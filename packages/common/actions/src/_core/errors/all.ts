@@ -17,6 +17,7 @@ import type { ScenarioError } from "../../scenario/errors/index.js";
 import type { SpacingError } from "../../spacing/errors/index.js";
 import type { StackingError } from "../../stacking/errors/index.js";
 import type { StateStyleError } from "../../state-style/errors/index.js";
+import type { TextStyleError } from "../../text-style/errors/index.js";
 import type { TextError } from "../../text/errors/index.js";
 import type { TokenError } from "../../token/errors/index.js";
 import type { ViewportError } from "../../viewport/errors/index.js";
@@ -43,6 +44,7 @@ type StudioError =
   | StackingError
   | StateStyleError
   | TextError
+  | TextStyleError
   | TokenError
   | ViewportError;
 

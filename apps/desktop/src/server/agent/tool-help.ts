@@ -31,8 +31,6 @@ export const TOOL_SHORT = {
     "Attached apps only. Lay out route frames left to right and link them from the links in their source.",
   app_doctor:
     "Read only. Diagnose why the attached app dev server or a route does not render.",
-  apply_text_style:
-    "Apply a text style to an element: Tailwind classes that replace text size, font, leading and tracking classes, or CSS var references.",
   arrange:
     "Align, distribute or tidy sibling elements by writing the parent auto layout. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
@@ -54,10 +52,6 @@ export const TOOL_SHORT = {
     "Turn one element into a reusable React component file with inferred props and cva variants, and use it at the old place.",
   create_component_variant:
     "Add a value (or a new key) to the cva variants map of one kit component, with classes or a copy of a value; returns a preview.",
-  create_text_style:
-    "Add the computed text props of an element as a new text style token in the project token source.",
-  detach_text_style:
-    "Detach an element from its text style: write its computed text props as literal values on the element.",
   define_tweaks:
     "Save the Tweaks panel controls (replaces the list). Each control sets one CSS custom property that is declared in :root and used with var().",
   design_review:
@@ -102,8 +96,6 @@ export const TOOL_SHORT = {
   list_locked_layers: "List the locked layers of the design with their page.",
   list_route_links:
     "Attached apps only. Read only. Links in the source of one app route.",
-  list_text_styles:
-    "Read only. The project type scale: Tailwind @theme, tokens.json, CSS vars, DESIGN.md. Name, size, weight, line-height, letter-spacing, family, source.",
   measure:
     "Read only. Distance, gaps and insets between two elements on the live page.",
   paint_shape: VECTOR_PAINT_SHORT,
@@ -156,8 +148,6 @@ export const TOOL_HELP: Record<
 > = {
   add_flow: `Attached apps only. Lay out route frames left to right with the same code as Flow in the studio, and make prototype links from the links in their source. routes: routes in order; or from: a route or frame id/@label, with depth (default 1) to add the routes it links to. params: sample values for dynamic segments. ${FLOW_NOTE}`,
   app_doctor: APP_DOCTOR_DESCRIPTION,
-  apply_text_style:
-    "Apply one text style from list_text_styles to the target with the same server code as the MCP apply_text_style tool. In a Tailwind file it adds the style classes (text-xl, font-semibold, leading-[..], tracking-[..]) and removes the text size, font weight, font family, leading and tracking classes they replace; text colors and alignment stay. Elsewhere it writes font-size, font-weight, line-height, letter-spacing and font-family with var(--token) references in the rule or inline style.",
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
@@ -176,10 +166,6 @@ export const TOOL_HELP: Record<
   create_component: CREATE_COMPONENT_AGENT_DESCRIPTION,
   create_component_variant:
     "Add a value to the cva() variants map of one kit component with the same server code as the MCP create_component_variant tool. Pass name (from list_components) or file, key (variant, size or another key), value, and classes; copyFrom starts from an existing value of the key, and classes then replace the ones of the same utility. newKey: true adds a key that does not exist, with this value as its default. setDefault: true also sets defaultVariants. Only the cva() call changes. It refuses a component with no cva(). You get the value list and a preview image of the new value.",
-  create_text_style:
-    "Read the computed font size, weight, line-height, letter-spacing and family of the target on the live page and add them as a new text style named name: --text-<name> with pairs in the Tailwind @theme block, a tokens.json typography entry, or :root CSS vars. Refuses a name that exists.",
-  detach_text_style:
-    "Read the computed font size, weight, line-height, letter-spacing and family of the target on the live page and write them as literal values on the element, with the same server code as the MCP detach_text_style tool. A later change to the text style no longer reaches the element.",
   define_tweaks:
     "Save the Tweaks panel controls for this design (replaces the whole list). Each control sets one CSS custom property: range {min, max, step?, unit?, default: number}, color {default}, toggle {on, off, default: boolean}, select {options: [{label, value}], default}. The user drags them for a live preview with no model call, and Commit writes the values into the :root declaration. Every cssVar must be declared in a top-level :root rule of the page CSS with the default value (a design-system token from tokens.css is already declared; Commit then updates tokens.json) and used with var() in the rules it changes. The result lists any var that is not declared or not used.",
   design_review:
@@ -218,8 +204,6 @@ export const TOOL_HELP: Record<
   list_locked_layers:
     "List the locked layers of the design, with the page of each and whether it is on the page now. Changes nothing.",
   list_route_links: `Attached apps only. Read only. List the links found in the source of one app route (route pattern or concrete path): kind, href, target route, element and file:line. ${FLOW_NOTE}`,
-  list_text_styles:
-    "Read only. List the text styles that apply_text_style can use, with the same server code as the MCP list_text_styles tool. It reads Tailwind v4 @theme --text-* vars with their --line-height, --font-weight and --letter-spacing pairs and --font-* families, then tokens.json typography, then size, weight and line-height vars in :root, then the DESIGN.md typography section; the first source wins for a name. Returns name, size, weight, lineHeight, letterSpacing, family, source and file.",
   measure:
     "Read only. Measure the distance between two elements on the live page, like holding Alt in the studio: boxes, relation, horizontal and vertical gap, inset when one is inside the other, center offset and guide lines.",
   paint_shape: VECTOR_PAINT_SHORT,

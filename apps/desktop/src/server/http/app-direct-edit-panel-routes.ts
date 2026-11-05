@@ -6,7 +6,6 @@ import { registerComponentVariantRoutes } from "./component-variant-routes.js";
 import { registerComponentRoutes } from "./components-routes.js";
 import { registerImageSearchRoutes } from "./image-search-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
-import { registerTextStyleRoutes } from "./text-style-routes.js";
 
 const registerComponentPanelRoutes = (app: Hono): void => {
   registerComponentRoutes(app);
@@ -21,8 +20,6 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
     loadDirection,
     withDirection,
   };
-  const plain = { editDeps, readBody, loadDirection, withDirection };
-  registerTextStyleRoutes(app, plain);
   registerImageSearchRoutes(app, { ...withPreview, projects });
   registerComponentVariantRoutes(app, withPreview);
 };

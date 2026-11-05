@@ -189,7 +189,6 @@ import {
   runReplaceStyle,
 } from "./style-tool.js";
 import type { TasteRule } from "./taste.js";
-import { createTextStyleTools } from "./text-style-tool.js";
 import { TOOL_HELP, TOOL_SHORT } from "./tool-help.js";
 import type { StudioToolName } from "./tool-help.js";
 import { HELP_TOOL, studioToolsFor } from "./tool-sets.js";
@@ -1536,7 +1535,6 @@ export async function createStudioMcpServer(
     reviewFrameTool,
     insertComponentTool,
     insertJsxTool,
-    ...createTextStyleTools(deps, tool),
     listBreakpointsTool,
     setBreakpointStyleTool,
     copyCodeTool,

@@ -102,3 +102,14 @@ export type {
   InspectAccessibilityCommand,
   SetAccessibilityCommand,
 } from "../accessibility/index.js";
+
+export { TextStyleStore, TextStyleWriter } from "../text-styles/index.js";
+
+export type {
+  ApplyTextStyleCommand,
+  CreateTextStyleCommand,
+  DetachTextStyleCommand,
+  InspectTextStyleCommand,
+  TextStyleStoreApi,
+  TextStyleWriterApi,
+} from "../text-styles/index.js";

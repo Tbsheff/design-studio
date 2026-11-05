@@ -30,6 +30,7 @@ import { SpacingLive } from "./spacing/live.js";
 import { StackingLive } from "./stacking/live.js";
 import { StateStyleLive } from "./state-style/live.js";
 import { StudioLive } from "./studio/live.js";
+import { TextStyleLive } from "./text-style/live.js";
 import { TextLive } from "./text/live.js";
 import { TokenLive } from "./token/live.js";
 import { VersionLive } from "./version/live.js";
@@ -69,6 +70,7 @@ const ALL_LIVE = {
   stateStyle: StateStyleLive,
   studio: StudioLive,
   text: TextLive,
+  textStyle: TextStyleLive,
   token: TokenLive,
   version: VersionLive,
   viewport: ViewportLive,

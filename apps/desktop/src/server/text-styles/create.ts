@@ -93,7 +93,7 @@ const planTextStyleCreate = async (
   };
 };
 
-const createTextStyle = async (
+const createTextStyleToken = async (
   deps: DirectEditDeps,
   scope: TextStyleEditScope,
   request: TextStyleCreateRequest
@@ -105,7 +105,7 @@ const createTextStyle = async (
   return { plan, version };
 };
 
-export { computedTextValues, createTextStyle, planTextStyleCreate };
+export { computedTextValues, createTextStyleToken, planTextStyleCreate };
 
 export type {
   TextStyleCreateDone,

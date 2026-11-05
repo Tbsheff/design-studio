@@ -87,11 +87,6 @@ import type {
   PageImportRequest,
   PageImportResult,
 } from "../shared/page-import";
-import type {
-  TextStyleApplyResult,
-  TextStyleCreateResult,
-  TextStyleList,
-} from "../shared/text-styles";
 
 export interface CanvasSnapshot {
   directionId: string;
@@ -132,6 +127,12 @@ import type { JsonBody } from "./platform/http";
 import { insertIconAt, listIconsAt } from "./platform/icon-api";
 import type { IconInsertBody, IconListQuery } from "./platform/icon-api";
 import { prefetch, readShared } from "./platform/query";
+import {
+  applyTextStyleAt,
+  createTextStyleAt,
+  detachTextStyleAt,
+  listTextStylesAt,
+} from "./platform/text-style-api";
 import { startBody } from "./start-body.js";
 
 export { ApiError } from "./platform/http";
@@ -424,11 +425,7 @@ export const api = {
     }>("GET", `${p(pid)}/app`),
   applyTextStyle: (pid: string, did: string, body: TextStyleApplyBody) =>
     timedEdit(pid, did, "text-style", 1, () =>
-      json<TextStyleApplyResult>(
-        "POST",
-        `${d(pid, did)}/text-styles/apply`,
-        body
-      )
+      applyTextStyleAt(pid, did, body)
     ),
   attachApp: (input: AttachAppRequest) =>
     json<{ project: Project }>("POST", "/api/projects/attach", input),
@@ -483,11 +480,7 @@ export const api = {
     ),
   createTextStyle: (pid: string, did: string, body: TextStyleCreateBody) =>
     timedEdit(pid, did, "text-style", 1, () =>
-      json<TextStyleCreateResult>(
-        "POST",
-        `${d(pid, did)}/text-styles/create`,
-        body
-      )
+      createTextStyleAt(pid, did, body)
     ),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {
     const res = await request(
@@ -501,11 +494,7 @@ export const api = {
   },
   detachTextStyle: (pid: string, did: string, body: TextStyleDetachBody) =>
     timedEdit(pid, did, "text-style", 1, () =>
-      json<{ file: string; versionId: string }>(
-        "POST",
-        `${d(pid, did)}/text-styles/detach`,
-        body
-      )
+      detachTextStyleAt(pid, did, body)
     ),
   directEdit: (pid: string, did: string, req: DirectEditRequest) =>
     timedEdit(
@@ -689,8 +678,7 @@ export const api = {
     return page.items;
   },
   listSkills: (): Promise<SkillCatalog> => call(routes.listSkillsStudio, {}),
-  listTextStyles: (pid: string, did: string) =>
-    json<TextStyleList>("GET", `${d(pid, did)}/text-styles?limit=100`),
+  listTextStyles: (pid: string, did: string) => listTextStylesAt(pid, did),
   listVersions: async (pid: string, did: string) => {
     const list = await call(versionsRoutes.listVersion, {
       directionId: did,

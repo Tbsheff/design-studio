@@ -135,10 +135,6 @@ export const withUntrustedLimits = (
   return policy;
 };
 
-const LIST_TEXT_STYLES_TOOL = "mcp__studio__list_text_styles";
-const APPLY_TEXT_STYLE_TOOL = "mcp__studio__apply_text_style";
-const CREATE_TEXT_STYLE_TOOL = "mcp__studio__create_text_style";
-const DETACH_TEXT_STYLE_TOOL = "mcp__studio__detach_text_style";
 const CREATE_COMPONENT_VARIANT_TOOL = "mcp__studio__create_component_variant";
 const UPDATE_COMPONENT_VARIANT_TOOL = "mcp__studio__update_component_variant";
 const COPY_CODE_TOOL = "mcp__studio__copy_code";
@@ -151,9 +147,6 @@ const SEARCH_IMAGES_TOOL = "mcp__studio__search_images";
 const PLACE_IMAGE_TOOL = "mcp__studio__place_image";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
-  APPLY_TEXT_STYLE_TOOL,
-  CREATE_TEXT_STYLE_TOOL,
-  DETACH_TEXT_STYLE_TOOL,
   CREATE_COMPONENT_VARIANT_TOOL,
   UPDATE_COMPONENT_VARIANT_TOOL,
   EDIT_ELEMENT_TOOL,
@@ -186,10 +179,6 @@ export const EDIT_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
 
 const STUDIO_MCP_TOOLS: readonly string[] = [
   ...LEGACY_AGENT_TOOLS,
-  LIST_TEXT_STYLES_TOOL,
-  APPLY_TEXT_STYLE_TOOL,
-  CREATE_TEXT_STYLE_TOOL,
-  DETACH_TEXT_STYLE_TOOL,
   CREATE_COMPONENT_VARIANT_TOOL,
   UPDATE_COMPONENT_VARIANT_TOOL,
   COPY_CODE_TOOL,

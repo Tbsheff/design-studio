@@ -175,7 +175,7 @@ const planTextStyleApply = async (
   };
 };
 
-const applyTextStyle = async (
+const applyTextStyleEdit = async (
   deps: DirectEditDeps,
   scope: TextStyleEditScope,
   request: TextStyleApplyRequest
@@ -192,7 +192,7 @@ const applyTextStyle = async (
   return { plan, version };
 };
 
-export { applyTextStyle, planTextStyleApply };
+export { applyTextStyleEdit, planTextStyleApply };
 
 export type {
   TextStyleApplyDone,

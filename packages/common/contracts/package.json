@@ -36,6 +36,7 @@
     "./states": "./src/states.ts",
     "./style-search": "./src/style-search.ts",
     "./text-search": "./src/text-search.ts",
+    "./text-styles": "./src/text-styles.ts",
     "./usage-scope": "./src/usage-scope.ts"
   }
 }

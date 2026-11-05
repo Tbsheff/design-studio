@@ -30,6 +30,7 @@ import { SpacingEntries } from "./spacing/handlers.js";
 import { StackingEntries } from "./stacking/handlers.js";
 import { StateStyleEntries } from "./state-style/handlers.js";
 import { StudioEntries } from "./studio/handlers.js";
+import { TextStyleEntries } from "./text-style/handlers.js";
 import { TextEntries } from "./text/handlers.js";
 import { TokenEntries } from "./token/handlers.js";
 import { VersionEntries } from "./version/handlers.js";
@@ -69,6 +70,7 @@ const ALL_ENTRIES = {
   stateStyle: StateStyleEntries,
   studio: StudioEntries,
   text: TextEntries,
+  textStyle: TextStyleEntries,
   token: TokenEntries,
   version: VersionEntries,
   viewport: ViewportEntries,

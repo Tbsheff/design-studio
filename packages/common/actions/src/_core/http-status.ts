@@ -17,6 +17,7 @@ import { ScenarioStatus } from "../scenario/errors/status.js";
 import { SpacingStatus } from "../spacing/errors/status.js";
 import { StackingStatus } from "../stacking/errors/status.js";
 import { StateStyleStatus } from "../state-style/errors/status.js";
+import { TextStyleStatus } from "../text-style/errors/status.js";
 import { TextStatus } from "../text/errors/status.js";
 import { TokenStatus } from "../token/errors/status.js";
 import { ViewportStatus } from "../viewport/errors/status.js";
@@ -45,6 +46,7 @@ const HTTP_STATUS = {
   ...StackingStatus,
   ...StateStyleStatus,
   ...TextStatus,
+  ...TextStyleStatus,
   ...TokenStatus,
   ...ViewportStatus,
   Defect: 500,

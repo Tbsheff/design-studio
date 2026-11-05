@@ -37,7 +37,6 @@ const CORE_TOOLS = [
   "set_image",
   "search_images",
   "place_image",
-  "import_page",
   "export_frame",
   "draw_vector",
   "boolean_shapes",

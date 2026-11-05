@@ -83,10 +83,6 @@ import type {
 } from "@design-studio/contracts/text-search";
 
 import type { FolderInspection } from "../shared/open-app";
-import type {
-  PageImportRequest,
-  PageImportResult,
-} from "../shared/page-import";
 
 export interface CanvasSnapshot {
   directionId: string;
@@ -126,6 +122,8 @@ import { call, pickMessage, request } from "./platform/http";
 import type { JsonBody } from "./platform/http";
 import { insertIconAt, listIconsAt } from "./platform/icon-api";
 import type { IconInsertBody, IconListQuery } from "./platform/icon-api";
+import { importPageAt } from "./platform/page-api";
+import type { PageImportBody } from "./platform/page-api";
 import { prefetch, readShared } from "./platform/query";
 import {
   applyTextStyleAt,
@@ -609,23 +607,8 @@ export const api = {
   getTweaks: (pid: string, did: string) =>
     json<TweaksState>("GET", `${d(pid, did)}/tweaks`),
   hiddenProjects: () => call(projectsRoutes.getHiddenProject, {}),
-  importPage: async (
-    pid: string,
-    did: string,
-    req: Omit<PageImportRequest, "name">
-  ) =>
-    (await (
-      await request(
-        "POST",
-        `${d(pid, did)}/import-page`,
-        {
-          url: req.url,
-          width: req.width,
-          ...(req.selector ? { selector: req.selector } : {}),
-        },
-        pickMessage
-      )
-    ).json()) as PageImportResult,
+  importPage: (pid: string, did: string, body: PageImportBody) =>
+    importPageAt(pid, did, body),
   importProject: async (
     path: string,
     options: { appDir?: string; skipApp?: boolean } = {}

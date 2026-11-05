@@ -19,6 +19,7 @@ import { ImageLive } from "../handlers/image/live.js";
 import { MotionLive } from "../handlers/motion/live.js";
 import { OrgScopeLive } from "../handlers/org-scope/live.js";
 import { PackLive } from "../handlers/pack/live.js";
+import { PageLive } from "../handlers/page/live.js";
 import { ProjectLive } from "../handlers/project/live.js";
 import { PropLive } from "../handlers/prop/live.js";
 import { PublishLive } from "../handlers/publish/live.js";
@@ -68,6 +69,7 @@ const liveLayer = Layer.mergeAll(
   MotionLive,
   OrgScopeLive,
   PackLive,
+  PageLive,
   ProjectLive,
   PropLive,
   PublishLive,

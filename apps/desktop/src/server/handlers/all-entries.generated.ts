@@ -18,6 +18,7 @@ import { ImageEntries } from "./image/handlers.js";
 import { MotionEntries } from "./motion/handlers.js";
 import { OrgScopeEntries } from "./org-scope/handlers.js";
 import { PackEntries } from "./pack/handlers.js";
+import { PageEntries } from "./page/handlers.js";
 import { ProjectEntries } from "./project/handlers.js";
 import { PropEntries } from "./prop/handlers.js";
 import { PublishEntries } from "./publish/handlers.js";
@@ -57,6 +58,7 @@ const ALL_ENTRIES = {
   motion: MotionEntries,
   orgScope: OrgScopeEntries,
   pack: PackEntries,
+  page: PageEntries,
   project: ProjectEntries,
   prop: PropEntries,
   publish: PublishEntries,

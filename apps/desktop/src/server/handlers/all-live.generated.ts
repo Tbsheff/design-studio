@@ -18,6 +18,7 @@ import { ImageLive } from "./image/live.js";
 import { MotionLive } from "./motion/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
+import { PageLive } from "./page/live.js";
 import { ProjectLive } from "./project/live.js";
 import { PropLive } from "./prop/live.js";
 import { PublishLive } from "./publish/live.js";
@@ -57,6 +58,7 @@ const ALL_LIVE = {
   motion: MotionLive,
   orgScope: OrgScopeLive,
   pack: PackLive,
+  page: PageLive,
   project: ProjectLive,
   prop: PropLive,
   publish: PublishLive,

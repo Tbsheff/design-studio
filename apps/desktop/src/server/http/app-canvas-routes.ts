@@ -6,7 +6,6 @@ import { bindViewportRuntime } from "../viewport/index.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
 import { registerLinkInteractionRoutes } from "./link-interaction-routes.js";
-import { registerPageImportRoutes } from "./page-import-routes.js";
 
 const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
   const {
@@ -17,7 +16,6 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     loadDirection,
     preview,
     projects,
-    withDirection,
   } = ctx;
   bindViewportRuntime({
     applyFrameState: async (project, request) => {
@@ -52,7 +50,6 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     projects,
     readBody,
   });
-  registerPageImportRoutes(app, { canvas, editDeps, readBody, withDirection });
 };
 
 export { registerAppCanvasRoutes };

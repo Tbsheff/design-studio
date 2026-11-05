@@ -113,3 +113,7 @@ export type {
   TextStyleStoreApi,
   TextStyleWriterApi,
 } from "../text-styles/index.js";
+
+export { PageWriter } from "../page-import/index.js";
+
+export type { ImportPageCommand, PageWriterApi } from "../page-import/index.js";

@@ -11,6 +11,7 @@ import type { IconError } from "../../icon/errors/index.js";
 import type { ImageError } from "../../image/errors/index.js";
 import type { MotionError } from "../../motion/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
+import type { PageError } from "../../page/errors/index.js";
 import type { PropError } from "../../prop/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
 import type { ScenarioError } from "../../scenario/errors/index.js";
@@ -37,6 +38,7 @@ type StudioError =
   | ImageError
   | MotionError
   | PackError
+  | PageError
   | PropError
   | PublishError
   | ScenarioError

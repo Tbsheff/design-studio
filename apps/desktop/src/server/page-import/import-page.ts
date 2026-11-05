@@ -287,7 +287,7 @@ const resultOf = (
   width: placement.frame.width,
 });
 
-const importPage = async (
+const importPageCopy = async (
   target: ImportTarget,
   request: PageImportRequest,
   commit: ImportCommit | null
@@ -330,6 +330,6 @@ const importPage = async (
   return { result: resultOf(capture, written, placement, version), version };
 };
 
-export { importPage };
+export { importPageCopy };
 
 export type { ImportCommit, ImportOutcome, ImportTarget };

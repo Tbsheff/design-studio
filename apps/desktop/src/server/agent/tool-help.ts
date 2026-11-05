@@ -16,7 +16,6 @@ import {
   searchImagesDescription,
 } from "./image-search-tool.js";
 import { SET_IMAGE_AGENT_DESCRIPTION } from "./image-tool.js";
-import { importPageDescription } from "./page-import-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
 import { SELECT_MATCHING_DESCRIPTION } from "./select-tool.js";
 import {
@@ -75,8 +74,6 @@ export const TOOL_SHORT = {
     "Read only. The repo context (AGENTS.md, CLAUDE.md, DESIGN.md, PRODUCT.md) again. The message already has it as <repo_context>.",
   import_figma_frame:
     "Turn a Figma nodes JSON file (exported by the user) into flex markup with token colors and kit components, as one version.",
-  import_page:
-    "Copy a live page (https or localhost URL) into a new static HTML page and canvas frame: a copy for redesign, not a live link.",
   insert_component:
     "Insert one library component inside or after a target, with required props and the import line. .map() and condition targets are refused.",
   insert_jsx:
@@ -186,7 +183,6 @@ export const TOOL_HELP: Record<
   get_run_context:
     "Read only. Read the repo context of this run again with the same server code as the MCP get_run_context tool: the app folder and workspace root AGENTS.md, CLAUDE.md, DESIGN.md and PRODUCT.md, cut to about 8 KB, secret-looking lines left out. The run message already has it as <repo_context>; call this only when you need the file list or a fresh copy.",
   import_figma_frame: FIGMA_IMPORT_TOOL_DESCRIPTION,
-  import_page: importPageDescription,
   insert_component:
     "Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.",
   insert_jsx:

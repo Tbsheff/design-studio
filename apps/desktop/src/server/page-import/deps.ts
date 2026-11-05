@@ -40,7 +40,7 @@ export {
   PAGE_IMPORT_WIDTH_DEFAULT,
   PAGE_IMPORT_WIDTH_MAX,
   PAGE_IMPORT_WIDTH_MIN,
-} from "../../shared/page-import.js";
+} from "@design-studio/contracts/page-import";
 
 export type {
   FetchPolicy,
@@ -66,6 +66,6 @@ export type {
 export type {
   PageImportRequest,
   PageImportResult,
-} from "../../shared/page-import.js";
+} from "@design-studio/contracts/page-import";
 
 export { z } from "../platform/zod-bridge/index.js";

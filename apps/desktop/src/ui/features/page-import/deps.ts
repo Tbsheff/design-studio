@@ -7,6 +7,6 @@ export type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 export {
   PAGE_IMPORT_SELECTOR_MAX,
   PAGE_IMPORT_URL_MAX,
-} from "../../../shared/page-import.js";
+} from "@design-studio/contracts/page-import";
 
-export type { PageImportResult } from "../../../shared/page-import.js";
+export type { PageImportResult } from "@design-studio/contracts/page-import";

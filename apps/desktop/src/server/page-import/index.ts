@@ -1,13 +1,7 @@
 export { PageImportError } from "./errors.js";
 
-export { importPage } from "./import-page.js";
+export { PageWriter } from "./page-writer.js";
 
-export { IMPORT_PAGE_DESCRIPTION, toImportRequest } from "./input.js";
+export type { ImportPageCommand } from "./page-run.js";
 
-export type {
-  ImportCommit,
-  ImportOutcome,
-  ImportTarget,
-} from "./import-page.js";
-
-export type { ImportPageInput } from "./input.js";
+export type { PageWriterApi } from "./page-writer.js";

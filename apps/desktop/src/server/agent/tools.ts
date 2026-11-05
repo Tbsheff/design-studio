@@ -169,7 +169,6 @@ import {
   runSetLinkInteraction,
   setLinkInteractionInput,
 } from "./link-interaction-tool.js";
-import { importPageInput, runImportPage } from "./page-import-tool.js";
 import { recordShot } from "./polish-loop.js";
 import { runSetProps, setPropsShape } from "./props-tool.js";
 import {
@@ -1411,13 +1410,6 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runExportFrame(deps, args))
   );
 
-  const importPageTool = tool(
-    "import_page",
-    TOOL_SHORT.import_page,
-    importPageInput.sdkFields,
-    toDecodedRun(importPageInput.input, (args) => runImportPage(deps, args))
-  );
-
   const setImageTool = tool(
     "set_image",
     TOOL_SHORT.set_image,
@@ -1560,7 +1552,6 @@ export async function createStudioMcpServer(
     setImageTool,
     searchImagesTool,
     placeImageTool,
-    importPageTool,
     drawVectorTool,
     booleanShapesTool,
     paintShapeTool,

@@ -18,6 +18,7 @@ import { ImageActions } from "./image/index.js";
 import { MotionActions } from "./motion/index.js";
 import { OrgScopeActions } from "./org-scope/index.js";
 import { PackActions } from "./pack/index.js";
+import { PageActions } from "./page/index.js";
 import { ProjectActions } from "./project/index.js";
 import { PropActions } from "./prop/index.js";
 import { PublishActions } from "./publish/index.js";
@@ -57,6 +58,7 @@ const ALL_ACTIONS = {
   motion: MotionActions,
   orgScope: OrgScopeActions,
   pack: PackActions,
+  page: PageActions,
   project: ProjectActions,
   prop: PropActions,
   publish: PublishActions,

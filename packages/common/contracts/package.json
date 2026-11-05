@@ -25,6 +25,7 @@
     "./link-interaction": "./src/link-interaction.ts",
     "./links": "./src/links.ts",
     "./motion": "./src/motion.ts",
+    "./page-import": "./src/page-import.ts",
     "./port": "./src/port.ts",
     "./props": "./src/props.ts",
     "./review": "./src/review.ts",

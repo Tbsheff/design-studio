@@ -21,6 +21,7 @@ import { createCommentStore } from "../store/comments.js";
 import { createVersionStore } from "../store/versions.js";
 import { bootAgentRunner } from "./agent-runner.js";
 import { desktopSender, linkDesktop } from "./desktop-link.js";
+import { eventRunner } from "./event-runner.js";
 import { handleSignals, prepareDataDir } from "./lifecycle.js";
 import {
   createProjectLayerLocks,
@@ -158,7 +159,7 @@ const openStores = async (
 ): Promise<Stores> => {
   const versions = withSaveQueue(createVersionStore(config));
   const projects = createWiredProjectStore(config, versions);
-  const baseBus = await openEventBus(config.dataDir);
+  const baseBus = await openEventBus(config.dataDir, eventRunner);
   const linked = linkBus(config, baseBus);
 
   const observed = options.thumbnails?.observeBus(linked) ?? {

@@ -191,8 +191,13 @@ const toTokensUpload = async (form: FormData): Promise<TokensWire | null> => {
   return { name: file.name, text: await file.text() };
 };
 
-const toRequest = (form: FormData): DraftRequestWire =>
-  JSON.parse(String(form.get("request") ?? "{}")) as DraftRequestWire;
+const toRequest = (form: FormData): DraftRequestWire => {
+  const request: DraftRequestWire = JSON.parse(
+    String(form.get("request") ?? "{}")
+  );
+
+  return request;
+};
 
 const withTokens = (input: DraftWire, upload: TokensWire | null): DraftWire => {
   if (upload === null) {

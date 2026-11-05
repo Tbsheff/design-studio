@@ -13,6 +13,7 @@ import {
   type ConnectionState,
   type EventSourceLike,
 } from "./event-hub";
+import { isApprovalPoll, isStreamHello } from "./json-guard";
 import { getSession } from "./session";
 
 type Wants = Record<string, number>;
@@ -123,11 +124,11 @@ function eventHead(
   data: string
 ): { pid: string; seq: number; type: string } | null {
   try {
-    const event = JSON.parse(data) as {
+    const event: {
       projectId?: unknown;
       seq?: unknown;
       type?: unknown;
-    };
+    } = JSON.parse(data);
     if (
       typeof event.projectId !== "string" ||
       typeof event.seq !== "number" ||
@@ -256,12 +257,10 @@ class Leader {
     const es = new EventSource(url);
     this.es = es;
     es.addEventListener(STREAM_HELLO, (msg) =>
-      this.hello(JSON.parse((msg as MessageEvent<string>).data) as StreamHello)
+      this.helloText((msg as MessageEvent<string>).data)
     );
     es.addEventListener(STREAM_APPROVALS, (msg) =>
-      this.approvals(
-        JSON.parse((msg as MessageEvent<string>).data) as McpApprovalPoll
-      )
+      this.approvalsText((msg as MessageEvent<string>).data)
     );
     const onEvent = (msg: Event) =>
       this.event((msg as MessageEvent<string>).data);
@@ -277,6 +276,22 @@ class Leader {
     window.setTimeout(() => {
       if (this.es === es) this.open();
     }, REOPEN_MS);
+  }
+
+  private helloText(data: string): void {
+    const hello = JSON.parse(data);
+
+    if (isStreamHello(hello)) {
+      this.hello(hello);
+    }
+  }
+
+  private approvalsText(data: string): void {
+    const poll = JSON.parse(data);
+
+    if (isApprovalPoll(poll)) {
+      this.approvals(poll);
+    }
   }
 
   private hello(hello: StreamHello): void {

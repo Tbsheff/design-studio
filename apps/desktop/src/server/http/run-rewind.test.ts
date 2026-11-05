@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { forkBaseOf } from "../../shared/rewind.js";
 import { createEventBus } from "../events/index.js";
 import { bootAgentRunner } from "../main/agent-runner.js";
+import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { buildRuntime } from "../main/runtime.js";
 import {
@@ -140,7 +141,7 @@ beforeEach(async () => {
   config = { ...config, agentMode: "mock" };
   const versions = createVersionStore(config);
   projects = createProjectStore(config, versions, projectStorePorts);
-  const bus = createEventBus(config.dataDir, new Map());
+  const bus = createEventBus(config.dataDir, new Map(), eventRunner);
   const preview = {
     ...createFakePreview(),
     directionUrl: async () => "http://127.0.0.1:0/",

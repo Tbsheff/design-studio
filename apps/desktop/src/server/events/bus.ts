@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import type { StudioEvent, StudioEventInput } from "@design-studio/contracts";
+import { Effect } from "effect";
 
 import { assertSafeId } from "../platform/errors/index.js";
 import { bindEventBus } from "./event-core.js";
@@ -8,6 +9,7 @@ import { readSeqFloors } from "./event-file.js";
 import type { SeqFloor } from "./event-file.js";
 import { fanOut, openLog, sinceLog } from "./event-log.js";
 import type { EventListener, ProjectLog } from "./event-log.js";
+import type { EventRunner } from "./event-runner.js";
 import { flushLog, record, releaseReserved } from "./event-writer.js";
 
 interface EventBus {
@@ -22,7 +24,8 @@ interface FlushableEventBus extends EventBus {
 
 const createEventBus = (
   dataDir: string,
-  floors: ReadonlyMap<string, SeqFloor>
+  floors: ReadonlyMap<string, SeqFloor>,
+  run: EventRunner
 ): FlushableEventBus => {
   const logs = new Map<string, ProjectLog>();
 
@@ -40,7 +43,7 @@ const createEventBus = (
       "events.jsonl"
     );
 
-    const log = openLog(file, floors.get(projectId) ?? null);
+    const log = openLog(file, floors.get(projectId) ?? null, run);
 
     logs.set(projectId, log);
 
@@ -56,20 +59,23 @@ const createEventBus = (
     return recorded.event;
   };
 
-  const flush = async (): Promise<void> => {
+  const flush = (): Promise<void> => {
     const all = [...logs.values()];
 
     for (const log of all) {
       flushLog(log);
     }
 
-    await Promise.all(all.map((log) => releaseReserved(log)));
+    return run.toPromise(
+      Effect.all(
+        all.map((log) => releaseReserved(log)),
+        { concurrency: "unbounded", discard: true }
+      )
+    );
   };
 
-  const since = async (
-    projectId: string,
-    afterSeq: number
-  ): Promise<StudioEvent[]> => await sinceLog(logFor(projectId), afterSeq);
+  const since = (projectId: string, afterSeq: number): Promise<StudioEvent[]> =>
+    run.toPromise(sinceLog(logFor(projectId), afterSeq));
 
   const subscribe = (
     projectId: string,
@@ -87,8 +93,11 @@ const createEventBus = (
   return { emit, flush, since, subscribe };
 };
 
-const openEventBus = async (dataDir: string): Promise<FlushableEventBus> => {
-  const bus = createEventBus(dataDir, await readSeqFloors(dataDir));
+const openEventBus = async (
+  dataDir: string,
+  run: EventRunner
+): Promise<FlushableEventBus> => {
+  const bus = createEventBus(dataDir, await readSeqFloors(dataDir), run);
 
   bindEventBus(bus);
 

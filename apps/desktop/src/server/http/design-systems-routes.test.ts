@@ -26,6 +26,7 @@ import {
 
 import { normalizeColor } from "../design-system/extract/values.js";
 import { createEventBus } from "../events/index.js";
+import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { createProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
@@ -75,7 +76,7 @@ function makeApp(
   const projects = createProjectStore(config, versions, projectStorePorts);
   return createApp({
     config: { ...config, fetchAllowLoopback: allowLoopback },
-    bus: createEventBus(config.dataDir, new Map()),
+    bus: createEventBus(config.dataDir, new Map(), eventRunner),
     projects,
     versions,
     runner,

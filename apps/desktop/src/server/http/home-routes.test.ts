@@ -19,6 +19,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { buildUserText } from "../agent/user-message.js";
 import { createEventBus } from "../events/index.js";
+import { eventRunner as runner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { PREFERENCES_FILE } from "../store/default-folder.js";
 import {
@@ -106,10 +107,10 @@ function fakeRunner(): AgentRunner {
 
 function build(extra: Partial<ServerConfig> = {}): void {
   const preview = fakePreview();
-  const observed = observeBus(createEventBus(config.dataDir, new Map()));
-  bus = observed.bus;
+  const seen = observeBus(createEventBus(config.dataDir, new Map(), runner));
+  bus = seen.bus;
   const thumbnails = createThumbnailService({ projects, preview, versions });
-  observed.observe((event) => {
+  seen.observe((event) => {
     if (wantsThumbnail(event)) {
       thumbnails.schedule(event.projectId);
     }

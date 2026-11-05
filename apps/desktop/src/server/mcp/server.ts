@@ -20,6 +20,13 @@ import type { McpCaller } from "./registry.js";
 import { argsOf, runActionEdit, runEdit } from "./run-edit.js";
 import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
 import type { McpSettings } from "./settings.js";
+import {
+  FORBIDDEN_BODY,
+  NOT_FOUND_BODY,
+  OFFLINE_BODY,
+  TOO_LARGE_BODY,
+  UNAUTHORIZED_BODY,
+} from "./wire-bodies.js";
 
 const PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 const MAX_BODY = 1024 * 1024;
@@ -230,12 +237,12 @@ function createMcpApp(
     const { port, token } = settings();
     const host = c.req.header("host") ?? "";
     if (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`)
-      return c.json({ error: "forbidden" }, 403);
+      return c.json(FORBIDDEN_BODY, 403);
     if (c.req.header("origin") !== undefined)
-      return c.json({ error: "forbidden" }, 403);
+      return c.json(FORBIDDEN_BODY, 403);
     const auth = c.req.header("authorization") ?? "";
     const unauthorized = (): Response =>
-      c.json({ error: "unauthorized" }, 401, {
+      c.json(UNAUTHORIZED_BODY, 401, {
         "www-authenticate": "Bearer",
       });
     if (!auth.startsWith("Bearer ")) return unauthorized();
@@ -246,15 +253,15 @@ function createMcpApp(
     }
     const resolution = await keys.resolve(bearer);
     if (resolution.kind === "denied") return unauthorized();
-    if (resolution.kind === "offline") return c.json({ error: "offline" }, 503);
+    if (resolution.kind === "offline") return c.json(OFFLINE_BODY, 503);
     c.set("key", resolution.resolved);
     return next();
   });
   app.post("/mcp", async (c) => {
     const length = Number(c.req.header("content-length") ?? "0");
-    if (length > MAX_BODY) return c.json({ error: "too large" }, 413);
+    if (length > MAX_BODY) return c.json(TOO_LARGE_BODY, 413);
     const raw = await c.req.text();
-    if (raw.length > MAX_BODY) return c.json({ error: "too large" }, 413);
+    if (raw.length > MAX_BODY) return c.json(TOO_LARGE_BODY, 413);
     let parsed: unknown;
     try {
       parsed = JSON.parse(raw);
@@ -303,7 +310,7 @@ function createMcpApp(
     return c.json(batch ? replies : replies[0], 200, headers);
   });
   app.all("/mcp", (c) => c.body(null, 405, { allow: "POST" }));
-  app.notFound((c) => c.json({ error: "not found" }, 404));
+  app.notFound((c) => c.json(NOT_FOUND_BODY, 404));
   return app;
 }
 

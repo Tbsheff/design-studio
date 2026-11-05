@@ -7,6 +7,7 @@ import type { CommentTarget, StudioEvent } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createEventBus } from "../events/index.js";
+import { eventRunner } from "../main/event-runner.js";
 import { createCommentStore, reorderSubset } from "./comments.js";
 import type { CommentStore } from "./comments.js";
 
@@ -24,7 +25,7 @@ let events: StudioEvent[];
 
 beforeEach(async () => {
   dataDir = await mkdtemp(path.join(os.tmpdir(), "studio comments "));
-  const bus = createEventBus(dataDir, new Map());
+  const bus = createEventBus(dataDir, new Map(), eventRunner);
   events = [];
   bus.subscribe("p1", (event) => events.push(event));
   store = createCommentStore(dataDir, bus);

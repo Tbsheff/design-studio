@@ -1,6 +1,11 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
+import { Conflict } from "@design-studio/actions/_core/errors/conflict";
+import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
+import { NotImplemented } from "@design-studio/actions/_core/errors/not-implemented";
+import { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
+import { toWire } from "@design-studio/actions/_core/wire";
 import type { TelemetrySample } from "@design-studio/contracts";
 import type { Hono } from "hono";
 
@@ -17,6 +22,29 @@ import {
 } from "./app-request.js";
 import { mountAll } from "./mount-all.js";
 
+const FORBIDDEN_BODY = toWire(
+  new Forbidden({
+    message: "Only the Design Studio app can open the folder picker.",
+    perm: "pick-folder",
+  })
+);
+
+const UNSUPPORTED_BODY = toWire(
+  new NotImplemented({
+    message: "the folder picker needs macOS; paste a path instead",
+  })
+);
+
+const BUSY_BODY = toWire(
+  new Conflict({ message: "a folder picker is already open" })
+);
+
+const TIMEOUT_BODY = toWire(
+  new Unavailable({ message: "the folder picker timed out" })
+);
+
+const FAILED_BODY = toWire(null);
+
 const registerStudioRoutes = (app: Hono, ctx: AppContext): void => {
   const { appTelemetryFile, folderPicker, projects, runtime, telemetryFile } =
     ctx;
@@ -30,7 +58,7 @@ const registerStudioRoutes = (app: Hono, ctx: AppContext): void => {
       c.req.header("sec-fetch-site") !== undefined &&
       c.req.header("sec-fetch-site") !== "same-origin"
     ) {
-      return c.json({ error: "forbidden" }, 403);
+      return c.json(FORBIDDEN_BODY, 403);
     }
     const body = await readBody(c);
 
@@ -46,20 +74,17 @@ const registerStudioRoutes = (app: Hono, ctx: AppContext): void => {
       return c.body(null, 204);
     }
     if (result.status === "unsupported") {
-      return c.json(
-        { error: "the folder picker needs macOS; paste a path instead" },
-        501
-      );
+      return c.json(UNSUPPORTED_BODY, 501);
     }
     if (result.status === "busy") {
-      return c.json({ error: "a folder picker is already open" }, 409);
+      return c.json(BUSY_BODY, 409);
     }
     if (result.status === "timeout") {
-      return c.json({ error: "the folder picker timed out" }, 504);
+      return c.json(TIMEOUT_BODY, 504);
     }
     console.error("[http] folder picker failed", result.error);
 
-    return c.json({ error: `the folder picker failed: ${result.error}` }, 500);
+    return c.json(FAILED_BODY, 500);
   });
 
   app.post("/api/telemetry", async (c) => {

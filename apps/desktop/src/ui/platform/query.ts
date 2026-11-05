@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-
 import type { ActionId } from "@design-studio/actions/_core/action";
 import type { ActionDone } from "@design-studio/actions/app-stream";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+
 import { call } from "./http";
 import type { ActionRoute, RouteInput, RouteOutput } from "./http";
+import { isActionDone } from "./json-guard";
 import { subscribeActionDone } from "./stream";
 
 interface ReadState<Route extends ActionRoute> {
@@ -91,7 +92,13 @@ const notify = (done: ActionDone): void => {
 
 const parseDone = (raw: string): ActionDone | null => {
   try {
-    return JSON.parse(raw) as ActionDone;
+    const parsed = JSON.parse(raw);
+
+    if (isActionDone(parsed)) {
+      return parsed;
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -144,7 +151,7 @@ const useRead = <Route extends ActionRoute>(
   const reads = input !== null;
 
   const refetch = useCallback(async (): Promise<void> => {
-    const [, current] = JSON.parse(key) as [ActionId, RouteInput<Route> | null];
+    const [, current]: [ActionId, RouteInput<Route> | null] = JSON.parse(key);
 
     if (current === null) {
       return;

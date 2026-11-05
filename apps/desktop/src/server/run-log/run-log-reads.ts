@@ -14,6 +14,7 @@ import { runQueryTerms } from "../../shared/rewind.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { listRunSummaries, pageRuns } from "./run-list.js";
+import { isRunLogRecord, isRunSummary } from "./run-log-json.js";
 import { readRunLogRuntime } from "./run-log-runtime.js";
 import type { RunLogRuntime } from "./run-log-runtime.js";
 
@@ -50,14 +51,21 @@ const parseLines = (text: string): (StudioEvent | RunSentRecord)[] =>
   text
     .split("\n")
     .filter((line) => line.trim() !== "")
-    .map((line) => JSON.parse(line) as StudioEvent | RunSentRecord);
+    .map((line) => JSON.parse(line))
+    .filter((record) => isRunLogRecord(record));
 
 const parseSummary = (text: string | null): RunSummary | null => {
   if (text === null) {
     return null;
   }
 
-  return JSON.parse(text) as RunSummary;
+  const parsed = JSON.parse(text);
+
+  if (isRunSummary(parsed)) {
+    return parsed;
+  }
+
+  return null;
 };
 
 const missingRun = (runId: string): NotFound =>

@@ -6,6 +6,7 @@ import { PNG } from "pngjs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createEventBus } from "../events/index.js";
+import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import type { TileRequest } from "../preview/browser.js";
 import {
@@ -162,7 +163,7 @@ beforeEach(async () => {
   thumbnails = createThumbnailService({ projects, preview, versions });
   app = createApp({
     config,
-    bus: createEventBus(config.dataDir, new Map()),
+    bus: createEventBus(config.dataDir, new Map(), eventRunner),
     projects,
     versions,
     runner,

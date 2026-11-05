@@ -17,6 +17,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
 import { createEventBus } from "../events/index.js";
+import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { createProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
@@ -123,7 +124,7 @@ beforeEach(async () => {
   const projects = createProjectStore(config, versions, projectStorePorts);
   app = createApp({
     config,
-    bus: createEventBus(config.dataDir, new Map()),
+    bus: createEventBus(config.dataDir, new Map(), eventRunner),
     projects,
     versions,
     runner,

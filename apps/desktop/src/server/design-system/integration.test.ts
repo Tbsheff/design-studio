@@ -31,6 +31,7 @@ import { buildSystemPrompt } from "../agent/prompt.js";
 import { buildUserText } from "../agent/user-message.js";
 import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
+import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import {
   recompileOnTokensChange,
@@ -189,7 +190,7 @@ beforeEach(async () => {
       });
     },
   });
-  bus = createEventBus(config.dataDir, new Map());
+  bus = createEventBus(config.dataDir, new Map(), eventRunner);
   started = [];
   app = createApp({
     config,
@@ -526,7 +527,7 @@ describe("recompile", { timeout: 20_000 }, () => {
     const root = await copyFixtureWorkTree();
     await syncDesignSystem(root);
     const events: StudioEvent[] = [];
-    const localBus = createEventBus(config.dataDir, new Map());
+    const localBus = createEventBus(config.dataDir, new Map(), eventRunner);
     localBus.subscribe("p1", (event) => events.push(event));
 
     const fakeProjects = {

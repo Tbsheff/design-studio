@@ -83,7 +83,7 @@ function loadUiState(): UiState {
       return defaults;
     }
 
-    const parsed = JSON.parse(raw) as Partial<UiState>;
+    const parsed: Partial<UiState> = JSON.parse(raw);
 
     return {
       activeProjectId: parsed.activeProjectId ?? null,

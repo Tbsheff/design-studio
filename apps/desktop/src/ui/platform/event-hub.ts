@@ -1,5 +1,7 @@
 import type { StudioEvent, StudioEventBody } from "@design-studio/contracts";
 
+import { isStudioEvent } from "./json-guard";
+
 const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
   "app.status": true,
   "canvas.changed": true,
@@ -100,12 +102,18 @@ export function createEventHub(deps: HubDeps): EventHub {
     let event: StudioEvent;
 
     try {
-      event = JSON.parse(msg.data) as StudioEvent;
+      const parsed = JSON.parse(msg.data);
+
+      if (!isStudioEvent(parsed)) {
+        return;
+      }
+
+      event = parsed;
     } catch {
       return;
     }
 
-    if (typeof event.seq !== "number" || event.seq <= channel.lastSeq) {
+    if (event.seq <= channel.lastSeq) {
       return;
     }
 

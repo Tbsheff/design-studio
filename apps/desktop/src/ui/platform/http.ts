@@ -9,6 +9,7 @@ import type {
 import type { WireBody } from "@design-studio/actions/_core/wire";
 import { STUDIO_TOKEN_HEADER } from "@design-studio/contracts";
 
+import { isText } from "./json-guard";
 import { getSession } from "./session";
 
 type HttpMethod = Method;
@@ -137,12 +138,28 @@ const withQuery = (url: string, rest: WireFields): string => {
   return `${url}?${text}`;
 };
 
+const TEXT_KEYS = new Set(["code", "error", "message"]);
+
+const isWireErrorBody = (value: unknown): value is WireFields & WireError => {
+  if (!(value instanceof Object) || Array.isArray(value)) {
+    return false;
+  }
+
+  return Object.entries(value).every(
+    ([key, field]) => !TEXT_KEYS.has(key) || field === null || isText(field)
+  );
+};
+
 const readError = async (
   res: Response,
   fallback: string
 ): Promise<ApiError> => {
   try {
-    const body = (await res.json()) as WireFields & WireError;
+    const body = await res.json();
+
+    if (!isWireErrorBody(body)) {
+      return new ApiError(res.status, `${fallback} ${res.statusText}`);
+    }
 
     return new ApiError(
       res.status,
@@ -198,7 +215,7 @@ const call = async <Route extends ActionRoute>(
     );
   }
 
-  return (await res.json()) as RouteOutput<Route>;
+  return res.json();
 };
 
 type ErrorPick = (data: {
@@ -237,10 +254,11 @@ const failureOf = async (
   pick: ErrorPick
 ): Promise<ApiError> => {
   try {
-    const parsed = (await res.json()) as WireFields & {
-      error?: string;
-      message?: string;
-    };
+    const parsed = await res.json();
+
+    if (!isWireErrorBody(parsed)) {
+      return new ApiError(res.status, `${fallback} ${res.statusText}`);
+    }
 
     return new ApiError(
       res.status,
@@ -290,7 +308,7 @@ const sendJson = async <Body>(
     );
   }
 
-  return (await res.json()) as Body;
+  return res.json();
 };
 
 const getRaw = (path: string, signal?: AbortSignal): Promise<Response> =>
@@ -303,7 +321,7 @@ const getJson = async <Body>(path: string): Promise<Body | null> => {
     return null;
   }
 
-  return (await res.json()) as Body;
+  return res.json();
 };
 
 const getBlob = async (path: string): Promise<Blob | null> => {

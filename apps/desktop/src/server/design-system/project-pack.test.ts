@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
+import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { createProjectStore } from "../store/projects.js";
 import type { StudioProjectStore } from "../store/projects.js";
@@ -116,7 +117,7 @@ beforeEach(async () => {
   });
   running = new Set();
   app = createApp({
-    bus: createEventBus(config.dataDir, new Map()),
+    bus: createEventBus(config.dataDir, new Map(), eventRunner),
     config,
     preview: {
       ...createFakePreview(),

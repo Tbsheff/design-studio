@@ -13,6 +13,7 @@ import { Effect } from "effect";
 import { RUN_TITLE_MAX } from "../../shared/rewind.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
+import { isRunSummary } from "./run-log-json.js";
 import { findRunFile } from "./run-log-reads.js";
 import { readRunLogRuntime } from "./run-log-runtime.js";
 import type { ActiveRun, StartRunCall } from "./run-log-runtime.js";
@@ -156,9 +157,10 @@ const readSummary = (
     Effect.flatMap((text) =>
       Effect.try({
         catch: () => missing,
-        try: () => JSON.parse(text) as RunSummary,
+        try: () => JSON.parse(text),
       })
-    )
+    ),
+    Effect.filterOrFail(isRunSummary, () => missing)
   );
 };
 

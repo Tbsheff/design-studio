@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { buildUserText } from "../agent/user-message.js";
 import { createEventBus } from "../events/index.js";
+import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import {
   createProjectStore,
@@ -171,7 +172,7 @@ beforeEach(async () => {
   runningKeys = new Set();
   app = createApp({
     config,
-    bus: createEventBus(config.dataDir, new Map()),
+    bus: createEventBus(config.dataDir, new Map(), eventRunner),
     projects,
     versions,
     runner: fakeRunner(),

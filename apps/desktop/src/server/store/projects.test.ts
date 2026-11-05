@@ -14,6 +14,7 @@ import { DEFAULT_SETTINGS } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { openEventBus } from "../events/index.js";
+import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig, VersionStore } from "../types.js";
 import { createProjectStore } from "./projects.js";
@@ -184,7 +185,7 @@ describe("project store", () => {
 
 describe("event bus", () => {
   it("keeps seq across a new bus instance and replays from the file", async () => {
-    const bus = await openEventBus(config.dataDir);
+    const bus = await openEventBus(config.dataDir, eventRunner);
     const received: number[] = [];
 
     const unsubscribe = bus.subscribe("p1", (event) =>
@@ -218,7 +219,7 @@ describe("event bus", () => {
     expect(received).toEqual([1, 2]);
     await bus.flush();
 
-    const restarted = await openEventBus(config.dataDir);
+    const restarted = await openEventBus(config.dataDir, eventRunner);
     expect((await restarted.since("p1", 1)).map((event) => event.seq)).toEqual([
       2, 3,
     ]);

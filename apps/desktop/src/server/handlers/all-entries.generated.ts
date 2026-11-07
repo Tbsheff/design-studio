@@ -39,6 +39,7 @@ import { StateStyleEntries } from "./state-style/handlers.js";
 import { StudioEntries } from "./studio/handlers.js";
 import { TextStyleEntries } from "./text-style/handlers.js";
 import { TextEntries } from "./text/handlers.js";
+import { ThemeEntries } from "./theme/handlers.js";
 import { TokenEntries } from "./token/handlers.js";
 import { VersionEntries } from "./version/handlers.js";
 import { ViewportEntries } from "./viewport/handlers.js";
@@ -85,6 +86,7 @@ const ALL_ENTRIES = {
   studio: StudioEntries,
   text: TextEntries,
   textStyle: TextStyleEntries,
+  theme: ThemeEntries,
   token: TokenEntries,
   version: VersionEntries,
   viewport: ViewportEntries,

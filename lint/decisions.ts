@@ -536,6 +536,17 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
+      "packages/common/actions/src/theme/{apply,create,list,set}.ts",
+      "packages/common/actions/src/theme/errors/status.ts",
+      "apps/desktop/src/server/handlers/theme/{apply,create,handlers,list,live,set}.ts",
+      "apps/desktop/src/server/theme/deps.ts",
+      "apps/desktop/src/server/design-system/theme-tokens.ts",
+      "apps/desktop/src/ui/features/theme/deps.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
       "apps/desktop/src/server/pattern/engine/{convert,scan}.ts",
       "apps/desktop/src/server/pattern/{pattern-capture,pattern-imports,snippet-parse}.ts",
     ],

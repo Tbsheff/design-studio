@@ -296,11 +296,16 @@ export function plannedCssText(
   return next;
 }
 
+export interface AppTokenWrite {
+  changes: TokenChange[];
+  title: string | null;
+}
+
 function updateMeta(
   loaded: LoadedAppTokens,
-  changes: TokenChange[]
+  write: AppTokenWrite
 ): VersionMeta {
-  const parts = changes.map((change) => {
+  const parts = write.changes.map((change) => {
     const { name } = tokenOf(loaded, change);
 
     const bits = [
@@ -317,7 +322,7 @@ function updateMeta(
 
   return {
     kind: "manual",
-    prompt: `Update tokens in ${loaded.file}: ${parts.join("; ")}`,
+    prompt: `${write.title ?? "Update tokens"} in ${loaded.file}: ${parts.join("; ")}`,
   };
 }
 
@@ -327,7 +332,7 @@ async function writeAndCommit(
   direction: Direction,
   loaded: LoadedAppTokens,
   text: string,
-  changes: TokenChange[]
+  write: AppTokenWrite
 ): Promise<Version> {
   const { workTree } = direction;
   const snapshot = await readSnapshot(workTree, loaded.file);
@@ -335,16 +340,16 @@ async function writeAndCommit(
   try {
     await writeFileAtomic(loaded.absolute, text);
 
-    const title = tokensTitle(
-      changes.map((change) => tokenOf(loaded, change).name)
-    );
+    const title =
+      write.title ??
+      tokensTitle(write.changes.map((change) => tokenOf(loaded, change).name));
 
     const version = await deps.versions.commitFile(
       project,
       direction,
       [loaded.file],
       title,
-      updateMeta(loaded, changes)
+      updateMeta(loaded, write)
     );
 
     if (version === null) {
@@ -373,7 +378,7 @@ export async function updateAppTokens(
   deps: DirectEditDeps,
   project: Project,
   direction: Direction,
-  raw: unknown
+  request: { raw: unknown; title: string | null }
 ): Promise<UpdateTokensResult | null> {
   const found = await appTokensFor(project, direction);
 
@@ -381,7 +386,7 @@ export async function updateAppTokens(
     return null;
   }
 
-  const changes = parseTokenChanges(raw);
+  const changes = parseTokenChanges(request.raw);
   assertCanEdit(deps, project, direction);
   const loaded = await readAppTokensAt(direction.workTree, found.file);
 
@@ -395,14 +400,10 @@ export async function updateAppTokens(
     throw new DirectEditError("no_change", "The token values are already set");
   }
 
-  const version = await writeAndCommit(
-    deps,
-    project,
-    direction,
-    loaded,
-    text,
-    changes
-  );
+  const version = await writeAndCommit(deps, project, direction, loaded, text, {
+    changes,
+    title: request.title,
+  });
 
   await publishVersion(deps, project, direction, version);
   const fresh = await readAppTokensAt(direction.workTree, found.file);

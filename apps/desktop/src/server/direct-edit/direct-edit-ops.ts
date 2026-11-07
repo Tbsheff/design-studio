@@ -98,8 +98,10 @@ const updateTokensIn = (
     ref.projectId,
     ref.directionId,
     async (project, direction) =>
-      (await updateAppTokens(runtime.editDeps, project, direction, body)) ??
-      updateTokens(runtime.editDeps, project, direction, body)
+      (await updateAppTokens(runtime.editDeps, project, direction, {
+        raw: body,
+        title: null,
+      })) ?? updateTokens(runtime.editDeps, project, direction, body)
   );
 
 const readTweaks = async (

@@ -70,10 +70,15 @@ function describeChange(change: TokenChange): string {
   return `${change.path} ${parts.join(" ")}`;
 }
 
-function updateMeta(changes: TokenChange[]): VersionMeta {
+export interface TokenWrite {
+  changes: TokenChange[];
+  title: string | null;
+}
+
+function updateMeta(write: TokenWrite): VersionMeta {
   return {
     kind: "manual",
-    prompt: `Update tokens: ${changes.map(describeChange).join("; ")}`,
+    prompt: `${write.title ?? "Update tokens"}: ${write.changes.map(describeChange).join("; ")}`,
   };
 }
 
@@ -100,7 +105,7 @@ async function writeAndCommit(
   project: Project,
   direction: Direction,
   text: string,
-  changes: TokenChange[]
+  write: TokenWrite
 ): Promise<Version> {
   const { workTree } = direction;
 
@@ -119,8 +124,8 @@ async function writeAndCommit(
       project,
       direction,
       paths,
-      updateTitle(changes),
-      updateMeta(changes)
+      write.title ?? updateTitle(write.changes),
+      updateMeta(write)
     );
 
     if (version === null) {
@@ -189,13 +194,13 @@ export async function writeTokensText(
   }
 }
 
-export async function updateTokens(
+export async function updateTokensTitled(
   deps: DirectEditDeps,
   project: Project,
   direction: Direction,
-  raw: unknown
+  request: { raw: unknown; title: string | null }
 ): Promise<UpdateTokensResult> {
-  const changes = parseTokenChanges(raw);
+  const changes = parseTokenChanges(request.raw);
   assertCanEdit(deps, project, direction);
   const { workTree } = direction;
   const text = await plannedTokensText(workTree, changes);
@@ -204,8 +209,21 @@ export async function updateTokens(
     throw new DirectEditError("no_change", "The token values are already set");
   }
 
-  const version = await writeAndCommit(deps, project, direction, text, changes);
+  const version = await writeAndCommit(deps, project, direction, text, {
+    changes,
+    title: request.title,
+  });
+
   await publishVersion(deps, project, direction, version);
 
   return { state: await readDesignSystemState(project, direction), version };
+}
+
+export function updateTokens(
+  deps: DirectEditDeps,
+  project: Project,
+  direction: Direction,
+  raw: unknown
+): Promise<UpdateTokensResult> {
+  return updateTokensTitled(deps, project, direction, { raw, title: null });
 }

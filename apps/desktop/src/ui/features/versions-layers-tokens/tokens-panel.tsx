@@ -1,9 +1,14 @@
 import type { CompiledTokenEntry } from "@design-studio/contracts";
 import { Icon, PanelHead } from "@design-studio/ui";
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 
+import {
+  broadcastTokenCss,
+  holdTokenCssUntilReload,
+} from "../design-system/token-frames.js";
 import type { ThemeChoice } from "../design-system/token-frames.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
+import { ThemeStrip } from "../theme/index.js";
 import { TokenSweepSlot, tokenSweepCopy } from "../token-sweep/index.js";
 import { COPY } from "./copy.js";
 import {
@@ -177,6 +182,16 @@ export function TokensPanel({ tokens, draft, sweep }: Props) {
           projectId={sweep.projectId}
           directionId={sweep.directionId}
         />
+      )}
+      {sweep && sweep.directionId !== null && (
+        <Suspense fallback={null}>
+          <ThemeStrip
+            directionId={sweep.directionId}
+            onApplied={holdTokenCssUntilReload}
+            onPreview={broadcastTokenCss}
+            projectId={sweep.projectId}
+          />
+        </Suspense>
       )}
       {tokens.source && (
         <p

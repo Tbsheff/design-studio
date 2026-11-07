@@ -26,6 +26,7 @@ import type { StackingError } from "../../stacking/errors/index.js";
 import type { StateStyleError } from "../../state-style/errors/index.js";
 import type { TextStyleError } from "../../text-style/errors/index.js";
 import type { TextError } from "../../text/errors/index.js";
+import type { ThemeError } from "../../theme/errors/index.js";
 import type { TokenError } from "../../token/errors/index.js";
 import type { ViewportError } from "../../viewport/errors/index.js";
 import type { CoreError } from "./index.js";
@@ -59,6 +60,7 @@ type StudioError =
   | StateStyleError
   | TextError
   | TextStyleError
+  | ThemeError
   | TokenError
   | ViewportError;
 

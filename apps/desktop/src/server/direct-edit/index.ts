@@ -59,6 +59,18 @@ export type {
   UpdateIntegrationCommand,
 } from "../integration/index.js";
 
+export { ThemeStore, ThemeWriter } from "../theme/index.js";
+
+export type {
+  ApplyThemeCommand,
+  CreateThemeCommand,
+  ListThemeCommand,
+  SetThemeCommand,
+  ThemePage,
+  ThemeStoreApi,
+  ThemeWriterApi,
+} from "../theme/index.js";
+
 export { EffectStore, EffectWriter } from "../effect/index.js";
 
 export type {

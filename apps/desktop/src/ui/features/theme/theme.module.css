@@ -1,0 +1,139 @@
+.strip {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.title {
+  margin: 0 auto 0 0;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  font-weight: 600;
+}
+
+.shuffle,
+.apply {
+  height: 24px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.apply {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.shuffle:disabled,
+.apply:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.shuffle:focus-visible,
+.apply:focus-visible,
+.card:focus-visible,
+.brief:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.brief {
+  height: 24px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: var(--surface-inset);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: var(--s-1);
+  align-content: start;
+}
+
+.card {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: var(--surface-inset);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.card[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.card:disabled {
+  cursor: default;
+}
+
+.half {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-2);
+}
+
+.sample {
+  margin-right: auto;
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.chip {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgb(128 128 128 / 40%);
+  border-radius: 50%;
+}
+
+.name {
+  overflow: hidden;
+  padding: var(--s-1) var(--s-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error {
+  color: var(--danger, var(--text-2));
+  font-size: var(--t-xs);
+}
+
+.note {
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}

@@ -39,6 +39,7 @@ import { StateStyleLive } from "./state-style/live.js";
 import { StudioLive } from "./studio/live.js";
 import { TextStyleLive } from "./text-style/live.js";
 import { TextLive } from "./text/live.js";
+import { ThemeLive } from "./theme/live.js";
 import { TokenLive } from "./token/live.js";
 import { VersionLive } from "./version/live.js";
 import { ViewportLive } from "./viewport/live.js";
@@ -85,6 +86,7 @@ const ALL_LIVE = {
   studio: StudioLive,
   text: TextLive,
   textStyle: TextStyleLive,
+  theme: ThemeLive,
   token: TokenLive,
   version: VersionLive,
   viewport: ViewportLive,

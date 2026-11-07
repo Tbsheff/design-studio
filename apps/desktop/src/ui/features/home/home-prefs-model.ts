@@ -7,11 +7,11 @@ export type HomeFilter = "all" | "prototypes" | "apps" | "systems";
 const FILTERS: HomeFilter[] = ["all", "prototypes", "apps", "systems"];
 
 export interface HomePrefs {
-  favorites: string[];
-  favoritesOnly: boolean;
-  view: HomeView;
-  templatesShown: boolean;
-  filter: HomeFilter;
+  readonly favorites: string[];
+  readonly favoritesOnly: boolean;
+  readonly view: HomeView;
+  readonly templatesShown: boolean;
+  readonly filter: HomeFilter;
 }
 
 const KEY = "studio.home.v1";

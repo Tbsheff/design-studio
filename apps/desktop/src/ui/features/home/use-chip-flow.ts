@@ -17,14 +17,17 @@ import { useDoctorGate } from "./use-doctor-gate.js";
 import { useOpenAppRequests } from "./use-open-app-requests.js";
 
 interface ChipFlowDeps {
-  onOpen: (projectId: string) => void;
-  setBusy: (busy: Busy) => void;
-  setFormError: (message: string | null) => void;
-  homeRef: RefObject<HTMLDivElement | null>;
-  homeDir: string | null;
-  level: RunLevel;
-  attached: RefObject<{ images: ImageDraft[]; references: ReferenceDraft[] }>;
-  doctor: ReturnType<typeof useDoctorGate>;
+  readonly onOpen: (projectId: string) => void;
+  readonly setBusy: (busy: Busy) => void;
+  readonly setFormError: (message: string | null) => void;
+  readonly homeRef: RefObject<HTMLDivElement | null>;
+  readonly homeDir: string | null;
+  readonly level: RunLevel;
+  readonly attached: RefObject<{
+    readonly images: ImageDraft[];
+    readonly references: ReferenceDraft[];
+  }>;
+  readonly doctor: ReturnType<typeof useDoctorGate>;
 }
 
 function useChipFlow({

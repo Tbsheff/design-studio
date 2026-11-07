@@ -16,10 +16,10 @@ const RETRY_MS = 1000;
 const RETRY_LIMIT = 20;
 
 function attachRequest(chip: AppChip): {
-  folder: string;
-  appDir: string;
-  url?: string;
-  env: Record<string, string>;
+  readonly folder: string;
+  readonly appDir: string;
+  readonly url?: string;
+  readonly env: Record<string, string>;
 } {
   const found = chip.inspection;
 
@@ -92,10 +92,10 @@ const wait = (ms: number) =>
 export async function runInProject(
   projectId: string,
   input: {
-    prompt: string;
-    level: RunLevel;
-    images: File[];
-    referenceUrls: string[];
+    readonly prompt: string;
+    readonly level: RunLevel;
+    readonly images: File[];
+    readonly referenceUrls: string[];
   }
 ): Promise<void> {
   const project = await api.getProject(projectId);
@@ -147,8 +147,8 @@ function Candidates({
   chip,
   onChange,
 }: {
-  chip: AppChip;
-  onChange: (patch: Partial<AppChip>) => void;
+  readonly chip: AppChip;
+  readonly onChange: (patch: Partial<AppChip>) => void;
 }) {
   const found = chip.inspection;
 
@@ -188,8 +188,8 @@ function DevServer({
   chip,
   onChange,
 }: {
-  chip: AppChip;
-  onChange: (patch: Partial<AppChip>) => void;
+  readonly chip: AppChip;
+  readonly onChange: (patch: Partial<AppChip>) => void;
 }) {
   const [envOpen, setEnvOpen] = useState(() => chip.env.trim() !== "");
   const mode = (next: RunMode) => () => onChange({ mode: next });
@@ -254,13 +254,13 @@ function DevServer({
 }
 
 export interface AppMenuProps {
-  chip: AppChip;
-  homeDir: string | null;
-  trigger: RefObject<HTMLElement | null>;
-  closing: boolean;
-  onClose: Close;
-  onChange: (patch: Partial<AppChip>) => void;
-  onTokensOnly: () => void;
+  readonly chip: AppChip;
+  readonly homeDir: string | null;
+  readonly trigger: RefObject<HTMLElement | null>;
+  readonly closing: boolean;
+  readonly onClose: Close;
+  readonly onChange: (patch: Partial<AppChip>) => void;
+  readonly onTokensOnly: () => void;
 }
 
 export function AppMenu({
@@ -331,10 +331,10 @@ export function FolderPathPop({
   onClose,
   onPick,
 }: {
-  trigger: RefObject<HTMLElement | null>;
-  closing: boolean;
-  onClose: Close;
-  onPick: (path: string) => void;
+  readonly trigger: RefObject<HTMLElement | null>;
+  readonly closing: boolean;
+  readonly onClose: Close;
+  readonly onPick: (path: string) => void;
 }) {
   const [value, setValue] = useState("");
 

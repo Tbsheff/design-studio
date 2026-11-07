@@ -1,17 +1,17 @@
 import { CopyButton, Icon, useModalDialog } from "@design-studio/ui";
 
 export interface DoctorStep {
-  ok: boolean;
-  text: string;
+  readonly ok: boolean;
+  readonly text: string;
 }
 
 export interface DoctorProblem {
-  name: string;
-  place: string;
-  badge: { label: string; tone: string };
-  steps: DoctorStep[];
-  detail: string;
-  command: string | null;
+  readonly name: string;
+  readonly place: string;
+  readonly badge: { readonly label: string; readonly tone: string };
+  readonly steps: DoctorStep[];
+  readonly detail: string;
+  readonly command: string | null;
 }
 
 export default function HomeDoctor({
@@ -21,11 +21,11 @@ export default function HomeDoctor({
   onOpenAnyway,
   onClose,
 }: {
-  problem: DoctorProblem;
-  checking: boolean;
-  onCheck: () => void;
-  onOpenAnyway: () => void;
-  onClose: () => void;
+  readonly problem: DoctorProblem;
+  readonly checking: boolean;
+  readonly onCheck: () => void;
+  readonly onOpenAnyway: () => void;
+  readonly onClose: () => void;
 }) {
   const dialog = useModalDialog(() => onClose());
   return (

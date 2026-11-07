@@ -6,8 +6,8 @@ import { api, errorText, json } from "../../api.js";
 import { isThumbnailPending } from "./project-list-model.js";
 
 export interface ProjectsState {
-  projects: Project[] | null;
-  error: string | null;
+  readonly projects: Project[] | null;
+  readonly error: string | null;
 }
 
 let state: ProjectsState = { projects: null, error: null };
@@ -79,7 +79,7 @@ export const projectsApi = {
     await load();
   },
   reveal: (project: Project) =>
-    json<{ ok: true }>(
+    json<{ readonly ok: true }>(
       "POST",
       `/api/projects/${encodeURIComponent(project.id)}/reveal`
     ),
@@ -93,8 +93,8 @@ const POLL_MS = 1500;
 const RECENT_MS = 120_000;
 
 export function useProjects(
-  options: { watch?: boolean } = {}
-): ProjectsState & { reload: () => Promise<void> } {
+  options: { readonly watch?: boolean } = {}
+): ProjectsState & { readonly reload: () => Promise<void> } {
   const current = useSyncExternalStore(projectsApi.subscribe, projectsApi.get);
   useEffect(() => {
     void load();

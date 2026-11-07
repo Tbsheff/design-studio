@@ -7,17 +7,21 @@ import { formatRelative, formatTime } from "../../domain/format.js";
 import { getBlob } from "../../platform/http.js";
 
 type Confirm =
-  | { kind: "one"; item: TrashItem }
-  | { kind: "all"; count: number; folderStays: boolean };
+  | { readonly kind: "one"; readonly item: TrashItem }
+  | {
+      readonly kind: "all";
+      readonly count: number;
+      readonly folderStays: boolean;
+    };
 
 const trashApi = {
   list: () => json<TrashItem[]>("GET", "/api/trash"),
   remove: (trashId: string) =>
-    json<{ deleted: number }>(
+    json<{ readonly deleted: number }>(
       "DELETE",
       `/api/trash/${encodeURIComponent(trashId)}`
     ),
-  empty: () => json<{ deleted: number }>("DELETE", "/api/trash"),
+  empty: () => json<{ readonly deleted: number }>("DELETE", "/api/trash"),
 };
 
 function useTrashThumb(item: TrashItem): string | null {
@@ -67,10 +71,10 @@ function TrashRow({
   onRestore,
   onDelete,
 }: {
-  item: TrashItem;
-  busy: boolean;
-  onRestore: () => void;
-  onDelete: () => void;
+  readonly item: TrashItem;
+  readonly busy: boolean;
+  readonly onRestore: () => void;
+  readonly onDelete: () => void;
 }) {
   const thumb = useTrashThumb(item);
 
@@ -129,11 +133,11 @@ function ConfirmDelete({
   onCancel,
   onConfirm,
 }: {
-  confirm: Confirm;
-  busy: boolean;
-  error: string | null;
-  onCancel: () => void;
-  onConfirm: () => void;
+  readonly confirm: Confirm;
+  readonly busy: boolean;
+  readonly error: string | null;
+  readonly onCancel: () => void;
+  readonly onConfirm: () => void;
 }) {
   const dialog = useModalDialog(() => (busy ? false : onCancel()));
 
@@ -204,8 +208,8 @@ export default function HomeTrash({
   onClose,
   onRestored,
 }: {
-  onClose: () => void;
-  onRestored: () => void;
+  readonly onClose: () => void;
+  readonly onRestored: () => void;
 }) {
   const [items, setItems] = useState<TrashItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);

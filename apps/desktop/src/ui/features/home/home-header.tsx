@@ -2,7 +2,7 @@ import { BrandMark, Icon, ThemeButton } from "@design-studio/ui";
 
 import { loadTrash } from "./lazy-parts.js";
 
-function Header({ onTrash }: { onTrash: () => void }) {
+function Header({ onTrash }: { readonly onTrash: () => void }) {
   return (
     <header className="home-header">
       <BrandMark />

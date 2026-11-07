@@ -4,13 +4,16 @@ import { errorText } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 
 type ChooseResult =
-  | { path: string; unsupported: false }
-  | { path: null; unsupported: boolean };
+  | { readonly path: string; readonly unsupported: false }
+  | { readonly path: null; readonly unsupported: boolean };
 
 export interface FolderChooser {
-  choose: (title: string, defaultPath?: string) => Promise<ChooseResult>;
-  unsupported: boolean;
-  picking: boolean;
+  readonly choose: (
+    title: string,
+    defaultPath?: string
+  ) => Promise<ChooseResult>;
+  readonly unsupported: boolean;
+  readonly picking: boolean;
 }
 
 export function useFolderChooser(

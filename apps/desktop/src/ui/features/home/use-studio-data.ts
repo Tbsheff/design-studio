@@ -7,7 +7,7 @@ import type {
   WorkTreeStatus,
 } from "@design-studio/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
@@ -30,55 +30,61 @@ import {
   createDeltaBatcher,
   frameOrTimeout,
 } from "../inspector/delta-batch.js";
+import {
+  createCursor,
+  toLoadedCount,
+  updateCursorSeen,
+} from "./run-cursor-model.js";
+import type { RunCursor } from "./run-cursor-model.js";
 
 export interface BuildError {
-  id: string;
-  directionId: string | null;
-  source: "build" | "console" | "runtime" | "unhandledrejection";
-  message: string;
-  file?: string;
-  line?: number;
-  ts: number;
+  readonly id: string;
+  readonly directionId: string | null;
+  readonly source: "build" | "console" | "runtime" | "unhandledrejection";
+  readonly message: string;
+  readonly file?: string;
+  readonly line?: number;
+  readonly ts: number;
 }
 
 export interface FilesChange {
-  directionId: string;
-  changedAt: number;
-  receivedAt: number;
-  paths: string[];
-  reload?: boolean;
+  readonly directionId: string;
+  readonly changedAt: number;
+  readonly receivedAt: number;
+  readonly paths: string[];
+  readonly reload?: boolean;
 }
 
 interface StudioData {
-  project: Project | null;
-  setProject: (project: Project) => void;
-  loadError: string | null;
-  directionId: string | null;
-  setDirectionId: (id: string) => void;
-  versions: Version[];
-  runs: RunMap;
-  runsLoaded: boolean;
-  status: WorkTreeStatus | null;
-  setStatus: (s: WorkTreeStatus | null) => void;
-  errors: BuildError[];
-  addError: (e: Omit<BuildError, "id" | "ts">) => void;
-  clearErrors: () => void;
-  clearFrameErrors: () => void;
-  lastChange: FilesChange | null;
-  connection: ConnectionState;
-  refreshVersions: () => void;
-  seedRun: (
+  readonly project: Project | null;
+  readonly setProject: (project: Project) => void;
+  readonly loadError: string | null;
+  readonly directionId: string | null;
+  readonly setDirectionId: (id: string) => void;
+  readonly versions: Version[];
+  readonly runs: RunMap;
+  readonly runsLoaded: boolean;
+  readonly status: WorkTreeStatus | null;
+  readonly setStatus: (s: WorkTreeStatus | null) => void;
+  readonly errors: BuildError[];
+  readonly addError: (e: Omit<BuildError, "id" | "ts">) => void;
+  readonly clearErrors: () => void;
+  readonly clearFrameErrors: () => void;
+  readonly lastChange: FilesChange | null;
+  readonly connection: ConnectionState;
+  readonly refreshVersions: () => void;
+  readonly seedRun: (
     runId: string,
     directionId: string,
     request: RunRequest,
     stopped?: boolean
   ) => void;
-  noteSend: () => () => void;
+  readonly noteSend: () => () => void;
 }
 
 interface SendTimes {
-  pending: number | null;
-  byRun: Map<string, number>;
+  readonly pending: MutableRefObject<number | null>;
+  readonly byRun: Map<string, number>;
 }
 
 function trackFirstToken(
@@ -87,11 +93,12 @@ function trackFirstToken(
   event: StudioEvent
 ): void {
   if (event.type === "run.started") {
-    if (sends.pending === null || event.ts < sends.pending - 1000) {
+    const pendingAt = sends.pending.current;
+    if (pendingAt === null || event.ts < pendingAt - 1000) {
       return;
     }
-    sends.byRun.set(event.runId, sends.pending);
-    sends.pending = null;
+    sends.byRun.set(event.runId, pendingAt);
+    sends.pending.current = null;
     return;
   }
   if (event.type !== "run.text.delta" && event.type !== "run.thinking.delta") {
@@ -108,28 +115,6 @@ function trackFirstToken(
 const FIRST_RUNS = 12;
 const MORE_RUNS = 16;
 
-interface RunCursor {
-  projectId: string;
-  before: number | null;
-  done: boolean;
-  loading: boolean;
-  pending: Promise<void> | null;
-  byDirection: Map<string, number>;
-  seen: Set<string>;
-}
-
-function newCursor(projectId: string): RunCursor {
-  return {
-    projectId,
-    before: null,
-    done: false,
-    loading: false,
-    pending: null,
-    byDirection: new Map(),
-    seen: new Set(),
-  };
-}
-
 const THROUGH_RUNS = 60;
 
 function mergeSummaries(prev: RunMap, list: RunSummary[]): RunMap {
@@ -145,26 +130,6 @@ function mergeSummaries(prev: RunMap, list: RunSummary[]): RunMap {
   return next;
 }
 
-function countRuns(cursor: RunCursor, list: RunSummary[]): void {
-  for (const s of list) {
-    if (cursor.seen.has(s.id)) {
-      continue;
-    }
-    cursor.seen.add(s.id);
-    cursor.byDirection.set(
-      s.directionId,
-      (cursor.byDirection.get(s.directionId) ?? 0) + 1
-    );
-  }
-}
-
-function loadedFor(cursor: RunCursor, directionId: string | null): number {
-  if (directionId === null) {
-    return cursor.seen.size;
-  }
-  return cursor.byDirection.get(directionId) ?? 0;
-}
-
 type SetRuns = Dispatch<SetStateAction<RunMap>>;
 
 function useRunPages(
@@ -173,32 +138,38 @@ function useRunPages(
   setRuns: SetRuns,
   setRunsLoaded: (loaded: boolean) => void
 ): void {
-  const cursor = useRef<RunCursor>(newCursor(projectId));
+  const cursor = useRef<RunCursor>(createCursor(projectId));
   const direction = useRef(directionId);
   direction.current = directionId;
 
   const publish = useCallback((c: RunCursor, load: (() => void) | null) => {
     if (cursor.current === c) {
-      publishOlderRuns({ more: !c.done, loading: c.loading }, load);
+      publishOlderRuns(
+        { more: !c.state.current.isDone, loading: c.state.current.isLoading },
+        load
+      );
     }
   }, []);
 
   const page = useCallback(
     async (c: RunCursor, want: (c: RunCursor) => boolean, size: number) => {
-      let first = c.before === null;
-      while (!c.done && cursor.current === c && want(c)) {
+      let first = c.state.current.before === null;
+      while (!c.state.current.isDone && cursor.current === c && want(c)) {
         const next = await listRunPage(
           c.projectId,
           first ? FIRST_RUNS : size,
-          c.before
+          c.state.current.before
         );
         if (cursor.current !== c) {
           return;
         }
         first = false;
-        countRuns(c, next.runs);
-        c.before = next.nextBefore;
-        c.done = next.nextBefore === null;
+        updateCursorSeen(c, next.runs);
+        c.state.current = {
+          ...c.state.current,
+          before: next.nextBefore,
+          isDone: next.nextBefore === null,
+        };
         setRuns((prev) => mergeSummaries(prev, next.runs));
         setRunsLoaded(true);
         for (const s of next.runs.filter((r) => r.status === "running")) {
@@ -218,26 +189,32 @@ function useRunPages(
 
   const wantMore = useCallback(
     (target: number) => (c: RunCursor) =>
-      loadedFor(c, direction.current) < target,
+      toLoadedCount(c, direction.current) < target,
     []
   );
 
   const fill = useCallback(
     async (c: RunCursor, want: (c: RunCursor) => boolean, size = MORE_RUNS) => {
-      if (c.loading || c.done) {
+      if (c.state.current.isLoading || c.state.current.isDone) {
         return;
       }
-      c.loading = true;
+      c.state.current = { ...c.state.current, isLoading: true };
       publish(c, null);
       const work = page(c, want, size).catch(() => setRunsLoaded(true));
-      c.pending = work;
+      c.state.current = { ...c.state.current, pending: work };
       await work;
-      c.loading = false;
-      c.pending = null;
+      c.state.current = {
+        ...c.state.current,
+        isLoading: false,
+        pending: null,
+      };
       publish(
         c,
         () =>
-          void fill(c, wantMore(loadedFor(c, direction.current) + MORE_RUNS))
+          void fill(
+            c,
+            wantMore(toLoadedCount(c, direction.current) + MORE_RUNS)
+          )
       );
     },
     [page, publish, setRunsLoaded, wantMore]
@@ -246,14 +223,19 @@ function useRunPages(
   const through = useCallback(
     async (runId: string) => {
       const c = cursor.current;
-      while (cursor.current === c && !c.seen.has(runId) && !c.done) {
-        const before = c.before;
-        if (c.pending) {
-          await c.pending;
+      while (
+        cursor.current === c &&
+        !c.seen.has(runId) &&
+        !c.state.current.isDone
+      ) {
+        const { before, pending } = c.state.current;
+        if (pending) {
+          await pending;
         } else {
           await fill(c, (x) => !x.seen.has(runId), THROUGH_RUNS);
         }
-        if (c.before === before && !c.pending) {
+        const after = c.state.current;
+        if (after.before === before && !after.pending) {
           break;
         }
       }
@@ -268,13 +250,13 @@ function useRunPages(
   }, [projectId, through]);
 
   useEffect(() => {
-    const c = newCursor(projectId);
+    const c = createCursor(projectId);
     cursor.current = c;
     setRunsLoaded(false);
     void fill(c, wantMore(FIRST_RUNS));
     return () => {
       if (cursor.current === c) {
-        cursor.current = newCursor(projectId);
+        cursor.current = createCursor(projectId);
       }
       publishOlderRuns({ more: false, loading: false }, null);
     };
@@ -284,8 +266,8 @@ function useRunPages(
     const c = cursor.current;
     if (
       directionId !== null &&
-      !c.loading &&
-      loadedFor(c, directionId) < FIRST_RUNS
+      !c.state.current.isLoading &&
+      toLoadedCount(c, directionId) < FIRST_RUNS
     ) {
       void fill(c, wantMore(FIRST_RUNS));
     }
@@ -306,7 +288,10 @@ export function useStudioData(projectId: string): StudioData {
   const [batcher] = useState(() =>
     createDeltaBatcher(setRuns, frameOrTimeout(100))
   );
-  const sends = useRef<SendTimes>({ pending: null, byRun: new Map() });
+  const sends = useRef<SendTimes>({
+    pending: { current: null },
+    byRun: new Map(),
+  });
   useEffect(() => () => batcher.dispose(), [batcher]);
 
   const stored = ui.directionByProject[projectId];
@@ -493,10 +478,10 @@ export function useStudioData(projectId: string): StudioData {
 
   const noteSend = useCallback(() => {
     const at = Date.now();
-    sends.current.pending = at;
+    sends.current.pending.current = at;
     return () => {
-      if (sends.current.pending === at) {
-        sends.current.pending = null;
+      if (sends.current.pending.current === at) {
+        sends.current.pending.current = null;
       }
     };
   }, []);

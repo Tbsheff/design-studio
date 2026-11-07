@@ -12,11 +12,11 @@ export function CardMenu({
   onClose,
   onPick,
 }: {
-  project: Project;
-  place: string | null;
-  at: Exclude<MenuAt, null>;
-  onClose: (refocus: boolean) => void;
-  onPick: (action: CardAction) => void;
+  readonly project: Project;
+  readonly place: string | null;
+  readonly at: Exclude<MenuAt, null>;
+  readonly onClose: (refocus: boolean) => void;
+  readonly onPick: (action: CardAction) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -127,8 +127,8 @@ export function RenameField({
   project,
   onDone,
 }: {
-  project: Project;
-  onDone: (name: string | null) => void;
+  readonly project: Project;
+  readonly onDone: (name: string | null) => void;
 }) {
   const [value, setValue] = useState(project.name);
   const ref = useRef<HTMLInputElement>(null);

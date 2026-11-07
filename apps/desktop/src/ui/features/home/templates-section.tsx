@@ -11,10 +11,10 @@ function TemplatesSection({
   disabled,
   onPick,
 }: {
-  templates: TemplatesModule | null;
-  selected: string | null;
-  disabled: boolean;
-  onPick: (template: HomeTemplate, starter: Starter | null) => void;
+  readonly templates: TemplatesModule | null;
+  readonly selected: string | null;
+  readonly disabled: boolean;
+  readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
 }) {
   return (
     <section className="home-templates" aria-label="Templates and starters">

@@ -13,14 +13,14 @@ function ChipMenuSlot({
   onChange,
   onTokensOnly,
 }: {
-  shown: boolean;
-  closing: boolean;
-  chip: AppChip | null;
-  homeDir: string | null;
-  chipRef: RefObject<HTMLDivElement | null>;
-  onClose: () => void;
-  onChange: (patch: Partial<AppChip>) => void;
-  onTokensOnly: () => void;
+  readonly shown: boolean;
+  readonly closing: boolean;
+  readonly chip: AppChip | null;
+  readonly homeDir: string | null;
+  readonly chipRef: RefObject<HTMLDivElement | null>;
+  readonly onClose: () => void;
+  readonly onChange: (patch: Partial<AppChip>) => void;
+  readonly onTokensOnly: () => void;
 }) {
   if (!shown || !chip) {
     return null;

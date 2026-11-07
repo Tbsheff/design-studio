@@ -5,9 +5,9 @@ function HeroNotes({
   formError,
   onClearError,
 }: {
-  windowDrag: boolean;
-  formError: string | null;
-  onClearError: () => void;
+  readonly windowDrag: boolean;
+  readonly formError: string | null;
+  readonly onClearError: () => void;
 }) {
   return (
     <>

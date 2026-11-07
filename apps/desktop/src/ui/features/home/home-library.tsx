@@ -12,7 +12,7 @@ export { ProjectGrid } from "./project-grid.js";
 
 export { PackCards } from "./home-popovers.js";
 
-const FILTERS: { id: HomeFilter; label: string }[] = [
+const FILTERS: { readonly id: HomeFilter; readonly label: string }[] = [
   { id: "all", label: "All" },
   { id: "prototypes", label: "Prototypes" },
   { id: "apps", label: "Apps" },
@@ -55,7 +55,7 @@ export function filterLibrary(
   );
 }
 
-export function FilterChips({ filter }: { filter: HomeFilter }) {
+export function FilterChips({ filter }: { readonly filter: HomeFilter }) {
   return (
     <div className="home-seg" role="tablist" aria-label="Show">
       {FILTERS.map((item) => (
@@ -75,9 +75,9 @@ export function FilterChips({ filter }: { filter: HomeFilter }) {
 }
 
 interface LastRun {
-  prompt: string;
-  route: string | null;
-  at: number;
+  readonly prompt: string;
+  readonly route: string | null;
+  readonly at: number;
 }
 
 function useLastRun(project: Project): LastRun | null {
@@ -129,9 +129,9 @@ export function ContinueCard({
   health,
   onOpen,
 }: {
-  project: Project;
-  health: AppHealth | null;
-  onOpen: (project: Project) => void;
+  readonly project: Project;
+  readonly health: AppHealth | null;
+  readonly onOpen: (project: Project) => void;
 }) {
   const thumb = useThumbnail(project);
   const last = useLastRun(project);

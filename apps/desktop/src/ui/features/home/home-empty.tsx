@@ -38,7 +38,7 @@ function useFound(): FoundApps | null | "error" {
   return found;
 }
 
-function FoundList({ onUse }: { onUse: (path: string) => void }) {
+function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
   const found = useFound();
 
   if (found === "error") {
@@ -101,9 +101,9 @@ function StartCards({
   onSample,
   onStarter,
 }: {
-  busy: boolean;
-  onSample: () => void;
-  onStarter: (starter: Starter) => void;
+  readonly busy: boolean;
+  readonly onSample: () => void;
+  readonly onStarter: (starter: Starter) => void;
 }) {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
@@ -155,10 +155,10 @@ export default function HomeEmpty({
   onSample,
   onStarter,
 }: {
-  busy: boolean;
-  onUse: (path: string) => void;
-  onSample: () => void;
-  onStarter: (starter: Starter) => void;
+  readonly busy: boolean;
+  readonly onUse: (path: string) => void;
+  readonly onSample: () => void;
+  readonly onStarter: (starter: Starter) => void;
 }) {
   return (
     <div className="home-empty-state">

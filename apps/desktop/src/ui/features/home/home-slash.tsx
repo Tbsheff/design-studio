@@ -1,6 +1,6 @@
 import type { RunLevel } from "@design-studio/contracts";
 import { useLayoutEffect } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import type { KeyboardEvent, MutableRefObject, RefObject } from "react";
 
 import { levelGroup, modelGroup } from "../chat/slash-groups.js";
 import { SlashMenu, useSlashMenu } from "../chat/slash-menu.js";
@@ -12,14 +12,16 @@ const INPUT_ATTRS = [
 ] as const;
 
 interface Props {
-  prompt: string;
-  setPrompt: (value: string) => void;
-  level: RunLevel;
-  onLevel: (level: RunLevel) => void;
-  model: string;
-  onModel: (model: string) => void;
-  keys: { current: ((event: KeyboardEvent<HTMLElement>) => boolean) | null };
-  home: RefObject<HTMLElement | null>;
+  readonly prompt: string;
+  readonly setPrompt: (value: string) => void;
+  readonly level: RunLevel;
+  readonly onLevel: (level: RunLevel) => void;
+  readonly model: string;
+  readonly onModel: (model: string) => void;
+  readonly keys: MutableRefObject<
+    ((event: KeyboardEvent<HTMLElement>) => boolean) | null
+  >;
+  readonly home: RefObject<HTMLElement | null>;
 }
 
 export function HomeSlashMenu({

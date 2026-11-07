@@ -7,7 +7,10 @@ import { api, errorText } from "../../api.js";
 import type { CardActions } from "./project-grid.js";
 import { projectsApi, useProjects } from "./projects-store-model.js";
 
-export function useOnboarding(): { show: boolean; dismiss: () => void } {
+export function useOnboarding(): {
+  readonly show: boolean;
+  readonly dismiss: () => void;
+} {
   const [show, setShow] = useState(false);
   useEffect(() => {
     api
@@ -25,11 +28,11 @@ export function useOnboarding(): { show: boolean; dismiss: () => void } {
 }
 
 export interface HomeToastState {
-  id: number;
-  text: string;
-  action?: { label: string; run: () => void };
-  more?: { label: string; run: () => void };
-  error?: boolean;
+  readonly id: number;
+  readonly text: string;
+  readonly action?: { readonly label: string; readonly run: () => void };
+  readonly more?: { readonly label: string; readonly run: () => void };
+  readonly error?: boolean;
 }
 
 const TOAST_MS = 8000;
@@ -38,8 +41,8 @@ export function HomeToast({
   toast,
   onDone,
 }: {
-  toast: HomeToastState | null;
-  onDone: () => void;
+  readonly toast: HomeToastState | null;
+  readonly onDone: () => void;
 }) {
   const [held, setHeld] = useState(false);
   useEffect(() => {
@@ -103,10 +106,10 @@ export function HomeToast({
 }
 
 interface ActionDeps {
-  onOpen: (project: Project) => void;
-  showToast: (toast: Omit<HomeToastState, "id">) => void;
-  onOpenTrash: () => void;
-  homeDir: string | null;
+  readonly onOpen: (project: Project) => void;
+  readonly showToast: (toast: Omit<HomeToastState, "id">) => void;
+  readonly onOpenTrash: () => void;
+  readonly homeDir: string | null;
 }
 
 function removedText(project: Project, homeDir: string | null): string {

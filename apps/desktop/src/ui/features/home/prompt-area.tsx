@@ -9,15 +9,17 @@ import {
 import { useExample } from "./use-example.js";
 
 interface PromptAreaProps {
-  value: string;
-  onChange: (v: string) => void;
-  onSubmit: (e: FormEvent) => void;
-  onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void;
-  describedBy?: string | undefined;
-  menuKeys: {
-    current: ((e: KeyboardEvent<HTMLTextAreaElement>) => boolean) | null;
+  readonly value: string;
+  readonly onChange: (v: string) => void;
+  readonly onSubmit: (e: FormEvent) => void;
+  readonly onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void;
+  readonly describedBy?: string | undefined;
+  readonly menuKeys: {
+    readonly current:
+      | ((e: KeyboardEvent<HTMLTextAreaElement>) => boolean)
+      | null;
   };
-  placeholder: string | null;
+  readonly placeholder: string | null;
 }
 
 function PromptArea({

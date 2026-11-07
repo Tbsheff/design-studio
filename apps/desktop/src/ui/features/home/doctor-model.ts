@@ -5,10 +5,10 @@ import type { DoctorProblem } from "./home-doctor.js";
 import { shortHome } from "./home-model.js";
 
 interface DoctorGate {
-  problem: DoctorProblem;
-  checking: boolean;
-  check: () => Promise<boolean>;
-  proceed: () => void;
+  readonly problem: DoctorProblem;
+  readonly checking: boolean;
+  readonly check: () => Promise<boolean>;
+  readonly proceed: () => void;
 }
 
 const INSTALL_DETAIL =
@@ -53,7 +53,11 @@ function installProblem(
   name: string,
   place: string,
   kindLabel: string,
-  install: { command: string; dir: string; homeDir: string | null }
+  install: {
+    readonly command: string;
+    readonly dir: string;
+    readonly homeDir: string | null;
+  }
 ): DoctorProblem {
   return {
     name,

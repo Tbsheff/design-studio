@@ -11,11 +11,11 @@ import type { Pop } from "./home-model.js";
 import { loadAppMenu } from "./lazy-parts.js";
 
 interface AppSlotProps {
-  chip: AppChip | null;
-  pop: Pop;
-  folderRef: RefObject<HTMLButtonElement | null>;
-  onAddFolder: () => void;
-  onDoctor: () => void;
+  readonly chip: AppChip | null;
+  readonly pop: Pop;
+  readonly folderRef: RefObject<HTMLButtonElement | null>;
+  readonly onAddFolder: () => void;
+  readonly onDoctor: () => void;
 }
 
 function AppSlot({

@@ -88,9 +88,9 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   const [advancedOpened, setAdvancedOpened] = useState(0);
 
   const [template, setTemplate] = useState<{
-    id: string;
-    label: string;
-    starter: Starter | null;
+    readonly id: string;
+    readonly label: string;
+    readonly starter: Starter | null;
   } | null>(null);
 
   const chooser = useFolderChooser(setFormError);
@@ -112,8 +112,8 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   const homeDir = homeOf(workspaces);
 
   const attached = useRef<{
-    images: ImageDraft[];
-    references: ReferenceDraft[];
+    readonly images: ImageDraft[];
+    readonly references: ReferenceDraft[];
   }>({ images: [], references: [] });
 
   const flow = useChipFlow({

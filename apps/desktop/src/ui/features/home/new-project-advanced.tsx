@@ -11,12 +11,12 @@ const SettingsFields = lazy(() =>
 );
 
 interface Props {
-  draft: SettingsDraft;
-  onDraft: (next: SettingsDraft) => void;
-  designMd: string;
-  onDesignMd: (value: string) => void;
-  onError: (message: string) => void;
-  initiallyOpen?: boolean;
+  readonly draft: SettingsDraft;
+  readonly onDraft: (next: SettingsDraft) => void;
+  readonly designMd: string;
+  readonly onDesignMd: (value: string) => void;
+  readonly onError: (message: string) => void;
+  readonly initiallyOpen?: boolean;
 }
 
 export function NewProjectAdvanced(props: Props) {

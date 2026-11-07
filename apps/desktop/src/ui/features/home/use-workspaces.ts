@@ -34,7 +34,10 @@ export function filterByFolder(
   projects: Project[] | null,
   list: WorkspaceList | null,
   filterId: string | null
-): { filterFolder: WorkspaceFolder | null; shownProjects: Project[] | null } {
+): {
+  readonly filterFolder: WorkspaceFolder | null;
+  readonly shownProjects: Project[] | null;
+} {
   const filterFolder =
     list?.folders.find((folder) => folder.id === filterId) ?? null;
 

@@ -8,13 +8,13 @@ import { projectsApi } from "./projects-store-model.js";
 import { useDoctorGate } from "./use-doctor-gate.js";
 
 interface FlowDeps {
-  onOpen: (projectId: string) => void;
-  setBusy: (busy: Busy) => void;
-  setFormError: (message: string | null) => void;
-  location: string | null;
-  health: Map<string, AppHealth>;
-  homeDir: string | null;
-  doctor: ReturnType<typeof useDoctorGate>;
+  readonly onOpen: (projectId: string) => void;
+  readonly setBusy: (busy: Busy) => void;
+  readonly setFormError: (message: string | null) => void;
+  readonly location: string | null;
+  readonly health: Map<string, AppHealth>;
+  readonly homeDir: string | null;
+  readonly doctor: ReturnType<typeof useDoctorGate>;
 }
 
 function useOpenFlows({

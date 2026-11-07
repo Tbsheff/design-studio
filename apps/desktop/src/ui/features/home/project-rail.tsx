@@ -30,7 +30,10 @@ import "../../styles/project-nav.css";
 const KEY = "design-studio.rail.v1";
 const MINI_MAX = 8;
 
-const GROUPS: { title: string; test: (hit: ProjectHit) => boolean }[] = [
+const GROUPS: {
+  readonly title: string;
+  readonly test: (hit: ProjectHit) => boolean;
+}[] = [
   { title: "Apps", test: (hit) => hit.type === "next" || hit.type === "vite" },
   {
     title: "Prototypes",
@@ -221,9 +224,9 @@ function useRailKeys(onOpened: () => void): void {
 }
 
 interface RailProps {
-  projectId: string;
-  onHome: () => void;
-  onNewPrototype: () => void;
+  readonly projectId: string;
+  readonly onHome: () => void;
+  readonly onNewPrototype: () => void;
 }
 
 const KIND_LABEL = TYPE_LABELS;
@@ -241,9 +244,9 @@ function MiniRail({
   projectId,
   onNewPrototype,
 }: {
-  hits: ProjectHit[];
-  projectId: string;
-  onNewPrototype: () => void;
+  readonly hits: ProjectHit[];
+  readonly projectId: string;
+  readonly onNewPrototype: () => void;
 }) {
   const top = hits.slice(0, MINI_MAX);
   const current = hits.find((hit) => hit.id === projectId);
@@ -304,7 +307,13 @@ function MiniRail({
   );
 }
 
-function RailRow({ hit, current }: { hit: ProjectHit; current: boolean }) {
+function RailRow({
+  hit,
+  current,
+}: {
+  readonly hit: ProjectHit;
+  readonly current: boolean;
+}) {
   return (
     <button
       type="button"
@@ -332,11 +341,11 @@ function OpenRail({
   onNewPrototype,
   find,
 }: {
-  hits: ProjectHit[];
-  projectId: string;
-  onHome: () => void;
-  onNewPrototype: () => void;
-  find: RefObject<HTMLInputElement | null>;
+  readonly hits: ProjectHit[];
+  readonly projectId: string;
+  readonly onHome: () => void;
+  readonly onNewPrototype: () => void;
+  readonly find: RefObject<HTMLInputElement | null>;
 }) {
   const [filter, setFilter] = useState("");
 

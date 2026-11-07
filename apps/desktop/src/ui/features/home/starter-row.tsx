@@ -7,9 +7,12 @@ function StarterRow({
   busy,
   onOpen,
 }: {
-  template: { label: string; starter: Starter | null } | null;
-  busy: Busy;
-  onOpen: (starter: Starter) => void;
+  readonly template: {
+    readonly label: string;
+    readonly starter: Starter | null;
+  } | null;
+  readonly busy: Busy;
+  readonly onOpen: (starter: Starter) => void;
 }) {
   const starter = template?.starter;
 

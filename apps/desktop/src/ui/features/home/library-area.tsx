@@ -14,14 +14,14 @@ function LibraryArea({
   onStarter,
   children,
 }: {
-  empty: boolean;
-  busy: boolean;
-  listError: string | null;
-  onRetry: () => void;
-  onUse: (path: string) => void;
-  onSample: () => void;
-  onStarter: (starter: Starter) => void;
-  children: ReactNode;
+  readonly empty: boolean;
+  readonly busy: boolean;
+  readonly listError: string | null;
+  readonly onRetry: () => void;
+  readonly onUse: (path: string) => void;
+  readonly onSample: () => void;
+  readonly onStarter: (starter: Starter) => void;
+  readonly children: ReactNode;
 }) {
   if (empty) {
     return (

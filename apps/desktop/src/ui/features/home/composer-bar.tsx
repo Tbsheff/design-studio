@@ -27,23 +27,23 @@ import { PillSelect } from "./pill-select.js";
 import { SendButton } from "./send-button.js";
 
 interface ComposerBarProps {
-  fileRef: RefObject<HTMLInputElement | null>;
-  onFiles: (files: File[]) => void;
-  plusActions: Omit<PlusMenuActions, "onDesignSystem">;
-  locationLabel: string;
-  packs: PacksState;
-  pack: PackSummary | null;
-  kind: ProjectKind;
-  onKind: (kind: ProjectKind) => void;
-  modelValue: string;
-  modelSizes: string[];
-  modelSettings: ModelSettings;
-  busy: Busy;
-  sendDisabled: string | null;
-  app: Omit<AppSlotProps, "pop" | "folderRef"> & {
-    folderPop: boolean;
-    onFolderPick: (path: string) => void;
-    onFolderClose: () => void;
+  readonly fileRef: RefObject<HTMLInputElement | null>;
+  readonly onFiles: (files: File[]) => void;
+  readonly plusActions: Omit<PlusMenuActions, "onDesignSystem">;
+  readonly locationLabel: string;
+  readonly packs: PacksState;
+  readonly pack: PackSummary | null;
+  readonly kind: ProjectKind;
+  readonly onKind: (kind: ProjectKind) => void;
+  readonly modelValue: string;
+  readonly modelSizes: string[];
+  readonly modelSettings: ModelSettings;
+  readonly busy: Busy;
+  readonly sendDisabled: string | null;
+  readonly app: Omit<AppSlotProps, "pop" | "folderRef"> & {
+    readonly folderPop: boolean;
+    readonly onFolderPick: (path: string) => void;
+    readonly onFolderClose: () => void;
   };
 }
 

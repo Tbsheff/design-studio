@@ -12,7 +12,10 @@ function initialOf(name: string | null): string | null {
 export function useProfileInitial(): string | null {
   const [initial, setInitial] = useState<string | null>(null);
   useEffect(() => {
-    profile ??= json<{ name: string | null }>("GET", "/api/profile").then(
+    profile ??= json<{ readonly name: string | null }>(
+      "GET",
+      "/api/profile"
+    ).then(
       (result) => initialOf(result.name),
       () => null
     );

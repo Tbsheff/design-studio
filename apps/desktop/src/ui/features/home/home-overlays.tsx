@@ -12,12 +12,12 @@ function HomeOverlays({
   toast,
   onToastDone,
 }: {
-  trashOpen: boolean;
-  onCloseTrash: () => void;
-  onRestored: () => void;
-  doctor: ReturnType<typeof useDoctorGate>;
-  toast: HomeToastState | null;
-  onToastDone: () => void;
+  readonly trashOpen: boolean;
+  readonly onCloseTrash: () => void;
+  readonly onRestored: () => void;
+  readonly doctor: ReturnType<typeof useDoctorGate>;
+  readonly toast: HomeToastState | null;
+  readonly onToastDone: () => void;
 }) {
   const gate = doctor.gate;
 

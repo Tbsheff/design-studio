@@ -18,12 +18,12 @@ function HiddenProjectsNote({
   homeDir,
   onMoved,
 }: {
-  homeDir: string | null;
-  onMoved: () => void;
+  readonly homeDir: string | null;
+  readonly onMoved: () => void;
 }) {
   const [hidden, setHidden] = useState<{
-    count: number;
-    target: string;
+    readonly count: number;
+    readonly target: string;
   } | null>(null);
 
   const [moving, setMoving] = useState(false);
@@ -89,21 +89,21 @@ function HiddenProjectsNote({
 }
 
 export interface ComposerFootProps {
-  workspaces: WorkspaceList | null;
-  location: string | null;
-  prompt: string;
-  chooser: FolderChooser;
-  onLocation: (path: string | null) => void;
-  onAddFolder: (path: string) => Promise<WorkspaceFolder | null>;
-  advanced: {
-    opened: number;
-    draft: SettingsDraft;
-    onDraft: (next: SettingsDraft) => void;
-    designMd: string;
-    onDesignMd: (value: string) => void;
-    onError: (message: string) => void;
+  readonly workspaces: WorkspaceList | null;
+  readonly location: string | null;
+  readonly prompt: string;
+  readonly chooser: FolderChooser;
+  readonly onLocation: (path: string | null) => void;
+  readonly onAddFolder: (path: string) => Promise<WorkspaceFolder | null>;
+  readonly advanced: {
+    readonly opened: number;
+    readonly draft: SettingsDraft;
+    readonly onDraft: (next: SettingsDraft) => void;
+    readonly designMd: string;
+    readonly onDesignMd: (value: string) => void;
+    readonly onError: (message: string) => void;
   };
-  onHiddenMoved: () => void;
+  readonly onHiddenMoved: () => void;
 }
 
 export function ComposerFoot({

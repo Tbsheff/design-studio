@@ -26,6 +26,7 @@ import {
   loadPackFonts,
   type PacksState,
 } from "../design-system/packs.js";
+import type { DesignCount } from "./home-model.js";
 
 export type Close = (refocus: boolean) => void;
 
@@ -68,14 +69,14 @@ export function Pop({
   onKeyDown,
   closing = false,
 }: {
-  trigger: RefObject<HTMLElement | null>;
-  onClose: Close;
-  className: string;
-  label: string;
-  role?: "dialog" | "menu";
-  children: ReactNode;
-  onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
-  closing?: boolean | undefined;
+  readonly trigger: RefObject<HTMLElement | null>;
+  readonly onClose: Close;
+  readonly className: string;
+  readonly label: string;
+  readonly role?: "dialog" | "menu";
+  readonly children: ReactNode;
+  readonly onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
+  readonly closing?: boolean | undefined;
 }) {
   const root = useRef<HTMLDivElement>(null);
   usePopover(!closing, root, onClose, trigger);
@@ -112,14 +113,14 @@ export function Pop({
 }
 
 export interface PlusMenuActions {
-  onAttachFile: () => void;
-  onLinkCode: () => void;
-  onTemplates: () => void;
-  templatesShown: boolean;
-  onImportSystem: () => void;
-  onDesignSystem: () => void;
-  onSkills: () => void;
-  onLocation: () => void;
+  readonly onAttachFile: () => void;
+  readonly onLinkCode: () => void;
+  readonly onTemplates: () => void;
+  readonly templatesShown: boolean;
+  readonly onImportSystem: () => void;
+  readonly onDesignSystem: () => void;
+  readonly onSkills: () => void;
+  readonly onLocation: () => void;
 }
 
 export function Item({
@@ -128,10 +129,10 @@ export function Item({
   meta,
   onClick,
 }: {
-  icon: Parameters<typeof Icon>[0]["name"];
-  label: string;
-  meta?: ReactNode;
-  onClick: () => void;
+  readonly icon: Parameters<typeof Icon>[0]["name"];
+  readonly label: string;
+  readonly meta?: ReactNode;
+  readonly onClick: () => void;
 }) {
   return (
     <button
@@ -155,11 +156,11 @@ export function PlusMenu({
   locationLabel,
   closing,
 }: {
-  trigger: RefObject<HTMLElement | null>;
-  onClose: Close;
-  actions: PlusMenuActions;
-  locationLabel: string;
-  closing?: boolean;
+  readonly trigger: RefObject<HTMLElement | null>;
+  readonly onClose: Close;
+  readonly actions: PlusMenuActions;
+  readonly locationLabel: string;
+  readonly closing?: boolean;
 }) {
   const run = (action: () => void) => () => {
     onClose(false);
@@ -273,9 +274,9 @@ export function PackPreviewCard({
   selected,
   onPick,
 }: {
-  pack: PackSummary;
-  selected: boolean;
-  onPick: () => void;
+  readonly pack: PackSummary;
+  readonly selected: boolean;
+  readonly onPick: () => void;
 }) {
   return (
     <button
@@ -316,8 +317,8 @@ function NoneCard({
   selected,
   onPick,
 }: {
-  selected: boolean;
-  onPick: () => void;
+  readonly selected: boolean;
+  readonly onPick: () => void;
 }) {
   return (
     <button
@@ -341,10 +342,10 @@ export function PackCards({
   includeNone,
   onPick,
 }: {
-  packs: PackSummary[];
-  value: string | null;
-  includeNone: boolean;
-  onPick: (pack: PackSummary | null) => void;
+  readonly packs: PackSummary[];
+  readonly value: string | null;
+  readonly includeNone: boolean;
+  readonly onPick: (pack: PackSummary | null) => void;
 }) {
   useEffect(() => loadPackFonts(packs), [packs]);
 
@@ -374,13 +375,13 @@ export function PackPopover({
   onNew,
   closing,
 }: {
-  trigger: RefObject<HTMLElement | null>;
-  onClose: Close;
-  state: PacksState;
-  value: string | null;
-  onChange: (id: string | null) => void;
-  onNew: () => void;
-  closing?: boolean;
+  readonly trigger: RefObject<HTMLElement | null>;
+  readonly onClose: Close;
+  readonly state: PacksState;
+  readonly value: string | null;
+  readonly onChange: (id: string | null) => void;
+  readonly onNew: () => void;
+  readonly closing?: boolean;
 }) {
   return (
     <Pop
@@ -417,12 +418,12 @@ export function PackPopover({
 }
 
 export interface ModelSettings {
-  model: string;
-  onModel: (model: string) => void;
-  level: RunLevel;
-  onLevel: (level: RunLevel) => void;
-  designs: { value: number; max: number; onChange: (count: number) => void };
-  onMore: () => void;
+  readonly model: string;
+  readonly onModel: (model: string) => void;
+  readonly level: RunLevel;
+  readonly onLevel: (level: RunLevel) => void;
+  readonly designs: DesignCount;
+  readonly onMore: () => void;
 }
 
 export function ModelPopover({
@@ -431,13 +432,11 @@ export function ModelPopover({
   settings,
   closing,
 }: {
-  trigger: RefObject<HTMLElement | null>;
-  onClose: Close;
-  settings: ModelSettings;
-  closing?: boolean;
+  readonly trigger: RefObject<HTMLElement | null>;
+  readonly onClose: Close;
+  readonly settings: ModelSettings;
+  readonly closing?: boolean;
 }) {
-  const { designs } = settings;
-
   return (
     <Pop
       trigger={trigger}
@@ -472,15 +471,15 @@ export function ModelPopover({
           Designs
         </span>
         <VariationsControl
-          value={designs.value}
-          max={designs.max}
-          onChange={designs.onChange}
+          value={settings.designs.value}
+          max={settings.designs.max}
+          onChange={settings.designs.onChange}
           labelledBy="home-designs-label"
         />
         <p className="home-pop-hint">
-          {designs.value > 1
-            ? `Create makes ${designs.value} designs side by side.`
-            : `Pick 2 to ${designs.max} to compare options.`}
+          {settings.designs.value > 1
+            ? `Create makes ${settings.designs.value} designs side by side.`
+            : `Pick 2 to ${settings.designs.max} to compare options.`}
         </p>
       </div>
       <div className="ui-menu-section">
@@ -507,11 +506,11 @@ export function LevelPopover({
   onLevel,
   closing,
 }: {
-  trigger: RefObject<HTMLElement | null>;
-  onClose: Close;
-  level: RunLevel;
-  onLevel: (level: RunLevel) => void;
-  closing?: boolean;
+  readonly trigger: RefObject<HTMLElement | null>;
+  readonly onClose: Close;
+  readonly level: RunLevel;
+  readonly onLevel: (level: RunLevel) => void;
+  readonly closing?: boolean;
 }) {
   return (
     <Pop

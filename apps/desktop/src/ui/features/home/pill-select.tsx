@@ -12,13 +12,13 @@ function PillSelect({
   onOpen,
   ariaLabel,
 }: {
-  label: string;
-  value: string;
-  sizes?: readonly string[];
-  open: boolean;
-  triggerRef: RefObject<HTMLButtonElement | null>;
-  onOpen: () => void;
-  ariaLabel: string;
+  readonly label: string;
+  readonly value: string;
+  readonly sizes?: readonly string[];
+  readonly open: boolean;
+  readonly triggerRef: RefObject<HTMLButtonElement | null>;
+  readonly onOpen: () => void;
+  readonly ariaLabel: string;
 }) {
   return (
     <button

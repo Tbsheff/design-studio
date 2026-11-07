@@ -22,18 +22,18 @@ function Library({
   listError,
   onPickPack,
 }: {
-  lib: LibraryModule | null;
-  projects: Project[];
-  health: Map<string, AppHealth>;
-  homeDir: string | null;
-  actions: ReturnType<typeof useProjectActions>;
-  packs: PacksState;
-  pack: PackSummary | null;
-  query: string;
-  onQuery: (q: string) => void;
-  searchRef: RefObject<HTMLInputElement | null>;
-  listError: string | null;
-  onPickPack: (id: string | null) => void;
+  readonly lib: LibraryModule | null;
+  readonly projects: Project[];
+  readonly health: Map<string, AppHealth>;
+  readonly homeDir: string | null;
+  readonly actions: ReturnType<typeof useProjectActions>;
+  readonly packs: PacksState;
+  readonly pack: PackSummary | null;
+  readonly query: string;
+  readonly onQuery: (q: string) => void;
+  readonly searchRef: RefObject<HTMLInputElement | null>;
+  readonly listError: string | null;
+  readonly onPickPack: (id: string | null) => void;
 }) {
   const { filter } = useHomePrefs();
 

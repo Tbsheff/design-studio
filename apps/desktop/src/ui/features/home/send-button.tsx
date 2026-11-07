@@ -8,10 +8,10 @@ function SendButton({
   reason,
   label,
 }: {
-  busy: Busy;
-  disabled: boolean;
-  reason: string | null;
-  label: string;
+  readonly busy: Busy;
+  readonly disabled: boolean;
+  readonly reason: string | null;
+  readonly label: string;
 }) {
   const working = busy === "create" || busy === "ask";
 

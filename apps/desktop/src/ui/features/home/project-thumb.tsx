@@ -22,7 +22,10 @@ const TYPE_ICON: Record<ProjectType, IconName> = {
 
 function useThumb(hit: ProjectHit): string | null {
   const key = hit.thumbnail ? `${hit.id}/${hit.thumbnail}` : null;
-  const [url, setUrl] = useState<{ key: string; url: string } | null>(null);
+  const [url, setUrl] = useState<{
+    readonly key: string;
+    readonly url: string;
+  } | null>(null);
   useEffect(() => {
     if (!key || !hit.thumbnail) {
       return;
@@ -56,8 +59,8 @@ export function ProjectThumb({
   hit,
   className,
 }: {
-  hit: ProjectHit;
-  className?: string;
+  readonly hit: ProjectHit;
+  readonly className?: string;
 }) {
   const url = useThumb(hit);
 
@@ -76,7 +79,7 @@ export function ProjectThumb({
   );
 }
 
-export function TypeBadge({ hit }: { hit: ProjectHit }) {
+export function TypeBadge({ hit }: { readonly hit: ProjectHit }) {
   return (
     <span className="badge pnav-badge" data-type={hit.type}>
       {hit.typeLabel}
@@ -88,8 +91,8 @@ export function HealthDot({
   hit,
   className,
 }: {
-  hit: ProjectHit;
-  className?: string;
+  readonly hit: ProjectHit;
+  readonly className?: string;
 }) {
   if (!hit.health) {
     return null;

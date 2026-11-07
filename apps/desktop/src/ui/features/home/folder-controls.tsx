@@ -17,8 +17,8 @@ function FolderPath({
   path,
   homeDir,
 }: {
-  path: string;
-  homeDir: string | null;
+  readonly path: string;
+  readonly homeDir: string | null;
 }) {
   const short = shortenHome(path, homeDir);
   const cut = short.lastIndexOf("/");
@@ -37,9 +37,9 @@ function PastePath({
   action,
   onSubmit,
 }: {
-  label: string;
-  action: string;
-  onSubmit: (path: string) => void;
+  readonly label: string;
+  readonly action: string;
+  readonly onSubmit: (path: string) => void;
 }) {
   const [value, setValue] = useState("");
   return (
@@ -74,7 +74,7 @@ function locationOptions(
   usable: WorkspaceFolder[],
   value: string | null,
   homeDir: string | null,
-  labels: { fallback: string; unsupported: boolean }
+  labels: { readonly fallback: string; readonly unsupported: boolean }
 ): UiSelectOption[] {
   const custom =
     value && !usable.some((folder) => folder.path === value)
@@ -92,13 +92,13 @@ function locationOptions(
 }
 
 interface LocationProps {
-  folders: WorkspaceFolder[];
-  value: string | null;
-  homeDir: string | null;
-  prompt: string;
-  chooser: FolderChooser;
-  onChange: (path: string | null) => void;
-  onAddFolder: (path: string) => Promise<WorkspaceFolder | null>;
+  readonly folders: WorkspaceFolder[];
+  readonly value: string | null;
+  readonly homeDir: string | null;
+  readonly prompt: string;
+  readonly chooser: FolderChooser;
+  readonly onChange: (path: string | null) => void;
+  readonly onAddFolder: (path: string) => Promise<WorkspaceFolder | null>;
 }
 
 export function LocationField({
@@ -177,17 +177,17 @@ export function LocationField({
 }
 
 interface FolderRowProps {
-  folder: WorkspaceFolder;
-  count: number;
-  active: boolean;
-  homeDir: string | null;
-  onFilter: () => void;
-  onNewHere: () => void;
-  onOpenHere: () => void;
-  onRename: (label: string) => Promise<boolean>;
-  onRemove: () => void;
-  onChangeDefault: () => void;
-  changing: boolean;
+  readonly folder: WorkspaceFolder;
+  readonly count: number;
+  readonly active: boolean;
+  readonly homeDir: string | null;
+  readonly onFilter: () => void;
+  readonly onNewHere: () => void;
+  readonly onOpenHere: () => void;
+  readonly onRename: (label: string) => Promise<boolean>;
+  readonly onRemove: () => void;
+  readonly onChangeDefault: () => void;
+  readonly changing: boolean;
 }
 
 function FolderRow({
@@ -341,17 +341,17 @@ function FolderRow({
 }
 
 interface FoldersSectionProps {
-  list: WorkspaceList | null;
-  projects: Project[] | null;
-  filterId: string | null;
-  chooser: FolderChooser;
-  onFilter: (id: string | null) => void;
-  onAdd: (path: string) => Promise<WorkspaceFolder | null>;
-  onRename: (id: string, label: string) => Promise<boolean>;
-  onRemove: (folder: WorkspaceFolder) => void;
-  onNewHere: (folder: WorkspaceFolder) => void;
-  onOpenHere: (folder: WorkspaceFolder) => void;
-  onSetDefault: (path: string) => Promise<boolean>;
+  readonly list: WorkspaceList | null;
+  readonly projects: Project[] | null;
+  readonly filterId: string | null;
+  readonly chooser: FolderChooser;
+  readonly onFilter: (id: string | null) => void;
+  readonly onAdd: (path: string) => Promise<WorkspaceFolder | null>;
+  readonly onRename: (id: string, label: string) => Promise<boolean>;
+  readonly onRemove: (folder: WorkspaceFolder) => void;
+  readonly onNewHere: (folder: WorkspaceFolder) => void;
+  readonly onOpenHere: (folder: WorkspaceFolder) => void;
+  readonly onSetDefault: (path: string) => Promise<boolean>;
 }
 
 export function FoldersSection({

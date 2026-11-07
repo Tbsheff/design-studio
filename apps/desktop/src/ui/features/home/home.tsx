@@ -18,7 +18,7 @@ import { StarterRow } from "./starter-row.js";
 import { TemplatesSection } from "./templates-section.js";
 import { useHomeScreen } from "./use-home-screen.js";
 
-function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
+function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
   const {
     actions,
     addAppFolder,

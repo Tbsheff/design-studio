@@ -118,8 +118,8 @@ export function useRouteHits(
   fallback: RouteHit[]
 ): RouteHit[] {
   const [found, setFound] = useState<{
-    query: string;
-    routes: RouteHit[];
+    readonly query: string;
+    readonly routes: RouteHit[];
   } | null>(null);
 
   const text = query.trim();

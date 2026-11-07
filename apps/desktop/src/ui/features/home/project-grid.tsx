@@ -29,6 +29,7 @@ import {
 } from "../../platform/storage.js";
 import { findPack, keySwatches } from "../design-system/packs.js";
 import { Swatches } from "../inspector/swatches.js";
+import type { KeyedFlag, KeyedUrl, Point, StarProps } from "./home-model.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import {
   toFilteredProjects,
@@ -55,9 +56,7 @@ const runCache = new Map<string, Promise<boolean>>();
 export function useLastRunFailed(project: Project): boolean {
   const key = `${project.id}/${project.updatedAt}`;
 
-  const [failed, setFailed] = useState<{ key: string; on: boolean } | null>(
-    null
-  );
+  const [failed, setFailed] = useState<KeyedFlag | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -98,7 +97,7 @@ function warmOpen(project: Project, withPreview: boolean): void {
 export function useThumbnail(project: Project): string | null {
   const thumb = project.thumbnail ?? null;
   const key = thumb ? `${project.id}/${thumb.versionId}` : null;
-  const [url, setUrl] = useState<{ key: string; url: string } | null>(null);
+  const [url, setUrl] = useState<KeyedUrl | null>(null);
   useEffect(() => {
     if (!key || !thumb) {
       return;
@@ -132,7 +131,7 @@ export function useThumbnail(project: Project): string | null {
   return null;
 }
 
-function Star({ filled, size = 14 }: { filled: boolean; size?: number }) {
+function Star({ filled, size = 14 }: StarProps) {
   return (
     <svg
       width={size}
@@ -150,16 +149,16 @@ function Star({ filled, size = 14 }: { filled: boolean; size?: number }) {
 }
 
 export interface CardActions {
-  onOpen: (project: Project) => void;
-  onRename: (project: Project, name: string) => Promise<void>;
-  onDuplicate: (project: Project) => void;
-  onReveal: (project: Project) => void;
-  onDelete: (project: Project) => void;
+  readonly onOpen: (project: Project) => void;
+  readonly onRename: (project: Project, name: string) => Promise<void>;
+  readonly onDuplicate: (project: Project) => void;
+  readonly onReveal: (project: Project) => void;
+  readonly onDelete: (project: Project) => void;
 }
 
 export type CardAction = "open" | "rename" | "duplicate" | "reveal" | "delete";
 
-export type MenuAt = { x: number; y: number } | "button" | "keys" | null;
+export type MenuAt = Point | "button" | "keys" | null;
 
 const menusChunk = import("./project-card-menus.js");
 const CardMenu = lazy(() => menusChunk.then((m) => ({ default: m.CardMenu })));
@@ -169,14 +168,14 @@ const RenameField = lazy(() =>
 );
 
 interface CardProps {
-  project: Project;
-  pack: PackSummary | null;
-  health: AppHealth | null;
-  homeDir: string | null;
-  active: boolean;
-  favorite: boolean;
-  actions: CardActions;
-  onFocusCard: () => void;
+  readonly project: Project;
+  readonly pack: PackSummary | null;
+  readonly health: AppHealth | null;
+  readonly homeDir: string | null;
+  readonly active: boolean;
+  readonly favorite: boolean;
+  readonly actions: CardActions;
+  readonly onFocusCard: () => void;
 }
 
 const TYPE_TONE: Record<ProjectType, string> = {
@@ -192,8 +191,8 @@ export function isFolderProject(project: Project): boolean {
 }
 
 export function projectBadge(project: Project): {
-  label: string;
-  tone: string;
+  readonly label: string;
+  readonly tone: string;
 } {
   const type = projectTypeOf(project);
 
@@ -224,8 +223,8 @@ export function HealthCell({
   health,
   runFailed = false,
 }: {
-  health: AppHealth | null;
-  runFailed?: boolean;
+  readonly health: AppHealth | null;
+  readonly runFailed?: boolean;
 }) {
   const state = health?.state ?? "static";
 
@@ -481,18 +480,18 @@ function ProjectCard({
 }
 
 interface Props {
-  projects: Project[] | null;
-  packs: PackSummary[] | null;
-  health: Map<string, AppHealth>;
-  homeDir: string | null;
-  error: string | null;
-  actions: CardActions;
-  query: string;
-  onQuery: (query: string) => void;
-  searchRef: React.RefObject<HTMLInputElement | null>;
-  filter?: ListFilter | null;
-  tabs: ReactNode;
-  headActions?: ReactNode;
+  readonly projects: Project[] | null;
+  readonly packs: PackSummary[] | null;
+  readonly health: Map<string, AppHealth>;
+  readonly homeDir: string | null;
+  readonly error: string | null;
+  readonly actions: CardActions;
+  readonly query: string;
+  readonly onQuery: (query: string) => void;
+  readonly searchRef: React.RefObject<HTMLInputElement | null>;
+  readonly filter?: ListFilter | null;
+  readonly tabs: ReactNode;
+  readonly headActions?: ReactNode;
 }
 
 function ProjectListTools({
@@ -503,12 +502,12 @@ function ProjectListTools({
   onOpenFirst,
   canOpen,
 }: {
-  query: string;
-  onQuery: (query: string) => void;
-  searchRef: React.RefObject<HTMLInputElement | null>;
-  onFirst: () => void;
-  onOpenFirst: () => void;
-  canOpen: boolean;
+  readonly query: string;
+  readonly onQuery: (query: string) => void;
+  readonly searchRef: React.RefObject<HTMLInputElement | null>;
+  readonly onFirst: () => void;
+  readonly onOpenFirst: () => void;
+  readonly canOpen: boolean;
 }) {
   const { homeSort } = useUi();
 
@@ -633,9 +632,9 @@ function useHomeView() {
 }
 
 export interface ListFilter {
-  label: string;
-  onClear: () => void;
-  empty?: string;
+  readonly label: string;
+  readonly onClear: () => void;
+  readonly empty?: string;
 }
 
 function ProjectListStates({
@@ -646,12 +645,12 @@ function ProjectListStates({
   shownCount,
   onClearQuery,
 }: {
-  projects: Project[] | null;
-  error: string | null;
-  filter: ListFilter | null;
-  query: string;
-  shownCount: number;
-  onClearQuery: () => void;
+  readonly projects: Project[] | null;
+  readonly error: string | null;
+  readonly filter: ListFilter | null;
+  readonly query: string;
+  readonly shownCount: number;
+  readonly onClearQuery: () => void;
 }) {
   return (
     <>

@@ -18,8 +18,8 @@ export function StarterGallery({
   disabled,
   onPick,
 }: {
-  disabled: boolean;
-  onPick: (starter: Starter) => Promise<void>;
+  readonly disabled: boolean;
+  readonly onPick: (starter: Starter) => Promise<void>;
 }) {
   const [starters, setStarters] = useState<Starter[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -107,8 +107,8 @@ export function FirstRunPanel({
   onClose,
   onSample,
 }: {
-  onClose: () => void;
-  onSample: () => Promise<void>;
+  readonly onClose: () => void;
+  readonly onSample: () => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

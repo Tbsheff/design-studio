@@ -29,8 +29,8 @@ export function ComposerAlert({
   children,
   onClose,
 }: {
-  children: ReactNode;
-  onClose: () => void;
+  readonly children: ReactNode;
+  readonly onClose: () => void;
 }) {
   return (
     <div className="alert error composer-alert" role="alert">
@@ -48,14 +48,14 @@ export function ComposerAlert({
 }
 
 export interface ImageDraft {
-  id: string;
-  file: File;
-  url: string;
+  readonly id: string;
+  readonly file: File;
+  readonly url: string;
 }
 
 export interface ReferenceDraft {
-  url: string;
-  host: string;
+  readonly url: string;
+  readonly host: string;
 }
 
 export function soleUrl(text: string): ReferenceDraft | null {
@@ -85,11 +85,11 @@ export function ComposerChips({
   onRemoveImage,
   onRemoveReference,
 }: {
-  lead?: ReactNode;
-  images: ImageDraft[];
-  references: ReferenceDraft[];
-  onRemoveImage: (id: string) => void;
-  onRemoveReference: (url: string) => void;
+  readonly lead?: ReactNode;
+  readonly images: ImageDraft[];
+  readonly references: ReferenceDraft[];
+  readonly onRemoveImage: (id: string) => void;
+  readonly onRemoveReference: (url: string) => void;
 }) {
   if (!lead && images.length === 0 && references.length === 0) {
     return null;

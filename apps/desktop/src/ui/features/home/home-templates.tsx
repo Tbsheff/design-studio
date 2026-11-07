@@ -5,12 +5,12 @@ import type { ReactNode } from "react";
 import { api } from "../../api.js";
 
 export interface HomeTemplate {
-  id: string;
-  label: string;
-  prompt: string;
-  starterId?: string;
-  kind?: ProjectKind;
-  level?: RunLevel;
+  readonly id: string;
+  readonly label: string;
+  readonly prompt: string;
+  readonly starterId?: string;
+  readonly kind?: ProjectKind;
+  readonly level?: RunLevel;
 }
 
 const S = {
@@ -27,7 +27,7 @@ const mark = {
   stroke: "none",
 } as const;
 
-function Art({ children }: { children: ReactNode }) {
+function Art({ children }: { readonly children: ReactNode }) {
   return (
     <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true" {...S}>
       {children}
@@ -236,9 +236,9 @@ export function HomeTemplateGrid({
   disabled,
   onPick,
 }: {
-  selected: string | null;
-  disabled: boolean;
-  onPick: (template: HomeTemplate, starter: Starter | null) => void;
+  readonly selected: string | null;
+  readonly disabled: boolean;
+  readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
 }) {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {

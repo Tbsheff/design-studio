@@ -8,15 +8,15 @@ import { desktopBridge } from "../../platform/desktop.js";
 export type RunMode = "start" | "url";
 
 export interface AppChip {
-  path: string;
-  inspection: FolderInspection | null;
-  checking: boolean;
-  error: string | null;
-  appDir: string | null;
-  mode: RunMode;
-  url: string;
-  env: string;
-  nonce: number;
+  readonly path: string;
+  readonly inspection: FolderInspection | null;
+  readonly checking: boolean;
+  readonly error: string | null;
+  readonly appDir: string | null;
+  readonly mode: RunMode;
+  readonly url: string;
+  readonly env: string;
+  readonly nonce: number;
 }
 
 const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
@@ -36,7 +36,7 @@ export function chipProblem(chip: AppChip | null): string | null {
 
 export function chipBlocker(
   chip: AppChip | null
-): { command: string; dir: string } | null {
+): { readonly command: string; readonly dir: string } | null {
   const found = chip?.inspection;
 
   if (
@@ -86,12 +86,12 @@ function chipLabel(chip: AppChip): string {
 }
 
 interface DropBridge {
-  pathForFile?: (file: File) => string;
+  readonly pathForFile?: (file: File) => string;
 }
 
 export function droppedFolder(
   data: DataTransfer
-): { path: string } | { unsupported: true } | null {
+): { readonly path: string } | { readonly unsupported: true } | null {
   for (const item of Array.from(data.items)) {
     if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
       continue;
@@ -183,10 +183,10 @@ export function AppChipView({
   onMenu,
   onRemove,
 }: {
-  chip: AppChip;
-  menuOpen: boolean;
-  onMenu: () => void;
-  onRemove: () => void;
+  readonly chip: AppChip;
+  readonly menuOpen: boolean;
+  readonly onMenu: () => void;
+  readonly onRemove: () => void;
 }) {
   const name = chipName(chip);
   const bad = chipProblem(chip) !== null || chipBlocker(chip) !== null;

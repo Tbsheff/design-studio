@@ -111,15 +111,15 @@ function homeSendBlocker(
 }
 
 interface HomeCreateInput {
-  prompt: string;
-  kind: ProjectKind;
-  settings: ProjectSettings;
-  designMd: string;
-  packId: string | null;
-  designCount: number;
-  location: string | null;
-  images: ImageDraft[];
-  references: ReferenceDraft[];
+  readonly prompt: string;
+  readonly kind: ProjectKind;
+  readonly settings: ProjectSettings;
+  readonly designMd: string;
+  readonly packId: string | null;
+  readonly designCount: number;
+  readonly location: string | null;
+  readonly images: ImageDraft[];
+  readonly references: ReferenceDraft[];
 }
 
 async function createFromHome(input: HomeCreateInput): Promise<Project> {
@@ -210,6 +210,32 @@ function shortHome(target: string, homeDir: string | null): string {
   return shortenHome(target.replace(/^\/private(?=\/)/u, ""), homeDir);
 }
 
+interface DesignCount {
+  readonly value: number;
+  readonly max: number;
+  readonly onChange: (count: number) => void;
+}
+
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+interface KeyedFlag {
+  readonly key: string;
+  readonly on: boolean;
+}
+
+interface KeyedUrl {
+  readonly key: string;
+  readonly url: string;
+}
+
+interface StarProps {
+  readonly filled: boolean;
+  readonly size?: number;
+}
+
 export {
   PLACEHOLDER,
   focusPrompt,
@@ -231,4 +257,13 @@ export {
   createFromHome,
 };
 
-export type { Pop, Busy, HomeCreateInput };
+export type {
+  Pop,
+  Busy,
+  HomeCreateInput,
+  DesignCount,
+  KeyedFlag,
+  KeyedUrl,
+  Point,
+  StarProps,
+};

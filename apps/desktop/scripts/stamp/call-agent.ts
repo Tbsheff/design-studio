@@ -1,100 +1,18 @@
-import { createRequire, syncBuiltinESMExports } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import type { tool } from "@anthropic-ai/claude-agent-sdk";
-
 import { WORKSPACE_ROOT } from "../workspace-root.ts";
-import { firstText, parseText, timed } from "./call-types.js";
-import type {
-  CallableAction,
-  Context,
-  Fields,
-  SurfaceResult,
-  TextResult,
-} from "./call-types.js";
-
-interface SpawnResult {
-  readonly pid?: number;
-}
-
-type SpawnFn = (command: string, ...rest: readonly Fields[]) => SpawnResult;
-
-type SpawnKey =
-  | "exec"
-  | "execFile"
-  | "execFileSync"
-  | "execSync"
-  | "spawn"
-  | "spawnSync";
-
-type ChildProcessModule = Record<SpawnKey, SpawnFn>;
-
-interface Counter {
-  count: number;
-}
-
-interface SpawnCounter {
-  readonly read: () => number;
-  readonly stop: () => void;
-}
-
-interface HandlerExtra {
-  readonly signal?: AbortSignal;
-}
-
-interface AgentTool {
-  readonly handler: (args: Fields, extra: HandlerExtra) => Promise<TextResult>;
-  readonly name: string;
-}
-
-interface StudioRuntimeHandle {
-  readonly dispose: () => Promise<void>;
-}
-
-type CallById = (action: CallableAction, args: Fields) => Promise<TextResult>;
-
-interface StudioConfigHandle {
-  readonly agentMode: string;
-}
-
-interface ConfigModule {
-  readonly loadConfig: () => StudioConfigHandle;
-}
-
-interface RuntimeModule {
-  readonly buildRuntime: (config: StudioConfigHandle) => StudioRuntimeHandle;
-  readonly disposeRuntime: (runtime: StudioRuntimeHandle) => Promise<void>;
-}
-
-interface McpRegistryModule {
-  readonly actionCaller: (runtime: StudioRuntimeHandle) => CallById | null;
-}
-
-interface AgentRegistryModule {
-  readonly buildAgentTools: (
-    call: CallById | null,
-    toolFn: typeof tool
-  ) => AgentTool[];
-}
-
-interface LoadedAgent {
-  readonly dispose: () => Promise<void>;
-  readonly tools: readonly AgentTool[];
-}
+import { firstText, parseText, timed, TOKEN_HEADER } from "./call-types.js";
+import type { Context, SurfaceResult, TextResult } from "./call-types.js";
 
 const ROOT = WORKSPACE_ROOT;
 
-const GIT_NAME = /(?:^|[\\/])git(?:\.exe)?$/u;
+const NOT_FOUND = 404;
 
-const SPAWN_KEYS: readonly SpawnKey[] = [
-  "exec",
-  "execFile",
-  "execFileSync",
-  "execSync",
-  "spawn",
-  "spawnSync",
-];
+const AGENT_TOOL_ROUTE = "/api/agent-tools/";
+
+const NO_ROUTE =
+  "the studio has no agent tool route. Start it with STUDIO_AGENT=mock, then run call-action again";
 
 const importSource = async <Module>(relative: string): Promise<Module> => {
   const loaded = (await import(
@@ -104,90 +22,35 @@ const importSource = async <Module>(relative: string): Promise<Module> => {
   return loaded;
 };
 
-const countingSpawn =
-  (original: SpawnFn, counter: Counter): SpawnFn =>
-  (command, ...rest) => {
-    if (GIT_NAME.test(String(command))) {
-      counter.count += 1;
-    }
-
-    return original(command, ...rest);
-  };
-
-const countGitSpawns = (): SpawnCounter => {
-  const require = createRequire(import.meta.url);
-  const childProcess = require("node:child_process") as ChildProcessModule;
-  const originals = SPAWN_KEYS.map((key) => [key, childProcess[key]] as const);
-  const counter: Counter = { count: 0 };
-
-  for (const [key, original] of originals) {
-    childProcess[key] = countingSpawn(original, counter);
-  }
-
-  syncBuiltinESMExports();
-
-  const stop = (): void => {
-    for (const [key, original] of originals) {
-      childProcess[key] = original;
-    }
-
-    syncBuiltinESMExports();
-  };
-
-  return { read: () => counter.count, stop };
-};
-
-const loadAgentTools = async (): Promise<LoadedAgent> => {
-  const runtimeModule = await importSource<RuntimeModule>(
-    "apps/desktop/src/server/main/runtime.ts"
-  );
-
-  const configModule = await importSource<ConfigModule>(
-    "apps/desktop/src/server/platform/config/index.ts"
-  );
-
-  const mcpRegistry = await importSource<McpRegistryModule>(
-    "apps/desktop/src/server/mcp/registry.ts"
-  );
-
-  const agentRegistry = await importSource<AgentRegistryModule>(
-    "apps/desktop/src/server/agent-tools/registry.ts"
-  );
-
-  const sdk = await import("@anthropic-ai/claude-agent-sdk");
-  const runtime = runtimeModule.buildRuntime(configModule.loadConfig());
-
-  const tools = agentRegistry.buildAgentTools(
-    mcpRegistry.actionCaller(runtime),
-    sdk.tool
-  );
-
-  const dispose = (): Promise<void> => runtimeModule.disposeRuntime(runtime);
-
-  return { dispose, tools };
-};
-
 const runAgentTool = async (
-  tools: readonly AgentTool[],
-  name: string,
-  counter: SpawnCounter,
-  input: Fields
-): Promise<SurfaceResult> => {
-  const found = tools.find((entry) => entry.name === name);
+  context: Context,
+  name: string
+): Promise<TextResult> => {
+  const res = await fetch(
+    `${context.base}${AGENT_TOOL_ROUTE}${encodeURIComponent(name)}`,
+    {
+      body: JSON.stringify({ args: context.input }),
+      headers: new Headers([
+        ["content-type", "application/json"],
+        [TOKEN_HEADER, context.token],
+      ]),
+      method: "POST",
+    }
+  );
 
-  if (!found) {
-    return { reason: `agent registry has no tool ${name}`, surface: "agent" };
+  if (res.status === NOT_FOUND) {
+    throw new Error(NO_ROUTE);
   }
 
-  const timing = await timed(() => found.handler(input, {}));
+  if (!res.ok) {
+    throw new Error(
+      `the agent tool route answered ${res.status}: ${await res.text()}`
+    );
+  }
 
-  return {
-    isError: timing.value.isError === true,
-    ms: timing.ms,
-    output: parseText(firstText(timing.value)),
-    spawns: counter.read(),
-    surface: "agent",
-  };
+  const reply = (await res.json()) as TextResult;
+
+  return reply;
 };
 
 const callAgent = async (context: Context): Promise<SurfaceResult> => {
@@ -197,15 +60,15 @@ const callAgent = async (context: Context): Promise<SurfaceResult> => {
     return { reason: `agent binding is off (${off})`, surface: "agent" };
   }
 
-  const counter = countGitSpawns();
-  const { dispose, tools } = await loadAgentTools();
+  const timing = await timed(() => runAgentTool(context, name));
 
-  try {
-    return await runAgentTool(tools, name, counter, context.input);
-  } finally {
-    counter.stop();
-    await dispose();
-  }
+  return {
+    isError: timing.value.isError === true,
+    ms: timing.ms,
+    output: parseText(firstText(timing.value)),
+    spawns: null,
+    surface: "agent",
+  };
 };
 
 export { callAgent, importSource };

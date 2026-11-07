@@ -52,6 +52,7 @@ const registerAppMcpRoutes = (
     keepVariant: variations.keepVariant,
     layerLocks: ctx.layerLocks ?? null,
     listener: ctx.mcpListener,
+    isAgentToolOpen: config.agentMode === "mock",
     ...(runtime === null ? {} : { runtime }),
   });
   slot.routes = mcpRoutes;
@@ -63,6 +64,7 @@ const registerAppMcpRoutes = (
       track: ctx.streamTracker,
     });
   }
+
   return mcpRoutes;
 };
 

@@ -156,15 +156,17 @@ const report = (
   answered: readonly string[]
 ): boolean => {
   const failed = results.filter((result) => "error" in result).length;
-  const diffs = diffOutcomes(results.filter((result) => isOutcome(result)));
-  const isFailed = diffs.length + failed > 0;
+  const outcomes = results.filter((result) => isOutcome(result));
+  const errors = outcomes.filter((outcome) => outcome.isError).length;
+  const diffs = diffOutcomes(outcomes);
+  const isFailed = diffs.length + failed + errors > 0 || outcomes.length === 0;
   const verdict = (isFailed && "fail") || "pass";
 
   const lines = [
     ...results.map((result) => formatResult(result)),
     ...diffs,
     `answered approval cards: ${answered.join(", ") || "none"}`,
-    `call-action: ${verdict}, ${diffs.length} diffs, ${failed} failed surfaces`,
+    `call-action: ${verdict}, ${outcomes.length} surfaces ran, ${diffs.length} diffs, ${failed} failed surfaces, ${errors} error results`,
   ];
 
   if (isFailed) {
@@ -188,7 +190,7 @@ const main = async (): Promise<void> => {
   const approver = startApprover(context);
 
   process.stdout.write(
-    `call-action ${action.id} on ${base}. The agent path runs in this process on the STUDIO_DATA_DIR of this shell.\n\n`
+    `call-action ${action.id} on ${base}. The agent path runs in the studio through its agent tool route (STUDIO_AGENT=mock). The MCP path reads its token from the STUDIO_DATA_DIR of this shell.\n\n`
   );
 
   const results = await callSurfaces(context);

@@ -13,6 +13,7 @@ import {
   createApprovalQueue,
   createCloudIntrospect,
   createMcpService,
+  runAgentTool,
 } from "../mcp/index.js";
 import type { ActivityLog, FixApp } from "../mcp/index.js";
 import { warmUpstream } from "../preview/warm-upstream.js";
@@ -34,7 +35,10 @@ interface McpRouteDeps extends ExportDeps {
   fixApp: FixApp;
   keepVariant: KeepVariant;
   layerLocks: LayerLockStore | null;
+  isAgentToolOpen: boolean;
 }
+
+const AGENT_TOOL_PATH = "/api/agent-tools/:name";
 
 function warmAfterEdits(deps: McpRouteDeps): void {
   onSourceChange((change) => {
@@ -70,13 +74,31 @@ function warmAfterEdits(deps: McpRouteDeps): void {
   });
 }
 
+const createAgentToolRoute = (app: Hono, deps: McpRouteDeps): void => {
+  const { runtime } = deps;
+
+  if (!runtime || !deps.isAgentToolOpen) {
+    return;
+  }
+
+  app.post(AGENT_TOOL_PATH, async (context) =>
+    context.json(
+      await runAgentTool(
+        runtime,
+        context.req.param("name"),
+        await context.req.json()
+      )
+    )
+  );
+};
+
 export interface ApprovalFeed {
   snapshot(): Promise<McpApprovalPoll>;
   watch(onChange: () => void): () => void;
 }
 
 export function registerMcpRoutes(
-  _app: Hono,
+  app: Hono,
   deps: McpRouteDeps
 ): { activity: ActivityLog; approvalFeed: ApprovalFeed } {
   const approvals = createApprovalQueue({
@@ -149,6 +171,8 @@ export function registerMcpRoutes(
     mcp,
     onSettingsChanged: settingsChanged,
   });
+
+  createAgentToolRoute(app, deps);
 
   return { activity, approvalFeed };
 }

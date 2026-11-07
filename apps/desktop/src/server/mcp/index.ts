@@ -1,5 +1,7 @@
 export { createActivityLog } from "./activity.js";
 
+export { runAgentTool } from "./agent-call.js";
+
 export { createApprovalQueue } from "./approvals.js";
 
 export { createCloudIntrospect } from "./key-introspect.js";

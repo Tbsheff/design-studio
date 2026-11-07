@@ -1,3 +1,7 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+import { importSource } from "./call-agent.js";
 import { firstText, parseText, studioJson, timed } from "./call-types.js";
 import type {
   Context,
@@ -34,7 +38,22 @@ interface RpcReply {
   readonly result?: TextResult;
 }
 
-const BEARER = /Bearer (?<token>[^"\s]+)/u;
+interface StudioConfigHandle {
+  readonly dataDir: string;
+}
+
+interface ConfigModule {
+  readonly loadConfig: () => StudioConfigHandle;
+}
+
+interface McpSettingsFile {
+  readonly token?: string;
+}
+
+const MCP_SETTINGS = "mcp.json";
+
+const NO_TOKEN =
+  "the MCP token is not in mcp.json of this STUDIO_DATA_DIR. Run call-action with the STUDIO_DATA_DIR of the studio";
 
 const PROTOCOL = "2025-06-18";
 
@@ -79,11 +98,33 @@ const restoreMcp = async (context: Context, restore: Fields): Promise<void> => {
   }
 };
 
-const mcpTarget = (status: McpStatus): McpTarget => {
-  const token = BEARER.exec(status.command ?? "")?.groups?.token ?? "";
+const getMcpToken = async (): Promise<string> => {
+  const config = await importSource<ConfigModule>(
+    "apps/desktop/src/server/platform/config/index.ts"
+  );
 
-  if (status.url === null || token === "") {
-    throw new Error("the studio MCP server gave no url or token");
+  const file = path.join(config.loadConfig().dataDir, MCP_SETTINGS);
+
+  try {
+    const settings = JSON.parse(
+      await readFile(file, "utf-8")
+    ) as McpSettingsFile;
+
+    return settings.token ?? "";
+  } catch {
+    return "";
+  }
+};
+
+const mcpTarget = async (status: McpStatus): Promise<McpTarget> => {
+  if (status.url === null) {
+    throw new Error("the studio MCP server gave no url");
+  }
+
+  const token = await getMcpToken();
+
+  if (token === "") {
+    throw new Error(NO_TOKEN);
   }
 
   return { token, url: status.url };
@@ -112,7 +153,7 @@ const postRpc = (
 };
 
 const openSession = async (status: McpStatus): Promise<McpSession> => {
-  const target = mcpTarget(status);
+  const target = await mcpTarget(status);
 
   const res = await postRpc(target, "", {
     id: 1,
@@ -143,6 +184,12 @@ const runMcpTool = async (
     method: "tools/call",
     params: { arguments: input, name },
   });
+
+  if (!res.ok) {
+    throw new Error(
+      `MCP tools/call answered ${res.status}: ${await res.text()}`
+    );
+  }
 
   const reply = (await res.json()) as RpcReply;
 

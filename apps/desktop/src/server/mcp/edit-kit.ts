@@ -174,7 +174,7 @@ export function versionActivity(
 }
 
 export async function pageUrl(
-  deps: EditDeps,
+  deps: Pick<EditDeps, "preview">,
   project: Project,
   direction: Project["directions"][number],
   page: string | undefined

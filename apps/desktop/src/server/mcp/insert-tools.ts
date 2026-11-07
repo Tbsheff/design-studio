@@ -115,7 +115,7 @@ export interface TargetInput {
 }
 
 export async function targetOf(
-  deps: EditDeps,
+  deps: Pick<EditDeps, "preview">,
   project: Project,
   direction: Direction,
   input: TargetInput

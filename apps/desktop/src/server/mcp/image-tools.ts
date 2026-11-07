@@ -39,7 +39,7 @@ import {
   type Done,
 } from "./edit-kit.js";
 
-export const SET_IMAGE_DESCRIPTION =
+const SET_IMAGE_DESCRIPTION =
   'Place or change an image, like the Image section of the studio inspector. On an <img> it copies the file into the project (the app public/ folder for Next and Vite, assets/ for HTML) with a content-hashed name and writes src (srcset is removed), alt, fit (object-fit) and focal (object-position). On an element with a background image it writes background-image, background-size and background-position. On any other element it inserts a new <img> inside it (position "after" puts it after). In a Tailwind file fit and focal become classes (object-cover, object-[50%_30%]). One version and one undo step. url must be https, at most 10 MB, and an image content type; path is a local image file. src from a data expression such as {item.image} is refused with a reason.';
 
 const schema = z
@@ -157,10 +157,10 @@ async function tagAt(file: string, line: number, col: number): Promise<string> {
 }
 
 async function targetFor(
-  deps: EditDeps,
+  deps: Pick<EditDeps, "preview">,
   project: Project,
   direction: Direction,
-  input: Input
+  input: Pick<Input, "page" | "selector" | "source">
 ): Promise<SetImageRequest["target"]> {
   if (input.source) {
     const source = await resolveSourceLoc(
@@ -280,4 +280,6 @@ const setImage = defineTool(
   }
 );
 
-export const IMAGE_TOOLS = [setImage];
+const IMAGE_TOOLS = [setImage];
+
+export { IMAGE_TOOLS, SET_IMAGE_DESCRIPTION, targetFor };

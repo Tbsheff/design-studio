@@ -2,6 +2,7 @@ import { Option, Schema } from "effect";
 import type { JsonSchema } from "effect";
 
 import type { WireArgs } from "../handlers/_core/run-action.js";
+import { toLegacyTargetFields } from "./legacy-target-schema.js";
 
 type LegacyArgs = WireArgs;
 
@@ -11,6 +12,9 @@ interface LegacyTool {
 }
 
 const ALIASES = {
+  create_text_style: { targetSelector: "selector" },
+  detach_text_style: { targetSelector: "selector" },
+  inspect_accessibility: { targetSelector: "selector" },
   keep_links: { linkIds: "ids" },
   set_frame_session: { forgetCookies: "forget" },
 } as const;
@@ -105,8 +109,10 @@ const DIRECTION_TOOLS: ReadonlySet<string> = new Set([
   "add_flow",
   "add_link",
   "keep_links",
+  "list_link_interactions",
   "list_links",
   "remove_link",
+  "set_link_interaction",
   "set_start_frame",
 ]);
 
@@ -118,6 +124,13 @@ const LINK_IDS_PROPERTY = {
   type: "array",
 } satisfies Schema.Json;
 
+const TARGET_SELECTOR_PROPERTY = {
+  description: "CSS selector or layer id of the element.",
+  maxLength: 2000,
+  minLength: 1,
+  type: "string",
+} satisfies Schema.Json;
+
 const FORGET_PROPERTY = {
   description: "Forget the cookies kept from a real sign-in.",
   type: "boolean",
@@ -126,6 +139,7 @@ const FORGET_PROPERTY = {
 const ALIAS_PROPERTIES = {
   forgetCookies: FORGET_PROPERTY,
   linkIds: LINK_IDS_PROPERTY,
+  targetSelector: TARGET_SELECTOR_PROPERTY,
 } satisfies Record<string, Schema.Json>;
 
 const toAliasProperty = (alias: string): Schema.Json =>
@@ -203,8 +217,7 @@ const toLegacySchema = (
 
   const hidden = toHiddenKeys(name);
 
-  return {
-    ...schema,
+  const legacy = toLegacyTargetFields(name, {
     properties: {
       ...toExtraProperties(name, takesDirection),
       ...Object.fromEntries(
@@ -214,7 +227,9 @@ const toLegacySchema = (
       ),
     },
     required: fields.value.required.filter((key) => !optional.has(key)),
-  };
+  });
+
+  return { ...schema, ...legacy };
 };
 
 export { toLegacyArgs, toLegacySchema };

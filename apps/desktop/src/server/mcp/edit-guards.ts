@@ -58,7 +58,7 @@ const requireProjectInScope = async (projectId: string): Promise<void> => {
 };
 
 export async function loadTarget(
-  deps: EditDeps,
+  deps: Pick<ExportDeps, "projects">,
   projectId: string,
   directionId?: string
 ): Promise<{ project: Project; direction: Direction }> {

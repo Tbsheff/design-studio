@@ -27,7 +27,11 @@ export {
   resolveImport,
 } from "./props-schema.js";
 
+export { planImports } from "./import-plan.js";
+
 export { bundleGallery } from "./preview-bundle.js";
+
+export type { ImportNeed } from "./import-plan.js";
 
 export type {
   ComponentPreviews,

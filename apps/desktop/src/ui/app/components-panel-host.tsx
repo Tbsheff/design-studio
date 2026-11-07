@@ -1,8 +1,13 @@
-import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
 import type { ComponentProps, ReactElement } from "react";
 
 import { ComponentsPanel as FeatureComponentsPanel } from "../features/design-system/components-panel.js";
 import { GalleryHost } from "../features/gallery/gallery-host.js";
+import {
+  PatternPanel,
+  PatternTabs,
+  useInsertTab,
+} from "../features/pattern/index.js";
 
 type PanelProps = Omit<
   ComponentProps<typeof FeatureComponentsPanel>,
@@ -35,17 +40,35 @@ const ComponentsPanel = ({
     [directionId, projectId, selection]
   );
 
+  const insert = useInsertTab();
+
   return (
-    <FeatureComponentsPanel
-      projectId={projectId}
-      directionId={directionId}
-      list={list}
-      active={active}
-      onMention={onMention}
-      kind={kind}
-      selection={selection}
-      renderGallery={renderGallery}
-    />
+    <>
+      <Suspense fallback={null}>
+        <PatternTabs onSelect={insert.select} tab={insert.tab} />
+      </Suspense>
+      {insert.tab === "patterns" ? (
+        <Suspense fallback={null}>
+          <PatternPanel
+            directionId={directionId}
+            kind={kind}
+            projectId={projectId}
+            selection={selection}
+          />
+        </Suspense>
+      ) : (
+        <FeatureComponentsPanel
+          projectId={projectId}
+          directionId={directionId}
+          list={list}
+          active={active}
+          onMention={onMention}
+          kind={kind}
+          selection={selection}
+          renderGallery={renderGallery}
+        />
+      )}
+    </>
   );
 };
 

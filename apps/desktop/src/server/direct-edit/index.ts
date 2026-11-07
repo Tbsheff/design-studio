@@ -28,6 +28,8 @@ export {
 
 export type { ImageBytes } from "./commit/image-source.js";
 
+export { resolveTarget, seenImports } from "./components-ops/insert.js";
+
 export type { InsertScope } from "./components-ops/insert.js";
 
 export { savesSettled } from "./commit/save-queue.js";
@@ -136,3 +138,15 @@ export type {
   ImageSearchWriterApi,
   InsertImageSearchCommand,
 } from "../image-search/index.js";
+
+export { PatternStore, PatternWriter } from "../pattern/index.js";
+
+export type {
+  CreatePatternCommand,
+  InsertPatternCommand,
+  PatternDeleted,
+  PatternInserted,
+  PatternStoreApi,
+  PatternWriterApi,
+  StoredPattern,
+} from "../pattern/index.js";

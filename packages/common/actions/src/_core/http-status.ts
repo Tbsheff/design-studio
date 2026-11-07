@@ -15,6 +15,7 @@ import { ImageStatus } from "../image/errors/status.js";
 import { MotionStatus } from "../motion/errors/status.js";
 import { PackStatus } from "../pack/errors/status.js";
 import { PageStatus } from "../page/errors/status.js";
+import { PatternStatus } from "../pattern/errors/status.js";
 import { PropStatus } from "../prop/errors/status.js";
 import { PublishStatus } from "../publish/errors/status.js";
 import { ScenarioStatus } from "../scenario/errors/status.js";
@@ -47,6 +48,7 @@ const HTTP_STATUS = {
   ...MotionStatus,
   ...PackStatus,
   ...PageStatus,
+  ...PatternStatus,
   ...PropStatus,
   ...PublishStatus,
   ...ScenarioStatus,

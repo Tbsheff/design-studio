@@ -52,6 +52,7 @@ import type { EditHistory } from "../direct-edit/commit/index.js";
 import { onPlannedEdit, toEditEvent } from "../events/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
+import { insertPatternNames } from "../pattern/index.js";
 import { REPO_ROOT } from "../platform/config/index.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
@@ -442,9 +443,7 @@ const createAppContext = (deps: AppDeps) => {
     const repoContext = await (
       isLeanRun(request)
         ? leanContext(project, direction.workTree, request.selection)
-        : loadRepoContext(project, direction.workTree).then(
-            (state) => state.text
-          )
+        : insertPatternNames(loadRepoContext(project, direction.workTree))
     ).catch((error: unknown) => {
       console.error("[http] repo context load failed", error);
 

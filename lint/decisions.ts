@@ -505,9 +505,27 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/server/grid/{deps,grid-failure,grid-run,grid-store,grid-writer}.ts",
       "apps/desktop/src/server/grid/engine/deps.ts",
       "apps/desktop/src/ui/features/grid/deps.ts",
+      "apps/desktop/src/ui/features/pattern/deps.ts",
       "apps/desktop/src/ui/features/inspector/grid-section.tsx",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
+      "packages/common/actions/src/pattern/{create,delete,get,insert,list,schema}.ts",
+      "packages/common/actions/src/pattern/errors/status.ts",
+      "apps/desktop/src/server/handlers/pattern/{create,delete,get,handlers,insert,list,live}.ts",
+      "apps/desktop/src/server/pattern/deps.ts",
+      "apps/desktop/src/server/pattern/engine/deps.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
+      "apps/desktop/src/server/pattern/engine/{convert,scan}.ts",
+      "apps/desktop/src/server/pattern/{pattern-capture,pattern-imports,snippet-parse}.ts",
+    ],
+    rules: { "sonarjs/no-implicit-dependencies": "off" },
   },
   {
     files: [

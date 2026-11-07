@@ -22,6 +22,7 @@ import { MotionEntries } from "./motion/handlers.js";
 import { OrgScopeEntries } from "./org-scope/handlers.js";
 import { PackEntries } from "./pack/handlers.js";
 import { PageEntries } from "./page/handlers.js";
+import { PatternEntries } from "./pattern/handlers.js";
 import { ProjectEntries } from "./project/handlers.js";
 import { PropEntries } from "./prop/handlers.js";
 import { PublishEntries } from "./publish/handlers.js";
@@ -65,6 +66,7 @@ const ALL_ENTRIES = {
   orgScope: OrgScopeEntries,
   pack: PackEntries,
   page: PageEntries,
+  pattern: PatternEntries,
   project: ProjectEntries,
   prop: PropEntries,
   publish: PublishEntries,

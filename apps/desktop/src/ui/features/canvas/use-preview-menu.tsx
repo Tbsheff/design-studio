@@ -27,6 +27,7 @@ import {
   structureMenuItems,
 } from "../inspector/structure-edits.js";
 import { requestAuthoredCss } from "../inspector/use-authored-css.js";
+import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { PreviewMenu } from "./preview-menu.js";
@@ -254,6 +255,15 @@ export function usePreviewMenu(o: Options) {
     projectId: o.ids.projectId,
   });
 
+  const patterns = usePatternHost({
+    busy: o.edits.busy,
+    directionId,
+    enabled: o.edits.enabled,
+    isReact: o.ids.kind === "react",
+    notify: o.edits.notify,
+    projectId: o.ids.projectId,
+  });
+
   const dialog =
     creating && directionId ? (
       <Suspense fallback={null}>
@@ -272,6 +282,7 @@ export function usePreviewMenu(o: Options) {
           ...icons.items(item),
           ...photos.items(item),
           ...props.items(item),
+          ...patterns.items(item),
         ])
       : [];
 
@@ -303,6 +314,17 @@ export function usePreviewMenu(o: Options) {
             layer={props.opened.layer}
             target={props.opened.target}
             onClose={props.close}
+            onDone={o.edits.notify}
+          />
+        </Suspense>
+      ) : null}
+      {patterns.opened && directionId ? (
+        <Suspense fallback={null}>
+          <PatternSlot
+            directionId={directionId}
+            projectId={o.ids.projectId}
+            target={patterns.opened}
+            onClose={patterns.close}
             onDone={o.edits.notify}
           />
         </Suspense>

@@ -16,7 +16,7 @@ const VectorSection = (props: InspectorProps) => {
         projectId={props.projectId}
         directionId={props.directionId}
         selection={props.selection}
-        editable={props.editable}
+        isEditable={props.isEditable}
       />
     </Suspense>
   );

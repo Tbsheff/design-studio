@@ -65,7 +65,7 @@ const useCanvasEdits = (
   useCanvasVectorTools(editsEnabled, protoOn, draw, comment);
   useImageDrop({
     directionId,
-    enabled: editsEnabled,
+    isEnabled: editsEnabled,
     frames,
     kind,
     notify: layerEdits.notify,
@@ -150,7 +150,7 @@ const useCanvasEdits = (
 
   useElementNudge({
     directionId,
-    enabled: handlesOn,
+    isEnabled: handlesOn,
     listen: frames.listen,
     onError: layerEdits.notify,
     post: frames.post,

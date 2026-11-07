@@ -48,12 +48,12 @@ const breakpointsOf = (support: VariantSupport | null) => {
 
 const Chip = ({
   label,
-  pressed,
+  isPressed: pressed,
   tip,
   onClick,
 }: {
   readonly label: string;
-  readonly pressed: boolean;
+  readonly isPressed: boolean;
   readonly tip: string;
   readonly onClick: () => void;
 }) => (
@@ -165,14 +165,14 @@ const InspectorVariantBarView = ({
           <Chip
             key={state.id}
             label={state.label}
-            pressed={current.states.includes(state.id)}
+            isPressed={current.states.includes(state.id)}
             tip={`${state.label} state. The frame shows the element as if ${state.id === "hover" ? "hovered" : state.id === "focus" ? "focused" : "pressed"}`}
             onClick={() => toggleState(state.id)}
           />
         ))}
         <Chip
           label="Dark"
-          pressed={current.dark}
+          isPressed={current.dark}
           tip="Dark mode. The frame shows the dark theme"
           onClick={() => choose({ ...current, dark: !current.dark })}
         />

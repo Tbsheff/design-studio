@@ -9,7 +9,7 @@ const isPlain = (value: unknown): value is Bag =>
   value !== null &&
   Object.getPrototypeOf(value) === Object.prototype;
 
-const sameList = (a: unknown, b: unknown): boolean => {
+const isSameList = (a: unknown, b: unknown): boolean => {
   if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
     return false;
   }
@@ -66,7 +66,7 @@ class Stabilizer {
       );
     }
 
-    if (sameList(next, prev)) {
+    if (isSameList(next, prev)) {
       return prev;
     }
 

@@ -20,7 +20,7 @@ const SessionHeader = ({
   return (
     <div className="edit-head">
       <h2 className="edit-title">{copy.editTitle}</h2>
-      {session.dirty && session.net > 0 && (
+      {session.isDirty && session.net > 0 && (
         <span
           className="edit-count"
           role="status"

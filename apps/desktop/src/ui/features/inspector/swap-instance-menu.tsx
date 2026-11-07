@@ -18,7 +18,7 @@ interface Props {
   readonly directionId: string;
   readonly use: SourceLoc;
   readonly onDone: (result: {
-    readonly ok: boolean;
+    readonly isOk: boolean;
     readonly text: string;
   }) => void;
   readonly onClose: () => void;
@@ -69,11 +69,13 @@ export default function SwapInstanceMenu({
       .swap(projectId, directionId, use, { file: item.file, name: item.name })
       .then((result) =>
         onDone({
-          ok: true,
+          isOk: true,
           text: `${result.title}${result.dropped.length > 0 ? `, dropped ${result.dropped.join(", ")}` : ""}`,
         })
       )
-      .catch((error: unknown) => onDone({ ok: false, text: apiMessage(error) }))
+      .catch((error: unknown) =>
+        onDone({ isOk: false, text: apiMessage(error) })
+      )
       .finally(onClose);
   };
 

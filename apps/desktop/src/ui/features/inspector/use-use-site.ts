@@ -37,7 +37,9 @@ const useUseSite = (props: InspectorProps) => {
   return {
     editingUse,
     effective,
-    sharedEditing: shared ? { editingUse, onToggle: toggle, shared } : null,
+    sharedEditing: shared
+      ? { isEditingUse: editingUse, onToggle: toggle, shared }
+      : null,
   };
 };
 

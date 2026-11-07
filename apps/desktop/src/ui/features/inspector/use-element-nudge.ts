@@ -35,7 +35,7 @@ interface Options {
   readonly projectId: string;
   readonly directionId: string | null;
   readonly selection: SelectionContext[];
-  readonly enabled: boolean;
+  readonly isEnabled: boolean;
   readonly post: (body: ParentMessageBody) => void;
   readonly listen: (handler: (message: BridgeToParent) => void) => () => void;
   readonly setSelection: (
@@ -109,7 +109,7 @@ export const nudgeStyle = (b: Step): Record<string, string> => {
   };
 };
 
-const movable = (base: NudgeBase, dx: number, dy: number): boolean => {
+const isMovable = (base: NudgeBase, dx: number, dy: number): boolean => {
   if (base.mode === "position") {
     return true;
   }
@@ -149,7 +149,7 @@ const savedOf = (b: Burst): Saved[] =>
 const OVERLAY_OPEN =
   'dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]';
 
-const picksNew = (
+const shouldPickNew = (
   message: BridgeToParent,
   current: SelectionContext[]
 ): boolean => {
@@ -180,7 +180,7 @@ const keysToCanvas = (): void => {
   }
 };
 
-const blurToCanvas = (event: KeyboardEvent): boolean => {
+const shouldBlurToCanvas = (event: KeyboardEvent): boolean => {
   const focused = document.activeElement;
 
   if (
@@ -215,7 +215,7 @@ const blurToCanvas = (event: KeyboardEvent): boolean => {
   return true;
 };
 
-const takeArrowKeys = (): boolean => {
+const shouldTakeArrowKeys = (): boolean => {
   if (canvasHasKeys()) {
     return true;
   }
@@ -330,7 +330,7 @@ export const useElementNudge = (o: Options): void => {
     const moversFor = (wanted: NudgeItem[]): Mover[] | null => {
       const cur = live.current;
 
-      if (!cur.enabled || !cur.directionId) {
+      if (!cur.isEnabled || !cur.directionId) {
         return null;
       }
 
@@ -387,7 +387,7 @@ export const useElementNudge = (o: Options): void => {
         return;
       }
 
-      if (!current.items.some((item) => movable(item.base, dx, dy))) {
+      if (!current.items.some((item) => isMovable(item.base, dx, dy))) {
         return hintOnce(FLOW_HINT);
       }
 
@@ -413,9 +413,9 @@ export const useElementNudge = (o: Options): void => {
 
     const onKey = (event: KeyboardEvent) => {
       if (
-        live.current.enabled &&
+        live.current.isEnabled &&
         live.current.selection.length > 0 &&
-        blurToCanvas(event)
+        shouldBlurToCanvas(event)
       ) {
         return;
       }
@@ -432,7 +432,11 @@ export const useElementNudge = (o: Options): void => {
 
       const cur = live.current;
 
-      if (!cur.enabled || cur.selection.length === 0 || !takeArrowKeys()) {
+      if (
+        !cur.isEnabled ||
+        cur.selection.length === 0 ||
+        !shouldTakeArrowKeys()
+      ) {
         return;
       }
 
@@ -463,7 +467,7 @@ export const useElementNudge = (o: Options): void => {
         editing = false;
       }
 
-      if (picksNew(message, live.current.selection)) {
+      if (shouldPickNew(message, live.current.selection)) {
         window.setTimeout(() => editing || keysToCanvas(), 0);
       }
     });

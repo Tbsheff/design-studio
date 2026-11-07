@@ -4,7 +4,7 @@ import type { ShiftPart } from "./css-values.js";
 import { writeShadows, shadowView } from "./effects-model.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
-import { NumberField } from "./number-field.js";
+import { PlainNumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import { ShadowRow } from "./shadow-row.js";
 import { NEW_SHADOW, blurOf, withBlur } from "./shadows.js";
@@ -25,14 +25,13 @@ const LayerBlur = ({ edit }: { readonly edit: DirectEdit }) => {
     blurOf(filter),
     (value) => ({ filter: withBlur(filter, value) }),
     ["filter"],
-    { part: BLUR_PART }
+    { isMixed: null, part: BLUR_PART }
   );
 
   return (
-    <NumberField
+    <PlainNumberField
       id="ins-layer-blur"
       short="Blur"
-      tokens={false}
       spec={{ edit: blur, label: "Layer blur", min: 0, prop: "width" }}
     />
   );
@@ -51,10 +50,10 @@ const useScrollInOnMount = (on: boolean) => {
 
 const EffectsSection = ({
   edit,
-  revealed = false,
+  isRevealed: revealed = false,
 }: {
   readonly edit: DirectEdit;
-  readonly revealed?: boolean;
+  readonly isRevealed: boolean;
 }) => {
   const view = shadowView(edit);
   const anchor = useScrollInOnMount(revealed);

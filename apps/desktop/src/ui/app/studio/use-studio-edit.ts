@@ -84,7 +84,7 @@ const useStudioEdit = (
       port.current?.post({ type: "optimistic-drop" });
     },
     direction: base.direction,
-    locked: activeRun !== null,
+    isLocked: activeRun !== null,
     onError: ui.setActionError,
     onStepped: (): void => {
       refreshSelection(true);

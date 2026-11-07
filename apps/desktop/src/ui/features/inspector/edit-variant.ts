@@ -103,8 +103,10 @@ export const VariantScopeContext = createContext<VariantScope>({
   props: new Set(),
 });
 
-export const useInherited = (prop: DirectStyleProperty): boolean => {
-  const scope = useContext(VariantScopeContext);
+export const useVariantScope = (): VariantScope =>
+  useContext(VariantScopeContext);
 
-  return scope.prefix !== "" && !scope.props.has(prop);
-};
+export const isInherited = (
+  scope: VariantScope,
+  prop: DirectStyleProperty
+): boolean => scope.prefix !== "" && !scope.props.has(prop);

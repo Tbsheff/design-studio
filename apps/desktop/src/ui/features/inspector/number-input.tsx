@@ -2,9 +2,9 @@ import { memo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import { normalizeLength, stepValue } from "./css-values.js";
-import { useInherited } from "./edit-variant.js";
+import { isInherited, useVariantScope } from "./edit-variant.js";
 import { resolveNumberInput } from "./math-input.js";
-import { dependsOnCurrent } from "./mixed-values.js";
+import { hasCurrentDependency } from "./mixed-values.js";
 import {
   plainLength,
   displayLength,
@@ -42,7 +42,7 @@ const useNumberText = (spec: NumberSpec) => {
 
     setText(raw);
 
-    if (mixed && dependsOnCurrent(raw, unit)) {
+    if (mixed && hasCurrentDependency(raw, unit)) {
       return;
     }
 
@@ -93,7 +93,7 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
   const [focused, setFocused] = useState(false);
   const keepSelection = useRef(false);
   const field = useNumberText(spec);
-  const inherited = useInherited(spec.prop);
+  const inherited = isInherited(useVariantScope(), spec.prop);
 
   const shown =
     field.text ??
@@ -102,7 +102,7 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
   const refused =
     field.mixed &&
     field.text !== null &&
-    dependsOnCurrent(field.text, field.unit);
+    hasCurrentDependency(field.text, field.unit);
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const input = event.currentTarget;

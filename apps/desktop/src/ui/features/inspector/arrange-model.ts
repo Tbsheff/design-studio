@@ -17,11 +17,11 @@ interface Props {
   readonly projectId: string;
   readonly directionId: string | null;
   readonly selection: SelectionContext[];
-  readonly editable: boolean;
+  readonly isEditable: boolean;
   readonly port: MutableRefObject<PreviewPort | null>;
   readonly control: MutableRefObject<DirectEditControl | null>;
   readonly onCommitted: (commit: DirectEditCommit) => void;
-  readonly showBar: boolean;
+  readonly shouldShowBar: boolean;
 }
 
 interface Message {
@@ -104,7 +104,7 @@ const isAbsolute = (selection: SelectionContext): boolean => {
   return position === "absolute" || position === "fixed";
 };
 
-const arrangeShown = (selection: SelectionContext[]): boolean => {
+const isArrangeShown = (selection: SelectionContext[]): boolean => {
   if (selection.length > 1) {
     return true;
   }
@@ -117,7 +117,7 @@ const arrangeShown = (selection: SelectionContext[]): boolean => {
 
   const parent = parentLayout(only.styles);
 
-  return isAbsolute(only) || parent.flex || parent.grid;
+  return isAbsolute(only) || parent.isFlex || parent.isGrid;
 };
 
 const minCount = (
@@ -202,7 +202,7 @@ export {
   ALIGN_TOOLS,
   OK_MS,
   SPACE_TOOLS,
-  arrangeShown,
+  isArrangeShown as arrangeShown,
   commitWrites,
   frameRequest,
   minCount,

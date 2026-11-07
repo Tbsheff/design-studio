@@ -6,7 +6,7 @@ import {
   varName,
 } from "../../../shared/token-match.js";
 import { formatNumber, parseNumber } from "./css-values.js";
-import { sameEditValues } from "./use-direct-edit.js";
+import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { TokenUi } from "./use-token-snap.js";
 
@@ -76,7 +76,7 @@ const shiftMixed = (spec: NumberSpec, delta: number): void => {
 };
 
 const stepOf = (
-  event: { readonly shiftKey: boolean; readonly altKey?: boolean },
+  event: Pick<KeyboardEvent, "altKey" | "shiftKey">,
   spec: NumberSpec
 ): number => {
   const base = spec.step ?? 1;
@@ -104,7 +104,7 @@ const selectSoon = (input: HTMLInputElement): void => {
   });
 };
 
-const sameSpec = (a: NumberSpec, b: NumberSpec): boolean => {
+const isSameSpec = (a: NumberSpec, b: NumberSpec): boolean => {
   const targets = a.targets ?? [a.prop];
 
   const sameShape =
@@ -119,7 +119,7 @@ const sameSpec = (a: NumberSpec, b: NumberSpec): boolean => {
   return (
     sameShape &&
     targets.join(",") === (b.targets ?? [b.prop]).join(",") &&
-    sameEditValues(a.edit, b.edit, targets)
+    isSameEditValues(a.edit, b.edit, targets)
   );
 };
 
@@ -133,7 +133,7 @@ export {
   stepOf,
   isValidValue,
   selectSoon,
-  sameSpec,
+  isSameSpec as sameSpec,
 };
 
 export type { NumberSpec };

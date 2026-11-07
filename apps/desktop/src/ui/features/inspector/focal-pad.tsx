@@ -5,11 +5,11 @@ import { focalOf, focalText } from "../../../shared/image.js";
 
 const FocalPad = ({
   value,
-  disabled,
+  isDisabled: disabled,
   onPick,
 }: {
   readonly value: string;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onPick: (focal: string) => void;
 }) => {
   const [drag, setDrag] = useState<string | null>(null);

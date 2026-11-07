@@ -14,7 +14,7 @@ import type { TweaksDraft } from "./use-tweaks.js";
 
 interface Props {
   readonly draft: TweaksDraft;
-  readonly running: boolean;
+  readonly isRunning: boolean;
   readonly onSuggest: () => void;
 }
 
@@ -86,11 +86,11 @@ const RangeInput = ({
 
 const ToggleInput = ({
   control,
-  value,
+  isOn: value,
   onEdit,
 }: {
   readonly control: ToggleTweak;
-  readonly value: boolean;
+  readonly isOn: boolean;
   readonly onEdit: EditFn;
 }) => (
   <button
@@ -162,7 +162,7 @@ const ControlInput = ({
 
   if (control.type === "toggle") {
     return (
-      <ToggleInput control={control} value={value === true} onEdit={onEdit} />
+      <ToggleInput control={control} isOn={value === true} onEdit={onEdit} />
     );
   }
 
@@ -178,12 +178,12 @@ const ControlInput = ({
 const ControlRow = ({
   control,
   value,
-  changed,
+  isChanged: changed,
   draft,
 }: {
   readonly control: TweakControl;
   readonly value: TweakValue;
-  readonly changed: boolean;
+  readonly isChanged: boolean;
   readonly draft: TweaksDraft;
 }) => {
   const labelFor = control.type === "color" ? undefined : `twk-${control.id}`;
@@ -258,10 +258,10 @@ const Footer = ({ draft }: { readonly draft: TweaksDraft }) => {
 };
 
 const EmptyState = ({
-  running,
+  isRunning: running,
   onSuggest,
 }: {
-  readonly running: boolean;
+  readonly isRunning: boolean;
   readonly onSuggest: () => void;
 }) => (
   <div className="twk-empty">
@@ -315,7 +315,7 @@ const Problems = ({ problems }: { readonly problems: string[] }) => {
 
 const Header = ({
   draft,
-  running,
+  isRunning: running,
   onSuggest,
   hasControls,
 }: Props & { readonly hasControls: boolean }) => (
@@ -350,7 +350,11 @@ const Header = ({
   </PanelHead>
 );
 
-export const TweaksPanel = ({ draft, running, onSuggest }: Props) => {
+export const TweaksPanel = ({
+  draft,
+  isRunning: running,
+  onSuggest,
+}: Props) => {
   const { state } = draft;
 
   const groups = useMemo(
@@ -364,7 +368,7 @@ export const TweaksPanel = ({ draft, running, onSuggest }: Props) => {
     <div className="twk">
       <Header
         draft={draft}
-        running={running}
+        isRunning={running}
         onSuggest={onSuggest}
         hasControls={hasControls}
       />
@@ -382,7 +386,7 @@ export const TweaksPanel = ({ draft, running, onSuggest }: Props) => {
       )}
       <div className="twk-scroll">
         {state && !hasControls && (
-          <EmptyState running={running} onSuggest={onSuggest} />
+          <EmptyState isRunning={running} onSuggest={onSuggest} />
         )}
         {state && <Problems problems={state.problems} />}
         {groups.map((group) => (
@@ -403,7 +407,7 @@ export const TweaksPanel = ({ draft, running, onSuggest }: Props) => {
                   key={control.id}
                   control={control}
                   value={draft.values[control.id] ?? control.default}
-                  changed={draft.pending[control.id] !== undefined}
+                  isChanged={draft.pending[control.id] !== undefined}
                   draft={draft}
                 />
               ))}

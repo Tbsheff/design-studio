@@ -16,12 +16,12 @@ import { useArrange, useArrangeKeys } from "./use-arrange.js";
 
 const ToolButton = ({
   tool,
-  disabled,
+  isDisabled: disabled,
   why,
   onRun,
 }: {
   readonly tool: Tool;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly why: string | null;
   readonly onRun: (action: ArrangeAction) => void;
 }) => {
@@ -83,11 +83,11 @@ const ArrangeMessage = ({ message }: { readonly message: Message | null }) => {
 
 const ArrangeBar = ({
   selection,
-  busy,
+  isBusy: busy,
   onRun,
 }: {
   readonly selection: SelectionContext[];
-  readonly busy: boolean;
+  readonly isBusy: boolean;
   readonly onRun: (action: ArrangeAction) => void;
 }) => {
   const button = (tool: Tool) => {
@@ -100,7 +100,7 @@ const ArrangeBar = ({
       <ToolButton
         key={tool.key}
         tool={tool}
-        disabled={busy || why !== null}
+        isDisabled={busy || why !== null}
         why={why}
         onRun={onRun}
       />
@@ -121,10 +121,12 @@ const InspectorArrange = (props: Props) => {
   const arrange = useArrange(props);
 
   const active =
-    props.editable && props.selection.length > 0 && props.directionId !== null;
+    props.isEditable &&
+    props.selection.length > 0 &&
+    props.directionId !== null;
 
   useArrangeKeys(root, active, (action) => void arrange.run(action));
-  const shown = props.showBar && active && arrangeShown(props.selection);
+  const shown = props.shouldShowBar && active && arrangeShown(props.selection);
 
   return (
     <div
@@ -135,7 +137,7 @@ const InspectorArrange = (props: Props) => {
       {shown && (
         <ArrangeBar
           selection={props.selection}
-          busy={arrange.busy}
+          isBusy={arrange.busy}
           onRun={(action) => void arrange.run(action)}
         />
       )}

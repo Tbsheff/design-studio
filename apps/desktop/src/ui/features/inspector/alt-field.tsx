@@ -2,11 +2,11 @@ import { useState } from "react";
 
 const AltField = ({
   initial,
-  disabled,
+  isDisabled: disabled,
   onSave,
 }: {
   readonly initial: string;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onSave: (alt: string) => void;
 }) => {
   const [text, setText] = useState<string | null>(null);

@@ -55,7 +55,7 @@ const useImageSet = (props: Props) => {
     change: Omit<SetImageRequest, "target">,
     file?: Blob | null
   ): Promise<void> => {
-    if (!props.editable) {
+    if (!props.isEditable) {
       return Promise.resolve();
     }
 

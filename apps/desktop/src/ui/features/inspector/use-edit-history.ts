@@ -44,7 +44,7 @@ interface Options {
   readonly directionId: string | null;
   readonly direction: Direction | null;
   readonly versions: Version[];
-  readonly locked: boolean;
+  readonly isLocked: boolean;
   readonly before: () => Promise<void>;
   readonly onStepped: (version: Version) => void;
   readonly onError: (message: string) => void;
@@ -227,7 +227,7 @@ export const useEditHistory = (o: Options) => {
   );
 
   const redo: RedoShortcut = {
-    enabled: state.canRedo && !o.locked,
+    enabled: state.canRedo && !o.isLocked,
     onRedo: () => step("redo"),
   };
 
@@ -239,7 +239,7 @@ export const useEditHistory = (o: Options) => {
     isHistoryStep(head) ? () => showToast(NOTHING_TO_UNDO) : fallback;
 
   const undoChain = (canUndo: boolean, fallback: () => void) => ({
-    canUndo: canUndo || (state.canUndo && !o.locked),
+    canUndo: canUndo || (state.canUndo && !o.isLocked),
     onUndo: () => step("undo", versionFallback(fallback)),
   });
 
@@ -255,7 +255,7 @@ interface RefreshWatch {
   readonly dropDrafts: () => void;
 }
 
-const sameStyles = (
+const isSameStyles = (
   a: Record<string, string>,
   b: Record<string, string>
 ): boolean => {
@@ -267,7 +267,7 @@ const sameStyles = (
   );
 };
 
-const stylesMoved = (
+const hasStylesMoved = (
   prev: SelectionContext[],
   selectors: string[],
   contexts: (SelectionContext | null)[]
@@ -278,7 +278,7 @@ const stylesMoved = (
     return (
       context !== null &&
       context !== undefined &&
-      !sameStyles(context.styles, item.styles)
+      !isSameStyles(context.styles, item.styles)
     );
   });
 
@@ -321,7 +321,7 @@ export const useSelectionRefresh = (
           return;
         }
 
-        if (stylesMoved(current.current, selectors, contexts)) {
+        if (hasStylesMoved(current.current, selectors, contexts)) {
           dropDrafts.current();
         }
 

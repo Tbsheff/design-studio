@@ -8,8 +8,8 @@ import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { colorToHex, displayColor, isValidColor } from "./css-values.js";
-import { useInherited } from "./edit-variant.js";
-import { sameEditValues } from "./use-direct-edit.js";
+import { isInherited, useVariantScope } from "./edit-variant.js";
+import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { useTokenUi } from "./use-token-snap.js";
 
@@ -22,11 +22,11 @@ interface FieldProps {
 
 const NEUTRAL_SWATCH = "#ffffff";
 
-const sameField = (a: FieldProps, b: FieldProps): boolean =>
+const isSameField = (a: FieldProps, b: FieldProps): boolean =>
   a.prop === b.prop &&
   a.label === b.label &&
   a.short === b.short &&
-  sameEditValues(a.edit, b.edit, [a.prop]);
+  isSameEditValues(a.edit, b.edit, [a.prop]);
 
 const ColorFieldView = ({ prop, label, short, edit }: FieldProps) => {
   const [text, setText] = useState<string | null>(null);
@@ -35,7 +35,7 @@ const ColorFieldView = ({ prop, label, short, edit }: FieldProps) => {
   const resolved = ui ? resolveTokenValue(value, ui.entries, ui.mode) : value;
   const hex = colorToHex(resolved) ?? (ui ? colorHex(resolved) : null);
   const shown = text ?? displayColor(value);
-  const inherited = useInherited(prop);
+  const inherited = isInherited(useVariantScope(), prop);
 
   const settle = () => {
     if (text !== null && !isValidColor(text)) {
@@ -120,7 +120,7 @@ const SelectFieldView = ({
     value && !options.includes(value) ? [value, ...options] : options;
 
   const id = `ins-${prop}`;
-  const inherited = useInherited(prop);
+  const inherited = isInherited(useVariantScope(), prop);
 
   return (
     <div className={`ins-field select ${inherited ? "inherited" : ""}`}>
@@ -233,7 +233,6 @@ interface SectionProps {
   readonly aside?: ReactNode;
   readonly className?: string;
   readonly label?: ReactNode;
-  readonly initialOpen?: boolean;
 }
 
 export const InspectorSection = ({
@@ -242,9 +241,8 @@ export const InspectorSection = ({
   aside,
   className,
   label,
-  initialOpen,
 }: SectionProps) => {
-  const [open, toggle] = useSectionOpen(title, initialOpen);
+  const [open, toggle] = useSectionOpen(title);
 
   const hasBody =
     children !== null && children !== undefined && children !== false;
@@ -275,13 +273,13 @@ export const InspectorSection = ({
   );
 };
 
-export const ColorField = memo(ColorFieldView, sameField);
+export const ColorField = memo(ColorFieldView, isSameField);
 
 export const SelectField = memo(
   SelectFieldView,
-  (a, b) => sameField(a, b) && a.options.join(",") === b.options.join(",")
+  (a, b) => isSameField(a, b) && a.options.join(",") === b.options.join(",")
 );
 
 export const AlignField = memo(AlignFieldView, (a, b) =>
-  sameEditValues(a.edit, b.edit, ["text-align"])
+  isSameEditValues(a.edit, b.edit, ["text-align"])
 );

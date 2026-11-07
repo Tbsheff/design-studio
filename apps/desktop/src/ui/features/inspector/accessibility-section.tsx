@@ -10,7 +10,7 @@ const AccessibilitySection = (props: InspectorProps) => {
     props.selection.length !== 1 ||
     !target ||
     !props.directionId ||
-    !props.editable
+    !props.isEditable
   ) {
     return null;
   }

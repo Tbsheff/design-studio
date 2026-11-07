@@ -12,7 +12,7 @@ interface NumberFieldProps {
   readonly short: string;
   readonly icon?: ReactNode;
   readonly id?: string;
-  readonly tokens?: boolean;
+  readonly hasTokens: boolean;
   readonly className?: string;
 }
 
@@ -21,7 +21,7 @@ const NumberFieldView = ({
   short,
   icon,
   id: idProp,
-  tokens = true,
+  hasTokens: tokens,
   className,
 }: NumberFieldProps) => {
   const id = idProp ?? `ins-${spec.prop}`;
@@ -45,22 +45,58 @@ const NumberFieldView = ({
   );
 };
 
-const sameField = (a: NumberFieldProps, b: NumberFieldProps): boolean => {
+const isSameField = (a: NumberFieldProps, b: NumberFieldProps): boolean => {
   const sameIcon = (a.icon === undefined) === (b.icon === undefined);
 
   return (
     sameIcon &&
     a.short === b.short &&
     a.id === b.id &&
-    a.tokens === b.tokens &&
+    a.hasTokens === b.hasTokens &&
     a.className === b.className &&
     sameSpec(a.spec, b.spec)
   );
 };
 
-const NumberField = memo(NumberFieldView, sameField);
+const MemoNumberField = memo(NumberFieldView, isSameField);
 
-export { NumberField };
+type SharedFieldProps = Omit<NumberFieldProps, "hasTokens">;
+
+const NumberField = ({
+  spec,
+  short,
+  icon,
+  id,
+  className,
+}: SharedFieldProps) => (
+  <MemoNumberField
+    spec={spec}
+    short={short}
+    icon={icon}
+    id={id}
+    className={className}
+    hasTokens
+  />
+);
+
+const PlainNumberField = ({
+  spec,
+  short,
+  icon,
+  id,
+  className,
+}: SharedFieldProps) => (
+  <MemoNumberField
+    spec={spec}
+    short={short}
+    icon={icon}
+    id={id}
+    className={className}
+    hasTokens={false}
+  />
+);
+
+export { NumberField, PlainNumberField };
 
 export { NumberInput } from "./number-input.js";
 

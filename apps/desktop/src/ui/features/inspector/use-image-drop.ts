@@ -12,7 +12,7 @@ interface Options {
   readonly projectId: string;
   readonly directionId: string | null;
   readonly kind: ProjectKind;
-  readonly enabled: boolean;
+  readonly isEnabled: boolean;
   readonly frames: {
     readonly slots: { readonly token: string; readonly src: string }[];
     readonly frontToken: string | null;
@@ -68,7 +68,7 @@ const refusal = (o: Options, drop: FileDrop): string | null => {
     return "Drop an image file: PNG, JPEG, WebP, AVIF, GIF or SVG.";
   }
 
-  if (!o.enabled || !o.directionId) {
+  if (!o.isEnabled || !o.directionId) {
     return "Edits are paused here. Wait for the run to finish, or open the latest version.";
   }
 

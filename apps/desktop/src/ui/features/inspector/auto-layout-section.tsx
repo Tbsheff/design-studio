@@ -51,11 +51,11 @@ const gridValue = (value: string): string => {
 const AlignGrid = ({
   edit,
   isRow,
-  grid = false,
+  isGrid: grid = false,
 }: {
   readonly edit: DirectEdit;
   readonly isRow: boolean;
-  readonly grid?: boolean;
+  readonly isGrid: boolean;
 }) => {
   const justifyProp = grid ? "justify-items" : "justify-content";
 
@@ -165,12 +165,12 @@ const GapModeField = ({ edit }: { readonly edit: DirectEdit }) => {
 
 const GapFields = ({
   edit,
-  split,
-  auto,
+  isSplit: split,
+  isAuto: auto,
 }: {
   readonly edit: DirectEdit;
-  readonly split: boolean;
-  readonly auto: boolean;
+  readonly isSplit: boolean;
+  readonly isAuto: boolean;
 }) => {
   if (split) {
     return (
@@ -201,9 +201,9 @@ const GapFields = ({
 
 const GridControls = ({ edit }: { readonly edit: DirectEdit }) => (
   <div className="ins-flex">
-    <AlignGrid edit={edit} isRow grid />
+    <AlignGrid edit={edit} isRow isGrid />
     <div className="ins-flex-side">
-      <GapFields edit={edit} split auto={false} />
+      <GapFields edit={edit} isSplit isAuto={false} />
     </div>
   </div>
 );
@@ -221,7 +221,7 @@ const FlexControls = ({ edit }: { readonly edit: DirectEdit }) => {
 
   return (
     <div className="ins-flex">
-      <AlignGrid edit={edit} isRow={direction === "row"} />
+      <AlignGrid isGrid={false} edit={edit} isRow={direction === "row"} />
       <div className="ins-flex-side">
         <div className="ins-flex-row">
           <div
@@ -257,7 +257,7 @@ const FlexControls = ({ edit }: { readonly edit: DirectEdit }) => {
           </button>
         </div>
         <GapModeField edit={edit} />
-        <GapFields edit={edit} split={wraps} auto={auto} />
+        <GapFields edit={edit} isSplit={wraps} isAuto={auto} />
       </div>
     </div>
   );

@@ -25,7 +25,7 @@ interface Props {
   readonly selection: SelectionContext[];
   readonly port: MutableRefObject<PreviewPort | null>;
   readonly control: MutableRefObject<DirectEditControl | null>;
-  readonly selectMode?: boolean;
+  readonly isSelectMode: boolean;
   readonly onSelectMode?: () => void;
   readonly onUndo?: () => void;
   readonly onRedo?: () => void;
@@ -66,22 +66,22 @@ const INSERTS: {
 const isHtmlFile = (file: string | undefined): boolean =>
   file !== undefined && /\.html?$/iu.test(file);
 
-const canvasSelectMode = (): boolean =>
+const isCanvasSelectMode = (): boolean =>
   collectCommands().find((command) => command.id === "tool.select")?.title ===
   "Stop selecting";
 
 const ToolButton = ({
   label,
-  pressed,
-  disabled,
+  isPressed: pressed,
+  isDisabled: disabled,
   tip,
   align,
   onClick,
   children,
 }: {
   readonly label: string;
-  readonly pressed?: boolean;
-  readonly disabled?: boolean;
+  readonly isPressed: boolean;
+  readonly isDisabled: boolean;
   readonly tip?: string;
   readonly align?: "start" | "end";
   readonly onClick: () => void;
@@ -130,8 +130,8 @@ const VectorButtons = () => {
         <ToolButton
           key={item.id}
           label={item.label}
-          pressed={tool === item.id}
-          disabled={!available}
+          isPressed={tool === item.id}
+          isDisabled={!available}
           tip={
             available
               ? `${item.label} ${item.keyLabel}: draw on the canvas`
@@ -164,7 +164,7 @@ export const InspectorTools = (props: Props) => {
       return props.onSelectMode();
     }
 
-    if (!canvasSelectMode()) {
+    if (!isCanvasSelectMode()) {
       runCommand("tool.select");
     }
   };
@@ -217,16 +217,18 @@ export const InspectorTools = (props: Props) => {
     <div className="ins-tools-wrap">
       <div className="ins-tools" role="toolbar" aria-label="Edit tools">
         <ToolButton
+          isDisabled={false}
           label="Select"
-          pressed={props.selectMode}
+          isPressed={props.isSelectMode}
           align="start"
           onClick={select}
         >
           <Icon name="pointer" size={14} />
         </ToolButton>
         <ToolButton
+          isPressed={false}
           label="Select child"
-          disabled={!last}
+          isDisabled={!last}
           tip={last ? "Select child" : "Select an element first"}
           onClick={directSelect}
         >
@@ -235,9 +237,10 @@ export const InspectorTools = (props: Props) => {
         <span className="ins-tools-sep" aria-hidden="true" />
         {INSERTS.map((item) => (
           <ToolButton
+            isPressed={false}
             key={item.kind}
             label={`Add ${item.label.toLowerCase()}`}
-            disabled={insertTip !== undefined}
+            isDisabled={insertTip !== undefined}
             tip={
               insertTip
                 ? `${item.label}: ${insertTip}`
@@ -253,6 +256,8 @@ export const InspectorTools = (props: Props) => {
         <VariantsButton />
         <span className="ins-tools-end" />
         <ToolButton
+          isDisabled={false}
+          isPressed={false}
           label="Undo"
           tip="Undo ⌘Z"
           align="end"
@@ -261,6 +266,8 @@ export const InspectorTools = (props: Props) => {
           <Icon name="undo" size={14} />
         </ToolButton>
         <ToolButton
+          isDisabled={false}
+          isPressed={false}
           label="Redo"
           tip="Redo ⇧⌘Z"
           align="end"

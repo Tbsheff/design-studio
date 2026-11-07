@@ -77,7 +77,7 @@ const Inspector = (raw: InspectorProps) => {
         <LeavePrompt session={session} />
         <TabBar tab={tab} onTab={onTab} />
         {(tab === "simple" || tab === "pro") && <ToolsMemo {...props} />}
-        <ArrangeMemo {...props} showBar={tab === "simple"} />
+        <ArrangeMemo {...props} shouldShowBar={tab === "simple"} />
         <div
           className="edit-body"
           role="tabpanel"
@@ -103,7 +103,7 @@ const Inspector = (raw: InspectorProps) => {
               )}
               <InspectorTweaks
                 tweaks={props.tweaks}
-                blocked={session.count > 0}
+                isBlocked={session.count > 0}
               />
             </>
           )}

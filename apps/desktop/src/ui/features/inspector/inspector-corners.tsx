@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { expandBox, SIDES } from "./css-values.js";
 import type { ShiftPart, Side } from "./css-values.js";
-import { NumberField } from "./number-field.js";
+import { NumberField, PlainNumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
@@ -51,7 +51,7 @@ const ALL_CORNERS: ShiftPart = {
   },
 };
 
-const differ = (radius: string): boolean => {
+const isDifferent = (radius: string): boolean => {
   const corners = cornersOf(radius);
 
   return SIDES.some((side) => corners[side] !== corners.top);
@@ -65,7 +65,7 @@ export const RadiusField = ({
   readonly short?: string;
 }) => {
   const [split, setSplit] = useState(() =>
-    differ(edit.values["border-radius"])
+    isDifferent(edit.values["border-radius"])
   );
 
   const radius = edit.values["border-radius"];
@@ -97,7 +97,7 @@ export const RadiusField = ({
               radius,
               (value) => ({ "border-radius": value }),
               ["border-radius"],
-              { part: ALL_CORNERS }
+              { isMixed: null, part: ALL_CORNERS }
             ),
             label: "Border radius",
             min: 0,
@@ -113,11 +113,10 @@ export const RadiusField = ({
     <div className="ins-radius split">
       <div className="ins-grid">
         {CORNERS.map(({ side, short, label }) => (
-          <NumberField
+          <PlainNumberField
             key={side}
             id={`ins-radius-${side}`}
             short={short}
-            tokens={false}
             spec={{
               edit: proxyEdit(
                 edit,
@@ -127,7 +126,7 @@ export const RadiusField = ({
                   "border-radius": joinCorners({ ...corners, [side]: value }),
                 }),
                 ["border-radius"],
-                { part: cornerPart(side) }
+                { isMixed: null, part: cornerPart(side) }
               ),
               label,
               min: 0,

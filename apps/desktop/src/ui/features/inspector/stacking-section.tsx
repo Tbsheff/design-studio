@@ -10,7 +10,7 @@ const StackingSection = (props: InspectorProps) => {
     props.selection.length !== 1 ||
     !target ||
     !props.directionId ||
-    !props.editable ||
+    !props.isEditable ||
     !target.source
   ) {
     return null;

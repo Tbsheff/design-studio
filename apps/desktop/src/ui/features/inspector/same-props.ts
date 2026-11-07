@@ -13,7 +13,7 @@ const UNSHARED_PROPS = new Set([
   "onSessionEnd",
 ]);
 
-const sameButRect = (a: SelectionContext, b: SelectionContext): boolean => {
+const isSameButRect = (a: SelectionContext, b: SelectionContext): boolean => {
   if (a === b) {
     return true;
   }
@@ -31,7 +31,7 @@ const sameButRect = (a: SelectionContext, b: SelectionContext): boolean => {
   return true;
 };
 
-const sameSelection = (
+const isSameSelection = (
   a: SelectionContext[],
   b: SelectionContext[]
 ): boolean => {
@@ -43,10 +43,10 @@ const sameSelection = (
     return false;
   }
 
-  return a.every((item, i) => sameButRect(item, b[i] as SelectionContext));
+  return a.every((item, i) => isSameButRect(item, b[i] as SelectionContext));
 };
 
-const sameShared = (a: object, b: object): boolean => {
+const isSameShared = (a: object, b: object): boolean => {
   const left = a as Record<string, unknown>;
   const right = b as Record<string, unknown>;
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
@@ -58,7 +58,7 @@ const sameShared = (a: object, b: object): boolean => {
 
     if (
       key === "selection" &&
-      sameSelection(
+      isSameSelection(
         left[key] as SelectionContext[],
         right[key] as SelectionContext[]
       )
@@ -72,4 +72,4 @@ const sameShared = (a: object, b: object): boolean => {
   return true;
 };
 
-export { sameShared };
+export { isSameShared as sameShared };

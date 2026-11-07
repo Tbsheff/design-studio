@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { PARTS, fieldPart, writeShadows } from "./effects-model.js";
 import type { Field, ShadowView } from "./effects-model.js";
 import { ColorField } from "./inspector-fields.js";
-import { NumberField } from "./number-field.js";
+import { PlainNumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import { formatShadows } from "./shadows.js";
 import type { Shadow } from "./shadows.js";
@@ -42,7 +42,7 @@ const ShadowRow = ({
       (next) => replace(write(next)),
       ["box-shadow"],
       {
-        mixed: view.mixed?.has(`${index}.${field}`) ?? false,
+        isMixed: view.mixed?.has(`${index}.${field}`) ?? false,
         part: fieldPart(index, field),
       }
     );
@@ -72,13 +72,13 @@ const ShadowRow = ({
         <button
           type="button"
           className="ins-chip-toggle"
-          aria-pressed={shadow.inset}
+          aria-pressed={shadow.isInset}
           aria-label={`Shadow ${n} inset`}
-          data-tip={shadow.inset ? "Inner shadow" : "Drop shadow"}
+          data-tip={shadow.isInset ? "Inner shadow" : "Drop shadow"}
           onClick={() =>
             writeShadows(edit, view, (own) =>
               own.map((s, i) =>
-                i === index ? { ...s, inset: !shadow.inset } : s
+                i === index ? { ...s, isInset: !shadow.isInset } : s
               )
             )
           }
@@ -100,11 +100,10 @@ const ShadowRow = ({
       </div>
       <div className="ins-grid">
         {PARTS.map(({ part, short, label, min }) => (
-          <NumberField
+          <PlainNumberField
             key={part}
             id={`ins-shadow-${index}-${part}`}
             short={short}
-            tokens={false}
             spec={{
               edit: fieldEdit(part, shadow[part], (value) => ({
                 [part]: value || "0",

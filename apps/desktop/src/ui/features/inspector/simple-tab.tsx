@@ -17,13 +17,13 @@ import { VectorSection } from "./vector-section.js";
 const SimpleTab = (props: InspectorProps) => {
   const variant = useEditVariant();
   const site = useUseSite(props);
-  const reason = inspectorEmptyReason(props.selection, props.editable);
+  const reason = inspectorEmptyReason(props.selection, props.isEditable);
   const target = props.selection[0];
 
   if (
     reason &&
     target &&
-    props.editable &&
+    props.isEditable &&
     props.selection.length === 1 &&
     imageKindOf(target)
   ) {

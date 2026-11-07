@@ -23,7 +23,7 @@ const ComponentSection = (props: InspectorProps) => {
         projectId={props.projectId}
         directionId={props.directionId}
         selection={target}
-        editable={props.editable}
+        isEditable={props.isEditable}
       />
     </Suspense>
   );

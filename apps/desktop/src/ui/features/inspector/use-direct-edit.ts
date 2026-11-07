@@ -92,7 +92,7 @@ export const NO_MIXED: ReadonlySet<DirectStyleProperty> = new Set();
 
 type EditValues = Pick<DirectEdit, "values" | "mixed" | "preview" | "commit">;
 
-export function sameEditValues(
+export function isSameEditValues(
   a: EditValues,
   b: EditValues,
   props: readonly DirectStyleProperty[]

@@ -44,7 +44,7 @@ export const useInspectorTokens = (input: ScopeInput) => {
             mode: tokens.mode,
             requestCreate: tokens.source ? null : setCreating,
             setSnap,
-            snap: snapOn,
+            shouldSnap: snapOn,
           }
         : null,
     [tokens, snapOn, setSnap]
@@ -68,14 +68,14 @@ export const SnapToggle = ({ ui }: { readonly ui: TokenUi | null }) => {
       type="button"
       className="icon-btn small tk-snap-toggle"
       aria-label="Snap to tokens"
-      aria-pressed={ui.snap}
+      aria-pressed={ui.shouldSnap}
       data-tip={
-        ui.snap
+        ui.shouldSnap
           ? "Snap to tokens is on: values near a token use var()"
           : "Snap to tokens is off: values stay as typed"
       }
       data-tip-align="end"
-      onClick={() => ui.setSnap(!ui.snap)}
+      onClick={() => ui.setSnap(!ui.shouldSnap)}
     >
       <Icon name="magnet" size={14} />
     </button>

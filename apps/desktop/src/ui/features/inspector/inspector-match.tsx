@@ -245,7 +245,7 @@ const InspectorMatch = (props: InspectorMatchProps) => {
   );
 };
 
-const sameItems = (a: SelectionContext[], b: SelectionContext[]): boolean =>
+const isSameItems = (a: SelectionContext[], b: SelectionContext[]): boolean =>
   a.length === b.length && a.every((item, i) => item === b[i]);
 
 export default memo(
@@ -256,5 +256,5 @@ export default memo(
     a.port === b.port &&
     a.tokens === b.tokens &&
     a.drain === b.drain &&
-    sameItems(a.selection, b.selection)
+    isSameItems(a.selection, b.selection)
 );

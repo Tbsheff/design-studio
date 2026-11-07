@@ -23,9 +23,10 @@ const SizeRows = ({
         <SizeRow axis="height" edit={edit} selection={selection} />
       </div>
       <MinMaxRows edit={edit} />
-      {(parent.flex || parent.grid) && !isPositioned(edit.values.position) && (
-        <AlignSelf edit={edit} column={parent.flex && !parent.row} />
-      )}
+      {(parent.isFlex || parent.isGrid) &&
+        !isPositioned(edit.values.position) && (
+          <AlignSelf edit={edit} isColumn={parent.isFlex && !parent.isRow} />
+        )}
       <PositionRows edit={edit} selection={selection} />
     </>
   );

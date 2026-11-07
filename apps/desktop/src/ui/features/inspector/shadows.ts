@@ -6,13 +6,13 @@ export interface Shadow {
   readonly blur: string;
   readonly spread: string;
   readonly color: string;
-  readonly inset: boolean;
+  readonly isInset: boolean;
 }
 
 export const NEW_SHADOW: Shadow = {
   blur: "12px",
   color: "rgb(0 0 0 / 0.12)",
-  inset: false,
+  isInset: false,
   spread: "0",
   x: "0",
   y: "4px",
@@ -91,7 +91,7 @@ const parseOne = (raw: string): Shadow | null => {
 
   const [x = "0", y = "0", blur = "0", spread = "0"] = lengths;
 
-  return { blur, color: colors[0] ?? "", inset, spread, x, y };
+  return { blur, color: colors[0] ?? "", isInset: inset, spread, x, y };
 };
 
 export const parseShadows = (value: string): Shadow[] | null => {
@@ -118,7 +118,7 @@ export const parseShadows = (value: string): Shadow[] | null => {
 
 const formatOne = (shadow: Shadow): string => {
   const parts = [
-    shadow.inset ? "inset" : "",
+    shadow.isInset ? "inset" : "",
     tidyLength(shadow.x || "0"),
     tidyLength(shadow.y || "0"),
     tidyLength(shadow.blur || "0"),

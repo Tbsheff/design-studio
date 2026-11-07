@@ -66,9 +66,10 @@ import {
 } from "./inspector-tokens.js";
 import { InspectorVariantBar } from "./inspector-variant-bar.js";
 import { NumberField } from "./number-field.js";
+import { SAVE_SETTLE_MS } from "./save-model.js";
 import { MinMaxRows } from "./size-limits.js";
 import { useAuthoredCss } from "./use-authored-css.js";
-import { sameEditValues, useDirectEdit } from "./use-direct-edit.js";
+import { isSameEditValues, useDirectEdit } from "./use-direct-edit.js";
 import type {
   DirectEdit,
   DirectEditCommit,
@@ -117,7 +118,7 @@ const BOX_PROPS = (["margin", "padding"] as const).flatMap((box) =>
 const BoxModelMemo = memo(
   BoxModel,
   (a, b) =>
-    sameEditValues(a.edit, b.edit, BOX_PROPS) &&
+    isSameEditValues(a.edit, b.edit, BOX_PROPS) &&
     a.edit.dirty.join(",") === b.edit.dirty.join(",") &&
     SIDES.every((side) => a.declared?.[side] === b.declared?.[side])
 );
@@ -234,7 +235,7 @@ export const ErrorLine = ({
 
 export interface SharedEditing {
   readonly shared: SharedSource;
-  readonly editingUse: boolean;
+  readonly isEditingUse: boolean;
   readonly onToggle: () => void;
 }
 
@@ -521,7 +522,7 @@ const SimpleSections = ({
         onReveal={reveal}
       />
       {extras.has("shadow") && (
-        <EffectsSection edit={edit} revealed={revealed.has("shadow")} />
+        <EffectsSection edit={edit} isRevealed={revealed.has("shadow")} />
       )}
       <BorderSection edit={edit} />
     </>
@@ -534,7 +535,7 @@ const MetaRow = ({
   status,
   ui,
   onReset,
-  resetDisabled,
+  isResetDisabled: resetDisabled,
   children,
 }: {
   readonly tag?: string;
@@ -542,7 +543,7 @@ const MetaRow = ({
   readonly status: SaveStatus;
   readonly ui: TokenUi | null;
   readonly onReset: () => void;
-  readonly resetDisabled?: boolean;
+  readonly isResetDisabled: boolean;
   readonly children?: ReactNode;
 }) => (
   <div className="ins-meta">
@@ -563,8 +564,6 @@ const MetaRow = ({
     </button>
   </div>
 );
-
-const SAVE_SETTLE_MS = 400;
 
 const useSettled = <T,>(value: T, ms: number): T => {
   const [settled, setSettled] = useState(value);
@@ -667,10 +666,10 @@ const useSimpleEditor = (props: SimpleEditorProps) => {
 
 const SharedNote = ({
   sharedEditing,
-  forwards,
+  isForwards: forwards,
 }: {
   readonly sharedEditing: SharedEditing | null | undefined;
-  readonly forwards: boolean;
+  readonly isForwards: boolean;
 }) => {
   if (!sharedEditing) {
     return null;
@@ -679,8 +678,8 @@ const SharedNote = ({
   return (
     <SharedSourceNote
       shared={sharedEditing.shared}
-      editingUse={sharedEditing.editingUse}
-      canUse={sharedEditing.editingUse || forwards}
+      isEditingUse={sharedEditing.isEditingUse}
+      canUse={sharedEditing.isEditingUse || forwards}
       onToggle={sharedEditing.onToggle}
     />
   );
@@ -713,6 +712,7 @@ export const SimpleEditor = (props: SimpleEditorProps) => {
             <div className="ins-head">
               <InspectorBreadcrumb selection={props.target} port={props.port} />
               <MetaRow
+                isResetDisabled={false}
                 source={
                   <SourceLink
                     projectId={props.projectId}
@@ -731,7 +731,7 @@ export const SimpleEditor = (props: SimpleEditorProps) => {
               <ErrorLine status={edit.status} text={props.target.text} />
               <SharedNote
                 sharedEditing={props.sharedEditing}
-                forwards={classes.element?.forwardsClassName === true}
+                isForwards={classes.element?.forwardsClassName === true}
               />
               {props.component}
               <ClassLine info={classLine} resolved={resolved} />
@@ -876,7 +876,7 @@ export const SimpleMultiEditor = (
           status={edit.status}
           ui={tk.ui}
           onReset={edit.reset}
-          resetDisabled={edit.blocked !== null}
+          isResetDisabled={edit.blocked !== null}
         />
         <div className="ins-scroll">
           <MultiNote reason={edit.blocked} />

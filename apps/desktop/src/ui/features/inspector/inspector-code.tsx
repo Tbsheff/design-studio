@@ -21,7 +21,7 @@ type Snippet =
       readonly code: string;
       readonly file: string;
       readonly line: number;
-      readonly exact: boolean;
+      readonly isExact: boolean;
     }
   | { readonly kind: "error"; readonly message: string };
 
@@ -85,7 +85,7 @@ const useSnippet = (
     if (!directionId || !source) {
       setSnippet({
         code: fallback,
-        exact: false,
+        isExact: false,
         file: "",
         kind: "ready",
         line: 0,
@@ -107,14 +107,14 @@ const useSnippet = (
           result.code === null
             ? {
                 code: fallback,
-                exact: false,
+                isExact: false,
                 file: result.file,
                 kind: "ready",
                 line: result.line,
               }
             : {
                 code: result.code,
-                exact: true,
+                isExact: true,
                 file: result.file,
                 kind: "ready",
                 line: result.line,
@@ -251,7 +251,7 @@ export const InspectorCode = ({ projectId, directionId, selection }: Props) => {
       )}
       {snippet.kind === "ready" && (
         <>
-          {!snippet.exact && (
+          {!snippet.isExact && (
             <p className="ins-note ins-code-note">
               No source location. This is the rendered HTML.
             </p>

@@ -248,6 +248,6 @@ export const batchEdits = (
 ): DirectEditRequest[] =>
   ownEdits(selections, bases, style).map((item) => item.edit);
 
-export const dependsOnCurrent = (raw: string, unit: string): boolean =>
+export const hasCurrentDependency = (raw: string, unit: string): boolean =>
   resolveNumberInput(raw, `0${unit}`, unit) !==
   resolveNumberInput(raw, `1${unit}`, unit);

@@ -18,8 +18,8 @@ interface Scrub {
   readonly x: number;
   readonly value: number;
   readonly unit: string;
-  readonly moved: boolean;
-  readonly mixed: boolean;
+  readonly isMoved: boolean;
+  readonly isMixed: boolean;
 }
 
 const scrubStart = (spec: NumberSpec, ui: TokenUi | null, x: number): Scrub => {
@@ -31,8 +31,8 @@ const scrubStart = (spec: NumberSpec, ui: TokenUi | null, x: number): Scrub => {
   };
 
   return {
-    mixed: spec.edit.mixed.has(spec.prop),
-    moved: false,
+    isMixed: spec.edit.mixed.has(spec.prop),
+    isMoved: false,
     unit: parsed.unit || unit,
     value: parsed.value,
     x,
@@ -69,14 +69,14 @@ const useScrub = (spec: NumberSpec) => {
 
     const moved: Scrub = {
       ...s,
-      moved: true,
+      isMoved: true,
       x: s.x + steps * SCRUB_PX_PER_STEP,
     };
 
     scrub.current = moved;
     document.body.classList.add("ins-scrubbing");
 
-    if (moved.mixed) {
+    if (moved.isMixed) {
       return shiftMixed(spec, steps * stepOf(event, spec));
     }
 
@@ -106,9 +106,9 @@ const useScrub = (spec: NumberSpec) => {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    scrubbed.current = s.moved;
+    scrubbed.current = s.isMoved;
 
-    if (s.moved) {
+    if (s.isMoved) {
       spec.edit.commit();
     }
   };

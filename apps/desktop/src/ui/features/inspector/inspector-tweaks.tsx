@@ -6,15 +6,15 @@ import type { TweaksDraft } from "./use-tweaks.js";
 
 export interface InspectorTweaksProps {
   readonly draft: TweaksDraft;
-  readonly running: boolean;
+  readonly isRunning: boolean;
   readonly onSuggest: (prompt?: string) => void;
 }
 
 const TweaksPrompt = ({
-  running,
+  isRunning: running,
   onSuggest,
 }: {
-  readonly running: boolean;
+  readonly isRunning: boolean;
   readonly onSuggest?: (prompt?: string) => void;
 }) => {
   const [text, setText] = useState("");
@@ -81,17 +81,17 @@ const TweaksPrompt = ({
 
 export const InspectorTweaks = ({
   tweaks,
-  blocked = false,
+  isBlocked: blocked = false,
 }: {
   readonly tweaks?: InspectorTweaksProps;
-  readonly blocked?: boolean;
+  readonly isBlocked: boolean;
 }) => {
   const controls = tweaks?.draft.state?.controls.length ?? 0;
 
   if (!tweaks || (tweaks.draft.state && controls === 0)) {
     return (
       <TweaksPrompt
-        running={(tweaks?.running ?? false) || blocked}
+        isRunning={(tweaks?.isRunning ?? false) || blocked}
         onSuggest={tweaks?.onSuggest}
       />
     );
@@ -100,7 +100,7 @@ export const InspectorTweaks = ({
   return (
     <TweaksPanel
       draft={tweaks.draft}
-      running={tweaks.running}
+      isRunning={tweaks.isRunning}
       onSuggest={() => tweaks.onSuggest()}
     />
   );

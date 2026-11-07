@@ -24,7 +24,7 @@ interface Props {
   readonly projectId: string;
   readonly directionId: string | null;
   readonly selection: SelectionContext[];
-  readonly editable: boolean;
+  readonly isEditable: boolean;
 }
 
 const SHAPE_TAG = /<(path|rect|circle|ellipse|polygon|polyline|line)\b[^>]*>/iu;
@@ -106,12 +106,12 @@ const targetOf = (selection: SelectionContext): InsertTarget => ({
 const ColorRow = ({
   label,
   value,
-  disabled,
+  isDisabled: disabled,
   onSave,
 }: {
   readonly label: string;
   readonly value: string;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onSave: (value: string | null) => void;
 }) => {
   const [text, setText] = useState<string | null>(null);
@@ -189,11 +189,11 @@ const ColorRow = ({
 
 const WidthRow = ({
   value,
-  disabled,
+  isDisabled: disabled,
   onSave,
 }: {
   readonly value: string;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onSave: (value: number | null) => void;
 }) => {
   const [text, setText] = useState<string | null>(null);
@@ -313,7 +313,7 @@ const PaintRows = ({
   const { busy, error, run } = useRun(props);
   const [saved, setSaved] = useState<Partial<ReturnType<typeof paintOf>>>({});
   const paint = { ...paintOf(target), ...saved };
-  const disabled = busy || !props.editable;
+  const disabled = busy || !props.isEditable;
 
   const save = (change: VectorPaint) =>
     void run({ op: "paint", target: targetOf(target), ...change }).then(
@@ -345,19 +345,19 @@ const PaintRows = ({
           <ColorRow
             label="Fill"
             value={paint.fill}
-            disabled={disabled}
+            isDisabled={disabled}
             onSave={(fill) => save({ fill })}
           />
         </div>
         <ColorRow
           label="Stroke"
           value={paint.stroke}
-          disabled={disabled}
+          isDisabled={disabled}
           onSave={(stroke) => save({ stroke })}
         />
         <WidthRow
           value={paint.width}
-          disabled={disabled}
+          isDisabled={disabled}
           onSave={(strokeWidth) => save({ strokeWidth })}
         />
       </div>
@@ -395,7 +395,7 @@ const BooleanRow = ({ props }: { readonly props: Props }) => {
             type="button"
             aria-label={BOOLEAN_LABEL[op]}
             data-tip={BOOLEAN_TIP[op]}
-            disabled={busy || !props.editable}
+            disabled={busy || !props.isEditable}
             onClick={() => go(op)}
           >
             <BooleanGlyph op={op} />

@@ -6,7 +6,7 @@ import { memo, useState, type KeyboardEvent } from "react";
 
 import { textEditability } from "./css-values.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
-import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";
+import { isSameEditValues, type DirectEdit } from "./use-direct-edit.js";
 
 function useRowKeys(onCommit: () => void, onRevert: () => void) {
   return (event: KeyboardEvent<HTMLInputElement>) => {
@@ -77,14 +77,12 @@ export function CssTextRow({
   short,
   edit,
   placeholder,
-  wide = true,
 }: {
   readonly prop: DirectStyleProperty;
   readonly label: string;
   readonly short: string;
   readonly edit: DirectEdit;
   readonly placeholder: string;
-  readonly wide?: boolean;
 }) {
   const [text, setText] = useState<string | null>(null);
   const value = edit.values[prop];
@@ -112,7 +110,7 @@ export function CssTextRow({
   });
 
   return (
-    <div className={`ins-field ${wide ? "wide" : ""}`}>
+    <div className="ins-field wide">
       <label htmlFor={id} className="ins-scrub static">
         {short}
       </label>
@@ -215,5 +213,5 @@ function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
 }
 
 export const TextStyleToggles = memo(TextStyleTogglesView, (a, b) =>
-  sameEditValues(a.edit, b.edit, ["font-style", "text-decoration-line"])
+  isSameEditValues(a.edit, b.edit, ["font-style", "text-decoration-line"])
 );

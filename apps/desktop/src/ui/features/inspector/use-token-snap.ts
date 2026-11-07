@@ -38,7 +38,7 @@ export interface CreateRequest {
 export interface TokenUi {
   readonly entries: CompiledTokenEntry[];
   readonly mode: TokenMode;
-  readonly snap: boolean;
+  readonly shouldSnap: boolean;
   readonly setSnap: (on: boolean) => void;
   readonly requestCreate: ((req: CreateRequest) => void) | null;
 }

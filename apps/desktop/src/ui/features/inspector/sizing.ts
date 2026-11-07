@@ -7,9 +7,9 @@ export type SizeMode = "hug" | "fill" | "fixed";
 export type AxisRole = "main" | "cross" | "none";
 
 export interface ParentLayout {
-  readonly flex: boolean;
-  readonly grid: boolean;
-  readonly row: boolean;
+  readonly isFlex: boolean;
+  readonly isGrid: boolean;
+  readonly isRow: boolean;
 }
 
 export const SIZE_MODES: {
@@ -34,18 +34,18 @@ export const parentLayout = (styles: Record<string, string>): ParentLayout => {
   const direction = (styles["parent-flex-direction"] ?? "").trim();
 
   return {
-    flex: isFlexDisplay(display),
-    grid: display === "grid" || display === "inline-grid",
-    row: !direction.startsWith("column"),
+    isFlex: isFlexDisplay(display),
+    isGrid: display === "grid" || display === "inline-grid",
+    isRow: !direction.startsWith("column"),
   };
 };
 
 export const axisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
-  if (!parent.flex) {
+  if (!parent.isFlex) {
     return "none";
   }
 
-  return (axis === "width") === parent.row ? "main" : "cross";
+  return (axis === "width") === parent.isRow ? "main" : "cross";
 };
 
 export const flexGrow = (flex: string): number => {
@@ -90,7 +90,7 @@ export const sizeFacts = (styles: Record<string, string>): SizeFacts => ({
   parentJustifyItems: (styles["parent-justify-items"] ?? "").trim(),
 });
 
-const stretchesByDefault = (values: Values, facts: SizeFacts): boolean => {
+const isStretchedByDefault = (values: Values, facts: SizeFacts): boolean => {
   const self = values["align-self"].trim();
 
   if (self === "stretch") {
@@ -109,7 +109,7 @@ const stretchesByDefault = (values: Values, facts: SizeFacts): boolean => {
 
 const STRETCHY = new Set(["", "auto", "normal", "stretch", "legacy"]);
 
-const gridStretches = (
+const isGridStretched = (
   axis: Axis,
   values: Values,
   facts: SizeFacts
@@ -143,11 +143,11 @@ const naturalMode = (
   }
 
   if (role === "cross") {
-    return stretchesByDefault(values, facts) ? "fill" : "hug";
+    return isStretchedByDefault(values, facts) ? "fill" : "hug";
   }
 
-  if (parent.grid) {
-    return gridStretches(axis, values, facts) ? "fill" : "hug";
+  if (parent.isGrid) {
+    return isGridStretched(axis, values, facts) ? "fill" : "hug";
   }
 
   return axis === "width" && BLOCK_DISPLAYS.has(facts.display) ? "fill" : "hug";
@@ -224,7 +224,7 @@ const fillPatch = (
   }
 
   if (role === "cross") {
-    return stretchesByDefault(values, facts)
+    return isStretchedByDefault(values, facts)
       ? { [axis]: "" }
       : { "align-self": "stretch", [axis]: "" };
   }

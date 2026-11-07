@@ -79,7 +79,7 @@ function structureItems(o: Options): PreviewMenuItem[] {
   }
 
   const state = {
-    busy: edits.busy,
+    isBusy: edits.busy,
     canPaste: edits.canPaste,
     count: o.selection.length,
     hasSource: selectionTargets(o.selection) !== null,

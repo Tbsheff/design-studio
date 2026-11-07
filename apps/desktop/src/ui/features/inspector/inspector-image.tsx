@@ -45,13 +45,16 @@ const InspectorImage = (props: Props) => {
         : props.selection.styles["object-position"]) ?? "50% 50%"
   );
 
-  usePasteImage(props.editable && kind !== null, (file) => void run({}, file));
+  usePasteImage(
+    props.isEditable && kind !== null,
+    (file) => void run({}, file)
+  );
 
   if (!kind) {
     return null;
   }
 
-  const disabled = !props.editable;
+  const disabled = !props.isEditable;
 
   const paste = async () => {
     try {
@@ -145,7 +148,7 @@ const InspectorImage = (props: Props) => {
         <div className="img-focal-row">
           <FocalPad
             value={focal}
-            disabled={disabled}
+            isDisabled={disabled}
             onPick={(next) => {
               setFocal(next);
               void run({ focal: next });
@@ -158,7 +161,7 @@ const InspectorImage = (props: Props) => {
         {!background && (
           <AltField
             initial={alt ?? attrOf(props.selection.outerHTML, "alt") ?? ""}
-            disabled={disabled}
+            isDisabled={disabled}
             onSave={(next) => {
               setAlt(next);
               void run({ alt: next });

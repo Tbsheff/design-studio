@@ -8,7 +8,7 @@ interface Props {
   readonly projectId: string;
   readonly directionId: string;
   readonly selection: SelectionContext;
-  readonly editable: boolean;
+  readonly isEditable: boolean;
   readonly port?: MutableRefObject<PreviewPort | null>;
 }
 

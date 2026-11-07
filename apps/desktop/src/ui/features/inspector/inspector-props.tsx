@@ -21,6 +21,8 @@ import { ApiError } from "../../api.js";
 import { VariantSheet } from "../../inspector-slots.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { ComponentPreviewThumb } from "../design-system/component-preview-thumb.js";
+import { AUTHOR_OPTIONS, toAuthorMode } from "./author-model.js";
+import type { SheetMode } from "./author-model.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { propsApi } from "./props-api.js";
 
@@ -28,31 +30,13 @@ import "../../styles/inspector-props.css";
 
 const SwapInstanceMenu = lazy(() => import("./swap-instance-menu.js"));
 
-type SheetMode = "create" | "edit";
 type SheetTarget = { readonly prop: string; readonly mode: SheetMode };
-
-const authorModeOf = (value: string): SheetMode | null => {
-  if (value === ":new") {
-    return "create";
-  }
-
-  if (value === ":edit") {
-    return "edit";
-  }
-
-  return null;
-};
-
-const AUTHOR_OPTIONS = [
-  { label: "New variant…", value: ":new" },
-  { label: "Edit variant…", value: ":edit" },
-];
 
 interface InspectorPropsProps {
   readonly projectId: string;
   readonly directionId: string | null;
   readonly selection: SelectionContext;
-  readonly editable: boolean;
+  readonly isEditable: boolean;
 }
 
 type Status =
@@ -147,15 +131,15 @@ const valueOf = (
 const SelectProp = ({
   spec,
   value,
-  overridden,
-  disabled,
+  isOverridden: overridden,
+  isDisabled: disabled,
   onChange,
   onAuthor,
 }: {
   readonly spec: PropSpec;
   readonly value: PropValue | undefined;
-  readonly overridden: boolean;
-  readonly disabled: boolean;
+  readonly isOverridden: boolean;
+  readonly isDisabled: boolean;
   readonly onChange: (value: PropValue | null) => void;
   readonly onAuthor?: ((mode: SheetMode) => void) | undefined;
 }) => {
@@ -166,7 +150,7 @@ const SelectProp = ({
     current && !options.includes(current) ? [current, ...options] : options;
 
   const pick = (next: string) => {
-    const mode = authorModeOf(next);
+    const mode = toAuthorMode(next);
 
     if (mode && onAuthor) {
       onAuthor(mode);
@@ -210,12 +194,12 @@ const SelectProp = ({
 const BooleanProp = ({
   spec,
   value,
-  disabled,
+  isDisabled: disabled,
   onChange,
 }: {
   readonly spec: PropSpec;
   readonly value: PropValue | undefined;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onChange: (value: PropValue | null) => void;
 }) => {
   const on = value === true || value === "true";
@@ -243,12 +227,12 @@ const BooleanProp = ({
 const TextProp = ({
   spec,
   value,
-  disabled,
+  isDisabled: disabled,
   onChange,
 }: {
   readonly spec: PropSpec;
   readonly value: PropValue | undefined;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onChange: (value: PropValue | null) => void;
 }) => {
   const [draft, setDraft] = useState<string | null>(null);
@@ -313,13 +297,13 @@ const TextProp = ({
 const PropRow = ({
   instance,
   spec,
-  disabled,
+  isDisabled: disabled,
   onChange,
   onAuthor,
 }: {
   readonly instance: ComponentInstance;
   readonly spec: PropSpec;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onChange: (name: string, value: PropValue | null) => void;
   readonly onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
 }) => {
@@ -341,8 +325,8 @@ const PropRow = ({
       <SelectProp
         spec={spec}
         value={value}
-        overridden={spec.name in instance.values}
-        disabled={disabled}
+        isOverridden={spec.name in instance.values}
+        isDisabled={disabled}
         onChange={change}
         onAuthor={onAuthor && ((mode) => onAuthor(spec.name, mode))}
       />
@@ -354,14 +338,19 @@ const PropRow = ({
       <BooleanProp
         spec={spec}
         value={value}
-        disabled={disabled}
+        isDisabled={disabled}
         onChange={change}
       />
     );
   }
 
   return (
-    <TextProp spec={spec} value={value} disabled={disabled} onChange={change} />
+    <TextProp
+      spec={spec}
+      value={value}
+      isDisabled={disabled}
+      onChange={change}
+    />
   );
 };
 
@@ -419,12 +408,12 @@ const VariantPicker = ({
 const ClassChips = ({
   label,
   classes,
-  editable,
+  isEditable: editable,
   onRemove,
 }: {
   readonly label: string;
   readonly classes: string[];
-  readonly editable: boolean;
+  readonly isEditable: boolean;
   readonly onRemove: (name: string) => void;
 }) => (
   <div className="prp-classes" aria-label={label}>
@@ -578,7 +567,7 @@ const VariantStyles = ({
       <ClassChips
         label={`${group.prop} ${option.value} classes`}
         classes={option.classes.split(/\s+/u).filter(Boolean)}
-        editable={option.editable}
+        isEditable={option.editable}
         onRemove={(name) => send({ classes: { remove: [name] } })}
       />
       {option.editable ? (
@@ -639,13 +628,13 @@ const PxField = ({
 const PropRows = ({
   instance,
   component,
-  disabled,
+  isDisabled: disabled,
   onChange,
   onAuthor,
 }: {
   readonly instance: ComponentInstance;
   readonly component: ComponentSchema;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onChange: (name: string, value: PropValue | null) => void;
   readonly onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
 }) => {
@@ -663,7 +652,7 @@ const PropRows = ({
                 key={spec.name}
                 instance={instance}
                 spec={spec}
-                disabled={disabled}
+                isDisabled={disabled}
                 onChange={onChange}
                 onAuthor={
                   component.cva?.variants.some(
@@ -684,7 +673,7 @@ const PropRows = ({
               key={spec.name}
               instance={instance}
               spec={spec}
-              disabled={disabled}
+              isDisabled={disabled}
               onChange={onChange}
             />
           ))}
@@ -728,7 +717,7 @@ const SwapButton = ({
             use={instance.use}
             onDone={(result) =>
               onStatus(
-                result.ok
+                result.isOk
                   ? { kind: "saved", text: result.text }
                   : { kind: "error", text: result.text }
               )
@@ -829,7 +818,7 @@ export default function InspectorProps({
   projectId,
   directionId,
   selection,
-  editable,
+  isEditable: editable,
 }: InspectorPropsProps) {
   const { instance, setInstance } = useInstance(
     projectId,
@@ -930,7 +919,7 @@ export default function InspectorProps({
       <PropRows
         instance={instance}
         component={component}
-        disabled={disabled}
+        isDisabled={disabled}
         onChange={onChange}
         onAuthor={openSheet}
       />

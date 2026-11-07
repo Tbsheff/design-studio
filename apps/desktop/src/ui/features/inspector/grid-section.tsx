@@ -6,7 +6,7 @@ import { useEditVariant } from "./edit-variant.js";
 import type { InspectorProps } from "./inspector-model.js";
 
 const GridSection = (props: InspectorProps): ReactElement | null => {
-  const { directionId, editable, projectId, selection } = props;
+  const { directionId, isEditable: editable, projectId, selection } = props;
   const variant = useEditVariant();
   const [target] = selection;
   const isReady = selection.length === 1 && editable && Boolean(directionId);

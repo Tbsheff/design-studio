@@ -7,7 +7,7 @@ import { InspectorSection } from "./inspector-fields.js";
 import type { InspectorProps } from "./inspector-model.js";
 
 const EffectLayersSection = (props: InspectorProps): ReactElement | null => {
-  const { directionId, editable, projectId, selection } = props;
+  const { directionId, isEditable: editable, projectId, selection } = props;
   const [target] = selection;
   const isReady = selection.length === 1 && editable && Boolean(directionId);
 

@@ -93,7 +93,7 @@ const designCandidates = (
   }));
 };
 
-const sameValue = (kind: StyleKind, a: string, b: string): boolean => {
+const isSameValue = (kind: StyleKind, a: string, b: string): boolean => {
   if (kind === "color") {
     return colorHex(a) !== null && colorHex(a) === colorHex(b);
   }
@@ -103,14 +103,14 @@ const sameValue = (kind: StyleKind, a: string, b: string): boolean => {
   return px !== null && px === lengthToPx(b);
 };
 
-const fitsKind = (kind: StyleKind, value: string): boolean =>
+const canFitKind = (kind: StyleKind, value: string): boolean =>
   kind === "color" ? colorHex(value) !== null : lengthToPx(value) !== null;
 
 const varCandidates = (row: StyleValueRow, vars: PageVar[]): Candidate[] =>
   vars
-    .filter((v) => fitsKind(row.kind, v.value))
+    .filter((v) => canFitKind(row.kind, v.value))
     .map((v) => ({
-      hint: sameValue(row.kind, v.value, row.value) ? "same value" : "",
+      hint: isSameValue(row.kind, v.value, row.value) ? "same value" : "",
       token: v.name,
       value: v.value,
     }))

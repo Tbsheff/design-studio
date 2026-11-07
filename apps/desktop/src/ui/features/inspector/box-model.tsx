@@ -23,11 +23,11 @@ const propsOf = (box: Box): DirectStyleProperty[] =>
 
 const LinkToggle = ({
   box,
-  linked,
+  isLinked: linked,
   onToggle,
 }: {
   readonly box: Box;
-  readonly linked: boolean;
+  readonly isLinked: boolean;
   readonly onToggle: () => void;
 }) => {
   const name = box === "padding" ? "Padding" : "Margin";
@@ -64,13 +64,13 @@ const SideInput = ({
   box,
   side,
   edit,
-  linked,
+  isLinked: linked,
   declared,
 }: {
   readonly box: Box;
   readonly side: Side;
   readonly edit: DirectEdit;
-  readonly linked: boolean;
+  readonly isLinked: boolean;
   readonly declared?: DeclaredMargins;
 }) => {
   const prop = `${box}-${side}` as DirectStyleProperty;
@@ -111,12 +111,12 @@ const SideInput = ({
 const BoxRing = (props: {
   readonly box: Box;
   readonly edit: DirectEdit;
-  readonly linked: boolean;
+  readonly isLinked: boolean;
   readonly onToggle: () => void;
   readonly declared?: DeclaredMargins;
   readonly children: ReactNode;
 }) => {
-  const { box, edit, linked, declared } = props;
+  const { box, edit, isLinked: linked, declared } = props;
 
   return (
     <div className={`box-ring ${box}`}>
@@ -124,20 +124,20 @@ const BoxRing = (props: {
         <span className="box-ring-label">
           {box === "padding" ? "Padding" : "Margin"}
         </span>
-        <LinkToggle box={box} linked={linked} onToggle={props.onToggle} />
+        <LinkToggle box={box} isLinked={linked} onToggle={props.onToggle} />
       </div>
       <SideInput
         box={box}
         side="top"
         edit={edit}
-        linked={linked}
+        isLinked={linked}
         declared={declared}
       />
       <SideInput
         box={box}
         side="left"
         edit={edit}
-        linked={linked}
+        isLinked={linked}
         declared={declared}
       />
       <div className="box-ring-core">{props.children}</div>
@@ -145,14 +145,14 @@ const BoxRing = (props: {
         box={box}
         side="right"
         edit={edit}
-        linked={linked}
+        isLinked={linked}
         declared={declared}
       />
       <SideInput
         box={box}
         side="bottom"
         edit={edit}
-        linked={linked}
+        isLinked={linked}
         declared={declared}
       />
     </div>
@@ -174,14 +174,14 @@ export const BoxModel = ({
       <BoxRing
         box="margin"
         edit={edit}
-        linked={linkMargin}
+        isLinked={linkMargin}
         declared={declared}
         onToggle={() => setLinkMargin((x) => !x)}
       >
         <BoxRing
           box="padding"
           edit={edit}
-          linked={linkPadding}
+          isLinked={linkPadding}
           onToggle={() => setLinkPadding((x) => !x)}
         >
           <span className="box-content" aria-hidden="true" />

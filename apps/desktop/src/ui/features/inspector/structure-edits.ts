@@ -42,7 +42,7 @@ export const nodeTarget = (
   return node && source ? { source, tag: node.tag } : null;
 };
 
-const sameLoc = (a: StructureTarget, b: StructureTarget): boolean =>
+const isSameLoc = (a: StructureTarget, b: StructureTarget): boolean =>
   a.source.file === b.source.file &&
   a.source.line === b.source.line &&
   a.source.col === b.source.col;
@@ -72,7 +72,7 @@ export const dropRequest = (
   const targets =
     selected &&
     selected.length > 1 &&
-    selected.some((entry) => sameLoc(entry, dragged))
+    selected.some((entry) => isSameLoc(entry, dragged))
       ? selected
       : [dragged];
 
@@ -89,7 +89,7 @@ export interface StructureMenuState {
   readonly count: number;
   readonly hasSource: boolean;
   readonly canPaste: boolean;
-  readonly busy: boolean;
+  readonly isBusy: boolean;
 }
 
 const LABELS: Record<StructureKey, string> = {
@@ -130,7 +130,7 @@ const blockReason = (
     return NO_SOURCE;
   }
 
-  if (state.busy) {
+  if (state.isBusy) {
     return "Wait for the last edit to finish.";
   }
 

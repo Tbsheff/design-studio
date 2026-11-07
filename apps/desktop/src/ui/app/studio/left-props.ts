@@ -118,8 +118,8 @@ const promptProps = (ctx: StudioCtx): LeftProps["prompt"] => {
 
 const tweaksProps = (ctx: StudioCtx): LeftProps["tweaks"] => ({
   draft: ctx.core.tweaks,
+  isRunning: ctx.core.activeRun !== null,
   onSuggest: (): Promise<void> => ctx.run.suggestTweaks(),
-  running: ctx.core.activeRun !== null,
 });
 
 const detailsProps = (ctx: StudioCtx): LeftProps["details"] => ({

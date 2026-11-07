@@ -5,7 +5,7 @@ import type { DirectEdit } from "./use-direct-edit.js";
 
 export interface ProxyOptions {
   readonly part?: ShiftPart;
-  readonly mixed?: boolean;
+  readonly isMixed: boolean | null;
 }
 
 export const proxyEdit = (
@@ -14,11 +14,11 @@ export const proxyEdit = (
   value: string,
   write: (next: string) => Partial<StyleValues>,
   real: DirectStyleProperty[],
-  options: ProxyOptions = {}
+  options: ProxyOptions
 ): DirectEdit => {
   const realMixed = real.some((prop) => edit.mixed.has(prop));
   const part = realMixed ? options.part : undefined;
-  const mixed = options.mixed ?? realMixed;
+  const mixed = options.isMixed ?? realMixed;
 
   return {
     ...edit,

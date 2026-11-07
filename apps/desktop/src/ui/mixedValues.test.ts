@@ -5,7 +5,7 @@ import { nextSelection } from "./features/canvas/use-preview-frames";
 import { valuesFromStyles } from "./features/inspector/css-values";
 import {
   batchEdits,
-  dependsOnCurrent,
+  hasCurrentDependency,
   mergeValues,
   multiBlockReason,
 } from "./features/inspector/mixed-values";
@@ -106,12 +106,12 @@ describe(multiBlockReason, () => {
   });
 });
 
-describe(dependsOnCurrent, () => {
+describe(hasCurrentDependency, () => {
   it("flags relative math and allows plain or absolute input", () => {
-    expect(dependsOnCurrent("+8", "px")).toBe(true);
-    expect(dependsOnCurrent("8", "px")).toBe(false);
-    expect(dependsOnCurrent("8*2", "px")).toBe(false);
-    expect(dependsOnCurrent("", "px")).toBe(false);
+    expect(hasCurrentDependency("+8", "px")).toBe(true);
+    expect(hasCurrentDependency("8", "px")).toBe(false);
+    expect(hasCurrentDependency("8*2", "px")).toBe(false);
+    expect(hasCurrentDependency("", "px")).toBe(false);
   });
 });
 

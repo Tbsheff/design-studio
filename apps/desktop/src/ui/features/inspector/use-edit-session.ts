@@ -14,7 +14,7 @@ import type { DirectEditControl } from "./use-direct-edit.js";
 export type SessionAction = "save" | "discard";
 
 export interface EditSessionHandle {
-  readonly dirty: boolean;
+  readonly isDirty: boolean;
   readonly count: number;
   readonly net: number;
   readonly requestExit: () => Promise<boolean>;
@@ -34,7 +34,7 @@ interface SessionView {
   readonly base: string | null;
   readonly count: number;
   readonly net: number;
-  readonly dirty: boolean;
+  readonly isDirty: boolean;
   readonly blocked: string | null;
 }
 
@@ -42,7 +42,7 @@ const EMPTY: SessionView = {
   base: null,
   blocked: null,
   count: 0,
-  dirty: false,
+  isDirty: false,
   net: 0,
 };
 
@@ -92,7 +92,7 @@ const readSession = async (
     base,
     blocked: state.blocked,
     count: state.count,
-    dirty: state.dirty,
+    isDirty: state.dirty,
     net: 0,
   };
 
@@ -240,7 +240,7 @@ export const useEditSession = (o: Options) => {
       return Promise.resolve(true);
     }
 
-    if (!viewRef.current.dirty || viewRef.current.net <= 0) {
+    if (!viewRef.current.isDirty || viewRef.current.net <= 0) {
       return end("save");
     }
 

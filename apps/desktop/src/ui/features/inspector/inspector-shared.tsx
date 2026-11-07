@@ -205,12 +205,12 @@ function DataTextAsk({
 
 export function SharedSourceNote({
   shared,
-  editingUse,
+  isEditingUse: editingUse,
   canUse,
   onToggle,
 }: {
   readonly shared: SharedSource;
-  readonly editingUse: boolean;
+  readonly isEditingUse: boolean;
   readonly canUse: boolean;
   readonly onToggle: () => void;
 }) {

@@ -19,7 +19,7 @@ interface InspectorProps {
   readonly projectId: string;
   readonly directionId: string | null;
   readonly selection: SelectionContext[];
-  readonly editable: boolean;
+  readonly isEditable: boolean;
   readonly port: MutableRefObject<PreviewPort | null>;
   readonly control: MutableRefObject<DirectEditControl | null>;
   readonly onCommitted: (commit: DirectEditCommit) => void;
@@ -34,7 +34,7 @@ interface InspectorProps {
   ) => void;
   readonly layers?: ReactNode;
   readonly tweaks?: InspectorTweaksProps;
-  readonly selectMode?: boolean;
+  readonly isSelectMode: boolean;
   readonly onSelectMode?: () => void;
   readonly onUndo?: () => void;
   readonly onRedo?: () => void;
@@ -79,7 +79,7 @@ const inspectorEmptyReason = (
   return null;
 };
 
-const vectorShown = (selection: SelectionContext[]): boolean =>
+const isVectorShown = (selection: SelectionContext[]): boolean =>
   selection.length > 0 &&
   selection.length <= 2 &&
   selection.every((item) => isSvgShapeTag(item.tag));
@@ -89,7 +89,7 @@ export {
   TABS,
   inspectorEmptyReason,
   isDirectEditable,
-  vectorShown,
+  isVectorShown as vectorShown,
 };
 
 export type { InspectorProps, InspectorTab };

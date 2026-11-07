@@ -32,10 +32,10 @@ const selfSlot = (value: string): string => {
 
 const AlignSelf = ({
   edit,
-  column,
+  isColumn: column,
 }: {
   readonly edit: DirectEdit;
-  readonly column: boolean;
+  readonly isColumn: boolean;
 }) => {
   const current = selfSlot(edit.values["align-self"]);
 
@@ -75,13 +75,13 @@ const LIMITS = [
 
 const UNSET_LIMITS = new Set(["", "auto", "none", "0", "0px"]);
 
-const limitsSet = (edit: DirectEdit): boolean =>
+const hasLimitsSet = (edit: DirectEdit): boolean =>
   LIMITS.some((limit) => !UNSET_LIMITS.has(edit.values[limit.prop].trim()));
 
 const MinMaxRows = ({ edit }: { readonly edit: DirectEdit }) => {
   const [open, setOpen] = useState(false);
 
-  if (!open && !limitsSet(edit)) {
+  if (!open && !hasLimitsSet(edit)) {
     return (
       <div className="ins-add-row ins-limits-add">
         <AddButton

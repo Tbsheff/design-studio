@@ -49,7 +49,7 @@ function CanvasLayersPanel({
   const hoveredNode = useHoveredNode(frames.hover);
 
   const menuState = {
-    busy: edits.busy,
+    isBusy: edits.busy,
     canPaste: edits.canPaste,
     count: selection.length,
     hasSource: selectionTargets(selection) !== null,

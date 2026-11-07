@@ -168,7 +168,7 @@ const PinSelect = ({
   edit,
   selection,
   onPick,
-  ready,
+  isReady: ready,
   queue,
 }: {
   readonly axis: PinAxis;
@@ -176,7 +176,7 @@ const PinSelect = ({
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
   readonly onPick: (axis: PinAxis, mode: PinMode) => void;
-  readonly ready: boolean;
+  readonly isReady: boolean;
   readonly queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
 }) => {
   const change = (next: PinMode) => {
@@ -288,7 +288,7 @@ const ConstraintRows = ({
           edit={edit}
           selection={selection}
           onPick={(axis, mode) => pick({ [axis]: mode })}
-          ready={ready}
+          isReady={ready}
           queue={queue}
         />
         <PinSelect
@@ -297,7 +297,7 @@ const ConstraintRows = ({
           edit={edit}
           selection={selection}
           onPick={(axis, mode) => pick({ [axis]: mode })}
-          ready={ready}
+          isReady={ready}
           queue={queue}
         />
       </div>

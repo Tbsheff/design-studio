@@ -2,6 +2,7 @@ import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useState } from "react";
 
+import { copy } from "./copy.js";
 import { AddButton } from "./inspector-shared.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
@@ -43,7 +44,7 @@ const AlignSelf = ({
     <div
       className={`segmented icons ins-self ${column ? "column" : ""}`}
       role="group"
-      aria-label="Align self"
+      aria-label={copy.alignSelf}
     >
       {SELF.map((option) => (
         <button

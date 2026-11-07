@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
 import { api, ApiError } from "../../api.js";
+import { copy } from "./copy.js";
 import type { AppChip, RunMode } from "./home-app-chip.js";
 import { Pop } from "./home-popovers.js";
 import type { Close } from "./home-popovers.js";
@@ -159,7 +160,7 @@ function Candidates({
   const chosen = chip.appDir ?? found.appDir;
 
   return (
-    <div className="ui-menu-section" role="radiogroup" aria-label="App">
+    <div className="ui-menu-section" role="radiogroup" aria-label={copy.app}>
       <span className="ui-menu-label">
         {found.name} has {found.candidates.length} Next.js apps
       </span>
@@ -197,7 +198,7 @@ function DevServer({
   return (
     <div className="ui-menu-section home-app-server">
       <span className="ui-menu-label">Dev server</span>
-      <div className="segmented" role="radiogroup" aria-label="Dev server">
+      <div className="segmented" role="radiogroup" aria-label={copy.devServer}>
         <button
           type="button"
           role="radio"
@@ -220,9 +221,9 @@ function DevServer({
       {chip.mode === "url" && (
         <input
           className="mono"
-          aria-label="Dev server URL"
+          aria-label={copy.devServerUrl}
           value={chip.url}
-          placeholder="http://localhost:3000"
+          placeholder={copy.httpLocalhost3000}
           spellCheck={false}
           autoComplete="off"
           onKeyDown={(e) => keepEnter(e)}
@@ -243,9 +244,9 @@ function DevServer({
           className="mono"
           rows={3}
           value={chip.env}
-          placeholder="SKIP_ENV_VALIDATION=true"
+          placeholder={copy.skipEnvValidationTrue}
           spellCheck={false}
-          aria-label="Environment for next dev"
+          aria-label={copy.environmentForNextDev}
           onChange={(e) => onChange({ env: e.target.value })}
         />
       )}
@@ -363,7 +364,7 @@ export function FolderPathPop({
           id="home-app-path"
           className="mono"
           value={value}
-          placeholder="~/code/my-app"
+          placeholder={copy.codeMyApp}
           spellCheck={false}
           autoComplete="off"
           onKeyDown={(e) => keepEnter(e, submit)}

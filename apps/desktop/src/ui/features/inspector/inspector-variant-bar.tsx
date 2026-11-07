@@ -13,6 +13,7 @@ import type {
   VariantSupport,
 } from "../../../shared/variants.js";
 import type { PreviewPort } from "../../platform/bridge.js";
+import { copy } from "./copy.js";
 import {
   editVariantStore,
   fitFrameTo,
@@ -146,13 +147,13 @@ const InspectorVariantBarView = ({
     <div
       className="ins-variants"
       role="group"
-      aria-label="Breakpoint and state"
+      aria-label={copy.breakpointAndState}
     >
       <div className="ins-variant-row">
         <UiSelect
           size="sm"
           className="ins-variant-width"
-          aria-label="Breakpoint"
+          aria-label={copy.breakpoint}
           tip="Edit styles from this width up. The frame resizes to it"
           value={current.breakpoint ?? ANY_WIDTH}
           options={widths}

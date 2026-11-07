@@ -17,6 +17,7 @@ import {
   useVectorTool,
   vectorTool,
 } from "../canvas/vector-tool-model.js";
+import { copy } from "./copy.js";
 import type { DirectEditControl } from "./use-direct-edit.js";
 
 interface Props {
@@ -108,7 +109,7 @@ const VariantsButton = () => {
     <button
       type="button"
       className="ins-tool"
-      aria-label="Try variants"
+      aria-label={copy.tryVariants}
       aria-disabled={blocked ? true : undefined}
       data-tip={
         blocked ? `Try variants: ${blocked}` : "Try variants of this element"
@@ -215,7 +216,7 @@ export const InspectorTools = (props: Props) => {
 
   return (
     <div className="ins-tools-wrap">
-      <div className="ins-tools" role="toolbar" aria-label="Edit tools">
+      <div className="ins-tools" role="toolbar" aria-label={copy.editTools}>
         <ToolButton
           isDisabled={false}
           label="Select"

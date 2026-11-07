@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch } from "./constraints.js";
 import type { InsetProp, PinAxis, PinMode } from "./constraints.js";
+import { copy } from "./copy.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
@@ -280,7 +281,7 @@ const ConstraintRows = ({
       <div
         className="ins-grid ins-constraints"
         role="group"
-        aria-label="Constraints"
+        aria-label={copy.constraints}
       >
         <PinSelect
           axis="x"

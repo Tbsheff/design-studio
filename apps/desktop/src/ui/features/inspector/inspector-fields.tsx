@@ -7,6 +7,7 @@ import type { KeyboardEvent, ReactNode } from "react";
 import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
+import { copy } from "./copy.js";
 import { colorToHex, displayColor, isValidColor } from "./css-values.js";
 import { isInherited, useVariantScope } from "./edit-variant.js";
 import { isSameEditValues } from "./use-direct-edit.js";
@@ -173,7 +174,7 @@ const AlignFieldView = ({ edit }: { readonly edit: DirectEdit }) => {
     <div
       className="segmented icons ins-align"
       role="group"
-      aria-label="Text align"
+      aria-label={copy.textAlign}
     >
       {ALIGN.map((option) => (
         <button

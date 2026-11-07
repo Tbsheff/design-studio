@@ -16,6 +16,7 @@ import {
 } from "react";
 
 import { api } from "../../api.js";
+import { copy } from "./copy.js";
 import { textHints, type DirectEdit } from "./use-direct-edit.js";
 
 export interface InspectorApp {
@@ -120,7 +121,7 @@ function SourceTextRow({
         <input
           id="ins-content"
           className="ins-input"
-          aria-label="Text content"
+          aria-label={copy.textContent}
           value={edit.text}
           spellCheck={false}
           onChange={(event) => edit.previewText(event.target.value)}

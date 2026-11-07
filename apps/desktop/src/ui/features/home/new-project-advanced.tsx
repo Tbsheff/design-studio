@@ -3,6 +3,7 @@ import { lazy, Suspense, useState } from "react";
 import type { ChangeEvent } from "react";
 
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
+import { copy } from "./copy.js";
 
 const loadFields = () => import("../../app/shell/settings-fields.js");
 
@@ -60,12 +61,12 @@ export function NewProjectAdvanced(props: Props) {
             DESIGN.md (optional). The agent reads it before the first run.
           </span>
           <textarea
-            aria-label="DESIGN.md"
+            aria-label={copy.designMd}
             className="mono"
             rows={5}
             value={props.designMd}
             onChange={(e) => props.onDesignMd(e.target.value)}
-            placeholder="# Brand&#10;Primary color #0B6E4F. Headings in Georgia."
+            placeholder={copy.brandPrimaryColor0b6e4fHeadings}
             spellCheck={false}
           />
         </label>

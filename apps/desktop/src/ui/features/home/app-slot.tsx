@@ -1,6 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import type { RefObject } from "react";
 
+import { copy } from "./copy.js";
 import {
   type AppChip,
   chipBlocker,
@@ -33,7 +34,7 @@ function AppSlot({
         className="home-pill"
         aria-haspopup="dialog"
         aria-expanded={pop === "folder"}
-        data-tip="Add app folder"
+        data-tip={copy.addAppFolder}
         data-tip-side="top"
         onPointerEnter={() => void loadAppMenu()}
         onClick={onAddFolder}

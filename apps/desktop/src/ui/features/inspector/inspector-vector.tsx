@@ -15,6 +15,7 @@ import type {
 } from "../../../shared/vector.js";
 import { errorText } from "../../api.js";
 import { runVector } from "../canvas/vector-tool-model.js";
+import { copy } from "./copy.js";
 import { colorToHex } from "./css-values.js";
 import { InspectorSection } from "./inspector-fields.js";
 
@@ -227,7 +228,7 @@ const WidthRow = ({
       <input
         id="vector-stroke-width"
         className="ins-input"
-        aria-label="Stroke width"
+        aria-label={copy.strokeWidth}
         inputMode="decimal"
         value={text ?? value}
         placeholder="0"
@@ -339,7 +340,7 @@ const PaintRows = ({
     );
 
   return (
-    <InspectorSection title="Fill and stroke" className="vector-paint">
+    <InspectorSection title={copy.fillAndStroke} className="vector-paint">
       <div className="ins-grid">
         <div className="wide">
           <ColorRow
@@ -383,11 +384,11 @@ const BooleanRow = ({ props }: { readonly props: Props }) => {
     });
 
   return (
-    <InspectorSection title="Boolean">
+    <InspectorSection title={copy.boolean}>
       <div
         className="segmented icons vector-boolean"
         role="group"
-        aria-label="Boolean"
+        aria-label={copy.boolean}
       >
         {BOOLEAN_OPS.map((op) => (
           <button

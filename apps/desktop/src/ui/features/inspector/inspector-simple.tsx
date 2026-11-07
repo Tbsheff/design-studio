@@ -20,6 +20,7 @@ import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
 import { AutoLayoutSection } from "./auto-layout-section.js";
 import { BoxModel } from "./box-model.js";
 import type { DeclaredMargins } from "./box-model.js";
+import { copy } from "./copy.js";
 import { SIDES } from "./css-values.js";
 import { VariantScopeContext, useEditVariant } from "./edit-variant.js";
 import { InspectorBreadcrumb } from "./inspector-breadcrumb.js";
@@ -188,10 +189,7 @@ const StatusText = ({ status }: { readonly status: SaveStatus }) => {
 
   if (status.kind === "saved") {
     return (
-      <span
-        className="ins-status saved"
-        data-tip="Written to the file. Save version keeps it in the history"
-      >
+      <span className="ins-status saved" data-tip={copy.writtenToTheFileSave}>
         Written
       </span>
     );
@@ -250,7 +248,7 @@ const TextSection = ({
   readonly selection: SelectionContext | null;
   readonly textStyle?: ReactNode;
 }) => (
-  <InspectorSection title="Text">
+  <InspectorSection title={copy.text}>
     <div className="ins-grid">
       {selection && <ContentRow selection={selection} edit={edit} />}
       {textStyle && <div className="wide">{textStyle}</div>}
@@ -328,7 +326,7 @@ const AppearanceSection = ({
   const hidden = EXTRAS.filter((extra) => !extras.has(extra.id));
 
   return (
-    <InspectorSection title="Appearance">
+    <InspectorSection title={copy.appearance}>
       <div className="ins-grid">
         <div className="wide">{fill || <BackgroundField edit={edit} />}</div>
         <RadiusField edit={edit} short="Radius" />
@@ -358,7 +356,7 @@ const AppearanceSection = ({
           label="Text shadow"
           short="Text shadow"
           edit={edit}
-          placeholder="0 1px 2px #0003"
+          placeholder={copy.text01px2px0003}
         />
       )}
       {extras.has("transform") && (
@@ -367,7 +365,7 @@ const AppearanceSection = ({
           label="Transform"
           short="Transform"
           edit={edit}
-          placeholder="rotate(4deg)"
+          placeholder={copy.rotate4deg}
         />
       )}
       {extras.has("filter") && (
@@ -376,14 +374,14 @@ const AppearanceSection = ({
           label="Filter"
           short="Filter"
           edit={edit}
-          placeholder="blur(4px)"
+          placeholder={copy.blur4px}
         />
       )}
       {hidden.length > 0 && (
         <div
           className="ins-add-row"
           role="group"
-          aria-label="Add to appearance"
+          aria-label={copy.addToAppearance}
         >
           {hidden.map((extra) => (
             <AddButton
@@ -405,8 +403,8 @@ const BorderSection = ({ edit }: { readonly edit: DirectEdit }) => {
     <button
       type="button"
       className="icon-btn small"
-      aria-label="Remove border"
-      data-tip="Remove border"
+      aria-label={copy.removeBorder}
+      data-tip={copy.removeBorder}
       data-tip-align="end"
       onClick={() =>
         write(edit, { "border-style": "none", "border-width": "0px" })
@@ -417,7 +415,7 @@ const BorderSection = ({ edit }: { readonly edit: DirectEdit }) => {
   ) : undefined;
 
   return (
-    <InspectorSection title="Border" aside={aside}>
+    <InspectorSection title={copy.border} aside={aside}>
       {!on && (
         <div className="ins-add-row">
           <AddButton label="Border" onClick={() => write(edit, NEW_BORDER)} />
@@ -476,7 +474,7 @@ const LayoutSection = ({
   );
 
   return (
-    <AutoLayoutSection edit={edit} title="Layout" lead={size}>
+    <AutoLayoutSection edit={edit} title={copy.layout} lead={size}>
       <BoxModelMemo edit={edit} declared={declaredMargins(selection)} />
     </AutoLayoutSection>
   );
@@ -708,7 +706,10 @@ export const SimpleEditor = (props: SimpleEditorProps) => {
     <InspectorAppContext.Provider value={{ ...app, element: classes.element }}>
       <VariantScopeContext.Provider value={variantScope}>
         <TokenUiContext.Provider value={tk.ui}>
-          <div className="inspector ins-simple" aria-label="Design inspector">
+          <div
+            className="inspector ins-simple"
+            aria-label={copy.designInspector}
+          >
             <div className="ins-head">
               <InspectorBreadcrumb selection={props.target} port={props.port} />
               <MetaRow
@@ -869,7 +870,7 @@ export const SimpleMultiEditor = (
 
   return (
     <TokenUiContext.Provider value={tk.ui}>
-      <div className="inspector ins-simple" aria-label="Design inspector">
+      <div className="inspector ins-simple" aria-label={copy.designInspector}>
         <MetaRow
           tag={`${props.selection.length} elements`}
           source={<span className="ins-source" />}

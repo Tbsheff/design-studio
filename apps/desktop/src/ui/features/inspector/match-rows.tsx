@@ -6,6 +6,7 @@ import type {
 import { Icon, usePopover } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { copy } from "./copy.js";
 import { shownValue, StateTag, Swatch } from "./match-candidates.js";
 import { ROWS_SHOWN, KIND_LABEL, rowKey } from "./match-scan.js";
 import type { Scope, Status } from "./match-scan.js";
@@ -195,7 +196,7 @@ const ScopeToggle = ({
   <div
     className="segmented sm-scope"
     role="radiogroup"
-    aria-label="Values from"
+    aria-label={copy.valuesFrom}
   >
     {(["selection", "page"] as const).map((id) => (
       <button

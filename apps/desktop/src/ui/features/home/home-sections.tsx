@@ -4,6 +4,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 
 import { api, errorText } from "../../api.js";
+import { copy } from "./copy.js";
 import type { CardActions } from "./project-grid.js";
 import { projectsApi, useProjects } from "./projects-store-model.js";
 
@@ -94,7 +95,7 @@ export function HomeToast({
           <button
             type="button"
             className="icon-btn"
-            aria-label="Dismiss"
+            aria-label={copy.dismiss}
             onClick={onDone}
           >
             <Icon name="close" size={14} />
@@ -140,11 +141,11 @@ export function useProjectActions({
     },
     onDuplicate: async (project) => {
       try {
-        const copy = await projectsApi.duplicate(project);
+        const duplicate = await projectsApi.duplicate(project);
         showToast({
           hasError: false,
-          text: `Duplicated as “${copy.name}”`,
-          action: { label: "Open", run: () => onOpen(copy) },
+          text: `Duplicated as “${duplicate.name}”`,
+          action: { label: "Open", run: () => onOpen(duplicate) },
         });
       } catch (err) {
         showToast({

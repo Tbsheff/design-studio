@@ -1,5 +1,6 @@
 import type { SelectionContext } from "@design-studio/contracts";
 
+import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { isPositioned, PositionRows } from "./position-rows.js";
 import { AlignSelf, MinMaxRows } from "./size-limits.js";
@@ -39,7 +40,7 @@ const SizeSection = ({
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
 }) => (
-  <InspectorSection title="Size">
+  <InspectorSection title={copy.size}>
     <SizeRows edit={edit} selection={selection} />
   </InspectorSection>
 );

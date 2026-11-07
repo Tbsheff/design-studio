@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { api, errorText, json } from "../../api.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
 import { getBlob } from "../../platform/http.js";
+import { copy } from "./copy.js";
 
 type Confirm =
   | { readonly kind: "one"; readonly item: TrashItem }
@@ -320,7 +321,7 @@ export default function HomeTrash({
         <button
           type="button"
           className="icon-btn"
-          aria-label="Close Trash"
+          aria-label={copy.closeTrash}
           onClick={onClose}
         >
           <Icon name="close" />
@@ -345,7 +346,7 @@ export default function HomeTrash({
           </div>
         )}
         {items !== null && items.length > 0 && (
-          <ul className="trash-list" aria-label="Deleted projects">
+          <ul className="trash-list" aria-label={copy.deletedProjects}>
             {items.map((item) => (
               <TrashRow
                 key={item.trashId}

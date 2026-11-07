@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { focalOf, focalText } from "../../../shared/image.js";
+import { copy } from "./copy.js";
 
 const FocalPad = ({
   value,
@@ -47,9 +48,9 @@ const FocalPad = ({
       className={`img-focal${disabled ? " off" : ""}`}
       role="slider"
       tabIndex={disabled ? -1 : 0}
-      aria-label="Focal point"
+      aria-label={copy.focalPoint}
       aria-valuetext={focalText(point.x, point.y)}
-      data-tip="Click or drag to set the part of the image that stays in view"
+      data-tip={copy.clickOrDragToSet}
       onPointerDown={(event) => {
         if (disabled) {
           return;

@@ -26,6 +26,7 @@ import {
   loadPackFonts,
   type PacksState,
 } from "../design-system/packs.js";
+import { copy } from "./copy.js";
 import type { DesignCount } from "./home-model.js";
 
 export type Close = (refocus: boolean) => void;
@@ -448,7 +449,7 @@ export function ModelPopover({
       <div
         className="ui-menu-section"
         role="radiogroup"
-        aria-label="Model"
+        aria-label={copy.model}
         onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
       >
         <span className="ui-menu-label">Model</span>
@@ -522,7 +523,7 @@ export function LevelPopover({
       role="menu"
       onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
     >
-      <div className="ui-menu-section" role="group" aria-label="Level">
+      <div className="ui-menu-section" role="group" aria-label={copy.level}>
         <span className="ui-menu-label">Level</span>
         {RUN_LEVELS.map((item) => (
           <ChoiceItem

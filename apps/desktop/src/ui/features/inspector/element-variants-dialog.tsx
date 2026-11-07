@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { budgetFor, money } from "../canvas/use-variations.js";
 import { maxVariationsFor } from "../canvas/variations-api.js";
+import { copy } from "./copy.js";
 
 interface Props {
   readonly project: Project;
@@ -55,7 +56,7 @@ export const ElementVariantsDialog = ({
         </div>
         <button
           className="icon-btn small"
-          aria-label="Close"
+          aria-label={copy.close}
           onClick={onCancel}
         >
           <Icon name="close" size={14} />
@@ -68,14 +69,14 @@ export const ElementVariantsDialog = ({
           rows={2}
           value={note}
           maxLength={2000}
-          placeholder="For example: more compact, or a bolder call to action"
+          placeholder={copy.forExampleMoreCompactOr}
           onChange={(e) => setNote(e.target.value)}
         />
       </label>
       <div
         className="element-variants-count"
         role="radiogroup"
-        aria-label="How many variants"
+        aria-label={copy.howManyVariants}
       >
         <span>Variants</span>
         {COUNTS.map((value) => {

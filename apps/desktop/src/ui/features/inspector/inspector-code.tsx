@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { exportApi } from "../share-publish-ship-export/export-api.js";
+import { copy } from "./copy.js";
 
 interface Props {
   readonly projectId: string;
@@ -259,7 +260,7 @@ export const InspectorCode = ({ projectId, directionId, selection }: Props) => {
           <pre
             className="ins-code-pre"
             tabIndex={0}
-            aria-label="Element source"
+            aria-label={copy.elementSource}
           >
             <code>{highlight(snippet.code)}</code>
           </pre>

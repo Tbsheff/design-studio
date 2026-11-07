@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { api } from "../../api.js";
+import { copy } from "./copy.js";
 
 export interface HomeTemplate {
   readonly id: string;
@@ -251,7 +252,7 @@ export function HomeTemplateGrid({
     <div
       className="ui-tile-grid home-tile-grid"
       role="group"
-      aria-label="Templates"
+      aria-label={copy.templates}
     >
       {HOME_TEMPLATES.map((template) => (
         <button

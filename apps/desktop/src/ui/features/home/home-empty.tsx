@@ -9,6 +9,7 @@ import {
   type FoundApps,
 } from "../../../shared/found-apps.js";
 import { api } from "../../api.js";
+import { copy } from "./copy.js";
 import { projectsApi } from "./projects-store-model.js";
 
 const MAX_FOUND = 6;
@@ -54,7 +55,7 @@ function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
     : "";
 
   return (
-    <section className="home-found" aria-label="Found on this Mac">
+    <section className="home-found" aria-label={copy.foundOnThisMac}>
       <div className="home-found-head">
         <span>Found on this Mac</span>
         <span className="spacer" />
@@ -85,7 +86,7 @@ function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
             type="button"
             className="btn small"
             aria-label={`Use ${app.name}`}
-            data-tip="Pick this app to design in. Return opens it."
+            data-tip={copy.pickThisAppToDesign}
             onClick={() => onUse(app.path)}
           >
             Use

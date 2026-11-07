@@ -12,6 +12,7 @@ import {
 } from "../design-system/component-create-api.js";
 
 import "../../styles/create-component.css";
+import { copy } from "./copy.js";
 
 interface Props {
   readonly projectId: string;
@@ -84,7 +85,7 @@ export default function SwapInstanceMenu({
       ref={root}
       className="ui-menu prp-swap-menu"
       role="menu"
-      aria-label="Swap instance"
+      aria-label={copy.swapInstance}
     >
       <div className="ui-menu-section">
         <div className="ui-menu-label">

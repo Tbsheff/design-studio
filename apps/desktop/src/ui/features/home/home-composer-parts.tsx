@@ -2,6 +2,8 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ClipboardEvent, DragEvent, FormEvent, ReactNode } from "react";
 
+import { copy } from "./copy.js";
+
 export const IMAGE_TYPES = [
   "image/png",
   "image/jpeg",
@@ -38,7 +40,7 @@ export function ComposerAlert({
       <button
         type="button"
         className="icon-btn composer-alert-close"
-        aria-label="Dismiss"
+        aria-label={copy.dismiss}
         onClick={onClose}
       >
         <Icon name="close" size={12} />
@@ -96,7 +98,7 @@ export function ComposerChips({
   }
 
   return (
-    <ul className="home-chips" aria-label="Attached to this prompt">
+    <ul className="home-chips" aria-label={copy.attachedToThisPrompt}>
       {lead}
       {images.map((image) => (
         <li

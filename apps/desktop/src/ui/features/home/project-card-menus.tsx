@@ -3,6 +3,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
+import { copy } from "./copy.js";
 import type { CardAction, MenuAt } from "./project-grid.js";
 
 export function CardMenu({
@@ -146,7 +147,7 @@ export function RenameField({
     <form className="project-rename" onSubmit={submit}>
       <input
         ref={ref}
-        aria-label="Project name"
+        aria-label={copy.projectName}
         value={value}
         maxLength={120}
         onChange={(event) => setValue(event.target.value)}

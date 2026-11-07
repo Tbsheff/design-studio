@@ -18,6 +18,7 @@ import { openProject } from "../../app/project-nav.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { IS_MAC, tipWithKey } from "../commands/keys.js";
 import { useCommands } from "../commands/registry.js";
+import { copy } from "./copy.js";
 import {
   noteProjectOpened,
   refreshProjectHits,
@@ -261,7 +262,7 @@ function MiniRail({
       <div className="prail-top">
         <BrandMark />
       </div>
-      <nav className="prail-thumbs" aria-label="Recent projects">
+      <nav className="prail-thumbs" aria-label={copy.recentProjects}>
         {shown.map((hit) => (
           <button
             key={hit.id}
@@ -282,8 +283,8 @@ function MiniRail({
         <button
           type="button"
           className="icon-btn small"
-          aria-label="New prototype"
-          data-tip="New prototype"
+          aria-label={copy.newPrototype}
+          data-tip={copy.newPrototype}
           data-tip-side="top"
           data-tip-align="start"
           onClick={onNewPrototype}
@@ -293,7 +294,7 @@ function MiniRail({
         <button
           type="button"
           className="icon-btn small"
-          aria-label="Show projects"
+          aria-label={copy.showProjects}
           aria-expanded="false"
           data-tip={tipWithKey("Show projects", "project-rail")}
           data-tip-side="top"
@@ -367,7 +368,7 @@ function OpenRail({
         <button
           type="button"
           className="icon-btn small"
-          aria-label="Collapse projects"
+          aria-label={copy.collapseProjects}
           aria-expanded="true"
           data-tip={tipWithKey("Collapse", "project-rail")}
           data-tip-align="end"
@@ -381,8 +382,8 @@ function OpenRail({
         <input
           ref={find}
           value={filter}
-          placeholder="Find"
-          aria-label="Find a project"
+          placeholder={copy.find}
+          aria-label={copy.findAProject}
           spellCheck={false}
           onChange={(e) => setFilter(e.target.value)}
           onKeyDown={(e) => {
@@ -398,7 +399,7 @@ function OpenRail({
           }}
         />
       </div>
-      <nav className="prail-list" aria-label="Projects">
+      <nav className="prail-list" aria-label={copy.projects}>
         {GROUPS.map((group) => {
           const items = shown.filter(group.test);
 
@@ -474,7 +475,7 @@ export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
       ref={aside}
       className="prail"
       data-state={state}
-      aria-label="Project rail"
+      aria-label={copy.projectRail}
       onKeyDown={moveFocus}
     >
       {state === "open" ? (

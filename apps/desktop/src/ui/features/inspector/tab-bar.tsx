@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
 
+import { copy } from "./copy.js";
 import { TABS } from "./inspector-model.js";
 import type { InspectorTab } from "./inspector-model.js";
 
@@ -39,7 +40,7 @@ const TabBar = ({
     <div
       className="edit-tabs"
       role="tablist"
-      aria-label="Edit mode"
+      aria-label={copy.editMode}
       onKeyDown={onKeyDown}
     >
       {TABS.map((t) => (

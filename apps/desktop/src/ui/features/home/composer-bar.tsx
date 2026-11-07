@@ -13,6 +13,7 @@ import { uiStore } from "../../platform/storage.js";
 import { usePresence } from "../chat/use-presence.js";
 import { type PacksState, pickable } from "../design-system/packs.js";
 import { AppSlot, type AppSlotProps } from "./app-slot.js";
+import { copy } from "./copy.js";
 import { type Busy, LEVEL_LABEL, type Pop } from "./home-model.js";
 import type { ModelSettings, PlusMenuActions } from "./home-popovers.js";
 import {
@@ -124,10 +125,10 @@ function ComposerBar({
           ref={plusRef}
           type="button"
           className="icon-btn bordered home-square"
-          aria-label="Add"
+          aria-label={copy.add}
           aria-haspopup="menu"
           aria-expanded={pop === "plus"}
-          data-tip="Attach, import and options"
+          data-tip={copy.attachImportAndOptions}
           data-tip-align="start"
           onPointerEnter={() => void loadPops()}
           onClick={() => togglePop("plus")}
@@ -170,7 +171,7 @@ function ComposerBar({
           type="button"
           className="icon-btn bordered home-square home-kind"
           aria-pressed={kind === "react"}
-          aria-label="React + Vite project"
+          aria-label={copy.reactViteProject}
           data-tip={
             kind === "react"
               ? "React + Vite project. Press for a plain HTML page."

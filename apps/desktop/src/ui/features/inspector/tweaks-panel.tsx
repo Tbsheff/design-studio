@@ -10,6 +10,7 @@ import type {
   TweakValue,
 } from "../../../shared/tweaks.js";
 import { ColorValue } from "../versions-layers-tokens/token-inputs.js";
+import { copy } from "./copy.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 
 interface Props {
@@ -204,7 +205,7 @@ const ControlRow = ({
           type="button"
           className={`icon-btn small twk-reset ${changed ? "" : "hidden"}`}
           aria-label={`Reset ${control.label}`}
-          data-tip="Reset"
+          data-tip={copy.reset}
           data-tip-align="end"
           disabled={!changed}
           onClick={() => draft.revert(control.id)}
@@ -319,7 +320,11 @@ const Header = ({
   onSuggest,
   hasControls,
 }: Props & { readonly hasControls: boolean }) => (
-  <PanelHead title="Tweaks" className="twk-header" titleClassName="twk-title">
+  <PanelHead
+    title={copy.tabTweaks}
+    className="twk-header"
+    titleClassName="twk-title"
+  >
     <div className="twk-header-end">
       {draft.count > 0 && (
         <button

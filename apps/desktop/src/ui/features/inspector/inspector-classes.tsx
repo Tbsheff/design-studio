@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import type { VariantSupport } from "../../../shared/variants.js";
 import { api } from "../../api.js";
+import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
 
 export interface ElementClasses {
@@ -94,7 +95,7 @@ export const ClassLine = ({
 
   return (
     <InspectorSection
-      title="Classes"
+      title={copy.classes}
       className="ins-classes"
       aside={
         !own && list.length > 0 ? (

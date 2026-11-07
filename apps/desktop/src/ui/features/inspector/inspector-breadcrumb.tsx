@@ -13,6 +13,7 @@ import type { MutableRefObject } from "react";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { parseSelectionPath, pathCrumbs } from "./authored-css.js";
 import type { PathCrumb } from "./authored-css.js";
+import { copy } from "./copy.js";
 
 interface Props {
   readonly selection: SelectionContext;
@@ -159,7 +160,7 @@ const InspectorBreadcrumbView = ({ selection, port }: Props) => {
   const current = elementLabel(selection);
 
   return (
-    <nav className="ins-crumbs" aria-label="Element path">
+    <nav className="ins-crumbs" aria-label={copy.elementPath}>
       <ol ref={list}>
         <HiddenCrumbs hidden={path.slice(0, cut)} onSelect={select} />
         {path.slice(cut).map((crumb) => (

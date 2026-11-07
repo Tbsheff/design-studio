@@ -2,6 +2,7 @@ import type { StyleValueRow } from "@design-studio/contracts/style-search";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
+import { copy } from "./copy.js";
 import { shownValue, Swatch } from "./match-candidates.js";
 import type { Candidate } from "./match-candidates.js";
 import { PICK_SHOWN, KIND_EXAMPLE } from "./match-scan.js";
@@ -57,7 +58,7 @@ const TokenPicker = (props: {
       <input
         ref={input}
         className="ins-input sm-picker-input"
-        aria-label="Token or class"
+        aria-label={copy.tokenOrClass}
         placeholder={KIND_EXAMPLE[props.row.kind]}
         value={text}
         spellCheck={false}
@@ -65,7 +66,7 @@ const TokenPicker = (props: {
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
       />
-      <div className="sm-picker-list" role="listbox" aria-label="Tokens">
+      <div className="sm-picker-list" role="listbox" aria-label={copy.tokens}>
         {shown.map((candidate) => (
           <button
             key={candidate.token}

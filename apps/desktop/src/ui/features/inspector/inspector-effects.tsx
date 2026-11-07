@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { copy } from "./copy.js";
 import type { ShiftPart } from "./css-values.js";
 import { writeShadows, shadowView } from "./effects-model.js";
 import { InspectorSection } from "./inspector-fields.js";
@@ -59,7 +60,7 @@ const EffectsSection = ({
   const anchor = useScrollInOnMount(revealed);
 
   return (
-    <InspectorSection title="Effects">
+    <InspectorSection title={copy.effects}>
       <span ref={anchor} hidden />
       {view === null ? (
         <div className="ins-custom">

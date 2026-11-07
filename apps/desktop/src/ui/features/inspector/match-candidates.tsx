@@ -13,6 +13,7 @@ import {
   matchForProperty,
 } from "../../../shared/token-match.js";
 import type { TokenMode } from "../../../shared/token-match.js";
+import { copy } from "./copy.js";
 import type { PageVar } from "./match-scan.js";
 
 const shownValue = (row: Pick<StyleValueRow, "kind" | "value">): string =>
@@ -32,7 +33,7 @@ const StateTag = ({
         className="sm-tag raw"
         style={{ border: 0, cursor: "pointer" }}
         aria-label={`Replace ${shownValue(row)} with a token`}
-        data-tip="Not a token. Replace it with one"
+        data-tip={copy.notATokenReplaceIt}
         onClick={onReplace}
       >
         raw

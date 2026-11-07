@@ -11,6 +11,7 @@ import { Icon, LazySelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
 import { useRef, useState, type FormEvent } from "react";
 
+import { copy } from "./copy.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
 
 function FolderPath({
@@ -56,7 +57,7 @@ function PastePath({
         aria-label={label}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="/Users/me/projects"
+        placeholder={copy.usersMeProjects}
         spellCheck={false}
         autoFocus
       />
@@ -268,10 +269,7 @@ function FolderRow({
             <FolderPath path={folder.path} homeDir={homeDir} />
           </span>
           {folder.missing ? (
-            <span
-              className="badge fail"
-              data-tip="This folder was moved or deleted. Remove it, or put it back."
-            >
+            <span className="badge fail" data-tip={copy.thisFolderWasMovedOr}>
               Missing
             </span>
           ) : (
@@ -303,8 +301,8 @@ function FolderRow({
             <button
               type="button"
               className="btn small"
-              aria-label="Change the default folder"
-              data-tip="New projects go here when you pick no location."
+              aria-label={copy.changeTheDefaultFolder}
+              data-tip={copy.newProjectsGoHereWhen}
               onClick={onChangeDefault}
               disabled={isChanging}
             >
@@ -317,7 +315,7 @@ function FolderRow({
                 type="button"
                 className="icon-btn small"
                 aria-label={`Rename ${folder.label}`}
-                data-tip="Rename"
+                data-tip={copy.rename}
                 onClick={() => setEditing(true)}
                 disabled={editing}
               >
@@ -327,7 +325,7 @@ function FolderRow({
                 type="button"
                 className="icon-btn small"
                 aria-label={`Remove ${folder.label} from the list`}
-                data-tip="Remove from list. Files stay on disk."
+                data-tip={copy.removeFromListFilesStay}
                 onClick={onRemove}
               >
                 <Icon name="close" size={14} />

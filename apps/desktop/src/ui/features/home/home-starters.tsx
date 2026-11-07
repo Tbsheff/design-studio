@@ -3,6 +3,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
+import { copy } from "./copy.js";
 
 const STARTER_IMAGES: Record<string, string> = {
   landing: new URL("../assets/starters/landing.png", import.meta.url).href,
@@ -126,7 +127,7 @@ export function FirstRunPanel({
   };
 
   return (
-    <section className="ui-notice info first-run" aria-label="First steps">
+    <section className="ui-notice info first-run" aria-label={copy.firstSteps}>
       <Icon name="sparkle" size={16} />
       <p className="first-run-text">
         <strong>New here?</strong> Describe a page or pick a template. Then use
@@ -149,8 +150,8 @@ export function FirstRunPanel({
       <button
         type="button"
         className="icon-btn small"
-        aria-label="Close first steps"
-        data-tip="Close"
+        aria-label={copy.closeFirstSteps}
+        data-tip={copy.close}
         data-tip-align="end"
         onClick={onClose}
       >

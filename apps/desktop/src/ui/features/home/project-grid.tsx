@@ -29,6 +29,7 @@ import {
 } from "../../platform/storage.js";
 import { findPack, keySwatches } from "../design-system/packs.js";
 import { Swatches } from "../inspector/swatches.js";
+import { copy } from "./copy.js";
 import type { KeyedFlag, KeyedUrl, Point, StarProps } from "./home-model.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import {
@@ -232,7 +233,7 @@ export function HealthCell({
     return (
       <span
         className="project-health run-failed"
-        data-tip="The last AI run failed. Open the project to see why."
+        data-tip={copy.theLastAiRunFailed}
       >
         <span className="project-dot" aria-hidden="true" />
         Last run failed
@@ -455,7 +456,7 @@ function ProjectCard({
         aria-label={`More actions for ${project.name}`}
         aria-haspopup="menu"
         aria-expanded={menu !== null}
-        data-tip="More actions"
+        data-tip={copy.moreActions}
         data-tip-align="end"
         onClick={() => setMenu((current) => (current ? null : "button"))}
         onMouseDown={(event) => event.stopPropagation()}
@@ -532,8 +533,8 @@ function ProjectListTools({
         <input
           ref={searchRef}
           type="search"
-          aria-label="Search projects"
-          placeholder="Search"
+          aria-label={copy.searchProjects}
+          placeholder={copy.search}
           value={query}
           onChange={(event) => onQuery(event.target.value)}
           onKeyDown={onKeyDown}
@@ -547,7 +548,7 @@ function ProjectListTools({
       <ViewTools />
       <LazySelect
         className="home-sort"
-        aria-label="Sort projects"
+        aria-label={copy.sortProjects}
         value={homeSort}
         options={SORT_OPTIONS}
         onChange={(sort) => uiStore.set({ homeSort: sort })}
@@ -565,8 +566,8 @@ function ViewTools() {
         type="button"
         className="icon-btn home-fav-filter"
         aria-pressed={favoritesOnly}
-        aria-label="Show favorites only"
-        data-tip="Favorites"
+        aria-label={copy.showFavoritesOnly}
+        data-tip={copy.favorites}
         onClick={() => homePrefs.set({ isFavoritesOnly: !favoritesOnly })}
       >
         <Star isFilled={favoritesOnly} />
@@ -574,13 +575,13 @@ function ViewTools() {
       <div
         className="ui-tools home-view-toggle"
         role="group"
-        aria-label="Layout"
+        aria-label={copy.layout}
       >
         <button
           type="button"
           aria-pressed={view === "list"}
-          aria-label="List"
-          data-tip="List"
+          aria-label={copy.list}
+          data-tip={copy.list}
           onClick={() => homePrefs.set({ view: "list" })}
         >
           <svg
@@ -599,8 +600,8 @@ function ViewTools() {
         <button
           type="button"
           aria-pressed={view === "grid"}
-          aria-label="Grid"
-          data-tip="Grid"
+          aria-label={copy.grid}
+          data-tip={copy.grid}
           data-tip-align="end"
           onClick={() => homePrefs.set({ view: "grid" })}
         >
@@ -807,7 +808,7 @@ export function ProjectGrid({
   };
 
   return (
-    <section className="home-list" aria-label="Projects">
+    <section className="home-list" aria-label={copy.projects}>
       <div className="home-list-head">
         {tabs}
         <div className="spacer" />

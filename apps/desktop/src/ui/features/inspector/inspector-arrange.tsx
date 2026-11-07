@@ -12,6 +12,7 @@ import {
   minCount,
 } from "./arrange-model.js";
 import type { Props, Message, Tool } from "./arrange-model.js";
+import { copy } from "./copy.js";
 import { useArrange, useArrangeKeys } from "./use-arrange.js";
 
 const ToolButton = ({
@@ -108,7 +109,11 @@ const ArrangeBar = ({
   };
 
   return (
-    <div className="ins-tools ins-arrange" role="toolbar" aria-label="Arrange">
+    <div
+      className="ins-tools ins-arrange"
+      role="toolbar"
+      aria-label={copy.arrange}
+    >
       {ALIGN_TOOLS.map(button)}
       <span className="ins-tools-sep" aria-hidden="true" />
       {SPACE_TOOLS.map(button)}

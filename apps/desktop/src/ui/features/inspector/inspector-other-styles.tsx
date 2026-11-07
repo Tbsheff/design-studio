@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { formatCopyCss, otherStyles } from "./authored-css.js";
 import type { AuthoredCss } from "./authored-css.js";
+import { copy } from "./copy.js";
 import type { AuthoredCssState } from "./use-authored-css.js";
 
 const COPIED_MS = 1500;
@@ -23,7 +24,7 @@ export const CopyCssButton = ({
     []
   );
 
-  const copy = async () => {
+  const copyCss = async () => {
     const css = await authored.request();
     let next: "copied" | "failed" = "failed";
 
@@ -58,7 +59,7 @@ export const CopyCssButton = ({
       className="icon-btn small ins-copy-css"
       data-tip={state === "idle" ? "Copy CSS" : label}
       data-tip-align="end"
-      onClick={() => void copy()}
+      onClick={() => void copyCss()}
     >
       <Icon name={state === "copied" ? "check" : "copy"} size={14} />
       <span className="sr-only" aria-live="polite">
@@ -81,7 +82,7 @@ export const InspectorOtherStyles = ({
   }
 
   return (
-    <section className="ins-section ins-other" aria-label="Other styles">
+    <section className="ins-section ins-other" aria-label={copy.otherStyles}>
       <button
         type="button"
         className="ins-other-toggle"

@@ -1,6 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 
+import { copy } from "./copy.js";
 import { TweaksPanel } from "./tweaks-panel.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 
@@ -37,8 +38,8 @@ const TweaksPrompt = ({
       </p>
       <div className="ins-tweaks-prompt">
         <textarea
-          aria-label="Describe the tweaks you want"
-          placeholder="Describe what you want to adjust and Claude will add a tweaks panel"
+          aria-label={copy.describeTheTweaksYouWant}
+          placeholder={copy.describeWhatYouWantTo}
           rows={3}
           value={text}
           disabled={!onSuggest}
@@ -58,7 +59,7 @@ const TweaksPrompt = ({
             type="button"
             className="btn small ghost ins-tweaks-auto"
             disabled={!onSuggest || running}
-            data-tip="Claude picks the controls"
+            data-tip={copy.claudePicksTheControls}
             onClick={send}
           >
             Let Claude choose
@@ -67,7 +68,7 @@ const TweaksPrompt = ({
         <button
           type="button"
           className="icon-btn small send"
-          aria-label="Add tweaks panel"
+          aria-label={copy.addTweaksPanel}
           disabled={!onSuggest || running || !text.trim()}
           onClick={send}
         >

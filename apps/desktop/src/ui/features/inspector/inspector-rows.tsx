@@ -4,6 +4,7 @@ import type {
 } from "@design-studio/contracts";
 import { memo, useState, type KeyboardEvent } from "react";
 
+import { copy } from "./copy.js";
 import { textEditability } from "./css-values.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
 import { isSameEditValues, type DirectEdit } from "./use-direct-edit.js";
@@ -57,7 +58,7 @@ export function ContentRow({
       <input
         id="ins-content"
         className="ins-input"
-        aria-label="Text content"
+        aria-label={copy.textContent}
         value={edit.text}
         spellCheck={false}
         data-tip={edit.text}
@@ -194,7 +195,11 @@ function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
   ];
 
   return (
-    <div className="ins-field ins-toggles" role="group" aria-label="Text style">
+    <div
+      className="ins-field ins-toggles"
+      role="group"
+      aria-label={copy.textStyle}
+    >
       {items.map((item) => (
         <button
           key={item.key}

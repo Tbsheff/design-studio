@@ -1,5 +1,6 @@
 import { BrandMark, Icon, ThemeButton } from "@design-studio/ui";
 
+import { copy } from "./copy.js";
 import { loadTrash } from "./lazy-parts.js";
 
 function Header({ onTrash }: { readonly onTrash: () => void }) {
@@ -8,11 +9,11 @@ function Header({ onTrash }: { readonly onTrash: () => void }) {
       <BrandMark />
       <span className="brand">Design Studio</span>
       <div className="spacer" />
-      <nav className="home-nav" aria-label="App">
+      <nav className="home-nav" aria-label={copy.app}>
         <button
           type="button"
           className="btn small ghost home-goto"
-          data-tip="Find a project, folder or action"
+          data-tip={copy.findAProjectFolderOr}
           onClick={() =>
             window.dispatchEvent(
               new CustomEvent("studio:command-layer", { detail: "palette" })

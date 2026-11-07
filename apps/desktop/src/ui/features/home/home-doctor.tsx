@@ -1,5 +1,7 @@
 import { CopyButton, Icon, useModalDialog } from "@design-studio/ui";
 
+import { copy } from "./copy.js";
+
 export interface DoctorStep {
   readonly isOk: boolean;
   readonly text: string;
@@ -44,13 +46,13 @@ export default function HomeDoctor({
         <button
           type="button"
           className="icon-btn small"
-          aria-label="Close"
+          aria-label={copy.close}
           onClick={onClose}
         >
           <Icon name="close" size={14} />
         </button>
       </div>
-      <ul className="home-doctor-steps" aria-label="Checks">
+      <ul className="home-doctor-steps" aria-label={copy.checks}>
         {problem.steps.map((step) => (
           <li key={step.text} className={step.isOk ? "ok" : "bad"}>
             <Icon name={step.isOk ? "check" : "alert"} size={12} />

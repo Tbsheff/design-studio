@@ -1,6 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import { useMemo } from "react";
 
+import { copy } from "./copy.js";
 import { PARTS, fieldPart, writeShadows } from "./effects-model.js";
 import type { Field, ShadowView } from "./effects-model.js";
 import { ColorField } from "./inspector-fields.js";
@@ -89,7 +90,7 @@ const ShadowRow = ({
           type="button"
           className="icon-btn small"
           aria-label={`Remove shadow ${n}`}
-          data-tip="Remove shadow"
+          data-tip={copy.removeShadow}
           data-tip-align="end"
           onClick={() =>
             writeShadows(edit, view, (own) => own.filter((_, i) => i !== index))

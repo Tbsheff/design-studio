@@ -16,6 +16,7 @@ import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { lintValues } from "../versions-layers-tokens/token-lint.js";
 import type { LintIssue } from "../versions-layers-tokens/token-lint.js";
 import type { AuthoredCss } from "./authored-css.js";
+import { copy } from "./copy.js";
 import type { StyleValues } from "./css-values.js";
 import { buildEditRequest } from "./use-direct-edit.js";
 import type { DirectEdit, DirectEditCommit } from "./use-direct-edit.js";
@@ -67,7 +68,7 @@ export const SnapToggle = ({ ui }: { readonly ui: TokenUi | null }) => {
     <button
       type="button"
       className="icon-btn small tk-snap-toggle"
-      aria-label="Snap to tokens"
+      aria-label={copy.snapToTokens}
       aria-pressed={ui.shouldSnap}
       data-tip={
         ui.shouldSnap
@@ -95,7 +96,7 @@ const NoteBar = ({
     <button
       type="button"
       className="icon-btn tk-note-close"
-      aria-label="Dismiss"
+      aria-label={copy.dismiss}
       onClick={onClose}
     >
       <Icon name="close" size={12} />
@@ -256,7 +257,7 @@ export const TokenLint = ({
   };
 
   return (
-    <section className="tk-lint" aria-label="Token checks">
+    <section className="tk-lint" aria-label={copy.tokenChecks}>
       <h3 className="tk-lint-head">
         <Icon name="alert" size={13} />
         {issues.length === 1
@@ -397,7 +398,7 @@ export const FontField = ({
       <input
         id="ins-font-family"
         className="ins-input"
-        aria-label="Font family"
+        aria-label={copy.fontFamily}
         value={
           text ??
           (ui && varName(value)

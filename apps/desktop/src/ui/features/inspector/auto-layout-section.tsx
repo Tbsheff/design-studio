@@ -3,6 +3,7 @@ import type { IconName } from "@design-studio/ui";
 import { useRef } from "react";
 import type { ReactNode } from "react";
 
+import { copy } from "./copy.js";
 import { InspectorSection, SelectField } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
 import { write, useLayoutKeys } from "./layout-keys.js";
@@ -66,7 +67,7 @@ const AlignGrid = ({
   );
 
   return (
-    <div className="ins-align-grid" role="group" aria-label="Alignment">
+    <div className="ins-align-grid" role="group" aria-label={copy.alignment}>
       {[0, 1, 2].map((row) =>
         [0, 1, 2].map((col) => {
           const on = active?.col === col && active.row === row;
@@ -148,13 +149,13 @@ const GapModeField = ({ edit }: { readonly edit: DirectEdit }) => {
   return (
     <div
       className="ins-field select ins-gap-mode"
-      data-tip="Auto puts the space between the children"
+      data-tip={copy.autoPutsTheSpaceBetween}
       data-tip-align="end"
     >
       <span className="ins-scrub static">Spacing</span>
       <UiSelect
         className="ins-select"
-        aria-label="Gap mode"
+        aria-label={copy.gapMode}
         value={mode}
         options={GAP_MODES}
         onChange={change}
@@ -227,7 +228,7 @@ const FlexControls = ({ edit }: { readonly edit: DirectEdit }) => {
           <div
             className="segmented icons ins-direction"
             role="group"
-            aria-label="Direction"
+            aria-label={copy.direction}
           >
             {DIRECTIONS.map((option) => (
               <button
@@ -246,7 +247,7 @@ const FlexControls = ({ edit }: { readonly edit: DirectEdit }) => {
           <button
             type="button"
             className="icon-btn ins-toggle"
-            aria-label="Wrap"
+            aria-label={copy.wrap}
             aria-pressed={wraps}
             data-tip={wraps ? "Wrap: on" : "Wrap: off"}
             onClick={() =>
@@ -298,9 +299,9 @@ const AutoLayoutSection = ({
     <button
       type="button"
       className="icon-btn small"
-      aria-label="Remove auto layout"
+      aria-label={copy.removeAutoLayout}
       aria-keyshortcuts="Alt+Shift+A"
-      data-tip="Remove auto layout ⌥⇧A"
+      data-tip={copy.removeAutoLayoutA}
       data-tip-align="end"
       onClick={() => write(edit, { display: "block" })}
     >

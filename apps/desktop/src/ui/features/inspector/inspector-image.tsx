@@ -11,6 +11,7 @@ import {
 import type { ImageFit } from "../../../shared/image.js";
 import { runCommand } from "../../inspector-slots.js";
 import { AltField } from "./alt-field.js";
+import { copy } from "./copy.js";
 import { FocalPad } from "./focal-pad.js";
 import { clipboardImage } from "./image-api.js";
 import {
@@ -87,7 +88,7 @@ const InspectorImage = (props: Props) => {
             type="button"
             className="btn small"
             disabled={disabled}
-            data-tip="Pick an image file. You can also drop one on the canvas."
+            data-tip={copy.pickAnImageFileYou}
             onClick={() => fileInput.current?.click()}
           >
             <Icon name="image" size={12} />
@@ -97,7 +98,7 @@ const InspectorImage = (props: Props) => {
             type="button"
             className="btn ghost small"
             disabled={disabled}
-            data-tip="Use the image on the clipboard"
+            data-tip={copy.textUseTheImageOnThe}
             onClick={() => void paste()}
           >
             Paste
@@ -106,7 +107,7 @@ const InspectorImage = (props: Props) => {
             type="button"
             className="btn ghost small"
             disabled={disabled}
-            data-tip="Search free stock photos and place one here"
+            data-tip={copy.searchFreeStockPhotosAnd}
             onClick={() => runCommand("image.find")}
           >
             Find photo
@@ -116,7 +117,7 @@ const InspectorImage = (props: Props) => {
             type="file"
             accept={IMAGE_ACCEPT}
             hidden
-            aria-label="Image file"
+            aria-label={copy.imageFile}
             onChange={(event) => {
               const file = event.target.files?.[0];
               event.target.value = "";
@@ -127,7 +128,7 @@ const InspectorImage = (props: Props) => {
             }}
           />
         </div>
-        <div className="segmented img-fit" role="group" aria-label="Fit">
+        <div className="segmented img-fit" role="group" aria-label={copy.fit}>
           {IMAGE_FITS.map((option) => (
             <button
               key={option}

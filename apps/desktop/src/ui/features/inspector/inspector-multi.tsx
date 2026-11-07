@@ -14,6 +14,7 @@ import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CreateTokenDialog } from "../versions-layers-tokens/create-token-dialog.js";
 import type { CreateTokenSubmit } from "../versions-layers-tokens/create-token-dialog.js";
+import { copy } from "./copy.js";
 import type { StyleValues } from "./css-values.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { NumberField } from "./number-field.js";
@@ -34,7 +35,7 @@ export const MultiNote = ({ reason }: { readonly reason: string | null }) => {
 };
 
 export const MultiSizeSection = ({ edit }: { readonly edit: DirectEdit }) => (
-  <InspectorSection title="Size">
+  <InspectorSection title={copy.size}>
     <div className="ins-grid">
       <NumberField
         short="W"
@@ -211,11 +212,11 @@ const SelectMatchingView = ({
   const fresh = note && Date.now() - note.at < MATCH_NOTE_MS ? note.text : null;
 
   return (
-    <InspectorSection title="Select matching">
+    <InspectorSection title={copy.selectMatching}>
       <div
         className="ins-add-links ins-select-matching"
         role="group"
-        aria-label="Select matching"
+        aria-label={copy.selectMatching}
       >
         {MATCH_OPTIONS.map((option) => (
           <button

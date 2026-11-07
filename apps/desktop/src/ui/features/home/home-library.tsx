@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { formatRelative } from "../../domain/format.js";
+import { copy } from "./copy.js";
 import { homePrefs, type HomeFilter } from "./home-prefs-model.js";
 import { isFolderProject, projectBadge, useThumbnail } from "./project-grid.js";
 import { listRecentRuns } from "./use-last-runs.js";
@@ -57,7 +58,7 @@ export function filterLibrary(
 
 export function FilterChips({ filter }: { readonly filter: HomeFilter }) {
   return (
-    <div className="home-seg" role="tablist" aria-label="Show">
+    <div className="home-seg" role="tablist" aria-label={copy.show}>
       {FILTERS.map((item) => (
         <button
           key={item.id}
@@ -140,7 +141,7 @@ export function ContinueCard({
   const server = project.app && health ? SERVER_TEXT[health.state] : undefined;
 
   return (
-    <section className="home-continue" aria-label="Continue">
+    <section className="home-continue" aria-label={copy.continue}>
       <button
         type="button"
         className="home-continue-thumb"

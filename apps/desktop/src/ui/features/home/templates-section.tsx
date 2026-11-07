@@ -1,6 +1,7 @@
 import type { Starter } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 
+import { copy } from "./copy.js";
 import { homePrefs } from "./home-prefs-model.js";
 import type { HomeTemplate } from "./home-templates.js";
 import type { TemplatesModule } from "./lazy-parts.js";
@@ -17,7 +18,7 @@ function TemplatesSection({
   readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
 }) {
   return (
-    <section className="home-templates" aria-label="Templates and starters">
+    <section className="home-templates" aria-label={copy.templatesAndStarters}>
       <button
         type="button"
         className="ui-section-label home-templates-toggle"

@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { uiStore } from "../../platform/storage.js";
 import { type PacksState, pickable } from "../design-system/packs.js";
+import { copy } from "./copy.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import { useProjectActions } from "./home-sections.js";
 import type { LibraryModule } from "./lazy-parts.js";
@@ -107,7 +108,7 @@ function Library({
         headActions={systemActions}
       />
       {systems && (
-        <section className="home-list" aria-label="Pick a design system">
+        <section className="home-list" aria-label={copy.pickADesignSystem}>
           <p className="home-section-hint">
             Pick one for your next project. Edit, import and export them in the
             library.

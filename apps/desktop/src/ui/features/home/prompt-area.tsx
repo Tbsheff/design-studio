@@ -6,6 +6,7 @@ import {
   useRef,
 } from "react";
 
+import { copy } from "./copy.js";
 import { useExample } from "./use-example.js";
 
 interface PromptAreaProps {
@@ -47,7 +48,7 @@ function PromptArea({
   return (
     <textarea
       ref={ref}
-      aria-label="Describe the design"
+      aria-label={copy.describeTheDesign}
       aria-describedby={describedBy}
       rows={2}
       autoFocus

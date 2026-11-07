@@ -1,6 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 
+import { copy } from "./copy.js";
 import { expandBox, SIDES } from "./css-values.js";
 import type { ShiftPart, Side } from "./css-values.js";
 import { NumberField, PlainNumberField } from "./number-field.js";
@@ -75,7 +76,7 @@ export const RadiusField = ({
     <button
       type="button"
       className="icon-btn small ins-toggle"
-      aria-label="Independent corners"
+      aria-label={copy.independentCorners}
       aria-pressed={split}
       data-tip={split ? "Set all corners together" : "Set each corner"}
       data-tip-align="end"

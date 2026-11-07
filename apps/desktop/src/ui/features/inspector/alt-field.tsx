@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { copy } from "./copy.js";
+
 const AltField = ({
   initial,
   isDisabled: disabled,
@@ -27,9 +29,9 @@ const AltField = ({
       <input
         id="img-alt"
         className="ins-input"
-        aria-label="Alt text"
+        aria-label={copy.altText}
         value={text ?? initial}
-        placeholder="Describe the image"
+        placeholder={copy.describeTheImage}
         disabled={disabled}
         spellCheck
         onChange={(event) => setText(event.target.value)}

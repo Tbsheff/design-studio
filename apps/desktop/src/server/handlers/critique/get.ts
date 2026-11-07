@@ -12,11 +12,13 @@ const handle = Effect.fn("critique.get")(function* run(
 ) {
   const store = yield* CritiqueStore;
 
-  return yield* store.get({
+  const saved = yield* store.get({
     directionId: input.directionId,
     frameId: input.frameId,
     projectId: input.projectId,
   });
+
+  return { ...saved, issues: saved.issues.slice(0, input.limit) };
 }) satisfies Handle<typeof getCritique>;
 
 export { handle };

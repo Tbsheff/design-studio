@@ -9,6 +9,7 @@ import {
   FrameIdSchema,
   ProjectIdSchema,
 } from "../_core/ids.js";
+import { PageFields } from "../_core/list-page.js";
 import { CritiqueSchema } from "./schema.js";
 
 const getCritique = defineAction({
@@ -22,7 +23,7 @@ const getCritique = defineAction({
   },
   confirm: "none",
   description:
-    "Read the last saved design critique of one canvas frame. Returns five scores from 0 to 10 for hierarchy, spacing, type, color and copy, and up to 12 issues with a fix for each. Makes no model call. Run run_critique first to make a critique.",
+    "Read the last saved design critique of one canvas frame. Returns five scores from 0 to 10 for hierarchy, spacing, type, color and copy, and up to 12 issues with a fix for each. limit caps the issues. Makes no model call. Run run_critique first to make a critique.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",
@@ -32,6 +33,7 @@ const getCritique = defineAction({
   input: Schema.Struct({
     directionId: DirectionIdSchema,
     frameId: FrameIdSchema,
+    limit: PageFields.limit,
     projectId: ProjectIdSchema,
   }),
   invalidates: [],

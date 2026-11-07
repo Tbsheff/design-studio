@@ -14,10 +14,12 @@ const handle = Effect.fn("canvas.inspectLinkInteraction")(function* run(
 ) {
   const store = yield* LinkStore;
 
-  return yield* store.interactions({
+  const listed = yield* store.interactions({
     fromFrame: input.fromFrame ?? null,
     projectId: input.projectId,
   });
+
+  return { ...listed, items: listed.items.slice(0, input.limit) };
 }) satisfies Handle<typeof inspectLinkInteractionCanvas>;
 
 export { handle };

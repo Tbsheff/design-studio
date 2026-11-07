@@ -116,7 +116,7 @@ export interface PlusMenuActions {
   readonly onAttachFile: () => void;
   readonly onLinkCode: () => void;
   readonly onTemplates: () => void;
-  readonly templatesShown: boolean;
+  readonly hasTemplatesShown: boolean;
   readonly onImportSystem: () => void;
   readonly onDesignSystem: () => void;
   readonly onSkills: () => void;
@@ -154,13 +154,13 @@ export function PlusMenu({
   onClose,
   actions,
   locationLabel,
-  closing,
+  isClosing,
 }: {
   readonly trigger: RefObject<HTMLElement | null>;
   readonly onClose: Close;
   readonly actions: PlusMenuActions;
   readonly locationLabel: string;
-  readonly closing?: boolean;
+  readonly isClosing: boolean;
 }) {
   const run = (action: () => void) => () => {
     onClose(false);
@@ -170,7 +170,7 @@ export function PlusMenu({
   return (
     <Pop
       trigger={trigger}
-      closing={closing}
+      closing={isClosing}
       onClose={onClose}
       className="ui-menu home-plus-menu"
       label="Add to the project"
@@ -199,7 +199,7 @@ export function PlusMenu({
         <Item
           icon="layers"
           label={
-            actions.templatesShown
+            actions.hasTemplatesShown
               ? "Hide templates and starters"
               : "Templates and starters"
           }
@@ -271,18 +271,18 @@ function fontNames(pack: PackSummary): string {
 
 export function PackPreviewCard({
   pack,
-  selected,
+  isSelected,
   onPick,
 }: {
   readonly pack: PackSummary;
-  readonly selected: boolean;
+  readonly isSelected: boolean;
   readonly onPick: () => void;
 }) {
   return (
     <button
       type="button"
       className="home-pack-card"
-      aria-pressed={selected}
+      aria-pressed={isSelected}
       data-pack-id={pack.id}
       onClick={onPick}
     >
@@ -314,17 +314,17 @@ export function PackPreviewCard({
 }
 
 function NoneCard({
-  selected,
+  isSelected,
   onPick,
 }: {
-  readonly selected: boolean;
+  readonly isSelected: boolean;
   readonly onPick: () => void;
 }) {
   return (
     <button
       type="button"
       className="home-pack-card none"
-      aria-pressed={selected}
+      aria-pressed={isSelected}
       onClick={onPick}
     >
       <span className="home-pack-face none" aria-hidden="true">
@@ -339,26 +339,26 @@ function NoneCard({
 export function PackCards({
   packs,
   value,
-  includeNone,
+  shouldIncludeNone,
   onPick,
 }: {
   readonly packs: PackSummary[];
   readonly value: string | null;
-  readonly includeNone: boolean;
+  readonly shouldIncludeNone: boolean;
   readonly onPick: (pack: PackSummary | null) => void;
 }) {
   useEffect(() => loadPackFonts(packs), [packs]);
 
   return (
     <div className="home-pack-grid">
-      {includeNone && (
-        <NoneCard selected={value === null} onPick={() => onPick(null)} />
+      {shouldIncludeNone && (
+        <NoneCard isSelected={value === null} onPick={() => onPick(null)} />
       )}
       {packs.map((pack) => (
         <PackPreviewCard
           key={pack.id}
           pack={pack}
-          selected={pack.id === value}
+          isSelected={pack.id === value}
           onPick={() => onPick(pack)}
         />
       ))}
@@ -373,7 +373,7 @@ export function PackPopover({
   value,
   onChange,
   onNew,
-  closing,
+  isClosing,
 }: {
   readonly trigger: RefObject<HTMLElement | null>;
   readonly onClose: Close;
@@ -381,12 +381,12 @@ export function PackPopover({
   readonly value: string | null;
   readonly onChange: (id: string | null) => void;
   readonly onNew: () => void;
-  readonly closing?: boolean;
+  readonly isClosing: boolean;
 }) {
   return (
     <Pop
       trigger={trigger}
-      closing={closing}
+      closing={isClosing}
       onClose={onClose}
       className="home-pack-pop"
       label="Design system"
@@ -407,7 +407,7 @@ export function PackPopover({
       <PackCards
         packs={state.packs ?? []}
         value={value}
-        includeNone
+        shouldIncludeNone
         onPick={(pack) => {
           onChange(pack?.id ?? null);
           onClose(true);
@@ -430,17 +430,17 @@ export function ModelPopover({
   trigger,
   onClose,
   settings,
-  closing,
+  isClosing,
 }: {
   readonly trigger: RefObject<HTMLElement | null>;
   readonly onClose: Close;
   readonly settings: ModelSettings;
-  readonly closing?: boolean;
+  readonly isClosing: boolean;
 }) {
   return (
     <Pop
       trigger={trigger}
-      closing={closing}
+      closing={isClosing}
       onClose={onClose}
       className="home-model-pop"
       label="Model and run settings"
@@ -504,18 +504,18 @@ export function LevelPopover({
   onClose,
   level,
   onLevel,
-  closing,
+  isClosing,
 }: {
   readonly trigger: RefObject<HTMLElement | null>;
   readonly onClose: Close;
   readonly level: RunLevel;
   readonly onLevel: (level: RunLevel) => void;
-  readonly closing?: boolean;
+  readonly isClosing: boolean;
 }) {
   return (
     <Pop
       trigger={trigger}
-      closing={closing}
+      closing={isClosing}
       onClose={onClose}
       className="home-level-pop"
       label="Level"

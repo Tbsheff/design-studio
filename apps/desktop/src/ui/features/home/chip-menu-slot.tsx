@@ -4,8 +4,8 @@ import type { AppChip } from "./home-app-chip.js";
 import { AppMenu } from "./lazy-parts.js";
 
 function ChipMenuSlot({
-  shown,
-  closing,
+  isShown,
+  isClosing,
   chip,
   homeDir,
   chipRef,
@@ -13,8 +13,8 @@ function ChipMenuSlot({
   onChange,
   onTokensOnly,
 }: {
-  readonly shown: boolean;
-  readonly closing: boolean;
+  readonly isShown: boolean;
+  readonly isClosing: boolean;
   readonly chip: AppChip | null;
   readonly homeDir: string | null;
   readonly chipRef: RefObject<HTMLDivElement | null>;
@@ -22,7 +22,7 @@ function ChipMenuSlot({
   readonly onChange: (patch: Partial<AppChip>) => void;
   readonly onTokensOnly: () => void;
 }) {
-  if (!shown || !chip) {
+  if (!isShown || !chip) {
     return null;
   }
 
@@ -37,7 +37,7 @@ function ChipMenuSlot({
         chip={chip}
         homeDir={homeDir}
         trigger={trigger}
-        closing={closing}
+        isClosing={isClosing}
         onClose={onClose}
         onChange={onChange}
         onTokensOnly={onTokensOnly}

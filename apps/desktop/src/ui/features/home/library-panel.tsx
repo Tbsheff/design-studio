@@ -115,7 +115,7 @@ function Library({
           <lib.PackCards
             packs={pickable(packs).packs ?? []}
             value={pack?.id ?? null}
-            includeNone={false}
+            shouldIncludeNone={false}
             onPick={(picked) => onPickPack(picked?.id ?? null)}
           />
         </section>

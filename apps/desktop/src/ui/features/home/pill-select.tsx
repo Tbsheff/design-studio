@@ -7,7 +7,7 @@ function PillSelect({
   label,
   value,
   sizes = [],
-  open,
+  isOpen,
   triggerRef,
   onOpen,
   ariaLabel,
@@ -15,7 +15,7 @@ function PillSelect({
   readonly label: string;
   readonly value: string;
   readonly sizes?: readonly string[];
-  readonly open: boolean;
+  readonly isOpen: boolean;
   readonly triggerRef: RefObject<HTMLButtonElement | null>;
   readonly onOpen: () => void;
   readonly ariaLabel: string;
@@ -26,7 +26,7 @@ function PillSelect({
       type="button"
       className="ui-pill-select inline"
       aria-haspopup="dialog"
-      aria-expanded={open}
+      aria-expanded={isOpen}
       aria-label={`${ariaLabel}: ${value}`}
       data-tip={label}
       data-tip-side="top"
@@ -48,7 +48,7 @@ function PillSelect({
         strokeWidth={1.6}
         aria-hidden="true"
       >
-        <path d={open ? "M3.5 10L8 5.5l4.5 4.5" : "M3.5 6L8 10.5 12.5 6"} />
+        <path d={isOpen ? "M3.5 10L8 5.5l4.5 4.5" : "M3.5 6L8 10.5 12.5 6"} />
       </svg>
     </button>
   );

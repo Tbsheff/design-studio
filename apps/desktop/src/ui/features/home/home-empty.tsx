@@ -97,11 +97,11 @@ function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
 }
 
 function StartCards({
-  busy,
+  isBusy,
   onSample,
   onStarter,
 }: {
-  readonly busy: boolean;
+  readonly isBusy: boolean;
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
 }) {
@@ -118,7 +118,7 @@ function StartCards({
       <button
         type="button"
         className="home-start-card sample"
-        disabled={busy}
+        disabled={isBusy}
         onClick={onSample}
       >
         <span className="home-start-thumb" aria-hidden="true">
@@ -137,7 +137,7 @@ function StartCards({
               key={starter.id}
               type="button"
               className="home-pill"
-              disabled={busy}
+              disabled={isBusy}
               onClick={() => onStarter(starter)}
             >
               {starter.name}
@@ -150,12 +150,12 @@ function StartCards({
 }
 
 export default function HomeEmpty({
-  busy,
+  isBusy,
   onUse,
   onSample,
   onStarter,
 }: {
-  readonly busy: boolean;
+  readonly isBusy: boolean;
   readonly onUse: (path: string) => void;
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
@@ -164,7 +164,7 @@ export default function HomeEmpty({
     <div className="home-empty-state">
       <div className="home-empty-grid">
         <FoundList onUse={onUse} />
-        <StartCards busy={busy} onSample={onSample} onStarter={onStarter} />
+        <StartCards isBusy={isBusy} onSample={onSample} onStarter={onStarter} />
       </div>
       <p className="home-empty-note">
         “Use” picks the app. Return opens it in the studio, and your changes go

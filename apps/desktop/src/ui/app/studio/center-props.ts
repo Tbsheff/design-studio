@@ -109,7 +109,7 @@ const canvasProps = (ctx: StudioCtx): CanvasProps => {
     headVersionId: direction?.headVersionId ?? null,
     kind: project.kind,
     lastChange: data.lastChange,
-    noRuns: neverRan(data.runsLoaded, directionRuns),
+    noRuns: neverRan(data.hasRunsLoaded, directionRuns),
     onError: data.addError,
     onFrameChange: data.clearFrameErrors,
     onInlinePrompt: whenDirection(did, run.tweak),

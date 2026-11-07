@@ -151,7 +151,7 @@ function useChipFlow({
   const submitChip = (text: string) => {
     const chip = app.chip;
 
-    if (!chip || chip.checking) {
+    if (!chip || chip.isChecking) {
       return;
     }
 

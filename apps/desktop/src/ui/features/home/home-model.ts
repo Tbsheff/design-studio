@@ -96,7 +96,7 @@ function homeSendBlocker(
   }
 
   if (chip) {
-    return chip.checking ? "Checking the folder" : chipProblem(chip);
+    return chip.isChecking ? "Checking the folder" : chipProblem(chip);
   }
 
   if (asking) {
@@ -223,7 +223,7 @@ interface Point {
 
 interface KeyedFlag {
   readonly key: string;
-  readonly on: boolean;
+  readonly isOn: boolean;
 }
 
 interface KeyedUrl {
@@ -232,7 +232,7 @@ interface KeyedUrl {
 }
 
 interface StarProps {
-  readonly filled: boolean;
+  readonly isFilled: boolean;
   readonly size?: number;
 }
 

@@ -187,6 +187,7 @@ export const useSwapGate = (
         directionId: target.directionId,
         paths: [],
         receivedAt: now,
+        shouldReload: false,
       });
       bump();
     }

@@ -74,7 +74,7 @@ function locationOptions(
   usable: WorkspaceFolder[],
   value: string | null,
   homeDir: string | null,
-  labels: { readonly fallback: string; readonly unsupported: boolean }
+  labels: { readonly fallback: string; readonly isUnsupported: boolean }
 ): UiSelectOption[] {
   const custom =
     value && !usable.some((folder) => folder.path === value)
@@ -86,7 +86,7 @@ function locationOptions(
     ...custom,
     {
       value: CHOOSE,
-      label: labels.unsupported ? "Paste a folder path…" : "Choose folder…",
+      label: labels.isUnsupported ? "Paste a folder path…" : "Choose folder…",
     },
   ];
 }
@@ -123,7 +123,7 @@ export function LocationField({
     }
   };
   const pick = async () => {
-    if (chooser.unsupported) {
+    if (chooser.isUnsupported) {
       setPasting(true);
       return;
     }
@@ -133,7 +133,7 @@ export function LocationField({
     );
     if (picked.path) {
       await useFolder(picked.path);
-    } else if (picked.unsupported) {
+    } else if (picked.isUnsupported) {
       setPasting(true);
     }
   };
@@ -143,10 +143,10 @@ export function LocationField({
       <LazySelect
         id="new-project-location"
         value={value ?? DEFAULT}
-        disabled={chooser.picking}
+        disabled={chooser.isPicking}
         options={locationOptions(usable, value, homeDir, {
           fallback: fallback?.label ?? "Design Studio",
-          unsupported: chooser.unsupported,
+          isUnsupported: chooser.isUnsupported,
         })}
         onChange={(next) => {
           if (next === CHOOSE) {
@@ -179,7 +179,7 @@ export function LocationField({
 interface FolderRowProps {
   readonly folder: WorkspaceFolder;
   readonly count: number;
-  readonly active: boolean;
+  readonly isActive: boolean;
   readonly homeDir: string | null;
   readonly onFilter: () => void;
   readonly onNewHere: () => void;
@@ -187,13 +187,13 @@ interface FolderRowProps {
   readonly onRename: (label: string) => Promise<boolean>;
   readonly onRemove: () => void;
   readonly onChangeDefault: () => void;
-  readonly changing: boolean;
+  readonly isChanging: boolean;
 }
 
 function FolderRow({
   folder,
   count,
-  active,
+  isActive,
   homeDir,
   onFilter,
   onNewHere,
@@ -201,7 +201,7 @@ function FolderRow({
   onRename,
   onRemove,
   onChangeDefault,
-  changing,
+  isChanging,
 }: FolderRowProps) {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(folder.label);
@@ -224,7 +224,7 @@ function FolderRow({
   };
   return (
     <li
-      className={`folder-row${folder.missing ? " missing" : ""}${active ? " active" : ""}`}
+      className={`folder-row${folder.missing ? " missing" : ""}${isActive ? " active" : ""}`}
     >
       {editing ? (
         <form className="folder-rename" onSubmit={(e) => void save(e)}>
@@ -250,10 +250,10 @@ function FolderRow({
         <button
           type="button"
           className="folder-main"
-          aria-pressed={active}
+          aria-pressed={isActive}
           onClick={onFilter}
           data-tip={
-            active ? "Show all projects" : `Show projects in ${folder.label}`
+            isActive ? "Show all projects" : `Show projects in ${folder.label}`
           }
           data-tip-align="start"
         >
@@ -306,7 +306,7 @@ function FolderRow({
               aria-label="Change the default folder"
               data-tip="New projects go here when you pick no location."
               onClick={onChangeDefault}
-              disabled={changing}
+              disabled={isChanging}
             >
               Change…
             </button>
@@ -372,7 +372,7 @@ export function FoldersSection({
   const folders = list?.folders ?? [];
   const homeDir = list?.homeDir ?? null;
   const changeDefault = async (current: WorkspaceFolder) => {
-    if (chooser.unsupported) {
+    if (chooser.isUnsupported) {
       setPastingDefault(true);
       return;
     }
@@ -382,19 +382,19 @@ export function FoldersSection({
     );
     if (picked.path) {
       await onSetDefault(picked.path);
-    } else if (picked.unsupported) {
+    } else if (picked.isUnsupported) {
       setPastingDefault(true);
     }
   };
   const add = async () => {
-    if (chooser.unsupported) {
+    if (chooser.isUnsupported) {
       setPasting(true);
       return;
     }
     const picked = await chooser.choose("Choose a folder you work in");
     if (picked.path) {
       await onAdd(picked.path);
-    } else if (picked.unsupported) {
+    } else if (picked.isUnsupported) {
       setPasting(true);
     }
   };
@@ -411,7 +411,7 @@ export function FoldersSection({
           type="button"
           className="btn small has-icon"
           onClick={() => void add()}
-          disabled={chooser.picking}
+          disabled={chooser.isPicking}
         >
           <Icon name="plus" size={14} />
           Add folder…
@@ -450,7 +450,7 @@ export function FoldersSection({
               key={folder.id}
               folder={folder}
               count={projectsInFolder(projects ?? [], folder.path).length}
-              active={filterId === folder.id}
+              isActive={filterId === folder.id}
               homeDir={homeDir}
               onFilter={() =>
                 onFilter(filterId === folder.id ? null : folder.id)
@@ -460,7 +460,7 @@ export function FoldersSection({
               onRename={(label) => onRename(folder.id, label)}
               onRemove={() => onRemove(folder)}
               onChangeDefault={() => void changeDefault(folder)}
-              changing={chooser.picking}
+              isChanging={chooser.isPicking}
             />
           ))}
         </ul>

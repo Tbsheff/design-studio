@@ -518,7 +518,7 @@ export function usePreviewFrames(o: Options) {
       return;
     }
 
-    if (o.kind === "react" && !change.reload) {
+    if (o.kind === "react" && !change.shouldReload) {
       pendingReact.current = {
         changedAt: change.changedAt,
         receivedAt: change.receivedAt,
@@ -532,7 +532,7 @@ export function usePreviewFrames(o: Options) {
       window.clearTimeout(pendingSwap.current.timer);
     }
 
-    reselectOnSwap.current = change.reload === true;
+    reselectOnSwap.current = change.shouldReload === true;
     const token = randomToken();
     const src = frameSrc(o.baseUrl, { v: String(change.changedAt) });
     setSlots((prev) => [

@@ -1,7 +1,7 @@
 import { Icon } from "@design-studio/ui";
 
-function DropHint({ on }: { readonly on: boolean }) {
-  if (!on) {
+function DropHint({ isOn }: { readonly isOn: boolean }) {
+  if (!isOn) {
     return null;
   }
 

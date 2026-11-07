@@ -1,7 +1,7 @@
 import { CopyButton, Icon, useModalDialog } from "@design-studio/ui";
 
 export interface DoctorStep {
-  readonly ok: boolean;
+  readonly isOk: boolean;
   readonly text: string;
 }
 
@@ -16,13 +16,13 @@ export interface DoctorProblem {
 
 export default function HomeDoctor({
   problem,
-  checking,
+  isChecking,
   onCheck,
   onOpenAnyway,
   onClose,
 }: {
   readonly problem: DoctorProblem;
-  readonly checking: boolean;
+  readonly isChecking: boolean;
   readonly onCheck: () => void;
   readonly onOpenAnyway: () => void;
   readonly onClose: () => void;
@@ -52,8 +52,8 @@ export default function HomeDoctor({
       </div>
       <ul className="home-doctor-steps" aria-label="Checks">
         {problem.steps.map((step) => (
-          <li key={step.text} className={step.ok ? "ok" : "bad"}>
-            <Icon name={step.ok ? "check" : "alert"} size={12} />
+          <li key={step.text} className={step.isOk ? "ok" : "bad"}>
+            <Icon name={step.isOk ? "check" : "alert"} size={12} />
             {step.text}
           </li>
         ))}
@@ -77,10 +77,10 @@ export default function HomeDoctor({
             type="button"
             className="btn small primary"
             data-autofocus
-            disabled={checking}
+            disabled={isChecking}
             onClick={onCheck}
           >
-            {checking ? "Checking…" : "Check again"}
+            {isChecking ? "Checking…" : "Check again"}
           </button>
           <div className="spacer" />
           <button

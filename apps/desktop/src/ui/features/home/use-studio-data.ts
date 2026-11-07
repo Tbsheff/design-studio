@@ -52,7 +52,7 @@ export interface FilesChange {
   readonly changedAt: number;
   readonly receivedAt: number;
   readonly paths: string[];
-  readonly reload?: boolean;
+  readonly shouldReload: boolean;
 }
 
 interface StudioData {
@@ -63,7 +63,7 @@ interface StudioData {
   readonly setDirectionId: (id: string) => void;
   readonly versions: Version[];
   readonly runs: RunMap;
-  readonly runsLoaded: boolean;
+  readonly hasRunsLoaded: boolean;
   readonly status: WorkTreeStatus | null;
   readonly setStatus: (s: WorkTreeStatus | null) => void;
   readonly errors: BuildError[];
@@ -390,7 +390,7 @@ export function useStudioData(projectId: string): StudioData {
               changedAt: event.changedAt,
               receivedAt: Date.now(),
               paths: event.paths,
-              ...(event.reload ? { reload: true } : {}),
+              shouldReload: event.reload === true,
             });
           }
           break;
@@ -494,7 +494,7 @@ export function useStudioData(projectId: string): StudioData {
     setDirectionId,
     versions,
     runs,
-    runsLoaded,
+    hasRunsLoaded: runsLoaded,
     status,
     setStatus,
     errors,

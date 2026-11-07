@@ -309,16 +309,16 @@ function MiniRail({
 
 function RailRow({
   hit,
-  current,
+  isCurrent,
 }: {
   readonly hit: ProjectHit;
-  readonly current: boolean;
+  readonly isCurrent: boolean;
 }) {
   return (
     <button
       type="button"
       className="prail-item prail-row"
-      aria-current={current ? "page" : undefined}
+      aria-current={isCurrent ? "page" : undefined}
       data-tip={
         hit.health
           ? `${KIND_LABEL[hit.type]} · ${hit.health.note}`
@@ -418,7 +418,7 @@ function OpenRail({
                 <RailRow
                   key={hit.id}
                   hit={hit}
-                  current={hit.id === projectId}
+                  isCurrent={hit.id === projectId}
                 />
               ))}
             </div>

@@ -16,11 +16,11 @@ interface Props {
   readonly designMd: string;
   readonly onDesignMd: (value: string) => void;
   readonly onError: (message: string) => void;
-  readonly initiallyOpen?: boolean;
+  readonly isInitiallyOpen: boolean;
 }
 
 export function NewProjectAdvanced(props: Props) {
-  const [open, setOpen] = useState(props.initiallyOpen === true);
+  const [open, setOpen] = useState(props.isInitiallyOpen === true);
 
   const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

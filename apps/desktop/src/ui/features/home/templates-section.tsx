@@ -8,12 +8,12 @@ import type { TemplatesModule } from "./lazy-parts.js";
 function TemplatesSection({
   templates,
   selected,
-  disabled,
+  isDisabled,
   onPick,
 }: {
   readonly templates: TemplatesModule | null;
   readonly selected: string | null;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
 }) {
   return (
@@ -22,7 +22,7 @@ function TemplatesSection({
         type="button"
         className="ui-section-label home-templates-toggle"
         aria-expanded
-        onClick={() => homePrefs.set({ templatesShown: false })}
+        onClick={() => homePrefs.set({ hasTemplatesShown: false })}
       >
         Templates and starters
         <Icon name="close" size={10} />
@@ -30,7 +30,7 @@ function TemplatesSection({
       {templates ? (
         <templates.HomeTemplateGrid
           selected={selected}
-          disabled={disabled}
+          isDisabled={isDisabled}
           onPick={onPick}
         />
       ) : (

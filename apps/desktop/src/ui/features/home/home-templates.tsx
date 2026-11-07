@@ -233,11 +233,11 @@ export const HOME_TEMPLATES: HomeTemplate[] = [
 
 export function HomeTemplateGrid({
   selected,
-  disabled,
+  isDisabled,
   onPick,
 }: {
   readonly selected: string | null;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
 }) {
   const [starters, setStarters] = useState<Starter[]>([]);
@@ -259,7 +259,7 @@ export function HomeTemplateGrid({
           type="button"
           className="ui-tile"
           aria-pressed={selected === template.id}
-          disabled={disabled}
+          disabled={isDisabled}
           data-template={template.id}
           onClick={() =>
             onPick(

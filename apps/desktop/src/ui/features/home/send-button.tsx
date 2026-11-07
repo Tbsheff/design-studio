@@ -4,12 +4,12 @@ import { type Busy, EMPTY_PROMPT, HOME_REASON_ID } from "./home-model.js";
 
 function SendButton({
   busy,
-  disabled,
+  isDisabled,
   reason,
   label,
 }: {
   readonly busy: Busy;
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly reason: string | null;
   readonly label: string;
 }) {
@@ -19,12 +19,12 @@ function SendButton({
     <button
       className="icon-btn send home-send"
       type="submit"
-      disabled={disabled}
+      disabled={isDisabled}
       aria-busy={working || undefined}
       aria-label={
         busy === "ask" ? "Thinking" : busy === "create" ? "Working" : label
       }
-      data-tip={disabled && reason ? reason : `${label}  ↩`}
+      data-tip={isDisabled && reason ? reason : `${label}  ↩`}
       data-tip-align="end"
       data-tip-side="top"
     >

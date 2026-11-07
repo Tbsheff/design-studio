@@ -5,8 +5,8 @@ import { ComposerAlert } from "./home-composer-parts.js";
 import { HomeEmpty } from "./lazy-parts.js";
 
 function LibraryArea({
-  empty,
-  busy,
+  isEmpty,
+  isBusy,
   listError,
   onRetry,
   onUse,
@@ -14,8 +14,8 @@ function LibraryArea({
   onStarter,
   children,
 }: {
-  readonly empty: boolean;
-  readonly busy: boolean;
+  readonly isEmpty: boolean;
+  readonly isBusy: boolean;
   readonly listError: string | null;
   readonly onRetry: () => void;
   readonly onUse: (path: string) => void;
@@ -23,11 +23,11 @@ function LibraryArea({
   readonly onStarter: (starter: Starter) => void;
   readonly children: ReactNode;
 }) {
-  if (empty) {
+  if (isEmpty) {
     return (
       <Suspense fallback={null}>
         <HomeEmpty
-          busy={busy}
+          isBusy={isBusy}
           onUse={onUse}
           onSample={onSample}
           onStarter={onStarter}

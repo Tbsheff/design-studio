@@ -11,21 +11,21 @@ function useDoctorGate() {
       return;
     }
 
-    setGate({ ...gate, checking: true });
+    setGate({ ...gate, isChecking: true });
     const fixed = await gate.check().catch(() => false);
 
     if (fixed) {
       setGate(null);
       gate.proceed();
     } else {
-      setGate({ ...gate, checking: false });
+      setGate({ ...gate, isChecking: false });
     }
   };
 
   return {
     gate,
-    open: (next: Omit<DoctorGate, "checking">) =>
-      setGate({ ...next, checking: false }),
+    open: (next: Omit<DoctorGate, "isChecking">) =>
+      setGate({ ...next, isChecking: false }),
     close,
     check,
   };

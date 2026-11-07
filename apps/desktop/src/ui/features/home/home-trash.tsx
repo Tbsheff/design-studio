@@ -11,7 +11,7 @@ type Confirm =
   | {
       readonly kind: "all";
       readonly count: number;
-      readonly folderStays: boolean;
+      readonly shouldFolderStay: boolean;
     };
 
 const trashApi = {
@@ -67,12 +67,12 @@ function useTrashThumb(item: TrashItem): string | null {
 
 function TrashRow({
   item,
-  busy,
+  isBusy,
   onRestore,
   onDelete,
 }: {
   readonly item: TrashItem;
-  readonly busy: boolean;
+  readonly isBusy: boolean;
   readonly onRestore: () => void;
   readonly onDelete: () => void;
 }) {
@@ -106,7 +106,7 @@ function TrashRow({
           type="button"
           className="btn small has-icon"
           onClick={onRestore}
-          disabled={busy}
+          disabled={isBusy}
           aria-label={`Restore ${item.name}`}
         >
           <Icon name="restore" size={14} />
@@ -116,7 +116,7 @@ function TrashRow({
           type="button"
           className="btn small ghost danger"
           onClick={onDelete}
-          disabled={busy}
+          disabled={isBusy}
           aria-label={`Delete ${item.name} forever`}
         >
           Delete forever
@@ -128,18 +128,18 @@ function TrashRow({
 
 function ConfirmDelete({
   confirm,
-  busy,
+  isBusy,
   error,
   onCancel,
   onConfirm,
 }: {
   readonly confirm: Confirm;
-  readonly busy: boolean;
+  readonly isBusy: boolean;
   readonly error: string | null;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
 }) {
-  const dialog = useModalDialog(() => (busy ? false : onCancel()));
+  const dialog = useModalDialog(() => (isBusy ? false : onCancel()));
 
   const title =
     confirm.kind === "one"
@@ -152,7 +152,9 @@ function ConfirmDelete({
       : `${confirm.count === 1 ? "1 project" : `${confirm.count} projects`} and their versions, runs and comments leave the app. You cannot undo this.`;
 
   const folders =
-    confirm.kind === "one" ? confirm.item.folderStays : confirm.folderStays;
+    confirm.kind === "one"
+      ? confirm.item.folderStays
+      : confirm.shouldFolderStay;
 
   return (
     <dialog
@@ -183,7 +185,7 @@ function ConfirmDelete({
           className="btn ghost"
           data-autofocus
           onClick={onCancel}
-          disabled={busy}
+          disabled={isBusy}
         >
           Cancel
         </button>
@@ -191,9 +193,9 @@ function ConfirmDelete({
           type="button"
           className="btn danger"
           onClick={onConfirm}
-          disabled={busy}
+          disabled={isBusy}
         >
-          {busy
+          {isBusy
             ? "Deleting…"
             : confirm.kind === "one"
               ? "Delete forever"
@@ -348,7 +350,7 @@ export default function HomeTrash({
               <TrashRow
                 key={item.trashId}
                 item={item}
-                busy={busy !== null}
+                isBusy={busy !== null}
                 onRestore={() => void restore(item)}
                 onDelete={() => {
                   setConfirmError(null);
@@ -380,7 +382,9 @@ export default function HomeTrash({
               setConfirm({
                 kind: "all",
                 count,
-                folderStays: (items ?? []).every((item) => item.folderStays),
+                shouldFolderStay: (items ?? []).every(
+                  (item) => item.folderStays
+                ),
               });
             }}
           >
@@ -394,7 +398,7 @@ export default function HomeTrash({
       {confirm && (
         <ConfirmDelete
           confirm={confirm}
-          busy={busy === "confirm"}
+          isBusy={busy === "confirm"}
           error={confirmError}
           onCancel={() => setConfirm(null)}
           onConfirm={() => void confirmDelete()}

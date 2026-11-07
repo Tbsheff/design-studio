@@ -6,7 +6,7 @@ import { shortHome } from "./home-model.js";
 
 interface DoctorGate {
   readonly problem: DoctorProblem;
-  readonly checking: boolean;
+  readonly isChecking: boolean;
   readonly check: () => Promise<boolean>;
   readonly proceed: () => void;
 }
@@ -64,8 +64,8 @@ function installProblem(
     place,
     badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
     steps: [
-      { ok: true, text: `package.json · ${kindLabel}` },
-      { ok: false, text: "node_modules is missing" },
+      { isOk: true, text: `package.json · ${kindLabel}` },
+      { isOk: false, text: "node_modules is missing" },
     ],
     detail: INSTALL_DETAIL,
     command: `cd ${shellPath(install.dir, install.homeDir)} && ${install.command}`,
@@ -85,9 +85,9 @@ function healthProblem(
     place,
     badge: { label, tone: label === "Vite" ? "vite" : "next" },
     steps: [
-      { ok: true, text: `package.json · ${label}` },
+      { isOk: true, text: `package.json · ${label}` },
       {
-        ok: false,
+        isOk: false,
         text:
           health.state === "install"
             ? "node_modules is missing"

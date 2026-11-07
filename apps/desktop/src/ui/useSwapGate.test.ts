@@ -7,6 +7,7 @@ const change = (directionId: string, changedAt: number) => ({
   changedAt,
   receivedAt: changedAt,
   paths: [],
+  shouldReload: false,
 });
 
 describe(SwapQueue, () => {

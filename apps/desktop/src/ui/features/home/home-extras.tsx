@@ -133,7 +133,7 @@ export function ComposerFoot({
       </div>
       <NewProjectAdvanced
         key={advanced.opened}
-        initiallyOpen={advanced.opened > 0}
+        isInitiallyOpen={advanced.opened > 0}
         draft={advanced.draft}
         onDraft={advanced.onDraft}
         designMd={advanced.designMd}

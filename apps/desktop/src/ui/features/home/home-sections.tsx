@@ -8,7 +8,7 @@ import type { CardActions } from "./project-grid.js";
 import { projectsApi, useProjects } from "./projects-store-model.js";
 
 export function useOnboarding(): {
-  readonly show: boolean;
+  readonly shouldShow: boolean;
   readonly dismiss: () => void;
 } {
   const [show, setShow] = useState(false);
@@ -24,7 +24,7 @@ export function useOnboarding(): {
     void api.dismissOnboarding().catch(() => undefined);
   };
 
-  return { show, dismiss };
+  return { shouldShow: show, dismiss };
 }
 
 export interface HomeToastState {
@@ -32,7 +32,7 @@ export interface HomeToastState {
   readonly text: string;
   readonly action?: { readonly label: string; readonly run: () => void };
   readonly more?: { readonly label: string; readonly run: () => void };
-  readonly error?: boolean;
+  readonly hasError: boolean;
 }
 
 const TOAST_MS = 8000;
@@ -46,7 +46,7 @@ export function HomeToast({
 }) {
   const [held, setHeld] = useState(false);
   useEffect(() => {
-    if (!toast || held || toast.action || toast.error) {
+    if (!toast || held || toast.action || toast.hasError) {
       return;
     }
 
@@ -60,7 +60,7 @@ export function HomeToast({
       {toast && (
         <div
           key={toast.id}
-          className={`ds-toast home-toast${toast.error ? " error" : ""}`}
+          className={`ds-toast home-toast${toast.hasError ? " error" : ""}`}
           onMouseEnter={() => setHeld(true)}
           onMouseLeave={() => setHeld(false)}
           onFocus={() => setHeld(true)}
@@ -134,7 +134,7 @@ export function useProjectActions({
       await projectsApi.rename(project, name).catch((err: unknown) =>
         showToast({
           text: `Could not rename: ${errorText(err)}`,
-          error: true,
+          hasError: true,
         })
       );
     },
@@ -142,13 +142,14 @@ export function useProjectActions({
       try {
         const copy = await projectsApi.duplicate(project);
         showToast({
+          hasError: false,
           text: `Duplicated as “${copy.name}”`,
           action: { label: "Open", run: () => onOpen(copy) },
         });
       } catch (err) {
         showToast({
           text: `Could not duplicate: ${errorText(err)}`,
-          error: true,
+          hasError: true,
         });
       }
     },
@@ -156,7 +157,7 @@ export function useProjectActions({
       void projectsApi.reveal(project).catch((err: unknown) =>
         showToast({
           text: `Could not show the folder: ${errorText(err)}`,
-          error: true,
+          hasError: true,
         })
       );
     },
@@ -168,11 +169,12 @@ export function useProjectActions({
           void projectsApi.restore(trashed.trashId).catch((err: unknown) =>
             showToast({
               text: `Could not restore: ${errorText(err)}`,
-              error: true,
+              hasError: true,
             })
           );
 
         showToast({
+          hasError: false,
           text: removedText(project, homeDir),
           action: { label: "Undo", run: undo },
           more: { label: "Open Trash", run: onOpenTrash },
@@ -180,7 +182,7 @@ export function useProjectActions({
       } catch (err) {
         showToast({
           text: `Could not move to Trash: ${errorText(err)}`,
-          error: true,
+          hasError: true,
         });
       }
     },
@@ -200,7 +202,7 @@ export function useHomeProjects() {
     projects,
     error: listError,
     reload: loadProjects,
-  } = useProjects({ watch: true });
+  } = useProjects({ shouldWatch: true });
 
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {

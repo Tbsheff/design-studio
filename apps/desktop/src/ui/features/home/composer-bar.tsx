@@ -41,7 +41,7 @@ interface ComposerBarProps {
   readonly busy: Busy;
   readonly sendDisabled: string | null;
   readonly app: Omit<AppSlotProps, "pop" | "folderRef"> & {
-    readonly folderPop: boolean;
+    readonly isFolderPopOpen: boolean;
     readonly onFolderPick: (path: string) => void;
     readonly onFolderClose: () => void;
   };
@@ -96,9 +96,9 @@ function ComposerBar({
   useEffect(
     () =>
       setPop((current) =>
-        app.folderPop ? "folder" : current === "folder" ? null : current
+        app.isFolderPopOpen ? "folder" : current === "folder" ? null : current
       ),
-    [app.folderPop]
+    [app.isFolderPopOpen]
   );
 
   const closeFolder = (refocus: boolean) => {
@@ -138,7 +138,7 @@ function ComposerBar({
           <Suspense fallback={null}>
             <PlusMenu
               trigger={plusRef}
-              closing={shownPop.closing}
+              isClosing={shownPop.closing}
               onClose={closePop}
               locationLabel={locationLabel}
               actions={{ ...plusActions, onDesignSystem: () => setPop("pack") }}
@@ -158,7 +158,7 @@ function ComposerBar({
           <Suspense fallback={null}>
             <FolderPathPop
               trigger={folderRef}
-              closing={shownPop.closing}
+              isClosing={shownPop.closing}
               onClose={closeFolder}
               onPick={app.onFolderPick}
             />
@@ -187,7 +187,7 @@ function ComposerBar({
           label="Design system"
           ariaLabel="Design system"
           value={pack?.name ?? "No design system"}
-          open={pop === "pack"}
+          isOpen={pop === "pack"}
           triggerRef={packRef}
           onOpen={() => togglePop("pack")}
         />
@@ -195,7 +195,7 @@ function ComposerBar({
           <Suspense fallback={null}>
             <PackPopover
               trigger={packRef}
-              closing={shownPop.closing}
+              isClosing={shownPop.closing}
               onClose={closePop}
               state={pickable(packs)}
               value={pack?.id ?? null}
@@ -213,7 +213,7 @@ function ComposerBar({
           ariaLabel="Level"
           value={LEVEL_LABEL[modelSettings.level]}
           sizes={Object.values(LEVEL_LABEL)}
-          open={pop === "level"}
+          isOpen={pop === "level"}
           triggerRef={levelRef}
           onOpen={() => togglePop("level")}
         />
@@ -221,7 +221,7 @@ function ComposerBar({
           <Suspense fallback={null}>
             <LevelPopover
               trigger={levelRef}
-              closing={shownPop.closing}
+              isClosing={shownPop.closing}
               onClose={closePop}
               level={modelSettings.level}
               onLevel={modelSettings.onLevel}
@@ -235,7 +235,7 @@ function ComposerBar({
           ariaLabel="Model and run settings"
           value={modelValue}
           sizes={modelSizes}
-          open={pop === "model"}
+          isOpen={pop === "model"}
           triggerRef={modelRef}
           onOpen={() => togglePop("model")}
         />
@@ -243,7 +243,7 @@ function ComposerBar({
           <Suspense fallback={null}>
             <ModelPopover
               trigger={modelRef}
-              closing={shownPop.closing}
+              isClosing={shownPop.closing}
               onClose={closePop}
               settings={modelSettings}
             />
@@ -252,7 +252,7 @@ function ComposerBar({
       </div>
       <SendButton
         busy={busy}
-        disabled={sendDisabled !== null}
+        isDisabled={sendDisabled !== null}
         reason={sendDisabled}
         label={app.chip ? "Open" : "Create"}
       />

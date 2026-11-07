@@ -142,7 +142,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   } = flow;
 
   const shownAppMenu = usePresence(appMenu ? "menu" : null);
-  const templates = useModule(loadTemplates, prefs.templatesShown);
+  const templates = useModule(loadTemplates, prefs.hasTemplatesShown);
   const extras = useModule(loadExtras, true);
   const library = useModule(loadLibrary, true);
   const listed = projects !== null || listError !== null;
@@ -319,8 +319,9 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   const plusActions = {
     onAttachFile: () => fileRef.current?.click(),
     onLinkCode: () => void addAppFolder(),
-    onTemplates: () => homePrefs.set({ templatesShown: !prefs.templatesShown }),
-    templatesShown: prefs.templatesShown,
+    onTemplates: () =>
+      homePrefs.set({ hasTemplatesShown: !prefs.hasTemplatesShown }),
+    hasTemplatesShown: prefs.hasTemplatesShown,
     onImportSystem: () =>
       uiStore.set({ screen: "design-systems", libraryFrom: null }),
     onSkills: openAdvanced,
@@ -349,7 +350,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   const chipLead: ReactNode = app.chip ? (
     <AppChipView
       chip={app.chip}
-      menuOpen={appMenu}
+      isMenuOpen={appMenu}
       onMenu={() => setAppMenu((open) => !open)}
       onRemove={app.clear}
     />

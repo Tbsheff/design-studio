@@ -129,8 +129,8 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
                 onRemoveReference={removeReference}
               />
               <ChipMenuSlot
-                shown={shownAppMenu.shown !== null}
-                closing={shownAppMenu.closing}
+                isShown={shownAppMenu.shown !== null}
+                isClosing={shownAppMenu.closing}
                 chip={app.chip}
                 homeDir={homeDir}
                 chipRef={chipRef}
@@ -162,7 +162,7 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
                   home={homeRef}
                 />
               )}
-              <DropHint on={dragging} />
+              <DropHint isOn={dragging} />
               <StarterRow
                 template={template}
                 busy={busy}
@@ -186,7 +186,7 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
                   chip: app.chip,
                   onAddFolder: () => void addAppFolder(),
                   onDoctor: () => chipDoctor(prompt.trim()),
-                  folderPop,
+                  isFolderPopOpen: folderPop,
                   onFolderPick: putFolder,
                   onFolderClose: () => setFolderPop(false),
                 }}
@@ -208,17 +208,17 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
                 />
               </Suspense>
             )}
-            {!questions && prefs.templatesShown && (
+            {!questions && prefs.hasTemplatesShown && (
               <TemplatesSection
                 templates={templates}
                 selected={template?.id ?? null}
-                disabled={busy !== null}
+                isDisabled={busy !== null}
                 onPick={pickTemplate}
               />
             )}
           </div>
           <HeroNotes
-            windowDrag={windowDrag}
+            isWindowDragged={windowDrag}
             formError={formError}
             onClearError={() => setFormError(null)}
           />
@@ -243,8 +243,8 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
           )}
         </section>
         <LibraryArea
-          empty={empty}
-          busy={busy !== null}
+          isEmpty={empty}
+          isBusy={busy !== null}
           listError={listError}
           onRetry={() => void loadProjects()}
           onUse={putFolder}
@@ -273,7 +273,7 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
         </LibraryArea>
       </main>
       <HomeOverlays
-        trashOpen={trashOpen}
+        isTrashOpen={trashOpen}
         onCloseTrash={() => setTrashOpen(false)}
         onRestored={() => void loadProjects()}
         doctor={doctor}

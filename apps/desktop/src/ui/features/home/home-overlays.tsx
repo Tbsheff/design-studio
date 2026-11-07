@@ -5,14 +5,14 @@ import { HomeDoctor, HomeTrash } from "./lazy-parts.js";
 import { useDoctorGate } from "./use-doctor-gate.js";
 
 function HomeOverlays({
-  trashOpen,
+  isTrashOpen,
   onCloseTrash,
   onRestored,
   doctor,
   toast,
   onToastDone,
 }: {
-  readonly trashOpen: boolean;
+  readonly isTrashOpen: boolean;
   readonly onCloseTrash: () => void;
   readonly onRestored: () => void;
   readonly doctor: ReturnType<typeof useDoctorGate>;
@@ -23,7 +23,7 @@ function HomeOverlays({
 
   return (
     <>
-      {trashOpen && (
+      {isTrashOpen && (
         <Suspense fallback={null}>
           <HomeTrash onClose={onCloseTrash} onRestored={onRestored} />
         </Suspense>
@@ -32,7 +32,7 @@ function HomeOverlays({
         <Suspense fallback={null}>
           <HomeDoctor
             problem={gate.problem}
-            checking={gate.checking}
+            isChecking={gate.isChecking}
             onCheck={() => void doctor.check()}
             onOpenAnyway={() => {
               doctor.close();

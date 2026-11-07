@@ -257,7 +257,7 @@ export interface AppMenuProps {
   readonly chip: AppChip;
   readonly homeDir: string | null;
   readonly trigger: RefObject<HTMLElement | null>;
-  readonly closing: boolean;
+  readonly isClosing: boolean;
   readonly onClose: Close;
   readonly onChange: (patch: Partial<AppChip>) => void;
   readonly onTokensOnly: () => void;
@@ -267,7 +267,7 @@ export function AppMenu({
   chip,
   homeDir,
   trigger,
-  closing,
+  isClosing,
   onClose,
   onChange,
   onTokensOnly,
@@ -278,7 +278,7 @@ export function AppMenu({
   return (
     <Pop
       trigger={trigger}
-      closing={closing}
+      closing={isClosing}
       onClose={onClose}
       className="ui-menu home-app-menu"
       label="App options"
@@ -327,12 +327,12 @@ export function AppMenu({
 
 export function FolderPathPop({
   trigger,
-  closing,
+  isClosing,
   onClose,
   onPick,
 }: {
   readonly trigger: RefObject<HTMLElement | null>;
-  readonly closing: boolean;
+  readonly isClosing: boolean;
   readonly onClose: Close;
   readonly onPick: (path: string) => void;
 }) {
@@ -350,7 +350,7 @@ export function FolderPathPop({
   return (
     <Pop
       trigger={trigger}
-      closing={closing}
+      closing={isClosing}
       onClose={onClose}
       className="ui-menu home-path-pop"
       label="Add app folder"

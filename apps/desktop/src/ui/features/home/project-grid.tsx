@@ -71,7 +71,7 @@ export function useLastRunFailed(project: Project): boolean {
     }
 
     pending.then(
-      (on) => live && setFailed({ key, on }),
+      (on) => live && setFailed({ isOn: on, key }),
       () => undefined
     );
 
@@ -80,7 +80,7 @@ export function useLastRunFailed(project: Project): boolean {
     };
   }, [key, project.id]);
 
-  return failed?.key === key && failed.on;
+  return failed?.key === key && failed.isOn;
 }
 
 function warmOpen(project: Project, withPreview: boolean): void {
@@ -131,14 +131,14 @@ export function useThumbnail(project: Project): string | null {
   return null;
 }
 
-function Star({ filled, size = 14 }: StarProps) {
+function Star({ isFilled, size = 14 }: StarProps) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 16 16"
       aria-hidden="true"
-      fill={filled ? "currentColor" : "none"}
+      fill={isFilled ? "currentColor" : "none"}
       stroke="currentColor"
       strokeWidth={1.4}
       strokeLinejoin="round"
@@ -172,8 +172,8 @@ interface CardProps {
   readonly pack: PackSummary | null;
   readonly health: AppHealth | null;
   readonly homeDir: string | null;
-  readonly active: boolean;
-  readonly favorite: boolean;
+  readonly isActive: boolean;
+  readonly isFavorite: boolean;
   readonly actions: CardActions;
   readonly onFocusCard: () => void;
 }
@@ -221,14 +221,14 @@ const HEALTH_TEXT: Record<AppHealth["state"], string> = {
 
 export function HealthCell({
   health,
-  runFailed = false,
+  hasRunFailed = false,
 }: {
   readonly health: AppHealth | null;
-  readonly runFailed?: boolean;
+  readonly hasRunFailed: boolean;
 }) {
   const state = health?.state ?? "static";
 
-  if (runFailed && state !== "install" && state !== "failed") {
+  if (hasRunFailed && state !== "install" && state !== "failed") {
     return (
       <span
         className="project-health run-failed"
@@ -260,8 +260,8 @@ function ProjectCard({
   pack,
   health,
   homeDir,
-  active,
-  favorite,
+  isActive,
+  isFavorite,
   actions,
   onFocusCard,
 }: CardProps) {
@@ -346,7 +346,7 @@ function ProjectCard({
       <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
       <HealthCell
         health={project.imported ? health : null}
-        runFailed={runFailed}
+        hasRunFailed={runFailed}
       />
       <time
         className="project-time"
@@ -388,7 +388,7 @@ function ProjectCard({
   return (
     <div
       ref={cardRef}
-      className={`project-card${menu ? " menu-open" : ""}${favorite ? " favorite" : ""}`}
+      className={`project-card${menu ? " menu-open" : ""}${isFavorite ? " favorite" : ""}`}
       data-project-id={project.id}
       onContextMenu={onContextMenu}
     >
@@ -409,7 +409,7 @@ function ProjectCard({
           ref={openRef}
           type="button"
           className="project-open"
-          tabIndex={active ? 0 : -1}
+          tabIndex={isActive ? 0 : -1}
           onClick={() => actions.onOpen(project)}
           onPointerEnter={() => warmOpen(project, false)}
           onPointerDown={() => warmOpen(project, true)}
@@ -434,24 +434,24 @@ function ProjectCard({
       <button
         type="button"
         className="project-star icon-btn small"
-        tabIndex={active ? 0 : -1}
+        tabIndex={isActive ? 0 : -1}
         aria-label={
-          favorite
+          isFavorite
             ? `Remove ${project.name} from favorites`
             : `Add ${project.name} to favorites`
         }
-        aria-pressed={favorite}
-        data-tip={favorite ? "Remove from favorites" : "Add to favorites"}
+        aria-pressed={isFavorite}
+        data-tip={isFavorite ? "Remove from favorites" : "Add to favorites"}
         data-tip-align="end"
         onClick={() => homePrefs.toggleFavorite(project.id)}
       >
-        <Star filled={favorite} />
+        <Star isFilled={isFavorite} />
       </button>
       <button
         ref={moreRef}
         type="button"
         className="project-more icon-btn"
-        tabIndex={active ? 0 : -1}
+        tabIndex={isActive ? 0 : -1}
         aria-label={`More actions for ${project.name}`}
         aria-haspopup="menu"
         aria-expanded={menu !== null}
@@ -567,9 +567,9 @@ function ViewTools() {
         aria-pressed={favoritesOnly}
         aria-label="Show favorites only"
         data-tip="Favorites"
-        onClick={() => homePrefs.set({ favoritesOnly: !favoritesOnly })}
+        onClick={() => homePrefs.set({ isFavoritesOnly: !favoritesOnly })}
       >
-        <Star filled={favoritesOnly} />
+        <Star isFilled={favoritesOnly} />
       </button>
       <div
         className="ui-tools home-view-toggle"
@@ -626,7 +626,7 @@ function useHomeView() {
 
   return {
     view: prefs.view,
-    favoritesOnly: prefs.favoritesOnly,
+    favoritesOnly: prefs.isFavoritesOnly,
     favorites: prefs.favorites,
   };
 }
@@ -833,7 +833,7 @@ export function ProjectGrid({
       />
       {favoritesOnly && matched.length > 0 && shown.length === 0 && (
         <div className="home-empty" role="status">
-          <Star filled={false} size={16} />
+          <Star isFilled={false} size={16} />
           <span>No favorites yet. Use the star on a project to add it.</span>
         </div>
       )}
@@ -850,8 +850,8 @@ export function ProjectGrid({
               pack={findPack(packs, project.packId)}
               health={health.get(project.id) ?? null}
               homeDir={homeDir}
-              active={project.id === active}
-              favorite={favorites.includes(project.id)}
+              isActive={project.id === active}
+              isFavorite={favorites.includes(project.id)}
               actions={gridActions}
               onFocusCard={() => setActiveId(project.id)}
             />

@@ -10,7 +10,7 @@ export type RunMode = "start" | "url";
 export interface AppChip {
   readonly path: string;
   readonly inspection: FolderInspection | null;
-  readonly checking: boolean;
+  readonly isChecking: boolean;
   readonly error: string | null;
   readonly appDir: string | null;
   readonly mode: RunMode;
@@ -27,7 +27,7 @@ const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
 };
 
 export function chipProblem(chip: AppChip | null): string | null {
-  if (!chip || chip.checking) {
+  if (!chip || chip.isChecking) {
     return null;
   }
 
@@ -64,7 +64,7 @@ export function chipName(chip: AppChip): string {
 }
 
 function chipLabel(chip: AppChip): string {
-  if (chip.checking && !chip.inspection) {
+  if (chip.isChecking && !chip.inspection) {
     return "Checking…";
   }
 
@@ -117,7 +117,7 @@ export function useAppChip() {
       setChip({
         path,
         inspection: null,
-        checking: true,
+        isChecking: true,
         error: null,
         appDir: null,
         mode: "start",
@@ -179,12 +179,12 @@ export function useAppChip() {
 
 export function AppChipView({
   chip,
-  menuOpen,
+  isMenuOpen,
   onMenu,
   onRemove,
 }: {
   readonly chip: AppChip;
-  readonly menuOpen: boolean;
+  readonly isMenuOpen: boolean;
   readonly onMenu: () => void;
   readonly onRemove: () => void;
 }) {
@@ -197,7 +197,7 @@ export function AppChipView({
         type="button"
         className="home-chip-app"
         aria-haspopup="dialog"
-        aria-expanded={menuOpen}
+        aria-expanded={isMenuOpen}
         aria-label={`App options for ${name}`}
         data-tip={chip.inspection?.path ?? chip.path}
         data-tip-align="start"

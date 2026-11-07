@@ -4,16 +4,16 @@ import { errorText } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 
 type ChooseResult =
-  | { readonly path: string; readonly unsupported: false }
-  | { readonly path: null; readonly unsupported: boolean };
+  | { readonly path: string; readonly isUnsupported: false }
+  | { readonly path: null; readonly isUnsupported: boolean };
 
 export interface FolderChooser {
   readonly choose: (
     title: string,
     defaultPath?: string
   ) => Promise<ChooseResult>;
-  readonly unsupported: boolean;
-  readonly picking: boolean;
+  readonly isUnsupported: boolean;
+  readonly isPicking: boolean;
 }
 
 export function useFolderChooser(
@@ -39,16 +39,16 @@ export function useFolderChooser(
       }
 
       return outcome.kind === "picked"
-        ? { path: outcome.path, unsupported: false }
-        : { path: null, unsupported: outcome.kind === "unsupported" };
+        ? { isUnsupported: false, path: outcome.path }
+        : { isUnsupported: outcome.kind === "unsupported", path: null };
     } catch (err) {
       onError(errorText(err));
 
-      return { path: null, unsupported: false };
+      return { isUnsupported: false, path: null };
     } finally {
       setPicking(false);
     }
   };
 
-  return { choose, unsupported, picking };
+  return { choose, isUnsupported: unsupported, isPicking: picking };
 }

@@ -1,17 +1,17 @@
 import { ComposerAlert } from "./home-composer-parts.js";
 
 function HeroNotes({
-  windowDrag,
+  isWindowDragged,
   formError,
   onClearError,
 }: {
-  readonly windowDrag: boolean;
+  readonly isWindowDragged: boolean;
   readonly formError: string | null;
   readonly onClearError: () => void;
 }) {
   return (
     <>
-      {windowDrag && (
+      {isWindowDragged && (
         <p className="home-drop-anywhere">
           Drop anywhere: the folder goes on the prompt
         </p>

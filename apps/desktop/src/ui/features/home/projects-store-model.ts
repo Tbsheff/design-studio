@@ -92,9 +92,9 @@ const POLL_FAST_MS = 500;
 const POLL_MS = 1500;
 const RECENT_MS = 120_000;
 
-export function useProjects(
-  options: { readonly watch?: boolean } = {}
-): ProjectsState & { readonly reload: () => Promise<void> } {
+export function useProjects(options: {
+  readonly shouldWatch: boolean;
+}): ProjectsState & { readonly reload: () => Promise<void> } {
   const current = useSyncExternalStore(projectsApi.subscribe, projectsApi.get);
   useEffect(() => {
     void load();
@@ -103,7 +103,7 @@ export function useProjects(
   const lagging = projects?.some(isThumbnailPending) ?? false;
 
   const watching =
-    options.watch === true &&
+    options.shouldWatch === true &&
     (lagging ||
       (projects?.some(
         (project) => Date.now() - project.updatedAt < RECENT_MS

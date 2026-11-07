@@ -8,34 +8,42 @@ const FILTERS: HomeFilter[] = ["all", "prototypes", "apps", "systems"];
 
 export interface HomePrefs {
   readonly favorites: string[];
-  readonly favoritesOnly: boolean;
+  readonly isFavoritesOnly: boolean;
   readonly view: HomeView;
-  readonly templatesShown: boolean;
+  readonly hasTemplatesShown: boolean;
   readonly filter: HomeFilter;
+}
+
+interface LegacyHomePrefs {
+  readonly favoritesOnly: unknown;
+  readonly templatesShown: unknown;
 }
 
 const KEY = "studio.home.v1";
 const DEFAULTS: HomePrefs = {
   favorites: [],
-  favoritesOnly: false,
-  view: "list",
-  templatesShown: false,
   filter: "all",
+  hasTemplatesShown: false,
+  isFavoritesOnly: false,
+  view: "list",
 };
 
 function read(): HomePrefs {
   try {
-    const raw = JSON.parse(readStored(KEY) ?? "{}") as Partial<HomePrefs>;
+    const raw = JSON.parse(readStored(KEY) ?? "{}") as Partial<HomePrefs> &
+      Partial<LegacyHomePrefs>;
     return {
       favorites: Array.isArray(raw.favorites)
         ? raw.favorites.filter((id): id is string => typeof id === "string")
         : [],
-      favoritesOnly: raw.favoritesOnly === true,
-      view: raw.view === "grid" ? "grid" : "list",
-      templatesShown: raw.templatesShown === true,
       filter: FILTERS.includes(raw.filter as HomeFilter)
         ? (raw.filter as HomeFilter)
         : "all",
+      hasTemplatesShown:
+        raw.hasTemplatesShown === true || raw.templatesShown === true,
+      isFavoritesOnly:
+        raw.isFavoritesOnly === true || raw.favoritesOnly === true,
+      view: raw.view === "grid" ? "grid" : "list",
     };
   } catch {
     return DEFAULTS;

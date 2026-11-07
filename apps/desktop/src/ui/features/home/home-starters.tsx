@@ -15,10 +15,10 @@ const STARTER_IMAGES: Record<string, string> = {
 };
 
 export function StarterGallery({
-  disabled,
+  isDisabled,
   onPick,
 }: {
-  readonly disabled: boolean;
+  readonly isDisabled: boolean;
   readonly onPick: (starter: Starter) => Promise<void>;
 }) {
   const [starters, setStarters] = useState<Starter[] | null>(null);
@@ -65,7 +65,7 @@ export function StarterGallery({
               type="button"
               className="starter-card"
               data-starter-id={starter.id}
-              disabled={disabled || busy !== null}
+              disabled={isDisabled || busy !== null}
               aria-busy={busy === starter.id}
               onClick={() => void pick(starter)}
             >

@@ -1,13 +1,17 @@
-import { useState } from "react";
-
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import { useState } from "react";
+
 import { AddButton } from "./inspector-shared.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-const SELF: { value: string; icon: IconName; label: string }[] = [
+const SELF: {
+  readonly value: string;
+  readonly icon: IconName;
+  readonly label: string;
+}[] = [
   { icon: "selfStart", label: "Align self start", value: "flex-start" },
   { icon: "selfCenter", label: "Align self center", value: "center" },
   { icon: "selfEnd", label: "Align self end", value: "flex-end" },
@@ -26,7 +30,13 @@ const selfSlot = (value: string): string => {
   return value;
 };
 
-const AlignSelf = ({ edit, column }: { edit: DirectEdit; column: boolean }) => {
+const AlignSelf = ({
+  edit,
+  column,
+}: {
+  readonly edit: DirectEdit;
+  readonly column: boolean;
+}) => {
   const current = selfSlot(edit.values["align-self"]);
 
   return (
@@ -68,7 +78,7 @@ const UNSET_LIMITS = new Set(["", "auto", "none", "0", "0px"]);
 const limitsSet = (edit: DirectEdit): boolean =>
   LIMITS.some((limit) => !UNSET_LIMITS.has(edit.values[limit.prop].trim()));
 
-const MinMaxRows = ({ edit }: { edit: DirectEdit }) => {
+const MinMaxRows = ({ edit }: { readonly edit: DirectEdit }) => {
   const [open, setOpen] = useState(false);
 
   if (!open && !limitsSet(edit)) {

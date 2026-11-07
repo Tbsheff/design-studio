@@ -7,11 +7,11 @@ import type { Candidate } from "./match-candidates.js";
 import { PICK_SHOWN, KIND_EXAMPLE } from "./match-scan.js";
 
 const TokenPicker = (props: {
-  row: StyleValueRow;
-  candidates: Candidate[];
-  target: string;
-  onPick: (token: string) => void;
-  onClose: () => void;
+  readonly row: StyleValueRow;
+  readonly candidates: Candidate[];
+  readonly target: string;
+  readonly onPick: (token: string) => void;
+  readonly onClose: () => void;
 }) => {
   const [text, setText] = useState("");
   const input = useRef<HTMLInputElement>(null);

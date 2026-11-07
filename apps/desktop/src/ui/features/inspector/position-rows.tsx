@@ -17,8 +17,8 @@ const PositionRows = ({
   edit,
   selection,
 }: {
-  edit: DirectEdit;
-  selection: SelectionContext;
+  readonly edit: DirectEdit;
+  readonly selection: SelectionContext;
 }) => {
   const on = isPositioned(edit.values.position);
 
@@ -57,7 +57,10 @@ const PositionRows = ({
   );
 };
 
-const INSET_FIELDS: Record<InsetProp, { short: string; label: string }> = {
+const INSET_FIELDS: Record<
+  InsetProp,
+  { readonly short: string; readonly label: string }
+> = {
   bottom: { label: "Bottom", short: "B" },
   left: { label: "Left (X)", short: "X" },
   right: { label: "Right", short: "R" },
@@ -72,8 +75,10 @@ const PIN_TIPS: Record<PinAxis, string> = {
 const PIN_RESELECT_MS = [400, 1000, 2000, 3500, 6000];
 
 interface QueuedPins {
-  selector: string;
-  pins: Partial<Record<PinAxis, { mode: PinMode; from: PinMode }>>;
+  readonly selector: string;
+  readonly pins: Partial<
+    Record<PinAxis, { readonly mode: PinMode; readonly from: PinMode }>
+  >;
 }
 
 const pinStyles = (
@@ -114,7 +119,7 @@ const useQueuedPins = (
     const patch = (
       Object.entries(queued.pins) as [
         PinAxis,
-        { mode: PinMode; from: PinMode },
+        { readonly mode: PinMode; readonly from: PinMode },
       ][]
     ).reduce<Record<string, string>>(
       (all, [axis, pin]) => ({
@@ -166,13 +171,13 @@ const PinSelect = ({
   ready,
   queue,
 }: {
-  axis: PinAxis;
-  mode: PinMode;
-  edit: DirectEdit;
-  selection: SelectionContext;
-  onPick: (axis: PinAxis, mode: PinMode) => void;
-  ready: boolean;
-  queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
+  readonly axis: PinAxis;
+  readonly mode: PinMode;
+  readonly edit: DirectEdit;
+  readonly selection: SelectionContext;
+  readonly onPick: (axis: PinAxis, mode: PinMode) => void;
+  readonly ready: boolean;
+  readonly queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
 }) => {
   const change = (next: PinMode) => {
     if (next === mode) {
@@ -212,8 +217,8 @@ const PinSelect = ({
 const usePinModes = (
   selection: SelectionContext
 ): {
-  modes: Record<PinAxis, PinMode>;
-  pick: (next: Partial<Record<PinAxis, PinMode>>) => void;
+  readonly modes: Record<PinAxis, PinMode>;
+  readonly pick: (next: Partial<Record<PinAxis, PinMode>>) => void;
 } => {
   const authored = ["left", "right", "top", "bottom"]
     .map((side) => selection.styles[`authored-${side}`] ?? "")
@@ -222,8 +227,8 @@ const usePinModes = (
   const key = `${selection.selector}|${authored}`;
 
   const [picked, setPicked] = useState<{
-    key: string;
-    modes: Partial<Record<PinAxis, PinMode>>;
+    readonly key: string;
+    readonly modes: Partial<Record<PinAxis, PinMode>>;
   }>({ key, modes: {} });
 
   const fresh = picked.key === key ? picked.modes : {};
@@ -252,8 +257,8 @@ const ConstraintRows = ({
   edit,
   selection,
 }: {
-  edit: DirectEdit;
-  selection: SelectionContext;
+  readonly edit: DirectEdit;
+  readonly selection: SelectionContext;
 }) => {
   const { modes, pick } = usePinModes(selection);
   const { ready, queue } = useQueuedPins(edit, selection, pick);

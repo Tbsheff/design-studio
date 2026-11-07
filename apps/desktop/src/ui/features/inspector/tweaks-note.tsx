@@ -1,7 +1,7 @@
 import { copy } from "./copy.js";
 import type { EditSession } from "./use-edit-session.js";
 
-const TweaksNote = ({ session }: { session: EditSession }) => (
+const TweaksNote = ({ session }: { readonly session: EditSession }) => (
   <div className="edit-tweaks-note">
     <p className="ins-note">{copy.tweaksNote}</p>
     <div className="edit-leave-actions">

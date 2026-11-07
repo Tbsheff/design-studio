@@ -25,8 +25,8 @@ export function ContentRow({
   selection,
   edit,
 }: {
-  selection: SelectionContext;
-  edit: DirectEdit;
+  readonly selection: SelectionContext;
+  readonly edit: DirectEdit;
 }) {
   const state = textEditability(selection);
   const onKeyDown = useRowKeys(edit.commit, edit.revertText);
@@ -79,12 +79,12 @@ export function CssTextRow({
   placeholder,
   wide = true,
 }: {
-  prop: DirectStyleProperty;
-  label: string;
-  short: string;
-  edit: DirectEdit;
-  placeholder: string;
-  wide?: boolean;
+  readonly prop: DirectStyleProperty;
+  readonly label: string;
+  readonly short: string;
+  readonly edit: DirectEdit;
+  readonly placeholder: string;
+  readonly wide?: boolean;
 }) {
   const [text, setText] = useState<string | null>(null);
   const value = edit.values[prop];
@@ -155,7 +155,7 @@ function toggleLine(value: string, line: string): string {
   return next.length === 0 ? "none" : next.join(" ");
 }
 
-function TextStyleTogglesView({ edit }: { edit: DirectEdit }) {
+function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
   const italic =
     edit.values["font-style"] === "italic" ||
     edit.values["font-style"] === "oblique";

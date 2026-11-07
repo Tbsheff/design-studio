@@ -80,14 +80,14 @@ import { TokenUiContext } from "./use-token-snap.js";
 import type { TokenUi } from "./use-token-snap.js";
 
 export interface EditorProps {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext[];
-  port: MutableRefObject<PreviewPort | null>;
-  control: MutableRefObject<DirectEditControl | null>;
-  onCommitted: (commit: DirectEditCommit) => void;
-  onStale: (message: string) => void;
-  tokens: DesignTokens | null;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext[];
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly control: MutableRefObject<DirectEditControl | null>;
+  readonly onCommitted: (commit: DirectEditCommit) => void;
+  readonly onStale: (message: string) => void;
+  readonly tokens: DesignTokens | null;
 }
 
 const WEIGHTS = ["100", "200", "300", "400", "500", "600", "700", "800", "900"];
@@ -103,7 +103,7 @@ const NEW_BORDER = {
 
 type Extra = "shadow" | "text-shadow" | "transform" | "filter";
 
-const EXTRAS: { id: Extra; label: string }[] = [
+const EXTRAS: { readonly id: Extra; readonly label: string }[] = [
   { id: "shadow", label: "Shadow" },
   { id: "text-shadow", label: "Text shadow" },
   { id: "transform", label: "Transform" },
@@ -180,7 +180,7 @@ const write = (
   edit.commit();
 };
 
-const StatusText = ({ status }: { status: SaveStatus }) => {
+const StatusText = ({ status }: { readonly status: SaveStatus }) => {
   if (status.kind === "saving") {
     return <span className="ins-status saving">Writing…</span>;
   }
@@ -203,8 +203,8 @@ export const ErrorLine = ({
   status,
   text,
 }: {
-  status: SaveStatus;
-  text?: string;
+  readonly status: SaveStatus;
+  readonly text?: string;
 }) => {
   const app = useInspectorApp();
 
@@ -233,9 +233,9 @@ export const ErrorLine = ({
 };
 
 export interface SharedEditing {
-  shared: SharedSource;
-  editingUse: boolean;
-  onToggle: () => void;
+  readonly shared: SharedSource;
+  readonly editingUse: boolean;
+  readonly onToggle: () => void;
 }
 
 const TextSection = ({
@@ -244,10 +244,10 @@ const TextSection = ({
   selection,
   textStyle,
 }: {
-  edit: DirectEdit;
-  ui: TokenUi | null;
-  selection: SelectionContext | null;
-  textStyle?: ReactNode;
+  readonly edit: DirectEdit;
+  readonly ui: TokenUi | null;
+  readonly selection: SelectionContext | null;
+  readonly textStyle?: ReactNode;
 }) => (
   <InspectorSection title="Text">
     <div className="ins-grid">
@@ -304,7 +304,7 @@ const TextSection = ({
   </InspectorSection>
 );
 
-const BackgroundField = ({ edit }: { edit: DirectEdit }) => (
+const BackgroundField = ({ edit }: { readonly edit: DirectEdit }) => (
   <ColorField
     prop="background-color"
     label="Background color"
@@ -319,10 +319,10 @@ const AppearanceSection = ({
   fill,
   onReveal,
 }: {
-  edit: DirectEdit;
-  extras: Set<Extra>;
-  fill?: ReactNode;
-  onReveal: (extra: Extra) => void;
+  readonly edit: DirectEdit;
+  readonly extras: Set<Extra>;
+  readonly fill?: ReactNode;
+  readonly onReveal: (extra: Extra) => void;
 }) => {
   const hidden = EXTRAS.filter((extra) => !extras.has(extra.id));
 
@@ -397,7 +397,7 @@ const AppearanceSection = ({
   );
 };
 
-const BorderSection = ({ edit }: { edit: DirectEdit }) => {
+const BorderSection = ({ edit }: { readonly edit: DirectEdit }) => {
   const on = hasBorder(edit);
 
   const aside = on ? (
@@ -453,8 +453,8 @@ const LayoutSection = ({
   edit,
   selection,
 }: {
-  edit: DirectEdit;
-  selection: SelectionContext | null;
+  readonly edit: DirectEdit;
+  readonly selection: SelectionContext | null;
 }) => {
   const size = selection ? (
     <SizeRows edit={edit} selection={selection} />
@@ -488,11 +488,11 @@ const SimpleSections = ({
   textStyle,
   fill,
 }: {
-  edit: DirectEdit;
-  ui: TokenUi | null;
-  selection: SelectionContext | null;
-  textStyle?: ReactNode;
-  fill?: ReactNode;
+  readonly edit: DirectEdit;
+  readonly ui: TokenUi | null;
+  readonly selection: SelectionContext | null;
+  readonly textStyle?: ReactNode;
+  readonly fill?: ReactNode;
 }) => {
   const [revealed, setRevealed] = useState<Set<Extra>>(() => new Set());
   const extras = new Set([...extrasInUse(edit), ...revealed]);
@@ -537,13 +537,13 @@ const MetaRow = ({
   resetDisabled,
   children,
 }: {
-  tag?: string;
-  source: ReactNode;
-  status: SaveStatus;
-  ui: TokenUi | null;
-  onReset: () => void;
-  resetDisabled?: boolean;
-  children?: ReactNode;
+  readonly tag?: string;
+  readonly source: ReactNode;
+  readonly status: SaveStatus;
+  readonly ui: TokenUi | null;
+  readonly onReset: () => void;
+  readonly resetDisabled?: boolean;
+  readonly children?: ReactNode;
 }) => (
   <div className="ins-meta">
     {tag && <span className="ins-tag">{tag}</span>}
@@ -578,9 +578,9 @@ const useSettled = <T,>(value: T, ms: number): T => {
 };
 
 type SimpleEditorProps = EditorProps & {
-  target: SelectionContext;
-  sharedEditing?: SharedEditing | null;
-  component?: ReactNode;
+  readonly target: SelectionContext;
+  readonly sharedEditing?: SharedEditing | null;
+  readonly component?: ReactNode;
 };
 
 const useSimpleEditor = (props: SimpleEditorProps) => {
@@ -669,8 +669,8 @@ const SharedNote = ({
   sharedEditing,
   forwards,
 }: {
-  sharedEditing: SharedEditing | null | undefined;
-  forwards: boolean;
+  readonly sharedEditing: SharedEditing | null | undefined;
+  readonly forwards: boolean;
 }) => {
   if (!sharedEditing) {
     return null;
@@ -836,7 +836,7 @@ export const SimpleEditor = (props: SimpleEditorProps) => {
 };
 
 export const SimpleMultiEditor = (
-  props: EditorProps & { component?: ReactNode }
+  props: EditorProps & { readonly component?: ReactNode }
 ) => {
   const first = props.selection[0] as SelectionContext;
 

@@ -23,11 +23,11 @@ import { useSnapSetting, useTokenSnap } from "./use-token-snap.js";
 import type { CreateRequest, SnapNote, TokenUi } from "./use-token-snap.js";
 
 interface ScopeInput {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext;
-  tokens: DesignTokens | null;
-  onCommitted: (commit: DirectEditCommit) => void;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext;
+  readonly tokens: DesignTokens | null;
+  readonly onCommitted: (commit: DirectEditCommit) => void;
 }
 
 export const useInspectorTokens = (input: ScopeInput) => {
@@ -58,7 +58,7 @@ export const useInspectorTokens = (input: ScopeInput) => {
   };
 };
 
-export const SnapToggle = ({ ui }: { ui: TokenUi | null }) => {
+export const SnapToggle = ({ ui }: { readonly ui: TokenUi | null }) => {
   if (!ui) {
     return null;
   }
@@ -86,8 +86,8 @@ const NoteBar = ({
   children,
   onClose,
 }: {
-  children: ReactNode;
-  onClose: () => void;
+  readonly children: ReactNode;
+  readonly onClose: () => void;
 }) => (
   <div className="tk-note" role="status">
     <Icon name="magnet" size={13} />
@@ -104,10 +104,10 @@ const NoteBar = ({
 );
 
 export const TokenNotes = (props: {
-  ui: TokenUi | null;
-  note: SnapNote | null;
-  onKeepRaw: (raw: Partial<StyleValues>) => void;
-  onDismiss: () => void;
+  readonly ui: TokenUi | null;
+  readonly note: SnapNote | null;
+  readonly onKeepRaw: (raw: Partial<StyleValues>) => void;
+  readonly onDismiss: () => void;
 }) => {
   const { ui, note } = props;
 
@@ -228,9 +228,9 @@ export const TokenLint = ({
   edit,
   css,
 }: {
-  ui: TokenUi | null;
-  edit: DirectEdit;
-  css: AuthoredCss | null;
+  readonly ui: TokenUi | null;
+  readonly edit: DirectEdit;
+  readonly css: AuthoredCss | null;
 }) => {
   const issues = useMemo(
     () =>
@@ -308,9 +308,9 @@ export const TokenLint = ({
 
 export const CreateTokenHost = (
   props: ScopeInput & {
-    edit: DirectEdit;
-    request: CreateRequest | null;
-    onClose: () => void;
+    readonly edit: DirectEdit;
+    readonly request: CreateRequest | null;
+    readonly onClose: () => void;
   }
 ) => {
   const { tokens, request, edit } = props;
@@ -365,8 +365,8 @@ export const FontField = ({
   ui,
   edit,
 }: {
-  ui: TokenUi | null;
-  edit: DirectEdit;
+  readonly ui: TokenUi | null;
+  readonly edit: DirectEdit;
 }) => {
   const [text, setText] = useState<string | null>(null);
   const prop = "font-family";
@@ -429,12 +429,12 @@ export const FontField = ({
 const InspectorMatch = lazy(() => import("./inspector-match.js"));
 
 export const MatchSection = (props: {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext[];
-  port: MutableRefObject<PreviewPort | null>;
-  tokens: DesignTokens | null;
-  edit: DirectEdit;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext[];
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly tokens: DesignTokens | null;
+  readonly edit: DirectEdit;
 }) => {
   const { directionId, edit } = props;
 

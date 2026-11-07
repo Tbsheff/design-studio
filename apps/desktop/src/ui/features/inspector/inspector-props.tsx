@@ -29,6 +29,7 @@ import "../../styles/inspector-props.css";
 const SwapInstanceMenu = lazy(() => import("./swap-instance-menu.js"));
 
 type SheetMode = "create" | "edit";
+type SheetTarget = { readonly prop: string; readonly mode: SheetMode };
 
 const authorModeOf = (value: string): SheetMode | null => {
   if (value === ":new") {
@@ -48,25 +49,25 @@ const AUTHOR_OPTIONS = [
 ];
 
 interface InspectorPropsProps {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext;
-  editable: boolean;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext;
+  readonly editable: boolean;
 }
 
 type Status =
-  | { kind: "idle" }
-  | { kind: "saving" }
-  | { kind: "saved"; text: string }
-  | { kind: "error"; text: string };
+  | { readonly kind: "idle" }
+  | { readonly kind: "saving" }
+  | { readonly kind: "saved"; readonly text: string }
+  | { readonly kind: "error"; readonly text: string };
 
 const messageOf = (error: unknown): string => {
   if (
     error instanceof ApiError &&
     error.data &&
-    typeof (error.data as { message?: unknown }).message === "string"
+    typeof (error.data as { readonly message?: unknown }).message === "string"
   ) {
-    return (error.data as { message: string }).message;
+    return (error.data as { readonly message: string }).message;
   }
 
   return error instanceof Error ? error.message : String(error);
@@ -151,12 +152,12 @@ const SelectProp = ({
   onChange,
   onAuthor,
 }: {
-  spec: PropSpec;
-  value: PropValue | undefined;
-  overridden: boolean;
-  disabled: boolean;
-  onChange: (value: PropValue | null) => void;
-  onAuthor?: ((mode: SheetMode) => void) | undefined;
+  readonly spec: PropSpec;
+  readonly value: PropValue | undefined;
+  readonly overridden: boolean;
+  readonly disabled: boolean;
+  readonly onChange: (value: PropValue | null) => void;
+  readonly onAuthor?: ((mode: SheetMode) => void) | undefined;
 }) => {
   const current = value === undefined ? "" : String(value);
   const options = spec.options ?? [];
@@ -212,10 +213,10 @@ const BooleanProp = ({
   disabled,
   onChange,
 }: {
-  spec: PropSpec;
-  value: PropValue | undefined;
-  disabled: boolean;
-  onChange: (value: PropValue | null) => void;
+  readonly spec: PropSpec;
+  readonly value: PropValue | undefined;
+  readonly disabled: boolean;
+  readonly onChange: (value: PropValue | null) => void;
 }) => {
   const on = value === true || value === "true";
 
@@ -245,10 +246,10 @@ const TextProp = ({
   disabled,
   onChange,
 }: {
-  spec: PropSpec;
-  value: PropValue | undefined;
-  disabled: boolean;
-  onChange: (value: PropValue | null) => void;
+  readonly spec: PropSpec;
+  readonly value: PropValue | undefined;
+  readonly disabled: boolean;
+  readonly onChange: (value: PropValue | null) => void;
 }) => {
   const [draft, setDraft] = useState<string | null>(null);
   const shown = draft ?? (value === undefined ? "" : String(value));
@@ -316,11 +317,11 @@ const PropRow = ({
   onChange,
   onAuthor,
 }: {
-  instance: ComponentInstance;
-  spec: PropSpec;
-  disabled: boolean;
-  onChange: (name: string, value: PropValue | null) => void;
-  onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
+  readonly instance: ComponentInstance;
+  readonly spec: PropSpec;
+  readonly disabled: boolean;
+  readonly onChange: (name: string, value: PropValue | null) => void;
+  readonly onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
 }) => {
   const value = valueOf(instance, spec);
   const locked = instance.dynamic.includes(spec.name);
@@ -364,14 +365,14 @@ const PropRow = ({
   );
 };
 
-const PADDING: { label: string; props: string[] }[] = [
+const PADDING: { readonly label: string; readonly props: string[] }[] = [
   { label: "Padding X", props: ["padding-left", "padding-right"] },
   { label: "Padding Y", props: ["padding-top", "padding-bottom"] },
 ];
 
 interface ClassBody {
-  style?: Record<string, string | null>;
-  classes?: { add?: string[]; remove?: string[] };
+  readonly style?: Record<string, string | null>;
+  readonly classes?: { readonly add?: string[]; readonly remove?: string[] };
 }
 
 const VariantPicker = ({
@@ -381,11 +382,11 @@ const VariantPicker = ({
   onProp,
   onValue,
 }: {
-  groups: VariantGroup[];
-  group: VariantGroup;
-  value: string;
-  onProp: (prop: string) => void;
-  onValue: (value: string) => void;
+  readonly groups: VariantGroup[];
+  readonly group: VariantGroup;
+  readonly value: string;
+  readonly onProp: (prop: string) => void;
+  readonly onValue: (value: string) => void;
 }) => (
   <div className="ins-grid">
     <div className="ins-field select">
@@ -421,10 +422,10 @@ const ClassChips = ({
   editable,
   onRemove,
 }: {
-  label: string;
-  classes: string[];
-  editable: boolean;
-  onRemove: (name: string) => void;
+  readonly label: string;
+  readonly classes: string[];
+  readonly editable: boolean;
+  readonly onRemove: (name: string) => void;
 }) => (
   <div className="prp-classes" aria-label={label}>
     {classes.map((name) => (
@@ -445,7 +446,8 @@ const ClassChips = ({
   </div>
 );
 
-const ClassEditors = ({ send }: { send: (body: ClassBody) => void }) => {
+type ClassSend = (body: ClassBody) => void;
+const ClassEditors = ({ send }: { readonly send: ClassSend }) => {
   const [adding, setAdding] = useState("");
 
   return (
@@ -512,10 +514,10 @@ const VariantStyles = ({
   instance,
   onStatus,
 }: {
-  projectId: string;
-  directionId: string;
-  instance: ComponentInstance;
-  onStatus: (status: Status) => void;
+  readonly projectId: string;
+  readonly directionId: string;
+  readonly instance: ComponentInstance;
+  readonly onStatus: (status: Status) => void;
 }) => {
   const cva = instance.component?.cva;
   const groups = cva?.variants ?? [];
@@ -594,8 +596,8 @@ const PxField = ({
   label,
   onCommit,
 }: {
-  label: string;
-  onCommit: (px: number | null) => void;
+  readonly label: string;
+  readonly onCommit: (px: number | null) => void;
 }) => {
   const [text, setText] = useState("");
 
@@ -641,11 +643,11 @@ const PropRows = ({
   onChange,
   onAuthor,
 }: {
-  instance: ComponentInstance;
-  component: ComponentSchema;
-  disabled: boolean;
-  onChange: (name: string, value: PropValue | null) => void;
-  onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
+  readonly instance: ComponentInstance;
+  readonly component: ComponentSchema;
+  readonly disabled: boolean;
+  readonly onChange: (name: string, value: PropValue | null) => void;
+  readonly onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
 }) => {
   const variants = component.props.filter((spec) => spec.from === "variant");
   const others = component.props.filter((spec) => spec.from !== "variant");
@@ -698,10 +700,10 @@ const SwapButton = ({
   instance,
   onStatus,
 }: {
-  projectId: string;
-  directionId: string;
-  instance: ComponentInstance;
-  onStatus: (status: Status) => void;
+  readonly projectId: string;
+  readonly directionId: string;
+  readonly instance: ComponentInstance;
+  readonly onStatus: (status: Status) => void;
 }) => {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
@@ -748,20 +750,20 @@ const AuthorSheet = ({
   onUse,
   onStatus,
 }: {
-  projectId: string;
-  directionId: string;
-  instance: ComponentInstance;
-  sheet: { prop: string; mode: SheetMode } | null;
-  onClose: () => void;
-  onUse: (name: string, value: PropValue | null) => void;
-  onStatus: (status: Status) => void;
+  readonly projectId: string;
+  readonly directionId: string;
+  readonly instance: ComponentInstance;
+  readonly sheet: { readonly prop: string; readonly mode: SheetMode } | null;
+  readonly onClose: () => void;
+  readonly onUse: (name: string, value: PropValue | null) => void;
+  readonly onStatus: (status: Status) => void;
 }) => {
   const onSaved = useCallback(
     (saved: {
-      key: string;
-      title: string;
-      shouldUseOnSelected: boolean;
-      value: string;
+      readonly key: string;
+      readonly title: string;
+      readonly shouldUseOnSelected: boolean;
+      readonly value: string;
     }) => {
       onClose();
 
@@ -804,7 +806,7 @@ const AuthorSheet = ({
   );
 };
 
-const StatusLine = ({ status }: { status: Status }) => {
+const StatusLine = ({ status }: { readonly status: Status }) => {
   if (status.kind === "idle") {
     return null;
   }
@@ -838,9 +840,7 @@ export default function InspectorProps({
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [styles, setStyles] = useState(false);
 
-  const [sheet, setSheet] = useState<{ prop: string; mode: SheetMode } | null>(
-    null
-  );
+  const [sheet, setSheet] = useState<SheetTarget | null>(null);
 
   const closeSheet = useCallback(() => setSheet(null), []);
 

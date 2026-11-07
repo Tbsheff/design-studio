@@ -19,9 +19,9 @@ import { api } from "../../api.js";
 import { textHints, type DirectEdit } from "./use-direct-edit.js";
 
 export interface InspectorApp {
-  appDir: string | null;
-  ask: ((prompt: string) => void) | null;
-  element: ElementSourceInfo | null;
+  readonly appDir: string | null;
+  readonly ask: ((prompt: string) => void) | null;
+  readonly element: ElementSourceInfo | null;
 }
 
 export const InspectorAppContext = createContext<InspectorApp>({
@@ -34,11 +34,14 @@ export function useInspectorApp(): InspectorApp {
   return useContext(InspectorAppContext);
 }
 
-function loc(source: { file: string; line: number }): string {
+function loc(source: { readonly file: string; readonly line: number }): string {
   return `${source.file}:${source.line}`;
 }
 
-function shortLoc(source: { file: string; line: number }): string {
+function shortLoc(source: {
+  readonly file: string;
+  readonly line: number;
+}): string {
   return `${source.file.split("/").pop() ?? source.file}:${source.line}`;
 }
 
@@ -94,8 +97,8 @@ function SourceTextRow({
   found,
   edit,
 }: {
-  found: TextSourceInfo;
-  edit: TextEditScope;
+  readonly found: TextSourceInfo;
+  readonly edit: TextEditScope;
 }) {
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -141,9 +144,9 @@ export function DataTextNote({
   selection,
   edit,
 }: {
-  data: TextFromData;
-  selection: SelectionContext;
-  edit: TextEditScope;
+  readonly data: TextFromData;
+  readonly selection: SelectionContext;
+  readonly edit: TextEditScope;
 }) {
   const answer = useTextSource(edit, selection);
 
@@ -173,9 +176,9 @@ function DataTextAsk({
   text,
   reason,
 }: {
-  data: TextFromData;
-  text: string;
-  reason: string | null;
+  readonly data: TextFromData;
+  readonly text: string;
+  readonly reason: string | null;
 }) {
   const { ask } = useInspectorApp();
 
@@ -206,10 +209,10 @@ export function SharedSourceNote({
   canUse,
   onToggle,
 }: {
-  shared: SharedSource;
-  editingUse: boolean;
-  canUse: boolean;
-  onToggle: () => void;
+  readonly shared: SharedSource;
+  readonly editingUse: boolean;
+  readonly canUse: boolean;
+  readonly onToggle: () => void;
 }) {
   const what = shared.name ?? shared.file.split("/").pop() ?? shared.file;
 
@@ -249,10 +252,10 @@ export function AddButton({
   shortcut,
   onClick,
 }: {
-  label: string;
-  tip?: string;
-  shortcut?: string;
-  onClick: () => void;
+  readonly label: string;
+  readonly tip?: string;
+  readonly shortcut?: string;
+  readonly onClick: () => void;
 }) {
   return (
     <button

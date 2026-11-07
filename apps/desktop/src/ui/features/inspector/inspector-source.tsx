@@ -18,9 +18,9 @@ export const SourceLink = ({
   directionId,
   source,
 }: {
-  projectId: string;
-  directionId: string | null;
-  source: SourceLoc | null;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly source: SourceLoc | null;
 }) => {
   const [note, setNote] = useState<string | null>(null);
 

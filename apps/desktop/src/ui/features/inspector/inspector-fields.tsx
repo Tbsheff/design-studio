@@ -14,10 +14,10 @@ import type { DirectEdit } from "./use-direct-edit.js";
 import { useTokenUi } from "./use-token-snap.js";
 
 interface FieldProps {
-  prop: DirectStyleProperty;
-  label: string;
-  short: string;
-  edit: DirectEdit;
+  readonly prop: DirectStyleProperty;
+  readonly label: string;
+  readonly short: string;
+  readonly edit: DirectEdit;
 }
 
 const NEUTRAL_SWATCH = "#ffffff";
@@ -113,7 +113,7 @@ const SelectFieldView = ({
   short,
   edit,
   options,
-}: FieldProps & { options: string[] }) => {
+}: FieldProps & { readonly options: string[] }) => {
   const value = edit.values[prop];
 
   const list =
@@ -143,7 +143,11 @@ const SelectFieldView = ({
   );
 };
 
-const ALIGN: { value: string; icon: IconName; label: string }[] = [
+const ALIGN: {
+  readonly value: string;
+  readonly icon: IconName;
+  readonly label: string;
+}[] = [
   { icon: "alignLeft", label: "Align left", value: "left" },
   { icon: "alignCenter", label: "Align center", value: "center" },
   { icon: "alignRight", label: "Align right", value: "right" },
@@ -162,7 +166,7 @@ const alignOf = (value: string): string => {
   return value;
 };
 
-const AlignFieldView = ({ edit }: { edit: DirectEdit }) => {
+const AlignFieldView = ({ edit }: { readonly edit: DirectEdit }) => {
   const current = alignOf(edit.values["text-align"]);
 
   return (
@@ -224,12 +228,12 @@ export const useSectionOpen = (
 };
 
 interface SectionProps {
-  title: string;
-  children: ReactNode;
-  aside?: ReactNode;
-  className?: string;
-  label?: ReactNode;
-  initialOpen?: boolean;
+  readonly title: string;
+  readonly children: ReactNode;
+  readonly aside?: ReactNode;
+  readonly className?: string;
+  readonly label?: ReactNode;
+  readonly initialOpen?: boolean;
 }
 
 export const InspectorSection = ({

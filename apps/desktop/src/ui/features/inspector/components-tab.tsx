@@ -5,7 +5,7 @@ import type { InspectorProps } from "./inspector-model.js";
 const ComponentsTab = ({
   components,
 }: {
-  components: InspectorProps["components"];
+  readonly components: InspectorProps["components"];
 }) => {
   if (!components) {
     return <p className="ins-hint edit-tab-empty">{copy.componentsHint}</p>;

@@ -14,11 +14,14 @@ import {
 import "../../styles/create-component.css";
 
 interface Props {
-  projectId: string;
-  directionId: string;
-  use: SourceLoc;
-  onDone: (result: { ok: boolean; text: string }) => void;
-  onClose: () => void;
+  readonly projectId: string;
+  readonly directionId: string;
+  readonly use: SourceLoc;
+  readonly onDone: (result: {
+    readonly ok: boolean;
+    readonly text: string;
+  }) => void;
+  readonly onClose: () => void;
 }
 
 const hintOf = (item: SwapCandidate): string => {

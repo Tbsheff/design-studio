@@ -20,10 +20,10 @@ const ToolButton = ({
   why,
   onRun,
 }: {
-  tool: Tool;
-  disabled: boolean;
-  why: string | null;
-  onRun: (action: ArrangeAction) => void;
+  readonly tool: Tool;
+  readonly disabled: boolean;
+  readonly why: string | null;
+  readonly onRun: (action: ArrangeAction) => void;
 }) => {
   const tip = why
     ? `${tool.label}: ${why}`
@@ -56,7 +56,7 @@ const ToolButton = ({
   );
 };
 
-const ArrangeMessage = ({ message }: { message: Message | null }) => {
+const ArrangeMessage = ({ message }: { readonly message: Message | null }) => {
   if (!message) {
     return null;
   }
@@ -86,9 +86,9 @@ const ArrangeBar = ({
   busy,
   onRun,
 }: {
-  selection: SelectionContext[];
-  busy: boolean;
-  onRun: (action: ArrangeAction) => void;
+  readonly selection: SelectionContext[];
+  readonly busy: boolean;
+  readonly onRun: (action: ArrangeAction) => void;
 }) => {
   const button = (tool: Tool) => {
     const need = minCount(tool.action, selection);

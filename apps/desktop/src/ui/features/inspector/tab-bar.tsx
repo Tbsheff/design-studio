@@ -8,8 +8,8 @@ const TabBar = ({
   tab,
   onTab,
 }: {
-  tab: InspectorTab;
-  onTab: (tab: InspectorTab) => void;
+  readonly tab: InspectorTab;
+  readonly onTab: (tab: InspectorTab) => void;
 }) => {
   const refs = useRef<Partial<Record<InspectorTab, HTMLButtonElement | null>>>(
     {}

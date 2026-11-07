@@ -20,18 +20,18 @@ import {
 import type { DirectEditControl } from "./use-direct-edit.js";
 
 interface Props {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext[];
-  port: MutableRefObject<PreviewPort | null>;
-  control: MutableRefObject<DirectEditControl | null>;
-  selectMode?: boolean;
-  onSelectMode?: () => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext[];
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly control: MutableRefObject<DirectEditControl | null>;
+  readonly selectMode?: boolean;
+  readonly onSelectMode?: () => void;
+  readonly onUndo?: () => void;
+  readonly onRedo?: () => void;
 }
 
-const Glyph = ({ d }: { d: string }) => (
+const Glyph = ({ d }: { readonly d: string }) => (
   <svg
     width="14"
     height="14"
@@ -54,7 +54,11 @@ const GLYPHS = {
   text: "M3.5 3.5h9M8 3.5v9M6.25 12.5h3.5",
 };
 
-const INSERTS: { kind: InsertKind; label: string; glyph: string }[] = [
+const INSERTS: {
+  readonly kind: InsertKind;
+  readonly label: string;
+  readonly glyph: string;
+}[] = [
   { glyph: GLYPHS.text, kind: "text", label: "Text" },
   { glyph: GLYPHS.frame, kind: "frame", label: "Frame" },
 ];
@@ -75,13 +79,13 @@ const ToolButton = ({
   onClick,
   children,
 }: {
-  label: string;
-  pressed?: boolean;
-  disabled?: boolean;
-  tip?: string;
-  align?: "start" | "end";
-  onClick: () => void;
-  children: ReactNode;
+  readonly label: string;
+  readonly pressed?: boolean;
+  readonly disabled?: boolean;
+  readonly tip?: string;
+  readonly align?: "start" | "end";
+  readonly onClick: () => void;
+  readonly children: ReactNode;
 }) => (
   <button
     type="button"

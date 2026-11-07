@@ -20,9 +20,9 @@ import type { NumberSpec } from "./number-field-model.js";
 import { useTokenUi } from "./use-token-snap.js";
 
 interface InputProps {
-  spec: NumberSpec;
-  id?: string;
-  className?: string;
+  readonly spec: NumberSpec;
+  readonly id?: string;
+  readonly className?: string;
 }
 
 const useNumberText = (spec: NumberSpec) => {

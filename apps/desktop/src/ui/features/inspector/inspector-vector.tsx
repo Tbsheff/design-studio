@@ -21,10 +21,10 @@ import { InspectorSection } from "./inspector-fields.js";
 import "../../styles/vector.css";
 
 interface Props {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext[];
-  editable: boolean;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext[];
+  readonly editable: boolean;
 }
 
 const SHAPE_TAG = /<(path|rect|circle|ellipse|polygon|polyline|line)\b[^>]*>/iu;
@@ -45,7 +45,11 @@ const BOOLEAN_TIP: Record<BooleanOpName, string> = {
 
 const BOOLEAN_GLYPH: Record<
   BooleanOpName,
-  { a: string; b: string; fill: "a" | "b" | "both" | "cut" }
+  {
+    readonly a: string;
+    readonly b: string;
+    readonly fill: "a" | "b" | "both" | "cut";
+  }
 > = {
   exclude: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "both" },
   intersect: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "cut" },
@@ -72,9 +76,9 @@ const attrOf = (tag: string, name: string): string | null => {
 const paintOf = (
   selection: SelectionContext
 ): {
-  fill: string;
-  stroke: string;
-  width: string;
+  readonly fill: string;
+  readonly stroke: string;
+  readonly width: string;
 } => {
   const html = selection.outerHTML;
   const own = /^<[^>]*>/u.exec(html)?.[0] ?? "";
@@ -105,10 +109,10 @@ const ColorRow = ({
   disabled,
   onSave,
 }: {
-  label: string;
-  value: string;
-  disabled: boolean;
-  onSave: (value: string | null) => void;
+  readonly label: string;
+  readonly value: string;
+  readonly disabled: boolean;
+  readonly onSave: (value: string | null) => void;
 }) => {
   const [text, setText] = useState<string | null>(null);
 
@@ -188,9 +192,9 @@ const WidthRow = ({
   disabled,
   onSave,
 }: {
-  value: string;
-  disabled: boolean;
-  onSave: (value: number | null) => void;
+  readonly value: string;
+  readonly disabled: boolean;
+  readonly onSave: (value: number | null) => void;
 }) => {
   const [text, setText] = useState<string | null>(null);
 
@@ -236,7 +240,7 @@ const WidthRow = ({
   );
 };
 
-const BooleanGlyph = ({ op }: { op: BooleanOpName }) => {
+const BooleanGlyph = ({ op }: { readonly op: BooleanOpName }) => {
   const glyph = BOOLEAN_GLYPH[op];
 
   const filled = (which: "a" | "b") =>
@@ -303,8 +307,8 @@ const PaintRows = ({
   props,
   target,
 }: {
-  props: Props;
-  target: SelectionContext;
+  readonly props: Props;
+  readonly target: SelectionContext;
 }) => {
   const { busy, error, run } = useRun(props);
   const [saved, setSaved] = useState<Partial<ReturnType<typeof paintOf>>>({});
@@ -366,7 +370,7 @@ const PaintRows = ({
   );
 };
 
-const BooleanRow = ({ props }: { props: Props }) => {
+const BooleanRow = ({ props }: { readonly props: Props }) => {
   const { busy, error, run } = useRun(props);
   const [a, b] = props.selection as [SelectionContext, SelectionContext];
 

@@ -6,10 +6,10 @@ import { budgetFor, money } from "../canvas/use-variations.js";
 import { maxVariationsFor } from "../canvas/variations-api.js";
 
 interface Props {
-  project: Project;
-  element: SelectionContext;
-  onStart: (note: string, count: number) => void;
-  onCancel: () => void;
+  readonly project: Project;
+  readonly element: SelectionContext;
+  readonly onStart: (note: string, count: number) => void;
+  readonly onCancel: () => void;
 }
 
 const COUNTS = [2, 3, 4];

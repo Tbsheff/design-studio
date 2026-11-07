@@ -22,8 +22,8 @@ const StateTag = ({
   row,
   onReplace,
 }: {
-  row: StyleValueRow;
-  onReplace: () => void;
+  readonly row: StyleValueRow;
+  readonly onReplace: () => void;
 }) => {
   if (row.state === "raw") {
     return (
@@ -70,9 +70,9 @@ const StateTag = ({
 };
 
 interface Candidate {
-  token: string;
-  value: string;
-  hint: string;
+  readonly token: string;
+  readonly value: string;
+  readonly hint: string;
 }
 
 const designCandidates = (
@@ -153,7 +153,13 @@ const classCandidates = (row: StyleValueRow, page: StyleHit[]): Candidate[] => {
   );
 };
 
-const Swatch = ({ kind, value }: { kind: StyleKind; value: string }) => {
+const Swatch = ({
+  kind,
+  value,
+}: {
+  readonly kind: StyleKind;
+  readonly value: string;
+}) => {
   if (kind !== "color") {
     return null;
   }

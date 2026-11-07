@@ -11,8 +11,8 @@ const SizeRows = ({
   edit,
   selection,
 }: {
-  edit: DirectEdit;
-  selection: SelectionContext;
+  readonly edit: DirectEdit;
+  readonly selection: SelectionContext;
 }) => {
   const parent = parentLayout(selection.styles);
 
@@ -35,8 +35,8 @@ const SizeSection = ({
   edit,
   selection,
 }: {
-  edit: DirectEdit;
-  selection: SelectionContext;
+  readonly edit: DirectEdit;
+  readonly selection: SelectionContext;
 }) => (
   <InspectorSection title="Size">
     <SizeRows edit={edit} selection={selection} />

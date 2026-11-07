@@ -49,11 +49,11 @@ const roundedPx = (value: string): string => {
 };
 
 interface FixedDrag {
-  axis: Axis;
-  edit: DirectEdit;
-  parent: ReturnType<typeof parentLayout>;
-  facts: SizeFacts;
-  used: string;
+  readonly axis: Axis;
+  readonly edit: DirectEdit;
+  readonly parent: ReturnType<typeof parentLayout>;
+  readonly facts: SizeFacts;
+  readonly used: string;
 }
 
 const startFixedDrag = (
@@ -118,7 +118,13 @@ const startFixedDrag = (
   window.addEventListener("pointercancel", stop);
 };
 
-const LiveSize = ({ axis, value }: { axis: Axis; value: number }) => {
+const LiveSize = ({
+  axis,
+  value,
+}: {
+  readonly axis: Axis;
+  readonly value: number;
+}) => {
   const short = axis === "width" ? "W" : "H";
 
   return (
@@ -148,11 +154,11 @@ const SizeValue = ({
   edit,
   onDrag,
 }: {
-  axis: Axis;
-  mode: SizeMode;
-  used: string;
-  edit: DirectEdit;
-  onDrag: (event: ReactPointerEvent<HTMLLabelElement>) => void;
+  readonly axis: Axis;
+  readonly mode: SizeMode;
+  readonly used: string;
+  readonly edit: DirectEdit;
+  readonly onDrag: (event: ReactPointerEvent<HTMLLabelElement>) => void;
 }) => {
   const [editing, setEditing] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
@@ -231,9 +237,9 @@ const SizeRow = ({
   edit,
   selection,
 }: {
-  axis: Axis;
-  edit: DirectEdit;
-  selection: SelectionContext;
+  readonly axis: Axis;
+  readonly edit: DirectEdit;
+  readonly selection: SelectionContext;
 }) => {
   const parent = parentLayout(selection.styles);
   const facts = liveFacts(edit, selection);

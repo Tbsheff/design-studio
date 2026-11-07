@@ -1,3 +1,4 @@
+import { UiSelect } from "@design-studio/ui";
 import { memo, useEffect } from "react";
 import type { MutableRefObject } from "react";
 
@@ -11,7 +12,6 @@ import type {
   VariantState,
   VariantSupport,
 } from "../../../shared/variants.js";
-import { UiSelect } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import {
   editVariantStore,
@@ -23,13 +23,13 @@ import {
 import "../../styles/inspector-variants.css";
 
 interface Props {
-  selector: string;
-  port: MutableRefObject<PreviewPort | null>;
-  support: VariantSupport | null;
-  quietNote?: string | null;
+  readonly selector: string;
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly support: VariantSupport | null;
+  readonly quietNote?: string | null;
 }
 
-const STATES: { id: VariantState; label: string }[] = [
+const STATES: { readonly id: VariantState; readonly label: string }[] = [
   { id: "hover", label: "Hover" },
   { id: "focus", label: "Focus" },
   { id: "active", label: "Active" },
@@ -52,10 +52,10 @@ const Chip = ({
   tip,
   onClick,
 }: {
-  label: string;
-  pressed: boolean;
-  tip: string;
-  onClick: () => void;
+  readonly label: string;
+  readonly pressed: boolean;
+  readonly tip: string;
+  readonly onClick: () => void;
 }) => (
   <button
     type="button"

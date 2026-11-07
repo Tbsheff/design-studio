@@ -1,21 +1,21 @@
+import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 
-import { Icon } from "@design-studio/ui";
 import { TweaksPanel } from "./tweaks-panel.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 
 export interface InspectorTweaksProps {
-  draft: TweaksDraft;
-  running: boolean;
-  onSuggest: (prompt?: string) => void;
+  readonly draft: TweaksDraft;
+  readonly running: boolean;
+  readonly onSuggest: (prompt?: string) => void;
 }
 
 const TweaksPrompt = ({
   running,
   onSuggest,
 }: {
-  running: boolean;
-  onSuggest?: (prompt?: string) => void;
+  readonly running: boolean;
+  readonly onSuggest?: (prompt?: string) => void;
 }) => {
   const [text, setText] = useState("");
 
@@ -83,8 +83,8 @@ export const InspectorTweaks = ({
   tweaks,
   blocked = false,
 }: {
-  tweaks?: InspectorTweaksProps;
-  blocked?: boolean;
+  readonly tweaks?: InspectorTweaksProps;
+  readonly blocked?: boolean;
 }) => {
   const controls = tweaks?.draft.state?.controls.length ?? 0;
 

@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+
 import { copy } from "./copy.js";
 import { EMPTY_HINT } from "./inspector-model.js";
 
@@ -6,8 +7,8 @@ const EmptyState = ({
   reason,
   notice,
 }: {
-  reason: string;
-  notice: string | null;
+  readonly reason: string;
+  readonly notice: string | null;
 }) => (
   <div className="ins-empty">
     {notice ? (

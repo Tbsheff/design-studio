@@ -20,7 +20,7 @@ import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { CreateRequest } from "./use-token-snap.js";
 
-export const MultiNote = ({ reason }: { reason: string | null }) => {
+export const MultiNote = ({ reason }: { readonly reason: string | null }) => {
   if (!reason) {
     return null;
   }
@@ -33,7 +33,7 @@ export const MultiNote = ({ reason }: { reason: string | null }) => {
   );
 };
 
-export const MultiSizeSection = ({ edit }: { edit: DirectEdit }) => (
+export const MultiSizeSection = ({ edit }: { readonly edit: DirectEdit }) => (
   <InspectorSection title="Size">
     <div className="ins-grid">
       <NumberField
@@ -49,12 +49,12 @@ export const MultiSizeSection = ({ edit }: { edit: DirectEdit }) => (
 );
 
 interface HostProps {
-  projectId: string;
-  directionId: string | null;
-  tokens: DesignTokens | null;
-  edit: DirectEdit;
-  request: CreateRequest | null;
-  onClose: () => void;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly tokens: DesignTokens | null;
+  readonly edit: DirectEdit;
+  readonly request: CreateRequest | null;
+  readonly onClose: () => void;
 }
 
 export const MultiCreateTokenHost = ({
@@ -111,7 +111,11 @@ export const MultiCreateTokenHost = ({
   );
 };
 
-const MATCH_OPTIONS: { by: MatchKind; label: string; tip: string }[] = [
+const MATCH_OPTIONS: {
+  readonly by: MatchKind;
+  readonly label: string;
+  readonly tip: string;
+}[] = [
   {
     by: "component",
     label: "Component",
@@ -132,7 +136,7 @@ const MATCH_OPTIONS: { by: MatchKind; label: string; tip: string }[] = [
 const MATCH_WAIT_MS = 5000;
 const MATCH_NOTE_MS = 6000;
 
-let matchNote: { text: string; at: number } | null = null;
+let matchNote: { readonly text: string; readonly at: number } | null = null;
 let matchSeq = 0;
 const matchSubs = new Set<() => void>();
 
@@ -151,7 +155,7 @@ const subscribeMatch = (sub: () => void): (() => void) => {
 };
 
 const matchedText = (
-  message: Extract<BridgeToParent, { type: "matched" }>
+  message: Extract<BridgeToParent, { readonly type: "matched" }>
 ): string => {
   if (message.note) {
     return message.note;
@@ -194,8 +198,8 @@ const SelectMatchingView = ({
   selection,
   port,
 }: {
-  selection: SelectionContext[];
-  port: MutableRefObject<PreviewPort | null>;
+  readonly selection: SelectionContext[];
+  readonly port: MutableRefObject<PreviewPort | null>;
 }) => {
   const note = useSyncExternalStore(subscribeMatch, () => matchNote);
   const base = selection.at(-1);

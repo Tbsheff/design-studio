@@ -10,9 +10,9 @@ import { api } from "../../api.js";
 import { InspectorSection } from "./inspector-fields.js";
 
 export interface ElementClasses {
-  tailwind: TailwindOutcome | null;
-  element: ElementSourceInfo | null;
-  variants: VariantSupport | null;
+  readonly tailwind: TailwindOutcome | null;
+  readonly element: ElementSourceInfo | null;
+  readonly variants: VariantSupport | null;
 }
 
 const NO_CLASSES: ElementClasses = {
@@ -81,8 +81,8 @@ export const ClassLine = ({
   info,
   resolved,
 }: {
-  info: TailwindOutcome | null;
-  resolved: string[];
+  readonly info: TailwindOutcome | null;
+  readonly resolved: string[];
 }) => {
   if (!info || info.mode === "none") {
     return null;

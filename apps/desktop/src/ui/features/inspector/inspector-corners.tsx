@@ -1,13 +1,17 @@
+import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 
-import { Icon } from "@design-studio/ui";
 import { expandBox, SIDES } from "./css-values.js";
 import type { ShiftPart, Side } from "./css-values.js";
 import { NumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-const CORNERS: { side: Side; short: string; label: string }[] = [
+const CORNERS: {
+  readonly side: Side;
+  readonly short: string;
+  readonly label: string;
+}[] = [
   { label: "Top left radius", short: "TL", side: "top" },
   { label: "Top right radius", short: "TR", side: "right" },
   { label: "Bottom left radius", short: "BL", side: "left" },
@@ -57,8 +61,8 @@ export const RadiusField = ({
   edit,
   short = "R",
 }: {
-  edit: DirectEdit;
-  short?: string;
+  readonly edit: DirectEdit;
+  readonly short?: string;
 }) => {
   const [split, setSplit] = useState(() =>
     differ(edit.values["border-radius"])

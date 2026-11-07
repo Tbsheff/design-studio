@@ -1,9 +1,9 @@
 import type { PackSummary } from "@design-studio/contracts";
 
 interface Props {
-  swatches: PackSummary["swatches"];
-  max?: number;
-  size?: "sm" | "md" | "lg";
+  readonly swatches: PackSummary["swatches"];
+  readonly max?: number;
+  readonly size?: "sm" | "md" | "lg";
 }
 
 export const Swatches = ({ swatches, max = 6, size = "md" }: Props) => (

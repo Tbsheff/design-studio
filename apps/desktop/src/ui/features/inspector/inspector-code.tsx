@@ -9,15 +9,21 @@ import { useProjectEvents } from "../../platform/events.js";
 import { exportApi } from "../share-publish-ship-export/export-api.js";
 
 interface Props {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext | null;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext | null;
 }
 
 type Snippet =
-  | { kind: "loading" }
-  | { kind: "ready"; code: string; file: string; line: number; exact: boolean }
-  | { kind: "error"; message: string };
+  | { readonly kind: "loading" }
+  | {
+      readonly kind: "ready";
+      readonly code: string;
+      readonly file: string;
+      readonly line: number;
+      readonly exact: boolean;
+    }
+  | { readonly kind: "error"; readonly message: string };
 
 const TOKEN =
   /(<!--[\s\S]*?-->|\{\/\*[\s\S]*?\*\/\})|(<\/?[A-Za-z][\w.:-]*|\/?>)|("[^"]*"|'[^']*'|`[^`]*`)|([A-Za-z_:][\w:.-]*)(?==)|(\{|\})/gu;
@@ -133,9 +139,9 @@ const OpenInEditor = ({
   directionId,
   file,
 }: {
-  projectId: string;
-  directionId: string;
-  file: string;
+  readonly projectId: string;
+  readonly directionId: string;
+  readonly file: string;
 }) => {
   const [editors, setEditors] = useState<EditorInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -173,7 +179,7 @@ const OpenInEditor = ({
   );
 };
 
-const CopySnippet = ({ code }: { code: string }) => {
+const CopySnippet = ({ code }: { readonly code: string }) => {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) {

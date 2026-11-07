@@ -15,8 +15,8 @@ import { parseSelectionPath, pathCrumbs } from "./authored-css.js";
 import type { PathCrumb } from "./authored-css.js";
 
 interface Props {
-  selection: SelectionContext;
-  port: MutableRefObject<PreviewPort | null>;
+  readonly selection: SelectionContext;
+  readonly port: MutableRefObject<PreviewPort | null>;
 }
 
 const elementLabel = (selection: SelectionContext): string => {
@@ -103,8 +103,8 @@ const HiddenCrumbs = ({
   hidden,
   onSelect,
 }: {
-  hidden: PathCrumb[];
-  onSelect: (levels: number) => void;
+  readonly hidden: PathCrumb[];
+  readonly onSelect: (levels: number) => void;
 }) => {
   const nearest = hidden.at(-1);
 

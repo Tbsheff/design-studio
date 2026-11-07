@@ -6,8 +6,8 @@ const SessionHeader = ({
   session,
   onDone,
 }: {
-  session: EditSession;
-  onDone: (action: SessionAction) => void;
+  readonly session: EditSession;
+  readonly onDone: (action: SessionAction) => void;
 }) => {
   const blockedDiscard = session.blocked !== null;
 

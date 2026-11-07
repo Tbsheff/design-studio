@@ -8,9 +8,9 @@ const FocalPad = ({
   disabled,
   onPick,
 }: {
-  value: string;
-  disabled: boolean;
-  onPick: (focal: string) => void;
+  readonly value: string;
+  readonly disabled: boolean;
+  readonly onPick: (focal: string) => void;
 }) => {
   const [drag, setDrag] = useState<string | null>(null);
   const point = focalOf(drag ?? value);

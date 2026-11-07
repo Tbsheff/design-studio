@@ -26,9 +26,9 @@ const LinkToggle = ({
   linked,
   onToggle,
 }: {
-  box: Box;
-  linked: boolean;
-  onToggle: () => void;
+  readonly box: Box;
+  readonly linked: boolean;
+  readonly onToggle: () => void;
 }) => {
   const name = box === "padding" ? "Padding" : "Margin";
 
@@ -67,11 +67,11 @@ const SideInput = ({
   linked,
   declared,
 }: {
-  box: Box;
-  side: Side;
-  edit: DirectEdit;
-  linked: boolean;
-  declared?: DeclaredMargins;
+  readonly box: Box;
+  readonly side: Side;
+  readonly edit: DirectEdit;
+  readonly linked: boolean;
+  readonly declared?: DeclaredMargins;
 }) => {
   const prop = `${box}-${side}` as DirectStyleProperty;
   const name = box === "padding" ? "Padding" : "Margin";
@@ -109,12 +109,12 @@ const SideInput = ({
 };
 
 const BoxRing = (props: {
-  box: Box;
-  edit: DirectEdit;
-  linked: boolean;
-  onToggle: () => void;
-  declared?: DeclaredMargins;
-  children: ReactNode;
+  readonly box: Box;
+  readonly edit: DirectEdit;
+  readonly linked: boolean;
+  readonly onToggle: () => void;
+  readonly declared?: DeclaredMargins;
+  readonly children: ReactNode;
 }) => {
   const { box, edit, linked, declared } = props;
 
@@ -163,8 +163,8 @@ export const BoxModel = ({
   edit,
   declared,
 }: {
-  edit: DirectEdit;
-  declared?: DeclaredMargins;
+  readonly edit: DirectEdit;
+  readonly declared?: DeclaredMargins;
 }) => {
   const [linkPadding, setLinkPadding] = useState(false);
   const [linkMargin, setLinkMargin] = useState(false);

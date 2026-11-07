@@ -16,7 +16,7 @@ const BLUR_PART: ShiftPart = {
   map: (raw, change) => withBlur(raw, change(blurOf(raw) || "0")),
 };
 
-const LayerBlur = ({ edit }: { edit: DirectEdit }) => {
+const LayerBlur = ({ edit }: { readonly edit: DirectEdit }) => {
   const { filter } = edit.values;
 
   const blur = proxyEdit(
@@ -53,8 +53,8 @@ const EffectsSection = ({
   edit,
   revealed = false,
 }: {
-  edit: DirectEdit;
-  revealed?: boolean;
+  readonly edit: DirectEdit;
+  readonly revealed?: boolean;
 }) => {
   const view = shadowView(edit);
   const anchor = useScrollInOnMount(revealed);

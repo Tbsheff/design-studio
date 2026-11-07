@@ -15,7 +15,11 @@ import {
 } from "./sizing.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-const DIRECTIONS: { value: string; icon: IconName; label: string }[] = [
+const DIRECTIONS: {
+  readonly value: string;
+  readonly icon: IconName;
+  readonly label: string;
+}[] = [
   { icon: "arrowRight", label: "Horizontal", value: "row" },
   { icon: "arrowDown", label: "Vertical", value: "column" },
 ];
@@ -49,9 +53,9 @@ const AlignGrid = ({
   isRow,
   grid = false,
 }: {
-  edit: DirectEdit;
-  isRow: boolean;
-  grid?: boolean;
+  readonly edit: DirectEdit;
+  readonly isRow: boolean;
+  readonly grid?: boolean;
 }) => {
   const justifyProp = grid ? "justify-items" : "justify-content";
 
@@ -103,7 +107,7 @@ const AlignGrid = ({
 
 type GapMode = "fixed" | "auto";
 
-const GAP_MODES: { value: GapMode; label: string }[] = [
+const GAP_MODES: { readonly value: GapMode; readonly label: string }[] = [
   { label: "Fixed", value: "fixed" },
   { label: "Auto", value: "auto" },
 ];
@@ -122,7 +126,7 @@ const useLastGap = (edit: DirectEdit): string => {
   return last.current;
 };
 
-const GapModeField = ({ edit }: { edit: DirectEdit }) => {
+const GapModeField = ({ edit }: { readonly edit: DirectEdit }) => {
   const mode: GapMode =
     edit.values["justify-content"] === "space-between" ? "auto" : "fixed";
 
@@ -164,9 +168,9 @@ const GapFields = ({
   split,
   auto,
 }: {
-  edit: DirectEdit;
-  split: boolean;
-  auto: boolean;
+  readonly edit: DirectEdit;
+  readonly split: boolean;
+  readonly auto: boolean;
 }) => {
   if (split) {
     return (
@@ -195,7 +199,7 @@ const GapFields = ({
   );
 };
 
-const GridControls = ({ edit }: { edit: DirectEdit }) => (
+const GridControls = ({ edit }: { readonly edit: DirectEdit }) => (
   <div className="ins-flex">
     <AlignGrid edit={edit} isRow grid />
     <div className="ins-flex-side">
@@ -204,7 +208,7 @@ const GridControls = ({ edit }: { edit: DirectEdit }) => (
   </div>
 );
 
-const FlexControls = ({ edit }: { edit: DirectEdit }) => {
+const FlexControls = ({ edit }: { readonly edit: DirectEdit }) => {
   const direction = edit.values["flex-direction"].startsWith("column")
     ? "column"
     : "row";
@@ -265,10 +269,10 @@ const AutoLayoutSection = ({
   lead,
   children,
 }: {
-  edit: DirectEdit;
-  title?: string;
-  lead?: ReactNode;
-  children?: ReactNode;
+  readonly edit: DirectEdit;
+  readonly title?: string;
+  readonly lead?: ReactNode;
+  readonly children?: ReactNode;
 }) => {
   const root = useRef<HTMLDivElement>(null);
   const flex = isFlexDisplay(edit.values.display);

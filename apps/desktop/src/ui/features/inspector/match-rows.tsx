@@ -11,9 +11,9 @@ import { ROWS_SHOWN, KIND_LABEL, rowKey } from "./match-scan.js";
 import type { Scope, Status } from "./match-scan.js";
 
 interface RowActions {
-  selectValue: (row: StyleValueRow) => void;
-  selectClass: (row: StyleValueRow, cls: string) => void;
-  replace: (row: StyleValueRow) => void;
+  readonly selectValue: (row: StyleValueRow) => void;
+  readonly selectClass: (row: StyleValueRow, cls: string) => void;
+  readonly replace: (row: StyleValueRow) => void;
 }
 
 const RowMenu = ({
@@ -21,9 +21,9 @@ const RowMenu = ({
   actions,
   replaceLabel,
 }: {
-  row: StyleValueRow;
-  actions: RowActions;
-  replaceLabel: string;
+  readonly row: StyleValueRow;
+  readonly actions: RowActions;
+  readonly replaceLabel: string;
 }) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -121,9 +121,9 @@ const ValueRow = ({
   actions,
   replaceLabel,
 }: {
-  row: StyleValueRow;
-  actions: RowActions;
-  replaceLabel: string;
+  readonly row: StyleValueRow;
+  readonly actions: RowActions;
+  readonly replaceLabel: string;
 }) => (
   <li className="sm-row" data-testid="style-value" data-row={rowKey(row)}>
     <Swatch kind={row.kind} value={row.value} />
@@ -145,10 +145,10 @@ const KindGroup = ({
   actions,
   replaceLabel,
 }: {
-  kind: StyleKind;
-  rows: StyleValueRow[];
-  actions: RowActions;
-  replaceLabel: string;
+  readonly kind: StyleKind;
+  readonly rows: StyleValueRow[];
+  readonly actions: RowActions;
+  readonly replaceLabel: string;
 }) => {
   const [all, setAll] = useState(false);
 
@@ -189,8 +189,8 @@ const ScopeToggle = ({
   scope,
   onScope,
 }: {
-  scope: Scope;
-  onScope: (scope: Scope) => void;
+  readonly scope: Scope;
+  readonly onScope: (scope: Scope) => void;
 }) => (
   <div
     className="segmented sm-scope"
@@ -213,7 +213,7 @@ const ScopeToggle = ({
   </div>
 );
 
-const StatusLine = ({ status }: { status: Status }) => {
+const StatusLine = ({ status }: { readonly status: Status }) => {
   if (status.kind === "idle") {
     return null;
   }

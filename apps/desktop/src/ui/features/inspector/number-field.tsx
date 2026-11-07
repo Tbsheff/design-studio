@@ -8,12 +8,12 @@ import { NumberInput } from "./number-input.js";
 import { useScrub } from "./use-scrub.js";
 
 interface NumberFieldProps {
-  spec: NumberSpec;
-  short: string;
-  icon?: ReactNode;
-  id?: string;
-  tokens?: boolean;
-  className?: string;
+  readonly spec: NumberSpec;
+  readonly short: string;
+  readonly icon?: ReactNode;
+  readonly id?: string;
+  readonly tokens?: boolean;
+  readonly className?: string;
 }
 
 const NumberFieldView = ({

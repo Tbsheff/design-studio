@@ -5,9 +5,9 @@ const AltField = ({
   disabled,
   onSave,
 }: {
-  initial: string;
-  disabled: boolean;
-  onSave: (alt: string) => void;
+  readonly initial: string;
+  readonly disabled: boolean;
+  readonly onSave: (alt: string) => void;
 }) => {
   const [text, setText] = useState<string | null>(null);
 

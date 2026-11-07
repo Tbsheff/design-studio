@@ -1,9 +1,10 @@
 import { useModalDialog } from "@design-studio/ui";
+
 import { copy } from "./copy.js";
 import { unsavedLabel } from "./use-edit-session.js";
 import type { EditSession } from "./use-edit-session.js";
 
-const LeaveDialog = ({ session }: { session: EditSession }) => {
+const LeaveDialog = ({ session }: { readonly session: EditSession }) => {
   const dialog = useModalDialog(() => void session.answer("cancel"));
 
   return (

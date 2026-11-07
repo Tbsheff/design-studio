@@ -13,14 +13,14 @@ import { ColorValue } from "../versions-layers-tokens/token-inputs.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 
 interface Props {
-  draft: TweaksDraft;
-  running: boolean;
-  onSuggest: () => void;
+  readonly draft: TweaksDraft;
+  readonly running: boolean;
+  readonly onSuggest: () => void;
 }
 
 interface Group {
-  label: string;
-  controls: TweakControl[];
+  readonly label: string;
+  readonly controls: TweakControl[];
 }
 
 const groupControls = (controls: TweakControl[]): Group[] => {
@@ -63,9 +63,9 @@ const RangeInput = ({
   value,
   onEdit,
 }: {
-  control: RangeTweak;
-  value: number;
-  onEdit: EditFn;
+  readonly control: RangeTweak;
+  readonly value: number;
+  readonly onEdit: EditFn;
 }) => {
   const id = `twk-${control.id}`;
 
@@ -89,9 +89,9 @@ const ToggleInput = ({
   value,
   onEdit,
 }: {
-  control: ToggleTweak;
-  value: boolean;
-  onEdit: EditFn;
+  readonly control: ToggleTweak;
+  readonly value: boolean;
+  readonly onEdit: EditFn;
 }) => (
   <button
     id={`twk-${control.id}`}
@@ -110,9 +110,9 @@ const SelectInput = ({
   value,
   onEdit,
 }: {
-  control: SelectTweak;
-  value: string;
-  onEdit: EditFn;
+  readonly control: SelectTweak;
+  readonly value: string;
+  readonly onEdit: EditFn;
 }) => (
   <select
     id={`twk-${control.id}`}
@@ -133,9 +133,9 @@ const ColorInput = ({
   value,
   onEdit,
 }: {
-  control: ColorTweak;
-  value: string;
-  onEdit: EditFn;
+  readonly control: ColorTweak;
+  readonly value: string;
+  readonly onEdit: EditFn;
 }) => (
   <ColorValue
     label={control.label}
@@ -150,9 +150,9 @@ const ControlInput = ({
   value,
   onEdit,
 }: {
-  control: TweakControl;
-  value: TweakValue;
-  onEdit: EditFn;
+  readonly control: TweakControl;
+  readonly value: TweakValue;
+  readonly onEdit: EditFn;
 }) => {
   if (control.type === "range") {
     return (
@@ -181,10 +181,10 @@ const ControlRow = ({
   changed,
   draft,
 }: {
-  control: TweakControl;
-  value: TweakValue;
-  changed: boolean;
-  draft: TweaksDraft;
+  readonly control: TweakControl;
+  readonly value: TweakValue;
+  readonly changed: boolean;
+  readonly draft: TweaksDraft;
 }) => {
   const labelFor = control.type === "color" ? undefined : `twk-${control.id}`;
 
@@ -217,7 +217,7 @@ const ControlRow = ({
   );
 };
 
-const Footer = ({ draft }: { draft: TweaksDraft }) => {
+const Footer = ({ draft }: { readonly draft: TweaksDraft }) => {
   if (draft.count === 0 && !draft.commitError) {
     return null;
   }
@@ -261,8 +261,8 @@ const EmptyState = ({
   running,
   onSuggest,
 }: {
-  running: boolean;
-  onSuggest: () => void;
+  readonly running: boolean;
+  readonly onSuggest: () => void;
 }) => (
   <div className="twk-empty">
     <span className="twk-empty-icon" aria-hidden="true">
@@ -289,7 +289,7 @@ const EmptyState = ({
   </div>
 );
 
-const Problems = ({ problems }: { problems: string[] }) => {
+const Problems = ({ problems }: { readonly problems: string[] }) => {
   if (problems.length === 0) {
     return null;
   }
@@ -318,7 +318,7 @@ const Header = ({
   running,
   onSuggest,
   hasControls,
-}: Props & { hasControls: boolean }) => (
+}: Props & { readonly hasControls: boolean }) => (
   <PanelHead title="Tweaks" className="twk-header" titleClassName="twk-title">
     <div className="twk-header-end">
       {draft.count > 0 && (

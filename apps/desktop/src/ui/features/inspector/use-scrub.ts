@@ -15,11 +15,11 @@ import { useTokenUi } from "./use-token-snap.js";
 import type { TokenUi } from "./use-token-snap.js";
 
 interface Scrub {
-  x: number;
-  value: number;
-  unit: string;
-  moved: boolean;
-  mixed: boolean;
+  readonly x: number;
+  readonly value: number;
+  readonly unit: string;
+  readonly moved: boolean;
+  readonly mixed: boolean;
 }
 
 const scrubStart = (spec: NumberSpec, ui: TokenUi | null, x: number): Scrub => {
@@ -67,19 +67,29 @@ const useScrub = (spec: NumberSpec) => {
       return;
     }
 
-    s.x += steps * SCRUB_PX_PER_STEP;
-    s.moved = true;
+    const moved: Scrub = {
+      ...s,
+      moved: true,
+      x: s.x + steps * SCRUB_PX_PER_STEP,
+    };
+
+    scrub.current = moved;
     document.body.classList.add("ins-scrubbing");
 
-    if (s.mixed) {
+    if (moved.mixed) {
       return shiftMixed(spec, steps * stepOf(event, spec));
     }
 
-    s.value =
+    const value =
       parseNumber(
-        clamp(formatNumber(s.value + steps * stepOf(event, spec), s.unit), spec)
-      )?.value ?? s.value;
-    spec.edit.preview(patchFor(spec, formatNumber(s.value, s.unit)));
+        clamp(
+          formatNumber(moved.value + steps * stepOf(event, spec), moved.unit),
+          spec
+        )
+      )?.value ?? moved.value;
+
+    scrub.current = { ...moved, value };
+    spec.edit.preview(patchFor(spec, formatNumber(value, moved.unit)));
   };
 
   const onPointerUp = (event: PointerEvent<HTMLElement>) => {

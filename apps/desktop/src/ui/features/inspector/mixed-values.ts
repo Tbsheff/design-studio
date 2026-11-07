@@ -17,8 +17,8 @@ import { buildEditRequest } from "./use-direct-edit.js";
 export const MAX_MULTI_EDIT = 50;
 
 export interface MergedValues {
-  values: StyleValues;
-  mixed: ReadonlySet<DirectStyleProperty>;
+  readonly values: StyleValues;
+  readonly mixed: ReadonlySet<DirectStyleProperty>;
 }
 
 const ALL_PROPS = Object.keys(valuesFromStyles({})) as DirectStyleProperty[];
@@ -70,11 +70,11 @@ export const multiBlockReason = (
 export type { Shift, ShiftPart };
 
 export interface PartShift extends Shift {
-  part: ShiftPart;
+  readonly part: ShiftPart;
 }
 
 export interface PropShift extends Shift {
-  parts?: Record<string, PartShift>;
+  readonly parts?: Record<string, PartShift>;
 }
 
 export type Shifts = Partial<Record<DirectStyleProperty, PropShift>>;
@@ -217,8 +217,8 @@ export const withoutShifts = (
 };
 
 export interface OwnEdit {
-  edit: DirectEditRequest;
-  style: Partial<StyleValues>;
+  readonly edit: DirectEditRequest;
+  readonly style: Partial<StyleValues>;
 }
 
 export const ownEdits = (

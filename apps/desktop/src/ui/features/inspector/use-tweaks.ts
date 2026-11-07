@@ -26,16 +26,16 @@ export const TWEAKS_REQUEST: RunRequest = {
 };
 
 interface Step {
-  id: string;
-  before: TweakValue | undefined;
+  readonly id: string;
+  readonly before: TweakValue | undefined;
 }
 
 interface Options {
-  projectId: string;
-  project: Project | null;
-  directionId: string | null;
-  lastChange: FilesChange | null;
-  onCommitted: (version: Version) => void;
+  readonly projectId: string;
+  readonly project: Project | null;
+  readonly directionId: string | null;
+  readonly lastChange: FilesChange | null;
+  readonly onCommitted: (version: Version) => void;
 }
 
 const changeStamp = (
@@ -51,8 +51,8 @@ const baseValue = (
 
 const useTweaksState = (o: Options) => {
   const [loaded, setLoaded] = useState<{
-    key: string;
-    state: TweaksState;
+    readonly key: string;
+    readonly state: TweaksState;
   } | null>(null);
 
   const [loadError, setLoadError] = useState<string | null>(null);

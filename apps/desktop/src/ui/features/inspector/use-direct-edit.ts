@@ -23,33 +23,37 @@ import { editVariantStore } from "./edit-variant.js";
 import { startOptimistic } from "./optimistic-edit.js";
 
 export type SaveStatus =
-  | { kind: "idle" }
-  | { kind: "saving" }
-  | { kind: "saved"; at: number }
-  | { kind: "error"; message: string; code?: string };
+  | { readonly kind: "idle" }
+  | { readonly kind: "saving" }
+  | { readonly kind: "saved"; readonly at: number }
+  | {
+      readonly kind: "error";
+      readonly message: string;
+      readonly code?: string;
+    };
 
 export interface DirectEditControl {
-  cancel: () => void;
-  settle: () => Promise<void>;
-  commitText: (selector: string, text: string) => boolean;
+  readonly cancel: () => void;
+  readonly settle: () => Promise<void>;
+  readonly commitText: (selector: string, text: string) => boolean;
 }
 
 export interface DirectEditCommit {
-  selector: string;
-  style: Partial<StyleValues>;
-  text?: string;
+  readonly selector: string;
+  readonly style: Partial<StyleValues>;
+  readonly text?: string;
 }
 
 interface Options {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext;
-  port: MutableRefObject<PreviewPort | null>;
-  control: MutableRefObject<DirectEditControl | null>;
-  onCommitted: (commit: DirectEditCommit) => void;
-  onStale: (message: string) => void;
-  rewrite?: StyleRewrite;
-  variant?: string;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext;
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly control: MutableRefObject<DirectEditControl | null>;
+  readonly onCommitted: (commit: DirectEditCommit) => void;
+  readonly onStale: (message: string) => void;
+  readonly rewrite?: StyleRewrite;
+  readonly variant?: string;
 }
 
 type StyleRewrite = (style: Partial<StyleValues>) => Partial<StyleValues>;

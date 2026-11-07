@@ -1,12 +1,12 @@
 import { formatNumber, parseNumber } from "./css-values.js";
 
 export interface Shadow {
-  x: string;
-  y: string;
-  blur: string;
-  spread: string;
-  color: string;
-  inset: boolean;
+  readonly x: string;
+  readonly y: string;
+  readonly blur: string;
+  readonly spread: string;
+  readonly color: string;
+  readonly inset: boolean;
 }
 
 export const NEW_SHADOW: Shadow = {

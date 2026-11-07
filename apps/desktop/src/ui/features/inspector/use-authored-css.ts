@@ -8,8 +8,8 @@ import type { AuthoredCss } from "./authored-css.js";
 const REPLY_TIMEOUT_MS = 1500;
 
 export interface AuthoredCssState {
-  css: AuthoredCss | null;
-  request: () => Promise<AuthoredCss | null>;
+  readonly css: AuthoredCss | null;
+  readonly request: () => Promise<AuthoredCss | null>;
 }
 
 export const requestAuthoredCss = (

@@ -4,8 +4,8 @@ import type { ShiftPart, StyleValues } from "./css-values.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 export interface ProxyOptions {
-  part?: ShiftPart;
-  mixed?: boolean;
+  readonly part?: ShiftPart;
+  readonly mixed?: boolean;
 }
 
 export const proxyEdit = (

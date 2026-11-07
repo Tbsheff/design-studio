@@ -72,7 +72,7 @@ const useLayoutKeys = (
 
     const onArrangeKey = (event: Event) => {
       if (
-        (event as CustomEvent<{ key?: string }>).detail?.key ===
+        (event as CustomEvent<{ readonly key?: string }>).detail?.key ===
           REMOVE_LAYOUT_CHORD &&
         visible()
       ) {

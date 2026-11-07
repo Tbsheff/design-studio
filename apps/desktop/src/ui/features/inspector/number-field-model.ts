@@ -11,15 +11,15 @@ import type { DirectEdit } from "./use-direct-edit.js";
 import type { TokenUi } from "./use-token-snap.js";
 
 interface NumberSpec {
-  prop: DirectStyleProperty;
-  label: string;
-  edit: DirectEdit;
-  unit?: string;
-  step?: number;
-  min?: number;
-  max?: number;
-  targets?: DirectStyleProperty[];
-  display?: string;
+  readonly prop: DirectStyleProperty;
+  readonly label: string;
+  readonly edit: DirectEdit;
+  readonly unit?: string;
+  readonly step?: number;
+  readonly min?: number;
+  readonly max?: number;
+  readonly targets?: DirectStyleProperty[];
+  readonly display?: string;
 }
 
 const SCRUB_PX_PER_STEP = 2;
@@ -76,7 +76,7 @@ const shiftMixed = (spec: NumberSpec, delta: number): void => {
 };
 
 const stepOf = (
-  event: { shiftKey: boolean; altKey?: boolean },
+  event: { readonly shiftKey: boolean; readonly altKey?: boolean },
   spec: NumberSpec
 ): number => {
   const base = spec.step ?? 1;

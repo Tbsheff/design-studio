@@ -25,22 +25,22 @@ import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import type { StyleValues } from "./css-values.js";
 
 export interface SnapNote {
-  cssVar: string;
-  raw: Partial<StyleValues>;
+  readonly cssVar: string;
+  readonly raw: Partial<StyleValues>;
 }
 
 export interface CreateRequest {
-  prop: DirectStyleProperty;
-  value: string;
-  targets: DirectStyleProperty[];
+  readonly prop: DirectStyleProperty;
+  readonly value: string;
+  readonly targets: DirectStyleProperty[];
 }
 
 export interface TokenUi {
-  entries: CompiledTokenEntry[];
-  mode: TokenMode;
-  snap: boolean;
-  setSnap: (on: boolean) => void;
-  requestCreate: ((req: CreateRequest) => void) | null;
+  readonly entries: CompiledTokenEntry[];
+  readonly mode: TokenMode;
+  readonly snap: boolean;
+  readonly setSnap: (on: boolean) => void;
+  readonly requestCreate: ((req: CreateRequest) => void) | null;
 }
 
 export const TokenUiContext = createContext<TokenUi | null>(null);

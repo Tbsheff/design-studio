@@ -108,7 +108,9 @@ const useArrangeKeys = (
     };
 
     const onForwarded = (event: Event) =>
-      fire((event as CustomEvent<{ key?: string }>).detail?.key ?? null);
+      fire(
+        (event as CustomEvent<{ readonly key?: string }>).detail?.key ?? null
+      );
 
     window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);

@@ -14,28 +14,28 @@ import type { DirectEditControl } from "./use-direct-edit.js";
 export type SessionAction = "save" | "discard";
 
 export interface EditSessionHandle {
-  dirty: boolean;
-  count: number;
-  net: number;
-  requestExit: () => Promise<boolean>;
-  save: () => Promise<boolean>;
-  discard: () => Promise<boolean>;
+  readonly dirty: boolean;
+  readonly count: number;
+  readonly net: number;
+  readonly requestExit: () => Promise<boolean>;
+  readonly save: () => Promise<boolean>;
+  readonly discard: () => Promise<boolean>;
 }
 
 interface Options {
-  projectId: string;
-  directionId: string | null;
-  control: MutableRefObject<DirectEditControl | null>;
-  port: MutableRefObject<PreviewPort | null>;
-  onEnded?: (action: SessionAction, result: EditSessionEnd) => void;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly control: MutableRefObject<DirectEditControl | null>;
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly onEnded?: (action: SessionAction, result: EditSessionEnd) => void;
 }
 
 interface SessionView {
-  base: string | null;
-  count: number;
-  net: number;
-  dirty: boolean;
-  blocked: string | null;
+  readonly base: string | null;
+  readonly count: number;
+  readonly net: number;
+  readonly dirty: boolean;
+  readonly blocked: string | null;
 }
 
 const EMPTY: SessionView = {

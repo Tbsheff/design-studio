@@ -40,14 +40,14 @@ type Describe = (
 ) => Promise<(SelectionContext | null)[]>;
 
 interface Options {
-  projectId: string;
-  directionId: string | null;
-  direction: Direction | null;
-  versions: Version[];
-  locked: boolean;
-  before: () => Promise<void>;
-  onStepped: (version: Version) => void;
-  onError: (message: string) => void;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly direction: Direction | null;
+  readonly versions: Version[];
+  readonly locked: boolean;
+  readonly before: () => Promise<void>;
+  readonly onStepped: (version: Version) => void;
+  readonly onError: (message: string) => void;
 }
 
 const HISTORY_STEP_TITLE = /^(Undo|Redo): /u;
@@ -108,7 +108,8 @@ export const useEditHistory = (o: Options) => {
     setState(next);
   }, []);
 
-  const loading = useRef<{ key: string; again: boolean } | null>(null);
+  const loading = useRef<{ readonly key: string } | null>(null);
+  const reloadRequested = useRef(false);
   const mountedAt = useRef(Date.now());
 
   const load = useCallback(() => {
@@ -119,12 +120,13 @@ export const useEditHistory = (o: Options) => {
     const key = `${projectId}/${directionId}`;
 
     if (loading.current?.key === key) {
-      loading.current.again = true;
+      reloadRequested.current = true;
 
       return;
     }
 
-    const mine = { again: false, key };
+    reloadRequested.current = false;
+    const mine = { key };
     loading.current = mine;
     const started = generation.current;
     api
@@ -145,7 +147,8 @@ export const useEditHistory = (o: Options) => {
 
         loading.current = null;
 
-        if (mine.again) {
+        if (reloadRequested.current) {
+          reloadRequested.current = false;
           load();
         }
       });
@@ -244,9 +247,12 @@ export const useEditHistory = (o: Options) => {
 };
 
 interface RefreshWatch {
-  change: { directionId: string; changedAt: number } | null;
-  directionId: string | null;
-  dropDrafts: () => void;
+  readonly change: {
+    readonly directionId: string;
+    readonly changedAt: number;
+  } | null;
+  readonly directionId: string | null;
+  readonly dropDrafts: () => void;
 }
 
 const sameStyles = (

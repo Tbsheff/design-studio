@@ -1,8 +1,8 @@
 import { formatNumber, parseNumber } from "./css-values.js";
 
 type Token =
-  | { kind: "num"; value: number; unit: string }
-  | { kind: "op"; op: string };
+  | { readonly kind: "num"; readonly value: number; readonly unit: string }
+  | { readonly kind: "op"; readonly op: string };
 
 const TOKEN_RE = /\s*(?:(\d*\.?\d+)(px|rem|em|%)?|([-+*/()]))/iuy;
 const OPERATOR_RE = /[-+*/()]/u;
@@ -41,8 +41,8 @@ const tokenize = (raw: string): Token[] | null => {
 };
 
 interface Evaluated {
-  value: number;
-  units: Set<string>;
+  readonly value: number;
+  readonly units: Set<string>;
 }
 
 const evaluateTokens = (tokens: Token[]): Evaluated | null => {
@@ -100,7 +100,7 @@ const evaluateTokens = (tokens: Token[]): Evaluated | null => {
     let left = primary();
 
     while (left !== null && (isOp("*") || isOp("/"))) {
-      const { op } = peek() as { op: string };
+      const { op } = peek() as { readonly op: string };
       index += 1;
       const right = primary();
 
@@ -122,7 +122,7 @@ const evaluateTokens = (tokens: Token[]): Evaluated | null => {
     let left = product();
 
     while (left !== null && (isOp("+") || isOp("-"))) {
-      const { op } = peek() as { op: string };
+      const { op } = peek() as { readonly op: string };
       index += 1;
       const right = product();
 
@@ -147,7 +147,7 @@ const evaluateTokens = (tokens: Token[]): Evaluated | null => {
 
 export const evaluateMath = (
   raw: string
-): { value: number; unit: string } | null => {
+): { readonly value: number; readonly unit: string } | null => {
   const tokens = tokenize(raw);
 
   if (!tokens || tokens.length === 0) {

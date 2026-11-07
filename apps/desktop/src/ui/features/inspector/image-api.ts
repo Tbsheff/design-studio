@@ -18,8 +18,8 @@ export const imageTargetOf = (
 });
 
 export const fileData = async (
-  file: Blob & { name?: string }
-): Promise<{ name: string; data: string }> => {
+  file: Blob & { readonly name?: string }
+): Promise<{ readonly name: string; readonly data: string }> => {
   if (file.size > IMAGE_BYTES_MAX) {
     throw new Error("The image is larger than 10 MB.");
   }
@@ -79,10 +79,10 @@ export const clipboardImage = async (): Promise<Blob | null> => {
 export const imageError = (error: unknown): string => {
   if (
     isApiError(error) &&
-    typeof (error.data as { message?: unknown } | undefined)?.message ===
-      "string"
+    typeof (error.data as { readonly message?: unknown } | undefined)
+      ?.message === "string"
   ) {
-    return (error.data as { message: string }).message;
+    return (error.data as { readonly message: string }).message;
   }
 
   if (error instanceof Error) {

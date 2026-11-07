@@ -16,21 +16,21 @@ import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { requestAuthoredCss } from "./use-authored-css.js";
 
 interface InspectorMatchProps {
-  projectId: string;
-  directionId: string;
-  selection: SelectionContext[];
-  port: MutableRefObject<PreviewPort | null>;
-  tokens: DesignTokens | null;
-  drain: () => Promise<void>;
+  readonly projectId: string;
+  readonly directionId: string;
+  readonly selection: SelectionContext[];
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly tokens: DesignTokens | null;
+  readonly drain: () => Promise<void>;
 }
 
 type Scope = "selection" | "page";
 
 type Status =
-  | { kind: "idle" }
-  | { kind: "busy"; text: string }
-  | { kind: "done"; text: string }
-  | { kind: "error"; text: string };
+  | { readonly kind: "idle" }
+  | { readonly kind: "busy"; readonly text: string }
+  | { readonly kind: "done"; readonly text: string }
+  | { readonly kind: "error"; readonly text: string };
 
 const REPLY_MS = 5000;
 const ROWS_SHOWN = 6;
@@ -53,8 +53,8 @@ const KIND_EXAMPLE: Record<StyleKind, string> = {
 const CUSTOM_PROP = /(--[\w-]+)\s*:\s*([^;]+)/gu;
 
 interface PageVar {
-  name: string;
-  value: string;
+  readonly name: string;
+  readonly value: string;
 }
 
 const parseVars = (css: string[]): PageVar[] => {
@@ -103,7 +103,10 @@ const requestStyles = (
   port: PreviewPort | null,
   query: StyleQuery,
   select: boolean
-): Promise<{ result: StyleScanResult; selected: number } | null> => {
+): Promise<{
+  readonly result: StyleScanResult;
+  readonly selected: number;
+} | null> => {
   const listen = port?.listen;
 
   if (!port || !listen) {
@@ -124,7 +127,10 @@ const requestStyles = (
     const timer = window.setTimeout(() => finish(null), REPLY_MS);
 
     function finish(
-      value: { result: StyleScanResult; selected: number } | null
+      value: {
+        readonly result: StyleScanResult;
+        readonly selected: number;
+      } | null
     ) {
       window.clearTimeout(timer);
       stop();

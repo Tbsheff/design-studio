@@ -9,19 +9,21 @@ import type { BridgeFrame } from "../../platform/bridge.js";
 import { NO_SOURCE } from "./structure-edits.js";
 
 interface Options {
-  projectId: string;
-  directionId: string | null;
-  kind: ProjectKind;
-  enabled: boolean;
-  frames: {
-    slots: { token: string; src: string }[];
-    frontToken: string | null;
-    elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly kind: ProjectKind;
+  readonly enabled: boolean;
+  readonly frames: {
+    readonly slots: { readonly token: string; readonly src: string }[];
+    readonly frontToken: string | null;
+    readonly elements: MutableRefObject<
+      Record<string, HTMLIFrameElement | null>
+    >;
   };
-  notify: (message: string) => void;
+  readonly notify: (message: string) => void;
 }
 
-type FileDrop = Extract<BridgeToParent, { type: "file-drop" }>;
+type FileDrop = Extract<BridgeToParent, { readonly type: "file-drop" }>;
 
 const place = async (
   o: Options,

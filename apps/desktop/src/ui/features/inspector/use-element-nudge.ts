@@ -32,35 +32,35 @@ const SOME_HINT =
   "Some selected elements sit in the layout, so the arrow keys move only the others. Drag one to change its place.";
 
 interface Options {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext[];
-  enabled: boolean;
-  post: (body: ParentMessageBody) => void;
-  listen: (handler: (message: BridgeToParent) => void) => () => void;
-  setSelection: (
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext[];
+  readonly enabled: boolean;
+  readonly post: (body: ParentMessageBody) => void;
+  readonly listen: (handler: (message: BridgeToParent) => void) => () => void;
+  readonly setSelection: (
     updater: (prev: SelectionContext[]) => SelectionContext[]
   ) => void;
-  refreshRects: () => void;
-  onError: (message: string) => void;
+  readonly refreshRects: () => void;
+  readonly onError: (message: string) => void;
 }
 
 interface Mover {
-  target: SelectionContext;
-  base: NudgeBase;
+  readonly target: SelectionContext;
+  readonly base: NudgeBase;
 }
 
 interface Burst {
-  key: string;
-  items: Mover[];
-  dx: number;
-  dy: number;
+  readonly key: string;
+  readonly items: Mover[];
+  readonly dx: number;
+  readonly dy: number;
 }
 
 interface Step {
-  base: NudgeBase;
-  dx: number;
-  dy: number;
+  readonly base: NudgeBase;
+  readonly dx: number;
+  readonly dy: number;
 }
 
 const FLUSH_ON = new Set<BridgeToParent["type"]>([
@@ -124,10 +124,10 @@ const burstKey = (selectors: string[]): string =>
   selectors.toSorted().join("\n");
 
 interface Saved {
-  edit: DirectEditRequest;
-  selector: string;
-  style: Record<string, string>;
-  back: Record<string, string>;
+  readonly edit: DirectEditRequest;
+  readonly selector: string;
+  readonly style: Record<string, string>;
+  readonly back: Record<string, string>;
 }
 
 const savedOf = (b: Burst): Saved[] =>
@@ -381,18 +381,17 @@ export const useElementNudge = (o: Options): void => {
         flush();
       }
 
-      const b = burst.current ?? begin(wanted, key);
+      const current = burst.current ?? begin(wanted, key);
 
-      if (!b) {
+      if (!current) {
         return;
       }
 
-      if (!b.items.some((item) => movable(item.base, dx, dy))) {
+      if (!current.items.some((item) => movable(item.base, dx, dy))) {
         return hintOnce(FLOW_HINT);
       }
 
-      b.dx += dx;
-      b.dy += dy;
+      const b = { ...current, dx: current.dx + dx, dy: current.dy + dy };
       burst.current = b;
 
       for (const item of b.items) {

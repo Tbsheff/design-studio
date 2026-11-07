@@ -5,11 +5,11 @@ import type { ImageFit } from "../../../shared/image.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 
 interface Props {
-  projectId: string;
-  directionId: string;
-  selection: SelectionContext;
-  editable: boolean;
-  port?: MutableRefObject<PreviewPort | null>;
+  readonly projectId: string;
+  readonly directionId: string;
+  readonly selection: SelectionContext;
+  readonly editable: boolean;
+  readonly port?: MutableRefObject<PreviewPort | null>;
 }
 
 const RESELECT_AFTER_MS = [700, 1800];

@@ -5,13 +5,13 @@ export type PinAxis = "x" | "y";
 export type InsetProp = "left" | "right" | "top" | "bottom";
 
 interface AxisKeys {
-  start: InsetProp;
-  end: InsetProp;
-  size: "width" | "height";
-  offset: string;
-  container: string;
-  box: string;
-  inner: string;
+  readonly start: InsetProp;
+  readonly end: InsetProp;
+  readonly size: "width" | "height";
+  readonly offset: string;
+  readonly container: string;
+  readonly box: string;
+  readonly inner: string;
 }
 
 const AXES: Record<PinAxis, AxisKeys> = {
@@ -35,23 +35,25 @@ const AXES: Record<PinAxis, AxisKeys> = {
   },
 };
 
-export const PIN_OPTIONS: Record<PinAxis, { value: PinMode; label: string }[]> =
-  {
-    x: [
-      { label: "Left", value: "start" },
-      { label: "Right", value: "end" },
-      { label: "Left and right", value: "both" },
-      { label: "Center", value: "center" },
-      { label: "Scale", value: "scale" },
-    ],
-    y: [
-      { label: "Top", value: "start" },
-      { label: "Bottom", value: "end" },
-      { label: "Top and bottom", value: "both" },
-      { label: "Center", value: "center" },
-      { label: "Scale", value: "scale" },
-    ],
-  };
+export const PIN_OPTIONS: Record<
+  PinAxis,
+  { readonly value: PinMode; readonly label: string }[]
+> = {
+  x: [
+    { label: "Left", value: "start" },
+    { label: "Right", value: "end" },
+    { label: "Left and right", value: "both" },
+    { label: "Center", value: "center" },
+    { label: "Scale", value: "scale" },
+  ],
+  y: [
+    { label: "Top", value: "start" },
+    { label: "Bottom", value: "end" },
+    { label: "Top and bottom", value: "both" },
+    { label: "Center", value: "center" },
+    { label: "Scale", value: "scale" },
+  ],
+};
 
 const isSet = (value: string | undefined): boolean => {
   const text = (value ?? "").trim();

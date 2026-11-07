@@ -6,7 +6,7 @@ import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
 
 let prefix = "";
-let restore: { width: number; set: number } | null = null;
+let restore: { readonly width: number; readonly set: number } | null = null;
 const listeners = new Set<() => void>();
 
 const emit = (): void => {
@@ -94,8 +94,8 @@ export const resetEditVariant = (port: PreviewPort | null): void => {
 };
 
 export interface VariantScope {
-  prefix: string;
-  props: ReadonlySet<string>;
+  readonly prefix: string;
+  readonly props: ReadonlySet<string>;
 }
 
 export const VariantScopeContext = createContext<VariantScope>({

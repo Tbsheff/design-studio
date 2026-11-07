@@ -46,7 +46,7 @@ const clipboardText = async (): Promise<string | null> => {
 };
 
 const openFigmaImport = async (
-  ids: { projectId: string; directionId: string },
+  ids: { readonly projectId: string; readonly directionId: string },
   selection: SelectionContext,
   text: string,
   notify: (message: string) => void
@@ -81,7 +81,7 @@ const openFigmaImport = async (
 };
 
 export const pasteJsx = async (
-  ids: { projectId: string; directionId: string },
+  ids: { readonly projectId: string; readonly directionId: string },
   selection: SelectionContext,
   notify: (message: string) => void
 ): Promise<void> => {

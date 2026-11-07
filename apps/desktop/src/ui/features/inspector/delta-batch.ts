@@ -5,7 +5,7 @@ import type { RunMap } from "../chat/run-state-model.js";
 
 type DeltaEvent = Extract<
   StudioEvent,
-  { type: "run.text.delta" | "run.thinking.delta" }
+  { readonly type: "run.text.delta" | "run.thinking.delta" }
 >;
 
 type RunsUpdate = (update: (runs: RunMap) => RunMap) => void;

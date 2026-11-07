@@ -13,9 +13,9 @@ import { parseLoc } from "../comments/comment-anchors.js";
 export type SelectionOp = "delete" | "duplicate" | "wrap" | "unwrap" | "group";
 
 export type LayerDrop =
-  | { into: number }
-  | { before: number }
-  | { after: number };
+  | { readonly into: number }
+  | { readonly before: number }
+  | { readonly after: number };
 
 export const NO_SOURCE =
   "This element has no source location, so it cannot be changed here.";
@@ -86,10 +86,10 @@ export const dropRequest = (
 };
 
 export interface StructureMenuState {
-  count: number;
-  hasSource: boolean;
-  canPaste: boolean;
-  busy: boolean;
+  readonly count: number;
+  readonly hasSource: boolean;
+  readonly canPaste: boolean;
+  readonly busy: boolean;
 }
 
 const LABELS: Record<StructureKey, string> = {

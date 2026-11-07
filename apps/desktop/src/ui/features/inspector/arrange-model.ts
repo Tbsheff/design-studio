@@ -14,26 +14,26 @@ import { parentLayout } from "./sizing.js";
 import type { DirectEditCommit, DirectEditControl } from "./use-direct-edit.js";
 
 interface Props {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext[];
-  editable: boolean;
-  port: MutableRefObject<PreviewPort | null>;
-  control: MutableRefObject<DirectEditControl | null>;
-  onCommitted: (commit: DirectEditCommit) => void;
-  showBar: boolean;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext[];
+  readonly editable: boolean;
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly control: MutableRefObject<DirectEditControl | null>;
+  readonly onCommitted: (commit: DirectEditCommit) => void;
+  readonly showBar: boolean;
 }
 
 interface Message {
-  kind: "ok" | "note" | "error";
-  text: string;
+  readonly kind: "ok" | "note" | "error";
+  readonly text: string;
 }
 
 interface Tool {
-  key: KeyId;
-  label: string;
-  glyph: string;
-  action: ArrangeAction;
+  readonly key: KeyId;
+  readonly label: string;
+  readonly glyph: string;
+  readonly action: ArrangeAction;
 }
 
 const ALIGN_TOOLS: Tool[] = [
@@ -167,8 +167,8 @@ const successText = (result: ArrangeResult): string => {
 const frameRequest = (
   projectId: string
 ): {
-  path?: string;
-  viewport: { width: number; height: number };
+  readonly path?: string;
+  readonly viewport: { readonly width: number; readonly height: number };
 } => {
   const frame = activeFrame(
     canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport)

@@ -16,33 +16,36 @@ import type { EditSessionHandle, SessionAction } from "./use-edit-session.js";
 type InspectorTab = "simple" | "pro" | "components" | "code" | "tweaks";
 
 interface InspectorProps {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext[];
-  editable: boolean;
-  port: MutableRefObject<PreviewPort | null>;
-  control: MutableRefObject<DirectEditControl | null>;
-  onCommitted: (commit: DirectEditCommit) => void;
-  notice: string | null;
-  onStale: (message: string) => void;
-  tokens: DesignTokens | null;
-  session?: MutableRefObject<EditSessionHandle | null>;
-  onExit?: () => void;
-  onSessionEnd?: (action: SessionAction, result: EditSessionEnd) => void;
-  layers?: ReactNode;
-  tweaks?: InspectorTweaksProps;
-  selectMode?: boolean;
-  onSelectMode?: () => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
-  tab?: InspectorTab;
-  onTab?: (tab: InspectorTab) => void;
-  appDir?: string | null;
-  onAskAgent?: (prompt: string) => void;
-  components?: ComponentProps<typeof ComponentsPanel>;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selection: SelectionContext[];
+  readonly editable: boolean;
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly control: MutableRefObject<DirectEditControl | null>;
+  readonly onCommitted: (commit: DirectEditCommit) => void;
+  readonly notice: string | null;
+  readonly onStale: (message: string) => void;
+  readonly tokens: DesignTokens | null;
+  readonly session?: MutableRefObject<EditSessionHandle | null>;
+  readonly onExit?: () => void;
+  readonly onSessionEnd?: (
+    action: SessionAction,
+    result: EditSessionEnd
+  ) => void;
+  readonly layers?: ReactNode;
+  readonly tweaks?: InspectorTweaksProps;
+  readonly selectMode?: boolean;
+  readonly onSelectMode?: () => void;
+  readonly onUndo?: () => void;
+  readonly onRedo?: () => void;
+  readonly tab?: InspectorTab;
+  readonly onTab?: (tab: InspectorTab) => void;
+  readonly appDir?: string | null;
+  readonly onAskAgent?: (prompt: string) => void;
+  readonly components?: ComponentProps<typeof ComponentsPanel>;
 }
 
-const TABS: { id: InspectorTab; label: string }[] = [
+const TABS: { readonly id: InspectorTab; readonly label: string }[] = [
   { id: "simple", label: copy.tabSimple },
   { id: "pro", label: copy.tabLayers },
   { id: "components", label: copy.tabComponents },
@@ -53,7 +56,7 @@ const TABS: { id: InspectorTab; label: string }[] = [
 const EMPTY_HINT = copy.emptyHint;
 
 const isDirectEditable = (
-  source: { kind: string },
+  source: { readonly kind: string },
   compareOpen: boolean
 ): boolean => source.kind === "live" && !compareOpen;
 

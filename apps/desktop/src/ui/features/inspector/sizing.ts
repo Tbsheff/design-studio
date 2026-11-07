@@ -7,12 +7,15 @@ export type SizeMode = "hug" | "fill" | "fixed";
 export type AxisRole = "main" | "cross" | "none";
 
 export interface ParentLayout {
-  flex: boolean;
-  grid: boolean;
-  row: boolean;
+  readonly flex: boolean;
+  readonly grid: boolean;
+  readonly row: boolean;
 }
 
-export const SIZE_MODES: { value: SizeMode; label: string }[] = [
+export const SIZE_MODES: {
+  readonly value: SizeMode;
+  readonly label: string;
+}[] = [
   { label: "Fixed", value: "fixed" },
   { label: "Hug", value: "hug" },
   { label: "Fill", value: "fill" },
@@ -60,11 +63,11 @@ export const flexGrow = (flex: string): number => {
 type Values = Pick<StyleValues, Axis | "flex" | "align-self">;
 
 export interface SizeFacts {
-  authored: Record<Axis, string>;
-  display: string;
-  parentAlignItems: string;
-  parentJustifyItems: string;
-  justifySelf: string;
+  readonly authored: Record<Axis, string>;
+  readonly display: string;
+  readonly parentAlignItems: string;
+  readonly parentJustifyItems: string;
+  readonly justifySelf: string;
 }
 
 const BLOCK_DISPLAYS = new Set([
@@ -305,8 +308,8 @@ const legacyPatch = (
 };
 
 export interface AlignCell {
-  justify: string;
-  align: string;
+  readonly justify: string;
+  readonly align: string;
 }
 
 const AXIS_VALUES = ["flex-start", "center", "flex-end"] as const;
@@ -352,7 +355,7 @@ export const activeCell = (
   justify: string,
   align: string,
   isRow: boolean
-): { col: number; row: number } | null => {
+): { readonly col: number; readonly row: number } | null => {
   const j = alignSlot(justify);
 
   const a =

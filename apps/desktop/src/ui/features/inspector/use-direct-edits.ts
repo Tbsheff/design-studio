@@ -28,14 +28,14 @@ import type {
 } from "./use-direct-edit.js";
 
 interface Options {
-  projectId: string;
-  directionId: string | null;
-  selections: SelectionContext[];
-  port: MutableRefObject<PreviewPort | null>;
-  control: MutableRefObject<DirectEditControl | null>;
-  onCommitted: (commit: DirectEditCommit) => void;
-  onStale: (message: string) => void;
-  rewrite?: (style: Partial<StyleValues>) => Partial<StyleValues>;
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly selections: SelectionContext[];
+  readonly port: MutableRefObject<PreviewPort | null>;
+  readonly control: MutableRefObject<DirectEditControl | null>;
+  readonly onCommitted: (commit: DirectEditCommit) => void;
+  readonly onStale: (message: string) => void;
+  readonly rewrite?: (style: Partial<StyleValues>) => Partial<StyleValues>;
 }
 
 const DEBOUNCE_MS = 250;
@@ -50,7 +50,7 @@ const failureText = (err: unknown): string => {
 
 export const useDirectEdits = (
   o: Options
-): DirectEdit & { blocked: string | null } => {
+): DirectEdit & { readonly blocked: string | null } => {
   const opts = useRef(o);
   opts.current = o;
 

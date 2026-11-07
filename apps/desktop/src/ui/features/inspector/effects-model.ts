@@ -5,7 +5,12 @@ import type { DirectEdit } from "./use-direct-edit.js";
 
 type Part = "x" | "y" | "blur" | "spread";
 
-const PARTS: { part: Part; short: string; label: string; min?: number }[] = [
+const PARTS: {
+  readonly part: Part;
+  readonly short: string;
+  readonly label: string;
+  readonly min?: number;
+}[] = [
   { label: "X offset", part: "x", short: "X" },
   { label: "Y offset", part: "y", short: "Y" },
   { label: "Blur", min: 0, part: "blur", short: "B" },
@@ -15,8 +20,8 @@ const PARTS: { part: Part; short: string; label: string; min?: number }[] = [
 type Field = Part | "color";
 
 interface ShadowView {
-  list: Shadow[];
-  mixed: ReadonlySet<string> | null;
+  readonly list: Shadow[];
+  readonly mixed: ReadonlySet<string> | null;
 }
 
 const FIELDS: Field[] = ["x", "y", "blur", "spread", "color"];

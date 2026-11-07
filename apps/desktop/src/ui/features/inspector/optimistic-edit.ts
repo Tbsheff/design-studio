@@ -10,8 +10,8 @@ import type { PreviewPort } from "../../platform/bridge.js";
 const RESULT_WAIT_MS = 30_000;
 
 export interface OptimisticEdit {
-  saved: (tailwind: TailwindOutcome | null | undefined) => void;
-  failed: (reason: string) => void;
+  readonly saved: (tailwind: TailwindOutcome | null | undefined) => void;
+  readonly failed: (reason: string) => void;
 }
 
 let counter = 0;

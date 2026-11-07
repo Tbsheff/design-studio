@@ -19,11 +19,11 @@ import {
 import { call } from "../../platform/http.js";
 
 interface VariantPreviewQuery {
-  file: string;
-  name: string;
-  key: string;
-  value: string;
-  className: string | null;
+  readonly file: string;
+  readonly name: string;
+  readonly key: string;
+  readonly value: string;
+  readonly className: string | null;
 }
 
 const COMPONENT_PAGE_LIMIT = 100;

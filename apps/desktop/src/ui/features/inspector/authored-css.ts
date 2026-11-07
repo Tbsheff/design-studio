@@ -2,14 +2,14 @@ import { DIRECT_STYLE_PROPERTIES } from "@design-studio/contracts";
 import type { AuthoredRule } from "@design-studio/contracts";
 
 export interface AuthoredCss {
-  rules: AuthoredRule[];
-  inline: string;
+  readonly rules: AuthoredRule[];
+  readonly inline: string;
 }
 
 export interface AuthoredDeclaration {
-  prop: string;
-  value: string;
-  source: string;
+  readonly prop: string;
+  readonly value: string;
+  readonly source: string;
 }
 
 export const MAX_RULES = 60;
@@ -93,8 +93,8 @@ const splitTopLevel = (
 
 export const parseDeclarations = (
   css: string
-): { prop: string; value: string }[] => {
-  const out: { prop: string; value: string }[] = [];
+): { readonly prop: string; readonly value: string }[] => {
+  const out: { readonly prop: string; readonly value: string }[] = [];
 
   for (const chunk of splitTopLevel(
     css.replaceAll(/\/\*[\s\S]*?\*\//gu, ""),
@@ -183,8 +183,8 @@ const cappedString = (value: unknown, max: number): string | null =>
   typeof value === "string" && value.length <= max ? value : null;
 
 export const parseAuthoredReply = (message: {
-  rules?: unknown;
-  inline?: unknown;
+  readonly rules?: unknown;
+  readonly inline?: unknown;
 }): AuthoredCss | null => {
   if (!Array.isArray(message.rules)) {
     return null;
@@ -250,13 +250,13 @@ export const parseSelectionPath = (raw: unknown): string[] => {
 };
 
 export interface PathCrumb {
-  label: string;
-  levels: number;
+  readonly label: string;
+  readonly levels: number;
 }
 
 export type Crumb =
-  | ({ kind: "node" } & PathCrumb)
-  | { kind: "gap"; hidden: PathCrumb[] };
+  | ({ readonly kind: "node" } & PathCrumb)
+  | { readonly kind: "gap"; readonly hidden: PathCrumb[] };
 
 export const pathCrumbs = (path: string[]): PathCrumb[] =>
   path.map((label, index) => ({ label, levels: path.length - index }));

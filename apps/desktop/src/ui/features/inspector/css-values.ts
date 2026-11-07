@@ -19,8 +19,8 @@ const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 const MAX_TEXT = 300;
 
 interface ParsedNumber {
-  value: number;
-  unit: string;
+  readonly value: number;
+  readonly unit: string;
 }
 
 export function parseNumber(raw: string): ParsedNumber | null {
@@ -52,15 +52,15 @@ export function stepValue(
 }
 
 export interface Shift {
-  delta: number;
-  min?: number;
-  max?: number;
+  readonly delta: number;
+  readonly min?: number;
+  readonly max?: number;
 }
 
 export interface ShiftPart {
-  key: string;
-  map: (raw: string, change: (value: string) => string) => string;
-  set?: string;
+  readonly key: string;
+  readonly map: (raw: string, change: (value: string) => string) => string;
+  readonly set?: string;
 }
 
 export function shiftedPart(

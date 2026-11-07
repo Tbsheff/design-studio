@@ -86,15 +86,15 @@ export class SwapQueue {
 }
 
 export interface SwapGate {
-  shownFor: (key: string) => FilesChange | null;
-  nextFor: (key: string) => FilesChange | null;
-  onSwapDone: (key: string) => void;
+  readonly shownFor: (key: string) => FilesChange | null;
+  readonly nextFor: (key: string) => FilesChange | null;
+  readonly onSwapDone: (key: string) => void;
 }
 
 export interface GateTarget {
-  key: string;
-  directionId: string;
-  headVersionId: string | null;
+  readonly key: string;
+  readonly directionId: string;
+  readonly headVersionId: string | null;
 }
 
 export const useSwapGate = (

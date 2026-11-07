@@ -7,6 +7,7 @@ import type {
   SetupStep,
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
+import { copy } from "./copy.js";
 import { publishApi } from "./publish-api.js";
 
 export function usePublishBackend() {
@@ -137,7 +138,7 @@ export function BackendSetup({
         </div>
       )}
       {backend.steps.length > 0 && (
-        <ol className="publish-setup-steps" aria-label="Setup steps">
+        <ol className="publish-setup-steps" aria-label={copy.setupSteps}>
           {backend.steps.map((s) => (
             <StepRow key={s.id} step={s} />
           ))}
@@ -170,7 +171,7 @@ export function BackendSetup({
             className="btn small"
             disabled={busy || !cli?.installed}
             onClick={() => void setup("local")}
-            data-tip="Development only: local R2 and D1, a Worker on 127.0.0.1"
+            data-tip={copy.developmentOnlyLocal}
           >
             Set up local test server
           </button>
@@ -181,7 +182,7 @@ export function BackendSetup({
             className="btn small ghost"
             disabled={busy}
             onClick={() => void load(true)}
-            data-tip="Calls the Worker health check with the publish key"
+            data-tip={copy.callsTheWorker}
           >
             Test connection
           </button>

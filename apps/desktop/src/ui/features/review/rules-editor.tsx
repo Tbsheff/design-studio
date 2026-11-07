@@ -11,6 +11,7 @@ import { errorText, rulesApi } from "../../api.js";
 import { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
 
 import "../../styles/rules.css";
+import { copy } from "./copy.js";
 
 interface Props {
   projectId: string;
@@ -164,7 +165,7 @@ function RulesEditor({ projectId, directionId }: Props) {
 
   if (!state) {
     return (
-      <section className="rules-editor" aria-label="Design rules">
+      <section className="rules-editor" aria-label={copy.designRules}>
         {error ? (
           <p className="rules-error">{error}</p>
         ) : (
@@ -184,7 +185,7 @@ function RulesEditor({ projectId, directionId }: Props) {
       : null;
 
   return (
-    <section className="rules-editor" aria-label="Design rules">
+    <section className="rules-editor" aria-label={copy.designRules}>
       <div className="rules-head">
         <h3>Design rules</h3>
         {imported && (
@@ -205,7 +206,7 @@ function RulesEditor({ projectId, directionId }: Props) {
       </p>
       <textarea
         className="rules-input"
-        aria-label="Rules, one per line"
+        aria-label={copy.rulesOnePer}
         spellCheck={false}
         rows={8}
         value={text}
@@ -217,7 +218,7 @@ function RulesEditor({ projectId, directionId }: Props) {
           type="button"
           className="btn small"
           disabled={busy !== null || !text.trim()}
-          data-tip="Check these rules on the live frame. Nothing is saved."
+          data-tip={copy.checkTheseRules}
           onClick={() => void run("test")}
         >
           {busy === "test" ? "Testing…" : "Test on frame"}
@@ -240,7 +241,7 @@ function RulesEditor({ projectId, directionId }: Props) {
           </p>
         ))}
       {rules.length > 0 && (
-        <ul className="rules-list" aria-label="Parsed rules">
+        <ul className="rules-list" aria-label={copy.parsedRules}>
           {rules.map((rule) => (
             <RuleRow key={rule.id} rule={rule} hit={hits.get(rule.id)} />
           ))}

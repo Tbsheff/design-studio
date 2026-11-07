@@ -1,10 +1,11 @@
+import { Icon } from "@design-studio/ui";
 import { Suspense } from "react";
 import type { ReactNode } from "react";
 
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
-import { Icon } from "@design-studio/ui";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
+import { copy } from "./copy.js";
 import {
   PortToAppDialog,
   usePortDialog,
@@ -93,13 +94,17 @@ export function CanvasTopBar(p: Props) {
   };
 
   return (
-    <div className="toolbar canvas-topbar" role="toolbar" aria-label="Canvas">
+    <div
+      className="toolbar canvas-topbar"
+      role="toolbar"
+      aria-label={copy.canvas}
+    >
       {p.paneCollapsed && (
         <button
           type="button"
           className="icon-btn topbar-icon"
-          aria-label="Show chat pane"
-          data-tip="Show pane"
+          aria-label={copy.showChatPane}
+          data-tip={copy.showPane}
           data-tip-align="start"
           onClick={p.onExpandPane}
         >
@@ -109,8 +114,8 @@ export function CanvasTopBar(p: Props) {
       <button
         type="button"
         className="icon-btn topbar-icon topbar-fold-wide"
-        aria-label="Reload preview"
-        data-tip="Reload"
+        aria-label={copy.reloadPreview}
+        data-tip={copy.reload}
         data-tip-align="start"
         onClick={p.onReload}
       >
@@ -119,7 +124,7 @@ export function CanvasTopBar(p: Props) {
       <button
         type="button"
         className="icon-btn topbar-icon topbar-fold-narrow"
-        aria-label="Tweak"
+        aria-label={copy.tweak}
         aria-pressed={p.tweakOpen}
         aria-expanded={p.tweakOpen}
         disabled={p.tweakDisabled}
@@ -141,19 +146,23 @@ export function CanvasTopBar(p: Props) {
       <button
         type="button"
         className="icon-btn topbar-icon topbar-fold-wide"
-        aria-label="View options"
+        aria-label={copy.viewOptions}
         aria-pressed={p.viewOpen}
-        data-tip="Size, source and checks"
+        data-tip={copy.sizeSourceAnd}
         onClick={p.onToggleView}
       >
         <Icon name="more" size={14} />
       </button>
       <div className="spacer" />
       <ZoomPill {...zoom} />
-      <div className="ui-tools topbar-tools" role="group" aria-label="Tool">
+      <div
+        className="ui-tools topbar-tools"
+        role="group"
+        aria-label={copy.tool}
+      >
         <button
           type="button"
-          aria-label="Select"
+          aria-label={copy.select}
           aria-pressed={p.tool === "select"}
           aria-keyshortcuts="V"
           data-tip={tipWithKey("Select elements", "tool-select")}
@@ -164,7 +173,7 @@ export function CanvasTopBar(p: Props) {
         </button>
         <button
           type="button"
-          aria-label="Comment"
+          aria-label={copy.comment}
           aria-pressed={p.tool === "comment"}
           aria-keyshortcuts="C"
           disabled={!p.commentAvailable}
@@ -180,7 +189,7 @@ export function CanvasTopBar(p: Props) {
         </button>
         <button
           type="button"
-          aria-label="Edit"
+          aria-label={copy.edit}
           aria-pressed={p.tool === "edit"}
           aria-keyshortcuts="Alt+1"
           data-tip={tipWithKey("Edit and layers", "layers")}
@@ -191,9 +200,9 @@ export function CanvasTopBar(p: Props) {
         </button>
         <button
           type="button"
-          aria-label="Prototype"
+          aria-label={copy.prototype}
           aria-pressed={p.tool === "prototype"}
-          data-tip="Link elements to frames, then Play"
+          data-tip={copy.linkElementsTo}
           onClick={() => p.onTool("prototype")}
         >
           <Icon name="link" size={14} />
@@ -241,8 +250,8 @@ export function CanvasTopBar(p: Props) {
       <span
         className="topbar-avatar"
         role="img"
-        aria-label="You, on this computer"
-        data-tip="You, on this computer"
+        aria-label={copy.youOnThis}
+        data-tip={copy.youOnThis}
         data-tip-align="end"
       >
         Y

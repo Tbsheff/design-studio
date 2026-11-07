@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import { api, errorText } from "../../api.js";
+import { copy } from "./copy.js";
 
 const PRESETS: (number | null)[] = [null, 0.5, 1, 2, 5];
 
@@ -132,7 +133,7 @@ const BudgetMenu = ({
       ref={ref}
       className="ui-menu budget-pop"
       role="menu"
-      aria-label="Spending limit per run"
+      aria-label={copy.spendingLimitPer}
       data-testid="budget-menu"
     >
       <div className="ui-menu-section">
@@ -154,9 +155,9 @@ const BudgetMenu = ({
         <label className="budget-custom-row">
           <span>Other</span>
           <input
-            aria-label="Other spending limit in dollars"
+            aria-label={copy.otherSpendingLimit}
             inputMode="decimal"
-            placeholder="0.01 to 50"
+            placeholder={copy.text001To}
             value={custom}
             aria-invalid={bad || undefined}
             onChange={(e) => setCustom(e.target.value)}

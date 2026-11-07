@@ -13,6 +13,7 @@ import type { ReactNode, RefObject } from "react";
 
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { PREVIEW_ESCAPE_EVENT } from "../chat/use-escape-stop.js";
+import { copy } from "./copy.js";
 import type { ReviewState } from "./use-review.js";
 
 interface Props {
@@ -282,7 +283,12 @@ function ReviewPanel(p: Props) {
   };
 
   return (
-    <div ref={panel} className="review-panel" role="region" aria-label="Review">
+    <div
+      ref={panel}
+      className="review-panel"
+      role="region"
+      aria-label={copy.review}
+    >
       <div className="review-head">
         <Icon name="check" />
         <strong>Review</strong>
@@ -291,8 +297,8 @@ function ReviewPanel(p: Props) {
         <button
           type="button"
           className="icon-btn"
-          aria-label="Run the review again"
-          data-tip="Run again"
+          aria-label={copy.runTheReview}
+          data-tip={copy.runAgain}
           disabled={p.review.busy || !p.live}
           onClick={p.review.run}
         >
@@ -305,8 +311,8 @@ function ReviewPanel(p: Props) {
         <button
           type="button"
           className="icon-btn"
-          aria-label="Close"
-          data-tip="Close"
+          aria-label={copy.close}
+          data-tip={copy.close}
           data-tip-align="end"
           onClick={p.onClose}
         >

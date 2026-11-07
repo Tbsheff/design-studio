@@ -24,6 +24,7 @@ import {
   VectorSlot,
 } from "./canvas-tool-slots.js";
 import type { ViewProps } from "./canvas-types.js";
+import { copy } from "./copy.js";
 import { DrawBar } from "./draw-layer.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import {
@@ -134,7 +135,7 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
       ref={stageRef}
       className={`stage ${stageMode}${pz.panning ? " panning" : ""}`}
       tabIndex={-1}
-      aria-label="Canvas"
+      aria-label={copy.canvas}
       onPointerDown={quietOnPointer(pz.onPointerDown)}
       onBlur={dropQuietFocus}
     >

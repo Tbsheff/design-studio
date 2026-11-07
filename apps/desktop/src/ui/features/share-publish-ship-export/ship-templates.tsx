@@ -2,9 +2,10 @@ import type { ShipSettings } from "@design-studio/contracts/ship";
 import { useEffect, useState } from "react";
 import type { MutableRefObject } from "react";
 
-import { shipApi } from "./ship-api.js";
+import { copy } from "./copy.js";
 
 import "../../styles/ship.css";
+import { shipApi } from "./ship-api.js";
 
 interface Props {
   projectId: string;
@@ -35,7 +36,7 @@ export function ShipTemplates({ projectId, saveRef }: Props) {
     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
 
   return (
-    <section className="ship-settings" aria-label="Ship templates">
+    <section className="ship-settings" aria-label={copy.shipTemplates}>
       <h3>Ship as branch and PR</h3>
       {loadError && <p className="field-help">{loadError}</p>}
       {draft && (
@@ -46,7 +47,7 @@ export function ShipTemplates({ projectId, saveRef }: Props) {
               <input
                 className="mono"
                 value={draft.user}
-                placeholder="from git user.email"
+                placeholder={copy.fromGitUser}
                 spellCheck={false}
                 autoComplete="off"
                 onChange={(e) => set({ user: e.target.value })}
@@ -57,7 +58,7 @@ export function ShipTemplates({ projectId, saveRef }: Props) {
               <input
                 className="mono"
                 value={draft.issueId}
-                placeholder="QA-1234"
+                placeholder={copy.qa1234}
                 spellCheck={false}
                 autoComplete="off"
                 onChange={(e) => set({ issueId: e.target.value })}

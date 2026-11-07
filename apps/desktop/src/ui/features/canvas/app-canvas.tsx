@@ -18,6 +18,7 @@ import type { Listen } from "./app-canvas-routes.js";
 import { canAddFrame, canvasStore } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 import { FrameRedirectNote } from "./canvas-frames.js";
+import { copy } from "./copy.js";
 
 const LOAD_HINT_MS = 30_000;
 
@@ -166,8 +167,8 @@ function AppStageHint({ hint, onClose }: { hint: Hint; onClose: () => void }) {
           <button
             type="button"
             className="icon-btn small"
-            aria-label="Dismiss"
-            data-tip="Dismiss"
+            aria-label={copy.dismiss}
+            data-tip={copy.dismiss}
             onClick={onClose}
           >
             <Icon name="close" size={12} />

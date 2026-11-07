@@ -19,6 +19,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { ApiError, json } from "../../api.js";
 
 import "../../styles/figma-import.css";
+import { copy } from "./copy.js";
 
 interface Props {
   ids: { projectId: string; directionId: string };
@@ -186,7 +187,7 @@ function JsonPaste({
           rows={5}
           value={text}
           spellCheck={false}
-          placeholder='{ "nodes": { … } }'
+          placeholder={copy.nodes}
           aria-invalid={bad}
           aria-describedby="fgi-json-help"
           onChange={(e) => {
@@ -271,7 +272,7 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
       </div>
       <div className="fgi-facts">{facts(stats).join(" · ")}</div>
       {stats.kit.length > 0 && (
-        <ul className="fgi-kit" aria-label="Kit components">
+        <ul className="fgi-kit" aria-label={copy.kitComponents}>
           {stats.kit.slice(0, 6).map((use, index) => (
             <li key={`${use.layer}-${index}`}>
               <span>{use.layer}</span>
@@ -288,7 +289,7 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
         </ul>
       )}
       <div className="fgi-code-wrap">
-        <pre className="fgi-code" tabIndex={0} aria-label="Markup">
+        <pre className="fgi-code" tabIndex={0} aria-label={copy.markup}>
           {preview.markup}
         </pre>
       </div>
@@ -374,7 +375,7 @@ export function FigmaImportDialog({
     <dialog
       ref={dialog.ref}
       className="modal fgi-dialog"
-      aria-label="Import Figma frame"
+      aria-label={copy.importFigmaFrame}
       onMouseDown={dialog.onMouseDown}
       onKeyDown={onKeyDown}
     >
@@ -399,7 +400,7 @@ export function FigmaImportDialog({
               <span>Frame</span>
               <UiSelect
                 className="ins-select fgi-select"
-                aria-label="Frame"
+                aria-label={copy.frame}
                 value={chosen}
                 options={frames.map((frame) => ({
                   label: `${frame.name}${frame.width ? ` · ${frame.width}×${frame.height}` : ""}`,
@@ -413,7 +414,7 @@ export function FigmaImportDialog({
             <span>Place</span>
             <UiSelect
               className="ins-select fgi-select"
-              aria-label="Place"
+              aria-label={copy.place}
               value={position}
               options={
                 canNest

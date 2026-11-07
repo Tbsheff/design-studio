@@ -34,10 +34,11 @@ import { createPortal } from "react-dom";
 import { loadLinkInteraction } from "../../canvas-link-slots.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { framePage, frameTitle } from "./canvas-frames.js";
+import { copy } from "./copy.js";
 import { linksApi } from "./links-api.js";
-import type { LinkState } from "./use-link-rects.js";
 
 import "../../styles/prototype.css";
+import type { LinkState } from "./use-link-rects.js";
 
 const LinkInteractionEditor = lazy(async () => {
   const mod = await loadLinkInteraction();
@@ -446,8 +447,8 @@ export function LinkHandle({
       <button
         type="button"
         className="link-handle"
-        aria-label="Drag to a frame to link"
-        data-tip="Drag to a frame to link"
+        aria-label={copy.dragToA}
+        data-tip={copy.dragToA}
         data-testid="link-handle"
         onPointerDown={(event) => onBegin(event, selection, activeId)}
       >
@@ -626,10 +627,7 @@ function LinkEditor({
   return (
     <div className="proto-editor" data-testid="link-editor">
       {link.implicit && (
-        <span
-          className="proto-found"
-          data-tip="Found from a link in the page code. Keep it to save it with the canvas."
-        >
+        <span className="proto-found" data-tip={copy.foundFromA}>
           Found in page
         </span>
       )}
@@ -647,7 +645,7 @@ function LinkEditor({
       {toFrames && (
         <UiSelect
           className="proto-select"
-          aria-label="Link target"
+          aria-label={copy.linkTarget}
           value={targetFrame(link.to) ?? "back"}
           options={targetOptions(link, frames, frameTitle)}
           onChange={(value) =>
@@ -658,7 +656,7 @@ function LinkEditor({
       {toFrames && (
         <UiSelect
           className="proto-select"
-          aria-label="Transition"
+          aria-label={copy.transition}
           value={link.transition}
           options={opts.transitions}
           onChange={(value: LinkTransition) => change({ transition: value })}
@@ -668,14 +666,14 @@ function LinkEditor({
         <>
           <UiSelect
             className="proto-select proto-narrow"
-            aria-label="Duration"
+            aria-label={copy.duration}
             value={String(linkDuration(link))}
             options={opts.durations}
             onChange={(value) => change({ duration: Number(value) })}
           />
           <UiSelect
             className="proto-select proto-narrow"
-            aria-label="Easing"
+            aria-label={copy.easing}
             value={link.easing ?? LINK_EASING_DEFAULT}
             options={opts.easings}
             onChange={(value: LinkEasing) => change({ easing: value })}
@@ -700,8 +698,8 @@ function LinkEditor({
         <button
           type="button"
           className="icon-btn small"
-          aria-label="Remove link"
-          data-tip="Remove link"
+          aria-label={copy.removeLink}
+          data-tip={copy.removeLink}
           onClick={() => void linksApi.remove(projectId, link.id).catch(fail)}
         >
           <Icon name="unlink" size={14} />
@@ -747,7 +745,7 @@ function LinkList({
     <div
       className="proto-list ui-popover"
       role="list"
-      aria-label="Prototype links"
+      aria-label={copy.prototypeLinks}
       data-testid="link-list"
     >
       {states.length === 0 && <div className="proto-empty">No links yet.</div>}
@@ -771,7 +769,7 @@ function LinkList({
               type="button"
               className="icon-btn small"
               aria-label={`Keep link ${linkTitle(state.link)}`}
-              data-tip="Keep"
+              data-tip={copy.keep}
               onClick={() =>
                 void linksApi.keep(projectId, [state.link.id]).catch(fail)
               }
@@ -832,13 +830,13 @@ export function PrototypeBar(bar: BarProps) {
     <div
       className="proto-bar"
       role="toolbar"
-      aria-label="Prototype"
+      aria-label={copy.prototype}
       data-testid="proto-bar"
       onPointerDown={(event) => event.stopPropagation()}
     >
       <UiSelect
         className="proto-select proto-start"
-        aria-label="Start frame"
+        aria-label={copy.startFrame}
         tip="Start frame for Play"
         icon={<Icon name="play" size={12} />}
         value={startId}
@@ -899,7 +897,7 @@ export function PrototypeBar(bar: BarProps) {
           type="button"
           className="btn small ghost"
           data-testid="link-keep-all"
-          data-tip="Save the links found in the page code"
+          data-tip={copy.saveTheLinks}
           onClick={() => void linksApi.keep(p.projectId, "all").catch(fail)}
         >
           Keep all

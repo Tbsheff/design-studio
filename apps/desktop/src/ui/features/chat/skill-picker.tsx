@@ -10,6 +10,7 @@ import type { RefObject } from "react";
 import { api, errorText } from "../../api.js";
 import { rank } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
+import { copy } from "./copy.js";
 import { SkillsChecklist } from "./skills-checklist.js";
 import {
   NO_SKILLS_TEXT,
@@ -152,10 +153,7 @@ export const useSlashSections = ({
 
   const note =
     manualCount > 0 ? (
-      <span
-        data-tip-side="top"
-        data-tip="These skills set disable-model-invocation in SKILL.md, so the agent cannot load them. Run them yourself in Claude Code."
-      >
+      <span data-tip-side="top" data-tip={copy.theseSkillsSet}>
         {plural(manualCount, "manual-only skill")} not listed
       </span>
     ) : null;
@@ -221,7 +219,7 @@ export const SkillChips = ({
   }
 
   return (
-    <div className="skill-chips" aria-label="Skills for this message">
+    <div className="skill-chips" aria-label={copy.skillsForThis}>
       {ids.map((id) => (
         <span
           key={id}
@@ -273,7 +271,7 @@ const IndicatorPop = (props: {
       ref={ref}
       className="skill-pop skills-ind-pop settings-fields"
       role="dialog"
-      aria-label="Skills for this project"
+      aria-label={copy.skillsForThisProject}
     >
       <SkillsChecklist
         disabled={props.disabled}

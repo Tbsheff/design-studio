@@ -39,10 +39,11 @@ import type { BridgeFrame } from "../../platform/bridge.js";
 import { randomToken } from "../../platform/session.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameTitle } from "./canvas-frames.js";
+import { copy } from "./copy.js";
 import { hasOutgoing, playStartOf } from "./prototype-layer.js";
-import { linkQuery } from "./use-link-rects.js";
 
 import "../../styles/prototype.css";
+import { linkQuery } from "./use-link-rects.js";
 
 const NO_BRIDGE_MS = 1500;
 const LAYERS_FRESH_MS = 1500;
@@ -615,7 +616,7 @@ function SlotView({
       >
         <iframe
           ref={bind}
-          title="Prototype frame"
+          title={copy.prototypeFrame}
           src={slot.src}
           sandbox={sandbox}
           width={slot.frame.width}
@@ -701,7 +702,7 @@ export default function PlayMode(p: Props) {
       className="present-layer play-layer"
       role="dialog"
       aria-modal="true"
-      aria-label="Play prototype"
+      aria-label={copy.playPrototype}
       tabIndex={-1}
       data-testid="play-layer"
     >
@@ -709,8 +710,8 @@ export default function PlayMode(p: Props) {
         <button
           type="button"
           className="icon-btn small"
-          aria-label="Back"
-          data-tip="Back  ⌫"
+          aria-label={copy.back}
+          data-tip={copy.back7}
           disabled={play.history.length < 2 && !overlay}
           onClick={play.back}
         >
@@ -767,7 +768,7 @@ export default function PlayMode(p: Props) {
             <button
               type="button"
               className="play-backdrop"
-              aria-label="Close overlay"
+              aria-label={copy.closeOverlay}
               data-testid="play-backdrop"
               onClick={() => play.closeOverlay()}
             />

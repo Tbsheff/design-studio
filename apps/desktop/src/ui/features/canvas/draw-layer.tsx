@@ -10,6 +10,7 @@ import type { CommentTools } from "../comments/comment-layer.js";
 import { MOD_LABEL } from "../comments/comment-popover.js";
 import type { CommentsControl } from "../comments/use-comments.js";
 import { useProfileInitial } from "../home/use-profile-initial.js";
+import { copy } from "./copy.js";
 import {
   DRAW_COLORS,
   DRAW_SCREEN_WIDTH,
@@ -20,9 +21,9 @@ import {
   strokePath,
 } from "./drawing-model.js";
 import type { StrokeBuilder } from "./drawing-model.js";
-import type { DrawTool } from "./use-draw-tool.js";
 
 import "../../styles/drawing.css";
+import type { DrawTool } from "./use-draw-tool.js";
 
 interface Frame {
   width: number;
@@ -244,7 +245,7 @@ export function DrawSurface({
         ref={canvas}
         className="draw-canvas"
         data-testid="draw-canvas"
-        aria-label="Drawing area"
+        aria-label={copy.drawingArea}
         width={Math.max(1, Math.round(frame.width * scale))}
         height={Math.max(1, Math.round(frame.height * scale))}
         style={{ height: frame.height, width: frame.width }}
@@ -323,14 +324,14 @@ export function DrawBar({ draw }: { draw: DrawTool }) {
     <div
       className="draw-bar"
       role="toolbar"
-      aria-label="Drawing"
+      aria-label={copy.drawing}
       data-testid="draw-bar"
       onPointerDown={(event) => event.stopPropagation()}
     >
       <div
         className="draw-swatches"
         role="radiogroup"
-        aria-label="Pen color"
+        aria-label={copy.penColor}
         onKeyDown={onSwatchKey}
       >
         {DRAW_COLORS.map((color) => (
@@ -351,7 +352,7 @@ export function DrawBar({ draw }: { draw: DrawTool }) {
       <button
         type="button"
         className="icon-btn small"
-        aria-label="Undo stroke"
+        aria-label={copy.undoStroke}
         aria-keyshortcuts="Meta+Z Control+Z"
         data-tip={`Undo stroke  ${MOD_LABEL}Z`}
         disabled={count === 0}
@@ -362,8 +363,8 @@ export function DrawBar({ draw }: { draw: DrawTool }) {
       <button
         type="button"
         className="icon-btn small"
-        aria-label="Clear drawing"
-        data-tip="Clear"
+        aria-label={copy.clearDrawing}
+        data-tip={copy.clear}
         disabled={count === 0}
         onClick={draw.clear}
       >

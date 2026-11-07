@@ -15,12 +15,13 @@ import type { FormEvent, ReactNode } from "react";
 import type { PublishKind } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
+import { copy } from "./copy.js";
 import { canvasFrameChoices, frameRoute } from "./export-api.js";
 import { PublishPane } from "./publish-pane.js";
-import { shareApi, sharesChanged } from "./share-api.js";
 
 import "../../styles/export.css";
 import "../../styles/share.css";
+import { shareApi, sharesChanged } from "./share-api.js";
 
 export interface ShareTarget {
   projectId: string;
@@ -40,7 +41,7 @@ function ShareTabs({
   onMode: (mode: ShareMode) => void;
 }) {
   return (
-    <div className="segmented share-tabs" role="tablist" aria-label="Share as">
+    <div className="segmented share-tabs" role="tablist" aria-label={copy.tabs}>
       {(["link", "publish"] as const).map((id) => (
         <button
           key={id}
@@ -124,9 +125,7 @@ function offNote(links: ShareLink[], server: ShareServerState): string | null {
     return null;
   }
 
-  return server.running
-    ? "Viewers of a link that is off see a page that says it no longer works."
-    : "No link is on, so the share server is off and old addresses do not answer.";
+  return server.running ? copy.offNoteRunning : copy.offNoteStopped;
 }
 
 function hiddenNote(links: ShareLink[]): string | null {
@@ -280,7 +279,7 @@ function LinkList({ links, ...rest }: RowProps & { links: ShareLink[] }) {
 
   return (
     <div className="share-links-group">
-      <ul className="share-links" aria-label="Share links">
+      <ul className="share-links" aria-label={copy.shareLinks}>
         {links.map((link) => (
           <LinkRow key={link.id} link={link} {...rest} />
         ))}
@@ -430,7 +429,7 @@ function ExpiryPicker({
     <div
       className="segmented export-seg"
       role="radiogroup"
-      aria-label="Link ends after"
+      aria-label={copy.linkEndsAfter}
     >
       {EXPIRIES.map((option) => (
         <button
@@ -484,7 +483,7 @@ export function ShareDialog({
             <button
               type="button"
               className="icon-btn"
-              aria-label="Close"
+              aria-label={copy.close}
               onClick={onClose}
             >
               <Icon name="close" />
@@ -585,7 +584,7 @@ function LinkShare({
         <button
           type="button"
           className="icon-btn"
-          aria-label="Close"
+          aria-label={copy.close}
           onClick={onClose}
         >
           <Icon name="close" />

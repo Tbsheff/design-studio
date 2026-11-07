@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import { api } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { packApi } from "../../platform/pack-api.js";
+import { copy } from "./copy.js";
 
 type ImproveEnd = { runId: string; status: RunStatus } | null;
 
@@ -245,7 +246,7 @@ export const DraftSources = ({
   return (
     <section
       className="ds-sources"
-      aria-label="Sources"
+      aria-label={copy.sources}
       aria-busy={!state.done}
     >
       <div className="ds-src-head">

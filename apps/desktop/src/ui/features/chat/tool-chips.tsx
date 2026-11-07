@@ -21,6 +21,7 @@ import {
 import { Chip } from "../../ai/components/ai/chip.js";
 import { IS_MAC } from "../../chat-slots.js";
 import { formatMs } from "../../domain/format.js";
+import { copy } from "./copy.js";
 import type { ToolRow, RunView } from "./run-state-model.js";
 import {
   toolGroupLabel,
@@ -816,7 +817,7 @@ export const LiveStatus = ({
         <button
           type="button"
           className="icon-btn small live-stop"
-          aria-label="Stop run"
+          aria-label={copy.stopRun}
           data-tip={`Stop (${shortcutLabel("stop", IS_MAC)})`}
           data-tip-align="end"
           onClick={onStop}

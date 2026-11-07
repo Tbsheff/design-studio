@@ -11,9 +11,10 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 
-import type { setFrameSession } from "./frame-states-model.js";
+import { copy } from "./copy.js";
 
 import "../../styles/frame-state.css";
+import type { setFrameSession } from "./frame-states-model.js";
 
 type MockRules = NonNullable<FrameStateDef["mocks"]>;
 
@@ -103,7 +104,7 @@ export function SessionRows({
           role="menuitem"
           className="ui-menu-item"
           tabIndex={-1}
-          data-tip="Change the name and email of the mock user"
+          data-tip={copy.changeTheName}
           onClick={() => onPanel("user")}
         >
           <Icon name="edit" size={14} />

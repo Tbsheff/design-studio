@@ -2,6 +2,7 @@ import type { FrameStatesView } from "@design-studio/contracts/frame-state";
 import { Icon, usePopover } from "@design-studio/ui";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
+import { copy } from "./copy.js";
 import {
   stop,
   menuKeys,
@@ -100,7 +101,7 @@ function MenuBody({
     );
   }
   return (
-    <div role="menu" aria-label="Frame state" onKeyDown={menuKeys}>
+    <div role="menu" aria-label={copy.frameState} onKeyDown={menuKeys}>
       <StateRows
         view={view}
         chosen={chosen}

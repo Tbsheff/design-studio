@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { errorText } from "../../api.js";
 import { packApi } from "../../platform/pack-api.js";
 import { findPack, usePacks } from "../design-system/packs.js";
+import { copy } from "./copy.js";
 import { improvePassed, CheckStatus } from "./draft-improve.js";
 import type { RunView } from "./run-state-model.js";
 
@@ -244,7 +245,7 @@ const SaveAnyway = ({
           id={popId}
           className="ui-popover draft-confirm"
           role="dialog"
-          aria-label="Save anyway"
+          aria-label={copy.saveAnyway}
         >
           <p>
             The check found {count} problem{count === 1 ? "" : "s"}. Save
@@ -405,7 +406,11 @@ export const DraftBar = ({
   const ready = Boolean(check?.passed) && improvePassed(lastRun);
 
   return (
-    <div className="draft-bar" role="region" aria-label="Design system draft">
+    <div
+      className="draft-bar"
+      role="region"
+      aria-label={copy.designSystemDraft}
+    >
       {ready && (
         <span id={readyId} className="sr-only">
           The AI run passed the check. Save it to your library.

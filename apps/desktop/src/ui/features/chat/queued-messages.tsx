@@ -3,6 +3,8 @@ import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
 
+import { copy } from "./copy.js";
+
 const move = (
   items: QueuedMessage[],
   from: number,
@@ -85,7 +87,7 @@ const QueuedItem = ({
         <span
           className="queued-grip"
           aria-hidden="true"
-          data-tip="Drag, or Alt+↑ and Alt+↓, to move"
+          data-tip={copy.dragOrAlt}
           data-tip-side="top"
           data-tip-align="start"
         >
@@ -95,7 +97,7 @@ const QueuedItem = ({
       {editing ? (
         <textarea
           className="queued-edit"
-          aria-label="Edit queued message"
+          aria-label={copy.editQueuedMessage}
           value={text}
 
           rows={Math.min(4, text.split("\n").length)}
@@ -124,8 +126,8 @@ const QueuedItem = ({
       <button
         type="button"
         className="icon-btn small queued-remove"
-        aria-label="Remove queued message"
-        data-tip="Remove"
+        aria-label={copy.removeQueuedMessage}
+        data-tip={copy.remove}
         data-tip-side="top"
         onClick={onRemove}
       >
@@ -149,7 +151,7 @@ export const QueuedMessages = ({
   }
 
   return (
-    <div className="queued" aria-label="Queued messages" role="group">
+    <div className="queued" aria-label={copy.queuedMessages} role="group">
       <span className="queued-head">Queued · sent at the next step</span>
       <ol className="queued-list">
         {items.map((item, index) => (

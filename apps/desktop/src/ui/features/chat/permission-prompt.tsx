@@ -10,6 +10,7 @@ import {
   ruleForCommand,
 } from "../../../shared/permissionRules.js";
 import { api, errorText } from "../../api.js";
+import { copy } from "./copy.js";
 
 export const PermissionPrompt = ({
   projectId,
@@ -75,8 +76,8 @@ export const PermissionPrompt = ({
         >
           <input
             className="input small"
-            aria-label="Note for the agent"
-            placeholder="Tell the agent what to do instead (optional)"
+            aria-label={copy.noteForThe}
+            placeholder={copy.tellTheAgent}
             value={note}
 
             onChange={(event) => setNote(event.target.value)}

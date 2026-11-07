@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
+import { copy } from "./copy.js";
 
 export const useHistorySearch = (history: readonly string[]) => {
   const [open, setOpen] = useState(false);
@@ -50,14 +51,14 @@ export const HistorySearch = ({
     <div
       className="skill-pop history-pop"
       role="dialog"
-      aria-label="Search past prompts"
+      aria-label={copy.searchPastPrompts}
       data-testid="history-search"
     >
       <input
         autoFocus
         className="skill-search"
-        aria-label="Search past prompts"
-        placeholder="Search past prompts"
+        aria-label={copy.searchPastPrompts}
+        placeholder={copy.searchPastPrompts}
         value={search.query}
         onChange={(event) => search.setQuery(event.target.value)}
         onKeyDown={(event) => {
@@ -79,7 +80,7 @@ export const HistorySearch = ({
           event.stopPropagation();
         }}
       />
-      <ul role="listbox" aria-label="Past prompts" className="skill-opts">
+      <ul role="listbox" aria-label={copy.pastPrompts} className="skill-opts">
         {search.shown.map((prompt) => (
           <li
             key={prompt}

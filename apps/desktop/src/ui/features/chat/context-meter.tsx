@@ -1,3 +1,5 @@
+import { copy } from "./copy.js";
+
 export const contextWindowFor = (model: string): number =>
   /\[1m\]|-1m\b/iu.test(model) ? 1_000_000 : 200_000;
 
@@ -33,7 +35,7 @@ export const ContextMeter = ({
     <span
       className={`context-meter ${tone}`}
       role="meter"
-      aria-label="Context used"
+      aria-label={copy.contextUsed}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={percent}

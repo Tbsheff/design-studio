@@ -14,9 +14,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 
 import { errorText } from "../../api.js";
-import { shipApi } from "./ship-api.js";
+import { copy } from "./copy.js";
 
 import "../../styles/ship.css";
+import { shipApi } from "./ship-api.js";
 
 interface Props {
   projectId: string;
@@ -401,7 +402,7 @@ function FileList({
 }) {
   return (
     <div className="ship-files-wrap">
-      <ul className="ship-files" aria-label="Changed files">
+      <ul className="ship-files" aria-label={copy.changedFiles}>
         {plan.files.map((file) => (
           <li
             key={file.path}
@@ -499,7 +500,7 @@ function ShipFields({
         <input
           className="mono"
           value={draft.issue}
-          placeholder="QA-1234"
+          placeholder={copy.qa1234}
           spellCheck={false}
           autoComplete="off"
           onChange={(e) => patch({ issue: e.target.value })}
@@ -704,7 +705,7 @@ export function ShipDialog({ projectId, onClose }: Props) {
     <dialog
       ref={dialog.ref}
       className="modal ship-dialog"
-      aria-label="Ship as a pull request"
+      aria-label={copy.shipAsA}
       onMouseDown={dialog.onMouseDown}
     >
       <form className="modal-form" onSubmit={(e) => void submit(e)} noValidate>
@@ -716,7 +717,7 @@ export function ShipDialog({ projectId, onClose }: Props) {
           <button
             type="button"
             className="icon-btn"
-            aria-label="Close"
+            aria-label={copy.close}
             onClick={onClose}
             disabled={busy}
           >

@@ -4,6 +4,7 @@ import { useId, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
+import { copy } from "./copy.js";
 
 const STEP: Record<string, number> = {
   ArrowDown: 1,
@@ -102,7 +103,7 @@ export const LevelControl = ({
       tabIndex={0}
       className="segmented level-control"
       role="radiogroup"
-      aria-label="Run level"
+      aria-label={copy.runLevel}
       data-testid="level-control"
       onKeyDown={radios.onKeyDown}
     >

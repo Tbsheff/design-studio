@@ -13,6 +13,7 @@ import { LayersPanel } from "../versions-layers-tokens/layers-panel.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { frameName } from "./canvas-frames-model.js";
+import { copy } from "./copy.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import type { HoverBox } from "./use-preview-frames.js";
 
@@ -101,7 +102,7 @@ function EditNotice({
       <button
         type="button"
         className="icon-btn small"
-        aria-label="Dismiss"
+        aria-label={copy.dismiss}
         onClick={edits.clearNotice}
       >
         <Icon name="close" size={14} />

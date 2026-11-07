@@ -4,9 +4,10 @@ import type { IconName } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import { activeExportFrame, exportApi, openExport } from "./export-api.js";
+import { copy as uiCopy } from "./copy.js";
 
 import "../../styles/export.css";
+import { activeExportFrame, exportApi, openExport } from "./export-api.js";
 
 interface Props {
   projectId: string;
@@ -256,7 +257,7 @@ export function CopyCodeMenu({
         <div
           className="project-menu copy-code-menu"
           role="menu"
-          aria-label="Copy element"
+          aria-label={uiCopy.copyElement}
           onKeyDown={(e) => menuKeys(e, close)}
         >
           {items.map((item) => (

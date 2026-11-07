@@ -1,8 +1,9 @@
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import { Icon } from "@design-studio/ui";
 import { FRAME_PRESETS } from "./canvas-frames-model.js";
+import { copy } from "./copy.js";
 
 export function AddFrameMenu({
   disabled,
@@ -87,7 +88,7 @@ export function AddFrameMenu({
         ref={button}
         type="button"
         className="icon-btn"
-        aria-label="Add frame"
+        aria-label={copy.addFrame}
         aria-haspopup="menu"
         aria-expanded={open}
         data-tip={
@@ -103,7 +104,7 @@ export function AddFrameMenu({
           ref={menu}
           className="project-menu canvas-menu"
           role="menu"
-          aria-label="Add frame"
+          aria-label={copy.addFrame}
           onKeyDown={onKeyDown}
         >
           {FRAME_PRESETS.map((p) => (

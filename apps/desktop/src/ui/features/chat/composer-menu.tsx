@@ -13,6 +13,7 @@ import {
 import type { KeyboardEvent, ReactNode, CSSProperties, RefObject } from "react";
 import { createPortal } from "react-dom";
 
+import { copy } from "./copy.js";
 import {
   ChoiceItem,
   levelGist,
@@ -235,11 +236,11 @@ export const PlusMenu = (props: PlusMenuProps) => {
         ref={trigger}
         type="button"
         className="icon-btn small bordered composer-plus"
-        aria-label="Add and settings"
+        aria-label={copy.addAndSettings}
         aria-haspopup="menu"
         aria-expanded={menu.open}
         data-testid="composer-plus"
-        data-tip="Attach, mention, skills and run settings"
+        data-tip={copy.attachMentionSkills}
         data-tip-side="top"
         data-tip-align="start"
         onMouseDown={(event) => event.stopPropagation()}
@@ -260,7 +261,7 @@ export const PlusMenu = (props: PlusMenuProps) => {
             ref={panel}
             className="ui-menu composer-menu"
             role="menu"
-            aria-label="Add and settings"
+            aria-label={copy.addAndSettings}
             {...panelProps(menu)}
             onKeyDown={(event) => menuKeys(event, menu.close)}
           >
@@ -413,7 +414,7 @@ export const LevelPill = ({
             ref={panel}
             className="ui-menu composer-menu level-menu"
             role="menu"
-            aria-label="Level"
+            aria-label={copy.level}
             {...panelProps(menu)}
             onKeyDown={(event) => menuKeys(event, menu.close)}
           >
@@ -479,7 +480,7 @@ const ModelToggle = ({
       tabIndex={0}
       className="segmented"
       role="radiogroup"
-      aria-label="Model"
+      aria-label={copy.model}
       onKeyDown={radios.onKeyDown}
     >
       {MODEL_OPTIONS.map((option) => (
@@ -570,7 +571,7 @@ export const ModelPill = ({
             ref={panel}
             {...panelProps(pop)}
             role="dialog"
-            aria-label="Model and effort"
+            aria-label={copy.modelAndEffort}
             data-testid="run-settings-popover"
           >
             <section className="rs-group">

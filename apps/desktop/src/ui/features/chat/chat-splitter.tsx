@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import type { KeyboardEvent, PointerEvent, RefObject } from "react";
 
 import { uiStore, useUi } from "../../platform/storage.js";
+import { copy } from "./copy.js";
 
 const MIN_CHAT = 300;
 const MAX_CHAT = 640;
@@ -94,12 +95,12 @@ export const ChatSplitter = ({
       className="splitter"
       role="separator"
       aria-orientation="vertical"
-      aria-label="Resize chat panel"
+      aria-label={copy.resizeChatPanel}
       aria-valuemin={MIN_CHAT}
       aria-valuemax={MAX_CHAT}
       aria-valuenow={chatWidth ?? undefined}
       tabIndex={0}
-      data-tip="Drag to resize. Double-click to reset."
+      data-tip={copy.dragToResize}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={stop}

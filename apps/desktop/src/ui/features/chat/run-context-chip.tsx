@@ -1,5 +1,7 @@
-import { Chip } from "../../ai/components/ai/chip.js";
 import { Icon } from "@design-studio/ui";
+
+import { Chip } from "../../ai/components/ai/chip.js";
+import { copy } from "./copy.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 
 export const RunContextChip = ({
@@ -31,8 +33,8 @@ export const RunContextChip = ({
         <button
           type="button"
           className="icon-btn chip-x"
-          aria-label="Remove canvas context"
-          data-tip="Remove canvas context"
+          aria-label={copy.removeCanvasContext}
+          data-tip={copy.removeCanvasContext}
           onClick={chip.onRemove}
         >
           <Icon name="close" size={12} />

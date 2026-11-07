@@ -1,7 +1,8 @@
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 
-import { Icon } from "@design-studio/ui";
 import { cleanFramePath } from "./canvas-frames-model.js";
+import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";
 
@@ -98,7 +99,7 @@ export function FramePageMenu({
         <div
           className="project-menu canvas-menu frame-menu frame-page-menu"
           role="dialog"
-          aria-label="Frame page"
+          aria-label={copy.framePage}
         >
           <form
             onSubmit={(e) => {
@@ -133,7 +134,7 @@ export function FramePageMenu({
           {listPages && (
             <div
               role="menu"
-              aria-label="Pages"
+              aria-label={copy.pages}
               onKeyDown={(e) => menuKeys(e, menu.close)}
             >
               {pages === null && (

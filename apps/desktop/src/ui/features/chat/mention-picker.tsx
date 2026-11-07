@@ -4,6 +4,7 @@ import type { IconName } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
+import { copy } from "./copy.js";
 
 export interface MentionOption {
   key: string;
@@ -117,7 +118,7 @@ export const MentionList = ({
     >
       <ul
         role="listbox"
-        aria-label="Mention a file, token or component"
+        aria-label={copy.mentionAFile}
         className="skill-opts"
         id="mention-options"
       >
@@ -169,7 +170,7 @@ export const MentionChips = ({
   }
 
   return (
-    <div className="skill-chips" aria-label="Mentions for this message">
+    <div className="skill-chips" aria-label={copy.mentionsForThis}>
       {mentions.map((mention) => {
         const key = mentionKey(mention);
 

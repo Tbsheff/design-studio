@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import { formatMs, formatTime, formatUsd } from "../../domain/format.js";
+import { copy } from "./copy.js";
 import { LatencyBreakdown } from "./latency-breakdown.js";
 import type { RunView } from "./run-state-model.js";
 import {
@@ -99,7 +100,7 @@ export const RunDetails = ({
     <div
       className="drawer"
       role="dialog"
-      aria-label="Run details"
+      aria-label={copy.runDetails}
       onKeyDown={onKeyDown}
     >
       <div className="drawer-head">
@@ -108,8 +109,8 @@ export const RunDetails = ({
         <button
           ref={closeButton}
           className="icon-btn"
-          aria-label="Close"
-          data-tip="Close"
+          aria-label={copy.close}
+          data-tip={copy.close}
           data-tip-align="end"
           onClick={onClose}
         >

@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 
 import { errorText } from "../../api.js";
 import { formatTime } from "../../domain/format.js";
+import { copy } from "./copy.js";
 import { mcpApi } from "./mcp-model.js";
 import type { RunView } from "./run-state-model.js";
 import type { McpApprovalCard, McpFeedState } from "./use-mcp-feed.js";
@@ -114,7 +115,7 @@ const DisconnectButton = () => {
         type="button"
         className="mcp-block-btn"
         disabled={isPending}
-        data-tip="Turn off Allow edits. The MCP server keeps running."
+        data-tip={copy.turnOffAllow}
         data-tip-align="end"
         onClick={disconnect}
       >
@@ -125,7 +126,6 @@ const DisconnectButton = () => {
 };
 
 export const MCP_ACTIVE_MS = 60_000;
-
 const FOLD_AT = 5;
 
 const useNow = (stepMs: number, active: boolean): number => {

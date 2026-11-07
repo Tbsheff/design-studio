@@ -13,6 +13,7 @@ import {
 } from "../../../shared/final-check-baseline.js";
 import type { FinalCheckWithBaseline } from "../../../shared/final-check-baseline.js";
 import { api } from "../../api.js";
+import { copy } from "./copy.js";
 
 interface Props {
   projectId: string;
@@ -172,23 +173,20 @@ export function RenderCheckPanel({
     <div
       className="check-panel"
       role="region"
-      aria-label="Render check results"
+      aria-label={copy.renderCheckResults}
     >
       <div className="check-head">
         <Icon name="scan" />
         <strong>Render check</strong>
         <div className="spacer" />
-        <button className="icon-btn" aria-label="Close" onClick={onClose}>
+        <button className="icon-btn" aria-label={copy.close} onClick={onClose}>
           <Icon name="close" />
         </button>
       </div>
       <div className="check-body">
         {error && <div className="alert error">{error}</div>}
         {hidden > 0 && (
-          <div
-            className="muted small-text"
-            data-tip="Findings the page had before the last run started"
-          >
+          <div className="muted small-text" data-tip={copy.findingsThePage}>
             {hidden} old, hidden
           </div>
         )}

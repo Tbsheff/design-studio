@@ -3,6 +3,7 @@ import type { Project, VariationBrief } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
+import { copy } from "./copy.js";
 import { budgetFor, money } from "./use-variations.js";
 import type { BriefDraft } from "./use-variations.js";
 
@@ -197,7 +198,7 @@ export function VariationBriefCard({
         </div>
         <button
           className="icon-btn small"
-          aria-label="Close directions"
+          aria-label={copy.closeDirections}
           onClick={onDismiss}
           disabled={busy}
         >
@@ -220,7 +221,7 @@ export function VariationBriefCard({
             className="btn small"
             onClick={onSkip}
             disabled={busy || draft.autoStart}
-            data-tip="Start now with the generated briefs"
+            data-tip={copy.startNowWith}
           >
             Skip review
           </button>

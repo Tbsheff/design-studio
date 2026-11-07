@@ -5,10 +5,11 @@ import { createPortal } from "react-dom";
 
 import { appStream } from "../../platform/stream.js";
 import { useInlineApprovalProject } from "./approval-spot-model.js";
+import { copy } from "./copy.js";
 import { McpApproval } from "./mcp-feed.js";
-import type { McpApprovalCard } from "./use-mcp-feed.js";
 
 import "../../styles/mcp.css";
+import type { McpApprovalCard } from "./use-mcp-feed.js";
 
 const DONE_MS = 5000;
 
@@ -153,7 +154,7 @@ const Toast = ({
         <button
           type="button"
           className="icon-btn small"
-          aria-label="Hide"
+          aria-label={copy.hide}
           onClick={onDrop}
         >
           <Icon name="close" size={14} />

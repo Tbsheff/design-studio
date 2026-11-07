@@ -8,6 +8,7 @@ import type {
 import { openAppPanel } from "../../platform/app-status.js";
 import { canvasStore, frameName } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
+import { copy } from "./copy.js";
 import { FlowFromHere } from "./flow-from-here.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameStateMenu } from "./frame-state-menu.js";
@@ -163,7 +164,7 @@ export function FrameLabel({
           type="button"
           className="frame-remove"
           aria-label={`Remove ${name} frame`}
-          data-tip="Remove frame"
+          data-tip={copy.removeFrame}
           onClick={() => onRemove(frame)}
         >
           <Icon name="close" size={12} />
@@ -213,8 +214,8 @@ export function FrameRedirectNote({
       <button
         type="button"
         className="icon-btn small"
-        aria-label="Dismiss"
-        data-tip="Dismiss"
+        aria-label={copy.dismiss}
+        data-tip={copy.dismiss}
         onClick={onDismiss}
       >
         <Icon name="close" size={12} />

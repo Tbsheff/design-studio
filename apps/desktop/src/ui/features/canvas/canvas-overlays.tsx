@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { formatMeasure } from "../../../shared/measure.js";
 import { guideStyle } from "./artboard-overlay.js";
+import { copy } from "./copy.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";
 
@@ -65,11 +66,11 @@ function PresentLayer({
       className="present-layer"
       role="dialog"
       aria-modal="true"
-      aria-label="Present"
+      aria-label={copy.present}
     >
       <iframe
         className="present-frame"
-        title="Presented design"
+        title={copy.presentedDesign}
         src={url}
         sandbox={sandbox}
       />
@@ -137,7 +138,7 @@ function TweakPrompt({
     >
       <input
         autoFocus
-        aria-label="Describe a tweak"
+        aria-label={copy.describeATweak}
         placeholder={
           scope ? `Describe a tweak to ${scope}…` : "Describe a tweak…"
         }
@@ -156,7 +157,7 @@ function TweakPrompt({
       <button
         type="submit"
         className="icon-btn small send"
-        aria-label="Send tweak"
+        aria-label={copy.sendTweak}
         disabled={!text.trim()}
       >
         <Icon name="arrowUp" size={14} />

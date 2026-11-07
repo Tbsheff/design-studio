@@ -1,3 +1,4 @@
+import { CopyButton } from "@design-studio/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -14,8 +15,8 @@ import type {
   PublishPlan,
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
-import { CopyButton } from "@design-studio/ui";
 import { canvasFrameName } from "../canvas/canvas-frames.js";
+import { copy } from "./copy.js";
 import { canvasFrameChoices } from "./export-api.js";
 import { PublicationRow } from "./publication-row.js";
 import { publishApi } from "./publish-api.js";
@@ -178,7 +179,7 @@ function PublishForm({
         <FramePicker target={target} form={form} setForm={setForm} />
       )}
       <SwitchRow
-        title="Password"
+        title={copy.password}
         help={
           form.passwordOn
             ? "Viewers type it on a sign-in page."
@@ -203,7 +204,7 @@ function PublishForm({
         <div
           className="segmented export-seg"
           role="radiogroup"
-          aria-label="Stops working after"
+          aria-label={copy.stopsWorkingAfter}
         >
           {EXPIRIES.map((o) => (
             <button
@@ -221,7 +222,7 @@ function PublishForm({
       </div>
       {target.kind === "viewer" && (
         <SwitchRow
-          title="Show open comments"
+          title={copy.showOpenComments}
           help={
             form.comments
               ? "Open studio comments show as read-only text next to the frames."
@@ -232,7 +233,7 @@ function PublishForm({
         />
       )}
       <SwitchRow
-        title="Viewer comments"
+        title={copy.viewerComments}
         help={
           form.viewerComments
             ? "Viewers can leave a name and a comment on a comments page. You can delete them here."
@@ -242,7 +243,7 @@ function PublishForm({
         onChange={(on) => setForm({ ...form, viewerComments: on })}
       />
       <SwitchRow
-        title="Search engines"
+        title={copy.searchEngines}
         help={
           form.indexable
             ? "On: search engines may list this design."
@@ -563,7 +564,7 @@ function PublishPane({
           </div>
         )}
         {shown.length > 0 && (
-          <ul className="share-links" aria-label="Publications">
+          <ul className="share-links" aria-label={copy.publications}>
             {shown.map((p) => (
               <PublicationRow
                 key={p.id}

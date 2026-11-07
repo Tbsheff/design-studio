@@ -11,6 +11,7 @@ import { ArtboardOverlay } from "./artboard-overlay.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { overlayHover } from "./canvas-helpers.js";
 import type { StageNote } from "./canvas-helpers.js";
+import { copy } from "./copy.js";
 import { FirstBuildCover } from "./frame-skeleton.js";
 import { FreeMoveLayer } from "./free-move-layer.js";
 import { StablePassiveFrame } from "./passive-frame.js";
@@ -82,7 +83,7 @@ function PreviewSlots({
       ref={(el) => {
         frames.elements.current[slot.token] = tagFrame(el, slot.token);
       }}
-      title="Design preview"
+      title={copy.designPreview}
       className={`frame ${slot.token === frames.frontToken ? "front" : "back"}`}
       src={slot.src}
       onLoad={() => frames.onFrameLoad(slot.token)}

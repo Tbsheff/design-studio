@@ -3,6 +3,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
+import { copy } from "./copy.js";
 import { useRovingRadioGroup } from "./level-control.js";
 
 const ClarifyQuestionField = ({
@@ -71,7 +72,7 @@ const ClarifyQuestionField = ({
         <input
           className="clarify-other"
           aria-label={`Other answer: ${item.question}`}
-          placeholder="Or type an answer"
+          placeholder={copy.orTypeAn}
           value={picked ? "" : answer}
           onChange={(event) => onAnswer(event.target.value)}
         />

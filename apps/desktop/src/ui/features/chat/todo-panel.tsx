@@ -2,6 +2,8 @@ import type { TodoItem } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { memo, useState } from "react";
 
+import { copy } from "./copy.js";
+
 export const todoProgress = (
   todos: TodoItem[]
 ): {
@@ -104,7 +106,7 @@ export const TodoPanel = memo(
     return (
       <section
         className="todo-panel"
-        aria-label="Todo list"
+        aria-label={copy.todoList}
         data-testid="todo-panel"
       >
         <button

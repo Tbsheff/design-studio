@@ -1,10 +1,11 @@
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { useState, useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import { RUN_TITLE_MAX } from "../../../shared/rewind.js";
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 import { UserMessage } from "./chat-parts.js";
+import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
 export interface TurnRewind {
@@ -73,7 +74,7 @@ const RestoreConfirm = ({
   <div
     className="msg-confirm"
     role="alertdialog"
-    aria-label="Restore code here"
+    aria-label={copy.restoreCodeHere}
     data-testid="restore-confirm"
   >
     <p>
@@ -142,7 +143,7 @@ const MessageEditor = ({
     <div className="msg-editor" data-testid="message-editor">
       <textarea
         ref={ref}
-        aria-label="Edit message"
+        aria-label={copy.editMessage}
         rows={Math.min(8, Math.max(2, text.split("\n").length))}
         value={text}
         onChange={(event) => setText(event.target.value)}
@@ -191,8 +192,8 @@ const TitleField = ({
   return (
     <input
       className="run-title-input"
-      aria-label="Run name"
-      placeholder="Name this run"
+      aria-label={copy.runName}
+      placeholder={copy.nameThisRun}
       maxLength={RUN_TITLE_MAX}
       value={text}
       onFocus={(event) => event.currentTarget.select()}

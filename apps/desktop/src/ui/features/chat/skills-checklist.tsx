@@ -2,6 +2,7 @@ import type { SkillInfo } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
 
+import { copy } from "./copy.js";
 import { NO_SKILLS_TEXT, plural, useSkillCatalog } from "./skills-model.js";
 
 interface Props {
@@ -57,10 +58,7 @@ const SkillRow = ({
       <span className="skill-name">
         {skill.name}
         {skill.needsBash && !allowBash && (
-          <span
-            className="skill-tag"
-            data-tip="This skill runs terminal commands. Turn on shell commands in project settings to use it fully."
-          >
+          <span className="skill-tag" data-tip={copy.thisSkillRuns}>
             Needs shell
           </span>
         )}
@@ -68,7 +66,7 @@ const SkillRow = ({
           <span
             className="skill-tag muted-tag"
             data-tip-align="end"
-            data-tip="SKILL.md sets disable-model-invocation, so the agent cannot load it"
+            data-tip={copy.skillMdSets}
           >
             Manual only
           </span>
@@ -130,9 +128,9 @@ export const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
               {onCount} of {skills.length} on
             </span>
             <input
-              aria-label="Filter skills"
+              aria-label={copy.filterSkills}
               type="search"
-              placeholder="Filter"
+              placeholder={copy.filter}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />

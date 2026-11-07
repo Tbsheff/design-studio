@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "../../api.js";
 import { formatMs } from "../../domain/format.js";
+import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
 const FILE_WRITE_TOOLS = new Set(["Write", "Edit", "MultiEdit"]);
@@ -166,7 +167,7 @@ export const LatencyBreakdown = ({
   return (
     <>
       <h4>Latency</h4>
-      <dl className="kv" aria-label="Latency breakdown">
+      <dl className="kv" aria-label={copy.latencyBreakdown}>
         {rows.map(([k, v]) => (
           <div key={k}>
             <dt>{k}</dt>

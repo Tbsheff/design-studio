@@ -1,11 +1,12 @@
+import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
 import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
-import { Icon } from "@design-studio/ui";
 import { uiStore } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
+import { copy } from "./copy.js";
 
 export interface Props {
   viewport: Viewport;
@@ -98,7 +99,7 @@ export function ViewportControls({ viewport }: { viewport: Viewport }) {
       <div
         className="segmented icons"
         role="radiogroup"
-        aria-label="Viewport"
+        aria-label={copy.viewport}
         onKeyDown={onRadioGroupKey}
       >
         {PRESETS.map((p) => (
@@ -122,8 +123,8 @@ export function ViewportControls({ viewport }: { viewport: Viewport }) {
         ))}
         <button
           role="radio"
-          aria-label="Custom"
-          data-tip="Custom size"
+          aria-label={copy.custom}
+          data-tip={copy.customSize}
           aria-checked={viewport.preset === "custom"}
           tabIndex={viewport.preset === "custom" ? 0 : -1}
           className={viewport.preset === "custom" ? "on" : ""}
@@ -141,7 +142,7 @@ export function ViewportControls({ viewport }: { viewport: Viewport }) {
           }}
         >
           <input
-            aria-label="Width"
+            aria-label={copy.width}
             value={customW}
             onChange={(e) => setCustomW(e.target.value)}
             onBlur={applyCustom}
@@ -149,7 +150,7 @@ export function ViewportControls({ viewport }: { viewport: Viewport }) {
           />
           <span className="x">×</span>
           <input
-            aria-label="Height"
+            aria-label={copy.height}
             value={customH}
             onChange={(e) => setCustomH(e.target.value)}
             onBlur={applyCustom}
@@ -175,7 +176,7 @@ export function SourceControls({
       <div
         className="segmented source-seg"
         role="radiogroup"
-        aria-label="Preview source"
+        aria-label={copy.previewSource}
         onKeyDown={onRadioGroupKey}
       >
         <button
@@ -183,8 +184,8 @@ export function SourceControls({
           aria-checked={source.kind === "live"}
           tabIndex={source.kind === "last" ? -1 : 0}
           className={source.kind === "live" ? "on" : ""}
-          aria-label="Live"
-          data-tip="Live preview"
+          aria-label={copy.live}
+          data-tip={copy.livePreview}
           onClick={() => onSource({ kind: "live" })}
         >
           <Icon name="radio" className="seg-icon" />
@@ -196,8 +197,8 @@ export function SourceControls({
           tabIndex={source.kind === "last" ? 0 : -1}
           className={source.kind === "last" ? "on" : ""}
           disabled={!hasHead}
-          aria-label="Last completed"
-          data-tip="Last completed version"
+          aria-label={copy.lastCompleted}
+          data-tip={copy.lastCompletedVersion}
           onClick={() => onSource({ kind: "last" })}
         >
           <Icon name="history" className="seg-icon" />

@@ -12,6 +12,7 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 
 import { VariationsControl } from "../canvas/variations-control.js";
+import { copy } from "./copy.js";
 import {
   LevelControl,
   levelHint,
@@ -160,7 +161,7 @@ export const EffortToggle = ({
       tabIndex={0}
       className="segmented"
       role="radiogroup"
-      aria-label="Effort"
+      aria-label={copy.effort}
       aria-describedby={hintId}
       onKeyDown={radios.onKeyDown}
     >
@@ -197,7 +198,7 @@ const ModeToggle = ({
       tabIndex={0}
       className="segmented"
       role="radiogroup"
-      aria-label="Run mode"
+      aria-label={copy.runMode}
       aria-describedby={hintId}
       onKeyDown={radios.onKeyDown}
     >
@@ -315,7 +316,7 @@ export const RunSettings = ({
         data-testid="run-settings"
         aria-haspopup="dialog"
         aria-expanded={open}
-        data-tip="Run settings"
+        data-tip={copy.runSettings}
         data-tip-side="top"
         data-tip-align="start"
         onClick={() => {
@@ -337,7 +338,7 @@ export const RunSettings = ({
             ref={panel}
             style={style}
             role="dialog"
-            aria-label="Run settings"
+            aria-label={copy.runSettings}
             data-testid="run-settings-popover"
             onKeyDown={onPanelKey}
           >

@@ -1,6 +1,8 @@
 import { Icon } from "@design-studio/ui";
+
 import type { McpPointBadge as Badge } from "../canvas/use-canvas-point.js";
 import { authorInitial } from "../comments/comment-avatar.js";
+import { copy } from "./copy.js";
 
 export const McpPointBadge = ({
   badge,
@@ -37,7 +39,7 @@ export const McpPointBadge = ({
       <button
         type="button"
         className="icon-btn small"
-        aria-label="Dismiss"
+        aria-label={copy.dismiss}
         onClick={badge.dismiss}
       >
         <Icon name="close" size={14} />

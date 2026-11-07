@@ -1,13 +1,14 @@
+import { CopyButton } from "@design-studio/ui";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import type { PublishCliState } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
-import { CopyButton } from "@design-studio/ui";
+import { copy } from "./copy.js";
 import { publishApi } from "./publish-api.js";
 import { BackendSetup, usePublishBackend } from "./publish-backend-setup.js";
-import type { BackendHook } from "./publish-backend-setup.js";
 
 import "../../styles/publish.css";
+import type { BackendHook } from "./publish-backend-setup.js";
 
 export function usePublishCli() {
   const [cli, setCli] = useState<PublishCliState | null>(null);
@@ -150,10 +151,7 @@ function SignInStep({
         />
         <span>Lock the sign-in with a key in the macOS Keychain</span>
       </label>
-      <label
-        className="publish-check"
-        data-tip="Off: cf asks for its full default access, for when a publish fails with a permission error"
-      >
+      <label className="publish-check" data-tip={copy.offCfAsks}>
         <input
           type="checkbox"
           checked={narrow}
@@ -232,7 +230,7 @@ function AccountStep({
           className="btn small"
           disabled={busy}
           onClick={() => void run(() => publishApi.cli(true))}
-          data-tip="Asks cf who is signed in. It changes nothing."
+          data-tip={copy.asksCfWho}
         >
           Test connection
         </button>
@@ -241,7 +239,7 @@ function AccountStep({
           className="btn small ghost"
           disabled={busy}
           onClick={() => void run(() => publishApi.logout())}
-          data-tip="Runs cf auth logout, so cf in Terminal is signed out too"
+          data-tip={copy.runsCfAuth}
         >
           Sign out
         </button>
@@ -293,7 +291,10 @@ function PublishSetup() {
   const backend = usePublishBackend();
 
   return (
-    <section className="ship-settings publish-settings" aria-label="Publishing">
+    <section
+      className="ship-settings publish-settings"
+      aria-label={copy.publishing}
+    >
       <h3>Publishing</h3>
       <p className="field-help">
         Share › Publish puts a saved version on your own Cloudflare account. One

@@ -7,6 +7,7 @@ import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";
 
 import "../../styles/route-flow.css";
+import { copy } from "./copy.js";
 
 const DEPTHS = [0, 1, 2] as const;
 
@@ -129,10 +130,10 @@ export default function FlowTab({ projectId }: { projectId: string }) {
         placeholder={
           routes ? `Filter ${routes.length} routes` : "Loading routes…"
         }
-        aria-label="Filter routes"
+        aria-label={copy.filterRoutes}
         onChange={(e) => setFilter(e.target.value)}
       />
-      <div className="flow-routes" role="list" aria-label="Routes in the flow">
+      <div className="flow-routes" role="list" aria-label={copy.routesInThe}>
         {shown.map((route) => {
           const at = chosen.indexOf(route.route);
 
@@ -163,7 +164,7 @@ export default function FlowTab({ projectId }: { projectId: string }) {
           <div
             className="segmented"
             role="radiogroup"
-            aria-label="Link steps to follow"
+            aria-label={copy.linkStepsTo}
           >
             {DEPTHS.map((value) => (
               <button
@@ -190,7 +191,7 @@ export default function FlowTab({ projectId }: { projectId: string }) {
             <input
               className="mono"
               value={params[name] ?? ""}
-              placeholder="Sample value"
+              placeholder={copy.sampleValue}
               spellCheck={false}
               onChange={(e) =>
                 setParams((prev) => ({ ...prev, [name]: e.target.value }))
@@ -205,7 +206,7 @@ export default function FlowTab({ projectId }: { projectId: string }) {
           className="btn small primary"
           disabled={busy || chosen.length === 0}
           onClick={build}
-          data-tip="Lay out the routes left to right and link them from their source"
+          data-tip={copy.layOutThe}
         >
           {busy
             ? "Reading the source…"

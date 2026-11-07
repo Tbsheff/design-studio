@@ -5,6 +5,7 @@ import type { KeyboardEvent } from "react";
 
 import { runQueryTerms } from "../../../shared/rewind.js";
 import { formatRelative } from "../../domain/format.js";
+import { copy } from "./copy.js";
 import { searchRunPage, SEARCH_LIMIT } from "./run-history-model.js";
 
 interface Props {
@@ -122,7 +123,7 @@ const HitList = ({
       className="chat-search-hits"
       id={id}
       role="listbox"
-      aria-label="Matching runs"
+      aria-label={copy.matchingRuns}
     >
       {hits.runs.map((run, index) => (
         <li
@@ -207,11 +208,11 @@ export const ChatSearch = ({
           type="search"
           role="combobox"
           className="chat-search-input"
-          aria-label="Search runs"
+          aria-label={copy.searchRuns}
           aria-expanded={text !== ""}
           aria-controls={id}
           aria-activedescendant={runs[active] ? `${id}-${active}` : undefined}
-          placeholder="Search all runs by prompt or name"
+          placeholder={copy.searchAllRuns}
           value={query}
           onChange={(event) => onQuery(event.target.value)}
           onKeyDown={onKeyDown}
@@ -228,8 +229,8 @@ export const ChatSearch = ({
         <button
           type="button"
           className="icon-btn small"
-          aria-label="Close search"
-          data-tip="Close (Esc)"
+          aria-label={copy.closeSearch}
+          data-tip={copy.closeEsc}
           data-tip-side="top"
           data-tip-align="end"
           onClick={onClose}

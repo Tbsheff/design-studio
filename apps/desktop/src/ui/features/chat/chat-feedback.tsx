@@ -3,6 +3,7 @@ import { CopyButton, Icon } from "@design-studio/ui";
 import { memo, useMemo } from "react";
 
 import { baseName, formatMs, formatUsd } from "../../domain/format.js";
+import { copy } from "./copy.js";
 import { useRunFeedback } from "./run-feedback-model.js";
 import type { Thumb } from "./run-feedback-model.js";
 import type { RunView } from "./run-state-model.js";
@@ -89,7 +90,7 @@ const FileChips = ({
   return (
     <ul
       className="run-changes"
-      aria-label="Changed files"
+      aria-label={copy.changedFiles}
       data-testid="run-changes"
     >
       {changes.map((change) => (
@@ -178,7 +179,7 @@ export const RunFeedbackRow = memo(
             <span
               className="run-thumbs"
               role="group"
-              aria-label="Rate this response"
+              aria-label={copy.rateThisResponse}
             >
               <ThumbButton
                 value="up"
@@ -219,7 +220,7 @@ export const RunFeedbackRow = memo(
               <button
                 type="button"
                 className="btn ghost small run-foot-details"
-                data-tip="Keep or undo each change"
+                data-tip={copy.keepOrUndo}
                 data-tip-side="top"
                 onClick={onReview}
               >

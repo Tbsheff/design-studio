@@ -1,8 +1,10 @@
+import { Icon } from "@design-studio/ui";
+
 import { runCommand, TabOrderToggle } from "../../canvas-toolbar-slots.js";
 import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
-import { Icon } from "@design-studio/ui";
 import type { ZoomSetting } from "../../platform/storage.js";
+import { copy } from "./copy.js";
 import { PenIcon } from "./draw-layer.js";
 import { ViewportControls, SourceControls } from "./toolbar-viewport.js";
 import type { Props } from "./toolbar-viewport.js";
@@ -31,7 +33,7 @@ function ThemeSwitch({
     <button
       type="button"
       className="icon-btn theme-switch"
-      aria-label="Preview dark mode"
+      aria-label={copy.previewDarkMode}
       aria-pressed={dark}
       data-tip={dark ? "Back to the default mode" : "Preview dark mode"}
       onClick={onToggle}
@@ -112,7 +114,7 @@ export function VectorToolButtons() {
     <div
       className="ui-tools topbar-tools vector-tools"
       role="group"
-      aria-label="Shape tools"
+      aria-label={copy.tools}
     >
       {VECTOR_TOOLS.map((item) => (
         <button
@@ -151,9 +153,9 @@ function InsertIconButton() {
     <button
       type="button"
       className="btn small ghost insert-icon-btn"
-      aria-label="Insert icon"
+      aria-label={copy.insertIcon}
       aria-keyshortcuts="I"
-      data-tip="Insert an icon into the selected layer"
+      data-tip={copy.insertAnIcon}
       onClick={() => runCommand("icon.insert")}
     >
       <svg
@@ -181,8 +183,8 @@ function FindPhotoButton() {
     <button
       type="button"
       className="btn small ghost find-photo-btn"
-      aria-label="Find photo"
-      data-tip="Find a stock photo for the selected layer"
+      aria-label={copy.findPhoto}
+      data-tip={copy.findAStock}
       onClick={() => runCommand("image.find")}
     >
       <Icon name="image" size={14} />
@@ -196,7 +198,7 @@ export function CanvasViewRow(props: Props) {
     <div
       className="toolbar canvas-viewrow"
       role="toolbar"
-      aria-label="View options"
+      aria-label={copy.viewOptions}
     >
       <ViewportControls viewport={props.viewport} />
       {props.addFrame}
@@ -226,9 +228,9 @@ export function CanvasViewRow(props: Props) {
         <button
           className="btn small ghost select-toggle draw-toggle"
           aria-pressed={props.drawMode}
-          aria-label="Draw"
+          aria-label={copy.draw}
           aria-keyshortcuts="P"
-          data-tip="Draw on the design, then add a comment. Esc exits."
+          data-tip={copy.drawOnThe}
           data-tip-align="end"
           onClick={props.onToggleDraw}
         >

@@ -23,6 +23,7 @@ import {
 import { formatTime, formatUsd } from "../../domain/format.js";
 import { splitMarkdownBlocks } from "../../domain/markdown-blocks.js";
 import { contextShare } from "./context-meter.js";
+import { copy } from "./copy.js";
 import { levelLabel, levelHint } from "./level-control.js";
 import type { RunView } from "./run-state-model.js";
 import {
@@ -230,7 +231,7 @@ export const UserMessage = ({
             <span
               className="session-note"
               data-testid="session-note"
-              data-tip="The agent starts a new conversation because the files were restored to another version."
+              data-tip={copy.theAgentStarts}
             >
               {run.summary.sessionNote}
             </span>
@@ -533,7 +534,7 @@ export const PlanCard = ({ onApprove }: { onApprove: () => void }) => (
     className="plan-card"
     data-testid="plan-card"
     role="group"
-    aria-label="Plan ready"
+    aria-label={copy.planReady}
   >
     <p>
       <strong>Plan ready.</strong> No files changed yet.

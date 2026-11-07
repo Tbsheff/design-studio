@@ -4,6 +4,7 @@ import { createContext, useContext, useState } from "react";
 
 import { commentsDone } from "../../../shared/comments.js";
 import type { CommentsControl } from "../comments/use-comments.js";
+import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
 export const RunCommentsContext = createContext<CommentsControl | null>(null);
@@ -122,7 +123,7 @@ export const RunCommentsCard = ({ run }: { run: RunView }) => {
   return (
     <section
       className="run-comments"
-      aria-label="Comments in this run"
+      aria-label={copy.commentsInThis}
       data-testid="run-comments"
     >
       <div className="run-comments-head">

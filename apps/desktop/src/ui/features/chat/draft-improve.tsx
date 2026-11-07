@@ -7,6 +7,7 @@ import type {
 import { useFitPopover } from "@design-studio/ui";
 import { useId, useRef, useState } from "react";
 
+import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
 export const IMPROVE_PROMPT = "Improve this design system.";
@@ -74,8 +75,8 @@ export const ImproveControl = ({ running, run, onImprove }: ImproveProps) => {
         className="draft-focus"
         value={focus}
         maxLength={500}
-        placeholder="What should the AI focus on?"
-        aria-label="What should the AI focus on?"
+        placeholder={copy.whatShouldThe}
+        aria-label={copy.whatShouldThe}
         disabled={running}
         onChange={(event) => setFocus(event.target.value)}
       />
@@ -210,7 +211,7 @@ export const CheckStatus = ({
           className="draft-problems"
           id={listId}
           role="region"
-          aria-label="Design system check problems"
+          aria-label={copy.designSystemCheck}
         >
           {note && <p className="draft-problems-note">{note}</p>}
           {groupProblems(check.problems).map((group) => (

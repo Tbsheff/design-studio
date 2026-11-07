@@ -1,7 +1,8 @@
+import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 
-import { Icon } from "@design-studio/ui";
 import type { BuildError } from "../home/use-studio-data.js";
+import { copy } from "./copy.js";
 
 interface Props {
   errors: BuildError[];
@@ -48,12 +49,12 @@ function ErrorsChip({
   onClear: () => void;
 }) {
   return (
-    <div className="errors-chip" role="region" aria-label="Preview errors">
+    <div className="errors-chip" role="region" aria-label={copy.previewErrors}>
       <button
         type="button"
         className="errors-chip-open"
         aria-expanded={false}
-        data-tip="Show the errors"
+        data-tip={copy.showTheErrors}
         onClick={onOpen}
       >
         <Icon name="alert" size={14} />
@@ -63,8 +64,8 @@ function ErrorsChip({
       <button
         type="button"
         className="icon-btn"
-        aria-label="Clear errors"
-        data-tip="Clear"
+        aria-label={copy.clearErrors}
+        data-tip={copy.clear}
         data-tip-align="end"
         onClick={onClear}
       >
@@ -98,13 +99,13 @@ export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
   }
 
   return (
-    <div className="errors" role="region" aria-label="Preview errors">
+    <div className="errors" role="region" aria-label={copy.previewErrors}>
       <div className="section-head">
         <button
           type="button"
           className="errors-head"
           aria-expanded
-          data-tip="Hide the errors"
+          data-tip={copy.hideTheErrors}
           onClick={() => setOpen(false)}
         >
           <Icon name="alert" size={14} />

@@ -11,9 +11,10 @@ import type { KeyboardEvent } from "react";
 
 import { call } from "../../platform/http.js";
 import { uiStore } from "../../platform/storage.js";
-import type { InlinePromptView } from "./use-inline-prompt.js";
+import { copy } from "./copy.js";
 
 import "../../styles/inline-prompt.css";
+import type { InlinePromptView } from "./use-inline-prompt.js";
 
 const BOX_ROOM = 72;
 const BOX_WIDTH = 320;
@@ -231,10 +232,7 @@ export default function InlinePrompt({ view, zoom, frame }: Props) {
       onKeyUp={(event) => event.stopPropagation()}
     >
       <div className="inline-prompt-row">
-        <span
-          className="inline-prompt-target"
-          data-tip="The run edits this selection"
-        >
+        <span className="inline-prompt-target" data-tip={copy.theRunEdits}>
           <Icon name="sparkle" size={12} />
           <span className="inline-prompt-target-text">{view.label}</span>
         </span>
@@ -253,7 +251,7 @@ export default function InlinePrompt({ view, zoom, frame }: Props) {
           className="inline-prompt-send"
           disabled={!ready}
           data-tip={view.blocked ?? "Send (Enter)"}
-          aria-label="Send"
+          aria-label={copy.send}
           onClick={submit}
         >
           ↵

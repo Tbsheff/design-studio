@@ -18,6 +18,7 @@ import {
   keepVariationFrame,
   showVariationFrames,
 } from "./canvas-variations-model.js";
+import { copy } from "./copy.js";
 import { budgetFor, money } from "./use-variations.js";
 import type { VariationsState } from "./use-variations.js";
 import { VariationBriefCard } from "./variation-brief-card.js";
@@ -176,7 +177,7 @@ function VariationBar({
         <button
           className="btn small has-icon"
           onClick={showAll}
-          data-tip="Put every variation back on the canvas"
+          data-tip={copy.putEveryVariation}
         >
           <Icon name="compare" size={14} />
           Show all
@@ -187,7 +188,7 @@ function VariationBar({
           <span>{cancelError ?? state.notice}</span>
           <button
             className="icon-btn small"
-            aria-label="Dismiss"
+            aria-label={copy.dismiss}
             onClick={() =>
               cancelError ? setCancelError(null) : state.clearNotice()
             }
@@ -216,7 +217,7 @@ export function VariationsTop(props: TopProps) {
           <span>{state.kept}</span>
           <button
             className="icon-btn small"
-            aria-label="Dismiss"
+            aria-label={copy.dismiss}
             onClick={() => state.keepNotice(null)}
           >
             <Icon name="close" size={12} />

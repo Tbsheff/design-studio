@@ -16,6 +16,7 @@ import type { KeyboardEvent } from "react";
 import { downloadBlob } from "../../domain/format.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { mcpApi } from "../chat/mcp-model.js";
+import { copy as uiCopy } from "./copy.js";
 import {
   canRevealDownload,
   canvasFrameChoices,
@@ -25,9 +26,9 @@ import {
   revealDownload,
   saveExportPrefs,
 } from "./export-api.js";
-import type { ExportTarget, FrameChoice } from "./export-api.js";
 
 import "../../styles/export.css";
+import type { ExportTarget, FrameChoice } from "./export-api.js";
 
 interface Props {
   target: ExportTarget;
@@ -348,7 +349,7 @@ function ConnectClaudeCode() {
   const edits = status?.edits === true;
 
   return (
-    <section className="export-connect" aria-label="Connect to Claude Code">
+    <section className="export-connect" aria-label={uiCopy.connectToClaude}>
       <div className="export-connect-head">
         <div className="titles">
           <h3>Connect to Claude Code</h3>
@@ -361,7 +362,7 @@ function ConnectClaudeCode() {
           type="button"
           role="switch"
           aria-checked={on}
-          aria-label="MCP server"
+          aria-label={uiCopy.mcpServer}
           className={`export-switch${on ? " on" : ""}`}
           disabled={busy || status === null}
           onClick={() => void change({ enabled: !on })}
@@ -402,7 +403,7 @@ function ConnectClaudeCode() {
               type="button"
               role="switch"
               aria-checked={edits}
-              aria-label="Allow edits"
+              aria-label={uiCopy.allowEdits}
               className={`export-switch${edits ? " on" : ""}`}
               disabled={busy}
               onClick={() => void change({ edits: !edits })}
@@ -736,7 +737,7 @@ export function ExportDialog({ target, onClose }: Props) {
     <dialog
       ref={dialog.ref}
       className="modal export-dialog"
-      aria-label="Export"
+      aria-label={uiCopy.export}
       onMouseDown={dialog.onMouseDown}
     >
       <div className="modal-head">
@@ -750,7 +751,7 @@ export function ExportDialog({ target, onClose }: Props) {
         </div>
         <button
           className="icon-btn"
-          aria-label="Close export"
+          aria-label={uiCopy.closeExport}
           onClick={onClose}
           disabled={busy}
         >

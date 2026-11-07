@@ -3,6 +3,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
+import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 
 const STATUS_TEXT: Record<RunStatus, string> = {
@@ -76,7 +77,7 @@ function UseInMenu({
         <div
           className="project-menu canvas-menu frame-menu"
           role="menu"
-          aria-label="Use in variation"
+          aria-label={copy.inVariation}
           onKeyDown={(e) => menuKeys(e, menu.close)}
         >
           {siblings.map((other) => (

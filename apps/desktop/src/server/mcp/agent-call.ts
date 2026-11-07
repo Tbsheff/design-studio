@@ -1,6 +1,6 @@
 import { AllActions } from "@design-studio/actions";
 import type { AnyAction } from "@design-studio/actions/_core/action";
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 
 import { actionCaller, runActionCaller } from "./registry.js";
 import type { CallById } from "./registry.js";
@@ -21,7 +21,7 @@ const AgentCallSchema = Schema.Struct({
   args: Schema.Record(Schema.String, Schema.Json),
 });
 
-const readAgentCall = Schema.decodeUnknownOption(AgentCallSchema);
+const isAgentCall = Schema.is(AgentCallSchema);
 
 const isText = Schema.is(Schema.NonEmptyString);
 
@@ -78,7 +78,7 @@ const toAgentCaller = (
 const runAgentTool = (
   runtime: AgentRuntime,
   name: string,
-  body: Schema.Json
+  body: AgentCallArgs
 ): Promise<TextResult> => {
   const action = AGENT_ACTIONS.get(name) ?? null;
 
@@ -86,13 +86,11 @@ const runAgentTool = (
     return Promise.resolve(toRefusal(`No agent tool has the name ${name}.`));
   }
 
-  const decoded = readAgentCall(body);
-
-  if (Option.isNone(decoded)) {
+  if (!isAgentCall(body)) {
     return Promise.resolve(toRefusal(BAD_BODY));
   }
 
-  const { args } = decoded.value;
+  const { args } = body;
   const caller = toAgentCaller(runtime, args);
 
   if (caller === null) {

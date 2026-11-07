@@ -16,6 +16,10 @@ import { toLegacyPrincipal } from "../store/principal.js";
 
 type Group = Readonly<Record<string, AnyAction>>;
 
+type AgentToolRun = (name: string, body: WireArgs) => Promise<object>;
+
+const AGENT_TOOL_PATH = "/api/agent-tools/:name";
+
 const BODYLESS = new Set(["DELETE", "GET"]);
 
 const EMPTY: WireArgs = {};
@@ -115,4 +119,10 @@ const mountActions = <Actions extends Group>(
   }
 };
 
-export { mountActions };
+const createAgentToolRoute = (app: Hono, run: AgentToolRun): void => {
+  app.post(AGENT_TOOL_PATH, async (ctx) =>
+    ctx.json(await run(ctx.req.param("name"), await readBody(ctx)))
+  );
+};
+
+export { createAgentToolRoute, mountActions };

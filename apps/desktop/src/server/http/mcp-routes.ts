@@ -20,6 +20,7 @@ import { warmUpstream } from "../preview/warm-upstream.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunner, EventBus } from "../types.js";
 import type { KeepVariant } from "../variations/routes.js";
+import { createAgentToolRoute } from "./mount.js";
 
 interface McpRouteDeps extends ExportDeps {
   dataDir: string;
@@ -37,8 +38,6 @@ interface McpRouteDeps extends ExportDeps {
   layerLocks: LayerLockStore | null;
   isAgentToolOpen: boolean;
 }
-
-const AGENT_TOOL_PATH = "/api/agent-tools/:name";
 
 function warmAfterEdits(deps: McpRouteDeps): void {
   onSourceChange((change) => {
@@ -74,22 +73,14 @@ function warmAfterEdits(deps: McpRouteDeps): void {
   });
 }
 
-const createAgentToolRoute = (app: Hono, deps: McpRouteDeps): void => {
+const startAgentToolRoute = (app: Hono, deps: McpRouteDeps): void => {
   const { runtime } = deps;
 
   if (!runtime || !deps.isAgentToolOpen) {
     return;
   }
 
-  app.post(AGENT_TOOL_PATH, async (context) =>
-    context.json(
-      await runAgentTool(
-        runtime,
-        context.req.param("name"),
-        await context.req.json()
-      )
-    )
-  );
+  createAgentToolRoute(app, (name, body) => runAgentTool(runtime, name, body));
 };
 
 export interface ApprovalFeed {
@@ -172,7 +163,7 @@ export function registerMcpRoutes(
     onSettingsChanged: settingsChanged,
   });
 
-  createAgentToolRoute(app, deps);
+  startAgentToolRoute(app, deps);
 
   return { activity, approvalFeed };
 }

@@ -4,9 +4,9 @@ import type {
   RepoContextFile,
   RepoContextState,
 } from "../../../shared/repo-context.js";
-import { Chip } from "../../ai/components/ai/chip.js";
-import { Icon } from "@design-studio/ui";
 import { getJson } from "../../platform/http.js";
+import { IntegrationChip } from "./integration-chip.js";
+import { RepoChip } from "./repo-chip.js";
 
 const USE_NOTE: Record<RepoContextFile["use"], string | null> = {
   cut: "cut",
@@ -87,25 +87,12 @@ export default function RepoContextChip({
   const files = useRunContext(projectId, directionId);
   const shown = files.filter(sent);
 
-  if (shown.length === 0) {
-    return null;
-  }
-
   const names = [...new Set(shown.map(fileName))].join(", ");
 
   return (
-    <div className="chips repo-context flex flex-wrap gap-1 px-2 pt-2">
-      <Chip
-        size="sm"
-        className="chip max-w-full py-0.5 text-muted-foreground"
-        data-tip={tipFor(files)}
-        data-tip-side="top"
-      >
-        <Icon name="book" size={12} />
-        <span className="chip-text min-w-0 truncate">
-          Repo <span className="font-mono text-foreground">{names}</span>
-        </span>
-      </Chip>
-    </div>
+    <>
+      <IntegrationChip />
+      <RepoChip isShown={shown.length > 0} names={names} tip={tipFor(files)} />
+    </>
   );
 }

@@ -26,7 +26,12 @@ const toPublishCore = (dataDir: string): PublishCore => {
 
   const files = createPublishStore(dataDir);
   const cli = createCliSession(files);
-  const backend = createPublishBackend(files, cli, createKeyVault(files.dir));
+
+  const backend = createPublishBackend(
+    files,
+    cli,
+    createKeyVault(files.dir, "publish-key")
+  );
 
   const core: PublishCore = {
     backend,

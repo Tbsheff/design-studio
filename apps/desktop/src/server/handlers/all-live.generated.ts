@@ -19,6 +19,7 @@ import { GridLive } from "./grid/live.js";
 import { IconLive } from "./icon/live.js";
 import { ImageSearchLive } from "./image-search/live.js";
 import { ImageLive } from "./image/live.js";
+import { IntegrationLive } from "./integration/live.js";
 import { MotionLive } from "./motion/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
@@ -64,6 +65,7 @@ const ALL_LIVE = {
   icon: IconLive,
   image: ImageLive,
   imageSearch: ImageSearchLive,
+  integration: IntegrationLive,
   motion: MotionLive,
   orgScope: OrgScopeLive,
   pack: PackLive,

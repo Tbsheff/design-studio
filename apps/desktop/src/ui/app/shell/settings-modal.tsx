@@ -4,10 +4,10 @@ import { Suspense, useRef, useState, useTransition } from "react";
 
 import { api, errorText } from "../../api";
 import { CommandRules } from "../../features/commands/command-rules";
-import { KeysPanel } from "../../features/settings";
 import { PublishSetup } from "../../features/share-publish-ship-export/index.js";
 import { ShipTemplates } from "../../features/share-publish-ship-export/ship-templates";
 import { parseDraft, SettingsFields, toDraft } from "./settings-fields";
+import { SettingsPanels } from "./settings-panels";
 
 interface Props {
   project: Project;
@@ -75,7 +75,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
         )}
         <Suspense fallback={null}>
           <PublishSetup />
-          <KeysPanel />
+          <SettingsPanels />
         </Suspense>
         {error && (
           <div className="alert error" role="alert">

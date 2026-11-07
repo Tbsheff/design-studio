@@ -522,6 +522,20 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
+      "packages/common/actions/src/integration/{create,delete,list,run,update}.ts",
+      "packages/common/actions/src/integration/errors/status.ts",
+      "apps/desktop/src/server/handlers/integration/{create,delete,handlers,list,live,run,update}.ts",
+      "apps/desktop/src/server/integration/deps.ts",
+      "apps/desktop/src/server/agent/integration-run.ts",
+      "apps/desktop/src/server/agent/integration-gate.ts",
+      "apps/desktop/src/ui/features/integration/deps.ts",
+      "apps/desktop/src/ui/features/chat/integration-chip.tsx",
+      "apps/desktop/src/ui/features/chat/repo-chip.tsx",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
       "apps/desktop/src/server/pattern/engine/{convert,scan}.ts",
       "apps/desktop/src/server/pattern/{pattern-capture,pattern-imports,snippet-parse}.ts",
     ],

@@ -19,6 +19,7 @@ import { GridEntries } from "./grid/handlers.js";
 import { IconEntries } from "./icon/handlers.js";
 import { ImageSearchEntries } from "./image-search/handlers.js";
 import { ImageEntries } from "./image/handlers.js";
+import { IntegrationEntries } from "./integration/handlers.js";
 import { MotionEntries } from "./motion/handlers.js";
 import { OrgScopeEntries } from "./org-scope/handlers.js";
 import { PackEntries } from "./pack/handlers.js";
@@ -64,6 +65,7 @@ const ALL_ENTRIES = {
   icon: IconEntries,
   image: ImageEntries,
   imageSearch: ImageSearchEntries,
+  integration: IntegrationEntries,
   motion: MotionEntries,
   orgScope: OrgScopeEntries,
   pack: PackEntries,

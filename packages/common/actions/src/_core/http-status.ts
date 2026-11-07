@@ -13,6 +13,7 @@ import { GridStatus } from "../grid/errors/status.js";
 import { IconStatus } from "../icon/errors/status.js";
 import { ImageSearchStatus } from "../image-search/errors/status.js";
 import { ImageStatus } from "../image/errors/status.js";
+import { IntegrationStatus } from "../integration/errors/status.js";
 import { MotionStatus } from "../motion/errors/status.js";
 import { PackStatus } from "../pack/errors/status.js";
 import { PageStatus } from "../page/errors/status.js";
@@ -47,6 +48,7 @@ const HTTP_STATUS = {
   ...IconStatus,
   ...ImageStatus,
   ...ImageSearchStatus,
+  ...IntegrationStatus,
   ...MotionStatus,
   ...PackStatus,
   ...PageStatus,

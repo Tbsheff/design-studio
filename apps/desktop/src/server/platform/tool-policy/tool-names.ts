@@ -1,6 +1,7 @@
 import type { RunMode } from "@design-studio/contracts";
 
 import { TWEAKS_TOOL } from "../../../shared/tweaks.js";
+import type { IntegrationPolicy } from "./integration-tools.js";
 import { toolCatalog } from "./tool-catalog.js";
 
 interface ToolPolicy {
@@ -8,6 +9,7 @@ interface ToolPolicy {
   mode: RunMode;
   allowBash: boolean;
   allowInstall: boolean;
+  integrations?: IntegrationPolicy;
   skills?: string[];
   skillDirs?: string[];
   skillsOff?: string;

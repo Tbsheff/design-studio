@@ -1,6 +1,8 @@
 import type { PermissionResult } from "@anthropic-ai/claude-agent-sdk";
 
 import { checkBash } from "./bash-checks.js";
+import { toIntegrationAccess } from "./integration-tools.js";
+import type { IntegrationAccess } from "./integration-tools.js";
 import {
   checkExecutedConfig,
   checkGeneratedFile,
@@ -76,11 +78,33 @@ const checkFileTool = (
   return null;
 };
 
+const toIntegrationProblem = (
+  policy: ToolPolicy,
+  access: IntegrationAccess,
+  toolName: string
+): string | null => {
+  if (policy.mode === "critique") {
+    return `${toolName} is not available in critique runs.`;
+  }
+
+  if (policy.plan && access === "ask") {
+    return PLAN_MODE_DENY;
+  }
+
+  return null;
+};
+
 const findToolProblem = (
   policy: ToolPolicy,
   toolName: string,
   input: ToolInput
 ): string | null => {
+  const outside = toIntegrationAccess(policy, toolName);
+
+  if (outside !== null) {
+    return toIntegrationProblem(policy, outside, toolName);
+  }
+
   if (!permittedToolNames(policy).includes(toolName)) {
     return `Tool ${toolName} is not available in Design Studio.`;
   }
@@ -132,6 +156,14 @@ export {
   isExecutedConfigFile,
   isSecretFile,
 } from "./path-checks.js";
+
+export { toIntegrationAccess, toIntegrationName } from "./integration-tools.js";
+
+export type {
+  IntegrationAccess,
+  IntegrationGate,
+  IntegrationPolicy,
+} from "./integration-tools.js";
 
 export { setToolCatalog } from "./tool-catalog.js";
 

@@ -42,6 +42,23 @@ export type { DirectEditStatusFailure } from "./direct-edit-status-failure.js";
 
 export type { DirectionIds, DirectionRun } from "./direction-task.js";
 
+export {
+  IntegrationStore,
+  IntegrationWriter,
+  getRunIntegrations,
+} from "../integration/index.js";
+
+export type {
+  CreateIntegrationCommand,
+  IntegrationListCommand,
+  IntegrationPage,
+  IntegrationStoreApi,
+  IntegrationWriterApi,
+  RunIntegrations,
+  StoredIntegration,
+  UpdateIntegrationCommand,
+} from "../integration/index.js";
+
 export { EffectStore, EffectWriter } from "../effect/index.js";
 
 export type {

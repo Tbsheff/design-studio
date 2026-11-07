@@ -10,6 +10,7 @@ import {
   TODO_TOOL,
   evaluateToolUse,
   setToolCatalog,
+  toIntegrationAccess,
 } from "../platform/tool-policy/index.js";
 import type { ToolPolicy } from "../platform/tool-policy/index.js";
 import type { ToolGate } from "./ask-gate.js";
@@ -185,6 +186,28 @@ setToolCatalog({
   studioTools: STUDIO_MCP_TOOLS,
 });
 
+const DENY_NO_ASK =
+  "This integration tool is not on the allowlist, and no approval window is open. Work without it.";
+
+const getIntegrationGate = (
+  policy: ToolPolicy,
+  toolName: string,
+  toolUseId: string,
+  input: Parameters<CanUseTool>[1]
+): Promise<PermissionResult> | PermissionResult | null => {
+  if (toIntegrationAccess(policy, toolName) !== "ask") {
+    return null;
+  }
+
+  const gate = policy.integrations?.gate ?? null;
+
+  if (gate === null) {
+    return { behavior: "deny", message: DENY_NO_ASK };
+  }
+
+  return gate(toolName, toolUseId, input);
+};
+
 export function createCanUseTool(
   policy: ToolPolicy,
   onDecision?: (toolName: string, result: PermissionResult) => void,
@@ -193,10 +216,20 @@ export function createCanUseTool(
   return async (toolName, input, options) => {
     const checked = evaluateToolUse(policy, toolName, input);
 
-    const result =
+    let result =
       checked.behavior === "allow" && toolName === "Bash" && bashGate
         ? await bashGate(options.toolUseID, input)
         : checked;
+
+    if (result.behavior === "allow") {
+      result =
+        (await getIntegrationGate(
+          policy,
+          toolName,
+          options.toolUseID,
+          input
+        )) ?? result;
+    }
 
     onDecision?.(toolName, result);
 
@@ -267,10 +300,20 @@ export function createPreToolUseGuard(
 
     const checked = evaluateToolUse(policy, hookInput.tool_name, record);
 
-    const result =
+    let result =
       checked.behavior === "allow" && hookInput.tool_name === "Bash" && bashGate
         ? await bashGate(hookInput.tool_use_id, record)
         : checked;
+
+    if (result.behavior === "allow") {
+      result =
+        (await getIntegrationGate(
+          policy,
+          hookInput.tool_name,
+          hookInput.tool_use_id,
+          record
+        )) ?? result;
+    }
 
     onDecision?.(hookInput.tool_name, result);
 

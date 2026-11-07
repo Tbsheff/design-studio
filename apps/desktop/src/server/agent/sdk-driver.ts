@@ -30,6 +30,7 @@ import type { LayerLockStore } from "../store/layer-locks.js";
 import type { PreviewService } from "../types.js";
 import { createActionAsk, createBashGate, type ToolGate } from "./ask-gate.js";
 import { captureBaselineFindings } from "./baseline-findings.js";
+import { toBaselineGate } from "./baseline-gate.js";
 import { captureBaseline, prewarmChecks } from "./check-tool.js";
 import { designMdDigest } from "./design-md-digest.js";
 import {
@@ -47,6 +48,12 @@ import {
   studioAppReview,
   withReference,
 } from "./final-check.js";
+import {
+  createIntegrationNoteHook,
+  createRunIntegrations,
+  inspectFailedIntegrations,
+  toJoinedPrompt,
+} from "./integration-run.js";
 import { isLeanRun, LEAN_RUN_BLOCK, leanRunConfig } from "./lean-run.js";
 import {
   EMPTY_USAGE,
@@ -799,27 +806,6 @@ export function createBashEditHook(
 const BASELINE_GATE_TIMEOUT_S = 300;
 const BASH_EDIT_HOOK_TIMEOUT_S = 60;
 
-function whenAborted(signal: AbortSignal): Promise<void> {
-  if (signal.aborted) return Promise.resolve();
-  return new Promise((resolve) =>
-    signal.addEventListener("abort", () => resolve(), { once: true })
-  );
-}
-
-function baselineGate(
-  run: RunToolState,
-  signal: AbortSignal
-): (() => Promise<void>) | undefined {
-  const baseline = run.baseline;
-  if (!baseline) return undefined;
-  const ready = baseline.then(
-    () => undefined,
-    () => undefined
-  );
-  const gate = Promise.race([ready, whenAborted(signal)]);
-  return () => gate;
-}
-
 function actionAskOf(input: DriverInput) {
   if (!input.ask) {
     return null;
@@ -836,7 +822,11 @@ async function buildSdkOptions(
 ): Promise<Options> {
   const { ctx, signal } = input;
   const { skills, config } = setup;
-  const policy = buildPolicy(input, skills, config);
+  const outside = await createRunIntegrations(
+    buildPolicy(input, skills, config),
+    input
+  );
+  const { policy } = outside;
   const builtins = leanEdit(input)
     ? leanBuiltins(builtinToolNames(policy))
     : builtinToolNames(policy);
@@ -863,7 +853,7 @@ async function buildSdkOptions(
     cwd: ctx.direction.workTree,
     settingSources: [],
     strictMcpConfig: true,
-    mcpServers: { studio },
+    mcpServers: { studio, ...outside.servers },
     tools: builtins,
     settings: ISOLATION_SETTINGS,
     ...skillOptions(skills, setup.runSkills.loaded),
@@ -875,7 +865,7 @@ async function buildSdkOptions(
             createPreToolUseGuard(
               policy,
               options.onHookDecision,
-              baselineGate(setup.run, signal),
+              toBaselineGate(setup.run, signal),
               (toolUseId, name, toolInput) =>
                 input.sink.beforeWrite(toolUseId, name, toolInput),
               setup.bashGate
@@ -886,6 +876,7 @@ async function buildSdkOptions(
       ],
       PostToolUse: [
         { hooks: [createInboxHook(input)] },
+        { hooks: [createIntegrationNoteHook(policy)] },
         {
           hooks: [createBashEditHook(input, policy, setup.run.log?.toolOrder)],
           timeout: BASH_EDIT_HOOK_TIMEOUT_S,
@@ -911,14 +902,17 @@ async function buildSdkOptions(
     includePartialMessages: true,
     abortController: controller,
     env: { ...env, [TODO_TOOL_ENV]: "0" },
-    systemPrompt: buildSystemPrompt(
-      ctx.project,
-      ctx.request.mode,
-      ctx.designSystem ?? null,
-      skills.invocableCount,
-      setup.tasteRules,
-      ctx.designRules ?? [],
-      holdsUntrustedInput(ctx.request)
+    systemPrompt: toJoinedPrompt(
+      buildSystemPrompt(
+        ctx.project,
+        ctx.request.mode,
+        ctx.designSystem ?? null,
+        skills.invocableCount,
+        setup.tasteRules,
+        ctx.designRules ?? [],
+        holdsUntrustedInput(ctx.request)
+      ),
+      outside.prompt
     ),
     ...(resume
       ? { resume, sessionStore: createScreenshotTrimStore(options.claudeHome) }
@@ -1021,6 +1015,7 @@ async function handleMessage(
 ): Promise<boolean> {
   if (message.type === "system" && message.subtype === "init") {
     state.sawInit = true;
+    inspectFailedIntegrations(message.mcp_servers);
     state.sessionId = message.session_id;
     await sink.sessionStarted(message.session_id);
     return false;

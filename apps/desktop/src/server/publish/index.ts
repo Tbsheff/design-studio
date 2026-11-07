@@ -11,3 +11,7 @@ export { PublishPlanner } from "./publish-planner.js";
 export { PublishService } from "./publish-service.js";
 
 export { PublishStore } from "./publish-store.js";
+
+export { createKeyVault } from "./vault.js";
+
+export type { KeyVault } from "./vault.js";

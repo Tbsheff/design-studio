@@ -13,6 +13,7 @@ import type { GridError } from "../../grid/errors/index.js";
 import type { IconError } from "../../icon/errors/index.js";
 import type { ImageSearchError } from "../../image-search/errors/index.js";
 import type { ImageError } from "../../image/errors/index.js";
+import type { IntegrationError } from "../../integration/errors/index.js";
 import type { MotionError } from "../../motion/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
 import type { PageError } from "../../page/errors/index.js";
@@ -45,6 +46,7 @@ type StudioError =
   | IconError
   | ImageError
   | ImageSearchError
+  | IntegrationError
   | MotionError
   | PackError
   | PageError

@@ -7,6 +7,7 @@ import {
   VAULT_MESSAGE,
   type VaultRequest,
 } from "@design-studio/actions/vault-ipc";
+
 import { RENDER_IPC_ENV } from "../../shared/render-rpc.js";
 
 export interface KeyVault {
@@ -67,9 +68,9 @@ async function writePrivate(file: string, text: string): Promise<void> {
   await rename(temp, file);
 }
 
-export function createKeyVault(dir: string): KeyVault {
-  const sealedFile = path.join(dir, "publish-key.sealed");
-  const plainFile = path.join(dir, "publish-key.txt");
+export function createKeyVault(dir: string, stem: string): KeyVault {
+  const sealedFile = path.join(dir, `${stem}.sealed`);
+  const plainFile = path.join(dir, `${stem}.txt`);
   let keychain: boolean | null = null;
 
   const kind = async (): Promise<"keychain" | "file"> => {

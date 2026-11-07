@@ -19,6 +19,7 @@ import { GridActions } from "./grid/index.js";
 import { IconActions } from "./icon/index.js";
 import { ImageSearchActions } from "./image-search/index.js";
 import { ImageActions } from "./image/index.js";
+import { IntegrationActions } from "./integration/index.js";
 import { MotionActions } from "./motion/index.js";
 import { OrgScopeActions } from "./org-scope/index.js";
 import { PackActions } from "./pack/index.js";
@@ -64,6 +65,7 @@ const ALL_ACTIONS = {
   icon: IconActions,
   image: ImageActions,
   imageSearch: ImageSearchActions,
+  integration: IntegrationActions,
   motion: MotionActions,
   orgScope: OrgScopeActions,
   pack: PackActions,

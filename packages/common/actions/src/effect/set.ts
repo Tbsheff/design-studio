@@ -1,0 +1,44 @@
+import { Schema } from "effect";
+
+import { defineAction } from "../_core/action.js";
+import { ElementTargetSchema } from "../_core/element-target.js";
+import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
+import { NotFound } from "../_core/errors/not-found.js";
+import {
+  EffectChangeSchema,
+  EffectSetFields,
+  EffectTargetFields,
+} from "./schema.js";
+
+const setEffect = defineAction({
+  access: "edit",
+  agent: {
+    lean: false,
+    name: "set_effect",
+    set: "core",
+    short:
+      "Set the effect stack of one layer: shadows, blur, glass, noise and shaders.",
+  },
+  confirm: "none",
+  description:
+    "Set the effects of one layer in one version. effects is the full ordered stack: drop-shadow, inner-shadow, layer-blur, background-blur, noise, glass and shader, each with an enabled flag. styleName applies a saved effect style by name, null removes it. The stack is saved as a stylesheet class, so exports keep it. A shader also writes a small WebGL script and keeps a CSS fallback background. Saves one version.",
+  errors: [BadRequest, Conflict, NotFound],
+  http: {
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/effect",
+  },
+  id: "effect.set",
+  input: Schema.Struct({
+    ...EffectTargetFields,
+    ...EffectSetFields,
+    target: ElementTargetSchema,
+  }),
+  invalidates: ["effect.get", "effect.list"],
+  mcp: { name: "set_effect" },
+  needs: "project.update",
+  output: EffectChangeSchema,
+  scope: "project",
+});
+
+export { setEffect };

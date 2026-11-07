@@ -6,6 +6,7 @@ import { ComponentVariantStatus } from "../component-variant/errors/status.js";
 import { ContentStatus } from "../content/errors/status.js";
 import { CritiqueStatus } from "../critique/errors/status.js";
 import { DirectEditStatus } from "../direct-edit/errors/status.js";
+import { EffectStatus } from "../effect/errors/status.js";
 import { FillStatus } from "../fill/errors/status.js";
 import { GalleryStatus } from "../gallery/errors/status.js";
 import { GridStatus } from "../grid/errors/status.js";
@@ -39,6 +40,7 @@ const HTTP_STATUS = {
   ...ContentStatus,
   ...CritiqueStatus,
   ...DirectEditStatus,
+  ...EffectStatus,
   ...FillStatus,
   ...GalleryStatus,
   ...GridStatus,

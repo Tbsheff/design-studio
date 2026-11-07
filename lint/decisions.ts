@@ -529,6 +529,17 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
+      "packages/common/actions/src/effect/{create,delete,get,list,schema,set}.ts",
+      "packages/common/actions/src/effect/errors/status.ts",
+      "apps/desktop/src/server/handlers/effect/{create,delete,get,handlers,list,live,set}.ts",
+      "apps/desktop/src/server/effect/{deps,effect-failure,effect-run,effect-store,effect-writer}.ts",
+      "apps/desktop/src/ui/features/effect/deps.ts",
+      "apps/desktop/src/ui/features/inspector/effect-section.tsx",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
       "apps/desktop/src/server/components/prop/engine/{ast,change,component,create,edits,refs,sites,type-host,types}.ts",
       "apps/desktop/src/server/components/prop/prop-sites.ts",
     ],

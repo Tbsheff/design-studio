@@ -26,6 +26,7 @@
     "./image": "./src/image.ts",
     "./image-search": "./src/image-search.ts",
     "./insert": "./src/insert.ts",
+    "./layer-effect": "./src/layer-effect.ts",
     "./link-interaction": "./src/link-interaction.ts",
     "./links": "./src/links.ts",
     "./motion": "./src/motion.ts",

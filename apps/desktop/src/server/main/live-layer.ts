@@ -11,6 +11,7 @@ import { ContentLive } from "../handlers/content/live.js";
 import { CritiqueLive } from "../handlers/critique/live.js";
 import { DevServerLive } from "../handlers/dev-server/live.js";
 import { DirectEditLive } from "../handlers/direct-edit/live.js";
+import { EffectLive } from "../handlers/effect/live.js";
 import { EventsLive } from "../handlers/events/live.js";
 import { ExportLive } from "../handlers/export/live.js";
 import { FillLive } from "../handlers/fill/live.js";
@@ -65,6 +66,7 @@ const liveLayer = Layer.mergeAll(
   CritiqueLive,
   DevServerLive,
   DirectEditLive,
+  EffectLive,
   EventsLive,
   ExportLive,
   FillLive,

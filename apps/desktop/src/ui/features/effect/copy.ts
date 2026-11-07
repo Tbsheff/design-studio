@@ -1,0 +1,52 @@
+const copy = {
+  add: "Add effect",
+  addTip: "Add shadows, blur, glass, noise or a shader to this layer",
+  empty: "No effects on this layer yet.",
+  fieldLabel: {
+    blur: "Blur",
+    edge: "Edge",
+    frequency: "Grain",
+    intensity: "Strength",
+    offsetX: "X",
+    offsetY: "Y",
+    opacity: "Opacity",
+    radius: "Radius",
+    saturation: "Saturation",
+    seed: "Seed",
+    speed: "Speed",
+    spread: "Spread",
+    tintOpacity: "Tint",
+  },
+  kind: {
+    "background-blur": "Background blur",
+    "drop-shadow": "Drop shadow",
+    glass: "Glass",
+    "inner-shadow": "Inner shadow",
+    "layer-blur": "Layer blur",
+    noise: "Noise",
+    shader: "Shader",
+  },
+  moveDown: "Move down",
+  moveUp: "Move up",
+  noSource: "This layer has no source location, so it takes no effect edit.",
+  preset: "Preset",
+  presetLabel: {
+    aurora: "Aurora",
+    dither: "Dither",
+    grain: "Grain",
+    mesh: "Mesh",
+  },
+  remove: "Remove effect",
+  saveStyle: "Save style",
+  saveTip:
+    "Save the stack as a named style. Layers that use the style change when you save it again",
+  style: "Style",
+  styleName: "Style name",
+  styleNone: "No style",
+  styleTip:
+    "Apply a saved effect style to this layer. Edit the style once to change every layer that uses it",
+  title: "Effect layers",
+  toggle: "Show or hide this effect",
+} as const;
+
+export { copy };

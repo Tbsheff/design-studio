@@ -194,7 +194,7 @@ function collectExpression(selector: string): string {
     const children = [];
     for (const child of el.childNodes) {
       if (child.nodeType === 3) { if (child.textContent) children.push(child.textContent); }
-      else if (child.nodeType === 1 && !['SCRIPT', 'STYLE', 'TEMPLATE'].includes(child.tagName)) children.push(walk(child, style, false));
+      else if (child.nodeType === 1 && !['SCRIPT', 'STYLE', 'TEMPLATE'].includes(child.tagName) && !child.hasAttribute('data-fx-canvas')) children.push(walk(child, style, false));
     }
     return { tag, attrs, styles, children, cls: el.getAttribute('class') || '' };
   };

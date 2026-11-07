@@ -10,6 +10,7 @@ import { ContentActions } from "./content/index.js";
 import { CritiqueActions } from "./critique/index.js";
 import { DevServerActions } from "./dev-server/index.js";
 import { DirectEditActions } from "./direct-edit/index.js";
+import { EffectActions } from "./effect/index.js";
 import { EventsActions } from "./events/index.js";
 import { ExportActions } from "./export/index.js";
 import { FillActions } from "./fill/index.js";
@@ -54,6 +55,7 @@ const ALL_ACTIONS = {
   critique: CritiqueActions,
   devServer: DevServerActions,
   directEdit: DirectEditActions,
+  effect: EffectActions,
   events: EventsActions,
   export: ExportActions,
   fill: FillActions,

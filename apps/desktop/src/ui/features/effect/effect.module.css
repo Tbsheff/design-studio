@@ -1,0 +1,140 @@
+.label {
+  flex: none;
+  display: grid;
+  place-items: center start;
+  min-width: 36px;
+  height: 100%;
+  padding: 0 var(--s-1) 0 var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.body {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.list {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-1);
+  border-radius: var(--r-control-sm);
+  background: var(--surface-2);
+}
+
+.row[data-off="true"] .fields {
+  opacity: 0.5;
+}
+
+.head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 28px 28px 28px;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.toggle {
+  margin: 0 var(--s-1);
+  accent-color: var(--accent);
+}
+
+.kind {
+  overflow: hidden;
+  color: var(--text);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-1);
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  height: 28px;
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition-property: background-color, color, scale;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease);
+}
+
+.step:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.step:active:not(:disabled) {
+  scale: 0.96;
+}
+
+.step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.styleBar {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.saveRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-1);
+}
+
+.save {
+  height: 28px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition-property: background-color, scale;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease);
+}
+
+.save:active:not(:disabled) {
+  scale: 0.96;
+}
+
+.save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--t-xs);
+}

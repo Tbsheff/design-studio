@@ -42,6 +42,18 @@ export type { DirectEditStatusFailure } from "./direct-edit-status-failure.js";
 
 export type { DirectionIds, DirectionRun } from "./direction-task.js";
 
+export { EffectStore, EffectWriter } from "../effect/index.js";
+
+export type {
+  CreateEffectCommand,
+  DeleteEffectCommand,
+  EffectStoreApi,
+  EffectWriterApi,
+  GetEffectCommand,
+  ListEffectCommand,
+  SetEffectCommand,
+} from "../effect/index.js";
+
 export { FillStore, FillWriter } from "../fill/index.js";
 
 export type {

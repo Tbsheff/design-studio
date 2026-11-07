@@ -10,6 +10,7 @@ import { ContentEntries } from "./content/handlers.js";
 import { CritiqueEntries } from "./critique/handlers.js";
 import { DevServerEntries } from "./dev-server/handlers.js";
 import { DirectEditEntries } from "./direct-edit/handlers.js";
+import { EffectEntries } from "./effect/handlers.js";
 import { EventsEntries } from "./events/handlers.js";
 import { ExportEntries } from "./export/handlers.js";
 import { FillEntries } from "./fill/handlers.js";
@@ -54,6 +55,7 @@ const ALL_ENTRIES = {
   critique: CritiqueEntries,
   devServer: DevServerEntries,
   directEdit: DirectEditEntries,
+  effect: EffectEntries,
   events: EventsEntries,
   export: ExportEntries,
   fill: FillEntries,

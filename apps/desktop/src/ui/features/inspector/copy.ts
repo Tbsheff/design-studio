@@ -5,6 +5,7 @@ const copy = {
   discardTip: "Undo every edit since you entered Edit mode",
   discarding: "Discarding…",
   editTitle: "Edit",
+  effectLayers: "Effect layers",
   emptyHint:
     "Click any element on the canvas to edit it. Shift-click to select more.",
   imageOutside:

@@ -3,6 +3,7 @@ import { AccessibilitySection } from "./accessibility-section.js";
 import { ComponentSection } from "./component-section.js";
 import { copy } from "./copy.js";
 import { useEditVariant } from "./edit-variant.js";
+import { EffectLayersSection } from "./effect-section.js";
 import { EmptyState } from "./empty-state.js";
 import { GridSection } from "./grid-section.js";
 import { ImageSection } from "./image-section.js";
@@ -61,6 +62,7 @@ const SimpleTab = (props: InspectorProps) => {
           <VectorSection {...props} />
           <ImageSection {...props} />
           <GridSection {...props} />
+          <EffectLayersSection {...props} />
           <StackingSection {...props} />
           <AccessibilitySection {...props} />
           <ComponentSection {...props} />

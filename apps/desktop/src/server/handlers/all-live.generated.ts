@@ -10,6 +10,7 @@ import { ContentLive } from "./content/live.js";
 import { CritiqueLive } from "./critique/live.js";
 import { DevServerLive } from "./dev-server/live.js";
 import { DirectEditLive } from "./direct-edit/live.js";
+import { EffectLive } from "./effect/live.js";
 import { EventsLive } from "./events/live.js";
 import { ExportLive } from "./export/live.js";
 import { FillLive } from "./fill/live.js";
@@ -54,6 +55,7 @@ const ALL_LIVE = {
   critique: CritiqueLive,
   devServer: DevServerLive,
   directEdit: DirectEditLive,
+  effect: EffectLive,
   events: EventsLive,
   export: ExportLive,
   fill: FillLive,

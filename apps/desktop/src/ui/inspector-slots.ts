@@ -12,6 +12,12 @@ const AccessibilitySlot = lazy(async () => {
   return { default: loaded.AccessibilitySlot };
 });
 
+const EffectSlot = lazy(async () => {
+  const loaded = await import("./features/effect/index.js");
+
+  return { default: loaded.EffectSlot };
+});
+
 const GridSlot = lazy(async () => {
   const loaded = await import("./features/grid/index.js");
 
@@ -39,6 +45,7 @@ const TextStyleSlot = TextStyleSlotView;
 export {
   AccessibilitySlot,
   ContentPanel,
+  EffectSlot,
   FillSlot,
   GridSlot,
   MotionSlot,
@@ -53,4 +60,5 @@ export {
   commandBlocker,
   runCommand,
 } from "./features/commands/registry.js";
+
 export { IS_MAC } from "./features/commands/keys.js";

@@ -1,6 +1,7 @@
 import { SourceUseFields } from "@design-studio/actions/direct-edit/schema";
 import { DESIGN_RULES_TEXT_MAX } from "@design-studio/contracts/design-rules";
 import { FIGMA_NODES_MAX_BYTES } from "@design-studio/contracts/figma-nodes";
+import { INSERT_TEXT_MAX } from "@design-studio/contracts/insert";
 import {
   OWNERS_MAX,
   OWNER_STACK_MAX,
@@ -259,7 +260,7 @@ const VariantClassFields = {
   value: ShortTextSchema,
 } as const;
 
-const FigmaTargetSchema = Schema.Struct({
+const JsxTargetSchema = Schema.Struct({
   owners: Schema.optionalKey(OwnersSchema),
   selector: Schema.optionalKey(SelectorTextSchema),
   source: Schema.NullOr(SourceLocationSchema),
@@ -274,11 +275,53 @@ const FigmaImportFields = {
   position: Schema.Literals(["inside", "before", "after", "replace"]).pipe(
     Schema.withDecodingDefaultKey(Effect.succeed("inside" as const))
   ),
-  target: FigmaTargetSchema,
+  target: JsxTargetSchema,
+} as const;
+
+const InsertPropsSchema = Schema.Record(
+  Schema.String.check(Schema.isPattern(PROP_NAME)),
+  Schema.Union([PropTextSchema, Schema.Number, Schema.Boolean])
+)
+  .check(Schema.isMaxProperties(PROPS_MAX))
+  .annotate({
+    description:
+      'Props to set, for example {"variant": "outline"}. Required props that you leave out get a default from the props type.',
+  });
+
+const InsertedComponentSchema = Schema.Struct({
+  file: Schema.optionalKey(
+    ComponentFileSchema.annotate({
+      description:
+        "File of the component, relative to the project, when two components have the same name.",
+    })
+  ),
+  name: ComponentNameSchema.annotate({
+    description:
+      'Component name, for example "Button". The studio finds it in the project component library (exported React components in src, or in the app and its workspace packages such as @workspace/ui).',
+  }),
+});
+
+const InsertComponentFields = {
+  component: Schema.optionalKey(InsertedComponentSchema),
+  position: Schema.Literals(["inside", "after"])
+    .annotate({
+      description:
+        "inside adds the component as the last child of the target; after adds it as the next sibling.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed("inside" as const))),
+  props: Schema.optionalKey(InsertPropsSchema),
+  target: Schema.optionalKey(JsxTargetSchema),
+  text: Schema.optionalKey(
+    Schema.String.check(Schema.isMaxLength(INSERT_TEXT_MAX)).annotate({
+      description:
+        'Child text, for example "Save". Default: the component name, and that text stays when you later insert children into it, so pass "" for a container such as Card. To build a group (a Card with a header, rows and buttons) use insert_jsx instead: one call, one undo step.',
+    })
+  ),
 } as const;
 
 export {
   ComponentPreviewFields,
+  InsertComponentFields,
   FigmaImportFields,
   PropsComponentQueryFields,
   PropsInstanceFields,

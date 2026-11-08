@@ -25,6 +25,7 @@ const TARGET_KINDS = {
   get_fill: "loc",
   get_spacing: "loc",
   get_stacking: "loc",
+  insert_component: "owner",
   insert_icon: "owner",
   list_motion: "loc",
   list_state_styles: "loc",
@@ -39,6 +40,10 @@ const TARGET_KINDS = {
 } as const satisfies ToolKinds;
 
 const NESTED = {
+  insert_component: {
+    fields: ["file", "name"],
+    key: "component",
+  },
   set_fill: {
     fields: [
       "angle",
@@ -72,6 +77,10 @@ const NESTED = {
     key: "spacing",
   },
 } as const satisfies ToolNesting;
+
+const NESTED_REQUIRED = {
+  insert_component: ["name"],
+} as const satisfies ToolKeys;
 
 const NULLABLE_ARRAYS = {
   update_text: ["ids"],
@@ -248,6 +257,9 @@ const toAddedProperties = (
   ]);
 };
 
+const toNestedRequired = (name: string): readonly string[] =>
+  Object.entries(NESTED_REQUIRED).find(([key]) => key === name)?.[1] ?? [];
+
 const toLegacyTargetFields = (
   name: string,
   fields: LegacyFields
@@ -259,7 +271,10 @@ const toLegacyTargetFields = (
       ...fields.properties,
       ...toAddedProperties(name, fields.properties),
     },
-    required: fields.required.filter((key) => !dropped.has(key)),
+    required: [
+      ...fields.required.filter((key) => !dropped.has(key)),
+      ...toNestedRequired(name),
+    ],
   };
 };
 

@@ -38,7 +38,6 @@ const LEGACY_ORDER: readonly string[] = [
   "discard_page_variation",
   "find_styles",
   "replace_style",
-  "insert_component",
   "list_frame_states",
   "set_frame_state",
   "set_frame_session",

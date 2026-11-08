@@ -1,17 +1,5 @@
-import { insertComponentDirectEdit } from "@design-studio/actions/direct-edit/insert-component";
-import { listInsertableDirectEdit } from "@design-studio/actions/direct-edit/list-insertable";
 import type { Project } from "@design-studio/contracts";
-import {
-  INSERT_TEXT_MAX,
-  type InsertComponentResult,
-  type InsertTarget,
-  type InsertableList,
-} from "@design-studio/contracts/insert";
-import {
-  PROP_NAME,
-  PROP_TEXT_MAX,
-  PROPS_MAX,
-} from "@design-studio/contracts/props";
+import type { InsertTarget } from "@design-studio/contracts/insert";
 
 import {
   describeElement,
@@ -19,94 +7,11 @@ import {
   resolveSourceLoc,
   scopeOf,
 } from "../page-probe/index.js";
-import { z } from "../platform/zod-bridge/index.js";
-import { callAction } from "./action-call.js";
-import {
-  EditError,
-  loadTarget,
-  refuseWhileRunning,
-  type EditDeps,
-} from "./edit-guards.js";
-import {
-  defineTool,
-  directionId,
-  ok,
-  pagePath,
-  pageUrl,
-  projectId,
-  selector,
-  versionActivity,
-  type Done,
-} from "./edit-kit.js";
+import { EditError } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
+import { pageUrl } from "./edit-kit.js";
 
 type Direction = Project["directions"][number];
-
-const insertSchema = z
-  .object({
-    projectId,
-    directionId,
-    path: pagePath,
-    name: z
-      .string()
-      .regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/)
-      .describe(
-        'Component name, for example "Button". The studio finds it in the project component library (exported React components in src, or in the app and its workspace packages such as @workspace/ui).'
-      ),
-    file: z
-      .string()
-      .trim()
-      .max(1000)
-      .optional()
-      .describe(
-        "File of the component, relative to the project, when two components have the same name."
-      ),
-    targetSelector: selector
-      .optional()
-      .describe(
-        'CSS selector of the element on the page to insert inside or after, for example "main" or "[data-name=\'Hero\'] h2".'
-      ),
-    targetSource: z
-      .string()
-      .trim()
-      .max(1100)
-      .optional()
-      .describe(
-        'Or the target element as file:line:col of its JSX tag as get_layers prints it, for example "src/App.tsx:12:7". file:line works when one JSX tag starts on that line. Use this or targetSelector.'
-      ),
-    position: z
-      .enum(["inside", "after"])
-      .default("inside")
-      .describe(
-        "inside adds the component as the last child of the target; after adds it as the next sibling."
-      ),
-    props: z
-      .record(
-        z.string().regex(PROP_NAME),
-        z.union([z.string().max(PROP_TEXT_MAX), z.number(), z.boolean()])
-      )
-      .refine(
-        (props) => Object.keys(props).length <= PROPS_MAX,
-        `pass at most ${PROPS_MAX} props`
-      )
-      .optional()
-      .describe(
-        'Props to set, for example {"variant": "outline"}. Required props that you leave out get a default from the props type.'
-      ),
-    text: z
-      .string()
-      .max(INSERT_TEXT_MAX)
-      .optional()
-      .describe(
-        'Child text, for example "Save". Default: the component name, and that text stays when you later insert children into it, so pass "" for a container such as Card. To build a group (a Card with a header, rows and buttons) use insert_jsx instead: one call, one undo step.'
-      ),
-  })
-  .strict()
-  .refine(
-    (input) =>
-      (input.targetSelector === undefined) !==
-      (input.targetSource === undefined),
-    "pass targetSelector or targetSource, not both"
-  );
 
 export interface TargetInput {
   targetSelector?: string | undefined;
@@ -153,98 +58,3 @@ export async function targetOf(
     ...(probed?.owners.length ? { owners: probed.owners } : {}),
   };
 }
-
-async function knownNames(
-  deps: EditDeps,
-  project: Project,
-  direction: Direction
-): Promise<string> {
-  const list = await callAction<InsertableList>(
-    deps,
-    listInsertableDirectEdit,
-    { directionId: direction.id, projectId: project.id }
-  ).catch(() => null);
-
-  const names = [...new Set((list?.components ?? []).map((item) => item.name))];
-
-  return names.length > 0
-    ? ` Components: ${names.slice(0, 40).join(", ")}${names.length > 40 ? ", …" : ""}.`
-    : "";
-}
-
-const insertComponent = defineTool(
-  "insert_component",
-  insertSchema,
-  {
-    title: "Insert component",
-    description:
-      "Insert an instance of a React component from the project library, like dragging it from the studio Components panel: it writes <Name …>Text</Name> inside or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (a workspace package such as @workspace/ui/components/button, a tsconfig path, or a relative path). One version and one undo step. Targets made by .map(), shown by a condition, or the top element of a component are refused with a reason. HTML projects have no component kit and are refused.",
-  },
-  async (deps, input): Promise<Done> => {
-    const { project, direction } = await loadTarget(
-      deps,
-      input.projectId,
-      input.directionId
-    );
-
-    if (project.kind !== "react") {
-      throw new EditError(
-        "This is an HTML project. It has no component kit to insert from; use write_file or edit_element."
-      );
-    }
-
-    refuseWhileRunning(deps, project, direction);
-    const target = await targetOf(deps, project, direction, input);
-
-    const body = {
-      component: {
-        name: input.name,
-        ...(input.file ? { file: input.file } : {}),
-      },
-      target,
-      position: input.position,
-      ...(input.props ? { props: input.props } : {}),
-      ...(input.text === undefined ? {} : { text: input.text }),
-    };
-
-    let result: InsertComponentResult;
-
-    try {
-      result = await callAction<InsertComponentResult>(
-        deps,
-        insertComponentDirectEdit,
-        { ...body, directionId: direction.id, projectId: project.id }
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new EditError(
-        /no exported component/.test(message)
-          ? `${message}.${await knownNames(deps, project, direction)}`
-          : message
-      );
-    }
-
-    const output = ok({
-      file: result.file,
-      jsx: result.jsx,
-      importFrom: result.importFrom,
-      importAdded: result.importAdded,
-      at: result.select[0] ?? null,
-      usedAt: result.usedAt,
-      versionId: result.version?.id ?? null,
-      title: result.version?.title ?? null,
-    });
-
-    return {
-      result: output,
-      activity: versionActivity(
-        project,
-        direction,
-        result.version?.title ?? `Inserted ${input.name}`,
-        result.version
-      ),
-    };
-  }
-);
-
-export const INSERT_TOOLS = [insertComponent];

@@ -8,6 +8,7 @@ import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
 import { DirectEditFailed } from "./errors/direct-edit-failed.js";
 import { DirectEditNotFound } from "./errors/direct-edit-not-found.js";
+import { InsertComponentFields } from "./payload/schema.js";
 import { InsertResultSchema } from "./schema.js";
 
 const insertComponentDirectEdit = defineAction({
@@ -15,7 +16,7 @@ const insertComponentDirectEdit = defineAction({
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
-    "Insert an instance of a library component inside or after a target element. Writes the JSX, adds the import and saves one version.",
+    "Insert an instance of a React component from the project library, like dragging it from the studio Components panel: it writes the JSX inside or after the target element, fills required props from the props type, and adds or extends the import line. One version and one undo step. Targets made by .map(), shown by a condition, or the top element of a component are refused with a reason.",
   errors: [
     BadRequest,
     Conflict,
@@ -30,16 +31,12 @@ const insertComponentDirectEdit = defineAction({
   },
   id: "direct-edit.insertComponent",
   input: Schema.Struct({
-    component: Schema.optionalKey(Schema.Unknown),
+    ...InsertComponentFields,
     directionId: DirectionIdSchema,
-    position: Schema.optionalKey(Schema.Unknown),
     projectId: ProjectIdSchema,
-    props: Schema.optionalKey(Schema.Unknown),
-    target: Schema.optionalKey(Schema.Unknown),
-    text: Schema.optionalKey(Schema.Unknown),
   }),
   invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "insert_component" },
   needs: "project.update",
   output: InsertResultSchema,
   scope: "project",

@@ -24,18 +24,18 @@ import { uiStore, useUi } from "../../platform/storage.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import type { StyleValues } from "./css-values.js";
 
-export interface SnapNote {
+interface SnapNote {
   readonly cssVar: string;
   readonly raw: Partial<StyleValues>;
 }
 
-export interface CreateRequest {
+interface CreateRequest {
   readonly prop: DirectStyleProperty;
   readonly value: string;
   readonly targets: DirectStyleProperty[];
 }
 
-export interface TokenUi {
+interface TokenUi {
   readonly entries: CompiledTokenEntry[];
   readonly mode: TokenMode;
   readonly shouldSnap: boolean;
@@ -43,13 +43,13 @@ export interface TokenUi {
   readonly requestCreate: ((req: CreateRequest) => void) | null;
 }
 
-export const TokenUiContext = createContext<TokenUi | null>(null);
+const TokenUiContext = createContext<TokenUi | null>(null);
 
-export const useTokenUi = (): TokenUi | null => useContext(TokenUiContext);
+const useTokenUi = (): TokenUi | null => useContext(TokenUiContext);
 
 const NOTE_MS = 8000;
 
-export const snapTarget = (
+const snapTarget = (
   prop: DirectStyleProperty,
   value: string,
   entries: CompiledTokenEntry[],
@@ -66,7 +66,7 @@ export const snapTarget = (
   return isSnappable(group, best) ? best.cssVar : null;
 };
 
-export const useSnapSetting = (
+const useSnapSetting = (
   projectId: string
 ): [boolean, (on: boolean) => void] => {
   const ui = useUi();
@@ -83,7 +83,7 @@ export const useSnapSetting = (
   return [on, set];
 };
 
-export const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
+const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
   const [note, setNote] = useState<SnapNote | null>(null);
   const kept = useRef<Partial<StyleValues>>({});
   const live = useRef({ snapOn, tokens });
@@ -148,3 +148,7 @@ export const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
     [rewrite, note, keepRaw, dismiss]
   );
 };
+
+export { TokenUiContext, useTokenUi, snapTarget, useSnapSetting, useTokenSnap };
+
+export type { SnapNote, CreateRequest, TokenUi };

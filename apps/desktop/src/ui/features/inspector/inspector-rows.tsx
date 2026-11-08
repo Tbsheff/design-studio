@@ -24,7 +24,7 @@ function useRowKeys(onCommit: () => void, onRevert: () => void) {
   };
 }
 
-export function ContentRow({
+function ContentRow({
   selection,
   edit,
 }: {
@@ -74,7 +74,7 @@ export function ContentRow({
 
 const UNSAFE = /[;{}<>\\]/;
 
-export function CssTextRow({
+function CssTextRow({
   prop,
   label,
   short,
@@ -219,6 +219,8 @@ function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
   );
 }
 
-export const TextStyleToggles = memo(TextStyleTogglesView, (a, b) =>
+const TextStyleToggles = memo(TextStyleTogglesView, (a, b) =>
   isSameEditValues(a.edit, b.edit, ["font-style", "text-decoration-line"])
 );
+
+export { ContentRow, CssTextRow, TextStyleToggles };

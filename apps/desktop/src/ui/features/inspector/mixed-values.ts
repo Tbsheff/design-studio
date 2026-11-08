@@ -14,16 +14,16 @@ import type { Shift, ShiftPart, StyleValues } from "./css-values.js";
 import { resolveNumberInput } from "./math-input.js";
 import { buildEditRequest } from "./use-direct-edit.js";
 
-export const MAX_MULTI_EDIT = 50;
+const MAX_MULTI_EDIT = 50;
 
-export interface MergedValues {
+interface MergedValues {
   readonly values: StyleValues;
   readonly mixed: ReadonlySet<DirectStyleProperty>;
 }
 
 const ALL_PROPS = Object.keys(valuesFromStyles({})) as DirectStyleProperty[];
 
-export const mergeValues = (list: StyleValues[]): MergedValues => {
+const mergeValues = (list: StyleValues[]): MergedValues => {
   const first = list[0] ?? valuesFromStyles({});
   const values = { ...first };
   const mixed = new Set<DirectStyleProperty>();
@@ -47,9 +47,7 @@ const locKey = (selection: SelectionContext): string | null => {
   return s ? `${s.file}:${s.line}:${s.col}` : null;
 };
 
-export const multiBlockReason = (
-  selections: SelectionContext[]
-): string | null => {
+const multiBlockReason = (selections: SelectionContext[]): string | null => {
   if (selections.length > MAX_MULTI_EDIT) {
     return `Select ${MAX_MULTI_EDIT} elements or fewer to edit them together.`;
   }
@@ -67,17 +65,15 @@ export const multiBlockReason = (
   return null;
 };
 
-export type { Shift, ShiftPart };
-
-export interface PartShift extends Shift {
+interface PartShift extends Shift {
   readonly part: ShiftPart;
 }
 
-export interface PropShift extends Shift {
+interface PropShift extends Shift {
   readonly parts?: Record<string, PartShift>;
 }
 
-export type Shifts = Partial<Record<DirectStyleProperty, PropShift>>;
+type Shifts = Partial<Record<DirectStyleProperty, PropShift>>;
 
 const shiftedProp = (raw: string, shift: PropShift): string | null => {
   let value = shift.delta === 0 ? raw : shiftedValue(raw, shift);
@@ -93,7 +89,7 @@ const shiftedProp = (raw: string, shift: PropShift): string | null => {
   return value;
 };
 
-export const shiftedStyle = (
+const shiftedStyle = (
   base: StyleValues,
   shifts: Shifts
 ): Partial<StyleValues> => {
@@ -132,7 +128,7 @@ const withPart = (
   return { delta: prev?.delta ?? 0, max: prev?.max, min: prev?.min, parts };
 };
 
-export const addShift = (
+const addShift = (
   shifts: Shifts,
   props: readonly DirectStyleProperty[],
   delta: number,
@@ -188,7 +184,7 @@ const leftShift = (cur: PropShift, done: PropShift): PropShift | null => {
   return { ...cur, delta, parts };
 };
 
-export const withoutShifts = (
+const withoutShifts = (
   shifts: Shifts,
   props: readonly string[],
   sent?: Shifts
@@ -216,12 +212,12 @@ export const withoutShifts = (
   return next;
 };
 
-export interface OwnEdit {
+interface OwnEdit {
   readonly edit: DirectEditRequest;
   readonly style: Partial<StyleValues>;
 }
 
-export const ownEdits = (
+const ownEdits = (
   selections: SelectionContext[],
   bases: StyleValues[],
   style: Partial<StyleValues>,
@@ -241,13 +237,35 @@ export const ownEdits = (
   return out;
 };
 
-export const batchEdits = (
+const batchEdits = (
   selections: SelectionContext[],
   bases: StyleValues[],
   style: Partial<StyleValues>
 ): DirectEditRequest[] =>
   ownEdits(selections, bases, style).map((item) => item.edit);
 
-export const hasCurrentDependency = (raw: string, unit: string): boolean =>
+const hasCurrentDependency = (raw: string, unit: string): boolean =>
   resolveNumberInput(raw, `0${unit}`, unit) !==
   resolveNumberInput(raw, `1${unit}`, unit);
+
+export {
+  MAX_MULTI_EDIT,
+  mergeValues,
+  multiBlockReason,
+  shiftedStyle,
+  addShift,
+  withoutShifts,
+  ownEdits,
+  batchEdits,
+  hasCurrentDependency,
+};
+
+export type {
+  MergedValues,
+  Shift,
+  ShiftPart,
+  PartShift,
+  PropShift,
+  Shifts,
+  OwnEdit,
+};

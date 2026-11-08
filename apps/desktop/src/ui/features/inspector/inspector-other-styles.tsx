@@ -8,7 +8,7 @@ import type { AuthoredCssState } from "./use-authored-css.js";
 
 const COPIED_MS = 1500;
 
-export const CopyCssButton = ({
+const CopyCssButton = ({
   authored,
 }: {
   readonly authored: AuthoredCssState;
@@ -69,7 +69,7 @@ export const CopyCssButton = ({
   );
 };
 
-export const InspectorOtherStyles = ({
+const InspectorOtherStyles = ({
   css,
 }: {
   readonly css: AuthoredCss | null;
@@ -113,3 +113,5 @@ export const InspectorOtherStyles = ({
     </section>
   );
 };
+
+export { CopyCssButton, InspectorOtherStyles };

@@ -5,7 +5,7 @@ import type { FilesChange } from "../home/use-studio-data.js";
 
 const SWAP_RELEASE_MS = 4000;
 
-export class SwapQueue {
+class SwapQueue {
   readonly shown = new Map<string, FilesChange>();
   readonly next = new Map<string, FilesChange>();
   private readonly waiting = new Map<string, FilesChange>();
@@ -85,19 +85,19 @@ export class SwapQueue {
   }
 }
 
-export interface SwapGate {
+interface SwapGate {
   readonly shownFor: (key: string) => FilesChange | null;
   readonly nextFor: (key: string) => FilesChange | null;
   readonly onSwapDone: (key: string) => void;
 }
 
-export interface GateTarget {
+interface GateTarget {
   readonly key: string;
   readonly directionId: string;
   readonly headVersionId: string | null;
 }
 
-export const useSwapGate = (
+const useSwapGate = (
   kind: ProjectKind,
   targets: GateTarget[],
   lastChange: FilesChange | null,
@@ -223,3 +223,7 @@ export const useSwapGate = (
 
   return { nextFor, onSwapDone, shownFor };
 };
+
+export { SwapQueue, useSwapGate };
+
+export type { SwapGate, GateTarget };

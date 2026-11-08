@@ -5,7 +5,7 @@ import { copy } from "./copy.js";
 import { TweaksPanel } from "./tweaks-panel.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 
-export interface InspectorTweaksProps {
+interface InspectorTweaksProps {
   readonly draft: TweaksDraft;
   readonly isRunning: boolean;
   readonly onSuggest: (prompt?: string) => void;
@@ -80,7 +80,7 @@ const TweaksPrompt = ({
   );
 };
 
-export const InspectorTweaks = ({
+const InspectorTweaks = ({
   tweaks,
   isBlocked: blocked = false,
 }: {
@@ -106,3 +106,7 @@ export const InspectorTweaks = ({
     />
   );
 };
+
+export { InspectorTweaks };
+
+export type { InspectorTweaksProps };

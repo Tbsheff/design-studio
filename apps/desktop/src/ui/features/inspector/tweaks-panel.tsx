@@ -355,11 +355,7 @@ const Header = ({
   </PanelHead>
 );
 
-export const TweaksPanel = ({
-  draft,
-  isRunning: running,
-  onSuggest,
-}: Props) => {
+const TweaksPanel = ({ draft, isRunning: running, onSuggest }: Props) => {
   const { state } = draft;
 
   const groups = useMemo(
@@ -424,3 +420,5 @@ export const TweaksPanel = ({
     </div>
   );
 };
+
+export { TweaksPanel };

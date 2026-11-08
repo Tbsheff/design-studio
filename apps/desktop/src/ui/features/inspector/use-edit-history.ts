@@ -18,7 +18,7 @@ import { historyKeyOf } from "../canvas/use-undo-shortcut.js";
 import type { HistoryKind, RedoShortcut } from "../canvas/use-undo-shortcut.js";
 import { historyPhrase } from "../versions-layers-tokens/version-labels.js";
 
-export const PREVIEW_PAINTED_EVENT = "studio:preview-painted";
+const PREVIEW_PAINTED_EVENT = "studio:preview-painted";
 
 const EMPTY: EditHistoryState = {
   canRedo: false,
@@ -52,12 +52,12 @@ interface Options {
 
 const HISTORY_STEP_TITLE = /^(Undo|Redo): /u;
 
-export const isHistoryStep = (version: Version | undefined): boolean =>
+const isHistoryStep = (version: Version | undefined): boolean =>
   version !== undefined &&
   version.meta.kind === "manual" &&
   HISTORY_STEP_TITLE.test(version.title);
 
-export const stepToast = (kind: HistoryKind, label: string | null): string => {
+const stepToast = (kind: HistoryKind, label: string | null): string => {
   const word = kind === "undo" ? "Undid" : "Redid";
 
   if (!label) {
@@ -73,7 +73,7 @@ export const stepToast = (kind: HistoryKind, label: string | null): string => {
   return `${word} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 };
 
-export const refreshedSelection = (
+const refreshedSelection = (
   prev: SelectionContext[],
   selectors: string[],
   contexts: (SelectionContext | null)[]
@@ -92,7 +92,7 @@ export const refreshedSelection = (
       : item;
   });
 
-export const useEditHistory = (o: Options) => {
+const useEditHistory = (o: Options) => {
   const { projectId, directionId } = o;
   const [state, setState] = useState<EditHistoryState>(EMPTY);
   const [toast, setToast] = useState<string | null>(null);
@@ -282,7 +282,7 @@ const hasStylesMoved = (
     );
   });
 
-export const useSelectionRefresh = (
+const useSelectionRefresh = (
   selection: SelectionContext[],
   setSelection: Dispatch<SetStateAction<SelectionContext[]>>,
   describeRef: MutableRefObject<Describe | null>,
@@ -409,4 +409,13 @@ export const useSelectionRefresh = (
     },
     [refresh]
   );
+};
+
+export {
+  PREVIEW_PAINTED_EVENT,
+  isHistoryStep,
+  stepToast,
+  refreshedSelection,
+  useEditHistory,
+  useSelectionRefresh,
 };

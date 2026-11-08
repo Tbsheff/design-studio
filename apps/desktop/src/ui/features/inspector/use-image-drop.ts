@@ -83,7 +83,7 @@ const refusal = (o: Options, drop: FileDrop): string | null => {
   return null;
 };
 
-export const useImageDrop = (o: Options): void => {
+const useImageDrop = (o: Options): void => {
   const live = useRef(o);
   live.current = o;
   const busy = useRef(false);
@@ -127,3 +127,5 @@ export const useImageDrop = (o: Options): void => {
     }
   );
 };
+
+export { useImageDrop };

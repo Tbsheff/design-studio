@@ -21,7 +21,7 @@ import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { CreateRequest } from "./use-token-snap.js";
 
-export const MultiNote = ({ reason }: { readonly reason: string | null }) => {
+const MultiNote = ({ reason }: { readonly reason: string | null }) => {
   if (!reason) {
     return null;
   }
@@ -34,7 +34,7 @@ export const MultiNote = ({ reason }: { readonly reason: string | null }) => {
   );
 };
 
-export const MultiSizeSection = ({ edit }: { readonly edit: DirectEdit }) => (
+const MultiSizeSection = ({ edit }: { readonly edit: DirectEdit }) => (
   <InspectorSection title={copy.size}>
     <div className="ins-grid">
       <NumberField
@@ -58,7 +58,7 @@ interface HostProps {
   readonly onClose: () => void;
 }
 
-export const MultiCreateTokenHost = ({
+const MultiCreateTokenHost = ({
   projectId,
   directionId,
   tokens,
@@ -242,10 +242,17 @@ const SelectMatchingView = ({
   );
 };
 
-export const SelectMatchingSection = memo(
+const SelectMatchingSection = memo(
   SelectMatchingView,
   (a, b) =>
     a.port === b.port &&
     a.selection.length === b.selection.length &&
     a.selection.every((item, i) => item === b.selection[i])
 );
+
+export {
+  MultiNote,
+  MultiSizeSection,
+  MultiCreateTokenHost,
+  SelectMatchingSection,
+};

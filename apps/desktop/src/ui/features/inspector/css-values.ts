@@ -4,11 +4,11 @@ import type {
   SelectionContext,
 } from "@design-studio/contracts";
 
-export type StyleValues = Record<DirectStyleProperty, string>;
+type StyleValues = Record<DirectStyleProperty, string>;
 
-export const SIDES = ["top", "right", "bottom", "left"] as const;
+const SIDES = ["top", "right", "bottom", "left"] as const;
 
-export type Side = (typeof SIDES)[number];
+type Side = (typeof SIDES)[number];
 
 const NUMBER_RE = /^(-?\d*\.?\d+)\s*(px|rem|em|%)?$/i;
 
@@ -23,7 +23,7 @@ interface ParsedNumber {
   readonly unit: string;
 }
 
-export function parseNumber(raw: string): ParsedNumber | null {
+function parseNumber(raw: string): ParsedNumber | null {
   const match = NUMBER_RE.exec(raw.trim());
 
   if (!match) {
@@ -37,37 +37,29 @@ function round(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-export function formatNumber(value: number, unit: string): string {
+function formatNumber(value: number, unit: string): string {
   return `${round(value)}${unit}`;
 }
 
-export function stepValue(
-  raw: string,
-  delta: number,
-  fallbackUnit: string
-): string {
+function stepValue(raw: string, delta: number, fallbackUnit: string): string {
   const parsed = parseNumber(raw) ?? { unit: fallbackUnit, value: 0 };
 
   return formatNumber(parsed.value + delta, parsed.unit || fallbackUnit);
 }
 
-export interface Shift {
+interface Shift {
   readonly delta: number;
   readonly min?: number;
   readonly max?: number;
 }
 
-export interface ShiftPart {
+interface ShiftPart {
   readonly key: string;
   readonly map: (raw: string, change: (value: string) => string) => string;
   readonly set?: string;
 }
 
-export function shiftedPart(
-  raw: string,
-  part: ShiftPart,
-  shift: Shift
-): string {
+function shiftedPart(raw: string, part: ShiftPart, shift: Shift): string {
   return part.map(raw, (value) => {
     const from = part.set ?? value;
     const next = shift.delta === 0 ? from : (shiftedValue(from, shift) ?? from);
@@ -79,7 +71,7 @@ export function shiftedPart(
   });
 }
 
-export function shiftedValue(raw: string, shift: Shift): string | null {
+function shiftedValue(raw: string, shift: Shift): string | null {
   const parsed = parseNumber(raw);
 
   if (!parsed) {
@@ -94,7 +86,7 @@ export function shiftedValue(raw: string, shift: Shift): string | null {
   return formatNumber(next, parsed.unit);
 }
 
-export function normalizeLength(raw: string, defaultUnit: string): string {
+function normalizeLength(raw: string, defaultUnit: string): string {
   const trimmed = raw.trim();
   const parsed = parseNumber(trimmed);
 
@@ -119,7 +111,7 @@ function alphaOf(raw: string | undefined): number {
   return raw.endsWith("%") ? Number(raw.slice(0, -1)) / 100 : Number(raw);
 }
 
-export function colorToHex(raw: string): string | null {
+function colorToHex(raw: string): string | null {
   const value = raw.trim();
 
   if (HEX_RE.test(value)) {
@@ -141,7 +133,7 @@ export function colorToHex(raw: string): string | null {
 
 const TRANSPARENT_RE = /^rgba\(\s*0[\s,]+0[\s,]+0\s*[,/]\s*0\s*\)$/i;
 
-export function displayColor(raw: string): string {
+function displayColor(raw: string): string {
   if (TRANSPARENT_RE.test(raw.trim())) {
     return "transparent";
   }
@@ -149,7 +141,7 @@ export function displayColor(raw: string): string {
   return colorToHex(raw) ?? raw.trim();
 }
 
-export function isValidColor(raw: string): boolean {
+function isValidColor(raw: string): boolean {
   const value = raw.trim();
 
   if (value === "") {
@@ -163,7 +155,7 @@ export function isValidColor(raw: string): boolean {
   return CSS.supports("color", value);
 }
 
-export function expandBox(raw: string | undefined): Record<Side, string> {
+function expandBox(raw: string | undefined): Record<Side, string> {
   const parts = (raw ?? "").trim().split(/\s+/).filter(Boolean);
   const [top = "", right = top, bottom = top, left = right] = parts;
 
@@ -191,7 +183,7 @@ function tidy(raw: string | undefined): string {
   return parsed ? formatNumber(parsed.value, parsed.unit) : value;
 }
 
-export function valuesFromStyles(styles: Record<string, string>): StyleValues {
+function valuesFromStyles(styles: Record<string, string>): StyleValues {
   const values = {} as StyleValues;
 
   for (const prop of DIRECT_STYLE_PROPERTIES) {
@@ -206,7 +198,7 @@ export function valuesFromStyles(styles: Record<string, string>): StyleValues {
   return values;
 }
 
-export function hasChildElements(outerHTML: string): boolean {
+function hasChildElements(outerHTML: string): boolean {
   const close = outerHTML.indexOf(">");
 
   if (close === -1) {
@@ -218,7 +210,7 @@ export function hasChildElements(outerHTML: string): boolean {
 
 type TextEditability = "ok" | "children" | "long";
 
-export function textEditability(selection: SelectionContext): TextEditability {
+function textEditability(selection: SelectionContext): TextEditability {
   if (hasChildElements(selection.outerHTML)) {
     return "children";
   }
@@ -230,7 +222,7 @@ export function textEditability(selection: SelectionContext): TextEditability {
   return "ok";
 }
 
-export function changedProps(
+function changedProps(
   values: Partial<StyleValues>,
   base: StyleValues
 ): Partial<StyleValues> {
@@ -247,3 +239,23 @@ export function changedProps(
 
   return out;
 }
+
+export {
+  SIDES,
+  parseNumber,
+  formatNumber,
+  stepValue,
+  shiftedPart,
+  shiftedValue,
+  normalizeLength,
+  colorToHex,
+  displayColor,
+  isValidColor,
+  expandBox,
+  valuesFromStyles,
+  hasChildElements,
+  textEditability,
+  changedProps,
+};
+
+export type { StyleValues, Side, Shift, ShiftPart };

@@ -147,7 +147,7 @@ const VectorButtons = () => {
   );
 };
 
-export const InspectorTools = (props: Props) => {
+const InspectorTools = (props: Props) => {
   const [notice, setNotice] = useState<string | null>(null);
   const last = props.selection.at(-1);
 
@@ -285,3 +285,5 @@ export const InspectorTools = (props: Props) => {
     </div>
   );
 };
+
+export { InspectorTools };

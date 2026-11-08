@@ -212,7 +212,7 @@ const readOpen = (): Record<string, boolean> => {
 
 const sectionOpen = readOpen();
 
-export const useSectionOpen = (
+const useSectionOpen = (
   title: string,
   initial = true
 ): [boolean, () => void] => {
@@ -236,7 +236,7 @@ interface SectionProps {
   readonly label?: ReactNode;
 }
 
-export const InspectorSection = ({
+const InspectorSection = ({
   title,
   children,
   aside,
@@ -274,13 +274,21 @@ export const InspectorSection = ({
   );
 };
 
-export const ColorField = memo(ColorFieldView, isSameField);
+const ColorField = memo(ColorFieldView, isSameField);
 
-export const SelectField = memo(
+const SelectField = memo(
   SelectFieldView,
   (a, b) => isSameField(a, b) && a.options.join(",") === b.options.join(",")
 );
 
-export const AlignField = memo(AlignFieldView, (a, b) =>
+const AlignField = memo(AlignFieldView, (a, b) =>
   isSameEditValues(a.edit, b.edit, ["text-align"])
 );
+
+export {
+  useSectionOpen,
+  InspectorSection,
+  ColorField,
+  SelectField,
+  AlignField,
+};

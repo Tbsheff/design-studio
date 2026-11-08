@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { api, errorText } from "../../api.js";
 
-export const locText = (source: SourceLoc): string =>
+const locText = (source: SourceLoc): string =>
   `${source.file}:${source.line}:${source.col}`;
 
 const shortPath = (file: string): string => {
@@ -13,7 +13,7 @@ const shortPath = (file: string): string => {
   return parts.length > 2 ? parts.slice(-2).join("/") : file;
 };
 
-export const SourceLink = ({
+const SourceLink = ({
   projectId,
   directionId,
   source,
@@ -65,3 +65,5 @@ export const SourceLink = ({
     </>
   );
 };
+
+export { locText, SourceLink };

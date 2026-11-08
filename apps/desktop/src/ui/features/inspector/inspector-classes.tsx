@@ -10,7 +10,7 @@ import { api } from "../../api.js";
 import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
 
-export interface ElementClasses {
+interface ElementClasses {
   readonly tailwind: TailwindOutcome | null;
   readonly element: ElementSourceInfo | null;
   readonly variants: VariantSupport | null;
@@ -22,7 +22,7 @@ const NO_CLASSES: ElementClasses = {
   variants: null,
 };
 
-export const useElementClasses = (
+const useElementClasses = (
   projectId: string,
   directionId: string | null,
   source: SourceLoc | null,
@@ -71,14 +71,14 @@ export const useElementClasses = (
   return info;
 };
 
-export const domClasses = (outerHTML: string): string[] => {
+const domClasses = (outerHTML: string): string[] => {
   const raw =
     /^<[^>]*\bclass="([^"]*)"/u.exec(outerHTML.slice(0, 4000))?.[1] ?? "";
 
   return raw.split(/\s+/u).filter(Boolean);
 };
 
-export const ClassLine = ({
+const ClassLine = ({
   info,
   resolved,
 }: {
@@ -116,3 +116,7 @@ export const ClassLine = ({
     </InspectorSection>
   );
 };
+
+export { useElementClasses, domClasses, ClassLine };
+
+export type { ElementClasses };

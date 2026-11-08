@@ -15,7 +15,7 @@ interface Props {
 
 const COUNTS = [2, 3, 4];
 
-export const ElementVariantsDialog = ({
+const ElementVariantsDialog = ({
   project,
   element,
   onStart,
@@ -122,3 +122,5 @@ export const ElementVariantsDialog = ({
     </section>
   );
 };
+
+export { ElementVariantsDialog };

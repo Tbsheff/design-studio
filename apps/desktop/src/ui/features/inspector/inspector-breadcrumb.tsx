@@ -192,7 +192,7 @@ const InspectorBreadcrumbView = ({ selection, port }: Props) => {
   );
 };
 
-export const InspectorBreadcrumb = memo(
+const InspectorBreadcrumb = memo(
   InspectorBreadcrumbView,
   (a, b) =>
     a.port === b.port &&
@@ -201,3 +201,5 @@ export const InspectorBreadcrumb = memo(
     a.selection.outerHTML === b.selection.outerHTML &&
     a.selection.path === b.selection.path
 );
+
+export { InspectorBreadcrumb };

@@ -81,7 +81,7 @@ const axisStyle = (
 ): Record<string, string> =>
   delta === 0 ? {} : { [prop]: `${Math.round(start + delta)}px` };
 
-export const nudgeStyle = (b: Step): Record<string, string> => {
+const nudgeStyle = (b: Step): Record<string, string> => {
   const { base, dx, dy } = b;
 
   if (base.mode === "margin") {
@@ -231,7 +231,7 @@ const shouldTakeArrowKeys = (): boolean => {
   return true;
 };
 
-export const useElementNudge = (o: Options): void => {
+const useElementNudge = (o: Options): void => {
   const live = useRef(o);
   live.current = o;
   const burst = useRef<Burst | null>(null);
@@ -488,3 +488,5 @@ export const useElementNudge = (o: Options): void => {
     }
   }, [key]);
 };
+
+export { nudgeStyle, useElementNudge };

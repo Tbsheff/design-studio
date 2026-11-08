@@ -48,7 +48,7 @@ const failureText = (err: unknown): string => {
   return errorText(err);
 };
 
-export const useDirectEdits = (
+const useDirectEdits = (
   o: Options
 ): DirectEdit & { readonly blocked: string | null } => {
   const opts = useRef(o);
@@ -421,3 +421,5 @@ export const useDirectEdits = (
     values,
   };
 };
+
+export { useDirectEdits };

@@ -48,7 +48,7 @@ const LinkToggle = ({
   );
 };
 
-export type DeclaredMargins = Partial<Record<Side, string>>;
+type DeclaredMargins = Partial<Record<Side, string>>;
 
 const autoShown = (
   declared: DeclaredMargins | undefined,
@@ -159,7 +159,7 @@ const BoxRing = (props: {
   );
 };
 
-export const BoxModel = ({
+const BoxModel = ({
   edit,
   declared,
 }: {
@@ -190,3 +190,7 @@ export const BoxModel = ({
     </div>
   );
 };
+
+export { BoxModel };
+
+export type { DeclaredMargins };

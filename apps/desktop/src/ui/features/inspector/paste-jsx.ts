@@ -80,7 +80,7 @@ const openFigmaImport = async (
   );
 };
 
-export const pasteJsx = async (
+const pasteJsx = async (
   ids: { readonly projectId: string; readonly directionId: string },
   selection: SelectionContext,
   notify: (message: string) => void
@@ -122,3 +122,5 @@ export const pasteJsx = async (
     notify(insertError(error));
   }
 };
+
+export { pasteJsx };

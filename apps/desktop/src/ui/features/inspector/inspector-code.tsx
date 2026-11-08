@@ -29,7 +29,7 @@ type Snippet =
 const TOKEN =
   /(<!--[\s\S]*?-->|\{\/\*[\s\S]*?\*\/\})|(<\/?[A-Za-z][\w.:-]*|\/?>)|("[^"]*"|'[^']*'|`[^`]*`)|([A-Za-z_:][\w:.-]*)(?==)|(\{|\})/gu;
 
-export const highlight = (code: string): ReactNode[] => {
+const highlight = (code: string): ReactNode[] => {
   const out: ReactNode[] = [];
   let at = 0;
   let index = 0;
@@ -206,7 +206,7 @@ const CopySnippet = ({ code }: { readonly code: string }) => {
   );
 };
 
-export const InspectorCode = ({ projectId, directionId, selection }: Props) => {
+const InspectorCode = ({ projectId, directionId, selection }: Props) => {
   const snippet = useSnippet(projectId, directionId, selection);
 
   if (!selection) {
@@ -269,3 +269,5 @@ export const InspectorCode = ({ projectId, directionId, selection }: Props) => {
     </div>
   );
 };
+
+export { highlight, InspectorCode };

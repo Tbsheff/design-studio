@@ -18,7 +18,7 @@ import { isApiConflict } from "./api-error.js";
 
 type TweakMap = Record<string, TweakValue>;
 
-export const TWEAKS_REQUEST: RunRequest = {
+const TWEAKS_REQUEST: RunRequest = {
   mode: "edit",
   prompt:
     "Suggest tweaks for this design: add 3 to 8 live controls (spacing, accent color, radius, density, font size, a layout toggle) bound to CSS variables. Keep the look the same at the default values.",
@@ -100,7 +100,7 @@ const useTweaksState = (o: Options) => {
   return { loadError, replace, state };
 };
 
-export const useTweaks = (o: Options) => {
+const useTweaks = (o: Options) => {
   const { state, loadError, replace } = useTweaksState(o);
   const [pending, setPendingMap] = useState<TweakMap>({});
   const [committing, setCommitting] = useState(false);
@@ -295,4 +295,8 @@ export const useTweaks = (o: Options) => {
   };
 };
 
-export type TweaksDraft = ReturnType<typeof useTweaks>;
+type TweaksDraft = ReturnType<typeof useTweaks>;
+
+export { TWEAKS_REQUEST, useTweaks };
+
+export type { TweaksDraft };

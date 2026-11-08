@@ -11,9 +11,9 @@ import type { PreviewPort } from "../../platform/bridge.js";
 import { useProjectEvents } from "../../platform/events.js";
 import type { DirectEditControl } from "./use-direct-edit.js";
 
-export type SessionAction = "save" | "discard";
+type SessionAction = "save" | "discard";
 
-export interface EditSessionHandle {
+interface EditSessionHandle {
   readonly isDirty: boolean;
   readonly count: number;
   readonly net: number;
@@ -49,7 +49,7 @@ const EMPTY: SessionView = {
 const UNDO_PROMPT = 'Undo of "';
 const REFRESH_MS = 120;
 
-export const unsavedLabel = (count: number): string => {
+const unsavedLabel = (count: number): string => {
   if (count === 0) {
     return "No unsaved edits";
   }
@@ -112,7 +112,7 @@ const readSession = async (
 
 const fresh = (base: string | null): SessionView => ({ ...EMPTY, base });
 
-export const useEditSession = (o: Options) => {
+const useEditSession = (o: Options) => {
   const { projectId, directionId } = o;
   const [view, setView] = useState<SessionView>(EMPTY);
   const [busy, setBusy] = useState<SessionAction | null>(null);
@@ -283,4 +283,8 @@ export const useEditSession = (o: Options) => {
   };
 };
 
-export type EditSession = ReturnType<typeof useEditSession>;
+type EditSession = ReturnType<typeof useEditSession>;
+
+export { unsavedLabel, useEditSession };
+
+export type { SessionAction, EditSessionHandle, EditSession };

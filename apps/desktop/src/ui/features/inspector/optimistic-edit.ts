@@ -9,7 +9,7 @@ import type { PreviewPort } from "../../platform/bridge.js";
 
 const RESULT_WAIT_MS = 30_000;
 
-export interface OptimisticEdit {
+interface OptimisticEdit {
   readonly saved: (tailwind: TailwindOutcome | null | undefined) => void;
   readonly failed: (reason: string) => void;
 }
@@ -22,7 +22,7 @@ const nextId = (): string => {
   return `ui-${Date.now().toString(36)}-${counter}`;
 };
 
-export const domPatchFor = (req: DirectEditRequest): DomPatch | null => {
+const domPatchFor = (req: DirectEditRequest): DomPatch | null => {
   if (req.variant || req.move !== undefined || req.insert !== undefined) {
     return null;
   }
@@ -74,7 +74,7 @@ const NOOP: OptimisticEdit = {
   saved: () => undefined,
 };
 
-export const startOptimistic = (
+const startOptimistic = (
   port: PreviewPort | null | undefined,
   req: DirectEditRequest,
   onProblem: (reason: string) => void
@@ -103,3 +103,7 @@ export const startOptimistic = (
       }),
   };
 };
+
+export { domPatchFor, startOptimistic };
+
+export type { OptimisticEdit };

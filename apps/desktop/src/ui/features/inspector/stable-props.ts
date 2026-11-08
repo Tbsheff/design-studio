@@ -113,7 +113,7 @@ class Stabilizer {
   }
 }
 
-export const useStableProps = <T extends object>(
+const useStableProps = <T extends object>(
   next: T,
   nested: ReadonlySet<string> = new Set()
 ): T => {
@@ -122,3 +122,5 @@ export const useStableProps = <T extends object>(
 
   return ref.current.run(next, nested);
 };
+
+export { useStableProps };

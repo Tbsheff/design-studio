@@ -145,7 +145,7 @@ const evaluateTokens = (tokens: Token[]): Evaluated | null => {
   return { units, value };
 };
 
-export const evaluateMath = (
+const evaluateMath = (
   raw: string
 ): { readonly value: number; readonly unit: string } | null => {
   const tokens = tokenize(raw);
@@ -165,7 +165,7 @@ export const evaluateMath = (
 
 const RELATIVE_RE = /^(\+=?|-=)/u;
 
-export const resolveNumberInput = (
+const resolveNumberInput = (
   raw: string,
   current: string,
   defaultUnit: string
@@ -201,3 +201,5 @@ export const resolveNumberInput = (
     unit
   );
 };
+
+export { evaluateMath, resolveNumberInput };

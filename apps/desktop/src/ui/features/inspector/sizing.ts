@@ -1,18 +1,18 @@
 import type { StyleValues } from "./css-values.js";
 
-export type Axis = "width" | "height";
+type Axis = "width" | "height";
 
-export type SizeMode = "hug" | "fill" | "fixed";
+type SizeMode = "hug" | "fill" | "fixed";
 
-export type AxisRole = "main" | "cross" | "none";
+type AxisRole = "main" | "cross" | "none";
 
-export interface ParentLayout {
+interface ParentLayout {
   readonly isFlex: boolean;
   readonly isGrid: boolean;
   readonly isRow: boolean;
 }
 
-export const SIZE_MODES: {
+const SIZE_MODES: {
   readonly value: SizeMode;
   readonly label: string;
 }[] = [
@@ -23,13 +23,13 @@ export const SIZE_MODES: {
 
 const HUG_VALUES = new Set(["fit-content", "max-content", "min-content"]);
 
-export const isFlexDisplay = (display: string): boolean =>
+const isFlexDisplay = (display: string): boolean =>
   display === "flex" || display === "inline-flex";
 
-export const isGridDisplay = (display: string): boolean =>
+const isGridDisplay = (display: string): boolean =>
   display === "grid" || display === "inline-grid";
 
-export const parentLayout = (styles: Record<string, string>): ParentLayout => {
+const parentLayout = (styles: Record<string, string>): ParentLayout => {
   const display = (styles["parent-display"] ?? "").trim();
   const direction = (styles["parent-flex-direction"] ?? "").trim();
 
@@ -40,7 +40,7 @@ export const parentLayout = (styles: Record<string, string>): ParentLayout => {
   };
 };
 
-export const axisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
+const axisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
   if (!parent.isFlex) {
     return "none";
   }
@@ -48,7 +48,7 @@ export const axisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
   return (axis === "width") === parent.isRow ? "main" : "cross";
 };
 
-export const flexGrow = (flex: string): number => {
+const flexGrow = (flex: string): number => {
   const first = flex.trim().split(/\s+/u)[0] ?? "";
 
   if (first === "auto") {
@@ -62,7 +62,7 @@ export const flexGrow = (flex: string): number => {
 
 type Values = Pick<StyleValues, Axis | "flex" | "align-self">;
 
-export interface SizeFacts {
+interface SizeFacts {
   readonly authored: Record<Axis, string>;
   readonly display: string;
   readonly parentAlignItems: string;
@@ -79,7 +79,7 @@ const BLOCK_DISPLAYS = new Set([
   "flow-root",
 ]);
 
-export const sizeFacts = (styles: Record<string, string>): SizeFacts => ({
+const sizeFacts = (styles: Record<string, string>): SizeFacts => ({
   authored: {
     height: (styles["authored-height"] ?? "").trim(),
     width: (styles["authored-width"] ?? "").trim(),
@@ -169,7 +169,7 @@ const authoredMode = (size: string): SizeMode | null => {
   return "fixed";
 };
 
-export const sizeModeOf = (
+const sizeModeOf = (
   axis: Axis,
   values: Values,
   parent: ParentLayout,
@@ -232,7 +232,7 @@ const fillPatch = (
   return { [axis]: "100%" };
 };
 
-export const sizePatch = (
+const sizePatch = (
   axis: Axis,
   mode: SizeMode,
   values: Values,
@@ -307,14 +307,14 @@ const legacyPatch = (
   return { [axis]: "100%" };
 };
 
-export interface AlignCell {
+interface AlignCell {
   readonly justify: string;
   readonly align: string;
 }
 
 const AXIS_VALUES = ["flex-start", "center", "flex-end"] as const;
 
-export const alignSlot = (value: string): number | null => {
+const alignSlot = (value: string): number | null => {
   const v = value.trim();
 
   if (
@@ -338,11 +338,7 @@ export const alignSlot = (value: string): number | null => {
   return null;
 };
 
-export const alignCell = (
-  col: number,
-  row: number,
-  isRow: boolean
-): AlignCell => {
+const alignCell = (col: number, row: number, isRow: boolean): AlignCell => {
   const across = AXIS_VALUES[col] ?? "flex-start";
   const down = AXIS_VALUES[row] ?? "flex-start";
 
@@ -351,7 +347,7 @@ export const alignCell = (
     : { align: across, justify: down };
 };
 
-export const activeCell = (
+const activeCell = (
   justify: string,
   align: string,
   isRow: boolean
@@ -369,3 +365,20 @@ export const activeCell = (
 
   return isRow ? { col: j, row: a } : { col: a, row: j };
 };
+
+export {
+  SIZE_MODES,
+  isFlexDisplay,
+  isGridDisplay,
+  parentLayout,
+  axisRole,
+  flexGrow,
+  sizeFacts,
+  sizeModeOf,
+  sizePatch,
+  alignSlot,
+  alignCell,
+  activeCell,
+};
+
+export type { Axis, SizeMode, AxisRole, ParentLayout, SizeFacts, AlignCell };

@@ -50,7 +50,7 @@ const toVersion = <Value>(value: Value): Version | null => {
   return null;
 };
 
-export const propsApi = {
+const propsApi = {
   components: (pid: string, did: string) =>
     call(routes.listPropsComponentsDirectEdit, {
       cursor: null,
@@ -109,5 +109,7 @@ export const propsApi = {
     change: ComponentVariantChange
   ) => writeVariantAt(pid, did, target, change),
 };
+
+export { propsApi };
 
 export type { VariantPreviewQuery };

@@ -7,12 +7,12 @@ import type { AuthoredCss } from "./authored-css.js";
 
 const REPLY_TIMEOUT_MS = 1500;
 
-export interface AuthoredCssState {
+interface AuthoredCssState {
   readonly css: AuthoredCss | null;
   readonly request: () => Promise<AuthoredCss | null>;
 }
 
-export const requestAuthoredCss = (
+const requestAuthoredCss = (
   port: PreviewPort | null,
   selector: string
 ): Promise<AuthoredCss | null> => {
@@ -45,7 +45,7 @@ export const requestAuthoredCss = (
   });
 };
 
-export const useAuthoredCss = (
+const useAuthoredCss = (
   port: MutableRefObject<PreviewPort | null>,
   selector: string
 ): AuthoredCssState => {
@@ -73,3 +73,7 @@ export const useAuthoredCss = (
 
   return { css, request };
 };
+
+export { requestAuthoredCss, useAuthoredCss };
+
+export type { AuthoredCssState };

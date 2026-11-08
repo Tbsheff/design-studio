@@ -15,19 +15,19 @@ import { copy } from "./copy.js";
 import { textHints } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-export interface InspectorApp {
+interface InspectorApp {
   readonly appDir: string | null;
   readonly ask: ((prompt: string) => void) | null;
   readonly element: ElementSourceInfo | null;
 }
 
-export const InspectorAppContext = createContext<InspectorApp>({
+const InspectorAppContext = createContext<InspectorApp>({
   appDir: null,
   ask: null,
   element: null,
 });
 
-export function useInspectorApp(): InspectorApp {
+function useInspectorApp(): InspectorApp {
   return useContext(InspectorAppContext);
 }
 
@@ -42,7 +42,7 @@ function shortLoc(source: {
   return `${source.file.split("/").pop() ?? source.file}:${source.line}`;
 }
 
-export function dataTextPrompt(text: string, data: TextFromData): string {
+function dataTextPrompt(text: string, data: TextFromData): string {
   const shown = text.length > 80 ? `${text.slice(0, 79)}…` : text;
 
   return `The text "${shown}" comes from data: ${data.expression} in ${loc(data)}. Change it to: `;
@@ -136,7 +136,7 @@ function SourceTextRow({
   );
 }
 
-export function DataTextNote({
+function DataTextNote({
   data,
   selection,
   edit,
@@ -200,7 +200,7 @@ function DataTextAsk({
   );
 }
 
-export function SharedSourceNote({
+function SharedSourceNote({
   shared,
   isEditingUse: editingUse,
   canUse,
@@ -243,7 +243,7 @@ export function SharedSourceNote({
   );
 }
 
-export function AddButton({
+function AddButton({
   label,
   tip,
   shortcut,
@@ -269,3 +269,14 @@ export function AddButton({
     </button>
   );
 }
+
+export {
+  InspectorAppContext,
+  useInspectorApp,
+  dataTextPrompt,
+  DataTextNote,
+  SharedSourceNote,
+  AddButton,
+};
+
+export type { InspectorApp };

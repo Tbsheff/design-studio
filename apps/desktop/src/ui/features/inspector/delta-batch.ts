@@ -10,15 +10,15 @@ type DeltaEvent = Extract<
 
 type RunsUpdate = (update: (runs: RunMap) => RunMap) => void;
 
-export type Schedule = (fn: () => void) => () => void;
+type Schedule = (fn: () => void) => () => void;
 
-export interface DeltaBatcher {
+interface DeltaBatcher {
   push(event: StudioEvent): void;
   flush(): void;
   dispose(): void;
 }
 
-export const mergeDeltas = (
+const mergeDeltas = (
   pending: DeltaEvent[],
   event: DeltaEvent
 ): DeltaEvent[] => {
@@ -31,7 +31,7 @@ export const mergeDeltas = (
   return [...pending.slice(0, -1), { ...event, text: last.text + event.text }];
 };
 
-export const createDeltaBatcher = (
+const createDeltaBatcher = (
   update: RunsUpdate,
   schedule: Schedule
 ): DeltaBatcher => {
@@ -82,7 +82,7 @@ export const createDeltaBatcher = (
   };
 };
 
-export const frameOrTimeout =
+const frameOrTimeout =
   (fallbackMs: number): Schedule =>
   (fn) => {
     let done = false;
@@ -107,3 +107,7 @@ export const frameOrTimeout =
       window.clearTimeout(timer);
     };
   };
+
+export { mergeDeltas, createDeltaBatcher, frameOrTimeout };
+
+export type { Schedule, DeltaBatcher };

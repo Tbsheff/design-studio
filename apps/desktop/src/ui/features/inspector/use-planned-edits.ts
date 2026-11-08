@@ -9,7 +9,7 @@ const FRESH_MS = 5000;
 const patchIds = (id: string, count: number): string[] =>
   Array.from({ length: count }, (_, index) => `${id}:${index}`);
 
-export const usePlannedEdits = (
+const usePlannedEdits = (
   projectId: string,
   directionId: string | null,
   live: boolean
@@ -55,3 +55,5 @@ export const usePlannedEdits = (
     }
   });
 };
+
+export { usePlannedEdits };

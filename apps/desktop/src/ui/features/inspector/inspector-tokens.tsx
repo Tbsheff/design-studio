@@ -31,7 +31,7 @@ interface ScopeInput {
   readonly onCommitted: (commit: DirectEditCommit) => void;
 }
 
-export const useInspectorTokens = (input: ScopeInput) => {
+const useInspectorTokens = (input: ScopeInput) => {
   const [snapOn, setSnap] = useSnapSetting(input.projectId);
   const snap = useTokenSnap(input.tokens, snapOn);
   const [creating, setCreating] = useState<CreateRequest | null>(null);
@@ -59,7 +59,7 @@ export const useInspectorTokens = (input: ScopeInput) => {
   };
 };
 
-export const SnapToggle = ({ ui }: { readonly ui: TokenUi | null }) => {
+const SnapToggle = ({ ui }: { readonly ui: TokenUi | null }) => {
   if (!ui) {
     return null;
   }
@@ -104,7 +104,7 @@ const NoteBar = ({
   </div>
 );
 
-export const TokenNotes = (props: {
+const TokenNotes = (props: {
   readonly ui: TokenUi | null;
   readonly note: SnapNote | null;
   readonly onKeepRaw: (raw: Partial<StyleValues>) => void;
@@ -224,7 +224,7 @@ const issueText = (issue: LintIssue): ReactNode => {
   );
 };
 
-export const TokenLint = ({
+const TokenLint = ({
   ui,
   edit,
   css,
@@ -307,7 +307,7 @@ export const TokenLint = ({
   );
 };
 
-export const CreateTokenHost = (
+const CreateTokenHost = (
   props: ScopeInput & {
     readonly edit: DirectEdit;
     readonly request: CreateRequest | null;
@@ -362,7 +362,7 @@ export const CreateTokenHost = (
   );
 };
 
-export const FontField = ({
+const FontField = ({
   ui,
   edit,
 }: {
@@ -429,7 +429,7 @@ export const FontField = ({
 
 const InspectorMatch = lazy(() => import("./inspector-match.js"));
 
-export const MatchSection = (props: {
+const MatchSection = (props: {
   readonly projectId: string;
   readonly directionId: string | null;
   readonly selection: SelectionContext[];
@@ -455,4 +455,14 @@ export const MatchSection = (props: {
       />
     </Suspense>
   );
+};
+
+export {
+  useInspectorTokens,
+  SnapToggle,
+  TokenNotes,
+  TokenLint,
+  CreateTokenHost,
+  FontField,
+  MatchSection,
 };

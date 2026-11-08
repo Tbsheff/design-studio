@@ -28,7 +28,12 @@ const CursorFieldSchema = Schema.String.annotate({
 
 const listRoutesWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_routes",
+    set: "app",
+    short: "Read only. List the routes of the attached Next.js app.",
+  },
   confirm: "none",
   description:
     "List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group. Pages hold 50 routes; pass nextCursor as cursor for the next page.",

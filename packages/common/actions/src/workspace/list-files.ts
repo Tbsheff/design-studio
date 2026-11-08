@@ -22,7 +22,13 @@ const DirectionFieldSchema = DirectionIdSchema.annotate({
 
 const listFilesWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_files",
+    set: "core",
+    short:
+      "Read only. List the source files of a project, with paths for read_file.",
+  },
   confirm: "none",
   description:
     "List the source files of a version. Returns versionId and files with path and bytes. Read only.",

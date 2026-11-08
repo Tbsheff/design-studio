@@ -32,7 +32,13 @@ const RouteFieldSchema = PathTextSchema.annotate({
 
 const getUsageWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "get_component_usage",
+    set: "app",
+    short:
+      "Read only. List the app routes that render one source file, directly or through a layout.",
+  },
   confirm: "none",
   description:
     'List the app routes that render one source file, directly from the page or through a layout or any import chain, the same count the studio inline prompt shows as "All uses (N)". Returns file, component and routes ({route, file}). With usedAt or route it also returns callSite {file, kind: page, component or layout, routes, routeLocal, pageFile}: routeLocal false means no change can stay on one route. Prototype (HTML) projects return no routes. Read only.',

@@ -23,13 +23,13 @@ const ARROW =
   '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1l5.5 13 2-5.5L14 6.5z" fill="currentColor" stroke="white" stroke-width="1.2" stroke-linejoin="round"/></svg>';
 
 const hueOf = (id: string): number => {
-  let h = 0;
+  let height = 0;
 
   for (const ch of id) {
-    h = (h * 31 + ch.charCodeAt(0)) % 360;
+    height = (height * 31 + ch.charCodeAt(0)) % 360;
   }
 
-  return h;
+  return height;
 };
 
 const frameEl = (stage: HTMLElement, frameId: string): HTMLElement | null =>
@@ -93,8 +93,11 @@ class CursorLayer {
   set(list: SharePresenceCursor[]): void {
     this.cursors.clear();
 
-    for (const c of list) {
-      this.cursors.set(`${c.linkId}:${c.viewer}`, c);
+    for (const sharePresenceCursor of list) {
+      this.cursors.set(
+        `${sharePresenceCursor.linkId}:${sharePresenceCursor.viewer}`,
+        sharePresenceCursor
+      );
     }
 
     this.kick();
@@ -184,12 +187,12 @@ class CursorLayer {
       return;
     }
 
-    const r = frame.getBoundingClientRect();
-    const scale = r.width / frame.offsetWidth;
+    const domRect = frame.getBoundingClientRect();
+    const scale = domRect.width / frame.offsetWidth;
     const below = cursor.y > frame.offsetHeight;
     el.hidden = false;
     el.classList.toggle("below", below);
-    el.style.transform = `translate(${r.left - box.left + Math.min(cursor.x, frame.offsetWidth) * scale}px, ${r.top - box.top + Math.min(cursor.y, frame.offsetHeight) * scale}px)`;
+    el.style.transform = `translate(${domRect.left - box.left + Math.min(cursor.x, frame.offsetWidth) * scale}px, ${domRect.top - box.top + Math.min(cursor.y, frame.offsetHeight) * scale}px)`;
   }
 
   private paint(): void {
@@ -278,13 +281,13 @@ const studioPointer = (
       return;
     }
 
-    const r = target.getBoundingClientRect();
-    const scale = r.width / target.offsetWidth;
+    const domRect = target.getBoundingClientRect();
+    const scale = domRect.width / target.offsetWidth;
     lastFrame = target.dataset.frameId ?? null;
     queue({
       frameId: lastFrame,
-      x: Math.max(0, (clientX - r.left) / scale),
-      y: Math.max(0, (clientY - r.top) / scale),
+      x: Math.max(0, (clientX - domRect.left) / scale),
+      y: Math.max(0, (clientY - domRect.top) / scale),
     });
   };
 
@@ -305,9 +308,13 @@ const studioPointer = (
       return;
     }
 
-    const r = iframe.getBoundingClientRect();
-    const scale = r.width / iframe.offsetWidth;
-    at(iframe, r.left + message.x * scale, r.top + message.y * scale);
+    const domRect = iframe.getBoundingClientRect();
+    const scale = domRect.width / iframe.offsetWidth;
+    at(
+      iframe,
+      domRect.left + message.x * scale,
+      domRect.top + message.y * scale
+    );
   };
 
   function onLeave(): void {

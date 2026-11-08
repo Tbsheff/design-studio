@@ -28,7 +28,7 @@ const useExportTarget = (
         return;
       }
 
-      const version = list.find((v) => v.id === versionId);
+      const version = list.find((version) => version.id === versionId);
       setTarget({
         directionId: current?.id ?? null,
         projectId,

@@ -273,7 +273,7 @@ const CopyCodeMenu = ({
           className="project-menu copy-code-menu"
           role="menu"
           aria-label={uiCopy.copyElement}
-          onKeyDown={(e) => menuKeys(e, close)}
+          onKeyDown={(keyboardEvent) => menuKeys(keyboardEvent, close)}
         >
           {items.map((item) => (
             <button

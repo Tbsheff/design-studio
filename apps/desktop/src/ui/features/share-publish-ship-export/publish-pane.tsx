@@ -94,7 +94,7 @@ const FramePicker = ({
 }: {
   target: PublishTarget;
   form: FormState;
-  setForm: (f: FormState) => void;
+  setForm: (state: FormState) => void;
 }) => {
   const frames = useMemo(
     () => canvasFrameChoices(target.projectId, target.directionId),
@@ -162,7 +162,7 @@ const PublishForm = ({
 }: {
   target: PublishTarget;
   form: FormState;
-  setForm: (f: FormState) => void;
+  setForm: (state: FormState) => void;
 }) => (
   <div className="publish-form">
     {target.kind === "site" ? (
@@ -198,16 +198,16 @@ const PublishForm = ({
         role="radiogroup"
         aria-label={copy.stopsWorkingAfter}
       >
-        {EXPIRIES.map((o) => (
+        {EXPIRIES.map((option) => (
           <button
-            key={o.id}
+            key={option.id}
             type="button"
             role="radio"
-            aria-checked={form.expiry === o.id}
-            className={form.expiry === o.id ? "on" : ""}
-            onClick={() => setForm({ ...form, expiry: o.id })}
+            aria-checked={form.expiry === option.id}
+            className={form.expiry === option.id ? "on" : ""}
+            onClick={() => setForm({ ...form, expiry: option.id })}
           >
-            {o.label}
+            {option.label}
           </button>
         ))}
       </div>
@@ -284,16 +284,16 @@ const PlanView = ({ plan }: { plan: PublishPlan }) => {
           ? "It becomes the live version at this address; older versions stay for rollback."
           : "Anyone who has the address can open it."}
       </div>
-      {plan.warnings.map((w) => (
-        <div key={w} className="alert small" role="note">
-          {w}
+      {plan.warnings.map((warning) => (
+        <div key={warning} className="alert small" role="note">
+          {warning}
         </div>
       ))}
       <dl className="publish-plan-list">
-        {rows.map(([k, v]) => (
-          <div key={k} className="publish-kv">
-            <dt>{k}</dt>
-            <dd className={k === "Address" ? "mono" : ""}>{v}</dd>
+        {rows.map(([label, value]) => (
+          <div key={label} className="publish-kv">
+            <dt>{label}</dt>
+            <dd className={label === "Address" ? "mono" : ""}>{value}</dd>
           </div>
         ))}
       </dl>
@@ -314,7 +314,7 @@ const planInputOf = (
   const frames = canvasFrameChoices(
     target.projectId,
     target.directionId
-  ).filter((f) => form.picked.has(f.id));
+  ).filter((choice) => form.picked.has(choice.id));
 
   const input: PublishRequest = {
     expiresInDays: form.expiry,
@@ -328,7 +328,7 @@ const planInputOf = (
   if (target.kind === "viewer") {
     Object.assign(input, {
       comments: form.comments,
-      frames: frames.map((f) => f.id),
+      frames: frames.map((frame) => frame.id),
     });
   }
 
@@ -397,15 +397,15 @@ const usePublishFlow = (target: PublishTarget) => {
       }
     });
 
-  const unpublish = (p: Publication) =>
+  const unpublish = (publication: Publication) =>
     act("Unpublishing…", async () => {
-      await publishApi.unpublish(target.projectId, p.id);
+      await publishApi.unpublish(target.projectId, publication.id);
       await pubs.reload();
     });
 
-  const rollback = (p: Publication, versionId: string) =>
+  const rollback = (publication: Publication, versionId: string) =>
     act("Rolling back…", async () => {
-      await publishApi.rollback(target.projectId, p.id, versionId);
+      await publishApi.rollback(target.projectId, publication.id, versionId);
       await pubs.reload();
     });
 
@@ -528,7 +528,7 @@ const PublishPane = ({
     picked: new Set(
       canvasFrameChoices(target.projectId, target.directionId)
         .slice(0, PUBLISH_MAX_FRAMES)
-        .map((f) => f.id)
+        .map((choice) => choice.id)
     ),
     viewerComments: false,
   }));
@@ -557,10 +557,10 @@ const PublishPane = ({
         )}
         {shown.length > 0 && (
           <ul className="share-links" aria-label={copy.publications}>
-            {shown.map((p) => (
+            {shown.map((publication) => (
               <PublicationRow
-                key={p.id}
-                p={p}
+                key={publication.id}
+                publication={publication}
                 now={now}
                 projectId={target.projectId}
                 busy={flow.busy !== null}

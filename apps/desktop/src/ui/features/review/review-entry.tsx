@@ -108,31 +108,31 @@ const useCloseOnToolChange = (toolKey: string, close: () => void): void => {
   }, [toolKey, close]);
 };
 
-const ReviewEntry = (p: Props): ReactElement => {
+const ReviewEntry = (props: Props): ReactElement => {
   const marker = useRef<HTMLSpanElement>(null);
   const slot = useSlot(marker);
   const [open, setOpen] = useState(false);
   const close = useRef(() => setOpen(false)).current;
-  useCloseOnToolChange(p.toolKey, close);
+  useCloseOnToolChange(props.toolKey, close);
 
   const review = useReview({
-    directionId: p.directionId,
-    frame: p.frame,
-    lastChange: p.lastChange,
-    open: open && p.live,
-    projectId: p.projectId,
+    directionId: props.directionId,
+    frame: props.frame,
+    lastChange: props.lastChange,
+    open: open && props.live,
+    projectId: props.projectId,
   });
 
   const count = review.result ? review.result.findings.length : null;
-  const ask = p.shell?.onAskAgent;
+  const ask = props.shell?.onAskAgent;
 
   const select = (finding: ReviewFinding): void => {
     if (finding.selector) {
-      p.post({ selector: finding.selector, type: "select-selector" });
+      props.post({ selector: finding.selector, type: "select-selector" });
     }
   };
 
-  const { post } = p;
+  const { post } = props;
 
   const selectSelector = useCallback(
     (selector: string) => post({ selector, type: "select-selector" }),
@@ -148,10 +148,10 @@ const ReviewEntry = (p: Props): ReactElement => {
       aria-label={count === null ? "Review" : `Review, ${count} findings`}
       aria-pressed={open}
       aria-expanded={open}
-      disabled={!p.directionId}
+      disabled={!props.directionId}
       data-tip={entryTip(open, count, review.stale)}
       data-tip-align="end"
-      onClick={() => setOpen((v) => !v)}
+      onClick={() => setOpen((value) => !value)}
     >
       {review.busy && !open ? (
         <span className="spinner" />
@@ -177,9 +177,9 @@ const ReviewEntry = (p: Props): ReactElement => {
         <Suspense fallback={null}>
           <ReviewPanel
             review={review}
-            frameLabel={labelOf(p.frame)}
-            live={p.live}
-            running={p.running === true}
+            frameLabel={labelOf(props.frame)}
+            live={props.live}
+            running={props.running === true}
             canAsk={Boolean(ask)}
             onSelect={select}
             onAsk={(finding) => ask?.(finding.ask)}
@@ -187,11 +187,11 @@ const ReviewEntry = (p: Props): ReactElement => {
           >
             <Suspense fallback={null}>
               <CritiquePanel
-                directionId={p.directionId}
-                frameId={p.frame.id}
-                isLive={p.live}
+                directionId={props.directionId}
+                frameId={props.frame.id}
+                isLive={props.live}
                 onSelect={selectSelector}
-                projectId={p.projectId}
+                projectId={props.projectId}
               />
             </Suspense>
           </ReviewPanel>

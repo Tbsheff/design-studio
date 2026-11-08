@@ -10,7 +10,7 @@ import type {
 } from "@design-studio/contracts/export";
 import { Icon, useModalDialog } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { downloadBlob } from "../../domain/format.js";
@@ -30,6 +30,7 @@ import type { ExportTarget, FrameChoice } from "./export-api.js";
 
 import "../../styles/export.css";
 import { useCopied } from "./use-copied.js";
+import { useEditors } from "./use-editors.js";
 
 export interface Props {
   target: ExportTarget;
@@ -97,6 +98,7 @@ const FORMATS: FormatInfo[] = [
 ];
 
 const MOBILE_MAX = 600;
+
 const MOBILE_FRAME = { height: 844, name: "Mobile", width: 390 };
 
 type Status =
@@ -106,10 +108,10 @@ type Status =
   | { kind: "error"; text: string };
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
-  ArrowDown: (i, n) => (i + 1) % n,
-  ArrowLeft: (i, n) => (i - 1 + n) % n,
-  ArrowRight: (i, n) => (i + 1) % n,
-  ArrowUp: (i, n) => (i - 1 + n) % n,
+  ArrowDown: (index, count) => (index + 1) % count,
+  ArrowLeft: (index, count) => (index - 1 + count) % count,
+  ArrowRight: (index, count) => (index + 1) % count,
+  ArrowUp: (index, count) => (index - 1 + count) % count,
 };
 
 const onRadioKey = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -137,16 +139,16 @@ const onRadioKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   next?.click();
 };
 
-const Segmented = <T extends string | number>({
+const Segmented = <Value extends string | number>({
   label,
   value,
   options,
   onChange,
 }: {
   label: string;
-  value: T;
-  options: { id: T; label: string; icon?: IconName }[];
-  onChange: (value: T) => void;
+  value: Value;
+  options: { id: Value; label: string; icon?: IconName }[];
+  onChange: (value: Value) => void;
 }): ReactElement => (
   <div
     className="segmented export-seg"
@@ -170,6 +172,7 @@ const Segmented = <T extends string | number>({
     ))}
   </div>
 );
+
 const useElapsed = (status: Status): number => {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -440,7 +443,7 @@ const useExportOptions = (target: ExportTarget): Options => {
   );
 
   const [picked, setPicked] = useState<Set<string>>(
-    () => new Set(frames.map((f) => f.id))
+    () => new Set(frames.map((frame) => frame.id))
   );
 
   const selectionOnly =
@@ -459,7 +462,9 @@ const useExportOptions = (target: ExportTarget): Options => {
       setScope(next);
       saveExportPrefs({ format, scale, scope: next });
     },
-    chosen: frames.filter((f) => picked.has(f.id)).map((f) => f.frame),
+    chosen: frames
+      .filter((frame) => picked.has(frame.id))
+      .map((choice) => choice.frame),
     format,
     frames,
     needsFrames: format !== "zip" && !selectionOnly,
@@ -483,41 +488,12 @@ const useExportOptions = (target: ExportTarget): Options => {
   };
 };
 
-const useEditors = (active: boolean): EditorInfo[] => {
-  const [editors, setEditors] = useState<EditorInfo[]>([]);
-  useEffect(() => {
-    if (!active || editors.length > 0) {
-      return;
-    }
-
-    let live = true;
-    const load = async (): Promise<void> => {
-      try {
-        const list = await exportApi.editors();
-
-        if (live) {
-          setEditors(list);
-        }
-      } catch {
-        return;
-      }
-    };
-    void load();
-
-    return (): void => {
-      live = false;
-    };
-  }, [active, editors.length]);
-
-  return editors;
-};
-
 const exportOnce = async (
   target: ExportTarget,
   options: Options
 ): Promise<Status> => {
   const selectionFrame =
-    options.frames.find((f) => f.active)?.frame ?? options.chosen[0];
+    options.frames.find((frame) => frame.active)?.frame ?? options.chosen[0];
 
   const useSelection =
     options.selectionOnly && target.selector && selectionFrame;
@@ -542,7 +518,7 @@ const exportOnce = async (
 };
 
 const handoffFrames = (chosen: ExportFrame[]): ExportFrame[] =>
-  chosen.some((f) => f.width <= MOBILE_MAX)
+  chosen.some((frame) => frame.width <= MOBILE_MAX)
     ? chosen
     : [...chosen, MOBILE_FRAME];
 
@@ -597,7 +573,10 @@ const OptionFields = ({ options }: { options: Options }): ReactElement => {
           <Segmented
             label="Scale"
             value={scale}
-            options={EXPORT_SCALES.map((s) => ({ id: s, label: `${s}×` }))}
+            options={EXPORT_SCALES.map((scale) => ({
+              id: scale,
+              label: `${scale}×`,
+            }))}
             onChange={options.chooseScale}
           />
           {first && !selectionOnly ? (
@@ -688,7 +667,7 @@ export const ExportDialog = ({ target, onClose }: Props): ReactElement => {
   const dialog = useModalDialog(() => (busy ? false : onClose()));
 
   const info =
-    FORMATS.find((f) => f.id === format) ?? (FORMATS[0] as FormatInfo);
+    FORMATS.find((info) => info.id === format) ?? (FORMATS[0] as FormatInfo);
 
   const canRun = !busy && (!options.needsFrames || options.chosen.length > 0);
   const shown = format === "handoff" ? handoff : null;
@@ -751,10 +730,10 @@ export const ExportDialog = ({ target, onClose }: Props): ReactElement => {
         <Segmented
           label="Format"
           value={format}
-          options={FORMATS.map((f) => ({
-            icon: f.icon,
-            id: f.id,
-            label: f.label,
+          options={FORMATS.map((format) => ({
+            icon: format.icon,
+            id: format.id,
+            label: format.label,
           }))}
           onChange={(next) => {
             options.choose(next);

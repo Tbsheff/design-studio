@@ -23,6 +23,7 @@ import { catchFailure, ignoreFailure, settleValue } from "./settle.js";
 import "../../styles/export.css";
 import "../../styles/share.css";
 import { shareApi, sharesChanged } from "./share-api.js";
+import { linkMeta } from "./share-text.js";
 
 export interface ShareTarget {
   projectId: string;
@@ -65,30 +66,6 @@ const EXPIRIES: { id: ShareExpiryHours; label: string }[] = [
 
 const sessionTokens = new Map<string, string>();
 
-const endsText = (link: ShareLink, now: number): string => {
-  if (link.revokedAt !== null) {
-    return "Turned off";
-  }
-
-  const left = link.expiresAt - now;
-
-  if (left <= 0) {
-    return "Ended";
-  }
-
-  const hours = Math.round(left / 3_600_000);
-
-  if (hours >= 48) {
-    return `Ends in ${Math.round(hours / 24)} days`;
-  }
-
-  if (hours >= 1) {
-    return `Ends in ${hours} h`;
-  }
-
-  return `Ends in ${Math.max(1, Math.round(left / 60_000))} min`;
-};
-
 const LinkUrls = ({
   token,
   server,
@@ -123,7 +100,7 @@ const offNote = (
   links: ShareLink[],
   server: ShareServerState
 ): string | null => {
-  if (!links.some((l) => !l.active)) {
+  if (!links.some((link) => !link.active)) {
     return null;
   }
 
@@ -131,7 +108,7 @@ const offNote = (
 };
 
 const hiddenNote = (links: ShareLink[]): string | null =>
-  links.some((l) => l.active && !sessionTokens.has(l.id))
+  links.some((link) => link.active && !sessionTokens.has(link.id))
     ? "A link shows its address only when you make it. To copy it again, make a new link."
     : null;
 
@@ -185,21 +162,6 @@ const CursorSwitch = ({
     />
   </div>
 );
-
-const linkMeta = (link: ShareLink, now: number): string => {
-  const parts = [
-    `${link.frames.length} frame${link.frames.length === 1 ? "" : "s"}`,
-    `${link.comments} comment${link.comments === 1 ? "" : "s"}`,
-  ];
-
-  if (link.live && link.active) {
-    parts.unshift(
-      `Live · ${link.viewers} viewer${link.viewers === 1 ? "" : "s"}`
-    );
-  }
-
-  return [...parts, endsText(link, now)].join(" · ");
-};
 
 interface RowProps {
   server: ShareServerState;
@@ -350,7 +312,7 @@ const useShares = (projectId: string) => {
   useEffect(() => {
     void catchFailure(reload(), (failure) => setError(errorText(failure)));
   }, [reload]);
-  const watching = links.some((l) => l.live && l.active);
+  const watching = links.some((link) => link.live && link.active);
   useEffect(() => {
     if (!watching) {
       return;
@@ -395,7 +357,7 @@ const useCopyNew = (links: ShareLink[], server: ShareServerState) => {
       !pending ||
       !token ||
       !server.localUrl ||
-      !links.some((l) => l.id === pending)
+      !links.some((link) => link.id === pending)
     ) {
       return;
     }
@@ -417,7 +379,7 @@ const ExpiryPicker = ({
   onChange,
 }: {
   value: ShareExpiryHours;
-  onChange: (v: ShareExpiryHours) => void;
+  onChange: (value: ShareExpiryHours) => void;
 }) => (
   <div
     className="segmented export-seg"
@@ -500,7 +462,7 @@ const LinkShare = ({
   );
 
   const [picked, setPicked] = useState<Set<string>>(
-    () => new Set(frames.slice(0, SHARE_MAX_FRAMES).map((f) => f.id))
+    () => new Set(frames.slice(0, SHARE_MAX_FRAMES).map((choice) => choice.id))
   );
 
   const [expiry, setExpiry] = useState<ShareExpiryHours>(
@@ -510,10 +472,13 @@ const LinkShare = ({
   const [liveView, setLiveView] = useState(false);
   const shares = useShares(target.projectId);
   const now = Date.now();
-  const chosenChoices = frames.filter((f) => picked.has(f.id));
-  const chosen = chosenChoices.map((f) => f.frame);
-  const live = shares.links.filter((l) => l.active);
-  const shown = [...live, ...shares.links.filter((l) => !l.active).slice(0, 3)];
+  const chosenChoices = frames.filter((frame) => picked.has(frame.id));
+  const chosen = chosenChoices.map((chosenChoice) => chosenChoice.frame);
+  const live = shares.links.filter((link) => link.active);
+  const shown = [
+    ...live,
+    ...shares.links.filter((link) => !link.active).slice(0, 3),
+  ];
   const { versionId } = target;
 
   const canCreate =
@@ -548,7 +513,7 @@ const LinkShare = ({
       const made = await shareApi.create(target.projectId, {
         directionId: target.directionId,
         expiresInHours: expiry,
-        frameIds: chosenChoices.map((f) => f.id),
+        frameIds: chosenChoices.map((chosenChoice) => chosenChoice.id),
         frames: chosen,
         live: liveView,
         versionId,

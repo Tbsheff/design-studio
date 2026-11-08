@@ -147,7 +147,7 @@ const SignInStep = ({
         <input
           type="checkbox"
           checked={keyring}
-          onChange={(e) => setKeyring(e.target.checked)}
+          onChange={(changeEvent) => setKeyring(changeEvent.target.checked)}
         />
         <span>{copy.lockTheSignIn}</span>
       </label>
@@ -155,7 +155,7 @@ const SignInStep = ({
         <input
           type="checkbox"
           checked={narrow}
-          onChange={(e) => setNarrow(e.target.checked)}
+          onChange={(changeEvent) => setNarrow(changeEvent.target.checked)}
         />
         <span>{copy.askOnlyForWorkers}</span>
       </label>
@@ -193,14 +193,16 @@ const AccountStep = ({
         <select
           value={cli.accountId ?? ""}
           disabled={busy}
-          onChange={(e) =>
-            void run(() => publishApi.setAccount(e.target.value || null))
+          onChange={(changeEvent) =>
+            void run(() =>
+              publishApi.setAccount(changeEvent.target.value || null)
+            )
           }
         >
           <option value="">{copy.pickAnAccount}</option>
-          {cli.accounts.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
+          {cli.accounts.map((first) => (
+            <option key={first.id} value={first.id}>
+              {first.name}
             </option>
           ))}
         </select>

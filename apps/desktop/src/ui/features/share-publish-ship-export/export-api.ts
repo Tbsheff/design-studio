@@ -25,7 +25,8 @@ import {
 } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 
-const p = (pid: string): string => `/api/projects/${encodeURIComponent(pid)}`;
+const item = (pid: string): string =>
+  `/api/projects/${encodeURIComponent(pid)}`;
 const PREFS_KEY = "design-studio.export.v1";
 const OPEN_EVENT = "studio:open-export";
 
@@ -100,14 +101,14 @@ const exportApi = {
   ): Promise<void> => {
     await sendJson(
       "POST",
-      `${p(pid)}/d/${encodeURIComponent(did)}/open-in-editor`,
+      `${item(pid)}/d/${encodeURIComponent(did)}/open-in-editor`,
       file ? { editor, file } : { editor }
     );
   },
   revealHandoff: async (pid: string, folder: string): Promise<void> => {
     await sendJson(
       "POST",
-      `${p(pid)}/handoff/${encodeURIComponent(folder)}/reveal`,
+      `${item(pid)}/handoff/${encodeURIComponent(folder)}/reveal`,
       {}
     );
   },

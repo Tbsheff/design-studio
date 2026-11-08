@@ -7,7 +7,7 @@ import { copy } from "./copy.js";
 
 interface Props {
   errors: BuildError[];
-  onSendToAgent: (e: BuildError) => void;
+  onSendToAgent: (buildError: BuildError) => void;
   onClear: () => void;
   pane?: string;
 }
@@ -22,17 +22,23 @@ const DEV_NOISE = [
   /\bnext-dev-overlay\b|\b__nextjs_original-stack-frame/,
 ];
 
-const isDevNoise = (e: BuildError): boolean =>
-  e.source === "console" &&
-  DEV_NOISE.some((pattern) => pattern.test(e.message));
+const isDevNoise = (buildError: BuildError): boolean =>
+  buildError.source === "console" &&
+  DEV_NOISE.some((pattern) => pattern.test(buildError.message));
 
-const countText = (n: number): string => (n === 1 ? "1 error" : `${n} errors`);
+const countText = (count: number): string =>
+  count === 1 ? "1 error" : `${count} errors`;
 
-const fixPrompt = (e: BuildError): string => {
-  const where = e.file ? ` in ${e.file}${e.line ? `:${e.line}` : ""}` : "";
-  const what = e.source === "build" ? "build error" : `${e.source} error`;
+const fixPrompt = (buildError: BuildError): string => {
+  const where = buildError.file
+    ? ` in ${buildError.file}${buildError.line ? `:${buildError.line}` : ""}`
+    : "";
+  const what =
+    buildError.source === "build"
+      ? "build error"
+      : `${buildError.source} error`;
 
-  return `Fix this ${what}${where}:\n\n${e.message}`;
+  return `Fix this ${what}${where}:\n\n${buildError.message}`;
 };
 
 const ErrorsChip = ({
@@ -81,7 +87,7 @@ const ErrorsPanel = ({
       setOpen(false);
     }
   }, [pane]);
-  const shown = errors.filter((e) => !isDevNoise(e));
+  const shown = errors.filter((buildError) => !isDevNoise(buildError));
 
   if (shown.length === 0) {
     return null;
@@ -116,23 +122,23 @@ const ErrorsPanel = ({
         </button>
       </div>
       <ul className="error-list">
-        {shown.map((e) => (
-          <li key={e.id}>
+        {shown.map((buildError) => (
+          <li key={buildError.id}>
             <div className="row between">
-              <span className="badge fail">{e.source}</span>
+              <span className="badge fail">{buildError.source}</span>
               <button
                 className="btn small has-icon"
-                onClick={() => onSendToAgent(e)}
+                onClick={() => onSendToAgent(buildError)}
               >
                 <Icon name="sparkle" size={14} />
                 {copy.sendToAgent}
               </button>
             </div>
-            <div className="mono error-msg">{e.message}</div>
-            {e.file && (
+            <div className="mono error-msg">{buildError.message}</div>
+            {buildError.file && (
               <div className="mono error-loc">
-                {e.file}
-                {e.line ? `:${e.line}` : ""}
+                {buildError.file}
+                {buildError.line ? `:${buildError.line}` : ""}
               </div>
             )}
           </li>

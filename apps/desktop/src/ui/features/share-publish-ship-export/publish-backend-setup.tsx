@@ -143,8 +143,8 @@ const BackendSetup = ({
       )}
       {backend.steps.length > 0 && (
         <ol className="publish-setup-steps" aria-label={copy.setupSteps}>
-          {backend.steps.map((s) => (
-            <StepRow key={s.id} step={s} />
+          {backend.steps.map((setupStep) => (
+            <StepRow key={setupStep.id} step={setupStep} />
           ))}
         </ol>
       )}

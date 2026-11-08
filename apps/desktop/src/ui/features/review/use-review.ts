@@ -37,7 +37,7 @@ const side = (value: number): number =>
 const frameKey = (directionId: string | null, frame: CanvasFrame): string =>
   `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
 
-const useLatest = <T>(value: T): RefObject<T> => {
+const useLatest = <Value>(value: Value): RefObject<Value> => {
   const ref = useRef(value);
   ref.current = value;
 

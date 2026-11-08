@@ -62,7 +62,9 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
                 placeholder={copy.fromGitUser}
                 spellCheck={false}
                 autoComplete="off"
-                onChange={(e) => set({ user: e.target.value })}
+                onChange={(changeEvent) =>
+                  set({ user: changeEvent.target.value })
+                }
               />
             </label>
             <label className="field">
@@ -73,7 +75,9 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
                 placeholder={copy.qa1234}
                 spellCheck={false}
                 autoComplete="off"
-                onChange={(e) => set({ issueId: e.target.value })}
+                onChange={(changeEvent) =>
+                  set({ issueId: changeEvent.target.value })
+                }
               />
             </label>
           </div>
@@ -84,7 +88,9 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
               value={draft.branchTemplate}
               spellCheck={false}
               autoComplete="off"
-              onChange={(e) => set({ branchTemplate: e.target.value })}
+              onChange={(changeEvent) =>
+                set({ branchTemplate: changeEvent.target.value })
+              }
             />
           </label>
           <label className="field">
@@ -94,7 +100,9 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
               rows={5}
               value={draft.bodyTemplate}
               spellCheck={false}
-              onChange={(e) => set({ bodyTemplate: e.target.value })}
+              onChange={(changeEvent) =>
+                set({ bodyTemplate: changeEvent.target.value })
+              }
             />
             <small className="field-help">
               {copy.placeholders}{" "}

@@ -86,7 +86,9 @@ const CheckScreenshot = ({
 const SHOT_SUFFIX = /-(?:desktop|tablet|mobile)\.png$/;
 
 const directionOf = (results: RenderCheckResult[] | null): string | null => {
-  const shot = results?.find((r) => r.screenshotPath)?.screenshotPath;
+  const shot = results?.find(
+    (renderCheckResult) => renderCheckResult.screenshotPath
+  )?.screenshotPath;
   const name = shot?.split(/[\\/]/).pop() ?? "";
 
   return SHOT_SUFFIX.test(name) ? name.replace(SHOT_SUFFIX, "") : null;
@@ -110,9 +112,10 @@ const useOldKeys = (
       try {
         const runs = await api.listRuns(projectId);
         const run = runs.find(
-          (r) =>
-            r.directionId === did &&
-            (r.finalCheck as FinalCheckWithBaseline | undefined)?.baseline
+          (runSummary) =>
+            runSummary.directionId === did &&
+            (runSummary.finalCheck as FinalCheckWithBaseline | undefined)
+              ?.baseline
         );
 
         if (alive) {
@@ -161,11 +164,13 @@ const hideOld = (
 
   const shown = (results ?? []).map((result) => ({
     layout: (result.layout ?? []).filter(
-      (f) => f.severity !== "error" || keep(layoutKey(result.viewport, f))
+      (layoutFinding) =>
+        layoutFinding.severity !== "error" ||
+        keep(layoutKey(result.viewport, layoutFinding))
     ),
     overflow: result.horizontalOverflow && keep(`${result.viewport}|overflow`),
-    problems: [...result.pageErrors, ...result.consoleErrors].filter((p) =>
-      keep(consoleKey(result.viewport, p))
+    problems: [...result.pageErrors, ...result.consoleErrors].filter((item) =>
+      keep(consoleKey(result.viewport, item))
     ),
     result,
   }));
@@ -203,77 +208,87 @@ const RenderCheckPanel = ({
             {copy.oldHidden}
           </div>
         )}
-        {shown.map(({ result: r, problems, layout, overflow }) => {
-          const ok = problems.length === 0 && !overflow;
+        {shown.map(
+          ({ result: renderCheckResult, problems, layout, overflow }) => {
+            const ok = problems.length === 0 && !overflow;
 
-          const layoutTotal = Math.max(
-            layout.length,
-            (r.layoutTotal ?? 0) - ((r.layout ?? []).length - layout.length)
-          );
+            const layoutTotal = Math.max(
+              layout.length,
+              (renderCheckResult.layoutTotal ?? 0) -
+                ((renderCheckResult.layout ?? []).length - layout.length)
+            );
 
-          return (
-            <div key={`${r.viewport}-${r.width}`} className="check-row">
-              <div className="row">
-                <span className={`badge ${ok ? "ok" : "fail"}`}>
-                  {ok ? "Pass" : "Fail"}
-                </span>
-                <span>
-                  {r.viewport === "desktop"
-                    ? "Desktop"
-                    : r.viewport === "tablet"
-                      ? "Tablet"
-                      : "Mobile"}
-                </span>
-                <span className="muted num">
-                  {r.width}
-                  {copy.times}
-                  {r.height}
-                </span>
-                {overflow && (
-                  <span className="badge warn">{copy.horizontalOverflow}</span>
-                )}
-                {layout.length > 0 && (
-                  <span className="badge warn">
-                    {layoutTotal}
-                    {copy.layout} {layoutTotal === 1 ? "issue" : "issues"}
+            return (
+              <div
+                key={`${renderCheckResult.viewport}-${renderCheckResult.width}`}
+                className="check-row"
+              >
+                <div className="row">
+                  <span className={`badge ${ok ? "ok" : "fail"}`}>
+                    {ok ? "Pass" : "Fail"}
                   </span>
+                  <span>
+                    {renderCheckResult.viewport === "desktop"
+                      ? "Desktop"
+                      : renderCheckResult.viewport === "tablet"
+                        ? "Tablet"
+                        : "Mobile"}
+                  </span>
+                  <span className="muted num">
+                    {renderCheckResult.width}
+                    {copy.times}
+                    {renderCheckResult.height}
+                  </span>
+                  {overflow && (
+                    <span className="badge warn">
+                      {copy.horizontalOverflow}
+                    </span>
+                  )}
+                  {layout.length > 0 && (
+                    <span className="badge warn">
+                      {layoutTotal}
+                      {copy.layout} {layoutTotal === 1 ? "issue" : "issues"}
+                    </span>
+                  )}
+                </div>
+                {layout.length > 0 && (
+                  <ul className="check-errors check-layout">
+                    {layout.map((layoutFinding, index) => (
+                      <li key={index}>
+                        <strong>{layoutFinding.kind}</strong>{" "}
+                        <code>
+                          {layoutFinding.source ?? layoutFinding.selector}
+                        </code>
+                        {copy.colon}
+                        {layoutFinding.detail}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {problems.length > 0 && (
+                  <ul className="check-errors">
+                    {problems.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+                {renderCheckResult.screenshotPath && (
+                  <CheckScreenshot
+                    projectId={projectId}
+                    filePath={renderCheckResult.screenshotPath}
+                    label={
+                      renderCheckResult.viewport === "desktop"
+                        ? "Desktop"
+                        : renderCheckResult.viewport === "tablet"
+                          ? "Tablet"
+                          : "Mobile"
+                    }
+                  />
                 )}
               </div>
-              {layout.length > 0 && (
-                <ul className="check-errors check-layout">
-                  {layout.map((f, i) => (
-                    <li key={i}>
-                      <strong>{f.kind}</strong>{" "}
-                      <code>{f.source ?? f.selector}</code>
-                      {copy.colon}
-                      {f.detail}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {problems.length > 0 && (
-                <ul className="check-errors">
-                  {problems.map((p, i) => (
-                    <li key={i}>{p}</li>
-                  ))}
-                </ul>
-              )}
-              {r.screenshotPath && (
-                <CheckScreenshot
-                  projectId={projectId}
-                  filePath={r.screenshotPath}
-                  label={
-                    r.viewport === "desktop"
-                      ? "Desktop"
-                      : r.viewport === "tablet"
-                        ? "Tablet"
-                        : "Mobile"
-                  }
-                />
-              )}
-            </div>
-          );
-        })}
+            );
+          }
+        )}
       </div>
     </div>
   );

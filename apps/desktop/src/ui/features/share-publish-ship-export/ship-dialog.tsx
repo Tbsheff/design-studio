@@ -1,12 +1,7 @@
-import {
-  renderBranchName,
-  renderShipTemplate,
-} from "@design-studio/contracts/ship";
 import type {
   ShipFile,
   ShipMode,
   ShipPrepare,
-  ShipRequest,
   ShipResult,
 } from "@design-studio/contracts/ship";
 import { CopyButton, Icon, UiSelect, useModalDialog } from "@design-studio/ui";
@@ -19,79 +14,27 @@ import { settle } from "./settle.js";
 
 import "../../styles/ship.css";
 import { shipApi } from "./ship-api.js";
+import {
+  formatFact,
+  freshDraft,
+  shippable,
+  STATUS_LETTER,
+  MODES,
+  modeBlock,
+  FIRST_COMMIT,
+  conflictHint,
+  fieldsOf,
+  shipRequestOf,
+  leadText,
+  footNote,
+  actionLabel,
+} from "./ship-model.js";
+import type { Draft, Fields } from "./ship-model.js";
 
 export interface Props {
   projectId: string;
   onClose: () => void;
 }
-
-const STATUS_LETTER: Record<ShipFile["status"], string> = {
-  added: "A",
-  deleted: "D",
-  modified: "M",
-};
-
-const MODES: { id: ShipMode; label: string; hint: string }[] = [
-  {
-    hint: "Commit on a new local branch. Nothing leaves this computer.",
-    id: "branch",
-    label: "Branch only",
-  },
-  {
-    hint: "Commit, then push the branch to the remote. No force push.",
-    id: "push",
-    label: "Push branch",
-  },
-  {
-    hint: "Commit, push, then run gh pr create.",
-    id: "pr",
-    label: "Open pull request",
-  },
-];
-
-interface Draft {
-  files: Set<string>;
-  branch: string | null;
-  commitMessage: string | null;
-  title: string | null;
-  body: string | null;
-  issue: string;
-  mode: ShipMode;
-}
-
-const shippable = (file: ShipFile): boolean => !file.refused && !file.conflict;
-
-const freshDraft = (plan: ShipPrepare, mode: ShipMode): Draft => ({
-  body: null,
-  branch: null,
-  commitMessage: null,
-  files: new Set(plan.files.filter(shippable).map((f) => f.path)),
-  issue: plan.settings.issueId,
-  mode,
-  title: null,
-});
-
-const modeBlock = (plan: ShipPrepare, mode: ShipMode): string | null => {
-  const { repo } = plan;
-
-  if (!repo || mode === "branch") {
-    return null;
-  }
-
-  if (!repo.remote) {
-    return "The repo has no remote.";
-  }
-
-  if (mode === "pr" && !repo.gh) {
-    return "Install the GitHub CLI (gh) to open pull requests.";
-  }
-
-  if (mode === "pr" && !repo.github) {
-    return "The remote is not on GitHub.";
-  }
-
-  return null;
-};
 
 const DiffView = ({ file }: { file: ShipFile | null }) => {
   if (!file) {
@@ -122,9 +65,9 @@ const DiffView = ({ file }: { file: ShipFile | null }) => {
         </div>
       )}
       <pre>
-        {lines.map((line, i) => (
+        {lines.map((line, index) => (
           <span
-            key={i}
+            key={index}
             className={
               line.startsWith("+")
                 ? "add"
@@ -145,35 +88,6 @@ const DiffView = ({ file }: { file: ShipFile | null }) => {
       )}
     </div>
   );
-};
-
-const footNote = (plan: ShipPrepare | null): string => {
-  const format = plan?.format;
-
-  const hooks =
-    format && format.skipped.length > 0
-      ? `Repo hooks skipped (${format.skipped.join(", ")}).`
-      : "Git hooks do not run.";
-
-  if (!format) {
-    return `${hooks} .env files, secrets and node_modules never ship.`;
-  }
-
-  return format.tool
-    ? `Formats with ${format.tool} first. ${hooks}`
-    : `No formatter found, so files ship unformatted. ${hooks}`;
-};
-
-const formatFact = (format: NonNullable<ShipResult["format"]>): string => {
-  if (!format.tool) {
-    return "Not formatted (no biome or prettier config)";
-  }
-
-  const count = format.formatted.length;
-
-  return count === 0
-    ? `${format.tool}: no change needed`
-    : `${format.tool} reformatted ${count === 1 ? "1 file" : `${count} files`}`;
 };
 
 const ResultView = ({
@@ -255,94 +169,6 @@ const ResultView = ({
   </>
 );
 
-interface Fields {
-  title: string;
-  branch: string;
-  body: string;
-  commitMessage: string;
-}
-
-const fieldsOf = (plan: ShipPrepare, draft: Draft): Fields => {
-  const title = draft.title ?? plan.defaults.title;
-
-  const vars = {
-    ...plan.vars,
-    files: plan.files.filter((f) => draft.files.has(f.path)).map((f) => f.path),
-    issue: draft.issue,
-    title,
-  };
-
-  return {
-    body: draft.body ?? renderShipTemplate(plan.settings.bodyTemplate, vars),
-    branch:
-      draft.branch ?? renderBranchName(plan.settings.branchTemplate, vars),
-    commitMessage: draft.commitMessage ?? plan.defaults.commitMessage,
-    title,
-  };
-};
-
-const conflictHint = (plan: ShipPrepare): string => {
-  if (plan.base?.kind === "last-ship") {
-    return "Your checked-out commit does not have the last ship yet, so some files differ from this base. Merge that branch and pull, or pick “When attached” to ship all studio changes again.";
-  }
-
-  return "Some files have your own changes that differ from the studio base. They cannot ship until you commit or undo them. Pick a file to see why.";
-};
-
-const leadText = (plan: ShipPrepare | null): string => {
-  if (!plan?.repo) {
-    return "Commit studio changes to a new branch in your repo.";
-  }
-
-  return `Makes a new branch from ${plan.repo.branch ?? plan.repo.head.slice(0, 7)} in ${plan.repo.root}. Your checked-out branch, files and index do not change.`;
-};
-
-const shipRequestOf = (
-  plan: ShipPrepare | null,
-  draft: Draft | null,
-  fields: Fields | null
-): ShipRequest | null => {
-  if (!plan?.base || !plan.headVersionId || plan.blocked || !draft || !fields) {
-    return null;
-  }
-
-  if (
-    draft.files.size === 0 ||
-    !fields.branch.trim() ||
-    !fields.commitMessage.trim() ||
-    modeBlock(plan, draft.mode)
-  ) {
-    return null;
-  }
-
-  const files = plan.files
-    .filter((f) => draft.files.has(f.path))
-    .map((f) => f.path);
-
-  return {
-    baseVersionId: plan.base.versionId,
-    body: fields.body,
-    branch: fields.branch.trim(),
-    commitMessage: fields.commitMessage,
-    files,
-    headVersionId: plan.headVersionId,
-    mode: draft.mode,
-    title: fields.title,
-  };
-};
-
-const actionLabel = (mode: ShipMode): string => {
-  if (mode === "pr") {
-    return "Open pull request";
-  }
-
-  if (mode === "push") {
-    return "Push branch";
-  }
-
-  return "Create branch";
-};
-
 const usePlan = (projectId: string, baseId: string | undefined) => {
   const [plan, setPlan] = useState<ShipPrepare | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -422,7 +248,9 @@ const FileList = ({
         </li>
       ))}
     </ul>
-    <DiffView file={plan.files.find((f) => f.path === focus) ?? null} />
+    <DiffView
+      file={plan.files.find((shipFile) => shipFile.path === focus) ?? null}
+    />
   </div>
 );
 
@@ -481,7 +309,7 @@ const ShipFields = ({
         placeholder={copy.qa1234}
         spellCheck={false}
         autoComplete="off"
-        onChange={(e) => patch({ issue: e.target.value })}
+        onChange={(changeEvent) => patch({ issue: changeEvent.target.value })}
       />
     </label>
     <label className="field">
@@ -491,7 +319,7 @@ const ShipFields = ({
         value={fields.branch}
         spellCheck={false}
         autoComplete="off"
-        onChange={(e) => patch({ branch: e.target.value })}
+        onChange={(changeEvent) => patch({ branch: changeEvent.target.value })}
       />
     </label>
     <label className="field ship-wide">
@@ -500,7 +328,9 @@ const ShipFields = ({
         className="mono"
         rows={3}
         value={fields.commitMessage}
-        onChange={(e) => patch({ commitMessage: e.target.value })}
+        onChange={(changeEvent) =>
+          patch({ commitMessage: changeEvent.target.value })
+        }
       />
     </label>
     <ModePicker
@@ -514,7 +344,9 @@ const ShipFields = ({
           <span>{copy.pullRequestTitle}</span>
           <input
             value={fields.title}
-            onChange={(e) => patch({ title: e.target.value })}
+            onChange={(changeEvent) =>
+              patch({ title: changeEvent.target.value })
+            }
           />
         </label>
         <label className="field ship-wide">
@@ -523,15 +355,15 @@ const ShipFields = ({
             className="mono"
             rows={6}
             value={fields.body}
-            onChange={(e) => patch({ body: e.target.value })}
+            onChange={(changeEvent) =>
+              patch({ body: changeEvent.target.value })
+            }
           />
         </label>
       </>
     )}
   </div>
 );
-
-const FIRST_COMMIT = 'git init && git add -A && git commit -m "First commit"';
 
 const ShipEmpty = ({ text }: { text: string | null }) => (
   <div className="ship-empty" role="status">
@@ -588,7 +420,10 @@ const PlanView = ({
     return <ShipEmpty text={plan.blocked} />;
   }
 
-  const bases = plan.bases.map((b) => ({ label: b.title, value: b.versionId }));
+  const bases = plan.bases.map((second) => ({
+    label: second.title,
+    value: second.versionId,
+  }));
 
   return (
     <>
@@ -615,7 +450,7 @@ const PlanView = ({
           onToggle={toggle}
         />
       )}
-      {plan.files.some((f) => f.conflict) && (
+      {plan.files.some((shipFile) => shipFile.conflict) && (
         <p className="ship-warn">{conflictHint(plan)}</p>
       )}
       {draft && fields && !plan.blocked && (
@@ -681,7 +516,11 @@ export const ShipDialog = ({ projectId, onClose }: Props) => {
       aria-label={copy.shipAsA}
       onMouseDown={dialog.onMouseDown}
     >
-      <form className="modal-form" onSubmit={(e) => void submit(e)} noValidate>
+      <form
+        className="modal-form"
+        onSubmit={(submitEvent) => void submit(submitEvent)}
+        noValidate
+      >
         <div className="modal-head">
           <div className="titles">
             <h2>{copy.shipAsA}</h2>

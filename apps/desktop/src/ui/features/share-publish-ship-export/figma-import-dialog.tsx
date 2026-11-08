@@ -209,8 +209,8 @@ const JsonPaste = ({
           placeholder={copy.nodes}
           aria-invalid={bad}
           aria-describedby="fgi-json-help"
-          onChange={(e) => {
-            setText(e.target.value);
+          onChange={(changeEvent) => {
+            setText(changeEvent.target.value);
             setBad(false);
           }}
         />

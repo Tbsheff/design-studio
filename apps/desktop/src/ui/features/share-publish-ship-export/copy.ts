@@ -134,7 +134,7 @@ const copy = {
   thisComputer: "This computer",
   unpublish: "Unpublish",
   applyJson: "Use JSON",
-  v: "· v ",
+  versionPrefix: "· v ",
   versions: "Published versions",
   versions2: "Versions ",
   versionsTip: "Published versions; make an older one live",

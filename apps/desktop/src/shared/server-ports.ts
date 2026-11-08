@@ -388,6 +388,31 @@ interface PreviewService {
   ) => Promise<[file: string, deps: string[]][]>;
 }
 
+interface DiffResult {
+  png: Buffer;
+  changedPct: number;
+}
+
+type ThumbnailDiffArguments = [
+  projectId: string,
+  beforeId: string,
+  afterId: string,
+  viewport: { width: number; height: number },
+  signal?: AbortSignal,
+];
+
+interface ThumbnailService {
+  schedule: (projectId: string) => void;
+  file: (projectId: string, versionId: string) => Promise<Buffer>;
+  version: (
+    projectId: string,
+    versionId: string,
+    signal?: AbortSignal
+  ) => Promise<Buffer>;
+  diff: (...args: ThumbnailDiffArguments) => Promise<DiffResult>;
+  idle: () => Promise<void>;
+}
+
 export type {
   ServerConfig,
   AgentRunContext,
@@ -396,6 +421,7 @@ export type {
   AxeNode,
   AxeViolation,
   DesignSystemPromptContext,
+  DiffResult,
   InspectResult,
   MentionFile,
   PeekOptions,
@@ -409,6 +435,7 @@ export type {
   RunHandle,
   SessionEndResult,
   SessionSpan,
+  ThumbnailService,
   TileRequest,
   TileResult,
   VersionStore,

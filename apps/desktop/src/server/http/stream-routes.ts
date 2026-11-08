@@ -23,8 +23,8 @@ import {
 import type { ProjectStore } from "../../shared/server-ports.js";
 import type { RecordedEvent } from "../events/index.js";
 import { EventQueue } from "../events/index.js";
-import type { StudioRuntime } from "../main/runtime.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
+import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { ApprovalFeed } from "./mcp-routes.js";
 
 const HEARTBEAT_MS = 15_000;

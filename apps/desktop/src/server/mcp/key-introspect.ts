@@ -2,7 +2,7 @@ import type { Permission } from "@design-studio/actions/_core/permissions";
 import { Effect } from "effect";
 
 import { CLOUD_ORIGIN, CloudSession } from "../cloud/index.js";
-import type { StudioRuntime } from "../main/runtime.js";
+import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { Introspect, IntrospectResult } from "./key-auth.js";
 
 const OFFLINE: IntrospectResult = { kind: "offline" };

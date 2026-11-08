@@ -17,17 +17,29 @@ import type {
 } from "@design-studio/contracts";
 import { PNG } from "pngjs";
 
-import type { PreviewService, VersionStore } from "../shared/server-ports.js";
+import type {
+  DiffResult,
+  PreviewService,
+  ThumbnailService,
+  VersionStore,
+} from "../shared/server-ports.js";
 import type { EventBus } from "./events/index.js";
 import { NotFoundError, assertSafeId } from "./platform/errors/index.js";
 import { halfSize } from "./platform/half-size/index.js";
 import { siblingWorkerFile, WorkerClient } from "./platform/process/index.js";
-import { diffMask } from "./preview/visual-diff.js";
-import type { StudioProjectStore } from "./store/projects.js";
+import {
+  THUMB_VIEWPORT,
+  diffMask,
+  toClampedViewport,
+  toDiffThumbName,
+  toVersionThumbName,
+} from "./preview/thumbs/index.js";
+import type { StudioProjectStore } from "./store/index.js";
 
 export { halfSize } from "./platform/half-size/index.js";
 
-export const THUMB_VIEWPORT = { width: 1280, height: 800 };
+export type { DiffResult, ThumbnailService } from "../shared/server-ports.js";
+
 export const THUMB_KEEP = 200;
 const THUMB_KINDS = new Set<VersionKind>([
   "init",
@@ -38,35 +50,6 @@ const THUMB_KINDS = new Set<VersionKind>([
 ]);
 const SETTLE_MS = 1500;
 const THUMB_WORKER_IDLE_MS = 30_000;
-const DIFF_LIMITS = {
-  minWidth: 320,
-  maxWidth: 2560,
-  minHeight: 320,
-  maxHeight: 1600,
-};
-
-export interface DiffResult {
-  png: Buffer;
-  changedPct: number;
-}
-
-export interface ThumbnailService {
-  schedule(projectId: string): void;
-  file(projectId: string, versionId: string): Promise<Buffer>;
-  version(
-    projectId: string,
-    versionId: string,
-    signal?: AbortSignal
-  ): Promise<Buffer>;
-  diff(
-    projectId: string,
-    beforeId: string,
-    afterId: string,
-    viewport: { width: number; height: number },
-    signal?: AbortSignal
-  ): Promise<DiffResult>;
-  idle(): Promise<void>;
-}
 
 const halfSizer = new WorkerClient<Uint8Array, Uint8Array>({
   file: siblingWorkerFile(import.meta.url, "thumbnail-worker"),
@@ -111,20 +94,6 @@ export function wantsThumbnail(event: StudioEvent): boolean {
     event.directionId === "main" &&
     THUMB_KINDS.has(event.version.meta.kind)
   );
-}
-
-export function clampViewport(
-  width: number,
-  height: number
-): { width: number; height: number } {
-  const clamp = (value: number, min: number, max: number) =>
-    Number.isFinite(value)
-      ? Math.round(Math.min(max, Math.max(min, value)))
-      : min;
-  return {
-    width: clamp(width, DIFF_LIMITS.minWidth, DIFF_LIMITS.maxWidth),
-    height: clamp(height, DIFF_LIMITS.minHeight, DIFF_LIMITS.maxHeight),
-  };
 }
 
 function abortError(): Error {
@@ -210,18 +179,6 @@ function createShotQueue() {
 }
 
 const CACHED = /^(v|vp|diff|diffp)-.+\.png$/;
-
-export function versionThumbName(versionId: string): string {
-  return `vp-${assertSafeId(versionId, "versionId")}.png`;
-}
-
-export function diffThumbName(
-  beforeId: string,
-  afterId: string,
-  viewport: { width: number; height: number }
-): string {
-  return `diffp-${assertSafeId(beforeId, "versionId")}-${assertSafeId(afterId, "versionId")}-${viewport.width}x${viewport.height}.png`;
-}
 
 function changedPage(
   project: Project,
@@ -397,7 +354,7 @@ export function createThumbnailService(deps: {
       return bytes;
     },
     async version(projectId, versionId, signal) {
-      const name = versionThumbName(versionId);
+      const name = toVersionThumbName(versionId);
       const file = path.join(thumbsDir(projectId), name);
       const cached = await readCached(file);
       if (cached) return cached;
@@ -436,8 +393,8 @@ export function createThumbnailService(deps: {
       );
     },
     async diff(projectId, beforeId, afterId, requested, signal) {
-      const viewport = clampViewport(requested.width, requested.height);
-      const name = diffThumbName(beforeId, afterId, viewport);
+      const viewport = toClampedViewport(requested.width, requested.height);
+      const name = toDiffThumbName(beforeId, afterId, viewport);
       const file = path.join(thumbsDir(projectId), name);
       const toResult = (png: Buffer): DiffResult => {
         const mask = PNG.sync.read(png);

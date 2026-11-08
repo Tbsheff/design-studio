@@ -53,8 +53,8 @@ import {
 import type { EditLinksArgs, LinkProbe } from "../canvas/links/index.js";
 import { checkDesignSystem, describeCheck } from "../design-system/check.js";
 import { prepareShip } from "../git/ship-prepare.js";
-import type { StudioRuntime } from "../main/runtime.js";
 import { runActionCaller } from "../mcp/registry.js";
+import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { TileResult } from "../preview/browser.js";
 import { reviewFrameShape, runReviewFrameTool } from "../review/agent-tool.js";
 import type { CommentStore } from "../store/comments.js";

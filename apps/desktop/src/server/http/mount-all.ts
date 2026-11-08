@@ -1,10 +1,10 @@
+import { AllActions } from "@design-studio/actions";
+import type { AnyAction } from "@design-studio/actions/_core/action";
 import type { Hono } from "hono";
 
-import type { AnyAction } from "@design-studio/actions/_core/action";
-import { AllActions } from "@design-studio/actions";
 import type { Entries } from "../handlers/_core/handler.js";
 import { ALL_ENTRIES } from "../handlers/all-entries.generated.js";
-import type { StudioRuntime } from "../main/runtime.js";
+import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import { mountActions } from "./mount.js";
 
 type Group = Readonly<Record<string, AnyAction>>;

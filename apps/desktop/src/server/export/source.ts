@@ -4,7 +4,7 @@ import type {
   ProjectStore,
   VersionStore,
 } from "../../shared/server-ports.js";
-import type { StudioRuntime } from "../main/runtime.js";
+import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 
 export interface ExportDeps {
   projects: ProjectStore;

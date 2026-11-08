@@ -63,3 +63,5 @@ const useFrameResize = (
 };
 
 export { useFrameResize };
+
+export type { ResizeStart };

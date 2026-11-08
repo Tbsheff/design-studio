@@ -14,12 +14,12 @@ import type {
   PreviewState,
   StageState,
 } from "./canvas-wiring-inputs.js";
-import { useFrameActions } from "./use-canvas-frames.js";
 import {
   useFrameChangeReset,
   useLofiSwitch,
 } from "./use-canvas-wiring-parts.js";
 import { useClickThrough } from "./use-click-through.js";
+import { useFrameActions } from "./use-frame-actions.js";
 import { useFrameLabels } from "./use-frame-labels.js";
 import { usePrototype } from "./use-prototype.js";
 

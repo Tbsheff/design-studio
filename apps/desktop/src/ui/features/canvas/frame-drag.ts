@@ -1,0 +1,227 @@
+import type { PointerEvent as ReactPointerEvent } from "react";
+
+import type { Box, CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
+import { otherFrames } from "./frame-resize-model.js";
+import { frameSnapStore } from "./frame-snap-store.js";
+import { snapOff, snapRect } from "./snap-model.js";
+
+const DRAG_THRESHOLD = 3;
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface DragState {
+  frame: CanvasFrame;
+  isActive: boolean;
+  zoom: number;
+  passive: HTMLDivElement[];
+  own: HTMLDivElement | null;
+}
+
+interface DragHost {
+  readonly artboard: () => HTMLDivElement | null;
+  readonly layout: CanvasLayout;
+  readonly onMoved: (frame: CanvasFrame, world: Point) => void;
+  readonly onTap: (frame: CanvasFrame, point: Point | null) => void;
+  readonly passive: Record<string, HTMLDivElement | null>;
+  readonly zoom: number;
+}
+
+interface DragProgress {
+  isMoved: boolean;
+  world: Point;
+}
+
+const toPointer = (
+  target: HTMLElement,
+  clientX: number,
+  clientY: number,
+  zoom: number
+): Point => {
+  const rect = target.getBoundingClientRect();
+
+  return { x: (clientX - rect.left) / zoom, y: (clientY - rect.top) / zoom };
+};
+
+const toSnapShift = (
+  isActive: boolean,
+  shiftX: number,
+  shiftY: number
+): Point => {
+  if (isActive) {
+    return { x: -shiftX, y: -shiftY };
+  }
+
+  return { x: 0, y: 0 };
+};
+
+const snapMove = (
+  state: DragState,
+  candidates: Box[],
+  delta: Point,
+  isOff: boolean
+): Point => {
+  if (isOff || candidates.length === 0) {
+    frameSnapStore.set(null);
+
+    return delta;
+  }
+
+  const { frame } = state;
+
+  const snapped = snapRect({
+    candidates,
+    rect: {
+      height: frame.height,
+      width: frame.width,
+      x: frame.x + delta.x,
+      y: frame.y + delta.y,
+    },
+    x: "move",
+    y: "move",
+    zoom: state.zoom,
+  });
+
+  const shiftX = snapped.rect.x - frame.x;
+  const shiftY = snapped.rect.y - frame.y;
+
+  frameSnapStore.set({
+    guides: snapped.guides,
+    shift: toSnapShift(state.isActive, shiftX, shiftY),
+    spacing: snapped.spacing,
+  });
+
+  return { x: shiftX, y: shiftY };
+};
+
+const toTranslate = (isClear: boolean, x: number, y: number): string => {
+  if (isClear) {
+    return "";
+  }
+
+  return `${x}px ${y}px`;
+};
+
+const placeDrag = (
+  state: DragState,
+  artboard: HTMLDivElement | null,
+  dx: number,
+  dy: number
+): void => {
+  const worldX = dx / state.zoom;
+  const worldY = dy / state.zoom;
+  const isClear = dx === 0 && dy === 0;
+
+  if (!state.isActive) {
+    if (state.own) {
+      state.own.style.translate = toTranslate(isClear, worldX, worldY);
+    }
+
+    return;
+  }
+
+  if (artboard) {
+    artboard.style.translate = toTranslate(isClear, dx, dy);
+  }
+
+  for (const element of state.passive) {
+    element.style.translate = toTranslate(isClear, -worldX, -worldY);
+  }
+};
+
+const toDragState = (host: DragHost, frame: CanvasFrame): DragState => ({
+  frame,
+  isActive: frame.id === host.layout.activeId,
+  own: host.passive[frame.id] ?? null,
+  passive: Object.values(host.passive).filter(
+    (element): element is HTMLDivElement => element !== null
+  ),
+  zoom: host.zoom,
+});
+
+interface DragSession {
+  readonly host: DragHost;
+  readonly origin: { start: Point; candidates: Box[] };
+  readonly progress: DragProgress;
+  readonly state: DragState;
+}
+
+const moveFrameDrag = (session: DragSession, event: PointerEvent): void => {
+  const { host, origin, progress, state } = session;
+  const dx = event.clientX - origin.start.x;
+  const dy = event.clientY - origin.start.y;
+
+  if (!progress.isMoved && Math.hypot(dx, dy) < DRAG_THRESHOLD) {
+    return;
+  }
+
+  if (!progress.isMoved) {
+    document.body.classList.add("frame-dragging");
+  }
+
+  progress.isMoved = true;
+  progress.world = snapMove(
+    state,
+    origin.candidates,
+    { x: dx / state.zoom, y: dy / state.zoom },
+    snapOff(event)
+  );
+  placeDrag(
+    state,
+    host.artboard(),
+    progress.world.x * state.zoom,
+    progress.world.y * state.zoom
+  );
+};
+
+const startFrameDrag = (
+  host: DragHost,
+  event: ReactPointerEvent,
+  frame: CanvasFrame,
+  point: Point | null
+): void => {
+  const target = event.currentTarget;
+  target.setPointerCapture(event.pointerId);
+  const state = toDragState(host, frame);
+  const abort = new AbortController();
+  const { signal } = abort;
+  const progress: DragProgress = { isMoved: false, world: { x: 0, y: 0 } };
+
+  const origin = {
+    candidates: otherFrames(host.layout, frame.id),
+    start: { x: event.clientX, y: event.clientY },
+  };
+
+  const end = (): void => {
+    abort.abort();
+    document.body.classList.remove("frame-dragging");
+    frameSnapStore.set(null);
+    placeDrag(state, host.artboard(), 0, 0);
+
+    if (progress.isMoved) {
+      host.onMoved(frame, progress.world);
+
+      return;
+    }
+
+    host.onTap(frame, point);
+  };
+
+  target.addEventListener(
+    "pointermove",
+    (moveEvent) => {
+      if (moveEvent instanceof PointerEvent) {
+        moveFrameDrag({ host, origin, progress, state }, moveEvent);
+      }
+    },
+    { signal }
+  );
+  target.addEventListener("pointerup", end, { signal });
+  target.addEventListener("pointercancel", end, { signal });
+};
+
+export { startFrameDrag, toPointer };
+
+export type { DragHost, Point };

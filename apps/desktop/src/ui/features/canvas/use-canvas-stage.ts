@@ -18,14 +18,11 @@ import type { ViewProps } from "./canvas-types.js";
 import { markOf, withElementMark } from "./element-mark-model.js";
 import { useFrameStates } from "./frame-states-model.js";
 import { useResetPassiveGateInFirstRender } from "./passive-mount.js";
-import {
-  unionRect,
-  useCanvasFrames,
-  useZoomInput,
-} from "./use-canvas-frames.js";
+import { unionRect, useCanvasFrames } from "./use-canvas-frames.js";
 import { useCanvasDraw } from "./use-draw-tool.js";
 import { usePanZoom } from "./use-pan-zoom.js";
 import { usePreviewUrl, useRenderCheck } from "./use-preview-url.js";
+import { useZoomInput } from "./use-zoom-input.js";
 
 type CanvasFramesState = ReturnType<typeof useCanvasFrames>;
 
@@ -104,8 +101,8 @@ const useStageViewport = (props: ViewProps): StageViewport => {
   const canvasFrames = useCanvasFrames(
     projectId,
     directionId,
-    activateOf(props.directions),
-    knownIds(props.directions)
+    activateOf(props.directions) ?? null,
+    knownIds(props.directions) ?? null
   );
 
   const { layout, active } = canvasFrames;

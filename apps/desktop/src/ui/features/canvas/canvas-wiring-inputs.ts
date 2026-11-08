@@ -7,9 +7,9 @@ import type { stageCursor, themeSwitch } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
 import type { useCanvasEdits } from "./use-canvas-edits.js";
-import type { useFrameActions } from "./use-canvas-frames.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
+import type { useFrameActions } from "./use-frame-actions.js";
 import type { useFrameLabels } from "./use-frame-labels.js";
 import type { usePrototype } from "./use-prototype.js";
 

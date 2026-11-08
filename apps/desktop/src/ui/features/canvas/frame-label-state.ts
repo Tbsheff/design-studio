@@ -4,7 +4,8 @@ import { canHideFrame, setFrameHidden } from "./canvas-frame-ops.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasDirections, Props } from "./canvas-types.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
-import type { useCanvasFrames, useFrameActions } from "./use-canvas-frames.js";
+import type { useCanvasFrames } from "./use-canvas-frames.js";
+import type { useFrameActions } from "./use-frame-actions.js";
 import type { FrameVariation } from "./variation-model.js";
 
 interface LabelInput {

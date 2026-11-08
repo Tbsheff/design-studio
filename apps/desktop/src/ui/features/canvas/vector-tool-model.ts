@@ -15,6 +15,7 @@ import type {
 } from "../../../shared/vector.js";
 import { json } from "../../api.js";
 import { IS_MAC } from "../../canvas-hook-slots.js";
+import { findElement } from "../../platform/find-element.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 
 const PREVIEW_TOOL_KEY_EVENT = "studio:preview-tool-key";
@@ -117,7 +118,7 @@ const useVectorToolKeys = (available: boolean): void => {
       if (
         event.defaultPrevented ||
         isTypingTarget(event.target) ||
-        document.querySelector(".play-bar")
+        findElement(document.body, ".play-bar")
       ) {
         return;
       }
@@ -138,7 +139,7 @@ const useVectorToolKeys = (available: boolean): void => {
       if (
         tool &&
         vectorTool.get().available &&
-        !document.querySelector(".play-bar")
+        !findElement(document.body, ".play-bar")
       ) {
         vectorTool.toggle(tool);
       }

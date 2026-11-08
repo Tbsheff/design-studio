@@ -2,6 +2,9 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { api } from "../../api.js";
+import { findElements } from "../../platform/find-element.js";
+import { startInterval } from "../../platform/interval.js";
+import type { startShareLive } from "../share-publish-ship-export/share-live.js";
 import { runOrReport } from "./settle-model.js";
 
 const WIDTH_VALUE_0_25 = 0.25;
@@ -26,6 +29,31 @@ interface PresenceInput {
   stage: () => HTMLElement | null;
 }
 
+const isFrameInView = (frame: HTMLElement, box: DOMRect): boolean => {
+  const rect = frame.getBoundingClientRect();
+
+  const widthValue =
+    Math.min(rect.right, box.right) - Math.max(rect.left, box.left);
+
+  const heightValue =
+    Math.min(rect.bottom, box.bottom) - Math.max(rect.top, box.top);
+
+  if (
+    widthValue <= 0 ||
+    heightValue <= 0 ||
+    rect.width <= 0 ||
+    rect.height <= 0
+  ) {
+    return false;
+  }
+
+  return (
+    (widthValue * heightValue) / (rect.width * rect.height) >=
+      WIDTH_VALUE_0_25 ||
+    (widthValue * heightValue) / (box.width * box.height) >= WIDTH_VALUE_0_25
+  );
+};
+
 const inViewIds = (stage: HTMLElement | null): string[] => {
   if (!stage) {
     return [];
@@ -34,47 +62,31 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
   const box = stage.getBoundingClientRect();
   const ids: string[] = [];
 
-  for (const el of stage.querySelectorAll<HTMLElement>(
+  for (const frame of findElements(
+    stage,
     ".artboard[data-frame-id], .canvas-frame[data-frame-id]"
   )) {
-    const dOMRect = el.getBoundingClientRect();
-
-    const widthValue =
-      Math.min(dOMRect.right, box.right) - Math.max(dOMRect.left, box.left);
-
-    const heightValue =
-      Math.min(dOMRect.bottom, box.bottom) - Math.max(dOMRect.top, box.top);
-
-    if (
-      widthValue <= 0 ||
-      heightValue <= 0 ||
-      dOMRect.width <= 0 ||
-      dOMRect.height <= 0
-    ) {
-      continue;
-    }
-
-    if (
-      (widthValue * heightValue) / (dOMRect.width * dOMRect.height) >=
-        WIDTH_VALUE_0_25 ||
-      (widthValue * heightValue) / (box.width * box.height) >= WIDTH_VALUE_0_25
-    ) {
-      ids.push(el.dataset.frameId as string);
+    if (isFrameInView(frame, box)) {
+      ids.push(frame.dataset.frameId as string);
     }
   }
 
-  return [...new Set(ids)].sort();
+  return [...new Set(ids)].toSorted();
 };
 
-const presenceBody = (
-  presenceInput: PresenceInput
-): {
-  activeFrameId: string;
-  directionId: string | null;
-  inView: string[];
-  liveSize: { height: number; width: number };
-  selection: { selector: string; tag: string; text: string }[];
-} => ({
+interface PresenceBody {
+  readonly activeFrameId: string;
+  readonly directionId: string | null;
+  readonly inView: string[];
+  readonly liveSize: { readonly height: number; readonly width: number };
+  readonly selection: {
+    readonly selector: string;
+    readonly tag: string;
+    readonly text: string;
+  }[];
+}
+
+const presenceBody = (presenceInput: PresenceInput): PresenceBody => ({
   activeFrameId: presenceInput.activeId,
   directionId: presenceInput.directionId,
   inView: inViewIds(presenceInput.stage()),
@@ -91,7 +103,15 @@ const presenceBody = (
     })),
 });
 
+interface ShareLiveModule {
+  readonly startShareLive: typeof startShareLive;
+}
+
+const loadShareLive = (): Promise<ShareLiveModule> =>
+  import("../share-publish-ship-export/share-live.js");
+
 const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
+  const { projectId } = presenceInputValue;
   const latest = useRef(presenceInputValue);
   useLayoutEffect(() => {
     latest.current = presenceInputValue;
@@ -114,30 +134,24 @@ const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
 
       last = key;
       sentAt = Date.now();
-      void runOrReport(
-        api.putCanvasPresence(latest.current.projectId, body),
-        () => {
-          last = "";
-        }
-      );
+      void runOrReport(api.putCanvasPresence(projectId, body), () => {
+        last = "";
+      });
     };
 
     send();
-    const timer = globalThis.setInterval(send, PRESENCE_MS);
 
-    return (): void => globalThis.clearInterval(timer);
-  }, [presenceInputValue.projectId]);
+    return startInterval(send, PRESENCE_MS);
+  }, [projectId]);
   useEffect(() => {
     let stop: (() => void) | null = null;
     let gone = false;
 
     const startLive = async (): Promise<void> => {
-      const mod = await import("../share-publish-ship-export/share-live.js");
+      const mod = await loadShareLive();
 
       if (!gone) {
-        stop = mod.startShareLive(presenceInputValue.projectId, () =>
-          latest.current.stage()
-        );
+        stop = mod.startShareLive(projectId, () => latest.current.stage());
       }
     };
 
@@ -147,7 +161,7 @@ const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
       gone = true;
       stop?.();
     };
-  }, [presenceInputValue.projectId]);
+  }, [projectId]);
 };
 
 export { inViewIds, useCanvasPresence };

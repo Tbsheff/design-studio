@@ -18,19 +18,19 @@ const OpenRailHead = ({
 
   return (
     <div className="prail-head">
-      <BrandMark />
-      <span className="prail-title">{copy.projects}</span>
       <button
         type="button"
         className="icon-btn small"
         aria-label={copy.collapseProjects}
         aria-expanded="true"
         data-tip={collapseTip}
-        data-tip-align="end"
+        data-tip-align="start"
         onClick={collapse}
       >
         <Icon name="sidebar" size={HEAD_ICON_SIZE} />
       </button>
+      <BrandMark />
+      <span className="prail-title">{copy.projects}</span>
     </div>
   );
 };

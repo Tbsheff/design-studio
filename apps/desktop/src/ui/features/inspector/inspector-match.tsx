@@ -28,17 +28,12 @@ import {
 } from "./match-candidates-model.js";
 import { KindGroup } from "./match-kind-group.js";
 import type { RowActions } from "./match-rows-model.js";
-import {
-  usePageVars,
-  toRowKey,
-  getStyles,
-  toLookup,
-  useStyleScan,
-} from "./match-scan.js";
-import type { InspectorMatchProps, Scope, Status } from "./match-scan.js";
+import { PAGE_QUERY, toLookup, toRowKey } from "./match-scan-model.js";
+import type { InspectorMatchProps, Scope, Status } from "./match-scan-model.js";
 import { ScopeToggle } from "./match-scope-toggle.js";
 import { StatusLine } from "./match-status-line.js";
 import { TokenPicker } from "./match-token-picker.js";
+import { getStyles, usePageVars, useStyleScan } from "./use-style-scan.js";
 
 const useReplace = (
   props: InspectorMatchProps,
@@ -119,13 +114,8 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
     [scope, selectors.join("\n")]
   );
 
-  const scanned = useStyleScan(
-    props.port,
-    query,
-    `${scope}|${selectors.join("\n")}`
-  );
-
-  const page = useStyleScan(props.port, {}, "page");
+  const scanned = useStyleScan(props.port, query);
+  const page = useStyleScan(props.port, PAGE_QUERY);
   const vars = usePageVars(props.port, picking !== null);
   const lookup = useMemo(() => toLookup(props.tokens), [props.tokens]);
 

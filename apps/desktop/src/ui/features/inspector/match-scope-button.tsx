@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useCallback } from "react";
 
 import { SCOPE_LABEL, toOnClass } from "./match-rows-model.js";
-import type { Scope } from "./match-scan.js";
+import type { Scope } from "./match-scan-model.js";
 
 const MatchScopeButton = ({
   id,

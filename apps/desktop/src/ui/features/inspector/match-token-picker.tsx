@@ -5,7 +5,7 @@ import { copy } from "./copy.js";
 import { toShownValue } from "./match-candidates-model.js";
 import type { Candidate } from "./match-candidates-model.js";
 import { PickerList } from "./match-picker-list.js";
-import { KIND_EXAMPLE } from "./match-scan.js";
+import { KIND_EXAMPLE } from "./match-scan-model.js";
 import { useTokenPicker } from "./use-token-picker.js";
 
 const TokenPicker = ({

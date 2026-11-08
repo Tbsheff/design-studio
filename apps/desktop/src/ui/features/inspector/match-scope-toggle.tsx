@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { SCOPES } from "./match-rows-model.js";
-import type { Scope } from "./match-scan.js";
+import type { Scope } from "./match-scan-model.js";
 import { MatchScopeButton } from "./match-scope-button.js";
 
 const ScopeToggle = ({

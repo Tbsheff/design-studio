@@ -6,7 +6,7 @@ import { toShownValue } from "./match-candidates-model.js";
 import { RowMenu } from "./match-row-menu.js";
 import { toCountTip } from "./match-rows-model.js";
 import type { RowActions } from "./match-rows-model.js";
-import { toRowKey } from "./match-scan.js";
+import { toRowKey } from "./match-scan-model.js";
 import { StateTag } from "./match-state-tag.js";
 import { Swatch } from "./match-swatch.js";
 

@@ -7,7 +7,7 @@ import { useCallback, useState } from "react";
 
 import { toMoreLabel, toShownRows } from "./match-rows-model.js";
 import type { RowActions } from "./match-rows-model.js";
-import { KIND_LABEL, ROWS_SHOWN, toRowKey } from "./match-scan.js";
+import { KIND_LABEL, ROWS_SHOWN, toRowKey } from "./match-scan-model.js";
 import { ValueRow } from "./match-value-row.js";
 
 const KindGroup = ({

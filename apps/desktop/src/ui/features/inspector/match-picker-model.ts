@@ -1,5 +1,5 @@
 import type { Candidate } from "./match-candidates-model.js";
-import { PICK_SHOWN } from "./match-scan.js";
+import { PICK_SHOWN } from "./match-scan-model.js";
 
 const toFilter = (text: string): string => text.trim().toLowerCase();
 

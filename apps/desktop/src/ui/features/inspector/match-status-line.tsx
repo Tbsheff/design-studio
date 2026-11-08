@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
 import { toStatusRole } from "./match-rows-model.js";
-import type { Status } from "./match-scan.js";
+import type { Status } from "./match-scan-model.js";
 
 const StatusLine = ({
   status,

@@ -13,7 +13,7 @@ import {
   matchForProperty,
 } from "../../../shared/token-match.js";
 import type { TokenMode } from "../../../shared/token-match.js";
-import type { PageVar } from "./match-scan.js";
+import type { PageVar } from "./match-scan-model.js";
 
 interface Candidate {
   readonly token: string;

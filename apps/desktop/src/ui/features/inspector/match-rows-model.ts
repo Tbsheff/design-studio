@@ -1,7 +1,7 @@
 import type { StyleValueRow } from "@design-studio/contracts/style-search";
 
-import { ROWS_SHOWN } from "./match-scan.js";
-import type { Scope } from "./match-scan.js";
+import { ROWS_SHOWN } from "./match-scan-model.js";
+import type { Scope } from "./match-scan-model.js";
 
 interface RowActions {
   readonly selectValue: (row: StyleValueRow) => void;

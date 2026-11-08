@@ -376,6 +376,7 @@
 
 .draft-bar {
   position: relative;
+  z-index: 36;
 }
 
 .draft-check {

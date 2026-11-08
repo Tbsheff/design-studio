@@ -12,6 +12,14 @@ interface SaveAnywayProps {
   readonly onSave: () => void;
 }
 
+const toWaitTip = (isBusy: boolean): string | null => {
+  if (isBusy) {
+    return copy.saveAnywayWait;
+  }
+
+  return null;
+};
+
 const SaveAnyway = ({
   count,
   isBusy,
@@ -54,6 +62,7 @@ const SaveAnyway = ({
         aria-expanded={isOpen}
         aria-controls={popId}
         disabled={isBusy}
+        data-tip={toWaitTip(isBusy)}
         onClick={onToggle}
       >
         {copy.saveAnyway}

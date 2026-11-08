@@ -1,8 +1,5 @@
 import type { IconName } from "@design-studio/ui";
-import type { KeyboardEvent } from "react";
 
-import { findElements } from "../../platform/find-element";
-import { pick } from "../../platform/pick.js";
 import type { StudioPaneHeaderProps } from "./pane-header-types";
 
 interface MenuItem {
@@ -69,24 +66,6 @@ const toNavItems = (header: StudioPaneHeaderProps): MenuItem[] => [
   toItem("home", "arrowLeft", "All projects", header.onExit),
 ];
 
-const handleMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
-  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
-    return;
-  }
-
-  const items = findElements(
-    event.currentTarget,
-    ".ui-menu-item:not(:disabled)"
-  );
-
-  const at = items.indexOf(document.activeElement as HTMLButtonElement);
-  const step = pick(event.key === "ArrowDown", 1, -1);
-  const next = items[(at + step + items.length) % items.length];
-
-  event.preventDefault();
-  next?.focus();
-};
-
-export { handleMenuKey, toNavItems, toPanelItems, toProjectItems };
+export { toNavItems, toPanelItems, toProjectItems };
 
 export type { MenuItem };

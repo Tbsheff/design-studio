@@ -859,11 +859,7 @@ dialog.comment-card {
 }
 
 .comments-composer-row .btn.small {
-  --btn-h: 30px;
-  height: 30px;
   gap: 4px;
-  padding: 0 var(--s-3);
-  border-radius: var(--r-control);
   font-size: var(--t-xs);
   line-height: 16px;
 }

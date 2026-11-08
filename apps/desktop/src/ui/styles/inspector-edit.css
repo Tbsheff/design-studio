@@ -43,9 +43,6 @@
 }
 
 .edit-pane .btn.small {
-  height: 24px;
-  padding: 0 var(--s-2);
-  border-radius: var(--r-control-sm);
   font-size: var(--t-xs);
   font-weight: var(--w-medium);
 }
@@ -130,7 +127,7 @@
 }
 
 .edit-pane .edit-leave-actions .btn.small {
-  height: 30px;
+  --btn-h: var(--control-h);
   padding: 0 var(--s-3);
   border-radius: var(--r-control);
 }

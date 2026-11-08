@@ -4,12 +4,7 @@ import type { ReactElement, RefObject } from "react";
 
 import { MenuSection } from "./menu-section";
 import type { StudioPaneHeaderProps } from "./pane-header-types";
-import {
-  handleMenuKey,
-  toNavItems,
-  toPanelItems,
-  toProjectItems,
-} from "./pane-menu-model";
+import { toNavItems, toPanelItems, toProjectItems } from "./pane-menu-model";
 
 interface ProjectMenuProps {
   readonly header: StudioPaneHeaderProps;
@@ -45,7 +40,6 @@ const ProjectMenu = ({
       role="menu"
       aria-label="Project"
       tabIndex={-1}
-      onKeyDown={handleMenuKey}
     >
       <MenuSection
         items={toProjectItems(header, onStartRename)}

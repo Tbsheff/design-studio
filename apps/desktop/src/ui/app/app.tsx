@@ -1,3 +1,4 @@
+import { useMenuKeyboard } from "@design-studio/ui";
 import type { ReactNode } from "react";
 
 import { installRouting } from "../platform/router";
@@ -21,6 +22,8 @@ const App = (): ReactNode => {
   const session = useSession();
   const ui = useUi();
   const [layer, onLayer] = useCommandLayer();
+
+  useMenuKeyboard();
 
   if (session.error) {
     return (

@@ -18,13 +18,7 @@ interface SaveControlsProps {
   readonly running: boolean;
 }
 
-const toSaveLabel = (isPending: boolean): string => {
-  if (isPending) {
-    return "Saving…";
-  }
-
-  return "Use for new projects";
-};
+const SAVE_LABEL = "Use for new projects";
 
 const toDescribedBy = (
   isReady: boolean,
@@ -52,6 +46,13 @@ const SaveControls = ({
   const reasonId = useId();
   const reason = saveReason(check, reading, running);
   const isFailing = check !== null && !check.passed;
+  const isBlocked = isPending || reason !== null;
+
+  const onSaveClick = useCallback((): void => {
+    if (!isBlocked) {
+      onSavePlain();
+    }
+  }, [isBlocked, onSavePlain]);
 
   const onOpenLibrary = useCallback((): void => {
     uiStore.set({
@@ -76,19 +77,18 @@ const SaveControls = ({
           onSave={onSaveForced}
         />
       )}
-      <span
-        className="draft-save"
-        data-tip={reason ?? null}
-        data-tip-align="end"
-      >
+      <span className="draft-save">
         <button
           type="button"
           className={cn("btn small", isReady && "primary")}
-          onClick={onSavePlain}
-          disabled={isPending || reason !== null}
+          onClick={onSaveClick}
+          aria-busy={isPending}
+          aria-disabled={reason !== null}
           aria-describedby={toDescribedBy(isReady, readyId, reasonId)}
+          data-tip={reason ?? null}
+          data-tip-align="end"
         >
-          {toSaveLabel(isPending)}
+          {SAVE_LABEL}
         </button>
       </span>
       <span id={reasonId} className="sr-only">

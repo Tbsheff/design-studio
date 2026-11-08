@@ -1,5 +1,5 @@
 .btn {
-  --btn-h: 30px;
+  --btn-h: var(--control-h);
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -39,24 +39,10 @@
 }
 
 .btn.small {
-  --btn-h: 28px;
+  --btn-h: var(--control-h-sm);
   padding: 0 10px;
   font-size: var(--t-xs);
   border-radius: var(--r-control-sm);
-}
-
-.btn.xs {
-  --btn-h: 24px;
-  padding: 0 var(--s-2);
-  font-size: var(--t-xs);
-  border-radius: var(--r-control-sm);
-}
-
-.btn.large {
-  --btn-h: 36px;
-  padding: 0 var(--s-4);
-  font-size: var(--t-md);
-  line-height: var(--lh-md);
 }
 
 .btn.has-icon {
@@ -130,8 +116,8 @@
   position: relative;
   display: inline-grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
   flex: none;
   padding: 0;
   border: 0;
@@ -159,9 +145,15 @@
 }
 
 .icon-btn.small {
-  width: 28px;
-  height: 28px;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
   border-radius: var(--r-control-sm);
+}
+
+.icon-btn.md {
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: var(--r-control);
 }
 
 .icon-btn.on,

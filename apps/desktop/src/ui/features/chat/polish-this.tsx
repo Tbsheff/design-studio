@@ -6,6 +6,14 @@ import { levelHint } from "./level-model.js";
 
 const SPARKLE_ICON_SIZE = 14;
 
+const toPolishTip = (isDisabled: boolean): string => {
+  if (isDisabled) {
+    return copy.polishWait;
+  }
+
+  return levelHint("polish");
+};
+
 const PolishThis = ({
   disabled,
   onPolish,
@@ -21,7 +29,7 @@ const PolishThis = ({
       disabled={disabled}
       data-tip-side="top"
       data-tip-align="start"
-      data-tip={levelHint("polish")}
+      data-tip={toPolishTip(disabled)}
       onClick={onPolish}
     >
       <Icon name="sparkle" size={SPARKLE_ICON_SIZE} />

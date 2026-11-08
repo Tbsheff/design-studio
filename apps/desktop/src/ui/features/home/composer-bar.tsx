@@ -11,8 +11,7 @@ import { toSendLabel } from "./composer-pop-model.js";
 import { FolderAnchor } from "./folder-anchor.js";
 import type { Busy } from "./home-model.js";
 import { KindToggle } from "./kind-toggle.js";
-import { LevelAnchor } from "./level-anchor.js";
-import { ModelAnchor } from "./model-anchor.js";
+import { ModelAnchors } from "./model-anchors.js";
 import type { ModelSettings } from "./model-settings-model.js";
 import { PackAnchor } from "./pack-anchor.js";
 import { PlusAnchor } from "./plus-anchor.js";
@@ -105,14 +104,10 @@ const ComposerBar = ({
         pack={pack}
         state={pickable(packs)}
       />
-      <LevelAnchor
+      <ModelAnchors
         pops={pops.state}
-        triggerRef={pops.refs.level}
-        modelSettings={modelSettings}
-      />
-      <ModelAnchor
-        pops={pops.state}
-        triggerRef={pops.refs.model}
+        levelRef={pops.refs.level}
+        modelRef={pops.refs.model}
         modelValue={modelValue}
         modelSizes={modelSizes}
         modelSettings={modelSettings}

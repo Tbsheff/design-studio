@@ -1,14 +1,14 @@
 import type { Input } from "@design-studio/actions/_core/action";
-import type { inspectReferenceComment } from "@design-studio/actions/comment/inspect-reference";
+import type { inspectPictureComment } from "@design-studio/actions/comment/inspect-picture";
 import { Effect } from "effect";
 
 import { CommentStore } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type InspectReferenceCommentInput = Input<typeof inspectReferenceComment>;
+type InspectPictureCommentInput = Input<typeof inspectPictureComment>;
 
-const handle = Effect.fn("comment.inspectReference")(function* run(
-  input: InspectReferenceCommentInput
+const handle = Effect.fn("comment.inspectPicture")(function* run(
+  input: InspectPictureCommentInput
 ) {
   const store = yield* CommentStore;
 
@@ -20,6 +20,6 @@ const handle = Effect.fn("comment.inspectReference")(function* run(
     path: input.path ?? null,
     projectId: input.projectId,
   });
-}) satisfies Handle<typeof inspectReferenceComment>;
+}) satisfies Handle<typeof inspectPictureComment>;
 
 export { handle };

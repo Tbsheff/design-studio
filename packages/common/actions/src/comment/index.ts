@@ -5,7 +5,7 @@ import { deleteReplyComment } from "./delete-reply.js";
 import { deleteComment } from "./delete.js";
 import { exportComment } from "./export.js";
 import { insertComment } from "./insert.js";
-import { inspectReferenceComment } from "./inspect-reference.js";
+import { inspectPictureComment } from "./inspect-picture.js";
 import { listComment } from "./list.js";
 import { moveComment } from "./move.js";
 import { searchMentionComment } from "./search-mention.js";
@@ -20,7 +20,7 @@ const CommentActions = {
   deleteReplyComment,
   exportComment,
   insertComment,
-  inspectReferenceComment,
+  inspectPictureComment,
   listComment,
   moveComment,
   searchMentionComment,

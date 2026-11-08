@@ -38,7 +38,7 @@ const LimitFieldSchema = Schema.Int.check(
   description: "How many of the worst areas to list, from 1 to 9. Default 4.",
 });
 
-const inspectReferenceComment = defineAction({
+const inspectPictureComment = defineAction({
   access: "read",
   agent: {
     lean: false,
@@ -52,7 +52,7 @@ const inspectReferenceComment = defineAction({
     "Compare a canvas frame with a reference picture (PNG, JPEG, GIF or WebP). Returns a match score from 0 to 100 (content 20%, edges 80%), the 3x3 areas that differ most and the path of a side-by-side diff PNG. A score under 80 means the frame does not match yet. Read only; changes no project file.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/reference-check" },
-  id: "comment.inspectReference",
+  id: "comment.inspectPicture",
   input: Schema.Struct({
     directionId: Schema.optionalKey(DirectionFieldSchema),
     frame: Schema.optionalKey(FrameFieldSchema),
@@ -68,4 +68,4 @@ const inspectReferenceComment = defineAction({
   scope: "project",
 });
 
-export { inspectReferenceComment };
+export { inspectPictureComment };

@@ -13,7 +13,7 @@ import { CanvasChrome } from "./canvas-chrome.js";
 import { CanvasCommandsSlot } from "./canvas-commands-slot.js";
 import { canvasClass } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
-import { AccountSlot, CheckResults } from "./stage-parts.js";
+import { AccountButton, CheckResults } from "./stage-parts.js";
 import { useCanvasEdits } from "./use-canvas-edits.js";
 import { useCanvasPreview } from "./use-canvas-preview.js";
 import { useCanvasStage } from "./use-canvas-stage.js";
@@ -90,7 +90,14 @@ const useViewSlots = (
     [renderImport]
   );
 
-  const account = useMemo(() => <AccountSlot />, []);
+  const account = useMemo(
+    () => (
+      <Suspense fallback={null}>
+        <AccountButton />
+      </Suspense>
+    ),
+    []
+  );
 
   const extra = useMemo(
     () => ({ account, importPage, matrix }),

@@ -109,7 +109,7 @@
     "./comment/export": "./src/comment/export.ts",
     "./comment/index": "./src/comment/index.ts",
     "./comment/insert": "./src/comment/insert.ts",
-    "./comment/inspect-reference": "./src/comment/inspect-reference.ts",
+    "./comment/inspect-picture": "./src/comment/inspect-picture.ts",
     "./comment/list": "./src/comment/list.ts",
     "./comment/move": "./src/comment/move.ts",
     "./comment/routes": "./src/comment/routes.ts",

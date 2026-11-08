@@ -36,8 +36,8 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/comments",
   },
-  inspectReferenceComment: {
-    id: "comment.inspectReference",
+  inspectPictureComment: {
+    id: "comment.inspectPicture",
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/reference-check",

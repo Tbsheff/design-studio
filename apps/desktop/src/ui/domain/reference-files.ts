@@ -27,7 +27,7 @@ interface DroppedFiles {
 const toExtension = (name: string): string => {
   const dot = name.lastIndexOf(".");
 
-  if (dot < 0) {
+  if (dot === -1) {
     return "";
   }
 

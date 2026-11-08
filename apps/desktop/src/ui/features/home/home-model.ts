@@ -164,6 +164,7 @@ const toEditRunRequest = (
 
 const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
   const fanOut = input.designCount > 1;
+
   const separateRun =
     !fanOut && (input.images.length > 0 || input.beforeRun !== null);
 

@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { ReactElement } from "react";
 
 import { AccountButton } from "../account/index.js";
@@ -30,10 +29,4 @@ const CheckResults = ({
   );
 };
 
-const AccountSlot = (): ReactElement => (
-  <Suspense fallback={null}>
-    <AccountButton />
-  </Suspense>
-);
-
-export { AccountSlot, CheckResults };
+export { AccountButton, CheckResults };

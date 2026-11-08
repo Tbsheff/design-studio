@@ -29,6 +29,9 @@ const focusComposerInput = (): number =>
     document.querySelector<HTMLTextAreaElement>(INPUT)?.focus()
   );
 
+const focusPromptInput = (): void =>
+  document.querySelector<HTMLTextAreaElement>(INPUT)?.focus();
+
 const focusPromptTextarea = (): void =>
   document.querySelector<HTMLTextAreaElement>(".prompt textarea")?.focus();
 
@@ -59,6 +62,7 @@ const useComposerFocus = (running: boolean, ready: boolean): void => {
 
 export {
   focusComposerInput,
+  focusPromptInput,
   focusPromptTextarea,
   leaveComposer,
   useComposerFocus,

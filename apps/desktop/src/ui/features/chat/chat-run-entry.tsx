@@ -4,18 +4,13 @@ import type { ReactElement } from "react";
 import { Message, MessageContent } from "../../ai/components/ai/message.js";
 import { ApprovalCard, canPolishRun } from "../../chat-slots.js";
 import { RunFeedbackRow } from "./chat-feedback.js";
-import {
-  UserMessage,
-  PlanCard,
-  PolishThis,
-  RunError,
-  RunNotice,
-} from "./chat-parts.js";
+import { PlanCard, RunError, RunNotice, UserMessage } from "./chat-parts.js";
 import { UserTurn } from "./chat-rewind.js";
 import { RunParts } from "./chat-run-parts.js";
 import type { PolishProps, TurnProps } from "./chat-turn-model.js";
 import { LiveStatus } from "./live-status.js";
 import { PermissionPrompt } from "./permission-prompt.js";
+import { PolishThis } from "./polish-this.js";
 import { RunCommentsCard } from "./run-comments.js";
 import { runProjectId } from "./run-history-model.js";
 import type { RunView } from "./run-state-model.js";

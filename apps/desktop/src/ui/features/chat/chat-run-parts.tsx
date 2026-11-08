@@ -1,8 +1,9 @@
 import { memo, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { AssistantText, SentWhileRunning, Thinking } from "./chat-parts.js";
+import { AssistantText, Thinking } from "./chat-parts.js";
 import type { RunView, ToolRow } from "./run-state-model.js";
+import { SentWhileRunning } from "./sent-while-running.js";
 import { ToolChips, ToolSummary } from "./tool-chips.js";
 
 type Segment =

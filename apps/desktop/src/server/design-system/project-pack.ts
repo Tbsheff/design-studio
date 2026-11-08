@@ -16,8 +16,9 @@ import type {
   VersionMeta,
 } from "@design-studio/contracts";
 
-import { DirectEditError, publishVersion } from "../direct-edit/index.js";
-import type { DirectEditDeps } from "../direct-edit/index.js";
+import { publishVersion } from "../direct-edit/index.js";
+import { DirectEditError } from "../events/index.js";
+import type { DirectEditDeps } from "../events/index.js";
 import {
   BadRequestError,
   NotFoundError,

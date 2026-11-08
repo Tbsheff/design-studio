@@ -5,9 +5,8 @@ import type { Direction, Project, Version } from "@design-studio/contracts";
 import { Effect } from "effect";
 
 import type { VersionStore } from "../../shared/server-ports.js";
-import type { EditHistory } from "../direct-edit/commit/index.js";
-import { DirectEditError } from "../direct-edit/engine/index.js";
-import type { DirectEditDeps } from "../direct-edit/index.js";
+import type { EditHistory, DirectEditDeps } from "../events/index.js";
+import { DirectEditError } from "../events/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import {
   makeRuntimeSlot,

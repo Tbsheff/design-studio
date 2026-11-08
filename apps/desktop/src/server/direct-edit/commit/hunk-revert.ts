@@ -13,6 +13,7 @@ import {
   type HunkRevertResult,
   type PatchHunk,
 } from "../../../shared/hunk.js";
+import type { DirectEditDeps } from "../../events/index.js";
 import {
   BadRequestError,
   ConflictError,
@@ -20,7 +21,6 @@ import {
   isNodeError,
 } from "../../platform/errors/index.js";
 import { resolveSource, writeAtomic } from "./edit-source.js";
-import type { DirectEditDeps } from "./edit-types.js";
 import { assertCanEdit, publishVersion, saveDeferred } from "./publish.js";
 import { savesSettled } from "./save-queue.js";
 

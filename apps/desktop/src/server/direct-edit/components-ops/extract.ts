@@ -22,9 +22,9 @@ import {
   parseModuleFile,
   resolveImport,
 } from "../../components/props-schema.js";
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { writeAndCommitAll, type WrittenFile } from "../commit/batch.js";
-import type { DirectEditDeps, ResolvedSource } from "../commit/edit-types.js";
 import { assertCanEdit, publishVersion } from "../commit/publish.js";
 import { DirectEditError } from "../engine/errors.js";
 import { findJsxElement } from "../engine/jsx.js";

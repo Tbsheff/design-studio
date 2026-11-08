@@ -2,7 +2,7 @@ import path from "node:path";
 
 import type { Direction, Project, Version } from "@design-studio/contracts";
 
-import type { DirectEditDeps, EditFileChange } from "../direct-edit/index.js";
+import type { DirectEditDeps, EditFileChange } from "../events/index.js";
 import { readSnapshot } from "./token-snapshot.js";
 import type { FileSnapshot } from "./token-snapshot.js";
 

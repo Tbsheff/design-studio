@@ -26,6 +26,7 @@ import {
 } from "../../../shared/arrange.js";
 import { measureRects } from "../../../shared/measure.js";
 import type { PreviewService } from "../../../shared/server-ports.js";
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { withPagePath } from "../../project-source/index.js";
 import { DirectEditError } from "../engine/errors.js";
@@ -46,7 +47,6 @@ import {
   type EditSiteScope,
 } from "./edit-site.js";
 import { patchSource, resolveSource, themeForFile } from "./edit-source.js";
-import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
 import { assertCanEdit, publishVersion } from "./publish.js";
 
 export const ARRANGE_TARGETS_MAX = 50;

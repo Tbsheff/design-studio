@@ -2,12 +2,15 @@ import { readFile } from "node:fs/promises";
 
 import type { DirectEditRequest } from "@design-studio/contracts";
 
+import type {
+  EditScope,
+  PlannedDirectEdit as PlannedEdit,
+} from "../../events/index.js";
 import { hasClassChange } from "../engine/classes.js";
 import { DirectEditError } from "../engine/errors.js";
 import type { PatchResult } from "../engine/errors.js";
 import { assertKnownTokens } from "../engine/tokens.js";
 import { patchSource, resolveSource, themeForFile } from "./edit-source.js";
-import type { EditScope, PlannedEdit } from "./edit-types.js";
 import { findTextSource } from "./text-source.js";
 
 export async function planDirectEdit(

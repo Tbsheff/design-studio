@@ -7,13 +7,13 @@ import type {
 } from "@design-studio/contracts";
 
 import { domPatchOf } from "../../events/index.js";
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import type { PatchResult } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditRequest } from "../engine/validate.js";
 import { planDirectEdit } from "./edit-plan.js";
 import { writeAtomic } from "./edit-source.js";
 import { editSummary, editTitle } from "./edit-title.js";
-import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
 import {
   announceWhile,
   assertCanEdit,

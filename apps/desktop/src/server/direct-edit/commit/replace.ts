@@ -22,6 +22,7 @@ import {
   type StyleSkip,
 } from "@design-studio/contracts/style-search";
 
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { findJsxElement, parseSource } from "../engine/jsx.js";
@@ -31,7 +32,6 @@ import { parseDirectEditRequest } from "../engine/validate.js";
 import type { TailwindTheme, ThemeNamespace } from "../tailwind/theme.js";
 import { writeAndCommitAll, type WrittenFile } from "./batch.js";
 import { patchSource, resolveSource, themeForFile } from "./edit-source.js";
-import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
 import { assertCanEdit, publishVersion } from "./publish.js";
 
 const sourceSchema = z

@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { DirectEditRequest } from "@design-studio/contracts";
 
+import type { EditScope, ResolvedSource } from "../../events/index.js";
 import { writeAtomic as platformWriteAtomic } from "../../platform/atomic-write/index.js";
 import { isNodeError } from "../../platform/errors/index.js";
 import { DirectEditError } from "../engine/errors.js";
@@ -11,7 +12,6 @@ import { patchHtml } from "../engine/html.js";
 import { patchJsx } from "../engine/jsx.js";
 import { tailwindThemeFor } from "../tailwind/theme.js";
 import type { TailwindTheme } from "../tailwind/theme.js";
-import type { EditScope, ResolvedSource } from "./edit-types.js";
 
 const EDITABLE_EXTENSIONS = new Set([".html", ".htm", ".jsx", ".tsx"]);
 

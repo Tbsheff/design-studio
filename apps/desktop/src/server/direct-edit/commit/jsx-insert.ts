@@ -17,6 +17,7 @@ import {
 } from "@design-studio/contracts/insert";
 import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
 
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import {
   resolveTarget,
@@ -57,7 +58,6 @@ import {
   planImports,
 } from "./deps.js";
 import { resolveSource } from "./edit-source.js";
-import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
 import { assertCanEdit, publishVersion } from "./publish.js";
 
 export interface JsxInsertPlan {

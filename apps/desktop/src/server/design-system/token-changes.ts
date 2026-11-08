@@ -4,7 +4,7 @@ import type {
   TokenGroupName,
 } from "@design-studio/contracts";
 
-import { DirectEditError } from "../direct-edit/index.js";
+import { DirectEditError } from "../events/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { cssVarFor } from "./compile.js";
 import { VALUE_CHECKS } from "./create-token.js";

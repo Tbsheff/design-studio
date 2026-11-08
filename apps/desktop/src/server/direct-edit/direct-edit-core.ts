@@ -15,6 +15,7 @@ import type {
   ComponentService,
 } from "../../shared/component-ports.js";
 import type { PreviewService } from "../../shared/server-ports.js";
+import type { DirectEditDeps } from "../events/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
@@ -22,7 +23,6 @@ import {
   makeRuntimeSlot,
   requireBound,
 } from "../platform/runtime-slot/index.js";
-import type { DirectEditDeps } from "./commit/edit-types.js";
 import { DirectEditError } from "./engine/errors.js";
 
 interface DirectEditRuntime {

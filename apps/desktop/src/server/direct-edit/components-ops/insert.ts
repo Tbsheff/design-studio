@@ -39,10 +39,10 @@ import {
   parseModuleFile,
 } from "../../components/props-schema.js";
 import { ownerUseSite } from "../../components/use-site.js";
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { writeAndCommitAll } from "../commit/batch.js";
 import { resolveSource } from "../commit/edit-source.js";
-import type { DirectEditDeps, ResolvedSource } from "../commit/edit-types.js";
 import { assertCanEdit, publishVersion } from "../commit/publish.js";
 import { DirectEditError } from "../engine/errors.js";
 import { structureDoc } from "../engine/structure-docs.js";

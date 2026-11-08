@@ -23,6 +23,7 @@ import MagicString from "magic-string";
 import { cvaCalls, parseModuleFile } from "../../components/props-schema.js";
 import { sourceFiles, usesIn } from "../../components/props-service.js";
 import { elementAt, readInstance } from "../../components/use-site.js";
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { parseSource } from "../engine/jsx.js";
@@ -30,7 +31,6 @@ import { applySplices } from "../engine/splice.js";
 import { decideClassEdit } from "../engine/tailwind/index.js";
 import type { ClassSite } from "../engine/tailwind/plan.js";
 import { resolveSource, themeForFile, writeAtomic } from "./edit-source.js";
-import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
 import { assertCanEdit, publishVersion, saveDeferred } from "./publish.js";
 import { savesSettled } from "./save-queue.js";
 

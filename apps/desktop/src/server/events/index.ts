@@ -47,3 +47,20 @@ export { RenderTracker } from "./render-tracker.js";
 export { SaveQueue } from "./save-queue.js";
 
 export { bindSaveLanes } from "./save-lanes.js";
+
+export { DirectEditError } from "./direct-edit-ports.js";
+
+export type {
+  DirectEditDeps,
+  EditFileChange,
+  EditHistory,
+  EditRecord,
+  EditRecorder,
+  EditScope,
+  EditStepResult,
+  HistoryStep,
+  PatchResult,
+  PlannedDirectEdit,
+  ResolvedSource,
+  SourcePosition,
+} from "./direct-edit-ports.js";

@@ -4,7 +4,7 @@ import path from "node:path";
 import { PACK_FILE, TOKENS_FILE } from "@design-studio/contracts";
 import type { TokenFile, TokenPreviewResult } from "@design-studio/contracts";
 
-import { DirectEditError } from "../direct-edit/index.js";
+import { DirectEditError } from "../events/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import type { ThemeMode } from "./compile.js";
 import { readManifest } from "./sync.js";

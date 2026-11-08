@@ -6,7 +6,7 @@ import type {
   TokenChange,
 } from "@design-studio/contracts";
 
-import type { DirectEditDeps } from "../direct-edit/index.js";
+import type { DirectEditDeps } from "../events/index.js";
 import { appTokensFor } from "./app-tokens/source.js";
 import { updateAppTokens } from "./app-tokens/write.js";
 import { readDesignSystemFiles } from "./sync.js";

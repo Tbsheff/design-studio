@@ -11,6 +11,12 @@ import type {
 } from "@design-studio/contracts";
 
 import { domPatchOf } from "../../events/index.js";
+import type {
+  DirectEditDeps,
+  EditScope,
+  PlannedDirectEdit as PlannedEdit,
+  ResolvedSource,
+} from "../../events/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditBatch } from "../engine/validate.js";
@@ -23,12 +29,6 @@ import {
   writeNewFile,
 } from "./edit-source.js";
 import { editSummary } from "./edit-title.js";
-import type {
-  DirectEditDeps,
-  EditScope,
-  PlannedEdit,
-  ResolvedSource,
-} from "./edit-types.js";
 import {
   announceWhile,
   assertCanEdit,

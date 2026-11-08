@@ -10,6 +10,11 @@ import type {
   VersionMeta,
 } from "@design-studio/contracts";
 
+import type {
+  DirectEditDeps,
+  ResolvedSource,
+  EditScope,
+} from "../../events/index.js";
 import { structureDoc, type StructureDoc } from "../engine/structure-docs.js";
 import {
   planStructure,
@@ -23,11 +28,6 @@ import { knownTokenVars } from "../engine/tokens.js";
 import { parseStructureEdit } from "../engine/validate.js";
 import { writeAndCommitAll, type WrittenFile } from "./batch.js";
 import { patchSource, resolveSource, themeForFile } from "./edit-source.js";
-import type {
-  DirectEditDeps,
-  ResolvedSource,
-  EditScope,
-} from "./edit-types.js";
 import { assertCanEdit, publishVersion } from "./publish.js";
 
 interface FileWork {

@@ -68,7 +68,7 @@ const useDirectEdits = (
   const [draft, setDraftState] = useState<Partial<StyleValues>>({});
   const draftRef = useRef(draft);
   const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inflight = useRef<Promise<void> | null>(null);
   const again = useRef(false);
   const shifts = useRef<Shifts>({});
@@ -99,7 +99,7 @@ const useDirectEdits = (
 
   const cancel = useCallback(() => {
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
 
     timer.current = null;
@@ -216,15 +216,15 @@ const useDirectEdits = (
 
   const commitSoon = useCallback(() => {
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
 
-    timer.current = window.setTimeout(() => void flush(), DEBOUNCE_MS);
+    timer.current = globalThis.setTimeout(() => void flush(), DEBOUNCE_MS);
   }, [flush]);
 
   const commit = useCallback(() => {
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
 
     void flush();
@@ -326,7 +326,7 @@ const useDirectEdits = (
 
   const drain = useCallback(async () => {
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
       await flush();
     }
 
@@ -362,7 +362,7 @@ const useDirectEdits = (
       }
 
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
         void flush();
       }
     };

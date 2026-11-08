@@ -94,17 +94,17 @@ const frameOrTimeout =
 
       done = true;
       cancelAnimationFrame(frame);
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
       fn();
     };
 
     const frame = requestAnimationFrame(run);
-    const timer = window.setTimeout(run, fallbackMs);
+    const timer = globalThis.setTimeout(run, fallbackMs);
 
     return () => {
       done = true;
       cancelAnimationFrame(frame);
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
     };
   };
 

@@ -92,7 +92,7 @@ const selectedText = (count: number, total: number): string => {
 };
 
 const focusRow = (key: string): void => {
-  window.requestAnimationFrame(() => {
+  globalThis.requestAnimationFrame(() => {
     const row = document.querySelector<HTMLElement>(
       `.sm-section [data-row="${CSS.escape(key)}"]`
     );

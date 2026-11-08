@@ -33,10 +33,10 @@ const requestAuthoredCss = (
       finish(parseAuthoredReply(message));
     });
 
-    const timer = window.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
+    const timer = globalThis.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
 
     function finish(result: AuthoredCss | null): void {
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
       stop();
       resolve(result);
     }

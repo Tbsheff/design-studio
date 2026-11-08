@@ -124,7 +124,7 @@ const requestStyles = (
       finish({ result: message.result, selected: message.selected });
     });
 
-    const timer = window.setTimeout(() => finish(null), REPLY_MS);
+    const timer = globalThis.setTimeout(() => finish(null), REPLY_MS);
 
     function finish(
       value: {
@@ -132,7 +132,7 @@ const requestStyles = (
         readonly selected: number;
       } | null
     ): void {
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
       stop();
       resolve(value);
     }

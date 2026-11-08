@@ -235,7 +235,7 @@ const useElementNudge = (o: Options): void => {
   const live = useRef(o);
   live.current = o;
   const burst = useRef<Burst | null>(null);
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flushNow = useRef<() => void>(() => undefined);
 
   useEffect(() => {
@@ -315,7 +315,7 @@ const useElementNudge = (o: Options): void => {
 
     const flush = (): void => {
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
 
       timer.current = null;
@@ -405,10 +405,10 @@ const useElementNudge = (o: Options): void => {
       live.current.refreshRects();
 
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
 
-      timer.current = window.setTimeout(flush, SAVE_MS);
+      timer.current = globalThis.setTimeout(flush, SAVE_MS);
     };
 
     const onKey = (event: KeyboardEvent): void => {
@@ -468,15 +468,15 @@ const useElementNudge = (o: Options): void => {
       }
 
       if (shouldPickNew(message, live.current.selection)) {
-        window.setTimeout(() => editing || keysToCanvas(), 0);
+        globalThis.setTimeout(() => editing || keysToCanvas(), 0);
       }
     });
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
     return (): void => {
       stop();
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
       flush();
     };
   }, [o.listen]);

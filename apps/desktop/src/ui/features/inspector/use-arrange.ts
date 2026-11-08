@@ -31,9 +31,9 @@ const useArrange = (
       return;
     }
 
-    const timer = window.setTimeout(() => setMessage(null), OK_MS);
+    const timer = globalThis.setTimeout(() => setMessage(null), OK_MS);
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [message]);
   const key = props.selection.map((s) => s.selector).join("\n");
   useEffect(() => setMessage(null), [key]);
@@ -118,12 +118,12 @@ const useArrangeKeys = (
         (event as CustomEvent<{ readonly key?: string }>).detail?.key ?? null
       );
 
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
 
     return (): void => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
     };
   }, [root]);
 };

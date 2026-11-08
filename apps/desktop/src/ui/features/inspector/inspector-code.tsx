@@ -187,9 +187,9 @@ const CopySnippet = ({ code }: { readonly code: string }): ReactElement => {
       return;
     }
 
-    const timer = window.setTimeout(() => setCopied(false), 1500);
+    const timer = globalThis.setTimeout(() => setCopied(false), 1500);
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [copied]);
 
   return (

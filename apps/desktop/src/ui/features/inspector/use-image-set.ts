@@ -12,7 +12,7 @@ const useImageSet = (props: Props) => {
 
   const reselect = (): void => {
     for (const wait of RESELECT_AFTER_MS) {
-      window.setTimeout(
+      globalThis.setTimeout(
         () =>
           props.port?.current?.post({
             selector: props.selection.selector,

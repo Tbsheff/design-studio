@@ -150,13 +150,13 @@ const useSwapGate = (
       return;
     }
 
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       if (!holdRef.current && queue.current.hold(false)) {
         bump();
       }
     }, SWAP_RELEASE_MS);
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [liveWait]);
 
   const headKey = targets
@@ -206,9 +206,12 @@ const useSwapGate = (
       return;
     }
 
-    const timer = window.setTimeout(() => onSwapDone(flying), SWAP_RELEASE_MS);
+    const timer = globalThis.setTimeout(
+      () => onSwapDone(flying),
+      SWAP_RELEASE_MS
+    );
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [flying, flight, onSwapDone]);
 
   const shownFor = useCallback(

@@ -122,7 +122,7 @@ const useEditSession = (o: Options) => {
   viewRef.current = view;
   const opts = useRef(o);
   opts.current = o;
-  const timer = useRef<number | undefined>(undefined);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const exitResolve = useRef<((leave: boolean) => void) | null>(null);
 
   const begin = useCallback(() => {
@@ -149,8 +149,8 @@ const useEditSession = (o: Options) => {
       return;
     }
 
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
+    globalThis.clearTimeout(timer.current);
+    timer.current = globalThis.setTimeout(() => {
       readSession(projectId, directionId, base)
         .then((next) => {
           if (viewRef.current.base === base) {
@@ -161,7 +161,7 @@ const useEditSession = (o: Options) => {
     }, REFRESH_MS);
   }, [projectId, directionId]);
 
-  useEffect(() => (): void => window.clearTimeout(timer.current), []);
+  useEffect(() => (): void => globalThis.clearTimeout(timer.current), []);
   useProjectEvents(projectId, (event) => {
     if (event.directionId !== undefined && event.directionId !== directionId) {
       return;

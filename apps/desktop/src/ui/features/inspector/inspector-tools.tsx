@@ -187,7 +187,7 @@ const InspectorTools = (props: Props): ReactElement => {
       return own();
     }
 
-    window.dispatchEvent(
+    globalThis.dispatchEvent(
       new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo } })
     );
   };

@@ -101,7 +101,9 @@ const useEditHistory = (o: Options) => {
   const stateRef = useRef(state);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const generation = useRef(0);
-  const toastTimer = useRef<number | undefined>(undefined);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
 
   const apply = useCallback((next: EditHistoryState) => {
     stateRef.current = next;
@@ -163,12 +165,12 @@ const useEditHistory = (o: Options) => {
       load();
     }
   });
-  useEffect(() => (): void => window.clearTimeout(toastTimer.current), []);
+  useEffect(() => (): void => globalThis.clearTimeout(toastTimer.current), []);
 
   const showToast = useCallback((text: string) => {
-    window.clearTimeout(toastTimer.current);
+    globalThis.clearTimeout(toastTimer.current);
     setToast(text);
-    toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
+    toastTimer.current = globalThis.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
 
   const runStep = useCallback(
@@ -297,7 +299,7 @@ const useSelectionRefresh = (
   const dropDrafts = useRef(watch.dropDrafts);
   dropDrafts.current = watch.dropDrafts;
   const deadline = useRef(0);
-  const timers = useRef(new Set<number>());
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
   const refresh = useCallback(() => {
     if (Date.now() > deadline.current || current.current.length === 0) {
@@ -336,7 +338,7 @@ const useSelectionRefresh = (
   const later = useCallback(
     (delays: readonly number[]) => {
       for (const ms of delays) {
-        const id = window.setTimeout(() => {
+        const id = globalThis.setTimeout(() => {
           timers.current.delete(id);
           refresh();
         }, ms);
@@ -356,7 +358,7 @@ const useSelectionRefresh = (
       }
 
       paintQueued = true;
-      window.setTimeout(() => {
+      globalThis.setTimeout(() => {
         paintQueued = false;
         refresh();
       }, SWAPPED_FRAME_RENDER_MS);
@@ -370,14 +372,14 @@ const useSelectionRefresh = (
       deadline.current = 0;
     };
 
-    window.addEventListener(PREVIEW_PAINTED_EVENT, onPainted);
-    window.addEventListener("keydown", onInput, true);
-    window.addEventListener("pointerdown", onInput, true);
+    globalThis.addEventListener(PREVIEW_PAINTED_EVENT, onPainted);
+    globalThis.addEventListener("keydown", onInput, true);
+    globalThis.addEventListener("pointerdown", onInput, true);
 
     return (): void => {
-      window.removeEventListener(PREVIEW_PAINTED_EVENT, onPainted);
-      window.removeEventListener("keydown", onInput, true);
-      window.removeEventListener("pointerdown", onInput, true);
+      globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, onPainted);
+      globalThis.removeEventListener("keydown", onInput, true);
+      globalThis.removeEventListener("pointerdown", onInput, true);
     };
   }, [refresh]);
 
@@ -396,7 +398,7 @@ const useSelectionRefresh = (
   useEffect(
     () => (): void => {
       for (const id of timers.current) {
-        window.clearTimeout(id);
+        globalThis.clearTimeout(id);
       }
     },
     []

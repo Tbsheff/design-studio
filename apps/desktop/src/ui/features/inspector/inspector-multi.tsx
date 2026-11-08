@@ -193,10 +193,10 @@ const askMatching = (
     setMatchNote(matchedText(message));
   });
 
-  const timer = window.setTimeout(() => done(), MATCH_WAIT_MS);
+  const timer = globalThis.setTimeout(() => done(), MATCH_WAIT_MS);
 
   function done(): void {
-    window.clearTimeout(timer);
+    globalThis.clearTimeout(timer);
     stop?.();
   }
 

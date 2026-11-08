@@ -122,7 +122,7 @@ const useTweaks = (o: Options) => {
 
   const stopPreview = useCallback(() => {
     if (frame.current !== null) {
-      window.cancelAnimationFrame(frame.current);
+      globalThis.cancelAnimationFrame(frame.current);
     }
 
     frame.current = null;
@@ -133,7 +133,7 @@ const useTweaks = (o: Options) => {
       return;
     }
 
-    frame.current = window.requestAnimationFrame(() => {
+    frame.current = globalThis.requestAnimationFrame(() => {
       frame.current = null;
       broadcastTweakCss(
         tweaksPreviewCss(stateRef.current?.controls ?? [], pendingRef.current)
@@ -254,7 +254,7 @@ const useTweaks = (o: Options) => {
       return true;
     }
 
-    const ok = window.confirm(
+    const ok = globalThis.confirm(
       `Discard ${count} tweak ${count === 1 ? "change" : "changes"}?`
     );
 

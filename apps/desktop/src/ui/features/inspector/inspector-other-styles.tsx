@@ -15,11 +15,11 @@ const CopyCssButton = ({
   readonly authored: AuthoredCssState;
 }): ReactElement => {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => (): void => {
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
     },
     []
@@ -41,10 +41,10 @@ const CopyCssButton = ({
     setState(next);
 
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
 
-    timer.current = window.setTimeout(() => setState("idle"), COPIED_MS);
+    timer.current = globalThis.setTimeout(() => setState("idle"), COPIED_MS);
   };
 
   const label =

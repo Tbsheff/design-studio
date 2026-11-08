@@ -150,9 +150,12 @@ const useQueuedPins = (
       return;
     }
 
-    const timers = PIN_RESELECT_MS.map((ms) => window.setTimeout(reselect, ms));
+    const timers = PIN_RESELECT_MS.map((ms) =>
+      globalThis.setTimeout(reselect, ms)
+    );
 
-    return (): void => timers.forEach((timer) => window.clearTimeout(timer));
+    return (): void =>
+      timers.forEach((timer) => globalThis.clearTimeout(timer));
   }, [waiting, reselect]);
 
   const queue = (axis: PinAxis, mode: PinMode, from: PinMode): void =>

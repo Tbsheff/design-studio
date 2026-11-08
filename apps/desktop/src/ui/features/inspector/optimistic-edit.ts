@@ -59,14 +59,14 @@ const watchResult = (
     }
 
     stop();
-    window.clearTimeout(timer);
+    globalThis.clearTimeout(timer);
 
     if (message.outcome === "mismatch" || message.outcome === "timeout") {
       onProblem(message.reason ?? "The page does not show the saved edit.");
     }
   });
 
-  const timer = window.setTimeout(stop, RESULT_WAIT_MS);
+  const timer = globalThis.setTimeout(stop, RESULT_WAIT_MS);
 };
 
 const NOOP: OptimisticEdit = {

@@ -94,9 +94,9 @@ const startFixedDrag = (
   };
 
   const stop = (): void => {
-    window.removeEventListener("pointermove", move);
-    window.removeEventListener("pointerup", stop);
-    window.removeEventListener("pointercancel", stop);
+    globalThis.removeEventListener("pointermove", move);
+    globalThis.removeEventListener("pointerup", stop);
+    globalThis.removeEventListener("pointercancel", stop);
     document.body.classList.remove("ins-scrubbing");
 
     if (!moved) {
@@ -110,16 +110,16 @@ const startFixedDrag = (
       click.stopPropagation();
     };
 
-    window.addEventListener("click", eat, { capture: true, once: true });
-    window.setTimeout(
-      () => window.removeEventListener("click", eat, { capture: true }),
+    globalThis.addEventListener("click", eat, { capture: true, once: true });
+    globalThis.setTimeout(
+      () => globalThis.removeEventListener("click", eat, { capture: true }),
       0
     );
   };
 
-  window.addEventListener("pointermove", move);
-  window.addEventListener("pointerup", stop);
-  window.addEventListener("pointercancel", stop);
+  globalThis.addEventListener("pointermove", move);
+  globalThis.addEventListener("pointerup", stop);
+  globalThis.addEventListener("pointercancel", stop);
 };
 
 const LiveSize = ({

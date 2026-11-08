@@ -80,14 +80,14 @@ const useLayoutKeys = (
       }
     };
 
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
-    window.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onArrangeKey);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+    globalThis.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onArrangeKey);
 
     return (): void => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
-      window.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onArrangeKey);
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+      globalThis.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onArrangeKey);
     };
   }, [root]);
 };

@@ -1,7 +1,7 @@
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
-import { Icon } from "@design-studio/ui";
 import { cachedThumb, requestThumb } from "./versions-api.js";
 import type { ThumbResult } from "./versions-api.js";
 

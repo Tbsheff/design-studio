@@ -15,6 +15,7 @@ import type { Dispatch, FormEvent, SetStateAction } from "react";
 
 import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
+import { settle } from "./settle.js";
 
 import "../../styles/ship.css";
 import { shipApi } from "./ship-api.js";
@@ -353,20 +354,20 @@ const usePlan = (projectId: string, baseId: string | undefined) => {
     let live = true;
     setPlan(null);
     setLoadError(null);
-    shipApi
-      .prepare(projectId, baseId)
-      .then((next) => {
+    void settle(
+      shipApi.prepare(projectId, baseId),
+      (next) => {
         if (!live) {
           return;
         }
-
         setPlan(next);
         setDraft((prev) => freshDraft(next, prev?.mode ?? "branch"));
         setFocus(
           next.files.find(shippable)?.path ?? next.files[0]?.path ?? null
         );
-      })
-      .catch((error: unknown) => live && setLoadError(errorText(error)));
+      },
+      (error) => live && setLoadError(errorText(error))
+    );
 
     return () => {
       live = false;

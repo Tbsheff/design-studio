@@ -26,9 +26,10 @@ import {
   revealDownload,
   saveExportPrefs,
 } from "./export-api.js";
+import type { ExportTarget, FrameChoice } from "./export-api.js";
 
 import "../../styles/export.css";
-import type { ExportTarget, FrameChoice } from "./export-api.js";
+import { useCopied } from "./use-copied.js";
 
 export interface Props {
   target: ExportTarget;
@@ -186,36 +187,6 @@ const useElapsed = (status: Status): number => {
     : 0;
 };
 
-const useCopied = (): [string | null, (key: string, text: string) => void] => {
-  const [copied, setCopied] = useState<string | null>(null);
-  const timer = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
-  useEffect(
-    () => (): void => {
-      if (timer.current !== null) {
-        globalThis.clearTimeout(timer.current);
-      }
-    },
-    []
-  );
-
-  const copy = (key: string, text: string): void => {
-    void navigator.clipboard.writeText(text).then(
-      () => {
-        setCopied(key);
-
-        if (timer.current !== null) {
-          globalThis.clearTimeout(timer.current);
-        }
-
-        timer.current = globalThis.setTimeout(() => setCopied(null), 1500);
-      },
-      () => setCopied(null)
-    );
-  };
-
-  return [copied, copy];
-};
-
 const HandoffResultView = ({
   target,
   result,
@@ -230,10 +201,13 @@ const HandoffResultView = ({
   const [copied, copy] = useCopied();
   const folder = result.path.split("/").pop() ?? "";
 
-  const run = (task: () => Promise<void>): void =>
-    void task().catch((error: unknown) =>
-      onError(error instanceof Error ? error.message : String(error))
-    );
+  const run = async (task: () => Promise<void>): Promise<void> => {
+    try {
+      await task();
+    } catch (error) {
+      onError(error instanceof Error ? error.message : String(error));
+    }
+  };
 
   return (
     <div className="export-handoff-result">
@@ -313,12 +287,22 @@ const ConnectClaudeCode = (): ReactElement => {
   const [copied, copy] = useCopied();
   useEffect(() => {
     let live = true;
-    mcpApi.status().then(
-      (s) => live && setStatus(s),
-      (failure: unknown) =>
-        live &&
-        setError(failure instanceof Error ? failure.message : String(failure))
-    );
+    const load = async (): Promise<void> => {
+      try {
+        const next = await mcpApi.status();
+
+        if (live) {
+          setStatus(next);
+        }
+      } catch (failure) {
+        if (live) {
+          setError(
+            failure instanceof Error ? failure.message : String(failure)
+          );
+        }
+      }
+    };
+    void load();
 
     return (): void => {
       live = false;
@@ -510,10 +494,18 @@ const useEditors = (active: boolean): EditorInfo[] => {
     }
 
     let live = true;
-    exportApi.editors().then(
-      (list) => live && setEditors(list),
-      () => null
-    );
+    const load = async (): Promise<void> => {
+      try {
+        const list = await exportApi.editors();
+
+        if (live) {
+          setEditors(list);
+        }
+      } catch {
+        return;
+      }
+    };
+    void load();
 
     return (): void => {
       live = false;

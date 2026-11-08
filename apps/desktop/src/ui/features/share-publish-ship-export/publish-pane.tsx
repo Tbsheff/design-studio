@@ -23,6 +23,7 @@ import { publishApi } from "./publish-api.js";
 import type { PublishRequest } from "./publish-api.js";
 import { usePublishBackend } from "./publish-backend-setup.js";
 import { PublishSetupBody, usePublishCli } from "./publish-setup.js";
+import { ignoreFailure } from "./settle.js";
 
 export interface PublishTarget {
   projectId: string;
@@ -49,7 +50,7 @@ const usePublications = (projectId: string) => {
   }, [projectId]);
 
   useEffect(() => {
-    void reload().catch(() => null);
+    void ignoreFailure(reload());
   }, [reload]);
 
   return { backendError, list, reload };

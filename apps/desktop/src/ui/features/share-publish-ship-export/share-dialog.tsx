@@ -18,6 +18,7 @@ import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { copy } from "./copy.js";
 import { canvasFrameChoices, frameRoute } from "./export-api.js";
 import { PublishPane } from "./publish-pane.js";
+import { catchFailure, ignoreFailure, settleValue } from "./settle.js";
 
 import "../../styles/export.css";
 import "../../styles/share.css";
@@ -348,7 +349,7 @@ const useShares = (projectId: string) => {
   }, [projectId]);
 
   useEffect(() => {
-    reload().catch((failure: unknown) => setError(errorText(failure)));
+    void catchFailure(reload(), (failure) => setError(errorText(failure)));
   }, [reload]);
   const watching = links.some((l) => l.live && l.active);
   useEffect(() => {
@@ -357,7 +358,7 @@ const useShares = (projectId: string) => {
     }
 
     const timer = globalThis.setInterval(
-      () => void reload().catch(() => null),
+      () => void ignoreFailure(reload()),
       3000
     );
 
@@ -404,7 +405,7 @@ const useCopyNew = (links: ShareLink[], server: ShareServerState) => {
     document
       .querySelector<HTMLElement>(`[data-link-id="${pending}"] .copy-btn`)
       ?.focus();
-    void copyText(shareUrl(server.localUrl, token)).then((ok) =>
+    void settleValue(copyText(shareUrl(server.localUrl, token)), (ok) =>
       setId(ok ? pending : null)
     );
   }, [pending, links, server.localUrl]);

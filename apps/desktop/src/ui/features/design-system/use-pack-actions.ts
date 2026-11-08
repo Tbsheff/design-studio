@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { packApi } from "../../platform/pack-api.js";
 import type { DesignSystemActions } from "./design-system-model.js";
 import { refreshPacks } from "./packs.js";
+import { toRemainingToast } from "./toast-model.js";
 
 const TOAST_MS = 5000;
 
@@ -31,14 +32,6 @@ interface SaveOptions {
   force?: boolean;
   packId?: string;
 }
-
-const toRemainingToast = (current: Toast | null, id: number): Toast | null => {
-  if (current?.id === id) {
-    return null;
-  }
-
-  return current;
-};
 
 const toSaveBody = (name: string, options: SaveOptions): SaveBody => {
   const body: SaveBodyDraft = { name };

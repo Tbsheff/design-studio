@@ -29,6 +29,7 @@ import { TextStatus } from "../text/errors/status.js";
 import { ThemeStatus } from "../theme/errors/status.js";
 import { TokenStatus } from "../token/errors/status.js";
 import { ViewportStatus } from "../viewport/errors/status.js";
+import { WalkthroughStatus } from "../walkthrough/errors/status.js";
 import type { StudioErrorTag } from "./errors/all.js";
 import type { HttpStatus } from "./errors/http-status-codes.js";
 import { CoreStatus } from "./errors/status.js";
@@ -65,6 +66,7 @@ const HTTP_STATUS = {
   ...ThemeStatus,
   ...TokenStatus,
   ...ViewportStatus,
+  ...WalkthroughStatus,
   Defect: 500,
 } as const satisfies Record<StudioErrorTag | "Defect", HttpStatus>;
 

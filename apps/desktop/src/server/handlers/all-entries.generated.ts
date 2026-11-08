@@ -43,6 +43,7 @@ import { ThemeEntries } from "./theme/handlers.js";
 import { TokenEntries } from "./token/handlers.js";
 import { VersionEntries } from "./version/handlers.js";
 import { ViewportEntries } from "./viewport/handlers.js";
+import { WalkthroughEntries } from "./walkthrough/handlers.js";
 import { WorkspaceEntries } from "./workspace/handlers.js";
 
 const ALL_ENTRIES = {
@@ -90,6 +91,7 @@ const ALL_ENTRIES = {
   token: TokenEntries,
   version: VersionEntries,
   viewport: ViewportEntries,
+  walkthrough: WalkthroughEntries,
   workspace: WorkspaceEntries,
 } as const;
 

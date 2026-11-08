@@ -43,6 +43,7 @@ import { ThemeActions } from "./theme/index.js";
 import { TokenActions } from "./token/index.js";
 import { VersionActions } from "./version/index.js";
 import { ViewportActions } from "./viewport/index.js";
+import { WalkthroughActions } from "./walkthrough/index.js";
 import { WorkspaceActions } from "./workspace/index.js";
 
 const ALL_ACTIONS = {
@@ -90,6 +91,7 @@ const ALL_ACTIONS = {
   token: TokenActions,
   version: VersionActions,
   viewport: ViewportActions,
+  walkthrough: WalkthroughActions,
   workspace: WorkspaceActions,
 } as const;
 

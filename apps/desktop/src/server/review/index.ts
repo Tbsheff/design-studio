@@ -15,3 +15,10 @@ export type { CritiqueStoreApi, GetCommand } from "./critique-store.js";
 export type { Critique, RunCommand } from "./critique-frame.js";
 
 export { ScenarioRunner, ScenarioStore } from "./scenario/index.js";
+
+export { WalkthroughRunner, WalkthroughStore } from "./walkthrough/index.js";
+
+export type {
+  WalkthroughRunnerApi,
+  WalkthroughStoreApi,
+} from "./walkthrough/index.js";

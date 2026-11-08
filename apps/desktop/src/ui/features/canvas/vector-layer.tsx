@@ -72,7 +72,7 @@ function useDropAt(post: Props["post"], listen: Props["listen"]) {
       waiting.current.set(id, resolve);
       window.setTimeout(() => {
         if (waiting.current.delete(id)) {
-          resolve({ selection: null, inside: false });
+          resolve({ inside: false, selection: null });
         }
       }, DROP_WAIT_MS);
       post({ requestId: id, type: "element-at", x: point.x, y: point.y });
@@ -171,10 +171,10 @@ function useCommit(p: Props, dropAt: (point: Point) => Promise<Drop>) {
           window.setTimeout(
             () =>
               p.post({
-                type: "select-source",
                 sourceLoc: `${at0.file}:${at0.line}:${at0.col}`,
                 tag: at0.tag,
                 text: "",
+                type: "select-source",
               }),
             wait
           );
@@ -261,7 +261,7 @@ function useShapeTool(
     const point = pointOf(event);
 
     if (drag && point) {
-      setDrag({ ...drag, to: point, square: event.shiftKey });
+      setDrag({ ...drag, square: event.shiftKey, to: point });
     }
   };
 

@@ -531,16 +531,16 @@ const motionOptions = (link: PrototypeLink) => {
 
   return {
     durations: durations.map((ms) => ({
-      value: String(ms),
       label: `${ms} ms`,
+      value: String(ms),
     })),
     easings: LINK_EASINGS.map((easing) => ({
-      value: easing,
       label: EASING_LABELS[easing],
+      value: easing,
     })),
     transitions: LINK_TRANSITIONS.map((transition) => ({
-      value: transition,
       label: transitionLabel(transition),
+      value: transition,
     })),
   };
 };

@@ -306,8 +306,8 @@ const usePlay = (p: Props) => {
       }
 
       const slot: Slot = {
-        key: token,
         frame,
+        key: token,
         src: frameSrc(url, { [BRIDGE_PASSIVE_PARAM]: "1" }),
         token,
         ...(slotsRef.current.length === 0 ? INSTANT : effective),

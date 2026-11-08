@@ -170,7 +170,7 @@ const snapSize = (
   off: boolean
 ): { size: Size; guides: SnapGuide[] } => {
   if (off || d.candidates.length === 0) {
-    return { size: next, guides: [] };
+    return { guides: [], size: next };
   }
   const r = d.target.rect;
 
@@ -314,8 +314,8 @@ const useResizeHandles = (o: Options): ResizeHandles => {
       live.current.refreshRects();
     } catch (error) {
       const back = {
-        width: d.target.styles.width ?? "",
         height: d.target.styles.height ?? "",
+        width: d.target.styles.width ?? "",
       };
       optimistic.failed(errorText(error));
       live.current.setSelection((prev) =>

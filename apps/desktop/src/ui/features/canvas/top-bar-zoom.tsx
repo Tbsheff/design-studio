@@ -142,11 +142,11 @@ const OverflowMenu = (p: OverflowProps): ReactElement => {
     {
       fold: "tight",
       items: VECTOR_TOOLS.map((item) => ({
+        checked: shape.available && shape.tool === item.id,
+        disabled: !shape.available,
         id: item.id,
         label: item.label,
         meta: item.keyLabel,
-        checked: shape.available && shape.tool === item.id,
-        disabled: !shape.available,
         run: () => vectorTool.toggle(item.id),
       })),
       label: "Shapes",

@@ -118,10 +118,10 @@ const useFileMenu = (p: ChromeProps, onImport: () => void) => {
   const groups = (): MenuGroup[] => [
     {
       items: pages.map((path) => ({
+        checked: current === path,
+        icon: "file" as const,
         id: `page-${path}`,
         label: path,
-        icon: "file" as const,
-        checked: current === path,
         run: () => p.frames.update((l) => setFramePath(l, p.active.id, path)),
       })),
       label: "Pages",
@@ -140,10 +140,10 @@ const useFileMenu = (p: ChromeProps, onImport: () => void) => {
         };
 
         return {
+          checked: f.id === p.active.id,
           id: `frame-${f.id}`,
           label: `${info.number ?? i + 1}  ${info.badge?.title ?? frameBaseName(f)}`,
           meta: f.hidden ? "Hidden" : framePage(f.path),
-          checked: f.id === p.active.id,
           run: show,
         };
       }),
@@ -152,10 +152,10 @@ const useFileMenu = (p: ChromeProps, onImport: () => void) => {
     {
       items: [
         ...FRAME_PRESETS.map((f) => ({
+          disabled: !canAddFrame(p.layout),
+          icon: f.preset,
           id: `add-${f.preset}`,
           label: f.label,
-          icon: f.preset,
-          disabled: !canAddFrame(p.layout),
           run: () => addAndShow(p, { width: f.width, height: f.height }),
         })),
         ...p.importPage.items(p.kind, p.directionId, onImport),

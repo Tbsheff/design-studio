@@ -65,8 +65,8 @@ const useCanvasEdits = (
   useCanvasVectorTools(editsEnabled, protoOn, draw, comment);
   useImageDrop({
     directionId,
-    isEnabled: editsEnabled,
     frames,
+    isEnabled: editsEnabled,
     kind,
     notify: layerEdits.notify,
     projectId,

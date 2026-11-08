@@ -96,7 +96,7 @@ export function defaultLayout(viewport: Viewport): CanvasLayout {
   return {
     activeId: "f1",
     frames: [
-      { id: "f1", width: viewport.width, height: viewport.height, x: 0, y: 0 },
+      { height: viewport.height, id: "f1", width: viewport.width, x: 0, y: 0 },
     ],
   };
 }

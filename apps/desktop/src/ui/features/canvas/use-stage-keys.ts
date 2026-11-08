@@ -231,7 +231,7 @@ const useStageKeys = (o: StageKeys): void => {
     on: o.live && !o.commentMode && !o.protoOn,
     picking: o.picking,
     selectFirst: () =>
-      o.post({ type: "select-relative", selector: "", move: "child" }),
+      o.post({ move: "child", selector: "", type: "select-relative" }),
     startPicking: () => o.setSelectMode(() => true),
   });
 };

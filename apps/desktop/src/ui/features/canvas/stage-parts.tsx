@@ -140,7 +140,7 @@ const OtherFrames = ({
         offset: active,
         onNextLoad: passive.onSwapDone,
         pending: wait
-          ? { step: step ?? null, missing: wait === "missing" }
+          ? { missing: wait === "missing", step: step ?? null }
           : undefined,
         register,
         sandbox,

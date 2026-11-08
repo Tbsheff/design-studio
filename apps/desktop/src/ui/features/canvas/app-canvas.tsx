@@ -104,25 +104,25 @@ const serverHint = (
 
   if (state === "failed" || state === "stopped") {
     return {
-      text: `${managed ? "The dev server is not running" : "Your dev server does not answer"}. Press ${name} at the bottom left for the fix.`,
       busy: false,
       kind: "failed",
+      text: `${managed ? "The dev server is not running" : "Your dev server does not answer"}. Press ${name} at the bottom left for the fix.`,
     };
   }
   if (state !== "ready") {
     return {
+      busy: true,
+      kind: "starting",
       text: managed
         ? `Starting ${app.framework === "next" ? "next dev" : "the dev server"}…`
         : "Checking your dev server…",
-      busy: true,
-      kind: "starting",
     };
   }
   if (!loaded) {
     return {
-      text: "Loading the page. The first visit to a route can take a while.",
       busy: true,
       kind: "loading",
+      text: "Loading the page. The first visit to a route can take a while.",
     };
   }
   return null;

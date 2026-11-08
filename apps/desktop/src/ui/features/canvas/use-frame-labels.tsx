@@ -168,9 +168,9 @@ const useFrameLabels = (o: LabelInput) => {
       ...o.baseLabel(frame),
       badge: variation
         ? {
+            current: did === o.directionId,
             label: variation.label,
             title: variation.title,
-            current: did === o.directionId,
           }
         : undefined,
       directionId: did,

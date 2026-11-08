@@ -158,9 +158,9 @@ export function useVariations(o: Options) {
       } catch (error) {
         setDraft({
           ...current,
-          starting: false,
           autoStart: false,
           error: errorText(error),
+          starting: false,
         });
       }
     },
@@ -232,7 +232,7 @@ export function useVariations(o: Options) {
         }
       } catch (error) {
         if (requestRef.current === ticket) {
-          setDraft({ ...base, loading: false, error: errorText(error) });
+          setDraft({ ...base, error: errorText(error), loading: false });
         }
       }
     },
@@ -310,9 +310,9 @@ export function useVariations(o: Options) {
         if (requestRef.current === ticket) {
           setDraft({
             ...base,
-            loading: false,
             autoStart: false,
             error: errorText(error),
+            loading: false,
           });
         }
       }

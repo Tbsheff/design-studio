@@ -8,6 +8,8 @@ const PlayMode = lazy(async () => {
   return { default: loaded.PlayMode };
 });
 
+export { Canvas, PlayMode };
+
 export {
   activeFrame,
   addFrame,
@@ -31,13 +33,13 @@ export {
   placeDirections,
 } from "./canvas-direction-ops.js";
 
-export { canvasStore } from "./canvas-frames-model.js";
+export {
+  canvasStore,
+  cleanFramePath,
+  parseLayout,
+} from "./canvas-frames-model.js";
 
 export { canvasVariations } from "./canvas-variations.js";
-
-export type { CanvasCommentTools, CanvasDirections } from "./canvas-types.js";
-
-export { Canvas, PlayMode };
 
 export { canvasFrameName, framePage } from "./frame-label-model.js";
 
@@ -47,16 +49,16 @@ export { nextSelection } from "./preview-selection-model.js";
 
 export { runVector } from "./vector-tool-model.js";
 
-export { cleanFramePath, parseLayout } from "./canvas-frames-model.js";
-
 export { historyKeyOf, routeHistoryCommand } from "./use-undo-shortcut.js";
-
-export type { ShortcutState } from "./use-undo-shortcut.js";
 
 export {
   focusStageQuietly,
   MAX_INLINE_TEXT,
   parseTextCommit,
 } from "./use-inline-text-edit.js";
+
+export type { CanvasCommentTools, CanvasDirections } from "./canvas-types.js";
+
+export type { ShortcutState } from "./use-undo-shortcut.js";
 
 export type { PreviewMenuItem } from "./preview-menu.js";

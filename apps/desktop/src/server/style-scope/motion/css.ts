@@ -148,7 +148,7 @@ const toMergeLines = (lines: readonly string[], edit: SheetEdit): string[] => {
 const toBlockOf = (lines: readonly string[]): string =>
   [OPEN_TAG, ...lines, CLOSE_TAG].join("\n");
 
-const insertBlock = (code: string, lines: readonly string[]): string => {
+const insertMotionRule = (code: string, lines: readonly string[]): string => {
   const head = code.indexOf(HEAD_END);
 
   if (head === -1) {
@@ -168,7 +168,7 @@ const toUpsertHtmlBlock = (code: string, edit: SheetEdit): string => {
       return code;
     }
 
-    return insertBlock(code, edit.add);
+    return insertMotionRule(code, edit.add);
   }
 
   const lines = (match.groups?.["body"] ?? "")

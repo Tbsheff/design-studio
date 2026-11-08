@@ -17,6 +17,7 @@ import type {
 
 import { desktopBridge } from "../../platform/desktop.js";
 import { call as callAction, getJson, sendJson } from "../../platform/http.js";
+import type { RouteOutput } from "../../platform/http.js";
 import { isFieldSource } from "../../platform/json-guard.js";
 import { readStored, uiStore, writeStored } from "../../platform/storage.js";
 import { canvasStore } from "../canvas/canvas-frames-model.js";
@@ -117,7 +118,10 @@ const exportApi = {
         versionId: request.versionId,
       })
     ),
-  exportFlow: (pid: string, request: FlowRequest) =>
+  exportFlow: (
+    pid: string,
+    request: FlowRequest
+  ): Promise<RouteOutput<typeof canvasRoutes.exportFlowCanvas>> =>
     callAction(canvasRoutes.exportFlowCanvas, {
       directionId: request.directionId,
       format: request.format,

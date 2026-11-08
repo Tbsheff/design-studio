@@ -48,7 +48,7 @@ function firstHeadingLine(lines: string[]): number {
   return -1;
 }
 
-function insertBlock(markdown: string, block: string): string {
+function insertDesignMarkdownBlock(markdown: string, block: string): string {
   const lines = markdown.split("\n");
   const heading = firstHeadingLine(lines);
 
@@ -82,7 +82,7 @@ export function upsertTokenBlock(
     );
   }
 
-  return insertBlock(markdown, block);
+  return insertDesignMarkdownBlock(markdown, block);
 }
 
 export const TOKEN_TABLE_POINTER =

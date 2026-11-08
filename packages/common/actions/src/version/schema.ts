@@ -72,10 +72,6 @@ const VersionSchema = Schema.Struct({
   title: Schema.String,
 });
 
-const VersionListSchema = Schema.Struct({
-  items: Schema.Array(VersionSchema),
-});
-
 const VersionChangesSchema = Schema.Struct({
   files: Schema.Array(VersionFileDiffSchema),
   from: Schema.String,
@@ -131,6 +127,20 @@ const SessionEndSchema = Schema.Struct({
   version: Schema.NullOr(VersionSchema),
 });
 
+const WorkTreeStatusSchema = Schema.Struct({
+  changed: Schema.Array(Schema.String),
+  dirty: Schema.Boolean,
+});
+
+const VersionPreviewSchema = Schema.Struct({
+  url: Schema.String,
+});
+
+const VersionExportSchema = Schema.Struct({
+  base64: Schema.String,
+  fileName: Schema.String,
+});
+
 export {
   EditHistoryViewSchema,
   EditStepSchema,
@@ -139,6 +149,8 @@ export {
   SessionEndSchema,
   VersionRenamedSchema,
   VersionChangesSchema,
-  VersionListSchema,
+  VersionExportSchema,
+  VersionPreviewSchema,
   VersionSchema,
+  WorkTreeStatusSchema,
 };

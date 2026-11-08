@@ -13,6 +13,7 @@ import {
 } from "../platform/runtime-slot/index.js";
 import type { CommentStore as CommentFiles } from "../store/comments.js";
 import type { PrefillDeps } from "./prefill.js";
+import type { ReferenceDeps } from "./reference-compare.js";
 import type { RunWatcher } from "./run-watch.js";
 
 interface CommentTarget {
@@ -47,6 +48,7 @@ interface CommentRuntime {
   ) => Promise<CommentTarget>;
   readonly prefill: PrefillDeps;
   readonly projectDir: (projectId: string) => string;
+  readonly reference: ReferenceDeps;
   readonly runs: CommentRunDeps;
 }
 

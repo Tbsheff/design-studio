@@ -1,25 +1,24 @@
+import {
+  AuthorSchema,
+  CommentTextSchema,
+} from "@design-studio/actions/comment/schema";
 import type { Direction, Project } from "@design-studio/contracts";
+import { Result, Schema } from "effect";
 import type { Context, Hono } from "hono";
 
-import { COMMENT_TEXT_MAX } from "../../shared/comments.js";
 import type { RunWatcher } from "../comments/run-watch.js";
+import { toDecoder } from "../platform/decode/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import type { CommentStore } from "../store/comments.js";
 
 export { withCommentInputs } from "../comments/run-payload.js";
 
-const textSchema = z
-  .string()
-  .trim()
-  .min(1, "text is required")
-  .max(COMMENT_TEXT_MAX);
+const replyBodySchema = Schema.Struct({
+  author: Schema.optionalKey(AuthorSchema),
+  text: CommentTextSchema,
+});
 
-const authorSchema = z.string().trim().min(1).max(60);
-
-const replySchema = z
-  .object({ text: textSchema, author: authorSchema.optional() })
-  .strict();
+const decodeReplyBody = toDecoder(replyBodySchema, "error");
 
 interface CommentRouteDeps {
   comments: CommentStore;
@@ -30,7 +29,10 @@ interface CommentRouteDeps {
   ) => Promise<{ project: Project; direction: Direction }>;
 }
 
-async function parseBody<T>(c: Context, schema: z.ZodType<T>): Promise<T> {
+async function parseBody(c: Context): Promise<{
+  author: string | undefined;
+  text: string;
+}> {
   const raw = (await c.req.text()).trim();
   let json: unknown = {};
   if (raw !== "") {
@@ -40,16 +42,11 @@ async function parseBody<T>(c: Context, schema: z.ZodType<T>): Promise<T> {
       throw new BadRequestError("body must be JSON");
     }
   }
-  const parsed = schema.safeParse(json);
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    throw new BadRequestError(
-      issue
-        ? `${issue.path.join(".") || "body"}: ${issue.message}`
-        : "invalid body"
-    );
+  const parsed = decodeReplyBody(json);
+  if (Result.isFailure(parsed)) {
+    throw new BadRequestError(`invalid body: ${parsed.failure.message}`);
   }
-  return parsed.data;
+  return { author: parsed.success.author, text: parsed.success.text };
 }
 
 export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
@@ -70,7 +67,7 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
   });
 
   app.post(`${base}/:cid/replies`, async (c) => {
-    const { text, author } = await parseBody(c, replySchema);
+    const { text, author } = await parseBody(c);
     const { project, direction } = await deps.loadDirection(
       c.req.param("pid"),
       c.req.param("did")

@@ -5,7 +5,8 @@ import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
-import { VersionListSchema } from "./schema.js";
+import { PageFields, pageOf } from "../_core/list-page.js";
+import { VersionSchema } from "./schema.js";
 
 const listVersion = defineAction({
   access: "read",
@@ -20,13 +21,14 @@ const listVersion = defineAction({
   },
   id: "version.list",
   input: Schema.Struct({
+    ...PageFields,
     directionId: DirectionIdSchema,
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
   mcp: { off: "ui-bootstrap" },
   needs: "project.read",
-  output: VersionListSchema,
+  output: pageOf(VersionSchema),
   scope: "project",
 });
 

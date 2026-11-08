@@ -3,20 +3,26 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Version } from "@design-studio/contracts";
+import { Result, Schema } from "effect";
 
+import { toDecoder } from "../platform/decode/index.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 
 export const VERSION_NAME_MAX = 80;
 const FILE = "version-names.json";
 
-const NamesFile = z.record(
-  z.string().min(1),
-  z.string().min(1).max(VERSION_NAME_MAX)
+const NamesFile = Schema.Record(
+  Schema.String.check(Schema.isMinLength(1)),
+  Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(VERSION_NAME_MAX)
+  )
 );
 
-type Names = z.infer<typeof NamesFile>;
+const decodeNames = toDecoder(Schema.fromJsonString(NamesFile), "ignore");
+
+type Names = Record<string, string>;
 
 export interface VersionNames {
   all(projectId: string): Promise<Names>;
@@ -57,6 +63,20 @@ export function createVersionNames(
   const fileOf = (projectId: string): string =>
     path.join(projectDir(assertSafeId(projectId, "projectId")), FILE);
 
+  const load = async (projectId: string): Promise<Names> => {
+    try {
+      const parsed = decodeNames(await readFile(fileOf(projectId), "utf-8"));
+
+      if (Result.isSuccess(parsed)) {
+        return { ...parsed.success };
+      }
+    } catch {
+      return {};
+    }
+
+    return {};
+  };
+
   const read = async (projectId: string): Promise<Names> => {
     const cached = cache.get(projectId);
 
@@ -64,20 +84,7 @@ export function createVersionNames(
       return cached;
     }
 
-    let names: Names = {};
-
-    try {
-      const parsed = NamesFile.safeParse(
-        JSON.parse(await readFile(fileOf(projectId), "utf-8"))
-      );
-
-      if (parsed.success) {
-        names = parsed.data;
-      }
-    } catch {
-      names = {};
-    }
-
+    const names = await load(projectId);
     cache.set(projectId, names);
 
     return names;

@@ -12,7 +12,7 @@ import type {
   TweaksState,
   TweakValue,
 } from "../shared/tweaks";
-import { enc, json, toDirectionPath, toProjectPath } from "./api-core.js";
+import { enc, json, toDirectionPath } from "./api-core.js";
 import { call, pickMessage, request } from "./platform/http";
 import {
   endEditSessionAt,
@@ -31,6 +31,30 @@ const toBaseQuery = (base?: string): string => {
 
 const COMMIT_HISTORY_LIMIT = 1;
 
+const VERSION_PAGE_LIMIT = 200;
+
+const collectVersions = async (
+  pid: string,
+  did: string,
+  cursor: string | null,
+  seen: readonly Version[]
+): Promise<Version[]> => {
+  const page = await call(versionsRoutes.listVersion, {
+    cursor,
+    directionId: did,
+    limit: VERSION_PAGE_LIMIT,
+    projectId: pid,
+  });
+
+  const versions = [...seen, ...page.items];
+
+  if (page.next === null) {
+    return versions;
+  }
+
+  return collectVersions(pid, did, page.next, versions);
+};
+
 const versionApi = {
   commitTweaks: async (
     pid: string,
@@ -47,7 +71,10 @@ const versionApi = {
     return (await res.json()) as CommitTweaksResult;
   },
   discard: (pid: string, did: string): Promise<WorkTreeStatus> =>
-    json<WorkTreeStatus>("POST", `${toDirectionPath(pid, did)}/discard`),
+    call(versionsRoutes.restoreWorkTreeVersion, {
+      directionId: did,
+      projectId: pid,
+    }),
   editHistory: (pid: string, did: string): Promise<EditHistoryState> =>
     call(versionsRoutes.listHistoryVersion, {
       directionId: did,
@@ -76,36 +103,36 @@ const versionApi = {
   ): Promise<EditSessionEnd> =>
     endEditSessionAt(pid, did, action, baseVersionId),
   exportVersion: async (pid: string, vid: string): Promise<Blob> => {
-    const res = await request(
-      "GET",
-      `${toProjectPath(pid)}/versions/${enc(vid)}/export`
+    const exported = await call(versionsRoutes.exportVersion, {
+      projectId: pid,
+      versionId: vid,
+    });
+
+    const bytes = Uint8Array.from(
+      atob(exported.base64),
+      (char) => char.codePointAt(0) ?? 0
     );
 
-    return res.blob();
+    return new Blob([bytes], { type: "application/zip" });
   },
   getTweaks: (pid: string, did: string): Promise<TweaksState> =>
     json<TweaksState>("GET", `${toDirectionPath(pid, did)}/tweaks`),
   keep: (pid: string, did: string): Promise<Version> =>
-    json<Version>("POST", `${toDirectionPath(pid, did)}/keep`),
-  listVersions: async (pid: string, did: string): Promise<Version[]> => {
-    const list = await call(versionsRoutes.listVersion, {
-      directionId: did,
-      projectId: pid,
-    });
-
-    const items: Version[] = list.items;
-
-    return items;
-  },
+    call(versionsRoutes.createVersion, { directionId: did, projectId: pid }),
+  listVersions: (pid: string, did: string): Promise<Version[]> =>
+    collectVersions(pid, did, null, []),
   restore: (pid: string, did: string, versionId: string): Promise<Version> =>
     restoreVersionAt(pid, did, versionId),
   undo: (pid: string, did: string): Promise<Version> =>
-    json<Version>("POST", `${toDirectionPath(pid, did)}/undo`),
+    call(versionsRoutes.restoreHeadVersion, {
+      directionId: did,
+      projectId: pid,
+    }),
   versionPreview: (pid: string, vid: string): Promise<{ url: string }> =>
-    json<{ url: string }>(
-      "GET",
-      `${toProjectPath(pid)}/versions/${enc(vid)}/preview`
-    ),
+    call(versionsRoutes.inspectPreviewVersion, {
+      projectId: pid,
+      versionId: vid,
+    }),
 };
 
 export { versionApi };

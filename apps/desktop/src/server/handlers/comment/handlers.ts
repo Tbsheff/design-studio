@@ -8,6 +8,7 @@ import { handle as deleteReplyCommentHandle } from "./delete-reply.js";
 import { handle as deleteCommentHandle } from "./delete.js";
 import { handle as exportCommentHandle } from "./export.js";
 import { handle as insertCommentHandle } from "./insert.js";
+import { handle as inspectReferenceCommentHandle } from "./inspect-reference.js";
 import { handle as listCommentHandle } from "./list.js";
 import { handle as moveCommentHandle } from "./move.js";
 import { handle as searchMentionCommentHandle } from "./search-mention.js";
@@ -22,6 +23,7 @@ const CommentEntries = {
   deleteReplyComment: { handle: deleteReplyCommentHandle },
   exportComment: { handle: exportCommentHandle },
   insertComment: { handle: insertCommentHandle },
+  inspectReferenceComment: { handle: inspectReferenceCommentHandle },
   listComment: { handle: listCommentHandle },
   moveComment: { handle: moveCommentHandle },
   searchMentionComment: { handle: searchMentionCommentHandle },

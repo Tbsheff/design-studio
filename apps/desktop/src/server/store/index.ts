@@ -37,6 +37,8 @@ export { ProjectAccess } from "./project-access.js";
 
 export { StudioInfo } from "./studio-info.js";
 
+export { toVersionPage } from "./version-page.js";
+
 export { VersionStore } from "./version-store.js";
 
 export { VersionWriter } from "./version-writer.js";

@@ -40,7 +40,6 @@ const ZOD_BRIDGE_FILES = new Set([
   "apps/desktop/src/server/mcp/legacy/projects-schema.ts",
   "apps/desktop/src/server/mcp/move-tools.ts",
   "apps/desktop/src/server/mcp/props-tools.ts",
-  "apps/desktop/src/server/mcp/reference-tools.ts",
   "apps/desktop/src/server/mcp/review-tools.ts",
   "apps/desktop/src/server/mcp/rules-tools.ts",
   "apps/desktop/src/server/mcp/select-tools.ts",

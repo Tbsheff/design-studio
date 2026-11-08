@@ -1,7 +1,15 @@
 import { Layer } from "effect";
 
-import { ViewportRunner, ViewportWriter } from "../../viewport/index.js";
+import {
+  ViewportFixWriter,
+  ViewportRunner,
+  ViewportWriter,
+} from "../../viewport/index.js";
 
-const ViewportLive = Layer.mergeAll(ViewportRunner.layer, ViewportWriter.layer);
+const ViewportLive = Layer.mergeAll(
+  ViewportRunner.layer,
+  ViewportWriter.layer,
+  ViewportFixWriter.layer
+);
 
 export { ViewportLive };

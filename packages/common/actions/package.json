@@ -459,6 +459,7 @@
     "./version/restore-history": "./src/version/restore-history.ts",
     "./version/routes": "./src/version/routes.ts",
     "./version/schema": "./src/version/schema.ts",
+    "./viewport/apply": "./src/viewport/apply.ts",
     "./viewport/create": "./src/viewport/create.ts",
     "./viewport/errors/index": "./src/viewport/errors/index.ts",
     "./viewport/errors/status": "./src/viewport/errors/status.ts",

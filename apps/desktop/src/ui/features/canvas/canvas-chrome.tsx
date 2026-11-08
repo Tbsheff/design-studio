@@ -14,7 +14,7 @@ import { TweakPrompt } from "./tweak-prompt.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import { VectorToolButtons } from "./vector-tool-buttons.js";
 
-const NOOP = (): null => null;
+const noop = (): null => null;
 
 const toggleRulers = (): void => uiStore.set((st) => ({ rulers: !st.rulers }));
 
@@ -64,8 +64,8 @@ const barShell = (
     return {
       canExport: false,
       directionName: null,
-      onExpandPane: NOOP,
-      onExport: NOOP,
+      onExpandPane: noop,
+      onExport: noop,
       onShareLink: null,
       onShip: null,
       paneCollapsed: false,

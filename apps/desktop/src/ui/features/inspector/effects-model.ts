@@ -1,4 +1,4 @@
-import type { ShiftPart } from "./css-values.js";
+import type { ShiftPart } from "./css-value-model.js";
 import { formatShadows, parseShadows } from "./shadows.js";
 import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";

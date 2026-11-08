@@ -15,7 +15,7 @@ import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CreateTokenDialog } from "../versions-layers-tokens/create-token-dialog.js";
 import type { CreateTokenSubmit } from "../versions-layers-tokens/create-token-dialog.js";
 import { copy } from "./copy.js";
-import type { StyleValues } from "./css-values.js";
+import type { StyleValues } from "./css-value-model.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";

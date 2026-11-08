@@ -23,7 +23,7 @@ import { lintValues } from "../versions-layers-tokens/token-lint.js";
 import type { LintIssue } from "../versions-layers-tokens/token-lint.js";
 import type { AuthoredCss } from "./authored-css.js";
 import { copy } from "./copy.js";
-import type { StyleValues } from "./css-values.js";
+import type { StyleValues } from "./css-value-model.js";
 import { buildEditRequest } from "./use-direct-edit.js";
 import type { DirectEdit, DirectEditCommit } from "./use-direct-edit.js";
 import { useSnapSetting, useTokenSnap } from "./use-token-snap.js";

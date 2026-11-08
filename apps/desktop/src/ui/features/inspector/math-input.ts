@@ -1,4 +1,4 @@
-import { formatNumber, parseNumber } from "./css-values.js";
+import { toNumberText, toParsedNumber } from "./css-value-model.js";
 
 type Token =
   | { readonly kind: "num"; readonly value: number; readonly unit: string }
@@ -183,11 +183,11 @@ const resolveNumberInput = (
     return null;
   }
 
-  const base = parseNumber(current);
+  const base = toParsedNumber(current);
   const unit = result.unit || base?.unit || defaultUnit;
 
   if (!relative) {
-    return formatNumber(result.value, unit);
+    return toNumberText(result.value, unit);
   }
 
   if (base && result.unit && base.unit && base.unit !== result.unit) {
@@ -196,7 +196,7 @@ const resolveNumberInput = (
 
   const start = base?.value ?? 0;
 
-  return formatNumber(
+  return toNumberText(
     relative === "-=" ? start - result.value : start + result.value,
     unit
   );

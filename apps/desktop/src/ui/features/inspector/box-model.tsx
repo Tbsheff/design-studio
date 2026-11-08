@@ -4,8 +4,8 @@ import { useState } from "react";
 import type { ReactNode, ReactElement } from "react";
 
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
-import { SIDES } from "./css-values.js";
-import type { Side } from "./css-values.js";
+import { SIDES } from "./css-value-model.js";
+import type { Side } from "./css-value-model.js";
 import { NumberInput } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 

@@ -3,7 +3,7 @@ import { startTransition, useCallback, useEffect, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
-import type { StyleValues } from "./css-values.js";
+import type { StyleValues } from "./css-value-model.js";
 import type { ElementClasses } from "./element-classes-model.js";
 import { CreateTokenHost, useInspectorTokens } from "./inspector-tokens.js";
 import type { ScopeInput } from "./inspector-tokens.js";

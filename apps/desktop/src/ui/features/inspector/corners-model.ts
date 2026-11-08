@@ -1,6 +1,6 @@
 import { copy } from "./copy.js";
-import { expandBox, SIDES } from "./css-values.js";
-import type { ShiftPart, Side } from "./css-values.js";
+import { toBoxSides, SIDES } from "./css-value-model.js";
+import type { ShiftPart, Side } from "./css-value-model.js";
 
 const NO_CORNER = "0";
 
@@ -27,7 +27,7 @@ const toJoinedCorners = (corners: Record<Side, string>): string => {
 };
 
 const toCorners = (radius: string): Record<Side, string> =>
-  expandBox(radius.split("/")[0]);
+  toBoxSides(radius.split("/")[0] ?? null);
 
 const toCornerPart = (side: Side): ShiftPart => ({
   key: side,

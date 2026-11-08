@@ -32,7 +32,7 @@ import {
 } from "../chat/use-escape-stop.js";
 import { moveRegion, openLayer, runCommand } from "../commands/index.js";
 import type { BuildError, FilesChange } from "../home/use-studio-data.js";
-import { textEditability } from "../inspector/css-values.js";
+import { toTextEditability } from "../inspector/index.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 import { parseLayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
@@ -882,7 +882,7 @@ const usePreviewFrames = (options: Options) => {
         move === "child" &&
         cur.textEditAllowed &&
         target &&
-        textEditability(target) === "ok"
+        toTextEditability(target) === "ok"
       ) {
         frontFrame()?.element?.focus();
       }

@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import type { ChangeEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { textEditability } from "./css-values.js";
+import { toTextEditability } from "./css-value-model.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
 import { toReadonlyText } from "./rows-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
@@ -15,7 +15,7 @@ interface ContentRowProps {
 }
 
 const ContentRow = ({ selection, edit }: ContentRowProps): ReactElement => {
-  const state = textEditability(selection);
+  const state = toTextEditability(selection);
   const handleKeyDown = useRowKeys(edit.commit, edit.revertText);
   const data = useInspectorApp().element?.textFromData;
   const { previewText, commit: handleTextSettle } = edit;

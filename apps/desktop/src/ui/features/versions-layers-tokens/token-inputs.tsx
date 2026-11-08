@@ -9,10 +9,10 @@ import type {
 
 import { colorHex } from "../../../shared/token-match.js";
 import {
-  colorToHex,
-  formatNumber,
-  parseNumber,
-} from "../inspector/css-values.js";
+  toHexColor,
+  toNumberText,
+  toParsedNumber,
+} from "../inspector/index.js";
 
 interface ValueProps {
   readonly invalid?: boolean;
@@ -104,13 +104,13 @@ const toStepped = (
   steps: number,
   isShift: boolean
 ): string | null => {
-  const parsed = parseNumber(value);
+  const parsed = toParsedNumber(value);
 
   if (!parsed) {
     return null;
   }
 
-  return formatNumber(
+  return toNumberText(
     parsed.value + steps * toStep(parsed.unit, isShift),
     parsed.unit
   );
@@ -124,7 +124,7 @@ const useScrub = (
 
   const onPointerDown = useCallback(
     (event: PointerEvent<HTMLElement>): void => {
-      if (event.button !== 0 || !parseNumber(value)) {
+      if (event.button !== 0 || !toParsedNumber(value)) {
         return;
       }
 
@@ -224,7 +224,7 @@ const ColorValue = ({
 }): ReactNode => {
   const draft = useDraftText(value, onChange);
   const { change } = draft;
-  const hex = colorToHex(swatch) ?? colorHex(swatch);
+  const hex = toHexColor(swatch) ?? colorHex(swatch);
   let emptyClass = "empty";
 
   if (hex) {
@@ -305,7 +305,7 @@ const DimensionValue = ({
   const { onKeyDown } = draft;
   let staticClass = "static";
 
-  if (parseNumber(value)) {
+  if (toParsedNumber(value)) {
     staticClass = "";
   }
 

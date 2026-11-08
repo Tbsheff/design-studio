@@ -1,7 +1,7 @@
 import type { CompiledTokenEntry } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { valuesFromStyles } from "../inspector/css-values.js";
+import { toStyleValues } from "../inspector/index.js";
 import { lintValues } from "./token-lint.js";
 
 const entries: CompiledTokenEntry[] = [
@@ -42,7 +42,7 @@ const css = (text: string) => ({
 
 describe(lintValues, () => {
   it("names the nearest token and its ΔE for an off-palette color", () => {
-    const values = valuesFromStyles({ color: "rgb(250, 10, 20)" });
+    const values = toStyleValues({ color: "rgb(250, 10, 20)" });
     const [issue] = lintValues(
       values,
       entries,
@@ -57,7 +57,7 @@ describe(lintValues, () => {
   });
 
   it("flags a raw value that equals a token, and skips values written as var()", () => {
-    const values = valuesFromStyles({
+    const values = toStyleValues({
       "background-color": "rgb(17, 17, 17)",
       color: "rgb(255, 0, 0)",
     });
@@ -78,14 +78,14 @@ describe(lintValues, () => {
   });
 
   it("skips values the element only inherits", () => {
-    const values = valuesFromStyles({ color: "rgb(250, 10, 20)" });
+    const values = toStyleValues({ color: "rgb(250, 10, 20)" });
     expect(
       lintValues(values, entries, "light", css("display: block;"))
     ).toEqual([]);
   });
 
   it("groups a padding shorthand near a space token and flags a font outside the font tokens", () => {
-    const values = valuesFromStyles({
+    const values = toStyleValues({
       "font-family": "Comic Sans MS",
       "padding-bottom": "15px",
       "padding-left": "15px",
@@ -113,7 +113,7 @@ describe(lintValues, () => {
   });
 
   it("counts unsaved edits as authored", () => {
-    const values = valuesFromStyles({ color: "#00ff00" });
+    const values = toStyleValues({ color: "#00ff00" });
     expect(lintValues(values, entries, "light", null, ["color"])).toHaveLength(
       1
     );

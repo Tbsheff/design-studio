@@ -1,4 +1,4 @@
-import { formatNumber, parseNumber } from "./css-values.js";
+import { toNumberText, toParsedNumber } from "./css-value-model.js";
 
 interface Shadow {
   readonly x: string;
@@ -56,7 +56,7 @@ const splitTopLevel = (value: string, separator: "," | " "): string[] => {
 };
 
 const tidyLength = (raw: string): string => {
-  const parsed = parseNumber(raw);
+  const parsed = toParsedNumber(raw);
 
   if (!parsed) {
     return raw;
@@ -64,7 +64,7 @@ const tidyLength = (raw: string): string => {
 
   return parsed.value === 0
     ? "0"
-    : formatNumber(parsed.value, parsed.unit || "px");
+    : toNumberText(parsed.value, parsed.unit || "px");
 };
 
 const parseOne = (raw: string): Shadow | null => {
@@ -154,7 +154,7 @@ const withBlur = (filter: string, blur: string): string => {
     " "
   ).filter((part) => !BLUR_RE.test(part));
 
-  const amount = parseNumber(blur);
+  const amount = toParsedNumber(blur);
   const keep = blur.trim() !== "" && !(amount && amount.value === 0);
 
   return [...others, ...(keep ? [`blur(${blur.trim()})`] : [])].join(" ");

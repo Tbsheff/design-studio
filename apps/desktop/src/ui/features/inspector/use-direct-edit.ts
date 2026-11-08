@@ -12,12 +12,12 @@ import type { ApiError } from "../../api.js";
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import {
-  changedProps,
-  shiftedPart,
-  shiftedValue,
-  valuesFromStyles,
-} from "./css-values.js";
-import type { Shift, ShiftPart, StyleValues } from "./css-values.js";
+  toChangedProps,
+  toShiftedPart,
+  toShiftedValue,
+  toStyleValues,
+} from "./css-value-model.js";
+import type { Shift, ShiftPart, StyleValues } from "./css-value-model.js";
 import { startOptimistic } from "./optimistic-edit.js";
 import { isApiConflict, isApiError } from "./use-api-error.js";
 import { editVariantStore } from "./use-edit-variant.js";
@@ -162,7 +162,7 @@ export function useDirectEdit(o: Options) {
   const opts = useRef(o);
   opts.current = o;
   const base = useMemo(
-    () => valuesFromStyles(o.selection.styles),
+    () => toStyleValues(o.selection.styles),
     [o.selection.styles]
   );
   const baseRef = useRef(base);
@@ -240,8 +240,8 @@ export function useDirectEdit(o: Options) {
     (style: Partial<StyleValues>) => {
       const rewrite = opts.current.rewrite;
       if (!rewrite || Object.keys(style).length === 0) return style;
-      const next = changedProps(rewrite(style), baseRef.current);
-      const moved = changedProps(next, { ...baseRef.current, ...style });
+      const next = toChangedProps(rewrite(style), baseRef.current);
+      const moved = toChangedProps(next, { ...baseRef.current, ...style });
       if (Object.keys(moved).length === 0) return next;
       setDraft({ ...draftRef.current, ...moved });
       post({
@@ -268,7 +268,7 @@ export function useDirectEdit(o: Options) {
     );
     forced.current.clear();
     const style = rewriteDraft({
-      ...changedProps(draftRef.current, baseRef.current),
+      ...toChangedProps(draftRef.current, baseRef.current),
       ...kept,
     });
     const pendingText = textRef.current;
@@ -356,8 +356,8 @@ export function useDirectEdit(o: Options) {
       for (const prop of props) {
         const from = draftRef.current[prop] ?? baseRef.current[prop];
         const next = part
-          ? shiftedPart(from, part, { ...bounds, delta })
-          : shiftedValue(from, { ...bounds, delta });
+          ? toShiftedPart(from, part, { ...bounds, delta })
+          : toShiftedValue(from, { ...bounds, delta });
         if (next !== null) patch[prop] = next;
       }
       if (Object.keys(patch).length > 0) preview(patch);

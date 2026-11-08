@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { MouseEvent, PointerEvent } from "react";
 
-import { formatNumber, parseNumber } from "./css-values.js";
+import { toNumberText, toParsedNumber } from "./css-value-model.js";
 import {
   SCRUB_PX_PER_STEP,
   plainLength,
@@ -29,7 +29,9 @@ const scrubStart = (
 ): Scrub => {
   const unit = spec.unit ?? "px";
 
-  const parsed = parseNumber(plainLength(spec.edit.values[spec.prop], ui)) ?? {
+  const parsed = toParsedNumber(
+    plainLength(spec.edit.values[spec.prop], ui)
+  ) ?? {
     unit,
     value: 0,
   };
@@ -93,15 +95,15 @@ const useScrub = (spec: NumberSpec): UseScrubResult => {
     }
 
     const value =
-      parseNumber(
+      toParsedNumber(
         clamp(
-          formatNumber(moved.value + steps * stepOf(event, spec), moved.unit),
+          toNumberText(moved.value + steps * stepOf(event, spec), moved.unit),
           spec
         )
       )?.value ?? moved.value;
 
     scrub.current = { ...moved, value };
-    spec.edit.preview(patchFor(spec, formatNumber(value, moved.unit)));
+    spec.edit.preview(patchFor(spec, toNumberText(value, moved.unit)));
   };
 
   const onPointerUp = (event: PointerEvent<HTMLElement>): void => {

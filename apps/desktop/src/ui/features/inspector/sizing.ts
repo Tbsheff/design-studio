@@ -1,4 +1,4 @@
-import type { StyleValues } from "./css-values.js";
+import type { StyleValues } from "./css-value-model.js";
 
 type Axis = "width" | "height";
 

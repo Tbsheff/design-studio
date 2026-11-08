@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { toCornerPart, toJoinedCorners } from "./corners-model.js";
-import type { Side } from "./css-values.js";
+import type { Side } from "./css-value-model.js";
 import { PlainNumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";

@@ -2,7 +2,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { useCallback } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import type { StyleValues } from "./css-values.js";
+import type { StyleValues } from "./css-value-model.js";
 import { MultiCreateTokenHost } from "./inspector-multi.js";
 import { useInspectorTokens } from "./inspector-tokens.js";
 import type { ScopeInput } from "./inspector-tokens.js";

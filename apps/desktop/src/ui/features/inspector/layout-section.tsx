@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 import { AutoLayoutSection } from "./auto-layout-section.js";
 import { BoxModel } from "./box-model.js";
 import { copy } from "./copy.js";
-import { SIDES } from "./css-values.js";
+import { SIDES } from "./css-value-model.js";
 import type { DirectEdit } from "./deps.js";
 import { LayoutLead } from "./layout-lead.js";
 import { BOX_PROPS, toDeclaredMargins } from "./simple-model.js";

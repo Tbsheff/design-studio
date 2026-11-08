@@ -44,6 +44,45 @@ const getAttributeText = (html: string, name: string): string | null => {
   return node.value;
 };
 
+const DEFAULT_FOCAL = "50% 50%";
+
+const toInitialFocal = (
+  selection: SelectionContext,
+  background: boolean
+): string => {
+  let raw = selection.styles["object-position"];
+
+  if (background) {
+    raw = selection.styles["background-position"];
+  }
+
+  return raw ?? DEFAULT_FOCAL;
+};
+
+const toImageTitle = (background: boolean): string => {
+  if (background) {
+    return "Background image";
+  }
+
+  return "Image";
+};
+
+const toReplaceLabel = (isBusy: boolean): string => {
+  if (isBusy) {
+    return "Placing…";
+  }
+
+  return "Replace";
+};
+
+const toFitClass = (isOn: boolean): string => {
+  if (isOn) {
+    return "on";
+  }
+
+  return "";
+};
+
 const getCurrentFit = (
   selection: SelectionContext,
   background: boolean
@@ -103,6 +142,10 @@ export {
   getAttributeText,
   getCurrentFit,
   getSourceName,
+  toFitClass,
+  toImageTitle,
+  toInitialFocal,
+  toReplaceLabel,
 };
 
 export type { Props };

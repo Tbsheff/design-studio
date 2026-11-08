@@ -2,7 +2,7 @@ import type { IconName } from "@design-studio/ui";
 
 import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
 import { copy } from "./copy.js";
-import { colorToHex } from "./css-values.js";
+import { toHexColor } from "./css-value-model.js";
 import type { TokenUi } from "./deps.js";
 
 const ALIGN_OPTIONS: readonly {
@@ -25,7 +25,7 @@ const toResolvedColor = (value: string, ui: TokenUi | null): string => {
 };
 
 const toColorHex = (resolved: string, ui: TokenUi | null): string | null => {
-  const direct = colorToHex(resolved);
+  const direct = toHexColor(resolved);
 
   if (direct || !ui) {
     return direct;

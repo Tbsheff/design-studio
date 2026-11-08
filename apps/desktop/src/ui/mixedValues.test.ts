@@ -2,7 +2,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
 import { nextSelection } from "./features/canvas/index";
-import { valuesFromStyles } from "./features/inspector/css-values";
+import { toStyleValues } from "./features/inspector/index";
 import {
   batchEdits,
   hasCurrentDependency,
@@ -30,9 +30,9 @@ function card(
 describe(mergeValues, () => {
   it("keeps shared values and marks differing ones as mixed with an empty value", () => {
     const merged = mergeValues([
-      valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
-      valuesFromStyles({ "border-radius": "4px", color: "rgb(0, 0, 0)" }),
-      valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
+      toStyleValues({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
+      toStyleValues({ "border-radius": "4px", color: "rgb(0, 0, 0)" }),
+      toStyleValues({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
     ]);
     expect(merged.values["border-radius"]).toBe("");
     expect(merged.mixed.has("border-radius")).toBe(true);
@@ -42,8 +42,8 @@ describe(mergeValues, () => {
 
   it("marks a padding side as mixed when only that side differs", () => {
     const merged = mergeValues([
-      valuesFromStyles({ padding: "8px" }),
-      valuesFromStyles({ padding: "8px 8px 16px" }),
+      toStyleValues({ padding: "8px" }),
+      toStyleValues({ padding: "8px 8px 16px" }),
     ]);
     expect(merged.mixed.has("padding-bottom")).toBe(true);
     expect(merged.mixed.has("padding-top")).toBe(false);
@@ -58,7 +58,7 @@ describe(batchEdits, () => {
       card(4, { "border-radius": "12px" }),
       card(5, { "border-radius": "8px" }),
     ];
-    const bases = selections.map((s) => valuesFromStyles(s.styles));
+    const bases = selections.map((s) => toStyleValues(s.styles));
     const edits = batchEdits(selections, bases, { "border-radius": "8px" });
     expect(edits.map((e) => [e.source.line, e.style])).toEqual([
       [3, { "border-radius": "8px" }],
@@ -72,7 +72,7 @@ describe(batchEdits, () => {
     expect(
       batchEdits(
         selections,
-        selections.map((s) => valuesFromStyles(s.styles)),
+        selections.map((s) => toStyleValues(s.styles)),
         { color: "red" }
       )
     ).toEqual([]);

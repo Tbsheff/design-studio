@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import type { ChangeEvent, InputEvent, KeyboardEvent } from "react";
 
-import { isValidColor } from "./css-values.js";
+import { isValidColor } from "./css-value-model.js";
 import type { FieldProps } from "./use-same-field.js";
 
 interface ColorFieldState {

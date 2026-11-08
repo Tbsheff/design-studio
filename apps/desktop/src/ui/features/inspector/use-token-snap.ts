@@ -22,7 +22,7 @@ import {
 import type { TokenMode } from "../../../shared/token-match.js";
 import { uiStore, useUi } from "../../platform/storage.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
-import type { StyleValues } from "./css-values.js";
+import type { StyleValues } from "./css-value-model.js";
 
 interface SnapNote {
   readonly cssVar: string;

@@ -16,7 +16,7 @@ import type {
 import { errorText } from "../../api.js";
 import { runVector } from "../canvas/vector-tool-model.js";
 import { copy } from "./copy.js";
-import { colorToHex } from "./css-values.js";
+import { toHexColor } from "./css-value-model.js";
 import { InspectorSection } from "./inspector-fields.js";
 
 import "../../styles/vector.css";
@@ -165,7 +165,7 @@ const ColorRow = ({
     }
   };
 
-  const hex = colorToHex(value) ?? "#ffffff";
+  const hex = toHexColor(value) ?? "#ffffff";
   const id = `vector-${label.toLowerCase()}`;
 
   return (

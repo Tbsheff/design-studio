@@ -14,7 +14,7 @@ import {
 import type { TokenMode } from "../../../shared/token-match.js";
 import { parseDeclarations } from "../inspector/authored-css.js";
 import type { AuthoredCss } from "../inspector/authored-css.js";
-import type { StyleValues } from "../inspector/css-values.js";
+import type { StyleValues } from "../inspector/index.js";
 
 type LintKind = "color" | "size" | "font";
 

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import type { ShiftPart } from "./css-values.js";
+import type { ShiftPart } from "./css-value-model.js";
 import { PlainNumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import { blurOf, withBlur } from "./shadows.js";

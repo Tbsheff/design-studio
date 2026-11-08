@@ -9,8 +9,8 @@ import type { MutableRefObject, ReactNode } from "react";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DeclaredMargins } from "./box-model.js";
 import { copy } from "./copy.js";
-import { SIDES } from "./css-values.js";
-import type { StyleValues } from "./css-values.js";
+import { SIDES } from "./css-value-model.js";
+import type { StyleValues } from "./css-value-model.js";
 import type {
   DesignTokens,
   DirectEdit,

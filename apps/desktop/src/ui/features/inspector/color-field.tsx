@@ -2,7 +2,7 @@ import { memo, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { displayColor, isValidColor } from "./css-values.js";
+import { toDisplayColor, isValidColor } from "./css-value-model.js";
 import { TokenControl } from "./deps.js";
 import {
   toColorHex,
@@ -54,7 +54,7 @@ const ColorFieldView = ({
         className="ins-input"
         aria-label={label}
         aria-invalid={field.text !== null && !isValidColor(field.text)}
-        value={field.text ?? displayColor(value)}
+        value={field.text ?? toDisplayColor(value)}
         spellCheck={false}
         autoComplete="off"
         placeholder={toPlaceholder(edit.mixed.has(prop), copy.none)}

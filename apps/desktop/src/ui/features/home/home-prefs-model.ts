@@ -27,6 +27,7 @@ interface LegacyHomePrefs {
 }
 
 const KEY = "studio.home.v1";
+
 const DEFAULTS: HomePrefs = {
   favorites: [],
   filter: "all",
@@ -39,6 +40,7 @@ function read(): HomePrefs {
   try {
     const raw = JSON.parse(readStored(KEY) ?? "{}") as Partial<HomePrefs> &
       Partial<LegacyHomePrefs>;
+
     return {
       favorites: Array.isArray(raw.favorites)
         ? raw.favorites.filter((id): id is string => typeof id === "string")

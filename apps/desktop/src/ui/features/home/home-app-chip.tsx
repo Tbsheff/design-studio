@@ -146,6 +146,7 @@ const useAppChip = () => {
     setChip((current) =>
       current ? { ...current, checking: true, error: null } : current
     );
+
     const inspect = async (): Promise<void> => {
       try {
         const inspection = await api.inspectFolder(path, appDir ?? undefined);

@@ -1,8 +1,10 @@
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 
-import { ColorValue, DimensionValue, TextValue } from "./token-inputs.js";
+import { DimensionValue } from "./token-dimension-value.js";
+import { ColorValue } from "./token-inputs.js";
 import type { TokenRowProps } from "./token-row-types.js";
+import { TextValue } from "./token-text-value.js";
 
 type TokenValueEditorProps = Pick<
   TokenRowProps,

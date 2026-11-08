@@ -1,10 +1,11 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
+import { AlignSelf } from "./align-self.js";
 import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
+import { MinMaxRows } from "./min-max-rows.js";
 import { isPositioned, PositionRows } from "./position-rows.js";
-import { AlignSelf, MinMaxRows } from "./size-limits.js";
 import { SizeRow } from "./size-row.js";
 import { parentLayout } from "./sizing.js";
 import type { DirectEdit } from "./use-direct-edit.js";

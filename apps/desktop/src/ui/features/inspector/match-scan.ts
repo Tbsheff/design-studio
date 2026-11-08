@@ -19,7 +19,7 @@ import type { MutableRefObject } from "react";
 import { tokenFieldState } from "../../../shared/token-match.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
-import { requestAuthoredCss } from "./use-authored-css.js";
+import { getAuthoredCss } from "./use-authored-css.js";
 
 interface InspectorMatchProps {
   readonly projectId: string;
@@ -89,7 +89,7 @@ const usePageVars = (
 
     let live = true;
     startTransition(async () => {
-      const css = await requestAuthoredCss(port.current, "html");
+      const css = await getAuthoredCss(port.current, "html");
 
       if (live && css) {
         setVars(parseVars([...css.rules.map((rule) => rule.css), css.inline]));

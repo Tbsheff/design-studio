@@ -1,5 +1,7 @@
+import { startTransition, useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { toChoice } from "./choice-model.js";
 import { copy } from "./copy.js";
 import { unsavedLabel } from "./use-edit-session.js";
 import type { EditSession, SessionAction } from "./use-edit-session.js";
@@ -11,41 +13,56 @@ const SessionHeader = ({
   readonly session: EditSession;
   readonly onDone: (action: SessionAction) => void;
 }): ReactElement => {
-  const blockedDiscard = session.blocked !== null;
+  const { discard, save } = session;
 
-  const run = async (action: SessionAction): Promise<void> => {
-    if (await (action === "save" ? session.save() : session.discard())) {
-      onDone(action);
-    }
-  };
+  const discardTip = session.blocked ?? copy.discardTip;
+
+  const finish = useCallback(
+    async (action: SessionAction): Promise<void> => {
+      const ok = await toChoice(action === "save", save, discard)();
+
+      if (ok) {
+        onDone(action);
+      }
+    },
+    [discard, onDone, save]
+  );
+
+  const discardEdits = useCallback(() => {
+    startTransition(async () => {
+      await finish("discard");
+    });
+  }, [finish]);
+
+  const saveEdits = useCallback(() => {
+    startTransition(async () => {
+      await finish("save");
+    });
+  }, [finish]);
 
   return (
     <div className="edit-head">
       <h2 className="edit-title">{copy.editTitle}</h2>
       {session.isDirty && session.net > 0 && (
-        <span
-          className="edit-count"
-          role="status"
-          data-tip={unsavedLabel(session.net)}
-        >
+        <output className="edit-count" data-tip={unsavedLabel(session.net)}>
           {session.net}
           <span className="sr-only"> {copy.unsavedEdits}</span>
-        </span>
+        </output>
       )}
       <span className="edit-head-end" />
       <button
         type="button"
         className="btn ghost small"
         disabled={
-          session.busy !== null || session.count === 0 || blockedDiscard
+          session.busy !== null ||
+          session.count === 0 ||
+          session.blocked !== null
         }
-        data-tip={
-          blockedDiscard ? (session.blocked ?? undefined) : copy.discardTip
-        }
+        data-tip={discardTip}
         data-tip-align="end"
-        onClick={() => void run("discard")}
+        onClick={discardEdits}
       >
-        {session.busy === "discard" ? copy.discarding : copy.discard}
+        {toChoice(session.busy === "discard", copy.discarding, copy.discard)}
       </button>
       <button
         type="button"
@@ -53,9 +70,9 @@ const SessionHeader = ({
         disabled={session.busy !== null}
         data-tip={copy.saveTip}
         data-tip-align="end"
-        onClick={() => void run("save")}
+        onClick={saveEdits}
       >
-        {session.busy === "save" ? copy.saving : copy.saveVersion}
+        {toChoice(session.busy === "save", copy.saving, copy.saveVersion)}
       </button>
     </div>
   );

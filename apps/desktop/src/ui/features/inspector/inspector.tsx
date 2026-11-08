@@ -12,7 +12,7 @@ import { InspectorTools } from "./inspector-tools.js";
 import { InspectorTweaks } from "./inspector-tweaks.js";
 import { LeavePrompt } from "./leave-prompt.js";
 import { ProTab } from "./pro-tab.js";
-import { sameShared } from "./same-props.js";
+import { isSameShared } from "./same-props-model.js";
 import { SessionHeader } from "./session-header.js";
 import { SimpleTab } from "./simple-tab.js";
 import { TabBar } from "./tab-bar.js";
@@ -23,9 +23,9 @@ import { useStableCallbacks } from "./use-stable-callbacks.js";
 
 import "../../styles/inspector-edit.css";
 
-const SimpleTabMemo = memo(SimpleTab, sameShared);
-const ToolsMemo = memo(InspectorTools, sameShared);
-const ArrangeMemo = memo(InspectorArrange, sameShared);
+const SimpleTabMemo = memo(SimpleTab, isSameShared);
+const ToolsMemo = memo(InspectorTools, isSameShared);
+const ArrangeMemo = memo(InspectorArrange, isSameShared);
 
 const Inspector = (raw: InspectorProps): ReactElement => {
   const props = useStableCallbacks(raw);
@@ -47,7 +47,7 @@ const Inspector = (raw: InspectorProps): ReactElement => {
     projectId: props.projectId,
   });
 
-  useSessionHandle(props.session, session);
+  useSessionHandle(props.session ?? null, session);
   const { port } = props;
   useEffect(() => (): void => resetEditVariant(port.current), [port]);
 

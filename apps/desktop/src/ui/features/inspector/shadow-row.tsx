@@ -6,11 +6,11 @@ import { copy } from "./copy.js";
 import { PARTS, fieldPart, writeShadows } from "./effects-model.js";
 import type { Field, ShadowView } from "./effects-model.js";
 import { ColorField } from "./inspector-fields.js";
-import { PlainNumberField } from "./number-field.js";
-import { proxyEdit } from "./proxy-edit.js";
+import { PlainNumberField } from "./plain-number-field.js";
 import { formatShadows } from "./shadows.js";
 import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { createProxyEdit } from "./use-proxy-edit.js";
 import { TokenUiContext, useTokenUi } from "./use-token-snap.js";
 
 const ShadowRow = ({
@@ -40,18 +40,13 @@ const ShadowRow = ({
     field: Field,
     value: string,
     write: (next: string) => Partial<Shadow>
-  ): ReturnType<typeof proxyEdit> =>
-    proxyEdit(
-      edit,
-      field === "color" ? "color" : "width",
-      value,
-      (next) => replace(write(next)),
-      ["box-shadow"],
-      {
-        isMixed: view.mixed?.has(`${index}.${field}`) ?? false,
-        part: fieldPart(index, field),
-      }
-    );
+  ): ReturnType<typeof createProxyEdit> =>
+    createProxyEdit(edit, field === "color" ? "color" : "width", value, {
+      isMixed: view.mixed?.has(`${index}.${field}`) ?? false,
+      part: fieldPart(index, field),
+      real: ["box-shadow"],
+      write: (next) => replace(write(next)),
+    });
 
   const ui = useTokenUi();
 

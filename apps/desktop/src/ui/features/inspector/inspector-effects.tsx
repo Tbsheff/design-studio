@@ -6,12 +6,12 @@ import type { ShiftPart } from "./css-values.js";
 import { writeShadows, shadowView } from "./effects-model.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
-import { PlainNumberField } from "./number-field.js";
-import { proxyEdit } from "./proxy-edit.js";
+import { PlainNumberField } from "./plain-number-field.js";
 import { ShadowRow } from "./shadow-row.js";
 import { NEW_SHADOW, blurOf, withBlur } from "./shadows.js";
 import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { createProxyEdit } from "./use-proxy-edit.js";
 
 const BLUR_PART: ShiftPart = {
   key: "blur",
@@ -21,14 +21,12 @@ const BLUR_PART: ShiftPart = {
 const LayerBlur = ({ edit }: { readonly edit: DirectEdit }): ReactElement => {
   const { filter } = edit.values;
 
-  const blur = proxyEdit(
-    edit,
-    "width",
-    blurOf(filter),
-    (value) => ({ filter: withBlur(filter, value) }),
-    ["filter"],
-    { isMixed: null, part: BLUR_PART }
-  );
+  const blur = createProxyEdit(edit, "width", blurOf(filter), {
+    isMixed: null,
+    part: BLUR_PART,
+    real: ["filter"],
+    write: (value) => ({ filter: withBlur(filter, value) }),
+  });
 
   return (
     <PlainNumberField

@@ -5,9 +5,10 @@ import { useState } from "react";
 import { copy } from "./copy.js";
 import { expandBox, SIDES } from "./css-values.js";
 import type { ShiftPart, Side } from "./css-values.js";
-import { NumberField, PlainNumberField } from "./number-field.js";
-import { proxyEdit } from "./proxy-edit.js";
+import { NumberField } from "./number-field.js";
+import { PlainNumberField } from "./plain-number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { createProxyEdit } from "./use-proxy-edit.js";
 
 const CORNERS: {
   readonly side: Side;
@@ -93,14 +94,12 @@ const RadiusField = ({
         <NumberField
           short={short}
           spec={{
-            edit: proxyEdit(
-              edit,
-              "border-radius",
-              radius,
-              (value) => ({ "border-radius": value }),
-              ["border-radius"],
-              { isMixed: null, part: ALL_CORNERS }
-            ),
+            edit: createProxyEdit(edit, "border-radius", radius, {
+              isMixed: null,
+              part: ALL_CORNERS,
+              real: ["border-radius"],
+              write: (value) => ({ "border-radius": value }),
+            }),
             label: "Border radius",
             min: 0,
             prop: "border-radius",
@@ -120,16 +119,14 @@ const RadiusField = ({
             id={`ins-radius-${side}`}
             short={short}
             spec={{
-              edit: proxyEdit(
-                edit,
-                "border-radius",
-                corners[side],
-                (value) => ({
+              edit: createProxyEdit(edit, "border-radius", corners[side], {
+                isMixed: null,
+                part: cornerPart(side),
+                real: ["border-radius"],
+                write: (value) => ({
                   "border-radius": joinCorners({ ...corners, [side]: value }),
                 }),
-                ["border-radius"],
-                { isMixed: null, part: cornerPart(side) }
-              ),
+              }),
               label,
               min: 0,
               prop: "border-radius",

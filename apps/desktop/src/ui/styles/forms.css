@@ -9,6 +9,12 @@
   flex: none;
 }
 
+.segmented:is(fieldset) {
+  min-inline-size: 0;
+  margin: 0;
+  border: 0;
+}
+
 .segmented button {
   display: inline-flex;
   align-items: center;

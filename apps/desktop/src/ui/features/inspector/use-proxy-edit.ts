@@ -4,29 +4,46 @@ import type { ShiftPart, StyleValues } from "./css-values.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 interface ProxyOptions {
-  readonly part?: ShiftPart;
+  readonly part: ShiftPart | null;
   readonly isMixed: boolean | null;
+  readonly real: DirectStyleProperty[];
+  readonly write: (next: string) => Partial<StyleValues>;
 }
 
-const proxyEdit = (
+const toProxyPart = (
+  edit: DirectEdit,
+  options: ProxyOptions
+): ShiftPart | null => {
+  if (options.real.some((prop) => edit.mixed.has(prop))) {
+    return options.part;
+  }
+
+  return null;
+};
+
+const createProxyEdit = (
   edit: DirectEdit,
   slot: DirectStyleProperty,
   value: string,
-  write: (next: string) => Partial<StyleValues>,
-  real: DirectStyleProperty[],
   options: ProxyOptions
 ): DirectEdit => {
+  const { real, write } = options;
   const realMixed = real.some((prop) => edit.mixed.has(prop));
-  const part = realMixed ? options.part : undefined;
+  const part = toProxyPart(edit, options);
   const mixed = options.isMixed ?? realMixed;
+  let slots = new Set<DirectStyleProperty>();
+
+  if (mixed) {
+    slots = new Set([slot]);
+  }
 
   return {
     ...edit,
-    mixed: mixed ? new Set([slot]) : new Set<DirectStyleProperty>(),
+    mixed: slots,
     preview: (patch) => {
-      const next = patch[slot];
+      const next = patch[slot] ?? null;
 
-      if (next === undefined) {
+      if (next === null) {
         return;
       }
 
@@ -46,6 +63,6 @@ const proxyEdit = (
   };
 };
 
-export { proxyEdit };
+export { createProxyEdit };
 
 export type { ProxyOptions };

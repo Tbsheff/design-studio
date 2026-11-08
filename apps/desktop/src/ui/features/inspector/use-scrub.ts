@@ -22,7 +22,7 @@ interface Scrub {
   readonly isMixed: boolean;
 }
 
-const scrubStart = (
+const startScrub = (
   spec: NumberSpec,
   ui: TokenUi | null,
   positionX: number
@@ -41,6 +41,41 @@ const scrubStart = (
     value: parsed.value,
     x: positionX,
   };
+};
+
+const applyScrubMove = (
+  spec: NumberSpec,
+  entry: Scrub,
+  event: PointerEvent<HTMLElement>
+): Scrub | null => {
+  const steps = Math.trunc((event.clientX - entry.x) / SCRUB_PX_PER_STEP);
+
+  if (steps === 0) {
+    return null;
+  }
+
+  const moved: Scrub = {
+    ...entry,
+    isMoved: true,
+    x: entry.x + steps * SCRUB_PX_PER_STEP,
+  };
+
+  document.body.classList.add("ins-scrubbing");
+
+  if (moved.isMixed) {
+    shiftMixed(spec, steps * stepOf(event, spec));
+
+    return moved;
+  }
+
+  const amount = formatNumber(
+    moved.value + steps * stepOf(event, spec),
+    moved.unit
+  );
+  const value = parseNumber(clamp(amount, spec))?.value ?? moved.value;
+  spec.edit.preview(patchFor(spec, formatNumber(value, moved.unit)));
+
+  return { ...moved, value };
 };
 
 interface UseScrubResult {
@@ -62,7 +97,7 @@ const useScrub = (spec: NumberSpec): UseScrubResult => {
     }
 
     event.preventDefault();
-    scrub.current = scrubStart(spec, ui, event.clientX);
+    scrub.current = startScrub(spec, ui, event.clientX);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -73,35 +108,11 @@ const useScrub = (spec: NumberSpec): UseScrubResult => {
       return;
     }
 
-    const steps = Math.trunc((event.clientX - entry.x) / SCRUB_PX_PER_STEP);
+    const moved = applyScrubMove(spec, entry, event);
 
-    if (steps === 0) {
-      return;
+    if (moved) {
+      scrub.current = moved;
     }
-
-    const moved: Scrub = {
-      ...entry,
-      isMoved: true,
-      x: entry.x + steps * SCRUB_PX_PER_STEP,
-    };
-
-    scrub.current = moved;
-    document.body.classList.add("ins-scrubbing");
-
-    if (moved.isMixed) {
-      return shiftMixed(spec, steps * stepOf(event, spec));
-    }
-
-    const value =
-      parseNumber(
-        clamp(
-          formatNumber(moved.value + steps * stepOf(event, spec), moved.unit),
-          spec
-        )
-      )?.value ?? moved.value;
-
-    scrub.current = { ...moved, value };
-    spec.edit.preview(patchFor(spec, formatNumber(value, moved.unit)));
   };
 
   const onPointerUp = (event: PointerEvent<HTMLElement>): void => {
@@ -134,15 +145,17 @@ const useScrub = (spec: NumberSpec): UseScrubResult => {
     event.preventDefault();
   };
 
+  const onPointerCancel = onPointerUp;
+
   return {
     onClick,
-    onPointerCancel: onPointerUp,
+    onPointerCancel,
     onPointerDown,
     onPointerMove,
     onPointerUp,
   };
 };
 
-export { scrubStart, useScrub };
+export { startScrub, useScrub };
 
 export type { Scrub };

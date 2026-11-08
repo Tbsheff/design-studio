@@ -3,8 +3,8 @@ import type { ReactElement } from "react";
 
 import type { DirectEdit } from "./deps.js";
 import { SizeRows } from "./inspector-layout.js";
+import { MinMaxRows } from "./min-max-rows.js";
 import { HEIGHT, WIDTH } from "./simple-model.js";
-import { MinMaxRows } from "./size-limits.js";
 import { SpecNumberField } from "./spec-number-field.js";
 
 interface LayoutLeadProps {

@@ -145,7 +145,7 @@ const CanvasChrome = (chromeProps: ChromeProps): ReactElement => {
   return (
     <>
       <CanvasTopBar
-        shapeTools={<VectorToolButtons />}
+        vectorTools={<VectorToolButtons />}
         matrix={chromeProps.matrix}
         paneCollapsed={bar.paneCollapsed}
         onExpandPane={bar.onExpandPane}

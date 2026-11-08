@@ -1,9 +1,22 @@
 import { Icon } from "@design-studio/ui";
-import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
 
+import { AddFrameItem } from "./add-frame-item.js";
 import { FRAME_PRESETS } from "./canvas-frame-ops.js";
 import { copy } from "./copy.js";
+import { useAddFrameMenu } from "./use-add-frame-menu.js";
+
+const toAddTip = (isOpen: boolean, isDisabled: boolean): string => {
+  if (isOpen) {
+    return "";
+  }
+
+  if (isDisabled) {
+    return "Frame limit reached";
+  }
+
+  return "Add frame";
+};
 
 const AddFrameMenu = ({
   disabled,
@@ -12,101 +25,8 @@ const AddFrameMenu = ({
   disabled: boolean;
   onAdd: (size: { width: number; height: number }) => void;
 }): ReactElement => {
-  const [open, setOpen] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
-  const menu = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    menu.current
-      ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
-      ?.focus();
-
-    const onDown = (event: MouseEvent): void => {
-      const target = event.target as Node;
-
-      if (
-        !menu.current?.contains(target) &&
-        !button.current?.contains(target)
-      ) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", onDown);
-
-    return (): void => document.removeEventListener("mousedown", onDown);
-  }, [open]);
-
-  const close = (refocus: boolean): void => {
-    setOpen(false);
-
-    if (refocus) {
-      button.current?.focus();
-    }
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    const items = [
-      ...(menu.current?.querySelectorAll<HTMLButtonElement>(
-        '[role="menuitem"]'
-      ) ?? []),
-    ];
-
-    const index = items.indexOf(document.activeElement as HTMLButtonElement);
-
-    if (event.key === "Escape" || event.key === "Tab") {
-      event.preventDefault();
-      event.stopPropagation();
-      close(true);
-
-      return;
-    }
-
-    const next: number | null = ((): number | null => {
-      if (event.key === "ArrowDown") {
-        return index + 1;
-      }
-
-      if (event.key === "ArrowUp") {
-        return index - 1;
-      }
-
-      if (event.key === "Home") {
-        return 0;
-      }
-
-      if (event.key === "End") {
-        return items.length - 1;
-      }
-
-      return null;
-    })();
-
-    if (next === null) {
-      return;
-    }
-
-    event.preventDefault();
-    items[(next + items.length) % items.length]?.focus();
-  };
-
-  const datatip: "Add frame" | "Frame limit reached" | undefined = (():
-    | "Add frame"
-    | "Frame limit reached"
-    | undefined => {
-    if (open) {
-      return undefined;
-    }
-
-    if (disabled) {
-      return "Frame limit reached";
-    }
-
-    return "Add frame";
-  })();
+  const { button, handleKeyDown, menu, open, pick, toggle } =
+    useAddFrameMenu(onAdd);
 
   return (
     <div className="add-frame">
@@ -117,9 +37,9 @@ const AddFrameMenu = ({
         aria-label={copy.addFrame}
         aria-haspopup="menu"
         aria-expanded={open}
-        data-tip={datatip}
+        data-tip={toAddTip(open, disabled) || null}
         disabled={disabled}
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggle}
       >
         <Icon name="frame" />
       </button>
@@ -128,27 +48,16 @@ const AddFrameMenu = ({
           ref={menu}
           className="project-menu canvas-menu"
           role="menu"
+          tabIndex={-1}
           aria-label={copy.addFrame}
-          onKeyDown={onKeyDown}
+          onKeyDown={handleKeyDown}
         >
           {FRAME_PRESETS.map((framePreset) => (
-            <button
+            <AddFrameItem
               key={framePreset.preset}
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                close(true);
-                onAdd({ height: framePreset.height, width: framePreset.width });
-              }}
-            >
-              <Icon name={framePreset.preset} size={14} />
-              <span>{framePreset.label}</span>
-              <kbd aria-hidden="true">
-                {framePreset.width}
-                {copy.times2}
-                {framePreset.height}
-              </kbd>
-            </button>
+              preset={framePreset}
+              pick={pick}
+            />
           ))}
         </div>
       )}

@@ -67,7 +67,6 @@ const ImpactRouteSchema = Schema.Struct({
 });
 
 const ImpactResultSchema = Schema.Struct({
-  at: Schema.NullOr(Schema.Number),
   component: Schema.NullOr(Schema.String),
   file: Schema.NullOr(Schema.String),
   hasBaseline: Schema.Boolean,

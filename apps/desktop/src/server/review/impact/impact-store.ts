@@ -8,7 +8,6 @@ interface ImpactStoreApi {
 }
 
 const EMPTY_RESULT: ImpactResult = {
-  at: null,
   component: null,
   file: null,
   hasBaseline: false,

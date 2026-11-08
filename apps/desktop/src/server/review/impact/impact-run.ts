@@ -153,7 +153,6 @@ const runBaseline = Effect.fn("impact.runBaseline")(function* run(
   );
 
   const baseline: ImpactBaseline = {
-    at: Date.now(),
     component: usage.component,
     file: usage.file,
     routes: shots.map((item) => ({
@@ -165,7 +164,6 @@ const runBaseline = Effect.fn("impact.runBaseline")(function* run(
   };
 
   const last: ImpactResult = {
-    at: baseline.at,
     component: usage.component,
     file: usage.file,
     hasBaseline: true,
@@ -238,7 +236,6 @@ const runCompare = Effect.fn("impact.runCompare")(function* run(
   );
 
   const last: ImpactResult = {
-    at: Date.now(),
     component: baseline.component,
     file: baseline.file,
     hasBaseline: true,

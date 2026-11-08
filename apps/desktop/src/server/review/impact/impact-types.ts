@@ -26,7 +26,6 @@ interface ImpactBaselineRoute {
 }
 
 interface ImpactBaseline {
-  readonly at: number;
   readonly component: string | null;
   readonly file: string;
   readonly routes: readonly ImpactBaselineRoute[];

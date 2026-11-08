@@ -10,13 +10,14 @@ import {
 
 type Rect = NonNullable<LinkRectReport["rect"]>;
 
-interface PlayPost {
-  (body: { type: "link-rects"; links: LinkRectReport[] }): void;
-  (body: { type: "play-click"; id: string }): void;
-  (body: { type: "play-key"; key: PlayKey }): void;
-  (body: { type: "play-press-key"; key: string }): void;
-  (body: { type: "play-layers"; layers: Record<string, Rect> }): void;
-}
+type PlayPostBody =
+  | { type: "link-rects"; links: LinkRectReport[] }
+  | { type: "play-click"; id: string }
+  | { type: "play-key"; key: PlayKey }
+  | { type: "play-press-key"; key: string }
+  | { type: "play-layers"; layers: Record<string, Rect> };
+
+type PlayPost = (body: PlayPostBody) => void;
 
 const LAYER_SCAN_MAX = 600;
 const LAYER_TEXT_MAX = 60;

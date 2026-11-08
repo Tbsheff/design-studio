@@ -61,6 +61,10 @@ export function createFakeBus(): FakeBus {
   };
 }
 
+const toResolved = (): Promise<void> => Promise.resolve();
+
+const toNothing = (): null => null;
+
 function notImplemented(name: string): never {
   throw new Error(`${name} is not part of the fake`);
 }
@@ -129,7 +133,7 @@ export function createFakeVersions(): FakeVersions {
   const store: FakeVersions = {
     commits: [],
     statusCalls: 0,
-    async ensureRepo() {},
+    ensureRepo: toResolved,
     async commit(_project, direction: Direction, title, meta) {
       store.commits.push({ title, meta, directionId: direction.id });
 
@@ -177,13 +181,13 @@ export function createFakeVersions(): FakeVersions {
 
 export function createFakePreview(): PreviewService {
   return {
-    async start() {},
-    async stop() {},
+    start: toResolved,
+    stop: toResolved,
     directionUrl: () => notImplemented("directionUrl"),
     snapshotUrl: () => notImplemented("snapshotUrl"),
-    watch() {},
-    unwatch() {},
-    async release() {},
+    watch: toNothing,
+    unwatch: toNothing,
+    release: toResolved,
     async renderCheck() {
       return [
         {

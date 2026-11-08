@@ -7,7 +7,6 @@ import {
   ACTION_LABELS,
   cleanLinkText,
   EASING_LABELS,
-  isBackTarget,
   isFrameAction,
   LINK_EASING_DEFAULT,
   LINK_EASINGS,

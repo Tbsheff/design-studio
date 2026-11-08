@@ -92,7 +92,7 @@ export default function CanvasRulers({
       ro.observe(root.current);
     }
 
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const media = globalThis.matchMedia("(prefers-color-scheme: dark)");
     media.addEventListener("change", schedule);
     const theme = new MutationObserver(schedule);
     theme.observe(document.documentElement, {

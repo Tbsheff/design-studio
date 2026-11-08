@@ -47,12 +47,12 @@ const PresentLayer = ({
       }
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
     document.addEventListener("fullscreenchange", onFullscreen);
     root.current?.querySelector<HTMLButtonElement>(".present-close")?.focus();
 
     return (): void => {
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
       document.removeEventListener("fullscreenchange", onFullscreen);
 
       if (document.fullscreenElement) {
@@ -244,9 +244,9 @@ const MarqueeLayer = ({
     }
 
     const clear = (): void => setRect(null);
-    window.addEventListener("pointerup", clear);
+    globalThis.addEventListener("pointerup", clear);
 
-    return (): void => window.removeEventListener("pointerup", clear);
+    return (): void => globalThis.removeEventListener("pointerup", clear);
   }, [shown]);
 
   if (!rect) {

@@ -99,9 +99,9 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
       }
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
-    return (): void => window.removeEventListener("keydown", onKey, true);
+    return (): void => globalThis.removeEventListener("keydown", onKey, true);
   }, [setOn, toggle, undo]);
 
   useDesktopCommand((command) => {

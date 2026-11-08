@@ -533,9 +533,9 @@ export default function VectorLayer(p: Props): ReactElement | null {
       }
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
-    return (): void => window.removeEventListener("keydown", onKey, true);
+    return (): void => globalThis.removeEventListener("keydown", onKey, true);
   }, [active, penOn]);
 
   if (!tool) {

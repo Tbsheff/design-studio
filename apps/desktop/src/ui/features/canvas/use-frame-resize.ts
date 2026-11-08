@@ -226,8 +226,8 @@ const useFrameResize = (
       target.removeEventListener("pointermove", move as EventListener);
       target.removeEventListener("pointerup", end);
       target.removeEventListener("pointercancel", end);
-      window.removeEventListener("keydown", key);
-      window.removeEventListener("keyup", key);
+      globalThis.removeEventListener("keydown", key);
+      globalThis.removeEventListener("keyup", key);
       document.body.classList.remove(`frame-resize-${edge}`);
       dragging.current = false;
       frameSnapStore.set(null);
@@ -250,8 +250,8 @@ const useFrameResize = (
     target.addEventListener("pointermove", move as EventListener);
     target.addEventListener("pointerup", end);
     target.addEventListener("pointercancel", end);
-    window.addEventListener("keydown", key);
-    window.addEventListener("keyup", key);
+    globalThis.addEventListener("keydown", key);
+    globalThis.addEventListener("keyup", key);
   };
 };
 

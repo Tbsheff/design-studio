@@ -18,7 +18,7 @@ const withElementMark = (
     return url;
   }
 
-  const next = new URL(url, window.location.href);
+  const next = new URL(url, globalThis.location.href);
   next.searchParams.set(ELEMENT_MARK_PARAM, mark);
 
   return next.toString();

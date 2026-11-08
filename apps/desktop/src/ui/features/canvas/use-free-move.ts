@@ -140,7 +140,7 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
       session.current = null;
       setView(null);
       document.body.classList.remove("element-moving");
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
       live.current.post({ type: "preview-reset" });
       live.current.holdSwap?.(false, !committing);
     };
@@ -189,7 +189,7 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
         target,
       };
       document.body.classList.add("element-moving");
-      window.addEventListener("keydown", onKey, true);
+      globalThis.addEventListener("keydown", onKey, true);
       cur.holdSwap?.(true, false);
       setView({
         box: start.rect,

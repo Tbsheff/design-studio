@@ -40,9 +40,9 @@ const useSelectKey = (
       }
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return (): void => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
 };
 
@@ -98,9 +98,9 @@ const useFirstSelectKeys = (
       cur.selectFirst();
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return (): void => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [stage]);
 };
 
@@ -129,9 +129,9 @@ const forwardLayoutKeyWhenShown = (): void => {
 
   const wait = (): void => {
     if (layoutSectionShown()) {
-      window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
+      globalThis.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
     } else if (performance.now() < until) {
-      window.requestAnimationFrame(wait);
+      globalThis.requestAnimationFrame(wait);
     }
   };
 
@@ -174,12 +174,12 @@ const useLayoutKeyFallback = (o: {
     };
 
     const onForwarded = (): undefined => void run();
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
 
     return (): void => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
     };
   }, []);
 };

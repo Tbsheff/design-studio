@@ -68,7 +68,7 @@ const passiveSrc = (
   if (kind !== "html" || !change) {
     return baseUrl;
   }
-  const url = new URL(baseUrl, window.location.href);
+  const url = new URL(baseUrl, globalThis.location.href);
   url.searchParams.set("v", String(change.changedAt));
 
   return url.toString();
@@ -194,9 +194,9 @@ const useZoomInput = (
       zoomBy(key, "key");
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return (): void => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [zoomBy]);
 
   return zoomBy;

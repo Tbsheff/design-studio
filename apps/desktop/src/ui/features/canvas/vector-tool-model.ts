@@ -122,12 +122,12 @@ const useVectorToolKeys = (available: boolean): void => {
       }
     };
 
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
 
     return (): void => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
     };
   }, []);
 };

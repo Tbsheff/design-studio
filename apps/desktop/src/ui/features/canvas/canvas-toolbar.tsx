@@ -2,7 +2,6 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { runCommand, TabOrderToggle } from "../../canvas-toolbar-slots.js";
-import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { copy } from "./copy.js";

@@ -1,4 +1,4 @@
-import { isModZoomKey, zoomKeyOf } from "@design-studio/contracts";
+import { isModZoomKey } from "@design-studio/contracts";
 import type { ZoomKey } from "@design-studio/contracts";
 import {
   useCallback,
@@ -585,13 +585,13 @@ export function usePanZoom({
       setZoomHeld(false);
     };
 
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
+    globalThis.addEventListener("keydown", down);
+    globalThis.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
 
     return (): void => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
+      globalThis.removeEventListener("keydown", down);
+      globalThis.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
   }, []);

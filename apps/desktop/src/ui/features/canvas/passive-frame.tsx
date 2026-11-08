@@ -24,7 +24,7 @@ const resetPassiveMountGate = (): void => {
     return;
   }
   paintListening = true;
-  window.addEventListener(PREVIEW_PAINTED_EVENT, () => {
+  globalThis.addEventListener(PREVIEW_PAINTED_EVENT, () => {
     frontPainted = true;
   });
 };
@@ -51,7 +51,7 @@ const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
       tryArm();
     };
 
-    window.addEventListener(PREVIEW_PAINTED_EVENT, onPaint);
+    globalThis.addEventListener(PREVIEW_PAINTED_EVENT, onPaint);
     const timer = window.setTimeout(onPaint, MOUNT_FALLBACK_MS);
     const root = el.closest(".stage");
 
@@ -69,7 +69,7 @@ const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
     io.observe(el);
 
     return (): void => {
-      window.removeEventListener(PREVIEW_PAINTED_EVENT, onPaint);
+      globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, onPaint);
       window.clearTimeout(timer);
       io.disconnect();
     };

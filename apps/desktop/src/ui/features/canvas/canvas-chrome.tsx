@@ -39,9 +39,9 @@ const useRulersKey = (): void => {
       toggleRulers();
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return (): void => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
 };
 

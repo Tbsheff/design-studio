@@ -92,12 +92,12 @@ const PreviewMenu = ({
       }
     };
 
-    window.addEventListener("mousedown", onDown, true);
+    globalThis.addEventListener("mousedown", onDown, true);
     window.addEventListener("blur", onClose);
     window.addEventListener("resize", onClose);
 
     return (): void => {
-      window.removeEventListener("mousedown", onDown, true);
+      globalThis.removeEventListener("mousedown", onDown, true);
       window.removeEventListener("blur", onClose);
       window.removeEventListener("resize", onClose);
     };

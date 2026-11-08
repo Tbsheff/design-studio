@@ -52,9 +52,9 @@ const usePortDialog = (
       open(detail?.frameId ?? null, detail?.directionId ?? null);
     };
 
-    window.addEventListener(PORT_OPEN_EVENT, onOpen);
+    globalThis.addEventListener(PORT_OPEN_EVENT, onOpen);
 
-    return (): void => window.removeEventListener(PORT_OPEN_EVENT, onOpen);
+    return (): void => globalThis.removeEventListener(PORT_OPEN_EVENT, onOpen);
   }, [open]);
 
   return { close: useCallback(() => setTarget(null), []), open, target };

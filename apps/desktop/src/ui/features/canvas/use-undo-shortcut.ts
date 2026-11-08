@@ -109,12 +109,12 @@ const useUndoShortcut = (
       routeHistoryCommand(kind, state.current);
     };
 
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
 
     return (): void => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
     };
   }, []);
   useDesktopCommand((command) => {

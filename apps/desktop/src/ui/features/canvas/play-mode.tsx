@@ -265,8 +265,8 @@ const usePlay = (p: Props) => {
     }
 
     setSlots((prev) => withPhase(prev, token, "enter"));
-    window.requestAnimationFrame(() =>
-      window.requestAnimationFrame(() => {
+    globalThis.requestAnimationFrame(() =>
+      globalThis.requestAnimationFrame(() => {
         setSlots((prev) => withPhase(prev, token, "run"));
         later(() => settle(token), slot.duration + 40);
       })
@@ -469,9 +469,9 @@ const usePlay = (p: Props) => {
       onKey(key);
     };
 
-    window.addEventListener("keydown", handler, true);
+    globalThis.addEventListener("keydown", handler, true);
 
-    return () => window.removeEventListener("keydown", handler, true);
+    return () => globalThis.removeEventListener("keydown", handler, true);
   });
 
   const linkKey = p.file.links
@@ -651,7 +651,7 @@ const useFocusReturn = (root: { current: HTMLElement | null }) => {
     root.current?.focus();
 
     return () => {
-      window.requestAnimationFrame(() => {
+      globalThis.requestAnimationFrame(() => {
         if (
           document.activeElement &&
           document.activeElement !== document.body

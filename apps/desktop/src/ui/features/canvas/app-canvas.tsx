@@ -223,11 +223,11 @@ const useRouteRequests = (
       }
     };
 
-    window.addEventListener(OPEN_ROUTE_EVENT, onRoute);
+    globalThis.addEventListener(OPEN_ROUTE_EVENT, onRoute);
 
     return (): void => {
       unsubscribe?.();
-      window.removeEventListener(OPEN_ROUTE_EVENT, onRoute);
+      globalThis.removeEventListener(OPEN_ROUTE_EVENT, onRoute);
     };
   }, [projectId, isApp]);
 };

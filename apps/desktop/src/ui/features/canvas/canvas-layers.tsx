@@ -13,7 +13,6 @@ import {
 import { LayersPanel } from "../versions-layers-tokens/layers-panel.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
-import { frameName } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import type { HoverBox } from "./use-preview-frames.js";
@@ -140,9 +139,9 @@ const useLayersWatch = (
       toggle.current();
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return (): void => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
 };
 
@@ -172,9 +171,9 @@ const useSelectMoveKeys = (
       cur.selectRelative(last.selector, move);
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return (): void => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
 };
 

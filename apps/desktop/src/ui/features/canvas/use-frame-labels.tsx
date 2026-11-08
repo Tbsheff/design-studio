@@ -1,6 +1,6 @@
 import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 import { useCallback, useRef } from "react";
-import type { MutableRefObject, ReactElement } from "react";
+import type { MutableRefObject } from "react";
 
 import { api } from "../../api.js";
 import {

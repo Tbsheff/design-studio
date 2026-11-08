@@ -26,12 +26,7 @@ import {
   PREVIEW_ESCAPE_EVENT,
   PREVIEW_STOP_EVENT,
 } from "../chat/use-escape-stop.js";
-import {
-  IS_MAC,
-  moveRegion,
-  openLayer,
-  runCommand,
-} from "../commands/index.js";
+import { moveRegion, openLayer, runCommand } from "../commands/index.js";
 import type { BuildError, FilesChange } from "../home/use-studio-data.js";
 import { textEditability } from "../inspector/css-values.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
@@ -75,7 +70,7 @@ const forwardAppKey = (id: AppKey): void => {
   } else if (id === "project-rail") {
     void runCommand("view.project-rail");
   } else if (id === "stop") {
-    window.dispatchEvent(new CustomEvent(PREVIEW_STOP_EVENT));
+    globalThis.dispatchEvent(new CustomEvent(PREVIEW_STOP_EVENT));
   } else if (id === "palette" || id === "shortcuts") {
     openLayer(id);
   } else {
@@ -87,19 +82,19 @@ const forwardKeyMessage = (msg: KeyMessage): void => {
   if (msg.type === "app-key") {
     forwardAppKey(msg.id);
   } else if (msg.type === "escape") {
-    window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
+    globalThis.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
   } else if (msg.type === "layout-key") {
-    window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
+    globalThis.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
   } else if (msg.type === "tool-key") {
-    window.dispatchEvent(
+    globalThis.dispatchEvent(
       new CustomEvent(PREVIEW_TOOL_KEY_EVENT, { detail: { tool: msg.tool } })
     );
   } else if (msg.type === "arrange-key") {
-    window.dispatchEvent(
+    globalThis.dispatchEvent(
       new CustomEvent(PREVIEW_ARRANGE_KEY_EVENT, { detail: { key: msg.key } })
     );
   } else if (typeof msg.redo === "boolean") {
-    window.dispatchEvent(
+    globalThis.dispatchEvent(
       new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } })
     );
   }
@@ -397,7 +392,7 @@ export function usePreviewFrames(o: Options) {
           }
 
           reselectOnSwap.current = false;
-          window.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
+          globalThis.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
         }, 0);
       }
     },
@@ -861,7 +856,7 @@ export function usePreviewFrames(o: Options) {
 
       if (msg.type === "painted") {
         if (frame.token === frontRef.current) {
-          window.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
+          globalThis.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
         }
 
         if (treeWanted.current && frame.token === frontRef.current) {

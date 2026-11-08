@@ -384,7 +384,7 @@ const useResizeHandles = (o: Options): ResizeHandles => {
         handle.removeEventListener("pointermove", onMove);
         handle.removeEventListener("pointerup", onUp);
         handle.removeEventListener("pointercancel", onCancel);
-        window.removeEventListener("keydown", onKey, true);
+        globalThis.removeEventListener("keydown", onKey, true);
       };
 
       const onUp = (ev: PointerEvent): void => {
@@ -421,7 +421,7 @@ const useResizeHandles = (o: Options): ResizeHandles => {
       handle.addEventListener("pointermove", onMove);
       handle.addEventListener("pointerup", onUp);
       handle.addEventListener("pointercancel", onCancel);
-      window.addEventListener("keydown", onKey, true);
+      globalThis.addEventListener("keydown", onKey, true);
     },
     [target, preview, end, cancel, commit]
   );

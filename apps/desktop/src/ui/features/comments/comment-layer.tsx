@@ -724,7 +724,7 @@ export const CommentLayer = (props: Props) => {
           offset={pickOffset}
           breadcrumb={breadcrumbOf(tools.pageName, [pick])}
           draftKey={`pick:${pick.selector}`}
-          autoFocus
+          shouldFocus
           trap
           onSubmit={submitFor([pick], finishPick, pickOffset)}
           onCancel={() => {
@@ -746,7 +746,7 @@ export const CommentLayer = (props: Props) => {
           anchor={lastSelected.rect}
           breadcrumb={breadcrumbOf(tools.pageName, props.selection)}
           draftKey={`sel:${selKey}`}
-          autoFocus={feedbackActive}
+          shouldFocus={feedbackActive}
           trap={feedbackActive}
           focusRef={feedbackInput}
           onSubmit={submitFor(props.selection, () => setDismissedKey(selKey))}

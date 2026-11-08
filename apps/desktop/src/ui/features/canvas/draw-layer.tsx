@@ -132,7 +132,7 @@ const DrawSurface = ({
           breadcrumb={breadcrumb}
           initial={initial}
           draftKey="draw"
-          autoFocus
+          shouldFocus
           trap
           running={control.running}
           busy={control.sending}

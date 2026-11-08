@@ -21,6 +21,7 @@ import type { GenerateTabProps } from "../../canvas-preview-slots.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
 import { CreateComponentDialog } from "../design-system/index.js";
+import { DevNoteSlot, useDevNoteHost } from "../dev-note/index.js";
 import {
   applyPasteJsx,
   toCopyCss,
@@ -32,6 +33,7 @@ import { LayerStyleSlot, useLayerStyleHost } from "../layer-style/index.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
+import { createItem, disabledBy } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 import { toValueOr } from "./settle-model.js";
@@ -54,7 +56,13 @@ interface Options {
     LayerEdits,
     "enabled" | "structureKey" | "canPaste" | "busy" | "notify"
   >;
-  ids: { projectId: string; directionId: string | null; kind: ProjectKind };
+  ids: {
+    projectId: string;
+    directionId: string | null;
+    frameId: string;
+    frameName: string;
+    kind: ProjectKind;
+  };
 }
 
 const copyCss = async (
@@ -83,18 +91,6 @@ const structureItems = (options: Options): PreviewMenuItem[] => {
   };
 
   return toStructureMenuEntries(state, edits.structureKey, true);
-};
-
-interface DisabledReason {
-  disabled?: string;
-}
-
-const disabledBy = (reason: string | null): DisabledReason => {
-  if (reason) {
-    return { disabled: reason };
-  }
-
-  return {};
 };
 
 const pasteItem = (
@@ -135,46 +131,6 @@ const pasteItem = (
       id: "paste-jsx",
       label: "Paste JSX or Figma",
       run: () => applyPasteJsx(ids, target, optionsValue.edits.notify),
-      ...disabledBy(blocked),
-    },
-  ];
-};
-
-const createBlocker = (options4: Options): string | null => {
-  if (options4.ids.kind !== "react") {
-    return "Components need a React project. This is a plain HTML page";
-  }
-
-  if (options4.selection.some((item) => !item.source && !item.owners?.length)) {
-    return "An element has no source location";
-  }
-
-  if (options4.edits.busy) {
-    return "Wait for the last edit to finish";
-  }
-
-  return null;
-};
-
-const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
-  if (!options3.edits.enabled || !options3.ids.directionId) {
-    return [];
-  }
-
-  const blocked = createBlocker(options3);
-
-  let label = "Create component…";
-
-  if (options3.selection.length > 1) {
-    label = `Create component from ${options3.selection.length}…`;
-  }
-
-  return [
-    {
-      icon: "component",
-      id: "create-component",
-      label,
-      run: open,
       ...disabledBy(blocked),
     },
   ];
@@ -264,6 +220,7 @@ interface HostBase {
 }
 
 interface MenuHosts {
+  readonly devNotes: ReturnType<typeof useDevNoteHost>;
   readonly icons: ReturnType<typeof useIconHost>;
   readonly layerStyle: ReturnType<typeof useLayerStyleHost>;
   readonly photos: ReturnType<typeof useImageSearchHost>;
@@ -282,6 +239,7 @@ const toHostItems = (
   hosts: MenuHosts,
   item: SelectionContext
 ): PreviewMenuItem[] => [
+  ...hosts.devNotes.items(item),
   ...hosts.icons.items(item),
   ...hosts.photos.items(item),
   ...hosts.props.items(item),
@@ -308,6 +266,18 @@ const toLayerStyleSlot = (hosts: MenuHosts): ReactNode => {
   return (
     <Suspense fallback={null}>
       <LayerStyleSlot host={hosts.layerStyle} />
+    </Suspense>
+  );
+};
+
+const toDevNoteSlot = (hosts: MenuHosts): ReactNode => {
+  if (hosts.devNotes.opened === null) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <DevNoteSlot host={hosts.devNotes} />
     </Suspense>
   );
 };
@@ -447,6 +417,13 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
   const isReact = options.ids.kind === "react";
 
   const hosts: MenuHosts = {
+    devNotes: useDevNoteHost({
+      enabled: base.enabled,
+      frameId: options.ids.frameId,
+      frameName: options.ids.frameName,
+      post: (message) => options.port?.current?.post(message),
+      projectId: options.ids.projectId,
+    }),
     icons: useIconHost({ ...base, selection }),
     layerStyle: useLayerStyleHost({ ...base, selection }),
     patterns: usePatternHost({ ...base, isReact }),
@@ -476,6 +453,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
       {toCreateDialog(options, creating, createIds, closeCreate)}
       {toIconSlot(options, hosts)}
       {toLayerStyleSlot(hosts)}
+      {toDevNoteSlot(hosts)}
       {toPropSlot(options, hosts)}
       {toPatternSlot(options, hosts)}
       <ImageSearchMount

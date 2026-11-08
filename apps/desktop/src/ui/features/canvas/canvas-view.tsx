@@ -111,6 +111,8 @@ const CanvasView = (props: ViewProps): ReactElement => {
     edits: edits.layerEdits,
     ids: {
       directionId: props.directionId,
+      frameId: stage.active.id,
+      frameName: stage.active.label ?? stage.active.path ?? stage.active.id,
       kind: props.kind,
       projectId: props.projectId,
     },

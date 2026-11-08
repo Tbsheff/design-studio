@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
-function useModule<Value>(
+const useModule = <Value>(
   load: () => Promise<Value>,
   enabled: boolean
-): Value | null {
+): Value | null => {
   const [mod, setMod] = useState<Value | null>(null);
   useEffect(() => {
     if (!enabled) {
@@ -28,6 +28,6 @@ function useModule<Value>(
   }, [enabled, load]);
 
   return mod;
-}
+};
 
 export { useModule };

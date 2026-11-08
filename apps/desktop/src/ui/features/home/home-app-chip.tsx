@@ -48,7 +48,7 @@ const getChipName = (chip: AppChip): string =>
   chip.path.split("/").filter(Boolean).pop() ??
   chip.path;
 
-function getChipLabel(chip: AppChip): string {
+const getChipLabel = (chip: AppChip): string => {
   if (chip.isChecking && !chip.inspection) {
     return "Checking…";
   }
@@ -68,7 +68,7 @@ function getChipLabel(chip: AppChip): string {
   return dir && dir !== "."
     ? `${KIND_LABEL[found.kind]} · ${dir}`
     : KIND_LABEL[found.kind];
-}
+};
 
 interface DropBridge {
   readonly pathForFile?: (file: File) => string;

@@ -23,10 +23,10 @@ import type { RailState } from "./rail-store-model.js";
 
 import "../../styles/project-nav.css";
 
-function useFloatingDismiss(
+const useFloatingDismiss = (
   state: RailState,
   rail: RefObject<HTMLElement | null>
-): void {
+): void => {
   useEffect(() => {
     if (state !== "open") {
       return;
@@ -64,9 +64,9 @@ function useFloatingDismiss(
       window.removeEventListener("blur", close);
     };
   }, [state, rail]);
-}
+};
 
-function moveFocus(event: ReactKeyboardEvent<HTMLElement>): void {
+const moveFocus = (event: ReactKeyboardEvent<HTMLElement>): void => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
     return;
   }
@@ -90,12 +90,12 @@ function moveFocus(event: ReactKeyboardEvent<HTMLElement>): void {
         items.length;
 
   items[next]?.focus();
-}
+};
 
-function useStageFocusOnClose(
+const useStageFocusOnClose = (
   state: RailState,
   rail: RefObject<HTMLElement | null>
-): void {
+): void => {
   const last = useRef(state);
   useEffect(() => {
     const closed = last.current === "open" && state !== "open";
@@ -115,9 +115,9 @@ function useStageFocusOnClose(
       .querySelector<HTMLElement>(".canvas .stage")
       ?.focus({ preventScroll: true });
   }, [state, rail]);
-}
+};
 
-function useRailKeys(onOpened: () => void): void {
+const useRailKeys = (onOpened: () => void): void => {
   const opened = useRef(onOpened);
   opened.current = onOpened;
   useCommands(() => [
@@ -157,7 +157,7 @@ function useRailKeys(onOpened: () => void): void {
 
     return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
 interface RailProps {
   readonly projectId: string;

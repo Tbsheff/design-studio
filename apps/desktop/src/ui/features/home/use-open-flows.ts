@@ -18,7 +18,7 @@ interface FlowDeps {
   readonly doctor: ReturnType<typeof useDoctorGate>;
 }
 
-function useOpenFlows({
+const useOpenFlows = ({
   onOpen,
   setBusy,
   setFormError,
@@ -26,7 +26,7 @@ function useOpenFlows({
   health,
   homeDir,
   doctor,
-}: FlowDeps) {
+}: FlowDeps) => {
   const openStarter = async (starter: Starter): Promise<void> => {
     setBusy("starter");
     setFormError(null);
@@ -86,7 +86,7 @@ function useOpenFlows({
   };
 
   return { openProject, openSample, openStarter };
-}
+};
 
 export { useOpenFlows };
 

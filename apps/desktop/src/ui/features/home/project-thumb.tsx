@@ -24,7 +24,7 @@ const getThumbUrl = async (id: string, thumbnail: string): Promise<string> => {
   return URL.createObjectURL(blob);
 };
 
-function useThumb(hit: ProjectHit): string | null {
+const useThumb = (hit: ProjectHit): string | null => {
   const key = hit.thumbnail ? `${hit.id}/${hit.thumbnail}` : null;
 
   const [url, setUrl] = useState<{
@@ -65,7 +65,7 @@ function useThumb(hit: ProjectHit): string | null {
   }, [key, hit.id, hit.thumbnail]);
 
   return url && url.key === key ? url.url : null;
-}
+};
 
 const ProjectThumb = ({
   hit,

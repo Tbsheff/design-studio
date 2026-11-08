@@ -32,7 +32,7 @@ interface ChipFlowDeps {
   readonly doctor: ReturnType<typeof useDoctorGate>;
 }
 
-function useChipFlow({
+const useChipFlow = ({
   onOpen,
   setBusy,
   setFormError,
@@ -41,7 +41,7 @@ function useChipFlow({
   level,
   attached,
   doctor,
-}: ChipFlowDeps) {
+}: ChipFlowDeps) => {
   const app = useAppChip();
   const [folderPop, setFolderPop] = useState(false);
   const [appMenu, setAppMenu] = useState(false);
@@ -181,7 +181,7 @@ function useChipFlow({
     submitChip,
     takeDrop,
   };
-}
+};
 
 export { useChipFlow };
 

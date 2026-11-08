@@ -16,7 +16,7 @@ const INSTALL_DETAIL =
 
 const SHELL_SAFE = /^[\w./-]+$/u;
 
-function getShellPath(dir: string, homeDir: string | null): string {
+const getShellPath = (dir: string, homeDir: string | null): string => {
   const short = shortHome(dir, homeDir);
 
   if (short === "~") {
@@ -30,12 +30,12 @@ function getShellPath(dir: string, homeDir: string | null): string {
   }
 
   return SHELL_SAFE.test(short) ? short : JSON.stringify(short);
-}
+};
 
-function getHomeCommand(
+const getHomeCommand = (
   command: string | null,
   homeDir: string | null
-): string | null {
+): string | null => {
   const match = command?.match(/^cd ("(?:[^"\\]|\\.)*") && (.+)$/u);
 
   if (!match?.[1] || !match[2]) {
@@ -47,9 +47,9 @@ function getHomeCommand(
   } catch {
     return command;
   }
-}
+};
 
-function getInstallProblem(
+const getInstallProblem = (
   name: string,
   place: string,
   kindLabel: string,
@@ -58,26 +58,24 @@ function getInstallProblem(
     readonly dir: string;
     readonly homeDir: string | null;
   }
-): DoctorProblem {
-  return {
-    badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
-    command: `cd ${getShellPath(install.dir, install.homeDir)} && ${install.command}`,
-    detail: INSTALL_DETAIL,
-    name,
-    place,
-    steps: [
-      { isOk: true, text: `package.json · ${kindLabel}` },
-      { isOk: false, text: "node_modules is missing" },
-    ],
-  };
-}
+): DoctorProblem => ({
+  badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
+  command: `cd ${getShellPath(install.dir, install.homeDir)} && ${install.command}`,
+  detail: INSTALL_DETAIL,
+  name,
+  place,
+  steps: [
+    { isOk: true, text: `package.json · ${kindLabel}` },
+    { isOk: false, text: "node_modules is missing" },
+  ],
+});
 
-function getHealthProblem(
+const getHealthProblem = (
   project: Project,
   health: AppHealth,
   place: string,
   homeDir: string | null
-): DoctorProblem {
+): DoctorProblem => {
   const label = project.app?.framework === "next" ? "Next.js" : "Vite";
 
   return {
@@ -100,7 +98,7 @@ function getHealthProblem(
       },
     ],
   };
-}
+};
 
 export {
   INSTALL_DETAIL,

@@ -36,7 +36,7 @@ const DEFAULTS: HomePrefs = {
   view: "list",
 };
 
-function getPrefs(): HomePrefs {
+const getPrefs = (): HomePrefs => {
   try {
     const raw = JSON.parse(readStored(KEY) ?? "{}") as Partial<HomePrefs> &
       Partial<LegacyHomePrefs>;
@@ -57,11 +57,11 @@ function getPrefs(): HomePrefs {
   } catch {
     return DEFAULTS;
   }
-}
+};
 
-function setPrefsQuietly(prefs: HomePrefs): void {
+const setPrefsQuietly = (prefs: HomePrefs): void => {
   writeStored(KEY, JSON.stringify(prefs));
-}
+};
 
 let current = getPrefs();
 const listeners = new Set<() => void>();
@@ -83,13 +83,13 @@ const homePrefs = {
   },
 };
 
-function startPrefsSubscription(listener: () => void) {
+const startPrefsSubscription = (listener: () => void) => {
   listeners.add(listener);
 
   return (): void => {
     listeners.delete(listener);
   };
-}
+};
 
 const useHomePrefs = (): HomePrefs =>
   useSyncExternalStore(startPrefsSubscription, homePrefs.get);

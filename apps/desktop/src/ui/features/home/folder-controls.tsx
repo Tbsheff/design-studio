@@ -22,12 +22,12 @@ import type { FolderChooser } from "./use-folder-chooser.js";
 const DEFAULT = "default";
 const CHOOSE = "choose";
 
-function listLocationOptions(
+const listLocationOptions = (
   usable: WorkspaceFolder[],
   value: string | null,
   homeDir: string | null,
   labels: { readonly fallback: string; readonly isUnsupported: boolean }
-): UiSelectOption[] {
+): UiSelectOption[] => {
   const custom =
     value && !usable.some((folder) => folder.path === value)
       ? [{ label: shortenHome(value, homeDir), value }]
@@ -42,7 +42,7 @@ function listLocationOptions(
       value: CHOOSE,
     },
   ];
-}
+};
 
 interface LocationProps {
   readonly folders: WorkspaceFolder[];

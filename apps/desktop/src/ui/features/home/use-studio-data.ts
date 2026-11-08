@@ -92,7 +92,7 @@ interface StudioData {
   readonly noteSend: () => () => void;
 }
 
-function mergeSummaries(prev: RunMap, list: RunSummary[]): RunMap {
+const mergeSummaries = (prev: RunMap, list: RunSummary[]): RunMap => {
   const next: RunMap = { ...prev };
 
   for (const s of list) {
@@ -106,16 +106,16 @@ function mergeSummaries(prev: RunMap, list: RunSummary[]): RunMap {
   }
 
   return next;
-}
+};
 
 type SetRuns = Dispatch<SetStateAction<RunMap>>;
 
-function useRunPages(
+const useRunPages = (
   projectId: string,
   directionId: string | null,
   setRuns: SetRuns,
   setRunsLoaded: (loaded: boolean) => void
-): void {
+): void => {
   const cursor = useRef<RunCursor>(createCursor(projectId));
   const direction = useRef(directionId);
   direction.current = directionId;
@@ -260,9 +260,9 @@ function useRunPages(
       void fill(c, wantMore(FIRST_RUNS));
     }
   }, [directionId, fill, wantMore]);
-}
+};
 
-export function useStudioData(projectId: string): StudioData {
+export const useStudioData = (projectId: string): StudioData => {
   const ui = useUi();
   const [project, setProject] = useState<Project | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -502,4 +502,4 @@ export function useStudioData(projectId: string): StudioData {
     status,
     versions,
   };
-}
+};

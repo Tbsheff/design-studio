@@ -117,14 +117,13 @@ const Pop = ({
   );
 };
 
-function swatch(pack: PackSummary, name: string, fallback: string): string {
-  return pack.swatches.find((item) => item.name === name)?.value ?? fallback;
-}
+const swatch = (pack: PackSummary, name: string, fallback: string): string =>
+  pack.swatches.find((item) => item.name === name)?.value ?? fallback;
 
 const RAMP = [6, 16, 30, 48, 68, 100, 72, 48];
 
-function packVars(pack: PackSummary): CSSProperties {
-  return {
+const packVars = (pack: PackSummary): CSSProperties =>
+  ({
     "--pc-accent": swatch(pack, "accent", "#888"),
     "--pc-bg": swatch(pack, "bg", "#fff"),
     "--pc-body": fontStack(pack.fonts.body, "var(--font)"),
@@ -133,16 +132,14 @@ function packVars(pack: PackSummary): CSSProperties {
     "--pc-fg": swatch(pack, "fg", "#111"),
     "--pc-primary": swatch(pack, "primary", "#555"),
     "--pc-surface": swatch(pack, "surface", "#f5f5f5"),
-  } as CSSProperties;
-}
+  }) as CSSProperties;
 
-function rampColor(step: number, index: number): string {
-  return index <= 5
+const rampColor = (step: number, index: number): string =>
+  index <= 5
     ? `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-bg))`
     : `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-fg))`;
-}
 
-function fontNames(pack: PackSummary): string {
+const fontNames = (pack: PackSummary): string => {
   const clean = (family: string): string =>
     family.split(",")[0]?.replaceAll(/['"]/g, "").trim() ?? "";
 
@@ -150,7 +147,7 @@ function fontNames(pack: PackSummary): string {
   const body = clean(pack.fonts.body);
 
   return display === body || !body ? display : `${display} / ${body}`;
-}
+};
 
 const PackPreviewCard = ({
   pack,

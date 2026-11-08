@@ -14,6 +14,7 @@ import { EffectLive } from "./effect/live.js";
 import { EventsLive } from "./events/live.js";
 import { ExportLive } from "./export/live.js";
 import { FillLive } from "./fill/live.js";
+import { FixtureLive } from "./fixture/live.js";
 import { GalleryLive } from "./gallery/live.js";
 import { GridLive } from "./grid/live.js";
 import { IconLive } from "./icon/live.js";
@@ -61,6 +62,7 @@ const ALL_LIVE = {
   events: EventsLive,
   export: ExportLive,
   fill: FillLive,
+  fixture: FixtureLive,
   gallery: GalleryLive,
   grid: GridLive,
   icon: IconLive,

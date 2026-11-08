@@ -171,7 +171,7 @@ export const ContinueCard = ({
         )}
       </button>
       <div className="home-continue-body">
-        <span className="home-continue-kicker">Continue</span>
+        <span className="home-continue-kicker">{copy.continue}</span>
         <div className="home-continue-title">
           <b className="truncate">{project.name}</b>
           <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
@@ -190,7 +190,7 @@ export const ContinueCard = ({
             className="btn primary"
             onClick={() => onOpen(project)}
           >
-            Resume
+            {copy.resume}
             <Icon name="arrowRight" size={14} />
           </button>
           {server && health && (

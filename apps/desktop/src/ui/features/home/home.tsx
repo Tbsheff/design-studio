@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { uiStore } from "../../platform/storage.js";
 import { ChipMenuSlot } from "./chip-menu-slot.js";
 import { ComposerBar } from "./composer-bar.js";
+import { copy } from "./copy.js";
 import { DropHint } from "./drop-hint.js";
 import { HeroNotes } from "./hero-notes.js";
 import { ComposerChips } from "./home-composer-parts.js";
@@ -116,9 +117,9 @@ const Home = ({
       <main className="home-main">
         <section className="home-hero">
           {empty ? (
-            <h1 className="ui-display">What should we design?</h1>
+            <h1 className="ui-display">{copy.whatShouldWeDesign}</h1>
           ) : (
-            <h1 className="sr-only">Home</h1>
+            <h1 className="sr-only">{copy.home}</h1>
           )}
           <div className="home-card" ref={chipRef}>
             <form

@@ -71,17 +71,18 @@ const FoundList = ({
   return (
     <section className="home-found" aria-label={copy.foundOnThisMac}>
       <div className="home-found-head">
-        <span>Found on this Mac</span>
+        <span>{copy.foundOnThisMac}</span>
         <span className="spacer" />
         <span className="home-found-roots truncate">{roots}</span>
       </div>
       {found === null && (
-        <p className="home-found-note">Looking in your folders…</p>
+        <p className="home-found-note">{copy.lookingInYourFolders}</p>
       )}
       {found && apps.length === 0 && (
         <p className="home-found-note">
-          No app folders found in {roots || "your home folder"}. Use Add app
-          folder, or drop a folder on the window.
+          {copy.noAppFoldersFoundIn}
+          {roots || "your home folder"}
+          {copy.labelUseAddAppFolderOr}
         </p>
       )}
       {apps.map((app) => (
@@ -103,7 +104,7 @@ const FoundList = ({
             data-tip={copy.pickThisAppToDesign}
             onClick={() => onUse(app.path)}
           >
-            Use
+            {copy.labelUse}
           </button>
         </div>
       ))}
@@ -146,12 +147,12 @@ const StartCards = ({
           <Icon name="play" size={16} />
         </span>
         <span className="home-start-text">
-          <b>Open the sample</b>
-          <span>Click through a finished prototype. No cost.</span>
+          <b>{copy.openTheSample}</b>
+          <span>{copy.clickThroughAFinishedPrototype}</span>
         </span>
       </button>
       <div className="home-start-card">
-        <b>Or start from</b>
+        <b>{copy.orStartFrom}</b>
         <div className="home-start-pills">
           {starters.map((starter) => (
             <button
@@ -187,10 +188,7 @@ export default function HomeEmpty({
         <FoundList onUse={onUse} />
         <StartCards isBusy={isBusy} onSample={onSample} onStarter={onStarter} />
       </div>
-      <p className="home-empty-note">
-        “Use” picks the app. Return opens it in the studio, and your changes go
-        to its files. Recent work shows here after your first project.
-      </p>
+      <p className="home-empty-note">{copy.labelUsePicksTheAppReturn}</p>
     </div>
   );
 }

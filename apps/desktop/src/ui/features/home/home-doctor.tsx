@@ -92,7 +92,7 @@ export default function HomeDoctor({
             className="btn small ghost"
             onClick={onOpenAnyway}
           >
-            Open anyway
+            {copy.openAnyway}
           </button>
         </div>
       </div>

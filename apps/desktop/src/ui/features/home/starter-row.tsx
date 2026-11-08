@@ -1,6 +1,7 @@
 import type { Starter } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
 import type { Busy } from "./home-model.js";
 
 const StarterRow = ({
@@ -23,7 +24,10 @@ const StarterRow = ({
 
   return (
     <div className="home-starter-row">
-      <span className="ui-chip">{template.label} starter</span>
+      <span className="ui-chip">
+        {template.label}
+        {copy.starter}
+      </span>
       <button
         type="button"
         className="link"
@@ -32,7 +36,7 @@ const StarterRow = ({
       >
         {busy === "starter" ? "Opening…" : "Open it now"}
       </button>
-      <span className="home-starter-hint">No agent run, no cost</span>
+      <span className="home-starter-hint">{copy.noAgentRunNoCost}</span>
     </div>
   );
 };

@@ -165,7 +165,7 @@ const PlusMenu = ({
       onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
     >
       <div className="ui-menu-section">
-        <span className="ui-menu-label">Files</span>
+        <span className="ui-menu-label">{copy.files}</span>
         <Item
           icon="paperclip"
           label="Attach images"
@@ -174,7 +174,7 @@ const PlusMenu = ({
         />
       </div>
       <div className="ui-menu-section">
-        <span className="ui-menu-label">Code</span>
+        <span className="ui-menu-label">{copy.code}</span>
         <Item
           icon="folder"
           label="Add app folder…"
@@ -182,7 +182,7 @@ const PlusMenu = ({
         />
       </div>
       <div className="ui-menu-section">
-        <span className="ui-menu-label">Designs</span>
+        <span className="ui-menu-label">{copy.designs}</span>
         <Item
           icon="layers"
           label={
@@ -282,10 +282,8 @@ const PackPreviewCard = ({
       </span>
       <span className="pc-sample">
         <span className="pc-sample-card">
-          <span className="pc-sample-text">
-            The quick brown fox jumps over the lazy dog.
-          </span>
-          <span className="pc-btn">Continue →</span>
+          <span className="pc-sample-text">{copy.theQuickBrownFoxJumps}</span>
+          <span className="pc-btn">{copy.continue2}</span>
         </span>
         <span className="pc-image" />
       </span>
@@ -308,10 +306,10 @@ const NoneCard = ({
     onClick={onPick}
   >
     <span className="home-pack-face none" aria-hidden="true">
-      <span className="pc-none-text">No design system</span>
-      <span className="pc-none-hint">The agent picks the look</span>
+      <span className="pc-none-text">{copy.noDesignSystem}</span>
+      <span className="pc-none-hint">{copy.theAgentPicksTheLook}</span>
     </span>
-    <span className="home-pack-label">None</span>
+    <span className="home-pack-label">{copy.none}</span>
   </button>
 );
 
@@ -370,16 +368,14 @@ const PackPopover = ({
     label="Design system"
     onKeyDown={(event) => moveFocus(event, FOCUS_ITEMS)}
   >
-    <p className="home-pop-lede">
-      Set up a design system so every project starts from your colors, type and
-      components.
-    </p>
+    <p className="home-pop-lede">{copy.setUpADesignSystem}</p>
     <button type="button" className="btn strong home-pop-cta" onClick={onNew}>
-      Set up your design system
+      {copy.setUpYourDesignSystem}
     </button>
     {state.error && (
       <div className="alert error small">
-        Could not load design systems. {state.error}
+        {copy.couldNotLoadDesignSystems}
+        {state.error}
       </div>
     )}
     <PackCards
@@ -427,7 +423,7 @@ const ModelPopover = ({
       aria-label={copy.model}
       onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
     >
-      <span className="ui-menu-label">Model</span>
+      <span className="ui-menu-label">{copy.model}</span>
       {MODEL_OPTIONS.map((option) => (
         <button
           key={option.id}
@@ -444,7 +440,7 @@ const ModelPopover = ({
     </div>
     <div className="ui-menu-section home-pop-group">
       <span className="ui-menu-label" id="home-designs-label">
-        Designs
+        {copy.designs}
       </span>
       <VariationsControl
         value={settings.designs.value}
@@ -468,7 +464,7 @@ const ModelPopover = ({
         }}
       >
         <Icon name="sliders" size={14} />
-        Skills, limits and DESIGN.md…
+        {copy.skillsLimitsAndDesignMd}
       </button>
     </div>
   </Pop>
@@ -497,7 +493,7 @@ const LevelPopover = ({
     onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
   >
     <div className="ui-menu-section" role="group" aria-label={copy.level}>
-      <span className="ui-menu-label">Level</span>
+      <span className="ui-menu-label">{copy.level}</span>
       {RUN_LEVELS.map((item) => (
         <ChoiceItem
           key={item}

@@ -25,7 +25,7 @@ const TemplatesSection = ({
       aria-expanded
       onClick={() => homePrefs.set({ hasTemplatesShown: false })}
     >
-      Templates and starters
+      {copy.templatesAndStarters}
       <Icon name="close" size={10} />
     </button>
     {templates ? (

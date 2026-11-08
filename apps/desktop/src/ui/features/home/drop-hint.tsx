@@ -1,6 +1,8 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
+
 const DropHint = ({
   isOn,
 }: {
@@ -13,7 +15,7 @@ const DropHint = ({
   return (
     <div className="home-drop-hint" aria-hidden="true">
       <Icon name="image" size={16} />
-      Drop an app folder, an image or a link to build on it
+      {copy.dropAnAppFolderAn}
     </div>
   );
 };

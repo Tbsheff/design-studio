@@ -127,7 +127,7 @@ const ART: Record<string, ReactNode> = {
         fontFamily="var(--serif)"
         fontSize="15"
       >
-        Aa
+        {copy.aa}
       </text>
       <path d="M33 15h10M36 19h7" />
       <rect x="12" y="31" width="8" height="7" rx="1.5" {...mark} />

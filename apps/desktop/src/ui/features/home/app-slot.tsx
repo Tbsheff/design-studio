@@ -36,7 +36,7 @@ const AppSlot = ({
         onClick={onAddFolder}
       >
         <Icon name="folder" size={14} />
-        <span className="home-pill-text">Add app folder</span>
+        <span className="home-pill-text">{copy.addAppFolder}</span>
       </button>
     );
   }
@@ -50,7 +50,8 @@ const AppSlot = ({
         className="home-badge warn home-badge-btn"
         onClick={onDoctor}
       >
-        Fix the app first: {blocker.command}
+        {copy.fixTheAppFirst}
+        {blocker.command}
       </button>
     );
   }
@@ -63,7 +64,8 @@ const AppSlot = ({
     <span
       className={`home-badge ${chip.inspection.kind === "next" ? "next" : chip.inspection.kind === "vite" ? "vite" : "html"}`}
     >
-      Edits {chipName(chip)}
+      {copy.edits}
+      {chipName(chip)}
     </span>
   );
 };

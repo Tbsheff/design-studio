@@ -58,7 +58,7 @@ const Library = ({
           uiStore.set({ returnTo: "home", screen: "new-design-system" })
         }
       >
-        New design system
+        {copy.newDesignSystem}
       </button>
       <button
         type="button"
@@ -67,7 +67,7 @@ const Library = ({
           uiStore.set({ libraryFrom: null, screen: "design-systems" })
         }
       >
-        Open library
+        {copy.openLibrary}
       </button>
     </>
   );
@@ -110,10 +110,7 @@ const Library = ({
       />
       {systems && (
         <section className="home-list" aria-label={copy.pickADesignSystem}>
-          <p className="home-section-hint">
-            Pick one for your next project. Edit, import and export them in the
-            library.
-          </p>
+          <p className="home-section-hint">{copy.pickOneForYourNext}</p>
           <lib.PackCards
             packs={pickable(packs).packs ?? []}
             value={pack?.id ?? null}

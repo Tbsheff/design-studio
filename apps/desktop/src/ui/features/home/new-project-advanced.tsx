@@ -50,7 +50,7 @@ const NewProjectAdvanced = (props: Props): ReactElement => {
     >
       <summary onPointerEnter={() => loadFields()} onFocus={() => loadFields()}>
         <Icon name="chevronRight" size={14} />
-        Advanced
+        {copy.advanced}
       </summary>
       <div className="advanced-body">
         {open && (
@@ -59,9 +59,7 @@ const NewProjectAdvanced = (props: Props): ReactElement => {
           </Suspense>
         )}
         <label className="field">
-          <span>
-            DESIGN.md (optional). The agent reads it before the first run.
-          </span>
+          <span>{copy.designMdOptionalTheAgent}</span>
           <textarea
             aria-label={copy.designMd}
             className="mono"
@@ -74,7 +72,7 @@ const NewProjectAdvanced = (props: Props): ReactElement => {
         </label>
         <label className="btn small has-icon file-pick">
           <Icon name="file" size={14} />
-          Load DESIGN.md from a file
+          {copy.loadDesignMdFromA}
           <input
             type="file"
             accept=".md,text/markdown,text/plain"

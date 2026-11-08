@@ -123,7 +123,7 @@ const ComposerChips = ({
           data-tip={`Use as reference: ${reference.url}`}
         >
           <Icon name="globe" size={14} />
-          <span className="home-chip-label">Use as reference</span>
+          <span className="home-chip-label">{copy.labelUseAsReference}</span>
           <span className="truncate home-chip-host">{reference.host}</span>
           <button
             type="button"

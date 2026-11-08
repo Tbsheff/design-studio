@@ -358,7 +358,7 @@ const OpenRail = ({
     <>
       <div className="prail-head">
         <BrandMark />
-        <span className="prail-title">Projects</span>
+        <span className="prail-title">{copy.projects}</span>
         <button
           type="button"
           className="icon-btn small"
@@ -432,11 +432,11 @@ const OpenRail = ({
       <div className="prail-foot">
         <button type="button" className="btn small" onClick={onNewPrototype}>
           <Icon name="plus" size={12} />
-          New prototype
+          {copy.newPrototype}
         </button>
         <button type="button" className="btn small ghost" onClick={onHome}>
           <Icon name="arrowLeft" size={12} />
-          All projects
+          {copy.allProjects}
         </button>
       </div>
     </>

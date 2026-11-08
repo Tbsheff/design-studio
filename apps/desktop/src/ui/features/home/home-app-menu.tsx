@@ -159,7 +159,10 @@ const Candidates = ({
   return (
     <div className="ui-menu-section" role="radiogroup" aria-label={copy.app}>
       <span className="ui-menu-label">
-        {found.name} has {found.candidates.length} Next.js apps
+        {found.name}
+        {copy.has}
+        {found.candidates.length}
+        {copy.nextJsApps}
       </span>
       {found.candidates.map((candidate) => (
         <button
@@ -194,7 +197,7 @@ const DevServer = ({
 
   return (
     <div className="ui-menu-section home-app-server">
-      <span className="ui-menu-label">Dev server</span>
+      <span className="ui-menu-label">{copy.devServer}</span>
       <div className="segmented" role="radiogroup" aria-label={copy.devServer}>
         <button
           type="button"
@@ -203,7 +206,7 @@ const DevServer = ({
           className={chip.mode === "start" ? "on" : ""}
           onClick={mode("start")}
         >
-          Start next dev
+          {copy.startNextDev}
         </button>
         <button
           type="button"
@@ -212,7 +215,7 @@ const DevServer = ({
           className={chip.mode === "url" ? "on" : ""}
           onClick={mode("url")}
         >
-          Use my running server
+          {copy.labelUseMyRunningServer}
         </button>
       </div>
       {chip.mode === "url" && (
@@ -234,7 +237,7 @@ const DevServer = ({
         onClick={() => setEnvOpen((isOpen) => !isOpen)}
       >
         <Icon name={envOpen ? "chevronDown" : "chevronRight"} size={14} />
-        <span>Environment for next dev</span>
+        <span>{copy.environmentForNextDev}</span>
       </button>
       {envOpen && (
         <textarea
@@ -295,11 +298,13 @@ const AppMenu = ({
         )}
         {found?.workspace && (
           <p className="home-app-note">
-            Opens as part of the {found.workspace.name} monorepo.
+            {copy.opensAsPartOfThe}
+            {found.workspace.name}
+            {copy.monorepo}
           </p>
         )}
         {found?.projectId && (
-          <p className="home-app-note">Already a project. Return opens it.</p>
+          <p className="home-app-note">{copy.alreadyAProjectReturnOpens}</p>
         )}
       </div>
       {found?.kind === "next" && !problem && (
@@ -313,8 +318,8 @@ const AppMenu = ({
               onClick={onTokensOnly}
             >
               <Icon name="palette" size={14} />
-              <span>Use only its tokens</span>
-              <span className="ui-menu-meta">No dev server</span>
+              <span>{copy.labelUseOnlyItsTokens}</span>
+              <span className="ui-menu-meta">{copy.noDevServer}</span>
             </button>
           </div>
         </>
@@ -355,7 +360,7 @@ const FolderPathPop = ({
     >
       <div className="ui-menu-section">
         <label className="ui-menu-label" htmlFor="home-app-path">
-          Folder path
+          {copy.folderPath}
         </label>
         <input
           id="home-app-path"
@@ -367,17 +372,14 @@ const FolderPathPop = ({
           onKeyDown={(eventExtra) => keepEnter(eventExtra, submit)}
           onChange={(eventLast) => setValue(eventLast.target.value)}
         />
-        <p className="home-app-note">
-          The desktop app opens the macOS folder picker here, and you can drop a
-          folder on the window.
-        </p>
+        <p className="home-app-note">{copy.theDesktopAppOpensThe}</p>
         <button
           type="button"
           className="btn small primary"
           disabled={!value.trim()}
           onClick={submit}
         >
-          Add folder
+          {copy.addFolder2}
         </button>
       </div>
     </Pop>

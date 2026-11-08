@@ -98,9 +98,10 @@ const TrashRow = ({
             dateTime={new Date(item.trashedAt).toISOString()}
             data-tip={formatTime(item.trashedAt)}
           >
-            Deleted {formatRelative(item.trashedAt).toLowerCase()}
+            {copy.deleted}
+            {formatRelative(item.trashedAt).toLowerCase()}
           </time>
-          {item.folderStays && <span> · Files in your folder stay</span>}
+          {item.folderStays && <span>{copy.filesInYourFolderStay}</span>}
         </span>
       </div>
       <div className="trash-actions">
@@ -112,7 +113,7 @@ const TrashRow = ({
           aria-label={`Restore ${item.name}`}
         >
           <Icon name="restore" size={14} />
-          Restore
+          {copy.restore}
         </button>
         <button
           type="button"
@@ -121,7 +122,7 @@ const TrashRow = ({
           disabled={isBusy}
           aria-label={`Delete ${item.name} forever`}
         >
-          Delete forever
+          {copy.deleteForever}
         </button>
       </div>
     </li>
@@ -189,7 +190,7 @@ const ConfirmDelete = ({
           onClick={onCancel}
           disabled={isBusy}
         >
-          Cancel
+          {copy.cancel}
         </button>
         <button
           type="button"
@@ -316,8 +317,8 @@ export default function HomeTrash({
     >
       <div className="modal-head">
         <div className="titles">
-          <h2 id="trash-title">Trash</h2>
-          <p>Restore a deleted project, or delete it for good.</p>
+          <h2 id="trash-title">{copy.trash}</h2>
+          <p>{copy.restoreADeletedProjectOr}</p>
         </div>
         <button
           type="button"
@@ -333,17 +334,15 @@ export default function HomeTrash({
           <div className="alert error small trash-error" role="alert">
             <span>{error}</span>
             <button type="button" className="btn small" onClick={load}>
-              Retry
+              {copy.retry}
             </button>
           </div>
         )}
         {items !== null && items.length === 0 && (
           <div className="trash-empty">
             <Icon name="trash" size={16} />
-            <strong>Trash is empty</strong>
-            <span>
-              Deleted projects stay here until you delete them for good.
-            </span>
+            <strong>{copy.trashIsEmpty}</strong>
+            <span>{copy.deletedProjectsStayHereUntil}</span>
           </div>
         )}
         {items !== null && items.length > 0 && (
@@ -390,11 +389,11 @@ export default function HomeTrash({
               });
             }}
           >
-            Empty trash…
+            {copy.emptyTrash}
           </button>
         )}
         <button type="button" className="btn" onClick={onClose}>
-          Done
+          {copy.done}
         </button>
       </div>
       {confirm && (

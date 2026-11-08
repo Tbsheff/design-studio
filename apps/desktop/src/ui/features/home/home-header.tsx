@@ -11,7 +11,7 @@ const Header = ({
 }): ReactElement => (
   <header className="home-header">
     <BrandMark />
-    <span className="brand">Design Studio</span>
+    <span className="brand">{copy.designStudio}</span>
     <div className="spacer" />
     <nav className="home-nav" aria-label={copy.app}>
       <button
@@ -25,8 +25,8 @@ const Header = ({
         }
       >
         <Icon name="search" size={14} />
-        Go to
-        <kbd aria-hidden="true">⌘K</kbd>
+        {copy.goTo}
+        <kbd aria-hidden="true">{copy.textK}</kbd>
       </button>
       <button
         type="button"
@@ -35,7 +35,7 @@ const Header = ({
         onClick={onTrash}
       >
         <Icon name="trash" size={14} />
-        Trash
+        {copy.trash}
       </button>
       <ThemeButton />
     </nav>

@@ -62,8 +62,8 @@ const StarterGallery = ({
       aria-labelledby="starters-heading"
     >
       <div className="home-list-head">
-        <h2 id="starters-heading">Starters</h2>
-        <span className="home-section-hint">Opens at once, no agent run</span>
+        <h2 id="starters-heading">{copy.starters}</h2>
+        <span className="home-section-hint">{copy.opensAtOnceNoAgent}</span>
       </div>
       <ul className="starter-grid">
         {(starters ?? []).map((starter) => (
@@ -136,8 +136,8 @@ const FirstRunPanel = ({
     <section className="ui-notice info first-run" aria-label={copy.firstSteps}>
       <Icon name="sparkle" size={16} />
       <p className="first-run-text">
-        <strong>New here?</strong> Describe a page or pick a template. Then use
-        Select to edit any part.
+        <strong>{copy.newHere}</strong>
+        {copy.describeAPageOrPick}
         {error && (
           <span className="first-run-error" role="alert">
             {" "}

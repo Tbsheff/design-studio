@@ -119,7 +119,13 @@ const CardMenu = ({
         "⌘⌫",
         true
       )}
-      {place && <p className="project-menu-note">Files stay in {place}.</p>}
+      {place && (
+        <p className="project-menu-note">
+          {copy.filesStayIn}
+          {place}
+          {copy.text}
+        </p>
+      )}
     </div>
   );
 };

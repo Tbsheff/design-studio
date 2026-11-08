@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
 import { ComposerAlert } from "./home-composer-parts.js";
 
 const HeroNotes = ({
@@ -13,9 +14,7 @@ const HeroNotes = ({
 }): ReactElement => (
   <>
     {isWindowDragged && (
-      <p className="home-drop-anywhere">
-        Drop anywhere: the folder goes on the prompt
-      </p>
+      <p className="home-drop-anywhere">{copy.dropAnywhereTheFolderGoes}</p>
     )}
     {formError && (
       <ComposerAlert onClose={onClearError}>{formError}</ComposerAlert>

@@ -144,7 +144,7 @@ const LocationField = ({
   };
   return (
     <div className="home-location">
-      <label htmlFor="new-project-location">Location</label>
+      <label htmlFor="new-project-location">{copy.location}</label>
       <LazySelect
         id="new-project-location"
         value={value ?? DEFAULT}
@@ -172,7 +172,8 @@ const LocationField = ({
         <span className="home-location-target" data-testid="location-target">
           {target && (
             <>
-              New folder <FolderPath path={target} homeDir={homeDir} />
+              {copy.newFolder}
+              <FolderPath path={target} homeDir={homeDir} />
             </>
           )}
         </span>
@@ -251,7 +252,7 @@ const FolderRow = ({
             }}
           />
           <button className="btn small" type="submit">
-            Save
+            {copy.save}
           </button>
         </form>
       ) : (
@@ -270,18 +271,20 @@ const FolderRow = ({
             <span className="folder-label">
               {folder.label}
               {folder.default && (
-                <span className="badge folder-default">Default</span>
+                <span className="badge folder-default">{copy.default}</span>
               )}
             </span>
             <FolderPath path={folder.path} homeDir={homeDir} />
           </span>
           {folder.missing ? (
             <span className="badge fail" data-tip={copy.thisFolderWasMovedOr}>
-              Missing
+              {copy.missing}
             </span>
           ) : (
             <span className="folder-count">
-              {count} project{count === 1 ? "" : "s"}
+              {count}
+              {copy.project}
+              {count === 1 ? "" : "s"}
             </span>
           )}
         </button>
@@ -293,7 +296,7 @@ const FolderRow = ({
           disabled={folder.missing}
           onClick={onNewHere}
         >
-          New project here
+          {copy.newProjectHere}
         </button>
         <button
           type="button"
@@ -301,7 +304,7 @@ const FolderRow = ({
           disabled={folder.missing}
           onClick={onOpenHere}
         >
-          Open folder here…
+          {copy.openFolderHere}
         </button>
         <span className="folder-tail">
           {folder.default ? (
@@ -313,7 +316,7 @@ const FolderRow = ({
               onClick={onChangeDefault}
               disabled={isChanging}
             >
-              Change…
+              {copy.change}
             </button>
           ) : (
             <>
@@ -409,7 +412,7 @@ const FoldersSection = ({
       aria-labelledby="folders-heading"
     >
       <div className="home-list-head">
-        <h2 id="folders-heading">Folders</h2>
+        <h2 id="folders-heading">{copy.folders}</h2>
         {folders.length > 0 && <span className="count">{folders.length}</span>}
         <div className="spacer" />
         <button
@@ -419,7 +422,7 @@ const FoldersSection = ({
           disabled={chooser.isPicking}
         >
           <Icon name="plus" size={14} />
-          Add folder…
+          {copy.addFolder}
         </button>
       </div>
       {pasting && (
@@ -473,10 +476,7 @@ const FoldersSection = ({
       {list !== null &&
         folders.every((folder) => folder.default) &&
         !pasting && (
-          <p className="home-folders-empty">
-            Add the other folders you work in. Then you can make new projects
-            there and see which projects each one holds.
-          </p>
+          <p className="home-folders-empty">{copy.addTheOtherFoldersYou}</p>
         )}
     </section>
   );

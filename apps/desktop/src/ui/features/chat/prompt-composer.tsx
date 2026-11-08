@@ -3,7 +3,7 @@ import type { MouseEvent, ReactElement } from "react";
 
 import { Composer } from "../../ai/components/ai/composer.js";
 import { findElement } from "../../platform/find-element.js";
-import { SelectionChips, AttachmentThumbs } from "./composer-parts.js";
+import { AttachmentThumbs } from "./attachment-thumbs.js";
 import { MentionChips } from "./mention-chips.js";
 import { RepoContextChip } from "./prompt-box-model.js";
 import type { PromptBoxProps } from "./prompt-box-props.js";
@@ -11,6 +11,7 @@ import { toDropClass } from "./prompt-send-model.js";
 import { PromptTextInput } from "./prompt-text-input.js";
 import { PromptToolbarRow } from "./prompt-toolbar-row.js";
 import { RunContextChip } from "./run-context-chip.js";
+import { SelectionChips } from "./selection-chips.js";
 import { SkillChips } from "./skill-chips.js";
 import type { PromptBase } from "./use-prompt-base.js";
 import type { PromptInput } from "./use-prompt-input.js";

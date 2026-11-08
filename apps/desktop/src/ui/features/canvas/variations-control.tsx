@@ -1,4 +1,5 @@
-import type { ReactElement } from "react";
+import { useCallback } from "react";
+import type { MouseEvent, ReactElement } from "react";
 
 import { useRovingRadioGroup } from "../chat/level-control.js";
 
@@ -16,6 +17,28 @@ interface Props {
 
 const OPTIONS = [1, 2, ITEM_3, ITEM_4] as const;
 
+const toGroupLabel = (labelledBy: string | undefined): string | undefined => {
+  if (!labelledBy) {
+    return "Designs";
+  }
+};
+
+const toOptionLabel = (count: number): string => {
+  if (count === 1) {
+    return "1 design (variations off)";
+  }
+
+  return `${count} variations`;
+};
+
+const toOptionClass = (isOn: boolean): string => {
+  if (isOn) {
+    return "on";
+  }
+
+  return "";
+};
+
 const VariationsControl = ({
   value,
   max,
@@ -30,49 +53,41 @@ const VariationsControl = ({
     (countValue) => Boolean(disabled) || countValue > max
   );
 
-  const arialabel: "Designs" | undefined = ((): "Designs" | undefined => {
-    if (labelledBy) {
-      return undefined;
-    }
+  const { onKeyDown: handleKeyDown } = radios;
 
-    return "Designs";
-  })();
+  const handlePick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>): void =>
+      onChange(Number(event.currentTarget.dataset.count)),
+    [onChange]
+  );
 
   return (
     <div
       className="segmented variations-control"
       role="radiogroup"
-      aria-label={arialabel}
+      aria-label={toGroupLabel(labelledBy)}
       aria-labelledby={labelledBy}
       data-testid="variations-control"
-      onKeyDown={radios.onKeyDown}
+      onKeyDown={handleKeyDown}
     >
-      {OPTIONS.map((count3) => {
-        let arialabel2 = `${count3} variations`;
-
-        if (count3 === 1) {
-          arialabel2 = "1 design (variations off)";
-        }
-
-        let className2: "" | "on" = "";
-
-        if (count3 === value) {
-          className2 = "on";
-        }
+      {OPTIONS.map((count) => {
+        const item = radios.item(count);
 
         return (
           <button
-            key={count3}
-            {...radios.item(count3)}
+            key={count}
+            ref={item.ref}
+            tabIndex={item.tabIndex}
             type="button"
             role="radio"
-            aria-checked={count3 === value}
-            aria-label={arialabel2}
-            disabled={disabled || count3 > max}
-            className={className2}
-            onClick={() => onChange(count3)}
+            aria-checked={count === value}
+            aria-label={toOptionLabel(count)}
+            disabled={Boolean(disabled) || count > max}
+            className={toOptionClass(count === value)}
+            data-count={count}
+            onClick={handlePick}
           >
-            {count3}
+            {count}
           </button>
         );
       })}

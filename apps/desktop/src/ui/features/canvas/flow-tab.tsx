@@ -27,7 +27,7 @@ export function flowSummary(result: FlowResult): string {
   return parts.join(", ");
 }
 
-function useRoutesAndParams(projectId: string) {
+const useRoutesAndParams = (projectId: string) => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
   const [params, setParams] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -43,30 +43,28 @@ function useRoutesAndParams(projectId: string) {
   }, [projectId]);
 
   return { error, params, routes, setError, setParams };
-}
+};
 
-function FlowResultView({ result }: { result: FlowResult }): ReactElement {
-  return (
-    <div className="flow-result" role="status">
-      <div>{flowSummary(result)}.</div>
-      {result.missingParams.length > 0 && (
-        <div className="flow-warn">
-          Set {result.missingParams.join(", ")} so the frames show real pages.
-        </div>
-      )}
-      {result.skipped.slice(0, 4).map((item) => (
-        <div
-          key={`${item.fromRoute}|${item.href}|${item.source}`}
-          className="flow-skip"
-          data-tip={`${item.reason} ${item.source}`}
-          data-tip-align="start"
-        >
-          {item.kind} {item.href}
-        </div>
-      ))}
-    </div>
-  );
-}
+const FlowResultView = ({ result }: { result: FlowResult }): ReactElement => (
+  <div className="flow-result" role="status">
+    <div>{flowSummary(result)}.</div>
+    {result.missingParams.length > 0 && (
+      <div className="flow-warn">
+        Set {result.missingParams.join(", ")} so the frames show real pages.
+      </div>
+    )}
+    {result.skipped.slice(0, 4).map((item) => (
+      <div
+        key={`${item.fromRoute}|${item.href}|${item.source}`}
+        className="flow-skip"
+        data-tip={`${item.reason} ${item.source}`}
+        data-tip-align="start"
+      >
+        {item.kind} {item.href}
+      </div>
+    ))}
+  </div>
+);
 
 export default function FlowTab({
   projectId,

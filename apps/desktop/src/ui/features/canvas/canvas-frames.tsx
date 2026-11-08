@@ -46,41 +46,39 @@ interface LabelProps {
   ) => void;
 }
 
-function framePage(path: string | undefined): string {
+const framePage = (path: string | undefined): string => {
   const clean = (path ?? "").replace(/^\/+/, "");
 
   if (clean === "" || /\.html?$/i.test(clean)) {
     return clean.replace(/^.*\//, "").replace(/\.html?$/i, "") || "index";
   }
   return `/${clean}`;
-}
+};
 
-function frameBaseName(
+const frameBaseName = (
   frame: Pick<CanvasFrame, "label" | "width" | "height">
-): string {
-  return frame.label?.trim() || frameName(frame);
-}
+): string => frame.label?.trim() || frameName(frame);
 
-function frameTitle(
+const frameTitle = (
   frame: Pick<CanvasFrame, "id" | "label" | "width" | "height" | "path">,
   frames?: readonly Pick<CanvasFrame, "id">[]
-): string {
+): string => {
   const index = frames ? frames.findIndex((item) => item.id === frame.id) : -1;
 
   return `${index >= 0 ? `${index + 1} ` : ""}${frameBaseName(frame)} · ${framePage(frame.path)}`;
-}
+};
 
-function canvasFrameName(
+const canvasFrameName = (
   projectId: string,
   frameId: string,
   fallback: string
-): string {
+): string => {
   const frames = canvasStore.get(projectId)?.frames ?? [];
   const index = frames.findIndex((item) => item.id === frameId);
   const frame = frames[index];
 
   return frame ? `${index + 1} ${frameBaseName(frame)}` : fallback;
-}
+};
 
 const NUDGE: Record<string, [number, number]> = {
   ArrowDown: [0, 1],
@@ -89,7 +87,7 @@ const NUDGE: Record<string, [number, number]> = {
   ArrowUp: [0, -1],
 };
 
-function FrameLabel({
+const FrameLabel = ({
   frame,
   active,
   removable,
@@ -103,7 +101,7 @@ function FrameLabel({
   onActivate,
   onRemove,
   onNudge,
-}: LabelProps): ReactElement {
+}: LabelProps): ReactElement => {
   const size = frameName(frame);
   const base = frameBaseName(frame);
   const name = badge ? `Variation ${badge.label}` : base;
@@ -173,18 +171,17 @@ function FrameLabel({
       )}
     </div>
   );
-}
+};
 
 interface FrameRedirect {
   from: string;
   to: string;
 }
 
-function isAuthRoute(route: string): boolean {
-  return /sign-?in|log-?in|auth/i.test(route);
-}
+const isAuthRoute = (route: string): boolean =>
+  /sign-?in|log-?in|auth/i.test(route);
 
-function FrameRedirectNote({
+const FrameRedirectNote = ({
   redirect,
   onSignIn,
   onDismiss,
@@ -192,7 +189,7 @@ function FrameRedirectNote({
   redirect: FrameRedirect;
   onSignIn: () => void;
   onDismiss: () => void;
-}): ReactElement {
+}): ReactElement => {
   const auth = isAuthRoute(redirect.to);
   const text = `${redirect.from} goes to ${redirect.to}.${auth ? " Sign in, or pick a public route." : ""}`;
 
@@ -223,7 +220,7 @@ function FrameRedirectNote({
       </button>
     </div>
   );
-}
+};
 
 export {
   FrameLabel,

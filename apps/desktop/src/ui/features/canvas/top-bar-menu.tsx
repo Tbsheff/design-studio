@@ -25,7 +25,7 @@ interface MenuGroup {
   fold?: "wide" | "narrow" | "tight";
 }
 
-function onMenuKey(event: KeyboardEvent<HTMLDivElement>): void {
+const onMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
     return;
   }
@@ -41,9 +41,9 @@ function onMenuKey(event: KeyboardEvent<HTMLDivElement>): void {
   items[
     (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
   ]?.focus();
-}
+};
 
-function MenuPopover({
+const MenuPopover = ({
   groups,
   label,
   align,
@@ -55,7 +55,7 @@ function MenuPopover({
   align: "start" | "end";
   onClose: (refocus: boolean) => void;
   trigger: RefObject<HTMLButtonElement | null>;
-}): ReactElement {
+}): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, onClose, trigger);
 
@@ -101,9 +101,9 @@ function MenuPopover({
         ))}
     </div>
   );
-}
+};
 
-function shareGroups(
+const shareGroups = (
   p: {
     canExport: boolean;
     onExport: () => void;
@@ -111,7 +111,7 @@ function shareGroups(
     onShareLink?: ((mode?: "link" | "publish") => void) | null;
   },
   onPort: (() => void) | null
-): MenuGroup[] {
+): MenuGroup[] => {
   const exportItem: MenuEntry = {
     disabled: !p.canExport,
     icon: "download",
@@ -194,7 +194,7 @@ function shareGroups(
       note: "Publish uploads only after you confirm what goes public.",
     },
   ];
-}
+};
 
 export { MenuPopover, shareGroups };
 

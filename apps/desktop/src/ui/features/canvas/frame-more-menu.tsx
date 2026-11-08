@@ -15,7 +15,7 @@ interface FrameMenuItem {
   run: () => void;
 }
 
-function portItem(root: HTMLElement | null): FrameMenuItem[] {
+const portItem = (root: HTMLElement | null): FrameMenuItem[] => {
   if (!portAvailable()) {
     return [];
   }
@@ -29,15 +29,15 @@ function portItem(root: HTMLElement | null): FrameMenuItem[] {
     });
 
   return [{ icon: "react", id: "port-to-app", label: "Move to app…", run }];
-}
+};
 
-function FrameMoreMenu({
+const FrameMoreMenu = ({
   name,
   items: own,
 }: {
   name: string;
   items: FrameMenuItem[];
-}): ReactElement | null {
+}): ReactElement | null => {
   const menu = useMenu();
   useEffect(() => {
     if (menu.open) {
@@ -98,7 +98,7 @@ function FrameMoreMenu({
       )}
     </div>
   );
-}
+};
 
 export { FrameMoreMenu };
 

@@ -33,7 +33,7 @@ const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
   Home: () => 0,
 };
 
-function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>): void {
+const onRadioGroupKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   const step = RADIO_STEP[event.key];
 
   if (!step) {
@@ -56,9 +56,13 @@ function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>): void {
   const next = radios[step(index, radios.length)];
   next?.focus();
   next?.click();
-}
+};
 
-function ViewportControls({ viewport }: { viewport: Viewport }): ReactElement {
+const ViewportControls = ({
+  viewport,
+}: {
+  viewport: Viewport;
+}): ReactElement => {
   const [customW, setCustomW] = useState(String(viewport.width));
   const [customH, setCustomH] = useState(String(viewport.height));
   const [shown, setShown] = useState(`${viewport.width}x${viewport.height}`);
@@ -164,59 +168,57 @@ function ViewportControls({ viewport }: { viewport: Viewport }): ReactElement {
       )}
     </div>
   );
-}
+};
 
-function SourceControls({
+const SourceControls = ({
   source,
   onSource,
   hasHead,
-}: Pick<Props, "source" | "onSource" | "hasHead">): ReactElement {
-  return (
-    <div className="toolbar-group source">
-      <div
-        className="segmented source-seg"
-        role="radiogroup"
-        aria-label={copy.previewSource}
-        onKeyDown={onRadioGroupKey}
+}: Pick<Props, "source" | "onSource" | "hasHead">): ReactElement => (
+  <div className="toolbar-group source">
+    <div
+      className="segmented source-seg"
+      role="radiogroup"
+      aria-label={copy.previewSource}
+      onKeyDown={onRadioGroupKey}
+    >
+      <button
+        role="radio"
+        aria-checked={source.kind === "live"}
+        tabIndex={source.kind === "last" ? -1 : 0}
+        className={source.kind === "live" ? "on" : ""}
+        aria-label={copy.live}
+        data-tip={copy.livePreview}
+        onClick={() => onSource({ kind: "live" })}
       >
-        <button
-          role="radio"
-          aria-checked={source.kind === "live"}
-          tabIndex={source.kind === "last" ? -1 : 0}
-          className={source.kind === "live" ? "on" : ""}
-          aria-label={copy.live}
-          data-tip={copy.livePreview}
-          onClick={() => onSource({ kind: "live" })}
-        >
-          <Icon name="radio" className="seg-icon" />
-          <span className="seg-label">Live</span>
-        </button>
-        <button
-          role="radio"
-          aria-checked={source.kind === "last"}
-          tabIndex={source.kind === "last" ? 0 : -1}
-          className={source.kind === "last" ? "on" : ""}
-          disabled={!hasHead}
-          aria-label={copy.lastCompleted}
-          data-tip={copy.lastCompletedVersion}
-          onClick={() => onSource({ kind: "last" })}
-        >
-          <Icon name="history" className="seg-icon" />
-          <span className="seg-label">Last completed</span>
-        </button>
-      </div>
-      {source.kind === "version" && (
-        <span className="pill">
-          <Icon name="eye" size={14} />
-          <span className="pill-text">Viewing {source.title}</span>
-          <button className="link" onClick={() => onSource({ kind: "live" })}>
-            Back to live
-          </button>
-        </span>
-      )}
+        <Icon name="radio" className="seg-icon" />
+        <span className="seg-label">Live</span>
+      </button>
+      <button
+        role="radio"
+        aria-checked={source.kind === "last"}
+        tabIndex={source.kind === "last" ? 0 : -1}
+        className={source.kind === "last" ? "on" : ""}
+        disabled={!hasHead}
+        aria-label={copy.lastCompleted}
+        data-tip={copy.lastCompletedVersion}
+        onClick={() => onSource({ kind: "last" })}
+      >
+        <Icon name="history" className="seg-icon" />
+        <span className="seg-label">Last completed</span>
+      </button>
     </div>
-  );
-}
+    {source.kind === "version" && (
+      <span className="pill">
+        <Icon name="eye" size={14} />
+        <span className="pill-text">Viewing {source.title}</span>
+        <button className="link" onClick={() => onSource({ kind: "live" })}>
+          Back to live
+        </button>
+      </span>
+    )}
+  </div>
+);
 
 export { SourceControls, ViewportControls };
 

@@ -16,7 +16,7 @@ const NOOP = (): null => null;
 
 const toggleRulers = (): void => uiStore.set((st) => ({ rulers: !st.rulers }));
 
-function useRulersKey(): void {
+const useRulersKey = (): void => {
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (
@@ -43,9 +43,9 @@ function useRulersKey(): void {
 
     return (): void => window.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
-function barShell(shell: CanvasShell | undefined) {
+const barShell = (shell: CanvasShell | undefined) => {
   if (!shell) {
     return {
       canExport: false,
@@ -59,9 +59,9 @@ function barShell(shell: CanvasShell | undefined) {
   }
 
   return shell;
-}
+};
 
-function CanvasChrome(p: ChromeProps): ReactElement {
+const CanvasChrome = (p: ChromeProps): ReactElement => {
   const [present, setPresent] = useState<Exclude<
     PresentMode,
     "new-window" | "play"
@@ -184,6 +184,6 @@ function CanvasChrome(p: ChromeProps): ReactElement {
       )}
     </>
   );
-}
+};
 
 export { CanvasChrome };

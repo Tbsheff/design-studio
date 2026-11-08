@@ -46,16 +46,14 @@ interface Options {
   };
 }
 
-function linkQuery(link: PrototypeLink): LinkQuery {
-  return {
-    id: link.id,
-    selector: link.from.selector,
-    ...(link.from.tag ? { tag: link.from.tag } : {}),
-    ...(link.from.text ? { text: link.from.text } : {}),
-  };
-}
+const linkQuery = (link: PrototypeLink): LinkQuery => ({
+  id: link.id,
+  selector: link.from.selector,
+  ...(link.from.tag ? { tag: link.from.tag } : {}),
+  ...(link.from.text ? { text: link.from.text } : {}),
+});
 
-function slotsOf(o: Options): FrameSlot[] {
+const slotsOf = (o: Options): FrameSlot[] => {
   const list: FrameSlot[] = [];
 
   if (o.active.token && o.active.src) {
@@ -81,19 +79,17 @@ function slotsOf(o: Options): FrameSlot[] {
   }
 
   return list;
-}
+};
 
-function bridgeFrame(slot: FrameSlot, kind: ProjectKind): BridgeFrame {
-  return {
-    element: slot.element,
-    key: slot.frameId,
-    kind,
-    token: slot.token,
-    url: slot.src,
-  };
-}
+const bridgeFrame = (slot: FrameSlot, kind: ProjectKind): BridgeFrame => ({
+  element: slot.element,
+  key: slot.frameId,
+  kind,
+  token: slot.token,
+  url: slot.src,
+});
 
-function useLinkRects(o: Options): LinkState[] {
+const useLinkRects = (o: Options): LinkState[] => {
   const [reports, setReports] = useState<
     Record<string, { token: string; rects: Record<string, Rect | null> }>
   >({});
@@ -209,7 +205,7 @@ function useLinkRects(o: Options): LinkState[] {
 
     return { issue: rect ? null : "element-missing", link, rect };
   });
-}
+};
 
 export { linkQuery, useLinkRects };
 

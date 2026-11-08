@@ -15,7 +15,7 @@ interface PresenceInput {
   stage: () => HTMLElement | null;
 }
 
-function inViewIds(stage: HTMLElement | null): string[] {
+const inViewIds = (stage: HTMLElement | null): string[] => {
   if (!stage) {
     return [];
   }
@@ -43,26 +43,24 @@ function inViewIds(stage: HTMLElement | null): string[] {
   }
 
   return [...new Set(ids)].sort();
-}
+};
 
-function presenceBody(o: PresenceInput) {
-  return {
-    activeFrameId: o.activeId,
-    directionId: o.directionId,
-    inView: inViewIds(o.stage()),
-    liveSize: {
-      height: Math.round(o.liveSize.height),
-      width: Math.round(o.liveSize.width),
-    },
-    selection: o.selection.slice(0, 20).map((s) => ({
-      selector: s.selector.slice(0, 400),
-      tag: s.tag.slice(0, 40),
-      text: s.text.slice(0, 200),
-    })),
-  };
-}
+const presenceBody = (o: PresenceInput) => ({
+  activeFrameId: o.activeId,
+  directionId: o.directionId,
+  inView: inViewIds(o.stage()),
+  liveSize: {
+    height: Math.round(o.liveSize.height),
+    width: Math.round(o.liveSize.width),
+  },
+  selection: o.selection.slice(0, 20).map((s) => ({
+    selector: s.selector.slice(0, 400),
+    tag: s.tag.slice(0, 40),
+    text: s.text.slice(0, 200),
+  })),
+});
 
-function useCanvasPresence(o: PresenceInput): void {
+const useCanvasPresence = (o: PresenceInput): void => {
   const latest = useRef(o);
   latest.current = o;
   useEffect(() => {
@@ -107,6 +105,6 @@ function useCanvasPresence(o: PresenceInput): void {
       stop?.();
     };
   }, [o.projectId]);
-}
+};
 
 export { inViewIds, useCanvasPresence };

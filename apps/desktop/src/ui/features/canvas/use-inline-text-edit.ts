@@ -7,20 +7,20 @@ const MAX_INLINE_TEXT = 5000;
 const REFOCUS_MS = 50;
 const QUIET_FOCUS_ATTR = "data-quiet-focus";
 
-function focusStageQuietly(
+const focusStageQuietly = (
   stage: HTMLElement | null = document.querySelector<HTMLElement>(
     ".canvas .stage"
   )
-): void {
+): void => {
   if (!stage) {
     return;
   }
 
   stage.setAttribute(QUIET_FOCUS_ATTR, "");
   stage.focus({ preventScroll: true });
-}
+};
 
-function focusLeftCanvas(stage: HTMLElement): boolean {
+const focusLeftCanvas = (stage: HTMLElement): boolean => {
   const active = document.activeElement;
 
   if (!active || active === document.body || active === stage) {
@@ -28,13 +28,13 @@ function focusLeftCanvas(stage: HTMLElement): boolean {
   }
 
   return !(active instanceof HTMLIFrameElement && stage.contains(active));
-}
+};
 
 type TextCommitHandler = (selector: string, text: string) => void;
 
-function parseTextCommit(
+const parseTextCommit = (
   message: TextEditMessage
-): { selector: string; text: string } | null {
+): { selector: string; text: string } | null => {
   if (message.type !== "text-commit") {
     return null;
   }
@@ -54,14 +54,14 @@ function parseTextCommit(
   }
 
   return { selector, text };
-}
+};
 
-function useInlineTextEdit(
+const useInlineTextEdit = (
   allowed: boolean,
   onCommit: TextCommitHandler | undefined,
   onReject: () => void,
   stage: () => HTMLElement | null
-) {
+) => {
   const [editing, setEditing] = useState(false);
   const live = useRef({ onCommit, onReject, stage });
   live.current = { onCommit, onReject, stage };
@@ -115,7 +115,7 @@ function useInlineTextEdit(
   const reset = useCallback(() => setEditing(false), []);
 
   return { editing, onMessage, reset };
-}
+};
 
 export {
   MAX_INLINE_TEXT,

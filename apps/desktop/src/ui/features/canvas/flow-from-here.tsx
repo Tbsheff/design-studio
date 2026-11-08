@@ -10,7 +10,7 @@ import "../../styles/route-flow.css";
 
 const stop = (e: ReactPointerEvent): void => e.stopPropagation();
 
-function doneText(result: FlowResult): string {
+const doneText = (result: FlowResult): string => {
   const added = result.frames.filter((frame) => frame.added).length;
 
   if (added === 0 && result.links.length === 0) {
@@ -23,15 +23,15 @@ function doneText(result: FlowResult): string {
       : "";
 
   return `Added ${added} ${added === 1 ? "route" : "routes"} and ${result.links.length} ${result.links.length === 1 ? "link" : "links"}.${missing}`;
-}
+};
 
-function FlowFromHere({
+const FlowFromHere = ({
   frameId,
   frameName,
 }: {
   frameId: string;
   frameName: string;
-}): ReactElement | null {
+}): ReactElement | null => {
   const states = useCurrentFrameStates();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -77,6 +77,6 @@ function FlowFromHere({
       )}
     </button>
   );
-}
+};
 
 export { FlowFromHere };

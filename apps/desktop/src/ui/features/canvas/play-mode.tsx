@@ -84,15 +84,13 @@ const INSTANT: Motion = {
   transition: "instant",
 };
 
-function motionOf(link: PrototypeLink): Motion {
-  return {
-    duration: linkDuration(link),
-    easing: easingCss(link.easing),
-    transition: link.transition,
-  };
-}
+const motionOf = (link: PrototypeLink): Motion => ({
+  duration: linkDuration(link),
+  easing: easingCss(link.easing),
+  transition: link.transition,
+});
 
-function useStageSize(): { width: number; height: number } {
+const useStageSize = (): { width: number; height: number } => {
   const [size, setSize] = useState({
     height: window.innerHeight,
     width: window.innerWidth,
@@ -108,12 +106,12 @@ function useStageSize(): { width: number; height: number } {
   }, []);
 
   return size;
-}
+};
 
-function scaleFor(
+const scaleFor = (
   slot: Slot,
   stage: { width: number; height: number }
-): number {
+): number => {
   const { frame } = slot;
 
   if (slot.overlay === "drawer") {
@@ -137,10 +135,10 @@ function scaleFor(
     (stage.width - 48) / frame.width,
     (stage.height - 120) / frame.height
   );
-}
+};
 
-function slotClass(slot: Slot, leaving: boolean): string {
-  return [
+const slotClass = (slot: Slot, leaving: boolean): string =>
+  [
     "play-slot",
     `t-${slot.transition}`,
     slot.overlay ? `overlay-${slot.overlay}` : "",
@@ -149,24 +147,19 @@ function slotClass(slot: Slot, leaving: boolean): string {
   ]
     .filter(Boolean)
     .join(" ");
-}
 
-function slotStyle(motion: Motion): CSSProperties {
-  return {
+const slotStyle = (motion: Motion): CSSProperties =>
+  ({
     "--play-ease": motion.easing,
     "--play-ms": `${motion.duration}ms`,
-  } as CSSProperties;
-}
+  }) as CSSProperties;
 
-function baseOf(slots: Slot[]): Slot[] {
-  return slots.filter((slot) => !slot.overlay);
-}
+const baseOf = (slots: Slot[]): Slot[] => slots.filter((slot) => !slot.overlay);
 
-function overlayOf(slots: Slot[]): Slot | undefined {
-  return slots.find((slot) => slot.overlay);
-}
+const overlayOf = (slots: Slot[]): Slot | undefined =>
+  slots.find((slot) => slot.overlay);
 
-function settled(prev: Slot[], token: string): Slot[] {
+const settled = (prev: Slot[], token: string): Slot[] => {
   const target = prev.find((item) => item.token === token);
 
   if (!target) {
@@ -184,13 +177,12 @@ function settled(prev: Slot[], token: string): Slot[] {
   return prev
     .filter((item, index) => index >= at || item.overlay)
     .map((item) => (item.token === token ? { ...item, phase: "shown" } : item));
-}
+};
 
-function withPhase(prev: Slot[], token: string, phase: Phase): Slot[] {
-  return prev.map((item) => (item.token === token ? { ...item, phase } : item));
-}
+const withPhase = (prev: Slot[], token: string, phase: Phase): Slot[] =>
+  prev.map((item) => (item.token === token ? { ...item, phase } : item));
 
-function placed(prev: Slot[], slot: Slot): Slot[] {
+const placed = (prev: Slot[], slot: Slot): Slot[] => {
   if (slot.overlay) {
     return [...baseOf(prev), slot];
   }
@@ -201,9 +193,9 @@ function placed(prev: Slot[], slot: Slot): Slot[] {
       .slice(-1),
     slot,
   ];
-}
+};
 
-function keyOf(event: KeyboardEvent): "exit" | "restart" | "back" | null {
+const keyOf = (event: KeyboardEvent): "exit" | "restart" | "back" | null => {
   if (event.key === "Escape") {
     return "exit";
   }
@@ -213,7 +205,7 @@ function keyOf(event: KeyboardEvent): "exit" | "restart" | "back" | null {
   }
 
   return event.key === "Backspace" || event.key === "ArrowLeft" ? "back" : null;
-}
+};
 
 interface LayerShot {
   token: string;
@@ -221,7 +213,7 @@ interface LayerShot {
   layers: Record<string, LinkRect>;
 }
 
-function usePlay(p: Props) {
+const usePlay = (p: Props) => {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [history, setHistory] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -578,9 +570,9 @@ function usePlay(p: Props) {
   });
 
   return { back, closeOverlay, elements, error, history, restart, slots };
-}
+};
 
-function SlotView({
+const SlotView = ({
   slot,
   leaving,
   timing,
@@ -594,7 +586,7 @@ function SlotView({
   stage: { width: number; height: number };
   sandbox?: string;
   bind: (el: HTMLIFrameElement | null) => void;
-}) {
+}) => {
   const scale = scaleFor(slot, stage);
 
   return (
@@ -626,13 +618,13 @@ function SlotView({
       </div>
     </div>
   );
-}
+};
 
-function playHint(
+const playHint = (
   p: Props,
   overlay: boolean,
   shown: CanvasFrame | undefined
-): string {
+): string => {
   if (p.file.links.length === 0) {
     return "No links yet. Use the Prototype tool to link frames.";
   }
@@ -646,9 +638,9 @@ function playHint(
   }
 
   return "Click a linked element";
-}
+};
 
-function useFocusReturn(root: { current: HTMLElement | null }) {
+const useFocusReturn = (root: { current: HTMLElement | null }) => {
   useEffect(() => {
     const opener =
       document.activeElement instanceof HTMLElement &&
@@ -675,7 +667,7 @@ function useFocusReturn(root: { current: HTMLElement | null }) {
       });
     };
   }, [root]);
-}
+};
 
 export default function PlayMode(p: Props) {
   const play = usePlay(p);

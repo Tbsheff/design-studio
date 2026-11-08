@@ -73,10 +73,10 @@ interface ChromeProps {
   proto: { on: boolean; set: (on: boolean) => void; play: () => void };
 }
 
-function addAndShow(
+const addAndShow = (
   p: ChromeProps,
   size: { width: number; height: number }
-): void {
+): void => {
   const before = new Set(
     (canvasStore.get(p.projectId)?.frames ?? p.layout.frames).map(
       (frame) => frame.id
@@ -95,9 +95,9 @@ function addAndShow(
 
   p.frames.activate(added);
   p.zoom.zoomToActive?.();
-}
+};
 
-function useFileMenu(p: ChromeProps, onImport: () => void) {
+const useFileMenu = (p: ChromeProps, onImport: () => void) => {
   const [pages, setPages] = useState<string[]>([]);
 
   const load = (): void => {
@@ -165,7 +165,7 @@ function useFileMenu(p: ChromeProps, onImport: () => void) {
   ];
 
   return { groups, load };
-}
+};
 
 export { useFileMenu };
 

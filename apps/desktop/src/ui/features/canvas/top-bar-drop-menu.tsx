@@ -15,11 +15,13 @@ const PortToAppDialog = lazy(async () => {
   return { default: loaded.PortToAppDialog };
 });
 
-function usePortDialog(available: boolean): {
+const usePortDialog = (
+  available: boolean
+): {
   target: PortDialogTarget | null;
   open: (frameId: string | null, directionId?: string | null) => void;
   close: () => void;
-} {
+} => {
   const [target, setTarget] = useState<PortDialogTarget | null>(null);
 
   const open = useCallback(
@@ -56,9 +58,9 @@ function usePortDialog(available: boolean): {
   }, [open]);
 
   return { close: useCallback(() => setTarget(null), []), open, target };
-}
+};
 
-function DropMenu({
+const DropMenu = ({
   label,
   groups,
   className,
@@ -76,7 +78,7 @@ function DropMenu({
   tip?: string;
   children: ReactNode;
   onOpen?: () => void;
-}): ReactElement {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
 
@@ -122,6 +124,6 @@ function DropMenu({
       )}
     </span>
   );
-}
+};
 
 export { DropMenu, PortToAppDialog, usePortDialog };

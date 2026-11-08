@@ -5,13 +5,13 @@ import type { KeyboardEvent, ReactElement } from "react";
 import { FRAME_PRESETS } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 
-function AddFrameMenu({
+const AddFrameMenu = ({
   disabled,
   onAdd,
 }: {
   disabled: boolean;
   onAdd: (size: { width: number; height: number }) => void;
-}): ReactElement {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
@@ -128,15 +128,15 @@ function AddFrameMenu({
       )}
     </div>
   );
-}
+};
 
-function FrameUndoBar({
+const FrameUndoBar = ({
   onUndo,
   onDismiss,
 }: {
   onUndo: (() => void) | null;
   onDismiss: () => void;
-}): ReactElement | null {
+}): ReactElement | null => {
   useEffect(() => {
     if (!onUndo) {
       return;
@@ -157,6 +157,6 @@ function FrameUndoBar({
       </button>
     </div>
   );
-}
+};
 
 export { AddFrameMenu, FrameUndoBar };

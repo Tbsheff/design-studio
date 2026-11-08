@@ -7,21 +7,19 @@ import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";
 
-function pageName(path: string | undefined): string {
+const pageName = (path: string | undefined): string => {
   const clean = (path ?? "").replace(/^\/+/, "").replace(/\.html$/, "");
 
   return clean || "index";
-}
+};
 
-function pageLabel(page: string, routes: boolean): string {
-  return routes ? `/${page}` : page;
-}
+const pageLabel = (page: string, routes: boolean): string =>
+  routes ? `/${page}` : page;
 
-function isCurrentPage(page: string, path: string, routes: boolean): boolean {
-  return routes ? page === path : page === (path || "index.html");
-}
+const isCurrentPage = (page: string, path: string, routes: boolean): boolean =>
+  routes ? page === path : page === (path || "index.html");
 
-function FramePageMenu({
+const FramePageMenu = ({
   path,
   listPages,
   onPath,
@@ -31,7 +29,7 @@ function FramePageMenu({
   listPages: (() => Promise<string[]>) | null;
   onPath: (path: string) => void;
   routes?: boolean;
-}): ReactElement {
+}): ReactElement => {
   const menu = useMenu();
   const [draft, setDraft] = useState(path);
   const [pages, setPages] = useState<string[] | null>(null);
@@ -167,6 +165,6 @@ function FramePageMenu({
       )}
     </div>
   );
-}
+};
 
 export { FramePageMenu, pageName };

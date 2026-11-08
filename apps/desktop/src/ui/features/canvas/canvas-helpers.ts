@@ -16,13 +16,12 @@ import { frameStateUrl } from "./frame-states-model.js";
 import type { FrameStatesRead } from "./frame-states-model.js";
 import { QUIET_FOCUS_ATTR } from "./use-inline-text-edit.js";
 
-function frameLabelOf(frameId: string): Element | null {
-  return document.querySelector(
+const frameLabelOf = (frameId: string): Element | null =>
+  document.querySelector(
     `.frame-label[data-frame-id="${CSS.escape(frameId)}"]`
   );
-}
 
-function jumpToFrame(frameId: string): void {
+const jumpToFrame = (frameId: string): void => {
   const id = CSS.escape(frameId);
 
   const target =
@@ -34,27 +33,23 @@ function jumpToFrame(frameId: string): void {
     block: "center",
     inline: "center",
   });
-}
+};
 
-function shellDirectionName(shell: CanvasShell | undefined): string | null {
-  return shell?.directionName ?? null;
-}
+const shellDirectionName = (shell: CanvasShell | undefined): string | null =>
+  shell?.directionName ?? null;
 
-function inEditPane(shell: CanvasShell | undefined): boolean {
-  return shell?.pane === "design";
-}
+const inEditPane = (shell: CanvasShell | undefined): boolean =>
+  shell?.pane === "design";
 
-function hostedClose(
+const hostedClose = (
   shell: CanvasShell | undefined,
   close: () => void
-): (() => void) | undefined {
-  return shell ? undefined : close;
-}
+): (() => void) | undefined => (shell ? undefined : close);
 
-function noteCommentFrame(
+const noteCommentFrame = (
   control: CommentsControl | undefined,
   active: { id: string; path?: string; label?: string }
-): void {
+): void => {
   if (control) {
     control.frameRef.current = {
       id: active.id,
@@ -62,25 +57,26 @@ function noteCommentFrame(
       ...(active.label ? { label: active.label } : {}),
     };
   }
-}
+};
 
-function activeFrameOf(
+const activeFrameOf = (
   active: { id: string; path?: string },
   all: { id: string }[]
-) {
-  return { id: active.id, ids: all.map((f) => f.id), path: active.path ?? "" };
-}
+) => ({ id: active.id, ids: all.map((f) => f.id), path: active.path ?? "" });
 
-function pageNameOf(path: string | undefined): string {
+const pageNameOf = (path: string | undefined): string => {
   const file = path
     ?.split("/")
     .pop()
     ?.replace(/\.html?$/i, "");
 
   return file && file !== "index" ? file : "Page";
-}
+};
 
-function commentToolsOf(props: Props, path: string | undefined): CommentTools {
+const commentToolsOf = (
+  props: Props,
+  path: string | undefined
+): CommentTools => {
   const tools = props.commentTools ?? {};
 
   return {
@@ -93,7 +89,7 @@ function commentToolsOf(props: Props, path: string | undefined): CommentTools {
       tokens: tools.tokens,
     },
   };
-}
+};
 
 const RECT_REFRESH_MS = [300, 1200];
 
@@ -102,14 +98,14 @@ const NO_VERSION_TEXT =
 
 type StageNote = "building" | "empty" | null;
 
-function stageNote(p: {
+const stageNote = (p: {
   running?: boolean;
   noRuns?: boolean;
   app?: AttachedApp | null;
   live: boolean;
   hasHead: boolean;
   urlError: string | null;
-}): StageNote {
+}): StageNote => {
   if (p.urlError || !p.live || p.hasHead) {
     return null;
   }
@@ -119,9 +115,9 @@ function stageNote(p: {
   }
 
   return p.noRuns && !p.app ? "empty" : null;
-}
+};
 
-function themeSwitch(enabled: boolean | undefined, theme: ThemeChoice) {
+const themeSwitch = (enabled: boolean | undefined, theme: ThemeChoice) => {
   if (!enabled) {
     return;
   }
@@ -129,41 +125,34 @@ function themeSwitch(enabled: boolean | undefined, theme: ThemeChoice) {
   const dark = theme === "dark";
 
   return { dark, onToggle: () => broadcastTheme(dark ? null : "dark") };
-}
+};
 
-function livePageUrl(
+const livePageUrl = (
   baseUrl: string | null,
   active: CanvasFrame,
   states: FrameStatesRead
-): string | null {
-  return baseUrl
+): string | null =>
+  baseUrl
     ? frameStateUrl(withFramePath(baseUrl, active.path), states, active.id)
     : null;
-}
 
-function knownList(
+const knownList = (
   directions: CanvasDirections | undefined
-): Direction[] | undefined {
-  return directions?.list;
-}
+): Direction[] | undefined => directions?.list;
 
-function activateOf(
+const activateOf = (
   directions: CanvasDirections | undefined
-): ((id: string) => void) | undefined {
-  return directions?.onActivate;
-}
+): ((id: string) => void) | undefined => directions?.onActivate;
 
-function knownIds(
+const knownIds = (
   directions: CanvasDirections | undefined
-): string[] | undefined {
-  return directions?.list.map((d) => d.id);
-}
+): string[] | undefined => directions?.list.map((d) => d.id);
 
-function stageCursor(pz: {
+const stageCursor = (pz: {
   panning: boolean;
   spaceHeld: boolean;
   zoomHeld: boolean;
-}): string {
+}): string => {
   if (pz.panning) {
     return "grabbing";
   }
@@ -173,41 +162,36 @@ function stageCursor(pz: {
   }
 
   return pz.zoomHeld ? "zoom-in" : "";
-}
+};
 
-function quietOnPointer(
-  onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void
-): (e: ReactPointerEvent<HTMLDivElement>) => void {
-  return (e: ReactPointerEvent<HTMLDivElement>): void => {
+const quietOnPointer =
+  (
+    onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void
+  ): ((e: ReactPointerEvent<HTMLDivElement>) => void) =>
+  (e: ReactPointerEvent<HTMLDivElement>): void => {
     e.currentTarget.setAttribute(QUIET_FOCUS_ATTR, "");
     onPointerDown(e);
   };
-}
 
-function dropQuietFocus(e: ReactFocusEvent<HTMLDivElement>): void {
+const dropQuietFocus = (e: ReactFocusEvent<HTMLDivElement>): void => {
   if (e.target === e.currentTarget) {
     e.currentTarget.removeAttribute(QUIET_FOCUS_ATTR);
   }
-}
+};
 
-function canvasClass(editing: boolean): string {
-  return editing ? "canvas text-editing" : "canvas";
-}
+const canvasClass = (editing: boolean): string =>
+  editing ? "canvas text-editing" : "canvas";
 
-function marqueeAllowed(
+const marqueeAllowed = (
   picking: boolean,
   prototype: boolean,
   comment: boolean
-): boolean {
-  return picking && !prototype && !comment;
-}
+): boolean => picking && !prototype && !comment;
 
-function overlayHover<T extends { fromTree?: boolean }>(
+const overlayHover = <T extends { fromTree?: boolean }>(
   hover: T | null,
   picking: boolean
-): T | null {
-  return picking || hover?.fromTree ? hover : null;
-}
+): T | null => (picking || hover?.fromTree ? hover : null);
 
 export {
   NO_VERSION_TEXT,

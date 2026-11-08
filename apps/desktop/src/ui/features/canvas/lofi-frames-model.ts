@@ -9,7 +9,7 @@ import { readBlob } from "../../platform/http.js";
 
 let cssLoad: Promise<string> | null = null;
 
-function toBase64(bytes: Uint8Array): string {
+const toBase64 = (bytes: Uint8Array): string => {
   let text = "";
   const step = 0x80_00;
 
@@ -18,9 +18,9 @@ function toBase64(bytes: Uint8Array): string {
   }
 
   return btoa(text);
-}
+};
 
-function loadLofiCss(): Promise<string> {
+const loadLofiCss = (): Promise<string> => {
   cssLoad ??= readBlob(
     new URL("../../assets/fonts/kalam-latin-400-normal.woff2", import.meta.url)
       .href
@@ -37,17 +37,17 @@ function loadLofiCss(): Promise<string> {
     });
 
   return cssLoad;
-}
+};
 
 interface LofiFrame extends BridgeFrame {
   directionId: string | null;
 }
 
-function stageFrames(
+const stageFrames = (
   stage: HTMLElement | null,
   kind: ProjectKind,
   currentId: string | null
-): LofiFrame[] {
+): LofiFrame[] => {
   if (!stage) {
     return [];
   }
@@ -76,14 +76,14 @@ function stageFrames(
   }
 
   return out;
-}
+};
 
-function useLofiFrames(
+const useLofiFrames = (
   stageRef: RefObject<HTMLElement | null>,
   kind: ProjectKind,
   currentId: string | null,
   lofi: readonly string[]
-): void {
+): void => {
   const sent = useRef(new WeakMap<HTMLIFrameElement, boolean>());
   const latest = useRef({ currentId, kind, lofi });
   latest.current = { currentId, kind, lofi };
@@ -150,6 +150,6 @@ function useLofiFrames(
       void loadLofiCss();
     }
   }, [key]);
-}
+};
 
 export { useLofiFrames };

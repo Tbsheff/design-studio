@@ -19,13 +19,13 @@ const InlinePrompt = lazy(() => import("../chat/inline-prompt.js"));
 
 type CommentLayerProps = Parameters<typeof CommentLayer>[0];
 
-function CanvasComments(
+const CanvasComments = (
   p: {
     comment: ReturnType<typeof useCommentMode>;
     control: Props["comments"];
     draw: DrawTool;
   } & Omit<CommentLayerProps, "control" | "commentMode" | "onExitCommentMode">
-): ReactElement | null {
+): ReactElement | null => {
   const { comment, control, draw, ...rest } = p;
 
   if (!comment.available || !control) {
@@ -51,27 +51,27 @@ function CanvasComments(
       )}
     </>
   );
-}
+};
 
-function useCanvasVectorTools(
+const useCanvasVectorTools = (
   editsEnabled: boolean,
   protoOn: boolean,
   draw: DrawTool,
   comment: { on: boolean; setOn: (on: boolean) => void }
-): void {
+): void => {
   const { tool } = useVectorTool();
   useVectorToolKeys(editsEnabled && !protoOn);
   useVectorToolGuards(tool, draw.on || comment.on, () => {
     draw.setOn(false);
     comment.setOn(false);
   });
-}
+};
 
-function VectorSlot(
+const VectorSlot = (
   p: Omit<ComponentProps<typeof VectorLayer>, "directionId"> & {
     directionId: string | null;
   }
-): ReactElement | null {
+): ReactElement | null => {
   const { available } = useVectorTool();
   const { directionId } = p;
 
@@ -84,9 +84,9 @@ function VectorSlot(
       <VectorLayer {...p} directionId={directionId} />
     </Suspense>
   );
-}
+};
 
-function InlinePromptSlot({
+const InlinePromptSlot = ({
   view,
   zoom,
   frame,
@@ -94,7 +94,7 @@ function InlinePromptSlot({
   view: InlinePromptView | null;
   zoom: number;
   frame: { width: number; height: number };
-}): ReactElement | null {
+}): ReactElement | null => {
   if (!view) {
     return null;
   }
@@ -104,6 +104,6 @@ function InlinePromptSlot({
       <InlinePrompt view={view} zoom={zoom} frame={frame} />
     </Suspense>
   );
-}
+};
 
 export { CanvasComments, InlinePromptSlot, VectorSlot, useCanvasVectorTools };

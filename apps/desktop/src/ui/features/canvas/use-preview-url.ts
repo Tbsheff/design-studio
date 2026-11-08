@@ -8,12 +8,12 @@ import type { FilesChange } from "../home/use-studio-data.js";
 import { NO_VERSION_TEXT, RECT_REFRESH_MS } from "./canvas-helpers.js";
 import type { CanvasSource } from "./canvas-toolbar.js";
 
-function usePreviewUrl(
+const usePreviewUrl = (
   projectId: string,
   directionId: string | null,
   source: CanvasSource,
   headVersionId: string | null
-) {
+) => {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
 
@@ -61,9 +61,9 @@ function usePreviewUrl(
   }, [projectId, directionId, source.kind, versionId]);
 
   return { baseUrl, urlError };
-}
+};
 
-function useRenderCheck(projectId: string, directionId: string | null) {
+const useRenderCheck = (projectId: string, directionId: string | null) => {
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState<RenderCheckResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,14 +92,14 @@ function useRenderCheck(projectId: string, directionId: string | null) {
   };
 
   return { checking, close, error, results, run };
-}
+};
 
-function useFramePort(
+const useFramePort = (
   port: MutableRefObject<PreviewPort | null> | undefined,
   frames: PreviewPort | null,
   lastChange: FilesChange | null,
   kind: ProjectKind
-): void {
+): void => {
   useEffect(() => {
     if (!port) {
       return;
@@ -124,6 +124,6 @@ function useFramePort(
 
     return (): void => timers.forEach((t) => window.clearTimeout(t));
   }, [lastChange, kind, port]);
-}
+};
 
 export { useFramePort, usePreviewUrl, useRenderCheck };

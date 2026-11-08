@@ -23,7 +23,7 @@ const EDGES: ResizeEdge[] = ["e", "s", "se"];
 const COMPACT_EDGES: ResizeEdge[] = ["se"];
 const COMPACT_PX = 40;
 
-function ResizeHandles({
+const ResizeHandles = ({
   control,
   rect,
   zoom,
@@ -31,7 +31,7 @@ function ResizeHandles({
   control: ResizeControl;
   rect: SelectionContext["rect"];
   zoom: number;
-}): ReactElement {
+}): ReactElement => {
   const { live } = control;
   const compact = Math.min(rect.width, rect.height) * zoom < COMPACT_PX;
 
@@ -61,27 +61,25 @@ function ResizeHandles({
       )}
     </div>
   );
-}
+};
 
-function guideStyle(g: SnapGuide) {
-  return g.axis === "x"
+const guideStyle = (g: SnapGuide) =>
+  g.axis === "x"
     ? { height: g.to - g.from, left: g.at, top: g.from }
     : { left: g.from, top: g.at, width: g.to - g.from };
-}
 
-function fullStyle(g: SnapGuide) {
-  return g.axis === "x"
+const fullStyle = (g: SnapGuide) =>
+  g.axis === "x"
     ? { bottom: 0, left: g.at, top: 0 }
     : { left: 0, right: 0, top: g.at };
-}
 
-function SnapGuides({
+const SnapGuides = ({
   guides,
   full,
 }: {
   guides: SnapGuide[];
   full?: boolean;
-}): ReactElement | null {
+}): ReactElement | null => {
   if (guides.length === 0) {
     return null;
   }
@@ -100,21 +98,20 @@ function SnapGuides({
       ))}
     </div>
   );
-}
+};
 
-function lineStyle(l: MeasureLine) {
-  return l.axis === "x"
+const lineStyle = (l: MeasureLine) =>
+  l.axis === "x"
     ? { left: l.from, top: l.at, width: l.to - l.from }
     : { height: l.to - l.from, left: l.at, top: l.from };
-}
 
-function Measurements({
+const Measurements = ({
   from,
   to,
 }: {
   from: SelectionContext["rect"];
   to: SelectionContext["rect"];
-}): ReactElement {
+}): ReactElement => {
   const lines = measureBetween(from, to);
 
   return (
@@ -136,28 +133,25 @@ function Measurements({
       ))}
     </div>
   );
-}
+};
 
-function sameRect(
+const sameRect = (
   a: SelectionContext["rect"],
   b: SelectionContext["rect"]
-): boolean {
-  return (
-    Math.abs(a.x - b.x) < 0.5 &&
-    Math.abs(a.y - b.y) < 0.5 &&
-    Math.abs(a.width - b.width) < 0.5 &&
-    Math.abs(a.height - b.height) < 0.5
-  );
-}
+): boolean =>
+  Math.abs(a.x - b.x) < 0.5 &&
+  Math.abs(a.y - b.y) < 0.5 &&
+  Math.abs(a.width - b.width) < 0.5 &&
+  Math.abs(a.height - b.height) < 0.5;
 
-function ArtboardOverlay({
+const ArtboardOverlay = ({
   hover,
   selection,
   comments,
   zoom,
   resize,
   spacing,
-}: Props): ReactElement {
+}: Props): ReactElement => {
   const anchor = unionBox(selection.map((s) => s.rect));
   const measuring = hover?.altKey && anchor && !hover.fromTree;
 
@@ -214,6 +208,6 @@ function ArtboardOverlay({
       {comments}
     </div>
   );
-}
+};
 
 export { ArtboardOverlay, SnapGuides, guideStyle };

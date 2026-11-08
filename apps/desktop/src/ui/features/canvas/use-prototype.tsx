@@ -61,11 +61,10 @@ interface Options {
   };
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
 
-function usePrototype(o: Options) {
+const usePrototype = (o: Options) => {
   const { on } = o;
   const [arrows, setArrows] = useState(true);
   const [playing, setPlaying] = useState(false);
@@ -244,6 +243,6 @@ function usePrototype(o: Options) {
       ? { on: arrows, onToggle: () => setArrows((v) => !v) }
       : undefined,
   };
-}
+};
 
 export { usePrototype };

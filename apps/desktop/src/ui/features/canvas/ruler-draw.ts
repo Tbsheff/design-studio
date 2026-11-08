@@ -27,7 +27,7 @@ interface Colors {
   line: string;
 }
 
-function viewOf(el: HTMLElement | null): View | null {
+const viewOf = (el: HTMLElement | null): View | null => {
   const m = el
     ? /translate\(([-\d.e]+)px,\s*([-\d.e]+)px\)\s*scale\(([-\d.e]+)\)/.exec(
         el.style.transform
@@ -39,15 +39,12 @@ function viewOf(el: HTMLElement | null): View | null {
   }
 
   return { x: Number(m[1]), y: Number(m[2]), zoom: Number(m[3]) || 1 };
-}
+};
 
-function stepFor(zoom: number): number {
-  return (
-    STEPS.find((s) => s * zoom >= MIN_LABEL_PX) ?? (STEPS.at(-1) as number)
-  );
-}
+const stepFor = (zoom: number): number =>
+  STEPS.find((s) => s * zoom >= MIN_LABEL_PX) ?? (STEPS.at(-1) as number);
 
-function colorsOf(el: HTMLElement): Colors {
+const colorsOf = (el: HTMLElement): Colors => {
   const css = getComputedStyle(el);
   const v = (name: string): string => css.getPropertyValue(name).trim();
 
@@ -59,11 +56,11 @@ function colorsOf(el: HTMLElement): Colors {
     text: v("--ruler-text"),
     tick: v("--ruler-tick"),
   };
-}
+};
 
-function sizeCanvas(
+const sizeCanvas = (
   canvas: HTMLCanvasElement
-): CanvasRenderingContext2D | null {
+): CanvasRenderingContext2D | null => {
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth;
   const h = canvas.clientHeight;
@@ -80,7 +77,7 @@ function sizeCanvas(
   ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   return ctx;
-}
+};
 
 interface AxisDraw {
   ctx: CanvasRenderingContext2D;
@@ -93,11 +90,10 @@ interface AxisDraw {
   range: [number, number] | null;
 }
 
-function toScreen(a: AxisDraw, value: number): number {
-  return a.offset + (value - a.origin) * a.zoom;
-}
+const toScreen = (a: AxisDraw, value: number): number =>
+  a.offset + (value - a.origin) * a.zoom;
 
-function tick(a: AxisDraw, pos: number, len: number): void {
+const tick = (a: AxisDraw, pos: number, len: number): void => {
   if (a.vertical) {
     a.ctx.moveTo(RULER_SIZE - len, pos + 0.5);
     a.ctx.lineTo(RULER_SIZE, pos + 0.5);
@@ -105,9 +101,9 @@ function tick(a: AxisDraw, pos: number, len: number): void {
     a.ctx.moveTo(pos + 0.5, RULER_SIZE - len);
     a.ctx.lineTo(pos + 0.5, RULER_SIZE);
   }
-}
+};
 
-function markSpans(a: AxisDraw): [number, number][] {
+const markSpans = (a: AxisDraw): [number, number][] => {
   if (!a.range) {
     return [];
   }
@@ -120,14 +116,14 @@ function markSpans(a: AxisDraw): [number, number][] {
 
     return [pos - half, pos + half];
   });
-}
+};
 
-function label(
+const label = (
   a: AxisDraw,
   pos: number,
   text: string,
   marks: [number, number][]
-): void {
+): void => {
   const { ctx } = a;
   const { width } = ctx.measureText(text);
 
@@ -150,9 +146,9 @@ function label(
   ctx.rotate(-Math.PI / 2);
   ctx.fillText(text, 0, 0);
   ctx.restore();
-}
+};
 
-function drawRange(a: AxisDraw): void {
+const drawRange = (a: AxisDraw): void => {
   if (!a.range) {
     return;
   }
@@ -180,9 +176,9 @@ function drawRange(a: AxisDraw): void {
     a.vertical ? RULER_SIZE : 1,
     a.vertical ? 1 : RULER_SIZE
   );
-}
+};
 
-function drawRangeLabels(a: AxisDraw): void {
+const drawRangeLabels = (a: AxisDraw): void => {
   if (!a.range) {
     return;
   }
@@ -217,9 +213,9 @@ function drawRangeLabels(a: AxisDraw): void {
     a.ctx.restore();
     a.ctx.fillStyle = a.colors.mark;
   }
-}
+};
 
-function drawAxis(a: AxisDraw): void {
+const drawAxis = (a: AxisDraw): void => {
   const { ctx } = a;
   ctx.fillStyle = a.colors.bg;
   ctx.fillRect(
@@ -259,7 +255,7 @@ function drawAxis(a: AxisDraw): void {
   }
 
   drawRangeLabels(a);
-}
+};
 
 export { RULER_SIZE, colorsOf, drawAxis, sizeCanvas, viewOf };
 

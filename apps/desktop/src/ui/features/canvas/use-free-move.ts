@@ -56,7 +56,7 @@ interface Placed {
   view: FreeMoveView;
 }
 
-function place(s: Session, drag: FreeMoveDrag, zoom: number): Placed {
+const place = (s: Session, drag: FreeMoveDrag, zoom: number): Placed => {
   const base = s.start.rect;
   const moved = { ...base, x: base.x + drag.dx, y: base.y + drag.dy };
   const absolute = s.start.mode === "absolute";
@@ -85,22 +85,22 @@ function place(s: Session, drag: FreeMoveDrag, zoom: number): Placed {
       spacing: snapped.spacing,
     },
   };
-}
+};
 
-function transformOf(s: Session, dx: number, dy: number): string {
+const transformOf = (s: Session, dx: number, dy: number): string => {
   const own =
     s.start.transform && s.start.transform !== "none"
       ? ` ${s.start.transform}`
       : "";
 
   return `translate(${dx}px, ${dy}px)${own}`;
-}
+};
 
-function absoluteStyle(
+const absoluteStyle = (
   s: Session,
   dx: number,
   dy: number
-): Record<string, string> {
+): Record<string, string> => {
   const style: Record<string, string> = {};
   const { fromRight, fromBottom } = s.start;
 
@@ -122,9 +122,9 @@ function absoluteStyle(
   }
 
   return style;
-}
+};
 
-function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
+const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
   const live = useRef(o);
   live.current = o;
   const session = useRef<Session | null>(null);
@@ -352,7 +352,7 @@ function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
   }, [o.listen]);
 
   return view;
-}
+};
 
 export { useFreeMove };
 

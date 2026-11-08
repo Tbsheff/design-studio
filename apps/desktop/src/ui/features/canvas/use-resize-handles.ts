@@ -78,11 +78,11 @@ interface ResizeHandles {
   onHandleDown: ResizeControl["onHandleDown"];
 }
 
-function useResizeLive({
+const useResizeLive = ({
   target,
   sizes,
   onHandleDown,
-}: ResizeHandles): ResizeControl {
+}: ResizeHandles): ResizeControl => {
   const size = useLive(sizes);
 
   const live =
@@ -97,30 +97,30 @@ function useResizeLive({
       : null;
 
   return { live, onHandleDown, target };
-}
+};
 
-function pxOf(value: string | undefined, fallback: number): number {
+const pxOf = (value: string | undefined, fallback: number): number => {
   const parsed = value?.endsWith("px") ? Number.parseFloat(value) : Number.NaN;
 
   return Math.round(Number.isFinite(parsed) ? parsed : fallback);
-}
+};
 
-function scaleOf(element: Element): number {
+const scaleOf = (element: Element): number => {
   const overlay = element.closest<HTMLElement>(".overlay");
 
   if (!overlay || overlay.offsetWidth === 0) {
     return 1;
   }
   return overlay.getBoundingClientRect().width / overlay.offsetWidth;
-}
+};
 
-function resizedSize(
+const resizedSize = (
   edge: ResizeEdge,
   base: Size,
   dx: number,
   dy: number,
   keepRatio: boolean
-): Size {
+): Size => {
   let w = edge === "s" ? base.w : base.w + dx;
   let h = edge === "e" ? base.h : base.h + dy;
 
@@ -139,11 +139,11 @@ function resizedSize(
   }
 
   return { h: Math.max(1, Math.round(h)), w: Math.max(1, Math.round(w)) };
-}
+};
 
 let neighborSeq = 0;
 
-function requestNeighbors(d: Drag, o: Options): void {
+const requestNeighbors = (d: Drag, o: Options): void => {
   if (!o.listen) {
     return;
   }
@@ -162,13 +162,13 @@ function requestNeighbors(d: Drag, o: Options): void {
 
   d.stopListen = stop;
   o.post({ requestId, selector: d.target.selector, type: "request-neighbors" });
-}
+};
 
-function snapSize(
+const snapSize = (
   d: Pick<Drag, "edge" | "base" | "target" | "candidates" | "zoom">,
   next: Size,
   off: boolean
-): { size: Size; guides: SnapGuide[] } {
+): { size: Size; guides: SnapGuide[] } => {
   if (off || d.candidates.length === 0) {
     return { size: next, guides: [] };
   }
@@ -195,9 +195,9 @@ function snapSize(
   };
 
   return { guides: res.guides, size };
-}
+};
 
-function axisStyle(d: Drag, size: Size): Record<string, string> {
+const axisStyle = (d: Drag, size: Size): Record<string, string> => {
   const style: Record<string, string> = {};
 
   if (d.axes.has("width")) {
@@ -207,9 +207,9 @@ function axisStyle(d: Drag, size: Size): Record<string, string> {
     style.height = `${size.h}px`;
   }
   return style;
-}
+};
 
-function styleFor(size: Size, base: Size): Record<string, string> {
+const styleFor = (size: Size, base: Size): Record<string, string> => {
   const style: Record<string, string> = {};
 
   if (size.w !== base.w) {
@@ -219,7 +219,7 @@ function styleFor(size: Size, base: Size): Record<string, string> {
     style.height = `${size.h}px`;
   }
   return style;
-}
+};
 
 interface ResizeReadout {
   selector: string;
@@ -229,7 +229,7 @@ interface ResizeReadout {
 
 const resizeReadout = createLiveStore<ResizeReadout | null>(null);
 
-function useResizeHandles(o: Options): ResizeHandles {
+const useResizeHandles = (o: Options): ResizeHandles => {
   const live = useRef(o);
   live.current = o;
   const drag = useRef<Drag | null>(null);
@@ -429,7 +429,7 @@ function useResizeHandles(o: Options): ResizeHandles {
   useEffect(() => (): void => cancel(), [cancel]);
 
   return { onHandleDown, sizes, target };
-}
+};
 
 export {
   resizeReadout,

@@ -51,36 +51,34 @@ interface Props {
   onShareLink?: ((mode?: "link" | "publish") => void) | null;
 }
 
-function presentItems(onPresent: (mode: PresentMode) => void): MenuEntry[] {
-  return [
-    {
-      icon: "link",
-      id: "play",
-      label: "Play prototype",
-      run: () => onPresent("play"),
-    },
-    {
-      icon: "play",
-      id: "window",
-      label: "In this window",
-      run: () => onPresent("window"),
-    },
-    {
-      icon: "expand",
-      id: "fullscreen",
-      label: "Fullscreen",
-      run: () => onPresent("fullscreen"),
-    },
-    {
-      icon: "window",
-      id: "new-window",
-      label: "New window",
-      run: () => onPresent("new-window"),
-    },
-  ];
-}
+const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
+  {
+    icon: "link",
+    id: "play",
+    label: "Play prototype",
+    run: () => onPresent("play"),
+  },
+  {
+    icon: "play",
+    id: "window",
+    label: "In this window",
+    run: () => onPresent("window"),
+  },
+  {
+    icon: "expand",
+    id: "fullscreen",
+    label: "Fullscreen",
+    run: () => onPresent("fullscreen"),
+  },
+  {
+    icon: "window",
+    id: "new-window",
+    label: "New window",
+    run: () => onPresent("new-window"),
+  },
+];
 
-function CanvasTopBar(p: Props): ReactElement {
+const CanvasTopBar = (p: Props): ReactElement => {
   const port = usePortDialog(!p.onShip);
   const onPort = p.onShip ? null : (): void => port.open(null);
   const present = presentItems(p.onPresent);
@@ -263,6 +261,6 @@ function CanvasTopBar(p: Props): ReactElement {
       )}
     </div>
   );
-}
+};
 
 export { CanvasTopBar };

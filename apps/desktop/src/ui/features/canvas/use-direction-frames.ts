@@ -38,10 +38,10 @@ interface Options {
   frameStates: FrameStatesRead;
 }
 
-function useDirectionUrls(
+const useDirectionUrls = (
   projectId: string,
   ids: string[]
-): Record<string, string> {
+): Record<string, string> => {
   const [urls, setUrls] = useState<Record<string, string>>({});
   const asked = useRef(new Set<string>());
   const key = ids.join(",");
@@ -64,9 +64,9 @@ function useDirectionUrls(
   }, [projectId, key]);
 
   return urls;
-}
+};
 
-function useDirectionFrames(o: Options) {
+const useDirectionFrames = (o: Options) => {
   const tokens = useRef(new Map<string, string>());
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
   const passive = o.frames.filter((f) => f.id !== o.activeId);
@@ -174,7 +174,7 @@ function useDirectionFrames(o: Options) {
   useTokenFrames(tokenSlots, elements, o.kind, o.live);
 
   return { elements, onSwapDone: gate.onSwapDone, slots };
-}
+};
 
 type DirectionFrames = ReturnType<typeof useDirectionFrames>;
 

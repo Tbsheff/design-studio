@@ -37,11 +37,13 @@ const variationsApi = {
     post<VariationStartResult>(base(pid), { ...req }),
 };
 
-function maxVariationsFor(kind: ProjectKind): number {
-  return kind === "react" ? VARIATION_MAX_REACT : VARIATION_MAX;
-}
+const maxVariationsFor = (kind: ProjectKind): number =>
+  kind === "react" ? VARIATION_MAX_REACT : VARIATION_MAX;
 
-function groupOf(project: Project | null, groupId: string | null): Direction[] {
+const groupOf = (
+  project: Project | null,
+  groupId: string | null
+): Direction[] => {
   if (!project || !groupId) {
     return [];
   }
@@ -49,6 +51,6 @@ function groupOf(project: Project | null, groupId: string | null): Direction[] {
   return project.directions
     .filter((direction) => direction.variation?.groupId === groupId)
     .sort((a, b) => (a.variation?.index ?? 0) - (b.variation?.index ?? 0));
-}
+};
 
 export { groupOf, maxVariationsFor, variationsApi };

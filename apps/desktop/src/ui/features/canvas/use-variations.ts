@@ -41,18 +41,17 @@ interface Options {
 
 const COUNT_KEY = "studio.variations.count";
 
-function storedCount(): number {
+const storedCount = (): number => {
   const raw = Number(readStored(COUNT_KEY) ?? "");
 
   return Number.isInteger(raw) && raw >= 1 && raw <= 4 ? raw : 1;
-}
+};
 
-function relabel(briefs: VariationBrief[]): VariationBrief[] {
-  return briefs.map((brief, index) => ({
+const relabel = (briefs: VariationBrief[]): VariationBrief[] =>
+  briefs.map((brief, index) => ({
     ...brief,
     label: "ABCD"[index] ?? String(index + 1),
   }));
-}
 
 export { formatUsd as money } from "../../domain/format.js";
 

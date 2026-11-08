@@ -30,7 +30,7 @@ const EMPTY_SNAP: FrameSnapView = {
   spacing: [],
 };
 
-function createSnapStore() {
+const createSnapStore = () => {
   let view = EMPTY_SNAP;
   const subs = new Set<() => void>();
 
@@ -49,21 +49,20 @@ function createSnapStore() {
       return (): boolean => subs.delete(fn);
     },
   };
-}
+};
 
 const frameSnapStore = createSnapStore();
 
-function otherFrames(layout: CanvasLayout, id: string): Box[] {
-  return shownFrames(layout).filter((f) => f.id !== id);
-}
+const otherFrames = (layout: CanvasLayout, id: string): Box[] =>
+  shownFrames(layout).filter((f) => f.id !== id);
 
-function resizedSize(
+const resizedSize = (
   start: { width: number; height: number },
   edge: ResizeEdge,
   dx: number,
   dy: number,
   keepRatio: boolean
-): { width: number; height: number } {
+): { width: number; height: number } => {
   const clamp = (v: number): number =>
     Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
 
@@ -88,16 +87,16 @@ function resizedSize(
   }
 
   return { height: clamp(height), width: clamp(width) };
-}
+};
 
-function snapSize(
+const snapSize = (
   frame: CanvasFrame,
   edge: ResizeEdge,
   size: { width: number; height: number },
   candidates: Box[],
   zoom: number,
   off: boolean
-) {
+) => {
   if (off || candidates.length === 0) {
     frameSnapStore.set(null);
 
@@ -122,13 +121,13 @@ function snapSize(
     Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
 
   return { height: clamp(res.rect.height), width: clamp(res.rect.width) };
-}
+};
 
-function paintSize(
+const paintSize = (
   host: HTMLElement,
   size: { width: number; height: number } | null,
   restore: { width: string; height: string }
-): void {
+): void => {
   host.style.width = size ? `${size.width}px` : restore.width;
   host.style.height = size ? `${size.height}px` : restore.height;
 
@@ -147,14 +146,14 @@ function paintSize(
     readout.textContent = size ? `${size.width} × ${size.height}` : "";
   }
   host.classList.toggle("frame-resizing", size !== null);
-}
+};
 
-function useFrameResize(
+const useFrameResize = (
   frames: CanvasFrames,
   pz: PanZoom,
   artboardRef: RefObject<HTMLDivElement | null>,
   passive: RefObject<Record<string, HTMLDivElement | null>>
-): (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => void {
+): ((e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => void) => {
   const dragging = useRef(false);
 
   return (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge): void => {
@@ -254,7 +253,7 @@ function useFrameResize(
     window.addEventListener("keydown", key);
     window.addEventListener("keyup", key);
   };
-}
+};
 
 export { frameSnapStore, otherFrames, resizedSize, useFrameResize };
 

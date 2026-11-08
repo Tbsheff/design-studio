@@ -25,7 +25,7 @@ const stop = (e: ReactPointerEvent): void => e.stopPropagation();
 
 const MOCK_EXAMPLE = '[\n  { "path": "/api/items", "body": [] }\n]';
 
-function menuKeys(event: ReactKeyboardEvent<HTMLElement>): void {
+const menuKeys = (event: ReactKeyboardEvent<HTMLElement>): void => {
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
       '[role^="menuitem"]:not(:disabled)'
@@ -46,9 +46,9 @@ function menuKeys(event: ReactKeyboardEvent<HTMLElement>): void {
   }
   event.preventDefault();
   items[(next + items.length) % items.length]?.focus();
-}
+};
 
-function StateRows({
+const StateRows = ({
   view,
   chosen,
   onPick,
@@ -56,36 +56,34 @@ function StateRows({
   view: FrameStatesView;
   chosen: string;
   onPick: (state: FrameStateDef) => void;
-}): ReactElement {
-  return (
-    <div className="ui-menu-section">
-      <div className="ui-menu-label">Preview state</div>
-      {view.states.map((state) => (
-        <button
-          key={state.id}
-          type="button"
-          role="menuitemradio"
-          aria-checked={state.id === chosen}
-          className="ui-menu-item"
-          tabIndex={-1}
-          data-tip={STATE_HINTS[state.kind]}
-          onClick={() => onPick(state)}
-        >
-          <span>{state.name}</span>
-          {state.kind === "mock" && (
-            <span className="ui-menu-meta">
-              {state.mocks?.length === 1
-                ? "1 rule"
-                : `${state.mocks?.length ?? 0} rules`}
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
+}): ReactElement => (
+  <div className="ui-menu-section">
+    <div className="ui-menu-label">Preview state</div>
+    {view.states.map((state) => (
+      <button
+        key={state.id}
+        type="button"
+        role="menuitemradio"
+        aria-checked={state.id === chosen}
+        className="ui-menu-item"
+        tabIndex={-1}
+        data-tip={STATE_HINTS[state.kind]}
+        onClick={() => onPick(state)}
+      >
+        <span>{state.name}</span>
+        {state.kind === "mock" && (
+          <span className="ui-menu-meta">
+            {state.mocks?.length === 1
+              ? "1 rule"
+              : `${state.mocks?.length ?? 0} rules`}
+          </span>
+        )}
+      </button>
+    ))}
+  </div>
+);
 
-function SessionRows({
+const SessionRows = ({
   view,
   onPanel,
   onSession,
@@ -93,7 +91,7 @@ function SessionRows({
   view: FrameStatesView;
   onPanel: (panel: Panel) => void;
   onSession: (change: Parameters<typeof setFrameSession>[1]) => void;
-}): ReactElement {
+}): ReactElement => {
   const kept = view.session.captured.length;
 
   return (
@@ -133,9 +131,9 @@ function SessionRows({
       )}
     </div>
   );
-}
+};
 
-function UserForm({
+const UserForm = ({
   user,
   onSave,
   onBack,
@@ -143,7 +141,7 @@ function UserForm({
   user: MockUser;
   onSave: (user: MockUser) => Promise<void>;
   onBack: () => void;
-}): ReactElement {
+}): ReactElement => {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [error, setError] = useState<string | null>(null);
@@ -186,15 +184,15 @@ function UserForm({
       </div>
     </form>
   );
-}
+};
 
-function MockForm({
+const MockForm = ({
   onSave,
   onBack,
 }: {
   onSave: (name: string, rules: MockRules) => Promise<void>;
   onBack: () => void;
-}): ReactElement {
+}): ReactElement => {
   const [name, setName] = useState("Mock data");
   const [rules, setRules] = useState(MOCK_EXAMPLE);
   const [error, setError] = useState<string | null>(null);
@@ -263,7 +261,7 @@ function MockForm({
       </div>
     </form>
   );
-}
+};
 
 export { MockForm, SessionRows, StateRows, UserForm, menuKeys, stop };
 

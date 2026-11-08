@@ -36,11 +36,11 @@ interface LabelInput {
   appPages?: (() => Promise<string[]>) | null;
 }
 
-function frameMenuItems(
+const frameMenuItems = (
   o: LabelInput,
   frame: CanvasFrame,
   did: string | null
-): FrameMenuItem[] {
+): FrameMenuItem[] => {
   const extra = o.frameActions?.(frame, did) ?? [];
 
   const hide: FrameMenuItem = {
@@ -54,13 +54,13 @@ function frameMenuItems(
   };
 
   return [...extra, hide];
-}
+};
 
-function frameLabelSig(
+const frameLabelSig = (
   o: LabelInput,
   frame: CanvasFrame,
   did: string | null
-): string {
+): string => {
   const variation = did ? o.directions?.variationOf(did) : undefined;
 
   const items = frameMenuItems(o, frame, did).map((item) => [
@@ -102,13 +102,13 @@ function frameLabelSig(
     v,
     items,
   ]);
-}
+};
 
-function liveVariation(
+const liveVariation = (
   variation: FrameVariation,
   did: string,
   live: MutableRefObject<LabelInput>
-): FrameVariation {
+): FrameVariation => {
   const now = (): FrameVariation =>
     live.current.directions?.variationOf(did) ?? variation;
 
@@ -117,24 +117,23 @@ function liveVariation(
     onKeep: () => now().onKeep(),
     onMix: (to, element) => now().onMix(to, element),
   };
-}
+};
 
-function liveMenuItems(
+const liveMenuItems = (
   o: LabelInput,
   frame: CanvasFrame,
   did: string | null,
   live: MutableRefObject<LabelInput>
-): FrameMenuItem[] {
-  return frameMenuItems(o, frame, did).map((item) => ({
+): FrameMenuItem[] =>
+  frameMenuItems(o, frame, did).map((item) => ({
     ...item,
     run: () =>
       frameMenuItems(live.current, frame, did)
         .find((cur) => cur.id === item.id)
         ?.run(),
   }));
-}
 
-function useFrameLabels(o: LabelInput) {
+const useFrameLabels = (o: LabelInput) => {
   const { projectId } = o;
   const live = useRef(o);
   live.current = o;
@@ -211,6 +210,6 @@ function useFrameLabels(o: LabelInput) {
     sig: (frame: CanvasFrame, did: string | null) =>
       frameLabelSig(o, frame, did),
   });
-}
+};
 
 export { useFrameLabels };

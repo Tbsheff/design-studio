@@ -12,7 +12,7 @@ import { copy } from "./copy.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";
 
-function PresentLayer({
+const PresentLayer = ({
   url,
   sandbox,
   fullscreen,
@@ -22,7 +22,7 @@ function PresentLayer({
   sandbox?: string;
   fullscreen: boolean;
   onClose: () => void;
-}): ReactElement {
+}): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = root.current;
@@ -86,9 +86,9 @@ function PresentLayer({
       </button>
     </div>
   );
-}
+};
 
-function TweakPrompt({
+const TweakPrompt = ({
   scope,
   onSend,
   onClose,
@@ -96,7 +96,7 @@ function TweakPrompt({
   scope: string | null;
   onSend: (text: string) => void;
   onClose: () => void;
-}): ReactElement {
+}): ReactElement => {
   const [text, setText] = useState("");
   const root = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -165,19 +165,18 @@ function TweakPrompt({
       </button>
     </form>
   );
-}
+};
 
-function gapStyle(b: SpacingBadge) {
-  return b.axis === "x"
+const gapStyle = (b: SpacingBadge) =>
+  b.axis === "x"
     ? { left: b.from, top: b.at, width: b.to - b.from }
     : { height: b.to - b.from, left: b.at, top: b.from };
-}
 
-function FrameSnapLayer({
+const FrameSnapLayer = ({
   origin,
 }: {
   origin: { x: number; y: number };
-}): ReactElement | null {
+}): ReactElement | null => {
   const view = useSyncExternalStore(
     frameSnapStore.subscribe,
     frameSnapStore.get
@@ -219,13 +218,13 @@ function FrameSnapLayer({
       ))}
     </div>
   );
-}
+};
 
-function MarqueeLayer({
+const MarqueeLayer = ({
   listen,
 }: {
   listen: (handler: (message: BridgeToParent) => void) => () => void;
-}): ReactElement | null {
+}): ReactElement | null => {
   const [rect, setRect] = useState<SelectionContext["rect"] | null>(null);
   useEffect(
     () =>
@@ -268,6 +267,6 @@ function MarqueeLayer({
       />
     </div>
   );
-}
+};
 
 export { FrameSnapLayer, MarqueeLayer, PresentLayer, TweakPrompt, gapStyle };

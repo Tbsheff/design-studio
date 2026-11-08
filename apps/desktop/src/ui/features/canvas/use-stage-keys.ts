@@ -9,11 +9,11 @@ import { isTypingTarget } from "./use-pan-zoom.js";
 import { PREVIEW_LAYOUT_KEY_EVENT } from "./use-preview-frames.js";
 import type { usePreviewFrames } from "./use-preview-frames.js";
 
-function useSelectKey(
+const useSelectKey = (
   setSelectMode: (update: (m: boolean) => boolean) => void,
   onEscape: () => void,
   clearSelection: () => boolean
-): void {
+): void => {
   const latest = useRef(clearSelection);
   latest.current = clearSelection;
   useEffect(() => {
@@ -44,7 +44,7 @@ function useSelectKey(
 
     return (): void => window.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
 const FIRST_SELECT_KEYS = new Set([
   "ArrowDown",
@@ -53,7 +53,7 @@ const FIRST_SELECT_KEYS = new Set([
   "ArrowLeft",
 ]);
 
-function firstSelectKey(e: KeyboardEvent): boolean {
+const firstSelectKey = (e: KeyboardEvent): boolean => {
   if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) {
     return false;
   }
@@ -61,9 +61,9 @@ function firstSelectKey(e: KeyboardEvent): boolean {
   return (
     selectMoveOf(e) !== null || (!e.shiftKey && FIRST_SELECT_KEYS.has(e.key))
   );
-}
+};
 
-function useFirstSelectKeys(
+const useFirstSelectKeys = (
   stage: () => HTMLElement | null,
   o: {
     on: boolean;
@@ -72,7 +72,7 @@ function useFirstSelectKeys(
     selectFirst: () => void;
     startPicking: () => void;
   }
-): void {
+): void => {
   const latest = useRef(o);
   latest.current = o;
   useEffect(() => {
@@ -102,11 +102,11 @@ function useFirstSelectKeys(
 
     return (): void => window.removeEventListener("keydown", onKey);
   }, [stage]);
-}
+};
 
 const LAYOUT_WAIT_MS = 1500;
 
-function layoutSectionShown(): boolean {
+const layoutSectionShown = (): boolean => {
   const section = document.querySelector(".ins-layout");
 
   return Boolean(
@@ -114,20 +114,17 @@ function layoutSectionShown(): boolean {
     !section.closest("[inert]") &&
     section.getClientRects().length > 0
   );
-}
+};
 
-function isAddLayoutKey(e: KeyboardEvent): boolean {
-  return (
-    e.code === "KeyA" &&
-    e.shiftKey &&
-    !e.metaKey &&
-    !e.ctrlKey &&
-    !e.altKey &&
-    !e.repeat
-  );
-}
+const isAddLayoutKey = (e: KeyboardEvent): boolean =>
+  e.code === "KeyA" &&
+  e.shiftKey &&
+  !e.metaKey &&
+  !e.ctrlKey &&
+  !e.altKey &&
+  !e.repeat;
 
-function forwardLayoutKeyWhenShown(): void {
+const forwardLayoutKeyWhenShown = (): void => {
   const until = performance.now() + LAYOUT_WAIT_MS;
 
   const wait = (): void => {
@@ -139,13 +136,13 @@ function forwardLayoutKeyWhenShown(): void {
   };
 
   wait();
-}
+};
 
-function useLayoutKeyFallback(o: {
+const useLayoutKeyFallback = (o: {
   on: boolean;
   hasSelection: boolean;
   openEdit: (() => void | Promise<boolean>) | null;
-}): void {
+}): void => {
   const latest = useRef(o);
   latest.current = o;
   useEffect(() => {
@@ -185,7 +182,7 @@ function useLayoutKeyFallback(o: {
       window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
     };
   }, []);
-}
+};
 
 interface StageKeys {
   stage: () => HTMLElement | null;
@@ -203,13 +200,12 @@ interface StageKeys {
   protoOn: boolean;
 }
 
-function editOpener(
+const editOpener = (
   shell: CanvasShell | undefined
-): (() => void | Promise<boolean>) | null {
-  return shell && shell.pane !== "design" ? () => shell.onPane("design") : null;
-}
+): (() => void | Promise<boolean>) | null =>
+  shell && shell.pane !== "design" ? () => shell.onPane("design") : null;
 
-function useStageKeys(o: StageKeys): void {
+const useStageKeys = (o: StageKeys): void => {
   const selection = useRef(o.selection);
   selection.current = o.selection;
   const { setSelection } = o;
@@ -235,9 +231,12 @@ function useStageKeys(o: StageKeys): void {
       o.post({ type: "select-relative", selector: "", move: "child" }),
     startPicking: () => o.setSelectMode(() => true),
   });
-}
+};
 
-function useFrameChange(key: string, onChange: (() => void) | undefined): void {
+const useFrameChange = (
+  key: string,
+  onChange: (() => void) | undefined
+): void => {
   const last = useRef(key);
   const latest = useRef(onChange);
   latest.current = onChange;
@@ -249,6 +248,6 @@ function useFrameChange(key: string, onChange: (() => void) | undefined): void {
     last.current = key;
     latest.current?.();
   }, [key]);
-}
+};
 
 export { useFrameChange, useStageKeys };

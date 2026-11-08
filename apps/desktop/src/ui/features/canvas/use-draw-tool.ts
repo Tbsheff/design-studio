@@ -21,14 +21,12 @@ interface DrawTool {
   clear: () => void;
 }
 
-function hasText(target: EventTarget | null): boolean {
-  return target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement
+const hasText = (target: EventTarget | null): boolean =>
+  target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
     ? target.value !== ""
     : isTypingTarget(target);
-}
 
-function useDrawTool(available: boolean, onActivate: () => void): DrawTool {
+const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
   const [on, setOnState] = useState(false);
   const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
@@ -131,13 +129,13 @@ function useDrawTool(available: boolean, onActivate: () => void): DrawTool {
     toolbarMode: available ? on : undefined,
     undo,
   };
-}
+};
 
-function useCanvasDraw(
+const useCanvasDraw = (
   comment: { available: boolean; on: boolean; setOn: (on: boolean) => void },
   selectMode: boolean,
   setSelectMode: (on: boolean) => void
-): DrawTool {
+): DrawTool => {
   const setComment = comment.setOn;
 
   const draw = useDrawTool(comment.available, () => {
@@ -153,7 +151,7 @@ function useCanvasDraw(
   }, [comment.on, selectMode, setDraw]);
 
   return draw;
-}
+};
 
 export { useCanvasDraw, useDrawTool };
 

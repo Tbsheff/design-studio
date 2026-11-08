@@ -32,11 +32,11 @@ interface CommentTool {
   toggle: () => void;
 }
 
-function useShellState(
+const useShellState = (
   shell: CanvasShell | undefined,
   comment: CommentTool,
   setSelectMode: SetSelectMode
-): void {
+): void => {
   const onPane = useRef(shell?.onPane);
   onPane.current = shell?.onPane;
   const pane = shell?.pane;
@@ -74,16 +74,16 @@ function useShellState(
       setSelectMode(() => false);
     }
   }, [pane, setSelectMode]);
-}
+};
 
-function useShellPane(
+const useShellPane = (
   shell: CanvasShell | undefined,
   comment: CommentTool,
   selectMode: boolean,
   setSelectMode: SetSelectMode,
   live: boolean,
   layersOpenSetting: boolean
-) {
+) => {
   useShellState(shell, comment, setSelectMode);
   const picking = selectMode || (shell?.pane === "design" && !comment.on);
   const editOpen = shell ? shell.pane === "design" : layersOpenSetting;
@@ -100,13 +100,13 @@ function useShellPane(
     shell?.layersHost ? createPortal(panel, shell.layersHost) : panel;
 
   return { closeLayers, layersOpen, picking, place, toggleEdit };
-}
+};
 
-function fileNameOf(
+const fileNameOf = (
   frame: CanvasFrame,
   kind: ProjectKind,
   directionName: string | null
-): string {
+): string => {
   if (kind === "html") {
     return (
       (frame.path || "index.html")
@@ -116,14 +116,14 @@ function fileNameOf(
   }
 
   return directionName ?? "Design";
-}
+};
 
-function toolOf(
+const toolOf = (
   pane: PanelTab | undefined,
   comment: boolean,
   select: boolean,
   proto: boolean
-): CanvasTool {
+): CanvasTool => {
   if (proto) {
     return "prototype";
   }
@@ -137,9 +137,9 @@ function toolOf(
   }
 
   return select ? "select" : null;
-}
+};
 
-function reloadFrames(stage: HTMLElement | null): void {
+const reloadFrames = (stage: HTMLElement | null): void => {
   stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame").forEach((el) => {
     const { src } = el;
 
@@ -147,9 +147,9 @@ function reloadFrames(stage: HTMLElement | null): void {
       el.src = src;
     }
   });
-}
+};
 
-function scopeOf(selection: SelectionContext[]): string | null {
+const scopeOf = (selection: SelectionContext[]): string | null => {
   if (selection.length > 1) {
     return `${selection.length} elements`;
   }
@@ -157,7 +157,7 @@ function scopeOf(selection: SelectionContext[]): string | null {
   const first = selection[0];
 
   return first ? `the ${first.tag}` : null;
-}
+};
 
 export { fileNameOf, reloadFrames, scopeOf, toolOf, useShellPane };
 

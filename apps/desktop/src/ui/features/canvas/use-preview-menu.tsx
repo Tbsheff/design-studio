@@ -60,18 +60,18 @@ interface Options {
   ids: { projectId: string; directionId: string | null; kind: ProjectKind };
 }
 
-async function copyCss(
+const copyCss = async (
   port: PreviewPort | null,
   selector: string
-): Promise<void> {
+): Promise<void> => {
   const css = await requestAuthoredCss(port, selector);
 
   if (css) {
     await navigator.clipboard.writeText(formatCopyCss(css)).catch(() => null);
   }
-}
+};
 
-function structureItems(o: Options): PreviewMenuItem[] {
+const structureItems = (o: Options): PreviewMenuItem[] => {
   const { edits } = o;
 
   if (!edits.enabled) {
@@ -86,9 +86,9 @@ function structureItems(o: Options): PreviewMenuItem[] {
   };
 
   return structureMenuItems(state, edits.structureKey, true);
-}
+};
 
-function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
+const pasteItem = (o: Options, target: SelectionContext): PreviewMenuItem[] => {
   if (!o.edits.enabled || !o.ids.directionId) {
     return [];
   }
@@ -112,9 +112,9 @@ function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
       ...disabledBy(blocked),
     },
   ];
-}
+};
 
-function createItem(o: Options, open: () => void): PreviewMenuItem[] {
+const createItem = (o: Options, open: () => void): PreviewMenuItem[] => {
   if (!o.edits.enabled || !o.ids.directionId) {
     return [];
   }
@@ -135,9 +135,9 @@ function createItem(o: Options, open: () => void): PreviewMenuItem[] {
       ...disabledBy(blocked),
     },
   ];
-}
+};
 
-function createBlocker(o: Options): string | null {
+const createBlocker = (o: Options): string | null => {
   if (o.ids.kind !== "react") {
     return "Components need a React project. This is a plain HTML page";
   }
@@ -147,78 +147,74 @@ function createBlocker(o: Options): string | null {
   }
 
   return o.edits.busy ? "Wait for the last edit to finish" : null;
-}
+};
 
-function disabledBy(reason: string | null): { disabled?: string } {
-  return reason ? { disabled: reason } : {};
-}
+const disabledBy = (reason: string | null): { disabled?: string } =>
+  reason ? { disabled: reason } : {};
 
-function menuItems(
+const menuItems = (
   o: Options,
   target: SelectionContext,
   openCreate: () => void,
   iconItems: (target: SelectionContext) => PreviewMenuItem[]
-): PreviewMenuItem[] {
-  return [
-    {
-      icon: "chat",
-      id: "ask",
-      label: "Ask the agent about this",
-      run: () =>
-        void (
-          runCommand("selection.ask-inline") ||
-          runCommand("panel.focus-composer")
-        ),
-    },
-    {
-      icon: "compare",
-      id: "variants",
-      label: "Try variants…",
-      run: () => void runCommand(TRY_VARIANTS_COMMAND),
-      ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)),
-    },
-    {
-      icon: "pointer",
-      id: "parent",
-      keyId: "select-parent",
-      label: "Select parent",
-      run: () => o.selectRelative(target.selector, "parent"),
-    },
-    {
-      icon: "pointer",
-      id: "child",
-      keyId: "select-child",
-      label: "Select child",
-      run: () => o.selectRelative(target.selector, "child"),
-    },
-    {
-      icon: "copy",
-      id: "copy-css",
-      label: "Copy CSS",
-      run: () => copyCss(o.port?.current ?? null, target.selector),
-    },
-    {
-      icon: "search",
-      id: "zoom",
-      keyId: "zoom-selection",
-      label: "Zoom to selection",
-      run: () => o.zoom("selection"),
-    },
-    {
-      icon: "layers",
-      id: "layers",
-      keyId: "layers",
-      label: "Show in layers",
-      run: () => uiStore.set({ layersOpen: true }),
-    },
-    ...structureItems(o),
-    ...pasteItem(o, target),
-    ...iconItems(target),
-    ...createItem(o, openCreate),
-  ];
-}
+): PreviewMenuItem[] => [
+  {
+    icon: "chat",
+    id: "ask",
+    label: "Ask the agent about this",
+    run: () =>
+      void (
+        runCommand("selection.ask-inline") || runCommand("panel.focus-composer")
+      ),
+  },
+  {
+    icon: "compare",
+    id: "variants",
+    label: "Try variants…",
+    run: () => void runCommand(TRY_VARIANTS_COMMAND),
+    ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)),
+  },
+  {
+    icon: "pointer",
+    id: "parent",
+    keyId: "select-parent",
+    label: "Select parent",
+    run: () => o.selectRelative(target.selector, "parent"),
+  },
+  {
+    icon: "pointer",
+    id: "child",
+    keyId: "select-child",
+    label: "Select child",
+    run: () => o.selectRelative(target.selector, "child"),
+  },
+  {
+    icon: "copy",
+    id: "copy-css",
+    label: "Copy CSS",
+    run: () => copyCss(o.port?.current ?? null, target.selector),
+  },
+  {
+    icon: "search",
+    id: "zoom",
+    keyId: "zoom-selection",
+    label: "Zoom to selection",
+    run: () => o.zoom("selection"),
+  },
+  {
+    icon: "layers",
+    id: "layers",
+    keyId: "layers",
+    label: "Show in layers",
+    run: () => uiStore.set({ layersOpen: true }),
+  },
+  ...structureItems(o),
+  ...pasteItem(o, target),
+  ...iconItems(target),
+  ...createItem(o, openCreate),
+];
 
-function usePreviewMenu(o: Options) {
+const usePreviewMenu = (o: Options) => {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const latest = useRef(o);
   latest.current = o;
@@ -340,6 +336,6 @@ function usePreviewMenu(o: Options) {
   );
 
   return { menu, onContextMenu };
-}
+};
 
 export { usePreviewMenu };

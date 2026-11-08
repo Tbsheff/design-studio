@@ -52,7 +52,7 @@ const entries = new Map<string, Entry>();
 const listeners = new Set<() => void>();
 const EMPTY = emptyLinksFile();
 
-function entryOf(projectId: string): Entry {
+const entryOf = (projectId: string): Entry => {
   let entry = entries.get(projectId);
 
   if (!entry) {
@@ -61,12 +61,12 @@ function entryOf(projectId: string): Entry {
   }
 
   return entry;
-}
+};
 
-function setFile(projectId: string, file: LinksFile): void {
+const setFile = (projectId: string, file: LinksFile): void => {
   entryOf(projectId).file = file;
   listeners.forEach((listener) => listener());
-}
+};
 
 const fetchLinks = async (
   projectId: string,
@@ -83,7 +83,7 @@ const fetchLinks = async (
   }
 };
 
-function load(projectId: string): void {
+const load = (projectId: string): void => {
   const entry = entryOf(projectId);
 
   if (entry.loaded || entry.loading) {
@@ -93,9 +93,9 @@ function load(projectId: string): void {
   entry.loading = true;
   entry.requestedAt = Date.now();
   void fetchLinks(projectId, entry);
-}
+};
 
-function receive(event: StudioEvent): void {
+const receive = (event: StudioEvent): void => {
   if (event.type !== "links.changed") {
     return;
   }
@@ -107,13 +107,13 @@ function receive(event: StudioEvent): void {
   }
 
   setFile(event.projectId, event.links);
-}
+};
 
-function writeFile(projectId: string, links: LinksFile): LinksFile {
+const writeFile = (projectId: string, links: LinksFile): LinksFile => {
   setFile(projectId, links);
 
   return links;
-}
+};
 
 const frameRefOf = (target: LinkTarget): string | undefined => {
   if ("back" in target) {
@@ -208,15 +208,15 @@ const linksApi = {
   },
 };
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
 
   return () => {
     listeners.delete(listener);
   };
-}
+};
 
-function useLinks(projectId: string): LinksFile {
+const useLinks = (projectId: string): LinksFile => {
   useEffect(() => load(projectId), [projectId]);
   useProjectEvents(projectId, receive);
 
@@ -224,7 +224,7 @@ function useLinks(projectId: string): LinksFile {
     subscribe,
     () => entries.get(projectId)?.file ?? EMPTY
   );
-}
+};
 
 const IMPLICIT_DEBOUNCE_MS = 400;
 
@@ -248,10 +248,10 @@ const fetchImplicit = async (
 
 const REPLAY_SLACK_MS = 1000;
 
-function useImplicitLinks(
+const useImplicitLinks = (
   projectId: string,
   framesKey: string
-): PrototypeLink[] {
+): PrototypeLink[] => {
   const [links, setLinks] = useState<PrototypeLink[]>([]);
   const timer = useRef(0);
   const seq = useRef(0);
@@ -299,7 +299,7 @@ function useImplicitLinks(
   });
 
   return links;
-}
+};
 
 export { linksApi, useImplicitLinks, useLinks };
 

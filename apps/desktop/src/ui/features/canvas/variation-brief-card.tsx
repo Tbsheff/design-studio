@@ -18,23 +18,21 @@ interface Props {
   onDismiss: () => void;
 }
 
-function BriefSkeleton({ count }: { count: number }): ReactElement {
-  return (
-    <ol className="variation-briefs" aria-busy="true">
-      {Array.from({ length: count }, (_, index) => (
-        <li key={index} className="variation-brief-row skeleton">
-          <span className="badge">{"ABCD"[index]}</span>
-          <span className="skeleton-lines" aria-hidden="true">
-            <span />
-            <span />
-          </span>
-        </li>
-      ))}
-    </ol>
-  );
-}
+const BriefSkeleton = ({ count }: { count: number }): ReactElement => (
+  <ol className="variation-briefs" aria-busy="true">
+    {Array.from({ length: count }, (_, index) => (
+      <li key={index} className="variation-brief-row skeleton">
+        <span className="badge">{"ABCD"[index]}</span>
+        <span className="skeleton-lines" aria-hidden="true">
+          <span />
+          <span />
+        </span>
+      </li>
+    ))}
+  </ol>
+);
 
-function BriefRows({
+const BriefRows = ({
   briefs,
   busy,
   onEdit,
@@ -44,7 +42,7 @@ function BriefRows({
   busy: boolean;
   onEdit: Props["onEdit"];
   onRemove: Props["onRemove"];
-}): ReactElement {
+}): ReactElement => {
   const canRemove = briefs.length > VARIATION_MIN;
 
   return (
@@ -86,9 +84,9 @@ function BriefRows({
       ))}
     </ol>
   );
-}
+};
 
-function BudgetLine({
+const BudgetLine = ({
   project,
   draft,
   count,
@@ -96,7 +94,7 @@ function BudgetLine({
   project: Project;
   draft: BriefDraft;
   count: number;
-}): ReactElement {
+}): ReactElement => {
   const budget = budgetFor(project, draft.level, count);
   const briefCost = draft.result?.costUsd ?? 0;
   const limited = budget.perRun !== null && budget.total !== null;
@@ -115,9 +113,9 @@ function BudgetLine({
       {briefCost > 0 ? ` + ${money(briefCost)} for the briefs` : ""}
     </p>
   );
-}
+};
 
-function briefsInvalid(briefs: VariationBrief[] | null): boolean {
+const briefsInvalid = (briefs: VariationBrief[] | null): boolean => {
   if (!briefs) {
     return true;
   }
@@ -128,13 +126,13 @@ function briefsInvalid(briefs: VariationBrief[] | null): boolean {
       brief.brief.trim().length < 12 ||
       brief.brief.length > VARIATION_BRIEF_MAX
   );
-}
+};
 
-function CardBody({
+const CardBody = ({
   draft,
   onEdit,
   onRemove,
-}: Pick<Props, "draft" | "onEdit" | "onRemove">): ReactElement | null {
+}: Pick<Props, "draft" | "onEdit" | "onRemove">): ReactElement | null => {
   if (draft.briefs) {
     return (
       <BriefRows
@@ -160,9 +158,9 @@ function CardBody({
       <BriefSkeleton count={draft.count} />
     </>
   );
-}
+};
 
-function VariationBriefCard({
+const VariationBriefCard = ({
   project,
   draft,
   onEdit,
@@ -170,7 +168,7 @@ function VariationBriefCard({
   onStart,
   onSkip,
   onDismiss,
-}: Props): ReactElement {
+}: Props): ReactElement => {
   const count = draft.briefs?.length ?? draft.count;
   const busy = draft.starting;
 
@@ -237,6 +235,6 @@ function VariationBriefCard({
       </footer>
     </section>
   );
-}
+};
 
 export { VariationBriefCard };

@@ -21,7 +21,7 @@ import {
 } from "./frame-states-model.js";
 import { useFrameStateSlot } from "./use-frame-state-slot.js";
 
-function usePanelMenu() {
+const usePanelMenu = () => {
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>("list");
   const root = useRef<HTMLDivElement>(null);
@@ -48,9 +48,9 @@ function usePanelMenu() {
   }, [open, panel]);
 
   return { close, open, panel, root, setOpen, setPanel, trigger };
-}
+};
 
-function MenuBody({
+const MenuBody = ({
   projectId,
   frameId,
   directionId,
@@ -66,7 +66,7 @@ function MenuBody({
   chosen: string;
   menu: ReturnType<typeof usePanelMenu>;
   onError: (message: string | null) => void;
-}): ReactElement {
+}): ReactElement => {
   const slot = useFrameStateSlot();
 
   const run = (task: Promise<unknown>): void => {
@@ -135,9 +135,9 @@ function MenuBody({
       </p>
     </div>
   );
-}
+};
 
-function FrameStateMenu({
+const FrameStateMenu = ({
   frameId,
   frameName,
   directionId,
@@ -145,7 +145,7 @@ function FrameStateMenu({
   frameId: string;
   frameName: string;
   directionId: string | null;
-}): ReactElement | null {
+}): ReactElement | null => {
   const states = useCurrentFrameStates();
   const menu = usePanelMenu();
   const [error, setError] = useState<string | null>(null);
@@ -196,6 +196,6 @@ function FrameStateMenu({
       )}
     </div>
   );
-}
+};
 
 export { FrameStateMenu };

@@ -20,7 +20,7 @@ interface Pending {
 
 type ClickThrough = (point: { x: number; y: number }) => void;
 
-function useClickThrough(port: Port, enabled: boolean): ClickThrough {
+const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
   const pending = useRef<Pending | null>(null);
   const timers = useRef<number[]>([]);
   const live = useRef({ enabled, port });
@@ -81,7 +81,7 @@ function useClickThrough(port: Port, enabled: boolean): ClickThrough {
     },
     [later]
   );
-}
+};
 
 export { useClickThrough };
 

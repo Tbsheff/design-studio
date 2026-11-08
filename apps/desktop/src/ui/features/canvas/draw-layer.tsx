@@ -33,27 +33,25 @@ interface Frame {
 const MAX_BACKING_SIDE = 8192;
 const MAX_BACKING_AREA = 24_000_000;
 
-function PenIcon({ size = 16 }: { size?: number }): ReactElement {
-  return (
-    <svg
-      className="icon"
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M2.5 12.5c1.6-2.6 3-3.4 4-2.6 1.1.9-.6 2.8.6 3.3 1.1.5 2.6-1.2 3.6-2.2" />
-      <path d="m9.6 7.4 3.6-3.6a1.13 1.13 0 0 0-1.6-1.6L8 5.8l-.5 2.1 2.1-.5Z" />
-    </svg>
-  );
-}
+const PenIcon = ({ size = 16 }: { size?: number }): ReactElement => (
+  <svg
+    className="icon"
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M2.5 12.5c1.6-2.6 3-3.4 4-2.6 1.1.9-.6 2.8.6 3.3 1.1.5 2.6-1.2 3.6-2.2" />
+    <path d="m9.6 7.4 3.6-3.6a1.13 1.13 0 0 0-1.6-1.6L8 5.8l-.5 2.1 2.1-.5Z" />
+  </svg>
+);
 
-function backingScale(frame: Frame, zoom: number): number {
+const backingScale = (frame: Frame, zoom: number): number => {
   const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
 
   return Math.min(
@@ -61,7 +59,7 @@ function backingScale(frame: Frame, zoom: number): number {
     MAX_BACKING_SIDE / Math.max(frame.width, frame.height),
     Math.sqrt(MAX_BACKING_AREA / (frame.width * frame.height))
   );
-}
+};
 
 interface SurfaceProps {
   draw: DrawTool;
@@ -71,13 +69,13 @@ interface SurfaceProps {
   tools: CommentTools;
 }
 
-function DrawSurface({
+const DrawSurface = ({
   draw,
   control,
   zoom,
   frame,
   tools,
-}: SurfaceProps): ReactElement {
+}: SurfaceProps): ReactElement => {
   const initial = useProfileInitial();
   const canvas = useRef<HTMLCanvasElement>(null);
 
@@ -281,9 +279,9 @@ function DrawSurface({
       )}
     </>
   );
-}
+};
 
-function onSwatchKey(event: KeyboardEvent<HTMLDivElement>): void {
+const onSwatchKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   const step =
     event.key === "ArrowRight" || event.key === "ArrowDown"
       ? 1
@@ -311,9 +309,9 @@ function onSwatchKey(event: KeyboardEvent<HTMLDivElement>): void {
   const next = radios[(index + step + radios.length) % radios.length];
   next?.focus();
   next?.click();
-}
+};
 
-function DrawBar({ draw }: { draw: DrawTool }): ReactElement | null {
+const DrawBar = ({ draw }: { draw: DrawTool }): ReactElement | null => {
   if (!draw.on) {
     return null;
   }
@@ -385,13 +383,13 @@ function DrawBar({ draw }: { draw: DrawTool }): ReactElement | null {
       </button>
     </div>
   );
-}
+};
 
-function DrawingStrokes({
+const DrawingStrokes = ({
   drawing,
 }: {
   drawing: CommentDrawing;
-}): ReactElement {
+}): ReactElement => {
   const { width, height } = drawing.frame;
 
   return (
@@ -419,6 +417,6 @@ function DrawingStrokes({
       })}
     </svg>
   );
-}
+};
 
 export { DrawBar, DrawSurface, DrawingStrokes, PenIcon };

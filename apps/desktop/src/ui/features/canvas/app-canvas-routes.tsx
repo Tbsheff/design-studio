@@ -11,7 +11,7 @@ import type { CanvasLayout } from "./canvas-frames-model.js";
 
 const AppBar = lazy(() => import("../../app/shell/app-bar.js"));
 
-function routeFrameId(layout: CanvasLayout, route: string): string | null {
+const routeFrameId = (layout: CanvasLayout, route: string): string | null => {
   const path = route.replace(/^\/+/, "").replace(/\/+$/, "");
 
   return (
@@ -19,13 +19,13 @@ function routeFrameId(layout: CanvasLayout, route: string): string | null {
       (frame) => (frame.path ?? "").replace(/\/+$/, "") === path
     )?.id ?? null
   );
-}
+};
 
-function addRouteFrame(
+const addRouteFrame = (
   layout: CanvasLayout,
   route: string,
   size: { width: number; height: number }
-): CanvasLayout {
+): CanvasLayout => {
   const path = route.replace(/^\/+/, "");
   const existing = routeFrameId(layout, route);
 
@@ -57,20 +57,20 @@ function addRouteFrame(
       f.id === frame.id && label ? { ...f, label } : f
     ),
   };
-}
+};
 
-function withoutHidden(
+const withoutHidden = (
   frame: CanvasLayout["frames"][number]
-): CanvasLayout["frames"][number] {
+): CanvasLayout["frames"][number] => {
   const { hidden: _hidden, ...rest } = frame;
 
   return rest;
-}
+};
 
-function appRoutePages(
+const appRoutePages = (
   projectId: string,
   app: AttachedApp | null | undefined
-): (() => Promise<string[]>) | null {
+): (() => Promise<string[]>) | null => {
   if (!app) {
     return null;
   }
@@ -82,9 +82,9 @@ function appRoutePages(
           .filter((route) => !route.dynamic)
           .map((route) => route.route.replace(/^\/+/, ""))
       );
-}
+};
 
-function AppCanvasBar({
+const AppCanvasBar = ({
   projectId,
   app,
   onAddRoute,
@@ -92,23 +92,21 @@ function AppCanvasBar({
   projectId: string;
   app: AttachedApp;
   onAddRoute: (route: string) => void;
-}): ReactElement {
-  return (
-    <div className="app-canvas-bar">
-      <Suspense fallback={null}>
-        <AppBar projectId={projectId} app={app} onAddRoute={onAddRoute} />
-      </Suspense>
-    </div>
-  );
-}
+}): ReactElement => (
+  <div className="app-canvas-bar">
+    <Suspense fallback={null}>
+      <AppBar projectId={projectId} app={app} onAddRoute={onAddRoute} />
+    </Suspense>
+  </div>
+);
 
 type Listen = (handler: (message: BridgeToParent) => void) => () => void;
 
-function useRedirectNote(
+const useRedirectNote = (
   listen: Listen,
   enabled: boolean,
   resetKey: string
-): { from: string; to: string } | null {
+): { from: string; to: string } | null => {
   const [note, setNote] = useState<{ from: string; to: string } | null>(null);
   useEffect(() => setNote(null), [resetKey]);
   useEffect(() => {
@@ -138,12 +136,12 @@ function useRedirectNote(
   }, [listen, enabled]);
 
   return note;
-}
+};
 
 const HIDDEN_REDIRECTS_KEY = "design-studio.hidden-redirects.v1";
 const MAX_HIDDEN_REDIRECTS = 50;
 
-function readHiddenRedirects(): string[] {
+const readHiddenRedirects = (): string[] => {
   try {
     const raw: unknown = JSON.parse(readStored(HIDDEN_REDIRECTS_KEY) ?? "[]");
 
@@ -153,15 +151,15 @@ function readHiddenRedirects(): string[] {
   } catch {
     return [];
   }
-}
+};
 
-function writeHiddenRedirects(keys: string[]): void {
+const writeHiddenRedirects = (keys: string[]): void => {
   try {
     writeStored(HIDDEN_REDIRECTS_KEY, JSON.stringify(keys));
   } catch {
     return;
   }
-}
+};
 
 export {
   AppCanvasBar,

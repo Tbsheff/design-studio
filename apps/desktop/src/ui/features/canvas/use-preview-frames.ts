@@ -66,11 +66,10 @@ const KEY_MESSAGES = new Set<BridgeToParent["type"]>([
   "tool-key",
 ]);
 
-function isKeyMessage(msg: BridgeToParent): msg is KeyMessage {
-  return KEY_MESSAGES.has(msg.type);
-}
+const isKeyMessage = (msg: BridgeToParent): msg is KeyMessage =>
+  KEY_MESSAGES.has(msg.type);
 
-function forwardAppKey(id: AppKey): void {
+const forwardAppKey = (id: AppKey): void => {
   if (id === "ask-inline") {
     void runCommand("selection.ask-inline");
   } else if (id === "project-rail") {
@@ -82,9 +81,9 @@ function forwardAppKey(id: AppKey): void {
   } else {
     void moveRegion(id === "next-region" ? 1 : -1);
   }
-}
+};
 
-function forwardKeyMessage(msg: KeyMessage): void {
+const forwardKeyMessage = (msg: KeyMessage): void => {
   if (msg.type === "app-key") {
     forwardAppKey(msg.id);
   } else if (msg.type === "escape") {
@@ -104,7 +103,7 @@ function forwardKeyMessage(msg: KeyMessage): void {
       new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } })
     );
   }
-}
+};
 
 interface PendingSwap {
   token: string;
@@ -154,11 +153,11 @@ interface Options {
   onContextMenu?: (point: { x: number; y: number }) => void;
 }
 
-function pagePoint(
+const pagePoint = (
   frame: HTMLIFrameElement | null,
   x: number,
   y: number
-): { x: number; y: number } | null {
+): { x: number; y: number } | null => {
   if (!frame) {
     return null;
   }
@@ -167,30 +166,29 @@ function pagePoint(
   const scale = frame.offsetWidth > 0 ? rect.width / frame.offsetWidth : 1;
 
   return { x: rect.left + x * scale, y: rect.top + y * scale };
-}
+};
 
 const SWAP_FALLBACK_MS = 1500;
 const LOAD_GRACE_MS = 500;
 const REACT_LATENCY_WINDOW_MS = 10_000;
 const HMR_FALLBACK_MS = 2500;
 
-function releaseToolbarFocus(): void {
+const releaseToolbarFocus = (): void => {
   const active = document.activeElement;
 
   if (active instanceof HTMLButtonElement && active.closest(".toolbar")) {
     active.blur();
   }
-}
+};
 
 type SelectMessage = Extract<BridgeToParent, { type: "select" }>;
 
 type SelectManyMessage = Extract<BridgeToParent, { type: "select-many" }>;
 
-function isSelectMessage(
+const isSelectMessage = (
   msg: BridgeToParent
-): msg is SelectMessage | SelectManyMessage {
-  return msg.type === "select" || msg.type === "select-many";
-}
+): msg is SelectMessage | SelectManyMessage =>
+  msg.type === "select" || msg.type === "select-many";
 
 export function nextSelection(
   prev: SelectionContext[],
@@ -222,10 +220,10 @@ export function manySelection(
   return [...prev, ...picked.filter((s) => !known.has(s.selector))];
 }
 
-function nodeAfterSelect(
+const nodeAfterSelect = (
   msg: SelectMessage,
   selection: SelectionContext[]
-): number | null {
+): number | null => {
   if (
     msg.additive &&
     selection.some((s) => s.selector === msg.selection.selector)
@@ -234,13 +232,13 @@ function nodeAfterSelect(
   }
 
   return typeof msg.node === "number" ? msg.node : null;
-}
+};
 
-function applyRects(
+const applyRects = (
   prev: SelectionContext[],
   selectors: string[],
   rects: (SelectionContext["rect"] | null)[]
-): SelectionContext[] {
+): SelectionContext[] => {
   let changed = false;
 
   const next = prev.map((s) => {
@@ -257,11 +255,11 @@ function applyRects(
   });
 
   return changed ? next : prev;
-}
+};
 
-function hoverOf(
+const hoverOf = (
   msg: Extract<BridgeToParent, { type: "hover" }>
-): HoverBox | null {
+): HoverBox | null => {
   if (!msg.rect) {
     return null;
   }
@@ -278,16 +276,13 @@ function hoverOf(
   }
 
   return box;
-}
+};
 
-function sameRect(
+const sameRect = (
   a: SelectionContext["rect"],
   b: SelectionContext["rect"]
-): boolean {
-  return (
-    a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height
-  );
-}
+): boolean =>
+  a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 
 export function usePreviewFrames(o: Options) {
   const [slots, setSlots] = useState<PreviewSlot[]>([]);

@@ -19,11 +19,11 @@ interface StrokeBuilder {
   points(): number[];
 }
 
-function createStrokeBuilder(
+const createStrokeBuilder = (
   x: number,
   y: number,
   minStep: number
-): StrokeBuilder {
+): StrokeBuilder => {
   const points = [round(x), round(y)];
   let lastX = x;
   let lastY = y;
@@ -57,17 +57,14 @@ function createStrokeBuilder(
     },
     points: () => points,
   };
-}
+};
 
-function minStepFor(zoom: number): number {
-  return MIN_STEP_SCREEN / Math.max(zoom, 0.05);
-}
+const minStepFor = (zoom: number): number =>
+  MIN_STEP_SCREEN / Math.max(zoom, 0.05);
 
-function round(value: number): number {
-  return Math.round(value * 10) / 10;
-}
+const round = (value: number): number => Math.round(value * 10) / 10;
 
-function strokePath(points: number[]): string {
+const strokePath = (points: number[]): string => {
   const count = points.length / 2;
 
   if (count === 0) {
@@ -92,9 +89,9 @@ function strokePath(points: number[]): string {
   }
 
   return `${path}L${points[(count - 1) * 2]} ${points[(count - 1) * 2 + 1]}`;
-}
+};
 
-function traceStroke(ctx: CanvasRenderingContext2D, points: number[]): void {
+const traceStroke = (ctx: CanvasRenderingContext2D, points: number[]): void => {
   const count = points.length / 2;
   const x0 = points[0] as number;
   const y0 = points[1] as number;
@@ -122,13 +119,13 @@ function traceStroke(ctx: CanvasRenderingContext2D, points: number[]): void {
       points[(count - 1) * 2 + 1] as number
     );
   }
-}
+};
 
-function paintStrokes(
+const paintStrokes = (
   ctx: CanvasRenderingContext2D,
   strokes: DrawStroke[],
   halo: boolean
-): void {
+): void => {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
@@ -149,9 +146,9 @@ function paintStrokes(
     ctx.lineWidth = stroke.width;
     ctx.stroke();
   }
-}
+};
 
-function renderDrawingPng(drawing: CommentDrawing): Promise<Blob> {
+const renderDrawingPng = (drawing: CommentDrawing): Promise<Blob> => {
   const { width, height } = drawing.frame;
   const scale = Math.min(1, PNG_MAX_SIDE / Math.max(width, height));
   const canvas = document.createElement("canvas");
@@ -175,7 +172,7 @@ function renderDrawingPng(drawing: CommentDrawing): Promise<Blob> {
       "image/png"
     )
   );
-}
+};
 
 interface PenAnchor {
   x: number;
@@ -184,7 +181,7 @@ interface PenAnchor {
   hout?: { x: number; y: number };
 }
 
-function penSegment(from: PenAnchor, to: PenAnchor): string {
+const penSegment = (from: PenAnchor, to: PenAnchor): string => {
   if (!from.hout && !to.hin) {
     return `L${round(to.x)} ${round(to.y)}`;
   }
@@ -193,9 +190,9 @@ function penSegment(from: PenAnchor, to: PenAnchor): string {
   const b = to.hin ?? to;
 
   return `C${round(a.x)} ${round(a.y)} ${round(b.x)} ${round(b.y)} ${round(to.x)} ${round(to.y)}`;
-}
+};
 
-function shiftAnchor(anchor: PenAnchor, dx: number, dy: number): PenAnchor {
+const shiftAnchor = (anchor: PenAnchor, dx: number, dy: number): PenAnchor => {
   const move = (p: { x: number; y: number }) => ({ x: p.x + dx, y: p.y + dy });
 
   return {
@@ -204,14 +201,14 @@ function shiftAnchor(anchor: PenAnchor, dx: number, dy: number): PenAnchor {
     ...(anchor.hin ? { hin: move(anchor.hin) } : {}),
     ...(anchor.hout ? { hout: move(anchor.hout) } : {}),
   };
-}
+};
 
-function penPath(
+const penPath = (
   anchors: PenAnchor[],
   closed: boolean,
   dx = 0,
   dy = 0
-): string {
+): string => {
   const moved =
     dx === 0 && dy === 0
       ? anchors
@@ -234,7 +231,7 @@ function penPath(
   }
 
   return d;
-}
+};
 
 export {
   DRAW_COLORS,

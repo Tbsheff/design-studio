@@ -22,7 +22,7 @@ interface State {
 let state: State = { available: false, tool: null };
 const listeners = new Set<() => void>();
 
-function emit(next: Partial<State>): void {
+const emit = (next: Partial<State>): void => {
   state = { ...state, ...next };
 
   if (!state.available) {
@@ -32,7 +32,7 @@ function emit(next: Partial<State>): void {
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
 const vectorTool = {
   get: () => state,
@@ -52,13 +52,8 @@ const vectorTool = {
     emit({ tool: state.available && state.tool !== tool ? tool : null }),
 };
 
-function useVectorTool(): State {
-  return useSyncExternalStore(
-    vectorTool.subscribe,
-    vectorTool.get,
-    vectorTool.get
-  );
-}
+const useVectorTool = (): State =>
+  useSyncExternalStore(vectorTool.subscribe, vectorTool.get, vectorTool.get);
 
 const VECTOR_TOOL_LIST: {
   id: VectorToolId;
@@ -92,7 +87,7 @@ const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({
   keyLabel: shortcutLabel(item.keyId, IS_MAC),
 }));
 
-function useVectorToolKeys(available: boolean): void {
+const useVectorToolKeys = (available: boolean): void => {
   useEffect(() => vectorTool.setAvailable(available), [available]);
   useEffect(() => (): void => vectorTool.setAvailable(false), []);
   useEffect(() => {
@@ -135,13 +130,13 @@ function useVectorToolKeys(available: boolean): void {
       window.removeEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
     };
   }, []);
-}
+};
 
-function useVectorToolGuards(
+const useVectorToolGuards = (
   tool: VectorToolId | null,
   otherOn: boolean,
   stopOthers: () => void
-): void {
+): void => {
   const stop = useRef(stopOthers);
   stop.current = stopOthers;
   useEffect(() => {
@@ -154,19 +149,18 @@ function useVectorToolGuards(
       vectorTool.set(null);
     }
   }, [otherOn]);
-}
+};
 
-function runVector(
+const runVector = (
   projectId: string,
   directionId: string,
   request: VectorRequest
-): Promise<VectorResult> {
-  return json<VectorResult>(
+): Promise<VectorResult> =>
+  json<VectorResult>(
     "POST",
     `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/vector`,
     request
   );
-}
 
 export {
   PREVIEW_TOOL_KEY_EVENT,

@@ -19,7 +19,7 @@ interface PreviewMenuItem {
 
 const EDGE = 8;
 
-function step(key: string, index: number, count: number): number | null {
+const step = (key: string, index: number, count: number): number | null => {
   if (key === "ArrowDown") {
     return (index + 1) % count;
   }
@@ -37,9 +37,9 @@ function step(key: string, index: number, count: number): number | null {
   }
 
   return null;
-}
+};
 
-function PreviewMenu({
+const PreviewMenu = ({
   at,
   label,
   items,
@@ -49,7 +49,7 @@ function PreviewMenu({
   label: string;
   items: PreviewMenuItem[];
   onClose: () => void;
-}): ReactElement {
+}): ReactElement => {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(at);
   const [scrolls, setScrolls] = useState(false);
@@ -149,42 +149,38 @@ function PreviewMenu({
         ))}
     </div>
   );
-}
+};
 
-function MenuRow({
+const MenuRow = ({
   item,
   onClose,
 }: {
   item: PreviewMenuItem;
   onClose: () => void;
-}): ReactElement {
-  return (
-    <>
-      {item.divider && (
-        <div className="preview-menu-divider" role="separator" />
-      )}
-      <button
-        type="button"
-        role="menuitem"
-        aria-disabled={item.disabled ? true : undefined}
-        data-tip={item.disabled}
-        data-tip-align="end"
-        onClick={() => {
-          if (item.disabled) {
-            return;
-          }
+}): ReactElement => (
+  <>
+    {item.divider && <div className="preview-menu-divider" role="separator" />}
+    <button
+      type="button"
+      role="menuitem"
+      aria-disabled={item.disabled ? true : undefined}
+      data-tip={item.disabled}
+      data-tip-align="end"
+      onClick={() => {
+        if (item.disabled) {
+          return;
+        }
 
-          onClose();
-          void item.run();
-        }}
-      >
-        <Icon name={item.icon} size={14} />
-        <span>{item.label}</span>
-        {item.keyId ? <KeyHint id={item.keyId} /> : <span />}
-      </button>
-    </>
-  );
-}
+        onClose();
+        void item.run();
+      }}
+    >
+      <Icon name={item.icon} size={14} />
+      <span>{item.label}</span>
+      {item.keyId ? <KeyHint id={item.keyId} /> : <span />}
+    </button>
+  </>
+);
 
 export { PreviewMenu };
 

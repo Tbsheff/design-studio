@@ -1,19 +1,19 @@
 import { ELEMENT_MARK_PARAM } from "@design-studio/contracts";
 import type { Direction } from "@design-studio/contracts";
 
-function markOf(
+const markOf = (
   directions: readonly Direction[] | undefined,
   directionId: string | null
-): string | null {
+): string | null => {
   const variation = directions?.find((d) => d.id === directionId)?.variation;
 
   return variation?.scope && !variation.settled ? variation.scope.loc : null;
-}
+};
 
-function withElementMark(
+const withElementMark = (
   url: string | null,
   mark: string | null
-): string | null {
+): string | null => {
   if (!url || !mark) {
     return url;
   }
@@ -22,6 +22,6 @@ function withElementMark(
   next.searchParams.set(ELEMENT_MARK_PARAM, mark);
 
   return next.toString();
-}
+};
 
 export { markOf, withElementMark };

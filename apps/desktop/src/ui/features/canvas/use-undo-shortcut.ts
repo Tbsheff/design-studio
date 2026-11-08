@@ -16,20 +16,18 @@ interface RedoShortcut {
   onRedo: () => void;
 }
 
-function undoAllowed(
+const undoAllowed = (
   directionId: string | null,
   locked: boolean,
   versionCount: number
-): boolean {
-  return directionId !== null && !locked && versionCount >= 2;
-}
+): boolean => directionId !== null && !locked && versionCount >= 2;
 
-function historyKeyOf(
+const historyKeyOf = (
   event: Pick<
     KeyboardEvent,
     "metaKey" | "ctrlKey" | "shiftKey" | "altKey" | "key"
   >
-): HistoryKind | null {
+): HistoryKind | null => {
   if (
     !(event.metaKey || event.ctrlKey) ||
     event.altKey ||
@@ -39,11 +37,10 @@ function historyKeyOf(
   }
 
   return event.shiftKey ? "redo" : "undo";
-}
+};
 
-function modalOpen(): boolean {
-  return document.querySelector('[role="dialog"][aria-modal="true"]') !== null;
-}
+const modalOpen = (): boolean =>
+  document.querySelector('[role="dialog"][aria-modal="true"]') !== null;
 
 interface ShortcutState {
   enabled: boolean;
@@ -51,11 +48,11 @@ interface ShortcutState {
   redo: RedoShortcut | undefined;
 }
 
-function routeHistoryCommand(
+const routeHistoryCommand = (
   kind: HistoryKind,
   state: ShortcutState,
   modal: () => boolean = modalOpen
-): boolean {
+): boolean => {
   if (kind === "redo" && !state.redo) {
     return false;
   }
@@ -73,13 +70,13 @@ function routeHistoryCommand(
   }
 
   return true;
-}
+};
 
-function useUndoShortcut(
+const useUndoShortcut = (
   enabled: boolean,
   onUndo: () => void,
   redo?: RedoShortcut
-): void {
+): void => {
   const state = useRef<ShortcutState>({ enabled, onUndo, redo });
   state.current = { enabled, onUndo, redo };
   useEffect(() => {
@@ -130,7 +127,7 @@ function useUndoShortcut(
 
     return routeHistoryCommand(command.type, state.current);
   });
-}
+};
 
 export {
   PREVIEW_HISTORY_EVENT,

@@ -13,11 +13,11 @@ const MOUNT_FALLBACK_MS = 1200;
 let frontPainted = false;
 let paintListening = false;
 
-function useResetPassiveGateInFirstRender(): void {
+const useResetPassiveGateInFirstRender = (): void => {
   useState(resetPassiveMountGate);
-}
+};
 
-function resetPassiveMountGate(): void {
+const resetPassiveMountGate = (): void => {
   frontPainted = false;
 
   if (paintListening || typeof window === "undefined") {
@@ -27,9 +27,9 @@ function resetPassiveMountGate(): void {
   window.addEventListener(PREVIEW_PAINTED_EVENT, () => {
     frontPainted = true;
   });
-}
+};
 
-function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
+const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     const el = ref.current;
@@ -76,7 +76,7 @@ function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
   }, [armed, ref]);
 
   return armed;
-}
+};
 
 interface PassiveProps {
   frame: CanvasFrame;
@@ -91,7 +91,7 @@ interface PassiveProps {
   onNextLoad: (id: string) => void;
 }
 
-function PassiveFrame({
+const PassiveFrame = ({
   frame,
   src,
   nextSrc,
@@ -102,7 +102,7 @@ function PassiveFrame({
   register,
   frameRef,
   onNextLoad,
-}: PassiveProps): ReactElement {
+}: PassiveProps): ReactElement => {
   const name = label.badge
     ? `Variation ${label.badge.label}`
     : frameBaseName(frame);
@@ -164,23 +164,21 @@ function PassiveFrame({
       />
     </div>
   );
-}
+};
 
 type PassiveEntry = PassiveProps;
 
-function liveLabel(cur: LabelProps, live: () => LabelProps): LabelProps {
-  return {
-    ...cur,
-    onActivate: (f) => live().onActivate(f),
-    onBodyPointerDown: cur.onBodyPointerDown
-      ? (e, f, body) => live().onBodyPointerDown?.(e, f, body)
-      : undefined,
-    onNudge: (f, dx, dy) => live().onNudge(f, dx, dy),
-    onPointerDown: (e, f) => live().onPointerDown(e, f),
-    onRemove: (f) => live().onRemove(f),
-    onResizeStart: (e, f, edge) => live().onResizeStart(e, f, edge),
-  };
-}
+const liveLabel = (cur: LabelProps, live: () => LabelProps): LabelProps => ({
+  ...cur,
+  onActivate: (f) => live().onActivate(f),
+  onBodyPointerDown: cur.onBodyPointerDown
+    ? (e, f, body) => live().onBodyPointerDown?.(e, f, body)
+    : undefined,
+  onNudge: (f, dx, dy) => live().onNudge(f, dx, dy),
+  onPointerDown: (e, f) => live().onPointerDown(e, f),
+  onRemove: (f) => live().onRemove(f),
+  onResizeStart: (e, f, edge) => live().onResizeStart(e, f, edge),
+});
 
 const StablePassiveFrame = memo(
   ({

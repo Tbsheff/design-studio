@@ -5,11 +5,11 @@ import { SnapGuides } from "./artboard-overlay.js";
 import { gapStyle } from "./canvas-overlays.js";
 import type { FreeMoveView } from "./use-free-move.js";
 
-function FreeMoveLayer({
+const FreeMoveLayer = ({
   view,
 }: {
   view: FreeMoveView | null;
-}): ReactElement | null {
+}): ReactElement | null => {
   if (!view) {
     return null;
   }
@@ -56,6 +56,6 @@ function FreeMoveLayer({
       )}
     </div>
   );
-}
+};
 
 export { FreeMoveLayer };

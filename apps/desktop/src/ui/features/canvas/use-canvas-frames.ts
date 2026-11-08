@@ -45,7 +45,7 @@ const TITLE_DOUBLE_MS = 400;
 
 type ZoomSource = "key" | "frame" | "menu";
 
-function unionRect(selection: SelectionContext[]): Box | null {
+const unionRect = (selection: SelectionContext[]): Box | null => {
   if (selection.length === 0) {
     return null;
   }
@@ -55,13 +55,13 @@ function unionRect(selection: SelectionContext[]): Box | null {
   const bottom = Math.max(...selection.map((s) => s.rect.y + s.rect.height));
 
   return { height: bottom - top, width: right - left, x: left, y: top };
-}
+};
 
-function passiveSrc(
+const passiveSrc = (
   baseUrl: string | null,
   kind: ProjectKind,
   change: FilesChange | null
-): string | null {
+): string | null => {
   if (!baseUrl) {
     return null;
   }
@@ -72,7 +72,7 @@ function passiveSrc(
   url.searchParams.set("v", String(change.changedAt));
 
   return url.toString();
-}
+};
 
 interface CanvasFrames {
   layout: CanvasLayout;
@@ -81,12 +81,12 @@ interface CanvasFrames {
   activate: (frame: CanvasFrame) => void;
 }
 
-function useCanvasFrames(
+const useCanvasFrames = (
   projectId: string,
   directionId: string | null = null,
   onDirection?: (id: string) => void,
   knownIds?: string[]
-): CanvasFrames {
+): CanvasFrames => {
   const { viewport } = useUi();
   const [layout, update] = useCanvasLayout(projectId, viewport);
   const active = activeFrame(layout);
@@ -145,11 +145,11 @@ function useCanvasFrames(
   };
 
   return { activate, active, layout, update };
-}
+};
 
-function useZoomInput(
+const useZoomInput = (
   apply: (key: ZoomKey) => void
-): (key: ZoomKey, from: ZoomSource) => void {
+): ((key: ZoomKey, from: ZoomSource) => void) => {
   const lastZoom = useRef<{
     key: ZoomKey;
     source: ZoomSource;
@@ -200,15 +200,15 @@ function useZoomInput(
   }, [zoomBy]);
 
   return zoomBy;
-}
+};
 
-function snapMove(
+const snapMove = (
   state: DragState,
   candidates: Box[],
   wx: number,
   wy: number,
   off: boolean
-): { x: number; y: number } {
+): { x: number; y: number } => {
   if (off || candidates.length === 0) {
     frameSnapStore.set(null);
 
@@ -234,7 +234,7 @@ function snapMove(
   });
 
   return { x: sx, y: sy };
-}
+};
 
 interface DragState {
   frame: CanvasFrame;
@@ -244,12 +244,12 @@ interface DragState {
   own: HTMLDivElement | null;
 }
 
-function placeDrag(
+const placeDrag = (
   state: DragState,
   artboard: HTMLDivElement | null,
   dx: number,
   dy: number
-): void {
+): void => {
   const wx = dx / state.zoom;
   const wy = dy / state.zoom;
   const clear = dx === 0 && dy === 0;
@@ -264,25 +264,25 @@ function placeDrag(
   } else if (state.own) {
     state.own.style.translate = clear ? "" : `${wx}px ${wy}px`;
   }
-}
+};
 
-function pointIn(
+const pointIn = (
   target: HTMLElement,
   clientX: number,
   clientY: number,
   zoom: number
-): { x: number; y: number } {
+): { x: number; y: number } => {
   const rect = target.getBoundingClientRect();
 
   return { x: (clientX - rect.left) / zoom, y: (clientY - rect.top) / zoom };
-}
+};
 
-function useFrameActions(
+const useFrameActions = (
   frames: CanvasFrames,
   pz: PanZoom,
   artboardRef: RefObject<HTMLDivElement | null>,
   clickThrough?: ClickThrough
-) {
+) => {
   const { layout } = frames;
   const passiveRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -456,7 +456,7 @@ function useFrameActions(
     registerPassive,
     undoRemove,
   };
-}
+};
 
 export {
   passiveSrc,

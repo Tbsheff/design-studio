@@ -29,7 +29,7 @@ import type { useRenderCheck } from "./use-preview-url.js";
 import { useResizeLive } from "./use-resize-handles.js";
 import type { ResizeHandles } from "./use-resize-handles.js";
 
-function StageMessage({
+const StageMessage = ({
   note: given,
   covered,
   urlError,
@@ -39,7 +39,7 @@ function StageMessage({
   covered: boolean;
   urlError: string | null;
   app: ReactNode;
-}): ReactNode {
+}): ReactNode => {
   const note = covered ? null : given;
 
   if (urlError) {
@@ -64,7 +64,7 @@ function StageMessage({
   }
 
   return app;
-}
+};
 
 interface SlotFrames {
   slots: { token: string; src: string }[];
@@ -73,7 +73,7 @@ interface SlotFrames {
   onFrameLoad: (token: string) => void;
 }
 
-function PreviewSlots({
+const PreviewSlots = ({
   frames,
   sandbox,
   viewport,
@@ -81,8 +81,8 @@ function PreviewSlots({
   frames: SlotFrames;
   sandbox?: string;
   viewport: { width: number; height: number };
-}): ReactElement[] {
-  return frames.slots.map((slot) => (
+}): ReactElement[] =>
+  frames.slots.map((slot) => (
     <iframe
       key={slot.token}
       ref={(el) => {
@@ -97,9 +97,8 @@ function PreviewSlots({
       height={viewport.height}
     />
   ));
-}
 
-function OtherFrames({
+const OtherFrames = ({
   frames,
   active,
   passive,
@@ -117,7 +116,7 @@ function OtherFrames({
   register: (id: string, el: HTMLDivElement | null) => void;
   waiting: (path: string | undefined, directionId: string | null) => PageWait;
   steps: LiveStore<string | null>;
-}): ReactElement[] {
+}): ReactElement[] => {
   const step = useLive(steps);
   const entries = useRef(new Map<string, PassiveEntry>());
   const live = entries.current;
@@ -165,7 +164,7 @@ function OtherFrames({
         <StablePassiveFrame key={f.id} id={f.id} sig={sig} entries={entries} />
       );
     });
-}
+};
 
 interface LiveOverlayProps extends Omit<
   ComponentProps<typeof ArtboardOverlay>,
@@ -180,7 +179,7 @@ interface LiveOverlayProps extends Omit<
 
 const NO_PICK = createLiveStore<SelectionContext[] | null>(null);
 
-function LiveOverlay({
+const LiveOverlay = ({
   hover,
   picked,
   commenting,
@@ -188,7 +187,7 @@ function LiveOverlay({
   resize,
   selection,
   ...rest
-}: LiveOverlayProps): ReactElement {
+}: LiveOverlayProps): ReactElement => {
   const box = useLive(hover);
   const early = useLive(commenting ? NO_PICK : picked);
 
@@ -200,32 +199,28 @@ function LiveOverlay({
       resize={useResizeLive(resize)}
     />
   );
-}
+};
 
-function StepCover({
+const StepCover = ({
   steps,
   ...rest
 }: Omit<ComponentProps<typeof FirstBuildCover>, "step"> & {
   steps: LiveStore<string | null>;
-}): ReactElement {
-  return <FirstBuildCover {...rest} step={useLive(steps)} />;
-}
+}): ReactElement => <FirstBuildCover {...rest} step={useLive(steps)} />;
 
-function FreeMoveSlot({
+const FreeMoveSlot = ({
   view,
 }: {
   view: LiveStore<FreeMoveView | null>;
-}): ReactElement {
-  return <FreeMoveLayer view={useLive(view)} />;
-}
+}): ReactElement => <FreeMoveLayer view={useLive(view)} />;
 
-function CheckResults({
+const CheckResults = ({
   projectId,
   check,
 }: {
   projectId: string;
   check: ReturnType<typeof useRenderCheck>;
-}): ReactElement | null {
+}): ReactElement | null => {
   if (!check.results && !check.error) {
     return null;
   }
@@ -238,7 +233,7 @@ function CheckResults({
       onClose={check.close}
     />
   );
-}
+};
 
 export {
   CheckResults,

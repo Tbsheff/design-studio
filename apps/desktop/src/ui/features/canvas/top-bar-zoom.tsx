@@ -24,50 +24,48 @@ interface ZoomProps {
   onStep: (d: 1 | -1) => void;
 }
 
-function zoomGroups({
+const zoomGroups = ({
   setting,
   onZoomTo,
   onFit,
   onStep,
-}: Omit<ZoomProps, "zoom">): MenuGroup[] {
-  return [
-    {
-      items: [
-        {
-          id: "in",
-          label: "Zoom in",
-          meta: shortcutLabel("zoom-in", IS_MAC),
-          run: () => onStep(1),
-        },
-        {
-          id: "out",
-          label: "Zoom out",
-          meta: shortcutLabel("zoom-out", IS_MAC),
-          run: () => onStep(-1),
-        },
-      ],
-    },
-    {
-      items: [
-        {
-          checked: setting === "fit",
-          id: "fit",
-          label: "Zoom to fit",
-          meta: shortcutLabel("zoom-fit", IS_MAC),
-          run: onFit,
-        },
-        ...ZOOMS.map((z) => ({
-          checked: setting === z,
-          id: String(z),
-          label: `${Math.round(z * 100)}%`,
-          run: () => onZoomTo(z),
-        })),
-      ],
-    },
-  ];
-}
+}: Omit<ZoomProps, "zoom">): MenuGroup[] => [
+  {
+    items: [
+      {
+        id: "in",
+        label: "Zoom in",
+        meta: shortcutLabel("zoom-in", IS_MAC),
+        run: () => onStep(1),
+      },
+      {
+        id: "out",
+        label: "Zoom out",
+        meta: shortcutLabel("zoom-out", IS_MAC),
+        run: () => onStep(-1),
+      },
+    ],
+  },
+  {
+    items: [
+      {
+        checked: setting === "fit",
+        id: "fit",
+        label: "Zoom to fit",
+        meta: shortcutLabel("zoom-fit", IS_MAC),
+        run: onFit,
+      },
+      ...ZOOMS.map((z) => ({
+        checked: setting === z,
+        id: String(z),
+        label: `${Math.round(z * 100)}%`,
+        run: () => onZoomTo(z),
+      })),
+    ],
+  },
+];
 
-function ZoomPill(p: ZoomProps): ReactElement {
+const ZoomPill = (p: ZoomProps): ReactElement => {
   const percent = useLive(p.zoom);
 
   return (
@@ -83,7 +81,7 @@ function ZoomPill(p: ZoomProps): ReactElement {
       <Icon name="search" size={14} className="topbar-zoom-icon" />
     </DropMenu>
   );
-}
+};
 
 interface OverflowProps {
   zoom: ZoomProps;
@@ -94,7 +92,7 @@ interface OverflowProps {
   tweak: { open: boolean; disabled: boolean; run: () => void };
 }
 
-function OverflowMenu(p: OverflowProps): ReactElement {
+const OverflowMenu = (p: OverflowProps): ReactElement => {
   const percent = useLive(p.zoom.zoom);
   const shape = useVectorTool();
   const zoom = zoomGroups(p.zoom);
@@ -167,7 +165,7 @@ function OverflowMenu(p: OverflowProps): ReactElement {
       <Icon name="more" size={14} />
     </DropMenu>
   );
-}
+};
 
 export { OverflowMenu, ZoomPill };
 

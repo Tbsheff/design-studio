@@ -12,13 +12,13 @@ interface Props {
 
 const OPTIONS = [1, 2, 3, 4] as const;
 
-function VariationsControl({
+const VariationsControl = ({
   value,
   max,
   onChange,
   disabled,
   labelledBy,
-}: Props): ReactElement {
+}: Props): ReactElement => {
   const radios = useRovingRadioGroup<number>(
     OPTIONS,
     value,
@@ -52,6 +52,6 @@ function VariationsControl({
       ))}
     </div>
   );
-}
+};
 
 export { VariationsControl };

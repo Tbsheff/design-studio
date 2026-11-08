@@ -35,7 +35,7 @@ interface FrameVariation {
 
 const stop = (e: ReactPointerEvent): void => e.stopPropagation();
 
-function UseInMenu({
+const UseInMenu = ({
   siblings,
   busy,
   onPick,
@@ -43,7 +43,7 @@ function UseInMenu({
   siblings: Sibling[];
   busy: boolean;
   onPick: (id: string) => void;
-}): ReactElement {
+}): ReactElement => {
   const menu = useMenu();
   useEffect(() => {
     if (menu.open) {
@@ -99,9 +99,9 @@ function UseInMenu({
       )}
     </div>
   );
-}
+};
 
-function shortRejection(error: string): string {
+const shortRejection = (error: string): string => {
   if (!error.startsWith("Rejected:")) {
     return error.length > 60 ? `${error.slice(0, 60)}…` : error;
   }
@@ -109,9 +109,9 @@ function shortRejection(error: string): string {
   return /another file|other files/.test(error)
     ? "Rejected: changed another file"
     : "Rejected: changed code outside the element";
-}
+};
 
-function VariationControls({
+const VariationControls = ({
   variation,
   active,
   element,
@@ -121,7 +121,7 @@ function VariationControls({
   active: boolean;
   element: SelectionContext | null;
   onMixed: () => void;
-}): ReactElement {
+}): ReactElement => {
   const [mixing, setMixing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [keeping, setKeeping] = useState(false);
@@ -221,7 +221,7 @@ function VariationControls({
       )}
     </>
   );
-}
+};
 
 export { VariationControls, stop };
 

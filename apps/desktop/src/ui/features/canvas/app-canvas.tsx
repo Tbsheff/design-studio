@@ -22,7 +22,7 @@ import { copy } from "./copy.js";
 
 const LOAD_HINT_MS = 30_000;
 
-function reloadAppFrames(): void {
+const reloadAppFrames = (): void => {
   document
     .querySelectorAll<HTMLIFrameElement>(".stage iframe.frame")
     .forEach((el) => {
@@ -32,23 +32,23 @@ function reloadAppFrames(): void {
         el.src = src;
       }
     });
-}
+};
 
-function needsReload(
+const needsReload = (
   prev: AppServerStatus | null,
   next: AppServerStatus | null
-): boolean {
+): boolean => {
   if (!prev || next?.state !== "ready") {
     return false;
   }
   return prev.state !== "ready" || prev.upstream !== next.upstream;
-}
+};
 
-function useServerFrames(
+const useServerFrames = (
   status: AppServerStatus | null,
   listen: Listen,
   enabled: boolean
-): boolean {
+): boolean => {
   const prev = useRef<AppServerStatus | null>(null);
   const [loaded, setLoaded] = useState(false);
   const ready = status?.state === "ready";
@@ -85,7 +85,7 @@ function useServerFrames(
   }, [listen, enabled]);
 
   return loaded;
-}
+};
 
 interface Hint {
   text: string;
@@ -93,11 +93,11 @@ interface Hint {
   kind: "failed" | "starting" | "loading" | "route";
 }
 
-function serverHint(
+const serverHint = (
   app: AttachedApp,
   status: AppServerStatus | null,
   loaded: boolean
-): Hint | null {
+): Hint | null => {
   const name = app.framework === "next" ? "Next.js" : "App";
   const managed = (status?.mode ?? app.mode) === "managed";
   const state = status?.state ?? "idle";
@@ -126,9 +126,9 @@ function serverHint(
     };
   }
   return null;
-}
+};
 
-function routeHint(layout: CanvasLayout): Hint | null {
+const routeHint = (layout: CanvasLayout): Hint | null => {
   if (layout.frames.some((frame) => frame.path !== undefined)) {
     return null;
   }
@@ -137,59 +137,57 @@ function routeHint(layout: CanvasLayout): Hint | null {
     kind: "route",
     text: "This frame shows the home route. Pick the page you want to design.",
   };
-}
+};
 
-function HintIcon({ hint }: { hint: Hint }): ReactElement {
+const HintIcon = ({ hint }: { hint: Hint }): ReactElement => {
   if (hint.busy) {
     return <span className="spinner" aria-hidden="true" />;
   }
   return <Icon name={hint.kind === "route" ? "file" : "alert"} size={14} />;
-}
+};
 
-function AppStageHint({
+const AppStageHint = ({
   hint,
   onClose,
 }: {
   hint: Hint;
   onClose: () => void;
-}): ReactElement {
-  return (
-    <div
-      className="stage-message app-stage-note"
-      role="status"
-      data-kind={hint.kind}
-    >
-      <HintIcon hint={hint} />
-      {hint.text}
-      {hint.kind === "route" && (
-        <>
-          <button
-            type="button"
-            className="btn small"
-            onClick={() => openAppPanel("routes")}
-          >
-            Pick a route
-          </button>
-          <button
-            type="button"
-            className="icon-btn small"
-            aria-label={copy.dismiss}
-            data-tip={copy.dismiss}
-            onClick={onClose}
-          >
-            <Icon name="close" size={12} />
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
+}): ReactElement => (
+  <div
+    className="stage-message app-stage-note"
+    role="status"
+    data-kind={hint.kind}
+  >
+    <HintIcon hint={hint} />
+    {hint.text}
+    {hint.kind === "route" && (
+      <>
+        <button
+          type="button"
+          className="btn small"
+          onClick={() => openAppPanel("routes")}
+        >
+          Pick a route
+        </button>
+        <button
+          type="button"
+          className="icon-btn small"
+          aria-label={copy.dismiss}
+          data-tip={copy.dismiss}
+          onClick={onClose}
+        >
+          <Icon name="close" size={12} />
+        </button>
+      </>
+    )}
+  </div>
+);
 
-function useRouteRequests(
+const useRouteRequests = (
   projectId: string,
   isApp: boolean,
   addRoute: (route: string) => void
-): void {
+): void => {
   const add = useRef(addRoute);
   add.current = addRoute;
   useEffect(() => {
@@ -232,7 +230,7 @@ function useRouteRequests(
       window.removeEventListener(OPEN_ROUTE_EVENT, onRoute);
     };
   }, [projectId, isApp]);
-}
+};
 
 interface AppCanvasInput {
   projectId: string;
@@ -250,11 +248,13 @@ interface AppCanvasInput {
   onSignIn: () => void;
 }
 
-function useAppCanvas(o: AppCanvasInput): {
+const useAppCanvas = (
+  o: AppCanvasInput
+): {
   bar: ReactNode;
   note: ReactNode;
   stage: ReactNode;
-} {
+} => {
   const addRoute = (route: string): void => {
     const shown = routeFrameId(o.frames.layout, route) !== null;
 
@@ -330,6 +330,6 @@ function useAppCanvas(o: AppCanvasInput): {
       <AppStageHint hint={hint} onClose={() => setRouteDismissed(true)} />
     ) : null,
   };
-}
+};
 
 export { useAppCanvas };

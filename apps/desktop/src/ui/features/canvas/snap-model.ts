@@ -46,29 +46,22 @@ interface Span {
   hi: number;
 }
 
-function span(r: Rect, axis: Axis): Span {
-  return axis === "x"
+const span = (r: Rect, axis: Axis): Span =>
+  axis === "x"
     ? { hi: r.x + r.width, lo: r.x }
     : { hi: r.y + r.height, lo: r.y };
-}
 
-function cross(axis: Axis): Axis {
-  return axis === "x" ? "y" : "x";
-}
+const cross = (axis: Axis): Axis => (axis === "x" ? "y" : "x");
 
-function linesOf(s: Span): number[] {
-  return [s.lo, (s.lo + s.hi) / 2, s.hi];
-}
+const linesOf = (s: Span): number[] => [s.lo, (s.lo + s.hi) / 2, s.hi];
 
-function overlaps(a: Span, b: Span): boolean {
-  return Math.min(a.hi, b.hi) - Math.max(a.lo, b.lo) > 0;
-}
+const overlaps = (a: Span, b: Span): boolean =>
+  Math.min(a.hi, b.hi) - Math.max(a.lo, b.lo) > 0;
 
-function movingPoints(s: Span, kind: Exclude<SnapKind, null>): number[] {
-  return kind === "move" ? linesOf(s) : [s.hi];
-}
+const movingPoints = (s: Span, kind: Exclude<SnapKind, null>): number[] =>
+  kind === "move" ? linesOf(s) : [s.hi];
 
-function nearest(deltas: number[], threshold: number): number | null {
+const nearest = (deltas: number[], threshold: number): number | null => {
   let best: number | null = null;
 
   for (const d of deltas) {
@@ -81,14 +74,14 @@ function nearest(deltas: number[], threshold: number): number | null {
   }
 
   return best;
-}
+};
 
-function edgeDeltas(
+const edgeDeltas = (
   own: Span,
   kind: Exclude<SnapKind, null>,
   candidates: Rect[],
   axis: Axis
-): number[] {
+): number[] => {
   const points = movingPoints(own, kind);
   const out: number[] = [];
 
@@ -101,7 +94,7 @@ function edgeDeltas(
   }
 
   return out;
-}
+};
 
 interface Neighbours {
   before: Span | null;
@@ -109,15 +102,15 @@ interface Neighbours {
   gaps: { a: Span; b: Span; at: number }[];
 }
 
-function crossMid(a: Rect, b: Rect, axis: Axis): number {
+const crossMid = (a: Rect, b: Rect, axis: Axis): number => {
   const c = cross(axis);
   const sa = span(a, c);
   const sb = span(b, c);
 
   return (Math.max(sa.lo, sb.lo) + Math.min(sa.hi, sb.hi)) / 2;
-}
+};
 
-function existingGaps(candidates: Rect[], axis: Axis): Neighbours["gaps"] {
+const existingGaps = (candidates: Rect[], axis: Axis): Neighbours["gaps"] => {
   const c = cross(axis);
   const gaps: Neighbours["gaps"] = [];
 
@@ -143,9 +136,13 @@ function existingGaps(candidates: Rect[], axis: Axis): Neighbours["gaps"] {
   }
 
   return gaps;
-}
+};
 
-function neighboursOf(rect: Rect, candidates: Rect[], axis: Axis): Neighbours {
+const neighboursOf = (
+  rect: Rect,
+  candidates: Rect[],
+  axis: Axis
+): Neighbours => {
   const own = span(rect, axis);
   const c = cross(axis);
   let before: Span | null = null;
@@ -168,9 +165,9 @@ function neighboursOf(rect: Rect, candidates: Rect[], axis: Axis): Neighbours {
   }
 
   return { after, before, gaps: existingGaps(candidates, axis) };
-}
+};
 
-function spacingDeltas(own: Span, n: Neighbours): number[] {
+const spacingDeltas = (own: Span, n: Neighbours): number[] => {
   const out: number[] = [];
 
   for (const g of n.gaps) {
@@ -190,9 +187,9 @@ function spacingDeltas(own: Span, n: Neighbours): number[] {
   }
 
   return out;
-}
+};
 
-function axisDelta(input: SnapInput, axis: Axis, threshold: number): number {
+const axisDelta = (input: SnapInput, axis: Axis, threshold: number): number => {
   const kind = input[axis];
 
   if (!kind) {
@@ -209,9 +206,14 @@ function axisDelta(input: SnapInput, axis: Axis, threshold: number): number {
   }
 
   return nearest(deltas, threshold) ?? 0;
-}
+};
 
-function shifted(rect: Rect, axis: Axis, kind: SnapKind, delta: number): Rect {
+const shifted = (
+  rect: Rect,
+  axis: Axis,
+  kind: SnapKind,
+  delta: number
+): Rect => {
   if (!kind || delta === 0) {
     return rect;
   }
@@ -225,14 +227,14 @@ function shifted(rect: Rect, axis: Axis, kind: SnapKind, delta: number): Rect {
   return axis === "x"
     ? { ...rect, width: Math.max(1, rect.width + delta) }
     : { ...rect, height: Math.max(1, rect.height + delta) };
-}
+};
 
-function guidesFor(
+const guidesFor = (
   rect: Rect,
   candidates: Rect[],
   axis: Axis,
   kind: Exclude<SnapKind, null>
-): SnapGuide[] {
+): SnapGuide[] => {
   const points = movingPoints(span(rect, axis), kind);
   const c = cross(axis);
   const own = span(rect, c);
@@ -256,18 +258,22 @@ function guidesFor(
   }
 
   return [...byAt.values()];
-}
+};
 
-function badge(axis: Axis, a: Span, b: Span, at: number): SpacingBadge {
-  return { at, axis, from: a.hi, to: b.lo, value: b.lo - a.hi };
-}
+const badge = (axis: Axis, a: Span, b: Span, at: number): SpacingBadge => ({
+  at,
+  axis,
+  from: a.hi,
+  to: b.lo,
+  value: b.lo - a.hi,
+});
 
-function ownGapAt(
+const ownGapAt = (
   rect: Rect,
   other: Span,
   candidates: Rect[],
   axis: Axis
-): number {
+): number => {
   const match = candidates.find((c) => {
     const s = span(c, axis);
 
@@ -275,19 +281,18 @@ function ownGapAt(
   });
 
   return match ? crossMid(rect, match, axis) : span(rect, cross(axis)).lo;
-}
+};
 
-function near(a: number | null, b: number): boolean {
-  return a !== null && Math.abs(a - b) < SAME;
-}
+const near = (a: number | null, b: number): boolean =>
+  a !== null && Math.abs(a - b) < SAME;
 
-function ownBadges(
+const ownBadges = (
   rect: Rect,
   candidates: Rect[],
   axis: Axis,
   n: Neighbours,
   values: number[]
-): SpacingBadge[] {
+): SpacingBadge[] => {
   const own = span(rect, axis);
   const left = n.before ? own.lo - n.before.hi : null;
   const right = n.after ? n.after.lo - own.hi : null;
@@ -317,13 +322,13 @@ function ownBadges(
   }
 
   return out;
-}
+};
 
-function spacingFor(
+const spacingFor = (
   rect: Rect,
   candidates: Rect[],
   axis: Axis
-): SpacingBadge[] {
+): SpacingBadge[] => {
   const n = neighboursOf(rect, candidates, axis);
   const own = span(rect, axis);
   const left = n.before ? own.lo - n.before.hi : null;
@@ -339,9 +344,9 @@ function spacingFor(
     ...matched.map((g) => badge(axis, g.a, g.b, g.at)),
     ...ownBadges(rect, candidates, axis, n, values),
   ];
-}
+};
 
-function snapRect(input: SnapInput): SnapResult {
+const snapRect = (input: SnapInput): SnapResult => {
   const threshold = SNAP_PX / Math.max(input.zoom, 0.01);
   let { rect } = input;
   rect = shifted(rect, "x", input.x, axisDelta(input, "x", threshold));
@@ -364,13 +369,12 @@ function snapRect(input: SnapInput): SnapResult {
   }
 
   return { guides, rect, spacing };
-}
+};
 
-function snapOff(event: { metaKey: boolean; ctrlKey: boolean }): boolean {
-  return event.metaKey || event.ctrlKey;
-}
+const snapOff = (event: { metaKey: boolean; ctrlKey: boolean }): boolean =>
+  event.metaKey || event.ctrlKey;
 
-function unionBox(rects: Rect[]): Rect | null {
+const unionBox = (rects: Rect[]): Rect | null => {
   if (rects.length === 0) {
     return null;
   }
@@ -381,7 +385,7 @@ function unionBox(rects: Rect[]): Rect | null {
   const bottom = Math.max(...rects.map((r) => r.y + r.height));
 
   return { height: bottom - top, width: right - left, x: left, y: top };
-}
+};
 
 export { SNAP_PX, snapOff, snapRect, unionBox };
 

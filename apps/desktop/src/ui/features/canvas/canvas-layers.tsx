@@ -26,13 +26,13 @@ interface TreeFrames {
   hover: LiveStore<HoverBox | null>;
 }
 
-function useHoveredNode(hover: LiveStore<HoverBox | null>): number | null {
+const useHoveredNode = (hover: LiveStore<HoverBox | null>): number | null => {
   const read = (): number | null => hover.get()?.node ?? null;
 
   return useSyncExternalStore(hover.subscribe, read, read);
-}
+};
 
-function CanvasLayersPanel({
+const CanvasLayersPanel = ({
   frames,
   edits,
   frameName,
@@ -46,7 +46,7 @@ function CanvasLayersPanel({
   selection: SelectionContext[];
   onSelectMode: () => void;
   onClose?: () => void;
-}): ReactElement {
+}): ReactElement => {
   const hasSelection = selection.length > 0;
   const hoveredNode = useHoveredNode(frames.hover);
 
@@ -86,13 +86,13 @@ function CanvasLayersPanel({
       onClose={onClose}
     />
   );
-}
+};
 
-function EditNotice({
+const EditNotice = ({
   edits,
 }: {
   edits: Pick<LayerEdits, "notice" | "clearNotice">;
-}): ReactElement | null {
+}): ReactElement | null => {
   if (!edits.notice) {
     return null;
   }
@@ -110,14 +110,14 @@ function EditNotice({
       </button>
     </div>
   );
-}
+};
 
-function useLayersWatch(
+const useLayersWatch = (
   watch: (on: boolean) => void,
   open: boolean,
   frontToken: string | null,
   onToggle: () => void
-): void {
+): void => {
   const toggle = useRef(onToggle);
   toggle.current = onToggle;
   useEffect(() => {
@@ -144,13 +144,13 @@ function useLayersWatch(
 
     return (): void => window.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
-function useSelectMoveKeys(
+const useSelectMoveKeys = (
   selectMode: boolean,
   selection: SelectionContext[],
   selectRelative: (selector: string, move: SelectMove) => void
-): void {
+): void => {
   const live = useRef({ selectMode, selectRelative, selection });
   live.current = { selectMode, selectRelative, selection };
   useEffect(() => {
@@ -176,6 +176,6 @@ function useSelectMoveKeys(
 
     return (): void => window.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
 export { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys };

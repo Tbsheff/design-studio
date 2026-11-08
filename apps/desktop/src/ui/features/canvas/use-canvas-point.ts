@@ -25,9 +25,9 @@ interface McpPointBadge {
   dismiss: () => void;
 }
 
-function useShowFrame(
+const useShowFrame = (
   o: PointInput
-): (frameId: string, selector: string | undefined) => boolean {
+): ((frameId: string, selector: string | undefined) => boolean) => {
   const latest = useRef(o);
   latest.current = o;
   const timers = useRef<number[]>([]);
@@ -73,9 +73,9 @@ function useShowFrame(
     },
     []
   );
-}
+};
 
-function useCanvasPoint(o: PointInput): McpPointBadge {
+const useCanvasPoint = (o: PointInput): McpPointBadge => {
   const showFrame = useShowFrame(o);
   const [point, setPoint] = useState<McpPoint | null>(null);
   useProjectEvents(o.projectId, (event) => {
@@ -117,7 +117,7 @@ function useCanvasPoint(o: PointInput): McpPointBadge {
   const dismiss = useCallback(() => setPoint(null), []);
 
   return { dismiss, point, show };
-}
+};
 
 export { MCP_POINT_MS, useCanvasPoint };
 

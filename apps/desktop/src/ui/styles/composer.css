@@ -1412,3 +1412,17 @@
 .prompt-foot-trail {
   gap: 2px;
 }
+
+.skill-chips {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+}
+
+dialog.skill-pop {
+  width: auto;
+  height: auto;
+  margin: 0;
+  border: 0;
+  color: inherit;
+}

@@ -48,11 +48,8 @@ import {
 import { PromptToolbar } from "./prompt-toolbar.js";
 import { QueuedMessages } from "./queued-messages.js";
 import { RunContextChip } from "./run-context-chip.js";
-import {
-  SkillChips,
-  SkillsIndicator,
-  useSlashSections,
-} from "./skill-picker.js";
+import { SkillChips } from "./skill-chips.js";
+import { SkillsIndicator } from "./skills-indicator.js";
 import { effortGroup, levelGroup, modelGroup } from "./slash-groups.js";
 import { SlashMenu, useSlashMenu } from "./slash-menu.js";
 import { useComposerKeys } from "./use-composer-keys.js";
@@ -66,6 +63,7 @@ import { usePromptSend } from "./use-prompt-send.js";
 import type { PromptRequest } from "./use-prompt-send.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 import { useRunLevel } from "./use-run-level.js";
+import { useSlashSections } from "./use-slash-sections.js";
 
 interface Props {
   projectId: string;
@@ -258,8 +256,8 @@ const PromptBox = (props: Props): ReactElement => {
     draft,
     draftStore: props.draft,
     effort,
-    isReady,
     files,
+    isReady,
     level: runLevel.level,
     linkedCommentIds: prefill.linked,
     mentions: mentions.mentions,

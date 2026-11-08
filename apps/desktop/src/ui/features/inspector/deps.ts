@@ -13,4 +13,4 @@ export type {
 
 export type { AuthoredCssState } from "./use-authored-css.js";
 
-export { historyKeyOf } from "../canvas/index.js";
+export { focusStageQuietly, historyKeyOf } from "../canvas/index.js";

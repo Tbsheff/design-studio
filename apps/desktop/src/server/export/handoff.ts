@@ -26,6 +26,7 @@ import {
   type HandoffResult,
 } from "@design-studio/contracts/export";
 
+import { getDevNotesMarkdown } from "../comments/index.js";
 import { listComponents } from "../components/inventory.js";
 import { findTokenFile } from "../design-system/app-tokens/detect.js";
 import {
@@ -39,6 +40,7 @@ import { readDesignSystemFiles } from "../design-system/sync.js";
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
 import { captureFrame } from "../preview/page-capture/index.js";
 import type { CommentStore } from "../store/comments.js";
+import { toCanvasLines } from "./handoff-canvas.js";
 import { inlineHtml } from "./inline-html.js";
 import type { ExportDeps, ExportSource } from "./source.js";
 
@@ -349,34 +351,27 @@ interface MarkdownInput {
   canvas: CanvasFile | null;
 }
 
-function canvasSection(canvas: CanvasFile | null): string[] {
-  if (!canvas || canvas.frames.length === 0)
-    return ["No saved canvas layout.", ""];
-  return [
-    `\`source/${CANVAS_FILE}\` is the canvas layout: the frames the designer placed, in order.`,
-    "",
-    "| Frame | Label | Page | Size | Position |",
-    "| --- | --- | --- | --- | --- |",
-    ...canvas.frames.map(
-      (f) =>
-        `| ${f.id} | ${cell(f.label ?? "")} | ${f.path ? `\`${cell(f.path)}\`` : "entry page"} | ${f.width} × ${f.height} | ${f.x}, ${f.y}${f.hidden ? " (hidden)" : ""} |`
-    ),
-    "",
-  ];
-}
-
 async function handoffMarkdown(
   deps: HandoffDeps,
   input: MarkdownInput
 ): Promise<string> {
   const { shots, designHtml, sourceMap, fonts } = input;
   const { project, direction, version } = input.source;
-  const components = await listComponents(input.filesRoot, project.kind).catch(
-    () => [] as ComponentInfo[]
-  );
-  const comments = await deps.comments
-    .list(project.id, direction.id)
-    .catch(() => [] as DesignComment[]);
+  const [components, comments, devNotes] = await Promise.all([
+    listComponents(input.filesRoot, project.kind).catch(
+      () => [] as ComponentInfo[]
+    ),
+    deps.comments
+      .list(project.id, direction.id)
+      .catch(() => [] as DesignComment[]),
+    getDevNotesMarkdown(
+      deps.projects.projectDir(project.id),
+      (input.canvas?.frames ?? []).map((f) => ({
+        id: f.id,
+        label: f.label ?? null,
+      }))
+    ),
+  ]);
   const lineage = versionAncestors(input.history, version);
   const { brief, changes } = intent(lineage);
   const decisions = lineage
@@ -445,7 +440,10 @@ async function handoffMarkdown(
     "",
     "## Canvas",
     "",
-    ...canvasSection(input.canvas),
+    ...toCanvasLines(input.canvas),
+    "## Dev notes",
+    "",
+    ...devNotes,
     "## Open comments",
     "",
     commentList(comments),

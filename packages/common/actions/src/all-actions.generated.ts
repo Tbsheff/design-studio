@@ -11,6 +11,7 @@ import { ConnectionActions } from "./connection/index.js";
 import { ContentActions } from "./content/index.js";
 import { CritiqueActions } from "./critique/index.js";
 import { DataModelActions } from "./data-model/index.js";
+import { DevNoteActions } from "./dev-note/index.js";
 import { DevServerActions } from "./dev-server/index.js";
 import { DevStatusActions } from "./dev-status/index.js";
 import { DirectEditActions } from "./direct-edit/index.js";
@@ -66,6 +67,7 @@ const ALL_ACTIONS = {
   content: ContentActions,
   critique: CritiqueActions,
   dataModel: DataModelActions,
+  devNote: DevNoteActions,
   devServer: DevServerActions,
   devStatus: DevStatusActions,
   directEdit: DirectEditActions,

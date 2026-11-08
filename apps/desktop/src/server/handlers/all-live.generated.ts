@@ -11,6 +11,7 @@ import { ConnectionLive } from "./connection/live.js";
 import { ContentLive } from "./content/live.js";
 import { CritiqueLive } from "./critique/live.js";
 import { DataModelLive } from "./data-model/live.js";
+import { DevNoteLive } from "./dev-note/live.js";
 import { DevServerLive } from "./dev-server/live.js";
 import { DevStatusLive } from "./dev-status/live.js";
 import { DirectEditLive } from "./direct-edit/live.js";
@@ -66,6 +67,7 @@ const ALL_LIVE = {
   content: ContentLive,
   critique: CritiqueLive,
   dataModel: DataModelLive,
+  devNote: DevNoteLive,
   devServer: DevServerLive,
   devStatus: DevStatusLive,
   directEdit: DirectEditLive,

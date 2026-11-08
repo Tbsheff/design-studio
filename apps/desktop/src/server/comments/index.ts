@@ -9,3 +9,12 @@ export { CommentStore } from "./comment-store.js";
 export { CommentThreadStore } from "./comment-thread-store.js";
 
 export { MENTION_MAX } from "./run-payload.js";
+
+export {
+  DevNoteStore,
+  DevNoteWriter,
+  getDevNotesMarkdown,
+  getSavedDevNotes,
+} from "./dev-note/index.js";
+
+export type { DevNoteRecord } from "./dev-note/index.js";

@@ -1,0 +1,35 @@
+const copy = {
+  add: "Add dev note",
+  addTitle: "Add dev note",
+  cancel: "Close",
+  done: "Done",
+  failed: "Could not read the dev notes.",
+  frameLabel: "Frame",
+  kindAccessibility: "Accessibility",
+  kindBehavior: "Behavior",
+  kindContent: "Content",
+  kindLabel: "Note kind",
+  kindSpec: "Spec",
+  layerLabel: "Layer",
+  list: "Dev notes…",
+  listEmpty: "This frame has no dev notes yet.",
+  listLoading: "Reading the dev notes",
+  listTitle: "Dev notes",
+  measure: "Measure this layer",
+  measureNeedsSource: "This element has no source location",
+  measureTip:
+    "Save the box, padding, gap, radius, font and colors of the layer, with token names.",
+  measuredTitle: "Measured values",
+  needFrame: "Open a frame first",
+  noSource: "No source",
+  rowTip: "Select this layer",
+  save: "Add note",
+  saveFailed: "Could not save the dev note.",
+  saved: "Saved",
+  textLabel: "Note",
+  textPlaceholder:
+    "16 px padding, truncates at 2 lines, opens the visit drawer on click",
+  wholeFrame: "Whole frame",
+} as const;
+
+export { copy };

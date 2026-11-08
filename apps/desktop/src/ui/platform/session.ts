@@ -51,6 +51,47 @@ const loadSession = async (): Promise<StudioSession> => {
   return current;
 };
 
+const RENEW_GAP_MS = 5000;
+
+let renewing: Promise<boolean> | null = null;
+
+let lastRenewAt = 0;
+
+const doRenew = async (): Promise<boolean> => {
+  lastRenewAt = Date.now();
+
+  try {
+    const next = await fetchSession();
+    const isChanged = next.token !== current?.token;
+    current = next;
+
+    return isChanged;
+  } catch {
+    return false;
+  }
+};
+
+const runRenew = async (): Promise<boolean> => {
+  const isChanged = await doRenew();
+  renewing = null;
+
+  return isChanged;
+};
+
+const renewSession = (): Promise<boolean> => {
+  if (renewing !== null) {
+    return renewing;
+  }
+
+  if (Date.now() - lastRenewAt < RENEW_GAP_MS) {
+    return Promise.resolve(false);
+  }
+
+  renewing = runRenew();
+
+  return renewing;
+};
+
 const getSession = (): StudioSession => {
   if (!current) {
     throw new Error("Session not loaded");
@@ -68,6 +109,6 @@ const randomToken = (): string => {
   ).join("");
 };
 
-export { getSession, loadSession, randomToken };
+export { getSession, loadSession, randomToken, renewSession };
 
 export type { StudioSession };

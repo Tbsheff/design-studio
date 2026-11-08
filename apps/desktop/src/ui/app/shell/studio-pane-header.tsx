@@ -1,13 +1,11 @@
 import { useCallback, useState } from "react";
 import type { ReactElement } from "react";
 
-import { shortcutLabel } from "../../../shared/keymap";
 import {
   chatSearchAvailable,
   chatSearchOpen,
   registerChatSearchButton,
 } from "../../features/chat/chat-search-model";
-import { IS_MAC } from "../../features/commands/keys";
 import { useLive } from "../../platform/live-store";
 import { CommentsToggle } from "./comments-toggle";
 import { PaneHeadButton } from "./pane-head-button";
@@ -16,8 +14,6 @@ import type { StudioPaneHeaderProps } from "./pane-header-types";
 import { PaneProject } from "./pane-project";
 import { PaneStatus } from "./pane-status";
 import { RenameField } from "./rename-field";
-
-const RAIL_SHORTCUT = shortcutLabel("project-rail", IS_MAC);
 
 const StudioPaneHeader = (props: StudioPaneHeaderProps): ReactElement => {
   const [renaming, setRenaming] = useState(false);
@@ -48,11 +44,7 @@ const StudioPaneHeader = (props: StudioPaneHeaderProps): ReactElement => {
       <header className="pane-head">
         {renaming && <RenameField name={props.name} onDone={finishRename} />}
         {!renaming && (
-          <PaneProject
-            header={props}
-            onStartRename={startRename}
-            railShortcut={RAIL_SHORTCUT}
-          />
+          <PaneProject header={props} onStartRename={startRename} />
         )}
         <PaneStatus
           connection={props.connection}

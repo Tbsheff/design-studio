@@ -54,7 +54,6 @@ const copy = {
   keyLetterR: "R",
   keyP: "P",
   keyR: "⇧R",
-  keyY: "Y",
   lastCompleted: "Last completed",
   lastCompletedVersion: "Last completed version",
   layOutThe: "Lay out the routes left to right and link them from their source",
@@ -142,7 +141,6 @@ const copy = {
   viewport: "Viewport",
   width: "Width",
   yet: " yet",
-  youOnThis: "You, on this computer",
 } as const;
 
 export { copy };

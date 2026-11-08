@@ -10,7 +10,7 @@ import type { WireBody } from "@design-studio/actions/_core/wire";
 import { STUDIO_TOKEN_HEADER } from "@design-studio/contracts";
 
 import { isText } from "./json-guard";
-import { getSession } from "./session";
+import { getSession, renewSession } from "./session";
 
 type HttpMethod = Method;
 
@@ -69,6 +69,8 @@ type UiOutput<Action extends AnyAction> = Writable<WireOutput<Action>>;
 type RouteOutput<Route extends ActionRoute> = UiOutput<ActionOf<Route>>;
 
 type WireError = Partial<WireBody>;
+
+const FORBIDDEN_STATUS = 403;
 
 const PARAM = /:(?<name>[A-Za-z_]\w*)/gu;
 
@@ -196,6 +198,26 @@ const targetOf = (route: ActionRoute, fields: WireFields): string => {
   return url;
 };
 
+const sendRecovering = async (
+  target: string,
+  build: () => RequestInit
+): Promise<Response> => {
+  const used = getSession().token;
+  const res = await fetch(target, build());
+
+  if (res.status !== FORBIDDEN_STATUS) {
+    return res;
+  }
+
+  const isFresh = getSession().token !== used || (await renewSession());
+
+  if (!isFresh) {
+    return res;
+  }
+
+  return fetch(target, build());
+};
+
 const call = async <Route extends ActionRoute>(
   route: Route,
   input: RouteInput<Route>
@@ -203,8 +225,7 @@ const call = async <Route extends ActionRoute>(
   const fields = input as WireFields;
   const target = targetOf(route, fields);
 
-  const res = await fetch(
-    target,
+  const res = await sendRecovering(target, () =>
     requestOf(route.method, restOf(route.path, fields))
   );
 
@@ -277,11 +298,11 @@ const request = async (
   body: RequestBody = null,
   pick: ErrorPick = pickError
 ): Promise<Response> => {
-  const res = await fetch(path, {
+  const res = await sendRecovering(path, () => ({
     body: payloadOf(body),
     headers: headersOf(body),
     method,
-  });
+  }));
 
   if (!res.ok) {
     throw await failureOf(
@@ -299,7 +320,7 @@ const sendJson = async <Body>(
   path: string,
   body: JsonBody
 ): Promise<Body> => {
-  const res = await fetch(path, requestOf(method, body));
+  const res = await sendRecovering(path, () => requestOf(method, body));
 
   if (!res.ok) {
     throw await readError(
@@ -312,7 +333,7 @@ const sendJson = async <Body>(
 };
 
 const getRaw = (path: string, signal?: AbortSignal): Promise<Response> =>
-  fetch(path, { headers: tokenHeaders(), signal });
+  sendRecovering(path, () => ({ headers: tokenHeaders(), signal }));
 
 const getJson = async <Body>(path: string): Promise<Body | null> => {
   const res = await getRaw(path);

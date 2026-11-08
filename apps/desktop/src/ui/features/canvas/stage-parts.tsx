@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import type { ReactElement } from "react";
 
+import { AccountButton } from "../account/index.js";
 import { RenderCheckPanel } from "../review/render-check-panel.js";
 import type { RenderCheckState } from "./use-preview-url.js";
 
@@ -28,4 +30,10 @@ const CheckResults = ({
   );
 };
 
-export { CheckResults };
+const AccountSlot = (): ReactElement => (
+  <Suspense fallback={null}>
+    <AccountButton />
+  </Suspense>
+);
+
+export { AccountSlot, CheckResults };

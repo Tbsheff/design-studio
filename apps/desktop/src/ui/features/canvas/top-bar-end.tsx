@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { copy } from "./copy.js";
 import type { MenuEntry } from "./top-bar-menu-model.js";
 import { OverflowMenu } from "./top-bar-overflow.js";
 import { TopBarPresent } from "./top-bar-present.js";
@@ -39,14 +38,7 @@ const TopBarEnd = ({
         tweak={tweak}
       />
       <TopBarShare props={props} onPort={onPort} />
-      <span
-        className="topbar-avatar"
-        data-tip={copy.youOnThis}
-        data-tip-align="end"
-      >
-        {copy.keyY}
-        <span className="sr-only">{copy.youOnThis}</span>
-      </span>
+      {props.account}
     </>
   );
 };

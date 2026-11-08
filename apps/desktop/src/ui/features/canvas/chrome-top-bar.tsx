@@ -29,6 +29,7 @@ const ChromeTopBar = ({
     <CanvasTopBar
       vectorTools={VECTOR_TOOLS}
       matrix={chrome.matrix}
+      account={chrome.account}
       paneCollapsed={paneCollapsed}
       onExpandPane={onExpandPane}
       onReload={reload}

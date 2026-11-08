@@ -11,6 +11,7 @@ import type {
 interface Props {
   vectorTools?: ReactNode;
   matrix?: ReactNode;
+  account?: ReactNode;
   paneCollapsed: boolean;
   onExpandPane: () => void;
   onReload: () => void;

@@ -402,8 +402,27 @@
   color: var(--text-3);
 }
 
+.account-anchor {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+
+.account-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + var(--s-1));
+  right: 0;
+  min-width: 200px;
+  transform-origin: top right;
+  animation: menu-in var(--dur) var(--ease-out);
+}
+
 .topbar-avatar {
   flex: none;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
   display: inline-grid;
   place-items: center;
   width: 20px;
@@ -571,7 +590,6 @@
 }
 
 @container canvas-bar (max-width: 780px) {
-  .canvas-topbar .topbar-avatar,
   .canvas-topbar .topbar-present > :not(:first-child) {
     display: none;
   }

@@ -5,17 +5,6 @@ import { findElements } from "../../platform/find-element";
 import { pick } from "../../platform/pick.js";
 import type { StudioPaneHeaderProps } from "./pane-header-types";
 
-type ThemePref = "system" | "light" | "dark";
-
-interface ThemeApi {
-  get: () => ThemePref;
-  set: (pref: ThemePref) => void;
-}
-
-interface ThemeHost {
-  readonly studioTheme: ThemeApi | null;
-}
-
 interface MenuItem {
   readonly checked: boolean | null;
   readonly icon: IconName;
@@ -24,34 +13,6 @@ interface MenuItem {
   readonly meta: string | null;
   readonly run: () => void;
 }
-
-const THEMES: readonly ThemePref[] = ["system", "light", "dark"];
-
-const THEME_ICONS: Record<ThemePref, IconName> = {
-  dark: "moon",
-  light: "sparkle",
-  system: "desktop",
-};
-
-const THEME_LABELS: Record<ThemePref, string> = {
-  dark: "Dark theme",
-  light: "Light theme",
-  system: "System theme",
-};
-
-const isThemeHost = (
-  host: typeof globalThis
-): host is ThemeHost & typeof globalThis => "studioTheme" in host;
-
-const toThemeApi = (): ThemeApi | null => {
-  const host = globalThis;
-
-  if (!isThemeHost(host)) {
-    return null;
-  }
-
-  return host.studioTheme ?? null;
-};
 
 const toItem = (
   id: string,
@@ -102,32 +63,7 @@ const toProjectItems = (
   toItem("settings", "settings", "Project settings", header.onSettings),
 ];
 
-const toThemeItems = (): MenuItem[] => {
-  const api = toThemeApi();
-  const pref = api?.get() ?? "system";
-
-  return THEMES.map((value) => ({
-    checked: pref === value,
-    icon: THEME_ICONS[value],
-    id: `theme-${value}`,
-    label: THEME_LABELS[value],
-    meta: null,
-    run: () => api?.set(value),
-  }));
-};
-
-const toNavItems = (
-  header: StudioPaneHeaderProps,
-  railShortcut: string
-): MenuItem[] => [
-  {
-    checked: null,
-    icon: "sidebar",
-    id: "rail",
-    label: pick(header.railOpen, "Hide project list", "Show project list"),
-    meta: railShortcut,
-    run: header.onToggleRail,
-  },
+const toNavItems = (header: StudioPaneHeaderProps): MenuItem[] => [
   toItem("home", "arrowLeft", "All projects", header.onExit),
 ];
 
@@ -149,12 +85,6 @@ const handleMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   next?.focus();
 };
 
-export {
-  handleMenuKey,
-  toNavItems,
-  toPanelItems,
-  toProjectItems,
-  toThemeItems,
-};
+export { handleMenuKey, toNavItems, toPanelItems, toProjectItems };
 
 export type { MenuItem };

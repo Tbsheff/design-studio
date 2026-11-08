@@ -3,7 +3,6 @@ import type { ComponentProps } from "react";
 
 import { api } from "../../api";
 import { shownPending } from "../../features/chat/run-state-model";
-import { setRailToggled as toggleRail } from "../../features/home/index.js";
 import { toFixPrompt } from "../../features/review/index";
 import { uiStore } from "../../platform/storage";
 import type { LeftPane } from "../shell/left-pane";
@@ -41,8 +40,6 @@ const headerProps = (
       ),
     onSettings: (): void => ui.setSettingsOpen(true),
     onTab: panes.showPane,
-    onToggleRail: toggleRail,
-    railOpen: ui.rail === "open",
     tab: panes.panel.tab,
   };
 };

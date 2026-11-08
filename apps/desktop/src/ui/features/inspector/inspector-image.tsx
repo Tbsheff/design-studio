@@ -140,7 +140,7 @@ const InspectorImage = (props: Props): ReactElement | null => {
               data-tip={FIT_TIP[option]}
               onClick={() => {
                 setFit(option);
-                void run({ fit: option });
+                void run({ fit: option }, null);
               }}
             >
               {FIT_LABEL[option]}
@@ -153,7 +153,7 @@ const InspectorImage = (props: Props): ReactElement | null => {
             isDisabled={disabled}
             onPick={(next) => {
               setFocal(next);
-              void run({ focal: next });
+              void run({ focal: next }, null);
             }}
           />
           <span className="img-focal-text">
@@ -166,7 +166,7 @@ const InspectorImage = (props: Props): ReactElement | null => {
             isDisabled={disabled}
             onSave={(next) => {
               setAlt(next);
-              void run({ alt: next });
+              void run({ alt: next }, null);
             }}
           />
         )}

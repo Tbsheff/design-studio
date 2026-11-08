@@ -1,31 +1,44 @@
-import { useRef } from "react";
+import { useMemo } from "react";
+import type { RefObject } from "react";
 
-type AnyFn = (...args: never[]) => unknown;
+import { useLatestRef } from "./use-latest-ref.js";
 
-const useStableCallbacks = <P extends object>(props: P): P => {
-  const latest = useRef(props);
-  latest.current = props;
-  const wrappers = useRef(new Map<string, AnyFn>());
-  const out: Record<string, unknown> = {};
+const FUNCTION_TAG = /Function\]$/u;
 
-  for (const [key, value] of Object.entries(props)) {
-    if (typeof value !== "function") {
-      out[key] = value;
-      continue;
-    }
+type AnyFunction = (...args: never[]) => void;
 
-    let wrapper = wrappers.current.get(key);
+const toWrapper =
+  <Props extends object>(latest: RefObject<Props>, key: string): AnyFunction =>
+  (...args: never[]): void =>
+    Object.entries(latest.current).find(([name]) => name === key)?.[1]?.(
+      ...args
+    );
 
-    if (!wrapper) {
-      wrapper = (...args: never[]): unknown =>
-        (latest.current as Record<string, AnyFn | undefined>)[key]?.(...args);
-      wrappers.current.set(key, wrapper);
-    }
-
-    out[key] = wrapper;
+const toStableEntry = <Props extends object, Value>(
+  key: string,
+  value: Value,
+  latest: RefObject<Props>,
+  wrappers: Map<string, AnyFunction>
+): [string, Value | AnyFunction] => {
+  if (!FUNCTION_TAG.test(Object.prototype.toString.call(value))) {
+    return [key, value];
   }
 
-  return out as P;
+  const known = wrappers.get(key) ?? toWrapper(latest, key);
+  wrappers.set(key, known);
+
+  return [key, known];
+};
+
+const useStableCallbacks = <Props extends object>(props: Props): Props => {
+  const latest = useLatestRef(props);
+  const wrappers = useMemo(() => new Map<string, AnyFunction>(), []);
+
+  return Object.fromEntries(
+    Object.entries(props).map(([key, value]) =>
+      toStableEntry(key, value, latest, wrappers)
+    )
+  ) as Props;
 };
 
 export { useStableCallbacks };

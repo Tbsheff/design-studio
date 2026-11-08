@@ -74,7 +74,9 @@ const applyScrubMove = (
     moved.value + steps * toStep(event, spec),
     moved.unit
   );
+
   const value = parseNumber(toClamped(amount, spec))?.value ?? moved.value;
+
   spec.edit.preview(toPatch(spec, formatNumber(value, moved.unit)));
 
   return { ...moved, value };

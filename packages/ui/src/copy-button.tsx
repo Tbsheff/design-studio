@@ -11,7 +11,7 @@ const COPY_ICON_SIZE = 14;
 
 const TIPS: Record<Exclude<CopyState, "idle">, string> = {
   copied: "Copied",
-  failed: "Copy failed",
+  failed: "Could not copy",
 };
 
 const toTip = (state: CopyState, label: string): string => {

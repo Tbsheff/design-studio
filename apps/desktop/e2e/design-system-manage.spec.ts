@@ -92,7 +92,7 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
     await shot(page, "detail-check.png");
   }
 
-  await original.getByRole("button", { name: "Make a copy to edit" }).click();
+  await original.getByRole("button", { name: "Duplicate to edit" }).click();
 
   const copy = detail(page, "Modern Minimal copy");
   await expect(copy).toBeVisible();

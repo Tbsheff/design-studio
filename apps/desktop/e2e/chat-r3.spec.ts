@@ -438,7 +438,7 @@ test("R3-10: the retry line counts down, and Retry on an error card adds no seco
   const { api, project } = await newProject(page, "Retry Probe Diner");
   await type(page, "Slow start [retry]", "Meta+Enter");
   await expect(page.getByTestId("live-status")).toContainText(
-    /Retrying in [12]s \(1\/5\)/
+    /Retrying in [12] s \(try 1 of 5\)/
   );
   await finishedRun(api, project.id, "Slow start [retry]");
   await type(page, "[fail] Break on purpose", "Meta+Enter");
@@ -451,7 +451,7 @@ test("R3-10: the retry line counts down, and Retry on an error card adds no seco
   if (await discard.count()) await discard.click();
   await page
     .locator(".run-error")
-    .getByRole("button", { name: "Retry" })
+    .getByRole("button", { name: "Try again" })
     .click();
   await expect
     .poll(

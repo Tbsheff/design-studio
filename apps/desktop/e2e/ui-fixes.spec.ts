@@ -140,7 +140,7 @@ test("UI fixes: disclosure, pan drag, custom size on Enter, settings persist, sv
   );
   await dialog.getByLabel("Spending limit per run").fill("0.5");
   await dialog.getByLabel("Max turns").fill("7");
-  await dialog.getByLabel("Allow agent to run shell commands").check();
+  await dialog.getByLabel("Let Claude run shell commands").check();
   await dialog.getByLabel("Allow installing packages").check();
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
@@ -169,7 +169,7 @@ test("UI fixes: disclosure, pan drag, custom size on Enter, settings persist, sv
   );
   await expect(reopened.getByLabel("Max turns")).toHaveValue("7");
   await expect(reopened.getByLabel("Allow installing packages")).toBeChecked();
-  await reopened.getByLabel("Allow agent to run shell commands").uncheck();
+  await reopened.getByLabel("Let Claude run shell commands").uncheck();
   await reopened.getByLabel("Spending limit per run").fill("");
   await reopened.getByRole("button", { name: "Save" }).click();
   await expect(reopened).toBeHidden();

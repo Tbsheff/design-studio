@@ -2,13 +2,13 @@ const copy = {
   accountTip: "Account",
   add: "Add",
   addFrame: "Add frame",
-  allowAgentToRunShell: "Allow agent to run shell commands",
+  allowAgentToRunShell: "Let Claude run shell commands",
   allowInstallingPackages: "Allow installing packages",
   appliesToTheNextRun: "Applies to the next run.",
   autoModeRunCommandsWithout: "Auto mode: run commands without asking",
   backToProjects: "Back to projects",
   cancel: "Cancel",
-  cannotOpenProject: "Cannot open project",
+  cannotOpenProject: "Could not open the project",
   checkAgain: "Check again",
   confirmUrl: "Use this URL",
   countSeparator: " of ",
@@ -16,7 +16,7 @@ const copy = {
   dynamic: "dynamic",
   environmentForNextDev: "Environment for next dev",
   installTheDependenciesInA:
-    "Install the dependencies in a terminal, then press Restart dev server",
+    "Install the dependencies in a terminal, then choose Restart dev server.",
   loadingProject: "Loading project…",
   maxTurnsPerRun: "Max turns per run",
   model: "Model",
@@ -30,7 +30,7 @@ const copy = {
   showing: "Showing ",
   spendingLimitPerRun: "Spending limit per run",
   stop: "Stop",
-  theDoctorSuggests: "The doctor suggests",
+  theDoctorSuggests: "Design Studio suggests",
   theStudioDidNotStart:
     "The studio did not start this dev server, so it cannot show its output. Look in the terminal where it runs. The studio checks are below.",
   theseAreOnByDefault:

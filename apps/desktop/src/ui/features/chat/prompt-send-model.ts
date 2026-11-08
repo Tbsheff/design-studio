@@ -10,7 +10,7 @@ import type { SlashGroup } from "./slash-menu.js";
 
 const SLASH_HIDDEN = /^composer\.(?:mode|level)-/u;
 
-const RUNNING_PLACEHOLDER = `Queue a note (↵) or send it now (${MOD_LABEL}↵)`;
+const RUNNING_PLACEHOLDER = `Add a note for Claude (↵), or send it now (${MOD_LABEL}↵)`;
 
 interface SendBlockerState {
   readonly waitReason: string | null | undefined;

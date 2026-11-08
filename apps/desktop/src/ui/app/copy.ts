@@ -1,9 +1,9 @@
 const copy = {
-  connectFailedTitle: "Cannot connect to the studio server",
+  connectFailedTitle: "Could not connect to Design Studio",
   connecting: "Connecting…",
   loadingProject: "Loading project…",
   reload: "Reload",
-  retry: "Retry",
+  retry: "Try again",
   screenFailedTitle: "This screen did not load",
 } as const;
 

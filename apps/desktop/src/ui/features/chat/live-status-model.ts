@@ -66,7 +66,7 @@ const statusLabel = (
       Math.ceil((run.retry.until - now) / MS_PER_SECOND)
     );
 
-    return `Retrying in ${seconds}s (${run.retry.attempt}/${run.retry.max})`;
+    return `Retrying in ${seconds} s (try ${run.retry.attempt} of ${run.retry.max})`;
   }
 
   const pending = [...run.tools]

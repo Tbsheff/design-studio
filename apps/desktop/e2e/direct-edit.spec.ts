@@ -196,7 +196,7 @@ test("Direct edit: HTML style, text, undo, and element with children", async ({
     .first()
     .click({ position: { x: 6, y: 6 } });
   await expect(page.locator(".ins-tag")).toHaveText("article");
-  await expect(page.getByText("Has child elements")).toBeVisible();
+  await expect(page.getByText("Has child layers")).toBeVisible();
   await expect(page.getByLabel("Text content")).toHaveCount(0);
 
   const beforeBad = readFileSync(indexFile, "utf-8");

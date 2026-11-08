@@ -324,7 +324,7 @@ function Summary({ changes }: { changes: VersionChanges }) {
   );
 }
 
-export function CompareCode({
+function CompareCode({
   projectId,
   older,
   newer,
@@ -401,3 +401,5 @@ export function CompareCode({
     </div>
   );
 }
+
+export { CompareCode };

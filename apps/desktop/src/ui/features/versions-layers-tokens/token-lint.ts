@@ -16,9 +16,9 @@ import { parseDeclarations } from "../inspector/authored-css.js";
 import type { AuthoredCss } from "../inspector/authored-css.js";
 import type { StyleValues } from "../inspector/css-values.js";
 
-export type LintKind = "color" | "size" | "font";
+type LintKind = "color" | "size" | "font";
 
-export interface LintIssue {
+interface LintIssue {
   kind: LintKind;
   props: DirectStyleProperty[];
   value: string;
@@ -46,7 +46,7 @@ function borderHasColor(value: string): boolean {
     .some((part) => part !== "" && !BORDER_KEYWORDS.test(part));
 }
 
-export function authoredProps(
+function authoredProps(
   css: AuthoredCss | null
 ): Map<DirectStyleProperty, string> {
   const out = new Map<DirectStyleProperty, string>();
@@ -172,7 +172,7 @@ function issueFor(
     : null;
 }
 
-export function lintValues(
+function lintValues(
   values: StyleValues,
   entries: CompiledTokenEntry[],
   mode: TokenMode,
@@ -216,3 +216,7 @@ export function lintValues(
 
   return issues;
 }
+
+export { authoredProps, lintValues };
+
+export type { LintKind, LintIssue };

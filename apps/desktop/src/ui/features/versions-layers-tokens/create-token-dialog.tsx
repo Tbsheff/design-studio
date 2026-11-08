@@ -17,7 +17,7 @@ import { displayColor, isValidColor } from "../inspector/css-values.js";
 import type { CreateRequest } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";
 
-export interface CreateTokenSubmit {
+interface CreateTokenSubmit {
   group: TokenGroupName;
   name: string;
   value: string;
@@ -205,7 +205,7 @@ function NameHelp({
   );
 }
 
-export function CreateTokenDialog({
+function CreateTokenDialog({
   request,
   entries,
   onSubmit,
@@ -379,3 +379,7 @@ export function CreateTokenDialog({
     </dialog>
   );
 }
+
+export { CreateTokenDialog };
+
+export type { CreateTokenSubmit };

@@ -31,7 +31,7 @@ const releaseFlag = (set: (value: boolean) => void) => {
   set(false);
 };
 
-export const AGENT_BUSY_MESSAGE = "Agent is running. Wait or cancel.";
+const AGENT_BUSY_MESSAGE = "Agent is running. Wait or cancel.";
 
 interface Step {
   path: string;
@@ -122,7 +122,7 @@ function commitMessage(err: unknown): string {
     : errorText(err);
 }
 
-export function useTokenDraft(o: Options) {
+function useTokenDraft(o: Options) {
   const [pending, setPendingMap] = useState<PendingMap>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const theme = useCanvasTheme();
@@ -337,4 +337,8 @@ export function useTokenDraft(o: Options) {
   };
 }
 
-export type TokenDraft = ReturnType<typeof useTokenDraft>;
+type TokenDraft = ReturnType<typeof useTokenDraft>;
+
+export { AGENT_BUSY_MESSAGE, useTokenDraft };
+
+export type { TokenDraft };

@@ -3,7 +3,7 @@ import type { LayerNode, ReorderMove } from "@design-studio/contracts";
 
 const LOC_MAX = 1100;
 
-export interface LayerTree {
+interface LayerTree {
   nodes: LayerNode[];
   truncated: boolean;
 }
@@ -18,7 +18,7 @@ function count(value: unknown): number {
     : 0;
 }
 
-export function parseLayerTree(raw: {
+function parseLayerTree(raw: {
   nodes?: unknown;
   truncated?: unknown;
 }): LayerTree {
@@ -58,7 +58,7 @@ export function parseLayerTree(raw: {
   return { nodes, truncated: raw.truncated === true };
 }
 
-export function visibleRows(
+function visibleRows(
   nodes: LayerNode[],
   collapsed: ReadonlySet<number>
 ): LayerNode[] {
@@ -81,7 +81,7 @@ export function visibleRows(
   return rows;
 }
 
-export function layerKeys(nodes: LayerNode[]): Map<number, string> {
+function layerKeys(nodes: LayerNode[]): Map<number, string> {
   const keys = new Map<number, string>();
 
   const stack: { key: string; counts: Map<string, number> }[] = [
@@ -106,7 +106,7 @@ export function layerKeys(nodes: LayerNode[]): Map<number, string> {
   return keys;
 }
 
-export function ancestorsOf(nodes: LayerNode[], id: number): number[] {
+function ancestorsOf(nodes: LayerNode[], id: number): number[] {
   const index = nodes.findIndex((n) => n.id === id);
 
   if (index === -1) {
@@ -128,14 +128,11 @@ export function ancestorsOf(nodes: LayerNode[], id: number): number[] {
   return out;
 }
 
-export function parentOf(nodes: LayerNode[], id: number): number | null {
+function parentOf(nodes: LayerNode[], id: number): number | null {
   return ancestorsOf(nodes, id)[0] ?? null;
 }
 
-export function defaultCollapsed(
-  nodes: LayerNode[],
-  openDepth: number
-): Set<number> {
+function defaultCollapsed(nodes: LayerNode[], openDepth: number): Set<number> {
   return new Set(
     nodes
       .filter((n) => n.childCount > 0 && n.depth >= openDepth)
@@ -143,10 +140,7 @@ export function defaultCollapsed(
   );
 }
 
-export type TreeAction =
-  | { select: number }
-  | { toggle: number; open: boolean }
-  | null;
+type TreeAction = { select: number } | { toggle: number; open: boolean } | null;
 
 function firstChildOf(nodes: LayerNode[], node: LayerNode): number | null {
   if (node.childCount === 0) {
@@ -195,7 +189,7 @@ function expandAction(
   return parent === null ? null : { select: parent };
 }
 
-export function treeKeyAction(
+function treeKeyAction(
   key: string,
   shift: boolean,
   nodes: LayerNode[],
@@ -237,7 +231,7 @@ export function treeKeyAction(
   return target === null ? null : { select: target };
 }
 
-export function subtreeEnd(rows: LayerNode[], index: number): number {
+function subtreeEnd(rows: LayerNode[], index: number): number {
   const depth = rows[index]?.depth ?? 0;
   let end = index + 1;
 
@@ -248,7 +242,7 @@ export function subtreeEnd(rows: LayerNode[], index: number): number {
   return end;
 }
 
-export function siblingRow(
+function siblingRow(
   rows: LayerNode[],
   index: number,
   step: 1 | -1
@@ -274,12 +268,12 @@ export function siblingRow(
   return null;
 }
 
-export interface DropTarget {
+interface DropTarget {
   move: ReorderMove;
   line: number;
 }
 
-export function dropTarget(
+function dropTarget(
   rows: LayerNode[],
   id: number,
   y: number,
@@ -311,11 +305,11 @@ export function dropTarget(
 const FALLBACK_LABEL = /^[#.]/;
 const UNSAFE_NAME_CHARS = /["'`<>{}&\\\u0000-\u001F\u007F]/g;
 
-export function editableName(name: string): string {
+function editableName(name: string): string {
   return FALLBACK_LABEL.test(name) ? "" : name;
 }
 
-export function cleanName(value: string): string {
+function cleanName(value: string): string {
   return value.replaceAll(UNSAFE_NAME_CHARS, "").slice(0, LAYER_LABEL_MAX);
 }
 
@@ -338,7 +332,7 @@ const CONTAINER_TAGS = new Set([
 
 const EDGE_ZONE = 0.25;
 
-export interface LayerDropTarget {
+interface LayerDropTarget {
   drop: { into: number } | { before: number } | { after: number };
   line: number | null;
   into: number | null;
@@ -368,7 +362,7 @@ function edgeDrop(
   return { drop: { after: row.id }, into: null, line: (index + 1) * rowHeight };
 }
 
-export function layerDrop(
+function layerDrop(
   rows: LayerNode[],
   id: number,
   y: number,
@@ -398,7 +392,7 @@ export function layerDrop(
   return edgeDrop(rows, index, frac >= 0.5, rowHeight);
 }
 
-export function adjacentMove(
+function adjacentMove(
   rows: LayerNode[],
   id: number,
   y: number,
@@ -415,3 +409,22 @@ export function adjacentMove(
 
   return onPrev || onNext ? dropTarget(rows, id, y, rowHeight) : null;
 }
+
+export {
+  parseLayerTree,
+  visibleRows,
+  layerKeys,
+  ancestorsOf,
+  parentOf,
+  defaultCollapsed,
+  treeKeyAction,
+  subtreeEnd,
+  siblingRow,
+  dropTarget,
+  editableName,
+  cleanName,
+  layerDrop,
+  adjacentMove,
+};
+
+export type { LayerTree, TreeAction, DropTarget, LayerDropTarget };

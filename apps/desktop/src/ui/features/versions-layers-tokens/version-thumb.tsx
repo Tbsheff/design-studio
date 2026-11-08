@@ -40,13 +40,7 @@ function useInView(
   return seen;
 }
 
-export function VersionThumb({
-  projectId,
-  versionId,
-  active,
-  label,
-  onOpen,
-}: Props) {
+function VersionThumb({ projectId, versionId, active, label, onOpen }: Props) {
   const ref = useRef<HTMLSpanElement>(null);
 
   const [result, setResult] = useState<ThumbResult | undefined>(() =>
@@ -94,3 +88,5 @@ export function VersionThumb({
     </span>
   );
 }
+
+export { VersionThumb };

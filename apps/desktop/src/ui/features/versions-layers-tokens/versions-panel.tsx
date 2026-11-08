@@ -311,7 +311,7 @@ function compareSides(
     : new Map();
 }
 
-export function VersionsPanel(props: Props) {
+function VersionsPanel(props: Props) {
   const { project, directionId, versions } = props;
 
   const direction =
@@ -426,3 +426,5 @@ export function VersionsPanel(props: Props) {
     </div>
   );
 }
+
+export { VersionsPanel };

@@ -278,7 +278,7 @@ function Control({
   );
 }
 
-export function TokenControl(props: ControlProps) {
+function TokenControl(props: ControlProps) {
   const ui = useTokenUi();
 
   if (!ui || tokensForProperty(props.prop, ui.entries).length === 0) {
@@ -287,3 +287,5 @@ export function TokenControl(props: ControlProps) {
 
   return <Control {...props} ui={ui} />;
 }
+
+export { TokenControl };

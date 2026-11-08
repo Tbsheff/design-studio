@@ -49,7 +49,7 @@ function useDraftText(value: string, onChange: (next: string) => void) {
   };
 }
 
-export function TextValue({
+function TextValue({
   label,
   value,
   invalid,
@@ -78,7 +78,7 @@ export function TextValue({
   );
 }
 
-export function ColorValue({
+function ColorValue({
   label,
   value,
   invalid,
@@ -189,7 +189,7 @@ function useScrub(value: string, onChange: (next: string) => void) {
   };
 }
 
-export function DimensionValue({
+function DimensionValue({
   label,
   value,
   invalid,
@@ -243,3 +243,5 @@ export function DimensionValue({
     </div>
   );
 }
+
+export { TextValue, ColorValue, DimensionValue };

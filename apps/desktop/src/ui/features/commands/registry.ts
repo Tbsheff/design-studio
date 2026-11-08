@@ -60,6 +60,7 @@ export const commandBlocker = (id: string): string | null => {
   if (command) {
     return command.disabled ?? null;
   }
+
   return "Not available here";
 };
 

@@ -1,5 +1,6 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon, usePopover } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 
 import { Swatches } from "../inspector/swatches.js";
@@ -22,7 +23,7 @@ interface Props {
   onNew?: () => void;
 }
 
-const TriggerLabel = ({ pack }: { pack: PackSummary | null }) => {
+const TriggerLabel = ({ pack }: { pack: PackSummary | null }): ReactElement => {
   if (!pack) {
     return (
       <>
@@ -40,7 +41,7 @@ const TriggerLabel = ({ pack }: { pack: PackSummary | null }) => {
   );
 };
 
-const PackPicker = ({ state, value, onChange, onNew }: Props) => {
+const PackPicker = ({ state, value, onChange, onNew }: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -56,7 +57,7 @@ const PackPicker = ({ state, value, onChange, onNew }: Props) => {
 
   usePopover(open, root, close);
 
-  const choose = (pack: PackSummary | null) => {
+  const choose = (pack: PackSummary | null): void => {
     onChange(pack?.id ?? null);
     close(true);
   };

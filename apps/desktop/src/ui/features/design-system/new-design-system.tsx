@@ -273,18 +273,15 @@ const DropZone = ({
         <Icon name="image" size={20} />
       </span>
       <div className="nds-dropzone-text">
-        <strong>Drop screenshots, a logo, a tokens file or a DESIGN.md</strong>
-        <span>
-          The AI step looks at images. Tokens files (Figma variables, DTCG,
-          Tokens Studio) and DESIGN.md are read at once.
-        </span>
+        <strong>{COPY.textDropScreenshotsALogo}</strong>
+        <span>{COPY.textTheAiStepLooks}</span>
       </div>
       <button
         type="button"
         className="btn small"
         onClick={() => input.current?.click()}
       >
-        Choose files…
+        {COPY.textChooseFiles}
       </button>
       {hasFiles && (
         <ul className="nds-chips" aria-label={COPY.labelAddedFiles}>
@@ -370,7 +367,7 @@ const UrlField = ({
           disabled={!form.urlInput.trim() || full}
           onClick={add}
         >
-          Add
+          {COPY.textAdd}
         </button>
       </div>
       {form.urls.length > 0 && (
@@ -426,14 +423,14 @@ const DesignMdField = ({
           rows={6}
           placeholder={COPY.placeholderBrand1010ColorPalette}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(evt) => onChange(evt.target.value)}
         />
       ) : (
         <div className="nds-preview" aria-label={COPY.labelDesignMdPreview}>
           {value.trim() ? (
             <Markdown>{value}</Markdown>
           ) : (
-            <p className="muted">Nothing to preview yet.</p>
+            <p className="muted">{COPY.textNothingToPreviewYet}</p>
           )}
         </div>
       )}
@@ -458,7 +455,7 @@ const TokensField = ({
         accept=".json,application/json,.css,text/css"
         hidden
         aria-label={COPY.labelTokensFileUpload}
-        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+        onChange={(evtNext) => onChange(evtNext.target.files?.[0] ?? null)}
       />
       <span className={`nds-file truncate ${file ? "" : "muted"}`}>
         {file ? file.name : "No tokens file"}
@@ -468,7 +465,7 @@ const TokensField = ({
         className="btn small"
         onClick={() => input.current?.click()}
       >
-        Choose file…
+        {COPY.textChooseFile}
       </button>
       {file && (
         <button
@@ -476,7 +473,7 @@ const TokensField = ({
           className="btn ghost small"
           onClick={() => onChange(null)}
         >
-          Remove
+          {COPY.textRemove}
         </button>
       )}
     </div>
@@ -521,7 +518,7 @@ const FolderField = ({
             placeholder={COPY.placeholderUsersYouCodeApp}
             value={value}
             aria-label={COPY.labelFolderPath}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(eventNext) => onChange(eventNext.target.value)}
           />
         ) : (
           <span className={`nds-file truncate ${value ? "" : "muted"}`}>
@@ -534,7 +531,7 @@ const FolderField = ({
             className="btn small"
             onClick={() => void choose()}
           >
-            Choose folder…
+            {COPY.textChooseFolder}
           </button>
         )}
         {value && (
@@ -543,7 +540,7 @@ const FolderField = ({
             className="btn ghost small"
             onClick={() => onChange("")}
           >
-            Clear
+            {COPY.textClear}
           </button>
         )}
       </div>
@@ -569,45 +566,37 @@ const Advanced = ({
     <details className="nds-advanced" open={count > 0 ? true : undefined}>
       <summary>
         <span className="nds-section-head">
-          <span className="nds-section-title">Advanced</span>
+          <span className="nds-section-title">{COPY.textAdvanced}</span>
           <span className="nds-section-hint">
-            Code folder and import options
+            {COPY.textCodeFolderAndImport}
           </span>
         </span>
         <Icon name="chevronRight" size={14} />
       </summary>
       <div className="nds-advanced-body">
         <div className="nds-field">
-          <span className="nds-field-label">Tokens file</span>
+          <span className="nds-field-label">{COPY.textTokensFile}</span>
           <span className="nds-field-hint">
-            Figma variables JSON (with Light and Dark modes), DTCG or Tokens
-            Studio JSON, or CSS custom properties. It wins over every other
-            source.
+            {COPY.textFigmaVariablesJsonWith}
           </span>
-          <span className="nds-field-hint">
-            From Figma: export the variables yourself (a plugin or the REST
-            /variables/local answer) and choose the file here. The studio does
-            not ask for a Figma token and does not connect to Figma.
-          </span>
+          <span className="nds-field-hint">{COPY.textFromFigmaExportThe}</span>
           <TokensField
             file={form.tokensFile}
             onChange={(tokensFile) => set({ tokensFile })}
           />
         </div>
         <div className="nds-field">
-          <span className="nds-field-label">Code folder</span>
-          <span className="nds-field-hint">
-            Read only. The studio scans CSS, SCSS and Tailwind config files.
-          </span>
+          <span className="nds-field-label">{COPY.textCodeFolder}</span>
+          <span className="nds-field-hint">{COPY.textReadOnlyTheStudio}</span>
           <FolderField
             value={form.folder}
             onChange={(folder) => set({ folder })}
           />
         </div>
         <div className="nds-field">
-          <span className="nds-field-label">DESIGN.md</span>
+          <span className="nds-field-label">{COPY.labelDesignMd}</span>
           <span className="nds-field-hint">
-            Paste an existing DESIGN.md. It becomes the system&apos;s guide.
+            {COPY.textPasteAnExistingDesign}
           </span>
           <DesignMdField
             value={form.designMd}
@@ -712,11 +701,9 @@ const SourceSummary = ({ form }: { form: DraftForm }) => {
 
   return (
     <div className="nds-summary">
-      <h2>Sources</h2>
+      <h2>{COPY.textSources}</h2>
       {list.length === 0 ? (
-        <p className="nds-summary-empty">
-          Add a website, a brief, files or images.
-        </p>
+        <p className="nds-summary-empty">{COPY.textAddAWebsiteA}</p>
       ) : (
         <ul>
           {list.map((item, index) => (
@@ -744,32 +731,34 @@ const Basics = ({
     aria-label={COPY.labelDesignSystemSettings}
   >
     <label className="field">
-      <span>Name</span>
+      <span>{COPY.textName}</span>
       <input
         value={form.name}
         maxLength={80}
         placeholder={COPY.placeholderFromTheWebsiteOrBrief}
         aria-label={COPY.labelDesignSystemName}
-        onChange={(e) => set({ name: e.target.value })}
+        onChange={(eventOther) => set({ name: eventOther.target.value })}
       />
     </label>
     <label className="field">
-      <span>Mode</span>
+      <span>{COPY.labelMode}</span>
       <select
         className="select"
         value={form.mode}
         aria-label={COPY.labelMode}
-        onChange={(e) => set({ mode: e.target.value as Mode })}
+        onChange={(eventExtra) =>
+          set({ mode: eventExtra.target.value as Mode })
+        }
       >
-        <option value="auto">Detect</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
+        <option value="auto">{COPY.textDetect}</option>
+        <option value="light">{COPY.textLight}</option>
+        <option value="dark">{COPY.textDark}</option>
       </select>
     </label>
   </div>
 );
 
-export const NewDesignSystem = ({
+const NewDesignSystem = ({
   onCancel,
   onCreated,
 }: {
@@ -812,21 +801,18 @@ export const NewDesignSystem = ({
           disabled={busy}
         >
           <Icon name="arrowLeft" size={14} />
-          Back
+          {COPY.textBack}
         </button>
       </header>
       <main className="nds-main">
         <form
           className="nds-form"
-          onSubmit={(e) => void submit(e)}
+          onSubmit={(evtOther) => void submit(evtOther)}
           aria-busy={busy}
         >
           <div className="nds-head">
-            <h1>New design system</h1>
-            <p className="muted">
-              Add what you have. The studio opens the draft at once, reads each
-              source while you watch, then the AI step finishes it.
-            </p>
+            <h1>{COPY.textNewDesignSystem}</h1>
+            <p className="muted">{COPY.textAddWhatYouHave}</p>
           </div>
           <div className="nds-sources">
             <Section
@@ -851,7 +837,7 @@ export const NewDesignSystem = ({
                 maxLength={4000}
                 placeholder={COPY.placeholderCalmPreciseBankingAppFor}
                 value={form.brief}
-                onChange={(e) => set({ brief: e.target.value })}
+                onChange={(evtExtra) => set({ brief: evtExtra.target.value })}
               />
             </Section>
             <Section
@@ -889,7 +875,7 @@ export const NewDesignSystem = ({
                   onClick={onCancel}
                   disabled={busy}
                 >
-                  Cancel
+                  {COPY.textCancel}
                 </button>
               </div>
             </div>
@@ -899,3 +885,5 @@ export const NewDesignSystem = ({
     </div>
   );
 };
+
+export { NewDesignSystem };

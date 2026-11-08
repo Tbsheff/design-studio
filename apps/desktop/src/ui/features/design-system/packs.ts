@@ -88,6 +88,7 @@ const pickable = (state: PacksState): PacksState => {
   if (state.packs) {
     return { ...state, packs: state.packs.filter((pack) => !pack.draft) };
   }
+
   return state;
 };
 
@@ -150,6 +151,7 @@ const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
     if (index === -1) {
       return KEY_SWATCHES.length;
     }
+
     return index;
   };
 

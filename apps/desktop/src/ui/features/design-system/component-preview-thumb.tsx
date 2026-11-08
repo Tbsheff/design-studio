@@ -189,6 +189,7 @@ const keepReady = (prev: Shown, next: Shown): Shown => {
   if (next.state === "none" && prev.state === "ready") {
     return prev;
   }
+
   return next;
 };
 

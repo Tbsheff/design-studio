@@ -26,5 +26,6 @@ export const KeyHint = ({ id }: { id: KeyId }): ReactElement | null => {
   if (first) {
     return <Keys keys={first} />;
   }
+
   return null;
 };

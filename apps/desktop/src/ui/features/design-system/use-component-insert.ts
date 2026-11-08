@@ -42,6 +42,7 @@ const newSelector = (selector: string, position: InsertPosition): string => {
   if (position === "inside") {
     return `${selector} > :last-child`;
   }
+
   return `${selector} + *`;
 };
 
@@ -83,6 +84,7 @@ const frameRect = (
   if (el) {
     return { el, rect: el.getBoundingClientRect() };
   }
+
   return null;
 };
 

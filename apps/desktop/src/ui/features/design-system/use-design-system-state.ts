@@ -35,6 +35,7 @@ const touchesDesignSystem = (
   ) {
     return change.receivedAt;
   }
+
   return 0;
 };
 

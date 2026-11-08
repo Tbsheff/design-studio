@@ -135,14 +135,14 @@ const SavePackDialog = ({
   canCopy,
   onClose,
   onSave,
-}: SaveProps) => {
+}: SaveProps): ReactElement => {
   const [name, setName] = useState(defaultName);
   const [asNew, setAsNew] = useState(false);
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));
 
-  const submit = () => {
+  const submit = (): void => {
     if (!name.trim() || busy) {
       return;
     }

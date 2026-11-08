@@ -113,6 +113,7 @@ const stepDirection = (
   if (next) {
     return () => studioActions.onDirection(next.id);
   }
+
   return null;
 };
 

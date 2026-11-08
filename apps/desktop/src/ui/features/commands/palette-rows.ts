@@ -84,6 +84,7 @@ const groupIndex = (group: string): number => {
   if (at === -1) {
     return GROUP_ORDER.length;
   }
+
   return at;
 };
 
@@ -150,6 +151,7 @@ const suggested = (input: RowInput, context: Command[]): Row[] => {
   const byId = new Map(input.commands.map((chNext) => [chNext.id, chNext]));
   const make = byId.get("project.new");
   const open = byId.get("project.open-folder");
+
   const rows: Row[] = context.map((charNext) =>
     commandRow(charNext, "Suggested")
   );
@@ -333,6 +335,7 @@ const projectMatches = (input: RowInput): Row[] => {
       projectRow(r.item, "Projects", input.actions, { marks: r.marks })
     );
   }
+
   return looseMatches(input);
 };
 
@@ -380,6 +383,7 @@ const typedRows = (input: RowInput): Row[] => {
   if (found.length > 0) {
     return [...found, make];
   }
+
   return [make];
 };
 
@@ -387,6 +391,7 @@ const buildRows = (input: RowInput): Row[] => {
   if (input.query.trim() === "") {
     return emptyRows(input);
   }
+
   return typedRows(input);
 };
 

@@ -101,6 +101,7 @@ const slashCommands = (): Command[] =>
       if (command.slash || !SLASH_OF[command.id]) {
         return command;
       }
+
       return { ...command, slash: SLASH_OF[command.id] };
     })
     .filter((char) => char.slash);

@@ -3,7 +3,36 @@ interface LineMap {
   readonly col: (oldLine: number, oldCol: number) => number;
 }
 
+interface Span {
+  readonly from: number;
+  readonly to: number;
+}
+
+interface Hunk {
+  readonly after: string[];
+  readonly before: string[];
+}
+
 const CELL_MAX = 9_000_000;
+const TRIVIAL_LINE = /^(?:<\/[\w.:-]*>|\/?>|[\s{}()[\];,]*)$/u;
+
+const toCell = (
+  table: Uint32Array,
+  width: number,
+  position: { oldIndex: number; newIndex: number },
+  isEqual: boolean
+): number => {
+  const { oldIndex, newIndex } = position;
+
+  if (isEqual) {
+    return (table[(oldIndex + 1) * width + newIndex + 1] as number) + 1;
+  }
+
+  return Math.max(
+    table[(oldIndex + 1) * width + newIndex] as number,
+    table[oldIndex * width + newIndex + 1] as number
+  );
+};
 
 const lcsPairs = (
   oldLines: string[],
@@ -21,13 +50,12 @@ const lcsPairs = (
 
   for (let oldIndex = oldCount - 1; oldIndex >= 0; oldIndex -= 1) {
     for (let newIndex = newCount - 1; newIndex >= 0; newIndex -= 1) {
-      table[oldIndex * width + newIndex] =
+      table[oldIndex * width + newIndex] = toCell(
+        table,
+        width,
+        { newIndex, oldIndex },
         oldLines[oldIndex] === newLines[newIndex]
-          ? (table[(oldIndex + 1) * width + newIndex + 1] as number) + 1
-          : Math.max(
-              table[(oldIndex + 1) * width + newIndex] as number,
-              table[oldIndex * width + newIndex + 1] as number
-            );
+      );
     }
   }
 
@@ -55,33 +83,33 @@ const lcsPairs = (
 
 const pairByIndex = (
   mapping: Int32Array,
-  fromOld: number,
-  toOld: number,
-  fromNew: number,
-  toNew: number
+  oldSpan: Span,
+  newSpan: Span
 ): void => {
-  const count = Math.min(toOld - fromOld, toNew - fromNew);
+  const count = Math.min(oldSpan.to - oldSpan.from, newSpan.to - newSpan.from);
 
   for (let step = 0; step < count; step += 1) {
-    mapping[fromOld + step] = fromNew + step;
+    mapping[oldSpan.from + step] = newSpan.from + step;
   }
 };
 
 const pairHunk = (
   mapping: Int32Array,
-  before: string[],
-  after: string[],
-  fromOld: number,
-  toOld: number,
-  fromNew: number,
-  toNew: number
+  hunk: Hunk,
+  oldSpan: Span,
+  newSpan: Span
 ): void => {
-  if (toOld <= fromOld || toNew <= fromNew) {
+  if (oldSpan.to <= oldSpan.from || newSpan.to <= newSpan.from) {
     return;
   }
 
-  const oldText = before.slice(fromOld, toOld).map((line) => line.trim());
-  const newText = after.slice(fromNew, toNew).map((line) => line.trim());
+  const oldText = hunk.before
+    .slice(oldSpan.from, oldSpan.to)
+    .map((line) => line.trim());
+
+  const newText = hunk.after
+    .slice(newSpan.from, newSpan.to)
+    .map((line) => line.trim());
 
   const pairs = lcsPairs(oldText, newText).filter(
     ([oldIndex]) => !TRIVIAL_LINE.test(oldText[oldIndex] as string)
@@ -96,14 +124,12 @@ const pairHunk = (
   ]) {
     pairByIndex(
       mapping,
-      fromOld + lastOld,
-      fromOld + oldIndex,
-      fromNew + lastNew,
-      fromNew + newIndex
+      { from: oldSpan.from + lastOld, to: oldSpan.from + oldIndex },
+      { from: newSpan.from + lastNew, to: newSpan.from + newIndex }
     );
 
     if (oldIndex < oldText.length) {
-      mapping[fromOld + oldIndex] = fromNew + newIndex;
+      mapping[oldSpan.from + oldIndex] = newSpan.from + newIndex;
     }
 
     lastOld = oldIndex + 1;
@@ -147,12 +173,9 @@ const lineMapping = (before: string[], after: string[]): Int32Array => {
   ]) {
     pairHunk(
       mapping,
-      before,
-      after,
-      head + lastOld,
-      head + oldIndex,
-      head + lastNew,
-      head + newIndex
+      { after, before },
+      { from: head + lastOld, to: head + oldIndex },
+      { from: head + lastNew, to: head + newIndex }
     );
 
     if (oldIndex < midOld.length) {
@@ -166,22 +189,20 @@ const lineMapping = (before: string[], after: string[]): Int32Array => {
   return mapping;
 };
 
-const TRIVIAL_LINE = /^(?:<\/[\w.:-]*>|\/?>|[\s{}()[\];,]*)$/u;
-
 const unclaimedByText = (
   after: string[],
   mapping: Int32Array
 ): Map<string, number[]> => {
   const claimed = new Set(mapping);
   const byText = new Map<string, number[]>();
-  after.forEach((line, index) => {
-    if (claimed.has(index)) {
-      return;
-    }
 
-    const text = line.trim();
-    byText.set(text, [...(byText.get(text) ?? []), index]);
-  });
+  for (const [index, line] of after.entries()) {
+    if (!claimed.has(index)) {
+      const text = line.trim();
+
+      byText.set(text, [...(byText.get(text) ?? []), index]);
+    }
+  }
 
   return byText;
 };
@@ -210,6 +231,28 @@ const movedTo = (
   return null;
 };
 
+const applyMovedLine = (
+  before: string[],
+  mapping: Int32Array,
+  byText: Map<string, number[]>,
+  oldIndex: number
+): void => {
+  const text = (before[oldIndex] as string).trim();
+  const candidates = byText.get(text);
+  let prev = -1;
+
+  if (oldIndex > 0) {
+    prev = mapping[oldIndex - 1] as number;
+  }
+
+  const to = movedTo(text, candidates, prev);
+
+  if (to !== null && candidates) {
+    mapping[oldIndex] = to;
+    candidates.splice(candidates.indexOf(to), 1);
+  }
+};
+
 const matchMovedLines = (
   before: string[],
   after: string[],
@@ -218,25 +261,9 @@ const matchMovedLines = (
   const byText = unclaimedByText(after, mapping);
 
   for (let oldIndex = 0; oldIndex < before.length; oldIndex += 1) {
-    if ((mapping[oldIndex] as number) >= 0) {
-      continue;
+    if ((mapping[oldIndex] as number) < 0) {
+      applyMovedLine(before, mapping, byText, oldIndex);
     }
-
-    const text = (before[oldIndex] as string).trim();
-    const candidates = byText.get(text);
-
-    const to = movedTo(
-      text,
-      candidates,
-      oldIndex > 0 ? (mapping[oldIndex - 1] as number) : -1
-    );
-
-    if (to === null || !candidates) {
-      continue;
-    }
-
-    mapping[oldIndex] = to;
-    candidates.splice(candidates.indexOf(to), 1);
   }
 };
 
@@ -268,9 +295,9 @@ const lineMapOf = (before: string, after: string): LineMap => {
 
   return {
     col: (oldLine, oldCol) => {
-      const mapped = mapping[oldLine - 1];
+      const mapped = mapping[oldLine - 1] ?? -1;
 
-      if (mapped === undefined || mapped < 0) {
+      if (mapped < 0) {
         return oldCol;
       }
 
@@ -281,9 +308,9 @@ const lineMapOf = (before: string, after: string): LineMap => {
       );
     },
     line: (oldLine) => {
-      const mapped = mapping[oldLine - 1];
+      const mapped = mapping[oldLine - 1] ?? -1;
 
-      if (mapped === undefined || mapped < 0) {
+      if (mapped < 0) {
         return null;
       }
 

@@ -18,8 +18,8 @@ const FixtureRowItem = (props: FixtureRowProps): ReactElement => {
   }, [fixtureId, onDelete]);
 
   return (
-    <div className="ui-menu-item">
-      <span>{props.label}</span>
+    <div className="ui-menu-item frame-state-fixture">
+      <span className="truncate">{props.label}</span>
       <button
         type="button"
         role="menuitem"

@@ -1,11 +1,25 @@
 import { lazy } from "react";
 
+import { chatWidthStyle } from "./chat-splitter-model.js";
+import {
+  createDeltaBatcher,
+  toFrameSchedule,
+  toMergedDeltas,
+} from "./delta-batch-model.js";
 import { runStepText } from "./live-status-model.js";
+import { parseDraft, toDraft } from "./settings-draft-model.js";
+import type { SettingsDraft } from "./settings-draft-model.js";
 
 const ChatPanel = lazy(async () => {
   const loaded = await import("./chat-panel.js");
 
   return { default: loaded.ChatPanel };
+});
+
+const UnfinishedBanner = lazy(async () => {
+  const loaded = await import("./unfinished-banner.js");
+
+  return { default: loaded.UnfinishedBanner };
 });
 
 const McpToasts = lazy(async () => {
@@ -20,4 +34,18 @@ const McpPointBadge = lazy(async () => {
   return { default: loaded.McpPointBadge };
 });
 
-export { ChatPanel, McpPointBadge, McpToasts, runStepText };
+export {
+  ChatPanel,
+  McpPointBadge,
+  McpToasts,
+  chatWidthStyle,
+  createDeltaBatcher,
+  parseDraft,
+  runStepText,
+  toDraft,
+  toFrameSchedule,
+  toMergedDeltas,
+  UnfinishedBanner,
+};
+
+export type { SettingsDraft };

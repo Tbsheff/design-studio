@@ -2,9 +2,14 @@ import { useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import type { SetImageRequest } from "../../../shared/image.js";
-import { fileData, imageApi, imageError, imageTargetOf } from "./image-api.js";
 import { RESELECT_AFTER_MS } from "./image-model.js";
 import type { Props } from "./image-model.js";
+import {
+  toFileData,
+  imageApi,
+  toImageError,
+  toImageTarget,
+} from "./use-image-api.js";
 
 interface UseImageSetResult {
   readonly isBusy: boolean;
@@ -43,10 +48,10 @@ const useImageSet = (props: Props): UseImageSetResult => {
     file?: Blob | null
   ): Promise<void> => {
     try {
-      const image = file ? await fileData(file) : undefined;
+      const image = file ? await toFileData(file) : undefined;
 
       const result = await imageApi.set(props.projectId, props.directionId, {
-        target: imageTargetOf(props.selection),
+        target: toImageTarget(props.selection),
         ...change,
         ...(image ? { image } : {}),
       });
@@ -59,7 +64,7 @@ const useImageSet = (props: Props): UseImageSetResult => {
         reselect();
       }
     } catch (failure) {
-      setError(imageError(failure));
+      setError(toImageError(failure));
     }
   };
 

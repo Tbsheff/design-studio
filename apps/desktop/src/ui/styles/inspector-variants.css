@@ -1,7 +1,10 @@
 .ins-variants {
   display: grid;
   gap: var(--s-1);
+  min-width: 0;
+  margin: 0;
   padding: var(--s-2) var(--pane-inset);
+  border: 0;
   border-top: 1px solid var(--line);
 }
 
@@ -13,7 +16,13 @@
 }
 
 .ins-variant-width {
+  display: flex;
   flex: 0 1 112px;
+  min-width: 0;
+}
+
+.ins-variant-width .ui-select-root {
+  flex: 1 1 auto;
 }
 
 .ins-variants-off {

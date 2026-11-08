@@ -3,8 +3,9 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { dataTextPrompt, useInspectorApp } from "./inspector-shared.js";
+import { toDataTextPrompt } from "./inspector-shared-model.js";
 import type { SaveStatus } from "./use-direct-edit.js";
+import { useInspectorApp } from "./use-inspector-app.js";
 
 interface ErrorLineProps {
   readonly status: SaveStatus;
@@ -22,7 +23,7 @@ const ErrorLine = ({ status, text }: ErrorLineProps): ReactElement | null => {
 
   const ask = useCallback(() => {
     if (data) {
-      app.ask?.(dataTextPrompt(text ?? "", data));
+      app.ask?.(toDataTextPrompt(text ?? "", data));
     }
   }, [app, data, text]);
 

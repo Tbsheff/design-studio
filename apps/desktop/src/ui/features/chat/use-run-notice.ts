@@ -13,7 +13,7 @@ const STATUS_TEXT: Partial<Record<RunStatus, string>> = {
 const canNotify = (): boolean =>
   document.hidden &&
   !isDesktop() &&
-  typeof Notification !== "undefined" &&
+  "Notification" in globalThis &&
   Notification.permission === "granted";
 
 const newlyFinished = (
@@ -27,17 +27,13 @@ const newlyFinished = (
     const finishedAt = run.summary?.finishedAt ?? null;
     const text = STATUS_TEXT[run.status];
 
-    if (
-      finishedAt === null ||
-      finishedAt < since ||
-      !text ||
-      shown.has(run.runId)
-    ) {
-      continue;
-    }
+    const isFresh =
+      finishedAt !== null && finishedAt >= since && !shown.has(run.runId);
 
-    shown.add(run.runId);
-    out.push(text);
+    if (isFresh && text) {
+      shown.add(run.runId);
+      out.push(text);
+    }
   }
 
   return out;
@@ -48,7 +44,11 @@ const useRunNotice = (projectName: string | null, runs: RunMap): void => {
   const shown = useRef(new Set<string>());
   useEffect(() => {
     const onVisibility = (): void => {
-      hiddenAt.current = document.hidden ? Date.now() : null;
+      hiddenAt.current = null;
+
+      if (document.hidden) {
+        hiddenAt.current = Date.now();
+      }
     };
 
     document.addEventListener("visibilitychange", onVisibility);
@@ -67,13 +67,17 @@ const useRunNotice = (projectName: string | null, runs: RunMap): void => {
       return;
     }
 
-    const body =
-      finished.length === 1
-        ? (finished[0] ?? "")
-        : `${finished.length} runs ended`;
+    let body = `${finished.length} runs ended`;
+
+    if (finished.length === 1) {
+      body = finished[0] ?? "";
+    }
 
     const notice = new Notification(projectName || "Run finished", { body });
-    notice.onclick = (): void => window.focus();
+    const focusWindow = (): void => window.focus();
+    notice.addEventListener("click", focusWindow);
+
+    return (): void => notice.removeEventListener("click", focusWindow);
   }, [projectName, runs]);
 };
 

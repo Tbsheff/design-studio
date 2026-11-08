@@ -2,8 +2,8 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { importFigmaDirectEdit } from "@design-studio/actions/direct-edit/import-figma";
 import type { inspectPropsInstanceDirectEdit } from "@design-studio/actions/direct-edit/inspect-props-instance";
 import type { listPropsComponentsDirectEdit } from "@design-studio/actions/direct-edit/list-props-components";
-import type { setPropsDirectEdit } from "@design-studio/actions/direct-edit/set-props";
 import type { setVariantClassesDirectEdit } from "@design-studio/actions/direct-edit/set-variant-classes";
+import type { setProp } from "@design-studio/actions/prop/set";
 import type { Direction, Project, VersionMeta } from "@design-studio/contracts";
 import type {
   FigmaImportPreview,
@@ -45,7 +45,7 @@ type PropsInstanceBody = Omit<
   RefKeys
 >;
 
-type SetPropsBody = Omit<Input<typeof setPropsDirectEdit>, RefKeys>;
+type SetPropsBody = Omit<Input<typeof setProp>, RefKeys>;
 
 type VariantClassBody = Omit<
   Input<typeof setVariantClassesDirectEdit>,

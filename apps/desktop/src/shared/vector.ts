@@ -102,7 +102,7 @@ export interface VectorResult {
   title: string;
 }
 
-export function isSvgShapeTag(tag: string | undefined): boolean {
+export function isSvgDrawingTag(tag: string | undefined): boolean {
   return (
     tag !== undefined &&
     (SVG_SHAPE_TAGS as readonly string[]).includes(tag.toLowerCase())

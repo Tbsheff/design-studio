@@ -17,6 +17,22 @@ const isThemeToken = (token: PortableToken): boolean =>
 const toLines = (tokens: readonly PortableToken[]): readonly string[] =>
   tokens.map((token) => toDeclaration(token.cssVar, token.light));
 
+const isColorAlias = (token: PortableToken): boolean =>
+  token.type === "color" && !isThemeToken(token);
+
+const toColorAliasLines = (
+  tokens: readonly PortableToken[]
+): readonly string[] =>
+  tokens.flatMap((token) => {
+    if (!isColorAlias(token)) {
+      return [];
+    }
+
+    const name = token.cssVar.slice("--".length);
+
+    return [`  --color-${name}: var(${token.cssVar});`];
+  });
+
 const toTailwind = (tokens: readonly PortableToken[]): FormatOutput => {
   const theme = tokens.filter((token) => isThemeToken(token));
   const rest = tokens.filter((token) => !isThemeToken(token));
@@ -28,6 +44,7 @@ const toTailwind = (tokens: readonly PortableToken[]): FormatOutput => {
       toBlock("@theme", toLines(theme)),
       toBlock(":root", toLines(rest)),
       toBlock(".dark", toDarkLines(tokens)),
+      toBlock("@theme inline", toColorAliasLines(tokens)),
     ]),
     tokenCount: tokens.length,
   };

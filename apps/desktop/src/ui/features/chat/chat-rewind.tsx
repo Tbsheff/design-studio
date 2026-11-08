@@ -5,6 +5,7 @@ import type { KeyboardEvent, ReactElement } from "react";
 
 import { RUN_TITLE_MAX } from "../../../shared/rewind.js";
 import { UserMessage } from "./chat-parts.js";
+import type { TurnActions } from "./chat-turn-model.js";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
@@ -16,17 +17,6 @@ interface TurnRewind {
   restoreVersionId: string | null;
   forkBase: string | null;
   editTip: string | null;
-}
-
-interface TurnActions {
-  onRestore: (versionId: string) => void;
-  onEditResend: (
-    run: RunView,
-    prompt: string,
-    fromVersionId: string
-  ) => Promise<void>;
-  onRename: (runId: string, title: string) => Promise<void>;
-  dirtyCount: () => number;
 }
 
 const TurnButton = ({
@@ -343,4 +333,4 @@ const UserTurn = ({
 
 export { UserTurn };
 
-export type { TurnActions, TurnRewind };
+export type { TurnRewind };

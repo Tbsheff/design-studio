@@ -9,7 +9,6 @@ import type {
 
 import { useLive } from "../../platform/live-store.js";
 import { resizeReadout } from "../canvas/use-resize-handles.js";
-import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import {
   SIZE_MODES,
@@ -20,6 +19,7 @@ import {
 } from "./sizing.js";
 import type { Axis, SizeFacts, SizeMode } from "./sizing.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { setEdit } from "./use-layout-keys.js";
 
 const liveFacts = (
   edit: DirectEdit,
@@ -286,7 +286,10 @@ const SizeRow = ({
           value={mode}
           options={SIZE_MODES}
           onChange={(next: SizeMode) =>
-            write(edit, sizePatch(axis, next, edit.values, parent, used, facts))
+            setEdit(
+              edit,
+              sizePatch(axis, next, edit.values, parent, used, facts)
+            )
           }
         />
       </div>

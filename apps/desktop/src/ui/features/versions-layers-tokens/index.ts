@@ -1,10 +1,20 @@
 import { lazy } from "react";
+import type { LazyExoticComponent } from "react";
+
+import type { CreateTokenDialog as CreateTokenDialogView } from "./create-token-dialog.js";
 
 const CompareView = lazy(async () => {
   const loaded = await import("./compare-view.js");
 
   return { default: loaded.CompareView };
 });
+
+const CreateTokenDialog: LazyExoticComponent<typeof CreateTokenDialogView> =
+  lazy(async () => {
+    const loaded = await import("./create-token-dialog.js");
+
+    return { default: loaded.CreateTokenDialog };
+  });
 
 const LayersPanel = lazy(async () => {
   const loaded = await import("./layers-panel.js");
@@ -24,6 +34,18 @@ const VersionsPanel = lazy(async () => {
   return { default: loaded.VersionsPanel };
 });
 
-export { CompareView, LayersPanel, TokensPanel, VersionsPanel };
+export {
+  CompareView,
+  CreateTokenDialog,
+  LayersPanel,
+  TokensPanel,
+  VersionsPanel,
+};
 
 export { TokenControl } from "./token-control.js";
+
+export type { CreateTokenSubmit } from "./create-token-dialog.js";
+
+export { lintValues } from "./token-lint.js";
+
+export type { LintIssue } from "./token-lint.js";

@@ -40,34 +40,40 @@ const ComponentsPanel = ({
     [directionId, projectId, selection]
   );
 
-  const insert = useInsertTab();
+  const { select: handleSelect, tab } = useInsertTab();
+
+  let panel = (
+    <FeatureComponentsPanel
+      projectId={projectId}
+      directionId={directionId}
+      list={list}
+      active={active}
+      onMention={onMention}
+      kind={kind}
+      selection={selection}
+      renderGallery={renderGallery}
+    />
+  );
+
+  if (tab === "patterns") {
+    panel = (
+      <Suspense fallback={null}>
+        <PatternPanel
+          directionId={directionId}
+          kind={kind}
+          projectId={projectId}
+          selection={selection}
+        />
+      </Suspense>
+    );
+  }
 
   return (
     <>
       <Suspense fallback={null}>
-        <PatternTabs onSelect={insert.select} tab={insert.tab} />
+        <PatternTabs onSelect={handleSelect} tab={tab} />
       </Suspense>
-      {insert.tab === "patterns" ? (
-        <Suspense fallback={null}>
-          <PatternPanel
-            directionId={directionId}
-            kind={kind}
-            projectId={projectId}
-            selection={selection}
-          />
-        </Suspense>
-      ) : (
-        <FeatureComponentsPanel
-          projectId={projectId}
-          directionId={directionId}
-          list={list}
-          active={active}
-          onMention={onMention}
-          kind={kind}
-          selection={selection}
-          renderGallery={renderGallery}
-        />
-      )}
+      {panel}
     </>
   );
 };

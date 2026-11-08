@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import type { ReactElement } from "react";
 
 import { GridSlot } from "../../inspector-slots.js";
-import { useEditVariant } from "./edit-variant.js";
 import type { InspectorProps } from "./inspector-model.js";
+import { useEditVariant } from "./use-edit-variant.js";
 
 const GridSection = (props: InspectorProps): ReactElement | null => {
   const { directionId, isEditable: editable, projectId, selection } = props;

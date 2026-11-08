@@ -37,16 +37,16 @@ const place = async (
     return;
   }
 
-  const { fileData, imageApi, imageError, imageTargetOf } =
-    await import("./image-api.js");
+  const { toFileData, imageApi, toImageError, toImageTarget } =
+    await import("./use-image-api.js");
 
   try {
-    const image = await fileData(file);
+    const image = await toFileData(file);
     const kind = imageKindOf(selection);
 
     const request: SetImageRequest = {
       image,
-      target: imageTargetOf(selection),
+      target: toImageTarget(selection),
       ...(kind
         ? {}
         : {
@@ -59,7 +59,7 @@ const place = async (
     const result = await imageApi.set(options.projectId, directionId, request);
     options.notify(`${result.title}.`);
   } catch (error) {
-    options.notify(imageError(error));
+    options.notify(toImageError(error));
   }
 };
 

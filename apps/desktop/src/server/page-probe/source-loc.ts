@@ -1,11 +1,22 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type * as babelTypes from "@babel/types";
 import type { SourceLoc } from "@design-studio/contracts";
 
 import { parseSource } from "../direct-edit/engine/index.js";
 import { EditError } from "./edit-error.js";
+
+interface AstStart {
+  readonly line: number;
+  readonly column: number;
+}
+
+interface AstNode {
+  readonly type: string | null;
+  readonly loc: { readonly start: AstStart } | null;
+}
+
+type ParsedSource = ReturnType<typeof parseSource>;
 
 const FULL = /^(?<file>.+):(?<line>\d+):(?<column>\d+)$/u;
 const LINE_ONLY = /^(?<file>.+):(?<line>\d+)$/u;
@@ -57,38 +68,51 @@ const insideTree = (workTree: string, file: string): string => {
   return absolute;
 };
 
-const tagStartsOn = (root: babelTypes.Node, line: number): number[] => {
+const isAstNode = (value: unknown): value is AstNode =>
+  typeof value === "object" && value !== null;
+
+const toChildren = (node: AstNode): unknown[] => {
+  const children: unknown[] = [];
+
+  for (const [key, value] of Object.entries(node)) {
+    if (key !== "loc") {
+      children.push(value);
+    }
+  }
+
+  return children;
+};
+
+const tagStartsOn = (root: ParsedSource, line: number): number[] => {
   const cols: number[] = [];
   const stack: unknown[] = [root];
 
   while (stack.length > 0) {
-    const node = stack.pop() as Record<string, unknown> | null;
+    const node = stack.pop();
 
-    if (!node || typeof node !== "object") {
-      continue;
-    }
+    if (isAstNode(node)) {
+      const start = node.loc?.start;
 
-    if (Array.isArray(node)) {
-      stack.push(...node);
-      continue;
-    }
-
-    if (node.type === "JSXOpeningElement") {
-      const start = (node.loc as babelTypes.SourceLocation | undefined)?.start;
-
-      if (start?.line === line) {
+      if (node.type === "JSXOpeningElement" && start?.line === line) {
         cols.push(start.column + 1);
       }
-    }
 
-    for (const [key, value] of Object.entries(node)) {
-      if (key !== "loc" && value && typeof value === "object") {
-        stack.push(value);
-      }
+      stack.push(...toChildren(node));
     }
   }
 
   return cols.toSorted((left, right) => left - right);
+};
+
+const toFileText = async (
+  workTree: string,
+  file: string
+): Promise<string | null> => {
+  try {
+    return await readFile(insideTree(workTree, file), "utf-8");
+  } catch {
+    return null;
+  }
 };
 
 const colOnLine = async (
@@ -103,9 +127,7 @@ const colOnLine = async (
     );
   }
 
-  const text = await readFile(insideTree(workTree, file), "utf-8").catch(
-    () => null
-  );
+  const text = await toFileText(workTree, file);
 
   if (text === null) {
     throw new EditError(`${raw}: there is no file ${file} in the project.`);
@@ -135,24 +157,24 @@ const resolveSourceLoc = async (
 ): Promise<SourceLoc> => {
   const full = FULL.exec(raw.trim());
 
-  if (full) {
+  if (full?.groups) {
     return {
-      col: Number(full[3]),
-      file: fullFile(scope, full[1] as string),
-      line: Number(full[2]),
+      col: Number(full.groups.column),
+      file: fullFile(scope, full.groups.file as string),
+      line: Number(full.groups.line),
     };
   }
 
   const lineOnly = LINE_ONLY.exec(raw.trim());
 
-  if (!lineOnly) {
+  if (!lineOnly?.groups) {
     throw new EditError(
       "pass the source as file:line:col or file:line, for example src/App.tsx:12:7 (get_layers prints it)."
     );
   }
 
-  const file = fullFile(scope, lineOnly[1] as string);
-  const line = Number(lineOnly[2]);
+  const file = fullFile(scope, lineOnly.groups.file as string);
+  const line = Number(lineOnly.groups.line);
 
   return { col: await colOnLine(workTree, file, line, raw), file, line };
 };

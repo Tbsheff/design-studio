@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
-import { parseAuthoredReply } from "./authored-css.js";
-import type { AuthoredCss } from "./authored-css.js";
+import { toAuthoredReply } from "./authored-css-model.js";
+import type { AuthoredCss } from "./authored-css-model.js";
 
 const REPLY_TIMEOUT_MS = 1500;
 
@@ -30,7 +30,7 @@ const requestAuthoredCss = (
         return;
       }
 
-      finish(parseAuthoredReply(message));
+      finish(toAuthoredReply(message));
     });
 
     const timer = globalThis.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);

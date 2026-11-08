@@ -4,6 +4,7 @@ import type { LazyExoticComponent } from "react";
 import type { TweaksPanel as TweaksPanelView } from "./tweaks-panel.js";
 
 const Inspector = lazy(async () => {
+  await import("../../styles/inspector-edit.css");
   const loaded = await import("./inspector.js");
 
   return { default: loaded.Inspector };
@@ -19,8 +20,57 @@ const TweaksPanel: LazyExoticComponent<typeof TweaksPanelView> = lazy(
 
 export { Inspector, TweaksPanel };
 
-export { useEditVariant } from "./edit-variant.js";
+export {
+  editVariantStore,
+  setForceState,
+  useEditVariant,
+} from "./use-edit-variant.js";
 
-export { inspectorEmptyReason, isDirectEditable } from "./inspector-model.js";
+export { toInspectorEmptyReason, isDirectEditable } from "./inspector-model.js";
 
 export { canPolishRun, POLISH_REQUEST } from "./polish-model.js";
+
+export { toJoinedCorners } from "./corners-model.js";
+
+export {
+  SIDES,
+  hasChildElements,
+  isValidColor,
+  toBoxSides,
+  toChangedProps,
+  toDisplayColor,
+  toHexColor,
+  toNormalizedLength,
+  toNumberText,
+  toParsedNumber,
+  toShiftedPart,
+  toShiftedValue,
+  toSteppedValue,
+  toStyleValues,
+  toTextEditability,
+} from "./css-value-model.js";
+
+export type { Shift, ShiftPart, Side, StyleValues } from "./css-value-model.js";
+
+export {
+  INLINE_SOURCE,
+  MAX_BYTES,
+  MAX_RULES,
+  isCoveredDeclaration,
+  toAuthoredReply,
+  toCollapsedCrumbs,
+  toCopyCss,
+  toDeclarations,
+  toOtherStyles,
+  toPathCrumbs,
+  toSelectionPath,
+} from "./authored-css-model.js";
+
+export type {
+  AuthoredCss,
+  AuthoredDeclaration,
+  Crumb,
+  PathCrumb,
+} from "./authored-css-model.js";
+
+export { toImageTarget } from "./use-image-api.js";

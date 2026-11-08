@@ -30,6 +30,20 @@
   white-space: normal;
 }
 
+.frame-state-fixture {
+  contain: inline-size;
+}
+
+.frame-state-fixture > .truncate {
+  flex: 1 1 0;
+}
+
+.frame-state-fixture > [role="menuitem"] {
+  flex: none;
+  width: auto;
+  margin-left: auto;
+}
+
 .frame-state-user {
   min-width: 0;
   overflow: hidden;

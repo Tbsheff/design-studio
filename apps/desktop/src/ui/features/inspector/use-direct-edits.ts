@@ -7,9 +7,8 @@ import type { MutableRefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
-import { isApiConflict, isApiError } from "./api-error.js";
-import { changedProps, valuesFromStyles } from "./css-values.js";
-import type { StyleValues } from "./css-values.js";
+import { toChangedProps, toStyleValues } from "./css-value-model.js";
+import type { StyleValues } from "./css-value-model.js";
 import {
   addShift,
   mergeValues,
@@ -20,6 +19,7 @@ import {
 } from "./mixed-values.js";
 import type { Shift, ShiftPart, Shifts } from "./mixed-values.js";
 import { startOptimistic } from "./optimistic-edit.js";
+import { isApiConflict, isApiError } from "./use-api-error.js";
 import type {
   DirectEdit,
   DirectEditCommit,
@@ -59,7 +59,7 @@ const useDirectEdits = (
   const bases = useMemo(
     () =>
       options.selections.map((selectionContext) =>
-        valuesFromStyles(selectionContext.styles)
+        toStyleValues(selectionContext.styles)
       ),
     [options.selections]
   );
@@ -145,15 +145,18 @@ const useDirectEdits = (
   );
 
   const pendingStyle = useCallback(() => {
-    const style = changedProps(draftRef.current, mergedRef.current.values);
+    const style = toChangedProps(draftRef.current, mergedRef.current.values);
     const { rewrite } = opts.current;
 
     if (!rewrite || Object.keys(style).length === 0) {
       return style;
     }
 
-    const next = changedProps(rewrite(style), mergedRef.current.values);
-    const moved = changedProps(next, { ...mergedRef.current.values, ...style });
+    const next = toChangedProps(rewrite(style), mergedRef.current.values);
+    const moved = toChangedProps(next, {
+      ...mergedRef.current.values,
+      ...style,
+    });
 
     if (Object.keys(moved).length > 0) {
       setDraft({ ...draftRef.current, ...moved });

@@ -20,6 +20,10 @@ import { frameSrc, postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
+import {
+  PREVIEW_ARRANGE_KEY_EVENT,
+  PREVIEW_LAYOUT_KEY_EVENT,
+} from "../../platform/preview-key-events.js";
 import { randomToken } from "../../platform/session.js";
 import { reportAppStart } from "../../platform/telemetry.js";
 import {
@@ -28,7 +32,7 @@ import {
 } from "../chat/use-escape-stop.js";
 import { moveRegion, openLayer, runCommand } from "../commands/index.js";
 import type { BuildError, FilesChange } from "../home/use-studio-data.js";
-import { textEditability } from "../inspector/css-values.js";
+import { toTextEditability } from "../inspector/index.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 import { parseLayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
@@ -47,9 +51,6 @@ import type {
 import type { PreviewSlot } from "./preview-slot-model.js";
 import { PREVIEW_HISTORY_EVENT } from "./use-undo-shortcut.js";
 import { PREVIEW_TOOL_KEY_EVENT } from "./vector-tool-model.js";
-
-const PREVIEW_LAYOUT_KEY_EVENT = "studio:preview-layout-key";
-const PREVIEW_ARRANGE_KEY_EVENT = "studio:preview-arrange-key";
 
 type KeyMessage = Extract<
   BridgeToParent,
@@ -881,7 +882,7 @@ const usePreviewFrames = (options: Options) => {
         move === "child" &&
         cur.textEditAllowed &&
         target &&
-        textEditability(target) === "ok"
+        toTextEditability(target) === "ok"
       ) {
         frontFrame()?.element?.focus();
       }

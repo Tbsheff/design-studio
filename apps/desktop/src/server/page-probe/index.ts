@@ -27,11 +27,13 @@ export {
   memoPage,
   resolveLayerRef,
   resolveLayerRefs,
+  getLayerRefPaths,
   scanLayers,
   scopeOf,
+  toProbeTarget,
 } from "./layer-ref.js";
 
-export type { Layer, Viewport } from "./layer-ref.js";
+export type { Layer, ProbeTarget, Viewport } from "./layer-ref.js";
 
 export { lineMapOf } from "./line-map.js";
 

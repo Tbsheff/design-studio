@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
-interface Props {
+interface UnfinishedBannerProps {
   count: number;
   busy: boolean;
   runStopped: boolean;
@@ -17,8 +17,8 @@ const UnfinishedBanner = ({
   runStopped,
   onKeep,
   onDiscard,
-}: Props): ReactElement => (
-  <div className="banner" role="status">
+}: UnfinishedBannerProps): ReactElement => (
+  <output className="banner">
     <Icon name="alert" />
     <span>
       {copy.unfinishedChangesIn}
@@ -48,7 +48,9 @@ const UnfinishedBanner = ({
     >
       {copy.keep}
     </button>
-  </div>
+  </output>
 );
 
 export { UnfinishedBanner };
+
+export type { UnfinishedBannerProps };

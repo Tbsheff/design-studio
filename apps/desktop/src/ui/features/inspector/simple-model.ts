@@ -7,10 +7,10 @@ import type { SharedSource } from "@design-studio/contracts/app";
 import type { MutableRefObject, ReactNode } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
-import type { DeclaredMargins } from "./box-model.js";
+import type { DeclaredMargins } from "./box-model-model.js";
 import { copy } from "./copy.js";
-import { SIDES } from "./css-values.js";
-import type { StyleValues } from "./css-values.js";
+import { SIDES } from "./css-value-model.js";
+import type { StyleValues } from "./css-value-model.js";
 import type {
   DesignTokens,
   DirectEdit,
@@ -18,14 +18,14 @@ import type {
   DirectEditControl,
   SaveStatus,
   AuthoredCssState,
+  VariantScope,
 } from "./deps.js";
-import type { VariantScope } from "./edit-variant.js";
-import type { ElementClasses } from "./inspector-classes.js";
+import type { ElementClasses } from "./element-classes-model.js";
+import type { NumberSpec } from "./number-field-model.js";
 import type {
   ScopeInput,
   UseInspectorTokensResult,
-} from "./inspector-tokens.js";
-import type { NumberSpec } from "./number-field-model.js";
+} from "./token-scope-model.js";
 
 const TEXT_SHADOW = "text-shadow";
 

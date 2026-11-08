@@ -35,16 +35,13 @@ interface RawElement {
   text: string;
   outerHTML: string;
   styles: Record<string, string>;
-  rect: { x: number; y: number; width: number; height: number };
+  rect: SelectionContext["rect"];
   loc: string | null;
   usedAt: string | null;
   usedBy: ComponentUse | null;
   owners: ComponentOwner[];
   ancestors: string[];
 }
-
-const probe = (selector: string): string =>
-  `(${probeBody()})(${JSON.stringify(selector)})`;
 
 const probeBody = (): string => `(async (selector) => {
     let el;
@@ -60,6 +57,9 @@ const probeBody = (): string => `(async (selector) => {
     const app = tagged ? null : await (${appSourceBody()})(el);
     return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().slice(0, 2000), outerHTML: el.outerHTML.slice(0, 10000), styles, rect: { x: Math.round(r.x), y: Math.round(r.y + scrollY), width: Math.round(r.width), height: Math.round(r.height) }, loc: tagged || app?.loc || null, usedAt: app?.usedAt ?? null, usedBy: app?.usedBy ?? null, owners: ${ownerWalk()}(el), ancestors };
   })`;
+
+const probe = (selector: string): string =>
+  `(${probeBody()})(${JSON.stringify(selector)})`;
 
 const probeAll = (selectors: string[]): string =>
   `Promise.all((${JSON.stringify(selectors)}).map(${probeBody()}))`;
@@ -130,10 +130,18 @@ const describeElement = async (
   return null;
 };
 
-const textHintsOf = (element: SelectionContext): TextSourceHints => ({
-  text: element.text,
-  ...(element.usedAt ? { usedAt: element.usedAt } : {}),
-  ...(element.owners?.length ? { owners: element.owners } : {}),
-});
+const textHintsOf = (element: SelectionContext): TextSourceHints => {
+  const hints: TextSourceHints = { text: element.text };
+
+  if (element.usedAt) {
+    hints.usedAt = element.usedAt;
+  }
+
+  if (element.owners?.length) {
+    hints.owners = element.owners;
+  }
+
+  return hints;
+};
 
 export { describeElements, describeElement, textHintsOf };

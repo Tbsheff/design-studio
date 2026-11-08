@@ -26,6 +26,11 @@ interface Message {
   readonly text: string;
 }
 
+interface FrameRequest {
+  readonly path?: string;
+  readonly viewport: { readonly width: number; readonly height: number };
+}
+
 interface Tool {
   readonly key: KeyId;
   readonly label: string;
@@ -94,6 +99,8 @@ const SPACE_TOOLS: Tool[] = [
 ];
 
 const OK_MS = 3000;
+const DISTRIBUTE_ABSOLUTE_MIN = 3;
+const DEFAULT_MIN = 2;
 
 const isAbsolute = (selection: SelectionContext): boolean => {
   const position = selection.styles.position ?? "";
@@ -106,7 +113,7 @@ const isArrangeShown = (selection: SelectionContext[]): boolean => {
     return true;
   }
 
-  const only = selection[0];
+  const [only] = selection;
 
   if (!only) {
     return false;
@@ -117,7 +124,7 @@ const isArrangeShown = (selection: SelectionContext[]): boolean => {
   return isAbsolute(only) || parent.isFlex || parent.isGrid;
 };
 
-const minCount = (
+const getMinCount = (
   action: ArrangeAction,
   selection: SelectionContext[]
 ): number => {
@@ -125,75 +132,89 @@ const minCount = (
     return 1;
   }
 
-  if ("distribute" in action) {
-    return selection.length > 0 && selection.every(isAbsolute) ? 3 : 2;
+  const isAllAbsolute =
+    selection.length > 0 && selection.every((item) => isAbsolute(item));
+
+  if ("distribute" in action && isAllAbsolute) {
+    return DISTRIBUTE_ABSOLUTE_MIN;
   }
 
-  return 2;
+  return DEFAULT_MIN;
 };
 
-const successText = (result: ArrangeResult): string => {
+const toWroteText = (result: ArrangeResult, set: readonly string[]): string => {
+  if (result.classes.length > 0) {
+    return `Wrote ${result.classes.join(" ")}`;
+  }
+
+  if (set.length > 0) {
+    return `Wrote ${set.join("; ")}`;
+  }
+
+  return "";
+};
+
+const toRemovedText = (removed: readonly string[]): string => {
+  if (removed.length > 0) {
+    return `Removed ${removed.join(", ")}`;
+  }
+
+  return "";
+};
+
+const toSuccessText = (result: ArrangeResult): string => {
   const styles = result.writes.flatMap((arrangeWrite) =>
     Object.entries(arrangeWrite.style)
   );
 
-  const set = styles
-    .filter(([, value]) => value !== null)
-    .map(([prop, value]) => `${prop}: ${value}`);
+  const set: string[] = [];
+  const removed = new Set<string>();
 
-  const removed = [
-    ...new Set(
-      styles.filter(([, value]) => value === null).map(([prop]) => prop)
-    ),
-  ];
-
-  const wrote =
-    result.classes.length > 0
-      ? `Wrote ${result.classes.join(" ")}`
-      : set.length > 0
-        ? `Wrote ${set.join("; ")}`
-        : "";
+  for (const [prop, value] of styles) {
+    if (value === null) {
+      removed.add(prop);
+    } else {
+      set.push(`${prop}: ${value}`);
+    }
+  }
 
   const parts = [
-    wrote,
-    removed.length > 0 ? `Removed ${removed.join(", ")}` : "",
+    toWroteText(result, set),
+    toRemovedText([...removed]),
     result.note,
   ];
 
   return parts.filter(Boolean).join(". ") || "Arranged";
 };
 
-const frameRequest = (
-  projectId: string
-): {
-  readonly path?: string;
-  readonly viewport: { readonly width: number; readonly height: number };
-} => {
+const getFrameRequest = (projectId: string): FrameRequest => {
   const frame = activeFrame(
     canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport)
   );
 
-  return {
-    ...(frame.path ? { path: frame.path } : {}),
-    viewport: { height: frame.height, width: frame.width },
-  };
+  const viewport = { height: frame.height, width: frame.width };
+
+  if (frame.path) {
+    return { path: frame.path, viewport };
+  }
+
+  return { viewport };
 };
 
-const commitWrites = (props: Props, result: ArrangeResult): void => {
+const applyWrites = (props: Props, result: ArrangeResult): void => {
   const selected = new Set(
     props.selection.map((selectionContext) => selectionContext.selector)
   );
 
-  for (const entry of result.writes) {
-    if (!selected.has(entry.selector)) {
-      continue;
-    }
+  const entries = result.writes.filter((entry) => selected.has(entry.selector));
 
-    const style = Object.fromEntries(
-      Object.entries(entry.style).map(([prop, value]) => [prop, value ?? ""])
-    );
-
-    props.onCommitted({ selector: entry.selector, style });
+  for (const entry of entries) {
+    props.onCommitted({
+      selector: entry.selector,
+      style: Object.fromEntries(
+        Object.entries(entry.style).map(([prop, value]) => [prop, value ?? ""])
+      ),
+    });
   }
 
   props.port.current?.refreshRects();
@@ -203,11 +224,11 @@ export {
   ALIGN_TOOLS,
   OK_MS,
   SPACE_TOOLS,
-  isArrangeShown as arrangeShown,
-  commitWrites,
-  frameRequest,
-  minCount,
-  successText,
+  applyWrites,
+  getFrameRequest,
+  getMinCount,
+  isArrangeShown,
+  toSuccessText,
 };
 
 export type { Message, Props, Tool };

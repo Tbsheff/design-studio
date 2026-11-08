@@ -1,25 +1,29 @@
 import type { StudioEvent } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import { createEventHub } from "./event-hub.js";
 import type { ConnectionState } from "./event-hub.js";
 import { appStream } from "./stream.js";
+import { useLatest } from "./use-latest.js";
 
-export type { ConnectionState } from "./event-hub.js";
+const noUnsubscribe = (): null => null;
 
 const hub = createEventHub({
-  clearTimer: (id) => window.clearTimeout(id),
+  clearTimer: (id) => {
+    if (id !== null) {
+      globalThis.clearTimeout(id);
+    }
+  },
   defer: (fn) => queueMicrotask(fn),
   open: (projectId, afterSeq) => appStream().source(projectId, afterSeq),
-  setTimer: (fn, ms) => window.setTimeout(fn, ms),
+  setTimer: (fn, ms) => Number(globalThis.setTimeout(fn, ms)),
 });
 
-export function useProjectEvents(
+const useProjectEvents = (
   projectId: string | null,
   onEvent: (event: StudioEvent) => void
-): ConnectionState {
-  const handler = useRef(onEvent);
-  handler.current = onEvent;
+): ConnectionState => {
+  const handler = useLatest(onEvent);
 
   useEffect(() => {
     if (!projectId) {
@@ -27,20 +31,30 @@ export function useProjectEvents(
     }
 
     return hub.subscribe(projectId, (event) => handler.current(event));
-  }, [projectId]);
+  }, [handler, projectId]);
 
   const watch = useCallback(
-    (onChange: () => void) =>
-      projectId
-        ? hub.watchState(projectId, onChange)
-        : (): undefined => undefined,
+    (onChange: () => void) => {
+      if (projectId) {
+        return hub.watchState(projectId, onChange);
+      }
+
+      return noUnsubscribe;
+    },
     [projectId]
   );
 
-  const read = useCallback(
-    () => (projectId ? hub.state(projectId) : "connecting"),
-    [projectId]
-  );
+  const read = useCallback(() => {
+    if (projectId) {
+      return hub.state(projectId);
+    }
+
+    return "connecting";
+  }, [projectId]);
 
   return useSyncExternalStore(watch, read, read);
-}
+};
+
+export { useProjectEvents };
+
+export type { ConnectionState };

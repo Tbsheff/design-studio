@@ -2,7 +2,7 @@ import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import type { CritiqueSchema } from "@design-studio/actions/critique/schema";
 import { Effect } from "effect";
 
-import { resolveLayerRefs } from "../page-probe/index.js";
+import { resolveLayerRefs, toProbeTarget } from "../page-probe/index.js";
 import type { Layer } from "../page-probe/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
@@ -56,10 +56,12 @@ const toSelectors = (
   }
 
   return resolveLayerRefs(
-    preview,
-    target.url,
-    { height: target.frame.height, width: target.frame.width },
-    target.scope,
+    toProbeTarget(
+      preview,
+      target.url,
+      { height: target.frame.height, width: target.frame.width },
+      target.scope
+    ),
     [...refs]
   );
 };

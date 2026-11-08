@@ -25,13 +25,13 @@ const promptHistoryOf = (
   return prompts;
 };
 
-const useChatState = (
-  runs: readonly RunView[]
-): {
+interface ChatState {
   history: string[];
   todos: { todos: TodoItem[]; running: boolean } | null;
   contextTokens: number | null;
-} => {
+}
+
+const useChatState = (runs: readonly RunView[]): ChatState => {
   const history = useMemo(() => promptHistoryOf(runs), [runs]);
   const last = runs.at(-1) ?? null;
   const todoList = last?.todos ?? null;
@@ -49,3 +49,5 @@ const useChatState = (
 };
 
 export { promptHistoryOf, useChatState };
+
+export type { ChatState };

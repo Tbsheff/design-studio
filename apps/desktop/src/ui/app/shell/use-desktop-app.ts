@@ -10,19 +10,32 @@ import {
   useDesktopContext,
 } from "../../platform/desktop";
 import { focusNewProject } from "../../platform/focus";
+import { pick } from "../../platform/pick.js";
 import { uiStore } from "../../platform/storage";
 import { isTypingTarget } from "../../platform/typing-target.js";
+
+const trimTrailingSlashes = (folder: string): string => {
+  let clean = folder;
+
+  while (clean.endsWith("/")) {
+    clean = clean.slice(0, -1);
+  }
+
+  return clean;
+};
 
 const projectForFolder = (
   projects: Project[],
   folder: string
-): Project | undefined => {
-  const clean = folder.replace(/\/+$/u, "");
+): Project | null => {
+  const clean = trimTrailingSlashes(folder);
 
-  return projects.find(
-    (project) =>
-      project.imported?.sourcePath === clean ||
-      project.directions.some((direction) => direction.workTree === clean)
+  return (
+    projects.find(
+      (project) =>
+        project.imported?.sourcePath === clean ||
+        project.directions.some((direction) => direction.workTree === clean)
+    ) ?? null
   );
 };
 
@@ -53,20 +66,31 @@ interface DropBridge {
   openDropped?: (path: string) => void;
 }
 
-const dropBridge = (): DropBridge | undefined =>
-  desktopBridge<DropBridge>() ?? undefined;
+const dropBridge = (): DropBridge | null => desktopBridge<DropBridge>();
 
 const hasFiles = (event: DragEvent): boolean =>
   event.dataTransfer?.types.includes("Files") ?? false;
 
+const toItemFolder = (
+  item: DataTransferItem,
+  bridge: DropBridge
+): string | null => {
+  if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
+    return null;
+  }
+
+  const file = item.getAsFile();
+
+  if (!file) {
+    return null;
+  }
+
+  return bridge.pathForFile?.(file) ?? null;
+};
+
 const droppedFolder = (event: DragEvent, bridge: DropBridge): string | null => {
   for (const item of event.dataTransfer?.items ?? []) {
-    if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
-      continue;
-    }
-
-    const file = item.getAsFile();
-    const folder = file ? bridge.pathForFile?.(file) : "";
+    const folder = toItemFolder(item, bridge);
 
     if (folder) {
       return folder;
@@ -125,8 +149,9 @@ const useFolderDrop = (): void => {
 
 const runAppCommand = (id: string): void => {
   const layer = id === "palette" || id === "shortcuts";
+
   globalThis.dispatchEvent(
-    new CustomEvent(layer ? LAYER_EVENT : COMMAND_EVENT, { detail: id })
+    new CustomEvent(pick(layer, LAYER_EVENT, COMMAND_EVENT), { detail: id })
   );
 };
 
@@ -144,27 +169,53 @@ const openFolderCommand = async (
 
 const useAppCommands = (setError: (error: string | null) => void): void => {
   useDesktopCommand((command: DesktopCommand) => {
-    if (command.type === "new-project") {
-      uiStore.set({ activeProjectId: null });
-      focusNewProject();
-    } else if (command.type === "open-project") {
-      setError(null);
-      uiStore.set({ activeProjectId: command.projectId });
-    } else if (command.type === "open-folder") {
-      setError(null);
-      void openFolderCommand(command.path, setError);
-    } else if (command.type === "undo" || command.type === "redo") {
-      textEdit(command.type);
-    } else if (command.type === "command") {
-      runAppCommand(command.id);
+    switch (command.type) {
+      case "new-project": {
+        uiStore.set({ activeProjectId: null });
+        focusNewProject();
+
+        break;
+      }
+
+      case "open-project": {
+        setError(null);
+        uiStore.set({ activeProjectId: command.projectId });
+
+        break;
+      }
+
+      case "open-folder": {
+        setError(null);
+        void openFolderCommand(command.path, setError);
+
+        break;
+      }
+
+      case "undo":
+      case "redo": {
+        textEdit(command.type);
+
+        break;
+      }
+
+      case "command": {
+        runAppCommand(command.id);
+
+        break;
+      }
+
+      default: {
+        break;
+      }
     }
 
     return true;
   });
 };
 
-export function useDesktopApp(activeProjectId: string | null): string | null {
+const useDesktopApp = (activeProjectId: string | null): string | null => {
   const [error, setError] = useState<string | null>(null);
+
   useDesktopContext(
     { directionId: null, projectId: null, running: false },
     activeProjectId === null
@@ -173,4 +224,6 @@ export function useDesktopApp(activeProjectId: string | null): string | null {
   useFolderDrop();
 
   return error;
-}
+};
+
+export { useDesktopApp };

@@ -5,7 +5,7 @@ import {
   resolveTokenValue,
   varName,
 } from "../../../shared/token-match.js";
-import { formatNumber, parseNumber } from "./css-values.js";
+import { toNumberText, toParsedNumber } from "./css-value-model.js";
 import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { TokenUi } from "./use-token-snap.js";
@@ -32,21 +32,21 @@ const plainLength = (value: string, ui: TokenUi | null): string => {
   const resolved = resolveTokenValue(value, ui.entries, ui.mode);
   const px = lengthToPx(resolved);
 
-  return px === null ? resolved : formatNumber(px, "px");
+  return px === null ? resolved : toNumberText(px, "px");
 };
 
 const displayLength = (value: string): string => {
-  const parsed = parseNumber(value);
+  const parsed = toParsedNumber(value);
 
   if (!parsed || parsed.unit !== "px" || Number.isInteger(parsed.value)) {
     return value;
   }
 
-  return formatNumber(Math.round(parsed.value * 10) / 10, "px");
+  return toNumberText(Math.round(parsed.value * 10) / 10, "px");
 };
 
 const clamp = (value: string, spec: NumberSpec): string => {
-  const parsed = parseNumber(value);
+  const parsed = toParsedNumber(value);
 
   if (!parsed) {
     return value;
@@ -56,7 +56,7 @@ const clamp = (value: string, spec: NumberSpec): string => {
   const hi = spec.max ?? Infinity;
   const bounded = Math.min(hi, Math.max(lo, parsed.value));
 
-  return bounded === parsed.value ? value : formatNumber(bounded, parsed.unit);
+  return bounded === parsed.value ? value : toNumberText(bounded, parsed.unit);
 };
 
 const patchFor = (

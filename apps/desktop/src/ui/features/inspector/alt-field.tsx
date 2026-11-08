@@ -1,5 +1,5 @@
-import type { ReactElement } from "react";
-import { useState } from "react";
+import type { ChangeEvent, KeyboardEvent, ReactElement } from "react";
+import { useCallback, useState } from "react";
 
 import { copy } from "./copy.js";
 
@@ -14,13 +14,31 @@ const AltField = ({
 }): ReactElement => {
   const [text, setText] = useState<string | null>(null);
 
-  const commit = (): void => {
+  const commit = useCallback((): void => {
     if (text !== null && text !== initial) {
       onSave(text);
     }
 
     setText(null);
-  };
+  }, [text, initial, onSave]);
+
+  const handleTextEdit = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => setText(event.target.value),
+    []
+  );
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        commit();
+      }
+
+      if (event.key === "Escape") {
+        setText(null);
+      }
+    },
+    [commit]
+  );
 
   return (
     <div className="ins-field wide">
@@ -35,17 +53,9 @@ const AltField = ({
         placeholder={copy.describeTheImage}
         disabled={disabled}
         spellCheck
-        onChange={(event) => setText(event.target.value)}
+        onChange={handleTextEdit}
         onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.currentTarget.blur();
-          }
-
-          if (event.key === "Escape") {
-            setText(null);
-          }
-        }}
+        onKeyDown={handleKeyDown}
       />
     </div>
   );

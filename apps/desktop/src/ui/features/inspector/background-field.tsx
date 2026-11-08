@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
+import { ColorField } from "./color-field.js";
 import type { DirectEdit } from "./deps.js";
-import { ColorField } from "./inspector-fields.js";
 
 interface BackgroundFieldProps {
   readonly edit: DirectEdit;

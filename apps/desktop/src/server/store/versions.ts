@@ -67,6 +67,7 @@ import {
   readBlobAt,
   updateTree,
 } from "./version-fast.js";
+import { updateIndexPaths } from "./version-index-paths.js";
 import { seedFromUserRepo } from "./version-seed.js";
 import { createChangeTracker } from "./version-tracker.js";
 import { createWarmQueue } from "./version-warm.js";
@@ -1663,13 +1664,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
     try {
       const cached = await loadHeadIndex(project, direction, head, tempIndex);
-      await runGit(tempScope, [
-        "--literal-pathspecs",
-        "add",
-        "-A",
-        "--",
-        ...paths,
-      ]);
+      await updateIndexPaths(tempScope, paths);
 
       if (
         tempScope.untracked &&
@@ -1697,13 +1692,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       );
 
       await keepHeadIndex(project, direction, tempIndex, tree);
-      await runGit(directionScope(project, direction), [
-        "--literal-pathspecs",
-        "add",
-        "-A",
-        "--",
-        ...paths,
-      ]);
+      await updateIndexPaths(directionScope(project, direction), paths);
 
       return version;
     } finally {

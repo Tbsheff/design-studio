@@ -12,9 +12,9 @@ export { activeFrame } from "../canvas/index.js";
 
 export {
   editVariantStore,
-  postForceState,
+  setForceState,
   useEditVariant,
-} from "../inspector/edit-variant.js";
+} from "../inspector/index.js";
 
 export { parseVariant, variantPrefix } from "../../../shared/variants.js";
 

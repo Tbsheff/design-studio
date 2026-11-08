@@ -9,7 +9,11 @@ import { readStored, writeStored } from "../../platform/storage.js";
 import { addFrame, canAddFrame, setFramePath } from "./canvas-frame-ops.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
-const AppBar = lazy(() => import("../../app/shell/app-bar.js"));
+const AppBar = lazy(async () => {
+  const loaded = await import("../../app/shell/app-bar.js");
+
+  return { default: loaded.AppBar };
+});
 
 const routeFrameId = (layout: CanvasLayout, route: string): string | null => {
   const path = route.replace(/^\/+/u, "").replace(/\/+$/u, "");

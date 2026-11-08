@@ -1,33 +1,23 @@
-import type {
-  SelectionContext,
-  TailwindOutcome,
-} from "@design-studio/contracts";
+import type { TailwindOutcome } from "@design-studio/contracts";
 import { startTransition, useCallback, useEffect, useMemo } from "react";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
-import type { StyleValues } from "./css-values.js";
-import { useEditVariant } from "./edit-variant.js";
-import { useElementClasses } from "./inspector-classes.js";
-import type { ElementClasses } from "./inspector-classes.js";
-import { MultiCreateTokenHost } from "./inspector-multi.js";
-import { CreateTokenHost, useInspectorTokens } from "./inspector-tokens.js";
-import type { ScopeInput } from "./inspector-tokens.js";
+import { CreateTokenHost } from "./create-token-host.js";
+import type { StyleValues } from "./css-value-model.js";
+import type { ElementClasses } from "./element-classes-model.js";
 import { SAVE_SETTLE_MS } from "./save-model.js";
 import { SimpleContexts } from "./simple-contexts.js";
 import { SimpleEditorBody } from "./simple-editor-body.js";
 import { toSavedAt } from "./simple-model.js";
-import type {
-  EditorProps,
-  SimpleEditorProps,
-  SimpleEditorState,
-} from "./simple-model.js";
-import { SimpleMultiBody } from "./simple-multi-body.js";
+import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
+import type { ScopeInput } from "./token-scope-model.js";
 import { useAuthoredCss } from "./use-authored-css.js";
 import { useDirectEdit } from "./use-direct-edit.js";
-import { useDirectEdits } from "./use-direct-edits.js";
+import { useEditVariant } from "./use-edit-variant.js";
+import { useElementClasses } from "./use-element-classes.js";
+import { useInspectorTokens } from "./use-inspector-tokens.js";
 import { useSettled } from "./use-settled.js";
-import { TokenUiContext } from "./use-token-snap.js";
 
 const toClassInfo = (
   classes: ElementClasses,
@@ -97,13 +87,16 @@ const useSimpleEditor = (props: SimpleEditorProps): SimpleEditorState => {
     [tokens.snap, edit]
   );
 
-  const classes = useElementClasses(
-    props.projectId,
-    props.directionId,
-    props.target.source,
+  const { directionId, projectId } = props;
+  const { source } = props.target;
+
+  const classes = useElementClasses({
+    directionId,
+    projectId,
     savedAt,
-    variant
-  );
+    source,
+    variant,
+  });
 
   const classLine = toClassLine(
     toClassInfo(classes, Boolean(props.target.component)),
@@ -113,7 +106,7 @@ const useSimpleEditor = (props: SimpleEditorProps): SimpleEditorState => {
   const variantProps = classes.variants?.props;
 
   const variantScope = useMemo(
-    () => ({ prefix: variant, props: new Set(variantProps ?? []) }),
+    () => ({ prefix: variant, props: new Set(variantProps) }),
     [variant, variantProps]
   );
 
@@ -133,6 +126,8 @@ const SimpleEditor = (props: SimpleEditorProps): ReactElement => {
   const state = useSimpleEditor(props);
   const { projectId, directionId, target } = props;
   const { edit, tokens, scope } = state;
+  const handleCommitted = scope.onCommitted;
+  const handleClose = tokens.closeCreate;
 
   const exportMenu = useMemo(
     () => (
@@ -155,72 +150,16 @@ const SimpleEditor = (props: SimpleEditorProps): ReactElement => {
       <SimpleEditorBody props={props} state={state} exportMenu={exportMenu} />
       <CreateTokenHost
         directionId={scope.directionId}
-        onCommitted={scope.onCommitted}
+        onCommitted={handleCommitted}
         projectId={scope.projectId}
         selection={scope.selection}
         tokens={scope.tokens}
         edit={edit}
         request={tokens.creating}
-        onClose={tokens.closeCreate}
+        onClose={handleClose}
       />
     </SimpleContexts>
   );
 };
 
-const SimpleMultiEditor = (
-  props: EditorProps & { readonly component: ReactNode }
-): ReactElement => {
-  const first = props.selection[0] as SelectionContext;
-
-  const scope: ScopeInput = {
-    directionId: props.directionId,
-    onCommitted: props.onCommitted,
-    projectId: props.projectId,
-    selection: first,
-    tokens: props.tokens,
-  };
-
-  const tokens = useInspectorTokens(scope);
-
-  const edit = useDirectEdits({
-    control: props.control,
-    directionId: props.directionId,
-    onCommitted: props.onCommitted,
-    onStale: props.onStale,
-    port: props.port,
-    projectId: props.projectId,
-    rewrite: tokens.ui && tokens.snap.rewrite,
-    selections: props.selection,
-  });
-
-  const keepRaw = useCallback(
-    (raw: Partial<StyleValues>) => {
-      tokens.snap.keepRaw(raw);
-      edit.preview(raw);
-      edit.commit();
-    },
-    [tokens.snap, edit]
-  );
-
-  return (
-    <TokenUiContext.Provider value={tokens.ui}>
-      <SimpleMultiBody
-        props={props}
-        component={props.component}
-        edit={edit}
-        tokens={tokens}
-        keepRaw={keepRaw}
-      />
-      <MultiCreateTokenHost
-        projectId={props.projectId}
-        directionId={props.directionId}
-        tokens={props.tokens}
-        edit={edit}
-        request={tokens.creating}
-        onClose={tokens.closeCreate}
-      />
-    </TokenUiContext.Provider>
-  );
-};
-
-export { SimpleEditor, SimpleMultiEditor };
+export { SimpleEditor };

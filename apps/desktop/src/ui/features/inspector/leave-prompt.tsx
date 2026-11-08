@@ -7,7 +7,12 @@ const LeavePrompt = ({
   session,
 }: {
   readonly session: EditSession;
-}): ReactElement | null =>
-  session.isAsking ? <LeaveDialog session={session} /> : null;
+}): ReactElement | null => {
+  if (!session.isAsking) {
+    return null;
+  }
+
+  return <LeaveDialog session={session} />;
+};
 
 export { LeavePrompt };

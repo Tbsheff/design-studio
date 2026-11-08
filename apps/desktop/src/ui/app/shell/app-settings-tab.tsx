@@ -1,116 +1,62 @@
-import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
-import { envText, parseEnvText } from "@design-studio/contracts/app";
-import { useState, useTransition } from "react";
-import type { ReactElement, FormEvent } from "react";
+import type { AttachedApp } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
-import { api, errorText } from "../../api";
+import { isEnvSet } from "./app-settings-model";
 import { copy } from "./copy";
+import { EnvSuggestion } from "./env-suggestion";
+import { useSettingsForm } from "./use-settings-form";
 
-const envSuggestion = (
-  status: AppServerStatus | null
-): Record<string, string> | null => {
-  const fix = status?.doctor?.causes.find(
-    (cause) => cause.fix?.kind === "set-env"
-  )?.fix;
-
-  if (fix?.kind === "set-env") {
-    return fix.env;
-  }
-
-  return null;
-};
+interface SettingsTabProps {
+  readonly app: AttachedApp;
+  readonly onSaved: () => void;
+  readonly projectId: string;
+  readonly suggested: Record<string, string> | null;
+}
 
 const SettingsTab = ({
-  projectId,
   app,
-  suggested,
   onSaved,
-}: {
-  projectId: string;
-  app: AttachedApp;
-  suggested: Record<string, string> | null;
-  onSaved: () => void;
-}): ReactElement => {
-  const [url, setUrl] = useState(app.url ?? "");
-  const [env, setEnv] = useState(() => envText(app.env));
-  const [note, setNote] = useState<string | null>(null);
-  const [busy, startSave] = useTransition();
-
-  const save = (event: FormEvent): void => {
-    event.preventDefault();
-    const parsed = parseEnvText(env);
-
-    if (parsed.bad.length > 0) {
-      setNote(`Use KEY=value lines. Not valid: ${parsed.bad[0] ?? ""}`);
-
-      return;
-    }
-
-    setNote(null);
-    startSave(async () => {
-      try {
-        await api.appConfig(projectId, { env: parsed.env, url: url.trim() });
-        setNote("Saved. The dev server restarts.");
-        onSaved();
-      } catch (error) {
-        setNote(errorText(error));
-      }
-    });
-  };
+  projectId,
+  suggested,
+}: SettingsTabProps): ReactElement => {
+  const form = useSettingsForm({ app, onSaved, projectId, suggested });
 
   return (
-    <form className="app-settings" onSubmit={save}>
+    <form className="app-settings" onSubmit={form.handleSubmit}>
       <label className="field">
         <span>{copy.devServerUrl}</span>
         <input
+          name="url"
           className="mono"
-          value={url}
+          value={form.url}
           placeholder="Empty: the studio starts next dev"
           spellCheck={false}
-          onChange={(event) => setUrl(event.target.value)}
+          onChange={form.handleUrl}
         />
       </label>
       <label className="field">
         <span>{copy.environmentForNextDev}</span>
         <textarea
+          name="env"
           className="mono"
           rows={5}
-          value={env}
+          value={form.env}
           placeholder="No variables set"
           spellCheck={false}
-          onChange={(event) => setEnv(event.target.value)}
+          onChange={form.handleEnv}
         />
         <small className="field-help">{copy.oneKeyValuePerLine}</small>
       </label>
-      {suggested &&
-        !Object.keys(suggested).every(
-          (key) => parseEnvText(env).env[key] !== undefined
-        ) && (
-          <div className="app-env-suggest">
-            <span className="app-panel-sub grow">
-              {copy.theDoctorSuggests}{" "}
-              <span className="mono">{envText(suggested)}</span>
-            </span>
-            <button
-              type="button"
-              className="btn small"
-              onClick={() =>
-                setEnv((text) =>
-                  [text.trim(), envText(suggested)].filter(Boolean).join("\n")
-                )
-              }
-            >
-              {copy.add}
-            </button>
-          </div>
-        )}
+      {suggested && !isEnvSet(suggested, form.env) && (
+        <EnvSuggestion onAdd={form.handleAdd} suggested={suggested} />
+      )}
       <div className="app-settings-foot">
-        {note && (
-          <span className="app-panel-sub" role="status">
-            {note}
-          </span>
-        )}
-        <button type="submit" className="btn small primary" disabled={busy}>
+        {form.note && <output className="app-panel-sub">{form.note}</output>}
+        <button
+          type="submit"
+          className="btn small primary"
+          disabled={form.isSaving}
+        >
           {copy.saveAndRestart}
         </button>
       </div>
@@ -118,4 +64,4 @@ const SettingsTab = ({
   );
 };
 
-export { envSuggestion, SettingsTab };
+export { SettingsTab };

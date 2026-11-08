@@ -1,4 +1,4 @@
-import { postForceState } from "./deps.js";
+import { setForceState } from "./deps.js";
 import type { MotionState, PreviewPort } from "./deps.js";
 import { REPLAY_GAP_MS, replayMs } from "./motion-model.js";
 import type { MotionDraft } from "./motion-model.js";
@@ -30,10 +30,10 @@ const replayTransition = (
   const { selector, state, variant } = target;
 
   if (state) {
-    postForceState(port, selector, state);
+    setForceState(port, selector, state);
 
     return globalThis.setTimeout(() => {
-      postForceState(port, selector, variant);
+      setForceState(port, selector, variant);
     }, replayMs(draft));
   }
 

@@ -2,11 +2,11 @@ import { Icon } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
+import { AddButton } from "./add-button.js";
 import { BorderGrid } from "./border-grid.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import { InspectorSection } from "./inspector-fields.js";
-import { AddButton } from "./inspector-shared.js";
 import { NEW_BORDER, applyEdit, hasBorder } from "./simple-model.js";
 
 interface BorderSectionProps {
@@ -43,7 +43,12 @@ const BorderSection = ({ edit }: BorderSectionProps): ReactElement => {
     <InspectorSection title={copy.border} aside={isOn && removeButton}>
       {!isOn && (
         <div className="ins-add-row">
-          <AddButton label={copy.border} onClick={addBorder} />
+          <AddButton
+            label={copy.border}
+            tip={null}
+
+            onClick={addBorder}
+          />
         </div>
       )}
       {isOn && <BorderGrid edit={edit} />}

@@ -29,6 +29,7 @@ import {
   memoPage,
   resolveLayerRef,
   scopeOf,
+  toProbeTarget,
 } from "../page-probe/index.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
@@ -164,10 +165,12 @@ async function resolveSelector(
     return raw;
   }
   return resolveLayerRef(
-    deps.preview,
-    target.url,
-    target.viewport,
-    scopeOf(deps.ctx.project.id, deps.ctx.direction.id),
+    toProbeTarget(
+      deps.preview,
+      target.url,
+      target.viewport,
+      scopeOf(deps.ctx.project.id, deps.ctx.direction.id)
+    ),
     raw.trim()
   );
 }

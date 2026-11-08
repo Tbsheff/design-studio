@@ -1,53 +1,60 @@
-import { lazy, Suspense } from "react";
-import type { ReactElement, JSX } from "react";
+import { createElement, lazy, Suspense, useCallback } from "react";
+import type { ReactElement } from "react";
 
-import { Icon } from "./Icon";
-import type { UiSelectProps } from "./UiSelect.js";
+import { SelectPlaceholder } from "./select-placeholder.js";
+import type { UiSelectProps } from "./ui-select-model.js";
 
-const UiSelect = lazy(() =>
-  (async (): Promise<{
-    default: (props: UiSelectProps<string>) => ReactElement;
-  }> => {
-    const loaded = await import("./UiSelect.js");
+const UiSelect = lazy(async () => {
+  const loaded = await import("./ui-select.js");
 
-    return {
-      default: loaded.UiSelect as (props: UiSelectProps<string>) => JSX.Element,
-    };
-  })()
-);
-
-const Placeholder = <OptionValue extends string>(
-  props: UiSelectProps<OptionValue>
-): ReactElement => {
-  const label =
-    props.options.find((option) => option.value === props.value)?.label ??
-    props.placeholder ??
-    "";
-
-  return (
-    <span className={`ui-select-root ${props.className ?? ""}`}>
-      <button
-        id={props.id}
-        type="button"
-        role="combobox"
-        className={`ui-select${props.size === "sm" ? " sm" : ""}`}
-        aria-haspopup="listbox"
-        aria-expanded={false}
-        aria-label={props["aria-label"]}
-        disabled={props.disabled}
-      >
-        {props.icon}
-        <span className="ui-select-value truncate">{label}</span>
-        <Icon name="chevronDown" size={12} />
-      </button>
-    </span>
-  );
-};
+  return { default: loaded.UiSelect };
+});
 
 export const LazySelect = <OptionValue extends string>(
   props: UiSelectProps<OptionValue>
-): ReactElement => (
-  <Suspense fallback={<Placeholder {...props} />}>
-    <UiSelect {...(props as unknown as UiSelectProps<string>)} />
-  </Suspense>
-);
+): ReactElement => {
+  const { options, onChange } = props;
+
+  const handleChange = useCallback(
+    (value: string) => {
+      const option = options.find((candidate) => candidate.value === value);
+
+      if (option) {
+        onChange(option.value);
+      }
+    },
+    [options, onChange]
+  );
+
+  const toLabel =
+    options.find((option) => option.value === props.value)?.label ??
+    props.placeholder ??
+    "";
+
+  const fallback = createElement(SelectPlaceholder, {
+    ariaLabel: props["aria-label"],
+    icon: props.icon,
+    id: props.id,
+    isDisabled: props.disabled,
+    label: toLabel,
+    rootClass: props.className ?? "",
+    size: props.size,
+  });
+
+  const select = createElement(UiSelect, {
+    "aria-label": props["aria-label"],
+    "aria-labelledby": props["aria-labelledby"],
+    className: props.className,
+    disabled: props.disabled,
+    icon: props.icon,
+    id: props.id,
+    onChange: handleChange,
+    options: props.options,
+    placeholder: props.placeholder,
+    size: props.size,
+    tip: props.tip,
+    value: props.value,
+  });
+
+  return <Suspense fallback={fallback}>{select}</Suspense>;
+};

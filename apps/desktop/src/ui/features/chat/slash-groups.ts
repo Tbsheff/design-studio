@@ -19,11 +19,15 @@ const effectiveModel = (model: string, level: RunLevel): string => {
 const shortModel = (id: string): string =>
   modelLabel(id).replace(/^Claude /u, "");
 
-const MODEL_HINT: Record<string, string> = {
+const MODEL_HINT = {
   "claude-haiku-5-5": "Fast and cheap",
   "claude-opus-5-5": "Most capable",
   "claude-sonnet-5-5": "Balanced",
-};
+} as const;
+
+const MODEL_HINT_BY_ID = new Map<string, string>(Object.entries(MODEL_HINT));
+
+const toModelHint = (id: string): string => MODEL_HINT_BY_ID.get(id) ?? "";
 
 const EFFORT_SHORT: Record<RunEffort | "auto", string> = {
   auto: "Model decides",
@@ -82,7 +86,7 @@ const modelGroup = (
     choices: MODEL_OPTIONS.map((option) => ({
       checked: option.id === shown,
       disabledReason: reason,
-      hint: MODEL_HINT[option.id],
+      hint: toModelHint(option.id),
       icon: "sparkle",
       id: option.id,
       label: shortModel(option.id),
@@ -93,6 +97,14 @@ const modelGroup = (
     label: "Model",
     value: shortModel(shown),
   };
+};
+
+const toEffortChoice = (item: RunEffort | "auto"): RunEffort | null => {
+  if (item === "auto") {
+    return null;
+  }
+
+  return item;
 };
 
 const effortGroup = (
@@ -109,7 +121,7 @@ const effortGroup = (
       icon: "sliders",
       id: item,
       label: EFFORT_NAME[item],
-      pick: () => onEffort(item === "auto" ? null : item),
+      pick: () => onEffort(toEffortChoice(item)),
     })),
     icon: "sliders",
     id: "effort",

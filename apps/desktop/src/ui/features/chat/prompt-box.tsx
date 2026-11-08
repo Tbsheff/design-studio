@@ -30,7 +30,7 @@ import { focusComposerInput, useComposerFocus } from "./composer-focus.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import { SelectionChips, AttachmentThumbs } from "./composer-parts.js";
 import { copy } from "./copy.js";
-import { HistorySearch, useHistorySearch } from "./history-search.js";
+import { HistorySearch } from "./history-search.js";
 import { MentionChips, MentionList } from "./mention-picker.js";
 import { INPUT_COPY, RepoContextChip } from "./prompt-box-model.js";
 import type { VariationsPromptProps } from "./prompt-box-model.js";
@@ -48,14 +48,12 @@ import {
 import { PromptToolbar } from "./prompt-toolbar.js";
 import { QueuedMessages } from "./queued-messages.js";
 import { RunContextChip } from "./run-context-chip.js";
-import {
-  SkillChips,
-  SkillsIndicator,
-  useSlashSections,
-} from "./skill-picker.js";
+import { SkillChips } from "./skill-chips.js";
+import { SkillsIndicator } from "./skills-indicator.js";
 import { effortGroup, levelGroup, modelGroup } from "./slash-groups.js";
 import { SlashMenu, useSlashMenu } from "./slash-menu.js";
 import { useComposerKeys } from "./use-composer-keys.js";
+import { useHistorySearch } from "./use-history-search.js";
 import { useMentions } from "./use-mentions.js";
 import type { MentionRequest } from "./use-mentions.js";
 import { useModelChoice } from "./use-model-choice.js";
@@ -66,6 +64,7 @@ import { usePromptSend } from "./use-prompt-send.js";
 import type { PromptRequest } from "./use-prompt-send.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 import { useRunLevel } from "./use-run-level.js";
+import { useSlashSections } from "./use-slash-sections.js";
 
 interface Props {
   projectId: string;
@@ -258,8 +257,8 @@ const PromptBox = (props: Props): ReactElement => {
     draft,
     draftStore: props.draft,
     effort,
-    isReady,
     files,
+    isReady,
     level: runLevel.level,
     linkedCommentIds: prefill.linked,
     mentions: mentions.mentions,

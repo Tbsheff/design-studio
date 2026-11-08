@@ -2,8 +2,9 @@ import { Suspense, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { ContentPanel, StateStylesSlot } from "../../inspector-slots.js";
+import { ClassLine } from "./class-line.js";
+import { toDomClasses } from "./element-classes-model.js";
 import { ErrorLine } from "./error-line.js";
-import { ClassLine, domClasses } from "./inspector-classes.js";
 import { InspectorVariantBar } from "./inspector-variant-bar.js";
 import { SharedNote } from "./shared-note.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
@@ -18,7 +19,7 @@ const SimpleLead = ({ props, state }: SimpleLeadProps): ReactElement => {
   const { edit, classes, classLine } = state;
   const hasSource = Boolean(directionId && target.source);
   const { outerHTML } = target;
-  const resolved = useMemo(() => domClasses(outerHTML), [outerHTML]);
+  const resolved = useMemo(() => toDomClasses(outerHTML), [outerHTML]);
 
   return (
     <>

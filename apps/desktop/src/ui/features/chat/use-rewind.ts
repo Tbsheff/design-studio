@@ -4,7 +4,7 @@ import type {
   Version,
   WorkTreeStatus,
 } from "@design-studio/contracts";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 
 import { api } from "../../api.js";
 import type { RunView } from "./run-state-model.js";
@@ -30,9 +30,9 @@ interface Options {
   status: WorkTreeStatus | null;
   busy: boolean;
   running: RunView | null;
-  act: (fn: () => Promise<unknown>) => Promise<void>;
+  act: (fn: () => Promise<void>) => Promise<void>;
   guard: <Args extends unknown[]>(
-    fn: (...args: Args) => unknown
+    fn: (...args: Args) => Promise<void>
   ) => (...args: Args) => Promise<void>;
   seedRun: (runId: string, directionId: string, request: RunRequest) => void;
   setDirectionId: (id: string) => void;
@@ -40,19 +40,27 @@ interface Options {
 }
 
 const editedRequest = (request: RunRequest, prompt: string): RunRequest => {
-  const {
-    retryOf: _retry,
-    variation: _variation,
-    task: _task,
-    ...rest
-  } = request;
+  const next: RunRequest = { ...request, prompt };
+  delete next.retryOf;
+  delete next.variation;
+  delete next.task;
 
-  return { ...rest, prompt };
+  return next;
+};
+
+const toDirtyCount = (status: WorkTreeStatus | null): number => {
+  if (status?.dirty) {
+    return status.changed.length;
+  }
+
+  return 0;
 };
 
 const useRewind = (options: Options): RewindControl => {
   const ref = useRef(options);
-  ref.current = options;
+  useLayoutEffect(() => {
+    ref.current = options;
+  });
 
   const onRestore = useCallback((versionId: string) => {
     const { act, direction, projectId, refreshVersions } = ref.current;
@@ -97,12 +105,7 @@ const useRewind = (options: Options): RewindControl => {
   );
 
   const { versions, status, busy, running } = options;
-  let dirtyCount = 0;
-
-  if (status?.dirty) {
-    dirtyCount = status.changed.length;
-  }
-
+  const dirtyCount = toDirtyCount(status);
   const locked = busy || running !== null;
   const headVersionId = options.direction?.headVersionId ?? null;
 

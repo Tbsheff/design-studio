@@ -99,3 +99,10 @@
   pointer-events: none;
   white-space: nowrap;
 }
+
+fieldset.img-fit {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 2px;
+  border: 0;
+}

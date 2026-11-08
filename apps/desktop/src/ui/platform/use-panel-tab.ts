@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
+import { pick } from "./pick.js";
 import { readStored, writeStored } from "./storage";
+import { isObject } from "./value-guards.js";
 
 type PanelTab =
   | "chat"
@@ -32,7 +34,7 @@ const readAll = (): Record<string, PanelTab> => {
   try {
     const raw: unknown = JSON.parse(readStored(TAB_KEY) ?? "{}");
 
-    if (raw && typeof raw === "object") {
+    if (isObject(raw)) {
       return raw as Record<string, PanelTab>;
     }
 
@@ -49,45 +51,46 @@ const readTab = (projectId: string): PanelTab | null => {
 };
 
 const writeTab = (projectId: string, tab: PanelTab): void => {
-  const all = readAll();
-  delete all[projectId];
-  all[projectId] = tab;
-  const kept = Object.entries(all).slice(-MAX_PROJECTS);
+  const all = new Map(Object.entries(readAll()));
+
+  all.delete(projectId);
+  all.set(projectId, tab);
+
+  const kept = [...all].slice(-MAX_PROJECTS);
 
   writeStored(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
 };
 
-const usePanelTab = (
-  projectId: string,
-  eligible: boolean
-): {
+interface PanelTabState {
   choose: (next: PanelTab) => void;
   show: (next: PanelTab) => void;
   tab: PanelTab;
-} => {
-  const chosen = useRef(readTab(projectId));
-  const autoSwitched = useRef(false);
-  const [tab, setTab] = useState<PanelTab>(chosen.current ?? "chat");
+}
 
-  useEffect(() => {
-    if (!eligible || chosen.current !== null || autoSwitched.current) {
-      return;
-    }
+const usePanelTab = (projectId: string, eligible: boolean): PanelTabState => {
+  const [chosen, setChosen] = useState<PanelTab | null>(() =>
+    readTab(projectId)
+  );
 
-    autoSwitched.current = true;
-    setTab("design");
-  }, [eligible]);
+  const [isAutoSwitched, setIsAutoSwitched] = useState(false);
+
+  if (eligible && chosen === null && !isAutoSwitched) {
+    setIsAutoSwitched(true);
+  }
 
   const choose = useCallback(
     (next: PanelTab) => {
-      chosen.current = next;
       writeTab(projectId, next);
-      setTab(next);
+      setChosen(next);
     },
     [projectId]
   );
 
-  return { choose, show: choose, tab };
+  const show = choose;
+
+  const tab = chosen ?? pick(isAutoSwitched, "design", "chat");
+
+  return { choose, show, tab };
 };
 
 export { PANE_MODES, usePanelTab };

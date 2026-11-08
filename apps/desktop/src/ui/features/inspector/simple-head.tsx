@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
+import { CopyCssButton } from "./copy-css-button.js";
 import { InspectorBreadcrumb } from "./inspector-breadcrumb.js";
-import { CopyCssButton } from "./inspector-other-styles.js";
 import { SourceLink } from "./inspector-source.js";
 import { MetaRow } from "./meta-row.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";

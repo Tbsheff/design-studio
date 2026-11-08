@@ -44,12 +44,13 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
 
 const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody["type"][];
 
+const RETRY_INITIAL_MS = 500;
+const RETRY_MAX_MS = 8000;
+const RETRY_FACTOR = 2;
+
 type ConnectionState = "connecting" | "open" | "reconnecting";
 
 interface EventSourceLike {
-  onopen: ((event: Event) => unknown) | null;
-  onmessage: ((event: MessageEvent) => unknown) | null;
-  onerror: ((event: Event) => unknown) | null;
   readonly addEventListener: (type: string, listener: EventListener) => void;
   readonly close: () => void;
 }
@@ -57,7 +58,7 @@ interface EventSourceLike {
 interface HubDeps {
   open: (projectId: string, afterSeq: number) => EventSourceLike;
   setTimer: (fn: () => void, ms: number) => number;
-  clearTimer: (id: number | undefined) => void;
+  clearTimer: (id: number | null) => void;
   defer: (fn: () => void) => void;
 }
 
@@ -69,7 +70,7 @@ interface Channel {
   state: ConnectionState;
   lastSeq: number;
   source: EventSourceLike | null;
-  retryTimer: number | undefined;
+  retryTimer: number | null;
   retryDelay: number;
   closing: boolean;
 }
@@ -81,165 +82,184 @@ interface EventHub {
   readonly openCount: () => number;
 }
 
-const createEventHub = (deps: HubDeps): EventHub => {
-  const channels = new Map<string, Channel>();
+interface HubScope {
+  readonly channels: Map<string, Channel>;
+  readonly deps: HubDeps;
+}
 
-  const setState = (channel: Channel, state: ConnectionState): void => {
-    if (channel.state === state) {
-      return;
+const setState = (channel: Channel, state: ConnectionState): void => {
+  if (channel.state === state) {
+    return;
+  }
+
+  channel.state = state;
+
+  for (const fn of new Set(channel.stateListeners)) {
+    fn();
+  }
+};
+
+const toStudioEvent = (data: string): StudioEvent | null => {
+  try {
+    const parsed = JSON.parse(data);
+
+    if (isStudioEvent(parsed)) {
+      return parsed;
     }
 
-    channel.state = state;
+    return null;
+  } catch {
+    return null;
+  }
+};
 
-    for (const fn of [...channel.stateListeners]) {
-      fn();
-    }
-  };
+const receive = (channel: Channel, msg: MessageEvent<string>): void => {
+  const event = toStudioEvent(msg.data);
 
-  const receive = (channel: Channel, msg: MessageEvent<string>): void => {
-    let event: StudioEvent;
+  if (!event || event.seq <= channel.lastSeq) {
+    return;
+  }
 
+  channel.lastSeq = event.seq;
+
+  for (const listener of new Set(channel.listeners)) {
     try {
-      const parsed = JSON.parse(msg.data);
+      listener(event);
+    } catch (error) {
+      globalThis.reportError(error);
+    }
+  }
+};
 
-      if (!isStudioEvent(parsed)) {
-        return;
-      }
+const connect = (
+  scope: HubScope,
+  projectId: string,
+  channel: Channel
+): void => {
+  if (scope.channels.get(projectId) !== channel) {
+    return;
+  }
 
-      event = parsed;
-    } catch {
+  const source = scope.deps.open(projectId, channel.lastSeq);
+
+  channel.source = source;
+
+  const onMessage = (msg: Event): void =>
+    receive(channel, msg as MessageEvent<string>);
+
+  source.addEventListener("open", () => {
+    channel.retryDelay = RETRY_INITIAL_MS;
+    setState(channel, "open");
+  });
+  source.addEventListener("message", onMessage);
+
+  for (const type of EVENT_TYPES) {
+    source.addEventListener(type, onMessage);
+  }
+
+  source.addEventListener("error", () => {
+    source.close();
+
+    if (scope.channels.get(projectId) !== channel) {
       return;
     }
 
-    if (event.seq <= channel.lastSeq) {
-      return;
-    }
+    setState(channel, "reconnecting");
+    scope.deps.clearTimer(channel.retryTimer);
+    channel.retryTimer = scope.deps.setTimer(
+      () => connect(scope, projectId, channel),
+      channel.retryDelay
+    );
+    channel.retryDelay = Math.min(
+      channel.retryDelay * RETRY_FACTOR,
+      RETRY_MAX_MS
+    );
+  });
+};
 
-    channel.lastSeq = event.seq;
+const channelFor = (scope: HubScope, projectId: string): Channel => {
+  const existing = scope.channels.get(projectId);
 
-    for (const listener of [...channel.listeners]) {
-      try {
-        listener(event);
-      } catch (error) {
-        console.error("[events] listener failed", error);
-      }
-    }
+  if (existing) {
+    existing.closing = false;
+
+    return existing;
+  }
+
+  const channel: Channel = {
+    closing: false,
+    lastSeq: 0,
+    listeners: new Set(),
+    retryDelay: RETRY_INITIAL_MS,
+    retryTimer: null,
+    source: null,
+    state: "connecting",
+    stateListeners: new Set(),
   };
 
-  const connect = (projectId: string, channel: Channel): void => {
-    if (channels.get(projectId) !== channel) {
-      return;
-    }
+  scope.channels.set(projectId, channel);
+  connect(scope, projectId, channel);
 
-    const es = deps.open(projectId, channel.lastSeq);
-    channel.source = es;
+  return channel;
+};
 
-    const onMessage = (msg: Event): void =>
-      receive(channel, msg as MessageEvent<string>);
+const isChannelIdle = (channel: Channel): boolean =>
+  channel.listeners.size === 0 && channel.stateListeners.size === 0;
 
-    es.onopen = (): void => {
-      channel.retryDelay = 500;
-      setState(channel, "open");
-    };
+const release = (
+  scope: HubScope,
+  projectId: string,
+  channel: Channel
+): void => {
+  if (!isChannelIdle(channel) || channel.closing) {
+    return;
+  }
 
-    es.onmessage = onMessage;
-
-    for (const type of EVENT_TYPES) {
-      es.addEventListener(type, onMessage);
-    }
-
-    es.onerror = (): void => {
-      es.close();
-
-      if (channels.get(projectId) !== channel) {
-        return;
-      }
-
-      setState(channel, "reconnecting");
-      deps.clearTimer(channel.retryTimer);
-      channel.retryTimer = deps.setTimer(
-        () => connect(projectId, channel),
-        channel.retryDelay
-      );
-      channel.retryDelay = Math.min(channel.retryDelay * 2, 8000);
-    };
-  };
-
-  const channelFor = (projectId: string): Channel => {
-    const existing = channels.get(projectId);
-
-    if (existing) {
-      existing.closing = false;
-
-      return existing;
-    }
-
-    const channel: Channel = {
-      closing: false,
-      lastSeq: 0,
-      listeners: new Set(),
-      retryDelay: 500,
-      retryTimer: undefined,
-      source: null,
-      state: "connecting",
-      stateListeners: new Set(),
-    };
-
-    channels.set(projectId, channel);
-    connect(projectId, channel);
-
-    return channel;
-  };
-
-  const release = (projectId: string, channel: Channel): void => {
+  channel.closing = true;
+  scope.deps.defer(() => {
     if (
-      channel.listeners.size > 0 ||
-      channel.stateListeners.size > 0 ||
-      channel.closing
+      !channel.closing ||
+      scope.channels.get(projectId) !== channel ||
+      !isChannelIdle(channel)
     ) {
       return;
     }
 
-    channel.closing = true;
-    deps.defer(() => {
-      if (!channel.closing || channels.get(projectId) !== channel) {
-        return;
-      }
+    scope.channels.delete(projectId);
+    scope.deps.clearTimer(channel.retryTimer);
+    channel.source?.close();
+    channel.source = null;
+  });
+};
 
-      if (channel.listeners.size > 0 || channel.stateListeners.size > 0) {
-        return;
-      }
-
-      channels.delete(projectId);
-      deps.clearTimer(channel.retryTimer);
-      channel.source?.close();
-      channel.source = null;
-    });
-  };
+const createEventHub = (deps: HubDeps): EventHub => {
+  const scope: HubScope = { channels: new Map(), deps };
 
   return {
     openCount() {
-      return channels.size;
+      return scope.channels.size;
     },
     state(projectId) {
-      return channels.get(projectId)?.state ?? "connecting";
+      return scope.channels.get(projectId)?.state ?? "connecting";
     },
     subscribe(projectId, listener) {
-      const channel = channelFor(projectId);
+      const channel = channelFor(scope, projectId);
+
       channel.listeners.add(listener);
 
       return () => {
         channel.listeners.delete(listener);
-        release(projectId, channel);
+        release(scope, projectId, channel);
       };
     },
     watchState(projectId, onChange) {
-      const channel = channelFor(projectId);
+      const channel = channelFor(scope, projectId);
+
       channel.stateListeners.add(onChange);
 
       return () => {
         channel.stateListeners.delete(onChange);
-        release(projectId, channel);
+        release(scope, projectId, channel);
       };
     },
   };

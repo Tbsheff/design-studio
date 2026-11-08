@@ -1,4 +1,5 @@
 import { routes } from "@design-studio/actions/direct-edit/routes";
+import { routes as propRoutes } from "@design-studio/actions/prop/routes";
 import type { SourceLoc, Version } from "@design-studio/contracts";
 import type {
   ComponentVariantChange,
@@ -82,7 +83,7 @@ const propsApi = {
     source: SourceLoc,
     props: Record<string, PropValue | null>
   ): Promise<SetPropsResult> => {
-    const result = await call(routes.setPropsDirectEdit, {
+    const result = await call(propRoutes.setProp, {
       directionId: did,
       projectId: pid,
       props,

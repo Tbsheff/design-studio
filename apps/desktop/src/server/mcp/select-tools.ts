@@ -14,6 +14,7 @@ import {
   resolveLayerRef,
   scopeOf,
   type Viewport,
+  toProbeTarget,
 } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, type EditDeps } from "./edit-guards.js";
@@ -73,19 +74,13 @@ export async function selectMatchingOnPage(
 ): Promise<MatchReport> {
   const css = isLayerRef(input.selector)
     ? await resolveLayerRef(
-        preview,
-        input.url,
-        input.viewport,
-        input.scope,
+        toProbeTarget(preview, input.url, input.viewport, input.scope),
         input.selector.trim()
       )
     : input.selector;
 
   const { layers, extra } = await layersAtPaths(
-    preview,
-    input.url,
-    input.viewport,
-    input.scope,
+    toProbeTarget(preview, input.url, input.viewport, input.scope),
     input.page,
     async (probe) => {
       const ready = await probe.evaluate<boolean>(

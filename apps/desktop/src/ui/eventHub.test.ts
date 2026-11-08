@@ -5,9 +5,6 @@ import { createEventHub } from "./platform/event-hub";
 import type { EventSourceLike } from "./platform/event-hub";
 
 class FakeSource implements EventSourceLike {
-  onopen: EventSourceLike["onopen"] = null;
-  onmessage: EventSourceLike["onmessage"] = null;
-  onerror: EventSourceLike["onerror"] = null;
   closed = false;
   listeners = new Map<string, EventListener[]>();
   constructor(
@@ -21,10 +18,14 @@ class FakeSource implements EventSourceLike {
     this.closed = true;
   }
   open(): void {
-    this.onopen?.call(this as unknown as EventSource, new Event("open"));
+    for (const listener of this.listeners.get("open") ?? []) {
+      listener(new Event("open"));
+    }
   }
   fail(): void {
-    this.onerror?.call(this as unknown as EventSource, new Event("error"));
+    for (const listener of this.listeners.get("error") ?? []) {
+      listener(new Event("error"));
+    }
   }
   send(event: Partial<StudioEvent> & { type: string; seq: number }): void {
     const msg = { data: JSON.stringify(event) } as MessageEvent<string>;

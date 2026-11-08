@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import {
   isDirectEditable,
-  inspectorEmptyReason,
+  toInspectorEmptyReason,
 } from "../../features/inspector";
 import { uiStore } from "../../platform/storage";
 import { usePanelTab } from "../../platform/use-panel-tab";
@@ -16,7 +16,7 @@ const useStudioPanes = (projectId: string, ui: StudioUi): StudioPanes => {
 
   const panel = usePanelTab(
     projectId,
-    inspectorEmptyReason(selection, editable) === null
+    toInspectorEmptyReason(selection, editable) === null
   );
 
   const showPane = async (tab: PanelTab): Promise<boolean> => {

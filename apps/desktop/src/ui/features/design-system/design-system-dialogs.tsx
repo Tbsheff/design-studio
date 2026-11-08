@@ -102,6 +102,7 @@ const ChangePackDialog = ({
           packs={state.packs}
           value={currentId}
           includeNone={false}
+          onTab={null}
           onChoose={(pack) => void choose(pack?.id)}
         />
       </div>

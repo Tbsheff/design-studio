@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { levelLabel } from "../chat/level-control.js";
+import { levelLabel } from "../chat/index.js";
 import { VersionDetail } from "./version-detail.js";
 import { displayTitle } from "./version-labels.js";
 import { VersionLine } from "./version-line.js";

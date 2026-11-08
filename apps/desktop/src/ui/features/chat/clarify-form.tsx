@@ -5,7 +5,7 @@ import type { FormEvent, ReactElement } from "react";
 
 import { cn } from "../../ai/lib/utils.js";
 import { copy } from "./copy.js";
-import { useRovingRadioGroup } from "./level-control.js";
+import { useRovingRadioGroup } from "./use-roving-radio-group.js";
 
 const ClarifyQuestionField = ({
   item,

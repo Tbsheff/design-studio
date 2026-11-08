@@ -6,6 +6,7 @@ import {
   toFrameSchedule,
   toMergedDeltas,
 } from "./delta-batch-model.js";
+import { levelGist, levelHint, levelLabel } from "./level-model.js";
 import { runStepText } from "./live-status-model.js";
 import { parseDraft, toDraft } from "./settings-draft-model.js";
 import type { SettingsDraft } from "./settings-draft-model.js";
@@ -50,6 +51,9 @@ export {
   McpToasts,
   chatWidthStyle,
   createDeltaBatcher,
+  levelGist,
+  levelHint,
+  levelLabel,
   parseDraft,
   runStepText,
   toDraft,

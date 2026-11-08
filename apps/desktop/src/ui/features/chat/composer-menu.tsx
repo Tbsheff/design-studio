@@ -19,6 +19,7 @@ import type {
 import { createPortal } from "react-dom";
 
 import { cn } from "../../ai/lib/utils.js";
+import { ChoiceItem } from "./choice-item.js";
 import { ITEM, MODES, MODE_SHORT_HINT } from "./composer-menu-model.js";
 import type {
   ItemProps,
@@ -28,13 +29,7 @@ import type {
 } from "./composer-menu-model.js";
 import { copy } from "./copy.js";
 import { DesignCounts } from "./design-counts.js";
-import {
-  ChoiceItem,
-  levelGist,
-  levelHint,
-  levelLabel,
-  useRovingRadioGroup,
-} from "./level-control.js";
+import { levelGist, levelHint, levelLabel } from "./level-model.js";
 import { MenuItem } from "./menu-item.js";
 import { ModelName } from "./model-name.js";
 import { PillCaret } from "./pill-caret.js";
@@ -51,6 +46,7 @@ import { MODEL_OPTIONS } from "./settings-draft-model.js";
 import { effectiveModel, shortModel } from "./slash-groups.js";
 import { StableText } from "./stable-text.js";
 import { usePresence } from "./use-presence.js";
+import { useRovingRadioGroup } from "./use-roving-radio-group.js";
 
 const MenuSection = ({
   label,

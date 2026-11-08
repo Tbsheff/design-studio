@@ -16,12 +16,9 @@ import { VariationsControl } from "../canvas/variations-control.js";
 import { MODE_LABEL } from "./composer-mode-model.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import { copy } from "./copy.js";
-import {
-  LevelControl,
-  levelHint,
-  levelLabel,
-  useRovingRadioGroup,
-} from "./level-control.js";
+import { LevelControl } from "./level-control.js";
+import { levelHint, levelLabel } from "./level-model.js";
+import { useRovingRadioGroup } from "./use-roving-radio-group.js";
 
 interface DesignsSetting {
   value: number;

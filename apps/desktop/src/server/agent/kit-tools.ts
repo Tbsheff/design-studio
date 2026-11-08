@@ -23,6 +23,7 @@ import {
   memoPage,
   resolveLayerRef,
   scopeOf,
+  toProbeTarget,
 } from "../page-probe/index.js";
 import type { Viewport } from "../page-probe/index.js";
 import { canvasFrames } from "./direct-tools.js";
@@ -245,10 +246,12 @@ export async function resolveSelectors<A extends LayerArgs>(
       args.path ?? memoPage(scope, ref) ?? editPage(deps.ctx, undefined)?.path;
 
     out[key] = (await resolveLayerRef(
-      deps.preview,
-      editPageUrl(deps.ctx, page),
-      EDIT_VIEWPORT,
-      scope,
+      toProbeTarget(
+        deps.preview,
+        editPageUrl(deps.ctx, page),
+        EDIT_VIEWPORT,
+        scope
+      ),
       ref
     )) as A[typeof key];
 

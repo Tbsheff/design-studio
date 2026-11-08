@@ -7,6 +7,7 @@ import {
   LayerRefError,
   resolveLayerRef,
   scopeOf,
+  toProbeTarget,
 } from "../page-probe/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
@@ -74,10 +75,12 @@ const toSelector = async (
 
   try {
     return await resolveLayerRef(
-      preview,
-      url,
-      { height: frame.height, width: frame.width },
-      scopeOf(src.project.id, src.direction.id),
+      toProbeTarget(
+        preview,
+        url,
+        { height: frame.height, width: frame.width },
+        scopeOf(src.project.id, src.direction.id)
+      ),
       element.trim()
     );
   } catch (error) {

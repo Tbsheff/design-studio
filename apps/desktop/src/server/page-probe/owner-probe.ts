@@ -79,6 +79,24 @@ const probe = (selector: string): string => `(async (selector) => {
     return { tag: el.tagName.toLowerCase(), owners: ${ownerWalk()}(el), usedAt: app?.usedAt ?? null };
   })(${JSON.stringify(selector)})`;
 
+const parseLoc = (raw: string | null): SourceLoc | null => {
+  if (raw === null) {
+    return null;
+  }
+
+  const match = /^(?<file>.+):(?<line>\d+):(?<column>\d+)$/u.exec(raw);
+
+  if (match?.groups) {
+    return {
+      col: Number(match.groups.column),
+      file: match.groups.file as string,
+      line: Number(match.groups.line),
+    };
+  }
+
+  return null;
+};
+
 const probeOwners = async (
   preview: PreviewService,
   url: string,
@@ -93,22 +111,6 @@ const probeOwners = async (
 
   if (raw) {
     return { owners: raw.owners, tag: raw.tag, usedAt: parseLoc(raw.usedAt) };
-  }
-
-  return null;
-};
-
-const parseLoc = (raw: string | null): SourceLoc | null => {
-  const match = raw
-    ? /^(?<file>.+):(?<line>\d+):(?<column>\d+)$/u.exec(raw)
-    : null;
-
-  if (match) {
-    return {
-      col: Number(match[3]),
-      file: match[1] as string,
-      line: Number(match[2]),
-    };
   }
 
   return null;

@@ -2,9 +2,14 @@ import type { RunLevel } from "@design-studio/contracts";
 import { useSyncExternalStore } from "react";
 
 import { pick } from "./pick.js";
+import { isNumber, isObject, isString } from "./value-guards.js";
+
+const VIEWPORT_PRESETS = ["desktop", "tablet", "mobile", "custom"] as const;
+
+type ViewportPreset = (typeof VIEWPORT_PRESETS)[number];
 
 interface Viewport {
-  preset: "desktop" | "tablet" | "mobile" | "custom";
+  preset: ViewportPreset;
   width: number;
   height: number;
 }
@@ -18,10 +23,13 @@ interface LibraryFrom {
   directionId: string;
 }
 
+const HOME_SCREEN: Screen = "home";
+const LIBRARY_SCREEN: Screen = "design-systems";
+
 const SCREENS: ReadonlySet<Screen> = new Set<Screen>([
-  "home",
+  HOME_SCREEN,
   "new-design-system",
-  "design-systems",
+  LIBRARY_SCREEN,
 ]);
 
 interface UiState {
@@ -59,33 +67,35 @@ const defaults: UiState = {
   layersOpen: false,
   libraryFrom: null,
   paneCollapsed: false,
-  returnTo: "home",
+  returnTo: HOME_SCREEN,
   rulers: false,
-  screen: "home",
+  screen: HOME_SCREEN,
   snapByProject: {},
   viewRowOpen: false,
   viewport: { height: 900, preset: "desktop", width: 1440 },
   zoom: "fit",
 };
 
-const libraryFromOf = (value: unknown): LibraryFrom | null => {
-  const from = value as Partial<LibraryFrom> | null | undefined;
-
-  if (
-    typeof from?.projectId === "string" &&
-    typeof from.directionId === "string"
-  ) {
+const libraryFromOf = (
+  from: Partial<LibraryFrom> | null | undefined
+): LibraryFrom | null => {
+  if (isString(from?.projectId) && isString(from.directionId)) {
     return { directionId: from.directionId, projectId: from.projectId };
   }
 
   return null;
 };
 
+const isPatchFunction = (
+  patch: Partial<UiState> | ((previous: UiState) => Partial<UiState>)
+): patch is (previous: UiState) => Partial<UiState> =>
+  typeof patch === "function";
+
 const toPatchValue = (
   patch: Partial<UiState> | ((previous: UiState) => Partial<UiState>),
   previous: UiState
 ): Partial<UiState> => {
-  if (typeof patch === "function") {
+  if (isPatchFunction(patch)) {
     return patch(previous);
   }
 
@@ -105,7 +115,7 @@ const loadUiState = (): UiState => {
     return {
       activeProjectId: parsed.activeProjectId ?? null,
       chatWidth: pick(
-        typeof parsed.chatWidth === "number",
+        isNumber(parsed.chatWidth),
         parsed.chatWidth ?? null,
         null
       ),
@@ -116,38 +126,35 @@ const loadUiState = (): UiState => {
         "recent"
       ),
       lastLocation: pick(
-        typeof parsed.lastLocation === "string" &&
-          parsed.lastLocation.startsWith("/"),
+        isString(parsed.lastLocation) && parsed.lastLocation.startsWith("/"),
         parsed.lastLocation ?? null,
         null
       ),
       lastPackId: pick(
-        typeof parsed.lastPackId === "string",
+        isString(parsed.lastPackId),
         parsed.lastPackId ?? null,
         null
       ),
       layersOpen: parsed.layersOpen === true,
       libraryFrom: pick(
-        parsed.screen === "design-systems",
+        parsed.screen === LIBRARY_SCREEN,
         libraryFromOf(parsed.libraryFrom),
         null
       ),
       paneCollapsed: parsed.paneCollapsed === true,
       returnTo: pick(
-        parsed.returnTo === "design-systems",
-        "design-systems",
-        "home"
+        parsed.returnTo === LIBRARY_SCREEN,
+        LIBRARY_SCREEN,
+        HOME_SCREEN
       ),
       rulers: parsed.rulers === true,
       screen: pick(
         Boolean(parsed.screen && SCREENS.has(parsed.screen)),
-        parsed.screen ?? "home",
-        "home"
+        parsed.screen ?? HOME_SCREEN,
+        HOME_SCREEN
       ),
       snapByProject: pick(
-        Boolean(
-          parsed.snapByProject && typeof parsed.snapByProject === "object"
-        ),
+        isObject(parsed.snapByProject),
         parsed.snapByProject ?? {},
         {}
       ),
@@ -160,11 +167,13 @@ const loadUiState = (): UiState => {
   }
 };
 
-const saveUiState = (state: UiState): void => {
+const saveUiState = (state: UiState): boolean => {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
+
+    return true;
   } catch {
-    return;
+    return false;
   }
 };
 
@@ -179,7 +188,10 @@ const uiStore = {
     const next = toPatchValue(patch, state);
     state = { ...state, ...next };
     saveUiState(state);
-    listeners.forEach((listener) => listener());
+
+    for (const listener of listeners) {
+      listener();
+    }
   },
   subscribe: (listener: () => void) => {
     listeners.add(listener);
@@ -211,7 +223,10 @@ const createDraftStore = (initial = ""): DraftStore => {
       }
 
       value = next;
-      draftListeners.forEach((listener) => listener());
+
+      for (const listener of draftListeners) {
+        listener();
+      }
     },
     subscribe: (listener) => {
       draftListeners.add(listener);
@@ -262,19 +277,23 @@ const readStored = (key: string): string | null => {
   }
 };
 
-const writeStored = (key: string, value: string): void => {
+const writeStored = (key: string, value: string): boolean => {
   try {
     globalThis.localStorage.setItem(key, value);
+
+    return true;
   } catch {
-    return;
+    return false;
   }
 };
 
-const removeStored = (key: string): void => {
+const removeStored = (key: string): boolean => {
   try {
     globalThis.localStorage.removeItem(key);
+
+    return true;
   } catch {
-    return;
+    return false;
   }
 };
 

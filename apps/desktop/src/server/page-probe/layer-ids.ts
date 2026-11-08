@@ -42,13 +42,11 @@ const refForKey = (scope: string, key: string): string => {
   }
 
   let ref = layerRef(key);
+  let counter = 1;
 
-  for (
-    let counter = 1;
-    ids.keyByRef.has(ref) && ids.keyByRef.get(ref) !== key;
-    counter += 1
-  ) {
+  while (ids.keyByRef.has(ref) && ids.keyByRef.get(ref) !== key) {
     ref = layerRef(`${key}^${counter}`);
+    counter += 1;
   }
 
   ids.refByKey.set(key, ref);
@@ -63,32 +61,47 @@ const isGoneRef = (scope: string, ref: string): boolean =>
 const movedKey = (key: string, maps: Map<string, LineMap>): string | null => {
   let gone = false;
 
-  const next = key.replaceAll(
-    LOC_IN_KEY,
-    (whole, lead: string, file: string, line: string, col: string) => {
-      const map = maps.get(file);
+  const next = key.replaceAll(LOC_IN_KEY, (whole, ...captures: string[]) => {
+    const [lead, file, line, col] = captures;
+    const map = maps.get(file as string);
 
-      if (!map) {
-        return whole;
-      }
-
-      const newLine = map.line(Number(line));
-
-      if (newLine === null) {
-        gone = true;
-
-        return whole;
-      }
-
-      return `${lead}${file}:${newLine}:${map.col(Number(line), Number(col))}`;
+    if (!map) {
+      return whole;
     }
-  );
+
+    const newLine = map.line(Number(line));
+
+    if (newLine === null) {
+      gone = true;
+
+      return whole;
+    }
+
+    return `${lead}${file}:${newLine}:${map.col(Number(line), Number(col))}`;
+  });
 
   if (gone) {
     return null;
   }
 
   return next;
+};
+
+const applyMove = (ids: Ids, move: Move): void => {
+  if (move.to === null) {
+    ids.keyByRef.set(move.ref, GONE);
+
+    return;
+  }
+
+  const displaced = ids.refByKey.get(move.to);
+
+  if (displaced && displaced !== move.ref) {
+    ids.keyByRef.set(displaced, GONE);
+  }
+
+  ids.refByKey.set(move.to, move.ref);
+  ids.keyByRef.set(move.ref, move.to);
 };
 
 const remapIds = (scope: string, files: SourceFileChange[]): Move[] => {
@@ -117,19 +130,7 @@ const remapIds = (scope: string, files: SourceFileChange[]): Move[] => {
   }
 
   for (const move of moves) {
-    if (move.to === null) {
-      ids.keyByRef.set(move.ref, GONE);
-      continue;
-    }
-
-    const displaced = ids.refByKey.get(move.to);
-
-    if (displaced && displaced !== move.ref) {
-      ids.keyByRef.set(displaced, GONE);
-    }
-
-    ids.refByKey.set(move.to, move.ref);
-    ids.keyByRef.set(move.ref, move.to);
+    applyMove(ids, move);
   }
 
   return moves;

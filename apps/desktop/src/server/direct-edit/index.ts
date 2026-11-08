@@ -30,6 +30,10 @@ export {
   applySetImage,
 } from "./commit/image.js";
 
+export { getLayerImage } from "./commit/image-read.js";
+
+export type { LayerImageTarget } from "./commit/image-read.js";
+
 export type { ImageBytes } from "./commit/image-source.js";
 
 export { resolveTarget, seenImports } from "./components-ops/insert.js";

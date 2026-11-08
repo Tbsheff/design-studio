@@ -5,6 +5,7 @@ export {
   planAsset,
   planChanged,
   planSetImage,
+  getLayerImage,
   publishVersion,
   saveDeferred,
   savesSettled,

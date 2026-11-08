@@ -1,10 +1,13 @@
 import { BadRequestError } from "./deps.js";
 import type { ImageBytes } from "./deps.js";
+import { toEditText } from "./edit-mode.js";
+import type { EditMode } from "./edit-mode.js";
 import { toStyledPrompt } from "./engine/sizes.js";
 import type { Aspect, Style } from "./engine/sizes.js";
-import { generateGemini } from "./gemini.js";
+import { generateGemini, updateGemini } from "./gemini.js";
+import { toMockEdit } from "./mock-edit.js";
 import { toMockImage } from "./mock-image.js";
-import { generateOpenai } from "./openai.js";
+import { generateOpenai, updateOpenai } from "./openai.js";
 import { messageOf, readChoice } from "./provider-env.js";
 import type { ImageProviderName } from "./provider-env.js";
 
@@ -64,6 +67,56 @@ const generateImage = async (request: GenerateRequest): Promise<Generated> => {
   };
 };
 
-export { generateImage, stemOf };
+interface UpdateRequest {
+  readonly mode: EditMode;
+  readonly prompt: string;
+  readonly source: ImageBytes;
+}
 
-export type { GenerateRequest, Generated };
+const NO_EDIT_PROMPT = "Describe the change to make with the prompt mode.";
+
+const updateImageBytes = async (request: UpdateRequest): Promise<Generated> => {
+  const { mode, source } = request;
+  const prompt = request.prompt.trim();
+  const choice = readChoice();
+  const problem = messageOf(choice);
+  const stem = `edit-${mode}`;
+  const text = toEditText(mode, prompt);
+
+  if (mode === "prompt" && prompt === "") {
+    throw new BadRequestError(NO_EDIT_PROMPT);
+  }
+
+  if (problem !== null) {
+    throw new BadRequestError(problem);
+  }
+
+  if (choice.name === "openai") {
+    return {
+      image: await updateOpenai(choice.key, source, text, stem),
+      provider: "openai",
+    };
+  }
+
+  if (choice.name === "gemini") {
+    return {
+      image: await updateGemini(choice.key, source, text, stem),
+      provider: "gemini",
+    };
+  }
+
+  const edited = toMockEdit(source.bytes, source.ext, mode, prompt);
+
+  if (edited.bytes === null) {
+    throw new BadRequestError(edited.message ?? "The mock edit failed.");
+  }
+
+  return {
+    image: { bytes: edited.bytes, ext: "png", stem },
+    provider: "mock",
+  };
+};
+
+export { generateImage, stemOf, updateImageBytes };
+
+export type { GenerateRequest, Generated, UpdateRequest };

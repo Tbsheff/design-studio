@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { SwapQueue } from "./features/inspector/use-swap-gate";
 
+const IS_FALSE = false;
+const IS_TRUE = true;
+
 const change = (directionId: string, changedAt: number) => ({
   changedAt,
   directionId,
@@ -12,26 +15,30 @@ const change = (directionId: string, changedAt: number) => ({
 
 describe(SwapQueue, () => {
   it("lets one frame reload at a time and keeps only the newest change per frame", () => {
+    expect.hasAssertions();
+
     const q = new SwapQueue();
     q.offer("a", change("a", 1));
     q.offer("b", change("b", 2));
     q.offer("b", change("b", 3));
     expect(q.inFlight).toBe("a");
-    expect([...q.next.keys()]).toEqual(["a"]);
-    expect(q.done("b")).toBe(false);
-    expect(q.done("a")).toBe(true);
+    expect([...q.next.keys()]).toStrictEqual(["a"]);
+    expect(q.done("b")).toBe(IS_FALSE);
+    expect(q.done("a")).toBe(IS_TRUE);
     expect(q.shown.get("a")?.changedAt).toBe(1);
     expect(q.inFlight).toBe("b");
     expect(q.next.get("b")?.changedAt).toBe(3);
     q.done("b");
     expect(q.inFlight).toBeNull();
     expect(q.next.size).toBe(0);
-  });
+  }, 0);
 
   it("gives the back slot up while the live frame holds one, then resumes", () => {
+    expect.hasAssertions();
+
     const q = new SwapQueue();
     q.offer("a", change("a", 1));
-    expect(q.hold(true)).toBe(true);
+    expect(q.hold(true)).toBe(IS_TRUE);
     expect(q.inFlight).toBeNull();
     expect(q.next.size).toBe(0);
     q.offer("b", change("b", 2));
@@ -40,5 +47,5 @@ describe(SwapQueue, () => {
     expect(q.inFlight).toBe("a");
     q.done("a");
     expect(q.inFlight).toBe("b");
-  });
+  }, 0);
 });

@@ -9,12 +9,16 @@ const base = { at: 1, ns: "studio", token: "t", type: "text-commit" } as const;
 
 describe(parseTextCommit, () => {
   it("accepts a string selector and text", () => {
+    expect.hasAssertions();
+
     expect(
       parseTextCommit({ ...base, selector: "body > main > h1", text: "Hello" })
-    ).toEqual({ selector: "body > main > h1", text: "Hello" });
-  });
+    ).toStrictEqual({ selector: "body > main > h1", text: "Hello" });
+  }, 0);
 
   it("refuses bad shapes and long text", () => {
+    expect.hasAssertions();
+
     expect(parseTextCommit({ ...base, selector: "", text: "x" })).toBeNull();
     expect(
       parseTextCommit({
@@ -39,5 +43,5 @@ describe(parseTextCommit, () => {
         type: "text-edit",
       })
     ).toBeNull();
-  });
+  }, 0);
 });

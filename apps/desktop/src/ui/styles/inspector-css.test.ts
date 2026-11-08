@@ -25,6 +25,8 @@ function declarations(
 
 describe("inspector.css spacing", () => {
   it("uses --s-* tokens for every padding, margin and gap", () => {
+    expect.hasAssertions();
+
     const spacing = declarations(css).filter((d) =>
       /^(padding|margin|gap|row-gap|column-gap)(-|$)/.test(d.prop)
     );
@@ -35,11 +37,13 @@ describe("inspector.css spacing", () => {
       .filter((d) => /\d(\.\d+)?px\b/.test(d.value))
       .map((d) => `${d.line}: ${d.prop}: ${d.value}`);
 
-    expect(raw).toEqual([]);
-  });
+    expect(raw).toStrictEqual([]);
+  }, 0);
 
   it("keeps inspector fields at 28px", () => {
+    expect.hasAssertions();
+
     const field = /\.ins-field \{[^}]*\}/.exec(css)?.[0] ?? "";
     expect(field).toContain("height: 28px");
-  });
+  }, 0);
 });

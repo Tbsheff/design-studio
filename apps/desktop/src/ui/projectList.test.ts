@@ -8,6 +8,9 @@ import {
   isThumbnailPending,
 } from "./features/home/index.js";
 
+const IS_FALSE = false;
+const IS_TRUE = true;
+
 function project(
   id: string,
   name: string,
@@ -20,14 +23,14 @@ function project(
     createdAt,
     directions: [
       {
+        branch: "d/main",
+        createdAt,
+        headVersionId: head,
         id: "main",
         name: "Main",
-        workTree: "/x",
-        branch: "d/main",
-        headVersionId: head,
         parentVersionId: null,
         sessionId: null,
-        createdAt,
+        workTree: "/x",
       },
     ],
     entry: "index.html",
@@ -36,7 +39,7 @@ function project(
     kind: "html",
     name,
     settings: {} as Project["settings"],
-    thumbnail: thumb ? { versionId: thumb, at: 1 } : null,
+    thumbnail: thumb ? { at: 1, versionId: thumb } : null,
     updatedAt,
   };
 }
@@ -49,34 +52,34 @@ const list = [
 
 describe("project list", () => {
   it("sorts by recent, name and created", () => {
-    expect(toSortedProjects(list, "recent").map((item) => item.id)).toEqual([
-      "a",
-      "c",
-      "b",
-    ]);
-    expect(toSortedProjects(list, "name").map((item) => item.id)).toEqual([
-      "b",
-      "c",
-      "a",
-    ]);
-    expect(toSortedProjects(list, "created").map((item) => item.id)).toEqual([
-      "b",
-      "c",
-      "a",
-    ]);
-  });
+    expect.hasAssertions();
+
+    expect(
+      toSortedProjects(list, "recent").map((item) => item.id)
+    ).toStrictEqual(["a", "c", "b"]);
+    expect(toSortedProjects(list, "name").map((item) => item.id)).toStrictEqual(
+      ["b", "c", "a"]
+    );
+    expect(
+      toSortedProjects(list, "created").map((item) => item.id)
+    ).toStrictEqual(["b", "c", "a"]);
+  }, 0);
 
   it("filters by every word, ignoring case and accents", () => {
-    expect(toFilteredProjects(list, "cafe").map((item) => item.id)).toEqual([
-      "c",
-    ]);
-    expect(toFilteredProjects(list, "PAGE zeb").map((item) => item.id)).toEqual(
-      ["a"]
-    );
+    expect.hasAssertions();
+
+    expect(
+      toFilteredProjects(list, "cafe").map((item) => item.id)
+    ).toStrictEqual(["c"]);
+    expect(
+      toFilteredProjects(list, "PAGE zeb").map((item) => item.id)
+    ).toStrictEqual(["a"]);
     expect(toFilteredProjects(list, "  ")).toHaveLength(3);
-  });
+  }, 0);
 
   it("filters 50 projects in well under 50 ms", () => {
+    expect.hasAssertions();
+
     const many = Array.from({ length: 50 }, (_, index) =>
       project(`p${index}`, `Project ${index} landing page`, index, index)
     );
@@ -85,15 +88,23 @@ describe("project list", () => {
     const shown = toFilteredProjects(many, "lan 4");
     expect(performance.now() - started).toBeLessThan(50);
     expect(shown.length).toBeGreaterThan(0);
-  });
+  }, 0);
 
   it("knows when a thumbnail is behind the head", () => {
-    expect(isThumbnailPending(project("a", "A", 1, 1, null))).toBe(false);
-    expect(isThumbnailPending(project("a", "A", 1, 1, "v2", "v1"))).toBe(true);
-    expect(isThumbnailPending(project("a", "A", 1, 1, "v2", "v2"))).toBe(false);
-  });
+    expect.hasAssertions();
+
+    expect(isThumbnailPending(project("a", "A", 1, 1, null))).toBe(IS_FALSE);
+    expect(isThumbnailPending(project("a", "A", 1, 1, "v2", "v1"))).toBe(
+      IS_TRUE
+    );
+    expect(isThumbnailPending(project("a", "A", 1, 1, "v2", "v2"))).toBe(
+      IS_FALSE
+    );
+  }, 0);
 
   it("moves through the grid with arrow keys", () => {
+    expect.hasAssertions();
+
     expect(toNextGridIndex("ArrowRight", 0, 5, 3)).toBe(1);
     expect(toNextGridIndex("ArrowRight", 4, 5, 3)).toBe(4);
     expect(toNextGridIndex("ArrowDown", 1, 5, 3)).toBe(4);
@@ -101,5 +112,5 @@ describe("project list", () => {
     expect(toNextGridIndex("ArrowUp", 4, 5, 3)).toBe(1);
     expect(toNextGridIndex("End", 0, 5, 3)).toBe(4);
     expect(toNextGridIndex("Tab", 0, 5, 3)).toBeNull();
-  });
+  }, 0);
 });

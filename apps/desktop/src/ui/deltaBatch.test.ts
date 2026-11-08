@@ -42,14 +42,14 @@ const finished = (runId: string, finalText: string): StudioEvent => ({
   ...base(),
   runId,
   summary: {
+    directionId: "d1",
+    finalText,
+    finishedAt: 2,
     id: runId,
     projectId: "p1",
-    directionId: "d1",
-    request: { prompt: "x", mode: "edit" },
-    status: "completed",
+    request: { mode: "edit", prompt: "x" },
     startedAt: 1,
-    finishedAt: 2,
-    finalText,
+    status: "completed",
     toolCalls: [],
   } as unknown as RunSummary,
   type: "run.finished",
@@ -93,6 +93,8 @@ function direct(events: StudioEvent[]): RunMap {
 
 describe("delta batcher", () => {
   it("applies many deltas in one update per frame", () => {
+    expect.hasAssertions();
+
     const h = harness();
     h.batcher.push(started("r1"));
 
@@ -104,9 +106,11 @@ describe("delta batcher", () => {
     h.frame();
     expect(h.updates()).toBe(2);
     expect(runText(h.runs().r1!)).toBe("a b c d");
-  });
+  }, 0);
 
   it("flushes pending deltas before a non-delta run event so order holds", () => {
+    expect.hasAssertions();
+
     const events = [
       started("r1"),
       delta("r1", "Hel"),
@@ -125,10 +129,12 @@ describe("delta batcher", () => {
     }
 
     h.frame();
-    expect(h.runs()).toEqual(direct(events));
-  });
+    expect(h.runs()).toStrictEqual(direct(events));
+  }, 0);
 
   it("gives the same text for small and big chunks", () => {
+    expect.hasAssertions();
+
     const text = "one two three four five six seven eight nine ten";
     const small = text.split(/(?<= )/).map((part) => delta("r1", part));
     const big = [delta("r1", text.slice(0, 20)), delta("r1", text.slice(20))];
@@ -144,9 +150,11 @@ describe("delta batcher", () => {
       h.frame();
       expect(runText(h.runs().r1!)).toBe(text);
     }
-  });
+  }, 0);
 
   it("keeps interleaved runs apart", () => {
+    expect.hasAssertions();
+
     const events = [
       started("r1"),
       started("r2"),
@@ -165,9 +173,11 @@ describe("delta batcher", () => {
     h.frame();
     expect(runText(h.runs().r1!)).toBe("ab");
     expect(runText(h.runs().r2!)).toBe("xy");
-  });
+  }, 0);
 
   it("skips updates for non-run events when nothing is pending", () => {
+    expect.hasAssertions();
+
     const h = harness();
     h.batcher.push({
       ...base(),
@@ -177,17 +187,21 @@ describe("delta batcher", () => {
       type: "files.changed",
     });
     expect(h.updates()).toBe(0);
-  });
+  }, 0);
 
   it("drops pending deltas on dispose", () => {
+    expect.hasAssertions();
+
     const h = harness();
     h.batcher.push(delta("r1", "a"));
     h.batcher.dispose();
     h.frame();
     expect(h.updates()).toBe(0);
-  });
+  }, 0);
 
   it("merges only adjacent deltas of the same run", () => {
+    expect.hasAssertions();
+
     const a = delta("r1", "a") as Extract<
       StudioEvent,
       { type: "run.text.delta" }
@@ -205,7 +219,7 @@ describe("delta batcher", () => {
 
     expect(
       mergeDeltas(mergeDeltas(mergeDeltas([], a), b), c).map((e) => e.text)
-    ).toEqual(["a", "b", "c"]);
-    expect(mergeDeltas([a], c).map((e) => e.text)).toEqual(["ac"]);
-  });
+    ).toStrictEqual(["a", "b", "c"]);
+    expect(mergeDeltas([a], c).map((e) => e.text)).toStrictEqual(["ac"]);
+  }, 0);
 });

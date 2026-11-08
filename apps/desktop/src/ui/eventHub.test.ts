@@ -4,6 +4,9 @@ import { describe, expect, it } from "vitest";
 import { createEventHub } from "./platform/event-hub";
 import type { EventSourceLike } from "./platform/event-hub";
 
+const IS_FALSE = false;
+const IS_TRUE = true;
+
 class FakeSource implements EventSourceLike {
   onopen: EventSourceLike["onopen"] = null;
   onmessage: EventSourceLike["onmessage"] = null;
@@ -43,7 +46,7 @@ function setup() {
   const deferred: (() => void)[] = [];
 
   const hub = createEventHub({
-    clearTimer: () => undefined,
+    clearTimer: ignoreEvent,
     defer: (fn) => deferred.push(fn),
     open: (projectId, after) => {
       const source = new FakeSource(projectId, after);
@@ -68,6 +71,8 @@ const files = (seq: number) =>
 
 describe("event hub", () => {
   it("opens one connection per project for many subscribers", () => {
+    expect.hasAssertions();
+
     const { hub, sources } = setup();
     const a: number[] = [];
     const b: number[] = [];
@@ -78,11 +83,13 @@ describe("event hub", () => {
     expect(sources[0]?.after).toBe(0);
     sources[0]?.send(files(1));
     sources[0]?.send(files(2));
-    expect(a).toEqual([1, 2]);
-    expect(b).toEqual([1, 2]);
-  });
+    expect(a).toStrictEqual([1, 2]);
+    expect(b).toStrictEqual([1, 2]);
+  }, 0);
 
   it("drops events with a seq at or below the last one", () => {
+    expect.hasAssertions();
+
     const { hub, sources } = setup();
     const seen: number[] = [];
     hub.subscribe("p1", (e) => seen.push(e.seq));
@@ -90,10 +97,12 @@ describe("event hub", () => {
     sources[0]?.send(files(3));
     sources[0]?.send(files(2));
     sources[0]?.send(files(4));
-    expect(seen).toEqual([3, 4]);
-  });
+    expect(seen).toStrictEqual([3, 4]);
+  }, 0);
 
   it("reconnects after the last seq and reports the state", () => {
+    expect.hasAssertions();
+
     const { hub, sources, timers } = setup();
     const states: string[] = [];
     hub.subscribe("p1", ignoreEvent);
@@ -101,54 +110,64 @@ describe("event hub", () => {
     sources[0]?.open();
     sources[0]?.send(files(7));
     sources[0]?.fail();
-    expect(sources[0]?.closed).toBe(true);
+    expect(sources[0]?.closed).toBe(IS_TRUE);
     expect(hub.state("p1")).toBe("reconnecting");
     timers.shift()?.();
     expect(sources).toHaveLength(2);
     expect(sources[1]?.after).toBe(7);
     sources[1]?.open();
-    expect(states).toEqual(["open", "reconnecting", "open"]);
-  });
+    expect(states).toStrictEqual(["open", "reconnecting", "open"]);
+  }, 0);
 
   it("keeps the connection through an unsubscribe and resubscribe in one task", () => {
+    expect.hasAssertions();
+
     const { hub, sources, flushDeferred } = setup();
     const off = hub.subscribe("p1", ignoreEvent);
     off();
     hub.subscribe("p1", ignoreEvent);
     flushDeferred();
     expect(sources).toHaveLength(1);
-    expect(sources[0]?.closed).toBe(false);
-  });
+    expect(sources[0]?.closed).toBe(IS_FALSE);
+  }, 0);
+});
 
+describe("event hub lifecycle", () => {
   it("closes when the last subscriber leaves and replays from zero on reopen", () => {
+    expect.hasAssertions();
+
     const { hub, sources, flushDeferred } = setup();
     const off = hub.subscribe("p1", ignoreEvent);
     sources[0]?.send(files(5));
     off();
     flushDeferred();
-    expect(sources[0]?.closed).toBe(true);
+    expect(sources[0]?.closed).toBe(IS_TRUE);
     expect(hub.openCount()).toBe(0);
     hub.subscribe("p1", ignoreEvent);
     expect(sources).toHaveLength(2);
     expect(sources[1]?.after).toBe(0);
-  });
+  }, 0);
 
   it("keeps projects apart", () => {
+    expect.hasAssertions();
+
     const { hub, sources } = setup();
     const seen: string[] = [];
     hub.subscribe("p1", (e) => seen.push(`p1:${e.seq}`));
     hub.subscribe("p2", (e) => seen.push(`p2:${e.seq}`));
-    expect(sources.map((s) => s.projectId)).toEqual(["p1", "p2"]);
+    expect(sources.map((s) => s.projectId)).toStrictEqual(["p1", "p2"]);
     sources[1]?.send(files(1));
-    expect(seen).toEqual(["p2:1"]);
-  });
+    expect(seen).toStrictEqual(["p2:1"]);
+  }, 0);
 
   it("does not reconnect a closed channel", () => {
+    expect.hasAssertions();
+
     const { hub, sources, timers, flushDeferred } = setup();
     const off = hub.subscribe("p1", ignoreEvent);
     off();
     flushDeferred();
     sources[0]?.fail();
     expect(timers).toHaveLength(0);
-  });
+  }, 0);
 });

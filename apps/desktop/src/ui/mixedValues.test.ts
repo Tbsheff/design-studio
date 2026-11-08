@@ -10,6 +10,9 @@ import {
   multiBlockReason,
 } from "./features/inspector/mixed-values";
 
+const IS_FALSE = false;
+const IS_TRUE = true;
+
 function card(
   line: number,
   styles: Record<string, string>,
@@ -20,7 +23,7 @@ function card(
     outerHTML: "<article></article>",
     rect: { height: 10, width: 10, x: 0, y: 0 },
     selector: `article:nth-of-type(${line})`,
-    source: source ? { file: "index.html", line, col: 7 } : null,
+    source: source ? { col: 7, file: "index.html", line } : null,
     styles,
     tag: "ARTICLE",
     text: "",
@@ -29,6 +32,8 @@ function card(
 
 describe(mergeValues, () => {
   it("keeps shared values and marks differing ones as mixed with an empty value", () => {
+    expect.hasAssertions();
+
     const merged = mergeValues([
       valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
       valuesFromStyles({ "border-radius": "4px", color: "rgb(0, 0, 0)" }),
@@ -36,25 +41,29 @@ describe(mergeValues, () => {
     ]);
 
     expect(merged.values["border-radius"]).toBe("");
-    expect(merged.mixed.has("border-radius")).toBe(true);
+    expect(merged.mixed.has("border-radius")).toBe(IS_TRUE);
     expect(merged.values.color).toBe("rgb(0, 0, 0)");
-    expect(merged.mixed.has("color")).toBe(false);
-  });
+    expect(merged.mixed.has("color")).toBe(IS_FALSE);
+  }, 0);
 
   it("marks a padding side as mixed when only that side differs", () => {
+    expect.hasAssertions();
+
     const merged = mergeValues([
       valuesFromStyles({ padding: "8px" }),
       valuesFromStyles({ padding: "8px 8px 16px" }),
     ]);
 
-    expect(merged.mixed.has("padding-bottom")).toBe(true);
-    expect(merged.mixed.has("padding-top")).toBe(false);
+    expect(merged.mixed.has("padding-bottom")).toBe(IS_TRUE);
+    expect(merged.mixed.has("padding-top")).toBe(IS_FALSE);
     expect(merged.values["padding-top"]).toBe("8px");
-  });
+  }, 0);
 });
 
 describe(batchEdits, () => {
   it("writes the value to every element whose own value differs, in one list", () => {
+    expect.hasAssertions();
+
     const selections = [
       card(3, { "border-radius": "4px" }),
       card(4, { "border-radius": "12px" }),
@@ -63,14 +72,16 @@ describe(batchEdits, () => {
 
     const bases = selections.map((s) => valuesFromStyles(s.styles));
     const edits = batchEdits(selections, bases, { "border-radius": "8px" });
-    expect(edits.map((e) => [e.source.line, e.style])).toEqual([
+    expect(edits.map((e) => [e.source.line, e.style])).toStrictEqual([
       [3, { "border-radius": "8px" }],
       [4, { "border-radius": "8px" }],
     ]);
     expect(edits[0]?.tag).toBe("article");
-  });
+  }, 0);
 
   it("returns no edits when nothing changes", () => {
+    expect.hasAssertions();
+
     const selections = [card(3, { color: "red" }), card(4, { color: "red" })];
     expect(
       batchEdits(
@@ -78,51 +89,63 @@ describe(batchEdits, () => {
         selections.map((s) => valuesFromStyles(s.styles)),
         { color: "red" }
       )
-    ).toEqual([]);
-  });
+    ).toStrictEqual([]);
+  }, 0);
 });
 
 describe(multiBlockReason, () => {
   it("allows distinct source locations", () => {
+    expect.hasAssertions();
+
     expect(multiBlockReason([card(3, {}), card(4, {})])).toBeNull();
-  });
+  }, 0);
 
   it("refuses elements without a source", () => {
+    expect.hasAssertions();
+
     expect(multiBlockReason([card(3, {}), card(4, {}, false)])).toMatch(
       /no source location/
     );
-  });
+  }, 0);
 
   it("refuses elements that share one source location, as from a .map()", () => {
+    expect.hasAssertions();
+
     expect(
       multiBlockReason([
         card(3, {}),
         { ...card(3, {}), selector: "li:nth-child(2)" },
       ])
     ).toMatch(/one line of code/);
-  });
+  }, 0);
 
   it("refuses more elements than one batch takes", () => {
+    expect.hasAssertions();
+
     expect(
       multiBlockReason(Array.from({ length: 51 }, (_, i) => card(i + 1, {})))
     ).toMatch(/50 elements or fewer/);
-  });
+  }, 0);
 });
 
 describe(hasCurrentDependency, () => {
   it("flags relative math and allows plain or absolute input", () => {
-    expect(hasCurrentDependency("+8", "px")).toBe(true);
-    expect(hasCurrentDependency("8", "px")).toBe(false);
-    expect(hasCurrentDependency("8*2", "px")).toBe(false);
-    expect(hasCurrentDependency("", "px")).toBe(false);
-  });
+    expect.hasAssertions();
+
+    expect(hasCurrentDependency("+8", "px")).toBe(IS_TRUE);
+    expect(hasCurrentDependency("8", "px")).toBe(IS_FALSE);
+    expect(hasCurrentDependency("8*2", "px")).toBe(IS_FALSE);
+    expect(hasCurrentDependency("", "px")).toBe(IS_FALSE);
+  }, 0);
 });
 
 describe(nextSelection, () => {
   it("replaces on a plain click, adds and removes on Shift+click", () => {
+    expect.hasAssertions();
+
     const [a, b] = [card(3, {}), card(4, {})];
-    expect(nextSelection([a], b, false)).toEqual([b]);
-    expect(nextSelection([a], b, true)).toEqual([a, b]);
-    expect(nextSelection([a, b], { ...a }, true)).toEqual([b]);
-  });
+    expect(nextSelection([a], b, false)).toStrictEqual([b]);
+    expect(nextSelection([a], b, true)).toStrictEqual([a, b]);
+    expect(nextSelection([a, b], { ...a }, true)).toStrictEqual([b]);
+  }, 0);
 });

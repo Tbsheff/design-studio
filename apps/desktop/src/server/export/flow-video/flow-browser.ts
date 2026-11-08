@@ -53,9 +53,13 @@ const startBrowser = async (index: number): Promise<Browser> => {
 const startRecording = async (
   size: RecordingSize,
   viewport: RecordingSize,
-  videoDir: string
+  videoDir: string | null
 ): Promise<FlowRecording> => {
   const browser = await startBrowser(0);
+
+  if (videoDir === null) {
+    return { browser, context: await browser.newContext({ viewport }) };
+  }
 
   const context = await browser.newContext({
     recordVideo: { dir: videoDir, size },

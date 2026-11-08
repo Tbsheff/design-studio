@@ -1,5 +1,5 @@
 import type { QueuedMessage } from "@design-studio/contracts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, startTransition } from "react";
 
 import { api } from "../../api.js";
 import type { DraftStore } from "../../platform/storage.js";
@@ -9,7 +9,13 @@ import { useEscapeStop } from "./use-escape-stop.js";
 const NO_QUEUE: QueuedMessage[] = [];
 
 const cancelQuietly = (projectId: string, runId: string): void => {
-  void api.cancelRun(projectId, runId).catch(() => null);
+  startTransition(async () => {
+    try {
+      await api.cancelRun(projectId, runId);
+    } catch {
+      return;
+    }
+  });
 };
 
 interface RunControls {

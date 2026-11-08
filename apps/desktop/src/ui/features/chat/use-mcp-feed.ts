@@ -3,7 +3,13 @@ import type {
   McpApprovalOutcome,
   McpApprovalRecord,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  startTransition,
+} from "react";
 
 import { useProjectEvents } from "../../platform/events.js";
 import { mcpApi } from "./mcp-model.js";
@@ -55,13 +61,17 @@ const useMcpFeed = (
 
   const reload = useCallback(() => {
     let live = true;
-    mcpApi
-      .activity(projectId)
-      .then(
-        (res) =>
-          live && setActivity((prev) => replaceActivity(prev, res.activity))
-      )
-      .catch(() => null);
+    startTransition(async () => {
+      try {
+        const res = await mcpApi.activity(projectId);
+
+        if (live) {
+          setActivity((prev) => replaceActivity(prev, res.activity));
+        }
+      } catch {
+        return;
+      }
+    });
 
     return (): void => {
       live = false;

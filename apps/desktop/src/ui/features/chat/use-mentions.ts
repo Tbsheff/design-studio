@@ -3,7 +3,7 @@ import type {
   ComponentInfo,
   RunMention,
 } from "@design-studio/contracts";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, startTransition } from "react";
 import type { Dispatch, KeyboardEvent, SetStateAction } from "react";
 
 import { api } from "../../api.js";
@@ -15,6 +15,19 @@ import {
 import type { MentionOption } from "./mention-picker.js";
 
 const fileCache = new Map<string, Promise<string[]>>();
+
+const requestFiles = async (
+  projectId: string,
+  directionId: string
+): Promise<string[]> => {
+  try {
+    const result = await api.workTreeFiles(projectId, directionId);
+
+    return result.files;
+  } catch {
+    return [];
+  }
+};
 
 const loadFiles = (
   projectId: string,
@@ -28,10 +41,7 @@ const loadFiles = (
     return known;
   }
 
-  const next = api.workTreeFiles(projectId, directionId).then(
-    (result) => result.files,
-    () => []
-  );
+  const next = requestFiles(projectId, directionId);
 
   fileCache.set(key, next);
 
@@ -97,7 +107,9 @@ const useMentions = ({
 
   const refresh = (fresh: boolean): void => {
     if (directionId) {
-      void loadFiles(projectId, directionId, fresh).then(setFiles);
+      startTransition(async () => {
+        setFiles(await loadFiles(projectId, directionId, fresh));
+      });
     }
   };
 

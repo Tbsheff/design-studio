@@ -1,5 +1,5 @@
 import type { TelemetrySample } from "@design-studio/contracts";
-import { useEffect, useState } from "react";
+import { useEffect, useState, startTransition } from "react";
 import type { ReactElement } from "react";
 
 import { api } from "../../api.js";
@@ -137,10 +137,19 @@ const LatencyBreakdown = ({
 
   useEffect(() => {
     let alive = true;
-    api
-      .getTelemetry(projectId)
-      .then((list) => alive && setSamples(list))
-      .catch(() => alive && setSamples([]));
+    startTransition(async () => {
+      try {
+        const list = await api.getTelemetry(projectId);
+
+        if (alive) {
+          setSamples(list);
+        }
+      } catch {
+        if (alive) {
+          setSamples([]);
+        }
+      }
+    });
 
     return (): void => {
       alive = false;

@@ -295,20 +295,20 @@ const SkillsIndicator = ({ projectId, settings, onSaved }: IndicatorProps) => {
   const disabled = pending ?? settings.disabledSkills ?? [];
   const count = enabledSkills(catalog, disabled).length;
 
-  const save = (next: string[]) => {
+  const save = async (next: string[]): Promise<void> => {
     setPending(next);
 
-    return api.updateSettings(projectId, { disabledSkills: next }).then(
-      (project) => {
-        setError(null);
-        onSaved(project);
-        setPending((current) => (current === next ? null : current));
-      },
-      (caught: unknown) => {
-        setError(errorText(caught));
-        setPending(null);
-      }
-    );
+    try {
+      const project = await api.updateSettings(projectId, {
+        disabledSkills: next,
+      });
+      setError(null);
+      onSaved(project);
+      setPending((current) => (current === next ? null : current));
+    } catch (thrownError: unknown) {
+      setError(errorText(thrownError));
+      setPending(null);
+    }
   };
 
   return (

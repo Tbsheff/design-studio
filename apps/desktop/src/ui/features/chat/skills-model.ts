@@ -1,24 +1,26 @@
 import type { SkillCatalog, SkillInfo } from "@design-studio/contracts";
-import { useCallback, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 
 let request: Promise<SkillCatalog> | null = null;
 let lastCatalog: SkillCatalog | null = null;
 
+const requestSkillCatalog = async (): Promise<SkillCatalog> => {
+  try {
+    const catalog = await api.listSkills();
+    lastCatalog = catalog;
+
+    return catalog;
+  } catch (error: unknown) {
+    request = null;
+    throw error;
+  }
+};
+
 const fetchSkillCatalog = (fresh = false): Promise<SkillCatalog> => {
   if (fresh || !request) {
-    request = api.listSkills().then(
-      (catalog) => {
-        lastCatalog = catalog;
-
-        return catalog;
-      },
-      (error: unknown) => {
-        request = null;
-        throw error;
-      }
-    );
+    request = requestSkillCatalog();
   }
 
   return request;
@@ -37,17 +39,20 @@ const useSkillCatalog = (): {
 
   const load = useCallback((fresh: boolean) => {
     let live = true;
-    fetchSkillCatalog(fresh).then(
-      (result) => {
-        if (!live) {
-          return;
-        }
+    startTransition(async () => {
+      try {
+        const result = await fetchSkillCatalog(fresh);
 
-        setCatalog(result);
-        setError(null);
-      },
-      (caught: unknown) => live && setError(errorText(caught))
-    );
+        if (live) {
+          setCatalog(result);
+          setError(null);
+        }
+      } catch (thrownError: unknown) {
+        if (live) {
+          setError(errorText(thrownError));
+        }
+      }
+    });
 
     return (): void => {
       live = false;

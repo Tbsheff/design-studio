@@ -1,6 +1,6 @@
 import type { RunStatus, RunSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, startTransition } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { runQueryTerms } from "../../../shared/rewind.js";
@@ -46,22 +46,24 @@ const useRunHits = (directionId: string | null, query: string): Hits | null => {
     let alive = true;
 
     const timer = globalThis.setTimeout(() => {
-      searchRunPage(directionId, text)
-        .then(
-          (page) =>
-            alive &&
+      startTransition(async () => {
+        try {
+          const page = await searchRunPage(directionId, text);
+
+          if (alive) {
             setHits({
               failed: false,
               more: page.nextBefore !== null,
               query: text,
               runs: page.runs,
-            })
-        )
-        .catch(
-          () =>
-            alive &&
-            setHits({ failed: true, more: false, query: text, runs: [] })
-        );
+            });
+          }
+        } catch {
+          if (alive) {
+            setHits({ failed: true, more: false, query: text, runs: [] });
+          }
+        }
+      });
     }, DEBOUNCE_MS);
 
     return (): void => {

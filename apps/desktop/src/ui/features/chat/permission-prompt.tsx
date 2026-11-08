@@ -3,7 +3,7 @@ import type {
   PermissionRequest,
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useState } from "react";
+import { useState, startTransition } from "react";
 import type { ReactElement } from "react";
 
 import {
@@ -30,12 +30,14 @@ const PermissionPrompt = ({
   const answer = (decision: PermissionDecision): void => {
     setBusy(true);
     setError(null);
-    api
-      .answerPermission(projectId, runId, request.id, decision)
-      .catch((caught: unknown) => {
+    startTransition(async () => {
+      try {
+        await api.answerPermission(projectId, runId, request.id, decision);
+      } catch (thrownError: unknown) {
         setBusy(false);
-        setError(errorText(caught));
-      });
+        setError(errorText(thrownError));
+      }
+    });
   };
 
   const command =

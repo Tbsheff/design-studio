@@ -1,6 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { RUN_TITLE_MAX } from "../../../shared/rewind.js";
@@ -290,9 +290,13 @@ const UserTurn = ({
           setRenameFailed(false);
 
           if (next !== null && next !== (title ?? "")) {
-            actions
-              .onRename(run.runId, next)
-              .catch(() => setRenameFailed(true));
+            startTransition(async () => {
+              try {
+                await actions.onRename(run.runId, next);
+              } catch {
+                setRenameFailed(true);
+              }
+            });
           }
         }}
       />

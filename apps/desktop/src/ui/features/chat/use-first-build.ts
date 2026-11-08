@@ -1,5 +1,5 @@
 import type { ProjectKind } from "@design-studio/contracts";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, startTransition } from "react";
 
 import { api } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";
@@ -52,13 +52,23 @@ const usePageFiles = (o: Options): ((path: string | undefined) => PageWait) => {
     }
 
     let alive = true;
-    api
-      .workTreeFiles(o.projectId, o.directionId)
-      .then(
-        ({ files: list }) =>
-          alive && setFiles(list.length >= TREE_CAP ? "all" : new Set(list))
-      )
-      .catch(() => alive && setFiles("all"));
+    const { directionId } = o;
+    startTransition(async () => {
+      try {
+        const { files: list } = await api.workTreeFiles(
+          o.projectId,
+          directionId
+        );
+
+        if (alive) {
+          setFiles(list.length >= TREE_CAP ? "all" : new Set(list));
+        }
+      } catch {
+        if (alive) {
+          setFiles("all");
+        }
+      }
+    });
 
     return (): void => {
       alive = false;

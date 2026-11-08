@@ -1,5 +1,5 @@
 import type { Project, RunLevel } from "@design-studio/contracts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, startTransition } from "react";
 
 import { api, errorText } from "../../api.js";
 
@@ -35,21 +35,24 @@ const useRunLevel = (
     const ticket = seq.current;
     setLevel(next);
     setError(null);
-    api
-      .updateSettings(projectId, { defaultLevel: next })
-      .then((project) => {
+    startTransition(async () => {
+      try {
+        const project = await api.updateSettings(projectId, {
+          defaultLevel: next,
+        });
+
         if (ticket === seq.current) {
           onSaved(project);
         }
-      })
-      .catch((caught: unknown) => {
+      } catch (thrownError: unknown) {
         if (ticket !== seq.current) {
           return;
         }
 
         setLevel(previous);
-        setError(`Could not save the run level: ${errorText(caught)}`);
-      });
+        setError(`Could not save the run level: ${errorText(thrownError)}`);
+      }
+    });
   };
 
   return { choose, clearError: () => setError(null), error, level };

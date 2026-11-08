@@ -5,7 +5,7 @@ import type {
   RunStatus,
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, startTransition } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { api } from "../../api.js";
@@ -31,15 +31,17 @@ const useDraftSources = (
     }
 
     let live = true;
-    api
-      .getRun(projectId, runId)
-      .then(
-        (run) =>
-          live &&
-          run.summary.status !== "running" &&
-          setEnd({ runId, status: run.summary.status })
-      )
-      .catch(() => null);
+    startTransition(async () => {
+      try {
+        const run = await api.getRun(projectId, runId);
+
+        if (live && run.summary.status !== "running") {
+          setEnd({ runId, status: run.summary.status });
+        }
+      } catch {
+        return;
+      }
+    });
 
     return (): void => {
       live = false;
@@ -53,10 +55,17 @@ const useDraftSources = (
     }
 
     let live = true;
-    packApi
-      .getDesignSystemDraft(projectId)
-      .then((info) => live && setState((prev) => prev ?? info.sources ?? null))
-      .catch(() => null);
+    startTransition(async () => {
+      try {
+        const info = await packApi.getDesignSystemDraft(projectId);
+
+        if (live) {
+          setState((prev) => prev ?? info.sources ?? null);
+        }
+      } catch {
+        return;
+      }
+    });
 
     return (): void => {
       live = false;

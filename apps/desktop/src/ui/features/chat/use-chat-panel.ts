@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  startTransition,
+} from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import { useLive } from "../../platform/live-store.js";
@@ -58,7 +65,11 @@ const useRunSearch = (available: boolean): UseRunSearchResult => {
   const pick = useCallback(
     (runId: string) => {
       close();
-      void loadRunsThrough(runId).then((found) => found && setTarget(runId));
+      startTransition(async () => {
+        if (await loadRunsThrough(runId)) {
+          setTarget(runId);
+        }
+      });
     },
     [close]
   );

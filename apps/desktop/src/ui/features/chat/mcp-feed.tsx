@@ -94,8 +94,8 @@ const DisconnectButton = () => {
       try {
         await mcpApi.disconnect();
         setIsDone(true);
-      } catch (caught: unknown) {
-        setError(errorText(caught));
+      } catch (thrownError: unknown) {
+        setError(errorText(thrownError));
       }
     });
   };
@@ -356,8 +356,8 @@ export const McpApproval = ({
         await mcpApi.answer(approval.id, allow);
         setLocal(allow ? "allow" : "deny");
         onAnswer?.(allow);
-      } catch (caught: unknown) {
-        const text = errorText(caught);
+      } catch (thrownError: unknown) {
+        const text = errorText(thrownError);
 
         if (/not open/u.test(text)) {
           setLocal("timeout");

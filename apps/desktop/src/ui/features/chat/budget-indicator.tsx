@@ -1,5 +1,5 @@
 import type { Project, ProjectSettings } from "@design-studio/contracts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, startTransition } from "react";
 import type { FormEvent, ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -46,17 +46,19 @@ const BudgetIndicator = ({
   const save = (value: number | null): void => {
     setPending(value);
     setError(null);
-    api.updateSettings(projectId, { maxBudgetUsd: value }).then(
-      (project) => {
+    startTransition(async () => {
+      try {
+        const project = await api.updateSettings(projectId, {
+          maxBudgetUsd: value,
+        });
         onSaved(project);
         setPending(undefined);
         setOpen(false);
-      },
-      (caught: unknown) => {
+      } catch (thrownError: unknown) {
         setPending(undefined);
-        setError(errorText(caught));
+        setError(errorText(thrownError));
       }
-    );
+    });
   };
 
   return (

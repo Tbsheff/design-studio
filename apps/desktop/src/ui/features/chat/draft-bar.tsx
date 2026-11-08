@@ -6,7 +6,7 @@ import type {
   DesignSystemCoverage,
 } from "@design-studio/contracts";
 import { useFitPopover } from "@design-studio/ui";
-import { useId, useEffect, useRef, useState } from "react";
+import { useId, useEffect, useRef, useState, startTransition } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { errorText } from "../../api.js";
@@ -50,18 +50,19 @@ const useDraftInfo = (
     }
 
     let live = true;
-    packApi
-      .getDesignSystemDraft(projectId)
-      .then(
-        (info) =>
-          live &&
-          setState({ check: info.check, coverage: info.coverage, error: null })
-      )
-      .catch(
-        (error) =>
-          live &&
-          setState({ check: null, coverage: null, error: errorText(error) })
-      );
+    startTransition(async () => {
+      try {
+        const info = await packApi.getDesignSystemDraft(projectId);
+
+        if (live) {
+          setState({ check: info.check, coverage: info.coverage, error: null });
+        }
+      } catch (error: unknown) {
+        if (live) {
+          setState({ check: null, coverage: null, error: errorText(error) });
+        }
+      }
+    });
 
     return (): void => {
       live = false;

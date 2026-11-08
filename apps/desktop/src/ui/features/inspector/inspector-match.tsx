@@ -16,9 +16,10 @@ import type { ReactElement } from "react";
 import { memo, useCallback, useMemo, useState } from "react";
 
 import { errorText, replaceStyle } from "../../api.js";
-import { InspectorSection } from "./inspector-fields.js";
+import { copy } from "./copy.js";
 
 import "../../styles/inspector-match.css";
+import { InspectorSection } from "./inspector-fields.js";
 import {
   classCandidates,
   designCandidates,
@@ -217,7 +218,9 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
       className="sm-section"
       aside={<ScopeToggle scope={scope} onScope={setScope} />}
     >
-      {scanned.hits === null && <p className="sm-empty">Reading values…</p>}
+      {scanned.hits === null && (
+        <p className="sm-empty">{copy.readingValues}</p>
+      )}
       {scanned.hits !== null && rows.length === 0 && (
         <p className="sm-empty">
           {scope === "page"

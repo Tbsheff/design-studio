@@ -85,7 +85,7 @@ const RowMenu = ({
             onClick={run(() => actions.selectValue(row))}
           >
             <Icon name="pointer" size={14} />
-            <span>Select all with this value</span>
+            <span>{copy.selectAllWithThisValue}</span>
           </button>
           {[...raws, ...named].map((cls) => (
             <button
@@ -98,7 +98,8 @@ const RowMenu = ({
             >
               <Icon name="code" size={14} />
               <span className="sm-menu-class">
-                Select all with <code>{cls}</code>
+                {copy.selectAllWith}
+                <code>{cls}</code>
               </span>
             </button>
           ))}

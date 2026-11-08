@@ -51,7 +51,7 @@ const PositionRows = ({
           onClick={toggle}
         >
           <Icon name={on ? "check" : "frame"} size={14} />
-          Absolute position
+          {copy.absolutePosition}
         </button>
       </div>
       {on && <ConstraintRows edit={edit} selection={selection} />}

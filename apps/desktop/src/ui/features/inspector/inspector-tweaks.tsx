@@ -32,11 +32,7 @@ const TweaksPrompt = ({
 
   return (
     <div className="ins-tweaks-empty">
-      <p className="ins-tweaks-text">
-        Tweaks are live controls for this design: sliders, colors, switches and
-        menus. Drag them to try values on every frame at once, with no model
-        call.
-      </p>
+      <p className="ins-tweaks-text">{copy.tweaksAreLiveControlsFor}</p>
       <div className="ins-tweaks-prompt">
         <textarea
           aria-label={copy.describeTheTweaksYouWant}
@@ -63,7 +59,7 @@ const TweaksPrompt = ({
             data-tip={copy.claudePicksTheControls}
             onClick={send}
           >
-            Let Claude choose
+            {copy.letClaudeChoose}
           </button>
         )}
         <button
@@ -76,7 +72,9 @@ const TweaksPrompt = ({
           <Icon name="arrowUp" size={14} />
         </button>
       </div>
-      {!onSuggest && <p className="ins-note">Tweaks are not available here.</p>}
+      {!onSuggest && (
+        <p className="ins-note">{copy.tweaksAreNotAvailableHere}</p>
+      )}
     </div>
   );
 };

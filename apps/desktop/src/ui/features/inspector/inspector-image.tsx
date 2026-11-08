@@ -102,7 +102,7 @@ const InspectorImage = (props: Props): ReactElement | null => {
             data-tip={copy.textUseTheImageOnThe}
             onClick={() => void paste()}
           >
-            Paste
+            {copy.paste}
           </button>
           <button
             type="button"
@@ -111,7 +111,7 @@ const InspectorImage = (props: Props): ReactElement | null => {
             data-tip={copy.searchFreeStockPhotosAnd}
             onClick={() => runCommand("image.find")}
           >
-            Find photo
+            {copy.findPhoto}
           </button>
           <input
             ref={fileInput}

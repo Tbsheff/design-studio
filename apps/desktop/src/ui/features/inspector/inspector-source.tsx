@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import { startTransition, useState } from "react";
 
 import { api, errorText } from "../../api.js";
+import { copy } from "./copy.js";
 
 const locText = (source: SourceLoc): string =>
   `${source.file}:${source.line}:${source.col}`;
@@ -58,7 +59,9 @@ const SourceLink = ({
         onClick={open}
       >
         <span className="truncate">
-          {shortPath(source.file)}:{source.line}
+          {shortPath(source.file)}
+          {copy.text3}
+          {source.line}
         </span>
         <Icon name="code" size={12} />
       </button>

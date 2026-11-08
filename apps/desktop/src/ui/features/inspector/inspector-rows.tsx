@@ -42,7 +42,7 @@ const ContentRow = ({
   if (state !== "ok") {
     return (
       <div className="ins-field wide readonly">
-        <span className="ins-scrub static">Content</span>
+        <span className="ins-scrub static">{copy.content}</span>
         <span className="ins-value">
           {state === "children"
             ? "Has child elements"
@@ -55,7 +55,7 @@ const ContentRow = ({
   return (
     <div className="ins-field wide">
       <label htmlFor="ins-content" className="ins-scrub static">
-        Content
+        {copy.content}
       </label>
       <input
         id="ins-content"
@@ -174,14 +174,14 @@ const TextStyleTogglesView = ({
 
   const items = [
     {
-      glyph: <em>I</em>,
+      glyph: <em>{copy.glyphItalic}</em>,
       key: "i",
       label: "Italic",
       on: italic,
       run: (): void => write({ "font-style": italic ? "normal" : "italic" }),
     },
     {
-      glyph: <u>U</u>,
+      glyph: <u>{copy.glyphUnderline}</u>,
       key: "u",
       label: "Underline",
       on: hasLine(decoration, "underline"),
@@ -189,7 +189,7 @@ const TextStyleTogglesView = ({
         write({ "text-decoration-line": toggleLine(decoration, "underline") }),
     },
     {
-      glyph: <s>S</s>,
+      glyph: <s>{copy.glyphStrikethrough}</s>,
       key: "s",
       label: "Strikethrough",
       on: hasLine(decoration, "line-through"),

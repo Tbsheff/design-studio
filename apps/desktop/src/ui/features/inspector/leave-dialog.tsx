@@ -25,8 +25,9 @@ const LeaveDialog = ({
         <div className="titles">
           <h2 id="edit-leave-title">{copy.leaveTitle}</h2>
           <p id="edit-leave-text">
-            You have {unsavedLabel(session.net).toLowerCase()}. Save version
-            keeps them as one version. Discard removes them.
+            {copy.youHave}
+            {unsavedLabel(session.net).toLowerCase()}
+            {copy.saveVersionKeepsThemAs}
           </p>
           {session.error && <p className="edit-leave-error">{session.error}</p>}
         </div>

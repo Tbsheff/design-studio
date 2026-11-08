@@ -91,7 +91,7 @@ const InspectorOtherStyles = ({
         onClick={() => setOpen((value) => !value)}
       >
         <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
-        <h3>Other styles</h3>
+        <h3>{copy.otherStyles}</h3>
         <span className="ins-other-count">{rows.length}</span>
       </button>
       {open ? (
@@ -103,8 +103,8 @@ const InspectorOtherStyles = ({
               data-tip={`${row.prop}: ${row.value}\nFrom ${row.source}`}
             >
               <span className="ins-other-decl">
-                <span className="prop">{row.prop}</span>:{" "}
-                <span className="value">{row.value}</span>
+                <span className="prop">{row.prop}</span>
+                {copy.text3} <span className="value">{row.value}</span>
               </span>
               <span className="ins-other-source">{row.source}</span>
             </li>

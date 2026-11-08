@@ -106,7 +106,7 @@ const ClassLine = ({
       className="ins-classes"
       aside={
         !own && list.length > 0 ? (
-          <span className="ins-classes-tag">Read only</span>
+          <span className="ins-classes-tag">{copy.readOnly}</span>
         ) : undefined
       }
     >
@@ -117,7 +117,9 @@ const ClassLine = ({
         }
       >
         {text}
-        {info.dynamic && <span className="ins-classes-more"> + dynamic</span>}
+        {info.dynamic && (
+          <span className="ins-classes-more"> {copy.dynamic}</span>
+        )}
       </code>
       {info.note && <p className="ins-note ins-classes-note">{info.note}</p>}
     </InspectorSection>

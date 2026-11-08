@@ -37,7 +37,7 @@ const StateTag = ({
         data-tip={copy.notATokenReplaceIt}
         onClick={onReplace}
       >
-        raw
+        {copy.raw}
       </button>
     );
   }

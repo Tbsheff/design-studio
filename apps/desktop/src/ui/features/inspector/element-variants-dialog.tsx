@@ -52,10 +52,10 @@ const ElementVariantsDialog = ({
     >
       <header className="variation-card-head">
         <div className="variation-card-heading">
-          <h2 id="element-variants-title">Try variants</h2>
+          <h2 id="element-variants-title">{copy.tryVariants}</h2>
           <p className="variation-card-prompt">
-            Versions of the selected <code>{element.tag}</code> only. The rest
-            of the page stays the same.
+            {copy.versionsOfTheSelected}
+            <code>{element.tag}</code> {copy.onlyTheRestOfThe}
           </p>
         </div>
         <button
@@ -67,7 +67,7 @@ const ElementVariantsDialog = ({
         </button>
       </header>
       <label className="element-variants-field">
-        <span>What to try (optional)</span>
+        <span>{copy.whatToTryOptional}</span>
         <textarea
           ref={noteRef}
           rows={2}
@@ -82,7 +82,7 @@ const ElementVariantsDialog = ({
         role="radiogroup"
         aria-label={copy.howManyVariants}
       >
-        <span>Variants</span>
+        <span>{copy.variants}</span>
         {COUNTS.map((value) => {
           const over = value > max;
 
@@ -112,14 +112,15 @@ const ElementVariantsDialog = ({
         </span>
         <div className="variation-card-actions">
           <button className="btn small" onClick={onCancel}>
-            Cancel
+            {copy.cancel}
           </button>
           <button
             className="btn small primary"
             onClick={start}
             data-testid="element-variants-start"
           >
-            Start {count} variants
+            {copy.start}
+            {count} {copy.variants2}
           </button>
         </div>
       </footer>

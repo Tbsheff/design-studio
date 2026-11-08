@@ -119,7 +119,7 @@ export default function SwapInstanceMenu({
           {list?.from ? `Swap ${list.from} for` : "Swap for"}
         </div>
         {list === null && (
-          <p className="prp-swap-empty">Finding components that fit…</p>
+          <p className="prp-swap-empty">{copy.findingComponentsThatFit}</p>
         )}
         {list?.candidates.map((item) => (
           <button

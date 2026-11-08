@@ -188,7 +188,7 @@ const InspectorVariantBarView = ({
             className="ins-add-link ins-variant-base"
             onClick={() => choose(BASE)}
           >
-            Base
+            {copy.base}
           </button>
         </p>
       )}

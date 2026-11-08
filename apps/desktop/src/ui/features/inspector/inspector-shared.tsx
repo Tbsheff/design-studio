@@ -135,7 +135,7 @@ const SourceTextRow = ({
     <>
       <div className="ins-field wide">
         <label htmlFor="ins-content" className="ins-scrub static">
-          Content
+          {copy.content}
         </label>
         <input
           id="ins-content"
@@ -150,8 +150,10 @@ const SourceTextRow = ({
       </div>
       <div className="ins-data-text wide" role="note">
         <span>
-          Edits {found.what} in{" "}
-          <code data-tip={loc(found)}>{shortLoc(found)}</code>.
+          {copy.edits}
+          {found.what} {copy.in}{" "}
+          <code data-tip={loc(found)}>{shortLoc(found)}</code>
+          {copy.text4}
           {found.shared ? ` ${found.shared}` : ""}
         </span>
       </div>
@@ -177,7 +179,7 @@ const DataTextNote = ({
   if (!answer && edit.scope.directionId && selection.source) {
     return (
       <div className="ins-data-text wide" role="status">
-        <span>Looking for where this text is set…</span>
+        <span>{copy.lookingForWhereThisText}</span>
       </div>
     );
   }
@@ -205,8 +207,10 @@ const DataTextAsk = ({
   return (
     <div className="ins-data-text wide" role="note">
       <span>
-        This text comes from data: <code>{data.expression}</code> in{" "}
-        <code data-tip={loc(data)}>{shortLoc(data)}</code>.
+        {copy.thisTextComesFromData}
+        <code>{data.expression}</code> {copy.in}{" "}
+        <code data-tip={loc(data)}>{shortLoc(data)}</code>
+        {copy.text4}
         {reason ? ` ${reason}` : ""}
       </span>
       {ask && (
@@ -216,7 +220,7 @@ const DataTextAsk = ({
           onClick={() => ask(dataTextPrompt(text, data))}
         >
           <Icon name="chat" size={12} />
-          Ask the agent to change it
+          {copy.askTheAgentToChange}
         </button>
       )}
     </div>
@@ -240,11 +244,13 @@ const SharedSourceNote = ({
     return (
       <div className="ins-shared" role="note">
         <span>
-          Edits go to this use of {what} in{" "}
+          {copy.editsGoToThisUse}
+          {what} {copy.in}{" "}
           <code data-tip={loc(shared.use)}>{shortLoc(shared.use)}</code>
         </span>
         <button type="button" className="btn small ghost" onClick={onToggle}>
-          Edit every {what}
+          {copy.editEvery}
+          {what}
         </button>
       </div>
     );
@@ -259,7 +265,7 @@ const SharedSourceNote = ({
       </span>
       {canUse && shared.use && (
         <button type="button" className="btn small" onClick={onToggle}>
-          Edit this use instead
+          {copy.editThisUseInstead}
         </button>
       )}
     </div>

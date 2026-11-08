@@ -187,7 +187,8 @@ const OpenInEditor = ({
         }}
       >
         <Icon name="file" size={13} />
-        Open in {editor.name}
+        {copy.openIn}
+        {editor.name}
       </button>
       {error && <span className="ins-code-error">{error}</span>}
     </>
@@ -231,11 +232,7 @@ const InspectorCode = ({
   const snippet = useSnippet(projectId, directionId, selection);
 
   if (!selection) {
-    return (
-      <p className="ins-hint">
-        Select an element on the canvas to see its source code.
-      </p>
-    );
+    return <p className="ins-hint">{copy.selectAnElementOnThe}</p>;
   }
 
   return (
@@ -269,13 +266,13 @@ const InspectorCode = ({
         </p>
       )}
       {snippet.kind === "loading" && (
-        <p className="ins-hint">Loading source…</p>
+        <p className="ins-hint">{copy.loadingSource}</p>
       )}
       {snippet.kind === "ready" && (
         <>
           {!snippet.isExact && (
             <p className="ins-note ins-code-note">
-              No source location. This is the rendered HTML.
+              {copy.noSourceLocationThisIs}
             </p>
           )}
           <pre

@@ -78,7 +78,7 @@ const EffectsSection = ({
               writeShadows(edit, { list: [], mixed: null }, () => [])
             }
           >
-            Clear
+            {copy.clear}
           </button>
         </div>
       ) : (

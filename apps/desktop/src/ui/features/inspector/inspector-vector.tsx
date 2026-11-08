@@ -224,7 +224,7 @@ const WidthRow = ({
   return (
     <div className="ins-field">
       <label htmlFor="vector-stroke-width" className="ins-scrub static">
-        Weight
+        {copy.weight}
       </label>
       <input
         id="vector-stroke-width"

@@ -74,7 +74,10 @@ const ShadowRow = ({
   return (
     <li className="ins-shadow" aria-label={`Shadow ${count}`}>
       <div className="ins-shadow-head">
-        <span className="ins-shadow-name">Shadow {count}</span>
+        <span className="ins-shadow-name">
+          {copy.shadow}
+          {count}
+        </span>
         <button
           type="button"
           className="ins-chip-toggle"
@@ -91,7 +94,7 @@ const ShadowRow = ({
             )
           }
         >
-          Inset
+          {copy.inset}
         </button>
         <button
           type="button"

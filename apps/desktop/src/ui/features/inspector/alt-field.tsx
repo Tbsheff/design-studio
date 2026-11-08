@@ -25,7 +25,7 @@ const AltField = ({
   return (
     <div className="ins-field wide">
       <label htmlFor="img-alt" className="ins-scrub static">
-        Alt
+        {copy.alt}
       </label>
       <input
         id="img-alt"

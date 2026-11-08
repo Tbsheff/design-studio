@@ -124,7 +124,7 @@ const HiddenCrumbs = ({
           data-tip-align="start"
           onClick={() => onSelect(nearest.levels)}
         >
-          …
+          {copy.text2}
         </button>
       </li>
       <Separator />

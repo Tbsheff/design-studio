@@ -156,7 +156,7 @@ const GapModeField = ({
       data-tip={copy.autoPutsTheSpaceBetween}
       data-tip-align="end"
     >
-      <span className="ins-scrub static">Spacing</span>
+      <span className="ins-scrub static">{copy.spacing}</span>
       <UiSelect
         className="ins-select"
         aria-label={copy.gapMode}

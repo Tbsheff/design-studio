@@ -247,7 +247,7 @@ const Footer = ({
             disabled={draft.isCommitting}
             onClick={draft.discard}
           >
-            Discard
+            {copy.discard}
           </button>
           <button
             type="button"
@@ -274,12 +274,8 @@ const EmptyState = ({
     <span className="twk-empty-icon" aria-hidden="true">
       <Icon name="settings" size={18} />
     </span>
-    <h3 className="twk-empty-title">No tweaks yet</h3>
-    <p className="twk-empty-text">
-      Tweaks are live controls for this design: sliders, colors, switches and
-      menus, each bound to a CSS variable. Drag them to preview every frame at
-      once with no model call. Commit saves the values as one version.
-    </p>
+    <h3 className="twk-empty-title">{copy.noTweaksYet}</h3>
+    <p className="twk-empty-text">{copy.tweaksAreLiveControlsFor2}</p>
     <button
       type="button"
       className="btn small primary"
@@ -287,11 +283,9 @@ const EmptyState = ({
       onClick={onSuggest}
     >
       <Icon name="sparkle" size={13} />
-      Suggest tweaks
+      {copy.suggestTweaks}
     </button>
-    {running && (
-      <p className="twk-empty-note">Wait for the current run to finish.</p>
-    )}
+    {running && <p className="twk-empty-note">{copy.waitForTheCurrentRun}</p>}
   </div>
 );
 
@@ -341,7 +335,7 @@ const Header = ({
           className="btn small ghost"
           onClick={draft.discard}
         >
-          Reset all
+          {copy.resetAll}
         </button>
       )}
       {hasControls && (
@@ -357,7 +351,7 @@ const Header = ({
           onClick={onSuggest}
         >
           <Icon name="sparkle" size={13} />
-          Suggest
+          {copy.suggest}
         </button>
       )}
     </div>

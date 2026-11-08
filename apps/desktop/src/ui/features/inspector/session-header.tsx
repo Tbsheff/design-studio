@@ -29,7 +29,7 @@ const SessionHeader = ({
           data-tip={unsavedLabel(session.net)}
         >
           {session.net}
-          <span className="sr-only"> unsaved edits</span>
+          <span className="sr-only"> {copy.unsavedEdits}</span>
         </span>
       )}
       <span className="edit-head-end" />

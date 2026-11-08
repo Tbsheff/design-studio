@@ -1,0 +1,65 @@
+.overlay {
+  position: fixed;
+  z-index: 60;
+}
+
+.surface {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  outline: 2px dashed var(--accent);
+  outline-offset: 0;
+}
+
+.toolbar {
+  position: absolute;
+  top: calc(100% + var(--s-2));
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-1);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.tools {
+  display: flex;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.tool[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.spacer {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line);
+}
+
+.error {
+  margin: 0 var(--s-2);
+  font-size: var(--t-xs);
+  color: var(--danger, #d92d20);
+}
+
+.note {
+  position: absolute;
+  width: 220px;
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-control-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-sm);
+}

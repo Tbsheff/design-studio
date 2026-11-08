@@ -60,6 +60,15 @@ interface InlineTextEdit {
   readonly reset: () => void;
 }
 
+const useResetOnChange = (token: string | null, reset: () => void): void => {
+  const [seen, setSeen] = useState(token);
+
+  if (seen !== token) {
+    setSeen(token);
+    reset();
+  }
+};
+
 const useInlineTextEdit = (
   allowed: boolean,
   onCommit: TextCommitHandler | undefined,
@@ -133,6 +142,7 @@ export {
   focusStageQuietly,
   parseTextCommit,
   useInlineTextEdit,
+  useResetOnChange,
 };
 
 export type { InlineTextEdit, TextCommitHandler };

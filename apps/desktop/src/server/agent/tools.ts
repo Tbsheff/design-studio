@@ -46,7 +46,6 @@ import type {
 import { canvasList, canvasPlace, canvasPoint } from "../canvas/index.js";
 import {
   editLinks,
-  editLinksFields,
   listLinks,
   probeWithPreview,
 } from "../canvas/links/index.js";
@@ -81,6 +80,7 @@ import {
   canvasPlaceInput,
   canvasPointInput,
   doctorInput,
+  editLinksInput,
   frameSessionInput,
   frameStateInput,
   routeLinkInput,
@@ -1041,8 +1041,8 @@ export async function createStudioMcpServer(
   const editLinksTool = tool(
     "edit_links",
     TOOL_SHORT.edit_links,
-    editLinksFields,
-    (args) => runEditLinks(deps, args)
+    editLinksInput.sdkFields,
+    toDecodedRun(editLinksInput.input, (args) => runEditLinks(deps, args))
   );
 
   const listFrameStatesTool = tool(

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { MutableRefObject } from "react";
 
 import { createOrphanTracker } from "./deps.js";
@@ -26,7 +26,10 @@ const useTrackRefs = (): TrackRefs => {
   const recheck = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retargeted = useRef(new Map<string, string>());
 
-  return { orphans, pending, readyTokens, recheck, retargeted };
+  return useMemo(
+    () => ({ orphans, pending, readyTokens, recheck, retargeted }),
+    [orphans, pending, readyTokens, recheck, retargeted]
+  );
 };
 
 const toOrphans = (

@@ -57,7 +57,7 @@ const offsetIn = (
   point: PinOffset | undefined
 ): PinOffset | undefined => {
   if (!point || rect.width <= 0 || rect.height <= 0) {
-    return undefined;
+    return;
   }
 
   return {

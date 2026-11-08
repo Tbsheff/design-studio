@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { useCallback } from "react";
 
-import { CommentReplies } from "./comment-popover.js";
+import { CommentReplies } from "./comment-replies.js";
 import type { DesignComment } from "./deps.js";
 import { fire } from "./fire.js";
 import type { CommentsControl } from "./use-comments.js";

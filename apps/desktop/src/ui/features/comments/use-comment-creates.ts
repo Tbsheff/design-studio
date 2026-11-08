@@ -14,6 +14,7 @@ import type {
 import type { CommentCall } from "./use-comment-call.js";
 import type { CommentSend } from "./use-comment-send.js";
 import type { CommentsStore } from "./use-comment-store.js";
+import { useLatest } from "./use-latest.js";
 
 interface CreateContext {
   readonly call: CommentCall;
@@ -165,6 +166,8 @@ const postDrawing = async (
 };
 
 const useCommentCreates = (context: CreateContext): CommentCreates => {
+  const latest = useLatest(context);
+
   const add = useCallback(
     (
       selections: SelectionContext[],
@@ -172,13 +175,14 @@ const useCommentCreates = (context: CreateContext): CommentCreates => {
       toClaude: boolean,
       extras: CommentExtras = {}
     ): Promise<boolean> =>
-      postAdd(context, { extras, selections, text, toClaude }),
-    [context]
+      postAdd(latest.current, { extras, selections, text, toClaude }),
+    [latest]
   );
 
   const addDrawing = useCallback(
-    (input: DrawingInput): Promise<boolean> => postDrawing(context, input),
-    [context]
+    (input: DrawingInput): Promise<boolean> =>
+      postDrawing(latest.current, input),
+    [latest]
   );
 
   return { add, addDrawing };

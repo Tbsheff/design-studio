@@ -7,7 +7,7 @@ import { ApiError, errorText } from "./deps.js";
 import type { DesignComment } from "./deps.js";
 import type { CommentCall } from "./use-comment-call.js";
 import type { CommentsStore } from "./use-comment-store.js";
-import { writeRef } from "./use-latest.js";
+import { useLatest, writeRef } from "./use-latest.js";
 
 const RUNNING_NOTICE = "Agent is running: queued";
 
@@ -86,6 +86,7 @@ const useCommentSend = (context: SendContext): CommentSend => {
   const { chatRef, isRunning, runningRef, store } = context;
   const { afterRun, listRef } = store;
   const [sending, startSending] = useTransition();
+  const latest = useLatest(context);
 
   const send = useCallback(
     async (ids?: string[]): Promise<void> => {
@@ -95,7 +96,7 @@ const useCommentSend = (context: SendContext): CommentSend => {
         return;
       }
 
-      const pending = postSend(context, chosen);
+      const pending = postSend(latest.current, chosen);
 
       startSending(async () => {
         await pending;
@@ -103,7 +104,7 @@ const useCommentSend = (context: SendContext): CommentSend => {
 
       await pending;
     },
-    [context, chatRef, listRef]
+    [latest, chatRef, listRef]
   );
 
   const deliver = useCallback(

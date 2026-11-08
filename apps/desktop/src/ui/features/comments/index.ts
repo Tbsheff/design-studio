@@ -33,6 +33,8 @@ export { CommentLayer, CommentsPanel, ComposerComments, QueuedComposerBar };
 
 export { authorInitial } from "./author-initial.js";
 
+export { MOD_LABEL } from "./mod-label.js";
+
 export { useComments } from "./use-comments.js";
 
 export { useCommentPrefill } from "./use-comment-prefill.js";

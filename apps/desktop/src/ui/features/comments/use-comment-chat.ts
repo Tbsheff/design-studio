@@ -51,6 +51,7 @@ const useCommentChat = (context: ChatContext): CommentChat => {
   const [chatIds, setChatIds] = useState<string[]>([]);
   const [preparing, startPreparing] = useTransition();
   const chatRef = useLatest(chatIds);
+  const latest = useLatest(context);
 
   const queued = useMemo(() => {
     const inChatIds = new Set(chatIds);
@@ -74,7 +75,7 @@ const useCommentChat = (context: ChatContext): CommentChat => {
         return;
       }
 
-      const pending = postChat(context, ids, addChatIds);
+      const pending = postChat(latest.current, ids, addChatIds);
 
       startPreparing(async () => {
         await pending;
@@ -82,7 +83,7 @@ const useCommentChat = (context: ChatContext): CommentChat => {
 
       await pending;
     },
-    [context, addChatIds]
+    [latest, addChatIds]
   );
 
   return { chatRef, inChat, preparing, queued, toChat };

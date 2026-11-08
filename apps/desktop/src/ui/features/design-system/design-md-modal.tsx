@@ -7,7 +7,7 @@ import {
   useRef,
 } from "react";
 
-import { MOD_LABEL } from "../comments/comment-popover.js";
+import { MOD_LABEL } from "../comments/index.js";
 import { COPY } from "./copy.js";
 import { jumpTo } from "./design-md-model.js";
 import { outlineOf } from "./design-md-outline.js";

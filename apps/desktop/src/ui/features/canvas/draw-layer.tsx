@@ -7,7 +7,7 @@ import { strokesBox } from "../../../shared/comments.js";
 import { CommentComposer } from "../comments/comment-composer.js";
 import type { ComposerSubmit } from "../comments/comment-composer.js";
 import type { CommentTools } from "../comments/comment-layer.js";
-import { MOD_LABEL } from "../comments/comment-popover.js";
+import { MOD_LABEL } from "../comments/index.js";
 import type { CommentsControl } from "../comments/use-comments.js";
 import { useProfileInitial } from "../home/use-profile-initial.js";
 import { copy } from "./copy.js";
@@ -271,7 +271,7 @@ const DrawSurface = ({
           }}
           initial={initial}
           draftKey="draw"
-          autoFocus
+          shouldFocus
           trap
           running={control.running}
           busy={control.sending}

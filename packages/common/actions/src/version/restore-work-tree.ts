@@ -9,7 +9,13 @@ import { WorkTreeStatusSchema } from "./schema.js";
 
 const restoreWorkTreeVersion = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "restore_work_tree_version",
+    set: "core",
+    short:
+      "Discard the unfinished changes of a direction and return its files to the head version.",
+  },
   confirm: "none",
   description:
     "Discard the unfinished changes of a direction and return its files to the head version.",
@@ -30,7 +36,7 @@ const restoreWorkTreeVersion = defineAction({
     "version.listHistory",
     "version.listHunks",
   ],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "restore_work_tree_version" },
   needs: "project.update",
   output: WorkTreeStatusSchema,
   scope: "project",

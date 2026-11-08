@@ -13,7 +13,13 @@ import { SessionEndSchema } from "./schema.js";
 
 const deleteSessionVersion = defineAction({
   access: "destructive",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "delete_session_version",
+    set: "core",
+    short:
+      "Discard the open edit session of a direction and put the files back to baseVersionId. The user must allow it.",
+  },
   confirm: "user",
   description:
     "Discard the open edit session of a direction and put the files back to baseVersionId, from the studio edit bar. The user must click Allow in Design Studio first.",
@@ -39,7 +45,7 @@ const deleteSessionVersion = defineAction({
     "version.listHistory",
     "version.listHunks",
   ],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "delete_session_version" },
   needs: "project.update",
   output: SessionEndSchema,
   scope: "project",

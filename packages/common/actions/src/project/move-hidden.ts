@@ -8,7 +8,13 @@ import { HiddenMovedSchema } from "./schema.js";
 
 const moveHiddenProject = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "move_hidden_project",
+    set: "core",
+    short:
+      "Move every hidden project into the default folder. Returns the moved project ids and the failures.",
+  },
   confirm: "none",
   description:
     "Move every hidden project into the default folder. Returns the moved project ids and the failures.",
@@ -17,7 +23,7 @@ const moveHiddenProject = defineAction({
   id: "project.moveHidden",
   input: Schema.Struct({}),
   invalidates: ["project.list", "project.getHidden"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "move_hidden_project" },
   needs: "project.update",
   output: HiddenMovedSchema,
   scope: "org",

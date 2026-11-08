@@ -13,7 +13,13 @@ import { CommentRemovedSchema } from "./schema.js";
 
 const deleteComment = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "delete_comment",
+    set: "core",
+    short:
+      "Delete one comment and its replies from a direction. The numbers of the other comments do not change.",
+  },
   confirm: "none",
   description:
     "Delete one comment and its replies from a direction, from the studio Comments pane. The comment numbers of the other comments do not change.",
@@ -29,7 +35,7 @@ const deleteComment = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "delete_comment" },
   needs: "comment.delete",
   output: CommentRemovedSchema,
   scope: "project",

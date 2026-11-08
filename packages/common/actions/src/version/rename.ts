@@ -9,7 +9,13 @@ import { VersionRenamedSchema } from "./schema.js";
 
 const renameVersion = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "rename_version",
+    set: "core",
+    short:
+      "Set or clear the name of one saved version. A name is 80 characters or fewer; null or empty clears it.",
+  },
   confirm: "none",
   description:
     "Set or clear the name of one saved version, shown in the studio Versions panel. A name is 80 characters or fewer; null or an empty name clears it.",
@@ -33,7 +39,7 @@ const renameVersion = defineAction({
     "version.listHistory",
     "version.listHunks",
   ],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "rename_version" },
   needs: "project.update",
   output: VersionRenamedSchema,
   scope: "project",

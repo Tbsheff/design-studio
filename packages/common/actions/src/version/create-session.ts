@@ -13,7 +13,13 @@ import { SessionEndSchema } from "./schema.js";
 
 const createSessionVersion = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "create_session_version",
+    set: "core",
+    short:
+      "Save the open edit session of a direction as one new version. The session starts at baseVersionId.",
+  },
   confirm: "none",
   description:
     "Save the open edit session of a direction as one new version, from the studio edit bar. The session starts at baseVersionId.",
@@ -39,7 +45,7 @@ const createSessionVersion = defineAction({
     "version.listHistory",
     "version.listHunks",
   ],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "create_session_version" },
   needs: "project.update",
   output: SessionEndSchema,
   scope: "project",

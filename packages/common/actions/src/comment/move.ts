@@ -9,7 +9,13 @@ import { CommentOrderSchema, ReorderIdsSchema } from "./schema.js";
 
 const moveComment = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "move_comment",
+    set: "core",
+    short:
+      "Set the order of the comments in a direction. Give the comment ids in the new order; ids left out keep their place.",
+  },
   confirm: "none",
   description:
     "Set the order of the comments in a direction, from the studio Comments pane. Give the comment ids in the new order; ids that you leave out keep their place.",
@@ -25,7 +31,7 @@ const moveComment = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "move_comment" },
   needs: "comment.write",
   output: CommentOrderSchema,
   scope: "project",

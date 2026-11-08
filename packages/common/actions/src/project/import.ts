@@ -8,7 +8,13 @@ import { ProjectImportFields, ProjectImportedSchema } from "./schema.js";
 
 const importProject = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "import_project",
+    set: "core",
+    short:
+      "Import a folder as a project. A folder with a Next.js app attaches the app and returns the first version state.",
+  },
   confirm: "none",
   description:
     "Import a folder as a project. A folder with a Next.js app attaches the app and returns the first version state.",
@@ -19,7 +25,7 @@ const importProject = defineAction({
     ...ProjectImportFields,
   }),
   invalidates: ["project.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "import_project" },
   needs: "project.create",
   output: ProjectImportedSchema,
   scope: "org",

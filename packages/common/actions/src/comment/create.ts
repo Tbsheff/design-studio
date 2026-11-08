@@ -20,7 +20,13 @@ import {
 
 const createComment = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "create_comment",
+    set: "core",
+    short:
+      "Pin a new comment on an element or frame of a direction. It starts as a draft or queued and does not start a run.",
+  },
   confirm: "none",
   description:
     "Pin a new comment on an element or a frame of a direction, from the studio Comments pane. The comment starts as a draft or queued and does not start a run.",
@@ -44,7 +50,7 @@ const createComment = defineAction({
     text: CommentTextSchema,
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "create_comment" },
   needs: "comment.write",
   output: CommentSchema,
   scope: "project",

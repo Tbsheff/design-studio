@@ -8,7 +8,13 @@ import { WorkspaceFolderSchema } from "./schema.js";
 
 const renameFolderWorkspace = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "rename_folder_workspace",
+    set: "core",
+    short:
+      "Rename a saved folder in the folder list. The default folder cannot be renamed. Returns the changed folder.",
+  },
   confirm: "none",
   description:
     "Rename a saved folder. The default folder cannot be renamed. Returns the changed folder.",
@@ -20,7 +26,7 @@ const renameFolderWorkspace = defineAction({
     workspaceId: Schema.String,
   }),
   invalidates: ["workspace.getFolders"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "rename_folder_workspace" },
   needs: "studio.write",
   output: WorkspaceFolderSchema,
   scope: "org",

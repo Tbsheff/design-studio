@@ -16,7 +16,13 @@ import {
 
 const insertComment = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "add_comment",
+    set: "core",
+    short:
+      "Pin a comment on an element (CSS selector) or on the whole frame. It does not send anything to the studio agent.",
+  },
   confirm: "none",
   description:
     "Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.",

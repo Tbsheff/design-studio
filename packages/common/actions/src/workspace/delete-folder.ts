@@ -8,7 +8,13 @@ import { WorkspaceRemovedSchema } from "./schema.js";
 
 const deleteFolderWorkspace = defineAction({
   access: "destructive",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "delete_folder_workspace",
+    set: "core",
+    short:
+      "Remove a saved folder from the folder list. The files stay on disk. The user must allow it. The default folder cannot be removed.",
+  },
   confirm: "user",
   description:
     "Remove a saved folder from the folder list. The folder and its files stay on disk. The default folder cannot be removed.",
@@ -19,7 +25,7 @@ const deleteFolderWorkspace = defineAction({
     workspaceId: Schema.String,
   }),
   invalidates: ["workspace.getFolders"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "delete_folder_workspace" },
   needs: "studio.write",
   output: WorkspaceRemovedSchema,
   scope: "org",

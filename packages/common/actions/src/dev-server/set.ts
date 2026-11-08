@@ -9,7 +9,13 @@ import { DevServerConfigSavedSchema } from "./schema.js";
 
 const setDevServer = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_dev_server",
+    set: "app",
+    short:
+      "Set the url and env of the attached app. An empty url makes the studio start the dev server. The dev server restarts.",
+  },
   confirm: "none",
   description:
     "Set the url and env of an attached app. An empty url makes the studio start the dev server. The dev server restarts after the change.",
@@ -26,7 +32,7 @@ const setDevServer = defineAction({
     url: Schema.optionalKey(Schema.NullOr(Schema.String)),
   }),
   invalidates: ["dev-server.get"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_dev_server" },
   needs: "project.update",
   output: DevServerConfigSavedSchema,
   scope: "project",

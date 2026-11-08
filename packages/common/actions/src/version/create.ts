@@ -9,7 +9,12 @@ import { VersionSchema } from "./schema.js";
 
 const createVersion = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "create_version",
+    set: "core",
+    short: "Keep the unfinished changes of a direction as a new saved version.",
+  },
   confirm: "none",
   description:
     "Keep the unfinished changes of a direction as a new saved version.",
@@ -30,7 +35,7 @@ const createVersion = defineAction({
     "version.listHistory",
     "version.listHunks",
   ],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "create_version" },
   needs: "project.update",
   output: VersionSchema,
   scope: "project",

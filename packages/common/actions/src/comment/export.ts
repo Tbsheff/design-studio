@@ -9,7 +9,13 @@ import { CommentPrefillSchema, PrefillIdsSchema } from "./schema.js";
 
 const exportComment = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "export_comment",
+    set: "core",
+    short:
+      "Make chat composer text and attachments for a set of comments. It saves element screenshots as attachments.",
+  },
   confirm: "none",
   description:
     "Make the chat composer text and attachments for a set of comments, so the user can edit the prompt before a run. It saves element screenshots as attachments.",
@@ -25,7 +31,7 @@ const exportComment = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "export_comment" },
   needs: "comment.read",
   output: CommentPrefillSchema,
   scope: "project",

@@ -16,7 +16,7 @@ const applyReviewFixDirectEdit = defineAction({
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
-    "Apply the direct fixes of one or more review findings as one version.",
+    "Apply the direct fix of one or more review_frame findings, with the same code path as the Fix button in the Review panel. Several ids make one version and one undo step. Fixes of findings with shared set edit a shared component file and are skipped unless allowShared is true. Findings with fix null need judgment and are skipped. Runs review_frame again first when the design changed since the last review.",
   errors: [
     BadRequest,
     Conflict,
@@ -36,7 +36,7 @@ const applyReviewFixDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["direct-edit.getReview"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "apply_fix" },
   needs: "project.update",
   output: ReviewFixResultSchema,
   scope: "project",

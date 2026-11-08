@@ -12,7 +12,7 @@ import { ListInsertableSchema } from "./schema.js";
 
 const listInsertableDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: { off: "ui-bootstrap" },
   confirm: "none",
   description:
     "Insertable list of components from the project library, with the props and variants of each. Used by the Components panel and the insert tools.",
@@ -34,7 +34,7 @@ const listInsertableDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { off: "ui-bootstrap" },
   needs: "project.read",
   output: ListInsertableSchema,
   scope: "project",

@@ -1,6 +1,6 @@
 import type { Schema } from "effect";
 
-type TargetKind = "element" | "loc" | "owner" | "place";
+type TargetKind = "element" | "list" | "loc" | "owner" | "place" | "use";
 
 interface NestedFields {
   readonly fields: readonly string[];
@@ -23,9 +23,11 @@ interface LegacyFields {
 const TARGET_KINDS = {
   apply_text_style: "element",
   clear_text: "owner",
+  create_component: "list",
   get_fill: "loc",
   get_spacing: "loc",
   get_stacking: "loc",
+  insert_component: "owner",
   insert_icon: "owner",
   insert_jsx: "owner",
   list_motion: "loc",
@@ -34,12 +36,17 @@ const TARGET_KINDS = {
   set_accessibility: "element",
   set_fill: "element",
   set_motion: "element",
+  set_props: "use",
   set_spacing: "element",
   set_stacking: "element",
   set_state_style: "element",
 } as const satisfies ToolKinds;
 
 const NESTED = {
+  insert_component: {
+    fields: ["file", "name"],
+    key: "component",
+  },
   set_fill: {
     fields: [
       "angle",
@@ -74,6 +81,10 @@ const NESTED = {
   },
 } as const satisfies ToolNesting;
 
+const NESTED_REQUIRED = {
+  insert_component: ["name"],
+} as const satisfies ToolKeys;
+
 const NULLABLE_ARRAYS = {
   update_text: ["ids"],
 } as const satisfies ToolKeys;
@@ -81,6 +92,8 @@ const NULLABLE_ARRAYS = {
 const LOC_KEYS: ReadonlySet<string> = new Set(["col", "file", "line"]);
 
 const TARGET_KEY = "target";
+
+const USE_KEY = "source";
 
 const PATH_PROPERTY = {
   description:
@@ -103,6 +116,72 @@ const SOURCE_PROPERTY = {
   maxLength: 1100,
   type: "string",
 } satisfies Schema.Json;
+
+const USE_PATH_PROPERTY = {
+  description:
+    'Page path in the project, for example "about.html". Leave out for the entry page.',
+  maxLength: 300,
+  type: "string",
+} satisfies Schema.Json;
+
+const USE_SELECTOR_PROPERTY = {
+  description:
+    'CSS selector of an element inside the component instance on the page, for example "button" or "main button:nth-of-type(2)". The nearest component (such as <Button> or <Badge> from packages/ui) that has props is changed, and the result names its use site (file:line:col).',
+  maxLength: 2000,
+  minLength: 1,
+  type: "string",
+} satisfies Schema.Json;
+
+const USE_SOURCE_PROPERTY = {
+  description:
+    'Use site of the component as file:line:col of its JSX tag, for example "src/App.tsx:14:9" (get_layers prints it). file:line works when one JSX tag starts on that line. Use this or selector.',
+  maxLength: 1100,
+  type: "string",
+} satisfies Schema.Json;
+
+const USE_PROPERTIES = {
+  path: USE_PATH_PROPERTY,
+  selector: USE_SELECTOR_PROPERTY,
+  source: USE_SOURCE_PROPERTY,
+} satisfies Record<string, Schema.Json>;
+
+const LIST_TARGETS_PROPERTY = {
+  description:
+    'The elements, one item per element: [{"targetSelector": "e0k3pz"}, {"targetSelector": "e0k4a1"}, {"targetSelector": "e0k4b7"}].',
+  items: {
+    additionalProperties: false,
+    properties: {
+      path: {
+        description:
+          "Page path of this element. Leave out to use the top-level path.",
+        maxLength: 300,
+        type: "string",
+      },
+      targetSelector: {
+        description:
+          'CSS selector or get_layers id of the element, for example "e0k3pz".',
+        maxLength: 2000,
+        minLength: 1,
+        type: "string",
+      },
+      targetSource: {
+        description:
+          'Or file:line:col of its JSX tag, for example "src/App.tsx:14:9".',
+        maxLength: 1100,
+        type: "string",
+      },
+    },
+    type: "object",
+  },
+  maxItems: 24,
+  minItems: 1,
+  type: "array",
+} satisfies Schema.Json;
+
+const LIST_PROPERTIES = {
+  path: USE_PATH_PROPERTY,
+  targets: LIST_TARGETS_PROPERTY,
+} satisfies Record<string, Schema.Json>;
 
 const TARGET_PROPERTIES = {
   path: PATH_PROPERTY,
@@ -146,7 +225,11 @@ const toDroppedKeys = (name: string): ReadonlySet<string> => {
     keys.push(...LOC_KEYS);
   }
 
-  if (kind !== null && kind !== "loc") {
+  if (kind === "use") {
+    keys.push(USE_KEY);
+  }
+
+  if (kind !== null && kind !== "loc" && kind !== "use" && kind !== "list") {
     keys.push(TARGET_KEY);
   }
 
@@ -197,7 +280,17 @@ const toAddedProperties = (
   const nested = toNested(name);
   const added: Record<string, Schema.Json> = {};
 
-  if (toKind(name) !== null) {
+  const kind = toKind(name);
+
+  if (kind === "use") {
+    Object.assign(added, USE_PROPERTIES);
+  }
+
+  if (kind === "list") {
+    Object.assign(added, LIST_PROPERTIES);
+  }
+
+  if (kind !== "use" && kind !== "list" && kind !== null) {
     Object.assign(added, TARGET_PROPERTIES);
   }
 
@@ -211,6 +304,9 @@ const toAddedProperties = (
   ]);
 };
 
+const toNestedRequired = (name: string): readonly string[] =>
+  Object.entries(NESTED_REQUIRED).find(([key]) => key === name)?.[1] ?? [];
+
 const toLegacyTargetFields = (
   name: string,
   fields: LegacyFields
@@ -222,7 +318,10 @@ const toLegacyTargetFields = (
       ...fields.properties,
       ...toAddedProperties(name, fields.properties),
     },
-    required: fields.required.filter((key) => !dropped.has(key)),
+    required: [
+      ...fields.required.filter((key) => !dropped.has(key)),
+      ...toNestedRequired(name),
+    ],
   };
 };
 

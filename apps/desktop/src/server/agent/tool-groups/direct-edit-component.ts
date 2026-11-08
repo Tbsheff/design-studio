@@ -10,18 +10,10 @@ import {
   swapInstanceSdkFields,
 } from "../component-create-tool.js";
 import {
-  componentPreviewSdkFields,
-  runComponentPreview,
-} from "../component-preview-tool.js";
-import {
   insertComponentSdkFields,
   runInsertComponent,
 } from "../insert-tool.js";
-import {
-  listComponentsSdkFields,
-  runListComponents,
-  withLayerIds,
-} from "../kit-tools.js";
+import { withLayerIds } from "../kit-tools.js";
 import { runSetProps, setPropsSdkFields } from "../props-tool.js";
 import { TOOL_SHORT } from "../tool-help.js";
 import { runDesignReview, toDecodedRun } from "../tools.js";
@@ -49,20 +41,6 @@ const toDirectEditComponentTools = (
     TOOL_SHORT.insert_component,
     insertComponentSdkFields,
     withLayerIds(deps, (args) => runInsertComponent(deps, args))
-  ),
-  tool(
-    "list_components",
-    TOOL_SHORT.list_components,
-    listComponentsSdkFields,
-    (args) => runListComponents(deps, args),
-    { annotations: { readOnlyHint: true } }
-  ),
-  tool(
-    "component_preview",
-    TOOL_SHORT.component_preview,
-    componentPreviewSdkFields,
-    (args) => runComponentPreview(deps, args),
-    { annotations: { readOnlyHint: true } }
   ),
   tool(
     "create_component",

@@ -14,10 +14,16 @@ import { PropsComponentSchema } from "./schema.js";
 
 const listPropsComponentsDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_components",
+    set: "kit",
+    short:
+      "Read only. Project components, the shared kit first, with import line, JSX example, parts and cva variants. Use query and cursor.",
+  },
   confirm: "none",
   description:
-    "List the React components of a direction with their props schema. Takes query, source, limit and cursor.",
+    "Find the React components of the project, shared workspace packages (the kit, such as packages/ui) first, then by use count. Each item has source, file, line, folder, parts, an import line, a JSX example, the use count, and the props schema with control, default and cva variants. Pages hold up to 200 items: pass next as cursor for the next page. Use the names with insert_component and the options with set_props.",
   errors: [
     BadRequest,
     Conflict,
@@ -38,7 +44,7 @@ const listPropsComponentsDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "list_components" },
   needs: "project.read",
   output: pageOf(PropsComponentSchema),
   scope: "project",

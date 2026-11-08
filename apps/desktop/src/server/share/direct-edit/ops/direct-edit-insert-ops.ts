@@ -117,13 +117,6 @@ const setVectorIn = (
   body: EditBody
 ): ReturnType<typeof applyVector> => applyWith(runtime, ref, applyVector, body);
 
-const createComponentIn = (
-  runtime: DirectEditRuntime,
-  ref: DirectionRef,
-  body: EditBody
-): ReturnType<typeof applyCreateComponent> =>
-  applyWith(runtime, ref, applyCreateComponent, body);
-
 const applySwapIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
@@ -165,6 +158,37 @@ const listComponentFoldersOf = async (
 
   return componentFolders(project, direction.workTree);
 };
+
+const DEFAULT_COMPONENT_FOLDER = "src/components";
+
+const toFolderOf = async (
+  runtime: DirectEditRuntime,
+  ref: DirectionRef,
+  body: EditBody
+): Promise<string> => {
+  const { folder } = body as Record<string, string | undefined>;
+
+  if (folder) {
+    return folder;
+  }
+
+  const list = await listComponentFoldersOf(runtime, ref);
+
+  return (
+    list.folders.find((item) => item.kind === "app")?.folder ??
+    DEFAULT_COMPONENT_FOLDER
+  );
+};
+
+const createComponentIn = async (
+  runtime: DirectEditRuntime,
+  ref: DirectionRef,
+  body: EditBody
+): ReturnType<typeof applyCreateComponent> =>
+  applyWith(runtime, ref, applyCreateComponent, {
+    ...body,
+    folder: await toFolderOf(runtime, ref, body),
+  });
 
 const listSwapCandidatesOf = async (
   runtime: DirectEditRuntime,

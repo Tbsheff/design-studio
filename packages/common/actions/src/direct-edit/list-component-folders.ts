@@ -12,7 +12,7 @@ import { ComponentFolderListSchema } from "./schema.js";
 
 const listComponentFoldersDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: { off: "ui-bootstrap" },
   confirm: "none",
   description: "List the folders where a new component can go.",
   errors: [
@@ -33,7 +33,7 @@ const listComponentFoldersDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { off: "ui-bootstrap" },
   needs: "project.read",
   output: ComponentFolderListSchema,
   scope: "project",

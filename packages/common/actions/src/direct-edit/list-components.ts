@@ -12,7 +12,7 @@ import { ComponentListSchema } from "./schema.js";
 
 const listComponentsDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: { off: "ui-bootstrap" },
   confirm: "none",
   description:
     "List the components of a direction with their file, name and usage count.",

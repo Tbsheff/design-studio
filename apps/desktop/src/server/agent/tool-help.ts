@@ -19,8 +19,6 @@ export const TOOL_SHORT = {
   arrange:
     "Align, distribute or tidy sibling elements by writing the parent auto layout. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
-  component_preview:
-    "Read only. Render one library component alone with default props, as an image.",
   create_component:
     "Turn one element into a reusable React component file with inferred props and cva variants, and use it at the old place.",
   define_tweaks:
@@ -42,8 +40,6 @@ export const TOOL_SHORT = {
     "Insert one library component inside or after a target, with required props and the import line. .map() and condition targets are refused.",
   list_breakpoints:
     "Read only. Project breakpoints, the active one for a frame width, and the values each breakpoint overrides on a layer.",
-  list_components:
-    "Read only. Project components, the shared kit first, with import line, JSX example, parts and cva variants. Use query; pages of 20.",
   list_locked_layers: "List the locked layers of the design with their page.",
   measure:
     "Read only. Distance, gaps and insets between two elements on the live page.",
@@ -81,8 +77,6 @@ export const TOOL_HELP: Record<
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
-  component_preview:
-    "Read only. Render one component of the project library alone with its default props, with the same server code as the studio Components panel tiles and the MCP component_preview tool, and see it as an image. Use it to check what a kit component looks like before you use it. Components that need data, server code or an open state return the reason.",
   create_component: CREATE_COMPONENT_AGENT_DESCRIPTION,
   define_tweaks:
     "Save the Tweaks panel controls for this design (replaces the whole list). Each control sets one CSS custom property: range {min, max, step?, unit?, default: number}, color {default}, toggle {on, off, default: boolean}, select {options: [{label, value}], default}. The user drags them for a live preview with no model call, and Commit writes the values into the :root declaration. Every cssVar must be declared in a top-level :root rule of the page CSS with the default value (a design-system token from tokens.css is already declared; Commit then updates tokens.json) and used with var() in the rules it changes. The result lists any var that is not declared or not used.",
@@ -101,8 +95,6 @@ export const TOOL_HELP: Record<
   insert_component:
     "Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.",
   list_breakpoints: listBreakpointsDescription,
-  list_components:
-    "Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.",
   list_locked_layers:
     "List the locked layers of the design, with the page of each and whether it is on the page now. Changes nothing.",
   measure:

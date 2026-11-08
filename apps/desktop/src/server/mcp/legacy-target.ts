@@ -1,8 +1,11 @@
 import type { Direction, Project, SourceLoc } from "@design-studio/contracts";
 import { Schema } from "effect";
 
-import { loadTarget } from "./edit-guards.js";
+import { resolveInstance } from "../components/use-site.js";
+import { probeOwners, resolveSourceLoc, scopeOf } from "../page-probe/index.js";
+import { EditError, loadTarget } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
+import { pageUrl } from "./edit-kit.js";
 import { targetFor } from "./image-tools.js";
 import { targetOf } from "./insert-tools.js";
 import { toKind, toNested } from "./legacy-target-schema.js";
@@ -294,6 +297,171 @@ const toResolvedArgs = async (
   }
 };
 
+const NO_USE_SITE =
+  "is not inside a component instance with props that the studio can find. Pass source with the file:line:col of the component's JSX tag (read_file shows it), or use edit_element for classes and text.";
+
+const toUseSource = async (
+  deps: TargetDeps,
+  scope: LegacyScope
+): Promise<SourceLoc> => {
+  const { args, direction, project } = scope;
+  const source = toText(args, "source");
+  const selector = toText(args, "selector");
+
+  if (source !== null && selector !== null) {
+    throw new EditError("pass selector or source, not both");
+  }
+
+  if (source !== null) {
+    return resolveSourceLoc(
+      direction.workTree,
+      scopeOf(project.id, direction.id),
+      source
+    );
+  }
+
+  if (selector === null) {
+    throw new EditError("pass selector or source, not both");
+  }
+
+  const url = await pageUrl(
+    deps,
+    project,
+    direction,
+    toText(args, "path") ?? ""
+  );
+
+  const probed = await probeOwners(deps.preview, url, selector);
+
+  if (!probed) {
+    throw new EditError(`No element matches ${selector} on the page.`);
+  }
+
+  const instance = await resolveInstance(
+    { previewOrigin: new URL(url).origin, workTree: direction.workTree },
+    { owners: probed.owners, usedAt: probed.usedAt }
+  );
+
+  if (!instance) {
+    throw new EditError(`${selector} ${NO_USE_SITE}`);
+  }
+
+  return instance.use;
+};
+
+const toUseArgs = async (
+  deps: TargetDeps,
+  args: LegacyArgs
+): Promise<LegacyOutcome> => {
+  try {
+    const scope = await toScope(deps, args);
+    const use = await toUseSource(deps, scope);
+
+    const kept = Object.fromEntries(
+      Object.entries(args).filter(
+        ([key]) => key !== "path" && key !== "selector" && key !== "source"
+      )
+    );
+
+    return {
+      args: { ...kept, source: toWireSource(use) },
+      isOk: true,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { isOk: false, message: error.message };
+    }
+
+    return { isOk: false, message: String(error) };
+  }
+};
+
+const ItemsSchema = Schema.Array(Schema.Record(Schema.String, Schema.Json));
+
+const readItems = Schema.is(ItemsSchema);
+
+const NO_TARGET = "pass targetSelector or targetSource, not both";
+
+const toItemTarget = async (
+  deps: TargetDeps,
+  scope: LegacyScope,
+  item: LegacyArgs
+): Promise<LegacyArgs> => {
+  const selector = toText(item, "targetSelector");
+  const source = toText(item, "targetSource");
+
+  if ((selector === null) === (source === null)) {
+    throw new EditError(NO_TARGET);
+  }
+
+  const { direction, project } = scope;
+  const path = toText(item, "path") ?? toText(scope.args, "path");
+  const pick: InsertPick = {};
+
+  if (path !== null) {
+    pick.path = path;
+  }
+
+  if (selector !== null) {
+    pick.targetSelector = selector;
+  }
+
+  if (source !== null) {
+    pick.targetSource = source;
+  }
+
+  const target = await targetOf(deps, project, direction, pick);
+
+  return toWireTarget("owner", target);
+};
+
+const toItemTargets = async (
+  deps: TargetDeps,
+  scope: LegacyScope,
+  items: readonly LegacyArgs[]
+): Promise<readonly LegacyArgs[]> => {
+  const [first = null, ...rest] = items;
+
+  if (first === null) {
+    return [];
+  }
+
+  const head = await toItemTarget(deps, scope, first);
+
+  return [head, ...(await toItemTargets(deps, scope, rest))];
+};
+
+const toListArgs = async (
+  deps: TargetDeps,
+  args: LegacyArgs
+): Promise<LegacyOutcome> => {
+  const items = args["targets"] ?? null;
+
+  if (!readItems(items)) {
+    return { args, isOk: true };
+  }
+
+  try {
+    const scope = await toScope(deps, args);
+    const targets = await toItemTargets(deps, scope, items);
+
+    const kept = Object.fromEntries(
+      Object.entries(args).filter(([key]) => key !== "path")
+    );
+
+    return { args: { ...kept, targets }, isOk: true };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { isOk: false, message: error.message };
+    }
+
+    return { isOk: false, message: String(error) };
+  }
+};
+
+const hasUseTarget = (args: LegacyArgs): boolean =>
+  toText(args, "selector") !== null || toText(args, "source") !== null;
+
 const toLegacyTargetArgs = (
   deps: TargetDeps,
   name: string,
@@ -301,6 +469,18 @@ const toLegacyTargetArgs = (
 ): Promise<LegacyOutcome> => {
   const nested = toNestedArgs(name, args);
   const kind = toKind(name);
+
+  if (kind === "list") {
+    return toListArgs(deps, nested);
+  }
+
+  if (kind === "use") {
+    if (!hasUseTarget(nested)) {
+      return Promise.resolve({ args: nested, isOk: true });
+    }
+
+    return toUseArgs(deps, nested);
+  }
 
   if (kind === null || !hasLegacyTarget(nested)) {
     return Promise.resolve({ args: nested, isOk: true });

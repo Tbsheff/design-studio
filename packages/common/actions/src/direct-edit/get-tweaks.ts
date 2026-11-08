@@ -12,10 +12,16 @@ import { TweaksStateSchema } from "./schema.js";
 
 const getTweaksDirectEdit = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: {
+    lean: false,
+    name: "list_tweaks",
+    set: "tweak",
+    short:
+      "List the tweak controls of a direction with their type, limits and current value.",
+  },
   confirm: "none",
   description:
-    "Read the tweak controls of a direction: controls, current values, token paths and problems.",
+    "List the tweak controls of a direction with their type, CSS variable, limits or options, default and current value, token paths and problems. Tweaks are the controls (sliders, colors, toggles, selects) that the studio agent made with define_tweaks. The user sees them in the Tweaks panel. Each control sets one CSS variable. An empty list means the agent has not made tweaks for this design. Read only.",
   errors: [
     BadRequest,
     Conflict,
@@ -34,7 +40,7 @@ const getTweaksDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "list_tweaks" },
   needs: "project.read",
   output: TweaksStateSchema,
   scope: "project",

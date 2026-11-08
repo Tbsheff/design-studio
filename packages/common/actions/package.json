@@ -220,6 +220,7 @@
     "./direct-edit/schema": "./src/direct-edit/schema.ts",
     "./direct-edit/set-image": "./src/direct-edit/set-image.ts",
     "./direct-edit/set-rules": "./src/direct-edit/set-rules.ts",
+    "./direct-edit/set-tweak": "./src/direct-edit/set-tweak.ts",
     "./direct-edit/set-variant-classes": "./src/direct-edit/set-variant-classes.ts",
     "./direct-edit/set-vector": "./src/direct-edit/set-vector.ts",
     "./direct-edit/update-tokens": "./src/direct-edit/update-tokens.ts",

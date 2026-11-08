@@ -175,6 +175,12 @@ const routes = {
     method: "PUT",
     path: "/api/projects/:projectId/d/:directionId/rules",
   },
+  setTweakDirectEdit: {
+    id: "direct-edit.setTweak",
+    invalidates: ["direct-edit.getTweaks"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/tweak",
+  },
   setVariantClassesDirectEdit: {
     id: "direct-edit.setVariantClasses",
     invalidates: ["version.list", "version.get"],

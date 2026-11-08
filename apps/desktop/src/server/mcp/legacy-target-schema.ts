@@ -22,10 +22,12 @@ interface LegacyFields {
 
 const TARGET_KINDS = {
   apply_text_style: "element",
+  clear_text: "owner",
   get_fill: "loc",
   get_spacing: "loc",
   get_stacking: "loc",
   insert_icon: "owner",
+  insert_jsx: "owner",
   list_motion: "loc",
   list_state_styles: "loc",
   place_image: "place",

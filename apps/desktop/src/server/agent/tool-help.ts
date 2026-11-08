@@ -28,8 +28,6 @@ export const TOOL_SHORT = {
     "Add or move canvas frames: { frames: [...] } in order, placed below / rightOf / leftOf / above a frame id or @label. Returns overlap warnings.",
   canvas_point:
     "Show the user one frame, and select an element in it when you pass a selector.",
-  clear_text:
-    "Remove the plain text inside an element and keep its child elements.",
   component_preview:
     "Read only. Render one library component alone with default props, as an image.",
   create_component:
@@ -53,8 +51,6 @@ export const TOOL_SHORT = {
     "Turn a Figma nodes JSON file (exported by the user) into flex markup with token colors and kit components, as one version.",
   insert_component:
     "Insert one library component inside or after a target, with required props and the import line. .map() and condition targets are refused.",
-  insert_jsx:
-    "Insert a JSX snippet (HTML in an HTML project) inside, before, after or in place of a target; adds kit imports. Markup only: no functions, hooks, conditions, .map() or spreads.",
   list_breakpoints:
     "Read only. Project breakpoints, the active one for a frame width, and the values each breakpoint overrides on a layer.",
   list_components:
@@ -113,8 +109,6 @@ export const TOOL_HELP: Record<
     "Add or move frames on the studio canvas. Pass { frames: [...] }, applied in order, so a later frame can use the @label of an earlier one. Each item: frame (id or @label to move; leave out to add), label, path (the page it shows), viewport or width/height, and one of below / rightOf / leftOf / above (another frame id or @label) with gap (default 80), or absolute x/y. With no placement a new frame goes to the right of all frames. Returns the placed frames and a warnings list when frames overlap.",
   canvas_point:
     'Show the user one frame: the studio makes the frame live, selects the element when you pass a CSS selector for an element inside that frame, and scrolls and zooms the canvas to it. Use it to say "this one" at the end of a reply.',
-  clear_text:
-    "Remove the plain text inside an element and keep its child elements, such as placeholder text next to children you inserted. On a library component it clears the text where the page uses it. Text from a prop or a { } expression stays.",
   component_preview:
     "Read only. Render one component of the project library alone with its default props, with the same server code as the studio Components panel tiles and the MCP component_preview tool, and see it as an image. Use it to check what a kit component looks like before you use it. Components that need data, server code or an open state return the reason.",
   create_component: CREATE_COMPONENT_AGENT_DESCRIPTION,
@@ -136,8 +130,6 @@ export const TOOL_HELP: Record<
   import_figma_frame: FIGMA_IMPORT_TOOL_DESCRIPTION,
   insert_component:
     "Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.",
-  insert_jsx:
-    "Insert a group of elements in one step with the same server code as the MCP insert_jsx tool and the studio Paste JSX menu: a JSX snippet (HTML in an HTML project) inside, before, after or in place of the target. Component tags that the file does not import are found in the project library and their import lines are added or extended. The snippet keeps its line breaks and gets the file indent. Markup only: text, string props, numbers, style objects and references to names the file has; functions, calls (hooks), conditions, .map() and spreads are refused. Targets made by .map() are refused; before or after the one element of a ? : or && branch wraps the branch in a <> fragment. Use it to build a card, row or section from library components; clear_text removes stray text next to child elements.",
   list_breakpoints: listBreakpointsDescription,
   list_components:
     "Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.",

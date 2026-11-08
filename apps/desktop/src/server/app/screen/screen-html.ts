@@ -176,6 +176,14 @@ const toHtmlCreatePlan = async (
   };
 };
 
+const toSourceFramePath = (scope: InspectScope, from: string): string => {
+  if (from === scope.project.entry) {
+    return "";
+  }
+
+  return from;
+};
+
 const toHtmlDuplicatePlan = async (
   scope: ScreenScope,
   command: DuplicateScreenCommand
@@ -199,14 +207,19 @@ const toHtmlDuplicatePlan = async (
 
   const code = await readFile(path.join(workTree, from), "utf-8");
 
+  const rightOfPath = toSourceFramePath(scope, from);
+  const rollbackRoot = null;
+  const route = `/${file}`;
+  const versionTitle = `Duplicate screen ${from} to ${file}`;
+
   return {
     files: [{ code, relative: file }],
     framePath: file,
     label: toHtmlTitle(file),
-    rightOfPath: from,
-    rollbackRoot: null,
-    route: `/${file}`,
-    versionTitle: `Duplicate screen ${from} to ${file}`,
+    rightOfPath,
+    rollbackRoot,
+    route,
+    versionTitle,
   };
 };
 

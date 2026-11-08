@@ -141,23 +141,18 @@ const getGroupFolder = (context: RouterContext, name: string): string => {
   return path.join(context.routerDir, name);
 };
 
-const toChildName = (
+const toDynamicName = (
   folders: readonly string[],
   segment: string,
   isLast: boolean
 ): string | null => {
-  if (folders.includes(segment)) {
-    return segment;
-  }
-
   if (isLast && !isDynamicSegment(segment)) {
     return null;
   }
 
   return (
-    folders.find(
-      (name) => isDynamicSegment(name) && !name.startsWith("[...")
-    ) ?? null
+    folders.find((name) => isDynamicSegment(name) && !name.includes("...")) ??
+    null
   );
 };
 
@@ -174,28 +169,35 @@ const getPlacement = async (
   }
 
   const folders = await listChildFolders(folder);
-  const child = toChildName(folders, head, tail.length === 0);
 
-  if (child !== null) {
-    return getPlacement(path.join(folder, child), tail, true);
+  if (folders.includes(head)) {
+    return getPlacement(path.join(folder, head), tail, true);
   }
 
-  if (!isGroupEntered) {
-    return { folder, rest: segments };
-  }
+  let groups: readonly string[] = [];
 
-  const groups = folders.filter((name) => GROUP_DIR.test(name));
+  if (isGroupEntered) {
+    groups = folders.filter((name) => GROUP_DIR.test(name));
+  }
 
   const inner = await Promise.all(
     groups.map((name) => getPlacement(path.join(folder, name), segments, true))
   );
 
-  return (
-    inner.find((item) => item.rest.length < segments.length) ?? {
-      folder,
-      rest: segments,
-    }
-  );
+  const grouped =
+    inner.find((item) => item.rest.length < segments.length) ?? null;
+
+  if (grouped !== null) {
+    return grouped;
+  }
+
+  const dynamic = toDynamicName(folders, head, tail.length === 0);
+
+  if (dynamic !== null) {
+    return getPlacement(path.join(folder, dynamic), tail, true);
+  }
+
+  return { folder, rest: segments };
 };
 
 const getGroupPlacement = (
@@ -271,6 +273,12 @@ const toGroupLabel = (name: string): string | null => {
   }
 
   return name.slice(1, -1);
+};
+
+const toGroupRouteCount = (context: RouterContext, name: string): number => {
+  const label = toGroupLabel(name);
+
+  return context.routes.filter((item) => item.group === label).length;
 };
 
 const listGroupSamples = (
@@ -359,6 +367,7 @@ export {
   isPathTaken,
   listEntries,
   listLayoutGroups,
+  toGroupRouteCount,
   toPosix,
 };
 

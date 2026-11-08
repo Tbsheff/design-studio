@@ -23,6 +23,7 @@ import {
   getGroupPlacement,
   isPathTaken,
   listLayoutGroups,
+  toGroupRouteCount,
   toPosix,
 } from "./screen-source.js";
 import type { GroupScan, Placement } from "./screen-source.js";
@@ -64,13 +65,15 @@ const getPickedGroup = async (
       hasShell: group.layoutFile !== null && group.sampleRoutes.length > 0,
       name: group.name,
       placement: await getGroupPlacement(scan.context, group.name, segments),
+      routeCount: toGroupRouteCount(scan.context, group.name),
     }))
   );
 
   const ordered = placed.toSorted(
     (left, right) =>
       toDepth(right.placement, segments) - toDepth(left.placement, segments) ||
-      Number(right.hasShell) - Number(left.hasShell)
+      Number(right.hasShell) - Number(left.hasShell) ||
+      right.routeCount - left.routeCount
   );
 
   const best = ordered.at(0) ?? null;

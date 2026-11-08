@@ -21,22 +21,21 @@ import {
 import type { MutableRefObject, ReactNode } from "react";
 
 import { api } from "../../api.js";
+
+import "../../styles/prototype.css";
 import { frameDirection } from "./canvas-direction-ops.js";
 import { frameName, withFramePath } from "./canvas-frame-ops.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
+import { LinkArrows } from "./link-arrows.js";
+import { LinkDragLine } from "./link-drag-line.js";
+import { LinkHandle } from "./link-handle.js";
+import { linkOfSelection } from "./link-view.js";
 import { linksApi, useImplicitLinks, useLinks } from "./links-api.js";
-import {
-  LinkArrows,
-  LinkDragLine,
-  LinkHandle,
-  linkOfSelection,
-  linkSourceOf,
-  playStartOf,
-  PrototypeBar,
-  useLinkDrag,
-} from "./prototype-layer.js";
+import { PrototypeBar } from "./prototype-bar.js";
+import { playStartOf, toLinkSource } from "./prototype-model.js";
 import { runOrReport, toValueOr } from "./settle-model.js";
+import { useLinkDrag } from "./use-link-drag.js";
 import { useLinkRects } from "./use-link-rects.js";
 import type { LinkState } from "./use-link-rects.js";
 
@@ -130,7 +129,7 @@ const usePrototype = (options: Options) => {
   const drag = useLinkDrag((selection, frameId) => {
     void runOrReport(
       linksApi.add(options.projectId, {
-        from: linkSourceOf(selection, options.active),
+        from: toLinkSource(selection, options.active),
         to: { frame: frameId },
         transition: "instant",
       }),
@@ -238,7 +237,7 @@ const usePrototype = (options: Options) => {
   let selected: LinkState | null = null;
 
   if (on) {
-    selected = linkOfSelection(states, single, options.active.id);
+    selected = linkOfSelection(states, single ?? null, options.active.id);
   }
 
   let artboard: ReactNode = null;
@@ -277,8 +276,7 @@ const usePrototype = (options: Options) => {
           startId={startId}
           selected={selected}
           hasSelection={single !== undefined}
-          selection={single}
-          frameTitle={frameTitle}
+          selection={single ?? null}
           linkTitle={linkTitle}
           onError={options.notify}
         />

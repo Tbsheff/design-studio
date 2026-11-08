@@ -40,7 +40,7 @@ import { randomToken } from "../../platform/session.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameTitle } from "./canvas-frames.js";
 import { copy } from "./copy.js";
-import { hasOutgoing, playStartOf } from "./prototype-layer.js";
+import { hasOutgoing, playStartOf } from "./prototype-model.js";
 
 import "../../styles/prototype.css";
 import { linkQuery } from "./use-link-rects.js";

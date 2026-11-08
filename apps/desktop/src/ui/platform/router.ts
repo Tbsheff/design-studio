@@ -2,7 +2,7 @@ import { uiStore } from "./storage";
 
 const PROJECT_PATH = /^\/p\/([^/]+)\/?$/;
 
-export function projectFromPath(pathname: string): string | null {
+function projectFromPath(pathname: string): string | null {
   const match = PROJECT_PATH.exec(pathname);
 
   if (!match?.[1]) {
@@ -16,18 +16,18 @@ export function projectFromPath(pathname: string): string | null {
   }
 }
 
-export function pathForProject(projectId: string | null): string {
+function pathForProject(projectId: string | null): string {
   return projectId ? `/p/${encodeURIComponent(projectId)}` : "/";
 }
 
 let installed = false;
 let leaveCheck: (() => boolean) | null = null;
 
-export function setLeaveCheck(check: (() => boolean) | null): void {
+function setLeaveCheck(check: (() => boolean) | null): void {
   leaveCheck = check;
 }
 
-export function installRouting(): void {
+function installRouting(): void {
   if (installed) {
     return;
   }
@@ -78,3 +78,5 @@ export function installRouting(): void {
     }
   });
 }
+
+export { projectFromPath, pathForProject, setLeaveCheck, installRouting };

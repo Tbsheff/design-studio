@@ -1,17 +1,17 @@
 import type { RunLevel } from "@design-studio/contracts";
 import { useSyncExternalStore } from "react";
 
-export interface Viewport {
+interface Viewport {
   preset: "desktop" | "tablet" | "mobile" | "custom";
   width: number;
   height: number;
 }
 
-export type ZoomSetting = "fit" | number;
+type ZoomSetting = "fit" | number;
 
-export type Screen = "home" | "new-design-system" | "design-systems";
+type Screen = "home" | "new-design-system" | "design-systems";
 
-export interface LibraryFrom {
+interface LibraryFrom {
   projectId: string;
   directionId: string;
 }
@@ -22,7 +22,7 @@ const SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   "design-systems",
 ]);
 
-export interface UiState {
+interface UiState {
   activeProjectId: string | null;
   screen: Screen;
   libraryFrom: LibraryFrom | null;
@@ -41,9 +41,9 @@ export interface UiState {
   rulers: boolean;
 }
 
-export type HomeSort = "recent" | "name" | "created";
+type HomeSort = "recent" | "name" | "created";
 
-export const HOME_SORTS: readonly HomeSort[] = ["recent", "name", "created"];
+const HOME_SORTS: readonly HomeSort[] = ["recent", "name", "created"];
 
 const KEY = "design-studio.ui.v1";
 
@@ -135,7 +135,7 @@ function saveUiState(state: UiState): void {
 let state: UiState = loadUiState();
 const listeners = new Set<() => void>();
 
-export const uiStore = {
+const uiStore = {
   get: () => state,
   set: (patch: Partial<UiState> | ((s: UiState) => Partial<UiState>)) => {
     const next = typeof patch === "function" ? patch(state) : patch;
@@ -152,17 +152,17 @@ export const uiStore = {
   },
 };
 
-export function useUi(): UiState {
+function useUi(): UiState {
   return useSyncExternalStore(uiStore.subscribe, uiStore.get);
 }
 
-export interface DraftStore {
+interface DraftStore {
   get: () => string;
   set: (value: string) => void;
   subscribe: (listener: () => void) => () => void;
 }
 
-export function createDraftStore(initial = ""): DraftStore {
+function createDraftStore(initial = ""): DraftStore {
   let value = initial;
   const draftListeners = new Set<() => void>();
 
@@ -186,11 +186,11 @@ export function createDraftStore(initial = ""): DraftStore {
   };
 }
 
-export function useDraft(store: DraftStore): string {
+function useDraft(store: DraftStore): string {
   return useSyncExternalStore(store.subscribe, store.get);
 }
 
-export function useDraftActive(store: DraftStore): boolean {
+function useDraftActive(store: DraftStore): boolean {
   return useSyncExternalStore(store.subscribe, () => store.get().trim() !== "");
 }
 
@@ -203,7 +203,7 @@ interface HomeVariationsIntent {
 
 let homeIntent: HomeVariationsIntent | null = null;
 
-export const homeVariations = {
+const homeVariations = {
   set: (intent: HomeVariationsIntent) => {
     homeIntent = intent;
   },
@@ -219,7 +219,7 @@ export const homeVariations = {
   },
 };
 
-export const readStored = (key: string): string | null => {
+const readStored = (key: string): string | null => {
   try {
     return globalThis.localStorage.getItem(key);
   } catch {
@@ -227,7 +227,7 @@ export const readStored = (key: string): string | null => {
   }
 };
 
-export const writeStored = (key: string, value: string): void => {
+const writeStored = (key: string, value: string): void => {
   try {
     globalThis.localStorage.setItem(key, value);
   } catch {
@@ -235,10 +235,33 @@ export const writeStored = (key: string, value: string): void => {
   }
 };
 
-export const removeStored = (key: string): void => {
+const removeStored = (key: string): void => {
   try {
     globalThis.localStorage.removeItem(key);
   } catch {
     return;
   }
+};
+
+export {
+  HOME_SORTS,
+  uiStore,
+  useUi,
+  createDraftStore,
+  useDraft,
+  useDraftActive,
+  homeVariations,
+  readStored,
+  writeStored,
+  removeStored,
+};
+
+export type {
+  Viewport,
+  ZoomSetting,
+  Screen,
+  LibraryFrom,
+  UiState,
+  HomeSort,
+  DraftStore,
 };

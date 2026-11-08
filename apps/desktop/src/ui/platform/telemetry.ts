@@ -3,7 +3,7 @@ import type { TelemetrySample } from "@design-studio/contracts";
 import { sendTelemetry } from "../api";
 import { desktopBridge } from "./desktop";
 
-export interface DesktopBoot {
+interface DesktopBoot {
   startedAt: number;
   marks: Record<string, number>;
 }
@@ -20,7 +20,7 @@ let scope: Scope = {};
 let appStartSent = false;
 let flushLongFrames: () => void = () => undefined;
 
-export function desktopBoot(): DesktopBoot | null {
+function desktopBoot(): DesktopBoot | null {
   const boot = desktopBridge<{ boot?: DesktopBoot }>()?.boot;
 
   return boot && typeof boot.startedAt === "number" ? boot : null;
@@ -30,7 +30,7 @@ function afterPaint(fn: () => void): void {
   requestAnimationFrame(() => requestAnimationFrame(fn));
 }
 
-export function reportAppStart(screen: "home" | "studio"): void {
+function reportAppStart(screen: "home" | "studio"): void {
   if (appStartSent) {
     return;
   }
@@ -51,7 +51,7 @@ export function reportAppStart(screen: "home" | "studio"): void {
   });
 }
 
-export function reportFirstToken(
+function reportFirstToken(
   projectId: string,
   directionId: string | undefined,
   runId: string,
@@ -82,7 +82,7 @@ function longFrameType(): string | null {
   return types.includes("longtask") ? "longtask" : null;
 }
 
-export function watchLongFrames(): () => void {
+function watchLongFrames(): () => void {
   const type = longFrameType();
 
   if (!type) {
@@ -148,7 +148,7 @@ export function watchLongFrames(): () => void {
   };
 }
 
-export function setTelemetryScope(next: Scope): () => void {
+function setTelemetryScope(next: Scope): () => void {
   flushLongFrames();
   scope = next;
 
@@ -161,3 +161,13 @@ export function setTelemetryScope(next: Scope): () => void {
     scope = {};
   };
 }
+
+export {
+  desktopBoot,
+  reportAppStart,
+  reportFirstToken,
+  watchLongFrames,
+  setTelemetryScope,
+};
+
+export type { DesktopBoot };

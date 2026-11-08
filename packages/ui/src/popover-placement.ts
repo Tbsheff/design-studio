@@ -1,17 +1,17 @@
 import { useLayoutEffect } from "react";
 import type { CSSProperties, RefObject } from "react";
 
-export const POPOVER_GAP = 4;
+const POPOVER_GAP = 4;
 const MARGIN = 8;
 
-export interface PopoverBounds {
+interface PopoverBounds {
   left: number;
   top: number;
   right: number;
   bottom: number;
 }
 
-export function popoverBounds(anchor: Element): PopoverBounds {
+function popoverBounds(anchor: Element): PopoverBounds {
   const bounds = {
     bottom: window.innerHeight - MARGIN,
     left: MARGIN,
@@ -30,12 +30,12 @@ export function popoverBounds(anchor: Element): PopoverBounds {
   return bounds;
 }
 
-export interface FixedPlacement {
+interface FixedPlacement {
   align?: "start" | "end";
   prefer?: "above" | "below";
 }
 
-export function placeFixed(
+function placeFixed(
   trigger: HTMLElement,
   panel: HTMLElement,
   { align = "start", prefer = "below" }: FixedPlacement = {}
@@ -159,7 +159,7 @@ function fitAbsolute(panel: HTMLElement, trigger: HTMLElement | null): void {
   fitHorizontal(panel, rect, bounds);
 }
 
-export function useFitPopover(
+function useFitPopover(
   panel: RefObject<HTMLElement | null>,
   trigger: RefObject<HTMLElement | null> | null,
   open: boolean
@@ -183,3 +183,7 @@ export function useFitPopover(
     };
   }, [open, panel, trigger]);
 }
+
+export { POPOVER_GAP, popoverBounds, placeFixed, useFitPopover };
+
+export type { PopoverBounds, FixedPlacement };

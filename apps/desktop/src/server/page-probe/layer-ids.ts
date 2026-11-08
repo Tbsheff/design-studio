@@ -8,7 +8,7 @@ interface Ids {
   keyByRef: Map<string, string>;
 }
 
-export interface Move {
+interface Move {
   ref: string;
   from: string;
   to: string | null;
@@ -30,7 +30,7 @@ function idsOf(scope: string): Ids {
   return ids;
 }
 
-export function refForKey(scope: string, key: string): string {
+function refForKey(scope: string, key: string): string {
   const ids = idsOf(scope);
   const known = ids.refByKey.get(key);
 
@@ -54,7 +54,7 @@ export function refForKey(scope: string, key: string): string {
   return ref;
 }
 
-export function isGoneRef(scope: string, ref: string): boolean {
+function isGoneRef(scope: string, ref: string): boolean {
   return registries.get(scope)?.keyByRef.get(ref) === GONE;
 }
 
@@ -85,7 +85,7 @@ function movedKey(key: string, maps: Map<string, LineMap>): string | null {
   return gone ? null : next;
 }
 
-export function remapIds(scope: string, files: SourceFileChange[]): Move[] {
+function remapIds(scope: string, files: SourceFileChange[]): Move[] {
   const ids = registries.get(scope);
 
   if (!ids || files.length === 0) {
@@ -128,3 +128,7 @@ export function remapIds(scope: string, files: SourceFileChange[]): Move[] {
 
   return moves;
 }
+
+export { refForKey, isGoneRef, remapIds };
+
+export type { Move };

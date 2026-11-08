@@ -1,4 +1,4 @@
-export function formatTime(ts: number): string {
+function formatTime(ts: number): string {
   const d = new Date(ts);
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
@@ -14,7 +14,7 @@ export function formatTime(ts: number): string {
       })}`;
 }
 
-export function formatMs(ms: number | null | undefined): string {
+function formatMs(ms: number | null | undefined): string {
   if (ms === null || ms === undefined) {
     return "";
   }
@@ -30,7 +30,7 @@ export function formatMs(ms: number | null | undefined): string {
   return `${Math.floor(ms / 60_000)}m ${Math.round((ms % 60_000) / 1000)}s`;
 }
 
-export function formatUsd(n: number): string {
+function formatUsd(n: number): string {
   if (n > 0 && n < 0.005) {
     return "<$0.01";
   }
@@ -38,7 +38,7 @@ export function formatUsd(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
-export function downloadBlob(blob: Blob, name: string): void {
+function downloadBlob(blob: Blob, name: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -49,7 +49,7 @@ export function downloadBlob(blob: Blob, name: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function formatRelative(ts: number, now = Date.now()): string {
+function formatRelative(ts: number, now = Date.now()): string {
   const diff = Math.max(0, now - ts);
   const min = Math.floor(diff / 60_000);
 
@@ -83,8 +83,17 @@ export function formatRelative(ts: number, now = Date.now()): string {
   });
 }
 
-export function baseName(p: string): string {
+function baseName(p: string): string {
   const parts = p.split(/[\\/]/).filter(Boolean);
 
   return parts.at(-1) ?? p;
 }
+
+export {
+  formatTime,
+  formatMs,
+  formatUsd,
+  downloadBlob,
+  formatRelative,
+  baseName,
+};

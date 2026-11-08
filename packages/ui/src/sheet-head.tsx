@@ -2,11 +2,9 @@ import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-export const SheetSlot = createContext<{ slot: HTMLElement | null } | null>(
-  null
-);
+const SheetSlot = createContext<{ slot: HTMLElement | null } | null>(null);
 
-export const PanelHead = ({
+const PanelHead = ({
   title,
   className,
   titleClassName,
@@ -30,3 +28,5 @@ export const PanelHead = ({
     </div>
   );
 };
+
+export { SheetSlot, PanelHead };

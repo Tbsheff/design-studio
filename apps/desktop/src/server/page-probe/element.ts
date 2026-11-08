@@ -94,7 +94,7 @@ function onProbePage<T>(
   return probeOnPage<T>(preview, url, PROBE_VIEWPORT, expression);
 }
 
-export async function describeElements(
+async function describeElements(
   preview: PreviewService,
   url: string,
   selectors: string[]
@@ -112,7 +112,7 @@ export async function describeElements(
   });
 }
 
-export async function describeElement(
+async function describeElement(
   preview: PreviewService,
   url: string,
   selector: string
@@ -126,10 +126,12 @@ export async function describeElement(
   return raw ? contextOf(selector, raw) : null;
 }
 
-export function textHintsOf(element: SelectionContext): TextSourceHints {
+function textHintsOf(element: SelectionContext): TextSourceHints {
   return {
     text: element.text,
     ...(element.usedAt ? { usedAt: element.usedAt } : {}),
     ...(element.owners?.length ? { owners: element.owners } : {}),
   };
 }
+
+export { describeElements, describeElement, textHintsOf };

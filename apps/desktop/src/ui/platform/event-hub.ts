@@ -42,13 +42,11 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
   "versions.changed": true,
 };
 
-export const EVENT_TYPES = Object.keys(
-  EVERY_EVENT_TYPE
-) as StudioEventBody["type"][];
+const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody["type"][];
 
-export type ConnectionState = "connecting" | "open" | "reconnecting";
+type ConnectionState = "connecting" | "open" | "reconnecting";
 
-export interface EventSourceLike {
+interface EventSourceLike {
   onopen: ((this: EventSource, ev: Event) => unknown) | null;
   onmessage: ((this: EventSource, ev: MessageEvent) => unknown) | null;
   onerror: ((this: EventSource, ev: Event) => unknown) | null;
@@ -56,7 +54,7 @@ export interface EventSourceLike {
   close(): void;
 }
 
-export interface HubDeps {
+interface HubDeps {
   open: (projectId: string, afterSeq: number) => EventSourceLike;
   setTimer: (fn: () => void, ms: number) => number;
   clearTimer: (id: number | undefined) => void;
@@ -76,14 +74,14 @@ interface Channel {
   closing: boolean;
 }
 
-export interface EventHub {
+interface EventHub {
   subscribe(projectId: string, listener: Listener): () => void;
   watchState(projectId: string, onChange: () => void): () => void;
   state(projectId: string): ConnectionState;
   openCount(): number;
 }
 
-export function createEventHub(deps: HubDeps): EventHub {
+function createEventHub(deps: HubDeps): EventHub {
   const channels = new Map<string, Channel>();
 
   const setState = (channel: Channel, state: ConnectionState) => {
@@ -246,3 +244,7 @@ export function createEventHub(deps: HubDeps): EventHub {
     },
   };
 }
+
+export { EVENT_TYPES, createEventHub };
+
+export type { ConnectionState, EventSourceLike, HubDeps, EventHub };

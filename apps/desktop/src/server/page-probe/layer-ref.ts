@@ -11,12 +11,12 @@ import type { PreviewService } from "../preview/index.js";
 import { onProbePage } from "../preview/probe-page.js";
 import { isGoneRef, refForKey, remapIds } from "./layer-ids.js";
 
-export interface Viewport {
+interface Viewport {
   width: number;
   height: number;
 }
 
-export interface RawLayer {
+interface RawLayer {
   parent: number;
   depth: number;
   tag: string;
@@ -31,7 +31,7 @@ export interface RawLayer {
   hidden: boolean;
 }
 
-export interface Layer extends RawLayer {
+interface Layer extends RawLayer {
   ref: string;
   key: string;
 }
@@ -190,11 +190,11 @@ const SCAN_SOURCE = String.raw`async (input) => {
   return { layers, truncated, missingRoot: false, roots };
 }`;
 
-export function scopeOf(projectId: string, directionId: string): string {
+function scopeOf(projectId: string, directionId: string): string {
   return `${projectId}/${directionId}`;
 }
 
-export function isLayerRef(value: unknown): value is string {
+function isLayerRef(value: unknown): value is string {
   return typeof value === "string" && LAYER_REF.test(value.trim());
 }
 
@@ -254,17 +254,17 @@ function remapMemo(change: SourceChange): void {
   }
 }
 
-export const pageProbe = {
+const pageProbe = {
   start(): () => void {
     return onSourceChange(remapMemo);
   },
 };
 
-export function memoPage(scope: string, ref: string): string | undefined {
+function memoPage(scope: string, ref: string): string | undefined {
   return memo.get(`${scope}|${ref}`)?.page;
 }
 
-export async function scanLayers(
+async function scanLayers(
   preview: PreviewService,
   url: string,
   viewport: Viewport,
@@ -281,7 +281,7 @@ export async function scanLayers(
   return { layers, truncated: found.truncated };
 }
 
-export class LayerRefError extends Error {}
+class LayerRefError extends Error {}
 
 function quickHits(
   scope: string,
@@ -368,7 +368,7 @@ function lookUp(
   );
 }
 
-export async function resolveLayerRefs(
+async function resolveLayerRefs(
   preview: PreviewService,
   url: string,
   viewport: Viewport,
@@ -414,7 +414,7 @@ export async function resolveLayerRefs(
   return found as Map<string, string>;
 }
 
-export async function resolveLayerRef(
+async function resolveLayerRef(
   preview: PreviewService,
   url: string,
   viewport: Viewport,
@@ -426,12 +426,12 @@ export async function resolveLayerRef(
   ) as string;
 }
 
-export interface PathMatch<T> {
+interface PathMatch<T> {
   layers: (Layer | null)[];
   extra: T;
 }
 
-export async function layersAtPaths<T>(
+async function layersAtPaths<T>(
   preview: PreviewService,
   url: string,
   viewport: Viewport,
@@ -462,3 +462,17 @@ export async function layersAtPaths<T>(
     return { layers: picked, extra: found.extra };
   });
 }
+
+export {
+  scopeOf,
+  isLayerRef,
+  pageProbe,
+  memoPage,
+  scanLayers,
+  LayerRefError,
+  resolveLayerRefs,
+  resolveLayerRef,
+  layersAtPaths,
+};
+
+export type { Viewport, RawLayer, Layer, PathMatch };

@@ -23,7 +23,7 @@ interface CenterProps {
   canvas: ComponentProps<typeof Canvas>;
 }
 
-export const CenterView = (props: CenterProps) => {
+const CenterView = (props: CenterProps) => {
   const { left, right } = props;
 
   if (props.compareOpen && left && right) {
@@ -48,7 +48,7 @@ const STOPPED: ReadonlySet<RunStatus> = new Set([
   "budget_exceeded",
 ]);
 
-export function runStoppedUnsaved(
+function runStoppedUnsaved(
   runs: readonly { startedAt: number; status: RunStatus }[],
   versions: readonly Version[]
 ): boolean {
@@ -60,7 +60,7 @@ export function runStoppedUnsaved(
   return runs.some((run) => run.startedAt > head && STOPPED.has(run.status));
 }
 
-export const UnfinishedSlot = (props: {
+const UnfinishedSlot = (props: {
   visible: boolean;
   count: number;
   busy: boolean;
@@ -92,7 +92,7 @@ interface ModalsProps {
   onCloseSettings: () => void;
 }
 
-export const StudioModals = (props: ModalsProps) => (
+const StudioModals = (props: ModalsProps) => (
   <>
     {props.designOpen && (
       <DesignMdModal
@@ -110,7 +110,7 @@ export const StudioModals = (props: ModalsProps) => (
   </>
 );
 
-export const StudioBoot = ({
+const StudioBoot = ({
   message,
   onExit,
 }: {
@@ -134,8 +134,17 @@ export const StudioBoot = ({
   );
 };
 
-export const StudioToast = ({ text }: { text: string | null }) => (
+const StudioToast = ({ text }: { text: string | null }) => (
   <div className="ds-toast-slot" role="status" aria-live="polite">
     {text && <div className="ds-toast">{text}</div>}
   </div>
 );
+
+export {
+  CenterView,
+  runStoppedUnsaved,
+  UnfinishedSlot,
+  StudioModals,
+  StudioBoot,
+  StudioToast,
+};

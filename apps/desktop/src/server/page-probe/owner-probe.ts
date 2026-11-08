@@ -6,7 +6,7 @@ import type { ComponentOwner } from "@design-studio/contracts/props";
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
 
-export interface ProbedElement {
+interface ProbedElement {
   tag: string;
   owners: ComponentOwner[];
   usedAt: SourceLoc | null;
@@ -18,7 +18,7 @@ interface RawProbe {
   usedAt: string | null;
 }
 
-export function appSourceBody(): string {
+function appSourceBody(): string {
   return `async (el) => {
     const fiberOf = (node) => { const key = Object.keys(node).find((k) => k.startsWith('__reactFiber$')); return key ? node[key] : null; };
     const stackOf = (f) => [f?._debugStack?.stack, f?.debugStack?.stack, f?.stack].find((v) => typeof v === 'string' && v.length > 0) || '';
@@ -46,7 +46,7 @@ export function appSourceBody(): string {
   }`;
 }
 
-export function ownerWalk(): string {
+function ownerWalk(): string {
   return `((el) => {
     const tags = new Set([0, 1, 11, 14, 15]);
     const nameOf = (type) => {
@@ -85,7 +85,7 @@ function probe(selector: string): string {
   })(${JSON.stringify(selector)})`;
 }
 
-export async function probeOwners(
+async function probeOwners(
   preview: PreviewService,
   url: string,
   selector: string
@@ -102,7 +102,7 @@ export async function probeOwners(
     : null;
 }
 
-export function parseLoc(raw: string | null): SourceLoc | null {
+function parseLoc(raw: string | null): SourceLoc | null {
   const match = raw ? /^(.+):(\d+):(\d+)$/.exec(raw) : null;
 
   return match
@@ -113,3 +113,7 @@ export function parseLoc(raw: string | null): SourceLoc | null {
       }
     : null;
 }
+
+export { appSourceBody, ownerWalk, probeOwners, parseLoc };
+
+export type { ProbedElement };

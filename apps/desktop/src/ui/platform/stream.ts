@@ -470,16 +470,14 @@ function startStream(): AppStream {
 
 let stream: AppStream | null = null;
 
-export function appStream(): AppStream {
+function appStream(): AppStream {
   stream ??= startStream();
   return stream;
 }
 
 const ACTION_DONE_EVENT = "action.done";
 
-export function subscribeActionDone(
-  listener: (data: string) => void
-): () => void {
+function subscribeActionDone(listener: (data: string) => void): () => void {
   if (typeof EventSource === "undefined") {
     return () => undefined;
   }
@@ -492,3 +490,5 @@ export function subscribeActionDone(
     source.close();
   };
 }
+
+export { appStream, subscribeActionDone };

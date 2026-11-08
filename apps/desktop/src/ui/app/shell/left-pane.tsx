@@ -51,7 +51,7 @@ const SHEET_TITLES: Partial<Record<PanelTab, string>> = {
   versions: "Versions",
 };
 
-export function visiblePane(
+function visiblePane(
   tab: PanelTab,
   has: {
     tokens: boolean;
@@ -161,7 +161,7 @@ const Sheet = (props: Props & { tab: PanelTab }) => {
   );
 };
 
-export const LeftPane = (props: Props) => {
+const LeftPane = (props: Props) => {
   const tab = visiblePane(props.tab, {
     comments: Boolean(props.comments),
     components: Boolean(props.components),
@@ -214,3 +214,5 @@ export const LeftPane = (props: Props) => {
     </aside>
   );
 };
+
+export { visiblePane, LeftPane };

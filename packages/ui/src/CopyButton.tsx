@@ -12,7 +12,7 @@ const reportCopy = async (
   report((await copied) ? "copied" : "failed");
 };
 
-export async function copyText(text: string): Promise<boolean> {
+async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
 
@@ -22,7 +22,7 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export const CopyButton = ({
+const CopyButton = ({
   text,
   label = "Copy",
   className = "",
@@ -71,3 +71,5 @@ export const CopyButton = ({
     </button>
   );
 };
+
+export { copyText, CopyButton };

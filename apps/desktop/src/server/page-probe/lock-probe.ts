@@ -4,7 +4,7 @@ import { APP_SOURCE_PATH } from "@design-studio/contracts/app";
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
 
-export interface LockProbe {
+interface LockProbe {
   found: boolean;
   key: string;
   tag: string;
@@ -91,7 +91,7 @@ const PROBE = String.raw`async (input) => {
   return { found: true, key: keyOf(element), tag: element.tagName.toLowerCase(), own, inside, page: location.pathname, resolved };
 }`;
 
-export function probeLock(
+function probeLock(
   preview: PreviewService,
   url: string,
   selector: string | null,
@@ -106,7 +106,7 @@ export function probeLock(
   );
 }
 
-export function lockDelta(
+function lockDelta(
   probe: LockProbe,
   locked: boolean
 ): { add: string[]; remove: string[] } {
@@ -117,7 +117,7 @@ export function lockDelta(
   return { add: [], remove: [...new Set([probe.key, ...probe.own])] };
 }
 
-export function applyDelta(
+function applyDelta(
   keys: string[],
   delta: { add: string[]; remove: string[] }
 ): string[] {
@@ -126,11 +126,7 @@ export function applyDelta(
   return [...keys.filter((key) => !remove.has(key)), ...delta.add];
 }
 
-export function lockOutcome(
-  probe: LockProbe,
-  locked: boolean,
-  count: number
-): string {
+function lockOutcome(probe: LockProbe, locked: boolean, count: number): string {
   const what = `${probe.tag} on ${probe.page}`;
 
   if (locked) {
@@ -156,7 +152,7 @@ function lockLabel(what: string): string {
     : what.replace(/^loc:/, "");
 }
 
-export function describeLocks(
+function describeLocks(
   keys: string[],
   resolved: Record<string, boolean> | null,
   page: string | null
@@ -182,3 +178,7 @@ export function describeLocks(
 
   return `${keys.length} locked layer${keys.length === 1 ? "" : "s"} (a click on the canvas passes through a locked layer and its children):\n${lines.join("\n")}`;
 }
+
+export { probeLock, lockDelta, applyDelta, lockOutcome, describeLocks };
+
+export type { LockProbe };

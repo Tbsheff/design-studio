@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { readStored, writeStored } from "./storage";
 
-export type PanelTab =
+type PanelTab =
   | "chat"
   | "design"
   | "tweaks"
@@ -12,7 +12,7 @@ export type PanelTab =
   | "versions"
   | "system";
 
-export const PANE_MODES: readonly PanelTab[] = ["chat", "design", "comments"];
+const PANE_MODES: readonly PanelTab[] = ["chat", "design", "comments"];
 
 const TABS: readonly PanelTab[] = [
   "chat",
@@ -55,7 +55,7 @@ function writeTab(projectId: string, tab: PanelTab): void {
   writeStored(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
 }
 
-export function usePanelTab(projectId: string, eligible: boolean) {
+function usePanelTab(projectId: string, eligible: boolean) {
   const chosen = useRef(readTab(projectId));
   const autoSwitched = useRef(false);
   const [tab, setTab] = useState<PanelTab>(chosen.current ?? "chat");
@@ -80,3 +80,7 @@ export function usePanelTab(projectId: string, eligible: boolean) {
 
   return { choose, show: choose, tab };
 }
+
+export { PANE_MODES, usePanelTab };
+
+export type { PanelTab };

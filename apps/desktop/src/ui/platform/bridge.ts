@@ -11,7 +11,7 @@ import type {
 } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
 
-export interface BridgeFrame {
+interface BridgeFrame {
   key: string;
   token: string;
   url: string;
@@ -29,15 +29,15 @@ const pending = new Map<string, ParentToBridge[]>();
 const listeners = new Set<(token: string, message: BridgeToParent) => void>();
 let helloInstalled = false;
 
-export const HTML_FRAME_SANDBOX = "allow-scripts allow-same-origin allow-forms";
+const HTML_FRAME_SANDBOX = "allow-scripts allow-same-origin allow-forms";
 
-export type ParentMessageBody = ParentToBridge extends infer M
+type ParentMessageBody = ParentToBridge extends infer M
   ? M extends ParentToBridge
     ? Omit<M, "ns" | "token">
     : never
   : never;
 
-export interface PreviewPort {
+interface PreviewPort {
   post: (body: ParentMessageBody) => void;
   refreshRects: () => void;
   listen?: (handler: (message: BridgeToParent) => void) => () => void;
@@ -55,7 +55,7 @@ function frameOrigin(frame: Pick<BridgeFrame, "url">): string {
   return urlOrigin(frame.url);
 }
 
-export function tagFrame(
+function tagFrame(
   element: HTMLIFrameElement | null,
   token: string
 ): HTMLIFrameElement | null {
@@ -64,14 +64,11 @@ export function tagFrame(
   return element;
 }
 
-export function frameTokenOf(element: HTMLIFrameElement): string | null {
+function frameTokenOf(element: HTMLIFrameElement): string | null {
   return element.getAttribute(FRAME_TOKEN_ATTR);
 }
 
-export function frameSrc(
-  previewUrl: string,
-  extra?: Record<string, string>
-): string {
+function frameSrc(previewUrl: string, extra?: Record<string, string>): string {
   const url = new URL(previewUrl, globalThis.location.href);
   url.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, globalThis.location.origin);
 
@@ -84,7 +81,7 @@ export function frameSrc(
   return url.toString();
 }
 
-export function postToFrame(frame: BridgeFrame, body: ParentMessageBody): void {
+function postToFrame(frame: BridgeFrame, body: ParentMessageBody): void {
   const win = frame.element?.contentWindow;
 
   if (!win) {
@@ -230,7 +227,7 @@ function isCloudBlocked(frame: BridgeFrame, message: BridgeToParent): boolean {
   );
 }
 
-export function useBridge(
+function useBridge(
   getFrames: () => BridgeFrame[],
   onMessage: (frame: BridgeFrame, message: BridgeToParent) => void
 ): void {
@@ -259,3 +256,14 @@ export function useBridge(
     };
   }, []);
 }
+
+export {
+  HTML_FRAME_SANDBOX,
+  tagFrame,
+  frameTokenOf,
+  frameSrc,
+  postToFrame,
+  useBridge,
+};
+
+export type { BridgeFrame, ParentMessageBody, PreviewPort };

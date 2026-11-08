@@ -13,7 +13,7 @@ const SCRIPT = /\.(tsx|jsx|ts|js|mjs|cjs)$/;
 const FILES_MAX = 2000;
 const shownFiles = new Map<string, Map<string, Set<string>>>();
 
-export function noteShownFiles(scope: string, files: Iterable<string>): void {
+function noteShownFiles(scope: string, files: Iterable<string>): void {
   let byBase = shownFiles.get(scope);
 
   if (!byBase || byBase.size > FILES_MAX) {
@@ -124,7 +124,7 @@ async function colOnLine(
   );
 }
 
-export async function resolveSourceLoc(
+async function resolveSourceLoc(
   workTree: string,
   scope: string,
   raw: string
@@ -152,3 +152,5 @@ export async function resolveSourceLoc(
 
   return { col: await colOnLine(workTree, file, line, raw), file, line };
 }
+
+export { noteShownFiles, resolveSourceLoc };

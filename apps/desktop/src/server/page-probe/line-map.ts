@@ -1,4 +1,4 @@
-export interface LineMap {
+interface LineMap {
   line(oldLine: number): number | null;
   col(oldLine: number, oldCol: number): number;
 }
@@ -253,7 +253,7 @@ function shiftedCol(oldText: string, newText: string, col: number): number {
   return col;
 }
 
-export function lineMapOf(before: string, after: string): LineMap {
+function lineMapOf(before: string, after: string): LineMap {
   const oldLines = before.split("\n");
   const newLines = after.split("\n");
   const mapping = lineMapping(oldLines, newLines);
@@ -280,3 +280,7 @@ export function lineMapOf(before: string, after: string): LineMap {
     },
   };
 }
+
+export { lineMapOf };
+
+export type { LineMap };

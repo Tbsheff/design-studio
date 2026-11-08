@@ -99,7 +99,7 @@ const PATHS = {
   wrap: "M2.5 4.5h9a2.25 2.25 0 0 1 0 4.5H6.5M8.5 7l-2 2 2 2M2.5 12.5h3",
 } as const;
 
-export type IconName = keyof typeof PATHS;
+type IconName = keyof typeof PATHS;
 
 const IconView = ({
   name,
@@ -127,4 +127,8 @@ const IconView = ({
   </svg>
 );
 
-export const Icon = memo(IconView);
+const Icon = memo(IconView);
+
+export { Icon };
+
+export type { IconName };

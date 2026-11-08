@@ -12,7 +12,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
 import { placeFixed } from "./popover-placement.js";
 
-export interface UiSelectOption<V extends string = string> {
+interface UiSelectOption<V extends string = string> {
   value: V;
   label: string;
   disabled?: boolean;
@@ -143,7 +143,7 @@ function openKey(key: string): boolean {
   );
 }
 
-export const UiSelect = <V extends string>(p: Props<V>) => {
+const UiSelect = <V extends string>(p: Props<V>) => {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN);
@@ -358,4 +358,8 @@ export const UiSelect = <V extends string>(p: Props<V>) => {
   );
 };
 
-export type UiSelectProps<V extends string> = Props<V>;
+type UiSelectProps<V extends string> = Props<V>;
+
+export { UiSelect };
+
+export type { UiSelectOption, UiSelectProps };

@@ -7,7 +7,7 @@ function modalDialogOwnsEscape(popover: HTMLElement | null): boolean {
   return modal !== null && popover !== null && !modal.contains(popover);
 }
 
-export function usePopover(
+function usePopover(
   open: boolean,
   root: RefObject<HTMLElement | null>,
   onClose: (refocus: boolean) => void,
@@ -61,7 +61,7 @@ function firstFocusable(root: Element | null): HTMLElement | null {
   return root?.querySelector<HTMLElement>(FOCUSABLE) ?? null;
 }
 
-export function useReturnFocusOnUnmount(): void {
+function useReturnFocusOnUnmount(): void {
   useLayoutEffect(() => {
     const opener =
       document.activeElement instanceof HTMLElement
@@ -76,7 +76,7 @@ export function useReturnFocusOnUnmount(): void {
   }, []);
 }
 
-export function useModalDialog(onDismiss: () => boolean | void) {
+function useModalDialog(onDismiss: () => boolean | void) {
   const ref = useRef<HTMLDialogElement>(null);
   const dismiss = useRef(onDismiss);
   dismiss.current = onDismiss;
@@ -151,3 +151,5 @@ export function useModalDialog(onDismiss: () => boolean | void) {
 
   return { onMouseDown: onBackdropMouseDown, ref };
 }
+
+export { usePopover, useReturnFocusOnUnmount, useModalDialog };

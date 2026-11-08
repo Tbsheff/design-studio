@@ -29,11 +29,6 @@ import {
   SET_FRAME_STATE_TOOL,
 } from "./legacy/canvas.js";
 import {
-  COMPARE_REFERENCE_TOOL,
-  LIST_COMMENTS_TOOL,
-  RESOLVE_COMMENT_TOOL,
-} from "./legacy/comments.js";
-import {
   ARRANGE_TOOL,
   CLEAR_TEXT_TOOL,
   COMPONENT_PREVIEW_TOOL,
@@ -56,7 +51,6 @@ import {
 import { EXPORT_FRAME_TOOL } from "./legacy/export.js";
 import { DESIGN_SYSTEM_CHECK_TOOL } from "./legacy/packs.js";
 import { STUDIO_HELP_TOOL } from "./legacy/studio.js";
-import { DIFF_VERSIONS_TOOL } from "./legacy/versions.js";
 
 export {
   ADD_FLOW_TOOL,
@@ -70,8 +64,6 @@ export {
   SET_FRAME_SESSION_TOOL,
   SET_FRAME_STATE_TOOL,
 } from "./legacy/canvas.js";
-
-export { LIST_COMMENTS_TOOL, RESOLVE_COMMENT_TOOL } from "./legacy/comments.js";
 
 export {
   ARRANGE_TOOL,
@@ -99,8 +91,6 @@ export { EXPORT_FRAME_TOOL } from "./legacy/export.js";
 export { DESIGN_SYSTEM_CHECK_TOOL } from "./legacy/packs.js";
 
 export { STUDIO_HELP_TOOL } from "./legacy/studio.js";
-
-export { DIFF_VERSIONS_TOOL } from "./legacy/versions.js";
 
 export {
   GENERATED_TOKENS_MESSAGE,
@@ -254,16 +244,12 @@ const NO_CHANGE_TOOLS = new Set([
   REVIEW_FRAME_TOOL,
   LIST_COMPONENTS_TOOL,
   GET_LAYERS_TOOL,
-  LIST_COMMENTS_TOOL,
-  RESOLVE_COMMENT_TOOL,
   LIST_ROUTE_LINKS_TOOL,
   ADD_FLOW_TOOL,
   COMPONENT_PREVIEW_TOOL,
   SELECT_MATCHING_TOOL,
-  DIFF_VERSIONS_TOOL,
   EXPORT_FRAME_TOOL,
   LIST_LOCKS_MCP,
-  COMPARE_REFERENCE_TOOL,
 ]);
 
 export function canChangePreview(toolName: string): boolean {

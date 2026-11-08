@@ -37,7 +37,13 @@ const StatusFieldSchema = Schema.NullOr(CommentFilterSchema)
 
 const listComment = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_comments",
+    set: "core",
+    short:
+      "Read only. Comments pinned on this direction: number, author, text, element, frame, status.",
+  },
   confirm: "none",
   description:
     "List the comments pinned on a direction, from you, other outside agents and the user, with the same server code as the studio Comments pane: number, author, text, replies, element (selector, source file:line, component), frame, id and status. Read only. Use reply_comment and resolve_comment with the id. Listing comments never sends them to the studio agent.",

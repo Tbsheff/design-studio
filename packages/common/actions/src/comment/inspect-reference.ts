@@ -40,7 +40,13 @@ const LimitFieldSchema = Schema.Int.check(
 
 const inspectReferenceComment = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "compare_to_reference",
+    set: "core",
+    short:
+      "Score a frame against the reference picture the user attached (0-100) and get a diff image. Changes nothing.",
+  },
   confirm: "none",
   description:
     "Compare a canvas frame with a reference picture (PNG, JPEG, GIF or WebP). Returns a match score from 0 to 100 (content 20%, edges 80%), the 3x3 areas that differ most and the path of a side-by-side diff PNG. A score under 80 means the frame does not match yet. Read only; changes no project file.",

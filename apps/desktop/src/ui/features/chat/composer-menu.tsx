@@ -49,7 +49,7 @@ import {
 } from "./run-settings.js";
 import { MODEL_OPTIONS } from "./settings-draft-model.js";
 import { effectiveModel, shortModel } from "./slash-groups.js";
-import { StableText, toStableSizes } from "./stable-text.js";
+import { StableText } from "./stable-text.js";
 import { usePresence } from "./use-presence.js";
 
 const MenuSection = ({
@@ -308,7 +308,12 @@ const LevelPill = ({
       >
         <span className="ui-pill-select-label">{copy.level}</span>
         <span className="ui-pill-select-value">
-          <StableText sizes={toStableSizes(RUN_LEVELS.map(levelLabel))}>
+          <StableText
+            sizes={RUN_LEVELS.map((runLevel) => ({
+              key: levelLabel(runLevel),
+              node: levelLabel(runLevel),
+            }))}
+          >
             {levelLabel(level)}
           </StableText>
         </span>

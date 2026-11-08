@@ -5,9 +5,6 @@ interface StableSize {
   readonly node: ReactNode;
 }
 
-const toStableSizes = (labels: readonly string[]): StableSize[] =>
-  labels.map((label) => ({ key: label, node: label }));
-
 const StableText = ({
   children,
   sizes,
@@ -25,6 +22,6 @@ const StableText = ({
   </span>
 );
 
-export { StableText, toStableSizes };
+export { StableText };
 
 export type { StableSize };

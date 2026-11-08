@@ -67,4 +67,10 @@ const feedShown = (mcp: McpFeedControl | null): boolean => {
   return mcp.activity.length > 0 || mcp.approvals.length > 0;
 };
 
-export { feedShown, timelineOf };
+const isChatEmpty = (
+  runCount: number,
+  pending: RunView | null,
+  mcp: McpFeedControl | null
+): boolean => runCount === 0 && !pending && !feedShown(mcp);
+
+export { feedShown, isChatEmpty, timelineOf };

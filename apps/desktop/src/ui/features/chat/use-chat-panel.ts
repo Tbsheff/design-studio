@@ -7,7 +7,7 @@ import {
   useState,
   startTransition,
 } from "react";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import { useLive } from "../../platform/live-store.js";
 import {
@@ -166,4 +166,37 @@ const useTurnActions = (
   return { actions, titles };
 };
 
-export { useLatest, usePolish, useRunSearch, useTurnActions };
+const FOUND_MS = 1600;
+
+interface ScrollToRunOptions {
+  runId: string | null;
+  isShown: boolean;
+  viewportRef: RefObject<HTMLElement | null>;
+  wasAtBottomRef: RefObject<boolean>;
+  onDone: () => void;
+}
+
+const useScrollToRun = (options: ScrollToRunOptions): void => {
+  const { runId, isShown, viewportRef, wasAtBottomRef, onDone } = options;
+  useEffect(() => {
+    if (!runId || !isShown) {
+      return;
+    }
+
+    const el = viewportRef.current?.querySelector<HTMLElement>(
+      `[data-run-id="${CSS.escape(runId)}"]`
+    );
+
+    if (!el) {
+      return;
+    }
+
+    wasAtBottomRef.current = false;
+    el.scrollIntoView({ block: "start" });
+    el.dataset.found = "";
+    globalThis.setTimeout(() => delete el.dataset.found, FOUND_MS);
+    onDone();
+  }, [runId, isShown, onDone, viewportRef, wasAtBottomRef]);
+};
+
+export { useLatest, usePolish, useRunSearch, useScrollToRun, useTurnActions };

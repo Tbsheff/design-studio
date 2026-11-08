@@ -106,8 +106,11 @@ const useHistoryRecall = (
 
 const useComposerKeys = (options: Options): UseComposerKeysResult => {
   const { draft, setDraft, running } = options;
+
   const queue = options.queue ?? NONE;
+
   const history = options.history ?? NO_HISTORY;
+
   const { historyKey, resetHistory } = useHistoryRecall(
     history,
     draft,

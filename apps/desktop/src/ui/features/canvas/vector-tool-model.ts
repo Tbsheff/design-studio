@@ -40,17 +40,17 @@ const emit = (next: Partial<State>): void => {
 };
 
 const vectorTool = {
-  get: () => state,
-  set: (tool: VectorToolId | null) => {
+  get: (): State => state,
+  set: (tool: VectorToolId | null): void => {
     let tool2: VectorToolId | null = null;
 
     if (state.available) {
       tool2 = tool;
     }
 
-    return emit({ tool: tool2 });
+    emit({ tool: tool2 });
   },
-  setAvailable: (available: boolean) => {
+  setAvailable: (available: boolean): void => {
     if (available !== state.available) {
       emit({ available });
     }
@@ -60,14 +60,14 @@ const vectorTool = {
 
     return (): boolean => listeners.delete(listener);
   },
-  toggle: (tool: VectorToolId) => {
+  toggle: (tool: VectorToolId): void => {
     let tool3: VectorToolId | null = null;
 
     if (state.available && state.tool !== tool) {
       tool3 = tool;
     }
 
-    return emit({ tool: tool3 });
+    emit({ tool: tool3 });
   },
 };
 
@@ -102,8 +102,11 @@ const VECTOR_TOOL_LIST: {
 ];
 
 const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({
-  ...item,
+  glyph: item.glyph,
+  id: item.id,
+  keyId: item.keyId,
   keyLabel: shortcutLabel(item.keyId, IS_MAC),
+  label: item.label,
 }));
 
 const useVectorToolKeys = (available: boolean): void => {

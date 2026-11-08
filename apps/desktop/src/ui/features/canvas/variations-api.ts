@@ -19,21 +19,36 @@ const post = <Item>(path: string, body: JsonBody = {}): Promise<Item> =>
 const base = (pid: string): string =>
   `/api/projects/${encodeURIComponent(pid)}/variations`;
 
+interface KeptVariation {
+  versionId: string;
+  directionId: string;
+  label: string;
+}
+
 const variationsApi = {
-  briefs: (pid: string, req: VariationBriefsRequest) =>
+  briefs: (
+    pid: string,
+    req: VariationBriefsRequest
+  ): Promise<VariationBriefsResult> =>
     post<VariationBriefsResult>(`${base(pid)}/briefs`, { ...req }),
-  cancel: (pid: string, groupId: string) =>
+  cancel: (pid: string, groupId: string): Promise<{ canceled: string[] }> =>
     post<{ canceled: string[] }>(
       `${base(pid)}/${encodeURIComponent(groupId)}/cancel`
     ),
-  keep: (pid: string, groupId: string, directionId: string) =>
-    post<{ versionId: string; directionId: string; label: string }>(
-      `${base(pid)}/${encodeURIComponent(groupId)}/keep`,
-      { directionId }
-    ),
-  mix: (pid: string, req: VariationMixRequest) =>
+  keep: (
+    pid: string,
+    groupId: string,
+    directionId: string
+  ): Promise<KeptVariation> =>
+    post<KeptVariation>(`${base(pid)}/${encodeURIComponent(groupId)}/keep`, {
+      directionId,
+    }),
+  mix: (pid: string, req: VariationMixRequest): Promise<{ runId: string }> =>
     post<{ runId: string }>(`${base(pid)}/mix`, { ...req }),
-  start: (pid: string, req: VariationStartRequest) =>
+  start: (
+    pid: string,
+    req: VariationStartRequest
+  ): Promise<VariationStartResult> =>
     post<VariationStartResult>(base(pid), { ...req }),
 };
 
@@ -55,7 +70,7 @@ const groupOf = (
 
   return project.directions
     .filter((direction) => direction.variation?.groupId === groupId)
-    .sort(
+    .toSorted(
       (directionValue, direction3) =>
         (directionValue.variation?.index ?? 0) -
         (direction3.variation?.index ?? 0)
@@ -63,3 +78,5 @@ const groupOf = (
 };
 
 export { groupOf, maxVariationsFor, variationsApi };
+
+export type { KeptVariation };

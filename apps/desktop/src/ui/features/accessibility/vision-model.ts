@@ -26,6 +26,8 @@ const VISION_KINDS: readonly VisionKind[] = [
 
 const CHECKS_MARK = "checks/";
 
+const DEFAULT_FRAME_ID = "f1";
+
 const toggleKind = (
   kinds: readonly VisionKind[],
   kind: VisionKind
@@ -51,6 +53,10 @@ const toFrameId = (
   frames: readonly CanvasFrameRef[],
   directionId: string
 ): string | null => {
+  if (frames.length === 0) {
+    return DEFAULT_FRAME_ID;
+  }
+
   const mine = frames.filter(
     (frame) => (frame.directionId ?? directionId) === directionId
   );

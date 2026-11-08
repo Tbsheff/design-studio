@@ -27,6 +27,7 @@ import { PatternStatus } from "../pattern/errors/status.js";
 import { PropStatus } from "../prop/errors/status.js";
 import { PublishStatus } from "../publish/errors/status.js";
 import { ScenarioStatus } from "../scenario/errors/status.js";
+import { ScreenStatus } from "../screen/errors/status.js";
 import { SpacingStatus } from "../spacing/errors/status.js";
 import { StackingStatus } from "../stacking/errors/status.js";
 import { StateStyleStatus } from "../state-style/errors/status.js";
@@ -70,6 +71,7 @@ const HTTP_STATUS = {
   ...PropStatus,
   ...PublishStatus,
   ...ScenarioStatus,
+  ...ScreenStatus,
   ...SpacingStatus,
   ...StackingStatus,
   ...StateStyleStatus,

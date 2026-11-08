@@ -36,6 +36,7 @@ import { PropLive } from "./prop/live.js";
 import { PublishLive } from "./publish/live.js";
 import { RunLive } from "./run/live.js";
 import { ScenarioLive } from "./scenario/live.js";
+import { ScreenLive } from "./screen/live.js";
 import { SessionLive } from "./session/live.js";
 import { ShareLive } from "./share/live.js";
 import { ShipLive } from "./ship/live.js";
@@ -90,6 +91,7 @@ const ALL_LIVE = {
   publish: PublishLive,
   run: RunLive,
   scenario: ScenarioLive,
+  screen: ScreenLive,
   session: SessionLive,
   share: ShareLive,
   ship: ShipLive,

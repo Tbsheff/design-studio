@@ -36,6 +36,7 @@ import { PropActions } from "./prop/index.js";
 import { PublishActions } from "./publish/index.js";
 import { RunActions } from "./run/index.js";
 import { ScenarioActions } from "./scenario/index.js";
+import { ScreenActions } from "./screen/index.js";
 import { SessionActions } from "./session/index.js";
 import { ShareActions } from "./share/index.js";
 import { ShipActions } from "./ship/index.js";
@@ -90,6 +91,7 @@ const ALL_ACTIONS = {
   publish: PublishActions,
   run: RunActions,
   scenario: ScenarioActions,
+  screen: ScreenActions,
   session: SessionActions,
   share: ShareActions,
   ship: ShipActions,

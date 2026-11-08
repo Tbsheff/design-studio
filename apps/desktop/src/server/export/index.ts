@@ -17,3 +17,7 @@ export type {
 } from "./fixture/index.js";
 
 export { FlowVideoStore, FlowVideoWriter } from "./flow-video/index.js";
+
+export { ScreenWriter } from "./screen/index.js";
+
+export type { ScreenWriterApi } from "./screen/index.js";

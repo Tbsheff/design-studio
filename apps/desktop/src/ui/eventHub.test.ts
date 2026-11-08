@@ -12,6 +12,13 @@ const FILES_ARG_7 = 7;
 const SAMPLE_3 = 3;
 const SAMPLE_4 = 4;
 
+interface FilesChanged {
+  readonly projectId: string;
+  readonly seq: number;
+  readonly ts: number;
+  readonly type: "files.changed";
+}
+
 const IS_FALSE = false;
 const IS_TRUE = true;
 
@@ -93,11 +100,11 @@ const setup = (): HubSetup => {
   return { flushDeferred, hub, sources, timers };
 };
 
-const files = (seq: number) => {
+const files = (seq: number): FilesChanged => {
   const projectId = "p1";
   const ts = seq;
 
-  return { projectId, seq, ts, type: "files.changed" } as const;
+  return { projectId, seq, ts, type: "files.changed" };
 };
 
 describe("event hub", () => {

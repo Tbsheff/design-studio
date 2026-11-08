@@ -12,38 +12,66 @@ import {
   stepToast,
 } from "./features/inspector/use-edit-history";
 
+const xAxis = "x";
+const yAxis = "y";
+
 const IS_FALSE = false;
 const IS_TRUE = true;
 
-function key(
+const [NO_VERSION] = Array.from<Version>({ length: 1 });
+
+const [NO_REDO] = Array.from<NonNullable<ShortcutState["redo"]>>({
+  length: 1,
+});
+
+const key = (
   over: Partial<KeyboardEvent>
-): Pick<KeyboardEvent, "metaKey" | "ctrlKey" | "shiftKey" | "altKey" | "key"> {
-  return {
-    altKey: false,
-    ctrlKey: false,
-    key: "z",
-    metaKey: false,
-    shiftKey: false,
-    ...over,
-  };
-}
+): Pick<
+  KeyboardEvent,
+  "metaKey" | "ctrlKey" | "shiftKey" | "altKey" | "key"
+> => ({
+  altKey: false,
+  ctrlKey: false,
+  key: "z",
+  metaKey: false,
+  shiftKey: false,
+  ...over,
+});
 
 interface ShortcutRun {
   calls: string[];
   state: ShortcutState;
 }
 
-function shortcut(withRedo: boolean, enabled = true): ShortcutRun {
+const shortcut = (withRedo: boolean, enabled = true): ShortcutRun => {
   const calls: string[] = [];
+  const onUndo = (): number => calls.push("undo");
+  const onRedo = (): number => calls.push("redo");
 
-  const state: ShortcutState = {
-    enabled,
-    onUndo: () => calls.push("undo"),
-    redo: withRedo ? { enabled, onRedo: () => calls.push("redo") } : undefined,
-  };
+  if (withRedo) {
+    return { calls, state: { enabled, onUndo, redo: { enabled, onRedo } } };
+  }
 
-  return { calls, state };
-}
+  return { calls, state: { enabled, onUndo, redo: NO_REDO } };
+};
+
+const version = (title: string, kind: Version["meta"]["kind"]): Version =>
+  ({ meta: { kind }, title }) as Version;
+
+const toSelection = (
+  path: string,
+  selectionStyles: Record<string, string>,
+  selectionText: string
+): SelectionContext => ({
+  ancestors: [],
+  outerHTML: "",
+  rect: { height: 0, width: 0, [xAxis]: 0, [yAxis]: 0 },
+  selector: path,
+  source: null,
+  styles: selectionStyles,
+  tag: path,
+  text: selectionText,
+});
 
 describe("history shortcut routing", () => {
   it("reads Cmd+Z as undo and Shift+Cmd+Z as redo", () => {
@@ -100,9 +128,6 @@ describe("edit history helpers", () => {
   it("knows a history step version so a later Cmd+Z does not version-undo it", () => {
     expect.hasAssertions();
 
-    const version = (title: string, kind: Version["meta"]["kind"]): Version =>
-      ({ meta: { kind }, title }) as Version;
-
     expect(isHistoryStep(version("Undo: Edit h1: color", "manual"))).toBe(
       IS_TRUE
     );
@@ -113,27 +138,15 @@ describe("edit history helpers", () => {
     expect(isHistoryStep(version("Undo: Edit h1: color", "undo"))).toBe(
       IS_FALSE
     );
-    expect(isHistoryStep(undefined)).toBe(IS_FALSE);
+    expect(isHistoryStep(NO_VERSION)).toBe(IS_FALSE);
   }, 0);
 
   it("refreshes styles and text of the selected elements from the preview", () => {
     expect.hasAssertions();
 
-    const base = {
-      selector: "h1",
-      source: null,
-      styles: { color: "red" },
-      tag: "h1",
-      text: "New",
-    } as unknown as SelectionContext;
-
-    const other = { ...base, selector: "p" } as SelectionContext;
-
-    const fresh = {
-      ...base,
-      styles: { color: "blue" },
-      text: "Old",
-    } as unknown as SelectionContext;
+    const base = toSelection("h1", { color: "red" }, "New");
+    const other = { ...base, selector: "p" };
+    const fresh = toSelection("h1", { color: "blue" }, "Old");
 
     const next = refreshedSelection([base, other], ["h1", "p"], [fresh, null]);
     expect(next[0]).toMatchObject({

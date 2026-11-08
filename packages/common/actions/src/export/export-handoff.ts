@@ -9,7 +9,13 @@ import { ExportFramesSchema, HandoffFolderResultSchema } from "./schema.js";
 
 const exportHandoffExport = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "export_handoff_export",
+    set: "core",
+    short:
+      "Write a handoff folder for a coding agent from a saved version. Changes no design file. Only when the user asks for a handoff.",
+  },
   confirm: "none",
   description:
     "Write a handoff folder for a coding agent from a saved version: source files, frame pictures, inlined HTML, decisions and a HANDOFF.md prompt. Returns the folder path, the file list and the prompt. Changes no design file.",
@@ -22,7 +28,7 @@ const exportHandoffExport = defineAction({
     versionId: VersionIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "export_handoff_export" },
   needs: "project.read",
   output: HandoffFolderResultSchema,
   scope: "project",

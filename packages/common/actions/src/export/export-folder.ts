@@ -55,7 +55,7 @@ const VersionFieldSchema = VersionIdSchema.annotate({
 
 const exportFolderExport = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "secret" },
   confirm: "user",
   description:
     "Export a version as PNG, HTML, PDF, a handoff zip or a source zip and write the files to a folder. Returns the file paths. Default folder: the Design Studio data folder, exports/<projectId>. The user approves each export in Design Studio.",

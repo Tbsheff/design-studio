@@ -9,7 +9,13 @@ import { ShareIdSchema, ShareLinkResultSchema } from "./schema.js";
 
 const updateShare = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "update_share",
+    set: "core",
+    short:
+      "Turn the studio cursor on or off for one live share link. Viewers of the link see your cursor when it is on.",
+  },
   confirm: "none",
   description:
     "Turn the studio cursor on or off for one active live share link. When it is on, viewers of the link see your cursor on the shared frames.",
@@ -22,7 +28,7 @@ const updateShare = defineAction({
     studioCursor: Schema.Boolean,
   }),
   invalidates: ["share.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "update_share" },
   needs: "project.update",
   output: ShareLinkResultSchema,
   scope: "project",

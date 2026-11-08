@@ -10,7 +10,7 @@ import { DeletedSchema, PublicationTargetFields } from "./schema.js";
 
 const deleteCommentPublish = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "secret" },
   confirm: "none",
   description:
     "Delete one viewer comment of a publication. Only the owner of the publication can delete a comment. A publication on an old per-design Worker has no comments.",
@@ -25,7 +25,7 @@ const deleteCommentPublish = defineAction({
     commentId: CommentIdSchema,
   }),
   invalidates: ["publish.listComments", "publish.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "delete_comment_publish" },
   needs: "comment.delete",
   output: DeletedSchema,
   scope: "project",

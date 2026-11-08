@@ -5,7 +5,7 @@ import { ShareServerResultSchema } from "./schema.js";
 
 const setLanShare = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "secret" },
   confirm: "none",
   description:
     "Turn Allow on local network on or off for the share listener. When it is on, other devices on your network can open share links too.",
@@ -16,7 +16,7 @@ const setLanShare = defineAction({
     isOn: Schema.Boolean,
   }),
   invalidates: ["share.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_lan_share" },
   needs: "project.update",
   output: ShareServerResultSchema,
   scope: "device",

@@ -29,8 +29,9 @@ export {
   saveDeferred,
 } from "./publish.js";
 
+export { ARRANGE_TARGETS_MAX } from "./arrange-request.js";
+
 export {
-  ARRANGE_TARGETS_MAX,
   DEFAULT_ARRANGE_VIEWPORT,
   measureTargets,
   planArrange,

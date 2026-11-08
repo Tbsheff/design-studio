@@ -15,8 +15,6 @@ import {
   type PlannedArrangeWrite,
 } from "../../../shared/arrange-plan.js";
 import {
-  ALIGN_OPS,
-  DISTRIBUTE_OPS,
   arrangeLabel,
   type ArrangeMode,
   type ArrangeRequest,
@@ -27,7 +25,6 @@ import {
 import { measureRects } from "../../../shared/measure.js";
 import type { PreviewService } from "../../../shared/server-ports.js";
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
 import { withPagePath } from "../../project-source/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { htmlClassInfo } from "../engine/html.js";
@@ -40,6 +37,7 @@ import {
   probeRects,
   type ProbedSource,
 } from "./arrange-probe.js";
+import { decodeArrangeRequest, toArrangeIssue } from "./arrange-request.js";
 import { writeAndCommitAll, type WrittenFile } from "./batch.js";
 import {
   chooseEditSite,
@@ -49,43 +47,20 @@ import {
 import { patchSource, resolveSource, themeForFile } from "./edit-source.js";
 import { assertCanEdit, publishVersion } from "./publish.js";
 
-export const ARRANGE_TARGETS_MAX = 50;
 export const DEFAULT_ARRANGE_VIEWPORT = { width: 1440, height: 900 };
 
 type Viewport = { width: number; height: number };
 
-const viewportSchema = z
-  .object({
-    width: z.number().int().min(100).max(10_000),
-    height: z.number().int().min(100).max(20_000),
-  })
-  .strict();
-const actionSchema = z.union([
-  z.object({ align: z.enum(ALIGN_OPS) }).strict(),
-  z.object({ distribute: z.enum(DISTRIBUTE_OPS) }).strict(),
-  z.object({ tidy: z.literal(true) }).strict(),
-]);
-const requestSchema = z
-  .object({
-    targets: z
-      .array(z.object({ selector: z.string().trim().min(1).max(2000) }).strip())
-      .min(1)
-      .max(ARRANGE_TARGETS_MAX),
-    action: actionSchema,
-    path: z.string().trim().max(300).optional(),
-    viewport: viewportSchema.optional(),
-  })
-  .strict();
-
 export function parseArrangeRequest(raw: unknown): ArrangeRequest {
-  const parsed = requestSchema.safeParse(raw);
-  if (parsed.success) return parsed.data;
-  const issue = parsed.error.issues[0];
+  const parsed = decodeArrangeRequest(raw);
+
+  if (parsed._tag === "Success") {
+    return parsed.success as ArrangeRequest;
+  }
+
   throw new DirectEditError(
     "invalid_request",
-    issue
-      ? `arrange.${issue.path.join(".")}: ${issue.message}`
-      : "arrange is not valid"
+    `arrange: ${toArrangeIssue(parsed)}`
   );
 }
 

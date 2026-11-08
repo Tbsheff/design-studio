@@ -37,9 +37,8 @@ import {
   type DirectEditDeps,
   type EditFileChange,
 } from "../direct-edit/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { applyEdits, type CssEdit } from "./css-vars.js";
-import { describeZodError } from "./schema.js";
+import { toCommitValues } from "./schema.js";
 import {
   declarationsFor,
   loadStyleSources,
@@ -51,15 +50,6 @@ import {
   serializeTweaks,
   tokenVarPaths,
 } from "./store.js";
-
-const requestSchema = z
-  .object({
-    values: z.record(
-      z.string(),
-      z.union([z.number(), z.string(), z.boolean()])
-    ),
-  })
-  .strict();
 
 const TITLE_LABELS = 4;
 
@@ -97,23 +87,20 @@ function commitMeta(values: PlannedValue[]): VersionMeta {
 }
 
 function parseRequest(raw: unknown): Record<string, TweakValue> {
-  const parsed = requestSchema.safeParse(raw);
+  const parsed = toCommitValues(raw);
 
-  if (!parsed.success) {
-    throw new DirectEditError(
-      "invalid_request",
-      describeZodError(parsed.error)
-    );
+  if (parsed.values === null) {
+    throw new DirectEditError("invalid_request", parsed.error);
   }
 
-  if (Object.keys(parsed.data.values).length === 0) {
+  if (Object.keys(parsed.values).length === 0) {
     throw new DirectEditError(
       "invalid_request",
       "values must name at least one control"
     );
   }
 
-  return parsed.data.values;
+  return parsed.values;
 }
 
 function planValues(

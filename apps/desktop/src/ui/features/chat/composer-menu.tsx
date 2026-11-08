@@ -1,7 +1,6 @@
 import { RUN_LEVELS } from "@design-studio/contracts";
 import type { RunLevel } from "@design-studio/contracts";
 import { Icon, usePopover } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 import {
   useEffect,
   useId,
@@ -42,11 +41,6 @@ import {
   placeAboveOrBelow,
   MODE_LABEL,
   EffortToggle,
-} from "./run-settings.js";
-import type {
-  DesignsSetting,
-  ComposerMode,
-  EffortSetting,
 } from "./run-settings.js";
 import { MODEL_OPTIONS } from "./settings-draft-model.js";
 import { effectiveModel, shortModel } from "./slash-groups.js";

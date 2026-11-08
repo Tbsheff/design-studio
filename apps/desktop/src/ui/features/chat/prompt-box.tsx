@@ -10,9 +10,8 @@ import type {
   SelectionContext,
 } from "@design-studio/contracts";
 import { elementVariantsIntent } from "@design-studio/contracts/element-variants";
-import { Disclosure, Icon, type IconName } from "@design-studio/ui";
+import { Disclosure, Icon } from "@design-studio/ui";
 import {
-  lazy,
   Suspense,
   useId,
   useRef,

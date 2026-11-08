@@ -1,5 +1,4 @@
 import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 import { useEffect, useRef, useId, useLayoutEffect, useState } from "react";
 import type {
   CSSProperties,

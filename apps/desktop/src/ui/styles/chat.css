@@ -698,7 +698,13 @@
 }
 
 .msg-confirm {
+  position: static;
   display: grid;
+  width: auto;
+  height: auto;
+  margin: 0;
+  border: 0;
+  color: inherit;
   gap: var(--s-2);
   align-self: flex-end;
   max-width: 92%;

@@ -1,11 +1,11 @@
 import { memo, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { UserTurn } from "./chat-rewind.js";
 import type { PolishProps, TurnProps } from "./chat-turn-model.js";
 import { RunBody } from "./run-body.js";
 import type { RunView } from "./run-state-model.js";
 import { useRunEntry } from "./use-run-entry.js";
+import { UserTurn } from "./user-turn.js";
 
 interface EntryProps extends TurnProps {
   run: RunView;

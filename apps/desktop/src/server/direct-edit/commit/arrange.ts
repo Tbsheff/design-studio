@@ -26,8 +26,8 @@ import {
 } from "../../../shared/arrange.js";
 import { measureRects } from "../../../shared/measure.js";
 import type { PreviewService } from "../../../shared/server-ports.js";
-import { withPagePath } from "../../export/source.js";
 import { z } from "../../platform/zod-bridge/index.js";
+import { withPagePath } from "../../project-source/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { htmlClassInfo } from "../engine/html.js";
 import { jsxClassInfo } from "../engine/jsx.js";

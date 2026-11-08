@@ -307,6 +307,7 @@ const exportErrors = async (scan: ContextScan): Promise<string[]> => {
 };
 
 interface ListSpec {
+  base: string;
   suffix: string;
   file: string;
   constName: string;
@@ -316,7 +317,7 @@ const globalList = (contexts: string[], spec: ListSpec): string =>
   lines(
     ...contexts.map(
       (ctx) =>
-        `import { ${pascal(ctx)}${spec.suffix} } from "./${ctx}/${spec.file}";`
+        `import { ${pascal(ctx)}${spec.suffix} } from "${spec.base}/${ctx}/${spec.file}";`
     ),
     "",
     `const ${spec.constName} = {`,
@@ -341,14 +342,16 @@ const globalFiles = async (contexts: string[]): Promise<GeneratedFile[]> => {
     {
       path: path.join(ACTIONS, "all-actions.generated.ts"),
       text: globalList(contexts, {
+        base: ".",
         constName: "ALL_ACTIONS",
         file: "index.js",
         suffix: "Actions",
       }),
     },
     {
-      path: path.join(HANDLERS, "all-entries.generated.ts"),
+      path: path.join(HANDLERS, "_core", "all-entries.generated.ts"),
       text: globalList(contexts, {
+        base: "..",
         constName: "ALL_ENTRIES",
         file: "handlers.js",
         suffix: "Entries",
@@ -360,6 +363,7 @@ const globalFiles = async (contexts: string[]): Promise<GeneratedFile[]> => {
     files.push({
       path: path.join(HANDLERS, "all-live.generated.ts"),
       text: globalList(live, {
+        base: ".",
         constName: "ALL_LIVE",
         file: "live.js",
         suffix: "Live",

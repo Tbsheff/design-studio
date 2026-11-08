@@ -41,9 +41,9 @@ import type {
   PreviewService,
 } from "../../../shared/server-ports.js";
 import { frameStatesView } from "../../app/frame-state.js";
-import { withPagePath } from "../../export/source.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { waitForPage } from "../../preview/page-capture/index.js";
+import { withPagePath } from "../../project-source/index.js";
 import type { FrameStateDeps } from "../app-flow/frame-state-service.js";
 import { findFrame, frameRef } from "../tools.js";
 import type { CanvasToolContext, ToolText } from "../tools.js";

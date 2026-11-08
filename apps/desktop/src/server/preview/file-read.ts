@@ -9,8 +9,8 @@ import type {
   VersionStore,
 } from "../../shared/server-ports.js";
 import { firstVersionWaitText } from "../app/first-version.js";
-import { resolveSource } from "../export/source.js";
 import { ConflictError, NotFoundError } from "../platform/errors/index.js";
+import { resolveSource } from "../project-source/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 const LIVE_VERSION_ID = "live";

@@ -746,3 +746,10 @@ body.ins-scrubbing * {
     scale: none;
   }
 }
+
+fieldset.ins-constraints {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

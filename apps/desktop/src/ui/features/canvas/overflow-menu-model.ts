@@ -1,6 +1,6 @@
+import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 import type { VectorToolId } from "./vector-tool-model.js";
 import { VECTOR_TOOLS, vectorTool } from "./vector-tool-model.js";
-import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 import { toQuickZoomEntries } from "./zoom-menu-model.js";
 import type { ZoomProps } from "./zoom-menu-model.js";
 

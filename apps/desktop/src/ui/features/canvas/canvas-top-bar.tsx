@@ -7,6 +7,7 @@ import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 import { DropMenu } from "./drop-menu.js";
+import { OverflowMenu } from "./overflow-menu.js";
 import { loadPortToAppDialog, usePortDialog } from "./top-bar-drop-menu.js";
 import { shareGroups } from "./top-bar-menu.js";
 import type {
@@ -15,7 +16,6 @@ import type {
   MenuEntry,
   MenuGroup,
 } from "./top-bar-menu.js";
-import { OverflowMenu } from "./overflow-menu.js";
 import { ZoomPill } from "./top-bar-zoom.js";
 import type { ZoomProps } from "./zoom-menu-model.js";
 

@@ -71,9 +71,7 @@ const toZoomGroups = ({
   },
 ];
 
-const toQuickZoomEntries = (
-  props: Omit<ZoomProps, "zoom">
-): MenuEntry[] => {
+const toQuickZoomEntries = (props: Omit<ZoomProps, "zoom">): MenuEntry[] => {
   const entries: MenuEntry[] = [];
 
   for (const group of toZoomGroups(props)) {

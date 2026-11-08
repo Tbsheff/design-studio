@@ -18,3 +18,5 @@ export {
 } from "./dev-note/index.js";
 
 export type { DevNoteRecord } from "./dev-note/index.js";
+
+export { MarkupWriter } from "./markup/index.js";

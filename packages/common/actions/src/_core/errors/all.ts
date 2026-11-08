@@ -23,6 +23,7 @@ import type { ImageError } from "../../image/errors/index.js";
 import type { IntegrationError } from "../../integration/errors/index.js";
 import type { KitDriftError } from "../../kit-drift/errors/index.js";
 import type { LayerStyleError } from "../../layer-style/errors/index.js";
+import type { MarkupError } from "../../markup/errors/index.js";
 import type { MotionError } from "../../motion/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
 import type { PageError } from "../../page/errors/index.js";
@@ -69,6 +70,7 @@ type StudioError =
   | IntegrationError
   | KitDriftError
   | LayerStyleError
+  | MarkupError
   | MotionError
   | PackError
   | PageError

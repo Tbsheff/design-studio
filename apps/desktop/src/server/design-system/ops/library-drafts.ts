@@ -28,6 +28,7 @@ import type { BackingSource, ImageInput } from "./library-backing.js";
 import type { PackWriteRuntime } from "./library-core.js";
 import { toDraftRaw, toImages } from "./library-draft-input.js";
 import type { DraftInput } from "./library-draft-input.js";
+import { toExistingDraft } from "./library-draft-reuse.js";
 
 interface DraftStart {
   readonly images: readonly ImageInput[];
@@ -156,6 +157,19 @@ const createDraft = async (
   const isImproved = input.improve === true;
   const raw = await toDraftRaw(input, runtime.dataDir);
   const request = parseDraftRequest(raw, images.length);
+
+  if (request.folderPath && input.shouldCreateNew !== true) {
+    const existing = await toExistingDraft(
+      runtime,
+      request.folderPath.trim(),
+      started
+    );
+
+    if (existing) {
+      return toDraftResult(existing);
+    }
+  }
+
   const start: DraftStart = { images, isImproved, request, started };
 
   if (runtime.live) {

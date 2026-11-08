@@ -27,6 +27,7 @@ import { GridLive } from "../handlers/grid/live.js";
 import { IconLive } from "../handlers/icon/live.js";
 import { ImageSearchLive } from "../handlers/image-search/live.js";
 import { ImageLive } from "../handlers/image/live.js";
+import { ImpactLive } from "../handlers/impact/live.js";
 import { IntegrationLive } from "../handlers/integration/live.js";
 import { KitDriftLive } from "../handlers/kit-drift/live.js";
 import { LayerStyleLive } from "../handlers/layer-style/live.js";
@@ -96,6 +97,7 @@ const liveLayer = Layer.mergeAll(
   IconLive,
   ImageLive,
   ImageSearchLive,
+  ImpactLive,
   IntegrationLive,
   KitDriftLive,
   LayerStyleLive,

@@ -10,9 +10,10 @@ import type { Dispatch, FormEvent, SetStateAction } from "react";
 
 import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
-import { settle } from "./settle.js";
+import { pick } from "./pick.js";
 
 import "../../styles/ship.css";
+import { settle } from "./settle.js";
 import { shipApi } from "./ship-api.js";
 import {
   formatFact,
@@ -49,9 +50,11 @@ const DiffView = ({ file }: { file: ShipFile | null }) => {
       ? [
           file.diff.includes("Binary files")
             ? "Binary file. No text diff."
-            : file.status === "deleted"
-              ? "The file is deleted."
-              : "No text changes.",
+            : pick(
+                file.status === "deleted",
+                "The file is deleted.",
+                "No text changes."
+              ),
         ]
       : all.slice(start);
 
@@ -59,7 +62,7 @@ const DiffView = ({ file }: { file: ShipFile | null }) => {
     <div className="ship-diff" aria-label={`Diff of ${file.path}`}>
       {(file.refused || file.conflict) && (
         <div
-          className={`ship-diff-note ${file.refused ? "refused" : "conflict"}`}
+          className={`ship-diff-note ${pick(file.refused, "refused", "conflict")}`}
         >
           {file.refused ?? file.conflict}
         </div>
@@ -73,9 +76,7 @@ const DiffView = ({ file }: { file: ShipFile | null }) => {
                 ? "add"
                 : line.startsWith("-")
                   ? "del"
-                  : line.startsWith("@@")
-                    ? "hunk"
-                    : ""
+                  : pick(line.startsWith("@@"), "hunk", "")
             }
           >
             {line || " "}
@@ -103,9 +104,7 @@ const ResultView = ({
         <Icon name="check" size={14} />{" "}
         {result.mode === "branch"
           ? "Branch created in your repo."
-          : result.prUrl
-            ? "Pull request opened."
-            : "Branch pushed."}{" "}
+          : pick(result.prUrl, "Pull request opened.", "Branch pushed.")}{" "}
         Your checked-out branch and files did not change.
       </p>
       <dl className="ship-facts">
@@ -142,8 +141,9 @@ const ResultView = ({
         <div className="alert warn small" role="alert">
           {result.format.tool} could not format{" "}
           {result.format.errors.map((item) => item.path).join(", ")}, so{" "}
-          {result.format.errors.length === 1 ? "it ships" : "they ship"} as the
-          studio wrote {result.format.errors.length === 1 ? "it" : "them"}.
+          {pick(result.format.errors.length === 1, "it ships", "they ship")} as
+          the studio wrote{" "}
+          {pick(result.format.errors.length === 1, "it", "them")}.
         </div>
       )}
       {result.prError && (
@@ -217,7 +217,7 @@ const FileList = ({
   <div className="ship-files-wrap">
     <ul className="ship-files" aria-label={copy.changedFiles}>
       {plan.files.map((file) => (
-        <li key={file.path} className={file.path === focus ? "active" : ""}>
+        <li key={file.path} className={pick(file.path === focus, "active", "")}>
           <input
             type="checkbox"
             aria-label={`Ship ${file.path}`}
@@ -271,7 +271,7 @@ const ModePicker = ({
       return (
         <label
           key={item.id}
-          className={`ship-mode${why ? " off" : ""}`}
+          className={`ship-mode${pick(why, " off", "")}`}
           data-tip={why ?? item.hint}
         >
           <input
@@ -584,7 +584,7 @@ export const ShipDialog = ({ projectId, onClose }: Props) => {
               >
                 {busy
                   ? "Shipping…"
-                  : `${actionLabel(draft?.mode ?? "branch")}${count > 0 ? ` (${count})` : ""}`}
+                  : `${actionLabel(draft?.mode ?? "branch")}${pick(count > 0, ` (${count})`, "")}`}
               </button>
             </div>
           </>

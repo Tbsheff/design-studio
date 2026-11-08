@@ -29,6 +29,7 @@ import {
 import type { ExportTarget, FrameChoice } from "./export-api.js";
 
 import "../../styles/export.css";
+import { pick } from "./pick.js";
 import { useCopied } from "./use-copied.js";
 import { useEditors } from "./use-editors.js";
 
@@ -162,8 +163,8 @@ const Segmented = <Value extends string | number>({
         type="button"
         role="radio"
         aria-checked={value === option.id}
-        tabIndex={value === option.id ? 0 : -1}
-        className={value === option.id ? "on" : ""}
+        tabIndex={pick(value === option.id, 0, -1)}
+        className={pick(value === option.id, "on", "")}
         onClick={() => onChange(option.id)}
       >
         {option.icon ? <Icon name={option.icon} size={14} /> : null}
@@ -228,7 +229,7 @@ const HandoffResultView = ({
           className="btn small primary has-icon"
           onClick={() => copy("prompt", result.prompt)}
         >
-          <Icon name={copied === "prompt" ? "check" : "copy"} size={14} />
+          <Icon name={pick(copied === "prompt", "check", "copy")} size={14} />
           <span aria-live="polite">
             {copied === "prompt" ? "Copied" : "Copy prompt for Claude Code"}
           </span>
@@ -344,7 +345,7 @@ const ConnectClaudeCode = (): ReactElement => {
           role="switch"
           aria-checked={on}
           aria-label={uiCopy.mcpServer}
-          className={`export-switch${on ? " on" : ""}`}
+          className={`export-switch${pick(on, " on", "")}`}
           disabled={busy || status === null}
           onClick={() => void change({ enabled: !on })}
         >
@@ -365,9 +366,9 @@ const ConnectClaudeCode = (): ReactElement => {
               className="btn small has-icon"
               onClick={() => copy("mcp", status.command as string)}
             >
-              <Icon name={copied === "mcp" ? "check" : "copy"} size={14} />
+              <Icon name={pick(copied === "mcp", "check", "copy")} size={14} />
               <span aria-live="polite">
-                {copied === "mcp" ? "Copied" : "Copy command"}
+                {pick(copied === "mcp", "Copied", "Copy command")}
               </span>
             </button>
           </div>
@@ -385,7 +386,7 @@ const ConnectClaudeCode = (): ReactElement => {
               role="switch"
               aria-checked={edits}
               aria-label={uiCopy.allowEdits}
-              className={`export-switch${edits ? " on" : ""}`}
+              className={`export-switch${pick(edits, " on", "")}`}
               disabled={busy}
               onClick={() => void change({ edits: !edits })}
             >
@@ -619,7 +620,7 @@ const StatusLine = ({
       {status.kind === "busy" ? (
         <span className="export-progress">
           <span className="spinner" />
-          {handoff ? "Building handoff" : "Exporting"}…{" "}
+          {pick(handoff, "Building handoff", "Exporting")}…{" "}
           <span className="tabular">{elapsed} s</span>
         </span>
       ) : null}
@@ -670,7 +671,7 @@ export const ExportDialog = ({ target, onClose }: Props): ReactElement => {
     FORMATS.find((info) => info.id === format) ?? (FORMATS[0] as FormatInfo);
 
   const canRun = !busy && (!options.needsFrames || options.chosen.length > 0);
-  const shown = format === "handoff" ? handoff : null;
+  const shown = pick(format === "handoff", handoff, null);
 
   const run = async (): Promise<void> => {
     if (!canRun) {
@@ -769,13 +770,13 @@ export const ExportDialog = ({ target, onClose }: Props): ReactElement => {
         </button>
         <button
           type="button"
-          className={`btn has-icon${shown ? "" : " primary"}`}
+          className={`btn has-icon${pick(shown, "", " primary")}`}
           disabled={!canRun}
           onClick={() => void run()}
           data-autofocus
         >
           <Icon
-            name={format === "handoff" ? "terminal" : "download"}
+            name={pick(format === "handoff", "terminal", "download")}
             size={14}
           />
           {actionLabel(info, status, shown !== null)}

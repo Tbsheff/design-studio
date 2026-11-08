@@ -8,6 +8,7 @@ import type { RefObject } from "react";
 import { api, errorText } from "../../api.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import type { FilesChange } from "../home/use-studio-data.js";
+import { pick } from "./pick.js";
 
 const RERUN_MS = 900;
 const SIDE_MIN = 200;
@@ -145,7 +146,7 @@ const useReview = (input: ReviewInput): ReviewState => {
       return;
     }
 
-    const timer = globalThis.setTimeout(run, result ? RERUN_MS : 0);
+    const timer = globalThis.setTimeout(run, pick(result, RERUN_MS, 0));
 
     return (): void => globalThis.clearTimeout(timer);
   }, [open, stale, result, busy, fixing, error, run]);
@@ -155,7 +156,7 @@ const useReview = (input: ReviewInput): ReviewState => {
     error,
     fix,
     fixing,
-    result: resultKey === key ? result : null,
+    result: pick(resultKey === key, result, null),
     run,
     stale,
   };

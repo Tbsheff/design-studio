@@ -14,6 +14,7 @@ import type { ReactNode, RefObject, ReactElement } from "react";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { PREVIEW_ESCAPE_EVENT } from "../chat/use-escape-stop.js";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 import type { ReviewState } from "./use-review.js";
 
 interface Props {
@@ -48,7 +49,7 @@ const fixBlocked = (live: boolean, running: boolean): string | null => {
     return "Fixes work on the live design";
   }
 
-  return running ? "A run is editing this design" : null;
+  return pick(running, "A run is editing this design", null);
 };
 
 const grouped = (findings: ReviewFinding[]): [ReviewKind, ReviewFinding[]][] =>
@@ -75,7 +76,7 @@ const FindingRow = ({
         type="button"
         className="review-target"
         disabled={!finding.selector}
-        data-tip={finding.selector ? "Select on the canvas" : null}
+        data-tip={pick(finding.selector, "Select on the canvas", null)}
         onClick={() => actions.onSelect(finding)}
       >
         <span
@@ -124,11 +125,11 @@ const FindingRow = ({
             type="button"
             className="btn small"
             disabled={!actions.canAsk}
-            data-tip={
-              actions.canAsk
-                ? "Put this finding in the chat box. You send it."
-                : "Chat is not available here"
-            }
+            data-tip={pick(
+              actions.canAsk,
+              "Put this finding in the chat box. You send it.",
+              "Chat is not available here"
+            )}
             data-tip-align="end"
             onClick={() => actions.onAsk(finding)}
           >

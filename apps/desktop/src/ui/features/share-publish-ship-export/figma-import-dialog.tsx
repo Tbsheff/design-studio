@@ -26,6 +26,7 @@ import { ApiError, json } from "../../api.js";
 
 import "../../styles/figma-import.css";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 
 interface Props {
   ids: { projectId: string; directionId: string };
@@ -58,7 +59,7 @@ const messageOf = (error: unknown): string => {
 };
 
 const plural = (count: number, word: string): string =>
-  `${count} ${word}${count === 1 ? "" : "s"}`;
+  `${count} ${word}${pick(count === 1, "", "s")}`;
 
 const facts = (stats: FigmaImportStats): string[] => {
   const out = [
@@ -216,7 +217,7 @@ const JsonPaste = ({
         />
       </label>
       <p id="fgi-json-help" className="fgi-facts">
-        {bad ? "This is not Figma frame JSON. " : ""}
+        {pick(bad, "This is not Figma frame JSON. ", "")}
         {copy.open2}
         {nodesUrl(link)}
         {copy.withYourFigmaToken}
@@ -269,7 +270,7 @@ const FailureNote = ({ failure }: { failure: string }): ReactElement => {
             aria-expanded={open}
             onClick={() => setOpen(!open)}
           >
-            <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
+            <Icon name={pick(open, "chevronDown", "chevronRight")} size={12} />
             {copy.details}
           </button>
           {open && <p className="fgi-details">{plain.details}</p>}
@@ -335,8 +336,8 @@ const FigmaImportDialog = ({
 
   const [nodeId, setNodeId] = useState("");
 
-  const [position, setPosition] = useState<JsxInsertPosition>(
-    canNest ? "inside" : "after"
+  const [position, setPosition] = useState<JsxInsertPosition>(() =>
+    pick(canNest, "inside", "after")
   );
 
   const [busy, setBusy] = useState(false);
@@ -475,7 +476,7 @@ const FigmaImportDialog = ({
             className="btn primary"
             disabled={busy || loading || !preview || failure !== null}
           >
-            {busy ? "Importing…" : "Import frame"}
+            {pick(busy, "Importing…", "Import frame")}
           </button>
         </div>
       </form>

@@ -9,6 +9,7 @@ import type {
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 import { publishApi } from "./publish-api.js";
 
 const usePublishBackend = (): {
@@ -93,7 +94,7 @@ const summary = (backend: PublishBackendState): string => {
   }
 
   if (backend.ready && backend.url) {
-    return `Ready. One Worker serves every published design at ${backend.url}${backend.mode === "local" ? " (local test server)" : ""}.`;
+    return `Ready. One Worker serves every published design at ${backend.url}${pick(backend.mode === "local", " (local test server)", "")}.`;
   }
 
   if (backend.error) {
@@ -128,16 +129,18 @@ const BackendSetup = ({
     <div
       className="publish-step publish-backend"
       data-testid="publish-backend"
-      data-ready={backend.ready ? "yes" : "no"}
+      data-ready={pick(backend.ready, "yes", "no")}
     >
       <p className="publish-step-text">{summary(backend)}</p>
       {backend.keyStore && (
         <div className="publish-kv">
           <span>{copy.publishKey}</span>
           <strong>
-            {backend.keyStore === "keychain"
-              ? "In the macOS Keychain"
-              : "In a private file on this Mac (the Keychain needs the desktop app)"}
+            {pick(
+              backend.keyStore === "keychain",
+              "In the macOS Keychain",
+              "In a private file on this Mac (the Keychain needs the desktop app)"
+            )}
           </strong>
         </div>
       )}
@@ -159,15 +162,17 @@ const BackendSetup = ({
           className="btn small primary"
           disabled={busy || !cfReady}
           onClick={() => void setup("cloudflare")}
-          data-tip={
-            cfReady
-              ? "Runs cf in your Cloudflare account. Each step checks first."
-              : "Sign in to Cloudflare first"
-          }
+          data-tip={pick(
+            cfReady,
+            "Runs cf in your Cloudflare account. Each step checks first.",
+            "Sign in to Cloudflare first"
+          )}
         >
-          {backend.mode === "cloudflare" && backend.setUpAt
-            ? "Run setup again"
-            : "Set up publishing"}
+          {pick(
+            backend.mode === "cloudflare" && backend.setUpAt,
+            "Run setup again",
+            "Set up publishing"
+          )}
         </button>
         {backend.localAllowed && (
           <button

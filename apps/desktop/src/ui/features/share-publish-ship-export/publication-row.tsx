@@ -9,6 +9,7 @@ import type {
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 import { isReadOnlyPublication, publishApi } from "./publish-api.js";
 
 const statusText = (publication: Publication, now: number): string => {
@@ -29,12 +30,12 @@ const statusText = (publication: Publication, now: number): string => {
   }
 
   const views = publication.views
-    ? `${publication.views.total} view${publication.views.total === 1 ? "" : "s"}, ${publication.views.last7} this week`
+    ? `${publication.views.total} view${pick(publication.views.total === 1, "", "s")}, ${publication.views.last7} this week`
     : null;
 
   return [
     publishExpiryText(publication.expiresAt, now),
-    publication.password ? "Password" : "Public",
+    pick(publication.password, "Password", "Public"),
     views,
     `v ${publication.versionId.slice(0, 7)}`,
   ]
@@ -175,7 +176,8 @@ const RowActions = ({
 }): ReactElement => {
   const app =
     publication.backend === "app" && !isReadOnlyPublication(publication);
-  const toggle = (name: string): void => setOpen(open === name ? null : name);
+  const toggle = (name: string): void =>
+    setOpen(pick(open === name, null, name));
 
   return (
     <>
@@ -219,11 +221,11 @@ const RowActions = ({
         className="btn ghost small danger"
         disabled={busy}
         onClick={() => onUnpublish(publication)}
-        data-tip={
-          app
-            ? "Turns the address off (410) and deletes its files"
-            : "Deletes the old per-design Cloudflare Worker"
-        }
+        data-tip={pick(
+          app,
+          "Turns the address off (410) and deletes its files",
+          "Deletes the old per-design Cloudflare Worker"
+        )}
       >
         {copy.unpublish}
       </button>
@@ -246,7 +248,7 @@ const PublicationRow = ({
 
   return (
     <li
-      className={`share-link${publication.status === "live" ? "" : " off"}`}
+      className={`share-link${pick(publication.status === "live", "", " off")}`}
       data-testid="publication"
       data-publication-id={publication.id}
       data-status={publication.status}

@@ -17,11 +17,12 @@ import { errorText } from "../../api.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { copy } from "./copy.js";
 import { canvasFrameChoices, frameRoute } from "./export-api.js";
+import { pick } from "./pick.js";
 import { PublishPane } from "./publish-pane.js";
-import { catchFailure, ignoreFailure, settleValue } from "./settle.js";
 
 import "../../styles/export.css";
 import "../../styles/share.css";
+import { catchFailure, ignoreFailure, settleValue } from "./settle.js";
 import { shareApi, sharesChanged } from "./share-api.js";
 import { linkMeta } from "./share-text.js";
 
@@ -49,10 +50,10 @@ const ShareTabs = ({
         type="button"
         role="tab"
         aria-selected={mode === id}
-        className={mode === id ? "on" : ""}
+        className={pick(mode === id, "on", "")}
         onClick={() => onMode(id)}
       >
-        {id === "link" ? "Local link" : "Publish"}
+        {pick(id === "link", "Local link", "Publish")}
       </button>
     ))}
   </div>
@@ -128,7 +129,7 @@ const Switch = ({
     role="switch"
     aria-checked={on}
     aria-label={label}
-    className={`export-switch${on ? " on" : ""}`}
+    className={`export-switch${pick(on, " on", "")}`}
     disabled={disabled}
     onClick={() => onChange(!on)}
   >
@@ -185,7 +186,7 @@ const LinkRow = ({
 
   return (
     <li
-      className={`share-link${link.active ? "" : " off"}`}
+      className={`share-link${pick(link.active, "", " off")}`}
       data-testid="share-link"
       data-link-id={link.id}
     >
@@ -273,7 +274,7 @@ const LanSwitch = ({
             : "Off: only this computer can open links (127.0.0.1)."}
         </span>
       </div>
-      <span data-tip={hasLive ? null : "Make a link first"}>
+      <span data-tip={pick(hasLive, null, "Make a link first")}>
         <Switch
           on={server.lan}
           label="Allow on local network"
@@ -367,7 +368,7 @@ const useCopyNew = (links: ShareLink[], server: ShareServerState) => {
       .querySelector<HTMLElement>(`[data-link-id="${pending}"] .copy-btn`)
       ?.focus();
     void settleValue(copyText(shareUrl(server.localUrl, token)), (ok) =>
-      setId(ok ? pending : null)
+      setId(pick(ok, pending, null))
     );
   }, [pending, links, server.localUrl]);
 
@@ -392,7 +393,7 @@ const ExpiryPicker = ({
         type="button"
         role="radio"
         aria-checked={value === option.id}
-        className={value === option.id ? "on" : ""}
+        className={pick(value === option.id, "on", "")}
         onClick={() => onChange(option.id)}
       >
         {option.label}
@@ -632,7 +633,7 @@ const LinkShare = ({
           disabled={!canCreate}
           data-autofocus
         >
-          {shares.busy ? "Working…" : "Create link"}
+          {pick(shares.busy, "Working…", "Create link")}
         </button>
       </div>
     </form>

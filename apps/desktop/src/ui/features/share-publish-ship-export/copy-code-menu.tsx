@@ -8,6 +8,7 @@ import { copy as uiCopy } from "./copy.js";
 
 import "../../styles/export.css";
 import { activeExportFrame, exportApi, openExport } from "./export-api.js";
+import { pick } from "./pick.js";
 
 interface Props {
   projectId: string;
@@ -108,7 +109,7 @@ const TriggerContent = ({
     return (
       <>
         <span>{text}</span>
-        <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
+        <Icon name={pick(open, "chevronDown", "chevronRight")} size={12} />
       </>
     );
   }
@@ -240,20 +241,18 @@ const CopyCodeMenu = ({
   const icon: IconName =
     state.kind === "copied"
       ? "check"
-      : state.kind === "failed"
-        ? "alert"
-        : "code";
+      : pick(state.kind === "failed", "alert", "code");
 
   return (
     <div className="copy-code-root" ref={root}>
       <button
         ref={trigger}
         type="button"
-        className={`${variant === "row" ? "ins-export-row" : "icon-btn small copy-code-trigger"}${state.kind === "busy" ? " busy" : ""}`}
+        className={`${pick(variant === "row", "ins-export-row", "icon-btn small copy-code-trigger")}${pick(state.kind === "busy", " busy", "")}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        data-tip={open || variant === "row" ? null : label}
+        data-tip={pick(open || variant === "row", null, label)}
         data-tip-align="end"
         onClick={() => setOpen((value) => !value)}
       >
@@ -261,12 +260,12 @@ const CopyCodeMenu = ({
           variant={variant}
           open={open}
           busy={state.kind === "busy"}
-          text={state.kind === "idle" ? "Export selection" : label}
+          text={pick(state.kind === "idle", "Export selection", label)}
           icon={icon}
         />
       </button>
       <span className="sr-only" aria-live="polite">
-        {state.kind === "idle" ? "" : label}
+        {pick(state.kind === "idle", "", label)}
       </span>
       {open ? (
         <div

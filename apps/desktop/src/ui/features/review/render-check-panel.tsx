@@ -15,6 +15,7 @@ import {
 import type { FinalCheckWithBaseline } from "../../../shared/final-check-baseline.js";
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 
 interface Props {
   projectId: string;
@@ -224,15 +225,17 @@ const RenderCheckPanel = ({
                 className="check-row"
               >
                 <div className="row">
-                  <span className={`badge ${ok ? "ok" : "fail"}`}>
-                    {ok ? "Pass" : "Fail"}
+                  <span className={`badge ${pick(ok, "ok", "fail")}`}>
+                    {pick(ok, "Pass", "Fail")}
                   </span>
                   <span>
                     {renderCheckResult.viewport === "desktop"
                       ? "Desktop"
-                      : renderCheckResult.viewport === "tablet"
-                        ? "Tablet"
-                        : "Mobile"}
+                      : pick(
+                          renderCheckResult.viewport === "tablet",
+                          "Tablet",
+                          "Mobile"
+                        )}
                   </span>
                   <span className="muted num">
                     {renderCheckResult.width}
@@ -247,7 +250,7 @@ const RenderCheckPanel = ({
                   {layout.length > 0 && (
                     <span className="badge warn">
                       {layoutTotal}
-                      {copy.layout} {layoutTotal === 1 ? "issue" : "issues"}
+                      {copy.layout} {pick(layoutTotal === 1, "issue", "issues")}
                     </span>
                   )}
                 </div>
@@ -279,9 +282,11 @@ const RenderCheckPanel = ({
                     label={
                       renderCheckResult.viewport === "desktop"
                         ? "Desktop"
-                        : renderCheckResult.viewport === "tablet"
-                          ? "Tablet"
-                          : "Mobile"
+                        : pick(
+                            renderCheckResult.viewport === "tablet",
+                            "Tablet",
+                            "Mobile"
+                          )
                     }
                   />
                 )}

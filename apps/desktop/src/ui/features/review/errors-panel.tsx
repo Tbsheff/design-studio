@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 
 import type { BuildError } from "../home/use-studio-data.js";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 
 interface Props {
   errors: BuildError[];
@@ -27,7 +28,7 @@ const isDevNoise = (buildError: BuildError): boolean =>
   DEV_NOISE.some((pattern) => pattern.test(buildError.message));
 
 const countText = (count: number): string =>
-  count === 1 ? "1 error" : `${count} errors`;
+  pick(count === 1, "1 error", `${count} errors`);
 
 const fixPrompt = (buildError: BuildError): string => {
   const where = buildError.file

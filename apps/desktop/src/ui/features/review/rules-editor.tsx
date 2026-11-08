@@ -13,6 +13,7 @@ import { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
 
 import "../../styles/rules.css";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 
 interface Props {
   projectId: string;
@@ -45,7 +46,7 @@ const hitText = (rule: DesignRule, hit: DesignRuleHit | undefined): string => {
 
   return hit.count === 0
     ? "Pass"
-    : `${hit.count} ${hit.count === 1 ? "break" : "breaks"}`;
+    : `${hit.count} ${pick(hit.count === 1, "break", "breaks")}`;
 };
 
 const hitTip = (rule: DesignRule, hit: DesignRuleHit | undefined): string => {
@@ -68,7 +69,7 @@ const RuleRow = ({
   hit: DesignRuleHit | undefined;
 }): ReactElement => {
   const tone =
-    rule.kind === "text" || !hit ? "idle" : hit.count === 0 ? "ok" : "bad";
+    rule.kind === "text" || !hit ? "idle" : pick(hit.count === 0, "ok", "bad");
 
   return (
     <li className="rules-row" data-tone={tone} data-tip={hitTip(rule, hit)}>
@@ -163,7 +164,7 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
         const saved = await rulesApi.save(projectId, directionId, text);
         setState(saved.state);
         setText(saved.state.text);
-        setNote(saved.versionId ? "Saved as a new version." : "Saved.");
+        setNote(pick(saved.versionId, "Saved as a new version.", "Saved."));
       }
     } catch (caught) {
       setError(errorText(caught));
@@ -230,7 +231,7 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
           data-tip={copy.checkTheseRules}
           onClick={() => void run("test")}
         >
-          {busy === "test" ? "Testing…" : "Test on frame"}
+          {pick(busy === "test", "Testing…", "Test on frame")}
         </button>
         <button
           type="button"
@@ -238,7 +239,7 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
           disabled={busy !== null || !dirty}
           onClick={() => void run("save")}
         >
-          {busy === "save" ? "Saving…" : "Save"}
+          {pick(busy === "save", "Saving…", "Save")}
         </button>
         {note && <span className="pane-system-text">{note}</span>}
       </div>

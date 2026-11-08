@@ -18,6 +18,7 @@ import { errorText } from "../../api.js";
 import { canvasFrameName } from "../canvas/canvas-frames.js";
 import { copy } from "./copy.js";
 import { canvasFrameChoices } from "./export-api.js";
+import { pick } from "./pick.js";
 import { PublicationRow } from "./publication-row.js";
 import { publishApi } from "./publish-api.js";
 import type { PublishRequest } from "./publish-api.js";
@@ -70,7 +71,7 @@ const Toggle = ({
     role="switch"
     aria-checked={on}
     aria-label={label}
-    className={`export-switch${on ? " on" : ""}`}
+    className={`export-switch${pick(on, " on", "")}`}
     onClick={() => onChange(!on)}
   >
     <span className="export-switch-knob" />
@@ -204,7 +205,7 @@ const PublishForm = ({
             type="button"
             role="radio"
             aria-checked={form.expiry === option.id}
-            className={form.expiry === option.id ? "on" : ""}
+            className={pick(form.expiry === option.id, "on", "")}
             onClick={() => setForm({ ...form, expiry: option.id })}
           >
             {option.label}
@@ -248,7 +249,7 @@ const PublishForm = ({
 );
 
 const filesText = (plan: PublishPlan): string => {
-  const base = `${plan.fileCount} file${plan.fileCount === 1 ? "" : "s"}, ${publishSize(plan.bytes)}`;
+  const base = `${plan.fileCount} file${pick(plan.fileCount === 1, "", "s")}, ${publishSize(plan.bytes)}`;
 
   return plan.changedFiles === null
     ? base
@@ -258,11 +259,11 @@ const filesText = (plan: PublishPlan): string => {
 const PlanView = ({ plan }: { plan: PublishPlan }) => {
   const rows: [string, string][] = [
     ["Address", plan.url ?? plan.urlPattern],
-    [plan.kind === "site" ? "Pages" : "Frames", plan.pages.join(", ")],
+    [pick(plan.kind === "site", "Pages", "Frames"), plan.pages.join(", ")],
     ["Files", filesText(plan)],
-    ["Password", plan.password ? "On" : "Off: anyone with the URL"],
+    ["Password", pick(plan.password, "On", "Off: anyone with the URL")],
     ["Ends", publishExpiryText(plan.expiresAt)],
-    ["Comments", plan.viewerComments ? "Viewers can comment" : "Off"],
+    ["Comments", pick(plan.viewerComments, "Viewers can comment", "Off")],
     ["Indexing", plan.noindex ? "noindex" : "Search engines may list it"],
     ["Version", plan.versionId.slice(0, 7)],
   ];
@@ -271,7 +272,7 @@ const PlanView = ({ plan }: { plan: PublishPlan }) => {
     rows.push([
       "Studio notes",
       plan.comments > 0
-        ? `${plan.comments} open comment${plan.comments === 1 ? "" : "s"}`
+        ? `${plan.comments} open comment${pick(plan.comments === 1, "", "s")}`
         : "None",
     ]);
   }
@@ -293,7 +294,7 @@ const PlanView = ({ plan }: { plan: PublishPlan }) => {
         {rows.map(([label, value]) => (
           <div key={label} className="publish-kv">
             <dt>{label}</dt>
-            <dd className={label === "Address" ? "mono" : ""}>{value}</dd>
+            <dd className={pick(label === "Address", "mono", "")}>{value}</dd>
           </div>
         ))}
       </dl>
@@ -487,7 +488,7 @@ const PaneFoot = ({
           onClick={() => void flow.confirm()}
           data-autofocus
         >
-          {flow.busy ?? (flow.plan.republishOf ? "Republish" : "Publish")}
+          {flow.busy ?? pick(flow.plan.republishOf, "Republish", "Publish")}
         </button>
       </>
     ) : (

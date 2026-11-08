@@ -24,6 +24,7 @@ import {
   frameName,
 } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
+import { pick } from "./pick.js";
 
 const item = (pid: string): string =>
   `/api/projects/${encodeURIComponent(pid)}`;
@@ -146,7 +147,7 @@ const readExportPrefs = (): ExportPrefs => {
         raw.scale === 1 || raw.scale === 2 || raw.scale === 3
           ? raw.scale
           : DEFAULT_PREFS.scale,
-      scope: raw.scope === "frame" ? "frame" : "page",
+      scope: pick(raw.scope === "frame", "frame", "page"),
     };
   } catch {
     return DEFAULT_PREFS;
@@ -180,9 +181,11 @@ const choiceNames = (frames: CanvasFrame[]): string[] => {
   const names = frames.map((frame) => toExport(frame).name);
 
   return names.map((name, index) =>
-    names.filter((other) => other === name).length < 2
-      ? name
-      : `Frame ${index + 1}`
+    pick(
+      names.filter((other) => other === name).length < 2,
+      name,
+      `Frame ${index + 1}`
+    )
   );
 };
 

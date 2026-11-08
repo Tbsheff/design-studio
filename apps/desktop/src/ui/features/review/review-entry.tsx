@@ -22,6 +22,7 @@ import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { CritiquePanel } from "../critique/index.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 import { useReview } from "./use-review.js";
 
 import "../../styles/review.css";
@@ -81,7 +82,7 @@ const entryTip = (
     return "Check contrast, tap targets, alt text, tokens and clipping";
   }
 
-  return `${count} review ${count === 1 ? "finding" : "findings"}${stale ? " (from an older render)" : ""}`;
+  return `${count} review ${pick(count === 1, "finding", "findings")}${pick(stale, " (from an older render)", "")}`;
 };
 
 const worst = (result: ReviewResult | null): ReviewSeverity | null => {
@@ -145,7 +146,7 @@ const ReviewEntry = (props: Props): ReactElement => {
     <button
       type="button"
       className="btn ghost topbar-review review-entry"
-      aria-label={count === null ? "Review" : `Review, ${count} findings`}
+      aria-label={pick(count === null, "Review", `Review, ${count} findings`)}
       aria-pressed={open}
       aria-expanded={open}
       disabled={!props.directionId}

@@ -2,17 +2,23 @@ import type {
   ReviewFinding,
   ReviewResult,
 } from "@design-studio/contracts/review";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import { api, errorText } from "../../api.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { pick } from "./pick.js";
+import { toFrameKey, toReviewRequest } from "./review-request.js";
 
 const RERUN_MS = 900;
-const SIDE_MIN = 200;
-const SIDE_MAX = 4000;
 
 interface ReviewInput {
   projectId: string;
@@ -32,29 +38,48 @@ interface ReviewState {
   fix: (findings: ReviewFinding[]) => Promise<void>;
 }
 
-const side = (value: number): number =>
-  Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(value)));
+interface Loaded {
+  ranAt: number;
+  result: ReviewResult | null;
+  resultKey: string | null;
+}
 
-const frameKey = (directionId: string | null, frame: CanvasFrame): string =>
-  `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
+interface SeenChange {
+  change: FilesChange | null;
+  changedAt: number;
+}
+
+interface ReviewRun {
+  isBusy: boolean;
+  run: () => void;
+}
+
+interface ReviewFix {
+  fix: (findings: ReviewFinding[]) => Promise<void>;
+  fixing: string[] | null;
+}
+
+type SetFailure = Dispatch<SetStateAction<string | null>>;
+
+const EMPTY_LOADED: Loaded = { ranAt: 0, result: null, resultKey: null };
+const EMPTY_SEEN: SeenChange = { change: null, changedAt: 0 };
 
 const useLatest = <Value>(value: Value): RefObject<Value> => {
   const ref = useRef(value);
-  ref.current = value;
+
+  useLayoutEffect(() => {
+    ref.current = value;
+  }, [value]);
 
   return ref;
 };
 
-const useReview = (input: ReviewInput): ReviewState => {
-  const [result, setResult] = useState<ReviewResult | null>(null);
-  const [resultKey, setResultKey] = useState<string | null>(null);
-  const [changedAt, setChangedAt] = useState(0);
-  const [ranAt, setRanAt] = useState(0);
-  const [busy, setBusy] = useState(false);
-  const [fixing, setFixing] = useState<string[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const latest = useLatest(input);
-  const key = frameKey(input.directionId, input.frame);
+const useReviewRun = (
+  latest: RefObject<ReviewInput>,
+  setLoaded: Dispatch<SetStateAction<Loaded>>,
+  setFailure: SetFailure
+): ReviewRun => {
+  const [isBusy, startRun] = useTransition();
   const pending = useRef(0);
 
   const run = useCallback(() => {
@@ -64,41 +89,43 @@ const useReview = (input: ReviewInput): ReviewState => {
       return;
     }
 
-    const ticket = ++pending.current;
-    const runKey = frameKey(directionId, frame);
+    pending.current += 1;
+
+    const ticket = pending.current;
     const started = Date.now();
-    setBusy(true);
-    setError(null);
+    setFailure(null);
 
-    const load = async (): Promise<void> => {
+    startRun(async () => {
       try {
-        const next = await api.review(projectId, directionId, {
-          frame: frame.id,
-          ...(frame.path ? { path: frame.path } : {}),
-          height: side(frame.height),
-          width: side(frame.width),
-        });
+        const next = await api.review(
+          projectId,
+          directionId,
+          toReviewRequest(frame)
+        );
 
-        if (ticket !== pending.current) {
-          return;
-        }
-
-        setResult(next);
-        setResultKey(runKey);
-        setRanAt(started);
-      } catch (caught) {
         if (ticket === pending.current) {
-          setError(errorText(caught));
+          setLoaded({
+            ranAt: started,
+            result: next,
+            resultKey: toFrameKey(directionId, frame),
+          });
         }
-      } finally {
+      } catch (error) {
         if (ticket === pending.current) {
-          setBusy(false);
+          setFailure(errorText(error));
         }
       }
-    };
+    });
+  }, [latest, setFailure, setLoaded]);
 
-    void load();
-  }, [latest]);
+  return { isBusy, run };
+};
+
+const useReviewFix = (
+  latest: RefObject<ReviewInput>,
+  setFailure: SetFailure
+): ReviewFix => {
+  const [fixing, setFixing] = useState<string[] | null>(null);
 
   const fix = useCallback(
     async (findings: ReviewFinding[]) => {
@@ -109,7 +136,7 @@ const useReview = (input: ReviewInput): ReviewState => {
       }
 
       setFixing(findings.map((finding) => finding.id));
-      setError(null);
+      setFailure(null);
 
       try {
         const done = await api.reviewFix(
@@ -119,28 +146,65 @@ const useReview = (input: ReviewInput): ReviewState => {
         );
 
         if (done.applied.length === 0) {
-          setError(done.skipped[0]?.reason ?? "Nothing was fixed.");
+          setFailure(done.skipped[0]?.reason ?? "Nothing was fixed.");
         }
-      } catch (caught) {
-        setError(errorText(caught));
-      } finally {
-        setFixing(null);
+      } catch (error) {
+        setFailure(errorText(error));
       }
+
+      setFixing(null);
     },
-    [latest]
+    [latest, setFailure]
   );
 
-  const change = input.lastChange;
-  useEffect(() => {
-    if (change && change.directionId === latest.current.directionId) {
-      setChangedAt(change.receivedAt);
-    }
-  }, [change, latest]);
+  return { fix, fixing };
+};
 
-  const stale = result !== null && (resultKey !== key || changedAt > ranAt);
+const useChangedAt = (
+  change: FilesChange | null,
+  directionId: string | null
+): number => {
+  const [seen, setSeen] = useState(EMPTY_SEEN);
+
+  if (change !== seen.change) {
+    const isOwn = change !== null && change.directionId === directionId;
+
+    setSeen({
+      change,
+      changedAt: pick(isOwn, change?.receivedAt ?? 0, seen.changedAt),
+    });
+  }
+
+  return seen.changedAt;
+};
+
+const useReview = (input: ReviewInput): ReviewState => {
+  const [loaded, setLoaded] = useState(EMPTY_LOADED);
+  const [failure, setFailure] = useState<string | null>(null);
+  const latest = useLatest(input);
+  const key = toFrameKey(input.directionId, input.frame);
+
+  const { isBusy, run: runReview } = useReviewRun(
+    latest,
+    setLoaded,
+    setFailure
+  );
+
+  const { fix: fixFindings, fixing: activeFixes } = useReviewFix(
+    latest,
+    setFailure
+  );
+
+  const changedAt = useChangedAt(input.lastChange, input.directionId);
+  const { result, resultKey } = loaded;
+
+  const stale =
+    result !== null && (resultKey !== key || changedAt > loaded.ranAt);
+
   const { open } = input;
+
   useEffect(() => {
-    if (!open || busy || fixing || error) {
+    if (!open || isBusy || activeFixes || failure) {
       return;
     }
 
@@ -148,22 +212,22 @@ const useReview = (input: ReviewInput): ReviewState => {
       return;
     }
 
-    const timer = globalThis.setTimeout(run, pick(result, RERUN_MS, 0));
+    const timer = globalThis.setTimeout(runReview, pick(result, RERUN_MS, 0));
 
     return (): void => globalThis.clearTimeout(timer);
-  }, [open, stale, result, busy, fixing, error, run]);
+  }, [open, stale, result, isBusy, activeFixes, failure, runReview]);
 
   return {
-    busy,
-    error,
-    fix,
-    fixing,
+    busy: isBusy,
+    error: failure,
+    fix: fixFindings,
+    fixing: activeFixes,
     result: pick(resultKey === key, result, null),
-    run,
+    run: runReview,
     stale,
   };
 };
 
-export { frameKey, useReview };
+export { useReview };
 
 export type { ReviewInput, ReviewState };

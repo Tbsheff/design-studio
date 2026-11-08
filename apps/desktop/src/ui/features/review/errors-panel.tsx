@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ReactElement } from "react";
 
 import type { BuildError } from "../home/use-studio-data.js";
 import { ErrorsChip } from "./errors-chip.js";
-import { isDevNoiseError, toFixPrompt } from "./errors-model.js";
+import { isDevNoiseError } from "./errors-model.js";
 import { ErrorsOpenPanel } from "./errors-open-panel.js";
 
 interface Props {
@@ -13,40 +13,36 @@ interface Props {
   pane?: string;
 }
 
-const isDevNoise = (buildError: BuildError): boolean =>
-  isDevNoiseError(buildError);
-
-const fixPrompt = (buildError: BuildError): string => toFixPrompt(buildError);
-
 const ErrorsPanel = ({
   errors,
   onClear,
   onSendToAgent,
   pane,
 }: Props): ReactElement | null => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [panel, setPanel] = useState({ isOpen: false, pane });
 
-  useEffect(() => {
-    if (pane === "design") {
-      setIsOpen(false);
-    }
-  }, [pane]);
+  if (panel.pane !== pane) {
+    setPanel({ isOpen: panel.isOpen && pane !== "design", pane });
+  }
 
   const open = useCallback((): void => {
-    setIsOpen(true);
+    setPanel((current) => ({ ...current, isOpen: true }));
   }, []);
 
   const close = useCallback((): void => {
-    setIsOpen(false);
+    setPanel((current) => ({ ...current, isOpen: false }));
   }, []);
 
-  const shown = errors.filter((buildError) => !isDevNoise(buildError));
+  const shown = useMemo(
+    () => errors.filter((buildError) => !isDevNoiseError(buildError)),
+    [errors]
+  );
 
   if (shown.length === 0) {
     return null;
   }
 
-  if (!isOpen) {
+  if (!panel.isOpen) {
     return <ErrorsChip count={shown.length} onOpen={open} onClear={onClear} />;
   }
 
@@ -60,4 +56,4 @@ const ErrorsPanel = ({
   );
 };
 
-export { ErrorsPanel, fixPrompt, isDevNoise };
+export { ErrorsPanel };

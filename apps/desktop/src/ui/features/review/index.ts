@@ -12,4 +12,6 @@ const ReviewPanel = lazy(async () => {
   return { default: loaded.ReviewPanel };
 });
 
+export { toFixPrompt } from "./errors-model.js";
+
 export { ReviewPanel, RulesEditor };

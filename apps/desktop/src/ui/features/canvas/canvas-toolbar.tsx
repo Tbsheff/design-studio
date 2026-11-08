@@ -7,7 +7,8 @@ import { PRESETS } from "../../domain/canvas-presets.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 import { PenIcon } from "./draw-layer.js";
-import { ViewportControls, SourceControls } from "./toolbar-viewport.js";
+import { SourceControls } from "./source-controls.js";
+import { ViewportControls } from "./toolbar-viewport.js";
 import type { Props } from "./toolbar-viewport.js";
 import {
   VECTOR_TOOLS,

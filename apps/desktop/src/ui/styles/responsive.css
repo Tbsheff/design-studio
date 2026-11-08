@@ -78,7 +78,8 @@ body.resizing iframe {
 }
 
 @container (max-width: 640px) {
-  .segmented.source-seg button {
+  .segmented.source-seg button,
+  .segmented.source-seg .seg-radio {
     width: 30px;
     padding: 0;
   }
@@ -86,7 +87,7 @@ body.resizing iframe {
     display: none;
   }
   .segmented .seg-icon {
-    display: block;
+    display: inline-flex;
   }
 }
 

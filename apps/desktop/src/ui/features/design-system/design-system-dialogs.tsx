@@ -27,7 +27,7 @@ const ChangePackDialog = ({
   const state = pickable(usePacks());
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const dialog = useModalDialog(() => (busy ? false : onClose()));
+  const dialog = useModalDialog(() => !busy && onClose());
   const title = (currentId && "Change design system") || "Add design system";
 
   const choose = (packId: string | undefined): void => {
@@ -149,7 +149,7 @@ const SavePackDialog = ({
   const [asNew, setAsNew] = useState(false);
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const dialog = useModalDialog(() => (busy ? false : onClose()));
+  const dialog = useModalDialog(() => !busy && onClose());
 
   const submit = (): void => {
     if (!name.trim() || busy) {

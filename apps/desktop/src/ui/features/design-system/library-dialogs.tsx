@@ -84,7 +84,7 @@ const RenamePackDialog = ({
 }): ReactElement => {
   const [name, setName] = useState(pack.name);
   const action = useBusyAction(onClose);
-  const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+  const dialog = useModalDialog(() => !action.busy && onClose());
 
   const submit = (event: FormEvent): void => {
     event.preventDefault();
@@ -164,7 +164,7 @@ const DeletePackDialog = ({
   onDelete: () => Promise<void>;
 }): ReactElement => {
   const action = useBusyAction(onClose);
-  const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+  const dialog = useModalDialog(() => !action.busy && onClose());
 
   const handleRun = useCallback(
     () => void action.run(onDelete),
@@ -221,7 +221,7 @@ const ImportConflictDialog = ({
   onChoose: (mode: "replace" | "copy") => Promise<void>;
 }) => {
   const action = useBusyAction(onClose);
-  const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+  const dialog = useModalDialog(() => !action.busy && onClose());
 
   const handleRun2 = useCallback(
     () => void action.run(() => onChoose("copy")),

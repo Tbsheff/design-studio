@@ -12,7 +12,13 @@ import { TokenSetFields, TokenSetSchema } from "./schema.js";
 
 const setToken = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_token",
+    set: "core",
+    short:
+      "Change one design token value (tokens.json, or the app token CSS declaration). theme dark changes the dark value.",
+  },
   confirm: "none",
   description:
     "Change one design token value, found by CSS variable or path, with the same code path as the studio Tokens panel. In a studio design system it edits tokens.json. In an imported app folder it rewrites only that declaration in the app CSS file (for example the Tailwind @theme, :root or .dark block). A version is saved.",

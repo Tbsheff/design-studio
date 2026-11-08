@@ -11,7 +11,13 @@ import { OkSchema } from "./schema.js";
 
 const deletePackPack = defineAction({
   access: "destructive",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "delete_pack_pack",
+    set: "design-system",
+    short:
+      "Delete a user design system from the studio library. A built-in pack cannot be deleted. The user must confirm.",
+  },
   confirm: "user",
   description:
     "Delete a user design system from the studio library. Projects that use it keep their files. Its draft project is marked as deleted. Built-in packs cannot be deleted.",
@@ -22,7 +28,7 @@ const deletePackPack = defineAction({
     packId: PackIdSchema,
   }),
   invalidates: ["pack.listSummary", "pack.list", "pack.getPack"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "delete_pack_pack" },
   needs: "pack.write",
   output: OkSchema,
   scope: "org",

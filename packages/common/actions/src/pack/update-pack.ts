@@ -19,7 +19,13 @@ const TagsSchema = Schema.Array(Schema.String);
 
 const updatePackPack = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "update_pack_pack",
+    set: "design-system",
+    short:
+      "Change a user design system in the studio library, for example its name. A built-in pack cannot change.",
+  },
   confirm: "none",
   description:
     "Change a user design system in the studio library, for example its name. The pack id does not change. Built-in packs cannot change.",
@@ -41,7 +47,7 @@ const updatePackPack = defineAction({
     tokensJson: Schema.optionalKey(TokensJsonSchema),
   }),
   invalidates: ["pack.listSummary", "pack.list", "pack.getPack"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "update_pack_pack" },
   needs: "pack.write",
   output: PackSummarySchema,
   scope: "org",

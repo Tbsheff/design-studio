@@ -18,7 +18,6 @@ const CORE_TOOLS = [
   "get_layers",
   "review_frame",
   "edit_element",
-  "set_token",
   "find_styles",
   "replace_style",
   "arrange",

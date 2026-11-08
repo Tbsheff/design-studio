@@ -13,7 +13,13 @@ const DraftsFieldSchema = Schema.Boolean.annotate({
 
 const listPack = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_design_systems",
+    set: "design-system",
+    short:
+      "List the design systems (packs) in the studio library: id, name, mode, fonts, built-in or user, and a few swatches.",
+  },
   confirm: "none",
   description:
     "List the design systems (packs) in the studio library: id, name, mode, fonts, built-in or user, and a few swatches. Use an id with create_project or apply_design_system.",

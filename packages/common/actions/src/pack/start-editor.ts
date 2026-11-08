@@ -11,7 +11,13 @@ import { EditorResultSchema } from "./schema.js";
 
 const startEditorPack = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "start_editor_pack",
+    set: "design-system",
+    short:
+      "Open the draft project of a user design system for editing. Makes a new draft project when none exists.",
+  },
   confirm: "none",
   description:
     "Open the draft project of a user design system so it can be edited. It returns the project that backs the pack, or makes a new one with a kit page.",
@@ -22,7 +28,7 @@ const startEditorPack = defineAction({
     packId: PackIdSchema,
   }),
   invalidates: ["pack.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "start_editor_pack" },
   needs: "pack.write",
   output: EditorResultSchema,
   scope: "org",

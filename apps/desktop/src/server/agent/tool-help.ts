@@ -100,8 +100,6 @@ export const TOOL_SHORT = {
     "Lock or unlock, hide or show, or rename one layer. Locks live in the studio; hide and rename change the source.",
   set_props:
     "Change props of one React component instance (by selector or source file:line:col), such as variant or size.",
-  set_token:
-    "Change one design token value (tokens.json, or the app token CSS declaration). theme dark changes the dark value.",
   studio_help:
     "Full description of one studio tool: when to use it, what it refuses, and the fields of its result.",
   swap_instance:
@@ -184,7 +182,5 @@ export const TOOL_HELP: Record<
     "Lock or unlock, hide or show, or rename one layer, like the lock, eye and name in the Layers panel. A locked layer ignores canvas clicks. Locks are stored in the studio data folder, not in the source; hide writes display:none and rename writes data-name in the source as one version.",
   set_props:
     'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
-  set_token:
-    "Change one design token value with the same code as the studio Tokens panel: design-system/tokens.json (tokens.css is rebuilt) in a studio design system, or only that declaration in the app token CSS file of an imported app (Tailwind @theme, :root or .dark). theme dark changes the dark value. Use it instead of editing tokens.json or the token CSS by hand when you change a token value.",
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,
 };

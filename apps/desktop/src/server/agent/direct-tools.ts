@@ -1,7 +1,6 @@
 import {
   DIRECT_STYLE_PROPERTIES,
   STRUCTURE_OPS,
-  TOKENS_FILE,
   type DirectStyleProperty,
   type SelectionContext,
   type StructureOp,
@@ -14,7 +13,6 @@ import type {
 } from "../../shared/server-ports.js";
 import { kebabKeys } from "../../shared/style-keys.js";
 import {
-  toDefaulted,
   toErrorText,
   toOptional,
   toOptionalText,
@@ -28,19 +26,7 @@ import {
   readCanvasAt,
   type CanvasService,
 } from "../canvas/index.js";
-import {
-  appTokensFor,
-  readAppTokensAt,
-} from "../design-system/app-tokens/source.js";
-import { plannedCssText } from "../design-system/app-tokens/write.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
-import { writeFileAtomic } from "../design-system/packs.js";
-import { readDesignSystemState } from "../design-system/state.js";
-import { invalidateTokenSource } from "../design-system/token-preview.js";
-import {
-  plannedTokensText,
-  writeTokensText,
-} from "../design-system/update-tokens.js";
 import {
   chooseEditSite,
   EDIT_TARGETS,
@@ -169,30 +155,11 @@ export const editElementFields = {
   ),
 };
 
-export const setTokenFields = {
-  name: toTrimmedText(3, 120).annotate({
-    description:
-      'Token CSS variable, for example "--primary", or its path, for example "color.primary".',
-  }),
-  value: toTrimmedText(1, 400).annotate({
-    description:
-      'New value, for example "#015A5D" or "var(--color-brand-teal-500)".',
-  }),
-  theme: toDefaulted(
-    Schema.Literals(["light", "dark"]),
-    "light" as const,
-    "light changes the main value, dark the dark value."
-  ),
-};
-
 export const editElementShape = toSdkFieldSet(editElementFields);
-export const setTokenSdkFields = toSdkFieldSet(setTokenFields);
 
 const editElementSchema = toToolInput(editElementFields);
-const setTokenSchema = toToolInput(setTokenFields);
 
 type EditElementArgs = ToolArgs<typeof editElementSchema>;
-type SetTokenArgs = ToolArgs<typeof setTokenSchema>;
 
 function text(message: string): ToolText {
   return { content: [{ type: "text", text: message }] };
@@ -537,61 +504,5 @@ export async function runEditElement(
       : await styleEdit(deps, input);
   } catch (error) {
     return failure(`edit_element failed: ${toErrorText(error)}`);
-  }
-}
-
-export async function runSetToken(
-  deps: DirectToolDeps,
-  args: SetTokenArgs
-): Promise<ToolText> {
-  const blocked = refusal(deps.ctx, "set_token");
-  if (blocked) return failure(blocked);
-  const parsed = setTokenSchema.safeParse(args);
-  if (!parsed.success) return failure(`set_token: ${parsed.error}`);
-  const input = parsed.data;
-  const { project, direction } = deps.ctx;
-  const workTree = direction.workTree;
-  try {
-    const state = await readDesignSystemState(project, direction);
-    const entry = state.entries.find(
-      (item) => item.cssVar === input.name || item.path === input.name
-    );
-    if (!entry)
-      return failure(
-        state.entries.length === 0
-          ? "This design has no tokens."
-          : `No token ${input.name}. Read design-system/tokens.json (or the app token CSS file) for the names.`
-      );
-    const change =
-      input.theme === "dark"
-        ? { path: entry.path, darkValue: input.value }
-        : { path: entry.path, value: input.value };
-    const app = await appTokensFor(project, direction);
-    if (app) {
-      const loaded = await readAppTokensAt(workTree, app.file);
-      if (!loaded) return failure("The app token file is gone.");
-      const problem = writeProblem(deps.ctx, loaded.file);
-      if (problem) return failure(problem);
-      const next = plannedCssText(loaded, [change]);
-      if (next === loaded.text)
-        return text(`${entry.cssVar} is already ${input.value}.`);
-      await writeFileAtomic(loaded.absolute, next);
-      return text(
-        `Set ${entry.cssVar}${input.theme === "dark" ? " (dark)" : ""} to ${input.value} in ${loaded.file}. ${RUN_NOTE}`
-      );
-    }
-    const problem = writeProblem(deps.ctx, TOKENS_FILE);
-    if (problem) return failure(problem);
-    const next = await plannedTokensText(workTree, [change]);
-    if (next === null)
-      return text(`${entry.cssVar} is already ${input.value}.`);
-    await writeTokensText(workTree, next);
-    return text(
-      `Set ${entry.cssVar}${input.theme === "dark" ? " (dark)" : ""} to ${input.value} in ${TOKENS_FILE}; tokens.css was rebuilt. ${RUN_NOTE}`
-    );
-  } catch (error) {
-    return failure(`set_token failed: ${toErrorText(error)}`);
-  } finally {
-    invalidateTokenSource(workTree);
   }
 }

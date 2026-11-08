@@ -15,7 +15,13 @@ import { ApplyResultSchema } from "./schema.js";
 
 const applyPackPack = defineAction({
   access: "destructive",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "apply_design_system",
+    set: "design-system",
+    short:
+      "Apply a design system to a direction. Writes the tokens and the kit files of the pack into the project.",
+  },
   confirm: "user",
   description:
     "Apply a design system to a direction. This writes over the tokens, tokens.css and DESIGN.md (project notes stay) as one new version. An attached app keeps its own design system.",

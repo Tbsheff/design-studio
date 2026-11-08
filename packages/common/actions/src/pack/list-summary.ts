@@ -20,7 +20,7 @@ const listSummaryPack = defineAction({
     ...PageFields,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { off: "ui-bootstrap" },
   needs: "pack.read",
   output: pageOf(PackSummarySchema),
   scope: "org",

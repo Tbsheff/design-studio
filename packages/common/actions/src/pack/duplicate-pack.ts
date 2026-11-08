@@ -11,7 +11,13 @@ import { PackSummarySchema } from "./schema.js";
 
 const duplicatePackPack = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "duplicate_pack_pack",
+    set: "design-system",
+    short:
+      "Copy a built-in or user design system to a new user pack. Leave out the name for the default name.",
+  },
   confirm: "none",
   description:
     "Copy a built-in or user design system to a new user pack. Leave out the name for the default name, which is the old name and copy.",
@@ -23,7 +29,7 @@ const duplicatePackPack = defineAction({
     packId: PackIdSchema,
   }),
   invalidates: ["pack.listSummary", "pack.list", "pack.getPack"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "duplicate_pack_pack" },
   needs: "pack.write",
   output: PackSummarySchema,
   scope: "org",

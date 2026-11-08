@@ -57,6 +57,7 @@ function valueOf(tokens: Record<string, unknown>, token: string): string {
 }
 
 export interface ComposeInput {
+  appNotes?: string | null;
   name: string;
   brief?: string;
   baseName: string;
@@ -76,8 +77,26 @@ export function sourceSummary(coverage: Coverage): string {
   return kinds.length > 0 ? kinds.join(", ") : "no sources";
 }
 
+function toQuoteLines(text: string | null | undefined, max: number): string[] {
+  const trimmed = text?.trim();
+  if (!trimmed) {
+    return [];
+  }
+  return trimmed
+    .slice(0, max)
+    .split("\n")
+    .map((line) => `> ${line}`);
+}
+
+function toNotesBlock(lines: string[]): string[] {
+  if (lines.length === 0) {
+    return [];
+  }
+  return ["Design notes from the app (kept word for word):", "", ...lines, ""];
+}
+
 export function composeDraftDesignMd(input: ComposeInput): string {
-  const { name, brief, baseName, fonts, tokens, coverage } = input;
+  const { name, brief, baseName, fonts, tokens, coverage, appNotes } = input;
   const from = new Map(coverage.tokens.map((entry) => [entry.token, entry]));
   const note = (token: string) =>
     from.get(token)?.confidence === "fallback"
@@ -87,13 +106,8 @@ export function composeDraftDesignMd(input: ComposeInput): string {
     (token) =>
       `- **${COLOR_ROLES[token] ?? token}**: \`--${token}\` = \`${valueOf(tokens, `color.${token}`)}\`${note(`color.${token}`)}`
   );
-  const briefLines = brief?.trim()
-    ? brief
-        .trim()
-        .slice(0, 2000)
-        .split("\n")
-        .map((line) => `> ${line}`)
-    : [];
+  const briefLines = toQuoteLines(brief, 2000);
+  const noteLines = toQuoteLines(appNotes, 4000);
   return [
     `# ${name}`,
     "",
@@ -102,6 +116,7 @@ export function composeDraftDesignMd(input: ComposeInput): string {
     `## ${SECTION.theme}`,
     "",
     ...(briefLines.length > 0 ? ["Brief:", "", ...briefLines, ""] : []),
+    ...toNotesBlock(noteLines),
     todo("describe the mood, density and personality in 3 to 5 sentences."),
     "",
     `## ${SECTION.color}`,

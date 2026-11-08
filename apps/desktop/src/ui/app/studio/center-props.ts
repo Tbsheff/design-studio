@@ -4,7 +4,7 @@ import { canvasVariations } from "../../features/canvas";
 import { uiStore } from "../../platform/storage";
 import { useCanvasCommandsHost } from "../canvas-commands-host";
 import type { CenterView } from "../shell/center-view";
-import { nameOf, whenDirection } from "./project-model";
+import { nameOf } from "./project-model";
 import { neverRan, runStepOf } from "./run-model";
 import type { StudioCtx } from "./studio-context";
 import { hasDarkMode, tokenEntries } from "./token-model";
@@ -39,9 +39,8 @@ const layersHostOf = (ui: StudioCtx["ui"]): HTMLDivElement | null => {
 };
 
 const shellProps = (ctx: StudioCtx): CanvasProps["shell"] => {
-  const { project, ui, panes, core, run, openShip } = ctx;
+  const { project, ui, panes, core, openShip } = ctx;
   const { direction } = core;
-  const did = core.directionId;
 
   return {
     canExport: core.exporter.canOpen,
@@ -64,7 +63,6 @@ const shellProps = (ctx: StudioCtx): CanvasProps["shell"] => {
         versionId: direction?.headVersionId ?? null,
       }),
     onShip: openShip,
-    onTweak: whenDirection(did, run.tweak),
     pane: panes.panel.tab,
     paneCollapsed: ui.paneCollapsed,
   };
@@ -112,7 +110,6 @@ const canvasProps = (ctx: StudioCtx): CanvasProps => {
     noRuns: neverRan(data.hasRunsLoaded, directionRuns),
     onError: data.addError,
     onFrameChange: data.clearFrameErrors,
-    onInlinePrompt: whenDirection(did, run.tweak),
     onSource: ui.setSource,
     onTextCommit: onTextCommit(ctx),
     port: ui.port,

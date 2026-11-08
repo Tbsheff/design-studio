@@ -41,16 +41,9 @@ const McpPointBadge = lazy(async () => {
   return { default: loaded.McpPointBadge };
 });
 
-const InlinePrompt = lazy(async () => {
-  const loaded = await import("./inline-prompt.js");
-
-  return { default: loaded.InlinePrompt };
-});
-
 export {
   ChatPanel,
   ClarifyForm,
-  InlinePrompt,
   McpPointBadge,
   McpToasts,
   chatWidthStyle,
@@ -68,7 +61,7 @@ export {
 
 export type { SettingsDraft };
 
-export type { InlinePromptView } from "./use-inline-prompt.js";
+export { useAskChat } from "./use-ask-chat.js";
 
 export { applyRunEvent, runText } from "./run-state-model.js";
 

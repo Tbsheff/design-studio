@@ -93,8 +93,7 @@
     .pack-popover,
     .desktop-notice,
     .theme-menu,
-    .ui-menu,
-    .tweak-prompt
+    .ui-menu
   ) {
   -webkit-app-region: no-drag;
   app-region: no-drag;

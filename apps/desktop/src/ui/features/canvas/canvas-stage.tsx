@@ -1,10 +1,7 @@
 import { Suspense, lazy, useCallback } from "react";
 import type { ReactElement } from "react";
 
-import {
-  InlinePrompt as ChatInlinePrompt,
-  McpPointBadge,
-} from "../chat/index.js";
+import { McpPointBadge } from "../chat/index.js";
 import { CommentModePill } from "../comments/comment-layer.js";
 import { useEditVariant } from "../inspector/index.js";
 import { frameName } from "./canvas-frame-ops.js";
@@ -39,7 +36,6 @@ const LazyTabOrderSlot = lazy(async () => {
 
 const STAGE_SLOTS = {
   Grid: LazyGridOverlay,
-  InlinePrompt: ChatInlinePrompt,
   Spacing: LazySpacingHandles,
   TabOrder: LazyTabOrderSlot,
 } as const;

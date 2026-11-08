@@ -15,9 +15,7 @@ interface Props {
   paneCollapsed: boolean;
   onExpandPane: () => void;
   onReload: () => void;
-  tweakOpen: boolean;
-  onTweak: () => void;
-  tweakDisabled: boolean;
+  onAskChat: () => void;
   fileName: string;
   fileMenu: () => MenuGroup[];
   onFileMenuOpen: () => void;

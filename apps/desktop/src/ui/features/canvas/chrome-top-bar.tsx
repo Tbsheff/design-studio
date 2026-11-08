@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { requestAskChat } from "../../platform/ask-chat.js";
 import type { ChromeProps } from "./canvas-chrome-menu.js";
 import { fileNameOf, toolOf } from "./canvas-shell.js";
 import { CanvasTopBar } from "./canvas-top-bar.js";
@@ -16,11 +17,11 @@ const ChromeTopBar = ({
   chrome: ChromeProps;
   handlers: ChromeHandlers;
 }): ReactElement => {
-  const { comment, live, proto, shell, ui, zoom } = chrome;
+  const { comment, proto, shell, ui, zoom } = chrome;
   const bar = toBarShell(shell);
   const { canExport, directionName, onExpandPane, onExport } = bar;
   const { onShareLink, onShip, paneCollapsed } = bar;
-  const { file, onPresent, onTool, reload, toggleTweak, toggleView } = handlers;
+  const { file, onPresent, onTool, reload, toggleView } = handlers;
 
   const { groups, load } = file;
   const { fit, zoomPercent, zoomStep, zoomTo } = zoom;
@@ -33,9 +34,7 @@ const ChromeTopBar = ({
       paneCollapsed={paneCollapsed}
       onExpandPane={onExpandPane}
       onReload={reload}
-      tweakOpen={handlers.isTweakOpen}
-      tweakDisabled={!shell?.onTweak || !live}
-      onTweak={toggleTweak}
+      onAskChat={requestAskChat}
       fileName={fileNameOf(chrome.active, chrome.kind, directionName)}
       fileMenu={groups}
       onFileMenuOpen={load}

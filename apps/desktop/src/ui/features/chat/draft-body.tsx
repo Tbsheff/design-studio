@@ -1,6 +1,6 @@
 import type { DesignSystemState, Project } from "@design-studio/contracts";
 import { useCallback, useId } from "react";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 
 import { REGION_ROLE } from "./aria-role-model.js";
 import { copy } from "./copy.js";
@@ -12,7 +12,6 @@ import { useDraftInfo } from "./use-draft-info.js";
 import type { DraftChange } from "./use-draft-info.js";
 
 interface DraftBodyProps {
-  readonly improve: ReactNode;
   readonly lastChange: DraftChange | null;
   readonly lastRun: RunView | null;
   readonly onSave: (
@@ -35,7 +34,6 @@ const DraftBody = ({
   state,
   lastChange,
   onSave,
-  improve,
   lastRun,
   reading,
   running,
@@ -76,7 +74,6 @@ const DraftBody = ({
         error={error}
       />
       <div className="draft-actions">
-        {improve}
         <SaveControls
           check={check}
           isReady={isReady}

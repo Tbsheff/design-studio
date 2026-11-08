@@ -487,39 +487,6 @@
   height: 24px;
 }
 
-.tweak-prompt {
-  position: absolute;
-  z-index: 40;
-  top: calc(
-    var(--bar-h) + var(--s-2) + var(--viewrow-h, 0px) + var(--banner-h, 0px)
-  );
-  left: 40px;
-  display: flex;
-  align-items: center;
-  gap: var(--s-1);
-  width: min(360px, calc(100% - 48px));
-  padding: var(--s-1) var(--s-1) var(--s-1) var(--s-3);
-  border-radius: var(--r-lg);
-  animation: pop-in var(--dur-slow) var(--ease);
-}
-
-.studio[data-pane="collapsed"] .tweak-prompt {
-  left: 72px;
-}
-
-.tweak-prompt input {
-  flex: 1;
-  min-width: 0;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--text);
-  font-size: var(--t-xs);
-  outline: none;
-}
-
 .present-layer {
   position: fixed;
   inset: 0;

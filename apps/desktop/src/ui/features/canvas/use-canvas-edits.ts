@@ -1,7 +1,6 @@
 import type { ZoomKey } from "@design-studio/contracts";
 import { useMemo } from "react";
 
-import { useInlinePrompt } from "../chat/use-inline-prompt.js";
 import { useComponentInsert } from "../design-system/use-component-insert.js";
 import { useElementNudge } from "../inspector/use-element-nudge.js";
 import { useImageDrop } from "../inspector/use-image-drop.js";
@@ -22,7 +21,6 @@ type CanvasPreviewState = ReturnType<typeof useCanvasPreview>;
 type LayerEdits = ReturnType<typeof useLayerEdits>;
 
 interface EditTools {
-  readonly inlinePrompt: ReturnType<typeof useInlinePrompt>;
   readonly layerEdits: LayerEdits;
 }
 
@@ -56,8 +54,7 @@ const useEditTools = (
 ): EditTools => {
   const { projectId, directionId, kind, headVersionId } = props;
   const { selection, setSelection } = props;
-  const { active, comment, draw, layersOpen, live, picking, protoOn } = text;
-  const { stageRef } = text;
+  const { comment, draw, layersOpen, picking, protoOn } = text;
   const { frames, editsEnabled } = pv;
   const selectMode = picking;
   const treeWanted = layersOpen;
@@ -89,21 +86,8 @@ const useEditTools = (
   useCanvasVectorTools(editsEnabled, protoOn, draw, comment);
   const isEnabled = editsEnabled;
   useImageDrop({ directionId, frames, isEnabled, kind, notify, projectId });
-  const { running } = props;
-  const onSubmit = props.onInlinePrompt;
-  const route = active.path;
-  const stage = (): HTMLDivElement | null => stageRef.current;
 
-  const inlinePrompt = useInlinePrompt({
-    live,
-    onSubmit,
-    route,
-    running,
-    selection,
-    stage,
-  });
-
-  return { inlinePrompt, layerEdits };
+  return { layerEdits };
 };
 
 const useEditHandles = (

@@ -19,12 +19,8 @@ const TopBarEnd = ({
   present: MenuEntry[];
   onPort: (() => void) | null;
 }): ReactElement => {
-  const { onTweak, tweakDisabled, tweakOpen } = props;
-
-  const tweak = useMemo(
-    () => ({ disabled: tweakDisabled, open: tweakOpen, run: onTweak }),
-    [tweakDisabled, tweakOpen, onTweak]
-  );
+  const { onAskChat } = props;
+  const askChat = useMemo(() => ({ run: onAskChat }), [onAskChat]);
 
   return (
     <>
@@ -35,7 +31,7 @@ const TopBarEnd = ({
         viewOpen={props.viewOpen}
         onToggleView={props.onToggleView}
         onReload={props.onReload}
-        tweak={tweak}
+        askChat={askChat}
       />
       <TopBarShare props={props} onPort={onPort} />
       {props.account}

@@ -15,6 +15,15 @@ const focusComposer = (prompt: string): void => {
   }
 };
 
+const focusComposerAtEnd = (): void => {
+  const input = findElement(document.body, COMPOSER_INPUT);
+
+  if (input instanceof HTMLTextAreaElement) {
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+};
+
 const focusNewProject = (): void => {
   globalThis.requestAnimationFrame(() =>
     findElement(document.body, NEW_PROJECT_INPUT)?.focus()
@@ -24,4 +33,4 @@ const focusNewProject = (): void => {
 const toMountRoot = (): HTMLElement | null =>
   findElement(document.body, MOUNT_ROOT);
 
-export { focusComposer, focusNewProject, toMountRoot };
+export { focusComposer, focusComposerAtEnd, focusNewProject, toMountRoot };

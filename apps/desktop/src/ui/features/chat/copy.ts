@@ -24,6 +24,9 @@ const copy = {
     "Could not load skills. Check your connection, then try again.",
   couldNotRenameThis: "Could not rename this run. Try again.",
   coverage: "Coverage ",
+  coverageDetails: "What coverage means",
+  coverageExplain:
+    "Coverage is the share of expected tokens (color, type, spacing, radius, shadow) that the studio found in your sources and checked.",
   ctrlROrFor: "Ctrl+R or ↓ for the next match, Enter to use, Esc to close",
   deny: "Deny",
   deny2: "Deny…",
@@ -58,7 +61,7 @@ const copy = {
   hide: "Hide",
   image: " image",
   improveWithAiFills:
-    "Improve with AI fills these in, or edit DESIGN.md yourself.",
+    "Ask the chat to fill these in, or edit DESIGN.md yourself.",
   input: "Input",
   isPointingAt: " is pointing at ",
   jumpToLatest: "Jump to latest",
@@ -80,6 +83,7 @@ const copy = {
   modelAndEffort: "Model and effort",
   moveOrTabAdd: "↑↓ move · ↵ or Tab add · Esc close",
   n100: "/100 · ",
+  n100Plain: " of 100 · ",
   nameThisRun: "Name this run",
   needsShell: "Needs shell",
   noFallbackTokens: "No fallback tokens",
@@ -96,7 +100,9 @@ const copy = {
   ofTheContextWindow:
     "% of the context window. Start a new direction to keep runs fast and focused.",
   on: " on",
+  onElement: "On ",
   onPage: "On page ",
+  openDesignSystems: "Open design systems",
   orTypeAn: "Or type an answer",
   other: "Other",
   otherSpendingLimit: "Other spending limit in dollars",
@@ -140,6 +146,7 @@ const copy = {
   sampleData: "Sample data from a model",
   saveAnyway: "Save anyway",
   saveAnyway2: ". Save anyway?",
+  savedForNewProjects: "Saved. It shows in the design system picker.",
   searchAllRuns: "Search all runs by prompt or name",
   searchFailedTryAgain: "Search failed. Try again.",
   searchPastPrompts: "Search past prompts",
@@ -211,7 +218,6 @@ const copy = {
   undone: "Undone",
   unfinishedChangesIn: "Unfinished changes in ",
   uploading: "Uploading",
-  whatShouldThe: "What should the AI focus on?",
   youAnswered: "You answered",
   youWhileItRan: "You, while it ran",
 } as const;

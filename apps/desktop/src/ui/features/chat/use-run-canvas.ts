@@ -4,8 +4,9 @@ import type {
   SelectionContext,
 } from "@design-studio/contracts";
 import { stateLabel } from "@design-studio/contracts/frame-state";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
+import { ASK_CHAT_EVENT } from "../../platform/ask-chat.js";
 import { findElement } from "../../platform/find-element.js";
 import { uiStore } from "../../platform/storage.js";
 import { canvasStore } from "../canvas/canvas-frames-model.js";
@@ -82,6 +83,13 @@ const useRunCanvas = (
   const [removed, setRemoved] = useState<string | null>(null);
   const key = frameKey(frame);
   const off = removed === key;
+
+  useEffect(() => {
+    const onAsk = (): void => setRemoved(null);
+    globalThis.addEventListener(ASK_CHAT_EVENT, onAsk);
+
+    return (): void => globalThis.removeEventListener(ASK_CHAT_EVENT, onAsk);
+  }, []);
 
   let chip: RunCanvasChip | null = null;
 

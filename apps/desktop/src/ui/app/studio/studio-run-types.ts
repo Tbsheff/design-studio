@@ -4,7 +4,6 @@ import type {
   RunMention,
   RunRequest,
 } from "@design-studio/contracts";
-import type { InlineRunExtras } from "@design-studio/contracts/usage-scope";
 
 import type { CanvasFrame } from "../../features/canvas/canvas-frames-model";
 import type { ComposerMode } from "../../features/chat/run-settings";
@@ -32,7 +31,6 @@ interface StudioRun {
   send: (...args: StudioSendArgs) => Promise<void>;
   startRun: (request: RunRequest, optimistic?: boolean) => Promise<void>;
   suggestTweaks: (prompt?: string) => Promise<void>;
-  tweak: (prompt: string, extras?: InlineRunExtras) => Promise<void>;
 }
 
 interface StudioStart {

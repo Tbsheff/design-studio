@@ -1,10 +1,13 @@
 import type { CommentPrefill } from "@design-studio/contracts";
 import { useEffect } from "react";
 
+import { useAskChat } from "../../features/chat";
 import {
   isDirectEditable,
   toInspectorEmptyReason,
 } from "../../features/inspector";
+import { ASK_CHAT_EVENT } from "../../platform/ask-chat";
+import { focusComposerAtEnd } from "../../platform/focus";
 import { uiStore } from "../../platform/storage";
 import { usePanelTab } from "../../platform/use-panel-tab";
 import { assignRef } from "./ref-model";
@@ -56,6 +59,24 @@ const useStudioPanes = (projectId: string, ui: StudioUi): StudioPanes => {
         ui.setPrefill({ ...next, seq: Date.now() });
       }
     });
+  });
+
+  useAskChat();
+
+  useEffect((): (() => void) => {
+    const onAsk = async (): Promise<void> => {
+      if (await showPane("chat")) {
+        globalThis.requestAnimationFrame(focusComposerAtEnd);
+      }
+    };
+
+    const listener = (): void => {
+      void onAsk();
+    };
+
+    globalThis.addEventListener(ASK_CHAT_EVENT, listener);
+
+    return (): void => globalThis.removeEventListener(ASK_CHAT_EVENT, listener);
   });
 
   return { canvasPane, editable, panel, showPane };

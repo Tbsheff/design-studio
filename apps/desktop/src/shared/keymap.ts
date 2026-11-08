@@ -120,7 +120,7 @@ export const KEYMAP = [
   },
   {
     id: "inline-prompt",
-    label: "Ask the agent at the selection",
+    label: "Ask the chat about the selection",
     keys: ["Mod+I"],
     group: "Run and chat",
   },

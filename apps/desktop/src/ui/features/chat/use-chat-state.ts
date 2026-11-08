@@ -12,6 +12,7 @@ const promptHistoryOf = (
     const { request } = run;
 
     let prompt = "";
+
     if (request && !request.task && !request.variation && !request.retryOf) {
       prompt = request.prompt.trim();
     }
@@ -40,6 +41,7 @@ const useChatState = (
     if (todoList && todoList.length > 0) {
       return { running, todos: todoList };
     }
+
     return null;
   }, [todoList, running]);
 

@@ -74,6 +74,7 @@ const shownPending = (
   if (started) {
     return null;
   }
+
   return pending;
 };
 
@@ -105,6 +106,7 @@ const legacyParts = (summary: RunSummary): RunPart[] => {
   if (summary.finalText) {
     return [...tools, { kind: "text", text: summary.finalText }];
   }
+
   return tools;
 };
 
@@ -175,9 +177,11 @@ const finishedView = (
 ): RunView => {
   const title = event.title ?? prev?.summary?.title;
   let summary: RunSummary = event;
+
   if (title) {
     summary = { ...event, title };
   }
+
   const finished = runFromSummary(summary);
 
   if (!prev) {
@@ -229,6 +233,7 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
           ...(event.denied ? { denied: true } : {}),
         };
       }
+
       return tool;
     });
   }
@@ -282,6 +287,7 @@ const applyControlEvent = (run: RunView, event: StudioEvent): void => {
       };
       break;
     }
+
     default: {
       break;
     }

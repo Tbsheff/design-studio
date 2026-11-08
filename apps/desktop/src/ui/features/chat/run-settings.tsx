@@ -233,6 +233,7 @@ const RunSettings = ({
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
   let designsOn = false;
+
   if (designs) {
     designsOn = designs.disabledReason === null;
   }

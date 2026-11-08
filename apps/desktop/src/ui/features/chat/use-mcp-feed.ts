@@ -97,6 +97,7 @@ const useMcpFeed = (
         if (prev.some((card) => card.approval.id === approval.id)) {
           return prev;
         }
+
         return [...prev, { approval, outcome: null }];
       });
     } else if (event.type === "mcp.approval.resolved") {
@@ -105,6 +106,7 @@ const useMcpFeed = (
           if (card.approval.id === event.approvalId) {
             return { ...card, outcome: event.outcome };
           }
+
           return card;
         })
       );

@@ -31,6 +31,7 @@ const replyText = (run: RunView): string => {
       if (part.kind === "text") {
         return [part.text];
       }
+
       return [];
     })
     .join("\n");
@@ -46,6 +47,7 @@ const stateOf = (comment: DesignComment, done: number[] | null): LinkState => {
   if (done?.includes(comment.n)) {
     return "done";
   }
+
   return "open";
 };
 
@@ -96,6 +98,7 @@ const resolvable = (
   if (done === null) {
     return open;
   }
+
   return open.filter((comment) => done.includes(comment.n));
 };
 
@@ -116,6 +119,7 @@ const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
 
   const done = commentsDone(replyText(run));
   let toResolve: DesignComment[] = [];
+
   if (run.status === "completed") {
     toResolve = resolvable(linked, done);
   }
@@ -133,6 +137,7 @@ const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
   };
 
   let noun: "comment" | "comments" = "comments";
+
   if (toResolve.length === 1) {
     noun = "comment";
   }

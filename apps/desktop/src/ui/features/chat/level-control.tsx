@@ -174,6 +174,7 @@ const levelShortHint = (level: RunLevel): string => {
   if (match) {
     return `${match[1]}, ${match[2]}`;
   }
+
   return hint.split(". ")[0] ?? hint;
 };
 

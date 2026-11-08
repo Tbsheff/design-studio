@@ -98,9 +98,11 @@ const useRewind = (options: Options): RewindControl => {
 
   const { versions, status, busy, running } = options;
   let dirtyCount = 0;
+
   if (status?.dirty) {
     dirtyCount = status.changed.length;
   }
+
   const locked = busy || running !== null;
   const headVersionId = options.direction?.headVersionId ?? null;
 

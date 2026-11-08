@@ -68,6 +68,7 @@ const skillDisplayName = (id: string): string => {
   if (id.startsWith("personal:")) {
     return id.slice("personal:".length);
   }
+
   return id;
 };
 
@@ -75,6 +76,7 @@ const originText = (origin: SkillInfo["origin"]): string => {
   if (origin === "personal") {
     return "personal";
   }
+
   return origin.slice("plugin:".length);
 };
 

@@ -57,6 +57,7 @@ const useApprovalFeed = (): [
         if (card.approval.id === id) {
           return { ...card, outcome };
         }
+
         return card;
       })
     );

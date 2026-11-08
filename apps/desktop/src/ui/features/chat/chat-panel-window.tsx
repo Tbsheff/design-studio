@@ -74,6 +74,7 @@ const useHistoryWindow = <Entry extends Item>(
   const last = items.at(-1)?.key ?? null;
 
   let count: number = FIRST;
+
   if (state.reset === resetKey) {
     count = nextCount(state, items, since);
   }
@@ -85,11 +86,13 @@ const useHistoryWindow = <Entry extends Item>(
   }
 
   let revealAt = -1;
+
   if (reveal !== null) {
     revealAt = items.findIndex((item) => item.key === reveal);
   }
 
   let need = 0;
+
   if (revealAt !== -1) {
     need = items.length - revealAt;
   }

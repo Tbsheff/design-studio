@@ -11,6 +11,7 @@ const money = (value: number): string => {
   if (Number.isInteger(value)) {
     return `$${value}`;
   }
+
   return `$${value.toFixed(2)}`;
 };
 
@@ -18,6 +19,7 @@ const limitLabel = (value: number | null): string => {
   if (value === null) {
     return "No limit";
   }
+
   return money(value);
 };
 
@@ -33,6 +35,7 @@ const parseLimit = (raw: string): number | null | "bad" => {
   if (Number.isFinite(value) && value >= 0.01 && value <= 50) {
     return Math.round(value * 100) / 100;
   }
+
   return "bad";
 };
 
@@ -51,6 +54,7 @@ const BudgetIndicator = ({
   const [pending, setPending] = useState<number | null | undefined>();
   const [error, setError] = useState<string | null>(null);
   let current = settings.maxBudgetUsd;
+
   if (pending !== undefined) {
     current = pending;
   }
@@ -63,6 +67,7 @@ const BudgetIndicator = ({
         const project = await api.updateSettings(projectId, {
           maxBudgetUsd: value,
         });
+
         onSaved(project);
         setPending(undefined);
         setOpen(false);
@@ -131,6 +136,7 @@ const BudgetMenu = ({
         onClose();
       }
     };
+
     document.addEventListener("mousedown", onDown);
     globalThis.addEventListener("keydown", onKey);
 

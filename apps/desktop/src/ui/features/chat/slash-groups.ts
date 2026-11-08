@@ -12,6 +12,7 @@ const effectiveModel = (model: string, level: RunLevel): string => {
   if (preset === "project") {
     return model;
   }
+
   return preset;
 };
 
@@ -64,12 +65,15 @@ const modelGroup = (
   onModel: (model: string) => void
 ): SlashGroup => {
   let shown: string = model;
+
   if (level) {
     shown = effectiveModel(model, level);
   }
+
   const locked = shown !== model;
 
   let reason: string | null = null;
+
   if (locked && level) {
     reason = `${levelLabel(level)} runs always use ${shortModel(shown)}`;
   }

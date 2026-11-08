@@ -25,9 +25,11 @@ const load = (): Store => {
   try {
     const raw = readStored(KEY);
     let parsed: unknown = {};
+
     if (raw) {
       parsed = JSON.parse(raw);
     }
+
     cache = parsed && typeof parsed === "object" ? (parsed as Store) : {};
   } catch {
     cache = {};
@@ -57,6 +59,7 @@ const readRunFeedback = (runId: string): RunFeedback => {
   if (entry) {
     return { stars: entry.stars ?? 0, thumb: entry.thumb ?? null };
   }
+
   return EMPTY;
 };
 

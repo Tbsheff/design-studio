@@ -32,6 +32,7 @@ const preciseUsd = (amount: number): string => {
   if (amount < 0.01) {
     return SMALL_COST.format(amount);
   }
+
   return `$${amount.toFixed(4)}`;
 };
 
@@ -46,6 +47,7 @@ const costText = (summary: NonNullable<RunView["summary"]>): string => {
   if (summary.status === "canceled") {
     return `${shown} (estimate)`;
   }
+
   return shown;
 };
 

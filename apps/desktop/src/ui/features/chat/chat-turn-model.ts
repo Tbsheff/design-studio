@@ -43,6 +43,7 @@ const turnProps = (
   const versionId = run.summary?.versionId ?? null;
 
   let forkBase: string | null = null;
+
   if (!running) {
     forkBase = forkBaseOf(
       { startedAt: run.startedAt, versionId },
@@ -83,6 +84,7 @@ const undoProps = (
   const versionId = run.summary?.versionId;
 
   let parentId: string | null | undefined = null;
+
   if (
     rewind &&
     run.status === "failed" &&
@@ -125,6 +127,7 @@ const reviewOf = (
   ) {
     return versionId;
   }
+
   return null;
 };
 

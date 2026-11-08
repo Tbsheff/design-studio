@@ -104,6 +104,7 @@ const useMentions = ({
   const [dismissed, setDismissed] = useState<string | null>(null);
   const rawQuery = mentionQueryOf(draft);
   let query: string | null = null;
+
   if (rawQuery !== null && draft !== dismissed) {
     query = rawQuery;
   }
@@ -164,6 +165,7 @@ const useMentions = ({
       if (prev.some((item) => mentionKey(item) === mentionKey(mention))) {
         return prev;
       }
+
       return [...prev, mention];
     });
 
@@ -187,6 +189,7 @@ const useMentions = ({
         if (space) {
           return " ";
         }
+
         return "";
       })
     );

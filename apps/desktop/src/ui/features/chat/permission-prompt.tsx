@@ -46,6 +46,7 @@ const PermissionPrompt = ({
       : undefined;
 
   let rule: string | null = null;
+
   if (
     typeof command === "string" &&
     command.trim() !== "" &&

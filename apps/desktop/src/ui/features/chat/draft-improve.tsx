@@ -20,6 +20,7 @@ const improveRequest = (
   const trimmed = focus.trim();
 
   let level: RunLevel = "prototype";
+
   if (defaultLevel && defaultLevel !== "wireframe") {
     level = defaultLevel;
   }

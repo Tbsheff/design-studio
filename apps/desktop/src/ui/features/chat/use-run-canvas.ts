@@ -92,6 +92,7 @@ const useRunCanvas = (
       if (off) {
         return undefined;
       }
+
       return refOf(frame);
     },
   };

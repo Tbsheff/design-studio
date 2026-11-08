@@ -113,6 +113,7 @@ const loadRunsThrough = (runId: string): Promise<boolean> => {
   if (history) {
     return history.through(runId);
   }
+
   return Promise.resolve(false);
 };
 

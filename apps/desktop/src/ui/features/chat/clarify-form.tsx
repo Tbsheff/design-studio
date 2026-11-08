@@ -19,9 +19,11 @@ const ClarifyQuestionField = ({
 }): ReactElement => {
   const legendId = useId();
   let picked = "";
+
   if (item.options.includes(answer)) {
     picked = answer;
   }
+
   const radios = useRovingRadioGroup(item.options, picked, onAnswer);
   const firstRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {

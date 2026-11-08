@@ -72,6 +72,7 @@ const RunEntry = memo(
       if (onReview && reviewVersionId) {
         return (): void => onReview(reviewVersionId);
       }
+
       return undefined;
     }, [onReview, reviewVersionId]);
 
@@ -79,6 +80,7 @@ const RunEntry = memo(
       if (actions && undoVersionId) {
         return (): void => actions.onRestore(undoVersionId);
       }
+
       return undefined;
     }, [actions, undoVersionId]);
 
@@ -113,6 +115,7 @@ const RunEntry = memo(
                     </Suspense>
                   );
                 }
+
                 return (
                   <PermissionPrompt
                     key={request.id}
@@ -165,6 +168,7 @@ const RunEntry = memo(
     );
   }
 );
+
 RunEntry.displayName = "RunEntry";
 
 const PendingEntry = ({

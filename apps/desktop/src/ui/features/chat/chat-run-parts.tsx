@@ -64,6 +64,7 @@ const ToolSegment = memo(
     left.tools.length === right.tools.length &&
     left.tools.every((tool, index) => tool === right.tools[index])
 );
+
 ToolSegment.displayName = "ToolSegment";
 
 const SegmentView = ({

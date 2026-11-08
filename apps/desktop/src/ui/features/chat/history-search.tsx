@@ -40,6 +40,7 @@ const useHistorySearch = (
         if (shown.length === 0) {
           return 0;
         }
+
         return (index + step + shown.length) % shown.length;
       }),
     open,

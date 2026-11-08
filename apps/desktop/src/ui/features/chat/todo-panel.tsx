@@ -64,6 +64,7 @@ const TodoMark = ({
   if (todo.status === "in_progress" && running) {
     return <span className="spinner" />;
   }
+
   return null;
 };
 
@@ -152,6 +153,7 @@ const TodoPanel = memo(
     );
   }
 );
+
 TodoPanel.displayName = "TodoPanel";
 
 export { TodoPanel, todoProgress };

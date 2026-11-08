@@ -67,6 +67,7 @@ const EmptyState = ({ empty }: { empty: boolean }): ReactElement | null => {
   if (empty) {
     return <EmptyChat />;
   }
+
   return null;
 };
 
@@ -115,9 +116,11 @@ const RUN_ANNOUNCE: Record<RunView["status"], string> = {
 
 const RunAnnouncer = ({ run }: { run: RunView | undefined }): ReactElement => {
   let queued = 0;
+
   if (run?.status === "running") {
     queued = run.queue.length;
   }
+
   const asking = run?.status === "running" ? run.permissions[0] : undefined;
 
   const text = run

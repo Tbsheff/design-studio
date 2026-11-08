@@ -167,6 +167,7 @@ const QueuedMessages = ({
                   if (entry.id === item.id) {
                     return { ...entry, text };
                   }
+
                   return entry;
                 })
               )

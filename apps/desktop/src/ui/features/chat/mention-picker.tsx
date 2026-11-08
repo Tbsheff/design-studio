@@ -19,6 +19,7 @@ const mentionKey = (mention: RunMention): string => {
   if (mention.kind === "file") {
     return `file:${mention.path}`;
   }
+
   return `${mention.kind}:${mention.name}`;
 };
 
@@ -26,6 +27,7 @@ const mentionLabel = (mention: RunMention): string => {
   if (mention.kind === "file") {
     return mention.path.split("/").pop() ?? mention.path;
   }
+
   return mention.name;
 };
 
@@ -37,6 +39,7 @@ const mentionIcon = (mention: RunMention): IconName => {
   if (mention.kind === "token") {
     return "token";
   }
+
   return "component";
 };
 
@@ -52,6 +55,7 @@ const mentionTitle = (mention: RunMention): string => {
   if (mention.file) {
     return `@${mention.name} · ${mention.file}`;
   }
+
   return `@${mention.name}`;
 };
 
@@ -61,6 +65,7 @@ const mentionQueryOf = (draft: string): string | null => {
   if (match) {
     return match[1] ?? "";
   }
+
   return null;
 };
 
@@ -75,6 +80,7 @@ const rankMentions = (
       if (option.mention.kind === "file") {
         return option.mention.path;
       }
+
       return option.label;
     },
     30
@@ -98,6 +104,7 @@ const useMentionPicker = (
     if (query === null) {
       return [];
     }
+
     return rankMentions(options, query);
   }, [options, query]);
 
@@ -111,6 +118,7 @@ const useMentionPicker = (
       if (shown.length === 0) {
         return 0;
       }
+
       return (index + step + shown.length) % shown.length;
     });
 

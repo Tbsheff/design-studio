@@ -51,6 +51,7 @@ const blockerOf = (options: InlinePromptOptions): string | null => {
   if (options.running) {
     return "Wait for the current run to finish";
   }
+
   return null;
 };
 
@@ -71,6 +72,7 @@ const labelOf = (selection: SelectionContext[]): string => {
   const text = last?.text.replaceAll(/\s+/gu, " ").trim() ?? "";
 
   let snippet: string = text;
+
   if (text.length > SNIPPET_MAX) {
     snippet = `${text.slice(0, SNIPPET_MAX - 1)}…`;
   }
@@ -78,6 +80,7 @@ const labelOf = (selection: SelectionContext[]): string => {
   if (snippet) {
     return `“${snippet}”`;
   }
+
   return last?.tag || "element";
 };
 
@@ -85,6 +88,7 @@ const usageFileOf = (selection: SelectionContext[]): string | null => {
   if (selection.length === 1) {
     return selection[0]?.source?.file ?? null;
   }
+
   return null;
 };
 
@@ -92,6 +96,7 @@ const usedAtFileOf = (selection: SelectionContext[]): string | null => {
   if (selection.length === 1) {
     return selection[0]?.usedAt?.file ?? null;
   }
+
   return null;
 };
 
@@ -100,6 +105,7 @@ const restoreFocus = (
   stage: HTMLElement | null
 ): void => {
   let target: HTMLElement | null = stage;
+
   if (
     previous instanceof HTMLElement &&
     previous.isConnected &&

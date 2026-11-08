@@ -18,6 +18,7 @@ const pageFileOf = (path: string | undefined): string => {
   if (clean.endsWith("/")) {
     return `${clean}index.html`;
   }
+
   return clean;
 };
 
@@ -42,6 +43,7 @@ const usePageFiles = (
 ): ((path: string | undefined) => PageWait) => {
   const gated =
     options.live && options.kind === "html" && options.directionId !== null;
+
   const [files, setFiles] = useState<ReadonlySet<string> | "all" | null>(null);
 
   const changeAt =
@@ -100,6 +102,7 @@ const usePageFiles = (
         if (building) {
           return "building";
         }
+
         return null;
       }
 
@@ -110,6 +113,7 @@ const usePageFiles = (
       if (building) {
         return "building";
       }
+
       return "missing";
     },
     [gated, files, building]
@@ -187,6 +191,7 @@ const useFirstBuildGate = (options: GateOptions): FirstBuildGate => {
       if (directionId === own) {
         return pageWait(path);
       }
+
       return null;
     },
     [own, pageWait]

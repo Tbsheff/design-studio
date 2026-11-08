@@ -147,6 +147,7 @@ const ChatPanel = ({
               if (item.kind === "run") {
                 return renderRun(item.run);
               }
+
               return <McpItem key={item.key} item={item} mcp={mcp} />;
             }}
           />

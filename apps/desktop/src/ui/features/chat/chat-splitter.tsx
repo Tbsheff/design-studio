@@ -22,6 +22,7 @@ const chatWidthStyle = (width: number | null): Record<string, string> => {
   if (width === null) {
     return {};
   }
+
   return { "--chat-w": `${width}px` };
 };
 
@@ -54,6 +55,7 @@ const ChatSplitter = ({
     if (panel instanceof HTMLElement) {
       return panel.getBoundingClientRect().width;
     }
+
     return MIN_CHAT;
   };
 
@@ -87,11 +89,13 @@ const ChatSplitter = ({
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     let step: 48 | 16 = 16;
+
     if (event.shiftKey) {
       step = 48;
     }
 
     let delta = 0;
+
     if (event.key === "ArrowRight") {
       delta = step;
     } else if (event.key === "ArrowLeft") {

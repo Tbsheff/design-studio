@@ -43,6 +43,7 @@ const relativePath = (file: string, workTree: string | null): string => {
   if (isAbsolutePath(norm)) {
     return baseName(norm);
   }
+
   return norm;
 };
 
@@ -76,6 +77,7 @@ const toolTarget = (input: unknown, workTree: string | null): string => {
   if (isAbsolutePath(raw)) {
     return relativePath(raw, workTree);
   }
+
   return raw;
 };
 
@@ -95,6 +97,7 @@ const skillToolName = (input: unknown): string => {
   if (value.startsWith("personal:")) {
     return value.slice("personal:".length);
   }
+
   return value;
 };
 
@@ -108,6 +111,7 @@ const toolLabel = (name: string, input: unknown): string => {
   if (skill) {
     return `Skill · ${skill}`;
   }
+
   return "Skill";
 };
 

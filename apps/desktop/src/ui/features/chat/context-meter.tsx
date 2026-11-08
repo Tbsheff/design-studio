@@ -6,6 +6,7 @@ const contextWindowFor = (model: string): number => {
   if (/\[1m\]|-1m\b/iu.test(model)) {
     return 1_000_000;
   }
+
   return 200_000;
 };
 
@@ -36,6 +37,7 @@ const ContextMeter = ({
   const percent = Math.round(share * 100);
   const window = contextWindowFor(model);
   let tone: "" | "danger" | "warn" = "";
+
   if (share >= 0.9) {
     tone = "danger";
   } else if (share >= 0.7) {

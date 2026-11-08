@@ -26,6 +26,7 @@ const originLabel = (origin: string): string => {
   if (origin === "personal") {
     return "Personal skills (~/.claude/skills)";
   }
+
   return `Plugin ${origin.slice("plugin:".length)}`;
 };
 

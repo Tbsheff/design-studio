@@ -52,6 +52,7 @@ const ThumbButton = ({
   onPick: (value: Thumb | null) => void;
 }): ReactElement => {
   let label: "Good response" | "Bad response" = "Bad response";
+
   if (value === "up") {
     label = "Good response";
   }
@@ -86,6 +87,7 @@ const FileChips = ({
   reviews: boolean;
 }): ReactElement | null => {
   let action: "Review the changes" | "Open run details" = "Open run details";
+
   if (reviews) {
     action = "Review the changes";
   }
@@ -94,6 +96,7 @@ const FileChips = ({
     if (quiet) {
       return <p className="run-no-changes">{copy.noFilesChanged}</p>;
     }
+
     return null;
   }
 
@@ -132,11 +135,13 @@ const stopNote = (run: RunView): string | null => {
   const restored = summary.restoredFiles ?? [];
 
   let putBack = "";
+
   if (restored.length > 0) {
     putBack = `Put back ${restored.map(baseName).join(", ")}: the write was cut off.`;
   }
 
   let saved: "" | "Saved what it changed as a version." = "";
+
   if (summary.versionId) {
     saved = "Saved what it changed as a version.";
   }
@@ -154,6 +159,7 @@ const StopNote = ({ run }: { run: RunView }): ReactElement | null => {
       </p>
     );
   }
+
   return null;
 };
 
@@ -173,6 +179,7 @@ const RunFeedbackRow = memo(
       if (run.status === "running") {
         return [];
       }
+
       return fileChanges(run.tools);
     }, [run.status, run.tools]);
 
@@ -260,6 +267,7 @@ const RunFeedbackRow = memo(
     );
   }
 );
+
 RunFeedbackRow.displayName = "RunFeedbackRow";
 
 export { RunFeedbackRow };

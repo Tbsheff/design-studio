@@ -85,6 +85,7 @@ const cssVarOf = (token: string): string => {
   if (group === "color") {
     return `--${name}`;
   }
+
   return `--${group}-${name}`;
 };
 

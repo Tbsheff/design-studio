@@ -93,6 +93,7 @@ const countText = (hits: Hits | null, searching: boolean): string => {
   if (hits.more) {
     return `${SEARCH_LIMIT}+`;
   }
+
   return String(hits.runs.length);
 };
 
@@ -115,6 +116,7 @@ const HitList = ({
     if (searching) {
       return <p className="chat-search-note">{copy.searching}</p>;
     }
+
     return null;
   }
 
@@ -199,9 +201,11 @@ const ChatSearch = ({
 
       event.preventDefault();
       let step: 1 | -1 = -1;
+
       if (event.key === "ArrowDown") {
         step = 1;
       }
+
       setActive((index) => (index + step + runs.length) % runs.length);
 
       return;

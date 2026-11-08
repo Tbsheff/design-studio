@@ -23,6 +23,7 @@ const useDraftSources = (
   const [end, setEnd] = useState<ImproveEnd>(null);
 
   let runId: string | null = null;
+
   if (state?.improve.state === "started") {
     runId = state.improve.runId ?? null;
   }
@@ -115,6 +116,7 @@ const seconds = (ms: number | undefined): string | null => {
   if (ms < 1000) {
     return `${ms} ms`;
   }
+
   return `${(ms / 1000).toFixed(1)} s`;
 };
 
@@ -190,6 +192,7 @@ const summary = (state: DraftSourcesState): string => {
   if (problems > 0) {
     return `${real.length - problems} of ${real.length} read`;
   }
+
   return "All read";
 };
 

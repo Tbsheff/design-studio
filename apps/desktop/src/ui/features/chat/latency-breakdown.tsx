@@ -16,6 +16,7 @@ const fileWriteMs = (run: RunView): number =>
     if (FILE_WRITE_TOOLS.has(tool.name) && !tool.isError) {
       return sum + (tool.durationMs ?? 0);
     }
+
     return sum;
   }, 0);
 
@@ -27,6 +28,7 @@ const firstWriteAt = (run: RunView): number | null => {
   if (starts.length > 0) {
     return Math.min(...starts);
   }
+
   return null;
 };
 
@@ -66,6 +68,7 @@ const previewText = (samples: TelemetrySample[] | null): string => {
   if (samples.length === 1) {
     return formatMs(last.ms);
   }
+
   return `${formatMs(last.ms)} last, ${formatMs(max)} max (${samples.length} updates)`;
 };
 

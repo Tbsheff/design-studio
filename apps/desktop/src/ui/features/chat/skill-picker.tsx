@@ -309,12 +309,14 @@ const SkillsIndicator = ({ projectId, settings, onSaved }: IndicatorProps) => {
       const project = await api.updateSettings(projectId, {
         disabledSkills: next,
       });
+
       setError(null);
       onSaved(project);
       setPending((current) => {
         if (current === next) {
           return null;
         }
+
         return current;
       });
     } catch (thrownError: unknown) {

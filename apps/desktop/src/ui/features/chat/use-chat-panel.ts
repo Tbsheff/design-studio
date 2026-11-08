@@ -157,6 +157,7 @@ const useTurnActions = (
         onRestore: (versionId): void => rewindRef.current?.onRestore(versionId),
       };
     }
+
     return null;
   }, [hasRewind, rewindRef]);
 

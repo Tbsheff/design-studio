@@ -226,6 +226,7 @@ export default function InlinePrompt({
 
   const ready = text.trim().length > 0 && !view.blocked;
   let shared: ComponentUsage | null = null;
+
   if (usage && usage.routes.length > 1) {
     shared = usage;
   }

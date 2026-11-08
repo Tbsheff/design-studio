@@ -3,50 +3,19 @@ import type {
   ComponentInfo,
   RunMention,
 } from "@design-studio/contracts";
-import { useEffect, useMemo, useState, startTransition } from "react";
+import { useMemo, useState } from "react";
 import type { Dispatch, KeyboardEvent, SetStateAction } from "react";
 
-import { api } from "../../api.js";
 import {
-  mentionKey,
-  mentionQueryOf,
-  useMentionPicker,
-} from "./mention-picker.js";
+  componentMention,
+  toDraftWithoutMention,
+  toMentionOptions,
+} from "./mention-options-model.js";
+import { mentionQueryOf, useMentionPicker } from "./mention-picker.js";
 import type { MentionOption } from "./mention-picker.js";
-
-const fileCache = new Map<string, Promise<string[]>>();
-
-const requestFiles = async (
-  projectId: string,
-  directionId: string
-): Promise<string[]> => {
-  try {
-    const result = await api.workTreeFiles(projectId, directionId);
-
-    return result.files;
-  } catch {
-    return [];
-  }
-};
-
-const loadFiles = (
-  projectId: string,
-  directionId: string,
-  fresh: boolean
-): Promise<string[]> => {
-  const key = `${projectId}/${directionId}`;
-  const known = fileCache.get(key);
-
-  if (known && !fresh) {
-    return known;
-  }
-
-  const next = requestFiles(projectId, directionId);
-
-  fileCache.set(key, next);
-
-  return next;
-};
+import { useMentionFiles } from "./use-mention-files.js";
+import { useMentionSet } from "./use-mention-set.js";
+import type { MentionRequest } from "./use-mention-set.js";
 
 interface Options {
   projectId: string;
@@ -59,18 +28,6 @@ interface Options {
   lead?: readonly MentionOption[];
   onLead?: (option: MentionOption) => void;
 }
-
-interface MentionRequest {
-  mention: RunMention;
-  seq: number;
-}
-
-const componentMention = (component: ComponentInfo): RunMention => ({
-  file: component.file,
-  kind: "component",
-  name: component.name,
-  selector: component.selector,
-});
 
 interface UseMentionsResult {
   readonly clear: () => void;
@@ -88,93 +45,65 @@ interface UseMentionsResult {
   readonly remove: (key: string) => void;
 }
 
-const useMentions = ({
-  projectId,
-  directionId,
-  tokens,
-  draft,
-  setDraft,
-  components,
-  request,
-  lead,
-  onLead,
-}: Options): UseMentionsResult => {
-  const [files, setFiles] = useState<string[] | null>(null);
-  const [mentions, setMentions] = useState<RunMention[]>([]);
-  const [dismissed, setDismissed] = useState<string | null>(null);
-  const rawQuery = mentionQueryOf(draft);
-  let query: string | null = null;
+type PickerKey = "dismiss" | "move" | "pick" | null;
 
-  if (rawQuery !== null && draft !== dismissed) {
-    query = rawQuery;
+const toPickerKey = (
+  event: KeyboardEvent<HTMLElement>,
+  hasCurrent: boolean
+): PickerKey => {
+  const { key } = event;
+
+  if (key === "ArrowDown" || key === "ArrowUp") {
+    return "move";
   }
 
-  const refresh = (fresh: boolean): void => {
-    if (directionId) {
-      startTransition(async () => {
-        setFiles(await loadFiles(projectId, directionId, fresh));
-      });
-    }
-  };
+  const isPickKey = key === "Enter" || key === "Tab";
 
-  useEffect(() => refresh(false), [projectId, directionId]);
-  useEffect(() => {
-    if (query === "") {
-      refresh(true);
-    }
-  }, [query === ""]);
+  if (isPickKey && hasCurrent && !event.metaKey && !event.ctrlKey) {
+    return "pick";
+  }
 
-  const options = useMemo<MentionOption[]>(() => {
-    const picked = new Set(mentions.map(mentionKey));
+  if (key === "Escape") {
+    return "dismiss";
+  }
 
-    const fileOptions = (files ?? []).map((path): MentionOption => ({
-      detail: path,
-      key: `file:${path}`,
-      label: path.split("/").pop() ?? path,
-      mention: { kind: "file", path },
-    }));
+  return null;
+};
 
-    const tokenOptions = (tokens ?? []).map((entry): MentionOption => ({
-      detail: entry.value,
-      key: `token:${entry.cssVar}`,
-      label: entry.cssVar,
-      mention: { kind: "token", name: entry.cssVar, value: entry.value },
-    }));
+const toActiveQuery = (
+  draft: string,
+  dismissed: string | null
+): string | null => {
+  const rawQuery = mentionQueryOf(draft);
 
-    const componentOptions = (components ?? []).map((item): MentionOption => {
-      const mention = componentMention(item);
+  if (rawQuery !== null && draft !== dismissed) {
+    return rawQuery;
+  }
 
-      return {
-        detail: item.file ?? "Component",
-        key: mentionKey(mention),
-        label: item.name,
-        mention,
-      };
-    });
+  return null;
+};
 
-    return [
-      ...(lead ?? []),
-      ...componentOptions,
-      ...fileOptions,
-      ...tokenOptions,
-    ].filter((option) => !picked.has(option.key));
-  }, [files, tokens, mentions, components, lead]);
+const pickDirection = (key: string): 1 | -1 => {
+  if (key === "ArrowDown") {
+    return 1;
+  }
 
-  const add = (mention: RunMention): void =>
-    setMentions((prev) => {
-      if (prev.some((item) => mentionKey(item) === mentionKey(mention))) {
-        return prev;
-      }
+  return -1;
+};
 
-      return [...prev, mention];
-    });
+const useMentions = (config: Options): UseMentionsResult => {
+  const { projectId, directionId, tokens, draft, setDraft } = config;
+  const { components, request, lead, onLead } = config;
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const query = toActiveQuery(draft, dismissed);
+  const files = useMentionFiles(projectId, directionId, query === "");
+  const { add, clear, mentions, remove } = useMentionSet(request);
 
-  const requestSeq = request?.seq;
-  useEffect(() => {
-    if (request) {
-      add(request.mention);
-    }
-  }, [requestSeq]);
+  const options = useMemo(
+    () => toMentionOptions({ components, files, lead, mentions, tokens }),
+    [components, files, lead, mentions, tokens]
+  );
+
   const picker = useMentionPicker(options, query);
 
   const pick = (option: MentionOption): void => {
@@ -184,35 +113,26 @@ const useMentions = ({
       add(option.mention);
     }
 
-    setDraft(
-      draft.replace(/@[^\s@]*$/u, "").replace(/\s+$/u, (space) => {
-        if (space) {
-          return " ";
-        }
-
-        return "";
-      })
-    );
+    setDraft(toDraftWithoutMention(draft));
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>): boolean => {
-    if (!picker.open) {
+    const action = toPickerKey(event, picker.current !== null);
+
+    if (!picker.open || action === null) {
       return false;
     }
 
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      picker.move(event.key === "ArrowDown" ? 1 : -1);
-    } else if (
-      (event.key === "Enter" || event.key === "Tab") &&
-      picker.current &&
-      !event.metaKey &&
-      !event.ctrlKey
-    ) {
+    if (action === "move") {
+      picker.move(pickDirection(event.key));
+    }
+
+    if (action === "pick" && picker.current) {
       pick(picker.current);
-    } else if (event.key === "Escape") {
+    }
+
+    if (action === "dismiss") {
       setDismissed(draft);
-    } else {
-      return false;
     }
 
     event.preventDefault();
@@ -221,18 +141,9 @@ const useMentions = ({
     return true;
   };
 
-  return {
-    clear: (): void => setMentions([]),
-    loading: files === null,
-    mentions,
-    onKeyDown,
-    pick,
-    picker,
-    remove: (key: string): void =>
-      setMentions((prev) =>
-        prev.filter((mention) => mentionKey(mention) !== key)
-      ),
-  };
+  const loading = files === null;
+
+  return { clear, loading, mentions, onKeyDown, pick, picker, remove };
 };
 
 export { componentMention, useMentions };

@@ -4,7 +4,7 @@ import type { MouseEvent, ReactElement } from "react";
 import { Composer } from "../../ai/components/ai/composer.js";
 import { findElement } from "../../platform/find-element.js";
 import { SelectionChips, AttachmentThumbs } from "./composer-parts.js";
-import { MentionChips } from "./mention-picker.js";
+import { MentionChips } from "./mention-chips.js";
 import { RepoContextChip } from "./prompt-box-model.js";
 import type { PromptBoxProps } from "./prompt-box-props.js";
 import { toDropClass } from "./prompt-send-model.js";

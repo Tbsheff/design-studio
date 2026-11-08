@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { findElement } from "../../platform/find-element.js";
 import { focusComposerInput } from "./composer-focus.js";
 import { HistorySearch } from "./history-search.js";
-import { MentionList } from "./mention-picker.js";
+import { MentionList } from "./mention-list.js";
 import { QueuedMessages } from "./queued-messages.js";
 import { SlashMenu } from "./slash-menu.js";
 import type { PromptBase } from "./use-prompt-base.js";

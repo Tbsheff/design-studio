@@ -11,13 +11,16 @@ import {
   EXPORT_SCALES,
 } from "@design-studio/contracts/export";
 import type { ExportFrame, ExportScale } from "@design-studio/contracts/export";
+import { Result, Schema } from "effect";
 
+import { toDecoder } from "../platform/decode/index.js";
 import {
   BadRequestError,
   NotFoundError,
   assertSafeId,
 } from "../platform/errors/index.js";
-import { z } from "../platform/zod-bridge/index.js";
+
+type ExportFrameInput = ExportFrame;
 
 interface OpenedPreview {
   url: string;
@@ -201,78 +204,82 @@ const withPagePath = (url: string, pagePath?: string): string => {
   return next.toString();
 };
 
-const sideOf = (label: string): z.ZodNumber => {
-  const error = `${label} must be 1 to ${EXPORT_FRAME_MAX_SIDE}`;
-
-  return z
-    .number({ error })
-    .int({ error })
-    .min(1, { error })
-    .max(EXPORT_FRAME_MAX_SIDE, { error });
-};
-
-const FrameInput = z.object(
-  {
-    height: sideOf("height"),
-    name: z
-      .union([
-        z
-          .string()
-          .trim()
-          .min(1)
-          .transform((name) => name.slice(0, FRAME_NAME_MAX)),
-        z.unknown().transform(() => "Frame"),
-      ])
-      .optional(),
-    path: z.string({ error: "path must be a string" }).nullish(),
-    width: sideOf("width"),
-  },
-  { error: "frame must be an object" }
+const SideSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: EXPORT_FRAME_MAX_SIDE, minimum: 1 })
 );
 
-const FrameDecoder = z.unknown().pipe(FrameInput);
+const FrameFieldsSchema = Schema.Struct({
+  height: Schema.optionalKey(Schema.Unknown),
+  name: Schema.optionalKey(Schema.Unknown),
+  path: Schema.optionalKey(Schema.Unknown),
+  width: Schema.optionalKey(Schema.Unknown),
+});
 
-const NoFrames = z.unknown().transform((): unknown[] => []);
+const NameSchema = Schema.Trim.check(Schema.isMinLength(1));
 
-const FrameList = z.union([z.array(z.unknown()), NoFrames]);
+const FramePathSchema = Schema.UndefinedOr(Schema.NullOr(Schema.String));
 
-const FrameListInput = z.unknown().pipe(FrameList);
+const FrameScaleSchema = Schema.UndefinedOr(Schema.Literals(EXPORT_SCALES));
 
-const ScaleInput = z
-  .unknown()
-  .pipe(
-    z.literal(EXPORT_SCALES, { error: "scale must be 1, 2 or 3" }).optional()
-  );
+const toFrameFields = toDecoder(FrameFieldsSchema, "ignore");
 
-const decode = <Schema extends z.ZodType>(
-  schema: Schema,
-  raw: z.input<Schema>
-): z.output<Schema> => {
-  const result = schema.safeParse(raw);
+const toFrameList = toDecoder(Schema.Array(Schema.Unknown), "error");
 
-  if (!result.success) {
-    throw new BadRequestError(
-      result.error.issues.at(0)?.message ?? "bad input"
-    );
+const toSideResult = toDecoder(SideSchema, "error");
+
+const toNameResult = toDecoder(NameSchema, "error");
+
+const toPathResult = toDecoder(FramePathSchema, "error");
+
+const toScaleResult = toDecoder(FrameScaleSchema, "error");
+
+const toSide = (
+  label: string,
+  result: Result.Result<number, unknown>
+): number => {
+  if (Result.isFailure(result)) {
+    throw new BadRequestError(`${label} must be 1 to ${EXPORT_FRAME_MAX_SIDE}`);
   }
 
-  return result.data;
+  return result.success;
 };
 
-const parseFrame = (raw: z.input<typeof FrameDecoder>): ExportFrame => {
-  const input = decode(FrameDecoder, raw);
+const toFrameName = (result: Result.Result<string, unknown>): string => {
+  if (Result.isFailure(result)) {
+    return "Frame";
+  }
 
-  const frame: ExportFrame = {
-    height: input.height,
-    name: input.name ?? "Frame",
-    width: input.width,
-  };
+  return result.success.slice(0, FRAME_NAME_MAX);
+};
 
-  if (!input.path) {
+const toFramePath = (
+  result: Result.Result<string | null | undefined, unknown>
+): string | null => {
+  if (Result.isFailure(result)) {
+    throw new BadRequestError("path must be a string");
+  }
+
+  return result.success ?? null;
+};
+
+type FrameFields = Result.Result<typeof FrameFieldsSchema.Type, unknown>;
+
+const toFrame = (fields: FrameFields): ExportFrame => {
+  if (Result.isFailure(fields)) {
+    throw new BadRequestError("frame must be an object");
+  }
+
+  const height = toSide("height", toSideResult(fields.success.height));
+  const framePath = toFramePath(toPathResult(fields.success.path));
+  const width = toSide("width", toSideResult(fields.success.width));
+  const name = toFrameName(toNameResult(fields.success.name));
+  const frame: ExportFrame = { height, name, width };
+
+  if (!framePath) {
     return frame;
   }
 
-  const cleaned = cleanExportPath(input.path);
+  const cleaned = cleanExportPath(framePath);
 
   if (cleaned === null) {
     throw new BadRequestError("path is not a page in this project");
@@ -285,8 +292,16 @@ const parseFrame = (raw: z.input<typeof FrameDecoder>): ExportFrame => {
   return frame;
 };
 
-const parseFrames = (raw: z.input<typeof FrameListInput>): ExportFrame[] => {
-  const list = decode(FrameListInput, raw);
+const parseFrame = (raw: ExportFrameInput): ExportFrame =>
+  toFrame(toFrameFields(raw));
+
+const parseFrames = (raw: readonly ExportFrameInput[]): ExportFrame[] => {
+  const decoded = toFrameList(raw);
+  let list: readonly unknown[] = [];
+
+  if (Result.isSuccess(decoded)) {
+    list = decoded.success;
+  }
 
   if (list.length === 0) {
     return [{ ...DEFAULT_FRAME }];
@@ -296,11 +311,18 @@ const parseFrames = (raw: z.input<typeof FrameListInput>): ExportFrame[] => {
     throw new BadRequestError(`at most ${EXPORT_MAX_FRAMES} frames`);
   }
 
-  return list.map((item) => parseFrame(item));
+  return list.map((item) => toFrame(toFrameFields(item)));
 };
 
-const parseScale = (raw: z.input<typeof ScaleInput>): ExportScale =>
-  decode(ScaleInput, raw) ?? 1;
+const parseScale = (raw: ExportScale): ExportScale => {
+  const scale = toScaleResult(raw);
+
+  if (Result.isFailure(scale)) {
+    throw new BadRequestError("scale must be 1, 2 or 3");
+  }
+
+  return scale.success ?? 1;
+};
 
 export { parseFrame, parseFrames, parseScale, resolveSource, withPagePath };
 

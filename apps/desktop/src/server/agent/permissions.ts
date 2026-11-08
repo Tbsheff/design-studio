@@ -54,7 +54,6 @@ import {
   SWAP_INSTANCE_TOOL,
 } from "./legacy/direct-edit.js";
 import { EXPORT_FRAME_TOOL } from "./legacy/export.js";
-import { APP_DOCTOR_TOOL, GET_RUN_CONTEXT_TOOL } from "./legacy/mcp-read.js";
 import { DESIGN_SYSTEM_CHECK_TOOL } from "./legacy/packs.js";
 import { STUDIO_HELP_TOOL } from "./legacy/studio.js";
 import { DIFF_VERSIONS_TOOL } from "./legacy/versions.js";
@@ -96,8 +95,6 @@ export {
 } from "./legacy/direct-edit.js";
 
 export { EXPORT_FRAME_TOOL } from "./legacy/export.js";
-
-export { APP_DOCTOR_TOOL, GET_RUN_CONTEXT_TOOL } from "./legacy/mcp-read.js";
 
 export { DESIGN_SYSTEM_CHECK_TOOL } from "./legacy/packs.js";
 
@@ -261,8 +258,6 @@ const NO_CHANGE_TOOLS = new Set([
   RESOLVE_COMMENT_TOOL,
   LIST_ROUTE_LINKS_TOOL,
   ADD_FLOW_TOOL,
-  GET_RUN_CONTEXT_TOOL,
-  APP_DOCTOR_TOOL,
   COMPONENT_PREVIEW_TOOL,
   SELECT_MATCHING_TOOL,
   DIFF_VERSIONS_TOOL,

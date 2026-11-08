@@ -9,7 +9,7 @@ import { AppServerStatusSchema } from "./schema.js";
 
 const stopDevServer = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "run-control" },
   confirm: "none",
   description: "Stop the dev server of an attached app and free its port.",
   errors: [BadRequest, Conflict, NotFound],
@@ -21,7 +21,7 @@ const stopDevServer = defineAction({
     }),
   }),
   invalidates: ["dev-server.get"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { off: "run-control" },
   needs: "project.update",
   output: AppServerStatusSchema,
   scope: "project",

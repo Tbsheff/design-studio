@@ -9,9 +9,11 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
+import { Result, Schema } from "effect";
+
+import { toDecoder } from "../platform/decode/index.js";
 import { BadRequestError, isNodeError } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { bindDefaultFolderRuntime } from "./workspace-runtime.js";
 
 export {
@@ -23,20 +25,21 @@ export {
 export const PREFERENCES_FILE = "preferences.json";
 const MAX_PATH_LENGTH = 4096;
 
-const preferencesSchema = z
-  .object({
-    onboardingDismissed: z.boolean().optional(),
-    projectsDir: z
-      .string()
-      .min(1)
-      .max(MAX_PATH_LENGTH)
-      .refine((value) => path.isAbsolute(value), "must be absolute")
-      .optional(),
-    version: z.literal(1),
-  })
-  .strict();
+const AbsolutePathSchema = Schema.String.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(MAX_PATH_LENGTH),
+  Schema.makeFilter((value: string) => path.isAbsolute(value))
+);
 
-type Preferences = z.infer<typeof preferencesSchema>;
+const PreferencesSchema = Schema.Struct({
+  onboardingDismissed: Schema.optionalKey(Schema.Boolean),
+  projectsDir: Schema.optionalKey(AbsolutePathSchema),
+  version: Schema.Literal(1),
+});
+
+type Preferences = typeof PreferencesSchema.Type;
+
+const toPreferences = toDecoder(PreferencesSchema, "error");
 
 export interface DefaultFolderStore {
   current(): Promise<string>;
@@ -79,10 +82,10 @@ export function createDefaultFolderStore(
     }
 
     try {
-      const parsed = preferencesSchema.safeParse(JSON.parse(raw));
+      const parsed = toPreferences(JSON.parse(raw));
 
-      if (parsed.success) {
-        return parsed.data;
+      if (Result.isSuccess(parsed)) {
+        return parsed.success;
       }
     } catch {
       console.error(
@@ -102,10 +105,13 @@ export function createDefaultFolderStore(
   const write = async (data: Preferences): Promise<void> => {
     await mkdir(dataDir, { recursive: true });
     const temp = `${file}.${randomBytes(4).toString("hex")}.tmp`;
-    await writeFile(
-      temp,
-      `${JSON.stringify(preferencesSchema.parse(data), null, 2)}\n`
-    );
+    const checked = toPreferences(data);
+
+    if (Result.isFailure(checked)) {
+      throw new BadRequestError("invalid preferences");
+    }
+
+    await writeFile(temp, `${JSON.stringify(checked.success, null, 2)}\n`);
     await rename(temp, file);
   };
 

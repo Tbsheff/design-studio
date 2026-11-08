@@ -139,6 +139,24 @@ const TokensViewSchema = Schema.Struct({
 
 const ScreenshotSchema = ImageOutputSchema;
 
+const WorkspaceFolderSchema = Schema.Struct({
+  addedAt: Schema.Number,
+  default: Schema.optionalKey(Schema.Boolean),
+  id: Schema.String,
+  label: Schema.String,
+  missing: Schema.Boolean,
+  path: Schema.String,
+});
+
+const WorkspaceListSchema = Schema.Struct({
+  folders: Schema.Array(WorkspaceFolderSchema),
+  homeDir: Schema.String,
+});
+
+const WorkspaceRemovedSchema = Schema.Struct({
+  ok: Schema.Boolean,
+});
+
 type DoctorViewText = typeof DoctorViewSchema.Type;
 
 type PortPlanView = typeof PortPlanViewSchema.Type;
@@ -162,6 +180,9 @@ export {
   TokensViewSchema,
   VariantListSchema,
   VersionListSchema,
+  WorkspaceFolderSchema,
+  WorkspaceListSchema,
+  WorkspaceRemovedSchema,
 };
 
 export type { DoctorView, DoctorViewText, PortPlanView };

@@ -565,9 +565,12 @@
     "./walkthrough/routes": "./src/walkthrough/routes.ts",
     "./walkthrough/run": "./src/walkthrough/run.ts",
     "./walkthrough/schema": "./src/walkthrough/schema.ts",
+    "./workspace/create-folder": "./src/workspace/create-folder.ts",
+    "./workspace/delete-folder": "./src/workspace/delete-folder.ts",
     "./workspace/get-design-md": "./src/workspace/get-design-md.ts",
     "./workspace/get-doctor": "./src/workspace/get-doctor.ts",
     "./workspace/get-file": "./src/workspace/get-file.ts",
+    "./workspace/get-folders": "./src/workspace/get-folders.ts",
     "./workspace/get-frame-html": "./src/workspace/get-frame-html.ts",
     "./workspace/get-port-plan": "./src/workspace/get-port-plan.ts",
     "./workspace/get-run-context": "./src/workspace/get-run-context.ts",
@@ -581,9 +584,11 @@
     "./workspace/list-routes": "./src/workspace/list-routes.ts",
     "./workspace/list-variants": "./src/workspace/list-variants.ts",
     "./workspace/list-versions": "./src/workspace/list-versions.ts",
+    "./workspace/rename-folder": "./src/workspace/rename-folder.ts",
     "./workspace/routes": "./src/workspace/routes.ts",
     "./workspace/schema": "./src/workspace/schema.ts",
-    "./workspace/search-projects": "./src/workspace/search-projects.ts"
+    "./workspace/search-projects": "./src/workspace/search-projects.ts",
+    "./workspace/set-default-folder": "./src/workspace/set-default-folder.ts"
   },
   "dependencies": {
     "@design-studio/contracts": "workspace:*",

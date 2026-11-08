@@ -18,7 +18,13 @@ const FreshFieldSchema = Schema.Boolean.annotate({
 
 const getDoctorWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "app_doctor",
+    set: "app",
+    short:
+      "Read only. Diagnose why the attached app dev server or a route does not render.",
+  },
   confirm: "none",
   description:
     "Read only. For an attached app: name the cause when the dev server fails or a frame shows an error overlay, with the same server code as the doctor card in the studio: env-validation (and the env key that skips it, such as SKIP_ENV_VALIDATION=true), missing-env-file, port-in-use, install (with the command) and auth-redirect. Each problem has a kind; pass it to apply_app_fix when it has a fix. Returns status, doctor and text, a plain summary. The doctor reads the dev server log of the current start and one request to the app root.",

@@ -69,8 +69,6 @@ const APP_TOOLS = [
   "set_frame_session",
   "list_route_links",
   "add_flow",
-  "app_doctor",
-  "get_run_context",
 ];
 
 export type ToolScopeProject = Pick<

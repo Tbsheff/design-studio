@@ -37,6 +37,7 @@ import { PatternActions } from "./pattern/index.js";
 import { ProjectActions } from "./project/index.js";
 import { PropActions } from "./prop/index.js";
 import { PublishActions } from "./publish/index.js";
+import { ReferenceActions } from "./reference/index.js";
 import { RunActions } from "./run/index.js";
 import { ScenarioActions } from "./scenario/index.js";
 import { ScreenActions } from "./screen/index.js";
@@ -95,6 +96,7 @@ const ALL_ACTIONS = {
   project: ProjectActions,
   prop: PropActions,
   publish: PublishActions,
+  reference: ReferenceActions,
   run: RunActions,
   scenario: ScenarioActions,
   screen: ScreenActions,

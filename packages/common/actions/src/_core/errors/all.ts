@@ -29,6 +29,7 @@ import type { PageError } from "../../page/errors/index.js";
 import type { PatternError } from "../../pattern/errors/index.js";
 import type { PropError } from "../../prop/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
+import type { ReferenceDomainError } from "../../reference/errors/index.js";
 import type { ScenarioError } from "../../scenario/errors/index.js";
 import type { ScreenError } from "../../screen/errors/index.js";
 import type { SpacingError } from "../../spacing/errors/index.js";
@@ -74,6 +75,7 @@ type StudioError =
   | PatternError
   | PropError
   | PublishError
+  | ReferenceDomainError
   | ScenarioError
   | ScreenError
   | SpacingError

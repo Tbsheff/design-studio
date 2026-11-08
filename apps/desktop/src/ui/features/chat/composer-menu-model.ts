@@ -17,6 +17,8 @@ interface ItemProps {
 
 interface PlusMenuProps {
   onAttach: () => void;
+  onAttachFolder: () => void;
+  onAttachZip: () => void;
   onMention: () => void;
   onSkills: () => void;
   onOpen?: () => void;

@@ -5,6 +5,7 @@ import { usePresence } from "../chat/use-presence.js";
 import { pickable } from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
 import type { AppSlotProps } from "./app-slot-model.js";
+import { ComposerContextInput } from "./composer-context-input.js";
 import { ComposerFileInput } from "./composer-file-input.js";
 import { toSendLabel } from "./composer-pop-model.js";
 import { FolderAnchor } from "./folder-anchor.js";
@@ -22,6 +23,8 @@ import { useFolderPopState } from "./use-folder-pop-state.js";
 
 interface ComposerBarProps {
   readonly fileRef: RefObject<HTMLInputElement | null>;
+  readonly contextFileRef: RefObject<HTMLInputElement | null>;
+  readonly onContextFiles: (files: File[]) => void;
   readonly onFiles: (files: File[]) => void;
   readonly plusActions: Omit<PlusMenuActions, "onDesignSystem">;
   readonly locationLabel: string;
@@ -43,6 +46,8 @@ interface ComposerBarProps {
 
 const ComposerBar = ({
   fileRef,
+  contextFileRef,
+  onContextFiles,
   onFiles,
   plusActions,
   locationLabel,
@@ -75,6 +80,7 @@ const ComposerBar = ({
   return (
     <div className="home-composer-bar">
       <ComposerFileInput fileRef={fileRef} onFiles={onFiles} />
+      <ComposerContextInput fileRef={contextFileRef} onFiles={onContextFiles} />
       <PlusAnchor
         pops={pops.state}
         triggerRef={pops.refs.plus}

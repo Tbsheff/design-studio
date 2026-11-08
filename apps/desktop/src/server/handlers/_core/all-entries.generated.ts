@@ -37,6 +37,7 @@ import { PatternEntries } from "../pattern/handlers.js";
 import { ProjectEntries } from "../project/handlers.js";
 import { PropEntries } from "../prop/handlers.js";
 import { PublishEntries } from "../publish/handlers.js";
+import { ReferenceEntries } from "../reference/handlers.js";
 import { RunEntries } from "../run/handlers.js";
 import { ScenarioEntries } from "../scenario/handlers.js";
 import { ScreenEntries } from "../screen/handlers.js";
@@ -95,6 +96,7 @@ const ALL_ENTRIES = {
   project: ProjectEntries,
   prop: PropEntries,
   publish: PublishEntries,
+  reference: ReferenceEntries,
   run: RunEntries,
   scenario: ScenarioEntries,
   screen: ScreenEntries,

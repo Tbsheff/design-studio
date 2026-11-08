@@ -2,6 +2,8 @@ import type { ReactElement, RefObject } from "react";
 
 import type { AppChip } from "./app-chip-model.js";
 import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
+import { ContextChip } from "./context-chip.js";
+import type { ContextDraft } from "./context-drafts-model.js";
 import { copy } from "./copy.js";
 import { AppChipView } from "./home-app-chip.js";
 import { ImageChip } from "./image-chip.js";
@@ -13,8 +15,10 @@ const ComposerChips = ({
   chipTriggerRef,
   onChipMenu,
   onChipRemove,
+  contexts,
   images,
   references,
+  onRemoveContext,
   onRemoveImage,
   onRemoveReference,
 }: {
@@ -23,12 +27,19 @@ const ComposerChips = ({
   readonly chipTriggerRef: RefObject<HTMLButtonElement | null>;
   readonly onChipMenu: () => void;
   readonly onChipRemove: () => void;
+  readonly contexts: ContextDraft[];
   readonly images: ImageDraft[];
   readonly references: ReferenceDraft[];
+  readonly onRemoveContext: (id: string) => void;
   readonly onRemoveImage: (id: string) => void;
   readonly onRemoveReference: (url: string) => void;
 }): ReactElement | null => {
-  if (!chip && images.length === 0 && references.length === 0) {
+  if (
+    !chip &&
+    images.length === 0 &&
+    references.length === 0 &&
+    contexts.length === 0
+  ) {
     return null;
   }
 
@@ -45,6 +56,13 @@ const ComposerChips = ({
       )}
       {images.map((image) => (
         <ImageChip key={image.id} image={image} onRemove={onRemoveImage} />
+      ))}
+      {contexts.map((context) => (
+        <ContextChip
+          key={context.id}
+          context={context}
+          onRemove={onRemoveContext}
+        />
       ))}
       {references.map((reference) => (
         <ReferenceChip

@@ -14,7 +14,9 @@ const copy = {
   app: "App",
   appOptions: "App options",
   apps: "Apps",
+  attachFolder: "Attach folder…",
   attachImportAndOptions: "Attach, import and options",
+  attachZipOrFile: "Attach zip or file…",
   attachedToThisPrompt: "Attached to this prompt",
   brandPrimaryColor0b6e4fHeadings:
     "# Brand\nPrimary color #0B6E4F. Headings in Georgia.",
@@ -22,6 +24,7 @@ const copy = {
   change: "Change…",
   changeTheDefaultFolder: "Change the default folder",
   checks: "Checks",
+  chooseReferenceFolder: "Choose a folder of reference material",
   clearSearch: "Clear search",
   clickThroughAFinishedPrototype:
     "Click through a finished prototype. No cost.",
@@ -64,7 +67,8 @@ const copy = {
   directions: "directions",
   dismiss: "Dismiss",
   done: "Done",
-  dropAnAppFolderAn: "Drop an app folder, an image or a link to build on it",
+  dropAnAppFolderAn:
+    "Drop an app folder, a zip, a PDF, a Markdown file, an image or a link",
   dropAnywhereTheFolderGoes: "Drop anywhere: the folder goes on the prompt",
   editedPrefix: "Edited",
   edits: "Edits ",
@@ -100,6 +104,7 @@ const copy = {
   irreversibleOne:
     "Its versions, runs and comments leave the app. You cannot undo this.",
   justLower: "just",
+  labelReferenceMaterial: "Reference",
   labelUse: "Use",
   labelUseAddAppFolderOr:
     ". Use Add app folder, or drop a folder on the window.",
@@ -176,6 +181,9 @@ const copy = {
   reactVitePress: "React + Vite project. Press for a plain HTML page.",
   reactViteProject: "React + Vite project",
   recentProjects: "Recent projects",
+  referenceFolderNeedsDesktop:
+    "Folder picking needs the desktop app. Attach a zip instead.",
+  referenceMaterialTip: "Reference material for the agent: ",
   removeFromFavorites: "Remove from favorites",
   removeFromListFilesStay: "Remove from list. Files stay on disk.",
   rename: "Rename",

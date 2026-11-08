@@ -103,6 +103,7 @@ interface HomeCreateInput {
   readonly location: string | null;
   readonly images: ImageDraft[];
   readonly references: ReferenceDraft[];
+  readonly beforeRun: ((projectId: string) => Promise<void>) | null;
 }
 
 type CreateRequest = Parameters<typeof api.createProject>[0];
@@ -163,11 +164,14 @@ const toEditRunRequest = (
 
 const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
   const fanOut = input.designCount > 1;
-  const separateRun = !fanOut && input.images.length > 0;
+  const separateRun =
+    !fanOut && (input.images.length > 0 || input.beforeRun !== null);
 
   const { project } = await api.createProject(
     toCreateRequest(input, !(fanOut || separateRun))
   );
+
+  await input.beforeRun?.(project.id);
 
   if (fanOut) {
     homeVariations.set({

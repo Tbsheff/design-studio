@@ -226,6 +226,7 @@ const createProjectCreation = (core: ProjectCore) => {
       kind: ProjectKind;
       settings?: Partial<ProjectSettings>;
       designSystemFor?: string;
+      folderName?: string;
     }): Promise<Project> {
       if (input.kind !== "html" && input.kind !== "react") {
         throw new BadRequestError("kind must be html or react");
@@ -240,7 +241,8 @@ const createProjectCreation = (core: ProjectCore) => {
 
       const parent = await resolveUserFolder(input.parentPath);
       const name = input.name.trim() || "Untitled";
-      const folder = await makeNewSubfolder(parent, slugify(name));
+      const slug = input.folderName ?? slugify(name);
+      const folder = await makeNewSubfolder(parent, slug);
       let project: Project | null = null;
 
       try {

@@ -22,12 +22,7 @@ import type {
   ThumbnailService,
   VersionStore,
 } from "../../shared/server-ports.js";
-import {
-  isLeanRun,
-  leanContext,
-  loadRepoContext,
-  resolveRunTarget,
-} from "../agent/index.js";
+import { resolveRunTarget } from "../agent/index.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import {
   createCanvasService,
@@ -65,7 +60,6 @@ import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import { resourcePath, resourcesDir } from "../platform/resources/index.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
-import { insertPatternNames } from "../share/pattern/index.js";
 import { createCommentStore } from "../store/comments.js";
 import type { CommentStore } from "../store/comments.js";
 import { createDefaultFolderStore } from "../store/default-folder.js";
@@ -82,6 +76,7 @@ import { readMentionFiles } from "./mentions.js";
 import { createFolderPicker } from "./pick-folder.js";
 import type { FolderPicker } from "./pick-folder.js";
 import { rulesLoader } from "./rules-routes.js";
+import { toRunRepoContext } from "./run-repo-context.js";
 import type { StreamTracker } from "./stream-routes.js";
 import { unavailableThumbnails } from "./unavailable-thumbnails.js";
 
@@ -439,10 +434,10 @@ const createAppContext = (deps: AppDeps) => {
       }
     );
 
-    const repoContext = await (
-      isLeanRun(request)
-        ? leanContext(project, direction.workTree, request.selection)
-        : insertPatternNames(loadRepoContext(project, direction.workTree))
+    const repoContext = await toRunRepoContext(
+      project,
+      direction.workTree,
+      request
     ).catch((error: unknown) => {
       console.error("[http] repo context load failed", error);
 

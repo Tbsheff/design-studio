@@ -7,6 +7,8 @@ import type { PlusMenuActions } from "./plus-menu-model.js";
 
 interface PlusSource {
   readonly addAppFolder: () => Promise<void>;
+  readonly attachFolder: () => Promise<void>;
+  readonly contextFileRef: RefObject<HTMLInputElement | null>;
   readonly fileRef: RefObject<HTMLInputElement | null>;
   readonly hasTemplatesShown: boolean;
   readonly openAdvanced: () => void;
@@ -14,12 +16,18 @@ interface PlusSource {
 
 const toPlusActions = ({
   addAppFolder,
+  attachFolder,
+  contextFileRef,
   fileRef,
   hasTemplatesShown,
   openAdvanced,
 }: PlusSource): Omit<PlusMenuActions, "onDesignSystem"> => ({
   hasTemplatesShown,
   onAttachFile: (): void => fileRef.current?.click(),
+  onAttachFolder: (): void => {
+    attachFolder();
+  },
+  onAttachZip: (): void => contextFileRef.current?.click(),
   onImportSystem: (): void =>
     uiStore.set({ libraryFrom: null, screen: "design-systems" }),
   onLinkCode: (): void => {

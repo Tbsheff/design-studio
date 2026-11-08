@@ -84,6 +84,8 @@ const useHomeUi = <Draft extends SettingsLike>(deps: UiDeps<Draft>): HomeUi => {
     modelSettings: toModelSettings(draft),
     plusActions: toPlusActions({
       addAppFolder: flow.addAppFolder,
+      attachFolder: attach.pickContextFolder,
+      contextFileRef: attach.contextFileRef,
       fileRef: attach.fileRef,
       hasTemplatesShown: homePrefs.hasTemplatesShown,
       openAdvanced: draft.openAdvanced,

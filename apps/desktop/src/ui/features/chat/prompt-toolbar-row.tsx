@@ -8,6 +8,7 @@ const PromptToolbarRow = ({ parts }: { parts: PromptParts }): ReactElement => {
   const { base, box, slash, sending } = parts;
   const { insertMention, openSkills, sendProps } = usePromptToolbar(parts);
   const { addFiles, chooseModel, effort, mode, reasonId } = base;
+  const { addReferenceFiles, pickReferenceFolder } = base.references;
   const { setEffort, setMode } = base;
   const { choose: onChooseLevel, level } = base.runLevel;
   const { designs } = slash;
@@ -27,6 +28,8 @@ const PromptToolbarRow = ({ parts }: { parts: PromptParts }): ReactElement => {
       onCloseSlash={onCloseSlash}
       onEffort={setEffort}
       onFiles={addFiles}
+      onReferenceFiles={addReferenceFiles}
+      onReferenceFolder={pickReferenceFolder}
       onMention={insertMention}
       onMode={setMode}
       onOpenSkills={openSkills}

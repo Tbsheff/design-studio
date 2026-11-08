@@ -5,7 +5,7 @@ import type { Semaphore } from "effect";
 import { toRecord } from "./completion-call.js";
 import { getSavedCompletion, setSavedCompletion } from "./completion-file.js";
 import type { CompletionSettings } from "./completion-file.js";
-import { runCompletionAnswer } from "./completion-model.js";
+import { DEFAULT_MODEL, runCompletionAnswer } from "./completion-model.js";
 import { toSpentUsd } from "./engine/to-spent-usd.js";
 
 interface CreateCommand {
@@ -57,6 +57,7 @@ const createCompletionResult = Effect.fn("CompletionRun.create")(function* run(
   const answer = yield* runCompletionAnswer({
     budgetUsd: saved.settings.capUsd - spentUsd,
     maxTokens: command.maxTokens,
+    model: DEFAULT_MODEL,
     prompt: command.prompt,
     system: command.system,
   });

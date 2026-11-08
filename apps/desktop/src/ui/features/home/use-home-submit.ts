@@ -12,9 +12,11 @@ import type { FormEvent, RefObject } from "react";
 import { api, errorText } from "../../api.js";
 import type { AppChip } from "./app-chip-model.js";
 import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
+import type { ContextDraft } from "./context-drafts-model.js";
 import { focusRequest } from "./focus-bus-model.js";
 import { createFromHome } from "./home-model.js";
 import type { Busy } from "./home-model.js";
+import { importContexts } from "./use-context-import.js";
 
 type ParsedSettings =
   | { readonly settings: ProjectSettings }
@@ -29,6 +31,7 @@ interface SubmitInput {
   readonly busy: Busy;
   readonly chip: AppChip | null;
   readonly clarifyRef: RefObject<HTMLDivElement | null>;
+  readonly contexts: ContextDraft[];
   readonly designCount: number;
   readonly designMd: string;
   readonly images: ImageDraft[];
@@ -72,6 +75,16 @@ const runClarifySubmit = (host: HTMLDivElement | null): void => {
   }
 };
 
+const toBeforeRun = (
+  contexts: ContextDraft[]
+): ((projectId: string) => Promise<void>) | null => {
+  if (contexts.length === 0) {
+    return null;
+  }
+
+  return (projectId) => importContexts(projectId, contexts);
+};
+
 const runBuild = async (
   input: SubmitInput,
   finalPrompt: string
@@ -89,6 +102,7 @@ const runBuild = async (
 
   try {
     const project = await createFromHome({
+      beforeRun: toBeforeRun(input.contexts),
       designCount: input.designCount,
       designMd: input.designMd,
       images: input.images,

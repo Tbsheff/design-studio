@@ -27,6 +27,8 @@ import { useReview } from "./use-review.js";
 
 import "../../styles/review.css";
 
+const MAX_BADGE = 99;
+
 const ReviewPanel = lazy(async () => {
   const loaded = await import("./review-panel.js");
 
@@ -67,7 +69,7 @@ const useSlot = (
 };
 
 const badgeText = (count: number): string =>
-  count > 99 ? "99+" : String(count);
+  count > MAX_BADGE ? "99+" : String(count);
 
 const entryTip = (
   open: boolean,

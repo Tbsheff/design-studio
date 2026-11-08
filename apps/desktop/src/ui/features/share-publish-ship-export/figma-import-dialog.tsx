@@ -28,6 +28,10 @@ import "../../styles/figma-import.css";
 import { copy } from "./copy.js";
 import { pick } from "./pick.js";
 
+const MAX_FAILURE_LENGTH = 140;
+const KIT_SHOWN = 6;
+const NOTES_SHOWN = 4;
+
 interface Props {
   ids: { projectId: string; directionId: string };
   target: InsertTarget;
@@ -100,6 +104,7 @@ const usePreview = (
   useEffect(() => {
     let live = true;
     setLoading(true);
+
     const load = async (): Promise<void> => {
       try {
         const result = await json<FigmaImportPreview>("POST", route(ids), {
@@ -126,6 +131,7 @@ const usePreview = (
         }
       }
     };
+
     void load();
 
     return (): void => {
@@ -151,7 +157,7 @@ const plainFailure = (raw: string): PlainFailure => {
     };
   }
 
-  const status = /Figma API answered (\d+)/.exec(raw);
+  const status = /Figma API answered (\d+)/u.exec(raw);
 
   if (status) {
     return {
@@ -161,18 +167,21 @@ const plainFailure = (raw: string): PlainFailure => {
     };
   }
 
-  if (raw.length > 140 || /https?:\/\/|[A-Z]+_[A-Z_]+=?/.test(raw)) {
+  if (
+    raw.length > MAX_FAILURE_LENGTH ||
+    /https?:\/\/|[A-Z]+_[A-Z_]+=?/u.test(raw)
+  ) {
     return { details: raw, fix: null, text: "The Figma frame did not load." };
   }
 
   return { details: null, fix: null, text: raw };
 };
 
-const LINKS_OFF = /Figma API, which is off/;
+const LINKS_OFF = /Figma API, which is off/u;
 
 const nodesUrl = (link: string): string => {
-  const match = /figma\.com\/(?:file|design|proto)\/([A-Za-z0-9]+)/.exec(link);
-  const node = /[?&]node-id=([^&#]+)/.exec(link)?.[1];
+  const match = /figma\.com\/(?:file|design|proto)\/([A-Za-z0-9]+)/u.exec(link);
+  const node = /[?&]node-id=([^&#]+)/u.exec(link)?.[1];
   const ids = node ? decodeURIComponent(node).replace("-", ":") : "<node id>";
 
   return `https://api.figma.com/v1/files/${match?.[1] ?? "<file key>"}/nodes?ids=${ids}`;
@@ -298,7 +307,7 @@ const Summary = ({
       <div className="fgi-facts">{facts(stats).join(" · ")}</div>
       {stats.kit.length > 0 && (
         <ul className="fgi-kit" aria-label={copy.kitComponents}>
-          {stats.kit.slice(0, 6).map((use, index) => (
+          {stats.kit.slice(0, KIT_SHOWN).map((use, index) => (
             <li key={`${use.layer}-${index}`}>
               <span>{use.layer}</span>
               <code>{`<${use.component}>`}</code>
@@ -308,7 +317,7 @@ const Summary = ({
       )}
       {stats.notes.length > 0 && (
         <ul className="fgi-notes">
-          {stats.notes.slice(0, 4).map((note) => (
+          {stats.notes.slice(0, NOTES_SHOWN).map((note) => (
             <li key={note}>{note}</li>
           ))}
         </ul>

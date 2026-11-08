@@ -38,6 +38,7 @@ const CheckScreenshot = ({
   useEffect(() => {
     let alive = true;
     let objectUrl: string | null = null;
+
     const load = async (): Promise<void> => {
       try {
         const blob = await api.projectFile(projectId, filePath);
@@ -54,6 +55,7 @@ const CheckScreenshot = ({
         }
       }
     };
+
     void load();
 
     return (): void => {
@@ -84,13 +86,14 @@ const CheckScreenshot = ({
   );
 };
 
-const SHOT_SUFFIX = /-(?:desktop|tablet|mobile)\.png$/;
+const SHOT_SUFFIX = /-(?:desktop|tablet|mobile)\.png$/u;
 
 const directionOf = (results: RenderCheckResult[] | null): string | null => {
   const shot = results?.find(
     (renderCheckResult) => renderCheckResult.screenshotPath
   )?.screenshotPath;
-  const name = shot?.split(/[\\/]/).pop() ?? "";
+
+  const name = shot?.split(/[\\/]/u).pop() ?? "";
 
   return SHOT_SUFFIX.test(name) ? name.replace(SHOT_SUFFIX, "") : null;
 };
@@ -112,6 +115,7 @@ const useOldKeys = (
     const load = async (): Promise<void> => {
       try {
         const runs = await api.listRuns(projectId);
+
         const run = runs.find(
           (runSummary) =>
             runSummary.directionId === did &&
@@ -129,6 +133,7 @@ const useOldKeys = (
         return;
       }
     };
+
     void load();
 
     return (): void => {

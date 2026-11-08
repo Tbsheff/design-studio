@@ -15,6 +15,9 @@ import "../../styles/rules.css";
 import { copy } from "./copy.js";
 import { pick } from "./pick.js";
 
+const MAX_SIDE = 4000;
+const MIN_SIDE = 200;
+
 interface Props {
   projectId: string;
   directionId: string;
@@ -96,7 +99,7 @@ const liveFrame = (
   const frame = activeFrame(layout);
 
   const side = (value: number): number =>
-    Math.min(4000, Math.max(200, Math.round(value)));
+    Math.min(MAX_SIDE, Math.max(MIN_SIDE, Math.round(value)));
 
   return {
     frame: frame.id,
@@ -122,6 +125,7 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
 
   useEffect(() => {
     let live = true;
+
     const load = async (): Promise<void> => {
       try {
         const next = await rulesApi.get(projectId, directionId);
@@ -138,6 +142,7 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
         }
       }
     };
+
     void load();
 
     return (): void => {

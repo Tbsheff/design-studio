@@ -12,6 +12,8 @@ import { copy } from "./copy.js";
 import { pick } from "./pick.js";
 import { isReadOnlyPublication, publishApi } from "./publish-api.js";
 
+const SHORT_VERSION = 7;
+
 const statusText = (publication: Publication, now: number): string => {
   if (publication.status === "removed") {
     return "Unpublished";
@@ -37,7 +39,7 @@ const statusText = (publication: Publication, now: number): string => {
     publishExpiryText(publication.expiresAt, now),
     pick(publication.password, "Password", "Public"),
     views,
-    `v ${publication.versionId.slice(0, 7)}`,
+    `v ${publication.versionId.slice(0, SHORT_VERSION)}`,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -74,7 +76,7 @@ const Versions = ({
               })
             : "Pending"}{" "}
           {copy.versionPrefix}
-          {publishedVersion.sourceVersion.slice(0, 7)}
+          {publishedVersion.sourceVersion.slice(0, SHORT_VERSION)}
           {copy.dot}
           {publishedVersion.fileCount}
           {copy.files}
@@ -176,6 +178,7 @@ const RowActions = ({
 }): ReactElement => {
   const app =
     publication.backend === "app" && !isReadOnlyPublication(publication);
+
   const toggle = (name: string): void =>
     setOpen(pick(open === name, null, name));
 

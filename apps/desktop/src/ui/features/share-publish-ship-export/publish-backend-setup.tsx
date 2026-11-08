@@ -12,6 +12,8 @@ import { copy } from "./copy.js";
 import { pick } from "./pick.js";
 import { publishApi } from "./publish-api.js";
 
+const POLL_MS = 1000;
+
 const usePublishBackend = (): {
   backend: PublishBackendState | null;
   error: string | null;
@@ -39,7 +41,7 @@ const usePublishBackend = (): {
       return;
     }
 
-    const timer = globalThis.setInterval(() => void load(), 1000);
+    const timer = globalThis.setInterval(() => void load(), POLL_MS);
 
     return (): void => globalThis.clearInterval(timer);
   }, [running, load]);

@@ -69,6 +69,7 @@ const useReview = (input: ReviewInput): ReviewState => {
     const started = Date.now();
     setBusy(true);
     setError(null);
+
     const load = async (): Promise<void> => {
       try {
         const next = await api.review(projectId, directionId, {
@@ -95,6 +96,7 @@ const useReview = (input: ReviewInput): ReviewState => {
         }
       }
     };
+
     void load();
   }, [latest]);
 

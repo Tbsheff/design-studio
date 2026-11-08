@@ -28,6 +28,7 @@ import { pick } from "./pick.js";
 
 const item = (pid: string): string =>
   `/api/projects/${encodeURIComponent(pid)}`;
+
 const PREFS_KEY = "design-studio.export.v1";
 const OPEN_EVENT = "studio:open-export";
 
@@ -175,7 +176,7 @@ const toExport = (
 });
 
 const frameRoute = (frame: ExportFrame): string =>
-  `/${(frame.path ?? "").replace(/^\/+/, "")}`;
+  `/${(frame.path ?? "").replace(/^\/+/u, "")}`;
 
 const choiceNames = (frames: CanvasFrame[]): string[] => {
   const names = frames.map((frame) => toExport(frame).name);

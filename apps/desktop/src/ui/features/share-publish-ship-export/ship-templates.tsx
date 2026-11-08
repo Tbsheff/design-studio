@@ -18,6 +18,7 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
 
   useEffect(() => {
     let live = true;
+
     const load = async (): Promise<void> => {
       try {
         const settings = await shipApi.settings(projectId);
@@ -31,6 +32,7 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
         }
       }
     };
+
     void load();
 
     return (): void => {

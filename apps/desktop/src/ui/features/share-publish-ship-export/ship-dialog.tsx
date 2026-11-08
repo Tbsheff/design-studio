@@ -42,7 +42,7 @@ const DiffView = ({ file }: { file: ShipFile | null }) => {
     return <div className="ship-diff empty">{copy.pickAFileTo}</div>;
   }
 
-  const all = file.diff.replace(/\n$/, "").split("\n");
+  const all = file.diff.replace(/\n$/u, "").split("\n");
   const start = all.findIndex((line) => line.startsWith("@@"));
 
   const lines =

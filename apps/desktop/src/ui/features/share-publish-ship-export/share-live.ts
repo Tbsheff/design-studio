@@ -22,14 +22,18 @@ const FRAME_SELECTOR = ".artboard[data-frame-id], .canvas-frame[data-frame-id]";
 const ARROW =
   '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1l5.5 13 2-5.5L14 6.5z" fill="currentColor" stroke="white" stroke-width="1.2" stroke-linejoin="round"/></svg>';
 
+const HUE_MULTIPLIER = 31;
+const HUE_RANGE = 360;
+const DATA_PREFIX_LENGTH = 5;
+
 const hueOf = (id: string): number => {
-  let height = 0;
+  let hue = 0;
 
   for (const ch of id) {
-    height = (height * 31 + ch.charCodeAt(0)) % 360;
+    hue = (hue * HUE_MULTIPLIER + ch.charCodeAt(0)) % HUE_RANGE;
   }
 
-  return height;
+  return hue;
 };
 
 const frameEl = (stage: HTMLElement, frameId: string): HTMLElement | null =>
@@ -65,14 +69,14 @@ const readEvents = async (
       buffer = buffer.slice(cut + 2);
       cut = buffer.indexOf("\n\n");
 
-      if (/^event: ping/m.test(block)) {
+      if (/^event: ping/mu.test(block)) {
         continue;
       }
 
       const data = block
         .split("\n")
         .filter((line) => line.startsWith("data:"))
-        .map((line) => line.slice(5).trimStart())
+        .map((line) => line.slice(DATA_PREFIX_LENGTH).trimStart())
         .join("\n");
 
       if (data) {
@@ -243,6 +247,7 @@ const studioPointer = (
 
     const body = pending.value ?? { frameId: null, x: 0, y: 0 };
     pending = null;
+
     const send = async (): Promise<void> => {
       try {
         await call(routes.setCursorShare, {
@@ -255,6 +260,7 @@ const studioPointer = (
         return;
       }
     };
+
     void send();
   };
 

@@ -14,13 +14,13 @@ interface Props {
 }
 
 const DEV_NOISE = [
-  /\bduring prerender/i,
-  /\bprerender(ing)?\b.*\b(URL|searchParams|params|headers|cookies)\b/i,
-  /should be awaited before using its properties/i,
-  /\[Fast Refresh\]/,
-  /\[HMR\]/,
-  /Download the React DevTools/i,
-  /\bnext-dev-overlay\b|\b__nextjs_original-stack-frame/,
+  /\bduring prerender/iu,
+  /\bprerender(ing)?\b.*\b(URL|searchParams|params|headers|cookies)\b/iu,
+  /should be awaited before using its properties/iu,
+  /\[Fast Refresh\]/u,
+  /\[HMR\]/u,
+  /Download the React DevTools/iu,
+  /\bnext-dev-overlay\b|\b__nextjs_original-stack-frame/u,
 ];
 
 const isDevNoise = (buildError: BuildError): boolean =>
@@ -34,6 +34,7 @@ const fixPrompt = (buildError: BuildError): string => {
   const where = buildError.file
     ? ` in ${buildError.file}${buildError.line ? `:${buildError.line}` : ""}`
     : "";
+
   const what =
     buildError.source === "build"
       ? "build error"

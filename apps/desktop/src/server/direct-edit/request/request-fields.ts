@@ -40,8 +40,38 @@ interface FailedDecode {
   readonly failure: { readonly message: string };
 }
 
+const AT_PREFIX = "at ";
+
+const isPathLine = (line: string): boolean => line.trim().startsWith(AT_PREFIX);
+
+const toPathText = (line: string): string =>
+  line
+    .trim()
+    .slice(AT_PREFIX.length)
+    .replaceAll("][", ".")
+    .replaceAll("[", "")
+    .replaceAll("]", "")
+    .replaceAll('"', "");
+
+const toIssueLines = (lines: readonly string[]): string[] =>
+  lines.flatMap((line, index) => {
+    if (isPathLine(line)) {
+      return [];
+    }
+
+    const next = lines[index + 1] ?? "";
+
+    if (!isPathLine(next)) {
+      return [line];
+    }
+
+    return [`${toPathText(next)}: ${line}`];
+  });
+
 const toIssueText = (failure: FailedDecode, fallback: string): string => {
-  const text = String(failure.failure.message).replaceAll("\n", "; ");
+  const text = toIssueLines(String(failure.failure.message).split("\n"))
+    .filter((line) => line !== "")
+    .join("; ");
 
   if (text === "") {
     return fallback;

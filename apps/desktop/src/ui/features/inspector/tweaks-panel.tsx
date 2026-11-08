@@ -1,429 +1,54 @@
-import { Icon, PanelHead } from "@design-studio/ui";
+import { PanelHead } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useMemo } from "react";
 
-import type {
-  ColorTweak,
-  RangeTweak,
-  SelectTweak,
-  ToggleTweak,
-  TweakControl,
-  TweakValue,
-} from "../../../shared/tweaks.js";
 import { ColorValue } from "../versions-layers-tokens/token-inputs.js";
 import { copy } from "./copy.js";
+import { TweaksBody } from "./tweaks-body.js";
+import { TweaksHeaderEnd } from "./tweaks-header-end.js";
+import { toGroupControls } from "./tweaks-model.js";
+import { TweakColorSlot } from "./use-tweak-color-slot.js";
 import type { TweaksDraft } from "./use-tweaks.js";
-
-interface Props {
-  readonly draft: TweaksDraft;
-  readonly isRunning: boolean;
-  readonly onSuggest: () => void;
-}
-
-interface Group {
-  readonly label: string;
-  readonly controls: TweakControl[];
-}
-
-const toGroupControls = (controls: TweakControl[]): Group[] => {
-  const groups = new Map<string, TweakControl[]>();
-
-  for (const control of controls) {
-    const label = control.group ?? "General";
-    groups.set(label, [...(groups.get(label) ?? []), control]);
-  }
-
-  return [...groups].map(([label, list]) => ({ controls: list, label }));
-};
-
-const toSlug = (value: string): string =>
-  value.toLowerCase().replaceAll(/[^a-z0-9]+/gu, "-");
-
-const toReadout = (control: TweakControl, value: TweakValue): string => {
-  if (control.type === "range") {
-    return `${value}${control.unit ?? ""}`;
-  }
-
-  if (control.type === "toggle") {
-    return value === true ? "On" : "Off";
-  }
-
-  if (control.type === "select") {
-    return (
-      control.options.find((option) => option.value === value)?.label ??
-      String(value)
-    );
-  }
-
-  return String(value);
-};
-
-type EditFn = (control: TweakControl, value: TweakValue) => void;
-
-const RangeInput = ({
-  control,
-  value,
-  onEdit,
-}: {
-  readonly control: RangeTweak;
-  readonly value: number;
-  readonly onEdit: EditFn;
-}): ReactElement => {
-  const id = `twk-${control.id}`;
-
-  return (
-    <input
-      id={id}
-      type="range"
-      className="twk-range"
-      min={control.min}
-      max={control.max}
-      step={control.step ?? "any"}
-      value={value}
-      aria-valuetext={toReadout(control, value)}
-      onChange={(event) => onEdit(control, Number(event.currentTarget.value))}
-    />
-  );
-};
-
-const ToggleInput = ({
-  control,
-  isOn: value,
-  onEdit,
-}: {
-  readonly control: ToggleTweak;
-  readonly isOn: boolean;
-  readonly onEdit: EditFn;
-}): ReactElement => (
-  <button
-    id={`twk-${control.id}`}
-    type="button"
-    role="switch"
-    aria-checked={value}
-    className={`twk-switch ${value ? "on" : ""}`}
-    onClick={() => onEdit(control, !value)}
-  >
-    <span className="twk-switch-knob" aria-hidden="true" />
-  </button>
-);
-
-const SelectInput = ({
-  control,
-  value,
-  onEdit,
-}: {
-  readonly control: SelectTweak;
-  readonly value: string;
-  readonly onEdit: EditFn;
-}): ReactElement => (
-  <select
-    id={`twk-${control.id}`}
-    className="ins-input twk-select"
-    value={value}
-    onChange={(event) => onEdit(control, event.currentTarget.value)}
-  >
-    {control.options.map((option) => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ))}
-  </select>
-);
-
-const ColorInput = ({
-  control,
-  value,
-  onEdit,
-}: {
-  readonly control: ColorTweak;
-  readonly value: string;
-  readonly onEdit: EditFn;
-}): ReactElement => (
-  <ColorValue
-    label={control.label}
-    value={value}
-    swatch={value}
-    onChange={(next) => onEdit(control, next)}
-  />
-);
-
-const ControlInput = ({
-  control,
-  value,
-  onEdit,
-}: {
-  readonly control: TweakControl;
-  readonly value: TweakValue;
-  readonly onEdit: EditFn;
-}): ReactElement => {
-  if (control.type === "range") {
-    return (
-      <RangeInput control={control} value={Number(value)} onEdit={onEdit} />
-    );
-  }
-
-  if (control.type === "toggle") {
-    return (
-      <ToggleInput control={control} isOn={value === true} onEdit={onEdit} />
-    );
-  }
-
-  if (control.type === "select") {
-    return (
-      <SelectInput control={control} value={String(value)} onEdit={onEdit} />
-    );
-  }
-
-  return <ColorInput control={control} value={String(value)} onEdit={onEdit} />;
-};
-
-const ControlRow = ({
-  control,
-  value,
-  isChanged: changed,
-  draft,
-}: {
-  readonly control: TweakControl;
-  readonly value: TweakValue;
-  readonly isChanged: boolean;
-  readonly draft: TweaksDraft;
-}): ReactElement => {
-  const labelFor = control.type === "color" ? undefined : `twk-${control.id}`;
-
-  return (
-    <li
-      className={`twk-row twk-row-${control.type} ${changed ? "changed" : ""}`}
-      data-tweak={control.id}
-    >
-      <div className="twk-row-head" data-tip={control.cssVar}>
-        <label className="twk-label truncate" htmlFor={labelFor}>
-          {control.label}
-        </label>
-        {control.type !== "color" && (
-          <span className="twk-toReadout">{toReadout(control, value)}</span>
-        )}
-        <button
-          type="button"
-          className={`icon-btn small twk-reset ${changed ? "" : "hidden"}`}
-          aria-label={`Reset ${control.label}`}
-          data-tip={copy.reset}
-          data-tip-align="end"
-          disabled={!changed}
-          onClick={() => draft.revert(control.id)}
-        >
-          <Icon name="undo" size={12} />
-        </button>
-      </div>
-      <ControlInput control={control} value={value} onEdit={draft.edit} />
-    </li>
-  );
-};
-
-const Footer = ({
-  draft,
-}: {
-  readonly draft: TweaksDraft;
-}): ReactElement | null => {
-  if (draft.count === 0 && !draft.commitError) {
-    return null;
-  }
-
-  return (
-    <div className="twk-footer">
-      {draft.commitError && (
-        <p className="twk-error twk-commit-error" role="alert">
-          <Icon name="alert" size={13} />
-          {draft.commitError}
-        </p>
-      )}
-      {draft.count > 0 && (
-        <div className="twk-footer-bar">
-          <span className="twk-count" aria-live="polite">
-            {draft.count} {draft.count === 1 ? "change" : "changes"}
-          </span>
-          <button
-            type="button"
-            className="btn small ghost"
-            disabled={draft.isCommitting}
-            onClick={draft.discard}
-          >
-            {copy.discard}
-          </button>
-          <button
-            type="button"
-            className="btn small primary"
-            disabled={draft.isCommitting}
-            onClick={() => void draft.commit()}
-          >
-            {draft.isCommitting ? "Committing…" : "Commit"}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const EmptyState = ({
-  isRunning: running,
-  onSuggest,
-}: {
-  readonly isRunning: boolean;
-  readonly onSuggest: () => void;
-}): ReactElement => (
-  <div className="twk-empty">
-    <span className="twk-empty-icon" aria-hidden="true">
-      <Icon name="settings" size={18} />
-    </span>
-    <h3 className="twk-empty-title">{copy.noTweaksYet}</h3>
-    <p className="twk-empty-text">{copy.tweaksAreLiveControlsFor2}</p>
-    <button
-      type="button"
-      className="btn small primary"
-      disabled={running}
-      onClick={onSuggest}
-    >
-      <Icon name="sparkle" size={13} />
-      {copy.suggestTweaks}
-    </button>
-    {running && <p className="twk-empty-note">{copy.waitForTheCurrentRun}</p>}
-  </div>
-);
-
-const Problems = ({
-  problems,
-}: {
-  readonly problems: string[];
-}): ReactElement | null => {
-  if (problems.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="twk-problems" role="status">
-      <Icon name="alert" size={13} />
-      <div>
-        <p className="twk-problems-head">
-          {problems.length === 1
-            ? "One control does not change the page yet"
-            : `${problems.length} problems: some controls do not change the page yet`}
-        </p>
-        <ul>
-          {problems.slice(0, 4).map((problem) => (
-            <li key={problem}>{problem}</li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-};
-
-const Header = ({
-  draft,
-  isRunning: running,
-  onSuggest,
-  hasControls,
-}: Props & { readonly hasControls: boolean }): ReactElement => (
-  <PanelHead
-    title={copy.tabTweaks}
-    className="twk-header"
-    titleClassName="twk-title"
-  >
-    <div className="twk-header-end">
-      {draft.count > 0 && (
-        <button
-          type="button"
-          className="btn small ghost"
-          onClick={draft.discard}
-        >
-          {copy.resetAll}
-        </button>
-      )}
-      {hasControls && (
-        <button
-          type="button"
-          className="btn small ghost"
-          disabled={running}
-          data-tip={
-            running
-              ? "Wait for the current run to finish"
-              : "Ask the agent for tweak controls"
-          }
-          onClick={onSuggest}
-        >
-          <Icon name="sparkle" size={13} />
-          {copy.suggest}
-        </button>
-      )}
-    </div>
-  </PanelHead>
-);
 
 const TweaksPanel = ({
   draft,
-  isRunning: running,
+  isRunning,
   onSuggest,
-}: Props): ReactElement => {
-  const { state } = draft;
+}: {
+  readonly draft: TweaksDraft;
+  readonly isRunning: boolean;
+  readonly onSuggest: () => void;
+}): ReactElement => {
+  const { state, discard } = draft;
 
   const groups = useMemo(
     () => toGroupControls(state?.controls ?? []),
     [state?.controls]
   );
 
-  const hasControls = groups.length > 0;
-
   return (
     <div className="twk">
-      <Header
-        draft={draft}
-        isRunning={running}
-        onSuggest={onSuggest}
-        hasControls={hasControls}
-      />
-      {state?.error && (
-        <p className="twk-error" role="alert">
-          <Icon name="alert" size={13} />
-          {state.error}
-        </p>
-      )}
-      {!state && draft.loadError && (
-        <p className="twk-error" role="alert">
-          <Icon name="alert" size={13} />
-          {draft.loadError}
-        </p>
-      )}
-      <div className="twk-scroll">
-        {state && !hasControls && (
-          <EmptyState isRunning={running} onSuggest={onSuggest} />
-        )}
-        {state && <Problems problems={state.problems} />}
-        {groups.map((group) => (
-          <section
-            key={group.label}
-            className="twk-section"
-            aria-labelledby={`twk-sec-${toSlug(group.label)}`}
-          >
-            <h3
-              className="twk-section-head"
-              id={`twk-sec-${toSlug(group.label)}`}
-            >
-              {group.label}
-            </h3>
-            <ul className="twk-list">
-              {group.controls.map((control) => (
-                <ControlRow
-                  key={control.id}
-                  control={control}
-                  value={draft.values[control.id] ?? control.default}
-                  isChanged={draft.pending[control.id] !== undefined}
-                  draft={draft}
-                />
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-      <Footer draft={draft} />
+      <PanelHead
+        title={copy.tabTweaks}
+        className="twk-header"
+        titleClassName="twk-title"
+      >
+        <TweaksHeaderEnd
+          count={draft.count}
+          isRunning={isRunning}
+          hasControls={groups.length > 0}
+          onDiscard={discard}
+          onSuggest={onSuggest}
+        />
+      </PanelHead>
+      <TweakColorSlot.Provider value={ColorValue}>
+        <TweaksBody
+          draft={draft}
+          groups={groups}
+          isRunning={isRunning}
+          onSuggest={onSuggest}
+        />
+      </TweakColorSlot.Provider>
     </div>
   );
 };

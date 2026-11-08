@@ -11,6 +11,7 @@ const NumberFieldView = ({
   short,
   icon,
   id: idProp,
+  inputRef,
   toControl,
 }: NumberFieldProps): ReactElement => {
   const id = idProp ?? `ins-${spec.prop}`;
@@ -37,7 +38,7 @@ const NumberFieldView = ({
       >
         {icon ?? short}
       </label>
-      <NumberInput spec={spec} id={id} />
+      <NumberInput spec={spec} id={id} inputRef={inputRef} />
       {toControl?.(spec)}
     </div>
   );

@@ -1,4 +1,4 @@
-import type { ReactNode, ReactElement } from "react";
+import type { ReactNode, ReactElement, RefObject } from "react";
 
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import type { NumberSpec } from "./number-field-model.js";
@@ -9,6 +9,7 @@ interface SharedFieldProps {
   readonly short: string;
   readonly icon?: ReactNode;
   readonly id?: string;
+  readonly inputRef?: RefObject<HTMLInputElement | null>;
 }
 
 const toTokenControl = (spec: NumberSpec): ReactElement => (
@@ -25,12 +26,14 @@ const NumberField = ({
   short,
   icon,
   id,
+  inputRef,
 }: SharedFieldProps): ReactElement => (
   <MemoNumberField
     spec={spec}
     short={short}
     icon={icon}
     id={id}
+    inputRef={inputRef}
     toControl={toTokenControl}
   />
 );

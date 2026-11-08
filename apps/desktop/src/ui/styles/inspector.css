@@ -632,7 +632,7 @@ body.ins-scrubbing * {
   background: var(--accent);
 }
 
-.ins-field.select .ins-size-mode {
+.ins-field.select.ins-size-field .ins-select {
   padding-left: var(--s-2);
 }
 

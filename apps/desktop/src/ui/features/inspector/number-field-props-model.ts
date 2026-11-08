@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import { sameSpec } from "./number-field-model.js";
 import type { NumberSpec } from "./number-field-model.js";
@@ -8,6 +8,7 @@ interface NumberFieldProps {
   readonly short: string;
   readonly icon?: ReactNode;
   readonly id?: string;
+  readonly inputRef?: RefObject<HTMLInputElement | null>;
   readonly toControl: ((spec: NumberSpec) => ReactNode) | null;
 }
 
@@ -21,7 +22,9 @@ const hasSameSlots = (
     return false;
   }
 
-  return first.toControl === second.toControl;
+  return (
+    first.toControl === second.toControl && first.inputRef === second.inputRef
+  );
 };
 
 const isSameField = (

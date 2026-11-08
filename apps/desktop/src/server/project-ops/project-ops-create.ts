@@ -72,7 +72,8 @@ const startFirstRun = async (
 
 const createProjectIn = async (
   runtime: ProjectOpsRuntime,
-  input: CreateInput
+  input: CreateInput,
+  folderName: string | null
 ): Promise<CreatedProject> => {
   const kind = kindOf(input.kind ?? "html");
   const settings = runtime.parsers.settings(input.settings);
@@ -89,12 +90,15 @@ const createProjectIn = async (
 
   const parentPath = requestedParent ?? (await runtime.defaultFolder.ensure());
 
-  const created = await runtime.projects.createInFolder({
-    kind,
-    name,
-    parentPath,
-    settings,
-  });
+  const request: Parameters<
+    ProjectOpsRuntime["projects"]["createInFolder"]
+  >[0] = { kind, name, parentPath, settings };
+
+  if (folderName !== null) {
+    request.folderName = folderName;
+  }
+
+  const created = await runtime.projects.createInFolder(request);
 
   await runtime.addParentFolder(requestedParent, created);
   await runtime.versions.ensureRepo(created);

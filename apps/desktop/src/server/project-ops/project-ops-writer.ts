@@ -1,10 +1,11 @@
-import { Context, Effect, Layer } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { createProject } from "@design-studio/actions/project/create";
 import type { importProject } from "@design-studio/actions/project/import";
 import type { updateProject } from "@design-studio/actions/project/update";
+import { Context, Effect, Layer } from "effect";
+
 import type { KnownFailure } from "../platform/attempt/index.js";
+import { toProjectFolderName } from "./folder-name.js";
 import { createProjectIn, importProjectIn } from "./project-ops-create.js";
 import {
   deleteCommandRuleIn,
@@ -63,8 +64,14 @@ class ProjectOpsWriter extends Context.Service<
       create: Effect.fn("ProjectOpsWriter.create")(function* run(
         input: CreateInput
       ) {
+        let folderName: string | null = null;
+
+        if ((input.name ?? null) === null) {
+          folderName = yield* toProjectFolderName(input.prompt);
+        }
+
         return yield* attemptProjectOps((runtime) =>
-          createProjectIn(runtime, input)
+          createProjectIn(runtime, input, folderName)
         );
       }),
       deleteCommandRule: Effect.fn("ProjectOpsWriter.deleteCommandRule")(

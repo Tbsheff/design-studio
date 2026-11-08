@@ -9,6 +9,7 @@ import { loadConfig } from "../../platform/config/index.js";
 interface ModelCommand {
   readonly budgetUsd: number;
   readonly maxTokens: number;
+  readonly model: string;
   readonly prompt: string;
   readonly system: string | null;
 }
@@ -42,7 +43,7 @@ const toOptions = (command: ModelCommand): Options => ({
   maxBudgetUsd: Math.max(command.budgetUsd, MIN_BUDGET_USD),
   maxTurns: 1,
   mcpServers: {},
-  model: DEFAULT_MODEL,
+  model: command.model,
   permissionMode: "default",
   persistSession: false,
   settingSources: [],
@@ -141,7 +142,7 @@ const runSdkAnswer = Effect.fn("CompletionModel.runSdk")(function* run(
 
   const answer: ModelAnswer = {
     costUsd: folded.costUsd,
-    model: DEFAULT_MODEL,
+    model: command.model,
     text: folded.text.slice(0, command.maxTokens * CHARS_PER_TOKEN),
   };
 
@@ -158,6 +159,6 @@ const runCompletionAnswer = Effect.fn("CompletionModel.run")(function* run(
   return yield* runSdkAnswer(command);
 });
 
-export { MOCK_MODEL, runCompletionAnswer };
+export { DEFAULT_MODEL, MOCK_MODEL, runCompletionAnswer };
 
 export type { ModelAnswer, ModelCommand };

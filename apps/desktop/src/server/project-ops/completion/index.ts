@@ -1,3 +1,5 @@
+export { runCompletionAnswer } from "./completion-model.js";
+
 export { CompletionRunner } from "./completion-runner.js";
 
 export { CompletionStore } from "./completion-store.js";

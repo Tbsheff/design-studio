@@ -50,6 +50,7 @@ export interface StudioProjectStore extends ProjectStore {
     kind: ProjectKind;
     settings?: Partial<ProjectSettings>;
     designSystemFor?: string;
+    folderName?: string;
   }): Promise<Project>;
   isHidden(project: Project): boolean;
   moveIntoFolder(projectId: string, parentPath: string): Promise<Project>;

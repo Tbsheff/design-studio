@@ -6,6 +6,7 @@ import type { ProjectKind, SelectionContext } from "./deps.js";
 import { toTarget } from "./pattern-model.js";
 import { PatternResult } from "./pattern-result.js";
 import { PatternRow } from "./pattern-row.js";
+import { PatternSaveDialog } from "./pattern-save-dialog.js";
 import { usePatternActions } from "./use-pattern-actions.js";
 import { usePatternList } from "./use-pattern-list.js";
 
@@ -25,6 +26,8 @@ const PatternPanel = ({
   selection,
 }: PatternPanelProps): ReactElement => {
   const [query, setQuery] = useState("");
+  const [isSiteOpen, setIsSiteOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const list = usePatternList(query);
   const actions = usePatternActions({ directionId, projectId });
   const first = selection?.[0] ?? null;
@@ -38,16 +41,34 @@ const PatternPanel = ({
     []
   );
 
+  const handleSiteOpen = useCallback((): void => setIsSiteOpen(true), []);
+  const handleSiteClose = useCallback((): void => setIsSiteOpen(false), []);
+
   return (
     <section aria-label={copy.panelTitle} className={styles.panel}>
-      <input
-        aria-label={copy.searchLabel}
-        className={styles.input}
-        onChange={handleQuery}
-        placeholder={copy.searchPlaceholder}
-        type="search"
-        value={query}
-      />
+      <div className={styles.head}>
+        <input
+          aria-label={copy.searchLabel}
+          className={styles.input}
+          onChange={handleQuery}
+          placeholder={copy.searchPlaceholder}
+          type="search"
+          value={query}
+        />
+        <button className={styles.small} onClick={handleSiteOpen} type="button">
+          {copy.fromSite}
+        </button>
+      </div>
+      {isSiteOpen && (
+        <PatternSaveDialog
+          directionId={directionId}
+          onClose={handleSiteClose}
+          onDone={setNotice}
+          projectId={projectId}
+          target={null}
+        />
+      )}
+      {notice !== null && <p className={styles.note}>{notice}</p>}
       {isEmpty && <p className={styles.note}>{copy.empty}</p>}
       {!isEmpty && list.items.length === 0 && !list.isLoading && (
         <p className={styles.note}>{copy.noMatch}</p>

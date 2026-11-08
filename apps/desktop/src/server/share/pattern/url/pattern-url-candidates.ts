@@ -19,6 +19,10 @@ const SHOT_HEIGHT_MAX = 2400;
 
 const HASH_CHARS = 12;
 
+const THUMBNAIL_HEIGHT_MAX = 640;
+
+const THUMBNAIL_QUALITY = 35;
+
 interface UrlCandidate {
   readonly box: {
     readonly height: number;
@@ -30,15 +34,17 @@ interface UrlCandidate {
   readonly selector: string;
   readonly shotPath: string;
   readonly textSample: string;
+  readonly thumbnail: string | null;
 }
 
-type FoundCandidate = Omit<UrlCandidate, "shotPath">;
+type FoundCandidate = Omit<UrlCandidate, "shotPath" | "thumbnail">;
 
 type UrlCandidatesResult =
   | { readonly candidates: readonly UrlCandidate[]; readonly ok: true }
   | UrlFailure;
 
 interface InspectRequest {
+  readonly hasThumbnails: boolean;
   readonly url: string;
   readonly width: number;
 }
@@ -52,39 +58,76 @@ const toShotFolder = (request: InspectRequest): string => {
   return path.join(loadConfig().dataDir, SHOT_FOLDER, key);
 };
 
+interface ShotJob {
+  readonly folder: string;
+  readonly hasThumbnails: boolean;
+}
+
+interface ClipBox {
+  readonly height: number;
+  readonly width: number;
+  readonly x: number;
+  readonly y: number;
+}
+
+const toClipOf = (found: FoundCandidate, heightMax: number): ClipBox => ({
+  height: Math.max(1, Math.min(found.box.height, heightMax)),
+  width: Math.max(1, found.box.width),
+  x: Math.max(0, found.box.x),
+  y: Math.max(0, found.box.y),
+});
+
+const toThumbnail = async (
+  page: Page,
+  found: FoundCandidate
+): Promise<string | null> => {
+  const bytes = await page.screenshot({
+    clip: toClipOf(found, THUMBNAIL_HEIGHT_MAX),
+    fullPage: true,
+    quality: THUMBNAIL_QUALITY,
+    type: "jpeg",
+  });
+
+  return `data:image/jpeg;base64,${bytes.toString("base64")}`;
+};
+
 const toShoot = async (
   page: Page,
-  folder: string,
+  job: ShotJob,
   found: FoundCandidate,
   index: number
 ): Promise<UrlCandidate> => {
-  const file = path.join(folder, `${String(index + 1).padStart(2, "0")}.png`);
+  const name = `${String(index + 1).padStart(2, "0")}.png`;
+  const file = path.join(job.folder, name);
 
-  const clip = {
-    height: Math.max(1, Math.min(found.box.height, SHOT_HEIGHT_MAX)),
-    width: Math.max(1, found.box.width),
-    x: Math.max(0, found.box.x),
-    y: Math.max(0, found.box.y),
-  };
-
-  const bytes = await page.screenshot({ clip, fullPage: true, type: "png" });
+  const bytes = await page.screenshot({
+    clip: toClipOf(found, SHOT_HEIGHT_MAX),
+    fullPage: true,
+    type: "png",
+  });
 
   await writeFile(file, bytes);
 
-  return { ...found, shotPath: file };
+  let thumbnail: string | null = null;
+
+  if (job.hasThumbnails) {
+    thumbnail = await toThumbnail(page, found);
+  }
+
+  return { ...found, shotPath: file, thumbnail };
 };
 
 const toShootAll = async (
   page: Page,
-  folder: string,
+  job: ShotJob,
   found: readonly FoundCandidate[]
 ): Promise<UrlCandidate[]> => {
-  await mkdir(folder, { recursive: true });
+  await mkdir(job.folder, { recursive: true });
 
   return Promise.all(
     found
       .slice(0, SHOTS_MAX)
-      .map((item, index) => toShoot(page, folder, item, index))
+      .map((item, index) => toShoot(page, job, item, index))
   );
 };
 
@@ -110,7 +153,11 @@ const toInspectUrl = async (
       async (page) => {
         const found = await page.evaluate<FoundCandidate[]>(CANDIDATES_SCRIPT);
 
-        return toShootAll(page, folder, found);
+        return toShootAll(
+          page,
+          { folder, hasThumbnails: request.hasThumbnails },
+          found
+        );
       }
     );
 

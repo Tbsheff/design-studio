@@ -18,6 +18,7 @@ const handle = Effect.fn("pattern.inspect")(function* run(
 
   return yield* store.inspect({
     cursor: input.cursor,
+    hasThumbnails: input.hasThumbnails,
     limit: input.limit,
     url: input.url,
     width: input.width,

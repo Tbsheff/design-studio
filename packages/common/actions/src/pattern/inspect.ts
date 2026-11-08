@@ -7,7 +7,7 @@ import { NotFound } from "../_core/errors/not-found.js";
 import { Unavailable } from "../_core/errors/unavailable.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import { PageFields, pageOf } from "../_core/list-page.js";
-import { PatternCandidateSchema, PatternUrlFields } from "./schema.js";
+import { PatternCandidateSchema, PatternInspectFields } from "./schema.js";
 
 const inspectPattern = defineAction({
   access: "read",
@@ -26,7 +26,7 @@ const inspectPattern = defineAction({
   id: "pattern.inspect",
   input: Schema.Struct({
     ...PageFields,
-    ...PatternUrlFields,
+    ...PatternInspectFields,
     projectId: ProjectIdSchema,
   }),
   invalidates: [],

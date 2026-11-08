@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
 import { PatternDeleteControls } from "./pattern-delete-controls.js";
 import { PatternInsertControls } from "./pattern-insert-controls.js";
-import { toMeta } from "./pattern-model.js";
+import { toMeta, toSourceHost } from "./pattern-model.js";
 import type {
   PatternItem,
   PatternPosition,
@@ -34,38 +35,47 @@ const PatternRow = ({
   onInsert,
   onPage,
   target,
-}: PatternRowProps): ReactElement => (
-  <li className={styles.row}>
-    <div className={styles.rowMain}>
-      <span className={styles.name}>{item.name}</span>
-      <span className={styles.meta}>{toMeta(item)}</span>
-    </div>
-    <div className={styles.actions}>
-      {item.tags.map((tag) => (
-        <span className={styles.tag} key={tag}>
-          {tag}
-        </span>
-      ))}
-    </div>
-    <PatternInsertControls
-      isBusy={isBusy}
-      onInsert={onInsert}
-      patternId={item.id}
-      target={target}
-    />
-    {canPage && (
-      <PatternPageControls
+}: PatternRowProps): ReactElement => {
+  const host = toSourceHost(item);
+
+  return (
+    <li className={styles.row}>
+      <div className={styles.rowMain}>
+        {host !== null && (
+          <span className={styles.urlChip} data-tip={copy.urlChipTip}>
+            {host}
+          </span>
+        )}
+        <span className={styles.name}>{item.name}</span>
+        <span className={styles.meta}>{toMeta(item)}</span>
+      </div>
+      <div className={styles.actions}>
+        {item.tags.map((tag) => (
+          <span className={styles.tag} key={tag}>
+            {tag}
+          </span>
+        ))}
+      </div>
+      <PatternInsertControls
         isBusy={isBusy}
-        onPage={onPage}
+        onInsert={onInsert}
+        patternId={item.id}
+        target={target}
+      />
+      {canPage && (
+        <PatternPageControls
+          isBusy={isBusy}
+          onPage={onPage}
+          patternId={item.id}
+        />
+      )}
+      <PatternDeleteControls
+        isBusy={isBusy}
+        onDelete={onDelete}
         patternId={item.id}
       />
-    )}
-    <PatternDeleteControls
-      isBusy={isBusy}
-      onDelete={onDelete}
-      patternId={item.id}
-    />
-  </li>
-);
+    </li>
+  );
+};
 
 export { PatternRow };

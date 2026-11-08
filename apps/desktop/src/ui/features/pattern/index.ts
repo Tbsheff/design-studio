@@ -34,4 +34,4 @@ export type {
   PatternMenuItem,
 } from "./use-pattern-host.js";
 
-export type { PatternSaveSetup as PatternSlotProps } from "./use-pattern-save.js";
+export type { PatternDialogProps as PatternSlotProps } from "./pattern-save-dialog.js";

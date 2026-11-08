@@ -140,6 +140,16 @@ const PatternUrlFields = {
   width: PatternWidthSchema,
 } as const;
 
+const FALSE_DEFAULT = Effect.succeed(false);
+
+const PatternInspectFields = {
+  ...PatternUrlFields,
+  hasThumbnails: Schema.Boolean.annotate({
+    description:
+      "Also return a small JPEG data URL for each candidate. Leave out when you read the crops from shotPath.",
+  }).pipe(Schema.withDecodingDefaultKey(FALSE_DEFAULT)),
+} as const;
+
 const PatternImportFields = {
   ...PatternUrlFields,
   name: PatternNameSchema,
@@ -167,6 +177,7 @@ const PatternCandidateSchema = Schema.Struct({
     description: "Absolute path of a PNG crop of the section.",
   }),
   textSample: Schema.String,
+  thumbnail: Schema.NullOr(Schema.String),
 });
 
 const PatternImportedSchema = Schema.Struct({
@@ -280,6 +291,7 @@ export {
   PatternIdSchema,
   PatternImportedSchema,
   PatternImportFields,
+  PatternInspectFields,
   PatternImportSchema,
   PatternInsertedSchema,
   PatternInsertFields,

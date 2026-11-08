@@ -7,6 +7,7 @@ import type { UrlCandidate } from "./url/pattern-url-candidates.js";
 
 interface InspectUrlCommand {
   readonly cursor: string | null;
+  readonly hasThumbnails: boolean;
   readonly limit: number;
   readonly url: string;
   readonly width: number;
@@ -62,7 +63,11 @@ class PatternUrlStore extends Context.Service<
         command: InspectUrlCommand
       ) {
         const result = yield* Effect.promise(() =>
-          inspectUrl({ url: command.url, width: command.width })
+          inspectUrl({
+            hasThumbnails: command.hasThumbnails,
+            url: command.url,
+            width: command.width,
+          })
         );
 
         if (result.ok) {

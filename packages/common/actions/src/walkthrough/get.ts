@@ -4,6 +4,7 @@ import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
+import { PageFields } from "../_core/list-page.js";
 import { WalkthroughIdSchema, WalkthroughSchema } from "./schema.js";
 
 const getWalkthrough = defineAction({
@@ -17,7 +18,7 @@ const getWalkthrough = defineAction({
   },
   confirm: "none",
   description:
-    "Read a saved walkthrough by id. Returns the outcome, the steps with screenshots, the friction notes with fixes and the contact sheet path. Makes no browser run and no model call. Run run_walkthrough first to make a walkthrough.",
+    "Read a saved walkthrough by id. Returns the outcome, the steps with screenshots, the friction notes with fixes and the contact sheet path. limit caps the steps and the friction notes. Makes no browser run and no model call. Run run_walkthrough first to make a walkthrough.",
   errors: [BadRequest, NotFound],
   http: {
     method: "GET",
@@ -25,6 +26,7 @@ const getWalkthrough = defineAction({
   },
   id: "walkthrough.get",
   input: Schema.Struct({
+    limit: PageFields.limit,
     projectId: ProjectIdSchema,
     walkthroughId: WalkthroughIdSchema,
   }),

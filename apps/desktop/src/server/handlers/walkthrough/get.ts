@@ -12,10 +12,16 @@ const handle = Effect.fn("walkthrough.get")(function* run(
 ) {
   const store = yield* WalkthroughStore;
 
-  return yield* store.get({
+  const saved = yield* store.get({
     projectId: input.projectId,
     walkthroughId: input.walkthroughId,
   });
+
+  return {
+    ...saved,
+    frictions: saved.frictions.slice(0, input.limit),
+    steps: saved.steps.slice(0, input.limit),
+  };
 }) satisfies Handle<typeof getWalkthrough>;
 
 export { handle };

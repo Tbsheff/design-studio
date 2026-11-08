@@ -14,6 +14,8 @@ export { ComponentVariantStore } from "./variant-write/component-variant-store.j
 
 export { ComponentVariantWriter } from "./variant-write/component-variant-writer.js";
 
+export { BlockStore, BlockWriter } from "./block/index.js";
+
 export { KitDriftStore, KitDriftWriter } from "./kit-drift/index.js";
 
 export { createComponentService } from "./thumbs.js";
@@ -52,6 +54,8 @@ export type {
 export type { ComponentVariantStoreApi } from "./variant-write/component-variant-store.js";
 
 export type { ComponentVariantWriterApi } from "./variant-write/component-variant-writer.js";
+
+export type { BlockStoreApi, BlockWriterApi } from "./block/index.js";
 
 export type { KitDriftStoreApi, KitDriftWriterApi } from "./kit-drift/index.js";
 

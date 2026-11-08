@@ -1,6 +1,7 @@
 // @generated
 import { AccessibilityEntries } from "../accessibility/handlers.js";
 import { AnimationEntries } from "../animation/handlers.js";
+import { BlockEntries } from "../block/handlers.js";
 import { CanvasEntries } from "../canvas/handlers.js";
 import { ChartEntries } from "../chart/handlers.js";
 import { CloudEntries } from "../cloud/handlers.js";
@@ -57,6 +58,7 @@ import { WorkspaceEntries } from "../workspace/handlers.js";
 const ALL_ENTRIES = {
   accessibility: AccessibilityEntries,
   animation: AnimationEntries,
+  block: BlockEntries,
   canvas: CanvasEntries,
   chart: ChartEntries,
   cloud: CloudEntries,

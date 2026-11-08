@@ -1,6 +1,7 @@
 // @generated
 import { AccessibilityActions } from "./accessibility/index.js";
 import { AnimationActions } from "./animation/index.js";
+import { BlockActions } from "./block/index.js";
 import { CanvasActions } from "./canvas/index.js";
 import { ChartActions } from "./chart/index.js";
 import { CloudActions } from "./cloud/index.js";
@@ -57,6 +58,7 @@ import { WorkspaceActions } from "./workspace/index.js";
 const ALL_ACTIONS = {
   accessibility: AccessibilityActions,
   animation: AnimationActions,
+  block: BlockActions,
   canvas: CanvasActions,
   chart: ChartActions,
   cloud: CloudActions,

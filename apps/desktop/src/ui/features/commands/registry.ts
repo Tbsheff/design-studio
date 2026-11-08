@@ -57,7 +57,10 @@ export const runCommand = (id: string): boolean => {
 export const commandBlocker = (id: string): string | null => {
   const command = collectCommands().find((ch) => ch.id === id);
 
-  return command ? (command.disabled ?? null) : "Not available here";
+  if (command) {
+    return command.disabled ?? null;
+  }
+  return "Not available here";
 };
 
 export const openLayer = (layer: CommandLayer): void => {

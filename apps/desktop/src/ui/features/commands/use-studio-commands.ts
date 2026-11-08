@@ -110,7 +110,10 @@ const stepDirection = (
         studioActions.directions.length
     ];
 
-  return next ? () => studioActions.onDirection(next.id) : null;
+  if (next) {
+    return () => studioActions.onDirection(next.id);
+  }
+  return null;
 };
 
 const studioCommands = (first: StudioActions): Command[] => {

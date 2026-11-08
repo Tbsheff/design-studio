@@ -28,11 +28,14 @@ const touchesDesignSystem = (
     return 0;
   }
 
-  return change.paths.some(
-    (file) => file.startsWith("design-system/") || file === sourceFile
-  )
-    ? change.receivedAt
-    : 0;
+  if (
+    change.paths.some(
+      (file) => file.startsWith("design-system/") || file === sourceFile
+    )
+  ) {
+    return change.receivedAt;
+  }
+  return 0;
 };
 
 interface DesignSystemView {

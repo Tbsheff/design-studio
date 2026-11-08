@@ -366,7 +366,7 @@ const OpenCommentPopover = (props: OpenProps): ReactElement => {
         <ReplyBox comment={comment} onReply={props.onReply} />
         {editable && (
           <div className="comment-card-foot">
-            {changed ? (
+            {changed && (
               <button
                 type="button"
                 className="thread-text-btn"
@@ -374,7 +374,8 @@ const OpenCommentPopover = (props: OpenProps): ReactElement => {
               >
                 {copy.textSave}
               </button>
-            ) : (
+            )}
+            {!changed && (
               <span className="comment-card-note">
                 {copy.textSavedOnTheCanvas}
               </span>

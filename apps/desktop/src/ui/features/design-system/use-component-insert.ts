@@ -38,8 +38,12 @@ interface Options {
   notify: (message: string) => void;
 }
 
-const newSelector = (selector: string, position: InsertPosition): string =>
-  position === "inside" ? `${selector} > :last-child` : `${selector} + *`;
+const newSelector = (selector: string, position: InsertPosition): string => {
+  if (position === "inside") {
+    return `${selector} > :last-child`;
+  }
+  return `${selector} + *`;
+};
 
 interface DropAt {
   requestId: string;
@@ -76,7 +80,10 @@ const frameRect = (
     ? frames.elements.current[frames.frontToken]
     : null;
 
-  return el ? { el, rect: el.getBoundingClientRect() } : null;
+  if (el) {
+    return { el, rect: el.getBoundingClientRect() };
+  }
+  return null;
 };
 
 const localPoint = (

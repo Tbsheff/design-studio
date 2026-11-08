@@ -29,10 +29,12 @@ const PackBadges = ({
   tags?: number;
 }): ReactElement => (
   <span className="lib-badges">
-    <span className="badge">{pack.mode === "dark" ? "Dark" : "Light"}</span>
-    {pack.source === "user" ? (
-      <ProvenanceBadge pack={pack} />
-    ) : (
+    <span className="badge">
+      {pack.mode === "dark" && "Dark"}
+      {pack.mode !== "dark" && "Light"}
+    </span>
+    {pack.source === "user" && <ProvenanceBadge pack={pack} />}
+    {pack.source !== "user" && (
       <span className="badge">{COPY.titleBuiltIn}</span>
     )}
     {pack.draft && <span className="badge warn">{COPY.textDraft}</span>}

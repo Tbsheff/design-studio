@@ -114,7 +114,8 @@ const DoctorCard = ({
             disabled={busy}
             onClick={fix}
           >
-            {busy ? "Restarting…" : cause.fix.label}
+            {busy && "Restarting…"}
+            {!busy && cause.fix.label}
           </button>
         )}
         {!cause.fix && onRestart && cause.severity === "error" && (

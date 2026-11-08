@@ -256,7 +256,8 @@ const SavePackDialog = ({
             className="btn primary"
             disabled={busy || !name.trim()}
           >
-            {busy ? "Saving…" : "Save"}
+            {busy && "Saving…"}
+            {!busy && "Save"}
           </button>
         </div>
       </form>

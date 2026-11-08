@@ -97,11 +97,12 @@ const SLASH_OF: Record<string, string> = {
 
 const slashCommands = (): Command[] =>
   collectCommands()
-    .map((command) =>
-      command.slash || !SLASH_OF[command.id]
-        ? command
-        : { ...command, slash: SLASH_OF[command.id] }
-    )
+    .map((command) => {
+      if (command.slash || !SLASH_OF[command.id]) {
+        return command;
+      }
+      return { ...command, slash: SLASH_OF[command.id] };
+    })
     .filter((char) => char.slash);
 
 export { nextMode, isModeCycleKey, composerCommands, slashCommands };

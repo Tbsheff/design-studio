@@ -84,10 +84,12 @@ const usePacks = (): PacksState => {
   return state;
 };
 
-const pickable = (state: PacksState): PacksState =>
-  state.packs
-    ? { ...state, packs: state.packs.filter((pack) => !pack.draft) }
-    : state;
+const pickable = (state: PacksState): PacksState => {
+  if (state.packs) {
+    return { ...state, packs: state.packs.filter((pack) => !pack.draft) };
+  }
+  return state;
+};
 
 const findPack = (
   packs: PackSummary[] | null,
@@ -145,7 +147,10 @@ const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
   const rank = (name: string): number => {
     const index = KEY_SWATCHES.indexOf(name);
 
-    return index === -1 ? KEY_SWATCHES.length : index;
+    if (index === -1) {
+      return KEY_SWATCHES.length;
+    }
+    return index;
   };
 
   return [...pack.swatches].toSorted(

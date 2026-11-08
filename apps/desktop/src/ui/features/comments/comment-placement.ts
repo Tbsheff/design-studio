@@ -38,10 +38,12 @@ interface PinOffset {
   y: number;
 }
 
-const unit = (value: number): number =>
-  Number.isFinite(value)
-    ? Math.round(Math.max(0, Math.min(1, value)) * 1000) / 1000
-    : 0;
+const unit = (value: number): number => {
+  if (Number.isFinite(value)) {
+    return Math.round(Math.max(0, Math.min(1, value)) * 1000) / 1000;
+  }
+  return 0;
+};
 
 const offsetIn = (
   rect: Rect,
@@ -266,7 +268,10 @@ const KIND_OF_TAG: Record<string, string> = {
 const snippet = (text: string, max: number): string => {
   const line = text.replaceAll(/\s+/gu, " ").trim();
 
-  return line.length > max ? `${line.slice(0, max - 1)}…` : line;
+  if (line.length > max) {
+    return `${line.slice(0, max - 1)}…`;
+  }
+  return line;
 };
 
 const className = (selection: SelectionContext): string | null => {
@@ -295,7 +300,10 @@ const elementLabel = (selection: SelectionContext): string => {
   if (cls) {
     return `${tag}.${cls}`;
   }
-  return text ? `${tag} “${text}”` : tag;
+  if (text) {
+    return `${tag} “${text}”`;
+  }
+  return tag;
 };
 
 interface Breadcrumb {

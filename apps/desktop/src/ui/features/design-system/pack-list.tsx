@@ -202,7 +202,8 @@ const PackList = ({
             onClick={() => onChoose(pack)}
             onMouseMove={() => index !== active && setActive(index)}
           >
-            {pack ? <PackCard pack={pack} /> : <NoneCard />}
+            {pack && <PackCard pack={pack} />}
+            {!pack && <NoneCard />}
             {isSelected && (
               <span className="pack-check" aria-hidden="true">
                 <Icon name="check" size={12} />

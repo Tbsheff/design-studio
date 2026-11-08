@@ -81,7 +81,10 @@ const clean = <T>(list: Ranked<T>[], query: string): Ranked<T>[] => {
 const groupIndex = (group: string): number => {
   const at = GROUP_ORDER.indexOf(group);
 
-  return at === -1 ? GROUP_ORDER.length : at;
+  if (at === -1) {
+    return GROUP_ORDER.length;
+  }
+  return at;
 };
 
 const projectMeta = (hit: ProjectHit): string | undefined => {
@@ -325,11 +328,12 @@ const projectMatches = (input: RowInput): Row[] => {
     input.query
   ).slice(0, MAX_PROJECTS);
 
-  return ranked.length > 0
-    ? ranked.map((r) =>
-        projectRow(r.item, "Projects", input.actions, { marks: r.marks })
-      )
-    : looseMatches(input);
+  if (ranked.length > 0) {
+    return ranked.map((r) =>
+      projectRow(r.item, "Projects", input.actions, { marks: r.marks })
+    );
+  }
+  return looseMatches(input);
 };
 
 const actionMatches = (input: RowInput): Scored => {
@@ -373,11 +377,18 @@ const typedRows = (input: RowInput): Row[] => {
 
   const make = newRow(input.query, input.actions);
 
-  return found.length > 0 ? [...found, make] : [make];
+  if (found.length > 0) {
+    return [...found, make];
+  }
+  return [make];
 };
 
-const buildRows = (input: RowInput): Row[] =>
-  input.query.trim() === "" ? emptyRows(input) : typedRows(input);
+const buildRows = (input: RowInput): Row[] => {
+  if (input.query.trim() === "") {
+    return emptyRows(input);
+  }
+  return typedRows(input);
+};
 
 export { typePair, buildRows };
 

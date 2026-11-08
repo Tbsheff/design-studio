@@ -135,7 +135,8 @@ const RenamePackDialog = ({
             className="btn primary"
             disabled={action.busy || !name.trim() || name.trim() === pack.name}
           >
-            {action.busy ? "Renaming…" : "Rename"}
+            {action.busy && "Renaming…"}
+            {!action.busy && "Rename"}
           </button>
         </div>
       </form>
@@ -187,7 +188,8 @@ const DeletePackDialog = ({
           onClick={() => void action.run(onDelete)}
           disabled={action.busy}
         >
-          {action.busy ? "Deleting…" : "Delete"}
+          {action.busy && "Deleting…"}
+          {!action.busy && "Delete"}
         </button>
       </div>
     </dialog>

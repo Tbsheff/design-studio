@@ -185,8 +185,12 @@ interface PreviewLoad {
   readonly setShown: (update: (prev: Shown) => Shown) => void;
 }
 
-const keepReady = (prev: Shown, next: Shown): Shown =>
-  next.state === "none" && prev.state === "ready" ? prev : next;
+const keepReady = (prev: Shown, next: Shown): Shown => {
+  if (next.state === "none" && prev.state === "ready") {
+    return prev;
+  }
+  return next;
+};
 
 const showPreview = async (load: PreviewLoad): Promise<void> => {
   const { controller } = load;

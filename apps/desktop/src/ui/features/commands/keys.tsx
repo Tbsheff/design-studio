@@ -23,5 +23,8 @@ export const Keys = ({
 export const KeyHint = ({ id }: { id: KeyId }): ReactElement | null => {
   const first = binding(id).keys[0];
 
-  return first ? <Keys keys={first} /> : null;
+  if (first) {
+    return <Keys keys={first} />;
+  }
+  return null;
 };

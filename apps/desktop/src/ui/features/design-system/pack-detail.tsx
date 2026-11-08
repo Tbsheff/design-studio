@@ -103,7 +103,8 @@ const CheckResult = ({
   return (
     <div className="lib-check fail" role="status">
       <strong>
-        {problems.length} {problems.length === 1 ? "problem" : "problems"}
+        {problems.length} {problems.length === 1 && "problem"}
+        {problems.length !== 1 && "problems"}
       </strong>
       <ul>
         {[...byRule].map(([rule, messages]) => (
@@ -157,7 +158,7 @@ const ActionBar = ({
           {COPY.textUseInNewProject}
         </button>
       )}
-      {user ? (
+      {user && (
         <button
           type="button"
           className="btn small"
@@ -166,7 +167,8 @@ const ActionBar = ({
         >
           {COPY.textOpenInEditor}
         </button>
-      ) : (
+      )}
+      {!user && (
         <button
           type="button"
           className="btn small"
@@ -297,10 +299,11 @@ const PackDetailDialog = ({
               {detail.error}
             </div>
           )}
-          {detail.value ? (
+          {detail.value && (
             <PackPreview pack={pack} entries={detail.value.entries} />
-          ) : (
-            !detail.error && <div className="pv-skeleton" aria-hidden="true" />
+          )}
+          {!detail.value && !detail.error && (
+            <div className="pv-skeleton" aria-hidden="true" />
           )}
         </section>
         <section className="lib-detail-section" aria-label={COPY.labelCheck}>

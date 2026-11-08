@@ -8,6 +8,14 @@ import type { ReactElement } from "react";
 import "../../styles/frame-state.css";
 import { copy } from "./copy.js";
 
+const toRuleCount = (count: number): string => {
+  if (count === 1) {
+    return "1 rule";
+  }
+
+  return `${count} rules`;
+};
+
 const StateRows = ({
   view,
   chosen,
@@ -33,9 +41,7 @@ const StateRows = ({
         <span>{state.name}</span>
         {state.kind === "mock" && (
           <span className="ui-menu-meta">
-            {state.mocks?.length === 1
-              ? "1 rule"
-              : `${state.mocks?.length ?? 0} rules`}
+            {toRuleCount(state.mocks?.length ?? 0)}
           </span>
         )}
       </button>

@@ -34,9 +34,9 @@ const PNG_MAX_SIDE = 4096;
 const HALO = "rgba(255, 255, 255, 0.9)";
 
 interface StrokeBuilder {
-  add(pointX: number, pointY: number): boolean;
-  end(pointXValue: number, pointYValue: number): void;
-  points(): number[];
+  add: (pointX: number, pointY: number) => boolean;
+  end: (pointXValue: number, pointYValue: number) => void;
+  points: () => number[];
 }
 
 const round = (value: number): number =>
@@ -150,11 +150,7 @@ const paintStrokes = (
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  for (const stroke of strokes) {
-    if (stroke.points.length < 2) {
-      continue;
-    }
-
+  for (const stroke of strokes.filter((item) => item.points.length >= 2)) {
     traceStroke(ctx, stroke.points);
 
     if (halo) {
@@ -219,12 +215,17 @@ const shiftAnchor = (anchor: PenAnchor, dx: number, dy: number): PenAnchor => {
     y: point.y + dy,
   });
 
-  return {
-    x: anchor.x + dx,
-    y: anchor.y + dy,
-    ...(anchor.hin ? { hin: move(anchor.hin) } : {}),
-    ...(anchor.hout ? { hout: move(anchor.hout) } : {}),
-  };
+  const shifted: PenAnchor = { x: anchor.x + dx, y: anchor.y + dy };
+
+  if (anchor.hin) {
+    shifted.hin = move(anchor.hin);
+  }
+
+  if (anchor.hout) {
+    shifted.hout = move(anchor.hout);
+  }
+
+  return shifted;
 };
 
 const penPath = (

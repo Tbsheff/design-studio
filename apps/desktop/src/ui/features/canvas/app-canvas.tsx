@@ -109,6 +109,7 @@ const serverHint = (
   if (app.framework === "next") {
     name = "Next.js";
   }
+
   const managed = (status?.mode ?? app.mode) === "managed";
   const state = status?.state ?? "idle";
 

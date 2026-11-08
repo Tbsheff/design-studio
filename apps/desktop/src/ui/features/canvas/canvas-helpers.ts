@@ -61,11 +61,12 @@ const noteCommentFrame = (
   active: { id: string; path?: string; label?: string }
 ): void => {
   if (control) {
-    control.frameRef.current = {
-      id: active.id,
-      path: active.path ?? "",
-      ...(active.label ? { label: active.label } : {}),
-    };
+    const base = { id: active.id, path: active.path ?? "" };
+    control.frameRef.current = base;
+
+    if (active.label) {
+      control.frameRef.current = { ...base, label: active.label };
+    }
   }
 };
 

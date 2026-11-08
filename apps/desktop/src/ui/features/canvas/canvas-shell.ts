@@ -102,6 +102,7 @@ const useShellPane = (
   if (shell) {
     editOpen = shell.pane === "design";
   }
+
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
 

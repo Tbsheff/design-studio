@@ -86,6 +86,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
   if (!props.onShip) {
     onPort = (): void => port.open(null);
   }
+
   const present = presentItems(props.onPresent);
 
   const zoom: ZoomProps = {

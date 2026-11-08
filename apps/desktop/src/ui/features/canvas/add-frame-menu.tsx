@@ -69,12 +69,15 @@ const AddFrameMenu = ({
       if (event.key === "ArrowDown") {
         return index + 1;
       }
+
       if (event.key === "ArrowUp") {
         return index - 1;
       }
+
       if (event.key === "Home") {
         return 0;
       }
+
       if (event.key === "End") {
         return items.length - 1;
       }
@@ -97,6 +100,7 @@ const AddFrameMenu = ({
     if (open) {
       return undefined;
     }
+
     if (disabled) {
       return "Frame limit reached";
     }

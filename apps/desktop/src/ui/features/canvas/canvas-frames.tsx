@@ -17,6 +17,8 @@ import { FrameStateMenu } from "./frame-state-menu.js";
 
 const SIZE_100 = 100;
 
+const SIZE_10 = 10;
+
 interface FrameBadge {
   label: string;
   title: string;
@@ -209,12 +211,13 @@ const FrameLabel = ({
           if (step) {
             event5.preventDefault();
 
-            let size: 100 | 10 = 10;
+            let distance: number = SIZE_10;
 
             if (event5.shiftKey) {
-              size = SIZE_100;
+              distance = SIZE_100;
             }
-            onNudge(frame, step[0] * size, step[1] * size);
+
+            onNudge(frame, step[0] * distance, step[1] * distance);
           } else if (event5.key === "Enter" || event5.key === " ") {
             event5.preventDefault();
             onActivate(frame);

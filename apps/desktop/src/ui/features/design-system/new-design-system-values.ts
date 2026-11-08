@@ -2,6 +2,8 @@ const DEFAULT_BASE = "modern-minimal";
 
 type Mode = "auto" | "light" | "dark";
 
+type DesignMdView = "edit" | "preview";
+
 interface DraftForm {
   name: string;
   mode: Mode;
@@ -40,6 +42,6 @@ const MAX_IMAGES = 8;
 
 type Patch = Partial<DraftForm>;
 
-export { EMPTY, MAX_URLS, IMAGE_TYPES, DROP_ACCEPT, MAX_IMAGES };
+export { DROP_ACCEPT, EMPTY, IMAGE_TYPES, MAX_IMAGES, MAX_URLS };
 
-export type { Mode, DraftForm, Patch };
+export type { DesignMdView, DraftForm, Mode, Patch };

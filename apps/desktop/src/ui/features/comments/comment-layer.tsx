@@ -4,8 +4,11 @@ import type { MutableRefObject } from "react";
 import { reviewReport, onActiveFrame } from "./comment-anchors.js";
 import type { ActiveFrame } from "./comment-anchors.js";
 import { AvatarFace } from "./comment-avatar.js";
+import type {
+  ComposerSources,
+  ComposerSubmit,
+} from "./comment-composer-model.js";
 import { CommentComposer } from "./comment-composer.js";
-import type { ComposerSubmit, ComposerSources } from "./comment-composer.js";
 import {
   breadcrumbOf,
   scopeText,

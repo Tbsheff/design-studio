@@ -215,7 +215,7 @@ const placeComposer = (
 };
 
 const useCardSize = (
-  card: RefObject<HTMLDivElement | null>
+  card: RefObject<HTMLElement | null>
 ): { height: number; width: number } => {
   const [height, setHeight] = useState(DEFAULT_CARD_HEIGHT);
   useLayoutEffect(() => {

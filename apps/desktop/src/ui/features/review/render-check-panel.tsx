@@ -37,17 +37,23 @@ const CheckScreenshot = ({
   useEffect(() => {
     let alive = true;
     let objectUrl: string | null = null;
-    api
-      .projectFile(projectId, filePath)
-      .then((blob) => {
+    const load = async (): Promise<void> => {
+      try {
+        const blob = await api.projectFile(projectId, filePath);
+
         if (!alive) {
           return;
         }
 
         objectUrl = URL.createObjectURL(blob);
         setSrc(objectUrl);
-      })
-      .catch(() => alive && setFailed(true));
+      } catch {
+        if (alive) {
+          setFailed(true);
+        }
+      }
+    };
+    void load();
 
     return (): void => {
       alive = false;
@@ -98,9 +104,9 @@ const useOldKeys = (
       return;
     }
 
-    api
-      .listRuns(projectId)
-      .then((runs) => {
+    const load = async (): Promise<void> => {
+      try {
+        const runs = await api.listRuns(projectId);
         const run = runs.find(
           (r) =>
             r.directionId === did &&
@@ -113,8 +119,11 @@ const useOldKeys = (
               ?.keys ?? null
           );
         }
-      })
-      .catch(() => null);
+      } catch {
+        return;
+      }
+    };
+    void load();
 
     return (): void => {
       alive = false;

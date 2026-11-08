@@ -121,17 +121,23 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
 
   useEffect(() => {
     let live = true;
-    rulesApi.get(projectId, directionId).then(
-      (next) => {
+    const load = async (): Promise<void> => {
+      try {
+        const next = await rulesApi.get(projectId, directionId);
+
         if (!live) {
           return;
         }
 
         setState(next);
         setText(next.text);
-      },
-      (caught: unknown) => live && setError(errorText(caught))
-    );
+      } catch (caught) {
+        if (live) {
+          setError(errorText(caught));
+        }
+      }
+    };
+    void load();
 
     return (): void => {
       live = false;

@@ -99,23 +99,33 @@ const usePreview = (
   useEffect(() => {
     let live = true;
     setLoading(true);
-    json<FigmaImportPreview>("POST", route(ids), {
-      ...base,
-      dryRun: true,
-      position,
-      target,
-      ...(nodeId ? { nodeId } : {}),
-    })
-      .then((result) => {
+    const load = async (): Promise<void> => {
+      try {
+        const result = await json<FigmaImportPreview>("POST", route(ids), {
+          ...base,
+          dryRun: true,
+          position,
+          target,
+          ...(nodeId ? { nodeId } : {}),
+        });
+
         if (!live) {
           return;
         }
 
         setPreview(result);
         setFailure(null);
-      })
-      .catch((error: unknown) => live && setFailure(messageOf(error)))
-      .finally(() => live && setLoading(false));
+      } catch (error) {
+        if (live) {
+          setFailure(messageOf(error));
+        }
+      } finally {
+        if (live) {
+          setLoading(false);
+        }
+      }
+    };
+    void load();
 
     return (): void => {
       live = false;

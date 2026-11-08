@@ -75,7 +75,7 @@ const FindingRow = ({
         type="button"
         className="review-target"
         disabled={!finding.selector}
-        data-tip={finding.selector ? "Select on the canvas" : undefined}
+        data-tip={finding.selector ? "Select on the canvas" : null}
         onClick={() => a.onSelect(finding)}
       >
         <span

@@ -296,7 +296,7 @@ const PlanView = ({ plan }: { plan: PublishPlan }) => {
         {rows.map(([k, v]) => (
           <div key={k} className="publish-kv">
             <dt>{k}</dt>
-            <dd className={k === "Address" ? "mono" : undefined}>{v}</dd>
+            <dd className={k === "Address" ? "mono" : ""}>{v}</dd>
           </div>
         ))}
       </dl>

@@ -71,9 +71,9 @@ const entryTip = (
   open: boolean,
   count: number | null,
   stale: boolean
-): string | undefined => {
+): string | null => {
   if (open) {
-    return undefined;
+    return null;
   }
 
   if (count === null) {

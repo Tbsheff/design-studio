@@ -68,14 +68,15 @@ const useReview = (input: ReviewInput): ReviewState => {
     const started = Date.now();
     setBusy(true);
     setError(null);
-    api
-      .review(projectId, directionId, {
-        frame: frame.id,
-        ...(frame.path ? { path: frame.path } : {}),
-        width: side(frame.width),
-        height: side(frame.height),
-      })
-      .then((next) => {
+    const load = async (): Promise<void> => {
+      try {
+        const next = await api.review(projectId, directionId, {
+          frame: frame.id,
+          ...(frame.path ? { path: frame.path } : {}),
+          width: side(frame.width),
+          height: side(frame.height),
+        });
+
         if (ticket !== pending.current) {
           return;
         }
@@ -83,12 +84,17 @@ const useReview = (input: ReviewInput): ReviewState => {
         setResult(next);
         setResultKey(runKey);
         setRanAt(started);
-      })
-      .catch(
-        (caught: unknown) =>
-          ticket === pending.current && setError(errorText(caught))
-      )
-      .finally(() => ticket === pending.current && setBusy(false));
+      } catch (caught) {
+        if (ticket === pending.current) {
+          setError(errorText(caught));
+        }
+      } finally {
+        if (ticket === pending.current) {
+          setBusy(false);
+        }
+      }
+    };
+    void load();
   }, [latest]);
 
   const fix = useCallback(

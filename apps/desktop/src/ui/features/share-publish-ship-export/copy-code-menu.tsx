@@ -51,26 +51,44 @@ const menuKeys = (
   items[(Math.max(0, index) + step + items.length) % items.length]?.focus();
 };
 
-const writeWhenReady = (text: Promise<string>): Promise<void> => {
-  if (
-    typeof ClipboardItem !== "undefined" &&
-    typeof navigator.clipboard?.write === "function"
-  ) {
-    const blob = text.then(
-      (value) => new Blob([value], { type: "text/plain" })
-    );
+const toBlob = async (text: Promise<string>): Promise<Blob> =>
+  new Blob([await text], { type: "text/plain" });
 
-    return navigator.clipboard
-      .write([new ClipboardItem({ "text/plain": blob })])
-      .catch(async (error: unknown) => {
-        const value = await text;
-        await navigator.clipboard.writeText(value).catch(() => {
-          throw error;
-        });
-      });
+const writeWhenReady = async (text: Promise<string>): Promise<void> => {
+  if (
+    typeof ClipboardItem === "undefined" ||
+    typeof navigator.clipboard?.write !== "function"
+  ) {
+    await navigator.clipboard.writeText(await text);
+
+    return;
   }
 
-  return text.then((value) => navigator.clipboard.writeText(value));
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ "text/plain": toBlob(text) }),
+    ]);
+  } catch (error) {
+    const value = await text;
+
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      throw error;
+    }
+  }
+};
+
+const toCopyText = async (
+  produce: () => Promise<string | null>
+): Promise<string> => {
+  const value = await produce();
+
+  if (!value) {
+    throw new Error("Nothing to copy");
+  }
+
+  return value;
 };
 
 const TriggerContent = ({
@@ -152,13 +170,7 @@ const CopyCodeMenu = ({
     label: string,
     produce: () => Promise<string | null>
   ): Promise<void> => {
-    const text = produce().then((value) => {
-      if (!value) {
-        throw new Error("Nothing to copy");
-      }
-
-      return value;
-    });
+    const text = toCopyText(produce);
 
     const written = writeWhenReady(text);
     close(true);
@@ -241,7 +253,7 @@ const CopyCodeMenu = ({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        data-tip={open || variant === "row" ? undefined : label}
+        data-tip={open || variant === "row" ? null : label}
         data-tip-align="end"
         onClick={() => setOpen((value) => !value)}
       >

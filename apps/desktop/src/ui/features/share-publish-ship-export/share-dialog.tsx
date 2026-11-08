@@ -310,7 +310,7 @@ const LanSwitch = ({
             : "Off: only this computer can open links (127.0.0.1)."}
         </span>
       </div>
-      <span data-tip={hasLive ? undefined : "Make a link first"}>
+      <span data-tip={hasLive ? null : "Make a link first"}>
         <Switch
           on={server.lan}
           label="Allow on local network"
@@ -389,7 +389,7 @@ const useCopyNew = (links: ShareLink[], server: ShareServerState) => {
   const [pending, setPending] = useState<string | null>(null);
   const [id, setId] = useState<string | null>(null);
   useEffect(() => {
-    const token = pending ? sessionTokens.get(pending) : undefined;
+    const token = pending ? sessionTokens.get(pending) : null;
 
     if (
       !pending ||

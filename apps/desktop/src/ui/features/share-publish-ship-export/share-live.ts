@@ -227,29 +227,36 @@ const studioPointer = (
   stage: () => HTMLElement | null
 ): { set(next: boolean): void } => {
   let on = false;
-  let pending: StudioCursorInput | null | undefined;
+  let pending: { value: StudioCursorInput | null } | null = null;
   let timer: ReturnType<typeof globalThis.setTimeout> | null = null;
   let lastFrame: string | null = null;
 
   const flush = (): void => {
     timer = null;
 
-    if (pending === undefined) {
+    if (pending === null) {
       return;
     }
 
-    const body = pending ?? { frameId: null, x: 0, y: 0 };
-    pending = undefined;
-    void call(routes.setCursorShare, {
-      frameId: body.frameId,
-      pointX: body.x,
-      pointY: body.y,
-      projectId,
-    }).catch(() => null);
+    const body = pending.value ?? { frameId: null, x: 0, y: 0 };
+    pending = null;
+    const send = async (): Promise<void> => {
+      try {
+        await call(routes.setCursorShare, {
+          frameId: body.frameId,
+          pointX: body.x,
+          pointY: body.y,
+          projectId,
+        });
+      } catch {
+        return;
+      }
+    };
+    void send();
   };
 
   const queue = (value: StudioCursorInput | null): void => {
-    pending = value;
+    pending = { value };
 
     if (!timer) {
       timer = globalThis.setTimeout(flush, SEND_MS);

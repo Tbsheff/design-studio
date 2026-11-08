@@ -131,7 +131,7 @@ const DiffView = ({ file }: { file: ShipFile | null }) => {
                   ? "del"
                   : line.startsWith("@@")
                     ? "hunk"
-                    : undefined
+                    : ""
             }
           >
             {line || " "}
@@ -392,10 +392,7 @@ const FileList = ({
   <div className="ship-files-wrap">
     <ul className="ship-files" aria-label={copy.changedFiles}>
       {plan.files.map((file) => (
-        <li
-          key={file.path}
-          className={file.path === focus ? "active" : undefined}
-        >
+        <li key={file.path} className={file.path === focus ? "active" : ""}>
           <input
             type="checkbox"
             aria-label={`Ship ${file.path}`}

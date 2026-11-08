@@ -18,10 +18,20 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
 
   useEffect(() => {
     let live = true;
-    shipApi
-      .settings(projectId)
-      .then((settings) => live && setDraft(settings))
-      .catch(() => live && setLoadError("Could not read the ship templates."));
+    const load = async (): Promise<void> => {
+      try {
+        const settings = await shipApi.settings(projectId);
+
+        if (live) {
+          setDraft(settings);
+        }
+      } catch {
+        if (live) {
+          setLoadError("Could not read the ship templates.");
+        }
+      }
+    };
+    void load();
 
     return (): void => {
       live = false;
@@ -29,8 +39,9 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
   }, [projectId]);
 
   saveRef.current = draft
-    ? async (): Promise<void> =>
-        void (await shipApi.saveSettings(projectId, draft))
+    ? async (): Promise<void> => {
+        await shipApi.saveSettings(projectId, draft);
+      }
     : null;
 
   const set = (patch: Partial<ShipSettings>): void =>

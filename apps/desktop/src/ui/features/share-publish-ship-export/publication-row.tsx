@@ -270,7 +270,7 @@ const PublicationRow = ({
         data-tip={
           p.views
             ? `${p.views.last7} views in the last 7 days. Counts page opens per day; no personal data.`
-            : undefined
+            : null
         }
       >
         {statusText(p, now)}

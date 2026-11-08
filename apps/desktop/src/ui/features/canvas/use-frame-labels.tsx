@@ -16,7 +16,13 @@ import { FrameMoreMenu } from "./frame-more-menu.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
 import type { useCanvasFrames, useFrameActions } from "./use-canvas-frames.js";
 import { VariationControls } from "./variation-controls.js";
-import type { FrameVariation } from "./variation-controls.js";
+import type { FrameVariation, Sibling } from "./variation-controls.js";
+
+const LENGTH_1 = 1;
+
+const INDEX_1 = 1;
+
+const EXTRAS_0 = 0;
 
 interface LabelInput {
   projectId: string;
@@ -64,9 +70,14 @@ const frameLabelSig = (
   frame: CanvasFrame,
   did: string | null
 ): string => {
-  const variation = did
-    ? labelInputValue.directions?.variationOf(did)
-    : undefined;
+  const variation: FrameVariation | undefined = (():
+    | FrameVariation
+    | undefined => {
+    if (did) {
+      return labelInputValue.directions?.variationOf(did);
+    }
+    return undefined;
+  })();
 
   const items = frameMenuItems(labelInputValue, frame, did).map((item) => [
     item.id,
@@ -75,23 +86,31 @@ const frameLabelSig = (
     item.disabled ?? "",
   ]);
 
-  const value = variation
-    ? [
-        variation.label,
-        variation.title,
-        variation.status,
-        variation.costText,
-        variation.scoped,
-        variation.error,
-        variation.keepBlocked,
-        variation.siblings,
-      ]
-    : null;
+  const value: (string | boolean | Sibling[] | null | undefined)[] | null =
+    ((): (string | boolean | Sibling[] | null | undefined)[] | null => {
+      if (variation) {
+        return [
+          variation.label,
+          variation.title,
+          variation.status,
+          variation.costText,
+          variation.scoped,
+          variation.error,
+          variation.keepBlocked,
+          variation.siblings,
+        ];
+      }
+      return null;
+    })();
 
-  const named = did
-    ? labelInputValue.directions?.list.find((direction) => direction.id === did)
-        ?.name
-    : undefined;
+  const named: string | undefined = ((): string | undefined => {
+    if (did) {
+      return labelInputValue.directions?.list.find(
+        (direction) => direction.id === did
+      )?.name;
+    }
+    return undefined;
+  })();
 
   const index = labelInputValue.frames.layout.frames.findIndex(
     (canvasFrame) => canvasFrame.id === frame.id
@@ -100,7 +119,7 @@ const frameLabelSig = (
   return JSON.stringify([
     index,
     frame.id === labelInputValue.activeId,
-    labelInputValue.frames.layout.frames.length > 1,
+    labelInputValue.frames.layout.frames.length > LENGTH_1,
     did,
     did === labelInputValue.directionId,
     named,
@@ -164,9 +183,14 @@ const useFrameLabels = (labelInput4: LabelInput) => {
   };
 
   const label = (frame: CanvasFrame, did: string | null) => {
-    const variation = did
-      ? labelInput4.directions?.variationOf(did)
-      : undefined;
+    const variation: FrameVariation | undefined = (():
+      | FrameVariation
+      | undefined => {
+      if (did) {
+        return labelInput4.directions?.variationOf(did);
+      }
+      return undefined;
+    })();
 
     const isActive = frame.id === labelInput4.activeId;
 
@@ -174,21 +198,47 @@ const useFrameLabels = (labelInput4: LabelInput) => {
       (canvasFrameValue) => canvasFrameValue.id === frame.id
     );
 
-    const named = did
-      ? labelInput4.directions?.list.find(
+    const named: string | undefined = ((): string | undefined => {
+      if (did) {
+        return labelInput4.directions?.list.find(
           (directionValue) => directionValue.id === did
-        )?.name
-      : undefined;
+        )?.name;
+      }
+      return undefined;
+    })();
+
+    const badge2:
+      | { current: boolean; label: string; title: string }
+      | undefined = (():
+      | { current: boolean; label: string; title: string }
+      | undefined => {
+      if (variation) {
+        return {
+          current: did === labelInput4.directionId,
+          label: variation.label,
+          title: variation.title,
+        };
+      }
+      return undefined;
+    })();
+
+    const number2: string = ((): string => {
+      if (variation) {
+        return `1${variation.label.toLowerCase()}`;
+      }
+      return String(index + INDEX_1);
+    })();
+
+    const title2: string | undefined = ((): string | undefined => {
+      if (variation) {
+        return undefined;
+      }
+      return frame.label ?? named ?? labelInput4.directionName ?? undefined;
+    })();
 
     return {
       ...labelInput4.baseLabel(frame),
-      badge: variation
-        ? {
-            current: did === labelInput4.directionId,
-            label: variation.label,
-            title: variation.title,
-          }
-        : undefined,
+      badge: badge2,
       directionId: did,
       extras: (
         <>
@@ -196,7 +246,9 @@ const useFrameLabels = (labelInput4: LabelInput) => {
             <VariationControls
               variation={liveVariation(variation, did, live)}
               active={isActive}
-              element={isActive ? (labelInput4.selection[0] ?? null) : null}
+              element={
+                isActive ? (labelInput4.selection[EXTRAS_0] ?? null) : null
+              }
               onMixed={() => live.current.setSelection(() => [])}
             />
           )}
@@ -216,12 +268,8 @@ const useFrameLabels = (labelInput4: LabelInput) => {
           />
         </>
       ),
-      number: variation
-        ? `1${variation.label.toLowerCase()}`
-        : String(index + 1),
-      title: variation
-        ? undefined
-        : (frame.label ?? named ?? labelInput4.directionName ?? undefined),
+      number: number2,
+      title: title2,
     };
   };
 

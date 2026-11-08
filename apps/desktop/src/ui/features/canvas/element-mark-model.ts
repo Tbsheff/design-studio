@@ -9,7 +9,10 @@ const markOf = (
     (direction) => direction.id === directionId
   )?.variation;
 
-  return variation?.scope && !variation.settled ? variation.scope.loc : null;
+  if (variation?.scope && !variation.settled) {
+    return variation.scope.loc;
+  }
+  return null;
 };
 
 const withElementMark = (

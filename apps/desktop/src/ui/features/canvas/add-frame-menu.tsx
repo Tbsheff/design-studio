@@ -5,6 +5,14 @@ import type { KeyboardEvent, ReactElement } from "react";
 import { FRAME_PRESETS } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 
+const INDEX_1 = 1;
+
+const NEXT_0 = 0;
+
+const LENGTH_1 = 1;
+
+const SET_TIMEOUT_8000 = 8000;
+
 const AddFrameMenu = ({
   disabled,
   onAdd,
@@ -65,16 +73,21 @@ const AddFrameMenu = ({
       return;
     }
 
-    const next =
-      event.key === "ArrowDown"
-        ? index + 1
-        : event.key === "ArrowUp"
-          ? index - 1
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? items.length - 1
-              : null;
+    const next: number | null = ((): number | null => {
+      if (event.key === "ArrowDown") {
+        return index + INDEX_1;
+      }
+      if (event.key === "ArrowUp") {
+        return index - INDEX_1;
+      }
+      if (event.key === "Home") {
+        return NEXT_0;
+      }
+      if (event.key === "End") {
+        return items.length - LENGTH_1;
+      }
+      return null;
+    })();
 
     if (next === null) {
       return;
@@ -83,6 +96,19 @@ const AddFrameMenu = ({
     event.preventDefault();
     items[(next + items.length) % items.length]?.focus();
   };
+
+  const datatip: "Add frame" | "Frame limit reached" | undefined = (():
+    | "Add frame"
+    | "Frame limit reached"
+    | undefined => {
+    if (open) {
+      return undefined;
+    }
+    if (disabled) {
+      return "Frame limit reached";
+    }
+    return "Add frame";
+  })();
 
   return (
     <div className="add-frame">
@@ -93,9 +119,7 @@ const AddFrameMenu = ({
         aria-label={copy.addFrame}
         aria-haspopup="menu"
         aria-expanded={open}
-        data-tip={
-          open ? undefined : disabled ? "Frame limit reached" : "Add frame"
-        }
+        data-tip={datatip}
         disabled={disabled}
         onClick={() => setOpen((value) => !value)}
       >
@@ -146,7 +170,7 @@ const FrameUndoBar = ({
       return;
     }
 
-    const timer = window.setTimeout(onDismiss, 8000);
+    const timer = window.setTimeout(onDismiss, SET_TIMEOUT_8000);
 
     return (): void => window.clearTimeout(timer);
   }, [onUndo, onDismiss]);

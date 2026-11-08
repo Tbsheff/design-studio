@@ -94,16 +94,18 @@ const useLinkRects = (optionsValue: Options): LinkState[] => {
     Record<string, { token: string; rects: Record<string, Rect | null> }>
   >({});
 
-  const queriesOf = (frameId: string): LinkQuery[] =>
-    optionsValue.enabled
-      ? optionsValue.file.links
-          .filter(
-            (link) =>
-              link.from.frame === frameId &&
-              staticLinkIssue(link, optionsValue.frames) === null
-          )
-          .map(linkQuery)
-      : [];
+  const queriesOf = (frameId: string): LinkQuery[] => {
+    if (optionsValue.enabled) {
+      return optionsValue.file.links
+        .filter(
+          (link) =>
+            link.from.frame === frameId &&
+            staticLinkIssue(link, optionsValue.frames) === null
+        )
+        .map(linkQuery);
+    }
+    return [];
+  };
 
   const slots = slotsOf(optionsValue);
   const slotsRef = useRef(slots);
@@ -169,7 +171,13 @@ const useLinkRects = (optionsValue: Options): LinkState[] => {
 
       const rects: Record<string, Rect | null> = {};
 
-      for (const report of Array.isArray(message.links) ? message.links : []) {
+      let result: LinkRectReport[] = [];
+
+      if (Array.isArray(message.links)) {
+        result = message.links;
+      }
+
+      for (const report of result) {
         if (typeof report?.id === "string") {
           rects[report.id] = report.rect ?? null;
         }
@@ -203,7 +211,13 @@ const useLinkRects = (optionsValue: Options): LinkState[] => {
 
     const rect = report.rects[link.id] ?? null;
 
-    return { issue: rect ? null : "element-missing", link, rect };
+    let issue2: "element-missing" | null = "element-missing";
+
+    if (rect) {
+      issue2 = null;
+    }
+
+    return { issue: issue2, link, rect };
   });
 };
 

@@ -10,6 +10,8 @@ import {
 } from "./ruler-draw.js";
 import type { Props } from "./ruler-draw.js";
 
+const FRAME_0 = 0;
+
 export default function CanvasRulers({
   artboardRef,
   origin,
@@ -42,19 +44,40 @@ export default function CanvasRulers({
 
       ctx.font = font;
 
-      const range: [number, number] | null = text
-        ? vertical
-          ? [options.y + text.y, options.y + text.y + text.height]
-          : [options.x + text.x, options.x + text.x + text.width]
-        : null;
+      const range: [number, number] | null = ((): [number, number] | null => {
+        if (text) {
+          if (vertical) {
+            return [options.y + text.y, options.y + text.y + text.height];
+          }
+          return [options.x + text.x, options.x + text.x + text.width];
+        }
+        return null;
+      })();
 
-      const length = vertical ? canvas.clientHeight : canvas.clientWidth;
+      let length: number = canvas.clientWidth;
+
+      if (vertical) {
+        length = canvas.clientHeight;
+      }
+
+      let operand: number = view.x;
+
+      if (vertical) {
+        operand = view.y;
+      }
+
+      let origin2: number = options.x;
+
+      if (vertical) {
+        origin2 = options.y;
+      }
+
       drawAxis({
         colors,
         ctx,
         length,
-        offset: (vertical ? view.y : view.x) - RULER_SIZE,
-        origin: vertical ? options.y : options.x,
+        offset: operand - RULER_SIZE,
+        origin: origin2,
         range,
         vertical,
         zoom: view.zoom,
@@ -74,7 +97,7 @@ export default function CanvasRulers({
       }
 
       frame = requestAnimationFrame(() => {
-        frame = 0;
+        frame = FRAME_0;
         draw.current();
       });
     };

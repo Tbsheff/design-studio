@@ -7,6 +7,8 @@ import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";
 
+const LENGTH_0 = 0;
+
 interface FrameMenuItem {
   id: string;
   label: string;
@@ -46,11 +48,25 @@ const FrameMoreMenu = ({
         ?.focus();
     }
   }, [menu.open, menu.root]);
-  const items = menu.open ? [...portItem(menu.root.current), ...own] : own;
 
-  if (items.length === 0 && !portAvailable()) {
+  let items: FrameMenuItem[] = own;
+
+  if (menu.open) {
+    items = [...portItem(menu.root.current), ...own];
+  }
+
+  if (items.length === LENGTH_0 && !portAvailable()) {
     return null;
   }
+
+  const datatip: "More frame actions" | undefined = (():
+    | "More frame actions"
+    | undefined => {
+    if (menu.open) {
+      return undefined;
+    }
+    return "More frame actions";
+  })();
 
   return (
     <div className="frame-menu-root" ref={menu.root}>
@@ -63,7 +79,7 @@ const FrameMoreMenu = ({
         aria-label={`More actions for ${name}`}
         onPointerDown={stop}
         onClick={() => menu.setOpen((value) => !value)}
-        data-tip={menu.open ? undefined : "More frame actions"}
+        data-tip={datatip}
       >
         <Icon name="more" size={14} />
       </button>
@@ -74,26 +90,34 @@ const FrameMoreMenu = ({
           aria-label={`${name} actions`}
           onKeyDown={(event) => menuKeys(event, menu.close)}
         >
-          {items.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="menuitem"
-              className={`ui-menu-item${item.disabled ? " has-hint" : ""}`}
-              tabIndex={-1}
-              disabled={Boolean(item.disabled)}
-              onClick={() => {
-                menu.close(true);
-                item.run();
-              }}
-            >
-              <Icon name={item.icon} size={14} />
-              <span>{item.label}</span>
-              {item.disabled && (
-                <span className="ui-menu-hint">{item.disabled}</span>
-              )}
-            </button>
-          ))}
+          {items.map((item) => {
+            let part: "" | " has-hint" = "";
+
+            if (item.disabled) {
+              part = " has-hint";
+            }
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="menuitem"
+                className={`ui-menu-item${part}`}
+                tabIndex={-1}
+                disabled={Boolean(item.disabled)}
+                onClick={() => {
+                  menu.close(true);
+                  item.run();
+                }}
+              >
+                <Icon name={item.icon} size={14} />
+                <span>{item.label}</span>
+                {item.disabled && (
+                  <span className="ui-menu-hint">{item.disabled}</span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

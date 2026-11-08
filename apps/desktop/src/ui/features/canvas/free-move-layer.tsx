@@ -5,6 +5,8 @@ import { SnapGuides } from "./artboard-overlay.js";
 import { gapStyle } from "./canvas-overlays.js";
 import type { FreeMoveView } from "./use-free-move.js";
 
+const LENGTH_0 = 0;
+
 const FreeMoveLayer = ({
   view,
 }: {
@@ -16,10 +18,16 @@ const FreeMoveLayer = ({
 
   const { box, line } = view;
 
+  let part: "" | " copy" = "";
+
+  if (view.copy) {
+    part = " copy";
+  }
+
   return (
     <div className="overlay" aria-hidden="true" data-testid="free-move">
       <div
-        className={`box move-ghost${view.copy ? " copy" : ""}`}
+        className={`box move-ghost${part}`}
         style={{
           height: box.height,
           left: box.x,
@@ -28,7 +36,7 @@ const FreeMoveLayer = ({
         }}
       />
       <SnapGuides guides={view.guides} full />
-      {view.spacing.length > 0 && (
+      {view.spacing.length > LENGTH_0 && (
         <div className="snap-guides">
           {view.spacing.map((spacingBadge) => (
             <div

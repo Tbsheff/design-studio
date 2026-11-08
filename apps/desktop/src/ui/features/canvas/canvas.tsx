@@ -19,14 +19,13 @@ const Canvas = ({ runStep, ...props }: Props): ReactElement => {
   const [steps] = useState(() => createLiveStore<string | null>(null));
   useLayoutEffect(() => steps.set(runStep ?? null), [steps, runStep]);
 
-  return (
-    <MemoCanvas
-      {...useStableProps(
-        { ...props, steps },
-        variations ? NESTED_LIVE_DIRECTIONS : NESTED
-      )}
-    />
-  );
+  let argument: Set<string> = NESTED;
+
+  if (variations) {
+    argument = NESTED_LIVE_DIRECTIONS;
+  }
+
+  return <MemoCanvas {...useStableProps({ ...props, steps }, argument)} />;
 };
 
 export { Canvas };

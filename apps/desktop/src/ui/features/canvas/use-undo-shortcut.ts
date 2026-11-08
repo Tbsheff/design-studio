@@ -7,6 +7,8 @@ import {
 } from "../../platform/desktop.js";
 import { editsText } from "../../platform/typing-target.js";
 
+const VERSION_COUNT_2 = 2;
+
 const PREVIEW_HISTORY_EVENT = "studio:preview-history";
 
 type HistoryKind = "undo" | "redo";
@@ -20,7 +22,8 @@ const undoAllowed = (
   directionId: string | null,
   locked: boolean,
   versionCount: number
-): boolean => directionId !== null && !locked && versionCount >= 2;
+): boolean =>
+  directionId !== null && !locked && versionCount >= VERSION_COUNT_2;
 
 const historyKeyOf = (
   event: Pick<
@@ -36,7 +39,10 @@ const historyKeyOf = (
     return null;
   }
 
-  return event.shiftKey ? "redo" : "undo";
+  if (event.shiftKey) {
+    return "redo";
+  }
+  return "undo";
 };
 
 const modalOpen = (): boolean =>
@@ -96,10 +102,11 @@ const useUndoShortcut = (
     };
 
     const fromPreview = (event: Event): void => {
-      const kind: HistoryKind =
-        (event as CustomEvent<{ redo?: unknown }>).detail?.redo === true
-          ? "redo"
-          : "undo";
+      let kind: HistoryKind = "undo";
+
+      if ((event as CustomEvent<{ redo?: unknown }>).detail?.redo === true) {
+        kind = "redo";
+      }
 
       if (recentDesktopCommand(kind)) {
         return;

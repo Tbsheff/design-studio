@@ -1,10 +1,18 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent, ReactElement } from "react";
+import type { KeyboardEvent, ReactElement, ReactNode } from "react";
 
 import type { KeyId } from "../../../shared/keymap.js";
 import { KeyHint } from "../../canvas-preview-slots.js";
+
+const INDEX_1 = 1;
+
+const STEP_0 = 0;
+
+const COUNT_1 = 1;
+
+const EDGE_2 = 2;
 
 interface PreviewMenuItem {
   id: string;
@@ -21,19 +29,19 @@ const EDGE = 8;
 
 const step = (key: string, index: number, count: number): number | null => {
   if (key === "ArrowDown") {
-    return (index + 1) % count;
+    return (index + INDEX_1) % count;
   }
 
   if (key === "ArrowUp") {
-    return (index - 1 + count) % count;
+    return (index - INDEX_1 + count) % count;
   }
 
   if (key === "Home") {
-    return 0;
+    return STEP_0;
   }
 
   if (key === "End") {
-    return count - 1;
+    return count - COUNT_1;
   }
 
   return null;
@@ -45,30 +53,47 @@ const MenuRow = ({
 }: {
   item: PreviewMenuItem;
   onClose: () => void;
-}): ReactElement => (
-  <>
-    {item.divider && <div className="preview-menu-divider" role="separator" />}
-    <button
-      type="button"
-      role="menuitem"
-      aria-disabled={item.disabled ? true : undefined}
-      data-tip={item.disabled}
-      data-tip-align="end"
-      onClick={() => {
-        if (item.disabled) {
-          return;
-        }
+}): ReactElement => {
+  const ariadisabled: true | undefined = ((): true | undefined => {
+    if (!item.disabled) {
+      return undefined;
+    }
+    return true;
+  })();
 
-        onClose();
-        void item.run();
-      }}
-    >
-      <Icon name={item.icon} size={14} />
-      <span>{item.label}</span>
-      {item.keyId ? <KeyHint id={item.keyId} /> : <span />}
-    </button>
-  </>
-);
+  let content: ReactNode = <span />;
+
+  if (item.keyId) {
+    content = <KeyHint id={item.keyId} />;
+  }
+
+  return (
+    <>
+      {item.divider && (
+        <div className="preview-menu-divider" role="separator" />
+      )}
+      <button
+        type="button"
+        role="menuitem"
+        aria-disabled={ariadisabled}
+        data-tip={item.disabled}
+        data-tip-align="end"
+        onClick={() => {
+          if (item.disabled) {
+            return;
+          }
+
+          onClose();
+          void item.run();
+        }}
+      >
+        <Icon name={item.icon} size={14} />
+        <span>{item.label}</span>
+        {content}
+      </button>
+    </>
+  );
+};
 
 const PreviewMenu = ({
   at,
@@ -96,10 +121,14 @@ const PreviewMenu = ({
       const width = el.offsetWidth;
       const height = el.offsetHeight;
       const last = el.lastElementChild as HTMLElement | null;
-      setScrolls(
-        (last ? last.offsetTop + last.offsetHeight : height) >
-          window.innerHeight - EDGE * 2
-      );
+
+      let operand: number = height;
+
+      if (last) {
+        operand = last.offsetTop + last.offsetHeight;
+      }
+
+      setScrolls(operand > window.innerHeight - EDGE * EDGE_2);
       setPos({
         x: Math.max(EDGE, Math.min(at.x, window.innerWidth - width - EDGE)),
         y: Math.max(EDGE, Math.min(at.y, window.innerHeight - height - EDGE)),
@@ -163,10 +192,16 @@ const PreviewMenu = ({
     buttons[next]?.focus();
   };
 
+  let part: "" | " scrolls" = "";
+
+  if (scrolls) {
+    part = " scrolls";
+  }
+
   return (
     <div
       ref={ref}
-      className={`project-menu at-pointer preview-menu${scrolls ? " scrolls" : ""}`}
+      className={`project-menu at-pointer preview-menu${part}`}
       role="menu"
       aria-label={label}
       style={{ left: pos.x, position: "fixed", right: "auto", top: pos.y }}

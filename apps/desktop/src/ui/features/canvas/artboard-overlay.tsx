@@ -7,7 +7,15 @@ import { copy } from "./copy.js";
 import { unionBox } from "./snap-model.js";
 import type { SnapGuide } from "./snap-model.js";
 import type { HoverBox } from "./use-preview-frames.js";
-import type { ResizeControl, ResizeEdge } from "./use-resize-handles.js";
+import type {
+  ResizeControl,
+  ResizeEdge,
+  ResizeLive,
+} from "./use-resize-handles.js";
+
+const LENGTH_0 = 0;
+
+const ABS_0_5 = 0.5;
 
 const LABEL_ROOM = 24;
 
@@ -36,9 +44,27 @@ const ResizeHandles = ({
   const { live } = control;
   const compact = Math.min(rect.width, rect.height) * zoom < COMPACT_PX;
 
+  let part: "" | " active" = "";
+
+  if (live) {
+    part = " active";
+  }
+
+  let part3: "" | " compact" = "";
+
+  if (compact) {
+    part3 = " compact";
+  }
+
+  let result: ResizeEdge[] = EDGES;
+
+  if (compact) {
+    result = COMPACT_EDGES;
+  }
+
   return (
     <div
-      className={`resize-frame${live ? " active" : ""}${compact ? " compact" : ""}`}
+      className={`resize-frame${part}${part3}`}
       data-testid="resize-frame"
       style={{
         height: live?.boxHeight ?? rect.height,
@@ -47,7 +73,7 @@ const ResizeHandles = ({
         width: live?.boxWidth ?? rect.width,
       }}
     >
-      {(compact ? COMPACT_EDGES : EDGES).map((edge) => (
+      {result.map((edge) => (
         <div
           key={edge}
           className={`resize-handle ${edge}`}
@@ -66,23 +92,27 @@ const ResizeHandles = ({
   );
 };
 
-const guideStyle = (snapGuide: SnapGuide) =>
-  snapGuide.axis === "x"
-    ? {
-        height: snapGuide.to - snapGuide.from,
-        left: snapGuide.at,
-        top: snapGuide.from,
-      }
-    : {
-        left: snapGuide.from,
-        top: snapGuide.at,
-        width: snapGuide.to - snapGuide.from,
-      };
+const guideStyle = (snapGuide: SnapGuide) => {
+  if (snapGuide.axis === "x") {
+    return {
+      height: snapGuide.to - snapGuide.from,
+      left: snapGuide.at,
+      top: snapGuide.from,
+    };
+  }
+  return {
+    left: snapGuide.from,
+    top: snapGuide.at,
+    width: snapGuide.to - snapGuide.from,
+  };
+};
 
-const fullStyle = (snapGuideValue: SnapGuide) =>
-  snapGuideValue.axis === "x"
-    ? { bottom: 0, left: snapGuideValue.at, top: 0 }
-    : { left: 0, right: 0, top: snapGuideValue.at };
+const fullStyle = (snapGuideValue: SnapGuide) => {
+  if (snapGuideValue.axis === "x") {
+    return { bottom: 0, left: snapGuideValue.at, top: 0 };
+  }
+  return { left: 0, right: 0, top: snapGuideValue.at };
+};
 
 const SnapGuides = ({
   guides,
@@ -91,38 +121,66 @@ const SnapGuides = ({
   guides: SnapGuide[];
   full?: boolean;
 }): ReactElement | null => {
-  if (guides.length === 0) {
+  if (guides.length === LENGTH_0) {
     return null;
   }
 
+  let part2: "" | " full" = "";
+
+  if (full) {
+    part2 = " full";
+  }
+
   return (
-    <div
-      className={`snap-guides${full ? " full" : ""}`}
-      data-testid="snap-guides"
-    >
-      {guides.map((snapGuide3) => (
-        <div
-          key={`${snapGuide3.axis}-${snapGuide3.at}`}
-          className={`snap-guide ${snapGuide3.axis}`}
-          style={full ? fullStyle(snapGuide3) : guideStyle(snapGuide3)}
-        />
-      ))}
+    <div className={`snap-guides${part2}`} data-testid="snap-guides">
+      {guides.map((snapGuide3) => {
+        const style2:
+          | { height: number; left: number; top: number; width?: undefined }
+          | { left: number; top: number; width: number; height?: undefined }
+          | { bottom: number; left: number; top: number; right?: undefined }
+          | { left: number; right: number; top: number; bottom?: undefined } =
+          (():
+            | { height: number; left: number; top: number; width?: undefined }
+            | { left: number; top: number; width: number; height?: undefined }
+            | { bottom: number; left: number; top: number; right?: undefined }
+            | {
+                left: number;
+                right: number;
+                top: number;
+                bottom?: undefined;
+              } => {
+            if (full) {
+              return fullStyle(snapGuide3);
+            }
+            return guideStyle(snapGuide3);
+          })();
+
+        return (
+          <div
+            key={`${snapGuide3.axis}-${snapGuide3.at}`}
+            className={`snap-guide ${snapGuide3.axis}`}
+            style={style2}
+          />
+        );
+      })}
     </div>
   );
 };
 
-const lineStyle = (measureLine: MeasureLine) =>
-  measureLine.axis === "x"
-    ? {
-        left: measureLine.from,
-        top: measureLine.at,
-        width: measureLine.to - measureLine.from,
-      }
-    : {
-        height: measureLine.to - measureLine.from,
-        left: measureLine.at,
-        top: measureLine.from,
-      };
+const lineStyle = (measureLine: MeasureLine) => {
+  if (measureLine.axis === "x") {
+    return {
+      left: measureLine.from,
+      top: measureLine.at,
+      width: measureLine.to - measureLine.from,
+    };
+  }
+  return {
+    height: measureLine.to - measureLine.from,
+    left: measureLine.at,
+    top: measureLine.from,
+  };
+};
 
 const Measurements = ({
   from,
@@ -158,10 +216,10 @@ const sameRect = (
   first: SelectionContext["rect"],
   second: SelectionContext["rect"]
 ): boolean =>
-  Math.abs(first.x - second.x) < 0.5 &&
-  Math.abs(first.y - second.y) < 0.5 &&
-  Math.abs(first.width - second.width) < 0.5 &&
-  Math.abs(first.height - second.height) < 0.5;
+  Math.abs(first.x - second.x) < ABS_0_5 &&
+  Math.abs(first.y - second.y) < ABS_0_5 &&
+  Math.abs(first.width - second.width) < ABS_0_5 &&
+  Math.abs(first.height - second.height) < ABS_0_5;
 
 const ArtboardOverlay = ({
   hover,
@@ -205,10 +263,11 @@ const ArtboardOverlay = ({
         </div>
       )}
       {selection.map((selectionContext3) => {
-        const live =
-          resize?.target?.selector === selectionContext3.selector
-            ? resize.live
-            : null;
+        let live: ResizeLive | null = null;
+
+        if (resize?.target?.selector === selectionContext3.selector) {
+          live = resize.live;
+        }
 
         return (
           <div

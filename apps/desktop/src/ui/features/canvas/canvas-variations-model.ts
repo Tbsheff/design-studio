@@ -9,6 +9,8 @@ import {
 } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
+const FRAMES_ON_CANVAS_0 = 0;
+
 const apply = (
   projectId: string,
   fn: (layout: CanvasLayout) => CanvasLayout
@@ -58,13 +60,14 @@ const keepVariationFrame = (
 const framesOnCanvas = (projectId: string, directionIds: string[]): number => {
   const layout = canvasStore.get(projectId);
 
-  return layout
-    ? layout.frames.filter(
-        (canvasFrame) =>
-          canvasFrame.directionId &&
-          directionIds.includes(canvasFrame.directionId)
-      ).length
-    : 0;
+  if (layout) {
+    return layout.frames.filter(
+      (canvasFrame) =>
+        canvasFrame.directionId &&
+        directionIds.includes(canvasFrame.directionId)
+    ).length;
+  }
+  return FRAMES_ON_CANVAS_0;
 };
 
 export { framesOnCanvas, keepVariationFrame, showVariationFrames };

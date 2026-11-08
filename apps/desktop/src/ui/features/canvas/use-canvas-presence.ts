@@ -4,6 +4,26 @@ import { useEffect, useRef } from "react";
 import { api } from "../../api.js";
 import { runOrReport } from "./settle-model.js";
 
+const WIDTH_VALUE_0 = 0;
+
+const HEIGHT_VALUE_0 = 0;
+
+const WIDTH_0 = 0;
+
+const HEIGHT_0 = 0;
+
+const WIDTH_VALUE_0_25 = 0.25;
+
+const SLICE_0 = 0;
+
+const SLICE_20 = 20;
+
+const SLICE_400 = 400;
+
+const SLICE_40 = 40;
+
+const SLICE_200 = 200;
+
 const PRESENCE_MS = 1500;
 const RESEND_MS = 60_000;
 
@@ -36,17 +56,18 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
       Math.min(dOMRect.bottom, box.bottom) - Math.max(dOMRect.top, box.top);
 
     if (
-      widthValue <= 0 ||
-      heightValue <= 0 ||
-      dOMRect.width <= 0 ||
-      dOMRect.height <= 0
+      widthValue <= WIDTH_VALUE_0 ||
+      heightValue <= HEIGHT_VALUE_0 ||
+      dOMRect.width <= WIDTH_0 ||
+      dOMRect.height <= HEIGHT_0
     ) {
       continue;
     }
 
     if (
-      (widthValue * heightValue) / (dOMRect.width * dOMRect.height) >= 0.25 ||
-      (widthValue * heightValue) / (box.width * box.height) >= 0.25
+      (widthValue * heightValue) / (dOMRect.width * dOMRect.height) >=
+        WIDTH_VALUE_0_25 ||
+      (widthValue * heightValue) / (box.width * box.height) >= WIDTH_VALUE_0_25
     ) {
       ids.push(el.dataset.frameId as string);
     }
@@ -63,11 +84,13 @@ const presenceBody = (presenceInput: PresenceInput) => ({
     height: Math.round(presenceInput.liveSize.height),
     width: Math.round(presenceInput.liveSize.width),
   },
-  selection: presenceInput.selection.slice(0, 20).map((selectionContext) => ({
-    selector: selectionContext.selector.slice(0, 400),
-    tag: selectionContext.tag.slice(0, 40),
-    text: selectionContext.text.slice(0, 200),
-  })),
+  selection: presenceInput.selection
+    .slice(SLICE_0, SLICE_20)
+    .map((selectionContext) => ({
+      selector: selectionContext.selector.slice(SLICE_0, SLICE_400),
+      tag: selectionContext.tag.slice(SLICE_0, SLICE_40),
+      text: selectionContext.text.slice(SLICE_0, SLICE_200),
+    })),
 });
 
 const useCanvasPresence = (presenceInputValue: PresenceInput): void => {

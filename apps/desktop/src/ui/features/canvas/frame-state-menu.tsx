@@ -76,7 +76,14 @@ const MenuBody = ({
       await task;
       menu.close(true);
     } catch (error: unknown) {
-      onError(error instanceof Error ? error.message : String(error));
+      const argument: string = ((): string => {
+        if (error instanceof Error) {
+          return error.message;
+        }
+        return String(error);
+      })();
+
+      onError(argument);
     }
   };
 
@@ -158,22 +165,36 @@ const FrameStateMenu = ({
   const def = states.view.states.find((state) => state.id === chosen);
   const set = chosen !== "default";
 
+  const part: "" | " set" = ((): "" | " set" => {
+    if (set) {
+      return " set";
+    }
+    return "";
+  })();
+
+  const datatip:
+    | "Preview state: signed in, empty, loading, error or mock data"
+    | undefined = (():
+    | "Preview state: signed in, empty, loading, error or mock data"
+    | undefined => {
+    if (menu.open) {
+      return undefined;
+    }
+    return "Preview state: signed in, empty, loading, error or mock data";
+  })();
+
   return (
     <div className="frame-menu-root frame-state-root" ref={menu.root}>
       <button
         ref={menu.trigger}
         type="button"
-        className={`frame-chip state${set ? " set" : ""}`}
+        className={`frame-chip state${part}`}
         aria-haspopup="menu"
         aria-expanded={menu.open}
         aria-label={`Preview state for ${frameName}: ${def?.name ?? chosen}`}
         onPointerDown={stop}
         onClick={() => menu.setOpen((value) => !value)}
-        data-tip={
-          menu.open
-            ? undefined
-            : "Preview state: signed in, empty, loading, error or mock data"
-        }
+        data-tip={datatip}
       >
         <Icon name="sliders" size={12} />
         {set && <span className="frame-state-name">{def?.name ?? chosen}</span>}

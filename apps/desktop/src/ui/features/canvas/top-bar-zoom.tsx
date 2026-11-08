@@ -15,7 +15,23 @@ import {
   vectorTool,
 } from "./vector-tool-model.js";
 
-const ZOOMS = [0.5, 0.75, 1, 1.25, 2];
+const ITEM_0_5 = 0.5;
+
+const ITEM_0_75 = 0.75;
+
+const ITEM_1 = 1;
+
+const ITEM_1_25 = 1.25;
+
+const ITEM_2 = 2;
+
+const ON_STEP_1 = 1;
+
+const ON_STEP_NEG_1 = -1;
+
+const ZOOM_VALUE_VALUE_100 = 100;
+
+const ZOOMS = [ITEM_0_5, ITEM_0_75, ITEM_1, ITEM_1_25, ITEM_2];
 
 interface ZoomProps {
   zoom: LiveStore<number>;
@@ -37,13 +53,13 @@ const zoomGroups = ({
         id: "in",
         label: "Zoom in",
         meta: shortcutLabel("zoom-in", IS_MAC),
-        run: () => onStep(1),
+        run: () => onStep(ON_STEP_1),
       },
       {
         id: "out",
         label: "Zoom out",
         meta: shortcutLabel("zoom-out", IS_MAC),
-        run: () => onStep(-1),
+        run: () => onStep(ON_STEP_NEG_1),
       },
     ],
   },
@@ -59,7 +75,7 @@ const zoomGroups = ({
       ...ZOOMS.map((zoomValueValue) => ({
         checked: setting === zoomValueValue,
         id: String(zoomValueValue),
-        label: `${Math.round(zoomValueValue * 100)}%`,
+        label: `${Math.round(zoomValueValue * ZOOM_VALUE_VALUE_100)}%`,
         run: () => onZoomTo(zoomValueValue),
       })),
     ],

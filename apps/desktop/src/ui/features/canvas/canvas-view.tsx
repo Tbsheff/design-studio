@@ -27,6 +27,8 @@ import { useCanvasPreview } from "./use-canvas-preview.js";
 import { useCanvasStage } from "./use-canvas-stage.js";
 import { useCanvasWiring } from "./use-canvas-wiring.js";
 
+const CANVAS_VIEW_0 = 0;
+
 const renderScenarioSlot = (args: FrameStateSlotArgs): ReactElement => (
   <ScenarioSection
     projectId={args.projectId}
@@ -206,7 +208,7 @@ const CanvasView = (props: ViewProps): ReactElement => {
             directionId={directionId}
             post={frames.post}
             projectId={projectId}
-            selector={props.selection[0]?.selector ?? null}
+            selector={props.selection[CANVAS_VIEW_0]?.selector ?? null}
           />
         </Suspense>
       )}

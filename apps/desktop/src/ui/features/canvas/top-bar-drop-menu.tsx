@@ -90,10 +90,28 @@ const DropMenu = ({
     }
   }, []);
 
+  let className2 = "topbar-anchor";
+
+  if (anchorClass) {
+    className2 = `topbar-anchor ${anchorClass}`;
+  }
+
+  const datatip: string | undefined = ((): string | undefined => {
+    if (open) {
+      return undefined;
+    }
+    return tip;
+  })();
+
+  const datatipalign: "end" | undefined = ((): "end" | undefined => {
+    if (align !== "end") {
+      return undefined;
+    }
+    return "end";
+  })();
+
   return (
-    <span
-      className={anchorClass ? `topbar-anchor ${anchorClass}` : "topbar-anchor"}
-    >
+    <span className={className2}>
       <button
         ref={trigger}
         type="button"
@@ -101,8 +119,8 @@ const DropMenu = ({
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
-        data-tip={open ? undefined : tip}
-        data-tip-align={align === "end" ? "end" : undefined}
+        data-tip={datatip}
+        data-tip-align={datatipalign}
         onClick={() => {
           if (!open) {
             onOpen?.();

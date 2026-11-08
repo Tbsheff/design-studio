@@ -94,16 +94,25 @@ const useFrameStates = (projectId: string, isApp: boolean): FrameStatesRead => {
       notify();
     };
   }, [projectId, isApp]);
-  useProjectEvents(isApp ? projectId : null, (event: StudioEvent) => {
+
+  let argument: string | null = null;
+
+  if (isApp) {
+    argument = projectId;
+  }
+
+  useProjectEvents(argument, (event: StudioEvent) => {
     if (event.type === "frame-states.changed") {
       store(projectId, event.states);
     }
   });
 
-  const read = useCallback(
-    () => (isApp ? views.get(projectId) : null),
-    [projectId, isApp]
-  );
+  const read = useCallback(() => {
+    if (isApp) {
+      return views.get(projectId);
+    }
+    return null;
+  }, [projectId, isApp]);
 
   return useSyncExternalStore(subscribe, read, read);
 };
@@ -112,14 +121,19 @@ const useCurrentFrameStates = (): {
   projectId: string;
   view: FrameStatesView;
 } | null => {
-  const read = useCallback(
-    () => (current ? (views.get(current) ?? null) : null),
-    []
-  );
+  const read = useCallback(() => {
+    if (current) {
+      return views.get(current) ?? null;
+    }
+    return null;
+  }, []);
 
   const view = useSyncExternalStore(subscribe, read, read);
 
-  return current && view ? { projectId: current, view } : null;
+  if (current && view) {
+    return { projectId: current, view };
+  }
+  return null;
 };
 
 const frameStateOf = (view: FrameStatesView | null, frameId: string): string =>
@@ -134,7 +148,10 @@ const frameStateUrl = (
     return null;
   }
 
-  return view ? withFrameStateHost(url, frameStateOf(view, frameId)) : url;
+  if (view) {
+    return withFrameStateHost(url, frameStateOf(view, frameId));
+  }
+  return url;
 };
 
 const setFrameState = async (

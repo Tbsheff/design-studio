@@ -36,8 +36,15 @@ const emit = (next: Partial<State>): void => {
 
 const vectorTool = {
   get: () => state,
-  set: (tool: VectorToolId | null) =>
-    emit({ tool: state.available ? tool : null }),
+  set: (tool: VectorToolId | null) => {
+    let tool2: VectorToolId | null = null;
+
+    if (state.available) {
+      tool2 = tool;
+    }
+
+    return emit({ tool: tool2 });
+  },
   setAvailable: (available: boolean) => {
     if (available !== state.available) {
       emit({ available });
@@ -48,8 +55,15 @@ const vectorTool = {
 
     return (): boolean => listeners.delete(listener);
   },
-  toggle: (tool: VectorToolId) =>
-    emit({ tool: state.available && state.tool !== tool ? tool : null }),
+  toggle: (tool: VectorToolId) => {
+    let tool3: VectorToolId | null = null;
+
+    if (state.available && state.tool !== tool) {
+      tool3 = tool;
+    }
+
+    return emit({ tool: tool3 });
+  },
 };
 
 const useVectorTool = (): State =>

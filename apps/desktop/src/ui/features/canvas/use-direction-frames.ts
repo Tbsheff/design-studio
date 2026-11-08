@@ -63,7 +63,13 @@ const useDirectionUrls = (
   );
 
   useEffect(() => {
-    for (const id of key ? key.split(",") : []) {
+    let result2: string[] = [];
+
+    if (key) {
+      result2 = key.split(",");
+    }
+
+    for (const id of result2) {
       if (asked.current.has(id)) {
         continue;
       }
@@ -89,12 +95,17 @@ const useDirectionFrames = (options: Options) => {
   const resolved = passive.map((canvasFrameValue) => {
     const own = frameDirection(canvasFrameValue, options.currentId);
 
+    let directionId2: string | null = options.currentId;
+
+    if (
+      own &&
+      (own === options.currentId || !options.directions || known.has(own))
+    ) {
+      directionId2 = own;
+    }
+
     return {
-      directionId:
-        own &&
-        (own === options.currentId || !options.directions || known.has(own))
-          ? own
-          : options.currentId,
+      directionId: directionId2,
       frame: canvasFrameValue,
     };
   });
@@ -128,12 +139,18 @@ const useDirectionFrames = (options: Options) => {
       key: result3.frame.id,
     }));
 
+  let argument: string | null = null;
+
+  if (options.live) {
+    argument = options.currentId;
+  }
+
   const gate = useSwapGate(
     options.kind,
     targets,
     options.lastChange,
     options.hold,
-    options.live ? options.currentId : null
+    argument
   );
 
   const slots: PassiveSlot[] = resolved.map(({ frame, directionId }) => {
@@ -141,52 +158,87 @@ const useDirectionFrames = (options: Options) => {
     tokens.current.set(frame.id, token);
     const isCurrent = directionId !== null && directionId === options.currentId;
 
-    const base =
-      directionId === null
-        ? null
-        : isCurrent
-          ? options.currentUrl
-          : withElementMark(
-              urls[directionId] ?? null,
-              markOf(options.directions, directionId)
-            );
+    const base: string | null = ((): string | null => {
+      if (directionId === null) {
+        return null;
+      }
+      if (isCurrent) {
+        return options.currentUrl;
+      }
+      return withElementMark(
+        urls[directionId] ?? null,
+        markOf(options.directions, directionId)
+      );
+    })();
 
     const gated = !isCurrent || options.live;
 
     const build = (change: FilesChange | null): string | null => {
-      const page = base
-        ? frameStateUrl(
-            passiveSrc(
-              withFramePath(base, frame.path),
-              options.kind,
-              change
-            ) as string,
-            options.frameStates,
-            frame.id
-          )
-        : null;
+      let page: string | null = null;
 
-      return page ? frameSrc(page, { [BRIDGE_PASSIVE_PARAM]: "1" }) : null;
+      if (base) {
+        page = frameStateUrl(
+          passiveSrc(
+            withFramePath(base, frame.path),
+            options.kind,
+            change
+          ) as string,
+          options.frameStates,
+          frame.id
+        );
+      }
+
+      if (page) {
+        return frameSrc(page, { [BRIDGE_PASSIVE_PARAM]: "1" });
+      }
+      return null;
     };
 
-    const src = build(gated ? gate.shownFor(frame.id) : null);
-    const next = gated ? gate.nextFor(frame.id) : null;
-    const nextSrc = next ? build(next) : null;
+    let argument2: FilesChange | null = null;
+
+    if (gated) {
+      argument2 = gate.shownFor(frame.id);
+    }
+
+    const src = build(argument2);
+
+    let next: FilesChange | null = null;
+
+    if (gated) {
+      next = gate.nextFor(frame.id);
+    }
+
+    let nextSrc: string | null = null;
+
+    if (next) {
+      nextSrc = build(next);
+    }
+
+    let nextSrc2: string | null = nextSrc;
+
+    if (nextSrc === src) {
+      nextSrc2 = null;
+    }
 
     return {
       directionId,
       id: frame.id,
-      nextSrc: nextSrc === src ? null : nextSrc,
+      nextSrc: nextSrc2,
       src,
       token,
     };
   });
 
   const slotKey = slots
-    .map(
-      (passiveSlot) =>
-        `${passiveSlot.id}:${passiveSlot.directionId === options.currentId ? passiveSlot.src : ""}`
-    )
+    .map((passiveSlot) => {
+      let part: string | null = "";
+
+      if (passiveSlot.directionId === options.currentId) {
+        part = passiveSlot.src;
+      }
+
+      return `${passiveSlot.id}:${part}`;
+    })
     .join("|");
 
   const tokenSlots = useMemo(

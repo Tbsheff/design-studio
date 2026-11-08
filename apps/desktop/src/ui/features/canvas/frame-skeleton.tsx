@@ -87,7 +87,10 @@ const FirstBuildCover = ({
     return <FrameSkeleton step={null} missing={pageFileOf(path)} />;
   }
 
-  return covered ? <FrameSkeleton step={step ?? null} /> : null;
+  if (covered) {
+    return <FrameSkeleton step={step ?? null} />;
+  }
+  return null;
 };
 
 export { FirstBuildCover, FrameSkeleton };

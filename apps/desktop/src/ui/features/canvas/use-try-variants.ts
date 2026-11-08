@@ -11,14 +11,20 @@ import {
 import { useCommands } from "../../canvas-hook-slots.js";
 import type { VariationsState } from "./use-variations.js";
 
+const RUN_0 = 0;
+
+const ELEMENT_0 = 0;
+
 const useTryVariants = (
   project: Project | null,
   selection: SelectionContext[],
   variations: VariationsState
 ): ((prompt: string, count: number, level: RunLevel) => Promise<void>) => {
-  const blocker = project
-    ? elementVariantsBlocker(project, selection)
-    : "Wait for the design to load";
+  let blocker: string | null = "Wait for the design to load";
+
+  if (project) {
+    blocker = elementVariantsBlocker(project, selection);
+  }
 
   useCommands(() => [
     {
@@ -27,8 +33,8 @@ const useTryVariants = (
       id: TRY_VARIANTS_COMMAND,
       keywords: "try versions options alternatives element",
       run: () => {
-        if (selection[0]) {
-          variations.askElement(selection[0]);
+        if (selection[RUN_0]) {
+          variations.askElement(selection[RUN_0]);
         }
       },
       slash: "variants",
@@ -42,7 +48,7 @@ const useTryVariants = (
     count: number,
     level: RunLevel
   ): Promise<void> => {
-    const element = selection[0];
+    const element = selection[ELEMENT_0];
 
     if (blocker || !element) {
       throw new Error(blocker ?? "Select one element first");

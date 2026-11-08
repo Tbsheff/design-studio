@@ -6,6 +6,16 @@ import { useDesktopCommand } from "../../platform/desktop.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { DRAW_COLORS } from "./drawing-model.js";
 
+const USE_DRAW_TOOL_0 = 0;
+
+const SLICE_0 = 0;
+
+const SLICE_NEG_1 = -1;
+
+const REDUCE_0 = 0;
+
+const MAX_0 = 0;
+
 interface DrawTool {
   available: boolean;
   on: boolean;
@@ -21,14 +31,21 @@ interface DrawTool {
   clear: () => void;
 }
 
-const hasText = (target: EventTarget | null): boolean =>
-  target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
-    ? target.value !== ""
-    : isTypingTarget(target);
+const hasText = (target: EventTarget | null): boolean => {
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement
+  ) {
+    return target.value !== "";
+  }
+  return isTypingTarget(target);
+};
 
 const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
   const [on, setOnState] = useState(false);
-  const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
+  const [color, setColor] = useState<string>(
+    DRAW_COLORS[USE_DRAW_TOOL_0].value
+  );
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
   const live = useRef({ available, on, onActivate });
   live.current = { available, on, onActivate };
@@ -48,14 +65,20 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
   }, []);
 
   const toggle = useCallback(() => setOn(!live.current.on), [setOn]);
-  const undo = useCallback(() => setStrokes((prev) => prev.slice(0, -1)), []);
+  const undo = useCallback(
+    () => setStrokes((prev) => prev.slice(SLICE_0, SLICE_NEG_1)),
+    []
+  );
   const clear = useCallback(() => setStrokes([]), []);
 
   const push = useCallback(
     (stroke: DrawStroke) =>
-      setStrokes((prev) =>
-        prev.length >= DRAW_STROKES_MAX ? prev : [...prev, stroke]
-      ),
+      setStrokes((prev) => {
+        if (prev.length >= DRAW_STROKES_MAX) {
+          return prev;
+        }
+        return [...prev, stroke];
+      }),
     []
   );
 
@@ -118,20 +141,30 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
     return true;
   });
 
-  const used = strokes.reduce((sum, stroke) => sum + stroke.points.length, 0);
+  const used = strokes.reduce(
+    (sum, stroke) => sum + stroke.points.length,
+    REDUCE_0
+  );
+
+  const toolbarMode2: boolean | undefined = ((): boolean | undefined => {
+    if (!available) {
+      return undefined;
+    }
+    return on;
+  })();
 
   return {
     available,
     clear,
     color,
     on,
-    pointsLeft: Math.max(0, DRAW_POINTS_MAX - used),
+    pointsLeft: Math.max(MAX_0, DRAW_POINTS_MAX - used),
     push,
     setColor,
     setOn,
     strokes,
     toggle,
-    toolbarMode: available ? on : undefined,
+    toolbarMode: toolbarMode2,
     undo,
   };
 };

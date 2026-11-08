@@ -34,6 +34,11 @@ import {
 } from "./prototype-layer.js";
 import { runOrReport, toValueOr } from "./settle-model.js";
 import { useLinkRects } from "./use-link-rects.js";
+import type { LinkState } from "./use-link-rects.js";
+
+const SINGLE_0 = 0;
+
+const LENGTH_1 = 1;
 
 const PlayMode = lazy(() => import("./play-mode.js"));
 
@@ -62,8 +67,12 @@ interface Options {
   };
 }
 
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+const errorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+};
 
 const usePrototype = (options: Options) => {
   const { on } = options;
@@ -132,7 +141,10 @@ const usePrototype = (options: Options) => {
   const titleById = (id: string): string => {
     const frame = options.frames.find((item) => item.id === id);
 
-    return frame ? frameTitle(frame) : "missing frame";
+    if (frame) {
+      return frameTitle(frame);
+    }
+    return "missing frame";
   };
 
   const targetName = (link: PrototypeLink): string => {
@@ -142,7 +154,10 @@ const usePrototype = (options: Options) => {
 
     const to = targetFrame(link.to);
 
-    return to ? titleById(to) : ACTION_LABELS[linkAction(link)];
+    if (to) {
+      return titleById(to);
+    }
+    return ACTION_LABELS[linkAction(link)];
   };
 
   const linkTitle = (link: PrototypeLink): string =>
@@ -151,15 +166,20 @@ const usePrototype = (options: Options) => {
   const urls = useRef(new Map<string, Promise<string>>());
   const frameStates = useCurrentFrameStates();
 
-  const withState = (frame: CanvasFrame, url: string): string =>
-    frameStates
-      ? withFrameStateHost(url, frameStateOf(frameStates.view, frame.id))
-      : url;
+  const withState = (frame: CanvasFrame, url: string): string => {
+    if (frameStates) {
+      return withFrameStateHost(url, frameStateOf(frameStates.view, frame.id));
+    }
+    return url;
+  };
 
   const urlOf = async (frame: CanvasFrame): Promise<string | null> => {
     const url = await baseUrlOf(frame);
 
-    return url ? withState(frame, url) : null;
+    if (url) {
+      return withState(frame, url);
+    }
+    return null;
   };
 
   const fetchDirectionUrl = async (did: string): Promise<string> => {
@@ -198,33 +218,45 @@ const usePrototype = (options: Options) => {
 
   const play = (): void => setPlaying(true);
 
-  const single =
-    options.selection.length === 1 ? options.selection[0] : undefined;
+  const single: SelectionContext | undefined = (():
+    | SelectionContext
+    | undefined => {
+    if (options.selection.length !== LENGTH_1) {
+      return undefined;
+    }
+    return options.selection[SINGLE_0];
+  })();
 
-  const selected = on
-    ? linkOfSelection(states, single, options.active.id)
-    : null;
+  let selected: LinkState | null = null;
 
-  const artboard: ReactNode = on ? (
-    <>
-      <LinkArrows
-        states={states}
-        frames={options.shown}
-        active={options.active}
-        startId={startId}
-        arrows={arrows}
-        selectedId={selected?.link.id ?? null}
-        dropTarget={drag.drag?.target ?? null}
-      />
-      {single && options.live && (
-        <LinkHandle
-          selection={single}
-          activeId={options.active.id}
-          onBegin={drag.begin}
+  if (on) {
+    selected = linkOfSelection(states, single, options.active.id);
+  }
+
+  let artboard: ReactNode = null;
+
+  if (on) {
+    artboard = (
+      <>
+        <LinkArrows
+          states={states}
+          frames={options.shown}
+          active={options.active}
+          startId={startId}
+          arrows={arrows}
+          selectedId={selected?.link.id ?? null}
+          dropTarget={drag.drag?.target ?? null}
         />
-      )}
-    </>
-  ) : null;
+        {single && options.live && (
+          <LinkHandle
+            selection={single}
+            activeId={options.active.id}
+            onBegin={drag.begin}
+          />
+        )}
+      </>
+    );
+  }
 
   const stage: ReactNode = (
     <>
@@ -261,13 +293,20 @@ const usePrototype = (options: Options) => {
     </>
   );
 
+  const viewToggle2: { on: boolean; onToggle: () => void } | undefined = (():
+    | { on: boolean; onToggle: () => void }
+    | undefined => {
+    if (on) {
+      return { on: arrows, onToggle: () => setArrows((value) => !value) };
+    }
+    return undefined;
+  })();
+
   return {
     artboard,
     play,
     stage,
-    viewToggle: on
-      ? { on: arrows, onToggle: () => setArrows((value) => !value) }
-      : undefined,
+    viewToggle: viewToggle2,
   };
 };
 

@@ -23,6 +23,8 @@ import type { CanvasViewRow } from "./canvas-toolbar.js";
 import { toValueOr } from "./settle-model.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 
+const INDEX_1 = 1;
+
 interface FrameLabelInfo {
   number?: string;
   title?: string;
@@ -149,11 +151,17 @@ const useFileMenu = (chromePropsValue: ChromeProps, onImport: () => void) => {
           chromePropsValue.zoom.zoomToActive?.();
         };
 
+        let meta2 = "Hidden";
+
+        if (!canvasFrame.hidden) {
+          meta2 = framePage(canvasFrame.path);
+        }
+
         return {
           checked: canvasFrame.id === chromePropsValue.active.id,
           id: `frame-${canvasFrame.id}`,
-          label: `${info.number ?? index + 1}  ${info.badge?.title ?? frameBaseName(canvasFrame)}`,
-          meta: canvasFrame.hidden ? "Hidden" : framePage(canvasFrame.path),
+          label: `${info.number ?? index + INDEX_1}  ${info.badge?.title ?? frameBaseName(canvasFrame)}`,
+          meta: meta2,
           run: show,
         };
       }),

@@ -40,7 +40,11 @@ const StageMessage = ({
   urlError: string | null;
   app: ReactNode;
 }): ReactNode => {
-  const note = covered ? null : given;
+  let note: "building" | "empty" | null = given;
+
+  if (covered) {
+    note = null;
+  }
 
   if (urlError) {
     return <div className="stage-message">{urlError}</div>;
@@ -82,21 +86,29 @@ const PreviewSlots = ({
   sandbox?: string;
   viewport: { width: number; height: number };
 }): ReactElement[] =>
-  frames.slots.map((slot) => (
-    <iframe
-      key={slot.token}
-      ref={(el) => {
-        frames.elements.current[slot.token] = tagFrame(el, slot.token);
-      }}
-      title={copy.designPreview}
-      className={`frame ${slot.token === frames.frontToken ? "front" : "back"}`}
-      src={slot.src}
-      onLoad={() => frames.onFrameLoad(slot.token)}
-      sandbox={sandbox}
-      width={viewport.width}
-      height={viewport.height}
-    />
-  ));
+  frames.slots.map((slot) => {
+    let part: "front" | "back" = "back";
+
+    if (slot.token === frames.frontToken) {
+      part = "front";
+    }
+
+    return (
+      <iframe
+        key={slot.token}
+        ref={(el) => {
+          frames.elements.current[slot.token] = tagFrame(el, slot.token);
+        }}
+        title={copy.designPreview}
+        className={`frame ${part}`}
+        src={slot.src}
+        onLoad={() => frames.onFrameLoad(slot.token)}
+        sandbox={sandbox}
+        width={viewport.width}
+        height={viewport.height}
+      />
+    );
+  });
 
 const OtherFrames = ({
   frames,
@@ -131,6 +143,30 @@ const OtherFrames = ({
 
       const did = slot?.directionId ?? null;
       const wait = waiting(canvasFrameValue.path, did);
+
+      let nextSrc2: string | null = slot?.nextSrc ?? null;
+
+      if (wait) {
+        nextSrc2 = null;
+      }
+
+      const pending2: { missing: boolean; step: string | null } | undefined =
+        ((): { missing: boolean; step: string | null } | undefined => {
+          if (!wait) {
+            return undefined;
+          }
+          return {
+            missing: wait === "missing",
+            step: step ?? null,
+          };
+        })();
+
+      let src2: string | null = slot?.src ?? null;
+
+      if (wait) {
+        src2 = null;
+      }
+
       live.set(canvasFrameValue.id, {
         frame: canvasFrameValue,
         frameRef: (el) => {
@@ -139,21 +175,25 @@ const OtherFrames = ({
           }
         },
         label: labelProps(canvasFrameValue, did),
-        nextSrc: wait ? null : (slot?.nextSrc ?? null),
+        nextSrc: nextSrc2,
         offset: active,
         onNextLoad: passive.onSwapDone,
-        pending: wait
-          ? { missing: wait === "missing", step: step ?? null }
-          : undefined,
+        pending: pending2,
         register,
         sandbox,
-        src: wait ? null : (slot?.src ?? null),
+        src: src2,
       });
+
+      let result: string | null = null;
+
+      if (wait) {
+        result = step;
+      }
 
       const sig = JSON.stringify([
         canvasFrameValue,
         wait,
-        wait ? step : null,
+        result,
         slot?.src ?? null,
         slot?.nextSrc ?? null,
         slot?.token ?? null,
@@ -197,7 +237,14 @@ const LiveOverlay = ({
   ...rest
 }: LiveOverlayProps): ReactElement => {
   const box = useLive(hover);
-  const early = useLive(commenting ? NO_PICK : picked);
+
+  let argument: LiveStore<SelectionContext[] | null> = picked;
+
+  if (commenting) {
+    argument = NO_PICK;
+  }
+
+  const early = useLive(argument);
 
   return (
     <ArtboardOverlay

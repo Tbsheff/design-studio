@@ -1,5 +1,10 @@
 import { selectMoveOf } from "@design-studio/contracts";
-import type { SelectMove, SelectionContext } from "@design-studio/contracts";
+import type {
+  ReorderMove,
+  SelectMove,
+  SelectionContext,
+  StructureKey,
+} from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useEffect, useRef, useSyncExternalStore } from "react";
@@ -10,12 +15,18 @@ import {
   selectionTargets,
   structureMenuItems,
 } from "../inspector/structure-edits.js";
+import type { LayerDrop } from "../inspector/structure-edits.js";
 import { LayersPanel } from "../versions-layers-tokens/layers-panel.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { copy } from "./copy.js";
+import type { PreviewMenuItem } from "./preview-menu.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import type { HoverBox } from "./use-preview-frames.js";
+
+const LENGTH_0 = 0;
+
+const AT_NEG_1 = -1;
 
 interface TreeFrames {
   tree: LayerTree | null;
@@ -46,7 +57,7 @@ const CanvasLayersPanel = ({
   onSelectMode: () => void;
   onClose?: () => void;
 }): ReactElement => {
-  const hasSelection = selection.length > 0;
+  const hasSelection = selection.length > LENGTH_0;
   const hoveredNode = useHoveredNode(frames.hover);
 
   const menuState = {
@@ -56,17 +67,33 @@ const CanvasLayersPanel = ({
     isBusy: edits.busy,
   };
 
-  const actions = edits.enabled
-    ? {
-        menuItems: () => structureMenuItems(menuState, edits.structureKey),
-        onDrop: edits.dropNode,
-        onMove: edits.moveNode,
-        onMoveSelected: edits.moveSelected,
-        onRename: edits.renameNode,
-        onStructureKey: edits.structureKey,
-        onToggleHidden: edits.setNodeHidden,
-      }
-    : null;
+  let actions: {
+    menuItems: () => PreviewMenuItem[];
+    onDrop: (id: number, drop: LayerDrop) => void;
+    onMove: (id: number, move: ReorderMove) => void;
+    onMoveSelected: (move: ReorderMove) => void;
+    onRename: (id: number, name: string | null) => void;
+    onStructureKey: (key: StructureKey) => void;
+    onToggleHidden: (id: number, hidden: boolean) => void;
+  } | null = null;
+
+  if (edits.enabled) {
+    actions = {
+      menuItems: () => structureMenuItems(menuState, edits.structureKey),
+      onDrop: edits.dropNode,
+      onMove: edits.moveNode,
+      onMoveSelected: edits.moveSelected,
+      onRename: edits.renameNode,
+      onStructureKey: edits.structureKey,
+      onToggleHidden: edits.setNodeHidden,
+    };
+  }
+
+  let selectedNode2: number | null = null;
+
+  if (hasSelection) {
+    selectedNode2 = frames.selectedNode;
+  }
 
   return (
     <LayersPanel
@@ -75,7 +102,7 @@ const CanvasLayersPanel = ({
       onToggleLocked={edits.setNodeLocked}
       busy={!edits.settled}
       frameName={frameName}
-      selectedNode={hasSelection ? frames.selectedNode : null}
+      selectedNode={selectedNode2}
       onHover={frames.hoverNode}
       hoveredNode={hoveredNode}
       onSelect={(id, additive) => {
@@ -155,7 +182,7 @@ const useSelectMoveKeys = (
   useEffect(() => {
     const onKey = (eventValue: KeyboardEvent): void => {
       const cur = live.current;
-      const last = cur.selection.at(-1);
+      const last = cur.selection.at(AT_NEG_1);
 
       if (!cur.selectMode || !last || !canvasHasKeys()) {
         return;

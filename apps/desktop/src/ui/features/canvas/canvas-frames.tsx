@@ -14,6 +14,22 @@ import { FlowFromHere } from "./flow-from-here.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameStateMenu } from "./frame-state-menu.js";
 
+const INDEX_0 = 0;
+
+const INDEX_1 = 1;
+
+const ITEM_0 = 0;
+
+const ITEM_1 = 1;
+
+const ITEM_NEG_1 = -1;
+
+const SIZE_100 = 100;
+
+const FRAME_LABEL_0 = 0;
+
+const FRAME_LABEL_1 = 1;
+
 interface FrameBadge {
   label: string;
   title: string;
@@ -64,9 +80,19 @@ const frameTitle = (
   frame: Pick<CanvasFrame, "id" | "label" | "width" | "height" | "path">,
   frames?: readonly Pick<CanvasFrame, "id">[]
 ): string => {
-  const index = frames ? frames.findIndex((item) => item.id === frame.id) : -1;
+  let index = -1;
 
-  return `${index >= 0 ? `${index + 1} ` : ""}${frameBaseName(frame)} · ${framePage(frame.path)}`;
+  if (frames) {
+    index = frames.findIndex((item) => item.id === frame.id);
+  }
+
+  let part = "";
+
+  if (index >= INDEX_0) {
+    part = `${index + INDEX_1} `;
+  }
+
+  return `${part}${frameBaseName(frame)} · ${framePage(frame.path)}`;
 };
 
 const canvasFrameName = (
@@ -78,14 +104,17 @@ const canvasFrameName = (
   const index = frames.findIndex((item) => item.id === frameId);
   const frame = frames[index];
 
-  return frame ? `${index + 1} ${frameBaseName(frame)}` : fallback;
+  if (frame) {
+    return `${index + INDEX_1} ${frameBaseName(frame)}`;
+  }
+  return fallback;
 };
 
 const NUDGE: Record<string, [number, number]> = {
-  ArrowDown: [0, 1],
-  ArrowLeft: [-1, 0],
-  ArrowRight: [1, 0],
-  ArrowUp: [0, -1],
+  ArrowDown: [ITEM_0, ITEM_1],
+  ArrowLeft: [ITEM_NEG_1, ITEM_0],
+  ArrowRight: [ITEM_1, ITEM_0],
+  ArrowUp: [ITEM_0, ITEM_NEG_1],
 };
 
 const FrameLabel = ({
@@ -105,24 +134,77 @@ const FrameLabel = ({
 }: LabelProps): ReactElement => {
   const size = frameName(frame);
   const base = frameBaseName(frame);
-  const name = badge ? `Variation ${badge.label}` : base;
-  const owner = !badge && title && title !== frame.label ? `${title} · ` : "";
 
-  const classes = [
-    "frame-label",
-    active ? "active" : "",
-    badge ? "variation" : "",
-    badge?.current ? "current" : "",
-  ]
+  let name: string = base;
+
+  if (badge) {
+    name = `Variation ${badge.label}`;
+  }
+
+  let owner = "";
+
+  if (!badge && title && title !== frame.label) {
+    owner = `${title} · `;
+  }
+
+  let result: "" | "active" = "";
+
+  if (active) {
+    result = "active";
+  }
+
+  let result2: "" | "variation" = "";
+
+  if (badge) {
+    result2 = "variation";
+  }
+
+  let result3: "" | "current" = "";
+
+  if (badge?.current) {
+    result3 = "current";
+  }
+
+  const classes = ["frame-label", result, result2, result3]
     .filter(Boolean)
     .join(" ");
+
+  const datatestid: "variation-frame" | undefined = (():
+    | "variation-frame"
+    | undefined => {
+    if (!badge) {
+      return undefined;
+    }
+    return "variation-frame";
+  })();
+
+  let part3: string = owner;
+
+  if (badge) {
+    part3 = `${size} · `;
+  }
+
+  let part4:
+    | "Drag to move, double-click to zoom"
+    | "Click to edit, double-click to zoom" =
+    "Click to edit, double-click to zoom";
+
+  if (active) {
+    part4 = "Drag to move, double-click to zoom";
+  }
+
+  let content: string = base;
+
+  if (badge) {
+    content = badge.title;
+  }
 
   return (
     <div
       className={classes}
       data-frame-id={frame.id}
       data-direction-id={directionId ?? undefined}
-      data-testid={badge ? "variation-frame" : undefined}
+      data-testid={datatestid}
       style={{ "--frame-w": `${frame.width}px` } as CSSProperties}
     >
       <button
@@ -130,15 +212,24 @@ const FrameLabel = ({
         className="frame-name"
         aria-pressed={active}
         aria-label={`${name} frame`}
-        data-tip={`${badge ? `${size} · ` : owner}${active ? "Drag to move, double-click to zoom" : "Click to edit, double-click to zoom"}`}
+        data-tip={`${part3}${part4}`}
         onPointerDown={(event4) => onPointerDown(event4, frame)}
         onKeyDown={(event5) => {
           const step = NUDGE[event5.key];
 
           if (step) {
             event5.preventDefault();
-            const size = event5.shiftKey ? 100 : 10;
-            onNudge(frame, step[0] * size, step[1] * size);
+
+            let size: 100 | 10 = 10;
+
+            if (event5.shiftKey) {
+              size = SIZE_100;
+            }
+            onNudge(
+              frame,
+              step[FRAME_LABEL_0] * size,
+              step[FRAME_LABEL_1] * size
+            );
           } else if (event5.key === "Enter" || event5.key === " ") {
             event5.preventDefault();
             onActivate(frame);
@@ -146,7 +237,7 @@ const FrameLabel = ({
         }}
       >
         {number && <span className="frame-number">{number}</span>}
-        <span className="frame-title">{badge ? badge.title : base}</span>
+        <span className="frame-title">{content}</span>
         {!badge && frame.label?.trim() && (
           <span className="frame-size">{size}</span>
         )}
@@ -192,7 +283,14 @@ const FrameRedirectNote = ({
   onDismiss: () => void;
 }): ReactElement => {
   const auth = isAuthRoute(redirect.to);
-  const text = `${redirect.from} goes to ${redirect.to}.${auth ? " Sign in, or pick a public route." : ""}`;
+
+  let part2: "" | " Sign in, or pick a public route." = "";
+
+  if (auth) {
+    part2 = " Sign in, or pick a public route.";
+  }
+
+  const text = `${redirect.from} goes to ${redirect.to}.${part2}`;
 
   return (
     <div className="frame-redirect" role="status" data-tip={text}>

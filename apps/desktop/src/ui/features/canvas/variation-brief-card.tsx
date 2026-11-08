@@ -1,12 +1,22 @@
 import { VARIATION_BRIEF_MAX, VARIATION_MIN } from "@design-studio/contracts";
 import type { Project, VariationBrief } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { copy } from "./copy.js";
 import { budgetFor, money } from "./use-variations.js";
 import type { BriefDraft } from "./use-variations.js";
+
+const COST_USD_0 = 0;
+
+const PER_RUN_0 = 0;
+
+const TOTAL_0 = 0;
+
+const BRIEF_COST_0 = 0;
+
+const LENGTH_12 = 12;
 
 interface Props {
   project: Project;
@@ -20,7 +30,7 @@ interface Props {
 
 const BriefSkeleton = ({ count }: { count: number }): ReactElement => (
   <ol className="variation-briefs" aria-busy="true">
-    {Array.from({ length: count }, (_, index) => (
+    {Array.from({ length: count }, (value, index) => (
       <li key={index} className="variation-brief-row skeleton">
         <span className="badge">{"ABCD"[index]}</span>
         <span className="skeleton-lines" aria-hidden="true">
@@ -47,43 +57,54 @@ const BriefRows = ({
 
   return (
     <ol className="variation-briefs">
-      {briefs.map((brief, index) => (
-        <li key={brief.label + index} className="variation-brief-row">
-          <span className="badge accent" aria-hidden="true">
-            {brief.label}
-          </span>
-          <div className="variation-brief-fields">
-            <input
-              className="variation-brief-title"
-              aria-label={`Direction ${brief.label} name`}
-              value={brief.title}
-              maxLength={40}
-              disabled={busy}
-              onChange={(event) => onEdit(index, { title: event.target.value })}
-            />
-            <textarea
-              className="variation-brief-text"
-              aria-label={`Direction ${brief.label} brief`}
-              value={brief.brief}
-              rows={2}
-              maxLength={VARIATION_BRIEF_MAX}
-              disabled={busy}
-              onChange={(eventValue) =>
-                onEdit(index, { brief: eventValue.target.value })
-              }
-            />
-          </div>
-          <button
-            className="icon-btn small"
-            aria-label={`Remove direction ${brief.label}`}
-            data-tip={canRemove ? "Remove" : "Keep at least 2 directions"}
-            disabled={busy || !canRemove}
-            onClick={() => onRemove(index)}
-          >
-            <Icon name="close" size={14} />
-          </button>
-        </li>
-      ))}
+      {briefs.map((brief, index) => {
+        let datatip: "Remove" | "Keep at least 2 directions" =
+          "Keep at least 2 directions";
+
+        if (canRemove) {
+          datatip = "Remove";
+        }
+
+        return (
+          <li key={brief.label + index} className="variation-brief-row">
+            <span className="badge accent" aria-hidden="true">
+              {brief.label}
+            </span>
+            <div className="variation-brief-fields">
+              <input
+                className="variation-brief-title"
+                aria-label={`Direction ${brief.label} name`}
+                value={brief.title}
+                maxLength={40}
+                disabled={busy}
+                onChange={(event) =>
+                  onEdit(index, { title: event.target.value })
+                }
+              />
+              <textarea
+                className="variation-brief-text"
+                aria-label={`Direction ${brief.label} brief`}
+                value={brief.brief}
+                rows={2}
+                maxLength={VARIATION_BRIEF_MAX}
+                disabled={busy}
+                onChange={(eventValue) =>
+                  onEdit(index, { brief: eventValue.target.value })
+                }
+              />
+            </div>
+            <button
+              className="icon-btn small"
+              aria-label={`Remove direction ${brief.label}`}
+              data-tip={datatip}
+              disabled={busy || !canRemove}
+              onClick={() => onRemove(index)}
+            >
+              <Icon name="close" size={14} />
+            </button>
+          </li>
+        );
+      })}
     </ol>
   );
 };
@@ -98,27 +119,36 @@ const BudgetLine = ({
   count: number;
 }): ReactElement => {
   const budget = budgetFor(project, draft.level, count);
-  const briefCost = draft.result?.costUsd ?? 0;
+  const briefCost = draft.result?.costUsd ?? COST_USD_0;
   const limited = budget.perRun !== null && budget.total !== null;
+
+  let content: ReactNode = <>{copy.noSpendingLimit}</>;
+
+  if (limited) {
+    content = (
+      <>
+        {copy.upTo}
+        {money(budget.perRun ?? PER_RUN_0)}
+        {copy.perRun}{" "}
+        <strong>
+          {money(budget.total ?? TOTAL_0)}
+          {copy.total}
+        </strong>
+      </>
+    );
+  }
+
+  let content4 = "";
+
+  if (briefCost > BRIEF_COST_0) {
+    content4 = ` + ${money(briefCost)} for the briefs`;
+  }
 
   return (
     <p className="variation-budget" data-testid="variation-budget">
       {LEVEL_PRESETS[draft.level].label}
-      {copy.middot}{" "}
-      {limited ? (
-        <>
-          {copy.upTo}
-          {money(budget.perRun ?? 0)}
-          {copy.perRun}{" "}
-          <strong>
-            {money(budget.total ?? 0)}
-            {copy.total}
-          </strong>
-        </>
-      ) : (
-        <>{copy.noSpendingLimit}</>
-      )}
-      {briefCost > 0 ? ` + ${money(briefCost)} for the briefs` : ""}
+      {copy.middot} {content}
+      {content4}
     </p>
   );
 };
@@ -131,7 +161,7 @@ const briefsInvalid = (briefs: VariationBrief[] | null): boolean => {
   return briefs.some(
     (brief) =>
       !brief.title.trim() ||
-      brief.brief.trim().length < 12 ||
+      brief.brief.trim().length < LENGTH_12 ||
       brief.brief.length > VARIATION_BRIEF_MAX
   );
 };
@@ -156,12 +186,16 @@ const CardBody = ({
     return null;
   }
 
+  let content2 = `Writing ${draft.count} different directions…`;
+
+  if (draft.autoStart) {
+    content2 = `Writing ${draft.count} directions. The runs start when they are ready.`;
+  }
+
   return (
     <>
       <p className="variation-card-status" role="status">
-        {draft.autoStart
-          ? `Writing ${draft.count} directions. The runs start when they are ready.`
-          : `Writing ${draft.count} different directions…`}
+        {content2}
       </p>
       <BriefSkeleton count={draft.count} />
     </>
@@ -180,6 +214,24 @@ const VariationBriefCard = ({
   const count = draft.briefs?.length ?? draft.count;
   const busy = draft.starting;
 
+  let content3: "Element variants" | "Directions to try" = "Directions to try";
+
+  if (draft.element) {
+    content3 = "Element variants";
+  }
+
+  let content5 = `${count} designs for “${draft.prompt}”`;
+
+  if (draft.element) {
+    content5 = `${count} versions of the ${draft.element.tag}: “${draft.prompt}”`;
+  }
+
+  let content6 = `Start ${count} variations`;
+
+  if (busy) {
+    content6 = "Starting…";
+  }
+
   return (
     <section
       className="variation-card"
@@ -194,14 +246,8 @@ const VariationBriefCard = ({
           data-tip={draft.prompt}
           data-tip-align="start"
         >
-          <h2 id="variation-card-title">
-            {draft.element ? "Element variants" : "Directions to try"}
-          </h2>
-          <p className="variation-card-prompt truncate">
-            {draft.element
-              ? `${count} versions of the ${draft.element.tag}: “${draft.prompt}”`
-              : `${count} designs for “${draft.prompt}”`}
-          </p>
+          <h2 id="variation-card-title">{content3}</h2>
+          <p className="variation-card-prompt truncate">{content5}</p>
         </div>
         <button
           className="icon-btn small"
@@ -237,7 +283,7 @@ const VariationBriefCard = ({
             onClick={onStart}
             disabled={busy || draft.loading || briefsInvalid(draft.briefs)}
           >
-            {busy ? "Starting…" : `Start ${count} variations`}
+            {content6}
           </button>
         </div>
       </footer>

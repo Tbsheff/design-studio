@@ -1,6 +1,6 @@
 import type { AppRoute } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { dynamicNames } from "../../../shared/route-flow.js";
@@ -11,17 +11,53 @@ import "../../styles/route-flow.css";
 import { copy } from "./copy.js";
 import { toValueOr } from "./settle-model.js";
 
-const DEPTHS = [0, 1, 2] as const;
+const ITEM_0 = 0;
+
+const ITEM_1 = 1;
+
+const ITEM_2 = 2;
+
+const LENGTH_1 = 1;
+
+const LENGTH_0 = 0;
+
+const SLICE_0 = 0;
+
+const SLICE_4 = 4;
+
+const USE_STATE_1 = 1;
+
+const SLICE_200 = 200;
+
+const DEPTH_0 = 0;
+
+const FROM_0 = 0;
+
+const AT_NEG_1 = -1;
+
+const AT_1 = 1;
+
+const VALUE_0 = 0;
+
+const VALUE_1 = 1;
+
+const DEPTHS = [ITEM_0, ITEM_1, ITEM_2] as const;
 
 export const flowSummary = (result: FlowResult): string => {
   const added = result.frames.filter((frame) => frame.added).length;
 
+  let part: "link" | "links" = "links";
+
+  if (result.links.length === LENGTH_1) {
+    part = "link";
+  }
+
   const parts = [
     `${result.frames.length} frames (${added} new)`,
-    `${result.links.length} ${result.links.length === 1 ? "link" : "links"}`,
+    `${result.links.length} ${part}`,
   ];
 
-  if (result.skipped.length > 0) {
+  if (result.skipped.length > LENGTH_0) {
     parts.push(`${result.skipped.length} not linked`);
   }
 
@@ -64,14 +100,14 @@ const FlowResultView = ({ result }: { result: FlowResult }): ReactElement => (
       {flowSummary(result)}
       {copy.text}
     </div>
-    {result.missingParams.length > 0 && (
+    {result.missingParams.length > LENGTH_0 && (
       <div className="flow-warn">
         {copy.set}
         {result.missingParams.join(", ")}
         {copy.soTheFramesShow}
       </div>
     )}
-    {result.skipped.slice(0, 4).map((item) => (
+    {result.skipped.slice(SLICE_0, SLICE_4).map((item) => (
       <div
         key={`${item.fromRoute}|${item.href}|${item.source}`}
         className="flow-skip"
@@ -94,7 +130,7 @@ export default function FlowTab({
 
   const [filter, setFilter] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
-  const [depth, setDepth] = useState<number>(1);
+  const [depth, setDepth] = useState<number>(USE_STATE_1);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<FlowResult | null>(null);
 
@@ -108,34 +144,43 @@ export default function FlowTab({
         route.file.toLowerCase().includes(needle)
     );
 
-    const picked = (route: AppRoute): number =>
-      chosen.includes(route.route)
-        ? chosen.indexOf(route.route)
-        : chosen.length;
+    const picked = (route: AppRoute): number => {
+      if (chosen.includes(route.route)) {
+        return chosen.indexOf(route.route);
+      }
+      return chosen.length;
+    };
 
     return [...found]
       .sort(
         (appRoute, appRouteValue) => picked(appRoute) - picked(appRouteValue)
       )
-      .slice(0, 200);
+      .slice(SLICE_0, SLICE_200);
   }, [routes, filter, chosen]);
 
   const names = [...new Set(chosen.flatMap(dynamicNames))];
 
   const toggle = (route: string): void =>
-    setChosen((list) =>
-      list.includes(route)
-        ? list.filter((item) => item !== route)
-        : [...list, route]
-    );
+    setChosen((list) => {
+      if (list.includes(route)) {
+        return list.filter((item) => item !== route);
+      }
+      return [...list, route];
+    });
 
   const build = async (): Promise<void> => {
     setBusy(true);
     setError(null);
-    const single = chosen.length === 1 && depth > 0;
+    const single = chosen.length === LENGTH_1 && depth > DEPTH_0;
+
+    let result2: { from: string } | { routes: string[] } = { routes: chosen };
+
+    if (single) {
+      result2 = { from: chosen[FROM_0] as string };
+    }
 
     const input = {
-      ...(single ? { from: chosen[0] as string } : { routes: chosen }),
+      ...result2,
       depth,
       params,
     };
@@ -149,14 +194,35 @@ export default function FlowTab({
     }
   };
 
+  let placeholder2 = "Loading routes…";
+
+  if (routes) {
+    placeholder2 = `Filter ${routes.length} routes`;
+  }
+
+  const content3: string = ((): string => {
+    if (busy) {
+      return "Reading the source…";
+    }
+    if (chosen.length === LENGTH_0) {
+      return "Pick routes for the flow";
+    }
+
+    let part3: "routes" | "route" = "routes";
+
+    if (chosen.length === LENGTH_1) {
+      part3 = "route";
+    }
+
+    return `Build flow from ${chosen.length} ${part3}`;
+  })();
+
   return (
     <div className="app-routes flow-tab">
       <input
         className="app-routes-filter"
         value={filter}
-        placeholder={
-          routes ? `Filter ${routes.length} routes` : "Loading routes…"
-        }
+        placeholder={placeholder2}
         aria-label={copy.filterRoutes}
         onChange={(event) => setFilter(event.target.value)}
       />
@@ -164,23 +230,34 @@ export default function FlowTab({
         {shown.map((route) => {
           const at = chosen.indexOf(route.route);
 
+          let datatip: "Add to the flow" | "Remove from the flow" =
+            "Remove from the flow";
+
+          if (at === AT_NEG_1) {
+            datatip = "Add to the flow";
+          }
+
+          let content: ReactNode = (
+            <span className="flow-order">{at + AT_1}</span>
+          );
+
+          if (at === AT_NEG_1) {
+            content = <Icon name="plus" size={12} />;
+          }
+
           return (
             <button
               key={`${route.route}|${route.file}`}
               type="button"
               role="listitem"
               className="app-route"
-              aria-pressed={at !== -1}
-              data-tip={at === -1 ? "Add to the flow" : "Remove from the flow"}
+              aria-pressed={at !== AT_NEG_1}
+              data-tip={datatip}
               data-tip-align="start"
               onClick={() => toggle(route.route)}
             >
               <span className="mono">{route.route}</span>
-              {at === -1 ? (
-                <Icon name="plus" size={12} />
-              ) : (
-                <span className="flow-order">{at + 1}</span>
-              )}
+              {content}
             </button>
           );
         })}
@@ -193,23 +270,47 @@ export default function FlowTab({
             role="radiogroup"
             aria-label={copy.linkStepsTo}
           >
-            {DEPTHS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={depth === value}
-                className={depth === value ? "on" : ""}
-                data-tip={
-                  value === 0
-                    ? "Only the chosen routes"
-                    : `Add routes up to ${value} ${value === 1 ? "click" : "clicks"} away`
+            {DEPTHS.map((value) => {
+              let className2: "" | "on" = "";
+
+              if (depth === value) {
+                className2 = "on";
+              }
+
+              let datatip2 = "Only the chosen routes";
+
+              if (value !== VALUE_0) {
+                const part2: "click" | "clicks" = ((): "click" | "clicks" => {
+                  if (value === VALUE_1) {
+                    return "click";
+                  }
+                  return "clicks";
+                })();
+
+                datatip2 = `Add routes up to ${value} ${part2} away`;
+              }
+
+              const content2: 1 | 2 | "None" = ((): 1 | 2 | "None" => {
+                if (value === VALUE_0) {
+                  return "None";
                 }
-                onClick={() => setDepth(value)}
-              >
-                {value === 0 ? "None" : value}
-              </button>
-            ))}
+                return value;
+              })();
+
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={depth === value}
+                  className={className2}
+                  data-tip={datatip2}
+                  onClick={() => setDepth(value)}
+                >
+                  {content2}
+                </button>
+              );
+            })}
           </div>
         </div>
         {names.map((name) => (
@@ -234,15 +335,11 @@ export default function FlowTab({
         <button
           type="button"
           className="btn small primary"
-          disabled={busy || chosen.length === 0}
+          disabled={busy || chosen.length === LENGTH_0}
           onClick={build}
           data-tip={copy.layOutThe}
         >
-          {busy
-            ? "Reading the source…"
-            : chosen.length === 0
-              ? "Pick routes for the flow"
-              : `Build flow from ${chosen.length} ${chosen.length === 1 ? "route" : "routes"}`}
+          {content3}
         </button>
       </div>
     </div>

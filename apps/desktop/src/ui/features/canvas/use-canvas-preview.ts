@@ -17,6 +17,8 @@ import { usePreviewFrames } from "./use-preview-frames.js";
 import { useFramePort } from "./use-preview-url.js";
 import { useStageKeys } from "./use-stage-keys.js";
 
+const LENGTH_1 = 1;
+
 const useCanvasPreview = (
   props: ViewProps,
   text: ReturnType<typeof useCanvasStage>
@@ -98,7 +100,7 @@ const useCanvasPreview = (
     directions: knownList(props.directions),
     frameStates,
     frames: shown,
-    hold: frames.slots.length > 1,
+    hold: frames.slots.length > LENGTH_1,
     kind,
     lastChange: props.lastChange,
     live,
@@ -107,7 +109,7 @@ const useCanvasPreview = (
 
   const theme = useCanvasTheme();
   useEffect(
-    () => setCanvasFront(frames.frontToken, frames.slots.length > 1),
+    () => setCanvasFront(frames.frontToken, frames.slots.length > LENGTH_1),
     [frames.frontToken, frames.slots.length]
   );
   useEffect(() => (): void => setCanvasFront(null, false), []);

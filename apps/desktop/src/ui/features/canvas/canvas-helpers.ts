@@ -16,6 +16,10 @@ import { frameStateUrl } from "./frame-states-model.js";
 import type { FrameStatesRead } from "./frame-states-model.js";
 import { QUIET_FOCUS_ATTR } from "./use-inline-text-edit.js";
 
+const ITEM_300 = 300;
+
+const ITEM_1200 = 1200;
+
 const frameLabelOf = (frameId: string): Element | null =>
   document.querySelector(
     `.frame-label[data-frame-id="${CSS.escape(frameId)}"]`
@@ -44,7 +48,12 @@ const inEditPane = (shell: CanvasShell | undefined): boolean =>
 const hostedClose = (
   shell: CanvasShell | undefined,
   close: () => void
-): (() => void) | undefined => (shell ? undefined : close);
+): (() => void) | undefined => {
+  if (shell) {
+    return undefined;
+  }
+  return close;
+};
 
 const noteCommentFrame = (
   control: CommentsControl | undefined,
@@ -74,7 +83,10 @@ const pageNameOf = (path: string | undefined): string => {
     .pop()
     ?.replace(/\.html?$/i, "");
 
-  return file && file !== "index" ? file : "Page";
+  if (file && file !== "index") {
+    return file;
+  }
+  return "Page";
 };
 
 const commentToolsOf = (
@@ -95,7 +107,7 @@ const commentToolsOf = (
   };
 };
 
-const RECT_REFRESH_MS = [300, 1200];
+const RECT_REFRESH_MS = [ITEM_300, ITEM_1200];
 
 const NO_VERSION_TEXT =
   "No completed version yet. Switch to Live to see the current work.";
@@ -118,7 +130,10 @@ const stageNote = (point: {
     return "building";
   }
 
-  return point.noRuns && !point.app ? "empty" : null;
+  if (point.noRuns && !point.app) {
+    return "empty";
+  }
+  return null;
 };
 
 const themeSwitch = (enabled: boolean | undefined, theme: ThemeChoice) => {
@@ -128,17 +143,34 @@ const themeSwitch = (enabled: boolean | undefined, theme: ThemeChoice) => {
 
   const dark = theme === "dark";
 
-  return { dark, onToggle: () => broadcastTheme(dark ? null : "dark") };
+  return {
+    dark,
+    onToggle: () => {
+      let argument: "dark" | null = "dark";
+
+      if (dark) {
+        argument = null;
+      }
+
+      return broadcastTheme(argument);
+    },
+  };
 };
 
 const livePageUrl = (
   baseUrl: string | null,
   active: CanvasFrame,
   states: FrameStatesRead
-): string | null =>
-  baseUrl
-    ? frameStateUrl(withFramePath(baseUrl, active.path), states, active.id)
-    : null;
+): string | null => {
+  if (baseUrl) {
+    return frameStateUrl(
+      withFramePath(baseUrl, active.path),
+      states,
+      active.id
+    );
+  }
+  return null;
+};
 
 const knownList = (
   directions: CanvasDirections | undefined
@@ -165,7 +197,10 @@ const stageCursor = (pz: {
     return "grab";
   }
 
-  return pz.zoomHeld ? "zoom-in" : "";
+  if (pz.zoomHeld) {
+    return "zoom-in";
+  }
+  return "";
 };
 
 const quietOnPointer =
@@ -183,8 +218,12 @@ const dropQuietFocus = (event4: ReactFocusEvent<HTMLDivElement>): void => {
   }
 };
 
-const canvasClass = (editing: boolean): string =>
-  editing ? "canvas text-editing" : "canvas";
+const canvasClass = (editing: boolean): string => {
+  if (editing) {
+    return "canvas text-editing";
+  }
+  return "canvas";
+};
 
 const marqueeAllowed = (
   picking: boolean,
@@ -192,10 +231,15 @@ const marqueeAllowed = (
   comment: boolean
 ): boolean => picking && !prototype && !comment;
 
-const overlayHover = <T extends { fromTree?: boolean }>(
-  hover: T | null,
+const overlayHover = <Item extends { fromTree?: boolean }>(
+  hover: Item | null,
   picking: boolean
-): T | null => (picking || hover?.fromTree ? hover : null);
+): Item | null => {
+  if (picking || hover?.fromTree) {
+    return hover;
+  }
+  return null;
+};
 
 export {
   NO_VERSION_TEXT,

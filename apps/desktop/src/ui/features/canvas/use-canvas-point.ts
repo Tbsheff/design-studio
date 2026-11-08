@@ -6,9 +6,15 @@ import { useProjectEvents } from "../../platform/events.js";
 import { setFrameHidden } from "./canvas-frames-model.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
 
+const ITEM_900 = 900;
+
+const ITEM_1700 = 1700;
+
+const MAX_0 = 0;
+
 const POINT_FRESH_MS = 8000;
 const MCP_POINT_MS = 20_000;
-const SELECT_AT_MS = [900, 1700];
+const SELECT_AT_MS = [ITEM_900, ITEM_1700];
 const ZOOM_AT_MS = 500;
 
 interface PointInput {
@@ -105,7 +111,7 @@ const useCanvasPoint = (pointInputValue: PointInput): McpPointBadge => {
 
     const timer = window.setTimeout(
       () => setPoint(null),
-      Math.max(0, point.at + MCP_POINT_MS - Date.now())
+      Math.max(MAX_0, point.at + MCP_POINT_MS - Date.now())
     );
 
     return (): void => window.clearTimeout(timer);

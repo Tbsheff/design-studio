@@ -146,10 +146,23 @@ const CanvasStage = ({
     stageMode,
   } = widthValue;
 
+  let part: "" | " panning" = "";
+
+  if (pz.panning) {
+    part = " panning";
+  }
+
+  const visibility2: "hidden" | undefined = ((): "hidden" | undefined => {
+    if (note !== "empty") {
+      return undefined;
+    }
+    return "hidden";
+  })();
+
   return (
     <div
       ref={stageRef}
-      className={`stage ${stageMode}${pz.panning ? " panning" : ""}`}
+      className={`stage ${stageMode}${part}`}
       tabIndex={-1}
       aria-label={copy.canvas}
       onPointerDown={quietOnPointer(pz.onPointerDown)}
@@ -168,7 +181,7 @@ const CanvasStage = ({
         data-direction-id={directionId || undefined}
         style={{
           height: viewport.height,
-          visibility: note === "empty" ? "hidden" : undefined,
+          visibility: visibility2,
           width: viewport.width,
         }}
       >
@@ -283,7 +296,10 @@ const CanvasStage = ({
               (item) => item.id === id
             );
 
-            return frameValue ? frameName(frameValue) : id;
+            if (frameValue) {
+              return frameName(frameValue);
+            }
+            return id;
           }}
         />
       </Suspense>

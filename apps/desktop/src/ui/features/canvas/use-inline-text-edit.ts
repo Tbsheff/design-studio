@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { TextEditMessage } from "./use-preview-frames.js";
 
+const LENGTH_2000 = 2000;
+
 const MAX_INLINE_TEXT = 5000;
 
 const REFOCUS_MS = 50;
@@ -44,7 +46,7 @@ const parseTextCommit = (
   if (
     typeof selector !== "string" ||
     selector === "" ||
-    selector.length > 2000
+    selector.length > LENGTH_2000
   ) {
     return null;
   }

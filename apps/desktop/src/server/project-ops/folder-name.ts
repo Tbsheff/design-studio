@@ -8,7 +8,7 @@ import { toFolderSlug } from "./engine/to-folder-slug.js";
 
 const FOLDER_NAME_MODEL = "claude-haiku-5-5";
 
-const FOLDER_NAME_TIMEOUT_SECONDS = 4;
+const FOLDER_NAME_TIMEOUT_SECONDS = 8;
 
 const FOLDER_NAME_TIMEOUT = Duration.seconds(FOLDER_NAME_TIMEOUT_SECONDS);
 

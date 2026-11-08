@@ -74,4 +74,4 @@ const shouldTakeArrowKeys = (): boolean => {
   return true;
 };
 
-export { shouldBlurToCanvas, shouldTakeArrowKeys, toCanvasKeys };
+export { runStageFocus, shouldBlurToCanvas, shouldTakeArrowKeys, toCanvasKeys };

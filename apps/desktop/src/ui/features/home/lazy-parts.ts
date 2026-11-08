@@ -17,7 +17,7 @@ const HomeTrash = lazy(importTrash);
 const importPopovers = () => import("./home-popovers.js");
 
 const PlusMenu = lazy(async () => ({
-  default: (await importPopovers()).PlusMenu,
+  default: (await import("./plus-menu.js")).PlusMenu,
 }));
 
 const PackPopover = lazy(async () => ({

@@ -40,6 +40,7 @@ import {
   MORE_RUNS,
   THROUGH_RUNS,
   startSendNote,
+  toBuildErrorsOnly,
   toUpdatedProject,
   toVersionsWith,
   updateFirstToken,
@@ -169,8 +170,9 @@ function useRunPages(
   );
 
   const wantMore = useCallback(
-    (target: number) => (c: RunCursor) =>
-      toLoadedCount(c, direction.current) < target,
+    (target: number) =>
+      (c: RunCursor): boolean =>
+        toLoadedCount(c, direction.current) < target,
     []
   );
 
@@ -229,7 +231,7 @@ function useRunPages(
   useEffect(() => {
     publishRunHistory({ projectId, through });
 
-    return () => publishRunHistory(null);
+    return (): void => publishRunHistory(null);
   }, [projectId, through]);
 
   useEffect(() => {
@@ -238,7 +240,7 @@ function useRunPages(
     setRunsLoaded(false);
     void fill(c, wantMore(FIRST_RUNS));
 
-    return () => {
+    return (): void => {
       if (cursor.current === c) {
         cursor.current = createCursor(projectId);
       }
@@ -281,7 +283,7 @@ export function useStudioData(projectId: string): StudioData {
     pending: { current: null },
   });
 
-  useEffect(() => () => batcher.dispose(), [batcher]);
+  useEffect(() => (): void => batcher.dispose(), [batcher]);
 
   const stored = ui.directionByProject[projectId];
 
@@ -310,7 +312,7 @@ export function useStudioData(projectId: string): StudioData {
       .then((p) => alive && setProject(p))
       .catch((error) => alive && setLoadError(errorText(error)));
 
-    return () => {
+    return (): void => {
       alive = false;
     };
   }, [projectId]);
@@ -482,12 +484,7 @@ export function useStudioData(projectId: string): StudioData {
   return {
     addError,
     clearErrors: () => setErrors([]),
-    clearFrameErrors: () =>
-      setErrors((prev) =>
-        prev.some((e) => e.source !== "build")
-          ? prev.filter((e) => e.source === "build")
-          : prev
-      ),
+    clearFrameErrors: () => setErrors((prev) => toBuildErrorsOnly(prev)),
     connection,
     directionId,
     errors,

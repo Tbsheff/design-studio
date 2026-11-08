@@ -83,6 +83,16 @@ const toVersionsWith = (versions: Version[], version: Version): Version[] => {
   return [version, ...versions];
 };
 
+const toBuildErrorsOnly = <Item extends { readonly source: string }>(
+  errors: Item[]
+): Item[] => {
+  if (errors.some((item) => item.source !== "build")) {
+    return errors.filter((item) => item.source === "build");
+  }
+
+  return errors;
+};
+
 const startSendNote = (sends: SendTimes): (() => void) => {
   const at = Date.now();
   sends.pending.current = at;
@@ -100,6 +110,7 @@ export {
   SEND_GRACE_MS,
   THROUGH_RUNS,
   startSendNote,
+  toBuildErrorsOnly,
   toUpdatedProject,
   toVersionsWith,
   updateFirstToken,

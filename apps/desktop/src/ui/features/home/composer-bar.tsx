@@ -12,7 +12,7 @@ import type { AppSlotProps } from "./app-slot.js";
 import { copy } from "./copy.js";
 import { LEVEL_LABEL } from "./home-model.js";
 import type { Busy, Pop } from "./home-model.js";
-import type { ModelSettings, PlusMenuActions } from "./home-popovers.js";
+import type { ModelSettings } from "./home-popovers.js";
 import {
   FolderPathPop,
   LevelPopover,
@@ -22,6 +22,7 @@ import {
   loadPops,
 } from "./lazy-parts.js";
 import { PillSelect } from "./pill-select.js";
+import type { PlusMenuActions } from "./plus-menu-model.js";
 import { SendButton } from "./send-button.js";
 
 interface ComposerBarProps {

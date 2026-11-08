@@ -193,7 +193,7 @@
   outline-offset: 2px;
 }
 
-.prail-mini-dot {
+.prail-mini .pnav-dot {
   position: absolute;
   top: -3px;
   right: -3px;
@@ -342,4 +342,11 @@
     var(--pane-inset, var(--s-3)),
     calc(var(--shell-inset) - var(--rail-w))
   );
+}
+
+fieldset.prail-group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
 }

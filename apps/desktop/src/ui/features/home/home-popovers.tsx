@@ -16,13 +16,17 @@ import { fontStack, loadPackFonts } from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
 import { copy } from "./copy.js";
 import type { DesignCount } from "./home-model.js";
+import { NoneCard } from "./none-card.js";
 
 type Close = (refocus: boolean) => void;
 
 const FOCUS_ITEMS =
   ".ui-menu-item:not(:disabled), .home-pack-card:not(:disabled), .btn:not(:disabled)";
 
-const moveFocus = (event: KeyboardEvent<HTMLElement>, selector: string) => {
+const moveFocus = (
+  event: KeyboardEvent<HTMLElement>,
+  selector: string
+): void => {
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLElement>(selector),
   ];
@@ -51,7 +55,7 @@ const moveFocus = (event: KeyboardEvent<HTMLElement>, selector: string) => {
 const Pop = ({
   trigger,
   onClose,
-  className,
+  variant,
   label,
   role = "dialog",
   children,
@@ -60,7 +64,7 @@ const Pop = ({
 }: {
   readonly trigger: RefObject<HTMLElement | null>;
   readonly onClose: Close;
-  readonly className: string;
+  readonly variant: string;
   readonly label: string;
   readonly role?: "dialog" | "menu";
   readonly children: ReactNode;
@@ -82,7 +86,7 @@ const Pop = ({
   return (
     <div
       ref={root}
-      className={`ui-popover home-pop ${className}`}
+      className={`ui-popover home-pop ${variant}`}
       role={role}
       aria-label={label}
       data-closing={closing || undefined}
@@ -98,126 +102,6 @@ const Pop = ({
     >
       {children}
     </div>
-  );
-};
-
-interface PlusMenuActions {
-  readonly onAttachFile: () => void;
-  readonly onLinkCode: () => void;
-  readonly onTemplates: () => void;
-  readonly hasTemplatesShown: boolean;
-  readonly onImportSystem: () => void;
-  readonly onDesignSystem: () => void;
-  readonly onSkills: () => void;
-  readonly onLocation: () => void;
-}
-
-const Item = ({
-  icon,
-  label,
-  meta,
-  onClick,
-}: {
-  readonly icon: Parameters<typeof Icon>[0]["name"];
-  readonly label: string;
-  readonly meta?: ReactNode;
-  readonly onClick: () => void;
-}) => (
-  <button
-    type="button"
-    role="menuitem"
-    className="ui-menu-item"
-    tabIndex={-1}
-    onClick={onClick}
-  >
-    <Icon name={icon} size={14} />
-    <span className="truncate">{label}</span>
-    {meta && <span className="ui-menu-meta">{meta}</span>}
-  </button>
-);
-
-const PlusMenu = ({
-  trigger,
-  onClose,
-  actions,
-  locationLabel,
-  isClosing,
-}: {
-  readonly trigger: RefObject<HTMLElement | null>;
-  readonly onClose: Close;
-  readonly actions: PlusMenuActions;
-  readonly locationLabel: string;
-  readonly isClosing: boolean;
-}) => {
-  const run = (action: () => void) => () => {
-    onClose(false);
-    action();
-  };
-
-  return (
-    <Pop
-      trigger={trigger}
-      closing={isClosing}
-      onClose={onClose}
-      className="ui-menu home-plus-menu"
-      label="Add to the project"
-      role="menu"
-      onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
-    >
-      <div className="ui-menu-section">
-        <span className="ui-menu-label">{copy.files}</span>
-        <Item
-          icon="paperclip"
-          label="Attach images"
-          meta="⌘V"
-          onClick={run(actions.onAttachFile)}
-        />
-      </div>
-      <div className="ui-menu-section">
-        <span className="ui-menu-label">{copy.code}</span>
-        <Item
-          icon="folder"
-          label="Add app folder…"
-          onClick={run(actions.onLinkCode)}
-        />
-      </div>
-      <div className="ui-menu-section">
-        <span className="ui-menu-label">{copy.designs}</span>
-        <Item
-          icon="layers"
-          label={
-            actions.hasTemplatesShown
-              ? "Hide templates and starters"
-              : "Templates and starters"
-          }
-          onClick={run(actions.onTemplates)}
-        />
-        <Item
-          icon="download"
-          label="Import design system or tokens"
-          onClick={run(actions.onImportSystem)}
-        />
-      </div>
-      <div className="ui-menu-section">
-        <Item
-          icon="palette"
-          label="Design system"
-          meta={<Icon name="chevronRight" size={12} />}
-          onClick={run(actions.onDesignSystem)}
-        />
-        <Item
-          icon="sparkle"
-          label="Skills and limits"
-          onClick={run(actions.onSkills)}
-        />
-        <Item
-          icon="folder"
-          label="Location"
-          meta={locationLabel}
-          onClick={run(actions.onLocation)}
-        />
-      </div>
-    </Pop>
   );
 };
 
@@ -247,7 +131,7 @@ function rampColor(step: number, index: number): string {
 }
 
 function fontNames(pack: PackSummary): string {
-  const clean = (family: string) =>
+  const clean = (family: string): string =>
     family.split(",")[0]?.replaceAll(/['"]/g, "").trim() ?? "";
 
   const display = clean(pack.fonts.display);
@@ -289,27 +173,6 @@ const PackPreviewCard = ({
       </span>
     </span>
     <span className="home-pack-label truncate">{pack.name}</span>
-  </button>
-);
-
-const NoneCard = ({
-  isSelected,
-  onPick,
-}: {
-  readonly isSelected: boolean;
-  readonly onPick: () => void;
-}) => (
-  <button
-    type="button"
-    className="home-pack-card none"
-    aria-pressed={isSelected}
-    onClick={onPick}
-  >
-    <span className="home-pack-face none" aria-hidden="true">
-      <span className="pc-none-text">{copy.noDesignSystem}</span>
-      <span className="pc-none-hint">{copy.theAgentPicksTheLook}</span>
-    </span>
-    <span className="home-pack-label">{copy.none}</span>
   </button>
 );
 
@@ -364,7 +227,7 @@ const PackPopover = ({
     trigger={trigger}
     closing={isClosing}
     onClose={onClose}
-    className="home-pack-pop"
+    variant="home-pack-pop"
     label="Design system"
     onKeyDown={(event) => moveFocus(event, FOCUS_ITEMS)}
   >
@@ -414,7 +277,7 @@ const ModelPopover = ({
     trigger={trigger}
     closing={isClosing}
     onClose={onClose}
-    className="home-model-pop"
+    variant="home-model-pop"
     label="Model and run settings"
   >
     <div
@@ -487,7 +350,7 @@ const LevelPopover = ({
     trigger={trigger}
     closing={isClosing}
     onClose={onClose}
-    className="home-level-pop"
+    variant="home-level-pop"
     label="Level"
     role="menu"
     onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
@@ -514,15 +377,13 @@ const LevelPopover = ({
 );
 
 export {
-  Item,
   LevelPopover,
   ModelPopover,
   PackCards,
   PackPopover,
   PackPreviewCard,
-  PlusMenu,
   Pop,
   moveFocus,
 };
 
-export type { Close, ModelSettings, PlusMenuActions };
+export type { Close, ModelSettings };

@@ -284,7 +284,7 @@ const AppMenu = ({
       trigger={trigger}
       closing={isClosing}
       onClose={onClose}
-      className="ui-menu home-app-menu"
+      variant="ui-menu home-app-menu"
       label="App options"
     >
       <div className="ui-menu-section">
@@ -358,7 +358,7 @@ const FolderPathPop = ({
       trigger={trigger}
       closing={isClosing}
       onClose={onClose}
-      className="ui-menu home-path-pop"
+      variant="ui-menu home-path-pop"
       label="Add app folder"
     >
       <div className="ui-menu-section">

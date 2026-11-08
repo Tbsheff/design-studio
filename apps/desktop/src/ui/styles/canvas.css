@@ -1364,3 +1364,7 @@ body.element-resizing .frame {
 .element-moving .resize-frame {
   display: none;
 }
+
+.passive-frames {
+  display: contents;
+}

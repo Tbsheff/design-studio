@@ -29,14 +29,12 @@ import type { ViewProps } from "./canvas-types.js";
 import { copy } from "./copy.js";
 import { DrawBar } from "./draw-layer.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
-import {
-  FreeMoveSlot,
-  LiveOverlay,
-  OtherFrames,
-  PreviewSlots,
-  StageMessage,
-  StepCover,
-} from "./stage-parts.js";
+import { FreeMoveSlot } from "./free-move-slot.js";
+import { LiveOverlay } from "./live-overlay.js";
+import { OtherFrames } from "./other-frames.js";
+import { PreviewSlots } from "./preview-slots.js";
+import { StageMessage } from "./stage-message.js";
+import { StepCover } from "./step-cover.js";
 import type { useCanvasEdits } from "./use-canvas-edits.js";
 import { unionRect } from "./use-canvas-frames.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";

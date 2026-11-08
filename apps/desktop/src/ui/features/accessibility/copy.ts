@@ -38,6 +38,30 @@ const copy = {
   title: "Accessibility",
   unnamedMark: "!",
   unset: "Not set",
+  visionChips: "Vision types",
+  visionConfused: (
+    kind: string,
+    first: string,
+    second: string,
+    after: number
+  ): string => `${kind}: ${first} and ${second} look alike (delta E ${after})`,
+  visionKind: {
+    achromatopsia: "Achromatopsia",
+    "blurred-vision": "Blurred",
+    deuteranopia: "Deuteranopia",
+    protanopia: "Protanopia",
+    "reduced-contrast": "Low contrast",
+    tritanopia: "Tritanopia",
+  },
+  visionLost: (kind: string): string => `${kind}: text that fails`,
+  visionNoFrame: "This direction has no frame to simulate.",
+  visionNothing: "No lost text pairs and no confused status colors.",
+  visionRun: "Run",
+  visionRunning: "Running",
+  visionSheet: "Simulation sheet: original and each vision type",
+  visionTip:
+    "Shows the frame as users with color blindness or low vision see it",
+  visionTitle: "Simulate vision",
 } as const;
 
 export { copy };

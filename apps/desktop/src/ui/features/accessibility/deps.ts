@@ -1,6 +1,8 @@
 export { routes as accessibilityRoutes } from "@design-studio/actions/accessibility/routes";
 
-export { replaceStyle } from "../../api.js";
+export { api, replaceStyle } from "../../api.js";
+
+export { routes as projectRoutes } from "@design-studio/actions/project/routes";
 
 export { call } from "../../platform/http.js";
 
@@ -21,6 +23,13 @@ export {
   TAB_INDEX_MAX,
   TAB_INDEX_MIN,
 } from "@design-studio/contracts/accessibility";
+
+export type {
+  WireInput,
+  WireOutput,
+} from "@design-studio/actions/_core/action";
+
+export type { runVisionAccessibility } from "@design-studio/actions/accessibility/run-vision";
 
 export type {
   AccessibilityChanges,

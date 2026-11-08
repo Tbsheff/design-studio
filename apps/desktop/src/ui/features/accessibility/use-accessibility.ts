@@ -15,6 +15,7 @@ interface Accessibility {
   readonly apply: (changes: AccessibilityChanges) => void;
   readonly error: string | null;
   readonly handleFix: (fix: ContrastFix) => void;
+  readonly ids: AccessibilityIds;
   readonly isPending: boolean;
   readonly report: AccessibilityReport | null;
 }
@@ -65,8 +66,8 @@ const useAccessibility = (
   const { report } = load;
 
   return useMemo(
-    () => ({ apply, error, handleFix, isPending, report }),
-    [apply, error, handleFix, isPending, report]
+    () => ({ apply, error, handleFix, ids, isPending, report }),
+    [apply, error, handleFix, ids, isPending, report]
   );
 };
 

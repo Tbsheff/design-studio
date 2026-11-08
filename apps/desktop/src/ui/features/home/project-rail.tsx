@@ -10,12 +10,12 @@ import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from "react";
 
 import { matchesKey } from "../../../shared/keymap.js";
 import { TYPE_LABELS } from "../../../shared/project-search.js";
-import type { ProjectHit } from "../../../shared/project-search.js";
 import { openProject } from "../../app/project-nav.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { IS_MAC, tipWithKey } from "../commands/keys.js";
 import { useCommands } from "../commands/registry.js";
 import { copy } from "./copy.js";
+import type { ProjectHit } from "./deps.js";
 import {
   noteProjectOpened,
   refreshProjectHits,

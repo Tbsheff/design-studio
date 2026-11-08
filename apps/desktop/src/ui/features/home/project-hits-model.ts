@@ -1,11 +1,8 @@
 import type { Project } from "@design-studio/contracts";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import type {
-  ProjectSearchResult,
-  RouteHit,
-} from "../../../shared/project-search.js";
 import { api } from "../../api.js";
+import type { ProjectSearchResult, RouteHit } from "./deps.js";
 import { projectsApi } from "./projects-store-model.js";
 
 const ALL_LIMIT = 100;

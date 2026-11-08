@@ -1,7 +1,7 @@
 import type { Project, Starter } from "@design-studio/contracts";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
 import { api, errorText } from "../../api.js";
+import type { AppHealth } from "./deps.js";
 import { healthProblem } from "./doctor-model.js";
 import { shortHome } from "./home-model.js";
 import type { Busy } from "./home-model.js";

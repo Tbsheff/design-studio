@@ -3,11 +3,8 @@ import type { IconName } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
-import type {
-  ProjectHit,
-  ProjectType,
-} from "../../../shared/project-search.js";
 import { api } from "../../api.js";
+import type { ProjectHit, ProjectType } from "./deps.js";
 
 import "../../styles/project-nav.css";
 

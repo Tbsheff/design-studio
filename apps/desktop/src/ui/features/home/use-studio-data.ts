@@ -11,7 +11,6 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
-import type { ConnectionState } from "../../platform/events.js";
 import { uiStore, useUi } from "../../platform/storage.js";
 import { reportFirstToken } from "../../platform/telemetry.js";
 import {
@@ -30,6 +29,7 @@ import {
   createDeltaBatcher,
   frameOrTimeout,
 } from "../inspector/delta-batch.js";
+import type { ConnectionState } from "./deps.js";
 import {
   createCursor,
   toLoadedCount,

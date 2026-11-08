@@ -5,9 +5,9 @@ import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import { FOUND_KIND_LABEL } from "../../../shared/found-apps.js";
-import type { FoundApp, FoundApps } from "../../../shared/found-apps.js";
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
+import type { FoundApp, FoundApps } from "./deps.js";
 import { projectsApi } from "./projects-store-model.js";
 
 const MAX_FOUND = 6;

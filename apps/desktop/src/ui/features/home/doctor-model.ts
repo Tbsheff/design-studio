@@ -1,6 +1,6 @@
 import type { Project } from "@design-studio/contracts";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
+import type { AppHealth } from "./deps.js";
 import type { DoctorProblem } from "./home-doctor.js";
 import { shortHome } from "./home-model.js";
 

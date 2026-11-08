@@ -2,9 +2,9 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 
-import type { FolderInspection } from "../../../shared/open-app.js";
 import { api, errorText } from "../../api.js";
 import { desktopBridge } from "../../platform/desktop.js";
+import type { FolderInspection } from "./deps.js";
 
 type RunMode = "start" | "url";
 

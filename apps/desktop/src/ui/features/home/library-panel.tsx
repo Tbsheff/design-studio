@@ -1,11 +1,11 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
 import type { ReactElement, RefObject } from "react";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
 import { uiStore } from "../../platform/storage.js";
 import { pickable } from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
 import { copy } from "./copy.js";
+import type { AppHealth } from "./deps.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import type { useProjectActions } from "./home-sections.js";
 import type { LibraryModule } from "./lazy-parts.js";

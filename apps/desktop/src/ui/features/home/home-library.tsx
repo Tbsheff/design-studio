@@ -3,9 +3,9 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
 import { formatRelative } from "../../domain/format.js";
 import { copy } from "./copy.js";
+import type { AppHealth } from "./deps.js";
 import { homePrefs } from "./home-prefs-model.js";
 import type { HomeFilter } from "./home-prefs-model.js";
 import { isFolderProject, projectBadge, useThumbnail } from "./project-grid.js";

@@ -4,17 +4,17 @@ import { Icon, LazySelect } from "@design-studio/ui";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
 import { projectTypeOf, TYPE_LABELS } from "../../../shared/project-search.js";
-import type { ProjectType } from "../../../shared/project-search.js";
 import { api, warmProject } from "../../api.js";
 import { prefetchStudio } from "../../app/screen-preload.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
 import { HOME_SORTS, uiStore, useUi } from "../../platform/storage.js";
-import type { HomeSort } from "../../platform/storage.js";
 import { findPack, keySwatches } from "../design-system/packs.js";
 import { Swatches } from "../inspector/swatches.js";
 import { copy } from "./copy.js";
+import type { AppHealth } from "./deps.js";
+import type { ProjectType } from "./deps.js";
+import type { HomeSort } from "./deps.js";
 import type { KeyedFlag, KeyedUrl, Point, StarProps } from "./home-model.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import {

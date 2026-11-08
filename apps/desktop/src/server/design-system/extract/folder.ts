@@ -4,6 +4,8 @@ import path from "node:path";
 import { findTokenFile, safeFileInside } from "../app-tokens/detect.js";
 import { readCssTokens } from "../app-tokens/read-css.js";
 import { buildAppTokens } from "../app-tokens/tokens.js";
+import { getAppDocs } from "./app-docs.js";
+import type { AppDocs } from "./app-docs.js";
 import { customProperties, parseCss } from "./css.js";
 import type { CustomProperties } from "./css.js";
 import { flattenJs, objectAfter } from "./js-literal.js";
@@ -35,6 +37,7 @@ export const FOLDER_LIMITS: FolderLimits = {
 export class FolderScanError extends Error {}
 
 export interface FolderScan {
+  docs: AppDocs;
   harvest: Harvest;
   files: string[];
   skipped: string[];
@@ -392,5 +395,9 @@ export async function scanFolder(
     extras: vars.extras,
     ...(fonts.googleFontsUrl ? { googleFontsUrl: fonts.googleFontsUrl } : {}),
   };
-  return { harvest, files: acc.read, skipped: acc.skipped };
+  const docs = await getAppDocs(root).catch((): AppDocs => ({
+    designMd: null,
+    notes: [],
+  }));
+  return { docs, harvest, files: acc.read, skipped: acc.skipped };
 }

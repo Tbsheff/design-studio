@@ -5,8 +5,15 @@ import type { CreateUserPackInput } from "@design-studio/contracts";
 import { BadRequestError } from "../../platform/errors/index.js";
 import type { LoadedPack, PackRegistry } from "../packs.js";
 import { toIssueLines } from "../parse-schema.js";
+import {
+  toAppDesignMd,
+  toAppNotesText,
+  toDocFiles,
+  toHarvestedWithDocs,
+} from "./app-docs.js";
 import { composeDraftDesignMd, sourceSummary } from "./compose.js";
 import { firstHeading, harvestDesignText } from "./design-md.js";
+import { toNameFromBrief, toNameFromUrl, toTitleCase } from "./draft-name.js";
 import {
   DEFAULT_BASE_PACK,
   MAX_TOKENS_FILE_BYTES,
@@ -104,37 +111,6 @@ export function parseDraftRequest(
   return request;
 }
 
-function titleCase(text: string): string {
-  return text.replaceAll(
-    /(^|[\s-])([a-z])/g,
-    (_whole, lead: string, char: string) => `${lead}${char.toUpperCase()}`
-  );
-}
-
-function nameFromUrl(url: string): string | null {
-  try {
-    const host = new URL(url).hostname.replace(/^www\./, "");
-    const label = host.split(".")[0] ?? "";
-
-    return /^[a-z0-9-]{1,40}$/i.test(label) && !/^\d+$/.test(label)
-      ? titleCase(label.replaceAll("-", " "))
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function nameFromBrief(brief: string | undefined): string | null {
-  const words = (brief ?? "")
-    .replaceAll(/[^\p{L}\p{N}\s-]/gu, " ")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 4);
-
-  return words.length > 0 ? titleCase(words.join(" ")).slice(0, 60) : null;
-}
-
 export function draftName(request: DraftRequest): string {
   const given = request.name?.trim();
 
@@ -143,13 +119,13 @@ export function draftName(request: DraftRequest): string {
   }
 
   const fromUrl = request.urls
-    .map(nameFromUrl)
+    .map(toNameFromUrl)
     .find((name): name is string => name !== null);
 
   const fromMd = request.designMd ? firstHeading(request.designMd) : null;
 
   const fromFile = request.tokensFile
-    ? titleCase(
+    ? toTitleCase(
         path
           .basename(request.tokensFile.name)
           .replace(/\.(tokens\.)?(json|css)$/i, "")
@@ -159,7 +135,7 @@ export function draftName(request: DraftRequest): string {
     : null;
 
   const fromFolder = request.folderPath
-    ? titleCase(
+    ? toTitleCase(
         path
           .basename(request.folderPath)
           .replaceAll(/[^\w\s-]/g, " ")
@@ -170,7 +146,7 @@ export function draftName(request: DraftRequest): string {
   return (
     fromUrl ??
     fromMd ??
-    nameFromBrief(request.brief) ??
+    toNameFromBrief(request.brief) ??
     fromFile ??
     fromFolder ??
     "New design system"
@@ -489,6 +465,7 @@ function sourceFiles(
 
   return [
     ...snapshots,
+    ...toDocFiles(harvested.folder?.docs ?? null),
     ...(request.tokensFile
       ? [
           {
@@ -549,18 +526,21 @@ export function emptyHarvested(): Harvested {
 export function assembleDraft(
   request: DraftRequest,
   base: LoadedPack,
-  harvested: Harvested,
+  scanned: Harvested,
   pending: readonly KitGroup[] = [],
   logo?: string
 ): Draft {
+  const harvested = toHarvestedWithDocs(scanned);
+  const docs = harvested.folder?.docs ?? null;
   const name = draftName(request);
   const mode = chooseMode(request, harvested.harvests, harvested.urlHarvests);
   const mapped = mapDraft(base, harvested.harvests, mode, harvested.reports);
-  const pastedMd = request.designMd?.trim() ? request.designMd : null;
+  const pastedMd = toAppDesignMd(request.designMd, docs);
 
   const designMd =
     pastedMd ??
     composeDraftDesignMd({
+      appNotes: toAppNotesText(docs),
       baseName: base.manifest.name,
       brief: request.brief,
       coverage: mapped.coverage,

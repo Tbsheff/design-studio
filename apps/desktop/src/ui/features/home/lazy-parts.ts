@@ -12,7 +12,9 @@ const importTrash = () => import("./home-trash.js");
 
 const importSlash = () => import("./home-slash.js");
 
-const HomeTrash = lazy(importTrash);
+const HomeTrash = lazy(async () => ({
+  default: (await importTrash()).HomeTrash,
+}));
 
 const importPopovers = () => import("./home-popovers.js");
 

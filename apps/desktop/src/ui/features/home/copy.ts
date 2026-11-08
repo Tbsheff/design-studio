@@ -35,10 +35,13 @@ const copy = {
   couldNotLoadDesignSystems: "Could not load design systems. ",
   default: "Default",
   deleteForever: "Delete forever",
+  deleteForeverAction: "Delete forever",
   deleted: "Deleted ",
+  deletedOneForever: "Deleted 1 project forever.",
   deletedProjects: "Deleted projects",
   deletedProjectsStayHereUntil:
     "Deleted projects stay here until you delete them for good.",
+  deletingEllipsis: "Deleting…",
   describeAPageOrPick:
     "Describe a page or pick a template. Then use Select to edit any part.",
   describeTheDesign: "Describe the design",
@@ -57,10 +60,13 @@ const copy = {
   dropAnAppFolderAn: "Drop an app folder, an image or a link to build on it",
   dropAnywhereTheFolderGoes: "Drop anywhere: the folder goes on the prompt",
   edits: "Edits ",
+  emptyTheTrash: "Empty the trash?",
   emptyTrash: "Empty trash…",
+  emptyTrashAction: "Empty trash",
   environmentForNextDev: "Environment for next dev",
   favorites: "Favorites",
   files: "Files",
+  filesInFolderStay: " Files in your folder stay.",
   filesInYourFolderStay: "· Files in your folder stay",
   filesStayIn: "Files stay in ",
   find: "Find",
@@ -76,6 +82,10 @@ const copy = {
   has: "has ",
   home: "Home",
   httpLocalhost3000: "http://localhost:3000",
+  irreversibleMany:
+    "and their versions, runs and comments leave the app. You cannot undo this.",
+  irreversibleOne:
+    "Its versions, runs and comments leave the app. You cannot undo this.",
   labelUse: "Use",
   labelUseAddAppFolderOr:
     ". Use Add app folder, or drop a folder on the window.",
@@ -114,6 +124,7 @@ const copy = {
   noProjectsYet:
     "No projects yet. Describe a design above, pick a starter, or open a folder that already holds one.",
   none: "None",
+  oneProject: "1 project",
   openAnyway: "Open anyway",
   openFolderHere: "Open folder here…",
   openLibrary: "Open library",
@@ -130,6 +141,7 @@ const copy = {
   projectName: "Project name",
   projectRail: "Project rail",
   projects: "Projects",
+  projectsSuffix: "projects",
   prototypes: "Prototypes",
   reactViteProject: "React + Vite project",
   recentProjects: "Recent projects",

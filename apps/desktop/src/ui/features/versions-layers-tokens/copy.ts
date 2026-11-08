@@ -20,6 +20,14 @@ const COPY = {
   detailRestored: "Restored",
   detailSaved: "Saved",
   detailUndid: "Undid",
+  directionDefault: "Direction",
+  directionNew: "New direction",
+  directionsTitle: "Directions",
+  forkBranchFrom: "Branch from ",
+  forkCancel: "Cancel",
+  forkCreate: "Create direction",
+  headCompare: "Compare",
+  headUndo: "Undo",
   hunkChangePrefix: "Change ",
   hunkKeep: "Keep",
   hunkKeepTip: "Keep this change",
@@ -114,6 +122,10 @@ const COPY = {
   toolGroup: "Group selection",
   toolUnwrap: "Unwrap",
   toolWrap: "Wrap in auto layout",
+  variantSuffix: " variant",
+  versionsEmpty:
+    "No versions yet. Send a prompt and the first run saves one here.",
+  versionsLoading: "Loading versions…",
 } as const;
 
 export { COPY };

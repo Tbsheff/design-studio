@@ -1,11 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { AnimationPanel } from "./animation-panel.js";
-import { copy } from "./copy.js";
+import { animationTimeline, useLive } from "./deps.js";
 import type { ParentMessageBody } from "./deps.js";
-
-import styles from "./animation.module.css";
 
 interface AnimationEntryProps {
   readonly directionId: string;
@@ -19,23 +17,13 @@ const AnimationEntry = ({
   post,
   projectId,
   selector,
-}: AnimationEntryProps): ReactElement => {
-  const [isOpen, setIsOpen] = useState(false);
+}: AnimationEntryProps): ReactElement | null => {
+  const isOpen = useLive(animationTimeline);
 
-  const handleOpen = useCallback((): void => setIsOpen(true), []);
-  const handleClose = useCallback((): void => setIsOpen(false), []);
+  const handleClose = useCallback((): void => animationTimeline.set(false), []);
 
   if (!isOpen) {
-    return (
-      <button
-        className={styles.toggle}
-        data-tip={copy.animation}
-        onClick={handleOpen}
-        type="button"
-      >
-        {copy.animation}
-      </button>
-    );
+    return null;
   }
 
   return (

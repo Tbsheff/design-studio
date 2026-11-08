@@ -194,6 +194,20 @@
 }
 
 .comment-card {
+  --float-bg: var(--surface-raised);
+  --float-bg-hover: var(--surface-hover);
+  --float-fg: var(--text);
+  --float-fg-muted: var(--text-2);
+  --float-fg-faint: var(--text-faint);
+  --float-line: var(--line);
+  --float-line-strong: var(--line-strong);
+  --float-accent: var(--accent);
+  --float-accent-text: var(--accent-text);
+  --float-accent-line: var(--accent-line);
+  --float-accent-tint: var(--accent-soft);
+}
+
+.comment-card {
   position: absolute;
   z-index: 4;
   box-sizing: border-box;
@@ -204,7 +218,6 @@
   background: var(--float-bg);
   color: var(--float-fg);
   box-shadow: var(--float-shadow);
-  color-scheme: dark;
   transform-origin: 0 0;
   pointer-events: auto;
   font: 400 14px/1.5 var(--font);

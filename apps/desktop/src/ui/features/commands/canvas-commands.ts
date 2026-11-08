@@ -1,6 +1,6 @@
 import type { CanvasActions } from "./canvas-actions.js";
 import { toReason, toTitle, withDisabled } from "./command-disabled.js";
-import { uiStore } from "./deps.js";
+import { animationTimeline, uiStore } from "./deps.js";
 import type { KeyId, ZoomKey } from "./deps.js";
 import type { Command } from "./registry.js";
 
@@ -118,6 +118,14 @@ const playCommands = (canvasActions: CanvasActions): Command[] => [
     keywords: "present prototype links click through",
     run: canvasActions.play,
     title: "Play prototype",
+  },
+  {
+    group: "Canvas",
+    icon: "play",
+    id: "view.animation",
+    keywords: "timeline keyframes motion animate",
+    run: () => animationTimeline.set(!animationTimeline.get()),
+    title: "Show or hide the animation timeline",
   },
   withDisabled(
     {

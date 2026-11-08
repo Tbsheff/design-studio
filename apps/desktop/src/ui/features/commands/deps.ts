@@ -51,6 +51,8 @@ export { findElement } from "../../platform/find-element.js";
 
 export { createLiveStore } from "../../platform/live-store.js";
 
+export { animationTimeline } from "../../platform/animation-timeline.js";
+
 export { readStored, uiStore, writeStored } from "../../platform/storage.js";
 
 export { isTypingTarget } from "../../platform/typing-target.js";

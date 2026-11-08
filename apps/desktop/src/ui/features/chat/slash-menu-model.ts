@@ -1,5 +1,5 @@
 import type { IconName } from "@design-studio/ui";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 
 interface SlashChoice {
   id: string;
@@ -91,6 +91,32 @@ const sectionRows = (sections: readonly SlashSection[]): Row[] =>
     }))
   );
 
+type ListInputProps = Readonly<Record<string, string | undefined>>;
+
+interface SlashMenuView {
+  readonly current: Row | undefined;
+  readonly heading: string | null;
+  readonly label: string;
+  readonly listId: string;
+  readonly lock: string | null;
+  readonly note: ReactNode;
+  readonly onHover: (row: Row) => void;
+  readonly onPick: (row: Row | undefined) => void;
+  readonly optionId: (row: Row) => string;
+  readonly query: string;
+  readonly rows: Row[];
+  readonly statuses: SlashSection[];
+}
+
+interface SlashMenuResult {
+  readonly close: () => void;
+  readonly inputProps: ListInputProps;
+  readonly onKeyDown: (event: KeyboardEvent<HTMLElement>) => boolean;
+  readonly open: boolean;
+  readonly openMenu: () => void;
+  readonly view: SlashMenuView;
+}
+
 export {
   GAP,
   MAX_HEIGHT,
@@ -101,4 +127,14 @@ export {
   wordsStart,
 };
 
-export type { MenuKey, SlashChoice, Options, Row, SlashGroup, SlashSection };
+export type {
+  ListInputProps,
+  MenuKey,
+  Options,
+  Row,
+  SlashChoice,
+  SlashGroup,
+  SlashMenuResult,
+  SlashMenuView,
+  SlashSection,
+};

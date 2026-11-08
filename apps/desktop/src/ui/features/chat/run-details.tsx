@@ -121,6 +121,7 @@ const RunDetails = ({
         <div className="spacer" />
         <button
           ref={closeButton}
+          type="button"
           className="icon-btn"
           aria-label={copy.close}
           data-tip={copy.close}

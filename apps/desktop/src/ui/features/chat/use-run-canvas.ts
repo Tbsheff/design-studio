@@ -33,7 +33,7 @@ const frameKey = (frame: CanvasFrame): string =>
   `${frame.id}|${frame.path ?? ""}`;
 
 const elementName = (selection: readonly SelectionContext[]): string | null => {
-  const first = selection[0];
+  const [first] = selection;
 
   if (!first) {
     return null;

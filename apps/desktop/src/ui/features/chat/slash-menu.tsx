@@ -20,10 +20,13 @@ import {
   wordsStart,
 } from "./slash-menu-model.js";
 import type {
+  ListInputProps,
   MenuKey,
   Options,
   Row,
   SlashGroup,
+  SlashMenuResult,
+  SlashMenuView,
   SlashSection,
 } from "./slash-menu-model.js";
 
@@ -106,7 +109,7 @@ const listInputProps = (
   open: boolean,
   listId: string,
   activeId: string | null
-) => {
+): ListInputProps => {
   if (open) {
     return {
       "aria-activedescendant": activeId ?? undefined,
@@ -125,7 +128,7 @@ const useSlashMenu = ({
   sections,
   note,
   label,
-}: Options) => {
+}: Options): SlashMenuResult => {
   const listId = useId();
   const [path, setPath] = useState<string | null>(null);
 
@@ -301,8 +304,6 @@ const useSlashMenu = ({
 
   return { close, inputProps, onKeyDown, open, openMenu, view };
 };
-
-type SlashMenuView = ReturnType<typeof useSlashMenu>["view"];
 
 const RowBody = ({ row }: { row: Row }): ReactElement => {
   if (row.kind === "group") {

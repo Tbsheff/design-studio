@@ -135,7 +135,9 @@ const publishOlderRuns = (next: OlderRuns, load: (() => void) | null): void => {
   }
 
   older = next.more || next.loading ? next : NONE;
-  listeners.forEach((listener) => listener());
+  for (const listener of listeners) {
+    listener();
+  }
 };
 
 const requestOlderRuns = (): void => {

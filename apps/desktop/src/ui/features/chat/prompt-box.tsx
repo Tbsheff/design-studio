@@ -309,7 +309,7 @@ const modeGroup = (
   value: MODE_LABEL[mode],
 });
 
-const SLASH_HIDDEN = /^composer\.(?:mode|level)-/;
+const SLASH_HIDDEN = /^composer\.(?:mode|level)-/u;
 
 const RUNNING_PLACEHOLDER = `Queue a note (↵) or send it now (${MOD_LABEL}↵)`;
 
@@ -380,12 +380,12 @@ const sendBlocker = (state: {
   return null;
 };
 
-const sendErrorText = (err: unknown): string => {
-  if (err instanceof TypeError) {
+const sendErrorText = (thrownError: unknown): string => {
+  if (thrownError instanceof TypeError) {
     return "Could not reach the studio. Your message is still here. Check that the studio runs, then send again.";
   }
 
-  return errorText(err);
+  return errorText(thrownError);
 };
 
 const designsBlocker = (
@@ -500,11 +500,11 @@ const PromptBox = (props: Props): ReactElement => {
             })
           )
         )
-        .catch((err) =>
+        .catch((thrownError) =>
           setFiles((prev) =>
             prev.map((entry) => {
               if (entry.localId === localId) {
-                return { ...entry, error: errorText(err) };
+                return { ...entry, error: errorText(thrownError) };
               }
 
               return entry;
@@ -538,8 +538,8 @@ const PromptBox = (props: Props): ReactElement => {
     api
       .updateSettings(props.projectId, { model })
       .then(props.onSettingsSaved)
-      .catch((err: unknown) =>
-        setError(`Could not save the model: ${errorText(err)}`)
+      .catch((thrownError: unknown) =>
+        setError(`Could not save the model: ${errorText(thrownError)}`)
       );
   };
 
@@ -561,7 +561,7 @@ const PromptBox = (props: Props): ReactElement => {
 
   const insertMention = (): void => {
     slash.close();
-    setDraft(draft === "" || /\s$/.test(draft) ? `${draft}@` : `${draft} @`);
+    setDraft(draft === "" || /\s$/u.test(draft) ? `${draft}@` : `${draft} @`);
     focusInput();
   };
 
@@ -714,12 +714,12 @@ const PromptBox = (props: Props): ReactElement => {
         setFiles([]);
         setSkillIds([]);
         keys.resetHistory();
-      } catch (err) {
+      } catch (thrownError) {
         if (!props.draft.get().trim()) {
           setDraft(sentDraft);
         }
 
-        setError(sendErrorText(err));
+        setError(sendErrorText(thrownError));
       }
     });
   };

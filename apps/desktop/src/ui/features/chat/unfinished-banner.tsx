@@ -33,13 +33,19 @@ const UnfinishedBanner = ({
     </span>
     <div className="spacer" />
     <button
+      type="button"
       className="btn small ghost danger"
       disabled={busy}
       onClick={onDiscard}
     >
       {copy.discard}
     </button>
-    <button className="btn small" disabled={busy} onClick={onKeep}>
+    <button
+      type="button"
+      className="btn small"
+      disabled={busy}
+      onClick={onKeep}
+    >
       {copy.keep}
     </button>
   </div>

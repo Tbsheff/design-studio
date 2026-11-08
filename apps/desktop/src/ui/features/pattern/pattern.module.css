@@ -254,3 +254,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.dialog .form {
+  padding: var(--s-3);
+}

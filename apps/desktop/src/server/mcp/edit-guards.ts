@@ -3,7 +3,6 @@ import path from "node:path";
 
 import type { Direction, Project } from "@design-studio/contracts";
 
-import type { FixApp } from "../../shared/mcp-ports.js";
 import type { AgentRunner } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
@@ -32,7 +31,6 @@ export interface EditDeps extends ExportDeps {
   dataDir: string;
   projectsFolder(): Promise<string>;
   history?: EditRecorder & Partial<Pick<EditHistory, "mark" | "dropUnsaved">>;
-  fixApp: FixApp;
   keepVariant: KeepVariant;
   layerLocks: LayerLockStore | null;
 }
@@ -192,5 +190,3 @@ export function oneLine(text: string, max = 80): string {
 
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
-
-export type { FixApp };

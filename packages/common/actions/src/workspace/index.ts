@@ -1,4 +1,5 @@
 // @generated
+import { applyFixWorkspace } from "./apply-fix.js";
 import { createFolderWorkspace } from "./create-folder.js";
 import { deleteFolderWorkspace } from "./delete-folder.js";
 import { getDesignMdWorkspace } from "./get-design-md.js";
@@ -22,6 +23,7 @@ import { searchProjectsWorkspace } from "./search-projects.js";
 import { setDefaultFolderWorkspace } from "./set-default-folder.js";
 
 const WorkspaceActions = {
+  applyFixWorkspace,
   createFolderWorkspace,
   deleteFolderWorkspace,
   getDesignMdWorkspace,

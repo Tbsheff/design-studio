@@ -1,7 +1,7 @@
 import { Layer } from "effect";
 
-import { McpReadStore } from "../../preview/index.js";
+import { AppFixRunner, McpReadStore } from "../../preview/index.js";
 
-const WorkspaceLive = Layer.mergeAll(McpReadStore.layer);
+const WorkspaceLive = Layer.mergeAll(AppFixRunner.layer, McpReadStore.layer);
 
 export { WorkspaceLive };

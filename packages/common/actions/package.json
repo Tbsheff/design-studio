@@ -565,6 +565,7 @@
     "./walkthrough/routes": "./src/walkthrough/routes.ts",
     "./walkthrough/run": "./src/walkthrough/run.ts",
     "./walkthrough/schema": "./src/walkthrough/schema.ts",
+    "./workspace/apply-fix": "./src/workspace/apply-fix.ts",
     "./workspace/create-folder": "./src/workspace/create-folder.ts",
     "./workspace/delete-folder": "./src/workspace/delete-folder.ts",
     "./workspace/get-design-md": "./src/workspace/get-design-md.ts",

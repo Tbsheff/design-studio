@@ -698,9 +698,8 @@ export { startHtmlServer } from "./html-server.js";
 export type { HtmlServer, RootKind } from "./html-server.js";
 
 export { ViteManager } from "./vite-manager.js";
-
 export type { ViteTarget } from "./vite-manager.js";
-
+export { AppFixRunner } from "./app-fix-runner.js";
 export { McpReadStore } from "./mcp-read-store.js";
 
 export { probeOnPage } from "./probe-page.js";

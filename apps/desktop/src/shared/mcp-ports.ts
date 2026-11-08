@@ -1,5 +1,4 @@
 import type { McpActivity } from "@design-studio/contracts";
-import type { AppFixResult } from "@design-studio/contracts/app-doctor";
 
 interface ActivityDraft {
   projectId: string;
@@ -23,6 +22,4 @@ interface ActivityLog {
   ) => Promise<void>;
 }
 
-type FixApp = (projectId: string, kind: string) => Promise<AppFixResult>;
-
-export type { ActivityDraft, ActivityLog, FixApp };
+export type { ActivityDraft, ActivityLog };

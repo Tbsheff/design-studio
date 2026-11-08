@@ -18,7 +18,6 @@ const ZOD_BRIDGE_FILES = new Set([
   "apps/desktop/src/server/mcp/breakpoints-tools.ts",
   "apps/desktop/src/server/mcp/component-create-tools.ts",
   "apps/desktop/src/server/mcp/component-preview-tools.ts",
-  "apps/desktop/src/server/mcp/doctor-tools.ts",
   "apps/desktop/src/server/mcp/edit-kit.ts",
   "apps/desktop/src/server/mcp/edit-tools.ts",
   "apps/desktop/src/server/mcp/figma-import-tools.ts",

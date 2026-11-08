@@ -142,6 +142,39 @@ const toSpec = (colors: ReferenceColors, bg: string): PaletteSpec => {
   };
 };
 
+const toAccentHex = (
+  colors: ReferenceColors,
+  primaryHue: number
+): string | null =>
+  toChromatic(colors.swatches).find((swatch) => {
+    const swatchHue = toParts(swatch.hex).hue;
+
+    return swatchHue !== null && toHueGap(swatchHue, primaryHue) >= ACCENT_GAP;
+  })?.hex ?? null;
+
+const toAccentPair = (
+  picked: string | null,
+  generated: ThemePalette,
+  neutral: number,
+  hueOf: number
+): Pick<ThemePalette, "accent" | "accentFg"> => {
+  if (picked === null) {
+    return { accent: generated.accent, accentFg: generated.accentFg };
+  }
+
+  const text = toBestText(
+    picked,
+    toHex(LIGHT_TEXT, neutral / 2, hueOf),
+    toHex(DARK_TEXT, neutral, hueOf)
+  );
+
+  if (toContrast(text, picked) < MIN_RATIO) {
+    return { accent: generated.accent, accentFg: generated.accentFg };
+  }
+
+  return { accent: picked, accentFg: text };
+};
+
 const toBestSwatch = (
   swatches: readonly PaletteSwatch[],
   bg: string
@@ -226,9 +259,16 @@ const toNativePalette = (
     toHex(DARK_TEXT, spec.neutral, hueOf)
   );
 
+  const pair = toAccentPair(
+    toAccentHex(colors, toParts(brand).hue ?? hueOf),
+    generated,
+    spec.neutral,
+    hueOf
+  );
+
   return {
-    accent: generated.accent,
-    accentFg: generated.accentFg,
+    accent: pair.accent,
+    accentFg: pair.accentFg,
     bg: base,
     border: toShifted(base, tone.borderDelta),
     fg: text,

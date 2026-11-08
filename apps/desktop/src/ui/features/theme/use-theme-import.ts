@@ -1,6 +1,7 @@
 import { useCallback, useState, useTransition } from "react";
 
 import { api, errorText, themeRoutes, useAction } from "./deps.js";
+import { toImportName } from "./theme-model.js";
 
 interface ThemeImportSetup {
   readonly directionId: string;
@@ -55,7 +56,7 @@ const useThemeImport = (setup: ThemeImportSetup): ThemeImport => {
           await runImport({
             directionId: directionKey,
             imagePath: saved.path,
-            name: null,
+            name: toImportName(file.name),
             projectId: projectKey,
             url: null,
           });

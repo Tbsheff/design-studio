@@ -18,6 +18,8 @@ interface ThemeLook {
   readonly surface: string;
 }
 
+const NAME_MAX = 80;
+
 const SEED_RANGE = 2_000_000_000;
 
 const FALLBACK = "transparent";
@@ -79,8 +81,25 @@ const toSourceLabel = (item: ThemeItem): string | null => {
 const toSourceTip = (item: ThemeItem): string =>
   `${copy.sourceTip}: ${item.source?.value ?? ""}`;
 
+const toImportName = (fileName: string): string | null => {
+  const stem = fileName.replace(/\.[^.]+$/u, "").trim();
+
+  if (stem === "") {
+    return null;
+  }
+
+  return `${copy.fromPrefix} ${stem}`.slice(0, NAME_MAX);
+};
+
 const toRandomSeed = (): number => Math.floor(Math.random() * SEED_RANGE);
 
-export { toLook, toRandomSeed, toSourceLabel, toSourceTip, toTokenChanges };
+export {
+  toImportName,
+  toLook,
+  toRandomSeed,
+  toSourceLabel,
+  toSourceTip,
+  toTokenChanges,
+};
 
 export type { ThemeItem, ThemeLook, ThemeMode };

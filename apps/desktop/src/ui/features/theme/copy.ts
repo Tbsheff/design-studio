@@ -7,6 +7,7 @@ const copy = {
   clearTip: "Show the saved tokens again",
   dark: "Dark",
   empty: "No themes yet. Press Shuffle to build some.",
+  fromPrefix: "From",
   importAction: "Import",
   importImageLabel: "Image to read the theme from",
   importImageTip: "Pick a PNG of a brand or screenshot",

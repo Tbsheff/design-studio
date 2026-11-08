@@ -4,8 +4,8 @@ import type {
   WorkspaceList,
 } from "@design-studio/contracts/folders";
 import { Disclosure } from "@design-studio/ui";
-import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";

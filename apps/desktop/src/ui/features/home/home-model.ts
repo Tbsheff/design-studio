@@ -11,9 +11,9 @@ import type { DragEvent } from "react";
 import { api } from "../../api.js";
 import { homeVariations } from "../../platform/storage.js";
 import { modelLabel } from "../chat/settings-draft-model.js";
-import { chipName, chipProblem } from "./home-app-chip.js";
-import type { AppChip } from "./home-app-chip.js";
-import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
+import type { AppChip } from "./app-chip-model.js";
+import { chipName, chipProblem } from "./chip-logic-model.js";
+import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 
 type Busy = "create" | "ask" | "starter" | null;
 

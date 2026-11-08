@@ -11,8 +11,8 @@ import type {
 } from "@design-studio/contracts/folders";
 import { Icon, LazySelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
-import type { FormEvent, ReactElement } from "react";
 import { useRef, useState } from "react";
+import type { FormEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { FolderPath } from "./folder-path.js";
@@ -87,7 +87,7 @@ const LocationField = ({
 
     const picked = await chooser.choose(
       "Choose where to save the new project",
-      value ?? undefined
+      value
     );
 
     if (picked.path) {
@@ -367,7 +367,7 @@ const FoldersSection = ({
       return;
     }
 
-    const picked = await chooser.choose("Choose a folder you work in");
+    const picked = await chooser.choose("Choose a folder you work in", null);
 
     if (picked.path) {
       await onAdd(picked.path);

@@ -3,19 +3,30 @@ import type { DragEvent } from "react";
 
 import { hasFiles } from "./home-model.js";
 
+interface RootDropHandlers {
+  readonly onDragLeave: (event: DragEvent<HTMLDivElement>) => void;
+  readonly onDragOver: (event: DragEvent<HTMLDivElement>) => void;
+  readonly onDrop: (event: DragEvent<HTMLDivElement>) => void;
+}
+
+interface RootDrop {
+  readonly rootDrop: RootDropHandlers;
+  readonly windowDrag: boolean;
+}
+
 const useRootDrop = (
   takeDrop: (data: DataTransfer) => boolean,
   setFormError: (message: string | null) => void
-) => {
+): RootDrop => {
   const [windowDrag, setWindowDrag] = useState(false);
 
-  const rootDrop = {
-    onDragLeave: (event: DragEvent<HTMLDivElement>) => {
+  const rootDrop: RootDropHandlers = {
+    onDragLeave: (event: DragEvent<HTMLDivElement>): void => {
       if (!event.relatedTarget) {
         setWindowDrag(false);
       }
     },
-    onDragOver: (event: DragEvent<HTMLDivElement>) => {
+    onDragOver: (event: DragEvent<HTMLDivElement>): void => {
       if (!hasFiles(event)) {
         return;
       }
@@ -23,7 +34,7 @@ const useRootDrop = (
       event.preventDefault();
       setWindowDrag(true);
     },
-    onDrop: (event: DragEvent<HTMLDivElement>) => {
+    onDrop: (event: DragEvent<HTMLDivElement>): void => {
       setWindowDrag(false);
 
       if (event.defaultPrevented || !hasFiles(event)) {
@@ -42,3 +53,5 @@ const useRootDrop = (
 };
 
 export { useRootDrop };
+
+export type { RootDropHandlers, RootDrop };

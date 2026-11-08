@@ -4,17 +4,13 @@ import type { RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
+import { chipBlocker, chipProblem, droppedFolder } from "./chip-logic-model.js";
+import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 import { installProblem } from "./doctor-model.js";
-import {
-  chipBlocker,
-  chipProblem,
-  droppedFolder,
-  useAppChip,
-} from "./home-app-chip.js";
-import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
 import { focusPrompt, shortHome } from "./home-model.js";
 import type { Busy } from "./home-model.js";
 import { loadAppMenu } from "./lazy-parts.js";
+import { useAppChip } from "./use-app-chip.js";
 import type { useDoctorGate } from "./use-doctor-gate.js";
 import { useOpenAppRequests } from "./use-open-app-requests.js";
 

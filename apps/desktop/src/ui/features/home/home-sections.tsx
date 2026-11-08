@@ -1,8 +1,8 @@
 import type { Project } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
-import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
+import type { ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";

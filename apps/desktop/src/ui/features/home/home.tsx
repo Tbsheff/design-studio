@@ -1,14 +1,14 @@
 import { formatAnswers } from "@design-studio/contracts/clarify";
-import type { ReactElement } from "react";
 import { Suspense } from "react";
+import type { ReactElement } from "react";
 
 import { uiStore } from "../../platform/storage.js";
 import { ChipMenuSlot } from "./chip-menu-slot.js";
 import { ComposerBar } from "./composer-bar.js";
+import { ComposerChips } from "./composer-chips.js";
 import { copy } from "./copy.js";
 import { DropHint } from "./drop-hint.js";
 import { HeroNotes } from "./hero-notes.js";
-import { ComposerChips } from "./home-composer-parts.js";
 import { Header } from "./home-header.js";
 import { focusPrompt, promptPlaceholder, reasonId } from "./home-model.js";
 import { HomeOverlays } from "./home-overlays.js";
@@ -43,7 +43,7 @@ const Home = ({
     create,
     designMd,
     doctor,
-    dragging,
+    isDragging,
     dropHandlers,
     empty,
     extras,
@@ -123,7 +123,7 @@ const Home = ({
           )}
           <div className="home-card" ref={chipRef}>
             <form
-              className={`ui-composer home-composer${dragging ? " dragging" : ""}`}
+              className={`ui-composer home-composer${isDragging ? " dragging" : ""}`}
               onSubmit={create}
               {...dropHandlers}
             >
@@ -168,7 +168,7 @@ const Home = ({
                   home={homeRef}
                 />
               )}
-              <DropHint isOn={dragging} />
+              <DropHint isOn={isDragging} />
               <StarterRow
                 template={template}
                 busy={busy}

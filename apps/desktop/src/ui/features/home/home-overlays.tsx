@@ -1,5 +1,5 @@
+import { Suspense, useCallback } from "react";
 import type { ReactElement } from "react";
-import { Suspense } from "react";
 
 import { HomeToast } from "./home-sections.js";
 import type { HomeToastState } from "./home-sections.js";
@@ -21,7 +21,16 @@ const HomeOverlays = ({
   readonly toast: HomeToastState | null;
   readonly onToastDone: () => void;
 }): ReactElement => {
-  const { gate } = doctor;
+  const { gate, check, close } = doctor;
+
+  const handleCheck = useCallback((): void => {
+    check();
+  }, [check]);
+
+  const handleOpenAnyway = useCallback((): void => {
+    close();
+    gate?.proceed();
+  }, [close, gate]);
 
   return (
     <>
@@ -35,12 +44,9 @@ const HomeOverlays = ({
           <HomeDoctor
             problem={gate.problem}
             isChecking={gate.isChecking}
-            onCheck={() => doctor.check()}
-            onOpenAnyway={() => {
-              doctor.close();
-              gate.proceed();
-            }}
-            onClose={doctor.close}
+            onCheck={handleCheck}
+            onOpenAnyway={handleOpenAnyway}
+            onClose={close}
           />
         </Suspense>
       )}

@@ -31,51 +31,112 @@ const getLocation = (
 const getDefaultFolder = (list: WorkspaceList | null): WorkspaceFolder | null =>
   list?.folders.find((folder) => folder.default) ?? null;
 
+interface FolderView {
+  readonly filterFolder: WorkspaceFolder | null;
+  readonly shownProjects: Project[] | null;
+}
+
 const listProjectsByFolder = (
   projects: Project[] | null,
   list: WorkspaceList | null,
   filterId: string | null
-): {
-  readonly filterFolder: WorkspaceFolder | null;
-  readonly shownProjects: Project[] | null;
-} => {
+): FolderView => {
   const filterFolder =
     list?.folders.find((folder) => folder.id === filterId) ?? null;
 
-  return {
-    filterFolder,
-    shownProjects:
-      projects && filterFolder
-        ? projectsInFolder(projects, filterFolder.path)
-        : projects,
-  };
+  if (projects && filterFolder) {
+    return {
+      filterFolder,
+      shownProjects: projectsInFolder(projects, filterFolder.path),
+    };
+  }
+
+  return { filterFolder, shownProjects: projects };
 };
 
 type Folders = (folders: WorkspaceFolder[]) => WorkspaceFolder[];
 
-const useWorkspaces = (onError: (message: string | null) => void) => {
+interface WorkspacesApi {
+  readonly addFolder: (path: string) => Promise<WorkspaceFolder | null>;
+  readonly forgetFolder: (target: WorkspaceFolder) => Promise<boolean>;
+  readonly renameFolder: (id: string, label: string) => Promise<boolean>;
+  readonly setDefaultFolder: (path: string) => Promise<boolean>;
+  readonly workspaces: WorkspaceList | null;
+}
+
+const toFoldersWith = (
+  folders: WorkspaceFolder[],
+  saved: WorkspaceFolder
+): WorkspaceFolder[] => {
+  if (folders.some((folder) => folder.id === saved.id)) {
+    return folders;
+  }
+
+  return [...folders, saved];
+};
+
+const toFoldersReplaced = (
+  folders: WorkspaceFolder[],
+  saved: WorkspaceFolder
+): WorkspaceFolder[] =>
+  folders.map((folder) => {
+    if (folder.id === saved.id) {
+      return saved;
+    }
+
+    return folder;
+  });
+
+const toFoldersWithout = (
+  folders: WorkspaceFolder[],
+  id: string
+): WorkspaceFolder[] => folders.filter((folder) => folder.id !== id);
+
+const toLoadMessage = (detail: string): string =>
+  `Could not load your folders: ${detail}. Reload to try again.`;
+
+const applyWorkspaces = async (
+  isLive: () => boolean,
+  onError: (message: string | null) => void,
+  setWorkspaces: (list: WorkspaceList) => void
+): Promise<void> => {
+  try {
+    const list = await api.listWorkspaces();
+
+    if (isLive()) {
+      setWorkspaces(list);
+    }
+  } catch (error: unknown) {
+    if (isLive()) {
+      onError(toLoadMessage(errorText(error)));
+    }
+  }
+};
+
+const runAttempt = async <Value>(
+  onError: (message: string | null) => void,
+  task: () => Promise<Value>,
+  failed: Value
+): Promise<Value> => {
+  onError(null);
+
+  try {
+    return await task();
+  } catch (error) {
+    onError(errorText(error));
+
+    return failed;
+  }
+};
+
+const useWorkspaces = (
+  onError: (message: string | null) => void
+): WorkspacesApi => {
   const [workspaces, setWorkspaces] = useState<WorkspaceList | null>(null);
 
   useEffect(() => {
     let live = true;
-
-    const load = async (): Promise<void> => {
-      try {
-        const list = await api.listWorkspaces();
-
-        if (live) {
-          setWorkspaces(list);
-        }
-      } catch (error: unknown) {
-        if (live) {
-          onError(
-            `Could not load your folders: ${errorText(error)}. Reload to try again.`
-          );
-        }
-      }
-    };
-
-    load();
+    applyWorkspaces(() => live, onError, setWorkspaces);
 
     return (): void => {
       live = false;
@@ -91,65 +152,52 @@ const useWorkspaces = (onError: (message: string | null) => void) => {
       return { ...list, folders: change(list.folders) };
     });
 
-  const attempt = async <Value>(
-    task: () => Promise<Value>,
-    failed: Value
-  ): Promise<Value> => {
-    onError(null);
-
-    try {
-      return await task();
-    } catch (error) {
-      onError(errorText(error));
-
-      return failed;
-    }
-  };
-
   const addFolder = (path: string): Promise<WorkspaceFolder | null> =>
-    attempt(async () => {
-      const saved = await api.addWorkspace(path);
-      update((folders) => {
-        if (folders.some((folder) => folder.id === saved.id)) {
-          return folders;
-        }
+    runAttempt(
+      onError,
+      async () => {
+        const saved = await api.addWorkspace(path);
+        update((folders) => toFoldersWith(folders, saved));
 
-        return [...folders, saved];
-      });
-
-      return saved;
-    }, null);
+        return saved;
+      },
+      null
+    );
 
   const renameFolder = (id: string, label: string): Promise<boolean> =>
-    attempt(async () => {
-      const saved = await api.renameWorkspace(id, label);
-      update((folders) =>
-        folders.map((folder) => {
-          if (folder.id === id) {
-            return saved;
-          }
+    runAttempt(
+      onError,
+      async () => {
+        const saved = await api.renameWorkspace(id, label);
+        update((folders) => toFoldersReplaced(folders, saved));
 
-          return folder;
-        })
-      );
-
-      return true;
-    }, false);
+        return true;
+      },
+      false
+    );
 
   const forgetFolder = (target: WorkspaceFolder): Promise<boolean> =>
-    attempt(async () => {
-      await api.removeWorkspace(target.id);
-      update((folders) => folders.filter((folder) => folder.id !== target.id));
+    runAttempt(
+      onError,
+      async () => {
+        await api.removeWorkspace(target.id);
+        update((folders) => toFoldersWithout(folders, target.id));
 
-      return true;
-    }, false);
+        return true;
+      },
+      false
+    );
 
   const setDefaultFolder = (path: string): Promise<boolean> =>
-    attempt(async () => {
-      setWorkspaces(await api.setDefaultFolder(path));
+    runAttempt(
+      onError,
+      async () => {
+        setWorkspaces(await api.setDefaultFolder(path));
 
-      return true;
-    }, false);
+        return true;
+      },
+      false
+    );
 
   return {
     addFolder,
@@ -166,3 +214,5 @@ export {
   getLocation as locationFor,
   useWorkspaces,
 };
+
+export type { FolderView, WorkspacesApi };

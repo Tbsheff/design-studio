@@ -3,8 +3,8 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import type { MenuEntry } from "./card-menu-model.js";
-import type { CardAction } from "./project-card-model.js";
 import { toClassName } from "./project-card-model.js";
+import type { CardAction } from "./project-card-model.js";
 
 const ITEM_ICON_SIZE = 14;
 

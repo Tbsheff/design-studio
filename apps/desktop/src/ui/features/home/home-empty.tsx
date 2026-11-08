@@ -1,8 +1,8 @@
 import type { Starter } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
-import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { FOUND_KIND_LABEL } from "../../../shared/found-apps.js";
 import { api } from "../../api.js";

@@ -2,7 +2,14 @@ import { useCallback, useState } from "react";
 
 import type { DoctorGate } from "./doctor-model.js";
 
-const useDoctorGate = () => {
+interface DoctorGateController {
+  readonly check: () => Promise<void>;
+  readonly close: () => void;
+  readonly gate: DoctorGate | null;
+  readonly open: (next: Omit<DoctorGate, "isChecking">) => void;
+}
+
+const useDoctorGate = (): DoctorGateController => {
   const [gate, setGate] = useState<DoctorGate | null>(null);
   const close = useCallback(() => setGate(null), []);
 
@@ -32,9 +39,11 @@ const useDoctorGate = () => {
     check,
     close,
     gate,
-    open: (next: Omit<DoctorGate, "isChecking">) =>
+    open: (next: Omit<DoctorGate, "isChecking">): void =>
       setGate({ ...next, isChecking: false }),
   };
 };
 
 export { useDoctorGate };
+
+export type { DoctorGateController };

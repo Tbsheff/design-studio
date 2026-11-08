@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import type { ReactElement, RefObject } from "react";
 
+import type { AppChip } from "./app-chip-model.js";
 import { AppSlot } from "./app-slot.js";
 import type { PopState } from "./composer-pop-model.js";
-import type { AppChip } from "./home-app-chip.js";
 import { FolderPathPop } from "./lazy-parts.js";
 
 interface FolderAnchorProps {

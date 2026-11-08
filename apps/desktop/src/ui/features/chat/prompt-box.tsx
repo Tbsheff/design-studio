@@ -16,16 +16,16 @@ import type { ClipboardEvent, DragEvent, ReactElement } from "react";
 import { Composer, ComposerInput } from "../../ai/components/ai/composer.js";
 import { composerCommands, useCommands } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
+import {
+  MAX_IMAGES,
+  getImageProblem as imageProblem,
+} from "../../domain/image-limits.js";
 import { useDraft } from "../../platform/storage.js";
 import type { DraftStore } from "../../platform/storage.js";
 import { ComposerComments } from "../comments/composer-comments.js";
 import { useCommentPrefill } from "../comments/use-comment-prefill.js";
 import type { PrefillRequest } from "../comments/use-comment-prefill.js";
-import {
-  ComposerAlert,
-  MAX_IMAGES,
-  imageProblem,
-} from "../home/home-composer-parts.js";
+import { ComposerAlert } from "../home/home-composer-parts.js";
 import { focusComposerInput, useComposerFocus } from "./composer-focus.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import { SelectionChips, AttachmentThumbs } from "./composer-parts.js";

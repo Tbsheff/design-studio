@@ -20,9 +20,8 @@ import {
 } from "../chat/settings-draft-model.js";
 import { usePresence } from "../chat/use-presence.js";
 import { findPack, usePacks } from "../design-system/packs.js";
+import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 import { AppChipView } from "./home-app-chip.js";
-import { useComposerAttachments } from "./home-composer-parts.js";
-import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
 import {
   createFromHome,
   focusIn,
@@ -47,6 +46,7 @@ import {
 } from "./lazy-parts.js";
 import { useAppHealth } from "./projects-store-model.js";
 import { useChipFlow } from "./use-chip-flow.js";
+import { useComposerAttachments } from "./use-composer-attachments.js";
 import { useDoctorGate } from "./use-doctor-gate.js";
 import { useFolderChooser } from "./use-folder-chooser.js";
 import { useModule } from "./use-module.js";
@@ -146,7 +146,7 @@ const useHomeScreen = (onOpen: (projectId: string) => void) => {
   const {
     images,
     references,
-    dragging,
+    isDragging,
     fileRef,
     addImages,
     removeImage,
@@ -369,7 +369,7 @@ const useHomeScreen = (onOpen: (projectId: string) => void) => {
     create,
     designMd,
     doctor,
-    dragging,
+    isDragging,
     dropHandlers,
     empty,
     extras,

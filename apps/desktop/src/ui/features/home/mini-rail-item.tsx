@@ -1,5 +1,5 @@
-import type { ReactElement } from "react";
 import { useCallback } from "react";
+import type { ReactElement } from "react";
 
 import type { ProjectHit } from "./deps.js";
 import { HealthDot, ProjectThumb } from "./project-thumb.js";

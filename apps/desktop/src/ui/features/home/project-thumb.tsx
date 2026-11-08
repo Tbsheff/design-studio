@@ -1,7 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
-import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { api } from "../../api.js";
 import type { ProjectHit, ProjectType } from "./deps.js";

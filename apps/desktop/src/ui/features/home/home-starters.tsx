@@ -1,7 +1,7 @@
 import type { Starter } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";

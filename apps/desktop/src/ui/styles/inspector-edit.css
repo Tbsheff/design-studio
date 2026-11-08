@@ -1013,7 +1013,7 @@
   display: none;
 }
 
-.ins-arrange-wrap[data-shown] {
+.ins-arrange-wrap[data-shown="true"] {
   border-bottom: 1px solid var(--line);
 }
 

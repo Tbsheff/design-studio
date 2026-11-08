@@ -12,7 +12,11 @@ interface Props {
   readonly port?: MutableRefObject<PreviewPort | null>;
 }
 
-const RESELECT_AFTER_MS = [700, 1800];
+const RESELECT_FIRST_MS = 700;
+const RESELECT_SECOND_MS = 1800;
+const NAME_LENGTH = 60;
+
+const RESELECT_AFTER_MS = [RESELECT_FIRST_MS, RESELECT_SECOND_MS];
 
 const FIT_LABEL: Record<ImageFit, string> = {
   contain: "Contain",
@@ -26,21 +30,21 @@ const FIT_TIP: Record<ImageFit, string> = {
   fill: "Stretch the image to the box",
 };
 
-const attrOf = (html: string, name: string): string | null => {
+const getAttributeText = (html: string, name: string): string | null => {
   const open = /^<[^>]*>/u.exec(html)?.[0] ?? "";
-  const match = new RegExp(`\\s${name}="([^"]*)"`, "i").exec(open);
+  const match = new RegExp(`\\s${name}="(?<value>[^"]*)"`, "iu").exec(open);
 
   if (!match) {
     return null;
   }
 
   const node = document.createElement("textarea");
-  node.innerHTML = match[1] ?? "";
+  node.insertAdjacentHTML("beforeend", match.groups?.value ?? "");
 
   return node.value;
 };
 
-const currentFit = (
+const getCurrentFit = (
   selection: SelectionContext,
   background: boolean
 ): ImageFit | null => {
@@ -61,20 +65,21 @@ const currentFit = (
   return null;
 };
 
-const sourceName = (
+const getSourceName = (
   selection: SelectionContext,
   background: boolean
 ): string => {
-  let raw = attrOf(selection.outerHTML, "src") ?? "";
+  let raw = getAttributeText(selection.outerHTML, "src") ?? "";
 
   if (background) {
     raw =
-      /url\(["']?([^"')]+)/u.exec(
+      /url\(["']?(?<name>[^"')]+)/u.exec(
         selection.styles["background-image"] ?? ""
-      )?.[1] ?? "";
+      )?.groups?.name ?? "";
   }
 
-  const nextUrl = /\/_next\/image\?(?:.*&)?url=([^&]+)/u.exec(raw)?.[1];
+  const nextUrl = /\/_next\/image\?(?:.*&)?url=(?<name>[^&]+)/u.exec(raw)
+    ?.groups?.name;
   let path = raw;
 
   if (nextUrl) {
@@ -87,16 +92,16 @@ const sourceName = (
     return "Inline image";
   }
 
-  return decodeURIComponent(last).slice(0, 60);
+  return decodeURIComponent(last).slice(0, NAME_LENGTH);
 };
 
 export {
   RESELECT_AFTER_MS,
   FIT_LABEL,
   FIT_TIP,
-  attrOf,
-  currentFit,
-  sourceName,
+  getAttributeText,
+  getCurrentFit,
+  getSourceName,
 };
 
 export type { Props };

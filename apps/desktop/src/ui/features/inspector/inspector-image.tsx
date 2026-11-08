@@ -18,9 +18,9 @@ import { clipboardImage } from "./image-api.js";
 import {
   FIT_LABEL,
   FIT_TIP,
-  attrOf,
-  currentFit,
-  sourceName,
+  getAttributeText,
+  getCurrentFit,
+  getSourceName,
 } from "./image-model.js";
 import type { Props } from "./image-model.js";
 import { InspectorSection } from "./inspector-fields.js";
@@ -37,7 +37,7 @@ const InspectorImage = (props: Props): ReactElement | null => {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const [fit, setFit] = useState<ImageFit | null>(() =>
-    currentFit(props.selection, background)
+    getCurrentFit(props.selection, background)
   );
 
   const [focal, setFocal] = useState(
@@ -79,7 +79,7 @@ const InspectorImage = (props: Props): ReactElement | null => {
       title={background ? "Background image" : "Image"}
       label={
         <span className="img-name">
-          {placed ?? sourceName(props.selection, background)}
+          {placed ?? getSourceName(props.selection, background)}
         </span>
       }
     >
@@ -162,7 +162,9 @@ const InspectorImage = (props: Props): ReactElement | null => {
         </div>
         {!background && (
           <AltField
-            initial={alt ?? attrOf(props.selection.outerHTML, "alt") ?? ""}
+            initial={
+              alt ?? getAttributeText(props.selection.outerHTML, "alt") ?? ""
+            }
             isDisabled={disabled}
             onSave={(next) => {
               setAlt(next);

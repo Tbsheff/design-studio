@@ -14,6 +14,7 @@ const copy = {
   altText: "Alt text",
   appearance: "Appearance",
   arrange: "Arrange",
+  arranged: "Arranged",
   askTheAgentToChange: "Ask the agent to change it",
   autoPutsTheSpaceBetween: "Auto puts the space between the children",
   base: "Base",
@@ -39,6 +40,9 @@ const copy = {
   componentsHint: "Components show for projects with a component list.",
   constraints: "Constraints",
   content: "Content",
+  copied: "Copied",
+  copyCss: "Copy CSS",
+  copyFailed: "Copy failed",
   dash: "—",
   deltaE: ", ΔE ",
   describeTheImage: "Describe the image",
@@ -115,6 +119,7 @@ const copy = {
   on: " on ",
   onlyTheRestOfThe: " only. The rest of the page stays the same.",
   openIn: "Open in ",
+  orMoreElements: "or more elements",
   otherStyles: "Other styles",
   paste: "Paste",
   pickAnImageFileYou:
@@ -141,6 +146,7 @@ const copy = {
     ". Save version keeps them as one version. Discard removes them.",
   saving: "Saving…",
   searchFreeStockPhotosAnd: "Search free stock photos and place one here",
+  select: "select",
   selectAllWith: "Select all with ",
   selectAllWithThisValue: "Select all with this value",
   selectAnElementOnThe:

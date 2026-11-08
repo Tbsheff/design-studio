@@ -58,10 +58,7 @@ const ChangePackDialog = ({
       <div className="modal-head">
         <div className="titles">
           <h2>{title}</h2>
-          <p>
-            Writes new tokens, tokens.css and DESIGN.md as one version. Your
-            project notes stay.
-          </p>
+          <p>{COPY.textWritesNewTokensTokens}</p>
         </div>
         <button
           className="icon-btn"
@@ -75,7 +72,8 @@ const ChangePackDialog = ({
       <div className="modal-body ds-switch-body" aria-busy={busy}>
         {state.error && (
           <div className="alert error small">
-            Could not load design systems. {state.error}
+            {COPY.textCouldNotLoadDesign}
+            {state.error}
           </div>
         )}
         {error && (
@@ -103,7 +101,7 @@ const ChangePackDialog = ({
             })
           }
         >
-          Manage…
+          {COPY.textManage}
         </button>
         <button
           type="button"
@@ -114,7 +112,7 @@ const ChangePackDialog = ({
           }
         >
           <Icon name="plus" size={14} />
-          New design system…
+          {COPY.textNewDesignSystem2}
         </button>
       </div>
     </dialog>
@@ -176,7 +174,7 @@ const SavePackDialog = ({
       >
         <div className="modal-head">
           <div className="titles">
-            <h2>Save to library</h2>
+            <h2>{COPY.labelSaveToLibrary}</h2>
             <p>
               {asNew
                 ? "Saves a new design system. This project then uses the new one."
@@ -198,7 +196,7 @@ const SavePackDialog = ({
         <div className="modal-body">
           {canCopy && (
             <fieldset className="save-choice">
-              <legend className="sr-only">Save as</legend>
+              <legend className="sr-only">{COPY.textSaveAs}</legend>
               <label>
                 <input
                   type="radio"
@@ -209,7 +207,8 @@ const SavePackDialog = ({
                     setName(defaultName);
                   }}
                 />
-                Update {defaultName}
+                {COPY.textUpdate}
+                {defaultName}
               </label>
               <label>
                 <input
@@ -223,12 +222,12 @@ const SavePackDialog = ({
                     );
                   }}
                 />
-                Save as a new design system
+                {COPY.textSaveAsANew}
               </label>
             </fieldset>
           )}
           <label className="field">
-            <span>Name</span>
+            <span>{COPY.textName}</span>
             <input
               data-autofocus
               value={name}
@@ -250,7 +249,7 @@ const SavePackDialog = ({
             onClick={onClose}
             disabled={busy}
           >
-            Cancel
+            {COPY.textCancel}
           </button>
           <button
             type="submit"

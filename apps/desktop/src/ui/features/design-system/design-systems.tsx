@@ -87,13 +87,13 @@ const ModeSwatches = ({ pack }: { pack: PackSummary }): ReactElement => {
     <span className="lib-modes" data-testid="mode-swatches">
       {light && (
         <span className="lib-mode light" data-tip={COPY.tipLightModeColors}>
-          <span className="sr-only">Light</span>
+          <span className="sr-only">{COPY.textLight}</span>
           <Swatches swatches={light} />
         </span>
       )}
       {dark && (
         <span className="lib-mode dark" data-tip={COPY.tipDarkModeColors}>
-          <span className="sr-only">Dark</span>
+          <span className="sr-only">{COPY.textDark}</span>
           <Swatches swatches={dark} />
         </span>
       )}
@@ -125,7 +125,7 @@ const LibraryCard = ({
           aria-hidden="true"
         >
           <span className="lib-aa" style={{ fontFamily: display }}>
-            Aa
+            {COPY.textAa}
           </span>
           <span
             className="lib-chip"
@@ -136,7 +136,7 @@ const LibraryCard = ({
           <span className="lib-name truncate">{pack.name}</span>
           <span className="lib-fonts">
             <span style={{ fontFamily: display }}>{pack.fonts.display}</span>
-            <span aria-hidden="true"> · </span>
+            <span aria-hidden="true"> {COPY.textGlyph3}</span>
             <span style={{ fontFamily: body }}>{pack.fonts.body}</span>
           </span>
           <ModeSwatches pack={pack} />
@@ -304,17 +304,14 @@ const DesignSystems = ({
           onClick={back}
         >
           <Icon name="arrowLeft" size={14} />
-          Back
+          {COPY.textBack}
         </button>
       </header>
       <main className="lib-main">
         <div className="lib-head">
           <div className="lib-titles">
-            <h1>Design systems</h1>
-            <p className="muted">
-              Tokens, fonts and a DESIGN.md that projects build with. Open one
-              to preview, check or edit it.
-            </p>
+            <h1>{COPY.labelDesignSystems}</h1>
+            <p className="muted">{COPY.textTokensFontsAndA}</p>
           </div>
           <div className="lib-head-actions">
             <input
@@ -352,18 +349,20 @@ const DesignSystems = ({
               }
             >
               <Icon name="plus" size={14} />
-              New design system
+              {COPY.textNewDesignSystem}
             </button>
           </div>
         </div>
         {importError && (
           <div className="alert error small" role="alert">
-            Could not import. {importError}
+            {COPY.textCouldNotImport}
+            {importError}
           </div>
         )}
         {error && (
           <div className="alert error small">
-            Could not load design systems. {error}
+            {COPY.textCouldNotLoadDesign}
+            {error}
           </div>
         )}
         <Problems problems={problems} />
@@ -377,9 +376,7 @@ const DesignSystems = ({
               onOpen={(pack) => setSelectedId(pack.id)}
               empty={
                 <div className="lib-empty">
-                  <span>
-                    Make one from a website, a DESIGN.md or a tokens file.
-                  </span>
+                  <span>{COPY.textMakeOneFromA}</span>
                   <button
                     type="button"
                     className="btn small"
@@ -390,7 +387,7 @@ const DesignSystems = ({
                       })
                     }
                   >
-                    Make your first
+                    {COPY.textMakeYourFirst}
                   </button>
                 </div>
               }

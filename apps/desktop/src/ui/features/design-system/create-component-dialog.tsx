@@ -179,7 +179,7 @@ const CreateComponentDialog = ({
       >
         <div className="modal-head">
           <div className="titles">
-            <h2>Create component</h2>
+            <h2>{COPY.labelCreateComponent}</h2>
             <p>
               {count === 1
                 ? "Writes a component file from this element and uses it in its place."
@@ -189,7 +189,7 @@ const CreateComponentDialog = ({
         </div>
         <div className="modal-body cc-form">
           <label className="field">
-            <span>Name</span>
+            <span>{COPY.textName}</span>
             <input
               data-autofocus
               className="mono"
@@ -216,7 +216,7 @@ const CreateComponentDialog = ({
             </span>
           </label>
           <div className="field">
-            <span id="cc-folder-label">Folder</span>
+            <span id="cc-folder-label">{COPY.labelFolder}</span>
             <UiSelect
               className="ins-select cc-folder"
               aria-label={COPY.labelFolder}
@@ -243,7 +243,7 @@ const CreateComponentDialog = ({
             onClick={onClose}
             disabled={busy}
           >
-            Cancel
+            {COPY.textCancel}
           </button>
           <button
             type="submit"

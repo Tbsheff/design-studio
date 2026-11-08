@@ -63,11 +63,9 @@ const Outline = ({
   onJump: (item: OutlineItem, index: number) => void;
 }): ReactElement => (
   <nav className="dmd-outline" aria-label={COPY.labelOutline}>
-    <p className="dmd-pane-label">Outline</p>
+    <p className="dmd-pane-label">{COPY.labelOutline}</p>
     {items.length === 0 ? (
-      <p className="dmd-outline-empty">
-        Add a heading, like ## Color, to see it here.
-      </p>
+      <p className="dmd-outline-empty">{COPY.textAddAHeadingLike}</p>
     ) : (
       <ul>
         {items.map((item, index) => (
@@ -109,10 +107,10 @@ const UnsavedBar = ({
     >
       <span id="dmd-unsaved-text" className="dmd-unsaved-text">
         <Icon name="alert" size={14} />
-        Save your changes to DESIGN.md?
+        {COPY.textSaveYourChangesTo}
       </span>
       <button className="btn ghost" onClick={onDiscard} disabled={saving}>
-        Discard
+        {COPY.textDiscard}
       </button>
       <button
         ref={keep}
@@ -120,7 +118,7 @@ const UnsavedBar = ({
         onClick={onKeep}
         disabled={saving}
       >
-        Keep editing
+        {COPY.textKeepEditing}
       </button>
       <button className="btn primary" onClick={onSave} disabled={saving}>
         {saving ? "Saving…" : "Save"}
@@ -232,10 +230,10 @@ const DesignMdModal = ({
       <div className="modal-head">
         <div className="titles">
           <h2>
-            DESIGN.md
-            {dirty && <span className="dmd-dirty">Unsaved</span>}
+            {COPY.labelDesignMd}
+            {dirty && <span className="dmd-dirty">{COPY.textUnsaved}</span>}
           </h2>
-          <p>The agent reads this file on every run.</p>
+          <p>{COPY.textTheAgentReadsThis}</p>
         </div>
         <button
           className="icon-btn"
@@ -253,7 +251,7 @@ const DesignMdModal = ({
           }
         />
         <div className="dmd-pane">
-          <p className="dmd-pane-label">Markdown</p>
+          <p className="dmd-pane-label">{COPY.textMarkdown}</p>
           <textarea
             ref={editor}
             className="mono design-md"
@@ -277,7 +275,7 @@ const DesignMdModal = ({
           />
         </div>
         <div className="dmd-pane">
-          <p className="dmd-pane-label">Preview</p>
+          <p className="dmd-pane-label">{COPY.labelPreview}</p>
           <div
             ref={preview}
             className="dmd-preview"
@@ -287,7 +285,7 @@ const DesignMdModal = ({
             {shown.trim() ? (
               <Markdown>{shown.replaceAll(/<!--[\s\S]*?-->/gu, "")}</Markdown>
             ) : (
-              <p className="dmd-outline-empty">Nothing to show yet.</p>
+              <p className="dmd-outline-empty">{COPY.textNothingToShowYet}</p>
             )}
           </div>
         </div>
@@ -308,10 +306,10 @@ const DesignMdModal = ({
         <div className="modal-foot">
           <span className="hint">
             <kbd>{MOD_LABEL === "⌘" ? "⌘" : "Ctrl"}</kbd>
-            <kbd>S</kbd> to save
+            <kbd>{COPY.textS}</kbd> {COPY.textToSave}
           </span>
           <button className="btn ghost" onClick={() => requestClose()}>
-            Cancel
+            {COPY.textCancel}
           </button>
           <button
             className="btn primary"

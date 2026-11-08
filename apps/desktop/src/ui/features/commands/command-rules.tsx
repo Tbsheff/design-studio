@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useState, useTransition } from "react";
 
+import { copy } from "./copy.js";
 import { errorText, json } from "./deps.js";
 
 const rulesPath = (projectId: string): string =>
@@ -70,9 +71,9 @@ const CommandRules = ({ projectId }: { projectId: string }): ReactElement => {
       className="skills-field command-rules"
       data-testid="command-rules"
     >
-      <legend>Allowed commands</legend>
+      <legend>{copy.textAllowedCommands}</legend>
       {rules === null ? null : rules.length === 0 ? (
-        <p className="command-rules-empty">No commands are always allowed.</p>
+        <p className="command-rules-empty">{copy.textNoCommandsAreAlways}</p>
       ) : (
         <ul>
           {rules.map((rule) => (
@@ -85,7 +86,7 @@ const CommandRules = ({ projectId }: { projectId: string }): ReactElement => {
                 aria-label={`Remove ${rule}`}
                 onClick={() => remove(rule)}
               >
-                Remove
+                {copy.textRemove}
               </button>
             </li>
           ))}

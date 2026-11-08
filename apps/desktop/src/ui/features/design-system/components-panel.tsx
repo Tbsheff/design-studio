@@ -363,10 +363,13 @@ const ComponentsPanel = (props: Props): ReactElement => {
         {error && (
           <p className="ins-error" role="alert">
             <Icon name="alert" size={13} />
-            <span>Could not list components. {error}</span>
+            <span>
+              {COPY.textCouldNotListComponents}
+              {error}
+            </span>
             {retry && (
               <button type="button" className="btn small" onClick={retry}>
-                Try again
+                {COPY.textTryAgain}
               </button>
             )}
           </p>
@@ -390,7 +393,11 @@ const ComponentsPanel = (props: Props): ReactElement => {
           </p>
         )}
         {count > 0 && shown.length === 0 && (
-          <p className="ins-empty cmp-empty">No components match “{query}”.</p>
+          <p className="ins-empty cmp-empty">
+            {COPY.textNoComponentsMatch}
+            {query}
+            {COPY.textGlyph}
+          </p>
         )}
         {directionId &&
           groups.map(([folder, items]) => (

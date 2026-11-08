@@ -134,7 +134,7 @@ const TokenRow = ({ entry }: { entry: CompiledTokenEntry }): ReactElement => {
       {entry.darkValue ? (
         <ValueCell value={entry.darkValue} color={color} />
       ) : (
-        <span className="ds-none">Same</span>
+        <span className="ds-none">{COPY.textSame}</span>
       )}
     </li>
   );
@@ -144,7 +144,8 @@ const TokenList = ({ load }: { load: Load }): ReactElement => {
   if (load.error) {
     return (
       <div className="alert error small" role="alert">
-        Could not load tokens. {load.error} Close this panel and open it again.
+        {COPY.textCouldNotLoadTokens}
+        {load.error} {COPY.textCloseThisPanelAnd}
       </div>
     );
   }
@@ -152,7 +153,7 @@ const TokenList = ({ load }: { load: Load }): ReactElement => {
   if (!load.state) {
     return (
       <div className="ds-loading" role="status">
-        <span className="spinner" /> Loading tokens…
+        <span className="spinner" /> {COPY.textLoadingTokens}
       </div>
     );
   }
@@ -172,9 +173,9 @@ const TokenList = ({ load }: { load: Load }): ReactElement => {
         </ul>
       )}
       <div className="ds-cols" aria-hidden="true">
-        <span>Variable</span>
-        <span>Light</span>
-        <span>Dark</span>
+        <span>{COPY.textVariable}</span>
+        <span>{COPY.textLight}</span>
+        <span>{COPY.textDark}</span>
       </div>
       <ul className="ds-list" aria-label={COPY.labelTokens}>
         {entries.map((entry) => (
@@ -284,7 +285,7 @@ export const DesignSystemChip = ({
           onClick={() => setDialog("change")}
         >
           <Icon name="palette" size={14} />
-          Add design system
+          {COPY.textAddDesignSystem}
         </button>
         {dialogs}
       </>
@@ -327,21 +328,21 @@ export const DesignSystemChip = ({
               className="btn small"
               onClick={() => openDialog("change")}
             >
-              Change design system…
+              {COPY.textChangeDesignSystem}
             </button>
             <button
               type="button"
               className="btn small"
               onClick={() => openDialog("save")}
             >
-              Save to library…
+              {COPY.textSaveToLibrary}
             </button>
           </div>
           <div className="ds-body">
             <TokenList load={load} />
           </div>
           <div className="ds-foot">
-            <span className="hint">Source: design-system/tokens.json</span>
+            <span className="hint">{COPY.textSourceDesignSystemTokens}</span>
             <button
               type="button"
               className="btn small has-icon"
@@ -351,7 +352,7 @@ export const DesignSystemChip = ({
               }}
             >
               <Icon name="doc" size={14} />
-              Open DESIGN.md
+              {COPY.textOpenDesignMd}
             </button>
           </div>
         </div>

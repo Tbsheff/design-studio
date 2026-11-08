@@ -98,12 +98,13 @@ const DoctorCard = ({
       {error && <span className="app-fail-error">{error}</span>}
       <div className="app-fail-foot">
         <button type="button" className="btn small ghost" onClick={onLog}>
-          Show the log
+          {COPY.textShowTheLog}
         </button>
         <span className="grow" />
         {version && (
           <span className="mono" data-tip={COPY.tipDesignStudioVersion}>
-            v{version}
+            {COPY.textV}
+            {version}
           </span>
         )}
         {cause.fix && (
@@ -122,7 +123,7 @@ const DoctorCard = ({
             className="btn small primary"
             onClick={onRestart}
           >
-            Restart dev server
+            {COPY.textRestartDevServer}
           </button>
         )}
       </div>

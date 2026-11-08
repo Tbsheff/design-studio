@@ -106,7 +106,7 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
   return (
     <aside className="keysheet" ref={rootRef} aria-label={copy.shortcuts}>
       <header className="keysheet-head">
-        <h2>Keyboard shortcuts</h2>
+        <h2>{copy.shortcuts}</h2>
         <button
           type="button"
           className="icon-btn small"
@@ -126,10 +126,14 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
-      <p className="keysheet-tip">Press a key to find it here.</p>
+      <p className="keysheet-tip">{copy.textPressAKeyTo}</p>
       <div className="keysheet-body">
         {groups.length === 0 && (
-          <p className="keysheet-empty">No shortcut matches “{query}”.</p>
+          <p className="keysheet-empty">
+            {copy.textNoShortcutMatches}
+            {query}
+            {copy.textGlyph}
+          </p>
         )}
         {groups.map(({ group, entries }) => (
           <section key={group} className="keysheet-group" aria-label={group}>
@@ -144,13 +148,15 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
                   <span className="keysheet-label">
                     {entry.label}
                     {entry.hold && (
-                      <span className="keysheet-hold"> (hold)</span>
+                      <span className="keysheet-hold"> {copy.textHold}</span>
                     )}
                   </span>
                   <span className="keysheet-keys">
                     {entry.keys.map((keys, index) => (
                       <span key={keys} className="keysheet-alt">
-                        {index > 0 && <span className="keysheet-or">or</span>}
+                        {index > 0 && (
+                          <span className="keysheet-or">{copy.textOr}</span>
+                        )}
                         <Keys keys={keys} />
                       </span>
                     ))}

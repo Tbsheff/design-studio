@@ -110,7 +110,7 @@ const RenamePackDialog = ({
         />
         <div className="modal-body">
           <label className="field">
-            <span>Name</span>
+            <span>{COPY.textName}</span>
             <input
               data-autofocus
               value={name}
@@ -128,7 +128,7 @@ const RenamePackDialog = ({
             onClick={onClose}
             disabled={action.busy}
           >
-            Cancel
+            {COPY.textCancel}
           </button>
           <button
             type="submit"
@@ -179,7 +179,7 @@ const DeletePackDialog = ({
           onClick={onClose}
           disabled={action.busy}
         >
-          Cancel
+          {COPY.textCancel}
         </button>
         <button
           type="button"
@@ -229,7 +229,7 @@ const ImportConflictDialog = ({
           onClick={onClose}
           disabled={action.busy}
         >
-          Cancel
+          {COPY.textCancel}
         </button>
         <button
           type="button"
@@ -237,7 +237,7 @@ const ImportConflictDialog = ({
           onClick={() => void action.run(() => onChoose("copy"))}
           disabled={action.busy}
         >
-          Keep both
+          {COPY.textKeepBoth}
         </button>
         <button
           type="button"
@@ -246,7 +246,7 @@ const ImportConflictDialog = ({
           onClick={() => void action.run(() => onChoose("replace"))}
           disabled={action.busy}
         >
-          Replace
+          {COPY.textReplace}
         </button>
       </div>
     </dialog>

@@ -27,7 +27,7 @@ const TriggerLabel = ({ pack }: { pack: PackSummary | null }) => {
     return (
       <>
         <Icon name="palette" size={14} />
-        <span className="pack-trigger-text">Style</span>
+        <span className="pack-trigger-text">{COPY.textStyle}</span>
       </>
     );
   }
@@ -83,15 +83,13 @@ const PackPicker = ({ state, value, onChange, onNew }: Props) => {
       {open && (
         <div className="pack-popover" role="presentation">
           <div className="pack-popover-head">
-            <strong>Design system</strong>
-            <span>
-              Tokens, fonts and a DESIGN.md go into the project. The agent
-              builds with them.
-            </span>
+            <strong>{COPY.labelDesignSystem}</strong>
+            <span>{COPY.textTokensFontsAndA2}</span>
           </div>
           {state.error && (
             <div className="alert error small">
-              Could not load design systems. {state.error}
+              {COPY.textCouldNotLoadDesign}
+              {state.error}
             </div>
           )}
           <Suspense fallback={null}>
@@ -111,7 +109,7 @@ const PackPicker = ({ state, value, onChange, onNew }: Props) => {
                 onClick={onNew}
               >
                 <Icon name="plus" size={14} />
-                New design system…
+                {COPY.textNewDesignSystem2}
               </button>
             </div>
           )}

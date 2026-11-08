@@ -52,10 +52,8 @@ const NoneCard = (): ReactElement => (
       <Icon name="close" size={14} />
     </span>
     <span className="pack-text">
-      <span className="pack-name">No design system</span>
-      <span className="pack-desc">
-        The agent picks colors and type for each project.
-      </span>
+      <span className="pack-name">{COPY.textNoDesignSystem}</span>
+      <span className="pack-desc">{COPY.textTheAgentPicksColors}</span>
     </span>
   </>
 );
@@ -76,19 +74,21 @@ const PackCard = ({ pack }: { pack: PackSummary }): ReactElement => {
           className="pack-aa"
           style={{ fontFamily: fontStack(pack.fonts.display, SERIF) }}
         >
-          Aa
+          {COPY.textAa}
         </span>
         <span
           className="pack-line"
           style={{ fontFamily: fontStack(pack.fonts.body, SANS) }}
         >
-          Quick brown fox
+          {COPY.textQuickBrownFox}
         </span>
       </span>
       <span className="pack-text" data-tip={pack.description}>
         <span className="pack-name">
           <span className="truncate">{pack.name}</span>
-          {pack.source === "user" && <span className="pack-yours">Yours</span>}
+          {pack.source === "user" && (
+            <span className="pack-yours">{COPY.titleYours}</span>
+          )}
         </span>
         <span className="pack-desc">{pack.description}</span>
         <Swatches swatches={pack.swatches} max={7} />

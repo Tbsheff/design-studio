@@ -67,7 +67,8 @@ const CheckResult = ({
   if (check.error) {
     return (
       <div className="alert error small">
-        Could not run the check. {check.error}
+        {COPY.textCouldNotRunThe}
+        {check.error}
       </div>
     );
   }
@@ -75,7 +76,7 @@ const CheckResult = ({
   if (!check.value) {
     return (
       <div className="lib-check" role="status">
-        <span className="spinner" /> Checking…
+        <span className="spinner" /> {COPY.textChecking}
       </div>
     );
   }
@@ -84,7 +85,7 @@ const CheckResult = ({
     return (
       <div className="lib-check ok" role="status">
         <Icon name="check" size={14} />
-        Check passed: tokens, AA contrast, DESIGN.md sections and fonts.
+        {COPY.textCheckPassedTokensAa}
       </div>
     );
   }
@@ -143,7 +144,7 @@ const ActionBar = ({
           disabled={busy}
           onClick={() => run(() => actions.onApply!(pack))}
         >
-          Apply to current project
+          {COPY.textApplyToCurrentProject}
         </button>
       )}
       {usable && (
@@ -153,7 +154,7 @@ const ActionBar = ({
           disabled={busy}
           onClick={() => actions.onUseInNew(pack)}
         >
-          Use in new project
+          {COPY.textUseInNewProject}
         </button>
       )}
       {user ? (
@@ -163,7 +164,7 @@ const ActionBar = ({
           disabled={busy}
           onClick={() => run(() => actions.onOpenEditor(pack))}
         >
-          Open in editor
+          {COPY.textOpenInEditor}
         </button>
       ) : (
         <button
@@ -172,7 +173,7 @@ const ActionBar = ({
           disabled={busy}
           onClick={() => run(() => actions.onDuplicate(pack))}
         >
-          Make a copy to edit
+          {COPY.textMakeACopyTo}
         </button>
       )}
       {user && (
@@ -182,7 +183,7 @@ const ActionBar = ({
           disabled={busy}
           onClick={() => run(() => actions.onDuplicate(pack))}
         >
-          Duplicate
+          {COPY.textDuplicate}
         </button>
       )}
       {user && (
@@ -192,7 +193,7 @@ const ActionBar = ({
           disabled={busy}
           onClick={() => actions.onRename(pack)}
         >
-          Rename
+          {COPY.textRename}
         </button>
       )}
       <button
@@ -202,7 +203,7 @@ const ActionBar = ({
         onClick={() => run(() => actions.onExport(pack))}
       >
         <Icon name="download" size={14} />
-        Export
+        {COPY.textExport}
       </button>
       {user && (
         <button
@@ -211,7 +212,7 @@ const ActionBar = ({
           disabled={busy}
           onClick={() => actions.onDelete(pack)}
         >
-          Delete
+          {COPY.textDelete}
         </button>
       )}
     </div>
@@ -289,10 +290,11 @@ const PackDetailDialog = ({
       </div>
       <div className="modal-body lib-detail-body" aria-busy={busy}>
         <section className="lib-detail-section" aria-label={COPY.labelPreview}>
-          <h3>Preview</h3>
+          <h3>{COPY.labelPreview}</h3>
           {detail.error && (
             <div className="alert error small">
-              Could not load the tokens. {detail.error}
+              {COPY.textCouldNotLoadThe}
+              {detail.error}
             </div>
           )}
           {detail.value ? (
@@ -302,11 +304,11 @@ const PackDetailDialog = ({
           )}
         </section>
         <section className="lib-detail-section" aria-label={COPY.labelCheck}>
-          <h3>Check</h3>
+          <h3>{COPY.labelCheck}</h3>
           <CheckResult check={check} />
         </section>
         <section className="lib-detail-section" aria-label={COPY.labelDesignMd}>
-          <h3>DESIGN.md</h3>
+          <h3>{COPY.labelDesignMd}</h3>
           {detail.value && (
             <Markdown className="lib-doc">{detail.value.designMd}</Markdown>
           )}

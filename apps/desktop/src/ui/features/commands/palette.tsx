@@ -357,7 +357,7 @@ const Palette = ({
             }}
             onKeyDown={onKeyDown}
           />
-          <kbd className="cmdk-esc">Esc</kbd>
+          <kbd className="cmdk-esc">{copy.textEsc}</kbd>
         </div>
         {error && (
           <div className="cmdk-error" role="alert">
@@ -418,17 +418,17 @@ const Palette = ({
         </div>
         <footer className="cmdk-foot" aria-hidden="true">
           <span>
-            <kbd>↑</kbd>
-            <kbd>↓</kbd> Move
+            <kbd>{copy.textGlyph2}</kbd>
+            <kbd>{copy.textGlyph3}</kbd> {copy.textMove}
           </span>
           <span>
-            <kbd>↩</kbd> Open
+            <kbd>{copy.textGlyph4}</kbd> {copy.textOpen}
           </span>
           <span>
-            <kbd>Esc</kbd> Close
+            <kbd>{copy.textEsc}</kbd> {copy.textClose}
           </span>
           <span className="cmdk-foot-end">
-            <Keys keys="?" /> All shortcuts
+            <Keys keys="?" /> {copy.textAllShortcuts}
           </span>
         </footer>
       </div>

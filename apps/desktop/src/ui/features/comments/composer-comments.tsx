@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
 import { Icon } from "./deps.js";
 
 const ComposerComments = ({
@@ -23,7 +24,7 @@ const ComposerComments = ({
         data-tip-side="top"
       >
         <Icon name="comment" size={12} />
-        {count} {noun} linked
+        {count} {noun} {copy.textLinked}
         <button
           type="button"
           className="icon-btn small"

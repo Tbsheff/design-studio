@@ -6,6 +6,22 @@ const copy = {
   paletteInput: "Go to anything, or describe something new",
   results: "Results",
   shortcuts: "Keyboard shortcuts",
+  textAllShortcuts: "All shortcuts",
+  textAllowedCommands: "Allowed commands",
+  textClose: "Close",
+  textEsc: "Esc",
+  textGlyph: "”.",
+  textGlyph2: "↑",
+  textGlyph3: "↓",
+  textGlyph4: "↩",
+  textHold: "(hold)",
+  textMove: "Move",
+  textNoCommandsAreAlways: "No commands are always allowed.",
+  textNoShortcutMatches: "No shortcut matches “",
+  textOpen: "Open",
+  textOr: "or",
+  textPressAKeyTo: "Press a key to find it here.",
+  textRemove: "Remove",
 } as const;
 
 export { copy };

@@ -57,7 +57,7 @@ const CommentAuthor = ({
       {author}
       {viewer && (
         <span className="comment-viewer-tag" data-tip={copy.viewerTag}>
-          Viewer
+          {copy.textViewer}
         </span>
       )}
     </span>

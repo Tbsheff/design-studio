@@ -284,7 +284,10 @@ const OpenCommentPopover = (props: OpenProps): ReactElement => {
         onPointerDown={(event) => event.stopPropagation()}
       >
         <div className="thread-head">
-          <span className="thread-num">#{comment.n}</span>
+          <span className="thread-num">
+            {copy.textGlyph2}
+            {comment.n}
+          </span>
           <CommentAuthor
             author={comment.author}
             viewer={comment.from === "viewer"}
@@ -369,10 +372,12 @@ const OpenCommentPopover = (props: OpenProps): ReactElement => {
                 className="thread-text-btn"
                 onClick={() => props.onSave(text.trim())}
               >
-                Save
+                {copy.textSave}
               </button>
             ) : (
-              <span className="comment-card-note">Saved on the canvas</span>
+              <span className="comment-card-note">
+                {copy.textSavedOnTheCanvas}
+              </span>
             )}
             <span className="spacer" />
             <button
@@ -382,7 +387,7 @@ const OpenCommentPopover = (props: OpenProps): ReactElement => {
               onClick={props.onSend}
             >
               <Icon name="arrowUp" size={13} />
-              Send to Claude
+              {copy.textSendToClaude}
             </button>
           </div>
         )}

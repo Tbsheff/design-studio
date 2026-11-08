@@ -51,6 +51,14 @@ const menuKeys = (event: ReactKeyboardEvent<HTMLElement>): void => {
   items[(next + items.length) % items.length]?.focus();
 };
 
-export { MOCK_EXAMPLE, menuKeys, stop, toFormText };
+const toRuleCount = (count: number): string => {
+  if (count === 1) {
+    return "1 rule";
+  }
+
+  return `${count} rules`;
+};
+
+export { MOCK_EXAMPLE, menuKeys, stop, toFormText, toRuleCount };
 
 export type { MockRules, Panel };

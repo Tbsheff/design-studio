@@ -24,7 +24,7 @@ const FrameStateMenu = ({
 }): ReactElement | null => {
   const states = useCurrentFrameStates();
   const menu = usePanelMenu();
-  const { setOpen } = menu;
+  const { root, setOpen, trigger } = menu;
   const [error, setError] = useState<string | null>(null);
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
 
@@ -47,9 +47,9 @@ const FrameStateMenu = ({
   }
 
   return (
-    <div className="frame-menu-root frame-state-root" ref={menu.root}>
+    <div className="frame-menu-root frame-state-root" ref={root}>
       <button
-        ref={menu.trigger}
+        ref={trigger}
         type="button"
         className={`frame-chip state${part}`}
         aria-haspopup="menu"

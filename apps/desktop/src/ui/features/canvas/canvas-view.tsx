@@ -1,6 +1,7 @@
-import type { ReactElement } from "react";
+import type { ComponentProps, ReactElement } from "react";
 import { Suspense, useCallback, useMemo } from "react";
 
+import { frameLabelOf, jumpToFrame } from "../../platform/stage-dom.js";
 import { AnimationEntry } from "../animation/index.js";
 import { ImportPageSlot, importPageItems } from "../page-import/index.js";
 import { ReviewEntry } from "../review/review-entry.js";
@@ -8,12 +9,10 @@ import { ScenarioSection } from "../scenario/index.js";
 import { FindPanelSlot, useFindHost } from "../text-search/index.js";
 import { MatrixSlot } from "../viewport/index.js";
 import { CanvasBody } from "./canvas-body.js";
-import type { ChromeImportPage } from "./canvas-chrome-menu.js";
 import { CanvasChrome } from "./canvas-chrome.js";
 import { CanvasCommandsSlot } from "./canvas-commands-slot.js";
-import { canvasClass, frameLabelOf, jumpToFrame } from "./canvas-helpers.js";
+import { canvasClass } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
-import type { FrameStateSlotArgs } from "./frame-state-slot-context.js";
 import { CheckResults } from "./stage-parts.js";
 import { useCanvasEdits } from "./use-canvas-edits.js";
 import { useCanvasPreview } from "./use-canvas-preview.js";
@@ -27,7 +26,9 @@ interface ViewSlots {
   readonly findHost: ReturnType<typeof useFindHost>;
 }
 
-const renderScenarioSlot = (args: FrameStateSlotArgs): ReactElement => (
+const renderScenarioSlot = (
+  args: ComponentProps<typeof ScenarioSection>
+): ReactElement => (
   <ScenarioSection
     projectId={args.projectId}
     directionId={args.directionId}
@@ -83,7 +84,7 @@ const useViewSlots = (
     [canvasFrames, directionId, projectId, pz]
   );
 
-  const importPage = useMemo<ChromeImportPage>(
+  const importPage = useMemo(
     () => ({ items: importPageItems, render: renderImport }),
     [renderImport]
   );

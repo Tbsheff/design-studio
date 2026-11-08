@@ -2,7 +2,7 @@ import { useModalDialog } from "@design-studio/ui";
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { pageName } from "../canvas/frame-controls.js";
+import { pageName } from "../canvas/index.js";
 import { canvasFrameChoices } from "../share-publish-ship-export/export-api.js";
 import type { FrameChoice } from "../share-publish-ship-export/export-api.js";
 import { COPY } from "./copy.js";

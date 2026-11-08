@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import { cleanFramePath } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 import { useMenu } from "./frame-menu-model.js";
+import { toChipClass, toChipTip } from "./frame-page-chip-model.js";
 import { FramePageForm } from "./frame-page-form.js";
 import { FramePageList } from "./frame-page-list.js";
 import { pageName } from "./page-name-model.js";
@@ -22,7 +23,7 @@ const FramePageMenu = ({
   routes?: boolean;
 }): ReactElement => {
   const menu = useMenu();
-  const { close, setOpen } = menu;
+  const { close, root, setOpen, trigger } = menu;
 
   const toggle = useCallback(() => setOpen((isOpen) => !isOpen), [setOpen]);
 
@@ -42,38 +43,26 @@ const FramePageMenu = ({
     [onPath, close]
   );
 
-  let part: "" | " set" = "";
-
-  if (path) {
-    part = " set";
-  }
-
-  let datatip = `/${path} · Show another page in this frame`;
-
-  if (menu.open) {
-    datatip = "";
-  }
-
   return (
-    <div className="frame-menu-root" ref={menu.root}>
+    <div className="frame-menu-root" ref={root}>
       <button
-        ref={menu.trigger}
+        ref={trigger}
         type="button"
-        className={`frame-chip page${part}`}
+        className={toChipClass(path)}
         aria-haspopup="dialog"
         aria-expanded={menu.open}
         aria-label={`Page: ${pageName(path)}`}
         onPointerDown={stop}
         onClick={toggle}
-        data-tip={datatip || null}
+        data-tip={toChipTip(path, menu.open)}
       >
         <Icon name="file" size={12} />
         <span className="frame-path">{pageName(path)}</span>
       </button>
       {menu.open && (
-        <div
+        <dialog
+          open
           className="project-menu canvas-menu frame-menu frame-page-menu"
-          role="dialog"
           aria-label={copy.framePage}
         >
           <FramePageForm
@@ -91,10 +80,10 @@ const FramePageMenu = ({
               close={close}
             />
           )}
-        </div>
+        </dialog>
       )}
     </div>
   );
 };
 
-export { FramePageMenu, pageName };
+export { FramePageMenu };

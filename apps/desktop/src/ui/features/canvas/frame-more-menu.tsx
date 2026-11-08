@@ -7,6 +7,7 @@ import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { FrameMenuItemButton } from "./frame-menu-item.js";
 import { menuKeys, useMenu } from "./frame-menu-model.js";
 import { toMenuItems } from "./menu-items-model.js";
+import { usePortEntry } from "./use-port-entry.js";
 import { stop } from "./variation-controls.js";
 
 interface FrameMenuItem {
@@ -17,22 +18,6 @@ interface FrameMenuItem {
   run: () => void;
 }
 
-const portItem = (root: HTMLElement | null): FrameMenuItem[] => {
-  if (!portAvailable()) {
-    return [];
-  }
-
-  const frame = root?.closest<HTMLElement>("[data-frame-id]") ?? null;
-
-  const run = (): void =>
-    openPortDialog({
-      directionId: frame?.dataset.directionId ?? null,
-      frameId: frame?.dataset.frameId ?? null,
-    });
-
-  return [{ icon: "react", id: "port-to-app", label: "Move to app…", run }];
-};
-
 const FrameMoreMenu = ({
   name,
   items: own,
@@ -41,8 +26,10 @@ const FrameMoreMenu = ({
   items: FrameMenuItem[];
 }): ReactElement | null => {
   const menu = useMenu();
-  const { close, root, setOpen } = menu;
+  const { close, root, setOpen, trigger } = menu;
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
+
+  const portEntry = usePortEntry(root, openPortDialog);
 
   const handleKeys = useCallback(
     (event: KeyboardEvent<HTMLElement>): void => menuKeys(event, close),
@@ -55,13 +42,7 @@ const FrameMoreMenu = ({
     }
   }, [menu.open, root]);
 
-  let items: FrameMenuItem[] = own;
-
-  if (menu.open) {
-    items = [...portItem(root.current), ...own];
-  }
-
-  if (items.length === 0 && !portAvailable()) {
+  if (own.length === 0 && !portAvailable()) {
     return null;
   }
 
@@ -74,7 +55,7 @@ const FrameMoreMenu = ({
   return (
     <div className="frame-menu-root" ref={root}>
       <button
-        ref={menu.trigger}
+        ref={trigger}
         type="button"
         className="frame-chip more"
         aria-haspopup="menu"
@@ -94,7 +75,10 @@ const FrameMoreMenu = ({
           aria-label={`${name} actions`}
           onKeyDown={handleKeys}
         >
-          {items.map((item) => (
+          {menu.open && portAvailable() && (
+            <FrameMenuItemButton entry={portEntry} close={close} />
+          )}
+          {own.map((item) => (
             <FrameMenuItemButton key={item.id} entry={item} close={close} />
           ))}
         </div>

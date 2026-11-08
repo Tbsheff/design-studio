@@ -37,6 +37,7 @@ import "../styles/shell.css";
 import "../styles/port-flow.css";
 import "../styles/comments.css";
 import "../styles/route-flow.css";
+import "../styles/frame-state.css";
 import "../styles/drawing.css";
 
 const desktop = desktopBridge<{ platform: string }>();

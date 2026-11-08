@@ -16,7 +16,7 @@ const PresentLayer = ({
   fullscreen: boolean;
   onClose: () => void;
 }): ReactElement => {
-  const root = useRef<HTMLDivElement>(null);
+  const root = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const close = useEffectEvent(onClose);
 
@@ -58,10 +58,10 @@ const PresentLayer = ({
   }, [fullscreen]);
 
   return (
-    <div
+    <dialog
       ref={root}
+      open
       className="present-layer"
-      role="dialog"
       aria-modal="true"
       aria-label={copy.present}
     >
@@ -81,7 +81,7 @@ const PresentLayer = ({
         {copy.exit}
         <kbd>{copy.esc}</kbd>
       </button>
-    </div>
+    </dialog>
   );
 };
 

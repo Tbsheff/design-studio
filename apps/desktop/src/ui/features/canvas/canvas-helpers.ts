@@ -20,25 +20,6 @@ const ITEM_300 = 300;
 
 const ITEM_1200 = 1200;
 
-const frameLabelOf = (frameId: string): Element | null =>
-  document.querySelector(
-    `.frame-label[data-frame-id="${CSS.escape(frameId)}"]`
-  );
-
-const jumpToFrame = (frameId: string): void => {
-  const id = CSS.escape(frameId);
-
-  const target =
-    document.querySelector(`.canvas-frame[data-frame-id="${id}"]`) ??
-    frameLabelOf(frameId);
-
-  target?.scrollIntoView({
-    behavior: "smooth",
-    block: "center",
-    inline: "center",
-  });
-};
-
 const shellDirectionName = (shell: CanvasShell | undefined): string | null =>
   shell?.directionName ?? null;
 
@@ -50,7 +31,7 @@ const hostedClose = (
   close: () => void
 ): (() => void) | undefined => {
   if (shell) {
-    return undefined;
+    return;
   }
 
   return close;
@@ -70,10 +51,16 @@ const noteCommentFrame = (
   }
 };
 
+interface ActiveFrameRef {
+  readonly id: string;
+  readonly ids: string[];
+  readonly path: string;
+}
+
 const activeFrameOf = (
   active: { id: string; path?: string },
   all: { id: string }[]
-): { id: string; ids: string[]; path: string } => ({
+): ActiveFrameRef => ({
   id: active.id,
   ids: all.map((frame) => frame.id),
   path: active.path ?? "",
@@ -141,7 +128,7 @@ const stageNote = (point: {
 };
 
 const themeSwitch = (
-  enabled: boolean | undefined,
+  enabled: boolean,
   theme: ThemeChoice
 ): { dark: boolean; onToggle: () => void } | undefined => {
   if (!enabled) {
@@ -260,10 +247,8 @@ export {
   canvasClass,
   commentToolsOf,
   dropQuietFocus,
-  frameLabelOf,
   hostedClose,
   inEditPane,
-  jumpToFrame,
   knownIds,
   knownList,
   livePageUrl,

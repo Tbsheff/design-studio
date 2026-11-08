@@ -79,7 +79,7 @@ const useCanvasWiring = (
     return undefined;
   })();
 
-  const darkSwitch = themeSwitch(props.darkPreview, theme);
+  const darkSwitch = themeSwitch(Boolean(props.darkPreview), theme);
 
   const sandbox: "allow-scripts allow-same-origin allow-forms" | undefined =
     ((): "allow-scripts allow-same-origin allow-forms" | undefined => {

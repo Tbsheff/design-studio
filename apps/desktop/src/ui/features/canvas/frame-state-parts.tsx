@@ -1,20 +1,11 @@
-import { STATE_HINTS } from "@design-studio/contracts/frame-state";
 import type {
   FrameStateDef,
   FrameStatesView,
 } from "@design-studio/contracts/frame-state";
 import type { ReactElement } from "react";
 
-import "../../styles/frame-state.css";
 import { copy } from "./copy.js";
-
-const toRuleCount = (count: number): string => {
-  if (count === 1) {
-    return "1 rule";
-  }
-
-  return `${count} rules`;
-};
+import { FrameStateRow } from "./frame-state-row.js";
 
 const StateRows = ({
   view,
@@ -28,23 +19,12 @@ const StateRows = ({
   <div className="ui-menu-section">
     <div className="ui-menu-label">{copy.previewState}</div>
     {view.states.map((state) => (
-      <button
+      <FrameStateRow
         key={state.id}
-        type="button"
-        role="menuitemradio"
-        aria-checked={state.id === chosen}
-        className="ui-menu-item"
-        tabIndex={-1}
-        data-tip={STATE_HINTS[state.kind]}
-        onClick={() => onPick(state)}
-      >
-        <span>{state.name}</span>
-        {state.kind === "mock" && (
-          <span className="ui-menu-meta">
-            {toRuleCount(state.mocks?.length ?? 0)}
-          </span>
-        )}
-      </button>
+        isChosen={state.id === chosen}
+        onPick={onPick}
+        state={state}
+      />
     ))}
   </div>
 );

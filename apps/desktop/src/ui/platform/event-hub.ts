@@ -47,9 +47,9 @@ const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody["type"][];
 type ConnectionState = "connecting" | "open" | "reconnecting";
 
 interface EventSourceLike {
-  onopen: ((this: EventSource, ev: Event) => unknown) | null;
-  onmessage: ((this: EventSource, ev: MessageEvent) => unknown) | null;
-  onerror: ((this: EventSource, ev: Event) => unknown) | null;
+  onopen: ((event: Event) => unknown) | null;
+  onmessage: ((event: MessageEvent) => unknown) | null;
+  onerror: ((event: Event) => unknown) | null;
   readonly addEventListener: (type: string, listener: EventListener) => void;
   readonly close: () => void;
 }

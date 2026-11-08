@@ -1,6 +1,8 @@
 import type { RunLevel } from "@design-studio/contracts";
 import { useSyncExternalStore } from "react";
 
+import { pick } from "./pick.js";
+
 interface Viewport {
   preset: "desktop" | "tablet" | "mobile" | "custom";
   width: number;
@@ -79,6 +81,17 @@ const libraryFromOf = (value: unknown): LibraryFrom | null => {
   return null;
 };
 
+const toPatchValue = (
+  patch: Partial<UiState> | ((previous: UiState) => Partial<UiState>),
+  previous: UiState
+): Partial<UiState> => {
+  if (typeof patch === "function") {
+    return patch(previous);
+  }
+
+  return patch;
+};
+
 const loadUiState = (): UiState => {
   try {
     const raw = localStorage.getItem(KEY);
@@ -91,34 +104,53 @@ const loadUiState = (): UiState => {
 
     return {
       activeProjectId: parsed.activeProjectId ?? null,
-      chatWidth: typeof parsed.chatWidth === "number" ? parsed.chatWidth : null,
+      chatWidth: pick(
+        typeof parsed.chatWidth === "number",
+        parsed.chatWidth ?? null,
+        null
+      ),
       directionByProject: parsed.directionByProject ?? {},
-      homeSort:
-        parsed.homeSort && HOME_SORTS.includes(parsed.homeSort)
-          ? parsed.homeSort
-          : "recent",
-      lastLocation:
+      homeSort: pick(
+        Boolean(parsed.homeSort && HOME_SORTS.includes(parsed.homeSort)),
+        parsed.homeSort ?? "recent",
+        "recent"
+      ),
+      lastLocation: pick(
         typeof parsed.lastLocation === "string" &&
-        parsed.lastLocation.startsWith("/")
-          ? parsed.lastLocation
-          : null,
-      lastPackId:
-        typeof parsed.lastPackId === "string" ? parsed.lastPackId : null,
+          parsed.lastLocation.startsWith("/"),
+        parsed.lastLocation ?? null,
+        null
+      ),
+      lastPackId: pick(
+        typeof parsed.lastPackId === "string",
+        parsed.lastPackId ?? null,
+        null
+      ),
       layersOpen: parsed.layersOpen === true,
-      libraryFrom:
-        parsed.screen === "design-systems"
-          ? libraryFromOf(parsed.libraryFrom)
-          : null,
+      libraryFrom: pick(
+        parsed.screen === "design-systems",
+        libraryFromOf(parsed.libraryFrom),
+        null
+      ),
       paneCollapsed: parsed.paneCollapsed === true,
-      returnTo:
-        parsed.returnTo === "design-systems" ? "design-systems" : "home",
+      returnTo: pick(
+        parsed.returnTo === "design-systems",
+        "design-systems",
+        "home"
+      ),
       rulers: parsed.rulers === true,
-      screen:
-        parsed.screen && SCREENS.has(parsed.screen) ? parsed.screen : "home",
-      snapByProject:
-        parsed.snapByProject && typeof parsed.snapByProject === "object"
-          ? parsed.snapByProject
-          : {},
+      screen: pick(
+        Boolean(parsed.screen && SCREENS.has(parsed.screen)),
+        parsed.screen ?? "home",
+        "home"
+      ),
+      snapByProject: pick(
+        Boolean(
+          parsed.snapByProject && typeof parsed.snapByProject === "object"
+        ),
+        parsed.snapByProject ?? {},
+        {}
+      ),
       viewRowOpen: parsed.viewRowOpen === true,
       viewport: parsed.viewport ?? defaults.viewport,
       zoom: parsed.zoom ?? defaults.zoom,
@@ -144,7 +176,7 @@ const uiStore = {
   set: (
     patch: Partial<UiState> | ((previous: UiState) => Partial<UiState>)
   ): void => {
-    const next = typeof patch === "function" ? patch(state) : patch;
+    const next = toPatchValue(patch, state);
     state = { ...state, ...next };
     saveUiState(state);
     listeners.forEach((listener) => listener());

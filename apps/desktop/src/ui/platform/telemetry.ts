@@ -2,6 +2,7 @@ import type { TelemetrySample } from "@design-studio/contracts";
 
 import { sendTelemetry } from "../api";
 import { desktopBridge } from "./desktop";
+import { pick } from "./pick.js";
 
 interface DesktopBoot {
   startedAt: number;
@@ -18,7 +19,7 @@ const FLUSH_MS = 5000;
 
 let scope: Scope = {};
 let appStartSent = false;
-let flushLongFrames: () => void = () => undefined;
+let flushLongFrames: () => void = () => null;
 
 const desktopBoot = (): DesktopBoot | null => {
   const boot = desktopBridge<{ boot?: DesktopBoot }>()?.boot;
@@ -42,11 +43,17 @@ const reportAppStart = (screen: "home" | "studio"): void => {
   appStartSent = true;
   afterPaint(() => {
     const boot = desktopBoot();
-    const ms = boot ? Date.now() - boot.startedAt : performance.now();
+
+    const ms = pick(
+      Boolean(boot),
+      Date.now() - (boot?.startedAt ?? 0),
+      performance.now()
+    );
+
     sendTelemetry({
       detail: {
         screen,
-        surface: boot ? "desktop" : "web",
+        surface: pick(Boolean(boot), "desktop", "web"),
         ...boot?.marks,
       },
       kind: "app.start",
@@ -94,7 +101,7 @@ const watchLongFrames = (): (() => void) => {
   const type = longFrameType();
 
   if (!type) {
-    return () => undefined;
+    return () => false;
   }
 
   let count = 0;
@@ -113,7 +120,11 @@ const watchLongFrames = (): (() => void) => {
       kind: "frame.long",
       ...scope,
       ms: Math.round(worst),
-      detail: { count, screen: scope.projectId ? "studio" : "home", type },
+      detail: {
+        count,
+        screen: pick(Boolean(scope.projectId), "studio", "home"),
+        type,
+      },
     };
 
     count = 0;

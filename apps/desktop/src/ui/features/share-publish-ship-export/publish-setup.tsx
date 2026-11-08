@@ -27,8 +27,8 @@ const usePublishCli = (): {
       try {
         const next = await task();
         setCli(next);
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (caught) {
+        setError(errorText(caught));
       }
     });
   }, []);

@@ -13,7 +13,6 @@ import { REVIEW_TOOLS } from "../review-tools.js";
 import { RULES_TOOLS } from "../rules-tools.js";
 import { SELECT_TOOLS } from "../select-tools.js";
 import { STYLE_TOOLS } from "../style-tools.js";
-import { TWEAK_TOOLS } from "../tweak-tools.js";
 import { VARIANT_TOOLS } from "../variant-tools.js";
 import { VECTOR_TOOLS } from "../vector-tools.js";
 import { DIRECT_EDIT_INLINE_TOOLS } from "./direct-edit-inline.js";
@@ -33,7 +32,6 @@ const DIRECT_EDIT_LEGACY_TOOLS_UNGUARDED = [
   ...COMPONENT_PREVIEW_TOOLS,
   ...COMPONENT_CREATE_TOOLS,
   ...SELECT_TOOLS,
-  ...TWEAK_TOOLS,
   ...IMAGE_TOOLS,
   ...VECTOR_TOOLS,
   ...LAYER_STATE_TOOLS,

@@ -42,7 +42,6 @@ const ZOD_BRIDGE_FILES = new Set([
   "apps/desktop/src/server/mcp/stacking-tools.ts",
   "apps/desktop/src/server/mcp/state-styles-tools.ts",
   "apps/desktop/src/server/mcp/style-tools.ts",
-  "apps/desktop/src/server/mcp/tweak-tools.ts",
   "apps/desktop/src/server/mcp/variant-tools.ts",
   "apps/desktop/src/server/mcp/vector-tools.ts",
   "apps/desktop/src/server/page-import/deps.ts",

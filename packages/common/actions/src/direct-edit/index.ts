@@ -27,6 +27,7 @@ import { runRulesTestDirectEdit } from "./run-rules-test.js";
 import { runDirectEdit } from "./run.js";
 import { setImageDirectEdit } from "./set-image.js";
 import { setRulesDirectEdit } from "./set-rules.js";
+import { setTweakDirectEdit } from "./set-tweak.js";
 import { setVariantClassesDirectEdit } from "./set-variant-classes.js";
 import { setVectorDirectEdit } from "./set-vector.js";
 import { updateTokensDirectEdit } from "./update-tokens.js";
@@ -61,6 +62,7 @@ const DirectEditActions = {
   runRulesTestDirectEdit,
   setImageDirectEdit,
   setRulesDirectEdit,
+  setTweakDirectEdit,
   setVariantClassesDirectEdit,
   setVectorDirectEdit,
   updateTokensDirectEdit,

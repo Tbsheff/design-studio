@@ -32,6 +32,37 @@ const DirectEditCodeSchema = Schema.Literals([
   "variant_not_supported",
 ]);
 
+const TWEAK_ID_MAX = 64;
+
+const TWEAK_TEXT_MAX = 200;
+
+const TweakIdSchema = Schema.String.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(TWEAK_ID_MAX)
+).annotate({ description: "Tweak control id from list_tweaks." });
+
+const TweakValueSchema = Schema.Union([
+  Schema.Finite,
+  Schema.String.check(Schema.isMaxLength(TWEAK_TEXT_MAX)),
+  Schema.Boolean,
+]).annotate({
+  description:
+    "New value: a number inside min and max for a range, a CSS color for a color, true or false for a toggle, one option value for a select.",
+});
+
+const TweakSetFields = {
+  id: TweakIdSchema,
+  value: TweakValueSchema,
+} as const;
+
+const TweakSetResultSchema = Schema.Struct({
+  cssVar: Schema.NullOr(Schema.String),
+  id: Schema.String,
+  title: Schema.String,
+  value: TweakValueSchema,
+  versionId: Schema.String,
+});
+
 type DirectEditCode = typeof DirectEditCodeSchema.Type;
 
 const CONFLICT_CODES: readonly DirectEditCode[] = [
@@ -413,6 +444,8 @@ export {
   SwapCandidateListSchema,
   SwapResultSchema,
   TokenChangesFields,
+  TweakSetFields,
+  TweakSetResultSchema,
   TweakValuesFields,
   TokenChangesQueryFields,
   TokenPreviewSchema,

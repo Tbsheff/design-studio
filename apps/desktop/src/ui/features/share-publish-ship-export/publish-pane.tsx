@@ -369,8 +369,8 @@ const usePublishFlow = (target: PublishTarget) => {
 
     try {
       await task();
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (caught) {
+      setError(errorText(caught));
     } finally {
       setBusy(null);
     }

@@ -291,6 +291,7 @@ const ConnectClaudeCode = (): ReactElement => {
   const [copied, copy] = useCopied();
   useEffect(() => {
     let live = true;
+
     const load = async (): Promise<void> => {
       try {
         const next = await mcpApi.status();
@@ -298,14 +299,13 @@ const ConnectClaudeCode = (): ReactElement => {
         if (live) {
           setStatus(next);
         }
-      } catch (failure) {
+      } catch (caught) {
         if (live) {
-          setError(
-            failure instanceof Error ? failure.message : String(failure)
-          );
+          setError(caught instanceof Error ? caught.message : String(caught));
         }
       }
     };
+
     void load();
 
     return (): void => {
@@ -323,8 +323,8 @@ const ConnectClaudeCode = (): ReactElement => {
 
     try {
       setStatus(await mcpApi.set(input));
-    } catch (failure) {
-      setError(failure instanceof Error ? failure.message : String(failure));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
     } finally {
       setBusy(false);
     }

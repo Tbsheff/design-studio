@@ -27,8 +27,8 @@ const usePublishBackend = (): {
     try {
       setBackend(await publishApi.backend(check));
       setError(null);
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (caught) {
+      setError(errorText(caught));
     }
   }, []);
 
@@ -50,8 +50,8 @@ const usePublishBackend = (): {
     try {
       setError(null);
       setBackend(await publishApi.setup(mode));
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (caught) {
+      setError(errorText(caught));
     }
   }, []);
 

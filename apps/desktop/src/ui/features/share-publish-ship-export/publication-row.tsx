@@ -114,8 +114,8 @@ const Comments = ({
   const load = useCallback(async () => {
     try {
       setList((await publishApi.comments(projectId, publication.id)).comments);
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (caught) {
+      setError(errorText(caught));
     }
   }, [projectId, publication.id]);
 
@@ -128,8 +128,8 @@ const Comments = ({
       await publishApi.deleteComment(projectId, publication.id, cid);
       await load();
       onChanged();
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (caught) {
+      setError(errorText(caught));
     }
   };
 

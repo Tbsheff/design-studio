@@ -526,8 +526,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/server/mcp/legacy/canvas-schema.ts",
       "apps/desktop/src/server/mcp/legacy/direct-edit-result.ts",
       "apps/desktop/src/server/mcp/legacy/direct-edit-schema.ts",
-      "apps/desktop/src/server/mcp/legacy/packs-result.ts",
-      "apps/desktop/src/server/mcp/legacy/packs-schema.ts",
       "apps/desktop/src/server/mcp/legacy/projects-result.ts",
       "apps/desktop/src/server/mcp/legacy/projects-schema.ts",
     ],

@@ -1,5 +1,6 @@
 import { publishExpiryText } from "../../../shared/publish.js";
 import type { Publication } from "../../../shared/publish.js";
+import { copy } from "./copy.js";
 import { pick } from "./pick.js";
 
 const SHORT_VERSION = 7;
@@ -80,9 +81,13 @@ const toViewsTip = (publication: Publication): string | null => {
   return `${publication.views.last7} views in the last 7 days. Counts page opens per day; no personal data.`;
 };
 
+const toFileCountText = (count: number): string =>
+  `${count} ${pick(count === 1, copy.fileWord, copy.filesPlural)}`;
+
 export {
   SHORT_VERSION,
   toDayText,
+  toFileCountText,
   toStatusText,
   toVersionTimeText,
   toViewsTip,

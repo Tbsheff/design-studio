@@ -217,7 +217,7 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
 
   await page.getByRole("tab", { name: /^Tweaks/ }).click();
   const versionsBefore = (await api.versions(project.id, main.id)).length;
-  await page.getByRole("button", { name: "Commit", exact: true }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator(".twk-footer")).toHaveCount(0);
   await expect
     .poll(() => readFileSync(indexPath, "utf-8"))

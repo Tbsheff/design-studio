@@ -3,7 +3,11 @@ import type { ReactElement } from "react";
 
 import type { Publication, PublishedVersion } from "../../../shared/publish.js";
 import { copy } from "./copy.js";
-import { SHORT_VERSION, toVersionTimeText } from "./publication-model.js";
+import {
+  SHORT_VERSION,
+  toFileCountText,
+  toVersionTimeText,
+} from "./publication-model.js";
 
 interface Props {
   isBusy: boolean;
@@ -28,8 +32,7 @@ const PublicationVersionItem = ({
         {toVersionTimeText(version.committedAt)} {copy.versionPrefix}
         {version.sourceVersion.slice(0, SHORT_VERSION)}
         {copy.dot}
-        {version.fileCount}
-        {copy.files}
+        {toFileCountText(version.fileCount)}
       </span>
       {version.live && <span className="publish-live-tag">{copy.live}</span>}
       {!version.live && (

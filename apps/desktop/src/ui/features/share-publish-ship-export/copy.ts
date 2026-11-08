@@ -94,7 +94,6 @@ const copy = {
   fileIsDeleted: "The file is deleted.",
   fileKeyPlaceholder: "FILE_KEY",
   fileWord: "file",
-  files: " files",
   files2: "Files",
   filesPlural: "files",
   filesWord: "Files",

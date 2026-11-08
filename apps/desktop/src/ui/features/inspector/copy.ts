@@ -214,7 +214,7 @@ const copy = {
   tweaksAreLiveControlsFor:
     "Tweaks are live controls for this design: sliders, colors, switches and menus. Drag them to try values on every frame at once, without asking Claude.",
   tweaksAreLiveControlsFor2:
-    "Tweaks are live controls for this design: sliders, colors, switches and menus, each bound to a CSS variable. Drag them to preview every frame at once, without asking Claude. Commit saves the values as one version.",
+    "Tweaks are live controls for this design: sliders, colors, switches and menus, each bound to a CSS variable. Drag them to preview every frame at once, without asking Claude. Save keeps the values as one version.",
   tweaksAreNotAvailableHere: "Tweaks are not available here.",
   tweaksNote: "Save or discard your edits before you ask for a tweaks panel.",
   typeACssVariableOr:

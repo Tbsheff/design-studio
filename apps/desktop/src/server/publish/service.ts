@@ -303,7 +303,7 @@ export function createPublishService(deps: PublishDeps): PublishService {
     const found = await store.get(assertSafeId(String(raw), "publicationId"));
 
     if (!found || found.projectId !== projectId) {
-      throw new NotFoundError("publication not found");
+      throw new NotFoundError("The publication does not exist.");
     }
 
     return found;

@@ -94,10 +94,10 @@ const toChangeCount = (count: number): string => {
 
 const toCommitLabel = (isCommitting: boolean): string => {
   if (isCommitting) {
-    return "Committing…";
+    return "Saving…";
   }
 
-  return "Commit";
+  return "Save";
 };
 
 const toSuggestTip = (isRunning: boolean): string => {

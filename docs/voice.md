@@ -18,12 +18,11 @@ Design Studio talks like a calm designer who sits next to you. Short, warm, plai
 - End a full sentence with a period. Do not end a label, button or title with a period.
 - Put "…" on a menu item or button that opens a dialog or needs more input: "Rename…", "Export…".
 - Put "…" on text that shows work in progress: "Saving…", "Checking…".
-- Use curly quotes in copy: “card-title”.
 
 ## 3. Buttons
 
-- Start a button with a verb: "Add padding", "Create key", "Save version". Never "Fix", "OK", "Submit" alone.
-- Use "Create" for a new thing, never "Make" or "New" on a button. "New" is fine in a title: "New screen".
+- Start a button with a verb: "Add padding", "Create key", "Save version". Never "OK" or "Submit". Never "Fix" alone: name what it fixes ("Fix this", "Fix all 3", "Fix with Claude").
+- Use "Create" for a new thing, never "Make". "New <thing>" is fine on a button that starts a create flow ("New animation", "New direction") and in a title ("New screen"). "Make live" is a fixed phrase and stays.
 - Use "Try again" to repeat a failed step. Do not use "Retry".
 - Use "Delete" for a permanent removal, and "Remove" when the thing stays somewhere else (a file on disk, a tag on a layer).
 - Name the result on a confirm button: "Delete forever", "Empty trash", not "Yes".
@@ -37,9 +36,9 @@ Design Studio talks like a calm designer who sits next to you. Short, warm, plai
 | direction | one branch of a design that you can compare and switch to | fork, variation id, direction id |
 | frame | one page or screen on the canvas | artboard, cell |
 | layer | one part of a frame that you can select | element, node, selector |
-| version | one saved state you can restore | commit, snapshot, checkpoint |
+| version | one saved state you can restore | commit, snapshot, checkpoint (git terms in Ship stay: "Commit message") |
 | design system | tokens, fonts, components and DESIGN.md that a project builds with | kit, pack, theme pack |
-| token | one named design value, such as a color or a spacing step | variable, var |
+| token | one named design value, such as a color or a spacing step | var (the web terms "CSS variable" and "Figma variables" stay) |
 | component | a reusable part from the project code | kit component, instance |
 | Claude | the AI that edits the design | the agent, the AI, the model, the AI step |
 | chat | the panel on the left where you talk to Claude | prompt box, composer (in copy) |
@@ -61,7 +60,8 @@ Design Studio talks like a calm designer who sits next to you. Short, warm, plai
 - Never show a stack, a status code, an error code (`run_in_progress`), an id or a file path that the person did not type.
 - Do not blame the person. "This URL does not start with https://", not "You entered a bad URL".
 - Use "Could not copy", not "Copy failed". Use "Could not publish", not "Publish failed".
-- Server messages that MCP callers read may name a tool ("Call canvas_list for the frame ids."). That text is for the caller, so keep it.
+- Server messages that MCP callers read may name a tool and an id ("No frame f3 on the canvas. Use canvas_list for the frame ids."). That text is for the caller, so keep it.
+- Schema field checks ("must be a CSS unit like px") are fragments that the caller puts after a field name. Keep them lowercase.
 
 ## 7. Numbers, units and counts
 

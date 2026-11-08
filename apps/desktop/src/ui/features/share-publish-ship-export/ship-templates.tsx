@@ -12,7 +12,7 @@ interface Props {
   saveRef: MutableRefObject<(() => Promise<void>) | null>;
 }
 
-export function ShipTemplates({ projectId, saveRef }: Props) {
+function ShipTemplates({ projectId, saveRef }: Props) {
   const [draft, setDraft] = useState<ShipSettings | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -97,3 +97,5 @@ export function ShipTemplates({ projectId, saveRef }: Props) {
     </section>
   );
 }
+
+export { ShipTemplates };

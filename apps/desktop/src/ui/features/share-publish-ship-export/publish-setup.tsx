@@ -10,7 +10,7 @@ import { BackendSetup, usePublishBackend } from "./publish-backend-setup.js";
 import "../../styles/publish.css";
 import type { BackendHook } from "./publish-backend-setup.js";
 
-export function usePublishCli() {
+function usePublishCli() {
   const [cli, setCli] = useState<PublishCliState | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function usePublishCli() {
   return { busy: isPending, cli, error, run };
 }
 
-export function cliReady(cli: PublishCliState | null): boolean {
+function cliReady(cli: PublishCliState | null): boolean {
   return Boolean(
     cli?.installed && cli.versionOk && cli.signedIn && cli.accountId
   );
@@ -248,7 +248,7 @@ function AccountStep({
   );
 }
 
-export function PublishSetupBody({
+function PublishSetupBody({
   state,
   backend,
 }: {
@@ -305,4 +305,4 @@ function PublishSetup() {
   );
 }
 
-export { PublishSetup };
+export { usePublishCli, cliReady, PublishSetupBody, PublishSetup };

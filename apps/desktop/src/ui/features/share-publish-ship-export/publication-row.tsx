@@ -1,3 +1,4 @@
+import { CopyButton } from "@design-studio/ui";
 import { useCallback, useEffect, useState } from "react";
 
 import { publishExpiryText } from "../../../shared/publish.js";
@@ -6,7 +7,6 @@ import type {
   PublicationComment,
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
-import { CopyButton } from "@design-studio/ui";
 import { copy } from "./copy.js";
 import { isReadOnlyPublication, publishApi } from "./publish-api.js";
 
@@ -41,7 +41,7 @@ function statusText(p: Publication, now: number): string {
     .join(" · ");
 }
 
-export interface RowProps {
+interface RowProps {
   p: Publication;
   now: number;
   projectId: string;
@@ -221,7 +221,7 @@ function RowActions({
   );
 }
 
-export function PublicationRow({
+function PublicationRow({
   p,
   now,
   projectId,
@@ -305,3 +305,6 @@ export function PublicationRow({
     </li>
   );
 }
+
+export { PublicationRow };
+export type { RowProps };

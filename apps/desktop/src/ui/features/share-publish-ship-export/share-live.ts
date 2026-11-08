@@ -337,7 +337,7 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
   };
 }
 
-export function startShareLive(
+function startShareLive(
   projectId: string,
   stage: () => HTMLElement | null
 ): () => void {
@@ -420,3 +420,5 @@ export function startShareLive(
     layer.destroy();
   };
 }
+
+export { startShareLive };

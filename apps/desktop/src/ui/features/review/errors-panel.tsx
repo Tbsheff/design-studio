@@ -21,7 +21,7 @@ const DEV_NOISE = [
   /\bnext-dev-overlay\b|\b__nextjs_original-stack-frame/,
 ];
 
-export function isDevNoise(e: BuildError): boolean {
+function isDevNoise(e: BuildError): boolean {
   return (
     e.source === "console" &&
     DEV_NOISE.some((pattern) => pattern.test(e.message))
@@ -32,7 +32,7 @@ function countText(n: number): string {
   return n === 1 ? "1 error" : `${n} errors`;
 }
 
-export function fixPrompt(e: BuildError): string {
+function fixPrompt(e: BuildError): string {
   const where = e.file ? ` in ${e.file}${e.line ? `:${e.line}` : ""}` : "";
   const what = e.source === "build" ? "build error" : `${e.source} error`;
 
@@ -75,7 +75,7 @@ function ErrorsChip({
   );
 }
 
-export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
+function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (pane === "design") {
@@ -142,3 +142,5 @@ export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
     </div>
   );
 }
+
+export { isDevNoise, fixPrompt, ErrorsPanel };

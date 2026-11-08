@@ -98,7 +98,7 @@ function TriggerContent({
   return busy ? <span className="spinner" /> : <Icon name={icon} size={14} />;
 }
 
-export function CopyCodeMenu({
+function CopyCodeMenu({
   projectId,
   directionId,
   selector,
@@ -277,3 +277,5 @@ export function CopyCodeMenu({
     </div>
   );
 }
+
+export { CopyCodeMenu };

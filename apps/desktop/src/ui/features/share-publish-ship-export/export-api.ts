@@ -29,7 +29,7 @@ const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
 const PREFS_KEY = "design-studio.export.v1";
 const OPEN_EVENT = "studio:open-export";
 
-export interface ExportedFile {
+interface ExportedFile {
   blob: Blob;
   name: string;
   note: string | null;
@@ -50,7 +50,7 @@ function toExportedFile(file: ExportFileResultWire): ExportedFile {
   };
 }
 
-export const exportApi = {
+const exportApi = {
   copyCode: (pid: string, request: CopyCodeRequest): Promise<CopyCodeResult> =>
     callAction(exportRoutes.getCodeExport, {
       directionId: request.directionId ?? null,
@@ -113,7 +113,7 @@ export const exportApi = {
   },
 };
 
-export interface ExportPrefs {
+interface ExportPrefs {
   format: ExportFormat;
   scale: ExportScale;
   scope: ExportScope;
@@ -131,7 +131,7 @@ const FORMATS: ReadonlySet<ExportFormat> = new Set<ExportFormat>([
   "pptx",
 ]);
 
-export function readExportPrefs(): ExportPrefs {
+function readExportPrefs(): ExportPrefs {
   try {
     const raw = JSON.parse(
       readStored(PREFS_KEY) ?? "{}"
@@ -152,11 +152,11 @@ export function readExportPrefs(): ExportPrefs {
   }
 }
 
-export function saveExportPrefs(prefs: ExportPrefs): void {
+function saveExportPrefs(prefs: ExportPrefs): void {
   writeStored(PREFS_KEY, JSON.stringify(prefs));
 }
 
-export interface FrameChoice {
+interface FrameChoice {
   id: string;
   frame: ExportFrame;
   active: boolean;
@@ -174,7 +174,7 @@ function toExport(
   };
 }
 
-export function frameRoute(frame: ExportFrame): string {
+function frameRoute(frame: ExportFrame): string {
   return `/${(frame.path ?? "").replace(/^\/+/, "")}`;
 }
 
@@ -188,7 +188,7 @@ function choiceNames(frames: CanvasFrame[]): string[] {
   );
 }
 
-export function canvasFrameChoices(
+function canvasFrameChoices(
   projectId: string,
   directionId: string | null
 ): FrameChoice[] {
@@ -211,7 +211,7 @@ export function canvasFrameChoices(
   }));
 }
 
-export function activeExportFrame(projectId: string): ExportFrame {
+function activeExportFrame(projectId: string): ExportFrame {
   return toExport(
     activeFrame(
       canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport)
@@ -219,7 +219,7 @@ export function activeExportFrame(projectId: string): ExportFrame {
   );
 }
 
-export interface ExportTarget {
+interface ExportTarget {
   projectId: string;
   directionId: string | null;
   versionId: string;
@@ -228,21 +228,19 @@ export interface ExportTarget {
   format?: ExportFormat;
 }
 
-export interface OpenExportDetail {
+interface OpenExportDetail {
   versionId?: string;
   format?: ExportFormat;
   selector?: string;
 }
 
-export function openExport(detail: OpenExportDetail = {}): void {
+function openExport(detail: OpenExportDetail = {}): void {
   globalThis.dispatchEvent(
     new CustomEvent<OpenExportDetail>(OPEN_EVENT, { detail })
   );
 }
 
-export function onOpenExport(
-  handler: (detail: OpenExportDetail) => void
-): () => void {
+function onOpenExport(handler: (detail: OpenExportDetail) => void): () => void {
   const listener = (event: Event) =>
     handler((event as CustomEvent<OpenExportDetail>).detail ?? {});
 
@@ -255,10 +253,30 @@ interface RevealBridge {
   revealExport?: () => void;
 }
 
-export function canRevealDownload(): boolean {
+function canRevealDownload(): boolean {
   return typeof desktopBridge<RevealBridge>()?.revealExport === "function";
 }
 
-export function revealDownload(): void {
+function revealDownload(): void {
   desktopBridge<RevealBridge>()?.revealExport?.();
 }
+
+export {
+  exportApi,
+  readExportPrefs,
+  saveExportPrefs,
+  frameRoute,
+  canvasFrameChoices,
+  activeExportFrame,
+  openExport,
+  onOpenExport,
+  canRevealDownload,
+  revealDownload,
+};
+export type {
+  ExportedFile,
+  ExportPrefs,
+  FrameChoice,
+  ExportTarget,
+  OpenExportDetail,
+};

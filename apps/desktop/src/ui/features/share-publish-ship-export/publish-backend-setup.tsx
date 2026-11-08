@@ -10,7 +10,7 @@ import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
 import { publishApi } from "./publish-api.js";
 
-export function usePublishBackend() {
+function usePublishBackend() {
   const [backend, setBackend] = useState<PublishBackendState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +49,7 @@ export function usePublishBackend() {
   return { backend, error, load, setup };
 }
 
-export type BackendHook = ReturnType<typeof usePublishBackend>;
+type BackendHook = ReturnType<typeof usePublishBackend>;
 
 const MARK: Record<SetupStep["status"], string> = {
   done: "✓",
@@ -99,7 +99,7 @@ function summary(backend: PublishBackendState): string {
   return "Not set up. Setup makes an R2 bucket, a D1 database and one publish Worker in your Cloudflare account. A re-run is safe.";
 }
 
-export function BackendSetup({
+function BackendSetup({
   hook,
   cli,
 }: {
@@ -191,3 +191,6 @@ export function BackendSetup({
     </div>
   );
 }
+
+export { usePublishBackend, BackendSetup };
+export type { BackendHook };

@@ -111,7 +111,7 @@ function useCloseOnToolChange(toolKey: string, close: () => void) {
   }, [toolKey, close]);
 }
 
-export function ReviewEntry(p: Props) {
+function ReviewEntry(p: Props) {
   const marker = useRef<HTMLSpanElement>(null);
   const slot = useSlot(marker);
   const [open, setOpen] = useState(false);
@@ -203,3 +203,5 @@ export function ReviewEntry(p: Props) {
     </>
   );
 }
+
+export { ReviewEntry };

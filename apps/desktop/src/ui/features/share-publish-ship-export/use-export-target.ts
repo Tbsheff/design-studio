@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { onOpenExport } from "./export-api.js";
 import type { ExportTarget, OpenExportDetail } from "./export-api.js";
 
-export function useExportTarget(
+function useExportTarget(
   projectId: string,
   direction: Direction | null,
   versions: Version[]
@@ -48,3 +48,5 @@ export function useExportTarget(
     target,
   };
 }
+
+export { useExportTarget };

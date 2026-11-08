@@ -297,7 +297,7 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
   );
 }
 
-export function FigmaImportDialog({
+function FigmaImportDialog({
   ids,
   target,
   text,
@@ -459,3 +459,5 @@ export function FigmaImportDialog({
     </dialog>
   );
 }
+
+export { FigmaImportDialog };

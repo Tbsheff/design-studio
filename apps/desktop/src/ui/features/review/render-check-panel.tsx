@@ -161,12 +161,7 @@ function hideOld(
   return { hidden, shown };
 }
 
-export function RenderCheckPanel({
-  projectId,
-  results,
-  error,
-  onClose,
-}: Props) {
+function RenderCheckPanel({ projectId, results, error, onClose }: Props) {
   const { shown, hidden } = hideOld(results, useOldKeys(projectId, results));
 
   return (
@@ -261,3 +256,5 @@ export function RenderCheckPanel({
     </div>
   );
 }
+
+export { RenderCheckPanel };

@@ -12,7 +12,7 @@ const RERUN_MS = 900;
 const SIDE_MIN = 200;
 const SIDE_MAX = 4000;
 
-export interface ReviewInput {
+interface ReviewInput {
   projectId: string;
   directionId: string | null;
   frame: CanvasFrame;
@@ -20,7 +20,7 @@ export interface ReviewInput {
   open: boolean;
 }
 
-export interface ReviewState {
+interface ReviewState {
   result: ReviewResult | null;
   stale: boolean;
   busy: boolean;
@@ -34,10 +34,7 @@ function side(value: number): number {
   return Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(value)));
 }
 
-export function frameKey(
-  directionId: string | null,
-  frame: CanvasFrame
-): string {
+function frameKey(directionId: string | null, frame: CanvasFrame): string {
   return `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
 }
 
@@ -48,7 +45,7 @@ function useLatest<T>(value: T) {
   return ref;
 }
 
-export function useReview(input: ReviewInput): ReviewState {
+function useReview(input: ReviewInput): ReviewState {
   const [result, setResult] = useState<ReviewResult | null>(null);
   const [resultKey, setResultKey] = useState<string | null>(null);
   const [changedAt, setChangedAt] = useState(0);
@@ -158,3 +155,6 @@ export function useReview(input: ReviewInput): ReviewState {
     stale,
   };
 }
+
+export { frameKey, useReview };
+export type { ReviewInput, ReviewState };

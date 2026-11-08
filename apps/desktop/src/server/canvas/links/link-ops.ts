@@ -8,6 +8,7 @@ import type {
   PrototypeLink,
 } from "@design-studio/contracts/links";
 
+import { isOwnAgentRun } from "../../platform/call-origin/index.js";
 import { ConflictError, NotFoundError } from "../../platform/errors/index.js";
 import type { CanvasToolContext } from "../tools.js";
 import { implicitLinks, keepImplicit } from "./implicit-links.js";
@@ -113,7 +114,10 @@ const toWritableContext = async (
 ): Promise<CanvasToolContext> => {
   const context = await contextOf(runtime, projectId);
 
-  if (runtime.runner.isRunning(context.project.id, context.direction.id)) {
+  if (
+    runtime.runner.isRunning(context.project.id, context.direction.id) &&
+    !isOwnAgentRun(context.project.id, context.direction.id)
+  ) {
     throw new ConflictError(
       "The agent is editing this direction; wait for the run to finish"
     );

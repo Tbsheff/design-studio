@@ -10,7 +10,6 @@ import { EditError, type EditDeps } from "./edit-guards.js";
 import type { Done, Meta, ToolSpec } from "./edit-kit.js";
 import { mcpErrorText } from "./error-copy.js";
 import { FolderError } from "./folders.js";
-import { CANVAS_LEGACY_TOOLS } from "./legacy/canvas.js";
 import { CLOUD_LEGACY_TOOLS } from "./legacy/cloud.js";
 import { COMMENTS_LEGACY_TOOLS } from "./legacy/comments.js";
 import { DEVSERVER_LEGACY_TOOLS } from "./legacy/devserver.js";
@@ -30,7 +29,6 @@ import { ACTION_EDIT_TOOLS } from "./registry.js";
 import type { ToolDef, ToolResult } from "./tool-types.js";
 
 const LEGACY_TOOLS: ToolSpec[] = [
-  ...CANVAS_LEGACY_TOOLS,
   ...CLOUD_LEGACY_TOOLS,
   ...COMMENTS_LEGACY_TOOLS,
   ...DEVSERVER_LEGACY_TOOLS,

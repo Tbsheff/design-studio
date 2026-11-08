@@ -133,24 +133,6 @@ async function withCanvas(
   }
 }
 
-export function runCanvasList(deps: Pick<StudioToolDeps, "ctx" | "canvas">) {
-  return withCanvas(deps, "canvas_list", canvasList);
-}
-
-export function runCanvasPlace(
-  deps: Pick<StudioToolDeps, "ctx" | "canvas">,
-  frames: readonly PlaceSpec[]
-) {
-  return withCanvas(deps, "canvas_place", (ctx) => canvasPlace(ctx, frames));
-}
-
-export function runCanvasPoint(
-  deps: Pick<StudioToolDeps, "ctx" | "canvas">,
-  args: { frame: string; selector?: string }
-) {
-  return withCanvas(deps, "canvas_point", (ctx) => canvasPoint(ctx, args));
-}
-
 function errorText(message: string) {
   return { content: [{ text: message, type: "text" as const }], isError: true };
 }

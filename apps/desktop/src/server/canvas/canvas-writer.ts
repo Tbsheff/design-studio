@@ -20,20 +20,52 @@ import type {
 } from "./canvas-ops.js";
 import { attemptCanvas } from "./canvas-runtime.js";
 import type { CanvasFailure } from "./canvas-runtime.js";
+import {
+  createCanvasFrame,
+  createCanvasRouteFrame,
+  deleteCanvasFrame,
+  setCanvasPoint,
+  updateCanvasFrames,
+} from "./frame-ops.js";
+import type {
+  FrameAddQuery,
+  FrameDeleteQuery,
+  FramePlaceQuery,
+  FramePointQuery,
+  FramePointed,
+  FrameRemoved,
+  FrameRouteQuery,
+} from "./frame-ops.js";
+import type { PlaceOutcome } from "./tools.js";
 
 interface CanvasWriterApi {
+  readonly createFrame: (
+    query: FrameAddQuery
+  ) => Effect.Effect<PlaceOutcome, CanvasFailure>;
   readonly createFlow: (
     query: FlowQuery
   ) => Effect.Effect<FlowResult, CanvasFailure>;
+  readonly createRouteFrame: (
+    query: FrameRouteQuery
+  ) => Effect.Effect<PlaceOutcome, CanvasFailure>;
+  readonly deleteFrame: (
+    query: FrameDeleteQuery
+  ) => Effect.Effect<FrameRemoved, CanvasFailure>;
   readonly setDoc: (
     query: CanvasDocWriteQuery
   ) => Effect.Effect<CanvasDocRead, CanvasFailure>;
   readonly setFrameState: (
     query: FrameStateQuery
   ) => Effect.Effect<FrameStateSet, CanvasFailure>;
+  readonly setPoint: (
+    query: FramePointQuery
+  ) => Effect.Effect<FramePointed, CanvasFailure>;
   readonly setPresence: (
     query: PresenceQuery
   ) => Effect.Effect<Record<string, never>, CanvasFailure>;
+  readonly updateFrames: (
+    query: FramePlaceQuery
+  ) => Effect.Effect<PlaceOutcome, CanvasFailure>;
   readonly updateFrameSession: (
     query: FrameSessionQuery
   ) => Effect.Effect<FrameStatesView, CanvasFailure>;
@@ -52,6 +84,27 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
       ) {
         return yield* attemptCanvas((runtime) => writeFlow(runtime, query));
       }),
+      createFrame: Effect.fn("CanvasWriter.createFrame")(function* run(
+        query: FrameAddQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          createCanvasFrame(runtime, query)
+        );
+      }),
+      createRouteFrame: Effect.fn("CanvasWriter.createRouteFrame")(
+        function* run(query: FrameRouteQuery) {
+          return yield* attemptCanvas((runtime) =>
+            createCanvasRouteFrame(runtime, query)
+          );
+        }
+      ),
+      deleteFrame: Effect.fn("CanvasWriter.deleteFrame")(function* run(
+        query: FrameDeleteQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          deleteCanvasFrame(runtime, query)
+        );
+      }),
       setDoc: Effect.fn("CanvasWriter.setDoc")(function* run(
         query: CanvasDocWriteQuery
       ) {
@@ -61,6 +114,13 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
         query: FrameStateQuery
       ) {
         return yield* attemptCanvas((runtime) => writeState(runtime, query));
+      }),
+      setPoint: Effect.fn("CanvasWriter.setPoint")(function* run(
+        query: FramePointQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          setCanvasPoint(runtime, query)
+        );
       }),
       setPresence: Effect.fn("CanvasWriter.setPresence")(function* run(
         query: PresenceQuery
@@ -74,6 +134,13 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
           );
         }
       ),
+      updateFrames: Effect.fn("CanvasWriter.updateFrames")(function* run(
+        query: FramePlaceQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          updateCanvasFrames(runtime, query)
+        );
+      }),
     })
   );
 }

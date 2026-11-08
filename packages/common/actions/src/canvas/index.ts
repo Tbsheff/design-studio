@@ -1,12 +1,16 @@
 // @generated
 import { applyImplicitLinkCanvas } from "./apply-implicit-link.js";
 import { createFlowCanvas } from "./create-flow.js";
+import { createFrameCanvas } from "./create-frame.js";
 import { createLinkCanvas } from "./create-link.js";
+import { createRouteFrameCanvas } from "./create-route-frame.js";
+import { deleteFrameCanvas } from "./delete-frame.js";
 import { deleteLinkCanvas } from "./delete-link.js";
 import { exportFlowCanvas } from "./export-flow.js";
 import { getDocCanvas } from "./get-doc.js";
 import { getFlowVideoCanvas } from "./get-flow-video.js";
 import { inspectLinkInteractionCanvas } from "./inspect-link-interaction.js";
+import { inspectCanvas } from "./inspect.js";
 import { listFlowLinksCanvas } from "./list-flow-links.js";
 import { listFlowParamsCanvas } from "./list-flow-params.js";
 import { listFrameStatesCanvas } from "./list-frame-states.js";
@@ -15,19 +19,25 @@ import { listLinksCanvas } from "./list-links.js";
 import { setDocCanvas } from "./set-doc.js";
 import { setFrameStateCanvas } from "./set-frame-state.js";
 import { setLinkInteractionCanvas } from "./set-link-interaction.js";
+import { setPointCanvas } from "./set-point.js";
 import { setPresenceCanvas } from "./set-presence.js";
 import { setStartLinkCanvas } from "./set-start-link.js";
 import { updateFrameSessionCanvas } from "./update-frame-session.js";
+import { updateFrameCanvas } from "./update-frame.js";
 import { updateLinkCanvas } from "./update-link.js";
 
 const CanvasActions = {
   applyImplicitLinkCanvas,
   createFlowCanvas,
+  createFrameCanvas,
   createLinkCanvas,
+  createRouteFrameCanvas,
+  deleteFrameCanvas,
   deleteLinkCanvas,
   exportFlowCanvas,
   getDocCanvas,
   getFlowVideoCanvas,
+  inspectCanvas,
   inspectLinkInteractionCanvas,
   listFlowLinksCanvas,
   listFlowParamsCanvas,
@@ -37,8 +47,10 @@ const CanvasActions = {
   setDocCanvas,
   setFrameStateCanvas,
   setLinkInteractionCanvas,
+  setPointCanvas,
   setPresenceCanvas,
   setStartLinkCanvas,
+  updateFrameCanvas,
   updateFrameSessionCanvas,
   updateLinkCanvas,
 } as const;

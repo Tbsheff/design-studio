@@ -4,102 +4,18 @@ import {
   toDefaulted,
   toLooseTool,
   toOptional,
-  toOptionalFlag,
   toOptionalInt,
   toOptionalText,
   toTrimmedText,
 } from "../agent-tools/index.js";
 
-const X_KEY = "x";
-const Y_KEY = "y";
 const FRAME_REF_MAX = 60;
 const FRAME_LABEL_MAX = 40;
-const FRAME_PATH_MAX = 200;
-const FRAME_GAP_MAX = 2000;
-const FRAME_SIZE_MIN = 200;
-const FRAME_SIZE_MAX = 4000;
 const FRAME_LIST_MAX = 12;
-const POINT_SELECTOR_MAX = 400;
 const ROUTE_MAX = 300;
 const TWEAK_CONTROLS_MAX = 12;
 
-const toTextLimit = (max: number): Schema.String =>
-  Schema.String.check(Schema.isMaxLength(max));
-
 const jsonRecord = Schema.Record(Schema.String, Schema.Json);
-
-const frameRefField = toTrimmedText(1, FRAME_REF_MAX).annotate({
-  description: "Frame id or @label.",
-});
-
-const frameSizes = ["desktop", "tablet", "mobile"] as const;
-
-const placeFrameFields = {
-  [X_KEY]: toOptional(
-    Schema.Int,
-    "Absolute canvas x. Overrides the relative x."
-  ),
-  [Y_KEY]: toOptional(
-    Schema.Int,
-    "Absolute canvas y. Overrides the relative y."
-  ),
-  above: toOptionalText(1, FRAME_REF_MAX, "Put the frame above this frame."),
-  below: toOptionalText(
-    1,
-    FRAME_REF_MAX,
-    "Put the frame under this frame (id or @label), left edges lined up."
-  ),
-  frame: toOptionalText(
-    1,
-    FRAME_REF_MAX,
-    "Id or @label of a frame to move or change. Leave out to add a new frame."
-  ),
-  gap: toOptionalInt(
-    0,
-    FRAME_GAP_MAX,
-    "Space between the frames in px. Default 80."
-  ),
-  height: toOptionalInt(FRAME_SIZE_MIN, FRAME_SIZE_MAX, "Frame height in px."),
-  hidden: toOptionalFlag("Hide the frame."),
-  label: toOptional(
-    toTextLimit(FRAME_LABEL_MAX),
-    'Short name shown on the frame label, for example "Empty" or "Pricing".'
-  ),
-  leftOf: toOptionalText(
-    1,
-    FRAME_REF_MAX,
-    "Put the frame to the left of this frame."
-  ),
-  path: toOptional(
-    toTextLimit(FRAME_PATH_MAX),
-    'Page the frame shows, relative to the project root, for example "states/empty.html". Empty string = the entry page.'
-  ),
-  rightOf: toOptionalText(
-    1,
-    FRAME_REF_MAX,
-    "Put the frame to the right of this frame, top edges lined up."
-  ),
-  viewport: toOptional(
-    Schema.Literals(frameSizes),
-    "Frame size preset: desktop 1440x900, tablet 768x1024, mobile 390x844."
-  ),
-  width: toOptionalInt(FRAME_SIZE_MIN, FRAME_SIZE_MAX, "Frame width in px."),
-};
-
-const placeFrameList = Schema.Array(Schema.Struct(placeFrameFields)).check(
-  Schema.isMinLength(1),
-  Schema.isMaxLength(FRAME_LIST_MAX)
-);
-
-const canvasPlaceInput = toLooseTool({ frames: placeFrameList });
-
-const canvasPointInput = toLooseTool({
-  frame: frameRefField,
-  selector: toOptional(
-    toTextLimit(POINT_SELECTOR_MAX),
-    "CSS selector of the element."
-  ),
-});
 
 const doctorInput = toLooseTool({
   fresh: Schema.optionalKey(Schema.Boolean),
@@ -172,12 +88,4 @@ const HELP_FIELDS = {
 
 const HELP_INPUT = toLooseTool(HELP_FIELDS);
 
-export {
-  HELP_INPUT,
-  SCREENSHOT_TOOL,
-  TARGET_TOOL,
-  TWEAKS_TOOL,
-  canvasPlaceInput,
-  canvasPointInput,
-  doctorInput,
-};
+export { HELP_INPUT, SCREENSHOT_TOOL, TARGET_TOOL, TWEAKS_TOOL, doctorInput };

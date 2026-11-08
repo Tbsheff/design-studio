@@ -13,16 +13,9 @@ const SET_FRAME_SESSION_TOOL = "mcp__studio__set_frame_session";
 const LIST_ROUTE_LINKS_TOOL = "mcp__studio__list_route_links";
 const ADD_FLOW_TOOL = "mcp__studio__add_flow";
 
-const CANVAS_AGENT_TOOLS: readonly string[] = [
-  CANVAS_LIST_TOOL,
-  CANVAS_PLACE_TOOL,
-  CANVAS_POINT_TOOL,
-];
-
 export {
   ADD_FLOW_TOOL,
   ADD_LINK_TOOL,
-  CANVAS_AGENT_TOOLS,
   CANVAS_LIST_TOOL,
   CANVAS_PLACE_TOOL,
   CANVAS_POINT_TOOL,

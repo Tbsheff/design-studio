@@ -21,12 +21,6 @@ export const TOOL_SHORT = {
   arrange:
     "Align, distribute or tidy sibling elements by writing the parent auto layout. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
-  canvas_list:
-    "Read only. Canvas frames (id, label, page, size, position), the selection, the live frame and frames in view.",
-  canvas_place:
-    "Add or move canvas frames: { frames: [...] } in order, placed below / rightOf / leftOf / above a frame id or @label. Returns overlap warnings.",
-  canvas_point:
-    "Show the user one frame, and select an element in it when you pass a selector.",
   clear_text:
     "Remove the plain text inside an element and keep its child elements.",
   compare_to_reference:
@@ -102,12 +96,6 @@ export const TOOL_HELP: Record<
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
-  canvas_list:
-    "List the frames on the studio canvas: id, label, page, size and position of each frame, which directions use the lo-fi look, what the user has selected, which frame is live and which frames are in view. Call it before you place or point at frames.",
-  canvas_place:
-    "Add or move frames on the studio canvas. Pass { frames: [...] }, applied in order, so a later frame can use the @label of an earlier one. Each item: frame (id or @label to move; leave out to add), label, path (the page it shows), viewport or width/height, and one of below / rightOf / leftOf / above (another frame id or @label) with gap (default 80), or absolute x/y. With no placement a new frame goes to the right of all frames. Returns the placed frames and a warnings list when frames overlap.",
-  canvas_point:
-    'Show the user one frame: the studio makes the frame live, selects the element when you pass a CSS selector for an element inside that frame, and scrolls and zooms the canvas to it. Use it to say "this one" at the end of a reply.',
   clear_text:
     "Remove the plain text inside an element and keep its child elements, such as placeholder text next to children you inserted. On a library component it clears the text where the page uses it. Text from a prop or a { } expression stays.",
   compare_to_reference: COMPARE_REFERENCE_DESCRIPTION,

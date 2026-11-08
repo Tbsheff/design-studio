@@ -12,11 +12,29 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/flow",
   },
+  createFrameCanvas: {
+    id: "canvas.createFrame",
+    invalidates: ["canvas.inspect"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/frames",
+  },
   createLinkCanvas: {
     id: "canvas.createLink",
     invalidates: ["canvas.listImplicitLinks", "canvas.listLinks"],
     method: "POST",
     path: "/api/projects/:projectId/links",
+  },
+  createRouteFrameCanvas: {
+    id: "canvas.createRouteFrame",
+    invalidates: ["canvas.inspect"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/route-frames",
+  },
+  deleteFrameCanvas: {
+    id: "canvas.deleteFrame",
+    invalidates: ["canvas.inspect"],
+    method: "DELETE",
+    path: "/api/projects/:projectId/canvas/frames",
   },
   deleteLinkCanvas: {
     id: "canvas.deleteLink",
@@ -41,6 +59,12 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/flow/video",
+  },
+  inspectCanvas: {
+    id: "canvas.inspect",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/canvas/frames",
   },
   inspectLinkInteractionCanvas: {
     id: "canvas.inspectLinkInteraction",
@@ -100,6 +124,12 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/links/interaction",
   },
+  setPointCanvas: {
+    id: "canvas.setPoint",
+    invalidates: ["canvas.inspect"],
+    method: "POST",
+    path: "/api/projects/:projectId/canvas/point",
+  },
   setPresenceCanvas: {
     id: "canvas.setPresence",
     invalidates: [],
@@ -111,6 +141,12 @@ const routes = {
     invalidates: ["canvas.listImplicitLinks", "canvas.listLinks"],
     method: "PUT",
     path: "/api/projects/:projectId/links/start",
+  },
+  updateFrameCanvas: {
+    id: "canvas.updateFrame",
+    invalidates: ["canvas.inspect"],
+    method: "PUT",
+    path: "/api/projects/:projectId/canvas/frames",
   },
   updateFrameSessionCanvas: {
     id: "canvas.updateFrameSession",

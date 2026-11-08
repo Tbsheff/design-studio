@@ -1,7 +1,7 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
 import type { FormEvent, ReactElement } from "react";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 
 import { errorText } from "../../api.js";
 import { COPY } from "./copy.js";
@@ -166,6 +166,11 @@ const DeletePackDialog = ({
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
 
+  const handleRun = useCallback(
+    () => void action.run(onDelete),
+    [action, onDelete]
+  );
+
   return (
     <dialog
       ref={dialog.ref}
@@ -195,7 +200,7 @@ const DeletePackDialog = ({
         <button
           type="button"
           className="btn danger"
-          onClick={() => void action.run(onDelete)}
+          onClick={handleRun}
           disabled={action.busy}
         >
           {action.busy && "Deleting…"}
@@ -217,6 +222,16 @@ const ImportConflictDialog = ({
 }) => {
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+
+  const handleRun2 = useCallback(
+    () => void action.run(() => onChoose("copy")),
+    [action, onChoose]
+  );
+
+  const handleRun3 = useCallback(
+    () => void action.run(() => onChoose("replace")),
+    [action, onChoose]
+  );
 
   return (
     <dialog
@@ -246,7 +261,7 @@ const ImportConflictDialog = ({
         <button
           type="button"
           className="btn"
-          onClick={() => void action.run(() => onChoose("copy"))}
+          onClick={handleRun2}
           disabled={action.busy}
         >
           {COPY.textKeepBoth}
@@ -255,7 +270,7 @@ const ImportConflictDialog = ({
           type="button"
           className="btn primary"
           data-autofocus
-          onClick={() => void action.run(() => onChoose("replace"))}
+          onClick={handleRun3}
           disabled={action.busy}
         >
           {COPY.textReplace}

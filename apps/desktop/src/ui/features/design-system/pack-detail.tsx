@@ -5,7 +5,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useCallback } from "react";
 
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
@@ -136,6 +136,46 @@ const ActionBar = ({
   const user = pack.source === "user";
   const usable = !pack.draft;
 
+  const handleRun = useCallback(
+    () => run(() => actions.onApply!(pack)),
+    [actions.onApply, pack, run]
+  );
+
+  const handleOnUseInNew = useCallback(
+    () => actions.onUseInNew(pack),
+    [actions, pack]
+  );
+
+  const handleRun2 = useCallback(
+    () => run(() => actions.onOpenEditor(pack)),
+    [actions, pack, run]
+  );
+
+  const handleRun3 = useCallback(
+    () => run(() => actions.onDuplicate(pack)),
+    [actions, pack, run]
+  );
+
+  const handleRun4 = useCallback(
+    () => run(() => actions.onDuplicate(pack)),
+    [actions, pack, run]
+  );
+
+  const handleOnRename = useCallback(
+    () => actions.onRename(pack),
+    [actions, pack]
+  );
+
+  const handleRun5 = useCallback(
+    () => run(() => actions.onExport(pack)),
+    [actions, pack, run]
+  );
+
+  const handleOnDelete = useCallback(
+    () => actions.onDelete(pack),
+    [actions, pack]
+  );
+
   return (
     <div className="lib-actions" aria-label={COPY.labelActions} role="group">
       {actions.onApply && usable && (
@@ -143,7 +183,7 @@ const ActionBar = ({
           type="button"
           className="btn primary small"
           disabled={busy}
-          onClick={() => run(() => actions.onApply!(pack))}
+          onClick={handleRun}
         >
           {COPY.textApplyToCurrentProject}
         </button>
@@ -153,7 +193,7 @@ const ActionBar = ({
           type="button"
           className={`btn small ${(!actions.onApply && "primary") || ""}`}
           disabled={busy}
-          onClick={() => actions.onUseInNew(pack)}
+          onClick={handleOnUseInNew}
         >
           {COPY.textUseInNewProject}
         </button>
@@ -163,7 +203,7 @@ const ActionBar = ({
           type="button"
           className="btn small"
           disabled={busy}
-          onClick={() => run(() => actions.onOpenEditor(pack))}
+          onClick={handleRun2}
         >
           {COPY.textOpenInEditor}
         </button>
@@ -173,7 +213,7 @@ const ActionBar = ({
           type="button"
           className="btn small"
           disabled={busy}
-          onClick={() => run(() => actions.onDuplicate(pack))}
+          onClick={handleRun3}
         >
           {COPY.textMakeACopyTo}
         </button>
@@ -183,7 +223,7 @@ const ActionBar = ({
           type="button"
           className="btn small"
           disabled={busy}
-          onClick={() => run(() => actions.onDuplicate(pack))}
+          onClick={handleRun4}
         >
           {COPY.textDuplicate}
         </button>
@@ -193,7 +233,7 @@ const ActionBar = ({
           type="button"
           className="btn small"
           disabled={busy}
-          onClick={() => actions.onRename(pack)}
+          onClick={handleOnRename}
         >
           {COPY.textRename}
         </button>
@@ -202,7 +242,7 @@ const ActionBar = ({
         type="button"
         className="btn small has-icon"
         disabled={busy}
-        onClick={() => run(() => actions.onExport(pack))}
+        onClick={handleRun5}
       >
         <Icon name="download" size={14} />
         {COPY.textExport}
@@ -212,7 +252,7 @@ const ActionBar = ({
           type="button"
           className="btn ghost danger small"
           disabled={busy}
-          onClick={() => actions.onDelete(pack)}
+          onClick={handleOnDelete}
         >
           {COPY.textDelete}
         </button>

@@ -1,6 +1,6 @@
 import { Icon, useModalDialog } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 
 import { errorText } from "../../api.js";
 import { uiStore } from "../../platform/storage.js";
@@ -50,6 +50,21 @@ const ChangePackDialog = ({
     });
   };
 
+  const handleSet = useCallback(
+    () =>
+      uiStore.set({
+        activeProjectId: null,
+        libraryFrom: from,
+        screen: "design-systems",
+      }),
+    [from]
+  );
+
+  const handleSet2 = useCallback(
+    () => uiStore.set({ activeProjectId: null, screen: "new-design-system" }),
+    []
+  );
+
   return (
     <dialog
       ref={dialog.ref}
@@ -95,13 +110,7 @@ const ChangePackDialog = ({
           type="button"
           className="btn ghost"
           disabled={busy}
-          onClick={() =>
-            uiStore.set({
-              activeProjectId: null,
-              libraryFrom: from,
-              screen: "design-systems",
-            })
-          }
+          onClick={handleSet}
         >
           {COPY.textManage}
         </button>
@@ -109,9 +118,7 @@ const ChangePackDialog = ({
           type="button"
           className="btn ghost has-icon"
           disabled={busy}
-          onClick={() =>
-            uiStore.set({ activeProjectId: null, screen: "new-design-system" })
-          }
+          onClick={handleSet2}
         >
           <Icon name="plus" size={14} />
           {COPY.textNewDesignSystem2}
@@ -160,6 +167,18 @@ const SavePackDialog = ({
     });
   };
 
+  const handleSetAsNew = useCallback(() => {
+    setAsNew(false);
+    setName(defaultName);
+  }, [defaultName]);
+
+  const handleSetAsNew2 = useCallback(() => {
+    setAsNew(true);
+    setName(
+      `${defaultName.slice(0, NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`
+    );
+  }, [defaultName]);
+
   return (
     <dialog
       ref={dialog.ref}
@@ -205,10 +224,7 @@ const SavePackDialog = ({
                   type="radio"
                   name="save-as"
                   checked={!asNew}
-                  onChange={() => {
-                    setAsNew(false);
-                    setName(defaultName);
-                  }}
+                  onChange={handleSetAsNew}
                 />
                 {COPY.textUpdate}
                 {defaultName}
@@ -218,12 +234,7 @@ const SavePackDialog = ({
                   type="radio"
                   name="save-as"
                   checked={asNew}
-                  onChange={() => {
-                    setAsNew(true);
-                    setName(
-                      `${defaultName.slice(0, NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`
-                    );
-                  }}
+                  onChange={handleSetAsNew2}
                 />
                 {COPY.textSaveAsANew}
               </label>

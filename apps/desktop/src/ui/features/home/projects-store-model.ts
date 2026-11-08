@@ -14,10 +14,10 @@ let state: ProjectsState = { error: null, projects: null };
 let inflight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
-function setProjectsState(next: ProjectsState): void {
+const setProjectsState = (next: ProjectsState): void => {
   state = next;
   listeners.forEach((listener) => listener());
-}
+};
 
 const runProjectsFetch = async (): Promise<void> => {
   try {
@@ -30,17 +30,17 @@ const runProjectsFetch = async (): Promise<void> => {
   }
 };
 
-function runProjectsLoad(): Promise<void> {
+const runProjectsLoad = (): Promise<void> => {
   inflight ??= runProjectsFetch();
 
   return inflight;
-}
+};
 
-function update(change: (list: Project[]) => Project[]): void {
+const update = (change: (list: Project[]) => Project[]): void => {
   if (state.projects) {
     setProjectsState({ ...state, projects: change(state.projects) });
   }
-}
+};
 
 const projectsApi = {
   duplicate: async (project: Project) => {
@@ -56,7 +56,13 @@ const projectsApi = {
   load: runProjectsLoad,
   rename: async (project: Project, name: string) => {
     update((list) =>
-      list.map((item) => (item.id === project.id ? { ...item, name } : item))
+      list.map((item) => {
+        if (item.id === project.id) {
+          return { ...item, name };
+        }
+
+        return item;
+      })
     );
 
     try {

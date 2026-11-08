@@ -42,7 +42,7 @@ const HOME_REASON_ID = "home-send-reason";
 
 const EMPTY_PROMPT = "Describe the design first";
 
-function setPromptFocus(home: HTMLElement | null, atEnd = false): void {
+const setPromptFocus = (home: HTMLElement | null, atEnd = false): void => {
   home?.scrollTo({ behavior: "smooth", top: 0 });
   globalThis.requestAnimationFrame(() => {
     const area = document.querySelector<HTMLTextAreaElement>(
@@ -55,20 +55,20 @@ function setPromptFocus(home: HTMLElement | null, atEnd = false): void {
       area.setSelectionRange(area.value.length, area.value.length);
     }
   });
-}
+};
 
-function setFocusIn(selector: string): void {
+const setFocusIn = (selector: string): void => {
   globalThis.setTimeout(() => {
     const el = document.querySelector<HTMLElement>(selector);
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
     el?.focus();
   }, 60);
-}
+};
 
-function getFolderLabel(
+const getFolderLabel = (
   list: WorkspaceList | null,
   location: string | null
-): string {
+): string => {
   const folders = list?.folders ?? [];
 
   const match =
@@ -76,26 +76,30 @@ function getFolderLabel(
     folders.find((folder) => folder.default);
 
   return match?.label ?? "Design Studio";
-}
+};
 
-function getModelSummary(model: string, count: number): string {
+const getModelSummary = (model: string, count: number): string => {
   const extra = count > 1 ? ` · ${count}×` : "";
 
   return `${modelLabel(model).replace(/^Claude /u, "")}${extra}`;
-}
+};
 
-function getHomeSendBlocker(
+const getHomeSendBlocker = (
   busy: Busy,
   prompt: string,
   asking: boolean,
   chip: AppChip | null
-): string | null {
+): string | null => {
   if (busy !== null) {
     return "Working on it";
   }
 
   if (chip) {
-    return chip.isChecking ? "Checking the folder" : chipProblem(chip);
+    if (chip.isChecking) {
+      return "Checking the folder";
+    }
+
+    return chipProblem(chip);
   }
 
   if (asking) {
@@ -107,7 +111,7 @@ function getHomeSendBlocker(
   }
 
   return null;
-}
+};
 
 interface HomeCreateInput {
   readonly prompt: string;
@@ -121,7 +125,7 @@ interface HomeCreateInput {
   readonly references: ReferenceDraft[];
 }
 
-async function createFromHome(input: HomeCreateInput): Promise<Project> {
+const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
   const extra = {
     ...(input.designMd.trim() ? { designMd: input.designMd } : {}),
     ...(input.packId ? { packId: input.packId } : {}),
@@ -173,41 +177,43 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
   }
 
   return project;
-}
+};
 
-function hasFiles(event: DragEvent): boolean {
-  return [...event.dataTransfer.types].includes("Files");
-}
+const hasFiles = (event: DragEvent): boolean =>
+  [...event.dataTransfer.types].includes("Files");
 
-function getPromptPlaceholder(
+const getPromptPlaceholder = (
   chip: AppChip | null,
   empty: boolean
-): string | null {
+): string | null => {
   if (chip) {
     return `Describe a change to ${chipName(chip)}, or press Return to open it`;
   }
 
-  return empty ? PLACEHOLDER : null;
-}
+  if (empty) {
+    return PLACEHOLDER;
+  }
 
-function getReasonId(blocker: string | null): string | undefined {
-  return blocker && blocker !== EMPTY_PROMPT ? HOME_REASON_ID : undefined;
-}
+  return null;
+};
 
-function isEmpty(projects: Project[] | null): boolean {
-  return (
-    projects !== null &&
-    projects.filter((project) => !project.designSystemDeleted).length === 0
-  );
-}
+const getReasonId = (blocker: string | null): string | undefined => {
+  if (blocker && blocker !== EMPTY_PROMPT) {
+    return HOME_REASON_ID;
+  }
 
-function getHome(workspaces: WorkspaceList | null): string | null {
-  return workspaces?.homeDir ?? null;
-}
+  return undefined;
+};
 
-function toShortHome(target: string, homeDir: string | null): string {
-  return shortenHome(target.replace(/^\/private(?=\/)/u, ""), homeDir);
-}
+const isEmpty = (projects: Project[] | null): boolean =>
+  projects !== null &&
+  projects.filter((project) => !project.designSystemDeleted).length === 0;
+
+const getHome = (workspaces: WorkspaceList | null): string | null =>
+  workspaces?.homeDir ?? null;
+
+const toShortHome = (target: string, homeDir: string | null): string =>
+  shortenHome(target.replace(/^\/private(?=\/)/u, ""), homeDir);
 
 interface DesignCount {
   readonly value: number;

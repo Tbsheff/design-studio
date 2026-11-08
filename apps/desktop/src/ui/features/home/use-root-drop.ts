@@ -3,10 +3,10 @@ import type { DragEvent } from "react";
 
 import { hasFiles } from "./home-model.js";
 
-function useRootDrop(
+const useRootDrop = (
   takeDrop: (data: DataTransfer) => boolean,
   setFormError: (message: string | null) => void
-) {
+) => {
   const [windowDrag, setWindowDrag] = useState(false);
 
   const rootDrop = {
@@ -39,6 +39,6 @@ function useRootDrop(
   };
 
   return { rootDrop, windowDrag };
-}
+};
 
 export { useRootDrop };

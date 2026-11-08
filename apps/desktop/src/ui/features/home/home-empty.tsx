@@ -14,13 +14,17 @@ const MAX_FOUND = 6;
 const MAX_STARTERS = 4;
 const KIND_TONE = { html: "html", next: "next", vite: "vite" } as const;
 
-function getFoundBadge(app: FoundApp): string {
+const getFoundBadge = (app: FoundApp): string => {
   const base = FOUND_KIND_LABEL[app.kind];
 
-  return app.kind === "next" && app.apps.length > 1 ? `${base} monorepo` : base;
-}
+  if (app.kind === "next" && app.apps.length > 1) {
+    return `${base} monorepo`;
+  }
 
-function useFound(): FoundApps | null | "error" {
+  return base;
+};
+
+const useFound = (): FoundApps | null | "error" => {
   const [found, setFound] = useState<FoundApps | null | "error">(null);
   useEffect(() => {
     let live = true;
@@ -47,7 +51,7 @@ function useFound(): FoundApps | null | "error" {
   }, []);
 
   return found;
-}
+};
 
 const FoundList = ({
   onUse,

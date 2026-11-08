@@ -54,7 +54,7 @@ import { useOpenFlows } from "./use-open-flows.js";
 import { useRootDrop } from "./use-root-drop.js";
 import { locationFor, useWorkspaces } from "./use-workspaces.js";
 
-function useHomeScreen(onOpen: (projectId: string) => void) {
+const useHomeScreen = (onOpen: (projectId: string) => void) => {
   const [prompt, setPrompt] = useState("");
   const [kind, setKind] = useState<ProjectKind>("html");
   const [busy, setBusy] = useState<Busy>(null);
@@ -431,6 +431,6 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     windowDrag,
     workspaces,
   };
-}
+};
 
 export { useHomeScreen };

@@ -1,133 +1,24 @@
-import type { TrashItem } from "@design-studio/contracts";
-import { Icon, useModalDialog } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
+import { useRef } from "react";
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
 
-import { api, errorText, json } from "../../api.js";
-import { formatRelative, formatTime } from "../../domain/format.js";
-import { getBlob } from "../../platform/http.js";
+import { ConfirmHead } from "./confirm-head.js";
 import { copy } from "./copy.js";
+import { TrashBody } from "./trash-body.js";
+import { TrashFoot } from "./trash-foot.js";
+import { TrashHead } from "./trash-head.js";
+import { toConfirmAction, toConfirmTitle } from "./trash-model.js";
+import type { Confirm } from "./trash-model.js";
+import { useTrashActions } from "./use-trash-actions.js";
+import { useTrashList } from "./use-trash-list.js";
 
-type Confirm =
-  | { readonly kind: "one"; readonly item: TrashItem }
-  | {
-      readonly kind: "all";
-      readonly count: number;
-      readonly shouldFolderStay: boolean;
-    };
-
-const trashApi = {
-  empty: () => json<{ readonly deleted: number }>("DELETE", "/api/trash"),
-  list: () => json<TrashItem[]>("GET", "/api/trash"),
-  remove: (trashId: string) =>
-    json<{ readonly deleted: number }>(
-      "DELETE",
-      `/api/trash/${encodeURIComponent(trashId)}`
-    ),
-};
-
-function useTrashThumb(item: TrashItem): string | null {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (!item.thumbnail) {
-      return;
-    }
-
-    let made: string | null = null;
-    let live = true;
-
-    const show = async (): Promise<void> => {
-      try {
-        const blob = await getBlob(
-          `/api/trash/${encodeURIComponent(item.trashId)}/thumbnail`
-        );
-
-        if (!blob || !live) {
-          return;
-        }
-
-        made = URL.createObjectURL(blob);
-        setUrl(made);
-      } catch {
-        made = null;
-      }
-    };
-
-    void show();
-
-    return (): void => {
-      live = false;
-
-      if (made) {
-        URL.revokeObjectURL(made);
-      }
-    };
-  }, [item.trashId, item.thumbnail]);
-
-  return url;
-}
-
-const TrashRow = ({
-  item,
-  isBusy,
-  onRestore,
-  onDelete,
-}: {
-  readonly item: TrashItem;
+interface ConfirmDeleteProps {
+  readonly confirm: Confirm;
   readonly isBusy: boolean;
-  readonly onRestore: () => void;
-  readonly onDelete: () => void;
-}): ReactElement => {
-  const thumb = useTrashThumb(item);
-
-  return (
-    <li className="trash-row" data-trash-id={item.trashId}>
-      <div className="trash-thumb" aria-hidden="true">
-        {thumb ? (
-          <img src={thumb} alt="" draggable={false} />
-        ) : (
-          <Icon name="doc" size={16} />
-        )}
-      </div>
-      <div className="trash-text">
-        <span className="trash-name" title={item.name}>
-          {item.name}
-        </span>
-        <span className="trash-meta">
-          <time
-            dateTime={new Date(item.trashedAt).toISOString()}
-            data-tip={formatTime(item.trashedAt)}
-          >
-            {copy.deleted}
-            {formatRelative(item.trashedAt).toLowerCase()}
-          </time>
-          {item.folderStays && <span>{copy.filesInYourFolderStay}</span>}
-        </span>
-      </div>
-      <div className="trash-actions">
-        <button
-          type="button"
-          className="btn small has-icon"
-          onClick={onRestore}
-          disabled={isBusy}
-          aria-label={`Restore ${item.name}`}
-        >
-          <Icon name="restore" size={14} />
-          {copy.restore}
-        </button>
-        <button
-          type="button"
-          className="btn small ghost danger"
-          onClick={onDelete}
-          disabled={isBusy}
-          aria-label={`Delete ${item.name} forever`}
-        >
-          {copy.deleteForever}
-        </button>
-      </div>
-    </li>
-  );
-};
+  readonly error: string | null;
+  readonly onCancel: () => void;
+  readonly onConfirm: () => void;
+}
 
 const ConfirmDelete = ({
   confirm,
@@ -135,29 +26,16 @@ const ConfirmDelete = ({
   error,
   onCancel,
   onConfirm,
-}: {
-  readonly confirm: Confirm;
-  readonly isBusy: boolean;
-  readonly error: string | null;
-  readonly onCancel: () => void;
-  readonly onConfirm: () => void;
-}): ReactElement => {
-  const dialog = useModalDialog(() => (isBusy ? false : onCancel()));
+}: ConfirmDeleteProps): ReactElement => {
+  const dialog = useModalDialog(() => {
+    if (isBusy) {
+      return false;
+    }
 
-  const title =
-    confirm.kind === "one"
-      ? `Delete “${confirm.item.name}” forever?`
-      : "Empty the trash?";
+    return onCancel();
+  });
 
-  const what =
-    confirm.kind === "one"
-      ? "Its versions, runs and comments leave the app. You cannot undo this."
-      : `${confirm.count === 1 ? "1 project" : `${confirm.count} projects`} and their versions, runs and comments leave the app. You cannot undo this.`;
-
-  const folders =
-    confirm.kind === "one"
-      ? confirm.item.folderStays
-      : confirm.shouldFolderStay;
+  const title = toConfirmTitle(confirm);
 
   return (
     <dialog
@@ -166,15 +44,7 @@ const ConfirmDelete = ({
       aria-label={title}
       onMouseDown={dialog.onMouseDown}
     >
-      <div className="modal-head">
-        <div className="titles">
-          <h2>{title}</h2>
-          <p>
-            {what}
-            {folders ? " Files in your folder stay." : ""}
-          </p>
-        </div>
-      </div>
+      <ConfirmHead confirm={confirm} title={title} />
       {error && (
         <div className="modal-body">
           <div className="alert error small" role="alert">
@@ -198,115 +68,42 @@ const ConfirmDelete = ({
           onClick={onConfirm}
           disabled={isBusy}
         >
-          {isBusy
-            ? "Deleting…"
-            : confirm.kind === "one"
-              ? "Delete forever"
-              : "Empty trash"}
+          {toConfirmAction(confirm, isBusy)}
         </button>
       </div>
     </dialog>
   );
 };
 
-export default function HomeTrash({
-  onClose,
-  onRestored,
-}: {
+interface HomeTrashProps {
   readonly onClose: () => void;
   readonly onRestored: () => void;
-}): ReactElement {
-  const [items, setItems] = useState<TrashItem[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<Confirm | null>(null);
-  const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [note, setNote] = useState("");
-  const dialog = useModalDialog(() => (confirm ? false : onClose()));
+}
 
-  const load = (): void => {
-    setError(null);
+const HomeTrash = ({ onClose, onRestored }: HomeTrashProps): ReactElement => {
+  const firstRestoreRef = useRef<HTMLButtonElement>(null);
+  const doneRef = useRef<HTMLButtonElement>(null);
+  const list = useTrashList();
 
-    const read = async (): Promise<void> => {
-      try {
-        setItems(await trashApi.list());
-      } catch (failure: unknown) {
-        setError(errorText(failure));
-      }
-    };
+  const {
+    busy,
+    confirm,
+    confirmError,
+    note,
+    restore,
+    askOne,
+    askAll,
+    cancelConfirm,
+    confirmDelete,
+  } = useTrashActions({ doneRef, firstRestoreRef, list, onRestored });
 
-    void read();
-  };
-
-  useEffect(load, []);
-
-  const drop = (trashId: string): void =>
-    setItems(
-      (list) => list?.filter((entry) => entry.trashId !== trashId) ?? list
-    );
-
-  const restore = async (item: TrashItem): Promise<void> => {
-    setBusy(item.trashId);
-    setError(null);
-
-    try {
-      await api.restoreProject(item.trashId);
-      drop(item.trashId);
-      setNote(`Restored “${item.name}”.`);
-      onRestored();
-      globalThis.requestAnimationFrame(() =>
-        dialog.ref.current
-          ?.querySelector<HTMLButtonElement>(
-            ".trash-row .btn:not(:disabled), .modal-foot .btn:last-child"
-          )
-          ?.focus()
-      );
-    } catch (failure) {
-      setError(`Could not restore “${item.name}”: ${errorText(failure)}`);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const confirmDelete = async (): Promise<void> => {
-    if (!confirm) {
-      return;
+  const dialog = useModalDialog(() => {
+    if (confirm) {
+      return false;
     }
 
-    setBusy("confirm");
-    setConfirmError(null);
-
-    try {
-      if (confirm.kind === "one") {
-        await trashApi.remove(confirm.item.trashId);
-        drop(confirm.item.trashId);
-        setNote(`Deleted “${confirm.item.name}” forever.`);
-      } else {
-        const { deleted } = await trashApi.empty();
-        setItems([]);
-        setNote(
-          deleted === 1
-            ? "Deleted 1 project forever."
-            : `Deleted ${deleted} projects forever.`
-        );
-      }
-
-      setConfirm(null);
-      globalThis.requestAnimationFrame(() =>
-        dialog.ref.current
-          ?.querySelector<HTMLButtonElement>(
-            ".trash-row .btn:not(:disabled), .modal-foot .btn:last-child"
-          )
-          ?.focus()
-      );
-    } catch (failure) {
-      setConfirmError(errorText(failure));
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const count = items?.length ?? 0;
+    return onClose();
+  });
 
   return (
     <dialog
@@ -315,96 +112,37 @@ export default function HomeTrash({
       aria-labelledby="trash-title"
       onMouseDown={dialog.onMouseDown}
     >
-      <div className="modal-head">
-        <div className="titles">
-          <h2 id="trash-title">{copy.trash}</h2>
-          <p>{copy.restoreADeletedProjectOr}</p>
-        </div>
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={copy.closeTrash}
-          onClick={onClose}
-        >
-          <Icon name="close" />
-        </button>
-      </div>
-      <div className="modal-body trash-body">
-        {error && (
-          <div className="alert error small trash-error" role="alert">
-            <span>{error}</span>
-            <button type="button" className="btn small" onClick={load}>
-              {copy.retry}
-            </button>
-          </div>
-        )}
-        {items !== null && items.length === 0 && (
-          <div className="trash-empty">
-            <Icon name="trash" size={16} />
-            <strong>{copy.trashIsEmpty}</strong>
-            <span>{copy.deletedProjectsStayHereUntil}</span>
-          </div>
-        )}
-        {items !== null && items.length > 0 && (
-          <ul className="trash-list" aria-label={copy.deletedProjects}>
-            {items.map((item) => (
-              <TrashRow
-                key={item.trashId}
-                item={item}
-                isBusy={busy !== null}
-                onRestore={() => restore(item)}
-                onDelete={() => {
-                  setConfirmError(null);
-                  setConfirm({ item, kind: "one" });
-                }}
-              />
-            ))}
-          </ul>
-        )}
-        <span className="sr-only" role="status">
-          {note}
-        </span>
-      </div>
-      <div className="modal-foot">
-        <span className="hint trash-count">
-          {items === null
-            ? ""
-            : count === 1
-              ? "1 project"
-              : `${count} projects`}
-        </span>
-        {count > 0 && (
-          <button
-            type="button"
-            className="btn danger"
-            disabled={busy !== null}
-            onClick={() => {
-              setConfirmError(null);
-              setConfirm({
-                count,
-                kind: "all",
-                shouldFolderStay: (items ?? []).every(
-                  (item) => item.folderStays
-                ),
-              });
-            }}
-          >
-            {copy.emptyTrash}
-          </button>
-        )}
-        <button type="button" className="btn" onClick={onClose}>
-          {copy.done}
-        </button>
-      </div>
+      <TrashHead onClose={onClose} />
+      <TrashBody
+        items={list.items}
+        error={list.message}
+        note={note}
+        isBusy={busy !== null}
+        firstRestoreRef={firstRestoreRef}
+        onRetry={list.reload}
+        onRestore={restore}
+        onDelete={askOne}
+      />
+      <TrashFoot
+        items={list.items}
+        isBusy={busy !== null}
+        doneRef={doneRef}
+        onClose={onClose}
+        onEmpty={askAll}
+      />
       {confirm && (
         <ConfirmDelete
           confirm={confirm}
           isBusy={busy === "confirm"}
           error={confirmError}
-          onCancel={() => setConfirm(null)}
-          onConfirm={() => confirmDelete()}
+          onCancel={cancelConfirm}
+          onConfirm={confirmDelete}
         />
       )}
     </dialog>
   );
-}
+};
+
+export { HomeTrash };
+
+export type { HomeTrashProps };

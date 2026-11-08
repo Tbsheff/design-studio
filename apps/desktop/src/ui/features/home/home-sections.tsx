@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";
-import type { CardActions } from "./project-grid.js";
+import type { CardActions } from "./project-card-model.js";
 import { projectsApi, useProjects } from "./projects-store-model.js";
 
 const useOnboarding = (): {
@@ -129,7 +129,7 @@ interface ActionDeps {
   readonly homeDir: string | null;
 }
 
-function getRemovedText(project: Project, homeDir: string | null): string {
+const getRemovedText = (project: Project, homeDir: string | null): string => {
   const folder = project.imported?.sourcePath;
 
   if (!folder || project.imported?.created) {
@@ -137,7 +137,7 @@ function getRemovedText(project: Project, homeDir: string | null): string {
   }
 
   return `Removed “${project.name}” from Design Studio. Its files stay in ${shortenHome(folder.replace(/^\/private(?=\/)/u, ""), homeDir)}.`;
-}
+};
 
 const useProjectActions = ({
   onOpen,
@@ -211,13 +211,10 @@ const useProjectActions = ({
   },
 });
 
-function isEditable(target: EventTarget | null): boolean {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
-  );
-}
+const isEditable = (target: EventTarget | null): boolean =>
+  target instanceof HTMLElement &&
+  (target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
 const useHomeProjects = () => {
   const {

@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 import type { DoctorGate } from "./doctor-model.js";
 
-function useDoctorGate() {
+const useDoctorGate = () => {
   const [gate, setGate] = useState<DoctorGate | null>(null);
   const close = useCallback(() => setGate(null), []);
 
@@ -35,6 +35,6 @@ function useDoctorGate() {
     open: (next: Omit<DoctorGate, "isChecking">) =>
       setGate({ ...next, isChecking: false }),
   };
-}
+};
 
 export { useDoctorGate };

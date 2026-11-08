@@ -4,21 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 import { desktopBridge } from "../../platform/desktop.js";
+import type { AppChip, RunMode } from "./app-chip-model.js";
 import type { FolderInspection } from "./deps.js";
-
-type RunMode = "start" | "url";
-
-interface AppChip {
-  readonly path: string;
-  readonly inspection: FolderInspection | null;
-  readonly isChecking: boolean;
-  readonly error: string | null;
-  readonly appDir: string | null;
-  readonly mode: RunMode;
-  readonly url: string;
-  readonly env: string;
-  readonly nonce: number;
-}
 
 const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
   html: "HTML",
@@ -61,7 +48,7 @@ const getChipName = (chip: AppChip): string =>
   chip.path.split("/").filter(Boolean).pop() ??
   chip.path;
 
-function getChipLabel(chip: AppChip): string {
+const getChipLabel = (chip: AppChip): string => {
   if (chip.isChecking && !chip.inspection) {
     return "Checking…";
   }
@@ -78,10 +65,12 @@ function getChipLabel(chip: AppChip): string {
 
   const dir = chip.appDir ?? found.appDir;
 
-  return dir && dir !== "."
-    ? `${KIND_LABEL[found.kind]} · ${dir}`
-    : KIND_LABEL[found.kind];
-}
+  if (dir && dir !== ".") {
+    return `${KIND_LABEL[found.kind]} · ${dir}`;
+  }
+
+  return KIND_LABEL[found.kind];
+};
 
 interface DropBridge {
   readonly pathForFile?: (file: File) => string;
@@ -101,7 +90,11 @@ const getDroppedFolder = (
       ? (desktopBridge<DropBridge>()?.pathForFile?.(file) ?? "")
       : "";
 
-    return path ? { path } : { unsupported: true };
+    if (path) {
+      return { path };
+    }
+
+    return { unsupported: true };
   }
 
   return null;
@@ -130,7 +123,13 @@ const useAppChip = () => {
 
   const update = useCallback(
     (patch: Partial<AppChip>) =>
-      setChip((current) => (current ? { ...current, ...patch } : current)),
+      setChip((current) => {
+        if (current) {
+          return { ...current, ...patch };
+        }
+
+        return current;
+      }),
     []
   );
 
@@ -143,28 +142,36 @@ const useAppChip = () => {
     }
 
     let live = true;
-    setChip((current) =>
-      current ? { ...current, checking: true, error: null } : current
-    );
+    setChip((current) => {
+      if (current) {
+        return { ...current, checking: true, error: null };
+      }
+
+      return current;
+    });
 
     const inspect = async (): Promise<void> => {
       try {
         const inspection = await api.inspectFolder(path, appDir ?? undefined);
 
         if (live) {
-          setChip((current) =>
-            current?.path === path
-              ? { ...current, checking: false, inspection }
-              : current
-          );
+          setChip((current) => {
+            if (current?.path === path) {
+              return { ...current, checking: false, inspection };
+            }
+
+            return current;
+          });
         }
       } catch (error: unknown) {
         if (live) {
-          setChip((current) =>
-            current?.path === path
-              ? { ...current, checking: false, error: errorText(error) }
-              : current
-          );
+          setChip((current) => {
+            if (current?.path === path) {
+              return { ...current, checking: false, error: errorText(error) };
+            }
+
+            return current;
+          });
         }
       }
     };
@@ -233,4 +240,4 @@ export {
   useAppChip,
 };
 
-export type { AppChip, RunMode };
+export type { AppChip, RunMode } from "./app-chip-model.js";

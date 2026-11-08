@@ -16,12 +16,16 @@ const getLocation = (
     return lastLocation;
   }
 
-  return list.folders.some(
-    (folder) =>
-      folder.path === lastLocation && !folder.missing && !folder.default
-  )
-    ? lastLocation
-    : null;
+  if (
+    list.folders.some(
+      (folder) =>
+        folder.path === lastLocation && !folder.missing && !folder.default
+    )
+  ) {
+    return lastLocation;
+  }
+
+  return null;
 };
 
 const getDefaultFolder = (list: WorkspaceList | null): WorkspaceFolder | null =>
@@ -79,9 +83,13 @@ const useWorkspaces = (onError: (message: string | null) => void) => {
   }, [onError]);
 
   const update = (change: Folders): void =>
-    setWorkspaces((list) =>
-      list === null ? list : { ...list, folders: change(list.folders) }
-    );
+    setWorkspaces((list) => {
+      if (list === null) {
+        return list;
+      }
+
+      return { ...list, folders: change(list.folders) };
+    });
 
   const attempt = async <Value>(
     task: () => Promise<Value>,
@@ -101,11 +109,13 @@ const useWorkspaces = (onError: (message: string | null) => void) => {
   const addFolder = (path: string): Promise<WorkspaceFolder | null> =>
     attempt(async () => {
       const saved = await api.addWorkspace(path);
-      update((folders) =>
-        folders.some((folder) => folder.id === saved.id)
-          ? folders
-          : [...folders, saved]
-      );
+      update((folders) => {
+        if (folders.some((folder) => folder.id === saved.id)) {
+          return folders;
+        }
+
+        return [...folders, saved];
+      });
 
       return saved;
     }, null);
@@ -114,7 +124,13 @@ const useWorkspaces = (onError: (message: string | null) => void) => {
     attempt(async () => {
       const saved = await api.renameWorkspace(id, label);
       update((folders) =>
-        folders.map((folder) => (folder.id === id ? saved : folder))
+        folders.map((folder) => {
+          if (folder.id === id) {
+            return saved;
+          }
+
+          return folder;
+        })
       );
 
       return true;

@@ -5,10 +5,10 @@ import {
   takeOpenAppRequest,
 } from "../../platform/app-events.js";
 
-function useOpenAppRequests(
+const useOpenAppRequests = (
   onPath: (path: string) => void,
   onPick: () => void
-): void {
+): void => {
   const handlers = useRef({ onPath, onPick });
   handlers.current = { onPath, onPick };
   useEffect(() => {
@@ -30,6 +30,6 @@ function useOpenAppRequests(
 
     return onOpenAppRequest(take);
   }, []);
-}
+};
 
 export { useOpenAppRequests };

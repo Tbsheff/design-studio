@@ -1,28 +1,24 @@
 import type { PackSummary, ProjectKind } from "@design-studio/contracts";
-import { Icon } from "@design-studio/ui";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactElement, RefObject } from "react";
 
-import { uiStore } from "../../platform/storage.js";
 import { usePresence } from "../chat/use-presence.js";
 import { pickable } from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
-import { AppSlot } from "./app-slot.js";
 import type { AppSlotProps } from "./app-slot.js";
-import { copy } from "./copy.js";
-import { LEVEL_LABEL } from "./home-model.js";
+import { ComposerFileInput } from "./composer-file-input.js";
+import { toNextFolderPop, toSendLabel } from "./composer-pop-model.js";
+import { FolderAnchor } from "./folder-anchor.js";
 import type { Busy, Pop } from "./home-model.js";
-import type { ModelSettings, PlusMenuActions } from "./home-popovers.js";
-import {
-  FolderPathPop,
-  LevelPopover,
-  ModelPopover,
-  PackPopover,
-  PlusMenu,
-  loadPops,
-} from "./lazy-parts.js";
-import { PillSelect } from "./pill-select.js";
+import type { ModelSettings } from "./home-popovers.js";
+import { KindToggle } from "./kind-toggle.js";
+import { LevelAnchor } from "./level-anchor.js";
+import { ModelAnchor } from "./model-anchor.js";
+import { PackAnchor } from "./pack-anchor.js";
+import { PlusAnchor } from "./plus-anchor.js";
+import type { PlusMenuActions } from "./plus-menu-model.js";
 import { SendButton } from "./send-button.js";
+import { useComposerPops } from "./use-composer-pops.js";
 
 interface ComposerBarProps {
   readonly fileRef: RefObject<HTMLInputElement | null>;
@@ -62,197 +58,66 @@ const ComposerBar = ({
   app,
 }: ComposerBarProps): ReactElement => {
   const [pop, setPop] = useState<Pop>(null);
-  const shownPop = usePresence(pop);
-  const plusRef = useRef<HTMLButtonElement>(null);
-  const packRef = useRef<HTMLButtonElement>(null);
-  const modelRef = useRef<HTMLButtonElement>(null);
-  const levelRef = useRef<HTMLButtonElement>(null);
-  const folderRef = useRef<HTMLButtonElement>(null);
+  const presence = usePresence(pop);
 
-  const closePop = useCallback(
-    (refocus: boolean) => {
-      const trigger = {
-        folder: folderRef,
-        level: levelRef,
-        model: modelRef,
-        pack: packRef,
-        plus: plusRef,
-      }[pop ?? "model"];
+  const pops = useComposerPops({
+    isClosing: presence.closing,
+    onFolderClose: app.onFolderClose,
+    pop,
+    setPop,
+    shown: presence.shown,
+  });
 
-      setPop(null);
+  const { isFolderPopOpen } = app;
 
-      if (refocus) {
-        trigger.current?.focus();
-      }
-    },
-    [pop]
-  );
-
-  const togglePop = (next: Exclude<Pop, null>): void =>
-    setPop((current) => (current === next ? null : next));
-
-  useEffect(
-    () =>
-      setPop((current) =>
-        app.isFolderPopOpen ? "folder" : current === "folder" ? null : current
-      ),
-    [app.isFolderPopOpen]
-  );
-
-  const closeFolder = (refocus: boolean): void => {
-    closePop(refocus);
-    app.onFolderClose();
-  };
+  useEffect(() => {
+    setPop((current) => toNextFolderPop(current, isFolderPopOpen));
+  }, [isFolderPopOpen]);
 
   return (
     <div className="home-composer-bar">
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/png,image/jpeg,image/gif,image/webp"
-        multiple
-        hidden
-        onChange={(event) => {
-          onFiles([...(event.target.files ?? [])]);
-          event.target.value = "";
-        }}
+      <ComposerFileInput fileRef={fileRef} onFiles={onFiles} />
+      <PlusAnchor
+        pops={pops.state}
+        triggerRef={pops.refs.plus}
+        locationLabel={locationLabel}
+        plusActions={plusActions}
+        onDesignSystem={pops.openPack}
       />
-      <div className="home-anchor">
-        <button
-          ref={plusRef}
-          type="button"
-          className="icon-btn bordered home-square"
-          aria-label={copy.add}
-          aria-haspopup="menu"
-          aria-expanded={pop === "plus"}
-          data-tip={copy.attachImportAndOptions}
-          data-tip-align="start"
-          onPointerEnter={() => loadPops()}
-          onClick={() => togglePop("plus")}
-        >
-          <Icon name="plus" size={16} />
-        </button>
-        {shownPop.shown === "plus" && (
-          <Suspense fallback={null}>
-            <PlusMenu
-              trigger={plusRef}
-              isClosing={shownPop.closing}
-              onClose={closePop}
-              locationLabel={locationLabel}
-              actions={{ ...plusActions, onDesignSystem: () => setPop("pack") }}
-            />
-          </Suspense>
-        )}
-      </div>
-      <div className="home-anchor">
-        <AppSlot
-          chip={app.chip}
-          pop={pop}
-          folderRef={folderRef}
-          onAddFolder={app.onAddFolder}
-          onDoctor={app.onDoctor}
-        />
-        {shownPop.shown === "folder" && (
-          <Suspense fallback={null}>
-            <FolderPathPop
-              trigger={folderRef}
-              isClosing={shownPop.closing}
-              onClose={closeFolder}
-              onPick={app.onFolderPick}
-            />
-          </Suspense>
-        )}
-      </div>
-      {!app.chip && (
-        <button
-          type="button"
-          className="icon-btn bordered home-square home-kind"
-          aria-pressed={kind === "react"}
-          aria-label={copy.reactViteProject}
-          data-tip={
-            kind === "react"
-              ? "React + Vite project. Press for a plain HTML page."
-              : "Plain HTML page. Press for a React + Vite project."
-          }
-          onClick={() => onKind(kind === "react" ? "html" : "react")}
-        >
-          <Icon name="code" size={16} />
-        </button>
-      )}
+      <FolderAnchor
+        pops={pops.state}
+        chip={app.chip}
+        triggerRef={pops.refs.folder}
+        onAddFolder={app.onAddFolder}
+        onDoctor={app.onDoctor}
+        onFolderPick={app.onFolderPick}
+        onFolderClose={pops.closeFolder}
+      />
+      {!app.chip && <KindToggle kind={kind} onKind={onKind} />}
       <div className="spacer" />
-      <div className="home-anchor end">
-        <PillSelect
-          label="Design system"
-          ariaLabel="Design system"
-          value={pack?.name ?? "No design system"}
-          isOpen={pop === "pack"}
-          triggerRef={packRef}
-          onOpen={() => togglePop("pack")}
-        />
-        {shownPop.shown === "pack" && (
-          <Suspense fallback={null}>
-            <PackPopover
-              trigger={packRef}
-              isClosing={shownPop.closing}
-              onClose={closePop}
-              state={pickable(packs)}
-              value={pack?.id ?? null}
-              onChange={(id) => uiStore.set({ lastPackId: id })}
-              onNew={() =>
-                uiStore.set({ returnTo: "home", screen: "new-design-system" })
-              }
-            />
-          </Suspense>
-        )}
-      </div>
-      <div className="home-anchor end">
-        <PillSelect
-          label="Level"
-          ariaLabel="Level"
-          value={LEVEL_LABEL[modelSettings.level]}
-          sizes={Object.values(LEVEL_LABEL)}
-          isOpen={pop === "level"}
-          triggerRef={levelRef}
-          onOpen={() => togglePop("level")}
-        />
-        {shownPop.shown === "level" && (
-          <Suspense fallback={null}>
-            <LevelPopover
-              trigger={levelRef}
-              isClosing={shownPop.closing}
-              onClose={closePop}
-              level={modelSettings.level}
-              onLevel={modelSettings.onLevel}
-            />
-          </Suspense>
-        )}
-      </div>
-      <div className="home-anchor end">
-        <PillSelect
-          label="Model"
-          ariaLabel="Model and run settings"
-          value={modelValue}
-          sizes={modelSizes}
-          isOpen={pop === "model"}
-          triggerRef={modelRef}
-          onOpen={() => togglePop("model")}
-        />
-        {shownPop.shown === "model" && (
-          <Suspense fallback={null}>
-            <ModelPopover
-              trigger={modelRef}
-              isClosing={shownPop.closing}
-              onClose={closePop}
-              settings={modelSettings}
-            />
-          </Suspense>
-        )}
-      </div>
+      <PackAnchor
+        pops={pops.state}
+        triggerRef={pops.refs.pack}
+        pack={pack}
+        state={pickable(packs)}
+      />
+      <LevelAnchor
+        pops={pops.state}
+        triggerRef={pops.refs.level}
+        modelSettings={modelSettings}
+      />
+      <ModelAnchor
+        pops={pops.state}
+        triggerRef={pops.refs.model}
+        modelValue={modelValue}
+        modelSizes={modelSizes}
+        modelSettings={modelSettings}
+      />
       <SendButton
         busy={busy}
         isDisabled={sendDisabled !== null}
         reason={sendDisabled}
-        label={app.chip ? "Open" : "Create"}
+        label={toSendLabel(app.chip !== null)}
       />
     </div>
   );

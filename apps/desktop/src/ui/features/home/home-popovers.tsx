@@ -1,8 +1,14 @@
 import { RUN_LEVELS } from "@design-studio/contracts";
 import type { PackSummary, RunLevel } from "@design-studio/contracts";
 import { Icon, useFitPopover, usePopover } from "@design-studio/ui";
-import { useEffect, useRef } from "react";
-import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  ReactElement,
+  ReactNode,
+  RefObject,
+} from "react";
 
 import { VariationsControl } from "../canvas/variations-control.js";
 import {
@@ -14,15 +20,25 @@ import {
 import { MODEL_OPTIONS } from "../chat/settings-draft-model.js";
 import { fontStack, loadPackFonts } from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
+import type { RunMode } from "./app-chip-model.js";
 import { copy } from "./copy.js";
 import type { DesignCount } from "./home-model.js";
+import { NoneCard } from "./none-card.js";
+import { toClassName } from "./project-card-model.js";
+
+import "../../styles/attach-app.css";
+
+const ROW_ICON_SIZE = 14;
 
 type Close = (refocus: boolean) => void;
 
 const FOCUS_ITEMS =
   ".ui-menu-item:not(:disabled), .home-pack-card:not(:disabled), .btn:not(:disabled)";
 
-const moveFocus = (event: KeyboardEvent<HTMLElement>, selector: string) => {
+const moveFocus = (
+  event: KeyboardEvent<HTMLElement>,
+  selector: string
+): void => {
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLElement>(selector),
   ];
@@ -51,7 +67,7 @@ const moveFocus = (event: KeyboardEvent<HTMLElement>, selector: string) => {
 const Pop = ({
   trigger,
   onClose,
-  className,
+  variant,
   label,
   role = "dialog",
   children,
@@ -60,7 +76,7 @@ const Pop = ({
 }: {
   readonly trigger: RefObject<HTMLElement | null>;
   readonly onClose: Close;
-  readonly className: string;
+  readonly variant: string;
   readonly label: string;
   readonly role?: "dialog" | "menu";
   readonly children: ReactNode;
@@ -82,7 +98,7 @@ const Pop = ({
   return (
     <div
       ref={root}
-      className={`ui-popover home-pop ${className}`}
+      className={`ui-popover home-pop ${variant}`}
       role={role}
       aria-label={label}
       data-closing={closing || undefined}
@@ -101,134 +117,13 @@ const Pop = ({
   );
 };
 
-interface PlusMenuActions {
-  readonly onAttachFile: () => void;
-  readonly onLinkCode: () => void;
-  readonly onTemplates: () => void;
-  readonly hasTemplatesShown: boolean;
-  readonly onImportSystem: () => void;
-  readonly onDesignSystem: () => void;
-  readonly onSkills: () => void;
-  readonly onLocation: () => void;
-}
-
-const Item = ({
-  icon,
-  label,
-  meta,
-  onClick,
-}: {
-  readonly icon: Parameters<typeof Icon>[0]["name"];
-  readonly label: string;
-  readonly meta?: ReactNode;
-  readonly onClick: () => void;
-}) => (
-  <button
-    type="button"
-    role="menuitem"
-    className="ui-menu-item"
-    tabIndex={-1}
-    onClick={onClick}
-  >
-    <Icon name={icon} size={14} />
-    <span className="truncate">{label}</span>
-    {meta && <span className="ui-menu-meta">{meta}</span>}
-  </button>
-);
-
-const PlusMenu = ({
-  trigger,
-  onClose,
-  actions,
-  locationLabel,
-  isClosing,
-}: {
-  readonly trigger: RefObject<HTMLElement | null>;
-  readonly onClose: Close;
-  readonly actions: PlusMenuActions;
-  readonly locationLabel: string;
-  readonly isClosing: boolean;
-}) => {
-  const run = (action: () => void) => () => {
-    onClose(false);
-    action();
-  };
-
-  return (
-    <Pop
-      trigger={trigger}
-      closing={isClosing}
-      onClose={onClose}
-      className="ui-menu home-plus-menu"
-      label="Add to the project"
-      role="menu"
-      onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
-    >
-      <div className="ui-menu-section">
-        <span className="ui-menu-label">{copy.files}</span>
-        <Item
-          icon="paperclip"
-          label="Attach images"
-          meta="⌘V"
-          onClick={run(actions.onAttachFile)}
-        />
-      </div>
-      <div className="ui-menu-section">
-        <span className="ui-menu-label">{copy.code}</span>
-        <Item
-          icon="folder"
-          label="Add app folder…"
-          onClick={run(actions.onLinkCode)}
-        />
-      </div>
-      <div className="ui-menu-section">
-        <span className="ui-menu-label">{copy.designs}</span>
-        <Item
-          icon="layers"
-          label={
-            actions.hasTemplatesShown
-              ? "Hide templates and starters"
-              : "Templates and starters"
-          }
-          onClick={run(actions.onTemplates)}
-        />
-        <Item
-          icon="download"
-          label="Import design system or tokens"
-          onClick={run(actions.onImportSystem)}
-        />
-      </div>
-      <div className="ui-menu-section">
-        <Item
-          icon="palette"
-          label="Design system"
-          meta={<Icon name="chevronRight" size={12} />}
-          onClick={run(actions.onDesignSystem)}
-        />
-        <Item
-          icon="sparkle"
-          label="Skills and limits"
-          onClick={run(actions.onSkills)}
-        />
-        <Item
-          icon="folder"
-          label="Location"
-          meta={locationLabel}
-          onClick={run(actions.onLocation)}
-        />
-      </div>
-    </Pop>
-  );
-};
-
-function swatch(pack: PackSummary, name: string, fallback: string): string {
-  return pack.swatches.find((item) => item.name === name)?.value ?? fallback;
-}
+const swatch = (pack: PackSummary, name: string, fallback: string): string =>
+  pack.swatches.find((item) => item.name === name)?.value ?? fallback;
 
 const RAMP = [6, 16, 30, 48, 68, 100, 72, 48];
 
-function packVars(pack: PackSummary): CSSProperties {
-  return {
+const packVars = (pack: PackSummary): CSSProperties =>
+  ({
     "--pc-accent": swatch(pack, "accent", "#888"),
     "--pc-bg": swatch(pack, "bg", "#fff"),
     "--pc-body": fontStack(pack.fonts.body, "var(--font)"),
@@ -237,24 +132,29 @@ function packVars(pack: PackSummary): CSSProperties {
     "--pc-fg": swatch(pack, "fg", "#111"),
     "--pc-primary": swatch(pack, "primary", "#555"),
     "--pc-surface": swatch(pack, "surface", "#f5f5f5"),
-  } as CSSProperties;
-}
+  }) as CSSProperties;
 
-function rampColor(step: number, index: number): string {
-  return index <= 5
-    ? `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-bg))`
-    : `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-fg))`;
-}
+const rampColor = (step: number, index: number): string => {
+  if (index <= 5) {
+    return `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-bg))`;
+  }
 
-function fontNames(pack: PackSummary): string {
-  const clean = (family: string) =>
+  return `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-fg))`;
+};
+
+const fontNames = (pack: PackSummary): string => {
+  const clean = (family: string): string =>
     family.split(",")[0]?.replaceAll(/['"]/g, "").trim() ?? "";
 
   const display = clean(pack.fonts.display);
   const body = clean(pack.fonts.body);
 
-  return display === body || !body ? display : `${display} / ${body}`;
-}
+  if (display === body || !body) {
+    return display;
+  }
+
+  return `${display} / ${body}`;
+};
 
 const PackPreviewCard = ({
   pack,
@@ -289,27 +189,6 @@ const PackPreviewCard = ({
       </span>
     </span>
     <span className="home-pack-label truncate">{pack.name}</span>
-  </button>
-);
-
-const NoneCard = ({
-  isSelected,
-  onPick,
-}: {
-  readonly isSelected: boolean;
-  readonly onPick: () => void;
-}) => (
-  <button
-    type="button"
-    className="home-pack-card none"
-    aria-pressed={isSelected}
-    onClick={onPick}
-  >
-    <span className="home-pack-face none" aria-hidden="true">
-      <span className="pc-none-text">{copy.noDesignSystem}</span>
-      <span className="pc-none-hint">{copy.theAgentPicksTheLook}</span>
-    </span>
-    <span className="home-pack-label">{copy.none}</span>
   </button>
 );
 
@@ -364,7 +243,7 @@ const PackPopover = ({
     trigger={trigger}
     closing={isClosing}
     onClose={onClose}
-    className="home-pack-pop"
+    variant="home-pack-pop"
     label="Design system"
     onKeyDown={(event) => moveFocus(event, FOCUS_ITEMS)}
   >
@@ -414,7 +293,7 @@ const ModelPopover = ({
     trigger={trigger}
     closing={isClosing}
     onClose={onClose}
-    className="home-model-pop"
+    variant="home-model-pop"
     label="Model and run settings"
   >
     <div
@@ -487,7 +366,7 @@ const LevelPopover = ({
     trigger={trigger}
     closing={isClosing}
     onClose={onClose}
-    className="home-level-pop"
+    variant="home-level-pop"
     label="Level"
     role="menu"
     onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
@@ -513,16 +392,79 @@ const LevelPopover = ({
   </Pop>
 );
 
+interface ModeButtonProps {
+  readonly mode: RunMode;
+  readonly current: RunMode;
+  readonly label: string;
+  readonly onSelect: (mode: RunMode) => void;
+}
+
+const ModeButton = ({
+  mode,
+  current,
+  label,
+  onSelect,
+}: ModeButtonProps): ReactElement => {
+  const select = useCallback((): void => {
+    onSelect(mode);
+  }, [mode, onSelect]);
+
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={mode === current}
+      className={toClassName(mode === current && "on")}
+      onClick={select}
+    >
+      {label}
+    </button>
+  );
+};
+
+interface AppCandidateRowProps {
+  readonly appDir: string;
+  readonly name: string;
+  readonly isChosen: boolean;
+  readonly onPick: (appDir: string) => void;
+}
+
+const AppCandidateRow = ({
+  appDir,
+  name,
+  isChosen,
+  onPick,
+}: AppCandidateRowProps): ReactElement => {
+  const pick = useCallback((): void => {
+    onPick(appDir);
+  }, [appDir, onPick]);
+
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={isChosen}
+      className="ui-menu-item"
+      onClick={pick}
+    >
+      {isChosen && <Icon name="check" size={ROW_ICON_SIZE} />}
+      {!isChosen && <Icon name="code" size={ROW_ICON_SIZE} />}
+      <span className="truncate mono">{appDir}</span>
+      <span className="ui-menu-meta truncate">{name}</span>
+    </button>
+  );
+};
+
 export {
-  Item,
+  AppCandidateRow,
   LevelPopover,
+  ModeButton,
   ModelPopover,
   PackCards,
   PackPopover,
   PackPreviewCard,
-  PlusMenu,
   Pop,
   moveFocus,
 };
 
-export type { Close, ModelSettings, PlusMenuActions };
+export type { Close, ModelSettings };

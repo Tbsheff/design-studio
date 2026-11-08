@@ -16,16 +16,15 @@ let listSignature = "";
 let stopList: (() => void) | null = null;
 const listeners = new Set<() => void>();
 
-function toSignature(projects: Project[] | null): string {
-  return (projects ?? [])
+const toSignature = (projects: Project[] | null): string =>
+  (projects ?? [])
     .map(
       (project) =>
         `${project.id}:${project.name}:${project.updatedAt}:${project.thumbnail?.versionId ?? ""}`
     )
     .join("|");
-}
 
-function runListChange(): void {
+const runListChange = (): void => {
   const next = toSignature(projectsApi.get().projects);
 
   if (next === listSignature) {
@@ -34,9 +33,9 @@ function runListChange(): void {
 
   listSignature = next;
   void runProjectHitsRefresh(lastCurrent, true);
-}
+};
 
-function startHitsSubscription(listener: () => void): () => void {
+const startHitsSubscription = (listener: () => void): (() => void) => {
   listeners.add(listener);
 
   if (!stopList) {
@@ -52,7 +51,7 @@ function startHitsSubscription(listener: () => void): () => void {
       stopList = null;
     }
   };
-}
+};
 
 const runProjectHits = async (current: string | null): Promise<void> => {
   try {

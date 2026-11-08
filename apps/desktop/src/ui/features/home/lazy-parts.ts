@@ -12,12 +12,14 @@ const importTrash = () => import("./home-trash.js");
 
 const importSlash = () => import("./home-slash.js");
 
-const HomeTrash = lazy(importTrash);
+const HomeTrash = lazy(async () => ({
+  default: (await importTrash()).HomeTrash,
+}));
 
 const importPopovers = () => import("./home-popovers.js");
 
 const PlusMenu = lazy(async () => ({
-  default: (await importPopovers()).PlusMenu,
+  default: (await import("./plus-menu.js")).PlusMenu,
 }));
 
 const PackPopover = lazy(async () => ({
@@ -36,14 +38,14 @@ const importTemplates = () => import("./home-templates.js");
 
 const importExtras = () => import("./home-extras.js");
 
-const importAppMenu = () => import("./home-app-menu.js");
+const importAppMenu = () => import("./use-app-attach.js");
 
 const AppMenu = lazy(async () => ({
-  default: (await importAppMenu()).AppMenu,
+  default: (await import("./app-menu.js")).AppMenu,
 }));
 
 const FolderPathPop = lazy(async () => ({
-  default: (await importAppMenu()).FolderPathPop,
+  default: (await import("./folder-path-pop.js")).FolderPathPop,
 }));
 
 const HomeDoctor = lazy(() => import("./home-doctor.js"));

@@ -4,6 +4,7 @@ import { ChipMenuSlot } from "./chip-menu-slot.js";
 import { ComposerBar } from "./composer-bar.js";
 import { ComposerChips } from "./composer-chips.js";
 import { DropHint } from "./drop-hint.js";
+import { ExpandPromptSlot } from "./expand-prompt-slot.js";
 import { HomePrompt } from "./home-prompt.js";
 import { StarterRow } from "./starter-row.js";
 import { useComposerHandlers } from "./use-composer-handlers.js";
@@ -87,7 +88,9 @@ const HomeComposer = ({
         busy={base.busy}
         sendDisabled={ui.sendBlocker}
         app={barApp}
-      />
+      >
+        <ExpandPromptSlot draft={draft} />
+      </ComposerBar>
     </form>
   );
 };

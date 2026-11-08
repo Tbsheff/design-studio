@@ -76,6 +76,9 @@ const copy = {
   emptyTrash: "Empty trash…",
   emptyTrashAction: "Empty trash",
   environmentForNextDev: "Environment for next dev",
+  expandPrompt: "Expand prompt",
+  expandPromptFailed: "Could not expand the prompt",
+  expandPromptTip: "Expand the prompt into a short brief",
   favorites: "Favorites",
   files: "Files",
   filesInFolderStay: " Files in your folder stay.",
@@ -224,6 +227,8 @@ const copy = {
   trashIsEmpty: "Trash is empty",
   typeDevUrl:
     "Type the URL of your running dev server, or let the studio start next dev.",
+  undoExpandPrompt: "Undo",
+  undoExpandPromptTip: "Go back to your short prompt",
   useKeyValueLines: "Use KEY=value lines. Not valid:",
   usersMeProjects: "/Users/me/projects",
   whatShouldWeDesign: "What should we design?",

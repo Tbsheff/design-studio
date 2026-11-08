@@ -1924,3 +1924,37 @@ fieldset.home-view-toggle {
   border: 0;
   min-inline-size: 0;
 }
+
+.home-expand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: var(--composer-ctl);
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--w-medium);
+  transition-property: background-color, color, box-shadow, scale;
+}
+
+.home-expand:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--text);
+}
+
+.home-expand:active:not(:disabled) {
+  scale: 0.97;
+}
+
+.home-expand:disabled {
+  opacity: 0.5;
+}
+
+.home-expand[aria-busy="true"] {
+  cursor: progress;
+}

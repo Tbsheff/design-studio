@@ -25,35 +25,35 @@ describe(SwapQueue, () => {
   it("lets one frame reload at a time and keeps only the newest change per frame", () => {
     expect.hasAssertions();
 
-    const q = new SwapQueue();
-    q.offer("a", change("a", 1));
-    q.offer("b", change("b", 2));
-    q.offer("b", change("b", 3));
-    expect(q.inFlight).toBe("a");
-    expect([...q.next.keys()]).toStrictEqual(["a"]);
-    expect(q.done("b")).toBe(IS_FALSE);
-    expect(q.done("a")).toBe(IS_TRUE);
-    expect(q.shown.get("a")?.changedAt).toBe(1);
-    expect(q.inFlight).toBe("b");
-    expect(q.next.get("b")?.changedAt).toBe(3);
-    q.done("b");
-    expect(q.inFlight).toBeNull();
-    expect(q.next.size).toBe(0);
+    const queue = new SwapQueue();
+    queue.offer("a", change("a", 1));
+    queue.offer("b", change("b", 2));
+    queue.offer("b", change("b", 3));
+    expect(queue.inFlight).toBe("a");
+    expect([...queue.next.keys()]).toStrictEqual(["a"]);
+    expect(queue.done("b")).toBe(IS_FALSE);
+    expect(queue.done("a")).toBe(IS_TRUE);
+    expect(queue.shown.get("a")?.changedAt).toBe(1);
+    expect(queue.inFlight).toBe("b");
+    expect(queue.next.get("b")?.changedAt).toBe(3);
+    queue.done("b");
+    expect(queue.inFlight).toBeNull();
+    expect(queue.next.size).toBe(0);
   }, 0);
 
   it("gives the back slot up while the live frame holds one, then resumes", () => {
     expect.hasAssertions();
 
-    const q = new SwapQueue();
-    q.offer("a", change("a", 1));
-    expect(q.hold(true)).toBe(IS_TRUE);
-    expect(q.inFlight).toBeNull();
-    expect(q.next.size).toBe(0);
-    q.offer("b", change("b", 2));
-    expect(q.inFlight).toBeNull();
-    q.hold(false);
-    expect(q.inFlight).toBe("a");
-    q.done("a");
-    expect(q.inFlight).toBe("b");
+    const queue = new SwapQueue();
+    queue.offer("a", change("a", 1));
+    expect(queue.hold(true)).toBe(IS_TRUE);
+    expect(queue.inFlight).toBeNull();
+    expect(queue.next.size).toBe(0);
+    queue.offer("b", change("b", 2));
+    expect(queue.inFlight).toBeNull();
+    queue.hold(false);
+    expect(queue.inFlight).toBe("a");
+    queue.done("a");
+    expect(queue.inFlight).toBe("b");
   }, 0);
 });

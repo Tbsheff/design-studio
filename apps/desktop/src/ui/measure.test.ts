@@ -28,7 +28,7 @@ describe(measureBetween, () => {
       { height: 100, width: 100, x: 0, y: 0 }
     );
 
-    expect(lines.map((l) => l.value)).toStrictEqual([20, 50, 10, 60]);
+    expect(lines.map((line) => line.value)).toStrictEqual([20, 50, 10, 60]);
   }, 0);
 
   it("formats with at most one decimal", () => {

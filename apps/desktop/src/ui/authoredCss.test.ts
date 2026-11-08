@@ -191,7 +191,7 @@ describe(parseAuthoredReply, () => {
 });
 
 describe("breadcrumb path", () => {
-  const path = [1, 2, 3, 4, 5, 6].map((n) => `div.n${n}`);
+  const path = [1, 2, 3, 4, 5, 6].map((step) => `div.n${step}`);
 
   it("parses a valid path, caps it, and refuses bad entries", () => {
     expect.hasAssertions();
@@ -201,7 +201,9 @@ describe("breadcrumb path", () => {
       "div.n2",
     ]);
     expect(
-      parseSelectionPath(Array.from({ length: 30 }, (_, i) => `p${i}`))
+      parseSelectionPath(
+        Array.from({ length: 30 }, (_unusedItem, index) => `p${index}`)
+      )
     ).toHaveLength(20);
     expect(parseSelectionPath(["a", 3])).toStrictEqual([]);
     expect(parseSelectionPath(["a", ""])).toStrictEqual([]);

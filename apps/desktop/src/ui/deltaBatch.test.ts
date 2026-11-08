@@ -110,17 +110,17 @@ describe("delta batcher", () => {
   it("applies many deltas in one update per frame", () => {
     expect.hasAssertions();
 
-    const h = harness();
-    h.batcher.push(started("r1"));
+    const fixture = harness();
+    fixture.batcher.push(started("r1"));
 
     for (const word of ["a ", "b ", "c ", "d"]) {
-      h.batcher.push(delta("r1", word));
+      fixture.batcher.push(delta("r1", word));
     }
 
-    expect(h.updates()).toBe(1);
-    h.frame();
-    expect(h.updates()).toBe(2);
-    expect(runText(h.runs().r1!)).toBe("a b c d");
+    expect(fixture.updates()).toBe(1);
+    fixture.frame();
+    expect(fixture.updates()).toBe(2);
+    expect(runText(fixture.runs().r1!)).toBe("a b c d");
   }, 0);
 
   it("flushes pending deltas before a non-delta run event so order holds", () => {
@@ -137,14 +137,14 @@ describe("delta batcher", () => {
       finished("r1", "Hello\n\nWorld"),
     ];
 
-    const h = harness();
+    const fixture = harness();
 
     for (const event of events) {
-      h.batcher.push(event);
+      fixture.batcher.push(event);
     }
 
-    h.frame();
-    expect(h.runs()).toStrictEqual(direct(events));
+    fixture.frame();
+    expect(fixture.runs()).toStrictEqual(direct(events));
   }, 0);
 
   it("gives the same text for small and big chunks", () => {
@@ -155,15 +155,15 @@ describe("delta batcher", () => {
     const big = [delta("r1", text.slice(0, 20)), delta("r1", text.slice(20))];
 
     for (const chunks of [small, big]) {
-      const h = harness();
-      h.batcher.push(started("r1"));
+      const fixture = harness();
+      fixture.batcher.push(started("r1"));
 
       for (const event of chunks) {
-        h.batcher.push(event);
+        fixture.batcher.push(event);
       }
 
-      h.frame();
-      expect(runText(h.runs().r1!)).toBe(text);
+      fixture.frame();
+      expect(runText(fixture.runs().r1!)).toBe(text);
     }
   }, 0);
 
@@ -179,62 +179,66 @@ describe("delta batcher", () => {
       delta("r2", "y"),
     ];
 
-    const h = harness();
+    const fixture = harness();
 
     for (const event of events) {
-      h.batcher.push(event);
+      fixture.batcher.push(event);
     }
 
-    h.frame();
-    expect(runText(h.runs().r1!)).toBe("ab");
-    expect(runText(h.runs().r2!)).toBe("xy");
+    fixture.frame();
+    expect(runText(fixture.runs().r1!)).toBe("ab");
+    expect(runText(fixture.runs().r2!)).toBe("xy");
   }, 0);
 
   it("skips updates for non-run events when nothing is pending", () => {
     expect.hasAssertions();
 
-    const h = harness();
-    h.batcher.push({
+    const fixture = harness();
+    fixture.batcher.push({
       ...base(),
       changedAt: 1,
       directionId: "d1",
       paths: ["a.html"],
       type: "files.changed",
     });
-    expect(h.updates()).toBe(0);
+    expect(fixture.updates()).toBe(0);
   }, 0);
 
   it("drops pending deltas on dispose", () => {
     expect.hasAssertions();
 
-    const h = harness();
-    h.batcher.push(delta("r1", "a"));
-    h.batcher.dispose();
-    h.frame();
-    expect(h.updates()).toBe(0);
+    const fixture = harness();
+    fixture.batcher.push(delta("r1", "a"));
+    fixture.batcher.dispose();
+    fixture.frame();
+    expect(fixture.updates()).toBe(0);
   }, 0);
 
   it("merges only adjacent deltas of the same run", () => {
     expect.hasAssertions();
 
-    const a = delta("r1", "a") as Extract<
+    const first = delta("r1", "a") as Extract<
       StudioEvent,
       { type: "run.text.delta" }
     >;
 
-    const b = delta("r2", "b") as Extract<
+    const second = delta("r2", "b") as Extract<
       StudioEvent,
       { type: "run.text.delta" }
     >;
 
-    const c = delta("r1", "c") as Extract<
+    const third = delta("r1", "c") as Extract<
       StudioEvent,
       { type: "run.text.delta" }
     >;
 
     expect(
-      mergeDeltas(mergeDeltas(mergeDeltas([], a), b), c).map((e) => e.text)
+      mergeDeltas(mergeDeltas(mergeDeltas([], first), second), third).map(
+        (merged) => merged.text
+      )
     ).toStrictEqual(["a", "b", "c"]);
-    expect(mergeDeltas([a], c).map((e) => e.text)).toStrictEqual(["ac"]);
+    expect(
+      mergeDeltas([first], third).map((merged) => merged.text)
+    ).toStrictEqual(["ac"]);
   }, 0);
 });

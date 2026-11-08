@@ -81,17 +81,17 @@ describe("event hub", () => {
     expect.hasAssertions();
 
     const { hub, sources } = setup();
-    const a: number[] = [];
-    const b: number[] = [];
-    hub.subscribe("p1", (e) => a.push(e.seq));
-    hub.subscribe("p1", (e) => b.push(e.seq));
+    const first: number[] = [];
+    const second: number[] = [];
+    hub.subscribe("p1", (event) => first.push(event.seq));
+    hub.subscribe("p1", (event) => second.push(event.seq));
     hub.watchState("p1", ignoreEvent);
     expect(sources).toHaveLength(1);
     expect(sources[0]?.after).toBe(0);
     sources[0]?.send(files(1));
     sources[0]?.send(files(2));
-    expect(a).toStrictEqual([1, 2]);
-    expect(b).toStrictEqual([1, 2]);
+    expect(first).toStrictEqual([1, 2]);
+    expect(second).toStrictEqual([1, 2]);
   }, 0);
 
   it("drops events with a seq at or below the last one", () => {
@@ -99,7 +99,7 @@ describe("event hub", () => {
 
     const { hub, sources } = setup();
     const seen: number[] = [];
-    hub.subscribe("p1", (e) => seen.push(e.seq));
+    hub.subscribe("p1", (event) => seen.push(event.seq));
     sources[0]?.send(files(3));
     sources[0]?.send(files(3));
     sources[0]?.send(files(2));
@@ -160,9 +160,12 @@ describe("event hub lifecycle", () => {
 
     const { hub, sources } = setup();
     const seen: string[] = [];
-    hub.subscribe("p1", (e) => seen.push(`p1:${e.seq}`));
-    hub.subscribe("p2", (e) => seen.push(`p2:${e.seq}`));
-    expect(sources.map((s) => s.projectId)).toStrictEqual(["p1", "p2"]);
+    hub.subscribe("p1", (event) => seen.push(`p1:${event.seq}`));
+    hub.subscribe("p2", (event) => seen.push(`p2:${event.seq}`));
+    expect(sources.map((source) => source.projectId)).toStrictEqual([
+      "p1",
+      "p2",
+    ]);
     sources[1]?.send(files(1));
     expect(seen).toStrictEqual(["p2:1"]);
   }, 0);

@@ -70,9 +70,11 @@ describe(batchEdits, () => {
       card(5, { "border-radius": "8px" }),
     ];
 
-    const bases = selections.map((s) => valuesFromStyles(s.styles));
+    const bases = selections.map((selection) =>
+      valuesFromStyles(selection.styles)
+    );
     const edits = batchEdits(selections, bases, { "border-radius": "8px" });
-    expect(edits.map((e) => [e.source.line, e.style])).toStrictEqual([
+    expect(edits.map((edit) => [edit.source.line, edit.style])).toStrictEqual([
       [3, { "border-radius": "8px" }],
       [4, { "border-radius": "8px" }],
     ]);
@@ -86,7 +88,7 @@ describe(batchEdits, () => {
     expect(
       batchEdits(
         selections,
-        selections.map((s) => valuesFromStyles(s.styles)),
+        selections.map((selection) => valuesFromStyles(selection.styles)),
         { color: "red" }
       )
     ).toStrictEqual([]);
@@ -123,7 +125,9 @@ describe(multiBlockReason, () => {
     expect.hasAssertions();
 
     expect(
-      multiBlockReason(Array.from({ length: 51 }, (_, i) => card(i + 1, {})))
+      multiBlockReason(
+        Array.from({ length: 51 }, (_unusedItem, index) => card(index + 1, {}))
+      )
     ).toMatch(/50 elements or fewer/);
   }, 0);
 });
@@ -143,9 +147,11 @@ describe(nextSelection, () => {
   it("replaces on a plain click, adds and removes on Shift+click", () => {
     expect.hasAssertions();
 
-    const [a, b] = [card(3, {}), card(4, {})];
-    expect(nextSelection([a], b, false)).toStrictEqual([b]);
-    expect(nextSelection([a], b, true)).toStrictEqual([a, b]);
-    expect(nextSelection([a, b], { ...a }, true)).toStrictEqual([b]);
+    const [first, second] = [card(3, {}), card(4, {})];
+    expect(nextSelection([first], second, false)).toStrictEqual([second]);
+    expect(nextSelection([first], second, true)).toStrictEqual([first, second]);
+    expect(nextSelection([first, second], { ...first }, true)).toStrictEqual([
+      second,
+    ]);
   }, 0);
 });

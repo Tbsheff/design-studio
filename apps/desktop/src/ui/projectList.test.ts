@@ -80,7 +80,7 @@ describe("project list", () => {
   it("filters 50 projects in well under 50 ms", () => {
     expect.hasAssertions();
 
-    const many = Array.from({ length: 50 }, (_, index) =>
+    const many = Array.from({ length: 50 }, (_unusedItem, index) =>
       project(`p${index}`, `Project ${index} landing page`, index, index)
     );
 

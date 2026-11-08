@@ -27,15 +27,18 @@ describe("inspector.css spacing", () => {
   it("uses --s-* tokens for every padding, margin and gap", () => {
     expect.hasAssertions();
 
-    const spacing = declarations(css).filter((d) =>
-      /^(padding|margin|gap|row-gap|column-gap)(-|$)/.test(d.prop)
+    const spacing = declarations(css).filter((declaration) =>
+      /^(padding|margin|gap|row-gap|column-gap)(-|$)/.test(declaration.prop)
     );
 
     expect(spacing.length).toBeGreaterThan(20);
 
     const raw = spacing
-      .filter((d) => /\d(\.\d+)?px\b/.test(d.value))
-      .map((d) => `${d.line}: ${d.prop}: ${d.value}`);
+      .filter((declaration) => /\d(\.\d+)?px\b/.test(declaration.value))
+      .map(
+        (declaration) =>
+          `${declaration.line}: ${declaration.prop}: ${declaration.value}`
+      );
 
     expect(raw).toStrictEqual([]);
   }, 0);

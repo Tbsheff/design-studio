@@ -16,13 +16,13 @@ describe("drawing strokes", () => {
     const builder = createStrokeBuilder(0, 0, minStepFor(1));
     expect(builder.add(0.5, 0.2)).toBe(IS_FALSE);
 
-    for (let x = 10; x <= 100; x += 10) {
-      builder.add(x, x % 20 === 0 ? 4 : -4);
+    for (let offset = 10; offset <= 100; offset += 10) {
+      builder.add(offset, offset % 20 === 0 ? 4 : -4);
     }
 
     builder.end(100, 0);
     const points = builder.points();
-    const ys = points.filter((_, index) => index % 2 === 1);
+    const ys = points.filter((_unusedItem, index) => index % 2 === 1);
     expect(Math.max(...ys.map(Math.abs))).toBeLessThan(4);
     expect(points.slice(-2)).toStrictEqual([100, 0]);
   }, 0);

@@ -33,7 +33,9 @@ describe("canvas frames", () => {
     let layout = defaultLayout(desktop);
     layout = addFrame(layout, { height: 1024, width: 768 });
     layout = addFrame(layout, { height: 844, width: 390 });
-    expect(layout.frames.map((f) => [f.id, f.x, f.y])).toStrictEqual([
+    expect(
+      layout.frames.map((frame) => [frame.id, frame.x, frame.y])
+    ).toStrictEqual([
       ["f1", 0, 0],
       ["f2", 1440 + FRAME_GAP, 0],
       ["f3", 1440 + 768 + FRAME_GAP * 2, 0],
@@ -156,7 +158,12 @@ describe("frames per direction", () => {
 
     expect(layout.activeId).toBe("f1");
     expect(
-      layout.frames.map((f) => [f.id, f.directionId, f.x, f.y])
+      layout.frames.map((frame) => [
+        frame.id,
+        frame.directionId,
+        frame.x,
+        frame.y,
+      ])
     ).toStrictEqual([
       ["f1", "main", 0, 0],
       ["f2", "va", 0, 900 + FRAME_GAP * 2],
@@ -170,7 +177,9 @@ describe("frames per direction", () => {
     expect.hasAssertions();
 
     const layout = placeDirections(defaultLayout(desktop), group, "main", true);
-    expect(layout.frames.map((f) => f.directionId)).toStrictEqual(group);
+    expect(layout.frames.map((frame) => frame.directionId)).toStrictEqual(
+      group
+    );
     expect(layout.activeId).toBe(layout.frames[0]?.id);
   }, 0);
 
@@ -185,16 +194,19 @@ describe("frames per direction", () => {
     );
 
     const kept = keepDirection(placed, "vc", group);
-    expect(kept.frames.map((f) => f.directionId)).toStrictEqual(["main", "vc"]);
+    expect(kept.frames.map((frame) => frame.directionId)).toStrictEqual([
+      "main",
+      "vc",
+    ]);
     expect(kept.activeId).toBe("f4");
     const back = placeDirections(kept, group, "vc", false);
-    expect(back.frames.map((f) => f.directionId).sort()).toStrictEqual([
+    expect(back.frames.map((frame) => frame.directionId).sort()).toStrictEqual([
       "main",
       "va",
       "vb",
       "vc",
     ]);
-    expect(new Set(back.frames.map((f) => f.id)).size).toBe(4);
+    expect(new Set(back.frames.map((frame) => frame.id)).size).toBe(4);
   }, 0);
 
   it("follows a direction change from outside the canvas", () => {
@@ -210,7 +222,7 @@ describe("frames per direction", () => {
     expect(followDirection(placed, "vb").activeId).toBe("f3");
     expect(followDirection(placed, "main")).toBe(placed);
     const rebound = followDirection(placed, "other");
-    expect(rebound.frames.find((f) => f.id === "f1")?.directionId).toBe(
+    expect(rebound.frames.find((frame) => frame.id === "f1")?.directionId).toBe(
       "other"
     );
 
@@ -276,7 +288,7 @@ describe("frames per direction", () => {
 
 describe(zoomKeyOf, () => {
   const key = (
-    k: string,
+    keyName: string,
     code: string,
     mods: Partial<{
       ctrlKey: boolean;
@@ -289,7 +301,7 @@ describe(zoomKeyOf, () => {
       altKey: false,
       code,
       ctrlKey: false,
-      key: k,
+      key: keyName,
       metaKey: false,
       shiftKey: false,
       ...mods,

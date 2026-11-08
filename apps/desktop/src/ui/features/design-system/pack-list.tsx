@@ -67,6 +67,8 @@ const PackCard = ({ pack }: { pack: PackSummary }): ReactElement => {
     color: swatchValue(pack, "fg"),
   };
 
+  const truncateNode = <span className="truncate">{pack.name}</span>;
+
   return (
     <>
       <span className="pack-specimen" style={colors} aria-hidden="true">
@@ -85,7 +87,7 @@ const PackCard = ({ pack }: { pack: PackSummary }): ReactElement => {
       </span>
       <span className="pack-text" data-tip={pack.description}>
         <span className="pack-name">
-          <span className="truncate">{pack.name}</span>
+          {truncateNode}
           {pack.source === "user" && (
             <span className="pack-yours">{COPY.titleYours}</span>
           )}

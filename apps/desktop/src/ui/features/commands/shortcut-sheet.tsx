@@ -103,6 +103,8 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
     })).filter((grp) => grp.entries.length > 0);
   }, [query]);
 
+  const iconNode = <Icon name="close" size={14} />;
+
   return (
     <aside className="keysheet" ref={rootRef} aria-label={copy.shortcuts}>
       <header className="keysheet-head">
@@ -113,7 +115,7 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
           aria-label={copy.closeShortcuts}
           onClick={onClose}
         >
-          <Icon name="close" size={14} />
+          {iconNode}
         </button>
       </header>
       <div className="keysheet-search">

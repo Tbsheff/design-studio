@@ -111,6 +111,25 @@ const LibraryCard = ({
   const display = fontStack(pack.fonts.display, SERIF);
   const body = fontStack(pack.fonts.body, SANS);
 
+  const libAaNode = (
+    <span className="lib-aa" style={{ fontFamily: display }}>
+      {COPY.textAa}
+    </span>
+  );
+
+  const libChipNode = (
+    <span
+      className="lib-chip"
+      style={{ background: swatch(pack, "primary") }}
+    />
+  );
+
+  const libNameNode = <span className="lib-name truncate">{pack.name}</span>;
+
+  const modeSwatchesNode = <ModeSwatches pack={pack} />;
+
+  const packBadgesNode = <PackBadges pack={pack} tags={2} />;
+
   return (
     <li>
       <button
@@ -124,23 +143,18 @@ const LibraryCard = ({
           style={{ background: swatch(pack, "bg"), color: swatch(pack, "fg") }}
           aria-hidden="true"
         >
-          <span className="lib-aa" style={{ fontFamily: display }}>
-            {COPY.textAa}
-          </span>
-          <span
-            className="lib-chip"
-            style={{ background: swatch(pack, "primary") }}
-          />
+          {libAaNode}
+          {libChipNode}
         </span>
         <span className="lib-text">
-          <span className="lib-name truncate">{pack.name}</span>
+          {libNameNode}
           <span className="lib-fonts">
             <span style={{ fontFamily: display }}>{pack.fonts.display}</span>
             <span aria-hidden="true"> {COPY.textGlyph3}</span>
             <span style={{ fontFamily: body }}>{pack.fonts.body}</span>
           </span>
-          <ModeSwatches pack={pack} />
-          <PackBadges pack={pack} tags={2} />
+          {modeSwatchesNode}
+          {packBadgesNode}
         </span>
       </button>
     </li>
@@ -295,6 +309,8 @@ const DesignSystems = ({
     onUseInNew: (pack) => leave({ activeProjectId: null, lastPackId: pack.id }),
   };
 
+  const iconNode = <Icon name="arrowLeft" size={14} />;
+
   return (
     <div className="home lib">
       <header className="home-header">
@@ -303,7 +319,7 @@ const DesignSystems = ({
           className="btn ghost small has-icon back-btn"
           onClick={back}
         >
-          <Icon name="arrowLeft" size={14} />
+          {iconNode}
           {COPY.textBack}
         </button>
       </header>

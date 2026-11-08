@@ -16,6 +16,8 @@ const ComposerComments = ({
 
   const noun = (count === 1 && "comment") || "comments";
 
+  const iconNode = <Icon name="close" size={12} />;
+
   return (
     <div className="composer-comments" data-testid="composer-comments">
       <span
@@ -31,7 +33,7 @@ const ComposerComments = ({
           aria-label={`Unlink the ${noun}`}
           onClick={onClear}
         >
-          <Icon name="close" size={12} />
+          {iconNode}
         </button>
       </span>
     </div>

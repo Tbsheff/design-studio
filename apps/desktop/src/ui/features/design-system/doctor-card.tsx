@@ -64,6 +64,8 @@ const DoctorCard = ({
     });
   };
 
+  const iconNode = <Icon name="close" size={12} />;
+
   return (
     <div className="app-fail app-doctor" role="alert" data-kind={cause.kind}>
       <div className="app-fail-head">
@@ -76,7 +78,7 @@ const DoctorCard = ({
           data-tip={COPY.tipDismiss}
           onClick={onClose}
         >
-          <Icon name="close" size={12} />
+          {iconNode}
         </button>
       </div>
       <p className="app-fail-message">{cause.detail}</p>

@@ -164,6 +164,27 @@ const CreateComponentDialog = ({
     }
   };
 
+  const btnNode = (
+    <button
+      type="button"
+      className="btn ghost"
+      onClick={onClose}
+      disabled={busy}
+    >
+      {COPY.textCancel}
+    </button>
+  );
+
+  const btnNode2 = (
+    <button
+      type="submit"
+      className="btn primary"
+      disabled={busy || nameProblem !== null || !folder}
+    >
+      {busy ? "Creating…" : "Create component"}
+    </button>
+  );
+
   return (
     <dialog
       ref={dialog.ref}
@@ -237,21 +258,8 @@ const CreateComponentDialog = ({
           )}
         </div>
         <div className="modal-foot">
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={onClose}
-            disabled={busy}
-          >
-            {COPY.textCancel}
-          </button>
-          <button
-            type="submit"
-            className="btn primary"
-            disabled={busy || nameProblem !== null || !folder}
-          >
-            {busy ? "Creating…" : "Create component"}
-          </button>
+          {btnNode}
+          {btnNode2}
         </div>
       </form>
     </dialog>

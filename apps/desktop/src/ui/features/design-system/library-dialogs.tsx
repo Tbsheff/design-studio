@@ -94,6 +94,30 @@ const RenamePackDialog = ({
     }
   };
 
+  const errorLineNode = <ErrorLine error={action.error} />;
+
+  const btnNode = (
+    <button
+      type="button"
+      className="btn ghost"
+      onClick={onClose}
+      disabled={action.busy}
+    >
+      {COPY.textCancel}
+    </button>
+  );
+
+  const btnNode2 = (
+    <button
+      type="submit"
+      className="btn primary"
+      disabled={action.busy || !name.trim() || name.trim() === pack.name}
+    >
+      {action.busy && "Renaming…"}
+      {!action.busy && "Rename"}
+    </button>
+  );
+
   return (
     <dialog
       ref={dialog.ref}
@@ -119,25 +143,11 @@ const RenamePackDialog = ({
               aria-label={COPY.labelDesignSystemName}
             />
           </label>
-          <ErrorLine error={action.error} />
+          {errorLineNode}
         </div>
         <div className="modal-foot">
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={onClose}
-            disabled={action.busy}
-          >
-            {COPY.textCancel}
-          </button>
-          <button
-            type="submit"
-            className="btn primary"
-            disabled={action.busy || !name.trim() || name.trim() === pack.name}
-          >
-            {action.busy && "Renaming…"}
-            {!action.busy && "Rename"}
-          </button>
+          {btnNode}
+          {btnNode2}
         </div>
       </form>
     </dialog>

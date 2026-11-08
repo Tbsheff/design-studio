@@ -14,3 +14,9 @@ export type {
 export type { AuthoredCssState } from "./use-authored-css.js";
 
 export { focusStageQuietly, historyKeyOf } from "../canvas/index.js";
+
+export type { PreviewMenuItem } from "../canvas/index.js";
+
+export { insertApi, insertError } from "../design-system/index.js";
+
+export { FigmaImportDialog } from "../share-publish-ship-export/index.js";

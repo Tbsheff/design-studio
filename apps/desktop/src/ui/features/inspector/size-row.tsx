@@ -17,8 +17,8 @@ import {
   toSizeFacts,
   toSizeMode,
   toSizePatch,
-} from "./sizing.js";
-import type { Axis, SizeFacts, SizeMode } from "./sizing.js";
+} from "./sizing-model.js";
+import type { Axis, SizeFacts, SizeMode } from "./sizing-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const toLiveFacts = (
@@ -92,9 +92,11 @@ const startFixedDrag = (
       toSizePatch(
         fixedDrag.axis,
         "fixed",
-        start.values,
-        fixedDrag.parent,
-        `${next}px`,
+        {
+          parent: fixedDrag.parent,
+          usedPx: `${next}px`,
+          values: start.values,
+        },
         fixedDrag.facts
       )
     );
@@ -288,7 +290,12 @@ const SizeRow = ({
           onChange={(next: SizeMode) =>
             write(
               edit,
-              toSizePatch(axis, next, edit.values, parent, used, facts)
+              toSizePatch(
+                axis,
+                next,
+                { parent, usedPx: used, values: edit.values },
+                facts
+              )
             )
           }
         />

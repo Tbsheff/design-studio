@@ -7,7 +7,7 @@ import {
   toShadows,
   listTopLevel,
   toWithBlur,
-} from "./features/inspector/shadows";
+} from "./features/inspector/index";
 
 describe(toShadows, () => {
   it("reads none and empty as no shadows", () => {

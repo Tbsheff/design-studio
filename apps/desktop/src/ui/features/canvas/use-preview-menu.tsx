@@ -21,11 +21,11 @@ import type { GenerateTabProps } from "../../canvas-preview-slots.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
 import { formatCopyCss } from "../inspector/authored-css.js";
-import { applyPasteJsx } from "../inspector/paste-jsx.js";
 import {
+  applyPasteJsx,
   toSelectionTargets,
   toStructureMenuEntries,
-} from "../inspector/structure-edits.js";
+} from "../inspector/index.js";
 import { getAuthoredCss } from "../inspector/use-authored-css.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";

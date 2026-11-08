@@ -12,13 +12,13 @@ import { api, errorText } from "../../api.js";
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
 import { IS_MAC } from "../commands/index.js";
-import { applyPasteJsx } from "../inspector/paste-jsx.js";
 import {
   NO_SOURCE,
+  applyPasteJsx,
   toDropRequest,
   toSelectionTargets,
-} from "../inspector/structure-edits.js";
-import type { LayerDrop, SelectionOp } from "../inspector/structure-edits.js";
+} from "../inspector/index.js";
+import type { LayerDrop, SelectionOp } from "../inspector/index.js";
 import { COPY } from "./copy.js";
 import { handleLayerBridge } from "./layer-bridge-model.js";
 import type { LayerBridgeContext } from "./layer-bridge-model.js";

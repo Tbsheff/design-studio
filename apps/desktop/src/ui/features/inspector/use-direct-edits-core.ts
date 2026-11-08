@@ -18,7 +18,7 @@ import type {
 } from "./direct-edit-model.js";
 import { toOwnEdits, toWithoutShifts } from "./mixed-values-model.js";
 import type { MergedValues, OwnEdit, Shifts } from "./mixed-values-model.js";
-import { startOptimistic } from "./optimistic-edit.js";
+import { startOptimistic } from "./optimistic-edit-model.js";
 import { stopTimer } from "./timer-model.js";
 import type { TimerRef } from "./timer-model.js";
 import { isStaleSelection, toFailureText } from "./use-direct-edit-core.js";
@@ -132,7 +132,7 @@ const runMultiSend = async (
     const result = await api.directEditBatch(projectId, directionId, { edits });
 
     for (const [index, one] of optimistic.entries()) {
-      one.saved(result.applied[index]?.tailwind);
+      one.saved(result.applied[index]?.tailwind ?? null);
     }
 
     for (const item of items) {

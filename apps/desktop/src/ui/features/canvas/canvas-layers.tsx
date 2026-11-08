@@ -14,8 +14,8 @@ import { canvasHasKeys } from "../../platform/typing-target.js";
 import {
   toSelectionTargets,
   toStructureMenuEntries,
-} from "../inspector/structure-edits.js";
-import type { LayerDrop } from "../inspector/structure-edits.js";
+} from "../inspector/index.js";
+import type { LayerDrop } from "../inspector/index.js";
 import { LayersPanel } from "../versions-layers-tokens/layers-panel.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
@@ -75,7 +75,8 @@ const CanvasLayersPanel = ({
 
   if (edits.enabled) {
     actions = {
-      menuItems: () => toStructureMenuEntries(menuState, edits.structureKey),
+      menuItems: () =>
+        toStructureMenuEntries(menuState, edits.structureKey, false),
       onDrop: edits.dropNode,
       onMove: edits.moveNode,
       onMoveSelected: edits.moveSelected,

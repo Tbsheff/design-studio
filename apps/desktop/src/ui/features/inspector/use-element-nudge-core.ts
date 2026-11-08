@@ -20,7 +20,7 @@ import {
   toSaved,
 } from "./nudge-model.js";
 import type { Burst, Mover, Saved } from "./nudge-model.js";
-import { startOptimistic } from "./optimistic-edit.js";
+import { startOptimistic } from "./optimistic-edit-model.js";
 import { stopTimer } from "./timer-model.js";
 import type { TimerRef } from "./timer-model.js";
 
@@ -97,14 +97,14 @@ const runNudgeSave = async (core: NudgeCore, batch: Burst): Promise<void> => {
         (list[0] as Saved).edit
       );
 
-      optimistic[0]?.saved(result.tailwind);
+      optimistic[0]?.saved(result.tailwind ?? null);
     } else {
       const result = await api.directEditBatch(cur.projectId, cur.directionId, {
         edits: list.map((one) => one.edit),
       });
 
       for (const [index, one] of optimistic.entries()) {
-        one.saved(result.applied[index]?.tailwind);
+        one.saved(result.applied[index]?.tailwind ?? null);
       }
     }
 

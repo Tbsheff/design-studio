@@ -1,14 +1,31 @@
 import type {
   LayerNode,
   SelectionContext,
+  SourceLoc,
   StructureEditRequest,
   StructureKey,
   StructureTarget,
 } from "@design-studio/contracts";
+import type { IconName } from "@design-studio/ui";
 
 import { STRUCTURE_KEY_IDS } from "../../../shared/structure-keys.js";
-import type { PreviewMenuItem } from "../canvas/preview-menu.js";
-import { parseLoc } from "../comments/comment-anchors.js";
+import type { PreviewMenuItem } from "./deps.js";
+
+const LOC_RE = /^(?<file>.+):(?<line>\d+):(?<col>\d+)$/u;
+
+const toSourceLoc = (value: string | null): SourceLoc | null => {
+  const groups = LOC_RE.exec(value ?? "")?.groups;
+
+  if (!groups?.file) {
+    return null;
+  }
+
+  return {
+    col: Number(groups.col),
+    file: groups.file,
+    line: Number(groups.line),
+  };
+};
 
 type SelectionOp = "delete" | "duplicate" | "wrap" | "unwrap" | "group";
 
@@ -46,10 +63,14 @@ const toRefId = (drop: LayerDrop): number => {
   return drop.after;
 };
 
-const toNodeTarget = (node: LayerNode | undefined): StructureTarget | null => {
-  const source = parseLoc(node?.loc);
+const toNodeTarget = (node: LayerNode | null): StructureTarget | null => {
+  const source = toSourceLoc(node?.loc ?? null);
 
-  return node && source ? { source, tag: node.tag } : null;
+  if (node && source) {
+    return { source, tag: node.tag };
+  }
+
+  return null;
 };
 
 const isSameLoc = (first: StructureTarget, second: StructureTarget): boolean =>
@@ -79,7 +100,7 @@ const toDropRequest = (
   selection: SelectionContext[]
 ): StructureEditRequest | null => {
   const byId = (key: number): StructureTarget | null =>
-    toNodeTarget(nodes.find((node) => node.id === key));
+    toNodeTarget(nodes.find((node) => node.id === key) ?? null);
 
   const dragged = byId(id);
 
@@ -131,7 +152,7 @@ const toMenuLabel = (key: StructureKey, count: number): string => {
   return LABELS[key];
 };
 
-const ICONS: Record<StructureKey, PreviewMenuItem["icon"]> = {
+const ICONS: Record<StructureKey, IconName> = {
   cut: "arrowRight",
   delete: "trash",
   duplicate: "copy",
@@ -154,7 +175,7 @@ const MENU_ORDER: StructureKey[] = [
 const toBlockReason = (
   key: StructureKey,
   state: StructureMenuState
-): string | undefined => {
+): string | null => {
   if (!state.hasSource) {
     return NO_SOURCE;
   }
@@ -167,29 +188,44 @@ const toBlockReason = (
     return "Cut a layer first, then select where it goes.";
   }
 
-  return undefined;
+  return null;
+};
+
+const toMenuItem = (
+  key: StructureKey,
+  index: number,
+  context: {
+    readonly state: StructureMenuState;
+    readonly run: (key: StructureKey) => void;
+    readonly hasLeadDivider: boolean;
+  }
+): PreviewMenuItem => {
+  const reason = toBlockReason(key, context.state);
+
+  const item: PreviewMenuItem = {
+    divider: (context.hasLeadDivider && index === 0) || key === "delete",
+    icon: ICONS[key],
+    id: `structure-${key}`,
+    keyId: STRUCTURE_KEY_IDS[key],
+    label: toMenuLabel(key, context.state.count),
+    run: () => context.run(key),
+  };
+
+  if (reason) {
+    return { ...item, disabled: reason };
+  }
+
+  return item;
 };
 
 const toStructureMenuEntries = (
   state: StructureMenuState,
   run: (key: StructureKey) => void,
-  leadDivider = false
+  hasLeadDivider: boolean
 ): PreviewMenuItem[] =>
-  MENU_ORDER.map((key, index) => {
-    const disabled = toBlockReason(key, state);
-
-    const label = toMenuLabel(key, state.count);
-
-    return {
-      divider: (leadDivider && index === 0) || key === "delete",
-      icon: ICONS[key],
-      id: `structure-${key}`,
-      keyId: STRUCTURE_KEY_IDS[key],
-      label,
-      run: () => run(key),
-      ...(disabled ? { disabled } : {}),
-    };
-  });
+  MENU_ORDER.map((key, index) =>
+    toMenuItem(key, index, { hasLeadDivider, run, state })
+  );
 
 export {
   NO_SOURCE,

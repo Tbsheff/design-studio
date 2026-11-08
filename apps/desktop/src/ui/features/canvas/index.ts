@@ -34,3 +34,5 @@ export { nextSelection } from "./preview-selection-model.js";
 
 export { historyKeyOf } from "./use-undo-shortcut.js";
 export { focusStageQuietly } from "./use-inline-text-edit.js";
+
+export type { PreviewMenuItem } from "./preview-menu.js";

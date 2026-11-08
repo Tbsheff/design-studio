@@ -37,3 +37,34 @@ export {
   toMergedValues,
   toMultiBlockReason,
 } from "./mixed-values-model.js";
+
+export { startOptimistic } from "./optimistic-edit-model.js";
+
+export {
+  toActiveCell,
+  toAlignCell,
+  toAxisRole,
+  toParentLayout,
+  toSizeMode,
+  toSizePatch,
+} from "./sizing-model.js";
+
+export {
+  NEW_SHADOW,
+  listTopLevel,
+  toBlur,
+  toShadows,
+  toShadowsText,
+  toWithBlur,
+} from "./shadows-model.js";
+
+export {
+  NO_SOURCE,
+  toDropRequest,
+  toSelectionTargets,
+  toStructureMenuEntries,
+} from "./structure-edits-model.js";
+
+export type { LayerDrop, SelectionOp } from "./structure-edits-model.js";
+
+export { applyPasteJsx } from "./use-paste-jsx.js";

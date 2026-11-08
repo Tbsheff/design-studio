@@ -14,7 +14,7 @@ import { createPortal } from "react-dom";
 
 import { PreviewMenu } from "../canvas/preview-menu.js";
 import type { PreviewMenuItem } from "../canvas/preview-menu.js";
-import { NO_SOURCE } from "../inspector/structure-edits.js";
+import { NO_SOURCE } from "../inspector/index.js";
 import { insertApi, insertBus, insertError } from "./component-insert-api.js";
 import type { DropHint } from "./component-insert-api.js";
 

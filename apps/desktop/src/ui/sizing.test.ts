@@ -7,7 +7,7 @@ import {
   toParentLayout,
   toSizeMode,
   toSizePatch,
-} from "./features/inspector/sizing";
+} from "./features/inspector/index";
 
 const rowParent = toParentLayout({
   "parent-display": "flex",
@@ -38,62 +38,94 @@ describe(toAxisRole, () => {
   });
 });
 
+const patchOf = (
+  axis: "width" | "height",
+  mode: "hug" | "fill" | "fixed",
+  context: Parameters<typeof toSizePatch>[2]
+): ReturnType<typeof toSizePatch> => toSizePatch(axis, mode, context, null);
+
 describe(toSizePatch, () => {
   it("fill writes flex: 1 on the main axis of a flex parent", () => {
-    expect(toSizePatch("width", "fill", plain, rowParent, "240px")).toEqual({
+    expect(
+      patchOf("width", "fill", {
+        parent: rowParent,
+        usedPx: "240px",
+        values: plain,
+      })
+    ).toEqual({
       flex: "1",
     });
-    expect(toSizePatch("height", "fill", plain, columnParent, "80px")).toEqual({
+    expect(
+      patchOf("height", "fill", {
+        parent: columnParent,
+        usedPx: "80px",
+        values: plain,
+      })
+    ).toEqual({
       flex: "1",
     });
   });
 
   it("fill writes align-self: stretch and clears the size on the cross axis", () => {
-    expect(toSizePatch("height", "fill", plain, rowParent, "80px")).toEqual({
+    expect(
+      patchOf("height", "fill", {
+        parent: rowParent,
+        usedPx: "80px",
+        values: plain,
+      })
+    ).toEqual({
       "align-self": "stretch",
       height: "",
     });
   });
 
   it("fill writes 100% outside flex", () => {
-    expect(toSizePatch("width", "fill", plain, blockParent, "240px")).toEqual({
+    expect(
+      patchOf("width", "fill", {
+        parent: blockParent,
+        usedPx: "240px",
+        values: plain,
+      })
+    ).toEqual({
       width: "100%",
     });
   });
+});
 
+describe("size modes", () => {
   it("hug writes fit-content and clears a flex grow", () => {
     expect(
-      toSizePatch(
-        "width",
-        "hug",
-        { ...plain, flex: "1 1 0%" },
-        rowParent,
-        "240px"
-      )
+      patchOf("width", "hug", {
+        parent: rowParent,
+        usedPx: "240px",
+        values: { ...plain, flex: "1 1 0%" },
+      })
     ).toEqual({ width: "fit-content", flex: "" });
-    expect(toSizePatch("height", "hug", plain, blockParent, "80px")).toEqual({
+    expect(
+      patchOf("height", "hug", {
+        parent: blockParent,
+        usedPx: "80px",
+        values: plain,
+      })
+    ).toEqual({
       height: "fit-content",
     });
   });
 
   it("fixed writes the used px and clears stretch", () => {
     expect(
-      toSizePatch(
-        "height",
-        "fixed",
-        { ...plain, height: "", "align-self": "stretch" },
-        rowParent,
-        "80px"
-      )
+      patchOf("height", "fixed", {
+        parent: rowParent,
+        usedPx: "80px",
+        values: { ...plain, height: "", "align-self": "stretch" },
+      })
     ).toEqual({ height: "80px", "align-self": "" });
     expect(
-      toSizePatch(
-        "width",
-        "fixed",
-        { ...plain, width: "fit-content" },
-        blockParent,
-        "132px"
-      )
+      patchOf("width", "fixed", {
+        parent: blockParent,
+        usedPx: "132px",
+        values: { ...plain, width: "fit-content" },
+      })
     ).toEqual({ width: "132px" });
   });
 
@@ -103,9 +135,9 @@ describe(toSizePatch, () => {
         for (const mode of ["hug", "fill", "fixed"] as const) {
           const next = {
             ...plain,
-            ...toSizePatch(axis, mode, plain, parent, "100px"),
+            ...patchOf(axis, mode, { parent, usedPx: "100px", values: plain }),
           };
-          expect(toSizeMode(axis, next, parent)).toBe(mode);
+          expect(toSizeMode(axis, next, parent, null)).toBe(mode);
         }
       }
     }

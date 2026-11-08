@@ -13,9 +13,12 @@ import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import { applyCommit, createCurrentEditRequest } from "../inspector/index.js";
-import { startOptimistic } from "../inspector/optimistic-edit.js";
-import { toSelectionTargets } from "../inspector/structure-edits.js";
+import {
+  applyCommit,
+  createCurrentEditRequest,
+  startOptimistic,
+  toSelectionTargets,
+} from "../inspector/index.js";
 import { snapRect } from "./snap-model.js";
 import type {
   Rect,
@@ -393,7 +396,7 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
           req
         );
 
-        optimistic.saved(result.tailwind);
+        optimistic.saved(result.tailwind ?? null);
         live.current.refreshRects();
       } catch (error) {
         optimistic.failed(errorText(error));

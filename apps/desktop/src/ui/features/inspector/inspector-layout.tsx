@@ -7,7 +7,7 @@ import { InspectorSection } from "./inspector-fields.js";
 import { MinMaxRows } from "./min-max-rows.js";
 import { isPositioned, PositionRows } from "./position-rows.js";
 import { SizeRow } from "./size-row.js";
-import { toParentLayout } from "./sizing.js";
+import { toParentLayout } from "./sizing-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const SizeRows = ({

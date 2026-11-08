@@ -13,7 +13,7 @@ import {
   toAlignCell,
   isFlexDisplay,
   isGridDisplay,
-} from "./sizing.js";
+} from "./sizing-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const DIRECTIONS: {

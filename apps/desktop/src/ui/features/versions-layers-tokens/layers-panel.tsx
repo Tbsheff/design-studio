@@ -10,7 +10,7 @@ import { PreviewMenu } from "../canvas/preview-menu.js";
 import type { PreviewMenuItem } from "../canvas/preview-menu.js";
 import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
 import { IS_MAC, tipWithKey } from "../commands/index.js";
-import type { LayerDrop } from "../inspector/structure-edits.js";
+import type { LayerDrop } from "../inspector/index.js";
 import { COPY } from "./copy.js";
 import { LayersHeader } from "./layers-header.js";
 import { LayersList } from "./layers-list.js";

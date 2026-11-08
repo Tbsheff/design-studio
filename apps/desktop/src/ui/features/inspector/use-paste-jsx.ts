@@ -8,10 +8,7 @@ import type {
   JsxInsertPosition,
 } from "@design-studio/contracts/insert";
 
-import {
-  insertApi,
-  insertError,
-} from "../design-system/component-insert-api.js";
+import { FigmaImportDialog, insertApi, insertError } from "./deps.js";
 
 const VOID = new Set([
   "img",
@@ -30,12 +27,19 @@ const VOID = new Set([
   "embed",
 ]);
 
-const toTarget = (selection: SelectionContext): InsertTarget => ({
-  selector: selection.selector,
-  source: selection.source,
-  tag: selection.tag.toLowerCase(),
-  ...(selection.owners?.length ? { owners: selection.owners } : {}),
-});
+const toTarget = (selection: SelectionContext): InsertTarget => {
+  const target: InsertTarget = {
+    selector: selection.selector,
+    source: selection.source,
+    tag: selection.tag.toLowerCase(),
+  };
+
+  if (selection.owners?.length) {
+    return { ...target, owners: selection.owners };
+  }
+
+  return target;
+};
 
 const getClipboardText = async (): Promise<string | null> => {
   try {
@@ -51,10 +55,9 @@ const startFigmaImport = async (
   text: string,
   notify: (message: string) => void
 ): Promise<void> => {
-  const [{ createElement }, { createRoot }, dialog] = await Promise.all([
+  const [{ Suspense, createElement }, { createRoot }] = await Promise.all([
     import("react"),
     import("react-dom/client"),
-    import("../share-publish-ship-export/figma-import-dialog.js"),
   ]);
 
   const host = document.createElement("div");
@@ -68,16 +71,43 @@ const startFigmaImport = async (
     });
   };
 
-  root.render(
-    createElement(dialog.FigmaImportDialog, {
-      canNest: !VOID.has(selection.tag.toLowerCase()),
-      ids,
-      onClose: close,
-      onDone: notify,
-      target: toTarget(selection),
-      text,
-    })
-  );
+  const canNest = !VOID.has(selection.tag.toLowerCase());
+  const onClose = close;
+  const onDone = notify;
+  const target = toTarget(selection);
+
+  const dialog = createElement(FigmaImportDialog, {
+    canNest,
+    ids,
+    onClose,
+    onDone,
+    target,
+    text,
+  });
+
+  root.render(createElement(Suspense, { fallback: null }, dialog));
+};
+
+const toInsertPosition = (selection: SelectionContext): JsxInsertPosition => {
+  if (VOID.has(selection.tag.toLowerCase())) {
+    return "after";
+  }
+
+  return "inside";
+};
+
+const toImportsText = (added: number): string => {
+  if (added === 0) {
+    return "";
+  }
+
+  let noun = "imports";
+
+  if (added === 1) {
+    noun = "import";
+  }
+
+  return `, ${added} ${noun} added`;
 };
 
 const applyPasteJsx = async (
@@ -85,39 +115,40 @@ const applyPasteJsx = async (
   selection: SelectionContext,
   notify: (message: string) => void
 ): Promise<void> => {
-  const jsx = (await getClipboardText())?.trim();
+  const clipboard = await getClipboardText();
+  const jsx = clipboard?.trim() ?? null;
 
-  if (jsx === undefined) {
-    return notify(
+  if (jsx === null) {
+    notify(
       "The studio cannot read the clipboard. Allow clipboard access, then try again."
     );
+
+    return;
   }
 
   if (looksLikeFigmaNodes(jsx) || looksLikeFigmaLink(jsx)) {
-    return startFigmaImport(ids, selection, jsx, notify);
+    await startFigmaImport(ids, selection, jsx, notify);
+
+    return;
   }
 
   if (!jsx.startsWith("<")) {
-    return notify(
+    notify(
       "The clipboard has no JSX. Copy a snippet such as <Card>…</Card> or Figma nodes JSON, then try again."
     );
-  }
 
-  const position: JsxInsertPosition = VOID.has(selection.tag.toLowerCase())
-    ? "after"
-    : "inside";
+    return;
+  }
 
   try {
     const result = await insertApi.insertJsx(ids.projectId, ids.directionId, {
       jsx,
-      position,
+      position: toInsertPosition(selection),
       target: toTarget(selection),
     });
 
     const added = (result.imports ?? []).filter((item) => item.added).length;
-    notify(
-      `${result.title}${added > 0 ? `, ${added} import${added === 1 ? "" : "s"} added` : ""}.`
-    );
+    notify(`${result.title}${toImportsText(added)}.`);
   } catch (error) {
     notify(insertError(error));
   }

@@ -28,7 +28,7 @@ import type {
 } from "./direct-edit-model.js";
 import { createEditRequest } from "./edit-request-model.js";
 import { editVariantStore } from "./edit-variant.js";
-import { startOptimistic } from "./optimistic-edit.js";
+import { startOptimistic } from "./optimistic-edit-model.js";
 import { stopTimer } from "./timer-model.js";
 import type { TimerRef } from "./timer-model.js";
 
@@ -191,7 +191,7 @@ const runEditSend = async (
       request
     );
 
-    optimistic.saved(result.tailwind);
+    optimistic.saved(result.tailwind ?? null);
     core.setTailwind(result.tailwind ?? null);
     current.onCommitted(commit);
     core.setStatus({ at: Date.now(), kind: "saved" });

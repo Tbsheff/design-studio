@@ -9,8 +9,11 @@ import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import { applyCommit, createCurrentEditRequest } from "../inspector/index.js";
-import { startOptimistic } from "../inspector/optimistic-edit.js";
+import {
+  applyCommit,
+  createCurrentEditRequest,
+  startOptimistic,
+} from "../inspector/index.js";
 import { snapOff, snapRect } from "./snap-model.js";
 import type { Rect, SnapGuide } from "./snap-model.js";
 
@@ -334,7 +337,7 @@ const useResizeHandles = (optionsValue: Options): ResizeHandles => {
 
     try {
       const result = await api.directEdit(cur.projectId, cur.directionId, req);
-      optimistic.saved(result.tailwind);
+      optimistic.saved(result.tailwind ?? null);
       live.current.refreshRects();
     } catch (error) {
       const back = {

@@ -13,7 +13,7 @@ import type { MutableRefObject } from "react";
 
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
-import { NO_SOURCE } from "../inspector/structure-edits.js";
+import { NO_SOURCE } from "../inspector/index.js";
 import { insertApi, insertBus, insertError } from "./component-insert-api.js";
 import type { DropHint, InsertHost } from "./component-insert-api.js";
 

@@ -1,6 +1,6 @@
 import type { ShiftPart } from "./css-values.js";
-import { toShadowsText, toShadows } from "./shadows.js";
-import type { Shadow } from "./shadows.js";
+import { toShadowsText, toShadows } from "./shadows-model.js";
+import type { Shadow } from "./shadows-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 type Part = "x" | "y" | "blur" | "spread";

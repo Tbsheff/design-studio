@@ -6,7 +6,7 @@ import { imageKindOf } from "../../../shared/image.js";
 import type { SetImageRequest } from "../../../shared/image.js";
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
-import { NO_SOURCE } from "./structure-edits.js";
+import { NO_SOURCE } from "./structure-edits-model.js";
 import { useLatestRef } from "./use-latest-ref.js";
 
 interface Options {

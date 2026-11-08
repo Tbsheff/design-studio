@@ -36,7 +36,6 @@ const LEGACY_ORDER: readonly string[] = [
   "list_page_variations",
   "keep_page_variation",
   "discard_page_variation",
-  "list_components",
   "set_props",
   "find_styles",
   "replace_style",

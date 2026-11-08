@@ -1,15 +1,11 @@
 import { inspectPropsInstanceDirectEdit } from "@design-studio/actions/direct-edit/inspect-props-instance";
-import { listPropsComponentsDirectEdit } from "@design-studio/actions/direct-edit/list-props-components";
 import { setProp } from "@design-studio/actions/prop/set";
 import type { Project, SourceLoc } from "@design-studio/contracts";
 import {
-  COMPONENT_LIST_MAX,
-  COMPONENT_SOURCES,
   PROP_NAME,
   PROP_TEXT_MAX,
   PROPS_MAX,
   type ComponentInstance,
-  type ComponentSchemaList,
   type PropValue,
   type SetPropsResult,
 } from "@design-studio/contracts/props";
@@ -44,39 +40,6 @@ const propValue = z.union([
   z.boolean(),
   z.null(),
 ]);
-
-const listSchema = z
-  .object({
-    projectId,
-    directionId,
-    query: z
-      .string()
-      .trim()
-      .max(100)
-      .optional()
-      .describe(
-        'Search text: matches the component name first (exact, then prefix, then part), then its folder or file, then the props, variants and other text of its file. For example "badge" or "card".'
-      ),
-    source: z
-      .enum(COMPONENT_SOURCES)
-      .optional()
-      .describe(
-        '"package" for components of shared workspace packages (such as packages/ui), "app" for components in the app, "all" (default) for both. Package components always come first.'
-      ),
-    limit: z
-      .number()
-      .int()
-      .min(1)
-      .max(COMPONENT_LIST_MAX)
-      .optional()
-      .describe("Components per page. Default 20."),
-    cursor: z
-      .string()
-      .regex(/^\d{1,6}$/)
-      .optional()
-      .describe("nextCursor from the previous page."),
-  })
-  .strict();
 
 const setSchema = z
   .object({
@@ -153,102 +116,6 @@ export async function useSiteOf(
 function valueText(value: PropValue | null): string {
   return value === null ? "default" : String(value);
 }
-
-type ListedComponent = ComponentSchemaList["components"][number];
-
-function sharedNotes(items: ListedComponent[]): Map<string, string[]> {
-  const byNote = new Map<string, string[]>();
-
-  for (const item of items) {
-    if (item.note) {
-      byNote.set(item.note, [...(byNote.get(item.note) ?? []), item.name]);
-    }
-  }
-
-  return new Map([...byNote].filter(([, names]) => names.length > 1));
-}
-
-function compactList(list: ComponentSchemaList): unknown {
-  const notes = sharedNotes(list.components);
-  const firstOfFile = new Map<string, string>();
-
-  const components = list.components.map((item) => {
-    const { note, parts, ...rest } = item as ListedComponent & {
-      parts?: string[];
-    };
-
-    const first = firstOfFile.get(item.file);
-
-    if (!first) {
-      firstOfFile.set(item.file, item.name);
-    }
-
-    return {
-      ...rest,
-      ...(note && !notes.has(note) ? { note } : {}),
-      ...(first ? { sameFileAs: first } : parts ? { parts } : {}),
-    };
-  });
-
-  const shared = [...notes].map(
-    ([note, names]) => `${names.join(", ")}: ${note}`
-  );
-
-  return {
-    ...list,
-    components,
-    ...(shared.length > 0 ? { notes: shared } : {}),
-  };
-}
-
-const listComponents = defineTool(
-  "list_components",
-  listSchema,
-  {
-    title: "List components and props",
-    description:
-      "Find the React components of the project, shared workspace packages (the kit, such as packages/ui) first, then by use count. Each item has source (package or app), file, line, folder, parts (the other components of the same file, such as CardHeader for Card; later items of that file say sameFileAs instead), a ready import line and a minimal JSX example, the use count, and the props schema: each prop with its control (select with options, boolean, text, number), default, and whether it comes from a cva() variant or the TypeScript props type; the cva variants with the classes of each option; and asChild. Pages hold 20 items: pass nextCursor as cursor for the next one. Use the names with insert_component and the options with set_props.",
-    readOnly: true,
-    idempotent: true,
-  },
-  async (deps, input): Promise<Done> => {
-    const { project, direction } = await loadTarget(
-      deps,
-      input.projectId,
-      input.directionId
-    );
-
-    if (project.kind !== "react") {
-      return {
-        result: ok({
-          components: [],
-          note: "This is an HTML project; it has no React components.",
-        }),
-      };
-    }
-
-    const page = await callAction<{
-      items: ComponentSchemaList["components"];
-      next: string | null;
-    }>(deps, listPropsComponentsDirectEdit, {
-      cursor: input.cursor ?? null,
-      directionId: direction.id,
-      limit: input.limit ?? 20,
-      projectId: project.id,
-      ...(input.query ? { query: input.query } : {}),
-      ...(input.source ? { source: input.source } : {}),
-    });
-
-    const list: ComponentSchemaList = {
-      components: page.items,
-      nextCursor: page.next,
-      total: page.items.length,
-      truncated: page.next !== null,
-    };
-
-    return { result: ok(compactList(list)) };
-  }
-);
 
 const setProps = defineTool(
   "set_props",
@@ -330,4 +197,4 @@ const setProps = defineTool(
   }
 );
 
-export const PROPS_TOOLS = [listComponents, setProps];
+export const PROPS_TOOLS = [setProps];

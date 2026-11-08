@@ -1,21 +1,14 @@
 import { DEFAULT_FRAME_STATE } from "@design-studio/contracts/frame-state";
-import {
-  COMPONENT_LIST_MAX,
-  COMPONENT_SOURCES,
-} from "@design-studio/contracts/props";
 import { Schema } from "effect";
 
 import {
   toDefaulted,
-  toOptional,
-  toOptionalInt,
   toOptionalText,
   toSdkFieldSet,
   toToolInput,
 } from "../agent-tools/index.js";
 import type { ToolArgs } from "../agent-tools/index.js";
 import { findFrame } from "../canvas/index.js";
-import { listComponentSchemas } from "../components/props-service.js";
 import { layerTreeText } from "../mcp/layer-tools.js";
 import {
   isLayerRef,
@@ -43,28 +36,6 @@ type ToolText = Readonly<{
 const EDIT_VIEWPORT: Viewport = { height: 900, width: 1440 };
 const SELECTOR_KEYS = ["selector", "targetSelector"] as const;
 
-const listComponentsFields = {
-  cursor: Schema.optionalKey(
-    Schema.String.check(Schema.isPattern(/^\d{1,6}$/u)).annotate({
-      description: "nextCursor from the previous page.",
-    })
-  ),
-  limit: toOptionalInt(
-    1,
-    COMPONENT_LIST_MAX,
-    "Components per page. Default 20."
-  ),
-  query: toOptionalText(
-    0,
-    100,
-    'Search text: matches the component name first (exact, then prefix, then part), then its folder or file, then the props, variants and other text of its file. For example "badge" or "card".'
-  ),
-  source: toOptional(
-    Schema.Literals(COMPONENT_SOURCES),
-    '"package" for components of shared workspace packages (such as packages/ui), "app" for components in the app, "all" (default) for both. Package components always come first.'
-  ),
-};
-
 const getLayersFields = {
   depth: toDefaulted(
     Schema.Int.check(Schema.isBetween({ maximum: 30, minimum: 0 })),
@@ -88,11 +59,8 @@ const getLayersFields = {
   ),
 };
 
-export const listComponentsSdkFields = toSdkFieldSet(listComponentsFields);
-
 export const getLayersSdkFields = toSdkFieldSet(getLayersFields);
 
-const listSchema = toToolInput(listComponentsFields);
 const layersSchema = toToolInput(getLayersFields);
 
 function text(message: string, isError = false): ToolText {
@@ -104,43 +72,6 @@ function text(message: string, isError = false): ToolText {
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-export async function runListComponents(
-  deps: DirectToolDeps,
-  args: ToolArgs<typeof listSchema>
-): Promise<ToolText> {
-  const parsed = listSchema.safeParse(args);
-
-  if (!parsed.success) {
-    return text(`list_components: ${parsed.error}`, true);
-  }
-
-  const { project, direction } = deps.ctx;
-
-  if (project.kind !== "react") {
-    return text(
-      JSON.stringify({
-        components: [],
-        note: "This is an HTML project; it has no React components.",
-      })
-    );
-  }
-
-  try {
-    const { query, source, limit, cursor } = parsed.data;
-
-    const list = await listComponentSchemas(project, direction.workTree, {
-      limit: limit ?? 20,
-      ...(query ? { query } : {}),
-      ...(source ? { source } : {}),
-      ...(cursor ? { cursor } : {}),
-    });
-
-    return text(JSON.stringify(list, null, 2));
-  } catch (error) {
-    return text(`list_components failed: ${describeError(error)}`, true);
-  }
 }
 
 async function framePage(

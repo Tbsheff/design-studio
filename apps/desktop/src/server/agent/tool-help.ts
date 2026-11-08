@@ -63,8 +63,6 @@ export const TOOL_SHORT = {
     "Read only. Project breakpoints, the active one for a frame width, and the values each breakpoint overrides on a layer.",
   list_comments:
     "Read only. Comments pinned on this direction: number, author, text, element, frame, status.",
-  list_components:
-    "Read only. Project components, the shared kit first, with import line, JSX example, parts and cva variants. Use query; pages of 20.",
   list_frame_states:
     "Attached apps only. Read only. Frame preview states, which frame shows which, and the session in use.",
   list_links:
@@ -150,8 +148,6 @@ export const TOOL_HELP: Record<
   list_breakpoints: listBreakpointsDescription,
   list_comments:
     "Read only. List the comments pinned on this direction with the same server code as the studio Comments pane and the MCP list_comments tool: number, author (an outside agent or the user), text, replies, element (selector, source file:line, component), frame and status. status: open (default), all or one status; frame: frame id, @label or page path.",
-  list_components:
-    "Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.",
   list_frame_states: `Attached apps only. Read only. List the frame preview states (signed in, empty, loading, error, mock), which frame shows which, and the session in use. ${FRAME_STATES_NOTE}`,
   list_links:
     'List the prototype links (on click of an element, go to a frame) used by Play mode: id, frame, selector, target frame or "back", transition, broken (null or why the link no longer works) and startFrame. Each page with links is rendered to check the elements.',

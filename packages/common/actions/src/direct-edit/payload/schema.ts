@@ -140,12 +140,18 @@ const PropsInstanceFields = {
 } as const;
 
 const PropsComponentQueryFields = {
-  query: Schema.String.check(Schema.isMaxLength(QUERY_TEXT_MAX)).pipe(
-    Schema.withDecodingDefaultKey(Effect.succeed(""))
-  ),
-  source: Schema.Literals(["package", "app", "all"]).pipe(
-    Schema.withDecodingDefaultKey(Effect.succeed("all" as const))
-  ),
+  query: Schema.String.check(Schema.isMaxLength(QUERY_TEXT_MAX))
+    .annotate({
+      description:
+        'Search text: matches the component name first (exact, then prefix, then part), then its folder or file, then the props, variants and other text of its file. For example "badge" or "card".',
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(""))),
+  source: Schema.Literals(["package", "app", "all"])
+    .annotate({
+      description:
+        '"package" for components of shared workspace packages (such as packages/ui), "app" for components in the app, "all" (default) for both. Package components always come first.',
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed("all" as const))),
 } as const;
 
 const PropTextSchema = Schema.String.check(Schema.isMaxLength(PROP_TEXT_MAX));

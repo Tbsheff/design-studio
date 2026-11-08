@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent, useRef } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import { reloadFramesMatching } from "../../platform/stage-dom.js";
 import { uiStore } from "../../platform/storage.js";
 import type { PanelTab } from "../../platform/use-panel-tab.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
@@ -84,20 +85,28 @@ const useShellState = (
   }, [pane, setSelectMode]);
 };
 
+interface ShellPaneInput {
+  readonly layersOpenSetting: boolean;
+  readonly live: boolean;
+  readonly selectMode: boolean;
+  readonly setSelectMode: SetSelectMode;
+}
+
+interface ShellPane {
+  readonly closeLayers: () => void;
+  readonly layersOpen: boolean;
+  readonly picking: boolean;
+  readonly place: (panel: ReactNode) => ReactNode;
+  readonly toggleEdit: () => void;
+}
+
 const useShellPane = (
   shell: CanvasShell | undefined,
   comment: CommentTool,
-  selectMode: boolean,
-  setSelectMode: SetSelectMode,
-  live: boolean,
-  layersOpenSetting: boolean
-): {
-  closeLayers: () => void;
-  layersOpen: boolean;
-  picking: boolean;
-  place: (panel: ReactNode) => ReactNode;
-  toggleEdit: () => void;
-} => {
+  input: ShellPaneInput
+): ShellPane => {
+  const { layersOpenSetting, live, selectMode, setSelectMode } = input;
+
   useShellState(shell, comment, setSelectMode);
   const picking = selectMode || (shell?.pane === "design" && !comment.on);
 
@@ -185,14 +194,8 @@ const toolOf = (
 };
 
 const reloadFrames = (stage: HTMLElement | null): void => {
-  const frames = stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame");
-
-  for (const el of frames ?? []) {
-    const { src } = el;
-
-    if (src) {
-      el.src = src;
-    }
+  if (stage) {
+    reloadFramesMatching("iframe.frame", stage);
   }
 };
 
@@ -212,4 +215,10 @@ const scopeOf = (selection: SelectionContext[]): string | null => {
 
 export { fileNameOf, reloadFrames, scopeOf, toolOf, useShellPane };
 
-export type { CanvasShell, CommentTool, SetSelectMode };
+export type {
+  CanvasShell,
+  CommentTool,
+  SetSelectMode,
+  ShellPane,
+  ShellPaneInput,
+};

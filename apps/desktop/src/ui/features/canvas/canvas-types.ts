@@ -17,6 +17,7 @@ import type { CanvasSource } from "../../domain/canvas-presets.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { TabOrderSlot } from "../accessibility/index.js";
+import type { InlinePromptView } from "../chat/index.js";
 import type { CommentsControl } from "../comments/use-comments.js";
 import type { GridOverlay } from "../grid/index.js";
 import type { BuildError, FilesChange } from "../home/use-studio-data.js";
@@ -96,6 +97,13 @@ interface CanvasCommandsInput {
 
 interface StageSlots {
   readonly Grid: LazyExoticComponent<typeof GridOverlay>;
+  readonly InlinePrompt: LazyExoticComponent<
+    ComponentType<{
+      frame: { width: number; height: number };
+      view: InlinePromptView;
+      zoom: number;
+    }>
+  >;
   readonly Spacing: LazyExoticComponent<typeof SpacingHandles>;
   readonly TabOrder: typeof TabOrderSlot;
 }

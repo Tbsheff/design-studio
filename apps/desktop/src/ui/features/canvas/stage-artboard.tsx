@@ -66,6 +66,8 @@ const StageArtboard = ({
         wiring={wiring}
       />
       <StageLayers
+        slots={slots}
+        variant={variant}
         props={props}
         stage={stage}
         preview={preview}

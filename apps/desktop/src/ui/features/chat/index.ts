@@ -20,4 +20,8 @@ const McpPointBadge = lazy(async () => {
   return { default: loaded.McpPointBadge };
 });
 
-export { ChatPanel, McpPointBadge, McpToasts, runStepText };
+const InlinePrompt = lazy(() => import("./inline-prompt.js"));
+
+export { ChatPanel, InlinePrompt, McpPointBadge, McpToasts, runStepText };
+
+export type { InlinePromptView } from "./use-inline-prompt.js";

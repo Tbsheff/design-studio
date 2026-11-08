@@ -112,7 +112,7 @@ const strokePath = (points: number[]): string => {
   return `${path}L${points[(count - 1) * 2]} ${points[(count - 1) * 2 + 1]}`;
 };
 
-const traceStroke = (ctx: CanvasRenderingContext2D, points: number[]): void => {
+const traceStroke = (ctx: DrawContext, points: number[]): void => {
   const count = points.length / 2;
   const x0 = points[0] as number;
   const y0 = points[1] as number;
@@ -142,8 +142,10 @@ const traceStroke = (ctx: CanvasRenderingContext2D, points: number[]): void => {
   }
 };
 
+type DrawContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
 const paintStrokes = (
-  ctx: CanvasRenderingContext2D,
+  ctx: DrawContext,
   strokes: DrawStroke[],
   halo: boolean
 ): void => {
@@ -168,9 +170,12 @@ const paintStrokes = (
 const renderDrawingPng = (drawing: CommentDrawing): Promise<Blob> => {
   const { width, height } = drawing.frame;
   const scale = Math.min(1, PNG_MAX_SIDE / Math.max(width, height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(width * scale));
-  canvas.height = Math.max(1, Math.round(height * scale));
+
+  const canvas = new OffscreenCanvas(
+    Math.max(1, Math.round(width * scale)),
+    Math.max(1, Math.round(height * scale))
+  );
+
   const ctx = canvas.getContext("2d");
 
   if (!ctx) {
@@ -180,15 +185,7 @@ const renderDrawingPng = (drawing: CommentDrawing): Promise<Blob> => {
   ctx.scale(scale, scale);
   paintStrokes(ctx, drawing.strokes, true);
 
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => {
-      if (blob) {
-        return resolve(blob);
-      }
-
-      return reject(new Error("Could not make the drawing image"));
-    }, "image/png")
-  );
+  return canvas.convertToBlob({ type: "image/png" });
 };
 
 interface PenAnchor {
@@ -209,8 +206,13 @@ const penSegment = (from: PenAnchor, to: PenAnchor): string => {
   return `C${round(firstValue.x)} ${round(firstValue.y)} ${round(second.x)} ${round(second.y)} ${round(to.x)} ${round(to.y)}`;
 };
 
+interface AnchorPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
 const shiftAnchor = (anchor: PenAnchor, dx: number, dy: number): PenAnchor => {
-  const move = (point: { x: number; y: number }): { x: number; y: number } => ({
+  const move = (point: AnchorPoint): AnchorPoint => ({
     x: point.x + dx,
     y: point.y + dy,
   });

@@ -1,14 +1,11 @@
-import { Suspense, lazy, useCallback } from "react";
+import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import type { InlinePromptView } from "../chat/use-inline-prompt.js";
 import { CommentLayer } from "../comments/comment-layer.js";
 import type { useCommentMode } from "../comments/use-comment-mode.js";
 import type { Props } from "./canvas-types.js";
 import { DrawSurface } from "./draw-layer.js";
 import type { DrawTool } from "./use-draw-tool.js";
-
-const InlinePrompt = lazy(() => import("../chat/inline-prompt.js"));
 
 type CommentLayerProps = Parameters<typeof CommentLayer>[0];
 
@@ -70,24 +67,4 @@ const CanvasComments = ({
   );
 };
 
-const InlinePromptSlot = ({
-  view,
-  zoom,
-  frame,
-}: {
-  view: InlinePromptView | null;
-  zoom: number;
-  frame: { width: number; height: number };
-}): ReactElement | null => {
-  if (!view) {
-    return null;
-  }
-
-  return (
-    <Suspense fallback={null}>
-      <InlinePrompt view={view} zoom={zoom} frame={frame} />
-    </Suspense>
-  );
-};
-
-export { CanvasComments, InlinePromptSlot };
+export { CanvasComments };

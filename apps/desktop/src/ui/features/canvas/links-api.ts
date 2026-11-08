@@ -115,7 +115,7 @@ const fetchLinks = async (
     entry.loaded = true;
     setFile(projectId, links);
   } catch (error: unknown) {
-    console.error("[links] load failed", error);
+    reportError(error);
   } finally {
     entry.loading = false;
   }
@@ -298,7 +298,7 @@ const fetchImplicit = async (
       setLinks(implicit);
     }
   } catch (error: unknown) {
-    console.error("[links] implicit load failed", error);
+    reportError(error);
   }
 };
 

@@ -47,17 +47,23 @@ const CanvasTopBar = (props: Props): ReactElement => {
   const openPortDialog = useCallback((): void => openPort(null), [openPort]);
   const present = presentItems(props.onPresent);
 
-  const { onFit, onZoomStep, onZoomTo, zoomSetting, zoom: zoomStore } = props;
+  const {
+    onFit: fit,
+    onZoomStep: step,
+    onZoomTo: zoomTo,
+    zoomSetting,
+    zoom: zoomStore,
+  } = props;
 
   const zoom = useMemo<ZoomProps>(
     () => ({
-      onFit,
-      onStep: onZoomStep,
-      onZoomTo,
+      onFit: fit,
+      onStep: step,
+      onZoomTo: zoomTo,
       setting: zoomSetting,
       zoom: zoomStore,
     }),
-    [onFit, onZoomStep, onZoomTo, zoomSetting, zoomStore]
+    [fit, step, zoomTo, zoomSetting, zoomStore]
   );
 
   let onPort: (() => void) | null = null;

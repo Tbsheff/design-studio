@@ -1,7 +1,11 @@
 import { Suspense, lazy } from "react";
 import type { ComponentProps, ReactElement } from "react";
 
-const CanvasRulers = lazy(() => import("./canvas-rulers.js"));
+const CanvasRulers = lazy(async () => {
+  const loaded = await import("./canvas-rulers.js");
+
+  return { default: loaded.CanvasRulers };
+});
 
 const StageRulers = (
   props: ComponentProps<typeof CanvasRulers>

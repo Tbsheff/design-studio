@@ -5,11 +5,11 @@ import { focalOf, focalText } from "../../../shared/image.js";
 import { toFocalAt, toKeyMove, toKeyStep } from "./focal-pad-model.js";
 
 interface FocalPadHandlers {
-  readonly handleKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
+  readonly handleKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
   readonly handlePointerCancel: () => void;
-  readonly handlePointerDown: (event: PointerEvent<HTMLDivElement>) => void;
-  readonly handlePointerMove: (event: PointerEvent<HTMLDivElement>) => void;
-  readonly handlePointerUp: (event: PointerEvent<HTMLDivElement>) => void;
+  readonly handlePointerDown: (event: PointerEvent<HTMLButtonElement>) => void;
+  readonly handlePointerMove: (event: PointerEvent<HTMLButtonElement>) => void;
+  readonly handlePointerUp: (event: PointerEvent<HTMLButtonElement>) => void;
   readonly point: { readonly x: number; readonly y: number };
 }
 
@@ -22,7 +22,7 @@ const useFocalPad = (
   const point = focalOf(drag ?? value);
 
   const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>): void => {
+    (event: KeyboardEvent<HTMLButtonElement>): void => {
       const move = toKeyMove(event.key, toKeyStep(event.shiftKey));
 
       if (!move) {
@@ -36,7 +36,7 @@ const useFocalPad = (
   );
 
   const handlePointerDown = useCallback(
-    (event: PointerEvent<HTMLDivElement>): void => {
+    (event: PointerEvent<HTMLButtonElement>): void => {
       if (isDisabled) {
         return;
       }
@@ -48,7 +48,7 @@ const useFocalPad = (
   );
 
   const handlePointerMove = useCallback(
-    (event: PointerEvent<HTMLDivElement>): void => {
+    (event: PointerEvent<HTMLButtonElement>): void => {
       if (drag !== null) {
         setDrag(toFocalAt(event, event.currentTarget.getBoundingClientRect()));
       }
@@ -57,7 +57,7 @@ const useFocalPad = (
   );
 
   const handlePointerUp = useCallback(
-    (event: PointerEvent<HTMLDivElement>): void => {
+    (event: PointerEvent<HTMLButtonElement>): void => {
       if (drag === null) {
         return;
       }

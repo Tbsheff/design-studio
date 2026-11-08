@@ -3,8 +3,13 @@ import { Icon, UiSelect } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 
-import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch } from "./constraints.js";
-import type { InsetProp, PinAxis, PinMode } from "./constraints.js";
+import {
+  PIN_OPTIONS,
+  toPinFields,
+  toPinMode,
+  toPinPatch,
+} from "./constraints-model.js";
+import type { InsetProp, PinAxis, PinMode } from "./constraints-model.js";
 import { copy } from "./copy.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
@@ -129,7 +134,7 @@ const useQueuedPins = (
     ).reduce<Record<string, string>>(
       (all, [axis, pin]) => ({
         ...all,
-        ...pinPatch(axis, pin.mode, pinStyles(edit, selection), pin.from),
+        ...toPinPatch(axis, pin.mode, pinStyles(edit, selection), pin.from),
       }),
       {}
     );
@@ -198,7 +203,10 @@ const PinSelect = ({
       return queue(axis, next, mode);
     }
 
-    edit.preview(pinPatch(axis, next, pinStyles(edit, selection), mode), true);
+    edit.preview(
+      toPinPatch(axis, next, pinStyles(edit, selection), mode),
+      true
+    );
     edit.commit();
   };
 
@@ -242,8 +250,8 @@ const usePinModes = (
   const fresh = picked.key === key ? picked.modes : {};
 
   const modes = {
-    x: fresh.x ?? pinModeOf("x", selection.styles),
-    y: fresh.y ?? pinModeOf("y", selection.styles),
+    x: fresh.x ?? toPinMode("x", selection.styles),
+    y: fresh.y ?? toPinMode("y", selection.styles),
   };
 
   const pick = useCallback(
@@ -270,7 +278,7 @@ const ConstraintRows = ({
 }): ReactElement => {
   const { modes, pick } = usePinModes(selection);
   const { isReady: ready, queue } = useQueuedPins(edit, selection, pick);
-  const fields = [...pinFields("x", modes.x), ...pinFields("y", modes.y)];
+  const fields = [...toPinFields("x", modes.x), ...toPinFields("y", modes.y)];
 
   return (
     <>

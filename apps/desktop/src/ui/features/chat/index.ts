@@ -1,5 +1,10 @@
 import { lazy } from "react";
 
+import {
+  createDeltaBatcher,
+  toFrameSchedule,
+  toMergedDeltas,
+} from "./delta-batch-model.js";
 import { runStepText } from "./live-status-model.js";
 
 const ChatPanel = lazy(async () => {
@@ -20,4 +25,12 @@ const McpPointBadge = lazy(async () => {
   return { default: loaded.McpPointBadge };
 });
 
-export { ChatPanel, McpPointBadge, McpToasts, runStepText };
+export {
+  ChatPanel,
+  McpPointBadge,
+  McpToasts,
+  createDeltaBatcher,
+  runStepText,
+  toMergedDeltas,
+  toFrameSchedule,
+};

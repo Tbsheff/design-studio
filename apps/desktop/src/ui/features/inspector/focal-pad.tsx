@@ -26,13 +26,11 @@ const FocalPad = ({
   );
 
   return (
-    <div
+    <button
+      type="button"
       className={toPadClass(isDisabled)}
-      role="slider"
       tabIndex={toPadTabIndex(isDisabled)}
-      aria-label={copy.focalPoint}
-      aria-valuenow={point.x}
-      aria-valuetext={focalText(point.x, point.y)}
+      aria-label={`${copy.focalPoint} ${focalText(point.x, point.y)}`}
       data-tip={copy.clickOrDragToSet}
       onPointerDown={pad.handlePointerDown}
       onPointerMove={pad.handlePointerMove}
@@ -41,7 +39,7 @@ const FocalPad = ({
       onKeyDown={pad.handleKeyDown}
     >
       <span className="img-focal-dot" style={dotStyle} />
-    </div>
+    </button>
   );
 };
 

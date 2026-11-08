@@ -80,6 +80,7 @@ const getSourceName = (
 
   const nextUrl = /\/_next\/image\?(?:.*&)?url=(?<name>[^&]+)/u.exec(raw)
     ?.groups?.name;
+
   let path = raw;
 
   if (nextUrl) {

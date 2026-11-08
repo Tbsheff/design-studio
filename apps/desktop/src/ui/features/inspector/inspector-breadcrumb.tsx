@@ -3,6 +3,7 @@ import { memo, useCallback, useRef } from "react";
 import type { MutableRefObject, ReactElement } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
+import { findElement } from "../../platform/find-element.js";
 import { parseSelectionPath, pathCrumbs } from "./authored-css.js";
 import { toElementLabel } from "./breadcrumb-model.js";
 import { copy } from "./copy.js";
@@ -34,10 +35,11 @@ const InspectorBreadcrumbView = ({
         });
       }
 
-      list.current
-        ?.closest(".studio")
-        ?.querySelector<HTMLElement>(".stage")
-        ?.focus({ preventScroll: true });
+      const studio = list.current?.closest(".studio");
+
+      if (studio) {
+        findElement(studio, ".stage")?.focus({ preventScroll: true });
+      }
     },
     [port, selection.selector]
   );

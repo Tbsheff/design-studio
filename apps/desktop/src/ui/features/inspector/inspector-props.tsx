@@ -9,6 +9,7 @@ import { InspectorSection } from "./inspector-fields.js";
 import { PropRows } from "./prop-rows.js";
 import { PropsChip } from "./props-chip.js";
 import { PropsFooter } from "./props-footer.js";
+import { PropsKitCaption } from "./props-kit-caption.js";
 import { usePropsPanel } from "./use-props-panel.js";
 
 interface InspectorPropsPanelProps {
@@ -34,9 +35,11 @@ const InspectorPropsPanel = ({
     projectId,
     selection,
   });
+
   const { instance, status, sheet, isStylesOpen, onChange, setStatus } = panel;
-  const { onToggleStyles, onOpenSheet: handleOpenSheet } = panel;
-  const { onCloseSheet: handleCloseSheet } = panel;
+
+  const { onToggleStyles, onOpenSheet, onCloseSheet } = panel;
+
   const component = instance?.component;
 
   if (!instance || !component || !directionId) {
@@ -61,12 +64,7 @@ const InspectorPropsPanel = ({
             version="0"
             active
           />
-          <p
-            className="prp-where"
-            data-tip={`${component.file}:${component.line}`}
-          >
-            {copy.kitComponentDefaultProps}
-          </p>
+          <PropsKitCaption component={component} />
         </div>
       )}
       {component.props.length === 0 && (
@@ -77,14 +75,14 @@ const InspectorPropsPanel = ({
         component={component}
         isDisabled={!isEditable || status.kind === "saving"}
         onChange={onChange}
-        onAuthor={handleOpenSheet}
+        onAuthor={onOpenSheet}
       />
       <AuthorSheet
         projectId={projectId}
         directionId={directionId}
         instance={instance}
         sheet={sheet}
-        onClose={handleCloseSheet}
+        onClose={onCloseSheet}
         onUse={onChange}
         onStatus={setStatus}
       />

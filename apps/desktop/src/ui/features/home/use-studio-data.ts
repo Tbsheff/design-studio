@@ -12,6 +12,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { uiStore, useUi } from "../../platform/storage.js";
+import { createDeltaBatcher, toFrameSchedule } from "../chat/index.js";
 import {
   listRunPage,
   publishOlderRuns,
@@ -24,10 +25,6 @@ import {
 } from "../chat/run-state-model.js";
 import type { RunMap } from "../chat/run-state-model.js";
 import { useRunNotice } from "../chat/use-run-notice.js";
-import {
-  createDeltaBatcher,
-  frameOrTimeout,
-} from "../inspector/delta-batch.js";
 import type { ConnectionState } from "./deps.js";
 import {
   createCursor,
@@ -275,7 +272,7 @@ export const useStudioData = (projectId: string): StudioData => {
   const mountedAt = useRef(Date.now());
 
   const [batcher] = useState(() =>
-    createDeltaBatcher(setRuns, frameOrTimeout(100))
+    createDeltaBatcher(setRuns, toFrameSchedule(100))
   );
 
   const sends = useRef<SendTimes>({

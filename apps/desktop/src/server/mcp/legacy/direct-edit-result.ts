@@ -66,8 +66,8 @@ const unchangedResult = (
   relative: string,
   head: string | null
 ): UnchangedResult => ({
-  path: relative,
   changed: false,
+  path: relative,
   versionId: head,
 });
 
@@ -76,18 +76,18 @@ const writtenResult = (
   isNew: boolean,
   version: Version | null
 ): WrittenResult => ({
-  path: relative,
   changed: true,
   created: isNew,
-  versionId: version?.id ?? null,
+  path: relative,
   title: version?.title ?? null,
+  versionId: version?.id ?? null,
 });
 
 const structureResult = (view: StructureEditResult): StructureResult => ({
   files: view.files,
-  versionId: view.version.id,
-  title: view.version.title,
   select: view.select,
+  title: view.version.title,
+  versionId: view.version.id,
 });
 
 const editedAt = (result: DirectEditResult, site: EditSite): string => {
@@ -136,8 +136,8 @@ const tailwindFields = (
   if (tailwind.note) {
     return {
       classes: tailwind.classes,
-      wrote: tailwind.mode,
       note: tailwind.note,
+      wrote: tailwind.mode,
     };
   }
 
@@ -155,13 +155,13 @@ const textSourceField = (
 };
 
 const editOutput = (result: DirectEditResult, site: EditSite): EditOutput => ({
-  file: result.file,
   at: editedAt(result, site),
   editedAt: editedAtLabel(site),
+  file: result.file,
   ...siteNoteField(site),
-  versionId: result.version.id,
-  title: result.version.title,
   applied: result.applied,
+  title: result.version.title,
+  versionId: result.version.id,
   ...tailwindFields(result.tailwind),
   ...textSourceField(result.textSource),
 });

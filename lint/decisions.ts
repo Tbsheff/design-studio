@@ -521,17 +521,6 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/max-dependencies": "off" },
   },
   {
-    files: [
-      "apps/desktop/src/server/mcp/legacy/canvas-result.ts",
-      "apps/desktop/src/server/mcp/legacy/canvas-schema.ts",
-      "apps/desktop/src/server/mcp/legacy/direct-edit-result.ts",
-      "apps/desktop/src/server/mcp/legacy/direct-edit-schema.ts",
-      "apps/desktop/src/server/mcp/legacy/projects-result.ts",
-      "apps/desktop/src/server/mcp/legacy/projects-schema.ts",
-    ],
-    rules: { "eslint/sort-keys": "off" },
-  },
-  {
     files: ["apps/desktop/src/server/mcp/{key-auth,key-introspect}.ts"],
     rules: {
       "anti-slop/require-readable-spacing": "warn",

@@ -20,9 +20,11 @@ const TEXT_MAX = 5000;
 
 const ALSO_MAX = 49;
 
+const targetFields = { directionId, projectId };
+
 const writeFileSchema = z.strictObject({
-  projectId,
-  directionId,
+  ...targetFields,
+  content: z.string().max(FILE_MAX).describe("The full new text of the file."),
   path: z
     .string()
     .trim()
@@ -31,7 +33,6 @@ const writeFileSchema = z.strictObject({
     .describe(
       'File path relative to the project folder, for example "index.html" or "styles/site.css".'
     ),
-  content: z.string().max(FILE_MAX).describe("The full new text of the file."),
 });
 
 const alsoItem = z.strictObject({
@@ -48,8 +49,15 @@ const alsoList = z
   );
 
 const editFields = z.strictObject({
-  projectId,
-  directionId,
+  ...targetFields,
+  also: alsoList,
+  classes: classes.optional(),
+  op: z
+    .enum(STRUCTURE_OPS)
+    .optional()
+    .describe(
+      'Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (keep the children, drop the element; also ungroups) or move (into targetSelector, as its last child).'
+    ),
   path: pagePath,
   selector: selector.describe("CSS selector of one element on the page."),
   style: style
@@ -57,29 +65,21 @@ const editFields = z.strictObject({
     .describe(
       "CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits."
     ),
-  text: z
-    .string()
-    .max(TEXT_MAX)
-    .optional()
-    .describe("New text content of the element."),
-  classes: classes.optional(),
   target: z
     .enum(EDIT_TARGETS)
     .optional()
     .describe(
       'Attached apps only. Leave out: an element that is the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes; other elements are edited in their own file. "component" edits the element in the shared component file, which changes every use ("element" is the same). "use" asks for the use site and fails when there is none.'
     ),
-  variant: variant.optional(),
-  op: z
-    .enum(STRUCTURE_OPS)
-    .optional()
-    .describe(
-      'Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (keep the children, drop the element; also ungroups) or move (into targetSelector, as its last child).'
-    ),
   targetSelector: selector
     .optional()
     .describe("For op move: CSS selector of the new parent element."),
-  also: alsoList,
+  text: z
+    .string()
+    .max(TEXT_MAX)
+    .optional()
+    .describe("New text content of the element."),
+  variant: variant.optional(),
 });
 
 type EditFields = z.output<typeof editFields>;

@@ -47,9 +47,9 @@ type AttachedResult = AttachedCore &
   AttachView["workspace"];
 
 const serverViewOf = (status: AppServerStatus): ServerView => ({
+  message: status.message,
   state: status.state,
   upstream: status.upstream,
-  message: status.message,
 });
 
 const createdResult = (
@@ -57,19 +57,19 @@ const createdResult = (
   main: Direction | null,
   pack: PackSummary | null
 ): CreatedResult => ({
-  projectId: project.id,
-  directionId: main?.id ?? null,
-  name: project.name,
-  folder: main?.workTree ?? null,
   designSystem: pack?.id ?? null,
+  directionId: main?.id ?? null,
+  folder: main?.workTree ?? null,
+  name: project.name,
+  projectId: project.id,
 });
 
 const attachedResult = (view: AttachView): AttachedResult => ({
-  projectId: view.project.id,
-  directionId: view.main?.id ?? null,
-  name: view.project.name,
-  folder: view.main?.workTree ?? null,
   app: view.project.app,
+  directionId: view.main?.id ?? null,
+  folder: view.main?.workTree ?? null,
+  name: view.project.name,
+  projectId: view.project.id,
   ...view.workspace,
   server: view.server,
   ...view.readiness,

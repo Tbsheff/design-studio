@@ -150,7 +150,6 @@ const LEGACY_OVERRIDES = new Set([
   "apps/desktop/src/server/app/dev-server-{attempt,ops,runner,runtime,store}.ts",
   "apps/desktop/src/server/app/dev-server-{ops,runner}.ts",
   "apps/desktop/desktop/build.ts",
-  "apps/desktop/src/server/mcp/legacy/canvas-result.ts",
   "apps/desktop/src/server/{agent/icon-tool,http/icon-routes,icons/deps,mcp/icon-tools}.ts",
   "*.config.ts",
   "**/*.generated.ts",

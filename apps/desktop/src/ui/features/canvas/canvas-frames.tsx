@@ -6,7 +6,6 @@ import type {
   ReactElement,
 } from "react";
 
-import { openAppPanel } from "../../platform/app-status.js";
 import { frameName } from "./canvas-frame-ops.js";
 import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
@@ -261,57 +260,8 @@ interface FrameRedirect {
 const isAuthRoute = (route: string): boolean =>
   /sign-?in|log-?in|auth/iu.test(route);
 
-const FrameRedirectNote = ({
-  redirect,
-  onSignIn,
-  onDismiss,
-}: {
-  redirect: FrameRedirect;
-  onSignIn: () => void;
-  onDismiss: () => void;
-}): ReactElement => {
-  const auth = isAuthRoute(redirect.to);
-
-  let part2: "" | " Sign in, or pick a public route." = "";
-
-  if (auth) {
-    part2 = " Sign in, or pick a public route.";
-  }
-
-  const text = `${redirect.from} goes to ${redirect.to}.${part2}`;
-
-  return (
-    <div className="frame-redirect" role="status" data-tip={text}>
-      <Icon name="alert" size={12} />
-      <span className="frame-redirect-text">{text}</span>
-      {auth && (
-        <button type="button" className="btn ghost small" onClick={onSignIn}>
-          {copy.signIn}
-        </button>
-      )}
-      <button
-        type="button"
-        className="btn ghost small"
-        onClick={() => openAppPanel("routes")}
-      >
-        {copy.pickARoute}
-      </button>
-      <button
-        type="button"
-        className="icon-btn small"
-        aria-label={copy.dismiss}
-        data-tip={copy.dismiss}
-        onClick={onDismiss}
-      >
-        <Icon name="close" size={12} />
-      </button>
-    </div>
-  );
-};
-
 export {
   FrameLabel,
-  FrameRedirectNote,
   canvasFrameName,
   frameBaseName,
   framePage,

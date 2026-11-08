@@ -1,10 +1,9 @@
 import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
-import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode, ReactElement } from "react";
+import type { ReactNode } from "react";
 
 import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../app/project-nav.js";
-import { openAppPanel, useAppStatus } from "../../platform/app-status.js";
+import { useAppStatus } from "../../platform/app-status.js";
 import {
   routeFrameId,
   addRouteFrame,
@@ -15,11 +14,12 @@ import {
   writeHiddenRedirects,
 } from "./app-canvas-routes.js";
 import type { Listen } from "./app-canvas-routes.js";
+import type { Hint } from "./app-hint-types.js";
+import { AppStageHint } from "./app-stage-hint.js";
 import { canAddFrame } from "./canvas-frame-ops.js";
 import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
-import { FrameRedirectNote } from "./canvas-frames.js";
-import { copy } from "./copy.js";
+import { FrameRedirectNote } from "./frame-redirect-note.js";
 
 const LOAD_HINT_MS = 30_000;
 
@@ -93,12 +93,6 @@ const useServerFrames = (
   return loaded;
 };
 
-interface Hint {
-  text: string;
-  busy: boolean;
-  kind: "failed" | "starting" | "loading" | "route";
-}
-
 const serverHint = (
   app: AttachedApp,
   status: AppServerStatus | null,
@@ -171,57 +165,6 @@ const routeHint = (layout: CanvasLayout): Hint | null => {
     text: "This frame shows the home route. Pick the page you want to design.",
   };
 };
-
-const HintIcon = ({ hint }: { hint: Hint }): ReactElement => {
-  if (hint.busy) {
-    return <span className="spinner" aria-hidden="true" />;
-  }
-
-  let name2: "alert" | "file" = "alert";
-
-  if (hint.kind === "route") {
-    name2 = "file";
-  }
-
-  return <Icon name={name2} size={14} />;
-};
-
-const AppStageHint = ({
-  hint,
-  onClose,
-}: {
-  hint: Hint;
-  onClose: () => void;
-}): ReactElement => (
-  <div
-    className="stage-message app-stage-note"
-    role="status"
-    data-kind={hint.kind}
-  >
-    <HintIcon hint={hint} />
-    {hint.text}
-    {hint.kind === "route" && (
-      <>
-        <button
-          type="button"
-          className="btn small"
-          onClick={() => openAppPanel("routes")}
-        >
-          {copy.pickARoute}
-        </button>
-        <button
-          type="button"
-          className="icon-btn small"
-          aria-label={copy.dismiss}
-          data-tip={copy.dismiss}
-          onClick={onClose}
-        >
-          <Icon name="close" size={12} />
-        </button>
-      </>
-    )}
-  </div>
-);
 
 const useRouteRequests = (
   projectId: string,

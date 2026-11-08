@@ -1,16 +1,29 @@
 import type { CompiledTokenEntry } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
-
 import {
-  colorHex,
-  lengthToPx,
-  modeValue,
-} from "../../../shared/token-match.js";
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
+
+import { modeValue } from "../../../shared/token-match.js";
 import type { TokenMode } from "../../../shared/token-match.js";
 import { COPY } from "./copy.js";
 import { findElement } from "./find-element.js";
+import {
+  filterEntries,
+  toMovedIndex,
+  toPxNote,
+  toStartIndex,
+} from "./token-picker-model.js";
+import { TokenPreview } from "./token-preview.js";
+
+const SEARCH_SIZE = 13;
+const CHECK_SIZE = 12;
 
 interface PickerProps {
   label: string;
@@ -21,115 +34,41 @@ interface PickerProps {
   onChoose: (entry: CompiledTokenEntry) => void;
 }
 
-function tokenShortName(entry: CompiledTokenEntry): string {
-  return entry.type === "color"
-    ? entry.cssVar
-    : entry.path.split(".").slice(1).join("-");
-}
-
-function Preview({
-  entry,
-  mode,
-}: {
-  entry: CompiledTokenEntry;
-  mode: TokenMode;
-}) {
-  const value = modeValue(entry, mode);
-
-  if (entry.type === "color") {
-    return (
-      <span
-        className="tk-swatch"
-        style={{ background: value }}
-        aria-hidden="true"
-      />
-    );
+const toOptionClass = (isActive: boolean): string => {
+  if (isActive) {
+    return "tk-option active";
   }
 
-  if (entry.type === "fontFamily") {
-    return (
-      <span
-        className="tk-glyph"
-        style={{ fontFamily: value }}
-        aria-hidden="true"
-      >
-        Aa
-      </span>
-    );
+  return "tk-option ";
+};
+
+const preventFocusLoss = (event: { preventDefault: () => void }): void => {
+  event.preventDefault();
+};
+
+const toActiveId = (
+  hasChosen: boolean,
+  id: string,
+  index: number
+): string | undefined => {
+  if (hasChosen) {
+    return `${id}-${index}`;
   }
+};
 
-  const px = lengthToPx(value);
-  const size = px === null ? 0 : Math.min(16, Math.max(2, px / 4));
-
-  return (
-    <span className="tk-bar-wrap" aria-hidden="true">
-      <span className="tk-bar" style={{ width: `${size}px` }} />
-    </span>
-  );
-}
-
-function pxNote(entry: CompiledTokenEntry, mode: TokenMode): string {
-  const value = modeValue(entry, mode);
-
-  if (entry.type === "color") {
-    return colorHex(value) ?? value;
-  }
-
-  if (entry.type === "fontFamily") {
-    return value.split(",")[0]?.replaceAll(/['"]/g, "").trim() ?? value;
-  }
-
-  if (entry.type !== "dimension" || value.endsWith("px")) {
-    return value;
-  }
-
-  const px = lengthToPx(value);
-
-  return px === null ? value : `${value} · ${Math.round(px * 100) / 100}px`;
-}
-
-function filterEntries(
-  entries: CompiledTokenEntry[],
-  query: string
-): CompiledTokenEntry[] {
-  const q = query.trim().toLowerCase();
-
-  if (!q) {
-    return entries;
-  }
-
-  return entries.filter(
-    (entry) =>
-      entry.cssVar.toLowerCase().includes(q) ||
-      entry.value.toLowerCase().includes(q)
-  );
-}
-
-function startIndex(
-  list: CompiledTokenEntry[],
-  current: string | null,
-  nearest: string | null
-): number {
-  const at = list.findIndex((entry) => entry.cssVar === (current ?? nearest));
-
-  return Math.max(0, at);
-}
-
-function TokenPicker({
+const TokenPicker = ({
   label,
   entries,
   mode,
   current,
   nearest,
   onChoose,
-}: PickerProps) {
+}: PickerProps): ReactNode => {
   const [query, setQuery] = useState("");
   const list = useMemo(() => filterEntries(entries, query), [entries, query]);
-
   const [active, setActive] = useState(() =>
-    startIndex(entries, current, nearest)
+    toStartIndex(entries, current, nearest)
   );
-
   const id = useId();
   const index = Math.min(active, Math.max(0, list.length - 1));
   const chosen = list[index];
@@ -143,45 +82,46 @@ function TokenPicker({
     }
   }, [id, index]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    const moves: Record<string, number> = {
-      ArrowDown: index + 1,
-      ArrowUp: index - 1,
-      End: list.length - 1,
-      Home: 0,
-    };
+  const handleSearchKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>): void => {
+      const next = toMovedIndex(event.key, index, list.length);
 
-    const next = moves[event.key];
+      if (next !== null) {
+        event.preventDefault();
+        setActive(next);
+      } else if (event.key === "Enter" && chosen) {
+        event.preventDefault();
+        onChoose(chosen);
+      }
+    },
+    [chosen, index, list.length, onChoose]
+  );
 
-    if (next !== undefined) {
-      event.preventDefault();
-      setActive(Math.min(list.length - 1, Math.max(0, next)));
-    } else if (event.key === "Enter" && chosen) {
-      event.preventDefault();
-      onChoose(chosen);
-    }
-  };
+  const handleSearchChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>): void => {
+      setQuery(event.target.value);
+      setActive(0);
+    },
+    []
+  );
 
   return (
     <div className="tk-picker">
       <div className="tk-search">
-        <Icon name="search" size={13} />
+        <Icon name="search" size={SEARCH_SIZE} />
         <input
           autoFocus
-          aria-label={`Search ${label.toLowerCase()} tokens`}
+          aria-label={`${COPY.pickerSearchPrefix}${label.toLowerCase()}${COPY.pickerTokensSuffix}`}
           aria-controls={`${id}-list`}
-          aria-activedescendant={chosen ? `${id}-${index}` : undefined}
+          aria-activedescendant={toActiveId(Boolean(chosen), id, index)}
           role="combobox"
           aria-expanded="true"
           placeholder={COPY.placeholderSearchTokens}
           value={query}
           spellCheck={false}
           autoComplete="off"
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setActive(0);
-          }}
-          onKeyDown={onKeyDown}
+          onChange={handleSearchChange}
+          onKeyDown={handleSearchKeyDown}
         />
       </div>
       <ul
@@ -189,35 +129,37 @@ function TokenPicker({
         className="tk-list"
         role="listbox"
         id={`${id}-list`}
-        aria-label={`${label} tokens`}
+        aria-label={`${label}${COPY.pickerTokensSuffix}`}
       >
-        {list.map((entry, i) => (
+        {list.map((entry, position) => (
           <li
             key={entry.cssVar}
-            id={`${id}-${i}`}
+            id={`${id}-${position}`}
             role="option"
-            aria-selected={i === index}
-            className={`tk-option ${i === index ? "active" : ""}`}
+            aria-selected={position === index}
+            className={toOptionClass(position === index)}
             data-tip={modeValue(entry, mode)}
             data-tip-align="end"
-            onMouseMove={() => i !== index && setActive(i)}
-            onMouseDown={(event) => event.preventDefault()}
+            onMouseMove={() => position !== index && setActive(position)}
+            onMouseDown={preventFocusLoss}
             onClick={() => onChoose(entry)}
           >
-            <Preview entry={entry} mode={mode} />
+            <TokenPreview entry={entry} mode={mode} />
             <span className="tk-name">{entry.cssVar}</span>
-            <span className="tk-val">{pxNote(entry, mode)}</span>
+            <span className="tk-val">{toPxNote(entry, mode)}</span>
             <span className="tk-check" aria-hidden="true">
-              {entry.cssVar === current && <Icon name="check" size={12} />}
+              {entry.cssVar === current && (
+                <Icon name="check" size={CHECK_SIZE} />
+              )}
             </span>
           </li>
         ))}
         {list.length === 0 && (
-          <li className="tk-empty">No tokens match. Try another name.</li>
+          <li className="tk-empty">{COPY.pickerNoMatch}</li>
         )}
       </ul>
     </div>
   );
-}
+};
 
-export { tokenShortName, TokenPicker };
+export { TokenPicker };

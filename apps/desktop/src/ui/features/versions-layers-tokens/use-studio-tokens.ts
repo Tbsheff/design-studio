@@ -17,15 +17,40 @@ interface Options {
   onCommitted: (version: Version) => void;
 }
 
-function useStudioTokens(o: Options) {
-  const draft = useTokenDraft(o);
+type TokenDraft = ReturnType<typeof useTokenDraft>;
+
+interface StudioTokensPanel {
+  readonly draft: TokenDraft;
+  readonly sweep: {
+    readonly directionId: string | null;
+    readonly projectId: string;
+  };
+  readonly tokens: DesignTokens;
+}
+
+interface StudioTokens {
+  readonly draft: TokenDraft;
+  readonly guard: <A extends unknown[]>(
+    fn: (...args: A) => unknown
+  ) => (...args: A) => Promise<void>;
+  readonly panel: StudioTokensPanel | null;
+}
+
+const useStudioTokens = (options: Options): StudioTokens => {
+  const draft = useTokenDraft(options);
+  const { canUndo, directionId, onUndo, projectId, redo, tokens } = options;
+  const { confirmLeave, count, undoLast } = draft;
   useTokenFrameSync();
-  useUndoShortcut(
-    o.canUndo || draft.count > 0,
-    () => (draft.count > 0 ? draft.undoLast() : o.onUndo()),
-    o.redo
-  );
-  const { confirmLeave } = draft;
+
+  const handleUndo = useCallback((): void => {
+    if (count > 0) {
+      undoLast();
+    } else {
+      onUndo();
+    }
+  }, [count, onUndo, undoLast]);
+
+  useUndoShortcut(canUndo || count > 0, handleUndo, redo);
 
   const guard = useCallback(
     <A extends unknown[]>(fn: (...args: A) => unknown) =>
@@ -37,15 +62,13 @@ function useStudioTokens(o: Options) {
     [confirmLeave]
   );
 
-  const panel = o.tokens
-    ? {
-        draft,
-        sweep: { directionId: o.directionId, projectId: o.projectId },
-        tokens: o.tokens,
-      }
-    : null;
+  let panel: StudioTokensPanel | null = null;
+
+  if (tokens) {
+    panel = { sweep: { directionId, projectId }, draft, tokens };
+  }
 
   return { draft, guard, panel };
-}
+};
 
 export { useStudioTokens };

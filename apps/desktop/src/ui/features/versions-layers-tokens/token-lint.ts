@@ -35,54 +35,71 @@ const SHORTHANDS: Record<string, DirectStyleProperty[]> = {
 };
 
 const LINTED = Object.keys(TOKEN_GROUP_FOR_PROPERTY) as DirectStyleProperty[];
-const CSS_WIDE = /^(inherit|initial|unset|revert|revert-layer|currentcolor)$/i;
+
+const CSS_WIDE =
+  /^(?:inherit|initial|unset|revert|revert-layer|currentcolor)$/iu;
 
 const BORDER_KEYWORDS =
-  /^(none|hidden|solid|dashed|dotted|double|groove|ridge|inset|outset|thin|medium|thick|inherit|initial|unset|revert|revert-layer|currentcolor|0|[\d.]+[a-z%]*)$/i;
+  /^(?:none|hidden|solid|dashed|dotted|double|groove|ridge|inset|outset|thin|medium|thick|inherit|initial|unset|revert|revert-layer|currentcolor|0|[\d.]+[a-z%]*)$/iu;
 
-function borderHasColor(value: string): boolean {
-  return value
-    .split(/\s+/)
+const COLOR_SCALE = 1000;
+const PERCENT_DIVISOR = 10;
+const FONT_FALLBACK_DISTANCE = 1;
+
+const borderHasColor = (value: string): boolean =>
+  value
+    .split(/\s+/u)
     .some((part) => part !== "" && !BORDER_KEYWORDS.test(part));
-}
 
-function authoredProps(
+const isLintedProp = (prop: string): prop is DirectStyleProperty =>
+  LINTED.some((linted) => linted === prop);
+
+const toTargets = (prop: string): DirectStyleProperty[] => {
+  const shorthand = SHORTHANDS[prop];
+
+  if (shorthand) {
+    return shorthand;
+  }
+
+  if (isLintedProp(prop)) {
+    return [prop];
+  }
+
+  return [];
+};
+
+const takeDeclarations = (
+  text: string,
+  out: Map<DirectStyleProperty, string>
+): void => {
+  for (const { prop, value } of parseDeclarations(text)) {
+    if (prop !== "border" || borderHasColor(value)) {
+      for (const target of toTargets(prop)) {
+        out.set(target, value);
+      }
+    }
+  }
+};
+
+const authoredProps = (
   css: AuthoredCss | null
-): Map<DirectStyleProperty, string> {
+): Map<DirectStyleProperty, string> => {
   const out = new Map<DirectStyleProperty, string>();
 
   if (!css) {
     return out;
   }
 
-  const take = (text: string) => {
-    for (const { prop, value } of parseDeclarations(text)) {
-      if (prop === "border" && !borderHasColor(value)) {
-        continue;
-      }
-
-      const targets =
-        SHORTHANDS[prop] ??
-        (LINTED.includes(prop as DirectStyleProperty)
-          ? [prop as DirectStyleProperty]
-          : []);
-
-      for (const target of targets) {
-        out.set(target, value);
-      }
-    }
-  };
-
   for (const rule of css.rules) {
-    take(rule.css);
+    takeDeclarations(rule.css, out);
   }
 
-  take(css.inline);
+  takeDeclarations(css.inline, out);
 
   return out;
-}
+};
 
-function kindOf(prop: DirectStyleProperty): LintKind {
+const toKind = (prop: DirectStyleProperty): LintKind => {
   const group = TOKEN_GROUP_FOR_PROPERTY[prop];
 
   if (group === "color") {
@@ -94,27 +111,30 @@ function kindOf(prop: DirectStyleProperty): LintKind {
   }
 
   return "size";
-}
+};
 
-function fontFallback(
+const toFontFallback = (
   prop: DirectStyleProperty,
   entries: CompiledTokenEntry[]
-): TokenMatch | null {
+): TokenMatch | null => {
   const pool = tokensForProperty(prop, entries);
-  const entry = pool.find((item) => item.cssVar === "--font-body") ?? pool[0];
+  const [first] = pool;
+  const entry = pool.find((item) => item.cssVar === "--font-body") ?? first;
 
-  return entry
-    ? {
-        cssVar: entry.cssVar,
-        distance: 1,
-        exact: false,
-        path: entry.path,
-        value: entry.value,
-      }
-    : null;
-}
+  if (!entry) {
+    return null;
+  }
 
-function noBorder(values: StyleValues): boolean {
+  return {
+    cssVar: entry.cssVar,
+    distance: FONT_FALLBACK_DISTANCE,
+    exact: false,
+    path: entry.path,
+    value: entry.value,
+  };
+};
+
+const hasNoBorder = (values: StyleValues): boolean => {
   const style = values["border-style"] ?? "";
 
   return (
@@ -123,17 +143,37 @@ function noBorder(values: StyleValues): boolean {
     style === "hidden" ||
     !(Number.parseFloat(values["border-width"] ?? "") > 0)
   );
+};
+
+const toFontToken = (
+  best: TokenMatch | undefined,
+  prop: DirectStyleProperty,
+  entries: CompiledTokenEntry[]
+): TokenMatch | null => {
+  if (best?.exact) {
+    return best;
+  }
+
+  return toFontFallback(prop, entries);
+};
+
+interface IssueInput {
+  readonly authored: string;
+  readonly entries: CompiledTokenEntry[];
+  readonly mode: TokenMode;
+  readonly prop: DirectStyleProperty;
+  readonly value: string;
 }
 
-function issueFor(
-  prop: DirectStyleProperty,
-  value: string,
-  authored: string,
-  entries: CompiledTokenEntry[],
-  mode: TokenMode
-): LintIssue | null {
+const toIssue = ({
+  authored,
+  entries,
+  mode,
+  prop,
+  value,
+}: IssueInput): LintIssue | null => {
   if (
-    /var\(/.test(authored) ||
+    authored.includes("var(") ||
     CSS_WIDE.test(authored.trim()) ||
     isUnsetValue(value)
   ) {
@@ -147,38 +187,66 @@ function issueFor(
   }
 
   const best = matchForProperty(prop, value, entries, mode)[0];
-  const kind = kindOf(prop);
+  const kind = toKind(prop);
 
   if (kind === "color") {
-    return best
-      ? {
-          deltaE: Math.round(best.distance * 1000) / 10,
-          kind,
-          props: [prop],
-          token: best,
-          value,
-        }
-      : null;
+    if (!best) {
+      return null;
+    }
+
+    return {
+      deltaE: Math.round(best.distance * COLOR_SCALE) / PERCENT_DIVISOR,
+      kind,
+      props: [prop],
+      token: best,
+      value,
+    };
   }
 
   if (kind === "font") {
-    const token = best?.exact ? best : fontFallback(prop, entries);
+    const token = toFontToken(best, prop, entries);
 
-    return token ? { deltaE: null, kind, props: [prop], token, value } : null;
+    if (!token) {
+      return null;
+    }
+
+    return { deltaE: null, kind, props: [prop], token, value };
   }
 
-  return best && isSnappable(group, best)
-    ? { deltaE: null, kind, props: [prop], token: best, value }
-    : null;
-}
+  if (best && isSnappable(group, best)) {
+    return { deltaE: null, kind, props: [prop], token: best, value };
+  }
 
-function lintValues(
+  return null;
+};
+
+const addIssue = (issues: LintIssue[], issue: LintIssue): void => {
+  const same = issues.find(
+    (item) =>
+      item.token.cssVar === issue.token.cssVar &&
+      item.value === issue.value &&
+      item.kind === issue.kind
+  );
+
+  if (same) {
+    same.props.push(...issue.props);
+  } else {
+    issues.push(issue);
+  }
+};
+
+const isSkippedProp = (
+  prop: DirectStyleProperty,
+  values: StyleValues
+): boolean => prop === "border-color" && hasNoBorder(values);
+
+const lintValues = (
   values: StyleValues,
   entries: CompiledTokenEntry[],
   mode: TokenMode,
   css: AuthoredCss | null,
   dirty: readonly DirectStyleProperty[] = []
-): LintIssue[] {
+): LintIssue[] => {
   const authored = authoredProps(css);
 
   for (const prop of dirty) {
@@ -188,34 +256,25 @@ function lintValues(
   const issues: LintIssue[] = [];
 
   for (const prop of LINTED) {
-    const source = authored.get(prop);
+    const source = authored.get(prop) ?? "";
 
-    if (source === undefined || (prop === "border-color" && noBorder(values))) {
-      continue;
-    }
+    if (authored.has(prop) && !isSkippedProp(prop, values)) {
+      const issue = toIssue({
+        authored: source,
+        entries,
+        mode,
+        prop,
+        value: values[prop],
+      });
 
-    const issue = issueFor(prop, values[prop], source, entries, mode);
-
-    if (!issue) {
-      continue;
-    }
-
-    const same = issues.find(
-      (item) =>
-        item.token.cssVar === issue.token.cssVar &&
-        item.value === issue.value &&
-        item.kind === issue.kind
-    );
-
-    if (same) {
-      same.props.push(prop);
-    } else {
-      issues.push(issue);
+      if (issue) {
+        addIssue(issues, issue);
+      }
     }
   }
 
   return issues;
-}
+};
 
 export { authoredProps, lintValues };
 

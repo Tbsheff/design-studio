@@ -27,10 +27,11 @@ import type { PendingMap, PendingToken, TokenField } from "./token-draft.js";
 const PREVIEW_THROTTLE_MS = 60;
 const MAX_PREVIEW_TRIES = 4;
 
-const releaseFlag = (set: (value: boolean) => void) => {
+const releaseFlag = (set: (value: boolean) => void): void => {
   set(false);
 };
 
+const CONFLICT_STATUS = 409;
 const AGENT_BUSY_MESSAGE = "Agent is running. Wait or cancel.";
 
 interface Step {
@@ -51,12 +52,12 @@ interface PreviewOutcome {
   errors: Record<string, string>;
 }
 
-function substitute(
+const substitute = (
   changes: TokenChange[],
   bad: Record<string, string>,
   good: PendingMap
-): TokenChange[] {
-  return changes.flatMap((change) => {
+): TokenChange[] =>
+  changes.flatMap((change) => {
     if (bad[change.path] === undefined) {
       return [change];
     }
@@ -70,22 +71,25 @@ function substitute(
 
     return last && !same ? [{ path: change.path, ...last }] : [];
   });
-}
 
-async function previewWithFallback(
-  pid: string,
-  did: string,
+const previewWithFallback = async (
+  projectId: string,
+  directionId: string,
   changes: TokenChange[],
   good: PendingMap
-): Promise<PreviewOutcome> {
+): Promise<PreviewOutcome> => {
   const errors: Record<string, string> = {};
   let rest = changes;
 
-  for (let i = 0; i < MAX_PREVIEW_TRIES && rest.length > 0; i += 1) {
-    let messages: string[];
+  for (
+    let attempt = 0;
+    attempt < MAX_PREVIEW_TRIES && rest.length > 0;
+    attempt += 1
+  ) {
+    let messages: string[] = [];
 
     try {
-      const result = await api.previewTokens(pid, did, rest);
+      const result = await api.previewTokens(projectId, directionId, rest);
 
       if (result.errors.length === 0) {
         for (const change of rest) {
@@ -113,16 +117,22 @@ async function previewWithFallback(
     rest = substitute(rest, bad, good);
   }
 
-  return { css: rest.length === 0 ? "" : null, errors };
-}
+  if (rest.length === 0) {
+    return { css: "", errors };
+  }
 
-function commitMessage(err: unknown): string {
-  return err instanceof ApiError && err.status === 409
-    ? AGENT_BUSY_MESSAGE
-    : errorText(err);
-}
+  return { css: null, errors };
+};
 
-function useTokenDraft(o: Options) {
+const commitMessage = (error: unknown): string => {
+  if (error instanceof ApiError && error.status === CONFLICT_STATUS) {
+    return AGENT_BUSY_MESSAGE;
+  }
+
+  return errorText(error);
+};
+
+const useTokenDraft = (options: Options) => {
   const [pending, setPendingMap] = useState<PendingMap>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const theme = useCanvasTheme();
@@ -133,8 +143,8 @@ function useTokenDraft(o: Options) {
   const seq = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSent = useRef(0);
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
   const pendingRef = useRef(pending);
   pendingRef.current = pending;
 
@@ -208,7 +218,7 @@ function useTokenDraft(o: Options) {
     broadcastTokenCss("");
   }, [clearDraft]);
 
-  const scope = `${o.projectId}:${o.directionId}`;
+  const scope = `${options.projectId}:${options.directionId}`;
   useEffect(() => reset, [scope, reset]);
 
   const apply = useCallback(
@@ -301,9 +311,13 @@ function useTokenDraft(o: Options) {
       return true;
     }
 
-    const ok = globalThis.confirm(
-      `Discard ${count} token ${count === 1 ? "change" : "changes"}?`
-    );
+    let noun = "changes";
+
+    if (count === 1) {
+      noun = "change";
+    }
+
+    const ok = globalThis.confirm(`Discard ${count} token ${noun}?`);
 
     if (ok) {
       reset();
@@ -315,8 +329,8 @@ function useTokenDraft(o: Options) {
   const count = Object.keys(pending).length;
 
   const effective = useMemo(
-    () => overlayTokens(o.tokens, pending),
-    [o.tokens, pending]
+    () => overlayTokens(options.tokens, pending),
+    [options.tokens, pending]
   );
 
   return {
@@ -335,7 +349,7 @@ function useTokenDraft(o: Options) {
     theme,
     undoLast,
   };
-}
+};
 
 type TokenDraft = ReturnType<typeof useTokenDraft>;
 

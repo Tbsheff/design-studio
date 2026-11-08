@@ -2,283 +2,220 @@ import type {
   CompiledTokenEntry,
   DirectStyleProperty,
 } from "@design-studio/contracts";
-import { Icon, useAnchoredPopover } from "@design-studio/ui";
-import { useRef } from "react";
-import type { KeyboardEvent } from "react";
+import { useAnchoredPopover } from "@design-studio/ui";
+import { useCallback, useMemo } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 
 import {
-  modeValue,
   tokenFieldState,
   tokensForProperty,
 } from "../../../shared/token-match.js";
-import type { TokenFieldState } from "../../../shared/token-match.js";
+import type {
+  TokenFieldState,
+  TokenMode,
+} from "../../../shared/token-match.js";
 import type { DirectEdit } from "../inspector/use-direct-edit.js";
 import { useTokenUi } from "../inspector/use-token-snap.js";
 import type { TokenUi } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";
-import { findElements } from "./find-element.js";
-import { TokenPicker, tokenShortName } from "./token-picker.js";
+import { toMiniLabel, toMiniTip } from "./token-control-model.js";
+import { TokenFieldButton } from "./token-field-button.js";
+import { TokenPicker } from "./token-picker.js";
+import { TokenRawMenu } from "./token-raw-menu.js";
 
 type View = "picker";
 
 interface ControlProps {
-  prop: DirectStyleProperty;
-  label: string;
   edit: DirectEdit;
+  label: string;
+  prop: DirectStyleProperty;
   targets?: DirectStyleProperty[];
   variant?: "field" | "mini";
 }
 
-function entryFor(
-  entries: CompiledTokenEntry[],
-  cssVar: string | undefined
-): CompiledTokenEntry | undefined {
-  return entries.find((entry) => entry.cssVar === cssVar);
+interface PopupProps {
+  readonly current: string | null;
+  readonly label: string;
+  readonly mode: TokenMode;
+  readonly nearest: string | null;
+  readonly onCreate: (() => void) | null;
+  readonly onWrite: (cssVar: string) => void;
+  readonly panel: RefObject<HTMLDivElement | null>;
+  readonly pool: CompiledTokenEntry[];
+  readonly state: TokenFieldState;
+  readonly popStyle: CSSProperties;
 }
 
-function RawMenu({
-  state,
-  onSnap,
-  onCreate,
-}: {
-  state: Extract<TokenFieldState, { kind: "raw" }>;
-  onSnap: () => void;
-  onCreate: (() => void) | null;
-}) {
-  const list = useRef<HTMLDivElement>(null);
-
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
-      return;
-    }
-
-    event.preventDefault();
-
-    const items = list.current
-      ? findElements(list.current, '[role="menuitem"]')
-      : [];
-
-    const at = items.indexOf(document.activeElement as HTMLElement);
-    const next = event.key === "ArrowDown" ? at + 1 : at - 1;
-    items[(next + items.length) % items.length]?.focus();
-  };
-
-  const { snap } = state;
-
-  return (
-    <div
-      className="tk-menu"
-      role="menu"
-      aria-label={COPY.labelRawValue}
-      ref={list}
-      onKeyDown={onKeyDown}
-    >
-      <p className="tk-menu-note">
-        {snap
-          ? "This value is near a design token."
-          : "This value is not a design token."}
-      </p>
-      {snap && (
-        <button
-          type="button"
-          role="menuitem"
-          className="tk-item"
-          onClick={onSnap}
-        >
-          <Icon name="magnet" size={16} />
-          <span>
-            Snap to <code>{snap.cssVar}</code>
-          </span>
-        </button>
-      )}
-      {onCreate && (
-        <button
-          type="button"
-          role="menuitem"
-          className="tk-item"
-          onClick={onCreate}
-        >
-          <Icon name="plus" size={16} />
-          <span>Create token…</span>
-        </button>
-      )}
-    </div>
-  );
-}
-
-function stateTip(state: TokenFieldState, name: string | null): string {
-  if (state.kind === "token") {
-    return name ?? state.match.cssVar;
-  }
-
-  if (state.kind === "raw") {
-    return state.snap
-      ? `Raw value, near ${state.snap.cssVar}`
-      : "Raw value, not a design token";
-  }
-
-  return "Design tokens";
-}
-
-function miniLabel(state: TokenFieldState, label: string): string {
-  if (state.kind === "token") {
-    return `${label}: token ${state.match.cssVar}`;
-  }
-
-  if (state.kind === "raw") {
-    return `${label}: raw value`;
-  }
-
-  return `${label}: choose a token`;
-}
-
-function FieldButton({
-  state,
-  ui,
-  label,
-  expanded,
-  onClick,
-}: {
-  state: TokenFieldState;
-  ui: TokenUi;
-  label: string;
-  expanded: boolean;
-  onClick: () => void;
-}) {
-  const current = state.kind === "token" ? state.match.cssVar : null;
-  const entry = current ? entryFor(ui.entries, current) : undefined;
-  const name = current ? (entry ? tokenShortName(entry) : current) : null;
-
-  return (
-    <button
-      type="button"
-      className="tk-open"
-      aria-label={
-        current
-          ? `${label}: token ${current}`
-          : `Choose ${label.toLowerCase()} token`
-      }
-      aria-description={
-        state.kind === "raw" ? stateTip(state, null) : undefined
-      }
-      aria-haspopup="listbox"
-      aria-expanded={expanded}
-      data-tip={stateTip(state, current)}
-      data-tip-align="end"
-      onClick={onClick}
-    >
-      {name && (
-        <span className="tk-name-chip">
-          {entry?.type === "color" && (
-            <span
-              className="tk-swatch sm"
-              style={{ background: modeValue(entry, ui.mode) }}
-              aria-hidden="true"
-            />
-          )}
-          <span className="truncate">{name}</span>
-        </span>
-      )}
-      <Icon name="token" size={12} />
-    </button>
-  );
-}
-
-const fieldAnchor = (trigger: HTMLElement): HTMLElement =>
+const toFieldAnchor = (trigger: HTMLElement): HTMLElement =>
   trigger.closest<HTMLElement>(".ins-field, .side-cell") ?? trigger;
 
-function Control({
-  prop,
+const toNearClass = (state: TokenFieldState): string => {
+  if (state.kind === "raw" && state.snap) {
+    return "near";
+  }
+
+  return "";
+};
+
+const ControlPopup = ({
+  current,
   label,
+  mode,
+  nearest,
+  onCreate,
+  onWrite,
+  panel,
+  pool,
+  popStyle,
+  state,
+}: PopupProps): ReactNode => {
+  const handleSnap = useCallback((): void => {
+    if (state.kind === "raw" && state.snap) {
+      onWrite(state.snap.cssVar);
+    }
+  }, [onWrite, state]);
+
+  const handleChoose = useCallback(
+    (choice: CompiledTokenEntry): void => {
+      onWrite(choice.cssVar);
+    },
+    [onWrite]
+  );
+
+  return (
+    <>
+      {createPortal(
+        <div
+          className="tk-pop"
+          ref={panel}
+          style={popStyle}
+          role="dialog"
+          aria-label={`${label}${COPY.controlTokensSuffix}`}
+        >
+          {state.kind === "raw" && (
+            <TokenRawMenu
+              state={state}
+              onSnap={handleSnap}
+              onCreate={onCreate}
+            />
+          )}
+          <TokenPicker
+            label={label}
+            entries={pool}
+            mode={mode}
+            current={current}
+            nearest={nearest}
+            onChoose={handleChoose}
+          />
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
+
+const Control = ({
   edit,
+  label,
+  prop,
   targets,
-  variant = "field",
   ui,
-}: ControlProps & { ui: TokenUi }) {
-  const pop = useAnchoredPopover<View>(fieldAnchor);
+  variant = "field",
+}: ControlProps & { readonly ui: TokenUi }): ReactNode => {
+  const pop = useAnchoredPopover<View>(toFieldAnchor);
+  const { close, open, view } = pop;
+  const { commit, preview } = edit;
+  const { requestCreate } = ui;
   const value = edit.values[prop];
   const state = tokenFieldState(prop, value, ui.entries, ui.mode);
   const pool = tokensForProperty(prop, ui.entries);
-  const props = targets ?? [prop];
+  const props = useMemo(() => targets ?? [prop], [prop, targets]);
 
-  const write = (cssVar: string) => {
-    pop.close(true);
-    edit.preview(Object.fromEntries(props.map((p) => [p, `var(${cssVar})`])));
-    edit.commit();
-  };
+  let current: string | null = null;
+  let nearest: string | null = null;
 
-  const toggle = (view: View) =>
-    pop.view === view ? pop.close(false) : pop.open(view);
+  if (state.kind === "token") {
+    current = state.match.cssVar;
+  }
 
-  const current = state.kind === "token" ? state.match.cssVar : null;
-  const nearest = state.kind === "raw" ? (state.nearest?.cssVar ?? null) : null;
-  const near = state.kind === "raw" && state.snap ? "near" : "";
-  const request = ui.requestCreate;
+  if (state.kind === "raw") {
+    nearest = state.nearest?.cssVar ?? null;
+  }
 
-  const create = request
-    ? () => {
-        pop.close(false);
-        request({ prop, value, targets: props });
-      }
-    : null;
+  const handleWrite = useCallback(
+    (cssVar: string): void => {
+      close(true);
+      preview(
+        Object.fromEntries(props.map((name) => [name, `var(${cssVar})`]))
+      );
+      commit();
+    },
+    [close, commit, preview, props]
+  );
+
+  const handleToggle = useCallback((): void => {
+    if (view === "picker") {
+      close(false);
+    } else {
+      open("picker");
+    }
+  }, [close, open, view]);
+
+  const handleCreate = useCallback((): void => {
+    close(false);
+    requestCreate?.({ targets: props, prop, value });
+  }, [close, prop, props, requestCreate, value]);
+
+  let create: (() => void) | null = null;
+
+  if (requestCreate) {
+    create = handleCreate;
+  }
 
   return (
     <span
-      className={`tk-control ${variant} ${state.kind} ${near}`}
+      className={`tk-control ${variant} ${state.kind} ${toNearClass(state)}`}
       ref={pop.trigger}
     >
-      {variant === "field" ? (
-        <FieldButton
+      {variant === "field" && (
+        <TokenFieldButton
           state={state}
-          ui={ui}
+          entries={ui.entries}
+          mode={ui.mode}
           label={label}
-          expanded={pop.view === "picker"}
-          onClick={() => toggle("picker")}
+          isExpanded={view === "picker"}
+          onClick={handleToggle}
         />
-      ) : (
+      )}
+      {variant === "mini" && (
         <button
           type="button"
           className="tk-dot"
-          aria-label={miniLabel(state, label)}
-          data-tip={
-            current ?? (state.kind === "raw" ? "Raw value" : "Choose a token")
-          }
-          onClick={() => toggle("picker")}
+          aria-label={toMiniLabel(state, label)}
+          data-tip={toMiniTip(state, current)}
+          onClick={handleToggle}
         />
       )}
-      {pop.view &&
-        createPortal(
-          <div
-            className="tk-pop"
-            ref={pop.panel}
-            style={pop.style}
-            role="dialog"
-            aria-label={`${label} tokens`}
-          >
-            {state.kind === "raw" && (
-              <RawMenu
-                state={state}
-                onSnap={() => state.snap && write(state.snap.cssVar)}
-                onCreate={create}
-              />
-            )}
-            <TokenPicker
-              label={label}
-              entries={pool}
-              mode={ui.mode}
-              current={current}
-              nearest={nearest}
-              onChoose={(choice) => write(choice.cssVar)}
-            />
-          </div>,
-          document.body
-        )}
+      {view && (
+        <ControlPopup
+          current={current}
+          label={label}
+          mode={ui.mode}
+          nearest={nearest}
+          onCreate={create}
+          onWrite={handleWrite}
+          panel={pop.panel}
+          pool={pool}
+          state={state}
+          popStyle={pop.style}
+        />
+      )}
     </span>
   );
-}
+};
 
-function TokenControl(props: ControlProps) {
+const TokenControl = (props: ControlProps): ReactNode => {
   const ui = useTokenUi();
 
   if (!ui || tokensForProperty(props.prop, ui.entries).length === 0) {
@@ -286,6 +223,6 @@ function TokenControl(props: ControlProps) {
   }
 
   return <Control {...props} ui={ui} />;
-}
+};
 
 export { TokenControl };

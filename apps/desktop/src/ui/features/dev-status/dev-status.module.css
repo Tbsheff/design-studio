@@ -33,11 +33,20 @@
   color: var(--muted);
 }
 
+.list {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .row {
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  min-height: 28px;
+  height: 28px;
+  padding: 0 var(--s-2);
 }
 
 .name {

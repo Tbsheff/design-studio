@@ -18,7 +18,7 @@ const DevStatusGroup = ({
 }: DevStatusGroupProps): ReactElement => (
   <section>
     <h3 className={styles.groupTitle}>{group.title}</h3>
-    <ul className="ui-menu">
+    <ul className={`ui-menu ${styles.list}`}>
       {group.rows.map((row) => (
         <DevStatusRow
           key={row.frame.id}

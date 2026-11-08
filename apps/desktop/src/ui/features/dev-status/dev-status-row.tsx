@@ -30,7 +30,7 @@ const DevStatusRow = ({
   );
 
   return (
-    <li className={`ui-menu-row ${styles.row}`}>
+    <li className={`ui-menu-item ${styles.row}`}>
       <span className={styles.name}>{toFrameName(frame)}</span>
       <ChangedChip entry={entry} />
       {entry && <CopyHandoff entry={entry} projectId={projectId} row={row} />}

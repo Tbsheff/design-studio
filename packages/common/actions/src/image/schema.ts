@@ -54,6 +54,23 @@ const ImageCreateFields = {
   ),
 } as const;
 
+const ImageEditModeSchema = Schema.Literals([
+  "remove-background",
+  "upscale",
+  "prompt",
+]);
+
+const ImageEditFields = {
+  layer: ImageLayerSchema,
+  mode: ImageEditModeSchema,
+  prompt: Schema.NullOr(
+    Schema.String.check(Schema.isMaxLength(PROMPT_MAX))
+  ).annotate({
+    description:
+      "What to change in the image. Required for the prompt mode. Null for the other modes.",
+  }),
+} as const;
+
 const ImageCreatedSchema = Schema.Struct({
   alt: Schema.String,
   asset: Schema.String,
@@ -76,6 +93,8 @@ export {
   ImageAspectSchema,
   ImageCreatedSchema,
   ImageCreateFields,
+  ImageEditFields,
+  ImageEditModeSchema,
   ImageLayerSchema,
   ImageProviderSchema,
   ImageStatusSchema,

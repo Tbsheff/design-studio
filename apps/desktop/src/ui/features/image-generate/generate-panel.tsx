@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent, ReactElement } from "react";
 
 import { ChipRow } from "./chip-row.js";
 import { ASPECT_LABEL, copy, STYLE_LABEL } from "./copy.js";
+import { EditPanel } from "./edit-panel.js";
 import { ASPECTS, STYLES } from "./generate-model.js";
 import { MockNote } from "./mock-note.js";
 import { useGenerate } from "./use-generate.js";
@@ -14,6 +15,7 @@ import styles from "./image-generate.module.css";
 const GeneratePanel = (setup: GenerateSetup): ReactElement => {
   const generate = useGenerate(setup);
   const { handleGenerate, handlePrompt } = generate;
+  const handleDone = setup.onDone;
 
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>): void => {
@@ -80,6 +82,12 @@ const GeneratePanel = (setup: GenerateSetup): ReactElement => {
         isBusy={generate.isPending}
         variants={generate.variants}
         onUse={generate.handleUse}
+      />
+      <EditPanel
+        directionId={setup.directionId}
+        projectId={setup.projectId}
+        target={setup.target}
+        onDone={handleDone}
       />
     </div>
   );

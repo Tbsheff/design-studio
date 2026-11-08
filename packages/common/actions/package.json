@@ -305,6 +305,7 @@
     "./image/inspect": "./src/image/inspect.ts",
     "./image/routes": "./src/image/routes.ts",
     "./image/schema": "./src/image/schema.ts",
+    "./image/update": "./src/image/update.ts",
     "./integration/create": "./src/integration/create.ts",
     "./integration/delete": "./src/integration/delete.ts",
     "./integration/errors/index": "./src/integration/errors/index.ts",

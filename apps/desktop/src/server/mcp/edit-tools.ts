@@ -102,6 +102,7 @@ export const RENDER_WAIT_TOOLS = new Set([
   "apply_content",
   "apply_token",
   "create_image",
+  "update_image",
   "create_component_variant",
   "update_component_variant",
   "import_page",

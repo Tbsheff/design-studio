@@ -2,9 +2,17 @@ import { BadRequestError } from "./deps.js";
 import type { ImageBytes } from "./deps.js";
 import { toSize } from "./engine/sizes.js";
 import type { Aspect } from "./engine/sizes.js";
-import { FAILED, postJson, toBytes } from "./remote.js";
+import {
+  createFormCall,
+  FAILED,
+  postJson,
+  toBytes,
+  toMimeType,
+} from "./remote.js";
 
 const URL = "https://api.openai.com/v1/images/generations";
+
+const EDIT_URL = "https://api.openai.com/v1/images/edits";
 
 const MODEL = "gpt-image-1";
 
@@ -56,4 +64,34 @@ const generateOpenai = async (
   return toBytes(encoded, "png", stem);
 };
 
-export { generateOpenai };
+const updateOpenai = async (
+  key: string,
+  source: ImageBytes,
+  text: string,
+  stem: string
+): Promise<ImageBytes> => {
+  const form = new FormData();
+
+  form.set("model", MODEL);
+  form.set("prompt", text);
+  form.set(
+    "image",
+    new Blob([new Uint8Array(source.bytes)], { type: toMimeType(source.ext) }),
+    `source.${source.ext}`
+  );
+
+  const reply = await createFormCall<OpenaiReply | null>(
+    { body: null, headers: { authorization: `Bearer ${key}` }, url: EDIT_URL },
+    form
+  );
+
+  const encoded = firstImage(reply);
+
+  if (encoded === null) {
+    throw new BadRequestError(FAILED);
+  }
+
+  return toBytes(encoded, "png", stem);
+};
+
+export { generateOpenai, updateOpenai };

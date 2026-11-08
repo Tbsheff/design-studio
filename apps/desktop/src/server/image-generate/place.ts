@@ -28,9 +28,15 @@ interface PlaceResult {
 }
 
 interface PlaceCommand {
-  readonly alt: string;
+  readonly alt: string | null;
   readonly layer: unknown;
   readonly prompt: string;
+  readonly title: string;
+}
+
+interface SetImageBody {
+  readonly alt?: string;
+  readonly target: unknown;
 }
 
 interface PlaceScope {
@@ -40,7 +46,7 @@ interface PlaceScope {
   readonly workTree: string;
 }
 
-const TITLE = "Generate image";
+const GENERATE_TITLE = "Generate image";
 
 const altOf = (prompt: string): string => prompt.trim().slice(0, IMAGE_ALT_MAX);
 
@@ -73,7 +79,7 @@ const saveOnly = async (
 
   const meta: VersionMeta = {
     kind: "manual",
-    prompt: `${TITLE}: saved ${asset.relative}`,
+    prompt: `${GENERATE_TITLE}: saved ${asset.relative}`,
   };
 
   const version = saveDeferred(
@@ -81,13 +87,21 @@ const saveOnly = async (
     project,
     direction,
     [asset.relative],
-    TITLE,
+    GENERATE_TITLE,
     meta
   );
 
   await publishVersion(deps, project, direction, version);
 
   return { asset: asset.relative, src: asset.src, versionId: version.id };
+};
+
+const toRequestOf = (command: PlaceCommand): SetImageBody => {
+  if (command.alt === null) {
+    return { target: command.layer };
+  }
+
+  return { alt: command.alt, target: command.layer };
 };
 
 const commitPlan = async (
@@ -97,7 +111,7 @@ const commitPlan = async (
   image: ImageBytes
 ): Promise<PlaceResult> => {
   const { direction, project } = scope;
-  const request = parseSetImage({ alt: command.alt, target: command.layer });
+  const request = parseSetImage(toRequestOf(command));
 
   assertCanEdit(deps, project, direction);
 
@@ -120,10 +134,17 @@ const commitPlan = async (
 
   const meta: VersionMeta = {
     kind: "manual",
-    prompt: `${TITLE}: ${command.prompt} at ${files.join(", ")}`,
+    prompt: `${command.title}: ${command.prompt} at ${files.join(", ")}`,
   };
 
-  const version = saveDeferred(deps, project, direction, files, TITLE, meta);
+  const version = saveDeferred(
+    deps,
+    project,
+    direction,
+    files,
+    command.title,
+    meta
+  );
 
   deps.history?.record({
     directionId: direction.id,
@@ -135,7 +156,7 @@ const commitPlan = async (
         relative: plan.target.relative,
       },
     ],
-    label: TITLE,
+    label: command.title,
     projectId: project.id,
     versionId: version.id,
   });
@@ -157,6 +178,6 @@ const placeGenerated = (
   return commitPlan(deps, scope, command, image);
 };
 
-export { altOf, placeGenerated };
+export { altOf, GENERATE_TITLE, placeGenerated };
 
 export type { PlaceCommand, PlaceResult, PlaceScope };

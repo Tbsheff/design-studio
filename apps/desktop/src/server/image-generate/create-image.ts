@@ -1,10 +1,16 @@
-import { BadRequestError, ConflictError, DirectEditError } from "./deps.js";
+import {
+  BadRequestError,
+  ConflictError,
+  DirectEditError,
+  getLayerImage,
+} from "./deps.js";
 import type { Direction, Project } from "./deps.js";
+import type { EditMode } from "./edit-mode.js";
 import type { Aspect, Style } from "./engine/sizes.js";
-import { generateImage } from "./generate-bytes.js";
+import { generateImage, updateImageBytes } from "./generate-bytes.js";
 import type { Generated } from "./generate-bytes.js";
 import type { ImageGenerateRuntime } from "./image-generate-runtime.js";
-import { altOf, placeGenerated } from "./place.js";
+import { altOf, GENERATE_TITLE, placeGenerated } from "./place.js";
 import type { PlaceCommand } from "./place.js";
 import type { ImageProviderName } from "./provider-env.js";
 import { readReuse } from "./reuse.js";
@@ -91,6 +97,7 @@ const placeCommandOf = (command: ImageCommand): PlaceCommand | null => {
     alt: altOf(command.prompt),
     layer: command.layer,
     prompt: command.prompt,
+    title: GENERATE_TITLE,
   };
 };
 
@@ -154,6 +161,93 @@ const createImageFile = async (
   }
 };
 
-export { createImageFile };
+interface UpdateLayer {
+  readonly background?: boolean;
+  readonly source: {
+    readonly col: number;
+    readonly file: string;
+    readonly line: number;
+  } | null;
+  readonly tag: string;
+}
 
-export type { ImageCommand, ImageCreated };
+interface UpdateCommand {
+  readonly directionId: string;
+  readonly layer: UpdateLayer;
+  readonly mode: EditMode;
+  readonly projectId: string;
+  readonly prompt: string | null;
+}
+
+const EDIT_TITLE = "Edit image";
+
+const toEditLabel = (command: UpdateCommand): string => {
+  if (command.mode === "prompt") {
+    return (command.prompt ?? "").trim();
+  }
+
+  return command.mode;
+};
+
+const updateImageFile = async (
+  runtime: ImageGenerateRuntime,
+  command: UpdateCommand
+): Promise<ImageCreated> => {
+  try {
+    return await runtime.withDirection(
+      command.projectId,
+      command.directionId,
+      async (project, direction) => {
+        const { workTree } = direction;
+
+        const source = await getLayerImage(project, workTree, {
+          background: command.layer.background ?? false,
+          source: command.layer.source,
+          tag: command.layer.tag,
+        });
+
+        const [edited, previewOrigin] = await Promise.all([
+          updateImageBytes({
+            mode: command.mode,
+            prompt: command.prompt ?? "",
+            source,
+          }),
+          previewOriginOf(runtime, project, direction),
+        ]);
+
+        const done = await placeGenerated(
+          runtime.editDeps,
+          { direction, previewOrigin, project, workTree },
+          {
+            alt: null,
+            layer: command.layer,
+            prompt: toEditLabel(command),
+            title: EDIT_TITLE,
+          },
+          edited.image
+        );
+
+        return {
+          alt: "",
+          asset: done.asset,
+          isMock: edited.provider === "mock",
+          placed: done.versionId !== null,
+          preview: toDataUrl(edited.image.bytes, extOf(done.asset)),
+          provider: edited.provider,
+          src: done.src,
+          versionId: done.versionId,
+        };
+      }
+    );
+  } catch (error) {
+    if (!(error instanceof Error)) {
+      throw error;
+    }
+
+    throw toKnown(error);
+  }
+};
+
+export { createImageFile, updateImageFile };
+
+export type { ImageCommand, ImageCreated, UpdateCommand };

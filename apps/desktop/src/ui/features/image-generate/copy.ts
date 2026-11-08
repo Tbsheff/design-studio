@@ -1,5 +1,10 @@
 const copy = {
   aspect: "Shape",
+  edit: "Edit this image",
+  editDone: "Image changed",
+  editNeedsPrompt: "Describe the change first.",
+  editPlaceholder: "Make the sky a warm sunset",
+  editPrompt: "Change prompt",
   generate: "Generate",
   generating: "Generating…",
   hint: "Describe the image. The studio makes two versions to choose from.",
@@ -31,4 +36,10 @@ const STYLE_LABEL = {
   photo: "Photo",
 } as const;
 
-export { ASPECT_LABEL, copy, STYLE_LABEL };
+const EDIT_LABEL = {
+  prompt: "Change with prompt",
+  "remove-background": "Remove background",
+  upscale: "Upscale",
+} as const;
+
+export { ASPECT_LABEL, copy, EDIT_LABEL, STYLE_LABEL };

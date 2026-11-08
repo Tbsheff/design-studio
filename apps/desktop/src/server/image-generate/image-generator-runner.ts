@@ -1,13 +1,20 @@
 import { Context, Effect, Layer } from "effect";
 
-import { createImageFile } from "./create-image.js";
-import type { ImageCommand, ImageCreated } from "./create-image.js";
+import { createImageFile, updateImageFile } from "./create-image.js";
+import type {
+  ImageCommand,
+  ImageCreated,
+  UpdateCommand,
+} from "./create-image.js";
 import type { KnownFailure } from "./deps.js";
 import { attemptImage } from "./image-generate-runtime.js";
 
 interface ImageGeneratorRunnerApi {
   readonly create: (
     command: ImageCommand
+  ) => Effect.Effect<ImageCreated, KnownFailure>;
+  readonly update: (
+    command: UpdateCommand
   ) => Effect.Effect<ImageCreated, KnownFailure>;
 }
 
@@ -25,6 +32,13 @@ class ImageGeneratorRunner extends Context.Service<
       ) {
         return yield* attemptImage((runtime) =>
           createImageFile(runtime, command)
+        );
+      }),
+      update: Effect.fn("ImageGeneratorRunner.update")(function* run(
+        command: UpdateCommand
+      ) {
+        return yield* attemptImage((runtime) =>
+          updateImageFile(runtime, command)
         );
       }),
     })

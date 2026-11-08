@@ -1,6 +1,6 @@
 import { BadRequestError } from "./deps.js";
 import type { ImageBytes } from "./deps.js";
-import { FAILED, postJson, toBytes } from "./remote.js";
+import { FAILED, postJson, toBytes, toMimeType } from "./remote.js";
 
 const URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent";
@@ -50,4 +50,39 @@ const generateGemini = async (
   return toBytes(found.inlineData.data, extOf(found.inlineData.mimeType), stem);
 };
 
-export { generateGemini };
+const updateGemini = async (
+  key: string,
+  source: ImageBytes,
+  prompt: string,
+  stem: string
+): Promise<ImageBytes> => {
+  const reply = await postJson<GeminiReply | null>({
+    body: {
+      contents: [
+        {
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                data: source.bytes.toString("base64"),
+                mimeType: toMimeType(source.ext),
+              },
+            },
+          ],
+        },
+      ],
+    },
+    headers: { "x-goog-api-key": key },
+    url: URL,
+  });
+
+  const found = partsOf(reply).find((part) => Boolean(part.inlineData?.data));
+
+  if (!found?.inlineData?.data) {
+    throw new BadRequestError(FAILED);
+  }
+
+  return toBytes(found.inlineData.data, extOf(found.inlineData.mimeType), stem);
+};
+
+export { generateGemini, updateGemini };

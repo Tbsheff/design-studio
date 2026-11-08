@@ -204,6 +204,10 @@ const withPagePath = (url: string, pagePath?: string): string => {
   return next.toString();
 };
 
+const toBadRequestFailure = (message: string): never => {
+  throw new BadRequestError(message);
+};
+
 const SideSchema = Schema.Int.check(
   Schema.isBetween({ maximum: EXPORT_FRAME_MAX_SIDE, minimum: 1 })
 );
@@ -238,7 +242,9 @@ const toSide = (
   result: Result.Result<number, unknown>
 ): number => {
   if (Result.isFailure(result)) {
-    throw new BadRequestError(`${label} must be 1 to ${EXPORT_FRAME_MAX_SIDE}`);
+    return toBadRequestFailure(
+      `${label} must be 1 to ${EXPORT_FRAME_MAX_SIDE}`
+    );
   }
 
   return result.success;
@@ -256,7 +262,7 @@ const toFramePath = (
   result: Result.Result<string | null | undefined, unknown>
 ): string | null => {
   if (Result.isFailure(result)) {
-    throw new BadRequestError("path must be a string");
+    return toBadRequestFailure("path must be a string");
   }
 
   return result.success ?? null;
@@ -266,7 +272,7 @@ type FrameFields = Result.Result<typeof FrameFieldsSchema.Type, unknown>;
 
 const toFrame = (fields: FrameFields): ExportFrame => {
   if (Result.isFailure(fields)) {
-    throw new BadRequestError("frame must be an object");
+    return toBadRequestFailure("frame must be an object");
   }
 
   const height = toSide("height", toSideResult(fields.success.height));
@@ -282,7 +288,7 @@ const toFrame = (fields: FrameFields): ExportFrame => {
   const cleaned = cleanExportPath(framePath);
 
   if (cleaned === null) {
-    throw new BadRequestError("path is not a page in this project");
+    return toBadRequestFailure("path is not a page in this project");
   }
 
   if (cleaned) {
@@ -308,7 +314,7 @@ const parseFrames = (raw: readonly ExportFrameInput[]): ExportFrame[] => {
   }
 
   if (list.length > EXPORT_MAX_FRAMES) {
-    throw new BadRequestError(`at most ${EXPORT_MAX_FRAMES} frames`);
+    return toBadRequestFailure(`at most ${EXPORT_MAX_FRAMES} frames`);
   }
 
   return list.map((item) => toFrame(toFrameFields(item)));
@@ -318,7 +324,7 @@ const parseScale = (raw: ExportScale): ExportScale => {
   const scale = toScaleResult(raw);
 
   if (Result.isFailure(scale)) {
-    throw new BadRequestError("scale must be 1, 2 or 3");
+    return toBadRequestFailure("scale must be 1, 2 or 3");
   }
 
   return scale.success ?? 1;

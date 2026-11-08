@@ -184,15 +184,19 @@
   width: 100%;
 }
 
-.msg-copy {
+.msg-copy-slot {
+  display: contents;
+}
+
+.msg-copy-slot .copy-btn {
   opacity: 0;
   transition-property: opacity, color, background-color;
   transition-duration: var(--dur-fast);
 }
 
-.msg.user:hover .msg-copy,
-.msg-copy:focus-visible,
-.msg-copy[data-state="copied"] {
+.msg.user:hover .msg-copy-slot .copy-btn,
+.msg-copy-slot .copy-btn:focus-visible,
+.msg-copy-slot .copy-btn[data-state="copied"] {
   opacity: 1;
 }
 
@@ -213,7 +217,7 @@
 }
 
 @media (hover: none) {
-  .msg-copy,
+  .msg-copy-slot .copy-btn,
   .reply-copy-slot .copy-btn {
     opacity: 1;
   }
@@ -599,7 +603,7 @@
 
 .msg.user:hover .msg-actions,
 .msg.user:focus-within .msg-actions,
-.msg.user:focus-within .msg-copy {
+.msg.user:focus-within .msg-copy-slot .copy-btn {
   opacity: 1;
 }
 
@@ -768,7 +772,7 @@
   line-height: var(--lh-sm);
 }
 
-.msg-user-row .msg-copy,
+.msg-user-row .msg-copy-slot .copy-btn,
 .msg-user-row .msg-action {
   width: 28px;
   height: 28px;

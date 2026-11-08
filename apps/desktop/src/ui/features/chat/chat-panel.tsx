@@ -6,13 +6,14 @@ import type { ReactElement, ReactNode } from "react";
 import { ConversationContent } from "../../ai/components/ai/conversation-content.js";
 import { ConversationScrollButton } from "../../ai/components/ai/conversation-scroll-button.js";
 import { Conversation } from "../../ai/components/ai/conversation.js";
-import { PendingEntry, RunEntry } from "./chat-run-entry.js";
+import { RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";
 import { copy } from "./copy.js";
 import { EmptyState } from "./empty-state.js";
 import { McpItem } from "./mcp-feed.js";
 import { isChatEmpty, timelineOf } from "./mcp-timeline.js";
+import { PendingEntry } from "./pending-entry.js";
 import { RunAnnouncer } from "./run-announcer.js";
 import type { RunView } from "./run-state-model.js";
 import {

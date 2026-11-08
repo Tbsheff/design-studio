@@ -16,7 +16,7 @@ const RunFeedbackRowBody = ({
 }: {
   run: RunView;
   onDetails: () => void;
-  onReview?: (() => void) | undefined;
+  onReview: (() => void) | null;
 }): ReactElement => {
   const [feedback, setFeedback] = useRunFeedback(run.runId);
 

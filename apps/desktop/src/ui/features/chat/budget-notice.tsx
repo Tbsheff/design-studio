@@ -14,7 +14,7 @@ const BudgetNotice = ({
 }: {
   run: RunView;
   latest: boolean;
-  onRetry: (() => void) | undefined;
+  onRetry: (() => void) | null;
 }): ReactElement => (
   <output className="ui-notice run-notice" data-testid="budget-notice">
     <Icon name="alert" size={ALERT_ICON_SIZE} />

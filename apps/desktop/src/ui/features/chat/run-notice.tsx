@@ -13,7 +13,7 @@ const RunNotice = ({
 }: {
   run: RunView;
   latest: boolean;
-  onRetry?: () => void;
+  onRetry: (() => void) | null;
 }): ReactElement | null => {
   if (run.status === "budget_exceeded") {
     return <BudgetNotice run={run} latest={latest} onRetry={onRetry} />;

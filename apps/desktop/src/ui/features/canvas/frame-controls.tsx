@@ -6,7 +6,7 @@ import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";
 
-export function pageName(path: string | undefined): string {
+function pageName(path: string | undefined): string {
   const clean = (path ?? "").replace(/^\/+/, "").replace(/\.html$/, "");
 
   return clean || "index";
@@ -20,7 +20,7 @@ function isCurrentPage(page: string, path: string, routes: boolean): boolean {
   return routes ? page === path : page === (path || "index.html");
 }
 
-export function FramePageMenu({
+function FramePageMenu({
   path,
   listPages,
   onPath,
@@ -167,3 +167,5 @@ export function FramePageMenu({
     </div>
   );
 }
+
+export { FramePageMenu, pageName };

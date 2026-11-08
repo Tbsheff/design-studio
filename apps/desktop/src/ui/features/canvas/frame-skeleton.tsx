@@ -25,7 +25,7 @@ function SkeletonPage() {
   );
 }
 
-export function FrameSkeleton({
+function FrameSkeleton({
   step,
   page,
   missing,
@@ -67,7 +67,7 @@ export function FrameSkeleton({
   );
 }
 
-export function FirstBuildCover({
+function FirstBuildCover({
   covered,
   wait,
   step,
@@ -84,3 +84,5 @@ export function FirstBuildCover({
 
   return covered ? <FrameSkeleton step={step ?? null} /> : null;
 }
+
+export { FirstBuildCover, FrameSkeleton };

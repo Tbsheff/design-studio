@@ -19,7 +19,7 @@ const post = <T>(path: string, body: JsonBody = {}): Promise<T> =>
 const base = (pid: string) =>
   `/api/projects/${encodeURIComponent(pid)}/variations`;
 
-export const variationsApi = {
+const variationsApi = {
   briefs: (pid: string, req: VariationBriefsRequest) =>
     post<VariationBriefsResult>(`${base(pid)}/briefs`, { ...req }),
   cancel: (pid: string, groupId: string) =>
@@ -37,14 +37,11 @@ export const variationsApi = {
     post<VariationStartResult>(base(pid), { ...req }),
 };
 
-export function maxVariationsFor(kind: ProjectKind): number {
+function maxVariationsFor(kind: ProjectKind): number {
   return kind === "react" ? VARIATION_MAX_REACT : VARIATION_MAX;
 }
 
-export function groupOf(
-  project: Project | null,
-  groupId: string | null
-): Direction[] {
+function groupOf(project: Project | null, groupId: string | null): Direction[] {
   if (!project || !groupId) {
     return [];
   }
@@ -53,3 +50,5 @@ export function groupOf(
     .filter((direction) => direction.variation?.groupId === groupId)
     .sort((a, b) => (a.variation?.index ?? 0) - (b.variation?.index ?? 0));
 }
+
+export { groupOf, maxVariationsFor, variationsApi };

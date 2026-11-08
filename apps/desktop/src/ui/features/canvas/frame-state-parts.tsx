@@ -18,13 +18,13 @@ import type { setFrameSession } from "./frame-states-model.js";
 
 type MockRules = NonNullable<FrameStateDef["mocks"]>;
 
-export type Panel = "list" | "user" | "mock";
+type Panel = "list" | "user" | "mock";
 
-export const stop = (e: ReactPointerEvent) => e.stopPropagation();
+const stop = (e: ReactPointerEvent) => e.stopPropagation();
 
 const MOCK_EXAMPLE = '[\n  { "path": "/api/items", "body": [] }\n]';
 
-export function menuKeys(event: ReactKeyboardEvent<HTMLElement>): void {
+function menuKeys(event: ReactKeyboardEvent<HTMLElement>): void {
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
       '[role^="menuitem"]:not(:disabled)'
@@ -47,7 +47,7 @@ export function menuKeys(event: ReactKeyboardEvent<HTMLElement>): void {
   items[(next + items.length) % items.length]?.focus();
 }
 
-export function StateRows({
+function StateRows({
   view,
   chosen,
   onPick,
@@ -84,7 +84,7 @@ export function StateRows({
   );
 }
 
-export function SessionRows({
+function SessionRows({
   view,
   onPanel,
   onSession,
@@ -134,7 +134,7 @@ export function SessionRows({
   );
 }
 
-export function UserForm({
+function UserForm({
   user,
   onSave,
   onBack,
@@ -187,7 +187,7 @@ export function UserForm({
   );
 }
 
-export function MockForm({
+function MockForm({
   onSave,
   onBack,
 }: {
@@ -263,3 +263,7 @@ export function MockForm({
     </form>
   );
 }
+
+export { MockForm, SessionRows, StateRows, UserForm, menuKeys, stop };
+
+export type { Panel };

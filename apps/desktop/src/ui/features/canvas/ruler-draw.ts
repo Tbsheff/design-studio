@@ -2,7 +2,7 @@ import type { RefObject } from "react";
 
 import type { Rect } from "./snap-model.js";
 
-export const RULER_SIZE = 20;
+const RULER_SIZE = 20;
 const STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000];
 const MIN_LABEL_PX = 56;
 
@@ -12,7 +12,7 @@ interface View {
   zoom: number;
 }
 
-export interface Props {
+interface Props {
   artboardRef: RefObject<HTMLDivElement | null>;
   origin: { x: number; y: number };
   selection: Rect | null;
@@ -27,7 +27,7 @@ interface Colors {
   line: string;
 }
 
-export function viewOf(el: HTMLElement | null): View | null {
+function viewOf(el: HTMLElement | null): View | null {
   const m = el
     ? /translate\(([-\d.e]+)px,\s*([-\d.e]+)px\)\s*scale\(([-\d.e]+)\)/.exec(
         el.style.transform
@@ -47,7 +47,7 @@ function stepFor(zoom: number): number {
   );
 }
 
-export function colorsOf(el: HTMLElement): Colors {
+function colorsOf(el: HTMLElement): Colors {
   const css = getComputedStyle(el);
   const v = (name: string) => css.getPropertyValue(name).trim();
 
@@ -61,7 +61,7 @@ export function colorsOf(el: HTMLElement): Colors {
   };
 }
 
-export function sizeCanvas(
+function sizeCanvas(
   canvas: HTMLCanvasElement
 ): CanvasRenderingContext2D | null {
   const dpr = window.devicePixelRatio || 1;
@@ -219,7 +219,7 @@ function drawRangeLabels(a: AxisDraw): void {
   }
 }
 
-export function drawAxis(a: AxisDraw): void {
+function drawAxis(a: AxisDraw): void {
   const { ctx } = a;
   ctx.fillStyle = a.colors.bg;
   ctx.fillRect(
@@ -260,3 +260,7 @@ export function drawAxis(a: AxisDraw): void {
 
   drawRangeLabels(a);
 }
+
+export { RULER_SIZE, colorsOf, drawAxis, sizeCanvas, viewOf };
+
+export type { Props };

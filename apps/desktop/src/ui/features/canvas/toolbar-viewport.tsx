@@ -8,7 +8,7 @@ import { uiStore } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 
-export interface Props {
+interface Props {
   viewport: Viewport;
   drawMode?: boolean;
   onToggleDraw?: () => void;
@@ -58,7 +58,7 @@ function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>) {
   next?.click();
 }
 
-export function ViewportControls({ viewport }: { viewport: Viewport }) {
+function ViewportControls({ viewport }: { viewport: Viewport }) {
   const [customW, setCustomW] = useState(String(viewport.width));
   const [customH, setCustomH] = useState(String(viewport.height));
   const [shown, setShown] = useState(`${viewport.width}x${viewport.height}`);
@@ -166,7 +166,7 @@ export function ViewportControls({ viewport }: { viewport: Viewport }) {
   );
 }
 
-export function SourceControls({
+function SourceControls({
   source,
   onSource,
   hasHead,
@@ -217,3 +217,7 @@ export function SourceControls({
     </div>
   );
 }
+
+export { SourceControls, ViewportControls };
+
+export type { Props };

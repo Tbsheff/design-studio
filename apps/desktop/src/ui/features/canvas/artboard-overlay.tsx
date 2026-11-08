@@ -63,7 +63,7 @@ function ResizeHandles({
   );
 }
 
-export function guideStyle(g: SnapGuide) {
+function guideStyle(g: SnapGuide) {
   return g.axis === "x"
     ? { height: g.to - g.from, left: g.at, top: g.from }
     : { left: g.from, top: g.at, width: g.to - g.from };
@@ -75,13 +75,7 @@ function fullStyle(g: SnapGuide) {
     : { left: 0, right: 0, top: g.at };
 }
 
-export function SnapGuides({
-  guides,
-  full,
-}: {
-  guides: SnapGuide[];
-  full?: boolean;
-}) {
+function SnapGuides({ guides, full }: { guides: SnapGuide[]; full?: boolean }) {
   if (guides.length === 0) {
     return null;
   }
@@ -150,7 +144,7 @@ function sameRect(
   );
 }
 
-export function ArtboardOverlay({
+function ArtboardOverlay({
   hover,
   selection,
   comments,
@@ -215,3 +209,5 @@ export function ArtboardOverlay({
     </div>
   );
 }
+
+export { ArtboardOverlay, SnapGuides, guideStyle };

@@ -13,7 +13,7 @@ const MOUNT_FALLBACK_MS = 1200;
 let frontPainted = false;
 let paintListening = false;
 
-export function useResetPassiveGateInFirstRender(): void {
+function useResetPassiveGateInFirstRender(): void {
   useState(resetPassiveMountGate);
 }
 
@@ -91,7 +91,7 @@ interface PassiveProps {
   onNextLoad: (id: string) => void;
 }
 
-export function PassiveFrame({
+function PassiveFrame({
   frame,
   src,
   nextSrc,
@@ -166,7 +166,7 @@ export function PassiveFrame({
   );
 }
 
-export type PassiveEntry = PassiveProps;
+type PassiveEntry = PassiveProps;
 
 function liveLabel(cur: LabelProps, live: () => LabelProps): LabelProps {
   return {
@@ -182,7 +182,7 @@ function liveLabel(cur: LabelProps, live: () => LabelProps): LabelProps {
   };
 }
 
-export const StablePassiveFrame = memo(
+const StablePassiveFrame = memo(
   ({
     id,
     entries,
@@ -206,3 +206,7 @@ export const StablePassiveFrame = memo(
 );
 
 StablePassiveFrame.displayName = "StablePassiveFrame";
+
+export { PassiveFrame, StablePassiveFrame, useResetPassiveGateInFirstRender };
+
+export type { PassiveEntry };

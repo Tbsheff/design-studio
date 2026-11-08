@@ -3,7 +3,7 @@ import { SnapGuides } from "./artboard-overlay.js";
 import { gapStyle } from "./canvas-overlays.js";
 import type { FreeMoveView } from "./use-free-move.js";
 
-export function FreeMoveLayer({ view }: { view: FreeMoveView | null }) {
+function FreeMoveLayer({ view }: { view: FreeMoveView | null }) {
   if (!view) {
     return null;
   }
@@ -51,3 +51,5 @@ export function FreeMoveLayer({ view }: { view: FreeMoveView | null }) {
     </div>
   );
 }
+
+export { FreeMoveLayer };

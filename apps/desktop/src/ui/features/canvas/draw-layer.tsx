@@ -33,7 +33,7 @@ interface Frame {
 const MAX_BACKING_SIDE = 8192;
 const MAX_BACKING_AREA = 24_000_000;
 
-export function PenIcon({ size = 16 }: { size?: number }) {
+function PenIcon({ size = 16 }: { size?: number }) {
   return (
     <svg
       className="icon"
@@ -71,13 +71,7 @@ interface SurfaceProps {
   tools: CommentTools;
 }
 
-export function DrawSurface({
-  draw,
-  control,
-  zoom,
-  frame,
-  tools,
-}: SurfaceProps) {
+function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
   const initial = useProfileInitial();
   const canvas = useRef<HTMLCanvasElement>(null);
 
@@ -313,7 +307,7 @@ function onSwatchKey(event: KeyboardEvent<HTMLDivElement>) {
   next?.click();
 }
 
-export function DrawBar({ draw }: { draw: DrawTool }) {
+function DrawBar({ draw }: { draw: DrawTool }) {
   if (!draw.on) {
     return null;
   }
@@ -387,7 +381,7 @@ export function DrawBar({ draw }: { draw: DrawTool }) {
   );
 }
 
-export function DrawingStrokes({ drawing }: { drawing: CommentDrawing }) {
+function DrawingStrokes({ drawing }: { drawing: CommentDrawing }) {
   const { width, height } = drawing.frame;
 
   return (
@@ -416,3 +410,5 @@ export function DrawingStrokes({ drawing }: { drawing: CommentDrawing }) {
     </svg>
   );
 }
+
+export { DrawBar, DrawSurface, DrawingStrokes, PenIcon };

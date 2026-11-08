@@ -9,13 +9,13 @@ import type { PortDialogTarget } from "../design-system/port-to-app-dialog.js";
 import { MenuPopover } from "./top-bar-menu.js";
 import type { MenuGroup } from "./top-bar-menu.js";
 
-export const PortToAppDialog = lazy(async () => {
+const PortToAppDialog = lazy(async () => {
   const loaded = await import("../design-system/port-to-app-dialog.js");
 
   return { default: loaded.PortToAppDialog };
 });
 
-export function usePortDialog(available: boolean): {
+function usePortDialog(available: boolean): {
   target: PortDialogTarget | null;
   open: (frameId: string | null, directionId?: string | null) => void;
   close: () => void;
@@ -58,7 +58,7 @@ export function usePortDialog(available: boolean): {
   return { close: useCallback(() => setTarget(null), []), open, target };
 }
 
-export function DropMenu({
+function DropMenu({
   label,
   groups,
   className,
@@ -123,3 +123,5 @@ export function DropMenu({
     </span>
   );
 }
+
+export { DropMenu, PortToAppDialog, usePortDialog };

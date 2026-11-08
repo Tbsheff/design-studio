@@ -1,12 +1,11 @@
+import { usePopover } from "@design-studio/ui";
 import { useCallback, useRef, useState } from "react";
 import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
 
-import { usePopover } from "@design-studio/ui";
-
-export type ResizeEdge = "right" | "bottom" | "corner";
+type ResizeEdge = "right" | "bottom" | "corner";
 
 const EDGES: { edge: ResizeEdge; label: string }[] = [
   { edge: "right", label: "Resize width" },
@@ -71,7 +70,7 @@ function passToElementHandle(e: ReactPointerEvent): boolean {
   return true;
 }
 
-export function FrameResizeHandles({
+function FrameResizeHandles({
   onPointerDown,
 }: {
   onPointerDown: (e: ReactPointerEvent, edge: ResizeEdge) => void;
@@ -101,7 +100,7 @@ const MENU_STEP: Record<string, (index: number, count: number) => number> = {
   Home: () => 0,
 };
 
-export function menuKeys(
+function menuKeys(
   event: ReactKeyboardEvent<HTMLElement>,
   close: (refocus: boolean) => void
 ) {
@@ -127,7 +126,7 @@ export function menuKeys(
   items[step(Math.max(0, index), items.length)]?.focus();
 }
 
-export function useMenu() {
+function useMenu() {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -144,3 +143,7 @@ export function useMenu() {
 
   return { close, open, root, setOpen, trigger };
 }
+
+export { FrameResizeHandles, menuKeys, useMenu };
+
+export type { ResizeEdge };

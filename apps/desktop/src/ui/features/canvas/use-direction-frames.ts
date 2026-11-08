@@ -16,7 +16,7 @@ import { frameStateUrl } from "./frame-states-model.js";
 import type { FrameStatesRead } from "./frame-states-model.js";
 import { passiveSrc } from "./use-canvas-frames.js";
 
-export interface PassiveSlot {
+interface PassiveSlot {
   id: string;
   directionId: string | null;
   token: string;
@@ -66,7 +66,7 @@ function useDirectionUrls(
   return urls;
 }
 
-export function useDirectionFrames(o: Options) {
+function useDirectionFrames(o: Options) {
   const tokens = useRef(new Map<string, string>());
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
   const passive = o.frames.filter((f) => f.id !== o.activeId);
@@ -176,4 +176,8 @@ export function useDirectionFrames(o: Options) {
   return { elements, onSwapDone: gate.onSwapDone, slots };
 }
 
-export type DirectionFrames = ReturnType<typeof useDirectionFrames>;
+type DirectionFrames = ReturnType<typeof useDirectionFrames>;
+
+export { useDirectionFrames };
+
+export type { DirectionFrames, PassiveSlot };

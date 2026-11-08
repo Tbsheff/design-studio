@@ -1,25 +1,25 @@
 import type { CommentDrawing, DrawStroke } from "@design-studio/contracts";
 
-export const DRAW_COLORS = [
+const DRAW_COLORS = [
   { id: "red", label: "Red", value: "#ff3b30" },
   { id: "blue", label: "Blue", value: "#0a84ff" },
   { id: "green", label: "Green", value: "#1fae4c" },
   { id: "ink", label: "Black", value: "#1c1c1e" },
 ] as const;
 
-export const DRAW_SCREEN_WIDTH = 3;
+const DRAW_SCREEN_WIDTH = 3;
 const SMOOTHING = 0.45;
 const MIN_STEP_SCREEN = 1.5;
 const PNG_MAX_SIDE = 4096;
 const HALO = "rgba(255, 255, 255, 0.9)";
 
-export interface StrokeBuilder {
+interface StrokeBuilder {
   add(x: number, y: number): boolean;
   end(x: number, y: number): void;
   points(): number[];
 }
 
-export function createStrokeBuilder(
+function createStrokeBuilder(
   x: number,
   y: number,
   minStep: number
@@ -59,7 +59,7 @@ export function createStrokeBuilder(
   };
 }
 
-export function minStepFor(zoom: number): number {
+function minStepFor(zoom: number): number {
   return MIN_STEP_SCREEN / Math.max(zoom, 0.05);
 }
 
@@ -67,7 +67,7 @@ function round(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
-export function strokePath(points: number[]): string {
+function strokePath(points: number[]): string {
   const count = points.length / 2;
 
   if (count === 0) {
@@ -124,7 +124,7 @@ function traceStroke(ctx: CanvasRenderingContext2D, points: number[]): void {
   }
 }
 
-export function paintStrokes(
+function paintStrokes(
   ctx: CanvasRenderingContext2D,
   strokes: DrawStroke[],
   halo: boolean
@@ -151,7 +151,7 @@ export function paintStrokes(
   }
 }
 
-export function renderDrawingPng(drawing: CommentDrawing): Promise<Blob> {
+function renderDrawingPng(drawing: CommentDrawing): Promise<Blob> {
   const { width, height } = drawing.frame;
   const scale = Math.min(1, PNG_MAX_SIDE / Math.max(width, height));
   const canvas = document.createElement("canvas");
@@ -177,7 +177,7 @@ export function renderDrawingPng(drawing: CommentDrawing): Promise<Blob> {
   );
 }
 
-export interface PenAnchor {
+interface PenAnchor {
   x: number;
   y: number;
   hin?: { x: number; y: number };
@@ -206,7 +206,7 @@ function shiftAnchor(anchor: PenAnchor, dx: number, dy: number): PenAnchor {
   };
 }
 
-export function penPath(
+function penPath(
   anchors: PenAnchor[],
   closed: boolean,
   dx = 0,
@@ -235,3 +235,16 @@ export function penPath(
 
   return d;
 }
+
+export {
+  DRAW_COLORS,
+  DRAW_SCREEN_WIDTH,
+  createStrokeBuilder,
+  minStepFor,
+  paintStrokes,
+  penPath,
+  renderDrawingPng,
+  strokePath,
+};
+
+export type { PenAnchor, StrokeBuilder };

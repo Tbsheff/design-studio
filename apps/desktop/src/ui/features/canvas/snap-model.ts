@@ -1,22 +1,22 @@
-export interface Rect {
+interface Rect {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-export type Axis = "x" | "y";
+type Axis = "x" | "y";
 
-export type SnapKind = "move" | "end" | null;
+type SnapKind = "move" | "end" | null;
 
-export interface SnapGuide {
+interface SnapGuide {
   axis: Axis;
   at: number;
   from: number;
   to: number;
 }
 
-export interface SpacingBadge {
+interface SpacingBadge {
   axis: Axis;
   from: number;
   to: number;
@@ -24,13 +24,13 @@ export interface SpacingBadge {
   value: number;
 }
 
-export interface SnapResult {
+interface SnapResult {
   rect: Rect;
   guides: SnapGuide[];
   spacing: SpacingBadge[];
 }
 
-export interface SnapInput {
+interface SnapInput {
   rect: Rect;
   candidates: Rect[];
   zoom: number;
@@ -38,7 +38,7 @@ export interface SnapInput {
   y: SnapKind;
 }
 
-export const SNAP_PX = 6;
+const SNAP_PX = 6;
 const SAME = 0.5;
 
 interface Span {
@@ -341,7 +341,7 @@ function spacingFor(
   ];
 }
 
-export function snapRect(input: SnapInput): SnapResult {
+function snapRect(input: SnapInput): SnapResult {
   const threshold = SNAP_PX / Math.max(input.zoom, 0.01);
   let { rect } = input;
   rect = shifted(rect, "x", input.x, axisDelta(input, "x", threshold));
@@ -366,14 +366,11 @@ export function snapRect(input: SnapInput): SnapResult {
   return { guides, rect, spacing };
 }
 
-export function snapOff(event: {
-  metaKey: boolean;
-  ctrlKey: boolean;
-}): boolean {
+function snapOff(event: { metaKey: boolean; ctrlKey: boolean }): boolean {
   return event.metaKey || event.ctrlKey;
 }
 
-export function unionBox(rects: Rect[]): Rect | null {
+function unionBox(rects: Rect[]): Rect | null {
   if (rects.length === 0) {
     return null;
   }
@@ -385,3 +382,15 @@ export function unionBox(rects: Rect[]): Rect | null {
 
   return { height: bottom - top, width: right - left, x: left, y: top };
 }
+
+export { SNAP_PX, snapOff, snapRect, unionBox };
+
+export type {
+  Axis,
+  Rect,
+  SnapGuide,
+  SnapInput,
+  SnapKind,
+  SnapResult,
+  SpacingBadge,
+};

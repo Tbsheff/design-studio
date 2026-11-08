@@ -29,7 +29,7 @@ const frameAction = (
 ): { action?: FrameAction } =>
   action !== undefined && isFrameActionName(action) ? { action } : {};
 
-export interface LinkInteractionChange {
+interface LinkInteractionChange {
   readonly action?: LinkAction;
   readonly delayMs?: number;
   readonly key?: string;
@@ -123,7 +123,7 @@ const frameRefOf = (target: LinkTarget): string | undefined => {
   return "frame" in target ? target.frame : undefined;
 };
 
-export const linksApi = {
+const linksApi = {
   add: async (
     projectId: string,
     link: { from: LinkSource; to: LinkTarget; transition: LinkTransition }
@@ -216,7 +216,7 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-export function useLinks(projectId: string): LinksFile {
+function useLinks(projectId: string): LinksFile {
   useEffect(() => load(projectId), [projectId]);
   useProjectEvents(projectId, receive);
 
@@ -248,7 +248,7 @@ const fetchImplicit = async (
 
 const REPLAY_SLACK_MS = 1000;
 
-export function useImplicitLinks(
+function useImplicitLinks(
   projectId: string,
   framesKey: string
 ): PrototypeLink[] {
@@ -300,3 +300,7 @@ export function useImplicitLinks(
 
   return links;
 }
+
+export { linksApi, useImplicitLinks, useLinks };
+
+export type { LinkInteractionChange };

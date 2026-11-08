@@ -12,9 +12,7 @@ import { json } from "../../api.js";
 import { IS_MAC } from "../../canvas-hook-slots.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 
-export type { VectorToolId };
-
-export const PREVIEW_TOOL_KEY_EVENT = "studio:preview-tool-key";
+const PREVIEW_TOOL_KEY_EVENT = "studio:preview-tool-key";
 
 interface State {
   tool: VectorToolId | null;
@@ -36,7 +34,7 @@ function emit(next: Partial<State>): void {
   }
 }
 
-export const vectorTool = {
+const vectorTool = {
   get: () => state,
   set: (tool: VectorToolId | null) =>
     emit({ tool: state.available ? tool : null }),
@@ -54,7 +52,7 @@ export const vectorTool = {
     emit({ tool: state.available && state.tool !== tool ? tool : null }),
 };
 
-export function useVectorTool(): State {
+function useVectorTool(): State {
   return useSyncExternalStore(
     vectorTool.subscribe,
     vectorTool.get,
@@ -89,12 +87,12 @@ const VECTOR_TOOL_LIST: {
   },
 ];
 
-export const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({
+const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({
   ...item,
   keyLabel: shortcutLabel(item.keyId, IS_MAC),
 }));
 
-export function useVectorToolKeys(available: boolean): void {
+function useVectorToolKeys(available: boolean): void {
   useEffect(() => vectorTool.setAvailable(available), [available]);
   useEffect(() => () => vectorTool.setAvailable(false), []);
   useEffect(() => {
@@ -139,7 +137,7 @@ export function useVectorToolKeys(available: boolean): void {
   }, []);
 }
 
-export function useVectorToolGuards(
+function useVectorToolGuards(
   tool: VectorToolId | null,
   otherOn: boolean,
   stopOthers: () => void
@@ -158,7 +156,7 @@ export function useVectorToolGuards(
   }, [otherOn]);
 }
 
-export function runVector(
+function runVector(
   projectId: string,
   directionId: string,
   request: VectorRequest
@@ -169,3 +167,15 @@ export function runVector(
     request
   );
 }
+
+export {
+  PREVIEW_TOOL_KEY_EVENT,
+  VECTOR_TOOLS,
+  runVector,
+  useVectorTool,
+  useVectorToolGuards,
+  useVectorToolKeys,
+  vectorTool,
+};
+
+export type { VectorToolId };

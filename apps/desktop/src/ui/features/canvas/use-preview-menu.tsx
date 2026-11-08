@@ -218,7 +218,7 @@ function menuItems(
   ];
 }
 
-export function usePreviewMenu(o: Options) {
+function usePreviewMenu(o: Options) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const latest = useRef(o);
   latest.current = o;
@@ -341,3 +341,5 @@ export function usePreviewMenu(o: Options) {
 
   return { menu, onContextMenu };
 }
+
+export { usePreviewMenu };

@@ -65,7 +65,7 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function usePrototype(o: Options) {
+function usePrototype(o: Options) {
   const { on } = o;
   const [arrows, setArrows] = useState(true);
   const [playing, setPlaying] = useState(false);
@@ -245,3 +245,5 @@ export function usePrototype(o: Options) {
       : undefined,
   };
 }
+
+export { usePrototype };

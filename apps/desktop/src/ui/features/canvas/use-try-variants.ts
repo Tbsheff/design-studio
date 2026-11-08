@@ -11,7 +11,7 @@ import {
 import { useCommands } from "../../canvas-hook-slots.js";
 import type { VariationsState } from "./use-variations.js";
 
-export function useTryVariants(
+function useTryVariants(
   project: Project | null,
   selection: SelectionContext[],
   variations: VariationsState
@@ -47,3 +47,5 @@ export function useTryVariants(
     await variations.proposeElement(element, prompt, count, level);
   };
 }
+
+export { useTryVariants };

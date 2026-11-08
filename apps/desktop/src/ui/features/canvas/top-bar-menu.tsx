@@ -3,11 +3,11 @@ import type { IconName } from "@design-studio/ui";
 import { useRef } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
-export type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
+type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
 
-export type PresentMode = "window" | "fullscreen" | "new-window" | "play";
+type PresentMode = "window" | "fullscreen" | "new-window" | "play";
 
-export interface MenuEntry {
+interface MenuEntry {
   id: string;
   label: string;
   icon?: IconName;
@@ -18,7 +18,7 @@ export interface MenuEntry {
   run: () => void;
 }
 
-export interface MenuGroup {
+interface MenuGroup {
   label?: string;
   items: MenuEntry[];
   note?: string;
@@ -43,7 +43,7 @@ function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
   ]?.focus();
 }
 
-export function MenuPopover({
+function MenuPopover({
   groups,
   label,
   align,
@@ -103,7 +103,7 @@ export function MenuPopover({
   );
 }
 
-export function shareGroups(
+function shareGroups(
   p: {
     canExport: boolean;
     onExport: () => void;
@@ -195,3 +195,7 @@ export function shareGroups(
     },
   ];
 }
+
+export { MenuPopover, shareGroups };
+
+export type { CanvasTool, MenuEntry, MenuGroup, PresentMode };

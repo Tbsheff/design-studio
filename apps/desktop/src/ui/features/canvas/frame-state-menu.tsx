@@ -136,7 +136,7 @@ function MenuBody({
   );
 }
 
-export function FrameStateMenu({
+function FrameStateMenu({
   frameId,
   frameName,
   directionId,
@@ -196,3 +196,5 @@ export function FrameStateMenu({
     </div>
   );
 }
+
+export { FrameStateMenu };

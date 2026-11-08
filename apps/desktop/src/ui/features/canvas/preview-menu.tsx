@@ -1,12 +1,12 @@
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import type { KeyId } from "../../../shared/keymap.js";
 import { KeyHint } from "../../canvas-preview-slots.js";
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 
-export interface PreviewMenuItem {
+interface PreviewMenuItem {
   id: string;
   label: string;
   icon: IconName;
@@ -39,7 +39,7 @@ function step(key: string, index: number, count: number): number | null {
   return null;
 }
 
-export function PreviewMenu({
+function PreviewMenu({
   at,
   label,
   items,
@@ -185,3 +185,7 @@ function MenuRow({
     </>
   );
 }
+
+export { PreviewMenu };
+
+export type { PreviewMenuItem };

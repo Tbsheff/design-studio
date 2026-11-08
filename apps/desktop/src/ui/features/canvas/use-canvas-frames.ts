@@ -45,7 +45,7 @@ const TITLE_DOUBLE_MS = 400;
 
 type ZoomSource = "key" | "frame" | "menu";
 
-export function unionRect(selection: SelectionContext[]): Box | null {
+function unionRect(selection: SelectionContext[]): Box | null {
   if (selection.length === 0) {
     return null;
   }
@@ -57,7 +57,7 @@ export function unionRect(selection: SelectionContext[]): Box | null {
   return { height: bottom - top, width: right - left, x: left, y: top };
 }
 
-export function passiveSrc(
+function passiveSrc(
   baseUrl: string | null,
   kind: ProjectKind,
   change: FilesChange | null
@@ -74,14 +74,14 @@ export function passiveSrc(
   return url.toString();
 }
 
-export interface CanvasFrames {
+interface CanvasFrames {
   layout: CanvasLayout;
   active: CanvasFrame;
   update: (fn: (layout: CanvasLayout) => CanvasLayout) => void;
   activate: (frame: CanvasFrame) => void;
 }
 
-export function useCanvasFrames(
+function useCanvasFrames(
   projectId: string,
   directionId: string | null = null,
   onDirection?: (id: string) => void,
@@ -147,7 +147,7 @@ export function useCanvasFrames(
   return { activate, active, layout, update };
 }
 
-export function useZoomInput(
+function useZoomInput(
   apply: (key: ZoomKey) => void
 ): (key: ZoomKey, from: ZoomSource) => void {
   const lastZoom = useRef<{
@@ -277,7 +277,7 @@ function pointIn(
   return { x: (clientX - rect.left) / zoom, y: (clientY - rect.top) / zoom };
 }
 
-export function useFrameActions(
+function useFrameActions(
   frames: CanvasFrames,
   pz: PanZoom,
   artboardRef: RefObject<HTMLDivElement | null>,
@@ -454,3 +454,13 @@ export function useFrameActions(
     undoRemove,
   };
 }
+
+export {
+  passiveSrc,
+  unionRect,
+  useCanvasFrames,
+  useFrameActions,
+  useZoomInput,
+};
+
+export type { CanvasFrames };

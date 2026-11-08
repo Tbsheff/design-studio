@@ -5,7 +5,7 @@ import type { KeyboardEvent } from "react";
 import { FRAME_PRESETS } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 
-export function AddFrameMenu({
+function AddFrameMenu({
   disabled,
   onAdd,
 }: {
@@ -130,7 +130,7 @@ export function AddFrameMenu({
   );
 }
 
-export function FrameUndoBar({
+function FrameUndoBar({
   onUndo,
   onDismiss,
 }: {
@@ -158,3 +158,5 @@ export function FrameUndoBar({
     </div>
   );
 }
+
+export { AddFrameMenu, FrameUndoBar };

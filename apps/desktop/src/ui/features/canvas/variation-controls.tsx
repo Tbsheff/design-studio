@@ -14,13 +14,13 @@ const STATUS_TEXT: Record<RunStatus, string> = {
   running: "Running",
 };
 
-export interface Sibling {
+interface Sibling {
   id: string;
   label: string;
   title: string;
 }
 
-export interface FrameVariation {
+interface FrameVariation {
   label: string;
   title: string;
   status: RunStatus | null;
@@ -33,7 +33,7 @@ export interface FrameVariation {
   onMix: (toDirectionId: string, element: SelectionContext) => Promise<void>;
 }
 
-export const stop = (e: ReactPointerEvent) => e.stopPropagation();
+const stop = (e: ReactPointerEvent) => e.stopPropagation();
 
 function UseInMenu({
   siblings,
@@ -111,7 +111,7 @@ function shortRejection(error: string): string {
     : "Rejected: changed code outside the element";
 }
 
-export function VariationControls({
+function VariationControls({
   variation,
   active,
   element,
@@ -222,3 +222,7 @@ export function VariationControls({
     </>
   );
 }
+
+export { VariationControls, stop };
+
+export type { FrameVariation, Sibling };

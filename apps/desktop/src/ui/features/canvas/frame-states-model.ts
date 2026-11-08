@@ -74,12 +74,9 @@ function load(projectId: string): void {
   void fetchView(projectId);
 }
 
-export type FrameStatesRead = FrameStatesView | null | undefined;
+type FrameStatesRead = FrameStatesView | null | undefined;
 
-export function useFrameStates(
-  projectId: string,
-  isApp: boolean
-): FrameStatesRead {
+function useFrameStates(projectId: string, isApp: boolean): FrameStatesRead {
   useEffect(() => {
     if (!isApp) {
       return;
@@ -111,7 +108,7 @@ export function useFrameStates(
   return useSyncExternalStore(subscribe, read, read);
 }
 
-export function useCurrentFrameStates(): {
+function useCurrentFrameStates(): {
   projectId: string;
   view: FrameStatesView;
 } | null {
@@ -125,14 +122,11 @@ export function useCurrentFrameStates(): {
   return current && view ? { projectId: current, view } : null;
 }
 
-export function frameStateOf(
-  view: FrameStatesView | null,
-  frameId: string
-): string {
+function frameStateOf(view: FrameStatesView | null, frameId: string): string {
   return view?.frames[frameId] ?? DEFAULT_FRAME_STATE;
 }
 
-export function frameStateUrl(
+function frameStateUrl(
   url: string | null,
   view: FrameStatesRead,
   frameId: string
@@ -144,7 +138,7 @@ export function frameStateUrl(
   return view ? withFrameStateHost(url, frameStateOf(view, frameId)) : url;
 }
 
-export async function setFrameState(
+async function setFrameState(
   projectId: string,
   frameId: string,
   state: string,
@@ -162,7 +156,7 @@ export async function setFrameState(
   return done.state;
 }
 
-export async function setFrameSession(
+async function setFrameSession(
   projectId: string,
   change: { user?: MockUser; forget?: boolean }
 ): Promise<void> {
@@ -174,3 +168,14 @@ export async function setFrameSession(
 
   store(projectId, view);
 }
+
+export {
+  frameStateOf,
+  frameStateUrl,
+  setFrameSession,
+  setFrameState,
+  useCurrentFrameStates,
+  useFrameStates,
+};
+
+export type { FrameStatesRead };

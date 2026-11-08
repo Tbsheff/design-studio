@@ -32,7 +32,7 @@ function apply(
   return next;
 }
 
-export function showVariationFrames(
+function showVariationFrames(
   projectId: string,
   directionIds: string[],
   currentId: string | null,
@@ -47,7 +47,7 @@ export function showVariationFrames(
   return activeFrame(next).directionId ?? currentId;
 }
 
-export function keepVariationFrame(
+function keepVariationFrame(
   projectId: string,
   keepId: string,
   groupIds: string[]
@@ -55,10 +55,7 @@ export function keepVariationFrame(
   apply(projectId, (layout) => keepDirection(layout, keepId, groupIds));
 }
 
-export function framesOnCanvas(
-  projectId: string,
-  directionIds: string[]
-): number {
+function framesOnCanvas(projectId: string, directionIds: string[]): number {
   const layout = canvasStore.get(projectId);
 
   return layout
@@ -67,3 +64,5 @@ export function framesOnCanvas(
       ).length
     : 0;
 }
+
+export { framesOnCanvas, keepVariationFrame, showVariationFrames };

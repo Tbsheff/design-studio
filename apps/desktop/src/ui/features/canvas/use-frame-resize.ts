@@ -18,7 +18,7 @@ import type { PanZoom } from "./use-pan-zoom.js";
 
 const MAX_SIDE = 4000;
 
-export interface FrameSnapView {
+interface FrameSnapView {
   guides: SnapGuide[];
   spacing: SpacingBadge[];
   shift: { x: number; y: number };
@@ -51,13 +51,13 @@ function createSnapStore() {
   };
 }
 
-export const frameSnapStore = createSnapStore();
+const frameSnapStore = createSnapStore();
 
-export function otherFrames(layout: CanvasLayout, id: string): Box[] {
+function otherFrames(layout: CanvasLayout, id: string): Box[] {
   return shownFrames(layout).filter((f) => f.id !== id);
 }
 
-export function resizedSize(
+function resizedSize(
   start: { width: number; height: number },
   edge: ResizeEdge,
   dx: number,
@@ -149,7 +149,7 @@ function paintSize(
   host.classList.toggle("frame-resizing", size !== null);
 }
 
-export function useFrameResize(
+function useFrameResize(
   frames: CanvasFrames,
   pz: PanZoom,
   artboardRef: RefObject<HTMLDivElement | null>,
@@ -255,3 +255,7 @@ export function useFrameResize(
     window.addEventListener("keyup", key);
   };
 }
+
+export { frameSnapStore, otherFrames, resizedSize, useFrameResize };
+
+export type { FrameSnapView };

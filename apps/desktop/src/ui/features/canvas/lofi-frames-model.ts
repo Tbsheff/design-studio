@@ -78,7 +78,7 @@ function stageFrames(
   return out;
 }
 
-export function useLofiFrames(
+function useLofiFrames(
   stageRef: RefObject<HTMLElement | null>,
   kind: ProjectKind,
   currentId: string | null,
@@ -151,3 +151,5 @@ export function useLofiFrames(
     }
   }, [key]);
 }
+
+export { useLofiFrames };

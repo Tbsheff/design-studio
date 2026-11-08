@@ -244,7 +244,7 @@ interface AppCanvasInput {
   onSignIn: () => void;
 }
 
-export function useAppCanvas(o: AppCanvasInput): {
+function useAppCanvas(o: AppCanvasInput): {
   bar: ReactNode;
   note: ReactNode;
   stage: ReactNode;
@@ -325,3 +325,5 @@ export function useAppCanvas(o: AppCanvasInput): {
     ) : null,
   };
 }
+
+export { useAppCanvas };

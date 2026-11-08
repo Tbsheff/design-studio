@@ -6,7 +6,7 @@ import { useDesktopCommand } from "../../platform/desktop.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { DRAW_COLORS } from "./drawing-model.js";
 
-export interface DrawTool {
+interface DrawTool {
   available: boolean;
   on: boolean;
   toolbarMode: boolean | undefined;
@@ -28,10 +28,7 @@ function hasText(target: EventTarget | null): boolean {
     : isTypingTarget(target);
 }
 
-export function useDrawTool(
-  available: boolean,
-  onActivate: () => void
-): DrawTool {
+function useDrawTool(available: boolean, onActivate: () => void): DrawTool {
   const [on, setOnState] = useState(false);
   const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
@@ -136,7 +133,7 @@ export function useDrawTool(
   };
 }
 
-export function useCanvasDraw(
+function useCanvasDraw(
   comment: { available: boolean; on: boolean; setOn: (on: boolean) => void },
   selectMode: boolean,
   setSelectMode: (on: boolean) => void
@@ -157,3 +154,7 @@ export function useCanvasDraw(
 
   return draw;
 }
+
+export { useCanvasDraw, useDrawTool };
+
+export type { DrawTool };

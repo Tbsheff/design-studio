@@ -1,9 +1,9 @@
+import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 import { useCurrentFrameStates } from "./frame-states-model.js";
 
 import "../../styles/route-flow.css";
@@ -25,7 +25,7 @@ function doneText(result: FlowResult): string {
   return `Added ${added} ${added === 1 ? "route" : "routes"} and ${result.links.length} ${result.links.length === 1 ? "link" : "links"}.${missing}`;
 }
 
-export function FlowFromHere({
+function FlowFromHere({
   frameId,
   frameName,
 }: {
@@ -78,3 +78,5 @@ export function FlowFromHere({
     </button>
   );
 }
+
+export { FlowFromHere };

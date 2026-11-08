@@ -10,7 +10,7 @@ interface Props {
 
 const OPTIONS = [1, 2, 3, 4] as const;
 
-export function VariationsControl({
+function VariationsControl({
   value,
   max,
   onChange,
@@ -51,3 +51,5 @@ export function VariationsControl({
     </div>
   );
 }
+
+export { VariationsControl };

@@ -7,7 +7,7 @@ import { setFrameHidden } from "./canvas-frames-model.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
 
 const POINT_FRESH_MS = 8000;
-export const MCP_POINT_MS = 20_000;
+const MCP_POINT_MS = 20_000;
 const SELECT_AT_MS = [900, 1700];
 const ZOOM_AT_MS = 500;
 
@@ -19,7 +19,7 @@ interface PointInput {
   zoom: (key: ZoomKey) => void;
 }
 
-export interface McpPointBadge {
+interface McpPointBadge {
   point: McpPoint | null;
   show: () => void;
   dismiss: () => void;
@@ -73,7 +73,7 @@ function useShowFrame(o: PointInput) {
   );
 }
 
-export function useCanvasPoint(o: PointInput): McpPointBadge {
+function useCanvasPoint(o: PointInput): McpPointBadge {
   const showFrame = useShowFrame(o);
   const [point, setPoint] = useState<McpPoint | null>(null);
   useProjectEvents(o.projectId, (event) => {
@@ -116,3 +116,7 @@ export function useCanvasPoint(o: PointInput): McpPointBadge {
 
   return { dismiss, point, show };
 }
+
+export { MCP_POINT_MS, useCanvasPoint };
+
+export type { McpPointBadge };

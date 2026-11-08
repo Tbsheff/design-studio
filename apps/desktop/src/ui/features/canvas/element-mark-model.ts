@@ -1,7 +1,7 @@
 import { ELEMENT_MARK_PARAM } from "@design-studio/contracts";
 import type { Direction } from "@design-studio/contracts";
 
-export function markOf(
+function markOf(
   directions: readonly Direction[] | undefined,
   directionId: string | null
 ): string | null {
@@ -10,7 +10,7 @@ export function markOf(
   return variation?.scope && !variation.settled ? variation.scope.loc : null;
 }
 
-export function withElementMark(
+function withElementMark(
   url: string | null,
   mark: string | null
 ): string | null {
@@ -23,3 +23,5 @@ export function withElementMark(
 
   return next.toString();
 }
+
+export { markOf, withElementMark };

@@ -161,7 +161,7 @@ function CardBody({
   );
 }
 
-export function VariationBriefCard({
+function VariationBriefCard({
   project,
   draft,
   onEdit,
@@ -237,3 +237,5 @@ export function VariationBriefCard({
     </section>
   );
 }
+
+export { VariationBriefCard };

@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { TextEditMessage } from "./use-preview-frames.js";
 
-export const MAX_INLINE_TEXT = 5000;
+const MAX_INLINE_TEXT = 5000;
 
 const REFOCUS_MS = 50;
-export const QUIET_FOCUS_ATTR = "data-quiet-focus";
+const QUIET_FOCUS_ATTR = "data-quiet-focus";
 
-export function focusStageQuietly(
+function focusStageQuietly(
   stage: HTMLElement | null = document.querySelector<HTMLElement>(
     ".canvas .stage"
   )
@@ -30,9 +30,9 @@ function focusLeftCanvas(stage: HTMLElement): boolean {
   return !(active instanceof HTMLIFrameElement && stage.contains(active));
 }
 
-export type TextCommitHandler = (selector: string, text: string) => void;
+type TextCommitHandler = (selector: string, text: string) => void;
 
-export function parseTextCommit(
+function parseTextCommit(
   message: TextEditMessage
 ): { selector: string; text: string } | null {
   if (message.type !== "text-commit") {
@@ -56,7 +56,7 @@ export function parseTextCommit(
   return { selector, text };
 }
 
-export function useInlineTextEdit(
+function useInlineTextEdit(
   allowed: boolean,
   onCommit: TextCommitHandler | undefined,
   onReject: () => void,
@@ -116,3 +116,13 @@ export function useInlineTextEdit(
 
   return { editing, onMessage, reset };
 }
+
+export {
+  MAX_INLINE_TEXT,
+  QUIET_FOCUS_ATTR,
+  focusStageQuietly,
+  parseTextCommit,
+  useInlineTextEdit,
+};
+
+export type { TextCommitHandler };

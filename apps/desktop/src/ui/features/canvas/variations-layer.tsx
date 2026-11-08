@@ -201,7 +201,7 @@ function VariationBar({
   );
 }
 
-export function VariationsTop(props: TopProps) {
+function VariationsTop(props: TopProps) {
   const { state, project, direction } = props;
   const group = useShownGroup(project, state, direction);
 
@@ -269,7 +269,7 @@ interface CanvasProps {
   setDirectionId: (id: string) => void;
 }
 
-export function canvasVariations({
+function canvasVariations({
   state,
   project,
   runs,
@@ -414,3 +414,5 @@ function elementVariation({
     title: variation.title,
   };
 }
+
+export { VariationsTop, canvasVariations };

@@ -15,7 +15,7 @@ interface PresenceInput {
   stage: () => HTMLElement | null;
 }
 
-export function inViewIds(stage: HTMLElement | null): string[] {
+function inViewIds(stage: HTMLElement | null): string[] {
   if (!stage) {
     return [];
   }
@@ -62,7 +62,7 @@ function presenceBody(o: PresenceInput) {
   };
 }
 
-export function useCanvasPresence(o: PresenceInput): void {
+function useCanvasPresence(o: PresenceInput): void {
   const latest = useRef(o);
   latest.current = o;
   useEffect(() => {
@@ -108,3 +108,5 @@ export function useCanvasPresence(o: PresenceInput): void {
     };
   }, [o.projectId]);
 }
+
+export { inViewIds, useCanvasPresence };

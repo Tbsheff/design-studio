@@ -1,6 +1,7 @@
+import { Icon } from "@design-studio/ui";
+
 import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC, tipWithKey } from "../../canvas-toolbar-slots.js";
-import { Icon } from "@design-studio/ui";
 import { useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
@@ -14,7 +15,7 @@ import {
 
 const ZOOMS = [0.5, 0.75, 1, 1.25, 2];
 
-export interface ZoomProps {
+interface ZoomProps {
   zoom: LiveStore<number>;
   setting: ZoomSetting;
   onZoomTo: (z: number) => void;
@@ -65,7 +66,7 @@ function zoomGroups({
   ];
 }
 
-export function ZoomPill(p: ZoomProps) {
+function ZoomPill(p: ZoomProps) {
   const percent = useLive(p.zoom);
 
   return (
@@ -92,7 +93,7 @@ interface OverflowProps {
   tweak: { open: boolean; disabled: boolean; run: () => void };
 }
 
-export function OverflowMenu(p: OverflowProps) {
+function OverflowMenu(p: OverflowProps) {
   const percent = useLive(p.zoom.zoom);
   const shape = useVectorTool();
   const zoom = zoomGroups(p.zoom);
@@ -166,3 +167,7 @@ export function OverflowMenu(p: OverflowProps) {
     </DropMenu>
   );
 }
+
+export { OverflowMenu, ZoomPill };
+
+export type { ZoomProps };

@@ -14,7 +14,7 @@ import { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
 import { snapOff, snapRect } from "./snap-model.js";
 import type { Rect, SnapGuide } from "./snap-model.js";
 
-export type ResizeEdge = "e" | "s" | "se";
+type ResizeEdge = "e" | "s" | "se";
 
 interface Size {
   w: number;
@@ -51,7 +51,7 @@ interface Drag {
   stopListen: () => void;
 }
 
-export interface ResizeLive {
+interface ResizeLive {
   width: number;
   height: number;
   boxWidth: number;
@@ -59,7 +59,7 @@ export interface ResizeLive {
   guides: SnapGuide[];
 }
 
-export interface ResizeControl {
+interface ResizeControl {
   target: SelectionContext | null;
   live: ResizeLive | null;
   onHandleDown: (edge: ResizeEdge, e: ReactPointerEvent<HTMLElement>) => void;
@@ -72,13 +72,13 @@ interface LiveSize {
   guides: SnapGuide[];
 }
 
-export interface ResizeHandles {
+interface ResizeHandles {
   target: SelectionContext | null;
   sizes: LiveStore<LiveSize | null>;
   onHandleDown: ResizeControl["onHandleDown"];
 }
 
-export function useResizeLive({
+function useResizeLive({
   target,
   sizes,
   onHandleDown,
@@ -114,7 +114,7 @@ function scaleOf(element: Element): number {
   return overlay.getBoundingClientRect().width / overlay.offsetWidth;
 }
 
-export function resizedSize(
+function resizedSize(
   edge: ResizeEdge,
   base: Size,
   dx: number,
@@ -164,7 +164,7 @@ function requestNeighbors(d: Drag, o: Options): void {
   o.post({ requestId, selector: d.target.selector, type: "request-neighbors" });
 }
 
-export function snapSize(
+function snapSize(
   d: Pick<Drag, "edge" | "base" | "target" | "candidates" | "zoom">,
   next: Size,
   off: boolean
@@ -221,15 +221,15 @@ function styleFor(size: Size, base: Size): Record<string, string> {
   return style;
 }
 
-export interface ResizeReadout {
+interface ResizeReadout {
   selector: string;
   width: number;
   height: number;
 }
 
-export const resizeReadout = createLiveStore<ResizeReadout | null>(null);
+const resizeReadout = createLiveStore<ResizeReadout | null>(null);
 
-export function useResizeHandles(o: Options): ResizeHandles {
+function useResizeHandles(o: Options): ResizeHandles {
   const live = useRef(o);
   live.current = o;
   const drag = useRef<Drag | null>(null);
@@ -430,3 +430,19 @@ export function useResizeHandles(o: Options): ResizeHandles {
 
   return { onHandleDown, sizes, target };
 }
+
+export {
+  resizeReadout,
+  resizedSize,
+  snapSize,
+  useResizeHandles,
+  useResizeLive,
+};
+
+export type {
+  ResizeControl,
+  ResizeEdge,
+  ResizeHandles,
+  ResizeLive,
+  ResizeReadout,
+};

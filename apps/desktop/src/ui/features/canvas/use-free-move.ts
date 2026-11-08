@@ -18,7 +18,7 @@ import { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
 import { snapRect } from "./snap-model.js";
 import type { Rect, SnapGuide, SpacingBadge } from "./snap-model.js";
 
-export interface FreeMoveView {
+interface FreeMoveView {
   box: Rect;
   guides: SnapGuide[];
   spacing: SpacingBadge[];
@@ -124,7 +124,7 @@ function absoluteStyle(
   return style;
 }
 
-export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
+function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
   const live = useRef(o);
   live.current = o;
   const session = useRef<Session | null>(null);
@@ -353,3 +353,7 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
 
   return view;
 }
+
+export { useFreeMove };
+
+export type { FreeMoveView };

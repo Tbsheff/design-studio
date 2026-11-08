@@ -16,7 +16,7 @@ import type { CanvasFrame } from "./canvas-frames-model.js";
 
 type Rect = NonNullable<LinkRectReport["rect"]>;
 
-export interface LinkState {
+interface LinkState {
   link: PrototypeLink;
   rect: Rect | null;
   issue: LinkIssue | null;
@@ -46,7 +46,7 @@ interface Options {
   };
 }
 
-export function linkQuery(link: PrototypeLink): LinkQuery {
+function linkQuery(link: PrototypeLink): LinkQuery {
   return {
     id: link.id,
     selector: link.from.selector,
@@ -93,7 +93,7 @@ function bridgeFrame(slot: FrameSlot, kind: ProjectKind): BridgeFrame {
   };
 }
 
-export function useLinkRects(o: Options): LinkState[] {
+function useLinkRects(o: Options): LinkState[] {
   const [reports, setReports] = useState<
     Record<string, { token: string; rects: Record<string, Rect | null> }>
   >({});
@@ -210,3 +210,7 @@ export function useLinkRects(o: Options): LinkState[] {
     return { issue: rect ? null : "element-missing", link, rect };
   });
 }
+
+export { linkQuery, useLinkRects };
+
+export type { LinkState };

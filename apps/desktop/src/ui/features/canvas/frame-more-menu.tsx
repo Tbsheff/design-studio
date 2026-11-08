@@ -1,12 +1,12 @@
-import { useEffect } from "react";
-
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import { useEffect } from "react";
+
 import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";
 
-export interface FrameMenuItem {
+interface FrameMenuItem {
   id: string;
   label: string;
   icon: IconName;
@@ -30,7 +30,7 @@ function portItem(root: HTMLElement | null): FrameMenuItem[] {
   return [{ icon: "react", id: "port-to-app", label: "Move to app…", run }];
 }
 
-export function FrameMoreMenu({
+function FrameMoreMenu({
   name,
   items: own,
 }: {
@@ -98,3 +98,7 @@ export function FrameMoreMenu({
     </div>
   );
 }
+
+export { FrameMoreMenu };
+
+export type { FrameMenuItem };

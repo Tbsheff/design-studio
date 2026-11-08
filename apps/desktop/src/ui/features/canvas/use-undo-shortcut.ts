@@ -7,16 +7,16 @@ import {
 } from "../../platform/desktop.js";
 import { editsText } from "../../platform/typing-target.js";
 
-export const PREVIEW_HISTORY_EVENT = "studio:preview-history";
+const PREVIEW_HISTORY_EVENT = "studio:preview-history";
 
-export type HistoryKind = "undo" | "redo";
+type HistoryKind = "undo" | "redo";
 
-export interface RedoShortcut {
+interface RedoShortcut {
   enabled: boolean;
   onRedo: () => void;
 }
 
-export function undoAllowed(
+function undoAllowed(
   directionId: string | null,
   locked: boolean,
   versionCount: number
@@ -24,7 +24,7 @@ export function undoAllowed(
   return directionId !== null && !locked && versionCount >= 2;
 }
 
-export function historyKeyOf(
+function historyKeyOf(
   event: Pick<
     KeyboardEvent,
     "metaKey" | "ctrlKey" | "shiftKey" | "altKey" | "key"
@@ -45,13 +45,13 @@ function modalOpen(): boolean {
   return document.querySelector('[role="dialog"][aria-modal="true"]') !== null;
 }
 
-export interface ShortcutState {
+interface ShortcutState {
   enabled: boolean;
   onUndo: () => void;
   redo: RedoShortcut | undefined;
 }
 
-export function routeHistoryCommand(
+function routeHistoryCommand(
   kind: HistoryKind,
   state: ShortcutState,
   modal: () => boolean = modalOpen
@@ -75,7 +75,7 @@ export function routeHistoryCommand(
   return true;
 }
 
-export function useUndoShortcut(
+function useUndoShortcut(
   enabled: boolean,
   onUndo: () => void,
   redo?: RedoShortcut
@@ -131,3 +131,13 @@ export function useUndoShortcut(
     return routeHistoryCommand(command.type, state.current);
   });
 }
+
+export {
+  PREVIEW_HISTORY_EVENT,
+  historyKeyOf,
+  routeHistoryCommand,
+  undoAllowed,
+  useUndoShortcut,
+};
+
+export type { HistoryKind, RedoShortcut, ShortcutState };

@@ -80,7 +80,7 @@ function presentItems(onPresent: (mode: PresentMode) => void): MenuEntry[] {
   ];
 }
 
-export function CanvasTopBar(p: Props) {
+function CanvasTopBar(p: Props) {
   const port = usePortDialog(!p.onShip);
   const onPort = p.onShip ? null : () => port.open(null);
   const present = presentItems(p.onPresent);
@@ -264,3 +264,5 @@ export function CanvasTopBar(p: Props) {
     </div>
   );
 }
+
+export { CanvasTopBar };

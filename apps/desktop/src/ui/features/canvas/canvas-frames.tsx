@@ -13,13 +13,13 @@ import { FlowFromHere } from "./flow-from-here.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameStateMenu } from "./frame-state-menu.js";
 
-export interface FrameBadge {
+interface FrameBadge {
   label: string;
   title: string;
   current: boolean;
 }
 
-export interface LabelProps {
+interface LabelProps {
   frame: CanvasFrame;
   active: boolean;
   removable: boolean;
@@ -45,7 +45,7 @@ export interface LabelProps {
   ) => void;
 }
 
-export function framePage(path: string | undefined): string {
+function framePage(path: string | undefined): string {
   const clean = (path ?? "").replace(/^\/+/, "");
 
   if (clean === "" || /\.html?$/i.test(clean)) {
@@ -54,13 +54,13 @@ export function framePage(path: string | undefined): string {
   return `/${clean}`;
 }
 
-export function frameBaseName(
+function frameBaseName(
   frame: Pick<CanvasFrame, "label" | "width" | "height">
 ): string {
   return frame.label?.trim() || frameName(frame);
 }
 
-export function frameTitle(
+function frameTitle(
   frame: Pick<CanvasFrame, "id" | "label" | "width" | "height" | "path">,
   frames?: readonly Pick<CanvasFrame, "id">[]
 ): string {
@@ -69,7 +69,7 @@ export function frameTitle(
   return `${index >= 0 ? `${index + 1} ` : ""}${frameBaseName(frame)} · ${framePage(frame.path)}`;
 }
 
-export function canvasFrameName(
+function canvasFrameName(
   projectId: string,
   frameId: string,
   fallback: string
@@ -88,7 +88,7 @@ const NUDGE: Record<string, [number, number]> = {
   ArrowUp: [0, -1],
 };
 
-export function FrameLabel({
+function FrameLabel({
   frame,
   active,
   removable,
@@ -174,16 +174,16 @@ export function FrameLabel({
   );
 }
 
-export interface FrameRedirect {
+interface FrameRedirect {
   from: string;
   to: string;
 }
 
-export function isAuthRoute(route: string): boolean {
+function isAuthRoute(route: string): boolean {
   return /sign-?in|log-?in|auth/i.test(route);
 }
 
-export function FrameRedirectNote({
+function FrameRedirectNote({
   redirect,
   onSignIn,
   onDismiss,
@@ -223,3 +223,15 @@ export function FrameRedirectNote({
     </div>
   );
 }
+
+export {
+  FrameLabel,
+  FrameRedirectNote,
+  canvasFrameName,
+  frameBaseName,
+  framePage,
+  frameTitle,
+  isAuthRoute,
+};
+
+export type { FrameBadge, FrameRedirect, LabelProps };

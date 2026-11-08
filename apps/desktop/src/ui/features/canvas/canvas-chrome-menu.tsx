@@ -19,7 +19,7 @@ import type {
   CommentTool,
   SetSelectMode,
 } from "./canvas-shell.js";
-import type { CanvasViewRow } from "./canvas-toolbar.js";
+import type { CanvasViewRow } from "./canvas-view-row.js";
 import { toValueOr } from "./settle-model.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 

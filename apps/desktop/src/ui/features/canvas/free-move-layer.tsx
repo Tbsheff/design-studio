@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactElement } from "react";
 
-import { SnapGuides } from "./artboard-overlay.js";
 import { FreeMoveSpacing } from "./free-move-spacing.js";
+import { SnapGuides } from "./snap-guides.js";
 import type { FreeMoveView } from "./use-free-move.js";
 
 const toBoxStyle = (box: {

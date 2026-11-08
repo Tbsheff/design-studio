@@ -9,13 +9,13 @@ import type {
 } from "@design-studio/contracts";
 import type { ComponentType, MutableRefObject } from "react";
 
+import type { CanvasSource } from "../../domain/canvas-presets.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { CommentsControl } from "../comments/use-comments.js";
 import type { BuildError, FilesChange } from "../home/use-studio-data.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasShell } from "./canvas-shell.js";
-import type { CanvasSource } from "./canvas-toolbar.js";
 import type { TextCommitHandler } from "./use-inline-text-edit.js";
 import type { FrameVariation } from "./variation-controls.js";
 

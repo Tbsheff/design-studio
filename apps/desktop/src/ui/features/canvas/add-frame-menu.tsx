@@ -5,8 +5,6 @@ import type { KeyboardEvent, ReactElement } from "react";
 import { FRAME_PRESETS } from "./canvas-frame-ops.js";
 import { copy } from "./copy.js";
 
-const SET_TIMEOUT_8000 = 8000;
-
 const AddFrameMenu = ({
   disabled,
   onAdd,
@@ -154,35 +152,4 @@ const AddFrameMenu = ({
   );
 };
 
-const FrameUndoBar = ({
-  onUndo,
-  onDismiss,
-}: {
-  onUndo: (() => void) | null;
-  onDismiss: () => void;
-}): ReactElement | null => {
-  useEffect(() => {
-    if (!onUndo) {
-      return;
-    }
-
-    const timer = globalThis.setTimeout(onDismiss, SET_TIMEOUT_8000);
-
-    return (): void => globalThis.clearTimeout(timer);
-  }, [onUndo, onDismiss]);
-
-  if (!onUndo) {
-    return null;
-  }
-
-  return (
-    <div className="frame-undo" role="status">
-      <span>{copy.frameRemoved}</span>
-      <button type="button" className="link" onClick={onUndo}>
-        {copy.undo}
-      </button>
-    </div>
-  );
-};
-
-export { AddFrameMenu, FrameUndoBar };
+export { AddFrameMenu };

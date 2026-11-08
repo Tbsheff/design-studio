@@ -4,22 +4,19 @@ import type { ReactElement } from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { copy } from "./copy.js";
-import {
-  stop,
-  menuKeys,
-  StateRows,
-  SessionRows,
-  UserForm,
-  MockForm,
-} from "./frame-state-parts.js";
-import type { Panel } from "./frame-state-parts.js";
+import { StateRows } from "./frame-state-parts.js";
+import { menuKeys, stop } from "./frame-state-ui-model.js";
+import type { Panel } from "./frame-state-ui-model.js";
 import {
   frameStateOf,
   setFrameSession,
   setFrameState,
   useCurrentFrameStates,
 } from "./frame-states-model.js";
+import { MockForm } from "./mock-form.js";
+import { SessionRows } from "./session-rows.js";
 import { useFrameStateSlot } from "./use-frame-state-slot.js";
+import { UserForm } from "./user-form.js";
 
 const usePanelMenu = () => {
   const [open, setOpen] = useState(false);

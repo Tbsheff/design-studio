@@ -7,7 +7,6 @@ import { CommentModePill } from "../comments/comment-layer.js";
 import type { GridOverlayProps } from "../grid/index.js";
 import { useEditVariant } from "../inspector/index.js";
 import type { SpacingHandlesProps } from "../spacing/index.js";
-import { FrameUndoBar } from "./add-frame-menu.js";
 import { frameDirection } from "./canvas-direction-ops.js";
 import { frameName } from "./canvas-frame-ops.js";
 import { FrameLabel } from "./canvas-frames.js";
@@ -25,6 +24,7 @@ import { copy } from "./copy.js";
 import { DrawBar } from "./draw-layer.js";
 import { EditNotice } from "./edit-notice.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
+import { FrameUndoBar } from "./frame-undo-bar.js";
 import {
   FreeMoveSlot,
   LiveOverlay,

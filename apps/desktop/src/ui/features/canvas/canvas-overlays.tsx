@@ -7,8 +7,8 @@ import type { ReactElement } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { formatMeasure } from "../../../shared/measure.js";
-import { guideStyle } from "./artboard-overlay.js";
 import { copy } from "./copy.js";
+import { guideStyle } from "./overlay-styles.js";
 import { toValueOr } from "./settle-model.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";

@@ -7,10 +7,11 @@ import type { ChromeProps } from "./canvas-chrome-menu.js";
 import { PresentLayer, TweakPrompt } from "./canvas-overlays.js";
 import { fileNameOf, reloadFrames, scopeOf, toolOf } from "./canvas-shell.js";
 import type { CanvasShell } from "./canvas-shell.js";
-import { CanvasViewRow, VectorToolButtons } from "./canvas-toolbar.js";
 import { CanvasTopBar } from "./canvas-top-bar.js";
+import { CanvasViewRow } from "./canvas-view-row.js";
 import type { CanvasTool, PresentMode } from "./top-bar-menu.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
+import { VectorToolButtons } from "./vector-tool-buttons.js";
 
 const NOOP = (): null => null;
 

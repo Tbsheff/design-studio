@@ -32,10 +32,7 @@ import { registerSessionRoutes } from "./app-session-routes.js";
 import { registerAppShareRoutes } from "./app-share-routes.js";
 import { registerAppShipRoutes } from "./app-ship-routes.js";
 import { registerStudioRoutes } from "./app-studio-routes.js";
-import {
-  registerVersionsHistoryRoutes,
-  registerVersionsRoutes,
-} from "./app-versions-routes.js";
+import { registerVersionsHistoryRoutes } from "./app-versions-routes.js";
 import { registerWorkspacesRoutes } from "./app-workspaces-routes.js";
 import { registerLoopbackGuard } from "./loopback-guard.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
@@ -63,7 +60,6 @@ export function createApp(deps: AppDeps): Hono {
   registerWorkspacesRoutes(app, ctx);
   registerEventsRoutes(app, ctx);
   registerProjectRunsRoutes(app, ctx);
-  registerVersionsRoutes(app, ctx);
   registerDirectEditRoutes(app, ctx);
   registerRunsRoutes(app, ctx);
   registerAppExportRoutes(app, ctx);

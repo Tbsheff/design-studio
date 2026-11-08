@@ -36,6 +36,18 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/edit-session/save",
   },
+  createVersion: {
+    id: "version.create",
+    invalidates: [
+      "version.get",
+      "version.inspectDiff",
+      "version.list",
+      "version.listHistory",
+      "version.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/keep",
+  },
   deleteSessionVersion: {
     id: "version.deleteSession",
     invalidates: [
@@ -48,6 +60,12 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/edit-session/discard",
   },
+  exportVersion: {
+    id: "version.export",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/versions/:versionId/export",
+  },
   getVersion: {
     id: "version.get",
     invalidates: [],
@@ -59,6 +77,12 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/versions/:from/changes",
+  },
+  inspectPreviewVersion: {
+    id: "version.inspectPreview",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/versions/:versionId/preview",
   },
   listHistoryVersion: {
     id: "version.listHistory",
@@ -90,6 +114,18 @@ const routes = {
     method: "PATCH",
     path: "/api/projects/:projectId/versions/:versionId",
   },
+  restoreHeadVersion: {
+    id: "version.restoreHead",
+    invalidates: [
+      "version.get",
+      "version.inspectDiff",
+      "version.list",
+      "version.listHistory",
+      "version.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/undo",
+  },
   restoreHistoryVersion: {
     id: "version.restoreHistory",
     invalidates: [
@@ -113,6 +149,18 @@ const routes = {
     ],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/restore",
+  },
+  restoreWorkTreeVersion: {
+    id: "version.restoreWorkTree",
+    invalidates: [
+      "version.get",
+      "version.inspectDiff",
+      "version.list",
+      "version.listHistory",
+      "version.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/discard",
   },
 } as const;
 

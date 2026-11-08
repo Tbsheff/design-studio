@@ -12,7 +12,7 @@ import type {
   TweaksState,
   TweakValue,
 } from "../shared/tweaks";
-import { enc, json, toDirectionPath, toProjectPath } from "./api-core.js";
+import { enc, json, toDirectionPath } from "./api-core.js";
 import { call, pickMessage, request } from "./platform/http";
 import {
   endEditSessionAt,
@@ -47,7 +47,10 @@ const versionApi = {
     return (await res.json()) as CommitTweaksResult;
   },
   discard: (pid: string, did: string): Promise<WorkTreeStatus> =>
-    json<WorkTreeStatus>("POST", `${toDirectionPath(pid, did)}/discard`),
+    call(versionsRoutes.restoreWorkTreeVersion, {
+      directionId: did,
+      projectId: pid,
+    }),
   editHistory: (pid: string, did: string): Promise<EditHistoryState> =>
     call(versionsRoutes.listHistoryVersion, {
       directionId: did,
@@ -76,17 +79,22 @@ const versionApi = {
   ): Promise<EditSessionEnd> =>
     endEditSessionAt(pid, did, action, baseVersionId),
   exportVersion: async (pid: string, vid: string): Promise<Blob> => {
-    const res = await request(
-      "GET",
-      `${toProjectPath(pid)}/versions/${enc(vid)}/export`
+    const exported = await call(versionsRoutes.exportVersion, {
+      projectId: pid,
+      versionId: vid,
+    });
+
+    const bytes = Uint8Array.from(
+      atob(exported.base64),
+      (char) => char.codePointAt(0) ?? 0
     );
 
-    return res.blob();
+    return new Blob([bytes], { type: "application/zip" });
   },
   getTweaks: (pid: string, did: string): Promise<TweaksState> =>
     json<TweaksState>("GET", `${toDirectionPath(pid, did)}/tweaks`),
   keep: (pid: string, did: string): Promise<Version> =>
-    json<Version>("POST", `${toDirectionPath(pid, did)}/keep`),
+    call(versionsRoutes.createVersion, { directionId: did, projectId: pid }),
   listVersions: async (pid: string, did: string): Promise<Version[]> => {
     const list = await call(versionsRoutes.listVersion, {
       directionId: did,
@@ -100,12 +108,15 @@ const versionApi = {
   restore: (pid: string, did: string, versionId: string): Promise<Version> =>
     restoreVersionAt(pid, did, versionId),
   undo: (pid: string, did: string): Promise<Version> =>
-    json<Version>("POST", `${toDirectionPath(pid, did)}/undo`),
+    call(versionsRoutes.restoreHeadVersion, {
+      directionId: did,
+      projectId: pid,
+    }),
   versionPreview: (pid: string, vid: string): Promise<{ url: string }> =>
-    json<{ url: string }>(
-      "GET",
-      `${toProjectPath(pid)}/versions/${enc(vid)}/preview`
-    ),
+    call(versionsRoutes.inspectPreviewVersion, {
+      projectId: pid,
+      versionId: vid,
+    }),
 };
 
 export { versionApi };

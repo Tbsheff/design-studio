@@ -5,7 +5,10 @@ import type {
 } from "@design-studio/contracts";
 import { Effect } from "effect";
 
-import type { VersionStore } from "../../shared/server-ports.js";
+import type {
+  PreviewService,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import type { EditHistory } from "../events/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
@@ -19,6 +22,7 @@ import type { VersionNames } from "./version-names.js";
 interface VersionReadRuntime {
   readonly history: EditHistory;
   readonly names: VersionNames;
+  readonly preview: Pick<PreviewService, "snapshotUrl">;
   readonly projects: Pick<StudioProjectStore, "get" | "mainDirection">;
   readonly thumbs: (
     project: Project,
@@ -38,6 +42,7 @@ type VersionReadError = KnownFailure;
 const REQUIRED_KEYS = [
   "history",
   "names",
+  "preview",
   "projects",
   "thumbs",
   "versions",

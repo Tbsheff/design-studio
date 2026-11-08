@@ -3,6 +3,11 @@ import { Context, Effect, Layer } from "effect";
 
 import { attemptVersionRead } from "./version-read-core.js";
 import type { VersionReadError } from "./version-read-core.js";
+import { exportVersionZip, inspectPreview } from "./version-read-export.js";
+import type {
+  VersionExportView,
+  VersionPreviewView,
+} from "./version-read-export.js";
 import {
   readChanges,
   readHistory,
@@ -23,6 +28,10 @@ interface VersionStoreApi {
   readonly changes: (
     query: ChangesQuery
   ) => Effect.Effect<VersionChanges, VersionReadError>;
+  readonly export: (
+    projectId: string,
+    versionId: string
+  ) => Effect.Effect<VersionExportView, VersionReadError>;
   readonly get: (
     projectId: string,
     versionId: string
@@ -36,6 +45,10 @@ interface VersionStoreApi {
   readonly list: (
     query: DirectionQuery
   ) => Effect.Effect<readonly Version[], VersionReadError>;
+  readonly preview: (
+    projectId: string,
+    versionId: string
+  ) => Effect.Effect<VersionPreviewView, VersionReadError>;
 }
 
 class VersionStore extends Context.Service<VersionStore, VersionStoreApi>()(
@@ -51,6 +64,14 @@ class VersionStore extends Context.Service<VersionStore, VersionStoreApi>()(
       ) {
         return yield* attemptVersionRead((runtime) =>
           readChanges(runtime, query)
+        );
+      }),
+      export: Effect.fn("VersionStore.export")(function* run(
+        projectId: string,
+        versionId: string
+      ) {
+        return yield* attemptVersionRead((runtime) =>
+          exportVersionZip(runtime, projectId, versionId)
         );
       }),
       get: Effect.fn("VersionStore.get")(function* run(
@@ -78,6 +99,14 @@ class VersionStore extends Context.Service<VersionStore, VersionStoreApi>()(
       ) {
         return yield* attemptVersionRead((runtime) =>
           readVersionList(runtime, query)
+        );
+      }),
+      preview: Effect.fn("VersionStore.preview")(function* run(
+        projectId: string,
+        versionId: string
+      ) {
+        return yield* attemptVersionRead((runtime) =>
+          inspectPreview(runtime, projectId, versionId)
         );
       }),
     })

@@ -12,6 +12,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/tokens/export",
   },
+  setToken: {
+    id: "token.set",
+    invalidates: ["direct-edit.getDesignSystem", "version.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/tokens/set",
+  },
 } as const;
 
 export { routes };

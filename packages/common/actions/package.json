@@ -527,6 +527,7 @@
     "./token/index": "./src/token/index.ts",
     "./token/routes": "./src/token/routes.ts",
     "./token/schema": "./src/token/schema.ts",
+    "./token/set": "./src/token/set.ts",
     "./vault-ipc": "./src/vault-ipc.ts",
     "./version/apply-history": "./src/version/apply-history.ts",
     "./version/apply-hunk": "./src/version/apply-hunk.ts",

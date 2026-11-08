@@ -5,7 +5,9 @@ import type {
 } from "@design-studio/contracts";
 
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
-import { DESIGN_MD_FILE, formatIssues, manifestSchema } from "./packs.js";
+import { parseManifestFields } from "./pack-manifest.js";
+import { DESIGN_MD_FILE } from "./packs.js";
+import { toIssueLines } from "./parse-schema.js";
 import { ZipError, unzipFiles } from "./zip.js";
 
 export const MAX_IMPORT_ZIP_BYTES = 2 * 1024 * 1024;
@@ -66,15 +68,15 @@ function readManifest(text: string): PackManifest {
     throw new BadRequestError("pack.json in the zip is not valid JSON");
   }
 
-  const parsed = manifestSchema.safeParse(raw);
+  const parsed = parseManifestFields(raw);
 
-  if (!parsed.success) {
+  if (!parsed.isValid) {
     throw new BadRequestError(
-      `invalid pack.json in the zip: ${formatIssues("pack.json", parsed.error).join("; ")}`
+      `invalid pack.json in the zip: ${toIssueLines("pack.json", parsed.issues).join("; ")}`
     );
   }
 
-  return parsed.data as PackManifest;
+  return parsed.value as PackManifest;
 }
 
 export function readPackZip(bytes: Buffer): PackZip {

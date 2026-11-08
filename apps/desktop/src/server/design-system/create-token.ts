@@ -19,6 +19,7 @@ import type {
   VersionMeta,
 } from "@design-studio/contracts";
 import { parse as parseColor } from "culori";
+import { Schema } from "effect";
 
 import {
   assertCanEdit,
@@ -34,9 +35,10 @@ import type {
   EditFileChange,
   PlannedDirectEdit as PlannedEdit,
 } from "../events/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { compileTokens, cssVarFor, parseTokenFile } from "./compile.js";
 import { DESIGN_MD_FILE, writeFileAtomic } from "./packs.js";
+import { toIssueLines, toParser } from "./parse-schema.js";
+import { toTrimmed } from "./schema-fields.js";
 import { readDesignSystemState } from "./state.js";
 import {
   buildErrorMessage,
@@ -56,7 +58,7 @@ export type { FileSnapshot } from "./token-snapshot.js";
 const MAX_NAME = 40;
 const MAX_VALUE = 200;
 const MAX_DESCRIPTION = 200;
-const CONTROL = /[\u0000-\u001F\u007F]/;
+const NO_CONTROL = /^[^\u0000-\u001F\u007F]*$/u;
 const UNSAFE = /[;{}<>\\\u0000-\u001F\u007F]/;
 const DIMENSION = /^(0|(\d+\.?\d*|\.\d+)(px|rem|em))$/;
 const FONT_STACK = /^[^;{}<>\\:\u0000-\u001F\u007F]+$/;
@@ -89,28 +91,32 @@ export const VALUE_CHECKS: Record<TokenGroupName, ValueCheck> = {
   text: isDimension,
 };
 
-const valueSchema = z.string().trim().min(1).max(MAX_VALUE);
+const valueSchema = toTrimmed(1, MAX_VALUE);
 
-const requestSchema = z
-  .object({
-    apply: z.unknown().optional(),
-    darkValue: valueSchema.optional(),
-    description: z
-      .string()
-      .max(MAX_DESCRIPTION)
-      .refine(
-        (text) => !CONTROL.test(text),
-        "description has a control character"
-      )
-      .optional(),
-    group: z.enum(GROUPS),
-    name: z
-      .string()
-      .max(MAX_NAME)
-      .regex(TOKEN_NAME_PATTERN, 'name must be lowercase words joined by "-"'),
-    value: valueSchema,
-  })
-  .strict();
+const DescriptionMessage = { message: "description has a control character" };
+
+const NameMessage = { message: 'name must be lowercase words joined by "-"' };
+
+const DescriptionSchema = Schema.String.check(
+  Schema.isMaxLength(MAX_DESCRIPTION),
+  Schema.isPattern(NO_CONTROL, DescriptionMessage)
+);
+
+const NameSchema = Schema.String.check(
+  Schema.isMaxLength(MAX_NAME),
+  Schema.isPattern(TOKEN_NAME_PATTERN, NameMessage)
+);
+
+const CreateRequestSchema = Schema.Struct({
+  apply: Schema.optionalKey(Schema.Unknown),
+  darkValue: Schema.optionalKey(valueSchema),
+  description: Schema.optionalKey(DescriptionSchema),
+  group: Schema.Literals(GROUPS),
+  name: NameSchema,
+  value: valueSchema,
+});
+
+const parseCreateFields = toParser(CreateRequestSchema, "error");
 
 interface ParsedCreate {
   token: CreateTokenRequest;
@@ -145,17 +151,17 @@ function checkValues(token: CreateTokenRequest): void {
 }
 
 function parseCreateTokenRequest(raw: unknown): ParsedCreate {
-  const parsed = requestSchema.safeParse(raw);
+  const parsed = parseCreateFields(raw);
 
-  if (!parsed.success) {
-    const detail = parsed.error.issues
-      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+  if (!parsed.isValid) {
+    const detail = toIssueLines("", parsed.issues)
+      .map((line) => line.trim())
       .join("; ");
 
     throw invalid(`Invalid token: ${detail}`);
   }
 
-  const { apply, ...rest } = parsed.data;
+  const { apply, ...rest } = parsed.value;
 
   const token: CreateTokenRequest = {
     group: rest.group,

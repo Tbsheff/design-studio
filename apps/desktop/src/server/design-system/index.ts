@@ -20,6 +20,13 @@ export {
 
 export type { ThemeTokenBase, ThemeTokensWritten } from "./theme-tokens.js";
 
+export {
+  toMissingTokenText,
+  toTokenEntry,
+  toTokenReadback,
+  toTokenSetChange,
+} from "./token-set.js";
+
 export { toTokenExport } from "./token-export/index.js";
 
 export type {

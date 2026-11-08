@@ -1,9 +1,6 @@
-import { TOKENS_FILE } from "@design-studio/contracts";
 import type {
-  CompiledTokenEntry,
   DirectEditResult,
   StructureEditResult,
-  UpdateTokensResult,
   Version,
 } from "@design-studio/contracts";
 
@@ -14,25 +11,9 @@ import {
 } from "../../direct-edit/commit/index.js";
 import type { EditSite } from "../../direct-edit/commit/index.js";
 
-type Theme = "dark" | "light";
-
 type Tailwind = NonNullable<DirectEditResult["tailwind"]>;
 
 type TextSource = NonNullable<DirectEditResult["textSource"]>;
-
-interface TokenReadback {
-  file: string;
-  line: number | null;
-  resolved: string | null;
-  value: string | null;
-}
-
-interface TokenResult extends TokenReadback {
-  changedFiles: string[];
-  theme: Theme;
-  token: string;
-  versionId: string;
-}
 
 interface UnchangedResult {
   changed: false;
@@ -80,59 +61,6 @@ type EditOutput = SiteNoteField &
     title: string;
     versionId: string;
   };
-
-interface TokenView {
-  after: CompiledTokenEntry;
-  cssVar: string;
-  theme: Theme;
-  version: UpdateTokensResult["version"];
-}
-
-const darkReadback = (entry: CompiledTokenEntry): TokenReadback => {
-  const { source } = entry;
-
-  if (source) {
-    return {
-      value: source.darkValue,
-      resolved: entry.darkValue,
-      file: source.file,
-      line: source.darkLine,
-    };
-  }
-
-  return {
-    value: entry.darkValue,
-    resolved: entry.darkValue,
-    file: TOKENS_FILE,
-    line: null,
-  };
-};
-
-const tokenReadback = (
-  entry: CompiledTokenEntry,
-  theme: Theme
-): TokenReadback => {
-  if (theme === "dark") {
-    return darkReadback(entry);
-  }
-
-  const { source } = entry;
-
-  return {
-    value: source?.value ?? entry.value,
-    resolved: entry.value,
-    file: source?.file ?? TOKENS_FILE,
-    line: source?.line ?? null,
-  };
-};
-
-const tokenResult = (view: TokenView): TokenResult => ({
-  token: view.cssVar,
-  theme: view.theme,
-  ...tokenReadback(view.after, view.theme),
-  versionId: view.version.id,
-  changedFiles: view.version.changedFiles,
-});
 
 const unchangedResult = (
   relative: string,
@@ -238,10 +166,4 @@ const editOutput = (result: DirectEditResult, site: EditSite): EditOutput => ({
   ...textSourceField(result.textSource),
 });
 
-export {
-  editOutput,
-  structureResult,
-  tokenResult,
-  unchangedResult,
-  writtenResult,
-};
+export { editOutput, structureResult, unchangedResult, writtenResult };

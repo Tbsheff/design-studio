@@ -25,7 +25,8 @@ import { KIT_PAGE_FILE } from "./extract/kit-page.js";
 import { SYSTEM_FAMILIES } from "./extract/map.js";
 import { pageParts } from "./extract/url.js";
 import { COLOR_IN_TEXT, contrast, primaryFamily } from "./extract/values.js";
-import { DESIGN_MD_FILE, manifestSchema } from "./packs.js";
+import { parseManifestFields } from "./pack-manifest.js";
+import { DESIGN_MD_FILE } from "./packs.js";
 
 export const AA_CONTRAST = 4.5;
 const LISTED_PER_RULE = 8;
@@ -116,8 +117,8 @@ function readManifest(
     return null;
   }
   try {
-    const parsed = manifestSchema.safeParse(JSON.parse(text));
-    if (parsed.success) return parsed.data as PackManifest;
+    const parsed = parseManifestFields(JSON.parse(text));
+    if (parsed.isValid) return parsed.value as PackManifest;
     problems.add("tokens", `${PACK_FILE} is not a valid pack manifest.`);
   } catch {
     problems.add("tokens", `${PACK_FILE} is not valid JSON.`);

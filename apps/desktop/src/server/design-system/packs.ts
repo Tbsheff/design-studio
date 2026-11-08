@@ -25,9 +25,10 @@ import {
 } from "../design-rules/markdown.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import { resourcePath } from "../platform/resources/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { compileTokens, parseTokenFile, resolveEntryValue } from "./compile.js";
 import { composeDesignMd as composeWithNotes } from "./design-md.js";
+import { parseManifestFields } from "./pack-manifest.js";
+import { toIssueLines } from "./parse-schema.js";
 
 const PACKS_DIR = resourcePath(
   "packs",
@@ -42,39 +43,6 @@ const SWATCH_TOKENS = ["bg", "surface", "fg", "primary", "accent", "border"];
 
 export const USER_PACK_PREFIX = "user-";
 const PACK_FILES = ["pack.json", "tokens.json", DESIGN_MD_FILE];
-
-export const manifestSchema = z
-  .object({
-    id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
-    name: z.string().trim().min(1).max(80),
-    description: z.string().trim().min(1).max(400),
-    mode: z.enum(["light", "dark"]),
-    tags: z.array(z.string().min(1).max(40)).max(20),
-    license: z.string().trim().min(1).max(40),
-    provenance: z.enum(["original", "imported", "extracted"]),
-    fonts: z
-      .object({
-        display: z.string().trim().min(1).max(120),
-        body: z.string().trim().min(1).max(120),
-        mono: z.string().trim().min(1).max(120),
-        googleFontsUrl: z
-          .string()
-          .max(2000)
-          .refine(
-            (url) =>
-              url.startsWith(GOOGLE_FONTS_PREFIX) && !/["'<>\s]/.test(url),
-            "must be an https://fonts.googleapis.com/ URL"
-          )
-          .optional(),
-      })
-      .strict(),
-    draft: z.literal(true).optional(),
-    copiedFrom: z
-      .string()
-      .regex(/^[a-z0-9][a-z0-9-]{0,63}$/)
-      .optional(),
-  })
-  .strict();
 
 export interface LoadedPack {
   dir: string;
@@ -116,12 +84,6 @@ async function readText(file: string): Promise<string | null> {
   }
 }
 
-export function formatIssues(prefix: string, error: z.ZodError): string[] {
-  return error.issues.map(
-    (issue) => `${prefix} ${issue.path.join(".") || "(root)"}: ${issue.message}`
-  );
-}
-
 function parseManifest(
   text: string | null,
   folderId: string,
@@ -143,21 +105,21 @@ function parseManifest(
     return null;
   }
 
-  const parsed = manifestSchema.safeParse(raw);
+  const parsed = parseManifestFields(raw);
 
-  if (!parsed.success) {
-    errors.push(...formatIssues("pack.json", parsed.error));
+  if (!parsed.isValid) {
+    errors.push(...toIssueLines("pack.json", parsed.issues));
 
     return null;
   }
 
-  if (parsed.data.id !== folderId) {
+  if (parsed.value.id !== folderId) {
     errors.push(
-      `pack.json id "${parsed.data.id}" must match the folder name "${folderId}"`
+      `pack.json id "${parsed.value.id}" must match the folder name "${folderId}"`
     );
   }
 
-  return parsed.data as PackManifest;
+  return parsed.value as PackManifest;
 }
 
 function swatchesOf(

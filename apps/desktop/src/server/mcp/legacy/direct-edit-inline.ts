@@ -1,13 +1,8 @@
 import { BREAKPOINT_TOOLS } from "../breakpoints-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
-import {
-  editElementSchema,
-  setTokenSchema,
-  writeFileSchema,
-} from "./direct-edit-schema.js";
+import { editElementSchema, writeFileSchema } from "./direct-edit-schema.js";
 import { editElement } from "./edit-element.js";
-import { setToken } from "./set-token.js";
 import { writeProjectFile } from "./write-file.js";
 
 const writeFileTool = defineTool(
@@ -32,21 +27,9 @@ const editElementTool = defineTool(
   editElement
 );
 
-const setTokenTool = defineTool(
-  "set_token",
-  setTokenSchema,
-  {
-    description:
-      "Change one design token value with the same code path as the studio Tokens panel. In a studio design system it edits tokens.json. In an imported app folder it rewrites only that declaration in the app CSS file (for example the Tailwind @theme, :root or .dark block). A version is saved.",
-    title: "Set token",
-  },
-  setToken
-);
-
 const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   writeFileTool,
   editElementTool,
-  setTokenTool,
   ...BREAKPOINT_TOOLS,
 ];
 

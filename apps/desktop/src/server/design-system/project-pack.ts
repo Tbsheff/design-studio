@@ -15,6 +15,7 @@ import type {
   Version,
   VersionMeta,
 } from "@design-studio/contracts";
+import { Schema } from "effect";
 
 import { publishVersion } from "../direct-edit/index.js";
 import { DirectEditError } from "../events/index.js";
@@ -24,22 +25,22 @@ import {
   NotFoundError,
   isNodeError,
 } from "../platform/errors/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { checkDesignSystem } from "./check.js";
 import { restoreSnapshots } from "./create-token.js";
 import { splitDesignMd } from "./design-md.js";
 import type { PackLibrary } from "./library.js";
+import { parseManifestFields } from "./pack-manifest.js";
 import {
   DESIGN_MD_FILE,
   WIRED_FILES,
   applyPack,
-  formatIssues,
-  manifestSchema,
   wiresReact,
   writeFileAtomic,
 } from "./packs.js";
 import type { LoadedPack } from "./packs.js";
+import { toIssueLines, toParser } from "./parse-schema.js";
+import { toTrimmed } from "./schema-fields.js";
 import { readDesignSystemState } from "./state.js";
 import { hasTokensFile, readManifest } from "./sync.js";
 import { invalidateTokenSource } from "./token-preview.js";
@@ -57,18 +58,20 @@ export const NOT_WIRED_NOTICE =
 
 const APPLY_FILES = [TOKENS_FILE, PACK_FILE, TOKENS_CSS_FILE, DESIGN_MD_FILE];
 
-const applySchema = z
-  .object({ packId: z.string().trim().min(1).max(64) })
-  .strict();
+const PackRefSchema = toTrimmed(1, 64);
 
-const saveSchema = z
-  .object({
-    asNew: z.boolean().optional(),
-    force: z.boolean().optional(),
-    name: z.string().trim().min(1).max(80),
-    packId: z.string().trim().min(1).max(64).optional(),
-  })
-  .strict();
+const ApplyRequestSchema = Schema.Struct({ packId: PackRefSchema });
+
+const SaveRequestSchema = Schema.Struct({
+  asNew: Schema.optionalKey(Schema.Boolean),
+  force: Schema.optionalKey(Schema.Boolean),
+  name: toTrimmed(1, 80),
+  packId: Schema.optionalKey(PackRefSchema),
+});
+
+const parseApply = toParser(ApplyRequestSchema, "error");
+
+const parseSave = toParser(SaveRequestSchema, "error");
 
 export class SaveCheckError extends Error {
   readonly problems: number;
@@ -94,13 +97,13 @@ async function readOptional(file: string): Promise<string | null> {
 }
 
 export function parseApplyRequest(raw: unknown): { packId: string } {
-  const parsed = applySchema.safeParse(raw);
+  const parsed = parseApply(raw);
 
-  if (!parsed.success) {
+  if (!parsed.isValid) {
     throw new BadRequestError("packId is required");
   }
 
-  return parsed.data;
+  return parsed.value;
 }
 
 export function parseSaveRequest(raw: unknown): {
@@ -109,17 +112,17 @@ export function parseSaveRequest(raw: unknown): {
   asNew?: boolean;
   force?: boolean;
 } {
-  const parsed = saveSchema.safeParse(raw);
+  const parsed = parseSave(raw);
 
-  if (!parsed.success) {
+  if (!parsed.isValid) {
     throw new BadRequestError(
-      `invalid request: ${formatIssues("", parsed.error)
+      `invalid request: ${toIssueLines("", parsed.issues)
         .map((line) => line.trim())
         .join("; ")}`
     );
   }
 
-  return parsed.data;
+  return parsed.value;
 }
 
 async function currentNotes(
@@ -230,15 +233,15 @@ function parseManifestText(text: string): PackManifest {
     throw new BadRequestError("design-system/pack.json is not valid JSON");
   }
 
-  const parsed = manifestSchema.safeParse(raw);
+  const parsed = parseManifestFields(raw);
 
-  if (!parsed.success) {
+  if (!parsed.isValid) {
     throw new BadRequestError(
-      `design-system/pack.json is invalid: ${formatIssues("pack.json", parsed.error).join("; ")}`
+      `design-system/pack.json is invalid: ${toIssueLines("pack.json", parsed.issues).join("; ")}`
     );
   }
 
-  return parsed.data as PackManifest;
+  return parsed.value as PackManifest;
 }
 
 async function saveTarget(

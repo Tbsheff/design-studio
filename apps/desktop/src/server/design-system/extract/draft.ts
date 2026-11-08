@@ -3,11 +3,17 @@ import path from "node:path";
 import type { CreateUserPackInput } from "@design-studio/contracts";
 
 import { BadRequestError } from "../../platform/errors/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
-import { formatIssues } from "../packs.js";
 import type { LoadedPack, PackRegistry } from "../packs.js";
+import { toIssueLines } from "../parse-schema.js";
 import { composeDraftDesignMd, sourceSummary } from "./compose.js";
 import { firstHeading, harvestDesignText } from "./design-md.js";
+import {
+  DEFAULT_BASE_PACK,
+  MAX_TOKENS_FILE_BYTES,
+  MAX_URLS,
+  parseDraftFields,
+} from "./draft-request.js";
+import type { DraftRequest } from "./draft-request.js";
 import { FolderScanError, scanFolder } from "./folder.js";
 import type { FolderScan } from "./folder.js";
 import { renderKitPage } from "./kit-page.js";
@@ -26,37 +32,10 @@ import { harvestUrl } from "./url.js";
 import type { Fetcher, UrlHarvest } from "./url.js";
 import { lightnessOf } from "./values.js";
 
-export const DEFAULT_BASE_PACK = "modern-minimal";
-export const MAX_URLS = 3;
-export const MAX_TOKENS_FILE_BYTES = 2 * 1024 * 1024;
 export const SOURCE_DIR = "source";
 export const META_FILE = `${SOURCE_DIR}/meta.json`;
 export const COVERAGE_FILE = `${SOURCE_DIR}/coverage.json`;
 export const EVIDENCE_FILE = `${SOURCE_DIR}/evidence.md`;
-
-export const draftRequestSchema = z
-  .object({
-    basePackId: z.string().trim().min(1).max(64).default(DEFAULT_BASE_PACK),
-    brief: z.string().max(4000).optional(),
-    designMd: z
-      .string()
-      .max(512 * 1024)
-      .optional(),
-    folderPath: z.string().trim().max(4096).optional(),
-    mode: z.enum(["light", "dark", "auto"]).default("auto"),
-    name: z.string().trim().max(80).optional(),
-    tokensFile: z
-      .object({
-        name: z.string().trim().min(1).max(200),
-        text: z.string().max(MAX_TOKENS_FILE_BYTES),
-      })
-      .strict()
-      .optional(),
-    urls: z.array(z.string().trim().min(1).max(2000)).max(MAX_URLS).default([]),
-  })
-  .strict();
-
-export type DraftRequest = z.infer<typeof draftRequestSchema>;
 
 export interface DraftFile {
   path: string;
@@ -91,19 +70,19 @@ export function parseDraftRequest(
   raw: unknown,
   imageCount: number
 ): DraftRequest {
-  const parsed = draftRequestSchema.safeParse(raw);
+  const parsed = parseDraftFields(raw);
 
-  if (!parsed.success) {
+  if (!parsed.isValid) {
     throw new BadRequestError(
-      `invalid request: ${formatIssues("", parsed.error)
+      `invalid request: ${toIssueLines("", parsed.issues)
         .map((line) => line.trim())
         .join("; ")}`
     );
   }
 
   const request = {
-    ...parsed.data,
-    urls: parsed.data.urls.filter((url) => url !== ""),
+    ...parsed.value,
+    urls: parsed.value.urls.filter((url) => url !== ""),
   };
 
   const blank = (value: string | undefined) =>
@@ -627,3 +606,7 @@ export function assembleDraft(
     },
   };
 }
+
+export { DEFAULT_BASE_PACK, MAX_TOKENS_FILE_BYTES, MAX_URLS };
+
+export type { DraftRequest };

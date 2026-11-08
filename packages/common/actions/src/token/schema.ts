@@ -110,6 +110,46 @@ const TokenAppliedSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
+const TOKEN_NAME_MIN = 3;
+
+const TOKEN_NAME_MAX = 120;
+
+const TOKEN_VALUE_MAX = 400;
+
+const TokenThemeSchema = Schema.Literals(["light", "dark"]);
+
+const TokenSetFields = {
+  name: Schema.Trim.check(
+    Schema.isMinLength(TOKEN_NAME_MIN),
+    Schema.isMaxLength(TOKEN_NAME_MAX)
+  ).annotate({
+    description:
+      'Token CSS variable from get_tokens, for example "--primary", or its path, for example "color.primary".',
+  }),
+  theme: TokenThemeSchema.annotate({
+    description:
+      "light changes the main declaration. dark changes (or adds) the dark declaration. Default light.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed("light" as const))),
+  value: Schema.Trim.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(TOKEN_VALUE_MAX)
+  ).annotate({
+    description:
+      'New value, for example "#015A5D" or "var(--color-brand-teal-500)".',
+  }),
+} as const;
+
+const TokenSetSchema = Schema.Struct({
+  changedFiles: Schema.Array(Schema.String),
+  file: Schema.String,
+  line: Schema.NullOr(Schema.Int),
+  resolved: Schema.NullOr(Schema.String),
+  theme: TokenThemeSchema,
+  token: Schema.String,
+  value: Schema.NullOr(Schema.String),
+  versionId: Schema.String,
+});
+
 export {
   TokenApplyFields,
   TokenExportFields,
@@ -122,4 +162,7 @@ export {
   TokenKindSchema,
   TokenLayerSchema,
   TokenLeftoverSchema,
+  TokenSetFields,
+  TokenSetSchema,
+  TokenThemeSchema,
 };

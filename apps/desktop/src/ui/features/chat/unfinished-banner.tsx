@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
-interface Props {
+interface UnfinishedBannerProps {
   count: number;
   busy: boolean;
   runStopped: boolean;
@@ -17,7 +17,7 @@ const UnfinishedBanner = ({
   runStopped,
   onKeep,
   onDiscard,
-}: Props): ReactElement => (
+}: UnfinishedBannerProps): ReactElement => (
   <div className="banner" role="status">
     <Icon name="alert" />
     <span>
@@ -52,3 +52,5 @@ const UnfinishedBanner = ({
 );
 
 export { UnfinishedBanner };
+
+export type { UnfinishedBannerProps };

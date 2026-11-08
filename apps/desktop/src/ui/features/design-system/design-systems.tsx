@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { ApiError, errorText } from "../../api.js";
-import { StudioToast } from "../../app/shell/studio-parts.js";
+import { StudioToast } from "../../app/shell/studio-toast.js";
 import { downloadBlob } from "../../domain/format.js";
 import { packApi } from "../../platform/pack-api.js";
 import { uiStore } from "../../platform/storage.js";

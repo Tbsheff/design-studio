@@ -1,5 +1,4 @@
-import { Icon, SheetSlot } from "@design-studio/ui";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, createElement, useCallback } from "react";
 import type { ReactElement, ComponentProps, ReactNode, RefObject } from "react";
 
 import { ChatPanel } from "../../features/chat/chat-panel";
@@ -19,6 +18,7 @@ import { TokensPanel } from "../../features/versions-layers-tokens/tokens-panel"
 import { VersionsPanel } from "../../features/versions-layers-tokens/versions-panel";
 import type { PanelTab } from "../../platform/use-panel-tab";
 import { ComponentsPanel } from "../components-panel-host";
+import { SheetFrame } from "./sheet-frame";
 
 interface Props {
   collapsed?: boolean;
@@ -74,110 +74,87 @@ const visiblePane = (
   return tab;
 };
 
-const SheetHead = ({
-  id,
-  title,
-  onClose,
-  onSlot,
-}: {
-  id: string;
-  title: string;
-  onClose: () => void;
-  onSlot: (el: HTMLDivElement | null) => void;
-}): ReactElement => (
-  <div className="pane-sheet-head">
-    <h2 className="pane-sheet-title" id={id}>
-      {title}
-    </h2>
-    <div className="pane-sheet-slot" ref={onSlot} />
-    <button
-      type="button"
-      className="icon-btn small"
-      aria-label="Back to chat"
-      data-tip="Back to chat"
-      data-tip-align="end"
-      onClick={onClose}
-    >
-      <Icon name="close" size={14} />
-    </button>
-  </div>
-);
+const toTokensBody = (props: Props): ReactElement | null => {
+  if (props.tokens) {
+    return createElement(TokensPanel, props.tokens);
+  }
 
-const Sheet = (props: Props & { tab: PanelTab }): ReactElement => {
-  const close = (): void => props.onTab("chat");
-  const [slot, setSlot] = useState<HTMLDivElement | null>(null);
-  const sheet = useMemo(() => ({ slot }), [slot]);
-  const title = SHEET_TITLES[props.tab] ?? "";
-
-  const body = ((): ReactElement | null => {
-    switch (props.tab) {
-      case "versions": {
-        return <VersionsPanel {...props.versions} />;
-      }
-
-      case "tokens": {
-        if (props.tokens) {
-          return <TokensPanel {...props.tokens} />;
-        }
-
-        return null;
-      }
-
-      case "components": {
-        if (props.components) {
-          return <ComponentsPanel {...props.components} />;
-        }
-
-        return null;
-      }
-
-      case "tweaks": {
-        if (props.tweaks) {
-          return (
-            <Suspense fallback={null}>
-              <TweaksPanel {...props.tweaks} />
-            </Suspense>
-          );
-        }
-
-        return null;
-      }
-
-      case "comments": {
-        if (props.comments) {
-          return <CommentsPanel {...props.comments} />;
-        }
-
-        return null;
-      }
-
-      case "system": {
-        return <div className="pane-system">{props.system}</div>;
-      }
-
-      default: {
-        return null;
-      }
-    }
-  })();
-
-  return (
-    <section
-      className={`pane-sheet pane-sheet-${props.tab}`}
-      aria-labelledby={`${props.tab}-heading`}
-    >
-      <SheetSlot.Provider value={sheet}>
-        <SheetHead
-          id={`${props.tab}-heading`}
-          title={title}
-          onClose={close}
-          onSlot={setSlot}
-        />
-        <div className="pane-sheet-body">{body}</div>
-      </SheetSlot.Provider>
-    </section>
-  );
+  return null;
 };
+
+const toComponentsBody = (props: Props): ReactElement | null => {
+  if (props.components) {
+    return createElement(ComponentsPanel, props.components);
+  }
+
+  return null;
+};
+
+const toTweaksBody = (props: Props): ReactElement | null => {
+  if (props.tweaks) {
+    return createElement(
+      Suspense,
+      { fallback: null },
+      createElement(TweaksPanel, props.tweaks)
+    );
+  }
+
+  return null;
+};
+
+const toCommentsBody = (props: Props): ReactElement | null => {
+  if (props.comments) {
+    return createElement(CommentsPanel, props.comments);
+  }
+
+  return null;
+};
+
+const toSheetBody = (props: Props, tab: PanelTab): ReactElement | null => {
+  switch (tab) {
+    case "versions": {
+      return createElement(VersionsPanel, props.versions);
+    }
+
+    case "tokens": {
+      return toTokensBody(props);
+    }
+
+    case "components": {
+      return toComponentsBody(props);
+    }
+
+    case "tweaks": {
+      return toTweaksBody(props);
+    }
+
+    case "comments": {
+      return toCommentsBody(props);
+    }
+
+    case "system": {
+      return <div className="pane-system">{props.system}</div>;
+    }
+
+    default: {
+      return null;
+    }
+  }
+};
+
+const toEditPane = (props: Props): ReactElement => (
+  <section className="pane-edit" aria-label="Edit">
+    {createElement(
+      Suspense,
+      { fallback: null },
+      createElement(Inspector, {
+        ...props.inspector,
+        components: props.components,
+      })
+    )}
+    <McpEditStrip mcp={props.chat.mcp ?? null} />
+  </section>
+);
 
 const LeftPane = (props: Props): ReactElement => {
   const tab = visiblePane(props.tab, {
@@ -190,7 +167,10 @@ const LeftPane = (props: Props): ReactElement => {
   const chat = tab === "chat";
   const edit = tab === "design";
   const sheet = !chat && !edit;
-  const { comments } = props;
+  const { comments, onTab } = props;
+
+  const showChat = useCallback(() => onTab("chat"), [onTab]);
+  const showComments = useCallback(() => onTab("comments"), [onTab]);
 
   return (
     <aside
@@ -202,35 +182,32 @@ const LeftPane = (props: Props): ReactElement => {
       {props.header}
       <div className="pane-body">
         <div className="pane-chat" hidden={!chat}>
-          <ChatPanel {...props.chat} />
+          {createElement(ChatPanel, props.chat)}
         </div>
-        {edit && (
-          <section className="pane-edit" aria-label="Edit">
-            <Suspense fallback={null}>
-              <Inspector {...props.inspector} components={props.components} />
-            </Suspense>
-            <McpEditStrip mcp={props.chat.mcp ?? null} />
-          </section>
+        {edit && toEditPane(props)}
+        {sheet && (
+          <SheetFrame
+            onClose={showChat}
+            tab={tab}
+            title={SHEET_TITLES[tab] ?? ""}
+          >
+            {toSheetBody(props, tab)}
+          </SheetFrame>
         )}
-        {sheet && <Sheet {...props} tab={tab} />}
       </div>
-      <ErrorsPanel {...props.errors} pane={tab} />
+      {createElement(ErrorsPanel, { ...props.errors, pane: tab })}
       {comments && tab !== "comments" && (
-        <QueuedComposerBar
-          control={comments.control}
-          onShow={() => props.onTab("comments")}
-        />
+        <QueuedComposerBar control={comments.control} onShow={showComments} />
       )}
-      {props.todos && chat && <TodoPanel {...props.todos} />}
+      {props.todos && chat && createElement(TodoPanel, props.todos)}
       <div className="pane-composer" hidden={!chat}>
-        <PromptBox {...props.prompt} />
+        {createElement(PromptBox, props.prompt)}
       </div>
-      {props.details.run && (
-        <RunDetails {...props.details} run={props.details.run} />
-      )}
+      {props.details.run &&
+        createElement(RunDetails, { ...props.details, run: props.details.run })}
       <ChatSplitter columnsRef={props.columnsRef} />
     </aside>
   );
 };
 
-export { visiblePane, LeftPane };
+export { LeftPane };

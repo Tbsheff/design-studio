@@ -1,30 +1,34 @@
 import type { AppServerStatus } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
+import { pick } from "../../platform/pick.js";
 import { copy } from "./copy";
+import { ServerActionButton } from "./server-action-button";
+import type { ServerAction } from "./server-action-button";
+
+interface ServerButtonsProps {
+  readonly control: (action: ServerAction) => void;
+  readonly managed: boolean;
+  readonly state: AppServerStatus["state"];
+}
 
 const ServerButtons = ({
-  state,
-  managed,
   control,
-}: {
-  state: AppServerStatus["state"];
-  managed: boolean;
-  control: (action: "start" | "stop" | "restart") => void;
-}): ReactElement | null => {
+  managed,
+  state,
+}: ServerButtonsProps): ReactElement | null => {
   if (!managed) {
     if (state === "starting") {
       return null;
     }
 
     return (
-      <button
-        type="button"
-        className="btn small"
-        onClick={() => control("start")}
-      >
-        {copy.checkAgain}
-      </button>
+      <ServerActionButton
+        action="start"
+        isGhost={false}
+        control={control}
+        label={copy.checkAgain}
+      />
     );
   }
 
@@ -33,22 +37,20 @@ const ServerButtons = ({
   return (
     <>
       {state !== "starting" && (
-        <button
-          type="button"
-          className="btn small"
-          onClick={() => control(running ? "restart" : "start")}
-        >
-          {running ? "Restart" : "Start"}
-        </button>
+        <ServerActionButton
+          action={pick(running, "restart", "start")}
+          isGhost={false}
+          control={control}
+          label={pick(running, "Restart", "Start")}
+        />
       )}
       {(running || state === "starting") && (
-        <button
-          type="button"
-          className="btn small ghost"
-          onClick={() => control("stop")}
-        >
-          {copy.stop}
-        </button>
+        <ServerActionButton
+          action="stop"
+          isGhost
+          control={control}
+          label={copy.stop}
+        />
       )}
     </>
   );

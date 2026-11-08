@@ -47,7 +47,11 @@ const openProject = (projectId: string, route?: string): void => {
     return;
   }
 
-  pending = route ? { projectId, route } : null;
+  pending = null;
+
+  if (route) {
+    pending = { projectId, route };
+  }
 
   if (switcher) {
     switcher(projectId);

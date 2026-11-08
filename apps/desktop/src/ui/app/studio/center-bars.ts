@@ -4,8 +4,8 @@ import { api } from "../../api";
 import type { DraftBar } from "../../features/chat/draft-bar";
 import type { ImproveControl } from "../../features/chat/draft-improve";
 import { improveRequest } from "../../features/chat/draft-improve";
-import type { UnfinishedSlot } from "../shell/studio-parts";
-import { runStoppedUnsaved } from "../shell/studio-parts";
+import { runStoppedUnsaved } from "../shell/unfinished-model";
+import type { UnfinishedSlot } from "../shell/unfinished-slot";
 import type { StudioCtx } from "./studio-context";
 
 const saveHandlerOf = (

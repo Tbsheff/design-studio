@@ -1,5 +1,7 @@
 import type { AppServerStatus } from "@design-studio/contracts";
 
+import { pick } from "../../platform/pick.js";
+
 const STATE_TEXT: Record<AppServerStatus["state"], string> = {
   failed: "Failed",
   idle: "Not started",
@@ -43,7 +45,7 @@ const statusLine = (
     parts.push(status.upstream);
   }
 
-  parts.push(managed ? "started by the studio" : "your dev server");
+  parts.push(pick(managed, "started by the studio", "your dev server"));
 
   return parts.join(" · ");
 };

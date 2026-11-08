@@ -2,11 +2,13 @@ import type { ReactElement } from "react";
 
 import { useDesktopApp } from "./use-desktop-app";
 
-export default function DesktopApp({
+interface DesktopAppProps {
+  readonly activeProjectId: string | null;
+}
+
+const DesktopApp = ({
   activeProjectId,
-}: {
-  activeProjectId: string | null;
-}): ReactElement | null {
+}: DesktopAppProps): ReactElement | null => {
   const error = useDesktopApp(activeProjectId);
 
   if (error) {
@@ -18,4 +20,6 @@ export default function DesktopApp({
   }
 
   return null;
-}
+};
+
+export { DesktopApp };

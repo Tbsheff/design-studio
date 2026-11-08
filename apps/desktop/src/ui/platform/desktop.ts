@@ -1,16 +1,19 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import type { DesktopCommand, DesktopContext } from "../../shared/desktop-link";
+import { useLatest } from "./use-latest.js";
+
+interface PickFolderOptions {
+  title: string;
+  defaultPath?: string;
+}
 
 interface DesktopBridge {
   platform: string;
   version: string;
   onCommand?: (handler: (command: DesktopCommand) => void) => void;
   setContext?: (context: DesktopContext) => void;
-  pickFolder?: (options: {
-    title: string;
-    defaultPath?: string;
-  }) => Promise<string | null>;
+  pickFolder?: (options: PickFolderOptions) => Promise<string | null>;
 }
 
 type Handler = (command: DesktopCommand) => boolean;
@@ -21,10 +24,25 @@ const recentKeys = new Map<string, { at: number; handled: () => boolean }>();
 const recentCommands = new Map<string, number>();
 let installed = false;
 
+interface DesktopHost {
+  readonly studioDesktop: object | null;
+}
+
+const isDesktopHost = (
+  host: typeof globalThis
+): host is DesktopHost & typeof globalThis => "studioDesktop" in host;
+
 const desktopBridge = <
   Bridge extends object = DesktopBridge,
->(): Bridge | null =>
-  (globalThis as unknown as { studioDesktop?: Bridge }).studioDesktop ?? null;
+>(): Bridge | null => {
+  const host = globalThis;
+
+  if (!isDesktopHost(host)) {
+    return null;
+  }
+
+  return (host.studioDesktop ?? null) as Bridge | null;
+};
 
 const isDesktop = (): boolean => desktopBridge() !== null;
 
@@ -97,14 +115,14 @@ const noteHandledShortcut = (name: "undo" | "redo"): void => {
 };
 
 const recentDesktopCommand = (name: string): boolean => {
-  const at = recentCommands.get(name);
+  const at = recentCommands.get(name) ?? null;
 
-  return at !== undefined && Date.now() - at < KEY_ECHO_MS;
+  return at !== null && Date.now() - at < KEY_ECHO_MS;
 };
 
 const useDesktopCommand = (handler: Handler): void => {
-  const latest = useRef(handler);
-  latest.current = handler;
+  const latest = useLatest(handler);
+
   useEffect(() => {
     if (!isDesktop()) {
       return;
@@ -121,7 +139,7 @@ const useDesktopCommand = (handler: Handler): void => {
         handlers.splice(index, 1);
       }
     };
-  }, []);
+  }, [latest]);
 };
 
 const useDesktopContext = (context: DesktopContext, enabled = true): void => {
@@ -138,23 +156,22 @@ type PickOutcome =
   | { kind: "canceled" }
   | { kind: "unsupported" };
 
-const hasNativePicker = (): boolean =>
-  typeof desktopBridge()?.pickFolder === "function";
+const hasNativePicker = (): boolean => Boolean(desktopBridge()?.pickFolder);
 
-const pickFolder = async (options: {
-  title: string;
-  defaultPath?: string;
-}): Promise<PickOutcome> => {
+const pickFolder = async (options: PickFolderOptions): Promise<PickOutcome> => {
   const native = desktopBridge()?.pickFolder;
 
   if (!native) {
     return { kind: "unsupported" };
   }
 
-  const chosen = await native({
-    title: options.title,
-    ...(options.defaultPath ? { defaultPath: options.defaultPath } : {}),
-  });
+  const request: PickFolderOptions = { title: options.title };
+
+  if (options.defaultPath) {
+    request.defaultPath = options.defaultPath;
+  }
+
+  const chosen = await native(request);
 
   if (chosen) {
     return { kind: "picked", path: chosen };

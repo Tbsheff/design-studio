@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+
+import { useLatest } from "../../platform/use-latest.js";
 
 const useEscape = (onClose: () => void): void => {
-  const close = useRef(onClose);
-  close.current = onClose;
+  const close = useLatest(onClose);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       if (event.key !== "Escape" || event.defaultPrevented) {
@@ -17,7 +19,7 @@ const useEscape = (onClose: () => void): void => {
     globalThis.addEventListener("keydown", onKey, true);
 
     return (): void => globalThis.removeEventListener("keydown", onKey, true);
-  }, []);
+  }, [close]);
 };
 
 export { useEscape };

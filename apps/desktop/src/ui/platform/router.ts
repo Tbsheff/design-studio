@@ -16,8 +16,13 @@ const projectFromPath = (pathname: string): string | null => {
   }
 };
 
-const pathForProject = (projectId: string | null): string =>
-  projectId ? `/p/${encodeURIComponent(projectId)}` : "/";
+const pathForProject = (projectId: string | null): string => {
+  if (projectId) {
+    return `/p/${encodeURIComponent(projectId)}`;
+  }
+
+  return "/";
+};
 
 let installed = false;
 let leaveCheck: (() => boolean) | null = null;

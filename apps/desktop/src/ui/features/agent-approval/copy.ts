@@ -2,8 +2,8 @@ const copy = {
   allow: "Allow",
   answerFailed: "Could not send the answer. Try again.",
   deny: "Deny",
-  denyNote: "Tell the agent what to do instead (optional)",
-  denyNoteLabel: "Note for the agent",
+  denyNote: "Tell Claude what to do instead (optional)",
+  denyNoteLabel: "Note for Claude",
   denyWithNote: "Deny…",
 } as const;
 

@@ -19,7 +19,7 @@ const copy = {
   nameFrom: (source: string): string => `from ${source}`,
   noName: "No accessible name",
   noSource:
-    "This layer has no source location, so it takes no accessibility edit.",
+    "Design Studio cannot find this layer in the code, so it cannot change accessibility.",
   noText: "No text on this layer to check.",
   ratio: (ratio: number, need: number): string =>
     `${ratio.toFixed(2)}:1 (needs ${need}:1)`,
@@ -54,10 +54,10 @@ const copy = {
     tritanopia: "Tritanopia",
   },
   visionLost: (kind: string): string => `${kind}: text that fails`,
-  visionNoFrame: "This direction has no frame to simulate.",
+  visionNoFrame: "This design has no frame to simulate.",
   visionNothing: "No lost text pairs and no confused status colors.",
   visionRun: "Run",
-  visionRunning: "Running",
+  visionRunning: "Running…",
   visionSheet: "Simulation sheet: original and each vision type",
   visionTip:
     "Shows the frame as users with color blindness or low vision see it",

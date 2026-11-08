@@ -1,7 +1,7 @@
 const copy = {
   adopt: "Use this variant",
   build: "Build gallery",
-  building: "Building",
+  building: "Building…",
   close: "Close",
   contrast: "Contrast",
   empty: "Build the gallery to see every variant, size and state.",

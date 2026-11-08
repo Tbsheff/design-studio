@@ -429,7 +429,7 @@ test("AC-23 HTML console and thrown errors appear in the studio", async ({
     .locator("li")
     .filter({ hasText: "ac23 thrown later" })
     .first();
-  await thrownItem.getByRole("button", { name: "Send to agent" }).click();
+  await thrownItem.getByRole("button", { name: "Send to Claude" }).click();
   const draft = await page.getByPlaceholder("Describe a change").inputValue();
   evidence("AC-23-html", { items, draft });
   expect(draft).toContain("ac23 thrown later");

@@ -7,14 +7,14 @@ const copy = {
   delayUnit: "ms",
   key: "Key",
   pick: "Pick",
-  pickHint: "Click the element in the frame",
-  pickTip: "Pick the target element in the frame",
-  target: "Target selector",
+  pickHint: "Click the layer in the frame",
+  pickTip: "Pick the target layer in the frame",
+  target: "Target",
   targetHint: "#section",
   trigger: "Trigger",
   url: "URL",
   urlHint: "https://example.com",
-  urlWrong: "Use a full https URL.",
+  urlWrong: "Use a full URL that starts with https://.",
   visibility: "Show or hide",
 } as const;
 

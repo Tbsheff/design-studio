@@ -6,7 +6,7 @@ const copy = {
   created: "Created text style",
   detach: "Detach",
   detached: "Detached the text style",
-  empty: "This project has no text styles",
+  empty: "No text styles yet. Select text, then choose Create style from this.",
   label: "Text style",
   loading: "Loading text styles…",
   menu: "Text styles",
@@ -14,7 +14,7 @@ const copy = {
   name: "Style name",
   nameHint: "Lowercase letters, digits and dashes, for example card-title",
   namePlaceholder: "card-title",
-  noSource: "This element has no source location",
+  noSource: "Design Studio cannot find this layer in the code",
   none: "None",
   save: "Create",
 } as const;

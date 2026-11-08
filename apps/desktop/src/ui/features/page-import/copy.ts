@@ -9,7 +9,8 @@ const copy = {
   note: "The copy is static. Scripts, iframes, forms and trackers are removed.",
   selector: "Only this part",
   selectorHint: "header, main > section:nth-of-type(2)",
-  selectorNote: "A CSS selector. Leave empty to copy the whole page.",
+  selectorNote:
+    "A CSS path to one part of the page. Leave it empty to copy the whole page.",
   title: "Import page from URL",
   url: "Page URL",
   urlHint: "https://example.com",

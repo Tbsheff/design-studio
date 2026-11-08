@@ -228,7 +228,7 @@ test("AC-23 React syntax error shows file and line in the studio", async ({
   await panel
     .locator("li", { hasText: "App.tsx:2" })
     .first()
-    .getByRole("button", { name: "Send to agent" })
+    .getByRole("button", { name: "Send to Claude" })
     .click();
   const draft = await page.getByPlaceholder("Describe a change").inputValue();
   writeFileSync(appFile, appSource("Fixed again"));

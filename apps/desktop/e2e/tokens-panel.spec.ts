@@ -230,7 +230,7 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
   const versionsBefore = (await api.versions(project.id, main.id)).length;
   await input.fill(COMMITTED);
   await expectColor(front, COMMITTED);
-  await page.getByRole("button", { name: "Commit", exact: true }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator(".tkp-footer")).toHaveCount(0);
   await expect
     .poll(() => readFileSync(tokensJson, "utf-8"))

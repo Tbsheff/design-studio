@@ -1,19 +1,20 @@
 const copy = {
   aspect: "Shape",
   generate: "Generate",
-  generating: "Generating",
+  generating: "Generating…",
   hint: "Describe the image. The studio makes two versions to choose from.",
   mockBody: "Mock images",
   mockLink: "Settings",
-  mockNote: "Gradients only. Add an image key to make real images.",
+  mockNote:
+    "Gradients only. Add an image key in Settings to create real images.",
   placed: "Image placed",
   placeholder: "A calm yoga studio at sunrise",
   prompt: "Prompt",
   style: "Style",
   tab: "Generate",
   use: "Use",
-  using: "Placing",
-  variants: "Versions",
+  using: "Placing…",
+  variants: "Options",
 } as const;
 
 const ASPECT_LABEL = {

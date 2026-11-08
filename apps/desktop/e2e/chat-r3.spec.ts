@@ -280,7 +280,7 @@ test("R3-5: a Bash call asks first; Deny with a note sends the note and runs not
   await expect(prompt).toContainText("Run this command?");
   await expect(prompt).toContainText("npm test");
   await prompt.getByRole("button", { name: "Deny…" }).click();
-  await prompt.getByLabel("Note for the agent").fill("use npm");
+  await prompt.getByLabel("Note for Claude").fill("use npm");
   await prompt.getByRole("button", { name: "Deny", exact: true }).click();
   const summary = await finishedRun(api, project.id, "Run the tests [bash]");
   const detail = await api.call<{ sent: RunSentRecord[] }>(

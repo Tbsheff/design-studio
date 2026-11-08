@@ -1,8 +1,8 @@
 const copy = {
   addColumn: "Add column",
   addRow: "Add row",
-  colSpan: "Col span",
-  colStart: "Col start",
+  colSpan: "Column span",
+  colStart: "Column start",
   columns: "Columns",
   columnsTip:
     "Track sizes such as 1fr 2fr, 200px 1fr or repeat(3, minmax(0, 1fr)). Clear the field to remove the tracks",
@@ -14,7 +14,8 @@ const copy = {
     "A line number from 1 for a start, or a count from 1 for a span. Clear the field to remove it",
   makeGrid: "Turn into grid",
   makeGridTip: "Set display grid on this layer",
-  noSource: "This layer has no source location, so it takes no grid edit.",
+  noSource:
+    "Design Studio cannot find this layer in the code, so it cannot edit the grid.",
   removeColumn: "Remove column",
   removeRow: "Remove row",
   rowSpan: "Row span",

@@ -14,11 +14,11 @@ const copy = {
   deleteTip: "Delete this integration and its secret",
   disabled: "Off",
   empty:
-    "No integrations yet. Add an MCP server and in-app chat can read from it, for example a Linear issue or a Notion spec.",
+    "No integrations yet. Add an MCP server so Claude can read from it in the chat, for example a Linear issue or a Notion spec.",
   enabled: "On",
   failed: "Could not reach the integrations. Try again.",
   intro:
-    "Connect outside MCP servers to in-app chat. Secrets stay in the vault and never go to the agent. Tool results count as untrusted data. Only ticked tools run without asking.",
+    "Connect outside MCP servers to the chat. Secrets stay in the vault and never go to Claude. Tool results count as untrusted data. Only ticked tools run without asking.",
   nameLabel: "Name",
   namePlaceholder: "linear",
   nameProblem:

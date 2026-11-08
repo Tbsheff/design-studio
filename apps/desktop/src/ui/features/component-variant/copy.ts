@@ -1,5 +1,5 @@
 const copy = {
-  applyToSelected: "Use it on the selected element",
+  applyToSelected: "Use on the selected layer",
   cancel: "Cancel",
   classes: "Classes",
   classesHint:
@@ -21,7 +21,7 @@ const copy = {
   previewLoading: "Rendering…",
   save: "Save",
   saving: "Saving…",
-  setDefault: "Make it the default",
+  setDefault: "Set as default",
   startFrom: "Start from",
   suggestions: "Class suggestions",
   value: "Value",

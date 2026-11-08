@@ -1,7 +1,7 @@
 const copy = {
   applied: "Motion saved.",
   apply: "Apply",
-  applying: "Saving",
+  applying: "Saving…",
   curve: "Easing curve",
   delay: "Delay",
   delayLabel: "Delay in milliseconds",
@@ -11,7 +11,7 @@ const copy = {
   easingLabel: "Easing curve",
   kindLabel: "Motion type",
   ms: "ms",
-  noSource: "This element has no source location.",
+  noSource: "Design Studio cannot find this layer in the code.",
   presetLabel: "Entrance preset",
   preview: "Preview",
   previewLabel: "Replay the motion in the frame",
@@ -22,7 +22,7 @@ const copy = {
   stateNone:
     "Pick Hover, Focus or Active in the variant bar to set the end state.",
   title: "Motion",
-  unguarded: "No prefers-reduced-motion guard on this element yet.",
+  unguarded: "No prefers-reduced-motion guard on this layer yet.",
 } as const;
 
 const KIND_LABELS = {

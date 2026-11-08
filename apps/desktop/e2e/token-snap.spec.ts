@@ -231,7 +231,7 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   await openDialog();
   await expect(dialog.getByLabel("Group")).toHaveValue("color");
   await expect(dialog.getByLabel("Light value")).toHaveValue(far);
-  await expect(dialog.getByLabel("Apply to this element")).toBeChecked();
+  await expect(dialog.getByLabel("Apply to this layer")).toBeChecked();
   const name = dialog.getByLabel("Name");
   await name.fill("primary");
   await dialog.getByRole("button", { name: "Create token" }).click();

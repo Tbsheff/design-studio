@@ -1,17 +1,17 @@
 const copy = {
   chipTip: {
     active:
-      "Pressed state. The frame shows the element as if pressed. Edits write active: styles",
+      "Pressed state. The frame shows the layer as if pressed. Edits write active: styles",
     dark: "Dark theme. The frame shows the dark theme. Edits write dark: styles",
     default: "Default state. Edits change the normal styles",
     disabled:
-      "Disabled state. The frame shows the element as disabled. Edits write disabled: styles",
+      "Disabled state. The frame shows the layer as disabled. Edits write disabled: styles",
     "focus-visible":
-      "Focus state. The frame shows the element as if focused with the keyboard. Edits write focus-visible: styles",
+      "Focus state. The frame shows the layer as if focused with the keyboard. Edits write focus-visible: styles",
     hover:
-      "Hover state. The frame shows the element as if hovered. Edits write hover: styles",
+      "Hover state. The frame shows the layer as if hovered. Edits write hover: styles",
   },
-  groupLabel: "Element state",
+  groupLabel: "Layer state",
   hasStyles: "Has styles in this state",
   label: {
     active: "Pressed",

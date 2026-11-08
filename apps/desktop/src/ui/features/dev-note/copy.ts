@@ -3,7 +3,7 @@ const copy = {
   addTitle: "Add dev note",
   cancel: "Close",
   done: "Done",
-  failed: "Could not read the dev notes.",
+  failed: "Could not read the dev notes. Try again.",
   frameLabel: "Frame",
   kindAccessibility: "Accessibility",
   kindBehavior: "Behavior",
@@ -12,11 +12,12 @@ const copy = {
   kindSpec: "Spec",
   layerLabel: "Layer",
   list: "Dev notes…",
-  listEmpty: "This frame has no dev notes yet.",
-  listLoading: "Reading the dev notes",
+  listEmpty:
+    "No dev notes yet. Add one to tell the developer what this frame does.",
+  listLoading: "Reading the dev notes…",
   listTitle: "Dev notes",
   measure: "Measure this layer",
-  measureNeedsSource: "This element has no source location",
+  measureNeedsSource: "Design Studio cannot find this layer in the code",
   measureTip:
     "Save the box, padding, gap, radius, font and colors of the layer, with token names.",
   measuredTitle: "Measured values",
@@ -24,7 +25,7 @@ const copy = {
   noSource: "No source",
   rowTip: "Select this layer",
   save: "Add note",
-  saveFailed: "Could not save the dev note.",
+  saveFailed: "Could not save the dev note. Try again.",
   saved: "Saved",
   textLabel: "Note",
   textPlaceholder:

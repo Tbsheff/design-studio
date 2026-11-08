@@ -2,7 +2,7 @@ const copy = {
   add: "Add effect",
   addPick: "Pick a kind",
   addTip: "Add shadows, blur, glass, noise or a shader to this layer",
-  empty: "No effects on this layer yet.",
+  empty: "No effects yet. Use Add effect for a shadow, blur or noise.",
   fieldLabel: {
     blur: "Blur",
     edge: "Edge",
@@ -29,7 +29,8 @@ const copy = {
   },
   moveDown: "Move down",
   moveUp: "Move up",
-  noSource: "This layer has no source location, so it takes no effect edit.",
+  noSource:
+    "Design Studio cannot find this layer in the code, so it cannot add effects.",
   preset: "Preset",
   presetLabel: {
     aurora: "Aurora",

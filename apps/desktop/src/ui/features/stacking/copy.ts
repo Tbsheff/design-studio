@@ -9,7 +9,8 @@ const copy = {
       "What the layer does with content taller than the box. Auto or Scroll makes the layer scroll",
   },
   inset: "Offsets",
-  noSource: "This layer has no source location, so it takes no stacking edit.",
+  noSource:
+    "Design Studio cannot find this layer in the code, so it cannot change scroll and stacking.",
   overflow: {
     auto: "Auto",
     clip: "Clip",
@@ -27,7 +28,7 @@ const copy = {
   },
   positionTip:
     "Sticky stays in the scroll area at its offset. Fixed stays in the viewport. Absolute sits at its offset in the nearest positioned parent",
-  saving: "Saving",
+  saving: "Saving…",
   side: {
     bottom: "Bottom",
     left: "Left",

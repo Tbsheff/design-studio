@@ -1,8 +1,8 @@
 const copy = {
   apply: "Apply",
-  applying: "Applying",
+  applying: "Applying…",
   decrease: "Fewer rows",
-  failed: "Could not apply content",
+  failed: "Could not apply the content. Try again.",
   groupLabel: "Sample content",
   increase: "More rows",
   minus: "-",
@@ -15,7 +15,7 @@ const copy = {
   modeTip: {
     empty: "Remove the text to see empty states",
     long: "Use very long text to show overflow",
-    pseudo: "Add accents and 30 percent width to show clipping",
+    pseudo: "Add accents and 30% more width to show clipping",
     short: "Use one to three characters",
   },
   plus: "+",

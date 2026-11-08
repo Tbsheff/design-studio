@@ -4,8 +4,8 @@ import type {
   ClipboardEvent,
   DragEvent,
   FormEvent,
-  ReactNode,
   ReactElement,
+  ReactNode,
 } from "react";
 
 import { copy } from "./copy.js";

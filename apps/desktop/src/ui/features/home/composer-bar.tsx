@@ -1,7 +1,7 @@
 import type { PackSummary, ProjectKind } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import type { RefObject, ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { uiStore } from "../../platform/storage.js";
 import { usePresence } from "../chat/use-presence.js";

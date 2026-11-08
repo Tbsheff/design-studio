@@ -1,4 +1,4 @@
-import type { RefObject, ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { StableText } from "../chat/stable-text.js";
 import { loadPops } from "./lazy-parts.js";

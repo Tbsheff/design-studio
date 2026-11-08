@@ -1,32 +1,17 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon, LazySelect } from "@design-studio/ui";
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 
 import type { AppHealth } from "../../../shared/found-apps.js";
-import {
-  projectTypeOf,
-  TYPE_LABELS,
-  type ProjectType,
-} from "../../../shared/project-search.js";
+import { projectTypeOf, TYPE_LABELS } from "../../../shared/project-search.js";
+import type { ProjectType } from "../../../shared/project-search.js";
 import { api, warmProject } from "../../api.js";
 import { prefetchStudio } from "../../app/screen-preload.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
-import {
-  HOME_SORTS,
-  uiStore,
-  useUi,
-  type HomeSort,
-} from "../../platform/storage.js";
+import { HOME_SORTS, uiStore, useUi } from "../../platform/storage.js";
+import type { HomeSort } from "../../platform/storage.js";
 import { findPack, keySwatches } from "../design-system/packs.js";
 import { Swatches } from "../inspector/swatches.js";
 import { copy } from "./copy.js";
@@ -41,14 +26,14 @@ import {
 import { listRecentRuns } from "./use-last-runs.js";
 
 const SORT_LABELS: Record<HomeSort, string> = {
-  recent: "Recent",
-  name: "Name",
   created: "Created",
+  name: "Name",
+  recent: "Recent",
 };
 
 const SORT_OPTIONS = HOME_SORTS.map((sort) => ({
-  value: sort,
   label: SORT_LABELS[sort],
+  value: sort,
 }));
 
 const thumbCache = new Map<string, Promise<string>>();
@@ -178,11 +163,11 @@ interface CardProps {
 }
 
 const TYPE_TONE: Record<ProjectType, string> = {
-  next: "next",
-  vite: "vite",
-  html: "proto",
-  react: "proto",
   "design-system": "dsb",
+  html: "proto",
+  next: "next",
+  react: "proto",
+  vite: "vite",
 };
 
 export function isFolderProject(project: Project): boolean {
@@ -211,10 +196,10 @@ export function projectPlace(project: Project, homeDir: string | null): string {
 }
 
 const HEALTH_TEXT: Record<AppHealth["state"], string> = {
-  ready: "Ready",
-  install: "Needs install",
   building: "Building…",
   failed: "Failed",
+  install: "Needs install",
+  ready: "Ready",
   static: "Static",
 };
 
@@ -624,9 +609,9 @@ function useHomeView() {
   const prefs = useHomePrefs();
 
   return {
-    view: prefs.view,
-    favoritesOnly: prefs.isFavoritesOnly,
     favorites: prefs.favorites,
+    favoritesOnly: prefs.isFavoritesOnly,
+    view: prefs.view,
   };
 }
 
@@ -742,7 +727,7 @@ function useGridFocus(shown: readonly Project[]) {
     focusAt(next);
   };
 
-  return { gridRef, active, setActiveId, focusAt, onGridKey };
+  return { active, focusAt, gridRef, onGridKey, setActiveId };
 }
 
 export const ProjectGrid = ({

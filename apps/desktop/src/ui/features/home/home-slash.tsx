@@ -3,8 +3,8 @@ import { useLayoutEffect } from "react";
 import type {
   KeyboardEvent,
   MutableRefObject,
-  RefObject,
   ReactElement,
+  RefObject,
 } from "react";
 
 import { levelGroup, modelGroup } from "../chat/slash-groups.js";

@@ -1,5 +1,5 @@
 import { Icon } from "@design-studio/ui";
-import type { RefObject, ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { copy } from "./copy.js";
 import { chipBlocker, chipName, chipProblem } from "./home-app-chip.js";

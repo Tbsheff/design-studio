@@ -135,22 +135,22 @@ const useProjectActions = ({
       const trashed = await projectsApi.trash(project);
 
       const undo = (): undefined =>
-        void projectsApi.restore(trashed.trashId).catch((err: unknown) =>
+        void projectsApi.restore(trashed.trashId).catch((error: unknown) =>
           showToast({
-            text: `Could not restore: ${errorText(err)}`,
+            text: `Could not restore: ${errorText(error)}`,
             hasError: true,
           })
         );
 
       showToast({
-        hasError: false,
-        text: removedText(project, homeDir),
         action: { label: "Undo", run: undo },
+        hasError: false,
         more: { label: "Open Trash", run: onOpenTrash },
+        text: removedText(project, homeDir),
       });
-    } catch (err) {
+    } catch (error) {
       showToast({
-        text: `Could not move to Trash: ${errorText(err)}`,
+        text: `Could not move to Trash: ${errorText(error)}`,
         hasError: true,
       });
     }
@@ -159,30 +159,30 @@ const useProjectActions = ({
     try {
       const duplicate = await projectsApi.duplicate(project);
       showToast({
+        action: { label: "Open", run: () => onOpen(duplicate) },
         hasError: false,
         text: `Duplicated as “${duplicate.name}”`,
-        action: { label: "Open", run: () => onOpen(duplicate) },
       });
-    } catch (err) {
+    } catch (error) {
       showToast({
-        text: `Could not duplicate: ${errorText(err)}`,
+        text: `Could not duplicate: ${errorText(error)}`,
         hasError: true,
       });
     }
   },
   onOpen,
   onRename: async (project, name) => {
-    await projectsApi.rename(project, name).catch((err: unknown) =>
+    await projectsApi.rename(project, name).catch((error: unknown) =>
       showToast({
-        text: `Could not rename: ${errorText(err)}`,
+        text: `Could not rename: ${errorText(error)}`,
         hasError: true,
       })
     );
   },
   onReveal: (project) => {
-    void projectsApi.reveal(project).catch((err: unknown) =>
+    void projectsApi.reveal(project).catch((error: unknown) =>
       showToast({
-        text: `Could not show the folder: ${errorText(err)}`,
+        text: `Could not show the folder: ${errorText(error)}`,
         hasError: true,
       })
     );

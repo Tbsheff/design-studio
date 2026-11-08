@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import type { RefObject, ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import type { AppChip } from "./home-app-chip.js";
 import { AppMenu } from "./lazy-parts.js";

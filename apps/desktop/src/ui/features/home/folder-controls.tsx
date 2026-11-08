@@ -4,13 +4,16 @@ import {
   projectsInFolder,
   shortenHome,
   slugify,
-  type WorkspaceFolder,
-  type WorkspaceList,
+} from "@design-studio/contracts/folders";
+import type {
+  WorkspaceFolder,
+  WorkspaceList,
 } from "@design-studio/contracts/folders";
 import { Icon, LazySelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState } from "react";
+import type { FormEvent } from "react";
 
 import { copy } from "./copy.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
@@ -80,15 +83,15 @@ function locationOptions(
 ): UiSelectOption[] {
   const custom =
     value && !usable.some((folder) => folder.path === value)
-      ? [{ value, label: shortenHome(value, homeDir) }]
+      ? [{ label: shortenHome(value, homeDir), value }]
       : [];
   return [
-    { value: DEFAULT, label: labels.fallback },
-    ...usable.map((folder) => ({ value: folder.path, label: folder.label })),
+    { label: labels.fallback, value: DEFAULT },
+    ...usable.map((folder) => ({ label: folder.label, value: folder.path })),
     ...custom,
     {
-      value: CHOOSE,
       label: labels.isUnsupported ? "Paste a folder path…" : "Choose folder…",
+      value: CHOOSE,
     },
   ];
 }

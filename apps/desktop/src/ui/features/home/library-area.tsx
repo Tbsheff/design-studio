@@ -1,6 +1,6 @@
 import type { Starter } from "@design-studio/contracts";
 import { Suspense } from "react";
-import type { ReactNode, ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { ComposerAlert } from "./home-composer-parts.js";
 import { HomeEmpty } from "./lazy-parts.js";

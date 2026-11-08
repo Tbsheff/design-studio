@@ -3,7 +3,7 @@ import { parseEnvText } from "@design-studio/contracts/app";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { KeyboardEvent, RefObject, ReactElement } from "react";
+import type { KeyboardEvent, ReactElement, RefObject } from "react";
 
 import { ApiError, api } from "../../api.js";
 import { copy } from "./copy.js";

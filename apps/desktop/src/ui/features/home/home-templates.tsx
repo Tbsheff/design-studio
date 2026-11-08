@@ -1,6 +1,6 @@
 import type { ProjectKind, RunLevel, Starter } from "@design-studio/contracts";
 import { useEffect, useState } from "react";
-import type { ReactNode, ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { api } from "../../api.js";
 import { copy } from "./copy.js";

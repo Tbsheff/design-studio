@@ -162,7 +162,7 @@ const useAppChip = () => {
           live &&
           setChip((current) =>
             current?.path === path
-              ? { ...current, error: errorText(error), checking: false }
+              ? { ...current, checking: false, error: errorText(error) }
               : current
           )
       );

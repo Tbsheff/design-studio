@@ -1,5 +1,5 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
-import type { RefObject, ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { uiStore } from "../../platform/storage.js";

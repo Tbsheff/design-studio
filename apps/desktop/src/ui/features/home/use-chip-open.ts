@@ -5,15 +5,18 @@ import { api, errorText } from "../../api.js";
 import type { AppChip } from "./app-chip-model.js";
 import { chipBlocker, chipProblem } from "./chip-logic-model.js";
 import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
+import type { ContextDraft } from "./context-drafts-model.js";
 import { installProblem } from "./doctor-model.js";
 import { shortHome } from "./home-model.js";
 import type { Busy } from "./home-model.js";
 import { loadAppMenu } from "./lazy-parts-model.js";
 import { toOptionalArg } from "./optional-arg-model.js";
+import { importContexts } from "./use-context-import.js";
 import type { useDoctorGate } from "./use-doctor-gate.js";
 
 interface ChipOpenDeps {
   readonly attached: RefObject<{
+    readonly contexts: ContextDraft[];
     readonly images: ImageDraft[];
     readonly references: ReferenceDraft[];
   }>;
@@ -59,6 +62,7 @@ const runOpenChip = async (
     const projectId = await mod.openChip(chip, tokensOnly);
 
     if (text) {
+      await importContexts(projectId, attached.current.contexts);
       await mod.runInProject(projectId, {
         images: attached.current.images.map((image) => image.file),
         level: deps.level,

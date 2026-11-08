@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { RefObject } from "react";
 
+import { toDroppedFiles } from "../../domain/reference-files.js";
 import { getSoleUrl } from "./composer-drafts-model.js";
 import type { ReferenceDraft } from "./composer-drafts-model.js";
 import { useDropTarget } from "./use-drop-target.js";
@@ -14,12 +15,18 @@ const isAcceptedDrag = (event: DragEvent): boolean =>
     (type) => type === "Files" || type === "text/uri-list"
   );
 
+interface DropSinks {
+  readonly addContextFiles: (picked: File[]) => void;
+  readonly addImages: (picked: File[]) => void;
+  readonly addReference: (reference: ReferenceDraft) => void;
+}
+
 const useComposerDrop = (
   formRef: RefObject<HTMLElement | null>,
-  addImages: (picked: File[]) => void,
-  addReference: (reference: ReferenceDraft) => void,
+  sinks: DropSinks,
   onFolder: ((data: DataTransfer) => boolean) | null
 ): ComposerDrop => {
+  const { addContextFiles, addImages, addReference } = sinks;
   const [isDragging, setIsDragging] = useState(false);
 
   const onDragOver = (event: DragEvent): void => {
@@ -45,7 +52,9 @@ const useComposerDrop = (
     const files = [...data.files];
 
     if (files.length > 0) {
-      addImages(files);
+      const dropped = toDroppedFiles(files);
+      addImages([...dropped.images, ...dropped.others]);
+      addContextFiles(dropped.references);
 
       return;
     }

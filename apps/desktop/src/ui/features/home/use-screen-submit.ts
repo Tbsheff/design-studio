@@ -33,7 +33,7 @@ const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
   const { designCount, designMd, kind, prompt } = draft;
   const { questions, setQuestions } = draft;
   const { attach, flow } = composer;
-  const { images, references } = attach;
+  const { contexts, images, references } = attach;
   const { location } = lib;
   const { chip } = flow.app;
   const { submitChip } = flow;
@@ -42,6 +42,7 @@ const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
     busy,
     chip,
     clarifyRef,
+    contexts,
     designCount,
     designMd,
     images,

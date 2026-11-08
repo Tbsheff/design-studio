@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { PlusFilesSection } from "./plus-files-section.js";
 import { PlusItem } from "./plus-item.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
 
@@ -24,17 +25,7 @@ const PlusMenuSections = ({
   onClose,
 }: PlusMenuSectionsProps): ReactElement => (
   <>
-    <div className="ui-menu-section">
-      <span className="ui-menu-label">{copy.files}</span>
-      <PlusItem
-        icon="paperclip"
-        label="Attach images"
-        meta="⌘V"
-        hasChevron={false}
-        action={actions.onAttachFile}
-        onClose={onClose}
-      />
-    </div>
+    <PlusFilesSection actions={actions} onClose={onClose} />
     <div className="ui-menu-section">
       <span className="ui-menu-label">{copy.code}</span>
       <PlusItem

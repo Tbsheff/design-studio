@@ -1,4 +1,7 @@
+import type { WireOutput } from "@design-studio/actions/_core/action";
 import { routes as projectsRoutes } from "@design-studio/actions/project/routes";
+import type { importReference } from "@design-studio/actions/reference/import";
+import { routes as referenceRoutes } from "@design-studio/actions/reference/routes";
 import type {
   Attachment,
   TrashedProject,
@@ -24,6 +27,8 @@ import {
 } from "./api-wire.js";
 import type { ProjectWire } from "./api-wire.js";
 import { call, request } from "./platform/http";
+
+type ReferenceImported = WireOutput<typeof importReference>;
 
 interface ProjectPage {
   readonly items: readonly ProjectWire[];
@@ -83,6 +88,28 @@ const projectApi = {
 
     return { project: toProject(imported.project) };
   },
+  importReferenceFile: async (
+    pid: string,
+    file: File
+  ): Promise<ReferenceImported> =>
+    call(referenceRoutes.importReference, {
+      data: await fileToBase64(file),
+      fileName: file.name,
+      name: null,
+      path: null,
+      projectId: pid,
+    }),
+  importReferencePath: (
+    pid: string,
+    folderPath: string
+  ): Promise<ReferenceImported> =>
+    call(referenceRoutes.importReference, {
+      data: null,
+      fileName: null,
+      name: null,
+      path: folderPath,
+      projectId: pid,
+    }),
   listProjects: async (): Promise<Project[]> => {
     const all = await listProjectPages(null);
 
@@ -152,3 +179,5 @@ const projectApi = {
 };
 
 export { projectApi };
+
+export type { ReferenceImported };

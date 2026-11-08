@@ -30,7 +30,8 @@ const HomeComposer = ({
   const handlers = useComposerHandlers(flow, draft.prompt);
   const { barApp, closeMenu, openTokensOnly, toggleMenu } = handlers;
   const { openStarter } = lib.openFlows;
-  const { addImages, removeImage, removeReference } = attach;
+  const { addContextFiles, addImages, removeContext } = attach;
+  const { removeImage, removeReference } = attach;
   const { changeKind } = draft;
 
   return (
@@ -45,8 +46,10 @@ const HomeComposer = ({
         chipTriggerRef={chipTriggerRef}
         onChipMenu={toggleMenu}
         onChipRemove={clear}
+        contexts={attach.contexts}
         images={attach.images}
         references={attach.references}
+        onRemoveContext={removeContext}
         onRemoveImage={removeImage}
         onRemoveReference={removeReference}
       />
@@ -69,7 +72,9 @@ const HomeComposer = ({
       />
       <ComposerBar
         fileRef={attach.fileRef}
+        contextFileRef={attach.contextFileRef}
         onFiles={addImages}
+        onContextFiles={addContextFiles}
         plusActions={ui.plusActions}
         locationLabel={lib.locationLabel}
         packs={lib.packs}

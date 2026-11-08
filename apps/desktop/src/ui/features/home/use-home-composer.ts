@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
 import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
+import type { ContextDraft } from "./context-drafts-model.js";
 import { useChipFlow } from "./use-chip-flow.js";
 import type { ChipFlow } from "./use-chip-flow.js";
 import { useComposerAttachments } from "./use-composer-attachments.js";
@@ -10,6 +11,8 @@ import type { ComposerAttachments } from "./use-composer-attachments.js";
 import type { HomeBase } from "./use-home-base.js";
 import { useRootDrop } from "./use-root-drop.js";
 import type { RootDrop } from "./use-root-drop.js";
+import { useRoutedFolderDrop } from "./use-routed-folder-drop.js";
+import type { FolderSink } from "./use-routed-folder-drop.js";
 
 interface HomeComposer {
   readonly attach: ComposerAttachments;
@@ -31,9 +34,10 @@ const useHomeComposer = (deps: ComposerDeps): HomeComposer => {
   const { doctor, setBusy, setFormError } = base;
 
   const attached = useRef<{
+    readonly contexts: ContextDraft[];
     readonly images: ImageDraft[];
     readonly references: ReferenceDraft[];
-  }>({ images: [], references: [] });
+  }>({ contexts: [], images: [], references: [] });
 
   const flow = useChipFlow({
     attached,
@@ -45,19 +49,20 @@ const useHomeComposer = (deps: ComposerDeps): HomeComposer => {
     setFormError,
   });
 
-  const attach = useComposerAttachments(
-    composerRef,
-    setFormError,
-    flow.takeDrop
-  );
+  const folderSink = useRef<FolderSink | null>(null);
+  const takeDrop = useRoutedFolderDrop(flow, folderSink);
+  const attach = useComposerAttachments(composerRef, setFormError, takeDrop);
 
-  const { images, references } = attach;
+  const { contexts, images, references } = attach;
+
+  const { addContextFolder } = attach;
 
   useEffect(() => {
-    attached.current = { images, references };
-  }, [images, references]);
+    attached.current = { contexts, images, references };
+    folderSink.current = addContextFolder;
+  }, [addContextFolder, contexts, images, references]);
 
-  const root = useRootDrop(homeRef, flow.takeDrop, setFormError);
+  const root = useRootDrop(homeRef, takeDrop, setFormError);
 
   return { attach, flow, root };
 };

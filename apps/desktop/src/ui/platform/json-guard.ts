@@ -65,4 +65,11 @@ const isActionDone = (value: unknown): value is ActionDone => {
   );
 };
 
-export { isActionDone, isApprovalPoll, isStreamHello, isStudioEvent, isText };
+export {
+  isActionDone,
+  isApprovalPoll,
+  isNumber,
+  isStreamHello,
+  isStudioEvent,
+  isText,
+};

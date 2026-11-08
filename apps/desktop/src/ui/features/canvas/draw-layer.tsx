@@ -17,6 +17,8 @@ import {
   renderDrawingPng,
 } from "./drawing-model.js";
 import type { StrokeBuilder } from "./drawing-model.js";
+import { DrawingStrokes } from "./drawing-strokes.js";
+import { PenIcon } from "./pen-icon.js";
 
 import "../../styles/drawing.css";
 import { toValueOr } from "./settle-model.js";
@@ -264,4 +266,4 @@ const DrawSurface = ({
   );
 };
 
-export { DrawSurface };
+export { DrawSurface, DrawingStrokes, PenIcon };

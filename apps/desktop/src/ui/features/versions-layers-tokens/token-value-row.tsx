@@ -45,7 +45,7 @@ const TokenValueRow = (props: TokenValueRowProps): ReactNode => {
         )}
       </span>
       <span className={toValueClass(paint !== null)}>
-        {paint !== null && <TokenValueSwatch paint={paint} />}
+        {paint !== null && <TokenValueSwatch paint={paint} isSmall={false} />}
         <input
           className="mono"
           name="token-value"

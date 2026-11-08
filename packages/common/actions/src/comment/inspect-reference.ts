@@ -15,6 +15,8 @@ const IMAGE_MAX = 4096;
 
 const FRAME_MAX = 60;
 
+const WORST_MAX = 9;
+
 const ImageFieldSchema = Schema.String.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(IMAGE_MAX)
@@ -30,6 +32,12 @@ const FrameFieldSchema = Schema.String.check(
     "Frame id or @label from canvas_list. Leave out for the first frame of the direction.",
 });
 
+const LimitFieldSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: WORST_MAX, minimum: 1 })
+).annotate({
+  description: "How many of the worst areas to list, from 1 to 9. Default 4.",
+});
+
 const inspectReferenceComment = defineAction({
   access: "read",
   agent: { off: "legacy-agent" },
@@ -43,6 +51,7 @@ const inspectReferenceComment = defineAction({
     directionId: Schema.optionalKey(DirectionFieldSchema),
     frame: Schema.optionalKey(FrameFieldSchema),
     image: ImageFieldSchema,
+    limit: Schema.optionalKey(LimitFieldSchema),
     path: Schema.optionalKey(PagePathFieldSchema),
     projectId: ProjectFieldSchema,
   }),

@@ -25,6 +25,7 @@ interface ReferenceQuery {
   readonly directionId: string | null;
   readonly frame: string | null;
   readonly image: string;
+  readonly limit: number | null;
   readonly path: string | null;
   readonly projectId: string;
 }
@@ -58,24 +59,28 @@ const WORST_LISTED = 4;
 
 type ReferenceFields = Omit<ReferenceView, "frame">;
 
-const toScoreFields = (score: ReferenceScore): ReferenceFields => ({
+const toScoreFields = (
+  score: ReferenceScore,
+  listed: number
+): ReferenceFields => ({
   contentScore: score.contentScore,
   diffPath: score.diffPath,
   differsPct: score.differsPct,
   edgeScore: score.edgeScore,
   matches: score.score >= REFERENCE_LOW_SCORE,
   ms: score.ms,
-  notes: scoreLines(score),
+  notes: scoreLines(score, listed),
   renderPath: score.renderPath,
   score: score.score,
   size: `${score.width}x${score.height}`,
-  worst: score.regions.slice(0, WORST_LISTED),
+  worst: score.regions.slice(0, listed),
 });
 
 const toScoreView = (
   score: ReferenceScore,
+  listed: number,
   frame: ReferenceView["frame"]
-): ReferenceView => ({ ...toScoreFields(score), frame });
+): ReferenceView => ({ ...toScoreFields(score, listed), frame });
 
 const toFileInfo = async (file: string): Promise<Stats | null> => {
   try {
@@ -186,9 +191,9 @@ const inspectReferenceFrame = async (
 
   const score = await compareToReference(input);
 
-  return toScoreView(score, toFrameView(frame));
+  return toScoreView(score, query.limit ?? WORST_LISTED, toFrameView(frame));
 };
 
-export { inspectReferenceFrame, toScoreFields, toScoreView };
+export { WORST_LISTED, inspectReferenceFrame, toScoreFields, toScoreView };
 
 export type { ReferenceDeps, ReferenceQuery, ReferenceView };

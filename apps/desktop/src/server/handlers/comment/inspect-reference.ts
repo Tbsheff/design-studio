@@ -16,6 +16,7 @@ const handle = Effect.fn("comment.inspectReference")(function* run(
     directionId: input.directionId ?? null,
     frame: input.frame ?? null,
     image: input.image,
+    limit: input.limit ?? null,
     path: input.path ?? null,
     projectId: input.projectId,
   });

@@ -12,6 +12,52 @@ interface Toast {
   text: string;
 }
 
+interface PackActionsResult {
+  actions: DesignSystemActions;
+  toast: Toast | null;
+}
+
+type SaveBody = Parameters<typeof packApi.savePack>[2];
+
+interface SaveBodyDraft {
+  asNew?: boolean;
+  force?: boolean;
+  name: string;
+  packId?: string;
+}
+
+interface SaveOptions {
+  asNew?: boolean;
+  force?: boolean;
+  packId?: string;
+}
+
+const toRemainingToast = (current: Toast | null, id: number): Toast | null => {
+  if (current?.id === id) {
+    return null;
+  }
+
+  return current;
+};
+
+const toSaveBody = (name: string, options: SaveOptions): SaveBody => {
+  const body: SaveBodyDraft = { name };
+
+  if (options.packId) {
+    body.packId = options.packId;
+  }
+
+  if (options.asNew) {
+    body.asNew = true;
+  }
+
+  if (options.force) {
+    body.force = true;
+  }
+
+  return body;
+};
+
 interface Options {
   projectId: string;
   directionId: string | null;
@@ -24,7 +70,7 @@ const usePackActions = ({
   directionId,
   setProject,
   onCommitted,
-}: Options): { actions: DesignSystemActions; toast: Toast | null } => {
+}: Options): PackActionsResult => {
   const [toast, setToast] = useState<Toast | null>(null);
 
   const show = useCallback(
@@ -38,7 +84,7 @@ const usePackActions = ({
     }
 
     const timer = setTimeout(
-      () => setToast((current) => (current?.id === toast.id ? null : current)),
+      () => setToast((current) => toRemainingToast(current, toast.id)),
       TOAST_MS
     );
 
@@ -62,12 +108,11 @@ const usePackActions = ({
           return;
         }
 
-        const result = await packApi.savePack(projectId, directionId, {
-          name,
-          ...(packId ? { packId } : {}),
-          ...(asNew ? { asNew: true } : {}),
-          ...(force ? { force: true } : {}),
-        });
+        const result = await packApi.savePack(
+          projectId,
+          directionId,
+          toSaveBody(name, { asNew, force, packId })
+        );
 
         refreshPacks();
         setProject(result.project);

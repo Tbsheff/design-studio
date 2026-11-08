@@ -2,8 +2,10 @@ import type { ComponentInfo } from "@design-studio/contracts";
 import { useEffect, useRef, useState } from "react";
 
 import { json } from "../../api.js";
+import { readBlob } from "../../platform/http.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { getBlob } from "./deps.js";
+import { trimmedOrSelf } from "./thumb-trim.js";
 
 const REFRESH_MS = 400;
 
@@ -25,6 +27,23 @@ const componentThumb = async (
   }
 
   return URL.createObjectURL(blob);
+};
+
+const trimmedUrl = async (url: string | null): Promise<string | null> => {
+  if (!url) {
+    return url;
+  }
+
+  const blob = await readBlob(url);
+  const next = await trimmedOrSelf(blob);
+
+  if (next === blob) {
+    return url;
+  }
+
+  URL.revokeObjectURL(url);
+
+  return URL.createObjectURL(next);
 };
 
 interface ComponentList {
@@ -94,6 +113,6 @@ const useComponents = (
   return { ...state, retry: () => setAttempt((count) => count + 1) };
 };
 
-export { componentThumb, useComponents };
+export { componentThumb, trimmedUrl, useComponents };
 
 export type { ComponentList };

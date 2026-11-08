@@ -1,3 +1,4 @@
+import { toReason, withDisabled } from "./command-disabled.js";
 import { LEVEL_PRESETS, matchesKey } from "./deps.js";
 import type { ComposerMode, KeyInput, RunLevel } from "./deps.js";
 import { IS_MAC } from "./key-model.js";
@@ -36,78 +37,100 @@ interface ComposerActions {
   focus: () => void;
 }
 
-const composerCommands = (composerActions: ComposerActions): Command[] => {
-  const modes = MODE_ORDER.map((mode) => ({
-    group: "Run",
-    icon: "chat" as const,
-    id: `composer.mode-${mode}`,
-    keywords: "mode composer",
-    run: (): void => {
-      composerActions.setMode(mode);
-      composerActions.focus();
+const toModeCommand = (
+  composerActions: ComposerActions,
+  mode: ComposerMode
+): Command =>
+  withDisabled(
+    {
+      group: "Run",
+      icon: "chat",
+      id: `composer.mode-${mode}`,
+      keywords: "mode composer",
+      run: (): void => {
+        composerActions.setMode(mode);
+        composerActions.focus();
+      },
+      slash: mode,
+      title: MODE_TITLES[mode],
     },
-    slash: mode,
-    title: MODE_TITLES[mode],
-    ...(composerActions.mode === mode ? { disabled: "Already on" } : {}),
-  }));
+    toReason(composerActions.mode === mode, "Already on")
+  );
 
-  const levels = (Object.keys(LEVEL_PRESETS) as RunLevel[]).map((level) => ({
-    group: "Run",
-    icon: "sliders" as const,
-    id: `composer.level-${level}`,
-    keywords: "quality speed cost",
-    run: (): void => {
-      composerActions.setLevel(level);
-      composerActions.focus();
+const toLevelCommand = (
+  composerActions: ComposerActions,
+  level: RunLevel
+): Command =>
+  withDisabled(
+    {
+      group: "Run",
+      icon: "sliders",
+      id: `composer.level-${level}`,
+      keywords: "quality speed cost",
+      run: (): void => {
+        composerActions.setLevel(level);
+        composerActions.focus();
+      },
+      slash: `level ${level}`,
+      title: `Level: ${LEVEL_PRESETS[level].label}`,
     },
-    slash: `level ${level}`,
-    title: `Level: ${LEVEL_PRESETS[level].label}`,
-    ...(composerActions.level === level ? { disabled: "Already on" } : {}),
-  }));
+    toReason(composerActions.level === level, "Already on")
+  );
 
+const toVariationCommands = (composerActions: ComposerActions): Command[] => {
   const callback = composerActions.variations;
 
-  const variations: Command[] =
-    (callback && [
-      {
-        group: "Run",
-        icon: "compare",
-        id: "composer.variations",
-        keywords: "directions options alternatives",
-        run: () => {
-          callback.onCount(Math.min(VARIATION_COUNT, callback.max));
-          composerActions.focus();
-        },
-        slash: "variations",
-        title: `Make ${Math.min(VARIATION_COUNT, callback.max)} variations of the next prompt`,
+  if (!callback) {
+    return [];
+  }
+
+  const count = Math.min(VARIATION_COUNT, callback.max);
+
+  return [
+    {
+      group: "Run",
+      icon: "compare",
+      id: "composer.variations",
+      keywords: "directions options alternatives",
+      run: () => {
+        callback.onCount(count);
+        composerActions.focus();
       },
-    ]) ||
-    [];
-
-  return [...modes, ...levels, ...variations];
+      slash: "variations",
+      title: `Make ${count} variations of the next prompt`,
+    },
+  ];
 };
 
-const SLASH_OF: Record<string, string> = {
-  "edit.undo": "undo",
-  "panel.comments": "comments",
-  "panel.versions": "versions",
-  "project.design-md": "design-md",
-  "project.settings": "settings",
-  "run.polish": "polish",
-  "version.export": "export",
-};
+const composerCommands = (composerActions: ComposerActions): Command[] => [
+  ...MODE_ORDER.map((mode) => toModeCommand(composerActions, mode)),
+  ...(Object.keys(LEVEL_PRESETS) as RunLevel[]).map((level) =>
+    toLevelCommand(composerActions, level)
+  ),
+  ...toVariationCommands(composerActions),
+];
+
+const SLASH_OF = new Map([
+  ["edit.undo", "undo"],
+  ["panel.comments", "comments"],
+  ["panel.versions", "versions"],
+  ["project.design-md", "design-md"],
+  ["project.settings", "settings"],
+  ["run.polish", "polish"],
+  ["version.export", "export"],
+]);
 
 const slashCommands = (): Command[] =>
-  collectCommands()
-    .map((command) => {
-      if (command.slash || !SLASH_OF[command.id]) {
-        return command;
-      }
+  collectCommands().flatMap((command) => {
+    const slash = command.slash ?? SLASH_OF.get(command.id);
 
-      return { ...command, slash: SLASH_OF[command.id] };
-    })
-    .filter((char) => char.slash);
+    if (!slash) {
+      return [];
+    }
 
-export { nextMode, isModeCycleKey, composerCommands, slashCommands };
+    return [{ ...command, slash }];
+  });
+
+export { composerCommands, isModeCycleKey, nextMode, slashCommands };
 
 export type { ComposerActions };

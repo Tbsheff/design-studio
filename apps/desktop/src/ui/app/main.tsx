@@ -32,6 +32,7 @@ import "../styles/tweaks.css";
 import "../styles/variations.css";
 import "../styles/frames.css";
 import "../styles/studio.css";
+import "../styles/commands.css";
 import "../styles/responsive.css";
 import "../styles/shell.css";
 import "../styles/port-flow.css";

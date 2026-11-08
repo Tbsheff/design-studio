@@ -25,18 +25,23 @@ const listPacks = async (): Promise<PackSummary[]> => {
   return items;
 };
 
-const loadPacks = (): Promise<PackSummary[]> => {
-  if (!cached) {
-    cached = listPacks().catch((error: unknown) => {
-      cached = null;
-      throw error;
-    });
-  }
+const loadPacks = async (): Promise<PackSummary[]> => {
+  const pending = cached ?? listPacks();
 
-  return cached;
+  cached = pending;
+
+  try {
+    return await pending;
+  } catch (error) {
+    if (cached === pending) {
+      cached = null;
+    }
+
+    throw error;
+  }
 };
 
-const listeners = new Set<() => void>();
+const listeners = new Set<() => Promise<void>>();
 
 const refreshPacks = (): void => {
   cached = null;
@@ -48,15 +53,7 @@ const refreshPacks = (): void => {
 
 const usePacks = (): PacksState => {
   const [state, setState] = useState<PacksState>({ error: null, packs: null });
-  const [generation, setGeneration] = useState(0);
-  useEffect(() => {
-    const listener = (): void => setGeneration((count) => count + 1);
-    listeners.add(listener);
 
-    return (): void => {
-      listeners.delete(listener);
-    };
-  }, []);
   useEffect(() => {
     let live = true;
 
@@ -74,12 +71,14 @@ const usePacks = (): PacksState => {
       }
     };
 
-    void read();
+    listeners.add(read);
+    read();
 
     return (): void => {
       live = false;
+      listeners.delete(read);
     };
-  }, [generation]);
+  }, []);
 
   return state;
 };
@@ -105,22 +104,24 @@ const findPack = (
 
 const loadedFonts = new Set<string>();
 
+const isFontLoadable = (pack: PackSummary): boolean => {
+  const url = pack.fonts.googleFontsUrl;
+
+  return Boolean(
+    url &&
+    !loadedFonts.has(pack.id) &&
+    url.startsWith("https://fonts.googleapis.com/")
+  );
+};
+
 const loadPackFonts = (packs: PackSummary[]): void => {
-  for (const pack of packs) {
-    const url = pack.fonts.googleFontsUrl;
+  const fresh = packs.filter((pack) => isFontLoadable(pack));
 
-    if (
-      !url ||
-      loadedFonts.has(pack.id) ||
-      !url.startsWith("https://fonts.googleapis.com/")
-    ) {
-      continue;
-    }
-
+  for (const pack of fresh) {
     loadedFonts.add(pack.id);
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = url;
+    link.href = pack.fonts.googleFontsUrl ?? "";
     link.dataset.packFont = pack.id;
     document.head.append(link);
   }
@@ -144,30 +145,29 @@ const fontStack = (family: string, fallback: string): string => {
 
 const KEY_SWATCHES = ["primary", "accent", "fg", "bg"];
 
-const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
-  const rank = (name: string): number => {
-    const index = KEY_SWATCHES.indexOf(name);
+const toSwatchRank = (name: string): number => {
+  const index = KEY_SWATCHES.indexOf(name);
 
-    if (index === -1) {
-      return KEY_SWATCHES.length;
-    }
+  if (index === -1) {
+    return KEY_SWATCHES.length;
+  }
 
-    return index;
-  };
-
-  return [...pack.swatches].toSorted(
-    (first, second) => rank(first.name) - rank(second.name)
-  );
+  return index;
 };
 
+const keySwatches = (pack: PackSummary): PackSummary["swatches"] =>
+  [...pack.swatches].toSorted(
+    (first, second) => toSwatchRank(first.name) - toSwatchRank(second.name)
+  );
+
 export {
-  refreshPacks,
-  usePacks,
-  pickable,
   findPack,
-  loadPackFonts,
   fontStack,
   keySwatches,
+  loadPackFonts,
+  pickable,
+  refreshPacks,
+  usePacks,
 };
 
 export type { PacksState };

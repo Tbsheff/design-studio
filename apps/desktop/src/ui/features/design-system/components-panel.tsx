@@ -15,12 +15,9 @@ import {
   useInsertable,
 } from "./component-insert.js";
 import type { ComponentDrag } from "./component-insert.js";
-import {
-  ComponentPreviewThumb,
-  trimmedUrl,
-} from "./component-preview-thumb.js";
+import { ComponentPreviewThumb } from "./component-preview-thumb.js";
 import { COPY } from "./copy.js";
-import { componentThumb } from "./use-components.js";
+import { componentThumb, trimmedUrl } from "./use-components.js";
 import type { ComponentList } from "./use-components.js";
 
 const MENU_GAP = 4;

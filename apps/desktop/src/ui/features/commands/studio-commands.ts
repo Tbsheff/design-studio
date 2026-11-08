@@ -1,0 +1,271 @@
+import { toReason, withDisabled } from "./command-disabled.js";
+import type { PanelTab } from "./deps.js";
+import { findElement } from "./deps.js";
+import type { Command } from "./registry.js";
+import type { StudioActions } from "./studio-actions.js";
+import { moveRegion } from "./studio-regions.js";
+
+const MIN_DIRECTIONS = 2;
+const COMPOSER_SELECTOR = '.prompt [data-slot="composer-input"]';
+
+const PANELS: { icon: Command["icon"]; tab: PanelTab; title: string }[] = [
+  { icon: "chat", tab: "chat", title: "Show Chat" },
+  { icon: "pointer", tab: "design", title: "Edit mode: inspector and layers" },
+  { icon: "comment", tab: "comments", title: "Show Comments" },
+  { icon: "history", tab: "versions", title: "Show Versions" },
+  { icon: "token", tab: "tokens", title: "Show Tokens" },
+  { icon: "component", tab: "components", title: "Show Components" },
+  { icon: "sliders", tab: "tweaks", title: "Show Tweaks" },
+  { icon: "palette", tab: "system", title: "Show Design system" },
+];
+
+const idle = (): void => globalThis.console.debug("idle");
+
+const stepDirection = (
+  studioActions: StudioActions,
+  step: 1 | -1
+): (() => void) | null => {
+  if (studioActions.directions.length < MIN_DIRECTIONS) {
+    return null;
+  }
+
+  const at = studioActions.directions.findIndex(
+    (delta) => delta.id === studioActions.directionId
+  );
+
+  const next =
+    studioActions.directions[
+      (at + step + studioActions.directions.length) %
+        studioActions.directions.length
+    ];
+
+  if (next) {
+    return () => studioActions.onDirection(next.id);
+  }
+
+  return null;
+};
+
+const focusComposer = (studioActions: StudioActions): void => {
+  studioActions.onPanel("chat");
+  globalThis.requestAnimationFrame(() =>
+    findElement(document.body, COMPOSER_SELECTOR)?.focus()
+  );
+};
+
+const goCommands = (studioActions: StudioActions): Command[] => {
+  const noDirection = toReason(
+    studioActions.directions.length < MIN_DIRECTIONS,
+    "Only one direction"
+  );
+
+  return [
+    {
+      group: "Go",
+      icon: "folder",
+      id: "go.home",
+      keyId: "home",
+      keywords: "projects back exit",
+      run: studioActions.onHome,
+      title: "Go to Home",
+    },
+    {
+      group: "Go",
+      icon: "settings",
+      id: "project.settings",
+      keyId: "settings",
+      keywords: "model shell preferences",
+      run: studioActions.onSettings,
+      title: "Project settings",
+    },
+    {
+      group: "Go",
+      icon: "doc",
+      id: "project.design-md",
+      keywords: "design system brief",
+      run: studioActions.onDesignMd,
+      title: "Edit DESIGN.md",
+    },
+    withDisabled(
+      {
+        group: "Go",
+        icon: "branch",
+        id: "direction.next",
+        keyId: "next-direction",
+        run: stepDirection(studioActions, 1) ?? idle,
+        title: "Next direction",
+      },
+      noDirection
+    ),
+    withDisabled(
+      {
+        group: "Go",
+        icon: "branch",
+        id: "direction.prev",
+        keyId: "prev-direction",
+        run: stepDirection(studioActions, -1) ?? idle,
+        title: "Previous direction",
+      },
+      noDirection
+    ),
+  ];
+};
+
+const directionCommands = (studioActions: StudioActions): Command[] =>
+  studioActions.directions.flatMap((direction) => {
+    if (direction.id === studioActions.directionId) {
+      return [];
+    }
+
+    return [
+      {
+        group: "Go",
+        icon: "branch" as const,
+        id: `direction.open.${direction.id}`,
+        keywords: "switch variation",
+        run: () => studioActions.onDirection(direction.id),
+        title: `Open direction ${direction.name}`,
+      },
+    ];
+  });
+
+const panelCommands = (studioActions: StudioActions): Command[] =>
+  PANELS.map((part) => ({
+    group: "Panels",
+    icon: part.icon,
+    id: `panel.${part.tab}`,
+    keywords: "tab side panel pane mode sheet",
+    run: () => studioActions.onPanel(part.tab),
+    title: part.title,
+  }));
+
+const toStatesReason = (studioActions: StudioActions): string | null => {
+  if (studioActions.running) {
+    return "A run is going";
+  }
+
+  return toReason(studioActions.onMakeStates === null, "No direction yet");
+};
+
+const runCommands = (studioActions: StudioActions): Command[] => [
+  {
+    group: "Run",
+    icon: "chat",
+    id: "panel.focus-composer",
+    keywords: "composer prompt message chat",
+    run: () => focusComposer(studioActions),
+    title: "Ask the agent",
+  },
+  withDisabled(
+    {
+      group: "Run",
+      icon: "stop",
+      id: "run.stop",
+      keyId: "stop",
+      keywords: "cancel interrupt",
+      run: studioActions.onStop,
+      title: "Stop the run",
+    },
+    toReason(!studioActions.running, "No run is going")
+  ),
+  withDisabled(
+    {
+      group: "Run",
+      icon: "sparkle",
+      id: "run.polish",
+      keywords: "improve refine critique",
+      run: studioActions.onPolish,
+      title: "Polish this design",
+    },
+    toReason(studioActions.running, "A run is going")
+  ),
+  withDisabled(
+    {
+      group: "Run",
+      icon: "layers",
+      id: "run.states",
+      keywords: "empty loading error success validation menu frames",
+      run: () => studioActions.onMakeStates?.(),
+      slash: "states",
+      title: "Make UI states of this page",
+    },
+    toStatesReason(studioActions)
+  ),
+];
+
+const toShipCommands = (studioActions: StudioActions): Command[] => {
+  if (!studioActions.onShip) {
+    return [];
+  }
+
+  return [
+    {
+      group: "Version",
+      icon: "branch",
+      id: "version.ship",
+      keywords: "share branch git commit push pull request github gh",
+      run: studioActions.onShip,
+      title: "Ship as a pull request…",
+    },
+  ];
+};
+
+const versionCommands = (studioActions: StudioActions): Command[] => [
+  withDisabled(
+    {
+      group: "Version",
+      icon: "undo",
+      id: "edit.undo",
+      keyId: "undo",
+      run: studioActions.onUndo,
+      title: "Undo",
+    },
+    toReason(!studioActions.canUndo, "Nothing to undo")
+  ),
+  withDisabled(
+    {
+      group: "Version",
+      icon: "restore",
+      id: "edit.redo",
+      keyId: "redo",
+      run: studioActions.onRedo,
+      title: "Redo",
+    },
+    toReason(!studioActions.canRedo, "Nothing to redo")
+  ),
+  withDisabled(
+    {
+      group: "Version",
+      icon: "download",
+      id: "version.export",
+      keywords: "share download png pdf html handoff zip source files",
+      run: () => {
+        if (studioActions.exportId) {
+          studioActions.onExport(studioActions.exportId);
+        }
+      },
+      title: "Export…",
+    },
+    toReason(!studioActions.exportId, "No version yet")
+  ),
+  ...toShipCommands(studioActions),
+];
+
+const studioCommands = (studioActions: StudioActions): Command[] => [
+  ...goCommands(studioActions),
+  ...directionCommands(studioActions),
+  ...panelCommands(studioActions),
+  ...runCommands(studioActions),
+  ...versionCommands(studioActions),
+  {
+    group: "View",
+    icon: "sidebar",
+    id: "view.next-region",
+    keyId: "focus-next-region",
+    keywords: "f6 toolbar canvas inspector chat",
+    run: () => moveRegion(1),
+    title: "Focus the next region",
+  },
+];
+
+export { studioCommands };

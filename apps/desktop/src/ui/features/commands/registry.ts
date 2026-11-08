@@ -2,13 +2,14 @@ import { useEffect, useRef } from "react";
 
 import { createLiveStore } from "./deps.js";
 import type { IconName, KeyId } from "./deps.js";
+import { IS_MAC, tipWithKey } from "./key-model.js";
 
-export const COMMAND_EVENT = "studio:command";
-export const LAYER_EVENT = "studio:command-layer";
+const COMMAND_EVENT = "studio:command";
+const LAYER_EVENT = "studio:command-layer";
 
-export type CommandLayer = "palette" | "shortcuts";
+type CommandLayer = "palette" | "shortcuts";
 
-export interface Command {
+interface Command {
   id: string;
   title: string;
   group: string;
@@ -24,16 +25,14 @@ type Source = () => Command[];
 
 const sources = createLiveStore<readonly { current: Source }[]>([]);
 
-export const collectCommands = (): Command[] => {
+const collectCommands = (): Command[] => {
   const seen = new Set<string>();
   const out: Command[] = [];
 
-  for (const source of [...sources.get()].reverse()) {
-    for (const command of source.current()) {
-      if (seen.has(command.id)) {
-        continue;
-      }
+  for (const source of sources.get().toReversed()) {
+    const fresh = source.current().filter((command) => !seen.has(command.id));
 
+    for (const command of fresh) {
       seen.add(command.id);
       out.push(command);
     }
@@ -42,7 +41,7 @@ export const collectCommands = (): Command[] => {
   return out;
 };
 
-export const runCommand = (id: string): boolean => {
+const runCommand = (id: string): boolean => {
   const command = collectCommands().find((char) => char.id === id);
 
   if (!command || command.disabled) {
@@ -54,7 +53,7 @@ export const runCommand = (id: string): boolean => {
   return true;
 };
 
-export const commandBlocker = (id: string): string | null => {
+const commandBlocker = (id: string): string | null => {
   const command = collectCommands().find((ch) => ch.id === id);
 
   if (command) {
@@ -64,13 +63,16 @@ export const commandBlocker = (id: string): string | null => {
   return "Not available here";
 };
 
-export const openLayer = (layer: CommandLayer): void => {
+const openLayer = (layer: CommandLayer): void => {
   globalThis.dispatchEvent(new CustomEvent(LAYER_EVENT, { detail: layer }));
 };
 
-export const useCommands = (source: Source): void => {
+const useCommands = (source: Source): void => {
   const ref = useRef(source);
-  ref.current = source;
+
+  useEffect(() => {
+    ref.current = source;
+  }, [source]);
   useEffect(() => {
     const entry = { current: (): Command[] => ref.current() };
     sources.set([...sources.get(), entry]);
@@ -83,19 +85,30 @@ export const useCommands = (source: Source): void => {
 
 let listening = false;
 
-export const listenForCommands = (): void => {
+const listenForCommands = (): void => {
   if (listening) {
     return;
   }
 
   listening = true;
   globalThis.addEventListener(COMMAND_EVENT, (event) => {
-    const id = (event as CustomEvent<unknown>).detail;
-
-    if (typeof id === "string") {
-      runCommand(id);
+    if (event instanceof CustomEvent) {
+      runCommand(String(event.detail));
     }
   });
 };
 
-export { IS_MAC, tipWithKey } from "./keys.js";
+export {
+  COMMAND_EVENT,
+  IS_MAC,
+  LAYER_EVENT,
+  collectCommands,
+  commandBlocker,
+  listenForCommands,
+  openLayer,
+  runCommand,
+  tipWithKey,
+  useCommands,
+};
+
+export type { Command, CommandLayer };

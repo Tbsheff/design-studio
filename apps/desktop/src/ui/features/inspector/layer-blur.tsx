@@ -2,30 +2,28 @@ import { useMemo } from "react";
 import type { ReactElement } from "react";
 
 import type { ShiftPart } from "./css-value-model.js";
-import { PlainNumberField } from "./number-field.js";
-import { proxyEdit } from "./proxy-edit.js";
-import { blurOf, withBlur } from "./shadows.js";
+import { PlainNumberField } from "./plain-number-field.js";
+import { toBlur, toWithBlur } from "./shadows-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { createProxyEdit } from "./use-proxy-edit.js";
 
 const NO_BLUR = "0";
 
 const BLUR_PART: ShiftPart = {
   key: "blur",
-  map: (raw, change) => withBlur(raw, change(blurOf(raw) || NO_BLUR)),
+  map: (raw, change) => toWithBlur(raw, change(toBlur(raw) || NO_BLUR)),
 };
 
 const LayerBlur = ({ edit }: { readonly edit: DirectEdit }): ReactElement => {
   const { filter } = edit.values;
 
   const spec = useMemo(() => {
-    const blur = proxyEdit(
-      edit,
-      "width",
-      blurOf(filter),
-      (value) => ({ filter: withBlur(filter, value) }),
-      ["filter"],
-      { isMixed: null, part: BLUR_PART }
-    );
+    const blur = createProxyEdit(edit, "width", toBlur(filter), {
+      isMixed: null,
+      part: BLUR_PART,
+      real: ["filter"],
+      write: (value) => ({ filter: toWithBlur(filter, value) }),
+    });
 
     return { edit: blur, label: "Layer blur", min: 0, prop: "width" as const };
   }, [edit, filter]);

@@ -4,11 +4,11 @@ import type { MouseEvent, PointerEvent } from "react";
 import { toNumberText, toParsedNumber } from "./css-value-model.js";
 import {
   SCRUB_PX_PER_STEP,
-  plainLength,
-  clamp,
-  patchFor,
-  shiftMixed,
-  stepOf,
+  toPlainLength,
+  toClamped,
+  toPatch,
+  applyMixedShift,
+  toStep,
 } from "./number-field-model.js";
 import type { NumberSpec } from "./number-field-model.js";
 import { useTokenUi } from "./use-token-snap.js";
@@ -22,7 +22,7 @@ interface Scrub {
   readonly isMixed: boolean;
 }
 
-const scrubStart = (
+const startScrub = (
   spec: NumberSpec,
   ui: TokenUi | null,
   positionX: number
@@ -30,7 +30,7 @@ const scrubStart = (
   const unit = spec.unit ?? "px";
 
   const parsed = toParsedNumber(
-    plainLength(spec.edit.values[spec.prop], ui)
+    toPlainLength(spec.edit.values[spec.prop], ui)
   ) ?? {
     unit,
     value: 0,
@@ -43,6 +43,43 @@ const scrubStart = (
     value: parsed.value,
     x: positionX,
   };
+};
+
+const applyScrubMove = (
+  spec: NumberSpec,
+  entry: Scrub,
+  event: PointerEvent<HTMLElement>
+): Scrub | null => {
+  const steps = Math.trunc((event.clientX - entry.x) / SCRUB_PX_PER_STEP);
+
+  if (steps === 0) {
+    return null;
+  }
+
+  const moved: Scrub = {
+    ...entry,
+    isMoved: true,
+    x: entry.x + steps * SCRUB_PX_PER_STEP,
+  };
+
+  document.body.classList.add("ins-scrubbing");
+
+  if (moved.isMixed) {
+    applyMixedShift(spec, steps * toStep(event, spec));
+
+    return moved;
+  }
+
+  const amount = toNumberText(
+    moved.value + steps * toStep(event, spec),
+    moved.unit
+  );
+
+  const value = toParsedNumber(toClamped(amount, spec))?.value ?? moved.value;
+
+  spec.edit.preview(toPatch(spec, toNumberText(value, moved.unit)));
+
+  return { ...moved, value };
 };
 
 interface UseScrubResult {
@@ -64,7 +101,7 @@ const useScrub = (spec: NumberSpec): UseScrubResult => {
     }
 
     event.preventDefault();
-    scrub.current = scrubStart(spec, ui, event.clientX);
+    scrub.current = startScrub(spec, ui, event.clientX);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -75,35 +112,11 @@ const useScrub = (spec: NumberSpec): UseScrubResult => {
       return;
     }
 
-    const steps = Math.trunc((event.clientX - entry.x) / SCRUB_PX_PER_STEP);
+    const moved = applyScrubMove(spec, entry, event);
 
-    if (steps === 0) {
-      return;
+    if (moved) {
+      scrub.current = moved;
     }
-
-    const moved: Scrub = {
-      ...entry,
-      isMoved: true,
-      x: entry.x + steps * SCRUB_PX_PER_STEP,
-    };
-
-    scrub.current = moved;
-    document.body.classList.add("ins-scrubbing");
-
-    if (moved.isMixed) {
-      return shiftMixed(spec, steps * stepOf(event, spec));
-    }
-
-    const value =
-      toParsedNumber(
-        clamp(
-          toNumberText(moved.value + steps * stepOf(event, spec), moved.unit),
-          spec
-        )
-      )?.value ?? moved.value;
-
-    scrub.current = { ...moved, value };
-    spec.edit.preview(patchFor(spec, toNumberText(value, moved.unit)));
   };
 
   const onPointerUp = (event: PointerEvent<HTMLElement>): void => {
@@ -136,15 +149,17 @@ const useScrub = (spec: NumberSpec): UseScrubResult => {
     event.preventDefault();
   };
 
+  const onPointerCancel = onPointerUp;
+
   return {
     onClick,
-    onPointerCancel: onPointerUp,
+    onPointerCancel,
     onPointerDown,
     onPointerMove,
     onPointerUp,
   };
 };
 
-export { scrubStart, useScrub };
+export { startScrub, useScrub };
 
 export type { Scrub };

@@ -59,7 +59,7 @@ const ComponentsPanel = (props: Props): ReactElement => {
     <div className="cmp">
       <PanelHead
         title={COPY.titleComponents}
-        rootClassName="ins-header cmp-header"
+        headClass="ins-header cmp-header"
         titleClassName="cmp-title"
       >
         <ComponentsCount count={toTotal(items.all)} />

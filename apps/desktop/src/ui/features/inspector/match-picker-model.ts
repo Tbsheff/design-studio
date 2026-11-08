@@ -6,14 +6,16 @@ import type {
 
 import type { DesignTokens } from "./deps.js";
 import {
-  classCandidates,
-  designCandidates,
-  uniqueTokens,
-  varCandidates,
-} from "./match-candidates.js";
-import type { PageVar } from "./match-scan.js";
+  listClassCandidates,
+  listDesignCandidates,
+  listUniqueTokens,
+  listVarCandidates,
+} from "./match-candidates-model.js";
+import type { Candidate } from "./match-candidates-model.js";
+import { PICK_SHOWN } from "./match-scan-model.js";
+import type { PageVar } from "./match-scan-model.js";
 
-type Candidates = ReturnType<typeof uniqueTokens>;
+type Candidates = Candidate[];
 
 const toTargets = (
   picking: StyleValueRow | null,
@@ -34,7 +36,7 @@ const toDesignCandidates = (
     return [];
   }
 
-  return designCandidates(picking, tokens.entries, tokens.mode);
+  return listDesignCandidates(picking, tokens.entries, tokens.mode);
 };
 
 const toCandidates = (
@@ -47,13 +49,49 @@ const toCandidates = (
     return [];
   }
 
-  return uniqueTokens([
-    ...varCandidates(picking, vars),
-    ...classCandidates(picking, pageHits),
+  return listUniqueTokens([
+    ...listVarCandidates(picking, vars),
+    ...listClassCandidates(picking, pageHits),
     ...toDesignCandidates(picking, tokens),
   ]);
 };
 
-export { toCandidates, toTargets };
+const toFilter = (text: string): string => text.trim().toLowerCase();
+
+const toShownCandidates = (
+  candidates: Candidate[],
+  filter: string
+): Candidate[] => {
+  const found: Candidate[] = [];
+
+  for (const candidate of candidates) {
+    const isMatch =
+      !filter ||
+      candidate.token.toLowerCase().includes(filter) ||
+      candidate.hint.toLowerCase().includes(filter);
+
+    if (isMatch) {
+      found.push(candidate);
+    }
+  }
+
+  return found.slice(0, PICK_SHOWN);
+};
+
+const toPickedToken = (
+  shown: Candidate[],
+  filter: string,
+  text: string
+): string => {
+  const [first] = shown;
+
+  if (first && first.token.toLowerCase() === filter) {
+    return first.token;
+  }
+
+  return text.trim();
+};
+
+export { toCandidates, toFilter, toPickedToken, toShownCandidates, toTargets };
 
 export type { Candidates };

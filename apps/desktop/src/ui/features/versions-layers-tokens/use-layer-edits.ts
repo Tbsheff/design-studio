@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 
 import { IS_MAC } from "../commands/index.js";
-import { pasteJsx } from "../inspector/paste-jsx.js";
 import {
   NO_SOURCE,
-  dropRequest,
-  selectionTargets,
-} from "../inspector/structure-edits.js";
+  applyPasteJsx,
+  toDropRequest,
+  toSelectionTargets,
+} from "../inspector/index.js";
 import type { LayerEdits, LayerEditsOptions } from "./layer-edits-types.js";
 import type { StructureDeps } from "./layer-structure-deps.js";
 import { useLatestRef } from "./use-latest-ref.js";
@@ -20,11 +20,11 @@ const isMac = IS_MAC;
 const noSource = NO_SOURCE;
 
 const STRUCTURE_DEPS: StructureDeps = {
-  dropRequest,
+  dropRequest: toDropRequest,
   isMac,
   noSource,
-  pasteJsx,
-  selectionTargets,
+  pasteJsx: applyPasteJsx,
+  selectionTargets: toSelectionTargets,
 };
 
 const useLayerEdits = (options: LayerEditsOptions): LayerEdits => {

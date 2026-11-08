@@ -1,47 +1,76 @@
+import type { SourceLoc } from "@design-studio/contracts";
 import { startTransition, useEffect, useMemo, useState } from "react";
 
 import { api } from "../../api.js";
-import { NO_CLASSES, toClassRequest } from "./element-classes-model.js";
-import type {
-  ClassesOptions,
-  ElementClasses,
-} from "./element-classes-model.js";
+import type { ElementClasses } from "./element-classes-model.js";
 
-const useElementClasses = (options: ClassesOptions): ElementClasses => {
+interface ClassesTarget {
+  readonly projectId: string;
+  readonly directionId: string | null;
+  readonly source: SourceLoc | null;
+  readonly savedAt: number;
+  readonly variant: string;
+}
+
+interface ClassesRequest {
+  readonly projectId: string;
+  readonly directionId: string;
+  readonly file: string;
+  readonly line: number;
+  readonly col: number;
+  readonly savedAt: number;
+  readonly variant: string;
+}
+
+const NO_CLASSES: ElementClasses = {
+  element: null,
+  tailwind: null,
+  variants: null,
+};
+
+const NO_POSITION = -1;
+
+const useClassesRequest = (target: ClassesTarget): ClassesRequest | null => {
+  const { projectId, directionId, source, savedAt, variant } = target;
+  let file = "";
+  let line = NO_POSITION;
+  let col = NO_POSITION;
+
+  if (source) {
+    ({ file, line, col } = source);
+  }
+
+  const isLocated = source !== null;
+
+  return useMemo(() => {
+    if (!isLocated || !directionId) {
+      return null;
+    }
+
+    return { col, directionId, file, line, projectId, savedAt, variant };
+  }, [isLocated, projectId, directionId, file, line, col, savedAt, variant]);
+};
+
+const useElementClasses = (target: ClassesTarget): ElementClasses => {
   const [info, setInfo] = useState<ElementClasses>(NO_CLASSES);
-  const { projectId, directionId, savedAt, variant } = options;
-  const file = options.source?.file ?? null;
-  const line = options.source?.line ?? null;
-  const col = options.source?.col ?? null;
-
-  const request = useMemo(
-    () =>
-      toClassRequest(
-        { directionId, projectId, savedAt, variant },
-        file,
-        line,
-        col
-      ),
-    [projectId, directionId, savedAt, variant, file, line, col]
-  );
+  const request = useClassesRequest(target);
 
   useEffect(() => {
-    if (!request) {
+    if (request === null) {
       return;
     }
 
-    let isLive = true;
-
+    let live = true;
     startTransition(async () => {
       try {
         const result = await api.elementClasses(
           request.projectId,
           request.directionId,
-          request.loc,
+          { col: request.col, file: request.file, line: request.line },
           request.variant
         );
 
-        if (isLive) {
+        if (live) {
           setInfo({
             element: result.element ?? null,
             tailwind: result.tailwind,
@@ -49,18 +78,18 @@ const useElementClasses = (options: ClassesOptions): ElementClasses => {
           });
         }
       } catch {
-        if (isLive) {
+        if (live) {
           setInfo(NO_CLASSES);
         }
       }
     });
 
     return (): void => {
-      isLive = false;
+      live = false;
     };
   }, [request]);
 
-  if (!request) {
+  if (request === null) {
     return NO_CLASSES;
   }
 

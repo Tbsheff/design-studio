@@ -761,3 +761,10 @@ fieldset.ins-align-grid {
 fieldset.ins-direction {
   padding: 2px;
 }
+
+fieldset.ins-constraints {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

@@ -4,16 +4,18 @@ import { Suspense } from "react";
 import { StackingSlot } from "../../inspector-slots.js";
 import type { InspectorProps } from "./inspector-model.js";
 
-const StackingSection = (props: InspectorProps): ReactElement | null => {
-  const target = props.selection[0];
+const isStackable = (props: InspectorProps): boolean => {
+  if (props.selection.length !== 1 || !props.directionId) {
+    return false;
+  }
 
-  if (
-    props.selection.length !== 1 ||
-    !target ||
-    !props.directionId ||
-    !props.isEditable ||
-    !target.source
-  ) {
+  return props.isEditable === true;
+};
+
+const StackingSection = (props: InspectorProps): ReactElement | null => {
+  const [target] = props.selection;
+
+  if (!target?.source || !isStackable(props) || !props.directionId) {
     return null;
   }
 

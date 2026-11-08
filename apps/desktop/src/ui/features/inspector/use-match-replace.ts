@@ -8,7 +8,7 @@ import { useCallback } from "react";
 
 import { errorText, replaceStyle } from "../../api.js";
 import { NO_SOURCE_TEXT, toUnlocatedText } from "./match-model.js";
-import type { InspectorMatchProps, Status } from "./match-scan.js";
+import type { InspectorMatchProps, Status } from "./match-scan-model.js";
 
 const useMatchReplace = (
   props: InspectorMatchProps,

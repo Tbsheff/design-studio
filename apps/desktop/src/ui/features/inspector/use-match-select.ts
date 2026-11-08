@@ -6,8 +6,8 @@ import type { MutableRefObject } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
 import { toSelectedText } from "./match-model.js";
-import { requestStyles } from "./match-scan.js";
-import type { Status } from "./match-scan.js";
+import type { Status } from "./match-scan-model.js";
+import { getStyles } from "./use-style-scan.js";
 
 const FRAME_SILENT = "The frame did not answer. Reload it and try again.";
 
@@ -19,7 +19,7 @@ const useMatchSelect =
   async (row: StyleValueRow, extra: StyleQuery): Promise<void> => {
     setStatus({ kind: "busy", text: "Finding matches…" });
 
-    const reply = await requestStyles(
+    const reply = await getStyles(
       port.current,
       { property: row.kind, ...extra },
       true

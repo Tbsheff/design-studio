@@ -1,182 +1,51 @@
-import { memo, useRef, useState } from "react";
-import type { KeyboardEvent, ReactElement } from "react";
+import { memo } from "react";
+import type { ReactElement, RefObject } from "react";
 
-import { toNormalizedLength, toSteppedValue } from "./css-value-model.js";
-import { resolveNumberInput } from "./math-input.js";
-import { hasCurrentDependency } from "./mixed-values.js";
-import {
-  plainLength,
-  displayLength,
-  clamp,
-  patchFor,
-  shiftMixed,
-  stepOf,
-  isValidValue,
-  selectSoon,
-  sameSpec,
-} from "./number-field-model.js";
+import { sameSpec } from "./number-field-model.js";
 import type { NumberSpec } from "./number-field-model.js";
+import {
+  toInputClass,
+  toPlaceholder,
+  toRefusedTip,
+} from "./number-input-model.js";
 import { isInherited, useVariantScope } from "./use-edit-variant.js";
-import { useTokenUi } from "./use-token-snap.js";
+import { useNumberInput } from "./use-number-input.js";
 
 interface InputProps {
   readonly spec: NumberSpec;
   readonly id?: string;
   readonly className?: string;
+  readonly inputRef?: RefObject<HTMLInputElement | null>;
 }
 
-interface UseNumberTextResult {
-  readonly apply: (raw: string) => void;
-  readonly cancel: () => void;
-  readonly current: string;
-  readonly isMixed: boolean;
-  readonly nudge: (delta: number, from: string) => void;
-  readonly settle: () => void;
-  readonly text: string | null;
-  readonly unit: string;
-}
-
-const useNumberText = (spec: NumberSpec): UseNumberTextResult => {
-  const { edit, prop } = spec;
-  const [text, setText] = useState<string | null>(null);
-  const start = useRef<string | null>(null);
-  const last = useRef<string | null>(null);
-  const ui = useTokenUi();
-  const unit = spec.unit ?? "px";
-  const current = plainLength(edit.values[prop], ui);
-  const mixed = edit.mixed.has(prop);
-
-  const apply = (raw: string): void => {
-    if (start.current === null) {
-      start.current = current;
-    }
-
-    setText(raw);
-
-    if (mixed && hasCurrentDependency(raw, unit)) {
-      return;
-    }
-
-    const math = resolveNumberInput(raw, start.current, unit);
-
-    if (math === null && /[-+*/(]\s*$/u.test(raw)) {
-      return;
-    }
-
-    const next = clamp(math ?? toNormalizedLength(raw, unit), spec);
-    last.current = next;
-    edit.preview(patchFor(spec, next));
-  };
-
-  const settle = (): void => {
-    const typed = last.current;
-    start.current = null;
-    last.current = null;
-    setText(null);
-
-    if (typed !== null && !isValidValue(prop, typed)) {
-      edit.revert(spec.targets ?? [prop]);
-    }
-
-    edit.commit();
-  };
-
-  const nudge = (delta: number, from: string): void => {
-    start.current = null;
-    last.current = null;
-    const next = clamp(toSteppedValue(from, delta, unit), spec);
-    setText(next);
-    edit.preview(patchFor(spec, next));
-    edit.commitSoon();
-  };
-
-  const cancel = (): void => {
-    start.current = null;
-    last.current = null;
-    setText(null);
-    edit.revert(spec.targets ?? [prop]);
-  };
-
-  return { apply, cancel, current, isMixed: mixed, nudge, settle, text, unit };
-};
-
-const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
-  const [focused, setFocused] = useState(false);
-  const keepSelection = useRef(false);
-  const field = useNumberText(spec);
+const NumberInputView = ({
+  spec,
+  id,
+  className,
+  inputRef,
+}: InputProps): ReactElement => {
+  const input = useNumberInput(spec);
+  const { blur, change, focus, keyDown, mouseUp, pointerDown } = input;
   const inherited = isInherited(useVariantScope(), spec.prop);
-
-  const shown =
-    field.text ??
-    (focused ? field.current : (spec.display ?? displayLength(field.current)));
-
-  const refused =
-    field.isMixed &&
-    field.text !== null &&
-    hasCurrentDependency(field.text, field.unit);
-
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
-    const input = event.currentTarget;
-
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-      event.preventDefault();
-      const delta = stepOf(event, spec) * (event.key === "ArrowUp" ? 1 : -1);
-
-      if (field.isMixed) {
-        shiftMixed(spec, delta);
-        spec.edit.commitSoon();
-
-        return;
-      }
-
-      field.nudge(delta, shown);
-      selectSoon(input);
-    } else if (event.key === "Enter") {
-      event.preventDefault();
-      field.settle();
-      selectSoon(input);
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      field.cancel();
-      input.blur();
-    }
-  };
 
   return (
     <input
+      ref={inputRef}
       id={id}
-      className={`ins-input num ${className ?? ""} ${inherited ? "inherited" : ""}`}
+      className={toInputClass(className ?? "", inherited)}
       aria-label={spec.label}
-      value={shown}
+      value={input.shown}
       spellCheck={false}
       autoComplete="off"
-      placeholder={field.isMixed ? "Mixed" : "—"}
-      aria-invalid={refused || undefined}
-      data-tip={
-        refused ? "Values differ. Type a number, not a change." : undefined
-      }
-      onChange={(event) => field.apply(event.target.value)}
-      onKeyDown={onKeyDown}
-      onPointerDown={(event) => {
-        keepSelection.current = document.activeElement !== event.currentTarget;
-      }}
-      onMouseUp={(event) => {
-        if (!keepSelection.current) {
-          return;
-        }
-
-        keepSelection.current = false;
-        event.preventDefault();
-      }}
-      onFocus={(event) => {
-        setFocused(true);
-        event.currentTarget.select();
-      }}
-      onBlur={() => {
-        setFocused(false);
-        field.settle();
-      }}
+      placeholder={toPlaceholder(input.isMixed)}
+      aria-invalid={input.isRefused}
+      data-tip={toRefusedTip(input.isRefused)}
+      onChange={change}
+      onKeyDown={keyDown}
+      onPointerDown={pointerDown}
+      onMouseUp={mouseUp}
+      onFocus={focus}
+      onBlur={blur}
     />
   );
 };
@@ -186,9 +55,10 @@ const NumberInput = memo(
   (first, second) =>
     first.id === second.id &&
     first.className === second.className &&
+    first.inputRef === second.inputRef &&
     sameSpec(first.spec, second.spec)
 );
 
-export { useNumberText, NumberInputView, NumberInput };
+export { NumberInput };
 
 export type { InputProps };

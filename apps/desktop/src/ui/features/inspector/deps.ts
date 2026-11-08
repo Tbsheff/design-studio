@@ -1,10 +1,17 @@
 export type { RunRequest } from "@design-studio/contracts";
 
-export { exportApi } from "../share-publish-ship-export/index.js";
+export {
+  FigmaImportDialog,
+  exportApi,
+} from "../share-publish-ship-export/index.js";
 
 export type { RunView } from "../chat/run-state-model.js";
 
-export type { DesignTokens } from "../design-system/index.js";
+export {
+  insertApi,
+  insertError,
+  type DesignTokens,
+} from "../design-system/index.js";
 
 export type {
   DirectEdit,
@@ -17,11 +24,8 @@ export {
   CreateTokenDialog,
   TokenControl,
   lintValues,
-} from "../versions-layers-tokens/index.js";
-
-export type {
-  CreateTokenSubmit,
-  LintIssue,
+  type CreateTokenSubmit,
+  type LintIssue,
 } from "../versions-layers-tokens/index.js";
 
 export type { AuthoredCssState } from "./use-authored-css.js";
@@ -30,4 +34,9 @@ export type { CreateRequest, SnapNote, TokenUi } from "./use-token-snap.js";
 
 export type { VariantScope } from "./use-edit-variant.js";
 
-export { runVector } from "../canvas/index.js";
+export {
+  focusStageQuietly,
+  historyKeyOf,
+  runVector,
+  type PreviewMenuItem,
+} from "../canvas/index.js";

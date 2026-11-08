@@ -1,7 +1,7 @@
 import type { IconName } from "@design-studio/ui";
 
 import type { DirectEdit } from "./deps.js";
-import type { AlignCell } from "./sizing.js";
+import type { AlignCell } from "./sizing-model.js";
 
 type EditPatch = Parameters<DirectEdit["preview"]>[0];
 

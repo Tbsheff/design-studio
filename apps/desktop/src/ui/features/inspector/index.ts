@@ -75,19 +75,60 @@ export type {
 
 export { toImageTarget } from "./use-image-api.js";
 
-export { evaluateMath, resolveNumberInput } from "./math-input.js";
+export { applyCommit } from "./edit-request-model.js";
+
+export { createCurrentEditRequest } from "./use-current-edit-request.js";
+
+export { useSelectionRefresh } from "./use-selection-refresh.js";
+
+export { runMath, toNumberInput } from "./math-input-model.js";
 
 export {
-  batchEdits,
   hasCurrentDependency,
-  mergeValues,
-  multiBlockReason,
-} from "./mixed-values.js";
+  toBatchEdits,
+  toMergedValues,
+  toMultiBlockReason,
+} from "./mixed-values-model.js";
 
 export {
   isHistoryStep,
-  refreshedSelection,
-  stepToast,
+  toRefreshedSelection,
+  toStepToast,
 } from "./use-edit-history.js";
 
 export { SwapQueue } from "./use-swap-gate.js";
+
+export { startOptimistic } from "./optimistic-edit-model.js";
+
+export {
+  toActiveCell,
+  toAlignCell,
+  toAxisRole,
+  toParentLayout,
+  toSizeMode,
+  toSizePatch,
+} from "./sizing-model.js";
+
+export {
+  NEW_SHADOW,
+  listTopLevel,
+  toBlur,
+  toShadows,
+  toShadowsText,
+  toWithBlur,
+} from "./shadows-model.js";
+
+export {
+  NO_SOURCE,
+  toDropRequest,
+  toSelectionTargets,
+  toStructureMenuEntries,
+} from "./structure-edits-model.js";
+
+export type { LayerDrop, SelectionOp } from "./structure-edits-model.js";
+
+export { applyPasteJsx } from "./use-paste-jsx.js";
+
+export { propsApi } from "./use-props-api.js";
+
+export type { VariantPreviewQuery } from "./use-props-api.js";

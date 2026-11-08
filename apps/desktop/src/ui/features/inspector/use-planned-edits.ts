@@ -5,8 +5,9 @@ import { useProjectEvents } from "../../platform/events.js";
 import { postToLiveFrames } from "../design-system/token-frames.js";
 
 const FRESH_MS = 5000;
+const MAX_TRACKED = 200;
 
-const patchIds = (id: string, count: number): string[] =>
+const toPatchIds = (id: string, count: number): string[] =>
   Array.from({ length: count }, (_unused, index) => `${id}:${index}`);
 
 const usePlannedEdits = (
@@ -26,23 +27,27 @@ const usePlannedEdits = (
     }
 
     if (event.type === "edit.planned") {
-      if (counts.current.size > 200) {
+      if (counts.current.size > MAX_TRACKED) {
         counts.current.clear();
       }
 
       counts.current.set(event.id, event.patches.length);
-      event.patches.forEach((patch, index) =>
+
+      for (const [index, patch] of event.patches.entries()) {
         postToLiveFrames({
           id: `${event.id}:${index}`,
           patch: { ...patch, trusted: false },
           type: "optimistic-apply",
           written: true,
-        })
-      );
+        });
+      }
     }
 
     if (event.type === "edit.unplanned") {
-      for (const id of patchIds(event.id, counts.current.get(event.id) ?? 0)) {
+      for (const id of toPatchIds(
+        event.id,
+        counts.current.get(event.id) ?? 0
+      )) {
         postToLiveFrames({
           id,
           ok: false,

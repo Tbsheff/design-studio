@@ -10,7 +10,7 @@ import { cssVarFor } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
 import type { StyleValues } from "./css-value-model.js";
 import type { CreateTokenSubmit, DesignTokens } from "./deps.js";
-import { buildEditRequest } from "./use-direct-edit.js";
+import { createCurrentEditRequest } from "./use-current-edit-request.js";
 import type { DirectEdit, DirectEditCommit } from "./use-direct-edit.js";
 import type { CreateRequest } from "./use-token-snap.js";
 
@@ -30,7 +30,7 @@ const toApply = (
   style: Partial<StyleValues>
 ): DirectEditRequest | null => {
   if (isApplied) {
-    return buildEditRequest(selection, style);
+    return createCurrentEditRequest(selection, style);
   }
 
   return null;

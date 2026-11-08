@@ -2,7 +2,7 @@ import { STYLE_KINDS } from "@design-studio/contracts/style-search";
 import type { StyleValueRow } from "@design-studio/contracts/style-search";
 import type { ReactElement } from "react";
 
-import { MatchKindGroup } from "./match-kind-group.js";
+import { KindGroup } from "./match-kind-group.js";
 import type { MatchActions } from "./match-model.js";
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 const MatchKinds = ({ rows, actions, replaceLabel }: Props): ReactElement => (
   <>
     {STYLE_KINDS.map((kind) => (
-      <MatchKindGroup
+      <KindGroup
         key={kind}
         kind={kind}
         rows={rows}

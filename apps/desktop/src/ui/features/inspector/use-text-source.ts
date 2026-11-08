@@ -7,8 +7,8 @@ import type {
 import { startTransition, useEffect, useState } from "react";
 
 import { api } from "../../api.js";
+import { toTextHints } from "./edit-request-model.js";
 import type { TextEditScope } from "./inspector-shared-model.js";
-import { textHints } from "./use-direct-edit.js";
 import { useStableValue } from "./use-stable-value.js";
 
 interface TextSourceRequest {
@@ -29,7 +29,7 @@ const toTextSourceRequest = (
     return null;
   }
 
-  const hints = textHints(selection);
+  const hints = toTextHints(selection);
 
   return { directionId, hints, projectId, source };
 };

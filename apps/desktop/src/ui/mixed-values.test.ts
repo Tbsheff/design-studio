@@ -4,10 +4,10 @@ import { describe, expect, it } from "vitest";
 import { nextSelection } from "./features/canvas/index.js";
 import {
   toStyleValues,
-  batchEdits,
+  toBatchEdits,
   hasCurrentDependency,
-  mergeValues,
-  multiBlockReason,
+  toMergedValues,
+  toMultiBlockReason,
 } from "./features/inspector/index.js";
 
 const xAxis = "x";
@@ -54,11 +54,11 @@ const card = (
   };
 };
 
-describe(mergeValues, () => {
+describe(toMergedValues, () => {
   it("keeps shared values and marks differing ones as mixed with an empty value", () => {
     expect.hasAssertions();
 
-    const merged = mergeValues([
+    const merged = toMergedValues([
       toStyleValues({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
       toStyleValues({ "border-radius": "4px", color: "rgb(0, 0, 0)" }),
       toStyleValues({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
@@ -73,7 +73,7 @@ describe(mergeValues, () => {
   it("marks a padding side as mixed when only that side differs", () => {
     expect.hasAssertions();
 
-    const merged = mergeValues([
+    const merged = toMergedValues([
       toStyleValues({ padding: "8px" }),
       toStyleValues({ padding: "8px 8px 16px" }),
     ]);
@@ -84,7 +84,7 @@ describe(mergeValues, () => {
   }, 0);
 });
 
-describe(batchEdits, () => {
+describe(toBatchEdits, () => {
   it("writes the value to every element whose own value differs, in one list", () => {
     expect.hasAssertions();
 
@@ -98,7 +98,7 @@ describe(batchEdits, () => {
       toStyleValues(selection.styles)
     );
 
-    const edits = batchEdits(selections, bases, { "border-radius": "8px" });
+    const edits = toBatchEdits(selections, bases, { "border-radius": "8px" });
     expect(edits.map((edit) => [edit.source.line, edit.style])).toStrictEqual([
       [SAMPLE_3, { "border-radius": "8px" }],
       [SAMPLE_4, { "border-radius": "8px" }],
@@ -115,7 +115,7 @@ describe(batchEdits, () => {
     ];
 
     expect(
-      batchEdits(
+      toBatchEdits(
         selections,
         selections.map((selection) => toStyleValues(selection.styles)),
         { color: "red" }
@@ -124,12 +124,12 @@ describe(batchEdits, () => {
   }, 0);
 });
 
-describe(multiBlockReason, () => {
+describe(toMultiBlockReason, () => {
   it("allows distinct source locations", () => {
     expect.hasAssertions();
 
     expect(
-      multiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {})])
+      toMultiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {})])
     ).toBeNull();
   }, 0);
 
@@ -137,7 +137,7 @@ describe(multiBlockReason, () => {
     expect.hasAssertions();
 
     expect(
-      multiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {}, false)])
+      toMultiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {}, false)])
     ).toMatch(/no source location/u);
   }, 0);
 
@@ -145,7 +145,7 @@ describe(multiBlockReason, () => {
     expect.hasAssertions();
 
     expect(
-      multiBlockReason([
+      toMultiBlockReason([
         card(CARD_ARG_3, {}),
         { ...card(CARD_ARG_3, {}), selector: "li:nth-child(2)" },
       ])
@@ -156,7 +156,7 @@ describe(multiBlockReason, () => {
     expect.hasAssertions();
 
     expect(
-      multiBlockReason(
+      toMultiBlockReason(
         Array.from({ length: 51 }, (_unusedItem, index) => card(index + 1, {}))
       )
     ).toMatch(/50 elements or fewer/u);

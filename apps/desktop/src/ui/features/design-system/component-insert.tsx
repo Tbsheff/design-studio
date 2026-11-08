@@ -8,7 +8,7 @@ import { useMemo } from "react";
 
 import { PreviewMenu } from "../canvas/preview-menu.js";
 import type { PreviewMenuItem } from "../canvas/preview-menu.js";
-import { NO_SOURCE } from "../inspector/structure-edits.js";
+import { NO_SOURCE } from "../inspector/index.js";
 import { insertBus } from "./component-insert-api.js";
 import type { MenuAnchor } from "./components-panel-props.js";
 

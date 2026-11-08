@@ -13,7 +13,7 @@ import {
 import type { Dispatch, SetStateAction } from "react";
 
 import { useProjectEvents } from "../../platform/events.js";
-import { propsApi } from "./props-api.js";
+import { propsApi } from "./use-props-api.js";
 
 interface InstanceState {
   readonly instance: ComponentInstance | null;

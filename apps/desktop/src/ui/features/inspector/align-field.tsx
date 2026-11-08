@@ -4,8 +4,8 @@ import type { ReactElement } from "react";
 import { AlignButton } from "./align-button.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
+import { isSameEditValues } from "./edit-request-model.js";
 import { ALIGN_OPTIONS, toAlign } from "./field-model.js";
-import { isSameEditValues } from "./use-direct-edit.js";
 
 const AlignFieldView = ({
   edit,

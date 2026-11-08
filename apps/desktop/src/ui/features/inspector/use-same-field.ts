@@ -1,7 +1,7 @@
 import type { DirectStyleProperty } from "@design-studio/contracts";
 
 import type { DirectEdit } from "./deps.js";
-import { isSameEditValues } from "./use-direct-edit.js";
+import { isSameEditValues } from "./edit-request-model.js";
 
 interface FieldProps {
   readonly prop: DirectStyleProperty;

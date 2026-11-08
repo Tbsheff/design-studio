@@ -5,8 +5,8 @@ import { historyKeyOf, routeHistoryCommand } from "./features/canvas/index.js";
 import type { ShortcutState } from "./features/canvas/index.js";
 import {
   isHistoryStep,
-  refreshedSelection,
-  stepToast,
+  toRefreshedSelection,
+  toStepToast,
 } from "./features/inspector/index.js";
 
 const xAxis = "x";
@@ -15,7 +15,7 @@ const yAxis = "y";
 const IS_FALSE = false;
 const IS_TRUE = true;
 
-const [NO_VERSION] = Array.from<Version>({ length: 1 });
+const NO_VERSION = null;
 
 const [NO_REDO] = Array.from<NonNullable<ShortcutState["redo"]>>({
   length: 1,
@@ -115,11 +115,11 @@ describe("edit history helpers", () => {
   it("words the status message plainly", () => {
     expect.hasAssertions();
 
-    expect(stepToast("undo", "Edit h1: color")).toBe("Undid edit h1: color");
-    expect(stepToast("redo", "Update tokens: --primary")).toBe(
+    expect(toStepToast("undo", "Edit h1: color")).toBe("Undid edit h1: color");
+    expect(toStepToast("redo", "Update tokens: --primary")).toBe(
       "Redid update tokens: --primary"
     );
-    expect(stepToast("undo", null)).toBe("Undid the last edit");
+    expect(toStepToast("undo", null)).toBe("Undid the last edit");
   }, 0);
 
   it("knows a history step version so a later Cmd+Z does not version-undo it", () => {
@@ -145,7 +145,12 @@ describe("edit history helpers", () => {
     const other = { ...base, selector: "p" };
     const fresh = toSelection("h1", { color: "blue" }, "Old");
 
-    const next = refreshedSelection([base, other], ["h1", "p"], [fresh, null]);
+    const next = toRefreshedSelection(
+      [base, other],
+      ["h1", "p"],
+      [fresh, null]
+    );
+
     expect(next[0]).toMatchObject({
       selector: "h1",
       styles: { color: "blue" },

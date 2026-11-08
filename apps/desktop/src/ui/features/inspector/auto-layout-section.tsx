@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from "react";
 import { AutoLayoutBody } from "./auto-layout-body.js";
 import { AutoLayoutRemove } from "./auto-layout-remove.js";
 import { InspectorSection } from "./inspector-fields.js";
-import { isFlexDisplay } from "./sizing.js";
+import { isFlexDisplay } from "./sizing-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 interface Props {

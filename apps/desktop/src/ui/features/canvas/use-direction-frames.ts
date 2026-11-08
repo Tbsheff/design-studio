@@ -153,13 +153,13 @@ const useDirectionFrames = (
     argument = options.currentId;
   }
 
-  const gate = useSwapGate(
-    options.kind,
+  const gate = useSwapGate({
+    isHeld: options.hold,
+    kind: options.kind,
+    lastChange: options.lastChange,
+    liveDirectionId: argument,
     targets,
-    options.lastChange,
-    options.hold,
-    argument
-  );
+  });
 
   const slots: PassiveSlot[] = resolved.map(({ frame, directionId }) => {
     const token = tokens.current.get(frame.id) ?? randomToken();

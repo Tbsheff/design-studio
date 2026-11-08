@@ -62,7 +62,7 @@ const useImageControls = (props: Props): ImageControls => {
     (option: ImageFit): void => {
       setFit(option);
       startTransition(async () => {
-        await run({ fit: option });
+        await run({ fit: option }, null);
       });
     },
     [run]
@@ -72,7 +72,7 @@ const useImageControls = (props: Props): ImageControls => {
     (next: string): void => {
       setFocal(next);
       startTransition(async () => {
-        await run({ focal: next });
+        await run({ focal: next }, null);
       });
     },
     [run]
@@ -82,7 +82,7 @@ const useImageControls = (props: Props): ImageControls => {
     (next: string): void => {
       setAlt(next);
       startTransition(async () => {
-        await run({ alt: next });
+        await run({ alt: next }, null);
       });
     },
     [run]

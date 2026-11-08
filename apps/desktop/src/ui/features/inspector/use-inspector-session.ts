@@ -36,7 +36,7 @@ const useInspectorSession = (props: InspectorProps): EditSession => {
     projectId,
   });
 
-  useSessionHandle(props.session, session);
+  useSessionHandle(props.session ?? null, session);
 
   useEffect(() => (): void => restoreEditVariant(port.current), [port]);
 

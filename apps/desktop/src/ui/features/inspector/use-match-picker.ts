@@ -10,7 +10,8 @@ import { findElement } from "../../platform/find-element.js";
 import type { DesignTokens } from "./deps.js";
 import { toCandidates, toTargets } from "./match-picker-model.js";
 import type { Candidates } from "./match-picker-model.js";
-import { rowKey, usePageVars } from "./match-scan.js";
+import { toRowKey } from "./match-scan-model.js";
+import { usePageVars } from "./use-style-scan.js";
 
 interface PickerOptions {
   readonly port: MutableRefObject<PreviewPort | null>;
@@ -65,7 +66,7 @@ const useMatchPicker = (options: PickerOptions): PickerState => {
 
   const handleClose = useCallback((): void => {
     if (picking) {
-      runRowFocus(rowKey(picking));
+      runRowFocus(toRowKey(picking));
     }
 
     setPicking(null);

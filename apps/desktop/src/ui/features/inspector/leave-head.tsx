@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { unsavedLabel } from "./use-edit-session.js";
+import { toUnsavedLabel } from "./use-edit-session.js";
 
 const LeaveHead = ({
   net,
@@ -15,7 +15,7 @@ const LeaveHead = ({
       <h2 id="edit-leave-title">{copy.leaveTitle}</h2>
       <p id="edit-leave-text">
         {copy.youHave}
-        {unsavedLabel(net).toLowerCase()}
+        {toUnsavedLabel(net).toLowerCase()}
         {copy.saveVersionKeepsThemAs}
       </p>
       {error && <p className="edit-leave-error">{error}</p>}

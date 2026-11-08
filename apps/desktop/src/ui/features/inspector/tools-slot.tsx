@@ -3,9 +3,9 @@ import type { ReactElement } from "react";
 
 import type { InspectorProps } from "./inspector-model.js";
 import { InspectorTools } from "./inspector-tools.js";
-import { sameShared } from "./same-props.js";
+import { isSameShared } from "./same-props-model.js";
 
-const ToolsMemo = memo(InspectorTools, sameShared);
+const ToolsMemo = memo(InspectorTools, isSameShared);
 
 interface Props {
   readonly props: InspectorProps;

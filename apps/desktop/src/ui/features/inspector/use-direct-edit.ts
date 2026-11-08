@@ -1,482 +1,199 @@
 import type {
-  DirectEditRequest,
   DirectStyleProperty,
-  SelectionContext,
   TailwindOutcome,
-  TextSourceHints,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { ApiError } from "../../api.js";
-import { api, errorText } from "../../api.js";
-import type { PreviewPort } from "../../platform/bridge.js";
+import type { StyleValues } from "./css-value-model.js";
+import { toStyleValues } from "./css-value-model.js";
+import { deleteControl, setControl } from "./direct-edit-model.js";
+import type {
+  DirectEdit,
+  DirectEditCommit,
+  DirectEditControl,
+  Options,
+  SaveStatus,
+} from "./direct-edit-model.js";
+import { NO_MIXED } from "./edit-request-model.js";
+import type { TimerRef } from "./timer-model.js";
+import { useCell } from "./use-cell.js";
 import {
-  toChangedProps,
-  toShiftedPart,
-  toShiftedValue,
-  toStyleValues,
-} from "./css-value-model.js";
-import type { Shift, ShiftPart, StyleValues } from "./css-value-model.js";
-import { startOptimistic } from "./optimistic-edit.js";
-import { isApiConflict, isApiError } from "./use-api-error.js";
-import { editVariantStore } from "./use-edit-variant.js";
+  applyEditRelease,
+  toCommitActions,
+  toPreviewActions,
+} from "./use-direct-edit-actions.js";
+import type {
+  CommitActions,
+  PreviewActions,
+} from "./use-direct-edit-actions.js";
+import { stopEdit } from "./use-direct-edit-core.js";
+import type { EditCore } from "./use-direct-edit-core.js";
+import { useLatestRef } from "./use-latest-ref.js";
 
-export type SaveStatus =
-  | { readonly kind: "idle" }
-  | { readonly kind: "saving" }
-  | { readonly kind: "saved"; readonly at: number }
-  | {
-      readonly kind: "error";
-      readonly message: string;
-      readonly code?: string;
-    };
-
-export interface DirectEditControl {
-  readonly cancel: () => void;
-  readonly settle: () => Promise<void>;
-  readonly commitText: (selector: string, text: string) => boolean;
+interface DraftState {
+  readonly draft: Partial<StyleValues>;
+  readonly draftRef: EditCore["draftRef"];
+  readonly storeDraft: (next: Partial<StyleValues>) => void;
+  readonly storeTextDraft: (next: string | null) => void;
+  readonly textDraft: string | null;
+  readonly textRef: EditCore["textRef"];
 }
 
-export interface DirectEditCommit {
-  readonly selector: string;
-  readonly style: Partial<StyleValues>;
-  readonly text?: string;
-}
+const useDraftState = (): DraftState => {
+  const [draft, setDraft] = useState<Partial<StyleValues>>({});
+  const [textDraft, setTextDraft] = useState<string | null>(null);
+  const draftRef = useCell<Partial<StyleValues>>({});
+  const textRef = useCell<string | null>(null);
 
-interface Options {
-  readonly projectId: string;
-  readonly directionId: string | null;
-  readonly selection: SelectionContext;
-  readonly port: MutableRefObject<PreviewPort | null>;
-  readonly control: MutableRefObject<DirectEditControl | null>;
-  readonly onCommitted: (commit: DirectEditCommit) => void;
-  readonly onStale: (message: string) => void;
-  readonly rewrite: StyleRewrite | null;
-  readonly variant?: string;
-}
-
-type StyleRewrite = (style: Partial<StyleValues>) => Partial<StyleValues>;
-
-function declaredOf(
-  styles: Record<string, string>,
-  style: Record<string, string>
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(style).flatMap(([key, value]) =>
-      `declared-${key}` in styles ? [[`declared-${key}`, value]] : []
-    )
-  );
-}
-
-export function mergeCommit(
-  prev: SelectionContext[],
-  commit: DirectEditCommit
-): SelectionContext[] {
-  return prev.map((s) =>
-    s.selector === commit.selector
-      ? {
-          ...s,
-          styles: {
-            ...s.styles,
-            ...declaredOf(s.styles, commit.style),
-            ...commit.style,
-          },
-          text: commit.text ?? s.text,
-        }
-      : s
-  );
-}
-
-export const NO_MIXED: ReadonlySet<DirectStyleProperty> = new Set();
-
-type EditValues = Pick<DirectEdit, "values" | "mixed" | "preview" | "commit">;
-
-export function isSameEditValues(
-  a: EditValues,
-  b: EditValues,
-  props: readonly DirectStyleProperty[]
-): boolean {
-  if (a === b) return true;
-  if (a.preview !== b.preview || a.commit !== b.commit) return false;
-  return props.every(
-    (prop) =>
-      a.values[prop] === b.values[prop] &&
-      a.mixed.has(prop) === b.mixed.has(prop)
-  );
-}
-
-const DEBOUNCE_MS = 250;
-const AGENT_RUNNING_MESSAGE = "Agent is running. Wait or cancel.";
-
-function isStaleSelection(err: unknown): err is ApiError {
-  return (
-    isApiError(err) && err.status === 422 && err.code === "stale_selection"
-  );
-}
-
-function failureText(err: unknown): string {
-  if (isApiConflict(err)) return AGENT_RUNNING_MESSAGE;
-  return errorText(err);
-}
-
-export function buildEditRequest(
-  selection: SelectionContext,
-  style: Partial<StyleValues>,
-  text?: string,
-  editVariant = editVariantStore.get()
-): DirectEditRequest | null {
-  const source = selection.source;
-  if (!source) return null;
-  const hasStyle = Object.keys(style).length > 0;
-  if (!hasStyle && text === undefined) return null;
-  const wire = Object.fromEntries(
-    Object.entries(style).map(([prop, value]) => [
-      prop,
-      value.trim() === "" ? null : value.trim(),
-    ])
-  );
-  const target = selection.component
-    ? { component: selection.component }
-    : { tag: selection.tag.toLowerCase() };
-  const variant = hasStyle ? editVariant : "";
-  return {
-    source,
-    selector: selection.selector,
-    ...target,
-    ...(hasStyle ? { style: wire } : {}),
-    ...(text === undefined ? {} : { text, hints: textHints(selection) }),
-    ...(variant ? { variant } : {}),
-  };
-}
-
-export function textHints(selection: SelectionContext): TextSourceHints {
-  return {
-    text: selection.text,
-    ...(selection.usedAt ? { usedAt: selection.usedAt } : {}),
-    ...(selection.owners?.length ? { owners: selection.owners } : {}),
-  };
-}
-
-export function useDirectEdit(o: Options) {
-  const opts = useRef(o);
-  opts.current = o;
-  const base = useMemo(
-    () => toStyleValues(o.selection.styles),
-    [o.selection.styles]
-  );
-  const baseRef = useRef(base);
-  baseRef.current = base;
-  const [draft, setDraftState] = useState<Partial<StyleValues>>({});
-  const draftRef = useRef(draft);
-  const [textDraft, setTextDraftState] = useState<string | null>(null);
-  const textRef = useRef(textDraft);
-  const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });
-  const [tailwind, setTailwind] = useState<TailwindOutcome | null>(null);
-  const timer = useRef<number | null>(null);
-  const inflight = useRef<Promise<void> | null>(null);
-  const again = useRef(false);
-  const forced = useRef(new Set<DirectStyleProperty>());
-
-  const setDraft = useCallback((next: Partial<StyleValues>) => {
-    draftRef.current = next;
-    setDraftState(next);
-  }, []);
-
-  const setTextDraft = useCallback((next: string | null) => {
-    textRef.current = next;
-    setTextDraftState(next);
-  }, []);
-
-  const post = useCallback(
-    (body: Parameters<PreviewPort["post"]>[0]) =>
-      opts.current.port.current?.post(body),
-    []
-  );
-
-  const resetPreview = useCallback(
-    () => post({ type: "preview-reset" }),
-    [post]
-  );
-  const reselect = useCallback(
-    () =>
-      post({
-        type: "select-selector",
-        selector: opts.current.selection.selector,
-      }),
-    [post]
-  );
-
-  const cancel = useCallback(() => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = null;
-    again.current = false;
-    forced.current.clear();
-    setDraft({});
-    setTextDraft(null);
-  }, [setDraft, setTextDraft]);
-
-  const fail = useCallback(
-    (err: unknown) => {
-      if (isStaleSelection(err)) {
-        cancel();
-        post({ type: "preview-reset" });
-        opts.current.onStale(err.message);
-        return;
-      }
-      resetPreview();
-      setDraft({});
-      setTextDraft(null);
-      setStatus({
-        kind: "error",
-        message: failureText(err),
-        ...(isApiError(err) && err.code ? { code: err.code } : {}),
-      });
-    },
-    [cancel, post, resetPreview, setDraft, setTextDraft]
-  );
-
-  const rewriteDraft = useCallback(
-    (style: Partial<StyleValues>) => {
-      const rewrite = opts.current.rewrite;
-      if (!rewrite || Object.keys(style).length === 0) return style;
-      const next = toChangedProps(rewrite(style), baseRef.current);
-      const moved = toChangedProps(next, { ...baseRef.current, ...style });
-      if (Object.keys(moved).length === 0) return next;
-      setDraft({ ...draftRef.current, ...moved });
-      post({
-        type: "preview-style",
-        selector: opts.current.selection.selector,
-        style: moved,
-      });
-      return next;
-    },
-    [post, setDraft]
-  );
-
-  const flush = useCallback(async () => {
-    timer.current = null;
-    if (inflight.current) {
-      again.current = true;
-      return;
-    }
-    const cur = opts.current;
-    const kept = Object.fromEntries(
-      [...forced.current]
-        .filter((prop) => prop in draftRef.current)
-        .map((prop) => [prop, draftRef.current[prop]])
-    );
-    forced.current.clear();
-    const style = rewriteDraft({
-      ...toChangedProps(draftRef.current, baseRef.current),
-      ...kept,
-    });
-    const pendingText = textRef.current;
-    const text =
-      pendingText !== null && pendingText !== cur.selection.text
-        ? pendingText
-        : undefined;
-    const req = buildEditRequest(cur.selection, style, text, cur.variant);
-    if (!req || !cur.directionId) return;
-    setStatus({ kind: "saving" });
-    const optimistic = startOptimistic(cur.port.current, req, (message) =>
-      setStatus({ kind: "error", message, code: "optimistic_mismatch" })
-    );
-    const request = api
-      .directEdit(cur.projectId, cur.directionId, req)
-      .then((result) => {
-        optimistic.saved(result.tailwind);
-        setTailwind(result.tailwind ?? null);
-        cur.onCommitted({ selector: req.selector, style, text });
-        setStatus({ kind: "saved", at: Date.now() });
-      })
-      .catch((err: unknown) => {
-        optimistic.failed(failureText(err));
-        fail(err);
-      });
-    inflight.current = request;
-    await request;
-    inflight.current = null;
-    if (again.current) {
-      again.current = false;
-      void flush();
-    }
-  }, [fail, rewriteDraft]);
-
-  const commitSoon = useCallback(() => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => void flush(), DEBOUNCE_MS);
-  }, [flush]);
-
-  const commit = useCallback(() => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    void flush();
-  }, [flush]);
-  const commitText = useCallback(
-    (selector: string, text: string) => {
-      const cur = opts.current;
-      if (
-        selector !== cur.selection.selector ||
-        !cur.selection.source ||
-        !cur.directionId
-      )
-        return false;
-      if (timer.current !== null) window.clearTimeout(timer.current);
-      setTextDraft(text);
-      void flush();
-      return true;
-    },
-    [flush, setTextDraft]
-  );
-
-  const preview = useCallback(
-    (patch: Partial<StyleValues>, force = false) => {
-      if (force)
-        for (const prop of Object.keys(patch) as DirectStyleProperty[])
-          forced.current.add(prop);
-      setDraft({ ...draftRef.current, ...patch });
-      post({
-        type: "preview-style",
-        selector: opts.current.selection.selector,
-        style: patch,
-      });
-      setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
-    },
-    [post, setDraft]
-  );
-
-  const shift = useCallback(
-    (
-      props: readonly DirectStyleProperty[],
-      delta: number,
-      bounds: Omit<Shift, "delta"> = {},
-      part?: ShiftPart
-    ) => {
-      const patch: Partial<StyleValues> = {};
-      for (const prop of props) {
-        const from = draftRef.current[prop] ?? baseRef.current[prop];
-        const next = part
-          ? toShiftedPart(from, part, { ...bounds, delta })
-          : toShiftedValue(from, { ...bounds, delta });
-        if (next !== null) patch[prop] = next;
-      }
-      if (Object.keys(patch).length > 0) preview(patch);
-    },
-    [preview]
-  );
-
-  const revert = useCallback(
-    (props: DirectStyleProperty[]) => {
-      const next = { ...draftRef.current };
-      const style: Record<string, string | null> = {};
-      for (const prop of props) {
-        delete next[prop];
-        style[prop] =
-          baseRef.current[prop] === "" ? null : baseRef.current[prop];
-      }
+  const storeDraft = useCallback(
+    (next: Partial<StyleValues>) => {
+      draftRef.current = next;
       setDraft(next);
-      post({
-        type: "preview-style",
-        selector: opts.current.selection.selector,
-        style,
-      });
     },
-    [post, setDraft]
+    [draftRef]
   );
 
-  const previewText = useCallback(
-    (text: string) => {
-      setTextDraft(text);
-      post({
-        type: "preview-text",
-        selector: opts.current.selection.selector,
-        text,
-      });
+  const storeTextDraft = useCallback(
+    (next: string | null) => {
+      textRef.current = next;
+      setTextDraft(next);
     },
-    [post, setTextDraft]
+    [textRef]
   );
 
-  const revertText = useCallback(() => {
-    setTextDraft(null);
-    post({
-      type: "preview-text",
-      selector: opts.current.selection.selector,
-      text: opts.current.selection.text,
-    });
-  }, [post, setTextDraft]);
+  return { draft, draftRef, storeDraft, storeTextDraft, textDraft, textRef };
+};
 
-  const reset = useCallback(() => {
-    cancel();
-    resetPreview();
-    setStatus({ kind: "idle" });
-  }, [cancel, resetPreview]);
-
-  const settle = useCallback(async () => {
-    cancel();
-    while (inflight.current) await inflight.current;
-  }, [cancel]);
-
-  const drain = useCallback(async () => {
-    if (timer.current !== null) {
-      window.clearTimeout(timer.current);
-      await flush();
-    }
-    while (inflight.current) await inflight.current;
-  }, [flush]);
-
-  const absorb = useCallback(
-    (style: Partial<StyleValues>) => {
-      const next = { ...draftRef.current };
-      for (const prop of Object.keys(style) as DirectStyleProperty[])
-        delete next[prop];
-      setDraft(next);
-      setStatus({ kind: "saved", at: Date.now() });
-    },
-    [setDraft]
-  );
+const useControlBinding = (
+  core: EditCore,
+  commits: CommitActions,
+  control: Options["control"]
+): void => {
+  const { commitText, settle } = commits;
+  const cancel = useCallback(() => stopEdit(core), [core]);
 
   useEffect(() => {
-    o.control.current = { cancel, settle, commitText };
-    return () => {
-      if (o.control.current?.cancel === cancel) o.control.current = null;
-      if (timer.current !== null) {
-        window.clearTimeout(timer.current);
-        void flush();
-      }
+    setControl(control, { cancel, commitText, settle });
+
+    return (): void => {
+      deleteControl(control, cancel);
+      applyEditRelease(core);
     };
-  }, [cancel, settle, commitText, flush, o.control]);
+  }, [cancel, commitText, settle, control, core]);
+};
+
+interface EditModel {
+  readonly commits: CommitActions;
+  readonly core: EditCore;
+  readonly previews: PreviewActions;
+}
+
+interface ModelInput {
+  readonly base: StyleValues;
+  readonly drafts: DraftState;
+  readonly options: Options;
+  readonly setStatus: EditCore["setStatus"];
+  readonly setTailwind: EditCore["setTailwind"];
+}
+
+const useEditModel = (input: ModelInput): EditModel => {
+  const { base, drafts, options, setStatus, setTailwind } = input;
+  const { draftRef, storeDraft, storeTextDraft, textRef } = drafts;
+  const opts = useLatestRef(options);
+  const baseRef = useLatestRef(base);
+  const timer: TimerRef = useCell(null);
+  const inflight = useCell<Promise<void> | null>(null);
+  const isAgain = useCell(false);
+  const forced = useCell(new Set<DirectStyleProperty>());
+
+  return useMemo(() => {
+    const core: EditCore = {
+      baseRef,
+      draftRef,
+      forced,
+      inflight,
+      isAgain,
+      opts,
+      setStatus,
+      setTailwind,
+      storeDraft,
+      storeTextDraft,
+      textRef,
+      timer,
+    };
+
+    const commits = toCommitActions(core);
+    const previews = toPreviewActions(core);
+
+    return { commits, core, previews };
+  }, [
+    baseRef,
+    draftRef,
+    forced,
+    inflight,
+    isAgain,
+    opts,
+    setStatus,
+    setTailwind,
+    storeDraft,
+    storeTextDraft,
+    textRef,
+    timer,
+  ]);
+};
+
+const useDirectEdit = (options: Options): DirectEdit => {
+  const base = useMemo(
+    () => toStyleValues(options.selection.styles),
+    [options.selection.styles]
+  );
+
+  const drafts = useDraftState();
+  const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });
+  const [tailwind, setTailwind] = useState<TailwindOutcome | null>(null);
+  const { draft, textDraft } = drafts;
+
+  const { commits, core, previews } = useEditModel({
+    base,
+    drafts,
+    options,
+    setStatus,
+    setTailwind,
+  });
+
+  useControlBinding(core, commits, options.control);
 
   const values = useMemo(() => ({ ...base, ...draft }), [base, draft]);
+
   const dirty = useMemo(
     () => Object.keys(draft) as DirectStyleProperty[],
     [draft]
   );
-  const text = textDraft ?? o.selection.text;
+
+  const text = textDraft ?? options.selection.text;
+
   const scope = useMemo(
-    () => ({ projectId: o.projectId, directionId: o.directionId }),
-    [o.projectId, o.directionId]
+    () => ({ directionId: options.directionId, projectId: options.projectId }),
+    [options.projectId, options.directionId]
   );
+
   return {
-    values,
+    ...previews,
+    commit: commits.commit,
+    commitSoon: commits.commitSoon,
+    dirty,
+    drain: commits.drain,
+    each: null,
     mixed: NO_MIXED,
-    each: null as readonly StyleValues[] | null,
-    text,
+    reset: commits.reset,
+    scope,
     status,
     tailwind,
-    preview,
-    shift,
-    revert,
-    commit,
-    commitSoon,
-    previewText,
-    revertText,
-    reset,
-    drain,
-    absorb,
-    dirty,
-    scope,
-    reselect,
+    text,
+    values,
   };
-}
+};
 
-export type DirectEdit = ReturnType<typeof useDirectEdit>;
+export { useDirectEdit };
+
+export type { DirectEdit, DirectEditCommit, DirectEditControl, SaveStatus };

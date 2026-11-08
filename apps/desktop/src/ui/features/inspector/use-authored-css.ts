@@ -6,13 +6,14 @@ import { toAuthoredReply } from "./authored-css-model.js";
 import type { AuthoredCss } from "./authored-css-model.js";
 
 const REPLY_TIMEOUT_MS = 1500;
+const RADIX = 36;
 
 interface AuthoredCssState {
   readonly css: AuthoredCss | null;
   readonly request: () => Promise<AuthoredCss | null>;
 }
 
-const requestAuthoredCss = (
+const getAuthoredCss = (
   port: PreviewPort | null,
   selector: string
 ): Promise<AuthoredCss | null> => {
@@ -22,28 +23,38 @@ const requestAuthoredCss = (
     return Promise.resolve(null);
   }
 
-  const requestId = Math.random().toString(36).slice(2);
+  const requestId = Math.random().toString(RADIX).slice(2);
+  const { promise, resolve } = Promise.withResolvers<AuthoredCss | null>();
+  const stops: (() => void)[] = [];
 
-  return new Promise((resolve) => {
-    const stop = listen((message) => {
+  const finish = (result: AuthoredCss | null): void => {
+    for (const stop of stops) {
+      stop();
+    }
+
+    resolve(result);
+  };
+
+  stops.push(
+    listen((message) => {
       if (message.type !== "authored" || message.requestId !== requestId) {
         return;
       }
 
       finish(toAuthoredReply(message));
-    });
+    })
+  );
 
-    const timer = globalThis.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
+  const timer = globalThis.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
+  stops.push(() => globalThis.clearTimeout(timer));
+  port.post({ requestId, selector, type: "request-authored" });
 
-    const finish = (result: AuthoredCss | null): void => {
-      globalThis.clearTimeout(timer);
-      stop();
-      resolve(result);
-    };
-
-    port.post({ requestId, selector, type: "request-authored" });
-  });
+  return promise;
 };
+
+const toPort = (
+  ref: MutableRefObject<PreviewPort | null>
+): PreviewPort | null => ref.current;
 
 const useAuthoredCss = (
   port: MutableRefObject<PreviewPort | null>,
@@ -53,7 +64,7 @@ const useAuthoredCss = (
   const live = useRef(true);
 
   const request = useCallback(async () => {
-    const result = await requestAuthoredCss(port.current, selector);
+    const result = await getAuthoredCss(toPort(port), selector);
 
     if (live.current && result) {
       setCss(result);
@@ -74,6 +85,6 @@ const useAuthoredCss = (
   return { css, request };
 };
 
-export { requestAuthoredCss, useAuthoredCss };
+export { getAuthoredCss, useAuthoredCss };
 
 export type { AuthoredCssState };

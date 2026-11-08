@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { AutoLayoutRow } from "./auto-layout-row.js";
 import { FlexControls } from "./flex-controls.js";
 import { GridControls } from "./grid-controls.js";
-import { isFlexDisplay, isGridDisplay } from "./sizing.js";
+import { isFlexDisplay, isGridDisplay } from "./sizing-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { setEdit, useLayoutKeys } from "./use-layout-keys.js";
 

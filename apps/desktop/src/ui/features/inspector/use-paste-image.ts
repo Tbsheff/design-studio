@@ -8,7 +8,9 @@ const usePasteImage = (
   onImage: (file: File) => void
 ): void => {
   const live = useRef(onImage);
-  live.current = onImage;
+  useEffect(() => {
+    live.current = onImage;
+  });
   useEffect(() => {
     if (!enabled) {
       return;

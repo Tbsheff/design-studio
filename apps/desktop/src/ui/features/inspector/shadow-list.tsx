@@ -5,7 +5,7 @@ import { AddButton } from "./add-button.js";
 import { setShadows, toShadowRows } from "./effects-model.js";
 import type { ShadowView } from "./effects-model.js";
 import { ShadowRow } from "./shadow-row.js";
-import { NEW_SHADOW } from "./shadows.js";
+import { NEW_SHADOW } from "./shadows-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 interface ShadowListProps {

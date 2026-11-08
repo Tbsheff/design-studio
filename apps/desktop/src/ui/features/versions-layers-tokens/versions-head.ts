@@ -17,7 +17,7 @@ const toVersionsHead = (props: VersionsHeadProps): ReactNode =>
   createElement(
     PanelHead,
     {
-      rootClassName: "section-head",
+      headClass: "section-head",
       title: COPY.titleVersions,
       titleClassName: "section-title",
     },

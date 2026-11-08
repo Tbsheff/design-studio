@@ -9,8 +9,11 @@ import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import { startOptimistic } from "../inspector/optimistic-edit.js";
-import { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
+import {
+  applyCommit,
+  createCurrentEditRequest,
+  startOptimistic,
+} from "../inspector/index.js";
 import { snapOff, snapRect } from "./snap-model.js";
 import type { Rect, SnapGuide } from "./snap-model.js";
 
@@ -317,14 +320,14 @@ const useResizeHandles = (optionsValue: Options): ResizeHandles => {
   const commit = useCallback(async (drag5: Drag) => {
     const cur = live.current;
     const style = styleFor(drag5.size, drag5.base);
-    const req = buildEditRequest(drag5.target, style);
+    const req = createCurrentEditRequest(drag5.target, style);
 
     if (!req || !cur.directionId) {
       return;
     }
 
     const { selector } = drag5.target;
-    cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
+    cur.setSelection((prev) => applyCommit(prev, { selector, style }));
 
     const optimistic = startOptimistic(
       { post: cur.post, refreshRects: cur.refreshRects },
@@ -334,7 +337,7 @@ const useResizeHandles = (optionsValue: Options): ResizeHandles => {
 
     try {
       const result = await api.directEdit(cur.projectId, cur.directionId, req);
-      optimistic.saved(result.tailwind);
+      optimistic.saved(result.tailwind ?? null);
       live.current.refreshRects();
     } catch (error) {
       const back = {
@@ -344,7 +347,7 @@ const useResizeHandles = (optionsValue: Options): ResizeHandles => {
 
       optimistic.failed(errorText(error));
       live.current.setSelection((prev) =>
-        mergeCommit(prev, { selector, style: back })
+        applyCommit(prev, { selector, style: back })
       );
       live.current.onError(errorText(error));
     }

@@ -8,7 +8,7 @@ import { useElementClasses } from "./use-element-classes.js";
 
 interface UseUseSiteResult {
   readonly isEditingUse: boolean;
-  readonly effective: SelectionContext | undefined;
+  readonly effective: SelectionContext | null;
   readonly sharedEditing: {
     readonly isEditingUse: boolean;
     readonly onToggle: () => void;
@@ -22,7 +22,7 @@ interface UseSource {
 }
 
 const toSharedSource = (
-  target: SelectionContext | undefined,
+  target: SelectionContext | null,
   appDir: InspectorProps["appDir"]
 ): SharedSource | null => {
   if (target && appDir) {
@@ -42,7 +42,7 @@ const toUse = (shared: SharedSource | null): UseSource | null => {
 
 const toUseSource = (
   use: UseSource | null,
-  target: SelectionContext | undefined
+  target: SelectionContext | null
 ): SourceLoc | null => {
   if (use) {
     return target?.source ?? null;
@@ -52,10 +52,10 @@ const toUseSource = (
 };
 
 const toEffective = (
-  target: SelectionContext | undefined,
+  target: SelectionContext | null,
   use: UseSource | null,
   isEditingUse: boolean
-): SelectionContext | undefined => {
+): SelectionContext | null => {
   if (target && use && isEditingUse) {
     return { ...target, ...use, usedAt: null };
   }
@@ -65,7 +65,7 @@ const toEffective = (
 
 const toToggled = (
   isEditingUse: boolean,
-  target: SelectionContext | undefined
+  target: SelectionContext | null
 ): string | null => {
   if (isEditingUse) {
     return target?.selector ?? null;
@@ -74,9 +74,31 @@ const toToggled = (
   return null;
 };
 
+const toSingleTarget = (
+  selection: InspectorProps["selection"]
+): SelectionContext | null => {
+  if (selection.length === 1) {
+    return selection[0] ?? null;
+  }
+
+  return null;
+};
+
+const toSharedEditing = (
+  shared: SharedSource | null,
+  isEditingUse: boolean,
+  onToggle: () => void
+): UseUseSiteResult["sharedEditing"] => {
+  if (shared) {
+    return { isEditingUse, onToggle, shared };
+  }
+
+  return null;
+};
+
 const useUseSite = (props: InspectorProps): UseUseSiteResult => {
   const [componentFor, setComponentFor] = useState<string | null>(null);
-  const target = props.selection.length === 1 ? props.selection[0] : undefined;
+  const target = toSingleTarget(props.selection);
 
   const shared = toSharedSource(target, props.appDir);
   const use = toUse(shared);
@@ -100,9 +122,7 @@ const useUseSite = (props: InspectorProps): UseUseSiteResult => {
   return {
     effective,
     isEditingUse: editingUse,
-    sharedEditing: shared
-      ? { isEditingUse: editingUse, onToggle: toggle, shared }
-      : null,
+    sharedEditing: toSharedEditing(shared, editingUse, toggle),
   };
 };
 

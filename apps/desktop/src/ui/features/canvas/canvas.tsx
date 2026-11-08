@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { createElement, memo, useLayoutEffect, useMemo } from "react";
 
 import { createLiveStore } from "../../platform/live-store.js";
-import { useStableProps } from "../inspector/stable-props.js";
+import { useStableProps } from "../../platform/use-stable-props.js";
 import type { Props } from "./canvas-types.js";
 import { CanvasView } from "./canvas-view.js";
 

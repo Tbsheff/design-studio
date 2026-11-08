@@ -6,8 +6,9 @@ import { InspectorSection } from "./inspector-fields.js";
 import { MatchEmpty } from "./match-empty.js";
 import { MatchKinds } from "./match-kinds.js";
 import { toMatchTitle, toTargetLabel } from "./match-model.js";
-import { ScopeToggle, StatusLine } from "./match-rows.js";
-import type { InspectorMatchProps, Scope } from "./match-scan.js";
+import type { InspectorMatchProps, Scope } from "./match-scan-model.js";
+import { ScopeToggle } from "./match-scope-toggle.js";
+import { StatusLine } from "./match-status-line.js";
 import { TokenPicker } from "./match-token-picker.js";
 import { useInspectorMatch } from "./use-inspector-match.js";
 

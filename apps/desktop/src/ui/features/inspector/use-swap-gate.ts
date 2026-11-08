@@ -1,28 +1,74 @@
 import type { ProjectKind } from "@design-studio/contracts";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import type { FilesChange } from "../home/use-studio-data.js";
+import { useLatestRef } from "./use-latest-ref.js";
 
 const SWAP_RELEASE_MS = 4000;
 
+interface SwapSnapshot {
+  readonly flights: number;
+  readonly inFlight: string | null;
+  readonly next: ReadonlyMap<string, FilesChange>;
+  readonly shown: ReadonlyMap<string, FilesChange>;
+}
+
 class SwapQueue {
-  readonly shown = new Map<string, FilesChange>();
-  readonly next = new Map<string, FilesChange>();
+  public readonly shown = new Map<string, FilesChange>();
+  public readonly next = new Map<string, FilesChange>();
   private readonly waiting = new Map<string, FilesChange>();
+  private readonly listeners = new Set<() => void>();
   private flying: string | null = null;
   private held = false;
-  flights = 0;
+  private snapshot: SwapSnapshot = {
+    flights: 0,
+    inFlight: null,
+    next: new Map(),
+    shown: new Map(),
+  };
+  public flights = 0;
 
-  get inFlight(): string | null {
+  public get inFlight(): string | null {
     return this.flying;
   }
 
-  offer(key: string, change: FilesChange): void {
+  public readonly subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+
+    return (): void => {
+      this.listeners.delete(listener);
+    };
+  };
+
+  public readonly getSnapshot = (): SwapSnapshot => this.snapshot;
+
+  public notify(): void {
+    this.snapshot = {
+      flights: this.flights,
+      inFlight: this.flying,
+      next: new Map(this.next),
+      shown: new Map(this.shown),
+    };
+
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+
+  public offer(key: string, change: FilesChange): void {
     this.waiting.set(key, change);
     this.pump();
   }
 
-  done(directionId: string): boolean {
+  public done(directionId: string): boolean {
     if (this.flying !== directionId) {
       return false;
     }
@@ -40,7 +86,7 @@ class SwapQueue {
     return true;
   }
 
-  hold(on: boolean): boolean {
+  public hold(on: boolean): boolean {
     if (this.held === on) {
       return false;
     }
@@ -97,131 +143,186 @@ interface GateTarget {
   readonly headVersionId: string | null;
 }
 
-const useSwapGate = (
-  kind: ProjectKind,
-  targets: GateTarget[],
-  lastChange: FilesChange | null,
-  hold: boolean,
-  liveDirectionId: string | null = null
-): SwapGate => {
-  const queue = useRef(new SwapQueue());
-  const [version, bump] = useReducer((count: number) => count + 1, 0);
-  const heads = useRef<Record<string, string>>({});
-  const live = useRef(targets);
-  live.current = targets;
-  const holdRef = useRef(hold);
-  holdRef.current = hold;
-  const [liveWait, setLiveWait] = useState(0);
-  const gated = kind === "html";
+interface SwapGateOptions {
+  readonly kind: ProjectKind;
+  readonly targets: GateTarget[];
+  readonly lastChange: FilesChange | null;
+  readonly isHeld: boolean;
+  readonly liveDirectionId: string | null;
+}
 
-  const onSwapDone = useCallback((key: string) => {
-    if (queue.current.done(key)) {
-      bump();
-    }
-  }, []);
+interface GateContext {
+  readonly queue: SwapQueue;
+  readonly isGated: boolean;
+  readonly targetsRef: RefObject<GateTarget[]>;
+}
+
+const useChangeOffer = (
+  ctx: GateContext,
+  lastChange: FilesChange | null,
+  liveDirectionId: string | null,
+  setLiveWait: Dispatch<SetStateAction<number>>
+): void => {
+  const { isGated, queue, targetsRef } = ctx;
 
   useEffect(() => {
-    if (!gated || !lastChange) {
+    if (!isGated || !lastChange) {
       return;
     }
 
-    if (
-      lastChange.directionId === liveDirectionId &&
-      queue.current.hold(true)
-    ) {
+    if (lastChange.directionId === liveDirectionId && queue.hold(true)) {
       setLiveWait((countValue) => countValue + 1);
     }
 
-    const hits = live.current.filter(
+    const hits = targetsRef.current.filter(
       (target) => target.directionId === lastChange.directionId
     );
 
     for (const target of hits) {
-      queue.current.offer(target.key, lastChange);
+      queue.offer(target.key, lastChange);
     }
 
     if (hits.length > 0) {
-      bump();
+      queue.notify();
     }
-  }, [gated, lastChange, liveDirectionId]);
+  }, [isGated, lastChange, liveDirectionId, queue, setLiveWait, targetsRef]);
+};
 
+const useLiveRelease = (
+  queue: SwapQueue,
+  liveWait: number,
+  holdRef: RefObject<boolean>
+): void => {
   useEffect(() => {
     if (liveWait === 0) {
       return;
     }
 
     const timer = globalThis.setTimeout(() => {
-      if (!holdRef.current && queue.current.hold(false)) {
-        bump();
+      if (!holdRef.current && queue.hold(false)) {
+        queue.notify();
       }
     }, SWAP_RELEASE_MS);
 
     return (): void => globalThis.clearTimeout(timer);
-  }, [liveWait]);
+  }, [liveWait, queue, holdRef]);
+};
 
-  const headKey = targets
-    .map(
-      (target) =>
-        `${target.key}:${target.directionId}:${target.headVersionId ?? ""}`
-    )
-    .join("|");
+const hasHeadMoved = (
+  previous: string | null,
+  head: string,
+  directionId: string
+): boolean =>
+  previous !== null &&
+  previous !== head &&
+  previous.startsWith(`${directionId}:`);
 
-  useEffect(() => {
-    for (const target of live.current) {
-      const head = `${target.directionId}:${target.headVersionId ?? ""}`;
-      const previous = heads.current[target.key];
-      heads.current[target.key] = head;
+const toHeadKey = (target: GateTarget): string =>
+  `${target.directionId}:${target.headVersionId ?? ""}`;
 
-      if (
-        !gated ||
-        previous === undefined ||
-        previous === head ||
-        !previous.startsWith(`${target.directionId}:`)
-      ) {
-        continue;
-      }
-
-      const now = Date.now();
-      queue.current.offer(target.key, {
-        changedAt: now,
-        directionId: target.directionId,
-        paths: [],
-        receivedAt: now,
-        shouldReload: false,
-      });
-      bump();
-    }
-  }, [headKey, gated]);
+const useHeadSwap = (ctx: GateContext): void => {
+  const { isGated, queue, targetsRef } = ctx;
+  const heads = useRef<Record<string, string>>({});
+  const lastKey = useRef("");
 
   useEffect(() => {
-    if (queue.current.hold(hold)) {
-      bump();
-    }
-  }, [hold]);
+    const headKey = targetsRef.current
+      .map((target) => `${target.key}:${toHeadKey(target)}`)
+      .join("|");
 
-  const flying = queue.current.inFlight;
-  const flight = queue.current.flights;
-  useEffect(() => {
-    if (flying === null) {
+    if (headKey === lastKey.current) {
       return;
     }
 
-    const timer = globalThis.setTimeout(
-      () => onSwapDone(flying),
-      SWAP_RELEASE_MS
-    );
+    lastKey.current = headKey;
+
+    for (const target of targetsRef.current) {
+      const head = toHeadKey(target);
+      const previous = heads.current[target.key] ?? null;
+      heads.current[target.key] = head;
+
+      if (isGated && hasHeadMoved(previous, head, target.directionId)) {
+        const now = Date.now();
+        queue.offer(target.key, {
+          changedAt: now,
+          directionId: target.directionId,
+          paths: [],
+          receivedAt: now,
+          shouldReload: false,
+        });
+        queue.notify();
+      }
+    }
+  });
+};
+
+const useFlightTimer = (
+  snapshot: SwapSnapshot,
+  onSwapDone: (key: string) => void
+): void => {
+  const { flights, inFlight } = snapshot;
+
+  const flight = useMemo(
+    () => ({ flights, id: inFlight }),
+    [flights, inFlight]
+  );
+
+  useEffect(() => {
+    const { id } = flight;
+
+    if (id === null) {
+      return;
+    }
+
+    const timer = globalThis.setTimeout(() => onSwapDone(id), SWAP_RELEASE_MS);
 
     return (): void => globalThis.clearTimeout(timer);
-  }, [flying, flight, onSwapDone]);
+  }, [flight, onSwapDone]);
+};
+
+const useSwapGate = (options: SwapGateOptions): SwapGate => {
+  const { isHeld, kind, lastChange, liveDirectionId, targets } = options;
+  const queue = useMemo(() => new SwapQueue(), []);
+  const snapshot = useSyncExternalStore(queue.subscribe, queue.getSnapshot);
+  const targetsRef = useLatestRef(targets);
+  const holdRef = useLatestRef(isHeld);
+  const [liveWait, setLiveWait] = useState(0);
+  const isGated = kind === "html";
+
+  const ctx = useMemo(
+    () => ({ isGated, queue, targetsRef }),
+    [isGated, queue, targetsRef]
+  );
+
+  const onSwapDone = useCallback(
+    (key: string) => {
+      if (queue.done(key)) {
+        queue.notify();
+      }
+    },
+    [queue]
+  );
+
+  useChangeOffer(ctx, lastChange, liveDirectionId, setLiveWait);
+  useLiveRelease(queue, liveWait, holdRef);
+  useHeadSwap(ctx);
+
+  useEffect(() => {
+    if (queue.hold(isHeld)) {
+      queue.notify();
+    }
+  }, [isHeld, queue]);
+
+  useFlightTimer(snapshot, onSwapDone);
 
   const shownFor = useCallback(
-    (directionId: string) => queue.current.shown.get(directionId) ?? null,
-    [version]
+    (directionId: string) => snapshot.shown.get(directionId) ?? null,
+    [snapshot]
   );
 
   const nextFor = useCallback(
-    (directionId: string) => queue.current.next.get(directionId) ?? null,
-    [version]
+    (directionId: string) => snapshot.next.get(directionId) ?? null,
+    [snapshot]
   );
 
   return { nextFor, onSwapDone, shownFor };

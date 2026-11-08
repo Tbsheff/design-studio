@@ -23,6 +23,7 @@ import type { TokenMode } from "../../../shared/token-match.js";
 import { uiStore, useUi } from "../../platform/storage.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import type { StyleValues } from "./css-value-model.js";
+import { useLatestRef } from "./use-latest-ref.js";
 
 interface SnapNote {
   readonly cssVar: string;
@@ -49,7 +50,7 @@ const useTokenUi = (): TokenUi | null => useContext(TokenUiContext);
 
 const NOTE_MS = 8000;
 
-const snapTarget = (
+const toSnapTarget = (
   prop: DirectStyleProperty,
   value: string,
   entries: CompiledTokenEntry[],
@@ -61,9 +62,55 @@ const snapTarget = (
     return null;
   }
 
-  const best = matchForProperty(prop, value, entries, mode)[0];
+  const [best] = matchForProperty(prop, value, entries, mode);
 
-  return isSnappable(group, best) ? best.cssVar : null;
+  if (isSnappable(group, best)) {
+    return best.cssVar;
+  }
+
+  return null;
+};
+
+interface SnapRewrite {
+  readonly cssVar: string | null;
+  readonly out: Partial<StyleValues>;
+  readonly raw: Partial<StyleValues>;
+}
+
+const toSnapNote = (
+  cssVar: string | null,
+  raw: Partial<StyleValues>
+): SnapNote | null => {
+  if (!cssVar) {
+    return null;
+  }
+
+  return { cssVar, raw };
+};
+
+const toSnapRewrite = (
+  style: Partial<StyleValues>,
+  kept: Partial<StyleValues>,
+  token: DesignTokens
+): SnapRewrite => {
+  const out: Partial<StyleValues> = { ...style };
+  const raw: Partial<StyleValues> = {};
+  let cssVar: string | null = null;
+
+  for (const [prop, value] of Object.entries(style) as [
+    DirectStyleProperty,
+    string,
+  ][]) {
+    const target = toSnapTarget(prop, value, token.entries, token.mode);
+
+    if (kept[prop] !== value && target) {
+      out[prop] = `var(${target})`;
+      raw[prop] = value;
+      cssVar ??= target;
+    }
+  }
+
+  return { cssVar, out, raw };
 };
 
 const useSnapSetting = (
@@ -96,45 +143,25 @@ const useTokenSnap = (
 ): UseTokenSnapResult => {
   const [note, setNote] = useState<SnapNote | null>(null);
   const kept = useRef<Partial<StyleValues>>({});
-  const live = useRef({ snapOn, tokens });
-  live.current = { snapOn, tokens };
+  const live = useLatestRef({ snapOn, tokens });
 
-  const rewrite = useCallback((style: Partial<StyleValues>) => {
-    const { tokens: token, snapOn: on } = live.current;
+  const rewrite = useCallback(
+    (style: Partial<StyleValues>) => {
+      const { tokens: token, snapOn: on } = live.current;
 
-    if (!token || !on) {
-      setNote(null);
+      if (!token || !on) {
+        setNote(null);
 
-      return style;
-    }
-
-    const out: Partial<StyleValues> = { ...style };
-    const raw: Partial<StyleValues> = {};
-    let cssVar: string | null = null;
-
-    for (const [prop, value] of Object.entries(style) as [
-      DirectStyleProperty,
-      string,
-    ][]) {
-      if (kept.current[prop] === value) {
-        continue;
+        return style;
       }
 
-      const target = snapTarget(prop, value, token.entries, token.mode);
+      const { cssVar, out, raw } = toSnapRewrite(style, kept.current, token);
+      setNote(toSnapNote(cssVar, raw));
 
-      if (!target) {
-        continue;
-      }
-
-      out[prop] = `var(${target})`;
-      raw[prop] = value;
-      cssVar = cssVar ?? target;
-    }
-
-    setNote(cssVar ? { cssVar, raw } : null);
-
-    return out;
-  }, []);
+      return out;
+    },
+    [live]
+  );
 
   const keepRaw = useCallback((raw: Partial<StyleValues>) => {
     kept.current = { ...kept.current, ...raw };
@@ -159,6 +186,12 @@ const useTokenSnap = (
   );
 };
 
-export { TokenUiContext, useTokenUi, snapTarget, useSnapSetting, useTokenSnap };
+export {
+  TokenUiContext,
+  useTokenUi,
+  toSnapTarget,
+  useSnapSetting,
+  useTokenSnap,
+};
 
 export type { SnapNote, CreateRequest, TokenUi };

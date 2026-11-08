@@ -6,7 +6,8 @@ import { imageKindOf } from "../../../shared/image.js";
 import type { SetImageRequest } from "../../../shared/image.js";
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
-import { NO_SOURCE } from "./structure-edits.js";
+import { NO_SOURCE } from "./structure-edits-model.js";
+import { useLatestRef } from "./use-latest-ref.js";
 
 interface Options {
   readonly projectId: string;
@@ -25,7 +26,34 @@ interface Options {
 
 type FileDrop = Extract<BridgeToParent, { readonly type: "file-drop" }>;
 
-const place = async (
+const toInsertPosition = (isInside: boolean): "inside" | "after" => {
+  if (isInside) {
+    return "inside";
+  }
+
+  return "after";
+};
+
+const toImageRequest = (
+  imageFile: NonNullable<SetImageRequest["image"]>,
+  imageTarget: SetImageRequest["target"],
+  hasKind: boolean,
+  isInside: boolean
+): SetImageRequest => {
+  if (hasKind) {
+    return { image: imageFile, target: imageTarget };
+  }
+
+  return {
+    alt: "",
+    image: imageFile,
+    mode: "insert",
+    position: toInsertPosition(isInside),
+    target: imageTarget,
+  };
+};
+
+const insertImage = async (
   options: Options,
   directionId: string,
   drop: FileDrop,
@@ -37,33 +65,29 @@ const place = async (
     return;
   }
 
-  const { toFileData, imageApi, toImageError, toImageTarget } =
-    await import("./use-image-api.js");
-
   try {
+    const { toFileData, imageApi, toImageTarget } =
+      await import("./use-image-api.js");
+
     const image = await toFileData(file);
     const kind = imageKindOf(selection);
 
-    const request: SetImageRequest = {
+    const request = toImageRequest(
       image,
-      target: toImageTarget(selection),
-      ...(kind
-        ? {}
-        : {
-            alt: "",
-            mode: "insert" as const,
-            position: drop.inside ? ("inside" as const) : ("after" as const),
-          }),
-    };
+      toImageTarget(selection),
+      Boolean(kind),
+      Boolean(drop.inside)
+    );
 
     const result = await imageApi.set(options.projectId, directionId, request);
     options.notify(`${result.title}.`);
   } catch (error) {
+    const { toImageError } = await import("./use-image-api.js");
     options.notify(toImageError(error));
   }
 };
 
-const refusal = (options: Options, drop: FileDrop): string | null => {
+const toRefusal = (options: Options, drop: FileDrop): string | null => {
   if (!drop.files[0]) {
     return "Drop an image file: PNG, JPEG, WebP, AVIF, GIF or SVG.";
   }
@@ -84,8 +108,7 @@ const refusal = (options: Options, drop: FileDrop): string | null => {
 };
 
 const useImageDrop = (options: Options): void => {
-  const live = useRef(options);
-  live.current = options;
+  const live = useLatestRef(options);
   const busy = useRef(false);
   useBridge(
     () =>
@@ -105,7 +128,7 @@ const useImageDrop = (options: Options): void => {
       }
 
       const cur = live.current;
-      const problem = refusal(cur, msg);
+      const problem = toRefusal(cur, msg);
 
       if (problem) {
         return cur.notify(problem);
@@ -117,16 +140,13 @@ const useImageDrop = (options: Options): void => {
 
       busy.current = true;
       startTransition(async () => {
-        try {
-          await place(
-            cur,
-            cur.directionId as string,
-            msg,
-            msg.files[0] as File
-          );
-        } finally {
-          busy.current = false;
-        }
+        await insertImage(
+          cur,
+          cur.directionId as string,
+          msg,
+          msg.files[0] as File
+        );
+        busy.current = false;
       });
     }
   );

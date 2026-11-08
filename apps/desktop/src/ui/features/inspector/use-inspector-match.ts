@@ -7,12 +7,13 @@ import { startTransition, useCallback, useMemo, useState } from "react";
 
 import { PAGE_QUERY, toReplaceLabel, toScopeQuery } from "./match-model.js";
 import type { MatchActions } from "./match-model.js";
-import { lookupFor, useStyleScan } from "./match-scan.js";
-import type { InspectorMatchProps, Scope, Status } from "./match-scan.js";
+import { toLookup } from "./match-scan-model.js";
+import type { InspectorMatchProps, Scope, Status } from "./match-scan-model.js";
 import { useMatchPicker } from "./use-match-picker.js";
 import { useMatchReplace } from "./use-match-replace.js";
 import { useMatchSelect } from "./use-match-select.js";
 import { useStableValue } from "./use-stable-value.js";
+import { useStyleScan } from "./use-style-scan.js";
 
 interface MatchState {
   readonly actions: MatchActions;
@@ -30,7 +31,7 @@ const useMatchRows = (
   hits: StyleHit[] | null,
   tokens: InspectorMatchProps["tokens"]
 ): ReturnType<typeof summarizeHits> => {
-  const lookup = useMemo(() => lookupFor(tokens), [tokens]);
+  const lookup = useMemo(() => toLookup(tokens), [tokens]);
 
   return useMemo(() => summarizeHits(hits ?? [], lookup), [hits, lookup]);
 };
@@ -48,8 +49,8 @@ const useInspectorMatch = (props: InspectorMatchProps): MatchState => {
     [scope, stableSelectors]
   );
 
-  const scan = useStyleScan(port, query, `${scope}|${selectorKey}`);
-  const pageScan = useStyleScan(port, PAGE_QUERY, "page");
+  const scan = useStyleScan(port, query);
+  const pageScan = useStyleScan(port, PAGE_QUERY);
   const { refresh: refreshScanned, hits: scanned } = scan;
   const { refresh: refreshPage, hits: pageRaw } = pageScan;
   const pageHits = pageRaw ?? [];

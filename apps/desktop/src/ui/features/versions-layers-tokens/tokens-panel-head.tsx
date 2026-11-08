@@ -29,7 +29,7 @@ const TokensPanelHead = (props: TokensPanelHeadProps): ReactNode => {
   return (
     <PanelHead
       title={COPY.titleTokens}
-      rootClassName="ins-header tkp-header"
+      headClass="ins-header tkp-header"
       titleClassName="tkp-title"
     >
       <TokensHeaderEnd

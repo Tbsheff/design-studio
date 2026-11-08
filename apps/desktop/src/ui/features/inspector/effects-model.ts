@@ -1,6 +1,6 @@
 import type { ShiftPart } from "./css-value-model.js";
-import { formatShadows, parseShadows } from "./shadows.js";
-import type { Shadow } from "./shadows.js";
+import { toShadows, toShadowsText } from "./shadows-model.js";
+import type { Shadow } from "./shadows-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 type Part = "x" | "y" | "blur" | "spread";
@@ -34,13 +34,13 @@ const toChangedShadows = (
   raw: string,
   change: (list: Shadow[]) => Shadow[]
 ): string => {
-  const list = parseShadows(raw);
+  const list = toShadows(raw);
 
   if (!list) {
     return raw;
   }
 
-  return formatShadows(change(list));
+  return toShadowsText(change(list));
 };
 
 const toFieldFallback = (field: Field, shadow: Shadow): string => {
@@ -93,7 +93,7 @@ const setShadows = (
       }
     );
   } else {
-    edit.preview({ [BOX_SHADOW]: formatShadows(change(view.list)) });
+    edit.preview({ [BOX_SHADOW]: toShadowsText(change(view.list)) });
   }
 
   edit.commit();
@@ -133,11 +133,11 @@ const toBlankMixed = (
 };
 
 const toShadowLists = (edit: DirectEdit): (Shadow[] | null)[] =>
-  (edit.each ?? []).map((values) => parseShadows(values[BOX_SHADOW]));
+  (edit.each ?? []).map((values) => toShadows(values[BOX_SHADOW]));
 
 const getShadowView = (edit: DirectEdit): ShadowView | null => {
   if (!edit.mixed.has(BOX_SHADOW)) {
-    const list = parseShadows(edit.values[BOX_SHADOW]);
+    const list = toShadows(edit.values[BOX_SHADOW]);
 
     if (!list) {
       return null;

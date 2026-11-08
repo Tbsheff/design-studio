@@ -6,7 +6,7 @@ import {
   varName,
 } from "../../../shared/token-match.js";
 import { toNumberText, toParsedNumber } from "./css-value-model.js";
-import { isSameEditValues } from "./use-direct-edit.js";
+import { isSameEditValues } from "./edit-request-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { TokenUi } from "./use-token-snap.js";
 
@@ -23,8 +23,10 @@ interface NumberSpec {
 }
 
 const SCRUB_PX_PER_STEP = 2;
+const DISPLAY_PRECISION = 10;
+const SHIFT_FACTOR = 10;
 
-const plainLength = (value: string, ui: TokenUi | null): string => {
+const toPlainLength = (value: string, ui: TokenUi | null): string => {
   if (!ui || !varName(value)) {
     return value;
   }
@@ -32,20 +34,27 @@ const plainLength = (value: string, ui: TokenUi | null): string => {
   const resolved = resolveTokenValue(value, ui.entries, ui.mode);
   const px = lengthToPx(resolved);
 
-  return px === null ? resolved : toNumberText(px, "px");
+  if (px === null) {
+    return resolved;
+  }
+
+  return toNumberText(px, "px");
 };
 
-const displayLength = (value: string): string => {
+const toDisplayLength = (value: string): string => {
   const parsed = toParsedNumber(value);
 
   if (!parsed || parsed.unit !== "px" || Number.isInteger(parsed.value)) {
     return value;
   }
 
-  return toNumberText(Math.round(parsed.value * 10) / 10, "px");
+  return toNumberText(
+    Math.round(parsed.value * DISPLAY_PRECISION) / DISPLAY_PRECISION,
+    "px"
+  );
 };
 
-const clamp = (value: string, spec: NumberSpec): string => {
+const toClamped = (value: string, spec: NumberSpec): string => {
   const parsed = toParsedNumber(value);
 
   if (!parsed) {
@@ -56,10 +65,14 @@ const clamp = (value: string, spec: NumberSpec): string => {
   const hi = spec.max ?? Infinity;
   const bounded = Math.min(hi, Math.max(lo, parsed.value));
 
-  return bounded === parsed.value ? value : toNumberText(bounded, parsed.unit);
+  if (bounded === parsed.value) {
+    return value;
+  }
+
+  return toNumberText(bounded, parsed.unit);
 };
 
-const patchFor = (
+const toPatch = (
   spec: NumberSpec,
   value: string
 ): Partial<Record<DirectStyleProperty, string>> => {
@@ -68,24 +81,30 @@ const patchFor = (
   return Object.fromEntries(targets.map((prop) => [prop, value]));
 };
 
-const shiftMixed = (spec: NumberSpec, delta: number): void => {
-  spec.edit.shift(spec.targets ?? [spec.prop], delta, {
-    max: spec.max,
-    min: spec.min,
-  });
+const applyMixedShift = (spec: NumberSpec, delta: number): void => {
+  spec.edit.shift(
+    spec.targets ?? [spec.prop],
+    delta,
+    { max: spec.max, min: spec.min },
+    null
+  );
 };
 
-const stepOf = (
+const toStep = (
   event: Pick<KeyboardEvent, "altKey" | "shiftKey">,
   spec: NumberSpec
 ): number => {
   const base = spec.step ?? 1;
 
   if (event.shiftKey) {
-    return base * 10;
+    return base * SHIFT_FACTOR;
   }
 
-  return event.altKey ? base / 10 : base;
+  if (event.altKey) {
+    return base / SHIFT_FACTOR;
+  }
+
+  return base;
 };
 
 const isValidValue = (prop: DirectStyleProperty, value: string): boolean => {
@@ -96,7 +115,7 @@ const isValidValue = (prop: DirectStyleProperty, value: string): boolean => {
   return CSS.supports(prop, value);
 };
 
-const selectSoon = (input: HTMLInputElement): void => {
+const startSelect = (input: HTMLInputElement): void => {
   requestAnimationFrame(() => {
     if (document.activeElement === input) {
       input.select();
@@ -107,17 +126,20 @@ const selectSoon = (input: HTMLInputElement): void => {
 const isSameSpec = (first: NumberSpec, second: NumberSpec): boolean => {
   const targets = first.targets ?? [first.prop];
 
-  const sameShape =
+  const hasSameLabel =
     first.prop === second.prop &&
     first.label === second.label &&
     first.unit === second.unit &&
-    first.step === second.step &&
-    first.min === second.min &&
-    first.max === second.max &&
     first.display === second.display;
 
+  const hasSameRange =
+    first.step === second.step &&
+    first.min === second.min &&
+    first.max === second.max;
+
   return (
-    sameShape &&
+    hasSameLabel &&
+    hasSameRange &&
     targets.join(",") === (second.targets ?? [second.prop]).join(",") &&
     isSameEditValues(first.edit, second.edit, targets)
   );
@@ -125,14 +147,14 @@ const isSameSpec = (first: NumberSpec, second: NumberSpec): boolean => {
 
 export {
   SCRUB_PX_PER_STEP,
-  plainLength,
-  displayLength,
-  clamp,
-  patchFor,
-  shiftMixed,
-  stepOf,
+  toPlainLength,
+  toDisplayLength,
+  toClamped,
+  toPatch,
+  applyMixedShift,
+  toStep,
   isValidValue,
-  selectSoon,
+  startSelect,
   isSameSpec as sameSpec,
 };
 

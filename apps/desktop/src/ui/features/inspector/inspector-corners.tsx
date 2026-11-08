@@ -10,9 +10,9 @@ import {
   toCorners,
 } from "./corners-model.js";
 import { NumberField } from "./number-field.js";
-import { proxyEdit } from "./proxy-edit.js";
 import { RadiusToggle } from "./radius-toggle.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { createProxyEdit } from "./use-proxy-edit.js";
 
 interface RadiusFieldProps {
   readonly edit: DirectEdit;
@@ -30,14 +30,12 @@ const RadiusField = ({ edit, short }: RadiusFieldProps): ReactElement => {
 
   const spec = useMemo(
     () => ({
-      edit: proxyEdit(
-        edit,
-        BORDER_RADIUS,
-        radius,
-        (value) => ({ [BORDER_RADIUS]: value }),
-        [BORDER_RADIUS],
-        { isMixed: null, part: ALL_CORNERS }
-      ),
+      edit: createProxyEdit(edit, BORDER_RADIUS, radius, {
+        isMixed: null,
+        part: ALL_CORNERS,
+        real: [BORDER_RADIUS],
+        write: (value) => ({ [BORDER_RADIUS]: value }),
+      }),
       label: copy.borderRadius,
       min: 0,
       prop: BORDER_RADIUS,

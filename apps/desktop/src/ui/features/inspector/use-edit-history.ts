@@ -1,5 +1,4 @@
 import type {
-  AnchorQuery,
   Direction,
   EditHistoryState,
   SelectionContext,
@@ -9,20 +8,19 @@ import {
   startTransition,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
-import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+import type { MutableRefObject, RefObject } from "react";
 
-import {
-  anchorQueryOf,
-  targetFromSelection,
-} from "../../../shared/comments.js";
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
-import { historyKeyOf } from "../canvas/use-undo-shortcut.js";
 import type { HistoryKind, RedoShortcut } from "../canvas/use-undo-shortcut.js";
 import { historyPhrase } from "../versions-layers-tokens/version-labels.js";
+import { stopTimer } from "./timer-model.js";
+import type { TimerRef } from "./timer-model.js";
+import { useLatestRef } from "./use-latest-ref.js";
 
 const PREVIEW_PAINTED_EVENT = "studio:preview-painted";
 
@@ -34,16 +32,10 @@ const EMPTY: EditHistoryState = {
 };
 
 const TOAST_MS = 2400;
-const REFRESH_WINDOW_MS = 3000;
-const SWAPPED_FRAME_RENDER_MS = 80;
-const CHANGE_WINDOW_MS = 8000;
-const CHANGE_RECHECK_MS = [500, 1500, 4000] as const;
 const REPLAY_SLACK_MS = 1000;
 const NOTHING_TO_UNDO = "Nothing more to undo";
 
-type Describe = (
-  anchors: AnchorQuery[]
-) => Promise<(SelectionContext | null)[]>;
+type HistoryFallback = (() => void | Promise<void>) | null;
 
 interface Options {
   readonly projectId: string;
@@ -56,18 +48,30 @@ interface Options {
   readonly onError: (message: string) => void;
 }
 
-const HISTORY_STEP_TITLE = /^(Undo|Redo): /u;
+const HISTORY_STEP_TITLE = /^(?:Undo|Redo): /u;
 
-const isHistoryStep = (version: Version | undefined): boolean =>
-  version !== undefined &&
+const isHistoryStep = (version: Version | null): boolean =>
+  version !== null &&
   version.meta.kind === "manual" &&
   HISTORY_STEP_TITLE.test(version.title);
 
-const stepToast = (kind: HistoryKind, label: string | null): string => {
-  const word = kind === "undo" ? "Undid" : "Redid";
+const toStepWord = (kind: HistoryKind): string => {
+  if (kind === "undo") {
+    return "Undid";
+  }
+
+  return "Redid";
+};
+
+const toStepToast = (kind: HistoryKind, label: string | null): string => {
+  const word = toStepWord(kind);
 
   if (!label) {
-    return kind === "undo" ? "Undid the last edit" : "Redid the edit";
+    if (kind === "undo") {
+      return "Undid the last edit";
+    }
+
+    return "Redid the edit";
   }
 
   const phrase = historyPhrase(label);
@@ -79,89 +83,212 @@ const stepToast = (kind: HistoryKind, label: string | null): string => {
   return `${word} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 };
 
-const refreshedSelection = (
+const toRefreshedItem = (
+  item: SelectionContext,
+  context: SelectionContext | null
+): SelectionContext => {
+  if (!context) {
+    return item;
+  }
+
+  return {
+    ...item,
+    rect: context.rect,
+    source: context.source ?? item.source,
+    styles: context.styles,
+    text: context.text,
+  };
+};
+
+const toRefreshedSelection = (
   prev: SelectionContext[],
   selectors: string[],
   contexts: (SelectionContext | null)[]
 ): SelectionContext[] =>
-  prev.map((item) => {
-    const context = contexts[selectors.indexOf(item.selector)];
+  prev.map((item) =>
+    toRefreshedItem(item, contexts[selectors.indexOf(item.selector)] ?? null)
+  );
 
-    return context
-      ? {
-          ...item,
-          rect: context.rect,
-          source: context.source ?? item.source,
-          styles: context.styles,
-          text: context.text,
-        }
-      : item;
-  });
+interface UndoChain {
+  readonly canUndo: boolean;
+  readonly onUndo: () => void;
+}
 
 interface UseEditHistoryResult {
   readonly redo: RedoShortcut;
   readonly state: EditHistoryState;
-  readonly step: (kind: HistoryKind, fallback?: () => unknown) => void;
+  readonly step: (kind: HistoryKind, fallback: HistoryFallback) => void;
   readonly toast: string | null;
-  readonly undoChain: (
-    canUndo: boolean,
-    fallback: () => void
-  ) => { readonly canUndo: boolean; readonly onUndo: () => void };
+  readonly undoChain: (canUndo: boolean, fallback: () => void) => UndoChain;
 }
 
-const useEditHistory = (options: Options): UseEditHistoryResult => {
-  const { projectId, directionId } = options;
-  const [state, setState] = useState<EditHistoryState>(EMPTY);
+interface StepContext {
+  readonly latest: RefObject<Options>;
+  readonly stateRef: MutableRefObject<EditHistoryState>;
+  readonly generation: MutableRefObject<number>;
+  readonly apply: (next: EditHistoryState) => void;
+  readonly load: () => void;
+  readonly showToast: (text: string) => void;
+}
+
+const getHistory = async (
+  projectId: string,
+  directionId: string
+): Promise<EditHistoryState | null> => {
+  try {
+    return await api.editHistory(projectId, directionId);
+  } catch {
+    return null;
+  }
+};
+
+const canStep = (known: EditHistoryState, kind: HistoryKind): boolean => {
+  if (kind === "undo") {
+    return known.canUndo;
+  }
+
+  return known.canRedo;
+};
+
+const toStepLabel = (
+  known: EditHistoryState,
+  kind: HistoryKind
+): string | null => {
+  if (kind === "undo") {
+    return known.undoLabel;
+  }
+
+  return known.redoLabel;
+};
+
+const runStepAttempt = async (
+  ctx: StepContext,
+  directionId: string,
+  kind: HistoryKind,
+  fallback: HistoryFallback
+): Promise<EditHistoryState | null> => {
+  const cur = ctx.latest.current;
+  let known = ctx.stateRef.current;
+
+  try {
+    await cur.before();
+    known = await api.editHistory(cur.projectId, directionId);
+    ctx.apply(known);
+
+    if (!canStep(known, kind)) {
+      await fallback?.();
+
+      return null;
+    }
+
+    const result = await api.editHistoryStep(cur.projectId, directionId, kind);
+
+    ctx.apply(result.state);
+    ctx.showToast(toStepToast(kind, toStepLabel(known, kind)));
+    cur.onStepped(result.version);
+  } catch (error) {
+    cur.onError(errorText(error));
+  }
+
+  return known;
+};
+
+const runHistoryStep = async (
+  ctx: StepContext,
+  kind: HistoryKind,
+  fallback: HistoryFallback
+): Promise<void> => {
+  const { directionId } = ctx.latest.current;
+
+  if (!directionId) {
+    await fallback?.();
+
+    return;
+  }
+
+  ctx.generation.current += 1;
+
+  const known = await runStepAttempt(ctx, directionId, kind, fallback);
+
+  ctx.generation.current += 1;
+
+  if (known !== null && ctx.stateRef.current === known) {
+    ctx.load();
+  }
+};
+
+const runStepAfter = async (
+  previous: Promise<void>,
+  ctx: StepContext,
+  kind: HistoryKind,
+  fallback: HistoryFallback
+): Promise<void> => {
+  await previous;
+  await runHistoryStep(ctx, kind, fallback);
+};
+
+const useToast = (): readonly [string | null, (text: string) => void] => {
   const [toast, setToast] = useState<string | null>(null);
-  const opts = useRef(options);
-  opts.current = options;
-  const stateRef = useRef(state);
-  const queue = useRef<Promise<void>>(Promise.resolve());
-  const generation = useRef(0);
+  const timer: TimerRef = useRef(null);
 
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined
-  );
-
-  const apply = useCallback((next: EditHistoryState) => {
-    stateRef.current = next;
-    setState(next);
+  const showToast = useCallback((text: string) => {
+    stopTimer(timer);
+    setToast(text);
+    timer.current = globalThis.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
 
+  useEffect(
+    () => (): void => {
+      stopTimer(timer);
+    },
+    []
+  );
+
+  return [toast, showToast];
+};
+
+interface LoadContext {
+  readonly latest: RefObject<Options>;
+  readonly generation: MutableRefObject<number>;
+  readonly apply: (next: EditHistoryState) => void;
+}
+
+const useHistoryLoad = (ctx: LoadContext): (() => void) => {
+  const { projectId, directionId } = ctx.latest.current;
+  const { apply, generation, latest } = ctx;
   const loading = useRef<{ readonly key: string } | null>(null);
-  const reloadRequested = useRef(false);
-  const mountedAt = useRef(Date.now());
+  const isReloadRequested = useRef(false);
+  const again = useRef<(() => void) | null>(null);
+  const mountedAt = useRef(0);
 
   const load = useCallback(() => {
     if (!directionId) {
-      return apply(EMPTY);
+      apply(EMPTY);
+
+      return;
     }
 
     const key = `${projectId}/${directionId}`;
 
     if (loading.current?.key === key) {
-      reloadRequested.current = true;
+      isReloadRequested.current = true;
 
       return;
     }
 
-    reloadRequested.current = false;
+    isReloadRequested.current = false;
+
     const mine = { key };
     loading.current = mine;
+
     const started = generation.current;
     startTransition(async () => {
-      let next: EditHistoryState | null = null;
-
-      try {
-        next = await api.editHistory(projectId, directionId);
-      } catch {
-        next = null;
-      }
+      const next = await getHistory(projectId, directionId);
 
       if (
         next !== null &&
         generation.current === started &&
-        opts.current.directionId === directionId
+        latest.current.directionId === directionId
       ) {
         apply(next);
       }
@@ -172,14 +299,22 @@ const useEditHistory = (options: Options): UseEditHistoryResult => {
 
       loading.current = null;
 
-      if (reloadRequested.current) {
-        reloadRequested.current = false;
-        load();
+      if (isReloadRequested.current) {
+        isReloadRequested.current = false;
+        again.current?.();
       }
     });
-  }, [projectId, directionId, apply]);
+  }, [projectId, directionId, apply, generation, latest]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
+
+  useEffect(() => {
+    again.current = load;
+    load();
+  }, [load]);
+
   useProjectEvents(projectId, (event) => {
     if (
       event.type === "edit-history.changed" &&
@@ -188,277 +323,77 @@ const useEditHistory = (options: Options): UseEditHistoryResult => {
       load();
     }
   });
-  useEffect(() => (): void => globalThis.clearTimeout(toastTimer.current), []);
 
-  const showToast = useCallback((text: string) => {
-    globalThis.clearTimeout(toastTimer.current);
-    setToast(text);
-    toastTimer.current = globalThis.setTimeout(() => setToast(null), TOAST_MS);
+  return load;
+};
+
+const toUndoFallback = (
+  isStep: boolean,
+  fallback: () => void,
+  showToast: (text: string) => void
+): (() => void) => {
+  if (isStep) {
+    return (): void => showToast(NOTHING_TO_UNDO);
+  }
+
+  return fallback;
+};
+
+const useEditHistory = (options: Options): UseEditHistoryResult => {
+  const [state, setState] = useState<EditHistoryState>(EMPTY);
+  const [toast, showToast] = useToast();
+  const latest = useLatestRef(options);
+  const stateRef = useRef(state);
+  const queue = useRef<Promise<void> | null>(null);
+  const generation = useRef(0);
+
+  const apply = useCallback((next: EditHistoryState) => {
+    stateRef.current = next;
+    setState(next);
   }, []);
 
-  const runStep = useCallback(
-    async (kind: HistoryKind, fallback?: () => unknown) => {
-      const cur = opts.current;
+  const load = useHistoryLoad({ apply, generation, latest });
 
-      if (!cur.directionId) {
-        await fallback?.();
-
-        return;
-      }
-
-      generation.current += 1;
-      let known = stateRef.current;
-
-      try {
-        await cur.before();
-        known = await api.editHistory(cur.projectId, cur.directionId);
-        apply(known);
-
-        if (!(kind === "undo" ? known.canUndo : known.canRedo)) {
-          await fallback?.();
-
-          return;
-        }
-
-        const result = await api.editHistoryStep(
-          cur.projectId,
-          cur.directionId,
-          kind
-        );
-
-        apply(result.state);
-        showToast(
-          stepToast(kind, kind === "undo" ? known.undoLabel : known.redoLabel)
-        );
-        cur.onStepped(result.version);
-      } catch (error) {
-        cur.onError(errorText(error));
-      } finally {
-        generation.current += 1;
-      }
-
-      if (stateRef.current === known) {
-        load();
-      }
-    },
-    [apply, load, showToast]
+  const ctx = useMemo(
+    () => ({ apply, generation, latest, load, showToast, stateRef }),
+    [apply, load, showToast, latest]
   );
 
   const step = useCallback(
-    (kind: HistoryKind, fallback?: () => unknown) => {
-      const previous = queue.current;
-
-      const run = async (): Promise<void> => {
-        await previous;
-        await runStep(kind, fallback);
-      };
-
-      queue.current = run();
+    (kind: HistoryKind, fallback: HistoryFallback) => {
+      queue.current = runStepAfter(
+        queue.current ?? Promise.resolve(),
+        ctx,
+        kind,
+        fallback
+      );
     },
-    [runStep]
+    [ctx]
   );
 
   const redo: RedoShortcut = {
     enabled: state.canRedo && !options.isLocked,
-    onRedo: () => step("redo"),
+    onRedo: () => step("redo", null),
   };
 
-  const head = options.versions.find(
-    (version) => version.id === options.direction?.headVersionId
-  );
+  const head =
+    options.versions.find(
+      (version) => version.id === options.direction?.headVersionId
+    ) ?? null;
 
-  const versionFallback = (fallback: () => void): (() => void) =>
-    isHistoryStep(head) ? (): void => showToast(NOTHING_TO_UNDO) : fallback;
-
-  const undoChain = (
-    canUndo: boolean,
-    fallback: () => void
-  ): { readonly canUndo: boolean; readonly onUndo: () => void } => ({
+  const undoChain = (canUndo: boolean, fallback: () => void): UndoChain => ({
     canUndo: canUndo || (state.canUndo && !options.isLocked),
-    onUndo: () => step("undo", versionFallback(fallback)),
+    onUndo: () =>
+      step("undo", toUndoFallback(isHistoryStep(head), fallback, showToast)),
   });
 
   return { redo, state, step, toast, undoChain };
 };
 
-interface RefreshWatch {
-  readonly change: {
-    readonly directionId: string;
-    readonly changedAt: number;
-  } | null;
-  readonly directionId: string | null;
-  readonly dropDrafts: () => void;
-}
-
-const isSameStyles = (
-  first: Record<string, string>,
-  second: Record<string, string>
-): boolean => {
-  const keys = Object.keys(first);
-
-  return (
-    keys.length === Object.keys(second).length &&
-    keys.every((key) => first[key] === second[key])
-  );
-};
-
-const hasStylesMoved = (
-  prev: SelectionContext[],
-  selectors: string[],
-  contexts: (SelectionContext | null)[]
-): boolean =>
-  prev.some((item) => {
-    const context = contexts[selectors.indexOf(item.selector)];
-
-    return (
-      context !== null &&
-      context !== undefined &&
-      !isSameStyles(context.styles, item.styles)
-    );
-  });
-
-const useSelectionRefresh = (
-  selection: SelectionContext[],
-  setSelection: Dispatch<SetStateAction<SelectionContext[]>>,
-  describeRef: MutableRefObject<Describe | null>,
-  watch: RefreshWatch
-): ((now: boolean) => void) => {
-  const { change, directionId } = watch;
-  const current = useRef(selection);
-  current.current = selection;
-  const dropDrafts = useRef(watch.dropDrafts);
-  dropDrafts.current = watch.dropDrafts;
-  const deadline = useRef(0);
-  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
-
-  const refresh = useCallback(() => {
-    if (Date.now() > deadline.current || current.current.length === 0) {
-      return;
-    }
-
-    const describe = describeRef.current;
-
-    if (!describe) {
-      setSelection([]);
-
-      return;
-    }
-
-    const selectors = current.current.map((item) => item.selector);
-
-    const queries = current.current.map((item, index) =>
-      anchorQueryOf({ id: String(index), target: targetFromSelection(item) })
-    );
-
-    startTransition(async () => {
-      let contexts: Awaited<ReturnType<typeof describe>> | null = null;
-
-      try {
-        contexts = await describe(queries);
-      } catch {
-        contexts = null;
-      }
-
-      if (contexts === null || Date.now() > deadline.current) {
-        return;
-      }
-
-      const settled = contexts;
-
-      if (hasStylesMoved(current.current, selectors, settled)) {
-        dropDrafts.current();
-      }
-
-      setSelection((prev) => refreshedSelection(prev, selectors, settled));
-    });
-  }, [describeRef, setSelection]);
-
-  const later = useCallback(
-    (delays: readonly number[]) => {
-      for (const ms of delays) {
-        const id = globalThis.setTimeout(() => {
-          timers.current.delete(id);
-          refresh();
-        }, ms);
-
-        timers.current.add(id);
-      }
-    },
-    [refresh]
-  );
-
-  useEffect(() => {
-    let paintQueued = false;
-
-    const onPainted = (): void => {
-      if (paintQueued || Date.now() > deadline.current) {
-        return;
-      }
-
-      paintQueued = true;
-      globalThis.setTimeout(() => {
-        paintQueued = false;
-        refresh();
-      }, SWAPPED_FRAME_RENDER_MS);
-    };
-
-    const onInput = (event: Event): void => {
-      if (event instanceof KeyboardEvent && historyKeyOf(event)) {
-        return;
-      }
-
-      deadline.current = 0;
-    };
-
-    globalThis.addEventListener(PREVIEW_PAINTED_EVENT, onPainted);
-    globalThis.addEventListener("keydown", onInput, true);
-    globalThis.addEventListener("pointerdown", onInput, true);
-
-    return (): void => {
-      globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, onPainted);
-      globalThis.removeEventListener("keydown", onInput, true);
-      globalThis.removeEventListener("pointerdown", onInput, true);
-    };
-  }, [refresh]);
-
-  useEffect(() => {
-    if (!change || change.directionId !== directionId) {
-      return;
-    }
-
-    deadline.current = Math.max(
-      deadline.current,
-      Date.now() + CHANGE_WINDOW_MS
-    );
-    later(CHANGE_RECHECK_MS);
-  }, [change, directionId, later]);
-
-  useEffect(
-    () => (): void => {
-      for (const id of timers.current) {
-        globalThis.clearTimeout(id);
-      }
-    },
-    []
-  );
-
-  return useCallback(
-    (now: boolean) => {
-      deadline.current = Date.now() + REFRESH_WINDOW_MS;
-
-      if (now) {
-        refresh();
-      }
-    },
-    [refresh]
-  );
-};
-
 export {
   PREVIEW_PAINTED_EVENT,
   isHistoryStep,
-  stepToast,
-  refreshedSelection,
+  toStepToast,
+  toRefreshedSelection,
   useEditHistory,
-  useSelectionRefresh,
 };

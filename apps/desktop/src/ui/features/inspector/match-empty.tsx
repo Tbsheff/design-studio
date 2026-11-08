@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { toEmptyText } from "./match-model.js";
-import type { Scope } from "./match-scan.js";
+import type { Scope } from "./match-scan-model.js";
 
 interface Props {
   readonly scope: Scope;

@@ -7,7 +7,7 @@ import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
 import { canvasStore } from "../canvas/canvas-frames-model.js";
 import { activeFrame, defaultLayout } from "../canvas/index.js";
-import { parentLayout } from "./sizing.js";
+import { toParentLayout } from "./sizing-model.js";
 import type { DirectEditCommit, DirectEditControl } from "./use-direct-edit.js";
 
 interface Props {
@@ -119,7 +119,7 @@ const isArrangeShown = (selection: SelectionContext[]): boolean => {
     return false;
   }
 
-  const parent = parentLayout(only.styles);
+  const parent = toParentLayout(only.styles);
 
   return isAbsolute(only) || parent.isFlex || parent.isGrid;
 };

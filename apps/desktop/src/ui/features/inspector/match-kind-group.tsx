@@ -2,38 +2,57 @@ import type {
   StyleKind,
   StyleValueRow,
 } from "@design-studio/contracts/style-search";
-import { useMemo } from "react";
 import type { ReactElement } from "react";
+import { useCallback, useState } from "react";
 
-import type { MatchActions } from "./match-model.js";
-import { KindGroup } from "./match-rows.js";
+import { toMoreLabel, toShownRows } from "./match-rows-model.js";
+import type { RowActions } from "./match-rows-model.js";
+import { KIND_LABEL, ROWS_SHOWN, toRowKey } from "./match-scan-model.js";
+import { ValueRow } from "./match-value-row.js";
 
-interface Props {
-  readonly kind: StyleKind;
-  readonly rows: StyleValueRow[];
-  readonly actions: MatchActions;
-  readonly replaceLabel: string;
-}
-
-const MatchKindGroup = ({
+const KindGroup = ({
   kind,
   rows,
   actions,
   replaceLabel,
-}: Props): ReactElement => {
-  const kindRows = useMemo(
-    () => rows.filter((row) => row.kind === kind),
-    [kind, rows]
-  );
+}: {
+  readonly kind: StyleKind;
+  readonly rows: StyleValueRow[];
+  readonly actions: RowActions;
+  readonly replaceLabel: string;
+}): ReactElement | null => {
+  const [isAll, setIsAll] = useState(false);
+  const toggleAll = useCallback(() => setIsAll((current) => !current), []);
+
+  if (rows.length === 0) {
+    return null;
+  }
 
   return (
-    <KindGroup
-      kind={kind}
-      rows={kindRows}
-      actions={actions}
-      replaceLabel={replaceLabel}
-    />
+    <div className="sm-group">
+      <h4 className="sm-group-head">{KIND_LABEL[kind]}</h4>
+      <ul className="sm-list">
+        {toShownRows(rows, isAll).map((row) => (
+          <ValueRow
+            key={toRowKey(row)}
+            row={row}
+            actions={actions}
+            replaceLabel={replaceLabel}
+          />
+        ))}
+      </ul>
+      {rows.length > ROWS_SHOWN && (
+        <button
+          type="button"
+          className="tk-lint-more"
+          aria-expanded={isAll}
+          onClick={toggleAll}
+        >
+          {toMoreLabel(isAll, rows.length)}
+        </button>
+      )}
+    </div>
   );
 };
 
-export { MatchKindGroup };
+export { KindGroup };

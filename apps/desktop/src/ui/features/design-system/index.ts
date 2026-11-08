@@ -82,3 +82,5 @@ export type {
 } from "./use-design-system-state.js";
 
 export type { Toast } from "./use-pack-actions.js";
+
+export { insertApi, insertError } from "./component-insert-api.js";

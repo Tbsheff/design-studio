@@ -45,3 +45,7 @@ export { historyKeyOf, routeHistoryCommand } from "./use-undo-shortcut.js";
 export type { ShortcutState } from "./use-undo-shortcut.js";
 
 export { MAX_INLINE_TEXT, parseTextCommit } from "./use-inline-text-edit.js";
+
+export { focusStageQuietly } from "./use-inline-text-edit.js";
+
+export type { PreviewMenuItem } from "./preview-menu.js";

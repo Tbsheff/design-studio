@@ -1,172 +1,170 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  activeCell,
-  alignCell,
-  axisRole,
-  parentLayout,
-  sizeModeOf,
-  sizePatch,
-} from "./features/inspector/sizing";
+  toActiveCell,
+  toAlignCell,
+  toAxisRole,
+  toParentLayout,
+  toSizeMode,
+  toSizePatch,
+} from "./features/inspector/index";
 
-const rowParent = parentLayout({
+const rowParent = toParentLayout({
   "parent-display": "flex",
   "parent-flex-direction": "row",
 });
-
-const columnParent = parentLayout({
+const columnParent = toParentLayout({
   "parent-display": "inline-flex",
   "parent-flex-direction": "column",
 });
-
-const blockParent = parentLayout({
+const blockParent = toParentLayout({
   "parent-display": "block",
   "parent-flex-direction": "row",
 });
-
 const plain = {
-  "align-self": "auto",
-  flex: "0 1 auto",
-  height: "80px",
   width: "240px",
+  height: "80px",
+  flex: "0 1 auto",
+  "align-self": "auto",
 };
 
-describe(axisRole, () => {
+describe(toAxisRole, () => {
   it("maps width and height to the main and cross axis of a flex parent", () => {
-    expect.hasAssertions();
-
-    expect(axisRole("width", rowParent)).toBe("main");
-    expect(axisRole("height", rowParent)).toBe("cross");
-    expect(axisRole("width", columnParent)).toBe("cross");
-    expect(axisRole("height", columnParent)).toBe("main");
-    expect(axisRole("width", blockParent)).toBe("none");
-  }, 0);
+    expect(toAxisRole("width", rowParent)).toBe("main");
+    expect(toAxisRole("height", rowParent)).toBe("cross");
+    expect(toAxisRole("width", columnParent)).toBe("cross");
+    expect(toAxisRole("height", columnParent)).toBe("main");
+    expect(toAxisRole("width", blockParent)).toBe("none");
+  });
 });
 
-describe(sizePatch, () => {
-  it("fill writes flex: 1 on the main axis of a flex parent", () => {
-    expect.hasAssertions();
+const patchOf = (
+  axis: "width" | "height",
+  mode: "hug" | "fill" | "fixed",
+  context: Parameters<typeof toSizePatch>[2]
+): ReturnType<typeof toSizePatch> => toSizePatch(axis, mode, context, null);
 
-    expect(sizePatch("width", "fill", plain, rowParent, "240px")).toStrictEqual(
-      {
-        flex: "1",
-      }
-    );
+describe(toSizePatch, () => {
+  it("fill writes flex: 1 on the main axis of a flex parent", () => {
     expect(
-      sizePatch("height", "fill", plain, columnParent, "80px")
-    ).toStrictEqual({
+      patchOf("width", "fill", {
+        parent: rowParent,
+        usedPx: "240px",
+        values: plain,
+      })
+    ).toEqual({
       flex: "1",
     });
-  }, 0);
+    expect(
+      patchOf("height", "fill", {
+        parent: columnParent,
+        usedPx: "80px",
+        values: plain,
+      })
+    ).toEqual({
+      flex: "1",
+    });
+  });
 
   it("fill writes align-self: stretch and clears the size on the cross axis", () => {
-    expect.hasAssertions();
-
-    expect(sizePatch("height", "fill", plain, rowParent, "80px")).toStrictEqual(
-      {
-        "align-self": "stretch",
-        height: "",
-      }
-    );
-  }, 0);
+    expect(
+      patchOf("height", "fill", {
+        parent: rowParent,
+        usedPx: "80px",
+        values: plain,
+      })
+    ).toEqual({
+      "align-self": "stretch",
+      height: "",
+    });
+  });
 
   it("fill writes 100% outside flex", () => {
-    expect.hasAssertions();
-
     expect(
-      sizePatch("width", "fill", plain, blockParent, "240px")
-    ).toStrictEqual({
+      patchOf("width", "fill", {
+        parent: blockParent,
+        usedPx: "240px",
+        values: plain,
+      })
+    ).toEqual({
       width: "100%",
     });
-  }, 0);
+  });
 });
 
-describe("sizePatch hug and fixed", () => {
+describe("size modes", () => {
   it("hug writes fit-content and clears a flex grow", () => {
-    expect.hasAssertions();
-
     expect(
-      sizePatch(
-        "width",
-        "hug",
-        { ...plain, flex: "1 1 0%" },
-        rowParent,
-        "240px"
-      )
-    ).toStrictEqual({ flex: "", width: "fit-content" });
+      patchOf("width", "hug", {
+        parent: rowParent,
+        usedPx: "240px",
+        values: { ...plain, flex: "1 1 0%" },
+      })
+    ).toEqual({ width: "fit-content", flex: "" });
     expect(
-      sizePatch("height", "hug", plain, blockParent, "80px")
-    ).toStrictEqual({
+      patchOf("height", "hug", {
+        parent: blockParent,
+        usedPx: "80px",
+        values: plain,
+      })
+    ).toEqual({
       height: "fit-content",
     });
-  }, 0);
+  });
 
   it("fixed writes the used px and clears stretch", () => {
-    expect.hasAssertions();
-
     expect(
-      sizePatch(
-        "height",
-        "fixed",
-        { ...plain, "align-self": "stretch", height: "" },
-        rowParent,
-        "80px"
-      )
-    ).toStrictEqual({ "align-self": "", height: "80px" });
+      patchOf("height", "fixed", {
+        parent: rowParent,
+        usedPx: "80px",
+        values: { ...plain, height: "", "align-self": "stretch" },
+      })
+    ).toEqual({ height: "80px", "align-self": "" });
     expect(
-      sizePatch(
-        "width",
-        "fixed",
-        { ...plain, width: "fit-content" },
-        blockParent,
-        "132px"
-      )
-    ).toStrictEqual({ width: "132px" });
-  }, 0);
+      patchOf("width", "fixed", {
+        parent: blockParent,
+        usedPx: "132px",
+        values: { ...plain, width: "fit-content" },
+      })
+    ).toEqual({ width: "132px" });
+  });
 
-  it("round-trips each mode through sizeModeOf", () => {
-    expect.hasAssertions();
-
+  it("round-trips each mode through toSizeMode", () => {
     for (const parent of [rowParent, columnParent, blockParent]) {
       for (const axis of ["width", "height"] as const) {
         for (const mode of ["hug", "fill", "fixed"] as const) {
           const next = {
             ...plain,
-            ...sizePatch(axis, mode, plain, parent, "100px"),
+            ...patchOf(axis, mode, { parent, usedPx: "100px", values: plain }),
           };
-
-          expect(sizeModeOf(axis, next, parent)).toBe(mode);
+          expect(toSizeMode(axis, next, parent, null)).toBe(mode);
         }
       }
     }
-  }, 0);
+  });
 });
 
 describe("align grid", () => {
   it("maps a cell to justify and align by direction", () => {
-    expect.hasAssertions();
-
-    expect(alignCell(1, 2, true)).toStrictEqual({
-      align: "flex-end",
+    expect(toAlignCell(1, 2, true)).toEqual({
       justify: "center",
+      align: "flex-end",
     });
-    expect(alignCell(1, 2, false)).toStrictEqual({
-      align: "center",
+    expect(toAlignCell(1, 2, false)).toEqual({
       justify: "flex-end",
+      align: "center",
     });
-  }, 0);
+  });
 
   it("finds the active cell and none for stretch", () => {
-    expect.hasAssertions();
-
-    expect(activeCell("center", "flex-end", true)).toStrictEqual({
+    expect(toActiveCell("center", "flex-end", true)).toEqual({
       col: 1,
       row: 2,
     });
-    expect(activeCell("flex-end", "center", false)).toStrictEqual({
+    expect(toActiveCell("flex-end", "center", false)).toEqual({
       col: 1,
       row: 2,
     });
-    expect(activeCell("normal", "normal", true)).toBeNull();
-  }, 0);
+    expect(toActiveCell("normal", "normal", true)).toBeNull();
+  });
 });

@@ -4,7 +4,7 @@ import type { MutableRefObject } from "react";
 
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
-import { NO_SOURCE as noSource } from "../inspector/structure-edits.js";
+import { NO_SOURCE as noSource } from "../inspector/index.js";
 import { insertBus } from "./component-insert-api.js";
 import { toDropHint } from "./component-insert-hint.js";
 import type { Options } from "./component-insert-model.js";

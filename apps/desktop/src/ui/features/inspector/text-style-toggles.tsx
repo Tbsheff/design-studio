@@ -2,9 +2,9 @@ import { memo, useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { isSameEditValues } from "./edit-request-model.js";
 import { hasTextLine, toItalicNext, toToggledLine } from "./rows-model.js";
 import { StyleToggle } from "./style-toggle.js";
-import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const LINE_PROP = "text-decoration-line";

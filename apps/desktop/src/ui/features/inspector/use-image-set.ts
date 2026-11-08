@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import type { SetImageRequest } from "../../../shared/image.js";
@@ -11,23 +11,62 @@ import {
   toImageTarget,
 } from "./use-image-api.js";
 
+type ImageChange = Omit<SetImageRequest, "target">;
+
 interface UseImageSetResult {
   readonly isBusy: boolean;
   readonly error: string | null;
   readonly placed: string | null;
-  readonly run: (
-    change: Omit<SetImageRequest, "target">,
-    file?: Blob | null
-  ) => Promise<void>;
+  readonly run: (change: ImageChange, file: Blob | null) => Promise<void>;
   readonly setError: Dispatch<SetStateAction<string | null>>;
 }
 
-const useImageSet = (props: Props): UseImageSetResult => {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [placed, setPlaced] = useState<string | null>(null);
+const toPlacedName = (src: string): string | null =>
+  src.split("/").pop() ?? null;
 
-  const reselect = (): void => {
+interface SendHandlers {
+  readonly onChanged: () => void;
+  readonly onFailure: (message: string) => void;
+  readonly onPlaced: (name: string | null) => void;
+}
+
+const runImageSet = async (
+  props: Props,
+  change: ImageChange,
+  file: Blob | null,
+  handlers: SendHandlers
+): Promise<void> => {
+  try {
+    const request: SetImageRequest = {
+      target: toImageTarget(props.selection),
+      ...change,
+    };
+
+    if (file) {
+      request.image = await toFileData(file);
+    }
+
+    const result = await imageApi.set(
+      props.projectId,
+      props.directionId,
+      request
+    );
+
+    if (result.src) {
+      handlers.onPlaced(toPlacedName(String(result.src)));
+    }
+
+    if (result.changed) {
+      handlers.onChanged();
+    }
+  } catch (error) {
+    handlers.onFailure(toImageError(error));
+  }
+};
+
+const useReselect =
+  (props: Props): (() => void) =>
+  () => {
     for (const wait of RESELECT_AFTER_MS) {
       globalThis.setTimeout(
         () =>
@@ -40,63 +79,46 @@ const useImageSet = (props: Props): UseImageSetResult => {
     }
   };
 
-  const queue = useRef<Promise<void>>(Promise.resolve());
-  const pending = useRef(0);
+const useImageSet = (props: Props): UseImageSetResult => {
+  const [isBusy, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [placed, setPlaced] = useState<string | null>(null);
+  const reselect = useReselect(props);
+  const queue = useRef<Promise<void> | null>(null);
 
-  const send = async (
-    change: Omit<SetImageRequest, "target">,
-    file?: Blob | null
+  const send = (change: ImageChange, file: Blob | null): Promise<void> =>
+    runImageSet(props, change, file, {
+      onChanged: reselect,
+      onFailure: setError,
+      onPlaced: setPlaced,
+    });
+
+  const sendAfter = async (
+    previous: Promise<void>,
+    change: ImageChange,
+    file: Blob | null
   ): Promise<void> => {
-    try {
-      const image = file ? await toFileData(file) : undefined;
-
-      const result = await imageApi.set(props.projectId, props.directionId, {
-        target: toImageTarget(props.selection),
-        ...change,
-        ...(image ? { image } : {}),
-      });
-
-      if (result.src) {
-        setPlaced(String(result.src).split("/").pop() ?? null);
-      }
-
-      if (result.changed) {
-        reselect();
-      }
-    } catch (failure) {
-      setError(toImageError(failure));
-    }
+    await previous;
+    await send(change, file);
   };
 
-  const run = (
-    change: Omit<SetImageRequest, "target">,
-    file?: Blob | null
-  ): Promise<void> => {
+  const run = (change: ImageChange, file: Blob | null): Promise<void> => {
     if (!props.isEditable) {
       return Promise.resolve();
     }
 
     setError(null);
-    pending.current += 1;
-    setBusy(true);
-    const previous = queue.current;
-    queue.current = (async (): Promise<void> => {
-      try {
-        await previous;
-        await send(change, file);
-      } finally {
-        pending.current -= 1;
 
-        if (pending.current === 0) {
-          setBusy(false);
-        }
-      }
-    })();
+    const job = sendAfter(queue.current ?? Promise.resolve(), change, file);
+    queue.current = job;
+    startTransition(async () => {
+      await job;
+    });
 
-    return queue.current;
+    return job;
   };
 
-  return { error, isBusy: busy, placed, run, setError };
+  return { error, isBusy, placed, run, setError };
 };
 
 export { useImageSet };

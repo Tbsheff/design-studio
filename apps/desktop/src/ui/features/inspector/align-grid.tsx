@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { AlignCellButton } from "./align-cell-button.js";
 import { GRID_STEPS, toAlignPatch, toCellLabel } from "./auto-layout-model.js";
 import { copy } from "./copy.js";
-import { activeCell, alignCell } from "./sizing.js";
+import { toActiveCell, toAlignCell } from "./sizing-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { setEdit } from "./use-layout-keys.js";
 
@@ -21,7 +21,7 @@ const AlignGrid = ({ edit, isRow, isGrid }: Props): ReactElement => {
     justifyProp = "justify-items";
   }
 
-  const active = activeCell(
+  const active = toActiveCell(
     edit.values[justifyProp],
     edit.values["align-items"],
     isRow
@@ -29,7 +29,7 @@ const AlignGrid = ({ edit, isRow, isGrid }: Props): ReactElement => {
 
   const handlePick = useCallback(
     (col: number, row: number): void => {
-      setEdit(edit, toAlignPatch(alignCell(col, row, isRow), isGrid));
+      setEdit(edit, toAlignPatch(toAlignCell(col, row, isRow), isGrid));
     },
     [edit, isGrid, isRow]
   );

@@ -2,10 +2,10 @@ import { memo } from "react";
 import type { ReactElement } from "react";
 
 import type { InspectorProps } from "./inspector-model.js";
-import { sameShared } from "./same-props.js";
+import { isSameShared } from "./same-props-model.js";
 import { SimpleTab } from "./simple-tab.js";
 
-const SimpleTabMemo = memo(SimpleTab, sameShared);
+const SimpleTabMemo = memo(SimpleTab, isSameShared);
 
 interface Props {
   readonly props: InspectorProps;

@@ -4,7 +4,7 @@ import type { MutableRefObject } from "react";
 import type { EditSession, EditSessionHandle } from "./use-edit-session.js";
 
 const useSessionHandle = (
-  ref: MutableRefObject<EditSessionHandle | null> | undefined,
+  ref: MutableRefObject<EditSessionHandle | null> | null,
   session: EditSession
 ): void => {
   useEffect(() => {

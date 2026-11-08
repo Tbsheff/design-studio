@@ -41,7 +41,11 @@ const McpPointBadge = lazy(async () => {
   return { default: loaded.McpPointBadge };
 });
 
-const InlinePrompt = lazy(() => import("./inline-prompt.js"));
+const InlinePrompt = lazy(async () => {
+  const loaded = await import("./inline-prompt.js");
+
+  return { default: loaded.InlinePrompt };
+});
 
 export {
   ChatPanel,

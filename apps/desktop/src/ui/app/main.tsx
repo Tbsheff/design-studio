@@ -20,6 +20,7 @@ import "../styles/prototype.css";
 import "../styles/chat.css";
 import "../styles/mcp.css";
 import "../styles/composer.css";
+import "../styles/inline-prompt.css";
 import "../styles/ai.css";
 import "../styles/inspector.css";
 import "../styles/inspector-extras.css";

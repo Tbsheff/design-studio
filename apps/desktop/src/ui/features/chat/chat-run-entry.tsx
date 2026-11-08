@@ -4,15 +4,17 @@ import type { ReactElement } from "react";
 import { Message, MessageContent } from "../../ai/components/ai/message.js";
 import { ApprovalCard, canPolishRun } from "../../chat-slots.js";
 import { RunFeedbackRow } from "./chat-feedback.js";
-import { PlanCard, RunError, RunNotice, UserMessage } from "./chat-parts.js";
+import { RunError, UserMessage } from "./chat-parts.js";
 import { UserTurn } from "./chat-rewind.js";
 import { RunParts } from "./chat-run-parts.js";
 import type { PolishProps, TurnProps } from "./chat-turn-model.js";
 import { LiveStatus } from "./live-status.js";
 import { PermissionPrompt } from "./permission-prompt.js";
+import { PlanCard } from "./plan-card.js";
 import { PolishThis } from "./polish-this.js";
 import { RunCommentsCard } from "./run-comments.js";
 import { runProjectId } from "./run-history-model.js";
+import { RunNotice } from "./run-notice.js";
 import type { RunView } from "./run-state-model.js";
 
 interface EntryProps extends TurnProps {

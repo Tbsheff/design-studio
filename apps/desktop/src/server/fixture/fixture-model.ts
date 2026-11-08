@@ -30,6 +30,7 @@ interface FixturePlan {
   readonly id: string;
   readonly label: string;
   readonly removed: readonly string[];
+  readonly sourceRoute: string;
   readonly unresolved: readonly string[];
   readonly url: string;
 }

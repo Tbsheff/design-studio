@@ -6,7 +6,7 @@ import type { Direction, Project } from "@design-studio/contracts";
 import { appRouterDir, listAppRoutes } from "../app/index.js";
 import { parseModuleFile } from "../components/index.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
-import { toRouteParamNames } from "./engine/index.js";
+import { toMatchedParams, toRouteParamNames } from "./engine/index.js";
 import type { ModuleFile } from "./engine/index.js";
 
 interface SourceScope {
@@ -18,6 +18,7 @@ interface SourcePage {
   readonly ast: ModuleFile;
   readonly code: string;
   readonly file: string;
+  readonly params: Readonly<Record<string, string>>;
   readonly relative: string;
   readonly route: string;
   readonly routerDir: string;
@@ -86,10 +87,30 @@ const toKnownRoutes = (routes: readonly { readonly route: string }[]): string =>
     .map((item) => item.route)
     .join(", ");
 
+interface RouteMatch {
+  readonly found: { readonly file: string; readonly route: string };
+  readonly params: Readonly<Record<string, string>>;
+}
+
+const toRouteMatch = (
+  routes: readonly { readonly file: string; readonly route: string }[],
+  requested: string
+): RouteMatch | null => {
+  for (const found of routes) {
+    const matched = toMatchedParams(found.route, requested);
+
+    if (matched !== null) {
+      return { found, params: matched };
+    }
+  }
+
+  return null;
+};
+
 const getSourcePage = async (
   scope: SourceScope,
   rawRoute: string,
-  params: Readonly<Record<string, string>>
+  explicit: Readonly<Record<string, string>>
 ): Promise<SourcePage> => {
   const { direction, project } = scope;
   const appDir = project.app?.appDir ?? ".";
@@ -101,16 +122,19 @@ const getSourcePage = async (
     );
   }
 
-  const route = toRoute(rawRoute);
+  const requested = toRoute(rawRoute);
   const routes = await listAppRoutes(direction.workTree, appDir);
-  const found = routes.find((item) => item.route === route) ?? null;
+  const match = toRouteMatch(routes, requested);
 
-  if (found === null) {
+  if (match === null) {
     throw new NotFoundError(
-      `No page has the route ${route}. Known routes: ${toKnownRoutes(routes)}. Write dynamic parts as [param].`
+      `No page has the route ${requested}. Known routes: ${toKnownRoutes(routes)}. Write dynamic parts as [param], or give a real path.`
     );
   }
 
+  const { found } = match;
+  const { route } = found;
+  const params = { ...match.params, ...explicit };
   const missing = getMissingParams(route, params);
 
   if (missing.length > 0) {
@@ -129,7 +153,7 @@ const getSourcePage = async (
 
   const relative = found.file;
 
-  return { ast, code, file, relative, route, routerDir };
+  return { ast, code, file, params, relative, route, routerDir };
 };
 
 export { getSourcePage, toParentFolder };

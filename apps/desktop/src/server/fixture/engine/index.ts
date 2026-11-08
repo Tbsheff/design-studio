@@ -1,4 +1,8 @@
-export { toRouteParamNames, toUrlSegments } from "./route-path.js";
+export {
+  toMatchedParams,
+  toRouteParamNames,
+  toUrlSegments,
+} from "./route-path.js";
 
 export { toStrippedPage } from "./strip-server-data.js";
 

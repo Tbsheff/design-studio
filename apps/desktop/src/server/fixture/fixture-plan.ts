@@ -48,7 +48,7 @@ const toStrippedCode = (
   const stripped = toStrippedPage({
     ast: source.ast,
     code: source.code,
-    params: command.params,
+    params: source.params,
     searchParams: command.searchParams,
   });
 
@@ -106,12 +106,13 @@ const toNextFixturePlan = async (
   });
 
   const url = [
-    ...toUrlSegments(parentSegments, command.params),
+    ...toUrlSegments(parentSegments, source.params),
     FIXTURE_URL_SEGMENT,
     id,
   ].join("/");
 
   const { removed, unresolved } = stripped;
+  const sourceRoute = source.route;
   const label = `Fixture ${source.route}`.slice(0, LABEL_MAX);
   const relative = toPosix(path.relative(direction.workTree, file));
 
@@ -121,6 +122,7 @@ const toNextFixturePlan = async (
     id,
     label,
     removed,
+    sourceRoute,
     unresolved,
     url,
   };

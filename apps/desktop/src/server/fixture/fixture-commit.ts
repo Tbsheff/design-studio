@@ -1,7 +1,7 @@
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
-import type { Direction } from "@design-studio/contracts";
+import type { Direction, Project } from "@design-studio/contracts";
 import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
 import type { CanvasFile } from "@design-studio/contracts/canvas-file";
 
@@ -18,6 +18,7 @@ import {
 import type { DirectionRun } from "../direct-edit/index.js";
 import { insertExcludeEntry } from "./fixture-exclude.js";
 import type {
+  PlannedFile,
   CreateFixtureCommand,
   DeleteFixtureCommand,
   FixtureCreated,
@@ -28,7 +29,14 @@ import { toFixturePlan } from "./fixture-plan.js";
 
 const CLIENT = "ui";
 
-const getCanvasText = async (direction: Direction): Promise<string | null> => {
+const getCanvasText = async (
+  project: Project,
+  direction: Direction
+): Promise<string | null> => {
+  if (project.app) {
+    return null;
+  }
+
   try {
     return await readFile(canvasPath(direction.workTree), "utf-8");
   } catch {
@@ -57,7 +65,7 @@ const createFixtureFrame = async (
   title: string
 ): Promise<PlacedFrame> => {
   const { direction, project, runtime } = run;
-  const before = await getCanvasText(direction);
+  const before = await getCanvasText(project, direction);
   let frameId = "";
 
   await runtime.canvas.update(
@@ -83,7 +91,7 @@ const createFixtureFrame = async (
     { source: "agent" }
   );
 
-  const after = await getCanvasText(direction);
+  const after = await getCanvasText(project, direction);
 
   return { after, before, frameId };
 };
@@ -102,19 +110,67 @@ const deleteFixtureFrame = async (
   );
 };
 
+interface RecordedFile {
+  readonly after: string;
+  readonly before: string;
+  readonly created: boolean;
+  readonly file: string;
+  readonly relative: string;
+}
+
+interface VersionChange {
+  readonly paths: readonly string[];
+  readonly records: readonly RecordedFile[];
+}
+
+const toCanvasChange = (
+  project: Project,
+  direction: Direction,
+  placed: Pick<PlacedFrame, "after" | "before">
+): VersionChange => {
+  if (project.app) {
+    return { paths: [], records: [] };
+  }
+
+  const record: RecordedFile = {
+    after: placed.after ?? "",
+    before: placed.before ?? "",
+    created: placed.before === null,
+    file: canvasPath(direction.workTree),
+    relative: CANVAS_FILE,
+  };
+
+  return { paths: [CANVAS_FILE], records: [record] };
+};
+
+const toFileChange = (
+  workTree: string,
+  files: readonly PlannedFile[]
+): VersionChange => ({
+  paths: files.map((item) => item.relative),
+  records: files.map((item) => ({
+    after: item.code,
+    before: "",
+    created: true,
+    file: path.join(workTree, item.relative),
+    relative: item.relative,
+  })),
+});
+
 const createFixtureVersion = async (
   run: DirectionRun,
-  files: readonly string[],
   title: string,
-  history: { readonly after: string | null; readonly before: string | null }
+  changes: readonly VersionChange[]
 ): Promise<string | null> => {
   const { direction, project, runtime } = run;
   const deps = runtime.editDeps;
+  const paths = changes.flatMap((change) => change.paths);
+  const records = changes.flatMap((change) => change.records);
 
   const version = await deps.versions.commitFile(
     project,
     direction,
-    [...files, CANVAS_FILE],
+    paths,
     title,
     { client: CLIENT, kind: "manual", prompt: `${title} by ${CLIENT}` }
   );
@@ -125,15 +181,7 @@ const createFixtureVersion = async (
 
   deps.history?.record({
     directionId: direction.id,
-    files: [
-      {
-        after: history.after ?? "",
-        before: history.before ?? "",
-        created: history.before === null,
-        file: canvasPath(direction.workTree),
-        relative: CANVAS_FILE,
-      },
-    ],
+    files: records,
     label: title,
     projectId: project.id,
     versionId: version.id,
@@ -184,14 +232,16 @@ const createFixturePage = async (
 
   const placed = await createFixtureFrame(run, plan.url, plan.label);
   const { after, before, frameId } = placed;
-  const [first] = plan.files;
-  const file = first?.relative ?? plan.folder;
+  const page = plan.files.find((item) => item.relative.includes("page."));
+  const file = page?.relative ?? plan.folder;
 
   const versionId = await createFixtureVersion(
     run,
-    plan.files.map((item) => item.relative),
     `Create data fixture ${plan.url}`,
-    { after, before }
+    [
+      toFileChange(direction.workTree, plan.files),
+      toCanvasChange(project, direction, { after, before }),
+    ]
   );
 
   const { removed, unresolved } = plan;
@@ -212,7 +262,7 @@ const createFixturePage = async (
   const createdAt = new Date().toISOString();
   const directionId = direction.id;
   const { folder } = plan;
-  const sourceRoute = command.route;
+  const { sourceRoute } = plan;
 
   const stored: StoredFixture = {
     createdAt,
@@ -236,23 +286,20 @@ const deleteFixturePage = async (
   const { direction, project, runtime } = run;
   assertCanEdit(runtime.editDeps, project, direction);
 
-  const before = await getCanvasText(direction);
+  const before = await getCanvasText(project, direction);
+
   await rm(path.join(direction.workTree, stored.folder), {
     force: true,
     recursive: true,
   });
-  await deleteFixtureFrame(run, stored.frameId);
-  const after = await getCanvasText(direction);
 
-  await createFixtureVersion(
-    run,
-    [stored.folder],
-    `Delete data fixture ${stored.route}`,
-    {
-      after,
-      before,
-    }
-  );
+  await deleteFixtureFrame(run, stored.frameId);
+  const after = await getCanvasText(project, direction);
+
+  await createFixtureVersion(run, `Delete data fixture ${stored.route}`, [
+    { paths: [stored.folder], records: [] },
+    toCanvasChange(project, direction, { after, before }),
+  ]);
 
   return {
     file: stored.file,

@@ -12,11 +12,22 @@ const handle = Effect.fn("fixture.list")(function* run(
 ) {
   const store = yield* FixtureStore;
 
-  return yield* store.list({
+  const page = yield* store.list({
     cursor: input.cursor,
     limit: input.limit,
     projectId: input.projectId,
   });
+
+  const items = page.items.map((item) => ({
+    createdAt: item.createdAt,
+    file: item.file,
+    frameId: item.frameId,
+    id: item.id,
+    route: item.route,
+    sourceRoute: item.sourceRoute,
+  }));
+
+  return { items, next: page.next };
 }) satisfies Handle<typeof listFixture>;
 
 export { handle };

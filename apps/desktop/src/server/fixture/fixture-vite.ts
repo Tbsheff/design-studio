@@ -203,6 +203,7 @@ const toViteFixturePlan = async (
   const label = `Fixture ${command.route}`.slice(0, LABEL_MAX);
 
   const { removed, unresolved } = stripped;
+  const sourceRoute = command.route;
   const url = `${FIXTURE_URL_SEGMENT}/${id}/`;
 
   const files = [
@@ -211,7 +212,16 @@ const toViteFixturePlan = async (
     { code: page, relative: `${folder}/page.tsx` },
   ];
 
-  return { files, folder, id, label, removed, unresolved, url };
+  return {
+    files,
+    folder,
+    id,
+    label,
+    removed,
+    sourceRoute,
+    unresolved,
+    url,
+  };
 };
 
 export { toViteFixturePlan };

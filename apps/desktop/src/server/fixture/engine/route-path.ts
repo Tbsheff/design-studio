@@ -80,4 +80,33 @@ const toUrlSegments = (
     return [params[name] ?? segment];
   });
 
-export { toMovedSpecifier, toRouteParamNames, toUrlSegments };
+const toMatchedParams = (
+  pattern: string,
+  actual: string
+): Readonly<Record<string, string>> | null => {
+  const patternParts = toParts(pattern);
+  const actualParts = toParts(actual);
+
+  if (patternParts.length !== actualParts.length) {
+    return null;
+  }
+
+  const params: Record<string, string> = {};
+
+  for (const [index, part] of patternParts.entries()) {
+    const value = actualParts[index] ?? "";
+    const name = SEGMENT_PARAM.exec(part)?.groups?.name ?? null;
+
+    if (name === null && part !== value) {
+      return null;
+    }
+
+    if (name !== null) {
+      params[name] = value;
+    }
+  }
+
+  return params;
+};
+
+export { toMatchedParams, toMovedSpecifier, toRouteParamNames, toUrlSegments };

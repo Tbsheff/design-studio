@@ -75,7 +75,7 @@ const tokenScore = (
 
   if (loose) {
     return {
-      score: 2 - (loose[loose.length - 1]! - loose[0]!) / 100,
+      score: 2 - (loose.at(-1)! - loose[0]!) / 100,
       marks: loose,
     };
   }

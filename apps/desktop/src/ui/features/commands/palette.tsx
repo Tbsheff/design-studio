@@ -38,7 +38,7 @@ import { collectCommands } from "./registry.js";
 
 const RECENT_KEY = "design-studio.commands.recent.v1";
 const RECENT_MAX = 5;
-const DESKTOP = typeof window !== "undefined" && isDesktop();
+const DESKTOP = "window" in globalThis && isDesktop();
 
 const readRecent = (): string[] => {
   try {
@@ -214,7 +214,7 @@ const usePaletteRows = (
       },
       openProject: (id: string, route?: string): void => {
         onClose();
-        window.setTimeout(() => openProject(id, route), 0);
+        globalThis.setTimeout(() => openProject(id, route), 0);
       },
     }),
     [onClose, setError]
@@ -288,7 +288,7 @@ const Palette = ({
     }
 
     onClose();
-    window.setTimeout(() => row.run(), 0);
+    globalThis.setTimeout(() => row.run(), 0);
   };
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>): void => {

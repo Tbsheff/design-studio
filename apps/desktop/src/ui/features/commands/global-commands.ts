@@ -10,7 +10,7 @@ import {
 import type { Command } from "./registry.js";
 
 const focusNewProject = (): void => {
-  window.requestAnimationFrame(() =>
+  globalThis.requestAnimationFrame(() =>
     findElement(document.body, '[aria-label="Describe the design"]')?.focus()
   );
 };
@@ -30,7 +30,9 @@ type ThemePref = "system" | "light" | "dark";
 
 const setTheme = (pref: ThemePref): void => {
   (
-    window as unknown as { studioTheme?: { set: (pref: ThemePref) => void } }
+    globalThis as unknown as {
+      studioTheme?: { set: (pref: ThemePref) => void };
+    }
   ).studioTheme?.set(pref);
 };
 
@@ -67,7 +69,7 @@ const findTextCommand = (inProject: boolean): Command => ({
   id: FIND_TEXT_COMMAND,
   keyId: "find-text",
   keywords: "search replace copy words rename text",
-  run: () => window.dispatchEvent(new CustomEvent(FIND_TEXT_EVENT)),
+  run: () => globalThis.dispatchEvent(new CustomEvent(FIND_TEXT_EVENT)),
   title: "Find and replace text",
   ...(inProject ? {} : { disabled: "Open a project to find text" }),
 });

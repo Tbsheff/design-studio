@@ -61,7 +61,7 @@ export const commandBlocker = (id: string): string | null => {
 };
 
 export const openLayer = (layer: CommandLayer): void => {
-  window.dispatchEvent(new CustomEvent(LAYER_EVENT, { detail: layer }));
+  globalThis.dispatchEvent(new CustomEvent(LAYER_EVENT, { detail: layer }));
 };
 
 export const useCommands = (source: Source): void => {
@@ -85,7 +85,7 @@ export const listenForCommands = (): void => {
   }
 
   listening = true;
-  window.addEventListener(COMMAND_EVENT, (event) => {
+  globalThis.addEventListener(COMMAND_EVENT, (event) => {
     const id = (event as CustomEvent<unknown>).detail;
 
     if (typeof id === "string") {

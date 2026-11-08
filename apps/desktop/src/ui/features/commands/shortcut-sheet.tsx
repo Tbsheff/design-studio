@@ -7,7 +7,7 @@ import type { KeyBinding, KeyGroup } from "./deps.js";
 import { IS_MAC, Keys } from "./keys.js";
 
 const MARK_MS = 900;
-const DESKTOP = typeof window !== "undefined" && isDesktop();
+const DESKTOP = "window" in globalThis && isDesktop();
 
 const GROUPS: KeyGroup[] = [
   "General",
@@ -26,7 +26,7 @@ const pressedIds = (event: KeyboardEvent): string[] =>
 const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
   const [query, setQuery] = useState("");
   const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
-  const timers = useRef(new Map<string, number>());
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const rootRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -57,10 +57,10 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
       setMarked((prev) => new Set([...prev, ...ids]));
 
       for (const id of ids) {
-        window.clearTimeout(live.get(id));
+        globalThis.clearTimeout(live.get(id));
         live.set(
           id,
-          window.setTimeout(() => {
+          globalThis.setTimeout(() => {
             live.delete(id);
             setMarked((prev) => {
               const next = new Set(prev);
@@ -73,13 +73,13 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
       }
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
     return (): void => {
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
 
       for (const timer of live.values()) {
-        window.clearTimeout(timer);
+        globalThis.clearTimeout(timer);
       }
 
       live.clear();

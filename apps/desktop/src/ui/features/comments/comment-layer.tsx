@@ -383,7 +383,7 @@ export const CommentLayer = (props: Props) => {
     new Map<string, (contexts: (SelectionContext | null)[]) => void>()
   );
 
-  const recheck = useRef<number | null>(null);
+  const recheck = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retargeted = useRef(new Map<string, string>());
   const live = useRef({ commentMode: props.commentMode, control });
   live.current = { commentMode: props.commentMode, control };
@@ -447,7 +447,7 @@ export const CommentLayer = (props: Props) => {
   useEffect(
     () => () => {
       if (recheck.current !== null) {
-        window.clearTimeout(recheck.current);
+        globalThis.clearTimeout(recheck.current);
       }
     },
     []
@@ -488,7 +488,7 @@ export const CommentLayer = (props: Props) => {
       setRects(next);
 
       if (missing && recheck.current === null) {
-        recheck.current = window.setTimeout(() => {
+        recheck.current = globalThis.setTimeout(() => {
           recheck.current = null;
           track(frameOfRef.current(frontRef.current));
         }, ORPHAN_GRACE_MS + 50);
@@ -587,9 +587,9 @@ export const CommentLayer = (props: Props) => {
 
   useEffect(() => {
     const hide = () => setDismissedKey(selKey);
-    window.addEventListener(INLINE_PROMPT_OPEN_EVENT, hide);
+    globalThis.addEventListener(INLINE_PROMPT_OPEN_EVENT, hide);
 
-    return () => window.removeEventListener(INLINE_PROMPT_OPEN_EVENT, hide);
+    return () => globalThis.removeEventListener(INLINE_PROMPT_OPEN_EVENT, hide);
   }, [selKey]);
 
   const modeKey = `${props.commentMode}:${props.selectMode}:${props.editing}`;
@@ -629,9 +629,9 @@ export const CommentLayer = (props: Props) => {
       }
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [feedbackOpen, selKey]);
 
   const pinned = shown.filter((c) => c.status !== "orphaned");

@@ -269,7 +269,7 @@ const studioCommands = (a: StudioActions): Command[] => {
 
 const focusComposer = (a: StudioActions): void => {
   a.onPanel("chat");
-  window.requestAnimationFrame(() =>
+  globalThis.requestAnimationFrame(() =>
     findElement(document.body, '.prompt [data-slot="composer-input"]')?.focus()
   );
 };
@@ -319,9 +319,9 @@ const useStudioKeys = (): void => {
       runCommand(hit[1]);
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, []);
 };
 

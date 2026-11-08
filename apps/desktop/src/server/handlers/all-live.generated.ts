@@ -14,6 +14,7 @@ import { EffectLive } from "./effect/live.js";
 import { EventsLive } from "./events/live.js";
 import { ExportLive } from "./export/live.js";
 import { FillLive } from "./fill/live.js";
+import { FixtureLive } from "./fixture/live.js";
 import { GalleryLive } from "./gallery/live.js";
 import { GridLive } from "./grid/live.js";
 import { IconLive } from "./icon/live.js";
@@ -43,6 +44,7 @@ import { ThemeLive } from "./theme/live.js";
 import { TokenLive } from "./token/live.js";
 import { VersionLive } from "./version/live.js";
 import { ViewportLive } from "./viewport/live.js";
+import { WalkthroughLive } from "./walkthrough/live.js";
 import { WorkspaceLive } from "./workspace/live.js";
 
 const ALL_LIVE = {
@@ -61,6 +63,7 @@ const ALL_LIVE = {
   events: EventsLive,
   export: ExportLive,
   fill: FillLive,
+  fixture: FixtureLive,
   gallery: GalleryLive,
   grid: GridLive,
   icon: IconLive,
@@ -90,6 +93,7 @@ const ALL_LIVE = {
   token: TokenLive,
   version: VersionLive,
   viewport: ViewportLive,
+  walkthrough: WalkthroughLive,
   workspace: WorkspaceLive,
 } as const;
 

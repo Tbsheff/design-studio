@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { FixtureBlock } from "./fixture-block.js";
 import { ScenarioRow } from "./scenario-row.js";
 import { useScenario } from "./use-scenario.js";
 
@@ -66,6 +67,11 @@ const ScenarioPanel = (props: PanelProps): ReactElement => {
       {state.error !== null && (
         <p className="frame-page-hint error">{state.error}</p>
       )}
+      <FixtureBlock
+        directionId={props.directionId}
+        projectId={props.projectId}
+        route={state.fixtureRoute}
+      />
     </section>
   );
 };

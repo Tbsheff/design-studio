@@ -19,6 +19,7 @@ export { ScenarioRunner, ScenarioStore } from "./scenario/index.js";
 export {
   AccessibilityStore,
   AccessibilityWriter,
+  VisionRunner,
 } from "./accessibility/index.js";
 
 export type {
@@ -27,3 +28,10 @@ export type {
   InspectAccessibilityCommand,
   SetAccessibilityCommand,
 } from "./accessibility/index.js";
+
+export { WalkthroughRunner, WalkthroughStore } from "./walkthrough/index.js";
+
+export type {
+  WalkthroughRunnerApi,
+  WalkthroughStoreApi,
+} from "./walkthrough/index.js";

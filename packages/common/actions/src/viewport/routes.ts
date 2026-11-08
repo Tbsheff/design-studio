@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  applyViewport: {
+    id: "viewport.apply",
+    invalidates: ["direct-edit.getTree", "workspace.getFrameHtml"],
+    method: "POST",
+    path: "/api/projects/:projectId/viewport/apply",
+  },
   createViewport: {
     id: "viewport.create",
     invalidates: ["canvas.getDoc"],

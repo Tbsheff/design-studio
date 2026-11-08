@@ -1,10 +1,15 @@
 import { Layer } from "effect";
 
-import { AccessibilityStore, AccessibilityWriter } from "../../review/index.js";
+import {
+  AccessibilityStore,
+  AccessibilityWriter,
+  VisionRunner,
+} from "../../review/index.js";
 
 const AccessibilityLive = Layer.mergeAll(
   AccessibilityStore.layer,
-  AccessibilityWriter.layer
+  AccessibilityWriter.layer,
+  VisionRunner.layer
 );
 
 export { AccessibilityLive };

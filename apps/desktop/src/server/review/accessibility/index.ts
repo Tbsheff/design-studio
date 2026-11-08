@@ -12,6 +12,8 @@ export { AccessibilityStore } from "./accessibility-store.js";
 
 export { AccessibilityWriter } from "./accessibility-writer.js";
 
+export { VisionRunner } from "./vision-runner.js";
+
 export {
   planAccessibility,
   setAccessibilityAttributes,
@@ -22,6 +24,10 @@ export type {
   InspectAccessibilityCommand,
   SetAccessibilityCommand,
 } from "./accessibility-run.js";
+
+export type { RunVisionCommand } from "./vision-run.js";
+
+export type { VisionRunnerApi } from "./vision-runner.js";
 
 export type { AccessibilityStoreApi } from "./accessibility-store.js";
 

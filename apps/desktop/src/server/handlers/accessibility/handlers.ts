@@ -3,10 +3,12 @@ import type { AccessibilityActions } from "@design-studio/actions/accessibility/
 
 import type { Entries } from "../_core/handler.js";
 import { handle as inspectAccessibilityHandle } from "./inspect.js";
+import { handle as runVisionAccessibilityHandle } from "./run-vision.js";
 import { handle as setAccessibilityHandle } from "./set.js";
 
 const AccessibilityEntries = {
   inspectAccessibility: { handle: inspectAccessibilityHandle },
+  runVisionAccessibility: { handle: runVisionAccessibilityHandle },
   setAccessibility: { handle: setAccessibilityHandle },
 } satisfies Entries<typeof AccessibilityActions>;
 

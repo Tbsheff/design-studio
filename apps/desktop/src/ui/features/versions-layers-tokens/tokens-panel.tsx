@@ -13,6 +13,7 @@ import { TokenSweepSlot, tokenSweepCopy } from "../token-sweep/index.js";
 import { COPY } from "./copy.js";
 import { rawToken, shownRaw, tokenSections } from "./token-draft.js";
 import type { RawToken } from "./token-draft.js";
+import { TokenExportMenu } from "./token-export-menu.js";
 import { TokensFooter } from "./tokens-footer.js";
 import { TokensHeaderEnd } from "./tokens-header-end.js";
 import { TokensSearch } from "./tokens-search.js";
@@ -103,6 +104,7 @@ const TokensPanel = ({ tokens, draft, sweep }: TokensPanelProps): ReactNode => {
           tokens={tokens.source.tokens}
         />
       )}
+      {sweep && <TokenExportMenu setup={sweep} />}
       <TokensSearch query={query} onQuery={setQuery} />
       {draft.errors[""] && (
         <p className="ins-error" role="alert">

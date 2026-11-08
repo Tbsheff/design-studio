@@ -84,7 +84,74 @@ const ViewportInspectedSchema = Schema.Struct({
   page: Schema.String,
 });
 
+const FIX_DEFAULT_WIDTHS: readonly number[] = [PHONE_WIDTH, TABLET_WIDTH];
+
+const FIX_ALL_KINDS = [
+  "overflow",
+  "clipped-text",
+  "tap-target",
+  "horizontal-scroll",
+] as const;
+
+const ViewportFixFields = {
+  isDryRun: Schema.Boolean.annotate({
+    description:
+      "True lists the edits and writes nothing. False writes them as one version.",
+  }),
+  kinds: Schema.Array(ViewportFindingKindSchema)
+    .check(Schema.isMinLength(1))
+    .annotate({
+      description:
+        "Finding kinds to fix: overflow, clipped-text, tap-target, horizontal-scroll. Default all.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(FIX_ALL_KINDS))),
+  page: Schema.String.annotate({
+    description:
+      "Page path relative to the project root. Leave out for the entry page.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(""))),
+  widths: Schema.Array(ViewportWidthSchema)
+    .check(Schema.isMaxLength(MAX_WIDTHS), Schema.isMinLength(1))
+    .annotate({ description: "Widths to fix. Default 375 and 768." })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(FIX_DEFAULT_WIDTHS))),
+} as const;
+
+const ViewportFixAppliedSchema = Schema.Struct({
+  after: Schema.String,
+  before: Schema.String,
+  kind: ViewportFindingKindSchema,
+  layerId: Schema.String,
+  width: Schema.Int,
+});
+
+const ViewportFixSkippedSchema = Schema.Struct({
+  kind: ViewportFindingKindSchema,
+  layerId: Schema.NullOr(Schema.String),
+  reason: Schema.String,
+  width: Schema.Int,
+});
+
+const ViewportFixCountSchema = Schema.Struct({
+  clippedText: Schema.Int,
+  horizontalScroll: Schema.Int,
+  overflow: Schema.Int,
+  tapTargets: Schema.Int,
+  width: Schema.Int,
+});
+
+const ViewportFixedSchema = Schema.Struct({
+  after: Schema.Array(ViewportFixCountSchema),
+  applied: Schema.Array(ViewportFixAppliedSchema),
+  before: Schema.Array(ViewportFixCountSchema),
+  skipped: Schema.Array(ViewportFixSkippedSchema),
+  versionId: Schema.NullOr(Schema.String),
+});
+
 export {
+  ViewportFixAppliedSchema,
+  ViewportFixCountSchema,
+  ViewportFixedSchema,
+  ViewportFixFields,
+  ViewportFixSkippedSchema,
   ViewportCellSchema,
   ViewportCreatedSchema,
   ViewportFindingSchema,

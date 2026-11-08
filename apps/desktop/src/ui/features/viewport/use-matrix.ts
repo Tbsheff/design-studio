@@ -3,6 +3,8 @@ import { useCallback, useState, useTransition } from "react";
 import { DEFAULT_WIDTHS, toggleWidth } from "./matrix-model.js";
 import type { MatrixReportView, Scheme } from "./matrix-model.js";
 import { useCreateMatrix } from "./use-create.js";
+import { useFix } from "./use-fix.js";
+import type { FixView } from "./use-fix.js";
 import { useRunMatrix } from "./use-run.js";
 import type { RunInput } from "./use-run.js";
 
@@ -15,6 +17,7 @@ interface MatrixOptions {
 interface MatrixView {
   readonly canRun: boolean;
   readonly error: string | null;
+  readonly fix: FixView;
   readonly handleCheck: () => void;
   readonly handleCreate: () => void;
   readonly handleScheme: (picked: Scheme) => void;
@@ -85,6 +88,14 @@ const useMatrix = (options: MatrixOptions): MatrixView => {
     });
   }, [directionId, options, runner, scheme, widths]);
 
+  const fix = useFix({
+    directionId: options.directionId,
+    onApplied: handleCheck,
+    page: options.page,
+    projectId: options.projectId,
+    widths,
+  });
+
   const handleWidth = useCallback((picked: number) => {
     setWidths((current) => toggleWidth(current, picked));
   }, []);
@@ -99,6 +110,7 @@ const useMatrix = (options: MatrixOptions): MatrixView => {
   return {
     canRun,
     error,
+    fix,
     handleCheck,
     handleCreate,
     handleScheme,

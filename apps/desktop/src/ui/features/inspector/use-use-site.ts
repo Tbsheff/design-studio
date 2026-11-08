@@ -1,4 +1,4 @@
-import type { SelectionContext } from "@design-studio/contracts";
+import type { SelectionContext, SourceLoc } from "@design-studio/contracts";
 import { sharedSourceOf } from "@design-studio/contracts/app";
 import type { SharedSource } from "@design-studio/contracts/app";
 import { useState } from "react";
@@ -16,22 +16,75 @@ interface UseUseSiteResult {
   } | null;
 }
 
+interface UseSource {
+  readonly component: string;
+  readonly source: SourceLoc;
+}
+
+const toSharedSource = (
+  target: SelectionContext | undefined,
+  appDir: InspectorProps["appDir"]
+): SharedSource | null => {
+  if (target && appDir) {
+    return sharedSourceOf(target, appDir);
+  }
+
+  return null;
+};
+
+const toUse = (shared: SharedSource | null): UseSource | null => {
+  if (shared?.use && shared.name) {
+    return { component: shared.name, source: shared.use };
+  }
+
+  return null;
+};
+
+const toUseSource = (
+  use: UseSource | null,
+  target: SelectionContext | undefined
+): SourceLoc | null => {
+  if (use) {
+    return target?.source ?? null;
+  }
+
+  return null;
+};
+
+const toEffective = (
+  target: SelectionContext | undefined,
+  use: UseSource | null,
+  isEditingUse: boolean
+): SelectionContext | undefined => {
+  if (target && use && isEditingUse) {
+    return { ...target, ...use, usedAt: null };
+  }
+
+  return target;
+};
+
+const toToggled = (
+  isEditingUse: boolean,
+  target: SelectionContext | undefined
+): string | null => {
+  if (isEditingUse) {
+    return target?.selector ?? null;
+  }
+
+  return null;
+};
+
 const useUseSite = (props: InspectorProps): UseUseSiteResult => {
   const [componentFor, setComponentFor] = useState<string | null>(null);
   const target = props.selection.length === 1 ? props.selection[0] : undefined;
 
-  const shared =
-    target && props.appDir ? sharedSourceOf(target, props.appDir) : null;
-
-  const use =
-    shared?.use && shared.name
-      ? { component: shared.name, source: shared.use }
-      : null;
+  const shared = toSharedSource(target, props.appDir);
+  const use = toUse(shared);
 
   const component = useElementClasses(
     props.projectId,
     props.directionId,
-    use ? (target?.source ?? null) : null,
+    toUseSource(use, target),
     0
   );
 
@@ -40,11 +93,8 @@ const useUseSite = (props: InspectorProps): UseUseSiteResult => {
     component.element?.forwardsClassName !== false &&
     componentFor !== target?.selector;
 
-  const effective =
-    target && use && editingUse ? { ...target, ...use, usedAt: null } : target;
-
-  const toggle = (): void =>
-    setComponentFor(editingUse ? (target?.selector ?? null) : null);
+  const effective = toEffective(target, use, editingUse);
+  const toggle = (): void => setComponentFor(toToggled(editingUse, target));
 
   return {
     effective,

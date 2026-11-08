@@ -34,6 +34,18 @@ const selectionTargets = (
   }));
 };
 
+const toRefId = (drop: LayerDrop): number => {
+  if ("into" in drop) {
+    return drop.into;
+  }
+
+  if ("before" in drop) {
+    return drop.before;
+  }
+
+  return drop.after;
+};
+
 const nodeTarget = (node: LayerNode | undefined): StructureTarget | null => {
   const source = parseLoc(node?.loc);
 
@@ -44,6 +56,21 @@ const isSameLoc = (first: StructureTarget, second: StructureTarget): boolean =>
   first.source.file === second.source.file &&
   first.source.line === second.source.line &&
   first.source.col === second.source.col;
+
+const toDragTargets = (
+  selected: StructureTarget[] | null,
+  dragged: StructureTarget
+): StructureTarget[] => {
+  if (
+    selected &&
+    selected.length > 1 &&
+    selected.some((entry) => isSameLoc(entry, dragged))
+  ) {
+    return selected;
+  }
+
+  return [dragged];
+};
 
 const dropRequest = (
   nodes: LayerNode[],
@@ -56,10 +83,7 @@ const dropRequest = (
 
   const dragged = byId(id);
 
-  const refId =
-    "into" in drop ? drop.into : "before" in drop ? drop.before : drop.after;
-
-  const ref = byId(refId);
+  const ref = byId(toRefId(drop));
 
   if (!dragged || !ref) {
     return null;
@@ -67,20 +91,17 @@ const dropRequest = (
 
   const selected = selectionTargets(selection);
 
-  const targets =
-    selected &&
-    selected.length > 1 &&
-    selected.some((entry) => isSameLoc(entry, dragged))
-      ? selected
-      : [dragged];
+  const targets = toDragTargets(selected, dragged);
 
   if ("into" in drop) {
     return { into: ref, op: "move", targets };
   }
 
-  return "before" in drop
-    ? { before: ref, op: "move", targets }
-    : { after: ref, op: "move", targets };
+  if ("before" in drop) {
+    return { before: ref, op: "move", targets };
+  }
+
+  return { after: ref, op: "move", targets };
 };
 
 interface StructureMenuState {
@@ -98,6 +119,16 @@ const LABELS: Record<StructureKey, string> = {
   paste: "Move cut layers here",
   unwrap: "Unwrap",
   wrap: "Wrap in auto layout",
+};
+
+const PLAIN_LABEL_KEYS = new Set(["paste", "wrap", "group"]);
+
+const toMenuLabel = (key: StructureKey, count: number): string => {
+  if (count > 1 && !PLAIN_LABEL_KEYS.has(key)) {
+    return `${LABELS[key]} ${count} layers`;
+  }
+
+  return LABELS[key];
 };
 
 const ICONS: Record<StructureKey, PreviewMenuItem["icon"]> = {
@@ -147,10 +178,7 @@ const structureMenuItems = (
   MENU_ORDER.map((key, index) => {
     const disabled = blockReason(key, state);
 
-    const label =
-      state.count > 1 && key !== "paste" && key !== "wrap" && key !== "group"
-        ? `${LABELS[key]} ${state.count} layers`
-        : LABELS[key];
+    const label = toMenuLabel(key, state.count);
 
     return {
       divider: (leadDivider && index === 0) || key === "delete",

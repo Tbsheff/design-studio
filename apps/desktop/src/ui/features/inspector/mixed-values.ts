@@ -2,6 +2,7 @@ import type {
   DirectEditRequest,
   DirectStyleProperty,
   SelectionContext,
+  SourceLoc,
 } from "@design-studio/contracts";
 
 import {
@@ -38,13 +39,22 @@ const mergeValues = (list: StyleValues[]): MergedValues => {
   return { mixed, values };
 };
 
-const locKey = (selection: SelectionContext): string | null => {
-  const entry =
-    selection.usedBy?.root && selection.usedAt
-      ? selection.usedAt
-      : selection.source;
+const toLocEntry = (selection: SelectionContext): SourceLoc | null => {
+  if (selection.usedBy?.root && selection.usedAt) {
+    return selection.usedAt;
+  }
 
-  return entry ? `${entry.file}:${entry.line}:${entry.col}` : null;
+  return selection.source;
+};
+
+const locKey = (selection: SelectionContext): string | null => {
+  const entry = toLocEntry(selection);
+
+  if (!entry) {
+    return null;
+  }
+
+  return `${entry.file}:${entry.line}:${entry.col}`;
 };
 
 const multiBlockReason = (selections: SelectionContext[]): string | null => {
@@ -76,7 +86,11 @@ interface PropShift extends Shift {
 type Shifts = Partial<Record<DirectStyleProperty, PropShift>>;
 
 const shiftedProp = (raw: string, shift: PropShift): string | null => {
-  let value = shift.delta === 0 ? raw : shiftedValue(raw, shift);
+  let value: string | null = raw;
+
+  if (shift.delta !== 0) {
+    value = shiftedValue(raw, shift);
+  }
 
   if (value === null) {
     return null;

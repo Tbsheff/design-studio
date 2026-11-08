@@ -63,12 +63,19 @@ interface ShiftPart {
 const shiftedPart = (raw: string, part: ShiftPart, shift: Shift): string =>
   part.map(raw, (value) => {
     const from = part.set ?? value;
-    const next = shift.delta === 0 ? from : (shiftedValue(from, shift) ?? from);
+    let next = from;
+
+    if (shift.delta !== 0) {
+      next = shiftedValue(from, shift) ?? from;
+    }
+
     const parsed = parseNumber(next);
 
-    return parsed && parsed.unit === "" && parsed.value !== 0
-      ? formatNumber(parsed.value, "px")
-      : next;
+    if (parsed && parsed.unit === "" && parsed.value !== 0) {
+      return formatNumber(parsed.value, "px");
+    }
+
+    return next;
   });
 
 const shiftedValue = (raw: string, shift: Shift): string | null => {
@@ -107,7 +114,11 @@ const alphaOf = (raw: string | undefined): number => {
     return 1;
   }
 
-  return raw.endsWith("%") ? Number(raw.slice(0, -1)) / 100 : Number(raw);
+  if (raw.endsWith("%")) {
+    return Number(raw.slice(0, -1)) / 100;
+  }
+
+  return Number(raw);
 };
 
 const colorToHex = (raw: string): string | null => {
@@ -116,9 +127,11 @@ const colorToHex = (raw: string): string | null => {
   if (HEX_RE.test(value)) {
     const body = value.slice(1);
 
-    return body.length === 3
-      ? `#${[...body].map((item) => item + item).join("")}`.toLowerCase()
-      : value.toLowerCase();
+    if (body.length === 3) {
+      return `#${[...body].map((item) => item + item).join("")}`.toLowerCase();
+    }
+
+    return value.toLowerCase();
   }
 
   const match = RGB_RE.exec(value);
@@ -179,7 +192,11 @@ const tidy = (raw: string | undefined): string => {
   const value = (raw ?? "").trim();
   const parsed = parseNumber(value);
 
-  return parsed ? formatNumber(parsed.value, parsed.unit) : value;
+  if (parsed) {
+    return formatNumber(parsed.value, parsed.unit);
+  }
+
+  return value;
 };
 
 const valuesFromStyles = (styles: Record<string, string>): StyleValues => {

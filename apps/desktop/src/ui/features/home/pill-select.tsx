@@ -1,4 +1,4 @@
-import type { ReactElement, RefObject } from "react";
+import type { ComponentProps, ReactElement, RefObject } from "react";
 
 import { StableText } from "../chat/stable-text.js";
 import { loadPops } from "./lazy-parts-model.js";
@@ -18,6 +18,11 @@ const toCaretPath = (isOpen: boolean): string => {
 
   return CARET_CLOSED;
 };
+
+const toSizeEntries = (
+  sizes: readonly string[]
+): ComponentProps<typeof StableText>["sizes"] =>
+  sizes.map((size) => ({ key: size, node: size }));
 
 const PillSelect = ({
   label,
@@ -51,9 +56,7 @@ const PillSelect = ({
   >
     <span className="ui-pill-select-label">{label}</span>
     <span className="ui-pill-select-value truncate">
-      <StableText sizes={sizes.map((size) => ({ key: size, node: size }))}>
-        {value}
-      </StableText>
+      <StableText sizes={toSizeEntries(sizes)}>{value}</StableText>
     </span>
     <svg
       className="ui-pill-select-caret"

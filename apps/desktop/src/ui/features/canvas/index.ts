@@ -42,6 +42,7 @@ export { canvasFrameName, framePage } from "./frame-label-model.js";
 export { pageName } from "./page-name-model.js";
 
 export { nextSelection } from "./preview-selection-model.js";
+
 export { runVector } from "./vector-tool-model.js";
 
 export { cleanFramePath, parseLayout } from "./canvas-frames-model.js";
@@ -50,8 +51,10 @@ export { historyKeyOf, routeHistoryCommand } from "./use-undo-shortcut.js";
 
 export type { ShortcutState } from "./use-undo-shortcut.js";
 
-export { MAX_INLINE_TEXT, parseTextCommit } from "./use-inline-text-edit.js";
-
-export { focusStageQuietly } from "./use-inline-text-edit.js";
+export {
+  focusStageQuietly,
+  MAX_INLINE_TEXT,
+  parseTextCommit,
+} from "./use-inline-text-edit.js";
 
 export type { PreviewMenuItem } from "./preview-menu.js";

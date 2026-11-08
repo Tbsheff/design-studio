@@ -1,5 +1,5 @@
 import { usePopover } from "@design-studio/ui";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type {
   Dispatch,
   KeyboardEvent as ReactKeyboardEvent,
@@ -7,6 +7,7 @@ import type {
   SetStateAction,
 } from "react";
 
+import { SCREEN_DUPLICATE_EVENT } from "../../domain/screen-events.js";
 import { toMenuItems } from "./menu-items-model.js";
 
 interface FrameMenu {
@@ -79,4 +80,35 @@ const useMenu = (): FrameMenu => {
   return { close, open, root, setOpen, trigger };
 };
 
-export { menuKeys, useMenu };
+interface ScreenEntry {
+  readonly icon: "copy";
+  readonly id: string;
+  readonly label: string;
+  readonly run: () => void;
+}
+
+const useScreenEntry = (root: RefObject<HTMLElement | null>): ScreenEntry => {
+  const run = useCallback((): void => {
+    const frame = root.current?.closest<HTMLElement>("[data-frame-id]") ?? null;
+
+    globalThis.dispatchEvent(
+      new CustomEvent(SCREEN_DUPLICATE_EVENT, {
+        detail: { frameId: frame?.dataset.frameId ?? null },
+      })
+    );
+  }, [root]);
+
+  return useMemo(
+    () => ({
+      icon: "copy",
+      id: "duplicate-screen",
+      label: "Duplicate screen…",
+      run,
+    }),
+    [run]
+  );
+};
+
+export { menuKeys, useMenu, useScreenEntry };
+
+export type { ScreenEntry };

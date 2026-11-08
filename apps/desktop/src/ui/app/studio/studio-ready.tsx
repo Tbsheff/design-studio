@@ -9,6 +9,7 @@ import { useBindStudioCommands } from "./bind-studio-commands";
 import { DataModelLayer } from "./data-model-layer";
 import { DevStatusLayer } from "./dev-status-layer";
 import { paneAttr, shipOpener } from "./project-model";
+import { ScreenLayer } from "./screen-layer";
 import { StudioCenter } from "./studio-center";
 import type { StudioCtx } from "./studio-context";
 import type { StudioCore } from "./studio-core-types";
@@ -77,6 +78,7 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
       </div>
       <StudioRight ctx={ctx} />
       <DevStatusLayer projectId={projectId} />
+      <ScreenLayer projectId={projectId} />
       <DataModelLayer draft={ui.draft} />
     </div>
   );

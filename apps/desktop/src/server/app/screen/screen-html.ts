@@ -184,12 +184,20 @@ const toSourceFramePath = (scope: InspectScope, from: string): string => {
   return from;
 };
 
+const toSourceFile = (scope: InspectScope, raw: string): string => {
+  if (raw.split("/").every((part) => part.trim() === "")) {
+    return scope.project.entry;
+  }
+
+  return toHtmlFile(raw);
+};
+
 const toHtmlDuplicatePlan = async (
   scope: ScreenScope,
   command: DuplicateScreenCommand
 ): Promise<ScreenWritePlan> => {
   const { workTree } = scope.direction;
-  const from = toHtmlFile(command.from);
+  const from = toSourceFile(scope, command.from);
   const file = toHtmlFile(command.path);
 
   const [hasSource, isTaken] = await Promise.all([

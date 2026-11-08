@@ -2,6 +2,7 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { AddFrameItem } from "./add-frame-item.js";
+import { AddScreenItem } from "./add-screen-item.js";
 import { FRAME_PRESETS } from "./canvas-frame-ops.js";
 import { copy } from "./copy.js";
 import { useAddFrameMenu } from "./use-add-frame-menu.js";
@@ -25,8 +26,16 @@ const AddFrameMenu = ({
   disabled: boolean;
   onAdd: (size: { width: number; height: number }) => void;
 }): ReactElement => {
-  const { button, handleKeyDown, menu, open, pick, toggle } =
-    useAddFrameMenu(onAdd);
+  const {
+    button,
+    handleKeyDown,
+    menu,
+    open,
+    openScreen,
+    pick,
+    screenLabel,
+    toggle,
+  } = useAddFrameMenu(onAdd);
 
   return (
     <div className="add-frame">
@@ -59,6 +68,7 @@ const AddFrameMenu = ({
               pick={pick}
             />
           ))}
+          <AddScreenItem label={screenLabel} onPick={openScreen} />
         </div>
       )}
     </div>

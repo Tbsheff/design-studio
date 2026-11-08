@@ -1,7 +1,13 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { usePopover } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import type {
   SwapCandidate,
@@ -52,13 +58,23 @@ export default function SwapInstanceMenu({
   usePopover(true, root, close);
   useEffect(() => {
     let live = true;
-    componentCreateApi
-      .swapCandidates(projectId, directionId, use)
-      .then((result) => live && setList(result))
-      .catch(
-        (error: unknown) =>
-          live && setList({ candidates: [], from: "", note: apiMessage(error) })
-      );
+    startTransition(async () => {
+      try {
+        const result = await componentCreateApi.swapCandidates(
+          projectId,
+          directionId,
+          use
+        );
+
+        if (live) {
+          setList(result);
+        }
+      } catch (error: unknown) {
+        if (live) {
+          setList({ candidates: [], from: "", note: apiMessage(error) });
+        }
+      }
+    });
 
     return (): void => {
       live = false;
@@ -67,18 +83,28 @@ export default function SwapInstanceMenu({
 
   const pick = (item: SwapCandidate): void => {
     setBusy(item.name);
-    componentCreateApi
-      .swap(projectId, directionId, use, { file: item.file, name: item.name })
-      .then((result) =>
-        onDone({
-          isOk: true,
-          text: `${result.title}${result.dropped.length > 0 ? `, dropped ${result.dropped.join(", ")}` : ""}`,
-        })
-      )
-      .catch((error: unknown) =>
-        onDone({ isOk: false, text: apiMessage(error) })
-      )
-      .finally(onClose);
+    startTransition(async () => {
+      try {
+        const result = await componentCreateApi.swap(
+          projectId,
+          directionId,
+          use,
+          {
+            file: item.file,
+            name: item.name,
+          }
+        );
+        const dropped =
+          result.dropped.length > 0
+            ? `, dropped ${result.dropped.join(", ")}`
+            : "";
+        onDone({ isOk: true, text: `${result.title}${dropped}` });
+      } catch (error: unknown) {
+        onDone({ isOk: false, text: apiMessage(error) });
+      } finally {
+        onClose();
+      }
+    });
   };
 
   return (

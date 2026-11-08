@@ -1,5 +1,5 @@
 import type { BridgeToParent, ProjectKind } from "@design-studio/contracts";
-import { useRef } from "react";
+import { startTransition, useRef } from "react";
 import type { MutableRefObject } from "react";
 
 import { imageKindOf } from "../../../shared/image.js";
@@ -116,13 +116,17 @@ const useImageDrop = (o: Options): void => {
       }
 
       busy.current = true;
-      void place(
-        cur,
-        cur.directionId as string,
-        msg,
-        msg.files[0] as File
-      ).finally(() => {
-        busy.current = false;
+      startTransition(async () => {
+        try {
+          await place(
+            cur,
+            cur.directionId as string,
+            msg,
+            msg.files[0] as File
+          );
+        } finally {
+          busy.current = false;
+        }
       });
     }
   );

@@ -1,6 +1,6 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { InsertTarget } from "@design-studio/contracts/insert";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import {
@@ -323,28 +323,33 @@ const PaintRows = ({
   const paint = { ...paintOf(target), ...saved };
   const disabled = busy || !props.isEditable;
 
-  const save = (change: VectorPaint): undefined =>
-    void run({ op: "paint", target: targetOf(target), ...change }).then(
-      (ok) => {
-        if (!ok) {
-          return;
-        }
+  const save = (change: VectorPaint): void => {
+    startTransition(async () => {
+      const ok = await run({
+        op: "paint",
+        target: targetOf(target),
+        ...change,
+      });
 
-        setSaved((prev) => ({
-          ...prev,
-          ...(change.fill === undefined ? {} : { fill: change.fill ?? "none" }),
-          ...(change.stroke === undefined
-            ? {}
-            : { stroke: change.stroke ?? "none" }),
-          ...(change.strokeWidth === undefined
-            ? {}
-            : {
-                width:
-                  change.strokeWidth === null ? "" : String(change.strokeWidth),
-              }),
-        }));
+      if (!ok) {
+        return;
       }
-    );
+
+      setSaved((prev) => ({
+        ...prev,
+        ...(change.fill === undefined ? {} : { fill: change.fill ?? "none" }),
+        ...(change.stroke === undefined
+          ? {}
+          : { stroke: change.stroke ?? "none" }),
+        ...(change.strokeWidth === undefined
+          ? {}
+          : {
+              width:
+                change.strokeWidth === null ? "" : String(change.strokeWidth),
+            }),
+      }));
+    });
+  };
 
   return (
     <InspectorSection title={copy.fillAndStroke} className="vector-paint">

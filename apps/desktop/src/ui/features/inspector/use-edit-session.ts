@@ -3,7 +3,13 @@ import type {
   EditSessionState,
   Version,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MutableRefObject } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -100,9 +106,13 @@ const readSession = async (
     return view;
   }
 
-  const versions = await api
-    .listVersions(projectId, directionId)
-    .catch(() => null);
+  let versions: Awaited<ReturnType<typeof api.listVersions>> | null = null;
+
+  try {
+    versions = await api.listVersions(projectId, directionId);
+  } catch {
+    versions = null;
+  }
 
   return {
     ...view,
@@ -130,14 +140,17 @@ const useEditSession = (o: Options) => {
       return setView(EMPTY);
     }
 
-    api
-      .editSession(projectId, directionId)
-      .then(
-        (state) =>
-          opts.current.directionId === directionId &&
-          setView(fresh(state.baseVersionId || null))
-      )
-      .catch((err: unknown) => setError(errorText(err)));
+    startTransition(async () => {
+      try {
+        const state = await api.editSession(projectId, directionId);
+
+        if (opts.current.directionId === directionId) {
+          setView(fresh(state.baseVersionId || null));
+        }
+      } catch (err: unknown) {
+        setError(errorText(err));
+      }
+    });
   }, [projectId, directionId]);
 
   useEffect(begin, [begin]);
@@ -151,13 +164,19 @@ const useEditSession = (o: Options) => {
 
     globalThis.clearTimeout(timer.current);
     timer.current = globalThis.setTimeout(() => {
-      readSession(projectId, directionId, base)
-        .then((next) => {
-          if (viewRef.current.base === base) {
-            setView(next);
-          }
-        })
-        .catch(() => undefined);
+      startTransition(async () => {
+        let next: Awaited<ReturnType<typeof readSession>> | null = null;
+
+        try {
+          next = await readSession(projectId, directionId, base);
+        } catch {
+          next = null;
+        }
+
+        if (next !== null && viewRef.current.base === base) {
+          setView(next);
+        }
+      });
     }, REFRESH_MS);
   }, [projectId, directionId]);
 

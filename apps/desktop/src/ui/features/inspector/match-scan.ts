@@ -7,7 +7,13 @@ import type {
   StyleValueRow,
   TokenLookup,
 } from "@design-studio/contracts/style-search";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MutableRefObject } from "react";
 
 import { tokenFieldState } from "../../../shared/token-match.js";
@@ -82,7 +88,9 @@ const usePageVars = (
     }
 
     let live = true;
-    void requestAuthoredCss(port.current, "html").then((css) => {
+    startTransition(async () => {
+      const css = await requestAuthoredCss(port.current, "html");
+
       if (live && css) {
         setVars(parseVars([...css.rules.map((rule) => rule.css), css.inline]));
       }
@@ -164,7 +172,9 @@ const useStyleScan = (
   queryRef.current = query;
   useEffect(() => {
     let live = true;
-    void requestStyles(port.current, queryRef.current, false).then((reply) => {
+    startTransition(async () => {
+      const reply = await requestStyles(port.current, queryRef.current, false);
+
       if (live) {
         setHits(reply ? reply.result.hits : []);
       }

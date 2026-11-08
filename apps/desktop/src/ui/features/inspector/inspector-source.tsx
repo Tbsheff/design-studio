@@ -1,7 +1,7 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 
@@ -37,10 +37,14 @@ const SourceLink = ({
     }
 
     setNote(null);
-    api
-      .openSource(projectId, directionId, text)
-      .then((result) => setNote(`Opened ${result.path}`))
-      .catch((error: unknown) => setNote(errorText(error)));
+    startTransition(async () => {
+      try {
+        const result = await api.openSource(projectId, directionId, text);
+        setNote(`Opened ${result.path}`);
+      } catch (error: unknown) {
+        setNote(errorText(error));
+      }
+    });
   };
 
   return (

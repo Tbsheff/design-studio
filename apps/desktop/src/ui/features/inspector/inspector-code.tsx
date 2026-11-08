@@ -1,7 +1,7 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { EditorInfo } from "@design-studio/contracts/export";
 import { Icon } from "@design-studio/ui";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import type { ReactNode, ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -97,9 +97,10 @@ const useSnippet = (
 
     let live = true;
     setSnippet((prev) => (prev.kind === "ready" ? prev : { kind: "loading" }));
-    api
-      .elementSource(projectId, directionId, source)
-      .then((result) => {
+    startTransition(async () => {
+      try {
+        const result = await api.elementSource(projectId, directionId, source);
+
         if (!live) {
           return;
         }
@@ -121,11 +122,12 @@ const useSnippet = (
                 line: result.line,
               }
         );
-      })
-      .catch(
-        (error: unknown) =>
-          live && setSnippet({ kind: "error", message: errorText(error) })
-      );
+      } catch (error: unknown) {
+        if (live) {
+          setSnippet({ kind: "error", message: errorText(error) });
+        }
+      }
+    });
 
     return (): void => {
       live = false;
@@ -147,10 +149,13 @@ const OpenInEditor = ({
   const [editors, setEditors] = useState<EditorInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    exportApi
-      .editors()
-      .then(setEditors)
-      .catch(() => setEditors([]));
+    startTransition(async () => {
+      try {
+        setEditors(await exportApi.editors());
+      } catch {
+        setEditors([]);
+      }
+    });
   }, []);
   const editor = editors?.[0];
 
@@ -167,9 +172,18 @@ const OpenInEditor = ({
         data-tip-align="end"
         onClick={() => {
           setError(null);
-          exportApi
-            .openInEditor(projectId, directionId, editor.id, file)
-            .catch((err: unknown) => setError(errorText(err)));
+          startTransition(async () => {
+            try {
+              await exportApi.openInEditor(
+                projectId,
+                directionId,
+                editor.id,
+                file
+              );
+            } catch (err: unknown) {
+              setError(errorText(err));
+            }
+          });
         }}
       >
         <Icon name="file" size={13} />
@@ -197,7 +211,10 @@ const CopySnippet = ({ code }: { readonly code: string }): ReactElement => {
       type="button"
       className="btn ghost small has-icon"
       onClick={() => {
-        void navigator.clipboard.writeText(code).then(() => setCopied(true));
+        startTransition(async () => {
+          await navigator.clipboard.writeText(code);
+          setCopied(true);
+        });
       }}
     >
       <Icon name={copied ? "check" : "copy"} size={13} />

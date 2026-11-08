@@ -7,7 +7,13 @@ import type {
 } from "@design-studio/contracts";
 import type { SharedSource } from "@design-studio/contracts/app";
 import { Icon } from "@design-studio/ui";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  startTransition,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { api } from "../../api.js";
@@ -77,10 +83,24 @@ function useTextSource(
     }
 
     let live = true;
-    api
-      .textSource(projectId, directionId, source, hints)
-      .then((next) => live && setAnswer(next))
-      .catch(() => live && setAnswer({ reason: "" }));
+    startTransition(async () => {
+      try {
+        const next = await api.textSource(
+          projectId,
+          directionId,
+          source,
+          hints
+        );
+
+        if (live) {
+          setAnswer(next);
+        }
+      } catch {
+        if (live) {
+          setAnswer({ reason: "" });
+        }
+      }
+    });
 
     return (): void => {
       live = false;

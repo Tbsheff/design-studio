@@ -4,7 +4,7 @@ import type {
   TailwindOutcome,
 } from "@design-studio/contracts";
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 
 import type { VariantSupport } from "../../../shared/variants.js";
 import { api } from "../../api.js";
@@ -47,9 +47,15 @@ const useElementClasses = (
     }
 
     let live = true;
-    api
-      .elementClasses(projectId, directionId, { col, file, line }, variant)
-      .then((result) => {
+    startTransition(async () => {
+      try {
+        const result = await api.elementClasses(
+          projectId,
+          directionId,
+          { col, file, line },
+          variant
+        );
+
         if (live) {
           setInfo({
             element: result.element ?? null,
@@ -57,12 +63,12 @@ const useElementClasses = (
             variants: result.variants ?? null,
           });
         }
-      })
-      .catch(() => {
+      } catch {
         if (live) {
           setInfo(NO_CLASSES);
         }
-      });
+      }
+    });
 
     return (): void => {
       live = false;

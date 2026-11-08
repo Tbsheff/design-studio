@@ -5,7 +5,13 @@ import type {
   SelectionContext,
   Version,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import {
@@ -131,29 +137,34 @@ const useEditHistory = (o: Options) => {
     const mine = { key };
     loading.current = mine;
     const started = generation.current;
-    api
-      .editHistory(projectId, directionId)
-      .then((next) => {
-        if (
-          generation.current === started &&
-          opts.current.directionId === directionId
-        ) {
-          apply(next);
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (loading.current !== mine) {
-          return;
-        }
+    startTransition(async () => {
+      let next: EditHistoryState | null = null;
 
-        loading.current = null;
+      try {
+        next = await api.editHistory(projectId, directionId);
+      } catch {
+        next = null;
+      }
 
-        if (reloadRequested.current) {
-          reloadRequested.current = false;
-          load();
-        }
-      });
+      if (
+        next !== null &&
+        generation.current === started &&
+        opts.current.directionId === directionId
+      ) {
+        apply(next);
+      }
+
+      if (loading.current !== mine) {
+        return;
+      }
+
+      loading.current = null;
+
+      if (reloadRequested.current) {
+        reloadRequested.current = false;
+        load();
+      }
+    });
   }, [projectId, directionId, apply]);
 
   useEffect(load, [load]);
@@ -223,7 +234,12 @@ const useEditHistory = (o: Options) => {
 
   const step = useCallback(
     (kind: HistoryKind, fallback?: () => unknown) => {
-      queue.current = queue.current.then(() => runStep(kind, fallback));
+      const previous = queue.current;
+      const run = async (): Promise<void> => {
+        await previous;
+        await runStep(kind, fallback);
+      };
+      queue.current = run();
     },
     [runStep]
   );
@@ -320,19 +336,27 @@ const useSelectionRefresh = (
       anchorQueryOf({ id: String(index), target: targetFromSelection(item) })
     );
 
-    describe(queries)
-      .then((contexts) => {
-        if (Date.now() > deadline.current) {
-          return;
-        }
+    startTransition(async () => {
+      let contexts: Awaited<ReturnType<typeof describe>> | null = null;
 
-        if (hasStylesMoved(current.current, selectors, contexts)) {
-          dropDrafts.current();
-        }
+      try {
+        contexts = await describe(queries);
+      } catch {
+        contexts = null;
+      }
 
-        setSelection((prev) => refreshedSelection(prev, selectors, contexts));
-      })
-      .catch(() => undefined);
+      if (contexts === null || Date.now() > deadline.current) {
+        return;
+      }
+
+      const settled = contexts;
+
+      if (hasStylesMoved(current.current, selectors, settled)) {
+        dropDrafts.current();
+      }
+
+      setSelection((prev) => refreshedSelection(prev, selectors, settled));
+    });
   }, [describeRef, setSelection]);
 
   const later = useCallback(

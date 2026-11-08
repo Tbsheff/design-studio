@@ -159,8 +159,9 @@ const useDirectEdits = (
     }
 
     const cur = opts.current;
+    const { directionId } = cur;
 
-    if (blocked || !cur.directionId) {
+    if (blocked || !directionId) {
       return;
     }
 
@@ -182,9 +183,12 @@ const useDirectEdits = (
       startOptimistic(cur.port.current, edit, problem)
     );
 
-    const request = api
-      .directEditBatch(cur.projectId, cur.directionId, { edits })
-      .then((result) => {
+    const request = (async (): Promise<void> => {
+      try {
+        const result = await api.directEditBatch(cur.projectId, directionId, {
+          edits,
+        });
+
         optimistic.forEach((one, index) =>
           one.saved(result.applied[index]?.tailwind)
         );
@@ -195,14 +199,14 @@ const useDirectEdits = (
 
         setShifts(withoutShifts(shifts.current, [], sent));
         setStatus({ at: Date.now(), kind: "saved" });
-      })
-      .catch((error: unknown) => {
+      } catch (error: unknown) {
         for (const one of optimistic) {
           one.failed(failureText(error));
         }
 
         fail(error);
-      });
+      }
+    })();
 
     inflight.current = request;
     await request;

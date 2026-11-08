@@ -62,15 +62,19 @@ const useImageSet = (props: Props) => {
     setError(null);
     pending.current += 1;
     setBusy(true);
-    queue.current = queue.current
-      .then(() => send(change, file))
-      .finally(() => {
+    const previous = queue.current;
+    queue.current = (async (): Promise<void> => {
+      try {
+        await previous;
+        await send(change, file);
+      } finally {
         pending.current -= 1;
 
         if (pending.current === 0) {
           setBusy(false);
         }
-      });
+      }
+    })();
 
     return queue.current;
   };

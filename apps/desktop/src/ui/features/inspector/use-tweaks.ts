@@ -1,5 +1,12 @@
 import type { Project, RunRequest, Version } from "@design-studio/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { tweaksPreviewCss } from "../../../shared/tweaks.js";
 import type {
@@ -80,20 +87,22 @@ const useTweaksState = (
     }
 
     const want = `${o.projectId}:${directionId}`;
-    api
-      .getTweaks(o.projectId, directionId)
-      .then((state) => {
+    startTransition(async () => {
+      try {
+        const state = await api.getTweaks(o.projectId, directionId);
+
         if (live.current !== want) {
           return;
         }
 
         setLoaded({ key: want, state });
         setLoadError(null);
-      })
-      .catch(
-        (error: unknown) =>
-          live.current === want && setLoadError(errorText(error))
-      );
+      } catch (error: unknown) {
+        if (live.current === want) {
+          setLoadError(errorText(error));
+        }
+      }
+    });
   }, [o.projectId, o.directionId, headVersionId, stamp]);
 
   const replace = useCallback(

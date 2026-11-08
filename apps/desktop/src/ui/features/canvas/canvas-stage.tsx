@@ -92,10 +92,10 @@ interface CanvasStageProps {
 
 const CanvasStage = ({
   props,
-  s,
+  s: text,
   pv,
   ed,
-  w,
+  w: widthValue,
 }: CanvasStageProps): ReactElement => {
   const editVariant = useEditVariant();
 
@@ -120,7 +120,7 @@ const CanvasStage = ({
     urlError,
     note,
     firstBuild,
-  } = s;
+  } = text;
 
   const { frames, covered, passive } = pv;
 
@@ -144,7 +144,7 @@ const CanvasStage = ({
     appCanvas,
     capture,
     stageMode,
-  } = w;
+  } = widthValue;
 
   return (
     <div
@@ -245,7 +245,7 @@ const CanvasStage = ({
           note={appCanvas.note}
         />
         <FrameResizeHandles
-          onPointerDown={(e, edge) => onResizeStart(e, active, edge)}
+          onPointerDown={(event, edge) => onResizeStart(event, active, edge)}
         />
         <OtherFrames
           frames={shown}
@@ -279,9 +279,11 @@ const CanvasStage = ({
         <McpPointBadge
           badge={pointBadge}
           frameName={(id: string) => {
-            const f = canvasFrames.layout.frames.find((item) => item.id === id);
+            const frameValue = canvasFrames.layout.frames.find(
+              (item) => item.id === id
+            );
 
-            return f ? frameName(f) : id;
+            return frameValue ? frameName(frameValue) : id;
           }}
         />
       </Suspense>

@@ -23,7 +23,7 @@ const VariationsControl = ({
     OPTIONS,
     value,
     onChange,
-    (n) => Boolean(disabled) || n > max
+    (countValue) => Boolean(disabled) || countValue > max
   );
 
   return (
@@ -35,19 +35,21 @@ const VariationsControl = ({
       data-testid="variations-control"
       onKeyDown={radios.onKeyDown}
     >
-      {OPTIONS.map((n) => (
+      {OPTIONS.map((count3) => (
         <button
-          key={n}
-          {...radios.item(n)}
+          key={count3}
+          {...radios.item(count3)}
           type="button"
           role="radio"
-          aria-checked={n === value}
-          aria-label={n === 1 ? "1 design (variations off)" : `${n} variations`}
-          disabled={disabled || n > max}
-          className={n === value ? "on" : ""}
-          onClick={() => onChange(n)}
+          aria-checked={count3 === value}
+          aria-label={
+            count3 === 1 ? "1 design (variations off)" : `${count3} variations`
+          }
+          disabled={disabled || count3 > max}
+          className={count3 === value ? "on" : ""}
+          onClick={() => onChange(count3)}
         >
-          {n}
+          {count3}
         </button>
       ))}
     </div>

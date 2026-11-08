@@ -65,58 +65,63 @@ interface Options {
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
-const usePrototype = (o: Options) => {
-  const { on } = o;
+const usePrototype = (options: Options) => {
+  const { on } = options;
   const [arrows, setArrows] = useState(true);
   const [playing, setPlaying] = useState(false);
-  const saved = useLinks(o.projectId);
+  const saved = useLinks(options.projectId);
 
   const implicit = useImplicitLinks(
-    o.projectId,
-    o.frames.map((frame) => `${frame.id}:${frame.path ?? ""}`).join(",")
+    options.projectId,
+    options.frames.map((frame) => `${frame.id}:${frame.path ?? ""}`).join(",")
   );
 
   const file = withImplicit(saved, implicit);
-  const clear = useRef(o.clearSelection);
-  clear.current = o.clearSelection;
-  const lastActive = useRef(o.active.id);
+  const clear = useRef(options.clearSelection);
+  clear.current = options.clearSelection;
+  const lastActive = useRef(options.active.id);
   useEffect(() => {
-    if (lastActive.current === o.active.id) {
+    if (lastActive.current === options.active.id) {
       return;
     }
 
-    lastActive.current = o.active.id;
+    lastActive.current = options.active.id;
 
     if (on) {
       clear.current();
     }
-  }, [o.active.id, on]);
-  const startId = playStartOf(file, o.frames, startFrameOf(file, o.frames));
+  }, [options.active.id, on]);
+  const startId = playStartOf(
+    file,
+    options.frames,
+    startFrameOf(file, options.frames)
+  );
 
   const states = useLinkRects({
     active: {
-      elements: o.preview.elements,
-      frameId: o.active.id,
+      elements: options.preview.elements,
+      frameId: options.active.id,
       src:
-        o.preview.slots.find((slot) => slot.token === o.preview.frontToken)
-          ?.src ?? null,
-      token: o.preview.frontToken,
+        options.preview.slots.find(
+          (slot) => slot.token === options.preview.frontToken
+        )?.src ?? null,
+      token: options.preview.frontToken,
     },
     enabled: on,
     file,
-    frames: o.frames,
-    kind: o.kind,
-    passive: o.passive,
+    frames: options.frames,
+    kind: options.kind,
+    passive: options.passive,
   });
 
   const drag = useLinkDrag((selection, frameId) => {
     void runOrReport(
-      linksApi.add(o.projectId, {
-        from: linkSourceOf(selection, o.active),
+      linksApi.add(options.projectId, {
+        from: linkSourceOf(selection, options.active),
         to: { frame: frameId },
         transition: "instant",
       }),
-      (error) => o.notify(errorMessage(error))
+      (error) => options.notify(errorMessage(error))
     );
   });
 
@@ -124,7 +129,7 @@ const usePrototype = (o: Options) => {
     frame.label ?? frame.path ?? frameName(frame);
 
   const titleById = (id: string): string => {
-    const frame = o.frames.find((item) => item.id === id);
+    const frame = options.frames.find((item) => item.id === id);
 
     return frame ? frameTitle(frame) : "missing frame";
   };
@@ -157,20 +162,20 @@ const usePrototype = (o: Options) => {
   };
 
   const fetchDirectionUrl = async (did: string): Promise<string> => {
-    const result = await api.directionPreview(o.projectId, did);
+    const result = await api.directionPreview(options.projectId, did);
 
     return result.url;
   };
 
   const baseUrlOf = async (frame: CanvasFrame): Promise<string | null> => {
-    const did = frameDirection(frame, o.directionId);
+    const did = frameDirection(frame, options.directionId);
 
     if (!did) {
       return null;
     }
 
-    if (did === o.directionId && o.baseUrl) {
-      return withFramePath(o.baseUrl, frame.path);
+    if (did === options.directionId && options.baseUrl) {
+      return withFramePath(options.baseUrl, frame.path);
     }
 
     let url = urls.current.get(did);
@@ -191,24 +196,27 @@ const usePrototype = (o: Options) => {
   };
 
   const play = (): void => setPlaying(true);
-  const single = o.selection.length === 1 ? o.selection[0] : undefined;
-  const selected = on ? linkOfSelection(states, single, o.active.id) : null;
+  const single =
+    options.selection.length === 1 ? options.selection[0] : undefined;
+  const selected = on
+    ? linkOfSelection(states, single, options.active.id)
+    : null;
 
   const artboard: ReactNode = on ? (
     <>
       <LinkArrows
         states={states}
-        frames={o.shown}
-        active={o.active}
+        frames={options.shown}
+        active={options.active}
         startId={startId}
         arrows={arrows}
         selectedId={selected?.link.id ?? null}
         dropTarget={drag.drag?.target ?? null}
       />
-      {single && o.live && (
+      {single && options.live && (
         <LinkHandle
           selection={single}
-          activeId={o.active.id}
+          activeId={options.active.id}
           onBegin={drag.begin}
         />
       )}
@@ -219,28 +227,28 @@ const usePrototype = (o: Options) => {
     <>
       {on && (
         <PrototypeBar
-          projectId={o.projectId}
+          projectId={options.projectId}
           file={file}
           states={states}
-          frames={o.shown}
+          frames={options.shown}
           startId={startId}
           selected={selected}
           hasSelection={single !== undefined}
           selection={single}
           frameTitle={frameTitle}
           linkTitle={linkTitle}
-          onError={o.notify}
+          onError={options.notify}
         />
       )}
       <LinkDragLine drag={drag.drag} />
       {playing && (
         <Suspense fallback={null}>
           <PlayMode
-            kind={o.kind}
+            kind={options.kind}
             file={file}
-            frames={o.frames}
+            frames={options.frames}
             startId={startId}
-            sandbox={o.sandbox}
+            sandbox={options.sandbox}
             urlOf={urlOf}
             frameTitle={frameTitle}
             onClose={() => setPlaying(false)}
@@ -255,7 +263,7 @@ const usePrototype = (o: Options) => {
     play,
     stage,
     viewToggle: on
-      ? { on: arrows, onToggle: () => setArrows((v) => !v) }
+      ? { on: arrows, onToggle: () => setArrows((value) => !value) }
       : undefined,
   };
 };

@@ -20,13 +20,13 @@ const InlinePrompt = lazy(() => import("../chat/inline-prompt.js"));
 type CommentLayerProps = Parameters<typeof CommentLayer>[0];
 
 const CanvasComments = (
-  p: {
+  point: {
     comment: ReturnType<typeof useCommentMode>;
     control: Props["comments"];
     draw: DrawTool;
   } & Omit<CommentLayerProps, "control" | "commentMode" | "onExitCommentMode">
 ): ReactElement | null => {
-  const { comment, control, draw, ...rest } = p;
+  const { comment, control, draw, ...rest } = point;
 
   if (!comment.available || !control) {
     return null;
@@ -68,12 +68,12 @@ const useCanvasVectorTools = (
 };
 
 const VectorSlot = (
-  p: Omit<ComponentProps<typeof VectorLayer>, "directionId"> & {
+  pointValue: Omit<ComponentProps<typeof VectorLayer>, "directionId"> & {
     directionId: string | null;
   }
 ): ReactElement | null => {
   const { available } = useVectorTool();
-  const { directionId } = p;
+  const { directionId } = pointValue;
 
   if (!available || !directionId) {
     return null;
@@ -81,7 +81,7 @@ const VectorSlot = (
 
   return (
     <Suspense fallback={null}>
-      <VectorLayer {...p} directionId={directionId} />
+      <VectorLayer {...pointValue} directionId={directionId} />
     </Suspense>
   );
 };

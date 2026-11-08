@@ -133,8 +133,8 @@ const TweakPrompt = ({
     <form
       ref={root}
       className="tweak-prompt ui-popover"
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(eventValue) => {
+        eventValue.preventDefault();
         send();
       }}
     >
@@ -145,14 +145,14 @@ const TweakPrompt = ({
           scope ? `Describe a tweak to ${scope}…` : "Describe a tweak…"
         }
         value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key !== "Escape") {
+        onChange={(event3) => setText(event3.target.value)}
+        onKeyDown={(event4) => {
+          if (event4.key !== "Escape") {
             return;
           }
 
-          e.preventDefault();
-          e.stopPropagation();
+          event4.preventDefault();
+          event4.stopPropagation();
           onClose();
         }}
       />
@@ -168,10 +168,18 @@ const TweakPrompt = ({
   );
 };
 
-const gapStyle = (b: SpacingBadge) =>
-  b.axis === "x"
-    ? { left: b.from, top: b.at, width: b.to - b.from }
-    : { height: b.to - b.from, left: b.at, top: b.from };
+const gapStyle = (spacingBadge: SpacingBadge) =>
+  spacingBadge.axis === "x"
+    ? {
+        left: spacingBadge.from,
+        top: spacingBadge.at,
+        width: spacingBadge.to - spacingBadge.from,
+      }
+    : {
+        height: spacingBadge.to - spacingBadge.from,
+        left: spacingBadge.at,
+        top: spacingBadge.from,
+      };
 
 const FrameSnapLayer = ({
   origin,
@@ -199,21 +207,21 @@ const FrameSnapLayer = ({
       data-testid="frame-snap"
       style={style}
     >
-      {view.guides.map((g) => (
+      {view.guides.map((snapGuide) => (
         <div
-          key={`g-${g.axis}-${g.at}`}
-          className={`snap-guide ${g.axis}`}
-          style={guideStyle(g)}
+          key={`g-${snapGuide.axis}-${snapGuide.at}`}
+          className={`snap-guide ${snapGuide.axis}`}
+          style={guideStyle(snapGuide)}
         />
       ))}
-      {view.spacing.map((b) => (
+      {view.spacing.map((spacingBadgeValue) => (
         <div
-          key={`s-${b.axis}-${b.from}-${b.to}`}
-          className={`snap-gap ${b.axis}`}
-          style={gapStyle(b)}
+          key={`s-${spacingBadgeValue.axis}-${spacingBadgeValue.from}-${spacingBadgeValue.to}`}
+          className={`snap-gap ${spacingBadgeValue.axis}`}
+          style={gapStyle(spacingBadgeValue)}
         >
-          <span className="snap-gap-label" data-value={b.value}>
-            {formatMeasure(b.value)}
+          <span className="snap-gap-label" data-value={spacingBadgeValue.value}>
+            {formatMeasure(spacingBadgeValue.value)}
           </span>
         </div>
       ))}

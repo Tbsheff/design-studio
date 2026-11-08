@@ -123,19 +123,19 @@ const useLayersWatch = (
     watch(open);
   }, [watch, open, frontToken]);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
-        !e.altKey ||
-        e.metaKey ||
-        e.ctrlKey ||
-        e.shiftKey ||
-        e.code !== "Digit1" ||
-        isTypingTarget(e.target)
+        !event.altKey ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.code !== "Digit1" ||
+        isTypingTarget(event.target)
       ) {
         return;
       }
 
-      e.preventDefault();
+      event.preventDefault();
       toggle.current();
     };
 
@@ -153,7 +153,7 @@ const useSelectMoveKeys = (
   const live = useRef({ selectMode, selectRelative, selection });
   live.current = { selectMode, selectRelative, selection };
   useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
+    const onKey = (eventValue: KeyboardEvent): void => {
       const cur = live.current;
       const last = cur.selection.at(-1);
 
@@ -161,13 +161,13 @@ const useSelectMoveKeys = (
         return;
       }
 
-      const move = selectMoveOf(e);
+      const move = selectMoveOf(eventValue);
 
       if (!move) {
         return;
       }
 
-      e.preventDefault();
+      eventValue.preventDefault();
       cur.selectRelative(last.selector, move);
     };
 

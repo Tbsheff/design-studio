@@ -13,7 +13,8 @@ const NESTED = new Set(["shell", "commentTools", "comments", "directions"]);
 const NESTED_LIVE_DIRECTIONS = new Set(["shell", "commentTools", "comments"]);
 
 const Canvas = ({ runStep, ...props }: Props): ReactElement => {
-  const variations = props.directions?.list.some((d) => d.variation) === true;
+  const variations =
+    props.directions?.list.some((direction) => direction.variation) === true;
   const [steps] = useState(() => createLiveStore<string | null>(null));
   useLayoutEffect(() => steps.set(runStep ?? null), [steps, runStep]);
 

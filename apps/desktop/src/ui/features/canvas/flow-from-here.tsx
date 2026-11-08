@@ -8,7 +8,7 @@ import { useCurrentFrameStates } from "./frame-states-model.js";
 
 import "../../styles/route-flow.css";
 
-const stop = (e: ReactPointerEvent): void => e.stopPropagation();
+const stop = (event: ReactPointerEvent): void => event.stopPropagation();
 
 const doneText = (result: FlowResult): string => {
   const added = result.frames.filter((frame) => frame.added).length;

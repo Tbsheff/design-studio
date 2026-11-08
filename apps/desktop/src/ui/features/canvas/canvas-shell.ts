@@ -23,7 +23,7 @@ interface CanvasShell {
   onAskAgent?: (text: string) => void;
 }
 
-type SetSelectMode = (update: (m: boolean) => boolean) => void;
+type SetSelectMode = (update: (match: boolean) => boolean) => void;
 
 interface CommentTool {
   available: boolean;

@@ -27,19 +27,23 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
   live.current = { enabled, port };
 
   const send = useCallback(() => {
-    const p = pending.current;
+    const pointValue = pending.current;
 
-    if (!p) {
+    if (!pointValue) {
       return;
     }
 
-    if (Date.now() - p.at > GIVE_UP_MS) {
+    if (Date.now() - pointValue.at > GIVE_UP_MS) {
       pending.current = null;
 
       return;
     }
 
-    live.current.port.post({ type: "select-at", x: p.x, y: p.y });
+    live.current.port.post({
+      type: "select-at",
+      x: pointValue.x,
+      y: pointValue.y,
+    });
   }, []);
 
   const later = useCallback(
@@ -64,7 +68,8 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
   );
 
   useEffect(
-    () => (): void => timers.current.forEach((t) => window.clearTimeout(t)),
+    () => (): void =>
+      timers.current.forEach((target) => window.clearTimeout(target)),
     []
   );
 
@@ -74,7 +79,7 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
         return;
       }
 
-      timers.current.forEach((t) => window.clearTimeout(t));
+      timers.current.forEach((targetValue) => window.clearTimeout(targetValue));
       timers.current = [];
       pending.current = { at: Date.now(), x: point.x, y: point.y };
       later(NO_RELOAD_MS);

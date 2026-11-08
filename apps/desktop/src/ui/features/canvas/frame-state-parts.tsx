@@ -22,7 +22,8 @@ type MockRules = NonNullable<FrameStateDef["mocks"]>;
 
 type Panel = "list" | "user" | "mock";
 
-const stop = (e: ReactPointerEvent): void => e.stopPropagation();
+const stop = (eventValue: ReactPointerEvent): void =>
+  eventValue.stopPropagation();
 
 const MOCK_EXAMPLE = '[\n  { "path": "/api/items", "body": [] }\n]';
 
@@ -151,8 +152,8 @@ const UserForm = ({
   return (
     <form
       className="frame-state-form"
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(event3) => {
+        event3.preventDefault();
         void runOrReport(onSave({ email, name }), (failure) =>
           setError(failure instanceof Error ? failure.message : String(failure))
         );
@@ -163,7 +164,7 @@ const UserForm = ({
         <input
           value={name}
           autoFocus
-          onChange={(e) => setName(e.target.value)}
+          onChange={(event4) => setName(event4.target.value)}
         />
       </label>
       <label className="frame-page-field">
@@ -172,7 +173,7 @@ const UserForm = ({
           value={email}
           spellCheck={false}
           aria-invalid={Boolean(error)}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(event5) => setEmail(event5.target.value)}
         />
       </label>
       {error && <p className="frame-page-hint error">{error}</p>}
@@ -224,8 +225,8 @@ const MockForm = ({
   return (
     <form
       className="frame-state-form"
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(event6) => {
+        event6.preventDefault();
         submit();
       }}
     >

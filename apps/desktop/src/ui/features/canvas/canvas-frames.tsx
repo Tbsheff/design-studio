@@ -30,9 +30,9 @@ interface LabelProps {
   title?: string;
   extras?: ReactNode;
   note?: ReactNode;
-  onPointerDown: (e: ReactPointerEvent, frame: CanvasFrame) => void;
+  onPointerDown: (event: ReactPointerEvent, frame: CanvasFrame) => void;
   onBodyPointerDown?: (
-    e: ReactPointerEvent,
+    eventValue: ReactPointerEvent,
     frame: CanvasFrame,
     body: boolean
   ) => void;
@@ -40,7 +40,7 @@ interface LabelProps {
   onRemove: (frame: CanvasFrame) => void;
   onNudge: (frame: CanvasFrame, dx: number, dy: number) => void;
   onResizeStart: (
-    e: ReactPointerEvent,
+    event3: ReactPointerEvent,
     frame: CanvasFrame,
     edge: ResizeEdge
   ) => void;
@@ -131,16 +131,16 @@ const FrameLabel = ({
         aria-pressed={active}
         aria-label={`${name} frame`}
         data-tip={`${badge ? `${size} · ` : owner}${active ? "Drag to move, double-click to zoom" : "Click to edit, double-click to zoom"}`}
-        onPointerDown={(e) => onPointerDown(e, frame)}
-        onKeyDown={(e) => {
-          const step = NUDGE[e.key];
+        onPointerDown={(event4) => onPointerDown(event4, frame)}
+        onKeyDown={(event5) => {
+          const step = NUDGE[event5.key];
 
           if (step) {
-            e.preventDefault();
-            const size = e.shiftKey ? 100 : 10;
+            event5.preventDefault();
+            const size = event5.shiftKey ? 100 : 10;
             onNudge(frame, step[0] * size, step[1] * size);
-          } else if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
+          } else if (event5.key === "Enter" || event5.key === " ") {
+            event5.preventDefault();
             onActivate(frame);
           }
         }}

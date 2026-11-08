@@ -56,16 +56,20 @@ interface Placed {
   view: FreeMoveView;
 }
 
-const place = (s: Session, drag: FreeMoveDrag, zoom: number): Placed => {
-  const base = s.start.rect;
+const place = (
+  sessionValue: Session,
+  drag: FreeMoveDrag,
+  zoom: number
+): Placed => {
+  const base = sessionValue.start.rect;
   const moved = { ...base, x: base.x + drag.dx, y: base.y + drag.dy };
-  const absolute = s.start.mode === "absolute";
+  const absolute = sessionValue.start.mode === "absolute";
 
   const snapped =
-    !absolute || drag.free || s.candidates.length === 0
+    !absolute || drag.free || sessionValue.candidates.length === 0
       ? { guides: [], rect: moved, spacing: [] }
       : snapRect({
-          candidates: s.candidates,
+          candidates: sessionValue.candidates,
           rect: moved,
           x: "move",
           y: "move",
@@ -87,46 +91,46 @@ const place = (s: Session, drag: FreeMoveDrag, zoom: number): Placed => {
   };
 };
 
-const transformOf = (s: Session, dx: number, dy: number): string => {
+const transformOf = (session3: Session, dx: number, dy: number): string => {
   const own =
-    s.start.transform && s.start.transform !== "none"
-      ? ` ${s.start.transform}`
+    session3.start.transform && session3.start.transform !== "none"
+      ? ` ${session3.start.transform}`
       : "";
 
   return `translate(${dx}px, ${dy}px)${own}`;
 };
 
 const absoluteStyle = (
-  s: Session,
+  session4: Session,
   dx: number,
   dy: number
 ): Record<string, string> => {
   const style: Record<string, string> = {};
-  const { fromRight, fromBottom } = s.start;
+  const { fromRight, fromBottom } = session4.start;
 
-  if (dx !== 0 || s.start.convert) {
+  if (dx !== 0 || session4.start.convert) {
     style[fromRight ? "right" : "left"] =
-      `${Math.round(s.start.left + (fromRight ? -dx : dx))}px`;
+      `${Math.round(session4.start.left + (fromRight ? -dx : dx))}px`;
   }
 
-  if (dy !== 0 || s.start.convert) {
+  if (dy !== 0 || session4.start.convert) {
     style[fromBottom ? "bottom" : "top"] =
-      `${Math.round(s.start.top + (fromBottom ? -dy : dy))}px`;
+      `${Math.round(session4.start.top + (fromBottom ? -dy : dy))}px`;
   }
 
-  if (s.start.convert) {
+  if (session4.start.convert) {
     Object.assign(style, {
       position: "absolute",
-      width: `${Math.round(s.start.rect.width)}px`,
+      width: `${Math.round(session4.start.rect.width)}px`,
     });
   }
 
   return style;
 };
 
-const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
-  const live = useRef(o);
-  live.current = o;
+const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
+  const live = useRef(options);
+  live.current = options;
   const session = useRef<Session | null>(null);
   const [view] = useState(() => createLiveStore<FreeMoveView | null>(null));
   const setView = view.set;
@@ -201,19 +205,19 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
     };
 
     const update = (drag: FreeMoveDrag): void => {
-      const s = session.current;
+      const text = session.current;
 
-      if (!s) {
+      if (!text) {
         return;
       }
 
-      const placed = place(s, drag, live.current.zoom);
+      const placed = place(text, drag, live.current.zoom);
       live.current.post({
-        selector: s.start.selector,
+        selector: text.start.selector,
         style: {
           transform: drag.alt
-            ? transformOf(s, 0, 0)
-            : transformOf(s, placed.dx, placed.dy),
+            ? transformOf(text, 0, 0)
+            : transformOf(text, placed.dx, placed.dy),
         },
         type: "preview-style",
       });
@@ -221,14 +225,14 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
     };
 
     const drop = (drag: FreeMoveDrag): void => {
-      const s = session.current;
+      const textValue = session.current;
 
-      if (!s) {
+      if (!textValue) {
         return;
       }
 
-      const placed = place(s, drag, live.current.zoom);
-      const write = commitPlan(s, drag, placed);
+      const placed = place(textValue, drag, live.current.zoom);
+      const write = commitPlan(textValue, drag, placed);
       end(write !== null);
 
       if (write) {
@@ -237,7 +241,7 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
     };
 
     const commitPlan = (
-      s: Session,
+      session5: Session,
       drag: FreeMoveDrag,
       placed: Placed
     ): (() => Promise<void>) | null => {
@@ -251,13 +255,13 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
         return null;
       }
 
-      const target = selectionTargets([s.target])?.[0];
+      const target = selectionTargets([session5.target])?.[0];
 
       if (!target) {
         return null;
       }
 
-      if (s.start.mode === "flow") {
+      if (session5.start.mode === "flow") {
         const ref = drag.insert?.ref;
 
         if (!ref) {
@@ -280,14 +284,14 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
         return null;
       }
 
-      const style = absoluteStyle(s, placed.dx, placed.dy);
+      const style = absoluteStyle(session5, placed.dx, placed.dy);
 
       if (drag.alt) {
         return () =>
           cur.applyStructure({ op: "duplicate", style, targets: [target] });
       }
 
-      return () => saveStyle(s.target, style);
+      return () => saveStyle(session5.target, style);
     };
 
     const saveStyle = async (
@@ -333,7 +337,7 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
       }
     };
 
-    const stop = o.listen((message) => {
+    const stop = options.listen((message) => {
       if (message.type === "move-start") {
         begin(message.move);
       } else if (message.type === "move-live") {
@@ -349,7 +353,7 @@ const useFreeMove = (o: Options): LiveStore<FreeMoveView | null> => {
       stop();
       end(false);
     };
-  }, [o.listen]);
+  }, [options.listen]);
 
   return view;
 };

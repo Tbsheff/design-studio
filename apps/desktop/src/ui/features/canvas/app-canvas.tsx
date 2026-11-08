@@ -260,50 +260,68 @@ interface AppCanvasInput {
 }
 
 const useAppCanvas = (
-  o: AppCanvasInput
+  appCanvasInput: AppCanvasInput
 ): {
   bar: ReactNode;
   note: ReactNode;
   stage: ReactNode;
 } => {
   const addRoute = (route: string): void => {
-    const shown = routeFrameId(o.frames.layout, route) !== null;
+    const shown = routeFrameId(appCanvasInput.frames.layout, route) !== null;
 
-    if (!shown && !canAddFrame(o.frames.layout)) {
-      o.notify(
+    if (!shown && !canAddFrame(appCanvasInput.frames.layout)) {
+      appCanvasInput.notify(
         "The canvas has the most frames it can hold. Remove one to add this route."
       );
 
       return;
     }
 
-    o.freeze();
-    o.frames.update((layout) => addRouteFrame(layout, route, o.size));
-    o.focus();
-    o.notify(
+    appCanvasInput.freeze();
+    appCanvasInput.frames.update((layout) =>
+      addRouteFrame(layout, route, appCanvasInput.size)
+    );
+    appCanvasInput.focus();
+    appCanvasInput.notify(
       shown
         ? `${route} is already on the canvas. Showing it.`
         : `Added a frame for ${route}`
     );
   };
 
-  useRouteRequests(o.projectId, Boolean(o.app), addRoute);
-  const redirect = useRedirectNote(o.listen, Boolean(o.app), o.resetKey);
-  const status = useAppStatus(o.projectId);
-  const loaded = useServerFrames(status, o.listen, Boolean(o.app));
+  useRouteRequests(
+    appCanvasInput.projectId,
+    Boolean(appCanvasInput.app),
+    addRoute
+  );
+  const redirect = useRedirectNote(
+    appCanvasInput.listen,
+    Boolean(appCanvasInput.app),
+    appCanvasInput.resetKey
+  );
+  const status = useAppStatus(appCanvasInput.projectId);
+  const loaded = useServerFrames(
+    status,
+    appCanvasInput.listen,
+    Boolean(appCanvasInput.app)
+  );
   const [routeDismissed, setRouteDismissed] = useState(false);
   const [hidden, setHidden] = useState(() => readHiddenRedirects());
 
   const key = redirect
-    ? `${o.projectId} ${redirect.from}>${redirect.to}`
+    ? `${appCanvasInput.projectId} ${redirect.from}>${redirect.to}`
     : null;
 
   const shownRedirect =
-    o.app && redirect && key && !hidden.includes(key) ? redirect : null;
+    appCanvasInput.app && redirect && key && !hidden.includes(key)
+      ? redirect
+      : null;
 
-  const hint = o.app
-    ? (serverHint(o.app, status, loaded) ??
-      (routeDismissed || shownRedirect ? null : routeHint(o.frames.layout)))
+  const hint = appCanvasInput.app
+    ? (serverHint(appCanvasInput.app, status, loaded) ??
+      (routeDismissed || shownRedirect
+        ? null
+        : routeHint(appCanvasInput.frames.layout)))
     : null;
 
   const hide = (value: string): void => {
@@ -323,12 +341,16 @@ const useAppCanvas = (
 
   const signIn = (): void => {
     dismissRedirect();
-    o.onSignIn();
+    appCanvasInput.onSignIn();
   };
 
   return {
-    bar: o.app ? (
-      <AppCanvasBar projectId={o.projectId} app={o.app} onAddRoute={addRoute} />
+    bar: appCanvasInput.app ? (
+      <AppCanvasBar
+        projectId={appCanvasInput.projectId}
+        app={appCanvasInput.app}
+        onAddRoute={addRoute}
+      />
     ) : null,
     note: shownRedirect ? (
       <FrameRedirectNote

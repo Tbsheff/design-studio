@@ -94,7 +94,7 @@ const FramePageMenu = ({
         aria-expanded={menu.open}
         aria-label={`Page: ${pageName(path)}`}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((v) => !v)}
+        onClick={() => menu.setOpen((valueValue) => !valueValue)}
         data-tip={
           menu.open ? undefined : `/${path} · Show another page in this frame`
         }
@@ -109,8 +109,8 @@ const FramePageMenu = ({
           aria-label={copy.framePage}
         >
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
+            onSubmit={(event) => {
+              event.preventDefault();
               apply(draft);
             }}
           >
@@ -124,8 +124,8 @@ const FramePageMenu = ({
                 placeholder={
                   routes ? "settings" : listPages ? "about.html" : "pricing"
                 }
-                onChange={(e) => {
-                  setDraft(e.target.value);
+                onChange={(eventValue) => {
+                  setDraft(eventValue.target.value);
                   setInvalid(false);
                 }}
               />
@@ -142,7 +142,7 @@ const FramePageMenu = ({
             <div
               role="menu"
               aria-label={copy.pages}
-              onKeyDown={(e) => menuKeys(e, menu.close)}
+              onKeyDown={(event3) => menuKeys(event3, menu.close)}
             >
               {pages === null && (
                 <p className="frame-page-hint">{copy.loadingPages}</p>

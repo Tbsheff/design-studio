@@ -37,11 +37,11 @@ const renderScenarioSlot = (args: FrameStateSlotArgs): ReactElement => (
 
 const useViewSlots = (
   props: ViewProps,
-  s: ReturnType<typeof useCanvasStage>,
+  text: ReturnType<typeof useCanvasStage>,
   pv: ReturnType<typeof useCanvasPreview>
 ) => {
   const { projectId, directionId } = props;
-  const { active, canvasFrames, pz } = s;
+  const { active, canvasFrames, pz } = text;
 
   const findHost = useFindHost({
     enabled: directionId !== null,
@@ -92,11 +92,15 @@ const useViewSlots = (
 };
 
 const CanvasView = (props: ViewProps): ReactElement => {
-  const s = useCanvasStage(props);
-  const pv = useCanvasPreview(props, s);
-  const ed = useCanvasEdits(props, s, pv);
-  const w = useCanvasWiring(props, s, pv, ed);
-  const { findHost, importPage, matrixSlot } = useViewSlots(props, s, pv);
+  const textValue = useCanvasStage(props);
+  const pv = useCanvasPreview(props, textValue);
+  const ed = useCanvasEdits(props, textValue, pv);
+  const width = useCanvasWiring(props, textValue, pv, ed);
+  const { findHost, importPage, matrixSlot } = useViewSlots(
+    props,
+    textValue,
+    pv
+  );
   const CommandsHost = props.commandsHost;
   const { projectId, directionId, kind, source, headVersionId } = props;
 
@@ -119,7 +123,7 @@ const CanvasView = (props: ViewProps): ReactElement => {
     setProto,
     draw,
     liveUrl,
-  } = s;
+  } = textValue;
 
   const { inline, frames } = pv;
   const { layerEdits, previewMenu } = ed;
@@ -133,7 +137,7 @@ const CanvasView = (props: ViewProps): ReactElement => {
     proto,
     commandsInput,
     appCanvas,
-  } = w;
+  } = width;
 
   return (
     <div className={canvasClass(inline.editing)}>
@@ -154,7 +158,9 @@ const CanvasView = (props: ViewProps): ReactElement => {
         layout={layout}
         active={active}
         frames={canvasFrames}
-        label={(f) => labelProps(f, frameDirection(f, directionId))}
+        label={(canvasFrame) =>
+          labelProps(canvasFrame, frameDirection(canvasFrame, directionId))
+        }
         addFrame={addFrameAt}
         presentUrl={liveUrl}
         sandbox={sandbox}
@@ -217,7 +223,7 @@ const CanvasView = (props: ViewProps): ReactElement => {
             />
           )}
         <FrameStateSlotContext.Provider value={renderScenarioSlot}>
-          <CanvasStage props={props} s={s} pv={pv} ed={ed} w={w} />
+          <CanvasStage props={props} s={textValue} pv={pv} ed={ed} w={width} />
         </FrameStateSlotContext.Provider>
       </div>
     </div>

@@ -17,7 +17,7 @@ import { useResizeHandles } from "./use-resize-handles.js";
 
 const useCanvasEdits = (
   props: ViewProps,
-  s: ReturnType<typeof useCanvasStage>,
+  text: ReturnType<typeof useCanvasStage>,
   pv: ReturnType<typeof useCanvasPreview>
 ) => {
   const { projectId, directionId, kind, headVersionId } = props;
@@ -36,7 +36,7 @@ const useCanvasEdits = (
     layersOpen,
     picking,
     draw,
-  } = s;
+  } = text;
 
   const { openMenu, frames, editsEnabled } = pv;
 

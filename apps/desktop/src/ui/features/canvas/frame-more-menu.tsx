@@ -62,7 +62,7 @@ const FrameMoreMenu = ({
         aria-expanded={menu.open}
         aria-label={`More actions for ${name}`}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((v) => !v)}
+        onClick={() => menu.setOpen((value) => !value)}
         data-tip={menu.open ? undefined : "More frame actions"}
       >
         <Icon name="more" size={14} />
@@ -72,7 +72,7 @@ const FrameMoreMenu = ({
           className="ui-menu project-menu canvas-menu frame-menu"
           role="menu"
           aria-label={`${name} actions`}
-          onKeyDown={(e) => menuKeys(e, menu.close)}
+          onKeyDown={(event) => menuKeys(event, menu.close)}
         >
           {items.map((item) => (
             <button

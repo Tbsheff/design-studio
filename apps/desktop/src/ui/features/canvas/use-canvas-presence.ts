@@ -27,17 +27,24 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
   for (const el of stage.querySelectorAll<HTMLElement>(
     ".artboard[data-frame-id], .canvas-frame[data-frame-id]"
   )) {
-    const r = el.getBoundingClientRect();
-    const w = Math.min(r.right, box.right) - Math.max(r.left, box.left);
-    const h = Math.min(r.bottom, box.bottom) - Math.max(r.top, box.top);
+    const dOMRect = el.getBoundingClientRect();
+    const widthValue =
+      Math.min(dOMRect.right, box.right) - Math.max(dOMRect.left, box.left);
+    const heightValue =
+      Math.min(dOMRect.bottom, box.bottom) - Math.max(dOMRect.top, box.top);
 
-    if (w <= 0 || h <= 0 || r.width <= 0 || r.height <= 0) {
+    if (
+      widthValue <= 0 ||
+      heightValue <= 0 ||
+      dOMRect.width <= 0 ||
+      dOMRect.height <= 0
+    ) {
       continue;
     }
 
     if (
-      (w * h) / (r.width * r.height) >= 0.25 ||
-      (w * h) / (box.width * box.height) >= 0.25
+      (widthValue * heightValue) / (dOMRect.width * dOMRect.height) >= 0.25 ||
+      (widthValue * heightValue) / (box.width * box.height) >= 0.25
     ) {
       ids.push(el.dataset.frameId as string);
     }
@@ -46,24 +53,24 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
   return [...new Set(ids)].sort();
 };
 
-const presenceBody = (o: PresenceInput) => ({
-  activeFrameId: o.activeId,
-  directionId: o.directionId,
-  inView: inViewIds(o.stage()),
+const presenceBody = (presenceInput: PresenceInput) => ({
+  activeFrameId: presenceInput.activeId,
+  directionId: presenceInput.directionId,
+  inView: inViewIds(presenceInput.stage()),
   liveSize: {
-    height: Math.round(o.liveSize.height),
-    width: Math.round(o.liveSize.width),
+    height: Math.round(presenceInput.liveSize.height),
+    width: Math.round(presenceInput.liveSize.width),
   },
-  selection: o.selection.slice(0, 20).map((s) => ({
-    selector: s.selector.slice(0, 400),
-    tag: s.tag.slice(0, 40),
-    text: s.text.slice(0, 200),
+  selection: presenceInput.selection.slice(0, 20).map((selectionContext) => ({
+    selector: selectionContext.selector.slice(0, 400),
+    tag: selectionContext.tag.slice(0, 40),
+    text: selectionContext.text.slice(0, 200),
   })),
 });
 
-const useCanvasPresence = (o: PresenceInput): void => {
-  const latest = useRef(o);
-  latest.current = o;
+const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
+  const latest = useRef(presenceInputValue);
+  latest.current = presenceInputValue;
   useEffect(() => {
     let last = "";
     let sentAt = 0;
@@ -94,7 +101,7 @@ const useCanvasPresence = (o: PresenceInput): void => {
     const timer = window.setInterval(send, PRESENCE_MS);
 
     return (): void => window.clearInterval(timer);
-  }, [o.projectId]);
+  }, [presenceInputValue.projectId]);
   useEffect(() => {
     let stop: (() => void) | null = null;
     let gone = false;
@@ -103,7 +110,9 @@ const useCanvasPresence = (o: PresenceInput): void => {
       const mod = await import("../share-publish-ship-export/share-live.js");
 
       if (!gone) {
-        stop = mod.startShareLive(o.projectId, () => latest.current.stage());
+        stop = mod.startShareLive(presenceInputValue.projectId, () =>
+          latest.current.stage()
+        );
       }
     };
 
@@ -113,7 +122,7 @@ const useCanvasPresence = (o: PresenceInput): void => {
       gone = true;
       stop?.();
     };
-  }, [o.projectId]);
+  }, [presenceInputValue.projectId]);
 };
 
 export { inViewIds, useCanvasPresence };

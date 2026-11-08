@@ -14,19 +14,19 @@ const PNG_MAX_SIDE = 4096;
 const HALO = "rgba(255, 255, 255, 0.9)";
 
 interface StrokeBuilder {
-  add(x: number, y: number): boolean;
-  end(x: number, y: number): void;
+  add(pointX: number, pointY: number): boolean;
+  end(pointXValue: number, pointYValue: number): void;
   points(): number[];
 }
 
 const createStrokeBuilder = (
-  x: number,
-  y: number,
+  pointX3: number,
+  pointY3: number,
   minStep: number
 ): StrokeBuilder => {
-  const points = [round(x), round(y)];
-  let lastX = x;
-  let lastY = y;
+  const points = [round(pointX3), round(pointY3)];
+  let lastX = pointX3;
+  let lastY = pointY3;
 
   return {
     add(rawX, rawY) {
@@ -80,12 +80,12 @@ const strokePath = (points: number[]): string => {
 
   let path = `M${x0} ${y0}`;
 
-  for (let i = 1; i < count - 1; i += 1) {
-    const x = points[i * 2] as number;
-    const y = points[i * 2 + 1] as number;
-    const mx = (x + (points[i * 2 + 2] as number)) / 2;
-    const my = (y + (points[i * 2 + 3] as number)) / 2;
-    path += `Q${x} ${y} ${round(mx)} ${round(my)}`;
+  for (let index = 1; index < count - 1; index += 1) {
+    const pointX4 = points[index * 2] as number;
+    const pointY4 = points[index * 2 + 1] as number;
+    const mx = (pointX4 + (points[index * 2 + 2] as number)) / 2;
+    const my = (pointY4 + (points[index * 2 + 3] as number)) / 2;
+    path += `Q${pointX4} ${pointY4} ${round(mx)} ${round(my)}`;
   }
 
   return `${path}L${points[(count - 1) * 2]} ${points[(count - 1) * 2 + 1]}`;
@@ -102,14 +102,14 @@ const traceStroke = (ctx: CanvasRenderingContext2D, points: number[]): void => {
     ctx.lineTo(x0 + 0.01, y0);
   }
 
-  for (let i = 1; i < count - 1; i += 1) {
-    const x = points[i * 2] as number;
-    const y = points[i * 2 + 1] as number;
+  for (let indexValue = 1; indexValue < count - 1; indexValue += 1) {
+    const pointX5 = points[indexValue * 2] as number;
+    const pointY5 = points[indexValue * 2 + 1] as number;
     ctx.quadraticCurveTo(
-      x,
-      y,
-      (x + (points[i * 2 + 2] as number)) / 2,
-      (y + (points[i * 2 + 3] as number)) / 2
+      pointX5,
+      pointY5,
+      (pointX5 + (points[indexValue * 2 + 2] as number)) / 2,
+      (pointY5 + (points[indexValue * 2 + 3] as number)) / 2
     );
   }
 
@@ -186,14 +186,17 @@ const penSegment = (from: PenAnchor, to: PenAnchor): string => {
     return `L${round(to.x)} ${round(to.y)}`;
   }
 
-  const a = from.hout ?? from;
-  const b = to.hin ?? to;
+  const firstValue = from.hout ?? from;
+  const second = to.hin ?? to;
 
-  return `C${round(a.x)} ${round(a.y)} ${round(b.x)} ${round(b.y)} ${round(to.x)} ${round(to.y)}`;
+  return `C${round(firstValue.x)} ${round(firstValue.y)} ${round(second.x)} ${round(second.y)} ${round(to.x)} ${round(to.y)}`;
 };
 
 const shiftAnchor = (anchor: PenAnchor, dx: number, dy: number): PenAnchor => {
-  const move = (p: { x: number; y: number }) => ({ x: p.x + dx, y: p.y + dy });
+  const move = (point: { x: number; y: number }) => ({
+    x: point.x + dx,
+    y: point.y + dy,
+  });
 
   return {
     x: anchor.x + dx,
@@ -220,17 +223,20 @@ const penPath = (
     return "";
   }
 
-  let d = `M${round(first.x)} ${round(first.y)}`;
+  let delta = `M${round(first.x)} ${round(first.y)}`;
 
-  for (let i = 1; i < moved.length; i += 1) {
-    d += penSegment(moved[i - 1] as PenAnchor, moved[i] as PenAnchor);
+  for (let index3 = 1; index3 < moved.length; index3 += 1) {
+    delta += penSegment(
+      moved[index3 - 1] as PenAnchor,
+      moved[index3] as PenAnchor
+    );
   }
 
   if (closed && moved.length > 1) {
-    d += `${penSegment(moved.at(-1) as PenAnchor, first)}Z`;
+    delta += `${penSegment(moved.at(-1) as PenAnchor, first)}Z`;
   }
 
-  return d;
+  return delta;
 };
 
 export {

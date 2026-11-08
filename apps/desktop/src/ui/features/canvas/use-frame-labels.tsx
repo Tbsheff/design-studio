@@ -37,18 +37,21 @@ interface LabelInput {
 }
 
 const frameMenuItems = (
-  o: LabelInput,
+  labelInput: LabelInput,
   frame: CanvasFrame,
   did: string | null
 ): FrameMenuItem[] => {
-  const extra = o.frameActions?.(frame, did) ?? [];
+  const extra = labelInput.frameActions?.(frame, did) ?? [];
 
   const hide: FrameMenuItem = {
     icon: "eyeOff",
     id: "hide",
     label: "Hide frame",
-    run: () => o.frames.update((l) => setFrameHidden(l, frame.id, true)),
-    ...(canHideFrame(o.frames.layout, frame.id)
+    run: () =>
+      labelInput.frames.update((canvasLayout) =>
+        setFrameHidden(canvasLayout, frame.id, true)
+      ),
+    ...(canHideFrame(labelInput.frames.layout, frame.id)
       ? {}
       : { disabled: "The last shown frame stays." }),
   };
@@ -57,20 +60,22 @@ const frameMenuItems = (
 };
 
 const frameLabelSig = (
-  o: LabelInput,
+  labelInputValue: LabelInput,
   frame: CanvasFrame,
   did: string | null
 ): string => {
-  const variation = did ? o.directions?.variationOf(did) : undefined;
+  const variation = did
+    ? labelInputValue.directions?.variationOf(did)
+    : undefined;
 
-  const items = frameMenuItems(o, frame, did).map((item) => [
+  const items = frameMenuItems(labelInputValue, frame, did).map((item) => [
     item.id,
     item.label,
     item.icon,
     item.disabled ?? "",
   ]);
 
-  const v = variation
+  const value = variation
     ? [
         variation.label,
         variation.title,
@@ -84,22 +89,25 @@ const frameLabelSig = (
     : null;
 
   const named = did
-    ? o.directions?.list.find((d) => d.id === did)?.name
+    ? labelInputValue.directions?.list.find((direction) => direction.id === did)
+        ?.name
     : undefined;
 
-  const index = o.frames.layout.frames.findIndex((f) => f.id === frame.id);
+  const index = labelInputValue.frames.layout.frames.findIndex(
+    (canvasFrame) => canvasFrame.id === frame.id
+  );
 
   return JSON.stringify([
     index,
-    frame.id === o.activeId,
-    o.frames.layout.frames.length > 1,
+    frame.id === labelInputValue.activeId,
+    labelInputValue.frames.layout.frames.length > 1,
     did,
-    did === o.directionId,
+    did === labelInputValue.directionId,
     named,
-    o.directionName,
-    o.kind,
-    Boolean(o.appPages),
-    v,
+    labelInputValue.directionName,
+    labelInputValue.kind,
+    Boolean(labelInputValue.appPages),
+    value,
     items,
   ]);
 };
@@ -120,12 +128,12 @@ const liveVariation = (
 };
 
 const liveMenuItems = (
-  o: LabelInput,
+  labelInput3: LabelInput,
   frame: CanvasFrame,
   did: string | null,
   live: MutableRefObject<LabelInput>
 ): FrameMenuItem[] =>
-  frameMenuItems(o, frame, did).map((item) => ({
+  frameMenuItems(labelInput3, frame, did).map((item) => ({
     ...item,
     run: () =>
       frameMenuItems(live.current, frame, did)
@@ -133,22 +141,22 @@ const liveMenuItems = (
         ?.run(),
   }));
 
-const useFrameLabels = (o: LabelInput) => {
-  const { projectId } = o;
-  const live = useRef(o);
-  live.current = o;
+const useFrameLabels = (labelInput4: LabelInput) => {
+  const { projectId } = labelInput4;
+  const live = useRef(labelInput4);
+  live.current = labelInput4;
 
   const listPages = useCallback(
     (did: string) => async (): Promise<string[]> => {
       const { files } = await api.workTreeFiles(projectId, did);
 
-      return files.filter((f) => f.endsWith(".html")).sort();
+      return files.filter((frameValue) => frameValue.endsWith(".html")).sort();
     },
     [projectId]
   );
 
   const pagesFor = (did: string | null): (() => Promise<string[]>) | null => {
-    if (!o.appPages && !(o.kind === "html" && did)) {
+    if (!labelInput4.appPages && !(labelInput4.kind === "html" && did)) {
       return null;
     }
 
@@ -156,19 +164,25 @@ const useFrameLabels = (o: LabelInput) => {
   };
 
   const label = (frame: CanvasFrame, did: string | null) => {
-    const variation = did ? o.directions?.variationOf(did) : undefined;
-    const isActive = frame.id === o.activeId;
-    const index = o.frames.layout.frames.findIndex((f) => f.id === frame.id);
+    const variation = did
+      ? labelInput4.directions?.variationOf(did)
+      : undefined;
+    const isActive = frame.id === labelInput4.activeId;
+    const index = labelInput4.frames.layout.frames.findIndex(
+      (canvasFrameValue) => canvasFrameValue.id === frame.id
+    );
 
     const named = did
-      ? o.directions?.list.find((d) => d.id === did)?.name
+      ? labelInput4.directions?.list.find(
+          (directionValue) => directionValue.id === did
+        )?.name
       : undefined;
 
     return {
-      ...o.baseLabel(frame),
+      ...labelInput4.baseLabel(frame),
       badge: variation
         ? {
-            current: did === o.directionId,
+            current: did === labelInput4.directionId,
             label: variation.label,
             title: variation.title,
           }
@@ -180,21 +194,23 @@ const useFrameLabels = (o: LabelInput) => {
             <VariationControls
               variation={liveVariation(variation, did, live)}
               active={isActive}
-              element={isActive ? (o.selection[0] ?? null) : null}
+              element={isActive ? (labelInput4.selection[0] ?? null) : null}
               onMixed={() => live.current.setSelection(() => [])}
             />
           )}
           <FramePageMenu
             path={frame.path ?? ""}
-            routes={Boolean(o.appPages)}
+            routes={Boolean(labelInput4.appPages)}
             listPages={pagesFor(did)}
             onPath={(path) =>
-              live.current.frames.update((l) => setFramePath(l, frame.id, path))
+              live.current.frames.update((canvasLayoutValue) =>
+                setFramePath(canvasLayoutValue, frame.id, path)
+              )
             }
           />
           <FrameMoreMenu
             name={frame.label ?? frameName(frame)}
-            items={liveMenuItems(o, frame, did, live)}
+            items={liveMenuItems(labelInput4, frame, did, live)}
           />
         </>
       ),
@@ -203,13 +219,13 @@ const useFrameLabels = (o: LabelInput) => {
         : String(index + 1),
       title: variation
         ? undefined
-        : (frame.label ?? named ?? o.directionName ?? undefined),
+        : (frame.label ?? named ?? labelInput4.directionName ?? undefined),
     };
   };
 
   return Object.assign(label, {
     sig: (frame: CanvasFrame, did: string | null) =>
-      frameLabelSig(o, frame, did),
+      frameLabelSig(labelInput4, frame, did),
   });
 };
 

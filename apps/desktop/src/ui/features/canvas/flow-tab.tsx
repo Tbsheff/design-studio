@@ -113,7 +113,11 @@ export default function FlowTab({
         ? chosen.indexOf(route.route)
         : chosen.length;
 
-    return [...found].sort((a, b) => picked(a) - picked(b)).slice(0, 200);
+    return [...found]
+      .sort(
+        (appRoute, appRouteValue) => picked(appRoute) - picked(appRouteValue)
+      )
+      .slice(0, 200);
   }, [routes, filter, chosen]);
 
   const names = [...new Set(chosen.flatMap(dynamicNames))];
@@ -154,7 +158,7 @@ export default function FlowTab({
           routes ? `Filter ${routes.length} routes` : "Loading routes…"
         }
         aria-label={copy.filterRoutes}
-        onChange={(e) => setFilter(e.target.value)}
+        onChange={(event) => setFilter(event.target.value)}
       />
       <div className="flow-routes" role="list" aria-label={copy.routesInThe}>
         {shown.map((route) => {
@@ -216,8 +220,11 @@ export default function FlowTab({
               value={params[name] ?? ""}
               placeholder={copy.sampleValue}
               spellCheck={false}
-              onChange={(e) =>
-                setParams((prev) => ({ ...prev, [name]: e.target.value }))
+              onChange={(eventValue) =>
+                setParams((prev) => ({
+                  ...prev,
+                  [name]: eventValue.target.value,
+                }))
               }
             />
           </label>

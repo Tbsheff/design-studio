@@ -108,7 +108,7 @@ const DropMenu = ({
             onOpen?.();
           }
 
-          setOpen((v) => !v);
+          setOpen((value) => !value);
         }}
       >
         {children}

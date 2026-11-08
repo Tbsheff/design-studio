@@ -20,9 +20,9 @@ const ZOOMS = [0.5, 0.75, 1, 1.25, 2];
 interface ZoomProps {
   zoom: LiveStore<number>;
   setting: ZoomSetting;
-  onZoomTo: (z: number) => void;
+  onZoomTo: (zoomValue: number) => void;
   onFit: () => void;
-  onStep: (d: 1 | -1) => void;
+  onStep: (delta: 1 | -1) => void;
 }
 
 const zoomGroups = ({
@@ -56,25 +56,25 @@ const zoomGroups = ({
         meta: shortcutLabel("zoom-fit", IS_MAC),
         run: onFit,
       },
-      ...ZOOMS.map((z) => ({
-        checked: setting === z,
-        id: String(z),
-        label: `${Math.round(z * 100)}%`,
-        run: () => onZoomTo(z),
+      ...ZOOMS.map((zoomValueValue) => ({
+        checked: setting === zoomValueValue,
+        id: String(zoomValueValue),
+        label: `${Math.round(zoomValueValue * 100)}%`,
+        run: () => onZoomTo(zoomValueValue),
       })),
     ],
   },
 ];
 
-const ZoomPill = (p: ZoomProps): ReactElement => {
-  const percent = useLive(p.zoom);
+const ZoomPill = (zoomProps: ZoomProps): ReactElement => {
+  const percent = useLive(zoomProps.zoom);
 
   return (
     <DropMenu
       label={`Zoom ${percent}%`}
       className="topbar-zoom"
       anchorClass="topbar-fold-narrow"
-      groups={() => zoomGroups(p)}
+      groups={() => zoomGroups(zoomProps)}
       align="end"
       tip={tipWithKey(`Zoom ${percent}%`, "zoom-fit")}
     >
@@ -96,10 +96,10 @@ interface OverflowProps {
   tweak: { open: boolean; disabled: boolean; run: () => void };
 }
 
-const OverflowMenu = (p: OverflowProps): ReactElement => {
-  const percent = useLive(p.zoom.zoom);
+const OverflowMenu = (overflowProps: OverflowProps): ReactElement => {
+  const percent = useLive(overflowProps.zoom.zoom);
   const shape = useVectorTool();
-  const zoom = zoomGroups(p.zoom);
+  const zoom = zoomGroups(overflowProps.zoom);
 
   const groups = (): MenuGroup[] => [
     {
@@ -109,35 +109,35 @@ const OverflowMenu = (p: OverflowProps): ReactElement => {
           icon: "reload",
           id: "reload",
           label: "Reload preview",
-          run: p.onReload,
+          run: overflowProps.onReload,
         },
         {
-          checked: p.viewOpen,
+          checked: overflowProps.viewOpen,
           icon: "eye",
           id: "view",
           label: "Size, source and checks",
-          run: p.onToggleView,
+          run: overflowProps.onToggleView,
         },
       ],
     },
-    { fold: "wide", items: p.present, label: "Present" },
+    { fold: "wide", items: overflowProps.present, label: "Present" },
     {
       fold: "narrow",
       items: [
         {
-          checked: p.tweak.open,
-          disabled: p.tweak.disabled,
+          checked: overflowProps.tweak.open,
+          disabled: overflowProps.tweak.disabled,
           icon: "sliders",
           id: "tweak",
           label: "Describe a tweak",
-          run: p.tweak.run,
+          run: overflowProps.tweak.run,
         },
       ],
     },
     {
       fold: "narrow",
       items: zoom
-        .flatMap((g) => g.items)
+        .flatMap((menuGroup) => menuGroup.items)
         .filter(
           (item) => item.id === "fit" || item.id === "in" || item.id === "out"
         ),

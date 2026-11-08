@@ -68,10 +68,10 @@ const MenuPopover = ({
       onKeyDown={onMenuKey}
     >
       {groups
-        .filter((g) => g.items.length > 0 || g.note)
-        .map((group, i) => (
+        .filter((menuGroup) => menuGroup.items.length > 0 || menuGroup.note)
+        .map((group, index) => (
           <div
-            key={group.label ?? i}
+            key={group.label ?? index}
             className="ui-menu-section"
             data-fold={group.fold}
           >
@@ -104,7 +104,7 @@ const MenuPopover = ({
 };
 
 const shareGroups = (
-  p: {
+  point: {
     canExport: boolean;
     onExport: () => void;
     onShip?: (() => void) | null;
@@ -113,16 +113,16 @@ const shareGroups = (
   onPort: (() => void) | null
 ): MenuGroup[] => {
   const exportItem: MenuEntry = {
-    disabled: !p.canExport,
+    disabled: !point.canExport,
     icon: "download",
     id: "export",
     label: "Export…",
     meta: "PNG, PDF, HTML, handoff",
-    run: p.onExport,
-    ...(p.canExport ? {} : { tip: "Save a version to export" }),
+    run: point.onExport,
+    ...(point.canExport ? {} : { tip: "Save a version to export" }),
   };
 
-  const ship = p.onShip;
+  const ship = point.onShip;
 
   const shipItem: MenuEntry[] = ship
     ? [
@@ -149,18 +149,18 @@ const shareGroups = (
       ]
     : [];
 
-  const link = p.onShareLink;
+  const link = point.onShareLink;
 
   const linkItem: MenuEntry[] = link
     ? [
         {
-          disabled: !p.canExport,
+          disabled: !point.canExport,
           icon: "link",
           id: "share-link",
           label: "Share a read-only link…",
           meta: "View and comment",
           run: () => link("link"),
-          tip: p.canExport
+          tip: point.canExport
             ? "Others see still images of the frames and can comment"
             : "Save a version to share",
         },
@@ -170,13 +170,13 @@ const shareGroups = (
   const publishItem: MenuEntry[] = link
     ? [
         {
-          disabled: !p.canExport,
+          disabled: !point.canExport,
           icon: "globe",
           id: "publish",
           label: "Publish on Cloudflare…",
           meta: "Your publish Worker",
           run: () => link("publish"),
-          tip: p.canExport
+          tip: point.canExport
             ? "Uploads a copy of a saved version to your publish Worker after you confirm"
             : "Save a version to publish",
         },

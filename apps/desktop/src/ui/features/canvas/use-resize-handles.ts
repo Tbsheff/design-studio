@@ -62,7 +62,10 @@ interface ResizeLive {
 interface ResizeControl {
   target: SelectionContext | null;
   live: ResizeLive | null;
-  onHandleDown: (edge: ResizeEdge, e: ReactPointerEvent<HTMLElement>) => void;
+  onHandleDown: (
+    edge: ResizeEdge,
+    event: ReactPointerEvent<HTMLElement>
+  ) => void;
 }
 
 interface LiveSize {
@@ -122,75 +125,82 @@ const resizedSize = (
   dy: number,
   keepRatio: boolean
 ): Size => {
-  let w = edge === "s" ? base.w : base.w + dx;
-  let h = edge === "e" ? base.h : base.h + dy;
+  let widthValue = edge === "s" ? base.w : base.w + dx;
+  let heightValue = edge === "e" ? base.h : base.h + dy;
 
   if (keepRatio && base.w > 0 && base.h > 0) {
     const ratio = base.w / base.h;
 
     if (edge === "e") {
-      h = w / ratio;
+      heightValue = widthValue / ratio;
     } else if (edge === "s") {
-      w = h * ratio;
+      widthValue = heightValue * ratio;
     } else if (Math.abs(dx / base.w) >= Math.abs(dy / base.h)) {
-      h = w / ratio;
+      heightValue = widthValue / ratio;
     } else {
-      w = h * ratio;
+      widthValue = heightValue * ratio;
     }
   }
 
-  return { h: Math.max(1, Math.round(h)), w: Math.max(1, Math.round(w)) };
+  return {
+    h: Math.max(1, Math.round(heightValue)),
+    w: Math.max(1, Math.round(widthValue)),
+  };
 };
 
 let neighborSeq = 0;
 
-const requestNeighbors = (d: Drag, o: Options): void => {
-  if (!o.listen) {
+const requestNeighbors = (dragValue: Drag, options: Options): void => {
+  if (!options.listen) {
     return;
   }
 
   neighborSeq += 1;
   const requestId = `nb-${neighborSeq}`;
 
-  const stop = o.listen((message) => {
+  const stop = options.listen((message) => {
     if (message.type !== "neighbors" || message.requestId !== requestId) {
       return;
     }
 
-    d.candidates = message.parent
+    dragValue.candidates = message.parent
       ? [message.parent, ...message.siblings]
       : message.siblings;
     stop();
   });
 
-  d.stopListen = stop;
-  o.post({ requestId, selector: d.target.selector, type: "request-neighbors" });
+  dragValue.stopListen = stop;
+  options.post({
+    requestId,
+    selector: dragValue.target.selector,
+    type: "request-neighbors",
+  });
 };
 
 const snapSize = (
-  d: Pick<Drag, "edge" | "base" | "target" | "candidates" | "zoom">,
+  delta: Pick<Drag, "edge" | "base" | "target" | "candidates" | "zoom">,
   next: Size,
   off: boolean
 ): { size: Size; guides: SnapGuide[] } => {
-  if (off || d.candidates.length === 0) {
+  if (off || delta.candidates.length === 0) {
     return { guides: [], size: next };
   }
 
-  const r = d.target.rect;
+  const resultValue = delta.target.rect;
 
   const box = {
-    height: r.height + next.h - d.base.h,
-    width: r.width + next.w - d.base.w,
-    x: r.x,
-    y: r.y,
+    height: resultValue.height + next.h - delta.base.h,
+    width: resultValue.width + next.w - delta.base.w,
+    x: resultValue.x,
+    y: resultValue.y,
   };
 
   const res = snapRect({
-    candidates: d.candidates,
+    candidates: delta.candidates,
     rect: box,
-    x: d.edge === "s" ? null : "end",
-    y: d.edge === "e" ? null : "end",
-    zoom: d.zoom,
+    x: delta.edge === "s" ? null : "end",
+    y: delta.edge === "e" ? null : "end",
+    zoom: delta.zoom,
   });
 
   const size = {
@@ -201,14 +211,14 @@ const snapSize = (
   return { guides: res.guides, size };
 };
 
-const axisStyle = (d: Drag, size: Size): Record<string, string> => {
+const axisStyle = (drag3: Drag, size: Size): Record<string, string> => {
   const style: Record<string, string> = {};
 
-  if (d.axes.has("width")) {
+  if (drag3.axes.has("width")) {
     style.width = `${size.w}px`;
   }
 
-  if (d.axes.has("height")) {
+  if (drag3.axes.has("height")) {
     style.height = `${size.h}px`;
   }
 
@@ -237,43 +247,45 @@ interface ResizeReadout {
 
 const resizeReadout = createLiveStore<ResizeReadout | null>(null);
 
-const useResizeHandles = (o: Options): ResizeHandles => {
-  const live = useRef(o);
-  live.current = o;
+const useResizeHandles = (optionsValue: Options): ResizeHandles => {
+  const live = useRef(optionsValue);
+  live.current = optionsValue;
   const drag = useRef<Drag | null>(null);
   const [sizes] = useState(() => createLiveStore<LiveSize | null>(null));
   const setSize = sizes.set;
 
   const target =
-    o.enabled && o.selection.length === 1 && o.selection[0]?.source
-      ? (o.selection[0] ?? null)
+    optionsValue.enabled &&
+    optionsValue.selection.length === 1 &&
+    optionsValue.selection[0]?.source
+      ? (optionsValue.selection[0] ?? null)
       : null;
 
-  const preview = useCallback((d: Drag, next: Size, keepRatio: boolean) => {
-    d.size = next;
+  const preview = useCallback((drag4: Drag, next: Size, keepRatio: boolean) => {
+    drag4.size = next;
 
-    if (d.edge !== "s" || keepRatio) {
-      d.axes.add("width");
+    if (drag4.edge !== "s" || keepRatio) {
+      drag4.axes.add("width");
     }
 
-    if (d.edge !== "e" || keepRatio) {
-      d.axes.add("height");
+    if (drag4.edge !== "e" || keepRatio) {
+      drag4.axes.add("height");
     }
 
     setSize({
-      base: d.base,
-      guides: d.guides,
-      rect: d.target.rect,
+      base: drag4.base,
+      guides: drag4.guides,
+      rect: drag4.target.rect,
       size: next,
     });
     resizeReadout.set({
       height: next.h,
-      selector: d.target.selector,
+      selector: drag4.target.selector,
       width: next.w,
     });
     live.current.post({
-      selector: d.target.selector,
-      style: axisStyle(d, next),
+      selector: drag4.target.selector,
+      style: axisStyle(drag4, next),
       type: "preview-style",
     });
   }, []);
@@ -288,30 +300,30 @@ const useResizeHandles = (o: Options): ResizeHandles => {
   }, []);
 
   const cancel = useCallback(() => {
-    const d = drag.current;
+    const deltaValue = drag.current;
 
-    if (!d) {
+    if (!deltaValue) {
       return;
     }
 
     live.current.post({
-      selector: d.target.selector,
-      style: axisStyle(d, d.base),
+      selector: deltaValue.target.selector,
+      style: axisStyle(deltaValue, deltaValue.base),
       type: "preview-style",
     });
     end();
   }, [end]);
 
-  const commit = useCallback(async (d: Drag) => {
+  const commit = useCallback(async (drag5: Drag) => {
     const cur = live.current;
-    const style = styleFor(d.size, d.base);
-    const req = buildEditRequest(d.target, style);
+    const style = styleFor(drag5.size, drag5.base);
+    const req = buildEditRequest(drag5.target, style);
 
     if (!req || !cur.directionId) {
       return;
     }
 
-    const { selector } = d.target;
+    const { selector } = drag5.target;
     cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
 
     const optimistic = startOptimistic(
@@ -326,8 +338,8 @@ const useResizeHandles = (o: Options): ResizeHandles => {
       live.current.refreshRects();
     } catch (error) {
       const back = {
-        height: d.target.styles.height ?? "",
-        width: d.target.styles.width ?? "",
+        height: drag5.target.styles.height ?? "",
+        width: drag5.target.styles.width ?? "",
       };
 
       optimistic.failed(errorText(error));
@@ -339,60 +351,60 @@ const useResizeHandles = (o: Options): ResizeHandles => {
   }, []);
 
   const onHandleDown = useCallback(
-    (edge: ResizeEdge, e: ReactPointerEvent<HTMLElement>) => {
+    (edge: ResizeEdge, eventValue: ReactPointerEvent<HTMLElement>) => {
       const sel = target;
 
-      if (e.button !== 0 || !sel) {
+      if (eventValue.button !== 0 || !sel) {
         return;
       }
 
-      e.preventDefault();
-      e.stopPropagation();
-      const handle = e.currentTarget;
-      handle.setPointerCapture(e.pointerId);
+      eventValue.preventDefault();
+      eventValue.stopPropagation();
+      const handle = eventValue.currentTarget;
+      handle.setPointerCapture(eventValue.pointerId);
 
       const base = {
         h: pxOf(sel.styles.height, sel.rect.height),
         w: pxOf(sel.styles.width, sel.rect.width),
       };
 
-      const d: Drag = {
+      const drag6: Drag = {
         axes: new Set(),
         base,
         candidates: [],
         edge,
         guides: [],
-        pointerId: e.pointerId,
+        pointerId: eventValue.pointerId,
         size: base,
-        startX: e.clientX,
-        startY: e.clientY,
+        startX: eventValue.clientX,
+        startY: eventValue.clientY,
         stopListen: () => undefined,
         target: sel,
         zoom: scaleOf(handle) || 1,
       };
 
-      drag.current = d;
+      drag.current = drag6;
       document.body.classList.add("element-resizing");
       live.current.holdSwap?.(true, false);
       setSize({ base, guides: [], rect: sel.rect, size: base });
-      requestNeighbors(d, live.current);
+      requestNeighbors(drag6, live.current);
 
       const onMove = (ev: PointerEvent): void => {
-        if (ev.pointerId !== d.pointerId || drag.current !== d) {
+        if (ev.pointerId !== drag6.pointerId || drag.current !== drag6) {
           return;
         }
 
         const raw = resizedSize(
-          d.edge,
-          d.base,
-          (ev.clientX - d.startX) / d.zoom,
-          (ev.clientY - d.startY) / d.zoom,
+          drag6.edge,
+          drag6.base,
+          (ev.clientX - drag6.startX) / drag6.zoom,
+          (ev.clientY - drag6.startY) / drag6.zoom,
           ev.shiftKey
         );
 
-        const snapped = snapSize(d, raw, ev.shiftKey || snapOff(ev));
-        d.guides = snapped.guides;
-        preview(d, snapped.size, ev.shiftKey);
+        const snapped = snapSize(drag6, raw, ev.shiftKey || snapOff(ev));
+        drag6.guides = snapped.guides;
+        preview(drag6, snapped.size, ev.shiftKey);
       };
 
       const detach = (): void => {
@@ -403,21 +415,22 @@ const useResizeHandles = (o: Options): ResizeHandles => {
       };
 
       const onUp = (ev: PointerEvent): void => {
-        if (ev.pointerId !== d.pointerId) {
+        if (ev.pointerId !== drag6.pointerId) {
           return;
         }
 
         detach();
 
-        if (drag.current !== d) {
+        if (drag.current !== drag6) {
           return;
         }
 
-        const changed = d.size.w !== d.base.w || d.size.h !== d.base.h;
+        const changed =
+          drag6.size.w !== drag6.base.w || drag6.size.h !== drag6.base.h;
         end(changed);
 
         if (changed) {
-          void commit(d);
+          void commit(drag6);
         }
       };
 

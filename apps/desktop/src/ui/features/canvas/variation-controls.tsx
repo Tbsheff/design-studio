@@ -33,7 +33,7 @@ interface FrameVariation {
   onMix: (toDirectionId: string, element: SelectionContext) => Promise<void>;
 }
 
-const stop = (e: ReactPointerEvent): void => e.stopPropagation();
+const stop = (event: ReactPointerEvent): void => event.stopPropagation();
 
 const UseInMenu = ({
   siblings,
@@ -63,7 +63,7 @@ const UseInMenu = ({
         aria-expanded={menu.open}
         disabled={busy}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((v) => !v)}
+        onClick={() => menu.setOpen((value) => !value)}
         data-tip={
           menu.open
             ? undefined
@@ -78,7 +78,7 @@ const UseInMenu = ({
           className="project-menu canvas-menu frame-menu"
           role="menu"
           aria-label={copy.inVariation}
-          onKeyDown={(e) => menuKeys(e, menu.close)}
+          onKeyDown={(eventValue) => menuKeys(eventValue, menu.close)}
         >
           {siblings.map((other) => (
             <button

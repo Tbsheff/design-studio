@@ -26,14 +26,14 @@ interface McpPointBadge {
 }
 
 const useShowFrame = (
-  o: PointInput
+  pointInput: PointInput
 ): ((frameId: string, selector: string | undefined) => boolean) => {
-  const latest = useRef(o);
-  latest.current = o;
+  const latest = useRef(pointInput);
+  latest.current = pointInput;
   const timers = useRef<number[]>([]);
   useEffect(
     () => (): void => {
-      timers.current.forEach((t) => window.clearTimeout(t));
+      timers.current.forEach((target) => window.clearTimeout(target));
     },
     []
   );
@@ -41,16 +41,20 @@ const useShowFrame = (
   return useCallback(
     (frameId: string, selector: string | undefined): boolean => {
       const cur = latest.current;
-      const frame = cur.frames.layout.frames.find((f) => f.id === frameId);
+      const frame = cur.frames.layout.frames.find(
+        (canvasFrame) => canvasFrame.id === frameId
+      );
 
       if (!frame) {
         return false;
       }
 
-      timers.current.forEach((t) => window.clearTimeout(t));
+      timers.current.forEach((targetValue) => window.clearTimeout(targetValue));
 
       if (frame.hidden) {
-        cur.frames.update((l) => setFrameHidden(l, frame.id, false));
+        cur.frames.update((canvasLayout) =>
+          setFrameHidden(canvasLayout, frame.id, false)
+        );
       }
 
       cur.frames.activate(frame);
@@ -75,10 +79,10 @@ const useShowFrame = (
   );
 };
 
-const useCanvasPoint = (o: PointInput): McpPointBadge => {
-  const showFrame = useShowFrame(o);
+const useCanvasPoint = (pointInputValue: PointInput): McpPointBadge => {
+  const showFrame = useShowFrame(pointInputValue);
   const [point, setPoint] = useState<McpPoint | null>(null);
-  useProjectEvents(o.projectId, (event) => {
+  useProjectEvents(pointInputValue.projectId, (event) => {
     if (
       event.type === "canvas.point" &&
       Date.now() - event.at <= POINT_FRESH_MS

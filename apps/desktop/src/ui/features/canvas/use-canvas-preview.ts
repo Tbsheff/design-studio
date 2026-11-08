@@ -19,7 +19,7 @@ import { useStageKeys } from "./use-stage-keys.js";
 
 const useCanvasPreview = (
   props: ViewProps,
-  s: ReturnType<typeof useCanvasStage>
+  text: ReturnType<typeof useCanvasStage>
 ) => {
   const { projectId, directionId, kind } = props;
 
@@ -43,7 +43,7 @@ const useCanvasPreview = (
     baseUrl,
     frameStates,
     firstBuild,
-  } = s;
+  } = text;
 
   const textEditAllowed = live && !props.running && !commentMode;
 

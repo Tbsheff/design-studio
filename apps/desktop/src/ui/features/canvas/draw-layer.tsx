@@ -404,16 +404,16 @@ const DrawingStrokes = ({
       aria-hidden="true"
     >
       {drawing.strokes.map((stroke, index) => {
-        const d = strokePath(stroke.points);
+        const delta = strokePath(stroke.points);
 
         return (
           <g key={index}>
             <path
-              d={d}
+              d={delta}
               style={{ stroke: "var(--halo)" }}
               strokeWidth={stroke.width + 3}
             />
-            <path d={d} stroke={stroke.color} strokeWidth={stroke.width} />
+            <path d={delta} stroke={stroke.color} strokeWidth={stroke.width} />
           </g>
         );
       })}

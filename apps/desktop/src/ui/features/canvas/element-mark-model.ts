@@ -5,7 +5,9 @@ const markOf = (
   directions: readonly Direction[] | undefined,
   directionId: string | null
 ): string | null => {
-  const variation = directions?.find((d) => d.id === directionId)?.variation;
+  const variation = directions?.find(
+    (direction) => direction.id === directionId
+  )?.variation;
 
   return variation?.scope && !variation.settled ? variation.scope.loc : null;
 };

@@ -30,14 +30,14 @@ const FreeMoveLayer = ({
       <SnapGuides guides={view.guides} full />
       {view.spacing.length > 0 && (
         <div className="snap-guides">
-          {view.spacing.map((b) => (
+          {view.spacing.map((spacingBadge) => (
             <div
-              key={`s-${b.axis}-${b.from}-${b.to}`}
-              className={`snap-gap ${b.axis}`}
-              style={gapStyle(b)}
+              key={`s-${spacingBadge.axis}-${spacingBadge.from}-${spacingBadge.to}`}
+              className={`snap-gap ${spacingBadge.axis}`}
+              style={gapStyle(spacingBadge)}
             >
-              <span className="snap-gap-label" data-value={b.value}>
-                {formatMeasure(b.value)}
+              <span className="snap-gap-label" data-value={spacingBadge.value}>
+                {formatMeasure(spacingBadge.value)}
               </span>
             </div>
           ))}

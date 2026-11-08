@@ -59,7 +59,7 @@ const BriefRows = ({
               value={brief.title}
               maxLength={40}
               disabled={busy}
-              onChange={(e) => onEdit(index, { title: e.target.value })}
+              onChange={(event) => onEdit(index, { title: event.target.value })}
             />
             <textarea
               className="variation-brief-text"
@@ -68,7 +68,9 @@ const BriefRows = ({
               rows={2}
               maxLength={VARIATION_BRIEF_MAX}
               disabled={busy}
-              onChange={(e) => onEdit(index, { brief: e.target.value })}
+              onChange={(eventValue) =>
+                onEdit(index, { brief: eventValue.target.value })
+              }
             />
           </div>
           <button

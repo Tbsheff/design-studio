@@ -97,7 +97,7 @@ const AddFrameMenu = ({
           open ? undefined : disabled ? "Frame limit reached" : "Add frame"
         }
         disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((value) => !value)}
       >
         <Icon name="frame" />
       </button>
@@ -109,22 +109,22 @@ const AddFrameMenu = ({
           aria-label={copy.addFrame}
           onKeyDown={onKeyDown}
         >
-          {FRAME_PRESETS.map((p) => (
+          {FRAME_PRESETS.map((framePreset) => (
             <button
-              key={p.preset}
+              key={framePreset.preset}
               type="button"
               role="menuitem"
               onClick={() => {
                 close(true);
-                onAdd({ height: p.height, width: p.width });
+                onAdd({ height: framePreset.height, width: framePreset.width });
               }}
             >
-              <Icon name={p.preset} size={14} />
-              <span>{p.label}</span>
+              <Icon name={framePreset.preset} size={14} />
+              <span>{framePreset.label}</span>
               <kbd aria-hidden="true">
-                {p.width}
+                {framePreset.width}
                 {copy.times2}
-                {p.height}
+                {framePreset.height}
               </kbd>
             </button>
           ))}

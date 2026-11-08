@@ -50,7 +50,11 @@ const groupOf = (
 
   return project.directions
     .filter((direction) => direction.variation?.groupId === groupId)
-    .sort((a, b) => (a.variation?.index ?? 0) - (b.variation?.index ?? 0));
+    .sort(
+      (directionValue, direction3) =>
+        (directionValue.variation?.index ?? 0) -
+        (direction3.variation?.index ?? 0)
+    );
 };
 
 export { groupOf, maxVariationsFor, variationsApi };

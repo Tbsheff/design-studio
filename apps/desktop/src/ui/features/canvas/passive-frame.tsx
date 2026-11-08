@@ -59,7 +59,7 @@ const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
 
     const io = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) {
+        if (!entries.some((event) => event.isIntersecting)) {
           return;
         }
 
@@ -155,15 +155,17 @@ const PassiveFrame = ({
       <div
         className="frame-hit"
         aria-hidden="true"
-        onPointerDown={(e) =>
+        onPointerDown={(eventValue) =>
           label.onBodyPointerDown
-            ? label.onBodyPointerDown(e, frame, true)
-            : label.onPointerDown(e, frame)
+            ? label.onBodyPointerDown(eventValue, frame, true)
+            : label.onPointerDown(eventValue, frame)
         }
       />
       <FrameLabel {...label} />
       <FrameResizeHandles
-        onPointerDown={(e, edge) => label.onResizeStart(e, frame, edge)}
+        onPointerDown={(event3, edge) =>
+          label.onResizeStart(event3, frame, edge)
+        }
       />
     </div>
   );
@@ -173,14 +175,17 @@ type PassiveEntry = PassiveProps;
 
 const liveLabel = (cur: LabelProps, live: () => LabelProps): LabelProps => ({
   ...cur,
-  onActivate: (f) => live().onActivate(f),
+  onActivate: (canvasFrame) => live().onActivate(canvasFrame),
   onBodyPointerDown: cur.onBodyPointerDown
-    ? (e, f, body) => live().onBodyPointerDown?.(e, f, body)
+    ? (event4, canvasFrameValue, body) =>
+        live().onBodyPointerDown?.(event4, canvasFrameValue, body)
     : undefined,
-  onNudge: (f, dx, dy) => live().onNudge(f, dx, dy),
-  onPointerDown: (e, f) => live().onPointerDown(e, f),
-  onRemove: (f) => live().onRemove(f),
-  onResizeStart: (e, f, edge) => live().onResizeStart(e, f, edge),
+  onNudge: (canvasFrame3, dx, dy) => live().onNudge(canvasFrame3, dx, dy),
+  onPointerDown: (event5, canvasFrame4) =>
+    live().onPointerDown(event5, canvasFrame4),
+  onRemove: (canvasFrame5) => live().onRemove(canvasFrame5),
+  onResizeStart: (event6, canvasFrame6, edge) =>
+    live().onResizeStart(event6, canvasFrame6, edge),
 });
 
 const StablePassiveFrame = memo(
@@ -205,7 +210,10 @@ const StablePassiveFrame = memo(
       />
     );
   },
-  (a, b) => a.sig === b.sig && a.entries === b.entries && a.id === b.id
+  (first, second) =>
+    first.sig === second.sig &&
+    first.entries === second.entries &&
+    first.id === second.id
 );
 
 StablePassiveFrame.displayName = "StablePassiveFrame";

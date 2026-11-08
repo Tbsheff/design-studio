@@ -123,19 +123,21 @@ const OtherFrames = ({
   live.clear();
 
   return frames
-    .filter((f) => f.id !== active.id)
-    .map((f) => {
-      const slot = passive.slots.find((item) => item.id === f.id);
+    .filter((canvasFrame) => canvasFrame.id !== active.id)
+    .map((canvasFrameValue) => {
+      const slot = passive.slots.find(
+        (item) => item.id === canvasFrameValue.id
+      );
       const did = slot?.directionId ?? null;
-      const wait = waiting(f.path, did);
-      live.set(f.id, {
-        frame: f,
+      const wait = waiting(canvasFrameValue.path, did);
+      live.set(canvasFrameValue.id, {
+        frame: canvasFrameValue,
         frameRef: (el) => {
           if (slot) {
             passive.elements.current[slot.token] = tagFrame(el, slot.token);
           }
         },
-        label: labelProps(f, did),
+        label: labelProps(canvasFrameValue, did),
         nextSrc: wait ? null : (slot?.nextSrc ?? null),
         offset: active,
         onNextLoad: passive.onSwapDone,
@@ -148,7 +150,7 @@ const OtherFrames = ({
       });
 
       const sig = JSON.stringify([
-        f,
+        canvasFrameValue,
         wait,
         wait ? step : null,
         slot?.src ?? null,
@@ -157,11 +159,16 @@ const OtherFrames = ({
         sandbox ?? null,
         active.x,
         active.y,
-        labelProps.sig(f, did),
+        labelProps.sig(canvasFrameValue, did),
       ]);
 
       return (
-        <StablePassiveFrame key={f.id} id={f.id} sig={sig} entries={entries} />
+        <StablePassiveFrame
+          key={canvasFrameValue.id}
+          id={canvasFrameValue.id}
+          sig={sig}
+          entries={entries}
+        />
       );
     });
 };

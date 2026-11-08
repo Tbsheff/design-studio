@@ -33,8 +33,10 @@ const addRouteFrame = (
     return {
       ...layout,
       activeId: existing,
-      frames: layout.frames.map((f) =>
-        f.id === existing && f.hidden ? withoutHidden(f) : f
+      frames: layout.frames.map((canvasFrame) =>
+        canvasFrame.id === existing && canvasFrame.hidden
+          ? withoutHidden(canvasFrame)
+          : canvasFrame
       ),
     };
   }
@@ -56,8 +58,10 @@ const addRouteFrame = (
   return {
     ...withPath,
     activeId: frame.id,
-    frames: withPath.frames.map((f) =>
-      f.id === frame.id && label ? { ...f, label } : f
+    frames: withPath.frames.map((canvasFrameValue) =>
+      canvasFrameValue.id === frame.id && label
+        ? { ...canvasFrameValue, label }
+        : canvasFrameValue
     ),
   };
 };

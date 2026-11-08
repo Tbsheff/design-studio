@@ -52,7 +52,7 @@ const ResizeHandles = ({
           key={edge}
           className={`resize-handle ${edge}`}
           aria-hidden="true"
-          onPointerDown={(e) => control.onHandleDown(edge, e)}
+          onPointerDown={(event) => control.onHandleDown(edge, event)}
         />
       ))}
       {live && (
@@ -66,15 +66,23 @@ const ResizeHandles = ({
   );
 };
 
-const guideStyle = (g: SnapGuide) =>
-  g.axis === "x"
-    ? { height: g.to - g.from, left: g.at, top: g.from }
-    : { left: g.from, top: g.at, width: g.to - g.from };
+const guideStyle = (snapGuide: SnapGuide) =>
+  snapGuide.axis === "x"
+    ? {
+        height: snapGuide.to - snapGuide.from,
+        left: snapGuide.at,
+        top: snapGuide.from,
+      }
+    : {
+        left: snapGuide.from,
+        top: snapGuide.at,
+        width: snapGuide.to - snapGuide.from,
+      };
 
-const fullStyle = (g: SnapGuide) =>
-  g.axis === "x"
-    ? { bottom: 0, left: g.at, top: 0 }
-    : { left: 0, right: 0, top: g.at };
+const fullStyle = (snapGuideValue: SnapGuide) =>
+  snapGuideValue.axis === "x"
+    ? { bottom: 0, left: snapGuideValue.at, top: 0 }
+    : { left: 0, right: 0, top: snapGuideValue.at };
 
 const SnapGuides = ({
   guides,
@@ -92,21 +100,29 @@ const SnapGuides = ({
       className={`snap-guides${full ? " full" : ""}`}
       data-testid="snap-guides"
     >
-      {guides.map((g) => (
+      {guides.map((snapGuide3) => (
         <div
-          key={`${g.axis}-${g.at}`}
-          className={`snap-guide ${g.axis}`}
-          style={full ? fullStyle(g) : guideStyle(g)}
+          key={`${snapGuide3.axis}-${snapGuide3.at}`}
+          className={`snap-guide ${snapGuide3.axis}`}
+          style={full ? fullStyle(snapGuide3) : guideStyle(snapGuide3)}
         />
       ))}
     </div>
   );
 };
 
-const lineStyle = (l: MeasureLine) =>
-  l.axis === "x"
-    ? { left: l.from, top: l.at, width: l.to - l.from }
-    : { height: l.to - l.from, left: l.at, top: l.from };
+const lineStyle = (measureLine: MeasureLine) =>
+  measureLine.axis === "x"
+    ? {
+        left: measureLine.from,
+        top: measureLine.at,
+        width: measureLine.to - measureLine.from,
+      }
+    : {
+        height: measureLine.to - measureLine.from,
+        left: measureLine.at,
+        top: measureLine.from,
+      };
 
 const Measurements = ({
   from,
@@ -123,14 +139,14 @@ const Measurements = ({
         className="box measure-target"
         style={{ height: to.height, left: to.x, top: to.y, width: to.width }}
       />
-      {lines.map((l) => (
+      {lines.map((measureLineValue) => (
         <div
-          key={`${l.axis}-${l.from}-${l.to}`}
-          className={`measure-line ${l.axis}`}
-          style={lineStyle(l)}
+          key={`${measureLineValue.axis}-${measureLineValue.from}-${measureLineValue.to}`}
+          className={`measure-line ${measureLineValue.axis}`}
+          style={lineStyle(measureLineValue)}
         >
-          <span className="measure-label" data-value={l.value}>
-            {formatMeasure(l.value)}
+          <span className="measure-label" data-value={measureLineValue.value}>
+            {formatMeasure(measureLineValue.value)}
           </span>
         </div>
       ))}
@@ -139,13 +155,13 @@ const Measurements = ({
 };
 
 const sameRect = (
-  a: SelectionContext["rect"],
-  b: SelectionContext["rect"]
+  first: SelectionContext["rect"],
+  second: SelectionContext["rect"]
 ): boolean =>
-  Math.abs(a.x - b.x) < 0.5 &&
-  Math.abs(a.y - b.y) < 0.5 &&
-  Math.abs(a.width - b.width) < 0.5 &&
-  Math.abs(a.height - b.height) < 0.5;
+  Math.abs(first.x - second.x) < 0.5 &&
+  Math.abs(first.y - second.y) < 0.5 &&
+  Math.abs(first.width - second.width) < 0.5 &&
+  Math.abs(first.height - second.height) < 0.5;
 
 const ArtboardOverlay = ({
   hover,
@@ -155,11 +171,16 @@ const ArtboardOverlay = ({
   resize,
   spacing,
 }: Props): ReactElement => {
-  const anchor = unionBox(selection.map((s) => s.rect));
+  const anchor = unionBox(
+    selection.map((selectionContext) => selectionContext.rect)
+  );
   const measuring = hover?.altKey && anchor && !hover.fromTree;
 
   const onSelected =
-    hover !== null && selection.some((s) => sameRect(s.rect, hover.rect));
+    hover !== null &&
+    selection.some((selectionContextValue) =>
+      sameRect(selectionContextValue.rect, hover.rect)
+    );
 
   return (
     <div className="overlay">
@@ -182,20 +203,22 @@ const ArtboardOverlay = ({
           )}
         </div>
       )}
-      {selection.map((s) => {
+      {selection.map((selectionContext3) => {
         const live =
-          resize?.target?.selector === s.selector ? resize.live : null;
+          resize?.target?.selector === selectionContext3.selector
+            ? resize.live
+            : null;
 
         return (
           <div
-            key={s.selector}
+            key={selectionContext3.selector}
             className="box selected"
-            data-selector={s.selector}
+            data-selector={selectionContext3.selector}
             style={{
-              height: live?.boxHeight ?? s.rect.height,
-              left: s.rect.x,
-              top: s.rect.y,
-              width: live?.boxWidth ?? s.rect.width,
+              height: live?.boxHeight ?? selectionContext3.rect.height,
+              left: selectionContext3.rect.x,
+              top: selectionContext3.rect.y,
+              width: live?.boxWidth ?? selectionContext3.rect.width,
             }}
           />
         );

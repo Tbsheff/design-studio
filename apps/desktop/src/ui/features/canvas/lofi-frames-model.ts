@@ -13,8 +13,8 @@ const toBase64 = (bytes: Uint8Array): string => {
   let text = "";
   const step = 0x80_00;
 
-  for (let i = 0; i < bytes.length; i += step) {
-    text += String.fromCharCode(...bytes.subarray(i, i + step));
+  for (let index = 0; index < bytes.length; index += step) {
+    text += String.fromCharCode(...bytes.subarray(index, index + step));
   }
 
   return btoa(text);

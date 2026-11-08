@@ -62,7 +62,11 @@ const noteCommentFrame = (
 const activeFrameOf = (
   active: { id: string; path?: string },
   all: { id: string }[]
-) => ({ id: active.id, ids: all.map((f) => f.id), path: active.path ?? "" });
+) => ({
+  id: active.id,
+  ids: all.map((frame) => frame.id),
+  path: active.path ?? "",
+});
 
 const pageNameOf = (path: string | undefined): string => {
   const file = path
@@ -98,7 +102,7 @@ const NO_VERSION_TEXT =
 
 type StageNote = "building" | "empty" | null;
 
-const stageNote = (p: {
+const stageNote = (point: {
   running?: boolean;
   noRuns?: boolean;
   app?: AttachedApp | null;
@@ -106,15 +110,15 @@ const stageNote = (p: {
   hasHead: boolean;
   urlError: string | null;
 }): StageNote => {
-  if (p.urlError || !p.live || p.hasHead) {
+  if (point.urlError || !point.live || point.hasHead) {
     return null;
   }
 
-  if (p.running) {
+  if (point.running) {
     return "building";
   }
 
-  return p.noRuns && !p.app ? "empty" : null;
+  return point.noRuns && !point.app ? "empty" : null;
 };
 
 const themeSwitch = (enabled: boolean | undefined, theme: ThemeChoice) => {
@@ -146,7 +150,7 @@ const activateOf = (
 
 const knownIds = (
   directions: CanvasDirections | undefined
-): string[] | undefined => directions?.list.map((d) => d.id);
+): string[] | undefined => directions?.list.map((direction) => direction.id);
 
 const stageCursor = (pz: {
   panning: boolean;
@@ -166,16 +170,16 @@ const stageCursor = (pz: {
 
 const quietOnPointer =
   (
-    onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void
-  ): ((e: ReactPointerEvent<HTMLDivElement>) => void) =>
-  (e: ReactPointerEvent<HTMLDivElement>): void => {
-    e.currentTarget.setAttribute(QUIET_FOCUS_ATTR, "");
-    onPointerDown(e);
+    onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
+  ): ((eventValue: ReactPointerEvent<HTMLDivElement>) => void) =>
+  (event3: ReactPointerEvent<HTMLDivElement>): void => {
+    event3.currentTarget.setAttribute(QUIET_FOCUS_ATTR, "");
+    onPointerDown(event3);
   };
 
-const dropQuietFocus = (e: ReactFocusEvent<HTMLDivElement>): void => {
-  if (e.target === e.currentTarget) {
-    e.currentTarget.removeAttribute(QUIET_FOCUS_ATTR);
+const dropQuietFocus = (event4: ReactFocusEvent<HTMLDivElement>): void => {
+  if (event4.target === event4.currentTarget) {
+    event4.currentTarget.removeAttribute(QUIET_FOCUS_ATTR);
   }
 };
 

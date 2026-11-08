@@ -10,29 +10,34 @@ import { PREVIEW_LAYOUT_KEY_EVENT } from "./use-preview-frames.js";
 import type { usePreviewFrames } from "./use-preview-frames.js";
 
 const useSelectKey = (
-  setSelectMode: (update: (m: boolean) => boolean) => void,
+  setSelectMode: (update: (match: boolean) => boolean) => void,
   onEscape: () => void,
   clearSelection: () => boolean
 ): void => {
   const latest = useRef(clearSelection);
   latest.current = clearSelection;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
-      if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) {
+    const onKey = (event: KeyboardEvent): void => {
+      if (
+        isTypingTarget(event.target) ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
         return;
       }
 
-      if (e.key === "v" || e.key === "V") {
-        e.preventDefault();
-        setSelectMode((m) => !m);
-      } else if (e.key === "Escape") {
+      if (event.key === "v" || event.key === "V") {
+        event.preventDefault();
+        setSelectMode((matchValue) => !matchValue);
+      } else if (event.key === "Escape") {
         if (
-          !e.defaultPrevented &&
-          !e.repeat &&
+          !event.defaultPrevented &&
+          !event.repeat &&
           canvasHasKeys() &&
           latest.current()
         ) {
-          return e.preventDefault();
+          return event.preventDefault();
         }
 
         setSelectMode(() => false);
@@ -53,19 +58,25 @@ const FIRST_SELECT_KEYS = new Set([
   "ArrowLeft",
 ]);
 
-const firstSelectKey = (e: KeyboardEvent): boolean => {
-  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) {
+const firstSelectKey = (eventValue: KeyboardEvent): boolean => {
+  if (
+    eventValue.repeat ||
+    eventValue.metaKey ||
+    eventValue.ctrlKey ||
+    eventValue.altKey
+  ) {
     return false;
   }
 
   return (
-    selectMoveOf(e) !== null || (!e.shiftKey && FIRST_SELECT_KEYS.has(e.key))
+    selectMoveOf(eventValue) !== null ||
+    (!eventValue.shiftKey && FIRST_SELECT_KEYS.has(eventValue.key))
   );
 };
 
 const useFirstSelectKeys = (
   stage: () => HTMLElement | null,
-  o: {
+  options: {
     on: boolean;
     empty: boolean;
     picking: boolean;
@@ -73,23 +84,23 @@ const useFirstSelectKeys = (
     startPicking: () => void;
   }
 ): void => {
-  const latest = useRef(o);
-  latest.current = o;
+  const latest = useRef(options);
+  latest.current = options;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
+    const onKey = (event3: KeyboardEvent): void => {
       const cur = latest.current;
 
       if (
         !cur.on ||
         !cur.empty ||
-        e.defaultPrevented ||
+        event3.defaultPrevented ||
         document.activeElement !== stage() ||
-        !firstSelectKey(e)
+        !firstSelectKey(event3)
       ) {
         return;
       }
 
-      e.preventDefault();
+      event3.preventDefault();
 
       if (!cur.picking) {
         cur.startPicking();
@@ -116,13 +127,13 @@ const layoutSectionShown = (): boolean => {
   );
 };
 
-const isAddLayoutKey = (e: KeyboardEvent): boolean =>
-  e.code === "KeyA" &&
-  e.shiftKey &&
-  !e.metaKey &&
-  !e.ctrlKey &&
-  !e.altKey &&
-  !e.repeat;
+const isAddLayoutKey = (event4: KeyboardEvent): boolean =>
+  event4.code === "KeyA" &&
+  event4.shiftKey &&
+  !event4.metaKey &&
+  !event4.ctrlKey &&
+  !event4.altKey &&
+  !event4.repeat;
 
 const forwardLayoutKeyWhenShown = (): void => {
   const until = performance.now() + LAYOUT_WAIT_MS;
@@ -138,13 +149,13 @@ const forwardLayoutKeyWhenShown = (): void => {
   wait();
 };
 
-const useLayoutKeyFallback = (o: {
+const useLayoutKeyFallback = (optionsValue: {
   on: boolean;
   hasSelection: boolean;
   openEdit: (() => void | Promise<boolean>) | null;
 }): void => {
-  const latest = useRef(o);
-  latest.current = o;
+  const latest = useRef(optionsValue);
+  latest.current = optionsValue;
   useEffect(() => {
     const run = (): boolean => {
       const { on, hasSelection, openEdit } = latest.current;
@@ -166,14 +177,14 @@ const useLayoutKeyFallback = (o: {
       return true;
     };
 
-    const onKey = (e: KeyboardEvent): void => {
+    const onKey = (event5: KeyboardEvent): void => {
       if (
-        isAddLayoutKey(e) &&
-        !isTypingTarget(e.target) &&
+        isAddLayoutKey(event5) &&
+        !isTypingTarget(event5.target) &&
         canvasHasKeys() &&
         run()
       ) {
-        e.preventDefault();
+        event5.preventDefault();
       }
     };
 
@@ -192,7 +203,7 @@ interface StageKeys {
   stage: () => HTMLElement | null;
   selection: SelectionContext[];
   setSelection: Props["setSelection"];
-  setSelectMode: (update: (m: boolean) => boolean) => void;
+  setSelectMode: (update: (match3: boolean) => boolean) => void;
   offProto: () => void;
   post: ReturnType<typeof usePreviewFrames>["post"];
   shell: CanvasShell | undefined;
@@ -209,11 +220,11 @@ const editOpener = (
 ): (() => void | Promise<boolean>) | null =>
   shell && shell.pane !== "design" ? () => shell.onPane("design") : null;
 
-const useStageKeys = (o: StageKeys): void => {
-  const selection = useRef(o.selection);
-  selection.current = o.selection;
-  const { setSelection } = o;
-  useSelectKey(o.setSelectMode, o.offProto, () => {
+const useStageKeys = (stageKeys: StageKeys): void => {
+  const selection = useRef(stageKeys.selection);
+  selection.current = stageKeys.selection;
+  const { setSelection } = stageKeys;
+  useSelectKey(stageKeys.setSelectMode, stageKeys.offProto, () => {
     if (selection.current.length === 0) {
       return false;
     }
@@ -223,17 +234,17 @@ const useStageKeys = (o: StageKeys): void => {
     return true;
   });
   useLayoutKeyFallback({
-    hasSelection: o.selection.length > 0,
-    on: o.live && !o.running && o.directionId !== null,
-    openEdit: editOpener(o.shell),
+    hasSelection: stageKeys.selection.length > 0,
+    on: stageKeys.live && !stageKeys.running && stageKeys.directionId !== null,
+    openEdit: editOpener(stageKeys.shell),
   });
-  useFirstSelectKeys(o.stage, {
-    empty: o.selection.length === 0,
-    on: o.live && !o.commentMode && !o.protoOn,
-    picking: o.picking,
+  useFirstSelectKeys(stageKeys.stage, {
+    empty: stageKeys.selection.length === 0,
+    on: stageKeys.live && !stageKeys.commentMode && !stageKeys.protoOn,
+    picking: stageKeys.picking,
     selectFirst: () =>
-      o.post({ move: "child", selector: "", type: "select-relative" }),
-    startPicking: () => o.setSelectMode(() => true),
+      stageKeys.post({ move: "child", selector: "", type: "select-relative" }),
+    startPicking: () => stageKeys.setSelectMode(() => true),
   });
 };
 

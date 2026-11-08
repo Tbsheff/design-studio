@@ -168,7 +168,7 @@ const FrameStateMenu = ({
         aria-expanded={menu.open}
         aria-label={`Preview state for ${frameName}: ${def?.name ?? chosen}`}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((v) => !v)}
+        onClick={() => menu.setOpen((value) => !value)}
         data-tip={
           menu.open
             ? undefined
@@ -181,7 +181,7 @@ const FrameStateMenu = ({
       {menu.open && (
         <div
           className="ui-menu project-menu canvas-menu frame-menu frame-state-menu"
-          onKeyDown={(e) => e.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
         >
           <MenuBody
             projectId={states.projectId}

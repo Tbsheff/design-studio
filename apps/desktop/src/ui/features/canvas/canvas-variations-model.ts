@@ -60,7 +60,9 @@ const framesOnCanvas = (projectId: string, directionIds: string[]): number => {
 
   return layout
     ? layout.frames.filter(
-        (f) => f.directionId && directionIds.includes(f.directionId)
+        (canvasFrame) =>
+          canvasFrame.directionId &&
+          directionIds.includes(canvasFrame.directionId)
       ).length
     : 0;
 };

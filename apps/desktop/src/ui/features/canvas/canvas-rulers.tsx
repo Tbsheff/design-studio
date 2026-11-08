@@ -30,7 +30,7 @@ export default function CanvasRulers({
     }
 
     const colors = colorsOf(el);
-    const { origin: o, selection: s } = props.current;
+    const { origin: options, selection: text } = props.current;
     const font = `500 9px ${getComputedStyle(el).fontFamily}`;
 
     const run = (canvas: HTMLCanvasElement, vertical: boolean): void => {
@@ -42,10 +42,10 @@ export default function CanvasRulers({
 
       ctx.font = font;
 
-      const range: [number, number] | null = s
+      const range: [number, number] | null = text
         ? vertical
-          ? [o.y + s.y, o.y + s.y + s.height]
-          : [o.x + s.x, o.x + s.x + s.width]
+          ? [options.y + text.y, options.y + text.y + text.height]
+          : [options.x + text.x, options.x + text.x + text.width]
         : null;
 
       const length = vertical ? canvas.clientHeight : canvas.clientWidth;
@@ -54,7 +54,7 @@ export default function CanvasRulers({
         ctx,
         length,
         offset: (vertical ? view.y : view.x) - RULER_SIZE,
-        origin: vertical ? o.y : o.x,
+        origin: vertical ? options.y : options.x,
         range,
         vertical,
         zoom: view.zoom,

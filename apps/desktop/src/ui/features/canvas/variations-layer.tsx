@@ -36,7 +36,9 @@ interface GroupRun {
 const groupRun = (runs: RunMap, directionId: string): GroupRun => {
   const list = Object.values(runs)
     .filter((run) => run.directionId === directionId)
-    .sort((a, b) => a.startedAt - b.startedAt);
+    .sort(
+      (runView, runViewValue) => runView.startedAt - runViewValue.startedAt
+    );
 
   const latest = list.at(-1);
 
@@ -66,7 +68,7 @@ const useShownGroup = (
 ): Direction[] => {
   const groupId = direction?.variation?.groupId ?? state.groupId;
   const group = groupOf(project, groupId);
-  const ids = group.map((d) => d.id);
+  const ids = group.map((directionValue) => directionValue.id);
 
   const onCanvas = useSyncExternalStore(canvasStore.subscribe, () =>
     framesOnCanvas(project.id, ids)
@@ -101,13 +103,16 @@ const VariationBar = ({
       ? direction.variation
       : null;
 
-  const groupRuns = group.map((d) => groupRun(runs ?? {}, d.id));
+  const groupRuns = group.map((direction3) =>
+    groupRun(runs ?? {}, direction3.id)
+  );
   const total = groupRuns.reduce((sum, run) => sum + run.costUsd, 0);
   const anyRunning = groupRuns.some((run) => run.running);
 
   const firstRun = Object.values(runs ?? {}).find(
     (run) =>
-      run.request?.variation && group.some((d) => d.id === run.directionId)
+      run.request?.variation &&
+      group.some((direction4) => direction4.id === run.directionId)
   );
 
   const budget = budgetFor(
@@ -120,7 +125,7 @@ const VariationBar = ({
     state.keepNotice(null);
     showVariationFrames(
       project.id,
-      group.map((d) => d.id),
+      group.map((direction5) => direction5.id),
       direction?.id ?? null,
       false
     );
@@ -281,7 +286,9 @@ const canvasVariations = ({
   list: project.directions,
   onActivate: setDirectionId,
   variationOf: (directionId) => {
-    const direction = project.directions.find((d) => d.id === directionId);
+    const direction = project.directions.find(
+      (direction6) => direction6.id === directionId
+    );
     const variation = direction?.variation;
 
     if (!direction || !variation) {

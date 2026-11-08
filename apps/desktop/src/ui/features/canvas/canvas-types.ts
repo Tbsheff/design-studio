@@ -25,13 +25,13 @@ interface Props {
   kind: ProjectKind;
   headVersionId: string | null;
   source: CanvasSource;
-  onSource: (s: CanvasSource) => void;
+  onSource: (canvasSource: CanvasSource) => void;
   lastChange: FilesChange | null;
   selection: SelectionContext[];
   setSelection: (
     updater: (prev: SelectionContext[]) => SelectionContext[]
   ) => void;
-  onError: (e: Omit<BuildError, "id" | "ts">) => void;
+  onError: (event: Omit<BuildError, "id" | "ts">) => void;
   port?: MutableRefObject<PreviewPort | null>;
   comments?: CommentsControl;
   commentTools?: CanvasCommentTools;

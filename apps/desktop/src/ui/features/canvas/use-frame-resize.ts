@@ -54,7 +54,7 @@ const createSnapStore = () => {
 const frameSnapStore = createSnapStore();
 
 const otherFrames = (layout: CanvasLayout, id: string): Box[] =>
-  shownFrames(layout).filter((f) => f.id !== id);
+  shownFrames(layout).filter((canvasFrame) => canvasFrame.id !== id);
 
 const resizedSize = (
   start: { width: number; height: number },
@@ -63,8 +63,8 @@ const resizedSize = (
   dy: number,
   keepRatio: boolean
 ): { width: number; height: number } => {
-  const clamp = (v: number): number =>
-    Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
+  const clamp = (value: number): number =>
+    Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, value)));
 
   let width = edge === "bottom" ? start.width : start.width + dx;
   let height = edge === "right" ? start.height : start.height + dy;
@@ -118,8 +118,8 @@ const snapSize = (
     spacing: [],
   });
 
-  const clamp = (v: number): number =>
-    Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
+  const clamp = (valueValue: number): number =>
+    Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, valueValue)));
 
   return { height: clamp(res.rect.height), width: clamp(res.rect.width) };
 };
@@ -155,16 +155,29 @@ const useFrameResize = (
   pz: PanZoom,
   artboardRef: RefObject<HTMLDivElement | null>,
   passive: RefObject<Record<string, HTMLDivElement | null>>
-): ((e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => void) => {
+): ((
+  event: ReactPointerEvent,
+  frame: CanvasFrame,
+  edge: ResizeEdge
+) => void) => {
   const dragging = useRef(false);
 
-  return (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge): void => {
-    if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld || dragging.current) {
+  return (
+    eventValue: ReactPointerEvent,
+    frame: CanvasFrame,
+    edge: ResizeEdge
+  ): void => {
+    if (
+      eventValue.button !== 0 ||
+      pz.spaceHeld ||
+      pz.zoomHeld ||
+      dragging.current
+    ) {
       return;
     }
 
-    e.preventDefault();
-    e.stopPropagation();
+    eventValue.preventDefault();
+    eventValue.stopPropagation();
 
     const host =
       frame.id === frames.layout.activeId
@@ -176,16 +189,16 @@ const useFrameResize = (
     }
 
     pz.freeze();
-    const target = e.currentTarget as HTMLElement;
-    target.setPointerCapture(e.pointerId);
+    const target = eventValue.currentTarget as HTMLElement;
+    target.setPointerCapture(eventValue.pointerId);
     dragging.current = true;
     const { zoom } = pz;
-    const startX = e.clientX;
-    const startY = e.clientY;
+    const startX = eventValue.clientX;
+    const startY = eventValue.clientY;
     const start = { height: frame.height, width: frame.width };
     let size = start;
-    let shift = e.shiftKey;
-    let off = snapOff(e);
+    let shift = eventValue.shiftKey;
+    let off = snapOff(eventValue);
     const candidates = otherFrames(frames.layout, frame.id);
     let last = { x: startX, y: startY };
     const restore = { height: host.style.height, width: host.style.width };
@@ -242,7 +255,9 @@ const useFrameResize = (
         return;
       }
 
-      frames.update((l) => resizeFrame(l, frame.id, size.width, size.height));
+      frames.update((canvasLayout) =>
+        resizeFrame(canvasLayout, frame.id, size.width, size.height)
+      );
 
       if (frame.id === frames.layout.activeId) {
         const next = activeFrame(

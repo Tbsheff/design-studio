@@ -72,8 +72,8 @@ const copyCss = async (
   }
 };
 
-const structureItems = (o: Options): PreviewMenuItem[] => {
-  const { edits } = o;
+const structureItems = (options: Options): PreviewMenuItem[] => {
+  const { edits } = options;
 
   if (!edits.enabled) {
     return [];
@@ -81,27 +81,33 @@ const structureItems = (o: Options): PreviewMenuItem[] => {
 
   const state = {
     canPaste: edits.canPaste,
-    count: o.selection.length,
-    hasSource: selectionTargets(o.selection) !== null,
+    count: options.selection.length,
+    hasSource: selectionTargets(options.selection) !== null,
     isBusy: edits.busy,
   };
 
   return structureMenuItems(state, edits.structureKey, true);
 };
 
-const pasteItem = (o: Options, target: SelectionContext): PreviewMenuItem[] => {
-  if (!o.edits.enabled || !o.ids.directionId) {
+const pasteItem = (
+  optionsValue: Options,
+  target: SelectionContext
+): PreviewMenuItem[] => {
+  if (!optionsValue.edits.enabled || !optionsValue.ids.directionId) {
     return [];
   }
 
   const blocked =
     !target.source && !target.owners?.length
       ? "This element has no source location"
-      : o.edits.busy
+      : optionsValue.edits.busy
         ? "Wait for the last edit to finish"
         : null;
 
-  const ids = { directionId: o.ids.directionId, projectId: o.ids.projectId };
+  const ids = {
+    directionId: optionsValue.ids.directionId,
+    projectId: optionsValue.ids.projectId,
+  };
 
   return [
     {
@@ -109,22 +115,22 @@ const pasteItem = (o: Options, target: SelectionContext): PreviewMenuItem[] => {
       icon: "code",
       id: "paste-jsx",
       label: "Paste JSX or Figma",
-      run: () => pasteJsx(ids, target, o.edits.notify),
+      run: () => pasteJsx(ids, target, optionsValue.edits.notify),
       ...disabledBy(blocked),
     },
   ];
 };
 
-const createItem = (o: Options, open: () => void): PreviewMenuItem[] => {
-  if (!o.edits.enabled || !o.ids.directionId) {
+const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
+  if (!options3.edits.enabled || !options3.ids.directionId) {
     return [];
   }
 
-  const blocked = createBlocker(o);
+  const blocked = createBlocker(options3);
 
   const label =
-    o.selection.length > 1
-      ? `Create component from ${o.selection.length}…`
+    options3.selection.length > 1
+      ? `Create component from ${options3.selection.length}…`
       : "Create component…";
 
   return [
@@ -138,23 +144,23 @@ const createItem = (o: Options, open: () => void): PreviewMenuItem[] => {
   ];
 };
 
-const createBlocker = (o: Options): string | null => {
-  if (o.ids.kind !== "react") {
+const createBlocker = (options4: Options): string | null => {
+  if (options4.ids.kind !== "react") {
     return "Components need a React project. This is a plain HTML page";
   }
 
-  if (o.selection.some((item) => !item.source && !item.owners?.length)) {
+  if (options4.selection.some((item) => !item.source && !item.owners?.length)) {
     return "An element has no source location";
   }
 
-  return o.edits.busy ? "Wait for the last edit to finish" : null;
+  return options4.edits.busy ? "Wait for the last edit to finish" : null;
 };
 
 const disabledBy = (reason: string | null): { disabled?: string } =>
   reason ? { disabled: reason } : {};
 
 const menuItems = (
-  o: Options,
+  options5: Options,
   target: SelectionContext,
   openCreate: () => void,
   iconItems: (target: SelectionContext) => PreviewMenuItem[]
@@ -180,27 +186,27 @@ const menuItems = (
     id: "parent",
     keyId: "select-parent",
     label: "Select parent",
-    run: () => o.selectRelative(target.selector, "parent"),
+    run: () => options5.selectRelative(target.selector, "parent"),
   },
   {
     icon: "pointer",
     id: "child",
     keyId: "select-child",
     label: "Select child",
-    run: () => o.selectRelative(target.selector, "child"),
+    run: () => options5.selectRelative(target.selector, "child"),
   },
   {
     icon: "copy",
     id: "copy-css",
     label: "Copy CSS",
-    run: () => copyCss(o.port?.current ?? null, target.selector),
+    run: () => copyCss(options5.port?.current ?? null, target.selector),
   },
   {
     icon: "search",
     id: "zoom",
     keyId: "zoom-selection",
     label: "Zoom to selection",
-    run: () => o.zoom("selection"),
+    run: () => options5.zoom("selection"),
   },
   {
     icon: "layers",
@@ -209,16 +215,16 @@ const menuItems = (
     label: "Show in layers",
     run: () => uiStore.set({ layersOpen: true }),
   },
-  ...structureItems(o),
-  ...pasteItem(o, target),
+  ...structureItems(options5),
+  ...pasteItem(options5, target),
   ...iconItems(target),
-  ...createItem(o, openCreate),
+  ...createItem(options5, openCreate),
 ];
 
-const usePreviewMenu = (o: Options) => {
+const usePreviewMenu = (options6: Options) => {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
-  const latest = useRef(o);
-  latest.current = o;
+  const latest = useRef(options6);
+  latest.current = options6;
 
   const onContextMenu = useCallback(
     (point: { x: number; y: number }) => setAt(point),
@@ -227,47 +233,47 @@ const usePreviewMenu = (o: Options) => {
 
   const close = useCallback(() => setAt(null), []);
   const [creating, setCreating] = useState<SelectionContext[] | null>(null);
-  const target = o.selection.at(-1);
+  const target = options6.selection.at(-1);
   const openCreate = (): void => setCreating(latest.current.selection);
-  const { directionId } = o.ids;
+  const { directionId } = options6.ids;
 
   const hostOptions = {
-    busy: o.edits.busy,
+    busy: options6.edits.busy,
     directionId,
-    enabled: o.edits.enabled,
-    notify: o.edits.notify,
-    projectId: o.ids.projectId,
-    selection: o.selection,
+    enabled: options6.edits.enabled,
+    notify: options6.edits.notify,
+    projectId: options6.ids.projectId,
+    selection: options6.selection,
   };
 
   const icons = useIconHost(hostOptions);
   const photos = useImageSearchHost(hostOptions);
 
   const props = usePropHost({
-    busy: o.edits.busy,
+    busy: options6.edits.busy,
     directionId,
-    enabled: o.edits.enabled,
-    isReact: o.ids.kind === "react",
-    notify: o.edits.notify,
-    projectId: o.ids.projectId,
+    enabled: options6.edits.enabled,
+    isReact: options6.ids.kind === "react",
+    notify: options6.edits.notify,
+    projectId: options6.ids.projectId,
   });
 
   const patterns = usePatternHost({
-    busy: o.edits.busy,
+    busy: options6.edits.busy,
     directionId,
-    enabled: o.edits.enabled,
-    isReact: o.ids.kind === "react",
-    notify: o.edits.notify,
-    projectId: o.ids.projectId,
+    enabled: options6.edits.enabled,
+    isReact: options6.ids.kind === "react",
+    notify: options6.edits.notify,
+    projectId: options6.ids.projectId,
   });
 
   const dialog =
     creating && directionId ? (
       <Suspense fallback={null}>
         <CreateComponentDialog
-          ids={{ directionId, projectId: o.ids.projectId }}
+          ids={{ directionId, projectId: options6.ids.projectId }}
           selection={creating}
-          onDone={o.edits.notify}
+          onDone={options6.edits.notify}
           onClose={() => setCreating(null)}
         />
       </Suspense>
@@ -296,12 +302,12 @@ const usePreviewMenu = (o: Options) => {
       {dialog}
       {icons.opened && directionId ? (
         <IconSlot
-          projectId={o.ids.projectId}
+          projectId={options6.ids.projectId}
           directionId={directionId}
           mode={icons.opened.mode}
           target={icons.opened.target}
           onClose={icons.close}
-          onDone={o.edits.notify}
+          onDone={options6.edits.notify}
         />
       ) : null}
       {props.opened ? (
@@ -311,7 +317,7 @@ const usePreviewMenu = (o: Options) => {
             layer={props.opened.layer}
             target={props.opened.target}
             onClose={props.close}
-            onDone={o.edits.notify}
+            onDone={options6.edits.notify}
           />
         </Suspense>
       ) : null}
@@ -319,19 +325,19 @@ const usePreviewMenu = (o: Options) => {
         <Suspense fallback={null}>
           <PatternSlot
             directionId={directionId}
-            projectId={o.ids.projectId}
+            projectId={options6.ids.projectId}
             target={patterns.opened}
             onClose={patterns.close}
-            onDone={o.edits.notify}
+            onDone={options6.edits.notify}
           />
         </Suspense>
       ) : null}
       <ImageSearchMount
         directionId={directionId}
         host={photos}
-        projectId={o.ids.projectId}
+        projectId={options6.ids.projectId}
         renderGenerate={renderGenerateTab}
-        onDone={o.edits.notify}
+        onDone={options6.edits.notify}
       />
     </>
   );

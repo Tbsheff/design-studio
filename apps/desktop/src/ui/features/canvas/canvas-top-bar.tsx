@@ -35,8 +35,8 @@ interface Props {
   onFileMenuOpen: () => void;
   zoom: LiveStore<number>;
   zoomSetting: ZoomSetting;
-  onZoomTo: (z: number) => void;
-  onZoomStep: (d: 1 | -1) => void;
+  onZoomTo: (zoomValue: number) => void;
+  onZoomStep: (delta: 1 | -1) => void;
   onFit: () => void;
   tool: CanvasTool;
   commentAvailable: boolean;
@@ -78,17 +78,17 @@ const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
   },
 ];
 
-const CanvasTopBar = (p: Props): ReactElement => {
-  const port = usePortDialog(!p.onShip);
-  const onPort = p.onShip ? null : (): void => port.open(null);
-  const present = presentItems(p.onPresent);
+const CanvasTopBar = (props: Props): ReactElement => {
+  const port = usePortDialog(!props.onShip);
+  const onPort = props.onShip ? null : (): void => port.open(null);
+  const present = presentItems(props.onPresent);
 
   const zoom: ZoomProps = {
-    onFit: p.onFit,
-    onStep: p.onZoomStep,
-    onZoomTo: p.onZoomTo,
-    setting: p.zoomSetting,
-    zoom: p.zoom,
+    onFit: props.onFit,
+    onStep: props.onZoomStep,
+    onZoomTo: props.onZoomTo,
+    setting: props.zoomSetting,
+    zoom: props.zoom,
   };
 
   return (
@@ -97,14 +97,14 @@ const CanvasTopBar = (p: Props): ReactElement => {
       role="toolbar"
       aria-label={copy.canvas}
     >
-      {p.paneCollapsed && (
+      {props.paneCollapsed && (
         <button
           type="button"
           className="icon-btn topbar-icon"
           aria-label={copy.showChatPane}
           data-tip={copy.showPane}
           data-tip-align="start"
-          onClick={p.onExpandPane}
+          onClick={props.onExpandPane}
         >
           <Icon name="sidebar" size={14} />
         </button>
@@ -115,7 +115,7 @@ const CanvasTopBar = (p: Props): ReactElement => {
         aria-label={copy.reloadPreview}
         data-tip={copy.reload}
         data-tip-align="start"
-        onClick={p.onReload}
+        onClick={props.onReload}
       >
         <Icon name="reload" size={14} />
       </button>
@@ -123,31 +123,31 @@ const CanvasTopBar = (p: Props): ReactElement => {
         type="button"
         className="icon-btn topbar-icon topbar-fold-narrow"
         aria-label={copy.tweak}
-        aria-pressed={p.tweakOpen}
-        aria-expanded={p.tweakOpen}
-        disabled={p.tweakDisabled}
-        data-tip={p.tweakOpen ? undefined : "Describe a tweak"}
-        onClick={p.onTweak}
+        aria-pressed={props.tweakOpen}
+        aria-expanded={props.tweakOpen}
+        disabled={props.tweakDisabled}
+        data-tip={props.tweakOpen ? undefined : "Describe a tweak"}
+        onClick={props.onTweak}
       >
         <Icon name="sliders" size={14} />
       </button>
       <DropMenu
         label="Pages and frames"
         className="topbar-file"
-        groups={p.fileMenu}
-        onOpen={p.onFileMenuOpen}
+        groups={props.fileMenu}
+        onOpen={props.onFileMenuOpen}
         tip="Pages and frames"
       >
-        <span className="truncate">{p.fileName}</span>
+        <span className="truncate">{props.fileName}</span>
         <Icon name="chevronDown" size={12} />
       </DropMenu>
       <button
         type="button"
         className="icon-btn topbar-icon topbar-fold-wide"
         aria-label={copy.viewOptions}
-        aria-pressed={p.viewOpen}
+        aria-pressed={props.viewOpen}
         data-tip={copy.sizeSourceAnd}
-        onClick={p.onToggleView}
+        onClick={props.onToggleView}
       >
         <Icon name="more" size={14} />
       </button>
@@ -161,10 +161,10 @@ const CanvasTopBar = (p: Props): ReactElement => {
         <button
           type="button"
           aria-label={copy.select}
-          aria-pressed={p.tool === "select"}
+          aria-pressed={props.tool === "select"}
           aria-keyshortcuts="V"
           data-tip={tipWithKey("Select elements", "tool-select")}
-          onClick={() => p.onTool("select")}
+          onClick={() => props.onTool("select")}
         >
           <Icon name="pointer" size={14} />
           <span>{copy.select}</span>
@@ -172,15 +172,15 @@ const CanvasTopBar = (p: Props): ReactElement => {
         <button
           type="button"
           aria-label={copy.comment}
-          aria-pressed={p.tool === "comment"}
+          aria-pressed={props.tool === "comment"}
           aria-keyshortcuts="C"
-          disabled={!p.commentAvailable}
+          disabled={!props.commentAvailable}
           data-tip={
-            p.commentAvailable
+            props.commentAvailable
               ? tipWithKey("Comment", "tool-comment")
               : "Comments work on the live preview"
           }
-          onClick={() => p.onTool("comment")}
+          onClick={() => props.onTool("comment")}
         >
           <Icon name="comment" size={14} />
           <span>{copy.comment}</span>
@@ -188,10 +188,10 @@ const CanvasTopBar = (p: Props): ReactElement => {
         <button
           type="button"
           aria-label={copy.edit}
-          aria-pressed={p.tool === "edit"}
+          aria-pressed={props.tool === "edit"}
           aria-keyshortcuts="Alt+1"
           data-tip={tipWithKey("Edit and layers", "layers")}
-          onClick={() => p.onTool("edit")}
+          onClick={() => props.onTool("edit")}
         >
           <Icon name="edit" size={14} />
           <span>{copy.edit}</span>
@@ -199,16 +199,16 @@ const CanvasTopBar = (p: Props): ReactElement => {
         <button
           type="button"
           aria-label={copy.prototype}
-          aria-pressed={p.tool === "prototype"}
+          aria-pressed={props.tool === "prototype"}
           data-tip={copy.linkElementsTo}
-          onClick={() => p.onTool("prototype")}
+          onClick={() => props.onTool("prototype")}
         >
           <Icon name="link" size={14} />
           <span>{copy.prototype}</span>
         </button>
       </div>
-      {p.shapeTools}
-      {p.matrix}
+      {props.shapeTools}
+      {props.matrix}
       <span data-topbar-slot="review" style={{ display: "contents" }} />
       <DropMenu
         label="Present"
@@ -225,18 +225,22 @@ const CanvasTopBar = (p: Props): ReactElement => {
       <OverflowMenu
         zoom={zoom}
         present={present}
-        viewOpen={p.viewOpen}
-        onToggleView={p.onToggleView}
-        onReload={p.onReload}
-        tweak={{ disabled: p.tweakDisabled, open: p.tweakOpen, run: p.onTweak }}
+        viewOpen={props.viewOpen}
+        onToggleView={props.onToggleView}
+        onReload={props.onReload}
+        tweak={{
+          disabled: props.tweakDisabled,
+          open: props.tweakOpen,
+          run: props.onTweak,
+        }}
       />
       <DropMenu
         label="Share"
         className="btn strong topbar-share"
-        groups={() => shareGroups(p, onPort)}
+        groups={() => shareGroups(props, onPort)}
         align="end"
         tip={
-          p.onShip
+          props.onShip
             ? "Export, or ship as a pull request"
             : "Export images, files or a handoff"
         }

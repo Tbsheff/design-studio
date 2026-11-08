@@ -8,7 +8,8 @@
   font-size: var(--t-xs);
 }
 
-.variations-control button {
+.variations-control button,
+.variations-control .seg-radio {
   min-width: 22px;
   font-variant-numeric: tabular-nums;
 }

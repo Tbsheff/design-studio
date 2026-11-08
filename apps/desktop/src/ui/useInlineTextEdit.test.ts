@@ -5,7 +5,7 @@ import {
   parseTextCommit,
 } from "./features/canvas/use-inline-text-edit";
 
-const base = { ns: "studio", token: "t", type: "text-commit", at: 1 } as const;
+const base = { at: 1, ns: "studio", token: "t", type: "text-commit" } as const;
 
 describe(parseTextCommit, () => {
   it("accepts a string selector and text", () => {
@@ -33,10 +33,10 @@ describe(parseTextCommit, () => {
     expect(
       parseTextCommit({
         ns: "studio",
-        token: "t",
-        type: "text-edit",
         selector: "h1",
         state: "start",
+        token: "t",
+        type: "text-edit",
       })
     ).toBeNull();
   });

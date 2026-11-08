@@ -10,7 +10,7 @@ import {
 } from "react";
 import { cn } from "../../lib/utils";
 
-type CodeBlockContextValue = {
+interface CodeBlockContextValue {
   clip: boolean;
   maxHeight: number;
   open: boolean;
@@ -18,15 +18,17 @@ type CodeBlockContextValue = {
   overflowing: boolean;
   setOverflowing: (overflowing: boolean) => void;
   contentId: string;
-};
+}
 
 const CodeBlockContext = createContext<CodeBlockContextValue | null>(null);
 
 function useCodeBlockContext() {
   const ctx = useContext(CodeBlockContext);
+
   if (!ctx) {
     throw new Error("CodeBlock parts must be rendered inside <CodeBlock>.");
   }
+
   return ctx;
 }
 
@@ -36,6 +38,30 @@ type CodeBlockProps = React.ComponentProps<"div"> & {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+};
+
+interface BlockHeightInput {
+  clip: boolean;
+  fullHeight: number | null;
+  isOverflowing: boolean;
+  maxHeight: number;
+  open: boolean;
+}
+
+const toBlockHeight = (input: BlockHeightInput): number | undefined => {
+  if (!input.clip) {
+    return undefined;
+  }
+
+  if (input.fullHeight === null) {
+    return input.open ? undefined : input.maxHeight;
+  }
+
+  if (!input.isOverflowing) {
+    return undefined;
+  }
+
+  return input.open ? input.fullHeight : input.maxHeight;
 };
 
 export function CodeBlock({
@@ -54,7 +80,7 @@ export function CodeBlock({
   const contentId = useId();
 
   const setOpen = (next: boolean) => {
-    if (!isControlled) setOpenState(next);
+    if (!isControlled) {setOpenState(next);}
     onOpenChange?.(next);
   };
 
@@ -64,12 +90,12 @@ export function CodeBlock({
     <CodeBlockContext.Provider
       value={{
         clip,
+        contentId,
         maxHeight,
         open,
-        setOpen,
         overflowing,
+        setOpen,
         setOverflowing,
-        contentId,
       }}
     >
       <div
@@ -146,6 +172,7 @@ export function CodeBlockContent({
 }: React.ComponentProps<"div">) {
   const { clip, maxHeight, open, contentId, setOverflowing } =
     useCodeBlockContext();
+
   const innerRef = useRef<HTMLDivElement>(null);
   const [fullHeight, setFullHeight] = useState<number | null>(null);
 
@@ -153,36 +180,32 @@ export function CodeBlockContent({
     if (!clip) {
       setOverflowing(false);
       setFullHeight(null);
+
       return;
     }
+
     const el = innerRef.current;
-    if (!el) return;
+
+    if (!el) {return;}
 
     const update = () => {
       const h = el.scrollHeight;
       setFullHeight(h);
       setOverflowing(h > maxHeight);
     };
+
     update();
 
     const observer = new ResizeObserver(update);
     observer.observe(el);
+
     return () => observer.disconnect();
   }, [clip, maxHeight, setOverflowing]);
 
   const isOverflowing = fullHeight !== null && fullHeight > maxHeight;
   const clipped = clip && isOverflowing && !open;
-  const height = !clip
-    ? undefined
-    : fullHeight === null
-      ? open
-        ? undefined
-        : maxHeight
-      : isOverflowing
-        ? open
-          ? fullHeight
-          : maxHeight
-        : undefined;
+
+  const height = toBlockHeight({ clip, fullHeight, isOverflowing, maxHeight, open });
 
   return (
     <div
@@ -197,7 +220,7 @@ export function CodeBlockContent({
           "overflow-hidden transition-[height] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         className,
       )}
-      style={{ height: height !== undefined ? `${height}px` : undefined }}
+      style={{ height: height === undefined ? undefined : `${height}px` }}
       {...props}
     >
       <div ref={innerRef} className="px-3 py-2">
@@ -226,19 +249,19 @@ export function CodeBlockTrigger({
   const { open, setOpen, contentId, clip, overflowing } = useCodeBlockContext();
 
   const element = useRender({
-    render,
     defaultTagName: "button",
     props: {
       ...props,
-      type: "button",
-      "data-slot": "code-block-trigger",
-      "data-open": open || undefined,
-      "aria-expanded": open,
       "aria-controls": contentId,
+      "aria-expanded": open,
+      "data-open": open || undefined,
+      "data-slot": "code-block-trigger",
       onClick: () => setOpen(!open),
+      type: "button",
     },
+    render,
   });
 
-  if (!clip || !overflowing) return null;
+  if (!clip || !overflowing) {return null;}
   return element;
 }

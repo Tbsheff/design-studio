@@ -1,5 +1,6 @@
 // Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
 import { cn } from "../../lib/utils";
 
 type MessageProps = React.ComponentProps<"div"> & {
@@ -60,15 +61,15 @@ export function MessageContent({
 }
 
 export const messageTextVariants = cva("min-w-0 text-sm/6.5", {
+  defaultVariants: { variant: "plain" },
   variants: {
     variant: {
-      plain:
-        "[[data-slot=message-avatar]+[data-slot=message-content]>&:first-child]:pt-2",
       bubble:
         "w-fit max-w-[75%] rounded-outer bg-surface-elevated px-3 py-2 ring ring-border",
+      plain:
+        "[[data-slot=message-avatar]+[data-slot=message-content]>&:first-child]:pt-2",
     },
   },
-  defaultVariants: { variant: "plain" },
 });
 
 type MessageTextProps = React.ComponentProps<"div"> &
@@ -83,7 +84,7 @@ export function MessageText({
     <div
       data-slot="message-text"
       data-variant={variant ?? "plain"}
-      className={cn(messageTextVariants({ variant, className }))}
+      className={cn(messageTextVariants({ className, variant }))}
       {...props}
     />
   );

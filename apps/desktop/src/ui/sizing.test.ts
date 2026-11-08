@@ -13,19 +13,22 @@ const rowParent = parentLayout({
   "parent-display": "flex",
   "parent-flex-direction": "row",
 });
+
 const columnParent = parentLayout({
   "parent-display": "inline-flex",
   "parent-flex-direction": "column",
 });
+
 const blockParent = parentLayout({
   "parent-display": "block",
   "parent-flex-direction": "row",
 });
+
 const plain = {
-  width: "240px",
-  height: "80px",
-  flex: "0 1 auto",
   "align-self": "auto",
+  flex: "0 1 auto",
+  height: "80px",
+  width: "240px",
 };
 
 describe(axisRole, () => {
@@ -70,7 +73,7 @@ describe(sizePatch, () => {
         rowParent,
         "240px"
       )
-    ).toEqual({ width: "fit-content", flex: "" });
+    ).toEqual({ flex: "", width: "fit-content" });
     expect(sizePatch("height", "hug", plain, blockParent, "80px")).toEqual({
       height: "fit-content",
     });
@@ -81,11 +84,11 @@ describe(sizePatch, () => {
       sizePatch(
         "height",
         "fixed",
-        { ...plain, height: "", "align-self": "stretch" },
+        { ...plain, "align-self": "stretch", height: "" },
         rowParent,
         "80px"
       )
-    ).toEqual({ height: "80px", "align-self": "" });
+    ).toEqual({ "align-self": "", height: "80px" });
     expect(
       sizePatch(
         "width",
@@ -105,6 +108,7 @@ describe(sizePatch, () => {
             ...plain,
             ...sizePatch(axis, mode, plain, parent, "100px"),
           };
+
           expect(sizeModeOf(axis, next, parent)).toBe(mode);
         }
       }
@@ -115,12 +119,12 @@ describe(sizePatch, () => {
 describe("align grid", () => {
   it("maps a cell to justify and align by direction", () => {
     expect(alignCell(1, 2, true)).toEqual({
-      justify: "center",
       align: "flex-end",
+      justify: "center",
     });
     expect(alignCell(1, 2, false)).toEqual({
-      justify: "flex-end",
       align: "center",
+      justify: "flex-end",
     });
   });
 

@@ -1,6 +1,8 @@
 // Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
-import { isValidElement, type ReactNode } from "react";
-import ReactMarkdown, { type Components } from "react-markdown";
+import { isValidElement } from 'react';
+import type { ReactNode } from 'react';
+import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
 import remarkGfm from "remark-gfm";
 import {
   CodeBlock,
@@ -16,10 +18,10 @@ type MarkdownProps = React.ComponentProps<"div"> & {
   components?: Components;
 };
 
-type CodeProps = {
+interface CodeProps {
   className?: string;
   children?: ReactNode;
-};
+}
 
 const defaultComponents: Components = {
   a({ href, children }) {
@@ -33,7 +35,7 @@ const defaultComponents: Components = {
     return <span>{alt ?? ""}</span>;
   },
   pre({ children }) {
-    if (!isValidElement<CodeProps>(children)) return <pre>{children}</pre>;
+    if (!isValidElement<CodeProps>(children)) {return <pre>{children}</pre>;}
 
     const { className, children: code } = children.props;
     const language = className?.match(/language-(\w+)/)?.[1] ?? "text";
@@ -53,13 +55,10 @@ const defaultComponents: Components = {
   },
 };
 
-// Streaming markdown can land mid-fence. If we have an odd number of ``` markers
-// the renderer otherwise dumps the remainder as plain text and the layout shifts
-// the moment the closing fence arrives. Synthesizing a closing fence keeps the
-// block stable until the real one lands.
 function closeIncompleteFence(source: string) {
   const fences = source.match(/```/g);
-  if (fences && fences.length % 2 === 1) return `${source}\n\`\`\``;
+
+  if (fences && fences.length % 2 === 1) {return `${source}\n\`\`\``;}
   return source;
 }
 

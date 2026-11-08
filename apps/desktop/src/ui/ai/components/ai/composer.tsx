@@ -13,7 +13,7 @@ import {
 import { useRender } from "@base-ui/react/use-render";
 import { cn } from "../../lib/utils";
 
-type ComposerContextValue = {
+interface ComposerContextValue {
   rootId: string;
   isEmpty: boolean;
   isFocused: boolean;
@@ -23,40 +23,45 @@ type ComposerContextValue = {
   registerSubmit: (fn: () => void) => () => void;
   triggerSubmit: () => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
-};
+}
 
 export const ComposerContext = createContext<ComposerContextValue | null>(null);
 
-type ComposerExtensionContextValue = {
+interface ComposerExtensionContextValue {
   state: unknown;
   setState: (s: unknown) => void;
-};
+}
 
 export const ComposerExtensionContext =
   createContext<ComposerExtensionContextValue | null>(null);
 
 export function useComposerContext() {
   const ctx = useContext(ComposerContext);
+
   if (!ctx) {
     throw new Error("Composer parts must be used inside <Composer>");
   }
+
   return ctx;
 }
 
 export function useComposerExtensionContext() {
   const ctx = useContext(ComposerExtensionContext);
+
   if (!ctx) {
     throw new Error("Composer parts must be used inside <Composer>");
   }
+
   return ctx;
 }
 
 export function useComposer() {
   const ctx = useComposerContext();
+
   return {
+    disabled: ctx.disabled,
     isEmpty: ctx.isEmpty,
     isFocused: ctx.isFocused,
-    disabled: ctx.disabled,
     submit: ctx.triggerSubmit,
   };
 }
@@ -82,8 +87,9 @@ export function Composer({
 
   const registerSubmit = useCallback((fn: () => void) => {
     submitFnRef.current = fn;
+
     return () => {
-      if (submitFnRef.current === fn) submitFnRef.current = null;
+      if (submitFnRef.current === fn) {submitFnRef.current = null;}
     };
   }, []);
 
@@ -93,37 +99,42 @@ export function Composer({
 
   useLayoutEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+
+    if (!el) {return;}
     let last = -1;
+
     const emit = () => {
       const next = el.offsetHeight;
-      if (next === last) return;
+
+      if (next === last) {return;}
       last = next;
       onHeightChangeRef.current?.(next);
     };
+
     emit();
     const ro = new ResizeObserver(emit);
     ro.observe(el);
+
     return () => ro.disconnect();
   }, []);
 
   const ctxValue = useMemo<ComposerContextValue>(
     () => ({
-      rootId,
+      containerRef,
+      disabled,
       isEmpty,
       isFocused,
-      disabled,
+      registerSubmit,
+      rootId,
       setEmpty: setIsEmpty,
       setFocused: setIsFocused,
-      registerSubmit,
       triggerSubmit,
-      containerRef,
     }),
     [rootId, isEmpty, isFocused, disabled, registerSubmit, triggerSubmit],
   );
 
   const extCtxValue = useMemo<ComposerExtensionContextValue>(
-    () => ({ state: extState, setState: setExtState }),
+    () => ({ setState: setExtState, state: extState }),
     [extState],
   );
 
@@ -156,9 +167,9 @@ export function Composer({
 function autosize(el: HTMLTextAreaElement, maxRows: number) {
   el.style.height = "auto";
   const styles = window.getComputedStyle(el);
-  const lineHeight = parseFloat(styles.lineHeight) || 20;
-  const paddingTop = parseFloat(styles.paddingTop) || 0;
-  const paddingBottom = parseFloat(styles.paddingBottom) || 0;
+  const lineHeight = Number.parseFloat(styles.lineHeight) || 20;
+  const paddingTop = Number.parseFloat(styles.paddingTop) || 0;
+  const paddingBottom = Number.parseFloat(styles.paddingBottom) || 0;
   const maxHeight = lineHeight * maxRows + paddingTop + paddingBottom;
   const next = Math.min(el.scrollHeight, maxHeight);
   el.style.height = `${next}px`;
@@ -206,20 +217,23 @@ export function ComposerInput({
 
   useLayoutEffect(() => {
     const el = inputRef.current;
-    if (!el) return;
+
+    if (!el) {return;}
     ctx.setEmpty(value.trim().length === 0);
     autosize(el, maxRows);
   }, [value, maxRows, ctx]);
 
   useLayoutEffect(() => {
-    if (autoFocus && !ctx.disabled) inputRef.current?.focus();
+    if (autoFocus && !ctx.disabled) {inputRef.current?.focus();}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const doSubmit = useCallback(() => {
     const text = valueRef.current;
-    if (!text.trim()) return;
+
+    if (!text.trim()) {return;}
     onSubmitRef.current?.(text);
+
     if (!isControlledRef.current) {
       setInternalValue("");
       onValueChangeRef.current?.("");
@@ -230,13 +244,15 @@ export function ComposerInput({
 
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const next = e.target.value;
-    if (!isControlled) setInternalValue(next);
+
+    if (!isControlled) {setInternalValue(next);}
     onValueChangeRef.current?.(next);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.nativeEvent.isComposing || isComposingRef.current) return;
+    if (e.nativeEvent.isComposing || isComposingRef.current) {return;}
     const submitKey = submitOnEnter ? !e.shiftKey : e.metaKey || e.ctrlKey;
+
     if (e.key === "Enter" && submitKey) {
       e.preventDefault();
       doSubmit();
@@ -316,13 +332,16 @@ export function ComposerQuoteContent({
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+
+    if (!el) {return;}
     const update = () => {
       setOverflows(el.scrollHeight > el.clientHeight + 1);
     };
+
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
+
     return () => observer.disconnect();
   }, []);
 
@@ -392,20 +411,20 @@ export function ComposerSubmit({
   ...props
 }: useRender.ComponentProps<"button">) {
   const ctx = useComposerContext();
-  const blocked = ctx.isEmpty || ctx.disabled || !!disabledProp;
+  const blocked = ctx.isEmpty || ctx.disabled || Boolean(disabledProp);
   const ariaLabel = props["aria-label"] ?? "Send";
 
   return useRender({
-    render,
     defaultTagName: "button",
     props: {
       ...props,
-      type: "button",
-      "data-slot": "composer-submit",
-      "data-empty": ctx.isEmpty || undefined,
       "aria-label": ariaLabel,
+      "data-empty": ctx.isEmpty || undefined,
+      "data-slot": "composer-submit",
       disabled: blocked,
       onClick: () => ctx.triggerSubmit(),
+      type: "button",
     },
+    render,
   });
 }

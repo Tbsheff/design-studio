@@ -35,12 +35,16 @@ class FakeSource implements EventSourceLike {
   }
 }
 
+const ignoreEvent = (): null => null;
+
 function setup() {
   const sources: FakeSource[] = [];
   const timers: (() => void)[] = [];
   const deferred: (() => void)[] = [];
 
   const hub = createEventHub({
+    clearTimer: () => undefined,
+    defer: (fn) => deferred.push(fn),
     open: (projectId, after) => {
       const source = new FakeSource(projectId, after);
       sources.push(source);
@@ -48,8 +52,6 @@ function setup() {
       return source;
     },
     setTimer: (fn) => timers.push(fn),
-    clearTimer: () => undefined,
-    defer: (fn) => deferred.push(fn),
   });
 
   const flushDeferred = () => {
@@ -58,11 +60,11 @@ function setup() {
     }
   };
 
-  return { hub, sources, timers, flushDeferred };
+  return { flushDeferred, hub, sources, timers };
 }
 
 const files = (seq: number) =>
-  ({ type: "files.changed", seq, ts: seq, projectId: "p1" }) as const;
+  ({ projectId: "p1", seq, ts: seq, type: "files.changed" }) as const;
 
 describe("event hub", () => {
   it("opens one connection per project for many subscribers", () => {
@@ -71,7 +73,7 @@ describe("event hub", () => {
     const b: number[] = [];
     hub.subscribe("p1", (e) => a.push(e.seq));
     hub.subscribe("p1", (e) => b.push(e.seq));
-    hub.watchState("p1", () => undefined);
+    hub.watchState("p1", ignoreEvent);
     expect(sources).toHaveLength(1);
     expect(sources[0]?.after).toBe(0);
     sources[0]?.send(files(1));
@@ -94,7 +96,7 @@ describe("event hub", () => {
   it("reconnects after the last seq and reports the state", () => {
     const { hub, sources, timers } = setup();
     const states: string[] = [];
-    hub.subscribe("p1", () => undefined);
+    hub.subscribe("p1", ignoreEvent);
     hub.watchState("p1", () => states.push(hub.state("p1")));
     sources[0]?.open();
     sources[0]?.send(files(7));
@@ -110,9 +112,9 @@ describe("event hub", () => {
 
   it("keeps the connection through an unsubscribe and resubscribe in one task", () => {
     const { hub, sources, flushDeferred } = setup();
-    const off = hub.subscribe("p1", () => undefined);
+    const off = hub.subscribe("p1", ignoreEvent);
     off();
-    hub.subscribe("p1", () => undefined);
+    hub.subscribe("p1", ignoreEvent);
     flushDeferred();
     expect(sources).toHaveLength(1);
     expect(sources[0]?.closed).toBe(false);
@@ -120,13 +122,13 @@ describe("event hub", () => {
 
   it("closes when the last subscriber leaves and replays from zero on reopen", () => {
     const { hub, sources, flushDeferred } = setup();
-    const off = hub.subscribe("p1", () => undefined);
+    const off = hub.subscribe("p1", ignoreEvent);
     sources[0]?.send(files(5));
     off();
     flushDeferred();
     expect(sources[0]?.closed).toBe(true);
     expect(hub.openCount()).toBe(0);
-    hub.subscribe("p1", () => undefined);
+    hub.subscribe("p1", ignoreEvent);
     expect(sources).toHaveLength(2);
     expect(sources[1]?.after).toBe(0);
   });
@@ -143,7 +145,7 @@ describe("event hub", () => {
 
   it("does not reconnect a closed channel", () => {
     const { hub, sources, timers, flushDeferred } = setup();
-    const off = hub.subscribe("p1", () => undefined);
+    const off = hub.subscribe("p1", ignoreEvent);
     off();
     flushDeferred();
     sources[0]?.fail();

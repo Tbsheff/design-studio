@@ -14,9 +14,9 @@ import {
 
 describe("cssValues", () => {
   it("parses numbers with units", () => {
-    expect(parseNumber("48px")).toEqual({ value: 48, unit: "px" });
-    expect(parseNumber("1.5")).toEqual({ value: 1.5, unit: "" });
-    expect(parseNumber("-0.5rem")).toEqual({ value: -0.5, unit: "rem" });
+    expect(parseNumber("48px")).toEqual({ unit: "px", value: 48 });
+    expect(parseNumber("1.5")).toEqual({ unit: "", value: 1.5 });
+    expect(parseNumber("-0.5rem")).toEqual({ unit: "rem", value: -0.5 });
     expect(parseNumber("auto")).toBeNull();
   });
 
@@ -39,22 +39,24 @@ describe("cssValues", () => {
 
   it("expands box shorthands and prefers longhands", () => {
     expect(expandBox("1px 2px")).toEqual({
-      top: "1px",
-      right: "2px",
       bottom: "1px",
       left: "2px",
+      right: "2px",
+      top: "1px",
     });
     expect(expandBox("1px 2px 3px")).toEqual({
-      top: "1px",
-      right: "2px",
       bottom: "3px",
       left: "2px",
+      right: "2px",
+      top: "1px",
     });
+
     const values = valuesFromStyles({
+      height: "61.59375px",
       padding: "8px 16px",
       "padding-top": "4px",
-      height: "61.59375px",
     });
+
     expect(values["padding-top"]).toBe("4px");
     expect(values["padding-left"]).toBe("16px");
     expect(values.height).toBe("61.59px");
@@ -71,6 +73,7 @@ describe("cssValues", () => {
       color: "rgb(0, 0, 0)",
       "font-size": "16px",
     });
+
     expect(
       changedProps({ color: "rgb(0, 0, 0)", "font-size": "18px" }, base)
     ).toEqual({ "font-size": "18px" });

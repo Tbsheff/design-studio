@@ -1,6 +1,7 @@
 // Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
 import { useRender } from "@base-ui/react/use-render";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
 import { cn } from "../../lib/utils";
 
 export const loaderVariants = cva(
@@ -38,15 +39,16 @@ export function Loader({
   const label = typeof children === "string" ? children : "Loading";
 
   const cssVars: React.CSSProperties = {};
+
   if (duration !== undefined) {
     (cssVars as Record<string, string>)["--loader-duration"] = `${duration}s`;
   }
+
   if (spread !== undefined) {
     (cssVars as Record<string, string>)["--loader-spread"] = `${spread}%`;
   }
 
   return useRender({
-    render,
     defaultTagName: "span",
     props: {
       role: "status",
@@ -79,5 +81,6 @@ export function Loader({
         </>
       ),
     },
+    render,
   });
 }

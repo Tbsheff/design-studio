@@ -16,14 +16,14 @@ function card(
   source = true
 ): SelectionContext {
   return {
+    ancestors: [],
+    outerHTML: "<article></article>",
+    rect: { height: 10, width: 10, x: 0, y: 0 },
     selector: `article:nth-of-type(${line})`,
+    source: source ? { file: "index.html", line, col: 7 } : null,
+    styles,
     tag: "ARTICLE",
     text: "",
-    outerHTML: "<article></article>",
-    styles,
-    rect: { x: 0, y: 0, width: 10, height: 10 },
-    source: source ? { file: "index.html", line, col: 7 } : null,
-    ancestors: [],
   };
 }
 
@@ -34,6 +34,7 @@ describe(mergeValues, () => {
       valuesFromStyles({ "border-radius": "4px", color: "rgb(0, 0, 0)" }),
       valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
     ]);
+
     expect(merged.values["border-radius"]).toBe("");
     expect(merged.mixed.has("border-radius")).toBe(true);
     expect(merged.values.color).toBe("rgb(0, 0, 0)");
@@ -45,6 +46,7 @@ describe(mergeValues, () => {
       valuesFromStyles({ padding: "8px" }),
       valuesFromStyles({ padding: "8px 8px 16px" }),
     ]);
+
     expect(merged.mixed.has("padding-bottom")).toBe(true);
     expect(merged.mixed.has("padding-top")).toBe(false);
     expect(merged.values["padding-top"]).toBe("8px");
@@ -58,6 +60,7 @@ describe(batchEdits, () => {
       card(4, { "border-radius": "12px" }),
       card(5, { "border-radius": "8px" }),
     ];
+
     const bases = selections.map((s) => valuesFromStyles(s.styles));
     const edits = batchEdits(selections, bases, { "border-radius": "8px" });
     expect(edits.map((e) => [e.source.line, e.style])).toEqual([

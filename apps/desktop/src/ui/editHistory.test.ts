@@ -16,22 +16,24 @@ function key(
   over: Partial<KeyboardEvent>
 ): Pick<KeyboardEvent, "metaKey" | "ctrlKey" | "shiftKey" | "altKey" | "key"> {
   return {
-    metaKey: false,
-    ctrlKey: false,
-    shiftKey: false,
     altKey: false,
+    ctrlKey: false,
     key: "z",
+    metaKey: false,
+    shiftKey: false,
     ...over,
   };
 }
 
 function shortcut(withRedo: boolean, enabled = true) {
   const calls: string[] = [];
+
   const state: ShortcutState = {
     enabled,
     onUndo: () => calls.push("undo"),
     redo: withRedo ? { enabled, onRedo: () => calls.push("redo") } : undefined,
   };
+
   return { calls, state };
 }
 
@@ -41,9 +43,9 @@ describe("history shortcut routing", () => {
     expect(historyKeyOf(key({ ctrlKey: true, key: "Z", shiftKey: true }))).toBe(
       "redo"
     );
-    expect(historyKeyOf(key({ metaKey: true, altKey: true }))).toBeNull();
+    expect(historyKeyOf(key({ altKey: true, metaKey: true }))).toBeNull();
     expect(historyKeyOf(key({}))).toBeNull();
-    expect(historyKeyOf(key({ metaKey: true, key: "y" }))).toBeNull();
+    expect(historyKeyOf(key({ key: "y", metaKey: true }))).toBeNull();
   });
 
   it("sends the desktop Edit menu undo and redo commands to the app", () => {
@@ -79,7 +81,8 @@ describe("edit history helpers", () => {
 
   it("knows a history step version so a later Cmd+Z does not version-undo it", () => {
     const version = (title: string, kind: Version["meta"]["kind"]) =>
-      ({ title, meta: { kind } }) as Version;
+      ({ meta: { kind }, title }) as Version;
+
     expect(isHistoryStep(version("Undo: Edit h1: color", "manual"))).toBe(true);
     expect(
       isHistoryStep(version("Redo: Update tokens: --primary", "manual"))
@@ -92,22 +95,25 @@ describe("edit history helpers", () => {
   it("refreshes styles and text of the selected elements from the preview", () => {
     const base = {
       selector: "h1",
+      source: null,
+      styles: { color: "red" },
       tag: "h1",
       text: "New",
-      styles: { color: "red" },
-      source: null,
     } as unknown as SelectionContext;
+
     const other = { ...base, selector: "p" } as SelectionContext;
+
     const fresh = {
       ...base,
-      text: "Old",
       styles: { color: "blue" },
+      text: "Old",
     } as unknown as SelectionContext;
+
     const next = refreshedSelection([base, other], ["h1", "p"], [fresh, null]);
     expect(next[0]).toMatchObject({
       selector: "h1",
-      text: "Old",
       styles: { color: "blue" },
+      text: "Old",
     });
     expect(next[1]).toBe(other);
   });

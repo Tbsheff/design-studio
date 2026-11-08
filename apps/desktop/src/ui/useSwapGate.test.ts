@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { SwapQueue } from "./features/inspector/use-swap-gate";
 
 const change = (directionId: string, changedAt: number) => ({
-  directionId,
   changedAt,
-  receivedAt: changedAt,
+  directionId,
   paths: [],
+  receivedAt: changedAt,
   shouldReload: false,
 });
 

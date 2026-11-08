@@ -23,28 +23,28 @@ import {
   withFramePath,
 } from "./features/canvas/index";
 
-const desktop = { preset: "desktop" as const, width: 1440, height: 900 };
+const desktop = { height: 900, preset: "desktop" as const, width: 1440 };
 
 describe("canvas frames", () => {
   it("adds frames to the right of the others and keeps the bounds", () => {
     let layout = defaultLayout(desktop);
-    layout = addFrame(layout, { width: 768, height: 1024 });
-    layout = addFrame(layout, { width: 390, height: 844 });
+    layout = addFrame(layout, { height: 1024, width: 768 });
+    layout = addFrame(layout, { height: 844, width: 390 });
     expect(layout.frames.map((f) => [f.id, f.x, f.y])).toEqual([
       ["f1", 0, 0],
       ["f2", 1440 + FRAME_GAP, 0],
       ["f3", 1440 + 768 + FRAME_GAP * 2, 0],
     ]);
     expect(boundsOf(layout.frames)).toEqual({
+      height: 1024,
+      width: 1440 + 768 + 390 + FRAME_GAP * 2,
       x: 0,
       y: 0,
-      width: 1440 + 768 + 390 + FRAME_GAP * 2,
-      height: 1024,
     });
   });
 
   it("moves, resizes and removes frames; the last frame stays", () => {
-    let layout = addFrame(defaultLayout(desktop), { width: 390, height: 844 });
+    let layout = addFrame(defaultLayout(desktop), { height: 844, width: 390 });
     layout = moveFrame(layout, "f2", 10.4, -20.6);
     expect(layout.frames[1]).toMatchObject({ x: 1530, y: -21 });
     layout = resizeActive(layout, 1000, 700);
@@ -54,34 +54,34 @@ describe("canvas frames", () => {
     layout = removeFrame(layout, "f1");
     expect(layout.activeId).toBe("f2");
     expect(removeFrame(layout, "f2")).toBe(layout);
-    expect(viewportOf({ width: 390, height: 844 })).toEqual({
+    expect(viewportOf({ height: 844, width: 390 })).toEqual({
+      height: 844,
       preset: "mobile",
       width: 390,
-      height: 844,
     });
   });
 
   it("drops bad stored data", () => {
     expect(
       parseLayout({
-        frames: [{ id: "f1", width: 10, height: 900, x: 0, y: 0 }],
         activeId: "f1",
+        frames: [{ id: "f1", width: 10, height: 900, x: 0, y: 0 }],
       })
     ).toBeNull();
     expect(
       parseLayout({
-        frames: [{ id: "x", width: 1440, height: 900, x: 0, y: 0 }],
         activeId: "x",
+        frames: [{ id: "x", width: 1440, height: 900, x: 0, y: 0 }],
       })
     ).toBeNull();
     expect(
       parseLayout({
-        frames: [{ id: "f2", width: 1440, height: 900, x: 5, y: 6 }],
         activeId: "f9",
+        frames: [{ id: "f2", width: 1440, height: 900, x: 5, y: 6 }],
       })
     ).toEqual({
-      frames: [{ id: "f2", width: 1440, height: 900, x: 5, y: 6 }],
       activeId: "f2",
+      frames: [{ id: "f2", width: 1440, height: 900, x: 5, y: 6 }],
     });
   });
 });
@@ -91,13 +91,14 @@ describe("frames per direction", () => {
 
   it("loads old records without a direction and keeps a valid direction and path", () => {
     const old = {
-      frames: [{ id: "f1", width: 1440, height: 900, x: 0, y: 0 }],
       activeId: "f1",
+      frames: [{ id: "f1", width: 1440, height: 900, x: 0, y: 0 }],
     };
 
     expect(parseLayout(old)).toEqual(old);
 
     const stored = {
+      activeId: "f1",
       frames: [
         {
           id: "f1",
@@ -118,20 +119,19 @@ describe("frames per direction", () => {
           path: "../secret",
         },
       ],
-      activeId: "f1",
     };
 
     expect(parseLayout(stored)?.frames).toEqual([
       {
-        id: "f1",
-        width: 1440,
+        directionId: "d_1",
         height: 900,
+        id: "f1",
+        path: "about.html",
+        width: 1440,
         x: 0,
         y: 0,
-        directionId: "d_1",
-        path: "about.html",
       },
-      { id: "f2", width: 390, height: 844, x: 0, y: 0 },
+      { height: 844, id: "f2", width: 390, x: 0, y: 0 },
     ]);
   });
 
@@ -196,8 +196,8 @@ describe("frames per direction", () => {
     );
 
     const unbound = addFrame(defaultLayout(desktop), {
-      width: 390,
       height: 844,
+      width: 390,
     });
 
     expect(followDirection(unbound, "any")).toBe(unbound);
@@ -205,7 +205,7 @@ describe("frames per direction", () => {
 
   it("resizes a frame with a floor of 240 and whole pixels", () => {
     const layout = resizeFrame(defaultLayout(desktop), "f1", 100.4, 1000.6);
-    expect(layout.frames[0]).toMatchObject({ width: 240, height: 1001 });
+    expect(layout.frames[0]).toMatchObject({ height: 1001, width: 240 });
     expect(resizeFrame(layout, "nope", 500, 500)).toBe(layout);
   });
 
@@ -218,7 +218,7 @@ describe("frames per direction", () => {
       "../x.html",
       "a/../../b",
       "./a",
-      "a\\b",
+      String.raw`a\b`,
       "https://x.test/",
       "a?b",
       "%2e%2e/x",
@@ -261,11 +261,11 @@ describe(zoomKeyOf, () => {
     }> = {}
   ) =>
     zoomKeyOf({
-      key: k,
+      altKey: false,
       code,
       ctrlKey: false,
+      key: k,
       metaKey: false,
-      altKey: false,
       shiftKey: false,
       ...mods,
     });

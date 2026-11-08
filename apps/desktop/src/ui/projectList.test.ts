@@ -17,14 +17,7 @@ function project(
   thumb: string | null = null
 ): Project {
   return {
-    id,
-    name,
-    kind: "html",
     createdAt,
-    updatedAt,
-    imported: null,
-    entry: "index.html",
-    settings: {} as Project["settings"],
     directions: [
       {
         id: "main",
@@ -37,7 +30,14 @@ function project(
         createdAt,
       },
     ],
+    entry: "index.html",
+    id,
+    imported: null,
+    kind: "html",
+    name,
+    settings: {} as Project["settings"],
     thumbnail: thumb ? { versionId: thumb, at: 1 } : null,
+    updatedAt,
   };
 }
 
@@ -80,6 +80,7 @@ describe("project list", () => {
     const many = Array.from({ length: 50 }, (_, index) =>
       project(`p${index}`, `Project ${index} landing page`, index, index)
     );
+
     const started = performance.now();
     const shown = toFilteredProjects(many, "lan 4");
     expect(performance.now() - started).toBeLessThan(50);

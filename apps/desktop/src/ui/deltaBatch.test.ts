@@ -11,36 +11,35 @@ import {
 let seq = 0;
 
 const base = () => ({
+  directionId: "d1",
+  projectId: "p1",
   seq: ++seq,
   ts: 1000 + seq,
-  projectId: "p1",
-  directionId: "d1",
 });
 
 const delta = (runId: string, text: string): StudioEvent => ({
   ...base(),
-  type: "run.text.delta",
   runId,
   text,
+  type: "run.text.delta",
 });
 
 const block = (runId: string, text: string): StudioEvent => ({
   ...base(),
-  type: "run.text",
   runId,
   text,
+  type: "run.text",
 });
 
 const started = (runId: string): StudioEvent => ({
   ...base(),
-  type: "run.started",
+  request: { mode: "edit", prompt: "x" },
   runId,
-  request: { prompt: "x", mode: "edit" },
+  type: "run.started",
 });
 
 const finished = (runId: string, finalText: string): StudioEvent => ({
   ...base(),
-  type: "run.finished",
   runId,
   summary: {
     id: runId,
@@ -53,6 +52,7 @@ const finished = (runId: string, finalText: string): StudioEvent => ({
     finalText,
     toolCalls: [],
   } as unknown as RunSummary,
+  type: "run.finished",
 });
 
 function harness() {
@@ -77,13 +77,13 @@ function harness() {
 
   return {
     batcher,
-    runs: () => runs,
-    updates: () => updates,
     frame: () => {
       for (const fn of queued.splice(0)) {
         fn();
       }
     },
+    runs: () => runs,
+    updates: () => updates,
   };
 }
 
@@ -171,10 +171,10 @@ describe("delta batcher", () => {
     const h = harness();
     h.batcher.push({
       ...base(),
-      type: "files.changed",
-      directionId: "d1",
       changedAt: 1,
+      directionId: "d1",
       paths: ["a.html"],
+      type: "files.changed",
     });
     expect(h.updates()).toBe(0);
   });

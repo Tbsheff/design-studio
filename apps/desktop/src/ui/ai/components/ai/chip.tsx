@@ -1,6 +1,7 @@
 // Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
 import { useRender } from "@base-ui/react/use-render";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
 import { cn } from "../../lib/utils";
 
 export const chipVariants = cva(
@@ -18,13 +19,13 @@ export const chipVariants = cva(
     "[&:is(button,a):focus-visible]:ring-primary",
   ),
   {
+    defaultVariants: { size: "default" },
     variants: {
       size: {
         default: "px-1.5 py-0.5 text-sm [&>svg]:size-4",
         sm: "px-1.5 py-0.5 text-xs [&>svg]:size-3",
       },
     },
-    defaultVariants: { size: "default" },
   },
 );
 
@@ -38,13 +39,13 @@ export function Chip({
   ...props
 }: ChipProps) {
   return useRender({
-    render,
     defaultTagName: "span",
     props: {
       ...props,
-      "data-slot": "chip",
-      "data-size": size,
       className: cn(chipVariants({ size, className })),
+      "data-size": size,
+      "data-slot": "chip",
     },
+    render,
   });
 }

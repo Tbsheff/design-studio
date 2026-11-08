@@ -7,15 +7,15 @@ import {
 
 describe(evaluateMath, () => {
   it("handles operator precedence and parentheses", () => {
-    expect(evaluateMath("16*2")).toEqual({ value: 32, unit: "" });
-    expect(evaluateMath("12+4*2")).toEqual({ value: 20, unit: "" });
-    expect(evaluateMath("(8+4)*2")).toEqual({ value: 24, unit: "" });
-    expect(evaluateMath("-(2+3)")).toEqual({ value: -5, unit: "" });
+    expect(evaluateMath("16*2")).toEqual({ unit: "", value: 32 });
+    expect(evaluateMath("12+4*2")).toEqual({ unit: "", value: 20 });
+    expect(evaluateMath("(8+4)*2")).toEqual({ unit: "", value: 24 });
+    expect(evaluateMath("-(2+3)")).toEqual({ unit: "", value: -5 });
   });
 
   it("keeps one unit and refuses mixed units", () => {
-    expect(evaluateMath("12px+4")).toEqual({ value: 16, unit: "px" });
-    expect(evaluateMath("1rem*2")).toEqual({ value: 2, unit: "rem" });
+    expect(evaluateMath("12px+4")).toEqual({ unit: "px", value: 16 });
+    expect(evaluateMath("1rem*2")).toEqual({ unit: "rem", value: 2 });
     expect(evaluateMath("12px+1rem")).toBeNull();
   });
 

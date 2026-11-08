@@ -31,16 +31,16 @@ describe("drawing strokes", () => {
   it("measures the stroke box with the pen width", () => {
     expect(strokesBox([])).toBeNull();
     expect(
-      strokesBox([{ color: "#ff3b30", width: 4, points: [10, 20, 110, 70] }])
-    ).toEqual({ x: 8, y: 18, width: 104, height: 54 });
+      strokesBox([{ color: "#ff3b30", points: [10, 20, 110, 70], width: 4 }])
+    ).toEqual({ height: 54, width: 104, x: 8, y: 18 });
   });
 
   it("puts replies in the text for the agent", () => {
-    expect(agentText({ text: "Red", replies: [] })).toBe("Red");
+    expect(agentText({ replies: [], text: "Red" })).toBe("Red");
     expect(
       agentText({
-        text: "Red",
         replies: [{ id: "a", text: "darker\n red", createdAt: 1 }],
+        text: "Red",
       })
     ).toBe("Red\nReplies:\n- darker red");
   });

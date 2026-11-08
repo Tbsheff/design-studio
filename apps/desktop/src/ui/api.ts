@@ -531,8 +531,8 @@ export const api = {
     json<{ project: Project }>("POST", `${p(pid)}/duplicate`),
   editHistory: (pid: string, did: string): Promise<EditHistoryState> =>
     call(versionsRoutes.listHistoryVersion, {
-      limit: 1,
       directionId: did,
+      limit: 1,
       projectId: pid,
     }),
   editHistoryStep: (pid: string, did: string, kind: "undo" | "redo") =>
@@ -741,8 +741,8 @@ export const api = {
     json<ReviewResult>("POST", `${d(pid, did)}/review`, body),
   reviewFix: (pid: string, did: string, findingIds: string[]) =>
     json<ReviewFixResult>("POST", `${d(pid, did)}/review/fix`, {
-      findingIds,
       allowShared: true,
+      findingIds,
     }),
   searchProjects: async (q: string, project: string | null, limit = 20) => {
     const found = await call(projectsRoutes.searchProject, {
@@ -825,8 +825,8 @@ export const api = {
     hints: TextSourceHints
   ) =>
     json<TextSourceAnswer>("POST", `${d(pid, did)}/text-source`, {
-      source,
       hints,
+      source,
     }),
   thumbnail: async (pid: string, versionId: string) =>
     (await request("GET", `${p(pid)}/thumbnail/${enc(versionId)}`)).blob(),

@@ -16,7 +16,7 @@ function declarations(
     const match = /^\s*([a-z-]+)\s*:\s*([^;]+);/.exec(text);
 
     if (match?.[1] && match[2]) {
-      out.push({ prop: match[1], value: match[2], line: index + 1 });
+      out.push({ line: index + 1, prop: match[1], value: match[2] });
     }
   });
 

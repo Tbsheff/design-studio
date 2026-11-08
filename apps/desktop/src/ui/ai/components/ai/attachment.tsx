@@ -1,7 +1,8 @@
 // Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
 import { createContext, use } from "react";
 import { useRender } from "@base-ui/react/use-render";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
 import { cn } from "../../lib/utils";
 
 const AttachmentContext = createContext<{ progress?: number }>({});
@@ -20,16 +21,17 @@ export const attachmentVariants = cva(
     "[&:is(button,a):focus-visible]:ring-primary",
   ),
   {
+    defaultVariants: { layout: "row", state: "default" },
     variants: {
       layout: {
+        card: cn(
+          "inline-flex shrink-0 aspect-square size-16 rounded-outer",
+          "[&:is(button,a):hover]:ring-2 [&:is(button,a):hover]:ring-border",
+        ),
         row: cn(
           "inline-flex items-center gap-2.5 rounded-outer p-1.5 pr-2",
           "bg-surface",
           "[&:is(button,a):hover]:bg-accent",
-        ),
-        card: cn(
-          "inline-flex shrink-0 aspect-square size-16 rounded-outer",
-          "[&:is(button,a):hover]:ring-2 [&:is(button,a):hover]:ring-border",
         ),
       },
       state: {
@@ -37,7 +39,6 @@ export const attachmentVariants = cva(
         error: "bg-destructive/5 ring-destructive/40",
       },
     },
-    defaultVariants: { layout: "row", state: "default" },
   },
 );
 
@@ -55,16 +56,17 @@ export function Attachment({
   ...props
 }: AttachmentProps) {
   const element = useRender({
-    render,
     defaultTagName: "div",
     props: {
       ...props,
-      "data-slot": "attachment",
-      "data-layout": layout,
-      "data-state": state,
       className: cn(attachmentVariants({ layout, state, className })),
+      "data-layout": layout,
+      "data-slot": "attachment",
+      "data-state": state,
     },
+    render,
   });
+
   return <AttachmentContext value={{ progress }}>{element}</AttachmentContext>;
 }
 
@@ -179,6 +181,7 @@ export function AttachmentProgress({
   const { progress } = use(AttachmentContext);
   const indeterminate = progress === undefined;
   const clamped = Math.max(0, Math.min(100, progress ?? 0));
+
   const offset = indeterminate
     ? PROGRESS_CIRCUMFERENCE * 0.75
     : PROGRESS_CIRCUMFERENCE * (1 - clamped / 100);

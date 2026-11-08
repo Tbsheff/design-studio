@@ -6,23 +6,24 @@ describe(measureBetween, () => {
   it("measures the gap to a sibling on the right and below", () => {
     expect(
       measureBetween(
-        { x: 0, y: 0, width: 100, height: 50 },
-        { x: 124, y: 10, width: 40, height: 20 }
+        { height: 50, width: 100, x: 0, y: 0 },
+        { height: 20, width: 40, x: 124, y: 10 }
       )
-    ).toEqual([{ axis: "x", from: 100, to: 124, at: 20, value: 24 }]);
+    ).toEqual([{ at: 20, axis: "x", from: 100, to: 124, value: 24 }]);
     expect(
       measureBetween(
-        { x: 0, y: 0, width: 100, height: 50 },
-        { x: 0, y: 66, width: 100, height: 20 }
+        { height: 50, width: 100, x: 0, y: 0 },
+        { height: 20, width: 100, x: 0, y: 66 }
       )
-    ).toEqual([{ axis: "y", from: 50, to: 66, at: 50, value: 16 }]);
+    ).toEqual([{ at: 50, axis: "y", from: 50, to: 66, value: 16 }]);
   });
 
   it("measures four insets to a parent", () => {
     const lines = measureBetween(
-      { x: 10, y: 20, width: 30, height: 30 },
-      { x: 0, y: 0, width: 100, height: 100 }
+      { height: 30, width: 30, x: 10, y: 20 },
+      { height: 100, width: 100, x: 0, y: 0 }
     );
+
     expect(lines.map((l) => l.value)).toEqual([20, 50, 10, 60]);
   });
 

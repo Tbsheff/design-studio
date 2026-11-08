@@ -22,20 +22,20 @@ describe(parseShadows, () => {
       )
     ).toEqual([
       {
-        x: "0",
-        y: "4px",
         blur: "12px",
-        spread: "0",
         color: "rgb(0 0 0 / 0.12)",
         inset: false,
+        spread: "0",
+        x: "0",
+        y: "4px",
       },
       {
-        x: "0",
-        y: "1px",
         blur: "2px",
-        spread: "0",
         color: "var(--shadow, rgba(0, 0, 0, 0.2))",
         inset: true,
+        spread: "0",
+        x: "0",
+        y: "1px",
       },
     ]);
   });
@@ -43,12 +43,12 @@ describe(parseShadows, () => {
   it("reads the computed order with the color first", () => {
     expect(parseShadows("rgba(0, 0, 0, 0.12) 0px 4px 12px 0px")).toEqual([
       {
-        x: "0",
-        y: "4px",
         blur: "12px",
-        spread: "0",
         color: "rgba(0, 0, 0, 0.12)",
         inset: false,
+        spread: "0",
+        x: "0",
+        y: "4px",
       },
     ]);
   });
@@ -56,12 +56,12 @@ describe(parseShadows, () => {
   it("fills missing blur and spread with 0", () => {
     expect(parseShadows("2px 3px red")).toEqual([
       {
-        x: "2px",
-        y: "3px",
         blur: "0",
-        spread: "0",
         color: "red",
         inset: false,
+        spread: "0",
+        x: "2px",
+        y: "3px",
       },
     ]);
   });
@@ -80,6 +80,7 @@ describe(formatShadows, () => {
   it("round-trips a list", () => {
     const value =
       "0 4px 12px 0 var(--color-ink), inset 1px 1px 0 0 rgb(255 255 255 / 0.5)";
+
     const parsed = parseShadows(value);
     expect(parsed).not.toBeNull();
     expect(formatShadows(parsed ?? [])).toBe(value);

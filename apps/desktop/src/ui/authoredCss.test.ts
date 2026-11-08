@@ -84,6 +84,7 @@ describe(isCoveredDeclaration, () => {
 describe(otherStyles, () => {
   it("lists uncovered declarations once, the last one winning, with the source", () => {
     const rows = otherStyles({
+      inline: "mix-blend-mode: multiply; padding: 4px",
       rules: [
         {
           selector: ".card",
@@ -96,12 +97,12 @@ describe(otherStyles, () => {
           source: null,
         },
       ],
-      inline: "mix-blend-mode: multiply; padding: 4px",
     });
+
     expect(rows).toEqual([
-      { prop: "transform", value: "rotate(2deg)", source: ".card.big" },
-      { prop: "position", value: "relative", source: ".card.big" },
-      { prop: "mix-blend-mode", value: "multiply", source: "inline" },
+      { prop: "transform", source: ".card.big", value: "rotate(2deg)" },
+      { prop: "position", source: ".card.big", value: "relative" },
+      { prop: "mix-blend-mode", source: "inline", value: "multiply" },
     ]);
   });
 });
@@ -109,11 +110,12 @@ describe(otherStyles, () => {
 describe(formatCopyCss, () => {
   it("writes rules in order and then the inline style", () => {
     const text = formatCopyCss({
+      inline: "opacity: 0.5",
       rules: [
         { selector: ".a", css: "color: red; margin: 0px;", source: "a.css" },
       ],
-      inline: "opacity: 0.5",
     });
+
     expect(text).toBe(
       ".a {\n  color: red;\n  margin: 0px;\n}\n\n/* inline */ {\n  opacity: 0.5;\n}"
     );
@@ -122,8 +124,8 @@ describe(formatCopyCss, () => {
   it("skips an empty inline style", () => {
     expect(
       formatCopyCss({
-        rules: [{ selector: "p", css: "color: red;", source: null }],
         inline: " ",
+        rules: [{ selector: "p", css: "color: red;", source: null }],
       })
     ).toBe("p {\n  color: red;\n}");
   });
@@ -132,34 +134,36 @@ describe(formatCopyCss, () => {
 describe(parseAuthoredReply, () => {
   it("keeps only well-formed rules and caps them", () => {
     const big = "x".repeat(19_990);
+
     const parsed = parseAuthoredReply({
+      inline: "color: blue",
       rules: [
         { selector: "p", css: "color: red;", source: "a.css" },
         { selector: 1, css: "" },
         { selector: "q", css: "a: b", source: 5 },
         { selector: "big", css: big, source: null },
       ],
-      inline: "color: blue",
     });
+
     expect(parsed).toEqual({
-      rules: [{ selector: "p", css: "color: red;", source: "a.css" }],
       inline: "color: blue",
+      rules: [{ selector: "p", css: "color: red;", source: "a.css" }],
     });
     expect(
       parseAuthoredReply({
+        inline: "",
         rules: Array.from({ length: 80 }, () => ({
           selector: "p",
           css: "a: b",
           source: null,
         })),
-        inline: "",
       })?.rules
     ).toHaveLength(60);
   });
 
   it("refuses a reply without rules or inline text", () => {
-    expect(parseAuthoredReply({ rules: "x", inline: "" })).toBeNull();
-    expect(parseAuthoredReply({ rules: [], inline: 3 })).toBeNull();
+    expect(parseAuthoredReply({ inline: "", rules: "x" })).toBeNull();
+    expect(parseAuthoredReply({ inline: 3, rules: [] })).toBeNull();
   });
 });
 

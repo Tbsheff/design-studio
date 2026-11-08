@@ -77,8 +77,9 @@
   outline-offset: 2px;
 }
 
-:is(.btn, .icon-btn)[aria-disabled="true"] {
-  opacity: var(--disabled-opacity);
+:is(.btn, .icon-btn):is(:disabled, [aria-disabled="true"]) {
+  opacity: 1;
+  color: var(--text-faint);
   cursor: default;
 }
 
@@ -88,7 +89,7 @@
 
 :is(.btn.ghost, .icon-btn)[aria-disabled="true"]:hover {
   background: transparent;
-  color: var(--text-2);
+  color: var(--text-faint);
 }
 
 :is(.btn.primary, .btn.strong, .btn.send, .icon-btn.send)[aria-disabled="true"],

@@ -1,5 +1,29 @@
 const copy = {
-  title: "Block",
+  allKinds: "All",
+  emptyList: "No blocks match this filter.",
+  insert: "Insert",
+  insertAfterTip: "Insert after the selected layer",
+  insertMainTip: "Insert at the end of main",
+  inserted: "Inserted. Press Cmd+Z to undo.",
+  kindAuth: "Auth",
+  kindDetailHeader: "Detail header",
+  kindEmptyState: "Empty state",
+  kindForm: "Form",
+  kindListDetail: "List and detail",
+  kindPageHeader: "Page header",
+  kindStats: "Stats",
+  kindTable: "Table",
+  kindsLabel: "Block kind",
+  listFailed: "Could not list the blocks.",
+  listLabel: "Blocks",
+  matched: "Uses your kit",
+  missingLabel: "Plain markup for",
+  missingTip:
+    "This project has no component with these names. The block draws them as plain markup.",
+  tabBlocks: "Blocks",
+  tabsLabel: "Insert panels",
+  title: "Blocks",
+  usesLabel: "Uses",
 } as const;
 
 export { copy };

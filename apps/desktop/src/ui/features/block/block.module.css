@@ -1,0 +1,194 @@
+.bar {
+  display: flex;
+  gap: var(--s-1);
+  padding: 0 var(--s-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  height: 26px;
+  padding: 0 var(--s-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  border-bottom-color: var(--accent-line);
+  color: var(--text);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  overflow-y: auto;
+  font-size: var(--t-xs);
+  color: var(--text);
+}
+
+.chips {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.chip {
+  height: 22px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--accent-line);
+  color: var(--text);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  grid-template-areas:
+    "wire meta"
+    "wire action";
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-1, 4px);
+}
+
+.meta {
+  grid-area: meta;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.description {
+  color: var(--text-dim);
+}
+
+.missing {
+  align-self: flex-start;
+  padding: 0 var(--s-2);
+  border: 1px dashed var(--warning, #d9a441);
+  border-radius: 11px;
+  color: var(--warning, #d9a441);
+}
+
+.matched {
+  align-self: flex-start;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--accent-line);
+  border-radius: 11px;
+  color: var(--text-dim);
+}
+
+.primary {
+  grid-area: action;
+  justify-self: end;
+  align-self: end;
+  height: 28px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-1, 4px);
+  background: var(--accent-line);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.wire {
+  grid-area: wire;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1, 4px);
+  background: var(--bg-elev, transparent);
+}
+
+.wireRow {
+  display: flex;
+  gap: 4px;
+}
+
+.wireLine,
+.wireShort,
+.wireChip,
+.wireButton,
+.wireBox {
+  display: block;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--text-dim);
+  opacity: 0.45;
+}
+
+.wireLine {
+  flex: 1;
+}
+
+.wireShort {
+  width: 36%;
+}
+
+.wireChip {
+  width: 14px;
+  border-radius: 6px;
+}
+
+.wireButton {
+  width: 22px;
+  margin-left: auto;
+  background: var(--accent-line);
+  opacity: 1;
+}
+
+.wireBox {
+  flex: 1;
+  height: 28px;
+}
+
+.note {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger, #e5484d);
+}

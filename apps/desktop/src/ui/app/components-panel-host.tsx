@@ -2,6 +2,11 @@ import { Suspense, useCallback } from "react";
 import type { ComponentProps, ReactElement } from "react";
 
 import {
+  BlockPanel,
+  BlockTabBar,
+  useBlockTab,
+} from "../features/block/index.js";
+import {
   ChartPanel,
   ChartTabBar,
   useChartTab,
@@ -22,6 +27,65 @@ type PanelProps = Omit<
 type GallerySlot = Parameters<
   NonNullable<ComponentProps<typeof FeatureComponentsPanel>["renderGallery"]>
 >[0];
+
+interface ExtraPanelState {
+  readonly isBlockOpen: boolean;
+  readonly isChartOpen: boolean;
+  readonly isPatternsOpen: boolean;
+}
+
+interface ExtraPanelProps {
+  readonly directionId: string | null;
+  readonly kind: PanelProps["kind"];
+  readonly projectId: string;
+  readonly selection: PanelProps["selection"];
+}
+
+const toExtraPanel = (
+  open: ExtraPanelState,
+  props: ExtraPanelProps
+): ReactElement | null => {
+  if (open.isBlockOpen) {
+    return (
+      <Suspense fallback={null}>
+        <BlockPanel
+          directionId={props.directionId}
+          kind={props.kind}
+          projectId={props.projectId}
+          selection={props.selection}
+        />
+      </Suspense>
+    );
+  }
+
+  if (open.isChartOpen) {
+    return (
+      <Suspense fallback={null}>
+        <ChartPanel
+          directionId={props.directionId}
+          kind={props.kind}
+          projectId={props.projectId}
+          selection={props.selection}
+        />
+      </Suspense>
+    );
+  }
+
+  if (open.isPatternsOpen) {
+    return (
+      <Suspense fallback={null}>
+        <PatternPanel
+          directionId={props.directionId}
+          kind={props.kind}
+          projectId={props.projectId}
+          selection={props.selection}
+        />
+      </Suspense>
+    );
+  }
+
+  return null;
+};
 
 const ComponentsPanel = ({
   projectId,
@@ -47,54 +111,50 @@ const ComponentsPanel = ({
 
   const { select: handleSelect, tab } = useInsertTab();
   const chartTab = useChartTab();
-  const handleChartToggle = chartTab.toggle;
+  const blockTab = useBlockTab();
+  const closeChart = chartTab.close;
+  const closeBlock = blockTab.close;
+  const toggleChart = chartTab.toggle;
+  const toggleBlock = blockTab.toggle;
 
-  let panel = (
-    <FeatureComponentsPanel
-      projectId={projectId}
-      directionId={directionId}
-      list={list}
-      active={active}
-      onMention={onMention}
-      kind={kind}
-      selection={selection}
-      renderGallery={renderGallery}
-    />
+  const handleChartToggle = useCallback((): void => {
+    closeBlock();
+    toggleChart();
+  }, [closeBlock, toggleChart]);
+
+  const handleBlockToggle = useCallback((): void => {
+    closeChart();
+    toggleBlock();
+  }, [closeChart, toggleBlock]);
+
+  const extra = toExtraPanel(
+    {
+      isBlockOpen: blockTab.isOpen,
+      isChartOpen: chartTab.isOpen,
+      isPatternsOpen: tab === "patterns",
+    },
+    { directionId, kind, projectId, selection }
   );
-
-  if (tab === "patterns") {
-    panel = (
-      <Suspense fallback={null}>
-        <PatternPanel
-          directionId={directionId}
-          kind={kind}
-          projectId={projectId}
-          selection={selection}
-        />
-      </Suspense>
-    );
-  }
-
-  if (chartTab.isOpen) {
-    panel = (
-      <Suspense fallback={null}>
-        <ChartPanel
-          directionId={directionId}
-          kind={kind}
-          projectId={projectId}
-          selection={selection}
-        />
-      </Suspense>
-    );
-  }
 
   return (
     <>
       <Suspense fallback={null}>
         <PatternTabs onSelect={handleSelect} tab={tab} />
         <ChartTabBar isOpen={chartTab.isOpen} onToggle={handleChartToggle} />
+        <BlockTabBar isOpen={blockTab.isOpen} onToggle={handleBlockToggle} />
       </Suspense>
-      {panel}
+      {extra ?? (
+        <FeatureComponentsPanel
+          projectId={projectId}
+          directionId={directionId}
+          list={list}
+          active={active}
+          onMention={onMention}
+          kind={kind}
+          selection={selection}
+          renderGallery={renderGallery}
+        />
+      )}
     </>
   );
 };

@@ -36,28 +36,27 @@ const handleDialogKeyDown = (event: KeyboardEvent): void => {
   }
 };
 
-const CreateTokenDialog = ({
-  request,
-  entries,
-  onSubmit,
-  onClose,
-}: DialogProps): ReactNode => {
-  const group = TOKEN_GROUP_FOR_PROPERTY[request.prop] ?? "color";
-  const isColor = group === "color";
-  let initialValue = request.value;
-  let valuePaint: string | null = null;
-
+const toInitialValue = (request: CreateRequest, isColor: boolean): string => {
   if (isColor) {
-    initialValue = displayColor(request.value);
+    return displayColor(request.value);
   }
 
+  return request.value;
+};
+
+const CreateTokenDialog = (props: DialogProps): ReactNode => {
+  const { onClose, request } = props;
+  const tokenGroup = TOKEN_GROUP_FOR_PROPERTY[request.prop] ?? "color";
+  const isColor = tokenGroup === "color";
+  let valuePaint: string | null = null;
+
   const form = useCreateToken({
-    entries,
-    group,
-    initialValue,
+    entries: props.entries,
+    group: tokenGroup,
+    initialValue: toInitialValue(request, isColor),
     isColor: isValidColor,
-    onClose,
-    onSubmit,
+    onClose: props.onClose,
+    onSubmit: props.onSubmit,
   });
 
   if (isColor) {

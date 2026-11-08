@@ -19,6 +19,9 @@ const isTextList = (value: unknown): value is string[] =>
 
 const isList = (value: unknown): value is unknown[] => Array.isArray(value);
 
+const isFieldSource = (value: unknown): value is object =>
+  value instanceof Object && !Array.isArray(value);
+
 const isStudioEvent = (value: unknown): value is StudioEvent => {
   if (!(value instanceof Object) || Array.isArray(value)) {
     return false;
@@ -65,4 +68,14 @@ const isActionDone = (value: unknown): value is ActionDone => {
   );
 };
 
-export { isActionDone, isApprovalPoll, isStreamHello, isStudioEvent, isText };
+export {
+  isActionDone,
+  isApprovalPoll,
+  isFieldSource,
+  isFlag,
+  isList,
+  isNumber,
+  isStreamHello,
+  isStudioEvent,
+  isText,
+};

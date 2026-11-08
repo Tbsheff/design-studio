@@ -1,6 +1,13 @@
 import { LAYER_LABEL_MAX, LAYER_TREE_MAX } from "@design-studio/contracts";
 import type { LayerNode, ReorderMove } from "@design-studio/contracts";
 
+import {
+  isFieldSource,
+  isList,
+  isNumber,
+  isText,
+} from "../../platform/json-guard.js";
+
 const LOC_MAX = 1100;
 const TAG_MAX = 32;
 
@@ -14,80 +21,81 @@ interface RawLayerTree {
   truncated?: unknown;
 }
 
-const toText = (value: unknown, max: number): string => {
-  if (typeof value === "string") {
+type Fields = ReadonlyMap<string, unknown>;
+
+const toText = (fields: Fields, key: string, max: number): string => {
+  const value = fields.get(key);
+
+  if (isText(value)) {
     return value.slice(0, max);
   }
 
   return "";
 };
 
-const toCount = (value: unknown): number => {
-  if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
+const toCount = (fields: Fields, key: string): number => {
+  const value = fields.get(key);
+
+  if (isNumber(value) && Number.isInteger(value) && value >= 0) {
     return value;
   }
 
   return 0;
 };
 
-const toRecord = (item: unknown): Record<string, unknown> | null => {
-  if (!item || typeof item !== "object") {
-    return null;
-  }
-
-  return item as Record<string, unknown>;
-};
-
 const toOptionalFields = (
-  record: Record<string, unknown>
+  fields: Fields
 ): Pick<LayerNode, "loc" | "locked"> => {
-  const fields: Pick<LayerNode, "loc" | "locked"> = {};
+  const optional: Pick<LayerNode, "loc" | "locked"> = {};
+  const loc = fields.get("loc");
 
-  if (typeof record.loc === "string" && record.loc.length <= LOC_MAX) {
-    fields.loc = record.loc;
+  if (isText(loc) && loc.length <= LOC_MAX) {
+    optional.loc = loc;
   }
 
-  if (record.locked === true) {
-    fields.locked = true;
+  if (fields.get("locked") === true) {
+    optional.locked = true;
   }
 
-  return fields;
+  return optional;
 };
 
 const toLayerNode = (
-  record: Record<string, unknown>,
+  fields: Fields,
   previousDepth: number
 ): LayerNode | null => {
-  const { id } = record;
+  const id = fields.get("id");
 
-  if (typeof id !== "number" || !Number.isInteger(id)) {
+  if (!isNumber(id) || !Number.isInteger(id)) {
     return null;
   }
 
   return {
-    childCount: toCount(record.childCount),
-    depth: Math.min(toCount(record.depth), previousDepth + 1),
-    hidden: record.hidden === true,
+    childCount: toCount(fields, "childCount"),
+    depth: Math.min(toCount(fields, "depth"), previousDepth + 1),
+    hidden: fields.get("hidden") === true,
     id,
-    name: toText(record.name, LAYER_LABEL_MAX),
-    tag: toText(record.tag, TAG_MAX).replaceAll(/[^a-z0-9-]/giu, ""),
-    text: toText(record.text, LAYER_LABEL_MAX),
-    ...toOptionalFields(record),
+    name: toText(fields, "name", LAYER_LABEL_MAX),
+    tag: toText(fields, "tag", TAG_MAX).replaceAll(/[^a-z0-9-]/giu, ""),
+    text: toText(fields, "text", LAYER_LABEL_MAX),
+    ...toOptionalFields(fields),
   };
 };
 
 const parseLayerTree = (raw: RawLayerTree): LayerTree => {
   let list: unknown[] = [];
 
-  if (Array.isArray(raw.nodes)) {
+  if (isList(raw.nodes)) {
     list = raw.nodes.slice(0, LAYER_TREE_MAX);
   }
 
   const nodes: LayerNode[] = [];
 
-  for (const item of list) {
-    const record = toRecord(item);
-    const node = record && toLayerNode(record, nodes.at(-1)?.depth ?? -1);
+  for (const item of list.filter((entry) => isFieldSource(entry))) {
+    const node = toLayerNode(
+      new Map(Object.entries(item)),
+      nodes.at(-1)?.depth ?? -1
+    );
 
     if (node) {
       nodes.push(node);
@@ -158,7 +166,7 @@ const ancestorsOf = (nodes: LayerNode[], id: number): number[] => {
 
     if (node.depth < depth) {
       out.push(node.id);
-      depth = node.depth;
+      ({ depth } = node);
     }
   }
 
@@ -168,12 +176,20 @@ const ancestorsOf = (nodes: LayerNode[], id: number): number[] => {
 const parentOf = (nodes: LayerNode[], id: number): number | null =>
   ancestorsOf(nodes, id)[0] ?? null;
 
-const defaultCollapsed = (nodes: LayerNode[], openDepth: number): Set<number> =>
-  new Set(
-    nodes
-      .filter((node) => node.childCount > 0 && node.depth >= openDepth)
-      .map((node) => node.id)
-  );
+const defaultCollapsed = (
+  nodes: LayerNode[],
+  openDepth: number
+): Set<number> => {
+  const collapsed = new Set<number>();
+
+  for (const node of nodes) {
+    if (node.childCount > 0 && node.depth >= openDepth) {
+      collapsed.add(node.id);
+    }
+  }
+
+  return collapsed;
+};
 
 type TreeAction = { select: number } | { toggle: number; open: boolean } | null;
 
@@ -190,7 +206,7 @@ const stepAction = (
   index: number,
   step: 1 | -1
 ): TreeAction => {
-  let target = rows[0];
+  let [target] = rows;
 
   if (index >= 0) {
     target = rows[index + step];
@@ -240,14 +256,19 @@ const expandAction = (
   return { select: parent };
 };
 
+interface TreeKeyInput {
+  readonly collapsed: ReadonlySet<number>;
+  readonly nodes: LayerNode[];
+  readonly rows: LayerNode[];
+  readonly selected: number | null;
+}
+
 const treeKeyAction = (
   key: string,
   shift: boolean,
-  nodes: LayerNode[],
-  rows: LayerNode[],
-  selected: number | null,
-  collapsed: ReadonlySet<number>
+  input: TreeKeyInput
 ): TreeAction => {
+  const { collapsed, nodes, rows, selected } = input;
   let index = -1;
 
   if (selected !== null) {
@@ -309,11 +330,13 @@ const siblingRow = (
   index: number,
   step: 1 | -1
 ): number | null => {
-  const depth = rows[index]?.depth;
+  const origin = rows[index];
 
-  if (depth === undefined) {
+  if (!origin) {
     return null;
   }
+
+  const { depth } = origin;
 
   for (let at = index + step; at >= 0 && at < rows.length; at += step) {
     const row = rows[at] as LayerNode;
@@ -371,7 +394,19 @@ const dropTarget = (
 };
 
 const FALLBACK_LABEL = /^[#.]/u;
-const UNSAFE_NAME_CHARS = /["'`<>{}&\\\u0000-\u001F\u007F]/gu;
+const UNSAFE_NAME_CHARS = "\"'`<>{}&\\";
+const LAST_CONTROL_CODE = 0x1f;
+const DELETE_CODE = 0x7f;
+
+const isUnsafeNameChar = (char: string): boolean => {
+  const code = char.codePointAt(0) ?? 0;
+
+  return (
+    code <= LAST_CONTROL_CODE ||
+    code === DELETE_CODE ||
+    UNSAFE_NAME_CHARS.includes(char)
+  );
+};
 
 const editableName = (name: string): string => {
   if (FALLBACK_LABEL.test(name)) {
@@ -382,7 +417,10 @@ const editableName = (name: string): string => {
 };
 
 const cleanName = (value: string): string =>
-  value.replaceAll(UNSAFE_NAME_CHARS, "").slice(0, LAYER_LABEL_MAX);
+  [...value]
+    .filter((char) => !isUnsafeNameChar(char))
+    .join("")
+    .slice(0, LAYER_LABEL_MAX);
 
 export {
   parseLayerTree,

@@ -17,6 +17,17 @@ interface Props {
   onClose: () => void;
 }
 
+const toFields = (
+  plan: Parameters<typeof fieldsOf>[0] | null,
+  draft: Parameters<typeof fieldsOf>[1] | null
+): ReturnType<typeof fieldsOf> | null => {
+  if (plan && draft) {
+    return fieldsOf(plan, draft);
+  }
+
+  return null;
+};
+
 const ShipDialog = ({ onClose, projectId }: Props): ReactElement => {
   const {
     draft,
@@ -29,30 +40,29 @@ const ShipDialog = ({ onClose, projectId }: Props): ReactElement => {
     toggleFile,
   } = useShipPlan(projectId);
 
-  const fields = useMemo(
-    () => (plan && draft ? fieldsOf(plan, draft) : null),
-    [plan, draft]
-  );
+  const fields = useMemo(() => toFields(plan, draft), [plan, draft]);
 
   const request = shipRequestOf(plan, draft, fields);
   const { failure, isBusy, result, submit } = useShipSubmit(projectId, request);
 
-  const closeUnlessBusy = useCallback((): boolean | void => {
+  const closeUnlessBusy = useCallback((): boolean => {
     if (isBusy) {
       return false;
     }
 
     onClose();
+
+    return true;
   }, [isBusy, onClose]);
 
-  const dialog = useModalDialog(closeUnlessBusy);
+  const { onMouseDown: handleMouseDown, ref } = useModalDialog(closeUnlessBusy);
 
   return (
     <dialog
-      ref={dialog.ref}
+      ref={ref}
       className="modal ship-dialog"
       aria-label={copy.shipAsA}
-      onMouseDown={dialog.onMouseDown}
+      onMouseDown={handleMouseDown}
     >
       <form className="modal-form" onSubmit={submit} noValidate>
         <ShipDialogHead

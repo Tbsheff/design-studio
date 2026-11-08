@@ -15,7 +15,6 @@ import { toFrameLabels } from "./frame-labels.js";
 import { pick } from "./pick.js";
 import type { SegmentOption } from "./segmented.js";
 import { useEditors } from "./use-editors.js";
-import type { ExportOptions } from "./use-export-options.js";
 import { useExportOptions } from "./use-export-options.js";
 import { useExportRunner } from "./use-export-runner.js";
 
@@ -42,6 +41,9 @@ const toActionText = (
   return pick(isRebuild, uiCopy.rebuildHandoff, info.action);
 };
 
+const toFormatInfo = (format: ExportFormat): FormatInfo =>
+  FORMATS.find((entry) => entry.id === format) ?? (FORMATS[0] as FormatInfo);
+
 const ExportDialog = ({ onClose, target }: Props): ReactElement => {
   const options = useExportOptions(target);
   const runner = useExportRunner(target, options);
@@ -54,21 +56,21 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
 
   const isHandoff = format === "handoff";
   const editors = useEditors(isHandoff);
-  const { failWith, isBusy, resetStatus } = runner;
+  const { failWith, isBusy, resetStatus, run } = runner;
 
-  const closeUnlessBusy = useCallback((): boolean | void => {
+  const closeUnlessBusy = useCallback((): boolean => {
     if (isBusy) {
       return false;
     }
 
     onClose();
+
+    return true;
   }, [isBusy, onClose]);
 
-  const dialog = useModalDialog(closeUnlessBusy);
+  const { onMouseDown: handleMouseDown, ref } = useModalDialog(closeUnlessBusy);
 
-  const info =
-    FORMATS.find((entry) => entry.id === format) ?? (FORMATS[0] as FormatInfo);
-
+  const info = toFormatInfo(format);
   const result = pick(isHandoff, runner.handoff, null);
 
   const selectFormat = useCallback(
@@ -81,10 +83,10 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
 
   return (
     <dialog
-      ref={dialog.ref}
+      ref={ref}
       className="modal export-dialog"
       aria-label={uiCopy.export}
-      onMouseDown={dialog.onMouseDown}
+      onMouseDown={handleMouseDown}
     >
       <ExportDialogHead
         versionLabel={target.versionLabel}
@@ -116,7 +118,7 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
           result !== null
         )}
         onClose={onClose}
-        onRun={runner.run}
+        onRun={run}
       />
     </dialog>
   );

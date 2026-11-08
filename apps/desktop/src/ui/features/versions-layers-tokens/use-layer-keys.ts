@@ -104,14 +104,12 @@ const runTreeKey = (
     selected = input.selectedNode;
   }
 
-  const action = treeKeyAction(
-    event.key,
-    event.shiftKey,
+  const action = treeKeyAction(event.key, event.shiftKey, {
+    collapsed,
     nodes,
     rows,
     selected,
-    collapsed
-  );
+  });
 
   if (!action) {
     return false;

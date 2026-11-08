@@ -4,7 +4,17 @@ import { describe, expect, it } from "vitest";
 import { valuesFromStyles } from "../inspector/css-values.js";
 import { lintValues } from "./token-lint.js";
 
-type CssInput = NonNullable<Parameters<typeof lintValues>[3]>;
+type CssInput = NonNullable<
+  Parameters<typeof lintValues> extends readonly [
+    unknown,
+    unknown,
+    unknown,
+    infer Css,
+    ...unknown[],
+  ]
+    ? Css
+    : never
+>;
 
 const MAX_DELTA_E = 10;
 

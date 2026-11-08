@@ -1,11 +1,12 @@
-import type { ShipSettings } from "@design-studio/contracts/ship";
-import { useEffect, useState } from "react";
+import { useCallback, useLayoutEffect } from "react";
 import type { MutableRefObject, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
 import "../../styles/ship.css";
 import { shipApi } from "./ship-api.js";
+import { ShipTemplateForm } from "./ship-template-form.js";
+import { useShipSettings } from "./use-ship-settings.js";
 
 interface Props {
   projectId: string;
@@ -13,108 +14,35 @@ interface Props {
 }
 
 const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
-  const [draft, setDraft] = useState<ShipSettings | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const { draft, loadError, patch } = useShipSettings(projectId);
 
-  useEffect(() => {
-    let live = true;
+  useLayoutEffect(() => {
+    saveRef.current = null;
 
-    const load = async (): Promise<void> => {
-      try {
-        const settings = await shipApi.settings(projectId);
-
-        if (live) {
-          setDraft(settings);
-        }
-      } catch {
-        if (live) {
-          setLoadError("Could not read the ship templates.");
-        }
-      }
-    };
-
-    void load();
-
-    return (): void => {
-      live = false;
-    };
-  }, [projectId]);
-
-  saveRef.current = draft
-    ? async (): Promise<void> => {
+    if (draft) {
+      saveRef.current = async (): Promise<void> => {
         await shipApi.saveSettings(projectId, draft);
-      }
-    : null;
+      };
+    }
+  }, [draft, projectId, saveRef]);
 
-  const set = (patch: Partial<ShipSettings>): void =>
-    setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
+  const patchBody = useCallback(
+    (bodyTemplate: string): void => {
+      patch({ bodyTemplate });
+    },
+    [patch]
+  );
 
   return (
     <section className="ship-settings" aria-label={copy.shipTemplates}>
       <h3>{copy.shipAsBranchAnd}</h3>
       {loadError && <p className="field-help">{loadError}</p>}
       {draft && (
-        <>
-          <div className="ship-settings-row">
-            <label className="field">
-              <span>{copy.yourNameInBranches}</span>
-              <input
-                className="mono"
-                value={draft.user}
-                placeholder={copy.fromGitUser}
-                spellCheck={false}
-                autoComplete="off"
-                onChange={(changeEvent) =>
-                  set({ user: changeEvent.target.value })
-                }
-              />
-            </label>
-            <label className="field">
-              <span>{copy.issueId}</span>
-              <input
-                className="mono"
-                value={draft.issueId}
-                placeholder={copy.qa1234}
-                spellCheck={false}
-                autoComplete="off"
-                onChange={(changeEvent) =>
-                  set({ issueId: changeEvent.target.value })
-                }
-              />
-            </label>
-          </div>
-          <label className="field">
-            <span>{copy.branchTemplate}</span>
-            <input
-              className="mono"
-              value={draft.branchTemplate}
-              spellCheck={false}
-              autoComplete="off"
-              onChange={(changeEvent) =>
-                set({ branchTemplate: changeEvent.target.value })
-              }
-            />
-          </label>
-          <label className="field">
-            <span>{copy.pullRequestBodyTemplate}</span>
-            <textarea
-              className="mono"
-              rows={5}
-              value={draft.bodyTemplate}
-              spellCheck={false}
-              onChange={(changeEvent) =>
-                set({ bodyTemplate: changeEvent.target.value })
-              }
-            />
-            <small className="field-help">
-              {copy.placeholders}{" "}
-              {
-                "{user} {slug} {issue} (lower case) {ISSUE} (as typed) {title} {summary} {versions} {files}"
-              }
-              {copy.aLineWhosePlaceholders}
-            </small>
-          </label>
-        </>
+        <ShipTemplateForm
+          draft={draft}
+          onPatch={patch}
+          onPatchBody={patchBody}
+        />
       )}
     </section>
   );

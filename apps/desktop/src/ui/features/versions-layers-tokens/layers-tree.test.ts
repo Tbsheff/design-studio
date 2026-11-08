@@ -151,6 +151,15 @@ describe("layers tree parsing", () => {
   }, 0);
 });
 
+type KeyInput = Parameters<typeof treeKeyAction>[2];
+
+const toInput = (
+  collapsed: ReadonlySet<number>,
+  nodes: KeyInput["nodes"],
+  rows: KeyInput["rows"],
+  selected: number | null
+): KeyInput => ({ collapsed, nodes, rows, selected });
+
 describe("layers tree keys", () => {
   it("maps arrow keys to select and toggle actions", () => {
     expect.hasAssertions();
@@ -164,7 +173,7 @@ describe("layers tree keys", () => {
       key: string,
       selected: number | null
     ): ReturnType<typeof treeKeyAction> =>
-      treeKeyAction(key, false, nodes, open, selected, new Set());
+      treeKeyAction(key, false, toInput(new Set(), nodes, open, selected));
 
     expect(keyAt("ArrowDown", null)).toStrictEqual({ select: 1 });
     expect(keyAt("ArrowDown", ID_NAV)).toStrictEqual({ select: ID_HOME });
@@ -177,10 +186,7 @@ describe("layers tree keys", () => {
       treeKeyAction(
         "ArrowRight",
         false,
-        nodes,
-        collapsedRows,
-        ID_NAV,
-        collapsedNav
+        toInput(collapsedNav, nodes, collapsedRows, ID_NAV)
       )
     ).toStrictEqual({ open: true, toggle: ID_NAV });
   }, 0);
@@ -191,14 +197,16 @@ describe("layers tree keys", () => {
     const { nodes } = parseLayerTree(raw);
     const open = visibleRows(nodes, new Set());
     const none = new Set<number>();
+    const atFirst = toInput(none, nodes, open, 1);
+    const atHome = toInput(none, nodes, open, ID_HOME);
 
-    expect(treeKeyAction("Enter", false, nodes, open, 1, none)).toStrictEqual({
+    expect(treeKeyAction("Enter", false, atFirst)).toStrictEqual({
       select: ID_NAV,
     });
-    expect(
-      treeKeyAction("Enter", true, nodes, open, ID_HOME, none)
-    ).toStrictEqual({ select: ID_NAV });
-    expect(treeKeyAction("Tab", false, nodes, open, ID_HOME, none)).toBeNull();
+    expect(treeKeyAction("Enter", true, atHome)).toStrictEqual({
+      select: ID_NAV,
+    });
+    expect(treeKeyAction("Tab", false, atHome)).toBeNull();
   }, 0);
 });
 

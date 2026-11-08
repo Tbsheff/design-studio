@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, ReactElement, SetStateAction } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
+import { cn } from "../../ai/lib/utils.js";
 import { copy } from "./copy.js";
 
 const MAX_MATCHES = 30;
@@ -167,7 +168,10 @@ const MentionList = ({
             id={`mention-${option.key}`}
             role="option"
             aria-selected={option === current}
-            className={`skill-opt mention-opt ${option === current ? "active" : ""}`}
+            className={cn(
+              "skill-opt mention-opt",
+              option === current && "active"
+            )}
             onMouseDown={(event) => event.preventDefault()}
             onMouseEnter={() => onHover(index)}
             onClick={() => onPick(option)}

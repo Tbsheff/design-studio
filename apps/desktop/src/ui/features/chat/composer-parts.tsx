@@ -14,6 +14,7 @@ import {
   AttachmentProgress,
 } from "../../ai/components/ai/attachment.js";
 import { Chip } from "../../ai/components/ai/chip.js";
+import { cn } from "../../ai/lib/utils.js";
 import { api } from "../../api.js";
 import type { PendingAttachment } from "../../domain/pending-attachment.js";
 import { readBlob } from "../../platform/http.js";
@@ -192,7 +193,7 @@ const ReferenceToggle = ({
   return (
     <button
       type="button"
-      className={`thumb-ref ${on ? "on" : ""}`}
+      className={cn("thumb-ref", on && "on")}
       aria-pressed={on}
       aria-label={
         on
@@ -234,7 +235,12 @@ const AttachmentThumbs = ({
           key={found.localId}
           layout="card"
           state={found.error ? "error" : "default"}
-          className={`thumb size-13 ${found.attachment && isReferenceName(found.attachment.name) ? "is-reference" : ""}`}
+          className={cn(
+            "thumb size-13",
+            found.attachment &&
+              isReferenceName(found.attachment.name) &&
+              "is-reference"
+          )}
           data-tip={found.error ?? shortName(found.name)}
           data-tip-side="top"
           data-tip-align={index < 2 ? "start" : "end"}
@@ -244,7 +250,7 @@ const AttachmentThumbs = ({
               data-slot="attachment-media-img"
               src={found.previewUrl}
               alt={found.name}
-              className={found.error ? "opacity-35" : ""}
+              className={cn(found.error && "opacity-35")}
             />
           </AttachmentMedia>
           <ThumbState file={found} />

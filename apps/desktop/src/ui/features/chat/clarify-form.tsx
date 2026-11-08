@@ -3,6 +3,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, ReactElement } from "react";
 
+import { cn } from "../../ai/lib/utils.js";
 import { copy } from "./copy.js";
 import { useRovingRadioGroup } from "./level-control.js";
 
@@ -55,7 +56,7 @@ const ClarifyQuestionField = ({
                 type="button"
                 role="radio"
                 aria-checked={on}
-                className={`chip-toggle${on ? " on" : ""}`}
+                className={cn("chip-toggle", on && "on")}
                 tabIndex={
                   picked === "" ? (index === 0 ? 0 : -1) : props.tabIndex
                 }

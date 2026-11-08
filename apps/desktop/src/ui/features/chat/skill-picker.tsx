@@ -11,6 +11,7 @@ import { api, errorText } from "../../api.js";
 import { rank } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
 import { copy } from "./copy.js";
+import { toPlural } from "./plural-model.js";
 import { SkillsChecklist } from "./skills-checklist.js";
 import {
   NO_SKILLS_TEXT,
@@ -360,7 +361,7 @@ const SkillsIndicator = ({
         onClick={() => setOpen((wasOpen) => !wasOpen)}
       >
         <Icon name="book" size={12} />
-        {catalog && `${count} skill${count === 1 ? "" : "s"}`}
+        {catalog && `${count} skill${toPlural(count)}`}
         {!catalog && "Skills"}
       </button>
       {open && (

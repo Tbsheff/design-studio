@@ -18,7 +18,8 @@ import { PendingEntry, RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";
 import { copy } from "./copy.js";
-import { feedShown, McpItem, timelineOf } from "./mcp-feed.js";
+import { McpItem } from "./mcp-feed.js";
+import { feedShown, timelineOf } from "./mcp-timeline.js";
 import type { RunView } from "./run-state-model.js";
 import {
   useLatest,

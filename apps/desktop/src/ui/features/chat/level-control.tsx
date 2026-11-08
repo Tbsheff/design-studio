@@ -4,6 +4,7 @@ import { useId, useRef } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
+import { cn } from "../../ai/lib/utils.js";
 import { copy } from "./copy.js";
 
 const STEP: Record<string, number> = {
@@ -129,7 +130,7 @@ const LevelControl = ({
             aria-checked={on}
             aria-describedby={`${baseId}-${level}-hint`}
             disabled={disabled}
-            className={on ? "on" : ""}
+            className={cn(on && "on")}
             data-testid={`level-option-${level}`}
             data-tip={LEVEL_PRESETS[level].hint}
             data-tip-side={tipSide}

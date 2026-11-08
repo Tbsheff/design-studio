@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, ReactElement, SetStateAction } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
+import { cn } from "../../ai/lib/utils.js";
 import { copy } from "./copy.js";
 
 const MAX_HITS = 20;
@@ -107,7 +108,7 @@ const HistorySearch = ({
             key={prompt}
             role="option"
             aria-selected={prompt === search.current}
-            className={`skill-opt ${prompt === search.current ? "active" : ""}`}
+            className={cn("skill-opt", prompt === search.current && "active")}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => onPick(prompt)}
           >

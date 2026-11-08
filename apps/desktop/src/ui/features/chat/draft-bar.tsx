@@ -9,11 +9,13 @@ import { useFitPopover } from "@design-studio/ui";
 import { useId, useEffect, useRef, useState, startTransition } from "react";
 import type { ReactElement, ReactNode } from "react";
 
+import { cn } from "../../ai/lib/utils.js";
 import { errorText } from "../../api.js";
 import { packApi } from "../../platform/pack-api.js";
 import { findPack, usePacks } from "../design-system/packs.js";
 import { copy } from "./copy.js";
 import { improvePassed, CheckStatus } from "./draft-improve.js";
+import { toPlural } from "./plural-model.js";
 import type { RunView } from "./run-state-model.js";
 
 interface Props {
@@ -323,7 +325,7 @@ const saveReason = (
 
   const count = check.problems.length;
 
-  return `Save is off: the check found ${count} problem${count === 1 ? "" : "s"}. Improve with AI fixes them.`;
+  return `Save is off: the check found ${count} problem${toPlural(count)}. Improve with AI fixes them.`;
 };
 
 interface SaveProps {
@@ -385,7 +387,7 @@ const SaveControls = ({
       >
         <button
           type="button"
-          className={`btn small${ready ? " primary" : ""}`}
+          className={cn("btn small", ready && "primary")}
           onClick={() => void save(false)}
           disabled={busy || reason !== null}
           aria-describedby={describedBy}

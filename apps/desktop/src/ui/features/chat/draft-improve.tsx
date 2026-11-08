@@ -8,6 +8,7 @@ import { useFitPopover } from "@design-studio/ui";
 import { useId, useRef, useState } from "react";
 import type { ReactElement } from "react";
 
+import { cn } from "../../ai/lib/utils.js";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
@@ -90,7 +91,7 @@ const ImproveControl = ({
       />
       <button
         type="submit"
-        className={`btn small${primary ? " primary" : ""}`}
+        className={cn("btn small", primary && "primary")}
         disabled={running || busy}
       >
         {improving && "Improving…"}

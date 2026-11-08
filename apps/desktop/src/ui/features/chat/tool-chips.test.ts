@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ToolRow } from "./run-state-model.js";
-import { groupRepeats, fileChanges } from "./tool-chips.js";
+import { groupRepeats, fileChanges } from "./tool-rows-model.js";
 
 const row = (
   id: string,

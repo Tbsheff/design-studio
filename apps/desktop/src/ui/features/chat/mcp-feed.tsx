@@ -4,6 +4,7 @@ import type { IconName } from "@design-studio/ui";
 import { useEffect, useState, useTransition } from "react";
 import type { ReactElement } from "react";
 
+import { cn } from "../../ai/lib/utils.js";
 import { errorText } from "../../api.js";
 import { formatTime } from "../../domain/format.js";
 import { copy } from "./copy.js";
@@ -13,68 +14,8 @@ import type { RunView } from "./run-state-model.js";
 import type {
   McpApprovalCard,
   McpFeedControl,
-  McpFeedState,
   TimelineItem,
 } from "./use-mcp-feed.js";
-
-const timelineOf = (
-  runs: readonly RunView[],
-  feed: McpFeedState | null
-): TimelineItem[] => {
-  const items: TimelineItem[] = runs.map((run) => ({
-    at: run.startedAt,
-    key: run.runId,
-    kind: "run",
-    run,
-  }));
-
-  if (!feed) {
-    return items;
-  }
-
-  for (const card of feed.approvals) {
-    items.push({
-      at: card.approval.createdAt,
-      card,
-      key: `approval-${card.approval.id}`,
-      kind: "approval",
-    });
-  }
-
-  const singles: TimelineItem[] = feed.activity.map((entry) => ({
-    at: entry.at,
-    client: entry.client,
-    entries: [entry],
-    key: `mcp-${entry.id}`,
-    kind: "block",
-  }));
-
-  const sorted = [...items, ...singles].toSorted(
-    (left, right) => left.at - right.at
-  );
-  const out: TimelineItem[] = [];
-
-  for (const item of sorted) {
-    const last = out.at(-1);
-
-    if (
-      item.kind === "block" &&
-      last?.kind === "block" &&
-      last.client === item.client
-    ) {
-      last.entries.push(...item.entries);
-    } else {
-      out.push(
-        item.kind === "block" ? { ...item, entries: [...item.entries] } : item
-      );
-    }
-  }
-
-  return out;
-};
-
-const feedShown = (mcp: McpFeedControl | null): boolean =>
-  mcp !== null && (mcp.activity.length > 0 || mcp.approvals.length > 0);
 
 const DisconnectButton = (): ReactElement => {
   const [isDone, setIsDone] = useState(false);
@@ -352,7 +293,7 @@ const McpApproval = ({
 
   return (
     <section
-      className={`permission mcp-approval${compact ? " compact" : ""}`}
+      className={cn("permission mcp-approval", compact && "compact")}
       role="group"
       aria-label={approval.title}
       data-testid="mcp-approval"
@@ -486,14 +427,6 @@ const McpEditStrip = ({
   );
 };
 
-export {
-  MCP_ACTIVE_MS,
-  McpApproval,
-  McpBlock,
-  McpEditStrip,
-  McpItem,
-  feedShown,
-  timelineOf,
-};
+export { MCP_ACTIVE_MS, McpApproval, McpBlock, McpEditStrip, McpItem };
 
 export type { McpFeedControl, TimelineItem };

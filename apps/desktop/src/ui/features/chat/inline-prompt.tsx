@@ -9,6 +9,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
+import { cn } from "../../ai/lib/utils.js";
 import { call } from "../../platform/http.js";
 import { uiStore } from "../../platform/storage.js";
 import { copy } from "./copy.js";
@@ -177,7 +178,7 @@ const ScopeChoice = ({ usage, choice, onChoice }: ScopeProps): ReactElement => {
           type="button"
           role="radio"
           aria-checked={choice === option.id}
-          className={choice === option.id ? "on" : undefined}
+          className={cn(choice === option.id && "on")}
           data-tip={option.tip}
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => onChoice(option.id)}

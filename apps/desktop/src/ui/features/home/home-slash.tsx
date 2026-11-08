@@ -53,7 +53,7 @@ const HomeSlashMenu = ({
       '[aria-label="Describe the design"]'
     ) ?? null;
 
-  const attrs: Record<string, string | undefined> = slash.inputProps;
+  const attrs: Record<string, string | undefined> = { ...slash.inputProps };
   useLayoutEffect(() => {
     const area = input();
 

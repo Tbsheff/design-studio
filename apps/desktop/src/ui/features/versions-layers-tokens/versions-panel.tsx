@@ -116,8 +116,8 @@ function useFork(
     try {
       await onNewDirection(from, name.trim());
       setFrom(null);
-    } catch (failure) {
-      setError(failure instanceof Error ? failure.message : String(failure));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
     }
   };
 

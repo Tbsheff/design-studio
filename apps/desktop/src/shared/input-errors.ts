@@ -12,22 +12,17 @@ const formatIssues = SchemaIssue.makeFormatterStandardSchemaV1();
 const toEncodedAst = (schema: Schema.Top): SchemaAST.AST =>
   SchemaAST.toEncoded(schema.ast);
 
-const isObjectAst = (ast: SchemaAST.AST): ast is SchemaAST.Objects =>
-  ast._tag === "Objects";
+const isObjectAst = SchemaAST.isObjects;
 
-const isArrayAst = (ast: SchemaAST.AST): ast is SchemaAST.Arrays =>
-  ast._tag === "Arrays";
+const isArrayAst = SchemaAST.isArrays;
 
-const isUnionAst = (ast: SchemaAST.AST): ast is SchemaAST.Union =>
-  ast._tag === "Union";
+const isUnionAst = SchemaAST.isUnion;
 
-const isLiteralAst = (ast: SchemaAST.AST): ast is SchemaAST.Literal =>
-  ast._tag === "Literal";
+const isLiteralAst = SchemaAST.isLiteral;
 
-const isEnumAst = (ast: SchemaAST.AST): ast is SchemaAST.Enum =>
-  ast._tag === "Enum";
+const isEnumAst = SchemaAST.isEnum;
 
-const toTypeName = (ast: SchemaAST.AST): string => ast._tag.toLowerCase();
+const toTypeName = ({ _tag: tag }: SchemaAST.AST): string => tag.toLowerCase();
 
 const describeObject = (ast: SchemaAST.Objects, depth: number): string => {
   if (depth > MAX_DEPTH) {

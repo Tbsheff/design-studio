@@ -3,12 +3,15 @@ import { Effect } from "effect";
 import {
   assertCanEdit,
   publishVersion,
+  savedVersionId,
+  savesSettled,
   runDirectionRead,
   runDirectionWrite,
   toDirectEditStatusFailure,
   writeAndCommitAll,
 } from "../direct-edit/index.js";
 import type { DirectionIds, WrittenFile } from "../direct-edit/index.js";
+import { attemptKnown } from "./deps.js";
 
 const toTitle = (count: number): string =>
   `Fix viewport findings: ${count} edits`;
@@ -61,7 +64,9 @@ const applyFixFiles = Effect.fn("applyFixFiles")(function* run(
     toDirectEditStatusFailure
   );
 
-  return version.id;
+  yield* attemptKnown(() => savesSettled(ids.projectId));
+
+  return savedVersionId(version.id);
 });
 
 export { applyFixFiles };

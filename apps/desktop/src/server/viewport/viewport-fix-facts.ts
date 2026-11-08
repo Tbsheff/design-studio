@@ -20,6 +20,7 @@ const FACTS_SOURCE = String.raw`(locs, locAttr) => {
     return {
       tag: el.tagName.toLowerCase(),
       display: getComputedStyle(el).display,
+      overflowX: getComputedStyle(el).overflowX,
       parentDisplay: parent ? getComputedStyle(parent).display : '',
       blockParentLoc: blockParentLoc(el),
     };

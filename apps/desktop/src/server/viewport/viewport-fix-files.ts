@@ -65,9 +65,8 @@ const applyEdit = Effect.fn("applyEdit")(function* run(
 ) {
   const request = parseDirectEditRequest({
     classes: { add: edit.add, remove: [] },
-    selector: edit.tag,
+    selector: "",
     source: edit.loc,
-    tag: edit.tag,
   });
 
   const patch = yield* runEdit(() =>

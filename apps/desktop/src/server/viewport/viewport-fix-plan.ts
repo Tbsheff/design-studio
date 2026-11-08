@@ -40,7 +40,6 @@ interface PlanEdit {
   readonly add: string[];
   readonly lines: string[];
   readonly loc: SourceLoc;
-  readonly tag: string;
 }
 
 interface PlanState {
@@ -171,8 +170,7 @@ const setSkipped = (
 const getEdit = (
   state: PlanState,
   locText: string,
-  site: FixSite,
-  tag: string
+  site: FixSite
 ): PlanEdit => {
   const known = state.edits.get(locText) ?? null;
 
@@ -180,7 +178,7 @@ const getEdit = (
     return known;
   }
 
-  const edit: PlanEdit = { add: [], lines: [], loc: site.loc, tag };
+  const edit: PlanEdit = { add: [], lines: [], loc: site.loc };
   state.edits.set(locText, edit);
 
   return edit;
@@ -324,7 +322,7 @@ const applyItem = Effect.fn("applyItem")(function* run(
     return;
   }
 
-  const picked = getEdit(state, targetText, targetSite, facts.tag);
+  const picked = getEdit(state, targetText, targetSite);
 
   applyTarget(state, item, intent, {
     edit: picked,
@@ -337,7 +335,6 @@ const toFixEdit = (edit: PlanEdit): FixEdit => ({
   add: edit.add,
   lines: edit.lines,
   loc: edit.loc,
-  tag: edit.tag,
 });
 
 const createFixPlan = Effect.fn("createFixPlan")(function* run(

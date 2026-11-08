@@ -3,6 +3,7 @@ type FixKind = "clipped-text" | "horizontal-scroll" | "overflow" | "tap-target";
 interface FixFacts {
   readonly blockParentLoc: string | null;
   readonly display: string;
+  readonly overflowX: string;
   readonly parentDisplay: string;
   readonly tag: string;
 }
@@ -48,6 +49,10 @@ const CLIP_CLASSES: ReadonlySet<string> = new Set([
   "truncate",
   "text-ellipsis",
 ]);
+
+const SCROLL_OVERFLOWS: ReadonlySet<string> = new Set(["auto", "scroll"]);
+
+const MOBILE_BREAKPOINT_PX = 768;
 
 const MAX_WIDTH_CLASS = "max-w-full";
 
@@ -157,6 +162,13 @@ const toFixDecision = (
   existing: readonly string[]
 ): FixDecision => {
   if (kind === "overflow") {
+    if (SCROLL_OVERFLOWS.has(facts.overflowX)) {
+      return {
+        isFixable: false,
+        reason: "The element already scrolls sideways inside its own box.",
+      };
+    }
+
     return { intent: toOverflowIntent(facts), isFixable: true };
   }
 
@@ -183,7 +195,11 @@ const toBreakpointPrefix = (
   breakpoints: readonly FixBreakpoint[]
 ): string => {
   const ordered = breakpoints.toSorted((left, right) => left.px - right.px);
-  const next = ordered.find((breakpoint) => breakpoint.px > width);
+
+  const next = ordered.find(
+    (breakpoint) =>
+      breakpoint.px > width && breakpoint.px >= MOBILE_BREAKPOINT_PX
+  );
 
   if (next) {
     return `max-${next.name}`;

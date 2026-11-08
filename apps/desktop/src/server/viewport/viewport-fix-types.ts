@@ -46,7 +46,6 @@ interface FixEdit {
   readonly add: readonly string[];
   readonly lines: readonly string[];
   readonly loc: SourceLoc;
-  readonly tag: string;
 }
 
 interface FixPlan {

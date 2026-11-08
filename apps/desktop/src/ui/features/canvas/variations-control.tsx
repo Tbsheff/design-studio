@@ -2,15 +2,9 @@ import type { ReactElement } from "react";
 
 import { useRovingRadioGroup } from "../chat/level-control.js";
 
-const ITEM_1 = 1;
-
-const ITEM_2 = 2;
-
 const ITEM_3 = 3;
 
 const ITEM_4 = 4;
-
-const COUNT3_1 = 1;
 
 interface Props {
   value: number;
@@ -20,7 +14,7 @@ interface Props {
   labelledBy?: string;
 }
 
-const OPTIONS = [ITEM_1, ITEM_2, ITEM_3, ITEM_4] as const;
+const OPTIONS = [1, 2, ITEM_3, ITEM_4] as const;
 
 const VariationsControl = ({
   value,
@@ -40,6 +34,7 @@ const VariationsControl = ({
     if (labelledBy) {
       return undefined;
     }
+
     return "Designs";
   })();
 
@@ -55,7 +50,7 @@ const VariationsControl = ({
       {OPTIONS.map((count3) => {
         let arialabel2 = `${count3} variations`;
 
-        if (count3 === COUNT3_1) {
+        if (count3 === 1) {
           arialabel2 = "1 design (variations off)";
         }
 

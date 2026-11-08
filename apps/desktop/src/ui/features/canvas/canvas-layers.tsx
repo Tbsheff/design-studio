@@ -24,10 +24,6 @@ import type { PreviewMenuItem } from "./preview-menu.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import type { HoverBox } from "./use-preview-frames.js";
 
-const LENGTH_0 = 0;
-
-const AT_NEG_1 = -1;
-
 interface TreeFrames {
   tree: LayerTree | null;
   selectedNode: number | null;
@@ -57,7 +53,7 @@ const CanvasLayersPanel = ({
   onSelectMode: () => void;
   onClose?: () => void;
 }): ReactElement => {
-  const hasSelection = selection.length > LENGTH_0;
+  const hasSelection = selection.length > 0;
   const hoveredNode = useHoveredNode(frames.hover);
 
   const menuState = {
@@ -182,7 +178,7 @@ const useSelectMoveKeys = (
   useEffect(() => {
     const onKey = (eventValue: KeyboardEvent): void => {
       const cur = live.current;
-      const last = cur.selection.at(AT_NEG_1);
+      const last = cur.selection.at(-1);
 
       if (!cur.selectMode || !last || !canvasHasKeys()) {
         return;

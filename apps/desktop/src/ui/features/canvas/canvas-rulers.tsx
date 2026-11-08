@@ -10,8 +10,6 @@ import {
 } from "./ruler-draw.js";
 import type { Props } from "./ruler-draw.js";
 
-const FRAME_0 = 0;
-
 export default function CanvasRulers({
   artboardRef,
   origin,
@@ -49,8 +47,10 @@ export default function CanvasRulers({
           if (vertical) {
             return [options.y + text.y, options.y + text.y + text.height];
           }
+
           return [options.x + text.x, options.x + text.x + text.width];
         }
+
         return null;
       })();
 
@@ -97,7 +97,7 @@ export default function CanvasRulers({
       }
 
       frame = requestAnimationFrame(() => {
-        frame = FRAME_0;
+        frame = 0;
         draw.current();
       });
     };

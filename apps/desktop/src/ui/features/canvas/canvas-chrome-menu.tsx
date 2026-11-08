@@ -23,8 +23,6 @@ import type { CanvasViewRow } from "./canvas-toolbar.js";
 import { toValueOr } from "./settle-model.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 
-const INDEX_1 = 1;
-
 interface FrameLabelInfo {
   number?: string;
   title?: string;
@@ -160,7 +158,7 @@ const useFileMenu = (chromePropsValue: ChromeProps, onImport: () => void) => {
         return {
           checked: canvasFrame.id === chromePropsValue.active.id,
           id: `frame-${canvasFrame.id}`,
-          label: `${info.number ?? index + INDEX_1}  ${info.badge?.title ?? frameBaseName(canvasFrame)}`,
+          label: `${info.number ?? index + 1}  ${info.badge?.title ?? frameBaseName(canvasFrame)}`,
           meta: meta2,
           run: show,
         };

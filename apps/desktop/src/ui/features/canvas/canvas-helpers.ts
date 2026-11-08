@@ -52,6 +52,7 @@ const hostedClose = (
   if (shell) {
     return undefined;
   }
+
   return close;
 };
 
@@ -86,6 +87,7 @@ const pageNameOf = (path: string | undefined): string => {
   if (file && file !== "index") {
     return file;
   }
+
   return "Page";
 };
 
@@ -133,6 +135,7 @@ const stageNote = (point: {
   if (point.noRuns && !point.app) {
     return "empty";
   }
+
   return null;
 };
 
@@ -169,6 +172,7 @@ const livePageUrl = (
       active.id
     );
   }
+
   return null;
 };
 
@@ -200,6 +204,7 @@ const stageCursor = (pz: {
   if (pz.zoomHeld) {
     return "zoom-in";
   }
+
   return "";
 };
 
@@ -222,6 +227,7 @@ const canvasClass = (editing: boolean): string => {
   if (editing) {
     return "canvas text-editing";
   }
+
   return "canvas";
 };
 
@@ -238,6 +244,7 @@ const overlayHover = <Item extends { fromTree?: boolean }>(
   if (picking || hover?.fromTree) {
     return hover;
   }
+
   return null;
 };
 

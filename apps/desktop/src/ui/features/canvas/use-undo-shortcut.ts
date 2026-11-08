@@ -7,8 +7,6 @@ import {
 } from "../../platform/desktop.js";
 import { editsText } from "../../platform/typing-target.js";
 
-const VERSION_COUNT_2 = 2;
-
 const PREVIEW_HISTORY_EVENT = "studio:preview-history";
 
 type HistoryKind = "undo" | "redo";
@@ -22,8 +20,7 @@ const undoAllowed = (
   directionId: string | null,
   locked: boolean,
   versionCount: number
-): boolean =>
-  directionId !== null && !locked && versionCount >= VERSION_COUNT_2;
+): boolean => directionId !== null && !locked && versionCount >= 2;
 
 const historyKeyOf = (
   event: Pick<
@@ -42,6 +39,7 @@ const historyKeyOf = (
   if (event.shiftKey) {
     return "redo";
   }
+
   return "undo";
 };
 

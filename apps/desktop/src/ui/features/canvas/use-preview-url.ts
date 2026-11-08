@@ -24,6 +24,7 @@ const usePreviewUrl = (
     if (source.kind === "last") {
       return headVersionId;
     }
+
     return null;
   })();
 
@@ -42,6 +43,7 @@ const usePreviewUrl = (
       if (versionId) {
         return api.versionPreview(projectId, versionId);
       }
+
       return Promise.reject(new Error(NO_VERSION_TEXT));
     })();
 

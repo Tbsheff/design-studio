@@ -9,8 +9,6 @@ import type { LabelProps } from "./canvas-frames.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import { FrameSkeleton } from "./frame-skeleton.js";
 
-const INDEX_0 = 0;
-
 const MOUNT_FALLBACK_MS = 1200;
 
 let frontPainted = false;
@@ -137,19 +135,15 @@ const PassiveFrame = ({
         url ? (
           <iframe
             key={url}
-            ref={index === INDEX_0 ? frameRef : undefined}
+            ref={index === 0 ? frameRef : undefined}
             title={`${name} preview`}
-            className={
-              index === INDEX_0 ? "frame passive" : "frame passive next"
-            }
+            className={index === 0 ? "frame passive" : "frame passive next"}
             src={url}
             sandbox={sandbox}
             width={frame.width}
             height={frame.height}
             tabIndex={-1}
-            onLoad={
-              index === INDEX_0 ? undefined : (): void => onNextLoad(frame.id)
-            }
+            onLoad={index === 0 ? undefined : (): void => onNextLoad(frame.id)}
           />
         ) : null
       )}

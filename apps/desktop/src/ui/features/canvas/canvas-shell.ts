@@ -8,10 +8,6 @@ import type { PanelTab } from "../../platform/use-panel-tab.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasTool } from "./top-bar-menu.js";
 
-const LENGTH_1 = 1;
-
-const FIRST_0 = 0;
-
 interface CanvasShell {
   pane: PanelTab;
   onPane: (tab: PanelTab) => void | Promise<boolean>;
@@ -110,6 +106,7 @@ const useShellPane = (
     if (shell) {
       return shell.onPane("chat");
     }
+
     return uiStore.set({ layersOpen: false });
   };
 
@@ -117,6 +114,7 @@ const useShellPane = (
     if (shell?.layersHost) {
       return createPortal(panel, shell.layersHost);
     }
+
     return panel;
   };
 
@@ -160,6 +158,7 @@ const toolOf = (
   if (select) {
     return "select";
   }
+
   return null;
 };
 
@@ -174,15 +173,16 @@ const reloadFrames = (stage: HTMLElement | null): void => {
 };
 
 const scopeOf = (selection: SelectionContext[]): string | null => {
-  if (selection.length > LENGTH_1) {
+  if (selection.length > 1) {
     return `${selection.length} elements`;
   }
 
-  const first = selection[FIRST_0];
+  const first = selection[0];
 
   if (first) {
     return `the ${first.tag}`;
   }
+
   return null;
 };
 

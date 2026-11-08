@@ -4,17 +4,7 @@ import { useEffect, useRef } from "react";
 import { api } from "../../api.js";
 import { runOrReport } from "./settle-model.js";
 
-const WIDTH_VALUE_0 = 0;
-
-const HEIGHT_VALUE_0 = 0;
-
-const WIDTH_0 = 0;
-
-const HEIGHT_0 = 0;
-
 const WIDTH_VALUE_0_25 = 0.25;
-
-const SLICE_0 = 0;
 
 const SLICE_20 = 20;
 
@@ -56,10 +46,10 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
       Math.min(dOMRect.bottom, box.bottom) - Math.max(dOMRect.top, box.top);
 
     if (
-      widthValue <= WIDTH_VALUE_0 ||
-      heightValue <= HEIGHT_VALUE_0 ||
-      dOMRect.width <= WIDTH_0 ||
-      dOMRect.height <= HEIGHT_0
+      widthValue <= 0 ||
+      heightValue <= 0 ||
+      dOMRect.width <= 0 ||
+      dOMRect.height <= 0
     ) {
       continue;
     }
@@ -85,11 +75,11 @@ const presenceBody = (presenceInput: PresenceInput) => ({
     width: Math.round(presenceInput.liveSize.width),
   },
   selection: presenceInput.selection
-    .slice(SLICE_0, SLICE_20)
+    .slice(0, SLICE_20)
     .map((selectionContext) => ({
-      selector: selectionContext.selector.slice(SLICE_0, SLICE_400),
-      tag: selectionContext.tag.slice(SLICE_0, SLICE_40),
-      text: selectionContext.text.slice(SLICE_0, SLICE_200),
+      selector: selectionContext.selector.slice(0, SLICE_400),
+      tag: selectionContext.tag.slice(0, SLICE_40),
+      text: selectionContext.text.slice(0, SLICE_200),
     })),
 });
 

@@ -104,6 +104,7 @@ const useLinkRects = (optionsValue: Options): LinkState[] => {
         )
         .map(linkQuery);
     }
+
     return [];
   };
 

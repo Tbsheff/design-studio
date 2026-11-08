@@ -4,65 +4,17 @@ const VALUE_10 = 10;
 
 const ROUND_10 = 10;
 
-const SMOOTHING_1 = 1;
-
 const LENGTH_4 = 4;
-
-const MIN_STEP_2 = 2;
 
 const MAX_0_05 = 0.05;
 
-const LENGTH_2 = 2;
-
-const COUNT_0 = 0;
-
-const X0_0 = 0;
-
-const Y0_1 = 1;
-
-const COUNT_1 = 1;
-
-const INDEX_1 = 1;
-
-const INDEX_2 = 2;
-
-const POINT_X4_2 = 2;
-
 const INDEX_3 = 3;
-
-const POINT_Y4_2 = 2;
-
-const COUNT_2 = 2;
 
 const X0_0_01 = 0.01;
 
-const INDEX_VALUE_1 = 1;
-
-const INDEX_VALUE_2 = 2;
-
-const POINT_X5_2 = 2;
-
 const INDEX_VALUE_3 = 3;
 
-const POINT_Y5_2 = 2;
-
 const WIDTH_3 = 3;
-
-const MIN_1 = 1;
-
-const MAX_1 = 1;
-
-const DX_0 = 0;
-
-const DY_0 = 0;
-
-const FIRST_0 = 0;
-
-const INDEX3_1 = 1;
-
-const LENGTH_1 = 1;
-
-const AT_NEG_1 = -1;
 
 const DRAW_COLORS = [
   { id: "red", label: "Red", value: "#ff3b30" },
@@ -101,8 +53,8 @@ const createStrokeBuilder = (
 
   return {
     add(rawX, rawY) {
-      const nextX = lastX + (rawX - lastX) * (SMOOTHING_1 - SMOOTHING);
-      const nextY = lastY + (rawY - lastY) * (SMOOTHING_1 - SMOOTHING);
+      const nextX = lastX + (rawX - lastX) * (1 - SMOOTHING);
+      const nextY = lastY + (rawY - lastY) * (1 - SMOOTHING);
 
       if (Math.hypot(nextX - lastX, nextY - lastY) < minStep) {
         return false;
@@ -117,7 +69,7 @@ const createStrokeBuilder = (
     end(rawX, rawY) {
       if (
         points.length >= LENGTH_4 &&
-        Math.hypot(rawX - lastX, rawY - lastY) < minStep / MIN_STEP_2
+        Math.hypot(rawX - lastX, rawY - lastY) < minStep / 2
       ) {
         return;
       }
@@ -134,70 +86,58 @@ const minStepFor = (zoom: number): number =>
   MIN_STEP_SCREEN / Math.max(zoom, MAX_0_05);
 
 const strokePath = (points: number[]): string => {
-  const count = points.length / LENGTH_2;
+  const count = points.length / 2;
 
-  if (count === COUNT_0) {
+  if (count === 0) {
     return "";
   }
 
-  const x0 = points[X0_0] as number;
-  const y0 = points[Y0_1] as number;
+  const x0 = points[0] as number;
+  const y0 = points[1] as number;
 
-  if (count === COUNT_1) {
+  if (count === 1) {
     return `M${x0} ${y0}l0.01 0`;
   }
 
   let path = `M${x0} ${y0}`;
 
-  for (let index = 1; index < count - COUNT_1; index += INDEX_1) {
-    const pointX4 = points[index * INDEX_2] as number;
-    const pointY4 = points[index * INDEX_2 + INDEX_1] as number;
-    const mx =
-      (pointX4 + (points[index * INDEX_2 + INDEX_2] as number)) / POINT_X4_2;
-    const my =
-      (pointY4 + (points[index * INDEX_2 + INDEX_3] as number)) / POINT_Y4_2;
+  for (let index = 1; index < count - 1; index += 1) {
+    const pointX4 = points[index * 2] as number;
+    const pointY4 = points[index * 2 + 1] as number;
+    const mx = (pointX4 + (points[index * 2 + 2] as number)) / 2;
+    const my = (pointY4 + (points[index * 2 + INDEX_3] as number)) / 2;
     path += `Q${pointX4} ${pointY4} ${round(mx)} ${round(my)}`;
   }
 
-  return `${path}L${points[(count - COUNT_1) * COUNT_2]} ${points[(count - COUNT_1) * COUNT_2 + COUNT_1]}`;
+  return `${path}L${points[(count - 1) * 2]} ${points[(count - 1) * 2 + 1]}`;
 };
 
 const traceStroke = (ctx: CanvasRenderingContext2D, points: number[]): void => {
-  const count = points.length / LENGTH_2;
-  const x0 = points[X0_0] as number;
-  const y0 = points[Y0_1] as number;
+  const count = points.length / 2;
+  const x0 = points[0] as number;
+  const y0 = points[1] as number;
   ctx.beginPath();
   ctx.moveTo(x0, y0);
 
-  if (count === COUNT_1) {
+  if (count === 1) {
     ctx.lineTo(x0 + X0_0_01, y0);
   }
 
-  for (
-    let indexValue = 1;
-    indexValue < count - COUNT_1;
-    indexValue += INDEX_VALUE_1
-  ) {
-    const pointX5 = points[indexValue * INDEX_VALUE_2] as number;
-    const pointY5 = points[
-      indexValue * INDEX_VALUE_2 + INDEX_VALUE_1
-    ] as number;
+  for (let indexValue = 1; indexValue < count - 1; indexValue += 1) {
+    const pointX5 = points[indexValue * 2] as number;
+    const pointY5 = points[indexValue * 2 + 1] as number;
     ctx.quadraticCurveTo(
       pointX5,
       pointY5,
-      (pointX5 +
-        (points[indexValue * INDEX_VALUE_2 + INDEX_VALUE_2] as number)) /
-        POINT_X5_2,
-      (pointY5 +
-        (points[indexValue * INDEX_VALUE_2 + INDEX_VALUE_3] as number)) /
-        POINT_Y5_2
+      (pointX5 + (points[indexValue * 2 + 2] as number)) / 2,
+      (pointY5 + (points[indexValue * 2 + INDEX_VALUE_3] as number)) / 2
     );
   }
 
-  if (count > COUNT_1) {
+  if (count > 1) {
     ctx.lineTo(
-      points[(count - COUNT_1) * COUNT_2] as number,
-      points[(count - COUNT_1) * COUNT_2 + COUNT_1] as number
+      points[(count - 1) * 2] as number,
+      points[(count - 1) * 2 + 1] as number
     );
   }
 };
@@ -211,7 +151,7 @@ const paintStrokes = (
   ctx.lineJoin = "round";
 
   for (const stroke of strokes) {
-    if (stroke.points.length < LENGTH_2) {
+    if (stroke.points.length < 2) {
       continue;
     }
 
@@ -231,10 +171,10 @@ const paintStrokes = (
 
 const renderDrawingPng = (drawing: CommentDrawing): Promise<Blob> => {
   const { width, height } = drawing.frame;
-  const scale = Math.min(MIN_1, PNG_MAX_SIDE / Math.max(width, height));
+  const scale = Math.min(1, PNG_MAX_SIDE / Math.max(width, height));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.max(MAX_1, Math.round(width * scale));
-  canvas.height = Math.max(MAX_1, Math.round(height * scale));
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
   const ctx = canvas.getContext("2d");
 
   if (!ctx) {
@@ -249,6 +189,7 @@ const renderDrawingPng = (drawing: CommentDrawing): Promise<Blob> => {
       if (blob) {
         return resolve(blob);
       }
+
       return reject(new Error("Could not make the drawing image"));
     }, "image/png")
   );
@@ -289,16 +230,16 @@ const shiftAnchor = (anchor: PenAnchor, dx: number, dy: number): PenAnchor => {
 const penPath = (
   anchors: PenAnchor[],
   closed: boolean,
-  dx = DX_0,
-  dy = DY_0
+  dx = 0,
+  dy = 0
 ): string => {
   let moved: PenAnchor[] = anchors;
 
-  if (!(dx === DX_0 && dy === DY_0)) {
+  if (!(dx === 0 && dy === 0)) {
     moved = anchors.map((anchor) => shiftAnchor(anchor, dx, dy));
   }
 
-  const first = moved[FIRST_0];
+  const first = moved[0];
 
   if (!first) {
     return "";
@@ -306,15 +247,15 @@ const penPath = (
 
   let delta = `M${round(first.x)} ${round(first.y)}`;
 
-  for (let index3 = 1; index3 < moved.length; index3 += INDEX3_1) {
+  for (let index3 = 1; index3 < moved.length; index3 += 1) {
     delta += penSegment(
-      moved[index3 - INDEX3_1] as PenAnchor,
+      moved[index3 - 1] as PenAnchor,
       moved[index3] as PenAnchor
     );
   }
 
-  if (closed && moved.length > LENGTH_1) {
-    delta += `${penSegment(moved.at(AT_NEG_1) as PenAnchor, first)}Z`;
+  if (closed && moved.length > 1) {
+    delta += `${penSegment(moved.at(-1) as PenAnchor, first)}Z`;
   }
 
   return delta;

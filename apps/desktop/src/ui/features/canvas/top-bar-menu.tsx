@@ -3,10 +3,6 @@ import type { IconName } from "@design-studio/ui";
 import { useRef } from "react";
 import type { KeyboardEvent, RefObject, ReactElement } from "react";
 
-const OPERAND_1 = 1;
-
-const LENGTH_0 = 0;
-
 type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
 
 type PresentMode = "window" | "fullscreen" | "new-window" | "play";
@@ -46,7 +42,7 @@ const onMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   let operand: 1 | -1 = -1;
 
   if (event.key === "ArrowDown") {
-    operand = OPERAND_1;
+    operand = 1;
   }
 
   items[(at + operand + items.length) % items.length]?.focus();
@@ -77,9 +73,7 @@ const MenuPopover = ({
       onKeyDown={onMenuKey}
     >
       {groups
-        .filter(
-          (menuGroup) => menuGroup.items.length > LENGTH_0 || menuGroup.note
-        )
+        .filter((menuGroup) => menuGroup.items.length > 0 || menuGroup.note)
         .map((group, index) => (
           <div
             key={group.label ?? index}

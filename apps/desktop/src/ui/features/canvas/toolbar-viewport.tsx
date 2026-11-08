@@ -8,25 +8,9 @@ import { uiStore } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 
-const INDEX_1 = 1;
-
-const COUNT_1 = 1;
-
-const HOME_0 = 0;
-
-const INDEX_NEG_1 = -1;
-
 const MAX_200 = 200;
 
 const MIN_4000 = 4000;
-
-const TAB_INDEX5_0 = 0;
-
-const TAB_INDEX3_0 = 0;
-
-const TAB_INDEX2_NEG_1 = -1;
-
-const TAB_INDEX4_0 = 0;
 
 interface Props {
   viewport: Viewport;
@@ -45,12 +29,12 @@ interface Props {
 }
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
-  ArrowDown: (index, count) => (index + INDEX_1) % count,
-  ArrowLeft: (index, count) => (index - INDEX_1 + count) % count,
-  ArrowRight: (index, count) => (index + INDEX_1) % count,
-  ArrowUp: (index, count) => (index - INDEX_1 + count) % count,
-  End: (_index, count) => count - COUNT_1,
-  Home: () => HOME_0,
+  ArrowDown: (index, count) => (index + 1) % count,
+  ArrowLeft: (index, count) => (index - 1 + count) % count,
+  ArrowRight: (index, count) => (index + 1) % count,
+  ArrowUp: (index, count) => (index - 1 + count) % count,
+  End: (_index, count) => count - 1,
+  Home: () => 0,
 };
 
 const onRadioGroupKey = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -68,7 +52,7 @@ const onRadioGroupKey = (event: KeyboardEvent<HTMLDivElement>): void => {
 
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
 
-  if (index === INDEX_NEG_1) {
+  if (index === -1) {
     return;
   }
 
@@ -123,7 +107,7 @@ const ViewportControls = ({
   let tabIndex5: 0 | -1 = -1;
 
   if (viewport.preset === "custom") {
-    tabIndex5 = TAB_INDEX5_0;
+    tabIndex5 = 0;
   }
 
   let className5: "" | "on" = "";
@@ -183,13 +167,14 @@ const ViewportControls = ({
             if (viewportPreset.id !== "desktop") {
               return undefined;
             }
+
             return "start";
           })();
 
           let tabIndex3: 0 | -1 = -1;
 
           if (viewport.preset === viewportPreset.id) {
-            tabIndex3 = TAB_INDEX3_0;
+            tabIndex3 = 0;
           }
 
           let className3: "" | "on" = "";
@@ -247,7 +232,7 @@ const SourceControls = ({
   let tabIndex2: 0 | -1 = 0;
 
   if (source.kind === "last") {
-    tabIndex2 = TAB_INDEX2_NEG_1;
+    tabIndex2 = -1;
   }
 
   let className2: "" | "on" = "";
@@ -259,7 +244,7 @@ const SourceControls = ({
   let tabIndex4: 0 | -1 = -1;
 
   if (source.kind === "last") {
-    tabIndex4 = TAB_INDEX4_0;
+    tabIndex4 = 0;
   }
 
   let className4: "" | "on" = "";

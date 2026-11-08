@@ -6,14 +6,6 @@ import type { KeyboardEvent, ReactElement, ReactNode } from "react";
 import type { KeyId } from "../../../shared/keymap.js";
 import { KeyHint } from "../../canvas-preview-slots.js";
 
-const INDEX_1 = 1;
-
-const STEP_0 = 0;
-
-const COUNT_1 = 1;
-
-const EDGE_2 = 2;
-
 interface PreviewMenuItem {
   id: string;
   label: string;
@@ -29,19 +21,19 @@ const EDGE = 8;
 
 const step = (key: string, index: number, count: number): number | null => {
   if (key === "ArrowDown") {
-    return (index + INDEX_1) % count;
+    return (index + 1) % count;
   }
 
   if (key === "ArrowUp") {
-    return (index - INDEX_1 + count) % count;
+    return (index - 1 + count) % count;
   }
 
   if (key === "Home") {
-    return STEP_0;
+    return 0;
   }
 
   if (key === "End") {
-    return count - COUNT_1;
+    return count - 1;
   }
 
   return null;
@@ -58,6 +50,7 @@ const MenuRow = ({
     if (!item.disabled) {
       return undefined;
     }
+
     return true;
   })();
 
@@ -128,7 +121,7 @@ const PreviewMenu = ({
         operand = last.offsetTop + last.offsetHeight;
       }
 
-      setScrolls(operand > window.innerHeight - EDGE * EDGE_2);
+      setScrolls(operand > window.innerHeight - EDGE * 2);
       setPos({
         x: Math.max(EDGE, Math.min(at.x, window.innerWidth - width - EDGE)),
         y: Math.max(EDGE, Math.min(at.y, window.innerHeight - height - EDGE)),

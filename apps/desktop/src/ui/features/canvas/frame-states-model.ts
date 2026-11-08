@@ -111,6 +111,7 @@ const useFrameStates = (projectId: string, isApp: boolean): FrameStatesRead => {
     if (isApp) {
       return views.get(projectId);
     }
+
     return null;
   }, [projectId, isApp]);
 
@@ -125,6 +126,7 @@ const useCurrentFrameStates = (): {
     if (current) {
       return views.get(current) ?? null;
     }
+
     return null;
   }, []);
 
@@ -133,6 +135,7 @@ const useCurrentFrameStates = (): {
   if (current && view) {
     return { projectId: current, view };
   }
+
   return null;
 };
 
@@ -151,6 +154,7 @@ const frameStateUrl = (
   if (view) {
     return withFrameStateHost(url, frameStateOf(view, frameId));
   }
+
   return url;
 };
 

@@ -19,8 +19,6 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useProjectEvents } from "../../platform/events.js";
 import { call as callAction } from "../../platform/http.js";
 
-const USE_REF_0 = 0;
-
 type FrameAction = (typeof LINK_ACTIONS)[number];
 
 const isFrameActionName = (action: LinkAction): action is FrameAction =>
@@ -125,6 +123,7 @@ const frameRefOf = (target: LinkTarget): string | undefined => {
   if ("frame" in target) {
     return target.frame;
   }
+
   return undefined;
 };
 
@@ -201,6 +200,7 @@ const linksApi = {
       if (change.to) {
         return frameRefOf(change.to);
       }
+
       return undefined;
     })();
 
@@ -263,8 +263,8 @@ const useImplicitLinks = (
   framesKey: string
 ): PrototypeLink[] => {
   const [links, setLinks] = useState<PrototypeLink[]>([]);
-  const timer = useRef(USE_REF_0);
-  const seq = useRef(USE_REF_0);
+  const timer = useRef(0);
+  const seq = useRef(0);
   const fetchNow = useRef(() => undefined as void);
   fetchNow.current = (): void => {
     const at = ++seq.current;

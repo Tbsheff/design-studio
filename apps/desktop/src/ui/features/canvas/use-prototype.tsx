@@ -36,10 +36,6 @@ import { runOrReport, toValueOr } from "./settle-model.js";
 import { useLinkRects } from "./use-link-rects.js";
 import type { LinkState } from "./use-link-rects.js";
 
-const SINGLE_0 = 0;
-
-const LENGTH_1 = 1;
-
 const PlayMode = lazy(() => import("./play-mode.js"));
 
 interface Options {
@@ -71,6 +67,7 @@ const errorMessage = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message;
   }
+
   return String(error);
 };
 
@@ -144,6 +141,7 @@ const usePrototype = (options: Options) => {
     if (frame) {
       return frameTitle(frame);
     }
+
     return "missing frame";
   };
 
@@ -157,6 +155,7 @@ const usePrototype = (options: Options) => {
     if (to) {
       return titleById(to);
     }
+
     return ACTION_LABELS[linkAction(link)];
   };
 
@@ -170,6 +169,7 @@ const usePrototype = (options: Options) => {
     if (frameStates) {
       return withFrameStateHost(url, frameStateOf(frameStates.view, frame.id));
     }
+
     return url;
   };
 
@@ -179,6 +179,7 @@ const usePrototype = (options: Options) => {
     if (url) {
       return withState(frame, url);
     }
+
     return null;
   };
 
@@ -221,10 +222,11 @@ const usePrototype = (options: Options) => {
   const single: SelectionContext | undefined = (():
     | SelectionContext
     | undefined => {
-    if (options.selection.length !== LENGTH_1) {
+    if (options.selection.length !== 1) {
       return undefined;
     }
-    return options.selection[SINGLE_0];
+
+    return options.selection[0];
   })();
 
   let selected: LinkState | null = null;
@@ -299,6 +301,7 @@ const usePrototype = (options: Options) => {
     if (on) {
       return { on: arrows, onToggle: () => setArrows((value) => !value) };
     }
+
     return undefined;
   })();
 

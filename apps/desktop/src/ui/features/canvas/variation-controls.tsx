@@ -8,11 +8,7 @@ import { menuKeys, useMenu } from "./frame-resize-handles.js";
 
 const LENGTH_60 = 60;
 
-const SLICE_0 = 0;
-
 const SLICE_60 = 60;
-
-const LENGTH_0 = 0;
 
 const STATUS_TEXT: Record<RunStatus, string> = {
   budget_exceeded: "Budget limit",
@@ -66,6 +62,7 @@ const UseInMenu = ({
       if (menu.open) {
         return undefined;
       }
+
       return "Use the selected element in another variation";
     })();
 
@@ -122,14 +119,16 @@ const UseInMenu = ({
 const shortRejection = (error: string): string => {
   if (!error.startsWith("Rejected:")) {
     if (error.length > LENGTH_60) {
-      return `${error.slice(SLICE_0, SLICE_60)}…`;
+      return `${error.slice(0, SLICE_60)}…`;
     }
+
     return error;
   }
 
   if (/another file|other files/.test(error)) {
     return "Rejected: changed another file";
   }
+
   return "Rejected: changed code outside the element";
 };
 
@@ -164,6 +163,7 @@ const VariationControls = ({
         if (caught instanceof Error) {
           return caught.message;
         }
+
         return String(caught);
       })();
 
@@ -189,6 +189,7 @@ const VariationControls = ({
         if (caught instanceof Error) {
           return caught.message;
         }
+
         return String(caught);
       })();
 
@@ -204,6 +205,7 @@ const VariationControls = ({
     if (variation.keepBlocked) {
       return true;
     }
+
     return undefined;
   })();
 
@@ -227,7 +229,7 @@ const VariationControls = ({
       {active &&
         element &&
         !variation.scoped &&
-        variation.siblings.length > LENGTH_0 && (
+        variation.siblings.length > 0 && (
           <UseInMenu
             siblings={variation.siblings}
             busy={mixing}

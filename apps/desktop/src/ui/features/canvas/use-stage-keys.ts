@@ -9,8 +9,6 @@ import { isTypingTarget } from "./use-pan-zoom.js";
 import { PREVIEW_LAYOUT_KEY_EVENT } from "./use-preview-frames.js";
 import type { usePreviewFrames } from "./use-preview-frames.js";
 
-const LENGTH_0 = 0;
-
 const useSelectKey = (
   setSelectMode: (update: (match: boolean) => boolean) => void,
   onEscape: () => void,
@@ -125,7 +123,7 @@ const layoutSectionShown = (): boolean => {
   return Boolean(
     section &&
     !section.closest("[inert]") &&
-    section.getClientRects().length > LENGTH_0
+    section.getClientRects().length > 0
   );
 };
 
@@ -223,6 +221,7 @@ const editOpener = (
   if (shell && shell.pane !== "design") {
     return () => shell.onPane("design");
   }
+
   return null;
 };
 
@@ -231,7 +230,7 @@ const useStageKeys = (stageKeys: StageKeys): void => {
   selection.current = stageKeys.selection;
   const { setSelection } = stageKeys;
   useSelectKey(stageKeys.setSelectMode, stageKeys.offProto, () => {
-    if (selection.current.length === LENGTH_0) {
+    if (selection.current.length === 0) {
       return false;
     }
 
@@ -240,12 +239,12 @@ const useStageKeys = (stageKeys: StageKeys): void => {
     return true;
   });
   useLayoutKeyFallback({
-    hasSelection: stageKeys.selection.length > LENGTH_0,
+    hasSelection: stageKeys.selection.length > 0,
     on: stageKeys.live && !stageKeys.running && stageKeys.directionId !== null,
     openEdit: editOpener(stageKeys.shell),
   });
   useFirstSelectKeys(stageKeys.stage, {
-    empty: stageKeys.selection.length === LENGTH_0,
+    empty: stageKeys.selection.length === 0,
     on: stageKeys.live && !stageKeys.commentMode && !stageKeys.protoOn,
     picking: stageKeys.picking,
     selectFirst: () =>

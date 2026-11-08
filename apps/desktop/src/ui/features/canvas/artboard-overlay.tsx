@@ -13,8 +13,6 @@ import type {
   ResizeLive,
 } from "./use-resize-handles.js";
 
-const LENGTH_0 = 0;
-
 const ABS_0_5 = 0.5;
 
 const LABEL_ROOM = 24;
@@ -100,6 +98,7 @@ const guideStyle = (snapGuide: SnapGuide) => {
       top: snapGuide.from,
     };
   }
+
   return {
     left: snapGuide.from,
     top: snapGuide.at,
@@ -111,6 +110,7 @@ const fullStyle = (snapGuideValue: SnapGuide) => {
   if (snapGuideValue.axis === "x") {
     return { bottom: 0, left: snapGuideValue.at, top: 0 };
   }
+
   return { left: 0, right: 0, top: snapGuideValue.at };
 };
 
@@ -121,7 +121,7 @@ const SnapGuides = ({
   guides: SnapGuide[];
   full?: boolean;
 }): ReactElement | null => {
-  if (guides.length === LENGTH_0) {
+  if (guides.length === 0) {
     return null;
   }
 
@@ -152,6 +152,7 @@ const SnapGuides = ({
             if (full) {
               return fullStyle(snapGuide3);
             }
+
             return guideStyle(snapGuide3);
           })();
 
@@ -175,6 +176,7 @@ const lineStyle = (measureLine: MeasureLine) => {
       width: measureLine.to - measureLine.from,
     };
   }
+
   return {
     height: measureLine.to - measureLine.from,
     left: measureLine.at,

@@ -26,22 +26,6 @@ import { VariationBriefCard } from "./variation-brief-card.js";
 import type { FrameVariation } from "./variation-controls.js";
 import { groupOf } from "./variations-api.js";
 
-const AT_NEG_1 = -1;
-
-const COST_USD_0 = 0;
-
-const REDUCE_0 = 0;
-
-const SLICE_0 = 0;
-
-const SLICE_1 = 1;
-
-const ON_CANVAS_0 = 0;
-
-const FIRST_0 = 0;
-
-const LENGTH_0 = 0;
-
 interface GroupRun {
   status: RunStatus | null;
   costUsd: number;
@@ -56,11 +40,11 @@ const groupRun = (runs: RunMap, directionId: string): GroupRun => {
       (runView, runViewValue) => runView.startedAt - runViewValue.startedAt
     );
 
-  const latest = list.at(AT_NEG_1);
+  const latest = list.at(-1);
 
   const costUsd = list.reduce(
-    (sum, run) => sum + (run.summary?.costUsd ?? COST_USD_0),
-    REDUCE_0
+    (sum, run) => sum + (run.summary?.costUsd ?? 0),
+    0
   );
 
   return {
@@ -72,7 +56,7 @@ const groupRun = (runs: RunMap, directionId: string): GroupRun => {
 };
 
 const labelOf = (direction: Direction): string =>
-  direction.variation?.label ?? direction.name.slice(SLICE_0, SLICE_1);
+  direction.variation?.label ?? direction.name.slice(0, 1);
 
 const keptText = (direction: Direction | undefined): string =>
   `Kept ${direction?.name ?? "this variation"}. The other variations stay in Versions as directions.`;
@@ -90,9 +74,10 @@ const useShownGroup = (
     framesOnCanvas(project.id, ids)
   );
 
-  if (direction?.variation || onCanvas > ON_CANVAS_0) {
+  if (direction?.variation || onCanvas > 0) {
     return group;
   }
+
   return [];
 };
 
@@ -111,7 +96,7 @@ const VariationBar = ({
   runs,
 }: TopProps & { group: Direction[] }): ReactElement | null => {
   const [cancelError, setCancelError] = useState<string | null>(null);
-  const first = group[FIRST_0]?.variation;
+  const first = group[0]?.variation;
 
   if (!first) {
     return null;
@@ -127,7 +112,7 @@ const VariationBar = ({
     groupRun(runs ?? {}, direction3.id)
   );
 
-  const total = groupRuns.reduce((sum, run) => sum + run.costUsd, REDUCE_0);
+  const total = groupRuns.reduce((sum, run) => sum + run.costUsd, 0);
   const anyRunning = groupRuns.some((run) => run.running);
 
   const firstRun = Object.values(runs ?? {}).find(
@@ -232,6 +217,7 @@ const VariationBar = ({
               if (cancelError) {
                 return setCancelError(null);
               }
+
               return state.clearNotice();
             }}
           >
@@ -249,7 +235,7 @@ const VariationsTop = (props: TopProps): ReactElement => {
 
   return (
     <>
-      {group.length > LENGTH_0 && <VariationBar {...props} group={group} />}
+      {group.length > 0 && <VariationBar {...props} group={group} />}
       {state.kept && (
         <div
           className="variations-notice alert inline"

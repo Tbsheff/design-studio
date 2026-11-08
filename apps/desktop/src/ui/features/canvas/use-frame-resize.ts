@@ -16,12 +16,6 @@ import type { SnapGuide, SpacingBadge } from "./snap-model.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
 import type { PanZoom } from "./use-pan-zoom.js";
 
-const MAX_1 = 1;
-
-const LENGTH_0 = 0;
-
-const BUTTON_0 = 0;
-
 const MAX_SIDE = 4000;
 
 interface FrameSnapView {
@@ -97,7 +91,7 @@ const resizedSize = (
       width = height * ratio;
     }
 
-    const scale = Math.max(MAX_1, RESIZE_MIN / width, RESIZE_MIN / height);
+    const scale = Math.max(1, RESIZE_MIN / width, RESIZE_MIN / height);
     width *= scale;
     height *= scale;
   }
@@ -113,7 +107,7 @@ const snapSize = (
   zoom: number,
   off: boolean
 ) => {
-  if (off || candidates.length === LENGTH_0) {
+  if (off || candidates.length === 0) {
     frameSnapStore.set(null);
 
     return size;
@@ -215,7 +209,7 @@ const useFrameResize = (
     edge: ResizeEdge
   ): void => {
     if (
-      eventValue.button !== BUTTON_0 ||
+      eventValue.button !== 0 ||
       pz.spaceHeld ||
       pz.zoomHeld ||
       dragging.current

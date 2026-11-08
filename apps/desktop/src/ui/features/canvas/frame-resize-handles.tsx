@@ -6,14 +6,6 @@ import type {
   ReactElement,
 } from "react";
 
-const INDEX_1 = 1;
-
-const COUNT_1 = 1;
-
-const HOME_0 = 0;
-
-const MAX_0 = 0;
-
 type ResizeEdge = "right" | "bottom" | "corner";
 
 const EDGES: { edge: ResizeEdge; label: string }[] = [
@@ -98,10 +90,10 @@ const FrameResizeHandles = ({
 );
 
 const MENU_STEP: Record<string, (index: number, count: number) => number> = {
-  ArrowDown: (index, count) => (index + INDEX_1) % count,
-  ArrowUp: (index, count) => (index - INDEX_1 + count) % count,
-  End: (_index, count) => count - COUNT_1,
-  Home: () => HOME_0,
+  ArrowDown: (index, count) => (index + 1) % count,
+  ArrowUp: (index, count) => (index - 1 + count) % count,
+  End: (_index, count) => count - 1,
+  Home: () => 0,
 };
 
 const menuKeys = (
@@ -127,7 +119,7 @@ const menuKeys = (
   ];
 
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
-  items[step(Math.max(MAX_0, index), items.length)]?.focus();
+  items[step(Math.max(0, index), items.length)]?.focus();
 };
 
 const useMenu = () => {

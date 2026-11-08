@@ -1,28 +1,4 @@
-const LO_2 = 2;
-
-const MIN_0 = 0;
-
-const MAX_2 = 2;
-
-const LO_0 = 0;
-
-const HI_2 = 2;
-
-const AXIS_DELTA_0 = 0;
-
-const NEAREST_0 = 0;
-
-const DELTA_0 = 0;
-
-const MAX_1 = 1;
-
-const LEFT_0 = 0;
-
-const RIGHT_0 = 0;
-
 const MAX_0_01 = 0.01;
-
-const LENGTH_0 = 0;
 
 interface Rect {
   x: number;
@@ -76,6 +52,7 @@ const span = (rectValue: Rect, axis: Axis): Span => {
   if (axis === "x") {
     return { hi: rectValue.x + rectValue.width, lo: rectValue.x };
   }
+
   return { hi: rectValue.y + rectValue.height, lo: rectValue.y };
 };
 
@@ -83,22 +60,24 @@ const cross = (axis: Axis): Axis => {
   if (axis === "x") {
     return "y";
   }
+
   return "x";
 };
 
 const linesOf = (spanValue: Span): number[] => [
   spanValue.lo,
-  (spanValue.lo + spanValue.hi) / LO_2,
+  (spanValue.lo + spanValue.hi) / 2,
   spanValue.hi,
 ];
 
 const overlaps = (span3: Span, span4: Span): boolean =>
-  Math.min(span3.hi, span4.hi) - Math.max(span3.lo, span4.lo) > MIN_0;
+  Math.min(span3.hi, span4.hi) - Math.max(span3.lo, span4.lo) > 0;
 
 const movingPoints = (span5: Span, kind: Exclude<SnapKind, null>): number[] => {
   if (kind === "move") {
     return linesOf(span5);
   }
+
   return [span5.hi];
 };
 
@@ -148,7 +127,7 @@ const crossMid = (rect4: Rect, rect5: Rect, axis: Axis): number => {
   const sa = span(rect4, axisValue);
   const sb = span(rect5, axisValue);
 
-  return (Math.max(sa.lo, sb.lo) + Math.min(sa.hi, sb.hi)) / MAX_2;
+  return (Math.max(sa.lo, sb.lo) + Math.min(sa.hi, sb.hi)) / 2;
 };
 
 const existingGaps = (candidates: Rect[], axis: Axis): Neighbours["gaps"] => {
@@ -175,7 +154,7 @@ const existingGaps = (candidates: Rect[], axis: Axis): Neighbours["gaps"] => {
       }
     }
 
-    if (next && span(next, axis).lo - sa.hi > LO_0) {
+    if (next && span(next, axis).lo - sa.hi > 0) {
       gaps.push({
         a: sa,
         at: crossMid(rect6, next, axis),
@@ -233,7 +212,7 @@ const spacingDeltas = (own: Span, count: Neighbours): number[] => {
 
   if (count.before && count.after) {
     out.push(
-      (count.before.hi + count.after.lo - (own.hi - own.lo)) / HI_2 - own.lo
+      (count.before.hi + count.after.lo - (own.hi - own.lo)) / 2 - own.lo
     );
   }
 
@@ -244,7 +223,7 @@ const axisDelta = (input: SnapInput, axis: Axis, threshold: number): number => {
   const kind = input[axis];
 
   if (!kind) {
-    return AXIS_DELTA_0;
+    return 0;
   }
 
   const own = span(input.rect, axis);
@@ -256,7 +235,7 @@ const axisDelta = (input: SnapInput, axis: Axis, threshold: number): number => {
     );
   }
 
-  return nearest(deltas, threshold) ?? NEAREST_0;
+  return nearest(deltas, threshold) ?? 0;
 };
 
 const shifted = (
@@ -265,7 +244,7 @@ const shifted = (
   kind: SnapKind,
   delta: number
 ): Rect => {
-  if (!kind || delta === DELTA_0) {
+  if (!kind || delta === 0) {
     return rect;
   }
 
@@ -273,13 +252,15 @@ const shifted = (
     if (axis === "x") {
       return { ...rect, x: rect.x + delta };
     }
+
     return { ...rect, y: rect.y + delta };
   }
 
   if (axis === "x") {
-    return { ...rect, width: Math.max(MAX_1, rect.width + delta) };
+    return { ...rect, width: Math.max(1, rect.width + delta) };
   }
-  return { ...rect, height: Math.max(MAX_1, rect.height + delta) };
+
+  return { ...rect, height: Math.max(1, rect.height + delta) };
 };
 
 const guidesFor = (
@@ -343,6 +324,7 @@ const ownGapAt = (
   if (match) {
     return crossMid(rect, match, axis);
   }
+
   return span(rect, cross(axis)).lo;
 };
 
@@ -369,13 +351,13 @@ const ownBadges = (
   if (countValue.after) {
     right = countValue.after.lo - own.hi;
   }
-  const even = left !== null && left > LEFT_0 && near(right, left);
+  const even = left !== null && left > 0 && near(right, left);
   const out: SpacingBadge[] = [];
 
   if (
     countValue.before &&
     left !== null &&
-    left > LEFT_0 &&
+    left > 0 &&
     (even || values.some((value3) => near(left, value3)))
   ) {
     out.push(
@@ -391,7 +373,7 @@ const ownBadges = (
   if (
     countValue.after &&
     right !== null &&
-    right > RIGHT_0 &&
+    right > 0 &&
     (even || values.some((value4) => near(right, value4)))
   ) {
     out.push(
@@ -470,7 +452,7 @@ const snapOff = (event: { metaKey: boolean; ctrlKey: boolean }): boolean =>
   event.metaKey || event.ctrlKey;
 
 const unionBox = (rects: Rect[]): Rect | null => {
-  if (rects.length === LENGTH_0) {
+  if (rects.length === 0) {
     return null;
   }
 

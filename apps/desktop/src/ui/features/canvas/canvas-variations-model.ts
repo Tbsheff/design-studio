@@ -9,8 +9,6 @@ import {
 } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
-const FRAMES_ON_CANVAS_0 = 0;
-
 const apply = (
   projectId: string,
   fn: (layout: CanvasLayout) => CanvasLayout
@@ -67,7 +65,8 @@ const framesOnCanvas = (projectId: string, directionIds: string[]): number => {
         directionIds.includes(canvasFrame.directionId)
     ).length;
   }
-  return FRAMES_ON_CANVAS_0;
+
+  return 0;
 };
 
 export { framesOnCanvas, keepVariationFrame, showVariationFrames };

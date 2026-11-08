@@ -80,6 +80,7 @@ const MenuBody = ({
         if (error instanceof Error) {
           return error.message;
         }
+
         return String(error);
       })();
 
@@ -169,6 +170,7 @@ const FrameStateMenu = ({
     if (set) {
       return " set";
     }
+
     return "";
   })();
 
@@ -180,6 +182,7 @@ const FrameStateMenu = ({
     if (menu.open) {
       return undefined;
     }
+
     return "Preview state: signed in, empty, loading, error or mock data";
   })();
 

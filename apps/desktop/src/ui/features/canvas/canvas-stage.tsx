@@ -156,6 +156,7 @@ const CanvasStage = ({
     if (note !== "empty") {
       return undefined;
     }
+
     return "hidden";
   })();
 
@@ -299,6 +300,7 @@ const CanvasStage = ({
             if (frameValue) {
               return frameName(frameValue);
             }
+
             return id;
           }}
         />

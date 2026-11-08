@@ -5,12 +5,6 @@ import type { KeyboardEvent, ReactElement } from "react";
 import { FRAME_PRESETS } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 
-const INDEX_1 = 1;
-
-const NEXT_0 = 0;
-
-const LENGTH_1 = 1;
-
 const SET_TIMEOUT_8000 = 8000;
 
 const AddFrameMenu = ({
@@ -75,17 +69,18 @@ const AddFrameMenu = ({
 
     const next: number | null = ((): number | null => {
       if (event.key === "ArrowDown") {
-        return index + INDEX_1;
+        return index + 1;
       }
       if (event.key === "ArrowUp") {
-        return index - INDEX_1;
+        return index - 1;
       }
       if (event.key === "Home") {
-        return NEXT_0;
+        return 0;
       }
       if (event.key === "End") {
-        return items.length - LENGTH_1;
+        return items.length - 1;
       }
+
       return null;
     })();
 
@@ -107,6 +102,7 @@ const AddFrameMenu = ({
     if (disabled) {
       return "Frame limit reached";
     }
+
     return "Add frame";
   })();
 

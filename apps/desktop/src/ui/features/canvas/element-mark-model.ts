@@ -12,6 +12,7 @@ const markOf = (
   if (variation?.scope && !variation.settled) {
     return variation.scope.loc;
   }
+
   return null;
 };
 

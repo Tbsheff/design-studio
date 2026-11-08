@@ -13,8 +13,6 @@ import { toValueOr } from "./settle-model.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";
 
-const LENGTH_0 = 0;
-
 const PresentLayer = ({
   url,
   sandbox,
@@ -182,6 +180,7 @@ const gapStyle = (spacingBadge: SpacingBadge) => {
       width: spacingBadge.to - spacingBadge.from,
     };
   }
+
   return {
     height: spacingBadge.to - spacingBadge.from,
     left: spacingBadge.at,
@@ -199,7 +198,7 @@ const FrameSnapLayer = ({
     frameSnapStore.get
   );
 
-  if (view.guides.length === LENGTH_0 && view.spacing.length === LENGTH_0) {
+  if (view.guides.length === 0 && view.spacing.length === 0) {
     return null;
   }
 

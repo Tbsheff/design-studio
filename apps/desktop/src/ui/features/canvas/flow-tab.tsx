@@ -11,44 +11,18 @@ import "../../styles/route-flow.css";
 import { copy } from "./copy.js";
 import { toValueOr } from "./settle-model.js";
 
-const ITEM_0 = 0;
-
-const ITEM_1 = 1;
-
-const ITEM_2 = 2;
-
-const LENGTH_1 = 1;
-
-const LENGTH_0 = 0;
-
-const SLICE_0 = 0;
-
 const SLICE_4 = 4;
-
-const USE_STATE_1 = 1;
 
 const SLICE_200 = 200;
 
-const DEPTH_0 = 0;
-
-const FROM_0 = 0;
-
-const AT_NEG_1 = -1;
-
-const AT_1 = 1;
-
-const VALUE_0 = 0;
-
-const VALUE_1 = 1;
-
-const DEPTHS = [ITEM_0, ITEM_1, ITEM_2] as const;
+const DEPTHS = [0, 1, 2] as const;
 
 export const flowSummary = (result: FlowResult): string => {
   const added = result.frames.filter((frame) => frame.added).length;
 
   let part: "link" | "links" = "links";
 
-  if (result.links.length === LENGTH_1) {
+  if (result.links.length === 1) {
     part = "link";
   }
 
@@ -57,7 +31,7 @@ export const flowSummary = (result: FlowResult): string => {
     `${result.links.length} ${part}`,
   ];
 
-  if (result.skipped.length > LENGTH_0) {
+  if (result.skipped.length > 0) {
     parts.push(`${result.skipped.length} not linked`);
   }
 
@@ -100,14 +74,14 @@ const FlowResultView = ({ result }: { result: FlowResult }): ReactElement => (
       {flowSummary(result)}
       {copy.text}
     </div>
-    {result.missingParams.length > LENGTH_0 && (
+    {result.missingParams.length > 0 && (
       <div className="flow-warn">
         {copy.set}
         {result.missingParams.join(", ")}
         {copy.soTheFramesShow}
       </div>
     )}
-    {result.skipped.slice(SLICE_0, SLICE_4).map((item) => (
+    {result.skipped.slice(0, SLICE_4).map((item) => (
       <div
         key={`${item.fromRoute}|${item.href}|${item.source}`}
         className="flow-skip"
@@ -130,7 +104,7 @@ export default function FlowTab({
 
   const [filter, setFilter] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
-  const [depth, setDepth] = useState<number>(USE_STATE_1);
+  const [depth, setDepth] = useState<number>(1);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<FlowResult | null>(null);
 
@@ -148,6 +122,7 @@ export default function FlowTab({
       if (chosen.includes(route.route)) {
         return chosen.indexOf(route.route);
       }
+
       return chosen.length;
     };
 
@@ -155,7 +130,7 @@ export default function FlowTab({
       .sort(
         (appRoute, appRouteValue) => picked(appRoute) - picked(appRouteValue)
       )
-      .slice(SLICE_0, SLICE_200);
+      .slice(0, SLICE_200);
   }, [routes, filter, chosen]);
 
   const names = [...new Set(chosen.flatMap(dynamicNames))];
@@ -165,18 +140,19 @@ export default function FlowTab({
       if (list.includes(route)) {
         return list.filter((item) => item !== route);
       }
+
       return [...list, route];
     });
 
   const build = async (): Promise<void> => {
     setBusy(true);
     setError(null);
-    const single = chosen.length === LENGTH_1 && depth > DEPTH_0;
+    const single = chosen.length === 1 && depth > 0;
 
     let result2: { from: string } | { routes: string[] } = { routes: chosen };
 
     if (single) {
-      result2 = { from: chosen[FROM_0] as string };
+      result2 = { from: chosen[0] as string };
     }
 
     const input = {
@@ -204,13 +180,13 @@ export default function FlowTab({
     if (busy) {
       return "Reading the source…";
     }
-    if (chosen.length === LENGTH_0) {
+    if (chosen.length === 0) {
       return "Pick routes for the flow";
     }
 
     let part3: "routes" | "route" = "routes";
 
-    if (chosen.length === LENGTH_1) {
+    if (chosen.length === 1) {
       part3 = "route";
     }
 
@@ -233,15 +209,13 @@ export default function FlowTab({
           let datatip: "Add to the flow" | "Remove from the flow" =
             "Remove from the flow";
 
-          if (at === AT_NEG_1) {
+          if (at === -1) {
             datatip = "Add to the flow";
           }
 
-          let content: ReactNode = (
-            <span className="flow-order">{at + AT_1}</span>
-          );
+          let content: ReactNode = <span className="flow-order">{at + 1}</span>;
 
-          if (at === AT_NEG_1) {
+          if (at === -1) {
             content = <Icon name="plus" size={12} />;
           }
 
@@ -251,7 +225,7 @@ export default function FlowTab({
               type="button"
               role="listitem"
               className="app-route"
-              aria-pressed={at !== AT_NEG_1}
+              aria-pressed={at !== -1}
               data-tip={datatip}
               data-tip-align="start"
               onClick={() => toggle(route.route)}
@@ -279,11 +253,12 @@ export default function FlowTab({
 
               let datatip2 = "Only the chosen routes";
 
-              if (value !== VALUE_0) {
+              if (value !== 0) {
                 const part2: "click" | "clicks" = ((): "click" | "clicks" => {
-                  if (value === VALUE_1) {
+                  if (value === 1) {
                     return "click";
                   }
+
                   return "clicks";
                 })();
 
@@ -291,9 +266,10 @@ export default function FlowTab({
               }
 
               const content2: 1 | 2 | "None" = ((): 1 | 2 | "None" => {
-                if (value === VALUE_0) {
+                if (value === 0) {
                   return "None";
                 }
+
                 return value;
               })();
 
@@ -335,7 +311,7 @@ export default function FlowTab({
         <button
           type="button"
           className="btn small primary"
-          disabled={busy || chosen.length === LENGTH_0}
+          disabled={busy || chosen.length === 0}
           onClick={build}
           data-tip={copy.layOutThe}
         >

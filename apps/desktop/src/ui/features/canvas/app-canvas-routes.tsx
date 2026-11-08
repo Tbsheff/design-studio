@@ -9,8 +9,6 @@ import { readStored, writeStored } from "../../platform/storage.js";
 import { addFrame, canAddFrame, setFramePath } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
-const AT_NEG_1 = -1;
-
 const AppBar = lazy(() => import("../../app/shell/app-bar.js"));
 
 const routeFrameId = (layout: CanvasLayout, route: string): string | null => {
@@ -47,6 +45,7 @@ const addRouteFrame = (
         if (canvasFrame.id === existing && canvasFrame.hidden) {
           return withoutHidden(canvasFrame);
         }
+
         return canvasFrame;
       }),
     };
@@ -57,7 +56,7 @@ const addRouteFrame = (
   }
 
   const added = addFrame(layout, size);
-  const frame = added.frames.at(AT_NEG_1);
+  const frame = added.frames.at(-1);
 
   if (!frame) {
     return layout;
@@ -73,6 +72,7 @@ const addRouteFrame = (
       if (canvasFrameValue.id === frame.id && label) {
         return { ...canvasFrameValue, label };
       }
+
       return canvasFrameValue;
     }),
   };
@@ -162,6 +162,7 @@ const readHiddenRedirects = (): string[] => {
     if (Array.isArray(raw)) {
       return raw.filter((item): item is string => typeof item === "string");
     }
+
     return [];
   } catch {
     return [];

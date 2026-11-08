@@ -5,8 +5,6 @@ import { SnapGuides } from "./artboard-overlay.js";
 import { gapStyle } from "./canvas-overlays.js";
 import type { FreeMoveView } from "./use-free-move.js";
 
-const LENGTH_0 = 0;
-
 const FreeMoveLayer = ({
   view,
 }: {
@@ -36,7 +34,7 @@ const FreeMoveLayer = ({
         }}
       />
       <SnapGuides guides={view.guides} full />
-      {view.spacing.length > LENGTH_0 && (
+      {view.spacing.length > 0 && (
         <div className="snap-guides">
           {view.spacing.map((spacingBadge) => (
             <div

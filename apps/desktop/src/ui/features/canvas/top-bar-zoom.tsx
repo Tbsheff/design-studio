@@ -19,19 +19,11 @@ const ITEM_0_5 = 0.5;
 
 const ITEM_0_75 = 0.75;
 
-const ITEM_1 = 1;
-
 const ITEM_1_25 = 1.25;
-
-const ITEM_2 = 2;
-
-const ON_STEP_1 = 1;
-
-const ON_STEP_NEG_1 = -1;
 
 const ZOOM_VALUE_VALUE_100 = 100;
 
-const ZOOMS = [ITEM_0_5, ITEM_0_75, ITEM_1, ITEM_1_25, ITEM_2];
+const ZOOMS = [ITEM_0_5, ITEM_0_75, 1, ITEM_1_25, 2];
 
 interface ZoomProps {
   zoom: LiveStore<number>;
@@ -53,13 +45,13 @@ const zoomGroups = ({
         id: "in",
         label: "Zoom in",
         meta: shortcutLabel("zoom-in", IS_MAC),
-        run: () => onStep(ON_STEP_1),
+        run: () => onStep(1),
       },
       {
         id: "out",
         label: "Zoom out",
         meta: shortcutLabel("zoom-out", IS_MAC),
-        run: () => onStep(ON_STEP_NEG_1),
+        run: () => onStep(-1),
       },
     ],
   },

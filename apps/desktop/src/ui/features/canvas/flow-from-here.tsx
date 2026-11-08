@@ -12,38 +12,30 @@ import { useCurrentFrameStates } from "./frame-states-model.js";
 
 import "../../styles/route-flow.css";
 
-const ADDED_0 = 0;
-
-const LENGTH_0 = 0;
-
-const ADDED_1 = 1;
-
-const LENGTH_1 = 1;
-
 const stop = (event: ReactPointerEvent): void => event.stopPropagation();
 
 const doneText = (result: FlowResult): string => {
   const added = result.frames.filter((frame) => frame.added).length;
 
-  if (added === ADDED_0 && result.links.length === LENGTH_0) {
+  if (added === 0 && result.links.length === 0) {
     return "No new routes or links found in the source of this route.";
   }
 
   let missing = "";
 
-  if (result.missingParams.length > LENGTH_0) {
+  if (result.missingParams.length > 0) {
     missing = ` Set ${result.missingParams.join(", ")} in App > Flow.`;
   }
 
   let part: "route" | "routes" = "routes";
 
-  if (added === ADDED_1) {
+  if (added === 1) {
     part = "route";
   }
 
   let part3: "link" | "links" = "links";
 
-  if (result.links.length === LENGTH_1) {
+  if (result.links.length === 1) {
     part3 = "link";
   }
 

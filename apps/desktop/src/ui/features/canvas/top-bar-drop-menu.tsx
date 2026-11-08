@@ -100,6 +100,7 @@ const DropMenu = ({
     if (open) {
       return undefined;
     }
+
     return tip;
   })();
 
@@ -107,6 +108,7 @@ const DropMenu = ({
     if (align !== "end") {
       return undefined;
     }
+
     return "end";
   })();
 

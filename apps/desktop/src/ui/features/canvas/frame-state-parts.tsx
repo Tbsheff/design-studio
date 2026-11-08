@@ -19,14 +19,6 @@ import "../../styles/frame-state.css";
 import type { setFrameSession } from "./frame-states-model.js";
 import { runOrReport } from "./settle-model.js";
 
-const INDEX_1 = 1;
-
-const LENGTH_0 = 0;
-
-const LENGTH_1 = 1;
-
-const KEPT_0 = 0;
-
 type MockRules = NonNullable<FrameStateDef["mocks"]>;
 
 type Panel = "list" | "user" | "mock";
@@ -47,15 +39,16 @@ const menuKeys = (event: ReactKeyboardEvent<HTMLElement>): void => {
 
   const next: number | null = ((): number | null => {
     if (event.key === "ArrowDown") {
-      return index + INDEX_1;
+      return index + 1;
     }
     if (event.key === "ArrowUp") {
-      return index - INDEX_1;
+      return index - 1;
     }
+
     return null;
   })();
 
-  if (next === null || items.length === LENGTH_0) {
+  if (next === null || items.length === 0) {
     return;
   }
 
@@ -88,9 +81,9 @@ const StateRows = ({
         <span>{state.name}</span>
         {state.kind === "mock" && (
           <span className="ui-menu-meta">
-            {state.mocks?.length === LENGTH_1
+            {state.mocks?.length === 1
               ? "1 rule"
-              : `${state.mocks?.length ?? LENGTH_0} rules`}
+              : `${state.mocks?.length ?? 0} rules`}
           </span>
         )}
       </button>
@@ -136,7 +129,7 @@ const SessionRows = ({
     <div className="ui-menu-section">
       <div className="ui-menu-label">{copy.signedInStatesUse}</div>
       {content}
-      {kept > KEPT_0 && (
+      {kept > 0 && (
         <button
           type="button"
           role="menuitem"

@@ -8,14 +8,6 @@ import { copy } from "./copy.js";
 import { budgetFor, money } from "./use-variations.js";
 import type { BriefDraft } from "./use-variations.js";
 
-const COST_USD_0 = 0;
-
-const PER_RUN_0 = 0;
-
-const TOTAL_0 = 0;
-
-const BRIEF_COST_0 = 0;
-
 const LENGTH_12 = 12;
 
 interface Props {
@@ -119,7 +111,7 @@ const BudgetLine = ({
   count: number;
 }): ReactElement => {
   const budget = budgetFor(project, draft.level, count);
-  const briefCost = draft.result?.costUsd ?? COST_USD_0;
+  const briefCost = draft.result?.costUsd ?? 0;
   const limited = budget.perRun !== null && budget.total !== null;
 
   let content: ReactNode = <>{copy.noSpendingLimit}</>;
@@ -128,10 +120,10 @@ const BudgetLine = ({
     content = (
       <>
         {copy.upTo}
-        {money(budget.perRun ?? PER_RUN_0)}
+        {money(budget.perRun ?? 0)}
         {copy.perRun}{" "}
         <strong>
-          {money(budget.total ?? TOTAL_0)}
+          {money(budget.total ?? 0)}
           {copy.total}
         </strong>
       </>
@@ -140,7 +132,7 @@ const BudgetLine = ({
 
   let content4 = "";
 
-  if (briefCost > BRIEF_COST_0) {
+  if (briefCost > 0) {
     content4 = ` + ${money(briefCost)} for the briefs`;
   }
 

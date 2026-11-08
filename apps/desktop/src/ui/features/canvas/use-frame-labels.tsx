@@ -18,12 +18,6 @@ import type { useCanvasFrames, useFrameActions } from "./use-canvas-frames.js";
 import { VariationControls } from "./variation-controls.js";
 import type { FrameVariation, Sibling } from "./variation-controls.js";
 
-const LENGTH_1 = 1;
-
-const INDEX_1 = 1;
-
-const EXTRAS_0 = 0;
-
 interface LabelInput {
   projectId: string;
   kind: ProjectKind;
@@ -76,6 +70,7 @@ const frameLabelSig = (
     if (did) {
       return labelInputValue.directions?.variationOf(did);
     }
+
     return undefined;
   })();
 
@@ -100,6 +95,7 @@ const frameLabelSig = (
           variation.siblings,
         ];
       }
+
       return null;
     })();
 
@@ -109,6 +105,7 @@ const frameLabelSig = (
         (direction) => direction.id === did
       )?.name;
     }
+
     return undefined;
   })();
 
@@ -119,7 +116,7 @@ const frameLabelSig = (
   return JSON.stringify([
     index,
     frame.id === labelInputValue.activeId,
-    labelInputValue.frames.layout.frames.length > LENGTH_1,
+    labelInputValue.frames.layout.frames.length > 1,
     did,
     did === labelInputValue.directionId,
     named,
@@ -189,6 +186,7 @@ const useFrameLabels = (labelInput4: LabelInput) => {
       if (did) {
         return labelInput4.directions?.variationOf(did);
       }
+
       return undefined;
     })();
 
@@ -204,6 +202,7 @@ const useFrameLabels = (labelInput4: LabelInput) => {
           (directionValue) => directionValue.id === did
         )?.name;
       }
+
       return undefined;
     })();
 
@@ -219,6 +218,7 @@ const useFrameLabels = (labelInput4: LabelInput) => {
           title: variation.title,
         };
       }
+
       return undefined;
     })();
 
@@ -226,13 +226,15 @@ const useFrameLabels = (labelInput4: LabelInput) => {
       if (variation) {
         return `1${variation.label.toLowerCase()}`;
       }
-      return String(index + INDEX_1);
+
+      return String(index + 1);
     })();
 
     const title2: string | undefined = ((): string | undefined => {
       if (variation) {
         return undefined;
       }
+
       return frame.label ?? named ?? labelInput4.directionName ?? undefined;
     })();
 
@@ -246,9 +248,7 @@ const useFrameLabels = (labelInput4: LabelInput) => {
             <VariationControls
               variation={liveVariation(variation, did, live)}
               active={isActive}
-              element={
-                isActive ? (labelInput4.selection[EXTRAS_0] ?? null) : null
-              }
+              element={isActive ? (labelInput4.selection[0] ?? null) : null}
               onMixed={() => live.current.setSelection(() => [])}
             />
           )}

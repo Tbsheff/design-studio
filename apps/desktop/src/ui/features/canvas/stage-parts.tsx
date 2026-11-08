@@ -155,6 +155,7 @@ const OtherFrames = ({
           if (!wait) {
             return undefined;
           }
+
           return {
             missing: wait === "missing",
             step: step ?? null,

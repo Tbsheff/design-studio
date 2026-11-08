@@ -24,18 +24,6 @@ import type {
   SnapResult,
 } from "./snap-model.js";
 
-const LENGTH_0 = 0;
-
-const DX_0 = 0;
-
-const DY_0 = 0;
-
-const TARGET_0 = 0;
-
-const LENGTH_1 = 1;
-
-const TRANSFORM_OF_0 = 0;
-
 interface FreeMoveView {
   box: Rect;
   guides: SnapGuide[];
@@ -85,9 +73,7 @@ const place = (
 
   let snapped: SnapResult = { guides: [], rect: moved, spacing: [] };
 
-  if (
-    !(!absolute || drag.free || sessionValue.candidates.length === LENGTH_0)
-  ) {
+  if (!(!absolute || drag.free || sessionValue.candidates.length === 0)) {
     snapped = snapRect({
       candidates: sessionValue.candidates,
       rect: moved,
@@ -130,7 +116,7 @@ const absoluteStyle = (
   const style: Record<string, string> = {};
   const { fromRight, fromBottom } = session4.start;
 
-  if (dx !== DX_0 || session4.start.convert) {
+  if (dx !== 0 || session4.start.convert) {
     let result2: "right" | "left" = "left";
 
     if (fromRight) {
@@ -146,7 +132,7 @@ const absoluteStyle = (
     style[result2] = `${Math.round(session4.start.left + operand)}px`;
   }
 
-  if (dy !== DY_0 || session4.start.convert) {
+  if (dy !== 0 || session4.start.convert) {
     let result3: "bottom" | "top" = "top";
 
     if (fromBottom) {
@@ -210,10 +196,11 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
       const target: SelectionContext | undefined = (():
         | SelectionContext
         | undefined => {
-        if (cur.selection.length !== LENGTH_1) {
+        if (cur.selection.length !== 1) {
           return undefined;
         }
-        return cur.selection[TARGET_0];
+
+        return cur.selection[0];
       })();
 
       if (
@@ -276,8 +263,9 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
 
       const transform2: string = ((): string => {
         if (drag.alt) {
-          return transformOf(text, TRANSFORM_OF_0, TRANSFORM_OF_0);
+          return transformOf(text, 0, 0);
         }
+
         return transformOf(text, placed.dx, placed.dy);
       })();
 
@@ -315,19 +303,14 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
       const cur = live.current;
 
       if (drag.note || cur.busy) {
-        if (
-          drag.note ||
-          drag.insert ||
-          placed.dx !== DX_0 ||
-          placed.dy !== DY_0
-        ) {
+        if (drag.note || drag.insert || placed.dx !== 0 || placed.dy !== 0) {
           cur.onError(drag.note ?? "Wait for the last edit to finish.");
         }
 
         return null;
       }
 
-      const target = selectionTargets([session5.target])?.[TARGET_0];
+      const target = selectionTargets([session5.target])?.[0];
 
       if (!target) {
         return null;
@@ -369,7 +352,7 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
         };
       }
 
-      if (placed.dx === DX_0 && placed.dy === DY_0) {
+      if (placed.dx === 0 && placed.dy === 0) {
         return null;
       }
 

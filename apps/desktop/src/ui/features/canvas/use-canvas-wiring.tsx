@@ -24,8 +24,6 @@ import { useFrameLabels } from "./use-frame-labels.js";
 import { usePrototype } from "./use-prototype.js";
 import { useFrameChange } from "./use-stage-keys.js";
 
-const LENGTH_0 = 0;
-
 const useCanvasWiring = (
   props: ViewProps,
   text: ReturnType<typeof useCanvasStage>,
@@ -80,6 +78,7 @@ const useCanvasWiring = (
           ),
       };
     }
+
     return undefined;
   })();
 
@@ -90,14 +89,16 @@ const useCanvasWiring = (
       if (kind !== "html") {
         return undefined;
       }
+
       return HTML_FRAME_SANDBOX;
     })();
   const clickThrough = useClickThrough(frames, picking);
   useFrameChange(`${active.id}|${String(liveUrl)}`, () => {
     props.setSelection((prev) => {
-      if (prev.length > LENGTH_0) {
+      if (prev.length > 0) {
         return [];
       }
+
       return prev;
     });
     props.onFrameChange?.();
@@ -135,6 +136,7 @@ const useCanvasWiring = (
       if (did === directionId) {
         return undefined;
       }
+
       return "Open this direction first.";
     })();
 

@@ -14,21 +14,7 @@ import { FlowFromHere } from "./flow-from-here.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameStateMenu } from "./frame-state-menu.js";
 
-const INDEX_0 = 0;
-
-const INDEX_1 = 1;
-
-const ITEM_0 = 0;
-
-const ITEM_1 = 1;
-
-const ITEM_NEG_1 = -1;
-
 const SIZE_100 = 100;
-
-const FRAME_LABEL_0 = 0;
-
-const FRAME_LABEL_1 = 1;
 
 interface FrameBadge {
   label: string;
@@ -88,8 +74,8 @@ const frameTitle = (
 
   let part = "";
 
-  if (index >= INDEX_0) {
-    part = `${index + INDEX_1} `;
+  if (index >= 0) {
+    part = `${index + 1} `;
   }
 
   return `${part}${frameBaseName(frame)} · ${framePage(frame.path)}`;
@@ -105,16 +91,17 @@ const canvasFrameName = (
   const frame = frames[index];
 
   if (frame) {
-    return `${index + INDEX_1} ${frameBaseName(frame)}`;
+    return `${index + 1} ${frameBaseName(frame)}`;
   }
+
   return fallback;
 };
 
 const NUDGE: Record<string, [number, number]> = {
-  ArrowDown: [ITEM_0, ITEM_1],
-  ArrowLeft: [ITEM_NEG_1, ITEM_0],
-  ArrowRight: [ITEM_1, ITEM_0],
-  ArrowUp: [ITEM_0, ITEM_NEG_1],
+  ArrowDown: [0, 1],
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
 };
 
 const FrameLabel = ({
@@ -175,6 +162,7 @@ const FrameLabel = ({
     if (!badge) {
       return undefined;
     }
+
     return "variation-frame";
   })();
 
@@ -225,11 +213,7 @@ const FrameLabel = ({
             if (event5.shiftKey) {
               size = SIZE_100;
             }
-            onNudge(
-              frame,
-              step[FRAME_LABEL_0] * size,
-              step[FRAME_LABEL_1] * size
-            );
+            onNudge(frame, step[0] * size, step[1] * size);
           } else if (event5.key === "Enter" || event5.key === " ") {
             event5.preventDefault();
             onActivate(frame);

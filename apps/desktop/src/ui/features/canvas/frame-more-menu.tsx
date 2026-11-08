@@ -7,8 +7,6 @@ import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";
 
-const LENGTH_0 = 0;
-
 interface FrameMenuItem {
   id: string;
   label: string;
@@ -55,7 +53,7 @@ const FrameMoreMenu = ({
     items = [...portItem(menu.root.current), ...own];
   }
 
-  if (items.length === LENGTH_0 && !portAvailable()) {
+  if (items.length === 0 && !portAvailable()) {
     return null;
   }
 
@@ -65,6 +63,7 @@ const FrameMoreMenu = ({
     if (menu.open) {
       return undefined;
     }
+
     return "More frame actions";
   })();
 

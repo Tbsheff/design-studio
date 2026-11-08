@@ -34,10 +34,6 @@ import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 import { toValueOr } from "./settle-model.js";
 
-const LENGTH_1 = 1;
-
-const AT_NEG_1 = -1;
-
 const renderGenerateTab = (props: GenerateTabProps): ReactElement => (
   <ImageGenerateSlot
     directionId={props.directionId}
@@ -117,6 +113,7 @@ const pasteItem = (
     if (optionsValue.edits.busy) {
       return "Wait for the last edit to finish";
     }
+
     return null;
   })();
 
@@ -149,6 +146,7 @@ const createBlocker = (options4: Options): string | null => {
   if (options4.edits.busy) {
     return "Wait for the last edit to finish";
   }
+
   return null;
 };
 
@@ -161,7 +159,7 @@ const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
 
   let label = "Create component…";
 
-  if (options3.selection.length > LENGTH_1) {
+  if (options3.selection.length > 1) {
     label = `Create component from ${options3.selection.length}…`;
   }
 
@@ -250,7 +248,7 @@ const usePreviewMenu = (options6: Options) => {
 
   const close = useCallback(() => setAt(null), []);
   const [creating, setCreating] = useState<SelectionContext[] | null>(null);
-  const target = options6.selection.at(AT_NEG_1);
+  const target = options6.selection.at(-1);
   const openCreate = (): void => setCreating(latest.current.selection);
   const { directionId } = options6.ids;
 

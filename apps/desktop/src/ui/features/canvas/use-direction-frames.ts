@@ -165,6 +165,7 @@ const useDirectionFrames = (options: Options) => {
       if (isCurrent) {
         return options.currentUrl;
       }
+
       return withElementMark(
         urls[directionId] ?? null,
         markOf(options.directions, directionId)
@@ -191,6 +192,7 @@ const useDirectionFrames = (options: Options) => {
       if (page) {
         return frameSrc(page, { [BRIDGE_PASSIVE_PARAM]: "1" });
       }
+
       return null;
     };
 

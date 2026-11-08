@@ -23,6 +23,7 @@ const zoomOptionLabel = (setting: ZoomSetting, zoom: number): string => {
   if (setting === "fit") {
     return `Fit ${Math.round(zoom * ZOOM_100)}%`;
   }
+
   return "Fit";
 };
 

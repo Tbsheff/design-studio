@@ -90,6 +90,7 @@ const FirstBuildCover = ({
   if (covered) {
     return <FrameSkeleton step={step ?? null} />;
   }
+
   return null;
 };
 

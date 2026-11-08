@@ -102,6 +102,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
     if (props.tweakOpen) {
       return undefined;
     }
+
     return "Describe a tweak";
   })();
 

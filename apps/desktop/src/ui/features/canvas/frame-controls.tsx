@@ -8,8 +8,6 @@ import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { toValueOr } from "./settle-model.js";
 import { stop } from "./variation-controls.js";
 
-const LENGTH_0 = 0;
-
 const pageName = (path: string | undefined): string => {
   const clean = (path ?? "").replace(/^\/+/, "").replace(/\.html$/, "");
 
@@ -20,6 +18,7 @@ const pageLabel = (page: string, routes: boolean): string => {
   if (routes) {
     return `/${page}`;
   }
+
   return page;
 };
 
@@ -31,6 +30,7 @@ const isCurrentPage = (
   if (routes) {
     return page === path;
   }
+
   return page === (path || "index.html");
 };
 
@@ -108,6 +108,7 @@ const FramePageMenu = ({
     if (menu.open) {
       return undefined;
     }
+
     return `/${path} · Show another page in this frame`;
   })();
 
@@ -172,7 +173,7 @@ const FramePageMenu = ({
               {pages === null && (
                 <p className="frame-page-hint">{copy.loadingPages}</p>
               )}
-              {pages?.length === LENGTH_0 && (
+              {pages?.length === 0 && (
                 <p className="frame-page-hint">{copy.noOtherPagesYet}</p>
               )}
               {pages?.map((page) => {
@@ -182,6 +183,7 @@ const FramePageMenu = ({
                   if (!isCurrentPage(page, path, routes)) {
                     return undefined;
                   }
+
                   return "true";
                 })();
 

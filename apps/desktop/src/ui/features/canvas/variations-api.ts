@@ -13,8 +13,6 @@ import type {
 import { sendJson } from "../../platform/http.js";
 import type { JsonBody } from "../../platform/http.js";
 
-const INDEX_0 = 0;
-
 const post = <Item>(path: string, body: JsonBody = {}): Promise<Item> =>
   sendJson<Item>("POST", path, body);
 
@@ -43,6 +41,7 @@ const maxVariationsFor = (kind: ProjectKind): number => {
   if (kind === "react") {
     return VARIATION_MAX_REACT;
   }
+
   return VARIATION_MAX;
 };
 
@@ -58,8 +57,8 @@ const groupOf = (
     .filter((direction) => direction.variation?.groupId === groupId)
     .sort(
       (directionValue, direction3) =>
-        (directionValue.variation?.index ?? INDEX_0) -
-        (direction3.variation?.index ?? INDEX_0)
+        (directionValue.variation?.index ?? 0) -
+        (direction3.variation?.index ?? 0)
     );
 };
 

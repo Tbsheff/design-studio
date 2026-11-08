@@ -41,7 +41,6 @@ const FEATURE_AREA_FILES = [
 const FEATURE_FILES = [
   ...FEATURE_AREA_FILES,
   "apps/desktop/src/server/cloud/checkout.ts",
-  "apps/desktop/src/server/direct-edit/{direct-edit-props-ops,direct-edit-review-ops}.ts",
 ];
 
 const FEATURE_HANDLER_FILES = [

@@ -97,9 +97,7 @@ const LEGACY_APP_IMPORTS = [
 
 const PROMISE_TASK_FILES = ["apps/desktop/src/server/content/write-content.ts"];
 
-const LEGACY_DEEP_IMPORTS = [
-  "apps/desktop/src/server/direct-edit/direct-edit-ops.ts",
-];
+const LEGACY_DEEP_IMPORTS = [];
 
 const LEGACY_LIST_PAGES = [
   "packages/common/actions/src/canvas/{list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links}.ts",
@@ -150,7 +148,6 @@ const LEGACY_RUNTIME_SLOTS = [
 ];
 
 const LEGACY_FEATURE_ASYNC = [
-  "apps/desktop/src/server/direct-edit/{direct-edit-props-ops,direct-edit-review-ops}.ts",
   "apps/desktop/src/server/gallery/{create-gallery,gallery-files,gallery-source}.ts",
   "apps/desktop/src/server/image-generate/{create-image,gemini,generate-bytes,openai,place,remote,reuse}.ts",
   "apps/desktop/src/server/project-ops/{project-ops-create,project-ops-detail,project-ops-hidden}.ts",

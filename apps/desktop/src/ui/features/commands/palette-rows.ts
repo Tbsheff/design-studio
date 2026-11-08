@@ -186,40 +186,50 @@ const suggested = (input: RowInput, context: Command[]): Row[] => {
 };
 
 const emptyRows = (input: RowInput): Row[] => {
-  const others = input.projects.filter((p) => p.id !== input.current);
+  const others = input.projects.filter(
+    (projectHit) => projectHit.id !== input.current
+  );
   const context = contextCommands(input);
 
   const recentProjects = others
     .slice(0, context.length > 0 ? RECENT_IN_STUDIO : RECENT_PROJECTS)
-    .map((hit, i) =>
+    .map((hit, idx) =>
       projectRow(hit, "Recent", input.actions, {
-        keys: (input.mac && `Ctrl+${i + 1}`) || undefined,
+        keys: (input.mac && `Ctrl+${idx + 1}`) || undefined,
       })
     );
 
-  const contextIds = new Set(context.map((c) => c.id));
+  const contextIds = new Set(context.map((commandNext) => commandNext.id));
 
   const commands = input.commands.filter(
-    (c) => !SUGGESTED_IDS.has(c.id) && !contextIds.has(c.id)
+    (commandOther) =>
+      !SUGGESTED_IDS.has(commandOther.id) && !contextIds.has(commandOther.id)
   );
 
-  const byId = new Map(commands.map((c) => [c.id, c]));
+  const byId = new Map(
+    commands.map((commandExtra) => [commandExtra.id, commandExtra])
+  );
 
   const top = input.recent
     .map((id) => byId.get(id))
-    .filter((c): c is Command => c !== undefined && !c.disabled);
+    .filter(
+      (charOther): charOther is Command =>
+        charOther !== undefined && !charOther.disabled
+    );
 
-  const topIds = new Set(top.map((c) => c.id));
+  const topIds = new Set(top.map((charExtra) => charExtra.id));
 
   const rest = commands
-    .filter((c) => !topIds.has(c.id))
-    .sort((a, b) => groupIndex(a.group) - groupIndex(b.group));
+    .filter((chOther) => !topIds.has(chOther.id))
+    .sort(
+      (first, second) => groupIndex(first.group) - groupIndex(second.group)
+    );
 
   return [
     ...recentProjects,
     ...suggested(input, context),
-    ...top.map((c) => commandRow(c, "Recent commands")),
-    ...rest.map((c) => commandRow(c, c.group)),
+    ...top.map((chExtra) => commandRow(chExtra, "Recent commands")),
+    ...rest.map((commandValue) => commandRow(commandValue, commandValue.group)),
   ];
 };
 
@@ -244,45 +254,51 @@ interface Scored {
   best: number;
 }
 
-const routeRow = (r: RouteHit, input: RowInput, marks: number[]): Row => ({
-  group: `Routes in ${r.projectName}`,
+const routeRow = (
+  routeHit: RouteHit,
+  input: RowInput,
+  marks: number[]
+): Row => ({
+  group: `Routes in ${routeHit.projectName}`,
   icon: "link",
-  key: `r:${r.projectId}:${r.route}`,
+  key: `r:${routeHit.projectId}:${routeHit.route}`,
   kind: "route",
   marks,
-  meta: r.file,
-  run: () => input.actions.openProject(r.projectId, r.route),
-  title: r.route,
+  meta: routeHit.file,
+  run: () => input.actions.openProject(routeHit.projectId, routeHit.route),
+  title: routeHit.route,
 });
 
 const routeRows = (input: RowInput): Scored => {
-  const usable = input.routes.filter((r) => !r.dynamic);
+  const usable = input.routes.filter((rect) => !rect.dynamic);
   const query = input.query.replace(/^\//u, "");
 
   const ranked = clean(
-    rank(usable, query, (r) => ({ title: r.route })),
+    rank(usable, query, (rectNext) => ({ title: rectNext.route })),
     query
   );
 
   if (ranked.length > 0) {
     return {
       best: ranked[0]?.score ?? 0,
-      rows: ranked.map((r) => routeRow(r.item, input, r.marks)),
+      rows: ranked.map((resultNext) =>
+        routeRow(resultNext.item, input, resultNext.marks)
+      ),
     };
   }
 
   const named = new Set(
     clean(
-      rank(input.projects, input.query, (p) => ({ title: p.name })),
+      rank(input.projects, input.query, (part) => ({ title: part.name })),
       input.query
-    ).map((r) => r.item.id)
+    ).map((resultOther) => resultOther.item.id)
   );
 
   return {
     best: 0,
     rows: usable
-      .filter((r) => named.has(r.projectId))
-      .map((r) => routeRow(r, input, [])),
+      .filter((routeHitNext) => named.has(routeHitNext.projectId))
+      .map((routeHitOther) => routeRow(routeHitOther, input, [])),
   };
 };
 
@@ -290,7 +306,7 @@ const looseMatches = (input: RowInput): Row[] => {
   const words = input.query
     .toLowerCase()
     .split(/\s+/u)
-    .filter((w) => w.length >= WORD_MIN);
+    .filter((entry) => entry.length >= WORD_MIN);
 
   if (words.length < 2) {
     return [];
@@ -300,20 +316,22 @@ const looseMatches = (input: RowInput): Row[] => {
   const out: Row[] = [];
 
   for (const word of words) {
-    for (const r of clean(
-      rank(input.projects, word, (p) => ({
-        keywords: p.place ?? "",
-        title: p.name,
+    for (const resultExtra of clean(
+      rank(input.projects, word, (itemNext) => ({
+        keywords: itemNext.place ?? "",
+        title: itemNext.name,
       })),
       word
     )) {
-      if (r.score < STRONG - 1 || seen.has(r.item.id)) {
+      if (resultExtra.score < STRONG - 1 || seen.has(resultExtra.item.id)) {
         continue;
       }
 
-      seen.add(r.item.id);
+      seen.add(resultExtra.item.id);
       out.push(
-        projectRow(r.item, "Matches", input.actions, { marks: r.marks })
+        projectRow(resultExtra.item, "Matches", input.actions, {
+          marks: resultExtra.marks,
+        })
       );
     }
   }
@@ -327,16 +345,18 @@ const projectMatches = (input: RowInput): Row[] => {
   }
 
   const ranked = clean(
-    rank(input.projects, input.query, (p) => ({
-      keywords: `${p.place ?? ""} ${typePair(p.type)}`,
-      title: p.name,
+    rank(input.projects, input.query, (partNext) => ({
+      keywords: `${partNext.place ?? ""} ${typePair(partNext.type)}`,
+      title: partNext.name,
     })),
     input.query
   ).slice(0, MAX_PROJECTS);
 
   if (ranked.length > 0) {
-    return ranked.map((r) =>
-      projectRow(r.item, "Projects", input.actions, { marks: r.marks })
+    return ranked.map((rectOther) =>
+      projectRow(rectOther.item, "Projects", input.actions, {
+        marks: rectOther.marks,
+      })
     );
   }
 
@@ -346,26 +366,36 @@ const projectMatches = (input: RowInput): Row[] => {
 const actionMatches = (input: RowInput): Scored => {
   const ranked = clean(
     rank(
-      input.commands.filter((c) => !SUGGESTED_IDS.has(c.id)),
+      input.commands.filter(
+        (commandValue) => !SUGGESTED_IDS.has(commandValue.id)
+      ),
       input.query,
-      (c) => ({ keywords: `${c.keywords ?? ""} ${c.group}`, title: c.title })
+      (commandValue) => ({
+        keywords: `${commandValue.keywords ?? ""} ${commandValue.group}`,
+        title: commandValue.title,
+      })
     ),
     input.query
   )
-    .map((r) => ({
-      ...r,
+    .map((rectExtra) => ({
+      ...rectExtra,
       score:
-        r.score +
-        ((input.recent.includes(r.item.id) && 1) || 0) -
-        (r.item.disabled ? DISABLED_PENALTY : 0),
+        rectExtra.score +
+        ((input.recent.includes(rectExtra.item.id) && 1) || 0) -
+        (rectExtra.item.disabled ? DISABLED_PENALTY : 0),
     }))
-    .sort((a, b) => b.score - a.score)
+    .sort((left, right) => right.score - left.score)
     .slice(0, MAX_ACTIONS);
 
   return {
     best: ranked[0]?.score ?? 0,
-    rows: ranked.map((r) =>
-      commandRow(r.item, "Actions", r.marks, r.item.group)
+    rows: ranked.map((resultValue) =>
+      commandRow(
+        resultValue.item,
+        "Actions",
+        resultValue.marks,
+        resultValue.item.group
+      )
     ),
   };
 };

@@ -281,8 +281,8 @@ const studioCommands = (first: StudioActions): Command[] => {
   ];
 };
 
-const focusComposer = (a: StudioActions): void => {
-  a.onPanel("chat");
+const focusComposer = (leftNext: StudioActions): void => {
+  leftNext.onPanel("chat");
   globalThis.requestAnimationFrame(() =>
     findElement(document.body, '.prompt [data-slot="composer-input"]')?.focus()
   );

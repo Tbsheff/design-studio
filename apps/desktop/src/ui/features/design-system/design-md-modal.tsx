@@ -262,13 +262,13 @@ const DesignMdModal = ({
             aria-label={COPY.labelDesignMdContent}
             value={content ?? ""}
             disabled={content === null}
-            onChange={(e) => {
-              setContent(e.target.value);
+            onChange={(event) => {
+              setContent(event.target.value);
               setAsking(false);
             }}
-            onKeyDown={(e) => {
-              if (e.key === "s" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
+            onKeyDown={(evt) => {
+              if (evt.key === "s" && (evt.metaKey || evt.ctrlKey)) {
+                evt.preventDefault();
                 void save();
               }
             }}

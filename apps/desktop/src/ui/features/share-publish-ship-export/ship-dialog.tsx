@@ -1,12 +1,7 @@
-import {
-  renderBranchName,
-  renderShipTemplate,
-} from "@design-studio/contracts/ship";
 import type {
   ShipFile,
   ShipMode,
   ShipPrepare,
-  ShipRequest,
   ShipResult,
 } from "@design-studio/contracts/ship";
 import { CopyButton, Icon, UiSelect, useModalDialog } from "@design-studio/ui";
@@ -15,93 +10,39 @@ import type { Dispatch, FormEvent, SetStateAction } from "react";
 
 import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 
 import "../../styles/ship.css";
+import { settle } from "./settle.js";
 import { shipApi } from "./ship-api.js";
+import {
+  formatFact,
+  freshDraft,
+  shippable,
+  STATUS_LETTER,
+  MODES,
+  modeBlock,
+  FIRST_COMMIT,
+  conflictHint,
+  fieldsOf,
+  shipRequestOf,
+  leadText,
+  footNote,
+  actionLabel,
+} from "./ship-model.js";
+import type { Draft, Fields } from "./ship-model.js";
 
-interface Props {
+export interface Props {
   projectId: string;
   onClose: () => void;
 }
 
-const STATUS_LETTER: Record<ShipFile["status"], string> = {
-  added: "A",
-  deleted: "D",
-  modified: "M",
-};
-
-const MODES: { id: ShipMode; label: string; hint: string }[] = [
-  {
-    hint: "Commit on a new local branch. Nothing leaves this computer.",
-    id: "branch",
-    label: "Branch only",
-  },
-  {
-    hint: "Commit, then push the branch to the remote. No force push.",
-    id: "push",
-    label: "Push branch",
-  },
-  {
-    hint: "Commit, push, then run gh pr create.",
-    id: "pr",
-    label: "Open pull request",
-  },
-];
-
-interface Draft {
-  files: Set<string>;
-  branch: string | null;
-  commitMessage: string | null;
-  title: string | null;
-  body: string | null;
-  issue: string;
-  mode: ShipMode;
-}
-
-function shippable(file: ShipFile): boolean {
-  return !file.refused && !file.conflict;
-}
-
-function freshDraft(plan: ShipPrepare, mode: ShipMode): Draft {
-  return {
-    body: null,
-    branch: null,
-    commitMessage: null,
-    files: new Set(plan.files.filter(shippable).map((f) => f.path)),
-    issue: plan.settings.issueId,
-    mode,
-    title: null,
-  };
-}
-
-function modeBlock(plan: ShipPrepare, mode: ShipMode): string | null {
-  const { repo } = plan;
-
-  if (!repo || mode === "branch") {
-    return null;
-  }
-
-  if (!repo.remote) {
-    return "The repo has no remote.";
-  }
-
-  if (mode === "pr" && !repo.gh) {
-    return "Install the GitHub CLI (gh) to open pull requests.";
-  }
-
-  if (mode === "pr" && !repo.github) {
-    return "The remote is not on GitHub.";
-  }
-
-  return null;
-}
-
-function DiffView({ file }: { file: ShipFile | null }) {
+const DiffView = ({ file }: { file: ShipFile | null }) => {
   if (!file) {
-    return <div className="ship-diff empty">Pick a file to see its diff.</div>;
+    return <div className="ship-diff empty">{copy.pickAFileTo}</div>;
   }
 
-  const all = file.diff.replace(/\n$/, "").split("\n");
+  const all = file.diff.replace(/\n$/u, "").split("\n");
   const start = all.findIndex((line) => line.startsWith("@@"));
 
   const lines =
@@ -109,9 +50,11 @@ function DiffView({ file }: { file: ShipFile | null }) {
       ? [
           file.diff.includes("Binary files")
             ? "Binary file. No text diff."
-            : file.status === "deleted"
-              ? "The file is deleted."
-              : "No text changes.",
+            : pick(
+                file.status === "deleted",
+                "The file is deleted.",
+                "No text changes."
+              ),
         ]
       : all.slice(start);
 
@@ -119,23 +62,21 @@ function DiffView({ file }: { file: ShipFile | null }) {
     <div className="ship-diff" aria-label={`Diff of ${file.path}`}>
       {(file.refused || file.conflict) && (
         <div
-          className={`ship-diff-note ${file.refused ? "refused" : "conflict"}`}
+          className={`ship-diff-note ${pick(file.refused, "refused", "conflict")}`}
         >
           {file.refused ?? file.conflict}
         </div>
       )}
       <pre>
-        {lines.map((line, i) => (
+        {lines.map((line, index) => (
           <span
-            key={i}
+            key={index}
             className={
               line.startsWith("+")
                 ? "add"
                 : line.startsWith("-")
                   ? "del"
-                  : line.startsWith("@@")
-                    ? "hunk"
-                    : undefined
+                  : pick(line.startsWith("@@"), "hunk", "")
             }
           >
             {line || " "}
@@ -144,218 +85,91 @@ function DiffView({ file }: { file: ShipFile | null }) {
         ))}
       </pre>
       {file.diffCut && (
-        <div className="ship-diff-note">
-          The diff is cut here. The full file ships.
-        </div>
+        <div className="ship-diff-note">{copy.theDiffIsCut}</div>
       )}
     </div>
   );
-}
+};
 
-function footNote(plan: ShipPrepare | null): string {
-  const format = plan?.format;
-
-  const hooks =
-    format && format.skipped.length > 0
-      ? `Repo hooks skipped (${format.skipped.join(", ")}).`
-      : "Git hooks do not run.";
-
-  if (!format) {
-    return `${hooks} .env files, secrets and node_modules never ship.`;
-  }
-
-  return format.tool
-    ? `Formats with ${format.tool} first. ${hooks}`
-    : `No formatter found, so files ship unformatted. ${hooks}`;
-}
-
-function formatFact(format: NonNullable<ShipResult["format"]>): string {
-  if (!format.tool) {
-    return "Not formatted (no biome or prettier config)";
-  }
-
-  const count = format.formatted.length;
-
-  return count === 0
-    ? `${format.tool}: no change needed`
-    : `${format.tool} reformatted ${count === 1 ? "1 file" : `${count} files`}`;
-}
-
-function ResultView({
+const ResultView = ({
   result,
   onClose,
 }: {
   result: ShipResult;
   onClose: () => void;
-}) {
-  return (
-    <>
-      <div className="modal-body ship-result" role="status">
-        <p className="ship-result-lead">
-          <Icon name="check" size={14} />{" "}
-          {result.mode === "branch"
-            ? "Branch created in your repo."
-            : result.prUrl
-              ? "Pull request opened."
-              : "Branch pushed."}{" "}
-          Your checked-out branch and files did not change.
-        </p>
-        <dl className="ship-facts">
-          <dt>Branch</dt>
-          <dd className="mono">{result.branch}</dd>
-          <dt>Commit</dt>
-          <dd className="mono">{result.sha.slice(0, 12)}</dd>
-          <dt>Files</dt>
-          <dd>{result.files.length}</dd>
-          {result.format && (
-            <>
-              <dt>Format</dt>
-              <dd data-tip={result.format.note}>{formatFact(result.format)}</dd>
-            </>
-          )}
-          {result.pushed && (
-            <>
-              <dt>Pushed to</dt>
-              <dd className="mono">{result.remote}</dd>
-            </>
-          )}
-          {result.prUrl && (
-            <>
-              <dt>Pull request</dt>
-              <dd>
-                <a
-                  href={result.prUrl}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  {result.prUrl}
-                </a>
-              </dd>
-            </>
-          )}
-        </dl>
-        {result.format && result.format.errors.length > 0 && (
-          <div className="alert warn small" role="alert">
-            {result.format.tool} could not format{" "}
-            {result.format.errors.map((item) => item.path).join(", ")}, so{" "}
-            {result.format.errors.length === 1 ? "it ships" : "they ship"} as
-            the studio wrote {result.format.errors.length === 1 ? "it" : "them"}
-            .
-          </div>
+}) => (
+  <>
+    <div className="modal-body ship-result" role="status">
+      <p className="ship-result-lead">
+        <Icon name="check" size={14} />{" "}
+        {result.mode === "branch"
+          ? "Branch created in your repo."
+          : pick(result.prUrl, "Pull request opened.", "Branch pushed.")}{" "}
+        Your checked-out branch and files did not change.
+      </p>
+      <dl className="ship-facts">
+        <dt>{copy.branch}</dt>
+        <dd className="mono">{result.branch}</dd>
+        <dt>{copy.commit}</dt>
+        <dd className="mono">{result.sha.slice(0, 12)}</dd>
+        <dt>{copy.files2}</dt>
+        <dd>{result.files.length}</dd>
+        {result.format && (
+          <>
+            <dt>{copy.format}</dt>
+            <dd data-tip={result.format.note}>{formatFact(result.format)}</dd>
+          </>
         )}
-        {result.prError && (
-          <div className="alert warn small" role="alert">
-            {result.prError}
-          </div>
+        {result.pushed && (
+          <>
+            <dt>{copy.pushedTo}</dt>
+            <dd className="mono">{result.remote}</dd>
+          </>
         )}
-        {result.mode === "branch" && (
-          <p className="field-help">To see it: git switch {result.branch}</p>
+        {result.prUrl && (
+          <>
+            <dt>{copy.pullRequest}</dt>
+            <dd>
+              <a href={result.prUrl} target="_blank" rel="noreferrer noopener">
+                {result.prUrl}
+              </a>
+            </dd>
+          </>
         )}
-      </div>
-      <div className="modal-foot">
-        <span className="ship-spacer" />
-        <button
-          type="button"
-          className="btn primary"
-          data-autofocus
-          onClick={onClose}
-        >
-          Done
-        </button>
-      </div>
-    </>
-  );
-}
+      </dl>
+      {result.format && result.format.errors.length > 0 && (
+        <div className="alert warn small" role="alert">
+          {result.format.tool} could not format{" "}
+          {result.format.errors.map((item) => item.path).join(", ")}, so{" "}
+          {pick(result.format.errors.length === 1, "it ships", "they ship")} as
+          the studio wrote{" "}
+          {pick(result.format.errors.length === 1, "it", "them")}.
+        </div>
+      )}
+      {result.prError && (
+        <div className="alert warn small" role="alert">
+          {result.prError}
+        </div>
+      )}
+      {result.mode === "branch" && (
+        <p className="field-help">To see it: git switch {result.branch}</p>
+      )}
+    </div>
+    <div className="modal-foot">
+      <span className="ship-spacer" />
+      <button
+        type="button"
+        className="btn primary"
+        data-autofocus
+        onClick={onClose}
+      >
+        {copy.done}
+      </button>
+    </div>
+  </>
+);
 
-interface Fields {
-  title: string;
-  branch: string;
-  body: string;
-  commitMessage: string;
-}
-
-function fieldsOf(plan: ShipPrepare, draft: Draft): Fields {
-  const title = draft.title ?? plan.defaults.title;
-
-  const vars = {
-    ...plan.vars,
-    files: plan.files.filter((f) => draft.files.has(f.path)).map((f) => f.path),
-    issue: draft.issue,
-    title,
-  };
-
-  return {
-    body: draft.body ?? renderShipTemplate(plan.settings.bodyTemplate, vars),
-    branch:
-      draft.branch ?? renderBranchName(plan.settings.branchTemplate, vars),
-    commitMessage: draft.commitMessage ?? plan.defaults.commitMessage,
-    title,
-  };
-}
-
-function conflictHint(plan: ShipPrepare): string {
-  if (plan.base?.kind === "last-ship") {
-    return "Your checked-out commit does not have the last ship yet, so some files differ from this base. Merge that branch and pull, or pick “When attached” to ship all studio changes again.";
-  }
-
-  return "Some files have your own changes that differ from the studio base. They cannot ship until you commit or undo them. Pick a file to see why.";
-}
-
-function leadText(plan: ShipPrepare | null): string {
-  if (!plan?.repo) {
-    return "Commit studio changes to a new branch in your repo.";
-  }
-
-  return `Makes a new branch from ${plan.repo.branch ?? plan.repo.head.slice(0, 7)} in ${plan.repo.root}. Your checked-out branch, files and index do not change.`;
-}
-
-function shipRequestOf(
-  plan: ShipPrepare | null,
-  draft: Draft | null,
-  fields: Fields | null
-): ShipRequest | null {
-  if (!plan?.base || !plan.headVersionId || plan.blocked || !draft || !fields) {
-    return null;
-  }
-
-  if (
-    draft.files.size === 0 ||
-    !fields.branch.trim() ||
-    !fields.commitMessage.trim() ||
-    modeBlock(plan, draft.mode)
-  ) {
-    return null;
-  }
-
-  const files = plan.files
-    .filter((f) => draft.files.has(f.path))
-    .map((f) => f.path);
-
-  return {
-    baseVersionId: plan.base.versionId,
-    body: fields.body,
-    branch: fields.branch.trim(),
-    commitMessage: fields.commitMessage,
-    files,
-    headVersionId: plan.headVersionId,
-    mode: draft.mode,
-    title: fields.title,
-  };
-}
-
-function actionLabel(mode: ShipMode): string {
-  if (mode === "pr") {
-    return "Open pull request";
-  }
-
-  if (mode === "push") {
-    return "Push branch";
-  }
-
-  return "Create branch";
-}
-
-function usePlan(projectId: string, baseId: string | undefined) {
+const usePlan = (projectId: string, baseId: string | undefined) => {
   const [plan, setPlan] = useState<ShipPrepare | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
@@ -364,20 +178,20 @@ function usePlan(projectId: string, baseId: string | undefined) {
     let live = true;
     setPlan(null);
     setLoadError(null);
-    shipApi
-      .prepare(projectId, baseId)
-      .then((next) => {
+    void settle(
+      shipApi.prepare(projectId, baseId),
+      (next) => {
         if (!live) {
           return;
         }
-
         setPlan(next);
         setDraft((prev) => freshDraft(next, prev?.mode ?? "branch"));
         setFocus(
           next.files.find(shippable)?.path ?? next.files[0]?.path ?? null
         );
-      })
-      .catch((error: unknown) => live && setLoadError(errorText(error)));
+      },
+      (error) => live && setLoadError(errorText(error))
+    );
 
     return () => {
       live = false;
@@ -385,9 +199,9 @@ function usePlan(projectId: string, baseId: string | undefined) {
   }, [projectId, baseId]);
 
   return { draft, focus, loadError, plan, setDraft, setFocus };
-}
+};
 
-function FileList({
+const FileList = ({
   plan,
   draft,
   focus,
@@ -399,53 +213,48 @@ function FileList({
   focus: string | null;
   onFocus: (path: string) => void;
   onToggle: (path: string) => void;
-}) {
-  return (
-    <div className="ship-files-wrap">
-      <ul className="ship-files" aria-label={copy.changedFiles}>
-        {plan.files.map((file) => (
-          <li
-            key={file.path}
-            className={file.path === focus ? "active" : undefined}
+}) => (
+  <div className="ship-files-wrap">
+    <ul className="ship-files" aria-label={copy.changedFiles}>
+      {plan.files.map((file) => (
+        <li key={file.path} className={pick(file.path === focus, "active", "")}>
+          <input
+            type="checkbox"
+            aria-label={`Ship ${file.path}`}
+            checked={draft.files.has(file.path)}
+            disabled={!shippable(file)}
+            onChange={() => onToggle(file.path)}
+          />
+          <button
+            type="button"
+            className="ship-file"
+            onClick={() => onFocus(file.path)}
+            data-tip={file.refused ?? file.conflict ?? file.path}
           >
-            <input
-              type="checkbox"
-              aria-label={`Ship ${file.path}`}
-              checked={draft.files.has(file.path)}
-              disabled={!shippable(file)}
-              onChange={() => onToggle(file.path)}
-            />
-            <button
-              type="button"
-              className="ship-file"
-              onClick={() => onFocus(file.path)}
-              data-tip={file.refused ?? file.conflict ?? file.path}
-            >
-              <span className={`ship-status ${file.status}`}>
-                {STATUS_LETTER[file.status]}
-              </span>
-              <span className="mono truncate">{file.path}</span>
-              {(file.refused || file.conflict) && (
-                <Icon name="alert" size={12} />
+            <span className={`ship-status ${file.status}`}>
+              {STATUS_LETTER[file.status]}
+            </span>
+            <span className="mono truncate">{file.path}</span>
+            {(file.refused || file.conflict) && <Icon name="alert" size={12} />}
+            <span className="ship-counts">
+              {file.additions !== null && (
+                <span className="add">+{file.additions}</span>
               )}
-              <span className="ship-counts">
-                {file.additions !== null && (
-                  <span className="add">+{file.additions}</span>
-                )}
-                {file.deletions !== null && (
-                  <span className="del">−{file.deletions}</span>
-                )}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <DiffView file={plan.files.find((f) => f.path === focus) ?? null} />
-    </div>
-  );
-}
+              {file.deletions !== null && (
+                <span className="del">−{file.deletions}</span>
+              )}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+    <DiffView
+      file={plan.files.find((shipFile) => shipFile.path === focus) ?? null}
+    />
+  </div>
+);
 
-function ModePicker({
+const ModePicker = ({
   plan,
   mode,
   onMode,
@@ -453,36 +262,34 @@ function ModePicker({
   plan: ShipPrepare;
   mode: ShipMode;
   onMode: (mode: ShipMode) => void;
-}) {
-  return (
-    <fieldset className="ship-modes ship-wide">
-      <legend>When done</legend>
-      {MODES.map((item) => {
-        const why = modeBlock(plan, item.id);
+}) => (
+  <fieldset className="ship-modes ship-wide">
+    <legend>{copy.whenDone}</legend>
+    {MODES.map((item) => {
+      const why = modeBlock(plan, item.id);
 
-        return (
-          <label
-            key={item.id}
-            className={`ship-mode${why ? " off" : ""}`}
-            data-tip={why ?? item.hint}
-          >
-            <input
-              type="radio"
-              name="ship-mode"
-              checked={mode === item.id}
-              disabled={Boolean(why)}
-              onChange={() => onMode(item.id)}
-            />
-            <span>{item.label}</span>
-            <small>{why ?? item.hint}</small>
-          </label>
-        );
-      })}
-    </fieldset>
-  );
-}
+      return (
+        <label
+          key={item.id}
+          className={`ship-mode${pick(why, " off", "")}`}
+          data-tip={why ?? item.hint}
+        >
+          <input
+            type="radio"
+            name="ship-mode"
+            checked={mode === item.id}
+            disabled={Boolean(why)}
+            onChange={() => onMode(item.id)}
+          />
+          <span>{item.label}</span>
+          <small>{why ?? item.hint}</small>
+        </label>
+      );
+    })}
+  </fieldset>
+);
 
-function ShipFields({
+const ShipFields = ({
   plan,
   draft,
   fields,
@@ -492,91 +299,89 @@ function ShipFields({
   draft: Draft;
   fields: Fields;
   patch: (next: Partial<Draft>) => void;
-}) {
-  return (
-    <div className="ship-fields">
-      <label className="field">
-        <span>Issue id</span>
-        <input
-          className="mono"
-          value={draft.issue}
-          placeholder={copy.qa1234}
-          spellCheck={false}
-          autoComplete="off"
-          onChange={(e) => patch({ issue: e.target.value })}
-        />
-      </label>
-      <label className="field">
-        <span>Branch</span>
-        <input
-          className="mono"
-          value={fields.branch}
-          spellCheck={false}
-          autoComplete="off"
-          onChange={(e) => patch({ branch: e.target.value })}
-        />
-      </label>
-      <label className="field ship-wide">
-        <span>Commit message</span>
-        <textarea
-          className="mono"
-          rows={3}
-          value={fields.commitMessage}
-          onChange={(e) => patch({ commitMessage: e.target.value })}
-        />
-      </label>
-      <ModePicker
-        plan={plan}
-        mode={draft.mode}
-        onMode={(mode) => patch({ mode })}
+}) => (
+  <div className="ship-fields">
+    <label className="field">
+      <span>{copy.issueId}</span>
+      <input
+        className="mono"
+        value={draft.issue}
+        placeholder={copy.qa1234}
+        spellCheck={false}
+        autoComplete="off"
+        onChange={(changeEvent) => patch({ issue: changeEvent.target.value })}
       />
-      {draft.mode === "pr" && (
-        <>
-          <label className="field ship-wide">
-            <span>Pull request title</span>
-            <input
-              value={fields.title}
-              onChange={(e) => patch({ title: e.target.value })}
-            />
-          </label>
-          <label className="field ship-wide">
-            <span>Pull request body</span>
-            <textarea
-              className="mono"
-              rows={6}
-              value={fields.body}
-              onChange={(e) => patch({ body: e.target.value })}
-            />
-          </label>
-        </>
-      )}
+    </label>
+    <label className="field">
+      <span>{copy.branch}</span>
+      <input
+        className="mono"
+        value={fields.branch}
+        spellCheck={false}
+        autoComplete="off"
+        onChange={(changeEvent) => patch({ branch: changeEvent.target.value })}
+      />
+    </label>
+    <label className="field ship-wide">
+      <span>{copy.commitMessage}</span>
+      <textarea
+        className="mono"
+        rows={3}
+        value={fields.commitMessage}
+        onChange={(changeEvent) =>
+          patch({ commitMessage: changeEvent.target.value })
+        }
+      />
+    </label>
+    <ModePicker
+      plan={plan}
+      mode={draft.mode}
+      onMode={(mode) => patch({ mode })}
+    />
+    {draft.mode === "pr" && (
+      <>
+        <label className="field ship-wide">
+          <span>{copy.pullRequestTitle}</span>
+          <input
+            value={fields.title}
+            onChange={(changeEvent) =>
+              patch({ title: changeEvent.target.value })
+            }
+          />
+        </label>
+        <label className="field ship-wide">
+          <span>{copy.pullRequestBody}</span>
+          <textarea
+            className="mono"
+            rows={6}
+            value={fields.body}
+            onChange={(changeEvent) =>
+              patch({ body: changeEvent.target.value })
+            }
+          />
+        </label>
+      </>
+    )}
+  </div>
+);
+
+const ShipEmpty = ({ text }: { text: string | null }) => (
+  <div className="ship-empty" role="status">
+    <span className="ship-empty-icon" aria-hidden="true">
+      <Icon name="branch" size={16} />
+    </span>
+    <p className="ship-empty-title">
+      {text ?? "There is nothing to ship yet."}
+    </p>
+    <p className="ship-empty-text">{copy.runThisInThe}</p>
+    <div className="ship-empty-command">
+      <code>{FIRST_COMMIT}</code>
+      <CopyButton text={FIRST_COMMIT} label="Copy command" />
     </div>
-  );
-}
+  </div>
+);
 
-const FIRST_COMMIT = 'git init && git add -A && git commit -m "First commit"';
-
-function ShipEmpty({ text }: { text: string | null }) {
-  return (
-    <div className="ship-empty" role="status">
-      <span className="ship-empty-icon" aria-hidden="true">
-        <Icon name="branch" size={16} />
-      </span>
-      <p className="ship-empty-title">
-        {text ?? "There is nothing to ship yet."}
-      </p>
-      <p className="ship-empty-text">
-        Run this in the app folder, then open Ship again:
-      </p>
-      <div className="ship-empty-command">
-        <code>{FIRST_COMMIT}</code>
-        <CopyButton text={FIRST_COMMIT} label="Copy command" />
-      </div>
-    </div>
-  );
-}
-
-function PlanView({
+const PlanView = ({
   plan,
   draft,
   fields,
@@ -592,7 +397,7 @@ function PlanView({
   onFocus: (path: string) => void;
   onBase: (id: string) => void;
   setDraft: Dispatch<SetStateAction<Draft | null>>;
-}) {
+}) => {
   const patch = (next: Partial<Draft>) =>
     setDraft((prev) => (prev ? { ...prev, ...next } : prev));
 
@@ -615,12 +420,15 @@ function PlanView({
     return <ShipEmpty text={plan.blocked} />;
   }
 
-  const bases = plan.bases.map((b) => ({ label: b.title, value: b.versionId }));
+  const bases = plan.bases.map((second) => ({
+    label: second.title,
+    value: second.versionId,
+  }));
 
   return (
     <>
       <div className="field ship-base">
-        <span id="ship-base-label">Changes since</span>
+        <span id="ship-base-label">{copy.changesSince}</span>
         <UiSelect
           aria-labelledby="ship-base-label"
           value={plan.base?.versionId ?? ""}
@@ -642,7 +450,7 @@ function PlanView({
           onToggle={toggle}
         />
       )}
-      {plan.files.some((f) => f.conflict) && (
+      {plan.files.some((shipFile) => shipFile.conflict) && (
         <p className="ship-warn">{conflictHint(plan)}</p>
       )}
       {draft && fields && !plan.blocked && (
@@ -650,9 +458,9 @@ function PlanView({
       )}
     </>
   );
-}
+};
 
-export function ShipDialog({ projectId, onClose }: Props) {
+export const ShipDialog = ({ projectId, onClose }: Props) => {
   const [baseId, setBaseId] = useState<string | undefined>();
 
   const { plan, draft, setDraft, focus, setFocus, loadError } = usePlan(
@@ -708,10 +516,14 @@ export function ShipDialog({ projectId, onClose }: Props) {
       aria-label={copy.shipAsA}
       onMouseDown={dialog.onMouseDown}
     >
-      <form className="modal-form" onSubmit={(e) => void submit(e)} noValidate>
+      <form
+        className="modal-form"
+        onSubmit={(submitEvent) => void submit(submitEvent)}
+        noValidate
+      >
         <div className="modal-head">
           <div className="titles">
-            <h2>Ship as a pull request</h2>
+            <h2>{copy.shipAsA}</h2>
             <p>{leadText(plan)}</p>
           </div>
           <button
@@ -729,7 +541,9 @@ export function ShipDialog({ projectId, onClose }: Props) {
         ) : (
           <>
             <div className="modal-body ship-body">
-              {!plan && !shown && <p className="muted">Reading changes…</p>}
+              {!plan && !shown && (
+                <p className="muted">{copy.readingChanges}</p>
+              )}
               {plan && (
                 <PlanView
                   plan={plan}
@@ -761,7 +575,7 @@ export function ShipDialog({ projectId, onClose }: Props) {
                 onClick={onClose}
                 disabled={busy}
               >
-                Cancel
+                {copy.cancel}
               </button>
               <button
                 type="submit"
@@ -770,7 +584,7 @@ export function ShipDialog({ projectId, onClose }: Props) {
               >
                 {busy
                   ? "Shipping…"
-                  : `${actionLabel(draft?.mode ?? "branch")}${count > 0 ? ` (${count})` : ""}`}
+                  : `${actionLabel(draft?.mode ?? "branch")}${pick(count > 0, ` (${count})`, "")}`}
               </button>
             </div>
           </>
@@ -778,4 +592,4 @@ export function ShipDialog({ projectId, onClose }: Props) {
       </form>
     </dialog>
   );
-}
+};

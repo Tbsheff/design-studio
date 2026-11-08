@@ -2,12 +2,13 @@ import type { CopyCodeFormat } from "@design-studio/contracts/export";
 import { Icon, usePopover } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy as uiCopy } from "./copy.js";
 
 import "../../styles/export.css";
 import { activeExportFrame, exportApi, openExport } from "./export-api.js";
+import { pick } from "./pick.js";
 
 interface Props {
   projectId: string;
@@ -24,10 +25,10 @@ type State =
 
 const RESET_MS = 1600;
 
-function menuKeys(
+const menuKeys = (
   event: KeyboardEvent<HTMLElement>,
   close: (refocus: boolean) => void
-): void {
+): void => {
   if (event.key === "Tab") {
     close(false);
   }
@@ -49,31 +50,49 @@ function menuKeys(
 
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
   items[(Math.max(0, index) + step + items.length) % items.length]?.focus();
-}
+};
 
-function writeWhenReady(text: Promise<string>): Promise<void> {
+const toBlob = async (text: Promise<string>): Promise<Blob> =>
+  new Blob([await text], { type: "text/plain" });
+
+const writeWhenReady = async (text: Promise<string>): Promise<void> => {
   if (
-    typeof ClipboardItem !== "undefined" &&
-    typeof navigator.clipboard?.write === "function"
+    typeof ClipboardItem === "undefined" ||
+    typeof navigator.clipboard?.write !== "function"
   ) {
-    const blob = text.then(
-      (value) => new Blob([value], { type: "text/plain" })
-    );
+    await navigator.clipboard.writeText(await text);
 
-    return navigator.clipboard
-      .write([new ClipboardItem({ "text/plain": blob })])
-      .catch(async (error: unknown) => {
-        const value = await text;
-        await navigator.clipboard.writeText(value).catch(() => {
-          throw error;
-        });
-      });
+    return;
   }
 
-  return text.then((value) => navigator.clipboard.writeText(value));
-}
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ "text/plain": toBlob(text) }),
+    ]);
+  } catch (error) {
+    const value = await text;
 
-function TriggerContent({
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      throw error;
+    }
+  }
+};
+
+const toCopyText = async (
+  produce: () => Promise<string | null>
+): Promise<string> => {
+  const value = await produce();
+
+  if (!value) {
+    throw new Error("Nothing to copy");
+  }
+
+  return value;
+};
+
+const TriggerContent = ({
   variant,
   open,
   busy,
@@ -85,30 +104,30 @@ function TriggerContent({
   busy: boolean;
   text: string;
   icon: IconName;
-}) {
+}): ReactElement => {
   if (variant === "row") {
     return (
       <>
         <span>{text}</span>
-        <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
+        <Icon name={pick(open, "chevronDown", "chevronRight")} size={12} />
       </>
     );
   }
 
   return busy ? <span className="spinner" /> : <Icon name={icon} size={14} />;
-}
+};
 
-export function CopyCodeMenu({
+const CopyCodeMenu = ({
   projectId,
   directionId,
   selector,
   variant = "icon",
-}: Props) {
+}: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<State>({ kind: "idle" });
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
@@ -120,9 +139,9 @@ export function CopyCodeMenu({
 
   usePopover(open, root, close);
   useEffect(
-    () => () => {
+    () => (): void => {
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
     },
     []
@@ -135,27 +154,24 @@ export function CopyCodeMenu({
     }
   }, [open]);
 
-  const settle = (next: State) => {
+  const settle = (next: State): void => {
     setState(next);
 
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
 
-    timer.current = window.setTimeout(
+    timer.current = globalThis.setTimeout(
       () => setState({ kind: "idle" }),
       RESET_MS
     );
   };
 
-  const copy = async (label: string, produce: () => Promise<string | null>) => {
-    const text = produce().then((value) => {
-      if (!value) {
-        throw new Error("Nothing to copy");
-      }
-
-      return value;
-    });
+  const copy = async (
+    label: string,
+    produce: () => Promise<string | null>
+  ): Promise<void> => {
+    const text = toCopyText(produce);
 
     const written = writeWhenReady(text);
     close(true);
@@ -172,7 +188,7 @@ export function CopyCodeMenu({
     }
   };
 
-  const code = (format: CopyCodeFormat) => async () => {
+  const code = (format: CopyCodeFormat) => async (): Promise<string | null> => {
     if (!directionId) {
       return null;
     }
@@ -225,20 +241,18 @@ export function CopyCodeMenu({
   const icon: IconName =
     state.kind === "copied"
       ? "check"
-      : state.kind === "failed"
-        ? "alert"
-        : "code";
+      : pick(state.kind === "failed", "alert", "code");
 
   return (
     <div className="copy-code-root" ref={root}>
       <button
         ref={trigger}
         type="button"
-        className={`${variant === "row" ? "ins-export-row" : "icon-btn small copy-code-trigger"}${state.kind === "busy" ? " busy" : ""}`}
+        className={`${pick(variant === "row", "ins-export-row", "icon-btn small copy-code-trigger")}${pick(state.kind === "busy", " busy", "")}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        data-tip={open || variant === "row" ? undefined : label}
+        data-tip={pick(open || variant === "row", null, label)}
         data-tip-align="end"
         onClick={() => setOpen((value) => !value)}
       >
@@ -246,19 +260,19 @@ export function CopyCodeMenu({
           variant={variant}
           open={open}
           busy={state.kind === "busy"}
-          text={state.kind === "idle" ? "Export selection" : label}
+          text={pick(state.kind === "idle", "Export selection", label)}
           icon={icon}
         />
       </button>
       <span className="sr-only" aria-live="polite">
-        {state.kind === "idle" ? "" : label}
+        {pick(state.kind === "idle", "", label)}
       </span>
       {open ? (
         <div
           className="project-menu copy-code-menu"
           role="menu"
           aria-label={uiCopy.copyElement}
-          onKeyDown={(e) => menuKeys(e, close)}
+          onKeyDown={(keyboardEvent) => menuKeys(keyboardEvent, close)}
         >
           {items.map((item) => (
             <button
@@ -276,4 +290,6 @@ export function CopyCodeMenu({
       ) : null}
     </div>
   );
-}
+};
+
+export { CopyCodeMenu };

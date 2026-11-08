@@ -18,11 +18,13 @@ import { errorText } from "../../api.js";
 import { canvasFrameName } from "../canvas/canvas-frames.js";
 import { copy } from "./copy.js";
 import { canvasFrameChoices } from "./export-api.js";
+import { pick } from "./pick.js";
 import { PublicationRow } from "./publication-row.js";
 import { publishApi } from "./publish-api.js";
 import type { PublishRequest } from "./publish-api.js";
 import { usePublishBackend } from "./publish-backend-setup.js";
 import { PublishSetupBody, usePublishCli } from "./publish-setup.js";
+import { ignoreFailure } from "./settle.js";
 
 export interface PublishTarget {
   projectId: string;
@@ -38,7 +40,7 @@ const EXPIRIES: { id: PublishExpiryDays; label: string }[] = [
   { id: 0, label: "No end" },
 ];
 
-function usePublications(projectId: string) {
+const usePublications = (projectId: string) => {
   const [list, setList] = useState<Publication[]>([]);
   const [backendError, setBackendError] = useState<string | null>(null);
 
@@ -49,13 +51,13 @@ function usePublications(projectId: string) {
   }, [projectId]);
 
   useEffect(() => {
-    void reload().catch(() => null);
+    void ignoreFailure(reload());
   }, [reload]);
 
   return { backendError, list, reload };
-}
+};
 
-function Toggle({
+const Toggle = ({
   on,
   label,
   onChange,
@@ -63,20 +65,18 @@ function Toggle({
   on: boolean;
   label: string;
   onChange: (on: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      className={`export-switch${on ? " on" : ""}`}
-      onClick={() => onChange(!on)}
-    >
-      <span className="export-switch-knob" />
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    className={`export-switch${pick(on, " on", "")}`}
+    onClick={() => onChange(!on)}
+  >
+    <span className="export-switch-knob" />
+  </button>
+);
 
 interface FormState {
   picked: Set<string>;
@@ -88,15 +88,15 @@ interface FormState {
   indexable: boolean;
 }
 
-function FramePicker({
+const FramePicker = ({
   target,
   form,
   setForm,
 }: {
   target: PublishTarget;
   form: FormState;
-  setForm: (f: FormState) => void;
-}) {
+  setForm: (state: FormState) => void;
+}) => {
   const frames = useMemo(
     () => canvasFrameChoices(target.projectId, target.directionId),
     [target.projectId, target.directionId]
@@ -116,7 +116,7 @@ function FramePicker({
 
   return (
     <fieldset className="export-field export-frames">
-      <legend className="export-label">Frames (published as images)</legend>
+      <legend className="export-label">{copy.framesPublishedAsImages}</legend>
       {frames.map((choice) => (
         <label key={choice.id} className="export-frame">
           <input
@@ -134,9 +134,9 @@ function FramePicker({
       ))}
     </fieldset>
   );
-}
+};
 
-function SwitchRow({
+const SwitchRow = ({
   title,
   help,
   on,
@@ -146,132 +146,124 @@ function SwitchRow({
   help: string;
   on: boolean;
   onChange: (on: boolean) => void;
-}) {
-  return (
-    <div className="share-lan-row">
-      <div className="share-lan-text">
-        <span className="share-lan-title">{title}</span>
-        <span className="share-lan-help">{help}</span>
-      </div>
-      <Toggle on={on} label={title} onChange={onChange} />
+}) => (
+  <div className="share-lan-row">
+    <div className="share-lan-text">
+      <span className="share-lan-title">{title}</span>
+      <span className="share-lan-help">{help}</span>
     </div>
-  );
-}
+    <Toggle on={on} label={title} onChange={onChange} />
+  </div>
+);
 
-function PublishForm({
+const PublishForm = ({
   target,
   form,
   setForm,
 }: {
   target: PublishTarget;
   form: FormState;
-  setForm: (f: FormState) => void;
-}) {
-  return (
-    <div className="publish-form">
-      {target.kind === "site" ? (
-        <p className="publish-step-text">
-          Every page of the saved version goes up as a static site: HTML, CSS,
-          scripts, images and fonts. Source files, .env, node_modules and studio
-          scripts stay on this Mac.
-        </p>
-      ) : (
-        <FramePicker target={target} form={form} setForm={setForm} />
-      )}
-      <SwitchRow
-        title={copy.password}
-        help={
-          form.passwordOn
-            ? "Viewers type it on a sign-in page."
-            : "Off: anyone with the URL can open it."
-        }
-        on={form.passwordOn}
-        onChange={(on) => setForm({ ...form, passwordOn: on })}
-      />
-      {form.passwordOn && (
-        <label className="field">
-          <span>Password ({PUBLISH_PASSWORD_MIN} or more characters)</span>
-          <input
-            type="password"
-            autoComplete="new-password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-        </label>
-      )}
-      <div className="export-field">
-        <span className="export-label">Stops working after</span>
-        <div
-          className="segmented export-seg"
-          role="radiogroup"
-          aria-label={copy.stopsWorkingAfter}
-        >
-          {EXPIRIES.map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              role="radio"
-              aria-checked={form.expiry === o.id}
-              className={form.expiry === o.id ? "on" : ""}
-              onClick={() => setForm({ ...form, expiry: o.id })}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      {target.kind === "viewer" && (
-        <SwitchRow
-          title={copy.showOpenComments}
-          help={
-            form.comments
-              ? "Open studio comments show as read-only text next to the frames."
-              : "Off: only the images go up."
-          }
-          on={form.comments}
-          onChange={(on) => setForm({ ...form, comments: on })}
+  setForm: (state: FormState) => void;
+}) => (
+  <div className="publish-form">
+    {target.kind === "site" ? (
+      <p className="publish-step-text">{copy.everyPageOfThe}</p>
+    ) : (
+      <FramePicker target={target} form={form} setForm={setForm} />
+    )}
+    <SwitchRow
+      title={copy.password}
+      help={
+        form.passwordOn
+          ? "Viewers type it on a sign-in page."
+          : "Off: anyone with the URL can open it."
+      }
+      on={form.passwordOn}
+      onChange={(on) => setForm({ ...form, passwordOn: on })}
+    />
+    {form.passwordOn && (
+      <label className="field">
+        <span>Password ({PUBLISH_PASSWORD_MIN} or more characters)</span>
+        <input
+          type="password"
+          autoComplete="new-password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
-      )}
-      <SwitchRow
-        title={copy.viewerComments}
-        help={
-          form.viewerComments
-            ? "Viewers can leave a name and a comment on a comments page. You can delete them here."
-            : "Off: viewers cannot comment."
-        }
-        on={form.viewerComments}
-        onChange={(on) => setForm({ ...form, viewerComments: on })}
-      />
-      <SwitchRow
-        title={copy.searchEngines}
-        help={
-          form.indexable
-            ? "On: search engines may list this design."
-            : "Off: pages send noindex."
-        }
-        on={form.indexable}
-        onChange={(on) => setForm({ ...form, indexable: on })}
-      />
+      </label>
+    )}
+    <div className="export-field">
+      <span className="export-label">{copy.stopsWorkingAfter}</span>
+      <div
+        className="segmented export-seg"
+        role="radiogroup"
+        aria-label={copy.stopsWorkingAfter}
+      >
+        {EXPIRIES.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            role="radio"
+            aria-checked={form.expiry === option.id}
+            className={pick(form.expiry === option.id, "on", "")}
+            onClick={() => setForm({ ...form, expiry: option.id })}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
     </div>
-  );
-}
+    {target.kind === "viewer" && (
+      <SwitchRow
+        title={copy.showOpenComments}
+        help={
+          form.comments
+            ? "Open studio comments show as read-only text next to the frames."
+            : "Off: only the images go up."
+        }
+        on={form.comments}
+        onChange={(on) => setForm({ ...form, comments: on })}
+      />
+    )}
+    <SwitchRow
+      title={copy.viewerComments}
+      help={
+        form.viewerComments
+          ? "Viewers can leave a name and a comment on a comments page. You can delete them here."
+          : "Off: viewers cannot comment."
+      }
+      on={form.viewerComments}
+      onChange={(on) => setForm({ ...form, viewerComments: on })}
+    />
+    <SwitchRow
+      title={copy.searchEngines}
+      help={
+        form.indexable
+          ? "On: search engines may list this design."
+          : "Off: pages send noindex."
+      }
+      on={form.indexable}
+      onChange={(on) => setForm({ ...form, indexable: on })}
+    />
+  </div>
+);
 
-function filesText(plan: PublishPlan): string {
-  const base = `${plan.fileCount} file${plan.fileCount === 1 ? "" : "s"}, ${publishSize(plan.bytes)}`;
+const filesText = (plan: PublishPlan): string => {
+  const base = `${plan.fileCount} file${pick(plan.fileCount === 1, "", "s")}, ${publishSize(plan.bytes)}`;
 
   return plan.changedFiles === null
     ? base
     : `${base} (${plan.changedFiles} changed since the live version)`;
-}
+};
 
-function PlanView({ plan }: { plan: PublishPlan }) {
+const PlanView = ({ plan }: { plan: PublishPlan }) => {
   const rows: [string, string][] = [
     ["Address", plan.url ?? plan.urlPattern],
-    [plan.kind === "site" ? "Pages" : "Frames", plan.pages.join(", ")],
+    [pick(plan.kind === "site", "Pages", "Frames"), plan.pages.join(", ")],
     ["Files", filesText(plan)],
-    ["Password", plan.password ? "On" : "Off: anyone with the URL"],
+    ["Password", pick(plan.password, "On", "Off: anyone with the URL")],
     ["Ends", publishExpiryText(plan.expiresAt)],
-    ["Comments", plan.viewerComments ? "Viewers can comment" : "Off"],
+    ["Comments", pick(plan.viewerComments, "Viewers can comment", "Off")],
     ["Indexing", plan.noindex ? "noindex" : "Search engines may list it"],
     ["Version", plan.versionId.slice(0, 7)],
   ];
@@ -280,7 +272,7 @@ function PlanView({ plan }: { plan: PublishPlan }) {
     rows.push([
       "Studio notes",
       plan.comments > 0
-        ? `${plan.comments} open comment${plan.comments === 1 ? "" : "s"}`
+        ? `${plan.comments} open comment${pick(plan.comments === 1, "", "s")}`
         : "None",
     ]);
   }
@@ -293,16 +285,16 @@ function PlanView({ plan }: { plan: PublishPlan }) {
           ? "It becomes the live version at this address; older versions stay for rollback."
           : "Anyone who has the address can open it."}
       </div>
-      {plan.warnings.map((w) => (
-        <div key={w} className="alert small" role="note">
-          {w}
+      {plan.warnings.map((warning) => (
+        <div key={warning} className="alert small" role="note">
+          {warning}
         </div>
       ))}
       <dl className="publish-plan-list">
-        {rows.map(([k, v]) => (
-          <div key={k} className="publish-kv">
-            <dt>{k}</dt>
-            <dd className={k === "Address" ? "mono" : undefined}>{v}</dd>
+        {rows.map(([label, value]) => (
+          <div key={label} className="publish-kv">
+            <dt>{label}</dt>
+            <dd className={pick(label === "Address", "mono", "")}>{value}</dd>
           </div>
         ))}
       </dl>
@@ -314,13 +306,16 @@ function PlanView({ plan }: { plan: PublishPlan }) {
       </p>
     </div>
   );
-}
+};
 
-function planInputOf(target: PublishTarget, form: FormState): PublishRequest {
+const planInputOf = (
+  target: PublishTarget,
+  form: FormState
+): PublishRequest => {
   const frames = canvasFrameChoices(
     target.projectId,
     target.directionId
-  ).filter((f) => form.picked.has(f.id));
+  ).filter((choice) => form.picked.has(choice.id));
 
   const input: PublishRequest = {
     expiresInDays: form.expiry,
@@ -334,14 +329,14 @@ function planInputOf(target: PublishTarget, form: FormState): PublishRequest {
   if (target.kind === "viewer") {
     Object.assign(input, {
       comments: form.comments,
-      frames: frames.map((f) => f.id),
+      frames: frames.map((frame) => frame.id),
     });
   }
 
   return input;
-}
+};
 
-function formError(target: PublishTarget, form: FormState): string | null {
+const formError = (target: PublishTarget, form: FormState): string | null => {
   if (!target.versionId) {
     return "Save a version first. Publish takes a saved version.";
   }
@@ -358,9 +353,9 @@ function formError(target: PublishTarget, form: FormState): string | null {
   }
 
   return null;
-}
+};
 
-function usePublishFlow(target: PublishTarget) {
+const usePublishFlow = (target: PublishTarget) => {
   const pubs = usePublications(target.projectId);
   const [plan, setPlan] = useState<PublishPlan | null>(null);
   const [asked, setAsked] = useState<PublishRequest | null>(null);
@@ -403,15 +398,15 @@ function usePublishFlow(target: PublishTarget) {
       }
     });
 
-  const unpublish = (p: Publication) =>
+  const unpublish = (publication: Publication) =>
     act("Unpublishing…", async () => {
-      await publishApi.unpublish(target.projectId, p.id);
+      await publishApi.unpublish(target.projectId, publication.id);
       await pubs.reload();
     });
 
-  const rollback = (p: Publication, versionId: string) =>
+  const rollback = (publication: Publication, versionId: string) =>
     act("Rolling back…", async () => {
-      await publishApi.rollback(target.projectId, p.id, versionId);
+      await publishApi.rollback(target.projectId, publication.id, versionId);
       await pubs.reload();
     });
 
@@ -427,9 +422,9 @@ function usePublishFlow(target: PublishTarget) {
     setPlan,
     unpublish,
   };
-}
+};
 
-function DoneNote({ done }: { done: Publication }) {
+const DoneNote = ({ done }: { done: Publication }) => {
   if (done.status !== "live" || !done.url) {
     return null;
   }
@@ -444,17 +439,17 @@ function DoneNote({ done }: { done: Publication }) {
       role="status"
       data-testid="publish-done"
     >
-      <span className="share-url-kind">Published</span>
+      <span className="share-url-kind">{copy.published}</span>
       <code className="mono truncate">{done.url}</code>
       <CopyButton text={done.url} label="Copy link" />
       {upload && <span className="publish-done-upload">{upload.trim()}</span>}
     </div>
   );
-}
+};
 
 type Flow = ReturnType<typeof usePublishFlow>;
 
-function PaneFoot({
+const PaneFoot = ({
   flow,
   ready,
   problem,
@@ -466,63 +461,61 @@ function PaneFoot({
   problem: string | null;
   onClose: () => void;
   onCheck: () => void;
-}) {
-  return (
-    <div className="modal-foot">
-      <span className="share-foot-note">
-        {flow.plan
-          ? "Nothing is uploaded until you click Publish."
-          : ready && problem
-            ? problem
-            : "Hosted by your own publish Worker."}
-      </span>
-      <span className="share-spacer" />
-      {flow.plan ? (
-        <>
-          <button
-            type="button"
-            className="btn ghost"
-            disabled={flow.busy !== null}
-            onClick={() => flow.setPlan(null)}
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            className="btn primary"
-            disabled={flow.busy !== null}
-            onClick={() => void flow.confirm()}
-            data-autofocus
-          >
-            {flow.busy ?? (flow.plan.republishOf ? "Republish" : "Publish")}
-          </button>
-        </>
-      ) : (
-        <>
-          <button type="button" className="btn ghost" onClick={onClose}>
-            Close
-          </button>
-          <button
-            type="button"
-            className="btn primary"
-            disabled={!ready || problem !== null || flow.busy !== null}
-            onClick={onCheck}
-          >
-            {flow.busy ?? "Check what goes public"}
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
+}) => (
+  <div className="modal-foot">
+    <span className="share-foot-note">
+      {flow.plan
+        ? "Nothing is uploaded until you click Publish."
+        : ready && problem
+          ? problem
+          : "Hosted by your own publish Worker."}
+    </span>
+    <span className="share-spacer" />
+    {flow.plan ? (
+      <>
+        <button
+          type="button"
+          className="btn ghost"
+          disabled={flow.busy !== null}
+          onClick={() => flow.setPlan(null)}
+        >
+          {copy.back}
+        </button>
+        <button
+          type="button"
+          className="btn primary"
+          disabled={flow.busy !== null}
+          onClick={() => void flow.confirm()}
+          data-autofocus
+        >
+          {flow.busy ?? pick(flow.plan.republishOf, "Republish", "Publish")}
+        </button>
+      </>
+    ) : (
+      <>
+        <button type="button" className="btn ghost" onClick={onClose}>
+          {copy.close}
+        </button>
+        <button
+          type="button"
+          className="btn primary"
+          disabled={!ready || problem !== null || flow.busy !== null}
+          onClick={onCheck}
+        >
+          {flow.busy ?? "Check what goes public"}
+        </button>
+      </>
+    )}
+  </div>
+);
 
-function PublishPane({
+const PublishPane = ({
   target,
   onClose,
 }: {
   target: PublishTarget;
   onClose: () => void;
-}) {
+}) => {
   const cli = usePublishCli();
   const backend = usePublishBackend();
   const flow = usePublishFlow(target);
@@ -536,7 +529,7 @@ function PublishPane({
     picked: new Set(
       canvasFrameChoices(target.projectId, target.directionId)
         .slice(0, PUBLISH_MAX_FRAMES)
-        .map((f) => f.id)
+        .map((choice) => choice.id)
     ),
     viewerComments: false,
   }));
@@ -565,10 +558,10 @@ function PublishPane({
         )}
         {shown.length > 0 && (
           <ul className="share-links" aria-label={copy.publications}>
-            {shown.map((p) => (
+            {shown.map((publication) => (
               <PublicationRow
-                key={p.id}
-                p={p}
+                key={publication.id}
+                publication={publication}
                 now={now}
                 projectId={target.projectId}
                 busy={flow.busy !== null}
@@ -595,6 +588,6 @@ function PublishPane({
       />
     </>
   );
-}
+};
 
 export { PublishPane };

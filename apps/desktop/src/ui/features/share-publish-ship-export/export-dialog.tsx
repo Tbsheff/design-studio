@@ -10,8 +10,8 @@ import type {
 } from "@design-studio/contracts/export";
 import { Icon, useModalDialog } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { downloadBlob } from "../../domain/format.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
@@ -26,11 +26,14 @@ import {
   revealDownload,
   saveExportPrefs,
 } from "./export-api.js";
-
-import "../../styles/export.css";
 import type { ExportTarget, FrameChoice } from "./export-api.js";
 
-interface Props {
+import "../../styles/export.css";
+import { pick } from "./pick.js";
+import { useCopied } from "./use-copied.js";
+import { useEditors } from "./use-editors.js";
+
+export interface Props {
   target: ExportTarget;
   onClose: () => void;
 }
@@ -96,6 +99,7 @@ const FORMATS: FormatInfo[] = [
 ];
 
 const MOBILE_MAX = 600;
+
 const MOBILE_FRAME = { height: 844, name: "Mobile", width: 390 };
 
 type Status =
@@ -105,13 +109,13 @@ type Status =
   | { kind: "error"; text: string };
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
-  ArrowDown: (i, n) => (i + 1) % n,
-  ArrowLeft: (i, n) => (i - 1 + n) % n,
-  ArrowRight: (i, n) => (i + 1) % n,
-  ArrowUp: (i, n) => (i - 1 + n) % n,
+  ArrowDown: (index, count) => (index + 1) % count,
+  ArrowLeft: (index, count) => (index - 1 + count) % count,
+  ArrowRight: (index, count) => (index + 1) % count,
+  ArrowUp: (index, count) => (index - 1 + count) % count,
 };
 
-function onRadioKey(event: KeyboardEvent<HTMLDivElement>): void {
+const onRadioKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   const step = RADIO_STEP[event.key];
 
   if (!step) {
@@ -134,92 +138,60 @@ function onRadioKey(event: KeyboardEvent<HTMLDivElement>): void {
   const next = radios[step(index, radios.length)];
   next?.focus();
   next?.click();
-}
+};
 
-function Segmented<T extends string | number>({
+const Segmented = <Value extends string | number>({
   label,
   value,
   options,
   onChange,
 }: {
   label: string;
-  value: T;
-  options: { id: T; label: string; icon?: IconName }[];
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div
-      className="segmented export-seg"
-      role="radiogroup"
-      aria-label={label}
-      onKeyDown={onRadioKey}
-    >
-      {options.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          role="radio"
-          aria-checked={value === option.id}
-          tabIndex={value === option.id ? 0 : -1}
-          className={value === option.id ? "on" : ""}
-          onClick={() => onChange(option.id)}
-        >
-          {option.icon ? <Icon name={option.icon} size={14} /> : null}
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+  value: Value;
+  options: { id: Value; label: string; icon?: IconName }[];
+  onChange: (value: Value) => void;
+}): ReactElement => (
+  <div
+    className="segmented export-seg"
+    role="radiogroup"
+    aria-label={label}
+    onKeyDown={onRadioKey}
+  >
+    {options.map((option) => (
+      <button
+        key={option.id}
+        type="button"
+        role="radio"
+        aria-checked={value === option.id}
+        tabIndex={pick(value === option.id, 0, -1)}
+        className={pick(value === option.id, "on", "")}
+        onClick={() => onChange(option.id)}
+      >
+        {option.icon ? <Icon name={option.icon} size={14} /> : null}
+        {option.label}
+      </button>
+    ))}
+  </div>
+);
 
-function useElapsed(status: Status): number {
+const useElapsed = (status: Status): number => {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (status.kind !== "busy") {
       return;
     }
 
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const timer = globalThis.setInterval(() => setNow(Date.now()), 1000);
 
-    return () => window.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [status.kind]);
 
   return status.kind === "busy"
     ? Math.max(0, Math.floor((now - status.startedAt) / 1000))
     : 0;
-}
+};
 
-function useCopied(): [string | null, (key: string, text: string) => void] {
-  const [copied, setCopied] = useState<string | null>(null);
-  const timer = useRef<number | null>(null);
-  useEffect(
-    () => () => {
-      if (timer.current !== null) {
-        window.clearTimeout(timer.current);
-      }
-    },
-    []
-  );
-
-  const copy = (key: string, text: string) => {
-    void navigator.clipboard.writeText(text).then(
-      () => {
-        setCopied(key);
-
-        if (timer.current !== null) {
-          window.clearTimeout(timer.current);
-        }
-
-        timer.current = window.setTimeout(() => setCopied(null), 1500);
-      },
-      () => setCopied(null)
-    );
-  };
-
-  return [copied, copy];
-}
-
-function HandoffResultView({
+const HandoffResultView = ({
   target,
   result,
   editors,
@@ -229,14 +201,17 @@ function HandoffResultView({
   result: HandoffResult;
   editors: EditorInfo[];
   onError: (text: string) => void;
-}) {
+}): ReactElement => {
   const [copied, copy] = useCopied();
   const folder = result.path.split("/").pop() ?? "";
 
-  const run = (task: () => Promise<void>) =>
-    void task().catch((error: unknown) =>
-      onError(error instanceof Error ? error.message : String(error))
-    );
+  const run = async (task: () => Promise<void>): Promise<void> => {
+    try {
+      await task();
+    } catch (error) {
+      onError(error instanceof Error ? error.message : String(error));
+    }
+  };
 
   return (
     <div className="export-handoff-result">
@@ -254,7 +229,7 @@ function HandoffResultView({
           className="btn small primary has-icon"
           onClick={() => copy("prompt", result.prompt)}
         >
-          <Icon name={copied === "prompt" ? "check" : "copy"} size={14} />
+          <Icon name={pick(copied === "prompt", "check", "copy")} size={14} />
           <span aria-live="polite">
             {copied === "prompt" ? "Copied" : "Copy prompt for Claude Code"}
           </span>
@@ -279,12 +254,12 @@ function HandoffResultView({
             run(() => exportApi.revealHandoff(target.projectId, folder))
           }
         >
-          Reveal in Finder
+          {uiCopy.revealInFinder}
         </button>
       </div>
       {editors.length > 0 && target.directionId ? (
         <div className="export-editors">
-          <span className="export-label">Open project in</span>
+          <span className="export-label">{uiCopy.openProjectIn}</span>
           {editors.map((editor) => (
             <button
               key={editor.id}
@@ -307,23 +282,33 @@ function HandoffResultView({
       ) : null}
     </div>
   );
-}
+};
 
-function ConnectClaudeCode() {
+const ConnectClaudeCode = (): ReactElement => {
   const [status, setStatus] = useState<McpStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, copy] = useCopied();
   useEffect(() => {
     let live = true;
-    mcpApi.status().then(
-      (s) => live && setStatus(s),
-      (failure: unknown) =>
-        live &&
-        setError(failure instanceof Error ? failure.message : String(failure))
-    );
+    const load = async (): Promise<void> => {
+      try {
+        const next = await mcpApi.status();
 
-    return () => {
+        if (live) {
+          setStatus(next);
+        }
+      } catch (failure) {
+        if (live) {
+          setError(
+            failure instanceof Error ? failure.message : String(failure)
+          );
+        }
+      }
+    };
+    void load();
+
+    return (): void => {
       live = false;
     };
   }, []);
@@ -332,7 +317,7 @@ function ConnectClaudeCode() {
     enabled?: boolean;
     edits?: boolean;
     rotate?: boolean;
-  }) => {
+  }): Promise<void> => {
     setBusy(true);
     setError(null);
 
@@ -352,18 +337,15 @@ function ConnectClaudeCode() {
     <section className="export-connect" aria-label={uiCopy.connectToClaude}>
       <div className="export-connect-head">
         <div className="titles">
-          <h3>Connect to Claude Code</h3>
-          <p className="export-sub">
-            A local MCP server lets Claude Code read projects, tokens, DESIGN.md
-            and screenshots. Runs on this Mac only.
-          </p>
+          <h3>{uiCopy.connectToClaude}</h3>
+          <p className="export-sub">{uiCopy.aLocalMcpServer}</p>
         </div>
         <button
           type="button"
           role="switch"
           aria-checked={on}
           aria-label={uiCopy.mcpServer}
-          className={`export-switch${on ? " on" : ""}`}
+          className={`export-switch${pick(on, " on", "")}`}
           disabled={busy || status === null}
           onClick={() => void change({ enabled: !on })}
         >
@@ -384,15 +366,15 @@ function ConnectClaudeCode() {
               className="btn small has-icon"
               onClick={() => copy("mcp", status.command as string)}
             >
-              <Icon name={copied === "mcp" ? "check" : "copy"} size={14} />
+              <Icon name={pick(copied === "mcp", "check", "copy")} size={14} />
               <span aria-live="polite">
-                {copied === "mcp" ? "Copied" : "Copy command"}
+                {pick(copied === "mcp", "Copied", "Copy command")}
               </span>
             </button>
           </div>
           <div className="export-connect-head export-control">
             <div className="titles">
-              <h4>Allow edits</h4>
+              <h4>{uiCopy.allowEdits}</h4>
               <p className="export-sub">
                 {edits
                   ? "Claude Code can also edit files and elements, arrange frames, comment, restore versions, apply design systems, create projects and export. Each edit is a version you can undo. It cannot start or stop Claude runs in the studio. Reconnect the server in Claude Code after you change this."
@@ -404,7 +386,7 @@ function ConnectClaudeCode() {
               role="switch"
               aria-checked={edits}
               aria-label={uiCopy.allowEdits}
-              className={`export-switch${edits ? " on" : ""}`}
+              className={`export-switch${pick(edits, " on", "")}`}
               disabled={busy}
               onClick={() => void change({ edits: !edits })}
             >
@@ -421,14 +403,14 @@ function ConnectClaudeCode() {
               disabled={busy}
               onClick={() => void change({ rotate: true })}
             >
-              New token
+              {uiCopy.newToken}
             </button>
           </div>
         </>
       ) : null}
     </section>
   );
-}
+};
 
 interface Options {
   projectId: string;
@@ -446,7 +428,7 @@ interface Options {
   toggle: (id: string) => void;
 }
 
-function useExportOptions(target: ExportTarget): Options {
+const useExportOptions = (target: ExportTarget): Options => {
   const initial = useMemo(readExportPrefs, []);
 
   const [format, setFormat] = useState<ExportFormat>(
@@ -462,7 +444,7 @@ function useExportOptions(target: ExportTarget): Options {
   );
 
   const [picked, setPicked] = useState<Set<string>>(
-    () => new Set(frames.map((f) => f.id))
+    () => new Set(frames.map((frame) => frame.id))
   );
 
   const selectionOnly =
@@ -481,7 +463,9 @@ function useExportOptions(target: ExportTarget): Options {
       setScope(next);
       saveExportPrefs({ format, scale, scope: next });
     },
-    chosen: frames.filter((f) => picked.has(f.id)).map((f) => f.frame),
+    chosen: frames
+      .filter((frame) => picked.has(frame.id))
+      .map((choice) => choice.frame),
     format,
     frames,
     needsFrames: format !== "zip" && !selectionOnly,
@@ -503,35 +487,14 @@ function useExportOptions(target: ExportTarget): Options {
         return next;
       }),
   };
-}
+};
 
-function useEditors(active: boolean): EditorInfo[] {
-  const [editors, setEditors] = useState<EditorInfo[]>([]);
-  useEffect(() => {
-    if (!active || editors.length > 0) {
-      return;
-    }
-
-    let live = true;
-    exportApi.editors().then(
-      (list) => live && setEditors(list),
-      () => null
-    );
-
-    return () => {
-      live = false;
-    };
-  }, [active, editors.length]);
-
-  return editors;
-}
-
-async function exportOnce(
+const exportOnce = async (
   target: ExportTarget,
   options: Options
-): Promise<Status> {
+): Promise<Status> => {
   const selectionFrame =
-    options.frames.find((f) => f.active)?.frame ?? options.chosen[0];
+    options.frames.find((frame) => frame.active)?.frame ?? options.chosen[0];
 
   const useSelection =
     options.selectionOnly && target.selector && selectionFrame;
@@ -553,46 +516,43 @@ async function exportOnce(
     reveal: canRevealDownload(),
     text: `Saved ${file.name}`,
   };
-}
+};
 
-function handoffFrames(chosen: ExportFrame[]): ExportFrame[] {
-  return chosen.some((f) => f.width <= MOBILE_MAX)
+const handoffFrames = (chosen: ExportFrame[]): ExportFrame[] =>
+  chosen.some((frame) => frame.width <= MOBILE_MAX)
     ? chosen
     : [...chosen, MOBILE_FRAME];
-}
 
-function FrameList({ options }: { options: Options }) {
-  return (
-    <fieldset className="export-field export-frames">
-      <legend className="export-label">
-        {options.format === "html" ? "Pages from frames" : "Frames"}
-      </legend>
-      {options.frames.map((choice) => (
-        <label key={choice.id} className="export-frame">
-          <input
-            type="checkbox"
-            checked={options.picked.has(choice.id)}
-            onChange={() => options.toggle(choice.id)}
-          />
-          <span className="export-frame-name">
-            {canvasFrameName(options.projectId, choice.id, choice.frame.name)}
-          </span>
-          <span
-            className="export-frame-path truncate"
-            data-tip={frameRoute(choice.frame)}
-          >
-            {framePage(choice.frame.path)}
-          </span>
-          <span className="export-frame-size">
-            {choice.frame.width} × {choice.frame.height}
-          </span>
-        </label>
-      ))}
-    </fieldset>
-  );
-}
+const FrameList = ({ options }: { options: Options }): ReactElement => (
+  <fieldset className="export-field export-frames">
+    <legend className="export-label">
+      {options.format === "html" ? "Pages from frames" : "Frames"}
+    </legend>
+    {options.frames.map((choice) => (
+      <label key={choice.id} className="export-frame">
+        <input
+          type="checkbox"
+          checked={options.picked.has(choice.id)}
+          onChange={() => options.toggle(choice.id)}
+        />
+        <span className="export-frame-name">
+          {canvasFrameName(options.projectId, choice.id, choice.frame.name)}
+        </span>
+        <span
+          className="export-frame-path truncate"
+          data-tip={frameRoute(choice.frame)}
+        >
+          {framePage(choice.frame.path)}
+        </span>
+        <span className="export-frame-size">
+          {choice.frame.width} × {choice.frame.height}
+        </span>
+      </label>
+    ))}
+  </fieldset>
+);
 
-function OptionFields({ options }: { options: Options }) {
+const OptionFields = ({ options }: { options: Options }): ReactElement => {
   const { format, chosen, scale, scope, selectionOnly } = options;
   const first = chosen[0];
 
@@ -600,7 +560,7 @@ function OptionFields({ options }: { options: Options }) {
     <>
       {selectionOnly ? (
         <div className="export-field">
-          <span className="export-label">Area</span>
+          <span className="export-label">{uiCopy.area}</span>
           <span className="export-selection">
             <Icon name="pointer" size={14} />
             Selected element
@@ -610,11 +570,14 @@ function OptionFields({ options }: { options: Options }) {
       {options.needsFrames ? <FrameList options={options} /> : null}
       {format === "png" ? (
         <div className="export-field export-inline">
-          <span className="export-label">Scale</span>
+          <span className="export-label">{uiCopy.scale}</span>
           <Segmented
             label="Scale"
             value={scale}
-            options={EXPORT_SCALES.map((s) => ({ id: s, label: `${s}×` }))}
+            options={EXPORT_SCALES.map((scale) => ({
+              id: scale,
+              label: `${scale}×`,
+            }))}
             onChange={options.chooseScale}
           />
           {first && !selectionOnly ? (
@@ -627,7 +590,7 @@ function OptionFields({ options }: { options: Options }) {
       {((format === "png" || format === "svg") && !selectionOnly) ||
       format === "pdf" ? (
         <div className="export-field export-inline">
-          <span className="export-label">Area</span>
+          <span className="export-label">{uiCopy.area}</span>
           <Segmented
             label="Area"
             value={scope}
@@ -641,9 +604,15 @@ function OptionFields({ options }: { options: Options }) {
       ) : null}
     </>
   );
-}
+};
 
-function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
+const StatusLine = ({
+  status,
+  handoff,
+}: {
+  status: Status;
+  handoff: boolean;
+}): ReactElement => {
   const elapsed = useElapsed(status);
 
   return (
@@ -651,7 +620,7 @@ function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
       {status.kind === "busy" ? (
         <span className="export-progress">
           <span className="spinner" />
-          {handoff ? "Building handoff" : "Exporting"}…{" "}
+          {pick(handoff, "Building handoff", "Exporting")}…{" "}
           <span className="tabular">{elapsed} s</span>
         </span>
       ) : null}
@@ -668,28 +637,28 @@ function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
               className="btn small ghost"
               onClick={revealDownload}
             >
-              Reveal in Finder
+              {uiCopy.revealInFinder}
             </button>
           ) : null}
         </span>
       ) : null}
     </div>
   );
-}
+};
 
-function actionLabel(
+const actionLabel = (
   info: FormatInfo,
   status: Status,
   rebuilt: boolean
-): string {
+): string => {
   if (status.kind === "error") {
     return "Try again";
   }
 
   return rebuilt ? "Rebuild handoff" : info.action;
-}
+};
 
-export function ExportDialog({ target, onClose }: Props) {
+export const ExportDialog = ({ target, onClose }: Props): ReactElement => {
   const options = useExportOptions(target);
   const { format } = options;
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -699,12 +668,12 @@ export function ExportDialog({ target, onClose }: Props) {
   const dialog = useModalDialog(() => (busy ? false : onClose()));
 
   const info =
-    FORMATS.find((f) => f.id === format) ?? (FORMATS[0] as FormatInfo);
+    FORMATS.find((info) => info.id === format) ?? (FORMATS[0] as FormatInfo);
 
   const canRun = !busy && (!options.needsFrames || options.chosen.length > 0);
-  const shown = format === "handoff" ? handoff : null;
+  const shown = pick(format === "handoff", handoff, null);
 
-  const run = async () => {
+  const run = async (): Promise<void> => {
     if (!canRun) {
       return;
     }
@@ -746,7 +715,7 @@ export function ExportDialog({ target, onClose }: Props) {
           data-tip={`From version: ${target.versionLabel}`}
           data-tip-align="start"
         >
-          <h2>Export</h2>
+          <h2>{uiCopy.export}</h2>
           <p className="truncate">From version: {target.versionLabel}</p>
         </div>
         <button
@@ -762,10 +731,10 @@ export function ExportDialog({ target, onClose }: Props) {
         <Segmented
           label="Format"
           value={format}
-          options={FORMATS.map((f) => ({
-            icon: f.icon,
-            id: f.id,
-            label: f.label,
+          options={FORMATS.map((format) => ({
+            icon: format.icon,
+            id: format.id,
+            label: format.label,
           }))}
           onChange={(next) => {
             options.choose(next);
@@ -797,17 +766,17 @@ export function ExportDialog({ target, onClose }: Props) {
           onClick={onClose}
           disabled={busy}
         >
-          Close
+          {uiCopy.close}
         </button>
         <button
           type="button"
-          className={`btn has-icon${shown ? "" : " primary"}`}
+          className={`btn has-icon${pick(shown, "", " primary")}`}
           disabled={!canRun}
           onClick={() => void run()}
           data-autofocus
         >
           <Icon
-            name={format === "handoff" ? "terminal" : "download"}
+            name={pick(format === "handoff", "terminal", "download")}
             size={14}
           />
           {actionLabel(info, status, shown !== null)}
@@ -815,4 +784,4 @@ export function ExportDialog({ target, onClose }: Props) {
       </div>
     </dialog>
   );
-}
+};

@@ -1,5 +1,6 @@
 import { CopyButton } from "@design-studio/ui";
 import { useCallback, useEffect, useState, useTransition } from "react";
+import type { ReactElement } from "react";
 
 import type { PublishCliState } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
@@ -10,7 +11,12 @@ import { BackendSetup, usePublishBackend } from "./publish-backend-setup.js";
 import "../../styles/publish.css";
 import type { BackendHook } from "./publish-backend-setup.js";
 
-export function usePublishCli() {
+const usePublishCli = (): {
+  busy: boolean;
+  cli: PublishCliState | null;
+  error: string | null;
+  run: (task: () => Promise<PublishCliState>) => void;
+} => {
   const [cli, setCli] = useState<PublishCliState | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -40,23 +46,20 @@ export function usePublishCli() {
       run(() => publishApi.cli());
     };
 
-    window.addEventListener("focus", refresh);
+    globalThis.addEventListener("focus", refresh);
 
-    return () => window.removeEventListener("focus", refresh);
+    return (): void => globalThis.removeEventListener("focus", refresh);
   }, [waiting, run]);
 
   return { busy: isPending, cli, error, run };
-}
+};
 
-export function cliReady(cli: PublishCliState | null): boolean {
-  return Boolean(
-    cli?.installed && cli.versionOk && cli.signedIn && cli.accountId
-  );
-}
+const cliReady = (cli: PublishCliState | null): boolean =>
+  Boolean(cli?.installed && cli.versionOk && cli.signedIn && cli.accountId);
 
 type Cli = ReturnType<typeof usePublishCli>;
 
-function InstallStep({
+const InstallStep = ({
   cli,
   busy,
   run,
@@ -64,7 +67,7 @@ function InstallStep({
   cli: PublishCliState;
   busy: boolean;
   run: Cli["run"];
-}) {
+}): ReactElement => {
   const old = cli.installed && !cli.versionOk;
 
   return (
@@ -85,14 +88,14 @@ function InstallStep({
           disabled={busy}
           onClick={() => void run(() => publishApi.cli(true))}
         >
-          Check again
+          {copy.checkAgain}
         </button>
       </div>
     </div>
   );
-}
+};
 
-function SignInStep({
+const SignInStep = ({
   cli,
   busy,
   run,
@@ -100,17 +103,14 @@ function SignInStep({
   cli: PublishCliState;
   busy: boolean;
   run: Cli["run"];
-}) {
+}): ReactElement => {
   const [keyring, setKeyring] = useState(cli.keyring);
   const [narrow, setNarrow] = useState(true);
 
   if (cli.login.running) {
     return (
       <div className="publish-step" data-testid="publish-signing-in">
-        <p className="publish-step-text">
-          Finish the Cloudflare sign-in in your browser. This page updates when
-          it is done.
-        </p>
+        <p className="publish-step-text">{copy.finishTheCloudflareSign}</p>
         <div className="publish-step-actions">
           {cli.login.url && (
             <a
@@ -119,7 +119,7 @@ function SignInStep({
               target="_blank"
               rel="noreferrer noopener"
             >
-              Open sign-in page
+              {copy.openSignInPage}
             </a>
           )}
           <button
@@ -128,7 +128,7 @@ function SignInStep({
             disabled={busy}
             onClick={() => void run(() => publishApi.cancelLogin())}
           >
-            Cancel
+            {copy.cancel}
           </button>
         </div>
       </div>
@@ -138,26 +138,26 @@ function SignInStep({
   return (
     <div className="publish-step" data-testid="publish-sign-in">
       <p className="publish-step-text">
-        cf {cli.version} is ready. Sign in to the Cloudflare account that will
-        host your designs. Design Studio never sees your password or token; cf
-        keeps the sign-in.
+        {copy.cf}
+        {cli.version}
+        {copy.isReadySignIn}
       </p>
       {cli.login.error && <p className="publish-error">{cli.login.error}</p>}
       <label className="publish-check">
         <input
           type="checkbox"
           checked={keyring}
-          onChange={(e) => setKeyring(e.target.checked)}
+          onChange={(changeEvent) => setKeyring(changeEvent.target.checked)}
         />
-        <span>Lock the sign-in with a key in the macOS Keychain</span>
+        <span>{copy.lockTheSignIn}</span>
       </label>
       <label className="publish-check" data-tip={copy.offCfAsks}>
         <input
           type="checkbox"
           checked={narrow}
-          onChange={(e) => setNarrow(e.target.checked)}
+          onChange={(changeEvent) => setNarrow(changeEvent.target.checked)}
         />
-        <span>Ask only for Workers access</span>
+        <span>{copy.askOnlyForWorkers}</span>
       </label>
       <div className="publish-step-actions">
         <button
@@ -166,14 +166,14 @@ function SignInStep({
           disabled={busy}
           onClick={() => void run(() => publishApi.login(keyring, narrow))}
         >
-          Sign in with Cloudflare
+          {copy.signInWithCloudflare}
         </button>
       </div>
     </div>
   );
-}
+};
 
-function AccountStep({
+const AccountStep = ({
   cli,
   busy,
   run,
@@ -181,80 +181,76 @@ function AccountStep({
   cli: PublishCliState;
   busy: boolean;
   run: Cli["run"];
-}) {
-  return (
-    <div className="publish-step" data-testid="publish-signed-in">
-      <div className="publish-kv">
-        <span>Signed in</span>
-        <strong className="truncate">
-          {cli.email ?? "Cloudflare account"}
-        </strong>
-      </div>
-      {cli.accounts.length > 1 ? (
-        <label className="field">
-          <span>Account</span>
-          <select
-            value={cli.accountId ?? ""}
-            disabled={busy}
-            onChange={(e) =>
-              void run(() => publishApi.setAccount(e.target.value || null))
-            }
-          >
-            <option value="">Pick an account</option>
-            {cli.accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : (
-        <div className="publish-kv">
-          <span>Account</span>
-          <strong className="truncate">
-            {cli.accounts[0]?.name ?? "None"}
-          </strong>
-        </div>
-      )}
-      <div className="publish-kv">
-        <span>Address</span>
-        <code className="mono truncate">
-          {cli.subdomain
-            ? `<name>.${cli.subdomain}.workers.dev`
-            : "<name>.<your-subdomain>.workers.dev"}
-        </code>
-      </div>
-      <div className="publish-step-actions">
-        <button
-          type="button"
-          className="btn small"
-          disabled={busy}
-          onClick={() => void run(() => publishApi.cli(true))}
-          data-tip={copy.asksCfWho}
-        >
-          Test connection
-        </button>
-        <button
-          type="button"
-          className="btn small ghost"
-          disabled={busy}
-          onClick={() => void run(() => publishApi.logout())}
-          data-tip={copy.runsCfAuth}
-        >
-          Sign out
-        </button>
-      </div>
+}): ReactElement => (
+  <div className="publish-step" data-testid="publish-signed-in">
+    <div className="publish-kv">
+      <span>{copy.signedIn}</span>
+      <strong className="truncate">{cli.email ?? "Cloudflare account"}</strong>
     </div>
-  );
-}
+    {cli.accounts.length > 1 ? (
+      <label className="field">
+        <span>{copy.account}</span>
+        <select
+          value={cli.accountId ?? ""}
+          disabled={busy}
+          onChange={(changeEvent) =>
+            void run(() =>
+              publishApi.setAccount(changeEvent.target.value || null)
+            )
+          }
+        >
+          <option value="">{copy.pickAnAccount}</option>
+          {cli.accounts.map((first) => (
+            <option key={first.id} value={first.id}>
+              {first.name}
+            </option>
+          ))}
+        </select>
+      </label>
+    ) : (
+      <div className="publish-kv">
+        <span>{copy.account}</span>
+        <strong className="truncate">{cli.accounts[0]?.name ?? "None"}</strong>
+      </div>
+    )}
+    <div className="publish-kv">
+      <span>{copy.address}</span>
+      <code className="mono truncate">
+        {cli.subdomain
+          ? `<name>.${cli.subdomain}.workers.dev`
+          : "<name>.<your-subdomain>.workers.dev"}
+      </code>
+    </div>
+    <div className="publish-step-actions">
+      <button
+        type="button"
+        className="btn small"
+        disabled={busy}
+        onClick={() => void run(() => publishApi.cli(true))}
+        data-tip={copy.asksCfWho}
+      >
+        {copy.testConnection}
+      </button>
+      <button
+        type="button"
+        className="btn small ghost"
+        disabled={busy}
+        onClick={() => void run(() => publishApi.logout())}
+        data-tip={copy.runsCfAuth}
+      >
+        {copy.signOut}
+      </button>
+    </div>
+  </div>
+);
 
-export function PublishSetupBody({
+const PublishSetupBody = ({
   state,
   backend,
 }: {
   state: Cli;
   backend: BackendHook;
-}) {
+}): ReactElement => {
   const { cli, busy, error, run } = state;
 
   if (!cli) {
@@ -284,9 +280,9 @@ export function PublishSetupBody({
       {installed && <BackendSetup hook={backend} cli={cli} />}
     </>
   );
-}
+};
 
-function PublishSetup() {
+const PublishSetup = (): ReactElement => {
   const state = usePublishCli();
   const backend = usePublishBackend();
 
@@ -295,14 +291,11 @@ function PublishSetup() {
       className="ship-settings publish-settings"
       aria-label={copy.publishing}
     >
-      <h3>Publishing</h3>
-      <p className="field-help">
-        Share › Publish puts a saved version on your own Cloudflare account. One
-        Worker serves every design; files go to R2, links and view counts to D1.
-      </p>
+      <h3>{copy.publishing}</h3>
+      <p className="field-help">{copy.sharePublishPutsA}</p>
       <PublishSetupBody state={state} backend={backend} />
     </section>
   );
-}
+};
 
-export { PublishSetup };
+export { usePublishCli, cliReady, PublishSetupBody, PublishSetup };

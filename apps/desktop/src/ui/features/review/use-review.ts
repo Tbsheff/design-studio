@@ -3,16 +3,18 @@ import type {
   ReviewResult,
 } from "@design-studio/contracts/review";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import type { FilesChange } from "../home/use-studio-data.js";
+import { pick } from "./pick.js";
 
 const RERUN_MS = 900;
 const SIDE_MIN = 200;
 const SIDE_MAX = 4000;
 
-export interface ReviewInput {
+interface ReviewInput {
   projectId: string;
   directionId: string | null;
   frame: CanvasFrame;
@@ -20,7 +22,7 @@ export interface ReviewInput {
   open: boolean;
 }
 
-export interface ReviewState {
+interface ReviewState {
   result: ReviewResult | null;
   stale: boolean;
   busy: boolean;
@@ -30,25 +32,20 @@ export interface ReviewState {
   fix: (findings: ReviewFinding[]) => Promise<void>;
 }
 
-function side(value: number): number {
-  return Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(value)));
-}
+const side = (value: number): number =>
+  Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(value)));
 
-export function frameKey(
-  directionId: string | null,
-  frame: CanvasFrame
-): string {
-  return `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
-}
+const frameKey = (directionId: string | null, frame: CanvasFrame): string =>
+  `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
 
-function useLatest<T>(value: T) {
+const useLatest = <Value>(value: Value): RefObject<Value> => {
   const ref = useRef(value);
   ref.current = value;
 
   return ref;
-}
+};
 
-export function useReview(input: ReviewInput): ReviewState {
+const useReview = (input: ReviewInput): ReviewState => {
   const [result, setResult] = useState<ReviewResult | null>(null);
   const [resultKey, setResultKey] = useState<string | null>(null);
   const [changedAt, setChangedAt] = useState(0);
@@ -72,14 +69,16 @@ export function useReview(input: ReviewInput): ReviewState {
     const started = Date.now();
     setBusy(true);
     setError(null);
-    api
-      .review(projectId, directionId, {
-        frame: frame.id,
-        ...(frame.path ? { path: frame.path } : {}),
-        width: side(frame.width),
-        height: side(frame.height),
-      })
-      .then((next) => {
+
+    const load = async (): Promise<void> => {
+      try {
+        const next = await api.review(projectId, directionId, {
+          frame: frame.id,
+          ...(frame.path ? { path: frame.path } : {}),
+          height: side(frame.height),
+          width: side(frame.width),
+        });
+
         if (ticket !== pending.current) {
           return;
         }
@@ -87,12 +86,18 @@ export function useReview(input: ReviewInput): ReviewState {
         setResult(next);
         setResultKey(runKey);
         setRanAt(started);
-      })
-      .catch(
-        (caught: unknown) =>
-          ticket === pending.current && setError(errorText(caught))
-      )
-      .finally(() => ticket === pending.current && setBusy(false));
+      } catch (caught) {
+        if (ticket === pending.current) {
+          setError(errorText(caught));
+        }
+      } finally {
+        if (ticket === pending.current) {
+          setBusy(false);
+        }
+      }
+    };
+
+    void load();
   }, [latest]);
 
   const fix = useCallback(
@@ -143,9 +148,9 @@ export function useReview(input: ReviewInput): ReviewState {
       return;
     }
 
-    const timer = window.setTimeout(run, result ? RERUN_MS : 0);
+    const timer = globalThis.setTimeout(run, pick(result, RERUN_MS, 0));
 
-    return () => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [open, stale, result, busy, fixing, error, run]);
 
   return {
@@ -153,8 +158,12 @@ export function useReview(input: ReviewInput): ReviewState {
     error,
     fix,
     fixing,
-    result: resultKey === key ? result : null,
+    result: pick(resultKey === key, result, null),
     run,
     stale,
   };
-}
+};
+
+export { frameKey, useReview };
+
+export type { ReviewInput, ReviewState };

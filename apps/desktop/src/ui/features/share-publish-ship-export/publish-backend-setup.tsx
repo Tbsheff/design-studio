@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import type {
   PublishBackendMode,
@@ -8,9 +9,17 @@ import type {
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 import { publishApi } from "./publish-api.js";
 
-export function usePublishBackend() {
+const POLL_MS = 1000;
+
+const usePublishBackend = (): {
+  backend: PublishBackendState | null;
+  error: string | null;
+  load: (check?: boolean) => Promise<void>;
+  setup: (mode: PublishBackendMode) => Promise<void>;
+} => {
   const [backend, setBackend] = useState<PublishBackendState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,9 +41,9 @@ export function usePublishBackend() {
       return;
     }
 
-    const timer = window.setInterval(() => void load(), 1000);
+    const timer = globalThis.setInterval(() => void load(), POLL_MS);
 
-    return () => window.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [running, load]);
 
   const setup = useCallback(async (mode: PublishBackendMode) => {
@@ -47,9 +56,9 @@ export function usePublishBackend() {
   }, []);
 
   return { backend, error, load, setup };
-}
+};
 
-export type BackendHook = ReturnType<typeof usePublishBackend>;
+type BackendHook = ReturnType<typeof usePublishBackend>;
 
 const MARK: Record<SetupStep["status"], string> = {
   done: "✓",
@@ -59,37 +68,35 @@ const MARK: Record<SetupStep["status"], string> = {
   skipped: "–",
 };
 
-function StepRow({ step }: { step: SetupStep }) {
-  return (
-    <li
-      className={`publish-setup-step is-${step.status}`}
-      data-testid="setup-step"
-      data-step={step.id}
-      data-status={step.status}
-    >
-      <span className="publish-setup-mark" aria-hidden="true">
-        {MARK[step.status]}
-      </span>
-      <div className="publish-setup-text">
-        <span className="publish-setup-label">{step.label}</span>
-        {step.detail && (
-          <span className="publish-setup-detail">{step.detail}</span>
-        )}
-        {step.command && (
-          <code className="mono publish-setup-command">{step.command}</code>
-        )}
-      </div>
-    </li>
-  );
-}
+const StepRow = ({ step }: { step: SetupStep }): ReactElement => (
+  <li
+    className={`publish-setup-step is-${step.status}`}
+    data-testid="setup-step"
+    data-step={step.id}
+    data-status={step.status}
+  >
+    <span className="publish-setup-mark" aria-hidden="true">
+      {MARK[step.status]}
+    </span>
+    <div className="publish-setup-text">
+      <span className="publish-setup-label">{step.label}</span>
+      {step.detail && (
+        <span className="publish-setup-detail">{step.detail}</span>
+      )}
+      {step.command && (
+        <code className="mono publish-setup-command">{step.command}</code>
+      )}
+    </div>
+  </li>
+);
 
-function summary(backend: PublishBackendState): string {
+const summary = (backend: PublishBackendState): string => {
   if (backend.running) {
     return "Setting up. Each step shows its result below.";
   }
 
   if (backend.ready && backend.url) {
-    return `Ready. One Worker serves every published design at ${backend.url}${backend.mode === "local" ? " (local test server)" : ""}.`;
+    return `Ready. One Worker serves every published design at ${backend.url}${pick(backend.mode === "local", " (local test server)", "")}.`;
   }
 
   if (backend.error) {
@@ -97,15 +104,15 @@ function summary(backend: PublishBackendState): string {
   }
 
   return "Not set up. Setup makes an R2 bucket, a D1 database and one publish Worker in your Cloudflare account. A re-run is safe.";
-}
+};
 
-export function BackendSetup({
+const BackendSetup = ({
   hook,
   cli,
 }: {
   hook: BackendHook;
   cli: PublishCliState | null;
-}) {
+}): ReactElement => {
   const { backend, error, setup, load } = hook;
 
   if (!backend) {
@@ -124,23 +131,25 @@ export function BackendSetup({
     <div
       className="publish-step publish-backend"
       data-testid="publish-backend"
-      data-ready={backend.ready ? "yes" : "no"}
+      data-ready={pick(backend.ready, "yes", "no")}
     >
       <p className="publish-step-text">{summary(backend)}</p>
       {backend.keyStore && (
         <div className="publish-kv">
-          <span>Publish key</span>
+          <span>{copy.publishKey}</span>
           <strong>
-            {backend.keyStore === "keychain"
-              ? "In the macOS Keychain"
-              : "In a private file on this Mac (the Keychain needs the desktop app)"}
+            {pick(
+              backend.keyStore === "keychain",
+              "In the macOS Keychain",
+              "In a private file on this Mac (the Keychain needs the desktop app)"
+            )}
           </strong>
         </div>
       )}
       {backend.steps.length > 0 && (
         <ol className="publish-setup-steps" aria-label={copy.setupSteps}>
-          {backend.steps.map((s) => (
-            <StepRow key={s.id} step={s} />
+          {backend.steps.map((setupStep) => (
+            <StepRow key={setupStep.id} step={setupStep} />
           ))}
         </ol>
       )}
@@ -155,15 +164,17 @@ export function BackendSetup({
           className="btn small primary"
           disabled={busy || !cfReady}
           onClick={() => void setup("cloudflare")}
-          data-tip={
-            cfReady
-              ? "Runs cf in your Cloudflare account. Each step checks first."
-              : "Sign in to Cloudflare first"
-          }
+          data-tip={pick(
+            cfReady,
+            "Runs cf in your Cloudflare account. Each step checks first.",
+            "Sign in to Cloudflare first"
+          )}
         >
-          {backend.mode === "cloudflare" && backend.setUpAt
-            ? "Run setup again"
-            : "Set up publishing"}
+          {pick(
+            backend.mode === "cloudflare" && backend.setUpAt,
+            "Run setup again",
+            "Set up publishing"
+          )}
         </button>
         {backend.localAllowed && (
           <button
@@ -173,7 +184,7 @@ export function BackendSetup({
             onClick={() => void setup("local")}
             data-tip={copy.developmentOnlyLocal}
           >
-            Set up local test server
+            {copy.setUpLocalTest}
           </button>
         )}
         {backend.setUpAt && (
@@ -184,10 +195,14 @@ export function BackendSetup({
             onClick={() => void load(true)}
             data-tip={copy.callsTheWorker}
           >
-            Test connection
+            {copy.testConnection}
           </button>
         )}
       </div>
     </div>
   );
-}
+};
+
+export { usePublishBackend, BackendSetup };
+
+export type { BackendHook };

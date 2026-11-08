@@ -22,7 +22,7 @@ interface CreateRequest {
 const SHARES_CHANGED = "studio:shares-changed";
 
 const sharesChanged = (projectId: string): void => {
-  window.dispatchEvent(
+  globalThis.dispatchEvent(
     new CustomEvent(SHARES_CHANGED, { detail: { projectId } })
   );
 };

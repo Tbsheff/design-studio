@@ -22,26 +22,29 @@ const FRAME_SELECTOR = ".artboard[data-frame-id], .canvas-frame[data-frame-id]";
 const ARROW =
   '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1l5.5 13 2-5.5L14 6.5z" fill="currentColor" stroke="white" stroke-width="1.2" stroke-linejoin="round"/></svg>';
 
-function hueOf(id: string): number {
-  let h = 0;
+const HUE_MULTIPLIER = 31;
+const HUE_RANGE = 360;
+const DATA_PREFIX_LENGTH = 5;
+
+const hueOf = (id: string): number => {
+  let hue = 0;
 
   for (const ch of id) {
-    h = (h * 31 + ch.charCodeAt(0)) % 360;
+    hue = (hue * HUE_MULTIPLIER + ch.charCodeAt(0)) % HUE_RANGE;
   }
 
-  return h;
-}
+  return hue;
+};
 
-function frameEl(stage: HTMLElement, frameId: string): HTMLElement | null {
-  return stage.querySelector<HTMLElement>(
+const frameEl = (stage: HTMLElement, frameId: string): HTMLElement | null =>
+  stage.querySelector<HTMLElement>(
     `.artboard[data-frame-id="${CSS.escape(frameId)}"], .canvas-frame[data-frame-id="${CSS.escape(frameId)}"]`
   );
-}
 
-async function readEvents(
+const readEvents = async (
   res: Response,
   onEvent: (event: SharePresenceEvent) => void
-): Promise<void> {
+): Promise<void> => {
   const reader = res.body?.getReader();
 
   if (!reader) {
@@ -66,14 +69,14 @@ async function readEvents(
       buffer = buffer.slice(cut + 2);
       cut = buffer.indexOf("\n\n");
 
-      if (/^event: ping/m.test(block)) {
+      if (/^event: ping/mu.test(block)) {
         continue;
       }
 
       const data = block
         .split("\n")
         .filter((line) => line.startsWith("data:"))
-        .map((line) => line.slice(5).trimStart())
+        .map((line) => line.slice(DATA_PREFIX_LENGTH).trimStart())
         .join("\n");
 
       if (data) {
@@ -81,7 +84,7 @@ async function readEvents(
       }
     }
   }
-}
+};
 
 class CursorLayer {
   private layer: HTMLDivElement | null = null;
@@ -94,8 +97,11 @@ class CursorLayer {
   set(list: SharePresenceCursor[]): void {
     this.cursors.clear();
 
-    for (const c of list) {
-      this.cursors.set(`${c.linkId}:${c.viewer}`, c);
+    for (const sharePresenceCursor of list) {
+      this.cursors.set(
+        `${sharePresenceCursor.linkId}:${sharePresenceCursor.viewer}`,
+        sharePresenceCursor
+      );
     }
 
     this.kick();
@@ -112,7 +118,7 @@ class CursorLayer {
   }
 
   destroy(): void {
-    window.cancelAnimationFrame(this.raf);
+    globalThis.cancelAnimationFrame(this.raf);
     this.layer?.remove();
     this.layer = null;
     this.nodes.clear();
@@ -120,7 +126,7 @@ class CursorLayer {
 
   private kick(): void {
     if (!this.raf) {
-      this.raf = window.requestAnimationFrame(() => this.paint());
+      this.raf = globalThis.requestAnimationFrame(() => this.paint());
     }
   }
 
@@ -185,12 +191,12 @@ class CursorLayer {
       return;
     }
 
-    const r = frame.getBoundingClientRect();
-    const scale = r.width / frame.offsetWidth;
+    const domRect = frame.getBoundingClientRect();
+    const scale = domRect.width / frame.offsetWidth;
     const below = cursor.y > frame.offsetHeight;
     el.hidden = false;
     el.classList.toggle("below", below);
-    el.style.transform = `translate(${r.left - box.left + Math.min(cursor.x, frame.offsetWidth) * scale}px, ${r.top - box.top + Math.min(cursor.y, frame.offsetHeight) * scale}px)`;
+    el.style.transform = `translate(${domRect.left - box.left + Math.min(cursor.x, frame.offsetWidth) * scale}px, ${domRect.top - box.top + Math.min(cursor.y, frame.offsetHeight) * scale}px)`;
   }
 
   private paint(): void {
@@ -219,42 +225,54 @@ class CursorLayer {
       this.place(this.node(key, cursor, layer), cursor, stage, box);
     }
 
-    this.raf = window.requestAnimationFrame(() => this.paint());
+    this.raf = globalThis.requestAnimationFrame(() => this.paint());
   }
 }
 
-function studioPointer(projectId: string, stage: () => HTMLElement | null) {
+const studioPointer = (
+  projectId: string,
+  stage: () => HTMLElement | null
+): { set(next: boolean): void } => {
   let on = false;
-  let pending: StudioCursorInput | null | undefined;
-  let timer = 0;
+  let pending: { value: StudioCursorInput | null } | null = null;
+  let timer: ReturnType<typeof globalThis.setTimeout> | null = null;
   let lastFrame: string | null = null;
 
-  const flush = () => {
-    timer = 0;
+  const flush = (): void => {
+    timer = null;
 
-    if (pending === undefined) {
+    if (pending === null) {
       return;
     }
 
-    const body = pending ?? { frameId: null, x: 0, y: 0 };
-    pending = undefined;
-    void call(routes.setCursorShare, {
-      frameId: body.frameId,
-      pointX: body.x,
-      pointY: body.y,
-      projectId,
-    }).catch(() => null);
+    const body = pending.value ?? { frameId: null, x: 0, y: 0 };
+    pending = null;
+
+    const send = async (): Promise<void> => {
+      try {
+        await call(routes.setCursorShare, {
+          frameId: body.frameId,
+          pointX: body.x,
+          pointY: body.y,
+          projectId,
+        });
+      } catch {
+        return;
+      }
+    };
+
+    void send();
   };
 
-  const queue = (value: StudioCursorInput | null) => {
-    pending = value;
+  const queue = (value: StudioCursorInput | null): void => {
+    pending = { value };
 
     if (!timer) {
-      timer = window.setTimeout(flush, SEND_MS);
+      timer = globalThis.setTimeout(flush, SEND_MS);
     }
   };
 
-  const at = (from: Element | null, clientX: number, clientY: number) => {
+  const at = (from: Element | null, clientX: number, clientY: number): void => {
     const root = stage();
     const target = from?.closest<HTMLElement>(FRAME_SELECTOR) ?? null;
 
@@ -269,17 +287,17 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
       return;
     }
 
-    const r = target.getBoundingClientRect();
-    const scale = r.width / target.offsetWidth;
+    const domRect = target.getBoundingClientRect();
+    const scale = domRect.width / target.offsetWidth;
     lastFrame = target.dataset.frameId ?? null;
     queue({
       frameId: lastFrame,
-      x: Math.max(0, (clientX - r.left) / scale),
-      y: Math.max(0, (clientY - r.top) / scale),
+      x: Math.max(0, (clientX - domRect.left) / scale),
+      y: Math.max(0, (clientY - domRect.top) / scale),
     });
   };
 
-  const onMove = (event: PointerEvent) =>
+  const onMove = (event: PointerEvent): void =>
     at(
       event.target instanceof Element ? event.target : null,
       event.clientX,
@@ -289,19 +307,23 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
   const onFrame = (
     frame: BridgeFrame,
     message: { x: number; y: number; inside: boolean }
-  ) => {
+  ): void => {
     const iframe = frame.element;
 
     if (!message.inside || !iframe || iframe.offsetWidth === 0) {
       return;
     }
 
-    const r = iframe.getBoundingClientRect();
-    const scale = r.width / iframe.offsetWidth;
-    at(iframe, r.left + message.x * scale, r.top + message.y * scale);
+    const domRect = iframe.getBoundingClientRect();
+    const scale = domRect.width / iframe.offsetWidth;
+    at(
+      iframe,
+      domRect.left + message.x * scale,
+      domRect.top + message.y * scale
+    );
   };
 
-  function onLeave() {
+  function onLeave(): void {
     if (lastFrame !== null) {
       queue(null);
     }
@@ -312,7 +334,7 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
   let offFrame: (() => void) | null = null;
 
   return {
-    set(next: boolean) {
+    set(next: boolean): void {
       if (next === on) {
         return;
       }
@@ -335,19 +357,19 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
       onLeave();
     },
   };
-}
+};
 
-export function startShareLive(
+const startShareLive = (
   projectId: string,
   stage: () => HTMLElement | null
-): () => void {
+): (() => void) => {
   const layer = new CursorLayer(stage);
   const pointer = studioPointer(projectId, stage);
   let stopped = false;
   let control: AbortController | null = null;
-  let retry = 0;
+  let retry: ReturnType<typeof globalThis.setTimeout> | null = null;
 
-  const handle = (event: SharePresenceEvent) => {
+  const handle = (event: SharePresenceEvent): void => {
     if (event.type === "state") {
       layer.set(event.cursors);
       pointer.set(event.wantCursor);
@@ -377,13 +399,16 @@ export function startShareLive(
       if (control === own && !stopped) {
         layer.set([]);
         pointer.set(false);
-        retry = window.setTimeout(reconnect, RETRY_MS);
+        retry = globalThis.setTimeout(reconnect, RETRY_MS);
       }
     }
   };
 
-  const connect = () => {
-    window.clearTimeout(retry);
+  const connect = (): void => {
+    if (retry !== null) {
+      globalThis.clearTimeout(retry);
+    }
+
     control?.abort();
 
     if (stopped) {
@@ -395,7 +420,7 @@ export function startShareLive(
     void listen(own, connect);
   };
 
-  const onChanged = (event: Event) => {
+  const onChanged = (event: Event): void => {
     if (
       (event as CustomEvent<{ projectId?: string }>).detail?.projectId ===
       projectId
@@ -404,15 +429,21 @@ export function startShareLive(
     }
   };
 
-  window.addEventListener(SHARES_CHANGED, onChanged);
+  globalThis.addEventListener(SHARES_CHANGED, onChanged);
   connect();
 
   return () => {
     stopped = true;
-    window.removeEventListener(SHARES_CHANGED, onChanged);
-    window.clearTimeout(retry);
+    globalThis.removeEventListener(SHARES_CHANGED, onChanged);
+
+    if (retry !== null) {
+      globalThis.clearTimeout(retry);
+    }
+
     control?.abort();
     pointer.set(false);
     layer.destroy();
   };
-}
+};
+
+export { startShareLive };

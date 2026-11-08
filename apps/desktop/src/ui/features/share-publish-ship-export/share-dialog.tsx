@@ -17,11 +17,14 @@ import { errorText } from "../../api.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { copy } from "./copy.js";
 import { canvasFrameChoices, frameRoute } from "./export-api.js";
+import { pick } from "./pick.js";
 import { PublishPane } from "./publish-pane.js";
 
 import "../../styles/export.css";
 import "../../styles/share.css";
+import { catchFailure, ignoreFailure, settleValue } from "./settle.js";
 import { shareApi, sharesChanged } from "./share-api.js";
+import { linkMeta } from "./share-text.js";
 
 export interface ShareTarget {
   projectId: string;
@@ -33,30 +36,28 @@ export interface ShareTarget {
 
 type ShareMode = "link" | "publish";
 
-function ShareTabs({
+const ShareTabs = ({
   mode,
   onMode,
 }: {
   mode: ShareMode;
   onMode: (mode: ShareMode) => void;
-}) {
-  return (
-    <div className="segmented share-tabs" role="tablist" aria-label={copy.tabs}>
-      {(["link", "publish"] as const).map((id) => (
-        <button
-          key={id}
-          type="button"
-          role="tab"
-          aria-selected={mode === id}
-          className={mode === id ? "on" : ""}
-          onClick={() => onMode(id)}
-        >
-          {id === "link" ? "Local link" : "Publish"}
-        </button>
-      ))}
-    </div>
-  );
-}
+}) => (
+  <div className="segmented share-tabs" role="tablist" aria-label={copy.tabs}>
+    {(["link", "publish"] as const).map((id) => (
+      <button
+        key={id}
+        type="button"
+        role="tab"
+        aria-selected={mode === id}
+        className={pick(mode === id, "on", "")}
+        onClick={() => onMode(id)}
+      >
+        {pick(id === "link", "Local link", "Publish")}
+      </button>
+    ))}
+  </div>
+);
 
 const EXPIRIES: { id: ShareExpiryHours; label: string }[] = [
   { id: 1, label: "1 hour" },
@@ -66,37 +67,13 @@ const EXPIRIES: { id: ShareExpiryHours; label: string }[] = [
 
 const sessionTokens = new Map<string, string>();
 
-function endsText(link: ShareLink, now: number): string {
-  if (link.revokedAt !== null) {
-    return "Turned off";
-  }
-
-  const left = link.expiresAt - now;
-
-  if (left <= 0) {
-    return "Ended";
-  }
-
-  const hours = Math.round(left / 3_600_000);
-
-  if (hours >= 48) {
-    return `Ends in ${Math.round(hours / 24)} days`;
-  }
-
-  if (hours >= 1) {
-    return `Ends in ${hours} h`;
-  }
-
-  return `Ends in ${Math.max(1, Math.round(left / 60_000))} min`;
-}
-
-function LinkUrls({
+const LinkUrls = ({
   token,
   server,
 }: {
   token: string;
   server: ShareServerState;
-}) {
+}) => {
   const local = server.localUrl ? shareUrl(server.localUrl, token) : null;
   const lan = server.lanUrl ? shareUrl(server.lanUrl, token) : null;
 
@@ -104,37 +81,39 @@ function LinkUrls({
     <div className="share-urls">
       {local && (
         <div className="share-url">
-          <span className="share-url-kind">This computer</span>
+          <span className="share-url-kind">{copy.thisComputer}</span>
           <code className="mono truncate">{local}</code>
           <CopyButton text={local} label="Copy link" />
         </div>
       )}
       {lan && (
         <div className="share-url">
-          <span className="share-url-kind">Local network</span>
+          <span className="share-url-kind">{copy.localNetwork}</span>
           <code className="mono truncate">{lan}</code>
           <CopyButton text={lan} label="Copy link" />
         </div>
       )}
     </div>
   );
-}
+};
 
-function offNote(links: ShareLink[], server: ShareServerState): string | null {
-  if (!links.some((l) => !l.active)) {
+const offNote = (
+  links: ShareLink[],
+  server: ShareServerState
+): string | null => {
+  if (!links.some((link) => !link.active)) {
     return null;
   }
 
   return server.running ? copy.offNoteRunning : copy.offNoteStopped;
-}
+};
 
-function hiddenNote(links: ShareLink[]): string | null {
-  return links.some((l) => l.active && !sessionTokens.has(l.id))
+const hiddenNote = (links: ShareLink[]): string | null =>
+  links.some((link) => link.active && !sessionTokens.has(link.id))
     ? "A link shows its address only when you make it. To copy it again, make a new link."
     : null;
-}
 
-function Switch({
+const Switch = ({
   on,
   label,
   disabled,
@@ -144,23 +123,21 @@ function Switch({
   label: string;
   disabled?: boolean;
   onChange: (on: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      className={`export-switch${on ? " on" : ""}`}
-      disabled={disabled}
-      onClick={() => onChange(!on)}
-    >
-      <span className="export-switch-knob" />
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    className={`export-switch${pick(on, " on", "")}`}
+    disabled={disabled}
+    onClick={() => onChange(!on)}
+  >
+    <span className="export-switch-knob" />
+  </button>
+);
 
-function CursorSwitch({
+const CursorSwitch = ({
   link,
   busy,
   onCursor,
@@ -168,41 +145,24 @@ function CursorSwitch({
   link: ShareLink;
   busy: boolean;
   onCursor: (id: string, on: boolean) => void;
-}) {
-  return (
-    <div className="share-lan-row share-cursor-row">
-      <div className="share-lan-text">
-        <span className="share-lan-title">Show my cursor to viewers</span>
-        <span className="share-lan-help">
-          {link.studioCursor
-            ? "On: viewers see your pointer over the frames you do not edit now, and over the frame you edit while Comment is on."
-            : "Off: viewers do not see your pointer."}
-        </span>
-      </div>
-      <Switch
-        on={link.studioCursor}
-        label="Show my cursor to viewers"
-        disabled={busy}
-        onChange={(on) => onCursor(link.id, on)}
-      />
+}) => (
+  <div className="share-lan-row share-cursor-row">
+    <div className="share-lan-text">
+      <span className="share-lan-title">{copy.showMyCursorTo}</span>
+      <span className="share-lan-help">
+        {link.studioCursor
+          ? "On: viewers see your pointer over the frames you do not edit now, and over the frame you edit while Comment is on."
+          : "Off: viewers do not see your pointer."}
+      </span>
     </div>
-  );
-}
-
-function linkMeta(link: ShareLink, now: number): string {
-  const parts = [
-    `${link.frames.length} frame${link.frames.length === 1 ? "" : "s"}`,
-    `${link.comments} comment${link.comments === 1 ? "" : "s"}`,
-  ];
-
-  if (link.live && link.active) {
-    parts.unshift(
-      `Live · ${link.viewers} viewer${link.viewers === 1 ? "" : "s"}`
-    );
-  }
-
-  return [...parts, endsText(link, now)].join(" · ");
-}
+    <Switch
+      on={link.studioCursor}
+      label="Show my cursor to viewers"
+      disabled={busy}
+      onChange={(on) => onCursor(link.id, on)}
+    />
+  </div>
+);
 
 interface RowProps {
   server: ShareServerState;
@@ -213,7 +173,7 @@ interface RowProps {
   copied: string | null;
 }
 
-function LinkRow({
+const LinkRow = ({
   link,
   server,
   now,
@@ -221,12 +181,12 @@ function LinkRow({
   onCursor,
   busy,
   copied,
-}: RowProps & { link: ShareLink }) {
+}: RowProps & { link: ShareLink }) => {
   const token = sessionTokens.get(link.id);
 
   return (
     <li
-      className={`share-link${link.active ? "" : " off"}`}
+      className={`share-link${pick(link.active, "", " off")}`}
       data-testid="share-link"
       data-link-id={link.id}
     >
@@ -251,14 +211,14 @@ function LinkRow({
                 : "The link stops working at once and its images are deleted"
             }
           >
-            Revoke
+            {copy.revoke}
           </button>
         )}
       </div>
       {link.active && token && <LinkUrls token={token} server={server} />}
       {copied === link.id && (
         <p className="share-link-note" role="status">
-          Link copied. Paste it to share.
+          {copy.linkCopiedPasteIt}
         </p>
       )}
       {link.active && link.live && (
@@ -266,9 +226,9 @@ function LinkRow({
       )}
     </li>
   );
-}
+};
 
-function LinkList({ links, ...rest }: RowProps & { links: ShareLink[] }) {
+const LinkList = ({ links, ...rest }: RowProps & { links: ShareLink[] }) => {
   if (links.length === 0) {
     return null;
   }
@@ -291,9 +251,9 @@ function LinkList({ links, ...rest }: RowProps & { links: ShareLink[] }) {
       ))}
     </div>
   );
-}
+};
 
-function LanSwitch({
+const LanSwitch = ({
   server,
   hasLive,
   busy,
@@ -303,38 +263,35 @@ function LanSwitch({
   hasLive: boolean;
   busy: boolean;
   onChange: (on: boolean) => void;
-}) {
-  return (
-    <div className="share-lan">
-      <div className="share-lan-row">
-        <div className="share-lan-text">
-          <span className="share-lan-title">Allow on local network</span>
-          <span className="share-lan-help">
-            {server.lan && server.lanUrl
-              ? `On: devices on this network can open links at ${server.lanUrl}.`
-              : "Off: only this computer can open links (127.0.0.1)."}
-          </span>
-        </div>
-        <span data-tip={hasLive ? undefined : "Make a link first"}>
-          <Switch
-            on={server.lan}
-            label="Allow on local network"
-            disabled={busy || (!hasLive && !server.lan)}
-            onChange={onChange}
-          />
+}) => (
+  <div className="share-lan">
+    <div className="share-lan-row">
+      <div className="share-lan-text">
+        <span className="share-lan-title">{copy.allowOnLocalNetwork}</span>
+        <span className="share-lan-help">
+          {server.lan && server.lanUrl
+            ? `On: devices on this network can open links at ${server.lanUrl}.`
+            : "Off: only this computer can open links (127.0.0.1)."}
         </span>
       </div>
-      {server.lan && (
-        <div className="alert share-lan-warn" role="alert">
-          Anyone on this network who has a link can open it and comment. Use
-          this only on networks you trust, and turn it off when the review ends.
-        </div>
-      )}
+      <span data-tip={pick(hasLive, null, "Make a link first")}>
+        <Switch
+          on={server.lan}
+          label="Allow on local network"
+          disabled={busy || (!hasLive && !server.lan)}
+          onChange={onChange}
+        />
+      </span>
     </div>
-  );
-}
+    {server.lan && (
+      <div className="alert share-lan-warn" role="alert">
+        {copy.anyoneOnThisNetwork}
+      </div>
+    )}
+  </div>
+);
 
-function useShares(projectId: string) {
+const useShares = (projectId: string) => {
   const [links, setLinks] = useState<ShareLink[]>([]);
 
   const [server, setServer] = useState<ShareServerState>({
@@ -354,20 +311,20 @@ function useShares(projectId: string) {
   }, [projectId]);
 
   useEffect(() => {
-    reload().catch((failure: unknown) => setError(errorText(failure)));
+    void catchFailure(reload(), (failure) => setError(errorText(failure)));
   }, [reload]);
-  const watching = links.some((l) => l.live && l.active);
+  const watching = links.some((link) => link.live && link.active);
   useEffect(() => {
     if (!watching) {
       return;
     }
 
-    const timer = window.setInterval(
-      () => void reload().catch(() => null),
+    const timer = globalThis.setInterval(
+      () => void ignoreFailure(reload()),
       3000
     );
 
-    return () => window.clearInterval(timer);
+    return () => globalThis.clearInterval(timer);
   }, [watching, reload]);
 
   const act = useCallback(
@@ -389,19 +346,19 @@ function useShares(projectId: string) {
   );
 
   return { act, busy, error, links, server };
-}
+};
 
-function useCopyNew(links: ShareLink[], server: ShareServerState) {
+const useCopyNew = (links: ShareLink[], server: ShareServerState) => {
   const [pending, setPending] = useState<string | null>(null);
   const [id, setId] = useState<string | null>(null);
   useEffect(() => {
-    const token = pending ? sessionTokens.get(pending) : undefined;
+    const token = pending ? sessionTokens.get(pending) : null;
 
     if (
       !pending ||
       !token ||
       !server.localUrl ||
-      !links.some((l) => l.id === pending)
+      !links.some((link) => link.id === pending)
     ) {
       return;
     }
@@ -410,50 +367,48 @@ function useCopyNew(links: ShareLink[], server: ShareServerState) {
     document
       .querySelector<HTMLElement>(`[data-link-id="${pending}"] .copy-btn`)
       ?.focus();
-    void copyText(shareUrl(server.localUrl, token)).then((ok) =>
-      setId(ok ? pending : null)
+    void settleValue(copyText(shareUrl(server.localUrl, token)), (ok) =>
+      setId(pick(ok, pending, null))
     );
   }, [pending, links, server.localUrl]);
 
   return { id, made: setPending };
-}
+};
 
-function ExpiryPicker({
+const ExpiryPicker = ({
   value,
   onChange,
 }: {
   value: ShareExpiryHours;
-  onChange: (v: ShareExpiryHours) => void;
-}) {
-  return (
-    <div
-      className="segmented export-seg"
-      role="radiogroup"
-      aria-label={copy.linkEndsAfter}
-    >
-      {EXPIRIES.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          role="radio"
-          aria-checked={value === option.id}
-          className={value === option.id ? "on" : ""}
-          onClick={() => onChange(option.id)}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+  onChange: (value: ShareExpiryHours) => void;
+}) => (
+  <div
+    className="segmented export-seg"
+    role="radiogroup"
+    aria-label={copy.linkEndsAfter}
+  >
+    {EXPIRIES.map((option) => (
+      <button
+        key={option.id}
+        type="button"
+        role="radio"
+        aria-checked={value === option.id}
+        className={pick(value === option.id, "on", "")}
+        onClick={() => onChange(option.id)}
+      >
+        {option.label}
+      </button>
+    ))}
+  </div>
+);
 
-export function ShareDialog({
+export const ShareDialog = ({
   target,
   onClose,
 }: {
   target: ShareTarget;
   onClose: () => void;
-}) {
+}) => {
   const dialog = useModalDialog(onClose);
   const [mode, setMode] = useState<ShareMode>(target.mode ?? "link");
   const tabs = <ShareTabs mode={mode} onMode={setMode} />;
@@ -473,11 +428,8 @@ export function ShareDialog({
         <>
           <div className="modal-head">
             <div className="titles">
-              <h2>Publish on Cloudflare</h2>
-              <p>
-                Put a saved version on your publish Worker. The address works
-                when this Mac is off.
-              </p>
+              <h2>{copy.publishOnCloudflare}</h2>
+              <p>{copy.putASavedVersion}</p>
             </div>
             {tabs}
             <button
@@ -494,9 +446,9 @@ export function ShareDialog({
       )}
     </dialog>
   );
-}
+};
 
-function LinkShare({
+const LinkShare = ({
   target,
   onClose,
   tabs,
@@ -504,14 +456,14 @@ function LinkShare({
   target: ShareTarget;
   onClose: () => void;
   tabs: ReactNode;
-}) {
+}) => {
   const frames = useMemo(
     () => canvasFrameChoices(target.projectId, target.directionId),
     [target.projectId, target.directionId]
   );
 
   const [picked, setPicked] = useState<Set<string>>(
-    () => new Set(frames.slice(0, SHARE_MAX_FRAMES).map((f) => f.id))
+    () => new Set(frames.slice(0, SHARE_MAX_FRAMES).map((choice) => choice.id))
   );
 
   const [expiry, setExpiry] = useState<ShareExpiryHours>(
@@ -521,10 +473,13 @@ function LinkShare({
   const [liveView, setLiveView] = useState(false);
   const shares = useShares(target.projectId);
   const now = Date.now();
-  const chosenChoices = frames.filter((f) => picked.has(f.id));
-  const chosen = chosenChoices.map((f) => f.frame);
-  const live = shares.links.filter((l) => l.active);
-  const shown = [...live, ...shares.links.filter((l) => !l.active).slice(0, 3)];
+  const chosenChoices = frames.filter((frame) => picked.has(frame.id));
+  const chosen = chosenChoices.map((chosenChoice) => chosenChoice.frame);
+  const live = shares.links.filter((link) => link.active);
+  const shown = [
+    ...live,
+    ...shares.links.filter((link) => !link.active).slice(0, 3),
+  ];
   const { versionId } = target;
 
   const canCreate =
@@ -559,7 +514,7 @@ function LinkShare({
       const made = await shareApi.create(target.projectId, {
         directionId: target.directionId,
         expiresInHours: expiry,
-        frameIds: chosenChoices.map((f) => f.id),
+        frameIds: chosenChoices.map((chosenChoice) => chosenChoice.id),
         frames: chosen,
         live: liveView,
         versionId,
@@ -574,11 +529,8 @@ function LinkShare({
     <form className="modal-form" onSubmit={submit} noValidate>
       <div className="modal-head">
         <div className="titles">
-          <h2>Share a read-only link</h2>
-          <p>
-            Viewers see images of the frames and can comment. They cannot edit,
-            run the app or reach the studio.
-          </p>
+          <h2>{copy.shareAReadOnly}</h2>
+          <p>{copy.viewersSeeImagesOf}</p>
         </div>
         {tabs}
         <button
@@ -592,7 +544,7 @@ function LinkShare({
       </div>
       <div className="modal-body share-body">
         <fieldset className="export-field export-frames">
-          <legend className="export-label">Frames</legend>
+          <legend className="export-label">{copy.frames}</legend>
           {frames.map((choice) => (
             <label key={choice.id} className="export-frame">
               <input
@@ -620,12 +572,12 @@ function LinkShare({
           ))}
         </fieldset>
         <div className="export-field">
-          <span className="export-label">Link ends after</span>
+          <span className="export-label">{copy.linkEndsAfter}</span>
           <ExpiryPicker value={expiry} onChange={setExpiry} />
         </div>
         <div className="share-lan-row">
           <div className="share-lan-text">
-            <span className="share-lan-title">Live</span>
+            <span className="share-lan-title">{copy.live}</span>
             <span className="share-lan-help">
               {liveView
                 ? "Viewers get a new image of each frame each time you save a version, and you see their cursors on the canvas."
@@ -640,9 +592,7 @@ function LinkShare({
           />
         </div>
         {!versionId && (
-          <p className="share-link-note">
-            Save a version first. A link shares a saved version.
-          </p>
+          <p className="share-link-note">{copy.saveAVersionFirst}</p>
         )}
         {shares.error && (
           <div className="alert error small" role="alert">
@@ -672,13 +622,10 @@ function LinkShare({
         />
       </div>
       <div className="modal-foot">
-        <span className="share-foot-note">
-          No upload: links work only while Design Studio is open on this
-          computer.
-        </span>
+        <span className="share-foot-note">{copy.noUploadLinksWork}</span>
         <span className="share-spacer" />
         <button type="button" className="btn ghost" onClick={onClose}>
-          Close
+          {copy.close}
         </button>
         <button
           type="submit"
@@ -686,9 +633,9 @@ function LinkShare({
           disabled={!canCreate}
           data-autofocus
         >
-          {shares.busy ? "Working…" : "Create link"}
+          {pick(shares.busy, "Working…", "Create link")}
         </button>
       </div>
     </form>
   );
-}
+};

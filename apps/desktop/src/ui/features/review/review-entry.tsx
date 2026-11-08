@@ -13,7 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { RefObject } from "react";
+import type { RefObject, ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
@@ -21,9 +21,13 @@ import { frameName } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { CritiquePanel } from "../critique/index.js";
 import type { FilesChange } from "../home/use-studio-data.js";
+import { copy } from "./copy.js";
+import { pick } from "./pick.js";
 import { useReview } from "./use-review.js";
 
 import "../../styles/review.css";
+
+const MAX_BADGE = 99;
 
 const ReviewPanel = lazy(async () => {
   const loaded = await import("./review-panel.js");
@@ -43,15 +47,12 @@ interface Props {
   toolKey: string;
 }
 
-function labelOf(frame: CanvasFrame): string {
-  return [frame.label ?? frameName(frame), frame.path]
-    .filter(Boolean)
-    .join(" · ");
-}
+const labelOf = (frame: CanvasFrame): string =>
+  [frame.label ?? frameName(frame), frame.path].filter(Boolean).join(" · ");
 
-function useSlot(
+const useSlot = (
   marker: RefObject<HTMLSpanElement | null>
-): HTMLElement | null {
+): HTMLElement | null => {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   useLayoutEffect(() => {
     const found =
@@ -65,29 +66,28 @@ function useSlot(
   });
 
   return slot;
-}
+};
 
-function badgeText(count: number): string {
-  return count > 99 ? "99+" : String(count);
-}
+const badgeText = (count: number): string =>
+  count > MAX_BADGE ? "99+" : String(count);
 
-function entryTip(
+const entryTip = (
   open: boolean,
   count: number | null,
   stale: boolean
-): string | undefined {
+): string | null => {
   if (open) {
-    return undefined;
+    return null;
   }
 
   if (count === null) {
     return "Check contrast, tap targets, alt text, tokens and clipping";
   }
 
-  return `${count} review ${count === 1 ? "finding" : "findings"}${stale ? " (from an older render)" : ""}`;
-}
+  return `${count} review ${pick(count === 1, "finding", "findings")}${pick(stale, " (from an older render)", "")}`;
+};
 
-function worst(result: ReviewResult | null): ReviewSeverity | null {
+const worst = (result: ReviewResult | null): ReviewSeverity | null => {
   if (!result) {
     return null;
   }
@@ -97,9 +97,9 @@ function worst(result: ReviewResult | null): ReviewSeverity | null {
       (sev) => result.counts[sev] > 0
     ) ?? null
   );
-}
+};
 
-function useCloseOnToolChange(toolKey: string, close: () => void) {
+const useCloseOnToolChange = (toolKey: string, close: () => void): void => {
   const last = useRef(toolKey);
   useEffect(() => {
     if (last.current === toolKey) {
@@ -109,33 +109,33 @@ function useCloseOnToolChange(toolKey: string, close: () => void) {
     last.current = toolKey;
     close();
   }, [toolKey, close]);
-}
+};
 
-export function ReviewEntry(p: Props) {
+const ReviewEntry = (props: Props): ReactElement => {
   const marker = useRef<HTMLSpanElement>(null);
   const slot = useSlot(marker);
   const [open, setOpen] = useState(false);
   const close = useRef(() => setOpen(false)).current;
-  useCloseOnToolChange(p.toolKey, close);
+  useCloseOnToolChange(props.toolKey, close);
 
   const review = useReview({
-    directionId: p.directionId,
-    frame: p.frame,
-    lastChange: p.lastChange,
-    open: open && p.live,
-    projectId: p.projectId,
+    directionId: props.directionId,
+    frame: props.frame,
+    lastChange: props.lastChange,
+    open: open && props.live,
+    projectId: props.projectId,
   });
 
   const count = review.result ? review.result.findings.length : null;
-  const ask = p.shell?.onAskAgent;
+  const ask = props.shell?.onAskAgent;
 
-  const select = (finding: ReviewFinding) => {
+  const select = (finding: ReviewFinding): void => {
     if (finding.selector) {
-      p.post({ selector: finding.selector, type: "select-selector" });
+      props.post({ selector: finding.selector, type: "select-selector" });
     }
   };
 
-  const { post } = p;
+  const { post } = props;
 
   const selectSelector = useCallback(
     (selector: string) => post({ selector, type: "select-selector" }),
@@ -148,20 +148,20 @@ export function ReviewEntry(p: Props) {
     <button
       type="button"
       className="btn ghost topbar-review review-entry"
-      aria-label={count === null ? "Review" : `Review, ${count} findings`}
+      aria-label={pick(count === null, "Review", `Review, ${count} findings`)}
       aria-pressed={open}
       aria-expanded={open}
-      disabled={!p.directionId}
+      disabled={!props.directionId}
       data-tip={entryTip(open, count, review.stale)}
       data-tip-align="end"
-      onClick={() => setOpen((v) => !v)}
+      onClick={() => setOpen((value) => !value)}
     >
       {review.busy && !open ? (
         <span className="spinner" />
       ) : (
         <Icon name="review" size={14} />
       )}
-      <span>Review</span>
+      <span>{copy.review}</span>
       {count !== null && count > 0 && (
         <span
           className={`review-badge ${review.stale ? "stale" : (sev ?? "low")}`}
@@ -180,9 +180,9 @@ export function ReviewEntry(p: Props) {
         <Suspense fallback={null}>
           <ReviewPanel
             review={review}
-            frameLabel={labelOf(p.frame)}
-            live={p.live}
-            running={p.running === true}
+            frameLabel={labelOf(props.frame)}
+            live={props.live}
+            running={props.running === true}
             canAsk={Boolean(ask)}
             onSelect={select}
             onAsk={(finding) => ask?.(finding.ask)}
@@ -190,11 +190,11 @@ export function ReviewEntry(p: Props) {
           >
             <Suspense fallback={null}>
               <CritiquePanel
-                directionId={p.directionId}
-                frameId={p.frame.id}
-                isLive={p.live}
+                directionId={props.directionId}
+                frameId={props.frame.id}
+                isLive={props.live}
                 onSelect={selectSelector}
-                projectId={p.projectId}
+                projectId={props.projectId}
               />
             </Suspense>
           </ReviewPanel>
@@ -202,4 +202,6 @@ export function ReviewEntry(p: Props) {
       )}
     </>
   );
-}
+};
+
+export { ReviewEntry };

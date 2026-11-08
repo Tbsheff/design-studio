@@ -6,12 +6,17 @@ import type {
   DesignRulesTestResult,
 } from "@design-studio/contracts/design-rules";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { errorText, rulesApi } from "../../api.js";
 import { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
 
 import "../../styles/rules.css";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
+
+const MAX_SIDE = 4000;
+const MIN_SIDE = 200;
 
 interface Props {
   projectId: string;
@@ -21,7 +26,7 @@ interface Props {
 const PLACEHOLDER =
   "One rule per line, for example:\ncontrols: h-9 rounded-md\ncards: rounded-xl p-6\nno raw hex\nfont: Inter\nuse Button from @/components/ui/button, not <button>\nKeep labels short and plain.";
 
-function originText(state: DesignRulesState): string {
+const originText = (state: DesignRulesState): string => {
   if (state.origin === "design-md") {
     return "Saved in the rules block of DESIGN.md. Save makes a version you can undo.";
   }
@@ -35,19 +40,19 @@ function originText(state: DesignRulesState): string {
   }
 
   return "No rules yet. Write some, or import them from the project docs.";
-}
+};
 
-function hitText(rule: DesignRule, hit: DesignRuleHit | undefined): string {
+const hitText = (rule: DesignRule, hit: DesignRuleHit | undefined): string => {
   if (rule.kind === "text" || !hit) {
     return "";
   }
 
   return hit.count === 0
     ? "Pass"
-    : `${hit.count} ${hit.count === 1 ? "break" : "breaks"}`;
-}
+    : `${hit.count} ${pick(hit.count === 1, "break", "breaks")}`;
+};
 
-function hitTip(rule: DesignRule, hit: DesignRuleHit | undefined): string {
+const hitTip = (rule: DesignRule, hit: DesignRuleHit | undefined): string => {
   if (rule.kind === "text") {
     return `${rule.text}. The agent and the critic get this rule. Review cannot check it.`;
   }
@@ -57,17 +62,17 @@ function hitTip(rule: DesignRule, hit: DesignRuleHit | undefined): string {
   return sample
     ? `${rule.text}. First break: ${sample.element}${sample.source ? ` at ${sample.source}` : ""}`
     : rule.text;
-}
+};
 
-function RuleRow({
+const RuleRow = ({
   rule,
   hit,
 }: {
   rule: DesignRule;
   hit: DesignRuleHit | undefined;
-}) {
+}): ReactElement => {
   const tone =
-    rule.kind === "text" || !hit ? "idle" : hit.count === 0 ? "ok" : "bad";
+    rule.kind === "text" || !hit ? "idle" : pick(hit.count === 0, "ok", "bad");
 
   return (
     <li className="rules-row" data-tone={tone} data-tip={hitTip(rule, hit)}>
@@ -78,9 +83,13 @@ function RuleRow({
       <span className="rules-hits">{hitText(rule, hit)}</span>
     </li>
   );
-}
+};
 
-function liveFrame(projectId: string) {
+const liveFrame = (
+  projectId: string
+):
+  | { width: number; height: number; path?: string | undefined; frame: string }
+  | undefined => {
   const layout = canvasStore.get(projectId);
 
   if (!layout) {
@@ -89,26 +98,24 @@ function liveFrame(projectId: string) {
 
   const frame = activeFrame(layout);
 
-  const side = (value: number) =>
-    Math.min(4000, Math.max(200, Math.round(value)));
+  const side = (value: number): number =>
+    Math.min(MAX_SIDE, Math.max(MIN_SIDE, Math.round(value)));
 
   return {
     frame: frame.id,
     ...(frame.path ? { path: frame.path } : {}),
-    width: side(frame.width),
     height: side(frame.height),
+    width: side(frame.width),
   };
-}
+};
 
-function frameText(result: DesignRulesTestResult): string {
-  return `Tested on ${result.frame.path ?? "the entry page"} at ${result.frame.width} px.`;
-}
+const frameText = (result: DesignRulesTestResult): string =>
+  `Tested on ${result.frame.path ?? "the entry page"} at ${result.frame.width} px.`;
 
-function withImport(text: string, imported: string): string {
-  return text.trim() ? `${text.trimEnd()}\n\n${imported}` : imported;
-}
+const withImport = (text: string, imported: string): string =>
+  text.trim() ? `${text.trimEnd()}\n\n${imported}` : imported;
 
-function RulesEditor({ projectId, directionId }: Props) {
+const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
   const [state, setState] = useState<DesignRulesState | null>(null);
   const [text, setText] = useState("");
   const [result, setResult] = useState<DesignRulesTestResult | null>(null);
@@ -118,24 +125,32 @@ function RulesEditor({ projectId, directionId }: Props) {
 
   useEffect(() => {
     let live = true;
-    rulesApi.get(projectId, directionId).then(
-      (next) => {
+
+    const load = async (): Promise<void> => {
+      try {
+        const next = await rulesApi.get(projectId, directionId);
+
         if (!live) {
           return;
         }
 
         setState(next);
         setText(next.text);
-      },
-      (caught: unknown) => live && setError(errorText(caught))
-    );
+      } catch (caught) {
+        if (live) {
+          setError(errorText(caught));
+        }
+      }
+    };
 
-    return () => {
+    void load();
+
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId]);
 
-  const run = async (kind: "test" | "save") => {
+  const run = async (kind: "test" | "save"): Promise<void> => {
     setBusy(kind);
     setError(null);
     setNote(null);
@@ -154,7 +169,7 @@ function RulesEditor({ projectId, directionId }: Props) {
         const saved = await rulesApi.save(projectId, directionId, text);
         setState(saved.state);
         setText(saved.state.text);
-        setNote(saved.versionId ? "Saved as a new version." : "Saved.");
+        setNote(pick(saved.versionId, "Saved as a new version.", "Saved."));
       }
     } catch (caught) {
       setError(errorText(caught));
@@ -169,7 +184,7 @@ function RulesEditor({ projectId, directionId }: Props) {
         {error ? (
           <p className="rules-error">{error}</p>
         ) : (
-          <p className="pane-system-text">Loading rules…</p>
+          <p className="pane-system-text">{copy.loadingRules}</p>
         )}
       </section>
     );
@@ -187,7 +202,7 @@ function RulesEditor({ projectId, directionId }: Props) {
   return (
     <section className="rules-editor" aria-label={copy.designRules}>
       <div className="rules-head">
-        <h3>Design rules</h3>
+        <h3>{copy.designRules}</h3>
         {imported && (
           <button
             type="button"
@@ -196,13 +211,13 @@ function RulesEditor({ projectId, directionId }: Props) {
             data-tip-align="end"
             onClick={() => setText(withImport(text, imported))}
           >
-            Import from docs
+            {copy.importFromDocs}
           </button>
         )}
       </div>
       <p className="pane-system-text">
-        {originText(state)} The agent follows every rule. Review checks class,
-        token, font and component rules.
+        {originText(state)}
+        {copy.theAgentFollowsEvery}
       </p>
       <textarea
         className="rules-input"
@@ -221,7 +236,7 @@ function RulesEditor({ projectId, directionId }: Props) {
           data-tip={copy.checkTheseRules}
           onClick={() => void run("test")}
         >
-          {busy === "test" ? "Testing…" : "Test on frame"}
+          {pick(busy === "test", "Testing…", "Test on frame")}
         </button>
         <button
           type="button"
@@ -229,7 +244,7 @@ function RulesEditor({ projectId, directionId }: Props) {
           disabled={busy !== null || !dirty}
           onClick={() => void run("save")}
         >
-          {busy === "save" ? "Saving…" : "Save"}
+          {pick(busy === "save", "Saving…", "Save")}
         </button>
         {note && <span className="pane-system-text">{note}</span>}
       </div>
@@ -249,6 +264,8 @@ function RulesEditor({ projectId, directionId }: Props) {
       )}
     </section>
   );
-}
+};
 
 export { RulesEditor };
+
+export type { Props };

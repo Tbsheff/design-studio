@@ -14,12 +14,23 @@ import type {
 } from "@design-studio/contracts/insert";
 import { Icon, UiSelect, useModalDialog } from "@design-studio/ui";
 import { useEffect, useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type {
+  FormEvent,
+  KeyboardEvent,
+  ReactElement,
+  SetStateAction,
+  Dispatch,
+} from "react";
 
 import { ApiError, json } from "../../api.js";
 
 import "../../styles/figma-import.css";
 import { copy } from "./copy.js";
+import { pick } from "./pick.js";
+
+const MAX_FAILURE_LENGTH = 140;
+const KIT_SHOWN = 6;
+const NOTES_SHOWN = 4;
 
 interface Props {
   ids: { projectId: string; directionId: string };
@@ -36,11 +47,10 @@ const POSITIONS: { value: JsxInsertPosition; label: string }[] = [
   { label: "Before the selection", value: "before" },
 ];
 
-function route(ids: Props["ids"]): string {
-  return `/api/projects/${encodeURIComponent(ids.projectId)}/d/${encodeURIComponent(ids.directionId)}/figma/import`;
-}
+const route = (ids: Props["ids"]): string =>
+  `/api/projects/${encodeURIComponent(ids.projectId)}/d/${encodeURIComponent(ids.directionId)}/figma/import`;
 
-function messageOf(error: unknown): string {
+const messageOf = (error: unknown): string => {
   if (
     error instanceof ApiError &&
     error.data &&
@@ -50,13 +60,12 @@ function messageOf(error: unknown): string {
   }
 
   return error instanceof Error ? error.message : String(error);
-}
+};
 
-function plural(count: number, word: string): string {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
-}
+const plural = (count: number, word: string): string =>
+  `${count} ${word}${pick(count === 1, "", "s")}`;
 
-function facts(stats: FigmaImportStats): string[] {
+const facts = (stats: FigmaImportStats): string[] => {
   const out = [
     plural(stats.layers, "layer"),
     `${plural(stats.tokens, "token color")}`,
@@ -75,46 +84,63 @@ function facts(stats: FigmaImportStats): string[] {
   }
 
   return out;
-}
+};
 
-function usePreview(
+const usePreview = (
   ids: Props["ids"],
   base: FigmaImportSource,
   target: InsertTarget,
   nodeId: string,
   position: JsxInsertPosition
-) {
+): {
+  failure: string | null;
+  loading: boolean;
+  preview: FigmaImportPreview | null;
+  setFailure: Dispatch<SetStateAction<string | null>>;
+} => {
   const [preview, setPreview] = useState<FigmaImportPreview | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let live = true;
     setLoading(true);
-    json<FigmaImportPreview>("POST", route(ids), {
-      ...base,
-      dryRun: true,
-      position,
-      target,
-      ...(nodeId ? { nodeId } : {}),
-    })
-      .then((result) => {
+
+    const load = async (): Promise<void> => {
+      try {
+        const result = await json<FigmaImportPreview>("POST", route(ids), {
+          ...base,
+          dryRun: true,
+          position,
+          target,
+          ...(nodeId ? { nodeId } : {}),
+        });
+
         if (!live) {
           return;
         }
 
         setPreview(result);
         setFailure(null);
-      })
-      .catch((error: unknown) => live && setFailure(messageOf(error)))
-      .finally(() => live && setLoading(false));
+      } catch (error) {
+        if (live) {
+          setFailure(messageOf(error));
+        }
+      } finally {
+        if (live) {
+          setLoading(false);
+        }
+      }
+    };
 
-    return () => {
+    void load();
+
+    return (): void => {
       live = false;
     };
   }, [ids, base, target, nodeId, position]);
 
   return { failure, loading, preview, setFailure };
-}
+};
 
 interface PlainFailure {
   text: string;
@@ -122,7 +148,7 @@ interface PlainFailure {
   details: string | null;
 }
 
-function plainFailure(raw: string): PlainFailure {
+const plainFailure = (raw: string): PlainFailure => {
   if (LINKS_OFF.test(raw)) {
     return {
       details: raw,
@@ -131,7 +157,7 @@ function plainFailure(raw: string): PlainFailure {
     };
   }
 
-  const status = /Figma API answered (\d+)/.exec(raw);
+  const status = /Figma API answered (\d+)/u.exec(raw);
 
   if (status) {
     return {
@@ -141,34 +167,37 @@ function plainFailure(raw: string): PlainFailure {
     };
   }
 
-  if (raw.length > 140 || /https?:\/\/|[A-Z]+_[A-Z_]+=?/.test(raw)) {
+  if (
+    raw.length > MAX_FAILURE_LENGTH ||
+    /https?:\/\/|[A-Z]+_[A-Z_]+=?/u.test(raw)
+  ) {
     return { details: raw, fix: null, text: "The Figma frame did not load." };
   }
 
   return { details: null, fix: null, text: raw };
-}
+};
 
-const LINKS_OFF = /Figma API, which is off/;
+const LINKS_OFF = /Figma API, which is off/u;
 
-function nodesUrl(link: string): string {
-  const match = /figma\.com\/(?:file|design|proto)\/([A-Za-z0-9]+)/.exec(link);
-  const node = /[?&]node-id=([^&#]+)/.exec(link)?.[1];
+const nodesUrl = (link: string): string => {
+  const match = /figma\.com\/(?:file|design|proto)\/([A-Za-z0-9]+)/u.exec(link);
+  const node = /[?&]node-id=([^&#]+)/u.exec(link)?.[1];
   const ids = node ? decodeURIComponent(node).replace("-", ":") : "<node id>";
 
   return `https://api.figma.com/v1/files/${match?.[1] ?? "<file key>"}/nodes?ids=${ids}`;
-}
+};
 
-function JsonPaste({
+const JsonPaste = ({
   link,
   onUse,
 }: {
   link: string;
   onUse: (nodes: string) => void;
-}) {
+}): ReactElement => {
   const [text, setText] = useState("");
   const [bad, setBad] = useState(false);
 
-  const use = () => {
+  const use = (): void => {
     const nodes = text.trim();
 
     if (!looksLikeFigmaNodes(nodes)) {
@@ -181,7 +210,7 @@ function JsonPaste({
   return (
     <div className="field">
       <label className="field">
-        <span>Frame JSON</span>
+        <span>{copy.frameJson}</span>
         <textarea
           className="mono"
           rows={5}
@@ -190,16 +219,17 @@ function JsonPaste({
           placeholder={copy.nodes}
           aria-invalid={bad}
           aria-describedby="fgi-json-help"
-          onChange={(e) => {
-            setText(e.target.value);
+          onChange={(changeEvent) => {
+            setText(changeEvent.target.value);
             setBad(false);
           }}
         />
       </label>
       <p id="fgi-json-help" className="fgi-facts">
-        {bad ? "This is not Figma frame JSON. " : ""}Open {nodesUrl(link)} with
-        your Figma token (X-Figma-Token header) and paste the reply here. To use
-        links, start the studio with STUDIO_FIGMA_FETCH=1 and FIGMA_TOKEN.
+        {pick(bad, "This is not Figma frame JSON. ", "")}
+        {copy.open2}
+        {nodesUrl(link)}
+        {copy.withYourFigmaToken}
       </p>
       <div>
         <button
@@ -208,14 +238,14 @@ function JsonPaste({
           disabled={text.trim() === ""}
           onClick={use}
         >
-          Use JSON
+          {copy.applyJson}
         </button>
       </div>
     </div>
   );
-}
+};
 
-function JsonFallback({
+const JsonFallback = ({
   base,
   failure,
   onUse,
@@ -223,15 +253,15 @@ function JsonFallback({
   base: FigmaImportSource;
   failure: string | null;
   onUse: (nodes: string) => void;
-}) {
+}): ReactElement | null => {
   if (!failure || !("link" in base) || !LINKS_OFF.test(failure)) {
     return null;
   }
 
   return <JsonPaste link={base.link} onUse={onUse} />;
-}
+};
 
-function FailureNote({ failure }: { failure: string }) {
+const FailureNote = ({ failure }: { failure: string }): ReactElement => {
   const [open, setOpen] = useState(false);
   const plain = plainFailure(failure);
 
@@ -249,17 +279,21 @@ function FailureNote({ failure }: { failure: string }) {
             aria-expanded={open}
             onClick={() => setOpen(!open)}
           >
-            <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
-            Details
+            <Icon name={pick(open, "chevronDown", "chevronRight")} size={12} />
+            {copy.details}
           </button>
           {open && <p className="fgi-details">{plain.details}</p>}
         </>
       )}
     </div>
   );
-}
+};
 
-function Summary({ preview }: { preview: FigmaImportPreview }) {
+const Summary = ({
+  preview,
+}: {
+  preview: FigmaImportPreview;
+}): ReactElement => {
   const { frame, stats } = preview;
 
   return (
@@ -273,7 +307,7 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
       <div className="fgi-facts">{facts(stats).join(" · ")}</div>
       {stats.kit.length > 0 && (
         <ul className="fgi-kit" aria-label={copy.kitComponents}>
-          {stats.kit.slice(0, 6).map((use, index) => (
+          {stats.kit.slice(0, KIT_SHOWN).map((use, index) => (
             <li key={`${use.layer}-${index}`}>
               <span>{use.layer}</span>
               <code>{`<${use.component}>`}</code>
@@ -283,7 +317,7 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
       )}
       {stats.notes.length > 0 && (
         <ul className="fgi-notes">
-          {stats.notes.slice(0, 4).map((note) => (
+          {stats.notes.slice(0, NOTES_SHOWN).map((note) => (
             <li key={note}>{note}</li>
           ))}
         </ul>
@@ -295,24 +329,24 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
       </div>
     </div>
   );
-}
+};
 
-export function FigmaImportDialog({
+const FigmaImportDialog = ({
   ids,
   target,
   text,
   canNest,
   onDone,
   onClose,
-}: Props) {
+}: Props): ReactElement => {
   const [base, setBase] = useState<FigmaImportSource>(() =>
     looksLikeFigmaLink(text) ? { link: text.trim() } : { nodes: text }
   );
 
   const [nodeId, setNodeId] = useState("");
 
-  const [position, setPosition] = useState<JsxInsertPosition>(
-    canNest ? "inside" : "after"
+  const [position, setPosition] = useState<JsxInsertPosition>(() =>
+    pick(canNest, "inside", "after")
   );
 
   const [busy, setBusy] = useState(false);
@@ -336,7 +370,7 @@ export function FigmaImportDialog({
   const frames = preview?.frames ?? [];
   const chosen = nodeId || preview?.frame.id || "";
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
 
     if (busy || !preview) {
@@ -365,7 +399,7 @@ export function FigmaImportDialog({
     }
   };
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === "Escape") {
       event.stopPropagation();
     }
@@ -386,18 +420,17 @@ export function FigmaImportDialog({
       >
         <div className="modal-head">
           <div className="titles">
-            <h2>Import Figma frame</h2>
+            <h2>{copy.importFigmaFrame}</h2>
             <p>
-              {preview?.fileName ? `From ${preview.fileName}. ` : ""}Auto layout
-              becomes flex, colors use your tokens, and kit instances become
-              components.
+              {preview?.fileName ? `From ${preview.fileName}. ` : ""}
+              {copy.autoLayoutBecomesFlex}
             </p>
           </div>
         </div>
         <div className="modal-body fgi-form">
           {frames.length > 1 && (
             <div className="field">
-              <span>Frame</span>
+              <span>{copy.frame}</span>
               <UiSelect
                 className="ins-select fgi-select"
                 aria-label={copy.frame}
@@ -411,7 +444,7 @@ export function FigmaImportDialog({
             </div>
           )}
           <div className="field">
-            <span>Place</span>
+            <span>{copy.place}</span>
             <UiSelect
               className="ins-select fgi-select"
               aria-label={copy.place}
@@ -426,7 +459,7 @@ export function FigmaImportDialog({
           </div>
           {preview && <Summary preview={preview} />}
           {loading && !preview && !failure && (
-            <div className="fgi-loading">Reading the Figma frame…</div>
+            <div className="fgi-loading">{copy.readingTheFigmaFrame}</div>
           )}
           {failure && <FailureNote failure={failure} />}
           <JsonFallback
@@ -445,17 +478,19 @@ export function FigmaImportDialog({
             onClick={onClose}
             disabled={busy}
           >
-            Cancel
+            {copy.cancel}
           </button>
           <button
             type="submit"
             className="btn primary"
             disabled={busy || loading || !preview || failure !== null}
           >
-            {busy ? "Importing…" : "Import frame"}
+            {pick(busy, "Importing…", "Import frame")}
           </button>
         </div>
       </form>
     </dialog>
   );
-}
+};
+
+export { FigmaImportDialog };

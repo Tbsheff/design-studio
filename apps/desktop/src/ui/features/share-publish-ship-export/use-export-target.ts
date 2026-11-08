@@ -4,11 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { onOpenExport } from "./export-api.js";
 import type { ExportTarget, OpenExportDetail } from "./export-api.js";
 
-export function useExportTarget(
+const useExportTarget = (
   projectId: string,
   direction: Direction | null,
   versions: Version[]
-) {
+): {
+  canOpen: boolean;
+  close: () => void;
+  open: (detail?: OpenExportDetail) => void;
+  openHead: () => void;
+  target: ExportTarget | null;
+} => {
   const [target, setTarget] = useState<ExportTarget | null>(null);
   const latest = useRef({ direction, versions });
   latest.current = { direction, versions };
@@ -22,7 +28,7 @@ export function useExportTarget(
         return;
       }
 
-      const version = list.find((v) => v.id === versionId);
+      const version = list.find((version) => version.id === versionId);
       setTarget({
         directionId: current?.id ?? null,
         projectId,
@@ -47,4 +53,6 @@ export function useExportTarget(
     openHead: () => open(),
     target,
   };
-}
+};
+
+export { useExportTarget };

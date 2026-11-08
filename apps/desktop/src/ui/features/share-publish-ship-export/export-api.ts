@@ -24,18 +24,21 @@ import {
   frameName,
 } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
+import { pick } from "./pick.js";
 
-const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
+const item = (pid: string): string =>
+  `/api/projects/${encodeURIComponent(pid)}`;
+
 const PREFS_KEY = "design-studio.export.v1";
 const OPEN_EVENT = "studio:open-export";
 
-export interface ExportedFile {
+interface ExportedFile {
   blob: Blob;
   name: string;
   note: string | null;
 }
 
-function toExportedFile(file: ExportFileResultWire): ExportedFile {
+const toExportedFile = (file: ExportFileResultWire): ExportedFile => {
   const raw = atob(file.content);
   const bytes = new Uint8Array(raw.length);
 
@@ -48,9 +51,9 @@ function toExportedFile(file: ExportFileResultWire): ExportedFile {
     name: file.name,
     note: file.note,
   };
-}
+};
 
-export const exportApi = {
+const exportApi = {
   copyCode: (pid: string, request: CopyCodeRequest): Promise<CopyCodeResult> =>
     callAction(exportRoutes.getCodeExport, {
       directionId: request.directionId ?? null,
@@ -100,20 +103,20 @@ export const exportApi = {
   ): Promise<void> => {
     await sendJson(
       "POST",
-      `${p(pid)}/d/${encodeURIComponent(did)}/open-in-editor`,
+      `${item(pid)}/d/${encodeURIComponent(did)}/open-in-editor`,
       file ? { editor, file } : { editor }
     );
   },
   revealHandoff: async (pid: string, folder: string): Promise<void> => {
     await sendJson(
       "POST",
-      `${p(pid)}/handoff/${encodeURIComponent(folder)}/reveal`,
+      `${item(pid)}/handoff/${encodeURIComponent(folder)}/reveal`,
       {}
     );
   },
 };
 
-export interface ExportPrefs {
+interface ExportPrefs {
   format: ExportFormat;
   scale: ExportScale;
   scope: ExportScope;
@@ -131,7 +134,7 @@ const FORMATS: ReadonlySet<ExportFormat> = new Set<ExportFormat>([
   "pptx",
 ]);
 
-export function readExportPrefs(): ExportPrefs {
+const readExportPrefs = (): ExportPrefs => {
   try {
     const raw = JSON.parse(
       readStored(PREFS_KEY) ?? "{}"
@@ -145,53 +148,52 @@ export function readExportPrefs(): ExportPrefs {
         raw.scale === 1 || raw.scale === 2 || raw.scale === 3
           ? raw.scale
           : DEFAULT_PREFS.scale,
-      scope: raw.scope === "frame" ? "frame" : "page",
+      scope: pick(raw.scope === "frame", "frame", "page"),
     };
   } catch {
     return DEFAULT_PREFS;
   }
-}
+};
 
-export function saveExportPrefs(prefs: ExportPrefs): void {
+const saveExportPrefs = (prefs: ExportPrefs): void => {
   writeStored(PREFS_KEY, JSON.stringify(prefs));
-}
+};
 
-export interface FrameChoice {
+interface FrameChoice {
   id: string;
   frame: ExportFrame;
   active: boolean;
 }
 
-function toExport(
+const toExport = (
   frame: CanvasFrame,
   name = frame.label?.trim() || frameName(frame)
-): ExportFrame {
-  return {
-    height: frame.height,
-    name,
-    width: frame.width,
-    ...(frame.path ? { path: frame.path } : {}),
-  };
-}
+): ExportFrame => ({
+  height: frame.height,
+  name,
+  width: frame.width,
+  ...(frame.path ? { path: frame.path } : {}),
+});
 
-export function frameRoute(frame: ExportFrame): string {
-  return `/${(frame.path ?? "").replace(/^\/+/, "")}`;
-}
+const frameRoute = (frame: ExportFrame): string =>
+  `/${(frame.path ?? "").replace(/^\/+/u, "")}`;
 
-function choiceNames(frames: CanvasFrame[]): string[] {
+const choiceNames = (frames: CanvasFrame[]): string[] => {
   const names = frames.map((frame) => toExport(frame).name);
 
   return names.map((name, index) =>
-    names.filter((other) => other === name).length < 2
-      ? name
-      : `Frame ${index + 1}`
+    pick(
+      names.filter((other) => other === name).length < 2,
+      name,
+      `Frame ${index + 1}`
+    )
   );
-}
+};
 
-export function canvasFrameChoices(
+const canvasFrameChoices = (
   projectId: string,
   directionId: string | null
-): FrameChoice[] {
+): FrameChoice[] => {
   const layout =
     canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport);
 
@@ -209,17 +211,16 @@ export function canvasFrameChoices(
     frame: toExport(frame, names[index]),
     id: frame.id,
   }));
-}
+};
 
-export function activeExportFrame(projectId: string): ExportFrame {
-  return toExport(
+const activeExportFrame = (projectId: string): ExportFrame =>
+  toExport(
     activeFrame(
       canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport)
     )
   );
-}
 
-export interface ExportTarget {
+interface ExportTarget {
   projectId: string;
   directionId: string | null;
   versionId: string;
@@ -228,37 +229,57 @@ export interface ExportTarget {
   format?: ExportFormat;
 }
 
-export interface OpenExportDetail {
+interface OpenExportDetail {
   versionId?: string;
   format?: ExportFormat;
   selector?: string;
 }
 
-export function openExport(detail: OpenExportDetail = {}): void {
-  window.dispatchEvent(
+const openExport = (detail: OpenExportDetail = {}): void => {
+  globalThis.dispatchEvent(
     new CustomEvent<OpenExportDetail>(OPEN_EVENT, { detail })
   );
-}
+};
 
-export function onOpenExport(
+const onOpenExport = (
   handler: (detail: OpenExportDetail) => void
-): () => void {
-  const listener = (event: Event) =>
+): (() => void) => {
+  const listener = (event: Event): void =>
     handler((event as CustomEvent<OpenExportDetail>).detail ?? {});
 
-  window.addEventListener(OPEN_EVENT, listener);
+  globalThis.addEventListener(OPEN_EVENT, listener);
 
-  return () => window.removeEventListener(OPEN_EVENT, listener);
-}
+  return () => globalThis.removeEventListener(OPEN_EVENT, listener);
+};
 
 interface RevealBridge {
   revealExport?: () => void;
 }
 
-export function canRevealDownload(): boolean {
-  return typeof desktopBridge<RevealBridge>()?.revealExport === "function";
-}
+const canRevealDownload = (): boolean =>
+  typeof desktopBridge<RevealBridge>()?.revealExport === "function";
 
-export function revealDownload(): void {
+const revealDownload = (): void => {
   desktopBridge<RevealBridge>()?.revealExport?.();
-}
+};
+
+export {
+  exportApi,
+  readExportPrefs,
+  saveExportPrefs,
+  frameRoute,
+  canvasFrameChoices,
+  activeExportFrame,
+  openExport,
+  onOpenExport,
+  canRevealDownload,
+  revealDownload,
+};
+
+export type {
+  ExportedFile,
+  ExportPrefs,
+  FrameChoice,
+  ExportTarget,
+  OpenExportDetail,
+};

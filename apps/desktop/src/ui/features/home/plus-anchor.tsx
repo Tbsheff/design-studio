@@ -4,7 +4,7 @@ import type { ReactElement, RefObject } from "react";
 
 import type { PopState } from "./composer-pop-model.js";
 import { copy } from "./copy.js";
-import { PlusMenu, loadPops } from "./lazy-parts.js";
+import { PlusMenu, loadPops } from "./lazy-parts-model.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
 
 const PLUS_ICON_SIZE = 16;

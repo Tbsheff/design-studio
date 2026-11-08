@@ -1,8 +1,21 @@
 import type { Project } from "@design-studio/contracts";
 
 import type { AppHealth } from "./deps.js";
-import type { DoctorProblem } from "./home-doctor.js";
 import { shortHome } from "./home-model.js";
+
+interface DoctorStep {
+  readonly isOk: boolean;
+  readonly text: string;
+}
+
+interface DoctorProblem {
+  readonly name: string;
+  readonly place: string;
+  readonly badge: { readonly label: string; readonly tone: string };
+  readonly steps: DoctorStep[];
+  readonly detail: string;
+  readonly command: string | null;
+}
 
 interface DoctorGate {
   readonly problem: DoctorProblem;
@@ -13,6 +26,8 @@ interface DoctorGate {
 
 const INSTALL_DETAIL =
   "Dependencies are not installed. Run the command below, then check again.";
+
+const HOME_COMMAND = /^cd (?<quoted>"(?:[^"\\]|\\.)*") && (?<rest>.+)$/u;
 
 const SHELL_SAFE = /^[\w./-]+$/u;
 
@@ -44,22 +59,32 @@ const getHomeCommand = (
   command: string | null,
   homeDir: string | null
 ): string | null => {
-  const match = command?.match(/^cd ("(?:[^"\\]|\\.)*") && (.+)$/u);
+  const groups = command?.match(HOME_COMMAND)?.groups;
 
-  if (!match?.[1] || !match[2]) {
+  if (!groups?.quoted || !groups.rest) {
     return command;
   }
 
   try {
-    return `cd ${getShellPath(JSON.parse(match[1]) as string, homeDir)} && ${match[2]}`;
+    const dir = String(JSON.parse(groups.quoted));
+
+    return `cd ${getShellPath(dir, homeDir)} && ${groups.rest}`;
   } catch {
     return command;
   }
 };
 
+const toKindTone = (label: string): string => {
+  if (label === "Vite") {
+    return "vite";
+  }
+
+  return "next";
+};
+
 const getInstallProblem = (
-  name: string,
-  place: string,
+  projectName: string,
+  placeLabel: string,
   kindLabel: string,
   install: {
     readonly command: string;
@@ -67,43 +92,58 @@ const getInstallProblem = (
     readonly homeDir: string | null;
   }
 ): DoctorProblem => ({
-  badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
+  badge: { label: kindLabel, tone: toKindTone(kindLabel) },
   command: `cd ${getShellPath(install.dir, install.homeDir)} && ${install.command}`,
   detail: INSTALL_DETAIL,
-  name,
-  place,
+  name: projectName,
+  place: placeLabel,
   steps: [
     { isOk: true, text: `package.json · ${kindLabel}` },
     { isOk: false, text: "node_modules is missing" },
   ],
 });
 
+const toFrameworkLabel = (project: Project): string => {
+  if (project.app?.framework === "next") {
+    return "Next.js";
+  }
+
+  return "Vite";
+};
+
+const toHealthDetail = (health: AppHealth): string => {
+  if (health.state === "install") {
+    return INSTALL_DETAIL;
+  }
+
+  return health.detail ?? health.title ?? "The dev server cannot start.";
+};
+
+const toHealthStep = (health: AppHealth): string => {
+  if (health.state === "install") {
+    return "node_modules is missing";
+  }
+
+  return health.title ?? "The dev server failed";
+};
+
 const getHealthProblem = (
   project: Project,
   health: AppHealth,
-  place: string,
+  placeLabel: string,
   homeDir: string | null
 ): DoctorProblem => {
-  const label = project.app?.framework === "next" ? "Next.js" : "Vite";
+  const label = toFrameworkLabel(project);
 
   return {
-    badge: { label, tone: label === "Vite" ? "vite" : "next" },
+    badge: { label, tone: toKindTone(label) },
     command: getHomeCommand(health.command, homeDir),
-    detail:
-      health.state === "install"
-        ? INSTALL_DETAIL
-        : (health.detail ?? health.title ?? "The dev server cannot start."),
+    detail: toHealthDetail(health),
     name: project.name,
-    place,
+    place: placeLabel,
     steps: [
       { isOk: true, text: `package.json · ${label}` },
-      {
-        isOk: false,
-        text:
-          health.state === "install"
-            ? "node_modules is missing"
-            : (health.title ?? "The dev server failed"),
-      },
+      { isOk: false, text: toHealthStep(health) },
     ],
   };
 };
@@ -117,4 +157,4 @@ export {
   getShellPath as shellPath,
 };
 
-export type { DoctorGate };
+export type { DoctorGate, DoctorProblem, DoctorStep };

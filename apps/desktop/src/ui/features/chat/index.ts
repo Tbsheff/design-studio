@@ -22,6 +22,12 @@ const UnfinishedBanner = lazy(async () => {
   return { default: loaded.UnfinishedBanner };
 });
 
+const ClarifyForm = lazy(async () => {
+  const loaded = await import("./clarify-form.js");
+
+  return { default: loaded.ClarifyForm };
+});
+
 const McpToasts = lazy(async () => {
   const loaded = await import("./mcp-toasts.js");
 
@@ -38,6 +44,7 @@ const InlinePrompt = lazy(() => import("./inline-prompt.js"));
 
 export {
   ChatPanel,
+  ClarifyForm,
   InlinePrompt,
   McpPointBadge,
   McpToasts,

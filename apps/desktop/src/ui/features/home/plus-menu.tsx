@@ -1,9 +1,9 @@
-import { useCallback } from "react";
-import type { KeyboardEvent, ReactElement, RefObject } from "react";
+import type { ReactElement, RefObject } from "react";
 
-import { Pop, moveFocus } from "./home-popovers.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
 import { PlusMenuSections } from "./plus-menu-sections.js";
+import { Pop } from "./pop.js";
+import { moveFocusInMenu } from "./popover-focus-model.js";
 
 interface PlusMenuProps {
   readonly trigger: RefObject<HTMLElement | null>;
@@ -19,32 +19,23 @@ const PlusMenu = ({
   actions,
   locationLabel,
   isClosing,
-}: PlusMenuProps): ReactElement => {
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>): void => {
-      moveFocus(event, ".ui-menu-item");
-    },
-    []
-  );
-
-  return (
-    <Pop
-      trigger={trigger}
-      closing={isClosing}
+}: PlusMenuProps): ReactElement => (
+  <Pop
+    trigger={trigger}
+    closing={isClosing}
+    onClose={onClose}
+    variant="ui-menu home-plus-menu"
+    label="Add to the project"
+    role="menu"
+    onKeyDown={moveFocusInMenu}
+  >
+    <PlusMenuSections
+      actions={actions}
+      locationLabel={locationLabel}
       onClose={onClose}
-      variant="ui-menu home-plus-menu"
-      label="Add to the project"
-      role="menu"
-      onKeyDown={onKeyDown}
-    >
-      <PlusMenuSections
-        actions={actions}
-        locationLabel={locationLabel}
-        onClose={onClose}
-      />
-    </Pop>
-  );
-};
+    />
+  </Pop>
+);
 
 export { PlusMenu };
 

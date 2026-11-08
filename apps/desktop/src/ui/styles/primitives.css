@@ -837,3 +837,9 @@ fieldset.ui-tools {
   line-height: var(--lh-xs);
   white-space: normal;
 }
+
+fieldset.ui-menu-section {
+  min-inline-size: 0;
+  margin: 0;
+  border: 0;
+}

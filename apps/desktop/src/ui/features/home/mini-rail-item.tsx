@@ -1,8 +1,9 @@
-import type { ReactElement } from "react";
 import { useCallback } from "react";
+import type { ReactElement } from "react";
 
 import type { ProjectHit } from "./deps.js";
-import { HealthDot, ProjectThumb } from "./project-thumb.js";
+import { HealthDot } from "./health-dot.js";
+import { ProjectThumb } from "./project-thumb.js";
 import { toRailTip } from "./rail-model.js";
 import { runPickProject } from "./rail-store-model.js";
 

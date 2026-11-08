@@ -1,15 +1,15 @@
 import { Suspense } from "react";
 import type { ReactElement, RefObject } from "react";
 
-import type { AppChip } from "./home-app-chip.js";
-import { AppMenu } from "./lazy-parts.js";
+import type { AppChip } from "./app-chip-model.js";
+import { AppMenu } from "./lazy-parts-model.js";
 
 const ChipMenuSlot = ({
   isShown,
   isClosing,
   chip,
   homeDir,
-  chipRef,
+  triggerRef,
   onClose,
   onChange,
   onTokensOnly,
@@ -18,7 +18,7 @@ const ChipMenuSlot = ({
   readonly isClosing: boolean;
   readonly chip: AppChip | null;
   readonly homeDir: string | null;
-  readonly chipRef: RefObject<HTMLDivElement | null>;
+  readonly triggerRef: RefObject<HTMLElement | null>;
   readonly onClose: () => void;
   readonly onChange: (patch: Partial<AppChip>) => void;
   readonly onTokensOnly: () => void;
@@ -27,17 +27,12 @@ const ChipMenuSlot = ({
     return null;
   }
 
-  const trigger = {
-    current:
-      chipRef.current?.querySelector<HTMLElement>(".home-chip-app") ?? null,
-  };
-
   return (
     <Suspense fallback={null}>
       <AppMenu
         chip={chip}
         homeDir={homeDir}
-        trigger={trigger}
+        trigger={triggerRef}
         isClosing={isClosing}
         onClose={onClose}
         onChange={onChange}

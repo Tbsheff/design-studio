@@ -3,8 +3,8 @@ import type { ReactElement } from "react";
 
 import { CardMeta } from "./card-meta.js";
 import type { AppHealth } from "./deps.js";
-import type { PackSwatches } from "./project-card-model.js";
 import { toProjectPlace } from "./project-card-model.js";
+import type { PackSwatches } from "./project-card-model.js";
 
 interface CardBodyProps {
   readonly project: Project;

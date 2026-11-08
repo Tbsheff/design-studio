@@ -1,4 +1,4 @@
-import type { Project } from "@design-studio/contracts";
+import type { Project, TrashedProject } from "@design-studio/contracts";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { api, errorText, json } from "../../api.js";
@@ -16,7 +16,10 @@ const listeners = new Set<() => void>();
 
 const setProjectsState = (next: ProjectsState): void => {
   state = next;
-  listeners.forEach((listener) => listener());
+
+  for (const listener of listeners) {
+    listener();
+  }
 };
 
 const runProjectsFetch = async (): Promise<void> => {
@@ -43,18 +46,18 @@ const update = (change: (list: Project[]) => Project[]): void => {
 };
 
 const projectsApi = {
-  duplicate: async (project: Project) => {
+  duplicate: async (project: Project): Promise<Project> => {
     const { project: copy } = await api.duplicateProject(project.id);
     await runProjectsLoad();
 
     return copy;
   },
-  found: (fresh = false) =>
-    json<FoundApps>("GET", `/api/folders/found${fresh ? "?fresh=1" : ""}`),
-  get: () => state,
-  health: () => json<AppHealth[]>("GET", "/api/home/health"),
+  found: (): Promise<FoundApps> => json<FoundApps>("GET", "/api/folders/found"),
+  get: (): ProjectsState => state,
+  health: (): Promise<AppHealth[]> =>
+    json<AppHealth[]>("GET", "/api/home/health"),
   load: runProjectsLoad,
-  rename: async (project: Project, name: string) => {
+  rename: async (project: Project, name: string): Promise<Project> => {
     update((list) =>
       list.map((item) => {
         if (item.id === project.id) {
@@ -71,11 +74,11 @@ const projectsApi = {
       void runProjectsLoad();
     }
   },
-  restore: async (trashId: string) => {
+  restore: async (trashId: string): Promise<void> => {
     await api.restoreProject(trashId);
     await runProjectsLoad();
   },
-  reveal: (project: Project) =>
+  reveal: (project: Project): Promise<{ readonly ok: true }> =>
     json<{ readonly ok: true }>(
       "POST",
       `/api/projects/${encodeURIComponent(project.id)}/reveal`
@@ -87,7 +90,7 @@ const projectsApi = {
       listeners.delete(listener);
     };
   },
-  trash: async (project: Project) => {
+  trash: async (project: Project): Promise<TrashedProject> => {
     update((list) => list.filter((item) => item.id !== project.id));
 
     try {
@@ -103,6 +106,21 @@ const POLL_FAST_MS = 500;
 const POLL_MS = 1500;
 const RECENT_MS = 120_000;
 
+const isRecentlyUpdated = (project: Project): boolean =>
+  Date.now() - project.updatedAt < RECENT_MS;
+
+const toPollDelay = (projects: Project[]): number | null => {
+  if (projects.some((project) => isThumbnailPending(project))) {
+    return POLL_FAST_MS;
+  }
+
+  if (projects.some((project) => isRecentlyUpdated(project))) {
+    return POLL_MS;
+  }
+
+  return null;
+};
+
 const useProjects = (options: {
   readonly shouldWatch: boolean;
 }): ProjectsState & { readonly reload: () => Promise<void> } => {
@@ -110,88 +128,95 @@ const useProjects = (options: {
   useEffect(() => {
     void runProjectsLoad();
   }, []);
-  const { projects } = current;
-  const lagging = projects?.some(isThumbnailPending) ?? false;
-
-  const watching =
-    options.shouldWatch === true &&
-    (lagging ||
-      (projects?.some(
-        (project) => Date.now() - project.updatedAt < RECENT_MS
-      ) ??
-        false));
+  const { shouldWatch } = options;
 
   useEffect(() => {
-    if (!watching) {
+    if (!shouldWatch || current.projects === null) {
       return;
     }
 
-    const timer = globalThis.setInterval(
-      () => {
-        if (document.visibilityState === "visible") {
-          void runProjectsLoad();
-        }
-      },
-      lagging ? POLL_FAST_MS : POLL_MS
-    );
+    const delay = toPollDelay(current.projects);
 
-    return (): void => globalThis.clearInterval(timer);
-  }, [watching, lagging]);
+    if (delay === null) {
+      return;
+    }
+
+    const reloadIfVisible = (): void => {
+      if (document.visibilityState === "visible") {
+        void runProjectsLoad();
+      }
+    };
+
+    const timer = globalThis.setTimeout(reloadIfVisible, delay);
+    document.addEventListener("visibilitychange", reloadIfVisible);
+
+    return (): void => {
+      globalThis.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", reloadIfVisible);
+    };
+  }, [shouldWatch, current]);
 
   return { ...current, reload: runProjectsLoad };
 };
 
 const HEALTH_POLL_MS = 2500;
 
+const getHealthOrNull = async (): Promise<AppHealth[] | null> => {
+  try {
+    return await projectsApi.health();
+  } catch {
+    return null;
+  }
+};
+
+const toHealthKey = (projects: Project[] | null): string => {
+  const parts: string[] = [];
+
+  for (const project of projects ?? []) {
+    if (project.imported && !project.designSystemFor) {
+      parts.push(`${project.id}:${project.updatedAt}`);
+    }
+  }
+
+  return parts.join(",");
+};
+
 const useAppHealth = (projects: Project[] | null): Map<string, AppHealth> => {
   const [health, setHealth] = useState<AppHealth[]>([]);
-  const [tick, setTick] = useState(0);
-
-  const key = (projects ?? [])
-    .filter((project) => project.imported && !project.designSystemFor)
-    .map((project) => `${project.id}:${project.updatedAt}`)
-    .join(",");
+  const key = toHealthKey(projects);
 
   useEffect(() => {
     if (!key) {
       return;
     }
 
-    let live = true;
+    let isLive = true;
+    let timer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
     const refresh = async (): Promise<void> => {
-      try {
-        const next = await projectsApi.health();
+      const next = await getHealthOrNull();
 
-        if (live) {
-          setHealth(next);
-        }
-      } catch {
-        if (live) {
-          setHealth((previous) => previous);
-        }
+      if (!isLive || next === null) {
+        return;
+      }
+
+      setHealth(next);
+
+      if (next.some((item) => item.state === "building")) {
+        timer = globalThis.setTimeout(refresh, HEALTH_POLL_MS);
       }
     };
 
     refresh();
 
     return (): void => {
-      live = false;
+      isLive = false;
+
+      if (timer !== null) {
+        globalThis.clearTimeout(timer);
+      }
     };
-  }, [key, tick]);
-  const building = health.some((item) => item.state === "building");
-  useEffect(() => {
-    if (!building) {
-      return;
-    }
-
-    const timer = globalThis.setTimeout(
-      () => setTick((count) => count + 1),
-      HEALTH_POLL_MS
-    );
-
-    return (): void => globalThis.clearTimeout(timer);
-  }, [building, health]);
+  }, [key]);
 
   return useMemo(
     () => new Map(health.map((item) => [item.projectId, item])),

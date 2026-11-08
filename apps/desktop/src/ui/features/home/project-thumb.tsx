@@ -1,14 +1,10 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
 
-import { api } from "../../api.js";
 import type { ProjectHit, ProjectType } from "./deps.js";
-
-import "../../styles/project-nav.css";
-
-const cache = new Map<string, Promise<string>>();
+import { toClassName } from "./thumb-class-model.js";
+import { useThumb } from "./use-thumb.js";
 
 const TYPE_ICON: Record<ProjectType, IconName> = {
   "design-system": "palette",
@@ -18,57 +14,24 @@ const TYPE_ICON: Record<ProjectType, IconName> = {
   vite: "code",
 };
 
-const getThumbUrl = async (id: string, thumbnail: string): Promise<string> => {
-  const blob = await api.thumbnail(id, thumbnail);
+const THUMB_ICON_SIZE = 12;
+const THUMB_WIDTH = 28;
+const THUMB_HEIGHT = 18;
 
-  return URL.createObjectURL(blob);
-};
-
-const useThumb = (hit: ProjectHit): string | null => {
-  const key = hit.thumbnail ? `${hit.id}/${hit.thumbnail}` : null;
-
-  const [url, setUrl] = useState<{
-    readonly key: string;
-    readonly url: string;
-  } | null>(null);
-
-  useEffect(() => {
-    if (!key || !hit.thumbnail) {
-      return;
-    }
-
-    let live = true;
-    let pending = cache.get(key);
-
-    if (!pending) {
-      pending = getThumbUrl(hit.id, hit.thumbnail);
-      cache.set(key, pending);
-    }
-
-    const apply = async (): Promise<void> => {
-      try {
-        const next = await pending;
-
-        if (live) {
-          setUrl({ key, url: next });
-        }
-      } catch {
-        cache.delete(key);
-      }
-    };
-
-    apply();
-
-    return (): void => {
-      live = false;
-    };
-  }, [key, hit.id, hit.thumbnail]);
-
-  if (url && url.key === key) {
-    return url.url;
+const toThumbBody = (url: string | null, type: ProjectType): ReactElement => {
+  if (url) {
+    return (
+      <img
+        src={url}
+        alt=""
+        width={THUMB_WIDTH}
+        height={THUMB_HEIGHT}
+        draggable={false}
+      />
+    );
   }
 
-  return null;
+  return <Icon name={TYPE_ICON[type]} size={THUMB_ICON_SIZE} />;
 };
 
 const ProjectThumb = ({
@@ -82,45 +45,15 @@ const ProjectThumb = ({
 
   return (
     <span
-      className={`pnav-thumb${className ? ` ${className}` : ""}`}
+      className={toClassName("pnav-thumb", className ?? null)}
       data-type={hit.type}
       aria-hidden="true"
     >
-      {url ? (
-        <img src={url} alt="" draggable={false} />
-      ) : (
-        <Icon name={TYPE_ICON[hit.type]} size={12} />
-      )}
+      {toThumbBody(url, hit.type)}
     </span>
   );
 };
 
-const TypeBadge = ({ hit }: { readonly hit: ProjectHit }): ReactElement => (
-  <span className="badge pnav-badge" data-type={hit.type}>
-    {hit.typeLabel}
-  </span>
-);
+export { HealthDot } from "./health-dot.js";
 
-const HealthDot = ({
-  hit,
-  className,
-}: {
-  readonly hit: ProjectHit;
-  readonly className?: string;
-}): ReactElement | null => {
-  if (!hit.health) {
-    return null;
-  }
-
-  return (
-    <span
-      className={`pnav-dot${className ? ` ${className}` : ""}`}
-      data-level={hit.health.level}
-      role="img"
-      aria-label={hit.health.note}
-      data-tip={hit.health.note}
-    />
-  );
-};
-
-export { HealthDot, ProjectThumb, TypeBadge };
+export { ProjectThumb };

@@ -8,7 +8,7 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
 import type { MentionRequest } from "../../features/chat/use-mentions";
 import type { PrefillRequest } from "../../features/comments";
-import type { useRail } from "../../features/home/project-rail";
+import type { useRail } from "../../features/home/index.js";
 import type { InspectorTab } from "../../features/inspector/inspector";
 import type { DirectEditControl } from "../../features/inspector/use-direct-edit";
 import type { EditSessionHandle } from "../../features/inspector/use-edit-session";

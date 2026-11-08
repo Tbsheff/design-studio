@@ -6,14 +6,13 @@ import type {
 } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import type { WorkspaceList } from "@design-studio/contracts/folders";
-import type { DragEvent } from "react";
 
 import { api } from "../../api.js";
 import { homeVariations } from "../../platform/storage.js";
-import { modelLabel } from "../chat/settings-draft-model.js";
-import { chipName, chipProblem } from "./home-app-chip.js";
-import type { AppChip } from "./home-app-chip.js";
-import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
+import { MODEL_OPTIONS, modelLabel } from "../chat/settings-draft-model.js";
+import type { AppChip } from "./app-chip-model.js";
+import { chipName, chipProblem } from "./chip-logic-model.js";
+import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 
 type Busy = "create" | "ask" | "starter" | null;
 
@@ -42,29 +41,6 @@ const HOME_REASON_ID = "home-send-reason";
 
 const EMPTY_PROMPT = "Describe the design first";
 
-const setPromptFocus = (home: HTMLElement | null, atEnd = false): void => {
-  home?.scrollTo({ behavior: "smooth", top: 0 });
-  globalThis.requestAnimationFrame(() => {
-    const area = document.querySelector<HTMLTextAreaElement>(
-      '[aria-label="Describe the design"]'
-    );
-
-    area?.focus();
-
-    if (atEnd && area) {
-      area.setSelectionRange(area.value.length, area.value.length);
-    }
-  });
-};
-
-const setFocusIn = (selector: string): void => {
-  globalThis.setTimeout(() => {
-    const el = document.querySelector<HTMLElement>(selector);
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
-    el?.focus();
-  }, 60);
-};
-
 const getFolderLabel = (
   list: WorkspaceList | null,
   location: string | null
@@ -79,7 +55,11 @@ const getFolderLabel = (
 };
 
 const getModelSummary = (model: string, count: number): string => {
-  const extra = count > 1 ? ` · ${count}×` : "";
+  let extra = "";
+
+  if (count > 1) {
+    extra = ` · ${count}×`;
+  }
 
   return `${modelLabel(model).replace(/^Claude /u, "")}${extra}`;
 };
@@ -125,34 +105,74 @@ interface HomeCreateInput {
   readonly references: ReferenceDraft[];
 }
 
-const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
-  const extra = {
-    ...(input.designMd.trim() ? { designMd: input.designMd } : {}),
-    ...(input.packId ? { packId: input.packId } : {}),
-  };
+type CreateRequest = Parameters<typeof api.createProject>[0];
 
-  const fanOut = input.designCount > 1;
-  const level = input.settings.defaultLevel;
-  const where = input.location ? { parentPath: input.location } : {};
-  const referenceUrls = input.references.map((reference) => reference.url);
-  const refs = referenceUrls.length > 0 ? { referenceUrls } : {};
-  const separateRun = !fanOut && input.images.length > 0;
-
-  const { project } = await api.createProject({
+const toCreateRequest = (
+  input: HomeCreateInput,
+  isStartingRun: boolean
+): CreateRequest => {
+  const request: CreateRequest = {
     kind: input.kind,
-    level,
+    level: input.settings.defaultLevel,
     prompt: input.prompt,
     settings: input.settings,
-    ...extra,
-    ...where,
-    ...(fanOut || separateRun ? { startRun: false } : {}),
-    ...refs,
-  });
+  };
+
+  if (input.designMd.trim()) {
+    request.designMd = input.designMd;
+  }
+
+  if (input.packId) {
+    request.packId = input.packId;
+  }
+
+  if (input.location) {
+    request.parentPath = input.location;
+  }
+
+  if (!isStartingRun) {
+    request.startRun = false;
+  }
+
+  if (input.references.length > 0) {
+    request.referenceUrls = input.references.map((reference) => reference.url);
+  }
+
+  return request;
+};
+
+type RunRequestInput = Parameters<typeof api.startRun>[2];
+
+const toEditRunRequest = (
+  input: HomeCreateInput,
+  attachmentIds: string[]
+): RunRequestInput => {
+  const request: RunRequestInput = {
+    attachmentIds,
+    level: input.settings.defaultLevel,
+    mode: "edit",
+    prompt: input.prompt,
+  };
+
+  if (input.references.length > 0) {
+    request.referenceUrls = input.references.map((reference) => reference.url);
+  }
+
+  return request;
+};
+
+const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
+  const fanOut = input.designCount > 1;
+  const separateRun = !fanOut && input.images.length > 0;
+
+  const { project } = await api.createProject(
+    toCreateRequest(input, !(fanOut || separateRun))
+  );
 
   if (fanOut) {
     homeVariations.set({
       count: input.designCount,
-      level,
+      level: input.settings.defaultLevel,
       projectId: project.id,
       prompt: input.prompt,
     });
@@ -167,20 +187,21 @@ const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
       input.images.map((image) => api.uploadAttachment(project.id, image.file))
     );
 
-    await api.startRun(project.id, main.id, {
-      attachmentIds: uploaded.map((item) => item.id),
-      level,
-      mode: "edit",
-      prompt: input.prompt,
-      ...refs,
-    });
+    await api.startRun(
+      project.id,
+      main.id,
+      toEditRunRequest(
+        input,
+        uploaded.map((item) => item.id)
+      )
+    );
   }
 
   return project;
 };
 
 const hasFiles = (event: DragEvent): boolean =>
-  [...event.dataTransfer.types].includes("Files");
+  [...(event.dataTransfer?.types ?? [])].includes("Files");
 
 const getPromptPlaceholder = (
   chip: AppChip | null,
@@ -197,12 +218,12 @@ const getPromptPlaceholder = (
   return null;
 };
 
-const getReasonId = (blocker: string | null): string | undefined => {
+const getReasonId = (blocker: string | null): string | null => {
   if (blocker && blocker !== EMPTY_PROMPT) {
     return HOME_REASON_ID;
   }
 
-  return undefined;
+  return null;
 };
 
 const isEmpty = (projects: Project[] | null): boolean =>
@@ -247,10 +268,9 @@ export {
   EXAMPLE_MS,
   HOME_REASON_ID,
   LEVEL_LABEL,
+  MODEL_OPTIONS,
   PLACEHOLDER,
   createFromHome,
-  setFocusIn as focusIn,
-  setPromptFocus as focusPrompt,
   getFolderLabel as folderLabel,
   hasFiles,
   getHome as homeOf,

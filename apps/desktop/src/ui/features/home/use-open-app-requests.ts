@@ -10,7 +10,9 @@ const useOpenAppRequests = (
   onPick: () => void
 ): void => {
   const handlers = useRef({ onPath, onPick });
-  handlers.current = { onPath, onPick };
+  useEffect(() => {
+    handlers.current = { onPath, onPick };
+  }, [onPath, onPick]);
   useEffect(() => {
     const take = (): void => {
       const request = takeOpenAppRequest();

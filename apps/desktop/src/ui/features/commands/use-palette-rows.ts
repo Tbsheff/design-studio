@@ -49,7 +49,7 @@ const usePaletteRows = (
   setError: (error: string | null) => void
 ): PaletteRows => {
   const current = uiStore.get().activeProjectId;
-  const hits = useProjectHits(current);
+  const hits = useProjectHits(current, true);
   const routes = useRouteHits(query, current, hits?.routes ?? []);
   const recent = useMemo(() => readRecent(), []);
   const commands = useMemo(() => toUniqueCommands(onShortcuts), [onShortcuts]);

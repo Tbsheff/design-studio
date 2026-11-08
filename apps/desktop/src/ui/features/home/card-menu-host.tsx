@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import type { ReactElement } from "react";
 
 import { CardMenu } from "./card-menus-model.js";
-import type { CardAction, MenuAt } from "./project-card-model.js";
 import { toFolderPlace } from "./project-card-model.js";
+import type { CardAction, MenuAt } from "./project-card-model.js";
 
 interface CardMenuHostProps {
   readonly project: Project;

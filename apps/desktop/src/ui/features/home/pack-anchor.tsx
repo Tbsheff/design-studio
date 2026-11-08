@@ -5,7 +5,7 @@ import type { ReactElement, RefObject } from "react";
 import { uiStore } from "../../platform/storage.js";
 import type { PopState } from "./composer-pop-model.js";
 import { copy } from "./copy.js";
-import { PackPopover } from "./lazy-parts.js";
+import { PackPopover } from "./lazy-parts-model.js";
 import { PillSelect } from "./pill-select.js";
 
 interface PackAnchorProps {

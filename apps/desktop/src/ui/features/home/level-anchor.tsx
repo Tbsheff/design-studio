@@ -4,8 +4,8 @@ import type { ReactElement, RefObject } from "react";
 import type { PopState } from "./composer-pop-model.js";
 import { copy } from "./copy.js";
 import { LEVEL_LABEL } from "./home-model.js";
-import type { ModelSettings } from "./home-popovers.js";
-import { LevelPopover } from "./lazy-parts.js";
+import { LevelPopover } from "./lazy-parts-model.js";
+import type { ModelSettings } from "./model-settings-model.js";
 import { PillSelect } from "./pill-select.js";
 
 interface LevelAnchorProps {

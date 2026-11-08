@@ -4,8 +4,12 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { homePrefs } from "./home-prefs-model.js";
-import type { HomeTemplate } from "./home-templates.js";
-import type { TemplatesModule } from "./lazy-parts.js";
+import type { HomeTemplate } from "./home-template-model.js";
+import type { TemplatesModule } from "./lazy-parts-model.js";
+
+const setTemplatesHidden = (): void => {
+  homePrefs.set({ hasTemplatesShown: false });
+};
 
 const TemplatesSection = ({
   templates,
@@ -23,20 +27,19 @@ const TemplatesSection = ({
       type="button"
       className="ui-section-label home-templates-toggle"
       aria-expanded
-      onClick={() => homePrefs.set({ hasTemplatesShown: false })}
+      onClick={setTemplatesHidden}
     >
       {copy.templatesAndStarters}
       <Icon name="close" size={10} />
     </button>
-    {templates ? (
+    {templates && (
       <templates.HomeTemplateGrid
         selected={selected}
         isDisabled={isDisabled}
         onPick={onPick}
       />
-    ) : (
-      <div className="home-tile-placeholder" aria-hidden="true" />
     )}
+    {!templates && <div className="home-tile-placeholder" aria-hidden="true" />}
   </section>
 );
 

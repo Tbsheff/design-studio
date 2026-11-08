@@ -805,8 +805,8 @@ const usePreviewFrames = (options: Options) => {
         frameErrorAt.current[frame.token] = Date.now();
         cur.onError({
           directionId: cur.directionId,
-          file: msg.source,
-          line: msg.line,
+          file: msg.source ?? null,
+          line: msg.line ?? null,
           message: msg.message,
           source: msg.kind,
         });

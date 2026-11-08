@@ -1,19 +1,23 @@
 import { Icon } from "@design-studio/ui";
-import type { ReactElement, RefObject } from "react";
+import type { ReactElement } from "react";
 
+import type { AppSlotProps } from "./app-slot-model.js";
+import { chipBlocker, chipName, chipProblem } from "./chip-logic-model.js";
 import { copy } from "./copy.js";
-import { chipBlocker, chipName, chipProblem } from "./home-app-chip.js";
-import type { AppChip } from "./home-app-chip.js";
-import type { Pop } from "./home-model.js";
-import { loadAppMenu } from "./lazy-parts.js";
+import { loadAppMenu } from "./lazy-parts-model.js";
 
-interface AppSlotProps {
-  readonly chip: AppChip | null;
-  readonly pop: Pop;
-  readonly folderRef: RefObject<HTMLButtonElement | null>;
-  readonly onAddFolder: () => void;
-  readonly onDoctor: () => void;
-}
+const BADGE_TONE = {
+  html: "html",
+  next: "next",
+  tokens: "html",
+  vite: "vite",
+} as const;
+
+const runAppMenuPreload = (): void => {
+  loadAppMenu();
+};
+
+const toBadgeTone = (kind: keyof typeof BADGE_TONE): string => BADGE_TONE[kind];
 
 const AppSlot = ({
   chip,
@@ -32,7 +36,7 @@ const AppSlot = ({
         aria-expanded={pop === "folder"}
         data-tip={copy.addAppFolder}
         data-tip-side="top"
-        onPointerEnter={() => loadAppMenu()}
+        onPointerEnter={runAppMenuPreload}
         onClick={onAddFolder}
       >
         <Icon name="folder" size={14} />
@@ -61,9 +65,7 @@ const AppSlot = ({
   }
 
   return (
-    <span
-      className={`home-badge ${chip.inspection.kind === "next" ? "next" : chip.inspection.kind === "vite" ? "vite" : "html"}`}
-    >
+    <span className={`home-badge ${toBadgeTone(chip.inspection.kind)}`}>
       {copy.edits}
       {chipName(chip)}
     </span>
@@ -71,5 +73,3 @@ const AppSlot = ({
 };
 
 export { AppSlot };
-
-export type { AppSlotProps };

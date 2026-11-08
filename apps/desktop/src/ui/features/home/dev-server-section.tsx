@@ -5,7 +5,7 @@ import type { AppChip, RunMode } from "./app-chip-model.js";
 import { copy } from "./copy.js";
 import { DevServerEnv } from "./dev-server-env.js";
 import { DevServerUrl } from "./dev-server-url.js";
-import { ModeButton } from "./home-popovers.js";
+import { ModeButton } from "./mode-button.js";
 
 interface DevServerSectionProps {
   readonly chip: AppChip;

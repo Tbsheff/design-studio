@@ -10,51 +10,72 @@ type ChooseResult =
 interface FolderChooser {
   readonly choose: (
     title: string,
-    defaultPath?: string
+    defaultPath: string | null
   ) => Promise<ChooseResult>;
   readonly isUnsupported: boolean;
   readonly isPicking: boolean;
 }
 
+const toPickOptions = (
+  title: string,
+  defaultPath: string | null
+): Parameters<typeof pickFolder>[0] => {
+  if (defaultPath) {
+    return { defaultPath, title };
+  }
+
+  return { title };
+};
+
+const toChooseResult = (
+  outcome: Awaited<ReturnType<typeof pickFolder>>
+): ChooseResult => {
+  if (outcome.kind === "picked") {
+    return { isUnsupported: false, path: outcome.path };
+  }
+
+  return { isUnsupported: outcome.kind === "unsupported", path: null };
+};
+
 const useFolderChooser = (
   onError: (message: string) => void
 ): FolderChooser => {
-  const [unsupported, setUnsupported] = useState(() => !hasNativePicker());
-  const [picking, setPicking] = useState(false);
+  const [isUnsupported, setIsUnsupported] = useState(() => !hasNativePicker());
+  const [isPicking, setIsPicking] = useState(false);
 
-  const choose = async (
+  const attempt = async (
     title: string,
-    defaultPath?: string
+    defaultPath: string | null
   ): Promise<ChooseResult> => {
-    setPicking(true);
-
     try {
-      const outcome = await pickFolder({
-        title,
-        ...(defaultPath ? { defaultPath } : {}),
-      });
+      const outcome = await pickFolder(toPickOptions(title, defaultPath));
 
       if (outcome.kind === "unsupported") {
-        setUnsupported(true);
+        setIsUnsupported(true);
       }
 
-      if (outcome.kind === "picked") {
-        return { isUnsupported: false, path: outcome.path };
-      }
-
-      return { isUnsupported: outcome.kind === "unsupported", path: null };
+      return toChooseResult(outcome);
     } catch (error) {
       onError(errorText(error));
 
       return { isUnsupported: false, path: null };
-    } finally {
-      setPicking(false);
     }
   };
 
-  return { choose, isPicking: picking, isUnsupported: unsupported };
+  const choose = async (
+    title: string,
+    defaultPath: string | null
+  ): Promise<ChooseResult> => {
+    setIsPicking(true);
+    const result = await attempt(title, defaultPath);
+    setIsPicking(false);
+
+    return result;
+  };
+
+  return { choose, isPicking, isUnsupported };
 };
 
 export { useFolderChooser };
 
-export type { FolderChooser };
+export type { ChooseResult, FolderChooser };

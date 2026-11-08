@@ -9,13 +9,13 @@ const useExample = (paused: boolean, fixed: boolean): string => {
       return;
     }
 
-    const timer = globalThis.setInterval(
-      () => setIndex((count) => (count + 1) % EXAMPLES.length),
+    const timer = globalThis.setTimeout(
+      () => setIndex((index + 1) % EXAMPLES.length),
       EXAMPLE_MS
     );
 
-    return (): void => globalThis.clearInterval(timer);
-  }, [paused, fixed]);
+    return (): void => globalThis.clearTimeout(timer);
+  }, [paused, fixed, index]);
 
   if (fixed) {
     return PLACEHOLDER;

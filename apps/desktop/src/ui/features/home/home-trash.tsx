@@ -1,79 +1,13 @@
-import { useModalDialog } from "@design-studio/ui";
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import type { ReactElement } from "react";
 
-import { ConfirmHead } from "./confirm-head.js";
-import { copy } from "./copy.js";
+import { ConfirmDelete } from "./confirm-delete.js";
 import { TrashBody } from "./trash-body.js";
 import { TrashFoot } from "./trash-foot.js";
 import { TrashHead } from "./trash-head.js";
-import { toConfirmAction, toConfirmTitle } from "./trash-model.js";
-import type { Confirm } from "./trash-model.js";
+import { useHomeDialog } from "./use-home-dialog.js";
 import { useTrashActions } from "./use-trash-actions.js";
 import { useTrashList } from "./use-trash-list.js";
-
-interface ConfirmDeleteProps {
-  readonly confirm: Confirm;
-  readonly isBusy: boolean;
-  readonly error: string | null;
-  readonly onCancel: () => void;
-  readonly onConfirm: () => void;
-}
-
-const ConfirmDelete = ({
-  confirm,
-  isBusy,
-  error,
-  onCancel,
-  onConfirm,
-}: ConfirmDeleteProps): ReactElement => {
-  const dialog = useModalDialog(() => {
-    if (isBusy) {
-      return false;
-    }
-
-    return onCancel();
-  });
-
-  const title = toConfirmTitle(confirm);
-
-  return (
-    <dialog
-      ref={dialog.ref}
-      className="modal trash-confirm"
-      aria-label={title}
-      onMouseDown={dialog.onMouseDown}
-    >
-      <ConfirmHead confirm={confirm} title={title} />
-      {error && (
-        <div className="modal-body">
-          <div className="alert error small" role="alert">
-            {error}
-          </div>
-        </div>
-      )}
-      <div className="modal-foot">
-        <button
-          type="button"
-          className="btn ghost"
-          data-autofocus
-          onClick={onCancel}
-          disabled={isBusy}
-        >
-          {copy.cancel}
-        </button>
-        <button
-          type="button"
-          className="btn danger"
-          onClick={onConfirm}
-          disabled={isBusy}
-        >
-          {toConfirmAction(confirm, isBusy)}
-        </button>
-      </div>
-    </dialog>
-  );
-};
 
 interface HomeTrashProps {
   readonly onClose: () => void;
@@ -84,6 +18,7 @@ const HomeTrash = ({ onClose, onRestored }: HomeTrashProps): ReactElement => {
   const firstRestoreRef = useRef<HTMLButtonElement>(null);
   const doneRef = useRef<HTMLButtonElement>(null);
   const list = useTrashList();
+  const { items, message, reload } = list;
 
   const {
     busy,
@@ -97,34 +32,37 @@ const HomeTrash = ({ onClose, onRestored }: HomeTrashProps): ReactElement => {
     confirmDelete,
   } = useTrashActions({ doneRef, firstRestoreRef, list, onRestored });
 
-  const dialog = useModalDialog(() => {
+  const dismiss = useCallback((): boolean => {
     if (confirm) {
       return false;
     }
 
-    return onClose();
-  });
+    onClose();
+
+    return true;
+  }, [confirm, onClose]);
+
+  const ref = useHomeDialog(dismiss);
 
   return (
     <dialog
-      ref={dialog.ref}
+      ref={ref}
       className="modal trash-modal"
       aria-labelledby="trash-title"
-      onMouseDown={dialog.onMouseDown}
     >
       <TrashHead onClose={onClose} />
       <TrashBody
-        items={list.items}
-        error={list.message}
+        items={items}
+        error={message}
         note={note}
         isBusy={busy !== null}
         firstRestoreRef={firstRestoreRef}
-        onRetry={list.reload}
+        onRetry={reload}
         onRestore={restore}
         onDelete={askOne}
       />
       <TrashFoot
-        items={list.items}
+        items={items}
         isBusy={busy !== null}
         doneRef={doneRef}
         onClose={onClose}

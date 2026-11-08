@@ -69,10 +69,12 @@ const toPatch = (
 };
 
 const applyMixedShift = (spec: NumberSpec, delta: number): void => {
-  spec.edit.shift(spec.targets ?? [spec.prop], delta, {
-    max: spec.max,
-    min: spec.min,
-  });
+  spec.edit.shift(
+    spec.targets ?? [spec.prop],
+    delta,
+    { max: spec.max, min: spec.min },
+    null
+  );
 };
 
 const toStep = (

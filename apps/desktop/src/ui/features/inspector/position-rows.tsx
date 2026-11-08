@@ -140,7 +140,7 @@ const useQueuedPins = (
         Object.entries(queued.pins).map(([axis, pin]) => [axis, pin.mode])
       )
     );
-    edit.preview(patch, true);
+    edit.previewForced(patch);
     edit.commit();
   }, [queued, ready, selection, edit, applied]);
   const waiting = queued !== null && !ready;
@@ -198,9 +198,8 @@ const PinSelect = ({
       return queue(axis, next, mode);
     }
 
-    edit.preview(
-      pinPatch(axis, next, toPinStyles(edit, selection), mode),
-      true
+    edit.previewForced(
+      pinPatch(axis, next, toPinStyles(edit, selection), mode)
     );
     edit.commit();
   };

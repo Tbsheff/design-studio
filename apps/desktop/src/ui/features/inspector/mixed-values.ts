@@ -147,7 +147,7 @@ const insertShift = (
   props: readonly DirectStyleProperty[],
   delta: number,
   bounds: Omit<Shift, "delta">,
-  part?: ShiftPart
+  part: ShiftPart | null
 ): Shifts => {
   const next = { ...shifts };
 
@@ -201,7 +201,7 @@ const toLeftShift = (cur: PropShift, done: PropShift): PropShift | null => {
 const toWithoutShifts = (
   shifts: Shifts,
   props: readonly string[],
-  sent?: Shifts
+  sent: Shifts
 ): Shifts => {
   const next = { ...shifts };
 
@@ -209,7 +209,7 @@ const toWithoutShifts = (
     delete next[prop];
   }
 
-  for (const [prop, done] of Object.entries(sent ?? {}) as [
+  for (const [prop, done] of Object.entries(sent) as [
     DirectStyleProperty,
     PropShift,
   ][]) {
@@ -235,7 +235,7 @@ const toOwnEdits = (
   selections: SelectionContext[],
   bases: StyleValues[],
   style: Partial<StyleValues>,
-  shifts: Shifts = {}
+  shifts: Shifts
 ): OwnEdit[] => {
   const out: OwnEdit[] = [];
   selections.forEach((selection, index) => {
@@ -259,7 +259,7 @@ const toBatchEdits = (
   bases: StyleValues[],
   style: Partial<StyleValues>
 ): DirectEditRequest[] =>
-  toOwnEdits(selections, bases, style).map((item) => item.edit);
+  toOwnEdits(selections, bases, style, {}).map((item) => item.edit);
 
 const hasCurrentDependency = (raw: string, unit: string): boolean =>
   toNumberInput(raw, `0${unit}`, unit) !== toNumberInput(raw, `1${unit}`, unit);

@@ -4,12 +4,17 @@ import { Effect } from "effect";
 
 import { createCanvasService } from "../canvas/index.js";
 import {
+  createProjectLayerLocks,
+  createWiredProjectStore,
+} from "../design-system/project-ports.js";
+import {
   followSourceMoves,
   withSaveQueue,
 } from "../direct-edit/commit/index.js";
 import { openEventBus } from "../events/index.js";
 import type { EventBus, FlushableEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
+import { eventRunner } from "../main/event-runner.js";
 import { McpListenerRunner } from "../mcp-life/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { pageProbe } from "../page-probe/index.js";
@@ -21,12 +26,7 @@ import { createCommentStore } from "../store/comments.js";
 import { createVersionStore } from "../store/versions.js";
 import { bootAgentRunner } from "./agent-runner.js";
 import { desktopSender, linkDesktop } from "./desktop-link.js";
-import { eventRunner } from "./event-runner.js";
 import { handleSignals, prepareDataDir } from "./lifecycle.js";
-import {
-  createProjectLayerLocks,
-  createWiredProjectStore,
-} from "./project-ports.js";
 import { buildRuntime } from "./runtime.js";
 import type { StudioRuntime } from "./runtime.js";
 

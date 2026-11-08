@@ -18,10 +18,10 @@ import {
   type TweaksState,
 } from "../../shared/tweaks.js";
 import { createPackRegistry } from "../design-system/packs.js";
+import { projectStorePorts } from "../design-system/project-ports.js";
 import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import {
   createProjectStore,

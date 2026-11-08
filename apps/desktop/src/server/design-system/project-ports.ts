@@ -1,14 +1,13 @@
 import { cleanAppDir, detectApp, frameworkOf } from "../app/detect.js";
 import { nextAppWorkspace } from "../app/workspace-root.js";
-import { findTokenFile } from "../design-system/app-tokens/detect.js";
 import type { EventBus } from "../events/index.js";
-import { createLayerLockStore } from "../store/layer-locks.js";
-import type { LayerLockStore } from "../store/layer-locks.js";
-import { createProjectStore } from "../store/projects.js";
+import { createLayerLockStore, createProjectStore } from "../store/index.js";
 import type {
+  LayerLockStore,
   ProjectStorePorts,
   StudioProjectStore,
-} from "../store/projects.js";
+} from "../store/index.js";
+import { findTokenFile } from "./app-tokens/detect.js";
 
 const projectStorePorts: ProjectStorePorts = {
   apps: { cleanAppDir, detectApp, frameworkOf, nextAppWorkspace },

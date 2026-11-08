@@ -15,9 +15,9 @@ import type {
   RunHandle,
 } from "../../shared/server-ports.js";
 import { buildUserText } from "../agent/user-message.js";
+import { projectStorePorts } from "../design-system/project-ports.js";
 import { createEventBus } from "../events/index.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import {
   createProjectStore,

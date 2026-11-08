@@ -39,7 +39,6 @@ import { createEventBus } from "../events/index.js";
 import type { EventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import {
   recompileOnTokensChange,
@@ -64,6 +63,7 @@ import {
   createPackRegistry,
   loadAllPacks,
 } from "./packs.js";
+import { projectStorePorts } from "./project-ports.js";
 import { loadDesignSystemPromptContext } from "./state.js";
 import { syncDesignSystem } from "./sync.js";
 

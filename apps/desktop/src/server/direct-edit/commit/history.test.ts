@@ -10,11 +10,11 @@ import type {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { AgentRunner, RunHandle } from "../../../shared/server-ports.js";
+import { projectStorePorts } from "../../design-system/project-ports.js";
 import { createEventBus } from "../../events/index.js";
 import type { EventBus } from "../../events/index.js";
 import { createApp } from "../../http/app.js";
 import { eventRunner } from "../../main/event-runner.js";
-import { projectStorePorts } from "../../main/project-ports.js";
 import type { ServerConfig } from "../../platform/config/index.js";
 import {
   createProjectStore,

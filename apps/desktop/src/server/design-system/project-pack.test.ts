@@ -20,7 +20,6 @@ import type { AgentRunner, VersionStore } from "../../shared/server-ports.js";
 import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import { createProjectStore } from "../store/projects.js";
 import type { StudioProjectStore } from "../store/projects.js";
@@ -29,6 +28,7 @@ import { createVersionStore } from "../store/versions.js";
 import { createFakePreview } from "../testing/fakes.js";
 import { REACT_TOKENS_IMPORT } from "./packs.js";
 import { NOT_WIRED_NOTICE } from "./project-pack.js";
+import { projectStorePorts } from "./project-ports.js";
 
 let config: ServerConfig;
 let cleanup: () => Promise<void>;

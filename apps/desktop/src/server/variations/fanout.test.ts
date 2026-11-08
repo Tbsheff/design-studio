@@ -18,10 +18,10 @@ import {
   type DriverOutcome,
 } from "../agent/lifecycle.js";
 import { createMockDriver } from "../agent/mock.js";
+import { projectStorePorts } from "../design-system/project-ports.js";
 import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import {
   createProjectStore,

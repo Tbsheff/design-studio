@@ -118,6 +118,7 @@ const runThemeCreate = Effect.fn("ThemeRun.create")(function* run(
     id: draft.id,
     name: draft.name,
     seed: draft.seed,
+    source: null,
     tokenFile,
   }));
 
@@ -211,6 +212,6 @@ const runThemeApply = Effect.fn("ThemeRun.apply")(function* run(
   return applied;
 });
 
-export { runThemeApply, runThemeCreate, runThemeSet };
+export { getThemeBase, runThemeApply, runThemeCreate, runThemeSet };
 
 export type { ApplyThemeCommand, CreateThemeCommand, SetThemeCommand };

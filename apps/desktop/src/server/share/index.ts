@@ -30,9 +30,14 @@ export type {
   StackingWriterApi,
 } from "./stacking/index.js";
 
-export { PageWriter } from "./page-import/index.js";
+export { PageStyleRunner, PageWriter } from "./page-import/index.js";
 
-export type { ImportPageCommand, PageWriterApi } from "./page-import/index.js";
+export type {
+  ImportPageCommand,
+  PageStyleRunnerApi,
+  PageWriterApi,
+  StyleSample,
+} from "./page-import/index.js";
 
 export { ImageSearchStore, ImageSearchWriter } from "./image-search/index.js";
 

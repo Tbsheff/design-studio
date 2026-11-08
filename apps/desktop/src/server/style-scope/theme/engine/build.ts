@@ -13,6 +13,7 @@ import type {
   ThemePalette,
   ThemeResult,
   ThemeRole,
+  ThemeTokenMap,
 } from "./types.js";
 
 interface TextPair {
@@ -103,7 +104,7 @@ const toRows = (
   });
 
 const toChanges = (
-  input: ThemeInput,
+  tokens: ThemeTokenMap,
   light: ThemePalette,
   dark: ThemePalette,
   fonts: { readonly body: string; readonly display: string }
@@ -111,7 +112,7 @@ const toChanges = (
   const changes: ThemeChange[] = [];
 
   for (const name of ROLES) {
-    const tokenPath = input.tokens.roles[name];
+    const tokenPath = tokens.roles[name];
 
     if (tokenPath !== null) {
       changes.push({
@@ -123,7 +124,7 @@ const toChanges = (
     }
   }
 
-  const { body, display } = input.tokens;
+  const { body, display } = tokens;
 
   if (display !== null) {
     changes.push({
@@ -196,7 +197,7 @@ const toDraft = (
     return null;
   }
 
-  const changes = toChanges(input, light, dark, {
+  const changes = toChanges(input.tokens, light, dark, {
     body: pair.body.stack,
     display: pair.display.stack,
   });
@@ -263,4 +264,4 @@ const toThemes = (input: ThemeInput): ThemeResult => {
   return { ok: true, value: drafts };
 };
 
-export { toThemes };
+export { toChanges, toRows, toThemes };

@@ -31,6 +31,7 @@ const ThemeChangeRoleSchema = Schema.Literals([
   ...ThemeRoleSchema.literals,
   "body",
   "display",
+  "radius",
 ]);
 
 const ThemeChangeSchema = Schema.Struct({
@@ -48,6 +49,18 @@ const ThemeContrastSchema = Schema.Struct({
   text: ThemeRoleSchema,
 });
 
+const ThemeSourceSchema = Schema.Struct({
+  kind: Schema.Literals(["image", "url"]),
+  value: Schema.String,
+});
+
+const ThemeStoredSourceSchema = Schema.NullOr(ThemeSourceSchema)
+  .annotate({
+    description:
+      "Site URL or image path the theme was read from. Null for themes built by theme.create.",
+  })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
+
 const ThemeBodySchema = Schema.Struct({
   changes: Schema.Array(ThemeChangeSchema),
   contrast: Schema.Array(ThemeContrastSchema),
@@ -58,6 +71,7 @@ const ThemeBodySchema = Schema.Struct({
   id: ThemeIdSchema,
   name: Schema.String.check(Schema.isMaxLength(NAME_MAX)),
   seed: Schema.Int,
+  source: ThemeStoredSourceSchema,
   tokenFile: Schema.String.annotate({
     description: "Token file that theme.apply writes for this project.",
   }),
@@ -101,6 +115,43 @@ const ThemeCreatedSchema = Schema.Struct({
   tokenFile: Schema.String,
 });
 
+const ThemeImportFields = {
+  imagePath: Schema.NullOr(Schema.String.check(Schema.isMinLength(1))).annotate(
+    {
+      description:
+        "Absolute PNG path, or the path of a project attachment from create_attachment. Give this or url, not both.",
+    }
+  ),
+  name: Schema.NullOr(
+    Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(NAME_MAX))
+  ).annotate({
+    description:
+      "Name for the candidate. Leave null to name it from the source.",
+  }),
+  url: Schema.NullOr(Schema.String.check(Schema.isMinLength(1))).annotate({
+    description:
+      "http or https page to read colors, fonts and radius from. Give this or imagePath, not both.",
+  }),
+} as const;
+
+const ThemeSwatchSchema = Schema.Struct({
+  hex: Schema.String,
+  share: Schema.Number,
+});
+
+const ThemeExtractedSchema = Schema.Struct({
+  colors: Schema.Array(ThemeSwatchSchema),
+  fonts: Schema.Array(Schema.String),
+  radius: Schema.NullOr(Schema.String),
+});
+
+const ThemeImportedSchema = Schema.Struct({
+  candidates: Schema.Array(ThemeSchema),
+  extracted: ThemeExtractedSchema,
+  source: ThemeSourceSchema,
+  tokenFile: Schema.String,
+});
+
 const ThemeSetResultSchema = Schema.Struct({
   activeThemeId: Schema.NullOr(ThemeIdSchema),
   changes: Schema.Array(ThemeChangeSchema),
@@ -124,9 +175,14 @@ export {
   ThemeContrastSchema,
   ThemeCreateFields,
   ThemeCreatedSchema,
+  ThemeExtractedSchema,
   ThemeFileSchema,
   ThemeIdSchema,
+  ThemeImportFields,
+  ThemeImportedSchema,
   ThemeRoleSchema,
   ThemeSchema,
   ThemeSetResultSchema,
+  ThemeSourceSchema,
+  ThemeSwatchSchema,
 };

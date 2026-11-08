@@ -139,11 +139,11 @@ const toNavigate = async (
   }
 };
 
-const toReadPage = async (
+const toLoadPage = async (
   page: Page,
   input: CaptureInput,
   guard: RequestGuard
-): Promise<CapturedPage> => {
+): Promise<void> => {
   const status = await toNavigate(page, input, guard);
 
   if (status >= ERROR_STATUS) {
@@ -151,6 +151,14 @@ const toReadPage = async (
   }
 
   await toSettle(page, input.deadline);
+};
+
+const toReadPage = async (
+  page: Page,
+  input: CaptureInput,
+  guard: RequestGuard
+): Promise<CapturedPage> => {
+  await toLoadPage(page, input, guard);
 
   const result = await page.evaluate<CapturedPage | CaptureFailure>(
     collectScript(
@@ -205,7 +213,10 @@ const toOpenPage = async (
   return page;
 };
 
-const toCapturePage = async (input: CaptureInput): Promise<Capture> => {
+const toWithPage = async <Value>(
+  input: CaptureInput,
+  read: (page: Page, guard: RequestGuard) => Promise<Value>
+): Promise<Value> => {
   const browser = await toLaunchBrowser();
   const guard = createRequestGuard(input.allowLoopback, input.deadline);
 
@@ -217,10 +228,7 @@ const toCapturePage = async (input: CaptureInput): Promise<Capture> => {
   );
 
   try {
-    const page = await toOpenPage(browser, input, guard);
-    const captured = await toReadPage(page, input, guard);
-
-    return { kept: guard.kept, page: captured, refused: guard.refused };
+    return await read(await toOpenPage(browser, input, guard), guard);
   } finally {
     clearTimeout(killer);
     guard.close();
@@ -228,6 +236,23 @@ const toCapturePage = async (input: CaptureInput): Promise<Capture> => {
   }
 };
 
-export { toCapturePage as capturePage };
+const toCapturePage = (input: CaptureInput): Promise<Capture> =>
+  toWithPage(input, async (page, guard) => {
+    const captured = await toReadPage(page, input, guard);
+
+    return { kept: guard.kept, page: captured, refused: guard.refused };
+  });
+
+const toSamplePage = <Value>(
+  input: CaptureInput,
+  script: string
+): Promise<Value> =>
+  toWithPage(input, async (page, guard) => {
+    await toLoadPage(page, input, guard);
+
+    return page.evaluate<Value>(script);
+  });
+
+export { toCapturePage as capturePage, toSamplePage as samplePage };
 
 export type { CaptureInput };

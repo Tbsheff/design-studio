@@ -1,5 +1,6 @@
 import type { TokenChange } from "@design-studio/contracts";
 
+import { copy } from "./copy.js";
 import type { RouteOutput, themeRoutes } from "./deps.js";
 
 type ThemeList = RouteOutput<typeof themeRoutes.listTheme>;
@@ -16,6 +17,8 @@ interface ThemeLook {
   readonly primary: string;
   readonly surface: string;
 }
+
+const NAME_MAX = 80;
 
 const SEED_RANGE = 2_000_000_000;
 
@@ -57,8 +60,46 @@ const toTokenChanges = (item: ThemeItem): TokenChange[] =>
     };
   });
 
+const toSourceLabel = (item: ThemeItem): string | null => {
+  const source = item.source ?? null;
+
+  if (source === null) {
+    return null;
+  }
+
+  if (source.kind === "image") {
+    return source.value.split("/").pop() ?? source.value;
+  }
+
+  try {
+    return new URL(source.value).hostname;
+  } catch {
+    return source.value;
+  }
+};
+
+const toSourceTip = (item: ThemeItem): string =>
+  `${copy.sourceTip}: ${item.source?.value ?? ""}`;
+
+const toImportName = (fileName: string): string | null => {
+  const stem = fileName.replace(/\.[^.]+$/u, "").trim();
+
+  if (stem === "") {
+    return null;
+  }
+
+  return `${copy.fromPrefix} ${stem}`.slice(0, NAME_MAX);
+};
+
 const toRandomSeed = (): number => Math.floor(Math.random() * SEED_RANGE);
 
-export { toLook, toRandomSeed, toTokenChanges };
+export {
+  toImportName,
+  toLook,
+  toRandomSeed,
+  toSourceLabel,
+  toSourceTip,
+  toTokenChanges,
+};
 
 export type { ThemeItem, ThemeLook, ThemeMode };

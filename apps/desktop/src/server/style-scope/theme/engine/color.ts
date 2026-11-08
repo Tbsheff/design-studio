@@ -75,4 +75,36 @@ const toHueOf = (color: string): number | null => {
   return hue;
 };
 
-export { toBestText, toContrast, toHex, toHue, toHueOf, toReadable };
+interface OklchParts {
+  readonly chroma: number;
+  readonly hue: number | null;
+  readonly lightness: number;
+}
+
+const toOklchParts = (color: string): OklchParts | null => {
+  const parsed = oklch(color);
+
+  if (!parsed) {
+    return null;
+  }
+
+  let angle: number | null = parsed.h ?? null;
+
+  if (angle !== null && Number.isNaN(angle)) {
+    angle = null;
+  }
+
+  return { chroma: parsed.c, hue: angle, lightness: parsed.l };
+};
+
+export {
+  toBestText,
+  toContrast,
+  toHex,
+  toHue,
+  toHueOf,
+  toOklchParts,
+  toReadable,
+};
+
+export type { OklchParts };

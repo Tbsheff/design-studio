@@ -31,7 +31,7 @@ interface ThemeInput {
   readonly tokens: ThemeTokenMap;
 }
 
-type ThemeChangeRole = ThemeRole | "body" | "display";
+type ThemeChangeRole = ThemeRole | "body" | "display" | "radius";
 
 interface ThemeChange {
   readonly darkValue: string | null;

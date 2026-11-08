@@ -10,6 +10,8 @@ export {
   toDirectEditStatusFailure,
 } from "../../direct-edit/index.js";
 
+export { attemptKnown } from "../../platform/attempt/index.js";
+
 export { loadConfig } from "../../platform/config/index.js";
 
 export { toJsonFileReader } from "../../platform/local-file/index.js";
@@ -32,6 +34,7 @@ export type {
   ThemeAppliedSchema,
   ThemeBodySchema,
   ThemeCreatedSchema,
+  ThemeImportedSchema,
   ThemeSchema,
   ThemeSetResultSchema,
 } from "@design-studio/actions/theme/schema";

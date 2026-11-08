@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { ThemeHalf } from "./theme-half.js";
+import { toSourceLabel, toSourceTip } from "./theme-model.js";
 import type { ThemeItem } from "./theme-model.js";
 
 import styles from "./theme.module.css";
@@ -22,6 +23,8 @@ const ThemeCard = ({
 }: ThemeCardProps): ReactElement => {
   const handleToggle = useCallback(() => onToggle(item), [item, onToggle]);
   const handleApply = useCallback(() => onApply(item), [item, onApply]);
+  const sourceLabel = toSourceLabel(item);
+  const sourceTip = toSourceTip(item);
   let tip: string = copy.liveTip;
 
   if (item.isActive) {
@@ -42,6 +45,13 @@ const ThemeCard = ({
         <ThemeHalf item={item} mode="dark" />
         <span className={styles.name}>{item.name}</span>
       </button>
+      {sourceLabel !== null && (
+        <span className={styles.source}>
+          <span className={styles.sourceChip} data-tip={sourceTip}>
+            {sourceLabel}
+          </span>
+        </span>
+      )}
       {item.isActive && (
         <button
           className={styles.apply}

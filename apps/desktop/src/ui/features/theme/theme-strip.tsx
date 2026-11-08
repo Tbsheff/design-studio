@@ -3,6 +3,7 @@ import type { ChangeEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { ThemeCard } from "./theme-card.js";
+import { ThemeImportRow } from "./theme-import-row.js";
 import { useThemeStrip } from "./use-theme-strip.js";
 import type { ThemeStripSetup } from "./use-theme-strip.js";
 
@@ -50,6 +51,11 @@ const ThemeStrip = (setup: ThemeStripSetup): ReactElement => {
         spellCheck={false}
         type="text"
         value={brief}
+      />
+      <ThemeImportRow
+        directionId={setup.directionId}
+        isBusy={strip.isBusy}
+        projectId={setup.projectId}
       />
       <span className={styles.error} role="alert">
         {strip.error}

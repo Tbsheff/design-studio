@@ -3,6 +3,7 @@ export { ThemeStore, ThemeWriter } from "./theme/index.js";
 export type {
   ApplyThemeCommand,
   CreateThemeCommand,
+  ImportThemeCommand,
   ListThemeCommand,
   SetThemeCommand,
   ThemePage,

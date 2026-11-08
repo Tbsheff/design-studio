@@ -6,6 +6,7 @@ import { chatWidthStyle } from "../../features/chat/index.js";
 import { focusNewProject } from "../../features/commands";
 import { ProjectRail } from "../../features/home/project-rail";
 import { useBindStudioCommands } from "./bind-studio-commands";
+import { DevStatusLayer } from "./dev-status-layer";
 import { paneAttr, shipOpener } from "./project-model";
 import { StudioCenter } from "./studio-center";
 import type { StudioCtx } from "./studio-context";
@@ -74,6 +75,7 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
         <StudioCenter ctx={ctx} />
       </div>
       <StudioRight ctx={ctx} />
+      <DevStatusLayer projectId={projectId} />
     </div>
   );
 };

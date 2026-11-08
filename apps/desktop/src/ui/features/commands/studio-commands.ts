@@ -1,6 +1,12 @@
 import { toReason, withDisabled } from "./command-disabled.js";
 import type { PanelTab } from "./deps.js";
-import { findElement } from "./deps.js";
+import {
+  DEV_STATUS_MARK_COMMAND,
+  DEV_STATUS_MARK_EVENT,
+  DEV_STATUS_OPEN_COMMAND,
+  DEV_STATUS_OPEN_EVENT,
+  findElement,
+} from "./deps.js";
 import type { Command } from "./registry.js";
 import type { StudioActions } from "./studio-actions.js";
 import { moveRegion } from "./studio-regions.js";
@@ -251,12 +257,32 @@ const versionCommands = (studioActions: StudioActions): Command[] => [
   ...toShipCommands(studioActions),
 ];
 
+const devStatusCommands = (): Command[] => [
+  {
+    group: "View",
+    icon: "doc",
+    id: DEV_STATUS_OPEN_COMMAND,
+    keywords: "handoff ready build developer status changed",
+    run: () => globalThis.dispatchEvent(new CustomEvent(DEV_STATUS_OPEN_EVENT)),
+    title: "Dev status",
+  },
+  {
+    group: "View",
+    icon: "check",
+    id: DEV_STATUS_MARK_COMMAND,
+    keywords: "handoff ready build developer status",
+    run: () => globalThis.dispatchEvent(new CustomEvent(DEV_STATUS_MARK_EVENT)),
+    title: "Mark selected frame ready for dev",
+  },
+];
+
 const studioCommands = (studioActions: StudioActions): Command[] => [
   ...goCommands(studioActions),
   ...directionCommands(studioActions),
   ...panelCommands(studioActions),
   ...runCommands(studioActions),
   ...versionCommands(studioActions),
+  ...devStatusCommands(),
   {
     group: "View",
     icon: "sidebar",

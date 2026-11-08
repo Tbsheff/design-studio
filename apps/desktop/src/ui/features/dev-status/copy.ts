@@ -1,0 +1,28 @@
+const copy = {
+  changedChip: "Changed since ready",
+  changedTip: "These files changed after the frame was marked ready:",
+  close: "Close",
+  copied: "Copied",
+  copyFailed: "Copy failed",
+  copyHandoff: "Copy handoff prompt",
+  empty: "This project has no frames yet.",
+  failed: "Could not read the dev status.",
+  groupBuilt: "Built",
+  groupDraft: "Draft",
+  groupInReview: "In review",
+  groupNone: "No status",
+  groupReady: "Ready for dev",
+  loading: "Reading the dev status",
+  markFailed: "Could not save the status.",
+  markedLine: "Marked at version",
+  marking: "Marking the frame ready for dev",
+  statusBuilt: "Built",
+  statusDraft: "Draft",
+  statusInReview: "In review",
+  statusLabel: "Dev status of this frame",
+  statusNone: "Set status",
+  statusReady: "Ready for dev",
+  title: "Dev status",
+} as const;
+
+export { copy };

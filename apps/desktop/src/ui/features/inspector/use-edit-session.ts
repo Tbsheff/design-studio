@@ -7,15 +7,24 @@ import {
   startTransition,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
-import type { MutableRefObject } from "react";
+import type {
+  Dispatch,
+  MutableRefObject,
+  RefObject,
+  SetStateAction,
+} from "react";
 
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { useProjectEvents } from "../../platform/events.js";
+import { stopTimer } from "./timer-model.js";
+import type { TimerRef } from "./timer-model.js";
 import type { DirectEditControl } from "./use-direct-edit.js";
+import { useLatestRef } from "./use-latest-ref.js";
 
 type SessionAction = "save" | "discard";
 
@@ -54,13 +63,45 @@ const EMPTY: SessionView = {
 
 const UNDO_PROMPT = 'Undo of "';
 const REFRESH_MS = 120;
+const VERSION_CREATED = "version.created";
+
+type ProjectEvent = Parameters<Parameters<typeof useProjectEvents>[1]>[0];
+
+type EndChoice = SessionAction | "cancel";
 
 const toUnsavedLabel = (count: number): string => {
   if (count === 0) {
     return "No unsaved edits";
   }
 
-  return count === 1 ? "1 unsaved edit" : `${count} unsaved edits`;
+  if (count === 1) {
+    return "1 unsaved edit";
+  }
+
+  return `${count} unsaved edits`;
+};
+
+const toVersionStep = (version: Version): number => {
+  if (version.meta.kind !== "manual" || version.meta.origin) {
+    return 0;
+  }
+
+  if (version.meta.prompt?.startsWith(UNDO_PROMPT)) {
+    return -1;
+  }
+
+  return 1;
+};
+
+const toParentVersion = (
+  byId: Map<string, Version>,
+  version: Version
+): Version | null => {
+  if (!version.parentId) {
+    return null;
+  }
+
+  return byId.get(version.parentId) ?? null;
 };
 
 const toNetSteps = (
@@ -70,17 +111,41 @@ const toNetSteps = (
 ): number => {
   const byId = new Map(versions.map((version) => [version.id, version]));
   let net = 0;
-  let at = versions[0];
+  let at = versions[0] ?? null;
 
   while (at && at.id !== base) {
-    if (at.meta.kind === "manual" && at.meta.origin === undefined) {
-      net += at.meta.prompt?.startsWith(UNDO_PROMPT) ? -1 : 1;
-    }
-
-    at = at.parentId ? byId.get(at.parentId) : undefined;
+    net += toVersionStep(at);
+    at = toParentVersion(byId, at);
   }
 
-  return at ? net : fallback;
+  if (at) {
+    return net;
+  }
+
+  return fallback;
+};
+
+const listVersionsSafe = async (
+  projectId: string,
+  directionId: string
+): Promise<Version[] | null> => {
+  try {
+    return await api.listVersions(projectId, directionId);
+  } catch {
+    return null;
+  }
+};
+
+const toNetCount = (
+  versions: Version[] | null,
+  base: string,
+  count: number
+): number => {
+  if (versions) {
+    return toNetSteps(versions, base, count);
+  }
+
+  return count;
 };
 
 const getSession = async (
@@ -106,24 +171,27 @@ const getSession = async (
     return view;
   }
 
-  let versions: Awaited<ReturnType<typeof api.listVersions>> | null = null;
+  const versions = await listVersionsSafe(projectId, directionId);
 
+  return { ...view, net: toNetCount(versions, base, state.count) };
+};
+
+const getSessionSafe = async (
+  projectId: string,
+  directionId: string,
+  base: string
+): Promise<SessionView | null> => {
   try {
-    versions = await api.listVersions(projectId, directionId);
+    return await getSession(projectId, directionId, base);
   } catch {
-    versions = null;
+    return null;
   }
-
-  return {
-    ...view,
-    net: versions ? toNetSteps(versions, base, state.count) : state.count,
-  };
 };
 
 const toFresh = (base: string | null): SessionView => ({ ...EMPTY, base });
 
 interface UseEditSessionResult {
-  readonly answer: (choice: SessionAction | "cancel") => Promise<void>;
+  readonly answer: (choice: EndChoice) => Promise<void>;
   readonly isAsking: boolean;
   readonly busy: SessionAction | null;
   readonly clearError: () => void;
@@ -138,38 +206,46 @@ interface UseEditSessionResult {
   readonly blocked: string | null;
 }
 
-const useEditSession = (options: Options): UseEditSessionResult => {
-  const { projectId, directionId } = options;
-  const [view, setView] = useState<SessionView>(EMPTY);
-  const [busy, setBusy] = useState<SessionAction | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [asking, setAsking] = useState(false);
-  const viewRef = useRef(view);
-  viewRef.current = view;
-  const opts = useRef(options);
-  opts.current = options;
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const exitResolve = useRef<((leave: boolean) => void) | null>(null);
+interface SessionContext {
+  readonly latest: RefObject<Options>;
+  readonly viewRef: RefObject<SessionView>;
+  readonly setView: Dispatch<SetStateAction<SessionView>>;
+  readonly setError: Dispatch<SetStateAction<string | null>>;
+}
 
-  const begin = useCallback(() => {
-    if (!directionId) {
-      return setView(EMPTY);
+const runSessionBegin = async (
+  ctx: SessionContext,
+  projectId: string,
+  directionId: string | null
+): Promise<void> => {
+  if (!directionId) {
+    ctx.setView(EMPTY);
+
+    return;
+  }
+
+  try {
+    const state = await api.editSession(projectId, directionId);
+
+    if (ctx.latest.current.directionId === directionId) {
+      ctx.setView(toFresh(state.baseVersionId || null));
     }
+  } catch (error) {
+    ctx.setError(errorText(error));
+  }
+};
 
-    startTransition(async () => {
-      try {
-        const state = await api.editSession(projectId, directionId);
+const isOutsideVersion = (event: ProjectEvent): boolean =>
+  event.type === VERSION_CREATED &&
+  (event.version.meta.kind !== "manual" || event.version.meta.origin === "mcp");
 
-        if (opts.current.directionId === directionId) {
-          setView(toFresh(state.baseVersionId || null));
-        }
-      } catch (failure: unknown) {
-        setError(errorText(failure));
-      }
-    });
-  }, [projectId, directionId]);
-
-  useEffect(begin, [begin]);
+const useSessionRefresh = (
+  ctx: SessionContext,
+  directionId: string | null
+): void => {
+  const { projectId } = ctx.latest.current;
+  const { setView, viewRef } = ctx;
+  const timer: TimerRef = useRef(null);
 
   const refresh = useCallback(() => {
     const { base } = viewRef.current;
@@ -178,94 +254,137 @@ const useEditSession = (options: Options): UseEditSessionResult => {
       return;
     }
 
-    globalThis.clearTimeout(timer.current);
+    stopTimer(timer);
     timer.current = globalThis.setTimeout(() => {
       startTransition(async () => {
-        let next: Awaited<ReturnType<typeof getSession>> | null = null;
-
-        try {
-          next = await getSession(projectId, directionId, base);
-        } catch {
-          next = null;
-        }
+        const next = await getSessionSafe(projectId, directionId, base);
 
         if (next !== null && viewRef.current.base === base) {
           setView(next);
         }
       });
     }, REFRESH_MS);
-  }, [projectId, directionId]);
+  }, [projectId, directionId, setView, viewRef]);
 
-  useEffect(() => (): void => globalThis.clearTimeout(timer.current), []);
+  useEffect(
+    () => (): void => {
+      stopTimer(timer);
+    },
+    []
+  );
+
   useProjectEvents(projectId, (event) => {
-    if (event.directionId !== undefined && event.directionId !== directionId) {
+    if ((event.directionId ?? directionId) !== directionId) {
       return;
     }
 
-    const outside =
-      event.type === "version.created" &&
-      (event.version.meta.kind !== "manual" ||
-        event.version.meta.origin === "mcp");
-
-    if (
-      event.type === "version.created" &&
-      outside &&
-      viewRef.current.count === 0
-    ) {
-      setView(toFresh(event.version.id));
+    if (isOutsideVersion(event) && viewRef.current.count === 0) {
+      if (event.type === VERSION_CREATED) {
+        setView(toFresh(event.version.id));
+      }
 
       return;
     }
 
     if (
       event.type === "edit-history.changed" ||
-      event.type === "version.created"
+      event.type === VERSION_CREATED
     ) {
       refresh();
     }
   });
+};
 
-  const end = useCallback(async (action: SessionAction): Promise<boolean> => {
-    const cur = opts.current;
-    const { base } = viewRef.current;
+interface EndTarget {
+  readonly action: SessionAction;
+  readonly base: string;
+  readonly directionId: string;
+}
 
-    if (!cur.directionId || !base) {
-      return true;
+const isSessionEnded = async (
+  ctx: SessionContext,
+  cur: Options,
+  target: EndTarget
+): Promise<boolean> => {
+  const { action, base, directionId } = target;
+
+  try {
+    await cur.control.current?.settle();
+
+    if (action === "discard") {
+      cur.port.current?.post({ type: "preview-reset" });
+      cur.port.current?.post({ type: "optimistic-drop" });
     }
 
-    setBusy(action);
-    setError(null);
+    const result = await api.endEditSession(
+      cur.projectId,
+      directionId,
+      action,
+      base
+    );
 
-    try {
-      await cur.control.current?.settle();
+    ctx.setView(toFresh(result.headVersionId));
+    cur.onEnded?.(action, result);
 
-      if (action === "discard") {
-        cur.port.current?.post({ type: "preview-reset" });
-        cur.port.current?.post({ type: "optimistic-drop" });
+    return true;
+  } catch (error) {
+    ctx.setError(errorText(error));
+
+    return false;
+  }
+};
+
+const useSessionEnd = (
+  ctx: SessionContext
+): readonly [
+  SessionAction | null,
+  (action: SessionAction) => Promise<boolean>,
+] => {
+  const [busy, setBusy] = useState<SessionAction | null>(null);
+
+  const end = useCallback(
+    async (action: SessionAction): Promise<boolean> => {
+      const cur = ctx.latest.current;
+      const { base } = ctx.viewRef.current;
+
+      if (!cur.directionId || !base) {
+        return true;
       }
 
-      const result = await api.endEditSession(
-        cur.projectId,
-        cur.directionId,
+      setBusy(action);
+      ctx.setError(null);
+
+      const isEnded = await isSessionEnded(ctx, cur, {
         action,
-        base
-      );
+        base,
+        directionId: cur.directionId,
+      });
 
-      setView(toFresh(result.headVersionId));
-      cur.onEnded?.(action, result);
-
-      return true;
-    } catch (failure) {
-      setError(errorText(failure));
-
-      return false;
-    } finally {
       setBusy(null);
-    }
-  }, []);
+
+      return isEnded;
+    },
+    [ctx]
+  );
+
+  return [busy, end];
+};
+
+interface ExitPrompt {
+  readonly answer: (choice: EndChoice) => Promise<void>;
+  readonly isAsking: boolean;
+  readonly requestExit: () => Promise<boolean>;
+}
+
+const useExitPrompt = (
+  viewRef: RefObject<SessionView>,
+  end: (action: SessionAction) => Promise<boolean>
+): ExitPrompt => {
+  const [isAsking, setIsAsking] = useState(false);
+  const exitResolve = useRef<((leave: boolean) => void) | null>(null);
 
   const close = useCallback((leave: boolean) => {
-    setAsking(false);
+    setIsAsking(false);
     exitResolve.current?.(leave);
     exitResolve.current = null;
   }, []);
@@ -280,39 +399,68 @@ const useEditSession = (options: Options): UseEditSessionResult => {
     }
 
     exitResolve.current?.(false);
-    setAsking(true);
+    setIsAsking(true);
 
-    return new Promise<boolean>((resolve) => {
-      exitResolve.current = resolve;
-    });
-  }, [end]);
+    const { promise, resolve } = Promise.withResolvers<boolean>();
+    exitResolve.current = resolve;
+
+    return promise;
+  }, [end, viewRef]);
 
   const answer = useCallback(
-    async (choice: SessionAction | "cancel") => {
+    async (choice: EndChoice) => {
       if (choice === "cancel") {
-        return close(false);
+        close(false);
+
+        return;
       }
 
-      const ok = await end(choice);
+      const isEnded = await end(choice);
 
-      if (ok) {
+      if (isEnded) {
         close(true);
       }
     },
     [end, close]
   );
 
+  return { answer, isAsking, requestExit };
+};
+
+const useEditSession = (options: Options): UseEditSessionResult => {
+  const { directionId } = options;
+  const [view, setView] = useState<SessionView>(EMPTY);
+  const [error, setError] = useState<string | null>(null);
+  const viewRef = useLatestRef(view);
+  const latest = useLatestRef(options);
+
+  const ctx = useMemo(
+    () => ({ latest, setError, setView, viewRef }),
+    [latest, viewRef]
+  );
+
+  useEffect(() => {
+    startTransition(async () => {
+      await runSessionBegin(ctx, options.projectId, directionId);
+    });
+  }, [ctx, directionId, options.projectId]);
+
+  useSessionRefresh(ctx, directionId);
+
+  const [busy, end] = useSessionEnd(ctx);
+  const { answer, isAsking, requestExit } = useExitPrompt(viewRef, end);
   const save = useCallback(() => end("save"), [end]);
   const discard = useCallback(() => end("discard"), [end]);
+  const clearError = useCallback(() => setError(null), []);
 
   return {
     ...view,
     answer,
     busy,
-    clearError: () => setError(null),
+    clearError,
     discard,
     error,
-    isAsking: asking,
+    isAsking,
     requestExit,
     save,
   };

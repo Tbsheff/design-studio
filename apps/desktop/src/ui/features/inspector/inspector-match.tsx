@@ -12,12 +12,14 @@ import type {
   StyleQuery,
   StyleValueRow,
 } from "@design-studio/contracts/style-search";
+import type { ReactElement } from "react";
 import { memo, useCallback, useMemo, useState } from "react";
 
 import { errorText, replaceStyle } from "../../api.js";
-import { InspectorSection } from "./inspector-fields.js";
+import { copy } from "./copy.js";
 
 import "../../styles/inspector-match.css";
+import { InspectorSection } from "./inspector-fields.js";
 import {
   classCandidates,
   designCandidates,
@@ -40,7 +42,7 @@ const useReplace = (
   props: InspectorMatchProps,
   setStatus: (status: Status) => void,
   refresh: () => void
-) =>
+): ((hits: StyleHit[], token: string) => Promise<void>) =>
   useCallback(
     async (hits: StyleHit[], token: string) => {
       const matches = matchesOf(hits);
@@ -91,7 +93,7 @@ const selectedText = (count: number, total: number): string => {
 };
 
 const focusRow = (key: string): void => {
-  window.requestAnimationFrame(() => {
+  globalThis.requestAnimationFrame(() => {
     const row = document.querySelector<HTMLElement>(
       `.sm-section [data-row="${CSS.escape(key)}"]`
     );
@@ -100,12 +102,14 @@ const focusRow = (key: string): void => {
   });
 };
 
-const InspectorMatch = (props: InspectorMatchProps) => {
+const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
   const single = props.selection.length === 1;
   const [scope, setScope] = useState<Scope>("selection");
   const [picking, setPicking] = useState<StyleValueRow | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const selectors = props.selection.map((s) => s.selector);
+  const selectors = props.selection.map(
+    (selectionContext) => selectionContext.selector
+  );
 
   const query = useMemo<StyleQuery>(
     () => (scope === "page" ? {} : { within: selectors }),
@@ -187,7 +191,7 @@ const InspectorMatch = (props: InspectorMatchProps) => {
       ])
     : [];
 
-  const closePicker = () => {
+  const closePicker = (): void => {
     if (picking) {
       focusRow(rowKey(picking));
     }
@@ -195,7 +199,7 @@ const InspectorMatch = (props: InspectorMatchProps) => {
     setPicking(null);
   };
 
-  const pick = (token: string) => {
+  const pick = (token: string): void => {
     const hits = targets;
     closePicker();
     void replace(hits, token);
@@ -214,7 +218,9 @@ const InspectorMatch = (props: InspectorMatchProps) => {
       className="sm-section"
       aside={<ScopeToggle scope={scope} onScope={setScope} />}
     >
-      {scanned.hits === null && <p className="sm-empty">Reading values…</p>}
+      {scanned.hits === null && (
+        <p className="sm-empty">{copy.readingValues}</p>
+      )}
       {scanned.hits !== null && rows.length === 0 && (
         <p className="sm-empty">
           {scope === "page"
@@ -235,7 +241,7 @@ const InspectorMatch = (props: InspectorMatchProps) => {
         <TokenPicker
           row={picking}
           candidates={candidates}
-          target={`${targets.length === 1 ? "1 element" : `${new Set(targets.map((t) => t.selector)).size} elements`}${pageWide ? " on this page" : " in the selection"}`}
+          target={`${targets.length === 1 ? "1 element" : `${new Set(targets.map((styleHit) => styleHit.selector)).size} elements`}${pageWide ? " on this page" : " in the selection"}`}
           onPick={pick}
           onClose={closePicker}
         />
@@ -245,16 +251,20 @@ const InspectorMatch = (props: InspectorMatchProps) => {
   );
 };
 
-const isSameItems = (a: SelectionContext[], b: SelectionContext[]): boolean =>
-  a.length === b.length && a.every((item, i) => item === b[i]);
+const isSameItems = (
+  first: SelectionContext[],
+  second: SelectionContext[]
+): boolean =>
+  first.length === second.length &&
+  first.every((item, index) => item === second[index]);
 
 export default memo(
   InspectorMatch,
-  (a, b) =>
-    a.projectId === b.projectId &&
-    a.directionId === b.directionId &&
-    a.port === b.port &&
-    a.tokens === b.tokens &&
-    a.drain === b.drain &&
-    isSameItems(a.selection, b.selection)
+  (first, second) =>
+    first.projectId === second.projectId &&
+    first.directionId === second.directionId &&
+    first.port === second.port &&
+    first.tokens === second.tokens &&
+    first.drain === second.drain &&
+    isSameItems(first.selection, second.selection)
 );

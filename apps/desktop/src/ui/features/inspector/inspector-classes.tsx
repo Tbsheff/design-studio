@@ -3,14 +3,15 @@ import type {
   SourceLoc,
   TailwindOutcome,
 } from "@design-studio/contracts";
-import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
+import { startTransition, useEffect, useState } from "react";
 
 import type { VariantSupport } from "../../../shared/variants.js";
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
 
-export interface ElementClasses {
+interface ElementClasses {
   readonly tailwind: TailwindOutcome | null;
   readonly element: ElementSourceInfo | null;
   readonly variants: VariantSupport | null;
@@ -22,7 +23,7 @@ const NO_CLASSES: ElementClasses = {
   variants: null,
 };
 
-export const useElementClasses = (
+const useElementClasses = (
   projectId: string,
   directionId: string | null,
   source: SourceLoc | null,
@@ -46,9 +47,15 @@ export const useElementClasses = (
     }
 
     let live = true;
-    api
-      .elementClasses(projectId, directionId, { col, file, line }, variant)
-      .then((result) => {
+    startTransition(async () => {
+      try {
+        const result = await api.elementClasses(
+          projectId,
+          directionId,
+          { col, file, line },
+          variant
+        );
+
         if (live) {
           setInfo({
             element: result.element ?? null,
@@ -56,14 +63,14 @@ export const useElementClasses = (
             variants: result.variants ?? null,
           });
         }
-      })
-      .catch(() => {
+      } catch {
         if (live) {
           setInfo(NO_CLASSES);
         }
-      });
+      }
+    });
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, file, line, col, savedAt, variant]);
@@ -71,20 +78,20 @@ export const useElementClasses = (
   return info;
 };
 
-export const domClasses = (outerHTML: string): string[] => {
+const domClasses = (outerHTML: string): string[] => {
   const raw =
     /^<[^>]*\bclass="([^"]*)"/u.exec(outerHTML.slice(0, 4000))?.[1] ?? "";
 
   return raw.split(/\s+/u).filter(Boolean);
 };
 
-export const ClassLine = ({
+const ClassLine = ({
   info,
   resolved,
 }: {
   readonly info: TailwindOutcome | null;
   readonly resolved: string[];
-}) => {
+}): ReactElement | null => {
   if (!info || info.mode === "none") {
     return null;
   }
@@ -99,7 +106,7 @@ export const ClassLine = ({
       className="ins-classes"
       aside={
         !own && list.length > 0 ? (
-          <span className="ins-classes-tag">Read only</span>
+          <span className="ins-classes-tag">{copy.readOnly}</span>
         ) : undefined
       }
     >
@@ -110,9 +117,15 @@ export const ClassLine = ({
         }
       >
         {text}
-        {info.dynamic && <span className="ins-classes-more"> + dynamic</span>}
+        {info.dynamic && (
+          <span className="ins-classes-more"> {copy.dynamic}</span>
+        )}
       </code>
       {info.note && <p className="ins-note ins-classes-note">{info.note}</p>}
     </InspectorSection>
   );
 };
+
+export { useElementClasses, domClasses, ClassLine };
+
+export type { ElementClasses };

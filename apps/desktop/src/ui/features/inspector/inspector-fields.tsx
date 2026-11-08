@@ -2,7 +2,7 @@ import type { DirectStyleProperty } from "@design-studio/contracts";
 import { Icon, UiSelect } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { memo, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { KeyboardEvent, ReactNode, ReactElement } from "react";
 
 import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
 import { readStored, writeStored } from "../../platform/storage.js";
@@ -23,13 +23,18 @@ interface FieldProps {
 
 const NEUTRAL_SWATCH = "#ffffff";
 
-const isSameField = (a: FieldProps, b: FieldProps): boolean =>
-  a.prop === b.prop &&
-  a.label === b.label &&
-  a.short === b.short &&
-  isSameEditValues(a.edit, b.edit, [a.prop]);
+const isSameField = (first: FieldProps, second: FieldProps): boolean =>
+  first.prop === second.prop &&
+  first.label === second.label &&
+  first.short === second.short &&
+  isSameEditValues(first.edit, second.edit, [first.prop]);
 
-const ColorFieldView = ({ prop, label, short, edit }: FieldProps) => {
+const ColorFieldView = ({
+  prop,
+  label,
+  short,
+  edit,
+}: FieldProps): ReactElement => {
   const [text, setText] = useState<string | null>(null);
   const ui = useTokenUi();
   const value = edit.values[prop];
@@ -38,7 +43,7 @@ const ColorFieldView = ({ prop, label, short, edit }: FieldProps) => {
   const shown = text ?? displayColor(value);
   const inherited = isInherited(useVariantScope(), prop);
 
-  const settle = () => {
+  const settle = (): void => {
     if (text !== null && !isValidColor(text)) {
       edit.revert([prop]);
     }
@@ -47,7 +52,7 @@ const ColorFieldView = ({ prop, label, short, edit }: FieldProps) => {
     edit.commit();
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
       settle();
@@ -114,7 +119,7 @@ const SelectFieldView = ({
   short,
   edit,
   options,
-}: FieldProps & { readonly options: string[] }) => {
+}: FieldProps & { readonly options: string[] }): ReactElement => {
   const value = edit.values[prop];
 
   const list =
@@ -167,7 +172,11 @@ const alignOf = (value: string): string => {
   return value;
 };
 
-const AlignFieldView = ({ edit }: { readonly edit: DirectEdit }) => {
+const AlignFieldView = ({
+  edit,
+}: {
+  readonly edit: DirectEdit;
+}): ReactElement => {
   const current = alignOf(edit.values["text-align"]);
 
   return (
@@ -212,13 +221,13 @@ const readOpen = (): Record<string, boolean> => {
 
 const sectionOpen = readOpen();
 
-export const useSectionOpen = (
+const useSectionOpen = (
   title: string,
   initial = true
 ): [boolean, () => void] => {
   const [open, setOpen] = useState(() => sectionOpen[title] ?? initial);
 
-  const toggle = () => {
+  const toggle = (): void => {
     const next = !open;
     sectionOpen[title] = next;
     setOpen(next);
@@ -236,13 +245,13 @@ interface SectionProps {
   readonly label?: ReactNode;
 }
 
-export const InspectorSection = ({
+const InspectorSection = ({
   title,
   children,
   aside,
   className,
   label,
-}: SectionProps) => {
+}: SectionProps): ReactElement => {
   const [open, toggle] = useSectionOpen(title);
 
   const hasBody =
@@ -274,13 +283,23 @@ export const InspectorSection = ({
   );
 };
 
-export const ColorField = memo(ColorFieldView, isSameField);
+const ColorField = memo(ColorFieldView, isSameField);
 
-export const SelectField = memo(
+const SelectField = memo(
   SelectFieldView,
-  (a, b) => isSameField(a, b) && a.options.join(",") === b.options.join(",")
+  (first, second) =>
+    isSameField(first, second) &&
+    first.options.join(",") === second.options.join(",")
 );
 
-export const AlignField = memo(AlignFieldView, (a, b) =>
-  isSameEditValues(a.edit, b.edit, ["text-align"])
+const AlignField = memo(AlignFieldView, (first, second) =>
+  isSameEditValues(first.edit, second.edit, ["text-align"])
 );
+
+export {
+  useSectionOpen,
+  InspectorSection,
+  ColorField,
+  SelectField,
+  AlignField,
+};

@@ -7,7 +7,13 @@ import type {
   StyleValueRow,
   TokenLookup,
 } from "@design-studio/contracts/style-search";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MutableRefObject } from "react";
 
 import { tokenFieldState } from "../../../shared/token-match.js";
@@ -82,13 +88,15 @@ const usePageVars = (
     }
 
     let live = true;
-    void requestAuthoredCss(port.current, "html").then((css) => {
+    startTransition(async () => {
+      const css = await requestAuthoredCss(port.current, "html");
+
       if (live && css) {
         setVars(parseVars([...css.rules.map((rule) => rule.css), css.inline]));
       }
     });
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [port, open]);
@@ -124,18 +132,18 @@ const requestStyles = (
       finish({ result: message.result, selected: message.selected });
     });
 
-    const timer = window.setTimeout(() => finish(null), REPLY_MS);
+    const timer = globalThis.setTimeout(() => finish(null), REPLY_MS);
 
-    function finish(
+    const finish = (
       value: {
         readonly result: StyleScanResult;
         readonly selected: number;
       } | null
-    ) {
-      window.clearTimeout(timer);
+    ): void => {
+      globalThis.clearTimeout(timer);
       stop();
       resolve(value);
-    }
+    };
 
     port.post({ query, requestId, select, type: "find-styles" });
   });
@@ -157,20 +165,22 @@ const useStyleScan = (
   port: MutableRefObject<PreviewPort | null>,
   query: StyleQuery,
   key: string
-) => {
+): { readonly hits: StyleHit[] | null; readonly refresh: () => void } => {
   const [hits, setHits] = useState<StyleHit[] | null>(null);
   const [nonce, setNonce] = useState(0);
   const queryRef = useRef(query);
   queryRef.current = query;
   useEffect(() => {
     let live = true;
-    void requestStyles(port.current, queryRef.current, false).then((reply) => {
+    startTransition(async () => {
+      const reply = await requestStyles(port.current, queryRef.current, false);
+
       if (live) {
         setHits(reply ? reply.result.hits : []);
       }
     });
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [port, key, nonce]);
@@ -183,12 +193,15 @@ const useStyleScan = (
 
     return listen((message) => {
       if (message.type === "ready") {
-        setNonce((n) => n + 1);
+        setNonce((count) => count + 1);
       }
     });
   }, [port]);
 
-  return { hits, refresh: useCallback(() => setNonce((n) => n + 1), []) };
+  return {
+    hits,
+    refresh: useCallback(() => setNonce((countValue) => countValue + 1), []),
+  };
 };
 
 export {
@@ -202,5 +215,4 @@ export {
   usePageVars,
   useStyleScan,
 };
-
 export type { InspectorMatchProps, PageVar, Scope, Status };

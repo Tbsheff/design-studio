@@ -3,12 +3,12 @@ import type { DirectStyleProperty } from "@design-studio/contracts";
 import type { ShiftPart, StyleValues } from "./css-values.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-export interface ProxyOptions {
+interface ProxyOptions {
   readonly part?: ShiftPart;
   readonly isMixed: boolean | null;
 }
 
-export const proxyEdit = (
+const proxyEdit = (
   edit: DirectEdit,
   slot: DirectStyleProperty,
   value: string,
@@ -45,3 +45,7 @@ export const proxyEdit = (
     values: { ...edit.values, [slot]: value },
   };
 };
+
+export { proxyEdit };
+
+export type { ProxyOptions };

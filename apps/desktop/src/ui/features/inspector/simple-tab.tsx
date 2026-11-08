@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { imageKindOf } from "../../../shared/image.js";
 import { AccessibilitySection } from "./accessibility-section.js";
 import { ComponentSection } from "./component-section.js";
@@ -14,7 +16,7 @@ import { StackingSection } from "./stacking-section.js";
 import { useUseSite } from "./use-use-site.js";
 import { VectorSection } from "./vector-section.js";
 
-const SimpleTab = (props: InspectorProps) => {
+const SimpleTab = (props: InspectorProps): ReactElement => {
   const variant = useEditVariant();
   const site = useUseSite(props);
   const reason = inspectorEmptyReason(props.selection, props.isEditable);
@@ -44,7 +46,9 @@ const SimpleTab = (props: InspectorProps) => {
   if (props.selection.length > 1) {
     return (
       <SimpleMultiEditor
-        key={props.selection.map((s) => s.selector).join("\n")}
+        key={props.selection
+          .map((selectionContext) => selectionContext.selector)
+          .join("\n")}
         {...props}
         component={<VectorSection {...props} />}
       />
@@ -53,7 +57,7 @@ const SimpleTab = (props: InspectorProps) => {
 
   return (
     <SimpleEditor
-      key={`${target.selector}|${variant}${site.editingUse ? "|use" : ""}`}
+      key={`${target.selector}|${variant}${site.isEditingUse ? "|use" : ""}`}
       {...props}
       target={site.effective ?? target}
       sharedEditing={site.sharedEditing}

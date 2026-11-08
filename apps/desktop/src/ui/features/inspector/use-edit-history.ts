@@ -5,7 +5,13 @@ import type {
   SelectionContext,
   Version,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import {
@@ -18,7 +24,7 @@ import { historyKeyOf } from "../canvas/use-undo-shortcut.js";
 import type { HistoryKind, RedoShortcut } from "../canvas/use-undo-shortcut.js";
 import { historyPhrase } from "../versions-layers-tokens/version-labels.js";
 
-export const PREVIEW_PAINTED_EVENT = "studio:preview-painted";
+const PREVIEW_PAINTED_EVENT = "studio:preview-painted";
 
 const EMPTY: EditHistoryState = {
   canRedo: false,
@@ -52,12 +58,12 @@ interface Options {
 
 const HISTORY_STEP_TITLE = /^(Undo|Redo): /u;
 
-export const isHistoryStep = (version: Version | undefined): boolean =>
+const isHistoryStep = (version: Version | undefined): boolean =>
   version !== undefined &&
   version.meta.kind === "manual" &&
   HISTORY_STEP_TITLE.test(version.title);
 
-export const stepToast = (kind: HistoryKind, label: string | null): string => {
+const stepToast = (kind: HistoryKind, label: string | null): string => {
   const word = kind === "undo" ? "Undid" : "Redid";
 
   if (!label) {
@@ -73,7 +79,7 @@ export const stepToast = (kind: HistoryKind, label: string | null): string => {
   return `${word} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 };
 
-export const refreshedSelection = (
+const refreshedSelection = (
   prev: SelectionContext[],
   selectors: string[],
   contexts: (SelectionContext | null)[]
@@ -92,16 +98,29 @@ export const refreshedSelection = (
       : item;
   });
 
-export const useEditHistory = (o: Options) => {
-  const { projectId, directionId } = o;
+interface UseEditHistoryResult {
+  readonly redo: RedoShortcut;
+  readonly state: EditHistoryState;
+  readonly step: (kind: HistoryKind, fallback?: () => unknown) => void;
+  readonly toast: string | null;
+  readonly undoChain: (
+    canUndo: boolean,
+    fallback: () => void
+  ) => { readonly canUndo: boolean; readonly onUndo: () => void };
+}
+
+const useEditHistory = (options: Options): UseEditHistoryResult => {
+  const { projectId, directionId } = options;
   const [state, setState] = useState<EditHistoryState>(EMPTY);
   const [toast, setToast] = useState<string | null>(null);
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
   const stateRef = useRef(state);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const generation = useRef(0);
-  const toastTimer = useRef<number | undefined>(undefined);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
 
   const apply = useCallback((next: EditHistoryState) => {
     stateRef.current = next;
@@ -129,29 +148,34 @@ export const useEditHistory = (o: Options) => {
     const mine = { key };
     loading.current = mine;
     const started = generation.current;
-    api
-      .editHistory(projectId, directionId)
-      .then((next) => {
-        if (
-          generation.current === started &&
-          opts.current.directionId === directionId
-        ) {
-          apply(next);
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (loading.current !== mine) {
-          return;
-        }
+    startTransition(async () => {
+      let next: EditHistoryState | null = null;
 
-        loading.current = null;
+      try {
+        next = await api.editHistory(projectId, directionId);
+      } catch {
+        next = null;
+      }
 
-        if (reloadRequested.current) {
-          reloadRequested.current = false;
-          load();
-        }
-      });
+      if (
+        next !== null &&
+        generation.current === started &&
+        opts.current.directionId === directionId
+      ) {
+        apply(next);
+      }
+
+      if (loading.current !== mine) {
+        return;
+      }
+
+      loading.current = null;
+
+      if (reloadRequested.current) {
+        reloadRequested.current = false;
+        load();
+      }
+    });
   }, [projectId, directionId, apply]);
 
   useEffect(load, [load]);
@@ -163,12 +187,12 @@ export const useEditHistory = (o: Options) => {
       load();
     }
   });
-  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+  useEffect(() => (): void => globalThis.clearTimeout(toastTimer.current), []);
 
   const showToast = useCallback((text: string) => {
-    window.clearTimeout(toastTimer.current);
+    globalThis.clearTimeout(toastTimer.current);
     setToast(text);
-    toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
+    toastTimer.current = globalThis.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
 
   const runStep = useCallback(
@@ -221,25 +245,33 @@ export const useEditHistory = (o: Options) => {
 
   const step = useCallback(
     (kind: HistoryKind, fallback?: () => unknown) => {
-      queue.current = queue.current.then(() => runStep(kind, fallback));
+      const previous = queue.current;
+      const run = async (): Promise<void> => {
+        await previous;
+        await runStep(kind, fallback);
+      };
+      queue.current = run();
     },
     [runStep]
   );
 
   const redo: RedoShortcut = {
-    enabled: state.canRedo && !o.isLocked,
+    enabled: state.canRedo && !options.isLocked,
     onRedo: () => step("redo"),
   };
 
-  const head = o.versions.find(
-    (version) => version.id === o.direction?.headVersionId
+  const head = options.versions.find(
+    (version) => version.id === options.direction?.headVersionId
   );
 
-  const versionFallback = (fallback: () => void) =>
-    isHistoryStep(head) ? () => showToast(NOTHING_TO_UNDO) : fallback;
+  const versionFallback = (fallback: () => void): (() => void) =>
+    isHistoryStep(head) ? (): void => showToast(NOTHING_TO_UNDO) : fallback;
 
-  const undoChain = (canUndo: boolean, fallback: () => void) => ({
-    canUndo: canUndo || (state.canUndo && !o.isLocked),
+  const undoChain = (
+    canUndo: boolean,
+    fallback: () => void
+  ): { readonly canUndo: boolean; readonly onUndo: () => void } => ({
+    canUndo: canUndo || (state.canUndo && !options.isLocked),
     onUndo: () => step("undo", versionFallback(fallback)),
   });
 
@@ -256,14 +288,14 @@ interface RefreshWatch {
 }
 
 const isSameStyles = (
-  a: Record<string, string>,
-  b: Record<string, string>
+  first: Record<string, string>,
+  second: Record<string, string>
 ): boolean => {
-  const keys = Object.keys(a);
+  const keys = Object.keys(first);
 
   return (
-    keys.length === Object.keys(b).length &&
-    keys.every((key) => a[key] === b[key])
+    keys.length === Object.keys(second).length &&
+    keys.every((key) => first[key] === second[key])
   );
 };
 
@@ -282,19 +314,19 @@ const hasStylesMoved = (
     );
   });
 
-export const useSelectionRefresh = (
+const useSelectionRefresh = (
   selection: SelectionContext[],
   setSelection: Dispatch<SetStateAction<SelectionContext[]>>,
   describeRef: MutableRefObject<Describe | null>,
   watch: RefreshWatch
-) => {
+): ((now: boolean) => void) => {
   const { change, directionId } = watch;
   const current = useRef(selection);
   current.current = selection;
   const dropDrafts = useRef(watch.dropDrafts);
   dropDrafts.current = watch.dropDrafts;
   const deadline = useRef(0);
-  const timers = useRef(new Set<number>());
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
   const refresh = useCallback(() => {
     if (Date.now() > deadline.current || current.current.length === 0) {
@@ -315,25 +347,33 @@ export const useSelectionRefresh = (
       anchorQueryOf({ id: String(index), target: targetFromSelection(item) })
     );
 
-    describe(queries)
-      .then((contexts) => {
-        if (Date.now() > deadline.current) {
-          return;
-        }
+    startTransition(async () => {
+      let contexts: Awaited<ReturnType<typeof describe>> | null = null;
 
-        if (hasStylesMoved(current.current, selectors, contexts)) {
-          dropDrafts.current();
-        }
+      try {
+        contexts = await describe(queries);
+      } catch {
+        contexts = null;
+      }
 
-        setSelection((prev) => refreshedSelection(prev, selectors, contexts));
-      })
-      .catch(() => undefined);
+      if (contexts === null || Date.now() > deadline.current) {
+        return;
+      }
+
+      const settled = contexts;
+
+      if (hasStylesMoved(current.current, selectors, settled)) {
+        dropDrafts.current();
+      }
+
+      setSelection((prev) => refreshedSelection(prev, selectors, settled));
+    });
   }, [describeRef, setSelection]);
 
   const later = useCallback(
     (delays: readonly number[]) => {
       for (const ms of delays) {
-        const id = window.setTimeout(() => {
+        const id = globalThis.setTimeout(() => {
           timers.current.delete(id);
           refresh();
         }, ms);
@@ -347,19 +387,19 @@ export const useSelectionRefresh = (
   useEffect(() => {
     let paintQueued = false;
 
-    const onPainted = () => {
+    const onPainted = (): void => {
       if (paintQueued || Date.now() > deadline.current) {
         return;
       }
 
       paintQueued = true;
-      window.setTimeout(() => {
+      globalThis.setTimeout(() => {
         paintQueued = false;
         refresh();
       }, SWAPPED_FRAME_RENDER_MS);
     };
 
-    const onInput = (event: Event) => {
+    const onInput = (event: Event): void => {
       if (event instanceof KeyboardEvent && historyKeyOf(event)) {
         return;
       }
@@ -367,14 +407,14 @@ export const useSelectionRefresh = (
       deadline.current = 0;
     };
 
-    window.addEventListener(PREVIEW_PAINTED_EVENT, onPainted);
-    window.addEventListener("keydown", onInput, true);
-    window.addEventListener("pointerdown", onInput, true);
+    globalThis.addEventListener(PREVIEW_PAINTED_EVENT, onPainted);
+    globalThis.addEventListener("keydown", onInput, true);
+    globalThis.addEventListener("pointerdown", onInput, true);
 
-    return () => {
-      window.removeEventListener(PREVIEW_PAINTED_EVENT, onPainted);
-      window.removeEventListener("keydown", onInput, true);
-      window.removeEventListener("pointerdown", onInput, true);
+    return (): void => {
+      globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, onPainted);
+      globalThis.removeEventListener("keydown", onInput, true);
+      globalThis.removeEventListener("pointerdown", onInput, true);
     };
   }, [refresh]);
 
@@ -391,9 +431,9 @@ export const useSelectionRefresh = (
   }, [change, directionId, later]);
 
   useEffect(
-    () => () => {
+    () => (): void => {
       for (const id of timers.current) {
-        window.clearTimeout(id);
+        globalThis.clearTimeout(id);
       }
     },
     []
@@ -409,4 +449,13 @@ export const useSelectionRefresh = (
     },
     [refresh]
   );
+};
+
+export {
+  PREVIEW_PAINTED_EVENT,
+  isHistoryStep,
+  stepToast,
+  refreshedSelection,
+  useEditHistory,
+  useSelectionRefresh,
 };

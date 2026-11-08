@@ -17,7 +17,7 @@ const useStableCallbacks = <P extends object>(props: P): P => {
     let wrapper = wrappers.current.get(key);
 
     if (!wrapper) {
-      wrapper = (...args: never[]) =>
+      wrapper = (...args: never[]): unknown =>
         (latest.current as Record<string, AnyFn | undefined>)[key]?.(...args);
       wrappers.current.set(key, wrapper);
     }

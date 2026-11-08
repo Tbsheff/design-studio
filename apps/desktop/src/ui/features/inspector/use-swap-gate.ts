@@ -5,7 +5,7 @@ import type { FilesChange } from "../home/use-studio-data.js";
 
 const SWAP_RELEASE_MS = 4000;
 
-export class SwapQueue {
+class SwapQueue {
   readonly shown = new Map<string, FilesChange>();
   readonly next = new Map<string, FilesChange>();
   private readonly waiting = new Map<string, FilesChange>();
@@ -85,19 +85,19 @@ export class SwapQueue {
   }
 }
 
-export interface SwapGate {
+interface SwapGate {
   readonly shownFor: (key: string) => FilesChange | null;
   readonly nextFor: (key: string) => FilesChange | null;
   readonly onSwapDone: (key: string) => void;
 }
 
-export interface GateTarget {
+interface GateTarget {
   readonly key: string;
   readonly directionId: string;
   readonly headVersionId: string | null;
 }
 
-export const useSwapGate = (
+const useSwapGate = (
   kind: ProjectKind,
   targets: GateTarget[],
   lastChange: FilesChange | null,
@@ -105,7 +105,7 @@ export const useSwapGate = (
   liveDirectionId: string | null = null
 ): SwapGate => {
   const queue = useRef(new SwapQueue());
-  const [version, bump] = useReducer((n: number) => n + 1, 0);
+  const [version, bump] = useReducer((count: number) => count + 1, 0);
   const heads = useRef<Record<string, string>>({});
   const live = useRef(targets);
   live.current = targets;
@@ -129,7 +129,7 @@ export const useSwapGate = (
       lastChange.directionId === liveDirectionId &&
       queue.current.hold(true)
     ) {
-      setLiveWait((n) => n + 1);
+      setLiveWait((countValue) => countValue + 1);
     }
 
     const hits = live.current.filter(
@@ -150,13 +150,13 @@ export const useSwapGate = (
       return;
     }
 
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       if (!holdRef.current && queue.current.hold(false)) {
         bump();
       }
     }, SWAP_RELEASE_MS);
 
-    return () => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [liveWait]);
 
   const headKey = targets
@@ -206,9 +206,12 @@ export const useSwapGate = (
       return;
     }
 
-    const timer = window.setTimeout(() => onSwapDone(flying), SWAP_RELEASE_MS);
+    const timer = globalThis.setTimeout(
+      () => onSwapDone(flying),
+      SWAP_RELEASE_MS
+    );
 
-    return () => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [flying, flight, onSwapDone]);
 
   const shownFor = useCallback(
@@ -223,3 +226,7 @@ export const useSwapGate = (
 
   return { nextFor, onSwapDone, shownFor };
 };
+
+export { SwapQueue, useSwapGate };
+
+export type { SwapGate, GateTarget };

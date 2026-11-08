@@ -1,7 +1,11 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { UiSelect } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { FocusEvent, PointerEvent as ReactPointerEvent } from "react";
+import type {
+  FocusEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactElement,
+} from "react";
 
 import { useLive } from "../../platform/live-store.js";
 import { resizeReadout } from "../canvas/use-resize-handles.js";
@@ -58,7 +62,7 @@ interface FixedDrag {
 
 const startFixedDrag = (
   event: ReactPointerEvent<HTMLLabelElement>,
-  o: FixedDrag
+  fixedDrag: FixedDrag
 ): void => {
   if (event.button !== 0) {
     return;
@@ -67,14 +71,14 @@ const startFixedDrag = (
   event.preventDefault();
 
   const start = {
-    value: Math.round(Number.parseFloat(o.used) || 0),
-    values: o.edit.values,
+    value: Math.round(Number.parseFloat(fixedDrag.used) || 0),
+    values: fixedDrag.edit.values,
     x: event.clientX,
   };
 
   let moved = false;
 
-  const move = (ev: PointerEvent) => {
+  const move = (ev: PointerEvent): void => {
     const steps = Math.trunc((ev.clientX - start.x) / 2);
 
     if (steps === 0 && !moved) {
@@ -84,38 +88,45 @@ const startFixedDrag = (
     moved = true;
     document.body.classList.add("ins-scrubbing");
     const next = Math.max(0, start.value + steps * (ev.shiftKey ? 10 : 1));
-    o.edit.preview(
-      sizePatch(o.axis, "fixed", start.values, o.parent, `${next}px`, o.facts)
+    fixedDrag.edit.preview(
+      sizePatch(
+        fixedDrag.axis,
+        "fixed",
+        start.values,
+        fixedDrag.parent,
+        `${next}px`,
+        fixedDrag.facts
+      )
     );
   };
 
-  const stop = () => {
-    window.removeEventListener("pointermove", move);
-    window.removeEventListener("pointerup", stop);
-    window.removeEventListener("pointercancel", stop);
+  const stop = (): void => {
+    globalThis.removeEventListener("pointermove", move);
+    globalThis.removeEventListener("pointerup", stop);
+    globalThis.removeEventListener("pointercancel", stop);
     document.body.classList.remove("ins-scrubbing");
 
     if (!moved) {
       return;
     }
 
-    o.edit.commit();
+    fixedDrag.edit.commit();
 
-    const eat = (click: MouseEvent) => {
+    const eat = (click: MouseEvent): void => {
       click.preventDefault();
       click.stopPropagation();
     };
 
-    window.addEventListener("click", eat, { capture: true, once: true });
-    window.setTimeout(
-      () => window.removeEventListener("click", eat, { capture: true }),
+    globalThis.addEventListener("click", eat, { capture: true, once: true });
+    globalThis.setTimeout(
+      () => globalThis.removeEventListener("click", eat, { capture: true }),
       0
     );
   };
 
-  window.addEventListener("pointermove", move);
-  window.addEventListener("pointerup", stop);
-  window.addEventListener("pointercancel", stop);
+  globalThis.addEventListener("pointermove", move);
+  globalThis.addEventListener("pointerup", stop);
+  globalThis.addEventListener("pointercancel", stop);
 };
 
 const LiveSize = ({
@@ -124,7 +135,7 @@ const LiveSize = ({
 }: {
   readonly axis: Axis;
   readonly value: number;
-}) => {
+}): ReactElement => {
   const short = axis === "width" ? "W" : "H";
 
   return (
@@ -159,7 +170,7 @@ const SizeValue = ({
   readonly used: string;
   readonly edit: DirectEdit;
   readonly onDrag: (event: ReactPointerEvent<HTMLLabelElement>) => void;
-}) => {
+}): ReactElement => {
   const [editing, setEditing] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const short = axis === "width" ? "W" : "H";
@@ -176,7 +187,7 @@ const SizeValue = ({
   }, [mode]);
 
   if (mode === "fixed" || editing) {
-    const leave = (event: FocusEvent<HTMLDivElement>) => {
+    const leave = (event: FocusEvent<HTMLDivElement>): void => {
       const next = event.relatedTarget;
 
       if (!(next instanceof Node && event.currentTarget.contains(next))) {
@@ -240,7 +251,7 @@ const SizeRow = ({
   readonly axis: Axis;
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
-}) => {
+}): ReactElement => {
   const parent = parentLayout(selection.styles);
   const facts = liveFacts(edit, selection);
   const mode = sizeModeOf(axis, edit.values, parent, facts);

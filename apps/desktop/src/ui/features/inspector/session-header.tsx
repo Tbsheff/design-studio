@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { copy } from "./copy.js";
 import { unsavedLabel } from "./use-edit-session.js";
 import type { EditSession, SessionAction } from "./use-edit-session.js";
@@ -8,10 +10,10 @@ const SessionHeader = ({
 }: {
   readonly session: EditSession;
   readonly onDone: (action: SessionAction) => void;
-}) => {
+}): ReactElement => {
   const blockedDiscard = session.blocked !== null;
 
-  const run = async (action: SessionAction) => {
+  const run = async (action: SessionAction): Promise<void> => {
     if (await (action === "save" ? session.save() : session.discard())) {
       onDone(action);
     }
@@ -27,7 +29,7 @@ const SessionHeader = ({
           data-tip={unsavedLabel(session.net)}
         >
           {session.net}
-          <span className="sr-only"> unsaved edits</span>
+          <span className="sr-only"> {copy.unsavedEdits}</span>
         </span>
       )}
       <span className="edit-head-end" />

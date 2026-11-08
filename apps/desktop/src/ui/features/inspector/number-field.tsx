@@ -1,5 +1,5 @@
 import { memo } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { sameSpec } from "./number-field-model.js";
@@ -23,7 +23,7 @@ const NumberFieldView = ({
   id: idProp,
   hasTokens: tokens,
   className,
-}: NumberFieldProps) => {
+}: NumberFieldProps): ReactElement => {
   const id = idProp ?? `ins-${spec.prop}`;
   const scrub = useScrub(spec);
 
@@ -45,16 +45,19 @@ const NumberFieldView = ({
   );
 };
 
-const isSameField = (a: NumberFieldProps, b: NumberFieldProps): boolean => {
-  const sameIcon = (a.icon === undefined) === (b.icon === undefined);
+const isSameField = (
+  first: NumberFieldProps,
+  second: NumberFieldProps
+): boolean => {
+  const sameIcon = (first.icon === undefined) === (second.icon === undefined);
 
   return (
     sameIcon &&
-    a.short === b.short &&
-    a.id === b.id &&
-    a.hasTokens === b.hasTokens &&
-    a.className === b.className &&
-    sameSpec(a.spec, b.spec)
+    first.short === second.short &&
+    first.id === second.id &&
+    first.hasTokens === second.hasTokens &&
+    first.className === second.className &&
+    sameSpec(first.spec, second.spec)
   );
 };
 
@@ -68,7 +71,7 @@ const NumberField = ({
   icon,
   id,
   className,
-}: SharedFieldProps) => (
+}: SharedFieldProps): ReactElement => (
   <MemoNumberField
     spec={spec}
     short={short}
@@ -85,7 +88,7 @@ const PlainNumberField = ({
   icon,
   id,
   className,
-}: SharedFieldProps) => (
+}: SharedFieldProps): ReactElement => (
   <MemoNumberField
     spec={spec}
     short={short}

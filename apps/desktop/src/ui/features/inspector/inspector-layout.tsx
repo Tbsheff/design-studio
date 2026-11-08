@@ -1,4 +1,5 @@
 import type { SelectionContext } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
@@ -14,7 +15,7 @@ const SizeRows = ({
 }: {
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
-}) => {
+}): ReactElement => {
   const parent = parentLayout(selection.styles);
 
   return (
@@ -39,7 +40,7 @@ const SizeSection = ({
 }: {
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
-}) => (
+}): ReactElement => (
   <InspectorSection title={copy.size}>
     <SizeRows edit={edit} selection={selection} />
   </InspectorSection>

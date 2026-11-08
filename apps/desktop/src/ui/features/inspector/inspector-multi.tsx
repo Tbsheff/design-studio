@@ -6,7 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { memo, useSyncExternalStore } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import { cssVarFor } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
@@ -21,7 +21,11 @@ import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { CreateRequest } from "./use-token-snap.js";
 
-export const MultiNote = ({ reason }: { readonly reason: string | null }) => {
+const MultiNote = ({
+  reason,
+}: {
+  readonly reason: string | null;
+}): ReactElement | null => {
   if (!reason) {
     return null;
   }
@@ -34,7 +38,11 @@ export const MultiNote = ({ reason }: { readonly reason: string | null }) => {
   );
 };
 
-export const MultiSizeSection = ({ edit }: { readonly edit: DirectEdit }) => (
+const MultiSizeSection = ({
+  edit,
+}: {
+  readonly edit: DirectEdit;
+}): ReactElement => (
   <InspectorSection title={copy.size}>
     <div className="ins-grid">
       <NumberField
@@ -58,14 +66,14 @@ interface HostProps {
   readonly onClose: () => void;
 }
 
-export const MultiCreateTokenHost = ({
+const MultiCreateTokenHost = ({
   projectId,
   directionId,
   tokens,
   edit,
   request,
   onClose,
-}: HostProps) => {
+}: HostProps): ReactElement | null => {
   if (!tokens || !request) {
     return null;
   }
@@ -92,7 +100,7 @@ export const MultiCreateTokenHost = ({
       const cssVar = cssVarFor(input.group, input.name);
 
       const style: Partial<StyleValues> = Object.fromEntries(
-        request.targets.map((p) => [p, `var(${cssVar})`])
+        request.targets.map((part) => [part, `var(${cssVar})`])
       );
 
       edit.preview(style);
@@ -185,12 +193,12 @@ const askMatching = (
     setMatchNote(matchedText(message));
   });
 
-  const timer = window.setTimeout(() => done(), MATCH_WAIT_MS);
+  const timer = globalThis.setTimeout(() => done(), MATCH_WAIT_MS);
 
-  function done(): void {
-    window.clearTimeout(timer);
+  const done = (): void => {
+    globalThis.clearTimeout(timer);
     stop?.();
-  }
+  };
 
   port.post({ by, requestId, selector, type: "select-matching" });
 };
@@ -201,7 +209,7 @@ const SelectMatchingView = ({
 }: {
   readonly selection: SelectionContext[];
   readonly port: MutableRefObject<PreviewPort | null>;
-}) => {
+}): ReactElement | null => {
   const note = useSyncExternalStore(subscribeMatch, () => matchNote);
   const base = selection.at(-1);
 
@@ -242,10 +250,17 @@ const SelectMatchingView = ({
   );
 };
 
-export const SelectMatchingSection = memo(
+const SelectMatchingSection = memo(
   SelectMatchingView,
-  (a, b) =>
-    a.port === b.port &&
-    a.selection.length === b.selection.length &&
-    a.selection.every((item, i) => item === b.selection[i])
+  (first, second) =>
+    first.port === second.port &&
+    first.selection.length === second.selection.length &&
+    first.selection.every((item, index) => item === second.selection[index])
 );
+
+export {
+  MultiNote,
+  MultiSizeSection,
+  MultiCreateTokenHost,
+  SelectMatchingSection,
+};

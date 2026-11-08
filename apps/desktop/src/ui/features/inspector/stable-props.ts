@@ -9,12 +9,16 @@ const isPlain = (value: unknown): value is Bag =>
   value !== null &&
   Object.getPrototypeOf(value) === Object.prototype;
 
-const isSameList = (a: unknown, b: unknown): boolean => {
-  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+const isSameList = (first: unknown, second: unknown): boolean => {
+  if (
+    !Array.isArray(first) ||
+    !Array.isArray(second) ||
+    first.length !== second.length
+  ) {
     return false;
   }
 
-  return a.every((item, i) => Object.is(item, b[i]));
+  return first.every((item, index) => Object.is(item, second[index]));
 };
 
 class Stabilizer {
@@ -27,7 +31,7 @@ class Stabilizer {
     let fn = this.callers.get(key);
 
     if (!fn) {
-      fn = (...args: never[]) => {
+      fn = (...args: never[]): unknown => {
         let target: unknown = this.latest;
 
         for (const part of path) {
@@ -113,7 +117,7 @@ class Stabilizer {
   }
 }
 
-export const useStableProps = <T extends object>(
+const useStableProps = <T extends object>(
   next: T,
   nested: ReadonlySet<string> = new Set()
 ): T => {
@@ -122,3 +126,5 @@ export const useStableProps = <T extends object>(
 
   return ref.current.run(next, nested);
 };
+
+export { useStableProps };

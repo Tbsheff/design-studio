@@ -1,10 +1,22 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import { sharedSourceOf } from "@design-studio/contracts/app";
+import type { SharedSource } from "@design-studio/contracts/app";
 import { useState } from "react";
 
 import { useElementClasses } from "./inspector-classes.js";
 import type { InspectorProps } from "./inspector-model.js";
 
-const useUseSite = (props: InspectorProps) => {
+interface UseUseSiteResult {
+  readonly isEditingUse: boolean;
+  readonly effective: SelectionContext | undefined;
+  readonly sharedEditing: {
+    readonly isEditingUse: boolean;
+    readonly onToggle: () => void;
+    readonly shared: SharedSource;
+  } | null;
+}
+
+const useUseSite = (props: InspectorProps): UseUseSiteResult => {
   const [componentFor, setComponentFor] = useState<string | null>(null);
   const target = props.selection.length === 1 ? props.selection[0] : undefined;
 
@@ -31,11 +43,11 @@ const useUseSite = (props: InspectorProps) => {
   const effective =
     target && use && editingUse ? { ...target, ...use, usedAt: null } : target;
 
-  const toggle = () =>
+  const toggle = (): void =>
     setComponentFor(editingUse ? (target?.selector ?? null) : null);
 
   return {
-    editingUse,
+    isEditingUse: editingUse,
     effective,
     sharedEditing: shared
       ? { isEditingUse: editingUse, onToggle: toggle, shared }

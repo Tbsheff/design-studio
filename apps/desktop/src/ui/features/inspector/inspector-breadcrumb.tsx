@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
 import { parseSelectionPath, pathCrumbs } from "./authored-css.js";
@@ -88,13 +88,13 @@ const useFitCount = (
 
     observer.observe(el);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [list, total]);
 
   return Math.min(shown, total);
 };
 
-const Separator = () => (
+const Separator = (): ReactElement => (
   <li aria-hidden="true" className="ins-crumb-sep">
     <Icon name="chevronRight" size={12} />
   </li>
@@ -106,7 +106,7 @@ const HiddenCrumbs = ({
 }: {
   readonly hidden: PathCrumb[];
   readonly onSelect: (levels: number) => void;
-}) => {
+}): ReactElement | null => {
   const nearest = hidden.at(-1);
 
   if (!nearest) {
@@ -124,7 +124,7 @@ const HiddenCrumbs = ({
           data-tip-align="start"
           onClick={() => onSelect(nearest.levels)}
         >
-          …
+          {copy.text2}
         </button>
       </li>
       <Separator />
@@ -132,7 +132,10 @@ const HiddenCrumbs = ({
   );
 };
 
-const InspectorBreadcrumbView = ({ selection, port }: Props) => {
+const InspectorBreadcrumbView = ({
+  selection,
+  port,
+}: Props): ReactElement | null => {
   const list = useRef<HTMLOListElement>(null);
   const path = pathCrumbs(parseSelectionPath(selection.path));
   const count = useFitCount(list, path.length);
@@ -141,7 +144,7 @@ const InspectorBreadcrumbView = ({ selection, port }: Props) => {
     return null;
   }
 
-  const select = (levels: number) => {
+  const select = (levels: number): void => {
     for (let step = 0; step < levels; step += 1) {
       port.current?.post({
         move: "parent",
@@ -192,12 +195,14 @@ const InspectorBreadcrumbView = ({ selection, port }: Props) => {
   );
 };
 
-export const InspectorBreadcrumb = memo(
+const InspectorBreadcrumb = memo(
   InspectorBreadcrumbView,
-  (a, b) =>
-    a.port === b.port &&
-    a.selection.selector === b.selection.selector &&
-    a.selection.tag === b.selection.tag &&
-    a.selection.outerHTML === b.selection.outerHTML &&
-    a.selection.path === b.selection.path
+  (first, second) =>
+    first.port === second.port &&
+    first.selection.selector === second.selection.selector &&
+    first.selection.tag === second.selection.tag &&
+    first.selection.outerHTML === second.selection.outerHTML &&
+    first.selection.path === second.selection.path
 );
+
+export { InspectorBreadcrumb };

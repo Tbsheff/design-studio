@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useRef, useState } from "react";
 
 import {
@@ -28,10 +29,10 @@ import { usePasteImage } from "./use-paste-image.js";
 
 import "../../styles/inspector-image.css";
 
-const InspectorImage = (props: Props) => {
+const InspectorImage = (props: Props): ReactElement | null => {
   const kind = imageKindOf(props.selection);
   const background = kind === "background";
-  const { busy, error, run, setError, placed } = useImageSet(props);
+  const { error, isBusy: busy, run, setError, placed } = useImageSet(props);
   const [alt, setAlt] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -57,7 +58,7 @@ const InspectorImage = (props: Props) => {
 
   const disabled = !props.isEditable;
 
-  const paste = async () => {
+  const paste = async (): Promise<void> => {
     try {
       const blob = await clipboardImage();
 
@@ -101,7 +102,7 @@ const InspectorImage = (props: Props) => {
             data-tip={copy.textUseTheImageOnThe}
             onClick={() => void paste()}
           >
-            Paste
+            {copy.paste}
           </button>
           <button
             type="button"
@@ -110,7 +111,7 @@ const InspectorImage = (props: Props) => {
             data-tip={copy.searchFreeStockPhotosAnd}
             onClick={() => runCommand("image.find")}
           >
-            Find photo
+            {copy.findPhoto}
           </button>
           <input
             ref={fileInput}

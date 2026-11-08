@@ -50,8 +50,11 @@ const toVersion = <Value>(value: Value): Version | null => {
   return null;
 };
 
-export const propsApi = {
-  components: (pid: string, did: string) =>
+const propsApi = {
+  components: (
+    pid: string,
+    did: string
+  ): ReturnType<typeof call<typeof routes.listPropsComponentsDirectEdit>> =>
     call(routes.listPropsComponentsDirectEdit, {
       cursor: null,
       directionId: did,
@@ -94,20 +97,31 @@ export const propsApi = {
       version: toVersion(result.version),
     };
   },
-  variantClasses: (pid: string, did: string, request: VariantClassRequest) =>
+  variantClasses: (
+    pid: string,
+    did: string,
+    request: VariantClassRequest
+  ): ReturnType<typeof call<typeof routes.setVariantClassesDirectEdit>> =>
     call(routes.setVariantClassesDirectEdit, {
       ...request,
       directionId: did,
       projectId: pid,
     }),
-  variantPreview: (pid: string, did: string, query: VariantPreviewQuery) =>
+  variantPreview: (
+    pid: string,
+    did: string,
+    query: VariantPreviewQuery
+  ): ReturnType<typeof getVariantPreviewAt> =>
     getVariantPreviewAt(pid, did, query),
   writeVariant: (
     pid: string,
     did: string,
     target: ComponentVariantTarget,
     change: ComponentVariantChange
-  ) => writeVariantAt(pid, did, target, change),
+  ): ReturnType<typeof writeVariantAt> =>
+    writeVariantAt(pid, did, target, change),
 };
+
+export { propsApi };
 
 export type { VariantPreviewQuery };

@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState } from "react";
 
 import { copy } from "./copy.js";
@@ -19,7 +20,7 @@ const CORNERS: {
   { label: "Bottom right radius", short: "BR", side: "bottom" },
 ];
 
-export const joinCorners = (corners: Record<Side, string>): string => {
+const joinCorners = (corners: Record<Side, string>): string => {
   const values = SIDES.map((side) => corners[side] || "0");
 
   return values.every((value) => value === values[0])
@@ -58,13 +59,13 @@ const isDifferent = (radius: string): boolean => {
   return SIDES.some((side) => corners[side] !== corners.top);
 };
 
-export const RadiusField = ({
+const RadiusField = ({
   edit,
   short = "R",
 }: {
   readonly edit: DirectEdit;
   readonly short?: string;
-}) => {
+}): ReactElement => {
   const [split, setSplit] = useState(() =>
     isDifferent(edit.values["border-radius"])
   );
@@ -140,3 +141,5 @@ export const RadiusField = ({
     </div>
   );
 };
+
+export { joinCorners, RadiusField };

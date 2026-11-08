@@ -1,5 +1,6 @@
 import type { Project, SelectionContext } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { budgetFor, money } from "../canvas/use-variations.js";
@@ -15,19 +16,19 @@ interface Props {
 
 const COUNTS = [2, 3, 4];
 
-export const ElementVariantsDialog = ({
+const ElementVariantsDialog = ({
   project,
   element,
   onStart,
   onCancel,
-}: Props) => {
+}: Props): ReactElement => {
   const max = maxVariationsFor(project.kind);
   const [note, setNote] = useState("");
   const [count, setCount] = useState(Math.min(3, max));
   const noteRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => noteRef.current?.focus(), []);
   const budget = budgetFor(project, project.settings.defaultLevel, count);
-  const start = () => onStart(note, count);
+  const start = (): void => onStart(note, count);
 
   return (
     <section
@@ -36,22 +37,25 @@ export const ElementVariantsDialog = ({
       aria-modal="false"
       aria-labelledby="element-variants-title"
       data-testid="element-variants-dialog"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
+      onKeyDown={(keyboardEvent) => {
+        if (keyboardEvent.key === "Escape") {
           onCancel();
         }
 
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        if (
+          keyboardEvent.key === "Enter" &&
+          (keyboardEvent.metaKey || keyboardEvent.ctrlKey)
+        ) {
           start();
         }
       }}
     >
       <header className="variation-card-head">
         <div className="variation-card-heading">
-          <h2 id="element-variants-title">Try variants</h2>
+          <h2 id="element-variants-title">{copy.tryVariants}</h2>
           <p className="variation-card-prompt">
-            Versions of the selected <code>{element.tag}</code> only. The rest
-            of the page stays the same.
+            {copy.versionsOfTheSelected}
+            <code>{element.tag}</code> {copy.onlyTheRestOfThe}
           </p>
         </div>
         <button
@@ -63,14 +67,14 @@ export const ElementVariantsDialog = ({
         </button>
       </header>
       <label className="element-variants-field">
-        <span>What to try (optional)</span>
+        <span>{copy.whatToTryOptional}</span>
         <textarea
           ref={noteRef}
           rows={2}
           value={note}
           maxLength={2000}
           placeholder={copy.forExampleMoreCompactOr}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={(changeEvent) => setNote(changeEvent.target.value)}
         />
       </label>
       <div
@@ -78,7 +82,7 @@ export const ElementVariantsDialog = ({
         role="radiogroup"
         aria-label={copy.howManyVariants}
       >
-        <span>Variants</span>
+        <span>{copy.variants}</span>
         {COUNTS.map((value) => {
           const over = value > max;
 
@@ -108,17 +112,20 @@ export const ElementVariantsDialog = ({
         </span>
         <div className="variation-card-actions">
           <button className="btn small" onClick={onCancel}>
-            Cancel
+            {copy.cancel}
           </button>
           <button
             className="btn small primary"
             onClick={start}
             data-testid="element-variants-start"
           >
-            Start {count} variants
+            {copy.start}
+            {count} {copy.variants2}
           </button>
         </div>
       </footer>
     </section>
   );
 };
+
+export { ElementVariantsDialog };

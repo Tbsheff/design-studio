@@ -1,6 +1,13 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { usePopover } from "@design-studio/ui";
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { ReactElement } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import type {
   SwapCandidate,
@@ -43,7 +50,7 @@ export default function SwapInstanceMenu({
   use,
   onDone,
   onClose,
-}: Props) {
+}: Props): ReactElement {
   const [list, setList] = useState<SwapCandidateList | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -51,33 +58,53 @@ export default function SwapInstanceMenu({
   usePopover(true, root, close);
   useEffect(() => {
     let live = true;
-    componentCreateApi
-      .swapCandidates(projectId, directionId, use)
-      .then((result) => live && setList(result))
-      .catch(
-        (error: unknown) =>
-          live && setList({ candidates: [], from: "", note: apiMessage(error) })
-      );
+    startTransition(async () => {
+      try {
+        const result = await componentCreateApi.swapCandidates(
+          projectId,
+          directionId,
+          use
+        );
 
-    return () => {
+        if (live) {
+          setList(result);
+        }
+      } catch (error: unknown) {
+        if (live) {
+          setList({ candidates: [], from: "", note: apiMessage(error) });
+        }
+      }
+    });
+
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, use]);
 
-  const pick = (item: SwapCandidate) => {
+  const pick = (item: SwapCandidate): void => {
     setBusy(item.name);
-    componentCreateApi
-      .swap(projectId, directionId, use, { file: item.file, name: item.name })
-      .then((result) =>
-        onDone({
-          isOk: true,
-          text: `${result.title}${result.dropped.length > 0 ? `, dropped ${result.dropped.join(", ")}` : ""}`,
-        })
-      )
-      .catch((error: unknown) =>
-        onDone({ isOk: false, text: apiMessage(error) })
-      )
-      .finally(onClose);
+    startTransition(async () => {
+      try {
+        const result = await componentCreateApi.swap(
+          projectId,
+          directionId,
+          use,
+          {
+            file: item.file,
+            name: item.name,
+          }
+        );
+        const dropped =
+          result.dropped.length > 0
+            ? `, dropped ${result.dropped.join(", ")}`
+            : "";
+        onDone({ isOk: true, text: `${result.title}${dropped}` });
+      } catch (error: unknown) {
+        onDone({ isOk: false, text: apiMessage(error) });
+      } finally {
+        onClose();
+      }
+    });
   };
 
   return (
@@ -92,7 +119,7 @@ export default function SwapInstanceMenu({
           {list?.from ? `Swap ${list.from} for` : "Swap for"}
         </div>
         {list === null && (
-          <p className="prp-swap-empty">Finding components that fit…</p>
+          <p className="prp-swap-empty">{copy.findingComponentsThatFit}</p>
         )}
         {list?.candidates.map((item) => (
           <button

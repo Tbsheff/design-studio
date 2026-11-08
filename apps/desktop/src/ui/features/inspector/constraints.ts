@@ -1,8 +1,8 @@
-export type PinMode = "start" | "end" | "both" | "center" | "scale";
+type PinMode = "start" | "end" | "both" | "center" | "scale";
 
-export type PinAxis = "x" | "y";
+type PinAxis = "x" | "y";
 
-export type InsetProp = "left" | "right" | "top" | "bottom";
+type InsetProp = "left" | "right" | "top" | "bottom";
 
 interface AxisKeys {
   readonly start: InsetProp;
@@ -35,7 +35,7 @@ const AXES: Record<PinAxis, AxisKeys> = {
   },
 };
 
-export const PIN_OPTIONS: Record<
+const PIN_OPTIONS: Record<
   PinAxis,
   { readonly value: PinMode; readonly label: string }[]
 > = {
@@ -61,10 +61,7 @@ const isSet = (value: string | undefined): boolean => {
   return text !== "" && text !== "auto";
 };
 
-export const pinModeOf = (
-  axis: PinAxis,
-  styles: Record<string, string>
-): PinMode => {
+const pinModeOf = (axis: PinAxis, styles: Record<string, string>): PinMode => {
   const keys = AXES[axis];
   const start = styles[`authored-${keys.start}`] ?? "";
   const end = styles[`authored-${keys.end}`] ?? "";
@@ -108,7 +105,7 @@ const numberOf = (styles: Record<string, string>, key: string): number => {
   return Number.isFinite(value) ? value : 0;
 };
 
-export const pinPatch = (
+const pinPatch = (
   axis: PinAxis,
   mode: PinMode,
   styles: Record<string, string>,
@@ -158,7 +155,7 @@ export const pinPatch = (
   return { [keys.start]: px(pos), [keys.end]: "", ...fixed };
 };
 
-export const pinFields = (axis: PinAxis, mode: PinMode): InsetProp[] => {
+const pinFields = (axis: PinAxis, mode: PinMode): InsetProp[] => {
   const keys = AXES[axis];
 
   if (mode === "start") {
@@ -175,3 +172,7 @@ export const pinFields = (axis: PinAxis, mode: PinMode): InsetProp[] => {
 
   return [];
 };
+
+export { PIN_OPTIONS, pinModeOf, pinPatch, pinFields };
+
+export type { PinMode, PinAxis, InsetProp };

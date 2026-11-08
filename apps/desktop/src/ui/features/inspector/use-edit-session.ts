@@ -3,7 +3,13 @@ import type {
   EditSessionState,
   Version,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MutableRefObject } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -11,9 +17,9 @@ import type { PreviewPort } from "../../platform/bridge.js";
 import { useProjectEvents } from "../../platform/events.js";
 import type { DirectEditControl } from "./use-direct-edit.js";
 
-export type SessionAction = "save" | "discard";
+type SessionAction = "save" | "discard";
 
-export interface EditSessionHandle {
+interface EditSessionHandle {
   readonly isDirty: boolean;
   readonly count: number;
   readonly net: number;
@@ -49,7 +55,7 @@ const EMPTY: SessionView = {
 const UNDO_PROMPT = 'Undo of "';
 const REFRESH_MS = 120;
 
-export const unsavedLabel = (count: number): string => {
+const unsavedLabel = (count: number): string => {
   if (count === 0) {
     return "No unsaved edits";
   }
@@ -100,9 +106,13 @@ const readSession = async (
     return view;
   }
 
-  const versions = await api
-    .listVersions(projectId, directionId)
-    .catch(() => null);
+  let versions: Awaited<ReturnType<typeof api.listVersions>> | null = null;
+
+  try {
+    versions = await api.listVersions(projectId, directionId);
+  } catch {
+    versions = null;
+  }
 
   return {
     ...view,
@@ -112,17 +122,33 @@ const readSession = async (
 
 const fresh = (base: string | null): SessionView => ({ ...EMPTY, base });
 
-export const useEditSession = (o: Options) => {
-  const { projectId, directionId } = o;
+interface UseEditSessionResult {
+  readonly answer: (choice: SessionAction | "cancel") => Promise<void>;
+  readonly isAsking: boolean;
+  readonly busy: SessionAction | null;
+  readonly clearError: () => void;
+  readonly discard: () => Promise<boolean>;
+  readonly error: string | null;
+  readonly requestExit: () => Promise<boolean>;
+  readonly save: () => Promise<boolean>;
+  readonly base: string | null;
+  readonly count: number;
+  readonly net: number;
+  readonly isDirty: boolean;
+  readonly blocked: string | null;
+}
+
+const useEditSession = (options: Options): UseEditSessionResult => {
+  const { projectId, directionId } = options;
   const [view, setView] = useState<SessionView>(EMPTY);
   const [busy, setBusy] = useState<SessionAction | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
   const viewRef = useRef(view);
   viewRef.current = view;
-  const opts = useRef(o);
-  opts.current = o;
-  const timer = useRef<number | undefined>(undefined);
+  const opts = useRef(options);
+  opts.current = options;
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const exitResolve = useRef<((leave: boolean) => void) | null>(null);
 
   const begin = useCallback(() => {
@@ -130,14 +156,17 @@ export const useEditSession = (o: Options) => {
       return setView(EMPTY);
     }
 
-    api
-      .editSession(projectId, directionId)
-      .then(
-        (state) =>
-          opts.current.directionId === directionId &&
-          setView(fresh(state.baseVersionId || null))
-      )
-      .catch((err: unknown) => setError(errorText(err)));
+    startTransition(async () => {
+      try {
+        const state = await api.editSession(projectId, directionId);
+
+        if (opts.current.directionId === directionId) {
+          setView(fresh(state.baseVersionId || null));
+        }
+      } catch (err: unknown) {
+        setError(errorText(err));
+      }
+    });
   }, [projectId, directionId]);
 
   useEffect(begin, [begin]);
@@ -149,19 +178,25 @@ export const useEditSession = (o: Options) => {
       return;
     }
 
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
-      readSession(projectId, directionId, base)
-        .then((next) => {
-          if (viewRef.current.base === base) {
-            setView(next);
-          }
-        })
-        .catch(() => undefined);
+    globalThis.clearTimeout(timer.current);
+    timer.current = globalThis.setTimeout(() => {
+      startTransition(async () => {
+        let next: Awaited<ReturnType<typeof readSession>> | null = null;
+
+        try {
+          next = await readSession(projectId, directionId, base);
+        } catch {
+          next = null;
+        }
+
+        if (next !== null && viewRef.current.base === base) {
+          setView(next);
+        }
+      });
     }, REFRESH_MS);
   }, [projectId, directionId]);
 
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(() => (): void => globalThis.clearTimeout(timer.current), []);
   useProjectEvents(projectId, (event) => {
     if (event.directionId !== undefined && event.directionId !== directionId) {
       return;
@@ -273,7 +308,7 @@ export const useEditSession = (o: Options) => {
   return {
     ...view,
     answer,
-    asking,
+    isAsking: asking,
     busy,
     clearError: () => setError(null),
     discard,
@@ -283,4 +318,8 @@ export const useEditSession = (o: Options) => {
   };
 };
 
-export type EditSession = ReturnType<typeof useEditSession>;
+type EditSession = ReturnType<typeof useEditSession>;
+
+export { unsavedLabel, useEditSession };
+
+export type { SessionAction, EditSessionHandle, EditSession };

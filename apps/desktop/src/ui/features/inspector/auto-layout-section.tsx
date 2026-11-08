@@ -1,7 +1,7 @@
 import { Icon, UiSelect } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useRef } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { InspectorSection, SelectField } from "./inspector-fields.js";
@@ -57,7 +57,7 @@ const AlignGrid = ({
   readonly edit: DirectEdit;
   readonly isRow: boolean;
   readonly isGrid: boolean;
-}) => {
+}): ReactElement => {
   const justifyProp = grid ? "justify-items" : "justify-content";
 
   const active = activeCell(
@@ -127,13 +127,17 @@ const useLastGap = (edit: DirectEdit): string => {
   return last.current;
 };
 
-const GapModeField = ({ edit }: { readonly edit: DirectEdit }) => {
+const GapModeField = ({
+  edit,
+}: {
+  readonly edit: DirectEdit;
+}): ReactElement => {
   const mode: GapMode =
     edit.values["justify-content"] === "space-between" ? "auto" : "fixed";
 
   const lastGap = useLastGap(edit);
 
-  const change = (next: GapMode) => {
+  const change = (next: GapMode): void => {
     if (next === mode) {
       return;
     }
@@ -152,7 +156,7 @@ const GapModeField = ({ edit }: { readonly edit: DirectEdit }) => {
       data-tip={copy.autoPutsTheSpaceBetween}
       data-tip-align="end"
     >
-      <span className="ins-scrub static">Spacing</span>
+      <span className="ins-scrub static">{copy.spacing}</span>
       <UiSelect
         className="ins-select"
         aria-label={copy.gapMode}
@@ -172,7 +176,7 @@ const GapFields = ({
   readonly edit: DirectEdit;
   readonly isSplit: boolean;
   readonly isAuto: boolean;
-}) => {
+}): ReactElement | null => {
   if (split) {
     return (
       <div className="ins-gap-pair">
@@ -200,7 +204,11 @@ const GapFields = ({
   );
 };
 
-const GridControls = ({ edit }: { readonly edit: DirectEdit }) => (
+const GridControls = ({
+  edit,
+}: {
+  readonly edit: DirectEdit;
+}): ReactElement => (
   <div className="ins-flex">
     <AlignGrid edit={edit} isRow isGrid />
     <div className="ins-flex-side">
@@ -209,7 +217,11 @@ const GridControls = ({ edit }: { readonly edit: DirectEdit }) => (
   </div>
 );
 
-const FlexControls = ({ edit }: { readonly edit: DirectEdit }) => {
+const FlexControls = ({
+  edit,
+}: {
+  readonly edit: DirectEdit;
+}): ReactElement => {
   const direction = edit.values["flex-direction"].startsWith("column")
     ? "column"
     : "row";
@@ -274,7 +286,7 @@ const AutoLayoutSection = ({
   readonly title?: string;
   readonly lead?: ReactNode;
   readonly children?: ReactNode;
-}) => {
+}): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   const flex = isFlexDisplay(edit.values.display);
   const grid = isGridDisplay(edit.values.display);

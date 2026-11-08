@@ -1,10 +1,11 @@
+import type { ReactElement } from "react";
 import { Suspense, lazy } from "react";
 
 import type { InspectorProps } from "./inspector-model.js";
 
 const InspectorPropsPanel = lazy(() => import("./inspector-props.js"));
 
-const ComponentSection = (props: InspectorProps) => {
+const ComponentSection = (props: InspectorProps): ReactElement | null => {
   const target = props.selection[0];
 
   if (

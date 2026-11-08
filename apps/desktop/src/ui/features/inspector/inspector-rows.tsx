@@ -2,15 +2,17 @@ import type {
   DirectStyleProperty,
   SelectionContext,
 } from "@design-studio/contracts";
-import { memo, useState, type KeyboardEvent } from "react";
+import { memo, useState } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { textEditability } from "./css-values.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
-import { isSameEditValues, type DirectEdit } from "./use-direct-edit.js";
+import { isSameEditValues } from "./use-direct-edit.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
-function useRowKeys(onCommit: () => void, onRevert: () => void) {
-  return (event: KeyboardEvent<HTMLInputElement>) => {
+const useRowKeys = (onCommit: () => void, onRevert: () => void) => {
+  return (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
       onCommit();
@@ -20,15 +22,15 @@ function useRowKeys(onCommit: () => void, onRevert: () => void) {
       onRevert();
     }
   };
-}
+};
 
-export function ContentRow({
+const ContentRow = ({
   selection,
   edit,
 }: {
   readonly selection: SelectionContext;
   readonly edit: DirectEdit;
-}) {
+}): ReactElement => {
   const state = textEditability(selection);
   const onKeyDown = useRowKeys(edit.commit, edit.revertText);
   const data = useInspectorApp().element?.textFromData;
@@ -40,7 +42,7 @@ export function ContentRow({
   if (state !== "ok") {
     return (
       <div className="ins-field wide readonly">
-        <span className="ins-scrub static">Content</span>
+        <span className="ins-scrub static">{copy.content}</span>
         <span className="ins-value">
           {state === "children"
             ? "Has child elements"
@@ -53,7 +55,7 @@ export function ContentRow({
   return (
     <div className="ins-field wide">
       <label htmlFor="ins-content" className="ins-scrub static">
-        Content
+        {copy.content}
       </label>
       <input
         id="ins-content"
@@ -68,11 +70,11 @@ export function ContentRow({
       />
     </div>
   );
-}
+};
 
 const UNSAFE = /[;{}<>\\]/;
 
-export function CssTextRow({
+const CssTextRow = ({
   prop,
   label,
   short,
@@ -84,13 +86,13 @@ export function CssTextRow({
   readonly short: string;
   readonly edit: DirectEdit;
   readonly placeholder: string;
-}) {
+}): ReactElement => {
   const [text, setText] = useState<string | null>(null);
   const value = edit.values[prop];
   const shown = text ?? (value === "none" ? "" : value);
   const id = `ins-${prop}`;
 
-  const commit = () => {
+  const commit = (): void => {
     if (text !== null) {
       const next = text.trim();
 
@@ -136,13 +138,13 @@ export function CssTextRow({
       />
     </div>
   );
-}
+};
 
-function hasLine(value: string, line: string): boolean {
+const hasLine = (value: string, line: string): boolean => {
   return value.split(/\s+/).includes(line);
-}
+};
 
-function toggleLine(value: string, line: string): string {
+const toggleLine = (value: string, line: string): string => {
   const parts = value
     .split(/\s+/)
     .filter((part) => part !== "" && part !== "none");
@@ -152,45 +154,49 @@ function toggleLine(value: string, line: string): string {
     : [...parts, line];
 
   return next.length === 0 ? "none" : next.join(" ");
-}
+};
 
-function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
+const TextStyleTogglesView = ({
+  edit,
+}: {
+  readonly edit: DirectEdit;
+}): ReactElement => {
   const italic =
     edit.values["font-style"] === "italic" ||
     edit.values["font-style"] === "oblique";
 
   const decoration = edit.values["text-decoration-line"];
 
-  const write = (patch: Partial<Record<DirectStyleProperty, string>>) => {
+  const write = (patch: Partial<Record<DirectStyleProperty, string>>): void => {
     edit.preview(patch);
     edit.commit();
   };
 
   const items = [
     {
+      glyph: <em>{copy.glyphItalic}</em>,
       key: "i",
       label: "Italic",
       on: italic,
-      run: () => write({ "font-style": italic ? "normal" : "italic" }),
-      glyph: <em>I</em>,
+      run: (): void => write({ "font-style": italic ? "normal" : "italic" }),
     },
     {
+      glyph: <u>{copy.glyphUnderline}</u>,
       key: "u",
       label: "Underline",
       on: hasLine(decoration, "underline"),
-      run: () =>
+      run: (): void =>
         write({ "text-decoration-line": toggleLine(decoration, "underline") }),
-      glyph: <u>U</u>,
     },
     {
+      glyph: <s>{copy.glyphStrikethrough}</s>,
       key: "s",
       label: "Strikethrough",
       on: hasLine(decoration, "line-through"),
-      run: () =>
+      run: (): void =>
         write({
           "text-decoration-line": toggleLine(decoration, "line-through"),
         }),
-      glyph: <s>S</s>,
     },
   ];
 
@@ -215,8 +221,13 @@ function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
       ))}
     </div>
   );
-}
+};
 
-export const TextStyleToggles = memo(TextStyleTogglesView, (a, b) =>
-  isSameEditValues(a.edit, b.edit, ["font-style", "text-decoration-line"])
+const TextStyleToggles = memo(TextStyleTogglesView, (first, second) =>
+  isSameEditValues(first.edit, second.edit, [
+    "font-style",
+    "text-decoration-line",
+  ])
 );
+
+export { ContentRow, CssTextRow, TextStyleToggles };

@@ -1,9 +1,10 @@
+import type { ReactElement } from "react";
 import { Suspense } from "react";
 
 import { AccessibilitySlot } from "../../inspector-slots.js";
 import type { InspectorProps } from "./inspector-model.js";
 
-const AccessibilitySection = (props: InspectorProps) => {
+const AccessibilitySection = (props: InspectorProps): ReactElement | null => {
   const target = props.selection[0];
 
   if (

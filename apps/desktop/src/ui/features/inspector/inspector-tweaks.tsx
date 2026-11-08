@@ -1,11 +1,12 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState } from "react";
 
 import { copy } from "./copy.js";
 import { TweaksPanel } from "./tweaks-panel.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 
-export interface InspectorTweaksProps {
+interface InspectorTweaksProps {
   readonly draft: TweaksDraft;
   readonly isRunning: boolean;
   readonly onSuggest: (prompt?: string) => void;
@@ -17,10 +18,10 @@ const TweaksPrompt = ({
 }: {
   readonly isRunning: boolean;
   readonly onSuggest?: (prompt?: string) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
 
-  const send = () => {
+  const send = (): void => {
     if (!onSuggest || running) {
       return;
     }
@@ -31,11 +32,7 @@ const TweaksPrompt = ({
 
   return (
     <div className="ins-tweaks-empty">
-      <p className="ins-tweaks-text">
-        Tweaks are live controls for this design: sliders, colors, switches and
-        menus. Drag them to try values on every frame at once, with no model
-        call.
-      </p>
+      <p className="ins-tweaks-text">{copy.tweaksAreLiveControlsFor}</p>
       <div className="ins-tweaks-prompt">
         <textarea
           aria-label={copy.describeTheTweaksYouWant}
@@ -62,7 +59,7 @@ const TweaksPrompt = ({
             data-tip={copy.claudePicksTheControls}
             onClick={send}
           >
-            Let Claude choose
+            {copy.letClaudeChoose}
           </button>
         )}
         <button
@@ -75,18 +72,20 @@ const TweaksPrompt = ({
           <Icon name="arrowUp" size={14} />
         </button>
       </div>
-      {!onSuggest && <p className="ins-note">Tweaks are not available here.</p>}
+      {!onSuggest && (
+        <p className="ins-note">{copy.tweaksAreNotAvailableHere}</p>
+      )}
     </div>
   );
 };
 
-export const InspectorTweaks = ({
+const InspectorTweaks = ({
   tweaks,
   isBlocked: blocked = false,
 }: {
   readonly tweaks?: InspectorTweaksProps;
   readonly isBlocked: boolean;
-}) => {
+}): ReactElement => {
   const controls = tweaks?.draft.state?.controls.length ?? 0;
 
   if (!tweaks || (tweaks.draft.state && controls === 0)) {
@@ -106,3 +105,7 @@ export const InspectorTweaks = ({
     />
   );
 };
+
+export { InspectorTweaks };
+
+export type { InspectorTweaksProps };

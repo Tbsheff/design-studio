@@ -13,13 +13,16 @@ const UNSHARED_PROPS = new Set([
   "onSessionEnd",
 ]);
 
-const isSameButRect = (a: SelectionContext, b: SelectionContext): boolean => {
-  if (a === b) {
+const isSameButRect = (
+  first: SelectionContext,
+  second: SelectionContext
+): boolean => {
+  if (first === second) {
     return true;
   }
 
-  const left = a as unknown as Record<string, unknown>;
-  const right = b as unknown as Record<string, unknown>;
+  const left = first as unknown as Record<string, unknown>;
+  const right = second as unknown as Record<string, unknown>;
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
 
   for (const key of keys) {
@@ -32,23 +35,25 @@ const isSameButRect = (a: SelectionContext, b: SelectionContext): boolean => {
 };
 
 const isSameSelection = (
-  a: SelectionContext[],
-  b: SelectionContext[]
+  first: SelectionContext[],
+  second: SelectionContext[]
 ): boolean => {
-  if (a === b) {
+  if (first === second) {
     return true;
   }
 
-  if (a.length !== b.length || vectorShown(b)) {
+  if (first.length !== second.length || vectorShown(second)) {
     return false;
   }
 
-  return a.every((item, i) => isSameButRect(item, b[i] as SelectionContext));
+  return first.every((item, index) =>
+    isSameButRect(item, second[index] as SelectionContext)
+  );
 };
 
-const isSameShared = (a: object, b: object): boolean => {
-  const left = a as Record<string, unknown>;
-  const right = b as Record<string, unknown>;
+const isSameShared = (first: object, second: object): boolean => {
+  const left = first as Record<string, unknown>;
+  const right = second as Record<string, unknown>;
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
 
   for (const key of keys) {

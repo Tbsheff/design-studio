@@ -1,6 +1,6 @@
 import { UiSelect } from "@design-studio/ui";
 import { memo, useEffect } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import {
   DEFAULT_BREAKPOINTS,
@@ -8,6 +8,7 @@ import {
   variantPrefix,
 } from "../../../shared/variants.js";
 import type {
+  Breakpoint,
   ParsedVariant,
   VariantState,
   VariantSupport,
@@ -39,7 +40,7 @@ const STATES: { readonly id: VariantState; readonly label: string }[] = [
 const SHOWN_BREAKPOINTS = 4;
 const BASE: ParsedVariant = { breakpoint: null, dark: false, states: [] };
 
-const breakpointsOf = (support: VariantSupport | null) => {
+const breakpointsOf = (support: VariantSupport | null): Breakpoint[] => {
   const list = support?.breakpoints.length
     ? support.breakpoints
     : DEFAULT_BREAKPOINTS;
@@ -57,7 +58,7 @@ const Chip = ({
   readonly isPressed: boolean;
   readonly tip: string;
   readonly onClick: () => void;
-}) => (
+}): ReactElement => (
   <button
     type="button"
     className={`ins-variant-chip ${pressed ? "on" : ""}`}
@@ -95,7 +96,7 @@ const InspectorVariantBarView = ({
   port,
   support,
   quietNote,
-}: Props) => {
+}: Props): ReactElement | null => {
   const prefix = useEditVariant();
   const current = parseVariant(prefix) ?? BASE;
   const off = support?.mode === "none";
@@ -107,7 +108,7 @@ const InspectorVariantBarView = ({
     }
   }, [port, selector, prefix]);
 
-  const choose = (next: ParsedVariant) => {
+  const choose = (next: ParsedVariant): void => {
     const value = variantPrefix(next);
 
     const width = next.breakpoint
@@ -129,7 +130,7 @@ const InspectorVariantBarView = ({
     );
   }
 
-  const toggleState = (state: VariantState) =>
+  const toggleState = (state: VariantState): void =>
     choose({
       ...current,
       states: current.states.includes(state) ? [] : [state],
@@ -187,7 +188,7 @@ const InspectorVariantBarView = ({
             className="ins-add-link ins-variant-base"
             onClick={() => choose(BASE)}
           >
-            Base
+            {copy.base}
           </button>
         </p>
       )}

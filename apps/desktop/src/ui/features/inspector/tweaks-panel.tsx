@@ -1,4 +1,5 @@
 import { Icon, PanelHead } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useMemo } from "react";
 
 import type {
@@ -67,7 +68,7 @@ const RangeInput = ({
   readonly control: RangeTweak;
   readonly value: number;
   readonly onEdit: EditFn;
-}) => {
+}): ReactElement => {
   const id = `twk-${control.id}`;
 
   return (
@@ -93,7 +94,7 @@ const ToggleInput = ({
   readonly control: ToggleTweak;
   readonly isOn: boolean;
   readonly onEdit: EditFn;
-}) => (
+}): ReactElement => (
   <button
     id={`twk-${control.id}`}
     type="button"
@@ -114,7 +115,7 @@ const SelectInput = ({
   readonly control: SelectTweak;
   readonly value: string;
   readonly onEdit: EditFn;
-}) => (
+}): ReactElement => (
   <select
     id={`twk-${control.id}`}
     className="ins-input twk-select"
@@ -137,7 +138,7 @@ const ColorInput = ({
   readonly control: ColorTweak;
   readonly value: string;
   readonly onEdit: EditFn;
-}) => (
+}): ReactElement => (
   <ColorValue
     label={control.label}
     value={value}
@@ -154,7 +155,7 @@ const ControlInput = ({
   readonly control: TweakControl;
   readonly value: TweakValue;
   readonly onEdit: EditFn;
-}) => {
+}): ReactElement => {
   if (control.type === "range") {
     return (
       <RangeInput control={control} value={Number(value)} onEdit={onEdit} />
@@ -186,7 +187,7 @@ const ControlRow = ({
   readonly value: TweakValue;
   readonly isChanged: boolean;
   readonly draft: TweaksDraft;
-}) => {
+}): ReactElement => {
   const labelFor = control.type === "color" ? undefined : `twk-${control.id}`;
 
   return (
@@ -218,7 +219,11 @@ const ControlRow = ({
   );
 };
 
-const Footer = ({ draft }: { readonly draft: TweaksDraft }) => {
+const Footer = ({
+  draft,
+}: {
+  readonly draft: TweaksDraft;
+}): ReactElement | null => {
   if (draft.count === 0 && !draft.commitError) {
     return null;
   }
@@ -239,18 +244,18 @@ const Footer = ({ draft }: { readonly draft: TweaksDraft }) => {
           <button
             type="button"
             className="btn small ghost"
-            disabled={draft.committing}
+            disabled={draft.isCommitting}
             onClick={draft.discard}
           >
-            Discard
+            {copy.discard}
           </button>
           <button
             type="button"
             className="btn small primary"
-            disabled={draft.committing}
+            disabled={draft.isCommitting}
             onClick={() => void draft.commit()}
           >
-            {draft.committing ? "Committing…" : "Commit"}
+            {draft.isCommitting ? "Committing…" : "Commit"}
           </button>
         </div>
       )}
@@ -264,17 +269,13 @@ const EmptyState = ({
 }: {
   readonly isRunning: boolean;
   readonly onSuggest: () => void;
-}) => (
+}): ReactElement => (
   <div className="twk-empty">
     <span className="twk-empty-icon" aria-hidden="true">
       <Icon name="settings" size={18} />
     </span>
-    <h3 className="twk-empty-title">No tweaks yet</h3>
-    <p className="twk-empty-text">
-      Tweaks are live controls for this design: sliders, colors, switches and
-      menus, each bound to a CSS variable. Drag them to preview every frame at
-      once with no model call. Commit saves the values as one version.
-    </p>
+    <h3 className="twk-empty-title">{copy.noTweaksYet}</h3>
+    <p className="twk-empty-text">{copy.tweaksAreLiveControlsFor2}</p>
     <button
       type="button"
       className="btn small primary"
@@ -282,15 +283,17 @@ const EmptyState = ({
       onClick={onSuggest}
     >
       <Icon name="sparkle" size={13} />
-      Suggest tweaks
+      {copy.suggestTweaks}
     </button>
-    {running && (
-      <p className="twk-empty-note">Wait for the current run to finish.</p>
-    )}
+    {running && <p className="twk-empty-note">{copy.waitForTheCurrentRun}</p>}
   </div>
 );
 
-const Problems = ({ problems }: { readonly problems: string[] }) => {
+const Problems = ({
+  problems,
+}: {
+  readonly problems: string[];
+}): ReactElement | null => {
   if (problems.length === 0) {
     return null;
   }
@@ -319,7 +322,7 @@ const Header = ({
   isRunning: running,
   onSuggest,
   hasControls,
-}: Props & { readonly hasControls: boolean }) => (
+}: Props & { readonly hasControls: boolean }): ReactElement => (
   <PanelHead
     title={copy.tabTweaks}
     className="twk-header"
@@ -332,7 +335,7 @@ const Header = ({
           className="btn small ghost"
           onClick={draft.discard}
         >
-          Reset all
+          {copy.resetAll}
         </button>
       )}
       {hasControls && (
@@ -348,18 +351,18 @@ const Header = ({
           onClick={onSuggest}
         >
           <Icon name="sparkle" size={13} />
-          Suggest
+          {copy.suggest}
         </button>
       )}
     </div>
   </PanelHead>
 );
 
-export const TweaksPanel = ({
+const TweaksPanel = ({
   draft,
   isRunning: running,
   onSuggest,
-}: Props) => {
+}: Props): ReactElement => {
   const { state } = draft;
 
   const groups = useMemo(
@@ -424,3 +427,5 @@ export const TweaksPanel = ({
     </div>
   );
 };
+
+export { TweaksPanel };

@@ -7,12 +7,12 @@ import type { AuthoredCss } from "./authored-css.js";
 
 const REPLY_TIMEOUT_MS = 1500;
 
-export interface AuthoredCssState {
+interface AuthoredCssState {
   readonly css: AuthoredCss | null;
   readonly request: () => Promise<AuthoredCss | null>;
 }
 
-export const requestAuthoredCss = (
+const requestAuthoredCss = (
   port: PreviewPort | null,
   selector: string
 ): Promise<AuthoredCss | null> => {
@@ -33,19 +33,19 @@ export const requestAuthoredCss = (
       finish(parseAuthoredReply(message));
     });
 
-    const timer = window.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
+    const timer = globalThis.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
 
-    function finish(result: AuthoredCss | null) {
-      window.clearTimeout(timer);
+    const finish = (result: AuthoredCss | null): void => {
+      globalThis.clearTimeout(timer);
       stop();
       resolve(result);
-    }
+    };
 
     port.post({ requestId, selector, type: "request-authored" });
   });
 };
 
-export const useAuthoredCss = (
+const useAuthoredCss = (
   port: MutableRefObject<PreviewPort | null>,
   selector: string
 ): AuthoredCssState => {
@@ -66,10 +66,13 @@ export const useAuthoredCss = (
     live.current = true;
     void request();
 
-    return () => {
+    return (): void => {
       live.current = false;
     };
   }, [request]);
 
   return { css, request };
 };
+
+export { requestAuthoredCss, useAuthoredCss };
+export type { AuthoredCssState };

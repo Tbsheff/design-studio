@@ -6,7 +6,7 @@ import type { SetImageRequest } from "../../../shared/image.js";
 import { call } from "../../platform/http.js";
 import { isApiError } from "./api-error.js";
 
-export const imageTargetOf = (
+const imageTargetOf = (
   selection: SelectionContext
 ): SetImageRequest["target"] => ({
   background: imageKindOf(selection) === "background",
@@ -17,7 +17,7 @@ export const imageTargetOf = (
   ...(selection.owners?.length ? { owners: selection.owners } : {}),
 });
 
-export const fileData = async (
+const fileData = async (
   file: Blob & { readonly name?: string }
 ): Promise<{ readonly name: string; readonly data: string }> => {
   if (file.size > IMAGE_BYTES_MAX) {
@@ -39,7 +39,7 @@ export const fileData = async (
   return { data: btoa(binary), name: file.name || `pasted-image.${ext}` };
 };
 
-export const imageFileOf = (
+const imageFileOf = (
   list: DataTransferItemList | FileList | null | undefined
 ): File | null => {
   if (!list) {
@@ -62,7 +62,7 @@ export const imageFileOf = (
   return null;
 };
 
-export const clipboardImage = async (): Promise<Blob | null> => {
+const clipboardImage = async (): Promise<Blob | null> => {
   const items = await navigator.clipboard.read();
 
   for (const item of items) {
@@ -76,7 +76,7 @@ export const clipboardImage = async (): Promise<Blob | null> => {
   return null;
 };
 
-export const imageError = (error: unknown): string => {
+const imageError = (error: unknown): string => {
   if (
     isApiError(error) &&
     typeof (error.data as { readonly message?: unknown } | undefined)
@@ -92,11 +92,24 @@ export const imageError = (error: unknown): string => {
   return "The image could not be placed.";
 };
 
-export const imageApi = {
-  set: (pid: string, did: string, request: SetImageRequest) =>
+const imageApi = {
+  set: (
+    pid: string,
+    did: string,
+    request: SetImageRequest
+  ): ReturnType<typeof call<typeof routes.setImageDirectEdit>> =>
     call(routes.setImageDirectEdit, {
       ...request,
       directionId: did,
       projectId: pid,
     }),
+};
+
+export {
+  imageTargetOf,
+  fileData,
+  imageFileOf,
+  clipboardImage,
+  imageError,
+  imageApi,
 };

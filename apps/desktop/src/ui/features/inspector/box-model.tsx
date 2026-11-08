@@ -1,7 +1,7 @@
 import type { DirectStyleProperty } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { SIDES } from "./css-values.js";
@@ -29,7 +29,7 @@ const LinkToggle = ({
   readonly box: Box;
   readonly isLinked: boolean;
   readonly onToggle: () => void;
-}) => {
+}): ReactElement => {
   const name = box === "padding" ? "Padding" : "Margin";
 
   return (
@@ -48,7 +48,7 @@ const LinkToggle = ({
   );
 };
 
-export type DeclaredMargins = Partial<Record<Side, string>>;
+type DeclaredMargins = Partial<Record<Side, string>>;
 
 const autoShown = (
   declared: DeclaredMargins | undefined,
@@ -72,7 +72,7 @@ const SideInput = ({
   readonly edit: DirectEdit;
   readonly isLinked: boolean;
   readonly declared?: DeclaredMargins;
-}) => {
+}): ReactElement => {
   const prop = `${box}-${side}` as DirectStyleProperty;
   const name = box === "padding" ? "Padding" : "Margin";
   const label = `${name} ${SIDE_LABEL[side]}`;
@@ -115,7 +115,7 @@ const BoxRing = (props: {
   readonly onToggle: () => void;
   readonly declared?: DeclaredMargins;
   readonly children: ReactNode;
-}) => {
+}): ReactElement => {
   const { box, edit, isLinked: linked, declared } = props;
 
   return (
@@ -159,13 +159,13 @@ const BoxRing = (props: {
   );
 };
 
-export const BoxModel = ({
+const BoxModel = ({
   edit,
   declared,
 }: {
   readonly edit: DirectEdit;
   readonly declared?: DeclaredMargins;
-}) => {
+}): ReactElement => {
   const [linkPadding, setLinkPadding] = useState(false);
   const [linkMargin, setLinkMargin] = useState(false);
 
@@ -176,13 +176,13 @@ export const BoxModel = ({
         edit={edit}
         isLinked={linkMargin}
         declared={declared}
-        onToggle={() => setLinkMargin((x) => !x)}
+        onToggle={() => setLinkMargin((positionX) => !positionX)}
       >
         <BoxRing
           box="padding"
           edit={edit}
           isLinked={linkPadding}
-          onToggle={() => setLinkPadding((x) => !x)}
+          onToggle={() => setLinkPadding((positionXValue) => !positionXValue)}
         >
           <span className="box-content" aria-hidden="true" />
         </BoxRing>
@@ -190,3 +190,7 @@ export const BoxModel = ({
     </div>
   );
 };
+
+export { BoxModel };
+
+export type { DeclaredMargins };

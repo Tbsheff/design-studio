@@ -81,7 +81,7 @@ const axisStyle = (
 ): Record<string, string> =>
   delta === 0 ? {} : { [prop]: `${Math.round(start + delta)}px` };
 
-export const nudgeStyle = (b: Step): Record<string, string> => {
+const nudgeStyle = (b: Step): Record<string, string> => {
   const { base, dx, dy } = b;
 
   if (base.mode === "margin") {
@@ -231,15 +231,15 @@ const shouldTakeArrowKeys = (): boolean => {
   return true;
 };
 
-export const useElementNudge = (o: Options): void => {
+const useElementNudge = (o: Options): void => {
   const live = useRef(o);
   live.current = o;
   const burst = useRef<Burst | null>(null);
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flushNow = useRef<() => void>(() => undefined);
 
   useEffect(() => {
-    const hintOnce = (text: string) => {
+    const hintOnce = (text: string): void => {
       if (shown.has(text)) {
         return;
       }
@@ -248,7 +248,7 @@ export const useElementNudge = (o: Options): void => {
       live.current.onError(text);
     };
 
-    const restore = (list: Saved[], message: string) => {
+    const restore = (list: Saved[], message: string): void => {
       live.current.post({ type: "preview-reset" });
 
       for (const one of list) {
@@ -260,7 +260,7 @@ export const useElementNudge = (o: Options): void => {
       live.current.onError(message);
     };
 
-    const save = async (b: Burst) => {
+    const save = async (b: Burst): Promise<void> => {
       const cur = live.current;
       const list = savedOf(b);
 
@@ -313,9 +313,9 @@ export const useElementNudge = (o: Options): void => {
       }
     };
 
-    const flush = () => {
+    const flush = (): void => {
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
 
       timer.current = null;
@@ -374,7 +374,7 @@ export const useElementNudge = (o: Options): void => {
       return items.length === 0 ? null : { dx: 0, dy: 0, items, key };
     };
 
-    const press = (wanted: NudgeItem[], dx: number, dy: number) => {
+    const press = (wanted: NudgeItem[], dx: number, dy: number): void => {
       const key = burstKey(wanted.map((item) => item.selector));
 
       if (burst.current && burst.current.key !== key) {
@@ -405,13 +405,13 @@ export const useElementNudge = (o: Options): void => {
       live.current.refreshRects();
 
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
 
-      timer.current = window.setTimeout(flush, SAVE_MS);
+      timer.current = globalThis.setTimeout(flush, SAVE_MS);
     };
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         live.current.isEnabled &&
         live.current.selection.length > 0 &&
@@ -468,15 +468,15 @@ export const useElementNudge = (o: Options): void => {
       }
 
       if (shouldPickNew(message, live.current.selection)) {
-        window.setTimeout(() => editing || keysToCanvas(), 0);
+        globalThis.setTimeout(() => editing || keysToCanvas(), 0);
       }
     });
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
-    return () => {
+    return (): void => {
       stop();
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
       flush();
     };
   }, [o.listen]);
@@ -488,3 +488,5 @@ export const useElementNudge = (o: Options): void => {
     }
   }, [key]);
 };
+
+export { nudgeStyle, useElementNudge };

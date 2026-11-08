@@ -1,24 +1,24 @@
 import { DIRECT_STYLE_PROPERTIES } from "@design-studio/contracts";
 import type { AuthoredRule } from "@design-studio/contracts";
 
-export interface AuthoredCss {
+interface AuthoredCss {
   readonly rules: AuthoredRule[];
   readonly inline: string;
 }
 
-export interface AuthoredDeclaration {
+interface AuthoredDeclaration {
   readonly prop: string;
   readonly value: string;
   readonly source: string;
 }
 
-export const MAX_RULES = 60;
-export const MAX_BYTES = 20_000;
+const MAX_RULES = 60;
+const MAX_BYTES = 20_000;
 const MAX_SELECTOR = 2000;
 const MAX_SOURCE = 200;
 const MAX_PATH = 20;
 const MAX_LABEL = 60;
-export const INLINE_SOURCE = "inline";
+const INLINE_SOURCE = "inline";
 
 const COVERED = new Set<string>([
   ...DIRECT_STYLE_PROPERTIES,
@@ -91,7 +91,7 @@ const splitTopLevel = (
   return parts;
 };
 
-export const parseDeclarations = (
+const parseDeclarations = (
   css: string
 ): { readonly prop: string; readonly value: string }[] => {
   const out: { readonly prop: string; readonly value: string }[] = [];
@@ -126,7 +126,7 @@ const isColorOnly = (value: string): boolean => {
   );
 };
 
-export const isCoveredDeclaration = (prop: string, value: string): boolean => {
+const isCoveredDeclaration = (prop: string, value: string): boolean => {
   if (prop === "background") {
     return isColorOnly(value);
   }
@@ -138,10 +138,10 @@ export const isCoveredDeclaration = (prop: string, value: string): boolean => {
   return prop.startsWith("border-") && !NOT_BORDER_BOX.test(prop);
 };
 
-export const otherStyles = (css: AuthoredCss): AuthoredDeclaration[] => {
+const otherStyles = (css: AuthoredCss): AuthoredDeclaration[] => {
   const winners = new Map<string, AuthoredDeclaration>();
 
-  const take = (text: string, source: string) => {
+  const take = (text: string, source: string): void => {
     for (const { prop, value } of parseDeclarations(text)) {
       if (isCoveredDeclaration(prop, value)) {
         continue;
@@ -169,7 +169,7 @@ const block = (head: string, css: string): string => {
   return `${head} {\n${lines.join("\n")}\n}`;
 };
 
-export const formatCopyCss = (css: AuthoredCss): string => {
+const formatCopyCss = (css: AuthoredCss): string => {
   const blocks = css.rules.map((rule) => block(rule.selector, rule.css));
 
   if (parseDeclarations(css.inline).length > 0) {
@@ -182,7 +182,7 @@ export const formatCopyCss = (css: AuthoredCss): string => {
 const cappedString = (value: unknown, max: number): string | null =>
   typeof value === "string" && value.length <= max ? value : null;
 
-export const parseAuthoredReply = (message: {
+const parseAuthoredReply = (message: {
   readonly rules?: unknown;
   readonly inline?: unknown;
 }): AuthoredCss | null => {
@@ -231,7 +231,7 @@ export const parseAuthoredReply = (message: {
   return { inline, rules };
 };
 
-export const parseSelectionPath = (raw: unknown): string[] => {
+const parseSelectionPath = (raw: unknown): string[] => {
   if (!Array.isArray(raw)) {
     return [];
   }
@@ -249,19 +249,19 @@ export const parseSelectionPath = (raw: unknown): string[] => {
   return path.map((label) => label.slice(0, MAX_LABEL));
 };
 
-export interface PathCrumb {
+interface PathCrumb {
   readonly label: string;
   readonly levels: number;
 }
 
-export type Crumb =
+type Crumb =
   | ({ readonly kind: "node" } & PathCrumb)
   | { readonly kind: "gap"; readonly hidden: PathCrumb[] };
 
-export const pathCrumbs = (path: string[]): PathCrumb[] =>
+const pathCrumbs = (path: string[]): PathCrumb[] =>
   path.map((label, index) => ({ label, levels: path.length - index }));
 
-export const collapseCrumbs = (crumbs: PathCrumb[], max = 4): Crumb[] => {
+const collapseCrumbs = (crumbs: PathCrumb[], max = 4): Crumb[] => {
   const nodes = crumbs.map((crumb): Crumb => ({ kind: "node", ...crumb }));
 
   if (crumbs.length <= max) {
@@ -276,3 +276,19 @@ export const collapseCrumbs = (crumbs: PathCrumb[], max = 4): Crumb[] => {
     ...nodes.slice(crumbs.length - keep),
   ];
 };
+
+export {
+  MAX_RULES,
+  MAX_BYTES,
+  INLINE_SOURCE,
+  parseDeclarations,
+  isCoveredDeclaration,
+  otherStyles,
+  formatCopyCss,
+  parseAuthoredReply,
+  parseSelectionPath,
+  pathCrumbs,
+  collapseCrumbs,
+};
+
+export type { AuthoredCss, AuthoredDeclaration, PathCrumb, Crumb };

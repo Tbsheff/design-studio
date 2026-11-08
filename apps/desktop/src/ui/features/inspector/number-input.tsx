@@ -1,5 +1,5 @@
 import { memo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { normalizeLength, stepValue } from "./css-values.js";
 import { isInherited, useVariantScope } from "./edit-variant.js";
@@ -25,7 +25,18 @@ interface InputProps {
   readonly className?: string;
 }
 
-const useNumberText = (spec: NumberSpec) => {
+interface UseNumberTextResult {
+  readonly apply: (raw: string) => void;
+  readonly cancel: () => void;
+  readonly current: string;
+  readonly isMixed: boolean;
+  readonly nudge: (delta: number, from: string) => void;
+  readonly settle: () => void;
+  readonly text: string | null;
+  readonly unit: string;
+}
+
+const useNumberText = (spec: NumberSpec): UseNumberTextResult => {
   const { edit, prop } = spec;
   const [text, setText] = useState<string | null>(null);
   const start = useRef<string | null>(null);
@@ -35,7 +46,7 @@ const useNumberText = (spec: NumberSpec) => {
   const current = plainLength(edit.values[prop], ui);
   const mixed = edit.mixed.has(prop);
 
-  const apply = (raw: string) => {
+  const apply = (raw: string): void => {
     if (start.current === null) {
       start.current = current;
     }
@@ -57,7 +68,7 @@ const useNumberText = (spec: NumberSpec) => {
     edit.preview(patchFor(spec, next));
   };
 
-  const settle = () => {
+  const settle = (): void => {
     const typed = last.current;
     start.current = null;
     last.current = null;
@@ -70,7 +81,7 @@ const useNumberText = (spec: NumberSpec) => {
     edit.commit();
   };
 
-  const nudge = (delta: number, from: string) => {
+  const nudge = (delta: number, from: string): void => {
     start.current = null;
     last.current = null;
     const next = clamp(stepValue(from, delta, unit), spec);
@@ -79,17 +90,17 @@ const useNumberText = (spec: NumberSpec) => {
     edit.commitSoon();
   };
 
-  const cancel = () => {
+  const cancel = (): void => {
     start.current = null;
     last.current = null;
     setText(null);
     edit.revert(spec.targets ?? [prop]);
   };
 
-  return { apply, cancel, current, mixed, nudge, settle, text, unit };
+  return { apply, cancel, current, isMixed: mixed, nudge, settle, text, unit };
 };
 
-const NumberInputView = ({ spec, id, className }: InputProps) => {
+const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
   const [focused, setFocused] = useState(false);
   const keepSelection = useRef(false);
   const field = useNumberText(spec);
@@ -100,18 +111,18 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
     (focused ? field.current : (spec.display ?? displayLength(field.current)));
 
   const refused =
-    field.mixed &&
+    field.isMixed &&
     field.text !== null &&
     hasCurrentDependency(field.text, field.unit);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     const input = event.currentTarget;
 
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
       const delta = stepOf(event, spec) * (event.key === "ArrowUp" ? 1 : -1);
 
-      if (field.mixed) {
+      if (field.isMixed) {
         shiftMixed(spec, delta);
         spec.edit.commitSoon();
 
@@ -140,7 +151,7 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
       value={shown}
       spellCheck={false}
       autoComplete="off"
-      placeholder={field.mixed ? "Mixed" : "—"}
+      placeholder={field.isMixed ? "Mixed" : "—"}
       aria-invalid={refused || undefined}
       data-tip={
         refused ? "Values differ. Type a number, not a change." : undefined
@@ -172,8 +183,10 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
 
 const NumberInput = memo(
   NumberInputView,
-  (a, b) =>
-    a.id === b.id && a.className === b.className && sameSpec(a.spec, b.spec)
+  (first, second) =>
+    first.id === second.id &&
+    first.className === second.className &&
+    sameSpec(first.spec, second.spec)
 );
 
 export { useNumberText, NumberInputView, NumberInput };

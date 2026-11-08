@@ -1,5 +1,6 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { Icon, UiSelect } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch } from "./constraints.js";
@@ -20,10 +21,10 @@ const PositionRows = ({
 }: {
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
-}) => {
+}): ReactElement => {
   const on = isPositioned(edit.values.position);
 
-  const toggle = () => {
+  const toggle = (): void => {
     if (on) {
       write(edit, IN_FLOW);
     } else {
@@ -50,7 +51,7 @@ const PositionRows = ({
           onClick={toggle}
         >
           <Icon name={on ? "check" : "frame"} size={14} />
-          Absolute position
+          {copy.absolutePosition}
         </button>
       </div>
       {on && <ConstraintRows edit={edit} selection={selection} />}
@@ -101,7 +102,10 @@ const useQueuedPins = (
   edit: DirectEdit,
   selection: SelectionContext,
   applied: (modes: Partial<Record<PinAxis, PinMode>>) => void
-) => {
+): {
+  readonly queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
+  readonly isReady: boolean;
+} => {
   const [queued, setQueued] = useState<QueuedPins | null>(null);
   const ready = hasPinGeometry(selection);
   useEffect(() => {
@@ -146,12 +150,15 @@ const useQueuedPins = (
       return;
     }
 
-    const timers = PIN_RESELECT_MS.map((ms) => window.setTimeout(reselect, ms));
+    const timers = PIN_RESELECT_MS.map((ms) =>
+      globalThis.setTimeout(reselect, ms)
+    );
 
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
+    return (): void =>
+      timers.forEach((timer) => globalThis.clearTimeout(timer));
   }, [waiting, reselect]);
 
-  const queue = (axis: PinAxis, mode: PinMode, from: PinMode) =>
+  const queue = (axis: PinAxis, mode: PinMode, from: PinMode): void =>
     setQueued((prev) => ({
       pins: {
         ...(prev?.selector === selection.selector ? prev.pins : {}),
@@ -160,7 +167,7 @@ const useQueuedPins = (
       selector: selection.selector,
     }));
 
-  return { queue, ready };
+  return { isReady: ready, queue };
 };
 
 const PinSelect = ({
@@ -179,8 +186,8 @@ const PinSelect = ({
   readonly onPick: (axis: PinAxis, mode: PinMode) => void;
   readonly isReady: boolean;
   readonly queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
-}) => {
-  const change = (next: PinMode) => {
+}): ReactElement => {
+  const change = (next: PinMode): void => {
     if (next === mode) {
       return;
     }
@@ -260,9 +267,9 @@ const ConstraintRows = ({
 }: {
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
-}) => {
+}): ReactElement => {
   const { modes, pick } = usePinModes(selection);
-  const { ready, queue } = useQueuedPins(edit, selection, pick);
+  const { isReady: ready, queue } = useQueuedPins(edit, selection, pick);
   const fields = [...pinFields("x", modes.x), ...pinFields("y", modes.y)];
 
   return (

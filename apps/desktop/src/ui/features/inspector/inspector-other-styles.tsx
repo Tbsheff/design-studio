@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { formatCopyCss, otherStyles } from "./authored-css.js";
@@ -8,23 +9,23 @@ import type { AuthoredCssState } from "./use-authored-css.js";
 
 const COPIED_MS = 1500;
 
-export const CopyCssButton = ({
+const CopyCssButton = ({
   authored,
 }: {
   readonly authored: AuthoredCssState;
-}) => {
+}): ReactElement => {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
-    () => () => {
+    () => (): void => {
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
     },
     []
   );
 
-  const copyCss = async () => {
+  const copyCss = async (): Promise<void> => {
     const css = await authored.request();
     let next: "copied" | "failed" = "failed";
 
@@ -40,10 +41,10 @@ export const CopyCssButton = ({
     setState(next);
 
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
 
-    timer.current = window.setTimeout(() => setState("idle"), COPIED_MS);
+    timer.current = globalThis.setTimeout(() => setState("idle"), COPIED_MS);
   };
 
   const label =
@@ -69,11 +70,11 @@ export const CopyCssButton = ({
   );
 };
 
-export const InspectorOtherStyles = ({
+const InspectorOtherStyles = ({
   css,
 }: {
   readonly css: AuthoredCss | null;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
   const rows = css ? otherStyles(css) : [];
 
@@ -90,7 +91,7 @@ export const InspectorOtherStyles = ({
         onClick={() => setOpen((value) => !value)}
       >
         <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
-        <h3>Other styles</h3>
+        <h3>{copy.otherStyles}</h3>
         <span className="ins-other-count">{rows.length}</span>
       </button>
       {open ? (
@@ -102,8 +103,8 @@ export const InspectorOtherStyles = ({
               data-tip={`${row.prop}: ${row.value}\nFrom ${row.source}`}
             >
               <span className="ins-other-decl">
-                <span className="prop">{row.prop}</span>:{" "}
-                <span className="value">{row.value}</span>
+                <span className="prop">{row.prop}</span>
+                {copy.text3} <span className="value">{row.value}</span>
               </span>
               <span className="ins-other-source">{row.source}</span>
             </li>
@@ -113,3 +114,5 @@ export const InspectorOtherStyles = ({
     </section>
   );
 };
+
+export { CopyCssButton, InspectorOtherStyles };

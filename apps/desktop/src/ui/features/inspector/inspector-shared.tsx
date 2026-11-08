@@ -9,61 +9,66 @@ import type { SharedSource } from "@design-studio/contracts/app";
 import { Icon } from "@design-studio/ui";
 import {
   createContext,
+  startTransition,
   useContext,
   useEffect,
   useState,
-  type KeyboardEvent,
 } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
-import { textHints, type DirectEdit } from "./use-direct-edit.js";
+import { textHints } from "./use-direct-edit.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
-export interface InspectorApp {
+interface InspectorApp {
   readonly appDir: string | null;
   readonly ask: ((prompt: string) => void) | null;
   readonly element: ElementSourceInfo | null;
 }
 
-export const InspectorAppContext = createContext<InspectorApp>({
+const InspectorAppContext = createContext<InspectorApp>({
   appDir: null,
   ask: null,
   element: null,
 });
 
-export function useInspectorApp(): InspectorApp {
+const useInspectorApp = (): InspectorApp => {
   return useContext(InspectorAppContext);
-}
+};
 
-function loc(source: { readonly file: string; readonly line: number }): string {
-  return `${source.file}:${source.line}`;
-}
-
-function shortLoc(source: {
+const loc = (source: {
   readonly file: string;
   readonly line: number;
-}): string {
-  return `${source.file.split("/").pop() ?? source.file}:${source.line}`;
-}
+}): string => {
+  return `${source.file}:${source.line}`;
+};
 
-export function dataTextPrompt(text: string, data: TextFromData): string {
+const shortLoc = (source: {
+  readonly file: string;
+  readonly line: number;
+}): string => {
+  return `${source.file.split("/").pop() ?? source.file}:${source.line}`;
+};
+
+const dataTextPrompt = (text: string, data: TextFromData): string => {
   const shown = text.length > 80 ? `${text.slice(0, 79)}…` : text;
 
   return `The text "${shown}" comes from data: ${data.expression} in ${loc(data)}. Change it to: `;
-}
+};
 
 type TextEditScope = Pick<
   DirectEdit,
   "scope" | "text" | "status" | "previewText" | "revertText" | "commit"
 >;
 
-function useTextSource(
+const useTextSource = (
   edit: TextEditScope,
   selection: SelectionContext
-): TextSourceAnswer | null {
+): TextSourceAnswer | null => {
   const [answer, setAnswer] = useState<TextSourceAnswer | null>(null);
   const { projectId, directionId } = edit.scope;
-  const source = selection.source;
+  const { source } = selection;
   const savedAt = edit.status.kind === "saved" ? edit.status.at : 0;
 
   const key = JSON.stringify([
@@ -81,27 +86,41 @@ function useTextSource(
     }
 
     let live = true;
-    api
-      .textSource(projectId, directionId, source, hints)
-      .then((next) => live && setAnswer(next))
-      .catch(() => live && setAnswer({ reason: "" }));
+    startTransition(async () => {
+      try {
+        const next = await api.textSource(
+          projectId,
+          directionId,
+          source,
+          hints
+        );
 
-    return () => {
+        if (live) {
+          setAnswer(next);
+        }
+      } catch {
+        if (live) {
+          setAnswer({ reason: "" });
+        }
+      }
+    });
+
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, key]);
 
   return answer;
-}
+};
 
-function SourceTextRow({
+const SourceTextRow = ({
   found,
   edit,
 }: {
   readonly found: TextSourceInfo;
   readonly edit: TextEditScope;
-}) {
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+}): ReactElement => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
       edit.commit();
@@ -116,7 +135,7 @@ function SourceTextRow({
     <>
       <div className="ins-field wide">
         <label htmlFor="ins-content" className="ins-scrub static">
-          Content
+          {copy.content}
         </label>
         <input
           id="ins-content"
@@ -131,16 +150,18 @@ function SourceTextRow({
       </div>
       <div className="ins-data-text wide" role="note">
         <span>
-          Edits {found.what} in{" "}
-          <code data-tip={loc(found)}>{shortLoc(found)}</code>.
+          {copy.edits}
+          {found.what} {copy.in}{" "}
+          <code data-tip={loc(found)}>{shortLoc(found)}</code>
+          {copy.text4}
           {found.shared ? ` ${found.shared}` : ""}
         </span>
       </div>
     </>
   );
-}
+};
 
-export function DataTextNote({
+const DataTextNote = ({
   data,
   selection,
   edit,
@@ -148,7 +169,7 @@ export function DataTextNote({
   readonly data: TextFromData;
   readonly selection: SelectionContext;
   readonly edit: TextEditScope;
-}) {
+}): ReactElement => {
   const answer = useTextSource(edit, selection);
 
   if (answer && "found" in answer) {
@@ -158,7 +179,7 @@ export function DataTextNote({
   if (!answer && edit.scope.directionId && selection.source) {
     return (
       <div className="ins-data-text wide" role="status">
-        <span>Looking for where this text is set…</span>
+        <span>{copy.lookingForWhereThisText}</span>
       </div>
     );
   }
@@ -170,9 +191,9 @@ export function DataTextNote({
       reason={answer && "reason" in answer ? answer.reason : null}
     />
   );
-}
+};
 
-function DataTextAsk({
+const DataTextAsk = ({
   data,
   text,
   reason,
@@ -180,14 +201,16 @@ function DataTextAsk({
   readonly data: TextFromData;
   readonly text: string;
   readonly reason: string | null;
-}) {
+}): ReactElement => {
   const { ask } = useInspectorApp();
 
   return (
     <div className="ins-data-text wide" role="note">
       <span>
-        This text comes from data: <code>{data.expression}</code> in{" "}
-        <code data-tip={loc(data)}>{shortLoc(data)}</code>.
+        {copy.thisTextComesFromData}
+        <code>{data.expression}</code> {copy.in}{" "}
+        <code data-tip={loc(data)}>{shortLoc(data)}</code>
+        {copy.text4}
         {reason ? ` ${reason}` : ""}
       </span>
       {ask && (
@@ -197,14 +220,14 @@ function DataTextAsk({
           onClick={() => ask(dataTextPrompt(text, data))}
         >
           <Icon name="chat" size={12} />
-          Ask the agent to change it
+          {copy.askTheAgentToChange}
         </button>
       )}
     </div>
   );
-}
+};
 
-export function SharedSourceNote({
+const SharedSourceNote = ({
   shared,
   isEditingUse: editingUse,
   canUse,
@@ -214,18 +237,20 @@ export function SharedSourceNote({
   readonly isEditingUse: boolean;
   readonly canUse: boolean;
   readonly onToggle: () => void;
-}) {
+}): ReactElement => {
   const what = shared.name ?? shared.file.split("/").pop() ?? shared.file;
 
   if (editingUse && shared.use) {
     return (
       <div className="ins-shared" role="note">
         <span>
-          Edits go to this use of {what} in{" "}
+          {copy.editsGoToThisUse}
+          {what} {copy.in}{" "}
           <code data-tip={loc(shared.use)}>{shortLoc(shared.use)}</code>
         </span>
         <button type="button" className="btn small ghost" onClick={onToggle}>
-          Edit every {what}
+          {copy.editEvery}
+          {what}
         </button>
       </div>
     );
@@ -240,14 +265,14 @@ export function SharedSourceNote({
       </span>
       {canUse && shared.use && (
         <button type="button" className="btn small" onClick={onToggle}>
-          Edit this use instead
+          {copy.editThisUseInstead}
         </button>
       )}
     </div>
   );
-}
+};
 
-export function AddButton({
+const AddButton = ({
   label,
   tip,
   shortcut,
@@ -257,7 +282,7 @@ export function AddButton({
   readonly tip?: string;
   readonly shortcut?: string;
   readonly onClick: () => void;
-}) {
+}): ReactElement => {
   return (
     <button
       type="button"
@@ -272,4 +297,14 @@ export function AddButton({
       {label}
     </button>
   );
-}
+};
+
+export {
+  InspectorAppContext,
+  useInspectorApp,
+  dataTextPrompt,
+  DataTextNote,
+  SharedSourceNote,
+  AddButton,
+};
+export type { InspectorApp };

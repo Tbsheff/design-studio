@@ -1,10 +1,12 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useState } from "react";
+import type { ReactElement } from "react";
+import { startTransition, useState } from "react";
 
 import { api, errorText } from "../../api.js";
+import { copy } from "./copy.js";
 
-export const locText = (source: SourceLoc): string =>
+const locText = (source: SourceLoc): string =>
   `${source.file}:${source.line}:${source.col}`;
 
 const shortPath = (file: string): string => {
@@ -13,7 +15,7 @@ const shortPath = (file: string): string => {
   return parts.length > 2 ? parts.slice(-2).join("/") : file;
 };
 
-export const SourceLink = ({
+const SourceLink = ({
   projectId,
   directionId,
   source,
@@ -21,7 +23,7 @@ export const SourceLink = ({
   readonly projectId: string;
   readonly directionId: string | null;
   readonly source: SourceLoc | null;
-}) => {
+}): ReactElement => {
   const [note, setNote] = useState<string | null>(null);
 
   if (!source) {
@@ -30,16 +32,20 @@ export const SourceLink = ({
 
   const text = locText(source);
 
-  const open = () => {
+  const open = (): void => {
     if (!directionId) {
       return;
     }
 
     setNote(null);
-    api
-      .openSource(projectId, directionId, text)
-      .then((result) => setNote(`Opened ${result.path}`))
-      .catch((error: unknown) => setNote(errorText(error)));
+    startTransition(async () => {
+      try {
+        const result = await api.openSource(projectId, directionId, text);
+        setNote(`Opened ${result.path}`);
+      } catch (error: unknown) {
+        setNote(errorText(error));
+      }
+    });
   };
 
   return (
@@ -53,7 +59,9 @@ export const SourceLink = ({
         onClick={open}
       >
         <span className="truncate">
-          {shortPath(source.file)}:{source.line}
+          {shortPath(source.file)}
+          {copy.text3}
+          {source.line}
         </span>
         <Icon name="code" size={12} />
       </button>
@@ -65,3 +73,5 @@ export const SourceLink = ({
     </>
   );
 };
+
+export { locText, SourceLink };

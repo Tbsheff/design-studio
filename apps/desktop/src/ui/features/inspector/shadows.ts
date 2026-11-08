@@ -1,6 +1,6 @@
 import { formatNumber, parseNumber } from "./css-values.js";
 
-export interface Shadow {
+interface Shadow {
   readonly x: string;
   readonly y: string;
   readonly blur: string;
@@ -9,7 +9,7 @@ export interface Shadow {
   readonly isInset: boolean;
 }
 
-export const NEW_SHADOW: Shadow = {
+const NEW_SHADOW: Shadow = {
   blur: "12px",
   color: "rgb(0 0 0 / 0.12)",
   isInset: false,
@@ -21,10 +21,7 @@ export const NEW_SHADOW: Shadow = {
 const LENGTH_RE = /^-?\d*\.?\d+(px|rem|em)?$/iu;
 const BLUR_RE = /^blur\(\s*([^()]*)\s*\)$/iu;
 
-export const splitTopLevel = (
-  value: string,
-  separator: "," | " "
-): string[] => {
+const splitTopLevel = (value: string, separator: "," | " "): string[] => {
   const parts: string[] = [];
   let depth = 0;
   let current = "";
@@ -89,12 +86,19 @@ const parseOne = (raw: string): Shadow | null => {
     return null;
   }
 
-  const [x = "0", y = "0", blur = "0", spread = "0"] = lengths;
+  const [positionX = "0", positionY = "0", blur = "0", spread = "0"] = lengths;
 
-  return { blur, color: colors[0] ?? "", isInset: inset, spread, x, y };
+  return {
+    blur,
+    color: colors[0] ?? "",
+    isInset: inset,
+    spread,
+    x: positionX,
+    y: positionY,
+  };
 };
 
-export const parseShadows = (value: string): Shadow[] | null => {
+const parseShadows = (value: string): Shadow[] | null => {
   const text = value.trim();
 
   if (text === "" || text.toLowerCase() === "none") {
@@ -129,10 +133,10 @@ const formatOne = (shadow: Shadow): string => {
   return parts.filter(Boolean).join(" ");
 };
 
-export const formatShadows = (list: Shadow[]): string =>
+const formatShadows = (list: Shadow[]): string =>
   list.map(formatOne).join(", ");
 
-export const blurOf = (filter: string): string => {
+const blurOf = (filter: string): string => {
   for (const part of splitTopLevel(filter, " ")) {
     const match = BLUR_RE.exec(part);
 
@@ -144,7 +148,7 @@ export const blurOf = (filter: string): string => {
   return "";
 };
 
-export const withBlur = (filter: string, blur: string): string => {
+const withBlur = (filter: string, blur: string): string => {
   const others = splitTopLevel(
     filter.trim().toLowerCase() === "none" ? "" : filter,
     " "
@@ -155,3 +159,14 @@ export const withBlur = (filter: string, blur: string): string => {
 
   return [...others, ...(keep ? [`blur(${blur.trim()})`] : [])].join(" ");
 };
+
+export {
+  NEW_SHADOW,
+  splitTopLevel,
+  parseShadows,
+  formatShadows,
+  blurOf,
+  withBlur,
+};
+
+export type { Shadow };

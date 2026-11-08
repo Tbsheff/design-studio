@@ -6,6 +6,7 @@ import type {
   StyleKind,
   StyleValueRow,
 } from "@design-studio/contracts/style-search";
+import type { ReactElement } from "react";
 
 import {
   colorHex,
@@ -25,7 +26,7 @@ const StateTag = ({
 }: {
   readonly row: StyleValueRow;
   readonly onReplace: () => void;
-}) => {
+}): ReactElement => {
   if (row.state === "raw") {
     return (
       <button
@@ -36,7 +37,7 @@ const StateTag = ({
         data-tip={copy.notATokenReplaceIt}
         onClick={onReplace}
       >
-        raw
+        {copy.raw}
       </button>
     );
   }
@@ -94,14 +95,18 @@ const designCandidates = (
   }));
 };
 
-const isSameValue = (kind: StyleKind, a: string, b: string): boolean => {
+const isSameValue = (
+  kind: StyleKind,
+  first: string,
+  second: string
+): boolean => {
   if (kind === "color") {
-    return colorHex(a) !== null && colorHex(a) === colorHex(b);
+    return colorHex(first) !== null && colorHex(first) === colorHex(second);
   }
 
-  const px = lengthToPx(a);
+  const px = lengthToPx(first);
 
-  return px !== null && px === lengthToPx(b);
+  return px !== null && px === lengthToPx(second);
 };
 
 const canFitKind = (kind: StyleKind, value: string): boolean =>
@@ -109,22 +114,27 @@ const canFitKind = (kind: StyleKind, value: string): boolean =>
 
 const varCandidates = (row: StyleValueRow, vars: PageVar[]): Candidate[] =>
   vars
-    .filter((v) => canFitKind(row.kind, v.value))
-    .map((v) => ({
-      hint: isSameValue(row.kind, v.value, row.value) ? "same value" : "",
-      token: v.name,
-      value: v.value,
+    .filter((pageVar) => canFitKind(row.kind, pageVar.value))
+    .map((pageVarValue) => ({
+      hint: isSameValue(row.kind, pageVarValue.value, row.value)
+        ? "same value"
+        : "",
+      token: pageVarValue.name,
+      value: pageVarValue.value,
     }))
     .sort(
-      (a, b) =>
-        Number(Boolean(b.hint)) - Number(Boolean(a.hint)) ||
-        a.token.localeCompare(b.token)
+      (first, second) =>
+        Number(Boolean(second.hint)) - Number(Boolean(first.hint)) ||
+        first.token.localeCompare(second.token)
     );
 
 const uniqueTokens = (list: Candidate[]): Candidate[] => {
   const seen = new Set<string>();
 
-  return list.filter((c) => !seen.has(c.token) && Boolean(seen.add(c.token)));
+  return list.filter(
+    (candidate) =>
+      !seen.has(candidate.token) && Boolean(seen.add(candidate.token))
+  );
 };
 
 const classCandidates = (row: StyleValueRow, page: StyleHit[]): Candidate[] => {
@@ -148,9 +158,9 @@ const classCandidates = (row: StyleValueRow, page: StyleHit[]): Candidate[] => {
   }
 
   return [...seen.values()].sort(
-    (a, b) =>
-      Number(b.value === row.value) - Number(a.value === row.value) ||
-      a.token.localeCompare(b.token)
+    (first, second) =>
+      Number(second.value === row.value) - Number(first.value === row.value) ||
+      first.token.localeCompare(second.token)
   );
 };
 
@@ -160,7 +170,7 @@ const Swatch = ({
 }: {
   readonly kind: StyleKind;
   readonly value: string;
-}) => {
+}): ReactElement | null => {
   if (kind !== "color") {
     return null;
   }

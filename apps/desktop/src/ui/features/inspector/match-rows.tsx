@@ -4,6 +4,7 @@ import type {
   StyleValueRow,
 } from "@design-studio/contracts/style-search";
 import { Icon, usePopover } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { copy } from "./copy.js";
@@ -25,7 +26,7 @@ const RowMenu = ({
   readonly row: StyleValueRow;
   readonly actions: RowActions;
   readonly replaceLabel: string;
-}) => {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -47,7 +48,7 @@ const RowMenu = ({
     }
   }, [open]);
 
-  const run = (task: () => void) => () => {
+  const run = (task: () => void) => (): void => {
     close(false);
     task();
   };
@@ -66,7 +67,7 @@ const RowMenu = ({
         aria-label={`Actions for ${shownValue(row)}`}
         data-tip={open ? undefined : "Select or replace"}
         data-tip-align="end"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((valueValue) => !valueValue)}
       >
         <Icon name="more" size={14} />
       </button>
@@ -84,7 +85,7 @@ const RowMenu = ({
             onClick={run(() => actions.selectValue(row))}
           >
             <Icon name="pointer" size={14} />
-            <span>Select all with this value</span>
+            <span>{copy.selectAllWithThisValue}</span>
           </button>
           {[...raws, ...named].map((cls) => (
             <button
@@ -97,7 +98,8 @@ const RowMenu = ({
             >
               <Icon name="code" size={14} />
               <span className="sm-menu-class">
-                Select all with <code>{cls}</code>
+                {copy.selectAllWith}
+                <code>{cls}</code>
               </span>
             </button>
           ))}
@@ -125,7 +127,7 @@ const ValueRow = ({
   readonly row: StyleValueRow;
   readonly actions: RowActions;
   readonly replaceLabel: string;
-}) => (
+}): ReactElement => (
   <li className="sm-row" data-testid="style-value" data-row={rowKey(row)}>
     <Swatch kind={row.kind} value={row.value} />
     <span className="sm-value">{shownValue(row)}</span>
@@ -150,7 +152,7 @@ const KindGroup = ({
   readonly rows: StyleValueRow[];
   readonly actions: RowActions;
   readonly replaceLabel: string;
-}) => {
+}): ReactElement | null => {
   const [all, setAll] = useState(false);
 
   if (rows.length === 0) {
@@ -192,7 +194,7 @@ const ScopeToggle = ({
 }: {
   readonly scope: Scope;
   readonly onScope: (scope: Scope) => void;
-}) => (
+}): ReactElement => (
   <div
     className="segmented sm-scope"
     role="radiogroup"
@@ -214,7 +216,11 @@ const ScopeToggle = ({
   </div>
 );
 
-const StatusLine = ({ status }: { readonly status: Status }) => {
+const StatusLine = ({
+  status,
+}: {
+  readonly status: Status;
+}): ReactElement | null => {
   if (status.kind === "idle") {
     return null;
   }

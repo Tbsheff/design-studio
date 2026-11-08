@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useMemo } from "react";
 
 import { copy } from "./copy.js";
@@ -20,14 +21,18 @@ const ShadowRow = ({
   readonly edit: DirectEdit;
   readonly view: ShadowView;
   readonly index: number;
-}) => {
+}): ReactElement => {
   const { list } = view;
   const shadow = list[index] as Shadow;
-  const n = index + 1;
+  const count = index + 1;
 
-  const replace = (patch: Partial<Shadow>) => ({
+  const replace = (
+    patch: Partial<Shadow>
+  ): { readonly "box-shadow": string } => ({
     "box-shadow": formatShadows(
-      list.map((s, i) => (i === index ? { ...s, ...patch } : s))
+      list.map((shadowValue, indexValue) =>
+        indexValue === index ? { ...shadowValue, ...patch } : shadowValue
+      )
     ),
   });
 
@@ -35,7 +40,7 @@ const ShadowRow = ({
     field: Field,
     value: string,
     write: (next: string) => Partial<Shadow>
-  ) =>
+  ): ReturnType<typeof proxyEdit> =>
     proxyEdit(
       edit,
       field === "color" ? "color" : "width",
@@ -57,7 +62,7 @@ const ShadowRow = ({
       ? {
           ...ui,
           requestCreate: request
-            ? (req: Parameters<typeof request>[0]) =>
+            ? (req: Parameters<typeof request>[0]): void =>
                 request({ ...req, targets: [] })
             : null,
         }
@@ -67,33 +72,40 @@ const ShadowRow = ({
   const colorEdit = fieldEdit("color", shadow.color, (color) => ({ color }));
 
   return (
-    <li className="ins-shadow" aria-label={`Shadow ${n}`}>
+    <li className="ins-shadow" aria-label={`Shadow ${count}`}>
       <div className="ins-shadow-head">
-        <span className="ins-shadow-name">Shadow {n}</span>
+        <span className="ins-shadow-name">
+          {copy.shadow}
+          {count}
+        </span>
         <button
           type="button"
           className="ins-chip-toggle"
           aria-pressed={shadow.isInset}
-          aria-label={`Shadow ${n} inset`}
+          aria-label={`Shadow ${count} inset`}
           data-tip={shadow.isInset ? "Inner shadow" : "Drop shadow"}
           onClick={() =>
             writeShadows(edit, view, (own) =>
-              own.map((s, i) =>
-                i === index ? { ...s, isInset: !shadow.isInset } : s
+              own.map((shadowValue2, indexValue2) =>
+                indexValue2 === index
+                  ? { ...shadowValue2, isInset: !shadow.isInset }
+                  : shadowValue2
               )
             )
           }
         >
-          Inset
+          {copy.inset}
         </button>
         <button
           type="button"
           className="icon-btn small"
-          aria-label={`Remove shadow ${n}`}
+          aria-label={`Remove shadow ${count}`}
           data-tip={copy.removeShadow}
           data-tip-align="end"
           onClick={() =>
-            writeShadows(edit, view, (own) => own.filter((_, i) => i !== index))
+            writeShadows(edit, view, (own) =>
+              own.filter((_shadowValue3, indexValue3) => indexValue3 !== index)
+            )
           }
         >
           <Icon name="minus" size={14} />
@@ -109,7 +121,7 @@ const ShadowRow = ({
               edit: fieldEdit(part, shadow[part], (value) => ({
                 [part]: value || "0",
               })),
-              label: `Shadow ${n} ${label.toLowerCase()}`,
+              label: `Shadow ${count} ${label.toLowerCase()}`,
               min,
               prop: "width",
             }}
@@ -119,7 +131,7 @@ const ShadowRow = ({
       <TokenUiContext.Provider value={colorUi}>
         <ColorField
           prop="color"
-          label={`Shadow ${n} color`}
+          label={`Shadow ${count} color`}
           short="Color"
           edit={colorEdit}
         />

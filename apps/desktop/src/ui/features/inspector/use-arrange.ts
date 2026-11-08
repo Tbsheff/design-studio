@@ -14,7 +14,13 @@ import {
 } from "./arrange-model.js";
 import type { Props, Message } from "./arrange-model.js";
 
-const useArrange = (props: Props) => {
+const useArrange = (
+  props: Props
+): {
+  readonly isBusy: boolean;
+  readonly message: Message | null;
+  readonly run: (action: ArrangeAction) => Promise<void>;
+} => {
   const latest = useRef(props);
   latest.current = props;
   const [busy, setBusy] = useState(false);
@@ -25,14 +31,16 @@ const useArrange = (props: Props) => {
       return;
     }
 
-    const timer = window.setTimeout(() => setMessage(null), OK_MS);
+    const timer = globalThis.setTimeout(() => setMessage(null), OK_MS);
 
-    return () => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [message]);
-  const key = props.selection.map((s) => s.selector).join("\n");
+  const key = props.selection
+    .map((selectionContext) => selectionContext.selector)
+    .join("\n");
   useEffect(() => setMessage(null), [key]);
 
-  const run = async (action: ArrangeAction) => {
+  const run = async (action: ArrangeAction): Promise<void> => {
     const cur = latest.current;
 
     if (!cur.directionId || busyRef.current || cur.selection.length === 0) {
@@ -45,7 +53,9 @@ const useArrange = (props: Props) => {
 
     try {
       await cur.control.current?.settle();
-      const targets = cur.selection.map((s) => ({ selector: s.selector }));
+      const targets = cur.selection.map((selectionContextValue) => ({
+        selector: selectionContextValue.selector,
+      }));
 
       const result = await arrangeRequest(cur.projectId, cur.directionId, {
         action,
@@ -67,7 +77,7 @@ const useArrange = (props: Props) => {
     }
   };
 
-  return { busy, message, run };
+  return { isBusy: busy, message, run };
 };
 
 const chordOf = (event: KeyboardEvent): string | null => {
@@ -86,11 +96,11 @@ const useArrangeKeys = (
   const latest = useRef({ active, run });
   latest.current = { active, run };
   useEffect(() => {
-    const ready = () =>
+    const ready = (): boolean =>
       latest.current.active &&
       Boolean(root.current && !root.current.closest("[inert]"));
 
-    const fire = (chord: string | null, event?: Event) => {
+    const fire = (chord: string | null, event?: Event): void => {
       const action = chord ? ARRANGE_SHORTCUTS[chord] : undefined;
 
       if (!action || !ready()) {
@@ -101,23 +111,23 @@ const useArrangeKeys = (
       latest.current.run(action);
     };
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (!isTypingTarget(event.target)) {
         fire(chordOf(event), event);
       }
     };
 
-    const onForwarded = (event: Event) =>
+    const onForwarded = (event: Event): void =>
       fire(
         (event as CustomEvent<{ readonly key?: string }>).detail?.key ?? null
       );
 
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
 
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
+    return (): void => {
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
     };
   }, [root]);
 };

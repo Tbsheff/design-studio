@@ -24,18 +24,18 @@ import { uiStore, useUi } from "../../platform/storage.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import type { StyleValues } from "./css-values.js";
 
-export interface SnapNote {
+interface SnapNote {
   readonly cssVar: string;
   readonly raw: Partial<StyleValues>;
 }
 
-export interface CreateRequest {
+interface CreateRequest {
   readonly prop: DirectStyleProperty;
   readonly value: string;
   readonly targets: DirectStyleProperty[];
 }
 
-export interface TokenUi {
+interface TokenUi {
   readonly entries: CompiledTokenEntry[];
   readonly mode: TokenMode;
   readonly shouldSnap: boolean;
@@ -43,13 +43,13 @@ export interface TokenUi {
   readonly requestCreate: ((req: CreateRequest) => void) | null;
 }
 
-export const TokenUiContext = createContext<TokenUi | null>(null);
+const TokenUiContext = createContext<TokenUi | null>(null);
 
-export const useTokenUi = (): TokenUi | null => useContext(TokenUiContext);
+const useTokenUi = (): TokenUi | null => useContext(TokenUiContext);
 
 const NOTE_MS = 8000;
 
-export const snapTarget = (
+const snapTarget = (
   prop: DirectStyleProperty,
   value: string,
   entries: CompiledTokenEntry[],
@@ -66,7 +66,7 @@ export const snapTarget = (
   return isSnappable(group, best) ? best.cssVar : null;
 };
 
-export const useSnapSetting = (
+const useSnapSetting = (
   projectId: string
 ): [boolean, (on: boolean) => void] => {
   const ui = useUi();
@@ -74,8 +74,8 @@ export const useSnapSetting = (
 
   const set = useCallback(
     (next: boolean) =>
-      uiStore.set((s) => ({
-        snapByProject: { ...s.snapByProject, [projectId]: next },
+      uiStore.set((uiState) => ({
+        snapByProject: { ...uiState.snapByProject, [projectId]: next },
       })),
     [projectId]
   );
@@ -83,16 +83,26 @@ export const useSnapSetting = (
   return [on, set];
 };
 
-export const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
+interface UseTokenSnapResult {
+  readonly dismiss: () => void;
+  readonly keepRaw: (raw: Partial<StyleValues>) => void;
+  readonly note: SnapNote | null;
+  readonly rewrite: (style: Partial<StyleValues>) => Partial<StyleValues>;
+}
+
+const useTokenSnap = (
+  tokens: DesignTokens | null,
+  snapOn: boolean
+): UseTokenSnapResult => {
   const [note, setNote] = useState<SnapNote | null>(null);
   const kept = useRef<Partial<StyleValues>>({});
   const live = useRef({ snapOn, tokens });
   live.current = { snapOn, tokens };
 
   const rewrite = useCallback((style: Partial<StyleValues>) => {
-    const { tokens: t, snapOn: on } = live.current;
+    const { tokens: token, snapOn: on } = live.current;
 
-    if (!t || !on) {
+    if (!token || !on) {
       setNote(null);
 
       return style;
@@ -110,7 +120,7 @@ export const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
         continue;
       }
 
-      const target = snapTarget(prop, value, t.entries, t.mode);
+      const target = snapTarget(prop, value, token.entries, token.mode);
 
       if (!target) {
         continue;
@@ -138,9 +148,9 @@ export const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
       return;
     }
 
-    const id = window.setTimeout(() => setNote(null), NOTE_MS);
+    const id = globalThis.setTimeout(() => setNote(null), NOTE_MS);
 
-    return () => window.clearTimeout(id);
+    return (): void => globalThis.clearTimeout(id);
   }, [note]);
 
   return useMemo(
@@ -148,3 +158,7 @@ export const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
     [rewrite, note, keepRaw, dismiss]
   );
 };
+
+export { TokenUiContext, useTokenUi, snapTarget, useSnapSetting, useTokenSnap };
+
+export type { SnapNote, CreateRequest, TokenUi };

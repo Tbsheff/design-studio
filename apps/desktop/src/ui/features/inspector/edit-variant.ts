@@ -13,7 +13,7 @@ const emit = (): void => {
   listeners.forEach((listener) => listener());
 };
 
-export const editVariantStore = {
+const editVariantStore = {
   get: (): string => prefix,
   set: (next: string): void => {
     if (next === prefix) {
@@ -32,10 +32,10 @@ export const editVariantStore = {
   },
 };
 
-export const useEditVariant = (): string =>
+const useEditVariant = (): string =>
   useSyncExternalStore(editVariantStore.subscribe, editVariantStore.get);
 
-export const fitFrameTo = (width: number | null): void => {
+const fitFrameTo = (width: number | null): void => {
   const { viewport } = uiStore.get();
 
   if (width === null) {
@@ -66,7 +66,7 @@ export const fitFrameTo = (width: number | null): void => {
   }
 };
 
-export const postForceState = (
+const postForceState = (
   port: PreviewPort | null,
   selector: string | null,
   variant: string
@@ -83,7 +83,7 @@ export const postForceState = (
   });
 };
 
-export const resetEditVariant = (port: PreviewPort | null): void => {
+const resetEditVariant = (port: PreviewPort | null): void => {
   if (prefix === "") {
     return;
   }
@@ -93,20 +93,30 @@ export const resetEditVariant = (port: PreviewPort | null): void => {
   postForceState(port, null, "");
 };
 
-export interface VariantScope {
+interface VariantScope {
   readonly prefix: string;
   readonly props: ReadonlySet<string>;
 }
 
-export const VariantScopeContext = createContext<VariantScope>({
+const VariantScopeContext = createContext<VariantScope>({
   prefix: "",
   props: new Set(),
 });
 
-export const useVariantScope = (): VariantScope =>
-  useContext(VariantScopeContext);
+const useVariantScope = (): VariantScope => useContext(VariantScopeContext);
 
-export const isInherited = (
-  scope: VariantScope,
-  prop: DirectStyleProperty
-): boolean => scope.prefix !== "" && !scope.props.has(prop);
+const isInherited = (scope: VariantScope, prop: DirectStyleProperty): boolean =>
+  scope.prefix !== "" && !scope.props.has(prop);
+
+export {
+  editVariantStore,
+  useEditVariant,
+  fitFrameTo,
+  postForceState,
+  resetEditVariant,
+  VariantScopeContext,
+  useVariantScope,
+  isInherited,
+};
+
+export type { VariantScope };

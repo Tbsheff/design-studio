@@ -1,6 +1,6 @@
 import type { StyleValueRow } from "@design-studio/contracts/style-search";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { shownValue, Swatch } from "./match-candidates.js";
@@ -13,7 +13,7 @@ const TokenPicker = (props: {
   readonly target: string;
   readonly onPick: (token: string) => void;
   readonly onClose: () => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -24,14 +24,14 @@ const TokenPicker = (props: {
 
   const shown = props.candidates
     .filter(
-      (c) =>
+      (candidateValue) =>
         !filter ||
-        c.token.toLowerCase().includes(filter) ||
-        c.hint.toLowerCase().includes(filter)
+        candidateValue.token.toLowerCase().includes(filter) ||
+        candidateValue.hint.toLowerCase().includes(filter)
     )
     .slice(0, PICK_SHOWN);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
@@ -53,7 +53,9 @@ const TokenPicker = (props: {
       aria-label={`Replace ${shownValue(props.row)} with a token`}
     >
       <p className="sm-picker-head">
-        Replace <code>{shownValue(props.row)}</code> on {props.target}
+        {copy.replace}
+        <code>{shownValue(props.row)}</code> {copy.on}
+        {props.target}
       </p>
       <input
         ref={input}
@@ -63,7 +65,7 @@ const TokenPicker = (props: {
         value={text}
         spellCheck={false}
         autoComplete="off"
-        onChange={(e) => setText(e.target.value)}
+        onChange={(changeEvent) => setText(changeEvent.target.value)}
         onKeyDown={onKeyDown}
       />
       <div className="sm-picker-list" role="listbox" aria-label={copy.tokens}>
@@ -85,9 +87,7 @@ const TokenPicker = (props: {
           </button>
         ))}
         {shown.length === 0 && (
-          <p className="sm-empty">
-            Type a CSS variable or a Tailwind class, then press Return.
-          </p>
+          <p className="sm-empty">{copy.typeACssVariableOr}</p>
         )}
       </div>
       <div className="sm-picker-actions">
@@ -96,7 +96,7 @@ const TokenPicker = (props: {
           className="btn ghost small"
           onClick={props.onClose}
         >
-          Cancel
+          {copy.cancel}
         </button>
         <button
           type="button"
@@ -104,7 +104,7 @@ const TokenPicker = (props: {
           disabled={!text.trim()}
           onClick={() => props.onPick(text.trim())}
         >
-          Replace
+          {copy.replace2}
         </button>
       </div>
     </div>

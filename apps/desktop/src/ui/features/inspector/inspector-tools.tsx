@@ -2,7 +2,7 @@ import type { InsertKind, SelectionContext } from "@design-studio/contracts";
 import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { MutableRefObject, ReactNode } from "react";
+import type { MutableRefObject, ReactNode, ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
 import {
@@ -32,7 +32,7 @@ interface Props {
   readonly onRedo?: () => void;
 }
 
-const Glyph = ({ d }: { readonly d: string }) => (
+const Glyph = ({ d: diff }: { readonly d: string }): ReactElement => (
   <svg
     width="14"
     height="14"
@@ -44,7 +44,7 @@ const Glyph = ({ d }: { readonly d: string }) => (
     strokeLinejoin="round"
     aria-hidden="true"
   >
-    <path d={d} />
+    <path d={diff} />
   </svg>
 );
 
@@ -87,7 +87,7 @@ const ToolButton = ({
   readonly align?: "start" | "end";
   readonly onClick: () => void;
   readonly children: ReactNode;
-}) => (
+}): ReactElement => (
   <button
     type="button"
     className="ins-tool"
@@ -102,7 +102,7 @@ const ToolButton = ({
   </button>
 );
 
-const VariantsButton = () => {
+const VariantsButton = (): ReactElement => {
   const blocked = commandBlocker(TRY_VARIANTS_COMMAND);
 
   return (
@@ -122,7 +122,7 @@ const VariantsButton = () => {
   );
 };
 
-const VectorButtons = () => {
+const VectorButtons = (): ReactElement => {
   const { tool, available } = useVectorTool();
 
   return (
@@ -147,7 +147,7 @@ const VectorButtons = () => {
   );
 };
 
-export const InspectorTools = (props: Props) => {
+const InspectorTools = (props: Props): ReactElement => {
   const [notice, setNotice] = useState<string | null>(null);
   const last = props.selection.at(-1);
 
@@ -160,7 +160,7 @@ export const InspectorTools = (props: Props) => {
       : "Adding elements works on one element in an HTML file"
     : "Select a parent element first";
 
-  const select = () => {
+  const select = (): void => {
     if (props.onSelectMode) {
       return props.onSelectMode();
     }
@@ -170,7 +170,7 @@ export const InspectorTools = (props: Props) => {
     }
   };
 
-  const directSelect = () => {
+  const directSelect = (): void => {
     if (last) {
       props.port.current?.post({
         move: "child",
@@ -180,19 +180,19 @@ export const InspectorTools = (props: Props) => {
     }
   };
 
-  const history = (redo: boolean) => {
+  const history = (redo: boolean): void => {
     const own = redo ? props.onRedo : props.onUndo;
 
     if (own) {
       return own();
     }
 
-    window.dispatchEvent(
+    globalThis.dispatchEvent(
       new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo } })
     );
   };
 
-  const insert = async (kind: InsertKind) => {
+  const insert = async (kind: InsertKind): Promise<void> => {
     const source = last?.source;
 
     if (!props.directionId || !last || !source) {
@@ -285,3 +285,5 @@ export const InspectorTools = (props: Props) => {
     </div>
   );
 };
+
+export { InspectorTools };

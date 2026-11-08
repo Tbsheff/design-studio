@@ -40,13 +40,15 @@ const fieldPart = (index: number, field: Field): ShiftPart => ({
   key: `${index}.${field}`,
   map: (raw, change) =>
     eachList(raw, (list) =>
-      list.map((s, i) =>
-        i === index
+      list.map((shadow, indexValue) =>
+        indexValue === index
           ? {
-              ...s,
-              [field]: change(s[field]) || (field === "color" ? s.color : "0"),
+              ...shadow,
+              [field]:
+                change(shadow[field]) ||
+                (field === "color" ? shadow.color : "0"),
             }
-          : s
+          : shadow
       )
     ),
 });

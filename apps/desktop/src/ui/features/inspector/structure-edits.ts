@@ -10,17 +10,17 @@ import { STRUCTURE_KEY_IDS } from "../../../shared/structure-keys.js";
 import type { PreviewMenuItem } from "../canvas/preview-menu.js";
 import { parseLoc } from "../comments/comment-anchors.js";
 
-export type SelectionOp = "delete" | "duplicate" | "wrap" | "unwrap" | "group";
+type SelectionOp = "delete" | "duplicate" | "wrap" | "unwrap" | "group";
 
-export type LayerDrop =
+type LayerDrop =
   | { readonly into: number }
   | { readonly before: number }
   | { readonly after: number };
 
-export const NO_SOURCE =
+const NO_SOURCE =
   "This element has no source location, so it cannot be changed here.";
 
-export const selectionTargets = (
+const selectionTargets = (
   selection: SelectionContext[]
 ): StructureTarget[] | null => {
   if (selection.length === 0 || selection.some((entry) => !entry.source)) {
@@ -34,26 +34,24 @@ export const selectionTargets = (
   }));
 };
 
-export const nodeTarget = (
-  node: LayerNode | undefined
-): StructureTarget | null => {
+const nodeTarget = (node: LayerNode | undefined): StructureTarget | null => {
   const source = parseLoc(node?.loc);
 
   return node && source ? { source, tag: node.tag } : null;
 };
 
-const isSameLoc = (a: StructureTarget, b: StructureTarget): boolean =>
-  a.source.file === b.source.file &&
-  a.source.line === b.source.line &&
-  a.source.col === b.source.col;
+const isSameLoc = (first: StructureTarget, second: StructureTarget): boolean =>
+  first.source.file === second.source.file &&
+  first.source.line === second.source.line &&
+  first.source.col === second.source.col;
 
-export const dropRequest = (
+const dropRequest = (
   nodes: LayerNode[],
   id: number,
   drop: LayerDrop,
   selection: SelectionContext[]
 ): StructureEditRequest | null => {
-  const byId = (key: number) =>
+  const byId = (key: number): StructureTarget | null =>
     nodeTarget(nodes.find((node) => node.id === key));
 
   const dragged = byId(id);
@@ -85,7 +83,7 @@ export const dropRequest = (
     : { after: ref, op: "move", targets };
 };
 
-export interface StructureMenuState {
+interface StructureMenuState {
   readonly count: number;
   readonly hasSource: boolean;
   readonly canPaste: boolean;
@@ -141,7 +139,7 @@ const blockReason = (
   return undefined;
 };
 
-export const structureMenuItems = (
+const structureMenuItems = (
   state: StructureMenuState,
   run: (key: StructureKey) => void,
   leadDivider = false
@@ -164,3 +162,13 @@ export const structureMenuItems = (
       ...(disabled ? { disabled } : {}),
     };
   });
+
+export {
+  NO_SOURCE,
+  selectionTargets,
+  nodeTarget,
+  dropRequest,
+  structureMenuItems,
+};
+
+export type { SelectionOp, LayerDrop, StructureMenuState };

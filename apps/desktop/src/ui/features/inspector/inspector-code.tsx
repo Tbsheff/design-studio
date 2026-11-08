@@ -1,8 +1,8 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { EditorInfo } from "@design-studio/contracts/export";
 import { Icon } from "@design-studio/ui";
-import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import { startTransition, useEffect, useState } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
@@ -29,7 +29,7 @@ type Snippet =
 const TOKEN =
   /(<!--[\s\S]*?-->|\{\/\*[\s\S]*?\*\/\})|(<\/?[A-Za-z][\w.:-]*|\/?>)|("[^"]*"|'[^']*'|`[^`]*`)|([A-Za-z_:][\w:.-]*)(?==)|(\{|\})/gu;
 
-export const highlight = (code: string): ReactNode[] => {
+const highlight = (code: string): ReactNode[] => {
   const out: ReactNode[] = [];
   let at = 0;
   let index = 0;
@@ -86,8 +86,8 @@ const useSnippet = (
     if (!directionId || !source) {
       setSnippet({
         code: fallback,
-        isExact: false,
         file: "",
+        isExact: false,
         kind: "ready",
         line: 0,
       });
@@ -97,9 +97,10 @@ const useSnippet = (
 
     let live = true;
     setSnippet((prev) => (prev.kind === "ready" ? prev : { kind: "loading" }));
-    api
-      .elementSource(projectId, directionId, source)
-      .then((result) => {
+    startTransition(async () => {
+      try {
+        const result = await api.elementSource(projectId, directionId, source);
+
         if (!live) {
           return;
         }
@@ -108,26 +109,27 @@ const useSnippet = (
           result.code === null
             ? {
                 code: fallback,
-                isExact: false,
                 file: result.file,
+                isExact: false,
                 kind: "ready",
                 line: result.line,
               }
             : {
                 code: result.code,
-                isExact: true,
                 file: result.file,
+                isExact: true,
                 kind: "ready",
                 line: result.line,
               }
         );
-      })
-      .catch(
-        (error: unknown) =>
-          live && setSnippet({ kind: "error", message: errorText(error) })
-      );
+      } catch (error: unknown) {
+        if (live) {
+          setSnippet({ kind: "error", message: errorText(error) });
+        }
+      }
+    });
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, key, tick, fallback]);
@@ -143,14 +145,17 @@ const OpenInEditor = ({
   readonly projectId: string;
   readonly directionId: string;
   readonly file: string;
-}) => {
+}): ReactElement | null => {
   const [editors, setEditors] = useState<EditorInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    exportApi
-      .editors()
-      .then(setEditors)
-      .catch(() => setEditors([]));
+    startTransition(async () => {
+      try {
+        setEditors(await exportApi.editors());
+      } catch {
+        setEditors([]);
+      }
+    });
   }, []);
   const editor = editors?.[0];
 
@@ -167,29 +172,39 @@ const OpenInEditor = ({
         data-tip-align="end"
         onClick={() => {
           setError(null);
-          exportApi
-            .openInEditor(projectId, directionId, editor.id, file)
-            .catch((err: unknown) => setError(errorText(err)));
+          startTransition(async () => {
+            try {
+              await exportApi.openInEditor(
+                projectId,
+                directionId,
+                editor.id,
+                file
+              );
+            } catch (err: unknown) {
+              setError(errorText(err));
+            }
+          });
         }}
       >
         <Icon name="file" size={13} />
-        Open in {editor.name}
+        {copy.openIn}
+        {editor.name}
       </button>
       {error && <span className="ins-code-error">{error}</span>}
     </>
   );
 };
 
-const CopySnippet = ({ code }: { readonly code: string }) => {
+const CopySnippet = ({ code }: { readonly code: string }): ReactElement => {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) {
       return;
     }
 
-    const timer = window.setTimeout(() => setCopied(false), 1500);
+    const timer = globalThis.setTimeout(() => setCopied(false), 1500);
 
-    return () => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [copied]);
 
   return (
@@ -197,7 +212,10 @@ const CopySnippet = ({ code }: { readonly code: string }) => {
       type="button"
       className="btn ghost small has-icon"
       onClick={() => {
-        void navigator.clipboard.writeText(code).then(() => setCopied(true));
+        startTransition(async () => {
+          await navigator.clipboard.writeText(code);
+          setCopied(true);
+        });
       }}
     >
       <Icon name={copied ? "check" : "copy"} size={13} />
@@ -206,15 +224,15 @@ const CopySnippet = ({ code }: { readonly code: string }) => {
   );
 };
 
-export const InspectorCode = ({ projectId, directionId, selection }: Props) => {
+const InspectorCode = ({
+  projectId,
+  directionId,
+  selection,
+}: Props): ReactElement => {
   const snippet = useSnippet(projectId, directionId, selection);
 
   if (!selection) {
-    return (
-      <p className="ins-hint">
-        Select an element on the canvas to see its source code.
-      </p>
-    );
+    return <p className="ins-hint">{copy.selectAnElementOnThe}</p>;
   }
 
   return (
@@ -248,13 +266,13 @@ export const InspectorCode = ({ projectId, directionId, selection }: Props) => {
         </p>
       )}
       {snippet.kind === "loading" && (
-        <p className="ins-hint">Loading source…</p>
+        <p className="ins-hint">{copy.loadingSource}</p>
       )}
       {snippet.kind === "ready" && (
         <>
           {!snippet.isExact && (
             <p className="ins-note ins-code-note">
-              No source location. This is the rendered HTML.
+              {copy.noSourceLocationThisIs}
             </p>
           )}
           <pre
@@ -269,3 +287,5 @@ export const InspectorCode = ({ projectId, directionId, selection }: Props) => {
     </div>
   );
 };
+
+export { highlight, InspectorCode };

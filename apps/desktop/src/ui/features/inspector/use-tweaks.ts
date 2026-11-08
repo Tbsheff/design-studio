@@ -1,5 +1,12 @@
 import type { Project, RunRequest, Version } from "@design-studio/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { tweaksPreviewCss } from "../../../shared/tweaks.js";
 import type {
@@ -18,7 +25,7 @@ import { isApiConflict } from "./api-error.js";
 
 type TweakMap = Record<string, TweakValue>;
 
-export const TWEAKS_REQUEST: RunRequest = {
+const TWEAKS_REQUEST: RunRequest = {
   mode: "edit",
   prompt:
     "Suggest tweaks for this design: add 3 to 8 live controls (spacing, accent color, radius, density, font size, a layout toggle) bound to CSS variables. Keep the look the same at the default values.",
@@ -49,7 +56,13 @@ const baseValue = (
   control: TweakControl
 ): TweakValue => state?.current[control.id] ?? control.default;
 
-const useTweaksState = (o: Options) => {
+const useTweaksState = (
+  options: Options
+): {
+  readonly loadError: string | null;
+  readonly replace: (state: TweaksState) => void;
+  readonly state: TweaksState | null;
+} => {
   const [loaded, setLoaded] = useState<{
     readonly key: string;
     readonly state: TweaksState;
@@ -58,37 +71,40 @@ const useTweaksState = (o: Options) => {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const headVersionId =
-    o.project?.directions.find((x) => x.id === o.directionId)?.headVersionId ??
-    null;
+    options.project?.directions.find(
+      (direction) => direction.id === options.directionId
+    )?.headVersionId ?? null;
 
-  const stamp = changeStamp(o.lastChange, o.directionId);
-  const key = `${o.projectId}:${o.directionId}`;
+  const stamp = changeStamp(options.lastChange, options.directionId);
+  const key = `${options.projectId}:${options.directionId}`;
   const live = useRef(key);
   live.current = key;
 
   useEffect(() => {
-    const directionId = o.directionId;
+    const { directionId } = options;
 
     if (!directionId) {
       return;
     }
 
-    const want = `${o.projectId}:${directionId}`;
-    api
-      .getTweaks(o.projectId, directionId)
-      .then((state) => {
+    const want = `${options.projectId}:${directionId}`;
+    startTransition(async () => {
+      try {
+        const state = await api.getTweaks(options.projectId, directionId);
+
         if (live.current !== want) {
           return;
         }
 
         setLoaded({ key: want, state });
         setLoadError(null);
-      })
-      .catch(
-        (error: unknown) =>
-          live.current === want && setLoadError(errorText(error))
-      );
-  }, [o.projectId, o.directionId, headVersionId, stamp]);
+      } catch (error: unknown) {
+        if (live.current === want) {
+          setLoadError(errorText(error));
+        }
+      }
+    });
+  }, [options.projectId, options.directionId, headVersionId, stamp]);
 
   const replace = useCallback(
     (state: TweaksState) => setLoaded({ key: live.current, state }),
@@ -100,8 +116,28 @@ const useTweaksState = (o: Options) => {
   return { loadError, replace, state };
 };
 
-export const useTweaks = (o: Options) => {
-  const { state, loadError, replace } = useTweaksState(o);
+interface UseTweaksResult {
+  readonly commit: () => Promise<void>;
+  readonly commitError: string | null;
+  readonly isCommitting: boolean;
+  readonly confirmLeave: () => boolean;
+  readonly count: number;
+  readonly discard: () => void;
+  readonly edit: (control: TweakControl, value: TweakValue) => void;
+  readonly loadError: string | null;
+  readonly pending: TweakMap;
+  readonly revert: (id: string) => void;
+  readonly state: TweaksState | null;
+  readonly undoChain: (
+    canUndo: boolean,
+    fallback: () => void
+  ) => { readonly canUndo: boolean; readonly onUndo: () => void };
+  readonly undoLast: () => void;
+  readonly values: TweakMap;
+}
+
+const useTweaks = (options: Options): UseTweaksResult => {
+  const { state, loadError, replace } = useTweaksState(options);
   const [pending, setPendingMap] = useState<TweakMap>({});
   const [committing, setCommitting] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
@@ -111,12 +147,12 @@ export const useTweaks = (o: Options) => {
   pendingRef.current = pending;
   const stateRef = useRef(state);
   stateRef.current = state;
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
 
   const stopPreview = useCallback(() => {
     if (frame.current !== null) {
-      window.cancelAnimationFrame(frame.current);
+      globalThis.cancelAnimationFrame(frame.current);
     }
 
     frame.current = null;
@@ -127,7 +163,7 @@ export const useTweaks = (o: Options) => {
       return;
     }
 
-    frame.current = window.requestAnimationFrame(() => {
+    frame.current = globalThis.requestAnimationFrame(() => {
       frame.current = null;
       broadcastTweakCss(
         tweaksPreviewCss(stateRef.current?.controls ?? [], pendingRef.current)
@@ -148,7 +184,7 @@ export const useTweaks = (o: Options) => {
     broadcastTweakCss("");
   }, [clearDraft]);
 
-  const scope = `${o.projectId}:${o.directionId}`;
+  const scope = `${options.projectId}:${options.directionId}`;
   useEffect(() => discard, [scope, discard]);
 
   const apply = useCallback(
@@ -248,7 +284,7 @@ export const useTweaks = (o: Options) => {
       return true;
     }
 
-    const ok = window.confirm(
+    const ok = globalThis.confirm(
       `Discard ${count} tweak ${count === 1 ? "change" : "changes"}?`
     );
 
@@ -261,7 +297,10 @@ export const useTweaks = (o: Options) => {
 
   const count = Object.keys(pending).length;
 
-  const undoChain = (canUndo: boolean, fallback: () => void) => ({
+  const undoChain = (
+    canUndo: boolean,
+    fallback: () => void
+  ): { readonly canUndo: boolean; readonly onUndo: () => void } => ({
     canUndo: canUndo || count > 0,
     onUndo: () =>
       Object.keys(pendingRef.current).length > 0 ? undoLast() : fallback(),
@@ -280,7 +319,7 @@ export const useTweaks = (o: Options) => {
   return {
     commit,
     commitError,
-    committing,
+    isCommitting: committing,
     confirmLeave,
     count,
     discard,
@@ -295,4 +334,8 @@ export const useTweaks = (o: Options) => {
   };
 };
 
-export type TweaksDraft = ReturnType<typeof useTweaks>;
+type TweaksDraft = ReturnType<typeof useTweaks>;
+
+export { TWEAKS_REQUEST, useTweaks };
+
+export type { TweaksDraft };

@@ -10,9 +10,9 @@ import { useId, useRef, useState } from "react";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
-export const IMPROVE_PROMPT = "Improve this design system.";
+const IMPROVE_PROMPT = "Improve this design system.";
 
-export const improveRequest = (
+const improveRequest = (
   focus: string,
   defaultLevel: RunLevel | undefined
 ): RunRequest => {
@@ -29,11 +29,11 @@ export const improveRequest = (
   };
 };
 
-export const lastImproveRun = (runs: readonly RunView[]): RunView | null =>
+const lastImproveRun = (runs: readonly RunView[]): RunView | null =>
   [...runs].toReversed().find((run) => run.request?.task === "design-system") ??
   null;
 
-export const improvePassed = (run: RunView | null): boolean =>
+const improvePassed = (run: RunView | null): boolean =>
   run?.summary?.status === "completed" &&
   run.summary.designSystemCheck?.passed === true;
 
@@ -43,7 +43,7 @@ interface ImproveProps {
   onImprove: (focus: string) => Promise<void>;
 }
 
-export const ImproveControl = ({ running, run, onImprove }: ImproveProps) => {
+const ImproveControl = ({ running, run, onImprove }: ImproveProps) => {
   const improving = run?.status === "running";
   const primary = !improvePassed(run);
   const [focus, setFocus] = useState("");
@@ -164,7 +164,7 @@ const groupProblems = (
     rule,
   })).filter((group) => group.items.length > 0);
 
-export const CheckStatus = ({
+const CheckStatus = ({
   check,
   run,
 }: {
@@ -236,4 +236,13 @@ export const CheckStatus = ({
       )}
     </span>
   );
+};
+
+export {
+  CheckStatus,
+  IMPROVE_PROMPT,
+  ImproveControl,
+  improvePassed,
+  improveRequest,
+  lastImproveRun,
 };

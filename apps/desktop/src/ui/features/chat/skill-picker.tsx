@@ -113,7 +113,7 @@ interface SlashSourceProps {
   onCommand: (command: Command) => void;
 }
 
-export const useSlashSections = ({
+const useSlashSections = ({
   disabled,
   exclude,
   commands,
@@ -207,7 +207,7 @@ const useFitAbove = (ref: RefObject<HTMLDivElement | null>, max: number) => {
   }, [ref, max]);
 };
 
-export const SkillChips = ({
+const SkillChips = ({
   ids,
   onRemove,
 }: {
@@ -287,11 +287,7 @@ const IndicatorPop = (props: {
   );
 };
 
-export const SkillsIndicator = ({
-  projectId,
-  settings,
-  onSaved,
-}: IndicatorProps) => {
+const SkillsIndicator = ({ projectId, settings, onSaved }: IndicatorProps) => {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { catalog } = useSkillCatalog();
@@ -346,3 +342,5 @@ export const SkillsIndicator = ({
     </span>
   );
 };
+
+export { SkillChips, SkillsIndicator, useSlashSections };

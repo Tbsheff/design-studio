@@ -83,7 +83,7 @@ const ClarifyQuestionField = ({
 
 const MOD = /Mac|iPhone|iPad/u.test(navigator.platform) ? "⌘" : "Ctrl+";
 
-export const ClarifyForm = ({
+const ClarifyForm = ({
   questions,
   busy,
   onBuild,
@@ -174,3 +174,5 @@ export const ClarifyForm = ({
     </form>
   );
 };
+
+export { ClarifyForm };

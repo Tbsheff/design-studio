@@ -12,18 +12,18 @@ const cancelQuietly = (projectId: string, runId: string): void => {
   void api.cancelRun(projectId, runId).catch(() => null);
 };
 
-export interface RunControls {
+interface RunControls {
   onCancel: () => void;
   queue: QueuedMessage[];
   onQueueChange: (items: QueuedMessage[]) => void;
   onSteer: (text: string) => void;
 }
 
-export type TrackSend = (
+type TrackSend = (
   start: () => Promise<{ runId: string }>
 ) => Promise<{ runId: string; stopped: boolean }>;
 
-export const useRunControls = (
+const useRunControls = (
   projectId: string,
   activeRun: RunView | null,
   draft: DraftStore,
@@ -145,3 +145,7 @@ export const useRunControls = (
 
   return { ...controls, queue };
 };
+
+export { useRunControls };
+
+export type { RunControls, TrackSend };

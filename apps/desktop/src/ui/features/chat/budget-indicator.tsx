@@ -33,7 +33,7 @@ interface Props {
   onSaved: (project: Project) => void;
 }
 
-export const BudgetIndicator = ({ projectId, settings, onSaved }: Props) => {
+const BudgetIndicator = ({ projectId, settings, onSaved }: Props) => {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<number | null | undefined>();
   const [error, setError] = useState<string | null>(null);
@@ -175,3 +175,5 @@ const BudgetMenu = ({
     </div>
   );
 };
+
+export { BudgetIndicator };

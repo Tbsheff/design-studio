@@ -117,6 +117,6 @@ const reviewOf = (
     : null;
 };
 
-export { turnProps, undoProps, reviewOf };
+export { reviewOf, turnProps, undoProps };
 
 export type { PolishProps, TurnProps };

@@ -10,7 +10,7 @@ interface RunLevelState {
   clearError: () => void;
 }
 
-export const useRunLevel = (
+const useRunLevel = (
   projectId: string,
   saved: RunLevel | undefined,
   onSaved: (project: Project) => void
@@ -54,3 +54,5 @@ export const useRunLevel = (
 
   return { choose, clearError: () => setError(null), error, level };
 };
+
+export { useRunLevel };

@@ -20,7 +20,7 @@ import {
 
 const PENDING_CLOCK_SLACK_MS = 1000;
 
-export interface ToolRow {
+interface ToolRow {
   toolUseId: string;
   name: string;
   input: unknown;
@@ -33,14 +33,14 @@ export interface ToolRow {
   denied?: boolean;
 }
 
-export interface RetryState {
+interface RetryState {
   attempt: number;
   max: number;
   until: number;
   error: string;
 }
 
-export interface RunView {
+interface RunView {
   runId: string;
   directionId: string | null;
   request: RunRequest | null;
@@ -56,7 +56,7 @@ export interface RunView {
   summary: RunSummary | null;
 }
 
-export const shownPending = (
+const shownPending = (
   pending: RunView | null,
   runs: RunView[],
   directionId: string | null
@@ -74,9 +74,9 @@ export const shownPending = (
   return started ? null : pending;
 };
 
-export const runText = (run: RunView): string => partsText(run.parts);
+const runText = (run: RunView): string => partsText(run.parts);
 
-export type RunMap = Record<string, RunView>;
+type RunMap = Record<string, RunView>;
 
 const toolRows = (summary: RunSummary): ToolRow[] =>
   summary.toolCalls.map((t) => ({
@@ -103,7 +103,7 @@ const legacyParts = (summary: RunSummary): RunPart[] => {
     : tools;
 };
 
-export const emptyRun = (
+const emptyRun = (
   runId: string,
   directionId: string | null,
   startedAt: number,
@@ -124,7 +124,7 @@ export const emptyRun = (
   tools: [],
 });
 
-export const runFromSummary = (summary: RunSummary): RunView => ({
+const runFromSummary = (summary: RunSummary): RunView => ({
   ...emptyRun(
     summary.id,
     summary.directionId,
@@ -275,7 +275,7 @@ const applyControlEvent = (run: RunView, event: StudioEvent): void => {
   }
 };
 
-export const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
+const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   if (!event.type.startsWith("run.") || !("runId" in event)) {
     return runs;
   }
@@ -338,7 +338,7 @@ export const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   return { ...runs, [runId]: run };
 };
 
-export const shortInput = (input: unknown): string => {
+const shortInput = (input: unknown): string => {
   if (input === null || input === undefined) {
     return "";
   }
@@ -371,3 +371,14 @@ export const shortInput = (input: unknown): string => {
 
   return JSON.stringify(input).slice(0, 80);
 };
+
+export {
+  applyRunEvent,
+  emptyRun,
+  runFromSummary,
+  runText,
+  shortInput,
+  shownPending,
+};
+
+export type { RetryState, RunMap, RunView, ToolRow };

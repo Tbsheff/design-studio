@@ -4,7 +4,7 @@ import type { McpPointBadge as Badge } from "../canvas/use-canvas-point.js";
 import { authorInitial } from "../comments/comment-avatar.js";
 import { copy } from "./copy.js";
 
-export const McpPointBadge = ({
+const McpPointBadge = ({
   badge,
   frameName,
 }: {
@@ -47,3 +47,5 @@ export const McpPointBadge = ({
     </div>
   );
 };
+
+export { McpPointBadge };

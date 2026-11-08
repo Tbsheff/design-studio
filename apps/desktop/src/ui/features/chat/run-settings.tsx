@@ -20,7 +20,7 @@ import {
   useRovingRadioGroup,
 } from "./level-control.js";
 
-export interface DesignsSetting {
+interface DesignsSetting {
   value: number;
   max: number;
   onChange: (count: number) => void;
@@ -31,21 +31,21 @@ const EFFORTS = ["auto", "low", "medium", "high"] as const;
 
 type EffortChoice = (typeof EFFORTS)[number];
 
-export const EFFORT_HINT: Record<EffortChoice, string> = {
+const EFFORT_HINT: Record<EffortChoice, string> = {
   auto: "The model picks how hard to think.",
   high: "Thinks the longest. Best for large or tricky work.",
   low: "Fastest and cheapest. Good for small changes.",
   medium: "A balance of speed and care.",
 };
 
-export type ComposerMode = RunMode | "plan";
+type ComposerMode = RunMode | "plan";
 
 interface ModeSetting {
   value: ComposerMode;
   onChange: (mode: ComposerMode) => void;
 }
 
-export interface EffortSetting {
+interface EffortSetting {
   value: RunEffort | null;
   onChange: (effort: RunEffort | null) => void;
 }
@@ -59,33 +59,33 @@ interface Props {
   onOpen?: () => void;
 }
 
-export const MODE_HINT: Record<ComposerMode, string> = {
+const MODE_HINT: Record<ComposerMode, string> = {
   critique: "Send asks for a review. The design does not change.",
   edit: "Send changes the design.",
   plan: "Send makes a plan first. Files change only after you approve it.",
 };
 
-export const UNPLACED: CSSProperties = {
+const UNPLACED: CSSProperties = {
   left: 0,
   opacity: 0,
   pointerEvents: "none",
   top: 0,
 };
 
-export const EFFORT_LABEL: Record<EffortChoice, string> = {
+const EFFORT_LABEL: Record<EffortChoice, string> = {
   auto: "Auto",
   high: "High",
   low: "Low",
   medium: "Medium",
 };
 
-export const MODE_LABEL: Record<ComposerMode, string> = {
+const MODE_LABEL: Record<ComposerMode, string> = {
   critique: "Critique",
   edit: "Edit",
   plan: "Plan",
 };
 
-export const runSettingsSummary = (input: {
+const runSettingsSummary = (input: {
   mode?: ComposerMode;
   level: RunLevel;
   designs?: number;
@@ -109,7 +109,7 @@ export const runSettingsSummary = (input: {
   return parts.filter(Boolean).join(" · ");
 };
 
-export const designsHint = (designs: DesignsSetting): string => {
+const designsHint = (designs: DesignsSetting): string => {
   if (designs.disabledReason) {
     return designs.disabledReason;
   }
@@ -121,7 +121,7 @@ export const designsHint = (designs: DesignsSetting): string => {
   return `Pick 2 to ${designs.max} to compare options.`;
 };
 
-export const placeAboveOrBelow = (
+const placeAboveOrBelow = (
   trigger: HTMLElement,
   panel: HTMLElement
 ): CSSProperties => {
@@ -142,7 +142,7 @@ const tabStops = (panel: HTMLElement): HTMLElement[] => [
   ...panel.querySelectorAll<HTMLElement>('[tabindex="0"]:not(:disabled)'),
 ];
 
-export const EffortToggle = ({
+const EffortToggle = ({
   effort,
   hintId,
 }: {
@@ -219,7 +219,7 @@ const ModeToggle = ({
   );
 };
 
-export const RunSettings = ({
+const RunSettings = ({
   mode,
   level,
   onLevel,
@@ -386,3 +386,18 @@ export const RunSettings = ({
     </span>
   );
 };
+
+export {
+  EFFORT_HINT,
+  EFFORT_LABEL,
+  EffortToggle,
+  MODE_HINT,
+  MODE_LABEL,
+  RunSettings,
+  UNPLACED,
+  designsHint,
+  placeAboveOrBelow,
+  runSettingsSummary,
+};
+
+export type { ComposerMode, DesignsSetting, EffortSetting };

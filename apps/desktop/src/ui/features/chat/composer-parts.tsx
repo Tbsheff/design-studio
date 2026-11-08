@@ -21,7 +21,7 @@ import { modelLabel } from "./settings-draft-model.js";
 
 export type { PendingAttachment } from "../../domain/pending-attachment.js";
 
-export const SelectionChips = ({
+const SelectionChips = ({
   selection,
   onRemove,
 }: {
@@ -197,7 +197,7 @@ const ReferenceToggle = ({
   );
 };
 
-export const AttachmentThumbs = ({
+const AttachmentThumbs = ({
   files,
   onRemove,
 }: {
@@ -250,7 +250,7 @@ export const AttachmentThumbs = ({
   );
 };
 
-export const ModelTag = ({ model }: { model: string }) => (
+const ModelTag = ({ model }: { model: string }) => (
   <Chip
     size="sm"
     className="model-tag mr-1 shrink-0 font-semibold whitespace-nowrap"
@@ -262,3 +262,5 @@ export const ModelTag = ({ model }: { model: string }) => (
     <span className="sr-only">({model})</span>
   </Chip>
 );
+
+export { AttachmentThumbs, ModelTag, SelectionChips };

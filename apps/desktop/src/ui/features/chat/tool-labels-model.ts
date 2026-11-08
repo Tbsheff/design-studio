@@ -13,7 +13,7 @@ const humanize = (raw: string): string => {
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
-export const prettyToolName = (name: string): string => {
+const prettyToolName = (name: string): string => {
   const parts = name.split("__");
 
   if (parts[0] === "mcp" && parts.length >= 3) {
@@ -61,7 +61,7 @@ const pathInput = (input: unknown): string | null => {
   return null;
 };
 
-export const toolTarget = (input: unknown, workTree: string | null): string => {
+const toolTarget = (input: unknown, workTree: string | null): string => {
   const file = pathInput(input);
 
   if (file) {
@@ -73,9 +73,9 @@ export const toolTarget = (input: unknown, workTree: string | null): string => {
   return isAbsolutePath(raw) ? relativePath(raw, workTree) : raw;
 };
 
-export const SKILL_TOOL = "Skill";
+const SKILL_TOOL = "Skill";
 
-export const skillToolName = (input: unknown): string => {
+const skillToolName = (input: unknown): string => {
   if (!input || typeof input !== "object") {
     return "";
   }
@@ -91,7 +91,7 @@ export const skillToolName = (input: unknown): string => {
     : value;
 };
 
-export const toolLabel = (name: string, input: unknown): string => {
+const toolLabel = (name: string, input: unknown): string => {
   if (name !== SKILL_TOOL) {
     return prettyToolName(name);
   }
@@ -119,7 +119,7 @@ const TOOL_VERBS: Record<string, string> = {
   mcp__studio__screenshot: "Screenshot",
 };
 
-export const toolVerb = (name: string): string =>
+const toolVerb = (name: string): string =>
   TOOL_VERBS[name] ?? prettyToolName(name);
 
 const TOOL_GROUPS: Record<string, string> = {
@@ -142,15 +142,15 @@ const TOOL_GROUPS: Record<string, string> = {
   mcp__studio__screenshot: "Checked",
 };
 
-export const toolGroupLabel = (name: string): string =>
+const toolGroupLabel = (name: string): string =>
   TOOL_GROUPS[name] ?? prettyToolName(name);
 
-export interface ToolTally {
+interface ToolTally {
   label: string;
   count: number;
 }
 
-export const toolTally = (names: Iterable<string>): ToolTally[] => {
+const toolTally = (names: Iterable<string>): ToolTally[] => {
   const counts = new Map<string, number>();
 
   for (const name of names) {
@@ -161,7 +161,7 @@ export const toolTally = (names: Iterable<string>): ToolTally[] => {
   return [...counts].map(([label, count]) => ({ count, label }));
 };
 
-export const toolSubject = (
+const toolSubject = (
   name: string,
   input: unknown,
   workTree: string | null
@@ -188,3 +188,17 @@ export const toolSubject = (
 
   return toolTarget(input, workTree);
 };
+
+export {
+  SKILL_TOOL,
+  prettyToolName,
+  skillToolName,
+  toolGroupLabel,
+  toolLabel,
+  toolSubject,
+  toolTally,
+  toolTarget,
+  toolVerb,
+};
+
+export type { ToolTally };

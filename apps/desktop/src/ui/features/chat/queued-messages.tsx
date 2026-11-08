@@ -137,7 +137,7 @@ const QueuedItem = ({
   );
 };
 
-export const QueuedMessages = ({
+const QueuedMessages = ({
   items,
   onChange,
 }: {
@@ -185,3 +185,5 @@ export const QueuedMessages = ({
     </div>
   );
 };
+
+export { QueuedMessages };

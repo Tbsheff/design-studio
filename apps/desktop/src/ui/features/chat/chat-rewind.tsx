@@ -8,14 +8,14 @@ import { UserMessage } from "./chat-parts.js";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
-export interface TurnRewind {
+interface TurnRewind {
   restoreTip: string | null;
   restoreVersionId: string | null;
   forkBase: string | null;
   editTip: string | null;
 }
 
-export interface TurnActions {
+interface TurnActions {
   onRestore: (versionId: string) => void;
   onEditResend: (
     run: RunView,
@@ -212,7 +212,7 @@ const TitleField = ({
   );
 };
 
-export const UserTurn = ({
+const UserTurn = ({
   run,
   title,
   rewind,
@@ -329,3 +329,7 @@ export const UserTurn = ({
     </>
   );
 };
+
+export { UserTurn };
+
+export type { TurnActions, TurnRewind };

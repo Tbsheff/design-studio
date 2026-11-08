@@ -20,7 +20,7 @@ const subscribe = (l: () => void): (() => void) => {
   };
 };
 
-export const useInlineApprovals = (
+const useInlineApprovals = (
   projectId: string,
   paneCollapsed: boolean,
   tab: string
@@ -33,5 +33,7 @@ export const useInlineApprovals = (
   }, [projectId, shown]);
 };
 
-export const useInlineApprovalProject = (): string | null =>
+const useInlineApprovalProject = (): string | null =>
   useSyncExternalStore(subscribe, () => inlineProject);
+
+export { useInlineApprovalProject, useInlineApprovals };

@@ -13,10 +13,10 @@ const clampWidth = (width: number, container: number): number => {
   return Math.round(Math.max(MIN_CHAT, Math.min(max, width)));
 };
 
-export const chatWidthStyle = (width: number | null): Record<string, string> =>
+const chatWidthStyle = (width: number | null): Record<string, string> =>
   width === null ? {} : { "--chat-w": `${width}px` };
 
-export const ChatSplitter = ({
+const ChatSplitter = ({
   columnsRef,
 }: {
   columnsRef: RefObject<HTMLDivElement | null>;
@@ -111,3 +111,5 @@ export const ChatSplitter = ({
     />
   );
 };
+
+export { ChatSplitter, chatWidthStyle };

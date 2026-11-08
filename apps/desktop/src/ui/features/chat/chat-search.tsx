@@ -154,7 +154,7 @@ const HitList = ({
   );
 };
 
-export const ChatSearch = ({
+const ChatSearch = ({
   query,
   directionId,
   onClose,
@@ -253,3 +253,5 @@ export const ChatSearch = ({
     </div>
   );
 };
+
+export { ChatSearch };

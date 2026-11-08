@@ -9,7 +9,7 @@ import { useCallback, useMemo, useRef } from "react";
 import { api } from "../../api.js";
 import type { RunView } from "./run-state-model.js";
 
-export interface RewindControl {
+interface RewindControl {
   versions: readonly Version[];
   headVersionId: string | null;
   headRestoredFrom: string | null;
@@ -39,10 +39,7 @@ interface Options {
   refreshVersions: () => void;
 }
 
-export const editedRequest = (
-  request: RunRequest,
-  prompt: string
-): RunRequest => {
+const editedRequest = (request: RunRequest, prompt: string): RunRequest => {
   const {
     retryOf: _retry,
     variation: _variation,
@@ -53,7 +50,7 @@ export const editedRequest = (
   return { ...rest, prompt };
 };
 
-export const useRewind = (options: Options): RewindControl => {
+const useRewind = (options: Options): RewindControl => {
   const ref = useRef(options);
   ref.current = options;
 
@@ -129,3 +126,7 @@ export const useRewind = (options: Options): RewindControl => {
     ]
   );
 };
+
+export { editedRequest, useRewind };
+
+export type { RewindControl };

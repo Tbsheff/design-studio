@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import type { RunView } from "./run-state-model.js";
 
-export const promptHistoryOf = (
+const promptHistoryOf = (
   runs: readonly Pick<RunView, "request">[]
 ): string[] => {
   const prompts: string[] = [];
@@ -24,7 +24,7 @@ export const promptHistoryOf = (
   return prompts;
 };
 
-export const useChatState = (
+const useChatState = (
   runs: readonly RunView[]
 ): {
   history: string[];
@@ -44,3 +44,5 @@ export const useChatState = (
 
   return { contextTokens: last?.contextTokens ?? null, history, todos };
 };
+
+export { promptHistoryOf, useChatState };

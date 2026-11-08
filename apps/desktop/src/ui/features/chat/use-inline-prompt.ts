@@ -10,9 +10,9 @@ import { IS_MAC, useCommands } from "../../chat-slots.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { unionRect } from "../canvas/use-canvas-frames.js";
 
-export const INLINE_PROMPT_COMMAND = "selection.ask-inline";
+const INLINE_PROMPT_COMMAND = "selection.ask-inline";
 
-export interface InlinePromptOptions {
+interface InlinePromptOptions {
   selection: SelectionContext[];
   live: boolean;
   running: boolean | undefined;
@@ -24,7 +24,7 @@ export interface InlinePromptOptions {
   route?: string | null | undefined;
 }
 
-export interface InlinePromptView {
+interface InlinePromptView {
   rect: NonNullable<ReturnType<typeof unionRect>>;
   label: string;
   blocked: string | null;
@@ -52,7 +52,7 @@ const blockerOf = (o: InlinePromptOptions): string | null => {
 };
 
 const SNIPPET_MAX = 16;
-export const INLINE_PROMPT_OPEN_EVENT = "studio:inline-prompt-open";
+const INLINE_PROMPT_OPEN_EVENT = "studio:inline-prompt-open";
 
 const labelOf = (selection: SelectionContext[]): string => {
   const last = selection.at(-1);
@@ -93,9 +93,7 @@ const restoreFocus = (
   target?.focus({ preventScroll: true });
 };
 
-export const useInlinePrompt = (
-  o: InlinePromptOptions
-): InlinePromptView | null => {
+const useInlinePrompt = (o: InlinePromptOptions): InlinePromptView | null => {
   const [open, setOpen] = useState(false);
   const returnTo = useRef<Element | null>(null);
   const latest = useRef(o);
@@ -195,3 +193,7 @@ export const useInlinePrompt = (
     usedAtFile: usedAtFileOf(o.selection),
   };
 };
+
+export { INLINE_PROMPT_COMMAND, INLINE_PROMPT_OPEN_EVENT, useInlinePrompt };
+
+export type { InlinePromptOptions, InlinePromptView };

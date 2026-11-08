@@ -1,9 +1,8 @@
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { useEffect, useRef, useId, useLayoutEffect, useState } from "react";
 import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
-
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 
 export interface SlashChoice {
   id: string;

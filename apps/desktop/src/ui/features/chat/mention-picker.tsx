@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { copy } from "./copy.js";
 
-export interface MentionOption {
+interface MentionOption {
   key: string;
   label: string;
   detail: string;
@@ -14,17 +14,17 @@ export interface MentionOption {
   icon?: IconName;
 }
 
-export const mentionKey = (mention: RunMention): string =>
+const mentionKey = (mention: RunMention): string =>
   mention.kind === "file"
     ? `file:${mention.path}`
     : `${mention.kind}:${mention.name}`;
 
-export const mentionLabel = (mention: RunMention): string =>
+const mentionLabel = (mention: RunMention): string =>
   mention.kind === "file"
     ? (mention.path.split("/").pop() ?? mention.path)
     : mention.name;
 
-export const mentionIcon = (mention: RunMention): IconName => {
+const mentionIcon = (mention: RunMention): IconName => {
   if (mention.kind === "file") {
     return "file";
   }
@@ -32,7 +32,7 @@ export const mentionIcon = (mention: RunMention): IconName => {
   return mention.kind === "token" ? "token" : "component";
 };
 
-export const mentionTitle = (mention: RunMention): string => {
+const mentionTitle = (mention: RunMention): string => {
   if (mention.kind === "file") {
     return mention.path;
   }
@@ -46,13 +46,13 @@ export const mentionTitle = (mention: RunMention): string => {
     : `@${mention.name}`;
 };
 
-export const mentionQueryOf = (draft: string): string | null => {
+const mentionQueryOf = (draft: string): string | null => {
   const match = /(?:^|\s)@([^\s@]*)$/u.exec(draft);
 
   return match ? (match[1] ?? "") : null;
 };
 
-export const rankMentions = (
+const rankMentions = (
   options: readonly MentionOption[],
   query: string
 ): MentionOption[] =>
@@ -64,7 +64,7 @@ export const rankMentions = (
     30
   );
 
-export const useMentionPicker = (
+const useMentionPicker = (
   options: readonly MentionOption[],
   query: string | null
 ) => {
@@ -88,7 +88,7 @@ export const useMentionPicker = (
   return { current, move, open: query !== null, setActive, shown };
 };
 
-export const MentionList = ({
+const MentionList = ({
   shown,
   current,
   loading,
@@ -158,7 +158,7 @@ export const MentionList = ({
   );
 };
 
-export const MentionChips = ({
+const MentionChips = ({
   mentions,
   onRemove,
 }: {
@@ -197,3 +197,17 @@ export const MentionChips = ({
     </div>
   );
 };
+
+export {
+  MentionChips,
+  MentionList,
+  mentionIcon,
+  mentionKey,
+  mentionLabel,
+  mentionQueryOf,
+  mentionTitle,
+  rankMentions,
+  useMentionPicker,
+};
+
+export type { MentionOption };

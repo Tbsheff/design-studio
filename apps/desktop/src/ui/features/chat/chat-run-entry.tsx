@@ -182,4 +182,4 @@ const PendingEntry = ({
   </div>
 );
 
-export { RunEntry, PendingEntry };
+export { PendingEntry, RunEntry };

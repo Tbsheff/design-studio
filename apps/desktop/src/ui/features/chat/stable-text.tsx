@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export const StableText = ({
+const StableText = ({
   children,
   sizes,
 }: {
@@ -16,3 +16,5 @@ export const StableText = ({
     ))}
   </span>
 );
+
+export { StableText };

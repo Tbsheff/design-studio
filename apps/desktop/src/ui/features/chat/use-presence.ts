@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
-export const CSS_DUR_EXIT_MS = 100;
+const CSS_DUR_EXIT_MS = 100;
 
 const reducedMotion = (): boolean =>
   globalThis.window !== undefined &&
   globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export const usePresence = <T>(
+const usePresence = <T>(
   value: T | null
 ): {
   shown: T | null;
@@ -33,3 +33,5 @@ export const usePresence = <T>(
 
   return { closing: value === null && kept !== null, shown: value ?? kept };
 };
+
+export { CSS_DUR_EXIT_MS, usePresence };

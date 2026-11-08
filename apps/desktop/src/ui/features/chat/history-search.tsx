@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { copy } from "./copy.js";
 
-export const useHistorySearch = (history: readonly string[]) => {
+const useHistorySearch = (history: readonly string[]) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -36,7 +36,7 @@ export const useHistorySearch = (history: readonly string[]) => {
   };
 };
 
-export const HistorySearch = ({
+const HistorySearch = ({
   search,
   onPick,
 }: {
@@ -103,3 +103,5 @@ export const HistorySearch = ({
     </div>
   );
 };
+
+export { HistorySearch, useHistorySearch };

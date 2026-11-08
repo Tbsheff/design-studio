@@ -1,12 +1,12 @@
 import type { ProjectSettings, RunLevel } from "@design-studio/contracts";
 
-export const MODEL_OPTIONS = [
+const MODEL_OPTIONS = [
   { id: "claude-haiku-5-5", label: "Claude Haiku 5.5" },
   { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
   { id: "claude-opus-5-5", label: "Claude Opus 5.5" },
 ];
 
-export interface SettingsDraft {
+interface SettingsDraft {
   model: string;
   maxBudgetUsd: string;
   maxTurns: string;
@@ -17,7 +17,7 @@ export interface SettingsDraft {
   defaultLevel: RunLevel;
 }
 
-export const toDraft = (settings: ProjectSettings): SettingsDraft => ({
+const toDraft = (settings: ProjectSettings): SettingsDraft => ({
   allowBash: settings.allowBash,
   allowInstall: settings.allowInstall,
   autoApprove: settings.autoApprove ?? true,
@@ -29,7 +29,7 @@ export const toDraft = (settings: ProjectSettings): SettingsDraft => ({
   model: settings.model,
 });
 
-export const parseDraft = (
+const parseDraft = (
   draft: SettingsDraft
 ): { settings: ProjectSettings } | { error: string } => {
   const rawBudget = draft.maxBudgetUsd.trim();
@@ -65,5 +65,9 @@ export const parseDraft = (
   };
 };
 
-export const modelLabel = (id: string): string =>
+const modelLabel = (id: string): string =>
   MODEL_OPTIONS.find((m) => m.id === id)?.label ?? id;
+
+export { MODEL_OPTIONS, modelLabel, parseDraft, toDraft };
+
+export type { SettingsDraft };

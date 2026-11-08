@@ -41,7 +41,7 @@ const costText = (s: NonNullable<RunView["summary"]>): string => {
   return s.status === "canceled" ? `${shown} (estimate)` : shown;
 };
 
-export const RunDetails = ({
+const RunDetails = ({
   projectId,
   run,
   onClose,
@@ -177,3 +177,5 @@ export const RunDetails = ({
     </div>
   );
 };
+
+export { RunDetails };

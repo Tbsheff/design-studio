@@ -24,7 +24,7 @@ const fetchSkillCatalog = (fresh = false): Promise<SkillCatalog> => {
   return request;
 };
 
-export const useSkillCatalog = (): {
+const useSkillCatalog = (): {
   catalog: SkillCatalog | null;
   error: string | null;
   reload: () => void;
@@ -59,31 +59,43 @@ export const useSkillCatalog = (): {
   return { catalog, error, reload: () => void load(true) };
 };
 
-export const skillDisplayName = (id: string): string =>
+const skillDisplayName = (id: string): string =>
   id.startsWith("personal:") ? id.slice("personal:".length) : id;
 
-export const originText = (origin: SkillInfo["origin"]): string =>
+const originText = (origin: SkillInfo["origin"]): string =>
   origin === "personal" ? "personal" : origin.slice("plugin:".length);
 
-export const enabledSkills = (
+const enabledSkills = (
   catalog: SkillCatalog | null,
   disabled: readonly string[]
 ): SkillInfo[] =>
   (catalog?.skills ?? []).filter((skill) => !disabled.includes(skill.id));
 
-export const skillInstruction = (ids: readonly string[]): string =>
+const skillInstruction = (ids: readonly string[]): string =>
   ids.map((id) => `Use the ${id} skill.`).join("\n");
 
-export const skillsFromPrompt = (prompt: string): string[] =>
+const skillsFromPrompt = (prompt: string): string[] =>
   [...prompt.matchAll(/^Use the (\S+:\S+) skill\.$/gmu)].map(
     (match) => match[1] ?? ""
   );
 
-export const withoutSkillLines = (prompt: string): string =>
+const withoutSkillLines = (prompt: string): string =>
   prompt.replaceAll(/^Use the \S+:\S+ skill\.$/gmu, "").trim();
 
-export const plural = (count: number, word: string): string =>
+const plural = (count: number, word: string): string =>
   `${count} ${word}${count === 1 ? "" : "s"}`;
 
-export const NO_SKILLS_TEXT =
+const NO_SKILLS_TEXT =
   "No skills found. Add a folder with a SKILL.md to ~/.claude/skills, or enable a Claude Code plugin that has skills.";
+
+export {
+  NO_SKILLS_TEXT,
+  enabledSkills,
+  originText,
+  plural,
+  skillDisplayName,
+  skillInstruction,
+  skillsFromPrompt,
+  useSkillCatalog,
+  withoutSkillLines,
+};

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
-export const PREVIEW_ESCAPE_EVENT = "studio:preview-escape";
-export const PREVIEW_STOP_EVENT = "studio:preview-stop";
+const PREVIEW_ESCAPE_EVENT = "studio:preview-escape";
+const PREVIEW_STOP_EVENT = "studio:preview-stop";
 
 const OVERLAY_SELECTOR = 'dialog[open], [role="dialog"][aria-modal="true"]';
 
@@ -16,7 +16,7 @@ const overlayOpen = (): boolean =>
     (element) => element.getClientRects().length > 0
   );
 
-export const useEscapeStop = (active: boolean, onStop: () => void): void => {
+const useEscapeStop = (active: boolean, onStop: () => void): void => {
   const stop = useRef(onStop);
   stop.current = onStop;
   useEffect(() => {
@@ -53,3 +53,5 @@ export const useEscapeStop = (active: boolean, onStop: () => void): void => {
     };
   }, [active]);
 };
+
+export { PREVIEW_ESCAPE_EVENT, PREVIEW_STOP_EVENT, useEscapeStop };

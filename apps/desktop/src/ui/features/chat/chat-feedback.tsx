@@ -141,7 +141,7 @@ const StopNote = ({ run }: { run: RunView }) => {
   ) : null;
 };
 
-export const RunFeedbackRow = memo(
+const RunFeedbackRow = memo(
   ({
     run,
     onDetails,
@@ -241,3 +241,5 @@ export const RunFeedbackRow = memo(
   }
 );
 RunFeedbackRow.displayName = "RunFeedbackRow";
+
+export { RunFeedbackRow };

@@ -16,7 +16,7 @@ import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { frameStateOf, useFrameStates } from "../canvas/frame-states-model.js";
 import { inViewIds } from "../canvas/use-canvas-presence.js";
 
-export interface RunCanvasChip {
+interface RunCanvasChip {
   frameId: string;
   page: string;
   element: string | null;
@@ -24,7 +24,7 @@ export interface RunCanvasChip {
   onRemove: () => void;
 }
 
-export interface RunCanvas {
+interface RunCanvas {
   chip: RunCanvasChip | null;
   current: () => RunCanvasRef | undefined;
 }
@@ -58,7 +58,7 @@ const refOf = (frame: CanvasFrame): RunCanvasRef => {
   };
 };
 
-export const useRunCanvas = (
+const useRunCanvas = (
   projectId: string,
   project: Project | null,
   selection: readonly SelectionContext[]
@@ -88,3 +88,7 @@ export const useRunCanvas = (
 
   return { chip, current: () => (off ? undefined : refOf(frame)) };
 };
+
+export { useRunCanvas };
+
+export type { RunCanvas, RunCanvasChip };

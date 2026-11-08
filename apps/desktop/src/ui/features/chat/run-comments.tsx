@@ -7,7 +7,7 @@ import type { CommentsControl } from "../comments/use-comments.js";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
-export const RunCommentsContext = createContext<CommentsControl | null>(null);
+const RunCommentsContext = createContext<CommentsControl | null>(null);
 
 const idsOf = (request: RunRequest | null | undefined): string[] => {
   if (!request) {
@@ -88,7 +88,7 @@ const resolvable = (
     : open.filter((comment) => done.includes(comment.n));
 };
 
-export const RunCommentsCard = ({ run }: { run: RunView }) => {
+const RunCommentsCard = ({ run }: { run: RunView }) => {
   const control = useContext(RunCommentsContext);
   const [busy, setBusy] = useState(false);
   const ids = new Set([...idsOf(run.summary?.request), ...idsOf(run.request)]);
@@ -158,3 +158,5 @@ export const RunCommentsCard = ({ run }: { run: RunView }) => {
     </section>
   );
 };
+
+export { RunCommentsCard, RunCommentsContext };

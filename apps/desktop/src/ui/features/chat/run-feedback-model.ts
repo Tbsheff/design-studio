@@ -2,9 +2,9 @@ import { useCallback, useState } from "react";
 
 import { readStored, writeStored } from "../../platform/storage.js";
 
-export type Thumb = "up" | "down";
+type Thumb = "up" | "down";
 
-export interface RunFeedback {
+interface RunFeedback {
   thumb: Thumb | null;
   stars: number;
 }
@@ -46,7 +46,7 @@ const save = (store: Store): void => {
   writeStored(KEY, JSON.stringify(store));
 };
 
-export const readRunFeedback = (runId: string): RunFeedback => {
+const readRunFeedback = (runId: string): RunFeedback => {
   const entry = load()[runId];
 
   return entry
@@ -54,10 +54,7 @@ export const readRunFeedback = (runId: string): RunFeedback => {
     : EMPTY;
 };
 
-export const writeRunFeedback = (
-  runId: string,
-  feedback: RunFeedback
-): void => {
+const writeRunFeedback = (runId: string, feedback: RunFeedback): void => {
   const store = { ...load() };
 
   if (feedback.thumb === null && feedback.stars === 0) {
@@ -70,7 +67,7 @@ export const writeRunFeedback = (
   save(store);
 };
 
-export const useRunFeedback = (
+const useRunFeedback = (
   runId: string
 ): [RunFeedback, (patch: Partial<RunFeedback>) => void] => {
   const [feedback, setFeedback] = useState(() => readRunFeedback(runId));
@@ -88,3 +85,7 @@ export const useRunFeedback = (
 
   return [feedback, update];
 };
+
+export { readRunFeedback, useRunFeedback, writeRunFeedback };
+
+export type { RunFeedback, Thumb };

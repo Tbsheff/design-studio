@@ -56,7 +56,7 @@ const nextCount = (
   return state.count + live;
 };
 
-export const useHistoryWindow = <T extends Item>(
+const useHistoryWindow = <T extends Item>(
   items: T[],
   resetKey: string | null,
   reveal: string | null
@@ -122,7 +122,7 @@ export const useHistoryWindow = <T extends Item>(
   return { hidden: start, more, shown: start > 0 ? items.slice(start) : items };
 };
 
-export const EarlierRuns = ({
+const EarlierRuns = ({
   hidden,
   onMore,
 }: {
@@ -185,3 +185,5 @@ export const EarlierRuns = ({
     </button>
   );
 };
+
+export { EarlierRuns, useHistoryWindow };

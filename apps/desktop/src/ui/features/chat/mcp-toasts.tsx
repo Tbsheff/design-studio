@@ -165,7 +165,7 @@ const Toast = ({
   );
 };
 
-export const McpToasts = () => {
+const McpToasts = () => {
   const [cards, mark, drop] = useApprovalFeed();
   const inlineProject = useInlineApprovalProject();
   const modal = useTopModal(cards.length > 0);
@@ -212,3 +212,5 @@ export const McpToasts = () => {
     modal
   );
 };
+
+export { McpToasts };

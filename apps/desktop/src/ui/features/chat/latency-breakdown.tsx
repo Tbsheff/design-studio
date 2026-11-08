@@ -124,7 +124,7 @@ const longFramesText = (
   return `${count}, longest ${formatMs(Math.max(...during.map((s) => s.ms)))}`;
 };
 
-export const LatencyBreakdown = ({
+const LatencyBreakdown = ({
   projectId,
   run,
 }: {
@@ -178,3 +178,5 @@ export const LatencyBreakdown = ({
     </>
   );
 };
+
+export { LatencyBreakdown };

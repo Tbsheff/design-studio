@@ -2,7 +2,7 @@ import type { QueuedMessage } from "@design-studio/contracts";
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
 
-export const QUEUE_MAX = 20;
+const QUEUE_MAX = 20;
 
 let queueCounter = 0;
 
@@ -29,7 +29,7 @@ const NO_HISTORY: string[] = [];
 const onFirstLine = (area: HTMLTextAreaElement): boolean =>
   !area.value.slice(0, area.selectionStart).includes("\n");
 
-export const useComposerKeys = (options: Options) => {
+const useComposerKeys = (options: Options) => {
   const historyIndex = useRef(-1);
   const { draft, setDraft, running } = options;
   const queue = options.queue ?? NONE;
@@ -134,3 +134,5 @@ export const useComposerKeys = (options: Options) => {
     setQueue,
   };
 };
+
+export { QUEUE_MAX, useComposerKeys };

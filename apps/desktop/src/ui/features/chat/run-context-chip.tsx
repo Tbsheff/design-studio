@@ -4,7 +4,7 @@ import { Chip } from "../../ai/components/ai/chip.js";
 import { copy } from "./copy.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 
-export const RunContextChip = ({
+const RunContextChip = ({
   chip,
 }: {
   chip: RunCanvasChip | null | undefined;
@@ -43,3 +43,5 @@ export const RunContextChip = ({
     </div>
   );
 };
+
+export { RunContextChip };

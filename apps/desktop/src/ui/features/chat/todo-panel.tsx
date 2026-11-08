@@ -4,7 +4,7 @@ import { memo, useState } from "react";
 
 import { copy } from "./copy.js";
 
-export const todoProgress = (
+const todoProgress = (
   todos: TodoItem[]
 ): {
   current: number;
@@ -85,7 +85,7 @@ const TodoRow = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
   );
 };
 
-export const TodoPanel = memo(
+const TodoPanel = memo(
   ({ todos, running }: { todos: TodoItem[]; running: boolean }) => {
     const [choice, setChoice] = useState<boolean | null>(null);
     const [ranWith, setRanWith] = useState(running);
@@ -137,3 +137,5 @@ export const TodoPanel = memo(
   }
 );
 TodoPanel.displayName = "TodoPanel";
+
+export { TodoPanel, todoProgress };

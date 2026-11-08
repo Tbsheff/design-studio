@@ -13,7 +13,7 @@ const STEP: Record<string, number> = {
   ArrowUp: -1,
 };
 
-export const nextRadioOption = <T,>(
+const nextRadioOption = <T,>(
   options: readonly T[],
   current: T,
   key: string,
@@ -48,7 +48,7 @@ export const nextRadioOption = <T,>(
   return enabled[(at + step + enabled.length) % enabled.length] ?? null;
 };
 
-export const useRovingRadioGroup = <T extends string | number>(
+const useRovingRadioGroup = <T extends string | number>(
   options: readonly T[],
   value: T,
   onChange: (next: T) => void,
@@ -89,7 +89,7 @@ interface Props {
   tipSide?: "top" | "bottom";
 }
 
-export const LevelControl = ({
+const LevelControl = ({
   value,
   onChange,
   disabled,
@@ -138,12 +138,11 @@ export const LevelControl = ({
   );
 };
 
-export const levelLabel = (level: RunLevel): string =>
-  LEVEL_PRESETS[level].label;
+const levelLabel = (level: RunLevel): string => LEVEL_PRESETS[level].label;
 
-export const levelHint = (level: RunLevel): string => LEVEL_PRESETS[level].hint;
+const levelHint = (level: RunLevel): string => LEVEL_PRESETS[level].hint;
 
-export const levelGist = (
+const levelGist = (
   level: RunLevel
 ): {
   hint: string;
@@ -158,14 +157,14 @@ export const levelGist = (
   return { cost: (match[2] ?? "").replace(" to ", "–"), hint: match[1] ?? "" };
 };
 
-export const levelShortHint = (level: RunLevel): string => {
+const levelShortHint = (level: RunLevel): string => {
   const { hint } = LEVEL_PRESETS[level];
   const match = /^(.*?) \(usually ([^,)]+)/u.exec(hint);
 
   return match ? `${match[1]}, ${match[2]}` : (hint.split(". ")[0] ?? hint);
 };
 
-export const ChoiceItem = ({
+const ChoiceItem = ({
   label,
   hint,
   meta,
@@ -208,4 +207,15 @@ export const ChoiceItem = ({
       </span>
     </button>
   );
+};
+
+export {
+  ChoiceItem,
+  LevelControl,
+  levelGist,
+  levelHint,
+  levelLabel,
+  levelShortHint,
+  nextRadioOption,
+  useRovingRadioGroup,
 };

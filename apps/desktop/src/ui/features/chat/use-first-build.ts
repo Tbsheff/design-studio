@@ -8,7 +8,7 @@ import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 const TREE_CAP = 3000;
 const PAINT_FALLBACK_MS = 5000;
 
-export const pageFileOf = (path: string | undefined): string => {
+const pageFileOf = (path: string | undefined): string => {
   const clean = (path ?? "").split(/[?#]/u)[0]?.replace(/^\/+/u, "") ?? "";
 
   if (!clean) {
@@ -23,7 +23,7 @@ const UNLISTED = /^(\.|node_modules\/|dist\/|\.vite\/|vite-cache\/)|\/\./u;
 const hasPage = (files: ReadonlySet<string>, file: string): boolean =>
   files.has(file) || files.has(`${file}/index.html`);
 
-export type PageWait = "building" | "missing" | null;
+type PageWait = "building" | "missing" | null;
 
 interface Options {
   projectId: string;
@@ -34,9 +34,7 @@ interface Options {
   lastChange: FilesChange | null;
 }
 
-export const usePageFiles = (
-  o: Options
-): ((path: string | undefined) => PageWait) => {
+const usePageFiles = (o: Options): ((path: string | undefined) => PageWait) => {
   const gated = o.live && o.kind === "html" && o.directionId !== null;
   const [files, setFiles] = useState<ReadonlySet<string> | "all" | null>(null);
 
@@ -90,10 +88,7 @@ export const usePageFiles = (
   );
 };
 
-export const useFramePainted = (
-  waiting: boolean,
-  mounted: boolean
-): boolean => {
+const useFramePainted = (waiting: boolean, mounted: boolean): boolean => {
   const [painted, setPainted] = useState(false);
   useEffect(() => {
     if (!waiting) {
@@ -133,14 +128,14 @@ interface GateOptions {
   url: string | null;
 }
 
-export interface FirstBuildGate {
+interface FirstBuildGate {
   building: boolean;
   wait: PageWait;
   url: string | null;
   waitFor: (path: string | undefined, directionId: string | null) => PageWait;
 }
 
-export const useFirstBuildGate = (o: GateOptions): FirstBuildGate => {
+const useFirstBuildGate = (o: GateOptions): FirstBuildGate => {
   const building = o.live && o.running === true && !o.hasHead && !o.urlError;
 
   const pageWait = usePageFiles({
@@ -164,10 +159,7 @@ export const useFirstBuildGate = (o: GateOptions): FirstBuildGate => {
   return { building, url: wait || o.emptyStage ? null : o.url, wait, waitFor };
 };
 
-export const useFirstBuildCover = (
-  gate: FirstBuildGate,
-  slots: number
-): boolean => {
+const useFirstBuildCover = (gate: FirstBuildGate, slots: number): boolean => {
   const painted = useFramePainted(
     gate.building,
     gate.url !== null && slots > 0
@@ -175,3 +167,13 @@ export const useFirstBuildCover = (
 
   return gate.building && !painted;
 };
+
+export {
+  pageFileOf,
+  useFirstBuildCover,
+  useFirstBuildGate,
+  useFramePainted,
+  usePageFiles,
+};
+
+export type { FirstBuildGate, PageWait };

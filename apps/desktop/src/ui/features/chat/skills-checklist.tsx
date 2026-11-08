@@ -77,7 +77,7 @@ const SkillRow = ({
   </label>
 );
 
-export const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
+const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
   const { catalog, error, reload } = useSkillCatalog();
   const [query, setQuery] = useState("");
 
@@ -211,3 +211,5 @@ export const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
     </fieldset>
   );
 };
+
+export { SkillsChecklist };

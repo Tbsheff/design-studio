@@ -1,16 +1,16 @@
 import { copy } from "./copy.js";
 
-export const contextWindowFor = (model: string): number =>
+const contextWindowFor = (model: string): number =>
   /\[1m\]|-1m\b/iu.test(model) ? 1_000_000 : 200_000;
 
-export const contextShare = (tokens: number, model: string): number =>
+const contextShare = (tokens: number, model: string): number =>
   Math.min(1, Math.max(0, tokens / contextWindowFor(model)));
 
 const R = 6;
 const SHOW_FROM = 0.5;
 const C = 2 * Math.PI * R;
 
-export const ContextMeter = ({
+const ContextMeter = ({
   tokens,
   model,
 }: {
@@ -59,3 +59,5 @@ export const ContextMeter = ({
     </span>
   );
 };
+
+export { ContextMeter, contextShare, contextWindowFor };

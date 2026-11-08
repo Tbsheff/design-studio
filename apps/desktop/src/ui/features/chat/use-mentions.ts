@@ -50,19 +50,19 @@ interface Options {
   onLead?: (option: MentionOption) => void;
 }
 
-export interface MentionRequest {
+interface MentionRequest {
   mention: RunMention;
   seq: number;
 }
 
-export const componentMention = (component: ComponentInfo): RunMention => ({
+const componentMention = (component: ComponentInfo): RunMention => ({
   file: component.file,
   kind: "component",
   name: component.name,
   selector: component.selector,
 });
 
-export const useMentions = ({
+const useMentions = ({
   projectId,
   directionId,
   tokens,
@@ -196,3 +196,7 @@ export const useMentions = ({
       ),
   };
 };
+
+export { componentMention, useMentions };
+
+export type { MentionRequest };

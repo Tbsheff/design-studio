@@ -375,7 +375,7 @@ const SaveControls = ({
   );
 };
 
-export const DraftBar = ({
+const DraftBar = ({
   project,
   state,
   lastChange,
@@ -437,3 +437,5 @@ export const DraftBar = ({
     </div>
   );
 };
+
+export { DraftBar };

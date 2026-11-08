@@ -15,7 +15,7 @@ import { copy } from "./copy.js";
 
 type ImproveEnd = { runId: string; status: RunStatus } | null;
 
-export const useDraftSources = (
+const useDraftSources = (
   projectId: string,
   enabled: boolean
 ): { state: DraftSourcesState | null; improveEnd: RunStatus | null } => {
@@ -216,7 +216,7 @@ const NEEDS_LOOK = new Set<DraftSourceStatus["state"]>([
   "failed",
 ]);
 
-export const DraftSources = ({
+const DraftSources = ({
   state,
   improveEnd,
 }: {
@@ -282,7 +282,7 @@ export const DraftSources = ({
   );
 };
 
-export interface DraftChrome {
+interface DraftChrome {
   banner: ReactNode;
   reading: boolean;
   waitReason: string | null;
@@ -290,7 +290,7 @@ export interface DraftChrome {
   unfinished: (visible: boolean) => boolean;
 }
 
-export const useDraftChrome = (
+const useDraftChrome = (
   projectId: string,
   project: Project | null
 ): DraftChrome => {
@@ -308,3 +308,7 @@ export const useDraftChrome = (
     waitReason: reading ? "Wait for the sources to finish reading..." : null,
   };
 };
+
+export { DraftSources, useDraftChrome, useDraftSources };
+
+export type { DraftChrome };

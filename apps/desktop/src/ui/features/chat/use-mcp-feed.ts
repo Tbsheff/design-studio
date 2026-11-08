@@ -8,12 +8,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useProjectEvents } from "../../platform/events.js";
 import { mcpApi } from "./mcp-model.js";
 
-export interface McpApprovalCard {
+interface McpApprovalCard {
   approval: McpApprovalRecord;
   outcome: McpApprovalOutcome | null;
 }
 
-export interface McpFeedState {
+interface McpFeedState {
   activity: McpActivity[];
   approvals: McpApprovalCard[];
 }
@@ -46,7 +46,7 @@ const replaceActivity = (
   );
 };
 
-export const useMcpFeed = (
+const useMcpFeed = (
   projectId: string,
   directionId: string | null
 ): McpFeedState => {
@@ -107,3 +107,7 @@ export const useMcpFeed = (
 
   return useMemo(() => ({ activity: shown, approvals }), [shown, approvals]);
 };
+
+export { useMcpFeed };
+
+export type { McpApprovalCard, McpFeedState };

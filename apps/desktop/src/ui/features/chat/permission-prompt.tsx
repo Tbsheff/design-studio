@@ -12,7 +12,7 @@ import {
 import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";
 
-export const PermissionPrompt = ({
+const PermissionPrompt = ({
   projectId,
   runId,
   request,
@@ -132,3 +132,5 @@ export const PermissionPrompt = ({
     </section>
   );
 };
+
+export { PermissionPrompt };

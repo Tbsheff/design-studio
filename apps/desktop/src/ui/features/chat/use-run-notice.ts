@@ -43,10 +43,7 @@ const newlyFinished = (
   return out;
 };
 
-export const useRunNotice = (
-  projectName: string | null,
-  runs: RunMap
-): void => {
+const useRunNotice = (projectName: string | null, runs: RunMap): void => {
   const hiddenAt = useRef<number | null>(null);
   const shown = useRef(new Set<string>());
   useEffect(() => {
@@ -78,3 +75,5 @@ export const useRunNotice = (
     notice.onclick = () => window.focus();
   }, [projectName, runs]);
 };
+
+export { useRunNotice };

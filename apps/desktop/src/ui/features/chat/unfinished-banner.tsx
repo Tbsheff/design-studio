@@ -8,7 +8,7 @@ interface Props {
   onDiscard: () => void;
 }
 
-export const UnfinishedBanner = ({
+const UnfinishedBanner = ({
   count,
   busy,
   runStopped,
@@ -38,3 +38,5 @@ export const UnfinishedBanner = ({
     </button>
   </div>
 );
+
+export { UnfinishedBanner };

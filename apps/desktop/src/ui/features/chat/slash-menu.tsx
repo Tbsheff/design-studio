@@ -561,7 +561,7 @@ export const SlashMenu = ({
                 }
                 className="slash-row"
                 data-highlighted={row === view.current || undefined}
-                data-tip={row.kind === "choice" ? row.choice.tip : undefined}
+                data-tip={row.kind === "choice" ? row.choice.tip : null}
                 data-tip-side="top"
                 onClick={() => view.onPick(row)}
               >

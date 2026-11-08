@@ -255,7 +255,7 @@ export const McpBlock = ({
       <header className="mcp-block-head">
         <span
           className="mcp-block-dot"
-          data-active={active || undefined}
+          data-active={active || null}
           aria-hidden="true"
         />
         <strong className="mcp-block-name">{client}</strong>
@@ -482,7 +482,7 @@ export const McpEditStrip = ({ mcp }: { mcp: McpFeedControl | null }) => {
       >
         <span
           className="mcp-block-dot"
-          data-active={now - last.at < MCP_ACTIVE_MS || undefined}
+          data-active={now - last.at < MCP_ACTIVE_MS || null}
           aria-hidden="true"
         />
         <strong className="mcp-edit-client">{last.client}</strong>

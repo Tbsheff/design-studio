@@ -132,7 +132,7 @@ const HitList = ({
           role="option"
           aria-selected={index === active}
           className="ui-menu-item chat-search-hit"
-          data-highlighted={index === active || undefined}
+          data-highlighted={index === active || null}
           onMouseEnter={() => onActive(index)}
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => onPick(run.id)}

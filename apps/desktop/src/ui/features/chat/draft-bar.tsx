@@ -357,7 +357,7 @@ const SaveControls = ({
       )}
       <span
         className="draft-save"
-        data-tip={reason ?? undefined}
+        data-tip={reason ?? null}
         data-tip-align="end"
       >
         <button

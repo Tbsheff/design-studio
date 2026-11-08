@@ -490,7 +490,7 @@ const ToolItem = ({
       className={`tool-row ${state} ${isSkill ? "skill-tool" : ""}`}
       data-state={state}
       data-tool={tool.name}
-      data-shell-edits={edits.length > 0 ? edits.length : undefined}
+      data-shell-edits={edits.length > 0 ? edits.length : null}
       open={open ?? state === "error"}
       onOpenChange={(next) => setOpen(next)}
     >
@@ -674,7 +674,7 @@ export const ToolSummary = ({
   return (
     <div
       className="tool-summary"
-      data-open={open || undefined}
+      data-open={open || null}
       data-testid="tool-summary"
     >
       <button
@@ -806,7 +806,7 @@ export const LiveStatus = ({
     <div
       className="ui-status live-status"
       data-testid="live-status"
-      data-offline={offline || undefined}
+      data-offline={offline || null}
     >
       <span className="ui-status-mark" aria-hidden="true" />
       <span className="live-label min-w-0 truncate">

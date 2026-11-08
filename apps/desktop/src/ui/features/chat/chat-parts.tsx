@@ -274,7 +274,7 @@ export const AssistantText = memo(
     return (
       <MessageText
         className="msg-body assistant-text wrap-anywhere"
-        data-streaming={streaming || undefined}
+        data-streaming={streaming || null}
       >
         {blocks.map((block, index) => (
           <MarkdownBlock key={index} text={block} />

@@ -130,7 +130,7 @@ const ChatPanel = ({
       <Conversation
         className="chat-conversation min-h-0 flex-1"
         data-ai-scope=""
-        data-searching={search.open || undefined}
+        data-searching={search.open || null}
       >
         <ConversationContent className="chat">
           <ChatLead

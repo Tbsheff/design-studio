@@ -24,7 +24,7 @@ const McpPointBadge = ({
     <div
       className="mcp-point"
       role="status"
-      data-tip={point.selector ? `${where}, ${point.selector}` : undefined}
+      data-tip={point.selector ? `${where}, ${point.selector}` : null}
       data-testid="mcp-point"
       onPointerDown={(event) => event.stopPropagation()}
     >

@@ -32,12 +32,24 @@ import { textEditability } from "../inspector/css-values.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 import { parseLayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
+import { applyRects, hoverOf, pagePoint } from "./preview-rect-model.js";
+import type { HoverBox } from "./preview-rect-model.js";
+import {
+  isSelectMessage,
+  manySelection,
+  nextSelection,
+  nodeAfterSelect,
+} from "./preview-selection-model.js";
+import type {
+  SelectManyMessage,
+  SelectMessage,
+} from "./preview-selection-model.js";
 import type { PreviewSlot } from "./preview-slot-model.js";
 import { PREVIEW_HISTORY_EVENT } from "./use-undo-shortcut.js";
 import { PREVIEW_TOOL_KEY_EVENT } from "./vector-tool-model.js";
 
-export const PREVIEW_LAYOUT_KEY_EVENT = "studio:preview-layout-key";
-export const PREVIEW_ARRANGE_KEY_EVENT = "studio:preview-arrange-key";
+const PREVIEW_LAYOUT_KEY_EVENT = "studio:preview-layout-key";
+const PREVIEW_ARRANGE_KEY_EVENT = "studio:preview-arrange-key";
 
 type KeyMessage = Extract<
   BridgeToParent,
@@ -74,7 +86,13 @@ const forwardAppKey = (id: AppKey): void => {
   } else if (id === "palette" || id === "shortcuts") {
     openLayer(id);
   } else {
-    void moveRegion(id === "next-region" ? 1 : -1);
+    let argument: 1 | -1 = -1;
+
+    if (id === "next-region") {
+      argument = 1;
+    }
+
+    void moveRegion(argument);
   }
 };
 
@@ -108,17 +126,9 @@ interface PendingSwap {
   due: boolean;
 }
 
-export interface HoverBox {
-  rect: SelectionContext["rect"];
-  label?: string;
-  altKey?: boolean;
-  fromTree?: boolean;
-  node?: number;
-}
-
 const TREE_REFRESH_MS = 400;
 
-export type TextEditMessage = Extract<
+type TextEditMessage = Extract<
   BridgeToParent,
   { type: "text-edit" | "text-commit" }
 >;
@@ -136,7 +146,7 @@ interface Options {
   setSelection: (
     updater: (prev: SelectionContext[]) => SelectionContext[]
   ) => void;
-  onError: (e: Omit<BuildError, "id" | "ts">) => void;
+  onError: (event2: Omit<BuildError, "id" | "ts">) => void;
   onModeExited: () => void;
   onFrameWheel: (
     frame: HTMLIFrameElement | null,
@@ -147,21 +157,6 @@ interface Options {
   onTextEdit?: (message: TextEditMessage) => void;
   onContextMenu?: (point: { x: number; y: number }) => void;
 }
-
-const pagePoint = (
-  frame: HTMLIFrameElement | null,
-  x: number,
-  y: number
-): { x: number; y: number } | null => {
-  if (!frame) {
-    return null;
-  }
-
-  const rect = frame.getBoundingClientRect();
-  const scale = frame.offsetWidth > 0 ? rect.width / frame.offsetWidth : 1;
-
-  return { x: rect.left + x * scale, y: rect.top + y * scale };
-};
 
 const SWAP_FALLBACK_MS = 1500;
 const LOAD_GRACE_MS = 500;
@@ -176,110 +171,7 @@ const releaseToolbarFocus = (): void => {
   }
 };
 
-type SelectMessage = Extract<BridgeToParent, { type: "select" }>;
-
-type SelectManyMessage = Extract<BridgeToParent, { type: "select-many" }>;
-
-const isSelectMessage = (
-  msg: BridgeToParent
-): msg is SelectMessage | SelectManyMessage =>
-  msg.type === "select" || msg.type === "select-many";
-
-export function nextSelection(
-  prev: SelectionContext[],
-  picked: SelectionContext,
-  additive: boolean
-): SelectionContext[] {
-  if (!additive) {
-    return [picked];
-  }
-
-  const has = prev.some((s) => s.selector === picked.selector);
-
-  return has
-    ? prev.filter((s) => s.selector !== picked.selector)
-    : [...prev, picked];
-}
-
-export function manySelection(
-  prev: SelectionContext[],
-  picked: SelectionContext[],
-  additive: boolean
-): SelectionContext[] {
-  if (!additive) {
-    return picked;
-  }
-
-  const known = new Set(prev.map((s) => s.selector));
-
-  return [...prev, ...picked.filter((s) => !known.has(s.selector))];
-}
-
-const nodeAfterSelect = (
-  msg: SelectMessage,
-  selection: SelectionContext[]
-): number | null => {
-  if (
-    msg.additive &&
-    selection.some((s) => s.selector === msg.selection.selector)
-  ) {
-    return null;
-  }
-
-  return typeof msg.node === "number" ? msg.node : null;
-};
-
-const applyRects = (
-  prev: SelectionContext[],
-  selectors: string[],
-  rects: (SelectionContext["rect"] | null)[]
-): SelectionContext[] => {
-  let changed = false;
-
-  const next = prev.map((s) => {
-    const i = selectors.indexOf(s.selector);
-    const r = i === -1 ? undefined : rects[i];
-
-    if (!r || sameRect(r, s.rect)) {
-      return s;
-    }
-
-    changed = true;
-
-    return { ...s, rect: r };
-  });
-
-  return changed ? next : prev;
-};
-
-const hoverOf = (
-  msg: Extract<BridgeToParent, { type: "hover" }>
-): HoverBox | null => {
-  if (!msg.rect) {
-    return null;
-  }
-
-  const box: HoverBox = {
-    altKey: msg.altKey === true,
-    fromTree: msg.source === "tree",
-    label: msg.label,
-    rect: msg.rect,
-  };
-
-  if (typeof msg.node === "number") {
-    box.node = msg.node;
-  }
-
-  return box;
-};
-
-const sameRect = (
-  a: SelectionContext["rect"],
-  b: SelectionContext["rect"]
-): boolean =>
-  a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
-
-export function usePreviewFrames(o: Options) {
+const usePreviewFrames = (options: Options) => {
   const [slots, setSlots] = useState<PreviewSlot[]>([]);
   const [frontToken, setFrontToken] = useState<string | null>(null);
 
@@ -320,8 +212,8 @@ export function usePreviewFrames(o: Options) {
   const textEditing = useRef(false);
   const dragHold = useRef(false);
 
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
 
   const frameFor = useCallback(
     (slot: PreviewSlot): BridgeFrame => ({
@@ -340,9 +232,15 @@ export function usePreviewFrames(o: Options) {
   frontRef.current = frontToken;
 
   const frontFrame = useCallback((): BridgeFrame | null => {
-    const slot = slotsRef.current.find((s) => s.token === frontRef.current);
+    const slot = slotsRef.current.find(
+      (previewSlot) => previewSlot.token === frontRef.current
+    );
 
-    return slot ? frameFor(slot) : null;
+    if (slot) {
+      return frameFor(slot);
+    }
+
+    return null;
   }, [frameFor]);
 
   const requestRects = useCallback((frame: BridgeFrame | null) => {
@@ -350,15 +248,24 @@ export function usePreviewFrames(o: Options) {
       return;
     }
 
-    const selectors = opts.current.selection.map((s) => s.selector);
+    const selectors = opts.current.selection.map(
+      (selectionContext7) => selectionContext7.selector
+    );
+
     postToFrame(frame, { selectors, type: "request-rects" });
   }, []);
 
   const syncFrame = useCallback(
     (frame: BridgeFrame) => {
+      let mode2: "select" | "none" = "none";
+
+      if (opts.current.selectMode) {
+        mode2 = "select";
+      }
+
       postToFrame(frame, {
         marquee: opts.current.marquee === true,
-        mode: opts.current.selectMode ? "select" : "none",
+        mode: mode2,
         type: "set-mode",
       });
       postToFrame(frame, {
@@ -374,9 +281,14 @@ export function usePreviewFrames(o: Options) {
     (token: string) => {
       frontRef.current = token;
       setFrontToken(token);
-      setSlots((prev) => prev.filter((s) => s.token === token));
+      setSlots((prev) =>
+        prev.filter((previewSlot2) => previewSlot2.token === token)
+      );
       setHover(null);
-      const slot = slotsRef.current.find((s) => s.token === token);
+
+      const slot = slotsRef.current.find(
+        (previewSlot3) => previewSlot3.token === token
+      );
 
       if (slot) {
         window.setTimeout(() => {
@@ -464,7 +376,7 @@ export function usePreviewFrames(o: Options) {
     setFrontToken(token);
   }, []);
 
-  useEffect(() => loadFresh(o.baseUrl), [o.baseUrl, loadFresh]);
+  useEffect(() => loadFresh(options.baseUrl), [options.baseUrl, loadFresh]);
 
   const watchHmr = useCallback(
     (receivedAt: number) => {
@@ -491,7 +403,7 @@ export function usePreviewFrames(o: Options) {
   );
 
   useEffect(() => {
-    const change = o.lastChange;
+    const change = options.lastChange;
 
     if (change === handledChange.current) {
       return;
@@ -501,14 +413,14 @@ export function usePreviewFrames(o: Options) {
 
     if (
       !change ||
-      !o.live ||
-      !o.baseUrl ||
-      change.directionId !== o.directionId
+      !options.live ||
+      !options.baseUrl ||
+      change.directionId !== options.directionId
     ) {
       return;
     }
 
-    if (o.kind === "react" && !change.shouldReload) {
+    if (options.kind === "react" && !change.shouldReload) {
       pendingReact.current = {
         changedAt: change.changedAt,
         receivedAt: change.receivedAt,
@@ -524,9 +436,9 @@ export function usePreviewFrames(o: Options) {
 
     reselectOnSwap.current = change.shouldReload === true;
     const token = randomToken();
-    const src = frameSrc(o.baseUrl, { v: String(change.changedAt) });
+    const src = frameSrc(options.baseUrl, { v: String(change.changedAt) });
     setSlots((prev) => [
-      ...prev.filter((s) => s.token === frontRef.current),
+      ...prev.filter((previewSlot4) => previewSlot4.token === frontRef.current),
       { src, token },
     ]);
 
@@ -543,11 +455,11 @@ export function usePreviewFrames(o: Options) {
       token,
     };
   }, [
-    o.lastChange,
-    o.live,
-    o.baseUrl,
-    o.directionId,
-    o.kind,
+    options.lastChange,
+    options.live,
+    options.baseUrl,
+    options.directionId,
+    options.kind,
     markSwap,
     watchHmr,
   ]);
@@ -562,43 +474,52 @@ export function usePreviewFrames(o: Options) {
   );
 
   useEffect(() => {
-    const f = frontFrame();
+    const frame = frontFrame();
 
-    if (f) {
-      postToFrame(f, {
-        marquee: o.marquee === true,
-        mode: o.selectMode ? "select" : "none",
+    if (frame) {
+      let mode3: "select" | "none" = "none";
+
+      if (options.selectMode) {
+        mode3 = "select";
+      }
+
+      postToFrame(frame, {
+        marquee: options.marquee === true,
+        mode: mode3,
         type: "set-mode",
       });
     }
 
-    if (!o.selectMode) {
+    if (!options.selectMode) {
       setHover(null);
     }
-  }, [o.selectMode, o.marquee, frontToken, frontFrame]);
+  }, [options.selectMode, options.marquee, frontToken, frontFrame]);
 
   useEffect(() => {
-    const f = frontFrame();
+    const frame2 = frontFrame();
 
-    if (!f) {
+    if (!frame2) {
       return;
     }
 
-    const allowed = o.textEditAllowed === true;
+    const allowed = options.textEditAllowed === true;
 
     if (!allowed) {
-      postToFrame(f, { type: "text-edit-stop" });
+      postToFrame(frame2, { type: "text-edit-stop" });
     }
 
-    postToFrame(f, { allowed, type: "text-edit-allowed" });
-  }, [o.textEditAllowed, frontToken, frontFrame]);
+    postToFrame(frame2, { allowed, type: "text-edit-allowed" });
+  }, [options.textEditAllowed, frontToken, frontFrame]);
 
-  const selectorKey = o.selection.map((s) => s.selector).join("\n");
+  const selectorKey = options.selection
+    .map((selectionContext8) => selectionContext8.selector)
+    .join("\n");
+
   useEffect(() => {
     requestRects(frontFrame());
   }, [selectorKey, frontToken, requestRects, frontFrame]);
 
-  useLayoutEffect(() => picked.set(null), [o.selection, picked]);
+  useLayoutEffect(() => picked.set(null), [options.selection, picked]);
 
   useLayoutEffect(() => {
     const at = pendingSelectAt.current;
@@ -617,7 +538,7 @@ export function usePreviewFrames(o: Options) {
         projectId: cur.projectId,
       });
     });
-  }, [o.selection]);
+  }, [options.selection]);
 
   const onPainted = useCallback(
     (frame: BridgeFrame) => {
@@ -680,10 +601,10 @@ export function usePreviewFrames(o: Options) {
 
     treeTimer.current = window.setTimeout(() => {
       treeTimer.current = null;
-      const f = frontFrame();
+      const frame3 = frontFrame();
 
-      if (f && treeWanted.current) {
-        postToFrame(f, { type: "request-tree" });
+      if (frame3 && treeWanted.current) {
+        postToFrame(frame3, { type: "request-tree" });
       }
     }, TREE_REFRESH_MS);
   }, [frontFrame]);
@@ -696,10 +617,10 @@ export function usePreviewFrames(o: Options) {
         return;
       }
 
-      const f = frontFrame();
+      const frame4 = frontFrame();
 
-      if (f) {
-        postToFrame(f, { type: "request-tree" });
+      if (frame4) {
+        postToFrame(frame4, { type: "request-tree" });
       }
     },
     [frontFrame]
@@ -724,7 +645,13 @@ export function usePreviewFrames(o: Options) {
       releaseToolbarFocus();
 
       if (msg.type === "select-many") {
-        setSelectedNode(typeof msg.node === "number" ? msg.node : null);
+        let argument2: number | null = null;
+
+        if (typeof msg.node === "number") {
+          argument2 = msg.node;
+        }
+
+        setSelectedNode(argument2);
 
         if (msg.selections.length > 0) {
           pendingSelectAt.current = msg.at;
@@ -785,10 +712,12 @@ export function usePreviewFrames(o: Options) {
 
           break;
         }
+
         case "tree": {
           setTree(parseLayerTree(msg));
           break;
         }
+
         case "rects": {
           if (dragHold.current) {
             heldRects.current = msg;
@@ -800,24 +729,29 @@ export function usePreviewFrames(o: Options) {
 
           break;
         }
+
         case "scroll": {
           setHover(null);
           requestRects(frame);
           break;
         }
+
         case "mode-exited": {
           setHover(null);
           cur.onModeExited();
           break;
         }
+
         case "wheel": {
           cur.onFrameWheel(frame.element, msg);
           break;
         }
+
         case "zoom-key": {
           cur.onZoomKey(msg.key);
           break;
         }
+
         case "context-menu": {
           const at = pagePoint(frame.element, msg.x, msg.y);
 
@@ -898,19 +832,19 @@ export function usePreviewFrames(o: Options) {
   );
 
   const clearSelection = useCallback(() => {
-    const f = frontFrame();
+    const frame5 = frontFrame();
 
-    if (f) {
-      postToFrame(f, { type: "clear" });
+    if (frame5) {
+      postToFrame(frame5, { type: "clear" });
     }
   }, [frontFrame]);
 
   const post = useCallback(
     (body: ParentMessageBody) => {
-      const f = frontFrame();
+      const frame6 = frontFrame();
 
-      if (f) {
-        postToFrame(f, body);
+      if (frame6) {
+        postToFrame(frame6, body);
       }
     },
     [frontFrame]
@@ -938,7 +872,10 @@ export function usePreviewFrames(o: Options) {
   const selectRelative = useCallback(
     (selector: string, move: SelectMove) => {
       const cur = opts.current;
-      const target = cur.selection.find((s) => s.selector === selector);
+
+      const target = cur.selection.find(
+        (selectionContext9) => selectionContext9.selector === selector
+      );
 
       if (
         move === "child" &&
@@ -1014,4 +951,12 @@ export function usePreviewFrames(o: Options) {
     tree,
     watchTree,
   };
-}
+};
+
+export {
+  PREVIEW_ARRANGE_KEY_EVENT,
+  PREVIEW_LAYOUT_KEY_EVENT,
+  usePreviewFrames,
+};
+
+export type { HoverBox, TextEditMessage };

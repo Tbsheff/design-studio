@@ -21,8 +21,8 @@ import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { copy } from "./copy.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
+import type { HoverBox } from "./preview-rect-model.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
-import type { HoverBox } from "./use-preview-frames.js";
 
 interface TreeFrames {
   tree: LayerTree | null;

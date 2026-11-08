@@ -4,9 +4,9 @@ import type { ReactNode, ReactElement } from "react";
 import { formatMeasure, measureBetween } from "../../../shared/measure.js";
 import type { MeasureLine } from "../../../shared/measure.js";
 import { copy } from "./copy.js";
+import type { HoverBox } from "./preview-rect-model.js";
 import { unionBox } from "./snap-model.js";
 import type { SnapGuide } from "./snap-model.js";
-import type { HoverBox } from "./use-preview-frames.js";
 import type {
   ResizeControl,
   ResizeEdge,

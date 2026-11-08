@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { deletePattern } from "@design-studio/actions/pattern/delete";
 import { Effect } from "effect";
 
-import { PatternStore, PatternWriter } from "../../direct-edit/index.js";
+import { PatternStore, PatternWriter } from "../../components/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 
 type DeletePatternInput = Input<typeof deletePattern>;

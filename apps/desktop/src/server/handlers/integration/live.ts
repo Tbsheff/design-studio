@@ -1,9 +1,6 @@
 import { Layer } from "effect";
 
-import {
-  IntegrationStore,
-  IntegrationWriter,
-} from "../../direct-edit/index.js";
+import { IntegrationStore, IntegrationWriter } from "../../publish/index.js";
 
 const IntegrationLive = Layer.mergeAll(
   IntegrationStore.layer,

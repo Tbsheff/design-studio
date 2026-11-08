@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { getEffect } from "@design-studio/actions/effect/get";
 import { Effect } from "effect";
 
-import { EffectStore } from "../../direct-edit/index.js";
+import { EffectStore } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetEffectInput = Input<typeof getEffect>;

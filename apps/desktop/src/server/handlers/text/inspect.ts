@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { inspectText } from "@design-studio/actions/text/inspect";
 import { Effect } from "effect";
 
-import { TextSearchStore } from "../../direct-edit/index.js";
+import { TextSearchStore } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectTextInput = Input<typeof inspectText>;

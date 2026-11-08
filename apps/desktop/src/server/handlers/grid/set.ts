@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { setGrid } from "@design-studio/actions/grid/set";
 import { Effect } from "effect";
 
-import { GridWriter } from "../../direct-edit/index.js";
+import { GridWriter } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetGridInput = Input<typeof setGrid>;

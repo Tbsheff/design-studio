@@ -1,0 +1,71 @@
+export {
+  commitBreakpointStyle as commitAccessibilityEdit,
+  guardBreakpointEdit as guardAccessibilityEdit,
+} from "../../breakpoints/commit.js";
+
+export { loadBreakpointSite as loadAccessibilitySite } from "../../breakpoints/site.js";
+
+export { findFrame } from "../../canvas/index.js";
+
+export { readDesignSystemState } from "../../design-system/state.js";
+
+export {
+  jsxElementAt,
+  jsxTagName,
+  setHtmlAttrs,
+  setJsxAttrs,
+} from "../../direct-edit/commit/index.js";
+
+export {
+  appSourceBody,
+  parseLoc,
+  probeOnPage,
+} from "../../page-probe/index.js";
+
+export { withPagePath } from "../../project-source/index.js";
+
+export { nearestPassingToken } from "../checks.js";
+
+export { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+
+export {
+  ACCESSIBILITY_LABEL_MAX,
+  ACCESSIBILITY_LIST_MAX,
+  ACCESSIBILITY_ROLES,
+  TAB_INDEX_MAX,
+  TAB_INDEX_MIN,
+} from "@design-studio/contracts/accessibility";
+
+export type { BreakpointScope as AccessibilityScope } from "../../breakpoints/commit.js";
+
+export type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
+
+export type {
+  AttrChanges,
+  WrittenFile,
+} from "../../direct-edit/commit/index.js";
+
+export type { DirectEditDeps } from "../../direct-edit/index.js";
+
+export type { PreviewService } from "../../preview/index.js";
+
+export type {
+  CompiledTokenEntry,
+  Direction,
+  Project,
+  SourceLoc,
+  Version,
+} from "@design-studio/contracts";
+
+export type {
+  AccessibilityChanges,
+  AccessibilityReport,
+  AccessibilityRole,
+  AccessibilitySetResult,
+  AccessibleNode,
+  ContrastFix,
+  ContrastPair,
+  MissingAlt,
+  NameSource,
+  TabStop,
+} from "@design-studio/contracts/accessibility";

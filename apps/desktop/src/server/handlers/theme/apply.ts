@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { applyTheme } from "@design-studio/actions/theme/apply";
 import { Effect } from "effect";
 
-import { ThemeWriter } from "../../direct-edit/index.js";
+import { ThemeWriter } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ApplyThemeInput = Input<typeof applyTheme>;

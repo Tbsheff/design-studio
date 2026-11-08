@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { listPattern } from "@design-studio/actions/pattern/list";
 import { Effect } from "effect";
 
-import { PatternStore } from "../../direct-edit/index.js";
+import { PatternStore } from "../../components/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ListPatternInput = Input<typeof listPattern>;

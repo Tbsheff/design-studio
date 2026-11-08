@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { inspectTextStyle } from "@design-studio/actions/text-style/inspect";
 import { Effect } from "effect";
 
-import { TextStyleStore } from "../../direct-edit/index.js";
+import { TextStyleStore } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectTextStyleInput = Input<typeof inspectTextStyle>;

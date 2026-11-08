@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { inspectMotion } from "@design-studio/actions/motion/inspect";
 import { Effect } from "effect";
 
-import { MotionStore } from "../../direct-edit/index.js";
+import { MotionStore } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectMotionInput = Input<typeof inspectMotion>;

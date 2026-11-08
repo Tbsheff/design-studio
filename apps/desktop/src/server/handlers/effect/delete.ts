@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { deleteEffect } from "@design-studio/actions/effect/delete";
 import { Effect } from "effect";
 
-import { EffectStore, EffectWriter } from "../../direct-edit/index.js";
+import { EffectStore, EffectWriter } from "../../style-scope/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 
 type DeleteEffectInput = Input<typeof deleteEffect>;

@@ -1,6 +1,6 @@
 import { Layer } from "effect";
 
-import { GridStore, GridWriter } from "../../direct-edit/index.js";
+import { GridStore, GridWriter } from "../../style-scope/index.js";
 
 const GridLive = Layer.mergeAll(GridStore.layer, GridWriter.layer);
 

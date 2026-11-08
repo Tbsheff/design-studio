@@ -2,10 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { deleteIntegration } from "@design-studio/actions/integration/delete";
 import { Effect } from "effect";
 
-import {
-  IntegrationStore,
-  IntegrationWriter,
-} from "../../direct-edit/index.js";
+import { IntegrationStore, IntegrationWriter } from "../../publish/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 
 type DeleteIntegrationInput = Input<typeof deleteIntegration>;

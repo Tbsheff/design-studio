@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { getFill } from "@design-studio/actions/fill/get";
 import { Effect } from "effect";
 
-import { FillStore } from "../../direct-edit/index.js";
+import { FillStore } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetFillInput = Input<typeof getFill>;

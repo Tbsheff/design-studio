@@ -1,6 +1,6 @@
 import { Layer } from "effect";
 
-import { MotionStore, MotionWriter } from "../../direct-edit/index.js";
+import { MotionStore, MotionWriter } from "../../style-scope/index.js";
 
 const MotionLive = Layer.mergeAll(MotionStore.layer, MotionWriter.layer);
 

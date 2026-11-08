@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { setEffect } from "@design-studio/actions/effect/set";
 import { Effect } from "effect";
 
-import { EffectWriter } from "../../direct-edit/index.js";
+import { EffectWriter } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetEffectInput = Input<typeof setEffect>;

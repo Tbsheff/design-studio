@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { setFill } from "@design-studio/actions/fill/set";
 import { Effect } from "effect";
 
-import { FillWriter } from "../../direct-edit/index.js";
+import { FillWriter } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetFillInput = Input<typeof setFill>;

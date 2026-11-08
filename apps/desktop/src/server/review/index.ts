@@ -15,3 +15,15 @@ export type { CritiqueStoreApi, GetCommand } from "./critique-store.js";
 export type { Critique, RunCommand } from "./critique-frame.js";
 
 export { ScenarioRunner, ScenarioStore } from "./scenario/index.js";
+
+export {
+  AccessibilityStore,
+  AccessibilityWriter,
+} from "./accessibility/index.js";
+
+export type {
+  AccessibilityStoreApi,
+  AccessibilityWriterApi,
+  InspectAccessibilityCommand,
+  SetAccessibilityCommand,
+} from "./accessibility/index.js";

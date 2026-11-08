@@ -230,7 +230,13 @@ const CanvasView = (props: ViewProps): ReactElement => {
             />
           )}
         <FrameStateSlotContext.Provider value={renderScenarioSlot}>
-          <CanvasStage props={props} s={textValue} pv={pv} ed={ed} w={width} />
+          <CanvasStage
+            props={props}
+            stage={textValue}
+            preview={pv}
+            edits={ed}
+            wiring={width}
+          />
         </FrameStateSlotContext.Provider>
       </div>
     </div>

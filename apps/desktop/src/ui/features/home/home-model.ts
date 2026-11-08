@@ -44,7 +44,7 @@ const EMPTY_PROMPT = "Describe the design first";
 
 function focusPrompt(home: HTMLElement | null, atEnd = false): void {
   home?.scrollTo({ behavior: "smooth", top: 0 });
-  window.requestAnimationFrame(() => {
+  globalThis.requestAnimationFrame(() => {
     const area = document.querySelector<HTMLTextAreaElement>(
       '[aria-label="Describe the design"]'
     );
@@ -58,7 +58,7 @@ function focusPrompt(home: HTMLElement | null, atEnd = false): void {
 }
 
 function focusIn(selector: string): void {
-  window.setTimeout(() => {
+  globalThis.setTimeout(() => {
     const el = document.querySelector<HTMLElement>(selector);
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
     el?.focus();
@@ -236,33 +236,33 @@ interface StarProps {
 }
 
 export {
-  PLACEHOLDER,
-  focusPrompt,
+  EMPTY_PROMPT,
+  EXAMPLES,
   EXAMPLE_MS,
-  reasonId,
+  HOME_REASON_ID,
   LEVEL_LABEL,
-  shortHome,
+  PLACEHOLDER,
+  createFromHome,
+  focusIn,
+  focusPrompt,
   folderLabel,
   hasFiles,
-  homeSendBlocker,
-  promptPlaceholder,
   homeOf,
-  modelSummary,
-  EXAMPLES,
-  EMPTY_PROMPT,
+  homeSendBlocker,
   isEmpty,
-  focusIn,
-  HOME_REASON_ID,
-  createFromHome,
+  modelSummary,
+  promptPlaceholder,
+  reasonId,
+  shortHome,
 };
 
 export type {
-  Pop,
   Busy,
-  HomeCreateInput,
   DesignCount,
+  HomeCreateInput,
   KeyedFlag,
   KeyedUrl,
   Point,
+  Pop,
   StarProps,
 };

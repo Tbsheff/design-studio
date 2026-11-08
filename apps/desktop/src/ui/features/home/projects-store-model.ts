@@ -5,7 +5,7 @@ import type { AppHealth, FoundApps } from "../../../shared/found-apps.js";
 import { api, errorText, json } from "../../api.js";
 import { isThumbnailPending } from "./project-list-model.js";
 
-export interface ProjectsState {
+interface ProjectsState {
   readonly projects: Project[] | null;
   readonly error: string | null;
 }
@@ -37,7 +37,7 @@ function update(change: (list: Project[]) => Project[]): void {
   }
 }
 
-export const projectsApi = {
+const projectsApi = {
   duplicate: async (project: Project) => {
     const { project: copy } = await api.duplicateProject(project.id);
     await load();
@@ -92,9 +92,9 @@ const POLL_FAST_MS = 500;
 const POLL_MS = 1500;
 const RECENT_MS = 120_000;
 
-export function useProjects(options: {
+const useProjects = (options: {
   readonly shouldWatch: boolean;
-}): ProjectsState & { readonly reload: () => Promise<void> } {
+}): ProjectsState & { readonly reload: () => Promise<void> } => {
   const current = useSyncExternalStore(projectsApi.subscribe, projectsApi.get);
   useEffect(() => {
     void load();
@@ -115,7 +115,7 @@ export function useProjects(options: {
       return;
     }
 
-    const timer = window.setInterval(
+    const timer = globalThis.setInterval(
       () => {
         if (document.visibilityState === "visible") {
           void load();
@@ -124,17 +124,15 @@ export function useProjects(options: {
       lagging ? POLL_FAST_MS : POLL_MS
     );
 
-    return () => window.clearInterval(timer);
+    return () => globalThis.clearInterval(timer);
   }, [watching, lagging]);
 
   return { ...current, reload: load };
-}
+};
 
 const HEALTH_POLL_MS = 2500;
 
-export function useAppHealth(
-  projects: Project[] | null
-): Map<string, AppHealth> {
+const useAppHealth = (projects: Project[] | null): Map<string, AppHealth> => {
   const [health, setHealth] = useState<AppHealth[]>([]);
   const [tick, setTick] = useState(0);
 
@@ -164,16 +162,20 @@ export function useAppHealth(
       return;
     }
 
-    const timer = window.setTimeout(
+    const timer = globalThis.setTimeout(
       () => setTick((n) => n + 1),
       HEALTH_POLL_MS
     );
 
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [building, health]);
 
   return useMemo(
     () => new Map(health.map((item) => [item.projectId, item])),
     [health]
   );
-}
+};
+
+export { projectsApi, useAppHealth, useProjects };
+
+export type { ProjectsState };

@@ -5,7 +5,7 @@ import type { HomeToastState } from "./home-sections.js";
 import { HomeDoctor, HomeTrash } from "./lazy-parts.js";
 import type { useDoctorGate } from "./use-doctor-gate.js";
 
-function HomeOverlays({
+const HomeOverlays = ({
   isTrashOpen,
   onCloseTrash,
   onRestored,
@@ -19,7 +19,7 @@ function HomeOverlays({
   readonly doctor: ReturnType<typeof useDoctorGate>;
   readonly toast: HomeToastState | null;
   readonly onToastDone: () => void;
-}) {
+}) => {
   const { gate } = doctor;
 
   return (
@@ -46,6 +46,6 @@ function HomeOverlays({
       <HomeToast toast={toast} onDone={onToastDone} />
     </>
   );
-}
+};
 
 export { HomeOverlays };

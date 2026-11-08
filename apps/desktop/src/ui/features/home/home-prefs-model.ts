@@ -2,9 +2,9 @@ import { useSyncExternalStore } from "react";
 
 import { readStored, writeStored } from "../../platform/storage.js";
 
-export type HomeView = "list" | "grid";
+type HomeView = "list" | "grid";
 
-export type HomeFilter = "all" | "prototypes" | "apps" | "systems";
+type HomeFilter = "all" | "prototypes" | "apps" | "systems";
 
 const FILTERS: ReadonlySet<string> = new Set([
   "all",
@@ -13,7 +13,7 @@ const FILTERS: ReadonlySet<string> = new Set([
   "systems",
 ]);
 
-export interface HomePrefs {
+interface HomePrefs {
   readonly favorites: string[];
   readonly isFavoritesOnly: boolean;
   readonly view: HomeView;
@@ -64,7 +64,7 @@ function saveQuietly(prefs: HomePrefs): void {
 let current = read();
 const listeners = new Set<() => void>();
 
-export const homePrefs = {
+const homePrefs = {
   get: () => current,
   set(patch: Partial<HomePrefs>) {
     current = { ...current, ...patch };
@@ -89,6 +89,9 @@ function subscribe(listener: () => void) {
   };
 }
 
-export function useHomePrefs(): HomePrefs {
-  return useSyncExternalStore(subscribe, homePrefs.get);
-}
+const useHomePrefs = (): HomePrefs =>
+  useSyncExternalStore(subscribe, homePrefs.get);
+
+export { homePrefs, useHomePrefs };
+
+export type { HomeFilter, HomePrefs, HomeView };

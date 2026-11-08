@@ -66,7 +66,7 @@ function useTrashThumb(item: TrashItem): string | null {
   return url;
 }
 
-function TrashRow({
+const TrashRow = ({
   item,
   isBusy,
   onRestore,
@@ -76,7 +76,7 @@ function TrashRow({
   readonly isBusy: boolean;
   readonly onRestore: () => void;
   readonly onDelete: () => void;
-}) {
+}) => {
   const thumb = useTrashThumb(item);
 
   return (
@@ -125,9 +125,9 @@ function TrashRow({
       </div>
     </li>
   );
-}
+};
 
-function ConfirmDelete({
+const ConfirmDelete = ({
   confirm,
   isBusy,
   error,
@@ -139,7 +139,7 @@ function ConfirmDelete({
   readonly error: string | null;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
-}) {
+}) => {
   const dialog = useModalDialog(() => (isBusy ? false : onCancel()));
 
   const title =
@@ -205,7 +205,7 @@ function ConfirmDelete({
       </div>
     </dialog>
   );
-}
+};
 
 export default function HomeTrash({
   onClose,
@@ -252,7 +252,7 @@ export default function HomeTrash({
       drop(item.trashId);
       setNote(`Restored “${item.name}”.`);
       onRestored();
-      window.requestAnimationFrame(() =>
+      globalThis.requestAnimationFrame(() =>
         dialog.ref.current
           ?.querySelector<HTMLButtonElement>(
             ".trash-row .btn:not(:disabled), .modal-foot .btn:last-child"
@@ -290,7 +290,7 @@ export default function HomeTrash({
       }
 
       setConfirm(null);
-      window.requestAnimationFrame(() =>
+      globalThis.requestAnimationFrame(() =>
         dialog.ref.current
           ?.querySelector<HTMLButtonElement>(
             ".trash-row .btn:not(:disabled), .modal-foot .btn:last-child"

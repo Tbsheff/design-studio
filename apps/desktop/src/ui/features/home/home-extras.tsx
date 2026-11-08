@@ -14,13 +14,13 @@ import type { FolderChooser } from "./use-folder-chooser.js";
 
 export { FoldersSection } from "./folder-controls.js";
 
-function HiddenProjectsNote({
+const HiddenProjectsNote = ({
   homeDir,
   onMoved,
 }: {
   readonly homeDir: string | null;
   readonly onMoved: () => void;
-}) {
+}) => {
   const [hidden, setHidden] = useState<{
     readonly count: number;
     readonly target: string;
@@ -86,7 +86,7 @@ function HiddenProjectsNote({
       {error && <span className="home-hidden-error">{error}</span>}
     </div>
   );
-}
+};
 
 export interface ComposerFootProps {
   readonly workspaces: WorkspaceList | null;
@@ -106,7 +106,7 @@ export interface ComposerFootProps {
   readonly onHiddenMoved: () => void;
 }
 
-export function ComposerFoot({
+export const ComposerFoot = ({
   workspaces,
   location,
   prompt,
@@ -115,7 +115,7 @@ export function ComposerFoot({
   onAddFolder,
   advanced,
   onHiddenMoved,
-}: ComposerFootProps) {
+}: ComposerFootProps) => {
   const homeDir = workspaces?.homeDir ?? null;
 
   return (
@@ -144,4 +144,4 @@ export function ComposerFoot({
       <HiddenProjectsNote homeDir={homeDir} onMoved={onHiddenMoved} />
     </div>
   );
-}
+};

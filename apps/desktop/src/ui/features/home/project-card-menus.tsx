@@ -6,7 +6,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { copy } from "./copy.js";
 import type { CardAction, MenuAt } from "./project-grid.js";
 
-export function CardMenu({
+const CardMenu = ({
   project,
   place,
   at,
@@ -18,7 +18,7 @@ export function CardMenu({
   readonly at: Exclude<MenuAt, null>;
   readonly onClose: (refocus: boolean) => void;
   readonly onPick: (action: CardAction) => void;
-}) {
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
@@ -122,15 +122,15 @@ export function CardMenu({
       {place && <p className="project-menu-note">Files stay in {place}.</p>}
     </div>
   );
-}
+};
 
-export function RenameField({
+const RenameField = ({
   project,
   onDone,
 }: {
   readonly project: Project;
   readonly onDone: (name: string | null) => void;
-}) {
+}) => {
   const [value, setValue] = useState(project.name);
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -166,4 +166,6 @@ export function RenameField({
       />
     </form>
   );
-}
+};
+
+export { CardMenu, RenameField };

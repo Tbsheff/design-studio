@@ -45,7 +45,7 @@ interface ComposerBarProps {
   };
 }
 
-function ComposerBar({
+const ComposerBar = ({
   fileRef,
   onFiles,
   plusActions,
@@ -60,7 +60,7 @@ function ComposerBar({
   busy,
   sendDisabled,
   app,
-}: ComposerBarProps) {
+}: ComposerBarProps) => {
   const [pop, setPop] = useState<Pop>(null);
   const shownPop = usePresence(pop);
   const plusRef = useRef<HTMLButtonElement>(null);
@@ -256,7 +256,7 @@ function ComposerBar({
       />
     </div>
   );
-}
+};
 
 export { ComposerBar };
 

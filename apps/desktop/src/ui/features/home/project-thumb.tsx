@@ -57,13 +57,13 @@ function useThumb(hit: ProjectHit): string | null {
   return url && url.key === key ? url.url : null;
 }
 
-export function ProjectThumb({
+const ProjectThumb = ({
   hit,
   className,
 }: {
   readonly hit: ProjectHit;
   readonly className?: string;
-}) {
+}) => {
   const url = useThumb(hit);
 
   return (
@@ -79,23 +79,21 @@ export function ProjectThumb({
       )}
     </span>
   );
-}
+};
 
-export function TypeBadge({ hit }: { readonly hit: ProjectHit }) {
-  return (
-    <span className="badge pnav-badge" data-type={hit.type}>
-      {hit.typeLabel}
-    </span>
-  );
-}
+const TypeBadge = ({ hit }: { readonly hit: ProjectHit }) => (
+  <span className="badge pnav-badge" data-type={hit.type}>
+    {hit.typeLabel}
+  </span>
+);
 
-export function HealthDot({
+const HealthDot = ({
   hit,
   className,
 }: {
   readonly hit: ProjectHit;
   readonly className?: string;
-}) {
+}) => {
   if (!hit.health) {
     return null;
   }
@@ -109,4 +107,6 @@ export function HealthDot({
       data-tip={hit.health.note}
     />
   );
-}
+};
+
+export { HealthDot, ProjectThumb, TypeBadge };

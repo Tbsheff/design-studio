@@ -18,7 +18,7 @@ interface PromptAreaProps {
   readonly placeholder: string | null;
 }
 
-function PromptArea({
+const PromptArea = ({
   value,
   onChange,
   onSubmit,
@@ -26,7 +26,7 @@ function PromptArea({
   describedBy,
   menuKeys,
   placeholder,
-}: PromptAreaProps) {
+}: PromptAreaProps) => {
   const ref = useRef<HTMLTextAreaElement>(null);
   const example = useExample(value !== "", placeholder === null);
   useLayoutEffect(() => {
@@ -62,7 +62,7 @@ function PromptArea({
       placeholder={placeholder ?? example}
     />
   );
-}
+};
 
 export { PromptArea };
 

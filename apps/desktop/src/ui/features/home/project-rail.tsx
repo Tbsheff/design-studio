@@ -50,7 +50,7 @@ function readRail(): RailState {
 
 let railState: RailState = readRail();
 
-export function setRail(next: RailState): void {
+const setRail = (next: RailState): void => {
   railState = next;
 
   writeStored(KEY, next);
@@ -58,14 +58,14 @@ export function setRail(next: RailState): void {
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
-export function toggleRail(): void {
+const toggleRail = (): void => {
   setRail(railState === "open" ? "mini" : "open");
-}
+};
 
-export function useRail(): RailState {
-  return useSyncExternalStore(
+const useRail = (): RailState =>
+  useSyncExternalStore(
     (listener) => {
       listeners.add(listener);
 
@@ -73,12 +73,11 @@ export function useRail(): RailState {
     },
     () => railState
   );
-}
 
 const OVERLAY_QUERY = "(max-width: 1279px)";
 
 function floating(): boolean {
-  return window.matchMedia(OVERLAY_QUERY).matches;
+  return globalThis.matchMedia(OVERLAY_QUERY).matches;
 }
 
 function pickProject(id: string): void {
@@ -116,13 +115,13 @@ function useFloatingDismiss(
       }
     };
 
-    window.addEventListener("pointerdown", onPointer, true);
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("pointerdown", onPointer, true);
+    globalThis.addEventListener("keydown", onKey);
     window.addEventListener("blur", close);
 
     return () => {
-      window.removeEventListener("pointerdown", onPointer, true);
-      window.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener("pointerdown", onPointer, true);
+      globalThis.removeEventListener("keydown", onKey);
       window.removeEventListener("blur", close);
     };
   }, [state, rail]);
@@ -211,13 +210,13 @@ function useRailKeys(onOpened: () => void): void {
       toggleRail();
 
       if (railState === "open") {
-        window.requestAnimationFrame(() => opened.current());
+        globalThis.requestAnimationFrame(() => opened.current());
       }
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, []);
 }
 
@@ -237,7 +236,7 @@ function tipOf(hit: ProjectHit, current: boolean): string {
   return current ? `${parts.join(" · ")} (open)` : parts.join(" · ");
 }
 
-function MiniRail({
+const MiniRail = ({
   hits,
   projectId,
   onNewPrototype,
@@ -245,7 +244,7 @@ function MiniRail({
   readonly hits: ProjectHit[];
   readonly projectId: string;
   readonly onNewPrototype: () => void;
-}) {
+}) => {
   const top = hits.slice(0, MINI_MAX);
   const current = hits.find((hit) => hit.id === projectId);
 
@@ -303,36 +302,34 @@ function MiniRail({
       </div>
     </>
   );
-}
+};
 
-function RailRow({
+const RailRow = ({
   hit,
   isCurrent,
 }: {
   readonly hit: ProjectHit;
   readonly isCurrent: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      className="prail-item prail-row"
-      aria-current={isCurrent ? "page" : undefined}
-      data-tip={
-        hit.health
-          ? `${KIND_LABEL[hit.type]} · ${hit.health.note}`
-          : KIND_LABEL[hit.type]
-      }
-      data-tip-align="start"
-      onClick={() => pickProject(hit.id)}
-    >
-      <ProjectThumb hit={hit} />
-      <span className="truncate">{hit.name}</span>
-      <HealthDot hit={hit} />
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    className="prail-item prail-row"
+    aria-current={isCurrent ? "page" : undefined}
+    data-tip={
+      hit.health
+        ? `${KIND_LABEL[hit.type]} · ${hit.health.note}`
+        : KIND_LABEL[hit.type]
+    }
+    data-tip-align="start"
+    onClick={() => pickProject(hit.id)}
+  >
+    <ProjectThumb hit={hit} />
+    <span className="truncate">{hit.name}</span>
+    <HealthDot hit={hit} />
+  </button>
+);
 
-function OpenRail({
+const OpenRail = ({
   hits,
   projectId,
   onHome,
@@ -344,7 +341,7 @@ function OpenRail({
   readonly onHome: () => void;
   readonly onNewPrototype: () => void;
   readonly find: RefObject<HTMLInputElement | null>;
-}) {
+}) => {
   const [filter, setFilter] = useState("");
 
   const shown = useMemo(() => {
@@ -440,9 +437,9 @@ function OpenRail({
       </div>
     </>
   );
-}
+};
 
-export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
+const ProjectRail = ({ projectId, onHome, onNewPrototype }: RailProps) => {
   const state = useRail();
   const result = useProjectHits(projectId, false);
   const find = useRef<HTMLInputElement>(null);
@@ -492,4 +489,6 @@ export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
       )}
     </aside>
   );
-}
+};
+
+export { ProjectRail, setRail, toggleRail, useRail };

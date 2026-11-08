@@ -36,7 +36,7 @@ function useFound(): FoundApps | null | "error" {
   return found;
 }
 
-function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
+const FoundList = ({ onUse }: { readonly onUse: (path: string) => void }) => {
   const found = useFound();
 
   if (found === "error") {
@@ -92,9 +92,9 @@ function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
       ))}
     </section>
   );
-}
+};
 
-function StartCards({
+const StartCards = ({
   isBusy,
   onSample,
   onStarter,
@@ -102,7 +102,7 @@ function StartCards({
   readonly isBusy: boolean;
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
-}) {
+}) => {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
     void api
@@ -145,7 +145,7 @@ function StartCards({
       </div>
     </div>
   );
-}
+};
 
 export default function HomeEmpty({
   isBusy,

@@ -8,10 +8,10 @@ import { useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 
-export function locationFor(
+const locationFor = (
   list: WorkspaceList | null,
   lastLocation: string | null
-): string | null {
+): string | null => {
   if (list === null) {
     return lastLocation;
   }
@@ -22,22 +22,19 @@ export function locationFor(
   )
     ? lastLocation
     : null;
-}
+};
 
-export function defaultFolderOf(
-  list: WorkspaceList | null
-): WorkspaceFolder | null {
-  return list?.folders.find((folder) => folder.default) ?? null;
-}
+const defaultFolderOf = (list: WorkspaceList | null): WorkspaceFolder | null =>
+  list?.folders.find((folder) => folder.default) ?? null;
 
-export function filterByFolder(
+const filterByFolder = (
   projects: Project[] | null,
   list: WorkspaceList | null,
   filterId: string | null
 ): {
   readonly filterFolder: WorkspaceFolder | null;
   readonly shownProjects: Project[] | null;
-} {
+} => {
   const filterFolder =
     list?.folders.find((folder) => folder.id === filterId) ?? null;
 
@@ -48,11 +45,11 @@ export function filterByFolder(
         ? projectsInFolder(projects, filterFolder.path)
         : projects,
   };
-}
+};
 
 type Folders = (folders: WorkspaceFolder[]) => WorkspaceFolder[];
 
-export function useWorkspaces(onError: (message: string | null) => void) {
+const useWorkspaces = (onError: (message: string | null) => void) => {
   const [workspaces, setWorkspaces] = useState<WorkspaceList | null>(null);
 
   useEffect(() => {
@@ -127,4 +124,6 @@ export function useWorkspaces(onError: (message: string | null) => void) {
     setDefaultFolder,
     workspaces,
   };
-}
+};
+
+export { defaultFolderOf, filterByFolder, locationFor, useWorkspaces };

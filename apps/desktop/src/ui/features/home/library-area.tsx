@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { ComposerAlert } from "./home-composer-parts.js";
 import { HomeEmpty } from "./lazy-parts.js";
 
-function LibraryArea({
+const LibraryArea = ({
   isEmpty,
   isBusy,
   listError,
@@ -23,7 +23,7 @@ function LibraryArea({
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
   readonly children: ReactNode;
-}) {
+}) => {
   if (isEmpty) {
     return (
       <Suspense fallback={null}>
@@ -45,6 +45,6 @@ function LibraryArea({
       )}
     </>
   );
-}
+};
 
 export { LibraryArea };

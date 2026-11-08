@@ -10,7 +10,7 @@ import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import type { useProjectActions } from "./home-sections.js";
 import type { LibraryModule } from "./lazy-parts.js";
 
-function Library({
+const Library = ({
   lib,
   projects,
   health,
@@ -36,7 +36,7 @@ function Library({
   readonly searchRef: RefObject<HTMLInputElement | null>;
   readonly listError: string | null;
   readonly onPickPack: (id: string | null) => void;
-}) {
+}) => {
   const { filter } = useHomePrefs();
 
   if (!lib) {
@@ -124,6 +124,6 @@ function Library({
       )}
     </>
   );
-}
+};
 
 export { Library };

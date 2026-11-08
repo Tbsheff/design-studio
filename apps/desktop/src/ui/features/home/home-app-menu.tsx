@@ -48,10 +48,7 @@ function attachRequest(chip: AppChip): {
   };
 }
 
-export async function openChip(
-  chip: AppChip,
-  tokensOnly = false
-): Promise<string> {
+const openChip = async (chip: AppChip, tokensOnly = false): Promise<string> => {
   const found = chip.inspection;
 
   if (!found?.kind || found.problem) {
@@ -73,7 +70,7 @@ export async function openChip(
   }
 
   return (await api.attachApp(attachRequest(chip))).project.id;
-}
+};
 
 function keepEnter(
   event: KeyboardEvent<HTMLInputElement>,
@@ -88,9 +85,9 @@ function keepEnter(
 }
 
 const wait = (ms: number) =>
-  new Promise((resolve) => window.setTimeout(resolve, ms));
+  new Promise((resolve) => globalThis.setTimeout(resolve, ms));
 
-export async function runInProject(
+const runInProject = async (
   projectId: string,
   input: {
     readonly prompt: string;
@@ -98,7 +95,7 @@ export async function runInProject(
     readonly images: File[];
     readonly referenceUrls: string[];
   }
-): Promise<void> {
+): Promise<void> => {
   const project = await api.getProject(projectId);
 
   const main =
@@ -142,15 +139,15 @@ export async function runInProject(
       await wait(RETRY_MS);
     }
   }
-}
+};
 
-function Candidates({
+const Candidates = ({
   chip,
   onChange,
 }: {
   readonly chip: AppChip;
   readonly onChange: (patch: Partial<AppChip>) => void;
-}) {
+}) => {
   const found = chip.inspection;
 
   if (!found || found.candidates.length < 2) {
@@ -183,15 +180,15 @@ function Candidates({
       ))}
     </div>
   );
-}
+};
 
-function DevServer({
+const DevServer = ({
   chip,
   onChange,
 }: {
   readonly chip: AppChip;
   readonly onChange: (patch: Partial<AppChip>) => void;
-}) {
+}) => {
   const [envOpen, setEnvOpen] = useState(() => chip.env.trim() !== "");
   const mode = (next: RunMode) => () => onChange({ mode: next });
 
@@ -252,9 +249,9 @@ function DevServer({
       )}
     </div>
   );
-}
+};
 
-export interface AppMenuProps {
+interface AppMenuProps {
   readonly chip: AppChip;
   readonly homeDir: string | null;
   readonly trigger: RefObject<HTMLElement | null>;
@@ -264,7 +261,7 @@ export interface AppMenuProps {
   readonly onTokensOnly: () => void;
 }
 
-export function AppMenu({
+const AppMenu = ({
   chip,
   homeDir,
   trigger,
@@ -272,7 +269,7 @@ export function AppMenu({
   onClose,
   onChange,
   onTokensOnly,
-}: AppMenuProps) {
+}: AppMenuProps) => {
   const found = chip.inspection;
   const problem = chip.error ?? found?.problem ?? null;
 
@@ -324,9 +321,9 @@ export function AppMenu({
       )}
     </Pop>
   );
-}
+};
 
-export function FolderPathPop({
+const FolderPathPop = ({
   trigger,
   isClosing,
   onClose,
@@ -336,7 +333,7 @@ export function FolderPathPop({
   readonly isClosing: boolean;
   readonly onClose: Close;
   readonly onPick: (path: string) => void;
-}) {
+}) => {
   const [value, setValue] = useState("");
 
   const submit = () => {
@@ -385,4 +382,8 @@ export function FolderPathPop({
       </div>
     </Pop>
   );
-}
+};
+
+export { AppMenu, FolderPathPop, openChip, runInProject };
+
+export type { AppMenuProps };

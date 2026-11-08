@@ -24,7 +24,7 @@ interface Props {
   readonly home: RefObject<HTMLElement | null>;
 }
 
-export function HomeSlashMenu({
+const HomeSlashMenu = ({
   prompt,
   setPrompt,
   level,
@@ -33,7 +33,7 @@ export function HomeSlashMenu({
   onModel,
   keys,
   home,
-}: Props) {
+}: Props) => {
   const slash = useSlashMenu({
     draft: prompt,
     groups: [levelGroup(level, onLevel), modelGroup(model, null, onModel)],
@@ -81,4 +81,6 @@ export function HomeSlashMenu({
       onClose={slash.close}
     />
   );
-}
+};
+
+export { HomeSlashMenu };

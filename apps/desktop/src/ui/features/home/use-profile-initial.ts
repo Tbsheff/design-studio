@@ -10,7 +10,7 @@ function initialOf(name: string | null): string | null {
   return first ? first.toLocaleUpperCase() : null;
 }
 
-export function useProfileInitial(): string | null {
+const useProfileInitial = (): string | null => {
   const [initial, setInitial] = useState<string | null>(null);
   useEffect(() => {
     profile ??= json<{ readonly name: string | null }>(
@@ -29,4 +29,6 @@ export function useProfileInitial(): string | null {
   }, []);
 
   return initial;
-}
+};
+
+export { useProfileInitial };

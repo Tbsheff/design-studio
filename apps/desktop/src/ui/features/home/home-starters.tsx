@@ -15,13 +15,13 @@ const STARTER_IMAGES: Record<string, string> = {
     .href,
 };
 
-export function StarterGallery({
+const StarterGallery = ({
   isDisabled,
   onPick,
 }: {
   readonly isDisabled: boolean;
   readonly onPick: (starter: Starter) => Promise<void>;
-}) {
+}) => {
   const [starters, setStarters] = useState<Starter[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -102,15 +102,15 @@ export function StarterGallery({
       )}
     </section>
   );
-}
+};
 
-export function FirstRunPanel({
+const FirstRunPanel = ({
   onClose,
   onSample,
 }: {
   readonly onClose: () => void;
   readonly onSample: () => Promise<void>;
-}) {
+}) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -159,4 +159,6 @@ export function FirstRunPanel({
       </button>
     </section>
   );
-}
+};
+
+export { FirstRunPanel, StarterGallery };

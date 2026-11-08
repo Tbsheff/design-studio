@@ -120,9 +120,9 @@ const toNextGridIndex = (
 };
 
 export {
+  isThumbnailPending,
   toFilteredProjects,
   toGridColumns,
   toNextGridIndex,
   toSortedProjects,
-  isThumbnailPending,
 };

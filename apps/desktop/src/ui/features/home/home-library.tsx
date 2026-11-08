@@ -57,24 +57,22 @@ export function filterLibrary(
   );
 }
 
-export function FilterChips({ filter }: { readonly filter: HomeFilter }) {
-  return (
-    <div className="home-seg" role="tablist" aria-label={copy.show}>
-      {FILTERS.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          role="tab"
-          aria-selected={filter === item.id}
-          className={filter === item.id ? "on" : ""}
-          onClick={() => homePrefs.set({ filter: item.id })}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+export const FilterChips = ({ filter }: { readonly filter: HomeFilter }) => (
+  <div className="home-seg" role="tablist" aria-label={copy.show}>
+    {FILTERS.map((item) => (
+      <button
+        key={item.id}
+        type="button"
+        role="tab"
+        aria-selected={filter === item.id}
+        className={filter === item.id ? "on" : ""}
+        onClick={() => homePrefs.set({ filter: item.id })}
+      >
+        {item.label}
+      </button>
+    ))}
+  </div>
+);
 
 interface LastRun {
   readonly prompt: string;
@@ -126,7 +124,7 @@ const SERVER_TEXT: Partial<Record<AppHealth["state"], string>> = {
   ready: "Dev server ready",
 };
 
-export function ContinueCard({
+export const ContinueCard = ({
   project,
   health,
   onOpen,
@@ -134,7 +132,7 @@ export function ContinueCard({
   readonly project: Project;
   readonly health: AppHealth | null;
   readonly onOpen: (project: Project) => void;
-}) {
+}) => {
   const thumb = useThumbnail(project);
   const last = useLastRun(project);
   const badge = projectBadge(project);
@@ -189,4 +187,4 @@ export function ContinueCard({
       </div>
     </section>
   );
-}
+};

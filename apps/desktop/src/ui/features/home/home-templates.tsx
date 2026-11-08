@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
 
-export interface HomeTemplate {
+interface HomeTemplate {
   readonly id: string;
   readonly label: string;
   readonly prompt: string;
@@ -30,13 +30,11 @@ const mark = {
   stroke: "none",
 } as const;
 
-function Art({ children }: { readonly children: ReactNode }) {
-  return (
-    <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true" {...S}>
-      {children}
-    </svg>
-  );
-}
+const Art = ({ children }: { readonly children: ReactNode }) => (
+  <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true" {...S}>
+    {children}
+  </svg>
+);
 
 const ART: Record<string, ReactNode> = {
   animation: (
@@ -175,7 +173,7 @@ const ART: Record<string, ReactNode> = {
   ),
 };
 
-export const HOME_TEMPLATES: HomeTemplate[] = [
+const HOME_TEMPLATES: HomeTemplate[] = [
   { id: "blank", label: "Blank", prompt: "" },
   {
     id: "mobile",
@@ -234,7 +232,7 @@ export const HOME_TEMPLATES: HomeTemplate[] = [
   },
 ];
 
-export function HomeTemplateGrid({
+const HomeTemplateGrid = ({
   selected,
   isDisabled,
   onPick,
@@ -242,7 +240,7 @@ export function HomeTemplateGrid({
   readonly selected: string | null;
   readonly isDisabled: boolean;
   readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
-}) {
+}) => {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
     api
@@ -279,4 +277,8 @@ export function HomeTemplateGrid({
       ))}
     </div>
   );
-}
+};
+
+export { HOME_TEMPLATES, HomeTemplateGrid };
+
+export type { HomeTemplate };

@@ -57,10 +57,10 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-export function refreshProjectHits(
+const refreshProjectHits = (
   current: string | null,
   fresh = false
-): Promise<void> {
+): Promise<void> => {
   lastCurrent = current;
 
   if (loading && fresh) {
@@ -90,19 +90,19 @@ export function refreshProjectHits(
     });
 
   return loading;
-}
+};
 
-export function noteProjectOpened(projectId: string): void {
+const noteProjectOpened = (projectId: string): void => {
   void api
     .markProjectOpened(projectId)
     .catch(() => undefined)
     .then(() => refreshProjectHits(projectId, true));
-}
+};
 
-export function useProjectHits(
+const useProjectHits = (
   current: string | null,
   refresh = true
-): ProjectSearchResult | null {
+): ProjectSearchResult | null => {
   useEffect(() => {
     if (refresh) {
       void refreshProjectHits(current);
@@ -110,13 +110,13 @@ export function useProjectHits(
   }, [current, refresh]);
 
   return useSyncExternalStore(subscribe, () => latest);
-}
+};
 
-export function useRouteHits(
+const useRouteHits = (
   query: string,
   current: string | null,
   fallback: RouteHit[]
-): RouteHit[] {
+): RouteHit[] => {
   const [found, setFound] = useState<{
     readonly query: string;
     readonly routes: RouteHit[];
@@ -130,7 +130,7 @@ export function useRouteHits(
 
     let live = true;
 
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       api
         .searchProjects(text, current, 8)
         .then(
@@ -141,7 +141,7 @@ export function useRouteHits(
 
     return () => {
       live = false;
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
     };
   }, [text, current]);
 
@@ -150,4 +150,6 @@ export function useRouteHits(
   }
 
   return found?.routes ?? [];
-}
+};
+
+export { noteProjectOpened, refreshProjectHits, useProjectHits, useRouteHits };

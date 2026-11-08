@@ -8,10 +8,10 @@ import { copy } from "./copy.js";
 import type { CardActions } from "./project-grid.js";
 import { projectsApi, useProjects } from "./projects-store-model.js";
 
-export function useOnboarding(): {
+const useOnboarding = (): {
   readonly shouldShow: boolean;
   readonly dismiss: () => void;
-} {
+} => {
   const [show, setShow] = useState(false);
   useEffect(() => {
     api
@@ -26,9 +26,9 @@ export function useOnboarding(): {
   };
 
   return { dismiss, shouldShow: show };
-}
+};
 
-export interface HomeToastState {
+interface HomeToastState {
   readonly id: number;
   readonly text: string;
   readonly action?: { readonly label: string; readonly run: () => void };
@@ -38,13 +38,13 @@ export interface HomeToastState {
 
 const TOAST_MS = 8000;
 
-export function HomeToast({
+const HomeToast = ({
   toast,
   onDone,
 }: {
   readonly toast: HomeToastState | null;
   readonly onDone: () => void;
-}) {
+}) => {
   const [held, setHeld] = useState(false);
   useEffect(() => {
     if (!toast || held || toast.action || toast.hasError) {
@@ -104,7 +104,7 @@ export function HomeToast({
       )}
     </div>
   );
-}
+};
 
 interface ActionDeps {
   readonly onOpen: (project: Project) => void;
@@ -123,72 +123,70 @@ function removedText(project: Project, homeDir: string | null): string {
   return `Removed “${project.name}” from Design Studio. Its files stay in ${shortenHome(folder.replace(/^\/private(?=\/)/u, ""), homeDir)}.`;
 }
 
-export function useProjectActions({
+const useProjectActions = ({
   onOpen,
   showToast,
   onOpenTrash,
   homeDir,
-}: ActionDeps): CardActions {
-  return {
-    onDelete: async (project) => {
-      try {
-        const trashed = await projectsApi.trash(project);
+}: ActionDeps): CardActions => ({
+  onDelete: async (project) => {
+    try {
+      const trashed = await projectsApi.trash(project);
 
-        const undo = () =>
-          void projectsApi.restore(trashed.trashId).catch((err: unknown) =>
-            showToast({
-              text: `Could not restore: ${errorText(err)}`,
-              hasError: true,
-            })
-          );
+      const undo = () =>
+        void projectsApi.restore(trashed.trashId).catch((err: unknown) =>
+          showToast({
+            text: `Could not restore: ${errorText(err)}`,
+            hasError: true,
+          })
+        );
 
-        showToast({
-          hasError: false,
-          text: removedText(project, homeDir),
-          action: { label: "Undo", run: undo },
-          more: { label: "Open Trash", run: onOpenTrash },
-        });
-      } catch (err) {
-        showToast({
-          text: `Could not move to Trash: ${errorText(err)}`,
-          hasError: true,
-        });
-      }
-    },
-    onDuplicate: async (project) => {
-      try {
-        const duplicate = await projectsApi.duplicate(project);
-        showToast({
-          hasError: false,
-          text: `Duplicated as “${duplicate.name}”`,
-          action: { label: "Open", run: () => onOpen(duplicate) },
-        });
-      } catch (err) {
-        showToast({
-          text: `Could not duplicate: ${errorText(err)}`,
-          hasError: true,
-        });
-      }
-    },
-    onOpen,
-    onRename: async (project, name) => {
-      await projectsApi.rename(project, name).catch((err: unknown) =>
-        showToast({
-          text: `Could not rename: ${errorText(err)}`,
-          hasError: true,
-        })
-      );
-    },
-    onReveal: (project) => {
-      void projectsApi.reveal(project).catch((err: unknown) =>
-        showToast({
-          text: `Could not show the folder: ${errorText(err)}`,
-          hasError: true,
-        })
-      );
-    },
-  };
-}
+      showToast({
+        hasError: false,
+        text: removedText(project, homeDir),
+        action: { label: "Undo", run: undo },
+        more: { label: "Open Trash", run: onOpenTrash },
+      });
+    } catch (err) {
+      showToast({
+        text: `Could not move to Trash: ${errorText(err)}`,
+        hasError: true,
+      });
+    }
+  },
+  onDuplicate: async (project) => {
+    try {
+      const duplicate = await projectsApi.duplicate(project);
+      showToast({
+        hasError: false,
+        text: `Duplicated as “${duplicate.name}”`,
+        action: { label: "Open", run: () => onOpen(duplicate) },
+      });
+    } catch (err) {
+      showToast({
+        text: `Could not duplicate: ${errorText(err)}`,
+        hasError: true,
+      });
+    }
+  },
+  onOpen,
+  onRename: async (project, name) => {
+    await projectsApi.rename(project, name).catch((err: unknown) =>
+      showToast({
+        text: `Could not rename: ${errorText(err)}`,
+        hasError: true,
+      })
+    );
+  },
+  onReveal: (project) => {
+    void projectsApi.reveal(project).catch((err: unknown) =>
+      showToast({
+        text: `Could not show the folder: ${errorText(err)}`,
+        hasError: true,
+      })
+    );
+  },
+});
 
 function isEditable(target: EventTarget | null): boolean {
   return (
@@ -198,7 +196,7 @@ function isEditable(target: EventTarget | null): boolean {
   );
 }
 
-export function useHomeProjects() {
+const useHomeProjects = () => {
   const {
     projects,
     error: listError,
@@ -226,10 +224,14 @@ export function useHomeProjects() {
       searchRef.current.focus();
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, []);
 
   return { listError, loadProjects, projects, searchRef };
-}
+};
+
+export { HomeToast, useHomeProjects, useOnboarding, useProjectActions };
+
+export type { HomeToastState };

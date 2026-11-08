@@ -15,13 +15,13 @@ interface AppSlotProps {
   readonly onDoctor: () => void;
 }
 
-function AppSlot({
+const AppSlot = ({
   chip,
   pop,
   folderRef,
   onAddFolder,
   onDoctor,
-}: AppSlotProps) {
+}: AppSlotProps) => {
   if (!chip) {
     return (
       <button
@@ -66,7 +66,7 @@ function AppSlot({
       Edits {chipName(chip)}
     </span>
   );
-}
+};
 
 export { AppSlot };
 

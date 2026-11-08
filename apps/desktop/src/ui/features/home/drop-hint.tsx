@@ -1,6 +1,6 @@
 import { Icon } from "@design-studio/ui";
 
-function DropHint({ isOn }: { readonly isOn: boolean }) {
+const DropHint = ({ isOn }: { readonly isOn: boolean }) => {
   if (!isOn) {
     return null;
   }
@@ -11,6 +11,6 @@ function DropHint({ isOn }: { readonly isOn: boolean }) {
       Drop an app folder, an image or a link to build on it
     </div>
   );
-}
+};
 
 export { DropHint };

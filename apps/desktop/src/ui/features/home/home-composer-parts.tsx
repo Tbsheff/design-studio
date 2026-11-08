@@ -4,18 +4,13 @@ import type { ClipboardEvent, DragEvent, FormEvent, ReactNode } from "react";
 
 import { copy } from "./copy.js";
 
-export const IMAGE_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/gif",
-  "image/webp",
-];
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 
-export const MAX_IMAGES = 4;
-export const MAX_REFERENCES = 3;
-export const MAX_IMAGE_BYTES = Math.floor(3.75 * 1024 * 1024);
+const MAX_IMAGES = 4;
+const MAX_REFERENCES = 3;
+const MAX_IMAGE_BYTES = Math.floor(3.75 * 1024 * 1024);
 
-export function imageProblem(file: File): string | null {
+const imageProblem = (file: File): string | null => {
   if (!IMAGE_TYPES.includes(file.type)) {
     return `${file.name} is not a PNG, JPEG, GIF or WebP image.`;
   }
@@ -25,42 +20,40 @@ export function imageProblem(file: File): string | null {
   }
 
   return null;
-}
+};
 
-export function ComposerAlert({
+const ComposerAlert = ({
   children,
   onClose,
 }: {
   readonly children: ReactNode;
   readonly onClose: () => void;
-}) {
-  return (
-    <div className="alert error composer-alert" role="alert">
-      <span className="composer-alert-text">{children}</span>
-      <button
-        type="button"
-        className="icon-btn composer-alert-close"
-        aria-label={copy.dismiss}
-        onClick={onClose}
-      >
-        <Icon name="close" size={12} />
-      </button>
-    </div>
-  );
-}
+}) => (
+  <div className="alert error composer-alert" role="alert">
+    <span className="composer-alert-text">{children}</span>
+    <button
+      type="button"
+      className="icon-btn composer-alert-close"
+      aria-label={copy.dismiss}
+      onClick={onClose}
+    >
+      <Icon name="close" size={12} />
+    </button>
+  </div>
+);
 
-export interface ImageDraft {
+interface ImageDraft {
   readonly id: string;
   readonly file: File;
   readonly url: string;
 }
 
-export interface ReferenceDraft {
+interface ReferenceDraft {
   readonly url: string;
   readonly host: string;
 }
 
-export function soleUrl(text: string): ReferenceDraft | null {
+const soleUrl = (text: string): ReferenceDraft | null => {
   const trimmed = text.trim();
 
   if (!/^https?:\/\/\S+$/iu.test(trimmed)) {
@@ -74,13 +67,12 @@ export function soleUrl(text: string): ReferenceDraft | null {
   } catch {
     return null;
   }
-}
+};
 
-export function imageFiles(list: FileList | File[] | null | undefined): File[] {
-  return [...(list ?? [])].filter((file) => IMAGE_TYPES.includes(file.type));
-}
+const imageFiles = (list: FileList | File[] | null | undefined): File[] =>
+  [...(list ?? [])].filter((file) => IMAGE_TYPES.includes(file.type));
 
-export function ComposerChips({
+const ComposerChips = ({
   lead,
   images,
   references,
@@ -92,7 +84,7 @@ export function ComposerChips({
   readonly references: ReferenceDraft[];
   readonly onRemoveImage: (id: string) => void;
   readonly onRemoveReference: (url: string) => void;
-}) {
+}) => {
   if (!lead && images.length === 0 && references.length === 0) {
     return null;
   }
@@ -139,12 +131,12 @@ export function ComposerChips({
       ))}
     </ul>
   );
-}
+};
 
-export function useComposerAttachments(
+const useComposerAttachments = (
   setFormError: (message: string | null) => void,
   onFolder?: (data: DataTransfer) => boolean
-) {
+) => {
   const [images, setImages] = useState<ImageDraft[]>([]);
   const [references, setReferences] = useState<ReferenceDraft[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -305,4 +297,19 @@ export function useComposerAttachments(
     removeImage,
     removeReference,
   };
-}
+};
+
+export {
+  ComposerAlert,
+  ComposerChips,
+  IMAGE_TYPES,
+  MAX_IMAGES,
+  MAX_IMAGE_BYTES,
+  MAX_REFERENCES,
+  imageFiles,
+  imageProblem,
+  soleUrl,
+  useComposerAttachments,
+};
+
+export type { ImageDraft, ReferenceDraft };

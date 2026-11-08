@@ -20,7 +20,7 @@ interface Props {
   readonly isInitiallyOpen: boolean;
 }
 
-export function NewProjectAdvanced(props: Props) {
+const NewProjectAdvanced = (props: Props) => {
   const [open, setOpen] = useState(props.isInitiallyOpen === true);
 
   const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -83,4 +83,6 @@ export function NewProjectAdvanced(props: Props) {
       </div>
     </details>
   );
-}
+};
+
+export { NewProjectAdvanced };

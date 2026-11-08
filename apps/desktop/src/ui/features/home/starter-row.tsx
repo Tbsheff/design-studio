@@ -2,7 +2,7 @@ import type { Starter } from "@design-studio/contracts";
 
 import type { Busy } from "./home-model.js";
 
-function StarterRow({
+const StarterRow = ({
   template,
   busy,
   onOpen,
@@ -13,7 +13,7 @@ function StarterRow({
   } | null;
   readonly busy: Busy;
   readonly onOpen: (starter: Starter) => void;
-}) {
+}) => {
   const starter = template?.starter;
 
   if (!template || !starter) {
@@ -34,6 +34,6 @@ function StarterRow({
       <span className="home-starter-hint">No agent run, no cost</span>
     </div>
   );
-}
+};
 
 export { StarterRow };

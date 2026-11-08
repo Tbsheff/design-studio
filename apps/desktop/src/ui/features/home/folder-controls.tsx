@@ -14,13 +14,13 @@ import { useRef, useState, type FormEvent } from "react";
 import { copy } from "./copy.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
 
-function FolderPath({
+const FolderPath = ({
   path,
   homeDir,
 }: {
   readonly path: string;
   readonly homeDir: string | null;
-}) {
+}) => {
   const short = shortenHome(path, homeDir);
   const cut = short.lastIndexOf("/");
   const head = cut > 0 ? short.slice(0, cut + 1) : "";
@@ -31,9 +31,9 @@ function FolderPath({
       <span className="folder-path-tail">{tail}</span>
     </span>
   );
-}
+};
 
-function PastePath({
+const PastePath = ({
   label,
   action,
   onSubmit,
@@ -41,7 +41,7 @@ function PastePath({
   readonly label: string;
   readonly action: string;
   readonly onSubmit: (path: string) => void;
-}) {
+}) => {
   const [value, setValue] = useState("");
   return (
     <form
@@ -66,7 +66,7 @@ function PastePath({
       </button>
     </form>
   );
-}
+};
 
 const DEFAULT = "default";
 const CHOOSE = "choose";
@@ -102,7 +102,7 @@ interface LocationProps {
   readonly onAddFolder: (path: string) => Promise<WorkspaceFolder | null>;
 }
 
-export function LocationField({
+const LocationField = ({
   folders,
   value,
   homeDir,
@@ -110,7 +110,7 @@ export function LocationField({
   chooser,
   onChange,
   onAddFolder,
-}: LocationProps) {
+}: LocationProps) => {
   const [pasting, setPasting] = useState(false);
   const fallback = folders.find((folder) => folder.default) ?? null;
   const usable = folders.filter((folder) => !folder.missing && !folder.default);
@@ -175,7 +175,7 @@ export function LocationField({
       )}
     </div>
   );
-}
+};
 
 interface FolderRowProps {
   readonly folder: WorkspaceFolder;
@@ -191,7 +191,7 @@ interface FolderRowProps {
   readonly isChanging: boolean;
 }
 
-function FolderRow({
+const FolderRow = ({
   folder,
   count,
   isActive,
@@ -203,7 +203,7 @@ function FolderRow({
   onRemove,
   onChangeDefault,
   isChanging,
-}: FolderRowProps) {
+}: FolderRowProps) => {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(folder.label);
   const renameRef = useRef<HTMLButtonElement>(null);
@@ -336,7 +336,7 @@ function FolderRow({
       </div>
     </li>
   );
-}
+};
 
 interface FoldersSectionProps {
   readonly list: WorkspaceList | null;
@@ -352,7 +352,7 @@ interface FoldersSectionProps {
   readonly onSetDefault: (path: string) => Promise<boolean>;
 }
 
-export function FoldersSection({
+const FoldersSection = ({
   list,
   projects,
   filterId,
@@ -364,7 +364,7 @@ export function FoldersSection({
   onNewHere,
   onOpenHere,
   onSetDefault,
-}: FoldersSectionProps) {
+}: FoldersSectionProps) => {
   const [pasting, setPasting] = useState(false);
   const [pastingDefault, setPastingDefault] = useState(false);
   const folders = list?.folders ?? [];
@@ -473,4 +473,6 @@ export function FoldersSection({
         )}
     </section>
   );
-}
+};
+
+export { FoldersSection, LocationField };

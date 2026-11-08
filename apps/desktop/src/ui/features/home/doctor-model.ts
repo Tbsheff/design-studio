@@ -103,12 +103,12 @@ function healthProblem(
 }
 
 export {
-  SHELL_SAFE,
   INSTALL_DETAIL,
-  installProblem,
+  SHELL_SAFE,
   healthProblem,
-  shellPath,
   homeCommand,
+  installProblem,
+  shellPath,
 };
 
 export type { DoctorGate };

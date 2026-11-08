@@ -656,12 +656,6 @@
   }
 }
 
-.canvas-topbar .vector-tools > button[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--on-accent);
-  box-shadow: none;
-}
-
 @container canvas-bar (max-width: 440px) {
   .canvas-topbar .vector-tools {
     display: none;

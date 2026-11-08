@@ -72,7 +72,7 @@ const SAMPLE_BODY = String.raw`() => {
     if (found) found.share += share;
     else merged.set(item.hex, { hex: item.hex, share });
   }
-  const colors = Array.from(merged.values()).sort((a, b) => b.share - a.share).slice(0, 8);
+  const colors = Array.from(merged.values()).sort((a, b) => b.share - a.share).slice(0, 8).map((item) => ({ hex: item.hex, share: Math.round(item.share * 1000) / 1000 }));
   const biggest = (table) => Array.from(table.values()).sort((a, b) => b.weight - a.weight)[0] || null;
   const chroma = (color) => Math.max(color.r, color.g, color.b) - Math.min(color.r, color.g, color.b);
   const filled = buttons.filter((button) => button.fill && button.area > 200).sort((a, b) => b.area - a.area);

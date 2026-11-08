@@ -206,7 +206,9 @@ const toNativePalette = (
     step: tone.step,
   });
 
-  const wanted = colors.primary ?? generated.primary;
+  const wanted =
+    colors.primary ?? toChromatic(colors.swatches)[0]?.hex ?? generated.primary;
+
   const wantedParts = toParts(wanted);
 
   const brand = toReadableOr(wanted, surfaces, {

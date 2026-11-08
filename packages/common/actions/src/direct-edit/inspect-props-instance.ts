@@ -13,7 +13,7 @@ import { PropsInstanceSchema } from "./schema.js";
 
 const inspectPropsInstanceDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: { off: "ui-bootstrap" },
   confirm: "none",
   description:
     "Find the component instance at a use site or owner stack and read its props. Writes nothing.",

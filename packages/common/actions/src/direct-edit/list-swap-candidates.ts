@@ -12,7 +12,7 @@ import { SourceUseFields, SwapCandidateListSchema } from "./schema.js";
 
 const listSwapCandidatesDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: { off: "ui-bootstrap" },
   confirm: "none",
   description:
     "List the library components that can replace the component used at a source location.",

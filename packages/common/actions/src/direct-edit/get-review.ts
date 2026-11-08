@@ -12,7 +12,7 @@ import { LastReviewSchema } from "./schema.js";
 
 const getReviewDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: { off: "ui-bootstrap" },
   confirm: "none",
   description: "Read the last review of a direction, or null when none ran.",
   errors: [

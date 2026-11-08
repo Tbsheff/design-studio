@@ -61,7 +61,7 @@ const Inspector = (raw: InspectorProps): ReactElement => {
     >
       <div className="edit-pane" aria-label="Edit">
         <SessionHeader session={session} onDone={() => props.onExit?.()} />
-        {session.error && !session.asking && (
+        {session.error && !session.isAsking && (
           <div className="ins-error" role="alert">
             <Icon name="alert" size={14} />
             <span>{session.error}</span>

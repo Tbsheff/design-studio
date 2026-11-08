@@ -178,14 +178,14 @@ const TextStyleTogglesView = ({
       key: "i",
       label: "Italic",
       on: italic,
-      run: () => write({ "font-style": italic ? "normal" : "italic" }),
+      run: (): void => write({ "font-style": italic ? "normal" : "italic" }),
     },
     {
       glyph: <u>U</u>,
       key: "u",
       label: "Underline",
       on: hasLine(decoration, "underline"),
-      run: () =>
+      run: (): void =>
         write({ "text-decoration-line": toggleLine(decoration, "underline") }),
     },
     {
@@ -193,7 +193,7 @@ const TextStyleTogglesView = ({
       key: "s",
       label: "Strikethrough",
       on: hasLine(decoration, "line-through"),
-      run: () =>
+      run: (): void =>
         write({
           "text-decoration-line": toggleLine(decoration, "line-through"),
         }),

@@ -25,7 +25,18 @@ interface InputProps {
   readonly className?: string;
 }
 
-const useNumberText = (spec: NumberSpec) => {
+interface UseNumberTextResult {
+  readonly apply: (raw: string) => void;
+  readonly cancel: () => void;
+  readonly current: string;
+  readonly isMixed: boolean;
+  readonly nudge: (delta: number, from: string) => void;
+  readonly settle: () => void;
+  readonly text: string | null;
+  readonly unit: string;
+}
+
+const useNumberText = (spec: NumberSpec): UseNumberTextResult => {
   const { edit, prop } = spec;
   const [text, setText] = useState<string | null>(null);
   const start = useRef<string | null>(null);
@@ -86,7 +97,7 @@ const useNumberText = (spec: NumberSpec) => {
     edit.revert(spec.targets ?? [prop]);
   };
 
-  return { apply, cancel, current, mixed, nudge, settle, text, unit };
+  return { apply, cancel, current, isMixed: mixed, nudge, settle, text, unit };
 };
 
 const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
@@ -100,7 +111,7 @@ const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
     (focused ? field.current : (spec.display ?? displayLength(field.current)));
 
   const refused =
-    field.mixed &&
+    field.isMixed &&
     field.text !== null &&
     hasCurrentDependency(field.text, field.unit);
 
@@ -111,7 +122,7 @@ const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
       event.preventDefault();
       const delta = stepOf(event, spec) * (event.key === "ArrowUp" ? 1 : -1);
 
-      if (field.mixed) {
+      if (field.isMixed) {
         shiftMixed(spec, delta);
         spec.edit.commitSoon();
 
@@ -140,7 +151,7 @@ const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
       value={shown}
       spellCheck={false}
       autoComplete="off"
-      placeholder={field.mixed ? "Mixed" : "—"}
+      placeholder={field.isMixed ? "Mixed" : "—"}
       aria-invalid={refused || undefined}
       data-tip={
         refused ? "Values differ. Type a number, not a change." : undefined

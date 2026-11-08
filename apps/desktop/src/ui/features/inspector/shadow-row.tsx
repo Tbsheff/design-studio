@@ -26,7 +26,9 @@ const ShadowRow = ({
   const shadow = list[index] as Shadow;
   const n = index + 1;
 
-  const replace = (patch: Partial<Shadow>): { "box-shadow": string } => ({
+  const replace = (
+    patch: Partial<Shadow>
+  ): { readonly "box-shadow": string } => ({
     "box-shadow": formatShadows(
       list.map((s, i) => (i === index ? { ...s, ...patch } : s))
     ),
@@ -36,7 +38,7 @@ const ShadowRow = ({
     field: Field,
     value: string,
     write: (next: string) => Partial<Shadow>
-  ) =>
+  ): ReturnType<typeof proxyEdit> =>
     proxyEdit(
       edit,
       field === "color" ? "color" : "width",

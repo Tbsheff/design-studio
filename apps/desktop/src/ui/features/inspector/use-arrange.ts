@@ -17,9 +17,9 @@ import type { Props, Message } from "./arrange-model.js";
 const useArrange = (
   props: Props
 ): {
-  busy: boolean;
-  message: Message | null;
-  run: (action: ArrangeAction) => Promise<void>;
+  readonly isBusy: boolean;
+  readonly message: Message | null;
+  readonly run: (action: ArrangeAction) => Promise<void>;
 } => {
   const latest = useRef(props);
   latest.current = props;
@@ -73,7 +73,7 @@ const useArrange = (
     }
   };
 
-  return { busy, message, run };
+  return { isBusy: busy, message, run };
 };
 
 const chordOf = (event: KeyboardEvent): string | null => {

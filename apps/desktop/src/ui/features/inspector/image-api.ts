@@ -93,7 +93,11 @@ const imageError = (error: unknown): string => {
 };
 
 const imageApi = {
-  set: (pid: string, did: string, request: SetImageRequest) =>
+  set: (
+    pid: string,
+    did: string,
+    request: SetImageRequest
+  ): ReturnType<typeof call<typeof routes.setImageDirectEdit>> =>
     call(routes.setImageDirectEdit, {
       ...request,
       directionId: did,

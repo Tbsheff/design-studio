@@ -59,9 +59,9 @@ const baseValue = (
 const useTweaksState = (
   o: Options
 ): {
-  loadError: string | null;
-  replace: (state: TweaksState) => void;
-  state: TweaksState | null;
+  readonly loadError: string | null;
+  readonly replace: (state: TweaksState) => void;
+  readonly state: TweaksState | null;
 } => {
   const [loaded, setLoaded] = useState<{
     readonly key: string;
@@ -115,7 +115,27 @@ const useTweaksState = (
   return { loadError, replace, state };
 };
 
-const useTweaks = (o: Options) => {
+interface UseTweaksResult {
+  readonly commit: () => Promise<void>;
+  readonly commitError: string | null;
+  readonly isCommitting: boolean;
+  readonly confirmLeave: () => boolean;
+  readonly count: number;
+  readonly discard: () => void;
+  readonly edit: (control: TweakControl, value: TweakValue) => void;
+  readonly loadError: string | null;
+  readonly pending: TweakMap;
+  readonly revert: (id: string) => void;
+  readonly state: TweaksState | null;
+  readonly undoChain: (
+    canUndo: boolean,
+    fallback: () => void
+  ) => { readonly canUndo: boolean; readonly onUndo: () => void };
+  readonly undoLast: () => void;
+  readonly values: TweakMap;
+}
+
+const useTweaks = (o: Options): UseTweaksResult => {
   const { state, loadError, replace } = useTweaksState(o);
   const [pending, setPendingMap] = useState<TweakMap>({});
   const [committing, setCommitting] = useState(false);
@@ -279,7 +299,7 @@ const useTweaks = (o: Options) => {
   const undoChain = (
     canUndo: boolean,
     fallback: () => void
-  ): { canUndo: boolean; onUndo: () => void } => ({
+  ): { readonly canUndo: boolean; readonly onUndo: () => void } => ({
     canUndo: canUndo || count > 0,
     onUndo: () =>
       Object.keys(pendingRef.current).length > 0 ? undoLast() : fallback(),
@@ -298,7 +318,7 @@ const useTweaks = (o: Options) => {
   return {
     commit,
     commitError,
-    committing,
+    isCommitting: committing,
     confirmLeave,
     count,
     discard,

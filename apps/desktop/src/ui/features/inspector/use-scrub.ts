@@ -39,7 +39,15 @@ const scrubStart = (spec: NumberSpec, ui: TokenUi | null, x: number): Scrub => {
   };
 };
 
-const useScrub = (spec: NumberSpec) => {
+interface UseScrubResult {
+  readonly onClick: (event: MouseEvent<HTMLElement>) => void;
+  readonly onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
+  readonly onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+  readonly onPointerMove: (event: PointerEvent<HTMLElement>) => void;
+  readonly onPointerUp: (event: PointerEvent<HTMLElement>) => void;
+}
+
+const useScrub = (spec: NumberSpec): UseScrubResult => {
   const scrub = useRef<Scrub | null>(null);
   const scrubbed = useRef(false);
   const ui = useTokenUi();

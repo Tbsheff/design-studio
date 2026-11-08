@@ -98,7 +98,18 @@ const refreshedSelection = (
       : item;
   });
 
-const useEditHistory = (o: Options) => {
+interface UseEditHistoryResult {
+  readonly redo: RedoShortcut;
+  readonly state: EditHistoryState;
+  readonly step: (kind: HistoryKind, fallback?: () => unknown) => void;
+  readonly toast: string | null;
+  readonly undoChain: (
+    canUndo: boolean,
+    fallback: () => void
+  ) => { readonly canUndo: boolean; readonly onUndo: () => void };
+}
+
+const useEditHistory = (o: Options): UseEditHistoryResult => {
   const { projectId, directionId } = o;
   const [state, setState] = useState<EditHistoryState>(EMPTY);
   const [toast, setToast] = useState<string | null>(null);
@@ -259,7 +270,7 @@ const useEditHistory = (o: Options) => {
   const undoChain = (
     canUndo: boolean,
     fallback: () => void
-  ): { canUndo: boolean; onUndo: () => void } => ({
+  ): { readonly canUndo: boolean; readonly onUndo: () => void } => ({
     canUndo: canUndo || (state.canUndo && !o.isLocked),
     onUndo: () => step("undo", versionFallback(fallback)),
   });

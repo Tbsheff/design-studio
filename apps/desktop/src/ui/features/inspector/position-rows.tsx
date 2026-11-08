@@ -103,8 +103,8 @@ const useQueuedPins = (
   selection: SelectionContext,
   applied: (modes: Partial<Record<PinAxis, PinMode>>) => void
 ): {
-  queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
-  ready: boolean;
+  readonly queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
+  readonly isReady: boolean;
 } => {
   const [queued, setQueued] = useState<QueuedPins | null>(null);
   const ready = hasPinGeometry(selection);
@@ -167,7 +167,7 @@ const useQueuedPins = (
       selector: selection.selector,
     }));
 
-  return { queue, ready };
+  return { isReady: ready, queue };
 };
 
 const PinSelect = ({
@@ -269,7 +269,7 @@ const ConstraintRows = ({
   readonly selection: SelectionContext;
 }): ReactElement => {
   const { modes, pick } = usePinModes(selection);
-  const { ready, queue } = useQueuedPins(edit, selection, pick);
+  const { isReady: ready, queue } = useQueuedPins(edit, selection, pick);
   const fields = [...pinFields("x", modes.x), ...pinFields("y", modes.y)];
 
   return (

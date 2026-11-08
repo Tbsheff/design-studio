@@ -122,7 +122,23 @@ const readSession = async (
 
 const fresh = (base: string | null): SessionView => ({ ...EMPTY, base });
 
-const useEditSession = (o: Options) => {
+interface UseEditSessionResult {
+  readonly answer: (choice: SessionAction | "cancel") => Promise<void>;
+  readonly isAsking: boolean;
+  readonly busy: SessionAction | null;
+  readonly clearError: () => void;
+  readonly discard: () => Promise<boolean>;
+  readonly error: string | null;
+  readonly requestExit: () => Promise<boolean>;
+  readonly save: () => Promise<boolean>;
+  readonly base: string | null;
+  readonly count: number;
+  readonly net: number;
+  readonly isDirty: boolean;
+  readonly blocked: string | null;
+}
+
+const useEditSession = (o: Options): UseEditSessionResult => {
   const { projectId, directionId } = o;
   const [view, setView] = useState<SessionView>(EMPTY);
   const [busy, setBusy] = useState<SessionAction | null>(null);
@@ -292,7 +308,7 @@ const useEditSession = (o: Options) => {
   return {
     ...view,
     answer,
-    asking,
+    isAsking: asking,
     busy,
     clearError: () => setError(null),
     discard,

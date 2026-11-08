@@ -55,7 +55,7 @@ const SimpleTab = (props: InspectorProps): ReactElement => {
 
   return (
     <SimpleEditor
-      key={`${target.selector}|${variant}${site.editingUse ? "|use" : ""}`}
+      key={`${target.selector}|${variant}${site.isEditingUse ? "|use" : ""}`}
       {...props}
       target={site.effective ?? target}
       sharedEditing={site.sharedEditing}

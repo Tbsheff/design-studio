@@ -83,7 +83,17 @@ const useSnapSetting = (
   return [on, set];
 };
 
-const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
+interface UseTokenSnapResult {
+  readonly dismiss: () => void;
+  readonly keepRaw: (raw: Partial<StyleValues>) => void;
+  readonly note: SnapNote | null;
+  readonly rewrite: (style: Partial<StyleValues>) => Partial<StyleValues>;
+}
+
+const useTokenSnap = (
+  tokens: DesignTokens | null,
+  snapOn: boolean
+): UseTokenSnapResult => {
   const [note, setNote] = useState<SnapNote | null>(null);
   const kept = useRef<Partial<StyleValues>>({});
   const live = useRef({ snapOn, tokens });

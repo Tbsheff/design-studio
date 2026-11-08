@@ -280,9 +280,9 @@ const BooleanGlyph = ({ op }: { readonly op: BooleanOpName }): ReactElement => {
 const useRun = (
   props: Props
 ): {
-  busy: boolean;
-  error: string | null;
-  run: (request: VectorRequest) => Promise<boolean>;
+  readonly isBusy: boolean;
+  readonly error: string | null;
+  readonly run: (request: VectorRequest) => Promise<boolean>;
 } => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -308,7 +308,7 @@ const useRun = (
     }
   };
 
-  return { busy, error, run };
+  return { error, isBusy: busy, run };
 };
 
 const PaintRows = ({
@@ -318,7 +318,7 @@ const PaintRows = ({
   readonly props: Props;
   readonly target: SelectionContext;
 }): ReactElement => {
-  const { busy, error, run } = useRun(props);
+  const { error, isBusy: busy, run } = useRun(props);
   const [saved, setSaved] = useState<Partial<ReturnType<typeof paintOf>>>({});
   const paint = { ...paintOf(target), ...saved };
   const disabled = busy || !props.isEditable;
@@ -384,7 +384,7 @@ const PaintRows = ({
 };
 
 const BooleanRow = ({ props }: { readonly props: Props }): ReactElement => {
-  const { busy, error, run } = useRun(props);
+  const { error, isBusy: busy, run } = useRun(props);
   const [a, b] = props.selection as [SelectionContext, SelectionContext];
 
   const go = (op: BooleanOpName): undefined =>

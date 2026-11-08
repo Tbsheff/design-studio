@@ -132,7 +132,10 @@ const HiddenCrumbs = ({
   );
 };
 
-const InspectorBreadcrumbView = ({ selection, port }: Props) => {
+const InspectorBreadcrumbView = ({
+  selection,
+  port,
+}: Props): ReactElement | null => {
   const list = useRef<HTMLOListElement>(null);
   const path = pathCrumbs(parseSelectionPath(selection.path));
   const count = useFitCount(list, path.length);
@@ -141,7 +144,7 @@ const InspectorBreadcrumbView = ({ selection, port }: Props) => {
     return null;
   }
 
-  const select = (levels: number) => {
+  const select = (levels: number): void => {
     for (let step = 0; step < levels; step += 1) {
       port.current?.post({
         move: "parent",

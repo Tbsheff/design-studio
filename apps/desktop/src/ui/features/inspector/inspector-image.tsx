@@ -32,7 +32,7 @@ import "../../styles/inspector-image.css";
 const InspectorImage = (props: Props): ReactElement | null => {
   const kind = imageKindOf(props.selection);
   const background = kind === "background";
-  const { busy, error, run, setError, placed } = useImageSet(props);
+  const { error, isBusy: busy, run, setError, placed } = useImageSet(props);
   const [alt, setAlt] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 

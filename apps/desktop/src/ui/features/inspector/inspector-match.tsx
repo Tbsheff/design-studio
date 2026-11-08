@@ -188,7 +188,7 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
       ])
     : [];
 
-  const closePicker = () => {
+  const closePicker = (): void => {
     if (picking) {
       focusRow(rowKey(picking));
     }
@@ -196,7 +196,7 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
     setPicking(null);
   };
 
-  const pick = (token: string) => {
+  const pick = (token: string): void => {
     const hits = targets;
     closePicker();
     void replace(hits, token);

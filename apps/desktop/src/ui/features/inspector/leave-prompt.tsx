@@ -8,6 +8,6 @@ const LeavePrompt = ({
 }: {
   readonly session: EditSession;
 }): ReactElement | null =>
-  session.asking ? <LeaveDialog session={session} /> : null;
+  session.isAsking ? <LeaveDialog session={session} /> : null;
 
 export { LeavePrompt };

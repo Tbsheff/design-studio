@@ -37,7 +37,19 @@ interface ScopeInput {
   readonly onCommitted: (commit: DirectEditCommit) => void;
 }
 
-const useInspectorTokens = (input: ScopeInput) => {
+interface UseInspectorTokensResult {
+  readonly closeCreate: () => void;
+  readonly creating: CreateRequest | null;
+  readonly snap: {
+    readonly dismiss: () => void;
+    readonly keepRaw: (raw: Partial<StyleValues>) => void;
+    readonly note: SnapNote | null;
+    readonly rewrite: (style: Partial<StyleValues>) => Partial<StyleValues>;
+  };
+  readonly ui: TokenUi | null;
+}
+
+const useInspectorTokens = (input: ScopeInput): UseInspectorTokensResult => {
   const [snapOn, setSnap] = useSnapSetting(input.projectId);
   const snap = useTokenSnap(input.tokens, snapOn);
   const [creating, setCreating] = useState<CreateRequest | null>(null);
@@ -448,7 +460,7 @@ const MatchSection = (props: {
   readonly port: MutableRefObject<PreviewPort | null>;
   readonly tokens: DesignTokens | null;
   readonly edit: DirectEdit;
-}) => {
+}): ReactElement | null => {
   const { directionId, edit } = props;
 
   if (!directionId || props.selection.length === 0) {

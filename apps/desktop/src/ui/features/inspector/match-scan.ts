@@ -165,7 +165,7 @@ const useStyleScan = (
   port: MutableRefObject<PreviewPort | null>,
   query: StyleQuery,
   key: string
-): { hits: StyleHit[] | null; refresh: () => void } => {
+): { readonly hits: StyleHit[] | null; readonly refresh: () => void } => {
   const [hits, setHits] = useState<StyleHit[] | null>(null);
   const [nonce, setNonce] = useState(0);
   const queryRef = useRef(query);

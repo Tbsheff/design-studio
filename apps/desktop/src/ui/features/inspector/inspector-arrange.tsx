@@ -147,7 +147,7 @@ const InspectorArrange = (props: Props): ReactElement => {
       {shown && (
         <ArrangeBar
           selection={props.selection}
-          isBusy={arrange.busy}
+          isBusy={arrange.isBusy}
           onRun={(action) => void arrange.run(action)}
         />
       )}

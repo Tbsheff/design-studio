@@ -244,7 +244,7 @@ const Footer = ({
           <button
             type="button"
             className="btn small ghost"
-            disabled={draft.committing}
+            disabled={draft.isCommitting}
             onClick={draft.discard}
           >
             Discard
@@ -252,10 +252,10 @@ const Footer = ({
           <button
             type="button"
             className="btn small primary"
-            disabled={draft.committing}
+            disabled={draft.isCommitting}
             onClick={() => void draft.commit()}
           >
-            {draft.committing ? "Committing…" : "Commit"}
+            {draft.isCommitting ? "Committing…" : "Commit"}
           </button>
         </div>
       )}

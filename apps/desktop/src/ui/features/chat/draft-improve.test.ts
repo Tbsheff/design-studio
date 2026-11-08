@@ -5,7 +5,7 @@ import {
   improvePassed,
   improveRequest,
   lastImproveRun,
-} from "./draft-improve.js";
+} from "./draft-improve-model.js";
 import { emptyRun } from "./run-state-model.js";
 import type { RunView } from "./run-state-model.js";
 

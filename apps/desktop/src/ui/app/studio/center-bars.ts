@@ -1,9 +1,9 @@
 import type { ComponentProps } from "react";
 
 import { api } from "../../api";
+import { improveRequest } from "../../features/chat";
 import type { DraftBar } from "../../features/chat/draft-bar";
 import type { ImproveControl } from "../../features/chat/draft-improve";
-import { improveRequest } from "../../features/chat/draft-improve";
 import { runStoppedUnsaved } from "../shell/unfinished-model";
 import type { UnfinishedSlot } from "../shell/unfinished-slot";
 import type { StudioCtx } from "./studio-context";

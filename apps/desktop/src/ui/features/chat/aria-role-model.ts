@@ -6,10 +6,12 @@ const DIALOG_ROLE = "dialog";
 const STATUS_ROLE = "status";
 const REGION_ROLE = "region";
 const GROUP_ROLE = "group";
+const IMG_ROLE = "img";
 
 export {
   DIALOG_ROLE,
   GROUP_ROLE,
+  IMG_ROLE,
   LISTBOX_ROLE,
   OPTION_ROLE,
   RADIO_ROLE,

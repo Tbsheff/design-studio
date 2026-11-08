@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useVariations } from "../../features/canvas/use-variations";
-import { lastImproveRun } from "../../features/chat/draft-improve";
+import { lastImproveRun } from "../../features/chat";
 import type { RunView } from "../../features/chat/run-state-model";
 import { useRunCanvas } from "../../features/chat/use-run-canvas";
 import { useComments } from "../../features/comments";

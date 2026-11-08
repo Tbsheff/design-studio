@@ -13,7 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { RefObject } from "react";
+import type { RefObject, ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
@@ -95,7 +95,7 @@ const worst = (result: ReviewResult | null): ReviewSeverity | null => {
   );
 };
 
-const useCloseOnToolChange = (toolKey: string, close: () => void) => {
+const useCloseOnToolChange = (toolKey: string, close: () => void): void => {
   const last = useRef(toolKey);
   useEffect(() => {
     if (last.current === toolKey) {
@@ -107,7 +107,7 @@ const useCloseOnToolChange = (toolKey: string, close: () => void) => {
   }, [toolKey, close]);
 };
 
-const ReviewEntry = (p: Props) => {
+const ReviewEntry = (p: Props): ReactElement => {
   const marker = useRef<HTMLSpanElement>(null);
   const slot = useSlot(marker);
   const [open, setOpen] = useState(false);
@@ -125,7 +125,7 @@ const ReviewEntry = (p: Props) => {
   const count = review.result ? review.result.findings.length : null;
   const ask = p.shell?.onAskAgent;
 
-  const select = (finding: ReviewFinding) => {
+  const select = (finding: ReviewFinding): void => {
     if (finding.selector) {
       p.post({ selector: finding.selector, type: "select-selector" });
     }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import type {
   PublishBackendMode,
@@ -10,7 +11,12 @@ import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
 import { publishApi } from "./publish-api.js";
 
-const usePublishBackend = () => {
+const usePublishBackend = (): {
+  backend: PublishBackendState | null;
+  error: string | null;
+  load: (check?: boolean) => Promise<void>;
+  setup: (mode: PublishBackendMode) => Promise<void>;
+} => {
   const [backend, setBackend] = useState<PublishBackendState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +40,7 @@ const usePublishBackend = () => {
 
     const timer = globalThis.setInterval(() => void load(), 1000);
 
-    return () => globalThis.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [running, load]);
 
   const setup = useCallback(async (mode: PublishBackendMode) => {
@@ -59,7 +65,7 @@ const MARK: Record<SetupStep["status"], string> = {
   skipped: "–",
 };
 
-const StepRow = ({ step }: { step: SetupStep }) => (
+const StepRow = ({ step }: { step: SetupStep }): ReactElement => (
   <li
     className={`publish-setup-step is-${step.status}`}
     data-testid="setup-step"
@@ -103,7 +109,7 @@ const BackendSetup = ({
 }: {
   hook: BackendHook;
   cli: PublishCliState | null;
-}) => {
+}): ReactElement => {
   const { backend, error, setup, load } = hook;
 
   if (!backend) {

@@ -8,7 +8,13 @@ const useExportTarget = (
   projectId: string,
   direction: Direction | null,
   versions: Version[]
-) => {
+): {
+  canOpen: boolean;
+  close: () => void;
+  open: (detail?: OpenExportDetail) => void;
+  openHead: () => void;
+  target: ExportTarget | null;
+} => {
   const [target, setTarget] = useState<ExportTarget | null>(null);
   const latest = useRef({ direction, versions });
   latest.current = { direction, versions };

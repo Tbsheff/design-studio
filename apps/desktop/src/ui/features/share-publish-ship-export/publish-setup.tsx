@@ -1,5 +1,6 @@
 import { CopyButton } from "@design-studio/ui";
 import { useCallback, useEffect, useState, useTransition } from "react";
+import type { ReactElement } from "react";
 
 import type { PublishCliState } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
@@ -10,7 +11,12 @@ import { BackendSetup, usePublishBackend } from "./publish-backend-setup.js";
 import "../../styles/publish.css";
 import type { BackendHook } from "./publish-backend-setup.js";
 
-const usePublishCli = () => {
+const usePublishCli = (): {
+  busy: boolean;
+  cli: PublishCliState | null;
+  error: string | null;
+  run: (task: () => Promise<PublishCliState>) => void;
+} => {
   const [cli, setCli] = useState<PublishCliState | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +48,7 @@ const usePublishCli = () => {
 
     globalThis.addEventListener("focus", refresh);
 
-    return () => globalThis.removeEventListener("focus", refresh);
+    return (): void => globalThis.removeEventListener("focus", refresh);
   }, [waiting, run]);
 
   return { busy: isPending, cli, error, run };
@@ -61,7 +67,7 @@ const InstallStep = ({
   cli: PublishCliState;
   busy: boolean;
   run: Cli["run"];
-}) => {
+}): ReactElement => {
   const old = cli.installed && !cli.versionOk;
 
   return (
@@ -97,7 +103,7 @@ const SignInStep = ({
   cli: PublishCliState;
   busy: boolean;
   run: Cli["run"];
-}) => {
+}): ReactElement => {
   const [keyring, setKeyring] = useState(cli.keyring);
   const [narrow, setNarrow] = useState(true);
 
@@ -178,7 +184,7 @@ const AccountStep = ({
   cli: PublishCliState;
   busy: boolean;
   run: Cli["run"];
-}) => (
+}): ReactElement => (
   <div className="publish-step" data-testid="publish-signed-in">
     <div className="publish-kv">
       <span>Signed in</span>
@@ -245,7 +251,7 @@ const PublishSetupBody = ({
 }: {
   state: Cli;
   backend: BackendHook;
-}) => {
+}): ReactElement => {
   const { cli, busy, error, run } = state;
 
   if (!cli) {
@@ -277,7 +283,7 @@ const PublishSetupBody = ({
   );
 };
 
-const PublishSetup = () => {
+const PublishSetup = (): ReactElement => {
   const state = usePublishCli();
   const backend = usePublishBackend();
 

@@ -9,7 +9,7 @@ import type {
 } from "@design-studio/contracts/review";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef } from "react";
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode, RefObject, ReactElement } from "react";
 
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { PREVIEW_ESCAPE_EVENT } from "../chat/use-escape-stop.js";
@@ -60,7 +60,13 @@ const grouped = (findings: ReviewFinding[]): [ReviewKind, ReviewFinding[]][] =>
       ]
   ).filter(([, list]) => list.length > 0);
 
-const FindingRow = ({ finding, a }: { finding: ReviewFinding; a: Actions }) => {
+const FindingRow = ({
+  finding,
+  a,
+}: {
+  finding: ReviewFinding;
+  a: Actions;
+}): ReactElement => {
   const busy = a.fixing?.includes(finding.id) ?? false;
 
   return (
@@ -140,7 +146,7 @@ const Group = ({
   kind: ReviewKind;
   list: ReviewFinding[];
   a: Actions;
-}) => {
+}): ReactElement => {
   const fixable = list.filter((finding) => finding.fix);
 
   return (
@@ -173,7 +179,7 @@ const Group = ({
   );
 };
 
-const Summary = ({ review }: { review: ReviewState }) => {
+const Summary = ({ review }: { review: ReviewState }): ReactElement | null => {
   const { result } = review;
 
   if (!result) {
@@ -207,7 +213,7 @@ const Body = ({
   live: boolean;
   a: Actions;
   children: ReactNode;
-}) => {
+}): ReactElement => {
   const { result } = review;
 
   return (
@@ -238,11 +244,11 @@ const Body = ({
 const useEscapeClose = (
   panel: RefObject<HTMLDivElement | null>,
   onClose: () => void
-) => {
+): void => {
   const latest = useRef(onClose);
   latest.current = onClose;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       if (e.key !== "Escape" || e.defaultPrevented) {
         return;
       }
@@ -257,18 +263,18 @@ const useEscapeClose = (
       latest.current();
     };
 
-    const onFrameEscape = () => latest.current();
+    const onFrameEscape = (): void => latest.current();
     globalThis.addEventListener("keydown", onKey);
     globalThis.addEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
 
-    return () => {
+    return (): void => {
       globalThis.removeEventListener("keydown", onKey);
       globalThis.removeEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
     };
   }, [panel]);
 };
 
-const ReviewPanel = (p: Props) => {
+const ReviewPanel = (p: Props): ReactElement => {
   const panel = useRef<HTMLDivElement>(null);
   useEscapeClose(panel, p.onClose);
 

@@ -11,7 +11,7 @@ import type {
 import { Icon, useModalDialog } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { downloadBlob } from "../../domain/format.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
@@ -146,7 +146,7 @@ const Segmented = <T extends string | number>({
   value: T;
   options: { id: T; label: string; icon?: IconName }[];
   onChange: (value: T) => void;
-}) => (
+}): ReactElement => (
   <div
     className="segmented export-seg"
     role="radiogroup"
@@ -178,7 +178,7 @@ const useElapsed = (status: Status): number => {
 
     const timer = globalThis.setInterval(() => setNow(Date.now()), 1000);
 
-    return () => globalThis.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [status.kind]);
 
   return status.kind === "busy"
@@ -190,7 +190,7 @@ const useCopied = (): [string | null, (key: string, text: string) => void] => {
   const [copied, setCopied] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
   useEffect(
-    () => () => {
+    () => (): void => {
       if (timer.current !== null) {
         globalThis.clearTimeout(timer.current);
       }
@@ -198,7 +198,7 @@ const useCopied = (): [string | null, (key: string, text: string) => void] => {
     []
   );
 
-  const copy = (key: string, text: string) => {
+  const copy = (key: string, text: string): void => {
     void navigator.clipboard.writeText(text).then(
       () => {
         setCopied(key);
@@ -226,11 +226,11 @@ const HandoffResultView = ({
   result: HandoffResult;
   editors: EditorInfo[];
   onError: (text: string) => void;
-}) => {
+}): ReactElement => {
   const [copied, copy] = useCopied();
   const folder = result.path.split("/").pop() ?? "";
 
-  const run = (task: () => Promise<void>) =>
+  const run = (task: () => Promise<void>): void =>
     void task().catch((error: unknown) =>
       onError(error instanceof Error ? error.message : String(error))
     );
@@ -306,7 +306,7 @@ const HandoffResultView = ({
   );
 };
 
-const ConnectClaudeCode = () => {
+const ConnectClaudeCode = (): ReactElement => {
   const [status, setStatus] = useState<McpStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -320,7 +320,7 @@ const ConnectClaudeCode = () => {
         setError(failure instanceof Error ? failure.message : String(failure))
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, []);
@@ -329,7 +329,7 @@ const ConnectClaudeCode = () => {
     enabled?: boolean;
     edits?: boolean;
     rotate?: boolean;
-  }) => {
+  }): Promise<void> => {
     setBusy(true);
     setError(null);
 
@@ -515,7 +515,7 @@ const useEditors = (active: boolean): EditorInfo[] => {
       () => null
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [active, editors.length]);
@@ -557,7 +557,7 @@ const handoffFrames = (chosen: ExportFrame[]): ExportFrame[] =>
     ? chosen
     : [...chosen, MOBILE_FRAME];
 
-const FrameList = ({ options }: { options: Options }) => (
+const FrameList = ({ options }: { options: Options }): ReactElement => (
   <fieldset className="export-field export-frames">
     <legend className="export-label">
       {options.format === "html" ? "Pages from frames" : "Frames"}
@@ -586,7 +586,7 @@ const FrameList = ({ options }: { options: Options }) => (
   </fieldset>
 );
 
-const OptionFields = ({ options }: { options: Options }) => {
+const OptionFields = ({ options }: { options: Options }): ReactElement => {
   const { format, chosen, scale, scope, selectionOnly } = options;
   const first = chosen[0];
 
@@ -643,7 +643,7 @@ const StatusLine = ({
 }: {
   status: Status;
   handoff: boolean;
-}) => {
+}): ReactElement => {
   const elapsed = useElapsed(status);
 
   return (
@@ -689,7 +689,7 @@ const actionLabel = (
   return rebuilt ? "Rebuild handoff" : info.action;
 };
 
-export const ExportDialog = ({ target, onClose }: Props) => {
+export const ExportDialog = ({ target, onClose }: Props): ReactElement => {
   const options = useExportOptions(target);
   const { format } = options;
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -704,7 +704,7 @@ export const ExportDialog = ({ target, onClose }: Props) => {
   const canRun = !busy && (!options.needsFrames || options.chosen.length > 0);
   const shown = format === "handoff" ? handoff : null;
 
-  const run = async () => {
+  const run = async (): Promise<void> => {
     if (!canRun) {
       return;
     }

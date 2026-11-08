@@ -6,6 +6,7 @@ import type {
   DesignRulesTestResult,
 } from "@design-studio/contracts/design-rules";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { errorText, rulesApi } from "../../api.js";
 import { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
@@ -65,7 +66,7 @@ const RuleRow = ({
 }: {
   rule: DesignRule;
   hit: DesignRuleHit | undefined;
-}) => {
+}): ReactElement => {
   const tone =
     rule.kind === "text" || !hit ? "idle" : hit.count === 0 ? "ok" : "bad";
 
@@ -80,7 +81,11 @@ const RuleRow = ({
   );
 };
 
-const liveFrame = (projectId: string) => {
+const liveFrame = (
+  projectId: string
+):
+  | { width: number; height: number; path?: string | undefined; frame: string }
+  | undefined => {
   const layout = canvasStore.get(projectId);
 
   if (!layout) {
@@ -89,7 +94,7 @@ const liveFrame = (projectId: string) => {
 
   const frame = activeFrame(layout);
 
-  const side = (value: number) =>
+  const side = (value: number): number =>
     Math.min(4000, Math.max(200, Math.round(value)));
 
   return {
@@ -106,7 +111,7 @@ const frameText = (result: DesignRulesTestResult): string =>
 const withImport = (text: string, imported: string): string =>
   text.trim() ? `${text.trimEnd()}\n\n${imported}` : imported;
 
-const RulesEditor = ({ projectId, directionId }: Props) => {
+const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
   const [state, setState] = useState<DesignRulesState | null>(null);
   const [text, setText] = useState("");
   const [result, setResult] = useState<DesignRulesTestResult | null>(null);
@@ -128,12 +133,12 @@ const RulesEditor = ({ projectId, directionId }: Props) => {
       (caught: unknown) => live && setError(errorText(caught))
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId]);
 
-  const run = async (kind: "test" | "save") => {
+  const run = async (kind: "test" | "save"): Promise<void> => {
     setBusy(kind);
     setError(null);
     setNote(null);

@@ -1,5 +1,6 @@
 import { CopyButton } from "@design-studio/ui";
 import { useCallback, useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { publishExpiryText } from "../../../shared/publish.js";
 import type {
@@ -56,7 +57,7 @@ const Versions = ({
   p,
   busy,
   onRollback,
-}: Pick<RowProps, "p" | "busy" | "onRollback">) => (
+}: Pick<RowProps, "p" | "busy" | "onRollback">): ReactElement => (
   <ol
     className="publish-versions"
     aria-label={copy.versions}
@@ -99,7 +100,7 @@ const Comments = ({
   p: Publication;
   projectId: string;
   onChanged: () => void;
-}) => {
+}): ReactElement => {
   const [list, setList] = useState<PublicationComment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,7 +116,7 @@ const Comments = ({
     void load();
   }, [load]);
 
-  const remove = async (cid: string) => {
+  const remove = async (cid: string): Promise<void> => {
     try {
       await publishApi.deleteComment(projectId, p.id, cid);
       await load();
@@ -163,9 +164,9 @@ const RowActions = ({
 }: Pick<RowProps, "p" | "busy" | "onRepublish" | "onUnpublish"> & {
   open: string | null;
   setOpen: (v: string | null) => void;
-}) => {
+}): ReactElement => {
   const app = p.backend === "app" && !isReadOnlyPublication(p);
-  const toggle = (name: string) => setOpen(open === name ? null : name);
+  const toggle = (name: string): void => setOpen(open === name ? null : name);
 
   return (
     <>
@@ -228,7 +229,7 @@ const PublicationRow = ({
   onUnpublish,
   onRollback,
   onChanged,
-}: RowProps) => {
+}: RowProps): ReactElement => {
   const [open, setOpen] = useState<string | null>(null);
   const active = p.status !== "removed";
 

@@ -25,7 +25,7 @@ import {
 } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 
-const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
+const p = (pid: string): string => `/api/projects/${encodeURIComponent(pid)}`;
 const PREFS_KEY = "design-studio.export.v1";
 const OPEN_EVENT = "studio:open-export";
 
@@ -239,7 +239,7 @@ const openExport = (detail: OpenExportDetail = {}): void => {
 const onOpenExport = (
   handler: (detail: OpenExportDetail) => void
 ): (() => void) => {
-  const listener = (event: Event) =>
+  const listener = (event: Event): void =>
     handler((event as CustomEvent<OpenExportDetail>).detail ?? {});
 
   globalThis.addEventListener(OPEN_EVENT, listener);

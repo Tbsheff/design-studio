@@ -1,6 +1,6 @@
 import type { ShipSettings } from "@design-studio/contracts/ship";
 import { useEffect, useState } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
@@ -12,7 +12,7 @@ interface Props {
   saveRef: MutableRefObject<(() => Promise<void>) | null>;
 }
 
-const ShipTemplates = ({ projectId, saveRef }: Props) => {
+const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
   const [draft, setDraft] = useState<ShipSettings | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -23,16 +23,17 @@ const ShipTemplates = ({ projectId, saveRef }: Props) => {
       .then((settings) => live && setDraft(settings))
       .catch(() => live && setLoadError("Could not read the ship templates."));
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId]);
 
   saveRef.current = draft
-    ? async () => void (await shipApi.saveSettings(projectId, draft))
+    ? async (): Promise<void> =>
+        void (await shipApi.saveSettings(projectId, draft))
     : null;
 
-  const set = (patch: Partial<ShipSettings>) =>
+  const set = (patch: Partial<ShipSettings>): void =>
     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
 
   return (

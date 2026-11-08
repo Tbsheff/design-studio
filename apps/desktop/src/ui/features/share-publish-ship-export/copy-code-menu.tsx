@@ -2,7 +2,7 @@ import type { CopyCodeFormat } from "@design-studio/contracts/export";
 import { Icon, usePopover } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy as uiCopy } from "./copy.js";
 
@@ -85,7 +85,7 @@ const TriggerContent = ({
   busy: boolean;
   text: string;
   icon: IconName;
-}) => {
+}): ReactElement => {
   if (variant === "row") {
     return (
       <>
@@ -103,7 +103,7 @@ const CopyCodeMenu = ({
   directionId,
   selector,
   variant = "icon",
-}: Props) => {
+}: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<State>({ kind: "idle" });
   const root = useRef<HTMLDivElement>(null);
@@ -120,7 +120,7 @@ const CopyCodeMenu = ({
 
   usePopover(open, root, close);
   useEffect(
-    () => () => {
+    () => (): void => {
       if (timer.current !== null) {
         globalThis.clearTimeout(timer.current);
       }
@@ -135,7 +135,7 @@ const CopyCodeMenu = ({
     }
   }, [open]);
 
-  const settle = (next: State) => {
+  const settle = (next: State): void => {
     setState(next);
 
     if (timer.current !== null) {
@@ -148,7 +148,10 @@ const CopyCodeMenu = ({
     );
   };
 
-  const copy = async (label: string, produce: () => Promise<string | null>) => {
+  const copy = async (
+    label: string,
+    produce: () => Promise<string | null>
+  ): Promise<void> => {
     const text = produce().then((value) => {
       if (!value) {
         throw new Error("Nothing to copy");
@@ -172,7 +175,7 @@ const CopyCodeMenu = ({
     }
   };
 
-  const code = (format: CopyCodeFormat) => async () => {
+  const code = (format: CopyCodeFormat) => async (): Promise<string | null> => {
     if (!directionId) {
       return null;
     }

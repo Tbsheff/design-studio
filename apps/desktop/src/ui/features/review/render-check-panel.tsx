@@ -4,6 +4,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import {
   consoleKey,
@@ -30,7 +31,7 @@ const CheckScreenshot = ({
   projectId: string;
   filePath: string;
   label: string;
-}) => {
+}): ReactElement | null => {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -48,7 +49,7 @@ const CheckScreenshot = ({
       })
       .catch(() => alive && setFailed(true));
 
-    return () => {
+    return (): void => {
       alive = false;
 
       if (objectUrl) {
@@ -115,7 +116,7 @@ const useOldKeys = (
       })
       .catch(() => null);
 
-    return () => {
+    return (): void => {
       alive = false;
     };
   }, [projectId, did, results]);
@@ -137,7 +138,7 @@ const hideOld = (
   const counts = keyCounts(keys ?? []);
   let hidden = 0;
 
-  const keep = (key: string) => {
+  const keep = (key: string): boolean => {
     const old = takeKey(counts, `error|${key}`);
 
     if (old) {
@@ -161,7 +162,12 @@ const hideOld = (
   return { hidden, shown };
 };
 
-const RenderCheckPanel = ({ projectId, results, error, onClose }: Props) => {
+const RenderCheckPanel = ({
+  projectId,
+  results,
+  error,
+  onClose,
+}: Props): ReactElement => {
   const { shown, hidden } = hideOld(results, useOldKeys(projectId, results));
 
   return (

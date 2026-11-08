@@ -14,7 +14,13 @@ import type {
 } from "@design-studio/contracts/insert";
 import { Icon, UiSelect, useModalDialog } from "@design-studio/ui";
 import { useEffect, useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type {
+  FormEvent,
+  KeyboardEvent,
+  ReactElement,
+  SetStateAction,
+  Dispatch,
+} from "react";
 
 import { ApiError, json } from "../../api.js";
 
@@ -81,7 +87,12 @@ const usePreview = (
   target: InsertTarget,
   nodeId: string,
   position: JsxInsertPosition
-) => {
+): {
+  failure: string | null;
+  loading: boolean;
+  preview: FigmaImportPreview | null;
+  setFailure: Dispatch<SetStateAction<string | null>>;
+} => {
   const [preview, setPreview] = useState<FigmaImportPreview | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,7 +117,7 @@ const usePreview = (
       .catch((error: unknown) => live && setFailure(messageOf(error)))
       .finally(() => live && setLoading(false));
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [ids, base, target, nodeId, position]);
@@ -162,11 +173,11 @@ const JsonPaste = ({
 }: {
   link: string;
   onUse: (nodes: string) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
   const [bad, setBad] = useState(false);
 
-  const use = () => {
+  const use = (): void => {
     const nodes = text.trim();
 
     if (!looksLikeFigmaNodes(nodes)) {
@@ -221,7 +232,7 @@ const JsonFallback = ({
   base: FigmaImportSource;
   failure: string | null;
   onUse: (nodes: string) => void;
-}) => {
+}): ReactElement | null => {
   if (!failure || !("link" in base) || !LINKS_OFF.test(failure)) {
     return null;
   }
@@ -229,7 +240,7 @@ const JsonFallback = ({
   return <JsonPaste link={base.link} onUse={onUse} />;
 };
 
-const FailureNote = ({ failure }: { failure: string }) => {
+const FailureNote = ({ failure }: { failure: string }): ReactElement => {
   const [open, setOpen] = useState(false);
   const plain = plainFailure(failure);
 
@@ -257,7 +268,11 @@ const FailureNote = ({ failure }: { failure: string }) => {
   );
 };
 
-const Summary = ({ preview }: { preview: FigmaImportPreview }) => {
+const Summary = ({
+  preview,
+}: {
+  preview: FigmaImportPreview;
+}): ReactElement => {
   const { frame, stats } = preview;
 
   return (
@@ -302,7 +317,7 @@ const FigmaImportDialog = ({
   canNest,
   onDone,
   onClose,
-}: Props) => {
+}: Props): ReactElement => {
   const [base, setBase] = useState<FigmaImportSource>(() =>
     looksLikeFigmaLink(text) ? { link: text.trim() } : { nodes: text }
   );
@@ -334,7 +349,7 @@ const FigmaImportDialog = ({
   const frames = preview?.frames ?? [];
   const chosen = nodeId || preview?.frame.id || "";
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
 
     if (busy || !preview) {
@@ -363,7 +378,7 @@ const FigmaImportDialog = ({
     }
   };
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === "Escape") {
       event.stopPropagation();
     }

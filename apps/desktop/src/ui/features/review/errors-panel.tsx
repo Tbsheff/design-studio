@@ -1,5 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import type { BuildError } from "../home/use-studio-data.js";
 import { copy } from "./copy.js";
@@ -42,7 +43,7 @@ const ErrorsChip = ({
   count: number;
   onOpen: () => void;
   onClear: () => void;
-}) => (
+}): ReactElement => (
   <div className="errors-chip" role="region" aria-label={copy.previewErrors}>
     <button
       type="button"
@@ -68,7 +69,12 @@ const ErrorsChip = ({
   </div>
 );
 
-const ErrorsPanel = ({ errors, onSendToAgent, onClear, pane }: Props) => {
+const ErrorsPanel = ({
+  errors,
+  onSendToAgent,
+  onClear,
+  pane,
+}: Props): ReactElement | null => {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (pane === "design") {

@@ -222,13 +222,16 @@ class CursorLayer {
   }
 }
 
-const studioPointer = (projectId: string, stage: () => HTMLElement | null) => {
+const studioPointer = (
+  projectId: string,
+  stage: () => HTMLElement | null
+): { set(next: boolean): void } => {
   let on = false;
   let pending: StudioCursorInput | null | undefined;
   let timer: ReturnType<typeof globalThis.setTimeout> | null = null;
   let lastFrame: string | null = null;
 
-  const flush = () => {
+  const flush = (): void => {
     timer = null;
 
     if (pending === undefined) {
@@ -245,7 +248,7 @@ const studioPointer = (projectId: string, stage: () => HTMLElement | null) => {
     }).catch(() => null);
   };
 
-  const queue = (value: StudioCursorInput | null) => {
+  const queue = (value: StudioCursorInput | null): void => {
     pending = value;
 
     if (!timer) {
@@ -253,7 +256,7 @@ const studioPointer = (projectId: string, stage: () => HTMLElement | null) => {
     }
   };
 
-  const at = (from: Element | null, clientX: number, clientY: number) => {
+  const at = (from: Element | null, clientX: number, clientY: number): void => {
     const root = stage();
     const target = from?.closest<HTMLElement>(FRAME_SELECTOR) ?? null;
 
@@ -278,7 +281,7 @@ const studioPointer = (projectId: string, stage: () => HTMLElement | null) => {
     });
   };
 
-  const onMove = (event: PointerEvent) =>
+  const onMove = (event: PointerEvent): void =>
     at(
       event.target instanceof Element ? event.target : null,
       event.clientX,
@@ -288,7 +291,7 @@ const studioPointer = (projectId: string, stage: () => HTMLElement | null) => {
   const onFrame = (
     frame: BridgeFrame,
     message: { x: number; y: number; inside: boolean }
-  ) => {
+  ): void => {
     const iframe = frame.element;
 
     if (!message.inside || !iframe || iframe.offsetWidth === 0) {
@@ -300,7 +303,7 @@ const studioPointer = (projectId: string, stage: () => HTMLElement | null) => {
     at(iframe, r.left + message.x * scale, r.top + message.y * scale);
   };
 
-  function onLeave() {
+  function onLeave(): void {
     if (lastFrame !== null) {
       queue(null);
     }
@@ -311,7 +314,7 @@ const studioPointer = (projectId: string, stage: () => HTMLElement | null) => {
   let offFrame: (() => void) | null = null;
 
   return {
-    set(next: boolean) {
+    set(next: boolean): void {
       if (next === on) {
         return;
       }
@@ -346,7 +349,7 @@ const startShareLive = (
   let control: AbortController | null = null;
   let retry: ReturnType<typeof globalThis.setTimeout> | null = null;
 
-  const handle = (event: SharePresenceEvent) => {
+  const handle = (event: SharePresenceEvent): void => {
     if (event.type === "state") {
       layer.set(event.cursors);
       pointer.set(event.wantCursor);
@@ -381,7 +384,7 @@ const startShareLive = (
     }
   };
 
-  const connect = () => {
+  const connect = (): void => {
     if (retry !== null) {
       globalThis.clearTimeout(retry);
     }
@@ -397,7 +400,7 @@ const startShareLive = (
     void listen(own, connect);
   };
 
-  const onChanged = (event: Event) => {
+  const onChanged = (event: Event): void => {
     if (
       (event as CustomEvent<{ projectId?: string }>).detail?.projectId ===
       projectId

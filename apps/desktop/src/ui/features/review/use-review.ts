@@ -3,6 +3,7 @@ import type {
   ReviewResult,
 } from "@design-studio/contracts/review";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
@@ -36,7 +37,7 @@ const side = (value: number): number =>
 const frameKey = (directionId: string | null, frame: CanvasFrame): string =>
   `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
 
-const useLatest = <T>(value: T) => {
+const useLatest = <T>(value: T): RefObject<T> => {
   const ref = useRef(value);
   ref.current = value;
 
@@ -140,7 +141,7 @@ const useReview = (input: ReviewInput): ReviewState => {
 
     const timer = globalThis.setTimeout(run, result ? RERUN_MS : 0);
 
-    return () => globalThis.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [open, stale, result, busy, fixing, error, run]);
 
   return {

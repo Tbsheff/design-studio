@@ -25,9 +25,9 @@ import {
   listDesignCandidates,
   listUniqueTokens,
   listVarCandidates,
-} from "./match-candidates.js";
-import { KindGroup, ScopeToggle, StatusLine } from "./match-rows.js";
-import type { RowActions } from "./match-rows.js";
+} from "./match-candidates-model.js";
+import { KindGroup } from "./match-kind-group.js";
+import type { RowActions } from "./match-rows-model.js";
 import {
   usePageVars,
   toRowKey,
@@ -36,6 +36,8 @@ import {
   useStyleScan,
 } from "./match-scan.js";
 import type { InspectorMatchProps, Scope, Status } from "./match-scan.js";
+import { ScopeToggle } from "./match-scope-toggle.js";
+import { StatusLine } from "./match-status-line.js";
 import { TokenPicker } from "./match-token-picker.js";
 
 const useReplace = (

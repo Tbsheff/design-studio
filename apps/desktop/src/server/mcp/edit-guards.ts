@@ -4,16 +4,17 @@ import path from "node:path";
 import type { Direction, Project } from "@design-studio/contracts";
 import type { AppFixResult } from "@design-studio/contracts/app-doctor";
 
+import type { AgentRunner } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { warmKit } from "../components/props-service.js";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import type { EditRecorder } from "../direct-edit/index.js";
+import type { EventBus } from "../events/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { EditError } from "../page-probe/index.js";
 import { LOCAL_ORG_ID, isOrgInScope, toOrgScope } from "../store/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
-import type { AgentRunner, EventBus } from "../types.js";
 import type { KeepVariant } from "../variations/routes.js";
 import type { ActivityLog } from "./activity.js";
 import { APPROVAL_TIMEOUT_MS } from "./approvals.js";

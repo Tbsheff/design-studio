@@ -6,8 +6,8 @@ import {
 } from "@design-studio/contracts";
 import type { ExportFrame } from "@design-studio/contracts/export";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { waitForPage } from "../preview/page-capture/index.js";
-import type { PreviewService } from "../types.js";
 import { withPagePath } from "./source.js";
 
 export interface InlinedHtml {

@@ -1,4 +1,4 @@
-import type { RenderPage } from "./render-backend.js";
+import type { RenderPage } from "../../shared/server-ports.js";
 import {
   clickablesExpression,
   replayExpression,

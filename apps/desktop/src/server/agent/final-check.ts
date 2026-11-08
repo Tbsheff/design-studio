@@ -20,10 +20,13 @@ import type {
   FinalCheckWithReference,
   ReferenceRecord,
 } from "../../shared/reference.js";
+import type {
+  PreviewService,
+  AgentRunContext,
+} from "../../shared/server-ports.js";
 import type { CanvasService } from "../canvas/index.js";
 import { countSeverities } from "../preview/quality.js";
 import { runReviewFrameTool } from "../review/agent-tool.js";
-import type { PreviewService, AgentRunContext } from "../types.js";
 import { buildCheckReport, saveCheck } from "./check-tool.js";
 import { regionFindings } from "./fit-check.js";
 import { probeLayout } from "./layout-region.js";

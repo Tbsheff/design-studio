@@ -4,7 +4,7 @@ import path from "node:path";
 import type { QualityFinding } from "@design-studio/contracts";
 
 import type { LayoutRegion, PageOwner } from "../../shared/run-target.js";
-import type { PreviewService } from "../types.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 
 export type {
   LayoutBox,

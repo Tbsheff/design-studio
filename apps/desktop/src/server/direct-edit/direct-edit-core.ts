@@ -9,6 +9,7 @@ import type { Direction, Project, Version } from "@design-studio/contracts";
 import type { DesignRule } from "@design-studio/contracts/design-rules";
 import { Effect } from "effect";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import type { CanvasService } from "../canvas/index.js";
 import type {
   ComponentPreviews,
@@ -21,7 +22,6 @@ import {
   makeRuntimeSlot,
   requireBound,
 } from "../platform/runtime-slot/index.js";
-import type { PreviewService } from "../types.js";
 import type { DirectEditDeps } from "./commit/edit-types.js";
 import { DirectEditError } from "./engine/errors.js";
 

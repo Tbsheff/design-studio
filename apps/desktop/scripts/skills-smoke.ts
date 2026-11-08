@@ -24,7 +24,7 @@ import {
   createFakeVersions,
   createTempProject,
 } from "../src/server/testing/fakes.js";
-import type { AgentRunContext } from "../src/server/types.js";
+import type { AgentRunContext } from "../src/shared/server-ports.js";
 
 const MODEL = process.env["SMOKE_MODEL"] ?? "claude-haiku-5-5";
 const SKILL = process.env["SMOKE_SKILL"] ?? "personal:example-skill";

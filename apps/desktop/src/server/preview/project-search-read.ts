@@ -1,7 +1,7 @@
 import type { ProjectSearchResult } from "../../shared/project-search.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 import { searchProjects } from "../app/project-search.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService } from "../types.js";
 
 interface ProjectSearchQuery {
   readonly limit: number;

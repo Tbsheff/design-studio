@@ -9,6 +9,10 @@ import type {
 } from "@design-studio/contracts";
 
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import type { RenderCheckOptions } from "../preview/browser.js";
 import {
   capFindings,
@@ -18,7 +22,6 @@ import {
 } from "../preview/quality.js";
 import { readScanFiles, scanTokenUse } from "../preview/token-scan.js";
 import { diffFinding, diffImages, readPng } from "../preview/visual-diff.js";
-import type { AgentRunContext, PreviewService } from "../types.js";
 import { regionFindings } from "./fit-check.js";
 import { probeLayout } from "./layout-region.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";

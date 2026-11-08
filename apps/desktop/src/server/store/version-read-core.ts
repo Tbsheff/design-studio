@@ -5,6 +5,7 @@ import type {
 } from "@design-studio/contracts";
 import { Effect } from "effect";
 
+import type { VersionStore } from "../../shared/server-ports.js";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
@@ -12,7 +13,6 @@ import {
   makeRuntimeSlot,
   requireBound,
 } from "../platform/runtime-slot/index.js";
-import type { VersionStore } from "../types.js";
 import type { StudioProjectStore } from "./projects.js";
 import type { VersionNames } from "./version-names.js";
 

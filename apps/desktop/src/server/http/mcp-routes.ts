@@ -1,10 +1,12 @@
 import type { McpApprovalPoll } from "@design-studio/contracts/export";
 import type { Hono } from "hono";
 
+import type { AgentRunner } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import type { EditRecorder } from "../direct-edit/index.js";
 import { onSourceChange, recentPages, startRender } from "../events/index.js";
+import type { EventBus } from "../events/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { bindMcpLifeRuntime } from "../mcp-life/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
@@ -18,7 +20,6 @@ import {
 import type { ActivityLog, FixApp } from "../mcp/index.js";
 import { warmUpstream } from "../preview/warm-upstream.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
-import type { AgentRunner, EventBus } from "../types.js";
 import type { KeepVariant } from "../variations/routes.js";
 import { createAgentToolRoute } from "./mount.js";
 

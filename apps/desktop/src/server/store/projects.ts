@@ -9,8 +9,9 @@ import type {
 } from "@design-studio/contracts";
 import { slugify } from "@design-studio/contracts/folders";
 
+import type { VersionStore } from "../../shared/server-ports.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
-import type { ServerConfig, VersionStore } from "../types.js";
 import { createProjectCore } from "./project-core.js";
 import { createProjectCreation } from "./project-create.js";
 import { createProjectFiles } from "./project-files.js";

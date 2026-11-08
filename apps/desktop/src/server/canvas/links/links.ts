@@ -10,8 +10,8 @@ import {
 } from "@design-studio/contracts/links";
 import type { LinksFile } from "@design-studio/contracts/links";
 
+import type { EventBus } from "../../events/index.js";
 import { createKeyedMutex } from "../../platform/mutex/index.js";
-import type { EventBus } from "../../types.js";
 import { canvasOwner, writeAtomic } from "../service.js";
 import type { LinksService, LinksWritten } from "../service.js";
 

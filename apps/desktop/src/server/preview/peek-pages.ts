@@ -1,4 +1,4 @@
-import type { RenderPage } from "./render-backend.js";
+import type { RenderPage } from "../../shared/server-ports.js";
 
 type Viewport = { width: number; height: number; scale?: number };
 type Opener = (url: string, viewport: Viewport) => Promise<RenderPage>;

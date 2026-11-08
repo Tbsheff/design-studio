@@ -4,8 +4,8 @@ import {
   type ExportScope,
 } from "@design-studio/contracts/export";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { zipFiles } from "../design-system/zip.js";
-import type { PreviewService } from "../types.js";
 import { buildPptx } from "./pptx.js";
 import { buildSvg } from "./svg.js";
 import { captureVector } from "./vector.js";

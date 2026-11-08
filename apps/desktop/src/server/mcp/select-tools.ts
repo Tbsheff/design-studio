@@ -4,6 +4,7 @@ import {
   type Project,
 } from "@design-studio/contracts";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { findFrame, frameRef } from "../canvas/index.js";
 import {
   isLayerRef,
@@ -15,7 +16,6 @@ import {
   type Viewport,
 } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
-import type { PreviewService } from "../types.js";
 import { EditError, loadTarget, type EditDeps } from "./edit-guards.js";
 import {
   defineTool,

@@ -4,11 +4,14 @@ import path from "node:path";
 import type { Direction, Project } from "@design-studio/contracts";
 import { cleanExportPath } from "@design-studio/contracts/export";
 
+import type {
+  PreviewService,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import { firstVersionWaitText } from "../app/first-version.js";
 import { resolveSource } from "../export/source.js";
 import { ConflictError, NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService, VersionStore } from "../types.js";
 
 const LIVE_VERSION_ID = "live";
 

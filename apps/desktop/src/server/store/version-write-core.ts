@@ -4,6 +4,7 @@ import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { Direction, Project, Version } from "@design-studio/contracts";
 import { Effect } from "effect";
 
+import type { VersionStore } from "../../shared/server-ports.js";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import { DirectEditError } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
@@ -12,7 +13,6 @@ import {
   makeRuntimeSlot,
   requireBound,
 } from "../platform/runtime-slot/index.js";
-import type { VersionStore } from "../types.js";
 import type { StudioProjectStore } from "./projects.js";
 import type { VersionNames } from "./version-names.js";
 

@@ -9,9 +9,11 @@ import type {
 } from "@design-studio/contracts";
 import { afterEach, describe, expect, it } from "vitest";
 
+import type { AgentRunContext } from "../../shared/server-ports.js";
 import { writeTestDraft } from "../design-system/test-draft.js";
 import { bootAgentRunner } from "../main/agent-runner.js";
 import { buildRuntime } from "../main/runtime.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import {
   createFakeBus,
   createFakePreview,
@@ -19,7 +21,6 @@ import {
   createFakeVersions,
   createTempProject,
 } from "../testing/fakes.js";
-import type { AgentRunContext, ServerConfig } from "../types.js";
 import { cleanPrompt, mockSkillRequests } from "./mock.js";
 
 const roots: string[] = [];

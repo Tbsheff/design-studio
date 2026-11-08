@@ -1,4 +1,4 @@
-import type { RenderBackend, RenderPage } from "./render-backend.js";
+import type { RenderBackend, RenderPage } from "../../shared/server-ports.js";
 
 export interface PageSize {
   width: number;

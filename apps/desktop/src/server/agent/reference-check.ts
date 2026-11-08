@@ -15,13 +15,16 @@ import type {
   ReferenceRecord,
   ReferenceScore,
 } from "../../shared/reference.js";
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import {
   diffPictures,
   pictureSheet,
   resizePng,
   topOf,
 } from "../preview/visual-diff.js";
-import type { AgentRunContext, PreviewService } from "../types.js";
 import { defaultShotTarget } from "./run-target.js";
 import type { ImagePart } from "./user-message.js";
 

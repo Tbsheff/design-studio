@@ -1,8 +1,8 @@
 import type { Project } from "@design-studio/contracts";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService } from "../types.js";
 import type { AttachResponse } from "./first-version.js";
 
 interface DevServerRuntime {

@@ -9,7 +9,7 @@ import type {
   ProjectThumbnail,
 } from "@design-studio/contracts";
 
-import type { ProjectStore } from "../types.js";
+import type { ProjectStore } from "../../shared/server-ports.js";
 
 export interface DetectedApp {
   framework: AppFramework | null;

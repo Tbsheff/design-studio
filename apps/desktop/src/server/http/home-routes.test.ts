@@ -17,8 +17,17 @@ import type {
 import { PNG } from "pngjs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type {
+  AgentRunContext,
+  AgentRunner,
+  PreviewService,
+  RunHandle,
+  ServerConfig,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import { buildUserText } from "../agent/user-message.js";
 import { createEventBus } from "../events/index.js";
+import type { EventBus } from "../events/index.js";
 import { eventRunner as runner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { PREFERENCES_FILE } from "../store/default-folder.js";
@@ -35,15 +44,6 @@ import {
   observeBus,
   wantsThumbnail,
 } from "../thumbnails.js";
-import type {
-  AgentRunContext,
-  AgentRunner,
-  EventBus,
-  PreviewService,
-  RunHandle,
-  ServerConfig,
-  VersionStore,
-} from "../types.js";
 import { createApp } from "./app.js";
 
 let config: ServerConfig;

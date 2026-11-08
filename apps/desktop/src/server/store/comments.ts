@@ -22,6 +22,7 @@ import {
   statusAfterRun,
 } from "../../shared/comments.js";
 import type { CommentActor } from "../../shared/comments.js";
+import type { EventBus } from "../events/index.js";
 import {
   BadRequestError,
   ConflictError,
@@ -29,7 +30,6 @@ import {
   assertSafeId,
 } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import type { EventBus } from "../types.js";
 
 interface CommentFile {
   nextN: number;

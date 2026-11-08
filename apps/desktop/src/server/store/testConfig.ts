@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import type { ServerConfig } from "../types.js";
+import type { ServerConfig } from "../platform/config/index.js";
 
 export async function makeTempConfig(): Promise<{
   config: ServerConfig;

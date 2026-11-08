@@ -8,20 +8,7 @@ import {
   DEFAULT_VITE_PORT_BASE,
 } from "@design-studio/contracts";
 
-interface ServerConfig {
-  dataDir: string;
-  projectsDir: string;
-  studioPort: number;
-  previewPort: number;
-  vitePortBase: number;
-  appPortBase?: number;
-  appPortCount?: number;
-  studioToken: string;
-  agentMode: "sdk" | "mock";
-  studioOrigin: string;
-  previewOrigin: string;
-  fetchAllowLoopback?: boolean;
-}
+import type { ServerConfig } from "../../../shared/server-ports.js";
 
 const REPO_ROOT = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 

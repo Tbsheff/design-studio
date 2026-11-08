@@ -18,10 +18,10 @@ import {
 import type { CanvasFile } from "@design-studio/contracts/canvas-file";
 import type { LinksFile } from "@design-studio/contracts/links";
 
+import type { EventBus } from "../events/index.js";
 import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
 import { ConflictError } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import type { EventBus } from "../types.js";
 import type { LayoutListener } from "./layout-history.js";
 
 export interface LinksService {

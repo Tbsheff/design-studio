@@ -3,23 +3,23 @@ import path from "node:path";
 import { TOKENS_FILE } from "@design-studio/contracts";
 import type { Direction, Project } from "@design-studio/contracts";
 
+import type {
+  AgentRunner,
+  PreviewService,
+  ProjectStore,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { refreshDraftCoverage } from "../design-system/draft-project.js";
 import { packRegistry } from "../design-system/packs.js";
 import type { PackRegistry } from "../design-system/packs.js";
 import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
+import type { EventBus } from "../events/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
-import type {
-  AgentRunner,
-  EventBus,
-  PreviewService,
-  ProjectStore,
-  ServerConfig,
-  VersionStore,
-} from "../types.js";
 import { createRunLifecycle } from "./lifecycle.js";
 import type { RunDriver } from "./lifecycle.js";
 import type { RunFibers } from "./run-runner.js";

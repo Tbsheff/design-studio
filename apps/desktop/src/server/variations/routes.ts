@@ -12,7 +12,9 @@ import type { Hono } from "hono";
 import { nanoid } from "nanoid";
 
 import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
+import type { AgentRunner } from "../../shared/server-ports.js";
 import { readDesignSystemState } from "../design-system/state.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import {
   BadRequestError,
   ConflictError,
@@ -21,7 +23,6 @@ import {
 import { z } from "../platform/zod-bridge/index.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { AgentRunner, ServerConfig } from "../types.js";
 import {
   countProblem,
   createMockBriefGenerator,

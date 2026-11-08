@@ -14,6 +14,10 @@ import {
   withRunTask,
 } from "../../shared/run-levels.js";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import { toOptional, toSdkFieldSet, toToolRun } from "../agent-tools/index.js";
 import type { ToolFields, ToolInput } from "../agent-tools/index.js";
 import { buildAgentTools } from "../agent-tools/registry.js";
@@ -56,7 +60,6 @@ import { reviewFrameShape, runReviewFrameTool } from "../review/agent-tool.js";
 import type { CommentStore } from "../store/comments.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import { defineTweaks } from "../tweaks/store.js";
-import type { AgentRunContext, PreviewService } from "../types.js";
 import {
   arrangeShape,
   measureShape,

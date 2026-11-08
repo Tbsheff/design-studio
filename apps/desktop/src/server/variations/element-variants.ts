@@ -1,7 +1,7 @@
 import type { Project } from "@design-studio/contracts";
 import type { ElementVariantInfo } from "@design-studio/contracts/element-variants";
 
-import type { AgentRunner } from "../types.js";
+import type { AgentRunner } from "../../shared/server-ports.js";
 import { variantInfo } from "./scope.js";
 
 const listElementVariants = async (

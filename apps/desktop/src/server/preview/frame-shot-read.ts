@@ -2,6 +2,7 @@ import type { ExportFrame } from "@design-studio/contracts/export";
 import { withFrameStateHost } from "@design-studio/contracts/frame-state";
 import { withForcedParam } from "@design-studio/contracts/state-styles";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import {
   isLayerRef,
   LayerRefError,
@@ -11,7 +12,6 @@ import {
 import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
 import type { ExportSource } from "../project-source/index.js";
-import type { PreviewService } from "../types.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
 import { captureFrame } from "./capture.js";
 import type { Shot } from "./capture.js";

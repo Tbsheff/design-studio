@@ -3,8 +3,11 @@ import path from "node:path";
 
 import type { QualityFinding } from "@design-studio/contracts";
 
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import type { CanvasService } from "../canvas/index.js";
-import type { AgentRunContext, PreviewService } from "../types.js";
 import { runScreens } from "./check-tool.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 import { isBlocking } from "./polish-loop.js";

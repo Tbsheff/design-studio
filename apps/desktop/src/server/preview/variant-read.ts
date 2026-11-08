@@ -1,7 +1,7 @@
 import type { ElementVariantInfo } from "@design-studio/contracts/element-variants";
 
+import type { AgentRunner } from "../../shared/server-ports.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { AgentRunner } from "../types.js";
 import { listElementVariants } from "../variations/element-variants.js";
 
 interface VariantListQuery {

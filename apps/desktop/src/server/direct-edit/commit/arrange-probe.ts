@@ -10,9 +10,9 @@ import type {
   ArrangeTargetFacts,
 } from "../../../shared/arrange-plan.js";
 import type { MeasureRect } from "../../../shared/arrange.js";
+import type { PreviewService } from "../../../shared/server-ports.js";
 import { appSourceBody, parseLoc } from "../../page-probe/index.js";
 import { probeOnPage } from "../../preview/probe-page.js";
-import type { PreviewService } from "../../types.js";
 
 type Viewport = { width: number; height: number };
 

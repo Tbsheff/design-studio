@@ -10,8 +10,8 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 import type { QualityFinding } from "@design-studio/contracts";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { diffImages, readPng } from "../preview/visual-diff.js";
-import type { PreviewService } from "../types.js";
 import { toCriticIssues } from "./critic-reply.js";
 import type { CriticIssue } from "./critic-reply.js";
 import { changedSince } from "./screens.js";

@@ -4,6 +4,7 @@ import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { Direction, Project, RunRequest } from "@design-studio/contracts";
 import { Effect } from "effect";
 
+import type { AgentRunner } from "../../shared/server-ports.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import {
@@ -11,7 +12,6 @@ import {
   requireBound,
 } from "../platform/runtime-slot/index.js";
 import type { CommentStore as CommentFiles } from "../store/comments.js";
-import type { AgentRunner } from "../types.js";
 import type { PrefillDeps } from "./prefill.js";
 import type { RunWatcher } from "./run-watch.js";
 

@@ -15,6 +15,12 @@ import type {
 
 import { withLofi } from "../../shared/lofi.js";
 import { levelOf } from "../../shared/run-levels.js";
+import type {
+  AgentRunner,
+  PreviewService,
+  RunHandle,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import {
   isLeanRun,
   leanContext,
@@ -50,10 +56,12 @@ import {
 } from "../direct-edit/commit/index.js";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import { onPlannedEdit, toEditEvent } from "../events/index.js";
+import type { EventBus } from "../events/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { insertPatternNames } from "../pattern/index.js";
 import { REPO_ROOT } from "../platform/config/index.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import { resourcePath, resourcesDir } from "../platform/resources/index.js";
@@ -70,14 +78,6 @@ import { createWorkspaceStore } from "../store/workspaces.js";
 import type { WorkspaceStore } from "../store/workspaces.js";
 import { createThumbnailService } from "../thumbnails.js";
 import type { ThumbnailService } from "../thumbnails.js";
-import type {
-  AgentRunner,
-  EventBus,
-  PreviewService,
-  RunHandle,
-  ServerConfig,
-  VersionStore,
-} from "../types.js";
 import { freshSessionPatch } from "./app-project-files.js";
 import { readMentionFiles } from "./mentions.js";
 import { createFolderPicker } from "./pick-folder.js";

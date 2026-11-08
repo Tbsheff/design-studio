@@ -10,7 +10,8 @@ import type {
 } from "@design-studio/contracts";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { EventBus, ProjectStore, VersionStore } from "../types.js";
+import type { ProjectStore, VersionStore } from "../../shared/server-ports.js";
+import type { EventBus } from "../events/index.js";
 import { WatcherManager } from "./watcher.js";
 
 function fakeBus(events: StudioEventInput[]): EventBus {

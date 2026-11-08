@@ -1,6 +1,10 @@
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { Effect } from "effect";
 
+import type {
+  AgentRunner,
+  PreviewService,
+} from "../../../shared/server-ports.js";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import type { KnownFailure } from "../../platform/attempt/index.js";
 import {
@@ -8,7 +12,6 @@ import {
   requireBound,
 } from "../../platform/runtime-slot/index.js";
 import type { StudioProjectStore } from "../../store/projects.js";
-import type { AgentRunner, PreviewService } from "../../types.js";
 import type { FrameStateDeps } from "../app-flow/frame-state-service.js";
 import type { CanvasService } from "../service.js";
 import { LinkError } from "./link-tools.js";

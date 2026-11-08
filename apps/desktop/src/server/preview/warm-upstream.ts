@@ -1,7 +1,7 @@
 import type { Project } from "@design-studio/contracts";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { noteRenderedPage } from "../events/index.js";
-import type { PreviewService } from "../types.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
 
 const WARM_TIMEOUT_MS = 120_000;

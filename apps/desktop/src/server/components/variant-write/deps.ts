@@ -30,7 +30,7 @@ export type { WrittenFile } from "../../direct-edit/commit/index.js";
 
 export type { DirectEditDeps } from "../../direct-edit/index.js";
 
-export type { PreviewService } from "../../types.js";
+export type { PreviewService } from "../../../shared/server-ports.js";
 
 export type { CvaCall } from "../props-schema.js";
 

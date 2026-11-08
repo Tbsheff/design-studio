@@ -9,6 +9,10 @@ import type {
 } from "@design-studio/contracts";
 import type { Context, Hono } from "hono";
 
+import type {
+  PreviewService,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import { bindDevServerRuntime } from "../app/dev-server-runtime.js";
 import {
   firstVersionState,
@@ -23,7 +27,6 @@ import { warmKit } from "../components/props-service.js";
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { userGit } from "../platform/git/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService, VersionStore } from "../types.js";
 import { isHeldActionPath } from "./first-version-routes.js";
 
 const SOURCE_PATTERN = /^(.+):(\d+):(\d+)$/;

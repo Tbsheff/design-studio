@@ -14,8 +14,8 @@ import type {
 import type { LayoutChange } from "@design-studio/contracts/canvas-file";
 
 import { emitSourceChange } from "../../events/index.js";
+import type { EventBus } from "../../events/index.js";
 import { isNodeError } from "../../platform/errors/index.js";
-import type { EventBus } from "../../types.js";
 import { DirectEditError } from "../engine/errors.js";
 import { writeAtomic, writeNewFile } from "./edit-source.js";
 import type {

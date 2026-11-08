@@ -3,10 +3,10 @@ import path from "node:path";
 
 import type { RunMention } from "@design-studio/contracts";
 
+import type { MentionFile } from "../../shared/server-ports.js";
 import { MENTION_MAX } from "../comments/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { checkPathInside } from "../platform/paths/index.js";
-import type { MentionFile } from "../types.js";
 
 const FILE_MAX_BYTES = 20_000;
 

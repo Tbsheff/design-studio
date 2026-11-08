@@ -17,12 +17,13 @@ import type {
 } from "@design-studio/contracts";
 import { PNG } from "pngjs";
 
+import type { PreviewService, VersionStore } from "../shared/server-ports.js";
+import type { EventBus } from "./events/index.js";
 import { NotFoundError, assertSafeId } from "./platform/errors/index.js";
 import { halfSize } from "./platform/half-size/index.js";
 import { siblingWorkerFile, WorkerClient } from "./platform/process/index.js";
 import { diffMask } from "./preview/visual-diff.js";
 import type { StudioProjectStore } from "./store/projects.js";
-import type { EventBus, PreviewService, VersionStore } from "./types.js";
 
 export { halfSize } from "./platform/half-size/index.js";
 

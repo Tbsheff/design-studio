@@ -1,13 +1,8 @@
 import type { NavSummary } from "@design-studio/contracts";
 
-const PLACEHOLDER_PATTERN = String.raw`\b(lorem|ipsum|todo|tbd|to come|will be added|placeholder|sample (data|timings))\b|example\.(com|org)|@[\w.-]+\.example\b`;
+import type { ProbeRect } from "../../shared/server-ports.js";
 
-export interface ProbeRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+const PLACEHOLDER_PATTERN = String.raw`\b(lorem|ipsum|todo|tbd|to come|will be added|placeholder|sample (data|timings))\b|example\.(com|org)|@[\w.-]+\.example\b`;
 
 export interface TapHit {
   selector: string;

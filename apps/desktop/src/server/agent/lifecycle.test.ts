@@ -4,13 +4,13 @@ import path from "node:path";
 import type { StudioEvent, TelemetrySample } from "@design-studio/contracts";
 import { afterEach, describe, expect, it } from "vitest";
 
+import type { AgentRunContext } from "../../shared/server-ports.js";
 import {
   createFakeBus,
   createFakeProjects,
   createFakeVersions,
   createTempProject,
 } from "../testing/fakes.js";
-import type { AgentRunContext } from "../types.js";
 import {
   createRunLifecycle,
   DELTA_FLUSH_CHARS,

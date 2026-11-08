@@ -1,9 +1,9 @@
 import type { Direction, Project } from "@design-studio/contracts";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { listInsertable, PreviewTargetError } from "../components/index.js";
 import type { PreviewResult, PreviewTarget } from "../components/index.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
-import type { PreviewService } from "../types.js";
 import { applySetImage } from "./commit/image.js";
 import { applyClearText, applyInsertJsx } from "./commit/jsx-insert.js";
 import { applyVector } from "./commit/vector-ops.js";

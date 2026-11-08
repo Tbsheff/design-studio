@@ -17,8 +17,11 @@ import {
   plainAttachmentName,
   REFERENCE_LOW_SCORE,
 } from "../../shared/reference.js";
+import type {
+  AgentRunContext,
+  MentionFile,
+} from "../../shared/server-ports.js";
 import { referencePagesBlock } from "../design-system/reference-page.js";
-import type { AgentRunContext, MentionFile } from "../types.js";
 import { referenceBlock, variationBlock } from "../variations/message.js";
 import { layoutLines } from "./layout-region.js";
 import type { RunTarget, TargetFrame } from "./run-target.js";

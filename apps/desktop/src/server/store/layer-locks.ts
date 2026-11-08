@@ -3,10 +3,10 @@ import path from "node:path";
 
 import { cleanLockKeys } from "../../shared/layer-locks.js";
 import type { LayerLocksView } from "../../shared/layer-locks.js";
+import type { EventBus } from "../events/index.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import { assertSafeId } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import type { EventBus } from "../types.js";
 
 const FILE = "layer-state.json";
 

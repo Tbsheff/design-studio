@@ -7,6 +7,7 @@ import type {
   QualitySeverity,
 } from "@design-studio/contracts";
 
+import type { AxeNode, AxeViolation } from "../../shared/server-ports.js";
 import { packagedResource } from "../platform/resources/index.js";
 
 const AXE_RULES = [
@@ -41,21 +42,6 @@ const REVIEW_EXTRA_RULES = [
 export const SHARED_AXE_RULES: readonly string[] = [
   ...new Set([...AXE_RULES, ...REVIEW_EXTRA_RULES]),
 ];
-
-interface AxeNode {
-  target: unknown[];
-  html: string;
-  failureSummary?: string;
-  any?: { id: string; data?: Record<string, unknown> | null }[];
-}
-
-export interface AxeViolation {
-  id: string;
-  impact?: string | null;
-  help: string;
-  helpUrl?: string;
-  nodes: AxeNode[];
-}
 
 let axeSource: Promise<string> | null = null;
 

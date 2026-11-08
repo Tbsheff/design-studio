@@ -1,10 +1,10 @@
-import type { StudioRuntime } from "../main/runtime.js";
 import type {
   AgentRunner,
   PreviewService,
   ProjectStore,
   VersionStore,
-} from "../types.js";
+} from "../../shared/server-ports.js";
+import type { StudioRuntime } from "../main/runtime.js";
 
 export interface ExportDeps {
   projects: ProjectStore;

@@ -10,12 +10,8 @@ import {
   type RenderRequest,
   type RenderResponse,
 } from "../../shared/render-rpc.js";
-import {
-  NAVIGATION_TIMEOUT_MS,
-  SETTLE_TIMEOUT_MS,
-  type RenderBackend,
-  type RenderPage,
-} from "./render-contract.js";
+import type { RenderBackend, RenderPage } from "../../shared/server-ports.js";
+import { NAVIGATION_TIMEOUT_MS, SETTLE_TIMEOUT_MS } from "./render-contract.js";
 
 const OP_TIMEOUT_MS = 90_000;
 

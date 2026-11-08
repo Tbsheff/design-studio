@@ -1,8 +1,8 @@
 import type { Project, RunMode } from "@design-studio/contracts";
 import type { DesignRule } from "@design-studio/contracts/design-rules";
 
+import type { DesignSystemPromptContext } from "../../shared/server-ports.js";
 import { tokenTable } from "../design-system/design-md.js";
-import type { DesignSystemPromptContext } from "../design-system/state.js";
 import type { TasteRule } from "./taste.js";
 
 const ROLE = `You are an expert product designer and frontend engineer working inside Design Studio. You edit real files in the current working directory. The studio renders those files live, so the filesystem owns the design: what is on disk is the design.`;

@@ -2,13 +2,12 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type {
-  AppTokenSource,
-  CompiledTokenEntry,
   DesignSystemState,
   Direction,
   Project,
 } from "@design-studio/contracts";
 
+import type { DesignSystemPromptContext } from "../../shared/server-ports.js";
 import {
   appTokenState,
   loadAppTokens,
@@ -19,14 +18,6 @@ import { DESIGN_MD_FILE } from "./packs.js";
 import { readDesignSystemFiles } from "./sync.js";
 
 const DESIGN_MD_PROMPT_CAP = 100_000;
-
-export interface DesignSystemPromptContext {
-  designMd: string | null;
-  entries: CompiledTokenEntry[];
-  googleFontsUrl: string | null;
-  errors: string[];
-  source?: AppTokenSource;
-}
 
 export async function readDesignSystemState(
   project: Project,

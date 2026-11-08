@@ -9,6 +9,12 @@ import type {
   RenderCheckResult,
 } from "@design-studio/contracts";
 
+import type {
+  PreviewService,
+  ProjectStore,
+  ServerConfig,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import { AppServers } from "../app/dev-server.js";
 import { resolveFrameState } from "../app/frame-state.js";
 import { createAppProxy, type AppTarget } from "../app/proxy.js";
@@ -16,13 +22,7 @@ import { sourcesShifted } from "../app/source-map.js";
 import { designSystemLinkProblem } from "../design-system/html-link.js";
 import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
 import { noteTreeChange, onSourceChange } from "../events/index.js";
-import type {
-  EventBus,
-  PreviewService,
-  ProjectStore,
-  ServerConfig,
-  VersionStore,
-} from "../types.js";
+import type { EventBus } from "../events/index.js";
 import { loadBridgeScript } from "./bridge-bundle.js";
 import type { BrowserPool, RenderCheckOptions } from "./browser.js";
 import { startHtmlServer } from "./html-server.js";
@@ -633,7 +633,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
   };
 }
 
-export type { PreviewService } from "../types.js";
+export type { PreviewService } from "../../shared/server-ports.js";
 
 export { loadBridgeScript } from "./bridge-bundle.js";
 
@@ -654,7 +654,7 @@ export {
   SETTLE_TIMEOUT_MS,
 } from "./render-backend.js";
 
-export type { RenderBackend, RenderPage } from "./render-backend.js";
+export type { RenderBackend, RenderPage } from "../../shared/server-ports.js";
 
 export { createElectronBackend } from "./render-electron.js";
 

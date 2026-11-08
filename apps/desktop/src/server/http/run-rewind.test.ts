@@ -12,11 +12,13 @@ import type {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { forkBaseOf } from "../../shared/rewind.js";
+import type { AgentRunner } from "../../shared/server-ports.js";
 import { createEventBus } from "../events/index.js";
 import { bootAgentRunner } from "../main/agent-runner.js";
 import { eventRunner } from "../main/event-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { buildRuntime } from "../main/runtime.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import {
   createProjectStore,
   type StudioProjectStore,
@@ -24,7 +26,6 @@ import {
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
 import { createFakePreview } from "../testing/fakes.js";
-import type { AgentRunner, ServerConfig } from "../types.js";
 import { createApp } from "./app.js";
 
 const run = promisify(execFile);

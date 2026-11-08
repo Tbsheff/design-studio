@@ -1,8 +1,8 @@
 import type { Hono } from "hono";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService } from "../types.js";
 
 interface UsageRouteDeps {
   readonly preview?: PreviewService;

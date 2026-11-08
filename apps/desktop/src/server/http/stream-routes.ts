@@ -1,11 +1,5 @@
 import { randomBytes } from "node:crypto";
 
-import { Effect, Option, Schema, Stream } from "effect";
-import type { Fiber } from "effect";
-import type { Context, Hono } from "hono";
-import { streamSSE } from "hono/streaming";
-import type { SSEStreamingApi } from "hono/streaming";
-
 import {
   ACTION_DONE,
   MAX_WATCH,
@@ -15,16 +9,22 @@ import type {
   ActionDone,
   StreamWatch,
 } from "@design-studio/actions/app-stream";
+import { Effect, Option, Schema, Stream } from "effect";
+import type { Fiber } from "effect";
+import type { Context, Hono } from "hono";
+import { streamSSE } from "hono/streaming";
+import type { SSEStreamingApi } from "hono/streaming";
+
 import {
   APP_STREAM_PATH,
   STREAM_APPROVALS,
   STREAM_HELLO,
 } from "../../shared/app-stream.js";
+import type { ProjectStore } from "../../shared/server-ports.js";
 import type { RecordedEvent } from "../events/index.js";
 import { EventQueue } from "../events/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
-import type { ProjectStore } from "../types.js";
 import type { ApprovalFeed } from "./mcp-routes.js";
 
 const HEARTBEAT_MS = 15_000;

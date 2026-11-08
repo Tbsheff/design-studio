@@ -36,12 +36,14 @@ import type {
   PrototypeLink,
 } from "@design-studio/contracts/links";
 
+import type {
+  RenderPage,
+  PreviewService,
+} from "../../../shared/server-ports.js";
 import { frameStatesView } from "../../app/frame-state.js";
 import { withPagePath } from "../../export/source.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { waitForPage } from "../../preview/page-capture/index.js";
-import type { RenderPage } from "../../preview/render-backend.js";
-import type { PreviewService } from "../../types.js";
 import type { FrameStateDeps } from "../app-flow/frame-state-service.js";
 import { findFrame, frameRef } from "../tools.js";
 import type { CanvasToolContext, ToolText } from "../tools.js";

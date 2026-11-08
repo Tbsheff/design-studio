@@ -9,11 +9,11 @@ import type {
 } from "@design-studio/contracts/app-doctor";
 import type { Context, Hono } from "hono";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { appProject, doctorControl } from "../preview/doctor-read.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService } from "../types.js";
 
 export interface DoctorRouteDeps {
   projects: StudioProjectStore;

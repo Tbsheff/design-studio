@@ -7,10 +7,10 @@ import type { LayoutChange } from "@design-studio/contracts/canvas-file";
 
 import type {
   AgentRunner,
-  EventBus,
   ProjectStore,
   VersionStore,
-} from "../../types.js";
+} from "../../../shared/server-ports.js";
+import type { EventBus } from "../../events/index.js";
 import type { PatchResult } from "../engine/errors.js";
 
 export interface EditFileChange {

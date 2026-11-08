@@ -5,9 +5,9 @@ import path from "node:path";
 import type { ExportFrame } from "@design-studio/contracts/export";
 import type { ShareFrame } from "@design-studio/contracts/share";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import type { ExportSource } from "../export/source.js";
 import { captureFrame } from "../preview/page-capture/index.js";
-import type { PreviewService } from "../types.js";
 
 const MAX_CSS_HEIGHT = 8000;
 

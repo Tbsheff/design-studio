@@ -10,9 +10,8 @@ import {
 } from "@design-studio/contracts";
 import type { PropValue } from "@design-studio/contracts/props";
 
+import type { RenderPage, PreviewService } from "../../shared/server-ports.js";
 import { humanize, propsFor } from "../direct-edit/components-ops/index.js";
-import type { RenderPage } from "../preview/render-backend.js";
-import type { PreviewService } from "../types.js";
 import { loadLibrary, type LibraryEntry } from "./insert-list.js";
 import {
   bundlePreview,

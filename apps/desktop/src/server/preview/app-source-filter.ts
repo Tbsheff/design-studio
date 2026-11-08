@@ -3,8 +3,8 @@ import {
   DEV_CHROME_SELECTOR,
 } from "@design-studio/contracts/app";
 
+import type { RenderPage } from "../../shared/server-ports.js";
 import { toDevChromeExpression } from "./dev-chrome-expression.js";
-import type { RenderPage } from "./render-backend.js";
 
 const MAX_ANCESTORS = 40;
 

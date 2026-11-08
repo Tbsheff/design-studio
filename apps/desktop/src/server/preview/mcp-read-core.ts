@@ -4,13 +4,17 @@ import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { PortFlowPlan, PortPlan } from "@design-studio/contracts/port";
 import { Effect } from "effect";
 
+import type {
+  AgentRunner,
+  PreviewService,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import {
   makeRuntimeSlot,
   requireBound,
 } from "../platform/runtime-slot/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { AgentRunner, PreviewService, VersionStore } from "../types.js";
 
 interface PortPlanQuery {
   readonly flow: boolean;

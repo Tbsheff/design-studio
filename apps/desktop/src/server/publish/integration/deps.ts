@@ -11,7 +11,7 @@ export { attemptKnown } from "../../platform/attempt/index.js";
 
 export { toDecoder } from "../../platform/decode/index.js";
 
-export { createKeyVault } from "../index.js";
+export { createKeyVault } from "../vault.js";
 
 export type { KnownFailure } from "../../platform/attempt/index.js";
 

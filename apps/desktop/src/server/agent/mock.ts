@@ -9,11 +9,11 @@ import type {
 } from "@design-studio/contracts";
 
 import { levelOf } from "../../shared/run-levels.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 import type { CanvasService } from "../canvas/index.js";
 import { probeWithPreview } from "../canvas/links/index.js";
 import { checkPathInside } from "../platform/paths/index.js";
 import { MOCK_TWEAKS_TAG, runMockTweaks } from "../tweaks/mock-tweaks.js";
-import type { PreviewService } from "../types.js";
 import { runVariationMock } from "../variations/mock-pages.js";
 import { createBashGate } from "./ask-gate.js";
 import {

@@ -7,7 +7,7 @@ import type {
   Project,
 } from "@design-studio/contracts";
 
-import type { PreviewService } from "../types.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 import { listComponents } from "./inventory.js";
 
 export const COMPONENT_VIEWPORT = { width: 1280, height: 800 };

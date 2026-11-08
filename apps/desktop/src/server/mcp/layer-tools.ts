@@ -1,5 +1,6 @@
 import type { Project } from "@design-studio/contracts";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { findFrame, frameRef, readProjectCanvas } from "../canvas/index.js";
 import { noteRenderedPage } from "../events/index.js";
 import {
@@ -14,7 +15,6 @@ import {
 } from "../page-probe/index.js";
 import type { Layer, Viewport } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
-import type { PreviewService } from "../types.js";
 import { EditError, loadTarget } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

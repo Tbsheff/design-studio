@@ -4,7 +4,7 @@ import type { CheckViewport, QualityFinding } from "@design-studio/contracts";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 
-import type { ProbeRect } from "./quality-probe.js";
+import type { ProbeRect } from "../../shared/server-ports.js";
 
 const BAND_HEIGHT = 200;
 const MASK_MARGIN = 24;

@@ -1,16 +1,31 @@
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import { api, errorText } from "../../api.js";
+import { MAX_IMAGES, getImageProblem } from "../../domain/image-limits.js";
 import type { PendingAttachment } from "../../domain/pending-attachment.js";
 
 const ID_RADIX = 36;
 
 interface FileRules {
-  readonly createPreviewUrl: (file: File) => string;
   readonly imageProblem: (file: File) => string | null;
   readonly maxImages: number;
 }
+
+const FILE_RULES: FileRules = {
+  imageProblem: getImageProblem,
+  maxImages: MAX_IMAGES,
+};
+
+interface PreviewSlot {
+  url: string;
+}
+
+const openPreview = (file: File, slot: PreviewSlot): (() => void) => {
+  slot.url = URL.createObjectURL(file);
+
+  return (): void => URL.revokeObjectURL(slot.url);
+};
 
 type FileUpdate = Partial<PendingAttachment>;
 
@@ -63,6 +78,7 @@ const usePromptFiles = (
 ): UsePromptFilesResult => {
   const [files, setFiles] = useState<PendingAttachment[]>([]);
   const [, startUpload] = useTransition();
+  const releases = useRef(new Map<string, () => void>());
 
   const uploadFile = async (file: File, localId: string): Promise<void> => {
     try {
@@ -89,7 +105,9 @@ const usePromptFiles = (
         room -= 1;
         const localId = toLocalId();
         const { name } = file;
-        const previewUrl = rules.createPreviewUrl(file);
+        const slot: PreviewSlot = { url: "" };
+        releases.current.set(localId, openPreview(file, slot));
+        const previewUrl = slot.url;
         setFiles((prev) => [
           ...prev,
           {
@@ -113,20 +131,15 @@ const usePromptFiles = (
     }
   };
 
-  const removeFile = (localId: string): void =>
-    setFiles((prev) => {
-      const file = prev.find((entry) => entry.localId === localId);
-
-      if (file) {
-        URL.revokeObjectURL(file.previewUrl);
-      }
-
-      return prev.filter((entry) => entry.localId !== localId);
-    });
+  const removeFile = (localId: string): void => {
+    releases.current.get(localId)?.();
+    releases.current.delete(localId);
+    setFiles((prev) => prev.filter((entry) => entry.localId !== localId));
+  };
 
   const uploading = files.some((file) => !file.attachment && !file.error);
 
   return { addFiles, files, removeFile, setFiles, uploading };
 };
 
-export { usePromptFiles };
+export { FILE_RULES, usePromptFiles };

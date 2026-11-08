@@ -6,6 +6,7 @@ import { ComposerContext } from "./composer-context";
 import type { SlotProps } from "./slot-props";
 
 interface ComposerProps extends SlotProps {
+  readonly extraClass?: string;
   readonly onClick?: MouseEventHandler<HTMLDivElement>;
 }
 
@@ -20,6 +21,7 @@ const toFlag = (isOn: boolean): "false" | "true" => {
 const Composer = ({
   children,
   className,
+  extraClass,
   onClick,
 }: ComposerProps): ReactElement => {
   const [isEmpty, setIsEmpty] = useState(true);
@@ -38,7 +40,8 @@ const Composer = ({
           "focus-within:border-primary/60",
           "transition-[box-shadow,border-color] shadow-xs",
           "data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed",
-          className
+          className,
+          extraClass
         )}
         data-empty={toFlag(isEmpty)}
         data-focus={toFlag(isFocused)}

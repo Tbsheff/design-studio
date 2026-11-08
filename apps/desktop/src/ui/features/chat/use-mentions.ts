@@ -237,4 +237,4 @@ const useMentions = ({
 
 export { componentMention, useMentions };
 
-export type { MentionRequest };
+export type { MentionRequest, UseMentionsResult };

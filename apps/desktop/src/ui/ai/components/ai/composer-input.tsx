@@ -9,7 +9,7 @@ interface ComposerInputProps {
   readonly "aria-controls"?: string;
   readonly "aria-describedby"?: string;
   readonly "aria-label"?: string;
-  readonly className?: string;
+  readonly extraClass?: string;
   readonly maxRows?: number;
   readonly onPaste?: ClipboardEventHandler<HTMLTextAreaElement>;
   readonly onSubmit: (text: string) => void;
@@ -22,7 +22,7 @@ interface ComposerInputProps {
 const DEFAULT_MAX_ROWS = 8;
 
 const ComposerInput = ({
-  className,
+  extraClass,
   maxRows = DEFAULT_MAX_ROWS,
   onPaste,
   onSubmit,
@@ -52,7 +52,7 @@ const ComposerInput = ({
         "min-h-9 px-3 py-2 text-sm leading-relaxed text-foreground",
         "placeholder:text-muted-foreground",
         "disabled:cursor-not-allowed",
-        className
+        extraClass
       )}
       data-slot="composer-input"
       onBlur={handlers.handleMarkBlurred}

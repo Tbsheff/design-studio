@@ -14,8 +14,10 @@ import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
+import { Result, Schema } from "effect";
 import { customAlphabet } from "nanoid";
 
+import { toDecoder } from "../platform/decode/index.js";
 import {
   BadRequestError,
   NotFoundError,
@@ -23,7 +25,6 @@ import {
   isNodeError,
 } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { DEFAULT_FOLDER_NAME } from "./default-folder.js";
 import type { DefaultFolderStore } from "./default-folder.js";
 import { bindWorkspaceRuntime } from "./workspace-runtime.js";
@@ -36,38 +37,48 @@ const MAX_PATH_LENGTH = 4096;
 
 const workspaceId = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 10);
 
-const storedFolderSchema = z
-  .object({
-    addedAt: z.number().int().nonnegative(),
-    id: z.string().regex(/^[a-z0-9]{1,64}$/),
-    label: z.string().trim().min(1).max(MAX_LABEL_LENGTH),
-    path: z
-      .string()
-      .min(1)
-      .max(MAX_PATH_LENGTH)
-      .refine((value) => path.isAbsolute(value), "must be absolute"),
-  })
-  .strict();
+const StoredFolderSchema = Schema.Struct({
+  addedAt: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  id: Schema.String.check(Schema.isPattern(/^[a-z0-9]{1,64}$/u)),
+  label: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(MAX_LABEL_LENGTH)
+  ),
+  path: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(MAX_PATH_LENGTH),
+    Schema.makeFilter((value: string) => path.isAbsolute(value))
+  ),
+});
 
-const workspacesFileSchema = z
-  .object({
-    folders: z.array(storedFolderSchema).max(MAX_WORKSPACES),
-    version: z.literal(1),
-  })
-  .strict();
+const WorkspacesFileSchema = Schema.Struct({
+  folders: Schema.Array(StoredFolderSchema).check(
+    Schema.isMaxLength(MAX_WORKSPACES)
+  ),
+  version: Schema.Literal(1),
+});
 
-type StoredFolder = z.infer<typeof storedFolderSchema>;
+const FolderEntriesSchema = Schema.Struct({
+  folders: Schema.Array(Schema.Unknown),
+});
 
-type WorkspacesFile = z.infer<typeof workspacesFileSchema>;
+interface StoredFolder {
+  addedAt: number;
+  id: string;
+  label: string;
+  path: string;
+}
 
-const labelSchema = z
-  .string()
-  .trim()
-  .min(1, "label is required")
-  .max(
-    MAX_LABEL_LENGTH,
-    `label must be ${MAX_LABEL_LENGTH} characters or fewer`
-  );
+interface WorkspacesFile {
+  folders: StoredFolder[];
+  version: 1;
+}
+
+const toStoredFolder = toDecoder(StoredFolderSchema, "error");
+
+const toWorkspacesFile = toDecoder(WorkspacesFileSchema, "error");
+
+const toFolderEntries = toDecoder(FolderEntriesSchema, "ignore");
 
 export interface WorkspaceStore {
   list(): Promise<WorkspaceList>;
@@ -90,15 +101,19 @@ async function isFolder(target: string): Promise<boolean> {
 }
 
 function parseLabel(raw: string): string {
-  const parsed = labelSchema.safeParse(raw);
+  const label = raw.trim();
 
-  if (!parsed.success) {
+  if (label.length === 0) {
+    throw new BadRequestError("label is required");
+  }
+
+  if (label.length > MAX_LABEL_LENGTH) {
     throw new BadRequestError(
-      parsed.error.issues[0]?.message ?? "invalid label"
+      `label must be ${MAX_LABEL_LENGTH} characters or fewer`
     );
   }
 
-  return parsed.data;
+  return label;
 }
 
 export function createWorkspaceStore(
@@ -134,26 +149,25 @@ export function createWorkspaceStore(
       return { folders: [], version: 1 };
     }
 
-    const parsed = workspacesFileSchema.safeParse(json);
+    const parsed = toWorkspacesFile(json);
 
-    if (parsed.success) {
-      return parsed.data;
+    if (Result.isSuccess(parsed)) {
+      return { folders: [...parsed.success.folders], version: 1 };
     }
 
     console.error(
       `[workspaces] ${file} failed validation; keeping only valid entries`
     );
 
-    const folders = Array.isArray((json as { folders?: unknown })?.folders)
-      ? (json as { folders: unknown[] }).folders
-      : [];
+    const entries = toFolderEntries(json);
+    const folders = Result.isSuccess(entries) ? entries.success.folders : [];
 
     return {
       folders: folders
         .flatMap((entry) => {
-          const result = storedFolderSchema.safeParse(entry);
+          const result = toStoredFolder(entry);
 
-          return result.success ? [result.data] : [];
+          return Result.isSuccess(result) ? [result.success] : [];
         })
         .slice(0, MAX_WORKSPACES),
       version: 1,
@@ -163,10 +177,13 @@ export function createWorkspaceStore(
   const write = async (data: WorkspacesFile): Promise<void> => {
     await mkdir(dataDir, { recursive: true });
     const temp = `${file}.${randomBytes(4).toString("hex")}.tmp`;
-    await writeFile(
-      temp,
-      `${JSON.stringify(workspacesFileSchema.parse(data), null, 2)}\n`
-    );
+    const checked = toWorkspacesFile(data);
+
+    if (Result.isFailure(checked)) {
+      throw new BadRequestError("invalid saved folders");
+    }
+
+    await writeFile(temp, `${JSON.stringify(checked.success, null, 2)}\n`);
     await rename(temp, file);
   };
 

@@ -40,6 +40,7 @@ import { PropLive } from "../handlers/prop/live.js";
 import { PublishLive } from "../handlers/publish/live.js";
 import { RunLive } from "../handlers/run/live.js";
 import { ScenarioLive } from "../handlers/scenario/live.js";
+import { ScreenLive } from "../handlers/screen/live.js";
 import { SessionLive } from "../handlers/session/live.js";
 import { ShareLive } from "../handlers/share/live.js";
 import { ShipLive } from "../handlers/ship/live.js";
@@ -107,6 +108,7 @@ const liveLayer = Layer.mergeAll(
   PublishLive,
   RunLive,
   ScenarioLive,
+  ScreenLive,
   SessionLive,
   ShareLive,
   ShipLive,

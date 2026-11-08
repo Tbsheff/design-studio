@@ -127,3 +127,20 @@ export type { WorkspaceRoot } from "./workspace-root.js";
 export { DataModelStore, toAppRoot } from "./data-model/index.js";
 
 export type { DataModelStoreApi } from "./data-model/index.js";
+
+export { ScreenStore, toCreatePlan, toDuplicatePlan } from "./screen/index.js";
+
+export type {
+  CreateScreenCommand,
+  DuplicateScreenCommand,
+  InspectScope,
+  InspectScreenCommand,
+  InspectScreenPage,
+  LayoutGroupInfo,
+  PlannedFile,
+  ScreenCreated,
+  ScreenDuplicated,
+  ScreenScope,
+  ScreenStoreApi,
+  ScreenWritePlan,
+} from "./screen/index.js";

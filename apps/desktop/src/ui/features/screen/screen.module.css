@@ -1,0 +1,177 @@
+.dialog {
+  width: min(560px, 94vw);
+}
+
+.form {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.title {
+  margin: 0 auto 0 0;
+  font-size: var(--t-md);
+}
+
+.close {
+  height: 28px;
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: var(--s-1);
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}
+
+.pathRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.pathInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 20px;
+  margin: var(--s-1) 0 0;
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+
+.statusFree {
+  color: var(--ok);
+}
+
+.statusTaken {
+  color: var(--danger);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.chip {
+  height: 28px;
+  padding: 0 var(--s-2-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--surface-hover);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.detail {
+  display: grid;
+  gap: var(--s-1);
+  margin: var(--s-2) 0 0;
+  padding: var(--s-2) var(--s-2-5);
+  border-radius: var(--r-control-sm);
+  background: var(--surface-inset);
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+
+.detailRow {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.detailKey {
+  flex: none;
+  width: 56px;
+  color: var(--text-3);
+}
+
+.detailValue {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-2);
+}
+
+.tile {
+  display: grid;
+  gap: var(--s-1);
+  justify-items: start;
+  padding: var(--s-2) var(--s-2-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tile:hover {
+  background: var(--surface-hover);
+}
+
+.tile[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.tileName {
+  font-size: var(--t-sm);
+  font-weight: var(--w-medium);
+}
+
+.tileNote {
+  font-size: var(--t-2xs);
+  color: var(--text-3);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--t-xs);
+}
+
+.group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.group legend {
+  padding: 0;
+}
+
+.statusFile {
+  flex-basis: 100%;
+  color: var(--text-3);
+}

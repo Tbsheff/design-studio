@@ -5,7 +5,7 @@ import { useCallback, useEffect } from "react";
 
 import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { FrameMenuItemButton } from "./frame-menu-item.js";
-import { menuKeys, useMenu } from "./frame-menu-model.js";
+import { menuKeys, useMenu, useScreenEntry } from "./frame-menu-model.js";
 import { toMenuItems } from "./menu-items-model.js";
 import { usePortEntry } from "./use-port-entry.js";
 import { stop } from "./variation-model.js";
@@ -30,6 +30,7 @@ const FrameMoreMenu = ({
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
 
   const portEntry = usePortEntry(root, openPortDialog);
+  const screenEntry = useScreenEntry(root);
 
   const handleKeys = useCallback(
     (event: KeyboardEvent<HTMLElement>): void => menuKeys(event, close),
@@ -41,10 +42,6 @@ const FrameMoreMenu = ({
       toMenuItems(root.current)[0]?.focus();
     }
   }, [menu.open, root]);
-
-  if (own.length === 0 && !portAvailable()) {
-    return null;
-  }
 
   let datatip = "More frame actions";
 
@@ -78,6 +75,7 @@ const FrameMoreMenu = ({
           {menu.open && portAvailable() && (
             <FrameMenuItemButton entry={portEntry} close={close} />
           )}
+          <FrameMenuItemButton entry={screenEntry} close={close} />
           {own.map((item) => (
             <FrameMenuItemButton key={item.id} entry={item} close={close} />
           ))}

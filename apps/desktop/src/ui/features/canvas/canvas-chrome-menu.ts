@@ -20,6 +20,7 @@ import type {
 } from "./canvas-shell.js";
 import type { CanvasViewRow } from "./canvas-view-row.js";
 import { frameBaseName, framePage } from "./frame-label-model.js";
+import { openScreenCreate } from "./frame-menu-model.js";
 import { toValueOr } from "./settle-model.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu-model.js";
 
@@ -169,6 +170,13 @@ const toAddGroup = (
           width: framePreset.width,
         }),
     })),
+    {
+      disabled: !canAddFrame(chromePropsValue.layout),
+      icon: "doc" as const,
+      id: "new-screen",
+      label: "New screen…",
+      run: openScreenCreate,
+    },
     ...chromePropsValue.importPage.items(
       chromePropsValue.kind,
       chromePropsValue.directionId,

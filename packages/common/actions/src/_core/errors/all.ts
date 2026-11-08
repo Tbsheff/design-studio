@@ -30,6 +30,7 @@ import type { PatternError } from "../../pattern/errors/index.js";
 import type { PropError } from "../../prop/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
 import type { ScenarioError } from "../../scenario/errors/index.js";
+import type { ScreenError } from "../../screen/errors/index.js";
 import type { SpacingError } from "../../spacing/errors/index.js";
 import type { StackingError } from "../../stacking/errors/index.js";
 import type { StateStyleError } from "../../state-style/errors/index.js";
@@ -74,6 +75,7 @@ type StudioError =
   | PropError
   | PublishError
   | ScenarioError
+  | ScreenError
   | SpacingError
   | StackingError
   | StateStyleError

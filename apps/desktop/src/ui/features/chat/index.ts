@@ -71,3 +71,5 @@ export { applyRunEvent, runText } from "./run-state-model.js";
 export type { RunMap } from "./run-state-model.js";
 
 export type { DeltaBatcher } from "./delta-batch-model.js";
+
+export { useSlashMenu } from "./use-slash-menu.js";

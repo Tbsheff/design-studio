@@ -52,7 +52,7 @@ import { RunContextChip } from "./run-context-chip.js";
 import { SkillChips } from "./skill-chips.js";
 import { SkillsIndicator } from "./skills-indicator.js";
 import { effortGroup, levelGroup, modelGroup } from "./slash-groups.js";
-import { SlashMenu, useSlashMenu } from "./slash-menu.js";
+import { SlashMenu } from "./slash-menu.js";
 import { useComposerKeys } from "./use-composer-keys.js";
 import { useHistorySearch } from "./use-history-search.js";
 import { useMentions } from "./use-mentions.js";
@@ -65,6 +65,7 @@ import { usePromptSend } from "./use-prompt-send.js";
 import type { PromptRequest } from "./use-prompt-send.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 import { useRunLevel } from "./use-run-level.js";
+import { useSlashMenu } from "./use-slash-menu.js";
 import { useSlashSections } from "./use-slash-sections.js";
 
 interface Props {

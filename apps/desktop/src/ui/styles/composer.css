@@ -1237,6 +1237,15 @@ dialog.run-settings-pop {
   user-select: none;
 }
 
+button.slash-row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
 .slash-row[data-highlighted] {
   background: var(--slash-hl);
 }

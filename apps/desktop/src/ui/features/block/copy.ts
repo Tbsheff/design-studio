@@ -17,6 +17,7 @@ const copy = {
   listFailed: "Could not list the blocks.",
   listLabel: "Blocks",
   matched: "Uses your kit",
+  missingCount: "parts",
   missingLabel: "Plain markup for",
   missingTip:
     "This project has no component with these names. The block draws them as plain markup.",

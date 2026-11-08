@@ -25,6 +25,8 @@ const BlockTile = ({
     [block.id, onInsert]
   );
 
+  const missingTip = `${copy.missingTip} ${block.missing.join(", ")}`;
+
   return (
     <li className={styles.tile} data-block={block.id}>
       <BlockWireframe kind={block.kind} />
@@ -32,8 +34,8 @@ const BlockTile = ({
         <span className={styles.name}>{block.name}</span>
         <span className={styles.description}>{block.description}</span>
         {block.missing.length > 0 && (
-          <span className={styles.missing} data-tip={copy.missingTip}>
-            {copy.missingLabel} {block.missing.join(", ")}
+          <span className={styles.missing} data-tip={missingTip}>
+            {copy.missingLabel} {block.missing.length} {copy.missingCount}
           </span>
         )}
         {block.missing.length === 0 && (

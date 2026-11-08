@@ -30,13 +30,24 @@ const SLOT_FALLBACKS: ReadonlyMap<string, SlotFallback> = new Map([
   ["Button", toFallback("button", BUTTON_CLASS, {}, ["variant", "size"])],
   ["Card", toFallback("div", CARD_CLASS, {}, [])],
   ["CardContent", toFallback("div", "px-6", {}, [])],
-  ["CardDescription", toFallback("p", "text-sm text-muted-foreground", {}, [])],
+  [
+    "CardDescription",
+    toFallback("p", "m-0 text-sm text-muted-foreground", {}, []),
+  ],
   ["CardFooter", toFallback("div", "flex items-center px-6", {}, [])],
   ["CardHeader", toFallback("div", "flex flex-col gap-1.5 px-6", {}, [])],
-  ["CardTitle", toFallback("h3", "font-semibold leading-none", {}, [])],
+  ["CardTitle", toFallback("h3", "m-0 font-semibold leading-none", {}, [])],
   ["Input", toFallback("input", INPUT_CLASS, {}, [])],
   ["Label", toFallback("label", "text-sm font-medium leading-none", {}, [])],
-  ["Table", toFallback("table", "w-full caption-bottom text-sm", {}, [])],
+  [
+    "Table",
+    toFallback(
+      "table",
+      "w-full border-collapse caption-bottom text-sm",
+      {},
+      []
+    ),
+  ],
   ["TableBody", toFallback("tbody", "", {}, [])],
   ["TableCell", toFallback("td", "p-3 align-middle", {}, [])],
   [

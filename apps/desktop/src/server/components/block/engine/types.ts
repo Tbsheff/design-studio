@@ -35,6 +35,7 @@ interface BlockRender {
 interface BlockRenderOptions {
   readonly available: ReadonlySet<string>;
   readonly isHtml: boolean;
+  readonly isTailwind: boolean;
 }
 
 interface SlotFallback {

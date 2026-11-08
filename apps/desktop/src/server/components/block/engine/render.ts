@@ -1,3 +1,4 @@
+import { toHtmlStyles } from "./html-styles.js";
 import { SLOT_FALLBACKS } from "./slot-fallbacks.js";
 import type {
   BlockAttrs,
@@ -141,7 +142,15 @@ const toBlockMarkup = (
     }
   }
 
-  return { fallbacks, markup: toMarkup(root, 0, options.isHtml) };
+  const markup = toMarkup(root, 0, options.isHtml);
+
+  if (options.isHtml && !options.isTailwind) {
+    const styles = toHtmlStyles(markup, template.id);
+
+    return { fallbacks, markup: `${markup}\n${styles}` };
+  }
+
+  return { fallbacks, markup };
 };
 
 export { toBlockComponents, toBlockMarkup };

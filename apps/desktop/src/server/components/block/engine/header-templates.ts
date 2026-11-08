@@ -28,7 +28,9 @@ const toPanel = (panel: Panel): BlockNode =>
 const toTitleBlock = (): BlockNode =>
   toNode("div", { className: "flex flex-col gap-1" }, [
     toNode("div", { className: ROW }, [
-      toNode("h1", { className: "text-2xl font-semibold" }, ["Order 10482"]),
+      toNode("h1", { className: "m-0 text-2xl font-semibold" }, [
+        "Order 10482",
+      ]),
       toBadge("secondary", "Processing"),
     ]),
     toText(MUTED, "Placed by Avery Chen on Jun 12, 2026"),
@@ -66,7 +68,9 @@ const toPageHeader = (): BlockNode =>
     { className: "flex flex-wrap items-start justify-between gap-4 pb-2" },
     [
       toNode("div", { className: "flex flex-col gap-1" }, [
-        toNode("h1", { className: "text-2xl font-semibold" }, ["Customers"]),
+        toNode("h1", { className: "m-0 text-2xl font-semibold" }, [
+          "Customers",
+        ]),
         toText(MUTED, "Manage who can order, and review their activity."),
       ]),
       toNode("div", { className: ROW }, [

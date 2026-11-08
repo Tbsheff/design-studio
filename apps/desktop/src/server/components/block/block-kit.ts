@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { loadLibrary } from "./deps.js";
 import type { LibraryEntry, Project } from "./deps.js";
 
@@ -5,9 +8,26 @@ interface BlockKit {
   readonly available: ReadonlySet<string>;
   readonly imports: Readonly<Record<string, string>>;
   readonly isHtml: boolean;
+  readonly isTailwind: boolean;
 }
 
 const KIT_FOLDER = /(?:^|\/)(?:ui|components\/ui)\//u;
+
+const hasTailwind = async (
+  project: Project,
+  workTree: string
+): Promise<boolean> => {
+  try {
+    const text = await readFile(
+      path.join(workTree, project.entry.replace(/^\//u, "")),
+      "utf-8"
+    );
+
+    return /tailwind/iu.test(text);
+  } catch {
+    return false;
+  }
+};
 
 const toRank = (entry: LibraryEntry): number => {
   if (KIT_FOLDER.test(entry.file)) {
@@ -34,7 +54,12 @@ const inspectBlockKit = async (
   names: readonly string[]
 ): Promise<BlockKit> => {
   if (project.kind !== "react") {
-    return { available: new Set(), imports: {}, isHtml: true };
+    return {
+      available: new Set(),
+      imports: {},
+      isHtml: true,
+      isTailwind: await hasTailwind(project, workTree),
+    };
   }
 
   const library = await loadLibrary(project, workTree);
@@ -50,7 +75,7 @@ const inspectBlockKit = async (
     }
   }
 
-  return { available, imports, isHtml: false };
+  return { available, imports, isHtml: false, isTailwind: true };
 };
 
 export { inspectBlockKit };

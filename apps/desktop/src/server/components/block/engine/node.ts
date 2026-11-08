@@ -28,7 +28,7 @@ const toSmallButton = (variant: string | null, text: string): BlockNode => {
 };
 
 const toText = (className: string, text: string): BlockNode =>
-  toNode("p", { className }, [text]);
+  toNode("p", { className: `m-0 ${className}` }, [text]);
 
 const toField = (
   id: string,

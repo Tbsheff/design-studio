@@ -17,7 +17,7 @@ const toEmptyState = (): BlockNode =>
         "flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-16 text-center",
     },
     [
-      toNode("h2", { className: "text-lg font-semibold" }, [
+      toNode("h2", { className: "m-0 text-lg font-semibold" }, [
         "No customers yet",
       ]),
       toText(

@@ -11,7 +11,7 @@
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
-  color: var(--text-dim);
+  color: var(--text-3);
   font: inherit;
   font-size: var(--t-xs);
   cursor: pointer;
@@ -48,7 +48,7 @@
   border: 1px solid var(--line);
   border-radius: 11px;
   background: transparent;
-  color: var(--text-dim);
+  color: var(--text-3);
   font: inherit;
   cursor: pointer;
 }
@@ -92,7 +92,7 @@
 }
 
 .description {
-  color: var(--text-dim);
+  color: var(--text-3);
 }
 
 .missing {
@@ -108,7 +108,7 @@
   padding: 0 var(--s-2);
   border: 1px solid var(--accent-line);
   border-radius: 11px;
-  color: var(--text-dim);
+  color: var(--text-3);
 }
 
 .primary {
@@ -117,10 +117,10 @@
   align-self: end;
   height: 28px;
   padding: 0 var(--s-3);
-  border: 1px solid var(--accent-line);
+  border: 1px solid var(--accent);
   border-radius: var(--r-1, 4px);
-  background: var(--accent-line);
-  color: var(--text);
+  background: var(--accent);
+  color: var(--on-accent);
   font: inherit;
   cursor: pointer;
 }
@@ -132,13 +132,14 @@
 
 .wire {
   grid-area: wire;
+  align-self: start;
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 6px;
   border: 1px solid var(--line);
   border-radius: var(--r-1, 4px);
-  background: var(--bg-elev, transparent);
+  background: var(--surface-inset);
 }
 
 .wireRow {
@@ -154,8 +155,7 @@
   display: block;
   height: 6px;
   border-radius: 2px;
-  background: var(--text-dim);
-  opacity: 0.45;
+  background: var(--text-faint);
 }
 
 .wireLine {
@@ -174,8 +174,7 @@
 .wireButton {
   width: 22px;
   margin-left: auto;
-  background: var(--accent-line);
-  opacity: 1;
+  background: var(--accent);
 }
 
 .wireBox {
@@ -185,7 +184,7 @@
 
 .note {
   margin: 0;
-  color: var(--text-dim);
+  color: var(--text-3);
 }
 
 .error {

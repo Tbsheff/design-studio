@@ -1,5 +1,6 @@
 .dialog {
   width: min(360px, 100%);
+  padding: var(--s-4);
 }
 
 .form {

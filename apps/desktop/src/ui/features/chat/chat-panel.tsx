@@ -3,11 +3,9 @@ import { Icon } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from "../../ai/components/ai/conversation.js";
+import { ConversationContent } from "../../ai/components/ai/conversation-content.js";
+import { ConversationScrollButton } from "../../ai/components/ai/conversation-scroll-button.js";
+import { Conversation } from "../../ai/components/ai/conversation.js";
 import { PendingEntry, RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";

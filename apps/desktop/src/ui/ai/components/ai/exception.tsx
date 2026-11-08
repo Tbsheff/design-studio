@@ -6,7 +6,7 @@ import type { SlotProps } from "./slot-props";
 import { useElementRender } from "./use-element-render";
 
 interface ExceptionProps extends SlotProps {
-  readonly "data-long"?: boolean | string;
+  readonly "data-long"?: boolean | string | null;
   readonly ref?: Ref<HTMLDivElement>;
   readonly role?: "alert" | "status";
 }

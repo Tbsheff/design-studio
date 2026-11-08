@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { ReactElement } from "react";
 
-import { useConversation } from "../../ai/components/ai/conversation.js";
+import { useConversation } from "../../ai/components/ai/use-conversation.js";
 import { toEarlierLabel } from "./earlier-runs-model.js";
 import { useOlderRuns } from "./run-history-model.js";
 

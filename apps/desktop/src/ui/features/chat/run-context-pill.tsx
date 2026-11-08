@@ -1,7 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
-import { chipVariants } from "../../ai/components/ai/chip.js";
+import { chipVariants } from "../../ai/components/ai/chip-variants.js";
 import { cn } from "../../ai/lib/utils.js";
 import { copy } from "./copy.js";
 import { RunContextText } from "./run-context-text.js";

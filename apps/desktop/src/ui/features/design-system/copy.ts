@@ -52,7 +52,7 @@ const COPY = {
     "Calm, precise banking app for small teams",
   placeholderCodeMyApp: "~/code/my-app",
   placeholderDesignMd:
-    "# Brand\nPrimary color, type, spacing and voice rules the agent should follow.",
+    "# Brand\nPrimary color, type, spacing and voice rules Claude should follow.",
   placeholderExampleClasses: "Example: /classes",
   placeholderFromTheWebsiteOrBrief: "From the website or brief",
   placeholderHttpsExampleCom: "https://example.com",
@@ -132,7 +132,7 @@ const COPY = {
   textInlineStylesStayOut: "inline styles stay out",
   textKeepBoth: "Keep both",
   textKeepEditing: "Keep editing",
-  textKit: "Kit",
+  textKit: "Components",
   textLight: "Light",
   textLoadingTokens: "Loading tokens…",
   textMakeACopyTo: "Duplicate to edit",

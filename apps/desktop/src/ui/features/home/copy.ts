@@ -6,7 +6,7 @@ const copy = {
   addFolder: "Add folder…",
   addFolder2: "Add folder",
   addTheOtherFoldersYou:
-    "Add the other folders you work in. Then you can make new projects there and see which projects each one holds.",
+    "Add the other folders you work in. Then you can create projects there and see which projects each one holds.",
   addToFavorites: "Add to favorites",
   advanced: "Advanced",
   allProjects: "All projects",
@@ -183,7 +183,7 @@ const copy = {
   recentProjects: "Recent projects",
   referenceFolderNeedsDesktop:
     "Folder picking needs the desktop app. Attach a zip instead.",
-  referenceMaterialTip: "Reference material for the agent: ",
+  referenceMaterialTip: "Reference material for Claude: ",
   removeFromFavorites: "Remove from favorites",
   removeFromListFilesStay: "Remove from list. Files stay on disk.",
   rename: "Rename",

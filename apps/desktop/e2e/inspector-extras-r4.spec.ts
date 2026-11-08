@@ -81,7 +81,7 @@ test("R4-8: the breadcrumb lists each ancestor, collapses the middle, and a clic
 }) => {
   await extrasProject(page);
   await selectInFrame(page, "h1");
-  const crumbs = page.getByRole("navigation", { name: "Element path" });
+  const crumbs = page.getByRole("navigation", { name: "Layer path" });
   await expect(page.locator(".ins-tag")).toHaveText("h1");
   await expect(crumbs.locator(".ins-crumb")).toHaveText([
     "…",

@@ -31,7 +31,7 @@ const copy = {
   deny: "Deny",
   deny2: "Deny…",
   describeAChangeBelow:
-    "Describe a change below. To target one part, press V, then click an element in the preview.",
+    "Describe a change below. To change one part, press V, then click a layer in the preview.",
   designSystemCheck: "Design system check problems",
   designSystemDraft: "Design system draft",
   designs: "Designs",

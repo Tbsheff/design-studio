@@ -67,8 +67,8 @@ const copy = {
   editsGoToThisUse: "Edits go to this use of ",
   effectLayers: "Effect layers",
   effects: "Effects",
-  elementPath: "Element path",
-  elementSource: "Element source",
+  elementPath: "Layer path",
+  elementSource: "Layer source",
   emDash: "—",
   emptyHint:
     "Click any layer on the canvas to edit it. Shift-click to select more.",
@@ -102,7 +102,7 @@ const copy = {
   italic: "Italic",
   justify: "Justify",
   keepRawValue: "Use raw",
-  kitComponentDefaultProps: "Kit component, default props",
+  kitComponentDefaultProps: "Component, default props",
   layersHint:
     "Layers show for the live preview. Press ⌥1 to open them on the canvas.",
   layout: "Layout",

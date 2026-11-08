@@ -3,7 +3,7 @@ const copy = {
     clarity: "Clarity",
     empty: "Run the attention check to see where the eye goes first.",
     heatmap: "Predicted attention heatmap",
-    noElements: "No visible element was found.",
+    noElements: "No visible layer was found.",
     notes: "Notes",
     notesNone: "No attention problems found.",
     rank: "Elements by attention",

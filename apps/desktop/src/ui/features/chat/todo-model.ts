@@ -64,4 +64,15 @@ const toTodoText = (todo: TodoItem): string => {
   return todo.content;
 };
 
-export { isCurrentStep, todoProgress, toRowView, toTodoText };
+const toTodoKeys = (todos: TodoItem[]): string[] => {
+  const seen = new Map<string, number>();
+
+  return todos.map((todo) => {
+    const occurrence = seen.get(todo.content) ?? 0;
+    seen.set(todo.content, occurrence + 1);
+
+    return `${todo.content}#${occurrence}`;
+  });
+};
+
+export { isCurrentStep, toRowView, toTodoKeys, toTodoText, todoProgress };

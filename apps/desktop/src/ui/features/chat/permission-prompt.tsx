@@ -30,9 +30,8 @@ const PermissionPrompt = ({
   const onCancel = useCallback(() => setIsDenying(false), []);
 
   return (
-    <section
+    <fieldset
       className="permission"
-      role="group"
       aria-label={request.title}
       data-testid="permission-prompt"
     >
@@ -64,7 +63,7 @@ const PermissionPrompt = ({
           {error}
         </p>
       )}
-    </section>
+    </fieldset>
   );
 };
 

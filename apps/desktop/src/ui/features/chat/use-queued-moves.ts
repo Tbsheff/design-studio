@@ -14,7 +14,7 @@ interface QueuedMovesOptions {
 }
 
 interface QueuedMoves {
-  onKeyDown: (event: KeyboardEvent<HTMLLIElement>) => void;
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
   onDragStart: (event: DragEvent) => void;
   onDragOver: (event: DragEvent) => void;
   onDrop: (event: DragEvent) => void;
@@ -24,7 +24,7 @@ const useQueuedMoves = (options: QueuedMovesOptions): QueuedMoves => {
   const { index, items, dragFrom, isEditing, onItems, onDragFrom } = options;
 
   const onKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLLIElement>): void => {
+    (event: KeyboardEvent<HTMLElement>): void => {
       const step = toArrowStep(event.key);
 
       if (isEditing || !event.altKey || !step) {

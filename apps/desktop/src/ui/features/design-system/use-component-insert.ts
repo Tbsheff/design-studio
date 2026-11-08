@@ -81,8 +81,8 @@ const frameRect = (
 
 const localPoint = (
   frames: Frames,
-  x: number,
-  y: number
+  posX: number,
+  posY: number
 ): { x: number; y: number } | null => {
   const found = frameRect(frames);
 
@@ -93,10 +93,10 @@ const localPoint = (
   const { el, rect } = found;
 
   if (
-    x < rect.left ||
-    x > rect.right ||
-    y < rect.top ||
-    y > rect.bottom ||
+    posX < rect.left ||
+    posX > rect.right ||
+    posY < rect.top ||
+    posY > rect.bottom ||
     rect.width === 0
   ) {
     return null;
@@ -104,7 +104,7 @@ const localPoint = (
 
   const scale = rect.width / (el.offsetWidth || rect.width);
 
-  return { x: (x - rect.left) / scale, y: (y - rect.top) / scale };
+  return { x: (posX - rect.left) / scale, y: (posY - rect.top) / scale };
 };
 
 const hintOf = (drop: DropAt | null): DropHint | null => {
@@ -124,9 +124,9 @@ const hintOf = (drop: DropAt | null): DropHint | null => {
   };
 };
 
-const useComponentInsert = (o: Options): void => {
-  const live = useRef(o);
-  live.current = o;
+const useComponentInsert = (options: Options): void => {
+  const live = useRef(options);
+  live.current = options;
   const busy = useRef(false);
   const drop = useRef<DropAt | null>(null);
 
@@ -185,7 +185,7 @@ const useComponentInsert = (o: Options): void => {
     [tickReselect]
   );
 
-  useEffect(tickReselect, [o.selection, tickReselect]);
+  useEffect(tickReselect, [options.selection, tickReselect]);
 
   useEffect(() => stopReselect, [stopReselect]);
 
@@ -284,12 +284,12 @@ const useComponentInsert = (o: Options): void => {
 
   const host = useMemo<InsertHost>(
     () => ({
-      dragEnd(component, x, y): void {
+      dragEnd(component, leftNext, topNext): void {
         const last = drop.current;
         drop.current = null;
         pending.current = null;
 
-        if (!localPoint(live.current.frames, x, y)) {
+        if (!localPoint(live.current.frames, leftNext, topNext)) {
           return;
         }
 
@@ -301,8 +301,8 @@ const useComponentInsert = (o: Options): void => {
 
         void run(component, last.inside ? "inside" : "after", last.selection);
       },
-      dragMove(x, y, onHint): void {
-        const point = localPoint(live.current.frames, x, y);
+      dragMove(posXNext, posYNext, onHint): void {
+        const point = localPoint(live.current.frames, posXNext, posYNext);
 
         if (!point) {
           drop.current = null;

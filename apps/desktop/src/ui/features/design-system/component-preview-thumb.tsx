@@ -37,16 +37,16 @@ const contentBox = (
   let top = height;
   let bottom = -1;
 
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      if (!differs(data, (y * width + x) * 4)) {
+  for (let posY = 0; posY < height; posY += 1) {
+    for (let posX = 0; posX < width; posX += 1) {
+      if (!differs(data, (posY * width + posX) * 4)) {
         continue;
       }
 
-      left = Math.min(left, x);
-      right = Math.max(right, x);
-      top = Math.min(top, y);
-      bottom = Math.max(bottom, y);
+      left = Math.min(left, posX);
+      right = Math.max(right, posX);
+      top = Math.min(top, posY);
+      bottom = Math.max(bottom, posY);
     }
   }
 
@@ -54,14 +54,14 @@ const contentBox = (
     return null;
   }
 
-  const x = Math.max(0, left - TRIM_PAD);
-  const y = Math.max(0, top - TRIM_PAD);
+  const leftNext = Math.max(0, left - TRIM_PAD);
+  const topNext = Math.max(0, top - TRIM_PAD);
 
   return {
-    h: Math.min(height, bottom + TRIM_PAD + 1) - y,
-    w: Math.min(width, right + TRIM_PAD + 1) - x,
-    x,
-    y,
+    h: Math.min(height, bottom + TRIM_PAD + 1) - topNext,
+    w: Math.min(width, right + TRIM_PAD + 1) - leftNext,
+    x: leftNext,
+    y: topNext,
   };
 };
 

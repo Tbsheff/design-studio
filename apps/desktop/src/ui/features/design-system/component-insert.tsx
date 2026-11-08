@@ -64,7 +64,7 @@ const useInsertable = (
     [projectId, directionId]
   );
 
-  return { ...state, retry: (): void => setAttempt((n) => n + 1) };
+  return { ...state, retry: (): void => setAttempt((count) => count + 1) };
 };
 
 interface Drag {
@@ -173,12 +173,12 @@ const useComponentDrag = (): ComponentDrag => {
       }
 
       cur.active = true;
-      const { clientX: x, clientY: y } = event;
+      const { clientX: posX, clientY: posY } = event;
       setGhost((prev) => ({
         hint: prev?.hint ?? null,
         name: component.name,
-        x,
-        y,
+        x: posX,
+        y: posY,
       }));
 
       if (frame.current) {
@@ -189,7 +189,7 @@ const useComponentDrag = (): ComponentDrag => {
         frame.current = 0;
         insertBus
           .get()
-          ?.dragMove(x, y, (hint) =>
+          ?.dragMove(posX, posY, (hint) =>
             setGhost((prev) => (prev ? { ...prev, hint } : prev))
           );
       });

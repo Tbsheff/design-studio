@@ -321,9 +321,9 @@ const DesignSystems = ({
               className="sr-only"
               tabIndex={-1}
               aria-label={COPY.labelDesignSystemZip}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
 
                 if (file) {
                   void importFile(file);

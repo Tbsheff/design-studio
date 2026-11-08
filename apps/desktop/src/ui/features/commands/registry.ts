@@ -43,7 +43,7 @@ export const collectCommands = (): Command[] => {
 };
 
 export const runCommand = (id: string): boolean => {
-  const command = collectCommands().find((c) => c.id === id);
+  const command = collectCommands().find((char) => char.id === id);
 
   if (!command || command.disabled) {
     return false;
@@ -55,7 +55,7 @@ export const runCommand = (id: string): boolean => {
 };
 
 export const commandBlocker = (id: string): string | null => {
-  const command = collectCommands().find((c) => c.id === id);
+  const command = collectCommands().find((ch) => ch.id === id);
 
   return command ? (command.disabled ?? null) : "Not available here";
 };
@@ -72,7 +72,7 @@ export const useCommands = (source: Source): void => {
     sources.set([...sources.get(), entry]);
 
     return (): void => {
-      sources.set(sources.get().filter((e) => e !== entry));
+      sources.set(sources.get().filter((evt) => evt !== entry));
     };
   }, []);
 };

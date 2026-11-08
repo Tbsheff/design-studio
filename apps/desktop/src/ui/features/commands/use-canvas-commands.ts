@@ -53,18 +53,20 @@ const ZOOMS: { key: ZoomKey; title: string; keyId: KeyId; keywords: string }[] =
     { key: "out", keyId: "zoom-out", keywords: "smaller", title: "Zoom out" },
   ];
 
-const canvasCommands = (a: CanvasActions): Command[] => {
-  const needLive = a.live ? {} : { disabled: "Only in the live preview" };
+const canvasCommands = (canvasActions: CanvasActions): Command[] => {
+  const needLive = canvasActions.live
+    ? {}
+    : { disabled: "Only in the live preview" };
 
   const out: Command[] = [
-    ...ZOOMS.map((z) => ({
+    ...ZOOMS.map((zed) => ({
       group: "Canvas",
       icon: "search" as const,
-      id: `view.zoom-${z.key}`,
-      keyId: z.keyId,
-      keywords: z.keywords,
-      run: () => a.zoom(z.key),
-      title: z.title,
+      id: `view.zoom-${zed.key}`,
+      keyId: zed.keyId,
+      keywords: zed.keywords,
+      run: () => canvasActions.zoom(zed.key),
+      title: zed.title,
     })),
     {
       group: "Canvas",
@@ -72,8 +74,8 @@ const canvasCommands = (a: CanvasActions): Command[] => {
       id: "tool.select",
       keyId: "tool-select",
       keywords: "pick inspect edit",
-      run: a.onSelect,
-      title: a.selectMode ? "Stop selecting" : "Select elements",
+      run: canvasActions.onSelect,
+      title: canvasActions.selectMode ? "Stop selecting" : "Select elements",
     },
     {
       group: "View",
@@ -81,8 +83,10 @@ const canvasCommands = (a: CanvasActions): Command[] => {
       id: "view.layers",
       keyId: "layers",
       keywords: "tree outline dom inspector edit",
-      run: a.onLayers,
-      title: a.layersOpen ? "Leave edit mode" : "Edit and show layers",
+      run: canvasActions.onLayers,
+      title: canvasActions.layersOpen
+        ? "Leave edit mode"
+        : "Edit and show layers",
       ...needLive,
     },
     {
@@ -90,7 +94,7 @@ const canvasCommands = (a: CanvasActions): Command[] => {
       icon: "radio",
       id: "view.live",
       keywords: "source current",
-      run: () => a.onSource("live"),
+      run: () => canvasActions.onSource("live"),
       title: "Show the live preview",
     },
     {
@@ -98,27 +102,31 @@ const canvasCommands = (a: CanvasActions): Command[] => {
       icon: "history",
       id: "view.last",
       keywords: "source previous",
-      run: () => a.onSource("last"),
+      run: () => canvasActions.onSource("last"),
       title: "Show the last completed version",
-      ...(a.hasHead ? {} : { disabled: "No version yet" }),
+      ...(canvasActions.hasHead ? {} : { disabled: "No version yet" }),
     },
-    ...a.presets.map((p) => ({
+    ...canvasActions.presets.map((viewportPreset) => ({
       group: "View",
-      icon: p.id as Command["icon"],
-      id: `view.viewport-${p.id}`,
+      icon: viewportPreset.id as Command["icon"],
+      id: `view.viewport-${viewportPreset.id}`,
       keywords: "viewport size device breakpoint",
       run: () =>
         uiStore.set({
-          viewport: { preset: p.id, width: p.width, height: p.height },
+          viewport: {
+            preset: viewportPreset.id,
+            width: viewportPreset.width,
+            height: viewportPreset.height,
+          },
         }),
-      title: `Preview at ${p.label}`,
+      title: `Preview at ${viewportPreset.label}`,
     })),
     {
       group: "Canvas",
       icon: "play",
       id: "present.play",
       keywords: "present prototype links click through",
-      run: a.play,
+      run: canvasActions.play,
       title: "Play prototype",
     },
     {
@@ -126,55 +134,59 @@ const canvasCommands = (a: CanvasActions): Command[] => {
       icon: "scan",
       id: "canvas.check",
       keywords: "accessibility errors overflow",
-      run: a.onCheck,
+      run: canvasActions.onCheck,
       title: "Check render",
-      ...(a.checking ? { disabled: "Checking now" } : {}),
+      ...(canvasActions.checking ? { disabled: "Checking now" } : {}),
     },
   ];
 
-  if (a.comment.available) {
+  if (canvasActions.comment.available) {
     out.push({
       group: "Canvas",
       icon: "comment",
       id: "tool.comment",
       keyId: "tool-comment",
       keywords: "pin feedback note",
-      run: a.comment.toggle,
-      title: a.comment.on ? "Stop commenting" : "Add comments",
+      run: canvasActions.comment.toggle,
+      title: canvasActions.comment.on ? "Stop commenting" : "Add comments",
     });
   }
 
-  if (a.draw) {
+  if (canvasActions.draw) {
     out.push({
       group: "Canvas",
       icon: "pencil",
       id: "tool.draw",
       keyId: "tool-draw",
       keywords: "pen sketch stroke",
-      run: a.draw.toggle,
-      title: a.draw.on ? "Stop drawing" : "Draw on the design",
+      run: canvasActions.draw.toggle,
+      title: canvasActions.draw.on ? "Stop drawing" : "Draw on the design",
     });
   }
 
-  if (a.lofi) {
+  if (canvasActions.lofi) {
     out.push({
       group: "View",
       icon: "pencil",
       id: "view.lofi",
       keywords: "wireframe grayscale sketch hand drawn",
-      run: a.lofi.toggle,
-      title: a.lofi.on ? "Turn off the lo-fi look" : "Turn on the lo-fi look",
+      run: canvasActions.lofi.toggle,
+      title: canvasActions.lofi.on
+        ? "Turn off the lo-fi look"
+        : "Turn on the lo-fi look",
     });
   }
 
-  if (a.dark) {
+  if (canvasActions.dark) {
     out.push({
       group: "View",
       icon: "moon",
       id: "view.dark",
       keywords: "theme light",
-      run: a.dark.toggle,
-      title: a.dark.on ? "Preview the default mode" : "Preview dark mode",
+      run: canvasActions.dark.toggle,
+      title: canvasActions.dark.on
+        ? "Preview the default mode"
+        : "Preview dark mode",
     });
   }
 
@@ -203,26 +215,30 @@ interface CanvasInput {
   play: () => void;
 }
 
-const actionsOf = (i: CanvasInput): CanvasActions => ({
-  checking: i.check.checking,
-  comment: i.comment,
-  dark: i.dark ? { on: i.dark.dark, toggle: i.dark.onToggle } : null,
-  draw: i.draw.available ? i.draw : null,
-  hasHead: i.hasHead,
-  layersOpen: i.layersOpen,
-  live: i.live,
-  lofi: i.lofi ? { on: i.lofi.on, toggle: i.lofi.onToggle } : null,
-  onCheck: i.check.run,
-  onLayers: i.onLayers,
+const actionsOf = (canvasInput: CanvasInput): CanvasActions => ({
+  checking: canvasInput.check.checking,
+  comment: canvasInput.comment,
+  dark: canvasInput.dark
+    ? { on: canvasInput.dark.dark, toggle: canvasInput.dark.onToggle }
+    : null,
+  draw: canvasInput.draw.available ? canvasInput.draw : null,
+  hasHead: canvasInput.hasHead,
+  layersOpen: canvasInput.layersOpen,
+  live: canvasInput.live,
+  lofi: canvasInput.lofi
+    ? { on: canvasInput.lofi.on, toggle: canvasInput.lofi.onToggle }
+    : null,
+  onCheck: canvasInput.check.run,
+  onLayers: canvasInput.onLayers,
   onSelect: () => {
-    i.comment.setOn(false);
-    i.setSelectMode((m) => !m);
+    canvasInput.comment.setOn(false);
+    canvasInput.setSelectMode((match) => !match);
   },
-  onSource: (kind) => i.onSource({ kind }),
-  play: i.play,
+  onSource: (kind) => canvasInput.onSource({ kind }),
+  play: canvasInput.play,
   presets: PRESETS,
-  selectMode: i.selectMode,
-  zoom: (key) => i.zoomBy(key, "menu"),
+  selectMode: canvasInput.selectMode,
+  zoom: (key) => canvasInput.zoomBy(key, "menu"),
 });
 
 const useCanvasCommands = (input: CanvasInput): void => {

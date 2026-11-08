@@ -94,13 +94,13 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
         (DESKTOP || !entry.desktop) &&
         (!needle ||
           entry.label.toLowerCase().includes(needle) ||
-          entry.keys.some((k) => k.toLowerCase().includes(needle)))
+          entry.keys.some((keyName) => keyName.toLowerCase().includes(needle)))
     );
 
     return GROUPS.map((group) => ({
       entries: shown.filter((entry) => entry.group === group),
       group,
-    })).filter((g) => g.entries.length > 0);
+    })).filter((grp) => grp.entries.length > 0);
   }, [query]);
 
   return (
@@ -123,7 +123,7 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
           placeholder={copy.filter}
           spellCheck={false}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(evt) => setQuery(evt.target.value)}
         />
       </div>
       <p className="keysheet-tip">{copy.textPressAKeyTo}</p>

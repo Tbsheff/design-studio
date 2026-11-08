@@ -167,8 +167,8 @@ const SavePackDialog = ({
     >
       <form
         className="modal-form"
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={(event) => {
+          event.preventDefault();
           void submit();
         }}
       >
@@ -232,7 +232,7 @@ const SavePackDialog = ({
               data-autofocus
               value={name}
               maxLength={80}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(evt) => setName(evt.target.value)}
               aria-label={COPY.labelDesignSystemName}
             />
           </label>

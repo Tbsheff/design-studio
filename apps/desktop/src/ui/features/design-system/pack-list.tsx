@@ -147,9 +147,9 @@ const PackList = ({
     cards.current[active]?.focus({ preventScroll: false });
   }, [active, ready]);
 
-  const onKey = (e: KeyboardEvent): void => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
+  const onKey = (event: KeyboardEvent): void => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
 
       if (options.length > 0) {
         onChoose(options[active] ?? null);
@@ -158,12 +158,12 @@ const PackList = ({
       return;
     }
 
-    if (e.key === "Tab") {
+    if (event.key === "Tab") {
       return onTab?.();
     }
 
     const next = nextIndex(
-      e.key,
+      event.key,
       active,
       options.length,
       columnsOf(list.current)
@@ -173,7 +173,7 @@ const PackList = ({
       return;
     }
 
-    e.preventDefault();
+    event.preventDefault();
     setActive(next);
   };
 

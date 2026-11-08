@@ -91,7 +91,7 @@ const useComponents = (
     [projectId, directionId]
   );
 
-  return { ...state, retry: () => setAttempt((n) => n + 1) };
+  return { ...state, retry: () => setAttempt((count) => count + 1) };
 };
 
 export { componentThumb, useComponents };

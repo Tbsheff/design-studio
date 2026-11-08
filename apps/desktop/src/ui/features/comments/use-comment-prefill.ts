@@ -45,7 +45,10 @@ const useCommentPrefill = ({
     const incoming = filesOf(request);
     setFiles((prev) => {
       const fresh = incoming.filter(
-        (file) => !prev.some((p) => p.localId === file.localId)
+        (file) =>
+          !prev.some(
+            (pendingAttachment) => pendingAttachment.localId === file.localId
+          )
       );
 
       return [...prev, ...fresh].slice(0, maxImages);

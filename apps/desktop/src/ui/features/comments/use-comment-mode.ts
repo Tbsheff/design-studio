@@ -13,7 +13,10 @@ const sameSelectors = (
   next: SelectionContext[]
 ): boolean =>
   prev.length === next.length &&
-  prev.every((s, i) => s.selector === next[i]?.selector);
+  prev.every(
+    (selectionContext, index) =>
+      selectionContext.selector === next[index]?.selector
+  );
 
 interface CommentMode {
   available: boolean;

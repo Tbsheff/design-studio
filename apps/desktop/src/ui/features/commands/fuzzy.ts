@@ -8,8 +8,8 @@ const words = (text: string): { word: string; at: number }[] => {
   const out: { word: string; at: number }[] = [];
   const re = /[\p{L}\p{N}]+/gu;
 
-  for (let m = re.exec(text); m; m = re.exec(text)) {
-    out.push({ word: m[0].toLowerCase(), at: m.index });
+  for (let match = re.exec(text); match; match = re.exec(text)) {
+    out.push({ word: match[0].toLowerCase(), at: match.index });
   }
 
   return out;
@@ -45,7 +45,7 @@ const tokenScore = (
   { title, list, used, extra }: TokenContext
 ): { score: number; marks: number[] } | null => {
   const prefix = list.findIndex(
-    (w, i) => !used.has(i) && w.word.startsWith(token)
+    (entry, idx) => !used.has(idx) && entry.word.startsWith(token)
   );
 
   if (prefix !== -1) {
@@ -54,7 +54,7 @@ const tokenScore = (
 
     return {
       score: prefix === 0 ? 12 : 10,
-      marks: Array.from({ length: token.length }, (_, i) => at + i),
+      marks: Array.from({ length: token.length }, (_, idxNext) => at + idxNext),
     };
   }
 
@@ -63,11 +63,14 @@ const tokenScore = (
   if (inside !== -1) {
     return {
       score: 6,
-      marks: Array.from({ length: token.length }, (_, i) => inside + i),
+      marks: Array.from(
+        { length: token.length },
+        (_, indexNext) => inside + indexNext
+      ),
     };
   }
 
-  if (extra.split(/\s+/u).some((w) => w.startsWith(token))) {
+  if (extra.split(/\s+/u).some((wide) => wide.startsWith(token))) {
     return { score: 5, marks: [] };
   }
 
@@ -126,12 +129,12 @@ const rank = <T>(
       out.push({
         item,
         score: score - title.length / 200,
-        marks: [...new Set(marks)].sort((a, b) => a - b),
+        marks: [...new Set(marks)].sort((first, second) => first - second),
       });
     }
   }
 
-  return out.sort((a, b) => b.score - a.score);
+  return out.sort((left, right) => right.score - left.score);
 };
 
 export { rank };

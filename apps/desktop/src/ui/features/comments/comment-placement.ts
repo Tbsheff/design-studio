@@ -114,11 +114,11 @@ const placeAround = (
   prefer?: CardSide
 ): ComposerPlacement => {
   const { card, frame, zoom } = view;
-  const s = 1 / zoom;
-  const pin = PIN_SIZE * s;
-  const gap = GAP * s;
-  const width = card.width * s;
-  const height = card.height * s;
+  const amount = 1 / zoom;
+  const pin = PIN_SIZE * amount;
+  const gap = GAP * amount;
+  const width = card.width * amount;
+  const height = card.height * amount;
   const right = rect.x + rect.width;
   const bottom = rect.y + rect.height;
   const vertical = clamp(rect.y, 0, frame.height - height);

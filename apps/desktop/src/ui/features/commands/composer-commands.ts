@@ -34,19 +34,19 @@ interface ComposerActions {
   focus: () => void;
 }
 
-const composerCommands = (a: ComposerActions): Command[] => {
+const composerCommands = (composerActions: ComposerActions): Command[] => {
   const modes = MODE_ORDER.map((mode) => ({
     group: "Run",
     icon: "chat" as const,
     id: `composer.mode-${mode}`,
     keywords: "mode composer",
     run: (): void => {
-      a.setMode(mode);
-      a.focus();
+      composerActions.setMode(mode);
+      composerActions.focus();
     },
     slash: mode,
     title: MODE_TITLES[mode],
-    ...(a.mode === mode ? { disabled: "Already on" } : {}),
+    ...(composerActions.mode === mode ? { disabled: "Already on" } : {}),
   }));
 
   const levels = (Object.keys(LEVEL_PRESETS) as RunLevel[]).map((level) => ({
@@ -55,17 +55,17 @@ const composerCommands = (a: ComposerActions): Command[] => {
     id: `composer.level-${level}`,
     keywords: "quality speed cost",
     run: (): void => {
-      a.setLevel(level);
-      a.focus();
+      composerActions.setLevel(level);
+      composerActions.focus();
     },
     slash: `level ${level}`,
     title: `Level: ${LEVEL_PRESETS[level].label}`,
-    ...(a.level === level ? { disabled: "Already on" } : {}),
+    ...(composerActions.level === level ? { disabled: "Already on" } : {}),
   }));
 
-  const v = a.variations;
+  const callback = composerActions.variations;
 
-  const variations: Command[] = v
+  const variations: Command[] = callback
     ? [
         {
           group: "Run",
@@ -73,11 +73,11 @@ const composerCommands = (a: ComposerActions): Command[] => {
           id: "composer.variations",
           keywords: "directions options alternatives",
           run: () => {
-            v.onCount(Math.min(3, v.max));
-            a.focus();
+            callback.onCount(Math.min(3, callback.max));
+            composerActions.focus();
           },
           slash: "variations",
-          title: `Make ${Math.min(3, v.max)} variations of the next prompt`,
+          title: `Make ${Math.min(3, callback.max)} variations of the next prompt`,
         },
       ]
     : [];
@@ -97,10 +97,12 @@ const SLASH_OF: Record<string, string> = {
 
 const slashCommands = (): Command[] =>
   collectCommands()
-    .map((c) =>
-      c.slash || !SLASH_OF[c.id] ? c : { ...c, slash: SLASH_OF[c.id] }
+    .map((command) =>
+      command.slash || !SLASH_OF[command.id]
+        ? command
+        : { ...command, slash: SLASH_OF[command.id] }
     )
-    .filter((c) => c.slash);
+    .filter((char) => char.slash);
 
 export { nextMode, isModeCycleKey, composerCommands, slashCommands };
 

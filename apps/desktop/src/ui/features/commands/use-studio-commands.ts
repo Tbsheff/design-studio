@@ -73,9 +73,9 @@ const regionOf = (element: Element | null): number => {
 const moveRegion = (step: 1 | -1): void => {
   const from = regionOf(document.activeElement);
 
-  for (let i = 1; i <= REGIONS.length; i += 1) {
+  for (let idx = 1; idx <= REGIONS.length; idx += 1) {
     const index =
-      ((((from < 0 ? (step === 1 ? -1 : 0) : from) + step * i) %
+      ((((from < 0 ? (step === 1 ? -1 : 0) : from) + step * idx) %
         REGIONS.length) +
         REGIONS.length) %
       REGIONS.length;
@@ -92,25 +92,33 @@ const moveRegion = (step: 1 | -1): void => {
   }
 };
 
-const stepDirection = (a: StudioActions, step: 1 | -1): (() => void) | null => {
-  if (a.directions.length < 2) {
+const stepDirection = (
+  studioActions: StudioActions,
+  step: 1 | -1
+): (() => void) | null => {
+  if (studioActions.directions.length < 2) {
     return null;
   }
 
-  const at = a.directions.findIndex((d) => d.id === a.directionId);
+  const at = studioActions.directions.findIndex(
+    (delta) => delta.id === studioActions.directionId
+  );
 
   const next =
-    a.directions[(at + step + a.directions.length) % a.directions.length];
+    studioActions.directions[
+      (at + step + studioActions.directions.length) %
+        studioActions.directions.length
+    ];
 
-  return next ? () => a.onDirection(next.id) : null;
+  return next ? () => studioActions.onDirection(next.id) : null;
 };
 
-const studioCommands = (a: StudioActions): Command[] => {
-  const next = stepDirection(a, 1);
-  const prev = stepDirection(a, -1);
+const studioCommands = (first: StudioActions): Command[] => {
+  const next = stepDirection(first, 1);
+  const prev = stepDirection(first, -1);
 
   const noDirection =
-    a.directions.length < 2 ? "Only one direction" : undefined;
+    first.directions.length < 2 ? "Only one direction" : undefined;
 
   return [
     {
@@ -119,7 +127,7 @@ const studioCommands = (a: StudioActions): Command[] => {
       id: "go.home",
       keyId: "home",
       keywords: "projects back exit",
-      run: a.onHome,
+      run: first.onHome,
       title: "Go to Home",
     },
     {
@@ -128,7 +136,7 @@ const studioCommands = (a: StudioActions): Command[] => {
       id: "project.settings",
       keyId: "settings",
       keywords: "model shell preferences",
-      run: a.onSettings,
+      run: first.onSettings,
       title: "Project settings",
     },
     {
@@ -136,7 +144,7 @@ const studioCommands = (a: StudioActions): Command[] => {
       icon: "doc",
       id: "project.design-md",
       keywords: "design system brief",
-      run: a.onDesignMd,
+      run: first.onDesignMd,
       title: "Edit DESIGN.md",
     },
     {
@@ -157,30 +165,30 @@ const studioCommands = (a: StudioActions): Command[] => {
       title: "Previous direction",
       ...(noDirection ? { disabled: noDirection } : {}),
     },
-    ...a.directions
-      .filter((d) => d.id !== a.directionId)
-      .map((d) => ({
+    ...first.directions
+      .filter((diff) => diff.id !== first.directionId)
+      .map((diffNext) => ({
         group: "Go",
         icon: "branch" as const,
-        id: `direction.open.${d.id}`,
+        id: `direction.open.${diffNext.id}`,
         keywords: "switch variation",
-        run: () => a.onDirection(d.id),
-        title: `Open direction ${d.name}`,
+        run: () => first.onDirection(diffNext.id),
+        title: `Open direction ${diffNext.name}`,
       })),
-    ...PANELS.map((p) => ({
+    ...PANELS.map((part) => ({
       group: "Panels",
-      icon: p.icon,
-      id: `panel.${p.tab}`,
+      icon: part.icon,
+      id: `panel.${part.tab}`,
       keywords: "tab side panel pane mode sheet",
-      run: () => a.onPanel(p.tab),
-      title: p.title,
+      run: () => first.onPanel(part.tab),
+      title: part.title,
     })),
     {
       group: "Run",
       icon: "chat",
       id: "panel.focus-composer",
       keywords: "composer prompt message chat",
-      run: () => focusComposer(a),
+      run: () => focusComposer(first),
       title: "Ask the agent",
     },
     {
@@ -189,30 +197,30 @@ const studioCommands = (a: StudioActions): Command[] => {
       id: "run.stop",
       keyId: "stop",
       keywords: "cancel interrupt",
-      run: a.onStop,
+      run: first.onStop,
       title: "Stop the run",
-      ...(a.running ? {} : { disabled: "No run is going" }),
+      ...(first.running ? {} : { disabled: "No run is going" }),
     },
     {
       group: "Run",
       icon: "sparkle",
       id: "run.polish",
       keywords: "improve refine critique",
-      run: a.onPolish,
+      run: first.onPolish,
       title: "Polish this design",
-      ...(a.running ? { disabled: "A run is going" } : {}),
+      ...(first.running ? { disabled: "A run is going" } : {}),
     },
     {
       group: "Run",
       icon: "layers",
       id: "run.states",
       keywords: "empty loading error success validation menu frames",
-      run: () => a.onMakeStates?.(),
+      run: () => first.onMakeStates?.(),
       slash: "states",
       title: "Make UI states of this page",
-      ...(a.running
+      ...(first.running
         ? { disabled: "A run is going" }
-        : a.onMakeStates
+        : first.onMakeStates
           ? {}
           : { disabled: "No direction yet" }),
     },
@@ -221,36 +229,36 @@ const studioCommands = (a: StudioActions): Command[] => {
       icon: "undo",
       id: "edit.undo",
       keyId: "undo",
-      run: a.onUndo,
+      run: first.onUndo,
       title: "Undo",
-      ...(a.canUndo ? {} : { disabled: "Nothing to undo" }),
+      ...(first.canUndo ? {} : { disabled: "Nothing to undo" }),
     },
     {
       group: "Version",
       icon: "restore",
       id: "edit.redo",
       keyId: "redo",
-      run: a.onRedo,
+      run: first.onRedo,
       title: "Redo",
-      ...(a.canRedo ? {} : { disabled: "Nothing to redo" }),
+      ...(first.canRedo ? {} : { disabled: "Nothing to redo" }),
     },
     {
       group: "Version",
       icon: "download",
       id: "version.export",
       keywords: "share download png pdf html handoff zip source files",
-      run: () => a.exportId && a.onExport(a.exportId),
+      run: () => first.exportId && first.onExport(first.exportId),
       title: "Export…",
-      ...(a.exportId ? {} : { disabled: "No version yet" }),
+      ...(first.exportId ? {} : { disabled: "No version yet" }),
     },
-    ...(a.onShip
+    ...(first.onShip
       ? [
           {
             group: "Version",
             icon: "branch" as const,
             id: "version.ship",
             keywords: "share branch git commit push pull request github gh",
-            run: a.onShip,
+            run: first.onShip,
             title: "Ship as a pull request…",
           },
         ]

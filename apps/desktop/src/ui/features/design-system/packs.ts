@@ -50,7 +50,7 @@ const usePacks = (): PacksState => {
   const [state, setState] = useState<PacksState>({ error: null, packs: null });
   const [generation, setGeneration] = useState(0);
   useEffect(() => {
-    const listener = (): void => setGeneration((n) => n + 1);
+    const listener = (): void => setGeneration((count) => count + 1);
     listeners.add(listener);
 
     return (): void => {
@@ -148,7 +148,9 @@ const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
     return index === -1 ? KEY_SWATCHES.length : index;
   };
 
-  return [...pack.swatches].toSorted((a, b) => rank(a.name) - rank(b.name));
+  return [...pack.swatches].toSorted(
+    (first, second) => rank(first.name) - rank(second.name)
+  );
 };
 
 export {

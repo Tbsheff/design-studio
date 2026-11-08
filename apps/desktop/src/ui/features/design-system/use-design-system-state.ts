@@ -54,8 +54,8 @@ const useDesignSystemState = (
   const packId = project?.packId ?? null;
 
   const headVersionId =
-    project?.directions.find((x) => x.id === directionId)?.headVersionId ??
-    null;
+    project?.directions.find((direction) => direction.id === directionId)
+      ?.headVersionId ?? null;
 
   const key = `${projectId}:${directionId}`;
 

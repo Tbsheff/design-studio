@@ -69,12 +69,13 @@ const STRONG = 10;
 const typePair = (type: ProjectType): string => TYPE_LABELS[type];
 
 const markRuns = (marks: number[]): number =>
-  marks.filter((at, i) => i === 0 || at !== (marks[i - 1] ?? 0) + 1).length;
+  marks.filter((at, index) => index === 0 || at !== (marks[index - 1] ?? 0) + 1)
+    .length;
 
 const clean = <T>(list: Ranked<T>[], query: string): Ranked<T>[] => {
   const tokens = query.trim().split(/\s+/u).filter(Boolean).length;
 
-  return list.filter((r) => markRuns(r.marks) <= tokens);
+  return list.filter((result) => markRuns(result.marks) <= tokens);
 };
 
 const groupIndex = (group: string): number => {
@@ -135,18 +136,20 @@ const contextCommands = (input: RowInput): Command[] => {
     return [];
   }
 
-  const byId = new Map(input.commands.map((c) => [c.id, c]));
+  const byId = new Map(input.commands.map((char) => [char.id, char]));
 
   return CONTEXT_IDS.map((id) => byId.get(id)).filter(
-    (c): c is Command => c !== undefined && !c.disabled
+    (ch): ch is Command => ch !== undefined && !ch.disabled
   );
 };
 
 const suggested = (input: RowInput, context: Command[]): Row[] => {
-  const byId = new Map(input.commands.map((c) => [c.id, c]));
+  const byId = new Map(input.commands.map((chNext) => [chNext.id, chNext]));
   const make = byId.get("project.new");
   const open = byId.get("project.open-folder");
-  const rows: Row[] = context.map((c) => commandRow(c, "Suggested"));
+  const rows: Row[] = context.map((charNext) =>
+    commandRow(charNext, "Suggested")
+  );
 
   if (make) {
     rows.push({

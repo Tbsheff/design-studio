@@ -58,7 +58,7 @@ const noteRecent = (id: string): void => {
   writeStored(
     RECENT_KEY,
     JSON.stringify(
-      [id, ...readRecent().filter((x) => x !== id)].slice(0, RECENT_MAX)
+      [id, ...readRecent().filter((posX) => posX !== id)].slice(0, RECENT_MAX)
     )
   );
 };
@@ -87,11 +87,11 @@ const Marked = ({
     run = "";
   };
 
-  [...text].forEach((ch, i) => {
-    const hit = set.has(i);
+  [...text].forEach((ch, idx) => {
+    const hit = set.has(idx);
 
     if (hit !== on) {
-      flush(i);
+      flush(idx);
       on = hit;
     }
 
@@ -186,10 +186,13 @@ const usePaletteRows = (
 
   const [commands] = useState(() => {
     const all = [...collectCommands(), ...globalCommands(onShortcuts)].filter(
-      (c) => !c.id.startsWith("project.open.")
+      (command) => !command.id.startsWith("project.open.")
     );
 
-    return all.filter((c, i) => all.findIndex((x) => x.id === c.id) === i);
+    return all.filter(
+      (char, idxNext) =>
+        all.findIndex((left) => left.id === char.id) === idxNext
+    );
   });
 
   const [busy, startTransition] = useTransition();
@@ -323,7 +326,7 @@ const Palette = ({
   return (
     <div
       className="cmdk-backdrop"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      onMouseDown={(evt) => evt.target === evt.currentTarget && onClose()}
     >
       <div
         className="cmdk"
@@ -351,8 +354,8 @@ const Palette = ({
             placeholder={copy.paletteInput}
             spellCheck={false}
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
+            onChange={(evtNext) => {
+              setQuery(evtNext.target.value);
               setActive(0);
               setError(null);
             }}

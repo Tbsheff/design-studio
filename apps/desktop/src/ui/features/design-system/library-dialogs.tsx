@@ -86,8 +86,8 @@ const RenamePackDialog = ({
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
 
-  const submit = (e: FormEvent): void => {
-    e.preventDefault();
+  const submit = (event: FormEvent): void => {
+    event.preventDefault();
 
     if (name.trim() && name.trim() !== pack.name) {
       void action.run(() => onRename(name.trim()));
@@ -115,7 +115,7 @@ const RenamePackDialog = ({
               data-autofocus
               value={name}
               maxLength={80}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(evt) => setName(evt.target.value)}
               aria-label={COPY.labelDesignSystemName}
             />
           </label>

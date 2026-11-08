@@ -86,8 +86,8 @@ const useSnippet = (
     if (!directionId || !source) {
       setSnippet({
         code: fallback,
-        isExact: false,
         file: "",
+        isExact: false,
         kind: "ready",
         line: 0,
       });
@@ -108,15 +108,15 @@ const useSnippet = (
           result.code === null
             ? {
                 code: fallback,
-                isExact: false,
                 file: result.file,
+                isExact: false,
                 kind: "ready",
                 line: result.line,
               }
             : {
                 code: result.code,
-                isExact: true,
                 file: result.file,
+                isExact: true,
                 kind: "ready",
                 line: result.line,
               }

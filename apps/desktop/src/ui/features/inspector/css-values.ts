@@ -1,7 +1,7 @@
-import {
-  DIRECT_STYLE_PROPERTIES,
-  type DirectStyleProperty,
-  type SelectionContext,
+import { DIRECT_STYLE_PROPERTIES } from "@design-studio/contracts";
+import type {
+  DirectStyleProperty,
+  SelectionContext,
 } from "@design-studio/contracts";
 
 export type StyleValues = Record<DirectStyleProperty, string>;
@@ -30,7 +30,7 @@ export function parseNumber(raw: string): ParsedNumber | null {
     return null;
   }
 
-  return { value: Number(match[1]), unit: (match[2] ?? "").toLowerCase() };
+  return { unit: (match[2] ?? "").toLowerCase(), value: Number(match[1]) };
 }
 
 function round(value: number): number {
@@ -46,7 +46,7 @@ export function stepValue(
   delta: number,
   fallbackUnit: string
 ): string {
-  const parsed = parseNumber(raw) ?? { value: 0, unit: fallbackUnit };
+  const parsed = parseNumber(raw) ?? { unit: fallbackUnit, value: 0 };
 
   return formatNumber(parsed.value + delta, parsed.unit || fallbackUnit);
 }
@@ -167,7 +167,7 @@ export function expandBox(raw: string | undefined): Record<Side, string> {
   const parts = (raw ?? "").trim().split(/\s+/).filter(Boolean);
   const [top = "", right = top, bottom = top, left = right] = parts;
 
-  return { top, right, bottom, left };
+  return { bottom, left, right, top };
 }
 
 function boxValue(

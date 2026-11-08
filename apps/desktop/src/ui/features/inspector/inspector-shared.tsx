@@ -7,17 +7,13 @@ import type {
 } from "@design-studio/contracts";
 import type { SharedSource } from "@design-studio/contracts/app";
 import { Icon } from "@design-studio/ui";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
-import { textHints, type DirectEdit } from "./use-direct-edit.js";
+import { textHints } from "./use-direct-edit.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 export interface InspectorApp {
   readonly appDir: string | null;
@@ -63,7 +59,7 @@ function useTextSource(
 ): TextSourceAnswer | null {
   const [answer, setAnswer] = useState<TextSourceAnswer | null>(null);
   const { projectId, directionId } = edit.scope;
-  const source = selection.source;
+  const { source } = selection;
   const savedAt = edit.status.kind === "saved" ? edit.status.at : 0;
 
   const key = JSON.stringify([

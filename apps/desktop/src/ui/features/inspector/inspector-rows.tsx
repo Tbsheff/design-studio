@@ -2,12 +2,14 @@ import type {
   DirectStyleProperty,
   SelectionContext,
 } from "@design-studio/contracts";
-import { memo, useState, type KeyboardEvent } from "react";
+import { memo, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import { copy } from "./copy.js";
 import { textEditability } from "./css-values.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
-import { isSameEditValues, type DirectEdit } from "./use-direct-edit.js";
+import { isSameEditValues } from "./use-direct-edit.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 function useRowKeys(onCommit: () => void, onRevert: () => void) {
   return (event: KeyboardEvent<HTMLInputElement>) => {
@@ -168,21 +170,22 @@ function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
 
   const items = [
     {
+      glyph: <em>I</em>,
       key: "i",
       label: "Italic",
       on: italic,
       run: () => write({ "font-style": italic ? "normal" : "italic" }),
-      glyph: <em>I</em>,
     },
     {
+      glyph: <u>U</u>,
       key: "u",
       label: "Underline",
       on: hasLine(decoration, "underline"),
       run: () =>
         write({ "text-decoration-line": toggleLine(decoration, "underline") }),
-      glyph: <u>U</u>,
     },
     {
+      glyph: <s>S</s>,
       key: "s",
       label: "Strikethrough",
       on: hasLine(decoration, "line-through"),
@@ -190,7 +193,6 @@ function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
         write({
           "text-decoration-line": toggleLine(decoration, "line-through"),
         }),
-      glyph: <s>S</s>,
     },
   ];
 

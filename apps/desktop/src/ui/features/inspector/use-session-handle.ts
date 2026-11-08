@@ -14,8 +14,8 @@ const useSessionHandle = (
 
     ref.current = {
       count: session.count,
-      isDirty: session.isDirty,
       discard: session.discard,
+      isDirty: session.isDirty,
       net: session.net,
       requestExit: session.requestExit,
       save: session.save,

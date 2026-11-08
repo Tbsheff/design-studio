@@ -7,7 +7,6 @@ import type {
   RunEffort,
   RunLevel,
   RunMention,
-  RunMode,
   SelectionContext,
 } from "@design-studio/contracts";
 import { elementVariantsIntent } from "@design-studio/contracts/element-variants";
@@ -140,8 +139,8 @@ interface VariationsPromptProps {
 type SendState = "send" | "queue" | "stop";
 
 const SEND_LABEL: Record<SendState, string> = {
-  send: "Send",
   queue: "Queue",
+  send: "Send",
   stop: "Stop",
 };
 
@@ -182,14 +181,14 @@ const QUEUE_TIP = `Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (${MOD_LABE
 const STOP_KEYS = IS_MAC ? "Meta+." : "Control+.";
 
 const SEND_CLASS: Record<SendState, string> = {
-  send: "icon-btn send send-btn",
   queue: "icon-btn send send-btn",
+  send: "icon-btn send send-btn",
   stop: "icon-btn send-btn stop-btn",
 };
 
 const SEND_ICON: Record<SendState, IconName> = {
-  send: "arrowUp",
   queue: "history",
+  send: "arrowUp",
   stop: "stop",
 };
 
@@ -217,31 +216,31 @@ function leaveComposer(input: HTMLElement): void {
 function sendView(props: SendProps): SendView {
   if (props.running && !props.hasDraft) {
     return {
-      state: "stop",
       busy: false,
       disabled: false,
-      tip: `Stop (${MOD_LABEL}.)`,
       keys: STOP_KEYS,
       onClick: props.onStop,
+      state: "stop",
+      tip: `Stop (${MOD_LABEL}.)`,
     };
   }
 
   if (props.running) {
     return {
-      state: "queue",
       busy: false,
       disabled: !props.canQueue,
-      tip: QUEUE_TIP,
       onClick: props.onQueue,
+      state: "queue",
+      tip: QUEUE_TIP,
     };
   }
 
   return {
-    state: "send",
     busy: props.sending,
     disabled: !props.canSend,
-    tip: props.tip,
     onClick: props.onSend,
+    state: "send",
+    tip: props.tip,
   };
 }
 
@@ -325,9 +324,9 @@ function StateChip({
 }
 
 const MODE_ICON: Record<ComposerMode, IconName> = {
+  critique: "eye",
   edit: "pencil",
   plan: "doc",
-  critique: "eye",
 };
 
 const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
@@ -337,18 +336,18 @@ function modeGroup(
   onMode: (mode: ComposerMode) => void
 ): SlashGroup {
   return {
-    id: "mode",
-    label: "Mode",
-    icon: "chat",
-    value: MODE_LABEL[mode],
     choices: MODES.map((item) => ({
+      checked: item === mode,
+      hint: MODE_SHORT_HINT[item],
+      icon: MODE_ICON[item],
       id: item,
       label: MODE_LABEL[item],
-      icon: MODE_ICON[item],
-      hint: MODE_SHORT_HINT[item],
-      checked: item === mode,
       pick: () => onMode(item),
     })),
+    icon: "chat",
+    id: "mode",
+    label: "Mode",
+    value: MODE_LABEL[mode],
   };
 }
 
@@ -356,6 +355,10 @@ const SLASH_HIDDEN = /^composer\.(mode|level)-/;
 
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> =
   {
+    critique: {
+      label: "Ask for a critique",
+      placeholder: "Ask for a critique…",
+    },
     edit: {
       label: "Describe what you want to create",
       placeholder: "Describe what you want to create…",
@@ -363,10 +366,6 @@ const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> =
     plan: {
       label: "Describe what to plan",
       placeholder: "Describe what to plan…",
-    },
-    critique: {
-      label: "Ask for a critique",
-      placeholder: "Ask for a critique…",
     },
   };
 
@@ -412,8 +411,8 @@ function sendStatus(state: {
   const blocker = state.running ? null : sendBlocker(state);
 
   return {
-    tip: blocker ?? `Send (${MOD_LABEL}↵)`,
     spoken: blocker === EMPTY_REASON ? null : blocker,
+    tip: blocker ?? `Send (${MOD_LABEL}↵)`,
   };
 }
 
@@ -492,7 +491,7 @@ export function PromptBox(props: Props) {
   useComposerFocus(props.running, !props.disabled);
 
   const focusInput = () =>
-    window.requestAnimationFrame(() =>
+    globalThis.requestAnimationFrame(() =>
       document
         .querySelector<HTMLTextAreaElement>(
           '.prompt [data-slot="composer-input"]'
@@ -502,24 +501,24 @@ export function PromptBox(props: Props) {
 
   useCommands(() =>
     composerCommands({
-      mode,
-      setMode,
-      level: runLevel.level,
-      setLevel: runLevel.choose,
-      variations: props.variations,
       focus: focusInput,
+      level: runLevel.level,
+      mode,
+      setLevel: runLevel.choose,
+      setMode,
+      variations: props.variations,
     })
   );
 
   const slashSource = useSlashSections({
-    disabled: props.settings.disabledSkills ?? [],
-    exclude: skillIds,
     commands: slashCommands().filter(
       (command) => !SLASH_HIDDEN.test(command.id)
     ),
+    disabled: props.settings.disabledSkills ?? [],
+    exclude: skillIds,
+    onCommand: (command: Command) => command.run(),
     onSkill: (id) =>
       setSkillIds((prev) => (prev.includes(id) ? prev : [...prev, id])),
-    onCommand: (command: Command) => command.run(),
   });
 
   const addFiles = (list: Iterable<File>) => {
@@ -541,7 +540,7 @@ export function PromptBox(props: Props) {
       const previewUrl = URL.createObjectURL(file);
       setFiles((prev) => [
         ...prev,
-        { localId, name: file.name, previewUrl, attachment: null, error: null },
+        { attachment: null, error: null, localId, name: file.name, previewUrl },
       ]);
       api
         .uploadAttachment(props.projectId, file)
@@ -591,16 +590,16 @@ export function PromptBox(props: Props) {
 
   const slash = useSlashMenu({
     draft,
-    setDraft,
     groups: [
       levelGroup(runLevel.level, runLevel.choose),
       modelGroup(props.model, runLevel.level, chooseModel),
       effortGroup(effort, setEffort),
       modeGroup(mode, setMode),
     ],
-    sections: slashSource.sections,
-    note: slashSource.note,
     label: "Settings, commands and skills",
+    note: slashSource.note,
+    sections: slashSource.sections,
+    setDraft,
   });
 
   const promptRef = useRef<HTMLDivElement>(null);
@@ -612,30 +611,30 @@ export function PromptBox(props: Props) {
   };
 
   const designs = props.variations && {
-    value: props.variations.count,
+    disabledReason: designsBlocker(mode, props.selection.length),
     max: props.variations.max,
     onChange: props.variations.onCount,
-    disabledReason: designsBlocker(mode, props.selection.length),
+    value: props.variations.count,
   };
 
   const prefill = useCommentPrefill({
-    request: props.prefill,
     draft: props.draft,
-    setFiles,
-    maxImages: MAX_IMAGES,
     focus: focusInput,
+    maxImages: MAX_IMAGES,
+    request: props.prefill,
+    setFiles,
   });
 
   const uploading = files.some((f) => !f.attachment && !f.error);
 
   const mentions = useMentions({
-    projectId: props.projectId,
-    directionId: props.directionId,
-    tokens: props.tokens,
-    draft,
-    setDraft,
     components: props.components,
+    directionId: props.directionId,
+    draft,
+    projectId: props.projectId,
     request: props.mentionRequest,
+    setDraft,
+    tokens: props.tokens,
   });
 
   const historySearch = useHistorySearch(props.history ?? []);
@@ -674,31 +673,31 @@ export function PromptBox(props: Props) {
   };
 
   const keys = useComposerKeys({
-    draft,
-    setDraft,
     blocked: files.length > 0,
-    running: props.running,
-    queue: props.queue,
+    draft,
     history: props.history,
     onQueueChange: props.onQueueChange,
     onSteer: props.onSteer,
+    queue: props.queue,
+    running: props.running,
+    setDraft,
   });
 
   const emptyDraft = draft.trim() === "" && skillIds.length === 0;
 
   const status = sendStatus({
-    running: props.running,
-    waitReason: props.waitReason,
-    loading: props.disabled,
-    uploading,
     empty: emptyDraft,
+    loading: props.disabled,
+    running: props.running,
+    uploading,
+    waitReason: props.waitReason,
   });
 
   const canSend = sendReady({
-    running: props.running,
     blocked: props.disabled || Boolean(props.waitReason),
     busy: sending || uploading,
     empty: emptyDraft,
+    running: props.running,
   });
 
   const send = () => {
@@ -840,7 +839,7 @@ export function PromptBox(props: Props) {
         onPick={(prompt) => {
           historySearch.close();
           setDraft(prompt);
-          window.requestAnimationFrame(() =>
+          globalThis.requestAnimationFrame(() =>
             document
               .querySelector<HTMLTextAreaElement>(
                 '.prompt [data-slot="composer-input"]'
@@ -968,7 +967,7 @@ export function PromptBox(props: Props) {
             <ModelPill
               model={props.model}
               level={runLevel.level}
-              effort={{ value: effort, onChange: setEffort }}
+              effort={{ onChange: setEffort, value: effort }}
               onModel={chooseModel}
               onOpen={slash.close}
             />

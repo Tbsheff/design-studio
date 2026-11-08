@@ -3,6 +3,12 @@ const copy = {
   check: "Check all scenarios",
   checked: "Contact sheet saved",
   checking: "Checking",
+  fixtureDelete: "Delete fixture",
+  fixtureLabel: "Data fixtures",
+  fixtureLead:
+    "This frame loads its data on the server. A fixture renders the page with browser data, so scenarios can drive it.",
+  fixtureMake: "Make a data fixture",
+  fixtureMaking: "Making",
   generate: "Generate scenarios",
   generating: "Generating",
   kinds: {
@@ -13,6 +19,7 @@ const copy = {
     long: "Long",
   },
   label: "Data scenarios",
+  noCallsMarker: "No browser calls were recorded",
   real: "Real data",
   unseenLead:
     "The proxy sees browser calls only. Server-side data is not covered.",

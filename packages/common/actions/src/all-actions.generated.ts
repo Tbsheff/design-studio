@@ -14,6 +14,7 @@ import { EffectActions } from "./effect/index.js";
 import { EventsActions } from "./events/index.js";
 import { ExportActions } from "./export/index.js";
 import { FillActions } from "./fill/index.js";
+import { FixtureActions } from "./fixture/index.js";
 import { GalleryActions } from "./gallery/index.js";
 import { GridActions } from "./grid/index.js";
 import { IconActions } from "./icon/index.js";
@@ -62,6 +63,7 @@ const ALL_ACTIONS = {
   events: EventsActions,
   export: ExportActions,
   fill: FillActions,
+  fixture: FixtureActions,
   gallery: GalleryActions,
   grid: GridActions,
   icon: IconActions,

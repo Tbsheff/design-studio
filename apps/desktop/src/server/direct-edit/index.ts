@@ -192,3 +192,17 @@ export type {
   PatternWriterApi,
   StoredPattern,
 } from "../pattern/index.js";
+
+export { FixtureStore, FixtureWriter } from "../fixture/index.js";
+
+export type {
+  CreateFixtureCommand,
+  DeleteFixtureCommand,
+  FixtureCreated,
+  FixtureDeleted,
+  FixturePage,
+  FixtureStoreApi,
+  FixtureWriterApi,
+  ListFixtureCommand,
+  StoredFixture,
+} from "../fixture/index.js";

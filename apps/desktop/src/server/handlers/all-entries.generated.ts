@@ -14,6 +14,7 @@ import { EffectEntries } from "./effect/handlers.js";
 import { EventsEntries } from "./events/handlers.js";
 import { ExportEntries } from "./export/handlers.js";
 import { FillEntries } from "./fill/handlers.js";
+import { FixtureEntries } from "./fixture/handlers.js";
 import { GalleryEntries } from "./gallery/handlers.js";
 import { GridEntries } from "./grid/handlers.js";
 import { IconEntries } from "./icon/handlers.js";
@@ -62,6 +63,7 @@ const ALL_ENTRIES = {
   events: EventsEntries,
   export: ExportEntries,
   fill: FillEntries,
+  fixture: FixtureEntries,
   gallery: GalleryEntries,
   grid: GridEntries,
   icon: IconEntries,

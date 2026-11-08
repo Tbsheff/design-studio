@@ -28,14 +28,12 @@ import {
 } from "./canvas-frame-ops.js";
 import { canvasStore, useCanvasLayout } from "./canvas-frames-model.js";
 import type { Box, CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
+import { otherFrames } from "./frame-resize-model.js";
+import { frameSnapStore } from "./frame-snap-store.js";
 import { blocksZoomKey } from "./pan-zoom-model.js";
 import { snapOff, snapRect } from "./snap-model.js";
 import type { ClickThrough } from "./use-click-through.js";
-import {
-  frameSnapStore,
-  otherFrames,
-  useFrameResize,
-} from "./use-frame-resize.js";
+import { useFrameResize } from "./use-frame-resize.js";
 import type { PanZoom } from "./use-pan-zoom.js";
 
 const ZOOM_ECHO_MS = 150;

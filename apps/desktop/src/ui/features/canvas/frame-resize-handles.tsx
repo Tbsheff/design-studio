@@ -9,7 +9,7 @@ import type {
   SetStateAction,
 } from "react";
 
-type ResizeEdge = "right" | "bottom" | "corner";
+import type { ResizeEdge } from "./resize-edge-model.js";
 
 const EDGES: { edge: ResizeEdge; label: string }[] = [
   { edge: "right", label: "Resize width" },

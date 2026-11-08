@@ -82,7 +82,7 @@ const pageNameOf = (path: string | undefined): string => {
   const file = path
     ?.split("/")
     .pop()
-    ?.replace(/\.html?$/i, "");
+    ?.replace(/\.html?$/iu, "");
 
   if (file && file !== "index") {
     return file;

@@ -272,7 +272,7 @@ const useImplicitLinks = (
   };
 
   const later = (): void => {
-    window.clearTimeout(timer.current);
+    globalThis.clearTimeout(timer.current);
     timer.current = window.setTimeout(
       () => fetchNow.current(),
       IMPLICIT_DEBOUNCE_MS
@@ -284,7 +284,7 @@ const useImplicitLinks = (
   useEffect(() => {
     fetchNow.current();
 
-    return (): void => window.clearTimeout(timer.current);
+    return (): void => globalThis.clearTimeout(timer.current);
   }, [projectId]);
   useEffect(() => {
     const before = lastKey.current;

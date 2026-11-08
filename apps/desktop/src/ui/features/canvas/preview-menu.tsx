@@ -121,10 +121,13 @@ const PreviewMenu = ({
         operand = last.offsetTop + last.offsetHeight;
       }
 
-      setScrolls(operand > window.innerHeight - EDGE * 2);
+      setScrolls(operand > globalThis.innerHeight - EDGE * 2);
       setPos({
-        x: Math.max(EDGE, Math.min(at.x, window.innerWidth - width - EDGE)),
-        y: Math.max(EDGE, Math.min(at.y, window.innerHeight - height - EDGE)),
+        x: Math.max(EDGE, Math.min(at.x, globalThis.innerWidth - width - EDGE)),
+        y: Math.max(
+          EDGE,
+          Math.min(at.y, globalThis.innerHeight - height - EDGE)
+        ),
       });
     };
 
@@ -146,13 +149,13 @@ const PreviewMenu = ({
     };
 
     globalThis.addEventListener("mousedown", onDown, true);
-    window.addEventListener("blur", onClose);
-    window.addEventListener("resize", onClose);
+    globalThis.addEventListener("blur", onClose);
+    globalThis.addEventListener("resize", onClose);
 
     return (): void => {
       globalThis.removeEventListener("mousedown", onDown, true);
-      window.removeEventListener("blur", onClose);
-      window.removeEventListener("resize", onClose);
+      globalThis.removeEventListener("blur", onClose);
+      globalThis.removeEventListener("resize", onClose);
     };
   }, [onClose]);
 

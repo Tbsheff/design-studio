@@ -73,7 +73,7 @@ const useServerFrames = (
 
     const timer = window.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [ready, loaded]);
   useEffect(() => {
     if (!enabled) {

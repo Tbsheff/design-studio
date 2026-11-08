@@ -123,7 +123,7 @@ const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
     send();
     const timer = window.setInterval(send, PRESENCE_MS);
 
-    return (): void => window.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [presenceInputValue.projectId]);
   useEffect(() => {
     let stop: (() => void) | null = null;

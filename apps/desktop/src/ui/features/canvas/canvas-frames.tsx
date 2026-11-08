@@ -49,10 +49,10 @@ interface LabelProps {
 }
 
 const framePage = (path: string | undefined): string => {
-  const clean = (path ?? "").replace(/^\/+/, "");
+  const clean = (path ?? "").replace(/^\/+/u, "");
 
-  if (clean === "" || /\.html?$/i.test(clean)) {
-    return clean.replace(/^.*\//, "").replace(/\.html?$/i, "") || "index";
+  if (clean === "" || /\.html?$/iu.test(clean)) {
+    return clean.replace(/^.*\//u, "").replace(/\.html?$/iu, "") || "index";
   }
 
   return `/${clean}`;
@@ -255,7 +255,7 @@ interface FrameRedirect {
 }
 
 const isAuthRoute = (route: string): boolean =>
-  /sign-?in|log-?in|auth/i.test(route);
+  /sign-?in|log-?in|auth/iu.test(route);
 
 const FrameRedirectNote = ({
   redirect,

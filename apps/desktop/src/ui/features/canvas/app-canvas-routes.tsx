@@ -12,11 +12,11 @@ import type { CanvasLayout } from "./canvas-frames-model.js";
 const AppBar = lazy(() => import("../../app/shell/app-bar.js"));
 
 const routeFrameId = (layout: CanvasLayout, route: string): string | null => {
-  const path = route.replace(/^\/+/, "").replace(/\/+$/, "");
+  const path = route.replace(/^\/+/u, "").replace(/\/+$/u, "");
 
   return (
     layout.frames.find(
-      (frame) => (frame.path ?? "").replace(/\/+$/, "") === path
+      (frame) => (frame.path ?? "").replace(/\/+$/u, "") === path
     )?.id ?? null
   );
 };
@@ -34,7 +34,7 @@ const addRouteFrame = (
   route: string,
   size: { width: number; height: number }
 ): CanvasLayout => {
-  const path = route.replace(/^\/+/, "");
+  const path = route.replace(/^\/+/u, "");
   const existing = routeFrameId(layout, route);
 
   if (existing) {
@@ -91,7 +91,7 @@ const appRoutePages = (
 
     return routes
       .filter((route) => !route.dynamic)
-      .map((route) => route.route.replace(/^\/+/, ""));
+      .map((route) => route.route.replace(/^\/+/u, ""));
   };
 };
 

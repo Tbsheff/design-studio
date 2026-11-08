@@ -191,6 +191,7 @@ const VariationBar = ({
         </span>
         {anyRunning && (
           <button
+            type="button"
             className="btn small danger has-icon"
             onClick={() => void cancelAll()}
           >
@@ -199,6 +200,7 @@ const VariationBar = ({
           </button>
         )}
         <button
+          type="button"
           className="btn small has-icon"
           onClick={showAll}
           data-tip={copy.putEveryVariation}
@@ -211,6 +213,7 @@ const VariationBar = ({
         <div className="variations-notice alert inline" role="status">
           <span>{cancelError ?? state.notice}</span>
           <button
+            type="button"
             className="icon-btn small"
             aria-label={copy.dismiss}
             onClick={() => {
@@ -244,6 +247,7 @@ const VariationsTop = (props: TopProps): ReactElement => {
         >
           <span>{state.kept}</span>
           <button
+            type="button"
             className="icon-btn small"
             aria-label={copy.dismiss}
             onClick={() => state.keepNotice(null)}

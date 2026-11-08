@@ -86,6 +86,7 @@ const BriefRows = ({
               />
             </div>
             <button
+              type="button"
               className="icon-btn small"
               aria-label={`Remove direction ${brief.label}`}
               data-tip={datatip}
@@ -242,6 +243,7 @@ const VariationBriefCard = ({
           <p className="variation-card-prompt truncate">{content5}</p>
         </div>
         <button
+          type="button"
           className="icon-btn small"
           aria-label={copy.closeDirections}
           onClick={onDismiss}
@@ -263,6 +265,7 @@ const VariationBriefCard = ({
         <BudgetLine project={project} draft={draft} count={count} />
         <div className="variation-card-actions">
           <button
+            type="button"
             className="btn small"
             onClick={onSkip}
             disabled={busy || draft.autoStart}
@@ -271,6 +274,7 @@ const VariationBriefCard = ({
             {copy.skipReview}
           </button>
           <button
+            type="button"
             className="btn small primary"
             onClick={onStart}
             disabled={busy || draft.loading || briefsInvalid(draft.briefs)}

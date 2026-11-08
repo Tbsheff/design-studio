@@ -98,7 +98,7 @@ const viewOf = (el: HTMLElement | null): View | null => {
 
   if (el) {
     match =
-      /translate\(([-\d.e]+)px,\s*([-\d.e]+)px\)\s*scale\(([-\d.e]+)\)/.exec(
+      /translate\(([-\d.e]+)px,\s*([-\d.e]+)px\)\s*scale\(([-\d.e]+)\)/u.exec(
         el.style.transform
       );
   }
@@ -137,7 +137,7 @@ const colorsOf = (el: HTMLElement): Colors => {
 const sizeCanvas = (
   canvas: HTMLCanvasElement
 ): CanvasRenderingContext2D | null => {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = globalThis.devicePixelRatio || 1;
   const widthValue = canvas.clientWidth;
   const heightValue = canvas.clientHeight;
 

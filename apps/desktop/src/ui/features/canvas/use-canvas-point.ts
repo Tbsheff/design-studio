@@ -37,7 +37,7 @@ const useShowFrame = (
   const timers = useRef<number[]>([]);
   useEffect(
     () => (): void => {
-      timers.current.forEach((target) => window.clearTimeout(target));
+      timers.current.forEach((target) => globalThis.clearTimeout(target));
     },
     []
   );
@@ -54,7 +54,9 @@ const useShowFrame = (
         return false;
       }
 
-      timers.current.forEach((targetValue) => window.clearTimeout(targetValue));
+      timers.current.forEach((targetValue) =>
+        globalThis.clearTimeout(targetValue)
+      );
 
       if (frame.hidden) {
         cur.frames.update((canvasLayout) =>
@@ -112,7 +114,7 @@ const useCanvasPoint = (pointInputValue: PointInput): McpPointBadge => {
       Math.max(0, point.at + MCP_POINT_MS - Date.now())
     );
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [point]);
 
   const show = useCallback(() => {

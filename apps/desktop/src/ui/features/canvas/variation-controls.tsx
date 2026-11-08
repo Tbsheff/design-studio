@@ -125,7 +125,7 @@ const shortRejection = (error: string): string => {
     return error;
   }
 
-  if (/another file|other files/.test(error)) {
+  if (/another file|other files/u.test(error)) {
     return "Rejected: changed another file";
   }
 

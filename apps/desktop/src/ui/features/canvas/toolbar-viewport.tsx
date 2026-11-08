@@ -185,6 +185,7 @@ const ViewportControls = ({
 
           return (
             <button
+              type="button"
               key={viewportPreset.id}
               role="radio"
               aria-label={viewportPreset.label}
@@ -208,6 +209,7 @@ const ViewportControls = ({
           );
         })}
         <button
+          type="button"
           role="radio"
           aria-label={copy.custom}
           data-tip={copy.customSize}
@@ -262,6 +264,7 @@ const SourceControls = ({
         onKeyDown={onRadioGroupKey}
       >
         <button
+          type="button"
           role="radio"
           aria-checked={source.kind === "live"}
           tabIndex={tabIndex2}
@@ -274,6 +277,7 @@ const SourceControls = ({
           <span className="seg-label">{copy.live}</span>
         </button>
         <button
+          type="button"
           role="radio"
           aria-checked={source.kind === "last"}
           tabIndex={tabIndex4}
@@ -294,7 +298,11 @@ const SourceControls = ({
             {copy.viewing}
             {source.title}
           </span>
-          <button className="link" onClick={() => onSource({ kind: "live" })}>
+          <button
+            type="button"
+            className="link"
+            onClick={() => onSource({ kind: "live" })}
+          >
             {copy.backToLive}
           </button>
         </span>

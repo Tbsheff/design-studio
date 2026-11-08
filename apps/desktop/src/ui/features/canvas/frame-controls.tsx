@@ -9,7 +9,7 @@ import { toValueOr } from "./settle-model.js";
 import { stop } from "./variation-controls.js";
 
 const pageName = (path: string | undefined): string => {
-  const clean = (path ?? "").replace(/^\/+/, "").replace(/\.html$/, "");
+  const clean = (path ?? "").replace(/^\/+/u, "").replace(/\.html$/u, "");
 
   return clean || "index";
 };

@@ -135,8 +135,8 @@ const fileNameOf = (
   if (kind === "html") {
     return (
       (frame.path || "index.html")
-        .replace(/\.html$/, "")
-        .replace(/^.*\//, "") || "index"
+        .replace(/\.html$/u, "")
+        .replace(/^.*\//u, "") || "index"
     );
   }
 

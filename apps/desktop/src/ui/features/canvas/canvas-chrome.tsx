@@ -131,7 +131,7 @@ const CanvasChrome = (chromeProps: ChromeProps): ReactElement => {
     }
 
     if (mode === "new-window") {
-      window.open(chromeProps.presentUrl, "_blank", "noopener");
+      globalThis.open(chromeProps.presentUrl, "_blank", "noopener");
     } else {
       setPresent(mode);
     }

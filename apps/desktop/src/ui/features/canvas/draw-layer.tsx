@@ -53,7 +53,8 @@ const PenIcon = ({ size = 16 }: { size?: number }): ReactElement => (
 );
 
 const backingScale = (frame: Frame, zoom: number): number => {
-  const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
+  const dpr =
+    typeof globalThis === "undefined" ? 1 : globalThis.devicePixelRatio || 1;
 
   return Math.min(
     dpr * zoom,

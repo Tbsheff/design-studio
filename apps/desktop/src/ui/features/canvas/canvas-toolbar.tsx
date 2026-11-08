@@ -296,6 +296,7 @@ const CanvasViewRow = (props: Props): ReactElement => {
       <TabOrderToggle />
       {props.drawMode !== undefined && (
         <button
+          type="button"
           className="btn small ghost select-toggle draw-toggle"
           aria-pressed={props.drawMode}
           aria-label={copy.draw}
@@ -309,6 +310,7 @@ const CanvasViewRow = (props: Props): ReactElement => {
         </button>
       )}
       <button
+        type="button"
         className="icon-btn small"
         aria-label={arialabel}
         data-tip={datatip5}

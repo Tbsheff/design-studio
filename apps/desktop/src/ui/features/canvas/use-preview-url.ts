@@ -152,7 +152,8 @@ const useFramePort = (
       window.setTimeout(() => port?.current?.refreshRects(), ms)
     );
 
-    return (): void => timers.forEach((target) => window.clearTimeout(target));
+    return (): void =>
+      timers.forEach((target) => globalThis.clearTimeout(target));
   }, [lastChange, kind, port]);
 };
 

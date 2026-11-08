@@ -18,7 +18,7 @@ let paintListening = false;
 const resetPassiveMountGate = (): void => {
   frontPainted = false;
 
-  if (paintListening || typeof window === "undefined") {
+  if (paintListening || typeof globalThis === "undefined") {
     return;
   }
 
@@ -75,7 +75,7 @@ const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
 
     return (): void => {
       globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, onPaint);
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
       io.disconnect();
     };
   }, [armed, ref]);

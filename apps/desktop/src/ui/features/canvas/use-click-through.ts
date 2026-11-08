@@ -69,7 +69,7 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
 
   useEffect(
     () => (): void =>
-      timers.current.forEach((target) => window.clearTimeout(target)),
+      timers.current.forEach((target) => globalThis.clearTimeout(target)),
     []
   );
 
@@ -79,7 +79,9 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
         return;
       }
 
-      timers.current.forEach((targetValue) => window.clearTimeout(targetValue));
+      timers.current.forEach((targetValue) =>
+        globalThis.clearTimeout(targetValue)
+      );
       timers.current = [];
       pending.current = { at: Date.now(), x: point.x, y: point.y };
       later(NO_RELOAD_MS);

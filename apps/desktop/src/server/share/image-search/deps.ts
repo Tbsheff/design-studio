@@ -66,5 +66,3 @@ export type {
 } from "@design-studio/contracts";
 
 export { toDecoder } from "../../platform/decode/index.js";
-
-export { z } from "../../platform/zod-bridge/index.js";

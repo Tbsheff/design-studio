@@ -18,7 +18,12 @@ import {
 import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
 import { buildEnv } from "../platform/config/index.js";
-import { z } from "../platform/zod-bridge/index.js";
+import {
+  TITLE_MAX,
+  decodeBriefItem,
+  decodeBriefReply,
+  toBriefItems,
+} from "./brief-schema.js";
 
 type QueryFn = typeof query;
 
@@ -26,7 +31,6 @@ export const BRIEF_MODEL = WIREFRAME_MODEL;
 const BRIEF_BUDGET_USD = 0.05;
 const VARIATION_LABELS = ["A", "B", "C", "D"] as const;
 const SIMILARITY_LIMIT = 0.5;
-const TITLE_MAX = 40;
 
 export interface BriefInput {
   prompt: string;
@@ -105,18 +109,6 @@ export function similarity(a: string, b: string): number {
   return shared / (left.size + right.size - shared);
 }
 
-const BriefItemSchema = z.object({
-  title: z.string().trim().min(1).max(TITLE_MAX),
-  brief: z.string().trim().min(12).max(VARIATION_BRIEF_MAX),
-});
-
-const BriefReplySchema = z.union([
-  z.array(BriefItemSchema),
-  z
-    .object({ briefs: z.array(BriefItemSchema) })
-    .transform((value) => value.briefs),
-]);
-
 function normalizeBriefText(text: string): string {
   return text.replaceAll(/\s+/g, " ").trim();
 }
@@ -170,7 +162,10 @@ function labelBriefs(
 }
 
 export function parseBriefReply(text: string, count: number): VariationBrief[] {
-  const items = BriefReplySchema.parse(extractJson(text));
+  const decoded = decodeBriefReply(extractJson(text));
+  if (decoded._tag === "Failure")
+    throw new Error(String(decoded.failure.message));
+  const items = toBriefItems(decoded.success);
   const problems = briefProblems(items, count);
   if (problems.length) throw new Error(problems.join("; "));
   return labelBriefs(items);
@@ -184,12 +179,12 @@ export function validateUserBriefs(
   const problem = countProblem(raw.length, kind);
   if (problem) throw new Error(problem.replace("count", "briefs"));
   const items = raw.map((item, index) => {
-    const parsed = BriefItemSchema.safeParse(item);
-    if (!parsed.success)
+    const parsed = decodeBriefItem(item);
+    if (parsed._tag === "Failure")
       throw new Error(
         `brief ${labelAt(index)}: title 1..${TITLE_MAX} and brief 12..${VARIATION_BRIEF_MAX} characters`
       );
-    return parsed.data;
+    return parsed.success;
   });
   return labelBriefs(items);
 }

@@ -64,7 +64,6 @@
     "apps/desktop/src/server/platform/git/objects.ts": 52,
     "apps/desktop/src/server/platform/git/run-git.ts": 14,
     "apps/desktop/src/server/platform/git/user-git.ts": 16,
-    "apps/desktop/src/server/platform/json-file/index.ts": 6,
     "apps/desktop/src/server/platform/mutex/index.ts": 4,
     "apps/desktop/src/server/platform/paths/index.ts": 1,
     "apps/desktop/src/server/platform/process/spawn.ts": 3,

@@ -1,13 +1,12 @@
-import {
-  RUN_LEVELS,
-  VARIATION_DEFAULT,
-  type Direction,
-  type DirectionVariation,
-  type Project,
-  type RunRequest,
-  type VariationBriefsResult,
-  type VariationStartResult,
+import type {
+  Direction,
+  DirectionVariation,
+  Project,
+  RunRequest,
+  VariationBriefsResult,
+  VariationStartResult,
 } from "@design-studio/contracts";
+import type { Result, Schema } from "effect";
 import type { Hono } from "hono";
 import { nanoid } from "nanoid";
 
@@ -20,9 +19,14 @@ import {
   ConflictError,
   assertSafeId,
 } from "../platform/errors/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import type { StudioProjectStore } from "../store/projects.js";
+import {
+  decodeBriefsBody,
+  decodeKeepBody,
+  decodeMixBody,
+  decodeStartBody,
+} from "./body-schema.js";
 import {
   countProblem,
   createMockBriefGenerator,
@@ -66,68 +70,16 @@ interface VariationRouteDeps {
   edit: KeepDeps;
 }
 
-const PROMPT_MAX = 20_000;
-const LevelSchema = z
-  .enum(RUN_LEVELS as unknown as [string, ...string[]])
-  .optional();
-
-const ElementSchema = z.object({
-  selector: z.string().max(2000),
-  tag: z.string().max(100),
-  text: z.string().max(20_000),
-  outerHTML: z.string().max(200_000),
-  styles: z.record(z.string(), z.string()),
-  rect: z.object({
-    x: z.number(),
-    y: z.number(),
-    width: z.number(),
-    height: z.number(),
-  }),
-  source: z
-    .object({
-      file: z.string().max(1000),
-      line: z.number().int(),
-      col: z.number().int(),
-    })
-    .nullable(),
-  ancestors: z.array(z.string()),
-});
-
-const BriefsBody = z.object({
-  prompt: z.string().trim().min(1).max(PROMPT_MAX),
-  count: z.number().int().default(VARIATION_DEFAULT),
-  fromDirectionId: z.string().nullish(),
-  element: ElementSchema.nullish(),
-});
-
-const StartBody = z.object({
-  prompt: z.string().trim().min(1).max(PROMPT_MAX),
-  briefs: z.array(z.unknown()),
-  level: LevelSchema,
-  fromDirectionId: z.string().nullish(),
-  attachmentIds: z.array(z.string()).max(10).optional(),
-  element: ElementSchema.nullish(),
-});
-
-const KeepBody = z.object({ directionId: z.string() });
-
-const MixBody = z.object({
-  fromDirectionId: z.string(),
-  toDirectionId: z.string(),
-  element: ElementSchema,
-  prompt: z.string().max(PROMPT_MAX).optional(),
-  level: LevelSchema,
-});
-
-function parse<T>(schema: z.ZodType<T>, raw: unknown): T {
-  const result = schema.safeParse(raw);
-  if (!result.success)
+function parse<Value>(
+  decode: (raw: unknown) => Result.Result<Value, Schema.SchemaError>,
+  raw: unknown
+): Value {
+  const result = decode(raw);
+  if (result._tag === "Failure")
     throw new BadRequestError(
-      result.error.issues
-        .map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`)
-        .join("; ")
+      String(result.failure.message).replaceAll("\n", "; ")
     );
-  return result.data;
+  return result.success;
 }
 
 async function body(c: {
@@ -182,7 +134,7 @@ export function registerVariationRoutes(
   const groups = createGroupRegistry();
 
   app.post("/api/projects/:pid/variations/briefs", async (c) => {
-    const input = parse(BriefsBody, await body(c));
+    const input = parse(decodeBriefsBody, await body(c));
     const project = await projects.get(c.req.param("pid"));
     const problem = countProblem(input.count, project.kind);
     if (problem) throw new BadRequestError(problem);
@@ -205,7 +157,7 @@ export function registerVariationRoutes(
 
   app.post("/api/projects/:pid/variations", async (c) => {
     const pid = c.req.param("pid");
-    const input = parse(StartBody, await body(c));
+    const input = parse(decodeStartBody, await body(c));
     const project = await projects.get(pid);
     let validBriefs;
     try {
@@ -282,7 +234,7 @@ export function registerVariationRoutes(
 
   app.post("/api/projects/:pid/variations/mix", async (c) => {
     const pid = c.req.param("pid");
-    const input = parse(MixBody, await body(c));
+    const input = parse(decodeMixBody, await body(c));
     if (input.fromDirectionId === input.toDirectionId)
       throw new BadRequestError("pick another variation as the target");
     const project = await projects.get(pid);
@@ -345,7 +297,7 @@ export function registerVariationRoutes(
 
   app.post("/api/projects/:pid/variations/:gid/keep", async (c) => {
     const groupId = assertSafeId(c.req.param("gid"), "groupId");
-    const input = parse(KeepBody, await body(c));
+    const input = parse(decodeKeepBody, await body(c));
     return c.json(await keep(c.req.param("pid"), groupId, input.directionId));
   });
 

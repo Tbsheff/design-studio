@@ -35,6 +35,7 @@ const TopBarStart = ({ props }: { props: Props }): ReactElement => (
       className="icon-btn topbar-icon topbar-fold-narrow"
       aria-label={copy.askChat}
       data-tip={tipWithKey(copy.askChatTip, "inline-prompt")}
+      data-tip-align="start"
       onClick={props.onAskChat}
     >
       <Icon name="sliders" size={14} />

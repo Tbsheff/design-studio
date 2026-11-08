@@ -13,6 +13,17 @@ interface CoverageNoteView {
 const toTokenCount = (count: number): string =>
   `${count} token${toPlural(count)}`;
 
+const toGroupSummary = (tokens: readonly string[]): string => {
+  const counts = new Map<string, number>();
+
+  for (const token of tokens) {
+    const group = token.split(".")[0] ?? token;
+    counts.set(group, (counts.get(group) ?? 0) + 1);
+  }
+
+  return [...counts].map(([group, count]) => `${group} ${count}`).join(", ");
+};
+
 const toNextStep = (hasGaps: boolean): string => {
   if (hasGaps) {
     return "Ask the chat to improve this design system. It fills the gaps from your app. Or edit DESIGN.md yourself.";
@@ -30,7 +41,7 @@ const toCoverageNote = (coverage: DesignSystemCoverage): CoverageNoteView => {
   let base: string | null = null;
 
   if (baseCount > 0) {
-    base = `${toTokenCount(baseCount)} came from the base pack, not from your app: ${toCssVarList(coverage.fallbacks)}.`;
+    base = `${toTokenCount(baseCount)} came from the base pack, not from your app (${toGroupSummary(coverage.fallbacks)}).`;
   }
 
   let guessed: string | null = null;

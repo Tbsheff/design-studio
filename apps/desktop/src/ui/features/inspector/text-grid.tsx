@@ -3,9 +3,9 @@ import type { ReactElement, ReactNode } from "react";
 
 import { AlignField } from "./align-field.js";
 import { ColorField } from "./color-field.js";
+import { ContentRow } from "./content-row.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
-import { ContentRow, TextStyleToggles } from "./inspector-rows.js";
 import { FontField } from "./inspector-tokens.js";
 import { SelectField } from "./select-field.js";
 import {
@@ -16,6 +16,7 @@ import {
   WEIGHTS,
 } from "./simple-model.js";
 import { SpecNumberField } from "./spec-number-field.js";
+import { TextStyleToggles } from "./text-style-toggles.js";
 import type { TokenUi } from "./use-token-snap.js";
 
 interface TextGridProps {

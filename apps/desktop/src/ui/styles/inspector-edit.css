@@ -494,6 +494,13 @@
   padding: 0 3px;
 }
 
+fieldset.ins-toggles {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .ins-toggles button {
   border: 0;
   background: transparent;

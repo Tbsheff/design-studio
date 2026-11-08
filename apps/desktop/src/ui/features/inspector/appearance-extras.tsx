@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
+import { CssTextRow } from "./css-text-row.js";
 import type { DirectEdit } from "./deps.js";
-import { CssTextRow } from "./inspector-rows.js";
 import { RevealButton } from "./reveal-button.js";
 import { EXTRAS, EXTRA_ROWS } from "./simple-model.js";
 import type { Extra } from "./simple-model.js";

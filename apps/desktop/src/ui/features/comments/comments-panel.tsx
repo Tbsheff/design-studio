@@ -1,5 +1,5 @@
+import type { ReactElement } from "react";
 import { useState, useTransition, useSyncExternalStore } from "react";
-import type { ReactNode } from "react";
 
 import { commentPageName, pageShown } from "./comment-anchors.js";
 import { CommentAuthor } from "./comment-avatar.js";
@@ -13,34 +13,8 @@ import {
   shownFrames,
 } from "./deps.js";
 import type { DesignComment, SelectionContext } from "./deps.js";
+import { Section } from "./section.js";
 import type { CommentsControl } from "./use-comments.js";
-
-const Section = ({
-  title,
-  count,
-  action,
-  children,
-}: {
-  title: string;
-  count: number;
-  action?: ReactNode;
-  children: ReactNode;
-}) => {
-  if (count === 0) {
-    return null;
-  }
-
-  return (
-    <section className="comments-section" aria-label={title}>
-      <h3>
-        {title} <span className="count">{count}</span>
-        <span className="spacer" />
-        {action}
-      </h3>
-      <ul className="comments-list">{children}</ul>
-    </section>
-  );
-};
 
 const PICK_HINT = "Press C or choose Comment, then click an element.";
 
@@ -64,7 +38,7 @@ const SendQueuedButton = ({
 }: {
   control: CommentsControl;
   className?: string;
-}) => {
+}): ReactElement => {
   const count = control.queued.length;
 
   return (
@@ -85,13 +59,13 @@ const CommentsComposer = ({
 }: {
   control: CommentsControl;
   selection: SelectionContext[];
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
   const [busy, startTransition] = useTransition();
   const target = composerTarget(selection);
   const ready = target !== null && text.trim().length > 0 && !busy;
 
-  const submit = () => {
+  const submit = (): void => {
     if (!ready) {
       return;
     }
@@ -139,20 +113,20 @@ const CommentsComposer = ({
           onClick={() => submit()}
         >
           <Icon name="arrowUp" size={12} />
-          Comment
+          {copy.comment}
         </button>
       </div>
     </div>
   );
 };
 
-export const ChatPickBar = ({
+const ChatPickBar = ({
   control,
   className,
 }: {
   control: CommentsControl;
   className?: string;
-}) => {
+}): ReactElement | null => {
   const count = control.picked.length;
 
   if (count === 0) {
@@ -166,13 +140,15 @@ export const ChatPickBar = ({
       aria-label={copy.selected}
       data-testid="comments-pick-bar"
     >
-      <span className="label">{count} selected</span>
+      <span className="label">
+        {count} {copy.textSelected}
+      </span>
       <button
         type="button"
         className="btn small ghost"
         onClick={control.clearPicked}
       >
-        Clear
+        {copy.textClear}
       </button>
       <span className="spacer" />
       <button
@@ -189,7 +165,7 @@ export const ChatPickBar = ({
   );
 };
 
-const focusNode = (node: HTMLInputElement | null) => {
+const focusNode = (node: HTMLInputElement | null): void => {
   node?.focus();
 };
 
@@ -273,7 +249,7 @@ const TargetLink = ({
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) => {
+}): ReactElement => {
   const away = notShownText(comment, useShownPaths());
 
   return (
@@ -299,7 +275,7 @@ const PickNum = ({
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) => {
+}): ReactElement => {
   if (!canPickForChat(comment.status)) {
     return <span className={`comment-num ${comment.status}`}>{comment.n}</span>;
   }
@@ -328,7 +304,7 @@ const FixButton = ({
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) => {
+}): ReactElement | null => {
   if (!canPickForChat(comment.status)) {
     return null;
   }
@@ -358,11 +334,11 @@ const QueuedRow = ({
   index: number;
   total: number;
   control: CommentsControl;
-}) => {
+}): ReactElement => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(comment.text);
 
-  const save = () => {
+  const save = (): void => {
     const clean = text.trim();
     setEditing(false);
 
@@ -495,7 +471,7 @@ const DoneRow = ({
 }: { comment: DesignComment; control: CommentsControl } & Pick<
   Props,
   "onOpenRun" | "onOpenVersion"
->) => {
+>): ReactElement => {
   const { runId, versionId } = comment;
 
   return (
@@ -533,7 +509,8 @@ const DoneRow = ({
                   onClick={() => onOpenVersion(versionId)}
                   data-testid="comment-version-link"
                 >
-                  Version {versionId.slice(0, 7)}
+                  {copy.textVersion}
+                  {versionId.slice(0, 7)}
                 </button>
               </>
             )}
@@ -550,7 +527,7 @@ const DoneRow = ({
                 }
               >
                 <Icon name="check" size={14} />
-                Resolve
+                {copy.resolve}
               </button>
             )}
             {comment.status === "resolved" && (
@@ -563,7 +540,7 @@ const DoneRow = ({
                 }
               >
                 <Icon name="undo" size={14} />
-                Reopen
+                {copy.reopen}
               </button>
             )}
             <button
@@ -587,7 +564,7 @@ const OrphanRow = ({
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) => {
+}): ReactElement => {
   const active = control.repinId === comment.id;
   const away = notShownText(comment, useShownPaths());
 
@@ -637,20 +614,20 @@ const OrphanRow = ({
   );
 };
 
-export const CommentsPanel = ({
+const CommentsPanel = ({
   control,
   running,
   onOpenRun,
   onOpenVersion,
   selection = [],
-}: Props) => {
-  const by = (status: DesignComment["status"]) =>
+}: Props): ReactElement => {
+  const by = (status: DesignComment["status"]): DesignComment[] =>
     control.comments.filter((comment) => comment.status === status);
 
   const sent = by("sent");
   const resolved = by("resolved");
   const orphaned = by("orphaned");
-  const queued = control.queued;
+  const { queued } = control;
 
   const outside = control.comments.filter(
     (comment) =>
@@ -666,7 +643,7 @@ export const CommentsPanel = ({
       (comment) => comment.status !== "draft" || comment.author
     ).length === 0;
 
-  const showResolved = control.showResolved;
+  const { showResolved } = control;
 
   return (
     <div className="comments-pane">
@@ -686,11 +663,7 @@ export const CommentsPanel = ({
         )}
         <ChatPickBar control={control} />
         {empty && (
-          <p className="comments-empty">
-            No comments yet. Press C or choose Comment in the toolbar, then
-            click an element to pin one. Select several by their numbers, then
-            send them to the chat.
-          </p>
+          <p className="comments-empty">{copy.textNoCommentsYetPress}</p>
         )}
         {resolved.length > 0 && (
           <div className="comments-filter">
@@ -702,11 +675,11 @@ export const CommentsPanel = ({
                   control.setShowResolved(event.target.checked)
                 }
               />
-              Show resolved
+              {copy.textShowResolved}
             </label>
             {!showResolved && (
               <span className="count" data-testid="resolved-hidden">
-                {resolved.length} hidden
+                {resolved.length} {copy.textHidden}
               </span>
             )}
           </div>
@@ -756,9 +729,7 @@ export const CommentsPanel = ({
           ))}
         </Section>
         {running && queued.length > 0 && (
-          <p className="comments-empty">
-            The agent is running. Queued comments wait until it finishes.
-          </p>
+          <p className="comments-empty">{copy.textTheAgentIsRunning}</p>
         )}
         <Section title={copy.sent} count={sent.length}>
           {sent.map((comment) => (
@@ -796,13 +767,13 @@ export const CommentsPanel = ({
   );
 };
 
-export const QueuedComposerBar = ({
+const QueuedComposerBar = ({
   control,
   onShow,
 }: {
   control: CommentsControl;
   onShow: () => void;
-}) => {
+}): ReactElement | null => {
   const count = control.queued.length;
 
   if (count === 0 && !control.notice) {
@@ -813,11 +784,19 @@ export const QueuedComposerBar = ({
     <div className="comments-queue-bar" data-testid="queued-bar">
       <span className="label">
         <button type="button" className="link" onClick={onShow}>
-          {count} queued
+          {count} {copy.textQueued}
         </button>
-        {control.notice && <span className="notice"> · {control.notice}</span>}
+        {control.notice && (
+          <span className="notice">
+            {" "}
+            {copy.textGlyph3}
+            {control.notice}
+          </span>
+        )}
       </span>
       {count > 0 && <SendQueuedButton control={control} />}
     </div>
   );
 };
+
+export { ChatPickBar, CommentsPanel, QueuedComposerBar };

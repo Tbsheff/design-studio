@@ -3,6 +3,11 @@ import type { RefObject } from "react";
 
 import type { SelectionContext } from "./deps.js";
 
+const UNIT_SCALE = 1000;
+const DEFAULT_CARD_HEIGHT = 112;
+const HTML_SNIPPET_MAX = 4000;
+const TEXT_SNIPPET_MAX = 32;
+
 type Rect = SelectionContext["rect"];
 
 interface Size {
@@ -10,21 +15,21 @@ interface Size {
   height: number;
 }
 
-export const PIN_SIZE = 28;
+const PIN_SIZE = 28;
 
-export const CARD_WIDTH = 400;
+const CARD_WIDTH = 400;
 
 const GAP = 8;
 
-export type CardSide = "right" | "left" | "below" | "above" | "over";
+type CardSide = "right" | "left" | "below" | "above" | "over";
 
-export interface PinPlacement {
+interface PinPlacement {
   left: number;
   top: number;
   flip: boolean;
 }
 
-export interface ComposerPlacement {
+interface ComposerPlacement {
   side: CardSide;
   pin: PinPlacement;
   card: { left: number; top: number };
@@ -33,17 +38,21 @@ export interface ComposerPlacement {
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(value, Math.max(min, max)));
 
-export interface PinOffset {
+interface PinOffset {
   x: number;
   y: number;
 }
 
-const unit = (value: number): number =>
-  Number.isFinite(value)
-    ? Math.round(Math.max(0, Math.min(1, value)) * 1000) / 1000
-    : 0;
+const unit = (value: number): number => {
+  if (Number.isFinite(value)) {
+    return (
+      Math.round(Math.max(0, Math.min(1, value)) * UNIT_SCALE) / UNIT_SCALE
+    );
+  }
+  return 0;
+};
 
-export const offsetIn = (
+const offsetIn = (
   rect: Rect,
   point: { x: number; y: number } | undefined
 ): PinOffset | undefined => {
@@ -56,7 +65,7 @@ export const offsetIn = (
   };
 };
 
-export const pinAnchor = (rect: Rect, offset: PinOffset | undefined): Rect => {
+const pinAnchor = (rect: Rect, offset: PinOffset | undefined): Rect => {
   if (!offset) {
     return rect;
   }
@@ -68,7 +77,7 @@ export const pinAnchor = (rect: Rect, offset: PinOffset | undefined): Rect => {
   };
 };
 
-export const pinPlacement = (
+const pinPlacement = (
   target: Rect,
   zoom: number,
   frame: Size,
@@ -114,11 +123,11 @@ const placeAround = (
   prefer?: CardSide
 ): ComposerPlacement => {
   const { card, frame, zoom } = view;
-  const s = 1 / zoom;
-  const pin = PIN_SIZE * s;
-  const gap = GAP * s;
-  const width = card.width * s;
-  const height = card.height * s;
+  const amount = 1 / zoom;
+  const pin = PIN_SIZE * amount;
+  const gap = GAP * amount;
+  const width = card.width * amount;
+  const height = card.height * amount;
   const right = rect.x + rect.width;
   const bottom = rect.y + rect.height;
   const vertical = clamp(rect.y, 0, frame.height - height);
@@ -160,7 +169,7 @@ const placeAround = (
     },
   };
 
-  const fitting = (side: CardSide) => {
+  const fitting = (side: CardSide): boolean => {
     const option = options[side];
 
     return (
@@ -189,7 +198,7 @@ const placeAround = (
   };
 };
 
-export const placeComposer = (
+const placeComposer = (
   target: Rect,
   view: PlaceView,
   prefer?: CardSide,
@@ -205,8 +214,10 @@ export const placeComposer = (
   return { ...placed, pin };
 };
 
-export const useCardSize = (card: RefObject<HTMLDivElement | null>) => {
-  const [height, setHeight] = useState(112);
+const useCardSize = (
+  card: RefObject<HTMLDivElement | null>
+): { height: number; width: number } => {
+  const [height, setHeight] = useState(DEFAULT_CARD_HEIGHT);
   useLayoutEffect(() => {
     const element = card.current;
 
@@ -217,7 +228,7 @@ export const useCardSize = (card: RefObject<HTMLDivElement | null>) => {
     const observer = new ResizeObserver(() => setHeight(element.offsetHeight));
     observer.observe(element);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [card]);
 
   return { height, width: CARD_WIDTH };
@@ -264,12 +275,15 @@ const KIND_OF_TAG: Record<string, string> = {
 const snippet = (text: string, max: number): string => {
   const line = text.replaceAll(/\s+/gu, " ").trim();
 
-  return line.length > max ? `${line.slice(0, max - 1)}…` : line;
+  if (line.length > max) {
+    return `${line.slice(0, max - 1)}…`;
+  }
+  return line;
 };
 
 const className = (selection: SelectionContext): string | null => {
   const match = /^<[^>]*\bclass="([^"]*)"/u.exec(
-    selection.outerHTML.slice(0, 4000)
+    selection.outerHTML.slice(0, HTML_SNIPPET_MAX)
   );
 
   const first = match?.[1]?.trim().split(/\s+/u)[0];
@@ -277,10 +291,10 @@ const className = (selection: SelectionContext): string | null => {
   return first || null;
 };
 
-export const elementLabel = (selection: SelectionContext): string => {
+const elementLabel = (selection: SelectionContext): string => {
   const tag = selection.tag.toLowerCase();
-  const text = snippet(selection.text, 32);
-  const kind = TEXT_TAGS.has(tag) ? "text" : (KIND_OF_TAG[tag] ?? null);
+  const text = snippet(selection.text, TEXT_SNIPPET_MAX);
+  const kind = (TEXT_TAGS.has(tag) && "text") || (KIND_OF_TAG[tag] ?? null);
 
   if (kind && text) {
     return `${kind} “${text}”`;
@@ -293,10 +307,13 @@ export const elementLabel = (selection: SelectionContext): string => {
   if (cls) {
     return `${tag}.${cls}`;
   }
-  return text ? `${tag} “${text}”` : tag;
+  if (text) {
+    return `${tag} “${text}”`;
+  }
+  return tag;
 };
 
-export interface Breadcrumb {
+interface Breadcrumb {
   short: string;
   full: string;
 }
@@ -320,7 +337,7 @@ const parentLabel = (selection: SelectionContext): string | null => {
   return meaningful ?? null;
 };
 
-export const breadcrumbOf = (
+const breadcrumbOf = (
   page: string,
   selections: SelectionContext[]
 ): Breadcrumb => {
@@ -350,7 +367,7 @@ export const breadcrumbOf = (
   };
 };
 
-export const scopeText = (
+const scopeText = (
   breadcrumb: Breadcrumb,
   selections: SelectionContext[],
   text: string
@@ -360,4 +377,25 @@ export const scopeText = (
     .join(", ");
 
   return `About ${breadcrumb.short} (${selectors}): ${text}`;
+};
+
+export {
+  PIN_SIZE,
+  CARD_WIDTH,
+  offsetIn,
+  pinAnchor,
+  pinPlacement,
+  placeComposer,
+  useCardSize,
+  elementLabel,
+  breadcrumbOf,
+  scopeText,
+};
+
+export type {
+  CardSide,
+  PinPlacement,
+  ComposerPlacement,
+  PinOffset,
+  Breadcrumb,
 };

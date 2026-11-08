@@ -1,5 +1,9 @@
+import type { ReactElement } from "react";
+
 import { copy } from "./copy.js";
 import { Icon } from "./deps.js";
+
+const COUNT_MAX = 9;
 
 interface AvatarProps {
   initial: string | null;
@@ -9,16 +13,16 @@ interface AvatarProps {
   author?: string | undefined;
 }
 
-export const authorInitial = (author: string): string =>
+const authorInitial = (author: string): string =>
   (author.trim()[0] ?? "?").toUpperCase();
 
-export const AvatarFace = ({
+const AvatarFace = ({
   initial,
   flip = false,
   tone = "queued",
   count = 0,
   author,
-}: AvatarProps) => {
+}: AvatarProps): ReactElement => {
   const face = author ? authorInitial(author) : initial;
 
   return (
@@ -30,19 +34,21 @@ export const AvatarFace = ({
         {face ?? <Icon name="comment" size={12} />}
       </span>
       {count > 0 && (
-        <span className="avatar-count">{count > 9 ? "9+" : count}</span>
+        <span className="avatar-count">
+          {count > COUNT_MAX ? `${COUNT_MAX}+` : count}
+        </span>
       )}
     </span>
   );
 };
 
-export const CommentAuthor = ({
+const CommentAuthor = ({
   author,
   viewer = false,
 }: {
   author: string | undefined;
   viewer?: boolean;
-}) => {
+}): ReactElement | null => {
   if (!author) {
     return null;
   }
@@ -55,9 +61,11 @@ export const CommentAuthor = ({
       {author}
       {viewer && (
         <span className="comment-viewer-tag" data-tip={copy.viewerTag}>
-          Viewer
+          {copy.textViewer}
         </span>
       )}
     </span>
   );
 };
+
+export { authorInitial, AvatarFace, CommentAuthor };

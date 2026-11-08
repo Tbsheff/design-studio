@@ -1,7 +1,7 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
-import { useState, useTransition } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactElement } from "react";
+import { useState, useTransition, useCallback } from "react";
 
 import { errorText } from "../../api.js";
 import { COPY } from "./copy.js";
@@ -10,7 +10,7 @@ const useBusyAction = (onClose: () => void) => {
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const run = (task: () => Promise<void>) => {
+  const run = (task: () => Promise<void>): void => {
     if (busy) {
       return;
     }
@@ -20,8 +20,8 @@ const useBusyAction = (onClose: () => void) => {
       try {
         await task();
         onClose();
-      } catch (caught) {
-        setError(errorText(caught));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };
@@ -39,7 +39,7 @@ const Head = ({
   text: string;
   busy: boolean;
   onClose: () => void;
-}) => (
+}): ReactElement => (
   <div className="modal-head">
     <div className="titles">
       <h2>{title}</h2>
@@ -57,7 +57,11 @@ const Head = ({
   </div>
 );
 
-const ErrorLine = ({ error }: { error: string | null }) => {
+const ErrorLine = ({
+  error,
+}: {
+  error: string | null;
+}): ReactElement | null => {
   if (!error) {
     return null;
   }
@@ -69,7 +73,7 @@ const ErrorLine = ({ error }: { error: string | null }) => {
   );
 };
 
-export const RenamePackDialog = ({
+const RenamePackDialog = ({
   pack,
   onClose,
   onRename,
@@ -77,18 +81,42 @@ export const RenamePackDialog = ({
   pack: PackSummary;
   onClose: () => void;
   onRename: (name: string) => Promise<void>;
-}) => {
+}): ReactElement => {
   const [name, setName] = useState(pack.name);
   const action = useBusyAction(onClose);
-  const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+  const dialog = useModalDialog(() => !action.busy && onClose());
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
+  const submit = (event: FormEvent): void => {
+    event.preventDefault();
 
     if (name.trim() && name.trim() !== pack.name) {
       void action.run(() => onRename(name.trim()));
     }
   };
+
+  const errorLineNode = <ErrorLine error={action.error} />;
+
+  const btnNode = (
+    <button
+      type="button"
+      className="btn ghost"
+      onClick={onClose}
+      disabled={action.busy}
+    >
+      {COPY.textCancel}
+    </button>
+  );
+
+  const btnNode2 = (
+    <button
+      type="submit"
+      className="btn primary"
+      disabled={action.busy || !name.trim() || name.trim() === pack.name}
+    >
+      {action.busy && "Renaming…"}
+      {!action.busy && "Rename"}
+    </button>
+  );
 
   return (
     <dialog
@@ -106,40 +134,27 @@ export const RenamePackDialog = ({
         />
         <div className="modal-body">
           <label className="field">
-            <span>Name</span>
+            <span>{COPY.textName}</span>
             <input
               data-autofocus
               value={name}
               maxLength={80}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(evt) => setName(evt.target.value)}
               aria-label={COPY.labelDesignSystemName}
             />
           </label>
-          <ErrorLine error={action.error} />
+          {errorLineNode}
         </div>
         <div className="modal-foot">
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={onClose}
-            disabled={action.busy}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="btn primary"
-            disabled={action.busy || !name.trim() || name.trim() === pack.name}
-          >
-            {action.busy ? "Renaming…" : "Rename"}
-          </button>
+          {btnNode}
+          {btnNode2}
         </div>
       </form>
     </dialog>
   );
 };
 
-export const DeletePackDialog = ({
+const DeletePackDialog = ({
   pack,
   onClose,
   onDelete,
@@ -147,9 +162,14 @@ export const DeletePackDialog = ({
   pack: PackSummary;
   onClose: () => void;
   onDelete: () => Promise<void>;
-}) => {
+}): ReactElement => {
   const action = useBusyAction(onClose);
-  const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+  const dialog = useModalDialog(() => !action.busy && onClose());
+
+  const handleRun = useCallback(
+    () => void action.run(onDelete),
+    [action, onDelete]
+  );
 
   return (
     <dialog
@@ -175,22 +195,23 @@ export const DeletePackDialog = ({
           onClick={onClose}
           disabled={action.busy}
         >
-          Cancel
+          {COPY.textCancel}
         </button>
         <button
           type="button"
           className="btn danger"
-          onClick={() => void action.run(onDelete)}
+          onClick={handleRun}
           disabled={action.busy}
         >
-          {action.busy ? "Deleting…" : "Delete"}
+          {action.busy && "Deleting…"}
+          {!action.busy && "Delete"}
         </button>
       </div>
     </dialog>
   );
 };
 
-export const ImportConflictDialog = ({
+const ImportConflictDialog = ({
   existing,
   onClose,
   onChoose,
@@ -200,7 +221,17 @@ export const ImportConflictDialog = ({
   onChoose: (mode: "replace" | "copy") => Promise<void>;
 }) => {
   const action = useBusyAction(onClose);
-  const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+  const dialog = useModalDialog(() => !action.busy && onClose());
+
+  const handleRun2 = useCallback(
+    () => void action.run(() => onChoose("copy")),
+    [action, onChoose]
+  );
+
+  const handleRun3 = useCallback(
+    () => void action.run(() => onChoose("replace")),
+    [action, onChoose]
+  );
 
   return (
     <dialog
@@ -225,26 +256,28 @@ export const ImportConflictDialog = ({
           onClick={onClose}
           disabled={action.busy}
         >
-          Cancel
+          {COPY.textCancel}
         </button>
         <button
           type="button"
           className="btn"
-          onClick={() => void action.run(() => onChoose("copy"))}
+          onClick={handleRun2}
           disabled={action.busy}
         >
-          Keep both
+          {COPY.textKeepBoth}
         </button>
         <button
           type="button"
           className="btn primary"
           data-autofocus
-          onClick={() => void action.run(() => onChoose("replace"))}
+          onClick={handleRun3}
           disabled={action.busy}
         >
-          Replace
+          {COPY.textReplace}
         </button>
       </div>
     </dialog>
   );
 };
+
+export { RenamePackDialog, DeletePackDialog, ImportConflictDialog };

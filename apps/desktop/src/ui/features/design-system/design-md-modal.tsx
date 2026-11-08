@@ -1,4 +1,5 @@
 import { Icon, useModalDialog } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import {
   useDeferredValue,
   useEffect,
@@ -14,6 +15,9 @@ import { MOD_LABEL } from "../comments/comment-popover.js";
 import { COPY } from "./copy.js";
 import { outlineOf } from "./design-md-outline.js";
 import type { OutlineItem } from "./design-md-outline.js";
+
+const DEFAULT_LINE_HEIGHT = 20;
+const SCROLL_PADDING = 8;
 
 const HEADING_TAGS = new Set(["H1", "H2", "H3"]);
 
@@ -42,7 +46,8 @@ const jumpTo = (
     editor.focus();
     editor.setSelectionRange(item.offset, item.offset);
 
-    const lineHeight = Number(getComputedStyle(editor).lineHeight) || 20;
+    const lineHeight =
+      Number(getComputedStyle(editor).lineHeight) || DEFAULT_LINE_HEIGHT;
 
     editor.scrollTop = Math.max(0, item.line * lineHeight - lineHeight);
   }
@@ -50,7 +55,7 @@ const jumpTo = (
   const heading = preview ? collectHeadings(preview, [])[index] : null;
 
   if (heading instanceof HTMLElement && preview) {
-    preview.scrollTop = heading.offsetTop - preview.offsetTop - 8;
+    preview.scrollTop = heading.offsetTop - preview.offsetTop - SCROLL_PADDING;
   }
 };
 
@@ -60,13 +65,11 @@ const Outline = ({
 }: {
   items: OutlineItem[];
   onJump: (item: OutlineItem, index: number) => void;
-}) => (
+}): ReactElement => (
   <nav className="dmd-outline" aria-label={COPY.labelOutline}>
-    <p className="dmd-pane-label">Outline</p>
+    <p className="dmd-pane-label">{COPY.labelOutline}</p>
     {items.length === 0 ? (
-      <p className="dmd-outline-empty">
-        Add a heading, like ## Color, to see it here.
-      </p>
+      <p className="dmd-outline-empty">{COPY.textAddAHeadingLike}</p>
     ) : (
       <ul>
         {items.map((item, index) => (
@@ -95,7 +98,7 @@ const UnsavedBar = ({
   onSave: () => void;
   onDiscard: () => void;
   onKeep: () => void;
-}) => {
+}): ReactElement => {
   const keep = useRef<HTMLButtonElement>(null);
   useEffect(() => keep.current?.focus(), []);
 
@@ -108,10 +111,10 @@ const UnsavedBar = ({
     >
       <span id="dmd-unsaved-text" className="dmd-unsaved-text">
         <Icon name="alert" size={14} />
-        Save your changes to DESIGN.md?
+        {COPY.textSaveYourChangesTo}
       </span>
       <button className="btn ghost" onClick={onDiscard} disabled={saving}>
-        Discard
+        {COPY.textDiscard}
       </button>
       <button
         ref={keep}
@@ -119,7 +122,7 @@ const UnsavedBar = ({
         onClick={onKeep}
         disabled={saving}
       >
-        Keep editing
+        {COPY.textKeepEditing}
       </button>
       <button className="btn primary" onClick={onSave} disabled={saving}>
         {saving ? "Saving…" : "Save"}
@@ -128,13 +131,13 @@ const UnsavedBar = ({
   );
 };
 
-export const DesignMdModal = ({
+const DesignMdModal = ({
   projectId,
   onClose,
 }: {
   projectId: string;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const [content, setContent] = useState<string | null>(null);
   const [original, setOriginal] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
@@ -144,7 +147,7 @@ export const DesignMdModal = ({
   useEffect(() => {
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const result = await api.getDesignMd(projectId);
 
@@ -152,11 +155,11 @@ export const DesignMdModal = ({
           setContent(result.content);
           setOriginal(result.content);
         }
-      } catch (failure) {
+      } catch (err) {
         if (live) {
           setContent("");
           setError(
-            `Could not load DESIGN.md. ${errorText(failure)} Close this window and open it again.`
+            `Could not load DESIGN.md. ${errorText(err)} Close this window and open it again.`
           );
         }
       }
@@ -164,7 +167,7 @@ export const DesignMdModal = ({
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId]);
@@ -173,7 +176,7 @@ export const DesignMdModal = ({
   const state = useRef({ asking, dirty });
   state.current = { asking, dirty };
 
-  const requestClose = () => {
+  const requestClose = (): false | undefined => {
     if (state.current.asking) {
       setAsking(false);
 
@@ -204,7 +207,7 @@ export const DesignMdModal = ({
     }
   }, [loaded]);
 
-  const save = () => {
+  const save = (): void => {
     if (content === null) {
       return;
     }
@@ -214,9 +217,9 @@ export const DesignMdModal = ({
       try {
         await api.putDesignMd(projectId, content);
         onClose();
-      } catch (failure) {
+      } catch (err) {
         setAsking(false);
-        setError(`Could not save DESIGN.md. ${errorText(failure)} Try again.`);
+        setError(`Could not save DESIGN.md. ${errorText(err)} Try again.`);
       }
     });
   };
@@ -231,10 +234,10 @@ export const DesignMdModal = ({
       <div className="modal-head">
         <div className="titles">
           <h2>
-            DESIGN.md
-            {dirty && <span className="dmd-dirty">Unsaved</span>}
+            {COPY.labelDesignMd}
+            {dirty && <span className="dmd-dirty">{COPY.textUnsaved}</span>}
           </h2>
-          <p>The agent reads this file on every run.</p>
+          <p>{COPY.textTheAgentReadsThis}</p>
         </div>
         <button
           className="icon-btn"
@@ -252,20 +255,20 @@ export const DesignMdModal = ({
           }
         />
         <div className="dmd-pane">
-          <p className="dmd-pane-label">Markdown</p>
+          <p className="dmd-pane-label">{COPY.textMarkdown}</p>
           <textarea
             ref={editor}
             className="mono design-md"
             aria-label={COPY.labelDesignMdContent}
             value={content ?? ""}
             disabled={content === null}
-            onChange={(e) => {
-              setContent(e.target.value);
+            onChange={(event) => {
+              setContent(event.target.value);
               setAsking(false);
             }}
-            onKeyDown={(e) => {
-              if (e.key === "s" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
+            onKeyDown={(evt) => {
+              if (evt.key === "s" && (evt.metaKey || evt.ctrlKey)) {
+                evt.preventDefault();
                 void save();
               }
             }}
@@ -276,7 +279,7 @@ export const DesignMdModal = ({
           />
         </div>
         <div className="dmd-pane">
-          <p className="dmd-pane-label">Preview</p>
+          <p className="dmd-pane-label">{COPY.labelPreview}</p>
           <div
             ref={preview}
             className="dmd-preview"
@@ -286,7 +289,7 @@ export const DesignMdModal = ({
             {shown.trim() ? (
               <Markdown>{shown.replaceAll(/<!--[\s\S]*?-->/gu, "")}</Markdown>
             ) : (
-              <p className="dmd-outline-empty">Nothing to show yet.</p>
+              <p className="dmd-outline-empty">{COPY.textNothingToShowYet}</p>
             )}
           </div>
         </div>
@@ -307,10 +310,10 @@ export const DesignMdModal = ({
         <div className="modal-foot">
           <span className="hint">
             <kbd>{MOD_LABEL === "⌘" ? "⌘" : "Ctrl"}</kbd>
-            <kbd>S</kbd> to save
+            <kbd>{COPY.textS}</kbd> {COPY.textToSave}
           </span>
           <button className="btn ghost" onClick={() => requestClose()}>
-            Cancel
+            {COPY.textCancel}
           </button>
           <button
             className="btn primary"
@@ -324,3 +327,5 @@ export const DesignMdModal = ({
     </dialog>
   );
 };
+
+export { DesignMdModal };

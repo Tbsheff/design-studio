@@ -11,7 +11,7 @@ import type { TokenMode } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 
-export interface DesignTokens {
+interface DesignTokens {
   entries: CompiledTokenEntry[];
   mode: TokenMode;
   file: TokenFile | null;
@@ -28,19 +28,23 @@ const touchesDesignSystem = (
     return 0;
   }
 
-  return change.paths.some(
-    (file) => file.startsWith("design-system/") || file === sourceFile
-  )
-    ? change.receivedAt
-    : 0;
+  if (
+    change.paths.some(
+      (file) => file.startsWith("design-system/") || file === sourceFile
+    )
+  ) {
+    return change.receivedAt;
+  }
+
+  return 0;
 };
 
-export interface DesignSystemView {
+interface DesignSystemView {
   tokens: DesignTokens | null;
   state: DesignSystemState | null;
 }
 
-export const useDesignSystemState = (
+const useDesignSystemState = (
   projectId: string,
   project: Project | null,
   directionId: string | null,
@@ -54,8 +58,8 @@ export const useDesignSystemState = (
   const packId = project?.packId ?? null;
 
   const headVersionId =
-    project?.directions.find((x) => x.id === directionId)?.headVersionId ??
-    null;
+    project?.directions.find((direction) => direction.id === directionId)
+      ?.headVersionId ?? null;
 
   const key = `${projectId}:${directionId}`;
 
@@ -109,10 +113,14 @@ export const useDesignSystemState = (
 
     const { entries } = state;
     const file = state.tokens;
-    const mode = state.manifest?.mode === "dark" ? "dark" : "light";
+    const mode = (state.manifest?.mode === "dark" && "dark") || "light";
     const source = state.source ?? null;
     const tokens: DesignTokens = { entries, file, mode, replace, source };
 
     return { state, tokens };
   }, [loaded, key, replace]);
 };
+
+export { useDesignSystemState };
+
+export type { DesignTokens, DesignSystemView };

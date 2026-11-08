@@ -425,11 +425,11 @@ export const CommentComposer = (props: ComposerProps) => {
     .filter((image) => image.id !== null)
     .map((image) => image.id as string);
 
-  const closeTimer = useRef<number | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
       if (closeTimer.current !== null) {
-        window.clearTimeout(closeTimer.current);
+        globalThis.clearTimeout(closeTimer.current);
       }
     },
     []
@@ -440,7 +440,7 @@ export const CommentComposer = (props: ComposerProps) => {
       return;
     }
     setClosing(true);
-    closeTimer.current = window.setTimeout(finish, CLOSE_MS);
+    closeTimer.current = globalThis.setTimeout(finish, CLOSE_MS);
   };
 
   const submit = (now: boolean) => {
@@ -465,12 +465,12 @@ export const CommentComposer = (props: ComposerProps) => {
   };
 
   const removeLast = (): boolean => {
-    const lastImage = images.images[images.images.length - 1];
+    const lastImage = images.images.at(-1);
     if (lastImage) {
       images.remove(lastImage.key);
       return true;
     }
-    const lastMention = mentions.mentions[mentions.mentions.length - 1];
+    const lastMention = mentions.mentions.at(-1);
     if (lastMention) {
       mentions.remove(mentionKey(lastMention));
       return true;

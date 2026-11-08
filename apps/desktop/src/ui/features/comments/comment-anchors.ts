@@ -7,18 +7,21 @@ import type {
 } from "./deps.js";
 import type { CommentPatch } from "./use-comments.js";
 
+const LINE_GROUP = 2;
+const COL_GROUP = 3;
+
 interface ReportReview {
   patch: CommentPatch | null;
   missing: boolean;
 }
 
-export interface ReviewState {
+interface ReviewState {
   orphans: OrphanTracker;
   retargeted: Map<string, string>;
   now: number;
 }
 
-export interface ActiveFrame {
+interface ActiveFrame {
   id: string;
   path: string;
   ids: string[];
@@ -30,12 +33,12 @@ const onPage = (
 ): boolean => {
   const { frame } = comment;
 
-  return matchesFrame(frame ? { frame: { path: frame.path } } : {}, "", {
+  return matchesFrame((frame && { frame: { path: frame.path } }) || {}, "", {
     path,
   });
 };
 
-export const onActiveFrame = (
+const onActiveFrame = (
   comment: Pick<DesignComment, "frame" | "drawing">,
   active: ActiveFrame
 ): boolean => {
@@ -48,7 +51,7 @@ export const onActiveFrame = (
   return onPage(comment, active.path);
 };
 
-export const pageShown = (
+const pageShown = (
   comment: Pick<DesignComment, "frame" | "drawing">,
   paths: readonly string[] | null
 ): boolean => {
@@ -59,9 +62,7 @@ export const pageShown = (
   return paths.some((path) => onPage(comment, path));
 };
 
-export const commentPageName = (
-  comment: Pick<DesignComment, "frame">
-): string => {
+const commentPageName = (comment: Pick<DesignComment, "frame">): string => {
   const path = (comment.frame?.path ?? "").replace(/^\/+/u, "");
 
   if (path === "" || /\.html?$/iu.test(path)) {
@@ -71,9 +72,7 @@ export const commentPageName = (
   return `/${path}`;
 };
 
-export const parseLoc = (
-  value: string | null | undefined
-): SourceLoc | null => {
+const parseLoc = (value: string | null | undefined): SourceLoc | null => {
   if (!value) {
     return null;
   }
@@ -84,7 +83,11 @@ export const parseLoc = (
     return null;
   }
 
-  return { col: Number(match[3]), file: match[1], line: Number(match[2]) };
+  return {
+    col: Number(match[COL_GROUP]),
+    file: match[1],
+    line: Number(match[LINE_GROUP]),
+  };
 };
 
 const movedTarget = (
@@ -136,7 +139,7 @@ const retargetPatch = (
   return { target: movedTarget(comment, report) };
 };
 
-export const reviewReport = (
+const reviewReport = (
   comment: DesignComment,
   report: AnchorReport,
   state: ReviewState
@@ -162,3 +165,7 @@ export const reviewReport = (
 
   return { missing: false, patch: { status: "orphaned" } };
 };
+
+export { onActiveFrame, pageShown, commentPageName, parseLoc, reviewReport };
+
+export type { ReviewState, ActiveFrame };

@@ -1,5 +1,6 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon, usePopover } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 
 import { Swatches } from "../inspector/swatches.js";
@@ -22,12 +23,12 @@ interface Props {
   onNew?: () => void;
 }
 
-const TriggerLabel = ({ pack }: { pack: PackSummary | null }) => {
+const TriggerLabel = ({ pack }: { pack: PackSummary | null }): ReactElement => {
   if (!pack) {
     return (
       <>
         <Icon name="palette" size={14} />
-        <span className="pack-trigger-text">Style</span>
+        <span className="pack-trigger-text">{COPY.textStyle}</span>
       </>
     );
   }
@@ -40,7 +41,7 @@ const TriggerLabel = ({ pack }: { pack: PackSummary | null }) => {
   );
 };
 
-export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
+const PackPicker = ({ state, value, onChange, onNew }: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -56,7 +57,7 @@ export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
 
   usePopover(open, root, close);
 
-  const choose = (pack: PackSummary | null) => {
+  const choose = (pack: PackSummary | null): void => {
     onChange(pack?.id ?? null);
     close(true);
   };
@@ -66,12 +67,12 @@ export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
       <button
         ref={trigger}
         type="button"
-        className={`btn ghost small pack-trigger ${selected ? "chosen" : ""}`}
+        className={`btn ghost small pack-trigger ${(selected && "chosen") || ""}`}
         aria-label={COPY.labelDesignSystem}
         aria-haspopup="listbox"
         aria-expanded={open}
         data-tip={
-          selected ? `Design system: ${selected.name}` : "Design system"
+          (selected && `Design system: ${selected.name}`) || "Design system"
         }
         onPointerEnter={() => void loadList()}
         onFocus={() => void loadList()}
@@ -83,15 +84,13 @@ export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
       {open && (
         <div className="pack-popover" role="presentation">
           <div className="pack-popover-head">
-            <strong>Design system</strong>
-            <span>
-              Tokens, fonts and a DESIGN.md go into the project. The agent
-              builds with them.
-            </span>
+            <strong>{COPY.labelDesignSystem}</strong>
+            <span>{COPY.textTokensFontsAndA2}</span>
           </div>
           {state.error && (
             <div className="alert error small">
-              Could not load design systems. {state.error}
+              {COPY.textCouldNotLoadDesign}
+              {state.error}
             </div>
           )}
           <Suspense fallback={null}>
@@ -111,7 +110,7 @@ export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
                 onClick={onNew}
               >
                 <Icon name="plus" size={14} />
-                New design system…
+                {COPY.textNewDesignSystem2}
               </button>
             </div>
           )}
@@ -120,3 +119,5 @@ export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
     </div>
   );
 };
+
+export { PackPicker };

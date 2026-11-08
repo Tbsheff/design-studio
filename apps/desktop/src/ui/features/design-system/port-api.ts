@@ -11,20 +11,20 @@ import { json } from "../../api.js";
 import { call } from "../../platform/http.js";
 import type { RouteOutput } from "../../platform/http.js";
 
-export interface PortOpenDetail {
+interface PortOpenDetail {
   frameId: string | null;
   directionId: string | null;
 }
 
 let available = false;
 
-export const setPortAvailable = (on: boolean): void => {
+const setPortAvailable = (on: boolean): void => {
   available = on;
 };
 
-export const portAvailable = (): boolean => available;
+const portAvailable = (): boolean => available;
 
-export const openPortDialog = (detail: PortOpenDetail): void => {
+const openPortDialog = (detail: PortOpenDetail): void => {
   globalThis.dispatchEvent(
     new CustomEvent<PortOpenDetail>(PORT_OPEN_EVENT, { detail })
   );
@@ -91,9 +91,13 @@ const readFlowPlan = async (input: PlanRequest): Promise<PortFlowPlan> => {
   return plan;
 };
 
-export const portApi = {
+const portApi = {
   flowPlan: readFlowPlan,
   plan: readPagePlan,
-  start: (input: PortStartRequest) =>
+  start: (input: PortStartRequest): Promise<PortStartResult> =>
     json<PortStartResult>("POST", "/api/port/start", input),
 };
+
+export { setPortAvailable, portAvailable, openPortDialog, portApi };
+
+export type { PortOpenDetail };

@@ -1,5 +1,5 @@
+import type { KeyboardEvent, ReactElement, ReactNode } from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
 
 import { AvatarFace, CommentAuthor } from "./comment-avatar.js";
 import type { Breadcrumb, CardSide } from "./comment-placement.js";
@@ -10,13 +10,13 @@ import type { DesignComment, SelectionContext } from "./deps.js";
 
 type Rect = SelectionContext["rect"];
 
-export const MOD_LABEL =
-  typeof navigator !== "undefined" &&
-  /Mac|iPhone|iPad/u.test(navigator.platform)
-    ? "⌘"
-    : "Ctrl+";
+const MOD_LABEL =
+  (typeof navigator !== "undefined" &&
+    /Mac|iPhone|iPad/u.test(navigator.platform) &&
+    "⌘") ||
+  "Ctrl+";
 
-export const STATUS_LABEL: Record<DesignComment["status"], string> = {
+const STATUS_LABEL: Record<DesignComment["status"], string> = {
   draft: "Draft",
   orphaned: "Element not found",
   queued: "Queued",
@@ -53,10 +53,7 @@ const focusables = (root: HTMLElement | null): HTMLElement[] => {
   );
 };
 
-export const trapTab = (
-  event: KeyboardEvent,
-  root: HTMLElement | null
-): void => {
+const trapTab = (event: KeyboardEvent, root: HTMLElement | null): void => {
   if (event.key !== "Tab") {
     return;
   }
@@ -78,13 +75,13 @@ export const trapTab = (
   }
 };
 
-export const CommentReplies = ({
+const CommentReplies = ({
   comment,
   onDelete,
 }: {
   comment: DesignComment;
   onDelete: (replyId: string) => void;
-}) => {
+}): ReactElement | null => {
   const initial = useProfileInitial();
   const replies = comment.replies ?? [];
 
@@ -133,7 +130,7 @@ const GrowingArea = (props: {
   onChange: (value: string) => void;
   onEnter: () => void;
   className?: string;
-}) => (
+}): ReactElement => (
   <textarea
     className={`comment-area ${props.className ?? ""}`}
     rows={1}
@@ -164,11 +161,11 @@ const ReplyBox = ({
 }: {
   comment: DesignComment;
   onReply: (text: string) => Promise<boolean>;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
   const [busy, startTransition] = useTransition();
 
-  const send = () => {
+  const send = (): void => {
     if (busy || text.trim() === "") {
       return;
     }
@@ -195,7 +192,7 @@ const ReplyBox = ({
   );
 };
 
-export const OpenCommentPopover = (props: OpenProps) => {
+const OpenCommentPopover = (props: OpenProps): ReactElement => {
   const { comment } = props;
   const [text, setText] = useState(comment.text);
   const root = useRef<HTMLDivElement>(null);
@@ -213,7 +210,7 @@ export const OpenCommentPopover = (props: OpenProps) => {
     target?.focus({ preventScroll: true });
   }, [comment.id]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
@@ -287,7 +284,10 @@ export const OpenCommentPopover = (props: OpenProps) => {
         onPointerDown={(event) => event.stopPropagation()}
       >
         <div className="thread-head">
-          <span className="thread-num">#{comment.n}</span>
+          <span className="thread-num">
+            {copy.textGlyph2}
+            {comment.n}
+          </span>
           <CommentAuthor
             author={comment.author}
             viewer={comment.from === "viewer"}
@@ -366,16 +366,19 @@ export const OpenCommentPopover = (props: OpenProps) => {
         <ReplyBox comment={comment} onReply={props.onReply} />
         {editable && (
           <div className="comment-card-foot">
-            {changed ? (
+            {changed && (
               <button
                 type="button"
                 className="thread-text-btn"
                 onClick={() => props.onSave(text.trim())}
               >
-                Save
+                {copy.textSave}
               </button>
-            ) : (
-              <span className="comment-card-note">Saved on the canvas</span>
+            )}
+            {!changed && (
+              <span className="comment-card-note">
+                {copy.textSavedOnTheCanvas}
+              </span>
             )}
             <span className="spacer" />
             <button
@@ -385,7 +388,7 @@ export const OpenCommentPopover = (props: OpenProps) => {
               onClick={props.onSend}
             >
               <Icon name="arrowUp" size={13} />
-              Send to Claude
+              {copy.textSendToClaude}
             </button>
           </div>
         )}
@@ -393,3 +396,5 @@ export const OpenCommentPopover = (props: OpenProps) => {
     </>
   );
 };
+
+export { MOD_LABEL, STATUS_LABEL, trapTab, CommentReplies, OpenCommentPopover };

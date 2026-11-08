@@ -1,7 +1,7 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { KeyboardEvent, ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
 
 import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
@@ -46,16 +46,14 @@ const nextIndex = (
   return Math.min(count - 1, Math.max(0, target));
 };
 
-const NoneCard = () => (
+const NoneCard = (): ReactElement => (
   <>
     <span className="pack-specimen none" aria-hidden="true">
       <Icon name="close" size={14} />
     </span>
     <span className="pack-text">
-      <span className="pack-name">No design system</span>
-      <span className="pack-desc">
-        The agent picks colors and type for each project.
-      </span>
+      <span className="pack-name">{COPY.textNoDesignSystem}</span>
+      <span className="pack-desc">{COPY.textTheAgentPicksColors}</span>
     </span>
   </>
 );
@@ -63,11 +61,13 @@ const NoneCard = () => (
 const swatchValue = (pack: PackSummary, name: string): string | undefined =>
   pack.swatches.find((swatch) => swatch.name === name)?.value;
 
-const PackCard = ({ pack }: { pack: PackSummary }) => {
+const PackCard = ({ pack }: { pack: PackSummary }): ReactElement => {
   const colors = {
     background: swatchValue(pack, "bg"),
     color: swatchValue(pack, "fg"),
   };
+
+  const truncateNode = <span className="truncate">{pack.name}</span>;
 
   return (
     <>
@@ -76,19 +76,21 @@ const PackCard = ({ pack }: { pack: PackSummary }) => {
           className="pack-aa"
           style={{ fontFamily: fontStack(pack.fonts.display, SERIF) }}
         >
-          Aa
+          {COPY.textAa}
         </span>
         <span
           className="pack-line"
           style={{ fontFamily: fontStack(pack.fonts.body, SANS) }}
         >
-          Quick brown fox
+          {COPY.textQuickBrownFox}
         </span>
       </span>
       <span className="pack-text" data-tip={pack.description}>
         <span className="pack-name">
-          <span className="truncate">{pack.name}</span>
-          {pack.source === "user" && <span className="pack-yours">Yours</span>}
+          {truncateNode}
+          {pack.source === "user" && (
+            <span className="pack-yours">{COPY.titleYours}</span>
+          )}
         </span>
         <span className="pack-desc">{pack.description}</span>
         <Swatches swatches={pack.swatches} max={7} />
@@ -105,13 +107,13 @@ interface ListProps {
   onTab?: () => void;
 }
 
-export const PackList = ({
+const PackList = ({
   packs,
   value,
   includeNone,
   onChoose,
   onTab,
-}: ListProps) => {
+}: ListProps): ReactElement => {
   const options: (PackSummary | null)[] = includeNone
     ? [null, ...(packs ?? [])]
     : (packs ?? []);
@@ -147,9 +149,9 @@ export const PackList = ({
     cards.current[active]?.focus({ preventScroll: false });
   }, [active, ready]);
 
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
+  const onKey = (event: KeyboardEvent): void => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
 
       if (options.length > 0) {
         onChoose(options[active] ?? null);
@@ -158,12 +160,12 @@ export const PackList = ({
       return;
     }
 
-    if (e.key === "Tab") {
+    if (event.key === "Tab") {
       return onTab?.();
     }
 
     const next = nextIndex(
-      e.key,
+      event.key,
       active,
       options.length,
       columnsOf(list.current)
@@ -173,7 +175,7 @@ export const PackList = ({
       return;
     }
 
-    e.preventDefault();
+    event.preventDefault();
     setActive(next);
   };
 
@@ -202,7 +204,8 @@ export const PackList = ({
             onClick={() => onChoose(pack)}
             onMouseMove={() => index !== active && setActive(index)}
           >
-            {pack ? <PackCard pack={pack} /> : <NoneCard />}
+            {pack && <PackCard pack={pack} />}
+            {!pack && <NoneCard />}
             {isSelected && (
               <span className="pack-check" aria-hidden="true">
                 <Icon name="check" size={12} />
@@ -217,3 +220,5 @@ export const PackList = ({
     </div>
   );
 };
+
+export { PackList };

@@ -1,7 +1,8 @@
+import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { componentPreviewPath } from "../../../shared/component-preview.js";
-import { Icon } from "@design-studio/ui";
 import { getRaw, readBlob } from "../../platform/http.js";
 
 type Shown =
@@ -36,16 +37,16 @@ const contentBox = (
   let top = height;
   let bottom = -1;
 
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      if (!differs(data, (y * width + x) * 4)) {
+  for (let posY = 0; posY < height; posY += 1) {
+    for (let posX = 0; posX < width; posX += 1) {
+      if (!differs(data, (posY * width + posX) * 4)) {
         continue;
       }
 
-      left = Math.min(left, x);
-      right = Math.max(right, x);
-      top = Math.min(top, y);
-      bottom = Math.max(bottom, y);
+      left = Math.min(left, posX);
+      right = Math.max(right, posX);
+      top = Math.min(top, posY);
+      bottom = Math.max(bottom, posY);
     }
   }
 
@@ -53,14 +54,14 @@ const contentBox = (
     return null;
   }
 
-  const x = Math.max(0, left - TRIM_PAD);
-  const y = Math.max(0, top - TRIM_PAD);
+  const leftNext = Math.max(0, left - TRIM_PAD);
+  const topNext = Math.max(0, top - TRIM_PAD);
 
   return {
-    h: Math.min(height, bottom + TRIM_PAD + 1) - y,
-    w: Math.min(width, right + TRIM_PAD + 1) - x,
-    x,
-    y,
+    h: Math.min(height, bottom + TRIM_PAD + 1) - topNext,
+    w: Math.min(width, right + TRIM_PAD + 1) - leftNext,
+    x: leftNext,
+    y: topNext,
   };
 };
 
@@ -97,9 +98,7 @@ const trimmed = async (blob: Blob): Promise<Blob> => {
   return new Promise((resolve) => out.toBlob((next) => resolve(next ?? blob)));
 };
 
-export const trimmedUrl = async (
-  url: string | null
-): Promise<string | null> => {
+const trimmedUrl = async (url: string | null): Promise<string | null> => {
   if (!url) {
     return url;
   }
@@ -172,7 +171,7 @@ const useVisible = (
 
     observer.observe(node);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [ref, active, visible]);
 
   return visible;
@@ -186,8 +185,13 @@ interface PreviewLoad {
   readonly setShown: (update: (prev: Shown) => Shown) => void;
 }
 
-const keepReady = (prev: Shown, next: Shown): Shown =>
-  next.state === "none" && prev.state === "ready" ? prev : next;
+const keepReady = (prev: Shown, next: Shown): Shown => {
+  if (next.state === "none" && prev.state === "ready") {
+    return prev;
+  }
+
+  return next;
+};
 
 const showPreview = async (load: PreviewLoad): Promise<void> => {
   const { controller } = load;
@@ -219,7 +223,7 @@ const showPreview = async (load: PreviewLoad): Promise<void> => {
   }
 };
 
-export const ComponentPreviewThumb = ({
+const ComponentPreviewThumb = ({
   projectId,
   directionId,
   id,
@@ -233,7 +237,7 @@ export const ComponentPreviewThumb = ({
   version: string;
   active: boolean;
   className?: string;
-}) => {
+}): ReactElement => {
   const ref = useRef<HTMLSpanElement>(null);
   const visible = useVisible(ref, active);
   const [shown, setShown] = useState<Shown>({ state: "idle" });
@@ -246,11 +250,11 @@ export const ComponentPreviewThumb = ({
     setShown((prev) => (prev.state === "ready" ? prev : { state: "loading" }));
     void showPreview({ controller, directionId, id, projectId, setShown });
 
-    return () => controller.abort();
+    return (): void => controller.abort();
   }, [projectId, directionId, id, version, visible]);
   const src = shown.state === "ready" ? shown.src : null;
   useEffect(
-    () => () => {
+    () => (): void => {
       if (src) {
         URL.revokeObjectURL(src);
       }
@@ -275,3 +279,5 @@ export const ComponentPreviewThumb = ({
     </span>
   );
 };
+
+export { trimmedUrl, ComponentPreviewThumb };

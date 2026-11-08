@@ -4,7 +4,8 @@ import type {
   PackSummary,
 } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
-import { useEffect, useState, useTransition } from "react";
+import type { ReactElement } from "react";
+import { useEffect, useState, useTransition, useCallback } from "react";
 
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
@@ -13,7 +14,7 @@ import { COPY } from "./copy.js";
 import { PackBadges } from "./pack-badges.js";
 import { PackPreview } from "./pack-preview.js";
 
-export interface PackDetailActions {
+interface PackDetailActions {
   onRename: (pack: PackSummary) => void;
   onDuplicate: (pack: PackSummary) => Promise<void>;
   onDelete: (pack: PackSummary) => void;
@@ -34,7 +35,7 @@ const useLoad = <T,>(load: () => Promise<T>, key: string): Load<T> => {
     let live = true;
     setState({ error: null, value: null });
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const value = await load();
 
@@ -50,7 +51,7 @@ const useLoad = <T,>(load: () => Promise<T>, key: string): Load<T> => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [key]);
@@ -58,11 +59,16 @@ const useLoad = <T,>(load: () => Promise<T>, key: string): Load<T> => {
   return state;
 };
 
-const CheckResult = ({ check }: { check: Load<DesignSystemCheckResult> }) => {
+const CheckResult = ({
+  check,
+}: {
+  check: Load<DesignSystemCheckResult>;
+}): ReactElement => {
   if (check.error) {
     return (
       <div className="alert error small">
-        Could not run the check. {check.error}
+        {COPY.textCouldNotRunThe}
+        {check.error}
       </div>
     );
   }
@@ -70,7 +76,7 @@ const CheckResult = ({ check }: { check: Load<DesignSystemCheckResult> }) => {
   if (!check.value) {
     return (
       <div className="lib-check" role="status">
-        <span className="spinner" /> Checking…
+        <span className="spinner" /> {COPY.textChecking}
       </div>
     );
   }
@@ -79,7 +85,7 @@ const CheckResult = ({ check }: { check: Load<DesignSystemCheckResult> }) => {
     return (
       <div className="lib-check ok" role="status">
         <Icon name="check" size={14} />
-        Check passed: tokens, AA contrast, DESIGN.md sections and fonts.
+        {COPY.textCheckPassedTokensAa}
       </div>
     );
   }
@@ -97,7 +103,8 @@ const CheckResult = ({ check }: { check: Load<DesignSystemCheckResult> }) => {
   return (
     <div className="lib-check fail" role="status">
       <strong>
-        {problems.length} {problems.length === 1 ? "problem" : "problems"}
+        {problems.length} {problems.length === 1 && "problem"}
+        {problems.length !== 1 && "problems"}
       </strong>
       <ul>
         {[...byRule].map(([rule, messages]) => (
@@ -125,9 +132,49 @@ const ActionBar = ({
   actions: PackDetailActions;
   busy: boolean;
   run: (task: () => Promise<void>) => void;
-}) => {
+}): ReactElement => {
   const user = pack.source === "user";
   const usable = !pack.draft;
+
+  const handleRun = useCallback(
+    () => run(() => actions.onApply!(pack)),
+    [actions.onApply, pack, run]
+  );
+
+  const handleOnUseInNew = useCallback(
+    () => actions.onUseInNew(pack),
+    [actions, pack]
+  );
+
+  const handleRun2 = useCallback(
+    () => run(() => actions.onOpenEditor(pack)),
+    [actions, pack, run]
+  );
+
+  const handleRun3 = useCallback(
+    () => run(() => actions.onDuplicate(pack)),
+    [actions, pack, run]
+  );
+
+  const handleRun4 = useCallback(
+    () => run(() => actions.onDuplicate(pack)),
+    [actions, pack, run]
+  );
+
+  const handleOnRename = useCallback(
+    () => actions.onRename(pack),
+    [actions, pack]
+  );
+
+  const handleRun5 = useCallback(
+    () => run(() => actions.onExport(pack)),
+    [actions, pack, run]
+  );
+
+  const handleOnDelete = useCallback(
+    () => actions.onDelete(pack),
+    [actions, pack]
+  );
 
   return (
     <div className="lib-actions" aria-label={COPY.labelActions} role="group">
@@ -136,38 +183,19 @@ const ActionBar = ({
           type="button"
           className="btn primary small"
           disabled={busy}
-          onClick={() => run(() => actions.onApply!(pack))}
+          onClick={handleRun}
         >
-          Apply to current project
+          {COPY.textApplyToCurrentProject}
         </button>
       )}
       {usable && (
         <button
           type="button"
-          className={`btn small ${actions.onApply ? "" : "primary"}`}
+          className={`btn small ${(!actions.onApply && "primary") || ""}`}
           disabled={busy}
-          onClick={() => actions.onUseInNew(pack)}
+          onClick={handleOnUseInNew}
         >
-          Use in new project
-        </button>
-      )}
-      {user ? (
-        <button
-          type="button"
-          className="btn small"
-          disabled={busy}
-          onClick={() => run(() => actions.onOpenEditor(pack))}
-        >
-          Open in editor
-        </button>
-      ) : (
-        <button
-          type="button"
-          className="btn small"
-          disabled={busy}
-          onClick={() => run(() => actions.onDuplicate(pack))}
-        >
-          Make a copy to edit
+          {COPY.textUseInNewProject}
         </button>
       )}
       {user && (
@@ -175,9 +203,19 @@ const ActionBar = ({
           type="button"
           className="btn small"
           disabled={busy}
-          onClick={() => run(() => actions.onDuplicate(pack))}
+          onClick={handleRun2}
         >
-          Duplicate
+          {COPY.textOpenInEditor}
+        </button>
+      )}
+      {!user && (
+        <button
+          type="button"
+          className="btn small"
+          disabled={busy}
+          onClick={handleRun3}
+        >
+          {COPY.textMakeACopyTo}
         </button>
       )}
       {user && (
@@ -185,35 +223,45 @@ const ActionBar = ({
           type="button"
           className="btn small"
           disabled={busy}
-          onClick={() => actions.onRename(pack)}
+          onClick={handleRun4}
         >
-          Rename
+          {COPY.textDuplicate}
+        </button>
+      )}
+      {user && (
+        <button
+          type="button"
+          className="btn small"
+          disabled={busy}
+          onClick={handleOnRename}
+        >
+          {COPY.textRename}
         </button>
       )}
       <button
         type="button"
         className="btn small has-icon"
         disabled={busy}
-        onClick={() => run(() => actions.onExport(pack))}
+        onClick={handleRun5}
       >
         <Icon name="download" size={14} />
-        Export
+        {COPY.textExport}
       </button>
       {user && (
         <button
           type="button"
           className="btn ghost danger small"
           disabled={busy}
-          onClick={() => actions.onDelete(pack)}
+          onClick={handleOnDelete}
         >
-          Delete
+          {COPY.textDelete}
         </button>
       )}
     </div>
   );
 };
 
-export const PackDetailDialog = ({
+const PackDetailDialog = ({
   pack,
   actions,
   onClose,
@@ -221,7 +269,7 @@ export const PackDetailDialog = ({
   pack: PackSummary;
   actions: PackDetailActions;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const detail = useLoad<PackDetail>(
     () => packApi.getPack(pack.id),
     `${pack.id}:${pack.name}`
@@ -236,7 +284,7 @@ export const PackDetailDialog = ({
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));
 
-  const run = (task: () => Promise<void>) => {
+  const run = (task: () => Promise<void>): void => {
     if (busy) {
       return;
     }
@@ -245,8 +293,8 @@ export const PackDetailDialog = ({
     startTransition(async () => {
       try {
         await task();
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };
@@ -284,24 +332,26 @@ export const PackDetailDialog = ({
       </div>
       <div className="modal-body lib-detail-body" aria-busy={busy}>
         <section className="lib-detail-section" aria-label={COPY.labelPreview}>
-          <h3>Preview</h3>
+          <h3>{COPY.labelPreview}</h3>
           {detail.error && (
             <div className="alert error small">
-              Could not load the tokens. {detail.error}
+              {COPY.textCouldNotLoadThe}
+              {detail.error}
             </div>
           )}
-          {detail.value ? (
+          {detail.value && (
             <PackPreview pack={pack} entries={detail.value.entries} />
-          ) : (
-            !detail.error && <div className="pv-skeleton" aria-hidden="true" />
+          )}
+          {!detail.value && !detail.error && (
+            <div className="pv-skeleton" aria-hidden="true" />
           )}
         </section>
         <section className="lib-detail-section" aria-label={COPY.labelCheck}>
-          <h3>Check</h3>
+          <h3>{COPY.labelCheck}</h3>
           <CheckResult check={check} />
         </section>
         <section className="lib-detail-section" aria-label={COPY.labelDesignMd}>
-          <h3>DESIGN.md</h3>
+          <h3>{COPY.labelDesignMd}</h3>
           {detail.value && (
             <Markdown className="lib-doc">{detail.value.designMd}</Markdown>
           )}
@@ -310,3 +360,7 @@ export const PackDetailDialog = ({
     </dialog>
   );
 };
+
+export { PackDetailDialog };
+
+export type { PackDetailActions };

@@ -1,16 +1,15 @@
 import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
 import { findElement, isTypingTarget, matchesKey } from "./deps.js";
 import type { KeyId, PanelTab } from "./deps.js";
 import { IS_MAC } from "./key-model.js";
-import {
-  listenForCommands,
-  runCommand,
-  useCommands,
-  type Command,
-} from "./registry.js";
+import { listenForCommands, runCommand, useCommands } from "./registry.js";
+import type { Command } from "./registry.js";
 
-export interface StudioActions {
+const PROMPT_REGION = 3;
+
+interface StudioActions {
   running: boolean;
   directions: { id: string; name: string }[];
   directionId: string | null;
@@ -32,14 +31,14 @@ export interface StudioActions {
 }
 
 const PANELS: { tab: PanelTab; title: string; icon: Command["icon"] }[] = [
-  { tab: "chat", title: "Show Chat", icon: "chat" },
-  { tab: "design", title: "Edit mode: inspector and layers", icon: "pointer" },
-  { tab: "comments", title: "Show Comments", icon: "comment" },
-  { tab: "versions", title: "Show Versions", icon: "history" },
-  { tab: "tokens", title: "Show Tokens", icon: "token" },
-  { tab: "components", title: "Show Components", icon: "component" },
-  { tab: "tweaks", title: "Show Tweaks", icon: "sliders" },
-  { tab: "system", title: "Show Design system", icon: "palette" },
+  { icon: "chat", tab: "chat", title: "Show Chat" },
+  { icon: "pointer", tab: "design", title: "Edit mode: inspector and layers" },
+  { icon: "comment", tab: "comments", title: "Show Comments" },
+  { icon: "history", tab: "versions", title: "Show Versions" },
+  { icon: "token", tab: "tokens", title: "Show Tokens" },
+  { icon: "component", tab: "components", title: "Show Components" },
+  { icon: "sliders", tab: "tweaks", title: "Show Tweaks" },
+  { icon: "palette", tab: "system", title: "Show Design system" },
 ];
 
 const REGIONS = [
@@ -49,7 +48,7 @@ const REGIONS = [
   '.prompt [data-slot="composer-input"]',
 ];
 
-function regionOf(element: Element | null): number {
+const regionOf = (element: Element | null): number => {
   if (!element) {
     return -1;
   }
@@ -63,7 +62,7 @@ function regionOf(element: Element | null): number {
   }
 
   if (element.closest(".prompt")) {
-    return 3;
+    return PROMPT_REGION;
   }
 
   if (element.closest(".pane-left")) {
@@ -71,14 +70,14 @@ function regionOf(element: Element | null): number {
   }
 
   return -1;
-}
+};
 
-export function moveRegion(step: 1 | -1): void {
+const moveRegion = (step: 1 | -1): void => {
   const from = regionOf(document.activeElement);
 
-  for (let i = 1; i <= REGIONS.length; i += 1) {
+  for (let idx = 1; idx <= REGIONS.length; idx += 1) {
     const index =
-      ((((from < 0 ? (step === 1 ? -1 : 0) : from) + step * i) %
+      ((((from < 0 ? (step === 1 ? -1 : 0) : from) + step * idx) %
         REGIONS.length) +
         REGIONS.length) %
       REGIONS.length;
@@ -93,189 +92,201 @@ export function moveRegion(step: 1 | -1): void {
 
     return;
   }
-}
+};
 
-function stepDirection(a: StudioActions, step: 1 | -1): (() => void) | null {
-  if (a.directions.length < 2) {
+const stepDirection = (
+  studioActions: StudioActions,
+  step: 1 | -1
+): (() => void) | null => {
+  if (studioActions.directions.length < 2) {
     return null;
   }
 
-  const at = a.directions.findIndex((d) => d.id === a.directionId);
+  const at = studioActions.directions.findIndex(
+    (delta) => delta.id === studioActions.directionId
+  );
 
   const next =
-    a.directions[(at + step + a.directions.length) % a.directions.length];
+    studioActions.directions[
+      (at + step + studioActions.directions.length) %
+        studioActions.directions.length
+    ];
 
-  return next ? () => a.onDirection(next.id) : null;
-}
+  if (next) {
+    return () => studioActions.onDirection(next.id);
+  }
 
-function studioCommands(a: StudioActions): Command[] {
-  const next = stepDirection(a, 1);
-  const prev = stepDirection(a, -1);
+  return null;
+};
+
+const studioCommands = (first: StudioActions): Command[] => {
+  const next = stepDirection(first, 1);
+  const prev = stepDirection(first, -1);
 
   const noDirection =
-    a.directions.length < 2 ? "Only one direction" : undefined;
+    first.directions.length < 2 ? "Only one direction" : undefined;
 
   return [
     {
-      id: "go.home",
-      title: "Go to Home",
       group: "Go",
       icon: "folder",
+      id: "go.home",
       keyId: "home",
       keywords: "projects back exit",
-      run: a.onHome,
+      run: first.onHome,
+      title: "Go to Home",
     },
     {
-      id: "project.settings",
-      title: "Project settings",
       group: "Go",
       icon: "settings",
+      id: "project.settings",
       keyId: "settings",
       keywords: "model shell preferences",
-      run: a.onSettings,
+      run: first.onSettings,
+      title: "Project settings",
     },
     {
-      id: "project.design-md",
-      title: "Edit DESIGN.md",
       group: "Go",
       icon: "doc",
+      id: "project.design-md",
       keywords: "design system brief",
-      run: a.onDesignMd,
+      run: first.onDesignMd,
+      title: "Edit DESIGN.md",
     },
     {
-      id: "direction.next",
-      title: "Next direction",
       group: "Go",
       icon: "branch",
+      id: "direction.next",
       keyId: "next-direction",
       run: next ?? (() => undefined),
+      title: "Next direction",
       ...(noDirection ? { disabled: noDirection } : {}),
     },
     {
-      id: "direction.prev",
-      title: "Previous direction",
       group: "Go",
       icon: "branch",
+      id: "direction.prev",
       keyId: "prev-direction",
       run: prev ?? (() => undefined),
+      title: "Previous direction",
       ...(noDirection ? { disabled: noDirection } : {}),
     },
-    ...a.directions
-      .filter((d) => d.id !== a.directionId)
-      .map((d) => ({
-        id: `direction.open.${d.id}`,
-        title: `Open direction ${d.name}`,
+    ...first.directions
+      .filter((diff) => diff.id !== first.directionId)
+      .map((diffNext) => ({
         group: "Go",
         icon: "branch" as const,
+        id: `direction.open.${diffNext.id}`,
         keywords: "switch variation",
-        run: () => a.onDirection(d.id),
+        run: () => first.onDirection(diffNext.id),
+        title: `Open direction ${diffNext.name}`,
       })),
-    ...PANELS.map((p) => ({
-      id: `panel.${p.tab}`,
-      title: p.title,
+    ...PANELS.map((part) => ({
       group: "Panels",
-      icon: p.icon,
+      icon: part.icon,
+      id: `panel.${part.tab}`,
       keywords: "tab side panel pane mode sheet",
-      run: () => a.onPanel(p.tab),
+      run: () => first.onPanel(part.tab),
+      title: part.title,
     })),
     {
-      id: "panel.focus-composer",
-      title: "Ask the agent",
       group: "Run",
       icon: "chat",
+      id: "panel.focus-composer",
       keywords: "composer prompt message chat",
-      run: () => focusComposer(a),
+      run: () => focusComposer(first),
+      title: "Ask the agent",
     },
     {
-      id: "run.stop",
-      title: "Stop the run",
       group: "Run",
       icon: "stop",
+      id: "run.stop",
       keyId: "stop",
       keywords: "cancel interrupt",
-      run: a.onStop,
-      ...(a.running ? {} : { disabled: "No run is going" }),
+      run: first.onStop,
+      title: "Stop the run",
+      ...(first.running ? {} : { disabled: "No run is going" }),
     },
     {
-      id: "run.polish",
-      title: "Polish this design",
       group: "Run",
       icon: "sparkle",
+      id: "run.polish",
       keywords: "improve refine critique",
-      run: a.onPolish,
-      ...(a.running ? { disabled: "A run is going" } : {}),
+      run: first.onPolish,
+      title: "Polish this design",
+      ...(first.running ? { disabled: "A run is going" } : {}),
     },
     {
-      id: "run.states",
-      title: "Make UI states of this page",
       group: "Run",
       icon: "layers",
-      slash: "states",
+      id: "run.states",
       keywords: "empty loading error success validation menu frames",
-      run: () => a.onMakeStates?.(),
-      ...(a.running
+      run: () => first.onMakeStates?.(),
+      slash: "states",
+      title: "Make UI states of this page",
+      ...(first.running
         ? { disabled: "A run is going" }
-        : a.onMakeStates
+        : first.onMakeStates
           ? {}
           : { disabled: "No direction yet" }),
     },
     {
-      id: "edit.undo",
-      title: "Undo",
       group: "Version",
       icon: "undo",
+      id: "edit.undo",
       keyId: "undo",
-      run: a.onUndo,
-      ...(a.canUndo ? {} : { disabled: "Nothing to undo" }),
+      run: first.onUndo,
+      title: "Undo",
+      ...(first.canUndo ? {} : { disabled: "Nothing to undo" }),
     },
     {
-      id: "edit.redo",
-      title: "Redo",
       group: "Version",
       icon: "restore",
+      id: "edit.redo",
       keyId: "redo",
-      run: a.onRedo,
-      ...(a.canRedo ? {} : { disabled: "Nothing to redo" }),
+      run: first.onRedo,
+      title: "Redo",
+      ...(first.canRedo ? {} : { disabled: "Nothing to redo" }),
     },
     {
-      id: "version.export",
-      title: "Export…",
       group: "Version",
       icon: "download",
+      id: "version.export",
       keywords: "share download png pdf html handoff zip source files",
-      run: () => a.exportId && a.onExport(a.exportId),
-      ...(a.exportId ? {} : { disabled: "No version yet" }),
+      run: () => first.exportId && first.onExport(first.exportId),
+      title: "Export…",
+      ...(first.exportId ? {} : { disabled: "No version yet" }),
     },
-    ...(a.onShip
+    ...(first.onShip
       ? [
           {
-            id: "version.ship",
-            title: "Ship as a pull request…",
             group: "Version",
             icon: "branch" as const,
+            id: "version.ship",
             keywords: "share branch git commit push pull request github gh",
-            run: a.onShip,
+            run: first.onShip,
+            title: "Ship as a pull request…",
           },
         ]
       : []),
     {
-      id: "view.next-region",
-      title: "Focus the next region",
       group: "View",
       icon: "sidebar",
+      id: "view.next-region",
       keyId: "focus-next-region",
       keywords: "f6 toolbar canvas inspector chat",
       run: () => moveRegion(1),
+      title: "Focus the next region",
     },
   ];
-}
+};
 
-function focusComposer(a: StudioActions): void {
-  a.onPanel("chat");
-  window.requestAnimationFrame(() =>
+const focusComposer = (leftNext: StudioActions): void => {
+  leftNext.onPanel("chat");
+  globalThis.requestAnimationFrame(() =>
     findElement(document.body, '.prompt [data-slot="composer-input"]')?.focus()
   );
-}
+};
 
 const KEYED: [KeyId, string][] = [
   ["home", "go.home"],
@@ -284,11 +295,11 @@ const KEYED: [KeyId, string][] = [
   ["prev-direction", "direction.prev"],
 ];
 
-function useStudioKeys(): void {
+const useStudioKeys = (): void => {
   useEffect(() => {
     listenForCommands();
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.defaultPrevented || event.repeat) {
         return;
       }
@@ -322,16 +333,20 @@ function useStudioKeys(): void {
       runCommand(hit[1]);
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
-export function useStudioCommands() {
+const useStudioCommands = (): RefObject<StudioActions | null> => {
   const actions = useRef<StudioActions | null>(null);
   useCommands(() => (actions.current ? studioCommands(actions.current) : []));
   useStudioKeys();
 
   return actions;
-}
+};
+
+export { moveRegion, useStudioCommands };
+
+export type { StudioActions };

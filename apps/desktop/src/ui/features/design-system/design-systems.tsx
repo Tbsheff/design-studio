@@ -1,5 +1,6 @@
 import type { PackProblem, PackSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { ApiError, errorText } from "../../api.js";
@@ -41,7 +42,11 @@ const leave = (patch: Parameters<typeof uiStore.set>[0]): void => {
   uiStore.set({ libraryFrom: null, screen: "home", ...patch });
 };
 
-const Problems = ({ problems }: { problems: PackProblem[] }) => {
+const Problems = ({
+  problems,
+}: {
+  problems: PackProblem[];
+}): ReactElement | null => {
   if (problems.length === 0) {
     return null;
   }
@@ -72,7 +77,7 @@ const SANS = "system-ui, sans-serif";
 const swatch = (pack: PackSummary, name: string): string | undefined =>
   pack.swatches.find((item) => item.name === name)?.value;
 
-const ModeSwatches = ({ pack }: { pack: PackSummary }) => {
+const ModeSwatches = ({ pack }: { pack: PackSummary }): ReactElement => {
   const light = pack.mode === "light" ? pack.swatches : null;
 
   const dark =
@@ -82,13 +87,13 @@ const ModeSwatches = ({ pack }: { pack: PackSummary }) => {
     <span className="lib-modes" data-testid="mode-swatches">
       {light && (
         <span className="lib-mode light" data-tip={COPY.tipLightModeColors}>
-          <span className="sr-only">Light</span>
+          <span className="sr-only">{COPY.textLight}</span>
           <Swatches swatches={light} />
         </span>
       )}
       {dark && (
         <span className="lib-mode dark" data-tip={COPY.tipDarkModeColors}>
-          <span className="sr-only">Dark</span>
+          <span className="sr-only">{COPY.textDark}</span>
           <Swatches swatches={dark} />
         </span>
       )}
@@ -102,9 +107,28 @@ const LibraryCard = ({
 }: {
   pack: PackSummary;
   onOpen: () => void;
-}) => {
+}): ReactElement => {
   const display = fontStack(pack.fonts.display, SERIF);
   const body = fontStack(pack.fonts.body, SANS);
+
+  const libAaNode = (
+    <span className="lib-aa" style={{ fontFamily: display }}>
+      {COPY.textAa}
+    </span>
+  );
+
+  const libChipNode = (
+    <span
+      className="lib-chip"
+      style={{ background: swatch(pack, "primary") }}
+    />
+  );
+
+  const libNameNode = <span className="lib-name truncate">{pack.name}</span>;
+
+  const modeSwatchesNode = <ModeSwatches pack={pack} />;
+
+  const packBadgesNode = <PackBadges pack={pack} tags={2} />;
 
   return (
     <li>
@@ -119,23 +143,18 @@ const LibraryCard = ({
           style={{ background: swatch(pack, "bg"), color: swatch(pack, "fg") }}
           aria-hidden="true"
         >
-          <span className="lib-aa" style={{ fontFamily: display }}>
-            Aa
-          </span>
-          <span
-            className="lib-chip"
-            style={{ background: swatch(pack, "primary") }}
-          />
+          {libAaNode}
+          {libChipNode}
         </span>
         <span className="lib-text">
-          <span className="lib-name truncate">{pack.name}</span>
+          {libNameNode}
           <span className="lib-fonts">
             <span style={{ fontFamily: display }}>{pack.fonts.display}</span>
-            <span aria-hidden="true"> · </span>
+            <span aria-hidden="true"> {COPY.textGlyph3}</span>
             <span style={{ fontFamily: body }}>{pack.fonts.body}</span>
           </span>
-          <ModeSwatches pack={pack} />
-          <PackBadges pack={pack} tags={2} />
+          {modeSwatchesNode}
+          {packBadgesNode}
         </span>
       </button>
     </li>
@@ -152,7 +171,7 @@ const Group = ({
   packs: PackSummary[];
   onOpen: (pack: PackSummary) => void;
   empty?: React.ReactNode;
-}) => {
+}): ReactElement => {
   const id = `lib-${title.toLowerCase().replaceAll(/\W+/gu, "-")}`;
 
   return (
@@ -191,13 +210,17 @@ const useToast = (): [string | null, (text: string) => void] => {
       TOAST_MS
     );
 
-    return () => clearTimeout(timer);
+    return (): void => clearTimeout(timer);
   }, [toast]);
 
   return [toast?.text ?? null, (text) => setToast({ id: Date.now(), text })];
 };
 
-export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
+const DesignSystems = ({
+  from,
+}: {
+  from: LibraryFrom | null;
+}): ReactElement => {
   const { packs, error } = usePacks();
   const [problems, setProblems] = useState<PackProblem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -210,7 +233,7 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
   useEffect(() => {
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       let next: PackProblem[] = [];
 
       try {
@@ -226,7 +249,7 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [packs]);
@@ -235,28 +258,28 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
   const builtin = (packs ?? []).filter((pack) => pack.source === "builtin");
   const selected = packs?.find((pack) => pack.id === selectedId) ?? null;
 
-  const back = () =>
+  const back = (): void =>
     from ? leave({ activeProjectId: from.projectId }) : leave({});
 
-  const imported = (pack: PackSummary, replaced: boolean) => {
+  const imported = (pack: PackSummary, replaced: boolean): void => {
     refreshPacks();
     show(replaced ? `Replaced ${pack.name}.` : `Imported ${pack.name}.`);
     setSelectedId(pack.id);
   };
 
-  const importFile = (file: File) => {
+  const importFile = (file: File): void => {
     setImportError(null);
     startImport(async () => {
       try {
         const result = await packApi.importPack(file);
         imported(result.pack, result.replaced);
-      } catch (failure) {
-        const existing = existingOf(failure);
+      } catch (err) {
+        const existing = existingOf(err);
 
         if (existing) {
           setDialog({ existing, file, kind: "conflict" });
         } else {
-          setImportError(errorText(failure));
+          setImportError(errorText(err));
         }
       }
     });
@@ -286,6 +309,8 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
     onUseInNew: (pack) => leave({ activeProjectId: null, lastPackId: pack.id }),
   };
 
+  const iconNode = <Icon name="arrowLeft" size={14} />;
+
   return (
     <div className="home lib">
       <header className="home-header">
@@ -294,18 +319,15 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
           className="btn ghost small has-icon back-btn"
           onClick={back}
         >
-          <Icon name="arrowLeft" size={14} />
-          Back
+          {iconNode}
+          {COPY.textBack}
         </button>
       </header>
       <main className="lib-main">
         <div className="lib-head">
           <div className="lib-titles">
-            <h1>Design systems</h1>
-            <p className="muted">
-              Tokens, fonts and a DESIGN.md that projects build with. Open one
-              to preview, check or edit it.
-            </p>
+            <h1>{COPY.labelDesignSystems}</h1>
+            <p className="muted">{COPY.textTokensFontsAndA}</p>
           </div>
           <div className="lib-head-actions">
             <input
@@ -315,9 +337,9 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
               className="sr-only"
               tabIndex={-1}
               aria-label={COPY.labelDesignSystemZip}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
 
                 if (file) {
                   void importFile(file);
@@ -343,18 +365,20 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
               }
             >
               <Icon name="plus" size={14} />
-              New design system
+              {COPY.textNewDesignSystem}
             </button>
           </div>
         </div>
         {importError && (
           <div className="alert error small" role="alert">
-            Could not import. {importError}
+            {COPY.textCouldNotImport}
+            {importError}
           </div>
         )}
         {error && (
           <div className="alert error small">
-            Could not load design systems. {error}
+            {COPY.textCouldNotLoadDesign}
+            {error}
           </div>
         )}
         <Problems problems={problems} />
@@ -368,9 +392,7 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
               onOpen={(pack) => setSelectedId(pack.id)}
               empty={
                 <div className="lib-empty">
-                  <span>
-                    Make one from a website, a DESIGN.md or a tokens file.
-                  </span>
+                  <span>{COPY.textMakeOneFromA}</span>
                   <button
                     type="button"
                     className="btn small"
@@ -381,7 +403,7 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
                       })
                     }
                   >
-                    Make your first
+                    {COPY.textMakeYourFirst}
                   </button>
                 </div>
               }
@@ -439,3 +461,5 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
     </div>
   );
 };
+
+export { DesignSystems };

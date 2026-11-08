@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { errorText } from "../../api.js";
 import { call } from "../../platform/http.js";
 
-export interface PacksState {
+interface PacksState {
   packs: PackSummary[] | null;
   error: string | null;
 }
@@ -38,7 +38,7 @@ const loadPacks = (): Promise<PackSummary[]> => {
 
 const listeners = new Set<() => void>();
 
-export const refreshPacks = (): void => {
+const refreshPacks = (): void => {
   cached = null;
 
   for (const listener of listeners) {
@@ -46,14 +46,14 @@ export const refreshPacks = (): void => {
   }
 };
 
-export const usePacks = (): PacksState => {
+const usePacks = (): PacksState => {
   const [state, setState] = useState<PacksState>({ error: null, packs: null });
   const [generation, setGeneration] = useState(0);
   useEffect(() => {
-    const listener = () => setGeneration((n) => n + 1);
+    const listener = (): void => setGeneration((count) => count + 1);
     listeners.add(listener);
 
-    return () => {
+    return (): void => {
       listeners.delete(listener);
     };
   }, []);
@@ -76,7 +76,7 @@ export const usePacks = (): PacksState => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [generation]);
@@ -84,12 +84,15 @@ export const usePacks = (): PacksState => {
   return state;
 };
 
-export const pickable = (state: PacksState): PacksState =>
-  state.packs
-    ? { ...state, packs: state.packs.filter((pack) => !pack.draft) }
-    : state;
+const pickable = (state: PacksState): PacksState => {
+  if (state.packs) {
+    return { ...state, packs: state.packs.filter((pack) => !pack.draft) };
+  }
 
-export const findPack = (
+  return state;
+};
+
+const findPack = (
   packs: PackSummary[] | null,
   id: string | null | undefined
 ): PackSummary | null => {
@@ -102,7 +105,7 @@ export const findPack = (
 
 const loadedFonts = new Set<string>();
 
-export const loadPackFonts = (packs: PackSummary[]): void => {
+const loadPackFonts = (packs: PackSummary[]): void => {
   for (const pack of packs) {
     const url = pack.fonts.googleFontsUrl;
 
@@ -123,7 +126,7 @@ export const loadPackFonts = (packs: PackSummary[]): void => {
   }
 };
 
-export const fontStack = (family: string, fallback: string): string => {
+const fontStack = (family: string, fallback: string): string => {
   const trimmed = family.trim();
 
   if (!trimmed) {
@@ -134,19 +137,37 @@ export const fontStack = (family: string, fallback: string): string => {
     return trimmed;
   }
 
-  const name = /^['"]/u.test(trimmed) ? trimmed : `'${trimmed}'`;
+  const name = (!/^['"]/u.test(trimmed) && `'${trimmed}'`) || trimmed;
 
   return `${name}, ${fallback}`;
 };
 
 const KEY_SWATCHES = ["primary", "accent", "fg", "bg"];
 
-export const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
-  const rank = (name: string) => {
+const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
+  const rank = (name: string): number => {
     const index = KEY_SWATCHES.indexOf(name);
 
-    return index === -1 ? KEY_SWATCHES.length : index;
+    if (index === -1) {
+      return KEY_SWATCHES.length;
+    }
+
+    return index;
   };
 
-  return [...pack.swatches].toSorted((a, b) => rank(a.name) - rank(b.name));
+  return [...pack.swatches].toSorted(
+    (first, second) => rank(first.name) - rank(second.name)
+  );
 };
+
+export {
+  refreshPacks,
+  usePacks,
+  pickable,
+  findPack,
+  loadPackFonts,
+  fontStack,
+  keySwatches,
+};
+
+export type { PacksState };

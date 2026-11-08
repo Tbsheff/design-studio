@@ -13,9 +13,12 @@ const sameSelectors = (
   next: SelectionContext[]
 ): boolean =>
   prev.length === next.length &&
-  prev.every((s, i) => s.selector === next[i]?.selector);
+  prev.every(
+    (selectionContext, index) =>
+      selectionContext.selector === next[index]?.selector
+  );
 
-export interface CommentMode {
+interface CommentMode {
   available: boolean;
   on: boolean;
   setOn: (on: boolean) => void;
@@ -23,7 +26,7 @@ export interface CommentMode {
   guard: (setSelection: SetSelection) => SetSelection;
 }
 
-export const useCommentMode = (
+const useCommentMode = (
   control: CommentsControl | undefined,
   live: boolean,
   setSelectMode: (on: boolean) => void
@@ -61,7 +64,7 @@ export const useCommentMode = (
   }, [on]);
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         isTypingTarget(event.target) ||
         event.metaKey ||
@@ -82,7 +85,7 @@ export const useCommentMode = (
 
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [toggle]);
 
   const guard = useCallback(
@@ -102,3 +105,7 @@ export const useCommentMode = (
 
   return { available, guard, on, setOn, toggle };
 };
+
+export { useCommentMode };
+
+export type { CommentMode };

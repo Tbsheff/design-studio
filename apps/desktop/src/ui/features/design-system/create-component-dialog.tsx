@@ -1,8 +1,8 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { InsertTarget } from "@design-studio/contracts/insert";
 import { UiSelect, useModalDialog } from "@design-studio/ui";
+import type { FormEvent, KeyboardEvent, ReactElement } from "react";
 import { useEffect, useState, useTransition } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
 
 import { COMPONENT_NAME } from "../../../shared/component-create.js";
 import type { ComponentFolder } from "../../../shared/component-create.js";
@@ -71,7 +71,7 @@ const useFolders = (ids: Props["ids"]) => {
   useEffect(() => {
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const list = await componentCreateApi.folders(
           ids.projectId,
@@ -98,7 +98,7 @@ const useFolders = (ids: Props["ids"]) => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [ids.projectId, ids.directionId]);
@@ -106,12 +106,12 @@ const useFolders = (ids: Props["ids"]) => {
   return { folder, folders, note, setFolder };
 };
 
-export const CreateComponentDialog = ({
+const CreateComponentDialog = ({
   ids,
   selection,
   onDone,
   onClose,
-}: Props) => {
+}: Props): ReactElement => {
   const [name, setName] = useState(() => suggestName(selection));
   const { folders, folder, setFolder, note } = useFolders(ids);
   const [busy, startTransition] = useTransition();
@@ -131,7 +131,7 @@ export const CreateComponentDialog = ({
 
   const count = selection.length;
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent): void => {
     event.preventDefault();
 
     if (nameProblem || busy || !folder) {
@@ -158,11 +158,32 @@ export const CreateComponentDialog = ({
     });
   };
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === "Escape") {
       event.stopPropagation();
     }
   };
+
+  const btnNode = (
+    <button
+      type="button"
+      className="btn ghost"
+      onClick={onClose}
+      disabled={busy}
+    >
+      {COPY.textCancel}
+    </button>
+  );
+
+  const btnNode2 = (
+    <button
+      type="submit"
+      className="btn primary"
+      disabled={busy || nameProblem !== null || !folder}
+    >
+      {busy ? "Creating…" : "Create component"}
+    </button>
+  );
 
   return (
     <dialog
@@ -179,7 +200,7 @@ export const CreateComponentDialog = ({
       >
         <div className="modal-head">
           <div className="titles">
-            <h2>Create component</h2>
+            <h2>{COPY.labelCreateComponent}</h2>
             <p>
               {count === 1
                 ? "Writes a component file from this element and uses it in its place."
@@ -189,7 +210,7 @@ export const CreateComponentDialog = ({
         </div>
         <div className="modal-body cc-form">
           <label className="field">
-            <span>Name</span>
+            <span>{COPY.textName}</span>
             <input
               data-autofocus
               className="mono"
@@ -216,7 +237,7 @@ export const CreateComponentDialog = ({
             </span>
           </label>
           <div className="field">
-            <span id="cc-folder-label">Folder</span>
+            <span id="cc-folder-label">{COPY.labelFolder}</span>
             <UiSelect
               className="ins-select cc-folder"
               aria-label={COPY.labelFolder}
@@ -237,23 +258,12 @@ export const CreateComponentDialog = ({
           )}
         </div>
         <div className="modal-foot">
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={onClose}
-            disabled={busy}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="btn primary"
-            disabled={busy || nameProblem !== null || !folder}
-          >
-            {busy ? "Creating…" : "Create component"}
-          </button>
+          {btnNode}
+          {btnNode2}
         </div>
       </form>
     </dialog>
   );
 };
+
+export { CreateComponentDialog };

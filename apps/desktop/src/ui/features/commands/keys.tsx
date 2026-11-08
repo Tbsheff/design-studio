@@ -1,26 +1,31 @@
+import type { ReactElement } from "react";
+
 import { binding, keyParts } from "./deps.js";
 import type { KeyId } from "./deps.js";
 import { IS_MAC } from "./key-model.js";
 
 export { IS_MAC, tipWithKey } from "./key-model.js";
 
-export function Keys({
+export const Keys = ({
   keys,
   className,
 }: {
   keys: string;
   className?: string;
-}) {
-  return (
-    <span className={`keys${className ? ` ${className}` : ""}`}>
-      {keyParts(keys, IS_MAC).map((part, index) => (
-        <kbd key={`${part}-${index}`}>{part}</kbd>
-      ))}
-    </span>
-  );
-}
+}): ReactElement => (
+  <span className={`keys${(className && ` ${className}`) || ""}`}>
+    {keyParts(keys, IS_MAC).map((part, index) => (
+      <kbd key={`${part}-${index}`}>{part}</kbd>
+    ))}
+  </span>
+);
 
-export function KeyHint({ id }: { id: KeyId }) {
+export const KeyHint = ({ id }: { id: KeyId }): ReactElement | null => {
   const first = binding(id).keys[0];
-  return first ? <Keys keys={first} /> : null;
-}
+
+  if (first) {
+    return <Keys keys={first} />;
+  }
+
+  return null;
+};

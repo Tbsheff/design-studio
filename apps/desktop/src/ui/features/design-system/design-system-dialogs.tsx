@@ -1,5 +1,6 @@
 import { Icon, useModalDialog } from "@design-studio/ui";
-import { useState, useTransition } from "react";
+import type { ReactElement } from "react";
+import { useState, useTransition, useCallback } from "react";
 
 import { errorText } from "../../api.js";
 import { uiStore } from "../../platform/storage.js";
@@ -8,6 +9,8 @@ import { COPY } from "./copy.js";
 import { PackList } from "./pack-list.js";
 import { pickable, usePacks } from "./packs.js";
 
+const NAME_MAX = 80;
+
 interface ChangeProps {
   currentId: string | null;
   from: LibraryFrom | null;
@@ -15,19 +18,19 @@ interface ChangeProps {
   onApply: (packId: string) => Promise<void>;
 }
 
-export const ChangePackDialog = ({
+const ChangePackDialog = ({
   currentId,
   from,
   onClose,
   onApply,
-}: ChangeProps) => {
+}: ChangeProps): ReactElement => {
   const state = pickable(usePacks());
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const dialog = useModalDialog(() => (busy ? false : onClose()));
-  const title = currentId ? "Change design system" : "Add design system";
+  const dialog = useModalDialog(() => !busy && onClose());
+  const title = (currentId && "Change design system") || "Add design system";
 
-  const choose = (packId: string | undefined) => {
+  const choose = (packId: string | undefined): void => {
     if (!packId || busy) {
       return;
     }
@@ -41,11 +44,26 @@ export const ChangePackDialog = ({
       try {
         await onApply(packId);
         onClose();
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };
+
+  const handleSet = useCallback(
+    () =>
+      uiStore.set({
+        activeProjectId: null,
+        libraryFrom: from,
+        screen: "design-systems",
+      }),
+    [from]
+  );
+
+  const handleSet2 = useCallback(
+    () => uiStore.set({ activeProjectId: null, screen: "new-design-system" }),
+    []
+  );
 
   return (
     <dialog
@@ -57,10 +75,7 @@ export const ChangePackDialog = ({
       <div className="modal-head">
         <div className="titles">
           <h2>{title}</h2>
-          <p>
-            Writes new tokens, tokens.css and DESIGN.md as one version. Your
-            project notes stay.
-          </p>
+          <p>{COPY.textWritesNewTokensTokens}</p>
         </div>
         <button
           className="icon-btn"
@@ -74,7 +89,8 @@ export const ChangePackDialog = ({
       <div className="modal-body ds-switch-body" aria-busy={busy}>
         {state.error && (
           <div className="alert error small">
-            Could not load design systems. {state.error}
+            {COPY.textCouldNotLoadDesign}
+            {state.error}
           </div>
         )}
         {error && (
@@ -94,26 +110,18 @@ export const ChangePackDialog = ({
           type="button"
           className="btn ghost"
           disabled={busy}
-          onClick={() =>
-            uiStore.set({
-              activeProjectId: null,
-              libraryFrom: from,
-              screen: "design-systems",
-            })
-          }
+          onClick={handleSet}
         >
-          Manage…
+          {COPY.textManage}
         </button>
         <button
           type="button"
           className="btn ghost has-icon"
           disabled={busy}
-          onClick={() =>
-            uiStore.set({ activeProjectId: null, screen: "new-design-system" })
-          }
+          onClick={handleSet2}
         >
           <Icon name="plus" size={14} />
-          New design system…
+          {COPY.textNewDesignSystem2}
         </button>
       </div>
     </dialog>
@@ -130,20 +138,20 @@ interface SaveProps {
 
 const COPY_SUFFIX = " copy";
 
-export const SavePackDialog = ({
+const SavePackDialog = ({
   defaultName,
   updating,
   canCopy,
   onClose,
   onSave,
-}: SaveProps) => {
+}: SaveProps): ReactElement => {
   const [name, setName] = useState(defaultName);
   const [asNew, setAsNew] = useState(false);
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const dialog = useModalDialog(() => (busy ? false : onClose()));
+  const dialog = useModalDialog(() => !busy && onClose());
 
-  const submit = () => {
+  const submit = (): void => {
     if (!name.trim() || busy) {
       return;
     }
@@ -153,11 +161,23 @@ export const SavePackDialog = ({
       try {
         await onSave(name.trim(), asNew);
         onClose();
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };
+
+  const handleSetAsNew = useCallback(() => {
+    setAsNew(false);
+    setName(defaultName);
+  }, [defaultName]);
+
+  const handleSetAsNew2 = useCallback(() => {
+    setAsNew(true);
+    setName(
+      `${defaultName.slice(0, NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`
+    );
+  }, [defaultName]);
 
   return (
     <dialog
@@ -168,20 +188,21 @@ export const SavePackDialog = ({
     >
       <form
         className="modal-form"
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={(event) => {
+          event.preventDefault();
           void submit();
         }}
       >
         <div className="modal-head">
           <div className="titles">
-            <h2>Save to library</h2>
+            <h2>{COPY.labelSaveToLibrary}</h2>
             <p>
-              {asNew
-                ? "Saves a new design system. This project then uses the new one."
-                : updating
-                  ? `Updates ${defaultName} in your library with this direction's tokens and DESIGN.md.`
-                  : "Saves this direction's tokens and DESIGN.md as a design system you can use in other projects."}
+              {asNew &&
+                "Saves a new design system. This project then uses the new one."}
+              {!asNew &&
+                ((updating &&
+                  `Updates ${defaultName} in your library with this direction's tokens and DESIGN.md.`) ||
+                  "Saves this direction's tokens and DESIGN.md as a design system you can use in other projects.")}
             </p>
           </div>
           <button
@@ -197,42 +218,35 @@ export const SavePackDialog = ({
         <div className="modal-body">
           {canCopy && (
             <fieldset className="save-choice">
-              <legend className="sr-only">Save as</legend>
+              <legend className="sr-only">{COPY.textSaveAs}</legend>
               <label>
                 <input
                   type="radio"
                   name="save-as"
                   checked={!asNew}
-                  onChange={() => {
-                    setAsNew(false);
-                    setName(defaultName);
-                  }}
+                  onChange={handleSetAsNew}
                 />
-                Update {defaultName}
+                {COPY.textUpdate}
+                {defaultName}
               </label>
               <label>
                 <input
                   type="radio"
                   name="save-as"
                   checked={asNew}
-                  onChange={() => {
-                    setAsNew(true);
-                    setName(
-                      `${defaultName.slice(0, 80 - COPY_SUFFIX.length)}${COPY_SUFFIX}`
-                    );
-                  }}
+                  onChange={handleSetAsNew2}
                 />
-                Save as a new design system
+                {COPY.textSaveAsANew}
               </label>
             </fieldset>
           )}
           <label className="field">
-            <span>Name</span>
+            <span>{COPY.textName}</span>
             <input
               data-autofocus
               value={name}
               maxLength={80}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(evt) => setName(evt.target.value)}
               aria-label={COPY.labelDesignSystemName}
             />
           </label>
@@ -249,17 +263,20 @@ export const SavePackDialog = ({
             onClick={onClose}
             disabled={busy}
           >
-            Cancel
+            {COPY.textCancel}
           </button>
           <button
             type="submit"
             className="btn primary"
             disabled={busy || !name.trim()}
           >
-            {busy ? "Saving…" : "Save"}
+            {busy && "Saving…"}
+            {!busy && "Save"}
           </button>
         </div>
       </form>
     </dialog>
   );
 };
+
+export { ChangePackDialog, SavePackDialog };

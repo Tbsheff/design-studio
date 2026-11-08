@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 import type { CommentPrefill, DraftStore, PendingAttachment } from "./deps.js";
 
-export type PrefillRequest = CommentPrefill & { seq: number };
+type PrefillRequest = CommentPrefill & { seq: number };
 
 interface Options {
   request: PrefillRequest | null | undefined;
@@ -22,7 +22,7 @@ const filesOf = (prefill: CommentPrefill): PendingAttachment[] =>
     previewUrl: item.dataUrl,
   }));
 
-export const useCommentPrefill = ({
+const useCommentPrefill = ({
   request,
   draft,
   setFiles,
@@ -41,11 +41,14 @@ export const useCommentPrefill = ({
 
     seen.current = request.seq;
     const current = draft.get().trim();
-    draft.set(current ? `${current}\n\n${request.text}` : request.text);
+    draft.set((current && `${current}\n\n${request.text}`) || request.text);
     const incoming = filesOf(request);
     setFiles((prev) => {
       const fresh = incoming.filter(
-        (file) => !prev.some((p) => p.localId === file.localId)
+        (file) =>
+          !prev.some(
+            (pendingAttachment) => pendingAttachment.localId === file.localId
+          )
       );
 
       return [...prev, ...fresh].slice(0, maxImages);
@@ -54,5 +57,9 @@ export const useCommentPrefill = ({
     focusRef.current();
   }, [request, draft, setFiles, maxImages]);
 
-  return { clear: () => setLinked([]), linked };
+  return { clear: (): void => setLinked([]), linked };
 };
+
+export { useCommentPrefill };
+
+export type { PrefillRequest };

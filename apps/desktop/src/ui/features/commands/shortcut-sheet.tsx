@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { copy } from "./copy.js";
@@ -6,7 +7,7 @@ import type { KeyBinding, KeyGroup } from "./deps.js";
 import { IS_MAC, Keys } from "./keys.js";
 
 const MARK_MS = 900;
-const DESKTOP = typeof window !== "undefined" && isDesktop();
+const DESKTOP = "window" in globalThis && isDesktop();
 
 const GROUPS: KeyGroup[] = [
   "General",
@@ -17,22 +18,21 @@ const GROUPS: KeyGroup[] = [
   "Home",
 ];
 
-function pressedIds(event: KeyboardEvent): string[] {
-  return KEYMAP.filter((entry) =>
+const pressedIds = (event: KeyboardEvent): string[] =>
+  KEYMAP.filter((entry) =>
     entry.keys.some((keys) => chordMatches(keys, event, IS_MAC))
   ).map((entry) => entry.id);
-}
 
-export function ShortcutSheet({ onClose }: { onClose: () => void }) {
+const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
   const [query, setQuery] = useState("");
   const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
-  const timers = useRef(new Map<string, number>());
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const rootRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const live = timers.current;
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.repeat) {
         return;
       }
@@ -57,10 +57,10 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
       setMarked((prev) => new Set([...prev, ...ids]));
 
       for (const id of ids) {
-        window.clearTimeout(live.get(id));
+        globalThis.clearTimeout(live.get(id));
         live.set(
           id,
-          window.setTimeout(() => {
+          globalThis.setTimeout(() => {
             live.delete(id);
             setMarked((prev) => {
               const next = new Set(prev);
@@ -73,13 +73,13 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
       }
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
-    return () => {
-      window.removeEventListener("keydown", onKey, true);
+    return (): void => {
+      globalThis.removeEventListener("keydown", onKey, true);
 
       for (const timer of live.values()) {
-        window.clearTimeout(timer);
+        globalThis.clearTimeout(timer);
       }
 
       live.clear();
@@ -94,26 +94,28 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
         (DESKTOP || !entry.desktop) &&
         (!needle ||
           entry.label.toLowerCase().includes(needle) ||
-          entry.keys.some((k) => k.toLowerCase().includes(needle)))
+          entry.keys.some((keyName) => keyName.toLowerCase().includes(needle)))
     );
 
     return GROUPS.map((group) => ({
-      group,
       entries: shown.filter((entry) => entry.group === group),
-    })).filter((g) => g.entries.length > 0);
+      group,
+    })).filter((grp) => grp.entries.length > 0);
   }, [query]);
+
+  const iconNode = <Icon name="close" size={14} />;
 
   return (
     <aside className="keysheet" ref={rootRef} aria-label={copy.shortcuts}>
       <header className="keysheet-head">
-        <h2>Keyboard shortcuts</h2>
+        <h2>{copy.shortcuts}</h2>
         <button
           type="button"
           className="icon-btn small"
           aria-label={copy.closeShortcuts}
           onClick={onClose}
         >
-          <Icon name="close" size={14} />
+          {iconNode}
         </button>
       </header>
       <div className="keysheet-search">
@@ -123,13 +125,17 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
           placeholder={copy.filter}
           spellCheck={false}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(evt) => setQuery(evt.target.value)}
         />
       </div>
-      <p className="keysheet-tip">Press a key to find it here.</p>
+      <p className="keysheet-tip">{copy.textPressAKeyTo}</p>
       <div className="keysheet-body">
         {groups.length === 0 && (
-          <p className="keysheet-empty">No shortcut matches “{query}”.</p>
+          <p className="keysheet-empty">
+            {copy.textNoShortcutMatches}
+            {query}
+            {copy.textGlyph}
+          </p>
         )}
         {groups.map(({ group, entries }) => (
           <section key={group} className="keysheet-group" aria-label={group}>
@@ -138,19 +144,21 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
               {entries.map((entry) => (
                 <li
                   key={entry.id}
-                  className={marked.has(entry.id) ? "on" : undefined}
+                  className={(marked.has(entry.id) && "on") || undefined}
                   data-key-id={entry.id}
                 >
                   <span className="keysheet-label">
                     {entry.label}
                     {entry.hold && (
-                      <span className="keysheet-hold"> (hold)</span>
+                      <span className="keysheet-hold"> {copy.textHold}</span>
                     )}
                   </span>
                   <span className="keysheet-keys">
                     {entry.keys.map((keys, index) => (
                       <span key={keys} className="keysheet-alt">
-                        {index > 0 && <span className="keysheet-or">or</span>}
+                        {index > 0 && (
+                          <span className="keysheet-or">{copy.textOr}</span>
+                        )}
                         <Keys keys={keys} />
                       </span>
                     ))}
@@ -163,4 +171,6 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
       </div>
     </aside>
   );
-}
+};
+
+export { ShortcutSheet };

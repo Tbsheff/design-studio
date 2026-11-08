@@ -1,21 +1,26 @@
-export interface Ranked<T> {
+const FIRST_PREFIX_SCORE = 12;
+const PREFIX_SCORE = 10;
+const SPAN_DIVISOR = 100;
+const LENGTH_DIVISOR = 200;
+
+interface Ranked<T> {
   item: T;
   score: number;
   marks: number[];
 }
 
-function words(text: string): { word: string; at: number }[] {
+const words = (text: string): { word: string; at: number }[] => {
   const out: { word: string; at: number }[] = [];
   const re = /[\p{L}\p{N}]+/gu;
 
-  for (let m = re.exec(text); m; m = re.exec(text)) {
-    out.push({ word: m[0].toLowerCase(), at: m.index });
+  for (let match = re.exec(text); match; match = re.exec(text)) {
+    out.push({ word: match[0].toLowerCase(), at: match.index });
   }
 
   return out;
-}
+};
 
-function subsequence(token: string, text: string): number[] | null {
+const subsequence = (token: string, text: string): number[] | null => {
   const marks: number[] = [];
   let from = 0;
 
@@ -31,7 +36,7 @@ function subsequence(token: string, text: string): number[] | null {
   }
 
   return marks;
-}
+};
 
 interface TokenContext {
   title: string;
@@ -40,12 +45,12 @@ interface TokenContext {
   extra: string;
 }
 
-function tokenScore(
+const tokenScore = (
   token: string,
   { title, list, used, extra }: TokenContext
-): { score: number; marks: number[] } | null {
+): { score: number; marks: number[] } | null => {
   const prefix = list.findIndex(
-    (w, i) => !used.has(i) && w.word.startsWith(token)
+    (entry, idx) => !used.has(idx) && entry.word.startsWith(token)
   );
 
   if (prefix !== -1) {
@@ -53,8 +58,8 @@ function tokenScore(
     const at = list[prefix]?.at ?? 0;
 
     return {
-      score: prefix === 0 ? 12 : 10,
-      marks: Array.from({ length: token.length }, (_, i) => at + i),
+      score: prefix === 0 ? FIRST_PREFIX_SCORE : PREFIX_SCORE,
+      marks: Array.from({ length: token.length }, (_, idxNext) => at + idxNext),
     };
   }
 
@@ -63,11 +68,14 @@ function tokenScore(
   if (inside !== -1) {
     return {
       score: 6,
-      marks: Array.from({ length: token.length }, (_, i) => inside + i),
+      marks: Array.from(
+        { length: token.length },
+        (_, indexNext) => inside + indexNext
+      ),
     };
   }
 
-  if (extra.split(/\s+/u).some((w) => w.startsWith(token))) {
+  if (extra.split(/\s+/u).some((wide) => wide.startsWith(token))) {
     return { score: 5, marks: [] };
   }
 
@@ -75,19 +83,19 @@ function tokenScore(
 
   if (loose) {
     return {
-      score: 2 - (loose[loose.length - 1]! - loose[0]!) / 100,
+      score: 2 - (loose.at(-1)! - loose[0]!) / SPAN_DIVISOR,
       marks: loose,
     };
   }
 
   return null;
-}
+};
 
-export function rank<T>(
+const rank = <T>(
   items: readonly T[],
   query: string,
   text: (item: T) => { title: string; keywords?: string }
-): Ranked<T>[] {
+): Ranked<T>[] => {
   const tokens = query.toLowerCase().split(/\s+/u).filter(Boolean);
 
   if (tokens.length === 0) {
@@ -125,11 +133,15 @@ export function rank<T>(
     if (ok) {
       out.push({
         item,
-        score: score - title.length / 200,
-        marks: [...new Set(marks)].sort((a, b) => a - b),
+        score: score - title.length / LENGTH_DIVISOR,
+        marks: [...new Set(marks)].sort((first, second) => first - second),
       });
     }
   }
 
-  return out.sort((a, b) => b.score - a.score);
-}
+  return out.sort((left, right) => right.score - left.score);
+};
+
+export { rank };
+
+export type { Ranked };

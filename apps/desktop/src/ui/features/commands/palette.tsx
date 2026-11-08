@@ -1,3 +1,8 @@
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 import {
   useId,
   useLayoutEffect,
@@ -6,7 +11,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 
 import { copy } from "./copy.js";
 import {
@@ -34,9 +38,9 @@ import { collectCommands } from "./registry.js";
 
 const RECENT_KEY = "design-studio.commands.recent.v1";
 const RECENT_MAX = 5;
-const DESKTOP = typeof window !== "undefined" && isDesktop();
+const DESKTOP = "window" in globalThis && isDesktop();
 
-function readRecent(): string[] {
+const readRecent = (): string[] => {
   try {
     const raw: unknown = JSON.parse(readStored(RECENT_KEY) ?? "[]");
 
@@ -48,18 +52,24 @@ function readRecent(): string[] {
   } catch {
     return [];
   }
-}
+};
 
-function noteRecent(id: string): void {
+const noteRecent = (id: string): void => {
   writeStored(
     RECENT_KEY,
     JSON.stringify(
-      [id, ...readRecent().filter((x) => x !== id)].slice(0, RECENT_MAX)
+      [id, ...readRecent().filter((posX) => posX !== id)].slice(0, RECENT_MAX)
     )
   );
-}
+};
 
-function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
+const Marked = ({
+  text,
+  marks,
+}: {
+  text: string;
+  marks: number[];
+}): ReactNode => {
   if (marks.length === 0) {
     return text;
   }
@@ -69,7 +79,7 @@ function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
   let run = "";
   let on = false;
 
-  const flush = (key: number) => {
+  const flush = (key: number): void => {
     if (run) {
       out.push(on ? <mark key={key}>{run}</mark> : run);
     }
@@ -77,11 +87,11 @@ function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
     run = "";
   };
 
-  [...text].forEach((ch, i) => {
-    const hit = set.has(i);
+  [...text].forEach((ch, idx) => {
+    const hit = set.has(idx);
 
     if (hit !== on) {
-      flush(i);
+      flush(idx);
       on = hit;
     }
 
@@ -90,9 +100,9 @@ function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
   flush(text.length);
 
   return out;
-}
+};
 
-function RowLead({ row }: { row: Row }) {
+const RowLead = ({ row }: { row: Row }): ReactElement => {
   if (row.hit && row.kind === "project" && !row.icon) {
     return <ProjectThumb hit={row.hit} />;
   }
@@ -102,9 +112,9 @@ function RowLead({ row }: { row: Row }) {
       <Icon name={row.icon ?? "dot"} size={14} />
     </span>
   );
-}
+};
 
-function RowEnd({
+const RowEnd = ({
   row,
   active,
   typing,
@@ -112,7 +122,7 @@ function RowEnd({
   row: Row;
   active: boolean;
   typing: boolean;
-}) {
+}): ReactElement => {
   const enter = typing && active && !row.disabled;
 
   return (
@@ -138,9 +148,9 @@ function RowEnd({
       )}
     </span>
   );
-}
+};
 
-function stepOf(event: ReactKeyboardEvent): number {
+const stepOf = (event: ReactKeyboardEvent): number => {
   if (event.key === "ArrowDown" || (event.ctrlKey && event.key === "n")) {
     return 1;
   }
@@ -150,23 +160,25 @@ function stepOf(event: ReactKeyboardEvent): number {
   }
 
   return 0;
-}
+};
 
-function recentRowFor(event: ReactKeyboardEvent, rows: Row[]): Row | undefined {
-  return rows.find(
+const recentRowFor = (
+  event: ReactKeyboardEvent,
+  rows: Row[]
+): Row | undefined =>
+  rows.find(
     (row) =>
       row.group === "Recent" &&
       row.keys !== undefined &&
       chordMatches(row.keys, event.nativeEvent, IS_MAC)
   );
-}
 
-function usePaletteRows(
+const usePaletteRows = (
   query: string,
   onShortcuts: () => void,
   onClose: () => void,
   setError: (error: string | null) => void
-) {
+) => {
   const current = uiStore.get().activeProjectId;
   const hits = useProjectHits(current);
   const routes = useRouteHits(query, current, hits?.routes ?? []);
@@ -174,21 +186,20 @@ function usePaletteRows(
 
   const [commands] = useState(() => {
     const all = [...collectCommands(), ...globalCommands(onShortcuts)].filter(
-      (c) => !c.id.startsWith("project.open.")
+      (command) => !command.id.startsWith("project.open.")
     );
 
-    return all.filter((c, i) => all.findIndex((x) => x.id === c.id) === i);
+    return all.filter(
+      (char, idxNext) =>
+        all.findIndex((left) => left.id === char.id) === idxNext
+    );
   });
 
   const [busy, startTransition] = useTransition();
 
   const actions = useMemo(
     () => ({
-      openProject: (id: string, route?: string) => {
-        onClose();
-        window.setTimeout(() => openProject(id, route), 0);
-      },
-      newPrototype: (prompt: string) => {
+      newPrototype: (prompt: string): void => {
         setError(null);
         startTransition(async () => {
           try {
@@ -196,6 +207,7 @@ function usePaletteRows(
               prompt,
               kind: "html",
             });
+
             void projectsApi.load();
             onClose();
             openProject(project.id);
@@ -204,6 +216,10 @@ function usePaletteRows(
           }
         });
       },
+      openProject: (id: string, route?: string): void => {
+        onClose();
+        globalThis.setTimeout(() => openProject(id, route), 0);
+      },
     }),
     [onClose, setError]
   );
@@ -211,29 +227,29 @@ function usePaletteRows(
   const rows = useMemo(
     () =>
       buildRows({
-        query,
+        actions,
         commands,
-        projects: hits?.projects ?? [],
-        routes,
-        recent,
         current,
         desktop: DESKTOP,
         mac: IS_MAC,
-        actions,
+        projects: hits?.projects ?? [],
+        query,
+        recent,
+        routes,
       }),
     [query, commands, hits, routes, recent, current, actions]
   );
 
-  return { rows, busy, loading: hits === null };
-}
+  return { busy, loading: hits === null, rows };
+};
 
-export function Palette({
+const Palette = ({
   onClose,
   onShortcuts,
 }: {
   onClose: () => void;
   onShortcuts: () => void;
-}) {
+}): ReactElement => {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -260,7 +276,7 @@ export function Palette({
     }
   }, [current, rows]);
 
-  const run = (row: Row | undefined) => {
+  const run = (row: Row | undefined): void => {
     if (!row || row.disabled || busy) {
       return;
     }
@@ -276,10 +292,10 @@ export function Palette({
     }
 
     onClose();
-    window.setTimeout(() => row.run(), 0);
+    globalThis.setTimeout(() => row.run(), 0);
   };
 
-  const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>): void => {
     const step = stepOf(event);
     const recentRow = typing ? undefined : recentRowFor(event, rows);
 
@@ -310,7 +326,7 @@ export function Palette({
   return (
     <div
       className="cmdk-backdrop"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      onMouseDown={(evt) => evt.target === evt.currentTarget && onClose()}
     >
       <div
         className="cmdk"
@@ -338,14 +354,14 @@ export function Palette({
             placeholder={copy.paletteInput}
             spellCheck={false}
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
+            onChange={(evtNext) => {
+              setQuery(evtNext.target.value);
               setActive(0);
               setError(null);
             }}
             onKeyDown={onKeyDown}
           />
-          <kbd className="cmdk-esc">Esc</kbd>
+          <kbd className="cmdk-esc">{copy.textEsc}</kbd>
         </div>
         {error && (
           <div className="cmdk-error" role="alert">
@@ -406,20 +422,22 @@ export function Palette({
         </div>
         <footer className="cmdk-foot" aria-hidden="true">
           <span>
-            <kbd>↑</kbd>
-            <kbd>↓</kbd> Move
+            <kbd>{copy.textGlyph2}</kbd>
+            <kbd>{copy.textGlyph3}</kbd> {copy.textMove}
           </span>
           <span>
-            <kbd>↩</kbd> Open
+            <kbd>{copy.textGlyph4}</kbd> {copy.textOpen}
           </span>
           <span>
-            <kbd>Esc</kbd> Close
+            <kbd>{copy.textEsc}</kbd> {copy.textClose}
           </span>
           <span className="cmdk-foot-end">
-            <Keys keys="?" /> All shortcuts
+            <Keys keys="?" /> {copy.textAllShortcuts}
           </span>
         </footer>
       </div>
     </div>
   );
-}
+};
+
+export { Palette };

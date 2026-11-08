@@ -38,8 +38,13 @@ interface Options {
   notify: (message: string) => void;
 }
 
-const newSelector = (selector: string, position: InsertPosition): string =>
-  position === "inside" ? `${selector} > :last-child` : `${selector} + *`;
+const newSelector = (selector: string, position: InsertPosition): string => {
+  if (position === "inside") {
+    return `${selector} > :last-child`;
+  }
+
+  return `${selector} + *`;
+};
 
 interface DropAt {
   requestId: string;
@@ -76,13 +81,17 @@ const frameRect = (
     ? frames.elements.current[frames.frontToken]
     : null;
 
-  return el ? { el, rect: el.getBoundingClientRect() } : null;
+  if (el) {
+    return { el, rect: el.getBoundingClientRect() };
+  }
+
+  return null;
 };
 
 const localPoint = (
   frames: Frames,
-  x: number,
-  y: number
+  posX: number,
+  posY: number
 ): { x: number; y: number } | null => {
   const found = frameRect(frames);
 
@@ -93,10 +102,10 @@ const localPoint = (
   const { el, rect } = found;
 
   if (
-    x < rect.left ||
-    x > rect.right ||
-    y < rect.top ||
-    y > rect.bottom ||
+    posX < rect.left ||
+    posX > rect.right ||
+    posY < rect.top ||
+    posY > rect.bottom ||
     rect.width === 0
   ) {
     return null;
@@ -104,7 +113,7 @@ const localPoint = (
 
   const scale = rect.width / (el.offsetWidth || rect.width);
 
-  return { x: (x - rect.left) / scale, y: (y - rect.top) / scale };
+  return { x: (posX - rect.left) / scale, y: (posY - rect.top) / scale };
 };
 
 const hintOf = (drop: DropAt | null): DropHint | null => {
@@ -118,15 +127,15 @@ const hintOf = (drop: DropAt | null): DropHint | null => {
 
   return {
     ok: true,
-    text: drop.inside
-      ? `Insert into ${drop.label}`
-      : `Insert after ${drop.label}`,
+    text:
+      (drop.inside && `Insert into ${drop.label}`) ||
+      `Insert after ${drop.label}`,
   };
 };
 
-export const useComponentInsert = (o: Options): void => {
-  const live = useRef(o);
-  live.current = o;
+const useComponentInsert = (options: Options): void => {
+  const live = useRef(options);
+  live.current = options;
   const busy = useRef(false);
   const drop = useRef<DropAt | null>(null);
 
@@ -185,7 +194,7 @@ export const useComponentInsert = (o: Options): void => {
     [tickReselect]
   );
 
-  useEffect(tickReselect, [o.selection, tickReselect]);
+  useEffect(tickReselect, [options.selection, tickReselect]);
 
   useEffect(() => stopReselect, [stopReselect]);
 
@@ -284,12 +293,12 @@ export const useComponentInsert = (o: Options): void => {
 
   const host = useMemo<InsertHost>(
     () => ({
-      dragEnd(component, x, y) {
+      dragEnd(component, leftNext, topNext): void {
         const last = drop.current;
         drop.current = null;
         pending.current = null;
 
-        if (!localPoint(live.current.frames, x, y)) {
+        if (!localPoint(live.current.frames, leftNext, topNext)) {
           return;
         }
 
@@ -299,10 +308,14 @@ export const useComponentInsert = (o: Options): void => {
           );
         }
 
-        void run(component, last.inside ? "inside" : "after", last.selection);
+        void run(
+          component,
+          (last.inside && "inside") || "after",
+          last.selection
+        );
       },
-      dragMove(x, y, onHint) {
-        const point = localPoint(live.current.frames, x, y);
+      dragMove(posXNext, posYNext, onHint): void {
+        const point = localPoint(live.current.frames, posXNext, posYNext);
 
         if (!point) {
           drop.current = null;
@@ -321,7 +334,7 @@ export const useComponentInsert = (o: Options): void => {
           y: point.y,
         });
       },
-      insert: (component, position) =>
+      insert: (component, position): undefined =>
         void run(component, position, live.current.selection.at(-1)),
     }),
     [run]
@@ -330,6 +343,8 @@ export const useComponentInsert = (o: Options): void => {
   useEffect(() => {
     insertBus.set(host);
 
-    return () => insertBus.clear(host);
+    return (): void => insertBus.clear(host);
   }, [host]);
 };
+
+export { useComponentInsert };

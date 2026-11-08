@@ -11,8 +11,8 @@ import {
 } from "@design-studio/contracts/port";
 import { Icon, UiSelect, useModalDialog } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
+import type { FormEvent, KeyboardEvent, ReactElement } from "react";
 import { useState, useTransition, useMemo, useEffect } from "react";
-import type { KeyboardEvent, FormEvent } from "react";
 
 import type { FolderInspection } from "../../../shared/open-app.js";
 import { errorText, api } from "../../api.js";
@@ -99,7 +99,7 @@ const useTargets = (sourceId: string): Targets => {
   useEffect(() => {
     let alive = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const list = await api.listProjects();
 
@@ -119,7 +119,7 @@ const useTargets = (sourceId: string): Targets => {
 
     void read();
 
-    return () => {
+    return (): void => {
       alive = false;
     };
   }, [sourceId, nonce]);
@@ -132,7 +132,7 @@ const usePagePicks = (flow: PortFlowPlan | null) => {
   const all = flow?.pages ?? [];
   const picked = all.filter((page) => !off.has(page.path));
 
-  const toggle = (page: string) =>
+  const toggle = (page: string): void =>
     setOff((prev) => {
       const next = new Set(prev);
 
@@ -219,7 +219,7 @@ const usePlan = (input: {
       );
     }, PLAN_DELAY_MS);
 
-    return () => {
+    return (): void => {
       alive = false;
       globalThis.clearTimeout(timer);
     };
@@ -304,7 +304,7 @@ const usePortStart = (target: PortDialogTarget, form: PortForm) => {
   const [error, setError] = useState<string | null>(null);
   const [started, setStarted] = useState<PortStartResult | null>(null);
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent): void => {
     event.preventDefault();
 
     if (!form.ready || busy || !form.cleanRoute) {
@@ -326,8 +326,8 @@ const usePortStart = (target: PortDialogTarget, form: PortForm) => {
             targetProjectId: form.chosenApp,
           })
         );
-      } catch (caught: unknown) {
-        setError(errorText(caught));
+      } catch (err: unknown) {
+        setError(errorText(err));
       }
     });
   };
@@ -343,7 +343,7 @@ const CandidatePick = ({
   found: FolderInspection;
   value: string;
   onChange: (appDir: string) => void;
-}) => {
+}): ReactElement => {
   const options: UiSelectOption[] = found.candidates.map((c) => ({
     label: `${c.name} · ${c.appDir}`,
     value: c.appDir,
@@ -398,7 +398,7 @@ const useAttach = (onAttached: (projectId: string) => void) => {
   const [found, setFound] = useState<FolderInspection | null>(null);
   const [appDir, setAppDir] = useState("");
 
-  const run = (folder: string) => {
+  const run = (folder: string): void => {
     if (!folder.trim() || busy) {
       return;
     }
@@ -416,13 +416,13 @@ const useAttach = (onAttached: (projectId: string) => void) => {
         } else {
           setFound(result.inspection);
         }
-      } catch (caught: unknown) {
-        setError(errorText(caught));
+      } catch (err: unknown) {
+        setError(errorText(err));
       }
     });
   };
 
-  const choose = async () => {
+  const choose = async (): Promise<void> => {
     const picked = await pickFolder({ title: "Choose your app folder" });
 
     if (picked.kind !== "picked") {
@@ -434,7 +434,7 @@ const useAttach = (onAttached: (projectId: string) => void) => {
     run(picked.path);
   };
 
-  const edit = (next: string) => {
+  const edit = (next: string): void => {
     setPath(next);
     setFound(null);
   };
@@ -448,10 +448,10 @@ const AttachField = ({
 }: {
   error: string | null;
   onAttached: (projectId: string) => void;
-}) => {
+}): ReactElement => {
   const attach = useAttach(onAttached);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key !== "Enter") {
       return;
     }
@@ -518,7 +518,7 @@ const AttachField = ({
   );
 };
 
-const AppField = ({ form }: { form: PortForm }) => {
+const AppField = ({ form }: { form: PortForm }): ReactElement => {
   const { apps, error } = form.targets;
 
   const options: UiSelectOption[] = (apps ?? []).map((a) => ({
@@ -526,7 +526,7 @@ const AppField = ({ form }: { form: PortForm }) => {
     value: a.id,
   }));
 
-  const attached = (projectId: string) => {
+  const attached = (projectId: string): void => {
     form.setAppId(projectId);
     form.targets.reload();
   };
@@ -558,7 +558,7 @@ const PageRow = ({
   page: PortFlowPage;
   checked: boolean;
   onToggle: () => void;
-}) => (
+}): ReactElement => (
   <label
     className="export-frame port-page"
     data-tip={page.routeFile ?? undefined}
@@ -572,7 +572,7 @@ const PageRow = ({
   </label>
 );
 
-const PageList = ({ form }: { form: PortForm }) => {
+const PageList = ({ form }: { form: PortForm }): ReactElement | null => {
   const { all, picked, toggle } = form.pages;
 
   if (all.length < 2) {
@@ -643,7 +643,7 @@ const PlanSummary = ({
   links: number;
   loading: boolean;
   error: string | null;
-}) => {
+}): ReactElement => {
   if (error) {
     return <p className="port-note error">{error}</p>;
   }
@@ -706,7 +706,7 @@ const FormBody = ({
 }: {
   form: PortForm;
   error: string | null;
-}) => {
+}): ReactElement => {
   const frameOptions: UiSelectOption[] = form.frames.map((f) => ({
     label: `${f.frame.name} · ${pageName(f.frame.path)}`,
     value: f.id,
@@ -776,7 +776,7 @@ const FormFoot = ({
   count: number;
   appName: string;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const noApp = form.targets.apps?.length === 0;
 
   return (
@@ -816,7 +816,7 @@ const Started = ({
   result: PortStartResult;
   appName: string;
   onClose: () => void;
-}) => (
+}): ReactElement => (
   <>
     <div className="modal-body port-body">
       <p className="port-done" role="status">
@@ -850,7 +850,7 @@ export const PortToAppDialog = ({
 }: {
   target: PortDialogTarget;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const dialog = useModalDialog(onClose);
   const form = usePortForm(target);
   const { busy, error, started, submit } = usePortStart(target, form);

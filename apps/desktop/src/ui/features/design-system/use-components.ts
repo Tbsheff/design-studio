@@ -10,7 +10,7 @@ const REFRESH_MS = 400;
 const base = (projectId: string, directionId: string): string =>
   `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/components`;
 
-export const componentThumb = async (
+const componentThumb = async (
   projectId: string,
   directionId: string,
   id: string,
@@ -27,14 +27,14 @@ export const componentThumb = async (
   return URL.createObjectURL(blob);
 };
 
-export interface ComponentList {
+interface ComponentList {
   components: ComponentInfo[] | null;
   version: string;
   error: string | null;
   retry?: () => void;
 }
 
-export const useComponents = (
+const useComponents = (
   projectId: string,
   directionId: string | null,
   lastChange: FilesChange | null
@@ -84,12 +84,16 @@ export const useComponents = (
       changedAt === 0 ? 0 : REFRESH_MS
     );
 
-    return () => globalThis.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [projectId, directionId, changedAt, attempt]);
   useEffect(
     () => setState({ components: null, error: null, version: "0" }),
     [projectId, directionId]
   );
 
-  return { ...state, retry: () => setAttempt((n) => n + 1) };
+  return { ...state, retry: () => setAttempt((count) => count + 1) };
 };
+
+export { componentThumb, useComponents };
+
+export type { ComponentList };

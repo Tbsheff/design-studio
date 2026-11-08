@@ -24,7 +24,7 @@ type Source = () => Command[];
 
 const sources = createLiveStore<readonly { current: Source }[]>([]);
 
-export function collectCommands(): Command[] {
+export const collectCommands = (): Command[] => {
   const seen = new Set<string>();
   const out: Command[] = [];
 
@@ -40,10 +40,10 @@ export function collectCommands(): Command[] {
   }
 
   return out;
-}
+};
 
-export function runCommand(id: string): boolean {
-  const command = collectCommands().find((c) => c.id === id);
+export const runCommand = (id: string): boolean => {
+  const command = collectCommands().find((char) => char.id === id);
 
   if (!command || command.disabled) {
     return false;
@@ -52,46 +52,50 @@ export function runCommand(id: string): boolean {
   command.run();
 
   return true;
-}
+};
 
-export function commandBlocker(id: string): string | null {
-  const command = collectCommands().find((c) => c.id === id);
+export const commandBlocker = (id: string): string | null => {
+  const command = collectCommands().find((ch) => ch.id === id);
 
-  return command ? (command.disabled ?? null) : "Not available here";
-}
+  if (command) {
+    return command.disabled ?? null;
+  }
 
-export function openLayer(layer: CommandLayer): void {
-  window.dispatchEvent(new CustomEvent(LAYER_EVENT, { detail: layer }));
-}
+  return "Not available here";
+};
 
-export function useCommands(source: Source): void {
+export const openLayer = (layer: CommandLayer): void => {
+  globalThis.dispatchEvent(new CustomEvent(LAYER_EVENT, { detail: layer }));
+};
+
+export const useCommands = (source: Source): void => {
   const ref = useRef(source);
   ref.current = source;
   useEffect(() => {
-    const entry = { current: () => ref.current() };
+    const entry = { current: (): Command[] => ref.current() };
     sources.set([...sources.get(), entry]);
 
-    return () => {
-      sources.set(sources.get().filter((e) => e !== entry));
+    return (): void => {
+      sources.set(sources.get().filter((evt) => evt !== entry));
     };
   }, []);
-}
+};
 
 let listening = false;
 
-export function listenForCommands(): void {
+export const listenForCommands = (): void => {
   if (listening) {
     return;
   }
 
   listening = true;
-  window.addEventListener(COMMAND_EVENT, (event) => {
+  globalThis.addEventListener(COMMAND_EVENT, (event) => {
     const id = (event as CustomEvent<unknown>).detail;
 
     if (typeof id === "string") {
       runCommand(id);
     }
   });
-}
+};
 
 export { IS_MAC, tipWithKey } from "./keys.js";

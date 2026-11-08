@@ -1,4 +1,4 @@
-export interface OutlineItem {
+interface OutlineItem {
   level: number;
   text: string;
   line: number;
@@ -8,7 +8,7 @@ export interface OutlineItem {
 const HEADING = /^(#{1,3})\s+(.+?)\s*#*\s*$/u;
 const FENCE = /^\s*(```|~~~)/u;
 
-export const outlineOf = (markdown: string): OutlineItem[] => {
+const outlineOf = (markdown: string): OutlineItem[] => {
   const out: OutlineItem[] = [];
   let fenced = false;
   let offset = 0;
@@ -30,3 +30,7 @@ export const outlineOf = (markdown: string): OutlineItem[] => {
 
   return out;
 };
+
+export { outlineOf };
+
+export type { OutlineItem };

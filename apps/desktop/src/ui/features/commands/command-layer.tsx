@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useEffect, useRef } from "react";
 
 import { Palette } from "./palette.js";
@@ -12,7 +13,7 @@ const CommandLayer = ({
 }: {
   layer: Layer;
   onLayer: (next: Layer | null) => void;
-}) => {
+}): ReactElement => {
   const opener = useRef<Element | null>(null);
 
   if (opener.current === null) {
@@ -20,7 +21,7 @@ const CommandLayer = ({
   }
 
   useEffect(
-    () => () => {
+    () => (): void => {
       const back = opener.current;
 
       if (

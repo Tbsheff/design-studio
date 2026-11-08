@@ -5,8 +5,8 @@ import type {
 } from "@design-studio/contracts";
 import type { InsertableComponent } from "@design-studio/contracts/insert";
 import { Icon, PanelHead } from "@design-studio/ui";
+import type { ReactElement, ReactNode } from "react";
 import { useState, useEffect, useMemo, useRef } from "react";
-import type { ReactNode } from "react";
 
 import {
   DragGhost,
@@ -22,6 +22,9 @@ import {
 import { COPY } from "./copy.js";
 import { componentThumb } from "./use-components.js";
 import type { ComponentList } from "./use-components.js";
+
+const MENU_GAP = 4;
+const SEARCH_MIN_COUNT = 6;
 
 interface GalleryRender {
   component: InsertableComponent | null;
@@ -137,12 +140,12 @@ const Thumb = ({
   component: ComponentInfo;
   version: string;
   active: boolean;
-}) => {
+}): ReactElement => {
   const [src, setSrc] = useState<string | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "none">("loading");
   const shown = useRef<string | null>(null);
   useEffect(
-    () => () => {
+    () => (): void => {
       if (shown.current) {
         URL.revokeObjectURL(shown.current);
       }
@@ -161,7 +164,8 @@ const Thumb = ({
     }
 
     let live = true;
-    const read = async () => {
+
+    const read = async (): Promise<void> => {
       let next: string | null = null;
 
       try {
@@ -203,7 +207,7 @@ const Thumb = ({
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [
@@ -244,7 +248,13 @@ interface CardProps {
   onGallery: (component: InsertableComponent) => void;
 }
 
-const Card = ({ item, props, drag, onInsertMenu, onGallery }: CardProps) => {
+const Card = ({
+  item,
+  props,
+  drag,
+  onInsertMenu,
+  onGallery,
+}: CardProps): ReactElement => {
   const { info, insert } = item;
 
   const tip = insert
@@ -292,7 +302,7 @@ const Card = ({ item, props, drag, onInsertMenu, onGallery }: CardProps) => {
           data-testid="component-insert"
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
-            onInsertMenu(insert, { x: rect.left, y: rect.bottom + 4 });
+            onInsertMenu(insert, { x: rect.left, y: rect.bottom + MENU_GAP });
           }}
         >
           <Icon name="plus" size={14} />
@@ -314,7 +324,7 @@ const Card = ({ item, props, drag, onInsertMenu, onGallery }: CardProps) => {
   );
 };
 
-export const ComponentsPanel = (props: Props) => {
+const ComponentsPanel = (props: Props): ReactElement => {
   const { list, directionId } = props;
   const canInsert = props.kind === "react";
   const [query, setQuery] = useState("");
@@ -339,7 +349,7 @@ export const ComponentsPanel = (props: Props) => {
       >
         {all && <span className="count cmp-count">{count}</span>}
       </PanelHead>
-      {count > 6 && (
+      {count > SEARCH_MIN_COUNT && (
         <div className="tk-search cmp-search">
           <Icon name="search" size={13} />
           <input
@@ -356,10 +366,13 @@ export const ComponentsPanel = (props: Props) => {
         {error && (
           <p className="ins-error" role="alert">
             <Icon name="alert" size={13} />
-            <span>Could not list components. {error}</span>
+            <span>
+              {COPY.textCouldNotListComponents}
+              {error}
+            </span>
             {retry && (
               <button type="button" className="btn small" onClick={retry}>
-                Try again
+                {COPY.textTryAgain}
               </button>
             )}
           </p>
@@ -383,7 +396,11 @@ export const ComponentsPanel = (props: Props) => {
           </p>
         )}
         {count > 0 && shown.length === 0 && (
-          <p className="ins-empty cmp-empty">No components match “{query}”.</p>
+          <p className="ins-empty cmp-empty">
+            {COPY.textNoComponentsMatch}
+            {query}
+            {COPY.textGlyph}
+          </p>
         )}
         {directionId &&
           groups.map(([folder, items]) => (
@@ -441,3 +458,5 @@ export const ComponentsPanel = (props: Props) => {
     </div>
   );
 };
+
+export { ComponentsPanel };

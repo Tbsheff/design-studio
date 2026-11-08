@@ -1,48 +1,29 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type {
+  DragEvent,
+  FormEvent,
+  KeyboardEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 import { useEffect, useState, useTransition, useRef } from "react";
-import type { DragEvent, KeyboardEvent, FormEvent, ReactNode } from "react";
 
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { packApi } from "../../platform/pack-api.js";
+import { Chip } from "./chip.js";
 import { COPY } from "./copy.js";
+import {
+  MAX_URLS,
+  IMAGE_TYPES,
+  MAX_IMAGES,
+  DROP_ACCEPT,
+  EMPTY,
+} from "./new-design-system-values.js";
+import type { DraftForm, Patch, Mode } from "./new-design-system-values.js";
 import { refreshPacks, pickable, usePacks } from "./packs.js";
-
-const DEFAULT_BASE = "modern-minimal";
-
-type Mode = "auto" | "light" | "dark";
-
-interface DraftForm {
-  name: string;
-  mode: Mode;
-  basePackId: string;
-  urls: string[];
-  urlInput: string;
-  designMd: string;
-  designMdFile: string | null;
-  brief: string;
-  tokensFile: File | null;
-  folder: string;
-  images: File[];
-}
-
-const EMPTY: DraftForm = {
-  basePackId: DEFAULT_BASE,
-  brief: "",
-  designMd: "",
-  designMdFile: null,
-  folder: "",
-  images: [],
-  mode: "auto",
-  name: "",
-  tokensFile: null,
-  urlInput: "",
-  urls: [],
-};
-
-const MAX_URLS = 3;
 
 const allUrls = (form: DraftForm): string[] => {
   const typed = form.urlInput.trim();
@@ -54,7 +35,7 @@ const allUrls = (form: DraftForm): string[] => {
 };
 
 const hasSource = (form: DraftForm): boolean => {
-  const filled = (text: string) => text.trim() !== "";
+  const filled = (text: string): boolean => text.trim() !== "";
 
   return (
     allUrls(form).length > 0 ||
@@ -104,7 +85,7 @@ const Section = ({
   hint?: string;
   children: ReactNode;
   className?: string;
-}) => (
+}): ReactElement => (
   <section
     className={`nds-section${className ? ` ${className}` : ""}`}
     aria-label={title}
@@ -119,7 +100,7 @@ const Section = ({
 
 const useDropGuard = (): void => {
   useEffect(() => {
-    const outside = (event: globalThis.DragEvent) => {
+    const outside = (event: globalThis.DragEvent): void => {
       const { target } = event;
 
       if (target instanceof Element && target.closest("[data-drop-target]")) {
@@ -136,20 +117,12 @@ const useDropGuard = (): void => {
     globalThis.addEventListener("dragover", outside);
     globalThis.addEventListener("drop", outside);
 
-    return () => {
+    return (): void => {
       globalThis.removeEventListener("dragover", outside);
       globalThis.removeEventListener("drop", outside);
     };
   }, []);
 };
-
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
-
-const DROP_ACCEPT = `${IMAGE_TYPES.join(",")},.json,application/json,.css,text/css,.md,.markdown,text/markdown`;
-
-const MAX_IMAGES = 8;
-
-type Patch = Partial<DraftForm>;
 
 const routeFiles = async (
   files: File[],
@@ -185,41 +158,18 @@ const routeFiles = async (
   return { patch, skipped };
 };
 
-const Chip = ({
-  icon,
-  label,
-  onRemove,
-}: {
-  icon: Parameters<typeof Icon>[0]["name"];
-  label: string;
-  onRemove: () => void;
-}) => (
-  <li className="nds-chip">
-    <Icon name={icon} size={12} />
-    <span className="truncate">{label}</span>
-    <button
-      type="button"
-      className="icon-btn small"
-      aria-label={`Remove ${label}`}
-      onClick={onRemove}
-    >
-      <Icon name="close" size={12} />
-    </button>
-  </li>
-);
-
 const DropZone = ({
   form,
   set,
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) => {
+}): ReactElement => {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
-  const add = async (files: File[]) => {
+  const add = async (files: File[]): Promise<void> => {
     const { patch, skipped } = await routeFiles(files, form);
     set(patch);
     setNote(
@@ -229,7 +179,7 @@ const DropZone = ({
     );
   };
 
-  const onDrop = (event: DragEvent) => {
+  const onDrop = (event: DragEvent): void => {
     event.preventDefault();
     setOver(false);
     void add([...event.dataTransfer.files]);
@@ -267,18 +217,15 @@ const DropZone = ({
         <Icon name="image" size={20} />
       </span>
       <div className="nds-dropzone-text">
-        <strong>Drop screenshots, a logo, a tokens file or a DESIGN.md</strong>
-        <span>
-          The AI step looks at images. Tokens files (Figma variables, DTCG,
-          Tokens Studio) and DESIGN.md are read at once.
-        </span>
+        <strong>{COPY.textDropScreenshotsALogo}</strong>
+        <span>{COPY.textTheAiStepLooks}</span>
       </div>
       <button
         type="button"
         className="btn small"
         onClick={() => input.current?.click()}
       >
-        Choose files…
+        {COPY.textChooseFiles}
       </button>
       {hasFiles && (
         <ul className="nds-chips" aria-label={COPY.labelAddedFiles}>
@@ -323,10 +270,10 @@ const UrlField = ({
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) => {
+}): ReactElement => {
   const full = form.urls.length >= MAX_URLS;
 
-  const add = () => {
+  const add = (): void => {
     const url = form.urlInput.trim();
 
     if (!url || full || form.urls.includes(url)) {
@@ -336,7 +283,7 @@ const UrlField = ({
     set({ urlInput: "", urls: [...form.urls, url] });
   };
 
-  const onKey = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKey = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key !== "Enter") {
       return;
     }
@@ -364,7 +311,7 @@ const UrlField = ({
           disabled={!form.urlInput.trim() || full}
           onClick={add}
         >
-          Add
+          {COPY.textAdd}
         </button>
       </div>
       {form.urls.length > 0 && (
@@ -391,7 +338,7 @@ const DesignMdField = ({
 }: {
   value: string;
   onChange: (value: string) => void;
-}) => {
+}): ReactElement => {
   const [view, setView] = useState<"edit" | "preview">("edit");
 
   return (
@@ -420,14 +367,14 @@ const DesignMdField = ({
           rows={6}
           placeholder={COPY.placeholderBrand1010ColorPalette}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(evt) => onChange(evt.target.value)}
         />
       ) : (
         <div className="nds-preview" aria-label={COPY.labelDesignMdPreview}>
           {value.trim() ? (
             <Markdown>{value}</Markdown>
           ) : (
-            <p className="muted">Nothing to preview yet.</p>
+            <p className="muted">{COPY.textNothingToPreviewYet}</p>
           )}
         </div>
       )}
@@ -441,7 +388,7 @@ const TokensField = ({
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
-}) => {
+}): ReactElement => {
   const input = useRef<HTMLInputElement>(null);
 
   return (
@@ -452,7 +399,7 @@ const TokensField = ({
         accept=".json,application/json,.css,text/css"
         hidden
         aria-label={COPY.labelTokensFileUpload}
-        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+        onChange={(evtNext) => onChange(evtNext.target.files?.[0] ?? null)}
       />
       <span className={`nds-file truncate ${file ? "" : "muted"}`}>
         {file ? file.name : "No tokens file"}
@@ -462,7 +409,7 @@ const TokensField = ({
         className="btn small"
         onClick={() => input.current?.click()}
       >
-        Choose file…
+        {COPY.textChooseFile}
       </button>
       {file && (
         <button
@@ -470,7 +417,7 @@ const TokensField = ({
           className="btn ghost small"
           onClick={() => onChange(null)}
         >
-          Remove
+          {COPY.textRemove}
         </button>
       )}
     </div>
@@ -483,11 +430,11 @@ const FolderField = ({
 }: {
   value: string;
   onChange: (value: string) => void;
-}) => {
+}): ReactElement => {
   const [manual, setManual] = useState(() => !hasNativePicker());
   const [error, setError] = useState<string | null>(null);
 
-  const choose = async () => {
+  const choose = async (): Promise<void> => {
     setError(null);
 
     try {
@@ -502,8 +449,8 @@ const FolderField = ({
       if (outcome.kind === "unsupported") {
         setManual(true);
       }
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (err) {
+      setError(errorText(err));
     }
   };
 
@@ -515,7 +462,7 @@ const FolderField = ({
             placeholder={COPY.placeholderUsersYouCodeApp}
             value={value}
             aria-label={COPY.labelFolderPath}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(eventNext) => onChange(eventNext.target.value)}
           />
         ) : (
           <span className={`nds-file truncate ${value ? "" : "muted"}`}>
@@ -528,7 +475,7 @@ const FolderField = ({
             className="btn small"
             onClick={() => void choose()}
           >
-            Choose folder…
+            {COPY.textChooseFolder}
           </button>
         )}
         {value && (
@@ -537,7 +484,7 @@ const FolderField = ({
             className="btn ghost small"
             onClick={() => onChange("")}
           >
-            Clear
+            {COPY.textClear}
           </button>
         )}
       </div>
@@ -552,7 +499,7 @@ const Advanced = ({
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) => {
+}): ReactElement => {
   const count = [
     form.tokensFile,
     form.folder.trim(),
@@ -563,45 +510,37 @@ const Advanced = ({
     <details className="nds-advanced" open={count > 0 ? true : undefined}>
       <summary>
         <span className="nds-section-head">
-          <span className="nds-section-title">Advanced</span>
+          <span className="nds-section-title">{COPY.textAdvanced}</span>
           <span className="nds-section-hint">
-            Code folder and import options
+            {COPY.textCodeFolderAndImport}
           </span>
         </span>
         <Icon name="chevronRight" size={14} />
       </summary>
       <div className="nds-advanced-body">
         <div className="nds-field">
-          <span className="nds-field-label">Tokens file</span>
+          <span className="nds-field-label">{COPY.textTokensFile}</span>
           <span className="nds-field-hint">
-            Figma variables JSON (with Light and Dark modes), DTCG or Tokens
-            Studio JSON, or CSS custom properties. It wins over every other
-            source.
+            {COPY.textFigmaVariablesJsonWith}
           </span>
-          <span className="nds-field-hint">
-            From Figma: export the variables yourself (a plugin or the REST
-            /variables/local answer) and choose the file here. The studio does
-            not ask for a Figma token and does not connect to Figma.
-          </span>
+          <span className="nds-field-hint">{COPY.textFromFigmaExportThe}</span>
           <TokensField
             file={form.tokensFile}
             onChange={(tokensFile) => set({ tokensFile })}
           />
         </div>
         <div className="nds-field">
-          <span className="nds-field-label">Code folder</span>
-          <span className="nds-field-hint">
-            Read only. The studio scans CSS, SCSS and Tailwind config files.
-          </span>
+          <span className="nds-field-label">{COPY.textCodeFolder}</span>
+          <span className="nds-field-hint">{COPY.textReadOnlyTheStudio}</span>
           <FolderField
             value={form.folder}
             onChange={(folder) => set({ folder })}
           />
         </div>
         <div className="nds-field">
-          <span className="nds-field-label">DESIGN.md</span>
+          <span className="nds-field-label">{COPY.labelDesignMd}</span>
           <span className="nds-field-hint">
-            Paste an existing DESIGN.md. It becomes the system&apos;s guide.
+            {COPY.textPasteAnExistingDesign}
           </span>
           <DesignMdField
             value={form.designMd}
@@ -618,7 +557,7 @@ const Advanced = ({
   );
 };
 
-const PackSwatches = ({ pack }: { pack: PackSummary }) => (
+const PackSwatches = ({ pack }: { pack: PackSummary }): ReactElement => (
   <span className="nds-preset-swatches" aria-hidden="true">
     {pack.swatches.slice(0, 4).map((swatch) => (
       <span key={swatch.name} style={{ background: swatch.value }} />
@@ -632,7 +571,7 @@ const Presets = ({
 }: {
   value: string;
   onChange: (id: string) => void;
-}) => {
+}): ReactElement | null => {
   const { packs } = pickable(usePacks());
 
   if (!packs) {
@@ -701,16 +640,14 @@ const sourceList = (
   return list;
 };
 
-const SourceSummary = ({ form }: { form: DraftForm }) => {
+const SourceSummary = ({ form }: { form: DraftForm }): ReactElement => {
   const list = sourceList(form);
 
   return (
     <div className="nds-summary">
-      <h2>Sources</h2>
+      <h2>{COPY.textSources}</h2>
       {list.length === 0 ? (
-        <p className="nds-summary-empty">
-          Add a website, a brief, files or images.
-        </p>
+        <p className="nds-summary-empty">{COPY.textAddAWebsiteA}</p>
       ) : (
         <ul>
           {list.map((item, index) => (
@@ -731,53 +668,58 @@ const Basics = ({
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) => (
+}): ReactElement => (
   <div
     className="nds-basics"
     role="group"
     aria-label={COPY.labelDesignSystemSettings}
   >
     <label className="field">
-      <span>Name</span>
+      <span>{COPY.textName}</span>
       <input
         value={form.name}
         maxLength={80}
         placeholder={COPY.placeholderFromTheWebsiteOrBrief}
         aria-label={COPY.labelDesignSystemName}
-        onChange={(e) => set({ name: e.target.value })}
+        onChange={(eventOther) => set({ name: eventOther.target.value })}
       />
     </label>
     <label className="field">
-      <span>Mode</span>
+      <span>{COPY.labelMode}</span>
       <select
         className="select"
         value={form.mode}
         aria-label={COPY.labelMode}
-        onChange={(e) => set({ mode: e.target.value as Mode })}
+        onChange={(eventExtra) =>
+          set({ mode: eventExtra.target.value as Mode })
+        }
       >
-        <option value="auto">Detect</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
+        <option value="auto">{COPY.textDetect}</option>
+        <option value="light">{COPY.textLight}</option>
+        <option value="dark">{COPY.textDark}</option>
       </select>
     </label>
   </div>
 );
 
-export const NewDesignSystem = ({
+const NewDesignSystem = ({
   onCancel,
   onCreated,
 }: {
   onCancel: () => void;
   onCreated: (projectId: string) => void;
-}) => {
+}): ReactElement => {
   const [form, setForm] = useState<DraftForm>(EMPTY);
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const set = (patch: Patch) => setForm((prev) => ({ ...prev, ...patch }));
+
+  const set = (patch: Patch): void =>
+    setForm((prev) => ({ ...prev, ...patch }));
+
   const ready = hasSource(form) && !busy;
   useDropGuard();
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent): void => {
     event.preventDefault();
 
     if (!ready) {
@@ -790,8 +732,8 @@ export const NewDesignSystem = ({
         const result = await packApi.createDesignSystemDraft(toFormData(form));
         refreshPacks();
         onCreated(result.project.id);
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };
@@ -806,21 +748,18 @@ export const NewDesignSystem = ({
           disabled={busy}
         >
           <Icon name="arrowLeft" size={14} />
-          Back
+          {COPY.textBack}
         </button>
       </header>
       <main className="nds-main">
         <form
           className="nds-form"
-          onSubmit={(e) => void submit(e)}
+          onSubmit={(evtOther) => void submit(evtOther)}
           aria-busy={busy}
         >
           <div className="nds-head">
-            <h1>New design system</h1>
-            <p className="muted">
-              Add what you have. The studio opens the draft at once, reads each
-              source while you watch, then the AI step finishes it.
-            </p>
+            <h1>{COPY.textNewDesignSystem}</h1>
+            <p className="muted">{COPY.textAddWhatYouHave}</p>
           </div>
           <div className="nds-sources">
             <Section
@@ -845,7 +784,7 @@ export const NewDesignSystem = ({
                 maxLength={4000}
                 placeholder={COPY.placeholderCalmPreciseBankingAppFor}
                 value={form.brief}
-                onChange={(e) => set({ brief: e.target.value })}
+                onChange={(evtExtra) => set({ brief: evtExtra.target.value })}
               />
             </Section>
             <Section
@@ -883,7 +822,7 @@ export const NewDesignSystem = ({
                   onClick={onCancel}
                   disabled={busy}
                 >
-                  Cancel
+                  {COPY.textCancel}
                 </button>
               </div>
             </div>
@@ -893,3 +832,5 @@ export const NewDesignSystem = ({
     </div>
   );
 };
+
+export { NewDesignSystem };

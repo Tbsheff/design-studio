@@ -4,6 +4,7 @@ import type {
   CompiledTokenEntry,
 } from "@design-studio/contracts";
 import { Icon, useFitPopover, usePopover } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useCallback, useRef, useState, useEffect } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -68,7 +69,7 @@ const ChipDialogs = ({
   userPack,
   actions,
   onClose,
-}: ChipDialogsProps) => {
+}: ChipDialogsProps): ReactElement | null => {
   if (dialog === "change") {
     const from = system.directionId
       ? { directionId: system.directionId, projectId: system.projectId }
@@ -104,7 +105,13 @@ interface Load {
   error: string | null;
 }
 
-const ValueCell = ({ value, color }: { value: string; color: boolean }) => (
+const ValueCell = ({
+  value,
+  color,
+}: {
+  value: string;
+  color: boolean;
+}): ReactElement => (
   <span className="ds-value" data-tip={value}>
     {color && (
       <span
@@ -117,7 +124,7 @@ const ValueCell = ({ value, color }: { value: string; color: boolean }) => (
   </span>
 );
 
-const TokenRow = ({ entry }: { entry: CompiledTokenEntry }) => {
+const TokenRow = ({ entry }: { entry: CompiledTokenEntry }): ReactElement => {
   const color = entry.type === "color";
 
   return (
@@ -127,17 +134,18 @@ const TokenRow = ({ entry }: { entry: CompiledTokenEntry }) => {
       {entry.darkValue ? (
         <ValueCell value={entry.darkValue} color={color} />
       ) : (
-        <span className="ds-none">Same</span>
+        <span className="ds-none">{COPY.textSame}</span>
       )}
     </li>
   );
 };
 
-const TokenList = ({ load }: { load: Load }) => {
+const TokenList = ({ load }: { load: Load }): ReactElement => {
   if (load.error) {
     return (
       <div className="alert error small" role="alert">
-        Could not load tokens. {load.error} Close this panel and open it again.
+        {COPY.textCouldNotLoadTokens}
+        {load.error} {COPY.textCloseThisPanelAnd}
       </div>
     );
   }
@@ -145,7 +153,7 @@ const TokenList = ({ load }: { load: Load }) => {
   if (!load.state) {
     return (
       <div className="ds-loading" role="status">
-        <span className="spinner" /> Loading tokens…
+        <span className="spinner" /> {COPY.textLoadingTokens}
       </div>
     );
   }
@@ -165,9 +173,9 @@ const TokenList = ({ load }: { load: Load }) => {
         </ul>
       )}
       <div className="ds-cols" aria-hidden="true">
-        <span>Variable</span>
-        <span>Light</span>
-        <span>Dark</span>
+        <span>{COPY.textVariable}</span>
+        <span>{COPY.textLight}</span>
+        <span>{COPY.textDark}</span>
       </div>
       <ul className="ds-list" aria-label={COPY.labelTokens}>
         {entries.map((entry) => (
@@ -188,7 +196,7 @@ const useDesignSystem = (ref: DesignSystemRef, open: boolean): Load => {
 
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const state = await api.getDesignSystem(projectId, directionId);
 
@@ -204,7 +212,7 @@ const useDesignSystem = (ref: DesignSystemRef, open: boolean): Load => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [open, projectId, directionId]);
@@ -220,7 +228,7 @@ export const DesignSystemChip = ({
   system: DesignSystemRef;
   actions: DesignSystemActions;
   onOpenDesignMd: () => void;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -248,7 +256,7 @@ export const DesignSystemChip = ({
   usePopover(open, root, close);
   useFitPopover(popover, trigger, open);
 
-  const openDialog = (next: Dialog) => {
+  const openDialog = (next: Dialog): void => {
     close(false);
     setDialog(next);
   };
@@ -277,7 +285,7 @@ export const DesignSystemChip = ({
           onClick={() => setDialog("change")}
         >
           <Icon name="palette" size={14} />
-          Add design system
+          {COPY.textAddDesignSystem}
         </button>
         {dialogs}
       </>
@@ -320,21 +328,21 @@ export const DesignSystemChip = ({
               className="btn small"
               onClick={() => openDialog("change")}
             >
-              Change design system…
+              {COPY.textChangeDesignSystem}
             </button>
             <button
               type="button"
               className="btn small"
               onClick={() => openDialog("save")}
             >
-              Save to library…
+              {COPY.textSaveToLibrary}
             </button>
           </div>
           <div className="ds-body">
             <TokenList load={load} />
           </div>
           <div className="ds-foot">
-            <span className="hint">Source: design-system/tokens.json</span>
+            <span className="hint">{COPY.textSourceDesignSystemTokens}</span>
             <button
               type="button"
               className="btn small has-icon"
@@ -344,7 +352,7 @@ export const DesignSystemChip = ({
               }}
             >
               <Icon name="doc" size={14} />
-              Open DESIGN.md
+              {COPY.textOpenDesignMd}
             </button>
           </div>
         </div>

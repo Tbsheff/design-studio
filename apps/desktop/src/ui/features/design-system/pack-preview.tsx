@@ -1,6 +1,6 @@
 import { REQUIRED_TOKENS } from "@design-studio/contracts";
 import type { CompiledTokenEntry, PackSummary } from "@design-studio/contracts";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactElement } from "react";
 
 import { COPY } from "./copy.js";
 
@@ -17,7 +17,7 @@ const varsFor = (entries: CompiledTokenEntry[], mode: Mode): CSSProperties => {
   return vars as CSSProperties;
 };
 
-const Palette = () => (
+const Palette = (): ReactElement => (
   <ul className="pv-palette" aria-label={COPY.labelColors}>
     {REQUIRED_TOKENS.color.map((name) => (
       <li key={name} className="pv-color">
@@ -32,17 +32,17 @@ const Palette = () => (
   </ul>
 );
 
-const Components = ({ name }: { name: string }) => (
+const Components = ({ name }: { name: string }): ReactElement => (
   <div className="pv-components">
     <div className="pv-card">
       <h4>{name}</h4>
-      <p>Cards, text and controls take every value from the tokens.</p>
+      <p>{COPY.textCardsTextAndControls}</p>
       <div className="pv-row">
-        <span className="pv-btn primary">Primary</span>
-        <span className="pv-btn accent">Accent</span>
-        <span className="pv-btn outline">Outline</span>
+        <span className="pv-btn primary">{COPY.textPrimary}</span>
+        <span className="pv-btn accent">{COPY.textAccent}</span>
+        <span className="pv-btn outline">{COPY.labelOutline}</span>
       </div>
-      <span className="pv-input">name@example.com</span>
+      <span className="pv-input">{COPY.textNameExampleCom}</span>
     </div>
     <div className="pv-alerts">
       <span className="pv-alert" style={{ borderColor: "var(--success)" }}>
@@ -51,7 +51,7 @@ const Components = ({ name }: { name: string }) => (
           style={{ background: "var(--success)" }}
           aria-hidden="true"
         />
-        Saved
+        {COPY.textSaved}
       </span>
       <span className="pv-alert" style={{ borderColor: "var(--warning)" }}>
         <span
@@ -59,7 +59,7 @@ const Components = ({ name }: { name: string }) => (
           style={{ background: "var(--warning)" }}
           aria-hidden="true"
         />
-        Check this
+        {COPY.textCheckThis}
       </span>
       <span className="pv-alert" style={{ borderColor: "var(--danger)" }}>
         <span
@@ -67,7 +67,7 @@ const Components = ({ name }: { name: string }) => (
           style={{ background: "var(--danger)" }}
           aria-hidden="true"
         />
-        Could not save
+        {COPY.textCouldNotSave}
       </span>
     </div>
   </div>
@@ -83,7 +83,7 @@ const Surface = ({
   mode: Mode;
   label: string;
   name: string;
-}) => (
+}): ReactElement => (
   <section
     className="pv-surface"
     style={varsFor(entries, mode)}
@@ -98,54 +98,59 @@ const Surface = ({
 
 const TYPE_STEPS = ["4xl", "2xl", "xl", "base", "sm"] as const;
 
-const TypeScale = ({ entries }: { entries: CompiledTokenEntry[] }) => (
+const TypeScale = ({
+  entries,
+}: {
+  entries: CompiledTokenEntry[];
+}): ReactElement => (
   <section
     className="pv-surface pv-type"
     style={varsFor(entries, "light")}
     aria-label={COPY.labelTypeScale}
   >
-    <span className="pv-label">Type</span>
+    <span className="pv-label">{COPY.textType}</span>
     {TYPE_STEPS.map((step, index) => (
       <div key={step} className="pv-type-row">
         <code>{step}</code>
         <span
           style={{
-            fontFamily: index < 2 ? "var(--font-display)" : "var(--font-body)",
+            fontFamily:
+              (index < 2 && "var(--font-display)") || "var(--font-body)",
             fontSize: `var(--text-${step})`,
           }}
         >
-          The quick brown fox
+          {COPY.textTheQuickBrownFox}
         </span>
       </div>
     ))}
     <div className="pv-type-row">
-      <code>mono</code>
+      <code>{COPY.textMono}</code>
       <span
         style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-sm)" }}
       >
-        const token = 'var(--primary)';
+        {COPY.textConstTokenVarPrimary}
       </span>
     </div>
   </section>
 );
 
-export const PackPreview = ({
+const PackPreview = ({
   pack,
   entries,
 }: {
   pack: PackSummary;
   entries: CompiledTokenEntry[];
-}) => {
+}): ReactElement => {
   const dual =
     pack.mode === "light" && entries.some((entry) => entry.darkValue !== null);
 
   return (
     <div className="pv">
-      <div className={`pv-modes ${dual ? "two" : ""}`}>
+      <div className={`pv-modes ${(dual && "two") || ""}`}>
         <Surface
           entries={entries}
           mode="light"
-          label={dual ? "Light" : pack.mode === "dark" ? "Dark" : "Light"}
+          label={dual ? "Light" : (pack.mode === "dark" && "Dark") || "Light"}
           name={pack.name}
         />
         {dual && (
@@ -161,3 +166,5 @@ export const PackPreview = ({
     </div>
   );
 };
+
+export { PackPreview };

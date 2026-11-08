@@ -1,128 +1,78 @@
 import type { QueuedMessage } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useState } from "react";
-import type { KeyboardEvent, ReactElement } from "react";
+import { useCallback, useState } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-
-const MAX_ROWS = 4;
-
-const move = (
-  items: QueuedMessage[],
-  from: number,
-  to: number
-): QueuedMessage[] => {
-  if (to < 0 || to >= items.length || from === to) {
-    return items;
-  }
-
-  const next = [...items];
-  const [item] = next.splice(from, 1);
-
-  if (item) {
-    next.splice(to, 0, item);
-  }
-
-  return next;
-};
+import { QueuedEdit } from "./queued-edit.js";
+import { QueuedGrip } from "./queued-grip.js";
+import { editQueued, removeQueued } from "./queued-model.js";
+import { useQueuedMoves } from "./use-queued-moves.js";
 
 const QueuedItem = ({
   item,
   index,
-  count,
-  onChange,
-  onRemove,
-  onMove,
-  onDragStart,
-  onDropAt,
+  items,
+  dragFrom,
+  onItems,
+  onDragFrom,
 }: {
   item: QueuedMessage;
   index: number;
-  count: number;
-  onChange: (text: string) => void;
-  onRemove: () => void;
-  onMove: (to: number) => void;
-  onDragStart: () => void;
-  onDropAt: () => void;
+  items: QueuedMessage[];
+  dragFrom: number | null;
+  onItems: (items: QueuedMessage[]) => void;
+  onDragFrom: (from: number | null) => void;
 }): ReactElement => {
-  const [editing, setEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(item.text);
+  const count = items.length;
 
-  const finish = (save: boolean): void => {
-    setEditing(false);
+  const onFinish = useCallback(
+    (save: boolean): void => {
+      setIsEditing(false);
 
-    if (save && text.trim() && text !== item.text) {
-      onChange(text);
-    } else {
-      setText(item.text);
-    }
-  };
+      if (save && text.trim() && text !== item.text) {
+        onItems(editQueued(items, item.id, text));
+      } else {
+        setText(item.text);
+      }
+    },
+    [text, item, items, onItems]
+  );
 
-  const onKey = (event: KeyboardEvent<HTMLLIElement>): void => {
-    if (editing || !event.altKey) {
-      return;
-    }
+  const { onDragOver, onDragStart, onDrop, onKeyDown } = useQueuedMoves({
+    dragFrom,
+    index,
+    isEditing,
+    items,
+    onDragFrom,
+    onItems,
+  });
 
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-      event.preventDefault();
-      onMove(index + (event.key === "ArrowUp" ? -1 : 1));
-    }
-  };
+  const onEdit = useCallback(() => setIsEditing(true), []);
+
+  const onRemove = useCallback(
+    () => onItems(removeQueued(items, item.id)),
+    [items, item.id, onItems]
+  );
 
   return (
     <li
       className="queued-item"
-      draggable={!editing && count > 1}
-      onDragStart={(event) => {
-        event.dataTransfer.effectAllowed = "move";
-        onDragStart();
-      }}
-      onDragOver={(event) => event.preventDefault()}
-      onDrop={(event) => {
-        event.preventDefault();
-        onDropAt();
-      }}
-      onKeyDown={onKey}
+      draggable={!isEditing && count > 1}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onKeyDown={onKeyDown}
       data-testid="queued-item"
     >
-      {count > 1 && (
-        <span
-          className="queued-grip"
-          aria-hidden="true"
-          data-tip={copy.dragOrAlt}
-          data-tip-side="top"
-          data-tip-align="start"
-        >
-          {copy.text8}
-        </span>
+      {count > 1 && <QueuedGrip />}
+      {isEditing && (
+        <QueuedEdit text={text} onText={setText} onFinish={onFinish} />
       )}
-      {editing && (
-        <textarea
-          className="queued-edit"
-          aria-label={copy.editQueuedMessage}
-          value={text}
-
-          rows={Math.min(MAX_ROWS, text.split("\n").length)}
-          onChange={(event) => setText(event.target.value)}
-          onBlur={() => finish(true)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              event.stopPropagation();
-              event.preventDefault();
-              finish(false);
-            } else if (event.key === "Enter" && !event.shiftKey) {
-              event.preventDefault();
-              finish(true);
-            }
-          }}
-        />
-      )}
-      {!editing && (
-        <button
-          type="button"
-          className="queued-text"
-          onClick={() => setEditing(true)}
-        >
+      {!isEditing && (
+        <button type="button" className="queued-text" onClick={onEdit}>
           {item.text}
         </button>
       )}
@@ -162,30 +112,10 @@ const QueuedMessages = ({
             key={item.id}
             item={item}
             index={index}
-            count={items.length}
-            onChange={(text) =>
-              onChange(
-                items.map((entry) => {
-                  if (entry.id === item.id) {
-                    return { ...entry, text };
-                  }
-
-                  return entry;
-                })
-              )
-            }
-            onRemove={() =>
-              onChange(items.filter((entry) => entry.id !== item.id))
-            }
-            onMove={(to) => onChange(move(items, index, to))}
-            onDragStart={() => setDragFrom(index)}
-            onDropAt={() => {
-              if (dragFrom !== null) {
-                onChange(move(items, dragFrom, index));
-              }
-
-              setDragFrom(null);
-            }}
+            items={items}
+            dragFrom={dragFrom}
+            onItems={onChange}
+            onDragFrom={setDragFrom}
           />
         ))}
       </ol>

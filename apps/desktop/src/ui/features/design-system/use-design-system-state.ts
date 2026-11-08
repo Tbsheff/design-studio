@@ -68,6 +68,24 @@ interface DesignSystemView {
   state: DesignSystemState | null;
 }
 
+interface StateRequest {
+  readonly directionId: string;
+  readonly headVersionId: string | null;
+  readonly packId: string | null;
+  readonly projectId: string;
+  readonly stamp: number;
+}
+
+const readState = async (
+  request: StateRequest
+): Promise<DesignSystemState | null> => {
+  try {
+    return await api.getDesignSystem(request.projectId, request.directionId);
+  } catch {
+    return null;
+  }
+};
+
 const useDesignSystemState = (
   projectId: string,
   project: Project | null,
@@ -102,13 +120,13 @@ const useDesignSystemState = (
     let cancelled = false;
 
     const read = async (): Promise<void> => {
-      let state: DesignSystemState | null = null;
-
-      try {
-        state = await api.getDesignSystem(projectId, directionId);
-      } catch {
-        state = null;
-      }
+      const state = await readState({
+        directionId,
+        headVersionId,
+        packId,
+        projectId,
+        stamp,
+      });
 
       if (state && !cancelled && live.current === want) {
         setLoaded({ key: want, state });

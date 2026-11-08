@@ -38,12 +38,34 @@ const toChangedAt = (
   return 0;
 };
 
-const toRefreshDelay = (changedAt: number): number => {
-  if (changedAt === 0) {
+const toRefreshDelay = (changedAt: number, attempt: number): number => {
+  if (changedAt === 0 || attempt > 0) {
     return 0;
   }
 
   return REFRESH_MS;
+};
+
+interface KeyedList {
+  key: string;
+  list: ComponentList;
+}
+
+const EMPTY_LIST: ComponentList = {
+  components: null,
+  error: null,
+  version: "0",
+};
+
+const toListKey = (projectId: string, directionId: string | null): string =>
+  `${projectId}:${directionId}`;
+
+const toKeptList = (prev: KeyedList, key: string): ComponentList => {
+  if (prev.key === key) {
+    return prev.list;
+  }
+
+  return EMPTY_LIST;
 };
 
 const useComponents = (
@@ -51,10 +73,9 @@ const useComponents = (
   directionId: string | null,
   lastChange: FilesChange | null
 ): ComponentList => {
-  const [state, setState] = useState<ComponentList>({
-    components: null,
-    error: null,
-    version: "0",
+  const [state, setState] = useState<KeyedList>({
+    key: toListKey(projectId, directionId),
+    list: EMPTY_LIST,
   });
 
   const changedAt = toChangedAt(lastChange, directionId);
@@ -69,38 +90,47 @@ const useComponents = (
     seq.current += 1;
     const my = seq.current;
     const version = String(changedAt);
+    const key = toListKey(projectId, directionId);
 
-    const timer = globalThis.setTimeout(async () => {
-      try {
-        const result = await json<{ components: ComponentInfo[] }>(
-          "GET",
-          base(projectId, directionId)
-        );
+    const timer = globalThis.setTimeout(
+      async () => {
+        try {
+          const result = await json<{ components: ComponentInfo[] }>(
+            "GET",
+            base(projectId, directionId)
+          );
 
-        if (my === seq.current) {
-          setState({ components: result.components, error: null, version });
+          if (my === seq.current) {
+            setState({
+              key,
+              list: { components: result.components, error: null, version },
+            });
+          }
+        } catch (error: unknown) {
+          let message = String(error);
+
+          if (error instanceof Error) {
+            ({ message } = error);
+          }
+
+          if (my === seq.current) {
+            setState((prev) => ({
+              key,
+              list: { ...toKeptList(prev, key), error: message },
+            }));
+          }
         }
-      } catch (error: unknown) {
-        let message = String(error);
-
-        if (error instanceof Error) {
-          ({ message } = error);
-        }
-
-        if (my === seq.current) {
-          setState((prev) => ({ ...prev, error: message }));
-        }
-      }
-    }, toRefreshDelay(changedAt));
+      },
+      toRefreshDelay(changedAt, attempt)
+    );
 
     return (): void => globalThis.clearTimeout(timer);
   }, [projectId, directionId, changedAt, attempt]);
-  useEffect(
-    () => setState({ components: null, error: null, version: "0" }),
-    [projectId, directionId]
-  );
 
-  return { ...state, retry: () => setAttempt((count) => count + 1) };
+  return {
+    ...toKeptList(state, toListKey(projectId, directionId)),
+    retry: () => setAttempt((count) => count + 1),
+  };
 };
 
 export { componentThumb, useComponents };

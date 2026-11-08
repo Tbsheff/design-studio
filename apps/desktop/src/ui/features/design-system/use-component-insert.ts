@@ -16,6 +16,7 @@ import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 import { NO_SOURCE } from "../inspector/structure-edits.js";
 import { insertApi, insertBus, insertError } from "./component-insert-api.js";
 import type { DropHint, InsertHost } from "./component-insert-api.js";
+import type { MenuAnchor } from "./components-panel-props.js";
 
 const FRAME_CHANGES = new Set(["painted", "ready", "tree"]);
 
@@ -92,7 +93,7 @@ const localPoint = (
   frames: Frames,
   posX: number,
   posY: number
-): { x: number; y: number } | null => {
+): MenuAnchor | null => {
   const found = frameRect(frames);
 
   if (!found) {

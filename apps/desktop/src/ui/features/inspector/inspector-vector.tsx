@@ -17,7 +17,7 @@ import { errorText } from "../../api.js";
 import { runVector } from "../canvas/vector-tool-model.js";
 import { copy } from "./copy.js";
 import { colorToHex } from "./css-values.js";
-import { InspectorSection } from "./inspector-fields.js";
+import { InspectorSection } from "./inspector-section.js";
 
 import "../../styles/vector.css";
 
@@ -368,7 +368,7 @@ const PaintRows = ({
   };
 
   return (
-    <InspectorSection title={copy.fillAndStroke} className="vector-paint">
+    <InspectorSection title={copy.fillAndStroke} modifier="vector-paint">
       <div className="ins-grid">
         <div className="wide">
           <ColorRow

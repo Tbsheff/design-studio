@@ -19,7 +19,7 @@ import { errorText, replaceStyle } from "../../api.js";
 import { copy } from "./copy.js";
 
 import "../../styles/inspector-match.css";
-import { InspectorSection } from "./inspector-fields.js";
+import { InspectorSection } from "./inspector-section.js";
 import {
   classCandidates,
   designCandidates,
@@ -216,7 +216,7 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
   return (
     <InspectorSection
       title={title}
-      className="sm-section"
+      modifier="sm-section"
       aside={<ScopeToggle scope={scope} onScope={setScope} />}
     >
       {scanned.hits === null && (

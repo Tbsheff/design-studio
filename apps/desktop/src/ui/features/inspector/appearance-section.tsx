@@ -4,7 +4,7 @@ import { AppearanceExtras } from "./appearance-extras.js";
 import { AppearanceGrid } from "./appearance-grid.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
-import { InspectorSection } from "./inspector-fields.js";
+import { InspectorSection } from "./inspector-section.js";
 import type { Extra } from "./simple-model.js";
 
 interface AppearanceSectionProps {

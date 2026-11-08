@@ -16,7 +16,7 @@ import { CreateTokenDialog } from "../versions-layers-tokens/create-token-dialog
 import type { CreateTokenSubmit } from "../versions-layers-tokens/create-token-dialog.js";
 import { copy } from "./copy.js";
 import type { StyleValues } from "./css-values.js";
-import { InspectorSection } from "./inspector-fields.js";
+import { InspectorSection } from "./inspector-section.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { CreateRequest } from "./use-token-snap.js";

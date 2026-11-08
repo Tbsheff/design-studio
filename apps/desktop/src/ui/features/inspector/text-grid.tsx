@@ -1,11 +1,13 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement, ReactNode } from "react";
 
+import { AlignField } from "./align-field.js";
+import { ColorField } from "./color-field.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
-import { AlignField, ColorField, SelectField } from "./inspector-fields.js";
 import { ContentRow, TextStyleToggles } from "./inspector-rows.js";
 import { FontField } from "./inspector-tokens.js";
+import { SelectField } from "./select-field.js";
 import {
   CASES,
   FONT_SIZE,

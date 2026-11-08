@@ -4,6 +4,7 @@ import { Suspense, lazy } from "react";
 import type { InspectorProps } from "./inspector-model.js";
 
 const InspectorPropsPanel = lazy(async () => {
+  await import("../../styles/inspector-props.css");
   const loaded = await import("./inspector-props.js");
 
   return { default: loaded.InspectorPropsPanel };

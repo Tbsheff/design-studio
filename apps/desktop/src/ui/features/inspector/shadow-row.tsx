@@ -2,10 +2,10 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useMemo } from "react";
 
+import { ColorField } from "./color-field.js";
 import { copy } from "./copy.js";
 import { PARTS, fieldPart, writeShadows } from "./effects-model.js";
 import type { Field, ShadowView } from "./effects-model.js";
-import { ColorField } from "./inspector-fields.js";
 import { PlainNumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import { formatShadows } from "./shadows.js";

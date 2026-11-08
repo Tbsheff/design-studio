@@ -11,4 +11,8 @@ export type {
   SaveStatus,
 } from "./use-direct-edit.js";
 
+export { TokenControl } from "../versions-layers-tokens/index.js";
+
 export type { AuthoredCssState } from "./use-authored-css.js";
+
+export type { TokenUi } from "./use-token-snap.js";

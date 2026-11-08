@@ -1,12 +1,11 @@
 import type { SelectionContext } from "@design-studio/contracts";
+import type { ComponentSchema } from "@design-studio/contracts/props";
 import type { ReactElement } from "react";
 
 import { ComponentPreviewThumb } from "../design-system/component-preview-thumb.js";
-
-import "../../styles/inspector-props.css";
 import { AuthorSheet } from "./author-sheet.js";
 import { copy } from "./copy.js";
-import { InspectorSection } from "./inspector-fields.js";
+import { InspectorSection } from "./inspector-section.js";
 import { PropRows } from "./prop-rows.js";
 import { PropsChip } from "./props-chip.js";
 import { PropsFooter } from "./props-footer.js";
@@ -19,24 +18,26 @@ interface InspectorPropsPanelProps {
   readonly isEditable: boolean;
 }
 
+const toPropsAside = (component: ComponentSchema): ReactElement => (
+  <PropsChip component={component} />
+);
+
 const InspectorPropsPanel = ({
   projectId,
   directionId,
   selection,
   isEditable,
 }: InspectorPropsPanelProps): ReactElement | null => {
-  const {
-    instance,
-    status,
-    setStatus,
-    sheet,
-    isStylesOpen,
-    onChange,
-    onOpenSheet,
-    onCloseSheet,
-    onToggleStyles,
-  } = usePropsPanel({ directionId, isEditable, projectId, selection });
-
+  const panel = usePropsPanel({
+    directionId,
+    isEditable,
+    projectId,
+    selection,
+  });
+  const { instance, status, sheet, isStylesOpen } = panel;
+  const { onChange, setStatus, onToggleStyles } = panel;
+  const { onOpenSheet: handleOpenSheet } = panel;
+  const { onCloseSheet: handleCloseSheet } = panel;
   const component = instance?.component;
 
   if (!instance || !component || !directionId) {
@@ -46,8 +47,8 @@ const InspectorPropsPanel = ({
   return (
     <InspectorSection
       title={copy.component}
-      className="prp"
-      aside={<PropsChip component={component} />}
+      modifier="prp"
+      aside={toPropsAside(component)}
     >
       <p className="prp-where">
         {`${copy.usedAt}${instance.use.file}:${instance.use.line}`}
@@ -60,7 +61,6 @@ const InspectorPropsPanel = ({
             id={`${component.file}#${component.name}`}
             version="0"
             active
-            className="prp-kit-thumb"
           />
           <p
             className="prp-where"
@@ -78,14 +78,14 @@ const InspectorPropsPanel = ({
         component={component}
         isDisabled={!isEditable || status.kind === "saving"}
         onChange={onChange}
-        onAuthor={onOpenSheet}
+        onAuthor={handleOpenSheet}
       />
       <AuthorSheet
         projectId={projectId}
         directionId={directionId}
         instance={instance}
         sheet={sheet}
-        onClose={onCloseSheet}
+        onClose={handleCloseSheet}
         onUse={onChange}
         onStatus={setStatus}
       />

@@ -9,7 +9,7 @@ import { startTransition, useEffect, useState } from "react";
 import type { VariantSupport } from "../../../shared/variants.js";
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
-import { InspectorSection } from "./inspector-fields.js";
+import { InspectorSection } from "./inspector-section.js";
 
 interface ElementClasses {
   readonly tailwind: TailwindOutcome | null;
@@ -103,7 +103,7 @@ const ClassLine = ({
   return (
     <InspectorSection
       title={copy.classes}
-      className="ins-classes"
+      modifier="ins-classes"
       aside={
         !own && list.length > 0 ? (
           <span className="ins-classes-tag">{copy.readOnly}</span>

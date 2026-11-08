@@ -4,10 +4,11 @@ import { useRef } from "react";
 import type { ReactNode, ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { InspectorSection, SelectField } from "./inspector-fields.js";
+import { InspectorSection } from "./inspector-section.js";
 import { AddButton } from "./inspector-shared.js";
 import { write, useLayoutKeys } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
+import { SelectField } from "./select-field.js";
 import {
   activeCell,
   alignCell,

@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from "react";
 import { BackgroundField } from "./background-field.js";
 import type { DirectEdit } from "./deps.js";
 import { RadiusField } from "./inspector-corners.js";
-import { SelectField } from "./inspector-fields.js";
+import { SelectField } from "./select-field.js";
 import { OPACITY, OVERFLOWS } from "./simple-model.js";
 import { SpecNumberField } from "./spec-number-field.js";
 

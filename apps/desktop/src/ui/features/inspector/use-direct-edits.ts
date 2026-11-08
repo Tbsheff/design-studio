@@ -69,10 +69,12 @@ const useDirectEdits = (
   const merged = useMemo(() => mergeValues(bases), [bases]);
   const mergedRef = useRef(merged);
   mergedRef.current = merged;
+
   const blocked = useMemo(
     () => multiBlockReason(options.selections),
     [options.selections]
   );
+
   const [draft, setDraftState] = useState<Partial<StyleValues>>({});
   const draftRef = useRef(draft);
   const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });

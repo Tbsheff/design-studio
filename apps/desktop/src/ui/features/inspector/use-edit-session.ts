@@ -163,8 +163,8 @@ const useEditSession = (options: Options): UseEditSessionResult => {
         if (opts.current.directionId === directionId) {
           setView(fresh(state.baseVersionId || null));
         }
-      } catch (err: unknown) {
-        setError(errorText(err));
+      } catch (failure: unknown) {
+        setError(errorText(failure));
       }
     });
   }, [projectId, directionId]);
@@ -255,8 +255,8 @@ const useEditSession = (options: Options): UseEditSessionResult => {
       cur.onEnded?.(action, result);
 
       return true;
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
 
       return false;
     } finally {
@@ -308,11 +308,11 @@ const useEditSession = (options: Options): UseEditSessionResult => {
   return {
     ...view,
     answer,
-    isAsking: asking,
     busy,
     clearError: () => setError(null),
     discard,
     error,
+    isAsking: asking,
     requestExit,
     save,
   };

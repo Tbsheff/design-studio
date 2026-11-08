@@ -47,8 +47,8 @@ const useUseSite = (props: InspectorProps): UseUseSiteResult => {
     setComponentFor(editingUse ? (target?.selector ?? null) : null);
 
   return {
-    isEditingUse: editingUse,
     effective,
+    isEditingUse: editingUse,
     sharedEditing: shared
       ? { isEditingUse: editingUse, onToggle: toggle, shared }
       : null,

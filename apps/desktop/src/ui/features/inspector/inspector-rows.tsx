@@ -11,8 +11,9 @@ import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
 import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-const useRowKeys = (onCommit: () => void, onRevert: () => void) => {
-  return (event: KeyboardEvent<HTMLInputElement>): void => {
+const useRowKeys =
+  (onCommit: () => void, onRevert: () => void) =>
+  (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
       onCommit();
@@ -22,7 +23,6 @@ const useRowKeys = (onCommit: () => void, onRevert: () => void) => {
       onRevert();
     }
   };
-};
 
 const ContentRow = ({
   selection,
@@ -140,9 +140,8 @@ const CssTextRow = ({
   );
 };
 
-const hasLine = (value: string, line: string): boolean => {
-  return value.split(/\s+/).includes(line);
-};
+const hasLine = (value: string, line: string): boolean =>
+  value.split(/\s+/).includes(line);
 
 const toggleLine = (value: string, line: string): string => {
   const parts = value

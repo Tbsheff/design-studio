@@ -180,8 +180,8 @@ const OpenInEditor = ({
                 editor.id,
                 file
               );
-            } catch (err: unknown) {
-              setError(errorText(err));
+            } catch (failure: unknown) {
+              setError(errorText(failure));
             }
           });
         }}

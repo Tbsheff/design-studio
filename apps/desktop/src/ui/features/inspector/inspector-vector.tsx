@@ -299,8 +299,8 @@ const useRun = (
       await runVector(props.projectId, props.directionId, request);
 
       return true;
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
 
       return false;
     } finally {
@@ -385,6 +385,7 @@ const PaintRows = ({
 
 const BooleanRow = ({ props }: { readonly props: Props }): ReactElement => {
   const { error, isBusy: busy, run } = useRun(props);
+
   const [first, second] = props.selection as [
     SelectionContext,
     SelectionContext,

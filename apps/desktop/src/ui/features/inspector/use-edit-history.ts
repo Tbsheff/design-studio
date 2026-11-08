@@ -118,6 +118,7 @@ const useEditHistory = (options: Options): UseEditHistoryResult => {
   const stateRef = useRef(state);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const generation = useRef(0);
+
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
   );
@@ -246,10 +247,12 @@ const useEditHistory = (options: Options): UseEditHistoryResult => {
   const step = useCallback(
     (kind: HistoryKind, fallback?: () => unknown) => {
       const previous = queue.current;
+
       const run = async (): Promise<void> => {
         await previous;
         await runStep(kind, fallback);
       };
+
       queue.current = run();
     },
     [runStep]

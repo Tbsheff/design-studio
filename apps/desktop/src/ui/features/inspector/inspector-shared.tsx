@@ -33,23 +33,17 @@ const InspectorAppContext = createContext<InspectorApp>({
   element: null,
 });
 
-const useInspectorApp = (): InspectorApp => {
-  return useContext(InspectorAppContext);
-};
+const useInspectorApp = (): InspectorApp => useContext(InspectorAppContext);
 
 const loc = (source: {
   readonly file: string;
   readonly line: number;
-}): string => {
-  return `${source.file}:${source.line}`;
-};
+}): string => `${source.file}:${source.line}`;
 
 const shortLoc = (source: {
   readonly file: string;
   readonly line: number;
-}): string => {
-  return `${source.file.split("/").pop() ?? source.file}:${source.line}`;
-};
+}): string => `${source.file.split("/").pop() ?? source.file}:${source.line}`;
 
 const dataTextPrompt = (text: string, data: TextFromData): string => {
   const shown = text.length > 80 ? `${text.slice(0, 79)}…` : text;
@@ -282,22 +276,20 @@ const AddButton = ({
   readonly tip?: string;
   readonly shortcut?: string;
   readonly onClick: () => void;
-}): ReactElement => {
-  return (
-    <button
-      type="button"
-      className="ins-add"
-      aria-label={`Add ${label.toLowerCase()}`}
-      aria-keyshortcuts={shortcut}
-      data-tip={tip}
-      data-tip-align={tip ? "start" : undefined}
-      onClick={onClick}
-    >
-      <Icon name="plus" size={12} />
-      {label}
-    </button>
-  );
-};
+}): ReactElement => (
+  <button
+    type="button"
+    className="ins-add"
+    aria-label={`Add ${label.toLowerCase()}`}
+    aria-keyshortcuts={shortcut}
+    data-tip={tip}
+    data-tip-align={tip ? "start" : undefined}
+    onClick={onClick}
+  >
+    <Icon name="plus" size={12} />
+    {label}
+  </button>
+);
 
 export {
   InspectorAppContext,
@@ -307,4 +299,5 @@ export {
   SharedSourceNote,
   AddButton,
 };
+
 export type { InspectorApp };

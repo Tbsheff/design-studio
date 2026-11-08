@@ -33,13 +33,10 @@ const parseNumber = (raw: string): ParsedNumber | null => {
   return { unit: (match[2] ?? "").toLowerCase(), value: Number(match[1]) };
 };
 
-const round = (value: number): number => {
-  return Math.round(value * 100) / 100;
-};
+const round = (value: number): number => Math.round(value * 100) / 100;
 
-const formatNumber = (value: number, unit: string): string => {
-  return `${round(value)}${unit}`;
-};
+const formatNumber = (value: number, unit: string): string =>
+  `${round(value)}${unit}`;
 
 const stepValue = (
   raw: string,
@@ -63,8 +60,8 @@ interface ShiftPart {
   readonly set?: string;
 }
 
-const shiftedPart = (raw: string, part: ShiftPart, shift: Shift): string => {
-  return part.map(raw, (value) => {
+const shiftedPart = (raw: string, part: ShiftPart, shift: Shift): string =>
+  part.map(raw, (value) => {
     const from = part.set ?? value;
     const next = shift.delta === 0 ? from : (shiftedValue(from, shift) ?? from);
     const parsed = parseNumber(next);
@@ -73,7 +70,6 @@ const shiftedPart = (raw: string, part: ShiftPart, shift: Shift): string => {
       ? formatNumber(parsed.value, "px")
       : next;
   });
-};
 
 const shiftedValue = (raw: string, shift: Shift): string | null => {
   const parsed = parseNumber(raw);
@@ -101,11 +97,10 @@ const normalizeLength = (raw: string, defaultUnit: string): string => {
   return formatNumber(parsed.value, defaultUnit);
 };
 
-const hexByte = (value: number): string => {
-  return Math.max(0, Math.min(255, Math.round(value)))
+const hexByte = (value: number): string =>
+  Math.max(0, Math.min(255, Math.round(value)))
     .toString(16)
     .padStart(2, "0");
-};
 
 const alphaOf = (raw: string | undefined): number => {
   if (raw === undefined) {
@@ -261,4 +256,5 @@ export {
   textEditability,
   changedProps,
 };
+
 export type { StyleValues, Side, Shift, ShiftPart };

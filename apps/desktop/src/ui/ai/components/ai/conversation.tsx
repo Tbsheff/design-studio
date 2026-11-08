@@ -22,7 +22,7 @@ const ConversationContext = createContext<ConversationContextValue | null>(
   null,
 );
 
-function useConversationContext() {
+const useConversationContext = () => {
   const ctx = useContext(ConversationContext);
 
   if (!ctx) {
@@ -30,9 +30,9 @@ function useConversationContext() {
   }
 
   return ctx;
-}
+};
 
-export function useConversation() {
+const useConversation = () => {
   const { isAtBottom, scrollToBottom, wasAtBottomRef, viewportRef } = useConversationContext();
 
   const stickToBottom = useCallback(() => {
@@ -41,13 +41,13 @@ export function useConversation() {
   }, [scrollToBottom, wasAtBottomRef]);
 
   return { isAtBottom, scrollToBottom, stickToBottom, viewportRef, wasAtBottomRef };
-}
+};
 
-export function Conversation({
+const Conversation = ({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"div">) {
+}: useRender.ComponentProps<"div">): React.JSX.Element => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const wasAtBottomRef = useRef(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -56,6 +56,7 @@ export function Conversation({
     const v = viewportRef.current;
 
     if (!v) {return;}
+
     v.scrollTo({ behavior, top: v.scrollHeight });
   }, []);
 
@@ -83,15 +84,15 @@ export function Conversation({
       {element}
     </ConversationContext.Provider>
   );
-}
+};
 
-export function ConversationContent({
+const ConversationContent = ({
   className,
   children,
   onScroll,
   render,
   ...props
-}: useRender.ComponentProps<"div">) {
+}: useRender.ComponentProps<"div">): React.JSX.Element => {
   const { viewportRef, isAtBottom, setIsAtBottom, wasAtBottomRef } =
     useConversationContext();
 
@@ -103,10 +104,12 @@ export function ConversationContent({
     const v = viewportRef.current;
 
     if (!v) {return;}
+
     const distance = v.scrollHeight - v.scrollTop - v.clientHeight;
     const atBottom = distance < 24;
 
     if (atBottom) {wasAtBottomRef.current = true;}
+
     setIsAtBottom(atBottom);
   }, [viewportRef, setIsAtBottom, wasAtBottomRef]);
 
@@ -114,6 +117,7 @@ export function ConversationContent({
     const v = viewportRef.current;
 
     if (!v) {return;}
+
     v.scrollTop = v.scrollHeight;
     recompute();
   }, [recompute, viewportRef]);
@@ -123,6 +127,7 @@ export function ConversationContent({
     const v = viewportRef.current;
 
     if (!c || !v) {return;}
+
     const ro = new ResizeObserver(() => {
       if (wasAtBottomRef.current) {
         v.scrollTop = v.scrollHeight;
@@ -153,47 +158,51 @@ export function ConversationContent({
       "data-at-bottom": isAtBottom ? "true" : "false",
       "data-slot": "conversation-content",
       onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === "PageUp" || event.key === "ArrowUp" || event.key === "Home" || (event.key === " " && event.shiftKey)) wasAtBottomRef.current = false;
+        if (event.key === "PageUp" || event.key === "ArrowUp" || event.key === "Home" || (event.key === " " && event.shiftKey)) {wasAtBottomRef.current = false;}
       },
       onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => {
-        if (event.target !== event.currentTarget) return;
+        if (event.target !== event.currentTarget) {return;}
         draggingRef.current = true;
+
         const release = () => {
           draggingRef.current = false;
           window.removeEventListener("pointerup", release);
           window.removeEventListener("pointercancel", release);
         };
+
         window.addEventListener("pointerup", release);
         window.addEventListener("pointercancel", release);
       },
       onScroll: (event: React.UIEvent<HTMLDivElement>) => {
         const v = event.currentTarget;
-        if (draggingRef.current) wasAtBottomRef.current = v.scrollHeight - v.scrollTop - v.clientHeight < 24;
+
+        if (draggingRef.current) {wasAtBottomRef.current = v.scrollHeight - v.scrollTop - v.clientHeight < 24;}
         recompute();
         onScroll?.(event);
       },
       onTouchMove: (event: React.TouchEvent<HTMLDivElement>) => {
         const y = event.touches[0]?.clientY;
-        if (y !== undefined && touchYRef.current !== null && y > touchYRef.current + 2) wasAtBottomRef.current = false;
+
+        if (y !== undefined && touchYRef.current !== null && y > touchYRef.current + 2) {wasAtBottomRef.current = false;}
         touchYRef.current = y ?? null;
       },
       onTouchStart: (event: React.TouchEvent<HTMLDivElement>) => {
         touchYRef.current = event.touches[0]?.clientY ?? null;
       },
       onWheel: (event: React.WheelEvent<HTMLDivElement>) => {
-        if (event.deltaY < 0) wasAtBottomRef.current = false;
+        if (event.deltaY < 0) {wasAtBottomRef.current = false;}
       },
     },
     ref: viewportRef,
     render,
   });
-}
+};
 
-export function ConversationScrollButton({
+const ConversationScrollButton = ({
   render,
   onClick,
   ...props
-}: useRender.ComponentProps<"button">) {
+}: useRender.ComponentProps<"button">): React.JSX.Element => {
   const { isAtBottom, scrollToBottom, wasAtBottomRef } = useConversationContext();
 
   return useRender({
@@ -212,4 +221,6 @@ export function ConversationScrollButton({
     },
     render,
   });
-}
+};
+
+export { Conversation, ConversationContent, ConversationScrollButton, useConversation };

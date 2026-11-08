@@ -1,7 +1,7 @@
 import { routes } from "@design-studio/actions/integration/routes";
 import type { ReactElement } from "react";
 
-import { chipVariants } from "../../ai/components/ai/chip.js";
+import { chipVariants } from "../../ai/components/ai/chip-variants.js";
 import { useAction } from "../../platform/query.js";
 import { chipCopy } from "./integration-chip-copy.js";
 import { toActiveNames } from "./integration-chip-model.js";

@@ -2,22 +2,22 @@
 import { Collapsible } from "@base-ui/react/collapsible";
 import { cn } from "../../lib/utils";
 
-export function Action({ className, ...props }: Collapsible.Root.Props) {
-  return (
+const Action = ({ className, ...props }: Collapsible.Root.Props): React.JSX.Element => 
+  (
     <Collapsible.Root
       data-slot="action"
       className={cn("group/action flex flex-col text-sm", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ActionTrigger({
+const ActionTrigger = ({
   className,
   children,
   ...props
-}: Collapsible.Trigger.Props) {
-  return (
+}: Collapsible.Trigger.Props): React.JSX.Element => 
+  (
     <Collapsible.Trigger
       data-slot="action-trigger"
       className={cn(
@@ -48,15 +48,15 @@ export function ActionTrigger({
         <path d="m9 18 6-6-6-6" />
       </svg>
     </Collapsible.Trigger>
-  );
-}
+  )
+;
 
-export function ActionIcon({
+const ActionIcon = ({
   className,
   children,
   ...props
-}: React.ComponentProps<"span">) {
-  return (
+}: React.ComponentProps<"span">): React.JSX.Element => 
+  (
     <span
       data-slot="action-icon"
       aria-hidden
@@ -68,28 +68,28 @@ export function ActionIcon({
     >
       {children ?? <span className="size-2 rounded-full bg-current" />}
     </span>
-  );
-}
+  )
+;
 
-export function ActionLabel({
+const ActionLabel = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
-  return (
+}: React.ComponentProps<"span">): React.JSX.Element => 
+  (
     <span
       data-slot="action-label"
       className={cn("text-foreground", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ActionContent({
+const ActionContent = ({
   className,
   children,
   ...props
-}: Collapsible.Panel.Props) {
-  return (
+}: Collapsible.Panel.Props): React.JSX.Element => 
+  (
     <Collapsible.Panel
       data-slot="action-content"
       className={cn(
@@ -103,5 +103,7 @@ export function ActionContent({
     >
       <div className="py-2 text-muted-foreground">{children}</div>
     </Collapsible.Panel>
-  );
-}
+  )
+;
+
+export { Action, ActionContent, ActionIcon, ActionLabel, ActionTrigger };

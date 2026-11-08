@@ -2,8 +2,8 @@
 import { Collapsible } from "@base-ui/react/collapsible";
 import { cn } from "../../lib/utils";
 
-export function Exception({ className, ...props }: Collapsible.Root.Props) {
-  return (
+const Exception = ({ className, ...props }: Collapsible.Root.Props): React.JSX.Element => 
+  (
     <Collapsible.Root
       data-slot="exception"
       className={cn(
@@ -14,27 +14,27 @@ export function Exception({ className, ...props }: Collapsible.Root.Props) {
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionHeader({
+const ExceptionHeader = ({
   className,
   ...props
-}: React.ComponentProps<"header">) {
-  return (
+}: React.ComponentProps<"header">): React.JSX.Element => 
+  (
     <header
       data-slot="exception-header"
       className={cn("flex items-center gap-2.5 px-4 h-11", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionType({
+const ExceptionType = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
-  return (
+}: React.ComponentProps<"span">): React.JSX.Element => 
+  (
     <span
       data-slot="exception-type"
       className={cn(
@@ -46,27 +46,27 @@ export function ExceptionType({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionMessage({
+const ExceptionMessage = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="exception-message"
       className={cn("min-w-0 flex-1 text-sm text-foreground", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionAction({
+const ExceptionAction = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="exception-action"
       className={cn(
@@ -76,15 +76,15 @@ export function ExceptionAction({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionTrigger({
+const ExceptionTrigger = ({
   className,
   children,
   ...props
-}: Collapsible.Trigger.Props) {
-  return (
+}: Collapsible.Trigger.Props): React.JSX.Element => 
+  (
     <Collapsible.Trigger
       data-slot="exception-trigger"
       className={cn(
@@ -113,15 +113,15 @@ export function ExceptionTrigger({
         <path d="m9 18 6-6-6-6" />
       </svg>
     </Collapsible.Trigger>
-  );
-}
+  )
+;
 
-export function ExceptionContent({
+const ExceptionContent = ({
   className,
   children,
   ...props
-}: Collapsible.Panel.Props) {
-  return (
+}: Collapsible.Panel.Props): React.JSX.Element => 
+  (
     <Collapsible.Panel
       data-slot="exception-content"
       className={cn(
@@ -135,14 +135,14 @@ export function ExceptionContent({
     >
       <div className="px-4 pb-3 pt-0.5">{children}</div>
     </Collapsible.Panel>
-  );
-}
+  )
+;
 
-export function ExceptionFrames({
+const ExceptionFrames = ({
   className,
   ...props
-}: React.ComponentProps<"ol">) {
-  return (
+}: React.ComponentProps<"ol">): React.JSX.Element => 
+  (
     <ol
       data-slot="exception-frames"
       className={cn(
@@ -153,21 +153,21 @@ export function ExceptionFrames({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
 type ExceptionFrameProps = React.ComponentProps<"li"> & {
   active?: boolean;
   internal?: boolean;
 };
 
-export function ExceptionFrame({
+const ExceptionFrame = ({
   active,
   internal,
   className,
   ...props
-}: ExceptionFrameProps) {
-  return (
+}: ExceptionFrameProps): React.JSX.Element => 
+  (
     <li
       data-slot="exception-frame"
       data-active={active ? "true" : undefined}
@@ -181,27 +181,27 @@ export function ExceptionFrame({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionFrameFunction({
+const ExceptionFrameFunction = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
-  return (
+}: React.ComponentProps<"span">): React.JSX.Element => 
+  (
     <span
       data-slot="exception-frame-function"
       className={cn("shrink-0 text-foreground", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionFrameLocation({
+const ExceptionFrameLocation = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
-  return (
+}: React.ComponentProps<"span">): React.JSX.Element => 
+  (
     <span
       data-slot="exception-frame-location"
       className={cn(
@@ -210,14 +210,14 @@ export function ExceptionFrameLocation({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionSource({
+const ExceptionSource = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="exception-source"
       className={cn(
@@ -226,14 +226,14 @@ export function ExceptionSource({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionSourceHeader({
+const ExceptionSourceHeader = ({
   className,
   ...props
-}: React.ComponentProps<"header">) {
-  return (
+}: React.ComponentProps<"header">): React.JSX.Element => 
+  (
     <header
       data-slot="exception-source-header"
       className={cn(
@@ -244,14 +244,14 @@ export function ExceptionSourceHeader({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ExceptionSourceContent({
+const ExceptionSourceContent = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="exception-source-content"
       className={cn(
@@ -267,5 +267,7 @@ export function ExceptionSourceContent({
       )}
       {...props}
     />
-  );
-}
+  )
+;
+
+export { Exception, ExceptionAction, ExceptionContent, ExceptionFrame, ExceptionFrameFunction, ExceptionFrameLocation, ExceptionFrames, ExceptionHeader, ExceptionMessage, ExceptionSource, ExceptionSourceContent, ExceptionSourceHeader, ExceptionTrigger, ExceptionType };

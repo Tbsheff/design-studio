@@ -1,51 +1,27 @@
 // Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
 import { useRender } from "@base-ui/react/use-render";
-import { cva } from 'class-variance-authority';
 import type { VariantProps } from 'class-variance-authority';
 import { cn } from "../../lib/utils";
-
-export const chipVariants = cva(
-  cn(
-    "inline-flex items-center gap-1.5 rounded bg-surface-elevated text-muted-foreground",
-    "ring ring-border",
-    "[&>svg]:shrink-0",
-    "[&:is(button,a)]:cursor-pointer",
-    "[&:is(button,a)]:transition-colors",
-    "[&:is(button,a):hover]:bg-accent",
-    "[&:is(button,a):hover]:text-foreground",
-    "[&:is(a)]:no-underline [&:is(a)]:text-muted-foreground",
-    "[&:is(button,a):focus-visible]:outline-none",
-    "[&:is(button,a):focus-visible]:ring-2",
-    "[&:is(button,a):focus-visible]:ring-primary",
-  ),
-  {
-    defaultVariants: { size: "default" },
-    variants: {
-      size: {
-        default: "px-1.5 py-0.5 text-sm [&>svg]:size-4",
-        sm: "px-1.5 py-0.5 text-xs [&>svg]:size-3",
-      },
-    },
-  },
-);
+import { chipVariants } from "./chip-variants.js";
 
 type ChipProps = useRender.ComponentProps<"span"> &
   VariantProps<typeof chipVariants>;
 
-export function Chip({
+const Chip = ({
   size = "default",
   className,
   render,
   ...props
-}: ChipProps) {
-  return useRender({
+}: ChipProps): React.JSX.Element =>
+  useRender({
     defaultTagName: "span",
     props: {
       ...props,
-      className: cn(chipVariants({ size, className })),
+      className: cn(chipVariants({ className, size })),
       "data-size": size,
       "data-slot": "chip",
     },
     render,
   });
-}
+
+export { Chip };

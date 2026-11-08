@@ -55,19 +55,20 @@ const defaultComponents: Components = {
   },
 };
 
-function closeIncompleteFence(source: string) {
+const closeIncompleteFence = (source: string) => {
   const fences = source.match(/```/g);
 
   if (fences && fences.length % 2 === 1) {return `${source}\n\`\`\``;}
-  return source;
-}
 
-export function Markdown({
+  return source;
+};
+
+const Markdown = ({
   children,
   components,
   className,
   ...props
-}: MarkdownProps) {
+}: MarkdownProps): React.JSX.Element => {
   const merged = components
     ? { ...defaultComponents, ...components }
     : defaultComponents;
@@ -86,4 +87,6 @@ export function Markdown({
       </ReactMarkdown>
     </div>
   );
-}
+};
+
+export { Markdown };

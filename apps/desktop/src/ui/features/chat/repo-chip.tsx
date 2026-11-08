@@ -1,7 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
-import { chipVariants } from "../../ai/components/ai/chip.js";
+import { chipVariants } from "../../ai/components/ai/chip-variants.js";
 import { RepoChipLabel } from "./repo-chip-label.js";
 
 interface RepoChipProps {

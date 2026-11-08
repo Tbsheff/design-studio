@@ -25,17 +25,17 @@ interface ComposerContextValue {
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export const ComposerContext = createContext<ComposerContextValue | null>(null);
+const ComposerContext = createContext<ComposerContextValue | null>(null);
 
 interface ComposerExtensionContextValue {
   state: unknown;
   setState: (s: unknown) => void;
 }
 
-export const ComposerExtensionContext =
+const ComposerExtensionContext =
   createContext<ComposerExtensionContextValue | null>(null);
 
-export function useComposerContext() {
+const useComposerContext = () => {
   const ctx = useContext(ComposerContext);
 
   if (!ctx) {
@@ -43,9 +43,9 @@ export function useComposerContext() {
   }
 
   return ctx;
-}
+};
 
-export function useComposerExtensionContext() {
+const useComposerExtensionContext = () => {
   const ctx = useContext(ComposerExtensionContext);
 
   if (!ctx) {
@@ -53,9 +53,9 @@ export function useComposerExtensionContext() {
   }
 
   return ctx;
-}
+};
 
-export function useComposer() {
+const useComposer = () => {
   const ctx = useComposerContext();
 
   return {
@@ -64,9 +64,9 @@ export function useComposer() {
     isFocused: ctx.isFocused,
     submit: ctx.triggerSubmit,
   };
-}
+};
 
-export function Composer({
+const Composer = ({
   disabled = false,
   className,
   children,
@@ -75,7 +75,7 @@ export function Composer({
 }: React.ComponentProps<"div"> & {
   disabled?: boolean;
   onHeightChange?: (height: number) => void;
-}) {
+}): React.JSX.Element => {
   const rootId = useId();
   const [isEmpty, setIsEmpty] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
@@ -101,12 +101,14 @@ export function Composer({
     const el = containerRef.current;
 
     if (!el) {return;}
+
     let last = -1;
 
     const emit = () => {
       const next = el.offsetHeight;
 
       if (next === last) {return;}
+
       last = next;
       onHeightChangeRef.current?.(next);
     };
@@ -162,9 +164,9 @@ export function Composer({
       </ComposerExtensionContext.Provider>
     </ComposerContext.Provider>
   );
-}
+};
 
-function autosize(el: HTMLTextAreaElement, maxRows: number) {
+const autosize = (el: HTMLTextAreaElement, maxRows: number) => {
   el.style.height = "auto";
   const styles = window.getComputedStyle(el);
   const lineHeight = Number.parseFloat(styles.lineHeight) || 20;
@@ -174,9 +176,9 @@ function autosize(el: HTMLTextAreaElement, maxRows: number) {
   const next = Math.min(el.scrollHeight, maxHeight);
   el.style.height = `${next}px`;
   el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
-}
+};
 
-export function ComposerInput({
+const ComposerInput = ({
   onSubmit,
   onValueChange,
   value: valueProp,
@@ -198,7 +200,7 @@ export function ComposerInput({
   autoFocus?: boolean;
   maxRows?: number;
   submitOnEnter?: boolean;
-}) {
+}): React.JSX.Element => {
   const ctx = useComposerContext();
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const isComposingRef = useRef(false);
@@ -219,6 +221,7 @@ export function ComposerInput({
     const el = inputRef.current;
 
     if (!el) {return;}
+
     ctx.setEmpty(value.trim().length === 0);
     autosize(el, maxRows);
   }, [value, maxRows, ctx]);
@@ -232,6 +235,7 @@ export function ComposerInput({
     const text = valueRef.current;
 
     if (!text.trim()) {return;}
+
     onSubmitRef.current?.(text);
 
     if (!isControlledRef.current) {
@@ -246,11 +250,13 @@ export function ComposerInput({
     const next = e.target.value;
 
     if (!isControlled) {setInternalValue(next);}
+
     onValueChangeRef.current?.(next);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.nativeEvent.isComposing || isComposingRef.current) {return;}
+
     const submitKey = submitOnEnter ? !e.shiftKey : e.metaKey || e.ctrlKey;
 
     if (e.key === "Enter" && submitKey) {
@@ -287,13 +293,13 @@ export function ComposerInput({
       {...props}
     />
   );
-}
+};
 
-export function ComposerQuote({
+const ComposerQuote = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="composer-quote"
       className={cn(
@@ -302,14 +308,14 @@ export function ComposerQuote({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ComposerQuoteIcon({
+const ComposerQuoteIcon = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
-  return (
+}: React.ComponentProps<"span">): React.JSX.Element => 
+  (
     <span
       data-slot="composer-quote-icon"
       aria-hidden
@@ -320,13 +326,13 @@ export function ComposerQuoteIcon({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ComposerQuoteContent({
+const ComposerQuoteContent = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div">): React.JSX.Element => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [overflows, setOverflows] = useState(false);
 
@@ -334,6 +340,7 @@ export function ComposerQuoteContent({
     const el = ref.current;
 
     if (!el) {return;}
+
     const update = () => {
       setOverflows(el.scrollHeight > el.clientHeight + 1);
     };
@@ -358,14 +365,14 @@ export function ComposerQuoteContent({
       {...props}
     />
   );
-}
+};
 
-export function ComposerQuoteDismiss({
+const ComposerQuoteDismiss = ({
   className,
   type,
   ...props
-}: React.ComponentProps<"button">) {
-  return (
+}: React.ComponentProps<"button">): React.JSX.Element => 
+  (
     <button
       type={type ?? "button"}
       data-slot="composer-quote-dismiss"
@@ -376,40 +383,40 @@ export function ComposerQuoteDismiss({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ComposerToolbar({
+const ComposerToolbar = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="composer-toolbar"
       className={cn("flex items-center gap-1.5 px-3 py-2", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ComposerToolbarSpacer({
+const ComposerToolbarSpacer = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="composer-toolbar-spacer"
       className={cn("ml-auto flex items-center gap-1.5", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ComposerSubmit({
+const ComposerSubmit = ({
   render,
   disabled: disabledProp,
   ...props
-}: useRender.ComponentProps<"button">) {
+}: useRender.ComponentProps<"button">): React.JSX.Element => {
   const ctx = useComposerContext();
   const blocked = ctx.isEmpty || ctx.disabled || Boolean(disabledProp);
   const ariaLabel = props["aria-label"] ?? "Send";
@@ -427,4 +434,6 @@ export function ComposerSubmit({
     },
     render,
   });
-}
+};
+
+export { Composer, ComposerContext, ComposerExtensionContext, ComposerInput, ComposerQuote, ComposerQuoteContent, ComposerQuoteDismiss, ComposerQuoteIcon, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer, useComposer, useComposerContext, useComposerExtensionContext };

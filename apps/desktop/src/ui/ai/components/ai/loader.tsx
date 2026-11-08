@@ -4,7 +4,7 @@ import { cva } from 'class-variance-authority';
 import type { VariantProps } from 'class-variance-authority';
 import { cn } from "../../lib/utils";
 
-export const loaderVariants = cva(
+const loaderVariants = cva(
   "inline-flex items-baseline text-muted-foreground",
   {
     variants: {
@@ -25,7 +25,7 @@ type LoaderProps = useRender.ComponentProps<"span"> &
     spread?: number;
   };
 
-export function Loader({
+const Loader = ({
   variant,
   dots = false,
   duration,
@@ -35,7 +35,7 @@ export function Loader({
   render,
   style,
   ...props
-}: LoaderProps) {
+}: LoaderProps): React.JSX.Element => {
   const label = typeof children === "string" ? children : "Loading";
 
   const cssVars: React.CSSProperties = {};
@@ -58,7 +58,7 @@ export function Loader({
       "data-variant": variant,
       "data-dots": dots ? "" : undefined,
       style: { ...cssVars, ...style },
-      className: cn(loaderVariants({ variant, className })),
+      className: cn(loaderVariants({ className, variant })),
       children: (
         <>
           {children}
@@ -83,4 +83,6 @@ export function Loader({
     },
     render,
   });
-}
+};
+
+export { Loader, loaderVariants };

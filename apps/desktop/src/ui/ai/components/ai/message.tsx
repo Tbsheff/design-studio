@@ -7,12 +7,12 @@ type MessageProps = React.ComponentProps<"div"> & {
   type?: "incoming" | "outgoing";
 };
 
-export function Message({
+const Message = ({
   type = "outgoing",
   className,
   ...props
-}: MessageProps) {
-  return (
+}: MessageProps): React.JSX.Element => 
+  (
     <div
       data-slot="message"
       data-type={type}
@@ -23,14 +23,14 @@ export function Message({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function MessageAvatar({
+const MessageAvatar = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="message-avatar"
       className={cn(
@@ -40,14 +40,14 @@ export function MessageAvatar({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function MessageContent({
+const MessageContent = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="message-content"
       className={cn(
@@ -57,10 +57,10 @@ export function MessageContent({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export const messageTextVariants = cva("min-w-0 text-sm/6.5", {
+const messageTextVariants = cva("min-w-0 text-sm/6.5", {
   defaultVariants: { variant: "plain" },
   variants: {
     variant: {
@@ -75,26 +75,26 @@ export const messageTextVariants = cva("min-w-0 text-sm/6.5", {
 type MessageTextProps = React.ComponentProps<"div"> &
   VariantProps<typeof messageTextVariants>;
 
-export function MessageText({
+const MessageText = ({
   variant,
   className,
   ...props
-}: MessageTextProps) {
-  return (
+}: MessageTextProps): React.JSX.Element => 
+  (
     <div
       data-slot="message-text"
       data-variant={variant ?? "plain"}
       className={cn(messageTextVariants({ className, variant }))}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function MessageAction({
+const MessageAction = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="message-action"
       className={cn(
@@ -104,5 +104,7 @@ export function MessageAction({
       )}
       {...props}
     />
-  );
-}
+  )
+;
+
+export { Message, MessageAction, MessageAvatar, MessageContent, MessageText, messageTextVariants };

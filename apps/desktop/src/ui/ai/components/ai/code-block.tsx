@@ -22,7 +22,7 @@ interface CodeBlockContextValue {
 
 const CodeBlockContext = createContext<CodeBlockContextValue | null>(null);
 
-function useCodeBlockContext() {
+const useCodeBlockContext = () => {
   const ctx = useContext(CodeBlockContext);
 
   if (!ctx) {
@@ -30,7 +30,7 @@ function useCodeBlockContext() {
   }
 
   return ctx;
-}
+};
 
 type CodeBlockProps = React.ComponentProps<"div"> & {
   clip?: boolean;
@@ -64,7 +64,7 @@ const toBlockHeight = (input: BlockHeightInput): number | undefined => {
   return input.open ? input.fullHeight : input.maxHeight;
 };
 
-export function CodeBlock({
+const CodeBlock = ({
   clip = false,
   maxHeight = 240,
   open: openProp,
@@ -72,7 +72,7 @@ export function CodeBlock({
   onOpenChange,
   className,
   ...props
-}: CodeBlockProps) {
+}: CodeBlockProps): React.JSX.Element => {
   const [openState, setOpenState] = useState(defaultOpen);
   const [overflowing, setOverflowing] = useState(false);
   const isControlled = openProp !== undefined;
@@ -81,6 +81,7 @@ export function CodeBlock({
 
   const setOpen = (next: boolean) => {
     if (!isControlled) {setOpenState(next);}
+
     onOpenChange?.(next);
   };
 
@@ -111,14 +112,14 @@ export function CodeBlock({
       />
     </CodeBlockContext.Provider>
   );
-}
+};
 
-export function CodeBlockHeader({
+const CodeBlockHeader = ({
   children,
   className,
   ...props
-}: React.ComponentProps<"header">) {
-  return (
+}: React.ComponentProps<"header">): React.JSX.Element => 
+  (
     <header
       data-slot="code-block-header"
       className={cn("px-3 h-8 flex items-center", className)}
@@ -126,15 +127,15 @@ export function CodeBlockHeader({
     >
       {children}
     </header>
-  );
-}
+  )
+;
 
-export function CodeBlockTitle({
+const CodeBlockTitle = ({
   children,
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="code-block-title"
       className={cn("text-xs font-medium text-muted-foreground", className)}
@@ -142,15 +143,15 @@ export function CodeBlockTitle({
     >
       {children}
     </div>
-  );
-}
+  )
+;
 
-export function CodeBlockAction({
+const CodeBlockAction = ({
   children,
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="code-block-action"
       className={cn(
@@ -162,14 +163,14 @@ export function CodeBlockAction({
     >
       {children}
     </div>
-  );
-}
+  )
+;
 
-export function CodeBlockContent({
+const CodeBlockContent = ({
   children,
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div">): React.JSX.Element => {
   const { clip, maxHeight, open, contentId, setOverflowing } =
     useCodeBlockContext();
 
@@ -240,12 +241,12 @@ export function CodeBlockContent({
       )}
     </div>
   );
-}
+};
 
-export function CodeBlockTrigger({
+const CodeBlockTrigger = ({
   render,
   ...props
-}: useRender.ComponentProps<"button">) {
+}: useRender.ComponentProps<"button">): React.JSX.Element | null => {
   const { open, setOpen, contentId, clip, overflowing } = useCodeBlockContext();
 
   const element = useRender({
@@ -263,5 +264,8 @@ export function CodeBlockTrigger({
   });
 
   if (!clip || !overflowing) {return null;}
+
   return element;
-}
+};
+
+export { CodeBlock, CodeBlockAction, CodeBlockContent, CodeBlockHeader, CodeBlockTitle, CodeBlockTrigger };

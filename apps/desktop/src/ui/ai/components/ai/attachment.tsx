@@ -7,7 +7,7 @@ import { cn } from "../../lib/utils";
 
 const AttachmentContext = createContext<{ progress?: number }>({});
 
-export const attachmentVariants = cva(
+const attachmentVariants = cva(
   cn(
     "relative text-foreground",
     "ring ring-border",
@@ -47,19 +47,19 @@ type AttachmentProps = useRender.ComponentProps<"div"> &
     progress?: number;
   };
 
-export function Attachment({
+const Attachment = ({
   layout = "row",
   state = "default",
   progress,
   className,
   render,
   ...props
-}: AttachmentProps) {
+}: AttachmentProps): React.JSX.Element => {
   const element = useRender({
     defaultTagName: "div",
     props: {
       ...props,
-      className: cn(attachmentVariants({ layout, state, className })),
+      className: cn(attachmentVariants({ className, layout, state })),
       "data-layout": layout,
       "data-slot": "attachment",
       "data-state": state,
@@ -68,13 +68,13 @@ export function Attachment({
   });
 
   return <AttachmentContext value={{ progress }}>{element}</AttachmentContext>;
-}
+};
 
-export function AttachmentMedia({
+const AttachmentMedia = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="attachment-media"
       className={cn(
@@ -90,14 +90,14 @@ export function AttachmentMedia({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function AttachmentIcon({
+const AttachmentIcon = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
-  return (
+}: React.ComponentProps<"span">): React.JSX.Element => 
+  (
     <span
       data-slot="attachment-icon"
       aria-hidden
@@ -108,40 +108,40 @@ export function AttachmentIcon({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function AttachmentContent({
+const AttachmentContent = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="attachment-content"
       className={cn("flex flex-1 flex-col min-w-0 leading-tight", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function AttachmentName({
+const AttachmentName = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="attachment-name"
       className={cn("text-sm text-foreground truncate", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function AttachmentDescription({
+const AttachmentDescription = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="attachment-description"
       className={cn(
@@ -151,14 +151,14 @@ export function AttachmentDescription({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function AttachmentOverlay({
+const AttachmentOverlay = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="attachment-overlay"
       className={cn(
@@ -168,16 +168,16 @@ export function AttachmentOverlay({
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
 const PROGRESS_RADIUS = 10;
 const PROGRESS_CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RADIUS;
 
-export function AttachmentProgress({
+const AttachmentProgress = ({
   className,
   ...props
-}: React.ComponentProps<"svg">) {
+}: React.ComponentProps<"svg">): React.JSX.Element => {
   const { progress } = use(AttachmentContext);
   const indeterminate = progress === undefined;
   const clamped = Math.max(0, Math.min(100, progress ?? 0));
@@ -222,17 +222,19 @@ export function AttachmentProgress({
       />
     </svg>
   );
-}
+};
 
-export function AttachmentAction({
+const AttachmentAction = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="attachment-action"
       className={cn("inline-flex items-center gap-0.5 shrink-0", className)}
       {...props}
     />
-  );
-}
+  )
+;
+
+export { Attachment, AttachmentAction, AttachmentContent, AttachmentDescription, AttachmentIcon, AttachmentMedia, AttachmentName, AttachmentOverlay, AttachmentProgress, attachmentVariants };

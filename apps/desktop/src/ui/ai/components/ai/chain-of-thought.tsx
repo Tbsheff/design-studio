@@ -2,25 +2,25 @@
 import { Collapsible } from "@base-ui/react/collapsible";
 import { cn } from "../../lib/utils";
 
-export function ChainOfThought({
+const ChainOfThought = ({
   className,
   ...props
-}: Collapsible.Root.Props) {
-  return (
+}: Collapsible.Root.Props): React.JSX.Element => 
+  (
     <Collapsible.Root
       data-slot="chain-of-thought"
       className={cn("group/cot flex flex-col text-sm", className)}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ChainOfThoughtHeader({
+const ChainOfThoughtHeader = ({
   className,
   children,
   ...props
-}: Collapsible.Trigger.Props) {
-  return (
+}: Collapsible.Trigger.Props): React.JSX.Element => 
+  (
     <Collapsible.Trigger
       data-slot="chain-of-thought-header"
       className={cn(
@@ -51,15 +51,15 @@ export function ChainOfThoughtHeader({
         <path d="m9 18 6-6-6-6" />
       </svg>
     </Collapsible.Trigger>
-  );
-}
+  )
+;
 
-export function ChainOfThoughtContent({
+const ChainOfThoughtContent = ({
   className,
   children,
   ...props
-}: Collapsible.Panel.Props) {
-  return (
+}: Collapsible.Panel.Props): React.JSX.Element => 
+  (
     <Collapsible.Panel
       data-slot="chain-of-thought-content"
       className={cn(
@@ -76,15 +76,15 @@ export function ChainOfThoughtContent({
         {children}
       </div>
     </Collapsible.Panel>
-  );
-}
+  )
+;
 
-export function ChainOfThoughtStep({
+const ChainOfThoughtStep = ({
   className,
   children,
   ...props
-}: Collapsible.Root.Props) {
-  return (
+}: Collapsible.Root.Props): React.JSX.Element => 
+  (
     <Collapsible.Root
       data-slot="chain-of-thought-step"
       className={cn(
@@ -102,15 +102,15 @@ export function ChainOfThoughtStep({
         className="w-px h-4 ml-4 bg-border"
       />
     </Collapsible.Root>
-  );
-}
+  )
+;
 
-export function ChainOfThoughtStepStatic({
+const ChainOfThoughtStepStatic = ({
   className,
   children,
   ...props
-}: React.ComponentProps<"div">) {
-  return (
+}: React.ComponentProps<"div">): React.JSX.Element => 
+  (
     <div
       data-slot="chain-of-thought-step-static"
       className={cn(
@@ -135,15 +135,15 @@ export function ChainOfThoughtStepStatic({
         className="w-px h-4 ml-4 bg-border"
       />
     </div>
-  );
-}
+  )
+;
 
-export function ChainOfThoughtStepTrigger({
+const ChainOfThoughtStepTrigger = ({
   className,
   children,
   ...props
-}: Collapsible.Trigger.Props) {
-  return (
+}: Collapsible.Trigger.Props): React.JSX.Element => 
+  (
     <Collapsible.Trigger
       data-slot="chain-of-thought-step-trigger"
       className={cn(
@@ -174,15 +174,15 @@ export function ChainOfThoughtStepTrigger({
         <path d="m9 18 6-6-6-6" />
       </svg>
     </Collapsible.Trigger>
-  );
-}
+  )
+;
 
-export function ChainOfThoughtIcon({
+const ChainOfThoughtIcon = ({
   className,
   children,
   ...props
-}: React.ComponentProps<"span">) {
-  return (
+}: React.ComponentProps<"span">): React.JSX.Element => 
+  (
     <span
       data-slot="chain-of-thought-icon"
       aria-hidden
@@ -194,15 +194,15 @@ export function ChainOfThoughtIcon({
     >
       {children ?? <span className="size-2 rounded-full bg-current" />}
     </span>
-  );
-}
+  )
+;
 
-export function ChainOfThoughtStepContent({
+const ChainOfThoughtStepContent = ({
   className,
   children,
   ...props
-}: Collapsible.Panel.Props) {
-  return (
+}: Collapsible.Panel.Props): React.JSX.Element => 
+  (
     <Collapsible.Panel
       data-slot="chain-of-thought-step-content"
       className={cn(
@@ -223,5 +223,7 @@ export function ChainOfThoughtStepContent({
         {children}
       </div>
     </Collapsible.Panel>
-  );
-}
+  )
+;
+
+export { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtHeader, ChainOfThoughtIcon, ChainOfThoughtStep, ChainOfThoughtStepContent, ChainOfThoughtStepStatic, ChainOfThoughtStepTrigger };

@@ -2,8 +2,8 @@
 import { Collapsible } from "@base-ui/react/collapsible";
 import { cn } from "../../lib/utils";
 
-export function Reasoning({ className, ...props }: Collapsible.Root.Props) {
-  return (
+const Reasoning = ({ className, ...props }: Collapsible.Root.Props): React.JSX.Element => 
+  (
     <Collapsible.Root
       data-slot="reasoning"
       className={cn(
@@ -12,15 +12,15 @@ export function Reasoning({ className, ...props }: Collapsible.Root.Props) {
       )}
       {...props}
     />
-  );
-}
+  )
+;
 
-export function ReasoningTrigger({
+const ReasoningTrigger = ({
   className,
   children,
   ...props
-}: Collapsible.Trigger.Props) {
-  return (
+}: Collapsible.Trigger.Props): React.JSX.Element => 
+  (
     <Collapsible.Trigger
       data-slot="reasoning-trigger"
       className={cn(
@@ -52,15 +52,15 @@ export function ReasoningTrigger({
       </svg>
       {children}
     </Collapsible.Trigger>
-  );
-}
+  )
+;
 
-export function ReasoningContent({
+const ReasoningContent = ({
   className,
   children,
   ...props
-}: Collapsible.Panel.Props) {
-  return (
+}: Collapsible.Panel.Props): React.JSX.Element => 
+  (
     <Collapsible.Panel
       data-slot="reasoning-content"
       className={cn(
@@ -74,5 +74,7 @@ export function ReasoningContent({
     >
       <div className="pl-6 py-2 text-sm text-muted-foreground">{children}</div>
     </Collapsible.Panel>
-  );
-}
+  )
+;
+
+export { Reasoning, ReasoningContent, ReasoningTrigger };

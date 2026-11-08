@@ -21,6 +21,7 @@ const usePreviewUrl = (
     if (source.kind === "version") {
       return source.versionId;
     }
+
     if (source.kind === "last") {
       return headVersionId;
     }
@@ -40,6 +41,7 @@ const usePreviewUrl = (
       if (source.kind === "live") {
         return api.directionPreview(projectId, directionId);
       }
+
       if (versionId) {
         return api.versionPreview(projectId, versionId);
       }
@@ -149,7 +151,7 @@ const useFramePort = (
     }
 
     const timers = RECT_REFRESH_MS.map((ms) =>
-      window.setTimeout(() => port?.current?.refreshRects(), ms)
+      globalThis.setTimeout(() => port?.current?.refreshRects(), ms)
     );
 
     return (): void =>

@@ -356,6 +356,7 @@ const ownBadges = (
   if (countValue.after) {
     right = countValue.after.lo - own.hi;
   }
+
   const even = left !== null && left > 0 && near(right, left);
   const out: SpacingBadge[] = [];
 

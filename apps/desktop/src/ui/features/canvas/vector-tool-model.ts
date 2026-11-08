@@ -1,4 +1,9 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 
 import { shortcutLabel } from "../../../shared/keymap.js";
 import type { KeyId } from "../../../shared/keymap.js";
@@ -152,7 +157,9 @@ const useVectorToolGuards = (
   stopOthers: () => void
 ): void => {
   const stop = useRef(stopOthers);
-  stop.current = stopOthers;
+  useLayoutEffect(() => {
+    stop.current = stopOthers;
+  });
   useEffect(() => {
     if (tool) {
       stop.current();

@@ -110,6 +110,7 @@ const pasteItem = (
     if (!target.source && !target.owners?.length) {
       return "This element has no source location";
     }
+
     if (optionsValue.edits.busy) {
       return "Wait for the last edit to finish";
     }

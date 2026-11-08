@@ -8,7 +8,13 @@ import type {
   VariationBrief,
   VariationBriefsResult,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { resolveRunConfig } from "../../../shared/run-levels.js";
 import { errorText } from "../../api.js";
@@ -80,7 +86,9 @@ const useVariations = (options: Options) => {
   const [kept, setKept] = useState<string | null>(null);
   const [ask, setAsk] = useState<SelectionContext | null>(null);
   const opts = useRef(options);
-  opts.current = options;
+  useLayoutEffect(() => {
+    opts.current = options;
+  });
   const requestRef = useRef(0);
   const autoStartRef = useRef(false);
   const max = options.project ? maxVariationsFor(options.project.kind) : 4;

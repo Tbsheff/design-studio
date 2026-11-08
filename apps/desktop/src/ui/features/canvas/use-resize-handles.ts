@@ -2,7 +2,13 @@ import type {
   SelectionContext,
   BridgeToParent,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -249,7 +255,9 @@ const resizeReadout = createLiveStore<ResizeReadout | null>(null);
 
 const useResizeHandles = (optionsValue: Options): ResizeHandles => {
   const live = useRef(optionsValue);
-  live.current = optionsValue;
+  useLayoutEffect(() => {
+    live.current = optionsValue;
+  });
   const drag = useRef<Drag | null>(null);
   const [sizes] = useState(() => createLiveStore<LiveSize | null>(null));
   const setSize = sizes.set;
@@ -378,7 +386,7 @@ const useResizeHandles = (optionsValue: Options): ResizeHandles => {
         size: base,
         startX: eventValue.clientX,
         startY: eventValue.clientY,
-        stopListen: () => undefined,
+        stopListen: () => null,
         target: sel,
         zoom: scaleOf(handle) || 1,
       };

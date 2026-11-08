@@ -1,6 +1,6 @@
 import { selectMoveOf } from "@design-studio/contracts";
 import type { SelectionContext } from "@design-studio/contracts";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { canvasHasKeys } from "../../platform/typing-target.js";
 import type { CanvasShell } from "./canvas-shell.js";
@@ -15,7 +15,9 @@ const useSelectKey = (
   clearSelection: () => boolean
 ): void => {
   const latest = useRef(clearSelection);
-  latest.current = clearSelection;
+  useLayoutEffect(() => {
+    latest.current = clearSelection;
+  });
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       if (
@@ -85,7 +87,9 @@ const useFirstSelectKeys = (
   }
 ): void => {
   const latest = useRef(options);
-  latest.current = options;
+  useLayoutEffect(() => {
+    latest.current = options;
+  });
   useEffect(() => {
     const onKey = (event3: KeyboardEvent): void => {
       const cur = latest.current;
@@ -155,7 +159,9 @@ const useLayoutKeyFallback = (optionsValue: {
   openEdit: (() => void | Promise<boolean>) | null;
 }): void => {
   const latest = useRef(optionsValue);
-  latest.current = optionsValue;
+  useLayoutEffect(() => {
+    latest.current = optionsValue;
+  });
   useEffect(() => {
     const run = (): boolean => {
       const { on, hasSelection, openEdit } = latest.current;
@@ -227,7 +233,9 @@ const editOpener = (
 
 const useStageKeys = (stageKeys: StageKeys): void => {
   const selection = useRef(stageKeys.selection);
-  selection.current = stageKeys.selection;
+  useLayoutEffect(() => {
+    selection.current = stageKeys.selection;
+  });
   const { setSelection } = stageKeys;
   useSelectKey(stageKeys.setSelectMode, stageKeys.offProto, () => {
     if (selection.current.length === 0) {
@@ -259,7 +267,9 @@ const useFrameChange = (
 ): void => {
   const last = useRef(key);
   const latest = useRef(onChange);
-  latest.current = onChange;
+  useLayoutEffect(() => {
+    latest.current = onChange;
+  });
   useEffect(() => {
     if (last.current === key) {
       return;

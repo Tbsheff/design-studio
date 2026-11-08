@@ -22,9 +22,12 @@ type ClickThrough = (point: { x: number; y: number }) => void;
 
 const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
   const pending = useRef<Pending | null>(null);
-  const timers = useRef<number[]>([]);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const live = useRef({ enabled, port });
-  live.current = { enabled, port };
+
+  useEffect(() => {
+    live.current = { enabled, port };
+  });
 
   const send = useCallback(() => {
     const pointValue = pending.current;
@@ -47,29 +50,36 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
   }, []);
 
   const later = useCallback(
-    (ms: number) => timers.current.push(window.setTimeout(send, ms)),
+    (ms: number) => timers.current.push(globalThis.setTimeout(send, ms)),
     [send]
   );
 
+  const { listen } = port;
+
   useEffect(
     () =>
-      port.listen((msg) => {
+      listen((msg) => {
         if (!pending.current) {
           return;
         }
 
         if (msg.type === "ready") {
           later(SETTLE_MS);
-        } else if (msg.type === "select") {
+        }
+
+        if (msg.type === "select") {
           pending.current = null;
         }
       }),
-    [port.listen, later]
+    [listen, later]
   );
 
   useEffect(
-    () => (): void =>
-      timers.current.forEach((target) => globalThis.clearTimeout(target)),
+    () => (): void => {
+      for (const target of timers.current) {
+        globalThis.clearTimeout(target);
+      }
+    },
     []
   );
 
@@ -79,9 +89,10 @@ const useClickThrough = (port: Port, enabled: boolean): ClickThrough => {
         return;
       }
 
-      timers.current.forEach((targetValue) =>
-        globalThis.clearTimeout(targetValue)
-      );
+      for (const targetValue of timers.current) {
+        globalThis.clearTimeout(targetValue);
+      }
+
       timers.current = [];
       pending.current = { at: Date.now(), x: point.x, y: point.y };
       later(NO_RELOAD_MS);

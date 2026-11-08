@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import {
   noteHandledShortcut,
@@ -82,7 +82,9 @@ const useUndoShortcut = (
   redo?: RedoShortcut
 ): void => {
   const state = useRef<ShortcutState>({ enabled, onUndo, redo });
-  state.current = { enabled, onUndo, redo };
+  useLayoutEffect(() => {
+    state.current = { enabled, onUndo, redo };
+  });
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       const kind = historyKeyOf(event);

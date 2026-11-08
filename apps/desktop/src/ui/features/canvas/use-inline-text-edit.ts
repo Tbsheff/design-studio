@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import type { TextEditMessage } from "./use-preview-frames.js";
 
@@ -70,11 +76,13 @@ const useInlineTextEdit = (
 } => {
   const [editing, setEditing] = useState(false);
   const live = useRef({ onCommit, onReject, stage });
-  live.current = { onCommit, onReject, stage };
+  useLayoutEffect(() => {
+    live.current = { onCommit, onReject, stage };
+  });
   const editingRef = useRef(false);
 
   const refocusStage = useCallback(() => {
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       const el = live.current.stage();
 
       if (!el || editingRef.current || focusLeftCanvas(el)) {

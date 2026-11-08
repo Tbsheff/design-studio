@@ -15,13 +15,13 @@ const PortToAppDialog = lazy(async () => {
   return { default: loaded.PortToAppDialog };
 });
 
-const usePortDialog = (
-  available: boolean
-): {
-  target: PortDialogTarget | null;
-  open: (frameId: string | null, directionId?: string | null) => void;
-  close: () => void;
-} => {
+interface PortDialog {
+  readonly target: PortDialogTarget | null;
+  readonly open: (frameId: string | null, directionId?: string | null) => void;
+  readonly close: () => void;
+}
+
+const usePortDialog = (isAvailable: boolean): PortDialog => {
   const [target, setTarget] = useState<PortDialogTarget | null>(null);
 
   const open = useCallback(
@@ -32,20 +32,21 @@ const usePortDialog = (
         return;
       }
 
-      setTarget({
-        directionId: directionId ?? directionByProject[activeProjectId] ?? null,
-        frameId,
-        projectId: activeProjectId,
-      });
+      const resolvedDirectionId =
+        directionId ?? directionByProject[activeProjectId] ?? null;
+
+      const projectId = activeProjectId;
+      const resolved = resolvedDirectionId;
+      setTarget({ directionId: resolved, frameId, projectId });
     },
     []
   );
 
   useEffect(() => {
-    setPortAvailable(available);
+    setPortAvailable(isAvailable);
 
     return (): void => setPortAvailable(false);
-  }, [available]);
+  }, [isAvailable]);
   useEffect(() => {
     const onOpen = (event: Event): void => {
       const { detail } = event as CustomEvent<PortOpenDetail>;
@@ -60,6 +61,41 @@ const usePortDialog = (
   return { close: useCallback(() => setTarget(null), []), open, target };
 };
 
+const toAnchorClass = (anchorClass: string | null): string => {
+  if (anchorClass) {
+    return `topbar-anchor ${anchorClass}`;
+  }
+
+  return "topbar-anchor";
+};
+
+const toDataTip = (isOpen: boolean, tip: string | null): string | null => {
+  if (isOpen) {
+    return null;
+  }
+
+  return tip;
+};
+
+const toTipAlign = (align: "start" | "end"): "end" | null => {
+  if (align !== "end") {
+    return null;
+  }
+
+  return "end";
+};
+
+interface DropMenuProps {
+  readonly label: string;
+  readonly groups: () => MenuGroup[];
+  readonly className: string;
+  readonly anchorClass?: string;
+  readonly align?: "start" | "end";
+  readonly tip?: string;
+  readonly children: ReactNode;
+  readonly onOpen?: () => void;
+}
+
 const DropMenu = ({
   label,
   groups,
@@ -69,71 +105,42 @@ const DropMenu = ({
   tip,
   children,
   onOpen,
-}: {
-  label: string;
-  groups: () => MenuGroup[];
-  className: string;
-  anchorClass?: string;
-  align?: "start" | "end";
-  tip?: string;
-  children: ReactNode;
-  onOpen?: () => void;
-}): ReactElement => {
-  const [open, setOpen] = useState(false);
+}: DropMenuProps): ReactElement => {
+  const [isOpen, setIsOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
 
   const close = useCallback((refocus: boolean) => {
-    setOpen(false);
+    setIsOpen(false);
 
     if (refocus) {
       trigger.current?.focus();
     }
   }, []);
 
-  let className2 = "topbar-anchor";
-
-  if (anchorClass) {
-    className2 = `topbar-anchor ${anchorClass}`;
-  }
-
-  const datatip: string | undefined = ((): string | undefined => {
-    if (open) {
-      return undefined;
+  const toggle = useCallback(() => {
+    if (!isOpen) {
+      onOpen?.();
     }
 
-    return tip;
-  })();
-
-  const datatipalign: "end" | undefined = ((): "end" | undefined => {
-    if (align !== "end") {
-      return undefined;
-    }
-
-    return "end";
-  })();
+    setIsOpen((value) => !value);
+  }, [isOpen, onOpen]);
 
   return (
-    <span className={className2}>
+    <span className={toAnchorClass(anchorClass ?? null)}>
       <button
         ref={trigger}
         type="button"
         className={className}
         aria-label={label}
         aria-haspopup="menu"
-        aria-expanded={open}
-        data-tip={datatip}
-        data-tip-align={datatipalign}
-        onClick={() => {
-          if (!open) {
-            onOpen?.();
-          }
-
-          setOpen((value) => !value);
-        }}
+        aria-expanded={isOpen}
+        data-tip={toDataTip(isOpen, tip ?? null)}
+        data-tip-align={toTipAlign(align)}
+        onClick={toggle}
       >
         {children}
       </button>
-      {open && (
+      {isOpen && (
         <MenuPopover
           groups={groups()}
           label={label}

@@ -360,12 +360,15 @@ const drawAxis = (axisDraw: AxisDraw): void => {
   drawRange(axisDraw);
   const step = stepFor(axisDraw.zoom);
   const minor = step / STEP_5;
+
   const first =
     Math.floor(
       (axisDraw.origin + (0 - axisDraw.offset) / axisDraw.zoom) / step
     ) * step;
+
   const last =
     axisDraw.origin + (axisDraw.length - axisDraw.offset) / axisDraw.zoom;
+
   ctx.strokeStyle = axisDraw.colors.tick;
   ctx.fillStyle = axisDraw.colors.text;
   ctx.lineWidth = 1;

@@ -1,5 +1,5 @@
 import type { SelectionContext } from "@design-studio/contracts";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { api } from "../../api.js";
 import { runOrReport } from "./settle-model.js";
@@ -93,7 +93,9 @@ const presenceBody = (
 
 const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
   const latest = useRef(presenceInputValue);
-  latest.current = presenceInputValue;
+  useLayoutEffect(() => {
+    latest.current = presenceInputValue;
+  });
   useEffect(() => {
     let last = "";
     let sentAt = 0;
@@ -121,7 +123,7 @@ const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
     };
 
     send();
-    const timer = window.setInterval(send, PRESENCE_MS);
+    const timer = globalThis.setInterval(send, PRESENCE_MS);
 
     return (): void => globalThis.clearInterval(timer);
   }, [presenceInputValue.projectId]);

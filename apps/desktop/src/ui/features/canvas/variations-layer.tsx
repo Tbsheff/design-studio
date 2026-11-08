@@ -360,7 +360,7 @@ const elementVariation = ({
         `Kept variant ${variation.label} (${variation.title}) in the design as one version. The other variants were discarded.`
       );
     },
-    onMix: async () => undefined,
+    onMix: () => Promise.resolve(),
     scoped: true,
     siblings: [],
     status: run.status,

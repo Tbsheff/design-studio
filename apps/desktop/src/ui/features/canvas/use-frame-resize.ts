@@ -159,6 +159,7 @@ const paintSize = (
   if (size) {
     host.style.width = `${size.width}px`;
   }
+
   host.style.height = restore.height;
 
   if (size) {
@@ -173,6 +174,7 @@ const paintSize = (
     if (size) {
       frame.style.width = `${size.width}px`;
     }
+
     frame.style.height = "";
 
     if (size) {

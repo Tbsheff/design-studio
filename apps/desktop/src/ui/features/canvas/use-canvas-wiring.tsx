@@ -89,6 +89,7 @@ const useCanvasWiring = (
 
       return HTML_FRAME_SANDBOX;
     })();
+
   const clickThrough = useClickThrough(frames, picking);
   useFrameChange(`${active.id}|${String(liveUrl)}`, () => {
     props.setSelection((prev) => {
@@ -130,6 +131,7 @@ const useCanvasWiring = (
       if (props.running) {
         return "A run is going.";
       }
+
       if (did === directionId) {
         return undefined;
       }

@@ -7,7 +7,7 @@ import type {
   LinksFile,
   PrototypeLink,
 } from "@design-studio/contracts/links";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 
 import { postToFrame, useBridge } from "../../platform/bridge.js";
@@ -110,9 +110,13 @@ const useLinkRects = (optionsValue: Options): LinkState[] => {
 
   const slots = slotsOf(optionsValue);
   const slotsRef = useRef(slots);
-  slotsRef.current = slots;
+  useLayoutEffect(() => {
+    slotsRef.current = slots;
+  });
   const queriesRef = useRef(queriesOf);
-  queriesRef.current = queriesOf;
+  useLayoutEffect(() => {
+    queriesRef.current = queriesOf;
+  });
 
   const posted = useRef(
     new Map<

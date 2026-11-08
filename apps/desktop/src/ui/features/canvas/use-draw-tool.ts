@@ -1,5 +1,11 @@
 import type { DrawStroke } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { DRAW_POINTS_MAX, DRAW_STROKES_MAX } from "../../../shared/comments.js";
 import { useDesktopCommand } from "../../platform/desktop.js";
@@ -37,7 +43,9 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
   const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
   const live = useRef({ available, on, onActivate });
-  live.current = { available, on, onActivate };
+  useLayoutEffect(() => {
+    live.current = { available, on, onActivate };
+  });
 
   const setOn = useCallback((next: boolean) => {
     if (next && !live.current.available) {

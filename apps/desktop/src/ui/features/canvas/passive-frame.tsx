@@ -56,7 +56,7 @@ const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
     };
 
     globalThis.addEventListener(PREVIEW_PAINTED_EVENT, onPaint);
-    const timer = window.setTimeout(onPaint, MOUNT_FALLBACK_MS);
+    const timer = globalThis.setTimeout(onPaint, MOUNT_FALLBACK_MS);
     const root = el.closest(".stage");
 
     const io = new IntersectionObserver(

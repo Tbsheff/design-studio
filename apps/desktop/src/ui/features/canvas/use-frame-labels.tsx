@@ -1,5 +1,5 @@
 import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
-import { useCallback, useRef } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import type { MutableRefObject } from "react";
 
 import { api } from "../../api.js";
@@ -160,7 +160,9 @@ const liveMenuItems = (
 const useFrameLabels = (labelInput4: LabelInput) => {
   const { projectId } = labelInput4;
   const live = useRef(labelInput4);
-  live.current = labelInput4;
+  useLayoutEffect(() => {
+    live.current = labelInput4;
+  });
 
   const listPages = useCallback(
     (did: string) => async (): Promise<string[]> => {

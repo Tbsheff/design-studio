@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { useUi } from "../../platform/storage.js";
 import { useFirstBuildGate } from "../chat/use-first-build.js";
@@ -44,7 +44,9 @@ const useCanvasStage = (props: ViewProps) => {
   const shown = shownFrames(layout);
   const viewport = { height: active.height, width: active.width };
   const selectionRef = useRef(props.selection);
-  selectionRef.current = props.selection;
+  useLayoutEffect(() => {
+    selectionRef.current = props.selection;
+  });
 
   const pz = usePanZoom({
     artboardRef,

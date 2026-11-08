@@ -10,7 +10,14 @@ import {
   withImplicit,
 } from "@design-studio/contracts/links";
 import type { PrototypeLink } from "@design-studio/contracts/links";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MutableRefObject, ReactNode } from "react";
 
 import { api } from "../../api.js";
@@ -81,7 +88,9 @@ const usePrototype = (options: Options) => {
 
   const file = withImplicit(saved, implicit);
   const clear = useRef(options.clearSelection);
-  clear.current = options.clearSelection;
+  useLayoutEffect(() => {
+    clear.current = options.clearSelection;
+  });
   const lastActive = useRef(options.active.id);
   useEffect(() => {
     if (lastActive.current === options.active.id) {

@@ -170,6 +170,7 @@ const useDirectionFrames = (
       if (directionId === null) {
         return null;
       }
+
       if (isCurrent) {
         return options.currentUrl;
       }

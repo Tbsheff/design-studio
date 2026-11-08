@@ -7,7 +7,7 @@ import type {
   StructureEditRequest,
   StructureTarget,
 } from "@design-studio/contracts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
@@ -160,7 +160,9 @@ const absoluteStyle = (
 
 const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
   const live = useRef(options);
-  live.current = options;
+  useLayoutEffect(() => {
+    live.current = options;
+  });
   const session = useRef<Session | null>(null);
   const [view] = useState(() => createLiveStore<FreeMoveView | null>(null));
   const setView = view.set;

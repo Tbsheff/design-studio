@@ -157,8 +157,8 @@ const useCanvasPreview = (
 ): CanvasPreview => {
   const { directionId, running, selection, setSelection, shell } = props;
   const { comment, commentMode, live, picking, protoOn } = text;
-  const { selectMode, setProtoOn, setSelectMode, layersOpen, toggleEdit } =
-    text;
+  const { selectMode, setProtoOn, setSelectMode } = text;
+  const { layersOpen, toggleEdit } = text;
 
   const openMenu = useRef<(at: MenuPoint) => void>(() => null);
   const state = usePreviewState(props, text, openMenu);

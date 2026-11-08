@@ -63,7 +63,11 @@ const useInlineTextEdit = (
   onCommit: TextCommitHandler | undefined,
   onReject: () => void,
   stage: () => HTMLElement | null
-) => {
+): {
+  editing: boolean;
+  onMessage: (message: TextEditMessage) => void;
+  reset: () => void;
+} => {
   const [editing, setEditing] = useState(false);
   const live = useRef({ onCommit, onReject, stage });
   live.current = { onCommit, onReject, stage };

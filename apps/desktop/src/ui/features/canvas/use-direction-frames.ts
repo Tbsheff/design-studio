@@ -1,6 +1,7 @@
 import { BRIDGE_PASSIVE_PARAM } from "@design-studio/contracts";
 import type { Direction, ProjectKind } from "@design-studio/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { api } from "../../api.js";
 import { frameSrc } from "../../platform/bridge.js";
@@ -82,7 +83,13 @@ const useDirectionUrls = (
   return urls;
 };
 
-const useDirectionFrames = (options: Options) => {
+const useDirectionFrames = (
+  options: Options
+): {
+  elements: RefObject<Record<string, HTMLIFrameElement | null>>;
+  onSwapDone: (key: string) => void;
+  slots: PassiveSlot[];
+} => {
   const tokens = useRef(new Map<string, string>());
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
 

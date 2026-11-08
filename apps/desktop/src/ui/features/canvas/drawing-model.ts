@@ -214,7 +214,7 @@ const penSegment = (from: PenAnchor, to: PenAnchor): string => {
 };
 
 const shiftAnchor = (anchor: PenAnchor, dx: number, dy: number): PenAnchor => {
-  const move = (point: { x: number; y: number }) => ({
+  const move = (point: { x: number; y: number }): { x: number; y: number } => ({
     x: point.x + dx,
     y: point.y + dy,
   });

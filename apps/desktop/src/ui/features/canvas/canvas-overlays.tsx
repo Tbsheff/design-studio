@@ -172,7 +172,11 @@ const TweakPrompt = ({
   );
 };
 
-const gapStyle = (spacingBadge: SpacingBadge) => {
+const gapStyle = (
+  spacingBadge: SpacingBadge
+):
+  | { left: number; top: number; width: number; height?: undefined }
+  | { height: number; left: number; top: number; width?: undefined } => {
   if (spacingBadge.axis === "x") {
     return {
       left: spacingBadge.from,

@@ -30,7 +30,11 @@ const EMPTY_SNAP: FrameSnapView = {
   spacing: [],
 };
 
-const createSnapStore = () => {
+const createSnapStore = (): {
+  get: () => FrameSnapView;
+  set: (next: FrameSnapView | null) => void;
+  subscribe: (fn: () => void) => () => boolean;
+} => {
   let view = EMPTY_SNAP;
   const subs = new Set<() => void>();
 
@@ -106,7 +110,7 @@ const snapSize = (
   candidates: Box[],
   zoom: number,
   off: boolean
-) => {
+): { width: number; height: number } => {
   if (off || candidates.length === 0) {
     frameSnapStore.set(null);
 

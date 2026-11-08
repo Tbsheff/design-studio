@@ -66,7 +66,15 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
   return [...new Set(ids)].sort();
 };
 
-const presenceBody = (presenceInput: PresenceInput) => ({
+const presenceBody = (
+  presenceInput: PresenceInput
+): {
+  activeFrameId: string;
+  directionId: string | null;
+  inView: string[];
+  liveSize: { height: number; width: number };
+  selection: { selector: string; tag: string; text: string }[];
+} => ({
   activeFrameId: presenceInput.activeId,
   directionId: presenceInput.directionId,
   inView: inViewIds(presenceInput.stage()),

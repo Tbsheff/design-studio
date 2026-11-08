@@ -39,7 +39,11 @@ const useViewSlots = (
   props: ViewProps,
   text: ReturnType<typeof useCanvasStage>,
   pv: ReturnType<typeof useCanvasPreview>
-) => {
+): {
+  findHost: ReturnType<typeof useFindHost>;
+  importPage: ChromeImportPage;
+  matrixSlot: ReactElement;
+} => {
   const { projectId, directionId } = props;
   const { active, canvasFrames, pz } = text;
 

@@ -87,7 +87,13 @@ const useShellPane = (
   setSelectMode: SetSelectMode,
   live: boolean,
   layersOpenSetting: boolean
-) => {
+): {
+  closeLayers: () => void | Promise<boolean>;
+  layersOpen: boolean;
+  picking: boolean;
+  place: (panel: ReactNode) => ReactNode;
+  toggleEdit: () => void | Promise<boolean> | undefined;
+} => {
   useShellState(shell, comment, setSelectMode);
   const picking = selectMode || (shell?.pane === "design" && !comment.on);
 

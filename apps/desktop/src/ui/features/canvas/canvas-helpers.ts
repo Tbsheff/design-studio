@@ -72,7 +72,7 @@ const noteCommentFrame = (
 const activeFrameOf = (
   active: { id: string; path?: string },
   all: { id: string }[]
-) => ({
+): { id: string; ids: string[]; path: string } => ({
   id: active.id,
   ids: all.map((frame) => frame.id),
   path: active.path ?? "",
@@ -139,7 +139,10 @@ const stageNote = (point: {
   return null;
 };
 
-const themeSwitch = (enabled: boolean | undefined, theme: ThemeChoice) => {
+const themeSwitch = (
+  enabled: boolean | undefined,
+  theme: ThemeChoice
+): { dark: boolean; onToggle: () => void } | undefined => {
   if (!enabled) {
     return;
   }

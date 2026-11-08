@@ -45,7 +45,19 @@ const useRulersKey = (): void => {
   }, []);
 };
 
-const barShell = (shell: CanvasShell | undefined) => {
+const barShell = (
+  shell: CanvasShell | undefined
+):
+  | CanvasShell
+  | {
+      canExport: boolean;
+      directionName: null;
+      onExpandPane: () => null;
+      onExport: () => null;
+      onShareLink: null;
+      onShip: null;
+      paneCollapsed: boolean;
+    } => {
   if (!shell) {
     return {
       canExport: false,

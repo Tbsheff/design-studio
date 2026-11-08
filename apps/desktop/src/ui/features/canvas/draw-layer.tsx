@@ -108,7 +108,10 @@ const DrawSurface = ({
 
   useEffect(paint, [draw.strokes, scale, frame.width, frame.height]);
 
-  const pointOf = (event: { clientX: number; clientY: number }) => {
+  const pointOf = (event: {
+    clientX: number;
+    clientY: number;
+  }): { x: number; y: number } | null => {
     const rect = canvas.current?.getBoundingClientRect();
 
     if (!rect || rect.width === 0 || rect.height === 0) {

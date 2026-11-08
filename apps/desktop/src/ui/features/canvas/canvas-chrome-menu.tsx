@@ -99,7 +99,10 @@ const addAndShow = (
   chromeProps.zoom.zoomToActive?.();
 };
 
-const useFileMenu = (chromePropsValue: ChromeProps, onImport: () => void) => {
+const useFileMenu = (
+  chromePropsValue: ChromeProps,
+  onImport: () => void
+): { groups: () => MenuGroup[]; load: () => Promise<void> } => {
   const [pages, setPages] = useState<string[]>([]);
 
   const load = async (): Promise<void> => {

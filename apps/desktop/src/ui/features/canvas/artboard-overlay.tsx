@@ -90,7 +90,11 @@ const ResizeHandles = ({
   );
 };
 
-const guideStyle = (snapGuide: SnapGuide) => {
+const guideStyle = (
+  snapGuide: SnapGuide
+):
+  | { height: number; left: number; top: number; width?: undefined }
+  | { left: number; top: number; width: number; height?: undefined } => {
   if (snapGuide.axis === "x") {
     return {
       height: snapGuide.to - snapGuide.from,
@@ -106,7 +110,11 @@ const guideStyle = (snapGuide: SnapGuide) => {
   };
 };
 
-const fullStyle = (snapGuideValue: SnapGuide) => {
+const fullStyle = (
+  snapGuideValue: SnapGuide
+):
+  | { bottom: number; left: number; top: number; right?: undefined }
+  | { left: number; right: number; top: number; bottom?: undefined } => {
   if (snapGuideValue.axis === "x") {
     return { bottom: 0, left: snapGuideValue.at, top: 0 };
   }
@@ -168,7 +176,11 @@ const SnapGuides = ({
   );
 };
 
-const lineStyle = (measureLine: MeasureLine) => {
+const lineStyle = (
+  measureLine: MeasureLine
+):
+  | { left: number; top: number; width: number; height?: undefined }
+  | { height: number; left: number; top: number; width?: undefined } => {
   if (measureLine.axis === "x") {
     return {
       left: measureLine.from,

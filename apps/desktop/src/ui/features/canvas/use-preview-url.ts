@@ -13,7 +13,7 @@ const usePreviewUrl = (
   directionId: string | null,
   source: CanvasSource,
   headVersionId: string | null
-) => {
+): { baseUrl: string | null; urlError: string | null } => {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
 
@@ -82,7 +82,16 @@ const usePreviewUrl = (
   return { baseUrl, urlError };
 };
 
-const useRenderCheck = (projectId: string, directionId: string | null) => {
+const useRenderCheck = (
+  projectId: string,
+  directionId: string | null
+): {
+  checking: boolean;
+  close: () => void;
+  error: string | null;
+  results: RenderCheckResult[] | null;
+  run: () => Promise<void>;
+} => {
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState<RenderCheckResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);

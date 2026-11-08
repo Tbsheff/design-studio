@@ -1,6 +1,6 @@
 import type { AppRoute } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import type { ReactElement, ReactNode } from "react";
+import type { Dispatch, ReactElement, ReactNode, SetStateAction } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { dynamicNames } from "../../../shared/route-flow.js";
@@ -38,7 +38,15 @@ export const flowSummary = (result: FlowResult): string => {
   return parts.join(", ");
 };
 
-const useRoutesAndParams = (projectId: string) => {
+const useRoutesAndParams = (
+  projectId: string
+): {
+  error: string | null;
+  params: Record<string, string>;
+  routes: AppRoute[] | null;
+  setError: Dispatch<SetStateAction<string | null>>;
+  setParams: Dispatch<SetStateAction<Record<string, string>>>;
+} => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
   const [params, setParams] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);

@@ -236,7 +236,12 @@ const menuItems = (
   ...createItem(options5, openCreate),
 ];
 
-const usePreviewMenu = (options6: Options) => {
+const usePreviewMenu = (
+  options6: Options
+): {
+  menu: ReactElement;
+  onContextMenu: (point: { x: number; y: number }) => void;
+} => {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const latest = useRef(options6);
   latest.current = options6;

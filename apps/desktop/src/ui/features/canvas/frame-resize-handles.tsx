@@ -1,9 +1,12 @@
 import { usePopover } from "@design-studio/ui";
 import { useCallback, useRef, useState } from "react";
 import type {
+  Dispatch,
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
   ReactElement,
+  RefObject,
+  SetStateAction,
 } from "react";
 
 type ResizeEdge = "right" | "bottom" | "corner";
@@ -122,7 +125,13 @@ const menuKeys = (
   items[step(Math.max(0, index), items.length)]?.focus();
 };
 
-const useMenu = () => {
+const useMenu = (): {
+  close: (refocus: boolean) => void;
+  open: boolean;
+  root: RefObject<HTMLDivElement | null>;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  trigger: RefObject<HTMLButtonElement | null>;
+} => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);

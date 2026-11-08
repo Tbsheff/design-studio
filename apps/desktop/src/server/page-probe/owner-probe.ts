@@ -97,7 +97,9 @@ const probeOwners = async (
 };
 
 const parseLoc = (raw: string | null): SourceLoc | null => {
-  const match = raw ? /^(.+):(\d+):(\d+)$/.exec(raw) : null;
+  const match = raw
+    ? /^(?<file>.+):(?<line>\d+):(?<column>\d+)$/u.exec(raw)
+    : null;
 
   return match
     ? {

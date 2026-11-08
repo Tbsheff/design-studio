@@ -84,7 +84,7 @@ const formatRelative = (ts: number, now = Date.now()): string => {
 };
 
 const baseName = (filePath: string): string => {
-  const parts = filePath.split(/[\\/]/).filter(Boolean);
+  const parts = filePath.split(/[\\/]/u).filter(Boolean);
 
   return parts.at(-1) ?? filePath;
 };

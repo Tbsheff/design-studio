@@ -17,7 +17,7 @@ const projectForFolder = (
   projects: Project[],
   folder: string
 ): Project | undefined => {
-  const clean = folder.replace(/\/+$/, "");
+  const clean = folder.replace(/\/+$/u, "");
 
   return projects.find(
     (project) =>

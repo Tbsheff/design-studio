@@ -7,9 +7,9 @@ import type { SourceLoc } from "@design-studio/contracts";
 import { parseSource } from "../direct-edit/engine/index.js";
 import { EditError } from "./edit-error.js";
 
-const FULL = /^(.+):(\d+):(\d+)$/;
-const LINE_ONLY = /^(.+):(\d+)$/;
-const SCRIPT = /\.(tsx|jsx|ts|js|mjs|cjs)$/;
+const FULL = /^(?<file>.+):(?<line>\d+):(?<column>\d+)$/u;
+const LINE_ONLY = /^(?<file>.+):(?<line>\d+)$/u;
+const SCRIPT = /\.(?<extension>tsx|jsx|ts|js|mjs|cjs)$/u;
 const FILES_MAX = 2000;
 const shownFiles = new Map<string, Map<string, Set<string>>>();
 
@@ -42,7 +42,7 @@ const insideTree = (workTree: string, file: string): string => {
 
   if (
     path.isAbsolute(file) ||
-    file.split(/[\\/]/).includes("..") ||
+    file.split(/[\\/]/u).includes("..") ||
     !absolute.startsWith(workTree + path.sep)
   ) {
     throw new EditError(
@@ -107,7 +107,7 @@ const colOnLine = async (
     throw new EditError(`${raw}: there is no file ${file} in the project.`);
   }
 
-  const cols = tagStartsOn(parseSource(text, /\.tsx?$/.test(file)), line);
+  const cols = tagStartsOn(parseSource(text, /\.tsx?$/u.test(file)), line);
 
   if (cols.length === 1) {
     return cols[0] as number;

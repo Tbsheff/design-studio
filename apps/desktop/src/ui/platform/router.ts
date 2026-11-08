@@ -1,6 +1,6 @@
 import { uiStore } from "./storage";
 
-const PROJECT_PATH = /^\/p\/([^/]+)\/?$/;
+const PROJECT_PATH = /^\/p\/(?<projectId>[^/]+)\/?$/u;
 
 const projectFromPath = (pathname: string): string | null => {
   const match = PROJECT_PATH.exec(pathname);

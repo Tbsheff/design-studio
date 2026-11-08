@@ -197,7 +197,7 @@ export const AppFailure = ({
         projectId={projectId}
         app={app}
         suggested={
-          /runs for this app at (\S+?)\.(?:\s|$)/.exec(
+          /runs for this app at (?<appPath>\S+?)\.(?:\s|$)/u.exec(
             status.message ?? ""
           )?.[1] ?? ""
         }

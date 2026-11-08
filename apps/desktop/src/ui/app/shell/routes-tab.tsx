@@ -58,7 +58,7 @@ const RoutesTab = ({
     event.preventDefault();
     const route = cleanRoute(custom);
 
-    if (!route || /[[\]]/.test(route)) {
+    if (!route || /[[\]]/u.test(route)) {
       return;
     }
 
@@ -146,7 +146,7 @@ const RoutesTab = ({
         <button
           type="submit"
           className="btn small"
-          disabled={!custom.trim() || /[[\]]/.test(custom)}
+          disabled={!custom.trim() || /[[\]]/u.test(custom)}
         >
           Add frame
         </button>

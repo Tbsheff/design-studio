@@ -166,7 +166,7 @@ const lineMapping = (before: string[], after: string[]): Int32Array => {
   return mapping;
 };
 
-const TRIVIAL_LINE = /^(?:<\/[\w.:-]*>|\/?>|[\s{}()[\];,]*)$/;
+const TRIVIAL_LINE = /^(?:<\/[\w.:-]*>|\/?>|[\s{}()[\];,]*)$/u;
 
 const unclaimedByText = (
   after: string[],

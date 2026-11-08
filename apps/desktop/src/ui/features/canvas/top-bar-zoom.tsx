@@ -7,7 +7,7 @@ import { useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { copy } from "./copy.js";
-import { DropMenu } from "./top-bar-drop-menu.js";
+import { DropMenu } from "./drop-menu.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 import {
   VECTOR_TOOLS,

@@ -1,16 +1,13 @@
 import { Icon } from "@design-studio/ui";
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import type { ReactNode, ReactElement } from "react";
 
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { copy } from "./copy.js";
-import {
-  PortToAppDialog,
-  usePortDialog,
-  DropMenu,
-} from "./top-bar-drop-menu.js";
+import { DropMenu } from "./drop-menu.js";
+import { loadPortToAppDialog, usePortDialog } from "./top-bar-drop-menu.js";
 import { shareGroups } from "./top-bar-menu.js";
 import type {
   CanvasTool,
@@ -50,6 +47,8 @@ interface Props {
   onShip?: (() => void) | null;
   onShareLink?: ((mode?: "link" | "publish") => void) | null;
 }
+
+const PortToAppDialog = lazy(loadPortToAppDialog);
 
 const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
   {

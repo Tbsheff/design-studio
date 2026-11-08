@@ -2,86 +2,123 @@ import { LAYER_LABEL_MAX, LAYER_TREE_MAX } from "@design-studio/contracts";
 import type { LayerNode, ReorderMove } from "@design-studio/contracts";
 
 const LOC_MAX = 1100;
+const TAG_MAX = 32;
 
 interface LayerTree {
   nodes: LayerNode[];
   truncated: boolean;
 }
 
-function text(value: unknown, max: number): string {
-  return typeof value === "string" ? value.slice(0, max) : "";
-}
-
-function count(value: unknown): number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0
-    ? value
-    : 0;
-}
-
-function parseLayerTree(raw: {
+interface RawLayerTree {
   nodes?: unknown;
   truncated?: unknown;
-}): LayerTree {
-  const list = Array.isArray(raw.nodes)
-    ? raw.nodes.slice(0, LAYER_TREE_MAX)
-    : [];
+}
+
+const toText = (value: unknown, max: number): string => {
+  if (typeof value === "string") {
+    return value.slice(0, max);
+  }
+
+  return "";
+};
+
+const toCount = (value: unknown): number => {
+  if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
+    return value;
+  }
+
+  return 0;
+};
+
+const toRecord = (item: unknown): Record<string, unknown> | null => {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  return item as Record<string, unknown>;
+};
+
+const toOptionalFields = (
+  record: Record<string, unknown>
+): Pick<LayerNode, "loc" | "locked"> => {
+  const fields: Pick<LayerNode, "loc" | "locked"> = {};
+
+  if (typeof record.loc === "string" && record.loc.length <= LOC_MAX) {
+    fields.loc = record.loc;
+  }
+
+  if (record.locked === true) {
+    fields.locked = true;
+  }
+
+  return fields;
+};
+
+const toLayerNode = (
+  record: Record<string, unknown>,
+  previousDepth: number
+): LayerNode | null => {
+  const { id } = record;
+
+  if (typeof id !== "number" || !Number.isInteger(id)) {
+    return null;
+  }
+
+  return {
+    childCount: toCount(record.childCount),
+    depth: Math.min(toCount(record.depth), previousDepth + 1),
+    hidden: record.hidden === true,
+    id,
+    name: toText(record.name, LAYER_LABEL_MAX),
+    tag: toText(record.tag, TAG_MAX).replaceAll(/[^a-z0-9-]/giu, ""),
+    text: toText(record.text, LAYER_LABEL_MAX),
+    ...toOptionalFields(record),
+  };
+};
+
+const parseLayerTree = (raw: RawLayerTree): LayerTree => {
+  let list: unknown[] = [];
+
+  if (Array.isArray(raw.nodes)) {
+    list = raw.nodes.slice(0, LAYER_TREE_MAX);
+  }
 
   const nodes: LayerNode[] = [];
 
   for (const item of list) {
-    if (!item || typeof item !== "object") {
-      continue;
+    const record = toRecord(item);
+    const node = record && toLayerNode(record, nodes.at(-1)?.depth ?? -1);
+
+    if (node) {
+      nodes.push(node);
     }
-
-    const n = item as Record<string, unknown>;
-
-    if (typeof n.id !== "number" || !Number.isInteger(n.id)) {
-      continue;
-    }
-
-    const depth = Math.min(count(n.depth), (nodes.at(-1)?.depth ?? -1) + 1);
-    nodes.push({
-      childCount: count(n.childCount),
-      depth,
-      hidden: n.hidden === true,
-      id: n.id,
-      name: text(n.name, LAYER_LABEL_MAX),
-      tag: text(n.tag, 32).replaceAll(/[^a-z0-9-]/gi, ""),
-      text: text(n.text, LAYER_LABEL_MAX),
-      ...(typeof n.loc === "string" && n.loc.length <= LOC_MAX
-        ? { loc: n.loc }
-        : {}),
-      ...(n.locked === true ? { locked: true } : {}),
-    });
   }
 
   return { nodes, truncated: raw.truncated === true };
-}
+};
 
-function visibleRows(
+const visibleRows = (
   nodes: LayerNode[],
   collapsed: ReadonlySet<number>
-): LayerNode[] {
+): LayerNode[] => {
   const rows: LayerNode[] = [];
   let skipBelow = Infinity;
 
   for (const node of nodes) {
-    if (node.depth > skipBelow) {
-      continue;
-    }
+    if (node.depth <= skipBelow) {
+      skipBelow = Infinity;
+      rows.push(node);
 
-    skipBelow = Infinity;
-    rows.push(node);
-
-    if (node.childCount > 0 && collapsed.has(node.id)) {
-      skipBelow = node.depth;
+      if (node.childCount > 0 && collapsed.has(node.id)) {
+        skipBelow = node.depth;
+      }
     }
   }
 
   return rows;
-}
+};
 
-function layerKeys(nodes: LayerNode[]): Map<number, string> {
+const layerKeys = (nodes: LayerNode[]): Map<number, string> => {
   const keys = new Map<number, string>();
 
   const stack: { key: string; counts: Map<string, number> }[] = [
@@ -104,10 +141,10 @@ function layerKeys(nodes: LayerNode[]): Map<number, string> {
   }
 
   return keys;
-}
+};
 
-function ancestorsOf(nodes: LayerNode[], id: number): number[] {
-  const index = nodes.findIndex((n) => n.id === id);
+const ancestorsOf = (nodes: LayerNode[], id: number): number[] => {
+  const index = nodes.findIndex((node) => node.id === id);
 
   if (index === -1) {
     return [];
@@ -116,8 +153,8 @@ function ancestorsOf(nodes: LayerNode[], id: number): number[] {
   const out: number[] = [];
   let { depth } = nodes[index] as LayerNode;
 
-  for (let i = index - 1; i >= 0 && depth > 0; i -= 1) {
-    const node = nodes[i] as LayerNode;
+  for (let at = index - 1; at >= 0 && depth > 0; at -= 1) {
+    const node = nodes[at] as LayerNode;
 
     if (node.depth < depth) {
       out.push(node.id);
@@ -126,46 +163,52 @@ function ancestorsOf(nodes: LayerNode[], id: number): number[] {
   }
 
   return out;
-}
+};
 
-function parentOf(nodes: LayerNode[], id: number): number | null {
-  return ancestorsOf(nodes, id)[0] ?? null;
-}
+const parentOf = (nodes: LayerNode[], id: number): number | null =>
+  ancestorsOf(nodes, id)[0] ?? null;
 
-function defaultCollapsed(nodes: LayerNode[], openDepth: number): Set<number> {
-  return new Set(
+const defaultCollapsed = (nodes: LayerNode[], openDepth: number): Set<number> =>
+  new Set(
     nodes
-      .filter((n) => n.childCount > 0 && n.depth >= openDepth)
-      .map((n) => n.id)
+      .filter((node) => node.childCount > 0 && node.depth >= openDepth)
+      .map((node) => node.id)
   );
-}
 
 type TreeAction = { select: number } | { toggle: number; open: boolean } | null;
 
-function firstChildOf(nodes: LayerNode[], node: LayerNode): number | null {
+const firstChildOf = (nodes: LayerNode[], node: LayerNode): number | null => {
   if (node.childCount === 0) {
     return null;
   }
 
   return nodes[nodes.indexOf(node) + 1]?.id ?? null;
-}
+};
 
-function stepAction(
+const stepAction = (
   rows: LayerNode[],
   index: number,
   step: 1 | -1
-): TreeAction {
-  const target = index < 0 ? rows[0] : rows[index + step];
+): TreeAction => {
+  let target = rows[0];
 
-  return target ? { select: target.id } : null;
-}
+  if (index >= 0) {
+    target = rows[index + step];
+  }
 
-function expandAction(
+  if (!target) {
+    return null;
+  }
+
+  return { select: target.id };
+};
+
+const expandAction = (
   nodes: LayerNode[],
   node: LayerNode,
   collapsed: ReadonlySet<number>,
   open: boolean
-): TreeAction {
+): TreeAction => {
   if (open) {
     if (node.childCount === 0) {
       return null;
@@ -177,7 +220,11 @@ function expandAction(
 
     const child = firstChildOf(nodes, node);
 
-    return child === null ? null : { select: child };
+    if (child === null) {
+      return null;
+    }
+
+    return { select: child };
   }
 
   if (node.childCount > 0 && !collapsed.has(node.id)) {
@@ -186,19 +233,26 @@ function expandAction(
 
   const parent = parentOf(nodes, node.id);
 
-  return parent === null ? null : { select: parent };
-}
+  if (parent === null) {
+    return null;
+  }
 
-function treeKeyAction(
+  return { select: parent };
+};
+
+const treeKeyAction = (
   key: string,
   shift: boolean,
   nodes: LayerNode[],
   rows: LayerNode[],
   selected: number | null,
   collapsed: ReadonlySet<number>
-): TreeAction {
-  const index =
-    selected === null ? -1 : rows.findIndex((r) => r.id === selected);
+): TreeAction => {
+  let index = -1;
+
+  if (selected !== null) {
+    index = rows.findIndex((row) => row.id === selected);
+  }
 
   if (key === "ArrowDown") {
     return stepAction(rows, index, 1);
@@ -208,9 +262,9 @@ function treeKeyAction(
     return stepAction(rows, index, -1);
   }
 
-  const node = index >= 0 ? rows[index] : undefined;
+  const node = rows[index];
 
-  if (!node) {
+  if (index < 0 || !node) {
     return null;
   }
 
@@ -226,12 +280,20 @@ function treeKeyAction(
     return null;
   }
 
-  const target = shift ? parentOf(nodes, node.id) : firstChildOf(nodes, node);
+  let target = firstChildOf(nodes, node);
 
-  return target === null ? null : { select: target };
-}
+  if (shift) {
+    target = parentOf(nodes, node.id);
+  }
 
-function subtreeEnd(rows: LayerNode[], index: number): number {
+  if (target === null) {
+    return null;
+  }
+
+  return { select: target };
+};
+
+const subtreeEnd = (rows: LayerNode[], index: number): number => {
   const depth = rows[index]?.depth ?? 0;
   let end = index + 1;
 
@@ -240,175 +302,87 @@ function subtreeEnd(rows: LayerNode[], index: number): number {
   }
 
   return end;
-}
+};
 
-function siblingRow(
+const siblingRow = (
   rows: LayerNode[],
   index: number,
   step: 1 | -1
-): number | null {
+): number | null => {
   const depth = rows[index]?.depth;
 
   if (depth === undefined) {
     return null;
   }
 
-  for (let i = index + step; i >= 0 && i < rows.length; i += step) {
-    const row = rows[i] as LayerNode;
+  for (let at = index + step; at >= 0 && at < rows.length; at += step) {
+    const row = rows[at] as LayerNode;
 
     if (row.depth < depth) {
       return null;
     }
 
     if (row.depth === depth) {
-      return i;
+      return at;
     }
   }
 
   return null;
-}
+};
 
 interface DropTarget {
   move: ReorderMove;
   line: number;
 }
 
-function dropTarget(
+const dropTarget = (
   rows: LayerNode[],
   id: number,
-  y: number,
+  offsetY: number,
   rowHeight: number
-): DropTarget | null {
-  const index = rows.findIndex((r) => r.id === id);
+): DropTarget | null => {
+  const index = rows.findIndex((row) => row.id === id);
 
   if (index === -1) {
     return null;
   }
 
-  if (y < index * rowHeight) {
+  if (offsetY < index * rowHeight) {
     const prev = siblingRow(rows, index, -1);
 
-    return prev === null ? null : { line: prev * rowHeight, move: "up" };
+    if (prev === null) {
+      return null;
+    }
+
+    return { line: prev * rowHeight, move: "up" };
   }
 
-  if (y < subtreeEnd(rows, index) * rowHeight) {
+  if (offsetY < subtreeEnd(rows, index) * rowHeight) {
     return null;
   }
 
   const next = siblingRow(rows, index, 1);
 
-  return next === null
-    ? null
-    : { line: subtreeEnd(rows, next) * rowHeight, move: "down" };
-}
-
-const FALLBACK_LABEL = /^[#.]/;
-const UNSAFE_NAME_CHARS = /["'`<>{}&\\\u0000-\u001F\u007F]/g;
-
-function editableName(name: string): string {
-  return FALLBACK_LABEL.test(name) ? "" : name;
-}
-
-function cleanName(value: string): string {
-  return value.replaceAll(UNSAFE_NAME_CHARS, "").slice(0, LAYER_LABEL_MAX);
-}
-
-const CONTAINER_TAGS = new Set([
-  "div",
-  "section",
-  "main",
-  "article",
-  "aside",
-  "header",
-  "footer",
-  "nav",
-  "form",
-  "ul",
-  "ol",
-  "li",
-  "figure",
-  "body",
-]);
-
-const EDGE_ZONE = 0.25;
-
-interface LayerDropTarget {
-  drop: { into: number } | { before: number } | { after: number };
-  line: number | null;
-  into: number | null;
-}
-
-function edgeDrop(
-  rows: LayerNode[],
-  index: number,
-  after: boolean,
-  rowHeight: number
-): LayerDropTarget {
-  const row = rows[index] as LayerNode;
-  const next = rows[index + 1];
-
-  if (!after) {
-    return { drop: { before: row.id }, into: null, line: index * rowHeight };
-  }
-
-  if (next && next.depth > row.depth) {
-    return {
-      drop: { before: next.id },
-      into: null,
-      line: (index + 1) * rowHeight,
-    };
-  }
-
-  return { drop: { after: row.id }, into: null, line: (index + 1) * rowHeight };
-}
-
-function layerDrop(
-  rows: LayerNode[],
-  id: number,
-  y: number,
-  rowHeight: number
-): LayerDropTarget | null {
-  const from = rows.findIndex((r) => r.id === id);
-  const index = Math.floor(y / rowHeight);
-  const row = rows[index];
-
-  if (
-    from === -1 ||
-    !row ||
-    (index >= from && index < subtreeEnd(rows, from))
-  ) {
+  if (next === null) {
     return null;
   }
 
-  const frac = y / rowHeight - index;
+  return { line: subtreeEnd(rows, next) * rowHeight, move: "down" };
+};
 
-  const canHold =
-    row.childCount > 0 || (CONTAINER_TAGS.has(row.tag) && row.text === "");
+const FALLBACK_LABEL = /^[#.]/u;
+const UNSAFE_NAME_CHARS = /["'`<>{}&\\\u0000-\u001F\u007F]/gu;
 
-  if (canHold && frac > EDGE_ZONE && frac < 1 - EDGE_ZONE) {
-    return { drop: { into: row.id }, into: row.id, line: null };
+const editableName = (name: string): string => {
+  if (FALLBACK_LABEL.test(name)) {
+    return "";
   }
 
-  return edgeDrop(rows, index, frac >= 0.5, rowHeight);
-}
+  return name;
+};
 
-function adjacentMove(
-  rows: LayerNode[],
-  id: number,
-  y: number,
-  rowHeight: number
-): DropTarget | null {
-  const from = rows.findIndex((r) => r.id === id);
-  const index = Math.floor(y / rowHeight);
-  const prev = from === -1 ? null : siblingRow(rows, from, -1);
-  const next = from === -1 ? null : siblingRow(rows, from, 1);
-  const onPrev = prev !== null && index >= prev && index < from;
-
-  const onNext =
-    next !== null && index >= next && index < subtreeEnd(rows, next);
-
-  return onPrev || onNext ? dropTarget(rows, id, y, rowHeight) : null;
-}
+const cleanName = (value: string): string =>
+  value.replaceAll(UNSAFE_NAME_CHARS, "").slice(0, LAYER_LABEL_MAX);
 
 export {
   parseLayerTree,
@@ -423,8 +397,6 @@ export {
   dropTarget,
   editableName,
   cleanName,
-  layerDrop,
-  adjacentMove,
 };
 
-export type { LayerTree, TreeAction, DropTarget, LayerDropTarget };
+export type { LayerTree, TreeAction, DropTarget };

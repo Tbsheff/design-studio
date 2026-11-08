@@ -9,7 +9,8 @@ import type {
 import type { MutableRefObject } from "react";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
-import type { LayerDropTarget, LayerTree } from "./layers-tree.js";
+import type { LayerDropTarget } from "./layers-drop.js";
+import type { LayerTree } from "./layers-tree.js";
 
 interface LayerFrames {
   slots: { token: string; src: string }[];

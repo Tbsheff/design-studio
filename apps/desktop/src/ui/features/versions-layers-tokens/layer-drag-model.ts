@@ -1,8 +1,9 @@
 import type { LayerNode, ReorderMove } from "@design-studio/contracts";
 
 import { ROW } from "./layers-constants.js";
-import { adjacentMove, dropTarget, layerDrop } from "./layers-tree.js";
-import type { LayerDropTarget } from "./layers-tree.js";
+import { adjacentMove, layerDrop } from "./layers-drop.js";
+import type { LayerDropTarget } from "./layers-drop.js";
+import { dropTarget } from "./layers-tree.js";
 
 interface RowDrop {
   readonly commit: () => void;

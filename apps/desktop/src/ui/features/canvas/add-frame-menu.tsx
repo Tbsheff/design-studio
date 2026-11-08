@@ -166,7 +166,7 @@ const FrameUndoBar = ({
       return;
     }
 
-    const timer = window.setTimeout(onDismiss, SET_TIMEOUT_8000);
+    const timer = globalThis.setTimeout(onDismiss, SET_TIMEOUT_8000);
 
     return (): void => globalThis.clearTimeout(timer);
   }, [onUndo, onDismiss]);

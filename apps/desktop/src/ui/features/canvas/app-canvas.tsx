@@ -24,15 +24,17 @@ import { copy } from "./copy.js";
 const LOAD_HINT_MS = 30_000;
 
 const reloadAppFrames = (): void => {
-  document
-    .querySelectorAll<HTMLIFrameElement>(".stage iframe.frame")
-    .forEach((el) => {
-      const { src } = el;
+  const frames = document.querySelectorAll<HTMLIFrameElement>(
+    ".stage iframe.frame"
+  );
 
-      if (src) {
-        el.src = src;
-      }
-    });
+  for (const el of frames) {
+    const { src } = el;
+
+    if (src) {
+      el.src = src;
+    }
+  }
 };
 
 const needsReload = (
@@ -72,7 +74,7 @@ const useServerFrames = (
       return;
     }
 
-    const timer = window.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
+    const timer = globalThis.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
 
     return (): void => globalThis.clearTimeout(timer);
   }, [ready, loaded]);

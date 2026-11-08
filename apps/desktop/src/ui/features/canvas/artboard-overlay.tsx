@@ -280,7 +280,7 @@ const ArtboardOverlay = ({
         let live: ResizeLive | null = null;
 
         if (resize?.target?.selector === selectionContext3.selector) {
-          live = resize.live;
+          ({ live } = resize);
         }
 
         return (

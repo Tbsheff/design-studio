@@ -1,7 +1,6 @@
 import type { StudioEvent } from "@design-studio/contracts";
 import {
   cleanFramePath,
-  isFrameId,
   normalizeCanvasFile,
   serializeCanvasFile,
 } from "@design-studio/contracts/canvas-file";
@@ -10,15 +9,21 @@ import { useEffect, useSyncExternalStore } from "react";
 
 import { ApiError, api } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
-import { readStored, writeStored } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
+import { defaultLayout, firstShown, withoutKey } from "./canvas-frame-ops.js";
+import type {
+  Box,
+  CanvasFrame,
+  CanvasLayout,
+  FramePreset,
+} from "./canvas-layout-types.js";
 import {
-  MAX_FRAMES,
-  MAX_SIDE,
-  defaultLayout,
-  firstShown,
-  withoutKey,
-} from "./canvas-frame-ops.js";
+  legacyLayout,
+  markMigrated,
+  parseLayout,
+  saveActive,
+  storedActive,
+} from "./canvas-legacy-layout.js";
 
 const TO_STRING_36 = 36;
 
@@ -26,210 +31,21 @@ const SLICE_12 = 12;
 
 const STATUS_409 = 409;
 
-interface CanvasFrame {
-  id: string;
-  width: number;
-  height: number;
-  x: number;
-  y: number;
-  directionId?: string;
-  path?: string;
-  label?: string;
-  hidden?: boolean;
-}
-
-interface CanvasLayout {
-  frames: CanvasFrame[];
-  activeId: string;
-}
-
-interface Box {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-interface FramePreset {
-  preset: Exclude<Viewport["preset"], "custom">;
-  label: string;
-  width: number;
-  height: number;
-}
-
-const MIN_SIDE = 200;
-
-const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
-
-const MAX_COORD = 100_000;
-
-const KEY = "design-studio.canvas.v1";
-
-const ACTIVE_KEY = "design-studio.canvas.active.v1";
-
-const MIGRATED_KEY = "design-studio.canvas.migrated.v1";
-
 const WRITE_DELAY_MS = 400;
 
 const RETRY_MS = 2000;
 
 const writerId = `w${Math.random().toString(TO_STRING_36).slice(2, SLICE_12)}`;
 
-const isSide = (value: unknown): value is number =>
-  typeof value === "number" &&
-  Number.isInteger(value) &&
-  value >= MIN_SIDE &&
-  value <= MAX_SIDE;
-
-const isCoord = (value: unknown): value is number =>
-  typeof value === "number" &&
-  Number.isFinite(value) &&
-  Math.abs(value) <= MAX_COORD;
-
-const parseLayout = (raw: unknown): CanvasLayout | null => {
-  if (!raw || typeof raw !== "object") {
-    return null;
-  }
-
-  const record = raw as Record<string, unknown>;
-
-  if (!Array.isArray(record.frames) || typeof record.activeId !== "string") {
-    return null;
-  }
-
-  const frames: CanvasFrame[] = [];
-
-  for (const item of record.frames.slice(0, MAX_FRAMES)) {
-    const frame2 = item as Record<string, unknown>;
-
-    if (
-      !isFrameId(frame2.id) ||
-      frames.some((other) => other.id === frame2.id)
-    ) {
-      continue;
-    }
-
-    if (
-      !isSide(frame2.width) ||
-      !isSide(frame2.height) ||
-      !isCoord(frame2.x) ||
-      !isCoord(frame2.y)
-    ) {
-      continue;
-    }
-
-    const frame: CanvasFrame = {
-      height: frame2.height,
-      id: frame2.id,
-      width: frame2.width,
-      x: Math.round(frame2.x),
-      y: Math.round(frame2.y),
-    };
-
-    if (
-      typeof frame2.directionId === "string" &&
-      ID_RE.test(frame2.directionId)
-    ) {
-      frame.directionId = frame2.directionId;
-    }
-
-    let path: string | null = null;
-
-    if (typeof frame2.path === "string") {
-      path = cleanFramePath(frame2.path);
-    }
-
-    if (path) {
-      frame.path = path;
-    }
-
-    frames.push(frame);
-  }
-
-  if (frames.length === 0) {
-    return null;
-  }
-
-  let activeId: string = (frames[0] as CanvasFrame).id;
-
-  if (frames.some((canvasFrame32) => canvasFrame32.id === record.activeId)) {
-    activeId = record.activeId;
-  }
-
-  return { activeId, frames };
-};
-
-const readJson = (key: string): Record<string, unknown> => {
-  try {
-    const parsed = JSON.parse(readStored(key) ?? "{}") as unknown;
-
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : {};
-  } catch {
-    return {};
-  }
-};
-
-const writeJson = (key: string, value: Record<string, unknown>): boolean => {
-  try {
-    writeStored(key, JSON.stringify(value));
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const legacyLayout = (projectId: string): CanvasLayout | null => {
-  if (readJson(MIGRATED_KEY)[projectId] === true) {
-    return null;
-  }
-
-  return parseLayout(readJson(KEY)[projectId]);
-};
-
-const markMigrated = (projectId: string): void => {
-  if (readJson(MIGRATED_KEY)[projectId] !== true) {
-    writeJson(MIGRATED_KEY, { ...readJson(MIGRATED_KEY), [projectId]: true });
-  }
-
-  const legacy = readJson(KEY);
-
-  if (!(projectId in legacy)) {
-    return;
-  }
-
-  delete legacy[projectId];
-  writeJson(KEY, legacy);
-};
-
-const storedActive = (projectId: string): string | null => {
-  const value = readJson(ACTIVE_KEY)[projectId];
-
-  if (typeof value === "string") {
-    return value;
-  }
-
-  return null;
-};
-
-const saveActive = (projectId: string, activeId: string): void => {
-  if (storedActive(projectId) === activeId) {
-    return;
-  }
-
-  writeJson(ACTIVE_KEY, { ...readJson(ACTIVE_KEY), [projectId]: activeId });
-};
-
 const toCanvasFile = (
   layout: CanvasLayout | null,
   lofi: readonly string[]
 ): CanvasFile => {
-  const frames = (layout?.frames ?? []).map((frame, order) => ({
-    ...frame,
-    order,
-  }));
+  const frames = [];
+
+  for (const [order, frame] of (layout?.frames ?? []).entries()) {
+    frames.push({ ...frame, order });
+  }
 
   return normalizeCanvasFile({ frames, lofi: [...lofi], version: 1 });
 };
@@ -270,7 +86,7 @@ interface Entry {
   loaded: boolean;
   loading: Promise<void> | null;
   requestedAt: number;
-  timer: number | null;
+  timer: ReturnType<typeof setTimeout> | null;
   writing: boolean;
   again: boolean;
 }
@@ -301,7 +117,9 @@ const entryOf = (projectId: string): Entry => {
 };
 
 const notify = (): void => {
-  listeners.forEach((listener) => listener());
+  for (const listener of listeners) {
+    listener();
+  }
 };
 
 const fileText = (entry: Pick<Entry, "layout" | "lofi">): string =>
@@ -315,7 +133,7 @@ const applySnapshot = (
   const entry = entryOf(projectId);
 
   if (entry.timer !== null) {
-    window.clearTimeout(entry.timer);
+    globalThis.clearTimeout(entry.timer);
   }
 
   entry.timer = null;
@@ -335,7 +153,7 @@ const applySnapshot = (
 const migrate = async (
   projectId: string,
   legacy: CanvasLayout
-): Promise<void> => {
+): Promise<boolean> => {
   const entry = entryOf(projectId);
   entry.layout = legacy;
   notify();
@@ -352,11 +170,13 @@ const migrate = async (
     markMigrated(projectId);
   } catch (error) {
     if (error instanceof ApiError && error.status === STATUS_409) {
-      await reloadCanvas(projectId);
-    } else {
-      console.error("[canvas] migration failed", error);
+      return true;
     }
+
+    console.error("[canvas] migration failed", error);
   }
+
+  return false;
 };
 
 const reloadCanvas = async (projectId: string): Promise<void> => {
@@ -373,10 +193,14 @@ const reloadCanvas = async (projectId: string): Promise<void> => {
     legacy = legacyLayout(projectId);
   }
 
-  if (legacy) {
-    await migrate(projectId, legacy);
-  } else {
+  if (!legacy) {
     markMigrated(projectId);
+
+    return;
+  }
+
+  if (await migrate(projectId, legacy)) {
+    await reloadCanvas(projectId);
   }
 };
 
@@ -410,16 +234,18 @@ const flush = async (projectId: string): Promise<void> => {
     }
 
     if (!stale && fileText(entry) === sent) {
-      entry.timer = window.setTimeout(() => void flush(projectId), RETRY_MS);
+      entry.timer = globalThis.setTimeout(() => flush(projectId), RETRY_MS);
     }
   } finally {
     entry.writing = false;
   }
 
   if (stale) {
-    await reloadCanvas(projectId).catch((error: unknown) =>
-      console.error("[canvas] reload failed", error)
-    );
+    try {
+      await reloadCanvas(projectId);
+    } catch (error) {
+      console.error("[canvas] reload failed", error);
+    }
 
     return;
   }
@@ -434,10 +260,20 @@ const schedule = (projectId: string): void => {
   const entry = entryOf(projectId);
 
   if (entry.timer !== null) {
-    window.clearTimeout(entry.timer);
+    globalThis.clearTimeout(entry.timer);
   }
 
-  entry.timer = window.setTimeout(() => void flush(projectId), WRITE_DELAY_MS);
+  entry.timer = globalThis.setTimeout(() => flush(projectId), WRITE_DELAY_MS);
+};
+
+const loadCanvas = async (projectId: string, entry: Entry): Promise<void> => {
+  try {
+    await reloadCanvas(projectId);
+  } catch (error) {
+    console.error("[canvas] load failed", error);
+  } finally {
+    entry.loading = null;
+  }
 };
 
 const ensureLoaded = (projectId: string): void => {
@@ -447,11 +283,7 @@ const ensureLoaded = (projectId: string): void => {
     return;
   }
 
-  entry.loading = reloadCanvas(projectId)
-    .catch((error: unknown) => console.error("[canvas] load failed", error))
-    .finally(() => {
-      entry.loading = null;
-    });
+  entry.loading = loadCanvas(projectId, entry);
 };
 
 const receiveCanvasEvent = (event: StudioEvent): void => {
@@ -482,7 +314,7 @@ const canvasStore = {
     entries.get(projectId)?.loaded ?? false,
   lofi: (projectId: string): string[] =>
     entries.get(projectId)?.lofi ?? NO_LOFI,
-  set: (projectId: string, layout: CanvasLayout) => {
+  set: (projectId: string, layout: CanvasLayout): void => {
     const entry = entryOf(projectId);
     const before = fileText(entry);
     entry.layout = layout;
@@ -498,7 +330,7 @@ const canvasStore = {
     directionId: string,
     on: boolean,
     fallback: CanvasLayout
-  ) => {
+  ): void => {
     const entry = entryOf(projectId);
 
     if (!entry.loaded || entry.lofi.includes(directionId) === on) {
@@ -507,7 +339,7 @@ const canvasStore = {
 
     entry.lofi = ((): string[] => {
       if (on) {
-        return [...entry.lofi, directionId].sort();
+        return [...entry.lofi, directionId].toSorted();
       }
 
       return entry.lofi.filter((id) => id !== directionId);

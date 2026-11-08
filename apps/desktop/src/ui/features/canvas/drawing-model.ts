@@ -239,7 +239,7 @@ const penPath = (
     moved = anchors.map((anchor) => shiftAnchor(anchor, dx, dy));
   }
 
-  const first = moved[0];
+  const [first] = moved;
 
   if (!first) {
     return "";

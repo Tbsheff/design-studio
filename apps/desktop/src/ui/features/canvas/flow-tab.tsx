@@ -55,8 +55,8 @@ const useRoutesAndParams = (
     try {
       const result = await api.appRoutes(projectId);
       setRoutes(result.routes);
-    } catch (caught: unknown) {
-      setError(errorText(caught));
+    } catch (error: unknown) {
+      setError(errorText(error));
     }
   }, [projectId]);
 
@@ -135,13 +135,13 @@ export default function FlowTab({
     };
 
     return [...found]
-      .sort(
+      .toSorted(
         (appRoute, appRouteValue) => picked(appRoute) - picked(appRouteValue)
       )
       .slice(0, SLICE_200);
   }, [routes, filter, chosen]);
 
-  const names = [...new Set(chosen.flatMap(dynamicNames))];
+  const names = [...new Set(chosen.flatMap((route) => dynamicNames(route)))];
 
   const toggle = (route: string): void =>
     setChosen((list) => {
@@ -171,8 +171,8 @@ export default function FlowTab({
 
     try {
       setResult(await api.buildFlow(projectId, input));
-    } catch (caught: unknown) {
-      setError(errorText(caught));
+    } catch (error: unknown) {
+      setError(errorText(error));
     } finally {
       setBusy(false);
     }

@@ -14,20 +14,55 @@ import type {
   LinkTransition,
   PrototypeLink,
 } from "@design-studio/contracts/links";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { useProjectEvents } from "../../platform/events.js";
 import { call as callAction } from "../../platform/http.js";
+import type { RouteInput } from "../../platform/http.js";
 
 type FrameAction = (typeof LINK_ACTIONS)[number];
 
 const isFrameActionName = (action: LinkAction): action is FrameAction =>
   (LINK_ACTIONS as readonly string[]).includes(action);
 
-const frameAction = (
-  action: LinkAction | undefined
-): { action?: FrameAction } =>
-  action !== undefined && isFrameActionName(action) ? { action } : {};
+type Writable<Value> = { -readonly [Key in keyof Value]: Value[Key] };
+
+interface MotionFields {
+  action?: FrameAction;
+  duration?: number;
+  easing?: NonNullable<LinkMotion["easing"]>;
+  transition?: LinkTransition;
+}
+
+const toMotionFields = (motion: LinkMotion): MotionFields => {
+  const fields: MotionFields = {};
+
+  if (motion.action && isFrameActionName(motion.action)) {
+    fields.action = motion.action;
+  }
+
+  const duration = motion.duration ?? null;
+
+  if (duration !== null) {
+    fields.duration = duration;
+  }
+
+  if (motion.easing) {
+    fields.easing = motion.easing;
+  }
+
+  if (motion.transition) {
+    fields.transition = motion.transition;
+  }
+
+  return fields;
+};
 
 interface LinkInteractionChange {
   readonly action?: LinkAction;
@@ -65,7 +100,10 @@ const entryOf = (projectId: string): Entry => {
 
 const setFile = (projectId: string, file: LinksFile): void => {
   entryOf(projectId).file = file;
-  listeners.forEach((listener) => listener());
+
+  for (const listener of listeners) {
+    listener();
+  }
 };
 
 const fetchLinks = async (
@@ -115,7 +153,7 @@ const writeFile = (projectId: string, links: LinksFile): LinksFile => {
   return links;
 };
 
-const frameRefOf = (target: LinkTarget): string | undefined => {
+const frameRefOf = (target: LinkTarget): string | null => {
   if ("back" in target) {
     return "back";
   }
@@ -124,7 +162,7 @@ const frameRefOf = (target: LinkTarget): string | undefined => {
     return target.frame;
   }
 
-  return undefined;
+  return null;
 };
 
 const linksApi = {
@@ -132,15 +170,28 @@ const linksApi = {
     projectId: string,
     link: { from: LinkSource; to: LinkTarget; transition: LinkTransition }
   ): Promise<PrototypeLink | null> => {
-    const { links, link: saved } = await callAction(routes.createLinkCanvas, {
+    const owner = projectId;
+
+    const input: Writable<RouteInput<typeof routes.createLinkCanvas>> = {
       fromFrame: link.from.frame,
-      projectId,
+      projectId: owner,
       selector: link.from.selector,
-      ...(link.from.tag ? { tag: link.from.tag } : {}),
-      ...(link.from.text ? { text: link.from.text } : {}),
       toFrame: frameRefOf(link.to) ?? "back",
       transition: link.transition,
-    });
+    };
+
+    if (link.from.tag) {
+      input.tag = link.from.tag;
+    }
+
+    if (link.from.text) {
+      input.text = link.from.text;
+    }
+
+    const { links, link: saved } = await callAction(
+      routes.createLinkCanvas,
+      input
+    );
 
     setFile(projectId, links);
 
@@ -150,19 +201,16 @@ const linksApi = {
     projectId: string,
     ids: string[] | "all",
     motion: LinkMotion = {}
-  ) => {
+  ): Promise<LinksFile> => {
     const { links } = await callAction(routes.applyImplicitLinkCanvas, {
-      ...frameAction(motion.action),
-      ...(motion.duration === undefined ? {} : { duration: motion.duration }),
-      ...(motion.easing ? { easing: motion.easing } : {}),
+      ...toMotionFields(motion),
       ids,
       projectId,
-      ...(motion.transition ? { transition: motion.transition } : {}),
     });
 
     return writeFile(projectId, links);
   },
-  remove: async (projectId: string, id: string) => {
+  remove: async (projectId: string, id: string): Promise<LinksFile> => {
     const { links } = await callAction(routes.deleteLinkCanvas, {
       linkId: id,
       projectId,
@@ -183,7 +231,7 @@ const linksApi = {
 
     return link;
   },
-  setStart: async (projectId: string, frame: string) => {
+  setStart: async (projectId: string, frame: string): Promise<LinksFile> => {
     const { links } = await callAction(routes.setStartLinkCanvas, {
       frame,
       projectId,
@@ -195,24 +243,22 @@ const linksApi = {
     projectId: string,
     id: string,
     change: { to?: LinkTarget } & LinkMotion
-  ) => {
-    const toFrame: string | undefined = ((): string | undefined => {
-      if (change.to) {
-        return frameRefOf(change.to);
-      }
-
-      return undefined;
-    })();
-
-    const { links } = await callAction(routes.updateLinkCanvas, {
-      ...frameAction(change.action),
-      ...(change.duration === undefined ? {} : { duration: change.duration }),
-      ...(change.easing ? { easing: change.easing } : {}),
+  ): Promise<LinksFile> => {
+    const input: Writable<RouteInput<typeof routes.updateLinkCanvas>> = {
       linkId: id,
       projectId,
-      ...(toFrame ? { toFrame } : {}),
-      ...(change.transition ? { transition: change.transition } : {}),
-    });
+      ...toMotionFields(change),
+    };
+
+    if (change.to) {
+      const toFrame = frameRefOf(change.to);
+
+      if (toFrame) {
+        input.toFrame = toFrame;
+      }
+    }
+
+    const { links } = await callAction(routes.updateLinkCanvas, input);
 
     return writeFile(projectId, links);
   },
@@ -263,29 +309,37 @@ const useImplicitLinks = (
   framesKey: string
 ): PrototypeLink[] => {
   const [links, setLinks] = useState<PrototypeLink[]>([]);
-  const timer = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seq = useRef(0);
-  const fetchNow = useRef(() => undefined as void);
-  fetchNow.current = (): void => {
-    const at = ++seq.current;
+
+  const fetchNow = useCallback((): void => {
+    seq.current += 1;
+    const at = seq.current;
     void fetchImplicit(projectId, () => at === seq.current, setLinks);
-  };
+  }, [projectId]);
 
-  const later = (): void => {
-    globalThis.clearTimeout(timer.current);
-    timer.current = window.setTimeout(
-      () => fetchNow.current(),
-      IMPLICIT_DEBOUNCE_MS
-    );
-  };
+  const later = useCallback((): void => {
+    if (timer.current !== null) {
+      globalThis.clearTimeout(timer.current);
+    }
 
-  const mountedAt = useRef(Date.now());
+    timer.current = globalThis.setTimeout(fetchNow, IMPLICIT_DEBOUNCE_MS);
+  }, [fetchNow]);
+
+  const mountedAt = useRef(0);
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
   const lastKey = useRef(framesKey);
   useEffect(() => {
-    fetchNow.current();
+    fetchNow();
 
-    return (): void => globalThis.clearTimeout(timer.current);
-  }, [projectId]);
+    return (): void => {
+      if (timer.current !== null) {
+        globalThis.clearTimeout(timer.current);
+      }
+    };
+  }, [fetchNow]);
   useEffect(() => {
     const before = lastKey.current;
     lastKey.current = framesKey;
@@ -293,7 +347,7 @@ const useImplicitLinks = (
     if (before !== "" && before !== framesKey) {
       later();
     }
-  }, [framesKey]);
+  }, [framesKey, later]);
   useProjectEvents(projectId, (event) => {
     if (event.ts < mountedAt.current - REPLAY_SLACK_MS) {
       return;

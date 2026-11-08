@@ -169,13 +169,15 @@ const toolOf = (
 };
 
 const reloadFrames = (stage: HTMLElement | null): void => {
-  stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame").forEach((el) => {
+  const frames = stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame");
+
+  for (const el of frames ?? []) {
     const { src } = el;
 
     if (src) {
       el.src = src;
     }
-  });
+  }
 };
 
 const scopeOf = (selection: SelectionContext[]): string | null => {
@@ -183,7 +185,7 @@ const scopeOf = (selection: SelectionContext[]): string | null => {
     return `${selection.length} elements`;
   }
 
-  const first = selection[0];
+  const [first] = selection;
 
   if (first) {
     return `the ${first.tag}`;

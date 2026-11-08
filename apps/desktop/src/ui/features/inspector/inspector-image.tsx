@@ -23,7 +23,7 @@ import {
   sourceName,
 } from "./image-model.js";
 import type { Props } from "./image-model.js";
-import { InspectorSection } from "./inspector-section.js";
+import { InspectorSection } from "./inspector-fields.js";
 import { useImageSet } from "./use-image-set.js";
 import { usePasteImage } from "./use-paste-image.js";
 

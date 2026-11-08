@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 import { BorderGrid } from "./border-grid.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
-import { InspectorSection } from "./inspector-section.js";
+import { InspectorSection } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
 import { NEW_BORDER, applyEdit, hasBorder } from "./simple-model.js";
 

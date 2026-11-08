@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { copy } from "./copy.js";
 import type { ShiftPart } from "./css-values.js";
 import { writeShadows, shadowView } from "./effects-model.js";
-import { InspectorSection } from "./inspector-section.js";
+import { InspectorSection } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
 import { PlainNumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";

@@ -1052,7 +1052,7 @@
   gap: var(--s-2);
 }
 
-.ins-gap-mode .ins-select {
+.ins-gap-mode .ui-select-root {
   padding-left: var(--s-2);
 }
 

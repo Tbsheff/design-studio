@@ -19,7 +19,7 @@ import { errorText, replaceStyle } from "../../api.js";
 import { copy } from "./copy.js";
 
 import "../../styles/inspector-match.css";
-import { InspectorSection } from "./inspector-section.js";
+import { InspectorSection } from "./inspector-fields.js";
 import {
   classCandidates,
   designCandidates,

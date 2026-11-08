@@ -17,7 +17,7 @@ import { errorText } from "../../api.js";
 import { runVector } from "../canvas/vector-tool-model.js";
 import { copy } from "./copy.js";
 import { colorToHex } from "./css-values.js";
-import { InspectorSection } from "./inspector-section.js";
+import { InspectorSection } from "./inspector-fields.js";
 
 import "../../styles/vector.css";
 

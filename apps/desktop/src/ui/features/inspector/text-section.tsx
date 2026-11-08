@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from "react";
 
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
-import { InspectorSection } from "./inspector-section.js";
+import { InspectorSection } from "./inspector-fields.js";
 import { TextGrid } from "./text-grid.js";
 import type { TokenUi } from "./use-token-snap.js";
 

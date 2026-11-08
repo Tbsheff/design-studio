@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 import { ComponentPreviewThumb } from "../design-system/component-preview-thumb.js";
 import { AuthorSheet } from "./author-sheet.js";
 import { copy } from "./copy.js";
-import { InspectorSection } from "./inspector-section.js";
+import { InspectorSection } from "./inspector-fields.js";
 import { PropRows } from "./prop-rows.js";
 import { PropsChip } from "./props-chip.js";
 import { PropsFooter } from "./props-footer.js";

@@ -47,4 +47,6 @@ const InspectorSection = ({
   );
 };
 
+export { ColorField } from "./color-field.js";
+
 export { InspectorSection };

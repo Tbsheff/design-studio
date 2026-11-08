@@ -9,7 +9,7 @@ import { startTransition, useEffect, useState } from "react";
 import type { VariantSupport } from "../../../shared/variants.js";
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
-import { InspectorSection } from "./inspector-section.js";
+import { InspectorSection } from "./inspector-fields.js";
 
 interface ElementClasses {
   readonly tailwind: TailwindOutcome | null;

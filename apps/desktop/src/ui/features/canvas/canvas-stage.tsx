@@ -1,7 +1,6 @@
 import { Suspense, lazy, useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { TabOrderSlot } from "../accessibility/index.js";
 import {
   InlinePrompt as ChatInlinePrompt,
   McpPointBadge,
@@ -32,11 +31,17 @@ const LazyGridOverlay = lazy(async () => {
   return { default: loaded.GridOverlay };
 });
 
+const LazyTabOrderSlot = lazy(async () => {
+  const loaded = await import("../accessibility/index.js");
+
+  return { default: loaded.TabOrderSlot };
+});
+
 const STAGE_SLOTS = {
   Grid: LazyGridOverlay,
   InlinePrompt: ChatInlinePrompt,
   Spacing: LazySpacingHandles,
-  TabOrder: TabOrderSlot,
+  TabOrder: LazyTabOrderSlot,
 } as const;
 
 const toPanningClass = (isPanning: boolean): string => {

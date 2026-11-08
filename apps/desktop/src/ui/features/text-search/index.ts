@@ -1,5 +1,3 @@
-export { FIND_TEXT_COMMAND, FIND_TEXT_EVENT } from "./deps.js";
-
 export { FindPanelSlot } from "./find-panel-slot.js";
 
 export { useFindHost } from "./use-find-host.js";

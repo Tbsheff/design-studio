@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import type { StageSlotProps } from "./canvas-stage-types.js";
@@ -47,16 +47,18 @@ const StageArtboard = ({
         wait={firstBuild.wait}
         path={active.path}
       />
-      <TabOrder
-        projectId={props.projectId}
-        directionId={props.directionId}
-        frameId={active.id}
-        frames={frames}
-        kind={props.kind}
-        isBlocked={stage.protoOn}
-        lastChange={props.lastChange}
-        zoom={stage.pz.zoom}
-      />
+      <Suspense fallback={null}>
+        <TabOrder
+          projectId={props.projectId}
+          directionId={props.directionId}
+          frameId={active.id}
+          frames={frames}
+          kind={props.kind}
+          isBlocked={stage.protoOn}
+          lastChange={props.lastChange}
+          zoom={stage.pz.zoom}
+        />
+      </Suspense>
       <StageOverlay
         slots={slots}
         variant={variant}

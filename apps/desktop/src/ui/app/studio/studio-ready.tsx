@@ -8,6 +8,7 @@ import { ProjectRail } from "../../features/home/project-rail";
 import { useBindStudioCommands } from "./bind-studio-commands";
 import { DataModelLayer } from "./data-model-layer";
 import { DevStatusLayer } from "./dev-status-layer";
+import { ImpactLayer } from "./impact-layer";
 import { paneAttr, shipOpener } from "./project-model";
 import { ScreenLayer } from "./screen-layer";
 import { StudioCenter } from "./studio-center";
@@ -78,6 +79,7 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
       </div>
       <StudioRight ctx={ctx} />
       <DevStatusLayer projectId={projectId} />
+      <ImpactLayer directionId={core.directionId} projectId={projectId} />
       <ScreenLayer projectId={projectId} />
       <DataModelLayer draft={ui.draft} />
     </div>

@@ -44,3 +44,7 @@ export type {
   GetAttentionCommand,
   RunAttentionCommand,
 } from "./attention/index.js";
+
+export { ImpactRunner, ImpactStore } from "./impact/index.js";
+
+export type { ImpactRunnerApi, ImpactStoreApi } from "./impact/index.js";

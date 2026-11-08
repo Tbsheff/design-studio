@@ -26,6 +26,7 @@ import { GridLive } from "./grid/live.js";
 import { IconLive } from "./icon/live.js";
 import { ImageSearchLive } from "./image-search/live.js";
 import { ImageLive } from "./image/live.js";
+import { ImpactLive } from "./impact/live.js";
 import { IntegrationLive } from "./integration/live.js";
 import { KitDriftLive } from "./kit-drift/live.js";
 import { LayerStyleLive } from "./layer-style/live.js";
@@ -85,6 +86,7 @@ const ALL_LIVE = {
   icon: IconLive,
   image: ImageLive,
   imageSearch: ImageSearchLive,
+  impact: ImpactLive,
   integration: IntegrationLive,
   kitDrift: KitDriftLive,
   layerStyle: LayerStyleLive,

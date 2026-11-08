@@ -26,6 +26,7 @@ import { GridEntries } from "../grid/handlers.js";
 import { IconEntries } from "../icon/handlers.js";
 import { ImageSearchEntries } from "../image-search/handlers.js";
 import { ImageEntries } from "../image/handlers.js";
+import { ImpactEntries } from "../impact/handlers.js";
 import { IntegrationEntries } from "../integration/handlers.js";
 import { KitDriftEntries } from "../kit-drift/handlers.js";
 import { LayerStyleEntries } from "../layer-style/handlers.js";
@@ -85,6 +86,7 @@ const ALL_ENTRIES = {
   icon: IconEntries,
   image: ImageEntries,
   imageSearch: ImageSearchEntries,
+  impact: ImpactEntries,
   integration: IntegrationEntries,
   kitDrift: KitDriftEntries,
   layerStyle: LayerStyleEntries,

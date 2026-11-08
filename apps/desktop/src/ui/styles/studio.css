@@ -578,7 +578,7 @@
   gap: 6px;
 }
 
-@container canvas-bar (max-width: 990px) {
+@container canvas-bar (max-width: 1060px) {
   .canvas-topbar .topbar-tools > button > span {
     display: none;
   }
@@ -589,7 +589,15 @@
   }
 }
 
-@container canvas-bar (max-width: 780px) {
+@container canvas-bar (max-width: 820px) {
+  .canvas-topbar {
+    gap: 2px;
+  }
+
+  .canvas-topbar .topbar-avatar {
+    margin-left: 0;
+  }
+
   .canvas-topbar .topbar-present > :not(:first-child) {
     display: none;
   }
@@ -601,7 +609,7 @@
   }
 }
 
-@container canvas-bar (max-width: 690px) {
+@container canvas-bar (max-width: 730px) {
   .canvas-topbar .topbar-zoom {
     width: 28px;
     padding: 0;
@@ -617,7 +625,7 @@
   }
 }
 
-@container canvas-bar (max-width: 660px) {
+@container canvas-bar (max-width: 700px) {
   .canvas-topbar .btn.topbar-review {
     position: relative;
     width: 28px;
@@ -652,7 +660,12 @@
   }
 }
 
-@container canvas-bar (max-width: 560px) {
+@container canvas-bar (max-width: 600px) {
+  .canvas-topbar .topbar-icon.icon-btn,
+  .canvas-topbar .topbar-tools > button {
+    width: 24px;
+  }
+
   .canvas-topbar .topbar-fold-wide {
     display: none;
   }
@@ -666,7 +679,7 @@
   }
 }
 
-@container canvas-bar (max-width: 480px) {
+@container canvas-bar (max-width: 520px) {
   .canvas-topbar .topbar-fold-narrow {
     display: none;
   }
@@ -676,7 +689,7 @@
   }
 }
 
-@container canvas-bar (max-width: 400px) {
+@container canvas-bar (max-width: 440px) {
   .canvas-topbar .vector-tools {
     display: none;
   }

@@ -23,11 +23,11 @@ function useDoctorGate() {
   };
 
   return {
+    check,
+    close,
     gate,
     open: (next: Omit<DoctorGate, "isChecking">) =>
       setGate({ ...next, isChecking: false }),
-    close,
-    check,
   };
 }
 

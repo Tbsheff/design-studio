@@ -10,7 +10,7 @@ export interface ProjectsState {
   readonly error: string | null;
 }
 
-let state: ProjectsState = { projects: null, error: null };
+let state: ProjectsState = { error: null, projects: null };
 let inflight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
@@ -22,8 +22,8 @@ function emit(next: ProjectsState): void {
 function load(): Promise<void> {
   inflight ??= api
     .listProjects()
-    .then((projects) => emit({ projects, error: null }))
-    .catch((err: unknown) => emit({ ...state, error: errorText(err) }))
+    .then((projects) => emit({ error: null, projects }))
+    .catch((error: unknown) => emit({ ...state, error: errorText(error) }))
     .finally(() => {
       inflight = null;
     });
@@ -38,16 +38,17 @@ function update(change: (list: Project[]) => Project[]): void {
 }
 
 export const projectsApi = {
-  get: () => state,
-  load,
-  subscribe(listener: () => void) {
-    listeners.add(listener);
+  duplicate: async (project: Project) => {
+    const { project: copy } = await api.duplicateProject(project.id);
+    await load();
 
-    return () => {
-      listeners.delete(listener);
-    };
+    return copy;
   },
-  update,
+  found: (fresh = false) =>
+    json<FoundApps>("GET", `/api/folders/found${fresh ? "?fresh=1" : ""}`),
+  get: () => state,
+  health: () => json<AppHealth[]>("GET", "/api/home/health"),
+  load,
   rename: async (project: Project, name: string) => {
     update((list) =>
       list.map((item) => (item.id === project.id ? { ...item, name } : item))
@@ -55,21 +56,6 @@ export const projectsApi = {
 
     try {
       return await api.renameProject(project.id, name);
-    } finally {
-      void load();
-    }
-  },
-  duplicate: async (project: Project) => {
-    const { project: copy } = await api.duplicateProject(project.id);
-    await load();
-
-    return copy;
-  },
-  trash: async (project: Project) => {
-    update((list) => list.filter((item) => item.id !== project.id));
-
-    try {
-      return await api.trashProject(project.id);
     } finally {
       void load();
     }
@@ -83,9 +69,23 @@ export const projectsApi = {
       "POST",
       `/api/projects/${encodeURIComponent(project.id)}/reveal`
     ),
-  health: () => json<AppHealth[]>("GET", "/api/home/health"),
-  found: (fresh = false) =>
-    json<FoundApps>("GET", `/api/folders/found${fresh ? "?fresh=1" : ""}`),
+  subscribe(listener: () => void) {
+    listeners.add(listener);
+
+    return () => {
+      listeners.delete(listener);
+    };
+  },
+  trash: async (project: Project) => {
+    update((list) => list.filter((item) => item.id !== project.id));
+
+    try {
+      return await api.trashProject(project.id);
+    } finally {
+      void load();
+    }
+  },
+  update,
 };
 
 const POLL_FAST_MS = 500;
@@ -99,7 +99,7 @@ export function useProjects(options: {
   useEffect(() => {
     void load();
   }, []);
-  const projects = current.projects;
+  const { projects } = current;
   const lagging = projects?.some(isThumbnailPending) ?? false;
 
   const watching =
@@ -152,7 +152,7 @@ export function useAppHealth(
     projectsApi
       .health()
       .then((next) => live && setHealth(next))
-      .catch(() => undefined);
+      .catch(() => null);
 
     return () => {
       live = false;

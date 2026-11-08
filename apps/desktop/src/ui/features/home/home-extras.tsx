@@ -1,7 +1,7 @@
-import {
-  shortenHome,
-  type WorkspaceFolder,
-  type WorkspaceList,
+import { shortenHome } from "@design-studio/contracts/folders";
+import type {
+  WorkspaceFolder,
+  WorkspaceList,
 } from "@design-studio/contracts/folders";
 import { Disclosure } from "@design-studio/ui";
 import { useEffect, useState } from "react";
@@ -60,8 +60,8 @@ function HiddenProjectsNote({
       if (result.moved.length > 0) {
         onMoved();
       }
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     } finally {
       setMoving(false);
       await load();

@@ -3,8 +3,15 @@ import { useSyncExternalStore } from "react";
 import { readStored, writeStored } from "../../platform/storage.js";
 
 export type HomeView = "list" | "grid";
+
 export type HomeFilter = "all" | "prototypes" | "apps" | "systems";
-const FILTERS: HomeFilter[] = ["all", "prototypes", "apps", "systems"];
+
+const FILTERS: ReadonlySet<string> = new Set([
+  "all",
+  "prototypes",
+  "apps",
+  "systems",
+]);
 
 export interface HomePrefs {
   readonly favorites: string[];
@@ -36,7 +43,7 @@ function read(): HomePrefs {
       favorites: Array.isArray(raw.favorites)
         ? raw.favorites.filter((id): id is string => typeof id === "string")
         : [],
-      filter: FILTERS.includes(raw.filter as HomeFilter)
+      filter: FILTERS.has(String(raw.filter))
         ? (raw.filter as HomeFilter)
         : "all",
       hasTemplatesShown:
@@ -76,6 +83,7 @@ export const homePrefs = {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
+
   return () => {
     listeners.delete(listener);
   };

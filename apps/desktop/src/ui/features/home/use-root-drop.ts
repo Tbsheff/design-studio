@@ -1,4 +1,5 @@
-import { type DragEvent, useState } from "react";
+import { useState } from "react";
+import type { DragEvent } from "react";
 
 import { hasFiles } from "./home-model.js";
 
@@ -9,6 +10,11 @@ function useRootDrop(
   const [windowDrag, setWindowDrag] = useState(false);
 
   const rootDrop = {
+    onDragLeave: (event: DragEvent<HTMLDivElement>) => {
+      if (!event.relatedTarget) {
+        setWindowDrag(false);
+      }
+    },
     onDragOver: (event: DragEvent<HTMLDivElement>) => {
       if (!hasFiles(event)) {
         return;
@@ -16,11 +22,6 @@ function useRootDrop(
 
       event.preventDefault();
       setWindowDrag(true);
-    },
-    onDragLeave: (event: DragEvent<HTMLDivElement>) => {
-      if (!event.relatedTarget) {
-        setWindowDrag(false);
-      }
     },
     onDrop: (event: DragEvent<HTMLDivElement>) => {
       setWindowDrag(false);
@@ -37,7 +38,7 @@ function useRootDrop(
     },
   };
 
-  return { windowDrag, rootDrop };
+  return { rootDrop, windowDrag };
 }
 
 export { useRootDrop };

@@ -6,13 +6,13 @@ import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";
 
 const STARTER_IMAGES: Record<string, string> = {
-  landing: new URL("../assets/starters/landing.png", import.meta.url).href,
   dashboard: new URL("../assets/starters/dashboard.png", import.meta.url).href,
+  deck: new URL("../assets/starters/deck.png", import.meta.url).href,
+  docs: new URL("../assets/starters/docs.png", import.meta.url).href,
+  form: new URL("../assets/starters/form.png", import.meta.url).href,
+  landing: new URL("../assets/starters/landing.png", import.meta.url).href,
   "mobile-app": new URL("../assets/starters/mobile-app.png", import.meta.url)
     .href,
-  deck: new URL("../assets/starters/deck.png", import.meta.url).href,
-  form: new URL("../assets/starters/form.png", import.meta.url).href,
-  docs: new URL("../assets/starters/docs.png", import.meta.url).href,
 };
 
 export function StarterGallery({
@@ -42,8 +42,8 @@ export function StarterGallery({
 
     try {
       await onPick(starter);
-    } catch (err) {
-      setError(`Could not open ${starter.name}: ${errorText(err)}`);
+    } catch (failure) {
+      setError(`Could not open ${starter.name}: ${errorText(failure)}`);
     } finally {
       setBusy(null);
     }
@@ -120,8 +120,8 @@ export function FirstRunPanel({
 
     try {
       await onSample();
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
       setBusy(false);
     }
   };

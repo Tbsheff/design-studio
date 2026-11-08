@@ -4,16 +4,15 @@ import type {
   ProjectSettings,
   RunLevel,
 } from "@design-studio/contracts";
-import {
-  type WorkspaceList,
-  shortenHome,
-} from "@design-studio/contracts/folders";
+import { shortenHome } from "@design-studio/contracts/folders";
+import type { WorkspaceList } from "@design-studio/contracts/folders";
 import type { DragEvent } from "react";
 
 import { api } from "../../api.js";
 import { homeVariations } from "../../platform/storage.js";
 import { modelLabel } from "../chat/settings-draft-model.js";
-import { type AppChip, chipName, chipProblem } from "./home-app-chip.js";
+import { chipName, chipProblem } from "./home-app-chip.js";
+import type { AppChip } from "./home-app-chip.js";
 import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
 
 type Busy = "create" | "ask" | "starter" | null;
@@ -31,9 +30,9 @@ const EXAMPLES = [
 const EXAMPLE_MS = 3500;
 
 const LEVEL_LABEL: Record<RunLevel, string> = {
-  wireframe: "Wireframe",
-  prototype: "Prototype",
   polish: "Polish",
+  prototype: "Prototype",
+  wireframe: "Wireframe",
 };
 
 const PLACEHOLDER =
@@ -44,7 +43,7 @@ const HOME_REASON_ID = "home-send-reason";
 const EMPTY_PROMPT = "Describe the design first";
 
 function focusPrompt(home: HTMLElement | null, atEnd = false): void {
-  home?.scrollTo({ top: 0, behavior: "smooth" });
+  home?.scrollTo({ behavior: "smooth", top: 0 });
   window.requestAnimationFrame(() => {
     const area = document.querySelector<HTMLTextAreaElement>(
       '[aria-label="Describe the design"]'
@@ -61,7 +60,7 @@ function focusPrompt(home: HTMLElement | null, atEnd = false): void {
 function focusIn(selector: string): void {
   window.setTimeout(() => {
     const el = document.querySelector<HTMLElement>(selector);
-    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
     el?.focus();
   }, 60);
 }
@@ -136,10 +135,10 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
   const separateRun = !fanOut && input.images.length > 0;
 
   const { project } = await api.createProject({
-    prompt: input.prompt,
     kind: input.kind,
-    settings: input.settings,
     level,
+    prompt: input.prompt,
+    settings: input.settings,
     ...extra,
     ...where,
     ...(fanOut || separateRun ? { startRun: false } : {}),
@@ -148,10 +147,10 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
 
   if (fanOut) {
     homeVariations.set({
-      projectId: project.id,
-      prompt: input.prompt,
       count: input.designCount,
       level,
+      projectId: project.id,
+      prompt: input.prompt,
     });
   }
 
@@ -165,10 +164,10 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
     );
 
     await api.startRun(project.id, main.id, {
-      prompt: input.prompt,
-      mode: "edit",
-      level,
       attachmentIds: uploaded.map((item) => item.id),
+      level,
+      mode: "edit",
+      prompt: input.prompt,
       ...refs,
     });
   }

@@ -1,6 +1,7 @@
 import { Icon } from "@design-studio/ui";
 
-import { type Busy, EMPTY_PROMPT, HOME_REASON_ID } from "./home-model.js";
+import { EMPTY_PROMPT, HOME_REASON_ID } from "./home-model.js";
+import type { Busy } from "./home-model.js";
 
 function SendButton({
   busy,

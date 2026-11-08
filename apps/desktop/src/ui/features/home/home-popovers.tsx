@@ -1,17 +1,8 @@
-import {
-  RUN_LEVELS,
-  type PackSummary,
-  type RunLevel,
-} from "@design-studio/contracts";
+import { RUN_LEVELS } from "@design-studio/contracts";
+import type { PackSummary, RunLevel } from "@design-studio/contracts";
 import { Icon, useFitPopover, usePopover } from "@design-studio/ui";
-import {
-  useEffect,
-  useRef,
-  type CSSProperties,
-  type KeyboardEvent,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { useEffect, useRef } from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { VariationsControl } from "../canvas/variations-control.js";
 import {
@@ -21,11 +12,8 @@ import {
   levelLabel,
 } from "../chat/level-control.js";
 import { MODEL_OPTIONS } from "../chat/settings-draft-model.js";
-import {
-  fontStack,
-  loadPackFonts,
-  type PacksState,
-} from "../design-system/packs.js";
+import { fontStack, loadPackFonts } from "../design-system/packs.js";
+import type { PacksState } from "../design-system/packs.js";
 import { copy } from "./copy.js";
 import type { DesignCount } from "./home-model.js";
 
@@ -243,14 +231,14 @@ const RAMP = [6, 16, 30, 48, 68, 100, 72, 48];
 
 function packVars(pack: PackSummary): CSSProperties {
   return {
-    "--pc-bg": swatch(pack, "bg", "#fff"),
-    "--pc-surface": swatch(pack, "surface", "#f5f5f5"),
-    "--pc-fg": swatch(pack, "fg", "#111"),
-    "--pc-primary": swatch(pack, "primary", "#555"),
     "--pc-accent": swatch(pack, "accent", "#888"),
+    "--pc-bg": swatch(pack, "bg", "#fff"),
+    "--pc-body": fontStack(pack.fonts.body, "var(--font)"),
     "--pc-border": swatch(pack, "border", "#ddd"),
     "--pc-display": fontStack(pack.fonts.display, "var(--serif)"),
-    "--pc-body": fontStack(pack.fonts.body, "var(--font)"),
+    "--pc-fg": swatch(pack, "fg", "#111"),
+    "--pc-primary": swatch(pack, "primary", "#555"),
+    "--pc-surface": swatch(pack, "surface", "#f5f5f5"),
   } as CSSProperties;
 }
 

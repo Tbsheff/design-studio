@@ -3,10 +3,11 @@ import type { RefObject } from "react";
 
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { uiStore } from "../../platform/storage.js";
-import { type PacksState, pickable } from "../design-system/packs.js";
+import { pickable } from "../design-system/packs.js";
+import type { PacksState } from "../design-system/packs.js";
 import { copy } from "./copy.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
-import { useProjectActions } from "./home-sections.js";
+import type { useProjectActions } from "./home-sections.js";
 import type { LibraryModule } from "./lazy-parts.js";
 
 function Library({
@@ -54,7 +55,7 @@ function Library({
         type="button"
         className="btn small"
         onClick={() =>
-          uiStore.set({ screen: "new-design-system", returnTo: "home" })
+          uiStore.set({ returnTo: "home", screen: "new-design-system" })
         }
       >
         New design system
@@ -63,7 +64,7 @@ function Library({
         type="button"
         className="btn small"
         onClick={() =>
-          uiStore.set({ screen: "design-systems", libraryFrom: null })
+          uiStore.set({ libraryFrom: null, screen: "design-systems" })
         }
       >
         Open library

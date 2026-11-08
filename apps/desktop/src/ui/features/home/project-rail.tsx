@@ -5,15 +5,12 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type RefObject,
 } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from "react";
 
 import { matchesKey } from "../../../shared/keymap.js";
-import {
-  TYPE_LABELS,
-  type ProjectHit,
-} from "../../../shared/project-search.js";
+import { TYPE_LABELS } from "../../../shared/project-search.js";
+import type { ProjectHit } from "../../../shared/project-search.js";
 import { openProject } from "../../app/project-nav.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { IS_MAC, tipWithKey } from "../commands/keys.js";
@@ -35,12 +32,12 @@ const GROUPS: {
   readonly title: string;
   readonly test: (hit: ProjectHit) => boolean;
 }[] = [
-  { title: "Apps", test: (hit) => hit.type === "next" || hit.type === "vite" },
+  { test: (hit) => hit.type === "next" || hit.type === "vite", title: "Apps" },
   {
-    title: "Prototypes",
     test: (hit) => hit.type === "html" || hit.type === "react",
+    title: "Prototypes",
   },
-  { title: "Design systems", test: (hit) => hit.type === "design-system" },
+  { test: (hit) => hit.type === "design-system", title: "Design systems" },
 ];
 
 type RailState = "open" | "mini";
@@ -187,13 +184,13 @@ function useRailKeys(onOpened: () => void): void {
   opened.current = onOpened;
   useCommands(() => [
     {
-      id: "view.project-rail",
-      title: "Show or hide the project rail",
       group: "View",
       icon: "sidebar",
+      id: "view.project-rail",
       keyId: "project-rail",
       keywords: "projects switch sidebar recent",
       run: () => toggleRail(),
+      title: "Show or hide the project rail",
     },
   ]);
   useEffect(() => {

@@ -41,8 +41,8 @@ export function useFolderChooser(
       return outcome.kind === "picked"
         ? { isUnsupported: false, path: outcome.path }
         : { isUnsupported: outcome.kind === "unsupported", path: null };
-    } catch (err) {
-      onError(errorText(err));
+    } catch (error) {
+      onError(errorText(error));
 
       return { isUnsupported: false, path: null };
     } finally {
@@ -50,5 +50,5 @@ export function useFolderChooser(
     }
   };
 
-  return { choose, isUnsupported: unsupported, isPicking: picking };
+  return { choose, isPicking: picking, isUnsupported: unsupported };
 }

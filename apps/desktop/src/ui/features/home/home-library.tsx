@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { formatRelative } from "../../domain/format.js";
 import { copy } from "./copy.js";
-import { homePrefs, type HomeFilter } from "./home-prefs-model.js";
+import { homePrefs } from "./home-prefs-model.js";
+import type { HomeFilter } from "./home-prefs-model.js";
 import { isFolderProject, projectBadge, useThumbnail } from "./project-grid.js";
 import { listRecentRuns } from "./use-last-runs.js";
 
@@ -22,8 +23,8 @@ const FILTERS: { readonly id: HomeFilter; readonly label: string }[] = [
 
 export const FILTER_EMPTY: Record<HomeFilter, string> = {
   all: "projects",
-  prototypes: "prototypes",
   apps: "apps",
+  prototypes: "prototypes",
   systems: "design systems",
 };
 
@@ -91,13 +92,13 @@ function useLastRun(project: Project): LastRun | null {
 
         if (live && run) {
           setLast({
+            at: run.startedAt,
             prompt: run.request.prompt,
             route: run.request.canvas?.path ?? null,
-            at: run.startedAt,
           });
         }
       })
-      .catch(() => undefined);
+      .catch(() => null);
 
     return () => {
       live = false;
@@ -119,10 +120,10 @@ function routeLine(project: Project, last: LastRun | null): string {
 }
 
 const SERVER_TEXT: Partial<Record<AppHealth["state"], string>> = {
-  ready: "Dev server ready",
   building: "Dev server starting…",
-  install: "Needs install",
   failed: "Dev server failed",
+  install: "Needs install",
+  ready: "Dev server ready",
 };
 
 export function ContinueCard({

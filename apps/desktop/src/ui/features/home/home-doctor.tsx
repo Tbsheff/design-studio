@@ -30,6 +30,7 @@ export default function HomeDoctor({
   readonly onClose: () => void;
 }) {
   const dialog = useModalDialog(() => onClose());
+
   return (
     <dialog
       ref={dialog.ref}

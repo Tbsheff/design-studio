@@ -13,19 +13,21 @@ import "../../styles/project-nav.css";
 const cache = new Map<string, Promise<string>>();
 
 const TYPE_ICON: Record<ProjectType, IconName> = {
-  next: "code",
-  vite: "code",
-  html: "file",
-  react: "react",
   "design-system": "palette",
+  html: "file",
+  next: "code",
+  react: "react",
+  vite: "code",
 };
 
 function useThumb(hit: ProjectHit): string | null {
   const key = hit.thumbnail ? `${hit.id}/${hit.thumbnail}` : null;
+
   const [url, setUrl] = useState<{
     readonly key: string;
     readonly url: string;
   } | null>(null);
+
   useEffect(() => {
     if (!key || !hit.thumbnail) {
       return;
@@ -44,7 +46,7 @@ function useThumb(hit: ProjectHit): string | null {
 
     pending.then(
       (next) => live && setUrl({ key, url: next }),
-      () => undefined
+      () => null
     );
 
     return () => {

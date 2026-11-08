@@ -60,15 +60,15 @@ function installProblem(
   }
 ): DoctorProblem {
   return {
+    badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
+    command: `cd ${shellPath(install.dir, install.homeDir)} && ${install.command}`,
+    detail: INSTALL_DETAIL,
     name,
     place,
-    badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
     steps: [
       { isOk: true, text: `package.json · ${kindLabel}` },
       { isOk: false, text: "node_modules is missing" },
     ],
-    detail: INSTALL_DETAIL,
-    command: `cd ${shellPath(install.dir, install.homeDir)} && ${install.command}`,
   };
 }
 
@@ -81,9 +81,14 @@ function healthProblem(
   const label = project.app?.framework === "next" ? "Next.js" : "Vite";
 
   return {
+    badge: { label, tone: label === "Vite" ? "vite" : "next" },
+    command: homeCommand(health.command, homeDir),
+    detail:
+      health.state === "install"
+        ? INSTALL_DETAIL
+        : (health.detail ?? health.title ?? "The dev server cannot start."),
     name: project.name,
     place,
-    badge: { label, tone: label === "Vite" ? "vite" : "next" },
     steps: [
       { isOk: true, text: `package.json · ${label}` },
       {
@@ -94,11 +99,6 @@ function healthProblem(
             : (health.title ?? "The dev server failed"),
       },
     ],
-    detail:
-      health.state === "install"
-        ? INSTALL_DETAIL
-        : (health.detail ?? health.title ?? "The dev server cannot start."),
-    command: homeCommand(health.command, homeDir),
   };
 }
 

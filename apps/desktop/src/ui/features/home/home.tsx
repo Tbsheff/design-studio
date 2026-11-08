@@ -184,11 +184,11 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
                 sendDisabled={sendBlocker}
                 app={{
                   chip: app.chip,
+                  isFolderPopOpen: folderPop,
                   onAddFolder: () => void addAppFolder(),
                   onDoctor: () => chipDoctor(prompt.trim()),
-                  isFolderPopOpen: folderPop,
-                  onFolderPick: putFolder,
                   onFolderClose: () => setFolderPop(false),
+                  onFolderPick: putFolder,
                 }}
               />
             </form>
@@ -231,12 +231,12 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
               onLocation={setLocation}
               onAddFolder={addFolder}
               advanced={{
-                opened: advancedOpened,
-                draft: settingsDraft,
-                onDraft: setSettingsDraft,
                 designMd,
+                draft: settingsDraft,
                 onDesignMd: setDesignMd,
+                onDraft: setSettingsDraft,
                 onError: setFormError,
+                opened: advancedOpened,
               }}
               onHiddenMoved={() => void loadProjects()}
             />

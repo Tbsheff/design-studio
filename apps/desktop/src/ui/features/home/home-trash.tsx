@@ -16,13 +16,13 @@ type Confirm =
     };
 
 const trashApi = {
+  empty: () => json<{ readonly deleted: number }>("DELETE", "/api/trash"),
   list: () => json<TrashItem[]>("GET", "/api/trash"),
   remove: (trashId: string) =>
     json<{ readonly deleted: number }>(
       "DELETE",
       `/api/trash/${encodeURIComponent(trashId)}`
     ),
-  empty: () => json<{ readonly deleted: number }>("DELETE", "/api/trash"),
 };
 
 function useTrashThumb(item: TrashItem): string | null {
@@ -228,8 +228,8 @@ export default function HomeTrash({
     const read = async (): Promise<void> => {
       try {
         setItems(await trashApi.list());
-      } catch (err: unknown) {
-        setError(errorText(err));
+      } catch (failure: unknown) {
+        setError(errorText(failure));
       }
     };
 
@@ -259,8 +259,8 @@ export default function HomeTrash({
           )
           ?.focus()
       );
-    } catch (err) {
-      setError(`Could not restore “${item.name}”: ${errorText(err)}`);
+    } catch (failure) {
+      setError(`Could not restore “${item.name}”: ${errorText(failure)}`);
     } finally {
       setBusy(null);
     }
@@ -297,8 +297,8 @@ export default function HomeTrash({
           )
           ?.focus()
       );
-    } catch (err) {
-      setConfirmError(errorText(err));
+    } catch (failure) {
+      setConfirmError(errorText(failure));
     } finally {
       setBusy(null);
     }
@@ -355,7 +355,7 @@ export default function HomeTrash({
                 onRestore={() => void restore(item)}
                 onDelete={() => {
                   setConfirmError(null);
-                  setConfirm({ kind: "one", item });
+                  setConfirm({ item, kind: "one" });
                 }}
               />
             ))}
@@ -381,8 +381,8 @@ export default function HomeTrash({
             onClick={() => {
               setConfirmError(null);
               setConfirm({
-                kind: "all",
                 count,
+                kind: "all",
                 shouldFolderStay: (items ?? []).every(
                   (item) => item.folderStays
                 ),

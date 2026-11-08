@@ -22,10 +22,10 @@ export function useOnboarding(): {
 
   const dismiss = () => {
     setShow(false);
-    void api.dismissOnboarding().catch(() => undefined);
+    void api.dismissOnboarding().catch(() => null);
   };
 
-  return { shouldShow: show, dismiss };
+  return { dismiss, shouldShow: show };
 }
 
 export interface HomeToastState {
@@ -130,38 +130,6 @@ export function useProjectActions({
   homeDir,
 }: ActionDeps): CardActions {
   return {
-    onOpen,
-    onRename: async (project, name) => {
-      await projectsApi.rename(project, name).catch((err: unknown) =>
-        showToast({
-          text: `Could not rename: ${errorText(err)}`,
-          hasError: true,
-        })
-      );
-    },
-    onDuplicate: async (project) => {
-      try {
-        const duplicate = await projectsApi.duplicate(project);
-        showToast({
-          hasError: false,
-          text: `Duplicated as “${duplicate.name}”`,
-          action: { label: "Open", run: () => onOpen(duplicate) },
-        });
-      } catch (err) {
-        showToast({
-          text: `Could not duplicate: ${errorText(err)}`,
-          hasError: true,
-        });
-      }
-    },
-    onReveal: (project) => {
-      void projectsApi.reveal(project).catch((err: unknown) =>
-        showToast({
-          text: `Could not show the folder: ${errorText(err)}`,
-          hasError: true,
-        })
-      );
-    },
     onDelete: async (project) => {
       try {
         const trashed = await projectsApi.trash(project);
@@ -186,6 +154,38 @@ export function useProjectActions({
           hasError: true,
         });
       }
+    },
+    onDuplicate: async (project) => {
+      try {
+        const duplicate = await projectsApi.duplicate(project);
+        showToast({
+          hasError: false,
+          text: `Duplicated as “${duplicate.name}”`,
+          action: { label: "Open", run: () => onOpen(duplicate) },
+        });
+      } catch (err) {
+        showToast({
+          text: `Could not duplicate: ${errorText(err)}`,
+          hasError: true,
+        });
+      }
+    },
+    onOpen,
+    onRename: async (project, name) => {
+      await projectsApi.rename(project, name).catch((err: unknown) =>
+        showToast({
+          text: `Could not rename: ${errorText(err)}`,
+          hasError: true,
+        })
+      );
+    },
+    onReveal: (project) => {
+      void projectsApi.reveal(project).catch((err: unknown) =>
+        showToast({
+          text: `Could not show the folder: ${errorText(err)}`,
+          hasError: true,
+        })
+      );
     },
   };
 }
@@ -231,5 +231,5 @@ export function useHomeProjects() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  return { projects, listError, loadProjects, searchRef };
+  return { listError, loadProjects, projects, searchRef };
 }

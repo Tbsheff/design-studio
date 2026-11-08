@@ -1,5 +1,6 @@
 import type { RunLevel } from "@design-studio/contracts";
-import { type RefObject, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
@@ -11,9 +12,10 @@ import {
   useAppChip,
 } from "./home-app-chip.js";
 import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
-import { type Busy, focusPrompt, shortHome } from "./home-model.js";
+import { focusPrompt, shortHome } from "./home-model.js";
+import type { Busy } from "./home-model.js";
 import { loadAppMenu } from "./lazy-parts.js";
-import { useDoctorGate } from "./use-doctor-gate.js";
+import type { useDoctorGate } from "./use-doctor-gate.js";
 import { useOpenAppRequests } from "./use-open-app-requests.js";
 
 interface ChipFlowDeps {
@@ -94,7 +96,7 @@ function useChipFlow({
   }, [chipCandidates, chipPicked]);
 
   const openChip = async (text: string, tokensOnly = false) => {
-    const chip = app.chip;
+    const { chip } = app;
 
     if (!chip) {
       return;
@@ -109,9 +111,9 @@ function useChipFlow({
 
       if (text) {
         await mod.runInProject(pid, {
-          prompt: text,
-          level,
           images: attached.current.images.map((image) => image.file),
+          level,
+          prompt: text,
           referenceUrls: attached.current.references.map(
             (reference) => reference.url
           ),
@@ -119,14 +121,14 @@ function useChipFlow({
       }
 
       onOpen(pid);
-    } catch (err) {
-      setFormError(errorText(err));
+    } catch (error) {
+      setFormError(errorText(error));
       setBusy(null);
     }
   };
 
   const chipDoctor = (text: string) => {
-    const chip = app.chip;
+    const { chip } = app;
     const found = chip?.inspection;
     const install = chipBlocker(chip);
 
@@ -135,21 +137,21 @@ function useChipFlow({
     }
 
     doctor.open({
+      check: async () =>
+        (await api.inspectFolder(found.path, chip.appDir ?? undefined))
+          .depsInstalled !== false,
       problem: installProblem(
         found.name,
         shortHome(found.path, homeDir),
         found.kind === "vite" ? "Vite" : "Next.js",
         { ...install, homeDir }
       ),
-      check: async () =>
-        (await api.inspectFolder(found.path, chip.appDir ?? undefined))
-          .depsInstalled !== false,
       proceed: () => void openChip(text),
     });
   };
 
   const submitChip = (text: string) => {
-    const chip = app.chip;
+    const { chip } = app;
 
     if (!chip || chip.isChecking) {
       return;
@@ -167,17 +169,17 @@ function useChipFlow({
   };
 
   return {
-    app,
-    folderPop,
-    setFolderPop,
-    appMenu,
-    setAppMenu,
-    putFolder,
-    takeDrop,
     addAppFolder,
-    openChip,
+    app,
+    appMenu,
     chipDoctor,
+    folderPop,
+    openChip,
+    putFolder,
+    setAppMenu,
+    setFolderPop,
     submitChip,
+    takeDrop,
   };
 }
 

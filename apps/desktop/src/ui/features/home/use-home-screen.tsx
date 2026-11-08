@@ -1,19 +1,12 @@
-import {
-  type ClarifyQuestion,
-  DEFAULT_SETTINGS,
-  type ProjectKind,
-  type Starter,
+import { DEFAULT_SETTINGS } from "@design-studio/contracts";
+import type {
+  ClarifyQuestion,
+  ProjectKind,
+  Starter,
 } from "@design-studio/contracts";
 import { needsQuestions } from "@design-studio/contracts/clarify";
-import {
-  type FormEvent,
-  type KeyboardEvent,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { FormEvent, KeyboardEvent, ReactNode } from "react";
 
 import { api, errorText } from "../../api.js";
 import { prefetchScreensWhenIdle } from "../../app/screen-preload.js";
@@ -28,13 +21,9 @@ import {
 import { usePresence } from "../chat/use-presence.js";
 import { findPack, usePacks } from "../design-system/packs.js";
 import { AppChipView } from "./home-app-chip.js";
+import { useComposerAttachments } from "./home-composer-parts.js";
+import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
 import {
-  type ImageDraft,
-  type ReferenceDraft,
-  useComposerAttachments,
-} from "./home-composer-parts.js";
-import {
-  type Busy,
   createFromHome,
   focusIn,
   focusPrompt,
@@ -44,13 +33,11 @@ import {
   isEmpty,
   modelSummary,
 } from "./home-model.js";
+import type { Busy } from "./home-model.js";
 import type { ModelSettings } from "./home-popovers.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
-import {
-  type HomeToastState,
-  useHomeProjects,
-  useProjectActions,
-} from "./home-sections.js";
+import { useHomeProjects, useProjectActions } from "./home-sections.js";
+import type { HomeToastState } from "./home-sections.js";
 import type { HomeTemplate } from "./home-templates.js";
 import {
   loadExtras,
@@ -117,14 +104,14 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   }>({ images: [], references: [] });
 
   const flow = useChipFlow({
+    attached,
+    doctor,
+    homeDir,
+    homeRef,
+    level: settingsDraft.defaultLevel,
     onOpen,
     setBusy,
     setFormError,
-    homeRef,
-    homeDir,
-    level: settingsDraft.defaultLevel,
-    attached,
-    doctor,
   });
 
   const {
@@ -181,13 +168,13 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   const location = locationFor(workspaces, lastLocation);
 
   const { openStarter, openSample, openProject } = useOpenFlows({
+    doctor,
+    health,
+    homeDir,
+    location,
     onOpen,
     setBusy,
     setFormError,
-    location,
-    health,
-    homeDir,
-    doctor,
   });
 
   const setLocation = (path: string | null) =>
@@ -209,20 +196,20 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
 
     try {
       const project = await createFromHome({
-        prompt: finalPrompt,
-        kind,
-        settings: parsed.settings,
-        designMd,
-        packId: pack?.id ?? null,
         designCount,
-        location,
+        designMd,
         images,
+        kind,
+        location,
+        packId: pack?.id ?? null,
+        prompt: finalPrompt,
         references,
+        settings: parsed.settings,
       });
 
       onOpen(project.id);
-    } catch (err) {
-      setFormError(errorText(err));
+    } catch (error) {
+      setFormError(errorText(error));
       setBusy(null);
     }
   };
@@ -270,10 +257,10 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   };
 
   const actions = useProjectActions({
-    onOpen: openProject,
-    showToast,
-    onOpenTrash: () => setTrashOpen(true),
     homeDir,
+    onOpen: openProject,
+    onOpenTrash: () => setTrashOpen(true),
+    showToast,
   });
 
   const pickTemplate = (picked: HomeTemplate, starter: Starter | null) => {
@@ -291,7 +278,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
       setKind(picked.kind);
     }
 
-    const level = picked.level;
+    const { level } = picked;
 
     if (level) {
       setSettingsDraft((d) => ({ ...d, defaultLevel: level }));
@@ -317,15 +304,15 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   };
 
   const plusActions = {
-    onAttachFile: () => fileRef.current?.click(),
-    onLinkCode: () => void addAppFolder(),
-    onTemplates: () =>
-      homePrefs.set({ hasTemplatesShown: !prefs.hasTemplatesShown }),
     hasTemplatesShown: prefs.hasTemplatesShown,
+    onAttachFile: () => fileRef.current?.click(),
     onImportSystem: () =>
       uiStore.set({ screen: "design-systems", libraryFrom: null }),
-    onSkills: openAdvanced,
+    onLinkCode: () => void addAppFolder(),
     onLocation: () => focusIn("#new-project-location"),
+    onSkills: openAdvanced,
+    onTemplates: () =>
+      homePrefs.set({ hasTemplatesShown: !prefs.hasTemplatesShown }),
   };
 
   const sendBlocker = homeSendBlocker(
@@ -336,12 +323,12 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   );
 
   const modelSettings: ModelSettings = {
-    model: settingsDraft.model,
-    onModel: (model) => setSettingsDraft((d) => ({ ...d, model })),
+    designs: { max: maxDesigns, onChange: setDesigns, value: designCount },
     level: settingsDraft.defaultLevel,
+    model: settingsDraft.model,
     onLevel: (defaultLevel) =>
       setSettingsDraft((d) => ({ ...d, defaultLevel })),
-    designs: { value: designCount, max: maxDesigns, onChange: setDesigns },
+    onModel: (model) => setSettingsDraft((d) => ({ ...d, model })),
     onMore: openAdvanced,
   };
 

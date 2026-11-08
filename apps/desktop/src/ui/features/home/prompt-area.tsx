@@ -1,10 +1,5 @@
-import {
-  type ClipboardEvent,
-  type FormEvent,
-  type KeyboardEvent,
-  useLayoutEffect,
-  useRef,
-} from "react";
+import { useLayoutEffect, useRef } from "react";
+import type { ClipboardEvent, FormEvent, KeyboardEvent } from "react";
 
 import { copy } from "./copy.js";
 import { useExample } from "./use-example.js";

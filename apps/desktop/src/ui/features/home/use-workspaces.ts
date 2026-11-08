@@ -1,8 +1,8 @@
 import type { Project } from "@design-studio/contracts";
-import {
-  projectsInFolder,
-  type WorkspaceFolder,
-  type WorkspaceList,
+import { projectsInFolder } from "@design-studio/contracts/folders";
+import type {
+  WorkspaceFolder,
+  WorkspaceList,
 } from "@design-studio/contracts/folders";
 import { useEffect, useState } from "react";
 
@@ -59,9 +59,9 @@ export function useWorkspaces(onError: (message: string | null) => void) {
     api
       .listWorkspaces()
       .then(setWorkspaces)
-      .catch((err) =>
+      .catch((error) =>
         onError(
-          `Could not load your folders: ${errorText(err)}. Reload to try again.`
+          `Could not load your folders: ${errorText(error)}. Reload to try again.`
         )
       );
   }, [onError]);
@@ -76,8 +76,8 @@ export function useWorkspaces(onError: (message: string | null) => void) {
 
     try {
       return await task();
-    } catch (err) {
-      onError(errorText(err));
+    } catch (error) {
+      onError(errorText(error));
 
       return failed;
     }
@@ -121,10 +121,10 @@ export function useWorkspaces(onError: (message: string | null) => void) {
     }, false);
 
   return {
-    workspaces,
     addFolder,
-    renameFolder,
     forgetFolder,
+    renameFolder,
     setDefaultFolder,
+    workspaces,
   };
 }

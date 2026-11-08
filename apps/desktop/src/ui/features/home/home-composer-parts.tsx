@@ -70,7 +70,7 @@ export function soleUrl(text: string): ReferenceDraft | null {
   try {
     const url = new URL(trimmed);
 
-    return { url: url.href, host: url.host.replace(/^www\./u, "") };
+    return { host: url.host.replace(/^www\./u, ""), url: url.href };
   } catch {
     return null;
   }
@@ -186,8 +186,8 @@ export function useComposerAttachments(
       return [
         ...current,
         ...files.slice(0, room).map((file) => ({
-          id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`,
           file,
+          id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`,
           url: URL.createObjectURL(file),
         })),
       ];
@@ -264,7 +264,7 @@ export function useComposerAttachments(
       return;
     }
 
-    const files = Array.from(event.dataTransfer.files);
+    const files = [...event.dataTransfer.files];
 
     if (files.length > 0) {
       addImages(files);
@@ -285,24 +285,24 @@ export function useComposerAttachments(
     setReferences((current) => current.filter((item) => item.url !== url));
 
   const dropHandlers = {
-    onDragOver,
-    onDrop,
     onDragLeave: (event: DragEvent<HTMLFormElement>) => {
       if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
         setDragging(false);
       }
     },
+    onDragOver,
+    onDrop,
   };
 
   return {
-    images,
-    references,
-    dragging,
-    fileRef,
     addImages,
+    dragging,
+    dropHandlers,
+    fileRef,
+    images,
+    onPromptPaste,
+    references,
     removeImage,
     removeReference,
-    onPromptPaste,
-    dropHandlers,
   };
 }

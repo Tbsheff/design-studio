@@ -20,10 +20,10 @@ export interface AppChip {
 }
 
 const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
-  next: "Next.js",
-  vite: "Vite",
   html: "HTML",
+  next: "Next.js",
   tokens: "Tokens",
+  vite: "Vite",
 };
 
 export function chipProblem(chip: AppChip | null): string | null {
@@ -92,7 +92,7 @@ interface DropBridge {
 export function droppedFolder(
   data: DataTransfer
 ): { readonly path: string } | { readonly unsupported: true } | null {
-  for (const item of Array.from(data.items)) {
+  for (const item of data.items) {
     if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
       continue;
     }
@@ -115,15 +115,15 @@ export function useAppChip() {
   const set = useCallback(
     (path: string) =>
       setChip({
-        path,
+        appDir: null,
+        env: "",
+        error: null,
         inspection: null,
         isChecking: true,
-        error: null,
-        appDir: null,
         mode: "start",
-        url: "",
-        env: "",
         nonce: 0,
+        path,
+        url: "",
       }),
     []
   );
@@ -155,16 +155,16 @@ export function useAppChip() {
           live &&
           setChip((current) =>
             current?.path === path
-              ? { ...current, inspection, checking: false }
+              ? { ...current, checking: false, inspection }
               : current
           )
       )
       .catch(
-        (err: unknown) =>
+        (error: unknown) =>
           live &&
           setChip((current) =>
             current?.path === path
-              ? { ...current, error: errorText(err), checking: false }
+              ? { ...current, error: errorText(error), checking: false }
               : current
           )
       );
@@ -174,7 +174,7 @@ export function useAppChip() {
     };
   }, [path, appDir, nonce]);
 
-  return { chip, set, clear, update };
+  return { chip, clear, set, update };
 }
 
 export function AppChipView({

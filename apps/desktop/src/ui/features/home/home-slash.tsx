@@ -36,9 +36,9 @@ export function HomeSlashMenu({
 }: Props) {
   const slash = useSlashMenu({
     draft: prompt,
-    setDraft: setPrompt,
     groups: [levelGroup(level, onLevel), modelGroup(model, null, onModel)],
     label: "Settings",
+    setDraft: setPrompt,
   });
 
   keys.current = slash.onKeyDown;

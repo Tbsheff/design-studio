@@ -1,5 +1,5 @@
 import { Icon } from "@design-studio/ui";
-import { lazy, Suspense, useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import type { ChangeEvent } from "react";
 
 import type { SettingsDraft } from "../chat/settings-draft-model.js";

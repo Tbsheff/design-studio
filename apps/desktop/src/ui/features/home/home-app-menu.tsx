@@ -5,7 +5,7 @@ import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
-import { api, ApiError } from "../../api.js";
+import { ApiError, api } from "../../api.js";
 import { copy } from "./copy.js";
 import type { AppChip, RunMode } from "./home-app-chip.js";
 import { Pop } from "./home-popovers.js";
@@ -114,9 +114,9 @@ export async function runInProject(
   );
 
   const request = {
-    prompt: input.prompt,
-    mode: "edit" as const,
     level: input.level,
+    mode: "edit" as const,
+    prompt: input.prompt,
     ...(uploaded.length > 0
       ? { attachmentIds: uploaded.map((item) => item.id) }
       : {}),
@@ -130,13 +130,13 @@ export async function runInProject(
       await api.startRun(projectId, main.id, request);
 
       return;
-    } catch (err) {
+    } catch (error) {
       if (
-        !(err instanceof ApiError) ||
-        err.status !== 409 ||
+        !(error instanceof ApiError) ||
+        error.status !== 409 ||
         attempt >= RETRY_LIMIT
       ) {
-        throw err;
+        throw error;
       }
 
       await wait(RETRY_MS);

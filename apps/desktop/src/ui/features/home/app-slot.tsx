@@ -2,12 +2,8 @@ import { Icon } from "@design-studio/ui";
 import type { RefObject } from "react";
 
 import { copy } from "./copy.js";
-import {
-  type AppChip,
-  chipBlocker,
-  chipName,
-  chipProblem,
-} from "./home-app-chip.js";
+import { chipBlocker, chipName, chipProblem } from "./home-app-chip.js";
+import type { AppChip } from "./home-app-chip.js";
 import type { Pop } from "./home-model.js";
 import { loadAppMenu } from "./lazy-parts.js";
 

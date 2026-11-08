@@ -3,9 +3,10 @@ import type { Project, Starter } from "@design-studio/contracts";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { api, errorText } from "../../api.js";
 import { healthProblem } from "./doctor-model.js";
-import { type Busy, shortHome } from "./home-model.js";
+import { shortHome } from "./home-model.js";
+import type { Busy } from "./home-model.js";
 import { projectsApi } from "./projects-store-model.js";
-import { useDoctorGate } from "./use-doctor-gate.js";
+import type { useDoctorGate } from "./use-doctor-gate.js";
 
 interface FlowDeps {
   readonly onOpen: (projectId: string) => void;
@@ -37,8 +38,8 @@ function useOpenFlows({
       );
 
       onOpen(project.id);
-    } catch (err) {
-      setFormError(`Could not open ${starter.name}: ${errorText(err)}`);
+    } catch (error) {
+      setFormError(`Could not open ${starter.name}: ${errorText(error)}`);
       setBusy(null);
     }
   };
@@ -49,8 +50,8 @@ function useOpenFlows({
     try {
       const { project } = await api.createSample(location ?? undefined);
       onOpen(project.id);
-    } catch (err) {
-      setFormError(errorText(err));
+    } catch (error) {
+      setFormError(errorText(error));
       setBusy(null);
     }
   };
@@ -63,14 +64,6 @@ function useOpenFlows({
     }
 
     doctor.open({
-      problem: healthProblem(
-        project,
-        state,
-        project.imported
-          ? shortHome(project.imported.sourcePath, homeDir)
-          : project.name,
-        homeDir
-      ),
       check: async () => {
         const fresh = (await projectsApi.health()).find(
           (item) => item.projectId === project.id
@@ -80,11 +73,19 @@ function useOpenFlows({
           !fresh || (fresh.state !== "install" && fresh.state !== "failed")
         );
       },
+      problem: healthProblem(
+        project,
+        state,
+        project.imported
+          ? shortHome(project.imported.sourcePath, homeDir)
+          : project.name,
+        homeDir
+      ),
       proceed: () => onOpen(project.id),
     });
   };
 
-  return { openStarter, openSample, openProject };
+  return { openProject, openSample, openStarter };
 }
 
 export { useOpenFlows };

@@ -3,18 +3,15 @@ import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 
-import {
-  FOUND_KIND_LABEL,
-  type FoundApp,
-  type FoundApps,
-} from "../../../shared/found-apps.js";
+import { FOUND_KIND_LABEL } from "../../../shared/found-apps.js";
+import type { FoundApp, FoundApps } from "../../../shared/found-apps.js";
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
 import { projectsApi } from "./projects-store-model.js";
 
 const MAX_FOUND = 6;
 const MAX_STARTERS = 4;
-const KIND_TONE = { next: "next", vite: "vite", html: "html" } as const;
+const KIND_TONE = { html: "html", next: "next", vite: "vite" } as const;
 
 function foundBadge(app: FoundApp): string {
   const base = FOUND_KIND_LABEL[app.kind];
@@ -111,7 +108,7 @@ function StartCards({
     void api
       .starters()
       .then((list) => setStarters(list.slice(0, MAX_STARTERS)))
-      .catch(() => undefined);
+      .catch(() => null);
   }, []);
 
   return (

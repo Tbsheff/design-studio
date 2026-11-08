@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState } from "react";
 
 import { copy } from "./copy.js";
@@ -64,7 +65,7 @@ const RadiusField = ({
 }: {
   readonly edit: DirectEdit;
   readonly short?: string;
-}) => {
+}): ReactElement => {
   const [split, setSplit] = useState(() =>
     isDifferent(edit.values["border-radius"])
   );

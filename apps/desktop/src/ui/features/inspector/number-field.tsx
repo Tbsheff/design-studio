@@ -1,5 +1,5 @@
 import { memo } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { sameSpec } from "./number-field-model.js";
@@ -23,7 +23,7 @@ const NumberFieldView = ({
   id: idProp,
   hasTokens: tokens,
   className,
-}: NumberFieldProps) => {
+}: NumberFieldProps): ReactElement => {
   const id = idProp ?? `ins-${spec.prop}`;
   const scrub = useScrub(spec);
 
@@ -68,7 +68,7 @@ const NumberField = ({
   icon,
   id,
   className,
-}: SharedFieldProps) => (
+}: SharedFieldProps): ReactElement => (
   <MemoNumberField
     spec={spec}
     short={short}
@@ -85,7 +85,7 @@ const PlainNumberField = ({
   icon,
   id,
   className,
-}: SharedFieldProps) => (
+}: SharedFieldProps): ReactElement => (
   <MemoNumberField
     spec={spec}
     short={short}

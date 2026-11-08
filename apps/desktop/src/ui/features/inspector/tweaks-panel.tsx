@@ -1,4 +1,5 @@
 import { Icon, PanelHead } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useMemo } from "react";
 
 import type {
@@ -67,7 +68,7 @@ const RangeInput = ({
   readonly control: RangeTweak;
   readonly value: number;
   readonly onEdit: EditFn;
-}) => {
+}): ReactElement => {
   const id = `twk-${control.id}`;
 
   return (
@@ -93,7 +94,7 @@ const ToggleInput = ({
   readonly control: ToggleTweak;
   readonly isOn: boolean;
   readonly onEdit: EditFn;
-}) => (
+}): ReactElement => (
   <button
     id={`twk-${control.id}`}
     type="button"
@@ -114,7 +115,7 @@ const SelectInput = ({
   readonly control: SelectTweak;
   readonly value: string;
   readonly onEdit: EditFn;
-}) => (
+}): ReactElement => (
   <select
     id={`twk-${control.id}`}
     className="ins-input twk-select"
@@ -137,7 +138,7 @@ const ColorInput = ({
   readonly control: ColorTweak;
   readonly value: string;
   readonly onEdit: EditFn;
-}) => (
+}): ReactElement => (
   <ColorValue
     label={control.label}
     value={value}
@@ -154,7 +155,7 @@ const ControlInput = ({
   readonly control: TweakControl;
   readonly value: TweakValue;
   readonly onEdit: EditFn;
-}) => {
+}): ReactElement => {
   if (control.type === "range") {
     return (
       <RangeInput control={control} value={Number(value)} onEdit={onEdit} />
@@ -186,7 +187,7 @@ const ControlRow = ({
   readonly value: TweakValue;
   readonly isChanged: boolean;
   readonly draft: TweaksDraft;
-}) => {
+}): ReactElement => {
   const labelFor = control.type === "color" ? undefined : `twk-${control.id}`;
 
   return (
@@ -218,7 +219,11 @@ const ControlRow = ({
   );
 };
 
-const Footer = ({ draft }: { readonly draft: TweaksDraft }) => {
+const Footer = ({
+  draft,
+}: {
+  readonly draft: TweaksDraft;
+}): ReactElement | null => {
   if (draft.count === 0 && !draft.commitError) {
     return null;
   }
@@ -264,7 +269,7 @@ const EmptyState = ({
 }: {
   readonly isRunning: boolean;
   readonly onSuggest: () => void;
-}) => (
+}): ReactElement => (
   <div className="twk-empty">
     <span className="twk-empty-icon" aria-hidden="true">
       <Icon name="settings" size={18} />
@@ -290,7 +295,11 @@ const EmptyState = ({
   </div>
 );
 
-const Problems = ({ problems }: { readonly problems: string[] }) => {
+const Problems = ({
+  problems,
+}: {
+  readonly problems: string[];
+}): ReactElement | null => {
   if (problems.length === 0) {
     return null;
   }
@@ -319,7 +328,7 @@ const Header = ({
   isRunning: running,
   onSuggest,
   hasControls,
-}: Props & { readonly hasControls: boolean }) => (
+}: Props & { readonly hasControls: boolean }): ReactElement => (
   <PanelHead
     title={copy.tabTweaks}
     className="twk-header"
@@ -355,7 +364,11 @@ const Header = ({
   </PanelHead>
 );
 
-const TweaksPanel = ({ draft, isRunning: running, onSuggest }: Props) => {
+const TweaksPanel = ({
+  draft,
+  isRunning: running,
+  onSuggest,
+}: Props): ReactElement => {
   const { state } = draft;
 
   const groups = useMemo(

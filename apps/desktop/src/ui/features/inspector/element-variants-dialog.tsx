@@ -1,5 +1,6 @@
 import type { Project, SelectionContext } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { budgetFor, money } from "../canvas/use-variations.js";
@@ -20,14 +21,14 @@ const ElementVariantsDialog = ({
   element,
   onStart,
   onCancel,
-}: Props) => {
+}: Props): ReactElement => {
   const max = maxVariationsFor(project.kind);
   const [note, setNote] = useState("");
   const [count, setCount] = useState(Math.min(3, max));
   const noteRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => noteRef.current?.focus(), []);
   const budget = budgetFor(project, project.settings.defaultLevel, count);
-  const start = () => onStart(note, count);
+  const start = (): void => onStart(note, count);
 
   return (
     <section

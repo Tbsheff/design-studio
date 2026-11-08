@@ -1,5 +1,6 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useRef } from "react";
 
 import type { ArrangeAction } from "../../../shared/arrange.js";
@@ -25,7 +26,7 @@ const ToolButton = ({
   readonly isDisabled: boolean;
   readonly why: string | null;
   readonly onRun: (action: ArrangeAction) => void;
-}) => {
+}): ReactElement => {
   const tip = why
     ? `${tool.label}: ${why}`
     : `${tool.label} ${shortcutLabel(tool.key, IS_MAC)}`;
@@ -57,7 +58,11 @@ const ToolButton = ({
   );
 };
 
-const ArrangeMessage = ({ message }: { readonly message: Message | null }) => {
+const ArrangeMessage = ({
+  message,
+}: {
+  readonly message: Message | null;
+}): ReactElement | null => {
   if (!message) {
     return null;
   }
@@ -90,8 +95,8 @@ const ArrangeBar = ({
   readonly selection: SelectionContext[];
   readonly isBusy: boolean;
   readonly onRun: (action: ArrangeAction) => void;
-}) => {
-  const button = (tool: Tool) => {
+}): ReactElement => {
+  const button = (tool: Tool): ReactElement => {
     const need = minCount(tool.action, selection);
 
     const why =
@@ -121,7 +126,7 @@ const ArrangeBar = ({
   );
 };
 
-const InspectorArrange = (props: Props) => {
+const InspectorArrange = (props: Props): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   const arrange = useArrange(props);
 

@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useRef, useState } from "react";
 
 import {
@@ -28,7 +29,7 @@ import { usePasteImage } from "./use-paste-image.js";
 
 import "../../styles/inspector-image.css";
 
-const InspectorImage = (props: Props) => {
+const InspectorImage = (props: Props): ReactElement | null => {
   const kind = imageKindOf(props.selection);
   const background = kind === "background";
   const { busy, error, run, setError, placed } = useImageSet(props);
@@ -57,7 +58,7 @@ const InspectorImage = (props: Props) => {
 
   const disabled = !props.isEditable;
 
-  const paste = async () => {
+  const paste = async (): Promise<void> => {
     try {
       const blob = await clipboardImage();
 

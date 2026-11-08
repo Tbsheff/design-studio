@@ -88,7 +88,7 @@ const usePageVars = (
       }
     });
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [port, open]);
@@ -131,7 +131,7 @@ const requestStyles = (
         readonly result: StyleScanResult;
         readonly selected: number;
       } | null
-    ) {
+    ): void {
       window.clearTimeout(timer);
       stop();
       resolve(value);
@@ -157,7 +157,7 @@ const useStyleScan = (
   port: MutableRefObject<PreviewPort | null>,
   query: StyleQuery,
   key: string
-) => {
+): { hits: StyleHit[] | null; refresh: () => void } => {
   const [hits, setHits] = useState<StyleHit[] | null>(null);
   const [nonce, setNonce] = useState(0);
   const queryRef = useRef(query);
@@ -170,7 +170,7 @@ const useStyleScan = (
       }
     });
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [port, key, nonce]);

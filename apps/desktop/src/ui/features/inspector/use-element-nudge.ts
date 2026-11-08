@@ -239,7 +239,7 @@ const useElementNudge = (o: Options): void => {
   const flushNow = useRef<() => void>(() => undefined);
 
   useEffect(() => {
-    const hintOnce = (text: string) => {
+    const hintOnce = (text: string): void => {
       if (shown.has(text)) {
         return;
       }
@@ -248,7 +248,7 @@ const useElementNudge = (o: Options): void => {
       live.current.onError(text);
     };
 
-    const restore = (list: Saved[], message: string) => {
+    const restore = (list: Saved[], message: string): void => {
       live.current.post({ type: "preview-reset" });
 
       for (const one of list) {
@@ -260,7 +260,7 @@ const useElementNudge = (o: Options): void => {
       live.current.onError(message);
     };
 
-    const save = async (b: Burst) => {
+    const save = async (b: Burst): Promise<void> => {
       const cur = live.current;
       const list = savedOf(b);
 
@@ -313,7 +313,7 @@ const useElementNudge = (o: Options): void => {
       }
     };
 
-    const flush = () => {
+    const flush = (): void => {
       if (timer.current !== null) {
         window.clearTimeout(timer.current);
       }
@@ -374,7 +374,7 @@ const useElementNudge = (o: Options): void => {
       return items.length === 0 ? null : { dx: 0, dy: 0, items, key };
     };
 
-    const press = (wanted: NudgeItem[], dx: number, dy: number) => {
+    const press = (wanted: NudgeItem[], dx: number, dy: number): void => {
       const key = burstKey(wanted.map((item) => item.selector));
 
       if (burst.current && burst.current.key !== key) {
@@ -411,7 +411,7 @@ const useElementNudge = (o: Options): void => {
       timer.current = window.setTimeout(flush, SAVE_MS);
     };
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         live.current.isEnabled &&
         live.current.selection.length > 0 &&
@@ -474,7 +474,7 @@ const useElementNudge = (o: Options): void => {
 
     window.addEventListener("keydown", onKey, true);
 
-    return () => {
+    return (): void => {
       stop();
       window.removeEventListener("keydown", onKey, true);
       flush();

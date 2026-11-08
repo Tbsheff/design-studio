@@ -1,8 +1,10 @@
+import type { ReactElement } from "react";
+
 import { copy } from "./copy.js";
 import { EMPTY_HINT } from "./inspector-model.js";
 import type { InspectorProps } from "./inspector-model.js";
 
-const ProTab = (props: InspectorProps) => (
+const ProTab = (props: InspectorProps): ReactElement => (
   <div className="edit-pro">
     <div className="edit-pro-layers">
       {props.layers ?? <p className="ins-hint">{copy.layersHint}</p>}

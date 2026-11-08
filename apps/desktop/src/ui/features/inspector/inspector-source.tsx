@@ -1,5 +1,6 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -21,7 +22,7 @@ const SourceLink = ({
   readonly projectId: string;
   readonly directionId: string | null;
   readonly source: SourceLoc | null;
-}) => {
+}): ReactElement => {
   const [note, setNote] = useState<string | null>(null);
 
   if (!source) {
@@ -30,7 +31,7 @@ const SourceLink = ({
 
   const text = locText(source);
 
-  const open = () => {
+  const open = (): void => {
     if (!directionId) {
       return;
     }

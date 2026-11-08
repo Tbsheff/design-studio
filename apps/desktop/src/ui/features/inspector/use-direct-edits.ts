@@ -175,7 +175,7 @@ const useDirectEdits = (
 
     setStatus({ kind: "saving" });
 
-    const problem = (message: string) =>
+    const problem = (message: string): void =>
       setStatus({ code: "optimistic_mismatch", kind: "error", message });
 
     const optimistic = edits.map((edit) =>
@@ -356,7 +356,7 @@ const useDirectEdits = (
   useEffect(() => {
     o.control.current = { cancel, commitText, settle };
 
-    return () => {
+    return (): void => {
       if (o.control.current?.cancel === cancel) {
         o.control.current = null;
       }

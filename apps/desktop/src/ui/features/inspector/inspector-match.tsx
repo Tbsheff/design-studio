@@ -12,6 +12,7 @@ import type {
   StyleQuery,
   StyleValueRow,
 } from "@design-studio/contracts/style-search";
+import type { ReactElement } from "react";
 import { memo, useCallback, useMemo, useState } from "react";
 
 import { errorText, replaceStyle } from "../../api.js";
@@ -40,7 +41,7 @@ const useReplace = (
   props: InspectorMatchProps,
   setStatus: (status: Status) => void,
   refresh: () => void
-) =>
+): ((hits: StyleHit[], token: string) => Promise<void>) =>
   useCallback(
     async (hits: StyleHit[], token: string) => {
       const matches = matchesOf(hits);
@@ -100,7 +101,7 @@ const focusRow = (key: string): void => {
   });
 };
 
-const InspectorMatch = (props: InspectorMatchProps) => {
+const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
   const single = props.selection.length === 1;
   const [scope, setScope] = useState<Scope>("selection");
   const [picking, setPicking] = useState<StyleValueRow | null>(null);

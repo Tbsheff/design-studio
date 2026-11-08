@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { KeyboardEvent, PointerEvent } from "react";
+import type { KeyboardEvent, PointerEvent, ReactElement } from "react";
 
 import { focalOf, focalText } from "../../../shared/image.js";
 import { copy } from "./copy.js";
@@ -12,11 +12,11 @@ const FocalPad = ({
   readonly value: string;
   readonly isDisabled: boolean;
   readonly onPick: (focal: string) => void;
-}) => {
+}): ReactElement => {
   const [drag, setDrag] = useState<string | null>(null);
   const point = focalOf(drag ?? value);
 
-  const at = (event: PointerEvent<HTMLDivElement>) => {
+  const at = (event: PointerEvent<HTMLDivElement>): string => {
     const rect = event.currentTarget.getBoundingClientRect();
 
     return focalText(
@@ -25,7 +25,7 @@ const FocalPad = ({
     );
   };
 
-  const onKey = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKey = (event: KeyboardEvent<HTMLDivElement>): void => {
     const step = event.shiftKey ? 10 : 5;
 
     const move = {

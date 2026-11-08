@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { imageKindOf } from "../../../shared/image.js";
 import { AccessibilitySection } from "./accessibility-section.js";
 import { ComponentSection } from "./component-section.js";
@@ -14,7 +16,7 @@ import { StackingSection } from "./stacking-section.js";
 import { useUseSite } from "./use-use-site.js";
 import { VectorSection } from "./vector-section.js";
 
-const SimpleTab = (props: InspectorProps) => {
+const SimpleTab = (props: InspectorProps): ReactElement => {
   const variant = useEditVariant();
   const site = useUseSite(props);
   const reason = inspectorEmptyReason(props.selection, props.isEditable);

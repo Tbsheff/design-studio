@@ -3,6 +3,7 @@ import type {
   SourceLoc,
   TailwindOutcome,
 } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import type { VariantSupport } from "../../../shared/variants.js";
@@ -63,7 +64,7 @@ const useElementClasses = (
         }
       });
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, file, line, col, savedAt, variant]);
@@ -84,7 +85,7 @@ const ClassLine = ({
 }: {
   readonly info: TailwindOutcome | null;
   readonly resolved: string[];
-}) => {
+}): ReactElement | null => {
   if (!info || info.mode === "none") {
     return null;
   }

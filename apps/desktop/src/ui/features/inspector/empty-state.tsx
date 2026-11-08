@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { EMPTY_HINT } from "./inspector-model.js";
@@ -9,7 +10,7 @@ const EmptyState = ({
 }: {
   readonly reason: string;
   readonly notice: string | null;
-}) => (
+}): ReactElement => (
   <div className="ins-empty">
     {notice ? (
       <div className="ins-error" role="alert">

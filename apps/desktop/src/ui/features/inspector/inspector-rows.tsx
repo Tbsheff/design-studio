@@ -3,7 +3,7 @@ import type {
   SelectionContext,
 } from "@design-studio/contracts";
 import { memo, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { textEditability } from "./css-values.js";
@@ -12,7 +12,7 @@ import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 function useRowKeys(onCommit: () => void, onRevert: () => void) {
-  return (event: KeyboardEvent<HTMLInputElement>) => {
+  return (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
       onCommit();
@@ -30,7 +30,7 @@ function ContentRow({
 }: {
   readonly selection: SelectionContext;
   readonly edit: DirectEdit;
-}) {
+}): ReactElement {
   const state = textEditability(selection);
   const onKeyDown = useRowKeys(edit.commit, edit.revertText);
   const data = useInspectorApp().element?.textFromData;
@@ -86,13 +86,13 @@ function CssTextRow({
   readonly short: string;
   readonly edit: DirectEdit;
   readonly placeholder: string;
-}) {
+}): ReactElement {
   const [text, setText] = useState<string | null>(null);
   const value = edit.values[prop];
   const shown = text ?? (value === "none" ? "" : value);
   const id = `ins-${prop}`;
 
-  const commit = () => {
+  const commit = (): void => {
     if (text !== null) {
       const next = text.trim();
 
@@ -156,14 +156,18 @@ function toggleLine(value: string, line: string): string {
   return next.length === 0 ? "none" : next.join(" ");
 }
 
-function TextStyleTogglesView({ edit }: { readonly edit: DirectEdit }) {
+function TextStyleTogglesView({
+  edit,
+}: {
+  readonly edit: DirectEdit;
+}): ReactElement {
   const italic =
     edit.values["font-style"] === "italic" ||
     edit.values["font-style"] === "oblique";
 
   const decoration = edit.values["text-decoration-line"];
 
-  const write = (patch: Partial<Record<DirectStyleProperty, string>>) => {
+  const write = (patch: Partial<Record<DirectStyleProperty, string>>): void => {
     edit.preview(patch);
     edit.commit();
   };

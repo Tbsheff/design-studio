@@ -51,7 +51,7 @@ const dropRequest = (
   drop: LayerDrop,
   selection: SelectionContext[]
 ): StructureEditRequest | null => {
-  const byId = (key: number) =>
+  const byId = (key: number): StructureTarget | null =>
     nodeTarget(nodes.find((node) => node.id === key));
 
   const dragged = byId(id);

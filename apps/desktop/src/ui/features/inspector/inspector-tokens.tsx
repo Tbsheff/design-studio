@@ -1,10 +1,16 @@
 import type {
+  CreateTokenResult,
   DirectStyleProperty,
   SelectionContext,
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { Suspense, lazy, useCallback, useMemo, useState } from "react";
-import type { KeyboardEvent, MutableRefObject, ReactNode } from "react";
+import type {
+  KeyboardEvent,
+  MutableRefObject,
+  ReactNode,
+  ReactElement,
+} from "react";
 
 import { colorHex, cssVarFor, varName } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
@@ -59,7 +65,11 @@ const useInspectorTokens = (input: ScopeInput) => {
   };
 };
 
-const SnapToggle = ({ ui }: { readonly ui: TokenUi | null }) => {
+const SnapToggle = ({
+  ui,
+}: {
+  readonly ui: TokenUi | null;
+}): ReactElement | null => {
   if (!ui) {
     return null;
   }
@@ -89,7 +99,7 @@ const NoteBar = ({
 }: {
   readonly children: ReactNode;
   readonly onClose: () => void;
-}) => (
+}): ReactElement => (
   <div className="tk-note" role="status">
     <Icon name="magnet" size={13} />
     {children}
@@ -109,7 +119,7 @@ const TokenNotes = (props: {
   readonly note: SnapNote | null;
   readonly onKeepRaw: (raw: Partial<StyleValues>) => void;
   readonly onDismiss: () => void;
-}) => {
+}): ReactElement | null => {
   const { ui, note } = props;
 
   if (!ui) {
@@ -232,7 +242,7 @@ const TokenLint = ({
   readonly ui: TokenUi | null;
   readonly edit: DirectEdit;
   readonly css: AuthoredCss | null;
-}) => {
+}): ReactElement | null => {
   const issues = useMemo(
     () =>
       ui ? lintValues(edit.values, ui.entries, ui.mode, css, edit.dirty) : [],
@@ -247,7 +257,7 @@ const TokenLint = ({
 
   const shown = all ? issues : issues.slice(0, LINT_SHOWN);
 
-  const use = (issue: LintIssue) => {
+  const use = (issue: LintIssue): void => {
     edit.preview(
       Object.fromEntries(
         issue.props.map((p) => [p, `var(${issue.token.cssVar})`])
@@ -313,14 +323,16 @@ const CreateTokenHost = (
     readonly request: CreateRequest | null;
     readonly onClose: () => void;
   }
-) => {
+): ReactElement | null => {
   const { tokens, request, edit } = props;
 
   if (!tokens || !request) {
     return null;
   }
 
-  const submit = async (input: CreateTokenSubmit) => {
+  const submit = async (
+    input: CreateTokenSubmit
+  ): Promise<CreateTokenResult> => {
     if (!props.directionId) {
       throw new Error("No direction selected");
     }
@@ -368,17 +380,17 @@ const FontField = ({
 }: {
   readonly ui: TokenUi | null;
   readonly edit: DirectEdit;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState<string | null>(null);
   const prop = "font-family";
   const value = edit.values[prop];
 
-  const settle = () => {
+  const settle = (): void => {
     setText(null);
     edit.commit();
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
       settle();

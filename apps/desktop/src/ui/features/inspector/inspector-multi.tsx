@@ -6,7 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { memo, useSyncExternalStore } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import { cssVarFor } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
@@ -21,7 +21,11 @@ import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { CreateRequest } from "./use-token-snap.js";
 
-const MultiNote = ({ reason }: { readonly reason: string | null }) => {
+const MultiNote = ({
+  reason,
+}: {
+  readonly reason: string | null;
+}): ReactElement | null => {
   if (!reason) {
     return null;
   }
@@ -34,7 +38,11 @@ const MultiNote = ({ reason }: { readonly reason: string | null }) => {
   );
 };
 
-const MultiSizeSection = ({ edit }: { readonly edit: DirectEdit }) => (
+const MultiSizeSection = ({
+  edit,
+}: {
+  readonly edit: DirectEdit;
+}): ReactElement => (
   <InspectorSection title={copy.size}>
     <div className="ins-grid">
       <NumberField
@@ -65,7 +73,7 @@ const MultiCreateTokenHost = ({
   edit,
   request,
   onClose,
-}: HostProps) => {
+}: HostProps): ReactElement | null => {
   if (!tokens || !request) {
     return null;
   }
@@ -201,7 +209,7 @@ const SelectMatchingView = ({
 }: {
   readonly selection: SelectionContext[];
   readonly port: MutableRefObject<PreviewPort | null>;
-}) => {
+}): ReactElement | null => {
   const note = useSyncExternalStore(subscribeMatch, () => matchNote);
   const base = selection.at(-1);
 

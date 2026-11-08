@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { formatCopyCss, otherStyles } from "./authored-css.js";
@@ -12,11 +13,11 @@ const CopyCssButton = ({
   authored,
 }: {
   readonly authored: AuthoredCssState;
-}) => {
+}): ReactElement => {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   const timer = useRef<number | null>(null);
   useEffect(
-    () => () => {
+    () => (): void => {
       if (timer.current !== null) {
         window.clearTimeout(timer.current);
       }
@@ -24,7 +25,7 @@ const CopyCssButton = ({
     []
   );
 
-  const copyCss = async () => {
+  const copyCss = async (): Promise<void> => {
     const css = await authored.request();
     let next: "copied" | "failed" = "failed";
 
@@ -73,7 +74,7 @@ const InspectorOtherStyles = ({
   css,
 }: {
   readonly css: AuthoredCss | null;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
   const rows = css ? otherStyles(css) : [];
 

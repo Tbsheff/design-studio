@@ -156,7 +156,7 @@ const useSwapGate = (
       }
     }, SWAP_RELEASE_MS);
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [liveWait]);
 
   const headKey = targets
@@ -208,7 +208,7 @@ const useSwapGate = (
 
     const timer = window.setTimeout(() => onSwapDone(flying), SWAP_RELEASE_MS);
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [flying, flight, onSwapDone]);
 
   const shownFor = useCallback(

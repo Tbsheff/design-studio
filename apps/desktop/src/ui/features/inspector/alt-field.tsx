@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useState } from "react";
 
 import { copy } from "./copy.js";
@@ -10,10 +11,10 @@ const AltField = ({
   readonly initial: string;
   readonly isDisabled: boolean;
   readonly onSave: (alt: string) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState<string | null>(null);
 
-  const commit = () => {
+  const commit = (): void => {
     if (text !== null && text !== initial) {
       onSave(text);
     }

@@ -27,7 +27,7 @@ class Stabilizer {
     let fn = this.callers.get(key);
 
     if (!fn) {
-      fn = (...args: never[]) => {
+      fn = (...args: never[]): unknown => {
         let target: unknown = this.latest;
 
         for (const part of path) {

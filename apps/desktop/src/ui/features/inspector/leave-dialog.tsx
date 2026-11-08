@@ -1,10 +1,15 @@
 import { useModalDialog } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { unsavedLabel } from "./use-edit-session.js";
 import type { EditSession } from "./use-edit-session.js";
 
-const LeaveDialog = ({ session }: { readonly session: EditSession }) => {
+const LeaveDialog = ({
+  session,
+}: {
+  readonly session: EditSession;
+}): ReactElement => {
   const dialog = useModalDialog(() => void session.answer("cancel"));
 
   return (

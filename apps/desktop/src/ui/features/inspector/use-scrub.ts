@@ -44,7 +44,7 @@ const useScrub = (spec: NumberSpec) => {
   const scrubbed = useRef(false);
   const ui = useTokenUi();
 
-  const onPointerDown = (event: PointerEvent<HTMLElement>) => {
+  const onPointerDown = (event: PointerEvent<HTMLElement>): void => {
     if (event.button !== 0) {
       return;
     }
@@ -54,7 +54,7 @@ const useScrub = (spec: NumberSpec) => {
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+  const onPointerMove = (event: PointerEvent<HTMLElement>): void => {
     const s = scrub.current;
 
     if (!s) {
@@ -92,7 +92,7 @@ const useScrub = (spec: NumberSpec) => {
     spec.edit.preview(patchFor(spec, formatNumber(value, moved.unit)));
   };
 
-  const onPointerUp = (event: PointerEvent<HTMLElement>) => {
+  const onPointerUp = (event: PointerEvent<HTMLElement>): void => {
     const s = scrub.current;
 
     if (!s) {
@@ -113,7 +113,7 @@ const useScrub = (spec: NumberSpec) => {
     }
   };
 
-  const onClick = (event: MouseEvent<HTMLElement>) => {
+  const onClick = (event: MouseEvent<HTMLElement>): void => {
     if (!scrubbed.current) {
       return;
     }

@@ -35,7 +35,7 @@ const requestAuthoredCss = (
 
     const timer = window.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
 
-    function finish(result: AuthoredCss | null) {
+    function finish(result: AuthoredCss | null): void {
       window.clearTimeout(timer);
       stop();
       resolve(result);
@@ -66,7 +66,7 @@ const useAuthoredCss = (
     live.current = true;
     void request();
 
-    return () => {
+    return (): void => {
       live.current = false;
     };
   }, [request]);

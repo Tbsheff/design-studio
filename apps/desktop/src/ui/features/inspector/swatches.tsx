@@ -1,4 +1,5 @@
 import type { PackSummary } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
 interface Props {
   readonly swatches: PackSummary["swatches"];
@@ -6,7 +7,7 @@ interface Props {
   readonly size?: "sm" | "md" | "lg";
 }
 
-const Swatches = ({ swatches, max = 6, size = "md" }: Props) => (
+const Swatches = ({ swatches, max = 6, size = "md" }: Props): ReactElement => (
   <span className={`swatches ${size}`} aria-hidden="true">
     {swatches.slice(0, max).map((swatch) => (
       <span

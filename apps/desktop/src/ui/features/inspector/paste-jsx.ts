@@ -61,7 +61,7 @@ const openFigmaImport = async (
   document.body.append(host);
   const root = createRoot(host);
 
-  const close = () => {
+  const close = (): void => {
     queueMicrotask(() => {
       root.unmount();
       host.remove();

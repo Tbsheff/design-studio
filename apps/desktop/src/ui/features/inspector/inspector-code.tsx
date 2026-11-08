@@ -2,7 +2,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import type { EditorInfo } from "@design-studio/contracts/export";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
@@ -127,7 +127,7 @@ const useSnippet = (
           live && setSnippet({ kind: "error", message: errorText(error) })
       );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, key, tick, fallback]);
@@ -143,7 +143,7 @@ const OpenInEditor = ({
   readonly projectId: string;
   readonly directionId: string;
   readonly file: string;
-}) => {
+}): ReactElement | null => {
   const [editors, setEditors] = useState<EditorInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -180,7 +180,7 @@ const OpenInEditor = ({
   );
 };
 
-const CopySnippet = ({ code }: { readonly code: string }) => {
+const CopySnippet = ({ code }: { readonly code: string }): ReactElement => {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) {
@@ -189,7 +189,7 @@ const CopySnippet = ({ code }: { readonly code: string }) => {
 
     const timer = window.setTimeout(() => setCopied(false), 1500);
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [copied]);
 
   return (
@@ -206,7 +206,11 @@ const CopySnippet = ({ code }: { readonly code: string }) => {
   );
 };
 
-const InspectorCode = ({ projectId, directionId, selection }: Props) => {
+const InspectorCode = ({
+  projectId,
+  directionId,
+  selection,
+}: Props): ReactElement => {
   const snippet = useSnippet(projectId, directionId, selection);
 
   if (!selection) {

@@ -1,7 +1,13 @@
+import type { ReactElement } from "react";
+
 import { copy } from "./copy.js";
 import type { EditSession } from "./use-edit-session.js";
 
-const TweaksNote = ({ session }: { readonly session: EditSession }) => (
+const TweaksNote = ({
+  session,
+}: {
+  readonly session: EditSession;
+}): ReactElement => (
   <div className="edit-tweaks-note">
     <p className="ins-note">{copy.tweaksNote}</p>
     <div className="edit-leave-actions">

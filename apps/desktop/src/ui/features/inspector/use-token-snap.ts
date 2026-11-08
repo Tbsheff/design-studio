@@ -140,7 +140,7 @@ const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
 
     const id = window.setTimeout(() => setNote(null), NOTE_MS);
 
-    return () => window.clearTimeout(id);
+    return (): void => window.clearTimeout(id);
   }, [note]);
 
   return useMemo(

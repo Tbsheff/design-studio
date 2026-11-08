@@ -1,7 +1,7 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { InsertTarget } from "@design-studio/contracts/insert";
 import { useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import {
   BOOLEAN_OPS,
@@ -89,7 +89,8 @@ const paintOf = (
       ? (SHAPE_TAG.exec(html.slice(own.length))?.[0] ?? own)
       : own;
 
-  const pick = (name: string) => attrOf(shape, name) ?? attrOf(own, name) ?? "";
+  const pick = (name: string): string =>
+    attrOf(shape, name) ?? attrOf(own, name) ?? "";
 
   return {
     fill: pick("fill"),
@@ -114,17 +115,17 @@ const ColorRow = ({
   readonly value: string;
   readonly isDisabled: boolean;
   readonly onSave: (value: string | null) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState<string | null>(null);
 
   const shown =
     text ??
     (/^#[0-9a-f]+$/iu.test(value) ? value.toLowerCase() : value || "none");
 
-  const valid = (raw: string) =>
+  const valid = (raw: string): boolean =>
     raw.trim() === "" || VECTOR_COLOR.test(raw.trim());
 
-  const settle = () => {
+  const settle = (): void => {
     if (text === null) {
       return;
     }
@@ -139,7 +140,7 @@ const ColorRow = ({
     onSave(next === "" || next === "none" ? null : next);
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       settle();
     } else if (event.key === "Escape") {
@@ -196,10 +197,10 @@ const WidthRow = ({
   readonly value: string;
   readonly isDisabled: boolean;
   readonly onSave: (value: number | null) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState<string | null>(null);
 
-  const settle = () => {
+  const settle = (): void => {
     if (text === null) {
       return;
     }
@@ -241,10 +242,10 @@ const WidthRow = ({
   );
 };
 
-const BooleanGlyph = ({ op }: { readonly op: BooleanOpName }) => {
+const BooleanGlyph = ({ op }: { readonly op: BooleanOpName }): ReactElement => {
   const glyph = BOOLEAN_GLYPH[op];
 
-  const filled = (which: "a" | "b") =>
+  const filled = (which: "a" | "b"): boolean =>
     glyph.fill === "both" || glyph.fill === which;
 
   return (
@@ -276,7 +277,13 @@ const BooleanGlyph = ({ op }: { readonly op: BooleanOpName }) => {
   );
 };
 
-const useRun = (props: Props) => {
+const useRun = (
+  props: Props
+): {
+  busy: boolean;
+  error: string | null;
+  run: (request: VectorRequest) => Promise<boolean>;
+} => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -310,13 +317,13 @@ const PaintRows = ({
 }: {
   readonly props: Props;
   readonly target: SelectionContext;
-}) => {
+}): ReactElement => {
   const { busy, error, run } = useRun(props);
   const [saved, setSaved] = useState<Partial<ReturnType<typeof paintOf>>>({});
   const paint = { ...paintOf(target), ...saved };
   const disabled = busy || !props.isEditable;
 
-  const save = (change: VectorPaint) =>
+  const save = (change: VectorPaint): undefined =>
     void run({ op: "paint", target: targetOf(target), ...change }).then(
       (ok) => {
         if (!ok) {
@@ -371,11 +378,11 @@ const PaintRows = ({
   );
 };
 
-const BooleanRow = ({ props }: { readonly props: Props }) => {
+const BooleanRow = ({ props }: { readonly props: Props }): ReactElement => {
   const { busy, error, run } = useRun(props);
   const [a, b] = props.selection as [SelectionContext, SelectionContext];
 
-  const go = (op: BooleanOpName) =>
+  const go = (op: BooleanOpName): undefined =>
     void run({
       boolean: op,
       op: "boolean",
@@ -412,7 +419,7 @@ const BooleanRow = ({ props }: { readonly props: Props }) => {
   );
 };
 
-export default function InspectorVector(props: Props) {
+export default function InspectorVector(props: Props): ReactElement | null {
   if (
     !props.directionId ||
     props.selection.length > 2 ||

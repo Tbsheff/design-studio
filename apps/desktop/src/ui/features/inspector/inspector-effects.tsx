@@ -1,3 +1,4 @@
+import type { ReactElement, RefObject } from "react";
 import { useEffect, useRef } from "react";
 
 import { copy } from "./copy.js";
@@ -17,7 +18,7 @@ const BLUR_PART: ShiftPart = {
   map: (raw, change) => withBlur(raw, change(blurOf(raw) || "0")),
 };
 
-const LayerBlur = ({ edit }: { readonly edit: DirectEdit }) => {
+const LayerBlur = ({ edit }: { readonly edit: DirectEdit }): ReactElement => {
   const { filter } = edit.values;
 
   const blur = proxyEdit(
@@ -38,7 +39,7 @@ const LayerBlur = ({ edit }: { readonly edit: DirectEdit }) => {
   );
 };
 
-const useScrollInOnMount = (on: boolean) => {
+const useScrollInOnMount = (on: boolean): RefObject<HTMLSpanElement | null> => {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (on) {
@@ -55,7 +56,7 @@ const EffectsSection = ({
 }: {
   readonly edit: DirectEdit;
   readonly isRevealed: boolean;
-}) => {
+}): ReactElement => {
   const view = shadowView(edit);
   const anchor = useScrollInOnMount(revealed);
 

@@ -141,7 +141,7 @@ const isCoveredDeclaration = (prop: string, value: string): boolean => {
 const otherStyles = (css: AuthoredCss): AuthoredDeclaration[] => {
   const winners = new Map<string, AuthoredDeclaration>();
 
-  const take = (text: string, source: string) => {
+  const take = (text: string, source: string): void => {
     for (const { prop, value } of parseDeclarations(text)) {
       if (isCoveredDeclaration(prop, value)) {
         continue;

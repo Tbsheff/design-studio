@@ -1,6 +1,6 @@
 import type { StyleValueRow } from "@design-studio/contracts/style-search";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { shownValue, Swatch } from "./match-candidates.js";
@@ -13,7 +13,7 @@ const TokenPicker = (props: {
   readonly target: string;
   readonly onPick: (token: string) => void;
   readonly onClose: () => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -31,7 +31,7 @@ const TokenPicker = (props: {
     )
     .slice(0, PICK_SHOWN);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();

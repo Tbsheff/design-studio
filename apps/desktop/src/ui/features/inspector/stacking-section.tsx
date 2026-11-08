@@ -1,9 +1,10 @@
+import type { ReactElement } from "react";
 import { Suspense } from "react";
 
 import { StackingSlot } from "../../inspector-slots.js";
 import type { InspectorProps } from "./inspector-model.js";
 
-const StackingSection = (props: InspectorProps) => {
+const StackingSection = (props: InspectorProps): ReactElement | null => {
   const target = props.selection[0];
 
   if (

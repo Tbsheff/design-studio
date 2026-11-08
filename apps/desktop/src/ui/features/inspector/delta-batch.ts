@@ -47,7 +47,7 @@ const createDeltaBatcher = (
     return out;
   };
 
-  const flush = () => {
+  const flush = (): void => {
     const batch = take();
 
     if (batch.length > 0) {
@@ -87,7 +87,7 @@ const frameOrTimeout =
   (fn) => {
     let done = false;
 
-    const run = () => {
+    const run = (): void => {
       if (done) {
         return;
       }

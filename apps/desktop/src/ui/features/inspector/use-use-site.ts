@@ -31,7 +31,7 @@ const useUseSite = (props: InspectorProps) => {
   const effective =
     target && use && editingUse ? { ...target, ...use, usedAt: null } : target;
 
-  const toggle = () =>
+  const toggle = (): void =>
     setComponentFor(editingUse ? (target?.selector ?? null) : null);
 
   return {

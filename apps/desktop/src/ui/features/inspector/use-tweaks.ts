@@ -49,7 +49,13 @@ const baseValue = (
   control: TweakControl
 ): TweakValue => state?.current[control.id] ?? control.default;
 
-const useTweaksState = (o: Options) => {
+const useTweaksState = (
+  o: Options
+): {
+  loadError: string | null;
+  replace: (state: TweaksState) => void;
+  state: TweaksState | null;
+} => {
   const [loaded, setLoaded] = useState<{
     readonly key: string;
     readonly state: TweaksState;
@@ -261,7 +267,10 @@ const useTweaks = (o: Options) => {
 
   const count = Object.keys(pending).length;
 
-  const undoChain = (canUndo: boolean, fallback: () => void) => ({
+  const undoChain = (
+    canUndo: boolean,
+    fallback: () => void
+  ): { canUndo: boolean; onUndo: () => void } => ({
     canUndo: canUndo || count > 0,
     onUndo: () =>
       Object.keys(pendingRef.current).length > 0 ? undoLast() : fallback(),

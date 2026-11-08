@@ -6,6 +6,7 @@ import type {
   StyleKind,
   StyleValueRow,
 } from "@design-studio/contracts/style-search";
+import type { ReactElement } from "react";
 
 import {
   colorHex,
@@ -25,7 +26,7 @@ const StateTag = ({
 }: {
   readonly row: StyleValueRow;
   readonly onReplace: () => void;
-}) => {
+}): ReactElement => {
   if (row.state === "raw") {
     return (
       <button
@@ -160,7 +161,7 @@ const Swatch = ({
 }: {
   readonly kind: StyleKind;
   readonly value: string;
-}) => {
+}): ReactElement | null => {
   if (kind !== "color") {
     return null;
   }

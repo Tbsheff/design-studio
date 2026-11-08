@@ -10,7 +10,7 @@ const useImageSet = (props: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<string | null>(null);
 
-  const reselect = () => {
+  const reselect = (): void => {
     for (const wait of RESELECT_AFTER_MS) {
       window.setTimeout(
         () =>
@@ -29,7 +29,7 @@ const useImageSet = (props: Props) => {
   const send = async (
     change: Omit<SetImageRequest, "target">,
     file?: Blob | null
-  ) => {
+  ): Promise<void> => {
     try {
       const image = file ? await fileData(file) : undefined;
 

@@ -3,7 +3,10 @@ import { useEffect, useRef } from "react";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { imageFileOf } from "./image-api.js";
 
-const usePasteImage = (enabled: boolean, onImage: (file: File) => void) => {
+const usePasteImage = (
+  enabled: boolean,
+  onImage: (file: File) => void
+): void => {
   const live = useRef(onImage);
   live.current = onImage;
   useEffect(() => {
@@ -11,7 +14,7 @@ const usePasteImage = (enabled: boolean, onImage: (file: File) => void) => {
       return;
     }
 
-    const onPaste = (event: ClipboardEvent) => {
+    const onPaste = (event: ClipboardEvent): void => {
       if (isTypingTarget(event.target)) {
         return;
       }
@@ -28,7 +31,7 @@ const usePasteImage = (enabled: boolean, onImage: (file: File) => void) => {
 
     document.addEventListener("paste", onPaste);
 
-    return () => document.removeEventListener("paste", onPaste);
+    return (): void => document.removeEventListener("paste", onPaste);
   }, [enabled]);
 };
 

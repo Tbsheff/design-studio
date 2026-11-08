@@ -1,5 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState } from "react";
 
 import { copy } from "./copy.js";
@@ -37,7 +38,7 @@ const AlignSelf = ({
 }: {
   readonly edit: DirectEdit;
   readonly isColumn: boolean;
-}) => {
+}): ReactElement => {
   const current = selfSlot(edit.values["align-self"]);
 
   return (
@@ -79,7 +80,7 @@ const UNSET_LIMITS = new Set(["", "auto", "none", "0", "0px"]);
 const hasLimitsSet = (edit: DirectEdit): boolean =>
   LIMITS.some((limit) => !UNSET_LIMITS.has(edit.values[limit.prop].trim()));
 
-const MinMaxRows = ({ edit }: { readonly edit: DirectEdit }) => {
+const MinMaxRows = ({ edit }: { readonly edit: DirectEdit }): ReactElement => {
   const [open, setOpen] = useState(false);
 
   if (!open && !hasLimitsSet(edit)) {

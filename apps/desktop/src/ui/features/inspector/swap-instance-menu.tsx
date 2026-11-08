@@ -1,5 +1,6 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { usePopover } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
@@ -43,7 +44,7 @@ export default function SwapInstanceMenu({
   use,
   onDone,
   onClose,
-}: Props) {
+}: Props): ReactElement {
   const [list, setList] = useState<SwapCandidateList | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -59,12 +60,12 @@ export default function SwapInstanceMenu({
           live && setList({ candidates: [], from: "", note: apiMessage(error) })
       );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, use]);
 
-  const pick = (item: SwapCandidate) => {
+  const pick = (item: SwapCandidate): void => {
     setBusy(item.name);
     componentCreateApi
       .swap(projectId, directionId, use, { file: item.file, name: item.name })

@@ -8,7 +8,7 @@ import type {
 import type { SharedSource } from "@design-studio/contracts/app";
 import { Icon } from "@design-studio/ui";
 import { createContext, useContext, useEffect, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
@@ -82,7 +82,7 @@ function useTextSource(
       .then((next) => live && setAnswer(next))
       .catch(() => live && setAnswer({ reason: "" }));
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, key]);
@@ -96,8 +96,8 @@ function SourceTextRow({
 }: {
   readonly found: TextSourceInfo;
   readonly edit: TextEditScope;
-}) {
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+}): ReactElement {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
       edit.commit();
@@ -144,7 +144,7 @@ function DataTextNote({
   readonly data: TextFromData;
   readonly selection: SelectionContext;
   readonly edit: TextEditScope;
-}) {
+}): ReactElement {
   const answer = useTextSource(edit, selection);
 
   if (answer && "found" in answer) {
@@ -176,7 +176,7 @@ function DataTextAsk({
   readonly data: TextFromData;
   readonly text: string;
   readonly reason: string | null;
-}) {
+}): ReactElement {
   const { ask } = useInspectorApp();
 
   return (
@@ -210,7 +210,7 @@ function SharedSourceNote({
   readonly isEditingUse: boolean;
   readonly canUse: boolean;
   readonly onToggle: () => void;
-}) {
+}): ReactElement {
   const what = shared.name ?? shared.file.split("/").pop() ?? shared.file;
 
   if (editingUse && shared.use) {
@@ -253,7 +253,7 @@ function AddButton({
   readonly tip?: string;
   readonly shortcut?: string;
   readonly onClick: () => void;
-}) {
+}): ReactElement {
   return (
     <button
       type="button"

@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { memo, useEffect, useState } from "react";
 
 import { ComponentsTab } from "./components-tab.js";
@@ -26,7 +27,7 @@ const SimpleTabMemo = memo(SimpleTab, sameShared);
 const ToolsMemo = memo(InspectorTools, sameShared);
 const ArrangeMemo = memo(InspectorArrange, sameShared);
 
-const Inspector = (raw: InspectorProps) => {
+const Inspector = (raw: InspectorProps): ReactElement => {
   const props = useStableCallbacks(raw);
   const [ownTab, setOwnTab] = useState<InspectorTab>("simple");
   const tab = props.tab ?? ownTab;
@@ -48,7 +49,7 @@ const Inspector = (raw: InspectorProps) => {
 
   useSessionHandle(props.session, session);
   const { port } = props;
-  useEffect(() => () => resetEditVariant(port.current), [port]);
+  useEffect(() => (): void => resetEditVariant(port.current), [port]);
 
   return (
     <InspectorAppContext.Provider

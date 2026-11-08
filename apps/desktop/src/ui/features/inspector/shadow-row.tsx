@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useMemo } from "react";
 
 import { copy } from "./copy.js";
@@ -20,12 +21,12 @@ const ShadowRow = ({
   readonly edit: DirectEdit;
   readonly view: ShadowView;
   readonly index: number;
-}) => {
+}): ReactElement => {
   const { list } = view;
   const shadow = list[index] as Shadow;
   const n = index + 1;
 
-  const replace = (patch: Partial<Shadow>) => ({
+  const replace = (patch: Partial<Shadow>): { "box-shadow": string } => ({
     "box-shadow": formatShadows(
       list.map((s, i) => (i === index ? { ...s, ...patch } : s))
     ),
@@ -57,7 +58,7 @@ const ShadowRow = ({
       ? {
           ...ui,
           requestCreate: request
-            ? (req: Parameters<typeof request>[0]) =>
+            ? (req: Parameters<typeof request>[0]): void =>
                 request({ ...req, targets: [] })
             : null,
         }

@@ -163,7 +163,7 @@ const useEditHistory = (o: Options) => {
       load();
     }
   });
-  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+  useEffect(() => (): void => window.clearTimeout(toastTimer.current), []);
 
   const showToast = useCallback((text: string) => {
     window.clearTimeout(toastTimer.current);
@@ -235,10 +235,13 @@ const useEditHistory = (o: Options) => {
     (version) => version.id === o.direction?.headVersionId
   );
 
-  const versionFallback = (fallback: () => void) =>
-    isHistoryStep(head) ? () => showToast(NOTHING_TO_UNDO) : fallback;
+  const versionFallback = (fallback: () => void): (() => void) =>
+    isHistoryStep(head) ? (): void => showToast(NOTHING_TO_UNDO) : fallback;
 
-  const undoChain = (canUndo: boolean, fallback: () => void) => ({
+  const undoChain = (
+    canUndo: boolean,
+    fallback: () => void
+  ): { canUndo: boolean; onUndo: () => void } => ({
     canUndo: canUndo || (state.canUndo && !o.isLocked),
     onUndo: () => step("undo", versionFallback(fallback)),
   });
@@ -287,7 +290,7 @@ const useSelectionRefresh = (
   setSelection: Dispatch<SetStateAction<SelectionContext[]>>,
   describeRef: MutableRefObject<Describe | null>,
   watch: RefreshWatch
-) => {
+): ((now: boolean) => void) => {
   const { change, directionId } = watch;
   const current = useRef(selection);
   current.current = selection;
@@ -347,7 +350,7 @@ const useSelectionRefresh = (
   useEffect(() => {
     let paintQueued = false;
 
-    const onPainted = () => {
+    const onPainted = (): void => {
       if (paintQueued || Date.now() > deadline.current) {
         return;
       }
@@ -359,7 +362,7 @@ const useSelectionRefresh = (
       }, SWAPPED_FRAME_RENDER_MS);
     };
 
-    const onInput = (event: Event) => {
+    const onInput = (event: Event): void => {
       if (event instanceof KeyboardEvent && historyKeyOf(event)) {
         return;
       }
@@ -371,7 +374,7 @@ const useSelectionRefresh = (
     window.addEventListener("keydown", onInput, true);
     window.addEventListener("pointerdown", onInput, true);
 
-    return () => {
+    return (): void => {
       window.removeEventListener(PREVIEW_PAINTED_EVENT, onPainted);
       window.removeEventListener("keydown", onInput, true);
       window.removeEventListener("pointerdown", onInput, true);
@@ -391,7 +394,7 @@ const useSelectionRefresh = (
   }, [change, directionId, later]);
 
   useEffect(
-    () => () => {
+    () => (): void => {
       for (const id of timers.current) {
         window.clearTimeout(id);
       }

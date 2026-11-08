@@ -1,5 +1,5 @@
 import { memo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { normalizeLength, stepValue } from "./css-values.js";
 import { isInherited, useVariantScope } from "./edit-variant.js";
@@ -35,7 +35,7 @@ const useNumberText = (spec: NumberSpec) => {
   const current = plainLength(edit.values[prop], ui);
   const mixed = edit.mixed.has(prop);
 
-  const apply = (raw: string) => {
+  const apply = (raw: string): void => {
     if (start.current === null) {
       start.current = current;
     }
@@ -57,7 +57,7 @@ const useNumberText = (spec: NumberSpec) => {
     edit.preview(patchFor(spec, next));
   };
 
-  const settle = () => {
+  const settle = (): void => {
     const typed = last.current;
     start.current = null;
     last.current = null;
@@ -70,7 +70,7 @@ const useNumberText = (spec: NumberSpec) => {
     edit.commit();
   };
 
-  const nudge = (delta: number, from: string) => {
+  const nudge = (delta: number, from: string): void => {
     start.current = null;
     last.current = null;
     const next = clamp(stepValue(from, delta, unit), spec);
@@ -79,7 +79,7 @@ const useNumberText = (spec: NumberSpec) => {
     edit.commitSoon();
   };
 
-  const cancel = () => {
+  const cancel = (): void => {
     start.current = null;
     last.current = null;
     setText(null);
@@ -89,7 +89,7 @@ const useNumberText = (spec: NumberSpec) => {
   return { apply, cancel, current, mixed, nudge, settle, text, unit };
 };
 
-const NumberInputView = ({ spec, id, className }: InputProps) => {
+const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
   const [focused, setFocused] = useState(false);
   const keepSelection = useRef(false);
   const field = useNumberText(spec);
@@ -104,7 +104,7 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
     field.text !== null &&
     hasCurrentDependency(field.text, field.unit);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     const input = event.currentTarget;
 
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {

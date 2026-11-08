@@ -1,7 +1,11 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { UiSelect } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { FocusEvent, PointerEvent as ReactPointerEvent } from "react";
+import type {
+  FocusEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactElement,
+} from "react";
 
 import { useLive } from "../../platform/live-store.js";
 import { resizeReadout } from "../canvas/use-resize-handles.js";
@@ -74,7 +78,7 @@ const startFixedDrag = (
 
   let moved = false;
 
-  const move = (ev: PointerEvent) => {
+  const move = (ev: PointerEvent): void => {
     const steps = Math.trunc((ev.clientX - start.x) / 2);
 
     if (steps === 0 && !moved) {
@@ -89,7 +93,7 @@ const startFixedDrag = (
     );
   };
 
-  const stop = () => {
+  const stop = (): void => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", stop);
     window.removeEventListener("pointercancel", stop);
@@ -101,7 +105,7 @@ const startFixedDrag = (
 
     o.edit.commit();
 
-    const eat = (click: MouseEvent) => {
+    const eat = (click: MouseEvent): void => {
       click.preventDefault();
       click.stopPropagation();
     };
@@ -124,7 +128,7 @@ const LiveSize = ({
 }: {
   readonly axis: Axis;
   readonly value: number;
-}) => {
+}): ReactElement => {
   const short = axis === "width" ? "W" : "H";
 
   return (
@@ -159,7 +163,7 @@ const SizeValue = ({
   readonly used: string;
   readonly edit: DirectEdit;
   readonly onDrag: (event: ReactPointerEvent<HTMLLabelElement>) => void;
-}) => {
+}): ReactElement => {
   const [editing, setEditing] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const short = axis === "width" ? "W" : "H";
@@ -176,7 +180,7 @@ const SizeValue = ({
   }, [mode]);
 
   if (mode === "fixed" || editing) {
-    const leave = (event: FocusEvent<HTMLDivElement>) => {
+    const leave = (event: FocusEvent<HTMLDivElement>): void => {
       const next = event.relatedTarget;
 
       if (!(next instanceof Node && event.currentTarget.contains(next))) {
@@ -240,7 +244,7 @@ const SizeRow = ({
   readonly axis: Axis;
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
-}) => {
+}): ReactElement => {
   const parent = parentLayout(selection.styles);
   const facts = liveFacts(edit, selection);
   const mode = sizeModeOf(axis, edit.values, parent, facts);

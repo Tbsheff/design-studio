@@ -6,7 +6,7 @@ import type { EditSession, EditSessionHandle } from "./use-edit-session.js";
 const useSessionHandle = (
   ref: MutableRefObject<EditSessionHandle | null> | undefined,
   session: EditSession
-) => {
+): void => {
   useEffect(() => {
     if (!ref) {
       return;
@@ -22,7 +22,7 @@ const useSessionHandle = (
     };
   });
   useEffect(
-    () => () => {
+    () => (): void => {
       if (ref) {
         ref.current = null;
       }

@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
 import { parseSelectionPath, pathCrumbs } from "./authored-css.js";
@@ -88,13 +88,13 @@ const useFitCount = (
 
     observer.observe(el);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [list, total]);
 
   return Math.min(shown, total);
 };
 
-const Separator = () => (
+const Separator = (): ReactElement => (
   <li aria-hidden="true" className="ins-crumb-sep">
     <Icon name="chevronRight" size={12} />
   </li>
@@ -106,7 +106,7 @@ const HiddenCrumbs = ({
 }: {
   readonly hidden: PathCrumb[];
   readonly onSelect: (levels: number) => void;
-}) => {
+}): ReactElement | null => {
   const nearest = hidden.at(-1);
 
   if (!nearest) {

@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState } from "react";
 
 import { copy } from "./copy.js";
@@ -17,10 +18,10 @@ const TweaksPrompt = ({
 }: {
   readonly isRunning: boolean;
   readonly onSuggest?: (prompt?: string) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
 
-  const send = () => {
+  const send = (): void => {
     if (!onSuggest || running) {
       return;
     }
@@ -86,7 +87,7 @@ const InspectorTweaks = ({
 }: {
   readonly tweaks?: InspectorTweaksProps;
   readonly isBlocked: boolean;
-}) => {
+}): ReactElement => {
   const controls = tweaks?.draft.state?.controls.length ?? 0;
 
   if (!tweaks || (tweaks.draft.state && controls === 0)) {

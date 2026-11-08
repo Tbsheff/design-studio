@@ -161,7 +161,7 @@ const useEditSession = (o: Options) => {
     }, REFRESH_MS);
   }, [projectId, directionId]);
 
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(() => (): void => window.clearTimeout(timer.current), []);
   useProjectEvents(projectId, (event) => {
     if (event.directionId !== undefined && event.directionId !== directionId) {
       return;

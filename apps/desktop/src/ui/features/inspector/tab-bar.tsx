@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { TABS } from "./inspector-model.js";
@@ -11,12 +11,12 @@ const TabBar = ({
 }: {
   readonly tab: InspectorTab;
   readonly onTab: (tab: InspectorTab) => void;
-}) => {
+}): ReactElement => {
   const refs = useRef<Partial<Record<InspectorTab, HTMLButtonElement | null>>>(
     {}
   );
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent): void => {
     const at = TABS.findIndex((t) => t.id === tab);
 
     const target = {

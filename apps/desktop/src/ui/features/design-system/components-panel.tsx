@@ -321,7 +321,7 @@ const Card = ({
   );
 };
 
-export const ComponentsPanel = (props: Props): ReactElement => {
+const ComponentsPanel = (props: Props): ReactElement => {
   const { list, directionId } = props;
   const canInsert = props.kind === "react";
   const [query, setQuery] = useState("");
@@ -448,3 +448,5 @@ export const ComponentsPanel = (props: Props): ReactElement => {
     </div>
   );
 };
+
+export { ComponentsPanel };

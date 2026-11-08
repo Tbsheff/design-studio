@@ -11,7 +11,7 @@ import type { TokenMode } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 
-export interface DesignTokens {
+interface DesignTokens {
   entries: CompiledTokenEntry[];
   mode: TokenMode;
   file: TokenFile | null;
@@ -35,12 +35,12 @@ const touchesDesignSystem = (
     : 0;
 };
 
-export interface DesignSystemView {
+interface DesignSystemView {
   tokens: DesignTokens | null;
   state: DesignSystemState | null;
 }
 
-export const useDesignSystemState = (
+const useDesignSystemState = (
   projectId: string,
   project: Project | null,
   directionId: string | null,
@@ -116,3 +116,7 @@ export const useDesignSystemState = (
     return { state, tokens };
   }, [loaded, key, replace]);
 };
+
+export { useDesignSystemState };
+
+export type { DesignTokens, DesignSystemView };

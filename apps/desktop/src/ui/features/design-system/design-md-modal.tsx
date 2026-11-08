@@ -129,7 +129,7 @@ const UnsavedBar = ({
   );
 };
 
-export const DesignMdModal = ({
+const DesignMdModal = ({
   projectId,
   onClose,
 }: {
@@ -325,3 +325,5 @@ export const DesignMdModal = ({
     </dialog>
   );
 };
+
+export { DesignMdModal };

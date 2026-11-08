@@ -40,7 +40,7 @@ const TriggerLabel = ({ pack }: { pack: PackSummary | null }) => {
   );
 };
 
-export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
+const PackPicker = ({ state, value, onChange, onNew }: Props) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -120,3 +120,5 @@ export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
     </div>
   );
 };
+
+export { PackPicker };

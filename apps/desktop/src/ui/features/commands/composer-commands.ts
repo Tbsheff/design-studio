@@ -12,7 +12,7 @@ const MODE_TITLES: Record<ComposerMode, string> = {
   plan: "Plan mode: the agent writes a plan first",
 };
 
-export function nextMode(mode: ComposerMode, step: 1 | -1 = 1): ComposerMode {
+function nextMode(mode: ComposerMode, step: 1 | -1 = 1): ComposerMode {
   const at = MODE_ORDER.indexOf(mode);
 
   return (
@@ -20,11 +20,11 @@ export function nextMode(mode: ComposerMode, step: 1 | -1 = 1): ComposerMode {
   );
 }
 
-export function isModeCycleKey(event: KeyInput): boolean {
+function isModeCycleKey(event: KeyInput): boolean {
   return matchesKey("composer-mode", event, IS_MAC);
 }
 
-export interface ComposerActions {
+interface ComposerActions {
   mode: ComposerMode;
   setMode: (mode: ComposerMode) => void;
   level: RunLevel;
@@ -35,7 +35,7 @@ export interface ComposerActions {
   focus: () => void;
 }
 
-export function composerCommands(a: ComposerActions): Command[] {
+function composerCommands(a: ComposerActions): Command[] {
   const modes = MODE_ORDER.map((mode) => ({
     group: "Run",
     icon: "chat" as const,
@@ -96,10 +96,14 @@ const SLASH_OF: Record<string, string> = {
   "version.export": "export",
 };
 
-export function slashCommands(): Command[] {
+function slashCommands(): Command[] {
   return collectCommands()
     .map((c) =>
       c.slash || !SLASH_OF[c.id] ? c : { ...c, slash: SLASH_OF[c.id] }
     )
     .filter((c) => c.slash);
 }
+
+export { nextMode, isModeCycleKey, composerCommands, slashCommands };
+
+export type { ComposerActions };

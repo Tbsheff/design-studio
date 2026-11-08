@@ -16,7 +16,7 @@ interface ChangeProps {
   onApply: (packId: string) => Promise<void>;
 }
 
-export const ChangePackDialog = ({
+const ChangePackDialog = ({
   currentId,
   from,
   onClose,
@@ -131,7 +131,7 @@ interface SaveProps {
 
 const COPY_SUFFIX = " copy";
 
-export const SavePackDialog = ({
+const SavePackDialog = ({
   defaultName,
   updating,
   canCopy,
@@ -264,3 +264,5 @@ export const SavePackDialog = ({
     </dialog>
   );
 };
+
+export { ChangePackDialog, SavePackDialog };

@@ -12,13 +12,13 @@ interface ReportReview {
   missing: boolean;
 }
 
-export interface ReviewState {
+interface ReviewState {
   orphans: OrphanTracker;
   retargeted: Map<string, string>;
   now: number;
 }
 
-export interface ActiveFrame {
+interface ActiveFrame {
   id: string;
   path: string;
   ids: string[];
@@ -35,7 +35,7 @@ const onPage = (
   });
 };
 
-export const onActiveFrame = (
+const onActiveFrame = (
   comment: Pick<DesignComment, "frame" | "drawing">,
   active: ActiveFrame
 ): boolean => {
@@ -48,7 +48,7 @@ export const onActiveFrame = (
   return onPage(comment, active.path);
 };
 
-export const pageShown = (
+const pageShown = (
   comment: Pick<DesignComment, "frame" | "drawing">,
   paths: readonly string[] | null
 ): boolean => {
@@ -59,9 +59,7 @@ export const pageShown = (
   return paths.some((path) => onPage(comment, path));
 };
 
-export const commentPageName = (
-  comment: Pick<DesignComment, "frame">
-): string => {
+const commentPageName = (comment: Pick<DesignComment, "frame">): string => {
   const path = (comment.frame?.path ?? "").replace(/^\/+/u, "");
 
   if (path === "" || /\.html?$/iu.test(path)) {
@@ -71,9 +69,7 @@ export const commentPageName = (
   return `/${path}`;
 };
 
-export const parseLoc = (
-  value: string | null | undefined
-): SourceLoc | null => {
+const parseLoc = (value: string | null | undefined): SourceLoc | null => {
   if (!value) {
     return null;
   }
@@ -136,7 +132,7 @@ const retargetPatch = (
   return { target: movedTarget(comment, report) };
 };
 
-export const reviewReport = (
+const reviewReport = (
   comment: DesignComment,
   report: AnchorReport,
   state: ReviewState
@@ -162,3 +158,7 @@ export const reviewReport = (
 
   return { missing: false, patch: { status: "orphaned" } };
 };
+
+export { onActiveFrame, pageShown, commentPageName, parseLoc, reviewReport };
+
+export type { ReviewState, ActiveFrame };

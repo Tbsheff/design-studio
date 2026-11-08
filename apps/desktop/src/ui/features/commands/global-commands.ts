@@ -9,7 +9,7 @@ import {
 } from "./deps.js";
 import type { Command } from "./registry.js";
 
-export function focusNewProject(): void {
+function focusNewProject(): void {
   window.requestAnimationFrame(() =>
     findElement(document.body, '[aria-label="Describe the design"]')?.focus()
   );
@@ -74,7 +74,7 @@ function findTextCommand(inProject: boolean): Command {
   };
 }
 
-export function globalCommands(openShortcuts: () => void): Command[] {
+function globalCommands(openShortcuts: () => void): Command[] {
   const inProject = uiStore.get().activeProjectId !== null;
   const home = (): void =>
     uiStore.set({ activeProjectId: null, screen: "home" });
@@ -150,3 +150,5 @@ export function globalCommands(openShortcuts: () => void): Command[] {
     },
   ];
 }
+
+export { focusNewProject, globalCommands };

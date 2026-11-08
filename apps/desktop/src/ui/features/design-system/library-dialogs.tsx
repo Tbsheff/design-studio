@@ -73,7 +73,7 @@ const ErrorLine = ({
   );
 };
 
-export const RenamePackDialog = ({
+const RenamePackDialog = ({
   pack,
   onClose,
   onRename,
@@ -143,7 +143,7 @@ export const RenamePackDialog = ({
   );
 };
 
-export const DeletePackDialog = ({
+const DeletePackDialog = ({
   pack,
   onClose,
   onDelete,
@@ -194,7 +194,7 @@ export const DeletePackDialog = ({
   );
 };
 
-export const ImportConflictDialog = ({
+const ImportConflictDialog = ({
   existing,
   onClose,
   onChoose,
@@ -252,3 +252,5 @@ export const ImportConflictDialog = ({
     </dialog>
   );
 };
+
+export { RenamePackDialog, DeletePackDialog, ImportConflictDialog };

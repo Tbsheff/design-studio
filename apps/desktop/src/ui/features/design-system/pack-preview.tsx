@@ -133,7 +133,7 @@ const TypeScale = ({
   </section>
 );
 
-export const PackPreview = ({
+const PackPreview = ({
   pack,
   entries,
 }: {
@@ -165,3 +165,5 @@ export const PackPreview = ({
     </div>
   );
 };
+
+export { PackPreview };

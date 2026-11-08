@@ -7,7 +7,7 @@ import { IS_MAC } from "./key-model.js";
 import { listenForCommands, runCommand, useCommands } from "./registry.js";
 import type { Command } from "./registry.js";
 
-export interface StudioActions {
+interface StudioActions {
   running: boolean;
   directions: { id: string; name: string }[];
   directionId: string | null;
@@ -70,7 +70,7 @@ function regionOf(element: Element | null): number {
   return -1;
 }
 
-export function moveRegion(step: 1 | -1): void {
+function moveRegion(step: 1 | -1): void {
   const from = regionOf(document.activeElement);
 
   for (let i = 1; i <= REGIONS.length; i += 1) {
@@ -325,10 +325,14 @@ function useStudioKeys(): void {
   }, []);
 }
 
-export function useStudioCommands(): RefObject<StudioActions | null> {
+function useStudioCommands(): RefObject<StudioActions | null> {
   const actions = useRef<StudioActions | null>(null);
   useCommands(() => (actions.current ? studioCommands(actions.current) : []));
   useStudioKeys();
 
   return actions;
 }
+
+export { moveRegion, useStudioCommands };
+
+export type { StudioActions };

@@ -11,10 +11,10 @@ interface AvatarProps {
   author?: string | undefined;
 }
 
-export const authorInitial = (author: string): string =>
+const authorInitial = (author: string): string =>
   (author.trim()[0] ?? "?").toUpperCase();
 
-export const AvatarFace = ({
+const AvatarFace = ({
   initial,
   flip = false,
   tone = "queued",
@@ -38,7 +38,7 @@ export const AvatarFace = ({
   );
 };
 
-export const CommentAuthor = ({
+const CommentAuthor = ({
   author,
   viewer = false,
 }: {
@@ -63,3 +63,5 @@ export const CommentAuthor = ({
     </span>
   );
 };
+
+export { authorInitial, AvatarFace, CommentAuthor };

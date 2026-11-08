@@ -98,9 +98,7 @@ const trimmed = async (blob: Blob): Promise<Blob> => {
   return new Promise((resolve) => out.toBlob((next) => resolve(next ?? blob)));
 };
 
-export const trimmedUrl = async (
-  url: string | null
-): Promise<string | null> => {
+const trimmedUrl = async (url: string | null): Promise<string | null> => {
   if (!url) {
     return url;
   }
@@ -220,7 +218,7 @@ const showPreview = async (load: PreviewLoad): Promise<void> => {
   }
 };
 
-export const ComponentPreviewThumb = ({
+const ComponentPreviewThumb = ({
   projectId,
   directionId,
   id,
@@ -276,3 +274,5 @@ export const ComponentPreviewThumb = ({
     </span>
   );
 };
+
+export { trimmedUrl, ComponentPreviewThumb };

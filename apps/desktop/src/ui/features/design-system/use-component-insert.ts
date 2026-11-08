@@ -124,7 +124,7 @@ const hintOf = (drop: DropAt | null): DropHint | null => {
   };
 };
 
-export const useComponentInsert = (o: Options): void => {
+const useComponentInsert = (o: Options): void => {
   const live = useRef(o);
   live.current = o;
   const busy = useRef(false);
@@ -333,3 +333,5 @@ export const useComponentInsert = (o: Options): void => {
     return (): void => insertBus.clear(host);
   }, [host]);
 };
+
+export { useComponentInsert };

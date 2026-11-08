@@ -202,7 +202,7 @@ const useToast = (): [string | null, (text: string) => void] => {
   return [toast?.text ?? null, (text) => setToast({ id: Date.now(), text })];
 };
 
-export const DesignSystems = ({
+const DesignSystems = ({
   from,
 }: {
   from: LibraryFrom | null;
@@ -448,3 +448,5 @@ export const DesignSystems = ({
     </div>
   );
 };
+
+export { DesignSystems };

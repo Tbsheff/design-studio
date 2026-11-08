@@ -231,7 +231,7 @@ function usePaletteRows(
   return { busy, loading: hits === null, rows };
 }
 
-export function Palette({
+function Palette({
   onClose,
   onShortcuts,
 }: {
@@ -427,3 +427,5 @@ export function Palette({
     </div>
   );
 }
+
+export { Palette };

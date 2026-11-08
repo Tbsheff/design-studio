@@ -5,7 +5,7 @@ import type { CreateComponentRequest } from "../../../shared/component-create.js
 import { ApiError } from "../../api.js";
 import { call } from "../../platform/http.js";
 
-export const componentCreateApi = {
+const componentCreateApi = {
   create: (pid: string, did: string, request: CreateComponentRequest) =>
     call(routes.createComponentDirectEdit, {
       ...request,
@@ -39,7 +39,7 @@ export const componentCreateApi = {
     }),
 };
 
-export const apiMessage = (error: unknown): string => {
+const apiMessage = (error: unknown): string => {
   if (
     error instanceof ApiError &&
     error.data &&
@@ -50,3 +50,5 @@ export const apiMessage = (error: unknown): string => {
 
   return error instanceof Error ? error.message : String(error);
 };
+
+export { componentCreateApi, apiMessage };

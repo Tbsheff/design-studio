@@ -5,7 +5,7 @@ import type { MutableRefObject } from "react";
 import { postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 
-export type ThemeChoice = "light" | "dark" | null;
+type ThemeChoice = "light" | "dark" | null;
 
 interface FrameSlot {
   token: string;
@@ -117,7 +117,7 @@ const registerTokenFrame = (
   };
 };
 
-export const postToLiveFrames = (body: ParentMessageBody): void => {
+const postToLiveFrames = (body: ParentMessageBody): void => {
   for (const token of liveTokens) {
     const frame = sources.get(token)?.();
 
@@ -159,19 +159,19 @@ const holdUntilReload = (channel: CssChannel): void => {
   );
 };
 
-export const broadcastTokenCss = (css: string): void => {
+const broadcastTokenCss = (css: string): void => {
   broadcastCss(tokenChannel, css);
 };
 
-export const broadcastTweakCss = (css: string): void => {
+const broadcastTweakCss = (css: string): void => {
   broadcastCss(tweakChannel, css);
 };
 
-export const holdTokenCssUntilReload = (): void => {
+const holdTokenCssUntilReload = (): void => {
   holdUntilReload(tokenChannel);
 };
 
-export const holdTweakCssUntilReload = (): void => {
+const holdTweakCssUntilReload = (): void => {
   holdUntilReload(tweakChannel);
 };
 
@@ -183,7 +183,7 @@ const subscribeTheme = (listener: () => void): (() => void) => {
   return () => themeListeners.delete(listener);
 };
 
-export const broadcastTheme = (theme: ThemeChoice): void => {
+const broadcastTheme = (theme: ThemeChoice): void => {
   const changed = current.theme !== theme;
   current.theme = theme;
 
@@ -198,10 +198,10 @@ export const broadcastTheme = (theme: ThemeChoice): void => {
   }
 };
 
-export const useCanvasTheme = (): ThemeChoice =>
+const useCanvasTheme = (): ThemeChoice =>
   useSyncExternalStore(subscribeTheme, () => current.theme);
 
-export const setSharePointer = (on: boolean): void => {
+const setSharePointer = (on: boolean): void => {
   if (current.pointer === on) {
     return;
   }
@@ -213,7 +213,7 @@ export const setSharePointer = (on: boolean): void => {
   }
 };
 
-export const onSharePointer = (
+const onSharePointer = (
   listener: (frame: BridgeFrame, message: SharePointerMessage) => void
 ): (() => void) => {
   pointerListeners.add(listener);
@@ -271,10 +271,7 @@ const onTokenFrameMessage = (
   }
 };
 
-export const setCanvasFront = (
-  front: string | null,
-  swapping: boolean
-): void => {
+const setCanvasFront = (front: string | null, swapping: boolean): void => {
   canvas.front = front;
   canvas.swapping = swapping;
 
@@ -283,7 +280,7 @@ export const setCanvasFront = (
   }
 };
 
-export const useTokenFrameSync = (): void => {
+const useTokenFrameSync = (): void => {
   useBridge(tokenFrames, onTokenFrameMessage);
   useEffect(
     () => (): void => {
@@ -298,7 +295,7 @@ export const useTokenFrameSync = (): void => {
   );
 };
 
-export const useTokenFrames = (
+const useTokenFrames = (
   slots: FrameSlot[],
   elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>,
   kind: ProjectKind,
@@ -322,3 +319,20 @@ export const useTokenFrames = (
     return (): void => offs.forEach((off) => off());
   }, [slots, elements, kind, live]);
 };
+
+export {
+  postToLiveFrames,
+  broadcastTokenCss,
+  broadcastTweakCss,
+  holdTokenCssUntilReload,
+  holdTweakCssUntilReload,
+  broadcastTheme,
+  useCanvasTheme,
+  setSharePointer,
+  onSharePointer,
+  setCanvasFront,
+  useTokenFrameSync,
+  useTokenFrames,
+};
+
+export type { ThemeChoice };

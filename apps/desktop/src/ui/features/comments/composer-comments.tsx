@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 
 import { Icon } from "./deps.js";
 
-export const ComposerComments = ({
+const ComposerComments = ({
   count,
   onClear,
 }: {
@@ -36,3 +36,5 @@ export const ComposerComments = ({
     </div>
   );
 };
+
+export { ComposerComments };

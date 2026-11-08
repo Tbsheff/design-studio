@@ -5,7 +5,7 @@ import type { CanvasSource, KeyId, ViewportPreset, ZoomKey } from "./deps.js";
 import { useCommands } from "./registry.js";
 import type { Command } from "./registry.js";
 
-export interface CanvasActions {
+interface CanvasActions {
   live: boolean;
   hasHead: boolean;
   zoom: (key: ZoomKey) => void;
@@ -181,7 +181,7 @@ function canvasCommands(a: CanvasActions): Command[] {
   return out;
 }
 
-export interface CanvasInput {
+interface CanvasInput {
   live: boolean;
   hasHead: boolean;
   zoomBy: (key: ZoomKey, from: "menu") => void;
@@ -227,8 +227,12 @@ function actionsOf(i: CanvasInput): CanvasActions {
   };
 }
 
-export function useCanvasCommands(input: CanvasInput): void {
+function useCanvasCommands(input: CanvasInput): void {
   const latest = useRef(input);
   latest.current = input;
   useCommands(() => canvasCommands(actionsOf(latest.current)));
 }
+
+export { useCanvasCommands };
+
+export type { CanvasActions, CanvasInput };

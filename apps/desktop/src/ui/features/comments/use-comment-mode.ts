@@ -15,7 +15,7 @@ const sameSelectors = (
   prev.length === next.length &&
   prev.every((s, i) => s.selector === next[i]?.selector);
 
-export interface CommentMode {
+interface CommentMode {
   available: boolean;
   on: boolean;
   setOn: (on: boolean) => void;
@@ -23,7 +23,7 @@ export interface CommentMode {
   guard: (setSelection: SetSelection) => SetSelection;
 }
 
-export const useCommentMode = (
+const useCommentMode = (
   control: CommentsControl | undefined,
   live: boolean,
   setSelectMode: (on: boolean) => void
@@ -102,3 +102,7 @@ export const useCommentMode = (
 
   return { available, guard, on, setOn, toggle };
 };
+
+export { useCommentMode };
+
+export type { CommentMode };

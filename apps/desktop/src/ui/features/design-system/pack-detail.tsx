@@ -14,7 +14,7 @@ import { COPY } from "./copy.js";
 import { PackBadges } from "./pack-badges.js";
 import { PackPreview } from "./pack-preview.js";
 
-export interface PackDetailActions {
+interface PackDetailActions {
   onRename: (pack: PackSummary) => void;
   onDuplicate: (pack: PackSummary) => Promise<void>;
   onDelete: (pack: PackSummary) => void;
@@ -218,7 +218,7 @@ const ActionBar = ({
   );
 };
 
-export const PackDetailDialog = ({
+const PackDetailDialog = ({
   pack,
   actions,
   onClose,
@@ -315,3 +315,7 @@ export const PackDetailDialog = ({
     </dialog>
   );
 };
+
+export { PackDetailDialog };
+
+export type { PackDetailActions };

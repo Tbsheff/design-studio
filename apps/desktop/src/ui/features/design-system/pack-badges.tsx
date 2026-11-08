@@ -19,7 +19,7 @@ const ProvenanceBadge = ({ pack }: { pack: PackSummary }): ReactElement => {
   return <span className="badge accent">{PROVENANCE[pack.provenance]}</span>;
 };
 
-export const PackBadges = ({
+const PackBadges = ({
   pack,
   tags = 0,
 }: {
@@ -41,3 +41,5 @@ export const PackBadges = ({
     ))}
   </span>
 );
+
+export { PackBadges };

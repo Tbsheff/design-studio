@@ -7,7 +7,7 @@ import { refreshPacks } from "./packs.js";
 
 const TOAST_MS = 5000;
 
-export interface Toast {
+interface Toast {
   id: number;
   text: string;
 }
@@ -19,7 +19,7 @@ interface Options {
   onCommitted: () => void;
 }
 
-export const usePackActions = ({
+const usePackActions = ({
   projectId,
   directionId,
   setProject,
@@ -84,3 +84,7 @@ export const usePackActions = ({
 
   return { actions, toast };
 };
+
+export { usePackActions };
+
+export type { Toast };

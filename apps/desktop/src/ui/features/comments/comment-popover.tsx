@@ -10,13 +10,13 @@ import type { DesignComment, SelectionContext } from "./deps.js";
 
 type Rect = SelectionContext["rect"];
 
-export const MOD_LABEL =
+const MOD_LABEL =
   typeof navigator !== "undefined" &&
   /Mac|iPhone|iPad/u.test(navigator.platform)
     ? "⌘"
     : "Ctrl+";
 
-export const STATUS_LABEL: Record<DesignComment["status"], string> = {
+const STATUS_LABEL: Record<DesignComment["status"], string> = {
   draft: "Draft",
   orphaned: "Element not found",
   queued: "Queued",
@@ -53,10 +53,7 @@ const focusables = (root: HTMLElement | null): HTMLElement[] => {
   );
 };
 
-export const trapTab = (
-  event: KeyboardEvent,
-  root: HTMLElement | null
-): void => {
+const trapTab = (event: KeyboardEvent, root: HTMLElement | null): void => {
   if (event.key !== "Tab") {
     return;
   }
@@ -78,7 +75,7 @@ export const trapTab = (
   }
 };
 
-export const CommentReplies = ({
+const CommentReplies = ({
   comment,
   onDelete,
 }: {
@@ -195,7 +192,7 @@ const ReplyBox = ({
   );
 };
 
-export const OpenCommentPopover = (props: OpenProps): ReactElement => {
+const OpenCommentPopover = (props: OpenProps): ReactElement => {
   const { comment } = props;
   const [text, setText] = useState(comment.text);
   const root = useRef<HTMLDivElement>(null);
@@ -393,3 +390,5 @@ export const OpenCommentPopover = (props: OpenProps): ReactElement => {
     </>
   );
 };
+
+export { MOD_LABEL, STATUS_LABEL, trapTab, CommentReplies, OpenCommentPopover };

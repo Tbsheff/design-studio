@@ -4,9 +4,9 @@ import { rank } from "./fuzzy.js";
 import type { Ranked } from "./fuzzy.js";
 import type { Command } from "./registry.js";
 
-export type RowKind = "command" | "project" | "route" | "new";
+type RowKind = "command" | "project" | "route" | "new";
 
-export interface Row {
+interface Row {
   key: string;
   kind: RowKind;
   group: string;
@@ -23,12 +23,12 @@ export interface Row {
   commandId?: string;
 }
 
-export interface RowActions {
+interface RowActions {
   openProject: (id: string, route?: string) => void;
   newPrototype: (prompt: string) => void;
 }
 
-export interface RowInput {
+interface RowInput {
   query: string;
   commands: Command[];
   projects: ProjectHit[];
@@ -66,7 +66,7 @@ const MAX_PROJECTS = 6;
 const MAX_ACTIONS = 12;
 const STRONG = 10;
 
-export function typePair(type: ProjectType): string {
+function typePair(type: ProjectType): string {
   return TYPE_LABELS[type];
 }
 
@@ -381,6 +381,10 @@ function typedRows(input: RowInput): Row[] {
   return found.length > 0 ? [...found, make] : [make];
 }
 
-export function buildRows(input: RowInput): Row[] {
+function buildRows(input: RowInput): Row[] {
   return input.query.trim() === "" ? emptyRows(input) : typedRows(input);
 }
+
+export { typePair, buildRows };
+
+export type { RowKind, Row, RowActions, RowInput };

@@ -20,7 +20,7 @@ import type { DropHint } from "./component-insert-api.js";
 
 const DRAG_START_PX = 4;
 
-export const useInsertable = (
+const useInsertable = (
   projectId: string,
   directionId: string | null,
   enabled: boolean,
@@ -75,7 +75,7 @@ interface Drag {
   active: boolean;
 }
 
-export interface ComponentDrag {
+interface ComponentDrag {
   ghost: { name: string; x: number; y: number; hint: DropHint | null } | null;
   handlers: (component: InsertableComponent) => {
     onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
@@ -134,7 +134,7 @@ const swallowClick = (
   event.stopPropagation();
 };
 
-export const useComponentDrag = (): ComponentDrag => {
+const useComponentDrag = (): ComponentDrag => {
   const drag = useRef<Drag | null>(null);
   const dragged = useRef(false);
   const frame = useRef(0);
@@ -210,7 +210,7 @@ export const useComponentDrag = (): ComponentDrag => {
   return { ghost, handlers };
 };
 
-export const DragGhost = ({
+const DragGhost = ({
   ghost,
 }: {
   ghost: ComponentDrag["ghost"];
@@ -251,7 +251,7 @@ const blockReason = (
   return undefined;
 };
 
-export const InsertMenu = ({
+const InsertMenu = ({
   component,
   at,
   selection,
@@ -295,3 +295,7 @@ export const InsertMenu = ({
     />
   );
 };
+
+export { useInsertable, useComponentDrag, DragGhost, InsertMenu };
+
+export type { ComponentDrag };

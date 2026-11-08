@@ -1,4 +1,4 @@
-export interface Ranked<T> {
+interface Ranked<T> {
   item: T;
   score: number;
   marks: number[];
@@ -83,7 +83,7 @@ function tokenScore(
   return null;
 }
 
-export function rank<T>(
+function rank<T>(
   items: readonly T[],
   query: string,
   text: (item: T) => { title: string; keywords?: string }
@@ -133,3 +133,7 @@ export function rank<T>(
 
   return out.sort((a, b) => b.score - a.score);
 }
+
+export { rank };
+
+export type { Ranked };

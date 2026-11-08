@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 import type { CommentPrefill, DraftStore, PendingAttachment } from "./deps.js";
 
-export type PrefillRequest = CommentPrefill & { seq: number };
+type PrefillRequest = CommentPrefill & { seq: number };
 
 interface Options {
   request: PrefillRequest | null | undefined;
@@ -22,7 +22,7 @@ const filesOf = (prefill: CommentPrefill): PendingAttachment[] =>
     previewUrl: item.dataUrl,
   }));
 
-export const useCommentPrefill = ({
+const useCommentPrefill = ({
   request,
   draft,
   setFiles,
@@ -56,3 +56,7 @@ export const useCommentPrefill = ({
 
   return { clear: (): void => setLinked([]), linked };
 };
+
+export { useCommentPrefill };
+
+export type { PrefillRequest };

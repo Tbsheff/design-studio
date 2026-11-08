@@ -24,11 +24,7 @@ function pressedIds(event: KeyboardEvent): string[] {
   ).map((entry) => entry.id);
 }
 
-export function ShortcutSheet({
-  onClose,
-}: {
-  onClose: () => void;
-}): ReactElement {
+function ShortcutSheet({ onClose }: { onClose: () => void }): ReactElement {
   const [query, setQuery] = useState("");
   const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
   const timers = useRef(new Map<string, number>());
@@ -169,3 +165,5 @@ export function ShortcutSheet({
     </aside>
   );
 }
+
+export { ShortcutSheet };

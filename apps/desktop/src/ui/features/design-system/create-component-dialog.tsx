@@ -106,7 +106,7 @@ const useFolders = (ids: Props["ids"]) => {
   return { folder, folders, note, setFolder };
 };
 
-export const CreateComponentDialog = ({
+const CreateComponentDialog = ({
   ids,
   selection,
   onDone,
@@ -257,3 +257,5 @@ export const CreateComponentDialog = ({
     </dialog>
   );
 };
+
+export { CreateComponentDialog };

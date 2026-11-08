@@ -105,7 +105,7 @@ interface ListProps {
   onTab?: () => void;
 }
 
-export const PackList = ({
+const PackList = ({
   packs,
   value,
   includeNone,
@@ -217,3 +217,5 @@ export const PackList = ({
     </div>
   );
 };
+
+export { PackList };

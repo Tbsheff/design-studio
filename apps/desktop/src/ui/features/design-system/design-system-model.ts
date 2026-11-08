@@ -1,4 +1,4 @@
-export interface DesignSystemActions {
+interface DesignSystemActions {
   onApply: (packId: string) => Promise<void>;
   onSave: (
     name: string,
@@ -7,3 +7,5 @@ export interface DesignSystemActions {
     force?: boolean
   ) => Promise<void>;
 }
+
+export type { DesignSystemActions };

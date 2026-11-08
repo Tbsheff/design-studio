@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { errorText } from "../../api.js";
 import { call } from "../../platform/http.js";
 
-export interface PacksState {
+interface PacksState {
   packs: PackSummary[] | null;
   error: string | null;
 }
@@ -38,7 +38,7 @@ const loadPacks = (): Promise<PackSummary[]> => {
 
 const listeners = new Set<() => void>();
 
-export const refreshPacks = (): void => {
+const refreshPacks = (): void => {
   cached = null;
 
   for (const listener of listeners) {
@@ -46,7 +46,7 @@ export const refreshPacks = (): void => {
   }
 };
 
-export const usePacks = (): PacksState => {
+const usePacks = (): PacksState => {
   const [state, setState] = useState<PacksState>({ error: null, packs: null });
   const [generation, setGeneration] = useState(0);
   useEffect(() => {
@@ -84,12 +84,12 @@ export const usePacks = (): PacksState => {
   return state;
 };
 
-export const pickable = (state: PacksState): PacksState =>
+const pickable = (state: PacksState): PacksState =>
   state.packs
     ? { ...state, packs: state.packs.filter((pack) => !pack.draft) }
     : state;
 
-export const findPack = (
+const findPack = (
   packs: PackSummary[] | null,
   id: string | null | undefined
 ): PackSummary | null => {
@@ -102,7 +102,7 @@ export const findPack = (
 
 const loadedFonts = new Set<string>();
 
-export const loadPackFonts = (packs: PackSummary[]): void => {
+const loadPackFonts = (packs: PackSummary[]): void => {
   for (const pack of packs) {
     const url = pack.fonts.googleFontsUrl;
 
@@ -123,7 +123,7 @@ export const loadPackFonts = (packs: PackSummary[]): void => {
   }
 };
 
-export const fontStack = (family: string, fallback: string): string => {
+const fontStack = (family: string, fallback: string): string => {
   const trimmed = family.trim();
 
   if (!trimmed) {
@@ -141,7 +141,7 @@ export const fontStack = (family: string, fallback: string): string => {
 
 const KEY_SWATCHES = ["primary", "accent", "fg", "bg"];
 
-export const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
+const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
   const rank = (name: string): number => {
     const index = KEY_SWATCHES.indexOf(name);
 
@@ -150,3 +150,15 @@ export const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
 
   return [...pack.swatches].toSorted((a, b) => rank(a.name) - rank(b.name));
 };
+
+export {
+  refreshPacks,
+  usePacks,
+  pickable,
+  findPack,
+  loadPackFonts,
+  fontStack,
+  keySwatches,
+};
+
+export type { PacksState };

@@ -18,12 +18,12 @@ import {
   inEditPane,
   quietOnPointer,
 } from "./canvas-helpers.js";
-import { EditNotice } from "./canvas-layers.js";
 import { FrameSnapLayer, MarqueeLayer } from "./canvas-overlays.js";
 import { CanvasComments, InlinePromptSlot } from "./canvas-tool-slots.js";
 import type { ViewProps } from "./canvas-types.js";
 import { copy } from "./copy.js";
 import { DrawBar } from "./draw-layer.js";
+import { EditNotice } from "./edit-notice.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import {
   FreeMoveSlot,

@@ -9,7 +9,11 @@ import { useState, useSyncExternalStore } from "react";
 import { uiStore } from "../../platform/storage.js";
 import { canvasStore } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
-import { frameStateOf, useFrameStates } from "../canvas/frame-states-model.js";
+import {
+  frameStateOf,
+  toLoadedStates,
+  useFrameStates,
+} from "../canvas/frame-states-model.js";
 import { activeFrame, defaultLayout } from "../canvas/index.js";
 import { inViewIds } from "../canvas/use-canvas-presence.js";
 
@@ -78,8 +82,8 @@ const useRunCanvas = (
         onRemove: (): void => setRemoved(key),
         page: `/${frame.path ?? ""}`,
         state: stateLabel(
-          states ?? null,
-          frameStateOf(states ?? null, frame.id)
+          toLoadedStates(states),
+          frameStateOf(toLoadedStates(states), frame.id)
         ),
       };
 

@@ -746,3 +746,18 @@ body.ins-scrubbing * {
     scale: none;
   }
 }
+
+fieldset.ins-align-grid,
+fieldset.ins-direction {
+  min-inline-size: 0;
+  margin: 0;
+  border: 0;
+}
+
+fieldset.ins-align-grid {
+  padding: 0;
+}
+
+fieldset.ins-direction {
+  padding: 2px;
+}

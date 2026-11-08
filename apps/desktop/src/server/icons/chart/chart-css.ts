@@ -20,6 +20,8 @@ const FILES_MAX = 160;
 
 const BYTES_MAX = 400_000;
 
+const STYLE_FILE = /\.(?:css|html?)$/u;
+
 const PROPERTY = /(?<name>--[a-z0-9-]{1,64}):/giu;
 
 const listEntries = async (dir: string): Promise<Dirent[]> => {
@@ -45,7 +47,7 @@ const listCssFiles = async (dir: string, depth: number): Promise<string[]> => {
         return listCssFiles(full, depth + 1);
       }
 
-      if (entry.isFile() && entry.name.endsWith(".css")) {
+      if (entry.isFile() && STYLE_FILE.test(entry.name)) {
         return [full];
       }
 

@@ -19,7 +19,7 @@ import {
 } from "./svg-frame.js";
 import type { ChartSvgOptions, Frame } from "./svg-frame.js";
 import { toLines } from "./svg-lines.js";
-import { toMarkup, toNode, toTextNode } from "./svg-markup.js";
+import { toMarkup, toNode, toRounded, toTextNode } from "./svg-markup.js";
 import type { SvgNode } from "./svg-markup.js";
 import { toPieLegend, toPieNodes } from "./svg-pie.js";
 import type { ChartSpec } from "./types.js";
@@ -107,7 +107,7 @@ const toLegendNodes = (frame: Frame): SvgNode[] => {
       ),
       toText(item.label, {
         x: cursor + LEGEND_SWATCH + LEGEND_TEXT_GAP,
-        y: base + FONT_SMALL / THIRD,
+        y: toRounded(base + FONT_SMALL / THIRD),
       }),
     ];
 

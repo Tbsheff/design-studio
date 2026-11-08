@@ -7,6 +7,12 @@
 }
 
 .splitter {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
   position: absolute;
   top: 0;
   bottom: 0;

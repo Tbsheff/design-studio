@@ -50,8 +50,8 @@ interface EventSourceLike {
   onopen: ((this: EventSource, ev: Event) => unknown) | null;
   onmessage: ((this: EventSource, ev: MessageEvent) => unknown) | null;
   onerror: ((this: EventSource, ev: Event) => unknown) | null;
-  addEventListener(type: string, listener: EventListener): void;
-  close(): void;
+  readonly addEventListener: (type: string, listener: EventListener) => void;
+  readonly close: () => void;
 }
 
 interface HubDeps {
@@ -75,10 +75,10 @@ interface Channel {
 }
 
 interface EventHub {
-  subscribe(projectId: string, listener: Listener): () => void;
-  watchState(projectId: string, onChange: () => void): () => void;
-  state(projectId: string): ConnectionState;
-  openCount(): number;
+  readonly subscribe: (projectId: string, listener: Listener) => () => void;
+  readonly watchState: (projectId: string, onChange: () => void) => () => void;
+  readonly state: (projectId: string) => ConnectionState;
+  readonly openCount: () => number;
 }
 
 const createEventHub = (deps: HubDeps): EventHub => {

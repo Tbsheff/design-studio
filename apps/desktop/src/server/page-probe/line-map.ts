@@ -1,6 +1,6 @@
 interface LineMap {
-  line(oldLine: number): number | null;
-  col(oldLine: number, oldCol: number): number;
+  readonly line: (oldLine: number) => number | null;
+  readonly col: (oldLine: number, oldCol: number) => number;
 }
 
 const CELL_MAX = 9_000_000;

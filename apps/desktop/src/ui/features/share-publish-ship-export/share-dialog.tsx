@@ -103,14 +103,14 @@ const LinkUrls = ({
     <div className="share-urls">
       {local && (
         <div className="share-url">
-          <span className="share-url-kind">This computer</span>
+          <span className="share-url-kind">{copy.thisComputer}</span>
           <code className="mono truncate">{local}</code>
           <CopyButton text={local} label="Copy link" />
         </div>
       )}
       {lan && (
         <div className="share-url">
-          <span className="share-url-kind">Local network</span>
+          <span className="share-url-kind">{copy.localNetwork}</span>
           <code className="mono truncate">{lan}</code>
           <CopyButton text={lan} label="Copy link" />
         </div>
@@ -170,7 +170,7 @@ const CursorSwitch = ({
 }) => (
   <div className="share-lan-row share-cursor-row">
     <div className="share-lan-text">
-      <span className="share-lan-title">Show my cursor to viewers</span>
+      <span className="share-lan-title">{copy.showMyCursorTo}</span>
       <span className="share-lan-help">
         {link.studioCursor
           ? "On: viewers see your pointer over the frames you do not edit now, and over the frame you edit while Comment is on."
@@ -248,14 +248,14 @@ const LinkRow = ({
                 : "The link stops working at once and its images are deleted"
             }
           >
-            Revoke
+            {copy.revoke}
           </button>
         )}
       </div>
       {link.active && token && <LinkUrls token={token} server={server} />}
       {copied === link.id && (
         <p className="share-link-note" role="status">
-          Link copied. Paste it to share.
+          {copy.linkCopiedPasteIt}
         </p>
       )}
       {link.active && link.live && (
@@ -304,7 +304,7 @@ const LanSwitch = ({
   <div className="share-lan">
     <div className="share-lan-row">
       <div className="share-lan-text">
-        <span className="share-lan-title">Allow on local network</span>
+        <span className="share-lan-title">{copy.allowOnLocalNetwork}</span>
         <span className="share-lan-help">
           {server.lan && server.lanUrl
             ? `On: devices on this network can open links at ${server.lanUrl}.`
@@ -322,8 +322,7 @@ const LanSwitch = ({
     </div>
     {server.lan && (
       <div className="alert share-lan-warn" role="alert">
-        Anyone on this network who has a link can open it and comment. Use this
-        only on networks you trust, and turn it off when the review ends.
+        {copy.anyoneOnThisNetwork}
       </div>
     )}
   </div>
@@ -466,11 +465,8 @@ export const ShareDialog = ({
         <>
           <div className="modal-head">
             <div className="titles">
-              <h2>Publish on Cloudflare</h2>
-              <p>
-                Put a saved version on your publish Worker. The address works
-                when this Mac is off.
-              </p>
+              <h2>{copy.publishOnCloudflare}</h2>
+              <p>{copy.putASavedVersion}</p>
             </div>
             {tabs}
             <button
@@ -567,11 +563,8 @@ const LinkShare = ({
     <form className="modal-form" onSubmit={submit} noValidate>
       <div className="modal-head">
         <div className="titles">
-          <h2>Share a read-only link</h2>
-          <p>
-            Viewers see images of the frames and can comment. They cannot edit,
-            run the app or reach the studio.
-          </p>
+          <h2>{copy.shareAReadOnly}</h2>
+          <p>{copy.viewersSeeImagesOf}</p>
         </div>
         {tabs}
         <button
@@ -585,7 +578,7 @@ const LinkShare = ({
       </div>
       <div className="modal-body share-body">
         <fieldset className="export-field export-frames">
-          <legend className="export-label">Frames</legend>
+          <legend className="export-label">{copy.frames}</legend>
           {frames.map((choice) => (
             <label key={choice.id} className="export-frame">
               <input
@@ -613,12 +606,12 @@ const LinkShare = ({
           ))}
         </fieldset>
         <div className="export-field">
-          <span className="export-label">Link ends after</span>
+          <span className="export-label">{copy.linkEndsAfter}</span>
           <ExpiryPicker value={expiry} onChange={setExpiry} />
         </div>
         <div className="share-lan-row">
           <div className="share-lan-text">
-            <span className="share-lan-title">Live</span>
+            <span className="share-lan-title">{copy.live}</span>
             <span className="share-lan-help">
               {liveView
                 ? "Viewers get a new image of each frame each time you save a version, and you see their cursors on the canvas."
@@ -633,9 +626,7 @@ const LinkShare = ({
           />
         </div>
         {!versionId && (
-          <p className="share-link-note">
-            Save a version first. A link shares a saved version.
-          </p>
+          <p className="share-link-note">{copy.saveAVersionFirst}</p>
         )}
         {shares.error && (
           <div className="alert error small" role="alert">
@@ -665,13 +656,10 @@ const LinkShare = ({
         />
       </div>
       <div className="modal-foot">
-        <span className="share-foot-note">
-          No upload: links work only while Design Studio is open on this
-          computer.
-        </span>
+        <span className="share-foot-note">{copy.noUploadLinksWork}</span>
         <span className="share-spacer" />
         <button type="button" className="btn ghost" onClick={onClose}>
-          Close
+          {copy.close}
         </button>
         <button
           type="submit"

@@ -115,7 +115,7 @@ const FramePicker = ({
 
   return (
     <fieldset className="export-field export-frames">
-      <legend className="export-label">Frames (published as images)</legend>
+      <legend className="export-label">{copy.framesPublishedAsImages}</legend>
       {frames.map((choice) => (
         <label key={choice.id} className="export-frame">
           <input
@@ -166,11 +166,7 @@ const PublishForm = ({
 }) => (
   <div className="publish-form">
     {target.kind === "site" ? (
-      <p className="publish-step-text">
-        Every page of the saved version goes up as a static site: HTML, CSS,
-        scripts, images and fonts. Source files, .env, node_modules and studio
-        scripts stay on this Mac.
-      </p>
+      <p className="publish-step-text">{copy.everyPageOfThe}</p>
     ) : (
       <FramePicker target={target} form={form} setForm={setForm} />
     )}
@@ -196,7 +192,7 @@ const PublishForm = ({
       </label>
     )}
     <div className="export-field">
-      <span className="export-label">Stops working after</span>
+      <span className="export-label">{copy.stopsWorkingAfter}</span>
       <div
         className="segmented export-seg"
         role="radiogroup"
@@ -442,7 +438,7 @@ const DoneNote = ({ done }: { done: Publication }) => {
       role="status"
       data-testid="publish-done"
     >
-      <span className="share-url-kind">Published</span>
+      <span className="share-url-kind">{copy.published}</span>
       <code className="mono truncate">{done.url}</code>
       <CopyButton text={done.url} label="Copy link" />
       {upload && <span className="publish-done-upload">{upload.trim()}</span>}
@@ -482,7 +478,7 @@ const PaneFoot = ({
           disabled={flow.busy !== null}
           onClick={() => flow.setPlan(null)}
         >
-          Back
+          {copy.back}
         </button>
         <button
           type="button"
@@ -497,7 +493,7 @@ const PaneFoot = ({
     ) : (
       <>
         <button type="button" className="btn ghost" onClick={onClose}>
-          Close
+          {copy.close}
         </button>
         <button
           type="button"

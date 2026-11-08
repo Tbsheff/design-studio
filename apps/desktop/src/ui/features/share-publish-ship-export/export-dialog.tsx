@@ -250,12 +250,12 @@ const HandoffResultView = ({
             run(() => exportApi.revealHandoff(target.projectId, folder))
           }
         >
-          Reveal in Finder
+          {uiCopy.revealInFinder}
         </button>
       </div>
       {editors.length > 0 && target.directionId ? (
         <div className="export-editors">
-          <span className="export-label">Open project in</span>
+          <span className="export-label">{uiCopy.openProjectIn}</span>
           {editors.map((editor) => (
             <button
               key={editor.id}
@@ -333,11 +333,8 @@ const ConnectClaudeCode = (): ReactElement => {
     <section className="export-connect" aria-label={uiCopy.connectToClaude}>
       <div className="export-connect-head">
         <div className="titles">
-          <h3>Connect to Claude Code</h3>
-          <p className="export-sub">
-            A local MCP server lets Claude Code read projects, tokens, DESIGN.md
-            and screenshots. Runs on this Mac only.
-          </p>
+          <h3>{uiCopy.connectToClaude}</h3>
+          <p className="export-sub">{uiCopy.aLocalMcpServer}</p>
         </div>
         <button
           type="button"
@@ -373,7 +370,7 @@ const ConnectClaudeCode = (): ReactElement => {
           </div>
           <div className="export-connect-head export-control">
             <div className="titles">
-              <h4>Allow edits</h4>
+              <h4>{uiCopy.allowEdits}</h4>
               <p className="export-sub">
                 {edits
                   ? "Claude Code can also edit files and elements, arrange frames, comment, restore versions, apply design systems, create projects and export. Each edit is a version you can undo. It cannot start or stop Claude runs in the studio. Reconnect the server in Claude Code after you change this."
@@ -402,7 +399,7 @@ const ConnectClaudeCode = (): ReactElement => {
               disabled={busy}
               onClick={() => void change({ rotate: true })}
             >
-              New token
+              {uiCopy.newToken}
             </button>
           </div>
         </>
@@ -586,7 +583,7 @@ const OptionFields = ({ options }: { options: Options }): ReactElement => {
     <>
       {selectionOnly ? (
         <div className="export-field">
-          <span className="export-label">Area</span>
+          <span className="export-label">{uiCopy.area}</span>
           <span className="export-selection">
             <Icon name="pointer" size={14} />
             Selected element
@@ -596,7 +593,7 @@ const OptionFields = ({ options }: { options: Options }): ReactElement => {
       {options.needsFrames ? <FrameList options={options} /> : null}
       {format === "png" ? (
         <div className="export-field export-inline">
-          <span className="export-label">Scale</span>
+          <span className="export-label">{uiCopy.scale}</span>
           <Segmented
             label="Scale"
             value={scale}
@@ -613,7 +610,7 @@ const OptionFields = ({ options }: { options: Options }): ReactElement => {
       {((format === "png" || format === "svg") && !selectionOnly) ||
       format === "pdf" ? (
         <div className="export-field export-inline">
-          <span className="export-label">Area</span>
+          <span className="export-label">{uiCopy.area}</span>
           <Segmented
             label="Area"
             value={scope}
@@ -660,7 +657,7 @@ const StatusLine = ({
               className="btn small ghost"
               onClick={revealDownload}
             >
-              Reveal in Finder
+              {uiCopy.revealInFinder}
             </button>
           ) : null}
         </span>
@@ -738,7 +735,7 @@ export const ExportDialog = ({ target, onClose }: Props): ReactElement => {
           data-tip={`From version: ${target.versionLabel}`}
           data-tip-align="start"
         >
-          <h2>Export</h2>
+          <h2>{uiCopy.export}</h2>
           <p className="truncate">From version: {target.versionLabel}</p>
         </div>
         <button
@@ -789,7 +786,7 @@ export const ExportDialog = ({ target, onClose }: Props): ReactElement => {
           onClick={onClose}
           disabled={busy}
         >
-          Close
+          {uiCopy.close}
         </button>
         <button
           type="button"

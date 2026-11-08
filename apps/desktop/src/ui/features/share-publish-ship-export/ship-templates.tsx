@@ -49,13 +49,13 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
 
   return (
     <section className="ship-settings" aria-label={copy.shipTemplates}>
-      <h3>Ship as branch and PR</h3>
+      <h3>{copy.shipAsBranchAnd}</h3>
       {loadError && <p className="field-help">{loadError}</p>}
       {draft && (
         <>
           <div className="ship-settings-row">
             <label className="field">
-              <span>Your name in branches</span>
+              <span>{copy.yourNameInBranches}</span>
               <input
                 className="mono"
                 value={draft.user}
@@ -66,7 +66,7 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
               />
             </label>
             <label className="field">
-              <span>Issue id</span>
+              <span>{copy.issueId}</span>
               <input
                 className="mono"
                 value={draft.issueId}
@@ -78,7 +78,7 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
             </label>
           </div>
           <label className="field">
-            <span>Branch template</span>
+            <span>{copy.branchTemplate}</span>
             <input
               className="mono"
               value={draft.branchTemplate}
@@ -88,7 +88,7 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
             />
           </label>
           <label className="field">
-            <span>Pull request body template</span>
+            <span>{copy.pullRequestBodyTemplate}</span>
             <textarea
               className="mono"
               rows={5}
@@ -97,11 +97,11 @@ const ShipTemplates = ({ projectId, saveRef }: Props): ReactElement => {
               onChange={(e) => set({ bodyTemplate: e.target.value })}
             />
             <small className="field-help">
-              Placeholders:{" "}
+              {copy.placeholders}{" "}
               {
                 "{user} {slug} {issue} (lower case) {ISSUE} (as typed) {title} {summary} {versions} {files}"
               }
-              . A line whose placeholders are all empty is left out.
+              {copy.aLineWhosePlaceholders}
             </small>
           </label>
         </>

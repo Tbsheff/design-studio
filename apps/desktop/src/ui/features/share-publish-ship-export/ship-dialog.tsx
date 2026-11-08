@@ -95,7 +95,7 @@ const modeBlock = (plan: ShipPrepare, mode: ShipMode): string | null => {
 
 const DiffView = ({ file }: { file: ShipFile | null }) => {
   if (!file) {
-    return <div className="ship-diff empty">Pick a file to see its diff.</div>;
+    return <div className="ship-diff empty">{copy.pickAFileTo}</div>;
   }
 
   const all = file.diff.replace(/\n$/, "").split("\n");
@@ -141,9 +141,7 @@ const DiffView = ({ file }: { file: ShipFile | null }) => {
         ))}
       </pre>
       {file.diffCut && (
-        <div className="ship-diff-note">
-          The diff is cut here. The full file ships.
-        </div>
+        <div className="ship-diff-note">{copy.theDiffIsCut}</div>
       )}
     </div>
   );
@@ -197,27 +195,27 @@ const ResultView = ({
         Your checked-out branch and files did not change.
       </p>
       <dl className="ship-facts">
-        <dt>Branch</dt>
+        <dt>{copy.branch}</dt>
         <dd className="mono">{result.branch}</dd>
-        <dt>Commit</dt>
+        <dt>{copy.commit}</dt>
         <dd className="mono">{result.sha.slice(0, 12)}</dd>
-        <dt>Files</dt>
+        <dt>{copy.files2}</dt>
         <dd>{result.files.length}</dd>
         {result.format && (
           <>
-            <dt>Format</dt>
+            <dt>{copy.format}</dt>
             <dd data-tip={result.format.note}>{formatFact(result.format)}</dd>
           </>
         )}
         {result.pushed && (
           <>
-            <dt>Pushed to</dt>
+            <dt>{copy.pushedTo}</dt>
             <dd className="mono">{result.remote}</dd>
           </>
         )}
         {result.prUrl && (
           <>
-            <dt>Pull request</dt>
+            <dt>{copy.pullRequest}</dt>
             <dd>
               <a href={result.prUrl} target="_blank" rel="noreferrer noopener">
                 {result.prUrl}
@@ -251,7 +249,7 @@ const ResultView = ({
         data-autofocus
         onClick={onClose}
       >
-        Done
+        {copy.done}
       </button>
     </div>
   </>
@@ -438,7 +436,7 @@ const ModePicker = ({
   onMode: (mode: ShipMode) => void;
 }) => (
   <fieldset className="ship-modes ship-wide">
-    <legend>When done</legend>
+    <legend>{copy.whenDone}</legend>
     {MODES.map((item) => {
       const why = modeBlock(plan, item.id);
 
@@ -476,7 +474,7 @@ const ShipFields = ({
 }) => (
   <div className="ship-fields">
     <label className="field">
-      <span>Issue id</span>
+      <span>{copy.issueId}</span>
       <input
         className="mono"
         value={draft.issue}
@@ -487,7 +485,7 @@ const ShipFields = ({
       />
     </label>
     <label className="field">
-      <span>Branch</span>
+      <span>{copy.branch}</span>
       <input
         className="mono"
         value={fields.branch}
@@ -497,7 +495,7 @@ const ShipFields = ({
       />
     </label>
     <label className="field ship-wide">
-      <span>Commit message</span>
+      <span>{copy.commitMessage}</span>
       <textarea
         className="mono"
         rows={3}
@@ -513,14 +511,14 @@ const ShipFields = ({
     {draft.mode === "pr" && (
       <>
         <label className="field ship-wide">
-          <span>Pull request title</span>
+          <span>{copy.pullRequestTitle}</span>
           <input
             value={fields.title}
             onChange={(e) => patch({ title: e.target.value })}
           />
         </label>
         <label className="field ship-wide">
-          <span>Pull request body</span>
+          <span>{copy.pullRequestBody}</span>
           <textarea
             className="mono"
             rows={6}
@@ -543,9 +541,7 @@ const ShipEmpty = ({ text }: { text: string | null }) => (
     <p className="ship-empty-title">
       {text ?? "There is nothing to ship yet."}
     </p>
-    <p className="ship-empty-text">
-      Run this in the app folder, then open Ship again:
-    </p>
+    <p className="ship-empty-text">{copy.runThisInThe}</p>
     <div className="ship-empty-command">
       <code>{FIRST_COMMIT}</code>
       <CopyButton text={FIRST_COMMIT} label="Copy command" />
@@ -597,7 +593,7 @@ const PlanView = ({
   return (
     <>
       <div className="field ship-base">
-        <span id="ship-base-label">Changes since</span>
+        <span id="ship-base-label">{copy.changesSince}</span>
         <UiSelect
           aria-labelledby="ship-base-label"
           value={plan.base?.versionId ?? ""}
@@ -688,7 +684,7 @@ export const ShipDialog = ({ projectId, onClose }: Props) => {
       <form className="modal-form" onSubmit={(e) => void submit(e)} noValidate>
         <div className="modal-head">
           <div className="titles">
-            <h2>Ship as a pull request</h2>
+            <h2>{copy.shipAsA}</h2>
             <p>{leadText(plan)}</p>
           </div>
           <button
@@ -706,7 +702,9 @@ export const ShipDialog = ({ projectId, onClose }: Props) => {
         ) : (
           <>
             <div className="modal-body ship-body">
-              {!plan && !shown && <p className="muted">Reading changes…</p>}
+              {!plan && !shown && (
+                <p className="muted">{copy.readingChanges}</p>
+              )}
               {plan && (
                 <PlanView
                   plan={plan}
@@ -738,7 +736,7 @@ export const ShipDialog = ({ projectId, onClose }: Props) => {
                 onClick={onClose}
                 disabled={busy}
               >
-                Cancel
+                {copy.cancel}
               </button>
               <button
                 type="submit"

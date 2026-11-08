@@ -72,10 +72,14 @@ const Versions = ({
                 timeStyle: "short",
               })
             : "Pending"}{" "}
-          · v {v.sourceVersion.slice(0, 7)} · {v.fileCount} files
+          {copy.v}
+          {v.sourceVersion.slice(0, 7)}
+          {copy.dot}
+          {v.fileCount}
+          {copy.files}
         </span>
         {v.live ? (
-          <span className="publish-live-tag">Live</span>
+          <span className="publish-live-tag">{copy.live}</span>
         ) : (
           <button
             type="button"
@@ -84,7 +88,7 @@ const Versions = ({
             onClick={() => onRollback(p, v.id)}
             data-tip={copy.restoreTip}
           >
-            Make live
+            {copy.makeLive}
           </button>
         )}
       </li>
@@ -130,7 +134,7 @@ const Comments = ({
     <div className="publish-comments" data-testid="publish-comments">
       {error && <p className="publish-error">{error}</p>}
       {list?.length === 0 && (
-        <p className="publish-step-text">No viewer comments yet.</p>
+        <p className="publish-step-text">{copy.noViewerCommentsYet}</p>
       )}
       <ol>
         {list?.map((c) => (
@@ -145,7 +149,7 @@ const Comments = ({
               onClick={() => void remove(c.id)}
               data-tip={copy.deleteCommentTip}
             >
-              Delete
+              {copy.delete}
             </button>
           </li>
         ))}
@@ -178,7 +182,8 @@ const RowActions = ({
           onClick={() => toggle("versions")}
           data-tip={copy.versionsTip}
         >
-          Versions {p.versions.length}
+          {copy.versions2}
+          {p.versions.length}
         </button>
       )}
       {app && (p.viewerComments || p.commentCount > 0) && (
@@ -189,7 +194,8 @@ const RowActions = ({
           onClick={() => toggle("comments")}
           data-tip={copy.commentsTip}
         >
-          Comments {p.commentCount}
+          {copy.comments}
+          {p.commentCount}
         </button>
       )}
       {app && p.status === "live" && (
@@ -200,7 +206,7 @@ const RowActions = ({
           onClick={() => onRepublish(p)}
           data-tip={copy.publishTip}
         >
-          Republish
+          {copy.republish}
         </button>
       )}
       <button
@@ -214,7 +220,7 @@ const RowActions = ({
             : "Deletes the old per-design Cloudflare Worker"
         }
       >
-        Unpublish
+        {copy.unpublish}
       </button>
     </>
   );
@@ -250,7 +256,7 @@ const PublicationRow = ({
           )}
           {!isReadOnlyPublication(p) && p.backend !== "app" && (
             <span className="publish-legacy-tag" data-tip={copy.workerTip}>
-              Old Worker
+              {copy.oldWorker}
             </span>
           )}
         </span>
@@ -288,7 +294,7 @@ const PublicationRow = ({
               target="_blank"
               rel="noreferrer noopener"
             >
-              Open
+              {copy.open}
             </a>
             <CopyButton text={p.url} label="Copy link" />
           </span>

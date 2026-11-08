@@ -21,6 +21,7 @@ import { frameName } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { CritiquePanel } from "../critique/index.js";
 import type { FilesChange } from "../home/use-studio-data.js";
+import { copy } from "./copy.js";
 import { useReview } from "./use-review.js";
 
 import "../../styles/review.css";
@@ -157,7 +158,7 @@ const ReviewEntry = (p: Props): ReactElement => {
       ) : (
         <Icon name="review" size={14} />
       )}
-      <span>Review</span>
+      <span>{copy.review}</span>
       {count !== null && count > 0 && (
         <span
           className={`review-badge ${review.stale ? "stale" : (sev ?? "low")}`}

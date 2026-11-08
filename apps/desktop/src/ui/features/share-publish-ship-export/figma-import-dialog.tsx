@@ -200,7 +200,7 @@ const JsonPaste = ({
   return (
     <div className="field">
       <label className="field">
-        <span>Frame JSON</span>
+        <span>{copy.frameJson}</span>
         <textarea
           className="mono"
           rows={5}
@@ -216,9 +216,10 @@ const JsonPaste = ({
         />
       </label>
       <p id="fgi-json-help" className="fgi-facts">
-        {bad ? "This is not Figma frame JSON. " : ""}Open {nodesUrl(link)} with
-        your Figma token (X-Figma-Token header) and paste the reply here. To use
-        links, start the studio with STUDIO_FIGMA_FETCH=1 and FIGMA_TOKEN.
+        {bad ? "This is not Figma frame JSON. " : ""}
+        {copy.open2}
+        {nodesUrl(link)}
+        {copy.withYourFigmaToken}
       </p>
       <div>
         <button
@@ -227,7 +228,7 @@ const JsonPaste = ({
           disabled={text.trim() === ""}
           onClick={use}
         >
-          Use JSON
+          {copy.applyJson}
         </button>
       </div>
     </div>
@@ -269,7 +270,7 @@ const FailureNote = ({ failure }: { failure: string }): ReactElement => {
             onClick={() => setOpen(!open)}
           >
             <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
-            Details
+            {copy.details}
           </button>
           {open && <p className="fgi-details">{plain.details}</p>}
         </>
@@ -409,18 +410,17 @@ const FigmaImportDialog = ({
       >
         <div className="modal-head">
           <div className="titles">
-            <h2>Import Figma frame</h2>
+            <h2>{copy.importFigmaFrame}</h2>
             <p>
-              {preview?.fileName ? `From ${preview.fileName}. ` : ""}Auto layout
-              becomes flex, colors use your tokens, and kit instances become
-              components.
+              {preview?.fileName ? `From ${preview.fileName}. ` : ""}
+              {copy.autoLayoutBecomesFlex}
             </p>
           </div>
         </div>
         <div className="modal-body fgi-form">
           {frames.length > 1 && (
             <div className="field">
-              <span>Frame</span>
+              <span>{copy.frame}</span>
               <UiSelect
                 className="ins-select fgi-select"
                 aria-label={copy.frame}
@@ -434,7 +434,7 @@ const FigmaImportDialog = ({
             </div>
           )}
           <div className="field">
-            <span>Place</span>
+            <span>{copy.place}</span>
             <UiSelect
               className="ins-select fgi-select"
               aria-label={copy.place}
@@ -449,7 +449,7 @@ const FigmaImportDialog = ({
           </div>
           {preview && <Summary preview={preview} />}
           {loading && !preview && !failure && (
-            <div className="fgi-loading">Reading the Figma frame…</div>
+            <div className="fgi-loading">{copy.readingTheFigmaFrame}</div>
           )}
           {failure && <FailureNote failure={failure} />}
           <JsonFallback
@@ -468,7 +468,7 @@ const FigmaImportDialog = ({
             onClick={onClose}
             disabled={busy}
           >
-            Cancel
+            {copy.cancel}
           </button>
           <button
             type="submit"

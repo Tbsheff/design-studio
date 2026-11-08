@@ -112,7 +112,7 @@ const ErrorsPanel = ({
           <Icon name="chevronDown" size={12} />
         </button>
         <button className="btn ghost small" onClick={onClear}>
-          Clear
+          {copy.clear}
         </button>
       </div>
       <ul className="error-list">
@@ -125,7 +125,7 @@ const ErrorsPanel = ({
                 onClick={() => onSendToAgent(e)}
               >
                 <Icon name="sparkle" size={14} />
-                Send to agent
+                {copy.sendToAgent}
               </button>
             </div>
             <div className="mono error-msg">{e.message}</div>

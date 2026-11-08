@@ -178,7 +178,7 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
         {error ? (
           <p className="rules-error">{error}</p>
         ) : (
-          <p className="pane-system-text">Loading rules…</p>
+          <p className="pane-system-text">{copy.loadingRules}</p>
         )}
       </section>
     );
@@ -196,7 +196,7 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
   return (
     <section className="rules-editor" aria-label={copy.designRules}>
       <div className="rules-head">
-        <h3>Design rules</h3>
+        <h3>{copy.designRules}</h3>
         {imported && (
           <button
             type="button"
@@ -205,13 +205,13 @@ const RulesEditor = ({ projectId, directionId }: Props): ReactElement => {
             data-tip-align="end"
             onClick={() => setText(withImport(text, imported))}
           >
-            Import from docs
+            {copy.importFromDocs}
           </button>
         )}
       </div>
       <p className="pane-system-text">
-        {originText(state)} The agent follows every rule. Review checks class,
-        token, font and component rules.
+        {originText(state)}
+        {copy.theAgentFollowsEvery}
       </p>
       <textarea
         className="rules-input"

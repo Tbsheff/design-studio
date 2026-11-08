@@ -86,9 +86,12 @@ const FindingRow = ({
         {finding.copies &&
           finding.copies > 1 &&
           !finding.element.startsWith("in ") && (
-            <span className="review-copies">{finding.copies} copies</span>
+            <span className="review-copies">
+              {finding.copies}
+              {copy.copies}
+            </span>
           )}
-        {finding.shared && <span className="review-copies">shared</span>}
+        {finding.shared && <span className="review-copies">{copy.shared}</span>}
       </button>
       <p className="review-msg">{finding.message}</p>
       <div className="review-actions">
@@ -130,7 +133,7 @@ const FindingRow = ({
             onClick={() => a.onAsk(finding)}
           >
             <Icon name="chat" size={12} />
-            Ask agent
+            {copy.askAgent}
           </button>
         )}
       </div>
@@ -166,7 +169,8 @@ const Group = ({
             data-tip-align="end"
             onClick={() => a.onFix(fixable)}
           >
-            Fix all {fixable.length}
+            {copy.fixAll}
+            {fixable.length}
           </button>
         )}
       </div>
@@ -193,7 +197,7 @@ const Summary = ({ review }: { review: ReviewState }): ReactElement | null => {
   return (
     <div className="review-summary">
       <span>{parts.length > 0 ? parts.join(" · ") : "No findings"}</span>
-      {review.stale && <span className="badge warn">Out of date</span>}
+      {review.stale && <span className="badge warn">{copy.outOfDate}</span>}
       {result.notes.map((note) => (
         <span key={note} className="muted">
           {note}
@@ -218,19 +222,16 @@ const Body = ({
 
   return (
     <div className="review-body">
-      {!live && (
-        <div className="alert">
-          Review checks the live design. Switch the canvas source to Live.
-        </div>
-      )}
+      {!live && <div className="alert">{copy.reviewChecksTheLive}</div>}
       {review.error && <div className="alert error">{review.error}</div>}
       {review.busy && !result && (
         <div className="review-wait">
-          <span className="spinner" /> Checking the frame…
+          <span className="spinner" />
+          {copy.checkingTheFrame}
         </div>
       )}
       {result && result.findings.length === 0 && (
-        <div className="review-wait">This frame passes every check.</div>
+        <div className="review-wait">{copy.thisFramePassesEvery}</div>
       )}
       {result &&
         grouped(result.findings).map(([kind, list]) => (
@@ -296,7 +297,7 @@ const ReviewPanel = (p: Props): ReactElement => {
     >
       <div className="review-head">
         <Icon name="check" />
-        <strong>Review</strong>
+        <strong>{copy.review}</strong>
         <span className="muted truncate">{p.frameLabel}</span>
         <div className="spacer" />
         <button

@@ -65,7 +65,9 @@ const CheckScreenshot = ({
   }, [projectId, filePath]);
 
   if (failed) {
-    return <div className="muted small-text">Screenshot not available</div>;
+    return (
+      <div className="muted small-text">{copy.screenshotNotAvailable}</div>
+    );
   }
 
   if (!src) {
@@ -187,7 +189,7 @@ const RenderCheckPanel = ({
     >
       <div className="check-head">
         <Icon name="scan" />
-        <strong>Render check</strong>
+        <strong>{copy.renderCheck}</strong>
         <div className="spacer" />
         <button className="icon-btn" aria-label={copy.close} onClick={onClose}>
           <Icon name="close" />
@@ -197,7 +199,8 @@ const RenderCheckPanel = ({
         {error && <div className="alert error">{error}</div>}
         {hidden > 0 && (
           <div className="muted small-text" data-tip={copy.findingsThePage}>
-            {hidden} old, hidden
+            {hidden}
+            {copy.oldHidden}
           </div>
         )}
         {shown.map(({ result: r, problems, layout, overflow }) => {
@@ -222,15 +225,17 @@ const RenderCheckPanel = ({
                       : "Mobile"}
                 </span>
                 <span className="muted num">
-                  {r.width} × {r.height}
+                  {r.width}
+                  {copy.times}
+                  {r.height}
                 </span>
                 {overflow && (
-                  <span className="badge warn">Horizontal overflow</span>
+                  <span className="badge warn">{copy.horizontalOverflow}</span>
                 )}
                 {layout.length > 0 && (
                   <span className="badge warn">
-                    {layoutTotal} layout{" "}
-                    {layoutTotal === 1 ? "issue" : "issues"}
+                    {layoutTotal}
+                    {copy.layout} {layoutTotal === 1 ? "issue" : "issues"}
                   </span>
                 )}
               </div>
@@ -239,7 +244,9 @@ const RenderCheckPanel = ({
                   {layout.map((f, i) => (
                     <li key={i}>
                       <strong>{f.kind}</strong>{" "}
-                      <code>{f.source ?? f.selector}</code>: {f.detail}
+                      <code>{f.source ?? f.selector}</code>
+                      {copy.colon}
+                      {f.detail}
                     </li>
                   ))}
                 </ul>

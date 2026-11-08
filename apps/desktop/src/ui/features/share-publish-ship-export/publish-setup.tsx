@@ -88,7 +88,7 @@ const InstallStep = ({
           disabled={busy}
           onClick={() => void run(() => publishApi.cli(true))}
         >
-          Check again
+          {copy.checkAgain}
         </button>
       </div>
     </div>
@@ -110,10 +110,7 @@ const SignInStep = ({
   if (cli.login.running) {
     return (
       <div className="publish-step" data-testid="publish-signing-in">
-        <p className="publish-step-text">
-          Finish the Cloudflare sign-in in your browser. This page updates when
-          it is done.
-        </p>
+        <p className="publish-step-text">{copy.finishTheCloudflareSign}</p>
         <div className="publish-step-actions">
           {cli.login.url && (
             <a
@@ -122,7 +119,7 @@ const SignInStep = ({
               target="_blank"
               rel="noreferrer noopener"
             >
-              Open sign-in page
+              {copy.openSignInPage}
             </a>
           )}
           <button
@@ -131,7 +128,7 @@ const SignInStep = ({
             disabled={busy}
             onClick={() => void run(() => publishApi.cancelLogin())}
           >
-            Cancel
+            {copy.cancel}
           </button>
         </div>
       </div>
@@ -141,9 +138,9 @@ const SignInStep = ({
   return (
     <div className="publish-step" data-testid="publish-sign-in">
       <p className="publish-step-text">
-        cf {cli.version} is ready. Sign in to the Cloudflare account that will
-        host your designs. Design Studio never sees your password or token; cf
-        keeps the sign-in.
+        {copy.cf}
+        {cli.version}
+        {copy.isReadySignIn}
       </p>
       {cli.login.error && <p className="publish-error">{cli.login.error}</p>}
       <label className="publish-check">
@@ -152,7 +149,7 @@ const SignInStep = ({
           checked={keyring}
           onChange={(e) => setKeyring(e.target.checked)}
         />
-        <span>Lock the sign-in with a key in the macOS Keychain</span>
+        <span>{copy.lockTheSignIn}</span>
       </label>
       <label className="publish-check" data-tip={copy.offCfAsks}>
         <input
@@ -160,7 +157,7 @@ const SignInStep = ({
           checked={narrow}
           onChange={(e) => setNarrow(e.target.checked)}
         />
-        <span>Ask only for Workers access</span>
+        <span>{copy.askOnlyForWorkers}</span>
       </label>
       <div className="publish-step-actions">
         <button
@@ -169,7 +166,7 @@ const SignInStep = ({
           disabled={busy}
           onClick={() => void run(() => publishApi.login(keyring, narrow))}
         >
-          Sign in with Cloudflare
+          {copy.signInWithCloudflare}
         </button>
       </div>
     </div>
@@ -187,12 +184,12 @@ const AccountStep = ({
 }): ReactElement => (
   <div className="publish-step" data-testid="publish-signed-in">
     <div className="publish-kv">
-      <span>Signed in</span>
+      <span>{copy.signedIn}</span>
       <strong className="truncate">{cli.email ?? "Cloudflare account"}</strong>
     </div>
     {cli.accounts.length > 1 ? (
       <label className="field">
-        <span>Account</span>
+        <span>{copy.account}</span>
         <select
           value={cli.accountId ?? ""}
           disabled={busy}
@@ -200,7 +197,7 @@ const AccountStep = ({
             void run(() => publishApi.setAccount(e.target.value || null))
           }
         >
-          <option value="">Pick an account</option>
+          <option value="">{copy.pickAnAccount}</option>
           {cli.accounts.map((a) => (
             <option key={a.id} value={a.id}>
               {a.name}
@@ -210,12 +207,12 @@ const AccountStep = ({
       </label>
     ) : (
       <div className="publish-kv">
-        <span>Account</span>
+        <span>{copy.account}</span>
         <strong className="truncate">{cli.accounts[0]?.name ?? "None"}</strong>
       </div>
     )}
     <div className="publish-kv">
-      <span>Address</span>
+      <span>{copy.address}</span>
       <code className="mono truncate">
         {cli.subdomain
           ? `<name>.${cli.subdomain}.workers.dev`
@@ -230,7 +227,7 @@ const AccountStep = ({
         onClick={() => void run(() => publishApi.cli(true))}
         data-tip={copy.asksCfWho}
       >
-        Test connection
+        {copy.testConnection}
       </button>
       <button
         type="button"
@@ -239,7 +236,7 @@ const AccountStep = ({
         onClick={() => void run(() => publishApi.logout())}
         data-tip={copy.runsCfAuth}
       >
-        Sign out
+        {copy.signOut}
       </button>
     </div>
   </div>
@@ -292,11 +289,8 @@ const PublishSetup = (): ReactElement => {
       className="ship-settings publish-settings"
       aria-label={copy.publishing}
     >
-      <h3>Publishing</h3>
-      <p className="field-help">
-        Share › Publish puts a saved version on your own Cloudflare account. One
-        Worker serves every design; files go to R2, links and view counts to D1.
-      </p>
+      <h3>{copy.publishing}</h3>
+      <p className="field-help">{copy.sharePublishPutsA}</p>
       <PublishSetupBody state={state} backend={backend} />
     </section>
   );

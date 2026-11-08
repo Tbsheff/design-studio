@@ -133,7 +133,7 @@ const BackendSetup = ({
       <p className="publish-step-text">{summary(backend)}</p>
       {backend.keyStore && (
         <div className="publish-kv">
-          <span>Publish key</span>
+          <span>{copy.publishKey}</span>
           <strong>
             {backend.keyStore === "keychain"
               ? "In the macOS Keychain"
@@ -177,7 +177,7 @@ const BackendSetup = ({
             onClick={() => void setup("local")}
             data-tip={copy.developmentOnlyLocal}
           >
-            Set up local test server
+            {copy.setUpLocalTest}
           </button>
         )}
         {backend.setUpAt && (
@@ -188,7 +188,7 @@ const BackendSetup = ({
             onClick={() => void load(true)}
             data-tip={copy.callsTheWorker}
           >
-            Test connection
+            {copy.testConnection}
           </button>
         )}
       </div>

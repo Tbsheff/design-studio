@@ -1,13 +1,6 @@
-import { usePopover } from "@design-studio/ui";
-import { useCallback, useRef, useState } from "react";
-import type {
-  Dispatch,
-  KeyboardEvent as ReactKeyboardEvent,
-  PointerEvent as ReactPointerEvent,
-  ReactElement,
-  RefObject,
-  SetStateAction,
-} from "react";
+import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
+
+import { FrameResizeEdge } from "./frame-resize-edge.js";
 
 type ResizeEdge = "right" | "bottom" | "corner";
 
@@ -31,40 +24,24 @@ const passToElementHandle = (event3: ReactPointerEvent): boolean => {
 
   event3.stopPropagation();
 
-  const {
-    clientX,
-    clientY,
-    screenX,
-    screenY,
-    pointerId,
-    pointerType,
-    isPrimary,
-    button,
-    buttons,
-    shiftKey,
-    altKey,
-    metaKey,
-    ctrlKey,
-  } = event3;
-
   handle.dispatchEvent(
     new PointerEvent("pointerdown", {
-      altKey,
+      altKey: event3.altKey,
       bubbles: true,
-      button,
-      buttons,
+      button: event3.button,
+      buttons: event3.buttons,
       cancelable: true,
-      clientX,
-      clientY,
+      clientX: event3.clientX,
+      clientY: event3.clientY,
       composed: true,
-      ctrlKey,
-      isPrimary,
-      metaKey,
-      pointerId,
-      pointerType,
-      screenX,
-      screenY,
-      shiftKey,
+      ctrlKey: event3.ctrlKey,
+      isPrimary: event3.isPrimary,
+      metaKey: event3.metaKey,
+      pointerId: event3.pointerId,
+      pointerType: event3.pointerType,
+      screenX: event3.screenX,
+      screenY: event3.screenY,
+      shiftKey: event3.shiftKey,
     })
   );
 
@@ -77,78 +54,18 @@ const FrameResizeHandles = ({
   onPointerDown: (event4: ReactPointerEvent, edge: ResizeEdge) => void;
 }): ReactElement => (
   <>
-    {EDGES.map(({ edge, label }) => (
-      <div
+    {EDGES.map(({ edge }) => (
+      <FrameResizeEdge
         key={edge}
-        className={`frame-resize ${edge}`}
-        aria-hidden="true"
-        data-edge={edge}
-        onPointerDown={(event5) =>
-          passToElementHandle(event5) || onPointerDown(event5, edge)
-        }
+        edge={edge}
+        isPassed={passToElementHandle}
+        start={onPointerDown}
       />
     ))}
     <span className="frame-size-readout" aria-hidden="true" />
   </>
 );
 
-const MENU_STEP: Record<string, (index: number, count: number) => number> = {
-  ArrowDown: (index, count) => (index + 1) % count,
-  ArrowUp: (index, count) => (index - 1 + count) % count,
-  End: (_index, count) => count - 1,
-  Home: () => 0,
-};
-
-const menuKeys = (
-  event: ReactKeyboardEvent<HTMLElement>,
-  close: (refocus: boolean) => void
-): void => {
-  const step = MENU_STEP[event.key];
-
-  if (event.key === "Tab") {
-    close(false);
-  }
-
-  if (!step) {
-    return;
-  }
-
-  event.preventDefault();
-
-  const items = [
-    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
-      '[role="menuitem"]'
-    ),
-  ];
-
-  const index = items.indexOf(document.activeElement as HTMLButtonElement);
-  items[step(Math.max(0, index), items.length)]?.focus();
-};
-
-const useMenu = (): {
-  close: (refocus: boolean) => void;
-  open: boolean;
-  root: RefObject<HTMLDivElement | null>;
-  setOpen: Dispatch<SetStateAction<boolean>>;
-  trigger: RefObject<HTMLButtonElement | null>;
-} => {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-
-  const close = useCallback((refocus: boolean) => {
-    setOpen(false);
-
-    if (refocus) {
-      trigger.current?.focus();
-    }
-  }, []);
-
-  usePopover(open, root, close);
-
-  return { close, open, root, setOpen, trigger };
-};
-
-export { FrameResizeHandles, menuKeys, useMenu };
+export { FrameResizeHandles };
 
 export type { ResizeEdge };

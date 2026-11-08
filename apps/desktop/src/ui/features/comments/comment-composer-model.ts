@@ -39,7 +39,7 @@ interface ComposerProps {
   frame: { width: number; height: number };
   breadcrumb: Breadcrumb;
   initial: string | null;
-  autoFocus: boolean;
+  shouldFocus: boolean;
   trap: boolean;
   focusRef?: RefObject<HTMLTextAreaElement | null>;
   draftKey: string;

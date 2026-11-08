@@ -1369,3 +1369,12 @@ fieldset.compare-modes {
 .element-moving .resize-frame {
   display: none;
 }
+
+dialog.canvas-menu {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  color: inherit;
+}

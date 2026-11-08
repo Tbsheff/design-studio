@@ -1,8 +1,9 @@
 import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import { reloadFramesMatching } from "../../platform/stage-dom.js";
 import { uiStore } from "../../platform/storage.js";
 import type { PanelTab } from "../../platform/use-panel-tab.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
@@ -10,7 +11,7 @@ import type { CanvasTool } from "./top-bar-menu.js";
 
 interface CanvasShell {
   pane: PanelTab;
-  onPane: (tab: PanelTab) => void | Promise<boolean>;
+  onPane: (tab: PanelTab) => Promise<boolean>;
   layersHost: HTMLElement | null;
   directionName: string | null;
   paneCollapsed: boolean;
@@ -37,12 +38,23 @@ const useShellState = (
   comment: CommentTool,
   setSelectMode: SetSelectMode
 ): void => {
-  const onPane = useRef(shell?.onPane);
-  onPane.current = shell?.onPane;
   const pane = shell?.pane;
-  const commentRef = useRef(comment);
-  commentRef.current = comment;
   const wasOn = useRef(comment.on);
+
+  const openPane = useEffectEvent(async (): Promise<void> => {
+    const moved = await shell?.onPane("comments");
+
+    if (moved === false) {
+      comment.setOn(false);
+    }
+  });
+
+  const closeComment = useEffectEvent((): void => {
+    if (comment.on) {
+      comment.setOn(false);
+    }
+  });
+
   useEffect(() => {
     const before = wasOn.current;
     wasOn.current = comment.on;
@@ -51,16 +63,9 @@ const useShellState = (
       return;
     }
 
-    const openPane = async (): Promise<void> => {
-      const moved = await onPane.current?.("comments");
-
-      if (moved === false) {
-        commentRef.current.setOn(false);
-      }
-    };
-
-    void openPane();
+    openPane();
   }, [comment.on]);
+
   const prevPane = useRef(pane);
   useEffect(() => {
     const before = prevPane.current;
@@ -70,8 +75,8 @@ const useShellState = (
       return;
     }
 
-    if (pane !== "comments" && commentRef.current.on) {
-      commentRef.current.setOn(false);
+    if (pane !== "comments") {
+      closeComment();
     }
 
     if (before === "design") {
@@ -80,20 +85,28 @@ const useShellState = (
   }, [pane, setSelectMode]);
 };
 
+interface ShellPaneInput {
+  readonly layersOpenSetting: boolean;
+  readonly live: boolean;
+  readonly selectMode: boolean;
+  readonly setSelectMode: SetSelectMode;
+}
+
+interface ShellPane {
+  readonly closeLayers: () => void;
+  readonly layersOpen: boolean;
+  readonly picking: boolean;
+  readonly place: (panel: ReactNode) => ReactNode;
+  readonly toggleEdit: () => void;
+}
+
 const useShellPane = (
   shell: CanvasShell | undefined,
   comment: CommentTool,
-  selectMode: boolean,
-  setSelectMode: SetSelectMode,
-  live: boolean,
-  layersOpenSetting: boolean
-): {
-  closeLayers: () => void | Promise<boolean>;
-  layersOpen: boolean;
-  picking: boolean;
-  place: (panel: ReactNode) => ReactNode;
-  toggleEdit: () => void | Promise<boolean> | undefined;
-} => {
+  input: ShellPaneInput
+): ShellPane => {
+  const { layersOpenSetting, live, selectMode, setSelectMode } = input;
+
   useShellState(shell, comment, setSelectMode);
   const picking = selectMode || (shell?.pane === "design" && !comment.on);
 
@@ -102,18 +115,30 @@ const useShellPane = (
   if (shell) {
     editOpen = shell.pane === "design";
   }
+
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
 
-  const toggleEdit = (): void | Promise<boolean> | undefined =>
-    shell?.onPane(shell.pane === "design" ? "chat" : "design");
-
-  const closeLayers = (): void | Promise<boolean> => {
-    if (shell) {
-      return shell.onPane("chat");
+  const toggleEdit = (): void => {
+    if (!shell) {
+      return;
     }
 
-    return uiStore.set({ layersOpen: false });
+    if (shell.pane === "design") {
+      shell.onPane("chat");
+    } else {
+      shell.onPane("design");
+    }
+  };
+
+  const closeLayers = (): void => {
+    if (shell) {
+      shell.onPane("chat");
+
+      return;
+    }
+
+    uiStore.set({ layersOpen: false });
   };
 
   const place = (panel: ReactNode): ReactNode => {
@@ -169,13 +194,9 @@ const toolOf = (
 };
 
 const reloadFrames = (stage: HTMLElement | null): void => {
-  stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame").forEach((el) => {
-    const { src } = el;
-
-    if (src) {
-      el.src = src;
-    }
-  });
+  if (stage) {
+    reloadFramesMatching("iframe.frame", stage);
+  }
 };
 
 const scopeOf = (selection: SelectionContext[]): string | null => {
@@ -183,7 +204,7 @@ const scopeOf = (selection: SelectionContext[]): string | null => {
     return `${selection.length} elements`;
   }
 
-  const first = selection[0];
+  const [first] = selection;
 
   if (first) {
     return `the ${first.tag}`;
@@ -194,4 +215,10 @@ const scopeOf = (selection: SelectionContext[]): string | null => {
 
 export { fileNameOf, reloadFrames, scopeOf, toolOf, useShellPane };
 
-export type { CanvasShell, CommentTool, SetSelectMode };
+export type {
+  CanvasShell,
+  CommentTool,
+  SetSelectMode,
+  ShellPane,
+  ShellPaneInput,
+};

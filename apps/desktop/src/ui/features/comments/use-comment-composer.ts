@@ -53,7 +53,7 @@ const useCommentComposer = (props: ComposerProps): CommentComposerState => {
   const placement = useComposerPlacement(props, card);
   const { closeWith, isClosing } = useComposerClose();
 
-  useAutoFocus(props.autoFocus, area);
+  useAutoFocus(props.shouldFocus, area);
 
   const readyIds = useMemo(
     () => toReadyImageIds(images.images),

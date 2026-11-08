@@ -6,7 +6,7 @@ import type {
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 
 import { errorText } from "../../api";
-import type { CanvasSource } from "../../features/canvas/canvas-toolbar";
+import type { CanvasSource } from "../../domain/canvas-presets.js";
 import type { MentionRequest } from "../../features/chat/use-mentions";
 import type { PrefillRequest } from "../../features/comments";
 import { useRail } from "../../features/home/project-rail";

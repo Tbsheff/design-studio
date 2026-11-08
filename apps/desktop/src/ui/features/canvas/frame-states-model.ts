@@ -74,7 +74,9 @@ const load = (projectId: string): void => {
   void fetchView(projectId);
 };
 
-type FrameStatesRead = FrameStatesView | null | undefined;
+const FRAME_STATES_PENDING = "pending";
+
+type FrameStatesRead = FrameStatesView | typeof FRAME_STATES_PENDING | null;
 
 const useFrameStates = (projectId: string, isApp: boolean): FrameStatesRead => {
   useEffect(() => {
@@ -109,7 +111,7 @@ const useFrameStates = (projectId: string, isApp: boolean): FrameStatesRead => {
 
   const read = useCallback(() => {
     if (isApp) {
-      return views.get(projectId);
+      return views.get(projectId) ?? FRAME_STATES_PENDING;
     }
 
     return null;
@@ -142,12 +144,20 @@ const useCurrentFrameStates = (): {
 const frameStateOf = (view: FrameStatesView | null, frameId: string): string =>
   view?.frames[frameId] ?? DEFAULT_FRAME_STATE;
 
+const toLoadedStates = (read: FrameStatesRead): FrameStatesView | null => {
+  if (read === FRAME_STATES_PENDING) {
+    return null;
+  }
+
+  return read;
+};
+
 const frameStateUrl = (
   url: string | null,
   view: FrameStatesRead,
   frameId: string
 ): string | null => {
-  if (!url || view === undefined) {
+  if (!url || view === FRAME_STATES_PENDING) {
     return null;
   }
 
@@ -164,12 +174,16 @@ const setFrameState = async (
   state: string,
   mock?: FrameStateMock
 ): Promise<FrameStateDef> => {
-  const done = await call(routes.setFrameStateCanvas, {
-    frame: frameId,
-    projectId,
-    state,
-    ...(mock ? { mock } : {}),
-  });
+  const base = { frame: frameId, projectId, state };
+
+  if (mock) {
+    const mocked = await call(routes.setFrameStateCanvas, { ...base, mock });
+    store(projectId, mocked.view);
+
+    return mocked.state;
+  }
+
+  const done = await call(routes.setFrameStateCanvas, base);
 
   store(projectId, done.view);
 
@@ -180,11 +194,22 @@ const setFrameSession = async (
   projectId: string,
   change: { user?: MockUser; forget?: boolean }
 ): Promise<void> => {
-  const view = await call(routes.updateFrameSessionCanvas, {
-    projectId,
-    ...(change.forget === undefined ? {} : { forget: change.forget }),
-    ...(change.user ? { user: change.user } : {}),
-  });
+  const { forget, user } = change;
+  let view = null;
+
+  if (forget && user) {
+    view = await call(routes.updateFrameSessionCanvas, {
+      forget,
+      projectId,
+      user,
+    });
+  } else if (forget) {
+    view = await call(routes.updateFrameSessionCanvas, { forget, projectId });
+  } else if (user) {
+    view = await call(routes.updateFrameSessionCanvas, { projectId, user });
+  } else {
+    view = await call(routes.updateFrameSessionCanvas, { projectId });
+  }
 
   store(projectId, view);
 };
@@ -194,6 +219,7 @@ export {
   frameStateUrl,
   setFrameSession,
   setFrameState,
+  toLoadedStates,
   useCurrentFrameStates,
   useFrameStates,
 };

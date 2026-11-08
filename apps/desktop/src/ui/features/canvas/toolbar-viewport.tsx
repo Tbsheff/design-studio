@@ -14,7 +14,7 @@ const MIN_4000 = 4000;
 
 interface Props {
   viewport: Viewport;
-  drawMode?: boolean;
+  drawMode: boolean | null;
   onToggleDraw?: () => void;
   source: CanvasSource;
   onSource: (canvasSource: CanvasSource) => void;

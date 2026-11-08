@@ -68,14 +68,12 @@ const useCanvasStage = (props: ViewProps) => {
   const commentMode = comment.on;
   const live = source.kind === "live";
 
-  const pane = useShellPane(
-    props.shell,
-    comment,
+  const pane = useShellPane(props.shell, comment, {
+    layersOpenSetting: ui.layersOpen,
+    live,
     selectMode,
     setSelectMode,
-    live,
-    ui.layersOpen
-  );
+  });
 
   const [protoOn, setProtoOn] = useState(false);
   const { layersOpen, toggleEdit } = pane;

@@ -1,11 +1,12 @@
 import type { BridgeToParent, ProjectKind } from "@design-studio/contracts";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
 import { lofiCss } from "../../../shared/lofi.js";
 import { frameTokenOf, postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
 import { readBlob } from "../../platform/http.js";
+import { listStageFrameElements } from "../../platform/stage-dom.js";
 
 let cssLoad: Promise<string> | null = null;
 
@@ -14,7 +15,7 @@ const toBase64 = (bytes: Uint8Array): string => {
   const step = 0x80_00;
 
   for (let index = 0; index < bytes.length; index += step) {
-    text += String.fromCharCode(...bytes.subarray(index, index + step));
+    text += String.fromCodePoint(...bytes.subarray(index, index + step));
   }
 
   return btoa(text);
@@ -36,7 +37,7 @@ const fetchLofiCss = async (): Promise<string> => {
     );
   } catch (error: unknown) {
     cssLoad = null;
-    console.error("[lofi] font load failed", error);
+    reportError(error);
 
     return lofiCss("data:font/woff2;base64,");
   }
@@ -61,30 +62,26 @@ const stageFrames = (
     return [];
   }
 
-  const out: LofiFrame[] = [];
-
-  for (const element of stage.querySelectorAll<HTMLIFrameElement>(
-    "iframe.frame"
-  )) {
-    const token = frameTokenOf(element);
+  return listStageFrameElements(stage).flatMap((found) => {
+    const token = frameTokenOf(found.element);
 
     if (!token) {
-      continue;
+      return [];
     }
 
-    const host = element.closest<HTMLElement>("[data-direction-id], .artboard");
-    const directionId = host?.dataset.directionId ?? currentId;
-    out.push({
-      directionId,
-      element,
-      key: token,
-      kind,
-      token,
-      url: element.src,
-    });
-  }
+    const { src: url } = found.element;
 
-  return out;
+    return [
+      {
+        directionId: found.directionId ?? currentId,
+        element: found.element,
+        key: token,
+        kind,
+        token,
+        url,
+      },
+    ];
+  });
 };
 
 const useLofiFrames = (
@@ -94,51 +91,52 @@ const useLofiFrames = (
   lofi: readonly string[]
 ): void => {
   const sent = useRef(new WeakMap<HTMLIFrameElement, boolean>());
-  const latest = useRef({ currentId, kind, lofi });
-  latest.current = { currentId, kind, lofi };
 
-  const frames = (): LofiFrame[] =>
-    stageFrames(
-      stageRef.current,
-      latest.current.kind,
-      latest.current.currentId
-    );
+  const frames = useCallback(
+    (): LofiFrame[] => stageFrames(stageRef.current, kind, currentId),
+    [stageRef, kind, currentId]
+  );
 
-  const wants = (frame: LofiFrame): boolean =>
-    frame.directionId !== null &&
-    latest.current.lofi.includes(frame.directionId);
+  const wants = useCallback(
+    (frame: LofiFrame): boolean =>
+      frame.directionId !== null && lofi.includes(frame.directionId),
+    [lofi]
+  );
 
-  const sync = (frame: LofiFrame, force: boolean): void => {
-    const { element } = frame;
+  const sync = useCallback(
+    (frame: LofiFrame, force: boolean): void => {
+      const { element } = frame;
 
-    if (!element) {
-      return;
-    }
-
-    const on = wants(frame);
-
-    if (!force && (sent.current.get(element) ?? false) === on) {
-      return;
-    }
-
-    sent.current.set(element, on);
-
-    if (!on) {
-      postToFrame(frame, { css: "", type: "lofi-preview" });
-
-      return;
-    }
-
-    const sendCss = async (): Promise<void> => {
-      const css = await loadLofiCss();
-
-      if (sent.current.get(element) === true && wants(frame)) {
-        postToFrame(frame, { css, type: "lofi-preview" });
+      if (!element) {
+        return;
       }
-    };
 
-    void sendCss();
-  };
+      const on = wants(frame);
+
+      if (!force && (sent.current.get(element) ?? false) === on) {
+        return;
+      }
+
+      sent.current.set(element, on);
+
+      if (!on) {
+        postToFrame(frame, { css: "", type: "lofi-preview" });
+
+        return;
+      }
+
+      const sendCss = async (): Promise<void> => {
+        const css = await loadLofiCss();
+
+        if (sent.current.get(element) === true && wants(frame)) {
+          postToFrame(frame, { css, type: "lofi-preview" });
+        }
+      };
+
+      void sendCss();
+    },
+    [wants]
+  );
 
   useBridge(frames, (frame: BridgeFrame, message: BridgeToParent) => {
     if (message.type !== "ready") {
@@ -153,11 +151,13 @@ const useLofiFrames = (
   });
 
   const key = lofi.join(",");
+
   useEffect(() => {
     for (const frame of frames()) {
       sync(frame, false);
     }
   });
+
   useEffect(() => {
     if (key) {
       void loadLofiCss();

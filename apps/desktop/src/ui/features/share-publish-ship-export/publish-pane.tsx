@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 
 import type { Publication } from "../../../shared/publish.js";
 import { useNow } from "../../platform/clock.js";
-import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
+import { canvasFrameName, framePage } from "../canvas/index.js";
 import { toFrameLabels } from "./frame-labels.js";
 import { PublishDoneNote } from "./publish-done-note.js";
 import { PublishForm } from "./publish-form.js";

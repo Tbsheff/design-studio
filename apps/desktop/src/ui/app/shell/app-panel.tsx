@@ -3,7 +3,7 @@ import { envText } from "@design-studio/contracts/app";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import FlowTab from "../../features/canvas/flow-tab";
+import { FlowTab } from "../../features/canvas/flow-tab";
 import type { AppBarProps } from "./app-bar";
 import { AppPanelHead } from "./app-panel-head";
 import { AppPanelTabs } from "./app-panel-tabs";

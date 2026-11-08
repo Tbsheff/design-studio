@@ -1,3 +1,5 @@
+export { getDevNotesMarkdown } from "./dev-note-handoff.js";
+
 export { getSavedDevNotes } from "./dev-note-file.js";
 
 export { DevNoteStore } from "./dev-note-store.js";

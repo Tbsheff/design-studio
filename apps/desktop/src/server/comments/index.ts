@@ -13,6 +13,7 @@ export { MENTION_MAX } from "./run-payload.js";
 export {
   DevNoteStore,
   DevNoteWriter,
+  getDevNotesMarkdown,
   getSavedDevNotes,
 } from "./dev-note/index.js";
 

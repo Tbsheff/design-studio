@@ -17,4 +17,6 @@ const IS_MAC =
 const tipWithKey = (label: string, id: KeyId): string =>
   `${label}  ${shortcutLabel(id, IS_MAC)}`;
 
+export { KeyHint } from "./key-hint.js";
+
 export { IS_MAC, tipWithKey };

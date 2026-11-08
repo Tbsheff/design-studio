@@ -12,7 +12,7 @@ import {
 } from "./deps.js";
 import type { ProjectHit } from "./deps.js";
 import { globalCommands } from "./global-commands.js";
-import { IS_MAC } from "./key-model.js";
+import { IS_MAC } from "./keys.js";
 import { readRecent } from "./palette-model.js";
 import type { Row, RowActions } from "./palette-row-types.js";
 import { buildRows } from "./palette-rows.js";

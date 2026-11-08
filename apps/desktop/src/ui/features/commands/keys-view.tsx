@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
 import { keyParts } from "./deps.js";
-import { IS_MAC } from "./key-model.js";
+import { IS_MAC } from "./keys.js";
 
 interface LabelledPart {
   readonly id: string;

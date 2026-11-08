@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { authorInitial } from "./comment-avatar.js";
+import { authorInitial } from "./author-initial.js";
 import { copy } from "./copy.js";
 
 const CommentAuthor = ({

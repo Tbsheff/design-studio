@@ -1,6 +1,6 @@
 import { KEYMAP, chordMatches, isDesktop } from "./deps.js";
 import type { KeyBinding, KeyGroup } from "./deps.js";
-import { IS_MAC } from "./key-model.js";
+import { IS_MAC } from "./keys.js";
 
 const DESKTOP = "window" in globalThis && isDesktop();
 

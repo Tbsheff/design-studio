@@ -1,7 +1,7 @@
 import { toReason, withDisabled } from "./command-disabled.js";
 import { LEVEL_PRESETS, matchesKey } from "./deps.js";
 import type { ComposerMode, KeyInput, RunLevel } from "./deps.js";
-import { IS_MAC } from "./key-model.js";
+import { IS_MAC } from "./keys.js";
 import { collectCommands } from "./registry.js";
 import type { Command } from "./registry.js";
 

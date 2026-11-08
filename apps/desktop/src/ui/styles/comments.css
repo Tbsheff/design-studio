@@ -1035,7 +1035,8 @@ dialog.comment-card {
   font-weight: 400;
 }
 
-.comment-row-actions .icon.flip {
+.comment-row-actions .icon.flip,
+.comment-row-actions .flip-up .icon {
   rotate: 180deg;
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { createLiveStore } from "./deps.js";
 import type { IconName, KeyId } from "./deps.js";
-import { IS_MAC, tipWithKey } from "./key-model.js";
+import { IS_MAC, tipWithKey } from "./keys.js";
 
 const COMMAND_EVENT = "studio:command";
 const LAYER_EVENT = "studio:command-layer";

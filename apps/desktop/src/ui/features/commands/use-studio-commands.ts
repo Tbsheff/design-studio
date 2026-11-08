@@ -3,7 +3,7 @@ import type { RefObject } from "react";
 
 import { findElement, isTypingTarget, matchesKey } from "./deps.js";
 import type { KeyId } from "./deps.js";
-import { IS_MAC } from "./key-model.js";
+import { IS_MAC } from "./keys.js";
 import { listenForCommands, runCommand, useCommands } from "./registry.js";
 import type { Command } from "./registry.js";
 import type { StudioActions } from "./studio-actions.js";

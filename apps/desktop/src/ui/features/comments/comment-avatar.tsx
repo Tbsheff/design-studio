@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { authorInitial } from "./author-initial.js";
 import { Icon } from "./deps.js";
 
 const COUNT_MAX = 9;
@@ -11,9 +12,6 @@ interface AvatarProps {
   count?: number;
   author?: string | undefined;
 }
-
-const authorInitial = (author: string): string =>
-  (author.trim()[0] ?? "?").toUpperCase();
 
 const toFace = (
   initial: string | null,
@@ -64,4 +62,4 @@ const AvatarFace = ({
   );
 };
 
-export { authorInitial, AvatarFace };
+export { AvatarFace };

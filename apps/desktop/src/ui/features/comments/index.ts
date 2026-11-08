@@ -23,7 +23,15 @@ const ComposerComments = lazy(async () => {
   return { default: loaded.ComposerComments };
 });
 
-export { CommentLayer, CommentsPanel, ComposerComments };
+const QueuedComposerBar = lazy(async () => {
+  const loaded = await import("./queued-composer-bar.js");
+
+  return { default: loaded.QueuedComposerBar };
+});
+
+export { CommentLayer, CommentsPanel, ComposerComments, QueuedComposerBar };
+
+export { authorInitial } from "./author-initial.js";
 
 export { useComments } from "./use-comments.js";
 

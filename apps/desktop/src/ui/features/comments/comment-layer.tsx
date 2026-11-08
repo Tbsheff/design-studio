@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 
+import { ChatPickBar } from "./chat-pick-bar.js";
 import { reviewReport, onActiveFrame } from "./comment-anchors.js";
 import type { ActiveFrame } from "./comment-anchors.js";
 import { AvatarFace } from "./comment-avatar.js";
@@ -17,7 +18,6 @@ import {
 } from "./comment-placement.js";
 import type { PinOffset } from "./comment-placement.js";
 import { OpenCommentPopover } from "./comment-popover.js";
-import { ChatPickBar } from "./comments-panel.js";
 import {
   INLINE_PROMPT_OPEN_EVENT,
   anchorQueryOf,
@@ -813,7 +813,7 @@ export const CommentModePill = ({
           ? `Click an element to move comment #${repin.n}`
           : "Click to comment, Shift-click pins to select, P to draw"}
       </div>
-      {control && <ChatPickBar control={control} className="floating" />}
+      {control && <ChatPickBar control={control} tone="floating" />}
     </>
   );
 };

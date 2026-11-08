@@ -8,8 +8,8 @@ import type { ZoomSetting } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 import { DropMenu } from "./drop-menu.js";
 import { OverflowMenu } from "./overflow-menu.js";
+import { shareGroups } from "./share-menu-groups.js";
 import { loadPortToAppDialog, usePortDialog } from "./top-bar-drop-menu.js";
-import { shareGroups } from "./top-bar-menu.js";
 import type {
   CanvasTool,
   PresentMode,

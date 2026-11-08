@@ -279,7 +279,7 @@ function VersionsEmpty({
 function useHeadFocus(headVersionId: string | null) {
   const ref = useRef<HTMLUListElement>(null);
   useEffect(() => {
-    const id = window.requestAnimationFrame(() => {
+    const id = globalThis.requestAnimationFrame(() => {
       const lost =
         !document.activeElement || document.activeElement === document.body;
 
@@ -290,7 +290,7 @@ function useHeadFocus(headVersionId: string | null) {
       }
     });
 
-    return () => window.cancelAnimationFrame(id);
+    return () => globalThis.cancelAnimationFrame(id);
   }, [headVersionId]);
 
   return ref;

@@ -483,15 +483,13 @@ function useMenuPlace(
     const below = button.bottom + MENU_GAP;
 
     const top =
-      below + el.offsetHeight > window.innerHeight - MENU_EDGE
+      below + el.offsetHeight > globalThis.innerHeight - MENU_EDGE
         ? button.top - MENU_GAP - el.offsetHeight
         : below;
 
+    const maxLeft = globalThis.innerWidth - el.offsetWidth - MENU_EDGE;
     setPlace({
-      left: Math.max(
-        MENU_EDGE,
-        Math.min(button.left, window.innerWidth - el.offsetWidth - MENU_EDGE)
-      ),
+      left: Math.max(MENU_EDGE, Math.min(button.left, maxLeft)),
       top: Math.max(MENU_EDGE, top),
     });
   }, [open, trigger, menu]);

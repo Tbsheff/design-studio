@@ -160,22 +160,22 @@ function withOverrides(
 
 function useNotice() {
   const [notice, setNotice] = useState<string | null>(null);
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearNotice = useCallback(() => setNotice(null), []);
 
   const notify = useCallback((message: string) => {
     setNotice(message);
 
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
-    timer.current = window.setTimeout(() => setNotice(null), NOTICE_MS);
+    timer.current = globalThis.setTimeout(() => setNotice(null), NOTICE_MS);
   }, []);
 
   useEffect(
     () => () => {
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
     },
     []
@@ -310,7 +310,7 @@ export function useLayerEdits(o: Options): LayerEdits {
 
       reselect.current = pending;
       setReselecting(true);
-      window.setTimeout(() => expire(pending), RESELECT_MS);
+      globalThis.setTimeout(() => expire(pending), RESELECT_MS);
       sendReselect();
     },
     [expire, sendReselect]
@@ -702,9 +702,9 @@ export function useLayerEdits(o: Options): LayerEdits {
       }
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [moveSelected]);
 
   const tree = useMemo(

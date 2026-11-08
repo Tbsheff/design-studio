@@ -1170,6 +1170,7 @@
 .project-menu-sep {
   height: 1px;
   margin: var(--s-1) var(--s-2);
+  border: 0;
   background: var(--line);
 }
 

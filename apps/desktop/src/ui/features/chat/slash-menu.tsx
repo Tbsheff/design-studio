@@ -1,59 +1,32 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useEffect, useRef, useId, useLayoutEffect, useState } from "react";
-import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  ReactElement,
+  ReactNode,
+  RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 
-export interface SlashChoice {
-  id: string;
-  label: string;
-  icon: IconName;
-  hint?: string | undefined;
-  meta?: string | null | undefined;
-  tag?: ReactNode;
-  tip?: string | undefined;
-  checked?: boolean;
-  disabledReason?: string | null | undefined;
-  pick: () => void;
-}
-
-export interface SlashGroup {
-  id: string;
-  label: string;
-  icon: IconName;
-  value: string;
-  choices: SlashChoice[];
-}
-
-export interface SlashSection {
-  label: string;
-  items: SlashChoice[];
-  status?: string | null;
-}
-
-interface Options {
-  draft: string;
-  setDraft: (value: string) => void;
-  groups: readonly SlashGroup[];
-  sections?: (query: string) => SlashSection[];
-  note?: ReactNode;
-  label: string;
-}
-
-type Row =
-  | { key: string; kind: "group"; group: SlashGroup }
-  | { key: string; kind: "choice"; choice: SlashChoice; section: string };
-
-const SLASH_QUERY = /^\/(?<query>\S*)$/u;
-
-const wordsStart = (text: string, query: string): boolean => {
-  const needle = query.toLowerCase();
-
-  return text
-    .toLowerCase()
-    .split(/[\s/-]+/u)
-    .some((word) => word.startsWith(needle));
-};
+import { copy } from "./copy.js";
+import {
+  GAP,
+  MAX_HEIGHT,
+  SLASH_QUERY,
+  lockReason,
+  sectionRows,
+  startIndex,
+  wordsStart,
+} from "./slash-menu-model.js";
+import type {
+  MenuKey,
+  Options,
+  Row,
+  SlashGroup,
+  SlashSection,
+} from "./slash-menu-model.js";
 
 const choiceRows = (group: SlashGroup, filter: string): Row[] =>
   group.choices
@@ -65,25 +38,6 @@ const choiceRows = (group: SlashGroup, filter: string): Row[] =>
       section: group.label,
     }));
 
-const startIndex = (
-  rows: readonly Row[],
-  inGroup: boolean,
-  filter: string
-): number | null => {
-  if (filter !== "") {
-    return 0;
-  }
-
-  if (!inGroup) {
-    return null;
-  }
-
-  return Math.max(
-    0,
-    rows.findIndex((row) => row.kind === "choice" && row.choice.checked)
-  );
-};
-
 const stepIndex = (
   index: number | null,
   down: boolean,
@@ -92,13 +46,15 @@ const stepIndex = (
   const last = count - 1;
 
   if (index === null) {
-    return down ? 0 : last;
+    if (down) {
+      return 0;
+    }
+
+    return last;
   }
 
   return Math.max(0, Math.min(last, index + (down ? 1 : -1)));
 };
-
-type MenuKey = "move" | "pick" | "drill" | "back" | "escape" | null;
 
 const menuKey = (
   event: KeyboardEvent<HTMLElement>,
@@ -130,33 +86,40 @@ const menuKey = (
     return "back";
   }
 
-  return key === "Escape" ? "escape" : null;
+  if (key === "Escape") {
+    return "escape";
+  }
+
+  return null;
 };
 
 const slashQuery = (draft: string, dismissed: string | null): string | null => {
   const match = dismissed === draft ? null : SLASH_QUERY.exec(draft);
 
-  return match ? (match[1] ?? "") : null;
+  if (match) {
+    return match[1] ?? "";
+  }
+
+  return null;
 };
 
 const listInputProps = (
   open: boolean,
   listId: string,
   activeId: string | null
-) =>
-  open
-    ? {
-        "aria-activedescendant": activeId ?? undefined,
-        "aria-autocomplete": "list" as const,
-        "aria-controls": listId,
-      }
-    : {};
+) => {
+  if (open) {
+    return {
+      "aria-activedescendant": activeId ?? undefined,
+      "aria-autocomplete": "list" as const,
+      "aria-controls": listId,
+    };
+  }
 
-const lockReason = (group: SlashGroup | null | undefined): string | null =>
-  group?.choices.find((choice) => choice.disabledReason)?.disabledReason ??
-  null;
+  return {};
+};
 
-export const useSlashMenu = ({
+const useSlashMenu = ({
   draft,
   setDraft,
   groups,
@@ -180,7 +143,11 @@ export const useSlashMenu = ({
     path === null ? undefined : groups.find((item) => item.id === path);
 
   const filter = query ?? "";
-  const shownSections = open && !group && sections ? sections(filter) : [];
+  let shownSections: SlashSection[] = [];
+
+  if (open && !group && sections) {
+    shownSections = sections(filter);
+  }
 
   const rows: Row[] = group
     ? choiceRows(group, filter)
@@ -222,9 +189,9 @@ export const useSlashMenu = ({
     setDraft(rest === "" ? stash : `${stash} ${rest}`);
   }, [open]);
 
-  const setIndex = (at: number) => setActive({ at, key: frame });
+  const setIndex = (at: number): void => setActive({ at, key: frame });
 
-  const enter = (id: string | null) => {
+  const enter = (id: string | null): void => {
     const from = groups.findIndex((item) => item.id === path);
     setPath(id);
     setActive(id === null && from !== -1 ? { at: from, key: "|" } : null);
@@ -232,12 +199,12 @@ export const useSlashMenu = ({
     setDraft("/");
   };
 
-  const finish = () => {
+  const finish = (): void => {
     setPath(null);
     setDraft("");
   };
 
-  const activate = (row: Row | undefined) => {
+  const activate = (row: Row | undefined): void => {
     if (!row) {
       return;
     }
@@ -254,7 +221,7 @@ export const useSlashMenu = ({
     finish();
   };
 
-  const close = () => {
+  const close = (): void => {
     if (open) {
       setDismissed(draft);
     }
@@ -297,7 +264,7 @@ export const useSlashMenu = ({
     return true;
   };
 
-  const openMenu = () => {
+  const openMenu = (): void => {
     if (open) {
       return;
     }
@@ -308,7 +275,7 @@ export const useSlashMenu = ({
     setDraft("/");
   };
 
-  const optionId = (row: Row) => `${listId}-${row.key}`;
+  const optionId = (row: Row): string => `${listId}-${row.key}`;
 
   const view = {
     current,
@@ -317,7 +284,7 @@ export const useSlashMenu = ({
     listId,
     lock: lockReason(group),
     note: group || filter !== "" ? null : note,
-    onHover: (row: Row) => setIndex(rows.indexOf(row)),
+    onHover: (row: Row): void => setIndex(rows.indexOf(row)),
     onPick: activate,
     optionId,
     query: filter,
@@ -336,9 +303,9 @@ export const useSlashMenu = ({
   return { close, inputProps, onKeyDown, open, openMenu, view };
 };
 
-export type SlashMenuView = ReturnType<typeof useSlashMenu>["view"];
+type SlashMenuView = ReturnType<typeof useSlashMenu>["view"];
 
-const RowBody = ({ row }: { row: Row }) => {
+const RowBody = ({ row }: { row: Row }): ReactElement => {
   if (row.kind === "group") {
     return (
       <>
@@ -346,7 +313,7 @@ const RowBody = ({ row }: { row: Row }) => {
         <span className="slash-label">{row.group.label}</span>
         <span className="slash-hint">{row.group.value}</span>
         <span className="slash-end slash-chevron" aria-hidden="true">
-          ›
+          {copy.text11}
         </span>
       </>
     );
@@ -374,18 +341,14 @@ const RowBody = ({ row }: { row: Row }) => {
   );
 };
 
-const MAX_HEIGHT = 288;
-
-const GAP = 6;
-
-const usePlacement = (anchor: () => HTMLElement | null) => {
+const usePlacement = (anchor: () => HTMLElement | null): CSSProperties => {
   const [style, setStyle] = useState<CSSProperties>({
     position: "fixed",
     visibility: "hidden",
   });
 
   useLayoutEffect(() => {
-    const place = () => {
+    const place = (): void => {
       const card = anchor()?.getBoundingClientRect();
 
       if (!card) {
@@ -418,7 +381,7 @@ const usePlacement = (anchor: () => HTMLElement | null) => {
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place, true);
 
-    return () => {
+    return (): void => {
       observer.disconnect();
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
@@ -432,13 +395,13 @@ const useDismissOutside = (
   input: () => HTMLElement | null,
   menu: RefObject<HTMLDivElement | null>,
   onClose: () => void
-) => {
+): void => {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   const inputRef = useRef(input);
   inputRef.current = input;
   useEffect(() => {
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       const target = event.target as Node;
 
       if (
@@ -451,11 +414,11 @@ const useDismissOutside = (
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [menu]);
 };
 
-export const SlashMenu = ({
+const SlashMenu = ({
   view,
   anchor,
   input,
@@ -465,11 +428,16 @@ export const SlashMenu = ({
   anchor: () => HTMLElement | null;
   input: () => HTMLElement | null;
   onClose: () => void;
-}) => {
+}): ReactNode => {
   const menu = useRef<HTMLDivElement>(null);
   const style = usePlacement(anchor);
   useDismissOutside(input, menu, onClose);
-  const currentId = view.current ? view.optionId(view.current) : null;
+  let currentId: string | null = null;
+
+  if (view.current) {
+    currentId = view.optionId(view.current);
+  }
+
   useEffect(() => {
     if (currentId) {
       document
@@ -489,7 +457,12 @@ export const SlashMenu = ({
       {view.heading && (
         <div className="slash-heading" aria-hidden="true">
           {view.heading}
-          {view.lock && <span className="slash-lock"> · {view.lock}</span>}
+          {view.lock && (
+            <span className="slash-lock">
+              {copy.text}
+              {view.lock}
+            </span>
+          )}
         </div>
       )}
       <div
@@ -517,12 +490,15 @@ export const SlashMenu = ({
         {view.rows.map((row, at) => {
           const before = view.rows[at - 1];
 
-          const label =
+          let label: string | null = null;
+
+          if (
             row.kind === "choice" &&
             !view.heading &&
             (before?.kind !== "choice" || before.section !== row.section)
-              ? row.section
-              : null;
+          ) {
+            label = row.section;
+          }
 
           const off =
             row.kind === "choice" && Boolean(row.choice.disabledReason);
@@ -578,7 +554,10 @@ export const SlashMenu = ({
         </div>
       ))}
       {view.rows.length === 0 && view.statuses.length === 0 && (
-        <div className="slash-empty">No results for /{view.query}</div>
+        <div className="slash-empty">
+          {copy.noResultsFor}
+          {view.query}
+        </div>
       )}
       {view.note && <div className="slash-note">{view.note}</div>}
     </div>,
@@ -609,12 +588,6 @@ const groupRows = (groups: readonly SlashGroup[], query: string): Row[] => {
   return [...heads, ...leaves];
 };
 
-const sectionRows = (sections: readonly SlashSection[]): Row[] =>
-  sections.flatMap((section) =>
-    section.items.map((choice): Row => ({
-      choice,
-      key: `${section.label}-${choice.id}`,
-      kind: "choice",
-      section: section.label,
-    }))
-  );
+export { SlashMenu, useSlashMenu };
+
+export type { SlashGroup, SlashMenuView, SlashSection };

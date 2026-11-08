@@ -21,6 +21,7 @@ import {
   type ClipboardEvent,
   type DragEvent,
   type KeyboardEvent,
+  type ReactElement,
   type ReactNode,
 } from "react";
 
@@ -68,8 +69,26 @@ import {
   type PendingAttachment,
 } from "./composer-parts.js";
 import { ContextMeter } from "./context-meter.js";
+import { copy } from "./copy.js";
 import { HistorySearch, useHistorySearch } from "./history-search.js";
 import { MentionChips, MentionList } from "./mention-picker.js";
+import {
+  EMPTY_REASON,
+  INPUT_COPY,
+  MODES,
+  MODE_ICON,
+  RepoContextChip,
+  SEND_CLASS,
+  SEND_ICON,
+  SEND_LABEL,
+} from "./prompt-box-model.js";
+import type {
+  SendProps,
+  SendState,
+  SendStatus,
+  SendView,
+  VariationsPromptProps,
+} from "./prompt-box-model.js";
 import { QueuedMessages } from "./queued-messages.js";
 import { RunContextChip } from "./run-context-chip.js";
 import { MODE_LABEL, type ComposerMode } from "./run-settings.js";
@@ -85,8 +104,6 @@ import { useComposerKeys } from "./use-composer-keys.js";
 import { useMentions, type MentionRequest } from "./use-mentions.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 import { useRunLevel } from "./use-run-level.js";
-
-const RepoContextChip = lazy(() => import("./repo-context-chip.js"));
 
 interface Props {
   projectId: string;
@@ -124,26 +141,6 @@ interface Props {
   waitReason?: string | null;
 }
 
-interface VariationsPromptProps {
-  count: number;
-  max: number;
-  onCount: (count: number) => void;
-  onSend: (
-    prompt: string,
-    level: RunLevel,
-    attachmentIds: string[]
-  ) => Promise<void>;
-  onElement?: (prompt: string, count: number, level: RunLevel) => Promise<void>;
-}
-
-type SendState = "send" | "queue" | "stop";
-
-const SEND_LABEL: Record<SendState, string> = {
-  queue: "Queue",
-  send: "Send",
-  stop: "Stop",
-};
-
 function useMorph(key: string): boolean {
   const last = useRef<string | null>(null);
   const morphed = useRef(false);
@@ -156,41 +153,8 @@ function useMorph(key: string): boolean {
   return morphed.current;
 }
 
-interface SendProps {
-  running: boolean;
-  sending: boolean;
-  canSend: boolean;
-  canQueue: boolean;
-  hasDraft: boolean;
-  tip: string;
-  onSend: () => void;
-  onQueue: () => void;
-  onStop: () => void;
-}
-
-interface SendView {
-  state: SendState;
-  busy: boolean;
-  disabled: boolean;
-  tip: string;
-  keys?: string;
-  onClick: () => void;
-}
-
 const QUEUE_TIP = `Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (${MOD_LABEL}.)`;
 const STOP_KEYS = IS_MAC ? "Meta+." : "Control+.";
-
-const SEND_CLASS: Record<SendState, string> = {
-  queue: "icon-btn send send-btn",
-  send: "icon-btn send send-btn",
-  stop: "icon-btn send-btn stop-btn",
-};
-
-const SEND_ICON: Record<SendState, IconName> = {
-  queue: "history",
-  send: "arrowUp",
-  stop: "stop",
-};
 
 function isPlainEscape(event: KeyboardEvent<HTMLDivElement>): boolean {
   return (
@@ -244,9 +208,14 @@ function sendView(props: SendProps): SendView {
   };
 }
 
-function SendButton(props: SendProps) {
+function SendButton(props: SendProps): ReactElement {
   const view = sendView(props);
-  const key = view.busy ? "busy" : view.state;
+  let key: "busy" | SendState = "busy";
+
+  if (!view.busy) {
+    key = view.state;
+  }
+
   const morph = useMorph(key);
 
   return (
@@ -264,9 +233,8 @@ function SendButton(props: SendProps) {
       data-tip-side="top"
     >
       <span key={key} className={morph ? "send-label morph" : "send-label"}>
-        {view.busy ? (
-          <span className="spinner" />
-        ) : (
+        {view.busy && <span className="spinner" />}
+        {!view.busy && (
           <Icon
             name={SEND_ICON[view.state]}
             size={view.state === "stop" ? 14 : 16}
@@ -277,7 +245,13 @@ function SendButton(props: SendProps) {
   );
 }
 
-function ReasonText({ id, text }: { id: string; text: string | null }) {
+function ReasonText({
+  id,
+  text,
+}: {
+  id: string;
+  text: string | null;
+}): ReactElement | null {
   if (!text) {
     return null;
   }
@@ -299,7 +273,7 @@ function StateChip({
   short: ReactNode;
   tip: string;
   onClear: () => void;
-}) {
+}): ReactElement {
   return (
     <span
       className="ui-chip composer-state"
@@ -323,14 +297,6 @@ function StateChip({
   );
 }
 
-const MODE_ICON: Record<ComposerMode, IconName> = {
-  critique: "eye",
-  edit: "pencil",
-  plan: "doc",
-};
-
-const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
-
 function modeGroup(
   mode: ComposerMode,
   onMode: (mode: ComposerMode) => void
@@ -353,22 +319,6 @@ function modeGroup(
 
 const SLASH_HIDDEN = /^composer\.(?:mode|level)-/;
 
-const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> =
-  {
-    critique: {
-      label: "Ask for a critique",
-      placeholder: "Ask for a critique…",
-    },
-    edit: {
-      label: "Describe what you want to create",
-      placeholder: "Describe what you want to create…",
-    },
-    plan: {
-      label: "Describe what to plan",
-      placeholder: "Describe what to plan…",
-    },
-  };
-
 const RUNNING_PLACEHOLDER = `Queue a note (↵) or send it now (${MOD_LABEL}↵)`;
 
 function sendReady(state: {
@@ -389,16 +339,11 @@ function inputPlaceholder(
     return waitReason;
   }
 
-  return running
-    ? RUNNING_PLACEHOLDER
-    : `${INPUT_COPY[mode].placeholder} (${MOD_LABEL}↵ to send)`;
-}
+  if (running) {
+    return RUNNING_PLACEHOLDER;
+  }
 
-const EMPTY_REASON = "Type a message to send";
-
-interface SendStatus {
-  tip: string;
-  spoken: string | null;
+  return `${INPUT_COPY[mode].placeholder} (${MOD_LABEL}↵ to send)`;
 }
 
 function sendStatus(state: {
@@ -408,7 +353,11 @@ function sendStatus(state: {
   uploading: boolean;
   empty: boolean;
 }): SendStatus {
-  const blocker = state.running ? null : sendBlocker(state);
+  let blocker: string | null = null;
+
+  if (!state.running) {
+    blocker = sendBlocker(state);
+  }
 
   return {
     spoken: blocker === EMPTY_REASON ? null : blocker,
@@ -468,7 +417,7 @@ function designsBlocker(
   return null;
 }
 
-export function PromptBox(props: Props) {
+function PromptBox(props: Props): ReactElement {
   const [mode, setMode] = useState<ComposerMode>("edit");
   const [effort, setEffort] = useState<RunEffort | null>(null);
   const [files, setFiles] = useState<PendingAttachment[]>([]);
@@ -490,7 +439,7 @@ export function PromptBox(props: Props) {
 
   useComposerFocus(props.running, !props.disabled);
 
-  const focusInput = () =>
+  const focusInput = (): number =>
     globalThis.requestAnimationFrame(() =>
       document
         .querySelector<HTMLTextAreaElement>(
@@ -518,10 +467,16 @@ export function PromptBox(props: Props) {
     exclude: skillIds,
     onCommand: (command: Command) => command.run(),
     onSkill: (id) =>
-      setSkillIds((prev) => (prev.includes(id) ? prev : [...prev, id])),
+      setSkillIds((prev) => {
+        if (prev.includes(id)) {
+          return prev;
+        }
+
+        return [...prev, id];
+      }),
   });
 
-  const addFiles = (list: Iterable<File>) => {
+  const addFiles = (list: Iterable<File>): void => {
     let room = MAX_IMAGES - files.length;
     const problems = new Set<string>();
 
@@ -546,14 +501,24 @@ export function PromptBox(props: Props) {
         .uploadAttachment(props.projectId, file)
         .then((attachment) =>
           setFiles((prev) =>
-            prev.map((f) => (f.localId === localId ? { ...f, attachment } : f))
+            prev.map((entry) => {
+              if (entry.localId === localId) {
+                return { ...entry, attachment };
+              }
+
+              return entry;
+            })
           )
         )
         .catch((err) =>
           setFiles((prev) =>
-            prev.map((f) =>
-              f.localId === localId ? { ...f, error: errorText(err) } : f
-            )
+            prev.map((entry) => {
+              if (entry.localId === localId) {
+                return { ...entry, error: errorText(err) };
+              }
+
+              return entry;
+            })
           )
         );
     }
@@ -563,18 +528,18 @@ export function PromptBox(props: Props) {
     }
   };
 
-  const removeFile = (localId: string) =>
+  const removeFile = (localId: string): void =>
     setFiles((prev) => {
-      const f = prev.find((x) => x.localId === localId);
+      const file = prev.find((wasOpen) => wasOpen.localId === localId);
 
-      if (f) {
-        URL.revokeObjectURL(f.previewUrl);
+      if (file) {
+        URL.revokeObjectURL(file.previewUrl);
       }
 
-      return prev.filter((x) => x.localId !== localId);
+      return prev.filter((wasOpen) => wasOpen.localId !== localId);
     });
 
-  const chooseModel = (model: string) => {
+  const chooseModel = (model: string): void => {
     if (model === props.model) {
       return;
     }
@@ -604,7 +569,7 @@ export function PromptBox(props: Props) {
 
   const promptRef = useRef<HTMLDivElement>(null);
 
-  const insertMention = () => {
+  const insertMention = (): void => {
     slash.close();
     setDraft(draft === "" || /\s$/.test(draft) ? `${draft}@` : `${draft} @`);
     focusInput();
@@ -625,7 +590,7 @@ export function PromptBox(props: Props) {
     setFiles,
   });
 
-  const uploading = files.some((f) => !f.attachment && !f.error);
+  const uploading = files.some((file) => !file.attachment && !file.error);
 
   const mentions = useMentions({
     components: props.components,
@@ -639,7 +604,7 @@ export function PromptBox(props: Props) {
 
   const historySearch = useHistorySearch(props.history ?? []);
 
-  const onKeyCapture = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyCapture = (event: KeyboardEvent<HTMLDivElement>): void => {
     const inInput = (event.target as HTMLElement).matches(
       '[data-slot="composer-input"]'
     );
@@ -700,7 +665,7 @@ export function PromptBox(props: Props) {
     running: props.running,
   });
 
-  const send = () => {
+  const send = (): void => {
     if (!canSend) {
       return;
     }
@@ -710,9 +675,13 @@ export function PromptBox(props: Props) {
 
     startSending(async () => {
       try {
-        const ids = files.flatMap((f) =>
-          f.attachment ? [f.attachment.id] : []
-        );
+        const ids = files.flatMap((file) => {
+          if (file.attachment) {
+            return [file.attachment.id];
+          }
+
+          return [];
+        });
 
         const prompt = [draft.trim(), skillInstruction(skillIds)]
           .filter(Boolean)
@@ -724,10 +693,11 @@ export function PromptBox(props: Props) {
           props.variations.count > 1 &&
           props.selection.length === 0;
 
-        const elementCount =
-          mode === "edit" && props.selection.length === 1
-            ? elementVariantsIntent(prompt)
-            : null;
+        let elementCount: number | null = null;
+
+        if (mode === "edit" && props.selection.length === 1) {
+          elementCount = elementVariantsIntent(prompt);
+        }
 
         const onElement = props.variations?.onElement;
 
@@ -750,7 +720,7 @@ export function PromptBox(props: Props) {
         await sent;
         mentions.clear();
         prefill.clear();
-        files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+        files.forEach((file) => URL.revokeObjectURL(file.previewUrl));
         setFiles([]);
         setSkillIds([]);
         keys.resetHistory();
@@ -788,21 +758,21 @@ export function PromptBox(props: Props) {
     return false;
   });
 
-  const onPaste = (e: ClipboardEvent) => {
-    const images = Array.from(e.clipboardData.files).filter((f) =>
-      f.type.startsWith("image/")
+  const onPaste = (event: ClipboardEvent): void => {
+    const images = Array.from(event.clipboardData.files).filter((file) =>
+      file.type.startsWith("image/")
     );
 
     if (images.length > 0) {
-      e.preventDefault();
+      event.preventDefault();
       addFiles(images);
     }
   };
 
-  const onDrop = (e: DragEvent) => {
-    e.preventDefault();
+  const onDrop = (event: DragEvent): void => {
+    event.preventDefault();
     setDragging(false);
-    addFiles(Array.from(e.dataTransfer.files));
+    addFiles(Array.from(event.dataTransfer.files));
   };
 
   return (
@@ -810,8 +780,8 @@ export function PromptBox(props: Props) {
       ref={promptRef}
       className={`prompt ${dragging ? "dragging" : ""}`}
       data-ai-scope=""
-      onDragOver={(e) => {
-        e.preventDefault();
+      onDragOver={(event) => {
+        event.preventDefault();
         setDragging(true);
       }}
       onDragLeave={() => setDragging(false)}
@@ -819,10 +789,15 @@ export function PromptBox(props: Props) {
       onKeyDownCapture={onKeyCapture}
     >
       {files
-        .filter((f) => f.error)
-        .map((f) => (
-          <ComposerAlert key={f.localId} onClose={() => removeFile(f.localId)}>
-            {f.name}: {f.error}
+        .filter((file) => file.error)
+        .map((file) => (
+          <ComposerAlert
+            key={file.localId}
+            onClose={() => removeFile(file.localId)}
+          >
+            {file.name}
+            {copy.text6}
+            {file.error}
           </ComposerAlert>
         ))}
       {error && (
@@ -873,9 +848,9 @@ export function PromptBox(props: Props) {
       )}
       <Composer
         className={`composer ui-composer cursor-text ${dragging ? "dragging" : ""}`}
-        onClick={(e) =>
-          e.target === e.currentTarget &&
-          e.currentTarget.querySelector("textarea")?.focus()
+        onClick={(event) =>
+          event.target === event.currentTarget &&
+          event.currentTarget.querySelector("textarea")?.focus()
         }
       >
         <RunContextChip chip={props.canvasChip} />
@@ -897,7 +872,9 @@ export function PromptBox(props: Props) {
         <MentionChips mentions={mentions.mentions} onRemove={mentions.remove} />
         <SkillChips
           ids={skillIds}
-          onRemove={(id) => setSkillIds((prev) => prev.filter((x) => x !== id))}
+          onRemove={(id) =>
+            setSkillIds((prev) => prev.filter((wasOpen) => wasOpen !== id))
+          }
         />
         <ComposerInput
           className="composer-input min-h-16"
@@ -950,12 +927,12 @@ export function PromptBox(props: Props) {
             accept="image/png,image/jpeg,image/gif,image/webp"
             multiple
             hidden
-            onChange={(e) => {
-              if (e.target.files) {
-                addFiles(Array.from(e.target.files));
+            onChange={(event) => {
+              if (event.target.files) {
+                addFiles(Array.from(event.target.files));
               }
 
-              e.target.value = "";
+              event.target.value = "";
             }}
           />
           <ComposerToolbarSpacer className="prompt-send gap-1">
@@ -1015,3 +992,5 @@ export function PromptBox(props: Props) {
     </div>
   );
 }
+
+export { PromptBox };

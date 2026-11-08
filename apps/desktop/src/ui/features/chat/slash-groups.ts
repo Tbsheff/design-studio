@@ -4,7 +4,7 @@ import type { RunEffort, RunLevel } from "@design-studio/contracts";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { levelGist, levelHint, levelLabel } from "./level-control.js";
 import { MODEL_OPTIONS, modelLabel } from "./settings-draft-model.js";
-import type { SlashGroup } from "./slash-menu.js";
+import type { SlashGroup } from "./slash-menu-model.js";
 
 const effectiveModel = (model: string, level: RunLevel): string => {
   const preset = LEVEL_PRESETS[level].model;

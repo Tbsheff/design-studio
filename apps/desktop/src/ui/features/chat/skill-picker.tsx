@@ -20,7 +20,7 @@ import {
   useSkillCatalog,
   skillDisplayName,
 } from "./skills-model.js";
-import type { SlashChoice, SlashSection } from "./slash-menu.js";
+import type { SlashChoice, SlashSection } from "./slash-menu-model.js";
 
 const MIN_POPOVER_HEIGHT = 120;
 const SKILL_POPOVER_HEIGHT = 520;

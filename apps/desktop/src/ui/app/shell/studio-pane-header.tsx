@@ -1,7 +1,5 @@
-import { Icon, usePopover } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
-import { useCallback, useRef, useState } from "react";
-import type { ReactElement, KeyboardEvent, ReactNode, RefObject } from "react";
+import { useCallback, useState } from "react";
+import type { ReactElement } from "react";
 
 import { shortcutLabel } from "../../../shared/keymap";
 import {
@@ -9,414 +7,77 @@ import {
   chatSearchOpen,
 } from "../../features/chat/chat-search-model";
 import { IS_MAC } from "../../features/commands/keys";
-import { findElements } from "../../platform/find-element";
 import { useLive } from "../../platform/live-store";
-import type { PanelTab } from "../../platform/use-panel-tab";
+import { CommentsToggle } from "./comments-toggle";
+import { PaneHeadButton } from "./pane-head-button";
+import { PaneHeadToggle } from "./pane-head-toggle";
+import type { StudioPaneHeaderProps } from "./pane-header-types";
+import { PaneProject } from "./pane-project";
+import { PaneStatus } from "./pane-status";
+import { RenameField } from "./rename-field";
 
-type ThemePref = "system" | "light" | "dark";
+const RAIL_SHORTCUT = shortcutLabel("project-rail", IS_MAC);
 
-interface ThemeApi {
-  get: () => ThemePref;
-  set: (pref: ThemePref) => void;
-}
-
-const themeApi = (): ThemeApi | undefined =>
-  (globalThis as unknown as { studioTheme?: ThemeApi }).studioTheme;
-
-interface Props {
-  name: string;
-  kindLabel: string;
-  directionName: string | null;
-  connection: string;
-  actionError: string | null;
-  onDismissError: () => void;
-  tab: PanelTab;
-  onTab: (tab: PanelTab) => void;
-  hasTokens: boolean;
-  hasComponents: boolean;
-  hasTweaks: boolean;
-  commentCount: number;
-  onRename: (name: string) => Promise<void>;
-  onExit: () => void;
-  onToggleRail: () => void;
-  railOpen: boolean;
-  onDesignMd: () => void;
-  onSettings: () => void;
-  onCollapse: () => void;
-}
-
-interface Item {
-  id: string;
-  label: string;
-  icon: IconName;
-  run: () => void;
-  meta?: string;
-  disabled?: boolean;
-  checked?: boolean;
-}
-
-const MenuItems = ({
-  items,
-  onDone,
-}: {
-  items: Item[];
-  onDone: () => void;
-}): ReactElement[] =>
-  items.map((item) => (
-    <button
-      key={item.id}
-      type="button"
-      role={item.checked === undefined ? "menuitem" : "menuitemradio"}
-      aria-checked={item.checked}
-      className="ui-menu-item"
-      disabled={item.disabled}
-      onClick={() => {
-        onDone();
-        item.run();
-      }}
-    >
-      <Icon name={item.icon} size={14} />
-      <span>{item.label}</span>
-      {item.meta && <span className="ui-menu-meta">{item.meta}</span>}
-    </button>
-  ));
-
-const onMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
-  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
-    return;
-  }
-
-  const items = findElements(
-    event.currentTarget,
-    ".ui-menu-item:not(:disabled)"
-  );
-
-  const at = items.indexOf(document.activeElement as HTMLButtonElement);
-
-  const next =
-    items[
-      (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
-    ];
-
-  event.preventDefault();
-  next?.focus();
-};
-
-const ProjectMenu = (
-  props: Props & {
-    onClose: (refocus: boolean) => void;
-    onStartRename: () => void;
-    trigger: RefObject<HTMLButtonElement | null>;
-  }
-): ReactElement => {
-  const root = useRef<HTMLDivElement>(null);
-  usePopover(true, root, props.onClose, props.trigger);
-  const done = (): void => props.onClose(false);
-  const pref = themeApi()?.get() ?? "system";
-
-  const panels: Item[] = [
-    {
-      icon: "history",
-      id: "versions",
-      label: "Versions",
-      run: () => props.onTab("versions"),
-    },
-    ...(props.hasTokens
-      ? [
-          {
-            icon: "token" as const,
-            id: "tokens",
-            label: "Tokens",
-            run: () => props.onTab("tokens"),
-          },
-        ]
-      : []),
-    ...(props.hasComponents
-      ? [
-          {
-            icon: "component" as const,
-            id: "components",
-            label: "Components",
-            run: () => props.onTab("components"),
-          },
-        ]
-      : []),
-    ...(props.hasTweaks
-      ? [
-          {
-            icon: "sliders" as const,
-            id: "tweaks",
-            label: "Tweaks",
-            run: () => props.onTab("tweaks"),
-          },
-        ]
-      : []),
-    {
-      icon: "palette",
-      id: "system",
-      label: "Design system",
-      run: () => props.onTab("system"),
-    },
-    {
-      icon: "doc",
-      id: "design-md",
-      label: "Edit DESIGN.md",
-      run: props.onDesignMd,
-    },
-  ];
-
-  const project: Item[] = [
-    { icon: "pencil", id: "rename", label: "Rename", run: props.onStartRename },
-    {
-      icon: "settings",
-      id: "settings",
-      label: "Project settings",
-      run: props.onSettings,
-    },
-  ];
-
-  const themes: Item[] = (["system", "light", "dark"] as const).map(
-    (value) => ({
-      checked: pref === value,
-      icon:
-        value === "dark" ? "moon" : value === "light" ? "sparkle" : "desktop",
-      id: `theme-${value}`,
-      label:
-        value === "system"
-          ? "System theme"
-          : value === "light"
-            ? "Light theme"
-            : "Dark theme",
-      run: () => themeApi()?.set(value),
-    })
-  );
-
-  return (
-    <div
-      ref={root}
-      className="ui-menu pane-project-menu"
-      role="menu"
-      aria-label="Project"
-      onKeyDown={onMenuKey}
-    >
-      <div className="ui-menu-section">
-        <div className="ui-menu-label">
-          {props.kindLabel}
-          {props.directionName ? ` · ${props.directionName}` : ""}
-        </div>
-        <MenuItems items={project} onDone={done} />
-      </div>
-      <div className="ui-menu-section">
-        <MenuItems items={panels} onDone={done} />
-      </div>
-      <div className="ui-menu-section">
-        <MenuItems items={themes} onDone={done} />
-      </div>
-      <div className="ui-menu-section">
-        <MenuItems
-          items={[
-            {
-              icon: "sidebar",
-              id: "rail",
-              label: props.railOpen ? "Hide project list" : "Show project list",
-              meta: shortcutLabel("project-rail", IS_MAC),
-              run: props.onToggleRail,
-            },
-            {
-              icon: "arrowLeft",
-              id: "home",
-              label: "All projects",
-              run: props.onExit,
-            },
-          ]}
-          onDone={done}
-        />
-      </div>
-    </div>
-  );
-};
-
-const RenameField = ({
-  name,
-  onDone,
-}: {
-  name: string;
-  onDone: (next: string | null) => void;
-}): ReactElement => {
-  const [value, setValue] = useState(name);
-  const done = useRef(false);
-
-  const finish = (save: boolean): void => {
-    if (done.current) {
-      return;
-    }
-
-    done.current = true;
-    onDone(save && value.trim() && value.trim() !== name ? value.trim() : null);
-  };
-
-  return (
-    <input
-      className="pane-rename"
-      aria-label="Project name"
-      autoFocus
-      value={value}
-      onChange={(event) => setValue(event.target.value)}
-      onFocus={(event) => event.currentTarget.select()}
-      onBlur={() => finish(true)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          finish(true);
-        } else if (event.key === "Escape") {
-          event.preventDefault();
-          event.stopPropagation();
-          finish(false);
-        }
-      }}
-    />
-  );
-};
-
-const Status = ({
-  connection,
-  error,
-  onDismiss,
-}: {
-  connection: string;
-  error: string | null;
-  onDismiss: () => void;
-}): ReactNode => (
-  <>
-    {connection !== "open" && (
-      <span
-        className="conn pane-conn"
-        role="status"
-        data-tip={connection === "connecting" ? "Connecting…" : "Reconnecting…"}
-      >
-        <span className="spinner" />
-        <span className="sr-only">
-          {connection === "connecting" ? "Connecting…" : "Reconnecting…"}
-        </span>
-      </span>
-    )}
-    {error && (
-      <div className="pane-error ui-notice" role="alert">
-        <Icon name="alert" size={14} />
-        <span className="pane-error-text">{error}</span>
-        <button
-          type="button"
-          className="icon-btn small"
-          aria-label="Dismiss"
-          onClick={onDismiss}
-        >
-          <Icon name="close" size={12} />
-        </button>
-      </div>
-    )}
-  </>
-);
-
-export const StudioPaneHeader = (props: Props): ReactElement => {
-  const [open, setOpen] = useState(false);
+const StudioPaneHeader = (props: StudioPaneHeaderProps): ReactElement => {
   const [renaming, setRenaming] = useState(false);
-  const trigger = useRef<HTMLButtonElement>(null);
-
-  const close = useCallback((refocus: boolean) => {
-    setOpen(false);
-
-    if (refocus) {
-      trigger.current?.focus();
-    }
-  }, []);
-
-  const commentsOn = props.tab === "comments";
-  const searchShown = useLive(chatSearchAvailable) && props.tab === "chat";
+  const { onCollapse, onRename, onTab, tab } = props;
+  const searchShown = useLive(chatSearchAvailable) && tab === "chat";
   const searchOpen = useLive(chatSearchOpen);
+
+  const startRename = useCallback(() => setRenaming(true), []);
+
+  const finishRename = useCallback(
+    (next: string | null): void => {
+      setRenaming(false);
+
+      if (next) {
+        void onRename(next);
+      }
+    },
+    [onRename]
+  );
+
+  const toggleSearch = useCallback(
+    () => chatSearchOpen.set(!searchOpen),
+    [searchOpen]
+  );
 
   return (
     <>
       <header className="pane-head">
-        {renaming ? (
-          <RenameField
-            name={props.name}
-            onDone={(next) => {
-              setRenaming(false);
-
-              if (next) {
-                void props.onRename(next);
-              }
-            }}
+        {renaming && <RenameField name={props.name} onDone={finishRename} />}
+        {!renaming && (
+          <PaneProject
+            header={props}
+            onStartRename={startRename}
+            railShortcut={RAIL_SHORTCUT}
           />
-        ) : (
-          <span className="pane-project-anchor">
-            <button
-              ref={trigger}
-              type="button"
-              className="pane-project"
-              aria-haspopup="menu"
-              aria-expanded={open}
-              data-tip={open ? undefined : props.name}
-              data-tip-align="start"
-              onClick={() => setOpen((isOpen) => !isOpen)}
-              onDoubleClick={() => setRenaming(true)}
-            >
-              <span className="truncate">{props.name}</span>
-              <Icon name="chevronDown" size={12} />
-            </button>
-            {open && (
-              <ProjectMenu
-                {...props}
-                trigger={trigger}
-                onClose={close}
-                onStartRename={() => setRenaming(true)}
-              />
-            )}
-          </span>
         )}
-        <Status
+        <PaneStatus
           connection={props.connection}
           error={null}
           onDismiss={props.onDismissError}
         />
-        <button
-          type="button"
-          className="icon-btn pane-head-btn"
-          aria-label="Hide chat pane"
-          data-tip="Hide pane"
-          data-tip-align="end"
-          onClick={props.onCollapse}
-        >
-          <Icon name="sidebar" size={14} />
-        </button>
+        <PaneHeadButton
+          extraClass=""
+          icon="sidebar"
+          label="Hide chat pane"
+          onClick={onCollapse}
+          tip="Hide pane"
+        />
         {searchShown && (
-          <button
-            type="button"
-            className="icon-btn pane-head-btn pane-head-search"
-            aria-label="Search runs"
-            aria-pressed={searchOpen}
-            data-tip="Search runs"
-            data-tip-align="end"
-            onClick={() => chatSearchOpen.set(!searchOpen)}
-          >
-            <Icon name="search" size={14} />
-          </button>
+          <PaneHeadToggle
+            extraClass="pane-head-search"
+            icon="search"
+            isPressed={searchOpen}
+            label="Search runs"
+            onClick={toggleSearch}
+            tip="Search runs"
+          />
         )}
-        <button
-          type="button"
-          className="icon-btn pane-head-btn"
-          aria-label="Comments"
-          aria-pressed={commentsOn}
-          data-tip="Comments"
-          data-tip-align="end"
-          onClick={() => props.onTab(commentsOn ? "chat" : "comments")}
-        >
-          <Icon name="comment" size={14} />
-          {props.commentCount > 0 && (
-            <span className="pane-head-badge">{props.commentCount}</span>
-          )}
-        </button>
+        <CommentsToggle count={props.commentCount} onTab={onTab} tab={tab} />
       </header>
-      <Status
+      <PaneStatus
         connection="open"
         error={props.actionError}
         onDismiss={props.onDismissError}
@@ -424,3 +85,5 @@ export const StudioPaneHeader = (props: Props): ReactElement => {
     </>
   );
 };
+
+export { StudioPaneHeader };

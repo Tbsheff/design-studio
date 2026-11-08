@@ -1,8 +1,14 @@
 import { RUN_LEVELS } from "@design-studio/contracts";
 import type { PackSummary, RunLevel } from "@design-studio/contracts";
 import { Icon, useFitPopover, usePopover } from "@design-studio/ui";
-import { useEffect, useRef } from "react";
-import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  ReactElement,
+  ReactNode,
+  RefObject,
+} from "react";
 
 import { VariationsControl } from "../canvas/variations-control.js";
 import {
@@ -14,9 +20,15 @@ import {
 import { MODEL_OPTIONS } from "../chat/settings-draft-model.js";
 import { fontStack, loadPackFonts } from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
+import type { RunMode } from "./app-chip-model.js";
 import { copy } from "./copy.js";
 import type { DesignCount } from "./home-model.js";
 import { NoneCard } from "./none-card.js";
+import { toClassName } from "./project-card-model.js";
+
+import "../../styles/attach-app.css";
+
+const ROW_ICON_SIZE = 14;
 
 type Close = (refocus: boolean) => void;
 
@@ -376,8 +388,73 @@ const LevelPopover = ({
   </Pop>
 );
 
+interface ModeButtonProps {
+  readonly mode: RunMode;
+  readonly current: RunMode;
+  readonly label: string;
+  readonly onSelect: (mode: RunMode) => void;
+}
+
+const ModeButton = ({
+  mode,
+  current,
+  label,
+  onSelect,
+}: ModeButtonProps): ReactElement => {
+  const select = useCallback((): void => {
+    onSelect(mode);
+  }, [mode, onSelect]);
+
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={mode === current}
+      className={toClassName(mode === current && "on")}
+      onClick={select}
+    >
+      {label}
+    </button>
+  );
+};
+
+interface AppCandidateRowProps {
+  readonly appDir: string;
+  readonly name: string;
+  readonly isChosen: boolean;
+  readonly onPick: (appDir: string) => void;
+}
+
+const AppCandidateRow = ({
+  appDir,
+  name,
+  isChosen,
+  onPick,
+}: AppCandidateRowProps): ReactElement => {
+  const pick = useCallback((): void => {
+    onPick(appDir);
+  }, [appDir, onPick]);
+
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={isChosen}
+      className="ui-menu-item"
+      onClick={pick}
+    >
+      {isChosen && <Icon name="check" size={ROW_ICON_SIZE} />}
+      {!isChosen && <Icon name="code" size={ROW_ICON_SIZE} />}
+      <span className="truncate mono">{appDir}</span>
+      <span className="ui-menu-meta truncate">{name}</span>
+    </button>
+  );
+};
+
 export {
+  AppCandidateRow,
   LevelPopover,
+  ModeButton,
   ModelPopover,
   PackCards,
   PackPopover,

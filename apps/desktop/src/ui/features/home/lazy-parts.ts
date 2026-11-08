@@ -38,14 +38,14 @@ const importTemplates = () => import("./home-templates.js");
 
 const importExtras = () => import("./home-extras.js");
 
-const importAppMenu = () => import("./home-app-menu.js");
+const importAppMenu = () => import("./use-app-attach.js");
 
 const AppMenu = lazy(async () => ({
-  default: (await importAppMenu()).AppMenu,
+  default: (await import("./app-menu.js")).AppMenu,
 }));
 
 const FolderPathPop = lazy(async () => ({
-  default: (await importAppMenu()).FolderPathPop,
+  default: (await import("./folder-path-pop.js")).FolderPathPop,
 }));
 
 const HomeDoctor = lazy(() => import("./home-doctor.js"));

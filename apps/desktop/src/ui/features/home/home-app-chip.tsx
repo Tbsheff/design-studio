@@ -4,21 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 import { desktopBridge } from "../../platform/desktop.js";
+import type { AppChip, RunMode } from "./app-chip-model.js";
 import type { FolderInspection } from "./deps.js";
-
-type RunMode = "start" | "url";
-
-interface AppChip {
-  readonly path: string;
-  readonly inspection: FolderInspection | null;
-  readonly isChecking: boolean;
-  readonly error: string | null;
-  readonly appDir: string | null;
-  readonly mode: RunMode;
-  readonly url: string;
-  readonly env: string;
-  readonly nonce: number;
-}
 
 const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
   html: "HTML",
@@ -233,4 +220,4 @@ export {
   useAppChip,
 };
 
-export type { AppChip, RunMode };
+export type { AppChip, RunMode } from "./app-chip-model.js";

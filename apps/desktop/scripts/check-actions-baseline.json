@@ -66,7 +66,7 @@
     "apps/desktop/src/server/platform/process/spawn.ts": 3,
     "apps/desktop/src/server/platform/process/worker-client.ts": 4,
     "apps/desktop/src/server/platform/ts-compiler/index.ts": 3,
-    "apps/desktop/src/server/project-source/source.ts": 18,
+    "apps/desktop/src/server/project-source/source.ts": 16,
     "apps/desktop/src/server/run-log/run-list.ts": 23
   },
   "S3": {

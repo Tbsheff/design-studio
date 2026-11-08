@@ -31,3 +31,53 @@
   color: var(--text-2);
   font-size: var(--t-xs);
 }
+
+.tabs {
+  display: flex;
+  padding: var(--s-1) var(--s-2) 0;
+}
+
+.heatmap {
+  display: block;
+  width: auto;
+  max-width: calc(100% - var(--s-4) * 2);
+  max-height: 180px;
+  height: auto;
+  margin: var(--s-2) var(--s-4);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.heatmapEmpty {
+  height: 120px;
+  margin: var(--s-2) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface-inset);
+}
+
+.clarity {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  padding: 0 var(--s-4) var(--s-1);
+}
+
+.clarityValue {
+  color: var(--text);
+  font: var(--w-medium) var(--t-md) / 1.2 var(--font);
+  font-variant-numeric: tabular-nums;
+}
+
+.rank {
+  flex: none;
+  min-width: 14px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.share {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}

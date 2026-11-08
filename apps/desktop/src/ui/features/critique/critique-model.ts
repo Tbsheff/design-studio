@@ -1,6 +1,8 @@
 import { copy } from "./copy.js";
 import type { RouteOutput, critiqueRoutes } from "./deps.js";
 
+type CritiqueTab = "attention" | "scores";
+
 type CritiqueView = RouteOutput<typeof critiqueRoutes.runCritique>;
 
 type IssueView = CritiqueView["issues"][number];
@@ -50,4 +52,4 @@ const toRunLabel = (isBusy: boolean, hasResult: boolean): string => {
 
 export { toRunLabel, toScoreRows };
 
-export type { CritiqueView, IssueView, ScoreRow };
+export type { CritiqueTab, CritiqueView, IssueView, ScoreRow };

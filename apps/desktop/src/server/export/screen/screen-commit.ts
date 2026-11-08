@@ -2,7 +2,7 @@ import { readFile, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { Direction, Project } from "@design-studio/contracts";
-import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
+import { CANVAS_FILE, CANVAS_GAP } from "@design-studio/contracts/canvas-file";
 import type {
   CanvasFile,
   CanvasFileFrame,
@@ -103,13 +103,44 @@ const toSourceFrame = (
   );
 };
 
+const isOverlap = (
+  frame: CanvasFileFrame,
+  left: number,
+  top: number
+): boolean => {
+  const isAcross =
+    frame.x < left + CANVAS_VIEWPORTS.desktop.width &&
+    frame.x + frame.width > left;
+
+  const isDown =
+    frame.y < top + CANVAS_VIEWPORTS.desktop.height &&
+    frame.y + frame.height > top;
+
+  return isAcross && isDown;
+};
+
+const isRightOfFree = (
+  frames: readonly CanvasFileFrame[],
+  source: CanvasFileFrame
+): boolean => {
+  const left = source.x + source.width + CANVAS_GAP;
+
+  return !frames.some(
+    (frame) =>
+      frame.id !== source.id &&
+      frame.hidden !== true &&
+      isOverlap(frame, left, source.y)
+  );
+};
+
 const toPlaceSpec = (
   plan: ScreenWritePlan,
-  source: CanvasFileFrame | null
+  source: CanvasFileFrame | null,
+  frames: readonly CanvasFileFrame[]
 ): PlaceSpec => {
   const base = { label: plan.label, path: plan.framePath };
 
-  if (source !== null) {
+  if (source !== null && isRightOfFree(frames, source)) {
     return { ...base, rightOf: source.id };
   }
 
@@ -129,7 +160,7 @@ const createScreenFrame = async (
     (file) => {
       const seeded = toFileWithEntry(file, direction.id);
       const source = toSourceFrame(seeded, plan.rightOfPath);
-      const spec = toPlaceSpec(plan, source);
+      const spec = toPlaceSpec(plan, source, seeded.frames);
       const next = applyPlacement(seeded, [spec], direction.id);
 
       frameId = next.placed.at(0)?.id ?? "";

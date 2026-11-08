@@ -182,7 +182,6 @@ const DAY_ONE_BUDGET_ZERO = new Set([
   "apps/desktop/src/ui/features/commands/use-studio-commands.ts",
   "apps/desktop/src/ui/features/versions-layers-tokens/compare-code.tsx",
   "apps/desktop/src/ui/features/versions-layers-tokens/compare-frame.tsx",
-  "apps/desktop/src/ui/features/versions-layers-tokens/compare-modes.tsx",
   "apps/desktop/src/ui/features/versions-layers-tokens/compare-view.tsx",
   "apps/desktop/src/ui/features/versions-layers-tokens/create-token-dialog.tsx",
   "apps/desktop/src/ui/features/versions-layers-tokens/layers-panel.tsx",

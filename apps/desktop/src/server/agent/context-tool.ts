@@ -1,7 +1,7 @@
 import type { AgentRunContext } from "../../shared/server-ports.js";
 import { loadRepoContext } from "./repo-context.js";
 
-export const getRunContextShape = {};
+export const getRunContextSdkFields = {};
 
 export async function runGetRunContext(deps: {
   ctx: Pick<AgentRunContext, "project" | "direction">;

@@ -186,7 +186,7 @@ export const setTokenFields = {
 };
 
 export const editElementShape = toSdkFieldSet(editElementFields);
-export const setTokenShape = toSdkFieldSet(setTokenFields);
+export const setTokenSdkFields = toSdkFieldSet(setTokenFields);
 
 const editElementSchema = toToolInput(editElementFields);
 const setTokenSchema = toToolInput(setTokenFields);

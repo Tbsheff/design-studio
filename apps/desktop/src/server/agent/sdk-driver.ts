@@ -105,8 +105,8 @@ import { createScreenshotTrimStore } from "./screenshot-trim-store.js";
 import { recommendedSkillsBlock, recommendSkills } from "./skill-match.js";
 import { prepareSkills, type PreparedSkills } from "./skills.js";
 import { loadTasteRules, type TasteRule } from "./taste.js";
+import { createStudioMcpServer } from "./tool-groups/agent-only.js";
 import { leanBuiltins } from "./tool-sets.js";
-import { createStudioMcpServer } from "./tools.js";
 import type { RunToolState } from "./types.js";
 import {
   buildUserMessageParts,

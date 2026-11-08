@@ -21,7 +21,7 @@ const VIEWPORTS = {
   mobile: { width: 390, height: 844 },
 } as const;
 
-export const reviewFrameShape = {
+export const reviewFrameSdkFields = {
   frame: frameRef
     .optional()
     .describe(
@@ -48,7 +48,7 @@ export const reviewFrameShape = {
     ),
 };
 
-const schema = z.object(reviewFrameShape).strict();
+const schema = z.object(reviewFrameSdkFields).strict();
 
 interface ReviewToolDeps {
   preview: PreviewService;

@@ -1,10 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type {
-  McpSdkServerConfigWithInstance,
-  query,
-} from "@anthropic-ai/claude-agent-sdk";
+import type { query, tool as createTool } from "@anthropic-ai/claude-agent-sdk";
 import { Schema } from "effect";
 
 import type { FlowInput } from "../../shared/route-flow.js";
@@ -20,7 +17,6 @@ import type {
 } from "../../shared/server-ports.js";
 import { toOptional, toSdkFieldSet, toToolRun } from "../agent-tools/index.js";
 import type { ToolFields, ToolInput } from "../agent-tools/index.js";
-import { buildAgentTools } from "../agent-tools/registry.js";
 import {
   applyFrameSession,
   applyFrameState,
@@ -28,8 +24,6 @@ import {
   describeFlow,
   describeFrameStates,
   describeRouteLinks,
-  FLOW_NOTE,
-  FRAME_STATES_NOTE,
   listRouteLinks,
   readFrameStates,
   toFlowDeps,
@@ -46,46 +40,18 @@ import type {
 import { canvasList, canvasPlace, canvasPoint } from "../canvas/index.js";
 import {
   editLinks,
-  editLinksFields,
   listLinks,
   probeWithPreview,
 } from "../canvas/links/index.js";
 import type { EditLinksArgs, LinkProbe } from "../canvas/links/index.js";
 import { checkDesignSystem, describeCheck } from "../design-system/check.js";
 import { prepareShip } from "../git/ship-prepare.js";
-import { runActionCaller } from "../mcp/registry.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { TileResult } from "../preview/browser.js";
-import { reviewFrameShape, runReviewFrameTool } from "../review/agent-tool.js";
 import type { CommentStore } from "../store/comments.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import { defineTweaks } from "../tweaks/store.js";
-import {
-  arrangeShape,
-  measureShape,
-  runArrange,
-  runMeasure,
-} from "./arrange-tool.js";
 import type { ActionAsk } from "./ask-gate.js";
-import {
-  listBreakpointsInput,
-  runListBreakpoints,
-  runSetBreakpointStyle,
-  setBreakpointStyleInput,
-} from "./breakpoints-tool.js";
-import {
-  HELP_INPUT,
-  SCREENSHOT_TOOL,
-  TARGET_TOOL,
-  FLOW_TOOL,
-  TWEAKS_TOOL,
-  canvasPlaceInput,
-  canvasPointInput,
-  doctorInput,
-  frameSessionInput,
-  frameStateInput,
-  routeLinkInput,
-} from "./canvas-tool-fields.js";
 import {
   budgetLine,
   buildCheckReport,
@@ -94,24 +60,6 @@ import {
   saveCheck,
 } from "./check-tool.js";
 import {
-  listCommentsInput,
-  resolveCommentInput,
-  runListComments,
-  runResolveComment,
-} from "./comment-tools.js";
-import {
-  createComponentShape,
-  runCreateComponent,
-  runSwapInstance,
-  swapInstanceShape,
-} from "./component-create-tool.js";
-import {
-  componentPreviewShape,
-  runComponentPreview,
-} from "./component-preview-tool.js";
-import { getRunContextShape, runGetRunContext } from "./context-tool.js";
-import { copyCodeInput, runCopyCode } from "./copy-code-tool.js";
-import {
   beforeImages,
   changedSourceFor,
   criticImages,
@@ -119,73 +67,19 @@ import {
   describeCriticResult,
   runCritic,
 } from "./critic.js";
-import {
-  editElementFields,
-  runEditElement,
-  runSetToken,
-  setTokenShape,
-} from "./direct-tools.js";
-import { runAppDoctor } from "./doctor-tool.js";
-import { exportFrameShape, runExportFrame } from "./export-tool.js";
-import { figmaImportShape, runFigmaImport } from "./figma-import-tool.js";
+import { editElementFields } from "./direct-tools.js";
 import { baselineNote } from "./final-check.js";
-import { runSetImage, setImageShape } from "./image-tool.js";
-import { insertComponentShape, runInsertComponent } from "./insert-tool.js";
-import {
-  clearTextShape,
-  insertJsxShape,
-  runClearText,
-  runInsertJsx,
-} from "./jsx-insert-tool.js";
-import {
-  getLayersShape,
-  listComponentsShape,
-  runGetLayers,
-  runListComponents,
-  withLayerIds,
-} from "./kit-tools.js";
-import {
-  LAYER_STATE_TOOL,
-  LIST_LOCKS_TOOL,
-  layerStateShape,
-  listLocksShape,
-  runListLockedLayers,
-  runSetLayerState,
-} from "./layer-state-tool.js";
-import { isLeanRun } from "./lean-run.js";
 import { AGENT_OPS } from "./legacy/agent-ops.js";
 import { recordShot } from "./polish-loop.js";
-import { runSetProps, setPropsShape } from "./props-tool.js";
-import {
-  COMPARE_REFERENCE_DESCRIPTION,
-  compareReferenceShape,
-  runCompareToReference,
-} from "./reference-tool.js";
 import { resolveShotTarget } from "./run-target.js";
 import type { ShotArgs, ShotTarget, TargetDeps } from "./run-target.js";
 import { describeScreens, samePage, warmScreens } from "./screens.js";
 import type { RunScreen } from "./screens.js";
-import { runSelectMatching, selectMatchingShape } from "./select-tool.js";
-import {
-  findStylesShape,
-  replaceStyleShape,
-  runFindStyles,
-  runReplaceStyle,
-} from "./style-tool.js";
 import type { TasteRule } from "./taste.js";
-import { TOOL_HELP, TOOL_SHORT } from "./tool-help.js";
+import { TOOL_HELP } from "./tool-help.js";
 import type { StudioToolName } from "./tool-help.js";
-import { HELP_TOOL, studioToolsFor } from "./tool-sets.js";
+import { HELP_TOOL } from "./tool-sets.js";
 import type { CriticImage, RunToolState } from "./types.js";
-import {
-  booleanShapesShape,
-  drawVectorShape,
-  paintShapeShape,
-  runBooleanShapes,
-  runDrawVector,
-  runPaintShape,
-} from "./vector-tool.js";
-import { diffVersionsShape, runDiffVersions } from "./version-diff-tool.js";
 
 const VIEWPORTS = {
   desktop: { height: 900, width: 1440 },
@@ -206,7 +100,7 @@ const TILE_PLAN: Record<
 
 type QueryFn = typeof query;
 
-const agentEditElementShape = toSdkFieldSet({
+export const agentEditElementSdkFields = toSdkFieldSet({
   ...editElementFields,
   style: toOptional(
     Schema.Record(
@@ -464,7 +358,7 @@ async function tileContent(paths: string[]) {
   }));
 }
 
-interface StudioToolCounters {
+export interface StudioToolCounters {
   shots: number;
   checks: number;
   mobileShots?: number;
@@ -517,7 +411,7 @@ async function screenTarget(
   return picked;
 }
 
-function targetDeps(
+export function targetDeps(
   deps: Pick<StudioToolDeps, "canvas" | "frameStates">
 ): TargetDeps | null {
   const states = deps.frameStates ?? null;
@@ -989,501 +883,12 @@ export async function runPrepareShip(
   }
 }
 
-const toDecodedRun = <Fields extends ToolFields, Reply>(
+export const toDecodedRun = <Fields extends ToolFields, Reply>(
   input: ToolInput<Fields>,
   run: (data: Schema.Struct.Type<Fields>) => Promise<Reply>
 ) => toToolRun(input, errorText, run);
 
-export async function createStudioMcpServer(
-  deps: StudioToolDeps
-): Promise<McpSdkServerConfigWithInstance> {
-  const { createSdkMcpServer, tool } =
-    await import("@anthropic-ai/claude-agent-sdk");
-
-  const counters: StudioToolCounters = deps.run
-    ? (deps.run.counters ??= { checks: 0, shots: 0 })
-    : { checks: 0, shots: 0 };
-
-  const screenshot = tool(
-    "screenshot",
-    TOOL_SHORT.screenshot,
-    SCREENSHOT_TOOL.sdkFields,
-    toDecodedRun(SCREENSHOT_TOOL.input, (args) =>
-      takeScreenshot(deps, counters, args)
-    ),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const renderCheck = tool(
-    "render_check",
-    TOOL_SHORT.render_check,
-    TARGET_TOOL.sdkFields,
-    toDecodedRun(TARGET_TOOL.input, (args) =>
-      runRenderCheck(deps, counters, args)
-    ),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const designReview = tool(
-    "design_review",
-    TOOL_SHORT.design_review,
-    TARGET_TOOL.sdkFields,
-    toDecodedRun(TARGET_TOOL.input, (args) => runDesignReview(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const defineTweaksTool = tool(
-    "define_tweaks",
-    TOOL_SHORT.define_tweaks,
-    TWEAKS_TOOL.sdkFields,
-    toDecodedRun(TWEAKS_TOOL.input, (args) =>
-      runDefineTweaks(deps, args.controls)
-    )
-  );
-
-  const designSystemCheck = tool(
-    "design_system_check",
-    TOOL_SHORT.design_system_check,
-    {},
-    () => runDesignSystemCheck(deps),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const canvasListTool = tool(
-    "canvas_list",
-    TOOL_SHORT.canvas_list,
-    {},
-    () => runCanvasList(deps),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const canvasPlaceTool = tool(
-    "canvas_place",
-    TOOL_SHORT.canvas_place,
-    canvasPlaceInput.sdkFields,
-    toDecodedRun(canvasPlaceInput.input, (args) =>
-      runCanvasPlace(deps, args.frames)
-    )
-  );
-
-  const canvasPointTool = tool(
-    "canvas_point",
-    TOOL_SHORT.canvas_point,
-    canvasPointInput.sdkFields,
-    toDecodedRun(canvasPointInput.input, (args) => runCanvasPoint(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const listLinksTool = tool(
-    "list_links",
-    TOOL_SHORT.list_links,
-    {},
-    () => runListLinks(deps),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const editLinksTool = tool(
-    "edit_links",
-    TOOL_SHORT.edit_links,
-    editLinksFields,
-    (args) => runEditLinks(deps, args)
-  );
-
-  const listFrameStatesTool = tool(
-    "list_frame_states",
-    TOOL_SHORT.list_frame_states,
-    {},
-    () => runListFrameStates(deps),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setFrameStateTool = tool(
-    "set_frame_state",
-    TOOL_SHORT.set_frame_state,
-    frameStateInput.sdkFields,
-    toDecodedRun(frameStateInput.input, (args) => runSetFrameState(deps, args))
-  );
-
-  const setFrameSessionTool = tool(
-    "set_frame_session",
-    TOOL_SHORT.set_frame_session,
-    frameSessionInput.sdkFields,
-    toDecodedRun(frameSessionInput.input, (args) =>
-      runSetFrameSession(deps, args)
-    )
-  );
-
-  const listRouteLinksTool = tool(
-    "list_route_links",
-    TOOL_SHORT.list_route_links,
-    routeLinkInput.sdkFields,
-    toDecodedRun(routeLinkInput.input, (args) =>
-      runListRouteLinks(deps, args.route)
-    ),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const addFlowTool = tool(
-    "add_flow",
-    TOOL_SHORT.add_flow,
-    FLOW_TOOL.sdkFields,
-    toDecodedRun(FLOW_TOOL.input, (args) => runAddFlow(deps, args))
-  );
-
-  const editElementTool = tool(
-    "edit_element",
-    TOOL_SHORT.edit_element,
-    agentEditElementShape,
-    withLayerIds(deps, (args) => runEditElement(deps, args))
-  );
-
-  const setTokenTool = tool(
-    "set_token",
-    TOOL_SHORT.set_token,
-    setTokenShape,
-    (args) => runSetToken(deps, args)
-  );
-
-  const prepareShipTool = tool(
-    "prepare_ship",
-    TOOL_SHORT.prepare_ship,
-    {},
-    () => runPrepareShip(deps),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setPropsTool = tool(
-    "set_props",
-    TOOL_SHORT.set_props,
-    setPropsShape,
-    withLayerIds(deps, (args) => runSetProps(deps, args))
-  );
-
-  const findStylesTool = tool(
-    "find_styles",
-    TOOL_SHORT.find_styles,
-    findStylesShape,
-    (args) => runFindStyles(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const replaceStyleTool = tool(
-    "replace_style",
-    TOOL_SHORT.replace_style,
-    replaceStyleShape,
-    (args) => runReplaceStyle(deps, args)
-  );
-
-  const arrangeTool = tool(
-    "arrange",
-    TOOL_SHORT.arrange,
-    arrangeShape,
-    (args) => runArrange(deps, args)
-  );
-
-  const selectMatchingTool = tool(
-    "select_matching",
-    TOOL_SHORT.select_matching,
-    selectMatchingShape,
-    (args) => runSelectMatching(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const diffVersionsTool = tool(
-    "diff_versions",
-    TOOL_SHORT.diff_versions,
-    diffVersionsShape,
-    (args) =>
-      runDiffVersions(
-        {
-          headVersionId: deps.ctx.direction.headVersionId,
-          runsDir: deps.runsDir,
-        },
-        args
-      ),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const measureTool = tool(
-    "measure",
-    TOOL_SHORT.measure,
-    measureShape,
-    (args) => runMeasure(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const reviewFrameTool = tool(
-    "review_frame",
-    TOOL_SHORT.review_frame,
-    reviewFrameShape,
-    withLayerIds(deps, (args) => runReviewFrameTool(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const insertComponentTool = tool(
-    "insert_component",
-    TOOL_SHORT.insert_component,
-    insertComponentShape,
-    withLayerIds(deps, (args) => runInsertComponent(deps, args))
-  );
-
-  const listBreakpointsTool = tool(
-    "list_breakpoints",
-    TOOL_SHORT.list_breakpoints,
-    listBreakpointsInput,
-    withLayerIds(deps, (args) => runListBreakpoints(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setBreakpointStyleTool = tool(
-    "set_breakpoint_style",
-    TOOL_SHORT.set_breakpoint_style,
-    setBreakpointStyleInput,
-    withLayerIds(deps, (args) => runSetBreakpointStyle(deps, args))
-  );
-
-  const copyCodeTool = tool(
-    "copy_code",
-    TOOL_SHORT.copy_code,
-    copyCodeInput,
-    withLayerIds(deps, (args) => runCopyCode(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const insertJsxTool = tool(
-    "insert_jsx",
-    TOOL_SHORT.insert_jsx,
-    insertJsxShape,
-    withLayerIds(deps, (args) => runInsertJsx(deps, args))
-  );
-
-  const clearTextTool = tool(
-    "clear_text",
-    TOOL_SHORT.clear_text,
-    clearTextShape,
-    withLayerIds(deps, (args) => runClearText(deps, args))
-  );
-
-  const listComponentsTool = tool(
-    "list_components",
-    TOOL_SHORT.list_components,
-    listComponentsShape,
-    (args) => runListComponents(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const getLayersTool = tool(
-    "get_layers",
-    TOOL_SHORT.get_layers,
-    getLayersShape,
-    (args) => runGetLayers(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const listCommentsTool = tool(
-    "list_comments",
-    TOOL_SHORT.list_comments,
-    listCommentsInput.sdkFields,
-    toDecodedRun(listCommentsInput.input, (args) =>
-      runListComments(deps, args)
-    ),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const resolveCommentTool = tool(
-    "resolve_comment",
-    TOOL_SHORT.resolve_comment,
-    resolveCommentInput.sdkFields,
-    toDecodedRun(resolveCommentInput.input, (args) =>
-      runResolveComment(deps, args)
-    )
-  );
-
-  const getRunContextTool = tool(
-    "get_run_context",
-    TOOL_SHORT.get_run_context,
-    getRunContextShape,
-    () => runGetRunContext(deps),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const appDoctorTool = tool(
-    "app_doctor",
-    TOOL_SHORT.app_doctor,
-    doctorInput.sdkFields,
-    toDecodedRun(doctorInput.input, (args) =>
-      runAppDoctor(deps, args.fresh === true)
-    ),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const componentPreviewTool = tool(
-    "component_preview",
-    TOOL_SHORT.component_preview,
-    componentPreviewShape,
-    (args) => runComponentPreview(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const createComponentTool = tool(
-    "create_component",
-    TOOL_SHORT.create_component,
-    createComponentShape,
-    (args) => runCreateComponent(deps, args)
-  );
-
-  const swapInstanceTool = tool(
-    "swap_instance",
-    TOOL_SHORT.swap_instance,
-    swapInstanceShape,
-    withLayerIds(deps, (args) => runSwapInstance(deps, args))
-  );
-
-  const exportFrameTool = tool(
-    "export_frame",
-    TOOL_SHORT.export_frame,
-    exportFrameShape,
-    withLayerIds(deps, (args) => runExportFrame(deps, args))
-  );
-
-  const setImageTool = tool(
-    "set_image",
-    TOOL_SHORT.set_image,
-    setImageShape,
-    (args) => runSetImage(deps, args)
-  );
-
-  const drawVectorTool = tool(
-    "draw_vector",
-    TOOL_SHORT.draw_vector,
-    drawVectorShape,
-    (args) => runDrawVector(deps, args)
-  );
-
-  const booleanShapesTool = tool(
-    "boolean_shapes",
-    TOOL_SHORT.boolean_shapes,
-    booleanShapesShape,
-    (args) => runBooleanShapes(deps, args)
-  );
-
-  const setLayerStateTool = tool(
-    LAYER_STATE_TOOL,
-    TOOL_SHORT.set_layer_state,
-    layerStateShape,
-    (args) => runSetLayerState(deps, args)
-  );
-
-  const listLockedLayersTool = tool(
-    LIST_LOCKS_TOOL,
-    TOOL_SHORT.list_locked_layers,
-    listLocksShape,
-    (args) => runListLockedLayers(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const compareReferenceTool = tool(
-    "compare_to_reference",
-    TOOL_SHORT.compare_to_reference,
-    compareReferenceShape,
-    (args) =>
-      runCompareToReference({ ...deps, targets: targetDeps(deps) }, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const figmaImportTool = tool(
-    "import_figma_frame",
-    TOOL_SHORT.import_figma_frame,
-    figmaImportShape,
-    withLayerIds(deps, (args) => runFigmaImport(deps, args))
-  );
-
-  const paintShapeTool = tool(
-    "paint_shape",
-    TOOL_SHORT.paint_shape,
-    paintShapeShape,
-    (args) => runPaintShape(deps, args)
-  );
-
-  const allowed = studioToolsFor(
-    deps.ctx.project,
-    deps.ctx.request.mode,
-    deps.ctx.request.mode === "edit" && isLeanRun(deps.ctx.request)
-  );
-
-  const helpTool = tool(
-    HELP_TOOL,
-    TOOL_SHORT.studio_help,
-    HELP_INPUT.sdkFields,
-    toDecodedRun(HELP_INPUT.input, async (args) => ({
-      content: [
-        { text: studioHelp(args.tool, allowed), type: "text" as const },
-      ],
-    })),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const all = [
-    screenshot,
-    renderCheck,
-    designReview,
-    defineTweaksTool,
-    designSystemCheck,
-    canvasListTool,
-    canvasPlaceTool,
-    canvasPointTool,
-    listLinksTool,
-    editLinksTool,
-    listFrameStatesTool,
-    setFrameStateTool,
-    setFrameSessionTool,
-    editElementTool,
-    setTokenTool,
-    prepareShipTool,
-    setPropsTool,
-    findStylesTool,
-    replaceStyleTool,
-    reviewFrameTool,
-    insertComponentTool,
-    insertJsxTool,
-    listBreakpointsTool,
-    setBreakpointStyleTool,
-    copyCodeTool,
-    clearTextTool,
-    listComponentsTool,
-    getLayersTool,
-    listCommentsTool,
-    resolveCommentTool,
-    listRouteLinksTool,
-    addFlowTool,
-    arrangeTool,
-    measureTool,
-    getRunContextTool,
-    appDoctorTool,
-    componentPreviewTool,
-    createComponentTool,
-    swapInstanceTool,
-    selectMatchingTool,
-    diffVersionsTool,
-    exportFrameTool,
-    setImageTool,
-    drawVectorTool,
-    booleanShapesTool,
-    paintShapeTool,
-    setLayerStateTool,
-    listLockedLayersTool,
-    compareReferenceTool,
-    figmaImportTool,
-    helpTool,
-    ...buildAgentTools(runActionCaller(deps), tool),
-  ];
-
-  return createSdkMcpServer({
-    name: "studio",
-    tools: all.filter((entry) => allowed.has(entry.name)),
-    version: "0.1.0",
-  });
-}
+export type ToolFactory = typeof createTool;
 
 export function studioHelp(name: string, allowed: ReadonlySet<string>): string {
   const short = name.replace(/^mcp__studio__/, "");

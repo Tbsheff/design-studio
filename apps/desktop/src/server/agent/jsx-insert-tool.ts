@@ -74,7 +74,7 @@ const insertJsxFields = {
   ),
 };
 
-export const insertJsxShape = toSdkFieldSet(insertJsxFields);
+export const insertJsxSdkFields = toSdkFieldSet(insertJsxFields);
 
 const schema = toToolInput(insertJsxFields);
 
@@ -165,7 +165,7 @@ const clearTextFields = {
   targetSource: insertJsxFields.targetSource,
 };
 
-export const clearTextShape = toSdkFieldSet(clearTextFields);
+export const clearTextSdkFields = toSdkFieldSet(clearTextFields);
 
 const clearSchema = toToolInput(clearTextFields);
 

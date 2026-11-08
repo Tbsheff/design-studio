@@ -45,7 +45,7 @@ const exportFrameFields = {
   ),
 };
 
-export const exportFrameShape = toSdkFieldSet(exportFrameFields);
+export const exportFrameSdkFields = toSdkFieldSet(exportFrameFields);
 
 const schema = toToolInput(exportFrameFields);
 

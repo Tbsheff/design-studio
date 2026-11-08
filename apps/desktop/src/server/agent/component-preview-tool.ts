@@ -29,7 +29,7 @@ const componentPreviewFields = {
   }),
 };
 
-export const componentPreviewShape = toSdkFieldSet(componentPreviewFields);
+export const componentPreviewSdkFields = toSdkFieldSet(componentPreviewFields);
 
 const schema = toToolInput(componentPreviewFields);
 

@@ -56,7 +56,7 @@ const setPropsFields = {
   ),
 };
 
-export const setPropsShape = toSdkFieldSet(setPropsFields);
+export const setPropsSdkFields = toSdkFieldSet(setPropsFields);
 
 const schema = toToolInput(setPropsFields);
 

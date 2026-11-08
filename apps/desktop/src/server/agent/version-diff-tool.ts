@@ -30,7 +30,7 @@ const diffVersionsFields = {
   ),
 };
 
-export const diffVersionsShape = toSdkFieldSet(diffVersionsFields);
+export const diffVersionsSdkFields = toSdkFieldSet(diffVersionsFields);
 
 const diffVersionsInput = toToolInput(diffVersionsFields);
 

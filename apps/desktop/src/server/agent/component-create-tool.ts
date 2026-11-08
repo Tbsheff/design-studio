@@ -104,9 +104,9 @@ const swapInstanceFields = {
   ),
 };
 
-export const createComponentShape = toSdkFieldSet(createComponentFields);
+export const createComponentSdkFields = toSdkFieldSet(createComponentFields);
 
-export const swapInstanceShape = toSdkFieldSet(swapInstanceFields);
+export const swapInstanceSdkFields = toSdkFieldSet(swapInstanceFields);
 
 const createSchema = toToolInput(createComponentFields);
 const swapSchema = toToolInput(swapInstanceFields);

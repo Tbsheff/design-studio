@@ -13,7 +13,13 @@ import { RulesTestResultSchema } from "./schema.js";
 
 const runRulesTestDirectEdit = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "test_design_rules",
+    set: "core",
+    short:
+      "Check design rules on one canvas frame without saving them. Returns each rule with the elements that break it. Writes nothing.",
+  },
   confirm: "none",
   description:
     "Check design rules on one canvas frame without saving them. Returns hits for each rule. Writes nothing.",

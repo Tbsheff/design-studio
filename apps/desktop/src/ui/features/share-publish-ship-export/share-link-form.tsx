@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 
 import { useNow } from "../../platform/clock.js";
 import { copy } from "./copy.js";
@@ -8,6 +8,7 @@ import { shareApi } from "./share-api.js";
 import { ShareFormBody } from "./share-form-body.js";
 import { ShareFormFoot } from "./share-form-foot.js";
 import { ShareHead } from "./share-head.js";
+import type { ShareMode } from "./share-mode.js";
 import type { ShareCopied, ShareState } from "./share-types.js";
 import { useShareForm } from "./use-share-form.js";
 import type { ShareTargetInput } from "./use-share-form.js";
@@ -19,16 +20,18 @@ interface ShareLinkFormProps {
   readonly shares: ShareState;
   readonly copied: ShareCopied;
   readonly labels: ReadonlyMap<string, FrameLabel>;
-  readonly tabs: ReactNode;
+  readonly mode: ShareMode;
+  readonly onMode: (mode: ShareMode) => void;
   readonly onClose: () => void;
 }
 
 const ShareLinkForm = ({
   copied,
   labels,
+  mode,
   onClose,
+  onMode,
   shares,
-  tabs,
   target,
 }: ShareLinkFormProps): ReactElement => {
   const form = useShareForm(target, shares, copied);
@@ -70,7 +73,8 @@ const ShareLinkForm = ({
       <ShareHead
         title={copy.shareAReadOnly}
         subtitle={copy.viewersSeeImagesOf}
-        tabs={tabs}
+        mode={mode}
+        onMode={onMode}
         onClose={onClose}
       />
       <ShareFormBody

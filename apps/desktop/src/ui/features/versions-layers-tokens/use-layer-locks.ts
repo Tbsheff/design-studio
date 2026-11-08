@@ -1,5 +1,5 @@
 import type { BridgeToParent, StudioEvent } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { cleanLockKeys } from "../../../shared/layer-locks.js";
 import type { LayerLocksView } from "../../../shared/layer-locks.js";
@@ -38,7 +38,8 @@ const loadLocks = async (
   );
 
   const legacy = legacyKey(projectId, directionId);
-  const old = readLegacy(legacy).filter((key) => !view.keys.includes(key));
+  const known = new Set(view.keys);
+  const old = readLegacy(legacy).filter((key) => !known.has(key));
 
   if (old.length === 0) {
     dropLegacy(legacy);
@@ -78,12 +79,12 @@ interface LiveLocks {
   scope: string | null;
 }
 
-const persistLocks = (
+const persistLocks = async (
   cur: LiveLocks,
   loadedScope: string | null,
   keys: { current: string[] },
   message: BridgeToParent
-): void => {
+): Promise<void> => {
   if (message.type !== "locks" || !Array.isArray(message.keys)) {
     return;
   }
@@ -99,9 +100,11 @@ const persistLocks = (
   }
 
   keys.current = next;
-  void json<LayerLocksView>("PUT", locksPath(cur.projectId, cur.directionId), {
-    keys: next,
-  }).catch(() => null);
+  await Promise.allSettled([
+    json<LayerLocksView>("PUT", locksPath(cur.projectId, cur.directionId), {
+      keys: next,
+    }),
+  ]);
 };
 
 const isNewLocksEvent = (
@@ -141,25 +144,19 @@ const postLocks = (
   }
 };
 
-const useLayerLocks = (
-  projectId: string,
-  directionId: string | null,
-  frontToken: string | null,
-  post: (body: ParentMessageBody) => void
-): LayerLocks => {
-  const scope = directionId ? `${projectId}/${directionId}` : null;
-  const keys = useRef<string[]>([]);
-  const loaded = useRef<string | null>(null);
-  const live = useRef({ directionId, post, projectId, scope });
-  live.current = { directionId, post, projectId, scope };
+interface LoadInput {
+  directionId: string | null;
+  projectId: string;
+  scope: string | null;
+  onLoaded: (list: string[], loadedScope: string) => void;
+  onReset: () => void;
+}
 
-  const send = useCallback((always = false): void => {
-    postLocks(live.current, loaded.current, keys.current, always);
-  }, []);
+const useLoadLocks = (input: LoadInput): void => {
+  const { directionId, onLoaded, onReset, projectId, scope } = input;
 
   useEffect(() => {
-    keys.current = [];
-    loaded.current = null;
+    onReset();
 
     if (!directionId || !scope) {
       return;
@@ -167,35 +164,85 @@ const useLayerLocks = (
 
     let active = true;
 
-    const load = async () => {
+    const load = async (): Promise<void> => {
       const list = await fetchLocks(projectId, directionId);
 
-      if (!list || !active) {
-        return;
+      if (list && active) {
+        onLoaded(list, scope);
       }
-
-      keys.current = list;
-      loaded.current = scope;
-      send();
     };
 
-    void load();
+    load();
 
-    return () => {
+    return (): void => {
       active = false;
     };
-  }, [projectId, directionId, scope, send]);
+  }, [projectId, directionId, scope, onLoaded, onReset]);
+};
+
+const toScope = (
+  projectId: string,
+  directionId: string | null
+): string | null => {
+  if (directionId) {
+    return `${projectId}/${directionId}`;
+  }
+
+  return null;
+};
+
+const useLayerLocks = (
+  projectId: string,
+  directionId: string | null,
+  frontToken: string | null,
+  post: (body: ParentMessageBody) => void
+): LayerLocks => {
+  const scope = toScope(projectId, directionId);
+  const keys = useRef<string[]>([]);
+  const loaded = useRef<string | null>(null);
+  const live = useRef({ directionId, post, projectId, scope });
+
+  useLayoutEffect(() => {
+    live.current = { directionId, post, projectId, scope };
+  }, [directionId, post, projectId, scope]);
+
+  const send = useCallback((always = false): void => {
+    postLocks(live.current, loaded.current, keys.current, always);
+  }, []);
+
+  const onReset = useCallback((): void => {
+    keys.current = [];
+    loaded.current = null;
+  }, []);
+
+  const onLoaded = useCallback(
+    (list: string[], loadedScope: string): void => {
+      keys.current = list;
+      loaded.current = loadedScope;
+      send();
+    },
+    [send]
+  );
+
+  useLoadLocks({ directionId, onLoaded, onReset, projectId, scope });
+
   useEffect(() => {
     if (frontToken) {
       send();
     }
-  }, [frontToken, scope, send]);
-  useProjectEvents(projectId, (event: StudioEvent) => {
-    if (isNewLocksEvent(event, live.current, loaded.current, keys.current)) {
-      keys.current = event.keys;
-      send(true);
-    }
-  });
+  }, [frontToken, send]);
+
+  const onProjectEvent = useCallback(
+    (event: StudioEvent): void => {
+      if (isNewLocksEvent(event, live.current, loaded.current, keys.current)) {
+        keys.current = event.keys;
+        send(true);
+      }
+    },
+    [send]
+  );
+
+  useProjectEvents(projectId, onProjectEvent);
 
   const setNodeLocked = useCallback((id: number, locked: boolean): void => {
     live.current.post({ id, locked, type: "lock-node" });

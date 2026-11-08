@@ -4,8 +4,12 @@ import type {
   CreateTokenResult,
 } from "@design-studio/contracts";
 import { useModalDialog } from "@design-studio/ui";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 
+import {
+  useBackdropDismiss,
+  useEscapeShield,
+} from "../../platform/use-backdrop-dismiss.js";
 import { toDisplayColor, isValidColor } from "../inspector/index.js";
 import type { CreateRequest } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";
@@ -30,49 +34,46 @@ const toPaint = (value: string): string => {
   return "transparent";
 };
 
-const handleDialogKeyDown = (event: KeyboardEvent): void => {
-  if (event.key === "Escape") {
-    event.stopPropagation();
+const toInitialValue = (request: CreateRequest, isColor: boolean): string => {
+  if (isColor) {
+    return toDisplayColor(request.value);
   }
+
+  return request.value;
 };
 
-const CreateTokenDialog = ({
-  request,
-  entries,
-  onSubmit,
-  onClose,
-}: DialogProps): ReactNode => {
-  const group = TOKEN_GROUP_FOR_PROPERTY[request.prop] ?? "color";
-  const isColor = group === "color";
-  let initialValue = request.value;
+const CreateTokenDialog = (props: DialogProps): ReactNode => {
+  const { onClose, request } = props;
+  const tokenGroup = TOKEN_GROUP_FOR_PROPERTY[request.prop] ?? "color";
+  const isColor = tokenGroup === "color";
   let valuePaint: string | null = null;
 
-  if (isColor) {
-    initialValue = toDisplayColor(request.value);
-  }
-
   const form = useCreateToken({
-    entries,
-    group,
-    initialValue,
+    entries: props.entries,
+    group: tokenGroup,
+    initialValue: toInitialValue(request, isColor),
     isColor: isValidColor,
-    onClose,
-    onSubmit,
+    onClose: props.onClose,
+    onSubmit: props.onSubmit,
   });
 
   if (isColor) {
     valuePaint = toPaint(form.value);
   }
 
-  const dialog = useModalDialog(() => {
+  const dismiss = (): boolean => {
     if (form.busy) {
       return false;
     }
 
     onClose();
-  });
 
-  const { onMouseDown: handleMouseDown, ref } = dialog;
+    return true;
+  };
+
+  const { ref } = useModalDialog(dismiss);
+  useBackdropDismiss(ref, dismiss);
+  useEscapeShield(ref);
   const { submit: handleSubmit } = form;
 
   return (
@@ -80,8 +81,6 @@ const CreateTokenDialog = ({
       ref={ref}
       className="modal tk-dialog"
       aria-label={COPY.labelCreateToken}
-      onMouseDown={handleMouseDown}
-      onKeyDown={handleDialogKeyDown}
     >
       <form className="modal-form" onSubmit={handleSubmit} noValidate>
         <CreateTokenHead />

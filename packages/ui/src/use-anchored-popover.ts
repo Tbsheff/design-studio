@@ -19,10 +19,13 @@ const HIDDEN: CSSProperties = {
 const SCROLL_EVENT = "scroll";
 const RESIZE_EVENT = "resize";
 
-interface AnchoredPopover<View extends string> {
+interface AnchoredPopover<
+  View extends string,
+  Panel extends HTMLElement = HTMLDivElement,
+> {
   readonly close: (refocus: boolean) => void;
   readonly open: (next: View) => void;
-  readonly panel: RefObject<HTMLDivElement | null>;
+  readonly panel: RefObject<Panel | null>;
   readonly style: CSSProperties;
   readonly trigger: RefObject<HTMLSpanElement | null>;
   readonly view: View | null;
@@ -86,12 +89,15 @@ const useDismiss = (
   }, [isActive, close, panel, trigger]);
 };
 
-const useAnchoredPopover = <View extends string>(
+const useAnchoredPopover = <
+  View extends string,
+  Panel extends HTMLElement = HTMLDivElement,
+>(
   anchor: ((trigger: HTMLElement) => HTMLElement) | null = null
-): AnchoredPopover<View> => {
+): AnchoredPopover<View, Panel> => {
   const [view, setView] = useState<View | null>(null);
   const trigger = useRef<HTMLSpanElement | null>(null);
-  const panel = useRef<HTMLDivElement | null>(null);
+  const panel = useRef<Panel | null>(null);
   const returnTo = useRef<HTMLElement | null>(null);
 
   const open = useCallback((next: View) => {

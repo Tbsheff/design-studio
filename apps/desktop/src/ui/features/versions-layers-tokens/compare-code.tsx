@@ -10,9 +10,6 @@ import { FileSection } from "./file-section.js";
 import { useChanges } from "./use-changes.js";
 import { useHunkReview } from "./use-hunk-review.js";
 
-import "../../styles/compare-code.css";
-import "../../styles/compare-hunk.css";
-
 interface CompareCodeProps {
   readonly newer: Version;
   readonly older: Version;
@@ -25,12 +22,14 @@ const CompareCode = ({
   projectId,
 }: CompareCodeProps): ReactNode => {
   const state = useChanges(projectId, older.id, newer.id);
+
   const review = useHunkReview(
     projectId,
     newer.directionId,
     older.id,
     newer.id
   );
+
   const [toggled, setToggled] = useState<Set<string>>(() => new Set());
 
   const toggleFile = useCallback((path: string): void => {

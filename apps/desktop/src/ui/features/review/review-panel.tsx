@@ -1,5 +1,11 @@
 import type { ReviewFinding } from "@design-studio/contracts/review";
-import { useCallback, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import type { ReactNode, RefObject, ReactElement } from "react";
 
 import { isTypingTarget } from "../../platform/typing-target.js";
@@ -31,7 +37,11 @@ const useEscapeClose = (
   onClose: () => void
 ): void => {
   const latest = useRef(onClose);
-  latest.current = onClose;
+
+  useLayoutEffect(() => {
+    latest.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     const onKey = (keyboardEvent: KeyboardEvent): void => {
       if (keyboardEvent.key !== "Escape" || keyboardEvent.defaultPrevented) {
@@ -63,7 +73,7 @@ const useEscapeClose = (
 const ReviewPanel = (props: Props): ReactElement => {
   const panel = useRef<HTMLDivElement>(null);
   useEscapeClose(panel, props.onClose);
-  const { fix } = props.review;
+  const { fix, run } = props.review;
 
   const fixFindings = useCallback(
     (list: ReviewFinding[]): void => {
@@ -72,14 +82,25 @@ const ReviewPanel = (props: Props): ReactElement => {
     [fix]
   );
 
-  const actions: ReviewActions = {
-    canAsk: props.canAsk,
-    fixBlocked: toFixBlocked(props.live, props.running),
-    fixing: props.review.fixing,
-    onAsk: props.onAsk,
-    onFix: fixFindings,
-    onSelect: props.onSelect,
-  };
+  const actions: ReviewActions = useMemo(
+    () => ({
+      canAsk: props.canAsk,
+      fixBlocked: toFixBlocked(props.live, props.running),
+      fixing: props.review.fixing,
+      onAsk: props.onAsk,
+      onFix: fixFindings,
+      onSelect: props.onSelect,
+    }),
+    [
+      props.canAsk,
+      props.live,
+      props.running,
+      props.review.fixing,
+      props.onAsk,
+      props.onSelect,
+      fixFindings,
+    ]
+  );
 
   return (
     <div
@@ -92,7 +113,7 @@ const ReviewPanel = (props: Props): ReactElement => {
         frameLabel={props.frameLabel}
         isBusy={props.review.busy}
         isLive={props.live}
-        onRun={props.review.run}
+        onRun={run}
         onClose={props.onClose}
       />
       <ReviewSummary review={props.review} />

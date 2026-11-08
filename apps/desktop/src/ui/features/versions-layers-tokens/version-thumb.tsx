@@ -3,27 +3,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 
 import { cachedThumb, requestThumb } from "./versions-api.js";
-import type { ThumbResult } from "./versions-api.js";
+import type { ThumbLookup, ThumbResult } from "./versions-api.js";
 
 interface Props {
   projectId: string;
   versionId: string;
   active: boolean;
-  label: string;
   onOpen: () => void;
 }
 
 const THUMB_ICON_SIZE = 14;
+const THUMB_WIDTH = 56;
+const THUMB_HEIGHT = 36;
 
-const toThumbState = (
-  result: ThumbResult | undefined,
-  isLoaded: boolean
-): string => {
-  if (result === undefined) {
+const toThumbState = (lookup: ThumbLookup, isLoaded: boolean): string => {
+  if (!lookup.isKnown) {
     return "loading";
   }
 
-  if (result === null) {
+  if (lookup.result === null) {
     return "none";
   }
 
@@ -65,26 +63,29 @@ const VersionThumb = ({
   projectId,
   versionId,
   active,
-  label,
   onOpen,
 }: Props): ReactNode => {
   const ref = useRef<HTMLSpanElement>(null);
 
-  const [result, setResult] = useState<ThumbResult | undefined>(() =>
+  const [lookup, setLookup] = useState<ThumbLookup>(() =>
     cachedThumb(projectId, versionId)
   );
 
+  const { isKnown, result } = lookup;
+
   const [loaded, setLoaded] = useState(false);
-  const inView = useInView(ref, active && result === undefined);
+  const inView = useInView(ref, active && !isKnown);
   useEffect(() => {
-    if (!inView || result !== undefined) {
+    if (!inView || isKnown) {
       return;
     }
 
-    return requestThumb(projectId, versionId, setResult);
-  }, [inView, result, projectId, versionId]);
+    return requestThumb(projectId, versionId, (found: ThumbResult): void => {
+      setLookup({ isKnown: true, result: found });
+    });
+  }, [inView, isKnown, projectId, versionId]);
 
-  const state = toThumbState(result, loaded);
+  const state = toThumbState(lookup, loaded);
 
   const handleLoad = useCallback((): void => {
     setLoaded(true);
@@ -100,7 +101,14 @@ const VersionThumb = ({
       onClick={onOpen}
     >
       {result && (
-        <img src={result} alt="" draggable={false} onLoad={handleLoad} />
+        <img
+          src={result}
+          alt=""
+          width={THUMB_WIDTH}
+          height={THUMB_HEIGHT}
+          draggable={false}
+          onLoad={handleLoad}
+        />
       )}
       {result === null && <Icon name="file" size={THUMB_ICON_SIZE} />}
     </span>

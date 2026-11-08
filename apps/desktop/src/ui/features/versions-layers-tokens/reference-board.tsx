@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import type { BoardProps } from "./compare-board-types.js";
+import type { BoardEntry } from "./compare-board-types.js";
 import { CompareFrame } from "./compare-frame.js";
 import { CompareLabel } from "./compare-label.js";
 import { CompareStage } from "./compare-stage.js";
@@ -16,7 +16,8 @@ import { toWipeHandle } from "./wipe-handle.js";
 
 const REFERENCE_OPACITY = 100;
 
-const ReferenceBoard = (props: BoardProps): ReactNode => {
+const ReferenceBoard = ({ board }: BoardEntry): ReactNode => {
+  const props = board;
   const { scale, viewport } = props;
   const width = viewport.width * scale;
   const height = viewport.height * scale;

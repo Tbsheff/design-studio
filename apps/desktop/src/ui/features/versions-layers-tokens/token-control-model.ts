@@ -3,7 +3,14 @@ import type {
   DirectStyleProperty,
 } from "@design-studio/contracts";
 
-import type { TokenFieldState } from "../../../shared/token-match.js";
+import {
+  tokenFieldState,
+  tokensForProperty,
+} from "../../../shared/token-match.js";
+import type {
+  TokenFieldState,
+  TokenMode,
+} from "../../../shared/token-match.js";
 import { COPY } from "./copy.js";
 
 interface TokenCreateRequest {
@@ -17,6 +24,43 @@ const findEntry = (
   cssVar: string | null
 ): CompiledTokenEntry | null =>
   entries.find((entry) => entry.cssVar === cssVar) ?? null;
+
+interface StateRefs {
+  readonly current: string | null;
+  readonly nearest: string | null;
+}
+
+const toStateRefs = (state: TokenFieldState): StateRefs => {
+  if (state.kind === "token") {
+    return { current: state.match.cssVar, nearest: null };
+  }
+
+  if (state.kind === "raw") {
+    return { current: null, nearest: state.nearest?.cssVar ?? null };
+  }
+
+  return { current: null, nearest: null };
+};
+
+interface FieldView extends StateRefs {
+  readonly pool: CompiledTokenEntry[];
+  readonly state: TokenFieldState;
+}
+
+const toFieldView = (
+  prop: DirectStyleProperty,
+  value: string,
+  entries: CompiledTokenEntry[],
+  mode: TokenMode
+): FieldView => {
+  const state = tokenFieldState(prop, value, entries, mode);
+
+  return {
+    ...toStateRefs(state),
+    pool: tokensForProperty(prop, entries),
+    state,
+  };
+};
 
 const toStateTip = (state: TokenFieldState, name: string | null): string => {
   if (state.kind === "token") {
@@ -66,6 +110,13 @@ const toFieldLabel = (label: string, current: string | null): string => {
   return `${COPY.controlChoosePrefix}${label.toLowerCase()}${COPY.controlTokenSuffix}`;
 };
 
-export { findEntry, toFieldLabel, toMiniLabel, toMiniTip, toStateTip };
+export {
+  findEntry,
+  toFieldLabel,
+  toMiniLabel,
+  toMiniTip,
+  toStateTip,
+  toFieldView,
+};
 
 export type { TokenCreateRequest };

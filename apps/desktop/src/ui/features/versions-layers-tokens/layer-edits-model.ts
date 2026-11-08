@@ -1,11 +1,12 @@
 import type {
   DirectEditRequest,
+  ProjectKind,
   SelectionContext,
   SourceLoc,
 } from "@design-studio/contracts";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
-import type { LayerChange } from "./layer-edits-types.js";
+import type { LayerChange, Reselect } from "./layer-edits-types.js";
 import type { LayerTree } from "./layers-tree.js";
 
 const toLocKey = (loc: SourceLoc): string =>
@@ -84,11 +85,75 @@ const toCutNotice = (count: number, pasteKey: string): string => {
   return `Cut ${what}. Select a frame and press ${pasteKey} to move ${pronoun} there.`;
 };
 
+const toCutFirstNotice = (cutKey: string): string =>
+  `Cut a layer first (${cutKey}), then select where it goes.`;
+
+const RESELECT_MS = 5000;
+
+const toReselectText = (pending: Reselect): string => {
+  if (pending.move) {
+    return pending.text;
+  }
+
+  return "";
+};
+
+const toReselectMessage = (pending: Reselect): ParentMessageBody => ({
+  sourceLoc: pending.loc,
+  tag: pending.tag,
+  text: toReselectText(pending),
+  type: "select-source",
+});
+
+const isReselectDone = (
+  pending: Reselect,
+  token: string,
+  selection: SelectionContext
+): boolean => {
+  if (!selection.source || toLocKey(selection.source) !== pending.loc) {
+    return false;
+  }
+
+  return !(pending.newFrame && token === pending.token);
+};
+
+const toReselect = (
+  next: Omit<Reselect, "newFrame" | "until">,
+  kind: ProjectKind
+): Reselect => ({
+  ...next,
+  newFrame: kind === "html",
+  until: Date.now() + RESELECT_MS,
+});
+
+const toActiveReselect = (
+  pending: Reselect | null,
+  selection: SelectionContext[]
+): Reselect | null => {
+  if (pending && selection.at(-1)?.selector === pending.fromSelector) {
+    return pending;
+  }
+
+  return null;
+};
+
+const isReselectWaiting = (
+  pending: Reselect,
+  frontToken: string | null
+): boolean => pending.newFrame && frontToken === pending.token;
+
 export {
+  RESELECT_MS,
+  isReselectWaiting,
+  toActiveReselect,
+  isReselectDone,
+  toCutFirstNotice,
   toCutNotice,
   toDirectEditRequest,
   toDisplay,
   toPreviewStyle,
   toLocKey,
+  toReselect,
+  toReselectMessage,
   withOverrides,
 };

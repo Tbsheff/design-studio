@@ -59,3 +59,5 @@ const useLayerListState = (input: LayerListStateInput): LayerListState => {
 };
 
 export { useLayerListState };
+
+export type { LayerListState };

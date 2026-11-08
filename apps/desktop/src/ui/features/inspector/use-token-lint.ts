@@ -25,7 +25,10 @@ const useTokenLint = (
       return [];
     }
 
-    return lintValues(edit.values, ui.entries, ui.mode, css, edit.dirty);
+    return lintValues(edit.values, ui.entries, ui.mode, {
+      css,
+      dirty: edit.dirty,
+    });
   }, [ui, edit.values, edit.dirty, css]);
 
   const [isAll, setIsAll] = useState(false);

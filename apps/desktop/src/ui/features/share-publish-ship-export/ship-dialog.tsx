@@ -2,7 +2,7 @@ import { useModalDialog } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import "../../styles/ship.css";
+import { useBackdropDismiss } from "../../platform/use-backdrop-dismiss.js";
 import { copy } from "./copy.js";
 import { ShipDialogBody } from "./ship-dialog-body.js";
 import { ShipDialogFoot } from "./ship-dialog-foot.js";
@@ -17,6 +17,17 @@ interface Props {
   onClose: () => void;
 }
 
+const toFields = (
+  plan: Parameters<typeof fieldsOf>[0] | null,
+  draft: Parameters<typeof fieldsOf>[1] | null
+): ReturnType<typeof fieldsOf> | null => {
+  if (plan && draft) {
+    return fieldsOf(plan, draft);
+  }
+
+  return null;
+};
+
 const ShipDialog = ({ onClose, projectId }: Props): ReactElement => {
   const {
     draft,
@@ -29,31 +40,26 @@ const ShipDialog = ({ onClose, projectId }: Props): ReactElement => {
     toggleFile,
   } = useShipPlan(projectId);
 
-  const fields = useMemo(
-    () => (plan && draft ? fieldsOf(plan, draft) : null),
-    [plan, draft]
-  );
+  const fields = useMemo(() => toFields(plan, draft), [plan, draft]);
 
   const request = shipRequestOf(plan, draft, fields);
   const { failure, isBusy, result, submit } = useShipSubmit(projectId, request);
 
-  const closeUnlessBusy = useCallback((): boolean | void => {
+  const closeUnlessBusy = useCallback((): boolean => {
     if (isBusy) {
       return false;
     }
 
     onClose();
+
+    return true;
   }, [isBusy, onClose]);
 
-  const dialog = useModalDialog(closeUnlessBusy);
+  const { ref } = useModalDialog(closeUnlessBusy);
+  useBackdropDismiss(ref, closeUnlessBusy);
 
   return (
-    <dialog
-      ref={dialog.ref}
-      className="modal ship-dialog"
-      aria-label={copy.shipAsA}
-      onMouseDown={dialog.onMouseDown}
-    >
+    <dialog ref={ref} className="modal ship-dialog" aria-label={copy.shipAsA}>
       <form className="modal-form" onSubmit={submit} noValidate>
         <ShipDialogHead
           lead={leadText(plan)}

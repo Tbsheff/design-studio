@@ -4,6 +4,7 @@ const copy = {
   addClassForExamplePx: "Add class, for example px-6",
   addToAppearance: "Add to appearance",
   addTweaksPanel: "Add tweaks panel",
+  align: "Align",
   alignSelf: "Align self",
   alignment: "Alignment",
   alt: "Alt",
@@ -59,6 +60,10 @@ const copy = {
   elementSource: "Element source",
   emptyHint:
     "Click any element on the canvas to edit it. Shift-click to select more.",
+  extraFilter: "Filter",
+  extraShadow: "Shadow",
+  extraTextShadow: "Text shadow",
+  extraTransform: "Transform",
   fillAndStroke: "Fill and stroke",
   findPhoto: "Find photo",
   findingComponentsThatFit: "Finding components that fit…",
@@ -195,6 +200,8 @@ const copy = {
   weight: "Weight",
   whatToTryOptional: "What to try (optional)",
   wrap: "Wrap",
+  writing: "Writing…",
+  written: "Written",
   writtenToTheFileSave:
     "Written to the file. Save version keeps it in the history",
   youHave: "You have ",

@@ -35,7 +35,9 @@ interface Options {
   readonly control: MutableRefObject<DirectEditControl | null>;
   readonly onCommitted: (commit: DirectEditCommit) => void;
   readonly onStale: (message: string) => void;
-  readonly rewrite?: (style: Partial<StyleValues>) => Partial<StyleValues>;
+  readonly rewrite:
+    | ((style: Partial<StyleValues>) => Partial<StyleValues>)
+    | null;
 }
 
 const DEBOUNCE_MS = 250;

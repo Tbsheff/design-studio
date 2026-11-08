@@ -481,6 +481,8 @@ const MatchSection = (props: {
   );
 };
 
+export type { ScopeInput, UseInspectorTokensResult };
+
 export {
   useInspectorTokens,
   SnapToggle,

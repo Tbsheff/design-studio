@@ -1,589 +1,60 @@
 import type {
-  DirectStyleProperty,
   SelectionContext,
+  TailwindOutcome,
 } from "@design-studio/contracts";
-import type { SharedSource } from "@design-studio/contracts/app";
-import { Icon } from "@design-studio/ui";
-import { Suspense, memo, useEffect, useMemo, useState } from "react";
-import type { MutableRefObject, ReactNode } from "react";
+import { startTransition, useCallback, useEffect, useMemo } from "react";
+import type { ReactElement, ReactNode } from "react";
 
-import {
-  ContentPanel,
-  FillSlot,
-  MotionSlot,
-  StateStylesSlot,
-  TextStyleSlot,
-} from "../../inspector-slots.js";
-import type { PreviewPort } from "../../platform/bridge.js";
-import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
-import { AutoLayoutSection } from "./auto-layout-section.js";
-import { BoxModel } from "./box-model.js";
-import type { DeclaredMargins } from "./box-model.js";
-import { copy } from "./copy.js";
-import { SIDES } from "./css-values.js";
-import { VariantScopeContext, useEditVariant } from "./edit-variant.js";
-import { InspectorBreadcrumb } from "./inspector-breadcrumb.js";
-import {
-  ClassLine,
-  domClasses,
-  useElementClasses,
-} from "./inspector-classes.js";
-import { RadiusField } from "./inspector-corners.js";
-import { EffectsSection } from "./inspector-effects.js";
-import {
-  AlignField,
-  ColorField,
-  InspectorSection,
-  SelectField,
-} from "./inspector-fields.js";
-import { SizeRows } from "./inspector-layout.js";
-import {
-  MultiCreateTokenHost,
-  MultiNote,
-  SelectMatchingSection,
-} from "./inspector-multi.js";
-import {
-  CopyCssButton,
-  InspectorOtherStyles,
-} from "./inspector-other-styles.js";
-import { ContentRow, CssTextRow, TextStyleToggles } from "./inspector-rows.js";
-import {
-  AddButton,
-  InspectorAppContext,
-  SharedSourceNote,
-  dataTextPrompt,
-  useInspectorApp,
-} from "./inspector-shared.js";
-import { SourceLink } from "./inspector-source.js";
-import {
-  CreateTokenHost,
-  FontField,
-  MatchSection,
-  SnapToggle,
-  TokenLint,
-  TokenNotes,
-  useInspectorTokens,
-} from "./inspector-tokens.js";
-import { InspectorVariantBar } from "./inspector-variant-bar.js";
-import { NumberField } from "./number-field.js";
+import type { StyleValues } from "./css-values.js";
+import { useEditVariant } from "./edit-variant.js";
+import { useElementClasses } from "./inspector-classes.js";
+import type { ElementClasses } from "./inspector-classes.js";
+import { MultiCreateTokenHost } from "./inspector-multi.js";
+import { CreateTokenHost, useInspectorTokens } from "./inspector-tokens.js";
+import type { ScopeInput } from "./inspector-tokens.js";
 import { SAVE_SETTLE_MS } from "./save-model.js";
-import { MinMaxRows } from "./size-limits.js";
-import { useAuthoredCss } from "./use-authored-css.js";
-import { isSameEditValues, useDirectEdit } from "./use-direct-edit.js";
+import { SimpleContexts } from "./simple-contexts.js";
+import { SimpleEditorBody } from "./simple-editor-body.js";
+import { toSavedAt } from "./simple-model.js";
 import type {
-  DirectEdit,
-  DirectEditCommit,
-  DirectEditControl,
-  SaveStatus,
-} from "./use-direct-edit.js";
+  EditorProps,
+  SimpleEditorProps,
+  SimpleEditorState,
+} from "./simple-model.js";
+import { SimpleMultiBody } from "./simple-multi-body.js";
+import { useAuthoredCss } from "./use-authored-css.js";
+import { useDirectEdit } from "./use-direct-edit.js";
 import { useDirectEdits } from "./use-direct-edits.js";
+import { useSettled } from "./use-settled.js";
 import { TokenUiContext } from "./use-token-snap.js";
-import type { TokenUi } from "./use-token-snap.js";
 
-export interface EditorProps {
-  readonly projectId: string;
-  readonly directionId: string | null;
-  readonly selection: SelectionContext[];
-  readonly port: MutableRefObject<PreviewPort | null>;
-  readonly control: MutableRefObject<DirectEditControl | null>;
-  readonly onCommitted: (commit: DirectEditCommit) => void;
-  readonly onStale: (message: string) => void;
-  readonly tokens: DesignTokens | null;
-}
-
-const WEIGHTS = ["100", "200", "300", "400", "500", "600", "700", "800", "900"];
-const BORDER_STYLES = ["none", "solid", "dashed", "dotted", "double"];
-const CASES = ["none", "uppercase", "lowercase", "capitalize"];
-const OVERFLOWS = ["visible", "hidden", "clip", "scroll", "auto"];
-
-const NEW_BORDER = {
-  "border-color": "#d0d0d0",
-  "border-style": "solid",
-  "border-width": "1px",
-};
-
-type Extra = "shadow" | "text-shadow" | "transform" | "filter";
-
-const EXTRAS: { readonly id: Extra; readonly label: string }[] = [
-  { id: "shadow", label: "Shadow" },
-  { id: "text-shadow", label: "Text shadow" },
-  { id: "transform", label: "Transform" },
-  { id: "filter", label: "Filter" },
-];
-
-const BOX_PROPS = (["margin", "padding"] as const).flatMap((box) =>
-  SIDES.map((side) => `${box}-${side}` as DirectStyleProperty)
-);
-
-const BoxModelMemo = memo(
-  BoxModel,
-  (a, b) =>
-    isSameEditValues(a.edit, b.edit, BOX_PROPS) &&
-    a.edit.dirty.join(",") === b.edit.dirty.join(",") &&
-    SIDES.every((side) => a.declared?.[side] === b.declared?.[side])
-);
-
-const declaredMargins = (
-  selection: SelectionContext | null
-): DeclaredMargins | undefined => {
-  if (!selection) {
-    return undefined;
-  }
-
-  return Object.fromEntries(
-    SIDES.map((side) => [
-      side,
-      selection.styles[`declared-margin-${side}`] ?? "",
-    ])
-  ) as DeclaredMargins;
-};
-
-const isSet = (value: string): boolean =>
-  value !== "" && value !== "none" && value !== "normal";
-
-const extrasInUse = (edit: DirectEdit): Set<Extra> => {
-  const used = new Set<Extra>();
-
-  if (isSet(edit.values["box-shadow"]) || edit.mixed.has("box-shadow")) {
-    used.add("shadow");
-  }
-
-  if (isSet(edit.values["text-shadow"])) {
-    used.add("text-shadow");
-  }
-
-  if (isSet(edit.values.transform)) {
-    used.add("transform");
-  }
-
-  if (isSet(edit.values.filter)) {
-    used.add("filter");
-  }
-
-  return used;
-};
-
-const hasBorder = (edit: DirectEdit): boolean => {
-  const style = edit.values["border-style"];
-  const width = Number.parseFloat(edit.values["border-width"]);
-
-  return (
-    (style !== "" && style !== "none" && width > 0) ||
-    edit.mixed.has("border-width")
-  );
-};
-
-const write = (
-  edit: DirectEdit,
-  patch: Parameters<DirectEdit["preview"]>[0]
-): void => {
-  edit.preview(patch);
-  edit.commit();
-};
-
-const StatusText = ({ status }: { readonly status: SaveStatus }) => {
-  if (status.kind === "saving") {
-    return <span className="ins-status saving">Writing…</span>;
-  }
-
-  if (status.kind === "saved") {
-    return (
-      <span className="ins-status saved" data-tip={copy.writtenToTheFileSave}>
-        Written
-      </span>
-    );
-  }
-
-  return null;
-};
-
-export const ErrorLine = ({
-  status,
-  text,
-}: {
-  readonly status: SaveStatus;
-  readonly text?: string;
-}) => {
-  const app = useInspectorApp();
-
-  if (status.kind !== "error") {
+const toClassInfo = (
+  classes: ElementClasses,
+  hasComponent: boolean
+): TailwindOutcome | null => {
+  if (classes.element?.component && !hasComponent) {
     return null;
   }
 
-  const data =
-    status.code === "text_from_data" ? app.element?.textFromData : null;
-
-  return (
-    <div className="ins-error" role="alert">
-      <Icon name="alert" size={14} />
-      <span>{status.message}</span>
-      {data && app.ask && (
-        <button
-          type="button"
-          className="btn small ghost ins-error-action"
-          onClick={() => app.ask?.(dataTextPrompt(text ?? "", data))}
-        >
-          Ask the agent to change it
-        </button>
-      )}
-    </div>
-  );
+  return classes.tailwind;
 };
 
-export interface SharedEditing {
-  readonly shared: SharedSource;
-  readonly isEditingUse: boolean;
-  readonly onToggle: () => void;
-}
+const toClassLine = (
+  info: TailwindOutcome | null,
+  note: string | null
+): TailwindOutcome | null => {
+  if (info && note) {
+    return { ...info, note };
+  }
 
-const TextSection = ({
-  edit,
-  ui,
-  selection,
-  textStyle,
-}: {
-  readonly edit: DirectEdit;
-  readonly ui: TokenUi | null;
-  readonly selection: SelectionContext | null;
-  readonly textStyle?: ReactNode;
-}) => (
-  <InspectorSection title={copy.text}>
-    <div className="ins-grid">
-      {selection && <ContentRow selection={selection} edit={edit} />}
-      {textStyle && <div className="wide">{textStyle}</div>}
-      <div className="wide">
-        <FontField ui={ui} edit={edit} />
-      </div>
-      <NumberField
-        short="Size"
-        spec={{ edit, label: "Font size", min: 0, prop: "font-size" }}
-      />
-      <ColorField prop="color" label="Text color" short="Color" edit={edit} />
-      <SelectField
-        prop="font-weight"
-        label="Font weight"
-        short="Weight"
-        edit={edit}
-        options={WEIGHTS}
-      />
-      <TextStyleToggles edit={edit} />
-      <div className="ins-field ins-align-row">
-        <span className="ins-scrub static">Align</span>
-        <AlignField edit={edit} />
-      </div>
-      <NumberField
-        short="Leading"
-        spec={{
-          edit,
-          label: "Line height",
-          min: 0,
-          prop: "line-height",
-          step: 0.1,
-          unit: "",
-        }}
-      />
-      <NumberField
-        short="Tracking"
-        spec={{
-          edit,
-          label: "Letter spacing",
-          prop: "letter-spacing",
-          step: 0.1,
-        }}
-      />
-      <SelectField
-        prop="text-transform"
-        label="Text case"
-        short="Case"
-        edit={edit}
-        options={CASES}
-      />
-    </div>
-  </InspectorSection>
-);
-
-const BackgroundField = ({ edit }: { readonly edit: DirectEdit }) => (
-  <ColorField
-    prop="background-color"
-    label="Background color"
-    short="Background"
-    edit={edit}
-  />
-);
-
-const AppearanceSection = ({
-  edit,
-  extras,
-  fill,
-  onReveal,
-}: {
-  readonly edit: DirectEdit;
-  readonly extras: Set<Extra>;
-  readonly fill?: ReactNode;
-  readonly onReveal: (extra: Extra) => void;
-}) => {
-  const hidden = EXTRAS.filter((extra) => !extras.has(extra.id));
-
-  return (
-    <InspectorSection title={copy.appearance}>
-      <div className="ins-grid">
-        <div className="wide">{fill || <BackgroundField edit={edit} />}</div>
-        <RadiusField edit={edit} short="Radius" />
-        <SelectField
-          prop="overflow"
-          label="Overflow"
-          short="Overflow"
-          edit={edit}
-          options={OVERFLOWS}
-        />
-        <NumberField
-          short="Opacity"
-          spec={{
-            edit,
-            label: "Opacity",
-            max: 1,
-            min: 0,
-            prop: "opacity",
-            step: 0.05,
-            unit: "",
-          }}
-        />
-      </div>
-      {extras.has("text-shadow") && (
-        <CssTextRow
-          prop="text-shadow"
-          label="Text shadow"
-          short="Text shadow"
-          edit={edit}
-          placeholder={copy.text01px2px0003}
-        />
-      )}
-      {extras.has("transform") && (
-        <CssTextRow
-          prop="transform"
-          label="Transform"
-          short="Transform"
-          edit={edit}
-          placeholder={copy.rotate4deg}
-        />
-      )}
-      {extras.has("filter") && (
-        <CssTextRow
-          prop="filter"
-          label="Filter"
-          short="Filter"
-          edit={edit}
-          placeholder={copy.blur4px}
-        />
-      )}
-      {hidden.length > 0 && (
-        <div
-          className="ins-add-row"
-          role="group"
-          aria-label={copy.addToAppearance}
-        >
-          {hidden.map((extra) => (
-            <AddButton
-              key={extra.id}
-              label={extra.label}
-              onClick={() => onReveal(extra.id)}
-            />
-          ))}
-        </div>
-      )}
-    </InspectorSection>
-  );
+  return info;
 };
 
-const BorderSection = ({ edit }: { readonly edit: DirectEdit }) => {
-  const on = hasBorder(edit);
-
-  const aside = on ? (
-    <button
-      type="button"
-      className="icon-btn small"
-      aria-label={copy.removeBorder}
-      data-tip={copy.removeBorder}
-      data-tip-align="end"
-      onClick={() =>
-        write(edit, { "border-style": "none", "border-width": "0px" })
-      }
-    >
-      <Icon name="close" size={12} />
-    </button>
-  ) : undefined;
-
-  return (
-    <InspectorSection title={copy.border} aside={aside}>
-      {!on && (
-        <div className="ins-add-row">
-          <AddButton label="Border" onClick={() => write(edit, NEW_BORDER)} />
-        </div>
-      )}
-      {on && (
-        <div className="ins-grid">
-          <NumberField
-            short="Width"
-            spec={{ edit, label: "Border width", min: 0, prop: "border-width" }}
-          />
-          <SelectField
-            prop="border-style"
-            label="Border style"
-            short="Style"
-            edit={edit}
-            options={BORDER_STYLES}
-          />
-          <div className="wide">
-            <ColorField
-              prop="border-color"
-              label="Border color"
-              short="Color"
-              edit={edit}
-            />
-          </div>
-        </div>
-      )}
-    </InspectorSection>
-  );
-};
-
-const LayoutSection = ({
-  edit,
-  selection,
-}: {
-  readonly edit: DirectEdit;
-  readonly selection: SelectionContext | null;
-}) => {
-  const size = selection ? (
-    <SizeRows edit={edit} selection={selection} />
-  ) : (
-    <>
-      <div className="ins-grid">
-        <NumberField
-          short="W"
-          spec={{ edit, label: "Width", min: 0, prop: "width" }}
-        />
-        <NumberField
-          short="H"
-          spec={{ edit, label: "Height", min: 0, prop: "height" }}
-        />
-      </div>
-      <MinMaxRows edit={edit} />
-    </>
-  );
-
-  return (
-    <AutoLayoutSection edit={edit} title={copy.layout} lead={size}>
-      <BoxModelMemo edit={edit} declared={declaredMargins(selection)} />
-    </AutoLayoutSection>
-  );
-};
-
-const SimpleSections = ({
-  edit,
-  ui,
-  selection,
-  textStyle,
-  fill,
-}: {
-  readonly edit: DirectEdit;
-  readonly ui: TokenUi | null;
-  readonly selection: SelectionContext | null;
-  readonly textStyle?: ReactNode;
-  readonly fill?: ReactNode;
-}) => {
-  const [revealed, setRevealed] = useState<Set<Extra>>(() => new Set());
-  const extras = new Set([...extrasInUse(edit), ...revealed]);
-
-  const reveal = (extra: Extra) => {
-    setRevealed((prev) => new Set(prev).add(extra));
-
-    if (extra === "shadow") {
-      write(edit, { "box-shadow": "0px 2px 8px 0px rgba(0, 0, 0, 0.16)" });
-    }
-  };
-
-  return (
-    <>
-      <LayoutSection edit={edit} selection={selection} />
-      <TextSection
-        edit={edit}
-        ui={ui}
-        selection={selection}
-        textStyle={textStyle}
-      />
-      <AppearanceSection
-        edit={edit}
-        extras={extras}
-        fill={fill}
-        onReveal={reveal}
-      />
-      {extras.has("shadow") && (
-        <EffectsSection edit={edit} isRevealed={revealed.has("shadow")} />
-      )}
-      <BorderSection edit={edit} />
-    </>
-  );
-};
-
-const MetaRow = ({
-  tag,
-  source,
-  status,
-  ui,
-  onReset,
-  isResetDisabled: resetDisabled,
-  children,
-}: {
-  readonly tag?: string;
-  readonly source: ReactNode;
-  readonly status: SaveStatus;
-  readonly ui: TokenUi | null;
-  readonly onReset: () => void;
-  readonly isResetDisabled: boolean;
-  readonly children?: ReactNode;
-}) => (
-  <div className="ins-meta">
-    {tag && <span className="ins-tag">{tag}</span>}
-    {source}
-    <span className="ins-header-end" role="status" aria-live="polite">
-      <StatusText status={status} />
-    </span>
-    <SnapToggle ui={ui} />
-    {children}
-    <button
-      type="button"
-      className="btn ghost small"
-      onClick={onReset}
-      disabled={resetDisabled}
-    >
-      Reset
-    </button>
-  </div>
-);
-
-const useSettled = <T,>(value: T, ms: number): T => {
-  const [settled, setSettled] = useState(value);
-  useEffect(() => {
-    const timer = window.setTimeout(() => setSettled(value), ms);
-
-    return () => window.clearTimeout(timer);
-  }, [value, ms]);
-
-  return settled;
-};
-
-type SimpleEditorProps = EditorProps & {
-  readonly target: SelectionContext;
-  readonly sharedEditing?: SharedEditing | null;
-  readonly component?: ReactNode;
-};
-
-const useSimpleEditor = (props: SimpleEditorProps) => {
+const useSimpleEditor = (props: SimpleEditorProps): SimpleEditorState => {
   const variant = useEditVariant();
 
-  const scope = {
+  const scope: ScopeInput = {
     directionId: props.directionId,
     onCommitted: props.onCommitted,
     projectId: props.projectId,
@@ -591,7 +62,7 @@ const useSimpleEditor = (props: SimpleEditorProps) => {
     tokens: props.tokens,
   };
 
-  const tk = useInspectorTokens(scope);
+  const tokens = useInspectorTokens(scope);
 
   const edit = useDirectEdit({
     control: props.control,
@@ -600,30 +71,31 @@ const useSimpleEditor = (props: SimpleEditorProps) => {
     onStale: props.onStale,
     port: props.port,
     projectId: props.projectId,
-    rewrite: tk.ui ? tk.snap.rewrite : undefined,
+    rewrite: tokens.ui && tokens.snap.rewrite,
     selection: props.target,
     variant,
   });
 
   const authored = useAuthoredCss(props.port, props.target.selector);
-
-  const savedAt = useSettled(
-    edit.status.kind === "saved" ? edit.status.at : 0,
-    SAVE_SETTLE_MS
-  );
-
+  const savedAt = useSettled(toSavedAt(edit.status), SAVE_SETTLE_MS);
   const refreshAuthored = authored.request;
+
   useEffect(() => {
     if (savedAt) {
-      void refreshAuthored();
+      startTransition(async () => {
+        await refreshAuthored();
+      });
     }
   }, [savedAt, refreshAuthored]);
 
-  const keepRaw = (raw: Partial<typeof edit.values>) => {
-    tk.snap.keepRaw(raw);
-    edit.preview(raw);
-    edit.commit();
-  };
+  const keepRaw = useCallback(
+    (raw: Partial<StyleValues>) => {
+      tokens.snap.keepRaw(raw);
+      edit.preview(raw);
+      edit.commit();
+    },
+    [tokens.snap, edit]
+  );
 
   const classes = useElementClasses(
     props.projectId,
@@ -633,15 +105,10 @@ const useSimpleEditor = (props: SimpleEditorProps) => {
     variant
   );
 
-  const classInfo =
-    classes.element?.component && !props.target.component
-      ? null
-      : classes.tailwind;
-
-  const classLine =
-    classInfo && edit.tailwind?.note
-      ? { ...classInfo, note: edit.tailwind.note }
-      : classInfo;
+  const classLine = toClassLine(
+    toClassInfo(classes, Boolean(props.target.component)),
+    edit.tailwind?.note ?? null
+  );
 
   const variantProps = classes.variants?.props;
 
@@ -657,191 +124,55 @@ const useSimpleEditor = (props: SimpleEditorProps) => {
     edit,
     keepRaw,
     scope,
-    tk,
+    tokens,
     variantScope,
   };
 };
 
-const SharedNote = ({
-  sharedEditing,
-  isForwards: forwards,
-}: {
-  readonly sharedEditing: SharedEditing | null | undefined;
-  readonly isForwards: boolean;
-}) => {
-  if (!sharedEditing) {
-    return null;
-  }
+const SimpleEditor = (props: SimpleEditorProps): ReactElement => {
+  const state = useSimpleEditor(props);
+  const { projectId, directionId, target } = props;
+  const { edit, tokens, scope } = state;
 
-  return (
-    <SharedSourceNote
-      shared={sharedEditing.shared}
-      isEditingUse={sharedEditing.isEditingUse}
-      canUse={sharedEditing.isEditingUse || forwards}
-      onToggle={sharedEditing.onToggle}
-    />
-  );
-};
-
-export const SimpleEditor = (props: SimpleEditorProps) => {
-  const {
-    scope,
-    tk,
-    edit,
-    authored,
-    keepRaw,
-    classes,
-    classLine,
-    variantScope,
-  } = useSimpleEditor(props);
-
-  const app = useInspectorApp();
-
-  const resolved = useMemo(
-    () => domClasses(props.target.outerHTML),
-    [props.target.outerHTML]
+  const exportMenu = useMemo(
+    () => (
+      <CopyCodeMenu
+        projectId={projectId}
+        directionId={directionId}
+        selector={target.selector}
+        variant="row"
+      />
+    ),
+    [projectId, directionId, target.selector]
   );
 
   return (
-    <InspectorAppContext.Provider value={{ ...app, element: classes.element }}>
-      <VariantScopeContext.Provider value={variantScope}>
-        <TokenUiContext.Provider value={tk.ui}>
-          <div
-            className="inspector ins-simple"
-            aria-label={copy.designInspector}
-          >
-            <div className="ins-head">
-              <InspectorBreadcrumb selection={props.target} port={props.port} />
-              <MetaRow
-                isResetDisabled={false}
-                source={
-                  <SourceLink
-                    projectId={props.projectId}
-                    directionId={props.directionId}
-                    source={props.target.source}
-                  />
-                }
-                status={edit.status}
-                ui={tk.ui}
-                onReset={edit.reset}
-              >
-                <CopyCssButton authored={authored} />
-              </MetaRow>
-            </div>
-            <div className="ins-scroll">
-              <ErrorLine status={edit.status} text={props.target.text} />
-              <SharedNote
-                sharedEditing={props.sharedEditing}
-                isForwards={classes.element?.forwardsClassName === true}
-              />
-              {props.component}
-              <ClassLine info={classLine} resolved={resolved} />
-              <InspectorVariantBar
-                selector={props.target.selector}
-                port={props.port}
-                support={classes.variants}
-                quietNote={classLine?.note ?? null}
-              />
-              {props.directionId && props.target.source && (
-                <StateStylesSlot
-                  projectId={props.projectId}
-                  directionId={props.directionId}
-                  target={props.target}
-                  port={props.port}
-                  status={edit.status}
-                />
-              )}
-              {props.directionId && props.target.source && (
-                <Suspense fallback={null}>
-                  <ContentPanel
-                    projectId={props.projectId}
-                    directionId={props.directionId}
-                    target={props.target}
-                  />
-                </Suspense>
-              )}
-              <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
-              <SimpleSections
-                edit={edit}
-                ui={tk.ui}
-                selection={props.target}
-                textStyle={
-                  props.directionId && (
-                    <TextStyleSlot
-                      projectId={props.projectId}
-                      directionId={props.directionId}
-                      targets={[props.target]}
-                    />
-                  )
-                }
-                fill={
-                  props.directionId && (
-                    <FillSlot
-                      projectId={props.projectId}
-                      directionId={props.directionId}
-                      target={props.target}
-                      port={props.port}
-                      edit={edit}
-                      fallback={<BackgroundField edit={edit} />}
-                    />
-                  )
-                }
-              />
-              {props.directionId && (
-                <MotionSlot
-                  projectId={props.projectId}
-                  directionId={props.directionId}
-                  target={props.target}
-                  port={props.port}
-                />
-              )}
-              <MatchSection
-                projectId={props.projectId}
-                directionId={props.directionId}
-                selection={[props.target]}
-                port={props.port}
-                tokens={props.tokens}
-                edit={edit}
-              />
-              <SelectMatchingSection
-                selection={[props.target]}
-                port={props.port}
-              />
-              <InspectorOtherStyles css={authored.css} />
-              <div className="ins-export">
-                <CopyCodeMenu
-                  projectId={props.projectId}
-                  directionId={props.directionId}
-                  selector={props.target.selector}
-                  variant="row"
-                />
-              </div>
-            </div>
-            <TokenNotes
-              ui={tk.ui}
-              note={tk.snap.note}
-              onKeepRaw={keepRaw}
-              onDismiss={tk.snap.dismiss}
-            />
-          </div>
-          <CreateTokenHost
-            {...scope}
-            edit={edit}
-            request={tk.creating}
-            onClose={tk.closeCreate}
-          />
-        </TokenUiContext.Provider>
-      </VariantScopeContext.Provider>
-    </InspectorAppContext.Provider>
+    <SimpleContexts
+      element={state.classes.element}
+      variantScope={state.variantScope}
+      tokenUi={tokens.ui}
+    >
+      <SimpleEditorBody props={props} state={state} exportMenu={exportMenu} />
+      <CreateTokenHost
+        directionId={scope.directionId}
+        onCommitted={scope.onCommitted}
+        projectId={scope.projectId}
+        selection={scope.selection}
+        tokens={scope.tokens}
+        edit={edit}
+        request={tokens.creating}
+        onClose={tokens.closeCreate}
+      />
+    </SimpleContexts>
   );
 };
 
-export const SimpleMultiEditor = (
-  props: EditorProps & { readonly component?: ReactNode }
-) => {
+const SimpleMultiEditor = (
+  props: EditorProps & { readonly component: ReactNode }
+): ReactElement => {
   const first = props.selection[0] as SelectionContext;
 
-  const scope = {
+  const scope: ScopeInput = {
     directionId: props.directionId,
     onCommitted: props.onCommitted,
     projectId: props.projectId,
@@ -849,7 +180,7 @@ export const SimpleMultiEditor = (
     tokens: props.tokens,
   };
 
-  const tk = useInspectorTokens(scope);
+  const tokens = useInspectorTokens(scope);
 
   const edit = useDirectEdits({
     control: props.control,
@@ -858,75 +189,38 @@ export const SimpleMultiEditor = (
     onStale: props.onStale,
     port: props.port,
     projectId: props.projectId,
-    rewrite: tk.ui ? tk.snap.rewrite : undefined,
+    rewrite: tokens.ui && tokens.snap.rewrite,
     selections: props.selection,
   });
 
-  const keepRaw = (raw: Partial<typeof edit.values>) => {
-    tk.snap.keepRaw(raw);
-    edit.preview(raw);
-    edit.commit();
-  };
+  const keepRaw = useCallback(
+    (raw: Partial<StyleValues>) => {
+      tokens.snap.keepRaw(raw);
+      edit.preview(raw);
+      edit.commit();
+    },
+    [tokens.snap, edit]
+  );
 
   return (
-    <TokenUiContext.Provider value={tk.ui}>
-      <div className="inspector ins-simple" aria-label={copy.designInspector}>
-        <MetaRow
-          tag={`${props.selection.length} elements`}
-          source={<span className="ins-source" />}
-          status={edit.status}
-          ui={tk.ui}
-          onReset={edit.reset}
-          isResetDisabled={edit.blocked !== null}
-        />
-        <div className="ins-scroll">
-          <MultiNote reason={edit.blocked} />
-          <ErrorLine status={edit.status} />
-          {props.component}
-          <fieldset className="ins-fieldset" disabled={edit.blocked !== null}>
-            <SimpleSections
-              edit={edit}
-              ui={tk.ui}
-              selection={null}
-              textStyle={
-                props.directionId && (
-                  <TextStyleSlot
-                    projectId={props.projectId}
-                    directionId={props.directionId}
-                    targets={props.selection}
-                  />
-                )
-              }
-            />
-          </fieldset>
-          <MatchSection
-            projectId={props.projectId}
-            directionId={props.directionId}
-            selection={props.selection}
-            port={props.port}
-            tokens={props.tokens}
-            edit={edit}
-          />
-          <SelectMatchingSection
-            selection={props.selection}
-            port={props.port}
-          />
-        </div>
-        <TokenNotes
-          ui={tk.ui}
-          note={tk.snap.note}
-          onKeepRaw={keepRaw}
-          onDismiss={tk.snap.dismiss}
-        />
-      </div>
+    <TokenUiContext.Provider value={tokens.ui}>
+      <SimpleMultiBody
+        props={props}
+        component={props.component}
+        edit={edit}
+        tokens={tokens}
+        keepRaw={keepRaw}
+      />
       <MultiCreateTokenHost
         projectId={props.projectId}
         directionId={props.directionId}
         tokens={props.tokens}
         edit={edit}
-        request={tk.creating}
-        onClose={tk.closeCreate}
+        request={tokens.creating}
+        onClose={tokens.closeCreate}
       />
     </TokenUiContext.Provider>
   );
 };
+
+export { SimpleEditor, SimpleMultiEditor };

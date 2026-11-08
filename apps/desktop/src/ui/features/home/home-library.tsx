@@ -1,5 +1,6 @@
 import type { Project } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import type { AppHealth } from "../../../shared/found-apps.js";
@@ -57,7 +58,11 @@ export function filterLibrary(
   );
 }
 
-export const FilterChips = ({ filter }: { readonly filter: HomeFilter }) => (
+export const FilterChips = ({
+  filter,
+}: {
+  readonly filter: HomeFilter;
+}): ReactElement => (
   <div className="home-seg" role="tablist" aria-label={copy.show}>
     {FILTERS.map((item) => (
       <button
@@ -98,7 +103,7 @@ function useLastRun(project: Project): LastRun | null {
       })
       .catch(() => null);
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [project.id]);
@@ -132,7 +137,7 @@ export const ContinueCard = ({
   readonly project: Project;
   readonly health: AppHealth | null;
   readonly onOpen: (project: Project) => void;
-}) => {
+}): ReactElement => {
   const thumb = useThumbnail(project);
   const last = useLastRun(project);
   const badge = projectBadge(project);

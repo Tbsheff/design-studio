@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Suspense } from "react";
 
 import { HomeToast } from "./home-sections.js";
@@ -19,7 +20,7 @@ const HomeOverlays = ({
   readonly doctor: ReturnType<typeof useDoctorGate>;
   readonly toast: HomeToastState | null;
   readonly onToastDone: () => void;
-}) => {
+}): ReactElement => {
   const { gate } = doctor;
 
   return (

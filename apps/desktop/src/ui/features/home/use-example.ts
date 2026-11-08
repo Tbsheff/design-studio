@@ -14,7 +14,7 @@ function useExample(paused: boolean, fixed: boolean): string {
       EXAMPLE_MS
     );
 
-    return () => globalThis.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [paused, fixed]);
 
   return fixed ? PLACEHOLDER : (EXAMPLES[index] ?? "");

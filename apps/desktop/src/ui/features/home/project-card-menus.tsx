@@ -1,7 +1,7 @@
 import type { Project } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type { FormEvent, KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import type { CardAction, MenuAt } from "./project-grid.js";
@@ -18,12 +18,12 @@ const CardMenu = ({
   readonly at: Exclude<MenuAt, null>;
   readonly onClose: (refocus: boolean) => void;
   readonly onPick: (action: CardAction) => void;
-}) => {
+}): ReactElement => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
 
-    const onDown = (event: globalThis.MouseEvent) => {
+    const onDown = (event: globalThis.MouseEvent): void => {
       if (!ref.current?.contains(event.target as Node)) {
         onClose(false);
       }
@@ -31,10 +31,10 @@ const CardMenu = ({
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const items = [
       ...(ref.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitem"]'
@@ -84,7 +84,7 @@ const CardMenu = ({
     icon: Parameters<typeof Icon>[0]["name"],
     keys: string,
     danger = false
-  ) => (
+  ): ReactElement => (
     <button
       type="button"
       role="menuitem"
@@ -130,7 +130,7 @@ const RenameField = ({
 }: {
   readonly project: Project;
   readonly onDone: (name: string | null) => void;
-}) => {
+}): ReactElement => {
   const [value, setValue] = useState(project.name);
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -138,7 +138,7 @@ const RenameField = ({
     ref.current?.select();
   }, []);
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent): void => {
     event.preventDefault();
     onDone(value.trim() && value.trim() !== project.name ? value.trim() : null);
   };

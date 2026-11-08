@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { EMPTY_PROMPT, HOME_REASON_ID } from "./home-model.js";
 import type { Busy } from "./home-model.js";
@@ -13,7 +14,7 @@ const SendButton = ({
   readonly isDisabled: boolean;
   readonly reason: string | null;
   readonly label: string;
-}) => {
+}): ReactElement => {
   const working = busy === "create" || busy === "ask";
 
   return (

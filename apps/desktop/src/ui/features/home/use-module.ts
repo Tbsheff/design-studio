@@ -10,7 +10,7 @@ function useModule<T>(load: () => Promise<T>, enabled: boolean): T | null {
     let live = true;
     void load().then((loaded) => live && setMod(loaded));
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [enabled, load]);

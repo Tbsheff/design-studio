@@ -1,5 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import type {
@@ -49,7 +50,7 @@ function useThumb(hit: ProjectHit): string | null {
       () => null
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [key, hit.id, hit.thumbnail]);
@@ -63,7 +64,7 @@ const ProjectThumb = ({
 }: {
   readonly hit: ProjectHit;
   readonly className?: string;
-}) => {
+}): ReactElement => {
   const url = useThumb(hit);
 
   return (
@@ -81,7 +82,7 @@ const ProjectThumb = ({
   );
 };
 
-const TypeBadge = ({ hit }: { readonly hit: ProjectHit }) => (
+const TypeBadge = ({ hit }: { readonly hit: ProjectHit }): ReactElement => (
   <span className="badge pnav-badge" data-type={hit.type}>
     {hit.typeLabel}
   </span>
@@ -93,7 +94,7 @@ const HealthDot = ({
 }: {
   readonly hit: ProjectHit;
   readonly className?: string;
-}) => {
+}): ReactElement | null => {
   if (!hit.health) {
     return null;
   }

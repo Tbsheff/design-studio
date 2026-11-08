@@ -139,7 +139,7 @@ const useRouteHits = (
         .catch(() => undefined);
     }, ROUTE_DELAY_MS);
 
-    return () => {
+    return (): void => {
       live = false;
       globalThis.clearTimeout(timer);
     };

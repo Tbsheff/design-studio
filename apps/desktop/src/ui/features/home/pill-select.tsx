@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import type { RefObject, ReactElement } from "react";
 
 import { StableText } from "../chat/stable-text.js";
 import { loadPops } from "./lazy-parts.js";
@@ -19,7 +19,7 @@ const PillSelect = ({
   readonly triggerRef: RefObject<HTMLButtonElement | null>;
   readonly onOpen: () => void;
   readonly ariaLabel: string;
-}) => (
+}): ReactElement => (
   <button
     ref={triggerRef}
     type="button"

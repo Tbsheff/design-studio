@@ -1,6 +1,12 @@
 import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useRef, useState } from "react";
-import type { ClipboardEvent, DragEvent, FormEvent, ReactNode } from "react";
+import type {
+  ClipboardEvent,
+  DragEvent,
+  FormEvent,
+  ReactNode,
+  ReactElement,
+} from "react";
 
 import { copy } from "./copy.js";
 
@@ -28,7 +34,7 @@ const ComposerAlert = ({
 }: {
   readonly children: ReactNode;
   readonly onClose: () => void;
-}) => (
+}): ReactElement => (
   <div className="alert error composer-alert" role="alert">
     <span className="composer-alert-text">{children}</span>
     <button
@@ -84,7 +90,7 @@ const ComposerChips = ({
   readonly references: ReferenceDraft[];
   readonly onRemoveImage: (id: string) => void;
   readonly onRemoveReference: (url: string) => void;
-}) => {
+}): ReactElement | null => {
   if (!lead && images.length === 0 && references.length === 0) {
     return null;
   }
@@ -144,12 +150,12 @@ const useComposerAttachments = (
   const imagesRef = useRef(images);
   imagesRef.current = images;
   useEffect(
-    () => () =>
+    () => (): void =>
       imagesRef.current.forEach((image) => URL.revokeObjectURL(image.url)),
     []
   );
 
-  const addImages = (picked: File[]) => {
+  const addImages = (picked: File[]): void => {
     if (picked.length === 0) {
       return;
     }
@@ -186,7 +192,7 @@ const useComposerAttachments = (
     });
   };
 
-  const addReference = (reference: ReferenceDraft) => {
+  const addReference = (reference: ReferenceDraft): void => {
     setReferences((current) => {
       if (current.some((item) => item.url === reference.url)) {
         return current;
@@ -202,7 +208,7 @@ const useComposerAttachments = (
     });
   };
 
-  const removeImage = (id: string) =>
+  const removeImage = (id: string): void =>
     setImages((current) => {
       const gone = current.find((image) => image.id === id);
 
@@ -213,7 +219,7 @@ const useComposerAttachments = (
       return current.filter((image) => image.id !== id);
     });
 
-  const onPromptPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
+  const onPromptPaste = (event: ClipboardEvent<HTMLTextAreaElement>): void => {
     const files = imageFiles(event.clipboardData.files);
 
     if (files.length > 0) {
@@ -231,7 +237,7 @@ const useComposerAttachments = (
     }
   };
 
-  const onDragOver = (event: DragEvent<HTMLFormElement>) => {
+  const onDragOver = (event: DragEvent<HTMLFormElement>): void => {
     if (
       ![...event.dataTransfer.types].some(
         (type) => type === "Files" || type === "text/uri-list"
@@ -248,7 +254,7 @@ const useComposerAttachments = (
     }
   };
 
-  const onDrop = (event: DragEvent<HTMLFormElement>) => {
+  const onDrop = (event: DragEvent<HTMLFormElement>): void => {
     event.preventDefault();
     setDragging(false);
 
@@ -273,7 +279,7 @@ const useComposerAttachments = (
     }
   };
 
-  const removeReference = (url: string) =>
+  const removeReference = (url: string): void =>
     setReferences((current) => current.filter((item) => item.url !== url));
 
   const dropHandlers = {

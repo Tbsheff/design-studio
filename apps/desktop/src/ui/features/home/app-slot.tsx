@@ -1,5 +1,5 @@
 import { Icon } from "@design-studio/ui";
-import type { RefObject } from "react";
+import type { RefObject, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { chipBlocker, chipName, chipProblem } from "./home-app-chip.js";
@@ -21,7 +21,7 @@ const AppSlot = ({
   folderRef,
   onAddFolder,
   onDoctor,
-}: AppSlotProps) => {
+}: AppSlotProps): ReactElement | null => {
   if (!chip) {
     return (
       <button

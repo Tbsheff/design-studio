@@ -1,5 +1,5 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
-import type { RefObject } from "react";
+import type { RefObject, ReactElement } from "react";
 
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { uiStore } from "../../platform/storage.js";
@@ -36,7 +36,7 @@ const Library = ({
   readonly searchRef: RefObject<HTMLInputElement | null>;
   readonly listError: string | null;
   readonly onPickPack: (id: string | null) => void;
-}) => {
+}): ReactElement => {
   const { filter } = useHomePrefs();
 
   if (!lib) {

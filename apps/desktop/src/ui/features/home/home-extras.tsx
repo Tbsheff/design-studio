@@ -4,6 +4,7 @@ import type {
   WorkspaceList,
 } from "@design-studio/contracts/folders";
 import { Disclosure } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -20,7 +21,7 @@ const HiddenProjectsNote = ({
 }: {
   readonly homeDir: string | null;
   readonly onMoved: () => void;
-}) => {
+}): ReactElement | null => {
   const [hidden, setHidden] = useState<{
     readonly count: number;
     readonly target: string;
@@ -29,7 +30,7 @@ const HiddenProjectsNote = ({
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = () =>
+  const load = (): Promise<void> =>
     api
       .hiddenProjects()
       .then(setHidden)
@@ -43,7 +44,7 @@ const HiddenProjectsNote = ({
     return null;
   }
 
-  const move = async () => {
+  const move = async (): Promise<void> => {
     setMoving(true);
     setError(null);
 
@@ -115,7 +116,7 @@ export const ComposerFoot = ({
   onAddFolder,
   advanced,
   onHiddenMoved,
-}: ComposerFootProps) => {
+}: ComposerFootProps): ReactElement => {
   const homeDir = workspaces?.homeDir ?? null;
 
   return (

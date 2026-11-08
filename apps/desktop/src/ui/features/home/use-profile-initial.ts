@@ -23,7 +23,7 @@ const useProfileInitial = (): string | null => {
     let alive = true;
     void profile.then((value) => alive && setInitial(value));
 
-    return () => {
+    return (): void => {
       alive = false;
     };
   }, []);

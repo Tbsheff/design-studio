@@ -1,6 +1,7 @@
 import type { Starter } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import { FOUND_KIND_LABEL } from "../../../shared/found-apps.js";
@@ -28,7 +29,7 @@ function useFound(): FoundApps | null | "error" {
       .then((next) => live && setFound(next))
       .catch(() => live && setFound("error"));
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, []);
@@ -36,7 +37,11 @@ function useFound(): FoundApps | null | "error" {
   return found;
 }
 
-const FoundList = ({ onUse }: { readonly onUse: (path: string) => void }) => {
+const FoundList = ({
+  onUse,
+}: {
+  readonly onUse: (path: string) => void;
+}): ReactElement | null => {
   const found = useFound();
 
   if (found === "error") {
@@ -102,7 +107,7 @@ const StartCards = ({
   readonly isBusy: boolean;
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
-}) => {
+}): ReactElement => {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
     void api
@@ -157,7 +162,7 @@ export default function HomeEmpty({
   readonly onUse: (path: string) => void;
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
-}) {
+}): ReactElement {
   return (
     <div className="home-empty-state">
       <div className="home-empty-grid">

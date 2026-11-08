@@ -69,10 +69,10 @@ const projectsApi = {
       "POST",
       `/api/projects/${encodeURIComponent(project.id)}/reveal`
     ),
-  subscribe(listener: () => void) {
+  subscribe(listener: () => void): () => void {
     listeners.add(listener);
 
-    return () => {
+    return (): void => {
       listeners.delete(listener);
     };
   },
@@ -124,7 +124,7 @@ const useProjects = (options: {
       lagging ? POLL_FAST_MS : POLL_MS
     );
 
-    return () => globalThis.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [watching, lagging]);
 
   return { ...current, reload: load };
@@ -152,7 +152,7 @@ const useAppHealth = (projects: Project[] | null): Map<string, AppHealth> => {
       .then((next) => live && setHealth(next))
       .catch(() => null);
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [key, tick]);
@@ -167,7 +167,7 @@ const useAppHealth = (projects: Project[] | null): Map<string, AppHealth> => {
       HEALTH_POLL_MS
     );
 
-    return () => globalThis.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [building, health]);
 
   return useMemo(

@@ -1,5 +1,6 @@
 import type { Starter } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -21,7 +22,7 @@ const StarterGallery = ({
 }: {
   readonly isDisabled: boolean;
   readonly onPick: (starter: Starter) => Promise<void>;
-}) => {
+}): ReactElement | null => {
   const [starters, setStarters] = useState<Starter[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +37,7 @@ const StarterGallery = ({
     return null;
   }
 
-  const pick = async (starter: Starter) => {
+  const pick = async (starter: Starter): Promise<void> => {
     setBusy(starter.id);
     setError(null);
 
@@ -110,11 +111,11 @@ const FirstRunPanel = ({
 }: {
   readonly onClose: () => void;
   readonly onSample: () => Promise<void>;
-}) => {
+}): ReactElement => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sample = async () => {
+  const sample = async (): Promise<void> => {
     setBusy(true);
     setError(null);
 

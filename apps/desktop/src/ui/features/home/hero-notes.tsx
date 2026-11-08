@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { ComposerAlert } from "./home-composer-parts.js";
 
 const HeroNotes = ({
@@ -8,7 +10,7 @@ const HeroNotes = ({
   readonly isWindowDragged: boolean;
   readonly formError: string | null;
   readonly onClearError: () => void;
-}) => (
+}): ReactElement => (
   <>
     {isWindowDragged && (
       <p className="home-drop-anywhere">

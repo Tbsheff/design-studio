@@ -63,7 +63,7 @@ const useWorkspaces = (onError: (message: string | null) => void) => {
       );
   }, [onError]);
 
-  const update = (change: Folders) =>
+  const update = (change: Folders): void =>
     setWorkspaces((list) =>
       list === null ? list : { ...list, folders: change(list.folders) }
     );

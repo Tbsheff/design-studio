@@ -6,7 +6,7 @@ function useDoctorGate() {
   const [gate, setGate] = useState<DoctorGate | null>(null);
   const close = useCallback(() => setGate(null), []);
 
-  const check = async () => {
+  const check = async (): Promise<void> => {
     if (!gate) {
       return;
     }

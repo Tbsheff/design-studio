@@ -1,4 +1,5 @@
 import { formatAnswers } from "@design-studio/contracts/clarify";
+import type { ReactElement } from "react";
 import { Suspense } from "react";
 
 import { uiStore } from "../../platform/storage.js";
@@ -18,7 +19,11 @@ import { StarterRow } from "./starter-row.js";
 import { TemplatesSection } from "./templates-section.js";
 import { useHomeScreen } from "./use-home-screen.js";
 
-const Home = ({ onOpen }: { readonly onOpen: (projectId: string) => void }) => {
+const Home = ({
+  onOpen,
+}: {
+  readonly onOpen: (projectId: string) => void;
+}): ReactElement => {
   const {
     actions,
     addAppFolder,

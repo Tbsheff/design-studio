@@ -1,9 +1,14 @@
 import { BrandMark, Icon, ThemeButton } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { loadTrash } from "./lazy-parts.js";
 
-const Header = ({ onTrash }: { readonly onTrash: () => void }) => (
+const Header = ({
+  onTrash,
+}: {
+  readonly onTrash: () => void;
+}): ReactElement => (
   <header className="home-header">
     <BrandMark />
     <span className="brand">Design Studio</span>

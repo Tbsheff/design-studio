@@ -1,5 +1,6 @@
 import type { TrashItem } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import { api, errorText, json } from "../../api.js";
@@ -54,7 +55,7 @@ function useTrashThumb(item: TrashItem): string | null {
 
     void show();
 
-    return () => {
+    return (): void => {
       live = false;
 
       if (made) {
@@ -76,7 +77,7 @@ const TrashRow = ({
   readonly isBusy: boolean;
   readonly onRestore: () => void;
   readonly onDelete: () => void;
-}) => {
+}): ReactElement => {
   const thumb = useTrashThumb(item);
 
   return (
@@ -139,7 +140,7 @@ const ConfirmDelete = ({
   readonly error: string | null;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
-}) => {
+}): ReactElement => {
   const dialog = useModalDialog(() => (isBusy ? false : onCancel()));
 
   const title =
@@ -213,7 +214,7 @@ export default function HomeTrash({
 }: {
   readonly onClose: () => void;
   readonly onRestored: () => void;
-}) {
+}): ReactElement {
   const [items, setItems] = useState<TrashItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -222,7 +223,7 @@ export default function HomeTrash({
   const [note, setNote] = useState("");
   const dialog = useModalDialog(() => (confirm ? false : onClose()));
 
-  const load = () => {
+  const load = (): void => {
     setError(null);
 
     const read = async (): Promise<void> => {
@@ -238,12 +239,12 @@ export default function HomeTrash({
 
   useEffect(load, []);
 
-  const drop = (trashId: string) =>
+  const drop = (trashId: string): void =>
     setItems(
       (list) => list?.filter((entry) => entry.trashId !== trashId) ?? list
     );
 
-  const restore = async (item: TrashItem) => {
+  const restore = async (item: TrashItem): Promise<void> => {
     setBusy(item.trashId);
     setError(null);
 
@@ -266,7 +267,7 @@ export default function HomeTrash({
     }
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (): Promise<void> => {
     if (!confirm) {
       return;
     }

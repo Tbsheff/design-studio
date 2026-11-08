@@ -1,6 +1,6 @@
 import type { Starter } from "@design-studio/contracts";
 import { Suspense } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { ComposerAlert } from "./home-composer-parts.js";
 import { HomeEmpty } from "./lazy-parts.js";
@@ -23,7 +23,7 @@ const LibraryArea = ({
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
   readonly children: ReactNode;
-}) => {
+}): ReactElement => {
   if (isEmpty) {
     return (
       <Suspense fallback={null}>

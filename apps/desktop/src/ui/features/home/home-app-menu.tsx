@@ -3,7 +3,7 @@ import { parseEnvText } from "@design-studio/contracts/app";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import type { KeyboardEvent, RefObject, ReactElement } from "react";
 
 import { ApiError, api } from "../../api.js";
 import { copy } from "./copy.js";
@@ -84,8 +84,8 @@ function keepEnter(
   run?.();
 }
 
-const wait = (ms: number) =>
-  new Promise((resolve) => globalThis.setTimeout(resolve, ms));
+const wait = (ms: number): Promise<void> =>
+  new Promise<void>((resolve) => globalThis.setTimeout(resolve, ms));
 
 const runInProject = async (
   projectId: string,
@@ -147,7 +147,7 @@ const Candidates = ({
 }: {
   readonly chip: AppChip;
   readonly onChange: (patch: Partial<AppChip>) => void;
-}) => {
+}): ReactElement | null => {
   const found = chip.inspection;
 
   if (!found || found.candidates.length < 2) {
@@ -188,9 +188,9 @@ const DevServer = ({
 }: {
   readonly chip: AppChip;
   readonly onChange: (patch: Partial<AppChip>) => void;
-}) => {
+}): ReactElement => {
   const [envOpen, setEnvOpen] = useState(() => chip.env.trim() !== "");
-  const mode = (next: RunMode) => () => onChange({ mode: next });
+  const mode = (next: RunMode) => (): void => onChange({ mode: next });
 
   return (
     <div className="ui-menu-section home-app-server">
@@ -269,7 +269,7 @@ const AppMenu = ({
   onClose,
   onChange,
   onTokensOnly,
-}: AppMenuProps) => {
+}: AppMenuProps): ReactElement => {
   const found = chip.inspection;
   const problem = chip.error ?? found?.problem ?? null;
 
@@ -333,10 +333,10 @@ const FolderPathPop = ({
   readonly isClosing: boolean;
   readonly onClose: Close;
   readonly onPick: (path: string) => void;
-}) => {
+}): ReactElement => {
   const [value, setValue] = useState("");
 
-  const submit = () => {
+  const submit = (): void => {
     if (!value.trim()) {
       return;
     }

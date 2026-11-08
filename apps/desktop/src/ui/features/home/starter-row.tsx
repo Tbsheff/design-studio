@@ -1,4 +1,5 @@
 import type { Starter } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
 import type { Busy } from "./home-model.js";
 
@@ -13,7 +14,7 @@ const StarterRow = ({
   } | null;
   readonly busy: Busy;
   readonly onOpen: (starter: Starter) => void;
-}) => {
+}): ReactElement | null => {
   const starter = template?.starter;
 
   if (!template || !starter) {

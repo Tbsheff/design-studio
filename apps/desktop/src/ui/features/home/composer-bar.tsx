@@ -1,7 +1,7 @@
 import type { PackSummary, ProjectKind } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import type { RefObject, ReactElement } from "react";
 
 import { uiStore } from "../../platform/storage.js";
 import { usePresence } from "../chat/use-presence.js";
@@ -60,7 +60,7 @@ const ComposerBar = ({
   busy,
   sendDisabled,
   app,
-}: ComposerBarProps) => {
+}: ComposerBarProps): ReactElement => {
   const [pop, setPop] = useState<Pop>(null);
   const shownPop = usePresence(pop);
   const plusRef = useRef<HTMLButtonElement>(null);
@@ -88,7 +88,7 @@ const ComposerBar = ({
     [pop]
   );
 
-  const togglePop = (next: Exclude<Pop, null>) =>
+  const togglePop = (next: Exclude<Pop, null>): void =>
     setPop((current) => (current === next ? null : next));
 
   useEffect(
@@ -99,7 +99,7 @@ const ComposerBar = ({
     [app.isFolderPopOpen]
   );
 
-  const closeFolder = (refocus: boolean) => {
+  const closeFolder = (refocus: boolean): void => {
     closePop(refocus);
     app.onFolderClose();
   };

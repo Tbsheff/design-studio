@@ -27,7 +27,7 @@ function useOpenFlows({
   homeDir,
   doctor,
 }: FlowDeps) {
-  const openStarter = async (starter: Starter) => {
+  const openStarter = async (starter: Starter): Promise<void> => {
     setBusy("starter");
     setFormError(null);
 
@@ -44,7 +44,7 @@ function useOpenFlows({
     }
   };
 
-  const openSample = async () => {
+  const openSample = async (): Promise<void> => {
     setBusy("starter");
 
     try {
@@ -56,7 +56,7 @@ function useOpenFlows({
     }
   };
 
-  const openProject = (project: Project) => {
+  const openProject = (project: Project): void => {
     const state = health.get(project.id);
 
     if (!state || (state.state !== "install" && state.state !== "failed")) {

@@ -1,5 +1,10 @@
 import { useLayoutEffect, useRef } from "react";
-import type { ClipboardEvent, FormEvent, KeyboardEvent } from "react";
+import type {
+  ClipboardEvent,
+  FormEvent,
+  KeyboardEvent,
+  ReactElement,
+} from "react";
 
 import { copy } from "./copy.js";
 import { useExample } from "./use-example.js";
@@ -26,7 +31,7 @@ const PromptArea = ({
   describedBy,
   menuKeys,
   placeholder,
-}: PromptAreaProps) => {
+}: PromptAreaProps): ReactElement => {
   const ref = useRef<HTMLTextAreaElement>(null);
   const example = useExample(value !== "", placeholder === null);
   useLayoutEffect(() => {

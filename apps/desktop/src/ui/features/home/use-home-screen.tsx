@@ -177,12 +177,12 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     setFormError,
   });
 
-  const setLocation = (path: string | null) =>
+  const setLocation = (path: string | null): void =>
     uiStore.set({ lastLocation: path });
 
   const locationLabel = folderLabel(workspaces, location);
 
-  const build = async (finalPrompt: string) => {
+  const build = async (finalPrompt: string): Promise<void> => {
     const parsed = parseDraft(settingsDraft);
 
     if ("error" in parsed) {
@@ -214,7 +214,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     }
   };
 
-  const create = async (e: FormEvent) => {
+  const create = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
     const text = prompt.trim();
 
@@ -263,7 +263,10 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     showToast,
   });
 
-  const pickTemplate = (picked: HomeTemplate, starter: Starter | null) => {
+  const pickTemplate = (
+    picked: HomeTemplate,
+    starter: Starter | null
+  ): void => {
     if (template?.id === picked.id) {
       setTemplate(null);
 
@@ -287,7 +290,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     focusPrompt(null, true);
   };
 
-  const changeKind = (next: ProjectKind) => {
+  const changeKind = (next: ProjectKind): void => {
     setKind(next);
     setDesigns((n) => Math.min(n, maxVariationsFor(next)));
   };
@@ -298,7 +301,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     modelSummary(option.id, designCount)
   );
 
-  const openAdvanced = () => {
+  const openAdvanced = (): void => {
     setAdvancedOpened((n) => n + 1);
     focusIn(".advanced summary");
   };

@@ -1,6 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import { Suspense, lazy, useState } from "react";
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, ReactElement } from "react";
 
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { copy } from "./copy.js";
@@ -20,10 +20,10 @@ interface Props {
   readonly isInitiallyOpen: boolean;
 }
 
-const NewProjectAdvanced = (props: Props) => {
+const NewProjectAdvanced = (props: Props): ReactElement => {
   const [open, setOpen] = useState(props.isInitiallyOpen === true);
 
-  const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
+  const pickFile = (e: ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
     e.target.value = "";
 

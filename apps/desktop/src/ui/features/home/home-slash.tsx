@@ -1,6 +1,11 @@
 import type { RunLevel } from "@design-studio/contracts";
 import { useLayoutEffect } from "react";
-import type { KeyboardEvent, MutableRefObject, RefObject } from "react";
+import type {
+  KeyboardEvent,
+  MutableRefObject,
+  RefObject,
+  ReactElement,
+} from "react";
 
 import { levelGroup, modelGroup } from "../chat/slash-groups.js";
 import { SlashMenu, useSlashMenu } from "../chat/slash-menu.js";
@@ -33,7 +38,7 @@ const HomeSlashMenu = ({
   onModel,
   keys,
   home,
-}: Props) => {
+}: Props): ReactElement | null => {
   const slash = useSlashMenu({
     draft: prompt,
     groups: [levelGroup(level, onLevel), modelGroup(model, null, onModel)],
@@ -43,7 +48,7 @@ const HomeSlashMenu = ({
 
   keys.current = slash.onKeyDown;
 
-  const input = () =>
+  const input = (): HTMLElement | null =>
     home.current?.querySelector<HTMLElement>(
       '[aria-label="Describe the design"]'
     ) ?? null;

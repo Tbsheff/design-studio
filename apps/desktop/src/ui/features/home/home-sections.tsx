@@ -1,6 +1,7 @@
 import type { Project } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -20,7 +21,7 @@ const useOnboarding = (): {
       .catch(() => setShow(false));
   }, []);
 
-  const dismiss = () => {
+  const dismiss = (): void => {
     setShow(false);
     void api.dismissOnboarding().catch(() => null);
   };
@@ -44,7 +45,7 @@ const HomeToast = ({
 }: {
   readonly toast: HomeToastState | null;
   readonly onDone: () => void;
-}) => {
+}): ReactElement => {
   const [held, setHeld] = useState(false);
   useEffect(() => {
     if (!toast || held || toast.action || toast.hasError) {
@@ -53,7 +54,7 @@ const HomeToast = ({
 
     const timer = window.setTimeout(onDone, TOAST_MS);
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [toast, held, onDone]);
 
   return (
@@ -133,7 +134,7 @@ const useProjectActions = ({
     try {
       const trashed = await projectsApi.trash(project);
 
-      const undo = () =>
+      const undo = (): undefined =>
         void projectsApi.restore(trashed.trashId).catch((err: unknown) =>
           showToast({
             text: `Could not restore: ${errorText(err)}`,
@@ -205,7 +206,7 @@ const useHomeProjects = () => {
 
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         event.key !== "/" ||
         event.metaKey ||
@@ -226,7 +227,7 @@ const useHomeProjects = () => {
 
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
 
   return { listError, loadProjects, projects, searchRef };

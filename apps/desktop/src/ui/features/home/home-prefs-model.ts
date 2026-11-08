@@ -66,12 +66,12 @@ const listeners = new Set<() => void>();
 
 const homePrefs = {
   get: () => current,
-  set(patch: Partial<HomePrefs>) {
+  set(patch: Partial<HomePrefs>): void {
     current = { ...current, ...patch };
     saveQuietly(current);
     listeners.forEach((listener) => listener());
   },
-  toggleFavorite(id: string) {
+  toggleFavorite(id: string): void {
     const has = current.favorites.includes(id);
     homePrefs.set({
       favorites: has
@@ -84,7 +84,7 @@ const homePrefs = {
 function subscribe(listener: () => void) {
   listeners.add(listener);
 
-  return () => {
+  return (): void => {
     listeners.delete(listener);
   };
 }

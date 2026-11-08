@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import type { FolderInspection } from "../../../shared/open-app.js";
@@ -166,7 +167,7 @@ const useAppChip = () => {
           )
       );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [path, appDir, nonce]);
@@ -184,7 +185,7 @@ const AppChipView = ({
   readonly isMenuOpen: boolean;
   readonly onMenu: () => void;
   readonly onRemove: () => void;
-}) => {
+}): ReactElement => {
   const name = chipName(chip);
   const bad = chipProblem(chip) !== null || chipBlocker(chip) !== null;
 

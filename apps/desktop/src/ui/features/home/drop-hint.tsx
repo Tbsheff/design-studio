@@ -1,6 +1,11 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
-const DropHint = ({ isOn }: { readonly isOn: boolean }) => {
+const DropHint = ({
+  isOn,
+}: {
+  readonly isOn: boolean;
+}): ReactElement | null => {
   if (!isOn) {
     return null;
   }

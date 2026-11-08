@@ -1,6 +1,6 @@
 import type { ProjectKind, RunLevel, Starter } from "@design-studio/contracts";
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
@@ -30,7 +30,7 @@ const mark = {
   stroke: "none",
 } as const;
 
-const Art = ({ children }: { readonly children: ReactNode }) => (
+const Art = ({ children }: { readonly children: ReactNode }): ReactElement => (
   <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true" {...S}>
     {children}
   </svg>
@@ -240,7 +240,7 @@ const HomeTemplateGrid = ({
   readonly selected: string | null;
   readonly isDisabled: boolean;
   readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
-}) => {
+}): ReactElement => {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
     api

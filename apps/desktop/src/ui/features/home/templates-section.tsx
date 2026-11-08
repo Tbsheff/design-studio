@@ -1,5 +1,6 @@
 import type { Starter } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { homePrefs } from "./home-prefs-model.js";
@@ -16,7 +17,7 @@ const TemplatesSection = ({
   readonly selected: string | null;
   readonly isDisabled: boolean;
   readonly onPick: (template: HomeTemplate, starter: Starter | null) => void;
-}) => (
+}): ReactElement => (
   <section className="home-templates" aria-label={copy.templatesAndStarters}>
     <button
       type="button"

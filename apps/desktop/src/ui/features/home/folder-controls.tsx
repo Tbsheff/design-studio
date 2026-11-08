@@ -9,6 +9,7 @@ import {
 } from "@design-studio/contracts/folders";
 import { Icon, LazySelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useRef, useState, type FormEvent } from "react";
 
 import { copy } from "./copy.js";
@@ -20,7 +21,7 @@ const FolderPath = ({
 }: {
   readonly path: string;
   readonly homeDir: string | null;
-}) => {
+}): ReactElement => {
   const short = shortenHome(path, homeDir);
   const cut = short.lastIndexOf("/");
   const head = cut > 0 ? short.slice(0, cut + 1) : "";
@@ -41,7 +42,7 @@ const PastePath = ({
   readonly label: string;
   readonly action: string;
   readonly onSubmit: (path: string) => void;
-}) => {
+}): ReactElement => {
   const [value, setValue] = useState("");
   return (
     <form
@@ -110,20 +111,20 @@ const LocationField = ({
   chooser,
   onChange,
   onAddFolder,
-}: LocationProps) => {
+}: LocationProps): ReactElement => {
   const [pasting, setPasting] = useState(false);
   const fallback = folders.find((folder) => folder.default) ?? null;
   const usable = folders.filter((folder) => !folder.missing && !folder.default);
   const parent = value ?? fallback?.path ?? null;
   const target = parent ? `${parent}/${slugify(nameFromPrompt(prompt))}` : null;
-  const useFolder = async (path: string) => {
+  const useFolder = async (path: string): Promise<void> => {
     const saved = await onAddFolder(path);
     if (saved) {
       setPasting(false);
       onChange(saved.path);
     }
   };
-  const pick = async () => {
+  const pick = async (): Promise<void> => {
     if (chooser.isUnsupported) {
       setPasting(true);
       return;
@@ -203,15 +204,15 @@ const FolderRow = ({
   onRemove,
   onChangeDefault,
   isChanging,
-}: FolderRowProps) => {
+}: FolderRowProps): ReactElement => {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(folder.label);
   const renameRef = useRef<HTMLButtonElement>(null);
-  const stopEditing = () => {
+  const stopEditing = (): void => {
     setEditing(false);
     window.requestAnimationFrame(() => renameRef.current?.focus());
   };
-  const save = async (e: FormEvent) => {
+  const save = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
     const next = label.trim();
     if (!next || next === folder.label) {
@@ -364,12 +365,12 @@ const FoldersSection = ({
   onNewHere,
   onOpenHere,
   onSetDefault,
-}: FoldersSectionProps) => {
+}: FoldersSectionProps): ReactElement => {
   const [pasting, setPasting] = useState(false);
   const [pastingDefault, setPastingDefault] = useState(false);
   const folders = list?.folders ?? [];
   const homeDir = list?.homeDir ?? null;
-  const changeDefault = async (current: WorkspaceFolder) => {
+  const changeDefault = async (current: WorkspaceFolder): Promise<void> => {
     if (chooser.isUnsupported) {
       setPastingDefault(true);
       return;
@@ -384,7 +385,7 @@ const FoldersSection = ({
       setPastingDefault(true);
     }
   };
-  const add = async () => {
+  const add = async (): Promise<void> => {
     if (chooser.isUnsupported) {
       setPasting(true);
       return;

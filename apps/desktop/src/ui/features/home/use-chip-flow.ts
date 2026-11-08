@@ -71,7 +71,7 @@ function useChipFlow({
     return true;
   };
 
-  const addAppFolder = async () => {
+  const addAppFolder = async (): Promise<void> => {
     if (!hasNativePicker()) {
       setFolderPop((open) => !open);
 
@@ -95,7 +95,7 @@ function useChipFlow({
     }
   }, [chipCandidates, chipPicked]);
 
-  const openChip = async (text: string, tokensOnly = false) => {
+  const openChip = async (text: string, tokensOnly = false): Promise<void> => {
     const { chip } = app;
 
     if (!chip) {
@@ -127,7 +127,7 @@ function useChipFlow({
     }
   };
 
-  const chipDoctor = (text: string) => {
+  const chipDoctor = (text: string): void => {
     const { chip } = app;
     const found = chip?.inspection;
     const install = chipBlocker(chip);
@@ -150,7 +150,7 @@ function useChipFlow({
     });
   };
 
-  const submitChip = (text: string) => {
+  const submitChip = (text: string): void => {
     const { chip } = app;
 
     if (!chip || chip.isChecking) {

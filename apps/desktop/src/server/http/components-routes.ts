@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 
 import { directEditRuntimeOf } from "../direct-edit/index.js";
-import { thumbOf } from "../direct-edit/ops/index.js";
+import { getThumbOf } from "../share/direct-edit/ops/index.js";
 
 const UNAVAILABLE = 503;
 
@@ -21,7 +21,7 @@ const registerComponentRoutes = (app: Hono): void => {
       );
     }
 
-    const png = await thumbOf(
+    const png = await getThumbOf(
       runtime,
       { directionId: c.req.param("did"), projectId: c.req.param("pid") },
       c.req.param("id"),

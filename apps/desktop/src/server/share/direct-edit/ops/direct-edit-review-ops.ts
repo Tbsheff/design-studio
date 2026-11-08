@@ -21,16 +21,16 @@ import {
   parseRules,
   ruleHits,
   saveDesignRules,
-} from "../design-rules/index.js";
-import { BadRequestError } from "../platform/errors/index.js";
+} from "../../../design-rules/index.js";
+import type { DirectEditRuntime } from "../../../direct-edit/index.js";
+import { BadRequestError } from "../../../platform/errors/index.js";
 import {
   applyFindingFixes,
   lastReview,
   rememberReview,
   resolveReviewFrame,
   runReview,
-} from "../review/index.js";
-import type { DirectEditRuntime } from "./direct-edit-core.js";
+} from "../../../review/index.js";
 import type { DirectionRef } from "./direct-edit-ops.js";
 
 type RefKeys = "directionId" | "projectId";
@@ -52,7 +52,7 @@ interface SavedRules {
 const NO_TESTABLE_NOTE =
   "No rule here can be checked on a page. The agent and the critic still get them.";
 
-const readRulesState = (
+const getRulesState = (
   runtime: DirectEditRuntime,
   project: Project,
   direction: Direction
@@ -72,10 +72,10 @@ const getRulesOf = async (
     ref.directionId
   );
 
-  return readRulesState(runtime, project, direction);
+  return getRulesState(runtime, project, direction);
 };
 
-const commitRules = (
+const applyRules = (
   runtime: DirectEditRuntime,
   project: Project,
   direction: Direction,
@@ -88,7 +88,7 @@ const commitRules = (
   return runtime.commitDesignMd(project, direction);
 };
 
-const writeRules = async (
+const setRules = async (
   runtime: DirectEditRuntime,
   target: { readonly direction: Direction; readonly project: Project },
   value: string
@@ -102,7 +102,7 @@ const writeRules = async (
   const saved = await saveDesignRules(place, value);
 
   const [version, state] = await Promise.all([
-    commitRules(runtime, target.project, target.direction, saved.inRepo),
+    applyRules(runtime, target.project, target.direction, saved.inRepo),
     loadDesignRules(place),
   ]);
 
@@ -115,10 +115,10 @@ const setRulesIn = (
   body: RulesSaveBody
 ): Promise<SavedRules> =>
   runtime.withDirection(ref.projectId, ref.directionId, (project, direction) =>
-    writeRules(runtime, { direction, project }, body.text)
+    setRules(runtime, { direction, project }, body.text)
   );
 
-const rulesOf = async (
+const getRulesTextOf = async (
   runtime: DirectEditRuntime,
   target: { readonly direction: Direction; readonly project: Project },
   text: string | null
@@ -127,12 +127,12 @@ const rulesOf = async (
     return parseRules(text);
   }
 
-  const state = await readRulesState(runtime, target.project, target.direction);
+  const state = await getRulesState(runtime, target.project, target.direction);
 
   return state.rules;
 };
 
-const testFrameOf = (frame: {
+const getTestFrameOf = (frame: {
   readonly height: number;
   readonly path?: string | null;
   readonly width: number;
@@ -155,7 +155,7 @@ const runRulesTestIn = async (
   );
 
   const [rules, frame] = await Promise.all([
-    rulesOf(runtime, { direction, project }, body.text ?? null),
+    getRulesTextOf(runtime, { direction, project }, body.text ?? null),
     resolveReviewFrame(runtime.canvas, project, direction, body),
   ]);
 
@@ -163,7 +163,7 @@ const runRulesTestIn = async (
 
   if (testable.length === 0) {
     return {
-      frame: testFrameOf(frame),
+      frame: getTestFrameOf(frame),
       hits: ruleHits(rules, []),
       notes: [NO_TESTABLE_NOTE],
       rules,
@@ -180,7 +180,7 @@ const runRulesTestIn = async (
   const findings = review.findings.filter((finding) => finding.kind === "rule");
 
   return {
-    frame: testFrameOf(frame),
+    frame: getTestFrameOf(frame),
     hits: ruleHits(rules, findings),
     notes: [],
     rules,
@@ -228,7 +228,7 @@ const runReviewIn = async (
   return result;
 };
 
-const currentReview = async (
+const getCurrentReview = async (
   runtime: DirectEditRuntime,
   project: Project,
   direction: Direction
@@ -260,7 +260,7 @@ const currentReview = async (
   return fresh;
 };
 
-const skipReason = (
+const toSkipReason = (
   finding: ReviewFinding | undefined,
   isSharedAllowed: boolean
 ): string | null => {
@@ -284,7 +284,7 @@ interface SortedFindings {
   readonly skipped: ReviewFixResult["skipped"];
 }
 
-const sortFindings = (
+const toSortedFindings = (
   review: ReviewResult,
   ids: readonly string[],
   isSharedAllowed: boolean
@@ -295,7 +295,7 @@ const sortFindings = (
 
   for (const id of new Set(ids)) {
     const finding = byId.get(id);
-    const reason = skipReason(finding, isSharedAllowed);
+    const reason = toSkipReason(finding, isSharedAllowed);
 
     if (reason !== null) {
       skipped.push({ id, reason });
@@ -309,7 +309,7 @@ const sortFindings = (
   return { chosen, skipped };
 };
 
-const sharedFilesOf = (chosen: readonly ReviewFinding[]): string[] => [
+const listSharedFilesOf = (chosen: readonly ReviewFinding[]): string[] => [
   ...new Set(
     chosen.flatMap((finding) => {
       if (finding.shared) {
@@ -321,15 +321,15 @@ const sharedFilesOf = (chosen: readonly ReviewFinding[]): string[] => [
   ),
 ];
 
-const fixFindings = async (
+const applyReviewFixes = async (
   runtime: DirectEditRuntime,
   target: { readonly direction: Direction; readonly project: Project },
   body: ReviewFixBody
 ): Promise<ReviewFixResult> => {
   const { direction, project } = target;
-  const review = await currentReview(runtime, project, direction);
+  const review = await getCurrentReview(runtime, project, direction);
 
-  const { chosen, skipped } = sortFindings(
+  const { chosen, skipped } = toSortedFindings(
     review,
     body.findingIds,
     body.allowShared === true
@@ -352,7 +352,7 @@ const fixFindings = async (
     ...done,
   };
 
-  const shared = sharedFilesOf(chosen);
+  const shared = listSharedFilesOf(chosen);
 
   if (shared.length > 0) {
     return { ...result, shared };
@@ -367,7 +367,7 @@ const applyReviewFixIn = (
   body: ReviewFixBody
 ): Promise<ReviewFixResult> =>
   runtime.withDirection(ref.projectId, ref.directionId, (project, direction) =>
-    fixFindings(runtime, { direction, project }, body)
+    applyReviewFixes(runtime, { direction, project }, body)
   );
 
 export {

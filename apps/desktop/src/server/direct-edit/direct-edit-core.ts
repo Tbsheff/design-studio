@@ -9,12 +9,12 @@ import type { Direction, Project, Version } from "@design-studio/contracts";
 import type { DesignRule } from "@design-studio/contracts/design-rules";
 import { Effect } from "effect";
 
-import type { PreviewService } from "../../shared/server-ports.js";
-import type { CanvasService } from "../canvas/index.js";
+import type { CanvasService } from "../../shared/canvas-ports.js";
 import type {
   ComponentPreviews,
   ComponentService,
-} from "../components/index.js";
+} from "../../shared/component-ports.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";

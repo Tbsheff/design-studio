@@ -1,12 +1,9 @@
 import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
-import type {
-  ComponentInfo,
-  Direction,
-  Project,
-} from "@design-studio/contracts";
+import type { Direction, Project } from "@design-studio/contracts";
 
+import type { ComponentService } from "../../shared/component-ports.js";
 import type { PreviewService } from "../../shared/server-ports.js";
 import { listComponents } from "./inventory.js";
 
@@ -15,16 +12,6 @@ export const COMPONENT_VIEWPORT = { width: 1280, height: 800 };
 interface Batch {
   version: string;
   done: Promise<Map<string, Buffer>>;
-}
-
-export interface ComponentService {
-  list(project: Project, direction: Direction): Promise<ComponentInfo[]>;
-  thumb(
-    project: Project,
-    direction: Direction,
-    id: string,
-    version: string
-  ): Promise<Buffer | null>;
 }
 
 export function createComponentService(deps: {

@@ -11,9 +11,9 @@ import {
   setImageIn,
   setVectorIn,
   applyEditBody,
-  commitTweaksIn,
+  applyTweaksIn,
   createTokenIn,
-  renderCheckOf,
+  getRenderCheckOf,
   updateTokensIn,
   importFigmaIn,
   setPropsIn,
@@ -22,8 +22,8 @@ import {
   runReviewIn,
   runRulesTestIn,
   setRulesIn,
-} from "../../direct-edit/ops/index.js";
-import type { DirectionRef, EditBody } from "../../direct-edit/ops/index.js";
+} from "./ops/index.js";
+import type { DirectionRef, EditBody } from "./ops/index.js";
 
 interface DirectEditWriterApi {
   readonly apply: (
@@ -36,14 +36,14 @@ interface DirectEditWriterApi {
   readonly check: (
     ref: DirectionRef
   ) => Effect.Effect<
-    Awaited<ReturnType<typeof renderCheckOf>>,
+    Awaited<ReturnType<typeof getRenderCheckOf>>,
     DirectEditFailure
   >;
   readonly commitTweaks: (
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
-    Awaited<ReturnType<typeof commitTweaksIn>>,
+    Awaited<ReturnType<typeof applyTweaksIn>>,
     DirectEditFailure
   >;
   readonly createToken: (
@@ -190,7 +190,7 @@ class DirectEditWriter extends Context.Service<
         ref: DirectionRef
       ) {
         return yield* attemptDirectEdit((runtime) =>
-          renderCheckOf(runtime, ref)
+          getRenderCheckOf(runtime, ref)
         );
       }),
       commitTweaks: Effect.fn("DirectEditWriter.commitTweaks")(function* run(
@@ -198,7 +198,7 @@ class DirectEditWriter extends Context.Service<
         body: EditBody
       ) {
         return yield* attemptDirectEdit((runtime) =>
-          commitTweaksIn(runtime, ref, body)
+          applyTweaksIn(runtime, ref, body)
         );
       }),
       createComponent: Effect.fn("DirectEditWriter.createComponent")(

@@ -18,23 +18,32 @@ import type {
   InstanceQuery,
 } from "@design-studio/contracts/props";
 
-import { instanceFor, listComponentSchemas } from "../components/index.js";
+import {
+  instanceFor,
+  listComponentSchemas,
+} from "../../../components/index.js";
+import {
+  assertCanEdit,
+  publishVersion,
+} from "../../../direct-edit/commit/index.js";
+import {
+  writeAndCommitAll,
+  planInsertJsx,
+  applySetProps,
+  applyVariantClasses,
+  DirectEditError,
+  toPreviewOrigin,
+} from "../../../direct-edit/index.js";
+import type { DirectEditRuntime } from "../../../direct-edit/index.js";
 import {
   fetchFigmaNodes,
   FigmaInputError,
   parseFigmaLink,
   parseFigmaNodes,
   prepareFigmaImport,
-} from "../figma/index.js";
-import { BadRequestError } from "../platform/errors/index.js";
-import { writeAndCommitAll } from "./commit/batch.js";
-import { assertCanEdit, publishVersion } from "./commit/index.js";
-import { planInsertJsx } from "./commit/jsx-insert.js";
-import { applySetProps, applyVariantClasses } from "./commit/props.js";
-import type { DirectEditRuntime } from "./direct-edit-core.js";
+} from "../../../figma/index.js";
+import { BadRequestError } from "../../../platform/errors/index.js";
 import type { DirectionRef } from "./direct-edit-ops.js";
-import { DirectEditError } from "./engine/errors.js";
-import { toPreviewOrigin } from "./preview-origin.js";
 
 type RefKeys = "directionId" | "projectId";
 
@@ -94,7 +103,7 @@ const listPropsComponentsOf = async (
   return listComponentSchemas(project, direction.workTree, toListQuery(body));
 };
 
-const readInstance = async (
+const getInstanceRead = async (
   runtime: DirectEditRuntime,
   target: { readonly direction: Direction; readonly project: Project },
   query: InstanceQuery
@@ -115,7 +124,7 @@ const readInstance = async (
   }
 };
 
-const propsInstanceOf = async (
+const getPropsInstanceOf = async (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: PropsInstanceBody
@@ -132,7 +141,7 @@ const propsInstanceOf = async (
   };
 
   return {
-    instance: await readInstance(runtime, { direction, project }, query),
+    instance: await getInstanceRead(runtime, { direction, project }, query),
   };
 };
 
@@ -188,7 +197,7 @@ interface FigmaSource {
   readonly text: string;
 }
 
-const withNodeId = (text: string, nodeId: string | null): FigmaSource => {
+const setNodeIdOn = (text: string, nodeId: string | null): FigmaSource => {
   if (nodeId === null) {
     return { text };
   }
@@ -196,12 +205,12 @@ const withNodeId = (text: string, nodeId: string | null): FigmaSource => {
   return { nodeId, text };
 };
 
-const figmaNodesText = async (
+const toFigmaNodesText = async (
   request: FigmaImportRequest,
   body: FigmaImportBody
 ): Promise<FigmaSource> => {
   if ("nodes" in request) {
-    return withNodeId(request.nodes, body.nodeId ?? null);
+    return setNodeIdOn(request.nodes, body.nodeId ?? null);
   }
 
   const link = parseFigmaLink(request.link);
@@ -212,10 +221,10 @@ const figmaNodesText = async (
 
   const text = await fetchFigmaNodes(link);
 
-  return withNodeId(text, body.nodeId ?? link.nodeId);
+  return setNodeIdOn(text, body.nodeId ?? link.nodeId);
 };
 
-const versionTitleOf = (frameName: string): string =>
+const toVersionTitleOf = (frameName: string): string =>
   `Import Figma frame ${frameName}`.slice(0, TITLE_MAX);
 
 type InsertPlan = Awaited<ReturnType<typeof planInsertJsx>>;
@@ -225,7 +234,7 @@ interface FigmaCommit {
   readonly version: Awaited<ReturnType<typeof writeAndCommitAll>>;
 }
 
-const placeOf = (plan: InsertPlan): string => {
+const toPlaceOf = (plan: InsertPlan): string => {
   const [at] = plan.select;
 
   if (!at) {
@@ -235,7 +244,7 @@ const placeOf = (plan: InsertPlan): string => {
   return `${at.file}:${at.line}:${at.col}`;
 };
 
-const commitFigmaPlan = async (
+const applyFigmaPlan = async (
   runtime: DirectEditRuntime,
   scope: FigmaScope,
   plan: InsertPlan,
@@ -243,8 +252,8 @@ const commitFigmaPlan = async (
 ): Promise<FigmaCommit> => {
   const deps = runtime.editDeps;
   const { direction, project } = scope;
-  const title = versionTitleOf(preview.frame.name);
-  const place = placeOf(plan);
+  const title = toVersionTitleOf(preview.frame.name);
+  const place = toPlaceOf(plan);
 
   const meta: VersionMeta = {
     kind: "manual",
@@ -285,7 +294,7 @@ interface PlannedImport {
   readonly preview: FigmaImportPreview;
 }
 
-const finishFigmaImport = async (
+const runFigmaImportFinish = async (
   runtime: DirectEditRuntime,
   scope: FigmaScope,
   planned: PlannedImport
@@ -296,7 +305,7 @@ const finishFigmaImport = async (
     return preview;
   }
 
-  const done = await commitFigmaPlan(runtime, scope, plan, preview);
+  const done = await applyFigmaPlan(runtime, scope, plan, preview);
 
   return {
     file: plan.target.relative,
@@ -316,7 +325,7 @@ const applyFigmaImport = async (
   body: FigmaImportBody
 ): Promise<FigmaImportPreview | FigmaImportResult> => {
   const request = toFigmaRequest(body);
-  const source = await figmaNodesText(request, body);
+  const source = await toFigmaNodesText(request, body);
   const doc = parseFigmaNodes(source.text);
 
   const prepared = await prepareFigmaImport(scope, doc, {
@@ -337,7 +346,7 @@ const applyFigmaImport = async (
     preview: prepared.preview,
   };
 
-  return finishFigmaImport(runtime, scope, planned);
+  return runFigmaImportFinish(runtime, scope, planned);
 };
 
 const importFigmaFor = async (
@@ -401,7 +410,7 @@ const importFigmaIn = async (
 export {
   importFigmaIn,
   listPropsComponentsOf,
-  propsInstanceOf,
+  getPropsInstanceOf,
   setPropsIn,
   setVariantClassesIn,
 };

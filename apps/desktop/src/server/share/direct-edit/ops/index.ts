@@ -11,33 +11,33 @@ export {
   listSwapCandidatesOf,
   setImageIn,
   setVectorIn,
-  thumbOf,
-} from "../direct-edit-insert-ops.js";
+  getThumbOf,
+} from "./direct-edit-insert-ops.js";
 
-export type { SourceUse } from "../direct-edit-insert-ops.js";
+export type { SourceUse } from "./direct-edit-insert-ops.js";
 
 export {
   applyEditBody,
-  commitTweaksIn,
+  applyTweaksIn,
   createTokenIn,
-  designSystemOf,
-  previewTokenChanges,
-  previewUrlOf,
-  readTweaks,
-  renderCheckOf,
-  treeOf,
+  getDesignSystemOf,
+  getTokenChangesPreview,
+  getPreviewUrlOf,
+  getTweaksState,
+  getRenderCheckOf,
+  getTreeOf,
   updateTokensIn,
-} from "../direct-edit-ops.js";
+} from "./direct-edit-ops.js";
 
-export type { DirectionRef, EditBody } from "../direct-edit-ops.js";
+export type { DirectionRef, EditBody } from "./direct-edit-ops.js";
 
 export {
   importFigmaIn,
   listPropsComponentsOf,
-  propsInstanceOf,
+  getPropsInstanceOf,
   setPropsIn,
   setVariantClassesIn,
-} from "../direct-edit-props-ops.js";
+} from "./direct-edit-props-ops.js";
 
 export {
   applyReviewFixIn,
@@ -46,4 +46,4 @@ export {
   runReviewIn,
   runRulesTestIn,
   setRulesIn,
-} from "../direct-edit-review-ops.js";
+} from "./direct-edit-review-ops.js";

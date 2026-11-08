@@ -8,27 +8,23 @@ import {
   listComponentsOf,
   listInsertableOf,
   listSwapCandidatesOf,
-  designSystemOf,
-  previewTokenChanges,
-  previewUrlOf,
-  readTweaks,
-  treeOf,
+  getDesignSystemOf,
+  getTokenChangesPreview,
+  getPreviewUrlOf,
+  getTweaksState,
+  getTreeOf,
   listPropsComponentsOf,
-  propsInstanceOf,
+  getPropsInstanceOf,
   getReviewOf,
   getRulesOf,
-} from "../../direct-edit/ops/index.js";
-import type {
-  SourceUse,
-  DirectionRef,
-  EditBody,
-} from "../../direct-edit/ops/index.js";
+} from "./ops/index.js";
+import type { SourceUse, DirectionRef, EditBody } from "./ops/index.js";
 
 interface DirectEditStoreApi {
   readonly getDesignSystem: (
     ref: DirectionRef
   ) => Effect.Effect<
-    Awaited<ReturnType<typeof designSystemOf>>,
+    Awaited<ReturnType<typeof getDesignSystemOf>>,
     DirectEditFailure
   >;
   readonly getPreview: (
@@ -39,7 +35,10 @@ interface DirectEditStoreApi {
   ) => Effect.Effect<{ files: string[] }, DirectEditFailure>;
   readonly getTweaks: (
     ref: DirectionRef
-  ) => Effect.Effect<Awaited<ReturnType<typeof readTweaks>>, DirectEditFailure>;
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof getTweaksState>>,
+    DirectEditFailure
+  >;
   readonly listInsertable: (
     ref: DirectionRef
   ) => Effect.Effect<
@@ -69,7 +68,7 @@ interface DirectEditStoreApi {
     ref: DirectionRef,
     body: EditBody
   ) => Effect.Effect<
-    Awaited<ReturnType<typeof previewTokenChanges>>,
+    Awaited<ReturnType<typeof getTokenChangesPreview>>,
     DirectEditFailure
   >;
   readonly getComponentPreview: (
@@ -81,9 +80,9 @@ interface DirectEditStoreApi {
   >;
   readonly inspectPropsInstance: (
     ref: DirectionRef,
-    body: Parameters<typeof propsInstanceOf>[2]
+    body: Parameters<typeof getPropsInstanceOf>[2]
   ) => Effect.Effect<
-    Awaited<ReturnType<typeof propsInstanceOf>>,
+    Awaited<ReturnType<typeof getPropsInstanceOf>>,
     DirectEditFailure
   >;
   readonly listPropsComponents: (
@@ -123,7 +122,7 @@ class DirectEditStore extends Context.Service<
       getDesignSystem: Effect.fn("DirectEditStore.getDesignSystem")(
         function* run(ref: DirectionRef) {
           return yield* attemptDirectEdit((runtime) =>
-            designSystemOf(runtime, ref)
+            getDesignSystemOf(runtime, ref)
           );
         }
       ),
@@ -131,7 +130,7 @@ class DirectEditStore extends Context.Service<
         ref: DirectionRef
       ) {
         return yield* attemptDirectEdit((runtime) =>
-          previewUrlOf(runtime, ref)
+          getPreviewUrlOf(runtime, ref)
         );
       }),
       getReview: Effect.fn("DirectEditStore.getReview")(function* run(
@@ -147,20 +146,22 @@ class DirectEditStore extends Context.Service<
       getTree: Effect.fn("DirectEditStore.getTree")(function* run(
         ref: DirectionRef
       ) {
-        return yield* attemptDirectEdit((runtime) => treeOf(runtime, ref));
+        return yield* attemptDirectEdit((runtime) => getTreeOf(runtime, ref));
       }),
       getTweaks: Effect.fn("DirectEditStore.getTweaks")(function* run(
         ref: DirectionRef
       ) {
-        return yield* attemptDirectEdit((runtime) => readTweaks(runtime, ref));
+        return yield* attemptDirectEdit((runtime) =>
+          getTweaksState(runtime, ref)
+        );
       }),
       inspectPropsInstance: Effect.fn("DirectEditStore.inspectPropsInstance")(
         function* run(
           ref: DirectionRef,
-          body: Parameters<typeof propsInstanceOf>[2]
+          body: Parameters<typeof getPropsInstanceOf>[2]
         ) {
           return yield* attemptDirectEdit((runtime) =>
-            propsInstanceOf(runtime, ref, body)
+            getPropsInstanceOf(runtime, ref, body)
           );
         }
       ),
@@ -207,7 +208,7 @@ class DirectEditStore extends Context.Service<
         body: EditBody
       ) {
         return yield* attemptDirectEdit((runtime) =>
-          previewTokenChanges(runtime, ref, body)
+          getTokenChangesPreview(runtime, ref, body)
         );
       }),
     })

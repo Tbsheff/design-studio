@@ -17,6 +17,8 @@ const toBody = (input: DirectionInput): Readonly<Record<string, unknown>> =>
     Object.entries(input).filter(([key]) => !REF_KEYS.has(key))
   );
 
+type EditBody = ReturnType<typeof toBody>;
+
 const toFields = <Fields extends DirectionInput>(
   input: Fields
 ): Omit<Fields, RefKey> => {
@@ -26,3 +28,5 @@ const toFields = <Fields extends DirectionInput>(
 };
 
 export { toBody, toFields, toRef };
+
+export type { EditBody };

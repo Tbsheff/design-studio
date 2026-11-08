@@ -1,22 +1,34 @@
 import type { Direction, Project } from "@design-studio/contracts";
 
-import { listInsertable, PreviewTargetError } from "../components/index.js";
-import type { PreviewResult, PreviewTarget } from "../components/index.js";
-import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
-import { applySetImage } from "./commit/image.js";
-import { applyClearText, applyInsertJsx } from "./commit/jsx-insert.js";
-import { applyVector } from "./commit/vector-ops.js";
+import type {
+  PreviewResult,
+  PreviewTarget,
+} from "../../../../shared/component-ports.js";
+import {
+  listInsertable,
+  PreviewTargetError,
+} from "../../../components/index.js";
 import {
   applyCreateComponent,
   applyInsertComponent,
   applySwap,
   componentFolders,
   swapCandidates,
-} from "./components-ops/index.js";
-import type { DirectEditRuntime } from "./direct-edit-core.js";
+} from "../../../direct-edit/components-ops/index.js";
+import {
+  applySetImage,
+  applyClearText,
+  applyInsertJsx,
+  applyVector,
+  DirectEditError,
+  toPreviewOrigin,
+} from "../../../direct-edit/index.js";
+import type { DirectEditRuntime } from "../../../direct-edit/index.js";
+import {
+  BadRequestError,
+  NotFoundError,
+} from "../../../platform/errors/index.js";
 import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
-import { DirectEditError } from "./engine/errors.js";
-import { toPreviewOrigin } from "./preview-origin.js";
 
 const NAME_RE = /^[A-Z][A-Za-z0-9_$]{0,63}$/u;
 
@@ -171,7 +183,7 @@ const listSwapCandidatesOf = async (
   });
 };
 
-const thumbOf = async (
+const getThumbOf = async (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   componentId: string,
@@ -200,7 +212,7 @@ const thumbOf = async (
   return png;
 };
 
-const targetOf = (body: EditBody): PreviewTarget => {
+const toTargetOf = (body: EditBody): PreviewTarget => {
   const { file, id, name } = body as Record<string, string | undefined>;
 
   if (id) {
@@ -226,7 +238,7 @@ const targetOf = (body: EditBody): PreviewTarget => {
   return { name };
 };
 
-const renderPreview = async (
+const runPreview = async (
   runtime: DirectEditRuntime,
   project: Project,
   direction: Direction,
@@ -257,14 +269,14 @@ const getComponentPreviewOf = async (
   ref: DirectionRef,
   body: EditBody
 ): Promise<ComponentPreviewBody> => {
-  const target = targetOf(body);
+  const target = toTargetOf(body);
 
   const { direction, project } = await runtime.loadDirection(
     ref.projectId,
     ref.directionId
   );
 
-  const result = await renderPreview(runtime, project, direction, target);
+  const result = await runPreview(runtime, project, direction, target);
 
   if (!result.ok) {
     throw new DirectEditError("invalid_request", result.reason, UNPROCESSABLE);
@@ -293,7 +305,7 @@ export {
   listSwapCandidatesOf,
   setImageIn,
   setVectorIn,
-  thumbOf,
+  getThumbOf,
 };
 
 export type { ComponentPreviewBody, SourceUse };

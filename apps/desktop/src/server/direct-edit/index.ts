@@ -2,11 +2,12 @@ export { DirectEditError, parseDirectEditRequest } from "./engine/index.js";
 
 export * from "./commit/index.js";
 
-export { writeAndCommitAll } from "./commit/batch.js";
+export { writeAndCommitAll, applyDirectEditBatch } from "./commit/batch.js";
 
 export {
   attemptDirectEdit,
   bindDirectEditRuntime,
+  directEditRuntimeOf,
 } from "./direct-edit-core.js";
 
 export type {
@@ -16,7 +17,7 @@ export type {
 
 export { toBody, toFields, toRef } from "./direct-edit-ref.js";
 
-export { directEditRuntimeOf } from "./direct-edit-core.js";
+export type { EditBody } from "./direct-edit-ref.js";
 
 export { toPreviewOrigin } from "./preview-origin.js";
 
@@ -26,6 +27,7 @@ export {
   planChanged,
   planSetImage,
   writeImagePlan,
+  applySetImage,
 } from "./commit/image.js";
 
 export type { ImageBytes } from "./commit/image-source.js";
@@ -43,3 +45,23 @@ export { runDirectionRead, runDirectionWrite } from "./direction-task.js";
 export type { DirectEditStatusFailure } from "./direct-edit-status-failure.js";
 
 export type { DirectionIds, DirectionRun } from "./direction-task.js";
+
+export {
+  applyClearText,
+  applyInsertJsx,
+  planInsertJsx,
+} from "./commit/jsx-insert.js";
+
+export { applyVector } from "./commit/vector-ops.js";
+
+export { commitDirectEdit } from "./commit/apply.js";
+
+export { applyArrange, isArrangeBody } from "./commit/arrange.js";
+
+export { applyStyleReplace } from "./commit/replace.js";
+
+export { applyStructureEdit } from "./commit/structure-apply.js";
+
+export { isDirectEditBatch, isStructureEdit } from "./engine/validate.js";
+
+export { applySetProps, applyVariantClasses } from "./commit/props.js";

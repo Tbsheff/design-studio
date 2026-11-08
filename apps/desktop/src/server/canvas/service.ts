@@ -18,21 +18,17 @@ import {
 import type { CanvasFile } from "@design-studio/contracts/canvas-file";
 import type { LinksFile } from "@design-studio/contracts/links";
 
+import type {
+  CanvasService,
+  CanvasSnapshot,
+  CanvasWrite,
+  LinksService,
+} from "../../shared/canvas-ports.js";
 import type { EventBus } from "../events/index.js";
 import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
 import { ConflictError } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import type { LayoutListener } from "./layout-history.js";
-
-export interface LinksService {
-  read: (project: Project) => Promise<LinksFile>;
-  update: (
-    project: Project,
-    change: (file: LinksFile) => LinksFile | null,
-    source: CanvasWriteSource
-  ) => Promise<LinksFile>;
-  announce: (project: Project) => Promise<void>;
-}
 
 export type LinksWritten = (
   project: Project,
@@ -45,38 +41,6 @@ export type LinksFactory = (
   bus: EventBus,
   written?: LinksWritten
 ) => LinksService;
-
-export interface CanvasSnapshot {
-  canvas: CanvasFile | null;
-  hash: string | null;
-}
-
-export interface CanvasWrite {
-  source: CanvasWriteSource;
-  writer?: string;
-  baseHash?: string | null;
-}
-
-export interface CanvasService {
-  ownerOf(project: Project): Direction;
-  read(project: Project): Promise<CanvasSnapshot>;
-  write(
-    project: Project,
-    canvas: CanvasFile,
-    write: CanvasWrite
-  ): Promise<CanvasSnapshot>;
-  update(
-    project: Project,
-    change: (canvas: CanvasFile) => CanvasFile | null,
-    write: CanvasWrite
-  ): Promise<CanvasSnapshot>;
-  announce(project: Project): Promise<void>;
-  setPresence(projectId: string, presence: CanvasPresence): void;
-  presence(projectId: string): CanvasPresence | null;
-  point(project: Project, frameId: string, selector?: string): void;
-  onLayoutChange?(listener: LayoutListener): void;
-  links: LinksService;
-}
 
 const MAIN_DIRECTION_ID = "main";
 const PRESENCE_TTL_MS = 10 * 60 * 1000;
@@ -347,3 +311,5 @@ export function createCanvasCore(
     },
   };
 }
+
+export type { CanvasService, CanvasSnapshot, CanvasWrite, LinksService };

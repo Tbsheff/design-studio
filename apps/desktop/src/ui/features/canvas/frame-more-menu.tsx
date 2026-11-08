@@ -1,12 +1,13 @@
-import { useEffect } from "react";
-
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import type { ReactElement } from "react";
+import { useEffect } from "react";
+
 import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";
 
-export interface FrameMenuItem {
+interface FrameMenuItem {
   id: string;
   label: string;
   icon: IconName;
@@ -14,29 +15,29 @@ export interface FrameMenuItem {
   run: () => void;
 }
 
-function portItem(root: HTMLElement | null): FrameMenuItem[] {
+const portItem = (root: HTMLElement | null): FrameMenuItem[] => {
   if (!portAvailable()) {
     return [];
   }
 
   const frame = root?.closest<HTMLElement>("[data-frame-id]") ?? null;
 
-  const run = () =>
+  const run = (): void =>
     openPortDialog({
       directionId: frame?.dataset.directionId ?? null,
       frameId: frame?.dataset.frameId ?? null,
     });
 
   return [{ icon: "react", id: "port-to-app", label: "Move to app…", run }];
-}
+};
 
-export function FrameMoreMenu({
+const FrameMoreMenu = ({
   name,
   items: own,
 }: {
   name: string;
   items: FrameMenuItem[];
-}) {
+}): ReactElement | null => {
   const menu = useMenu();
   useEffect(() => {
     if (menu.open) {
@@ -61,7 +62,7 @@ export function FrameMoreMenu({
         aria-expanded={menu.open}
         aria-label={`More actions for ${name}`}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((v) => !v)}
+        onClick={() => menu.setOpen((value) => !value)}
         data-tip={menu.open ? undefined : "More frame actions"}
       >
         <Icon name="more" size={14} />
@@ -71,7 +72,7 @@ export function FrameMoreMenu({
           className="ui-menu project-menu canvas-menu frame-menu"
           role="menu"
           aria-label={`${name} actions`}
-          onKeyDown={(e) => menuKeys(e, menu.close)}
+          onKeyDown={(event) => menuKeys(event, menu.close)}
         >
           {items.map((item) => (
             <button
@@ -97,4 +98,8 @@ export function FrameMoreMenu({
       )}
     </div>
   );
-}
+};
+
+export { FrameMoreMenu };
+
+export type { FrameMenuItem };

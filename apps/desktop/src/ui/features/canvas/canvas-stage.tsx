@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Suspense, lazy } from "react";
 
 import { TabOrderSlot } from "../accessibility/index.js";
@@ -49,7 +50,11 @@ const LazySpacingHandles = lazy(async () => {
   return { default: loaded.SpacingHandles };
 });
 
-const SpacingLayer = ({ host, selection, zoom }: SpacingHandlesProps) => (
+const SpacingLayer = ({
+  host,
+  selection,
+  zoom,
+}: SpacingHandlesProps): ReactElement => (
   <Suspense fallback={null}>
     <LazySpacingHandles host={host} selection={selection} zoom={zoom} />
   </Suspense>
@@ -61,7 +66,12 @@ const LazyGridOverlay = lazy(async () => {
   return { default: loaded.GridOverlay };
 });
 
-const GridLayer = ({ host, selection, variant, zoom }: GridOverlayProps) => (
+const GridLayer = ({
+  host,
+  selection,
+  variant,
+  zoom,
+}: GridOverlayProps): ReactElement => (
   <Suspense fallback={null}>
     <LazyGridOverlay
       host={host}
@@ -80,7 +90,13 @@ interface CanvasStageProps {
   w: ReturnType<typeof useCanvasWiring>;
 }
 
-const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
+const CanvasStage = ({
+  props,
+  s: text,
+  pv,
+  ed,
+  w: widthValue,
+}: CanvasStageProps): ReactElement => {
   const editVariant = useEditVariant();
 
   const { projectId, directionId, kind } = props;
@@ -104,7 +120,7 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
     urlError,
     note,
     firstBuild,
-  } = s;
+  } = text;
 
   const { frames, covered, passive } = pv;
 
@@ -128,7 +144,7 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
     appCanvas,
     capture,
     stageMode,
-  } = w;
+  } = widthValue;
 
   return (
     <div
@@ -229,7 +245,7 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
           note={appCanvas.note}
         />
         <FrameResizeHandles
-          onPointerDown={(e, edge) => onResizeStart(e, active, edge)}
+          onPointerDown={(event, edge) => onResizeStart(event, active, edge)}
         />
         <OtherFrames
           frames={shown}
@@ -263,9 +279,11 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
         <McpPointBadge
           badge={pointBadge}
           frameName={(id: string) => {
-            const f = canvasFrames.layout.frames.find((item) => item.id === id);
+            const frameValue = canvasFrames.layout.frames.find(
+              (item) => item.id === id
+            );
 
-            return f ? frameName(f) : id;
+            return frameValue ? frameName(frameValue) : id;
           }}
         />
       </Suspense>

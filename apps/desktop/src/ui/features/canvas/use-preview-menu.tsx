@@ -6,7 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import {
   commandBlocker,
@@ -32,8 +32,9 @@ import { PropSlot, usePropHost } from "../prop/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
+import { toValueOr } from "./settle-model.js";
 
-const renderGenerateTab = (props: GenerateTabProps) => (
+const renderGenerateTab = (props: GenerateTabProps): ReactElement => (
   <ImageGenerateSlot
     directionId={props.directionId}
     projectId={props.projectId}
@@ -60,47 +61,53 @@ interface Options {
   ids: { projectId: string; directionId: string | null; kind: ProjectKind };
 }
 
-async function copyCss(
+const copyCss = async (
   port: PreviewPort | null,
   selector: string
-): Promise<void> {
+): Promise<void> => {
   const css = await requestAuthoredCss(port, selector);
 
   if (css) {
-    await navigator.clipboard.writeText(formatCopyCss(css)).catch(() => null);
+    await toValueOr(navigator.clipboard.writeText(formatCopyCss(css)), null);
   }
-}
+};
 
-function structureItems(o: Options): PreviewMenuItem[] {
-  const { edits } = o;
+const structureItems = (options: Options): PreviewMenuItem[] => {
+  const { edits } = options;
 
   if (!edits.enabled) {
     return [];
   }
 
   const state = {
-    isBusy: edits.busy,
     canPaste: edits.canPaste,
-    count: o.selection.length,
-    hasSource: selectionTargets(o.selection) !== null,
+    count: options.selection.length,
+    hasSource: selectionTargets(options.selection) !== null,
+    isBusy: edits.busy,
   };
 
   return structureMenuItems(state, edits.structureKey, true);
-}
+};
 
-function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
-  if (!o.edits.enabled || !o.ids.directionId) {
+const pasteItem = (
+  optionsValue: Options,
+  target: SelectionContext
+): PreviewMenuItem[] => {
+  if (!optionsValue.edits.enabled || !optionsValue.ids.directionId) {
     return [];
   }
 
   const blocked =
     !target.source && !target.owners?.length
       ? "This element has no source location"
-      : o.edits.busy
+      : optionsValue.edits.busy
         ? "Wait for the last edit to finish"
         : null;
 
-  const ids = { directionId: o.ids.directionId, projectId: o.ids.projectId };
+  const ids = {
+    directionId: optionsValue.ids.directionId,
+    projectId: optionsValue.ids.projectId,
+  };
 
   return [
     {
@@ -108,22 +115,22 @@ function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
       icon: "code",
       id: "paste-jsx",
       label: "Paste JSX or Figma",
-      run: () => pasteJsx(ids, target, o.edits.notify),
+      run: () => pasteJsx(ids, target, optionsValue.edits.notify),
       ...disabledBy(blocked),
     },
   ];
-}
+};
 
-function createItem(o: Options, open: () => void): PreviewMenuItem[] {
-  if (!o.edits.enabled || !o.ids.directionId) {
+const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
+  if (!options3.edits.enabled || !options3.ids.directionId) {
     return [];
   }
 
-  const blocked = createBlocker(o);
+  const blocked = createBlocker(options3);
 
   const label =
-    o.selection.length > 1
-      ? `Create component from ${o.selection.length}…`
+    options3.selection.length > 1
+      ? `Create component from ${options3.selection.length}…`
       : "Create component…";
 
   return [
@@ -135,93 +142,89 @@ function createItem(o: Options, open: () => void): PreviewMenuItem[] {
       ...disabledBy(blocked),
     },
   ];
-}
+};
 
-function createBlocker(o: Options): string | null {
-  if (o.ids.kind !== "react") {
+const createBlocker = (options4: Options): string | null => {
+  if (options4.ids.kind !== "react") {
     return "Components need a React project. This is a plain HTML page";
   }
 
-  if (o.selection.some((item) => !item.source && !item.owners?.length)) {
+  if (options4.selection.some((item) => !item.source && !item.owners?.length)) {
     return "An element has no source location";
   }
 
-  return o.edits.busy ? "Wait for the last edit to finish" : null;
-}
+  return options4.edits.busy ? "Wait for the last edit to finish" : null;
+};
 
-function disabledBy(reason: string | null): { disabled?: string } {
-  return reason ? { disabled: reason } : {};
-}
+const disabledBy = (reason: string | null): { disabled?: string } =>
+  reason ? { disabled: reason } : {};
 
-function menuItems(
-  o: Options,
+const menuItems = (
+  options5: Options,
   target: SelectionContext,
   openCreate: () => void,
   iconItems: (target: SelectionContext) => PreviewMenuItem[]
-): PreviewMenuItem[] {
-  return [
-    {
-      icon: "chat",
-      id: "ask",
-      label: "Ask the agent about this",
-      run: () =>
-        void (
-          runCommand("selection.ask-inline") ||
-          runCommand("panel.focus-composer")
-        ),
-    },
-    {
-      icon: "compare",
-      id: "variants",
-      label: "Try variants…",
-      run: () => void runCommand(TRY_VARIANTS_COMMAND),
-      ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)),
-    },
-    {
-      icon: "pointer",
-      id: "parent",
-      keyId: "select-parent",
-      label: "Select parent",
-      run: () => o.selectRelative(target.selector, "parent"),
-    },
-    {
-      icon: "pointer",
-      id: "child",
-      keyId: "select-child",
-      label: "Select child",
-      run: () => o.selectRelative(target.selector, "child"),
-    },
-    {
-      icon: "copy",
-      id: "copy-css",
-      label: "Copy CSS",
-      run: () => copyCss(o.port?.current ?? null, target.selector),
-    },
-    {
-      icon: "search",
-      id: "zoom",
-      keyId: "zoom-selection",
-      label: "Zoom to selection",
-      run: () => o.zoom("selection"),
-    },
-    {
-      icon: "layers",
-      id: "layers",
-      keyId: "layers",
-      label: "Show in layers",
-      run: () => uiStore.set({ layersOpen: true }),
-    },
-    ...structureItems(o),
-    ...pasteItem(o, target),
-    ...iconItems(target),
-    ...createItem(o, openCreate),
-  ];
-}
+): PreviewMenuItem[] => [
+  {
+    icon: "chat",
+    id: "ask",
+    label: "Ask the agent about this",
+    run: () =>
+      void (
+        runCommand("selection.ask-inline") || runCommand("panel.focus-composer")
+      ),
+  },
+  {
+    icon: "compare",
+    id: "variants",
+    label: "Try variants…",
+    run: () => void runCommand(TRY_VARIANTS_COMMAND),
+    ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)),
+  },
+  {
+    icon: "pointer",
+    id: "parent",
+    keyId: "select-parent",
+    label: "Select parent",
+    run: () => options5.selectRelative(target.selector, "parent"),
+  },
+  {
+    icon: "pointer",
+    id: "child",
+    keyId: "select-child",
+    label: "Select child",
+    run: () => options5.selectRelative(target.selector, "child"),
+  },
+  {
+    icon: "copy",
+    id: "copy-css",
+    label: "Copy CSS",
+    run: () => copyCss(options5.port?.current ?? null, target.selector),
+  },
+  {
+    icon: "search",
+    id: "zoom",
+    keyId: "zoom-selection",
+    label: "Zoom to selection",
+    run: () => options5.zoom("selection"),
+  },
+  {
+    icon: "layers",
+    id: "layers",
+    keyId: "layers",
+    label: "Show in layers",
+    run: () => uiStore.set({ layersOpen: true }),
+  },
+  ...structureItems(options5),
+  ...pasteItem(options5, target),
+  ...iconItems(target),
+  ...createItem(options5, openCreate),
+];
 
-export function usePreviewMenu(o: Options) {
+const usePreviewMenu = (options6: Options) => {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
-  const latest = useRef(o);
-  latest.current = o;
+  const latest = useRef(options6);
+  latest.current = options6;
 
   const onContextMenu = useCallback(
     (point: { x: number; y: number }) => setAt(point),
@@ -230,47 +233,47 @@ export function usePreviewMenu(o: Options) {
 
   const close = useCallback(() => setAt(null), []);
   const [creating, setCreating] = useState<SelectionContext[] | null>(null);
-  const target = o.selection.at(-1);
-  const openCreate = () => setCreating(latest.current.selection);
-  const { directionId } = o.ids;
+  const target = options6.selection.at(-1);
+  const openCreate = (): void => setCreating(latest.current.selection);
+  const { directionId } = options6.ids;
 
   const hostOptions = {
-    busy: o.edits.busy,
+    busy: options6.edits.busy,
     directionId,
-    enabled: o.edits.enabled,
-    notify: o.edits.notify,
-    projectId: o.ids.projectId,
-    selection: o.selection,
+    enabled: options6.edits.enabled,
+    notify: options6.edits.notify,
+    projectId: options6.ids.projectId,
+    selection: options6.selection,
   };
 
   const icons = useIconHost(hostOptions);
   const photos = useImageSearchHost(hostOptions);
 
   const props = usePropHost({
-    busy: o.edits.busy,
+    busy: options6.edits.busy,
     directionId,
-    enabled: o.edits.enabled,
-    isReact: o.ids.kind === "react",
-    notify: o.edits.notify,
-    projectId: o.ids.projectId,
+    enabled: options6.edits.enabled,
+    isReact: options6.ids.kind === "react",
+    notify: options6.edits.notify,
+    projectId: options6.ids.projectId,
   });
 
   const patterns = usePatternHost({
-    busy: o.edits.busy,
+    busy: options6.edits.busy,
     directionId,
-    enabled: o.edits.enabled,
-    isReact: o.ids.kind === "react",
-    notify: o.edits.notify,
-    projectId: o.ids.projectId,
+    enabled: options6.edits.enabled,
+    isReact: options6.ids.kind === "react",
+    notify: options6.edits.notify,
+    projectId: options6.ids.projectId,
   });
 
   const dialog =
     creating && directionId ? (
       <Suspense fallback={null}>
         <CreateComponentDialog
-          ids={{ directionId, projectId: o.ids.projectId }}
+          ids={{ directionId, projectId: options6.ids.projectId }}
           selection={creating}
-          onDone={o.edits.notify}
+          onDone={options6.edits.notify}
           onClose={() => setCreating(null)}
         />
       </Suspense>
@@ -299,12 +302,12 @@ export function usePreviewMenu(o: Options) {
       {dialog}
       {icons.opened && directionId ? (
         <IconSlot
-          projectId={o.ids.projectId}
+          projectId={options6.ids.projectId}
           directionId={directionId}
           mode={icons.opened.mode}
           target={icons.opened.target}
           onClose={icons.close}
-          onDone={o.edits.notify}
+          onDone={options6.edits.notify}
         />
       ) : null}
       {props.opened ? (
@@ -314,7 +317,7 @@ export function usePreviewMenu(o: Options) {
             layer={props.opened.layer}
             target={props.opened.target}
             onClose={props.close}
-            onDone={o.edits.notify}
+            onDone={options6.edits.notify}
           />
         </Suspense>
       ) : null}
@@ -322,22 +325,24 @@ export function usePreviewMenu(o: Options) {
         <Suspense fallback={null}>
           <PatternSlot
             directionId={directionId}
-            projectId={o.ids.projectId}
+            projectId={options6.ids.projectId}
             target={patterns.opened}
             onClose={patterns.close}
-            onDone={o.edits.notify}
+            onDone={options6.edits.notify}
           />
         </Suspense>
       ) : null}
       <ImageSearchMount
         directionId={directionId}
         host={photos}
-        projectId={o.ids.projectId}
+        projectId={options6.ids.projectId}
         renderGenerate={renderGenerateTab}
-        onDone={o.edits.notify}
+        onDone={options6.edits.notify}
       />
     </>
   );
 
   return { menu, onContextMenu };
-}
+};
+
+export { usePreviewMenu };

@@ -9,22 +9,25 @@ import { useState } from "react";
 import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
+  ReactElement,
 } from "react";
 
 import { copy } from "./copy.js";
 
 import "../../styles/frame-state.css";
 import type { setFrameSession } from "./frame-states-model.js";
+import { runOrReport } from "./settle-model.js";
 
 type MockRules = NonNullable<FrameStateDef["mocks"]>;
 
-export type Panel = "list" | "user" | "mock";
+type Panel = "list" | "user" | "mock";
 
-export const stop = (e: ReactPointerEvent) => e.stopPropagation();
+const stop = (eventValue: ReactPointerEvent): void =>
+  eventValue.stopPropagation();
 
 const MOCK_EXAMPLE = '[\n  { "path": "/api/items", "body": [] }\n]';
 
-export function menuKeys(event: ReactKeyboardEvent<HTMLElement>): void {
+const menuKeys = (event: ReactKeyboardEvent<HTMLElement>): void => {
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
       '[role^="menuitem"]:not(:disabled)'
@@ -43,11 +46,12 @@ export function menuKeys(event: ReactKeyboardEvent<HTMLElement>): void {
   if (next === null || items.length === 0) {
     return;
   }
+
   event.preventDefault();
   items[(next + items.length) % items.length]?.focus();
-}
+};
 
-export function StateRows({
+const StateRows = ({
   view,
   chosen,
   onPick,
@@ -55,36 +59,34 @@ export function StateRows({
   view: FrameStatesView;
   chosen: string;
   onPick: (state: FrameStateDef) => void;
-}) {
-  return (
-    <div className="ui-menu-section">
-      <div className="ui-menu-label">Preview state</div>
-      {view.states.map((state) => (
-        <button
-          key={state.id}
-          type="button"
-          role="menuitemradio"
-          aria-checked={state.id === chosen}
-          className="ui-menu-item"
-          tabIndex={-1}
-          data-tip={STATE_HINTS[state.kind]}
-          onClick={() => onPick(state)}
-        >
-          <span>{state.name}</span>
-          {state.kind === "mock" && (
-            <span className="ui-menu-meta">
-              {state.mocks?.length === 1
-                ? "1 rule"
-                : `${state.mocks?.length ?? 0} rules`}
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
+}): ReactElement => (
+  <div className="ui-menu-section">
+    <div className="ui-menu-label">{copy.previewState}</div>
+    {view.states.map((state) => (
+      <button
+        key={state.id}
+        type="button"
+        role="menuitemradio"
+        aria-checked={state.id === chosen}
+        className="ui-menu-item"
+        tabIndex={-1}
+        data-tip={STATE_HINTS[state.kind]}
+        onClick={() => onPick(state)}
+      >
+        <span>{state.name}</span>
+        {state.kind === "mock" && (
+          <span className="ui-menu-meta">
+            {state.mocks?.length === 1
+              ? "1 rule"
+              : `${state.mocks?.length ?? 0} rules`}
+          </span>
+        )}
+      </button>
+    ))}
+  </div>
+);
 
-export function SessionRows({
+const SessionRows = ({
   view,
   onPanel,
   onSession,
@@ -92,12 +94,12 @@ export function SessionRows({
   view: FrameStatesView;
   onPanel: (panel: Panel) => void;
   onSession: (change: Parameters<typeof setFrameSession>[1]) => void;
-}) {
+}): ReactElement => {
   const kept = view.session.captured.length;
 
   return (
     <div className="ui-menu-section">
-      <div className="ui-menu-label">Signed-in states use</div>
+      <div className="ui-menu-label">{copy.signedInStatesUse}</div>
       {view.session.usesMockUser ? (
         <button
           type="button"
@@ -113,7 +115,7 @@ export function SessionRows({
       ) : (
         <div className="frame-state-line">
           <Icon name="lock" size={14} />
-          <span>A real sign-in from a signed-in frame</span>
+          <span>{copy.aRealSignIn}</span>
         </div>
       )}
       {kept > 0 && (
@@ -126,15 +128,15 @@ export function SessionRows({
           onClick={() => onSession({ forget: true })}
         >
           <Icon name="trash" size={14} />
-          <span>Forget kept cookies</span>
+          <span>{copy.forgetKeptCookies}</span>
           <span className="ui-menu-meta">{kept}</span>
         </button>
       )}
     </div>
   );
-}
+};
 
-export function UserForm({
+const UserForm = ({
   user,
   onSave,
   onBack,
@@ -142,7 +144,7 @@ export function UserForm({
   user: MockUser;
   onSave: (user: MockUser) => Promise<void>;
   onBack: () => void;
-}) {
+}): ReactElement => {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [error, setError] = useState<string | null>(null);
@@ -150,55 +152,55 @@ export function UserForm({
   return (
     <form
       className="frame-state-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSave({ email, name }).catch((failure: unknown) =>
+      onSubmit={(event3) => {
+        event3.preventDefault();
+        void runOrReport(onSave({ email, name }), (failure) =>
           setError(failure instanceof Error ? failure.message : String(failure))
         );
       }}
     >
       <label className="frame-page-field">
-        <span>Name</span>
+        <span>{copy.name}</span>
         <input
           value={name}
           autoFocus
-          onChange={(e) => setName(e.target.value)}
+          onChange={(event4) => setName(event4.target.value)}
         />
       </label>
       <label className="frame-page-field">
-        <span>Email</span>
+        <span>{copy.email}</span>
         <input
           value={email}
           spellCheck={false}
           aria-invalid={Boolean(error)}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(event5) => setEmail(event5.target.value)}
         />
       </label>
       {error && <p className="frame-page-hint error">{error}</p>}
       <div className="frame-state-actions">
         <button type="button" className="btn small ghost" onClick={onBack}>
-          Back
+          {copy.back}
         </button>
         <button type="submit" className="btn small strong">
-          Save
+          {copy.save}
         </button>
       </div>
     </form>
   );
-}
+};
 
-export function MockForm({
+const MockForm = ({
   onSave,
   onBack,
 }: {
   onSave: (name: string, rules: MockRules) => Promise<void>;
   onBack: () => void;
-}) {
+}): ReactElement => {
   const [name, setName] = useState("Mock data");
   const [rules, setRules] = useState(MOCK_EXAMPLE);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = () => {
+  const submit = (): void => {
     let parsed: MockRules | null = null;
 
     try {
@@ -215,7 +217,7 @@ export function MockForm({
       return;
     }
 
-    onSave(name, parsed).catch((failure: unknown) =>
+    void runOrReport(onSave(name, parsed), (failure) =>
       setError(failure instanceof Error ? failure.message : String(failure))
     );
   };
@@ -223,13 +225,13 @@ export function MockForm({
   return (
     <form
       className="frame-state-form"
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(event6) => {
+        event6.preventDefault();
         submit();
       }}
     >
       <label className="frame-page-field">
-        <span>Name</span>
+        <span>{copy.name}</span>
         <input
           value={name}
           autoFocus
@@ -237,7 +239,7 @@ export function MockForm({
         />
       </label>
       <label className="frame-page-field">
-        <span>Answers for calls from the browser</span>
+        <span>{copy.answersForCallsFrom}</span>
         <textarea
           className="frame-state-rules"
           value={rules}
@@ -247,19 +249,20 @@ export function MockForm({
           onChange={(e) => setRules(e.target.value)}
         />
       </label>
-      <p className="frame-page-hint">
-        A path that ends in * matches the start. Calls that match no rule go to
-        the app.
-      </p>
+      <p className="frame-page-hint">{copy.aPathThatEnds}</p>
       {error && <p className="frame-page-hint error">{error}</p>}
       <div className="frame-state-actions">
         <button type="button" className="btn small ghost" onClick={onBack}>
-          Back
+          {copy.back}
         </button>
         <button type="submit" className="btn small strong">
-          Show in this frame
+          {copy.showInThisFrame}
         </button>
       </div>
     </form>
   );
-}
+};
+
+export { MockForm, SessionRows, StateRows, UserForm, menuKeys, stop };
+
+export type { Panel };

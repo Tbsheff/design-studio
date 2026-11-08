@@ -1,6 +1,11 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { useRef } from "react";
-import type { ComponentProps, MutableRefObject, ReactNode } from "react";
+import type {
+  ComponentProps,
+  MutableRefObject,
+  ReactNode,
+  ReactElement,
+} from "react";
 
 import { tagFrame } from "../../platform/bridge.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
@@ -24,7 +29,7 @@ import type { useRenderCheck } from "./use-preview-url.js";
 import { useResizeLive } from "./use-resize-handles.js";
 import type { ResizeHandles } from "./use-resize-handles.js";
 
-function StageMessage({
+const StageMessage = ({
   note: given,
   covered,
   urlError,
@@ -34,7 +39,7 @@ function StageMessage({
   covered: boolean;
   urlError: string | null;
   app: ReactNode;
-}) {
+}): ReactNode => {
   const note = covered ? null : given;
 
   if (urlError) {
@@ -45,7 +50,7 @@ function StageMessage({
     return (
       <div className="stage-message" role="status">
         <span className="spinner" aria-hidden="true" />
-        Building the first version…
+        {copy.buildingTheFirstVersion}
       </div>
     );
   }
@@ -53,13 +58,13 @@ function StageMessage({
   if (note === "empty") {
     return (
       <div className="stage-message" role="status">
-        No design yet. Send a prompt, or start the variations.
+        {copy.noDesignYetSend}
       </div>
     );
   }
 
   return app;
-}
+};
 
 interface SlotFrames {
   slots: { token: string; src: string }[];
@@ -68,7 +73,7 @@ interface SlotFrames {
   onFrameLoad: (token: string) => void;
 }
 
-function PreviewSlots({
+const PreviewSlots = ({
   frames,
   sandbox,
   viewport,
@@ -76,8 +81,8 @@ function PreviewSlots({
   frames: SlotFrames;
   sandbox?: string;
   viewport: { width: number; height: number };
-}) {
-  return frames.slots.map((slot) => (
+}): ReactElement[] =>
+  frames.slots.map((slot) => (
     <iframe
       key={slot.token}
       ref={(el) => {
@@ -92,9 +97,8 @@ function PreviewSlots({
       height={viewport.height}
     />
   ));
-}
 
-function OtherFrames({
+const OtherFrames = ({
   frames,
   active,
   passive,
@@ -112,31 +116,33 @@ function OtherFrames({
   register: (id: string, el: HTMLDivElement | null) => void;
   waiting: (path: string | undefined, directionId: string | null) => PageWait;
   steps: LiveStore<string | null>;
-}) {
+}): ReactElement[] => {
   const step = useLive(steps);
   const entries = useRef(new Map<string, PassiveEntry>());
   const live = entries.current;
   live.clear();
 
   return frames
-    .filter((f) => f.id !== active.id)
-    .map((f) => {
-      const slot = passive.slots.find((item) => item.id === f.id);
+    .filter((canvasFrame) => canvasFrame.id !== active.id)
+    .map((canvasFrameValue) => {
+      const slot = passive.slots.find(
+        (item) => item.id === canvasFrameValue.id
+      );
       const did = slot?.directionId ?? null;
-      const wait = waiting(f.path, did);
-      live.set(f.id, {
-        frame: f,
+      const wait = waiting(canvasFrameValue.path, did);
+      live.set(canvasFrameValue.id, {
+        frame: canvasFrameValue,
         frameRef: (el) => {
           if (slot) {
             passive.elements.current[slot.token] = tagFrame(el, slot.token);
           }
         },
-        label: labelProps(f, did),
+        label: labelProps(canvasFrameValue, did),
         nextSrc: wait ? null : (slot?.nextSrc ?? null),
         offset: active,
         onNextLoad: passive.onSwapDone,
         pending: wait
-          ? { step: step ?? null, missing: wait === "missing" }
+          ? { missing: wait === "missing", step: step ?? null }
           : undefined,
         register,
         sandbox,
@@ -144,7 +150,7 @@ function OtherFrames({
       });
 
       const sig = JSON.stringify([
-        f,
+        canvasFrameValue,
         wait,
         wait ? step : null,
         slot?.src ?? null,
@@ -153,14 +159,19 @@ function OtherFrames({
         sandbox ?? null,
         active.x,
         active.y,
-        labelProps.sig(f, did),
+        labelProps.sig(canvasFrameValue, did),
       ]);
 
       return (
-        <StablePassiveFrame key={f.id} id={f.id} sig={sig} entries={entries} />
+        <StablePassiveFrame
+          key={canvasFrameValue.id}
+          id={canvasFrameValue.id}
+          sig={sig}
+          entries={entries}
+        />
       );
     });
-}
+};
 
 interface LiveOverlayProps extends Omit<
   ComponentProps<typeof ArtboardOverlay>,
@@ -175,7 +186,7 @@ interface LiveOverlayProps extends Omit<
 
 const NO_PICK = createLiveStore<SelectionContext[] | null>(null);
 
-function LiveOverlay({
+const LiveOverlay = ({
   hover,
   picked,
   commenting,
@@ -183,7 +194,7 @@ function LiveOverlay({
   resize,
   selection,
   ...rest
-}: LiveOverlayProps) {
+}: LiveOverlayProps): ReactElement => {
   const box = useLive(hover);
   const early = useLive(commenting ? NO_PICK : picked);
 
@@ -195,28 +206,28 @@ function LiveOverlay({
       resize={useResizeLive(resize)}
     />
   );
-}
+};
 
-function StepCover({
+const StepCover = ({
   steps,
   ...rest
 }: Omit<ComponentProps<typeof FirstBuildCover>, "step"> & {
   steps: LiveStore<string | null>;
-}) {
-  return <FirstBuildCover {...rest} step={useLive(steps)} />;
-}
+}): ReactElement => <FirstBuildCover {...rest} step={useLive(steps)} />;
 
-function FreeMoveSlot({ view }: { view: LiveStore<FreeMoveView | null> }) {
-  return <FreeMoveLayer view={useLive(view)} />;
-}
+const FreeMoveSlot = ({
+  view,
+}: {
+  view: LiveStore<FreeMoveView | null>;
+}): ReactElement => <FreeMoveLayer view={useLive(view)} />;
 
-function CheckResults({
+const CheckResults = ({
   projectId,
   check,
 }: {
   projectId: string;
   check: ReturnType<typeof useRenderCheck>;
-}) {
+}): ReactElement | null => {
   if (!check.results && !check.error) {
     return null;
   }
@@ -229,7 +240,7 @@ function CheckResults({
       onClose={check.close}
     />
   );
-}
+};
 
 export {
   CheckResults,

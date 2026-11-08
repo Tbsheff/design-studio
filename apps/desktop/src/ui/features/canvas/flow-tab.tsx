@@ -1,6 +1,7 @@
 import type { AppRoute } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useEffect, useMemo, useState } from "react";
+import type { ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { dynamicNames } from "../../../shared/route-flow.js";
 import type { FlowResult } from "../../../shared/route-flow.js";
@@ -8,6 +9,7 @@ import { api, errorText } from "../../api.js";
 
 import "../../styles/route-flow.css";
 import { copy } from "./copy.js";
+import { toValueOr } from "./settle-model.js";
 
 const DEPTHS = [0, 1, 2] as const;
 
@@ -26,48 +28,67 @@ export function flowSummary(result: FlowResult): string {
   return parts.join(", ");
 }
 
-function useRoutesAndParams(projectId: string) {
+const useRoutesAndParams = (projectId: string) => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
   const [params, setParams] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    api
-      .appRoutes(projectId)
-      .then((result) => setRoutes(result.routes))
-      .catch((failure: unknown) => setError(errorText(failure)));
-    api
-      .flowParams(projectId)
-      .then((result) => setParams(result.params))
-      .catch(() => null);
+
+  const loadRoutes = useCallback(async (): Promise<void> => {
+    try {
+      const result = await api.appRoutes(projectId);
+      setRoutes(result.routes);
+    } catch (failure: unknown) {
+      setError(errorText(failure));
+    }
   }, [projectId]);
 
+  const loadParams = useCallback(async (): Promise<void> => {
+    const result = await toValueOr(api.flowParams(projectId), null);
+
+    if (result) {
+      setParams(result.params);
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    void loadRoutes();
+    void loadParams();
+  }, [loadRoutes, loadParams]);
+
   return { error, params, routes, setError, setParams };
-}
+};
 
-function FlowResultView({ result }: { result: FlowResult }) {
-  return (
-    <div className="flow-result" role="status">
-      <div>{flowSummary(result)}.</div>
-      {result.missingParams.length > 0 && (
-        <div className="flow-warn">
-          Set {result.missingParams.join(", ")} so the frames show real pages.
-        </div>
-      )}
-      {result.skipped.slice(0, 4).map((item) => (
-        <div
-          key={`${item.fromRoute}|${item.href}|${item.source}`}
-          className="flow-skip"
-          data-tip={`${item.reason} ${item.source}`}
-          data-tip-align="start"
-        >
-          {item.kind} {item.href}
-        </div>
-      ))}
+const FlowResultView = ({ result }: { result: FlowResult }): ReactElement => (
+  <div className="flow-result" role="status">
+    <div>
+      {flowSummary(result)}
+      {copy.text}
     </div>
-  );
-}
+    {result.missingParams.length > 0 && (
+      <div className="flow-warn">
+        {copy.set}
+        {result.missingParams.join(", ")}
+        {copy.soTheFramesShow}
+      </div>
+    )}
+    {result.skipped.slice(0, 4).map((item) => (
+      <div
+        key={`${item.fromRoute}|${item.href}|${item.source}`}
+        className="flow-skip"
+        data-tip={`${item.reason} ${item.source}`}
+        data-tip-align="start"
+      >
+        {item.kind} {item.href}
+      </div>
+    ))}
+  </div>
+);
 
-export default function FlowTab({ projectId }: { projectId: string }) {
+export default function FlowTab({
+  projectId,
+}: {
+  projectId: string;
+}): ReactElement {
   const { routes, params, setParams, error, setError } =
     useRoutesAndParams(projectId);
 
@@ -87,24 +108,28 @@ export default function FlowTab({ projectId }: { projectId: string }) {
         route.file.toLowerCase().includes(needle)
     );
 
-    const picked = (route: AppRoute) =>
+    const picked = (route: AppRoute): number =>
       chosen.includes(route.route)
         ? chosen.indexOf(route.route)
         : chosen.length;
 
-    return [...found].sort((a, b) => picked(a) - picked(b)).slice(0, 200);
+    return [...found]
+      .sort(
+        (appRoute, appRouteValue) => picked(appRoute) - picked(appRouteValue)
+      )
+      .slice(0, 200);
   }, [routes, filter, chosen]);
 
   const names = [...new Set(chosen.flatMap(dynamicNames))];
 
-  const toggle = (route: string) =>
+  const toggle = (route: string): void =>
     setChosen((list) =>
       list.includes(route)
         ? list.filter((item) => item !== route)
         : [...list, route]
     );
 
-  const build = () => {
+  const build = async (): Promise<void> => {
     setBusy(true);
     setError(null);
     const single = chosen.length === 1 && depth > 0;
@@ -115,11 +140,13 @@ export default function FlowTab({ projectId }: { projectId: string }) {
       params,
     };
 
-    api
-      .buildFlow(projectId, input)
-      .then(setResult)
-      .catch((failure: unknown) => setError(errorText(failure)))
-      .finally(() => setBusy(false));
+    try {
+      setResult(await api.buildFlow(projectId, input));
+    } catch (failure: unknown) {
+      setError(errorText(failure));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -131,7 +158,7 @@ export default function FlowTab({ projectId }: { projectId: string }) {
           routes ? `Filter ${routes.length} routes` : "Loading routes…"
         }
         aria-label={copy.filterRoutes}
-        onChange={(e) => setFilter(e.target.value)}
+        onChange={(event) => setFilter(event.target.value)}
       />
       <div className="flow-routes" role="list" aria-label={copy.routesInThe}>
         {shown.map((route) => {
@@ -160,7 +187,7 @@ export default function FlowTab({ projectId }: { projectId: string }) {
       </div>
       <div className="flow-controls">
         <div className="flow-row">
-          <span className="flow-label">Follow links</span>
+          <span className="flow-label">{copy.followLinks}</span>
           <div
             className="segmented"
             role="radiogroup"
@@ -193,8 +220,11 @@ export default function FlowTab({ projectId }: { projectId: string }) {
               value={params[name] ?? ""}
               placeholder={copy.sampleValue}
               spellCheck={false}
-              onChange={(e) =>
-                setParams((prev) => ({ ...prev, [name]: e.target.value }))
+              onChange={(eventValue) =>
+                setParams((prev) => ({
+                  ...prev,
+                  [name]: eventValue.target.value,
+                }))
               }
             />
           </label>

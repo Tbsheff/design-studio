@@ -1,7 +1,7 @@
 import type { RunStatus, SelectionContext } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
@@ -14,13 +14,13 @@ const STATUS_TEXT: Record<RunStatus, string> = {
   running: "Running",
 };
 
-export interface Sibling {
+interface Sibling {
   id: string;
   label: string;
   title: string;
 }
 
-export interface FrameVariation {
+interface FrameVariation {
   label: string;
   title: string;
   status: RunStatus | null;
@@ -33,9 +33,9 @@ export interface FrameVariation {
   onMix: (toDirectionId: string, element: SelectionContext) => Promise<void>;
 }
 
-export const stop = (e: ReactPointerEvent) => e.stopPropagation();
+const stop = (event: ReactPointerEvent): void => event.stopPropagation();
 
-function UseInMenu({
+const UseInMenu = ({
   siblings,
   busy,
   onPick,
@@ -43,7 +43,7 @@ function UseInMenu({
   siblings: Sibling[];
   busy: boolean;
   onPick: (id: string) => void;
-}) {
+}): ReactElement => {
   const menu = useMenu();
   useEffect(() => {
     if (menu.open) {
@@ -63,7 +63,7 @@ function UseInMenu({
         aria-expanded={menu.open}
         disabled={busy}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((v) => !v)}
+        onClick={() => menu.setOpen((value) => !value)}
         data-tip={
           menu.open
             ? undefined
@@ -78,7 +78,7 @@ function UseInMenu({
           className="project-menu canvas-menu frame-menu"
           role="menu"
           aria-label={copy.inVariation}
-          onKeyDown={(e) => menuKeys(e, menu.close)}
+          onKeyDown={(eventValue) => menuKeys(eventValue, menu.close)}
         >
           {siblings.map((other) => (
             <button
@@ -99,9 +99,9 @@ function UseInMenu({
       )}
     </div>
   );
-}
+};
 
-function shortRejection(error: string): string {
+const shortRejection = (error: string): string => {
   if (!error.startsWith("Rejected:")) {
     return error.length > 60 ? `${error.slice(0, 60)}…` : error;
   }
@@ -109,9 +109,9 @@ function shortRejection(error: string): string {
   return /another file|other files/.test(error)
     ? "Rejected: changed another file"
     : "Rejected: changed code outside the element";
-}
+};
 
-export function VariationControls({
+const VariationControls = ({
   variation,
   active,
   element,
@@ -121,13 +121,13 @@ export function VariationControls({
   active: boolean;
   element: SelectionContext | null;
   onMixed: () => void;
-}) {
+}): ReactElement => {
   const [mixing, setMixing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [keeping, setKeeping] = useState(false);
   const { status } = variation;
 
-  const keep = async () => {
+  const keep = async (): Promise<void> => {
     if (variation.keepBlocked || keeping) {
       return;
     }
@@ -146,7 +146,7 @@ export function VariationControls({
     }
   };
 
-  const mix = async (to: string) => {
+  const mix = async (to: string): Promise<void> => {
     if (!element) {
       return;
     }
@@ -221,4 +221,8 @@ export function VariationControls({
       )}
     </>
   );
-}
+};
+
+export { VariationControls, stop };
+
+export type { FrameVariation, Sibling };

@@ -1,26 +1,26 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { cleanFramePath } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
+import { toValueOr } from "./settle-model.js";
 import { stop } from "./variation-controls.js";
 
-export function pageName(path: string | undefined): string {
+const pageName = (path: string | undefined): string => {
   const clean = (path ?? "").replace(/^\/+/, "").replace(/\.html$/, "");
 
   return clean || "index";
-}
+};
 
-function pageLabel(page: string, routes: boolean): string {
-  return routes ? `/${page}` : page;
-}
+const pageLabel = (page: string, routes: boolean): string =>
+  routes ? `/${page}` : page;
 
-function isCurrentPage(page: string, path: string, routes: boolean): boolean {
-  return routes ? page === path : page === (path || "index.html");
-}
+const isCurrentPage = (page: string, path: string, routes: boolean): boolean =>
+  routes ? page === path : page === (path || "index.html");
 
-export function FramePageMenu({
+const FramePageMenu = ({
   path,
   listPages,
   onPath,
@@ -30,7 +30,7 @@ export function FramePageMenu({
   listPages: (() => Promise<string[]>) | null;
   onPath: (path: string) => void;
   routes?: boolean;
-}) {
+}): ReactElement => {
   const menu = useMenu();
   const [draft, setDraft] = useState(path);
   const [pages, setPages] = useState<string[] | null>(null);
@@ -55,16 +55,23 @@ export function FramePageMenu({
     }
 
     let alive = true;
-    load()
-      .then((list) => alive && setPages(list))
-      .catch(() => alive && setPages([]));
 
-    return () => {
+    const fill = async (): Promise<void> => {
+      const list = await toValueOr(load(), []);
+
+      if (alive) {
+        setPages(list);
+      }
+    };
+
+    void fill();
+
+    return (): void => {
       alive = false;
     };
   }, [menu.open, path, hasPages]);
 
-  const apply = (raw: string) => {
+  const apply = (raw: string): void => {
     const clean = cleanFramePath(raw);
 
     if (clean === null) {
@@ -87,7 +94,7 @@ export function FramePageMenu({
         aria-expanded={menu.open}
         aria-label={`Page: ${pageName(path)}`}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((v) => !v)}
+        onClick={() => menu.setOpen((valueValue) => !valueValue)}
         data-tip={
           menu.open ? undefined : `/${path} · Show another page in this frame`
         }
@@ -102,13 +109,13 @@ export function FramePageMenu({
           aria-label={copy.framePage}
         >
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
+            onSubmit={(event) => {
+              event.preventDefault();
               apply(draft);
             }}
           >
             <label className="frame-page-field">
-              <span>Path</span>
+              <span>{copy.path}</span>
               <input
                 ref={input}
                 value={draft}
@@ -117,8 +124,8 @@ export function FramePageMenu({
                 placeholder={
                   routes ? "settings" : listPages ? "about.html" : "pricing"
                 }
-                onChange={(e) => {
-                  setDraft(e.target.value);
+                onChange={(eventValue) => {
+                  setDraft(eventValue.target.value);
                   setInvalid(false);
                 }}
               />
@@ -135,13 +142,13 @@ export function FramePageMenu({
             <div
               role="menu"
               aria-label={copy.pages}
-              onKeyDown={(e) => menuKeys(e, menu.close)}
+              onKeyDown={(event3) => menuKeys(event3, menu.close)}
             >
               {pages === null && (
-                <p className="frame-page-hint">Loading pages…</p>
+                <p className="frame-page-hint">{copy.loadingPages}</p>
               )}
               {pages?.length === 0 && (
-                <p className="frame-page-hint">No other pages yet.</p>
+                <p className="frame-page-hint">{copy.noOtherPagesYet}</p>
               )}
               {pages?.map((page) => (
                 <button
@@ -166,4 +173,6 @@ export function FramePageMenu({
       )}
     </div>
   );
-}
+};
+
+export { FramePageMenu, pageName };

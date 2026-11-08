@@ -16,7 +16,7 @@ import type { CanvasFrame } from "./canvas-frames-model.js";
 
 type Rect = NonNullable<LinkRectReport["rect"]>;
 
-export interface LinkState {
+interface LinkState {
   link: PrototypeLink;
   rect: Rect | null;
   issue: LinkIssue | null;
@@ -46,34 +46,32 @@ interface Options {
   };
 }
 
-export function linkQuery(link: PrototypeLink): LinkQuery {
-  return {
-    id: link.id,
-    selector: link.from.selector,
-    ...(link.from.tag ? { tag: link.from.tag } : {}),
-    ...(link.from.text ? { text: link.from.text } : {}),
-  };
-}
+const linkQuery = (link: PrototypeLink): LinkQuery => ({
+  id: link.id,
+  selector: link.from.selector,
+  ...(link.from.tag ? { tag: link.from.tag } : {}),
+  ...(link.from.text ? { text: link.from.text } : {}),
+});
 
-function slotsOf(o: Options): FrameSlot[] {
+const slotsOf = (options: Options): FrameSlot[] => {
   const list: FrameSlot[] = [];
 
-  if (o.active.token && o.active.src) {
+  if (options.active.token && options.active.src) {
     list.push({
-      element: o.active.elements.current[o.active.token] ?? null,
-      frameId: o.active.frameId,
-      src: o.active.src,
-      token: o.active.token,
+      element: options.active.elements.current[options.active.token] ?? null,
+      frameId: options.active.frameId,
+      src: options.active.src,
+      token: options.active.token,
     });
   }
 
-  for (const slot of o.passive.slots) {
-    if (!slot.src || slot.id === o.active.frameId) {
+  for (const slot of options.passive.slots) {
+    if (!slot.src || slot.id === options.active.frameId) {
       continue;
     }
 
     list.push({
-      element: o.passive.elements.current[slot.token] ?? null,
+      element: options.passive.elements.current[slot.token] ?? null,
       frameId: slot.id,
       src: slot.src,
       token: slot.token,
@@ -81,35 +79,33 @@ function slotsOf(o: Options): FrameSlot[] {
   }
 
   return list;
-}
+};
 
-function bridgeFrame(slot: FrameSlot, kind: ProjectKind): BridgeFrame {
-  return {
-    element: slot.element,
-    key: slot.frameId,
-    kind,
-    token: slot.token,
-    url: slot.src,
-  };
-}
+const bridgeFrame = (slot: FrameSlot, kind: ProjectKind): BridgeFrame => ({
+  element: slot.element,
+  key: slot.frameId,
+  kind,
+  token: slot.token,
+  url: slot.src,
+});
 
-export function useLinkRects(o: Options): LinkState[] {
+const useLinkRects = (optionsValue: Options): LinkState[] => {
   const [reports, setReports] = useState<
     Record<string, { token: string; rects: Record<string, Rect | null> }>
   >({});
 
   const queriesOf = (frameId: string): LinkQuery[] =>
-    o.enabled
-      ? o.file.links
+    optionsValue.enabled
+      ? optionsValue.file.links
           .filter(
             (link) =>
               link.from.frame === frameId &&
-              staticLinkIssue(link, o.frames) === null
+              staticLinkIssue(link, optionsValue.frames) === null
           )
           .map(linkQuery)
       : [];
 
-  const slots = slotsOf(o);
+  const slots = slotsOf(optionsValue);
   const slotsRef = useRef(slots);
   slotsRef.current = slots;
   const queriesRef = useRef(queriesOf);
@@ -122,7 +118,7 @@ export function useLinkRects(o: Options): LinkState[] {
     >()
   );
 
-  const send = (slot: FrameSlot, force: boolean) => {
+  const send = (slot: FrameSlot, force: boolean): void => {
     const queries = queriesRef.current(slot.frameId);
     const text = JSON.stringify(queries);
     const last = posted.current.get(slot.frameId);
@@ -142,7 +138,7 @@ export function useLinkRects(o: Options): LinkState[] {
       text,
       token: slot.token,
     });
-    postToFrame(bridgeFrame(slot, o.kind), {
+    postToFrame(bridgeFrame(slot, optionsValue.kind), {
       links: queries,
       type: "track-links",
     });
@@ -155,7 +151,7 @@ export function useLinkRects(o: Options): LinkState[] {
   });
 
   useBridge(
-    () => slotsRef.current.map((slot) => bridgeFrame(slot, o.kind)),
+    () => slotsRef.current.map((slot) => bridgeFrame(slot, optionsValue.kind)),
     (frame, message: BridgeToParent) => {
       const slot = slotsRef.current.find((item) => item.frameId === frame.key);
 
@@ -186,8 +182,8 @@ export function useLinkRects(o: Options): LinkState[] {
     }
   );
 
-  return o.file.links.map((link) => {
-    const issue = staticLinkIssue(link, o.frames);
+  return optionsValue.file.links.map((link) => {
+    const issue = staticLinkIssue(link, optionsValue.frames);
 
     if (issue) {
       return { issue, link, rect: null };
@@ -209,4 +205,8 @@ export function useLinkRects(o: Options): LinkState[] {
 
     return { issue: rect ? null : "element-missing", link, rect };
   });
-}
+};
+
+export { linkQuery, useLinkRects };
+
+export type { LinkState };

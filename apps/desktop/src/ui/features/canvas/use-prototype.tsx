@@ -32,6 +32,7 @@ import {
   PrototypeBar,
   useLinkDrag,
 } from "./prototype-layer.js";
+import { runOrReport, toValueOr } from "./settle-model.js";
 import { useLinkRects } from "./use-link-rects.js";
 
 const PlayMode = lazy(() => import("./play-mode.js"));
@@ -61,74 +62,79 @@ interface Options {
   };
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
 
-export function usePrototype(o: Options) {
-  const { on } = o;
+const usePrototype = (options: Options) => {
+  const { on } = options;
   const [arrows, setArrows] = useState(true);
   const [playing, setPlaying] = useState(false);
-  const saved = useLinks(o.projectId);
+  const saved = useLinks(options.projectId);
 
   const implicit = useImplicitLinks(
-    o.projectId,
-    o.frames.map((frame) => `${frame.id}:${frame.path ?? ""}`).join(",")
+    options.projectId,
+    options.frames.map((frame) => `${frame.id}:${frame.path ?? ""}`).join(",")
   );
 
   const file = withImplicit(saved, implicit);
-  const clear = useRef(o.clearSelection);
-  clear.current = o.clearSelection;
-  const lastActive = useRef(o.active.id);
+  const clear = useRef(options.clearSelection);
+  clear.current = options.clearSelection;
+  const lastActive = useRef(options.active.id);
   useEffect(() => {
-    if (lastActive.current === o.active.id) {
+    if (lastActive.current === options.active.id) {
       return;
     }
 
-    lastActive.current = o.active.id;
+    lastActive.current = options.active.id;
 
     if (on) {
       clear.current();
     }
-  }, [o.active.id, on]);
-  const startId = playStartOf(file, o.frames, startFrameOf(file, o.frames));
+  }, [options.active.id, on]);
+  const startId = playStartOf(
+    file,
+    options.frames,
+    startFrameOf(file, options.frames)
+  );
 
   const states = useLinkRects({
     active: {
-      elements: o.preview.elements,
-      frameId: o.active.id,
+      elements: options.preview.elements,
+      frameId: options.active.id,
       src:
-        o.preview.slots.find((slot) => slot.token === o.preview.frontToken)
-          ?.src ?? null,
-      token: o.preview.frontToken,
+        options.preview.slots.find(
+          (slot) => slot.token === options.preview.frontToken
+        )?.src ?? null,
+      token: options.preview.frontToken,
     },
     enabled: on,
     file,
-    frames: o.frames,
-    kind: o.kind,
-    passive: o.passive,
+    frames: options.frames,
+    kind: options.kind,
+    passive: options.passive,
   });
 
   const drag = useLinkDrag((selection, frameId) => {
-    void linksApi
-      .add(o.projectId, {
-        from: linkSourceOf(selection, o.active),
+    void runOrReport(
+      linksApi.add(options.projectId, {
+        from: linkSourceOf(selection, options.active),
         to: { frame: frameId },
         transition: "instant",
-      })
-      .catch((error: unknown) => o.notify(errorMessage(error)));
+      }),
+      (error) => options.notify(errorMessage(error))
+    );
   });
 
-  const frameTitle = (frame: CanvasFrame) =>
+  const frameTitle = (frame: CanvasFrame): string =>
     frame.label ?? frame.path ?? frameName(frame);
 
-  const titleById = (id: string) => {
-    const frame = o.frames.find((item) => item.id === id);
+  const titleById = (id: string): string => {
+    const frame = options.frames.find((item) => item.id === id);
 
     return frame ? frameTitle(frame) : "missing frame";
   };
 
-  const targetName = (link: PrototypeLink) => {
+  const targetName = (link: PrototypeLink): string => {
     if (isBackTarget(link.to)) {
       return "Back";
     }
@@ -138,7 +144,7 @@ export function usePrototype(o: Options) {
     return to ? titleById(to) : ACTION_LABELS[linkAction(link)];
   };
 
-  const linkTitle = (link: PrototypeLink) =>
+  const linkTitle = (link: PrototypeLink): string =>
     `${sourceName(link.from)} in ${titleById(link.from.frame)} → ${targetName(link)}`;
 
   const urls = useRef(new Map<string, Promise<string>>());
@@ -149,52 +155,68 @@ export function usePrototype(o: Options) {
       ? withFrameStateHost(url, frameStateOf(frameStates.view, frame.id))
       : url;
 
-  const urlOf = (frame: CanvasFrame): Promise<string | null> =>
-    baseUrlOf(frame).then((url) => (url ? withState(frame, url) : null));
+  const urlOf = async (frame: CanvasFrame): Promise<string | null> => {
+    const url = await baseUrlOf(frame);
 
-  const baseUrlOf = (frame: CanvasFrame): Promise<string | null> => {
-    const did = frameDirection(frame, o.directionId);
+    return url ? withState(frame, url) : null;
+  };
+
+  const fetchDirectionUrl = async (did: string): Promise<string> => {
+    const result = await api.directionPreview(options.projectId, did);
+
+    return result.url;
+  };
+
+  const baseUrlOf = async (frame: CanvasFrame): Promise<string | null> => {
+    const did = frameDirection(frame, options.directionId);
 
     if (!did) {
-      return Promise.resolve(null);
+      return null;
     }
 
-    if (did === o.directionId && o.baseUrl) {
-      return Promise.resolve(withFramePath(o.baseUrl, frame.path));
+    if (did === options.directionId && options.baseUrl) {
+      return withFramePath(options.baseUrl, frame.path);
     }
 
     let url = urls.current.get(did);
 
     if (!url) {
-      url = api.directionPreview(o.projectId, did).then((result) => result.url);
+      url = fetchDirectionUrl(did);
       urls.current.set(did, url);
-      url.catch(() => urls.current.delete(did));
+      void runOrReport(url, () => urls.current.delete(did));
     }
 
-    return url
-      .then((base) => withFramePath(base, frame.path))
-      .catch(() => null);
+    const base = await toValueOr(url, null);
+
+    if (base === null) {
+      return null;
+    }
+
+    return withFramePath(base, frame.path);
   };
 
-  const play = () => setPlaying(true);
-  const single = o.selection.length === 1 ? o.selection[0] : undefined;
-  const selected = on ? linkOfSelection(states, single, o.active.id) : null;
+  const play = (): void => setPlaying(true);
+  const single =
+    options.selection.length === 1 ? options.selection[0] : undefined;
+  const selected = on
+    ? linkOfSelection(states, single, options.active.id)
+    : null;
 
   const artboard: ReactNode = on ? (
     <>
       <LinkArrows
         states={states}
-        frames={o.shown}
-        active={o.active}
+        frames={options.shown}
+        active={options.active}
         startId={startId}
         arrows={arrows}
         selectedId={selected?.link.id ?? null}
         dropTarget={drag.drag?.target ?? null}
       />
-      {single && o.live && (
+      {single && options.live && (
         <LinkHandle
           selection={single}
-          activeId={o.active.id}
+          activeId={options.active.id}
           onBegin={drag.begin}
         />
       )}
@@ -205,28 +227,28 @@ export function usePrototype(o: Options) {
     <>
       {on && (
         <PrototypeBar
-          projectId={o.projectId}
+          projectId={options.projectId}
           file={file}
           states={states}
-          frames={o.shown}
+          frames={options.shown}
           startId={startId}
           selected={selected}
           hasSelection={single !== undefined}
           selection={single}
           frameTitle={frameTitle}
           linkTitle={linkTitle}
-          onError={o.notify}
+          onError={options.notify}
         />
       )}
       <LinkDragLine drag={drag.drag} />
       {playing && (
         <Suspense fallback={null}>
           <PlayMode
-            kind={o.kind}
+            kind={options.kind}
             file={file}
-            frames={o.frames}
+            frames={options.frames}
             startId={startId}
-            sandbox={o.sandbox}
+            sandbox={options.sandbox}
             urlOf={urlOf}
             frameTitle={frameTitle}
             onClose={() => setPlaying(false)}
@@ -241,7 +263,9 @@ export function usePrototype(o: Options) {
     play,
     stage,
     viewToggle: on
-      ? { on: arrows, onToggle: () => setArrows((v) => !v) }
+      ? { on: arrows, onToggle: () => setArrows((value) => !value) }
       : undefined,
   };
-}
+};
+
+export { usePrototype };

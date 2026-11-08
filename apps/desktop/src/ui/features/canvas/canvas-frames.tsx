@@ -3,6 +3,7 @@ import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
   ReactNode,
+  ReactElement,
 } from "react";
 
 import { openAppPanel } from "../../platform/app-status.js";
@@ -13,13 +14,13 @@ import { FlowFromHere } from "./flow-from-here.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameStateMenu } from "./frame-state-menu.js";
 
-export interface FrameBadge {
+interface FrameBadge {
   label: string;
   title: string;
   current: boolean;
 }
 
-export interface LabelProps {
+interface LabelProps {
   frame: CanvasFrame;
   active: boolean;
   removable: boolean;
@@ -29,9 +30,9 @@ export interface LabelProps {
   title?: string;
   extras?: ReactNode;
   note?: ReactNode;
-  onPointerDown: (e: ReactPointerEvent, frame: CanvasFrame) => void;
+  onPointerDown: (event: ReactPointerEvent, frame: CanvasFrame) => void;
   onBodyPointerDown?: (
-    e: ReactPointerEvent,
+    eventValue: ReactPointerEvent,
     frame: CanvasFrame,
     body: boolean
   ) => void;
@@ -39,47 +40,46 @@ export interface LabelProps {
   onRemove: (frame: CanvasFrame) => void;
   onNudge: (frame: CanvasFrame, dx: number, dy: number) => void;
   onResizeStart: (
-    e: ReactPointerEvent,
+    event3: ReactPointerEvent,
     frame: CanvasFrame,
     edge: ResizeEdge
   ) => void;
 }
 
-export function framePage(path: string | undefined): string {
+const framePage = (path: string | undefined): string => {
   const clean = (path ?? "").replace(/^\/+/, "");
 
   if (clean === "" || /\.html?$/i.test(clean)) {
     return clean.replace(/^.*\//, "").replace(/\.html?$/i, "") || "index";
   }
+
   return `/${clean}`;
-}
+};
 
-export function frameBaseName(
+const frameBaseName = (
   frame: Pick<CanvasFrame, "label" | "width" | "height">
-): string {
-  return frame.label?.trim() || frameName(frame);
-}
+): string => frame.label?.trim() || frameName(frame);
 
-export function frameTitle(
+const frameTitle = (
   frame: Pick<CanvasFrame, "id" | "label" | "width" | "height" | "path">,
   frames?: readonly Pick<CanvasFrame, "id">[]
-): string {
+): string => {
   const index = frames ? frames.findIndex((item) => item.id === frame.id) : -1;
 
   return `${index >= 0 ? `${index + 1} ` : ""}${frameBaseName(frame)} · ${framePage(frame.path)}`;
-}
+};
 
-export function canvasFrameName(
+const canvasFrameName = (
   projectId: string,
   frameId: string,
   fallback: string
-): string {
+): string => {
   const frames = canvasStore.get(projectId)?.frames ?? [];
   const index = frames.findIndex((item) => item.id === frameId);
   const frame = frames[index];
 
   return frame ? `${index + 1} ${frameBaseName(frame)}` : fallback;
-}
+};
 
 const NUDGE: Record<string, [number, number]> = {
   ArrowDown: [0, 1],
@@ -88,7 +88,7 @@ const NUDGE: Record<string, [number, number]> = {
   ArrowUp: [0, -1],
 };
 
-export function FrameLabel({
+const FrameLabel = ({
   frame,
   active,
   removable,
@@ -102,7 +102,7 @@ export function FrameLabel({
   onActivate,
   onRemove,
   onNudge,
-}: LabelProps) {
+}: LabelProps): ReactElement => {
   const size = frameName(frame);
   const base = frameBaseName(frame);
   const name = badge ? `Variation ${badge.label}` : base;
@@ -131,16 +131,16 @@ export function FrameLabel({
         aria-pressed={active}
         aria-label={`${name} frame`}
         data-tip={`${badge ? `${size} · ` : owner}${active ? "Drag to move, double-click to zoom" : "Click to edit, double-click to zoom"}`}
-        onPointerDown={(e) => onPointerDown(e, frame)}
-        onKeyDown={(e) => {
-          const step = NUDGE[e.key];
+        onPointerDown={(event4) => onPointerDown(event4, frame)}
+        onKeyDown={(event5) => {
+          const step = NUDGE[event5.key];
 
           if (step) {
-            e.preventDefault();
-            const size = e.shiftKey ? 100 : 10;
+            event5.preventDefault();
+            const size = event5.shiftKey ? 100 : 10;
             onNudge(frame, step[0] * size, step[1] * size);
-          } else if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
+          } else if (event5.key === "Enter" || event5.key === " ") {
+            event5.preventDefault();
             onActivate(frame);
           }
         }}
@@ -172,18 +172,17 @@ export function FrameLabel({
       )}
     </div>
   );
-}
+};
 
-export interface FrameRedirect {
+interface FrameRedirect {
   from: string;
   to: string;
 }
 
-export function isAuthRoute(route: string): boolean {
-  return /sign-?in|log-?in|auth/i.test(route);
-}
+const isAuthRoute = (route: string): boolean =>
+  /sign-?in|log-?in|auth/i.test(route);
 
-export function FrameRedirectNote({
+const FrameRedirectNote = ({
   redirect,
   onSignIn,
   onDismiss,
@@ -191,7 +190,7 @@ export function FrameRedirectNote({
   redirect: FrameRedirect;
   onSignIn: () => void;
   onDismiss: () => void;
-}) {
+}): ReactElement => {
   const auth = isAuthRoute(redirect.to);
   const text = `${redirect.from} goes to ${redirect.to}.${auth ? " Sign in, or pick a public route." : ""}`;
 
@@ -201,7 +200,7 @@ export function FrameRedirectNote({
       <span className="frame-redirect-text">{text}</span>
       {auth && (
         <button type="button" className="btn ghost small" onClick={onSignIn}>
-          Sign in
+          {copy.signIn}
         </button>
       )}
       <button
@@ -209,7 +208,7 @@ export function FrameRedirectNote({
         className="btn ghost small"
         onClick={() => openAppPanel("routes")}
       >
-        Pick a route
+        {copy.pickARoute}
       </button>
       <button
         type="button"
@@ -222,4 +221,16 @@ export function FrameRedirectNote({
       </button>
     </div>
   );
-}
+};
+
+export {
+  FrameLabel,
+  FrameRedirectNote,
+  canvasFrameName,
+  frameBaseName,
+  framePage,
+  frameTitle,
+  isAuthRoute,
+};
+
+export type { FrameBadge, FrameRedirect, LabelProps };

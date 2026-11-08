@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useEffect, useRef } from "react";
 
 import {
@@ -13,14 +14,14 @@ export default function CanvasRulers({
   artboardRef,
   origin,
   selection,
-}: Props) {
+}: Props): ReactElement {
   const root = useRef<HTMLDivElement>(null);
   const top = useRef<HTMLCanvasElement>(null);
   const left = useRef<HTMLCanvasElement>(null);
   const props = useRef({ origin, selection });
   props.current = { origin, selection };
   const draw = useRef<() => void>(() => null);
-  draw.current = () => {
+  draw.current = (): void => {
     const view = viewOf(artboardRef.current);
     const el = root.current;
 
@@ -29,10 +30,10 @@ export default function CanvasRulers({
     }
 
     const colors = colorsOf(el);
-    const { origin: o, selection: s } = props.current;
+    const { origin: options, selection: text } = props.current;
     const font = `500 9px ${getComputedStyle(el).fontFamily}`;
 
-    const run = (canvas: HTMLCanvasElement, vertical: boolean) => {
+    const run = (canvas: HTMLCanvasElement, vertical: boolean): void => {
       const ctx = sizeCanvas(canvas);
 
       if (!ctx) {
@@ -41,10 +42,10 @@ export default function CanvasRulers({
 
       ctx.font = font;
 
-      const range: [number, number] | null = s
+      const range: [number, number] | null = text
         ? vertical
-          ? [o.y + s.y, o.y + s.y + s.height]
-          : [o.x + s.x, o.x + s.x + s.width]
+          ? [options.y + text.y, options.y + text.y + text.height]
+          : [options.x + text.x, options.x + text.x + text.width]
         : null;
 
       const length = vertical ? canvas.clientHeight : canvas.clientWidth;
@@ -53,7 +54,7 @@ export default function CanvasRulers({
         ctx,
         length,
         offset: (vertical ? view.y : view.x) - RULER_SIZE,
-        origin: vertical ? o.y : o.x,
+        origin: vertical ? options.y : options.x,
         range,
         vertical,
         zoom: view.zoom,
@@ -67,7 +68,7 @@ export default function CanvasRulers({
   useEffect(() => {
     let frame = 0;
 
-    const schedule = () => {
+    const schedule = (): void => {
       if (frame) {
         return;
       }
@@ -91,7 +92,7 @@ export default function CanvasRulers({
       ro.observe(root.current);
     }
 
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const media = globalThis.matchMedia("(prefers-color-scheme: dark)");
     media.addEventListener("change", schedule);
     const theme = new MutationObserver(schedule);
     theme.observe(document.documentElement, {
@@ -100,7 +101,7 @@ export default function CanvasRulers({
     });
     schedule();
 
-    return () => {
+    return (): void => {
       cancelAnimationFrame(frame);
       mo.disconnect();
       ro.disconnect();

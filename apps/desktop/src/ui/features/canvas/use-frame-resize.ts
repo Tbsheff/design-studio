@@ -18,7 +18,7 @@ import type { PanZoom } from "./use-pan-zoom.js";
 
 const MAX_SIDE = 4000;
 
-export interface FrameSnapView {
+interface FrameSnapView {
   guides: SnapGuide[];
   spacing: SpacingBadge[];
   shift: { x: number; y: number };
@@ -30,7 +30,7 @@ const EMPTY_SNAP: FrameSnapView = {
   spacing: [],
 };
 
-function createSnapStore() {
+const createSnapStore = () => {
   let view = EMPTY_SNAP;
   const subs = new Set<() => void>();
 
@@ -46,26 +46,25 @@ function createSnapStore() {
     subscribe: (fn: () => void) => {
       subs.add(fn);
 
-      return () => subs.delete(fn);
+      return (): boolean => subs.delete(fn);
     },
   };
-}
+};
 
-export const frameSnapStore = createSnapStore();
+const frameSnapStore = createSnapStore();
 
-export function otherFrames(layout: CanvasLayout, id: string): Box[] {
-  return shownFrames(layout).filter((f) => f.id !== id);
-}
+const otherFrames = (layout: CanvasLayout, id: string): Box[] =>
+  shownFrames(layout).filter((canvasFrame) => canvasFrame.id !== id);
 
-export function resizedSize(
+const resizedSize = (
   start: { width: number; height: number },
   edge: ResizeEdge,
   dx: number,
   dy: number,
   keepRatio: boolean
-): { width: number; height: number } {
-  const clamp = (v: number) =>
-    Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
+): { width: number; height: number } => {
+  const clamp = (value: number): number =>
+    Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, value)));
 
   let width = edge === "bottom" ? start.width : start.width + dx;
   let height = edge === "right" ? start.height : start.height + dy;
@@ -82,22 +81,23 @@ export function resizedSize(
     } else {
       width = height * ratio;
     }
+
     const scale = Math.max(1, RESIZE_MIN / width, RESIZE_MIN / height);
     width *= scale;
     height *= scale;
   }
 
   return { height: clamp(height), width: clamp(width) };
-}
+};
 
-function snapSize(
+const snapSize = (
   frame: CanvasFrame,
   edge: ResizeEdge,
   size: { width: number; height: number },
   candidates: Box[],
   zoom: number,
   off: boolean
-) {
+) => {
   if (off || candidates.length === 0) {
     frameSnapStore.set(null);
 
@@ -118,17 +118,17 @@ function snapSize(
     spacing: [],
   });
 
-  const clamp = (v: number) =>
-    Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
+  const clamp = (valueValue: number): number =>
+    Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, valueValue)));
 
   return { height: clamp(res.rect.height), width: clamp(res.rect.width) };
-}
+};
 
-function paintSize(
+const paintSize = (
   host: HTMLElement,
   size: { width: number; height: number } | null,
   restore: { width: string; height: string }
-) {
+): void => {
   host.style.width = size ? `${size.width}px` : restore.width;
   host.style.height = size ? `${size.height}px` : restore.height;
 
@@ -146,23 +146,38 @@ function paintSize(
   if (readout) {
     readout.textContent = size ? `${size.width} × ${size.height}` : "";
   }
-  host.classList.toggle("frame-resizing", size !== null);
-}
 
-export function useFrameResize(
+  host.classList.toggle("frame-resizing", size !== null);
+};
+
+const useFrameResize = (
   frames: CanvasFrames,
   pz: PanZoom,
   artboardRef: RefObject<HTMLDivElement | null>,
   passive: RefObject<Record<string, HTMLDivElement | null>>
-) {
+): ((
+  event: ReactPointerEvent,
+  frame: CanvasFrame,
+  edge: ResizeEdge
+) => void) => {
   const dragging = useRef(false);
 
-  return (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => {
-    if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld || dragging.current) {
+  return (
+    eventValue: ReactPointerEvent,
+    frame: CanvasFrame,
+    edge: ResizeEdge
+  ): void => {
+    if (
+      eventValue.button !== 0 ||
+      pz.spaceHeld ||
+      pz.zoomHeld ||
+      dragging.current
+    ) {
       return;
     }
-    e.preventDefault();
-    e.stopPropagation();
+
+    eventValue.preventDefault();
+    eventValue.stopPropagation();
 
     const host =
       frame.id === frames.layout.activeId
@@ -172,23 +187,24 @@ export function useFrameResize(
     if (!host) {
       return;
     }
+
     pz.freeze();
-    const target = e.currentTarget as HTMLElement;
-    target.setPointerCapture(e.pointerId);
+    const target = eventValue.currentTarget as HTMLElement;
+    target.setPointerCapture(eventValue.pointerId);
     dragging.current = true;
     const { zoom } = pz;
-    const startX = e.clientX;
-    const startY = e.clientY;
+    const startX = eventValue.clientX;
+    const startY = eventValue.clientY;
     const start = { height: frame.height, width: frame.width };
     let size = start;
-    let shift = e.shiftKey;
-    let off = snapOff(e);
+    let shift = eventValue.shiftKey;
+    let off = snapOff(eventValue);
     const candidates = otherFrames(frames.layout, frame.id);
     let last = { x: startX, y: startY };
     const restore = { height: host.style.height, width: host.style.width };
     document.body.classList.add(`frame-resize-${edge}`);
 
-    const place = () => {
+    const place = (): void => {
       size = snapSize(
         frame,
         edge,
@@ -208,27 +224,28 @@ export function useFrameResize(
 
     place();
 
-    const move = (ev: PointerEvent) => {
+    const move = (ev: PointerEvent): void => {
       last = { x: ev.clientX, y: ev.clientY };
       shift = ev.shiftKey;
       off = snapOff(ev);
       place();
     };
 
-    const key = (ev: KeyboardEvent) => {
+    const key = (ev: KeyboardEvent): void => {
       if (ev.key !== "Shift") {
         return;
       }
+
       shift = ev.type === "keydown";
       place();
     };
 
-    const end = () => {
+    const end = (): void => {
       target.removeEventListener("pointermove", move as EventListener);
       target.removeEventListener("pointerup", end);
       target.removeEventListener("pointercancel", end);
-      window.removeEventListener("keydown", key);
-      window.removeEventListener("keyup", key);
+      globalThis.removeEventListener("keydown", key);
+      globalThis.removeEventListener("keyup", key);
       document.body.classList.remove(`frame-resize-${edge}`);
       dragging.current = false;
       frameSnapStore.set(null);
@@ -237,7 +254,10 @@ export function useFrameResize(
       if (size.width === start.width && size.height === start.height) {
         return;
       }
-      frames.update((l) => resizeFrame(l, frame.id, size.width, size.height));
+
+      frames.update((canvasLayout) =>
+        resizeFrame(canvasLayout, frame.id, size.width, size.height)
+      );
 
       if (frame.id === frames.layout.activeId) {
         const next = activeFrame(
@@ -251,7 +271,11 @@ export function useFrameResize(
     target.addEventListener("pointermove", move as EventListener);
     target.addEventListener("pointerup", end);
     target.addEventListener("pointercancel", end);
-    window.addEventListener("keydown", key);
-    window.addEventListener("keyup", key);
+    globalThis.addEventListener("keydown", key);
+    globalThis.addEventListener("keyup", key);
   };
-}
+};
+
+export { frameSnapStore, otherFrames, resizedSize, useFrameResize };
+
+export type { FrameSnapView };

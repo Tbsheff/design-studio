@@ -16,10 +16,10 @@ import type { JsonBody } from "../../platform/http.js";
 const post = <T>(path: string, body: JsonBody = {}): Promise<T> =>
   sendJson<T>("POST", path, body);
 
-const base = (pid: string) =>
+const base = (pid: string): string =>
   `/api/projects/${encodeURIComponent(pid)}/variations`;
 
-export const variationsApi = {
+const variationsApi = {
   briefs: (pid: string, req: VariationBriefsRequest) =>
     post<VariationBriefsResult>(`${base(pid)}/briefs`, { ...req }),
   cancel: (pid: string, groupId: string) =>
@@ -37,19 +37,24 @@ export const variationsApi = {
     post<VariationStartResult>(base(pid), { ...req }),
 };
 
-export function maxVariationsFor(kind: ProjectKind): number {
-  return kind === "react" ? VARIATION_MAX_REACT : VARIATION_MAX;
-}
+const maxVariationsFor = (kind: ProjectKind): number =>
+  kind === "react" ? VARIATION_MAX_REACT : VARIATION_MAX;
 
-export function groupOf(
+const groupOf = (
   project: Project | null,
   groupId: string | null
-): Direction[] {
+): Direction[] => {
   if (!project || !groupId) {
     return [];
   }
 
   return project.directions
     .filter((direction) => direction.variation?.groupId === groupId)
-    .sort((a, b) => (a.variation?.index ?? 0) - (b.variation?.index ?? 0));
-}
+    .sort(
+      (directionValue, direction3) =>
+        (directionValue.variation?.index ?? 0) -
+        (direction3.variation?.index ?? 0)
+    );
+};
+
+export { groupOf, maxVariationsFor, variationsApi };

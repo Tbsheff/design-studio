@@ -1,13 +1,13 @@
 import { Icon, usePopover } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useRef } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import type { KeyboardEvent, RefObject, ReactElement } from "react";
 
-export type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
+type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
 
-export type PresentMode = "window" | "fullscreen" | "new-window" | "play";
+type PresentMode = "window" | "fullscreen" | "new-window" | "play";
 
-export interface MenuEntry {
+interface MenuEntry {
   id: string;
   label: string;
   icon?: IconName;
@@ -18,14 +18,14 @@ export interface MenuEntry {
   run: () => void;
 }
 
-export interface MenuGroup {
+interface MenuGroup {
   label?: string;
   items: MenuEntry[];
   note?: string;
   fold?: "wide" | "narrow" | "tight";
 }
 
-function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
+const onMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
     return;
   }
@@ -41,9 +41,9 @@ function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
   items[
     (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
   ]?.focus();
-}
+};
 
-export function MenuPopover({
+const MenuPopover = ({
   groups,
   label,
   align,
@@ -55,7 +55,7 @@ export function MenuPopover({
   align: "start" | "end";
   onClose: (refocus: boolean) => void;
   trigger: RefObject<HTMLButtonElement | null>;
-}) {
+}): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, onClose, trigger);
 
@@ -68,10 +68,10 @@ export function MenuPopover({
       onKeyDown={onMenuKey}
     >
       {groups
-        .filter((g) => g.items.length > 0 || g.note)
-        .map((group, i) => (
+        .filter((menuGroup) => menuGroup.items.length > 0 || menuGroup.note)
+        .map((group, index) => (
           <div
-            key={group.label ?? i}
+            key={group.label ?? index}
             className="ui-menu-section"
             data-fold={group.fold}
           >
@@ -101,28 +101,28 @@ export function MenuPopover({
         ))}
     </div>
   );
-}
+};
 
-export function shareGroups(
-  p: {
+const shareGroups = (
+  point: {
     canExport: boolean;
     onExport: () => void;
     onShip?: (() => void) | null;
     onShareLink?: ((mode?: "link" | "publish") => void) | null;
   },
   onPort: (() => void) | null
-): MenuGroup[] {
+): MenuGroup[] => {
   const exportItem: MenuEntry = {
-    disabled: !p.canExport,
+    disabled: !point.canExport,
     icon: "download",
     id: "export",
     label: "Export…",
     meta: "PNG, PDF, HTML, handoff",
-    run: p.onExport,
-    ...(p.canExport ? {} : { tip: "Save a version to export" }),
+    run: point.onExport,
+    ...(point.canExport ? {} : { tip: "Save a version to export" }),
   };
 
-  const ship = p.onShip;
+  const ship = point.onShip;
 
   const shipItem: MenuEntry[] = ship
     ? [
@@ -149,18 +149,18 @@ export function shareGroups(
       ]
     : [];
 
-  const link = p.onShareLink;
+  const link = point.onShareLink;
 
   const linkItem: MenuEntry[] = link
     ? [
         {
-          disabled: !p.canExport,
+          disabled: !point.canExport,
           icon: "link",
           id: "share-link",
           label: "Share a read-only link…",
           meta: "View and comment",
           run: () => link("link"),
-          tip: p.canExport
+          tip: point.canExport
             ? "Others see still images of the frames and can comment"
             : "Save a version to share",
         },
@@ -170,13 +170,13 @@ export function shareGroups(
   const publishItem: MenuEntry[] = link
     ? [
         {
-          disabled: !p.canExport,
+          disabled: !point.canExport,
           icon: "globe",
           id: "publish",
           label: "Publish on Cloudflare…",
           meta: "Your publish Worker",
           run: () => link("publish"),
-          tip: p.canExport
+          tip: point.canExport
             ? "Uploads a copy of a saved version to your publish Worker after you confirm"
             : "Save a version to publish",
         },
@@ -194,4 +194,8 @@ export function shareGroups(
       note: "Publish uploads only after you confirm what goes public.",
     },
   ];
-}
+};
+
+export { MenuPopover, shareGroups };
+
+export type { CanvasTool, MenuEntry, MenuGroup, PresentMode };

@@ -96,7 +96,7 @@ export function defaultLayout(viewport: Viewport): CanvasLayout {
   return {
     activeId: "f1",
     frames: [
-      { id: "f1", width: viewport.width, height: viewport.height, x: 0, y: 0 },
+      { height: viewport.height, id: "f1", width: viewport.width, x: 0, y: 0 },
     ],
   };
 }
@@ -867,7 +867,7 @@ export const canvasStore = {
   subscribe: (l: () => void) => {
     listeners.add(l);
 
-    return () => {
+    return (): void => {
       listeners.delete(l);
     };
   },
@@ -888,7 +888,7 @@ export function useCanvasLayout(
 
   const layout = stored ?? defaultLayout(viewport);
 
-  const update = (fn: (layout: CanvasLayout) => CanvasLayout) => {
+  const update = (fn: (layout: CanvasLayout) => CanvasLayout): void => {
     const current = canvasStore.get(projectId) ?? defaultLayout(viewport);
     const next = fn(current);
 

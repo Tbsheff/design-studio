@@ -1,5 +1,6 @@
 import type { FrameStatesView } from "@design-studio/contracts/frame-state";
 import { Icon, usePopover } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { copy } from "./copy.js";
@@ -20,7 +21,7 @@ import {
 } from "./frame-states-model.js";
 import { useFrameStateSlot } from "./use-frame-state-slot.js";
 
-function usePanelMenu() {
+const usePanelMenu = () => {
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>("list");
   const root = useRef<HTMLDivElement>(null);
@@ -47,9 +48,9 @@ function usePanelMenu() {
   }, [open, panel]);
 
   return { close, open, panel, root, setOpen, setPanel, trigger };
-}
+};
 
-function MenuBody({
+const MenuBody = ({
   projectId,
   frameId,
   directionId,
@@ -65,16 +66,18 @@ function MenuBody({
   chosen: string;
   menu: ReturnType<typeof usePanelMenu>;
   onError: (message: string | null) => void;
-}) {
+}): ReactElement => {
   const slot = useFrameStateSlot();
 
-  const run = (task: Promise<unknown>) => {
+  const run = async (task: Promise<unknown>): Promise<void> => {
     onError(null);
-    task
-      .then(() => menu.close(true))
-      .catch((error: unknown) =>
-        onError(error instanceof Error ? error.message : String(error))
-      );
+
+    try {
+      await task;
+      menu.close(true);
+    } catch (error: unknown) {
+      onError(error instanceof Error ? error.message : String(error));
+    }
   };
 
   if (menu.panel === "user") {
@@ -82,24 +85,26 @@ function MenuBody({
       <UserForm
         user={view.session.user}
         onBack={() => menu.setPanel("list")}
-        onSave={(user) =>
-          setFrameSession(projectId, { user }).then(() => menu.close(true))
-        }
+        onSave={async (user) => {
+          await setFrameSession(projectId, { user });
+          menu.close(true);
+        }}
       />
     );
   }
+
   if (menu.panel === "mock") {
     return (
       <MockForm
         onBack={() => menu.setPanel("list")}
-        onSave={(name, rules) =>
-          setFrameState(projectId, frameId, "mock", { name, rules }).then(() =>
-            menu.close(true)
-          )
-        }
+        onSave={async (name, rules) => {
+          await setFrameState(projectId, frameId, "mock", { name, rules });
+          menu.close(true);
+        }}
       />
     );
   }
+
   return (
     <div role="menu" aria-label={copy.frameState} onKeyDown={menuKeys}>
       <StateRows
@@ -116,7 +121,7 @@ function MenuBody({
           onClick={() => menu.setPanel("mock")}
         >
           <Icon name="plus" size={14} />
-          <span>New mock data…</span>
+          <span>{copy.newMockData}</span>
         </button>
       </div>
       <Suspense fallback={null}>
@@ -127,16 +132,12 @@ function MenuBody({
         onPanel={menu.setPanel}
         onSession={(change) => run(setFrameSession(projectId, change))}
       />
-      <p className="frame-state-note">
-        To sign in for real, sign in inside a signed-in frame. The proxy changes
-        only calls from the browser. Data the app loads on the server can read
-        the x-studio-state header.
-      </p>
+      <p className="frame-state-note">{copy.toSignInFor}</p>
     </div>
   );
-}
+};
 
-export function FrameStateMenu({
+const FrameStateMenu = ({
   frameId,
   frameName,
   directionId,
@@ -144,7 +145,7 @@ export function FrameStateMenu({
   frameId: string;
   frameName: string;
   directionId: string | null;
-}) {
+}): ReactElement | null => {
   const states = useCurrentFrameStates();
   const menu = usePanelMenu();
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +153,7 @@ export function FrameStateMenu({
   if (!states) {
     return null;
   }
+
   const chosen = frameStateOf(states.view, frameId);
   const def = states.view.states.find((state) => state.id === chosen);
   const set = chosen !== "default";
@@ -166,7 +168,7 @@ export function FrameStateMenu({
         aria-expanded={menu.open}
         aria-label={`Preview state for ${frameName}: ${def?.name ?? chosen}`}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((v) => !v)}
+        onClick={() => menu.setOpen((value) => !value)}
         data-tip={
           menu.open
             ? undefined
@@ -179,7 +181,7 @@ export function FrameStateMenu({
       {menu.open && (
         <div
           className="ui-menu project-menu canvas-menu frame-menu frame-state-menu"
-          onKeyDown={(e) => e.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
         >
           <MenuBody
             projectId={states.projectId}
@@ -195,4 +197,6 @@ export function FrameStateMenu({
       )}
     </div>
   );
-}
+};
+
+export { FrameStateMenu };

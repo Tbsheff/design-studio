@@ -1,31 +1,32 @@
+import type { ReactElement } from "react";
+
 import { pageFileOf } from "../chat/use-first-build.js";
 import type { PageWait } from "../chat/use-first-build.js";
+import { copy } from "./copy.js";
 
-function SkeletonPage() {
-  return (
-    <div className="frame-skeleton-page" aria-hidden="true">
-      <div className="sk-nav">
-        <span className="sk-block sk-logo" />
-        <span className="sk-block sk-link" />
-        <span className="sk-block sk-link" />
-        <span className="sk-block sk-link" />
-      </div>
-      <div className="sk-hero">
-        <span className="sk-block sk-title" />
-        <span className="sk-block sk-title short" />
-        <span className="sk-block sk-text" />
-        <span className="sk-block sk-button" />
-      </div>
-      <div className="sk-grid">
-        <span className="sk-block sk-card" />
-        <span className="sk-block sk-card" />
-        <span className="sk-block sk-card" />
-      </div>
+const SkeletonPage = (): ReactElement => (
+  <div className="frame-skeleton-page" aria-hidden="true">
+    <div className="sk-nav">
+      <span className="sk-block sk-logo" />
+      <span className="sk-block sk-link" />
+      <span className="sk-block sk-link" />
+      <span className="sk-block sk-link" />
     </div>
-  );
-}
+    <div className="sk-hero">
+      <span className="sk-block sk-title" />
+      <span className="sk-block sk-title short" />
+      <span className="sk-block sk-text" />
+      <span className="sk-block sk-button" />
+    </div>
+    <div className="sk-grid">
+      <span className="sk-block sk-card" />
+      <span className="sk-block sk-card" />
+      <span className="sk-block sk-card" />
+    </div>
+  </div>
+);
 
-export function FrameSkeleton({
+const FrameSkeleton = ({
   step,
   page,
   missing,
@@ -33,7 +34,7 @@ export function FrameSkeleton({
   step: string | null;
   page?: string;
   missing?: string;
-}) {
+}): ReactElement => {
   if (missing) {
     return (
       <div
@@ -42,7 +43,11 @@ export function FrameSkeleton({
         data-testid="frame-missing"
       >
         <div className="frame-skeleton-step">
-          <span className="frame-skeleton-text">No page at {missing} yet</span>
+          <span className="frame-skeleton-text">
+            {copy.noPageAt}
+            {missing}
+            {copy.yet}
+          </span>
         </div>
       </div>
     );
@@ -65,9 +70,9 @@ export function FrameSkeleton({
       </div>
     </div>
   );
-}
+};
 
-export function FirstBuildCover({
+const FirstBuildCover = ({
   covered,
   wait,
   step,
@@ -77,10 +82,12 @@ export function FirstBuildCover({
   wait: PageWait;
   step: string | null | undefined;
   path: string | undefined;
-}) {
+}): ReactElement | null => {
   if (wait === "missing") {
     return <FrameSkeleton step={null} missing={pageFileOf(path)} />;
   }
 
   return covered ? <FrameSkeleton step={step ?? null} /> : null;
-}
+};
+
+export { FirstBuildCover, FrameSkeleton };

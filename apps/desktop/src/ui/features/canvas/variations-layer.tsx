@@ -6,6 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import type { ElementScope } from "@design-studio/contracts/element-variants";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState, useSyncExternalStore } from "react";
 
 import { errorText } from "../../api.js";
@@ -32,10 +33,12 @@ interface GroupRun {
   error: string | null;
 }
 
-function groupRun(runs: RunMap, directionId: string): GroupRun {
+const groupRun = (runs: RunMap, directionId: string): GroupRun => {
   const list = Object.values(runs)
     .filter((run) => run.directionId === directionId)
-    .sort((a, b) => a.startedAt - b.startedAt);
+    .sort(
+      (runView, runViewValue) => runView.startedAt - runViewValue.startedAt
+    );
 
   const latest = list.at(-1);
 
@@ -50,31 +53,29 @@ function groupRun(runs: RunMap, directionId: string): GroupRun {
     running: list.some((run) => run.status === "running"),
     status: latest?.status ?? null,
   };
-}
+};
 
-function labelOf(direction: Direction): string {
-  return direction.variation?.label ?? direction.name.slice(0, 1);
-}
+const labelOf = (direction: Direction): string =>
+  direction.variation?.label ?? direction.name.slice(0, 1);
 
-function keptText(direction: Direction | undefined): string {
-  return `Kept ${direction?.name ?? "this variation"}. The other variations stay in Versions as directions.`;
-}
+const keptText = (direction: Direction | undefined): string =>
+  `Kept ${direction?.name ?? "this variation"}. The other variations stay in Versions as directions.`;
 
-function useShownGroup(
+const useShownGroup = (
   project: Project,
   state: VariationsState,
   direction: Direction | null
-): Direction[] {
+): Direction[] => {
   const groupId = direction?.variation?.groupId ?? state.groupId;
   const group = groupOf(project, groupId);
-  const ids = group.map((d) => d.id);
+  const ids = group.map((directionValue) => directionValue.id);
 
   const onCanvas = useSyncExternalStore(canvasStore.subscribe, () =>
     framesOnCanvas(project.id, ids)
   );
 
   return direction?.variation || onCanvas > 0 ? group : [];
-}
+};
 
 interface TopProps {
   state: VariationsState;
@@ -83,13 +84,13 @@ interface TopProps {
   runs?: RunMap;
 }
 
-function VariationBar({
+const VariationBar = ({
   state,
   project,
   direction,
   group,
   runs,
-}: TopProps & { group: Direction[] }) {
+}: TopProps & { group: Direction[] }): ReactElement | null => {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const first = group[0]?.variation;
 
@@ -102,13 +103,16 @@ function VariationBar({
       ? direction.variation
       : null;
 
-  const groupRuns = group.map((d) => groupRun(runs ?? {}, d.id));
+  const groupRuns = group.map((direction3) =>
+    groupRun(runs ?? {}, direction3.id)
+  );
   const total = groupRuns.reduce((sum, run) => sum + run.costUsd, 0);
   const anyRunning = groupRuns.some((run) => run.running);
 
   const firstRun = Object.values(runs ?? {}).find(
     (run) =>
-      run.request?.variation && group.some((d) => d.id === run.directionId)
+      run.request?.variation &&
+      group.some((direction4) => direction4.id === run.directionId)
   );
 
   const budget = budgetFor(
@@ -117,17 +121,17 @@ function VariationBar({
     group.length
   );
 
-  const showAll = () => {
+  const showAll = (): void => {
     state.keepNotice(null);
     showVariationFrames(
       project.id,
-      group.map((d) => d.id),
+      group.map((direction5) => direction5.id),
       direction?.id ?? null,
       false
     );
   };
 
-  const cancelAll = async () => {
+  const cancelAll = async (): Promise<void> => {
     setCancelError(null);
 
     try {
@@ -146,14 +150,18 @@ function VariationBar({
           <>
             <span className="badge accent">{variation.label}</span>
             <span className="truncate">
-              {variation.title} · one of {variation.count} variations
+              {variation.title}
+              {copy.oneOf}
+              {variation.count}
+              {copy.variations}
             </span>
           </>
         ) : (
           <>
             <Icon name="compare" size={14} />
             <strong className="variation-bar-title">
-              {group.length} variations
+              {group.length}
+              {copy.variations}
             </strong>
             <span className="truncate variation-bar-prompt">
               {first.prompt}
@@ -171,7 +179,7 @@ function VariationBar({
             onClick={() => void cancelAll()}
           >
             <Icon name="stop" size={14} />
-            Cancel all
+            {copy.cancelAll}
           </button>
         )}
         <button
@@ -180,7 +188,7 @@ function VariationBar({
           data-tip={copy.putEveryVariation}
         >
           <Icon name="compare" size={14} />
-          Show all
+          {copy.showAll}
         </button>
       </div>
       {(state.notice || cancelError) && (
@@ -199,9 +207,9 @@ function VariationBar({
       )}
     </>
   );
-}
+};
 
-export function VariationsTop(props: TopProps) {
+const VariationsTop = (props: TopProps): ReactElement => {
   const { state, project, direction } = props;
   const group = useShownGroup(project, state, direction);
 
@@ -260,7 +268,7 @@ export function VariationsTop(props: TopProps) {
       )}
     </>
   );
-}
+};
 
 interface CanvasProps {
   state: VariationsState;
@@ -269,73 +277,73 @@ interface CanvasProps {
   setDirectionId: (id: string) => void;
 }
 
-export function canvasVariations({
+const canvasVariations = ({
   state,
   project,
   runs,
   setDirectionId,
-}: CanvasProps): CanvasDirections {
-  return {
-    list: project.directions,
-    onActivate: setDirectionId,
-    variationOf: (directionId) => {
-      const direction = project.directions.find((d) => d.id === directionId);
-      const variation = direction?.variation;
+}: CanvasProps): CanvasDirections => ({
+  list: project.directions,
+  onActivate: setDirectionId,
+  variationOf: (directionId) => {
+    const direction = project.directions.find(
+      (direction6) => direction6.id === directionId
+    );
+    const variation = direction?.variation;
 
-      if (!direction || !variation) {
-        return;
-      }
+    if (!direction || !variation) {
+      return;
+    }
 
-      const group = groupOf(project, variation.groupId);
-      const run = groupRun(runs, directionId);
+    const group = groupOf(project, variation.groupId);
+    const run = groupRun(runs, directionId);
 
-      if (variation.scope) {
-        return elementVariation({
-          direction,
-          group,
-          project,
-          run,
-          scope: variation.scope,
-          setDirectionId,
-          state,
-          variation,
-        });
-      }
+    if (variation.scope) {
+      return elementVariation({
+        direction,
+        group,
+        project,
+        run,
+        scope: variation.scope,
+        setDirectionId,
+        state,
+        variation,
+      });
+    }
 
-      return {
-        costText: `${money(run.costUsd)} spent`,
-        label: variation.label,
-        onKeep: () => {
-          keepVariationFrame(
-            project.id,
-            directionId,
-            group.map((d) => d.id)
-          );
-          setDirectionId(directionId);
-          state.setGroupId(variation.groupId);
-          state.keepNotice(keptText(direction));
-        },
-        onMix: async (to, element) => {
-          await state.mix(
-            directionId,
-            to,
-            element,
-            project.settings.defaultLevel
-          );
-        },
-        siblings: group
-          .filter((d) => d.id !== directionId)
-          .map((d) => ({
-            id: d.id,
-            label: labelOf(d),
-            title: d.variation?.title ?? d.name,
-          })),
-        status: run.status,
-        title: variation.title,
-      };
-    },
-  };
-}
+    return {
+      costText: `${money(run.costUsd)} spent`,
+      label: variation.label,
+      onKeep: () => {
+        keepVariationFrame(
+          project.id,
+          directionId,
+          group.map((d) => d.id)
+        );
+        setDirectionId(directionId);
+        state.setGroupId(variation.groupId);
+        state.keepNotice(keptText(direction));
+      },
+      onMix: async (to, element) => {
+        await state.mix(
+          directionId,
+          to,
+          element,
+          project.settings.defaultLevel
+        );
+      },
+      siblings: group
+        .filter((d) => d.id !== directionId)
+        .map((d) => ({
+          id: d.id,
+          label: labelOf(d),
+          title: d.variation?.title ?? d.name,
+        })),
+      status: run.status,
+      title: variation.title,
+    };
+  },
+});
 
 interface ElementVariationInput {
   state: VariationsState;
@@ -348,11 +356,11 @@ interface ElementVariationInput {
   run: GroupRun;
 }
 
-function keepBlocker(
+const keepBlocker = (
   variation: DirectionVariation,
   run: GroupRun,
   error: string | null
-): string | null {
+): string | null => {
   if (variation.settled === "kept") {
     return "Already kept in the main design";
   }
@@ -374,9 +382,9 @@ function keepBlocker(
   }
 
   return null;
-}
+};
 
-function elementVariation({
+const elementVariation = ({
   state,
   project,
   setDirectionId,
@@ -385,7 +393,7 @@ function elementVariation({
   scope,
   group,
   run,
-}: ElementVariationInput): FrameVariation {
+}: ElementVariationInput): FrameVariation => {
   const error =
     variation.rejected ?? (run.status === "failed" ? run.error : null);
 
@@ -413,4 +421,6 @@ function elementVariation({
     status: run.status,
     title: variation.title,
   };
-}
+};
+
+export { VariationsTop, canvasVariations };

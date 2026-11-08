@@ -81,7 +81,7 @@ const useCanvasStage = (props: ViewProps) => {
   const { layersOpen, toggleEdit } = pane;
   const picking = pane.picking || protoOn;
 
-  const setProto = (next: boolean) => {
+  const setProto = (next: boolean): void => {
     setProtoOn(next);
 
     if (!next) {

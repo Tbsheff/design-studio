@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { useRovingRadioGroup } from "../chat/level-control.js";
 
 interface Props {
@@ -10,18 +12,18 @@ interface Props {
 
 const OPTIONS = [1, 2, 3, 4] as const;
 
-export function VariationsControl({
+const VariationsControl = ({
   value,
   max,
   onChange,
   disabled,
   labelledBy,
-}: Props) {
+}: Props): ReactElement => {
   const radios = useRovingRadioGroup<number>(
     OPTIONS,
     value,
     onChange,
-    (n) => Boolean(disabled) || n > max
+    (countValue) => Boolean(disabled) || countValue > max
   );
 
   return (
@@ -33,21 +35,25 @@ export function VariationsControl({
       data-testid="variations-control"
       onKeyDown={radios.onKeyDown}
     >
-      {OPTIONS.map((n) => (
+      {OPTIONS.map((count3) => (
         <button
-          key={n}
-          {...radios.item(n)}
+          key={count3}
+          {...radios.item(count3)}
           type="button"
           role="radio"
-          aria-checked={n === value}
-          aria-label={n === 1 ? "1 design (variations off)" : `${n} variations`}
-          disabled={disabled || n > max}
-          className={n === value ? "on" : ""}
-          onClick={() => onChange(n)}
+          aria-checked={count3 === value}
+          aria-label={
+            count3 === 1 ? "1 design (variations off)" : `${count3} variations`
+          }
+          disabled={disabled || count3 > max}
+          className={count3 === value ? "on" : ""}
+          onClick={() => onChange(count3)}
         >
-          {n}
+          {count3}
         </button>
       ))}
     </div>
   );
-}
+};
+
+export { VariationsControl };

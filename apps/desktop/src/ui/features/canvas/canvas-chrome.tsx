@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { uiStore } from "../../platform/storage.js";
@@ -11,21 +12,21 @@ import { CanvasTopBar } from "./canvas-top-bar.js";
 import type { CanvasTool, PresentMode } from "./top-bar-menu.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 
-const NOOP = () => null;
+const NOOP = (): null => null;
 
-const toggleRulers = () => uiStore.set((st) => ({ rulers: !st.rulers }));
+const toggleRulers = (): void => uiStore.set((st) => ({ rulers: !st.rulers }));
 
-function useRulersKey() {
+const useRulersKey = (): void => {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
-        e.code !== "KeyR" ||
-        !e.shiftKey ||
-        e.metaKey ||
-        e.ctrlKey ||
-        e.altKey ||
-        e.repeat ||
-        isTypingTarget(e.target)
+        event.code !== "KeyR" ||
+        !event.shiftKey ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.repeat ||
+        isTypingTarget(event.target)
       ) {
         return;
       }
@@ -34,17 +35,17 @@ function useRulersKey() {
         return;
       }
 
-      e.preventDefault();
+      event.preventDefault();
       toggleRulers();
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
-function barShell(shell: CanvasShell | undefined) {
+const barShell = (shell: CanvasShell | undefined) => {
   if (!shell) {
     return {
       canExport: false,
@@ -58,9 +59,9 @@ function barShell(shell: CanvasShell | undefined) {
   }
 
   return shell;
-}
+};
 
-function CanvasChrome(p: ChromeProps) {
+const CanvasChrome = (chromeProps: ChromeProps): ReactElement => {
   const [present, setPresent] = useState<Exclude<
     PresentMode,
     "new-window" | "play"
@@ -71,52 +72,53 @@ function CanvasChrome(p: ChromeProps) {
   const closeTweak = useCallback(() => setTweakOpen(false), []);
   const [importing, setImporting] = useState(false);
   const closeImport = useCallback(() => setImporting(false), []);
-  const file = useFileMenu(p, () => setImporting(true));
+  const file = useFileMenu(chromeProps, () => setImporting(true));
   useRulersKey();
-  const { shell } = p;
-  const viewOpen = p.ui.viewRowOpen || p.view.source.kind === "version";
+  const { shell } = chromeProps;
+  const viewOpen =
+    chromeProps.ui.viewRowOpen || chromeProps.view.source.kind === "version";
 
-  const onTool = (next: Exclude<CanvasTool, null>) => {
+  const onTool = (next: Exclude<CanvasTool, null>): void => {
     if (next === "prototype") {
-      return p.proto.set(!p.proto.on);
+      return chromeProps.proto.set(!chromeProps.proto.on);
     }
 
-    const leavingProto = p.proto.on;
-    p.proto.set(false);
+    const leavingProto = chromeProps.proto.on;
+    chromeProps.proto.set(false);
 
     if (next === "edit" && leavingProto && shell?.pane === "design") {
       return;
     }
 
     if (next === "comment") {
-      return p.comment.toggle();
+      return chromeProps.comment.toggle();
     }
 
     if (next === "edit") {
-      return p.toggleEdit();
+      return chromeProps.toggleEdit();
     }
 
     const editing = shell?.pane === "design";
-    p.comment.setOn(false);
+    chromeProps.comment.setOn(false);
 
     if (editing) {
       shell?.onPane("chat");
     }
 
-    p.setSelectMode((m) => editing || !m);
+    chromeProps.setSelectMode((match) => editing || !match);
   };
 
-  const onPresent = (mode: PresentMode) => {
+  const onPresent = (mode: PresentMode): void => {
     if (mode === "play") {
-      return p.proto.play();
+      return chromeProps.proto.play();
     }
 
-    if (!p.presentUrl) {
+    if (!chromeProps.presentUrl) {
       return;
     }
 
     if (mode === "new-window") {
-      window.open(p.presentUrl, "_blank", "noopener");
+      window.open(chromeProps.presentUrl, "_blank", "noopener");
     } else {
       setPresent(mode);
     }
@@ -129,30 +131,39 @@ function CanvasChrome(p: ChromeProps) {
     <>
       <CanvasTopBar
         shapeTools={<VectorToolButtons />}
-        matrix={p.matrix}
+        matrix={chromeProps.matrix}
         paneCollapsed={bar.paneCollapsed}
         onExpandPane={bar.onExpandPane}
-        onReload={() => reloadFrames(p.stage())}
+        onReload={() => reloadFrames(chromeProps.stage())}
         tweakOpen={tweakOpen}
-        tweakDisabled={!onTweak || !p.live}
-        onTweak={() => setTweakOpen((v) => !v)}
-        fileName={fileNameOf(p.active, p.kind, bar.directionName)}
+        tweakDisabled={!onTweak || !chromeProps.live}
+        onTweak={() => setTweakOpen((value) => !value)}
+        fileName={fileNameOf(
+          chromeProps.active,
+          chromeProps.kind,
+          bar.directionName
+        )}
         fileMenu={file.groups}
         onFileMenuOpen={file.load}
-        zoom={p.zoom.zoomPercent}
-        zoomSetting={p.ui.zoom}
-        onZoomTo={p.zoom.zoomTo}
-        onZoomStep={p.zoom.zoomStep}
-        onFit={p.zoom.fit}
-        tool={toolOf(shell?.pane, p.comment.on, p.selectMode, p.proto.on)}
-        commentAvailable={p.comment.available}
+        zoom={chromeProps.zoom.zoomPercent}
+        zoomSetting={chromeProps.ui.zoom}
+        onZoomTo={chromeProps.zoom.zoomTo}
+        onZoomStep={chromeProps.zoom.zoomStep}
+        onFit={chromeProps.zoom.fit}
+        tool={toolOf(
+          shell?.pane,
+          chromeProps.comment.on,
+          chromeProps.selectMode,
+          chromeProps.proto.on
+        )}
+        commentAvailable={chromeProps.comment.available}
         onTool={onTool}
         viewOpen={viewOpen}
         onToggleView={() =>
           uiStore.set((st) => ({ viewRowOpen: !st.viewRowOpen }))
         }
         onPresent={onPresent}
-        presentDisabled={!p.presentUrl}
+        presentDisabled={!chromeProps.presentUrl}
         canExport={bar.canExport}
         onExport={bar.onExport}
         onShip={bar.onShip ?? null}
@@ -160,29 +171,31 @@ function CanvasChrome(p: ChromeProps) {
       />
       {tweakOpen && onTweak && (
         <TweakPrompt
-          scope={scopeOf(p.selection)}
+          scope={scopeOf(chromeProps.selection)}
           onSend={onTweak}
           onClose={closeTweak}
         />
       )}
       {viewOpen && (
         <CanvasViewRow
-          viewport={p.ui.viewport}
-          {...p.view}
-          rulers={{ on: p.ui.rulers, onToggle: toggleRulers }}
+          viewport={chromeProps.ui.viewport}
+          {...chromeProps.view}
+          rulers={{ on: chromeProps.ui.rulers, onToggle: toggleRulers }}
         />
       )}
-      {importing && p.directionId && p.importPage.render(closeImport)}
-      {present && p.presentUrl && (
+      {importing &&
+        chromeProps.directionId &&
+        chromeProps.importPage.render(closeImport)}
+      {present && chromeProps.presentUrl && (
         <PresentLayer
-          url={p.presentUrl}
-          sandbox={p.sandbox}
+          url={chromeProps.presentUrl}
+          sandbox={chromeProps.sandbox}
           fullscreen={present === "fullscreen"}
           onClose={closePresent}
         />
       )}
     </>
   );
-}
+};
 
 export { CanvasChrome };

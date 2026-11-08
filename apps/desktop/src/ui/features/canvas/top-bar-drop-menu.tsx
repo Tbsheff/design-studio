@@ -1,6 +1,6 @@
 import { PORT_OPEN_EVENT } from "@design-studio/contracts/port";
 import { lazy, useCallback, useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { uiStore } from "../../platform/storage.js";
 import { setPortAvailable } from "../design-system/port-api.js";
@@ -9,17 +9,19 @@ import type { PortDialogTarget } from "../design-system/port-to-app-dialog.js";
 import { MenuPopover } from "./top-bar-menu.js";
 import type { MenuGroup } from "./top-bar-menu.js";
 
-export const PortToAppDialog = lazy(async () => {
+const PortToAppDialog = lazy(async () => {
   const loaded = await import("../design-system/port-to-app-dialog.js");
 
   return { default: loaded.PortToAppDialog };
 });
 
-export function usePortDialog(available: boolean): {
+const usePortDialog = (
+  available: boolean
+): {
   target: PortDialogTarget | null;
   open: (frameId: string | null, directionId?: string | null) => void;
   close: () => void;
-} {
+} => {
   const [target, setTarget] = useState<PortDialogTarget | null>(null);
 
   const open = useCallback(
@@ -42,23 +44,23 @@ export function usePortDialog(available: boolean): {
   useEffect(() => {
     setPortAvailable(available);
 
-    return () => setPortAvailable(false);
+    return (): void => setPortAvailable(false);
   }, [available]);
   useEffect(() => {
-    const onOpen = (event: Event) => {
+    const onOpen = (event: Event): void => {
       const { detail } = event as CustomEvent<PortOpenDetail>;
       open(detail?.frameId ?? null, detail?.directionId ?? null);
     };
 
-    window.addEventListener(PORT_OPEN_EVENT, onOpen);
+    globalThis.addEventListener(PORT_OPEN_EVENT, onOpen);
 
-    return () => window.removeEventListener(PORT_OPEN_EVENT, onOpen);
+    return (): void => globalThis.removeEventListener(PORT_OPEN_EVENT, onOpen);
   }, [open]);
 
   return { close: useCallback(() => setTarget(null), []), open, target };
-}
+};
 
-export function DropMenu({
+const DropMenu = ({
   label,
   groups,
   className,
@@ -76,7 +78,7 @@ export function DropMenu({
   tip?: string;
   children: ReactNode;
   onOpen?: () => void;
-}) {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
 
@@ -106,7 +108,7 @@ export function DropMenu({
             onOpen?.();
           }
 
-          setOpen((v) => !v);
+          setOpen((value) => !value);
         }}
       >
         {children}
@@ -122,4 +124,6 @@ export function DropMenu({
       )}
     </span>
   );
-}
+};
+
+export { DropMenu, PortToAppDialog, usePortDialog };

@@ -2,6 +2,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
 
 import { api } from "../../api.js";
+import { runOrReport } from "./settle-model.js";
 
 const PRESENCE_MS = 1500;
 const RESEND_MS = 60_000;
@@ -15,7 +16,7 @@ interface PresenceInput {
   stage: () => HTMLElement | null;
 }
 
-export function inViewIds(stage: HTMLElement | null): string[] {
+const inViewIds = (stage: HTMLElement | null): string[] => {
   if (!stage) {
     return [];
   }
@@ -26,50 +27,55 @@ export function inViewIds(stage: HTMLElement | null): string[] {
   for (const el of stage.querySelectorAll<HTMLElement>(
     ".artboard[data-frame-id], .canvas-frame[data-frame-id]"
   )) {
-    const r = el.getBoundingClientRect();
-    const w = Math.min(r.right, box.right) - Math.max(r.left, box.left);
-    const h = Math.min(r.bottom, box.bottom) - Math.max(r.top, box.top);
+    const dOMRect = el.getBoundingClientRect();
+    const widthValue =
+      Math.min(dOMRect.right, box.right) - Math.max(dOMRect.left, box.left);
+    const heightValue =
+      Math.min(dOMRect.bottom, box.bottom) - Math.max(dOMRect.top, box.top);
 
-    if (w <= 0 || h <= 0 || r.width <= 0 || r.height <= 0) {
+    if (
+      widthValue <= 0 ||
+      heightValue <= 0 ||
+      dOMRect.width <= 0 ||
+      dOMRect.height <= 0
+    ) {
       continue;
     }
 
     if (
-      (w * h) / (r.width * r.height) >= 0.25 ||
-      (w * h) / (box.width * box.height) >= 0.25
+      (widthValue * heightValue) / (dOMRect.width * dOMRect.height) >= 0.25 ||
+      (widthValue * heightValue) / (box.width * box.height) >= 0.25
     ) {
       ids.push(el.dataset.frameId as string);
     }
   }
 
   return [...new Set(ids)].sort();
-}
+};
 
-function presenceBody(o: PresenceInput) {
-  return {
-    activeFrameId: o.activeId,
-    directionId: o.directionId,
-    inView: inViewIds(o.stage()),
-    liveSize: {
-      height: Math.round(o.liveSize.height),
-      width: Math.round(o.liveSize.width),
-    },
-    selection: o.selection.slice(0, 20).map((s) => ({
-      selector: s.selector.slice(0, 400),
-      tag: s.tag.slice(0, 40),
-      text: s.text.slice(0, 200),
-    })),
-  };
-}
+const presenceBody = (presenceInput: PresenceInput) => ({
+  activeFrameId: presenceInput.activeId,
+  directionId: presenceInput.directionId,
+  inView: inViewIds(presenceInput.stage()),
+  liveSize: {
+    height: Math.round(presenceInput.liveSize.height),
+    width: Math.round(presenceInput.liveSize.width),
+  },
+  selection: presenceInput.selection.slice(0, 20).map((selectionContext) => ({
+    selector: selectionContext.selector.slice(0, 400),
+    tag: selectionContext.tag.slice(0, 40),
+    text: selectionContext.text.slice(0, 200),
+  })),
+});
 
-export function useCanvasPresence(o: PresenceInput): void {
-  const latest = useRef(o);
-  latest.current = o;
+const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
+  const latest = useRef(presenceInputValue);
+  latest.current = presenceInputValue;
   useEffect(() => {
     let last = "";
     let sentAt = 0;
 
-    const send = () => {
+    const send = (): void => {
       if (document.hidden) {
         return;
       }
@@ -83,28 +89,40 @@ export function useCanvasPresence(o: PresenceInput): void {
 
       last = key;
       sentAt = Date.now();
-      api.putCanvasPresence(latest.current.projectId, body).catch(() => {
-        last = "";
-      });
+      void runOrReport(
+        api.putCanvasPresence(latest.current.projectId, body),
+        () => {
+          last = "";
+        }
+      );
     };
 
     send();
     const timer = window.setInterval(send, PRESENCE_MS);
 
-    return () => window.clearInterval(timer);
-  }, [o.projectId]);
+    return (): void => window.clearInterval(timer);
+  }, [presenceInputValue.projectId]);
   useEffect(() => {
     let stop: (() => void) | null = null;
     let gone = false;
-    void import("../share-publish-ship-export/share-live.js").then((mod) => {
-      if (!gone) {
-        stop = mod.startShareLive(o.projectId, () => latest.current.stage());
-      }
-    });
 
-    return () => {
+    const startLive = async (): Promise<void> => {
+      const mod = await import("../share-publish-ship-export/share-live.js");
+
+      if (!gone) {
+        stop = mod.startShareLive(presenceInputValue.projectId, () =>
+          latest.current.stage()
+        );
+      }
+    };
+
+    void startLive();
+
+    return (): void => {
       gone = true;
       stop?.();
     };
-  }, [o.projectId]);
-}
+  }, [presenceInputValue.projectId]);
+};
+
+export { inViewIds, useCanvasPresence };

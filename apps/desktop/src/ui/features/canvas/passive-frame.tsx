@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import type { RefObject, ReactElement } from "react";
 
 import { pageFileOf } from "../chat/use-first-build.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
@@ -13,23 +13,24 @@ const MOUNT_FALLBACK_MS = 1200;
 let frontPainted = false;
 let paintListening = false;
 
-export function useResetPassiveGateInFirstRender(): void {
+const useResetPassiveGateInFirstRender = (): void => {
   useState(resetPassiveMountGate);
-}
+};
 
-function resetPassiveMountGate(): void {
+const resetPassiveMountGate = (): void => {
   frontPainted = false;
 
   if (paintListening || typeof window === "undefined") {
     return;
   }
+
   paintListening = true;
-  window.addEventListener(PREVIEW_PAINTED_EVENT, () => {
+  globalThis.addEventListener(PREVIEW_PAINTED_EVENT, () => {
     frontPainted = true;
   });
-}
+};
 
-function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
+const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     const el = ref.current;
@@ -37,29 +38,31 @@ function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
     if (armed || !el) {
       return;
     }
+
     let front = frontPainted;
     let seen = false;
 
-    const tryArm = () => {
+    const tryArm = (): void => {
       if (front && seen) {
         setArmed(true);
       }
     };
 
-    const onPaint = () => {
+    const onPaint = (): void => {
       front = true;
       tryArm();
     };
 
-    window.addEventListener(PREVIEW_PAINTED_EVENT, onPaint);
+    globalThis.addEventListener(PREVIEW_PAINTED_EVENT, onPaint);
     const timer = window.setTimeout(onPaint, MOUNT_FALLBACK_MS);
     const root = el.closest(".stage");
 
     const io = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) {
+        if (!entries.some((event) => event.isIntersecting)) {
           return;
         }
+
         seen = true;
         tryArm();
       },
@@ -68,15 +71,15 @@ function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
 
     io.observe(el);
 
-    return () => {
-      window.removeEventListener(PREVIEW_PAINTED_EVENT, onPaint);
+    return (): void => {
+      globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, onPaint);
       window.clearTimeout(timer);
       io.disconnect();
     };
   }, [armed, ref]);
 
   return armed;
-}
+};
 
 interface PassiveProps {
   frame: CanvasFrame;
@@ -91,7 +94,7 @@ interface PassiveProps {
   onNextLoad: (id: string) => void;
 }
 
-export function PassiveFrame({
+const PassiveFrame = ({
   frame,
   src,
   nextSrc,
@@ -102,7 +105,7 @@ export function PassiveFrame({
   register,
   frameRef,
   onNextLoad,
-}: PassiveProps) {
+}: PassiveProps): ReactElement => {
   const name = label.badge
     ? `Variation ${label.badge.label}`
     : frameBaseName(frame);
@@ -138,7 +141,7 @@ export function PassiveFrame({
             width={frame.width}
             height={frame.height}
             tabIndex={-1}
-            onLoad={index === 0 ? undefined : () => onNextLoad(frame.id)}
+            onLoad={index === 0 ? undefined : (): void => onNextLoad(frame.id)}
           />
         ) : null
       )}
@@ -152,37 +155,40 @@ export function PassiveFrame({
       <div
         className="frame-hit"
         aria-hidden="true"
-        onPointerDown={(e) =>
+        onPointerDown={(eventValue) =>
           label.onBodyPointerDown
-            ? label.onBodyPointerDown(e, frame, true)
-            : label.onPointerDown(e, frame)
+            ? label.onBodyPointerDown(eventValue, frame, true)
+            : label.onPointerDown(eventValue, frame)
         }
       />
       <FrameLabel {...label} />
       <FrameResizeHandles
-        onPointerDown={(e, edge) => label.onResizeStart(e, frame, edge)}
+        onPointerDown={(event3, edge) =>
+          label.onResizeStart(event3, frame, edge)
+        }
       />
     </div>
   );
-}
+};
 
-export type PassiveEntry = PassiveProps;
+type PassiveEntry = PassiveProps;
 
-function liveLabel(cur: LabelProps, live: () => LabelProps): LabelProps {
-  return {
-    ...cur,
-    onActivate: (f) => live().onActivate(f),
-    onBodyPointerDown: cur.onBodyPointerDown
-      ? (e, f, body) => live().onBodyPointerDown?.(e, f, body)
-      : undefined,
-    onNudge: (f, dx, dy) => live().onNudge(f, dx, dy),
-    onPointerDown: (e, f) => live().onPointerDown(e, f),
-    onRemove: (f) => live().onRemove(f),
-    onResizeStart: (e, f, edge) => live().onResizeStart(e, f, edge),
-  };
-}
+const liveLabel = (cur: LabelProps, live: () => LabelProps): LabelProps => ({
+  ...cur,
+  onActivate: (canvasFrame) => live().onActivate(canvasFrame),
+  onBodyPointerDown: cur.onBodyPointerDown
+    ? (event4, canvasFrameValue, body) =>
+        live().onBodyPointerDown?.(event4, canvasFrameValue, body)
+    : undefined,
+  onNudge: (canvasFrame3, dx, dy) => live().onNudge(canvasFrame3, dx, dy),
+  onPointerDown: (event5, canvasFrame4) =>
+    live().onPointerDown(event5, canvasFrame4),
+  onRemove: (canvasFrame5) => live().onRemove(canvasFrame5),
+  onResizeStart: (event6, canvasFrame6, edge) =>
+    live().onResizeStart(event6, canvasFrame6, edge),
+});
 
-export const StablePassiveFrame = memo(
+const StablePassiveFrame = memo(
   ({
     id,
     entries,
@@ -192,8 +198,10 @@ export const StablePassiveFrame = memo(
     entries: RefObject<Map<string, PassiveEntry>>;
   }) => {
     const cur = entries.current.get(id);
+
     if (!cur) return null;
-    const live = () => entries.current.get(id) ?? cur;
+    const live = (): PassiveProps => entries.current.get(id) ?? cur;
+
     return (
       <PassiveFrame
         {...cur}
@@ -202,7 +210,14 @@ export const StablePassiveFrame = memo(
       />
     );
   },
-  (a, b) => a.sig === b.sig && a.entries === b.entries && a.id === b.id
+  (first, second) =>
+    first.sig === second.sig &&
+    first.entries === second.entries &&
+    first.id === second.id
 );
 
 StablePassiveFrame.displayName = "StablePassiveFrame";
+
+export { PassiveFrame, StablePassiveFrame, useResetPassiveGateInFirstRender };
+
+export type { PassiveEntry };

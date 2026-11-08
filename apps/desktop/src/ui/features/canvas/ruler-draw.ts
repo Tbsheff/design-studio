@@ -2,7 +2,7 @@ import type { RefObject } from "react";
 
 import type { Rect } from "./snap-model.js";
 
-export const RULER_SIZE = 20;
+const RULER_SIZE = 20;
 const STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000];
 const MIN_LABEL_PX = 56;
 
@@ -12,7 +12,7 @@ interface View {
   zoom: number;
 }
 
-export interface Props {
+interface Props {
   artboardRef: RefObject<HTMLDivElement | null>;
   origin: { x: number; y: number };
   selection: Rect | null;
@@ -27,60 +27,63 @@ interface Colors {
   line: string;
 }
 
-export function viewOf(el: HTMLElement | null): View | null {
-  const m = el
+const viewOf = (el: HTMLElement | null): View | null => {
+  const match = el
     ? /translate\(([-\d.e]+)px,\s*([-\d.e]+)px\)\s*scale\(([-\d.e]+)\)/.exec(
         el.style.transform
       )
     : null;
 
-  if (!m) {
+  if (!match) {
     return null;
   }
 
-  return { x: Number(m[1]), y: Number(m[2]), zoom: Number(m[3]) || 1 };
-}
+  return {
+    x: Number(match[1]),
+    y: Number(match[2]),
+    zoom: Number(match[3]) || 1,
+  };
+};
 
-function stepFor(zoom: number): number {
-  return (
-    STEPS.find((s) => s * zoom >= MIN_LABEL_PX) ?? (STEPS.at(-1) as number)
-  );
-}
+const stepFor = (zoom: number): number =>
+  STEPS.find((textValue) => textValue * zoom >= MIN_LABEL_PX) ??
+  (STEPS.at(-1) as number);
 
-export function colorsOf(el: HTMLElement): Colors {
+const colorsOf = (el: HTMLElement): Colors => {
   const css = getComputedStyle(el);
-  const v = (name: string) => css.getPropertyValue(name).trim();
+  const valueValue = (name: string): string =>
+    css.getPropertyValue(name).trim();
 
   return {
-    bg: v("--ruler-bg"),
-    line: v("--ruler-line"),
-    mark: v("--ruler-mark"),
-    markText: v("--ruler-mark-text"),
-    text: v("--ruler-text"),
-    tick: v("--ruler-tick"),
+    bg: valueValue("--ruler-bg"),
+    line: valueValue("--ruler-line"),
+    mark: valueValue("--ruler-mark"),
+    markText: valueValue("--ruler-mark-text"),
+    text: valueValue("--ruler-text"),
+    tick: valueValue("--ruler-tick"),
   };
-}
+};
 
-export function sizeCanvas(
+const sizeCanvas = (
   canvas: HTMLCanvasElement
-): CanvasRenderingContext2D | null {
+): CanvasRenderingContext2D | null => {
   const dpr = window.devicePixelRatio || 1;
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
+  const widthValue = canvas.clientWidth;
+  const heightValue = canvas.clientHeight;
 
   if (
-    canvas.width !== Math.round(w * dpr) ||
-    canvas.height !== Math.round(h * dpr)
+    canvas.width !== Math.round(widthValue * dpr) ||
+    canvas.height !== Math.round(heightValue * dpr)
   ) {
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
+    canvas.width = Math.round(widthValue * dpr);
+    canvas.height = Math.round(heightValue * dpr);
   }
 
   const ctx = canvas.getContext("2d");
   ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   return ctx;
-}
+};
 
 interface AxisDraw {
   ctx: CanvasRenderingContext2D;
@@ -93,45 +96,44 @@ interface AxisDraw {
   range: [number, number] | null;
 }
 
-function toScreen(a: AxisDraw, value: number): number {
-  return a.offset + (value - a.origin) * a.zoom;
-}
+const toScreen = (axisDraw: AxisDraw, value: number): number =>
+  axisDraw.offset + (value - axisDraw.origin) * axisDraw.zoom;
 
-function tick(a: AxisDraw, pos: number, len: number): void {
-  if (a.vertical) {
-    a.ctx.moveTo(RULER_SIZE - len, pos + 0.5);
-    a.ctx.lineTo(RULER_SIZE, pos + 0.5);
+const tick = (axisDrawValue: AxisDraw, pos: number, len: number): void => {
+  if (axisDrawValue.vertical) {
+    axisDrawValue.ctx.moveTo(RULER_SIZE - len, pos + 0.5);
+    axisDrawValue.ctx.lineTo(RULER_SIZE, pos + 0.5);
   } else {
-    a.ctx.moveTo(pos + 0.5, RULER_SIZE - len);
-    a.ctx.lineTo(pos + 0.5, RULER_SIZE);
+    axisDrawValue.ctx.moveTo(pos + 0.5, RULER_SIZE - len);
+    axisDrawValue.ctx.lineTo(pos + 0.5, RULER_SIZE);
   }
-}
+};
 
-function markSpans(a: AxisDraw): [number, number][] {
-  if (!a.range) {
+const markSpans = (axisDraw3: AxisDraw): [number, number][] => {
+  if (!axisDraw3.range) {
     return [];
   }
 
-  return a.range.map((value) => {
-    const pos = toScreen(a, value);
+  return axisDraw3.range.map((value) => {
+    const pos = toScreen(axisDraw3, value);
 
     const half =
-      (a.ctx.measureText(String(Math.round(value))).width + 6) / 2 + 2;
+      (axisDraw3.ctx.measureText(String(Math.round(value))).width + 6) / 2 + 2;
 
     return [pos - half, pos + half];
   });
-}
+};
 
-function label(
-  a: AxisDraw,
+const label = (
+  axisDraw4: AxisDraw,
   pos: number,
   text: string,
   marks: [number, number][]
-): void {
-  const { ctx } = a;
+): void => {
+  const { ctx } = axisDraw4;
   const { width } = ctx.measureText(text);
 
-  const [from, to] = a.vertical
+  const [from, to] = axisDraw4.vertical
     ? [pos - 3 - width, pos - 3]
     : [pos + 3, pos + 3 + width];
 
@@ -139,7 +141,7 @@ function label(
     return;
   }
 
-  if (!a.vertical) {
+  if (!axisDraw4.vertical) {
     ctx.fillText(text, pos + 3, 9);
 
     return;
@@ -150,76 +152,78 @@ function label(
   ctx.rotate(-Math.PI / 2);
   ctx.fillText(text, 0, 0);
   ctx.restore();
-}
+};
 
-function drawRange(a: AxisDraw): void {
-  if (!a.range) {
+const drawRange = (axisDraw5: AxisDraw): void => {
+  if (!axisDraw5.range) {
     return;
   }
 
-  const [lo, hi] = a.range.map((v) => toScreen(a, v)) as [number, number];
-  a.ctx.fillStyle = a.colors.mark;
-  a.ctx.globalAlpha = 0.18;
+  const [lo, hi] = axisDraw5.range.map((value3) =>
+    toScreen(axisDraw5, value3)
+  ) as [number, number];
+  axisDraw5.ctx.fillStyle = axisDraw5.colors.mark;
+  axisDraw5.ctx.globalAlpha = 0.18;
 
-  if (a.vertical) {
-    a.ctx.fillRect(0, lo, RULER_SIZE, hi - lo);
+  if (axisDraw5.vertical) {
+    axisDraw5.ctx.fillRect(0, lo, RULER_SIZE, hi - lo);
   } else {
-    a.ctx.fillRect(lo, 0, hi - lo, RULER_SIZE);
+    axisDraw5.ctx.fillRect(lo, 0, hi - lo, RULER_SIZE);
   }
 
-  a.ctx.globalAlpha = 1;
-  a.ctx.fillRect(
-    a.vertical ? 0 : lo,
-    a.vertical ? lo : 0,
-    a.vertical ? RULER_SIZE : 1,
-    a.vertical ? 1 : RULER_SIZE
+  axisDraw5.ctx.globalAlpha = 1;
+  axisDraw5.ctx.fillRect(
+    axisDraw5.vertical ? 0 : lo,
+    axisDraw5.vertical ? lo : 0,
+    axisDraw5.vertical ? RULER_SIZE : 1,
+    axisDraw5.vertical ? 1 : RULER_SIZE
   );
-  a.ctx.fillRect(
-    a.vertical ? 0 : hi - 1,
-    a.vertical ? hi - 1 : 0,
-    a.vertical ? RULER_SIZE : 1,
-    a.vertical ? 1 : RULER_SIZE
+  axisDraw5.ctx.fillRect(
+    axisDraw5.vertical ? 0 : hi - 1,
+    axisDraw5.vertical ? hi - 1 : 0,
+    axisDraw5.vertical ? RULER_SIZE : 1,
+    axisDraw5.vertical ? 1 : RULER_SIZE
   );
-}
+};
 
-function drawRangeLabels(a: AxisDraw): void {
-  if (!a.range) {
+const drawRangeLabels = (axisDraw6: AxisDraw): void => {
+  if (!axisDraw6.range) {
     return;
   }
 
-  a.ctx.fillStyle = a.colors.mark;
+  axisDraw6.ctx.fillStyle = axisDraw6.colors.mark;
 
-  for (const value of a.range) {
-    const pos = toScreen(a, value);
+  for (const value of axisDraw6.range) {
+    const pos = toScreen(axisDraw6, value);
     const text = String(Math.round(value));
-    const w = a.ctx.measureText(text).width + 6;
+    const width3 = axisDraw6.ctx.measureText(text).width + 6;
 
-    if (a.vertical) {
-      a.ctx.fillRect(1, pos - w / 2, RULER_SIZE - 2, w);
+    if (axisDraw6.vertical) {
+      axisDraw6.ctx.fillRect(1, pos - width3 / 2, RULER_SIZE - 2, width3);
     } else {
-      a.ctx.fillRect(pos - w / 2, 1, w, RULER_SIZE - 2);
+      axisDraw6.ctx.fillRect(pos - width3 / 2, 1, width3, RULER_SIZE - 2);
     }
 
-    a.ctx.fillStyle = a.colors.markText;
-    a.ctx.save();
-    a.ctx.textAlign = "center";
-    a.ctx.textBaseline = "middle";
-    a.ctx.translate(
-      a.vertical ? RULER_SIZE / 2 : pos,
-      a.vertical ? pos : RULER_SIZE / 2
+    axisDraw6.ctx.fillStyle = axisDraw6.colors.markText;
+    axisDraw6.ctx.save();
+    axisDraw6.ctx.textAlign = "center";
+    axisDraw6.ctx.textBaseline = "middle";
+    axisDraw6.ctx.translate(
+      axisDraw6.vertical ? RULER_SIZE / 2 : pos,
+      axisDraw6.vertical ? pos : RULER_SIZE / 2
     );
 
-    if (a.vertical) {
-      a.ctx.rotate(-Math.PI / 2);
+    if (axisDraw6.vertical) {
+      axisDraw6.ctx.rotate(-Math.PI / 2);
     }
 
-    a.ctx.fillText(text, 0, 0);
-    a.ctx.restore();
-    a.ctx.fillStyle = a.colors.mark;
+    axisDraw6.ctx.fillText(text, 0, 0);
+    axisDraw6.ctx.restore();
+    axisDraw6.ctx.fillStyle = axisDraw6.colors.mark;
   }
-}
+};
 
-export function drawAxis(a: AxisDraw): void {
+const drawAxis = (a: AxisDraw): void => {
   const { ctx } = a;
   ctx.fillStyle = a.colors.bg;
   ctx.fillRect(
@@ -239,13 +243,13 @@ export function drawAxis(a: AxisDraw): void {
   const marks = markSpans(a);
   ctx.beginPath();
 
-  for (let v = first; v <= last; v += step) {
-    const pos = Math.round(toScreen(a, v));
+  for (let value4 = first; value4 <= last; value4 += step) {
+    const pos = Math.round(toScreen(a, value4));
     tick(a, pos, RULER_SIZE);
-    label(a, pos, String(Math.round(v)), marks);
+    label(a, pos, String(Math.round(value4)), marks);
 
-    for (let i = 1; i < 5; i += 1) {
-      tick(a, Math.round(toScreen(a, v + minor * i)), 4);
+    for (let index = 1; index < 5; index += 1) {
+      tick(a, Math.round(toScreen(a, value4 + minor * index)), 4);
     }
   }
 
@@ -259,4 +263,8 @@ export function drawAxis(a: AxisDraw): void {
   }
 
   drawRangeLabels(a);
-}
+};
+
+export { RULER_SIZE, colorsOf, drawAxis, sizeCanvas, viewOf };
+
+export type { Props };

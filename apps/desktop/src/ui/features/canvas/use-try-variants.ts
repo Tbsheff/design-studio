@@ -11,11 +11,11 @@ import {
 import { useCommands } from "../../canvas-hook-slots.js";
 import type { VariationsState } from "./use-variations.js";
 
-export function useTryVariants(
+const useTryVariants = (
   project: Project | null,
   selection: SelectionContext[],
   variations: VariationsState
-) {
+): ((prompt: string, count: number, level: RunLevel) => Promise<void>) => {
   const blocker = project
     ? elementVariantsBlocker(project, selection)
     : "Wait for the design to load";
@@ -37,7 +37,11 @@ export function useTryVariants(
     },
   ]);
 
-  return async (prompt: string, count: number, level: RunLevel) => {
+  return async (
+    prompt: string,
+    count: number,
+    level: RunLevel
+  ): Promise<void> => {
     const element = selection[0];
 
     if (blocker || !element) {
@@ -46,4 +50,6 @@ export function useTryVariants(
 
     await variations.proposeElement(element, prompt, count, level);
   };
-}
+};
+
+export { useTryVariants };

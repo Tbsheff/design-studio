@@ -19,7 +19,7 @@ import { useStageKeys } from "./use-stage-keys.js";
 
 const useCanvasPreview = (
   props: ViewProps,
-  s: ReturnType<typeof useCanvasStage>
+  text: ReturnType<typeof useCanvasStage>
 ) => {
   const { projectId, directionId, kind } = props;
 
@@ -43,11 +43,11 @@ const useCanvasPreview = (
     baseUrl,
     frameStates,
     firstBuild,
-  } = s;
+  } = text;
 
   const textEditAllowed = live && !props.running && !commentMode;
 
-  const resetPreview = () =>
+  const resetPreview = (): void | undefined =>
     props.port?.current?.post({ type: "preview-reset" });
 
   const stageEl = useCallback(() => stageRef.current, []);
@@ -110,7 +110,7 @@ const useCanvasPreview = (
     () => setCanvasFront(frames.frontToken, frames.slots.length > 1),
     [frames.frontToken, frames.slots.length]
   );
-  useEffect(() => () => setCanvasFront(null, false), []);
+  useEffect(() => (): void => setCanvasFront(null, false), []);
 
   useFramePort(props.port, live ? frames : null, props.lastChange, kind);
 

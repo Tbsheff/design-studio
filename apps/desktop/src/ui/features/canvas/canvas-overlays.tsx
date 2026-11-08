@@ -3,15 +3,17 @@ import type {
   SelectionContext,
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { formatMeasure } from "../../../shared/measure.js";
 import { guideStyle } from "./artboard-overlay.js";
 import { copy } from "./copy.js";
+import { toValueOr } from "./settle-model.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";
 
-function PresentLayer({
+const PresentLayer = ({
   url,
   sandbox,
   fullscreen,
@@ -21,16 +23,16 @@ function PresentLayer({
   sandbox?: string;
   fullscreen: boolean;
   onClose: () => void;
-}) {
+}): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = root.current;
 
     if (fullscreen && el?.requestFullscreen) {
-      void el.requestFullscreen().catch(() => null);
+      void toValueOr(el.requestFullscreen(), null);
     }
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.key !== "Escape") {
         return;
       }
@@ -40,22 +42,22 @@ function PresentLayer({
       onClose();
     };
 
-    const onFullscreen = () => {
+    const onFullscreen = (): void => {
       if (fullscreen && !document.fullscreenElement) {
         onClose();
       }
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
     document.addEventListener("fullscreenchange", onFullscreen);
     root.current?.querySelector<HTMLButtonElement>(".present-close")?.focus();
 
-    return () => {
-      window.removeEventListener("keydown", onKey, true);
+    return (): void => {
+      globalThis.removeEventListener("keydown", onKey, true);
       document.removeEventListener("fullscreenchange", onFullscreen);
 
       if (document.fullscreenElement) {
-        void document.exitFullscreen().catch(() => null);
+        void toValueOr(document.exitFullscreen(), null);
       }
     };
   }, [fullscreen, onClose]);
@@ -80,14 +82,14 @@ function PresentLayer({
         onClick={onClose}
       >
         <Icon name="close" size={12} />
-        Exit
-        <kbd>Esc</kbd>
+        {copy.exit}
+        <kbd>{copy.esc}</kbd>
       </button>
     </div>
   );
-}
+};
 
-function TweakPrompt({
+const TweakPrompt = ({
   scope,
   onSend,
   onClose,
@@ -95,11 +97,11 @@ function TweakPrompt({
   scope: string | null;
   onSend: (text: string) => void;
   onClose: () => void;
-}) {
+}): ReactElement => {
   const [text, setText] = useState("");
   const root = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       const target = event.target as Element;
 
       if (
@@ -112,10 +114,10 @@ function TweakPrompt({
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
 
-  const send = () => {
+  const send = (): void => {
     const prompt = text.trim();
 
     if (!prompt) {
@@ -131,8 +133,8 @@ function TweakPrompt({
     <form
       ref={root}
       className="tweak-prompt ui-popover"
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(eventValue) => {
+        eventValue.preventDefault();
         send();
       }}
     >
@@ -143,14 +145,14 @@ function TweakPrompt({
           scope ? `Describe a tweak to ${scope}…` : "Describe a tweak…"
         }
         value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key !== "Escape") {
+        onChange={(event3) => setText(event3.target.value)}
+        onKeyDown={(event4) => {
+          if (event4.key !== "Escape") {
             return;
           }
 
-          e.preventDefault();
-          e.stopPropagation();
+          event4.preventDefault();
+          event4.stopPropagation();
           onClose();
         }}
       />
@@ -164,15 +166,26 @@ function TweakPrompt({
       </button>
     </form>
   );
-}
+};
 
-function gapStyle(b: SpacingBadge) {
-  return b.axis === "x"
-    ? { left: b.from, top: b.at, width: b.to - b.from }
-    : { height: b.to - b.from, left: b.at, top: b.from };
-}
+const gapStyle = (spacingBadge: SpacingBadge) =>
+  spacingBadge.axis === "x"
+    ? {
+        left: spacingBadge.from,
+        top: spacingBadge.at,
+        width: spacingBadge.to - spacingBadge.from,
+      }
+    : {
+        height: spacingBadge.to - spacingBadge.from,
+        left: spacingBadge.at,
+        top: spacingBadge.from,
+      };
 
-function FrameSnapLayer({ origin }: { origin: { x: number; y: number } }) {
+const FrameSnapLayer = ({
+  origin,
+}: {
+  origin: { x: number; y: number };
+}): ReactElement | null => {
   const view = useSyncExternalStore(
     frameSnapStore.subscribe,
     frameSnapStore.get
@@ -194,33 +207,33 @@ function FrameSnapLayer({ origin }: { origin: { x: number; y: number } }) {
       data-testid="frame-snap"
       style={style}
     >
-      {view.guides.map((g) => (
+      {view.guides.map((snapGuide) => (
         <div
-          key={`g-${g.axis}-${g.at}`}
-          className={`snap-guide ${g.axis}`}
-          style={guideStyle(g)}
+          key={`g-${snapGuide.axis}-${snapGuide.at}`}
+          className={`snap-guide ${snapGuide.axis}`}
+          style={guideStyle(snapGuide)}
         />
       ))}
-      {view.spacing.map((b) => (
+      {view.spacing.map((spacingBadgeValue) => (
         <div
-          key={`s-${b.axis}-${b.from}-${b.to}`}
-          className={`snap-gap ${b.axis}`}
-          style={gapStyle(b)}
+          key={`s-${spacingBadgeValue.axis}-${spacingBadgeValue.from}-${spacingBadgeValue.to}`}
+          className={`snap-gap ${spacingBadgeValue.axis}`}
+          style={gapStyle(spacingBadgeValue)}
         >
-          <span className="snap-gap-label" data-value={b.value}>
-            {formatMeasure(b.value)}
+          <span className="snap-gap-label" data-value={spacingBadgeValue.value}>
+            {formatMeasure(spacingBadgeValue.value)}
           </span>
         </div>
       ))}
     </div>
   );
-}
+};
 
-function MarqueeLayer({
+const MarqueeLayer = ({
   listen,
 }: {
   listen: (handler: (message: BridgeToParent) => void) => () => void;
-}) {
+}): ReactElement | null => {
   const [rect, setRect] = useState<SelectionContext["rect"] | null>(null);
   useEffect(
     () =>
@@ -239,10 +252,10 @@ function MarqueeLayer({
       return;
     }
 
-    const clear = () => setRect(null);
-    window.addEventListener("pointerup", clear);
+    const clear = (): void => setRect(null);
+    globalThis.addEventListener("pointerup", clear);
 
-    return () => window.removeEventListener("pointerup", clear);
+    return (): void => globalThis.removeEventListener("pointerup", clear);
   }, [shown]);
 
   if (!rect) {
@@ -263,6 +276,6 @@ function MarqueeLayer({
       />
     </div>
   );
-}
+};
 
 export { FrameSnapLayer, MarqueeLayer, PresentLayer, TweakPrompt, gapStyle };

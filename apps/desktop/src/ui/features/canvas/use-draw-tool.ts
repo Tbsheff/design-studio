@@ -6,7 +6,7 @@ import { useDesktopCommand } from "../../platform/desktop.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { DRAW_COLORS } from "./drawing-model.js";
 
-export interface DrawTool {
+interface DrawTool {
   available: boolean;
   on: boolean;
   toolbarMode: boolean | undefined;
@@ -21,17 +21,12 @@ export interface DrawTool {
   clear: () => void;
 }
 
-function hasText(target: EventTarget | null): boolean {
-  return target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement
+const hasText = (target: EventTarget | null): boolean =>
+  target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
     ? target.value !== ""
     : isTypingTarget(target);
-}
 
-export function useDrawTool(
-  available: boolean,
-  onActivate: () => void
-): DrawTool {
+const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
   const [on, setOnState] = useState(false);
   const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
@@ -42,11 +37,13 @@ export function useDrawTool(
     if (next && !live.current.available) {
       return;
     }
+
     if (next) {
       live.current.onActivate();
     } else {
       setStrokes([]);
     }
+
     setOnState(next);
   }, []);
 
@@ -69,7 +66,7 @@ export function useDrawTool(
   }, [available, setOn]);
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       const mod = event.metaKey || event.ctrlKey;
 
       if (
@@ -82,6 +79,7 @@ export function useDrawTool(
         if (hasText(event.target)) {
           return;
         }
+
         event.preventDefault();
         event.stopPropagation();
         undo();
@@ -92,6 +90,7 @@ export function useDrawTool(
       if (isTypingTarget(event.target) || mod || event.altKey) {
         return;
       }
+
       const key = event.key.toLowerCase();
 
       if (key === "p" && !event.shiftKey && live.current.available) {
@@ -104,15 +103,16 @@ export function useDrawTool(
       }
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
-    return () => window.removeEventListener("keydown", onKey, true);
+    return (): void => globalThis.removeEventListener("keydown", onKey, true);
   }, [setOn, toggle, undo]);
 
   useDesktopCommand((command) => {
     if (!live.current.on || command.type !== "undo") {
       return false;
     }
+
     undo();
 
     return true;
@@ -134,13 +134,13 @@ export function useDrawTool(
     toolbarMode: available ? on : undefined,
     undo,
   };
-}
+};
 
-export function useCanvasDraw(
+const useCanvasDraw = (
   comment: { available: boolean; on: boolean; setOn: (on: boolean) => void },
   selectMode: boolean,
   setSelectMode: (on: boolean) => void
-): DrawTool {
+): DrawTool => {
   const setComment = comment.setOn;
 
   const draw = useDrawTool(comment.available, () => {
@@ -156,4 +156,8 @@ export function useCanvasDraw(
   }, [comment.on, selectMode, setDraw]);
 
   return draw;
-}
+};
+
+export { useCanvasDraw, useDrawTool };
+
+export type { DrawTool };

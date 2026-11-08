@@ -41,18 +41,17 @@ interface Options {
 
 const COUNT_KEY = "studio.variations.count";
 
-function storedCount(): number {
+const storedCount = (): number => {
   const raw = Number(readStored(COUNT_KEY) ?? "");
 
   return Number.isInteger(raw) && raw >= 1 && raw <= 4 ? raw : 1;
-}
+};
 
-function relabel(briefs: VariationBrief[]): VariationBrief[] {
-  return briefs.map((brief, index) => ({
+const relabel = (briefs: VariationBrief[]): VariationBrief[] =>
+  briefs.map((brief, index) => ({
     ...brief,
     label: "ABCD"[index] ?? String(index + 1),
   }));
-}
 
 export { formatUsd as money } from "../../domain/format.js";
 
@@ -73,18 +72,18 @@ export function budgetFor(
   };
 }
 
-export function useVariations(o: Options) {
+export function useVariations(options: Options) {
   const [count, setCountState] = useState(storedCount);
   const [draft, setDraft] = useState<BriefDraft | null>(null);
   const [groupId, setGroupId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [kept, setKept] = useState<string | null>(null);
   const [ask, setAsk] = useState<SelectionContext | null>(null);
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
   const requestRef = useRef(0);
   const autoStartRef = useRef(false);
-  const max = o.project ? maxVariationsFor(o.project.kind) : 4;
+  const max = options.project ? maxVariationsFor(options.project.kind) : 4;
   const effectiveCount = Math.min(count, max);
 
   const setCount = useCallback((next: number) => {
@@ -98,7 +97,7 @@ export function useVariations(o: Options) {
     setNotice(null);
     setKept(null);
     setAsk(null);
-  }, [o.projectId]);
+  }, [options.projectId]);
 
   const startWith = useCallback(
     async (current: BriefDraft, briefs: VariationBrief[]) => {
@@ -159,9 +158,9 @@ export function useVariations(o: Options) {
       } catch (error) {
         setDraft({
           ...current,
-          starting: false,
           autoStart: false,
           error: errorText(error),
+          starting: false,
         });
       }
     },
@@ -233,7 +232,7 @@ export function useVariations(o: Options) {
         }
       } catch (error) {
         if (requestRef.current === ticket) {
-          setDraft({ ...base, loading: false, error: errorText(error) });
+          setDraft({ ...base, error: errorText(error), loading: false });
         }
       }
     },
@@ -311,9 +310,9 @@ export function useVariations(o: Options) {
         if (requestRef.current === ticket) {
           setDraft({
             ...base,
-            loading: false,
             autoStart: false,
             error: errorText(error),
+            loading: false,
           });
         }
       }
@@ -341,8 +340,8 @@ export function useVariations(o: Options) {
         prev?.briefs
           ? {
               ...prev,
-              briefs: prev.briefs.map((brief, i) =>
-                i === index ? { ...brief, ...patch } : brief
+              briefs: prev.briefs.map((brief, indexValue) =>
+                indexValue === index ? { ...brief, ...patch } : brief
               ),
             }
           : prev
@@ -356,7 +355,9 @@ export function useVariations(o: Options) {
       prev?.briefs && prev.briefs.length > VARIATION_MIN
         ? {
             ...prev,
-            briefs: relabel(prev.briefs.filter((_, i) => i !== index)),
+            briefs: relabel(
+              prev.briefs.filter((_, index3) => index3 !== index)
+            ),
           }
         : prev
     );

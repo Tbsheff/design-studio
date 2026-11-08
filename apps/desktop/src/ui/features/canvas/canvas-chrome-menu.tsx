@@ -20,6 +20,7 @@ import type {
   SetSelectMode,
 } from "./canvas-shell.js";
 import type { CanvasViewRow } from "./canvas-toolbar.js";
+import { toValueOr } from "./settle-model.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 
 interface FrameLabelInfo {
@@ -48,8 +49,8 @@ interface ChromeProps {
   ui: UiState;
   zoom: {
     zoomPercent: LiveStore<number>;
-    zoomTo: (z: number) => void;
-    zoomStep: (d: 1 | -1) => void;
+    zoomTo: (zoomValue: number) => void;
+    zoomStep: (delta: 1 | -1) => void;
     fit: () => void;
     zoomToActive?: () => void;
   };
@@ -60,7 +61,7 @@ interface ChromeProps {
   layout: CanvasLayout;
   active: CanvasFrame;
   frames: {
-    update: (fn: (l: CanvasLayout) => CanvasLayout) => void;
+    update: (fn: (canvasLayout: CanvasLayout) => CanvasLayout) => void;
     activate: (frame: CanvasFrame) => void;
   };
   label: (frame: CanvasFrame) => FrameLabelInfo;
@@ -73,74 +74,86 @@ interface ChromeProps {
   proto: { on: boolean; set: (on: boolean) => void; play: () => void };
 }
 
-function addAndShow(p: ChromeProps, size: { width: number; height: number }) {
+const addAndShow = (
+  chromeProps: ChromeProps,
+  size: { width: number; height: number }
+): void => {
   const before = new Set(
-    (canvasStore.get(p.projectId)?.frames ?? p.layout.frames).map(
-      (frame) => frame.id
-    )
+    (
+      canvasStore.get(chromeProps.projectId)?.frames ??
+      chromeProps.layout.frames
+    ).map((frame) => frame.id)
   );
 
-  p.addFrame(size);
+  chromeProps.addFrame(size);
 
   const added = canvasStore
-    .get(p.projectId)
+    .get(chromeProps.projectId)
     ?.frames.find((frame) => !before.has(frame.id));
 
   if (!added) {
     return;
   }
 
-  p.frames.activate(added);
-  p.zoom.zoomToActive?.();
-}
+  chromeProps.frames.activate(added);
+  chromeProps.zoom.zoomToActive?.();
+};
 
-function useFileMenu(p: ChromeProps, onImport: () => void) {
+const useFileMenu = (chromePropsValue: ChromeProps, onImport: () => void) => {
   const [pages, setPages] = useState<string[]>([]);
 
-  const load = () => {
-    if (p.kind !== "html" || !p.directionId) {
+  const load = async (): Promise<void> => {
+    if (chromePropsValue.kind !== "html" || !chromePropsValue.directionId) {
       return;
     }
 
-    void api
-      .workTreeFiles(p.projectId, p.directionId)
-      .then(({ files }) =>
-        setPages(files.filter((f) => f.endsWith(".html")).sort())
-      )
-      .catch(() => setPages([]));
+    const { files } = await toValueOr(
+      api.workTreeFiles(
+        chromePropsValue.projectId,
+        chromePropsValue.directionId
+      ),
+      { files: [] as string[] }
+    );
+
+    setPages(files.filter((frameValue) => frameValue.endsWith(".html")).sort());
   };
 
-  const current = p.active.path || "index.html";
+  const current = chromePropsValue.active.path || "index.html";
 
   const groups = (): MenuGroup[] => [
     {
       items: pages.map((path) => ({
+        checked: current === path,
+        icon: "file" as const,
         id: `page-${path}`,
         label: path,
-        icon: "file" as const,
-        checked: current === path,
-        run: () => p.frames.update((l) => setFramePath(l, p.active.id, path)),
+        run: () =>
+          chromePropsValue.frames.update((canvasLayoutValue) =>
+            setFramePath(canvasLayoutValue, chromePropsValue.active.id, path)
+          ),
       })),
       label: "Pages",
     },
     {
-      items: p.layout.frames.map((f, i) => {
-        const info = p.label(f);
+      items: chromePropsValue.layout.frames.map((canvasFrame, index) => {
+        const info = chromePropsValue.label(canvasFrame);
 
-        const show = () => {
-          if (f.hidden) {
-            p.frames.update((l) => setFrameHidden(l, f.id, false));
+        const show = (): void => {
+          if (canvasFrame.hidden) {
+            chromePropsValue.frames.update((canvasLayout3) =>
+              setFrameHidden(canvasLayout3, canvasFrame.id, false)
+            );
           }
 
-          p.frames.activate(f);
-          p.zoom.zoomToActive?.();
+          chromePropsValue.frames.activate(canvasFrame);
+          chromePropsValue.zoom.zoomToActive?.();
         };
 
         return {
-          id: `frame-${f.id}`,
-          label: `${info.number ?? i + 1}  ${info.badge?.title ?? frameBaseName(f)}`,
-          meta: f.hidden ? "Hidden" : framePage(f.path),
-          checked: f.id === p.active.id,
+          checked: canvasFrame.id === chromePropsValue.active.id,
+          id: `frame-${canvasFrame.id}`,
+          label: `${info.number ?? index + 1}  ${info.badge?.title ?? frameBaseName(canvasFrame)}`,
+          meta: canvasFrame.hidden ? "Hidden" : framePage(canvasFrame.path),
           run: show,
         };
       }),
@@ -148,21 +161,29 @@ function useFileMenu(p: ChromeProps, onImport: () => void) {
     },
     {
       items: [
-        ...FRAME_PRESETS.map((f) => ({
-          id: `add-${f.preset}`,
-          label: f.label,
-          icon: f.preset,
-          disabled: !canAddFrame(p.layout),
-          run: () => addAndShow(p, { width: f.width, height: f.height }),
+        ...FRAME_PRESETS.map((framePreset) => ({
+          disabled: !canAddFrame(chromePropsValue.layout),
+          icon: framePreset.preset,
+          id: `add-${framePreset.preset}`,
+          label: framePreset.label,
+          run: () =>
+            addAndShow(chromePropsValue, {
+              width: framePreset.width,
+              height: framePreset.height,
+            }),
         })),
-        ...p.importPage.items(p.kind, p.directionId, onImport),
+        ...chromePropsValue.importPage.items(
+          chromePropsValue.kind,
+          chromePropsValue.directionId,
+          onImport
+        ),
       ],
       label: "Add frame",
     },
   ];
 
   return { groups, load };
-}
+};
 
 export { useFileMenu };
 

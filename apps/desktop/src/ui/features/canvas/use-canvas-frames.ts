@@ -45,48 +45,51 @@ const TITLE_DOUBLE_MS = 400;
 
 type ZoomSource = "key" | "frame" | "menu";
 
-export function unionRect(selection: SelectionContext[]): Box | null {
+const unionRect = (selection: SelectionContext[]): Box | null => {
   if (selection.length === 0) {
     return null;
   }
+
   const left = Math.min(...selection.map((s) => s.rect.x));
   const top = Math.min(...selection.map((s) => s.rect.y));
   const right = Math.max(...selection.map((s) => s.rect.x + s.rect.width));
   const bottom = Math.max(...selection.map((s) => s.rect.y + s.rect.height));
 
   return { height: bottom - top, width: right - left, x: left, y: top };
-}
+};
 
-export function passiveSrc(
+const passiveSrc = (
   baseUrl: string | null,
   kind: ProjectKind,
   change: FilesChange | null
-): string | null {
+): string | null => {
   if (!baseUrl) {
     return null;
   }
+
   if (kind !== "html" || !change) {
     return baseUrl;
   }
-  const url = new URL(baseUrl, window.location.href);
+
+  const url = new URL(baseUrl, globalThis.location.href);
   url.searchParams.set("v", String(change.changedAt));
 
   return url.toString();
-}
+};
 
-export interface CanvasFrames {
+interface CanvasFrames {
   layout: CanvasLayout;
   active: CanvasFrame;
   update: (fn: (layout: CanvasLayout) => CanvasLayout) => void;
   activate: (frame: CanvasFrame) => void;
 }
 
-export function useCanvasFrames(
+const useCanvasFrames = (
   projectId: string,
   directionId: string | null = null,
   onDirection?: (id: string) => void,
   knownIds?: string[]
-): CanvasFrames {
+): CanvasFrames => {
   const { viewport } = useUi();
   const [layout, update] = useCanvasLayout(projectId, viewport);
   const active = activeFrame(layout);
@@ -102,6 +105,7 @@ export function useCanvasFrames(
       ) {
         uiStore.set({ viewport: viewportOf(active) });
       }
+
       return;
     }
 
@@ -113,17 +117,20 @@ export function useCanvasFrames(
     if (!directionId) {
       return;
     }
+
     const current = canvasStore.get(projectId) ?? defaultLayout(viewport);
     const bound = activeFrame(current).directionId;
 
     if (bound && knownIds && !knownIds.includes(bound)) {
       return;
     }
+
     const next = followDirection(current, directionId);
 
     if (next === current) {
       return;
     }
+
     canvasStore.set(projectId, next);
     const a = activeFrame(next);
 
@@ -132,10 +139,11 @@ export function useCanvasFrames(
     }
   }, [projectId, directionId, layout]);
 
-  const activate = (frame: CanvasFrame) => {
+  const activate = (frame: CanvasFrame): void => {
     if (frame.id === layout.activeId) {
       return;
     }
+
     update((l) => ({ ...l, activeId: frame.id }));
     uiStore.set({ viewport: viewportOf(frame) });
 
@@ -145,11 +153,11 @@ export function useCanvasFrames(
   };
 
   return { activate, active, layout, update };
-}
+};
 
-export function useZoomInput(
+const useZoomInput = (
   apply: (key: ZoomKey) => void
-): (key: ZoomKey, from: ZoomSource) => void {
+): ((key: ZoomKey, from: ZoomSource) => void) => {
   const lastZoom = useRef<{
     key: ZoomKey;
     source: ZoomSource;
@@ -169,6 +177,7 @@ export function useZoomInput(
       ) {
         return;
       }
+
       lastZoom.current = { at: now, key, source: from };
       apply(key);
     },
@@ -179,36 +188,38 @@ export function useZoomInput(
     if (command.type !== "zoom") {
       return false;
     }
+
     zoomBy(command.key, "menu");
 
     return true;
   });
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       const key = zoomKeyOf(e);
 
       if (!key || blocksZoomKey(e)) {
         return;
       }
+
       e.preventDefault();
       zoomBy(key, "key");
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [zoomBy]);
 
   return zoomBy;
-}
+};
 
-function snapMove(
+const snapMove = (
   state: DragState,
   candidates: Box[],
   wx: number,
   wy: number,
   off: boolean
-): { x: number; y: number } {
+): { x: number; y: number } => {
   if (off || candidates.length === 0) {
     frameSnapStore.set(null);
 
@@ -234,7 +245,7 @@ function snapMove(
   });
 
   return { x: sx, y: sy };
-}
+};
 
 interface DragState {
   frame: CanvasFrame;
@@ -244,12 +255,12 @@ interface DragState {
   own: HTMLDivElement | null;
 }
 
-function placeDrag(
+const placeDrag = (
   state: DragState,
   artboard: HTMLDivElement | null,
   dx: number,
   dy: number
-): void {
+): void => {
   const wx = dx / state.zoom;
   const wy = dy / state.zoom;
   const clear = dx === 0 && dy === 0;
@@ -258,31 +269,32 @@ function placeDrag(
     if (artboard) {
       artboard.style.translate = clear ? "" : `${dx}px ${dy}px`;
     }
+
     for (const el of state.passive) {
       el.style.translate = clear ? "" : `${-wx}px ${-wy}px`;
     }
   } else if (state.own) {
     state.own.style.translate = clear ? "" : `${wx}px ${wy}px`;
   }
-}
+};
 
-function pointIn(
+const pointIn = (
   target: HTMLElement,
   clientX: number,
   clientY: number,
   zoom: number
-): { x: number; y: number } {
+): { x: number; y: number } => {
   const rect = target.getBoundingClientRect();
 
   return { x: (clientX - rect.left) / zoom, y: (clientY - rect.top) / zoom };
-}
+};
 
-export function useFrameActions(
+const useFrameActions = (
   frames: CanvasFrames,
   pz: PanZoom,
   artboardRef: RefObject<HTMLDivElement | null>,
   clickThrough?: ClickThrough
-) {
+) => {
   const { layout } = frames;
   const passiveRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -293,14 +305,14 @@ export function useFrameActions(
     []
   );
 
-  const addFrameAt = (size: { width: number; height: number }) => {
+  const addFrameAt = (size: { width: number; height: number }): void => {
     pz.freeze();
     frames.update((l) => addFrame(l, size));
   };
 
   const [removed, setRemoved] = useState<CanvasLayout | null>(null);
 
-  const removeFrameAt = (frame: CanvasFrame) => {
+  const removeFrameAt = (frame: CanvasFrame): void => {
     pz.freeze();
     const next = removeFrame(layout, frame.id);
     setRemoved(layout);
@@ -312,7 +324,7 @@ export function useFrameActions(
   };
 
   const undoRemove = removed
-    ? () => {
+    ? (): void => {
         frames.update(() => removed);
         uiStore.set({ viewport: viewportOf(activeFrame(removed)) });
         setRemoved(null);
@@ -321,7 +333,7 @@ export function useFrameActions(
 
   const dismissUndo = useCallback(() => setRemoved(null), []);
 
-  const nudge = (frame: CanvasFrame, dx: number, dy: number) => {
+  const nudge = (frame: CanvasFrame, dx: number, dy: number): void => {
     pz.freeze();
     frames.update((l) => moveFrame(l, frame.id, dx, dy));
   };
@@ -330,10 +342,11 @@ export function useFrameActions(
     e: ReactPointerEvent,
     frame: CanvasFrame,
     body?: boolean
-  ) => {
+  ): void => {
     if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld) {
       return;
     }
+
     e.preventDefault();
     e.stopPropagation();
     const target = e.currentTarget as HTMLElement;
@@ -356,16 +369,18 @@ export function useFrameActions(
     let moved = false;
     let world = { x: 0, y: 0 };
 
-    const move = (ev: PointerEvent) => {
+    const move = (ev: PointerEvent): void => {
       const dx = ev.clientX - startX;
       const dy = ev.clientY - startY;
 
       if (!moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) {
         return;
       }
+
       if (!moved) {
         document.body.classList.add("frame-dragging");
       }
+
       moved = true;
       world = snapMove(
         state,
@@ -382,7 +397,7 @@ export function useFrameActions(
       );
     };
 
-    const end = () => {
+    const end = (): void => {
       target.removeEventListener("pointermove", move as EventListener);
       target.removeEventListener("pointerup", end);
       target.removeEventListener("pointercancel", end);
@@ -396,6 +411,7 @@ export function useFrameActions(
         if (point) {
           clickThrough?.(point);
         }
+
         return;
       }
 
@@ -410,7 +426,10 @@ export function useFrameActions(
 
   const lastTitle = useRef<{ id: string; at: number } | null>(null);
 
-  const onTitlePointerDown = (e: ReactPointerEvent, frame: CanvasFrame) => {
+  const onTitlePointerDown = (
+    e: ReactPointerEvent,
+    frame: CanvasFrame
+  ): void => {
     const last = lastTitle.current;
     const now = performance.now();
     lastTitle.current = { at: now, id: frame.id };
@@ -423,6 +442,7 @@ export function useFrameActions(
     ) {
       return onFramePointerDown(e, frame);
     }
+
     e.preventDefault();
     e.stopPropagation();
     lastTitle.current = null;
@@ -453,4 +473,14 @@ export function useFrameActions(
     registerPassive,
     undoRemove,
   };
-}
+};
+
+export {
+  passiveSrc,
+  unionRect,
+  useCanvasFrames,
+  useFrameActions,
+  useZoomInput,
+};
+
+export type { CanvasFrames };

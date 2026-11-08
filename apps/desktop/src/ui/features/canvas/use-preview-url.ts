@@ -8,12 +8,12 @@ import type { FilesChange } from "../home/use-studio-data.js";
 import { NO_VERSION_TEXT, RECT_REFRESH_MS } from "./canvas-helpers.js";
 import type { CanvasSource } from "./canvas-toolbar.js";
 
-function usePreviewUrl(
+const usePreviewUrl = (
   projectId: string,
   directionId: string | null,
   source: CanvasSource,
   headVersionId: string | null
-) {
+) => {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
 
@@ -39,9 +39,14 @@ function usePreviewUrl(
           ? api.versionPreview(projectId, versionId)
           : Promise.reject(new Error(NO_VERSION_TEXT));
 
-    load
-      .then(({ url }) => alive && setBaseUrl(url))
-      .catch((error) => {
+    const fetchBase = async (): Promise<void> => {
+      try {
+        const { url } = await load;
+
+        if (alive) {
+          setBaseUrl(url);
+        }
+      } catch (error: unknown) {
         if (!alive) {
           return;
         }
@@ -53,22 +58,25 @@ function usePreviewUrl(
             ? text
             : `Could not load the preview. ${text} Reload the page to try again.`
         );
-      });
+      }
+    };
 
-    return () => {
+    void fetchBase();
+
+    return (): void => {
       alive = false;
     };
   }, [projectId, directionId, source.kind, versionId]);
 
   return { baseUrl, urlError };
-}
+};
 
-function useRenderCheck(projectId: string, directionId: string | null) {
+const useRenderCheck = (projectId: string, directionId: string | null) => {
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState<RenderCheckResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const run = async () => {
+  const run = async (): Promise<void> => {
     if (!directionId) {
       return;
     }
@@ -86,20 +94,20 @@ function useRenderCheck(projectId: string, directionId: string | null) {
     }
   };
 
-  const close = () => {
+  const close = (): void => {
     setResults(null);
     setError(null);
   };
 
   return { checking, close, error, results, run };
-}
+};
 
-function useFramePort(
+const useFramePort = (
   port: MutableRefObject<PreviewPort | null> | undefined,
   frames: PreviewPort | null,
   lastChange: FilesChange | null,
   kind: ProjectKind
-) {
+): void => {
   useEffect(() => {
     if (!port) {
       return;
@@ -122,8 +130,8 @@ function useFramePort(
       window.setTimeout(() => port?.current?.refreshRects(), ms)
     );
 
-    return () => timers.forEach((t) => window.clearTimeout(t));
+    return (): void => timers.forEach((target) => window.clearTimeout(target));
   }, [lastChange, kind, port]);
-}
+};
 
 export { useFramePort, usePreviewUrl, useRenderCheck };

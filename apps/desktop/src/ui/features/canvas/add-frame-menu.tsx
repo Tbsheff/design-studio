@@ -1,17 +1,17 @@
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { FRAME_PRESETS } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 
-export function AddFrameMenu({
+const AddFrameMenu = ({
   disabled,
   onAdd,
 }: {
   disabled: boolean;
   onAdd: (size: { width: number; height: number }) => void;
-}) {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
@@ -19,11 +19,12 @@ export function AddFrameMenu({
     if (!open) {
       return;
     }
+
     menu.current
       ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
       ?.focus();
 
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       const target = event.target as Node;
 
       if (
@@ -36,10 +37,10 @@ export function AddFrameMenu({
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  const close = (refocus: boolean) => {
+  const close = (refocus: boolean): void => {
     setOpen(false);
 
     if (refocus) {
@@ -47,7 +48,7 @@ export function AddFrameMenu({
     }
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const items = [
       ...(menu.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitem"]'
@@ -78,6 +79,7 @@ export function AddFrameMenu({
     if (next === null) {
       return;
     }
+
     event.preventDefault();
     items[(next + items.length) % items.length]?.focus();
   };
@@ -95,7 +97,7 @@ export function AddFrameMenu({
           open ? undefined : disabled ? "Frame limit reached" : "Add frame"
         }
         disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((value) => !value)}
       >
         <Icon name="frame" />
       </button>
@@ -107,20 +109,22 @@ export function AddFrameMenu({
           aria-label={copy.addFrame}
           onKeyDown={onKeyDown}
         >
-          {FRAME_PRESETS.map((p) => (
+          {FRAME_PRESETS.map((framePreset) => (
             <button
-              key={p.preset}
+              key={framePreset.preset}
               type="button"
               role="menuitem"
               onClick={() => {
                 close(true);
-                onAdd({ height: p.height, width: p.width });
+                onAdd({ height: framePreset.height, width: framePreset.width });
               }}
             >
-              <Icon name={p.preset} size={14} />
-              <span>{p.label}</span>
+              <Icon name={framePreset.preset} size={14} />
+              <span>{framePreset.label}</span>
               <kbd aria-hidden="true">
-                {p.width} × {p.height}
+                {framePreset.width}
+                {copy.times2}
+                {framePreset.height}
               </kbd>
             </button>
           ))}
@@ -128,33 +132,37 @@ export function AddFrameMenu({
       )}
     </div>
   );
-}
+};
 
-export function FrameUndoBar({
+const FrameUndoBar = ({
   onUndo,
   onDismiss,
 }: {
   onUndo: (() => void) | null;
   onDismiss: () => void;
-}) {
+}): ReactElement | null => {
   useEffect(() => {
     if (!onUndo) {
       return;
     }
+
     const timer = window.setTimeout(onDismiss, 8000);
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [onUndo, onDismiss]);
 
   if (!onUndo) {
     return null;
   }
+
   return (
     <div className="frame-undo" role="status">
-      <span>Frame removed.</span>
+      <span>{copy.frameRemoved}</span>
       <button type="button" className="link" onClick={onUndo}>
-        Undo
+        {copy.undo}
       </button>
     </div>
   );
-}
+};
+
+export { AddFrameMenu, FrameUndoBar };

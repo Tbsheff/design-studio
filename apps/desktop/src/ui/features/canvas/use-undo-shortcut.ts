@@ -7,29 +7,27 @@ import {
 } from "../../platform/desktop.js";
 import { editsText } from "../../platform/typing-target.js";
 
-export const PREVIEW_HISTORY_EVENT = "studio:preview-history";
+const PREVIEW_HISTORY_EVENT = "studio:preview-history";
 
-export type HistoryKind = "undo" | "redo";
+type HistoryKind = "undo" | "redo";
 
-export interface RedoShortcut {
+interface RedoShortcut {
   enabled: boolean;
   onRedo: () => void;
 }
 
-export function undoAllowed(
+const undoAllowed = (
   directionId: string | null,
   locked: boolean,
   versionCount: number
-): boolean {
-  return directionId !== null && !locked && versionCount >= 2;
-}
+): boolean => directionId !== null && !locked && versionCount >= 2;
 
-export function historyKeyOf(
+const historyKeyOf = (
   event: Pick<
     KeyboardEvent,
     "metaKey" | "ctrlKey" | "shiftKey" | "altKey" | "key"
   >
-): HistoryKind | null {
+): HistoryKind | null => {
   if (
     !(event.metaKey || event.ctrlKey) ||
     event.altKey ||
@@ -39,23 +37,22 @@ export function historyKeyOf(
   }
 
   return event.shiftKey ? "redo" : "undo";
-}
+};
 
-function modalOpen(): boolean {
-  return document.querySelector('[role="dialog"][aria-modal="true"]') !== null;
-}
+const modalOpen = (): boolean =>
+  document.querySelector('[role="dialog"][aria-modal="true"]') !== null;
 
-export interface ShortcutState {
+interface ShortcutState {
   enabled: boolean;
   onUndo: () => void;
   redo: RedoShortcut | undefined;
 }
 
-export function routeHistoryCommand(
+const routeHistoryCommand = (
   kind: HistoryKind,
   state: ShortcutState,
   modal: () => boolean = modalOpen
-): boolean {
+): boolean => {
   if (kind === "redo" && !state.redo) {
     return false;
   }
@@ -73,17 +70,17 @@ export function routeHistoryCommand(
   }
 
   return true;
-}
+};
 
-export function useUndoShortcut(
+const useUndoShortcut = (
   enabled: boolean,
   onUndo: () => void,
   redo?: RedoShortcut
-): void {
+): void => {
   const state = useRef<ShortcutState>({ enabled, onUndo, redo });
   state.current = { enabled, onUndo, redo };
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       const kind = historyKeyOf(event);
 
       if (!kind || editsText(event.target)) {
@@ -98,7 +95,7 @@ export function useUndoShortcut(
       routeHistoryCommand(kind, state.current);
     };
 
-    const fromPreview = (event: Event) => {
+    const fromPreview = (event: Event): void => {
       const kind: HistoryKind =
         (event as CustomEvent<{ redo?: unknown }>).detail?.redo === true
           ? "redo"
@@ -112,12 +109,12 @@ export function useUndoShortcut(
       routeHistoryCommand(kind, state.current);
     };
 
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
 
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
+    return (): void => {
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
     };
   }, []);
   useDesktopCommand((command) => {
@@ -130,4 +127,14 @@ export function useUndoShortcut(
 
     return routeHistoryCommand(command.type, state.current);
   });
-}
+};
+
+export {
+  PREVIEW_HISTORY_EVENT,
+  historyKeyOf,
+  routeHistoryCommand,
+  undoAllowed,
+  useUndoShortcut,
+};
+
+export type { HistoryKind, RedoShortcut, ShortcutState };

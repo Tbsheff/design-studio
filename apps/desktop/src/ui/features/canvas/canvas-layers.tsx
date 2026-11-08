@@ -1,6 +1,7 @@
 import { selectMoveOf } from "@design-studio/contracts";
 import type { SelectMove, SelectionContext } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import type { LiveStore } from "../../platform/live-store.js";
@@ -12,7 +13,6 @@ import {
 import { LayersPanel } from "../versions-layers-tokens/layers-panel.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
-import { frameName } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import type { HoverBox } from "./use-preview-frames.js";
@@ -25,13 +25,13 @@ interface TreeFrames {
   hover: LiveStore<HoverBox | null>;
 }
 
-function useHoveredNode(hover: LiveStore<HoverBox | null>): number | null {
-  const read = () => hover.get()?.node ?? null;
+const useHoveredNode = (hover: LiveStore<HoverBox | null>): number | null => {
+  const read = (): number | null => hover.get()?.node ?? null;
 
   return useSyncExternalStore(hover.subscribe, read, read);
-}
+};
 
-function CanvasLayersPanel({
+const CanvasLayersPanel = ({
   frames,
   edits,
   frameName,
@@ -45,15 +45,15 @@ function CanvasLayersPanel({
   selection: SelectionContext[];
   onSelectMode: () => void;
   onClose?: () => void;
-}) {
+}): ReactElement => {
   const hasSelection = selection.length > 0;
   const hoveredNode = useHoveredNode(frames.hover);
 
   const menuState = {
-    isBusy: edits.busy,
     canPaste: edits.canPaste,
     count: selection.length,
     hasSource: selectionTargets(selection) !== null,
+    isBusy: edits.busy,
   };
 
   const actions = edits.enabled
@@ -85,13 +85,13 @@ function CanvasLayersPanel({
       onClose={onClose}
     />
   );
-}
+};
 
-function EditNotice({
+const EditNotice = ({
   edits,
 }: {
   edits: Pick<LayerEdits, "notice" | "clearNotice">;
-}) {
+}): ReactElement | null => {
   if (!edits.notice) {
     return null;
   }
@@ -109,51 +109,51 @@ function EditNotice({
       </button>
     </div>
   );
-}
+};
 
-function useLayersWatch(
+const useLayersWatch = (
   watch: (on: boolean) => void,
   open: boolean,
   frontToken: string | null,
   onToggle: () => void
-): void {
+): void => {
   const toggle = useRef(onToggle);
   toggle.current = onToggle;
   useEffect(() => {
     watch(open);
   }, [watch, open, frontToken]);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
-        !e.altKey ||
-        e.metaKey ||
-        e.ctrlKey ||
-        e.shiftKey ||
-        e.code !== "Digit1" ||
-        isTypingTarget(e.target)
+        !event.altKey ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.code !== "Digit1" ||
+        isTypingTarget(event.target)
       ) {
         return;
       }
 
-      e.preventDefault();
+      event.preventDefault();
       toggle.current();
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
-function useSelectMoveKeys(
+const useSelectMoveKeys = (
   selectMode: boolean,
   selection: SelectionContext[],
   selectRelative: (selector: string, move: SelectMove) => void
-): void {
+): void => {
   const live = useRef({ selectMode, selectRelative, selection });
   live.current = { selectMode, selectRelative, selection };
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (eventValue: KeyboardEvent): void => {
       const cur = live.current;
       const last = cur.selection.at(-1);
 
@@ -161,20 +161,20 @@ function useSelectMoveKeys(
         return;
       }
 
-      const move = selectMoveOf(e);
+      const move = selectMoveOf(eventValue);
 
       if (!move) {
         return;
       }
 
-      e.preventDefault();
+      eventValue.preventDefault();
       cur.selectRelative(last.selector, move);
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
 export { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys };

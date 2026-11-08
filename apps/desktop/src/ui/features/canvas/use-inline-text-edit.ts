@@ -2,25 +2,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { TextEditMessage } from "./use-preview-frames.js";
 
-export const MAX_INLINE_TEXT = 5000;
+const MAX_INLINE_TEXT = 5000;
 
 const REFOCUS_MS = 50;
-export const QUIET_FOCUS_ATTR = "data-quiet-focus";
+const QUIET_FOCUS_ATTR = "data-quiet-focus";
 
-export function focusStageQuietly(
+const focusStageQuietly = (
   stage: HTMLElement | null = document.querySelector<HTMLElement>(
     ".canvas .stage"
   )
-): void {
+): void => {
   if (!stage) {
     return;
   }
 
   stage.setAttribute(QUIET_FOCUS_ATTR, "");
   stage.focus({ preventScroll: true });
-}
+};
 
-function focusLeftCanvas(stage: HTMLElement): boolean {
+const focusLeftCanvas = (stage: HTMLElement): boolean => {
   const active = document.activeElement;
 
   if (!active || active === document.body || active === stage) {
@@ -28,13 +28,13 @@ function focusLeftCanvas(stage: HTMLElement): boolean {
   }
 
   return !(active instanceof HTMLIFrameElement && stage.contains(active));
-}
+};
 
-export type TextCommitHandler = (selector: string, text: string) => void;
+type TextCommitHandler = (selector: string, text: string) => void;
 
-export function parseTextCommit(
+const parseTextCommit = (
   message: TextEditMessage
-): { selector: string; text: string } | null {
+): { selector: string; text: string } | null => {
   if (message.type !== "text-commit") {
     return null;
   }
@@ -54,14 +54,14 @@ export function parseTextCommit(
   }
 
   return { selector, text };
-}
+};
 
-export function useInlineTextEdit(
+const useInlineTextEdit = (
   allowed: boolean,
   onCommit: TextCommitHandler | undefined,
   onReject: () => void,
   stage: () => HTMLElement | null
-) {
+) => {
   const [editing, setEditing] = useState(false);
   const live = useRef({ onCommit, onReject, stage });
   live.current = { onCommit, onReject, stage };
@@ -115,4 +115,14 @@ export function useInlineTextEdit(
   const reset = useCallback(() => setEditing(false), []);
 
   return { editing, onMessage, reset };
-}
+};
+
+export {
+  MAX_INLINE_TEXT,
+  QUIET_FOCUS_ATTR,
+  focusStageQuietly,
+  parseTextCommit,
+  useInlineTextEdit,
+};
+
+export type { TextCommitHandler };

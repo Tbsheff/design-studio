@@ -7,7 +7,7 @@ import { setFrameHidden } from "./canvas-frames-model.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
 
 const POINT_FRESH_MS = 8000;
-export const MCP_POINT_MS = 20_000;
+const MCP_POINT_MS = 20_000;
 const SELECT_AT_MS = [900, 1700];
 const ZOOM_AT_MS = 500;
 
@@ -19,19 +19,21 @@ interface PointInput {
   zoom: (key: ZoomKey) => void;
 }
 
-export interface McpPointBadge {
+interface McpPointBadge {
   point: McpPoint | null;
   show: () => void;
   dismiss: () => void;
 }
 
-function useShowFrame(o: PointInput) {
-  const latest = useRef(o);
-  latest.current = o;
+const useShowFrame = (
+  pointInput: PointInput
+): ((frameId: string, selector: string | undefined) => boolean) => {
+  const latest = useRef(pointInput);
+  latest.current = pointInput;
   const timers = useRef<number[]>([]);
   useEffect(
-    () => () => {
-      timers.current.forEach((t) => window.clearTimeout(t));
+    () => (): void => {
+      timers.current.forEach((target) => window.clearTimeout(target));
     },
     []
   );
@@ -39,22 +41,26 @@ function useShowFrame(o: PointInput) {
   return useCallback(
     (frameId: string, selector: string | undefined): boolean => {
       const cur = latest.current;
-      const frame = cur.frames.layout.frames.find((f) => f.id === frameId);
+      const frame = cur.frames.layout.frames.find(
+        (canvasFrame) => canvasFrame.id === frameId
+      );
 
       if (!frame) {
         return false;
       }
 
-      timers.current.forEach((t) => window.clearTimeout(t));
+      timers.current.forEach((targetValue) => window.clearTimeout(targetValue));
 
       if (frame.hidden) {
-        cur.frames.update((l) => setFrameHidden(l, frame.id, false));
+        cur.frames.update((canvasLayout) =>
+          setFrameHidden(canvasLayout, frame.id, false)
+        );
       }
 
       cur.frames.activate(frame);
       cur.clearSelection();
 
-      const later = (ms: number, fn: () => void) =>
+      const later = (ms: number, fn: () => void): number =>
         timers.current.push(window.setTimeout(fn, ms));
 
       later(ZOOM_AT_MS, () => latest.current.zoom("selection"));
@@ -71,12 +77,12 @@ function useShowFrame(o: PointInput) {
     },
     []
   );
-}
+};
 
-export function useCanvasPoint(o: PointInput): McpPointBadge {
-  const showFrame = useShowFrame(o);
+const useCanvasPoint = (pointInputValue: PointInput): McpPointBadge => {
+  const showFrame = useShowFrame(pointInputValue);
   const [point, setPoint] = useState<McpPoint | null>(null);
-  useProjectEvents(o.projectId, (event) => {
+  useProjectEvents(pointInputValue.projectId, (event) => {
     if (
       event.type === "canvas.point" &&
       Date.now() - event.at <= POINT_FRESH_MS
@@ -101,7 +107,7 @@ export function useCanvasPoint(o: PointInput): McpPointBadge {
       Math.max(0, point.at + MCP_POINT_MS - Date.now())
     );
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [point]);
 
   const show = useCallback(() => {
@@ -115,4 +121,8 @@ export function useCanvasPoint(o: PointInput): McpPointBadge {
   const dismiss = useCallback(() => setPoint(null), []);
 
   return { dismiss, point, show };
-}
+};
+
+export { MCP_POINT_MS, useCanvasPoint };
+
+export type { McpPointBadge };

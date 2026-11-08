@@ -9,10 +9,10 @@ import {
 } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
-function apply(
+const apply = (
   projectId: string,
   fn: (layout: CanvasLayout) => CanvasLayout
-): CanvasLayout {
+): CanvasLayout => {
   const current =
     canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport);
 
@@ -30,14 +30,14 @@ function apply(
   }
 
   return next;
-}
+};
 
-export function showVariationFrames(
+const showVariationFrames = (
   projectId: string,
   directionIds: string[],
   currentId: string | null,
   dropCurrent: boolean
-): string | null {
+): string | null => {
   const next = apply(projectId, (layout) =>
     placeDirections(layout, directionIds, currentId, dropCurrent)
   );
@@ -45,25 +45,26 @@ export function showVariationFrames(
   uiStore.set({ zoom: "fit" });
 
   return activeFrame(next).directionId ?? currentId;
-}
+};
 
-export function keepVariationFrame(
+const keepVariationFrame = (
   projectId: string,
   keepId: string,
   groupIds: string[]
-): void {
+): void => {
   apply(projectId, (layout) => keepDirection(layout, keepId, groupIds));
-}
+};
 
-export function framesOnCanvas(
-  projectId: string,
-  directionIds: string[]
-): number {
+const framesOnCanvas = (projectId: string, directionIds: string[]): number => {
   const layout = canvasStore.get(projectId);
 
   return layout
     ? layout.frames.filter(
-        (f) => f.directionId && directionIds.includes(f.directionId)
+        (canvasFrame) =>
+          canvasFrame.directionId &&
+          directionIds.includes(canvasFrame.directionId)
       ).length
     : 0;
-}
+};
+
+export { framesOnCanvas, keepVariationFrame, showVariationFrames };

@@ -1,12 +1,12 @@
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import type { KeyId } from "../../../shared/keymap.js";
 import { KeyHint } from "../../canvas-preview-slots.js";
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 
-export interface PreviewMenuItem {
+interface PreviewMenuItem {
   id: string;
   label: string;
   icon: IconName;
@@ -19,7 +19,7 @@ export interface PreviewMenuItem {
 
 const EDGE = 8;
 
-function step(key: string, index: number, count: number): number | null {
+const step = (key: string, index: number, count: number): number | null => {
   if (key === "ArrowDown") {
     return (index + 1) % count;
   }
@@ -37,9 +37,9 @@ function step(key: string, index: number, count: number): number | null {
   }
 
   return null;
-}
+};
 
-export function PreviewMenu({
+const PreviewMenu = ({
   at,
   label,
   items,
@@ -49,7 +49,7 @@ export function PreviewMenu({
   label: string;
   items: PreviewMenuItem[];
   onClose: () => void;
-}) {
+}): ReactElement => {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(at);
   const [scrolls, setScrolls] = useState(false);
@@ -61,7 +61,7 @@ export function PreviewMenu({
       return;
     }
 
-    const clamp = () => {
+    const clamp = (): void => {
       const width = el.offsetWidth;
       const height = el.offsetHeight;
       const last = el.lastElementChild as HTMLElement | null;
@@ -82,28 +82,28 @@ export function PreviewMenu({
     const observer = new ResizeObserver(clamp);
     observer.observe(el);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [at]);
 
   useEffect(() => {
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       if (!ref.current?.contains(event.target as Node)) {
         onClose();
       }
     };
 
-    window.addEventListener("mousedown", onDown, true);
+    globalThis.addEventListener("mousedown", onDown, true);
     window.addEventListener("blur", onClose);
     window.addEventListener("resize", onClose);
 
-    return () => {
-      window.removeEventListener("mousedown", onDown, true);
+    return (): void => {
+      globalThis.removeEventListener("mousedown", onDown, true);
       window.removeEventListener("blur", onClose);
       window.removeEventListener("resize", onClose);
     };
   }, [onClose]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === "Escape" || event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
@@ -149,39 +149,39 @@ export function PreviewMenu({
         ))}
     </div>
   );
-}
+};
 
-function MenuRow({
+const MenuRow = ({
   item,
   onClose,
 }: {
   item: PreviewMenuItem;
   onClose: () => void;
-}) {
-  return (
-    <>
-      {item.divider && (
-        <div className="preview-menu-divider" role="separator" />
-      )}
-      <button
-        type="button"
-        role="menuitem"
-        aria-disabled={item.disabled ? true : undefined}
-        data-tip={item.disabled}
-        data-tip-align="end"
-        onClick={() => {
-          if (item.disabled) {
-            return;
-          }
+}): ReactElement => (
+  <>
+    {item.divider && <div className="preview-menu-divider" role="separator" />}
+    <button
+      type="button"
+      role="menuitem"
+      aria-disabled={item.disabled ? true : undefined}
+      data-tip={item.disabled}
+      data-tip-align="end"
+      onClick={() => {
+        if (item.disabled) {
+          return;
+        }
 
-          onClose();
-          void item.run();
-        }}
-      >
-        <Icon name={item.icon} size={14} />
-        <span>{item.label}</span>
-        {item.keyId ? <KeyHint id={item.keyId} /> : <span />}
-      </button>
-    </>
-  );
-}
+        onClose();
+        void item.run();
+      }}
+    >
+      <Icon name={item.icon} size={14} />
+      <span>{item.label}</span>
+      {item.keyId ? <KeyHint id={item.keyId} /> : <span />}
+    </button>
+  </>
+);
+
+export { PreviewMenu };
+
+export type { PreviewMenuItem };

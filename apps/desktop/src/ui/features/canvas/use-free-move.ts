@@ -18,7 +18,7 @@ import { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
 import { snapRect } from "./snap-model.js";
 import type { Rect, SnapGuide, SpacingBadge } from "./snap-model.js";
 
-export interface FreeMoveView {
+interface FreeMoveView {
   box: Rect;
   guides: SnapGuide[];
   spacing: SpacingBadge[];
@@ -56,16 +56,20 @@ interface Placed {
   view: FreeMoveView;
 }
 
-function place(s: Session, drag: FreeMoveDrag, zoom: number): Placed {
-  const base = s.start.rect;
+const place = (
+  sessionValue: Session,
+  drag: FreeMoveDrag,
+  zoom: number
+): Placed => {
+  const base = sessionValue.start.rect;
   const moved = { ...base, x: base.x + drag.dx, y: base.y + drag.dy };
-  const absolute = s.start.mode === "absolute";
+  const absolute = sessionValue.start.mode === "absolute";
 
   const snapped =
-    !absolute || drag.free || s.candidates.length === 0
+    !absolute || drag.free || sessionValue.candidates.length === 0
       ? { guides: [], rect: moved, spacing: [] }
       : snapRect({
-          candidates: s.candidates,
+          candidates: sessionValue.candidates,
           rect: moved,
           x: "move",
           y: "move",
@@ -85,54 +89,54 @@ function place(s: Session, drag: FreeMoveDrag, zoom: number): Placed {
       spacing: snapped.spacing,
     },
   };
-}
+};
 
-function transformOf(s: Session, dx: number, dy: number): string {
+const transformOf = (session3: Session, dx: number, dy: number): string => {
   const own =
-    s.start.transform && s.start.transform !== "none"
-      ? ` ${s.start.transform}`
+    session3.start.transform && session3.start.transform !== "none"
+      ? ` ${session3.start.transform}`
       : "";
 
   return `translate(${dx}px, ${dy}px)${own}`;
-}
+};
 
-function absoluteStyle(
-  s: Session,
+const absoluteStyle = (
+  session4: Session,
   dx: number,
   dy: number
-): Record<string, string> {
+): Record<string, string> => {
   const style: Record<string, string> = {};
-  const { fromRight, fromBottom } = s.start;
+  const { fromRight, fromBottom } = session4.start;
 
-  if (dx !== 0 || s.start.convert) {
+  if (dx !== 0 || session4.start.convert) {
     style[fromRight ? "right" : "left"] =
-      `${Math.round(s.start.left + (fromRight ? -dx : dx))}px`;
+      `${Math.round(session4.start.left + (fromRight ? -dx : dx))}px`;
   }
 
-  if (dy !== 0 || s.start.convert) {
+  if (dy !== 0 || session4.start.convert) {
     style[fromBottom ? "bottom" : "top"] =
-      `${Math.round(s.start.top + (fromBottom ? -dy : dy))}px`;
+      `${Math.round(session4.start.top + (fromBottom ? -dy : dy))}px`;
   }
 
-  if (s.start.convert) {
+  if (session4.start.convert) {
     Object.assign(style, {
       position: "absolute",
-      width: `${Math.round(s.start.rect.width)}px`,
+      width: `${Math.round(session4.start.rect.width)}px`,
     });
   }
 
   return style;
-}
+};
 
-export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
-  const live = useRef(o);
-  live.current = o;
+const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
+  const live = useRef(options);
+  live.current = options;
   const session = useRef<Session | null>(null);
   const [view] = useState(() => createLiveStore<FreeMoveView | null>(null));
   const setView = view.set;
 
   useEffect(() => {
-    const end = (committing: boolean) => {
+    const end = (committing: boolean): void => {
       if (!session.current) {
         return;
       }
@@ -140,12 +144,12 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       session.current = null;
       setView(null);
       document.body.classList.remove("element-moving");
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
       live.current.post({ type: "preview-reset" });
       live.current.holdSwap?.(false, !committing);
     };
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.key !== "Escape" || !session.current) {
         return;
       }
@@ -156,7 +160,7 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       end(false);
     };
 
-    const begin = (start: FreeMoveStart) => {
+    const begin = (start: FreeMoveStart): void => {
       const cur = live.current;
       const target = cur.selection.length === 1 ? cur.selection[0] : undefined;
 
@@ -189,7 +193,7 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
         target,
       };
       document.body.classList.add("element-moving");
-      window.addEventListener("keydown", onKey, true);
+      globalThis.addEventListener("keydown", onKey, true);
       cur.holdSwap?.(true, false);
       setView({
         box: start.rect,
@@ -200,35 +204,35 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       });
     };
 
-    const update = (drag: FreeMoveDrag) => {
-      const s = session.current;
+    const update = (drag: FreeMoveDrag): void => {
+      const text = session.current;
 
-      if (!s) {
+      if (!text) {
         return;
       }
 
-      const placed = place(s, drag, live.current.zoom);
+      const placed = place(text, drag, live.current.zoom);
       live.current.post({
-        selector: s.start.selector,
+        selector: text.start.selector,
         style: {
           transform: drag.alt
-            ? transformOf(s, 0, 0)
-            : transformOf(s, placed.dx, placed.dy),
+            ? transformOf(text, 0, 0)
+            : transformOf(text, placed.dx, placed.dy),
         },
         type: "preview-style",
       });
       setView(placed.view);
     };
 
-    const drop = (drag: FreeMoveDrag) => {
-      const s = session.current;
+    const drop = (drag: FreeMoveDrag): void => {
+      const textValue = session.current;
 
-      if (!s) {
+      if (!textValue) {
         return;
       }
 
-      const placed = place(s, drag, live.current.zoom);
-      const write = commitPlan(s, drag, placed);
+      const placed = place(textValue, drag, live.current.zoom);
+      const write = commitPlan(textValue, drag, placed);
       end(write !== null);
 
       if (write) {
@@ -237,7 +241,7 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
     };
 
     const commitPlan = (
-      s: Session,
+      session5: Session,
       drag: FreeMoveDrag,
       placed: Placed
     ): (() => Promise<void>) | null => {
@@ -251,13 +255,13 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
         return null;
       }
 
-      const target = selectionTargets([s.target])?.[0];
+      const target = selectionTargets([session5.target])?.[0];
 
       if (!target) {
         return null;
       }
 
-      if (s.start.mode === "flow") {
+      if (session5.start.mode === "flow") {
         const ref = drag.insert?.ref;
 
         if (!ref) {
@@ -280,20 +284,20 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
         return null;
       }
 
-      const style = absoluteStyle(s, placed.dx, placed.dy);
+      const style = absoluteStyle(session5, placed.dx, placed.dy);
 
       if (drag.alt) {
         return () =>
           cur.applyStructure({ op: "duplicate", style, targets: [target] });
       }
 
-      return () => saveStyle(s.target, style);
+      return () => saveStyle(session5.target, style);
     };
 
     const saveStyle = async (
       target: SelectionContext,
       style: Record<string, string>
-    ) => {
+    ): Promise<void> => {
       const cur = live.current;
       const req = buildEditRequest(target, style);
 
@@ -333,7 +337,7 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       }
     };
 
-    const stop = o.listen((message) => {
+    const stop = options.listen((message) => {
       if (message.type === "move-start") {
         begin(message.move);
       } else if (message.type === "move-live") {
@@ -345,11 +349,15 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       }
     });
 
-    return () => {
+    return (): void => {
       stop();
       end(false);
     };
-  }, [o.listen]);
+  }, [options.listen]);
 
   return view;
-}
+};
+
+export { useFreeMove };
+
+export type { FreeMoveView };

@@ -23,7 +23,7 @@ interface CanvasShell {
   onAskAgent?: (text: string) => void;
 }
 
-type SetSelectMode = (update: (m: boolean) => boolean) => void;
+type SetSelectMode = (update: (match: boolean) => boolean) => void;
 
 interface CommentTool {
   available: boolean;
@@ -32,11 +32,11 @@ interface CommentTool {
   toggle: () => void;
 }
 
-function useShellState(
+const useShellState = (
   shell: CanvasShell | undefined,
   comment: CommentTool,
   setSelectMode: SetSelectMode
-) {
+): void => {
   const onPane = useRef(shell?.onPane);
   onPane.current = shell?.onPane;
   const pane = shell?.pane;
@@ -51,11 +51,15 @@ function useShellState(
       return;
     }
 
-    void Promise.resolve(onPane.current?.("comments")).then((moved) => {
+    const openPane = async (): Promise<void> => {
+      const moved = await onPane.current?.("comments");
+
       if (moved === false) {
         commentRef.current.setOn(false);
       }
-    });
+    };
+
+    void openPane();
   }, [comment.on]);
   const prevPane = useRef(pane);
   useEffect(() => {
@@ -74,39 +78,39 @@ function useShellState(
       setSelectMode(() => false);
     }
   }, [pane, setSelectMode]);
-}
+};
 
-function useShellPane(
+const useShellPane = (
   shell: CanvasShell | undefined,
   comment: CommentTool,
   selectMode: boolean,
   setSelectMode: SetSelectMode,
   live: boolean,
   layersOpenSetting: boolean
-) {
+) => {
   useShellState(shell, comment, setSelectMode);
   const picking = selectMode || (shell?.pane === "design" && !comment.on);
   const editOpen = shell ? shell.pane === "design" : layersOpenSetting;
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
 
-  const toggleEdit = () =>
+  const toggleEdit = (): void | Promise<boolean> | undefined =>
     shell?.onPane(shell.pane === "design" ? "chat" : "design");
 
-  const closeLayers = () =>
+  const closeLayers = (): void | Promise<boolean> =>
     shell ? shell.onPane("chat") : uiStore.set({ layersOpen: false });
 
-  const place = (panel: ReactNode) =>
+  const place = (panel: ReactNode): ReactNode =>
     shell?.layersHost ? createPortal(panel, shell.layersHost) : panel;
 
   return { closeLayers, layersOpen, picking, place, toggleEdit };
-}
+};
 
-function fileNameOf(
+const fileNameOf = (
   frame: CanvasFrame,
   kind: ProjectKind,
   directionName: string | null
-): string {
+): string => {
   if (kind === "html") {
     return (
       (frame.path || "index.html")
@@ -116,14 +120,14 @@ function fileNameOf(
   }
 
   return directionName ?? "Design";
-}
+};
 
-function toolOf(
+const toolOf = (
   pane: PanelTab | undefined,
   comment: boolean,
   select: boolean,
   proto: boolean
-): CanvasTool {
+): CanvasTool => {
   if (proto) {
     return "prototype";
   }
@@ -137,9 +141,9 @@ function toolOf(
   }
 
   return select ? "select" : null;
-}
+};
 
-function reloadFrames(stage: HTMLElement | null) {
+const reloadFrames = (stage: HTMLElement | null): void => {
   stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame").forEach((el) => {
     const { src } = el;
 
@@ -147,9 +151,9 @@ function reloadFrames(stage: HTMLElement | null) {
       el.src = src;
     }
   });
-}
+};
 
-function scopeOf(selection: SelectionContext[]): string | null {
+const scopeOf = (selection: SelectionContext[]): string | null => {
   if (selection.length > 1) {
     return `${selection.length} elements`;
   }
@@ -157,7 +161,7 @@ function scopeOf(selection: SelectionContext[]): string | null {
   const first = selection[0];
 
   return first ? `the ${first.tag}` : null;
-}
+};
 
 export { fileNameOf, reloadFrames, scopeOf, toolOf, useShellPane };
 

@@ -7,7 +7,6 @@ import {
   ACTION_LABELS,
   cleanLinkText,
   EASING_LABELS,
-  isBackTarget,
   isFrameAction,
   LINK_EASING_DEFAULT,
   LINK_EASINGS,
@@ -79,10 +78,10 @@ export function playStartOf(
   );
 }
 
-function protoHint(
+const protoHint = (
   frames: readonly CanvasFrame[],
   hasSelection: boolean
-): string {
+): string => {
   if (new Set(frames.map((frame) => framePage(frame.path))).size < 2) {
     return "Add a page first: ask in chat, or Add frame in the page menu, then pick its page.";
   }
@@ -90,22 +89,19 @@ function protoHint(
   return hasSelection
     ? "Drag the + handle to a frame to link it."
     : "Click an element, then drag its + handle to a frame.";
-}
+};
 
-function boxOf(frame: CanvasFrame, active: CanvasFrame): Box {
-  return {
-    height: frame.height,
-    width: frame.width,
-    x: frame.x - active.x,
-    y: frame.y - active.y,
-  };
-}
+const boxOf = (frame: CanvasFrame, active: CanvasFrame): Box => ({
+  height: frame.height,
+  width: frame.width,
+  x: frame.x - active.x,
+  y: frame.y - active.y,
+});
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
+const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value));
 
-function startPoint(state: LinkState, from: Box): Point | null {
+const startPoint = (state: LinkState, from: Box): Point | null => {
   const { rect } = state;
 
   if (!rect) {
@@ -118,9 +114,9 @@ function startPoint(state: LinkState, from: Box): Point | null {
     x: from.x + clamp(rect.x + rect.width, 0, from.width),
     y: from.y + y,
   };
-}
+};
 
-function arrowPath(start: Point, target: Box): { d: string; end: Point } {
+const arrowPath = (start: Point, target: Box): { d: string; end: Point } => {
   const toRight = target.x >= start.x;
 
   if (!toRight) {
@@ -145,9 +141,9 @@ function arrowPath(start: Point, target: Box): { d: string; end: Point } {
     d: `M ${start.x} ${start.y} C ${start.x + reach} ${start.y}, ${end.x - reach} ${end.y}, ${end.x} ${end.y}`,
     end,
   };
-}
+};
 
-function bounds(frames: CanvasFrame[], active: CanvasFrame): Box {
+const bounds = (frames: CanvasFrame[], active: CanvasFrame): Box => {
   const boxes = frames.map((frame) => boxOf(frame, active));
   const minX = Math.min(0, ...boxes.map((b) => b.x)) - PAD;
   const minY = Math.min(0, ...boxes.map((b) => b.y)) - PAD;
@@ -157,7 +153,7 @@ function bounds(frames: CanvasFrame[], active: CanvasFrame): Box {
     Math.max(active.height, ...boxes.map((b) => b.y + b.height)) + PAD;
 
   return { height: maxY - minY, width: maxX - minX, x: minX, y: minY };
-}
+};
 
 export interface LinkDrag {
   from: Point;
@@ -175,34 +171,32 @@ interface ArrowProps {
   dropTarget: string | null;
 }
 
-function ArrowMarkers() {
-  return (
-    <defs>
-      <marker
-        id="link-head"
-        viewBox="0 0 10 10"
-        refX="9"
-        refY="5"
-        markerWidth="7"
-        markerHeight="7"
-        orient="auto-start-reverse"
-      >
-        <path d="M 0 0 L 10 5 L 0 10 z" className="link-head" />
-      </marker>
-      <marker
-        id="link-head-broken"
-        viewBox="0 0 10 10"
-        refX="9"
-        refY="5"
-        markerWidth="7"
-        markerHeight="7"
-        orient="auto-start-reverse"
-      >
-        <path d="M 0 0 L 10 5 L 0 10 z" className="link-head broken" />
-      </marker>
-    </defs>
-  );
-}
+const ArrowMarkers = () => (
+  <defs>
+    <marker
+      id="link-head"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M 0 0 L 10 5 L 0 10 z" className="link-head" />
+    </marker>
+    <marker
+      id="link-head-broken"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M 0 0 L 10 5 L 0 10 z" className="link-head broken" />
+    </marker>
+  </defs>
+);
 
 export function LinkArrows({
   states,
@@ -349,7 +343,7 @@ export function LinkArrows({
   );
 }
 
-function frameUnder(x: number, y: number, exclude: string): string | null {
+const frameUnder = (x: number, y: number, exclude: string): string | null => {
   for (const element of document.elementsFromPoint(x, y)) {
     const host = element.closest<HTMLElement>("[data-frame-id]");
     const id = host?.dataset.frameId;
@@ -364,7 +358,7 @@ function frameUnder(x: number, y: number, exclude: string): string | null {
   }
 
   return null;
-}
+};
 
 export function useLinkDrag(
   onDrop: (selection: SelectionContext, frameId: string) => void
@@ -484,17 +478,14 @@ export function linkSourceOf(selection: SelectionContext, frame: CanvasFrame) {
   };
 }
 
-function sameRect(
+const sameRect = (
   a: { x: number; y: number; width: number; height: number },
   b: { x: number; y: number; width: number; height: number }
-): boolean {
-  return (
-    Math.abs(a.x - b.x) < 1 &&
-    Math.abs(a.y - b.y) < 1 &&
-    Math.abs(a.width - b.width) < 1 &&
-    Math.abs(a.height - b.height) < 1
-  );
-}
+): boolean =>
+  Math.abs(a.x - b.x) < 1 &&
+  Math.abs(a.y - b.y) < 1 &&
+  Math.abs(a.width - b.width) < 1 &&
+  Math.abs(a.height - b.height) < 1;
 
 export function linkOfSelection(
   states: LinkState[],
@@ -531,7 +522,7 @@ interface BarProps {
 
 const DURATIONS = [150, 200, 320, 500, 800, 1200];
 
-function motionOptions(link: PrototypeLink) {
+const motionOptions = (link: PrototypeLink) => {
   const duration = linkDuration(link);
 
   const durations = DURATIONS.includes(duration)
@@ -540,25 +531,25 @@ function motionOptions(link: PrototypeLink) {
 
   return {
     durations: durations.map((ms) => ({
-      value: String(ms),
       label: `${ms} ms`,
+      value: String(ms),
     })),
     easings: LINK_EASINGS.map((easing) => ({
-      value: easing,
       label: EASING_LABELS[easing],
+      value: easing,
     })),
     transitions: LINK_TRANSITIONS.map((transition) => ({
-      value: transition,
       label: transitionLabel(transition),
+      value: transition,
     })),
   };
-}
+};
 
-function targetOptions(
+const targetOptions = (
   link: PrototypeLink,
   frames: CanvasFrame[],
   frameTitle: (frame: CanvasFrame) => string
-): UiSelectOption[] {
+): UiSelectOption[] => {
   const options = frames.filter((frame) => frame.id !== link.from.frame);
   const target = targetFrame(link.to);
 
@@ -573,9 +564,9 @@ function targetOptions(
     ...(missing ? [{ label: "Missing frame", value: missing }] : []),
     { label: "Back", value: "back" },
   ];
-}
+};
 
-function LinkEditor({
+const LinkEditor = ({
   projectId,
   state,
   frames,
@@ -591,7 +582,7 @@ function LinkEditor({
   picked: string | null;
   onPicking: (isPicking: boolean) => void;
   onError: (message: string) => void;
-}) {
+}) => {
   const { link } = state;
   const toFrames = isFrameAction(linkAction(link));
 
@@ -707,9 +698,9 @@ function LinkEditor({
       )}
     </div>
   );
-}
+};
 
-function actionMeta(link: PrototypeLink): string {
+const actionMeta = (link: PrototypeLink): string => {
   const action = linkAction(link);
 
   if (!isFrameAction(action)) {
@@ -719,15 +710,15 @@ function actionMeta(link: PrototypeLink): string {
   return action === "navigate"
     ? transitionLabel(link.transition)
     : `${ACTION_LABELS[action]}, ${transitionLabel(link.transition).toLowerCase()}`;
-}
+};
 
-function rowMeta(link: PrototypeLink): string {
+const rowMeta = (link: PrototypeLink): string => {
   const meta = actionMeta(link);
 
   return link.trigger ? `${TRIGGER_LABELS[link.trigger.kind]}, ${meta}` : meta;
-}
+};
 
-function LinkList({
+const LinkList = ({
   projectId,
   states,
   linkTitle,
@@ -737,7 +728,7 @@ function LinkList({
   states: LinkState[];
   linkTitle: (link: PrototypeLink) => string;
   onError: (message: string) => void;
-}) {
+}) => {
   const fail = (error: unknown) =>
     onError(error instanceof Error ? error.message : String(error));
 
@@ -792,7 +783,7 @@ function LinkList({
       ))}
     </div>
   );
-}
+};
 
 export function PrototypeBar(bar: BarProps) {
   const p = {

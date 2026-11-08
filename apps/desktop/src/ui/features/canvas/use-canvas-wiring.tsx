@@ -26,7 +26,7 @@ import { useFrameChange } from "./use-stage-keys.js";
 
 const useCanvasWiring = (
   props: ViewProps,
-  s: ReturnType<typeof useCanvasStage>,
+  text: ReturnType<typeof useCanvasStage>,
   pv: ReturnType<typeof useCanvasPreview>,
   ed: ReturnType<typeof useCanvasEdits>
 ) => {
@@ -55,7 +55,7 @@ const useCanvasWiring = (
     draw,
     baseUrl,
     liveUrl,
-  } = s;
+  } = text;
 
   const { frames, passive, theme } = pv;
   const { layerEdits } = ed;

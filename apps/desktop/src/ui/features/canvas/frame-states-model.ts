@@ -25,22 +25,22 @@ const loading = new Set<string>();
 const listeners = new Set<() => void>();
 let current: string | null = null;
 
-function notify(): void {
+const notify = (): void => {
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
 
   return () => listeners.delete(listener);
-}
+};
 
-function store(projectId: string, view: FrameStatesView): void {
+const store = (projectId: string, view: FrameStatesView): void => {
   views.set(projectId, view);
   notify();
-}
+};
 
 const emptyView = (): FrameStatesView => ({
   frames: {},
@@ -65,21 +65,18 @@ const fetchView = async (projectId: string): Promise<void> => {
   }
 };
 
-function load(projectId: string): void {
+const load = (projectId: string): void => {
   if (loading.has(projectId)) {
     return;
   }
 
   loading.add(projectId);
   void fetchView(projectId);
-}
+};
 
-export type FrameStatesRead = FrameStatesView | null | undefined;
+type FrameStatesRead = FrameStatesView | null | undefined;
 
-export function useFrameStates(
-  projectId: string,
-  isApp: boolean
-): FrameStatesRead {
+const useFrameStates = (projectId: string, isApp: boolean): FrameStatesRead => {
   useEffect(() => {
     if (!isApp) {
       return;
@@ -89,7 +86,7 @@ export function useFrameStates(
     notify();
     load(projectId);
 
-    return () => {
+    return (): void => {
       if (current === projectId) {
         current = null;
       }
@@ -109,12 +106,12 @@ export function useFrameStates(
   );
 
   return useSyncExternalStore(subscribe, read, read);
-}
+};
 
-export function useCurrentFrameStates(): {
+const useCurrentFrameStates = (): {
   projectId: string;
   view: FrameStatesView;
-} | null {
+} | null => {
   const read = useCallback(
     () => (current ? (views.get(current) ?? null) : null),
     []
@@ -123,33 +120,29 @@ export function useCurrentFrameStates(): {
   const view = useSyncExternalStore(subscribe, read, read);
 
   return current && view ? { projectId: current, view } : null;
-}
+};
 
-export function frameStateOf(
-  view: FrameStatesView | null,
-  frameId: string
-): string {
-  return view?.frames[frameId] ?? DEFAULT_FRAME_STATE;
-}
+const frameStateOf = (view: FrameStatesView | null, frameId: string): string =>
+  view?.frames[frameId] ?? DEFAULT_FRAME_STATE;
 
-export function frameStateUrl(
+const frameStateUrl = (
   url: string | null,
   view: FrameStatesRead,
   frameId: string
-): string | null {
+): string | null => {
   if (!url || view === undefined) {
     return null;
   }
 
   return view ? withFrameStateHost(url, frameStateOf(view, frameId)) : url;
-}
+};
 
-export async function setFrameState(
+const setFrameState = async (
   projectId: string,
   frameId: string,
   state: string,
   mock?: FrameStateMock
-): Promise<FrameStateDef> {
+): Promise<FrameStateDef> => {
   const done = await call(routes.setFrameStateCanvas, {
     frame: frameId,
     projectId,
@@ -160,12 +153,12 @@ export async function setFrameState(
   store(projectId, done.view);
 
   return done.state;
-}
+};
 
-export async function setFrameSession(
+const setFrameSession = async (
   projectId: string,
   change: { user?: MockUser; forget?: boolean }
-): Promise<void> {
+): Promise<void> => {
   const view = await call(routes.updateFrameSessionCanvas, {
     projectId,
     ...(change.forget === undefined ? {} : { forget: change.forget }),
@@ -173,4 +166,15 @@ export async function setFrameSession(
   });
 
   store(projectId, view);
-}
+};
+
+export {
+  frameStateOf,
+  frameStateUrl,
+  setFrameSession,
+  setFrameState,
+  useCurrentFrameStates,
+  useFrameStates,
+};
+
+export type { FrameStatesRead };

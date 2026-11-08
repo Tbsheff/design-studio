@@ -1,7 +1,7 @@
 import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../app/project-nav.js";
 import { openAppPanel, useAppStatus } from "../../platform/app-status.js";
@@ -22,7 +22,7 @@ import { copy } from "./copy.js";
 
 const LOAD_HINT_MS = 30_000;
 
-function reloadAppFrames(): void {
+const reloadAppFrames = (): void => {
   document
     .querySelectorAll<HTMLIFrameElement>(".stage iframe.frame")
     .forEach((el) => {
@@ -32,23 +32,24 @@ function reloadAppFrames(): void {
         el.src = src;
       }
     });
-}
+};
 
-function needsReload(
+const needsReload = (
   prev: AppServerStatus | null,
   next: AppServerStatus | null
-): boolean {
+): boolean => {
   if (!prev || next?.state !== "ready") {
     return false;
   }
-  return prev.state !== "ready" || prev.upstream !== next.upstream;
-}
 
-function useServerFrames(
+  return prev.state !== "ready" || prev.upstream !== next.upstream;
+};
+
+const useServerFrames = (
   status: AppServerStatus | null,
   listen: Listen,
   enabled: boolean
-): boolean {
+): boolean => {
   const prev = useRef<AppServerStatus | null>(null);
   const [loaded, setLoaded] = useState(false);
   const ready = status?.state === "ready";
@@ -69,14 +70,16 @@ function useServerFrames(
     if (!ready || loaded) {
       return undefined;
     }
+
     const timer = window.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [ready, loaded]);
   useEffect(() => {
     if (!enabled) {
       return undefined;
     }
+
     return listen((message) => {
       if (message.type === "ready") {
         setLoaded(true);
@@ -85,7 +88,7 @@ function useServerFrames(
   }, [listen, enabled]);
 
   return loaded;
-}
+};
 
 interface Hint {
   text: string;
@@ -93,112 +96,124 @@ interface Hint {
   kind: "failed" | "starting" | "loading" | "route";
 }
 
-function serverHint(
+const serverHint = (
   app: AttachedApp,
   status: AppServerStatus | null,
   loaded: boolean
-): Hint | null {
+): Hint | null => {
   const name = app.framework === "next" ? "Next.js" : "App";
   const managed = (status?.mode ?? app.mode) === "managed";
   const state = status?.state ?? "idle";
 
   if (state === "failed" || state === "stopped") {
     return {
-      text: `${managed ? "The dev server is not running" : "Your dev server does not answer"}. Press ${name} at the bottom left for the fix.`,
       busy: false,
       kind: "failed",
+      text: `${managed ? "The dev server is not running" : "Your dev server does not answer"}. Press ${name} at the bottom left for the fix.`,
     };
   }
+
   if (state !== "ready") {
     return {
+      busy: true,
+      kind: "starting",
       text: managed
         ? `Starting ${app.framework === "next" ? "next dev" : "the dev server"}…`
         : "Checking your dev server…",
-      busy: true,
-      kind: "starting",
     };
   }
+
   if (!loaded) {
     return {
-      text: "Loading the page. The first visit to a route can take a while.",
       busy: true,
       kind: "loading",
+      text: "Loading the page. The first visit to a route can take a while.",
     };
   }
-  return null;
-}
 
-function routeHint(layout: CanvasLayout): Hint | null {
+  return null;
+};
+
+const routeHint = (layout: CanvasLayout): Hint | null => {
   if (layout.frames.some((frame) => frame.path !== undefined)) {
     return null;
   }
+
   return {
     busy: false,
     kind: "route",
     text: "This frame shows the home route. Pick the page you want to design.",
   };
-}
+};
 
-function HintIcon({ hint }: { hint: Hint }) {
+const HintIcon = ({ hint }: { hint: Hint }): ReactElement => {
   if (hint.busy) {
     return <span className="spinner" aria-hidden="true" />;
   }
+
   return <Icon name={hint.kind === "route" ? "file" : "alert"} size={14} />;
-}
+};
 
-function AppStageHint({ hint, onClose }: { hint: Hint; onClose: () => void }) {
-  return (
-    <div
-      className="stage-message app-stage-note"
-      role="status"
-      data-kind={hint.kind}
-    >
-      <HintIcon hint={hint} />
-      {hint.text}
-      {hint.kind === "route" && (
-        <>
-          <button
-            type="button"
-            className="btn small"
-            onClick={() => openAppPanel("routes")}
-          >
-            Pick a route
-          </button>
-          <button
-            type="button"
-            className="icon-btn small"
-            aria-label={copy.dismiss}
-            data-tip={copy.dismiss}
-            onClick={onClose}
-          >
-            <Icon name="close" size={12} />
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
+const AppStageHint = ({
+  hint,
+  onClose,
+}: {
+  hint: Hint;
+  onClose: () => void;
+}): ReactElement => (
+  <div
+    className="stage-message app-stage-note"
+    role="status"
+    data-kind={hint.kind}
+  >
+    <HintIcon hint={hint} />
+    {hint.text}
+    {hint.kind === "route" && (
+      <>
+        <button
+          type="button"
+          className="btn small"
+          onClick={() => openAppPanel("routes")}
+        >
+          {copy.pickARoute}
+        </button>
+        <button
+          type="button"
+          className="icon-btn small"
+          aria-label={copy.dismiss}
+          data-tip={copy.dismiss}
+          onClick={onClose}
+        >
+          <Icon name="close" size={12} />
+        </button>
+      </>
+    )}
+  </div>
+);
 
-function useRouteRequests(
+const useRouteRequests = (
   projectId: string,
   isApp: boolean,
   addRoute: (route: string) => void
-): void {
+): void => {
   const add = useRef(addRoute);
   add.current = addRoute;
   useEffect(() => {
     if (!isApp) {
       return;
     }
-    const runPending = () => {
+
+    const runPending = (): boolean => {
       if (!canvasStore.loaded(projectId)) {
         return false;
       }
+
       const route = takePendingRoute(projectId);
 
       if (route) {
         add.current(route);
       }
+
       return true;
     };
 
@@ -208,7 +223,7 @@ function useRouteRequests(
           queueMicrotask(() => runPending() && unsubscribe?.())
         );
 
-    const onRoute = (event: Event) => {
+    const onRoute = (event: Event): void => {
       const { detail } = event as CustomEvent<{
         projectId?: string;
         route?: string;
@@ -219,14 +234,14 @@ function useRouteRequests(
       }
     };
 
-    window.addEventListener(OPEN_ROUTE_EVENT, onRoute);
+    globalThis.addEventListener(OPEN_ROUTE_EVENT, onRoute);
 
-    return () => {
+    return (): void => {
       unsubscribe?.();
-      window.removeEventListener(OPEN_ROUTE_EVENT, onRoute);
+      globalThis.removeEventListener(OPEN_ROUTE_EVENT, onRoute);
     };
   }, [projectId, isApp]);
-}
+};
 
 interface AppCanvasInput {
   projectId: string;
@@ -244,52 +259,72 @@ interface AppCanvasInput {
   onSignIn: () => void;
 }
 
-export function useAppCanvas(o: AppCanvasInput): {
+const useAppCanvas = (
+  appCanvasInput: AppCanvasInput
+): {
   bar: ReactNode;
   note: ReactNode;
   stage: ReactNode;
-} {
-  const addRoute = (route: string) => {
-    const shown = routeFrameId(o.frames.layout, route) !== null;
+} => {
+  const addRoute = (route: string): void => {
+    const shown = routeFrameId(appCanvasInput.frames.layout, route) !== null;
 
-    if (!shown && !canAddFrame(o.frames.layout)) {
-      o.notify(
+    if (!shown && !canAddFrame(appCanvasInput.frames.layout)) {
+      appCanvasInput.notify(
         "The canvas has the most frames it can hold. Remove one to add this route."
       );
 
       return;
     }
 
-    o.freeze();
-    o.frames.update((layout) => addRouteFrame(layout, route, o.size));
-    o.focus();
-    o.notify(
+    appCanvasInput.freeze();
+    appCanvasInput.frames.update((layout) =>
+      addRouteFrame(layout, route, appCanvasInput.size)
+    );
+    appCanvasInput.focus();
+    appCanvasInput.notify(
       shown
         ? `${route} is already on the canvas. Showing it.`
         : `Added a frame for ${route}`
     );
   };
 
-  useRouteRequests(o.projectId, Boolean(o.app), addRoute);
-  const redirect = useRedirectNote(o.listen, Boolean(o.app), o.resetKey);
-  const status = useAppStatus(o.projectId);
-  const loaded = useServerFrames(status, o.listen, Boolean(o.app));
+  useRouteRequests(
+    appCanvasInput.projectId,
+    Boolean(appCanvasInput.app),
+    addRoute
+  );
+  const redirect = useRedirectNote(
+    appCanvasInput.listen,
+    Boolean(appCanvasInput.app),
+    appCanvasInput.resetKey
+  );
+  const status = useAppStatus(appCanvasInput.projectId);
+  const loaded = useServerFrames(
+    status,
+    appCanvasInput.listen,
+    Boolean(appCanvasInput.app)
+  );
   const [routeDismissed, setRouteDismissed] = useState(false);
   const [hidden, setHidden] = useState(() => readHiddenRedirects());
 
   const key = redirect
-    ? `${o.projectId} ${redirect.from}>${redirect.to}`
+    ? `${appCanvasInput.projectId} ${redirect.from}>${redirect.to}`
     : null;
 
   const shownRedirect =
-    o.app && redirect && key && !hidden.includes(key) ? redirect : null;
+    appCanvasInput.app && redirect && key && !hidden.includes(key)
+      ? redirect
+      : null;
 
-  const hint = o.app
-    ? (serverHint(o.app, status, loaded) ??
-      (routeDismissed || shownRedirect ? null : routeHint(o.frames.layout)))
+  const hint = appCanvasInput.app
+    ? (serverHint(appCanvasInput.app, status, loaded) ??
+      (routeDismissed || shownRedirect
+        ? null
+        : routeHint(appCanvasInput.frames.layout)))
     : null;
 
-  const hide = (value: string) => {
+  const hide = (value: string): void => {
     const next = [...hidden.filter((item) => item !== value), value].slice(
       -MAX_HIDDEN_REDIRECTS
     );
@@ -298,20 +333,24 @@ export function useAppCanvas(o: AppCanvasInput): {
     setHidden(next);
   };
 
-  const dismissRedirect = () => {
+  const dismissRedirect = (): void => {
     if (key) {
       hide(key);
     }
   };
 
-  const signIn = () => {
+  const signIn = (): void => {
     dismissRedirect();
-    o.onSignIn();
+    appCanvasInput.onSignIn();
   };
 
   return {
-    bar: o.app ? (
-      <AppCanvasBar projectId={o.projectId} app={o.app} onAddRoute={addRoute} />
+    bar: appCanvasInput.app ? (
+      <AppCanvasBar
+        projectId={appCanvasInput.projectId}
+        app={appCanvasInput.app}
+        onAddRoute={addRoute}
+      />
     ) : null,
     note: shownRedirect ? (
       <FrameRedirectNote
@@ -324,4 +363,6 @@ export function useAppCanvas(o: AppCanvasInput): {
       <AppStageHint hint={hint} onClose={() => setRouteDismissed(true)} />
     ) : null,
   };
-}
+};
+
+export { useAppCanvas };

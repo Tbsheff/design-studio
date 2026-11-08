@@ -1,4 +1,4 @@
-import { isModZoomKey, zoomKeyOf } from "@design-studio/contracts";
+import { isModZoomKey } from "@design-studio/contracts";
 import type { ZoomKey } from "@design-studio/contracts";
 import {
   useCallback,
@@ -58,29 +58,22 @@ interface View {
   y: number;
 }
 
-function wheelPixels(
+const wheelPixels = (
   e: WheelInput,
   pageHeight: number
-): { dx: number; dy: number } {
+): { dx: number; dy: number } => {
   const unit = e.deltaMode === 1 ? LINE_PX : e.deltaMode === 2 ? pageHeight : 1;
 
   return { dx: e.deltaX * unit, dy: e.deltaY * unit };
-}
+};
 
-function wheelZoomFactor(dy: number): number {
-  return Math.min(
-    ZOOM_STEP,
-    Math.max(1 / ZOOM_STEP, Math.exp(-dy * WHEEL_RATE))
-  );
-}
+const wheelZoomFactor = (dy: number): number =>
+  Math.min(ZOOM_STEP, Math.max(1 / ZOOM_STEP, Math.exp(-dy * WHEEL_RATE)));
 
-function clampZoom(z: number): number {
-  return (
-    Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)) * 10_000) / 10_000
-  );
-}
+const clampZoom = (z: number): number =>
+  Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)) * 10_000) / 10_000;
 
-function fitZoomFor(stage: Stage, bounds: Box): number {
+const fitZoomFor = (stage: Stage, bounds: Box): number => {
   if (stage.w <= 0 || stage.h <= 0 || bounds.width <= 0 || bounds.height <= 0) {
     return 1;
   }
@@ -93,48 +86,43 @@ function fitZoomFor(stage: Stage, bounds: Box): number {
       (stage.h - PAD * 2 - FRAME_LABEL_H) / bounds.height
     )
   );
-}
+};
 
-function fitTop(stage: Stage, height: number): number {
-  return (
-    FRAME_LABEL_H +
-    Math.max(PAD, Math.round((stage.h - FRAME_LABEL_H - height) / 2))
-  );
-}
+const fitTop = (stage: Stage, height: number): number =>
+  FRAME_LABEL_H +
+  Math.max(PAD, Math.round((stage.h - FRAME_LABEL_H - height) / 2));
 
-function numericBase(
+const numericBase = (
   stage: Stage,
   active: Box,
   z: number
-): { x: number; y: number } {
-  return {
-    x: Math.round((stage.w - active.width * z) / 2),
-    y: fitTop(stage, active.height * z),
-  };
-}
+): { x: number; y: number } => ({
+  x: Math.round((stage.w - active.width * z) / 2),
+  y: fitTop(stage, active.height * z),
+});
 
-function fitBase(
+const fitBase = (
   stage: Stage,
   layout: PanZoomLayout,
   z: number
-): { x: number; y: number } {
+): { x: number; y: number } => {
   const { bounds, active } = layout;
 
   return {
     x: Math.round((stage.w - bounds.width * z) / 2) + (active.x - bounds.x) * z,
     y: fitTop(stage, bounds.height * z) + (active.y - bounds.y) * z,
   };
-}
+};
 
 const SCREEN_SIZE_CHROME =
   ".frame-label, .frame-resize, .frame-size-readout, .overlay, .link-layer";
 
-function setZoomVars(el: HTMLElement, zoom: number): void {
+const setZoomVars = (el: HTMLElement, zoom: number): void => {
   el.style.setProperty("--stroke", `${1 / zoom}px`);
   el.style.setProperty("--inv-zoom", String(1 / zoom));
-}
+};
 
-function paintScreenSizeChrome(artboard: HTMLElement, zoom: number): void {
+const paintScreenSizeChrome = (artboard: HTMLElement, zoom: number): void => {
   for (const el of artboard.querySelectorAll<HTMLElement>(SCREEN_SIZE_CHROME)) {
     if (!el.classList.contains("frame-label")) {
       setZoomVars(el, zoom);
@@ -144,7 +132,7 @@ function paintScreenSizeChrome(artboard: HTMLElement, zoom: number): void {
     el.style.transform = `scale(${1 / zoom})`;
     el.style.maxWidth = `calc(var(--frame-w, 100000px) * ${zoom})`;
   }
-}
+};
 
 export function blocksZoomKey(event: KeyboardEvent): boolean {
   if (!isTypingTarget(event.target)) {
@@ -212,7 +200,7 @@ export function usePanZoom({
     ro.observe(el);
     setStage({ h: el.clientHeight, w: el.clientWidth });
 
-    return () => ro.disconnect();
+    return (): void => ro.disconnect();
   }, [stageRef]);
 
   const committedZoom =
@@ -270,7 +258,7 @@ export function usePanZoom({
     });
   }, [paint]);
 
-  useEffect(() => () => cancelAnimationFrame(paintFrame.current), []);
+  useEffect(() => (): void => cancelAnimationFrame(paintFrame.current), []);
 
   const prevActive = useRef<{ id: string; x: number; y: number } | null>(null);
   const { activeId } = layout;
@@ -535,7 +523,7 @@ export function usePanZoom({
     let height = 0;
     let lastAt = 0;
 
-    const onWheel = (e: WheelEvent) => {
+    const onWheel = (e: WheelEvent): void => {
       e.preventDefault();
 
       if (!rect || e.timeStamp - lastAt > WHEEL_IDLE_MS) {
@@ -560,11 +548,11 @@ export function usePanZoom({
 
     el.addEventListener("wheel", onWheel, { passive: false });
 
-    return () => el.removeEventListener("wheel", onWheel);
+    return (): void => el.removeEventListener("wheel", onWheel);
   }, [stageRef, wheelZoomAt, schedulePaint]);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
+    const down = (e: KeyboardEvent): void => {
       if (isTypingTarget(e.target)) {
         return;
       }
@@ -582,7 +570,7 @@ export function usePanZoom({
       }
     };
 
-    const up = (e: KeyboardEvent) => {
+    const up = (e: KeyboardEvent): void => {
       if (e.code === "Space") {
         setSpaceHeld(false);
       }
@@ -592,18 +580,18 @@ export function usePanZoom({
       }
     };
 
-    const blur = () => {
+    const blur = (): void => {
       setSpaceHeld(false);
       setZoomHeld(false);
     };
 
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
+    globalThis.addEventListener("keydown", down);
+    globalThis.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
 
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
+    return (): void => {
+      globalThis.removeEventListener("keydown", down);
+      globalThis.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
   }, []);
@@ -633,7 +621,7 @@ export function usePanZoom({
       let lastX = e.clientX;
       let lastY = e.clientY;
 
-      const move = (ev: PointerEvent) => {
+      const move = (ev: PointerEvent): void => {
         const dx = ev.clientX - lastX;
         const dy = ev.clientY - lastY;
         lastX = ev.clientX;
@@ -647,7 +635,7 @@ export function usePanZoom({
         schedulePaint();
       };
 
-      const end = () => {
+      const end = (): void => {
         setPanning(false);
         rerender();
         target.removeEventListener("pointermove", move as EventListener);

@@ -12,9 +12,7 @@ import { json } from "../../api.js";
 import { IS_MAC } from "../../canvas-hook-slots.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 
-export type { VectorToolId };
-
-export const PREVIEW_TOOL_KEY_EVENT = "studio:preview-tool-key";
+const PREVIEW_TOOL_KEY_EVENT = "studio:preview-tool-key";
 
 interface State {
   tool: VectorToolId | null;
@@ -24,7 +22,7 @@ interface State {
 let state: State = { available: false, tool: null };
 const listeners = new Set<() => void>();
 
-function emit(next: Partial<State>): void {
+const emit = (next: Partial<State>): void => {
   state = { ...state, ...next };
 
   if (!state.available) {
@@ -34,9 +32,9 @@ function emit(next: Partial<State>): void {
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
-export const vectorTool = {
+const vectorTool = {
   get: () => state,
   set: (tool: VectorToolId | null) =>
     emit({ tool: state.available ? tool : null }),
@@ -45,22 +43,17 @@ export const vectorTool = {
       emit({ available });
     }
   },
-  subscribe(listener: () => void) {
+  subscribe(listener: () => void): () => boolean {
     listeners.add(listener);
 
-    return () => listeners.delete(listener);
+    return (): boolean => listeners.delete(listener);
   },
   toggle: (tool: VectorToolId) =>
     emit({ tool: state.available && state.tool !== tool ? tool : null }),
 };
 
-export function useVectorTool(): State {
-  return useSyncExternalStore(
-    vectorTool.subscribe,
-    vectorTool.get,
-    vectorTool.get
-  );
-}
+const useVectorTool = (): State =>
+  useSyncExternalStore(vectorTool.subscribe, vectorTool.get, vectorTool.get);
 
 const VECTOR_TOOL_LIST: {
   id: VectorToolId;
@@ -89,16 +82,16 @@ const VECTOR_TOOL_LIST: {
   },
 ];
 
-export const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({
+const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({
   ...item,
   keyLabel: shortcutLabel(item.keyId, IS_MAC),
 }));
 
-export function useVectorToolKeys(available: boolean): void {
+const useVectorToolKeys = (available: boolean): void => {
   useEffect(() => vectorTool.setAvailable(available), [available]);
-  useEffect(() => () => vectorTool.setAvailable(false), []);
+  useEffect(() => (): void => vectorTool.setAvailable(false), []);
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         event.defaultPrevented ||
         isTypingTarget(event.target) ||
@@ -117,7 +110,7 @@ export function useVectorToolKeys(available: boolean): void {
       vectorTool.toggle(tool);
     };
 
-    const onForwarded = (event: Event) => {
+    const onForwarded = (event: Event): void => {
       const tool = (event as CustomEvent<{ tool?: VectorToolId }>).detail?.tool;
 
       if (
@@ -129,21 +122,21 @@ export function useVectorToolKeys(available: boolean): void {
       }
     };
 
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
 
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
+    return (): void => {
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
     };
   }, []);
-}
+};
 
-export function useVectorToolGuards(
+const useVectorToolGuards = (
   tool: VectorToolId | null,
   otherOn: boolean,
   stopOthers: () => void
-): void {
+): void => {
   const stop = useRef(stopOthers);
   stop.current = stopOthers;
   useEffect(() => {
@@ -156,16 +149,27 @@ export function useVectorToolGuards(
       vectorTool.set(null);
     }
   }, [otherOn]);
-}
+};
 
-export function runVector(
+const runVector = (
   projectId: string,
   directionId: string,
   request: VectorRequest
-): Promise<VectorResult> {
-  return json<VectorResult>(
+): Promise<VectorResult> =>
+  json<VectorResult>(
     "POST",
     `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/vector`,
     request
   );
-}
+
+export {
+  PREVIEW_TOOL_KEY_EVENT,
+  VECTOR_TOOLS,
+  runVector,
+  useVectorTool,
+  useVectorToolGuards,
+  useVectorToolKeys,
+  vectorTool,
+};
+
+export type { VectorToolId };

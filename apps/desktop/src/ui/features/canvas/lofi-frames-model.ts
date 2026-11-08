@@ -9,45 +9,54 @@ import { readBlob } from "../../platform/http.js";
 
 let cssLoad: Promise<string> | null = null;
 
-function toBase64(bytes: Uint8Array): string {
+const toBase64 = (bytes: Uint8Array): string => {
   let text = "";
   const step = 0x80_00;
 
-  for (let i = 0; i < bytes.length; i += step) {
-    text += String.fromCharCode(...bytes.subarray(i, i + step));
+  for (let index = 0; index < bytes.length; index += step) {
+    text += String.fromCharCode(...bytes.subarray(index, index + step));
   }
 
   return btoa(text);
-}
+};
 
-function loadLofiCss(): Promise<string> {
-  cssLoad ??= readBlob(
-    new URL("../../assets/fonts/kalam-latin-400-normal.woff2", import.meta.url)
-      .href
-  )
-    .then((blob) => blob.arrayBuffer())
-    .then((buffer) =>
-      lofiCss(`data:font/woff2;base64,${toBase64(new Uint8Array(buffer))}`)
-    )
-    .catch((error: unknown) => {
-      cssLoad = null;
-      console.error("[lofi] font load failed", error);
+const fetchLofiCss = async (): Promise<string> => {
+  try {
+    const blob = await readBlob(
+      new URL(
+        "../../assets/fonts/kalam-latin-400-normal.woff2",
+        import.meta.url
+      ).href
+    );
 
-      return lofiCss("data:font/woff2;base64,");
-    });
+    const buffer = await blob.arrayBuffer();
+
+    return lofiCss(
+      `data:font/woff2;base64,${toBase64(new Uint8Array(buffer))}`
+    );
+  } catch (error: unknown) {
+    cssLoad = null;
+    console.error("[lofi] font load failed", error);
+
+    return lofiCss("data:font/woff2;base64,");
+  }
+};
+
+const loadLofiCss = (): Promise<string> => {
+  cssLoad ??= fetchLofiCss();
 
   return cssLoad;
-}
+};
 
 interface LofiFrame extends BridgeFrame {
   directionId: string | null;
 }
 
-function stageFrames(
+const stageFrames = (
   stage: HTMLElement | null,
   kind: ProjectKind,
   currentId: string | null
-): LofiFrame[] {
+): LofiFrame[] => {
   if (!stage) {
     return [];
   }
@@ -76,30 +85,30 @@ function stageFrames(
   }
 
   return out;
-}
+};
 
-export function useLofiFrames(
+const useLofiFrames = (
   stageRef: RefObject<HTMLElement | null>,
   kind: ProjectKind,
   currentId: string | null,
   lofi: readonly string[]
-): void {
+): void => {
   const sent = useRef(new WeakMap<HTMLIFrameElement, boolean>());
   const latest = useRef({ currentId, kind, lofi });
   latest.current = { currentId, kind, lofi };
 
-  const frames = () =>
+  const frames = (): LofiFrame[] =>
     stageFrames(
       stageRef.current,
       latest.current.kind,
       latest.current.currentId
     );
 
-  const wants = (frame: LofiFrame) =>
+  const wants = (frame: LofiFrame): boolean =>
     frame.directionId !== null &&
     latest.current.lofi.includes(frame.directionId);
 
-  const sync = (frame: LofiFrame, force: boolean) => {
+  const sync = (frame: LofiFrame, force: boolean): void => {
     const { element } = frame;
 
     if (!element) {
@@ -120,11 +129,15 @@ export function useLofiFrames(
       return;
     }
 
-    void loadLofiCss().then((css) => {
+    const sendCss = async (): Promise<void> => {
+      const css = await loadLofiCss();
+
       if (sent.current.get(element) === true && wants(frame)) {
         postToFrame(frame, { css, type: "lofi-preview" });
       }
-    });
+    };
+
+    void sendCss();
   };
 
   useBridge(frames, (frame: BridgeFrame, message: BridgeToParent) => {
@@ -150,4 +163,6 @@ export function useLofiFrames(
       void loadLofiCss();
     }
   }, [key]);
-}
+};
+
+export { useLofiFrames };

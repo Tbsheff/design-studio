@@ -9,30 +9,35 @@ import { isTypingTarget } from "./use-pan-zoom.js";
 import { PREVIEW_LAYOUT_KEY_EVENT } from "./use-preview-frames.js";
 import type { usePreviewFrames } from "./use-preview-frames.js";
 
-function useSelectKey(
-  setSelectMode: (update: (m: boolean) => boolean) => void,
+const useSelectKey = (
+  setSelectMode: (update: (match: boolean) => boolean) => void,
   onEscape: () => void,
   clearSelection: () => boolean
-) {
+): void => {
   const latest = useRef(clearSelection);
   latest.current = clearSelection;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) {
+    const onKey = (event: KeyboardEvent): void => {
+      if (
+        isTypingTarget(event.target) ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
         return;
       }
 
-      if (e.key === "v" || e.key === "V") {
-        e.preventDefault();
-        setSelectMode((m) => !m);
-      } else if (e.key === "Escape") {
+      if (event.key === "v" || event.key === "V") {
+        event.preventDefault();
+        setSelectMode((matchValue) => !matchValue);
+      } else if (event.key === "Escape") {
         if (
-          !e.defaultPrevented &&
-          !e.repeat &&
+          !event.defaultPrevented &&
+          !event.repeat &&
           canvasHasKeys() &&
           latest.current()
         ) {
-          return e.preventDefault();
+          return event.preventDefault();
         }
 
         setSelectMode(() => false);
@@ -40,11 +45,11 @@ function useSelectKey(
       }
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
 const FIRST_SELECT_KEYS = new Set([
   "ArrowDown",
@@ -53,43 +58,49 @@ const FIRST_SELECT_KEYS = new Set([
   "ArrowLeft",
 ]);
 
-function firstSelectKey(e: KeyboardEvent): boolean {
-  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) {
+const firstSelectKey = (eventValue: KeyboardEvent): boolean => {
+  if (
+    eventValue.repeat ||
+    eventValue.metaKey ||
+    eventValue.ctrlKey ||
+    eventValue.altKey
+  ) {
     return false;
   }
 
   return (
-    selectMoveOf(e) !== null || (!e.shiftKey && FIRST_SELECT_KEYS.has(e.key))
+    selectMoveOf(eventValue) !== null ||
+    (!eventValue.shiftKey && FIRST_SELECT_KEYS.has(eventValue.key))
   );
-}
+};
 
-function useFirstSelectKeys(
+const useFirstSelectKeys = (
   stage: () => HTMLElement | null,
-  o: {
+  options: {
     on: boolean;
     empty: boolean;
     picking: boolean;
     selectFirst: () => void;
     startPicking: () => void;
   }
-) {
-  const latest = useRef(o);
-  latest.current = o;
+): void => {
+  const latest = useRef(options);
+  latest.current = options;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (event3: KeyboardEvent): void => {
       const cur = latest.current;
 
       if (
         !cur.on ||
         !cur.empty ||
-        e.defaultPrevented ||
+        event3.defaultPrevented ||
         document.activeElement !== stage() ||
-        !firstSelectKey(e)
+        !firstSelectKey(event3)
       ) {
         return;
       }
 
-      e.preventDefault();
+      event3.preventDefault();
 
       if (!cur.picking) {
         cur.startPicking();
@@ -98,15 +109,15 @@ function useFirstSelectKeys(
       cur.selectFirst();
     };
 
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [stage]);
-}
+};
 
 const LAYOUT_WAIT_MS = 1500;
 
-function layoutSectionShown(): boolean {
+const layoutSectionShown = (): boolean => {
   const section = document.querySelector(".ins-layout");
 
   return Boolean(
@@ -114,40 +125,37 @@ function layoutSectionShown(): boolean {
     !section.closest("[inert]") &&
     section.getClientRects().length > 0
   );
-}
+};
 
-function isAddLayoutKey(e: KeyboardEvent): boolean {
-  return (
-    e.code === "KeyA" &&
-    e.shiftKey &&
-    !e.metaKey &&
-    !e.ctrlKey &&
-    !e.altKey &&
-    !e.repeat
-  );
-}
+const isAddLayoutKey = (event4: KeyboardEvent): boolean =>
+  event4.code === "KeyA" &&
+  event4.shiftKey &&
+  !event4.metaKey &&
+  !event4.ctrlKey &&
+  !event4.altKey &&
+  !event4.repeat;
 
-function forwardLayoutKeyWhenShown(): void {
+const forwardLayoutKeyWhenShown = (): void => {
   const until = performance.now() + LAYOUT_WAIT_MS;
 
-  const wait = () => {
+  const wait = (): void => {
     if (layoutSectionShown()) {
-      window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
+      globalThis.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
     } else if (performance.now() < until) {
-      window.requestAnimationFrame(wait);
+      globalThis.requestAnimationFrame(wait);
     }
   };
 
   wait();
-}
+};
 
-function useLayoutKeyFallback(o: {
+const useLayoutKeyFallback = (optionsValue: {
   on: boolean;
   hasSelection: boolean;
   openEdit: (() => void | Promise<boolean>) | null;
-}) {
-  const latest = useRef(o);
-  latest.current = o;
+}): void => {
+  const latest = useRef(optionsValue);
+  latest.current = optionsValue;
   useEffect(() => {
     const run = (): boolean => {
       const { on, hasSelection, openEdit } = latest.current;
@@ -156,42 +164,46 @@ function useLayoutKeyFallback(o: {
         return false;
       }
 
-      void Promise.resolve(openEdit()).then((moved) => {
+      const forwardWhenOpened = async (): Promise<void> => {
+        const moved = await openEdit();
+
         if (moved !== false) {
           forwardLayoutKeyWhenShown();
         }
-      });
+      };
+
+      void forwardWhenOpened();
 
       return true;
     };
 
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (event5: KeyboardEvent): void => {
       if (
-        isAddLayoutKey(e) &&
-        !isTypingTarget(e.target) &&
+        isAddLayoutKey(event5) &&
+        !isTypingTarget(event5.target) &&
         canvasHasKeys() &&
         run()
       ) {
-        e.preventDefault();
+        event5.preventDefault();
       }
     };
 
-    const onForwarded = () => void run();
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+    const onForwarded = (): undefined => void run();
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
 
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+    return (): void => {
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
     };
   }, []);
-}
+};
 
 interface StageKeys {
   stage: () => HTMLElement | null;
   selection: SelectionContext[];
   setSelection: Props["setSelection"];
-  setSelectMode: (update: (m: boolean) => boolean) => void;
+  setSelectMode: (update: (match3: boolean) => boolean) => void;
   offProto: () => void;
   post: ReturnType<typeof usePreviewFrames>["post"];
   shell: CanvasShell | undefined;
@@ -203,17 +215,16 @@ interface StageKeys {
   protoOn: boolean;
 }
 
-function editOpener(
+const editOpener = (
   shell: CanvasShell | undefined
-): (() => void | Promise<boolean>) | null {
-  return shell && shell.pane !== "design" ? () => shell.onPane("design") : null;
-}
+): (() => void | Promise<boolean>) | null =>
+  shell && shell.pane !== "design" ? () => shell.onPane("design") : null;
 
-function useStageKeys(o: StageKeys) {
-  const selection = useRef(o.selection);
-  selection.current = o.selection;
-  const { setSelection } = o;
-  useSelectKey(o.setSelectMode, o.offProto, () => {
+const useStageKeys = (stageKeys: StageKeys): void => {
+  const selection = useRef(stageKeys.selection);
+  selection.current = stageKeys.selection;
+  const { setSelection } = stageKeys;
+  useSelectKey(stageKeys.setSelectMode, stageKeys.offProto, () => {
     if (selection.current.length === 0) {
       return false;
     }
@@ -223,21 +234,24 @@ function useStageKeys(o: StageKeys) {
     return true;
   });
   useLayoutKeyFallback({
-    hasSelection: o.selection.length > 0,
-    on: o.live && !o.running && o.directionId !== null,
-    openEdit: editOpener(o.shell),
+    hasSelection: stageKeys.selection.length > 0,
+    on: stageKeys.live && !stageKeys.running && stageKeys.directionId !== null,
+    openEdit: editOpener(stageKeys.shell),
   });
-  useFirstSelectKeys(o.stage, {
-    empty: o.selection.length === 0,
-    on: o.live && !o.commentMode && !o.protoOn,
-    picking: o.picking,
+  useFirstSelectKeys(stageKeys.stage, {
+    empty: stageKeys.selection.length === 0,
+    on: stageKeys.live && !stageKeys.commentMode && !stageKeys.protoOn,
+    picking: stageKeys.picking,
     selectFirst: () =>
-      o.post({ type: "select-relative", selector: "", move: "child" }),
-    startPicking: () => o.setSelectMode(() => true),
+      stageKeys.post({ move: "child", selector: "", type: "select-relative" }),
+    startPicking: () => stageKeys.setSelectMode(() => true),
   });
-}
+};
 
-function useFrameChange(key: string, onChange: (() => void) | undefined) {
+const useFrameChange = (
+  key: string,
+  onChange: (() => void) | undefined
+): void => {
   const last = useRef(key);
   const latest = useRef(onChange);
   latest.current = onChange;
@@ -249,6 +263,6 @@ function useFrameChange(key: string, onChange: (() => void) | undefined) {
     last.current = key;
     latest.current?.();
   }, [key]);
-}
+};
 
 export { useFrameChange, useStageKeys };

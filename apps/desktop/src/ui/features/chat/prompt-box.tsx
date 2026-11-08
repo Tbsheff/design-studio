@@ -141,7 +141,7 @@ interface Props {
   waitReason?: string | null;
 }
 
-function useMorph(key: string): boolean {
+const useMorph = (key: string): boolean => {
   const last = useRef<string | null>(null);
   const morphed = useRef(false);
 
@@ -151,23 +151,20 @@ function useMorph(key: string): boolean {
   }
 
   return morphed.current;
-}
+};
 
 const QUEUE_TIP = `Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (${MOD_LABEL}.)`;
 const STOP_KEYS = IS_MAC ? "Meta+." : "Control+.";
 
-function isPlainEscape(event: KeyboardEvent<HTMLDivElement>): boolean {
-  return (
-    event.key === "Escape" &&
-    !event.nativeEvent.isComposing &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.altKey &&
-    !event.shiftKey
-  );
-}
+const isPlainEscape = (event: KeyboardEvent<HTMLDivElement>): boolean =>
+  event.key === "Escape" &&
+  !event.nativeEvent.isComposing &&
+  !event.metaKey &&
+  !event.ctrlKey &&
+  !event.altKey &&
+  !event.shiftKey;
 
-function leaveComposer(input: HTMLElement): void {
+const leaveComposer = (input: HTMLElement): void => {
   const stage = document.querySelector<HTMLElement>(".stage");
 
   if (stage) {
@@ -175,9 +172,9 @@ function leaveComposer(input: HTMLElement): void {
   } else {
     input.blur();
   }
-}
+};
 
-function sendView(props: SendProps): SendView {
+const sendView = (props: SendProps): SendView => {
   if (props.running && !props.hasDraft) {
     return {
       busy: false,
@@ -206,9 +203,9 @@ function sendView(props: SendProps): SendView {
     state: "send",
     tip: props.tip,
   };
-}
+};
 
-function SendButton(props: SendProps): ReactElement {
+const SendButton = (props: SendProps): ReactElement => {
   const view = sendView(props);
   let key: "busy" | SendState = "busy";
 
@@ -243,15 +240,15 @@ function SendButton(props: SendProps): ReactElement {
       </span>
     </button>
   );
-}
+};
 
-function ReasonText({
+const ReasonText = ({
   id,
   text,
 }: {
   id: string;
   text: string | null;
-}): ReactElement | null {
+}): ReactElement | null => {
   if (!text) {
     return null;
   }
@@ -261,9 +258,9 @@ function ReasonText({
       {text}
     </span>
   );
-}
+};
 
-function StateChip({
+const StateChip = ({
   label,
   short,
   tip,
@@ -273,68 +270,62 @@ function StateChip({
   short: ReactNode;
   tip: string;
   onClear: () => void;
-}): ReactElement {
-  return (
-    <span
-      className="ui-chip composer-state"
-      data-tip={tip}
-      data-tip-side="top"
-      data-tip-align="start"
-    >
-      <span className="composer-state-short" aria-hidden="true">
-        {short}
-      </span>
-      <span className="composer-state-label">{label}</span>
-      <button
-        type="button"
-        className="icon-btn chip-x"
-        aria-label={`Clear ${label}`}
-        onClick={onClear}
-      >
-        <Icon name="close" size={12} />
-      </button>
+}): ReactElement => (
+  <span
+    className="ui-chip composer-state"
+    data-tip={tip}
+    data-tip-side="top"
+    data-tip-align="start"
+  >
+    <span className="composer-state-short" aria-hidden="true">
+      {short}
     </span>
-  );
-}
+    <span className="composer-state-label">{label}</span>
+    <button
+      type="button"
+      className="icon-btn chip-x"
+      aria-label={`Clear ${label}`}
+      onClick={onClear}
+    >
+      <Icon name="close" size={12} />
+    </button>
+  </span>
+);
 
-function modeGroup(
+const modeGroup = (
   mode: ComposerMode,
   onMode: (mode: ComposerMode) => void
-): SlashGroup {
-  return {
-    choices: MODES.map((item) => ({
-      checked: item === mode,
-      hint: MODE_SHORT_HINT[item],
-      icon: MODE_ICON[item],
-      id: item,
-      label: MODE_LABEL[item],
-      pick: () => onMode(item),
-    })),
-    icon: "chat",
-    id: "mode",
-    label: "Mode",
-    value: MODE_LABEL[mode],
-  };
-}
+): SlashGroup => ({
+  choices: MODES.map((item) => ({
+    checked: item === mode,
+    hint: MODE_SHORT_HINT[item],
+    icon: MODE_ICON[item],
+    id: item,
+    label: MODE_LABEL[item],
+    pick: () => onMode(item),
+  })),
+  icon: "chat",
+  id: "mode",
+  label: "Mode",
+  value: MODE_LABEL[mode],
+});
 
 const SLASH_HIDDEN = /^composer\.(?:mode|level)-/;
 
 const RUNNING_PLACEHOLDER = `Queue a note (↵) or send it now (${MOD_LABEL}↵)`;
 
-function sendReady(state: {
+const sendReady = (state: {
   running: boolean;
   blocked: boolean;
   busy: boolean;
   empty: boolean;
-}): boolean {
-  return !state.running && !state.blocked && !state.busy && !state.empty;
-}
+}): boolean => !state.running && !state.blocked && !state.busy && !state.empty;
 
-function inputPlaceholder(
+const inputPlaceholder = (
   mode: ComposerMode,
   running: boolean,
   waitReason: string | null | undefined
-): string {
+): string => {
   if (waitReason) {
     return waitReason;
   }
@@ -344,15 +335,15 @@ function inputPlaceholder(
   }
 
   return `${INPUT_COPY[mode].placeholder} (${MOD_LABEL}↵ to send)`;
-}
+};
 
-function sendStatus(state: {
+const sendStatus = (state: {
   running: boolean;
   waitReason: string | null | undefined;
   loading: boolean;
   uploading: boolean;
   empty: boolean;
-}): SendStatus {
+}): SendStatus => {
   let blocker: string | null = null;
 
   if (!state.running) {
@@ -363,14 +354,14 @@ function sendStatus(state: {
     spoken: blocker === EMPTY_REASON ? null : blocker,
     tip: blocker ?? `Send (${MOD_LABEL}↵)`,
   };
-}
+};
 
-function sendBlocker(state: {
+const sendBlocker = (state: {
   waitReason: string | null | undefined;
   loading: boolean;
   uploading: boolean;
   empty: boolean;
-}): string | null {
+}): string | null => {
   if (state.waitReason) {
     return state.waitReason;
   }
@@ -388,20 +379,20 @@ function sendBlocker(state: {
   }
 
   return null;
-}
+};
 
-function sendErrorText(err: unknown): string {
+const sendErrorText = (err: unknown): string => {
   if (err instanceof TypeError) {
     return "Could not reach the studio. Your message is still here. Check that the studio runs, then send again.";
   }
 
   return errorText(err);
-}
+};
 
-function designsBlocker(
+const designsBlocker = (
   mode: ComposerMode,
   selectionCount: number
-): string | null {
+): string | null => {
   if (mode === "critique") {
     return "Critique makes one review.";
   }
@@ -415,9 +406,9 @@ function designsBlocker(
   }
 
   return null;
-}
+};
 
-function PromptBox(props: Props): ReactElement {
+const PromptBox = (props: Props): ReactElement => {
   const [mode, setMode] = useState<ComposerMode>("edit");
   const [effort, setEffort] = useState<RunEffort | null>(null);
   const [files, setFiles] = useState<PendingAttachment[]>([]);
@@ -991,6 +982,6 @@ function PromptBox(props: Props): ReactElement {
       />
     </div>
   );
-}
+};
 
 export { PromptBox };

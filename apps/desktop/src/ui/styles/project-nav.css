@@ -133,14 +133,9 @@
 }
 
 .prail-head {
+  align-self: stretch;
   gap: var(--s-2);
   padding: 0 var(--s-2) 0 var(--s-3);
-}
-
-.prail[data-state="mini"] .prail-head {
-  width: 100%;
-  justify-content: center;
-  padding: 0;
 }
 
 .prail-title {

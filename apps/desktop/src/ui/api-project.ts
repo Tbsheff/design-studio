@@ -71,8 +71,13 @@ const projectApi = {
 
     return { project: toProject(created.project), runId: created.runId };
   },
-  duplicateProject: (pid: string): Promise<{ project: Project }> =>
-    json<{ project: Project }>("POST", `${toProjectPath(pid)}/duplicate`),
+  duplicateProject: async (pid: string): Promise<{ project: Project }> => {
+    const duplicated = await call(projectsRoutes.duplicateProject, {
+      projectId: pid,
+    });
+
+    return { project: toProject(duplicated.project) };
+  },
   getProject: async (pid: string): Promise<Project> =>
     toProject(await call(projectsRoutes.getProject, { projectId: pid })),
   hiddenProjects: (): Promise<{ count: number; target: string }> =>
@@ -156,7 +161,7 @@ const projectApi = {
     return res.blob();
   },
   trashProject: (pid: string): Promise<TrashedProject> =>
-    json<TrashedProject>("DELETE", toProjectPath(pid)),
+    call(projectsRoutes.deleteProject, { projectId: pid }),
   updateSettings: async (
     pid: string,
     settings: Partial<ProjectSettings>

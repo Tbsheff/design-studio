@@ -103,6 +103,10 @@ const createDraftPack = defineAction({
     improve: Schema.optionalKey(Schema.Boolean),
     mode: Schema.optionalKey(ModeFieldSchema),
     name: Schema.optionalKey(NameFieldSchema),
+    shouldCreateNew: Schema.optionalKey(Schema.Boolean).annotate({
+      description:
+        "Make a new design system even when one exists for the same code folder. Leave out to reuse the existing one.",
+    }),
     tokensFile: Schema.optionalKey(TokensFieldSchema),
     tokensUpload: Schema.optionalKey(TokensUploadSchema),
     urls: Schema.optionalKey(UrlsFieldSchema),

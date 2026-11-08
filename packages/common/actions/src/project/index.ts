@@ -2,6 +2,8 @@
 import { createAttachmentProject } from "./create-attachment.js";
 import { createProject } from "./create.js";
 import { deleteCommandRuleProject } from "./delete-command-rule.js";
+import { deleteProject } from "./delete.js";
+import { duplicateProject } from "./duplicate.js";
 import { getDesignMdProject } from "./get-design-md.js";
 import { getFileProject } from "./get-file.js";
 import { getHiddenProject } from "./get-hidden.js";
@@ -18,6 +20,8 @@ const ProjectActions = {
   createAttachmentProject,
   createProject,
   deleteCommandRuleProject,
+  deleteProject,
+  duplicateProject,
   getDesignMdProject,
   getFileProject,
   getHiddenProject,

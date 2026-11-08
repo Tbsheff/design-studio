@@ -33,6 +33,12 @@ const headerProps = (
     onCollapse: (): void => uiStore.set({ paneCollapsed: true }),
     onDesignMd: (): void => ui.setDesignOpen(true),
     onDismissError: (): void => ui.setActionError(null),
+    onDuplicate: (): void => {
+      void ui.act(async (): Promise<void> => {
+        await api.duplicateProject(projectId);
+        onExit();
+      });
+    },
     onExit: core.guard(onExit),
     onRename: (name: string): Promise<void> =>
       ui.act(async (): Promise<void> =>
@@ -40,6 +46,12 @@ const headerProps = (
       ),
     onSettings: (): void => ui.setSettingsOpen(true),
     onTab: panes.showPane,
+    onTrash: (): void => {
+      void ui.act(async (): Promise<void> => {
+        await api.trashProject(projectId);
+        onExit();
+      });
+    },
     tab: panes.panel.tab,
   };
 };

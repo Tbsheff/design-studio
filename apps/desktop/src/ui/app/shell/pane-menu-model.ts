@@ -61,6 +61,8 @@ const toProjectItems = (
 ): MenuItem[] => [
   toItem("rename", "pencil", "Rename", onStartRename),
   toItem("settings", "settings", "Project settings", header.onSettings),
+  toItem("duplicate", "copy", "Duplicate", header.onDuplicate),
+  toItem("trash", "trash", "Move to trash", header.onTrash),
 ];
 
 const toNavItems = (header: StudioPaneHeaderProps): MenuItem[] => [

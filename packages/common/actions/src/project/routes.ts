@@ -18,6 +18,18 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/command-rules/remove",
   },
+  deleteProject: {
+    id: "project.delete",
+    invalidates: ["project.list", "project.search"],
+    method: "DELETE",
+    path: "/api/projects/:projectId",
+  },
+  duplicateProject: {
+    id: "project.duplicate",
+    invalidates: ["project.list", "project.search"],
+    method: "POST",
+    path: "/api/projects/:projectId/duplicate",
+  },
   getDesignMdProject: {
     id: "project.getDesignMd",
     invalidates: [],

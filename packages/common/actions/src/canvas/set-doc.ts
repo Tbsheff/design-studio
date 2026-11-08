@@ -9,7 +9,7 @@ import { BaseHashSchema, CanvasDocSchema, WriterIdSchema } from "./schema.js";
 
 const setDocCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "stream" },
   confirm: "none",
   description:
     "Write the canvas document of a project. Pass baseHash from getDoc to refuse a write over a newer canvas. Set migrate to mark a layout migration.",
@@ -26,7 +26,7 @@ const setDocCanvas = defineAction({
     writer: Schema.optionalKey(WriterIdSchema),
   }),
   invalidates: ["canvas.getDoc"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { off: "stream" },
   needs: "project.update",
   output: CanvasDocSchema,
   scope: "project",

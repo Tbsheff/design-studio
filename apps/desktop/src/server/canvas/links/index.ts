@@ -19,11 +19,6 @@ export {
   setLinkInteraction,
 } from "./link-interaction.js";
 
-export {
-  editLinks,
-  editLinksFields,
-  listLinks,
-  probeWithPreview,
-} from "./link-tools.js";
+export { editLinks, listLinks, probeWithPreview } from "./link-tools.js";
 
 export type { EditLinksArgs, LinkProbe } from "./link-tools.js";

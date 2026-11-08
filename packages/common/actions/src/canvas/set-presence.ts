@@ -9,7 +9,7 @@ import { CanvasPresenceSavedSchema, PresenceFields } from "./schema.js";
 
 const setPresenceCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "stream" },
   confirm: "none",
   description:
     "Tell the studio which frame and elements the user has open on the canvas. The agent reads this as the user's current view. It is not saved to disk.",
@@ -23,7 +23,7 @@ const setPresenceCanvas = defineAction({
     }),
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { off: "stream" },
   needs: "project.update",
   output: CanvasPresenceSavedSchema,
   scope: "project",

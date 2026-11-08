@@ -9,15 +9,8 @@ import {
   cleanLinkSelector,
   cleanLinkText,
   isBackTarget,
-  LINK_ACTIONS,
-  LINK_DURATION_DEFAULT,
-  LINK_DURATION_MAX,
-  LINK_DURATION_MIN,
-  LINK_EASINGS,
   LINK_ISSUE_TEXT,
-  LINK_SELECTOR_MAX,
   LINK_TEXT_MAX,
-  LINK_TRANSITIONS,
   ACTION_LABELS,
   linkAction,
   sourceName,
@@ -28,6 +21,9 @@ import {
   upsertLink,
 } from "@design-studio/contracts/links";
 import type {
+  LINK_ACTIONS,
+  LINK_EASINGS,
+  LINK_TRANSITIONS,
   LinkIssue,
   LinkMotion,
   LinkQuery,
@@ -41,11 +37,10 @@ import type {
   PreviewService,
 } from "../../../shared/server-ports.js";
 import { frameStatesView } from "../../app/frame-state.js";
-import { z } from "../../platform/zod-bridge/index.js";
 import { waitForPage } from "../../preview/page-capture/index.js";
 import { withPagePath } from "../../project-source/index.js";
 import type { FrameStateDeps } from "../app-flow/frame-state-service.js";
-import { findFrame, frameRef } from "../tools.js";
+import { findFrame } from "../tools.js";
 import type { CanvasToolContext, ToolText } from "../tools.js";
 import { clickProbeScript } from "./click-probe.js";
 import { implicitLinks, keepImplicit } from "./implicit-links.js";
@@ -58,51 +53,15 @@ import type {
 
 export const BACK_REF = "back";
 
-export const linkSpecSchema = z
-  .object({
-    action: z
-      .enum(LINK_ACTIONS)
-      .optional()
-      .describe(
-        'navigate (default) replaces the frame; modal opens toFrame centred over the current frame; drawer opens it from the right edge. A backdrop click or Esc closes an overlay, and a "back" link inside it closes it too. Make modal and drawer frames the size of the dialog or panel, not a full page.'
-      ),
-    duration: z
-      .number()
-      .int()
-      .min(LINK_DURATION_MIN)
-      .max(LINK_DURATION_MAX)
-      .optional()
-      .describe(`Transition length in ms. Default ${LINK_DURATION_DEFAULT}.`),
-    easing: z
-      .enum(LINK_EASINGS)
-      .optional()
-      .describe(
-        "ease-out (default), ease-in, ease-in-out, linear or spring (small overshoot)."
-      ),
-    fromFrame: frameRef.describe(
-      "Frame id or @label of the frame that has the element."
-    ),
-    selector: z
-      .string()
-      .trim()
-      .min(1)
-      .max(LINK_SELECTOR_MAX)
-      .describe(
-        'CSS selector of the element to click, for example "#sign-in" or "button.primary".'
-      ),
-    toFrame: frameRef.describe(
-      'Frame id or @label to go to on click, or "back" to go back to the frame before.'
-    ),
-    transition: z
-      .enum(LINK_TRANSITIONS)
-      .optional()
-      .describe(
-        "instant (default), dissolve, slide-left, slide-right (both frames move sideways), push-up, push-down, move-in (the new frame moves up over the old one), move-out (the old frame moves down off the new one), or smart-animate (layers with the same id, or the same tag and text, move from their old place to the new one; the rest fade in). Use smart-animate between two states of one screen."
-      ),
-  })
-  .strict();
-
-export type LinkSpec = z.output<typeof linkSpecSchema>;
+export interface LinkSpec {
+  readonly action?: (typeof LINK_ACTIONS)[number];
+  readonly duration?: number;
+  readonly easing?: (typeof LINK_EASINGS)[number];
+  readonly fromFrame: string;
+  readonly selector: string;
+  readonly toFrame: string;
+  readonly transition?: (typeof LINK_TRANSITIONS)[number];
+}
 
 export interface ProbedElement {
   tag: string;
@@ -739,34 +698,11 @@ export function frameLabel(frame: CanvasFileFrame): string {
   return frame.label ?? frame.path ?? frame.id;
 }
 
-export const editLinksFields = {
-  add: z
-    .array(linkSpecSchema)
-    .max(20)
-    .optional()
-    .describe("Links to add (or replace, for the same element)."),
-  keep: z
-    .array(z.string().regex(/^(i[0-9a-z]{1,12}|all)$/))
-    .max(50)
-    .optional()
-    .describe(
-      'Ids of implicit links (implicit: true in list_links, from <a href> between pages) to save as normal links, or ["all"]. Then add the same selector again to change its action or transition.'
-    ),
-  remove: z
-    .array(z.string().regex(/^l\d{1,5}$/))
-    .max(50)
-    .optional()
-    .describe("Link ids from list_links to remove."),
-  startFrame: frameRef
-    .optional()
-    .describe("Frame id or @label where Play starts."),
-};
-
 export interface EditLinksArgs {
-  add?: LinkSpec[];
-  remove?: string[];
-  startFrame?: string;
-  keep?: string[];
+  readonly add?: readonly LinkSpec[];
+  readonly keep?: readonly string[];
+  readonly remove?: readonly string[];
+  readonly startFrame?: string;
 }
 
 function firstText(result: ToolText): string {
@@ -775,7 +711,7 @@ function firstText(result: ToolText): string {
 
 async function keepStep(
   ctx: CanvasToolContext,
-  keep: string[] | undefined,
+  keep: readonly string[] | undefined,
   probe?: LinkProbe
 ): Promise<{ failed: boolean; line: string } | null> {
   if (!keep || keep.length === 0) {

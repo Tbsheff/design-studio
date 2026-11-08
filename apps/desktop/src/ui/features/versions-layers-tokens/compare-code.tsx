@@ -10,9 +10,6 @@ import { FileSection } from "./file-section.js";
 import { useChanges } from "./use-changes.js";
 import { useHunkReview } from "./use-hunk-review.js";
 
-import "../../styles/compare-code.css";
-import "../../styles/compare-hunk.css";
-
 interface CompareCodeProps {
   readonly newer: Version;
   readonly older: Version;

@@ -2,8 +2,6 @@ import { useCallback, useLayoutEffect } from "react";
 import type { MutableRefObject, ReactElement } from "react";
 
 import { copy } from "./copy.js";
-
-import "../../styles/ship.css";
 import { shipApi } from "./ship-api.js";
 import { ShipTemplateForm } from "./ship-template-form.js";
 import { useShipSettings } from "./use-ship-settings.js";

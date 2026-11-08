@@ -23,8 +23,6 @@ import type {
 } from "react";
 
 import { ApiError, json } from "../../api.js";
-
-import "../../styles/figma-import.css";
 import { copy } from "./copy.js";
 import { pick } from "./pick.js";
 

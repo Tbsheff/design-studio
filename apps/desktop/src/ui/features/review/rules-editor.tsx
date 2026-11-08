@@ -3,8 +3,6 @@ import { useCallback } from "react";
 
 import { canvasStore } from "../canvas/canvas-frames-model.js";
 import { activeFrame } from "../canvas/index.js";
-
-import "../../styles/rules.css";
 import { copy } from "./copy.js";
 import { RulesEditorActions } from "./rules-editor-actions.js";
 import { RulesEditorHead } from "./rules-editor-head.js";

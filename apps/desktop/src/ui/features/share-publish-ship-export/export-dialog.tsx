@@ -3,6 +3,7 @@ import { useModalDialog } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
+import { useBackdropDismiss } from "../../platform/use-backdrop-dismiss.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { copy as uiCopy } from "./copy.js";
 import type { ExportTarget } from "./export-api.js";
@@ -68,7 +69,8 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
     return true;
   }, [isBusy, onClose]);
 
-  const { onMouseDown: handleMouseDown, ref } = useModalDialog(closeUnlessBusy);
+  const { ref } = useModalDialog(closeUnlessBusy);
+  useBackdropDismiss(ref, closeUnlessBusy);
 
   const info = toFormatInfo(format);
   const result = pick(isHandoff, runner.handoff, null);
@@ -86,7 +88,6 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
       ref={ref}
       className="modal export-dialog"
       aria-label={uiCopy.export}
-      onMouseDown={handleMouseDown}
     >
       <ExportDialogHead
         versionLabel={target.versionLabel}

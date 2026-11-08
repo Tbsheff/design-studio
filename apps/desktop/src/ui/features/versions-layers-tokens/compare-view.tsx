@@ -21,8 +21,6 @@ import { SliderBoard } from "./slider-board.js";
 import { useCompareLayout } from "./use-compare-layout.js";
 import { displayTitle, indexVersions } from "./version-labels.js";
 
-import "../../styles/reference.css";
-
 const CompareCode = lazy(async () => {
   const loaded = await import("./compare-code.js");
 

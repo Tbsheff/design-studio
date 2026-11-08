@@ -5,8 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy as uiCopy } from "./copy.js";
-
-import "../../styles/export.css";
 import { activeExportFrame, exportApi, openExport } from "./export-api.js";
 import { pick } from "./pick.js";
 

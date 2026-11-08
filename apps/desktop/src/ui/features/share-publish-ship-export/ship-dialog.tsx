@@ -2,7 +2,7 @@ import { useModalDialog } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import "../../styles/ship.css";
+import { useBackdropDismiss } from "../../platform/use-backdrop-dismiss.js";
 import { copy } from "./copy.js";
 import { ShipDialogBody } from "./ship-dialog-body.js";
 import { ShipDialogFoot } from "./ship-dialog-foot.js";
@@ -55,15 +55,11 @@ const ShipDialog = ({ onClose, projectId }: Props): ReactElement => {
     return true;
   }, [isBusy, onClose]);
 
-  const { onMouseDown: handleMouseDown, ref } = useModalDialog(closeUnlessBusy);
+  const { ref } = useModalDialog(closeUnlessBusy);
+  useBackdropDismiss(ref, closeUnlessBusy);
 
   return (
-    <dialog
-      ref={ref}
-      className="modal ship-dialog"
-      aria-label={copy.shipAsA}
-      onMouseDown={handleMouseDown}
-    >
+    <dialog ref={ref} className="modal ship-dialog" aria-label={copy.shipAsA}>
       <form className="modal-form" onSubmit={submit} noValidate>
         <ShipDialogHead
           lead={leadText(plan)}

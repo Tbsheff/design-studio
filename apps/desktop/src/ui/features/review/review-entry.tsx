@@ -10,8 +10,6 @@ import type { FilesChange } from "../home/use-studio-data.js";
 import { ReviewEntryButton } from "./review-entry-button.js";
 import { useReviewEntry } from "./use-review-entry.js";
 
-import "../../styles/review.css";
-
 const ReviewPanel = lazy(async () => {
   const loaded = await import("./review-panel.js");
 

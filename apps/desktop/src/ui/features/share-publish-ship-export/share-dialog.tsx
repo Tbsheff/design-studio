@@ -1,8 +1,9 @@
 import { useModalDialog } from "@design-studio/ui";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { ReactElement } from "react";
 
 import type { PublishKind } from "../../../shared/publish.js";
+import { useBackdropDismiss } from "../../platform/use-backdrop-dismiss.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { copy } from "./copy.js";
 import { LinkShare } from "./link-share.js";
@@ -10,9 +11,6 @@ import { pick } from "./pick.js";
 import { PublishPane } from "./publish-pane.js";
 import { ShareHead } from "./share-head.js";
 import type { ShareMode } from "./share-mode.js";
-
-import "../../styles/export.css";
-import "../../styles/share.css";
 
 const FRAME_NAMERS = { nameOf: canvasFrameName, pageOf: framePage };
 
@@ -30,7 +28,14 @@ interface ShareDialogProps {
 }
 
 const ShareDialog = ({ onClose, target }: ShareDialogProps): ReactElement => {
-  const { onMouseDown: handleMouseDown, ref } = useModalDialog(onClose);
+  const dismiss = useCallback((): boolean => {
+    onClose();
+
+    return true;
+  }, [onClose]);
+
+  const { ref } = useModalDialog(dismiss);
+  useBackdropDismiss(ref, dismiss);
   const [mode, setMode] = useState<ShareMode>(target.mode ?? "link");
   const isLink = mode === "link";
 
@@ -39,7 +44,6 @@ const ShareDialog = ({ onClose, target }: ShareDialogProps): ReactElement => {
       ref={ref}
       className="modal share-dialog"
       aria-label={pick(isLink, copy.shareLinkAria, copy.publishAria)}
-      onMouseDown={handleMouseDown}
     >
       {isLink && (
         <LinkShare

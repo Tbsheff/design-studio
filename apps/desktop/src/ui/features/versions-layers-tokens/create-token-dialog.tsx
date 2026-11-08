@@ -4,8 +4,12 @@ import type {
   CreateTokenResult,
 } from "@design-studio/contracts";
 import { useModalDialog } from "@design-studio/ui";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 
+import {
+  useBackdropDismiss,
+  useEscapeShield,
+} from "../../platform/use-backdrop-dismiss.js";
 import { displayColor, isValidColor } from "../inspector/css-values.js";
 import type { CreateRequest } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";
@@ -28,12 +32,6 @@ const toPaint = (value: string): string => {
   }
 
   return "transparent";
-};
-
-const handleDialogKeyDown = (event: KeyboardEvent): void => {
-  if (event.key === "Escape") {
-    event.stopPropagation();
-  }
 };
 
 const toInitialValue = (request: CreateRequest, isColor: boolean): string => {
@@ -63,15 +61,19 @@ const CreateTokenDialog = (props: DialogProps): ReactNode => {
     valuePaint = toPaint(form.value);
   }
 
-  const dialog = useModalDialog(() => {
+  const dismiss = (): boolean => {
     if (form.busy) {
       return false;
     }
 
     onClose();
-  });
 
-  const { onMouseDown: handleMouseDown, ref } = dialog;
+    return true;
+  };
+
+  const { ref } = useModalDialog(dismiss);
+  useBackdropDismiss(ref, dismiss);
+  useEscapeShield(ref);
   const { submit: handleSubmit } = form;
 
   return (
@@ -79,8 +81,6 @@ const CreateTokenDialog = (props: DialogProps): ReactNode => {
       ref={ref}
       className="modal tk-dialog"
       aria-label={COPY.labelCreateToken}
-      onMouseDown={handleMouseDown}
-      onKeyDown={handleDialogKeyDown}
     >
       <form className="modal-form" onSubmit={handleSubmit} noValidate>
         <CreateTokenHead />

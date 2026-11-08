@@ -13,8 +13,6 @@ import {
 } from "../design-system/token-frames.js";
 import { SHARES_CHANGED } from "./share-api.js";
 
-import "../../styles/share-live.css";
-
 const RETRY_MS = 5000;
 const SEND_MS = 50;
 const FRAME_SELECTOR = ".artboard[data-frame-id], .canvas-frame[data-frame-id]";

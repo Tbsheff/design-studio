@@ -5,8 +5,6 @@ import { PublishSetupBody } from "./publish-setup-body.js";
 import { usePublishBackend } from "./use-publish-backend.js";
 import { usePublishCli } from "./use-publish-cli.js";
 
-import "../../styles/publish.css";
-
 const PublishSetup = (): ReactElement => {
   const state = usePublishCli();
   const backend = usePublishBackend();

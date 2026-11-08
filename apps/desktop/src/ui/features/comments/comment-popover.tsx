@@ -5,8 +5,9 @@ import { AvatarFace, CommentAuthor } from "./comment-avatar.js";
 import type { Breadcrumb, CardSide } from "./comment-placement.js";
 import { CARD_WIDTH, placeComposer, useCardSize } from "./comment-placement.js";
 import { copy } from "./copy.js";
-import { Icon, findElement, findElements, useProfileInitial } from "./deps.js";
+import { Icon, findElement, useProfileInitial } from "./deps.js";
 import type { DesignComment, SelectionContext } from "./deps.js";
+import { focusables, trapTab } from "./focus-trap-model.js";
 
 type Rect = SelectionContext["rect"];
 
@@ -42,38 +43,6 @@ interface OpenProps {
   onReply: (text: string) => Promise<boolean>;
   onDeleteReply: (replyId: string) => void;
 }
-
-const focusables = (root: HTMLElement | null): HTMLElement[] => {
-  if (!root) {
-    return [];
-  }
-
-  return findElements(root, "input, textarea, button:not(:disabled)").filter(
-    (element) => element.tabIndex >= 0
-  );
-};
-
-const trapTab = (event: KeyboardEvent, root: HTMLElement | null): void => {
-  if (event.key !== "Tab") {
-    return;
-  }
-
-  const items = focusables(root);
-  const first = items[0];
-  const last = items.at(-1);
-
-  if (!first || !last) {
-    return;
-  }
-
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault();
-    first.focus();
-  }
-};
 
 const CommentReplies = ({
   comment,
@@ -397,4 +366,4 @@ const OpenCommentPopover = (props: OpenProps): ReactElement => {
   );
 };
 
-export { MOD_LABEL, STATUS_LABEL, trapTab, CommentReplies, OpenCommentPopover };
+export { MOD_LABEL, STATUS_LABEL, CommentReplies, OpenCommentPopover };

@@ -1,23 +1,21 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import type { InsertTab } from "./pattern-model.js";
-
 import styles from "./pattern.module.css";
 
-interface PatternTabButtonProps {
-  readonly id: InsertTab;
+interface PatternTabButtonProps<Tab extends string> {
+  readonly id: Tab;
   readonly label: string;
-  readonly onSelect: (tab: InsertTab) => void;
-  readonly tab: InsertTab;
+  readonly onSelect: (tab: Tab) => void;
+  readonly tab: Tab;
 }
 
-const PatternTabButton = ({
+const PatternTabButton = <Tab extends string>({
   id,
   label,
   onSelect,
   tab,
-}: PatternTabButtonProps): ReactElement => {
+}: PatternTabButtonProps<Tab>): ReactElement => {
   const handleSelect = useCallback((): void => onSelect(id), [id, onSelect]);
 
   return (

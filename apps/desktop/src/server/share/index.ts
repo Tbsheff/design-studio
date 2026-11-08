@@ -47,16 +47,24 @@ export type {
   InsertImageSearchCommand,
 } from "./image-search/index.js";
 
-export { PatternStore, PatternWriter } from "./pattern/index.js";
+export {
+  PatternStore,
+  PatternUrlStore,
+  PatternUrlWriter,
+  PatternWriter,
+} from "./pattern/index.js";
 
 export type {
   CreatePatternCommand,
+  ImportUrlCommand,
   InsertPatternCommand,
+  InspectUrlCommand,
   PatternDeleted,
   PatternInserted,
   PatternStoreApi,
   PatternWriterApi,
   StoredPattern,
+  UrlCandidatePage,
 } from "./pattern/index.js";
 
 export { DirectEditStore } from "./direct-edit/direct-edit-store.js";

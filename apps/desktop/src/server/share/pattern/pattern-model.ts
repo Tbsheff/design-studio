@@ -18,8 +18,10 @@ const toSummary = (pattern: StoredPattern): PatternSummary => ({
   isClient: pattern.isClient,
   kind: pattern.kind,
   name: pattern.name,
+  origin: pattern.origin,
   savedAt: pattern.savedAt,
   sourceName: pattern.sourceName,
+  sourceUrl: pattern.sourceUrl,
   tags: pattern.tags,
   tokenCount: pattern.tokens.length,
 });

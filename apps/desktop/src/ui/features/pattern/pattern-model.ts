@@ -83,11 +83,53 @@ const toSuggestedName = (tag: string): string => {
 
 type InsertTab = "components" | "patterns";
 
+type SaveTab = "layer" | "site";
+
+type PatternCandidate = RouteOutput<
+  typeof patternRoutes.inspectPattern
+>["items"][number];
+
+const SITE_WIDTH = 1280;
+
+const SITE_LIMIT = 24;
+
+const isSiteUrl = (text: string): boolean =>
+  /^https?:\/\/\S+$/u.test(text.trim());
+
+const toCandidateName = (candidate: PatternCandidate): string => {
+  const [, detail = ""] = candidate.label.split(": ");
+
+  if (detail !== "") {
+    return detail;
+  }
+
+  return candidate.label;
+};
+
+const toSourceHost = (item: PatternItem): string | null => {
+  const source = item.sourceUrl ?? null;
+
+  if (item.origin !== "url" || source === null) {
+    return null;
+  }
+
+  try {
+    return new URL(source).host;
+  } catch {
+    return null;
+  }
+};
+
 export {
   isMatch,
   isPosition,
+  isSiteUrl,
   POSITIONS,
+  SITE_LIMIT,
+  SITE_WIDTH,
+  toCandidateName,
   toMeta,
+  toSourceHost,
   toSuggestedName,
   toTagList,
   toTarget,
@@ -96,7 +138,9 @@ export {
 export type {
   InsertTab,
   PatternInserted,
+  PatternCandidate,
   PatternItem,
   PatternPosition,
   PatternTarget,
+  SaveTab,
 };

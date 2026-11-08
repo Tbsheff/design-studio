@@ -182,3 +182,79 @@
   border-bottom-color: var(--accent-line);
   color: var(--text);
 }
+
+.urlChip {
+  flex: none;
+  max-width: 120px;
+  overflow: hidden;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-control-sm);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--t-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.urlRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--s-2);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--s-2);
+  max-height: 280px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.tile {
+  display: grid;
+  width: 100%;
+  gap: var(--s-1);
+  padding: var(--s-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tile:hover {
+  background: var(--surface-hover);
+}
+
+.tile[aria-pressed="true"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.tileImage {
+  display: block;
+  width: 100%;
+  height: 72px;
+  border-radius: var(--r-control-sm);
+  background: var(--surface-inset);
+  object-fit: cover;
+  object-position: top left;
+}
+
+.tileLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialog .form {
+  padding: var(--s-3);
+}

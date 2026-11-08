@@ -9,3 +9,5 @@ export type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 export type { IconName } from "@design-studio/ui";
 
 export type { RouteInput, RouteOutput } from "../../platform/http.js";
+
+export { call } from "../../platform/http.js";

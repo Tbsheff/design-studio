@@ -340,6 +340,7 @@ const createStoredPattern = async (
   const list = await toTokenList(scope.workTree, toTokenNames(text));
 
   return {
+    assets: [],
     helpers: parts.helpers,
     id: toPatternId(command.name, text),
     importCount: parts.imports.length,
@@ -347,12 +348,15 @@ const createStoredPattern = async (
     isClient: parts.isClient,
     kind: patternKind,
     name: command.name,
+    origin: "layer",
+    referencePath: null,
     references: parts.references,
     savedAt: new Date().toISOString(),
     source: text,
     sourceFile: resolved.relative,
     sourceName: scope.project.name,
     sourceProjectId: scope.project.id,
+    sourceUrl: null,
     tags: toTags(command.tags),
     thumbnail: command.thumbnail,
     tokenCount: list.length,

@@ -1,3 +1,9 @@
+import {
+  PAGE_IMPORT_SELECTOR_MAX,
+  PAGE_IMPORT_URL_MAX,
+  PAGE_IMPORT_WIDTH_MAX,
+  PAGE_IMPORT_WIDTH_MIN,
+} from "@design-studio/contracts/page-import";
 import { Effect, Schema } from "effect";
 
 import { ElementTargetSchema } from "../_core/element-target.js";
@@ -51,24 +57,55 @@ const PatternTokenSchema = Schema.Struct({
   value: Schema.NullOr(Schema.String),
 });
 
+const WIDTH_DEFAULT = 1280;
+
+const NULL_DEFAULT = Effect.succeed(null);
+
+const LAYER_DEFAULT = Effect.succeed("layer" as const);
+
+const ORIGIN_TEXT =
+  "layer: saved from a layer of a project. url: captured from a web page.";
+
+const PatternOriginSchema = Schema.Literals(["layer", "url"]);
+
 const PatternSchema = Schema.Struct({
   id: PatternIdSchema,
   importCount: Schema.Int,
   isClient: Schema.Boolean,
   kind: PatternKindSchema,
   name: PatternNameSchema,
+  origin: PatternOriginSchema.annotate({ description: ORIGIN_TEXT }).pipe(
+    Schema.withDecodingDefaultKey(LAYER_DEFAULT)
+  ),
   savedAt: Schema.String,
   sourceName: Schema.String,
+  sourceUrl: Schema.NullOr(Schema.String)
+    .annotate({ description: "The page URL of a url pattern. null otherwise." })
+    .pipe(Schema.withDecodingDefaultKey(NULL_DEFAULT)),
   tags: PatternTagsSchema,
   tokenCount: Schema.Int,
 });
 
+const PatternAssetsSchema = Schema.Array(Schema.String)
+  .check(Schema.isMaxLength(ITEMS_MAX))
+  .annotate({ description: "Content-hashed asset files copied from the page." })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed([])));
+
+const PatternReferencePathSchema = Schema.NullOr(Schema.String)
+  .annotate({
+    description:
+      "Absolute path of the reference PNG of a url pattern. null otherwise.",
+  })
+  .pipe(Schema.withDecodingDefaultKey(NULL_DEFAULT));
+
 const PatternDetailSchema = Schema.Struct({
   ...PatternSchema.fields,
+  assets: PatternAssetsSchema,
   helpers: Schema.Array(Schema.String).check(Schema.isMaxLength(ITEMS_MAX)),
   imports: Schema.Array(PatternImportSchema).check(
     Schema.isMaxLength(ITEMS_MAX)
   ),
+  referencePath: PatternReferencePathSchema,
   references: Schema.Array(Schema.String).check(Schema.isMaxLength(ITEMS_MAX)),
   source: Schema.String,
   sourceFile: Schema.String,
@@ -78,6 +115,67 @@ const PatternDetailSchema = Schema.Struct({
 });
 
 const PatternGetSchema = Schema.Struct({ pattern: PatternDetailSchema });
+
+const PatternUrlSchema = Schema.String.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(PAGE_IMPORT_URL_MAX)
+).annotate({
+  description:
+    "The page to capture from: an https URL, or http://localhost:<port>/... for a preview or dev server.",
+});
+
+const PatternWidthSchema = Schema.Int.check(
+  Schema.isBetween({
+    maximum: PAGE_IMPORT_WIDTH_MAX,
+    minimum: PAGE_IMPORT_WIDTH_MIN,
+  })
+)
+  .annotate({
+    description: `Viewport width in px (${PAGE_IMPORT_WIDTH_MIN} to ${PAGE_IMPORT_WIDTH_MAX}). Default 1280.`,
+  })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(WIDTH_DEFAULT)));
+
+const PatternUrlFields = {
+  url: PatternUrlSchema,
+  width: PatternWidthSchema,
+} as const;
+
+const PatternImportFields = {
+  ...PatternUrlFields,
+  name: PatternNameSchema,
+  selector: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(PAGE_IMPORT_SELECTOR_MAX)
+  ).annotate({
+    description:
+      "CSS selector of the section to capture. Take it from inspect_pattern.",
+  }),
+} as const;
+
+const PatternBoxSchema = Schema.Struct({
+  height: Schema.Int,
+  width: Schema.Int,
+  x: Schema.Int,
+  y: Schema.Int,
+});
+
+const PatternCandidateSchema = Schema.Struct({
+  box: PatternBoxSchema,
+  label: Schema.String,
+  selector: Schema.String,
+  shotPath: Schema.String.annotate({
+    description: "Absolute path of a PNG crop of the section.",
+  }),
+  textSample: Schema.String,
+});
+
+const PatternImportedSchema = Schema.Struct({
+  pattern: PatternDetailSchema,
+  referencePath: Schema.String.annotate({
+    description:
+      "Absolute path of the reference PNG. Pass it to compare_to_reference.",
+  }),
+});
 
 const PatternProjectFields = {
   directionId: DirectionIdSchema,
@@ -172,18 +270,23 @@ const PatternDeletedSchema = Schema.Struct({
 const PatternIdFields = { patternId: PatternIdSchema } as const;
 
 export {
+  PatternBoxSchema,
+  PatternCandidateSchema,
   PatternCreateFields,
   PatternDeletedSchema,
   PatternDetailSchema,
   PatternGetSchema,
   PatternIdFields,
   PatternIdSchema,
+  PatternImportedSchema,
+  PatternImportFields,
   PatternImportSchema,
   PatternInsertedSchema,
   PatternInsertFields,
   PatternKindSchema,
   PatternListFields,
   PatternNameSchema,
+  PatternOriginSchema,
   PatternPositionSchema,
   PatternProjectFields,
   PatternSchema,
@@ -191,4 +294,7 @@ export {
   PatternTokenMapSchema,
   PatternTokenSchema,
   PatternUnmappedSchema,
+  PatternUrlFields,
+  PatternUrlSchema,
+  PatternWidthSchema,
 };

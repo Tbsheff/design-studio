@@ -20,6 +20,7 @@ interface ImpactRunQuery extends ImpactGetQuery {
 
 interface ImpactBaselineRoute {
   readonly file: string;
+  readonly note: string | null;
   readonly png: string | null;
   readonly route: string;
 }

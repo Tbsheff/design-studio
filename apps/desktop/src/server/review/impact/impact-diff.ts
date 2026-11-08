@@ -73,6 +73,20 @@ const toRouteDiff = (
   };
 };
 
-export { toRouteDiff, toThumb, toPng };
+const PIXEL_BYTES = 4;
+
+const isBlankShot = (encoded: string): boolean => {
+  const { data } = toPng(encoded);
+
+  for (let at = PIXEL_BYTES; at < data.length; at += PIXEL_BYTES) {
+    if (data.compare(data, at, at + PIXEL_BYTES, 0, PIXEL_BYTES) !== 0) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export { isBlankShot, toRouteDiff, toThumb };
 
 export type { RouteDiff };

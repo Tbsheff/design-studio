@@ -2,7 +2,7 @@ import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { Effect } from "effect";
 
 import type { McpReadStore } from "../../preview/index.js";
-import { toRouteDiff } from "./impact-diff.js";
+import { isBlankShot, toRouteDiff } from "./impact-diff.js";
 import { getImpactRecord, setImpactRecord } from "./impact-memory.js";
 import type {
   ImpactBaseline,
@@ -20,6 +20,8 @@ const SHOT_WIDTH = 1280;
 const SHOT_HEIGHT = 800;
 
 const DYNAMIC_ROUTE = /[:[*]/u;
+
+const BLANK_NOTE = "The page is blank. It may need a sign-in.";
 
 const DYNAMIC_NOTE = "A dynamic route has no sample page to shoot.";
 
@@ -63,7 +65,13 @@ const toShot = (
     }),
     {
       onFailure: (error): Shot => ({ note: error.message, png: null }),
-      onSuccess: (view): Shot => ({ note: null, png: view.data }),
+      onSuccess: (view): Shot => {
+        if (isBlankShot(view.data)) {
+          return { note: BLANK_NOTE, png: null };
+        }
+
+        return { note: null, png: view.data };
+      },
     }
   );
 };
@@ -77,7 +85,7 @@ const toRoutes = Effect.fn("impact.toRoutes")(function* run(
     routes.map((item) =>
       Effect.map(
         toShot(reads, query, item.route),
-        (shot): ImpactBaselineRoute & { readonly note: string | null } => ({
+        (shot): ImpactBaselineRoute => ({
           file: item.file,
           note: shot.note,
           png: shot.png,
@@ -88,9 +96,17 @@ const toRoutes = Effect.fn("impact.toRoutes")(function* run(
   );
 });
 
-const toBaselineRoute = (
-  item: ImpactBaselineRoute & { readonly note: string | null }
-): ImpactRoute => {
+const toRouteDepth = (route: string): number =>
+  route.split("/").filter((part) => part !== "").length;
+
+const toRouteOrder = (
+  left: { readonly route: string },
+  right: { readonly route: string }
+): number =>
+  toRouteDepth(left.route) - toRouteDepth(right.route) ||
+  left.route.localeCompare(right.route);
+
+const toBaselineRoute = (item: ImpactBaselineRoute): ImpactRoute => {
   if (item.png === null) {
     return {
       after: null,
@@ -133,7 +149,7 @@ const runBaseline = Effect.fn("impact.runBaseline")(function* run(
   const shots = yield* toRoutes(
     reads,
     query,
-    usage.routes.slice(0, query.limit)
+    usage.routes.toSorted(toRouteOrder).slice(0, query.limit)
   );
 
   const baseline: ImpactBaseline = {
@@ -142,6 +158,7 @@ const runBaseline = Effect.fn("impact.runBaseline")(function* run(
     file: usage.file,
     routes: shots.map((item) => ({
       file: item.file,
+      note: item.note,
       png: item.png,
       route: item.route,
     })),
@@ -172,7 +189,10 @@ const toCompareRoute = (
       changedPct: null,
       diff: null,
       file: baseline.file,
-      note: shot.note ?? "The baseline shot failed for this route.",
+      note:
+        shot.note ??
+        baseline.note ??
+        "The baseline shot failed for this route.",
       route: baseline.route,
       status: "failed",
     };

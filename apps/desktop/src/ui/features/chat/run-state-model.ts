@@ -17,15 +17,14 @@ import {
   isPartEvent,
   withFinalText,
 } from "../../../shared/run-parts.js";
-
-const SHORT_INPUT_CHARS = 80;
+import type { ToolInput } from "./tool-input-model.js";
 
 const PENDING_CLOCK_SLACK_MS = 1000;
 
 interface ToolRow {
   toolUseId: string;
   name: string;
-  input: unknown;
+  input: ToolInput;
   startedAt: number;
   durationMs: number | null;
   isError: boolean;
@@ -122,7 +121,7 @@ const toDuration = (
 const toolRows = (summary: RunSummary): ToolRow[] =>
   summary.toolCalls.map((tool) => ({
     durationMs: toDuration(tool.finishedAt, tool.startedAt),
-    input: tool.input,
+    input: tool.input as ToolInput,
     isError: tool.isError,
     name: tool.name,
     startedAt: tool.startedAt,
@@ -249,7 +248,7 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
       ...run.tools.filter((tool) => tool.toolUseId !== event.toolUseId),
       {
         durationMs: null,
-        input: event.input,
+        input: event.input as ToolInput,
         isError: false,
         name: event.name,
         startedAt: event.ts,
@@ -399,47 +398,6 @@ const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   return { ...runs, [runId]: run };
 };
 
-const shortInput = (input: unknown): string => {
-  if (input === null || input === undefined) {
-    return "";
-  }
-
-  if (typeof input === "string") {
-    return input.slice(0, SHORT_INPUT_CHARS);
-  }
-
-  if (typeof input !== "object") {
-    return String(input);
-  }
-
-  const record = input as Record<string, unknown>;
-
-  for (const key of [
-    "file_path",
-    "path",
-    "filePath",
-    "pattern",
-    "command",
-    "url",
-    "query",
-  ]) {
-    const value = record[key];
-
-    if (typeof value === "string") {
-      return value.slice(0, SHORT_INPUT_CHARS);
-    }
-  }
-
-  return JSON.stringify(input).slice(0, SHORT_INPUT_CHARS);
-};
-
-export {
-  applyRunEvent,
-  emptyRun,
-  runFromSummary,
-  runText,
-  shortInput,
-  shownPending,
-};
+export { applyRunEvent, emptyRun, runFromSummary, runText, shownPending };
 
 export type { RetryState, RunMap, RunView, ToolRow };

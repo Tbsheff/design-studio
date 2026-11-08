@@ -38,98 +38,122 @@ interface Options {
   lastChange: FilesChange | null;
 }
 
-const usePageFiles = (
-  options: Options
-): ((path: string | undefined) => PageWait) => {
-  const gated =
-    options.live && options.kind === "html" && options.directionId !== null;
+type TreeFiles = ReadonlySet<string> | "all";
 
-  const [files, setFiles] = useState<ReadonlySet<string> | "all" | null>(null);
+interface LoadedTree {
+  readonly files: TreeFiles;
+  readonly key: string;
+  readonly stamp: string;
+}
 
-  const changeAt =
-    options.lastChange?.directionId === options.directionId
-      ? options.lastChange?.changedAt
-      : undefined;
+const toChangeAt = (options: Options): number | null => {
+  if (options.lastChange?.directionId === options.directionId) {
+    return options.lastChange?.changedAt ?? null;
+  }
+
+  return null;
+};
+
+const useWorkTreeFiles = (
+  options: Options,
+  isGated: boolean
+): TreeFiles | null => {
+  const { projectId, directionId, building } = options;
+  const changeAt = toChangeAt(options);
+  const key = `${isGated}|${projectId}|${directionId}`;
+  const stamp = `${changeAt}|${building}`;
+  const [loaded, setLoaded] = useState<LoadedTree | null>(null);
 
   useEffect(() => {
-    setFiles(null);
-  }, [gated, options.projectId, options.directionId]);
-  useEffect(() => {
-    if (!gated || !options.directionId) {
+    if (!isGated || !directionId) {
       return;
     }
 
     let alive = true;
-    const { directionId } = options;
     startTransition(async () => {
-      try {
-        const { files: list } = await api.workTreeFiles(
-          options.projectId,
-          directionId
-        );
+      let files: TreeFiles = "all";
 
-        if (alive) {
-          setFiles(list.length >= TREE_CAP ? "all" : new Set(list));
+      try {
+        const tree = await api.workTreeFiles(projectId, directionId);
+
+        if (tree.files.length < TREE_CAP) {
+          files = new Set(tree.files);
         }
       } catch {
-        if (alive) {
-          setFiles("all");
-        }
+        files = "all";
+      }
+
+      if (alive) {
+        setLoaded({ files, key, stamp });
       }
     });
 
     return (): void => {
       alive = false;
     };
-  }, [
-    gated,
-    options.projectId,
-    options.directionId,
-    changeAt,
-    options.building,
-  ]);
+  }, [isGated, projectId, directionId, key, stamp]);
+
+  if (loaded?.key === key) {
+    return loaded.files;
+  }
+
+  return null;
+};
+
+const toPageWait = (
+  files: ReadonlySet<string> | null,
+  file: string,
+  building: boolean
+): PageWait => {
+  if (building && (files === null || !hasPage(files, file))) {
+    return "building";
+  }
+
+  if (files === null || hasPage(files, file)) {
+    return null;
+  }
+
+  return "missing";
+};
+
+const usePageFiles = (
+  options: Options
+): ((path: string | undefined) => PageWait) => {
+  const isGated =
+    options.live && options.kind === "html" && options.directionId !== null;
+
+  const files = useWorkTreeFiles(options, isGated);
   const { building } = options;
 
   return useCallback(
     (path: string | undefined) => {
       const file = pageFileOf(path);
 
-      if (!gated || files === "all" || UNLISTED.test(file)) {
+      if (!isGated || files === "all" || UNLISTED.test(file)) {
         return null;
       }
 
-      if (files === null) {
-        if (building) {
-          return "building";
-        }
-
-        return null;
-      }
-
-      if (hasPage(files, file)) {
-        return null;
-      }
-
-      if (building) {
-        return "building";
-      }
-
-      return "missing";
+      return toPageWait(files, file, building);
     },
-    [gated, files, building]
+    [isGated, files, building]
   );
 };
 
 const useFramePainted = (waiting: boolean, mounted: boolean): boolean => {
   const [painted, setPainted] = useState(false);
-  useEffect(() => {
-    if (!waiting) {
-      return;
+  const phase = `${waiting}|${mounted}`;
+  const [seen, setSeen] = useState(phase);
+
+  if (seen !== phase) {
+    setSeen(phase);
+
+    if (waiting) {
+      setPainted(false);
     }
+  }
 
-    setPainted(false);
-
-    if (!mounted) {
+  useEffect(() => {
+    if (!waiting || !mounted) {
       return;
     }
 
@@ -167,6 +191,14 @@ interface FirstBuildGate {
   waitFor: (path: string | undefined, directionId: string | null) => PageWait;
 }
 
+const toGateUrl = (wait: PageWait, options: GateOptions): string | null => {
+  if (wait || options.emptyStage) {
+    return null;
+  }
+
+  return options.url;
+};
+
 const useFirstBuildGate = (options: GateOptions): FirstBuildGate => {
   const building =
     options.live &&
@@ -197,12 +229,9 @@ const useFirstBuildGate = (options: GateOptions): FirstBuildGate => {
     [own, pageWait]
   );
 
-  return {
-    building,
-    url: wait || options.emptyStage ? null : options.url,
-    wait,
-    waitFor,
-  };
+  const url = toGateUrl(wait, options);
+
+  return { building, url, wait, waitFor };
 };
 
 const useFirstBuildCover = (gate: FirstBuildGate, slots: number): boolean => {

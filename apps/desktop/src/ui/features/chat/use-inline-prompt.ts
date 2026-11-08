@@ -3,7 +3,13 @@ import type {
   EditScope,
   InlineRunExtras,
 } from "@design-studio/contracts/usage-scope";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { matchesKey } from "../../../shared/keymap.js";
 import { IS_MAC, useCommands } from "../../chat-slots.js";
@@ -117,31 +123,12 @@ const restoreFocus = (
   target?.focus({ preventScroll: true });
 };
 
-const useInlinePrompt = (
-  options: InlinePromptOptions
-): InlinePromptView | null => {
-  const [open, setOpen] = useState(false);
-  const returnTo = useRef<Element | null>(null);
-  const latest = useRef(options);
-  latest.current = options;
+interface InlineKeyOptions {
+  readonly latest: { readonly current: InlinePromptOptions };
+  readonly show: () => void;
+}
 
-  const show = useCallback(() => {
-    const cur = latest.current;
-
-    if (cur.selection.length === 0 || !cur.live) {
-      return;
-    }
-
-    returnTo.current = document.activeElement;
-    setOpen(true);
-    globalThis.dispatchEvent(new Event(INLINE_PROMPT_OPEN_EVENT));
-  }, []);
-
-  const close = useCallback(() => {
-    setOpen(false);
-    restoreFocus(returnTo.current, latest.current.stage());
-  }, []);
-
+const useInlineShortcut = ({ latest, show }: InlineKeyOptions): void => {
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       if (
@@ -166,17 +153,12 @@ const useInlinePrompt = (
     globalThis.addEventListener("keydown", onKey);
 
     return (): void => globalThis.removeEventListener("keydown", onKey);
-  }, [show]);
+  }, [show, latest]);
+};
 
-  const empty = options.selection.length === 0 || !options.live;
-  useEffect(() => {
-    if (empty) {
-      setOpen(false);
-    }
-  }, [empty]);
-
-  useCommands(() => [
-    {
+const useInlineCommand = (show: () => void, hasSelection: boolean): void => {
+  useCommands(() => {
+    const command = {
       group: "Run",
       icon: "chat",
       id: INLINE_PROMPT_COMMAND,
@@ -184,11 +166,74 @@ const useInlinePrompt = (
       keywords: "inline prompt quick edit selection element",
       run: show,
       title: "Ask the agent at the selection",
-      ...(latest.current.selection.length === 0
-        ? { disabled: "Select an element first" }
-        : {}),
+    } as const;
+
+    if (hasSelection) {
+      return [command];
+    }
+
+    return [{ ...command, disabled: "Select an element first" }];
+  });
+};
+
+const toExtras = (editScope: EditScope | undefined): InlineRunExtras => {
+  if (editScope) {
+    return { editScope, lean: true };
+  }
+
+  return { lean: true };
+};
+
+const useInlinePrompt = (
+  options: InlinePromptOptions
+): InlinePromptView | null => {
+  const [open, setOpen] = useState(false);
+  const returnTo = useRef<Element | null>(null);
+  const latest = useRef(options);
+
+  useLayoutEffect(() => {
+    latest.current = options;
+  });
+
+  const show = useCallback(() => {
+    const cur = latest.current;
+
+    if (cur.selection.length === 0 || !cur.live) {
+      return;
+    }
+
+    returnTo.current = document.activeElement;
+    setOpen(true);
+    globalThis.dispatchEvent(new Event(INLINE_PROMPT_OPEN_EVENT));
+  }, [latest]);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    restoreFocus(returnTo.current, latest.current.stage());
+  }, [latest]);
+
+  const submit = useCallback(
+    (prompt: string, editScope?: EditScope) => {
+      const cur = latest.current;
+
+      if (blockerOf(cur) || !prompt.trim()) {
+        return;
+      }
+
+      cur.onSubmit?.(prompt.trim(), toExtras(editScope));
+      close();
     },
-  ]);
+    [latest, close]
+  );
+
+  useInlineShortcut({ latest, show });
+  useInlineCommand(show, options.selection.length > 0);
+
+  const isEmpty = options.selection.length === 0 || !options.live;
+
+  if (isEmpty && open) {
+    setOpen(false);
+  }
 
   const rect = unionRect(options.selection);
 
@@ -196,28 +241,13 @@ const useInlinePrompt = (
     return null;
   }
 
-  return {
-    blocked: blockerOf(options),
-    close,
-    label: labelOf(options.selection),
-    rect,
-    route: options.route ?? null,
-    submit: (prompt, editScope) => {
-      const cur = latest.current;
+  const blocked = blockerOf(options);
+  const label = labelOf(options.selection);
+  const route = options.route ?? null;
+  const usageFile = usageFileOf(options.selection);
+  const usedAtFile = usedAtFileOf(options.selection);
 
-      if (blockerOf(cur) || !prompt.trim()) {
-        return;
-      }
-
-      cur.onSubmit?.(
-        prompt.trim(),
-        editScope ? { editScope, lean: true } : { lean: true }
-      );
-      close();
-    },
-    usageFile: usageFileOf(options.selection),
-    usedAtFile: usedAtFileOf(options.selection),
-  };
+  return { blocked, close, label, rect, route, submit, usageFile, usedAtFile };
 };
 
 export { INLINE_PROMPT_COMMAND, INLINE_PROMPT_OPEN_EVENT, useInlinePrompt };

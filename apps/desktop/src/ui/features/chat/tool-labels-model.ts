@@ -1,5 +1,7 @@
 import { baseName } from "../../domain/format.js";
-import { shortInput } from "./run-state-model.js";
+import { isFieldSource } from "../../platform/json-guard.js";
+import { shortInput, toToolFields } from "./tool-input-model.js";
+import type { ToolInput } from "./tool-input-model.js";
 
 const MCP_NAME_PARTS = 3;
 
@@ -61,17 +63,13 @@ const relativePath = (file: string, workTree: string | null): string => {
   return norm;
 };
 
-const pathInput = (input: unknown): string | null => {
-  if (!input || typeof input !== "object") {
-    return null;
-  }
-
-  const record = input as Record<string, unknown>;
+const pathInput = (input: ToolInput): string | null => {
+  const fields = toToolFields(input);
 
   for (const key of PATH_KEYS) {
-    const value = record[key];
+    const value = fields.get(key);
 
-    if (typeof value === "string" && value) {
+    if (value) {
       return value;
     }
   }
@@ -79,7 +77,7 @@ const pathInput = (input: unknown): string | null => {
   return null;
 };
 
-const toolTarget = (input: unknown, workTree: string | null): string => {
+const toolTarget = (input: ToolInput, workTree: string | null): string => {
   const file = pathInput(input);
 
   if (file) {
@@ -97,16 +95,8 @@ const toolTarget = (input: unknown, workTree: string | null): string => {
 
 const SKILL_TOOL = "Skill";
 
-const skillToolName = (input: unknown): string => {
-  if (!input || typeof input !== "object") {
-    return "";
-  }
-
-  const value = (input as Record<string, unknown>)["skill"];
-
-  if (typeof value !== "string") {
-    return "";
-  }
+const skillToolName = (input: ToolInput): string => {
+  const value = toToolFields(input).get("skill") ?? "";
 
   if (value.startsWith("personal:")) {
     return value.slice("personal:".length);
@@ -115,7 +105,7 @@ const skillToolName = (input: unknown): string => {
   return value;
 };
 
-const toolLabel = (name: string, input: unknown): string => {
+const toolLabel = (name: string, input: ToolInput): string => {
   if (name !== SKILL_TOOL) {
     return prettyToolName(name);
   }
@@ -129,49 +119,49 @@ const toolLabel = (name: string, input: unknown): string => {
   return "Skill";
 };
 
-const TOOL_VERBS: Record<string, string> = {
-  Bash: "Run",
-  Edit: "Edit",
-  Glob: "Find",
-  Grep: "Search",
-  MultiEdit: "Edit",
-  Read: "Read",
-  Skill: "Skill",
-  TodoWrite: "Update todos",
-  WebFetch: "Fetch",
-  Write: "Write",
-  mcp__studio__define_tweaks: "Define tweaks",
-  mcp__studio__design_review: "Design review",
-  mcp__studio__design_system_check: "Design system check",
-  mcp__studio__render_check: "Render check",
-  mcp__studio__screenshot: "Screenshot",
-};
+const TOOL_VERBS = new Map<string, string>([
+  ["Bash", "Run"],
+  ["Edit", "Edit"],
+  ["Glob", "Find"],
+  ["Grep", "Search"],
+  ["MultiEdit", "Edit"],
+  ["Read", "Read"],
+  ["Skill", "Skill"],
+  ["TodoWrite", "Update todos"],
+  ["WebFetch", "Fetch"],
+  ["Write", "Write"],
+  ["mcp__studio__define_tweaks", "Define tweaks"],
+  ["mcp__studio__design_review", "Design review"],
+  ["mcp__studio__design_system_check", "Design system check"],
+  ["mcp__studio__render_check", "Render check"],
+  ["mcp__studio__screenshot", "Screenshot"],
+]);
 
 const toolVerb = (name: string): string =>
-  TOOL_VERBS[name] ?? prettyToolName(name);
+  TOOL_VERBS.get(name) ?? prettyToolName(name);
 
-const TOOL_GROUPS: Record<string, string> = {
-  Bash: "Ran",
-  Edit: "Edited",
-  Glob: "Searched",
-  Grep: "Searched",
-  MultiEdit: "Edited",
-  NotebookEdit: "Edited",
-  Read: "Read",
-  Skill: "Skill",
-  TodoWrite: "Planned",
-  WebFetch: "Fetched",
-  WebSearch: "Searched",
-  Write: "Wrote",
-  mcp__studio__define_tweaks: "Tweaks",
-  mcp__studio__design_review: "Checked",
-  mcp__studio__design_system_check: "Checked",
-  mcp__studio__render_check: "Checked",
-  mcp__studio__screenshot: "Checked",
-};
+const TOOL_GROUPS = new Map<string, string>([
+  ["Bash", "Ran"],
+  ["Edit", "Edited"],
+  ["Glob", "Searched"],
+  ["Grep", "Searched"],
+  ["MultiEdit", "Edited"],
+  ["NotebookEdit", "Edited"],
+  ["Read", "Read"],
+  ["Skill", "Skill"],
+  ["TodoWrite", "Planned"],
+  ["WebFetch", "Fetched"],
+  ["WebSearch", "Searched"],
+  ["Write", "Wrote"],
+  ["mcp__studio__define_tweaks", "Tweaks"],
+  ["mcp__studio__design_review", "Checked"],
+  ["mcp__studio__design_system_check", "Checked"],
+  ["mcp__studio__render_check", "Checked"],
+  ["mcp__studio__screenshot", "Checked"],
+]);
 
 const toolGroupLabel = (name: string): string =>
-  TOOL_GROUPS[name] ?? prettyToolName(name);
+  TOOL_GROUPS.get(name) ?? prettyToolName(name);
 
 interface ToolTally {
   label: string;
@@ -191,7 +181,7 @@ const toolTally = (names: Iterable<string>): ToolTally[] => {
 
 const toolSubject = (
   name: string,
-  input: unknown,
+  input: ToolInput,
   workTree: string | null
 ): string => {
   if (name === SKILL_TOOL) {
@@ -202,16 +192,16 @@ const toolSubject = (
     return "";
   }
 
-  if (input && typeof input === "object") {
-    const record = input as Record<string, unknown>;
+  const fields = toToolFields(input);
 
-    if (typeof record["viewport"] === "string") {
-      return record["viewport"];
-    }
+  if (fields.has("viewport")) {
+    return fields.get("viewport") ?? "";
+  }
 
-    if (name.startsWith("mcp__") && !pathInput(input)) {
-      return "";
-    }
+  const isObjectInput = isFieldSource(input) || Array.isArray(input);
+
+  if (isObjectInput && name.startsWith("mcp__") && !pathInput(input)) {
+    return "";
   }
 
   return toolTarget(input, workTree);

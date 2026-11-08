@@ -1,7 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
-import { DropMenu } from "./top-bar-drop-menu.js";
+import { DropMenu } from "./top-bar-drop.js";
 import type { Props } from "./top-bar-props.js";
 
 const TopBarFileMenu = ({ props }: { props: Props }): ReactElement => (

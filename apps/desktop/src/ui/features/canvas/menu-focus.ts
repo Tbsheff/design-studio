@@ -1,6 +1,6 @@
 import type { KeyboardEvent, RefObject } from "react";
 
-import type { MenuGroup } from "./top-bar-menu.js";
+import type { MenuGroup } from "./top-bar-menu-model.js";
 
 const toFocusableIds = (groups: MenuGroup[]): string[] => {
   const ids: string[] = [];

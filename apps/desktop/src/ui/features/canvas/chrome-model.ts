@@ -1,6 +1,6 @@
 import type { ChromeProps } from "./canvas-chrome-menu.js";
 import type { CanvasShell } from "./canvas-shell.js";
-import type { CanvasTool, PresentMode } from "./top-bar-menu.js";
+import type { CanvasTool, PresentMode } from "./top-bar-menu-model.js";
 
 interface BarShell {
   readonly canExport: boolean;

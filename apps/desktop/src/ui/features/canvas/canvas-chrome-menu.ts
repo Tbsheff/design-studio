@@ -21,7 +21,7 @@ import type {
 import type { CanvasViewRow } from "./canvas-view-row.js";
 import { frameBaseName, framePage } from "./frame-label-model.js";
 import { toValueOr } from "./settle-model.js";
-import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
+import type { MenuEntry, MenuGroup } from "./top-bar-menu-model.js";
 
 interface FrameLabelInfo {
   number?: string;

@@ -2,12 +2,12 @@ import { useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import type { MenuEntry } from "./top-bar-menu.js";
+import type { MenuEntry } from "./top-bar-menu-model.js";
+import { OverflowMenu } from "./top-bar-overflow.js";
 import { TopBarPresent } from "./top-bar-present.js";
 import type { Props } from "./top-bar-props.js";
 import { TopBarShare } from "./top-bar-share.js";
-import { OverflowMenu } from "./top-bar-zoom.js";
-import type { ZoomProps } from "./top-bar-zoom.js";
+import type { ZoomProps } from "./top-bar-zoom-model.js";
 
 const TopBarEnd = ({
   props,

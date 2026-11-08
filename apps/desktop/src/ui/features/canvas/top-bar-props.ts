@@ -2,7 +2,11 @@ import type { ReactNode } from "react";
 
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
-import type { CanvasTool, MenuGroup, PresentMode } from "./top-bar-menu.js";
+import type {
+  CanvasTool,
+  MenuGroup,
+  PresentMode,
+} from "./top-bar-menu-model.js";
 
 interface Props {
   vectorTools?: ReactNode;

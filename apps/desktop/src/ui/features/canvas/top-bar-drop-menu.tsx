@@ -1,41 +1,38 @@
 import { PORT_OPEN_EVENT } from "@design-studio/contracts/port";
-import { lazy, useCallback, useEffect, useRef, useState } from "react";
-import type { ReactNode, ReactElement } from "react";
+import { lazy, useCallback, useEffect, useState } from "react";
 
 import { uiStore } from "../../platform/storage.js";
 import { setPortAvailable } from "../design-system/port-api.js";
 import type { PortOpenDetail } from "../design-system/port-api.js";
 import type { PortDialogTarget } from "../design-system/port-to-app-dialog.js";
-import { MenuPopover } from "./top-bar-menu.js";
-import type { MenuGroup } from "./top-bar-menu.js";
 
-const PortToAppDialog = lazy(async () => {
+const lazyPortToAppDialog = lazy(async () => {
   const loaded = await import("../design-system/port-to-app-dialog.js");
 
   return { default: loaded.PortToAppDialog };
 });
 
-const usePortDialog = (
-  available: boolean
-): {
+interface PortDialog {
   target: PortDialogTarget | null;
   open: (frameId: string | null, directionId?: string | null) => void;
   close: () => void;
-} => {
+}
+
+const usePortDialog = (available: boolean): PortDialog => {
   const [target, setTarget] = useState<PortDialogTarget | null>(null);
 
   const open = useCallback(
     (frameId: string | null, directionId?: string | null) => {
-      const { activeProjectId, directionByProject } = uiStore.get();
+      const { activeProjectId: projectId, directionByProject } = uiStore.get();
 
-      if (!activeProjectId) {
+      if (!projectId) {
         return;
       }
 
       setTarget({
-        directionId: directionId ?? directionByProject[activeProjectId] ?? null,
+        directionId: directionId ?? directionByProject[projectId] ?? null,
         frameId,
-        projectId: activeProjectId,
+        projectId,
       });
     },
     []
@@ -60,90 +57,4 @@ const usePortDialog = (
   return { close: useCallback(() => setTarget(null), []), open, target };
 };
 
-const DropMenu = ({
-  label,
-  groups,
-  triggerClass,
-  anchorClass,
-  align = "start",
-  tip,
-  children,
-  onOpen,
-}: {
-  label: string;
-  groups: () => MenuGroup[];
-  triggerClass: string;
-  anchorClass?: string;
-  align?: "start" | "end";
-  tip?: string;
-  children: ReactNode;
-  onOpen?: () => void;
-}): ReactElement => {
-  const [open, setOpen] = useState(false);
-  const trigger = useRef<HTMLButtonElement>(null);
-
-  const close = useCallback((refocus: boolean) => {
-    setOpen(false);
-
-    if (refocus) {
-      trigger.current?.focus();
-    }
-  }, []);
-
-  let className2 = "topbar-anchor";
-
-  if (anchorClass) {
-    className2 = `topbar-anchor ${anchorClass}`;
-  }
-
-  const datatip: string | undefined = ((): string | undefined => {
-    if (open) {
-      return undefined;
-    }
-
-    return tip;
-  })();
-
-  const datatipalign: "end" | undefined = ((): "end" | undefined => {
-    if (align !== "end") {
-      return undefined;
-    }
-
-    return "end";
-  })();
-
-  return (
-    <span className={className2}>
-      <button
-        ref={trigger}
-        type="button"
-        className={triggerClass}
-        aria-label={label}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        data-tip={datatip}
-        data-tip-align={datatipalign}
-        onClick={() => {
-          if (!open) {
-            onOpen?.();
-          }
-
-          setOpen((value) => !value);
-        }}
-      >
-        {children}
-      </button>
-      {open && (
-        <MenuPopover
-          groups={groups()}
-          label={label}
-          align={align}
-          onClose={close}
-          trigger={trigger}
-        />
-      )}
-    </span>
-  );
-};
-
-export { DropMenu, PortToAppDialog, usePortDialog };
+export { lazyPortToAppDialog, usePortDialog };

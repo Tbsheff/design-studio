@@ -5,7 +5,11 @@ import type { ReactElement } from "react";
 import { copy } from "./copy.js";
 import type { PropsStatus } from "./props-model.js";
 
-const SwapInstanceMenu = lazy(() => import("./swap-instance-menu.js"));
+const SwapInstanceMenu = lazy(async () => {
+  const loaded = await import("./swap-instance-menu.js");
+
+  return { default: loaded.SwapInstanceMenu };
+});
 
 interface SwapButtonProps {
   readonly projectId: string;

@@ -1,18 +1,8 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { usePopover } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useMemo, useRef } from "react";
 
-import type {
-  SwapCandidate,
-  SwapCandidateList,
-} from "../../../shared/component-create.js";
 import {
   apiMessage,
   componentCreateApi,
@@ -20,94 +10,68 @@ import {
 
 import "../../styles/create-component.css";
 import { copy } from "./copy.js";
+import { SwapCandidateRow } from "./swap-candidate-row.js";
+import { toCandidateKey, toDroppedText, toSwapLabel } from "./swap-model.js";
+import { useSwapList, useSwapPick } from "./use-swap-candidates.js";
+import type { SwapApi, SwapDone } from "./use-swap-candidates.js";
 
 interface Props {
   readonly projectId: string;
   readonly directionId: string;
   readonly use: SourceLoc;
-  readonly onDone: (result: {
-    readonly isOk: boolean;
-    readonly text: string;
-  }) => void;
+  readonly onDone: (result: SwapDone) => void;
   readonly onClose: () => void;
 }
 
-const toHint = (item: SwapCandidate): string => {
-  if (item.drop.length > 0) {
-    return `drops ${item.drop.join(", ")}`;
-  }
+const swapApi: SwapApi = {
+  listCandidates: async (site) => {
+    try {
+      return await componentCreateApi.swapCandidates(
+        site.projectId,
+        site.directionId,
+        site.use
+      );
+    } catch (error: unknown) {
+      return { candidates: [], from: "", note: apiMessage(error) };
+    }
+  },
+  swap: async (site, candidate) => {
+    try {
+      const result = await componentCreateApi.swap(
+        site.projectId,
+        site.directionId,
+        site.use,
+        { file: candidate.file, name: candidate.name }
+      );
 
-  if (item.add.length > 0) {
-    return `adds ${item.add.join(", ")}`;
-  }
-
-  return "all props fit";
+      return {
+        isOk: true,
+        text: `${result.title}${toDroppedText(result.dropped)}`,
+      };
+    } catch (error: unknown) {
+      return { isOk: false, text: apiMessage(error) };
+    }
+  },
 };
 
-export default function SwapInstanceMenu({
+const SwapInstanceMenu = ({
   projectId,
   directionId,
   use,
   onDone,
   onClose,
-}: Props): ReactElement {
-  const [list, setList] = useState<SwapCandidateList | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
+}: Props): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   const close = useCallback(() => onClose(), [onClose]);
   usePopover(true, root, close);
-  useEffect(() => {
-    let live = true;
-    startTransition(async () => {
-      try {
-        const result = await componentCreateApi.swapCandidates(
-          projectId,
-          directionId,
-          use
-        );
 
-        if (live) {
-          setList(result);
-        }
-      } catch (error: unknown) {
-        if (live) {
-          setList({ candidates: [], from: "", note: apiMessage(error) });
-        }
-      }
-    });
+  const site = useMemo(
+    () => ({ directionId, projectId, use }),
+    [directionId, projectId, use]
+  );
 
-    return (): void => {
-      live = false;
-    };
-  }, [projectId, directionId, use]);
-
-  const pick = (item: SwapCandidate): void => {
-    setBusy(item.name);
-    startTransition(async () => {
-      try {
-        const result = await componentCreateApi.swap(
-          projectId,
-          directionId,
-          use,
-          {
-            file: item.file,
-            name: item.name,
-          }
-        );
-
-        const dropped =
-          result.dropped.length > 0
-            ? `, dropped ${result.dropped.join(", ")}`
-            : "";
-
-        onDone({ isOk: true, text: `${result.title}${dropped}` });
-      } catch (error: unknown) {
-        onDone({ isOk: false, text: apiMessage(error) });
-      } finally {
-        onClose();
-      }
-    });
-  };
+  const list = useSwapList(site, swapApi);
+  const { busyName, pick } = useSwapPick(site, swapApi, onDone, onClose);
 
   return (
     <div
@@ -117,30 +81,22 @@ export default function SwapInstanceMenu({
       aria-label={copy.swapInstance}
     >
       <div className="ui-menu-section">
-        <div className="ui-menu-label">
-          {list?.from ? `Swap ${list.from} for` : "Swap for"}
-        </div>
+        <div className="ui-menu-label">{toSwapLabel(list)}</div>
         {list === null && (
           <p className="prp-swap-empty">{copy.findingComponentsThatFit}</p>
         )}
-        {list?.candidates.map((item) => (
-          <button
-            key={`${item.file}#${item.name}`}
-            type="button"
-            role="menuitem"
-            className="ui-menu-item"
-            disabled={busy !== null}
-            data-tip={item.file}
-            onClick={() => pick(item)}
-          >
-            <span>{item.name}</span>
-            <span className="prp-swap-hint">
-              {busy === item.name ? "Swapping…" : toHint(item)}
-            </span>
-          </button>
+        {list?.candidates.map((candidate) => (
+          <SwapCandidateRow
+            key={toCandidateKey(candidate)}
+            candidate={candidate}
+            busyName={busyName}
+            onPick={pick}
+          />
         ))}
         {list?.note && <p className="prp-swap-empty">{list.note}</p>}
       </div>
     </div>
   );
-}
+};
+
+export { SwapInstanceMenu };

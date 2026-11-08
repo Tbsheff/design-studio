@@ -23,6 +23,8 @@ interface NumberSpec {
 }
 
 const SCRUB_PX_PER_STEP = 2;
+const DISPLAY_PRECISION = 10;
+const SHIFT_FACTOR = 10;
 
 const toPlainLength = (value: string, ui: TokenUi | null): string => {
   if (!ui || !varName(value)) {
@@ -32,7 +34,11 @@ const toPlainLength = (value: string, ui: TokenUi | null): string => {
   const resolved = resolveTokenValue(value, ui.entries, ui.mode);
   const px = lengthToPx(resolved);
 
-  return px === null ? resolved : formatNumber(px, "px");
+  if (px === null) {
+    return resolved;
+  }
+
+  return formatNumber(px, "px");
 };
 
 const toDisplayLength = (value: string): string => {
@@ -42,7 +48,10 @@ const toDisplayLength = (value: string): string => {
     return value;
   }
 
-  return formatNumber(Math.round(parsed.value * 10) / 10, "px");
+  return formatNumber(
+    Math.round(parsed.value * DISPLAY_PRECISION) / DISPLAY_PRECISION,
+    "px"
+  );
 };
 
 const toClamped = (value: string, spec: NumberSpec): string => {
@@ -56,7 +65,11 @@ const toClamped = (value: string, spec: NumberSpec): string => {
   const hi = spec.max ?? Infinity;
   const bounded = Math.min(hi, Math.max(lo, parsed.value));
 
-  return bounded === parsed.value ? value : formatNumber(bounded, parsed.unit);
+  if (bounded === parsed.value) {
+    return value;
+  }
+
+  return formatNumber(bounded, parsed.unit);
 };
 
 const toPatch = (
@@ -84,10 +97,14 @@ const toStep = (
   const base = spec.step ?? 1;
 
   if (event.shiftKey) {
-    return base * 10;
+    return base * SHIFT_FACTOR;
   }
 
-  return event.altKey ? base / 10 : base;
+  if (event.altKey) {
+    return base / SHIFT_FACTOR;
+  }
+
+  return base;
 };
 
 const isValidValue = (prop: DirectStyleProperty, value: string): boolean => {
@@ -109,17 +126,20 @@ const startSelect = (input: HTMLInputElement): void => {
 const isSameSpec = (first: NumberSpec, second: NumberSpec): boolean => {
   const targets = first.targets ?? [first.prop];
 
-  const sameShape =
+  const hasSameLabel =
     first.prop === second.prop &&
     first.label === second.label &&
     first.unit === second.unit &&
-    first.step === second.step &&
-    first.min === second.min &&
-    first.max === second.max &&
     first.display === second.display;
 
+  const hasSameRange =
+    first.step === second.step &&
+    first.min === second.min &&
+    first.max === second.max;
+
   return (
-    sameShape &&
+    hasSameLabel &&
+    hasSameRange &&
     targets.join(",") === (second.targets ?? [second.prop]).join(",") &&
     isSameEditValues(first.edit, second.edit, targets)
   );

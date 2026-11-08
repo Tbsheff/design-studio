@@ -1,5 +1,5 @@
 import type { PackSummary, ProjectKind } from "@design-studio/contracts";
-import type { ReactElement, RefObject } from "react";
+import type { ReactElement, ReactNode, RefObject } from "react";
 
 import { usePresence } from "../chat/use-presence.js";
 import { pickable } from "../design-system/packs.js";
@@ -36,6 +36,7 @@ interface ComposerBarProps {
   readonly modelSettings: ModelSettings;
   readonly busy: Busy;
   readonly sendDisabled: string | null;
+  readonly children: ReactNode;
   readonly app: Omit<AppSlotProps, "pop" | "folderRef"> & {
     readonly isFolderPopOpen: boolean;
     readonly onFolderPick: (path: string) => void;
@@ -59,6 +60,7 @@ const ComposerBar = ({
   modelSettings,
   busy,
   sendDisabled,
+  children,
   app,
 }: ComposerBarProps): ReactElement => {
   const [pop, setPop] = useFolderPopState(app.isFolderPopOpen);
@@ -112,6 +114,7 @@ const ComposerBar = ({
         modelSizes={modelSizes}
         modelSettings={modelSettings}
       />
+      {children}
       <SendButton
         busy={busy}
         isDisabled={sendDisabled !== null}

@@ -2,6 +2,7 @@
 import { AccessibilityStatus } from "../accessibility/errors/status.js";
 import { AnimationStatus } from "../animation/errors/status.js";
 import { BlockStatus } from "../block/errors/status.js";
+import { BriefStatus } from "../brief/errors/status.js";
 import { ChartStatus } from "../chart/errors/status.js";
 import { CommentStatus } from "../comment/errors/status.js";
 import { CompletionStatus } from "../completion/errors/status.js";
@@ -50,6 +51,7 @@ const HTTP_STATUS = {
   ...AccessibilityStatus,
   ...AnimationStatus,
   ...BlockStatus,
+  ...BriefStatus,
   ...ChartStatus,
   ...CommentStatus,
   ...CompletionStatus,

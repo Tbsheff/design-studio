@@ -2,6 +2,8 @@ export type { Project } from "@design-studio/contracts";
 
 export type { HomeSort } from "../../platform/storage.js";
 
+export { routes as briefRoutes } from "@design-studio/actions/brief/routes";
+
 export { call } from "../../platform/http.js";
 
 export type {

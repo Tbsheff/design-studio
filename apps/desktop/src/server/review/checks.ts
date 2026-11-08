@@ -387,7 +387,7 @@ export function tapDrafts(
       ...base("tap-target", el, el.selector, el.tag),
       key: el.selector,
       severity: Math.min(el.width, el.height) < 16 ? "high" : "medium",
-      message: `This target is ${el.width}x${el.height} px; tap targets need at least ${TAP_MIN}x${TAP_MIN} px.`,
+      message: `This target is ${el.width} × ${el.height} px. Make it at least ${TAP_MIN} × ${TAP_MIN} px so it is easy to tap.`,
       fix: edit ? { label: tapLabel(edit), edit } : null,
       hint: `Make the target at least ${TAP_MIN}x${TAP_MIN} px, for example with padding or a larger hit area, and keep the look close to the design.`,
     };

@@ -110,7 +110,8 @@ const toFolded = (folded: Folded, message: SDKMessage): Folded => {
 
 const toUnavailable = (): Unavailable =>
   new Unavailable({
-    message: "The model call failed. Check the Claude sign-in and try again.",
+    message:
+      "Could not reach Claude. Check the Claude sign-in, then try again.",
   });
 
 const toEmptyFold = (): Folded => ({ costUsd: 0, text: "" });

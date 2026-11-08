@@ -27,7 +27,7 @@ const KEY_CONFIG = "mcp";
 
 const toUnauthenticated = (): Unauthenticated =>
   new Unauthenticated({
-    message: "The API key is not valid. Make a new key in Settings.",
+    message: "The API key is not valid. Create a new key in Settings.",
   });
 
 const isLive = (key: KeyRecord, now: number): boolean => {

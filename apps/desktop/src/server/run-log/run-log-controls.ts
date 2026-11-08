@@ -49,7 +49,8 @@ const findActiveRun = Effect.fn("RunLog.findActiveRun")(function* run(
   return handle;
 });
 
-const runFinished = (): Conflict => new Conflict({ message: "run_finished" });
+const runFinished = (): Conflict =>
+  new Conflict({ message: "The run already finished." });
 
 const stopActiveRun = Effect.fn("RunLog.stopActiveRun")(function* run(
   projectId: string,
@@ -70,7 +71,7 @@ const steerActiveRun = Effect.fn("RunLog.steerActiveRun")(function* run(
   const text = rawText.trim();
 
   if (text === "") {
-    return yield* new BadRequest({ message: "text is required" });
+    return yield* new BadRequest({ message: "Type a message first." });
   }
 
   const handle = yield* findActiveRun(projectId, runId);
@@ -173,7 +174,7 @@ const setRunTitle = Effect.fn("RunLog.setRunTitle")(function* run(
 
   if (title.length > RUN_TITLE_MAX) {
     return yield* new BadRequest({
-      message: `title is longer than ${RUN_TITLE_MAX}`,
+      message: `The name is longer than ${RUN_TITLE_MAX} characters. Use a shorter name.`,
     });
   }
 
@@ -187,7 +188,9 @@ const setRunTitle = Effect.fn("RunLog.setRunTitle")(function* run(
     runtime.runner.isRunning(projectId, current.directionId);
 
   if (isActive) {
-    return yield* new Conflict({ message: "run_in_progress" });
+    return yield* new Conflict({
+      message: "The run is still working. Rename it when it ends.",
+    });
   }
 
   const next = withTitle(current, title);

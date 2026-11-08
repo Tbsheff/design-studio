@@ -31,16 +31,16 @@ const FORBIDDEN_BODY = toWire(
 
 const UNSUPPORTED_BODY = toWire(
   new NotImplemented({
-    message: "the folder picker needs macOS; paste a path instead",
+    message: "The folder picker needs macOS. Paste the full path.",
   })
 );
 
 const BUSY_BODY = toWire(
-  new Conflict({ message: "a folder picker is already open" })
+  new Conflict({ message: "A folder picker is already open." })
 );
 
 const TIMEOUT_BODY = toWire(
-  new Unavailable({ message: "the folder picker timed out" })
+  new Unavailable({ message: "The folder picker timed out. Try again." })
 );
 
 const FAILED_BODY = toWire(null);

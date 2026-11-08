@@ -101,7 +101,7 @@ class Problems {
       if (count > LISTED_PER_RULE)
         this.list.push({
           rule,
-          message: `${count - LISTED_PER_RULE} more ${rule} problem(s) not listed.`,
+          message: `More ${rule} problems not listed: ${count - LISTED_PER_RULE}.`,
         });
     }
     return this.list;

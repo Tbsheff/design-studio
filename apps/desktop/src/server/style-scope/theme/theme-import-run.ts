@@ -41,7 +41,7 @@ const readReference = Effect.fn("ThemeImport.read")(function* run(
   if (command.url !== null && command.imagePath === null) {
     if (command.sample === null) {
       return yield* new BadRequest({
-        message: "The page style sample is missing for this url.",
+        message: "Could not read the styles of this page. Import it again.",
       });
     }
 

@@ -25,7 +25,7 @@ const handle = Effect.fn("screen.inspect")(function* run(
 
   if (direction === null) {
     return yield* new NotFound({
-      message: `The project ${input.projectId} has no direction.`,
+      message: "This project has no design yet.",
     });
   }
 

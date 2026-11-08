@@ -45,7 +45,7 @@ const toTarget = (raw: string): TargetFailure | TargetUrl => {
       return { message: error.message };
     }
 
-    return { message: "The URL cannot be read." };
+    return { message: "Could not read this URL. Check it, then try again." };
   }
 };
 

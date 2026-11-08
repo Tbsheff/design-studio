@@ -7,7 +7,10 @@ import { toDecoder } from "../platform/decode/index.js";
 const CLOUD_ORIGIN = "https://api.designstudio.app";
 
 const toUnavailable = (): Unavailable =>
-  new Unavailable({ message: "The cloud did not answer." });
+  new Unavailable({
+    message:
+      "The Design Studio cloud did not answer. Check your connection, then try again.",
+  });
 
 interface JsonCall {
   readonly body: string | null;

@@ -32,8 +32,8 @@ export function tapFindings(
 
     return {
       check: "tap-target",
-      fix: "Add padding or an invisible ::after hit area so the target is at least 44x44 px.",
-      message: `"${hit.text || hit.selector}" is ${hit.width}x${hit.height} px; touch targets need at least 44x44 px.`,
+      fix: "Add padding or an invisible ::after hit area so the target is at least 44 × 44 px.",
+      message: `"${hit.text || hit.selector}" is ${hit.width} × ${hit.height} px. Make it at least 44 × 44 px so it is easy to tap.`,
       selector: hit.selector,
       severity: smallest < 24 ? "high" : "medium",
       source: hit.source,

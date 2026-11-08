@@ -1,9 +1,9 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { RunInProgress } from "@design-studio/actions/comment/errors/run-in-progress";
 import type { startComment } from "@design-studio/actions/comment/start";
+import { Effect } from "effect";
+
 import { CommentRunStarter } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 
@@ -23,7 +23,9 @@ const handle = Effect.fn("comment.start")(function* run(
   });
 
   if (outcome.kind === "empty") {
-    return yield* new BadRequest({ message: "no_comments" });
+    return yield* new BadRequest({
+      message: "Select at least one comment to send.",
+    });
   }
 
   if (outcome.kind === "busy") {

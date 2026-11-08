@@ -1,5 +1,3 @@
-import { Context, Effect, Layer } from "effect";
-
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { CfFailed } from "@design-studio/actions/publish/errors/cf-failed";
@@ -9,6 +7,8 @@ import type {
   PublishCliState,
   PublishInput,
 } from "@design-studio/actions/publish/schema";
+import { Context, Effect, Layer } from "effect";
+
 import type { Publication } from "../../shared/publish.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
@@ -112,7 +112,9 @@ const getOwned = (
     const found = yield* Effect.promise(() => core.files.get(publicationId));
 
     if (!found || found.projectId !== projectId) {
-      return yield* new NotFound({ message: "publication not found" });
+      return yield* new NotFound({
+        message: "The publication does not exist.",
+      });
     }
 
     return found;

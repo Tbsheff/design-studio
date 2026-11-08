@@ -24,7 +24,10 @@ const toUrlTarget = (raw: string): UrlTargetResult => {
       return { message: error.message, ok: false };
     }
 
-    return { message: "The URL cannot be read.", ok: false };
+    return {
+      message: "Could not read this URL. Check it, then try again.",
+      ok: false,
+    };
   }
 };
 

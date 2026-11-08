@@ -1,6 +1,7 @@
 // @generated
 import type { AccessibilityError } from "../../accessibility/errors/index.js";
 import type { AnimationError } from "../../animation/errors/index.js";
+import type { BlockError } from "../../block/errors/index.js";
 import type { ChartError } from "../../chart/errors/index.js";
 import type { CommentError } from "../../comment/errors/index.js";
 import type { ComponentVariantError } from "../../component-variant/errors/index.js";
@@ -42,6 +43,7 @@ type StudioError =
   | CoreError
   | AccessibilityError
   | AnimationError
+  | BlockError
   | ChartError
   | CommentError
   | ComponentVariantError

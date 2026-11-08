@@ -1,0 +1,494 @@
+{
+  "tools": [
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Find the React components of the project, shared workspace packages (the kit, such as packages/ui) first, then by use count. Each item has source (package or app), file, line, folder, parts (the other components of the same file, such as CardHeader for Card; later items of that file say sameFileAs instead), a ready import line and a minimal JSX example, the use count, and the props schema: each prop with its control (select with options, boolean, text, number), default, and whether it comes from a cva() variant or the TypeScript props type; the cva variants with the classes of each option; and asChild. Pages hold 20 items: pass nextCursor as cursor for the next one. Use the names with insert_component and the options with set_props.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "query": {
+            "description": "Search text: matches the component name first (exact, then prefix, then part), then its folder or file, then the props, variants and other text of its file. For example \"badge\" or \"card\".",
+            "type": "string",
+            "maxLength": 100
+          },
+          "source": {
+            "description": "\"package\" for components of shared workspace packages (such as packages/ui), \"app\" for components in the app, \"all\" (default) for both. Package components always come first.",
+            "type": "string",
+            "enum": ["package", "app", "all"]
+          },
+          "limit": {
+            "description": "Components per page. Default 20.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "cursor": {
+            "description": "nextCursor from the previous page.",
+            "type": "string",
+            "pattern": "^\\d{1,6}$"
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_components"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Change the props of one component instance, the same as the Component section of the studio inspector: it adds, replaces or removes JSX attributes at the use site (for example <Button variant=\"outline\"> to variant=\"destructive\") and keeps the rest of the file as it was. One version and one undo step. Find the instance by selector (an element inside it on the page) or by source (file:line:col of the JSX tag). Props set by an expression are refused.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "description": "CSS selector of an element inside the component instance on the page, for example \"button\" or \"main button:nth-of-type(2)\". The nearest component (such as <Button> or <Badge> from packages/ui) that has props is changed, and the result names its use site (file:line:col).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "source": {
+            "description": "Use site of the component as file:line:col of its JSX tag, for example \"src/App.tsx:14:9\" (get_layers prints it). file:line works when one JSX tag starts on that line. Use this or selector.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "props": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Za-z_$][A-Za-z0-9_$]{0,63}$"
+            },
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "Props to set: a string, number or boolean. null removes the prop. A value equal to the default removes the attribute. Variant props take one of the cva option names from list_components."
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "props"],
+        "additionalProperties": false
+      },
+      "name": "set_props"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Run the studio Review panel checks on one canvas frame and return the findings: color contrast (with the nearest passing color token), tap target size, missing alt text and other axe-core accessibility rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values), clipped or overflowing content, and breaks of the project design rules (kind rule, with rule set to the rule text; see get_design_rules). Each finding has an id, severity, element, selector, source and message; copies counts the repeats of one source line (for example a .map() list), and one fix changes all of them; an off-token finding from a shared kit file outside the app folder is one row for every use on the page (element is \"in <file>, N uses\", copies is N); fix is the label of a direct fix that needs no judgment, or null when it needs judgment; shared names the file a fix edits when that file is outside the route folder of the page (a shared component). selector limits the findings to one element subtree; matched (right after frame) gives how many elements the selector matched, and only the first one is reviewed. Read only. Apply a fix with apply_fix.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frame": {
+            "description": "Frame id or @label from canvas_list. Leave out for the frame the user has live, or the first frame.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "viewport": {
+            "description": "Render size instead of the frame size.",
+            "type": "string",
+            "enum": ["desktop", "tablet", "mobile"]
+          },
+          "selector": {
+            "description": "CSS selector of one element, for example [data-slot=\"card\"]. Only findings inside its subtree are returned. A layer id from get_layers works too.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "review_frame"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Apply the direct fix of one or more review_frame findings, with the same code path as the Fix button in the Review panel (the studio inspector edit, Tailwind-aware). Several ids make one version and one undo step. Fixes of findings with shared set edit a shared component file and are skipped unless allowShared is true. Findings with fix null need judgment and are skipped; change those with edit_element or write_file. Runs review_frame again first when the design changed since the last review.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "findingId": {
+            "description": "id of one finding from review_frame.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "findingIds": {
+            "description": "Or several finding ids, applied as one version.",
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "allowShared": {
+            "description": "Apply fixes whose finding has shared set: they edit a file outside the page's own route folder (a shared component), so the change reaches every page that uses it. Without it those fixes are skipped.",
+            "type": "boolean"
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "apply_fix"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Insert an instance of a React component from the project library, like dragging it from the studio Components panel: it writes <Name …>Text</Name> inside or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (a workspace package such as @workspace/ui/components/button, a tsconfig path, or a relative path). One version and one undo step. Targets made by .map(), shown by a condition, or the top element of a component are refused with a reason. HTML projects have no component kit and are refused.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9_$]{0,63}$",
+            "description": "Component name, for example \"Button\". The studio finds it in the project component library (exported React components in src, or in the app and its workspace packages such as @workspace/ui)."
+          },
+          "file": {
+            "description": "File of the component, relative to the project, when two components have the same name.",
+            "type": "string",
+            "maxLength": 1000
+          },
+          "targetSelector": {
+            "description": "CSS selector of the element on the page to insert inside or after, for example \"main\" or \"[data-name='Hero'] h2\".",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "targetSource": {
+            "description": "Or the target element as file:line:col of its JSX tag as get_layers prints it, for example \"src/App.tsx:12:7\". file:line works when one JSX tag starts on that line. Use this or targetSelector.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "position": {
+            "default": "inside",
+            "description": "inside adds the component as the last child of the target; after adds it as the next sibling.",
+            "type": "string",
+            "enum": ["inside", "after"]
+          },
+          "props": {
+            "description": "Props to set, for example {\"variant\": \"outline\"}. Required props that you leave out get a default from the props type.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Za-z_$][A-Za-z0-9_$]{0,63}$"
+            },
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          },
+          "text": {
+            "description": "Child text, for example \"Save\". Default: the component name, and that text stays when you later insert children into it, so pass \"\" for a container such as Card. To build a group (a Card with a header, rows and buttons) use insert_jsx instead: one call, one undo step.",
+            "type": "string",
+            "maxLength": 200
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "name"],
+        "additionalProperties": false
+      },
+      "name": "insert_component"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Read only. Render one React component of the project library alone with its default props, with the same server code as the tiles of the studio Components panel, and return the PNG. Required props get a value from the props type, variant props keep their default, a component that takes children gets its name as text, and a compound component (Card, Alert) gets its Header, Title, Description and Content parts. The page uses the app CSS from its dev server, so it looks like the app. Next.js link, image and navigation are stubbed; components that need data, server code or an open state are refused with the reason. Renders are cached per file content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "name": {
+            "description": "Component name from list_components, for example \"Button\".",
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9_$]{0,63}$"
+          },
+          "file": {
+            "description": "File of the component, relative to the project, when two components have the same name.",
+            "type": "string",
+            "maxLength": 1000
+          },
+          "id": {
+            "description": "Or the component id as the studio Components panel lists it: \"<file>#<Name>\".",
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "component_preview"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Turn repeated markup into a React component, like Figma \"Create component\": pass one element, or several look-alike elements written out one by one (for example 3 stat rows or 4 nav links). The studio writes the component file in folder (the kit, such as packages/ui/src/components, or the app components folder; leave out for the app folder), with a prop for each part that differs between the elements (text, href, src, values in { }) and a cva() variant prop when their classes differ. Then it replaces each element with <Name …props /> and adds the import. Names the markup gets from the page (state, handlers) become props too. One version and one undo step; undo also removes the new file. Elements that a .map() draws, that a condition shows, that spread props, or whose structure differs are refused with a reason. Next: set_props to change the variant of one use, swap_instance to change one use to another component.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "targets": {
+            "minItems": 1,
+            "maxItems": 24,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "targetSelector": {
+                  "description": "CSS selector or get_layers id of the element, for example \"e0k3pz\".",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "targetSource": {
+                  "description": "Or file:line:col of its JSX tag, for example \"src/App.tsx:14:9\".",
+                  "type": "string",
+                  "maxLength": 1100
+                },
+                "path": {
+                  "description": "Page path of this element. Leave out to use the top-level path.",
+                  "type": "string",
+                  "maxLength": 300
+                }
+              },
+              "additionalProperties": false
+            },
+            "description": "The elements, one item per element: [{\"targetSelector\": \"e0k3pz\"}, {\"targetSelector\": \"e0k4a1\"}, {\"targetSelector\": \"e0k4b7\"}]."
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]{0,63}$",
+            "description": "PascalCase component name, for example \"StatRow\". The file name follows the folder (stat-row.tsx in a kit of kebab-case files, StatRow.tsx in a folder of PascalCase files)."
+          },
+          "folder": {
+            "description": "Folder for the new file, relative to the project, for example \"packages/ui/src/components\" or \"src/components\". Leave out for the app components folder.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "targets", "name"],
+        "additionalProperties": false
+      },
+      "name": "create_component"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Replace one component use with another library component, like Figma \"Swap instance\": <Badge variant=\"success\">Paid</Badge> to <Button variant=\"outline\">Paid</Button>. Props the new component also has stay (variant values that are not its options are dropped), required props it needs get defaults, the import is added and the old import goes when the file no longer uses it. Leave out name to list the components that fit (name, file, which props stay, drop or get added); only one with children can take a use that has children. One version and one undo step.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "description": "CSS selector or get_layers id of an element of the component use on the page.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "source": {
+            "description": "Or the use site as file:line:col of its JSX tag, for example \"src/App.tsx:14:9\". Use this or selector.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "name": {
+            "description": "Component to swap to, for example \"Button\". Leave out to list the components that fit.",
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9_$]{0,63}$"
+          },
+          "file": {
+            "description": "File of that component when two have the same name.",
+            "type": "string",
+            "maxLength": 1000
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "swap_instance"
+    }
+  ]
+}

@@ -1,0 +1,1070 @@
+{
+  "tools": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List the saved prototype links with their trigger (click, hover, press, delay with delayMs, key with key), action (navigate, modal, drawer, scroll-to, open-url, close-overlay, toggle), target (toFrame, a target selector with visibility, or url) and broken (null, or why the link no longer works). Read only. Links live in the studio (.studio/links.json), not in the page code. limit caps the listed links.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "description": "Direction id. Leave out for the main direction.",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "fromFrame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Frame id or @label. Leave out for the links of every frame."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_link_interactions"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List the links found in the source of one app route: kind (link, push, form, redirect), href, the route it goes to, the element to click (selector and text) and file:line. Attached Next.js apps only. The route is a pattern from list_routes or a concrete path.",
+      "inputSchema": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          },
+          "route": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "Route pattern from list_routes or a concrete path such as /organizations/acme/patients."
+          }
+        },
+        "type": "object",
+        "required": ["projectId", "route"],
+        "additionalProperties": false
+      },
+      "name": "list_route_links"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List the preview states of an attached app (signed in, empty, loading, error and mock states), which frame shows which state, and the session in use.",
+      "inputSchema": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_frame_states"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List the saved prototype links of a project: id, frame, selector, target frame (or back), transition, and broken (null, or why the link no longer works). Also returns startFrame and the raw links file. Set check to true to render each page and mark links whose element is gone. Implicit links from page code come from list_implicit_links. Links live in the studio (.studio/links.json), not in the page code.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "description": "Direction id. Leave out for the main direction.",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "check": {
+            "type": "boolean"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_links"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "List the frames on the studio canvas of a project: id, label, page, size and position, plus what the user has selected and which frame is live.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "canvas_list"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Add or move frames on the studio canvas. Pass { frames: [...] }, applied in order. Each item: frame (id or @label to move; leave out to add), label, path (a query string or #hash is dropped, with a warning), viewport or width/height, and one of below / rightOf / leftOf / above (another frame) with gap, or absolute x/y. Returns the placed frames and overlap warnings.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frames": {
+            "minItems": 1,
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "above": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "below": {
+                  "description": "Put the frame under this frame (id or @label), left edges lined up.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "frame": {
+                  "description": "Id or @label of a frame to move or change. Leave out to add a new frame.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "gap": {
+                  "description": "Space between the frames in px. Default 80.",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2000
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 200,
+                  "maximum": 4000
+                },
+                "hidden": {
+                  "type": "boolean"
+                },
+                "label": {
+                  "description": "Short name shown on the frame label, for example \"Empty\" or \"Pricing\".",
+                  "type": "string",
+                  "maxLength": 40
+                },
+                "leftOf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "path": {
+                  "description": "Page the frame shows, relative to the project root, for example \"states/empty.html\". Empty string = the entry page.",
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "rightOf": {
+                  "description": "Put the frame to the right of this frame, top edges lined up.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "viewport": {
+                  "description": "Frame size preset: desktop 1440x900, tablet 768x1024, mobile 390x844.",
+                  "type": "string",
+                  "enum": ["desktop", "tablet", "mobile"]
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 200,
+                  "maximum": 4000
+                },
+                "x": {
+                  "description": "Absolute canvas x. Overrides the relative x.",
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "y": {
+                  "description": "Absolute canvas y. Overrides the relative y.",
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["projectId", "frames"],
+        "additionalProperties": false
+      },
+      "name": "canvas_place"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Show the user a small badge on the canvas that says you are pointing at one frame (and an optional CSS selector). The view moves only when the user clicks Show, so the result always has shown: false. badge: true means a studio window has the project open and the user sees the badge.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "Frame id or @label."
+          },
+          "selector": {
+            "type": "string",
+            "maxLength": 400
+          }
+        },
+        "required": ["projectId", "frame"],
+        "additionalProperties": false
+      },
+      "name": "canvas_point"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "viewport": {
+            "description": "desktop 1440x900, tablet 768x1024 or mobile 390x844. Default desktop.",
+            "type": "string",
+            "enum": ["desktop", "tablet", "mobile"]
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 4000
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 4000
+          },
+          "label": {
+            "description": "Short frame name, for example \"Empty state\".",
+            "type": "string",
+            "maxLength": 40
+          },
+          "rightOf": {
+            "description": "Put the new frame to the right of this frame (id or @label).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "below": {
+            "description": "Put the new frame under this frame (id or @label).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "add_frame"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Remove one frame from the canvas. The page file stays.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "frame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "Frame id or @label."
+          }
+        },
+        "required": ["projectId", "frame"],
+        "additionalProperties": false
+      },
+      "name": "remove_frame"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Add a canvas frame that shows one route of an attached app at a viewport. get_screenshot with the returned frame id renders it. On a canvas with no saved frames, the first route frame is f1 and replaces the default entry-page frame.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "route": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "App route from list_routes with the dynamic segments filled in, for example \"/design-system\" or \"/patients/123\"."
+          },
+          "viewport": {
+            "description": "desktop 1440x900, tablet 768x1024 or mobile 390x844. Default desktop.",
+            "type": "string",
+            "enum": ["desktop", "tablet", "mobile"]
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "rightOf": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "below": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          }
+        },
+        "required": ["projectId", "route"],
+        "additionalProperties": false
+      },
+      "name": "add_route_frame"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Apply one element variant to the design it came from, as one new version, and discard the other variants of its group. Use list_variants first: only a variant in state \"ready\" can be kept. This tool cannot start variant runs; the user starts them in the studio.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "groupId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "Variant group id from list_variants."
+          },
+          "directionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "Direction id of the variant to keep, from list_variants."
+          }
+        },
+        "required": ["projectId", "groupId", "directionId"],
+        "additionalProperties": false
+      },
+      "name": "keep_variant"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "List the page variation groups of a project with the directionId, label, title, run state, kept or discarded state and canvas frames of each variation. A page variation is a whole-page direction (1a, 1b, 1c) that the studio made from one prompt and shows side by side on the canvas. These tools change only the canvas and the variation state, like Keep on a variation frame in the studio: they never start, steer or stop a run, and they delete no direction or version (the Versions panel still has them).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_page_variations"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Keep one page variation, like Keep on its frame in the studio: the other variations of its group leave the canvas and are marked discarded, and the kept one stays as its own direction. Refused while a variation of the group still runs. A page variation is a whole-page direction (1a, 1b, 1c) that the studio made from one prompt and shows side by side on the canvas. These tools change only the canvas and the variation state, like Keep on a variation frame in the studio: they never start, steer or stop a run, and they delete no direction or version (the Versions panel still has them).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id of the page variation, from list_page_variations."
+          }
+        },
+        "required": ["projectId", "directionId"],
+        "additionalProperties": false
+      },
+      "name": "keep_page_variation"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Discard one page variation: its frames leave the canvas and it is marked discarded. The other variations stay. Refused while it runs. A page variation is a whole-page direction (1a, 1b, 1c) that the studio made from one prompt and shows side by side on the canvas. These tools change only the canvas and the variation state, like Keep on a variation frame in the studio: they never start, steer or stop a run, and they delete no direction or version (the Versions panel still has them).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id of the page variation, from list_page_variations."
+          }
+        },
+        "required": ["projectId", "directionId"],
+        "additionalProperties": false
+      },
+      "name": "discard_page_variation"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Save implicit links (found from a href or location.href between pages, or Next.js Link) as normal prototype links, so they show solid on the canvas and can change action or transition. Pass the ids from list_implicit_links, or all. Play already uses implicit links without this.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "description": "Direction id. Leave out for the main direction.",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "linkIds": {
+            "description": "Implicit link ids from list_links (implicit: true). Omit to keep all.",
+            "items": {
+              "pattern": "^i[0-9a-z]{1,12}$",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["navigate", "modal", "drawer"]
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 3000
+          },
+          "easing": {
+            "type": "string",
+            "enum": ["ease-out", "ease-in", "ease-in-out", "linear", "spring"]
+          },
+          "transition": {
+            "type": "string",
+            "enum": [
+              "instant",
+              "dissolve",
+              "slide-left",
+              "slide-right",
+              "push-up",
+              "push-down",
+              "move-in",
+              "move-out",
+              "smart-animate"
+            ]
+          },
+          "ids": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["all"]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^i[0-9a-z]{1,12}$"
+                },
+                "maxItems": 50
+              }
+            ]
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "keep_links"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Lay out app route frames left to right and make prototype links from the links in their source. Pass routes, or from with depth. Frames already on the canvas are reused. Attached Next.js apps only. Dynamic segments get the sample params, saved for the next flow.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "description": "Direction id. Leave out for the main direction.",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "params": {
+            "type": "object",
+            "patternProperties": {
+              "^[A-Za-z_][\\w-]{0,40}$": {
+                "type": "string",
+                "maxLength": 80
+              }
+            },
+            "additionalProperties": false
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          },
+          "routes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "minItems": 1,
+            "maxItems": 24
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "add_flow"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Link an element (CSS selector on the page of fromFrame) to another frame: on click, go to toFrame (action navigate) or open it as a modal or drawer over the current frame, with a transition, a duration and an easing. toFrame back goes back to the frame before. A second link on the same element replaces the first. Each link change is one step in the edit history.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "description": "Direction id. Leave out for the main direction.",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["navigate", "modal", "drawer"]
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 3000
+          },
+          "easing": {
+            "type": "string",
+            "enum": ["ease-out", "ease-in", "ease-in-out", "linear", "spring"]
+          },
+          "transition": {
+            "type": "string",
+            "enum": [
+              "instant",
+              "dissolve",
+              "slide-left",
+              "slide-right",
+              "push-up",
+              "push-down",
+              "move-in",
+              "move-out",
+              "smart-animate"
+            ]
+          },
+          "fromFrame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Frame id or @label of the frame that has the element."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400,
+            "description": "CSS selector of the element to click, for example #sign-in."
+          },
+          "tag": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "toFrame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Frame id or @label to go to, or back."
+          }
+        },
+        "type": "object",
+        "required": ["fromFrame", "projectId", "selector", "toFrame"],
+        "additionalProperties": false
+      },
+      "name": "add_link"
+    },
+    {
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Remove one saved prototype link. The page and the frames stay. The change is one step in the edit history, so undo brings the link back.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "description": "Direction id. Leave out for the main direction.",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "linkId": {
+            "type": "string",
+            "pattern": "^l\\d{1,5}$",
+            "description": "Link id from list_links, for example l2."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["linkId", "projectId"],
+        "additionalProperties": false
+      },
+      "name": "remove_link"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Show one app frame in a preview state: default, session, empty, loading, error, an existing mock state id, or mock to make a new mock state. The frame reloads in the studio. Use get_screenshot with frameId to see it.",
+      "inputSchema": {
+        "properties": {
+          "frame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Frame id or @label from canvas_list."
+          },
+          "mock": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "body": {},
+                    "delayMs": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 30000
+                    },
+                    "method": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z]{3,7}$"
+                    },
+                    "path": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 300
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    }
+                  },
+                  "required": ["path"],
+                  "additionalProperties": false
+                },
+                "maxItems": 40
+              },
+              "signedIn": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          },
+          "state": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,23}$"
+          }
+        },
+        "type": "object",
+        "required": ["frame", "projectId", "state"],
+        "additionalProperties": false
+      },
+      "name": "set_frame_state"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Set the trigger, action and target of one prototype link (linkId), or make a link from a source element (fromFrame and selector). trigger: click (default), hover, press, delay (delayMs) or key (key). action: navigate, modal or drawer (toFrame), scroll-to (target selector in the same frame), open-url (https url), close-overlay, or toggle (target selector, visibility toggle, show or hide). One element has one link per trigger; a second link with the same trigger replaces the first. Links live in the studio (.studio/links.json), not in the page code. Each change is one step in the edit history.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "description": "Direction id. Leave out for the main direction.",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "navigate",
+              "modal",
+              "drawer",
+              "scroll-to",
+              "open-url",
+              "close-overlay",
+              "toggle"
+            ],
+            "description": "navigate, modal or drawer go to toFrame; scroll-to scrolls target into view in the same frame; open-url opens url (https only) in a new tab; close-overlay closes the open modal or drawer; toggle shows or hides target."
+          },
+          "delayMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60000,
+            "description": "Wait in ms for trigger delay."
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 3000,
+            "description": "Transition length in ms for navigate, modal and drawer."
+          },
+          "easing": {
+            "type": "string",
+            "enum": ["ease-out", "ease-in", "ease-in-out", "linear", "spring"],
+            "description": "Transition easing."
+          },
+          "fromFrame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Frame id or @label of the frame that has the element."
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^(?:[!-~]|[A-Z][A-Za-z0-9]{1,19})$",
+            "description": "Key name for trigger key: one character (\"k\", \"/\") or a name (\"Enter\", \"Escape\", \"ArrowRight\", \"Space\")."
+          },
+          "linkId": {
+            "type": "string",
+            "pattern": "^l\\d{1,5}$",
+            "description": "Id of a saved link from list_link_interactions, for example \"l2\". Leave out to make a link from fromFrame and selector."
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400,
+            "description": "CSS selector of the source element, for example \"#menu-button\". Use \"body\" for a delay trigger on the whole frame."
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400,
+            "description": "CSS selector in the same frame for scroll-to and toggle."
+          },
+          "toFrame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Frame id or @label for navigate, modal and drawer, or \"back\" for navigate."
+          },
+          "transition": {
+            "type": "string",
+            "enum": [
+              "instant",
+              "dissolve",
+              "slide-left",
+              "slide-right",
+              "push-up",
+              "push-down",
+              "move-in",
+              "move-out",
+              "smart-animate"
+            ],
+            "description": "Transition for navigate, modal and drawer."
+          },
+          "trigger": {
+            "type": "string",
+            "enum": ["click", "hover", "press", "delay", "key"],
+            "description": "click (default), hover (pointer enters), press (pointer down), delay (delayMs after the frame shows) or key (a key press while the frame shows). One element has one link for each trigger."
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "https URL for open-url."
+          },
+          "visibility": {
+            "type": "string",
+            "enum": ["toggle", "show", "hide"],
+            "description": "For toggle: toggle (default), show or hide the target."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "set_link_interaction"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Set the frame where Play starts in the prototype. Each change is one step in the edit history.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "description": "Direction id. Leave out for the main direction.",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "frame": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Frame id or @label where Play starts."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["frame", "projectId"],
+        "additionalProperties": false
+      },
+      "name": "set_start_frame"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Change the session that signed-in frame states use: the mock user, or forget the cookies kept from a real sign-in.",
+      "inputSchema": {
+        "properties": {
+          "forgetCookies": {
+            "description": "Forget the cookies kept from a real sign-in.",
+            "type": "boolean"
+          },
+          "forget": {
+            "type": "boolean"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            },
+            "required": ["email", "name"],
+            "additionalProperties": false
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "set_frame_session"
+    }
+  ]
+}

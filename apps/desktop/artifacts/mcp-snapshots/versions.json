@@ -1,0 +1,77 @@
+{
+  "tools": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Compare two saved versions, the same as Compare in the studio Versions panel. Returns each changed file (path, oldPath for a rename, status added, removed, modified or renamed, additions, deletions, binary) with its unified git diff (cut at 64 KB a file, 512 KB in all, and 100 files; truncated says so). With thumbnails (default) it also returns thumbs: absolute PNG paths of a 1280x800 screenshot of each version, a mask PNG of the changed pixels and changedPct. Read only.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "from": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "The older version id, from list_versions."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          },
+          "thumbnails": {
+            "type": "boolean",
+            "description": "Render a screenshot of both versions and a changed-pixel mask, and return their file paths. Default true."
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "The newer version id. Leave out for the head version of the direction."
+          }
+        },
+        "type": "object",
+        "required": ["from", "projectId"],
+        "additionalProperties": false
+      },
+      "name": "diff_versions"
+    },
+    {
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Make an older version the current design of a direction. Saved as a new version that undo takes back. The current prototype links and canvas frames stay; only the page files change.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Direction id. Use the main direction id for the main one."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          },
+          "versionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Version id from list_versions."
+          }
+        },
+        "type": "object",
+        "required": ["projectId", "versionId"],
+        "additionalProperties": false
+      },
+      "name": "restore_version"
+    }
+  ]
+}

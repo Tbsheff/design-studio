@@ -1,0 +1,3764 @@
+{
+  "tools": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Search the icons that insert_icon can add. In a React project or attached app it reads the icon library the project has installed (lucide-react, @heroicons/react or @tabler/icons-react) from node_modules; HTML projects and projects with no icon library get a bundled set of about 360 lucide icons (ISC license). Returns name, library, the React component name (null for inline SVG) and an SVG preview. The limit caps the icons. Read only.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "library": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lucide",
+                  "lucide-react",
+                  "@heroicons/react",
+                  "@tabler/icons-react"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_icons"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Search free stock photos with Creative Commons licenses (Openverse, no key). query is the search words only; the studio sends no other project data. orientation is any, wide, tall or square; limit is 1 to 30 (default 12). Each result has id, thumbnailUrl, fullUrl, width, height, author, license, licenseUrl and sourceUrl. Pass a result id to place_image. The network is off until STUDIO_IMAGE_SEARCH=on or the project setting imageSearch is true.",
+      "inputSchema": {
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects. Its imageSearch setting can turn the search on."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30,
+            "description": "Number of results, 1 to 30."
+          },
+          "orientation": {
+            "type": "string",
+            "enum": ["any", "wide", "tall", "square"],
+            "description": "any (default), wide, tall or square."
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Search words only, for example \"mountain lake sunrise\"."
+          }
+        },
+        "type": "object",
+        "required": ["projectId", "query"],
+        "additionalProperties": false
+      },
+      "name": "search_images"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Read the motion of one element: the Tailwind transition, duration, ease, delay and animate classes, the studio motion CSS rules for the element, and whether a prefers-reduced-motion guard is there. Read only. The limit caps each list in the result.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "col": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page. Used with targetSelector.",
+            "maxLength": 300,
+            "type": "string"
+          },
+          "targetSelector": {
+            "description": "CSS selector or layer id of the element. Use this, targetSource or the new target fields.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "targetSource": {
+            "description": "Or the element as file:line:col of its tag, as get_layers prints it. file:line works when one tag starts on that line.",
+            "maxLength": 1100,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_motion"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Read the interaction and theme state styles of one layer: the values it sets for hover, focus-visible, active, disabled and dark, at base and at each breakpoint. In a Tailwind page these are the classes with a state prefix. In a plain HTML page these are the declarations of its state rules and of its dark rules. It also gives the state that each canvas frame shows from set_forced_state. Read only. The limit caps the list of forced frames and the state names.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "col": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page. Used with targetSelector.",
+            "maxLength": 300,
+            "type": "string"
+          },
+          "targetSelector": {
+            "description": "CSS selector or layer id of the element. Use this, targetSource or the new target fields.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "targetSource": {
+            "description": "Or the element as file:line:col of its tag, as get_layers prints it. file:line works when one tag starts on that line.",
+            "maxLength": 1100,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_state_styles"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Find visible text in the pages of this project: text nodes, the alt, placeholder, title and aria-label attributes, and string literals that are rendered as children, in HTML and JSX files. In an attached app it searches only the route and component files that the canvas frames use, plus the files in glob. Each hit gives its id (file:line:col), the layer source, a context snippet and the canvas frame. Text from a dynamic expression is not found. The limit caps the hits. Read only.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "caseSensitive": {
+            "type": "boolean"
+          },
+          "glob": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "regex": {
+            "type": "boolean"
+          },
+          "wholeWord": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        "type": "object",
+        "required": ["projectId", "query"],
+        "additionalProperties": false
+      },
+      "name": "search_text"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List the project type scale that apply_text_style can use, read in this order: Tailwind v4 @theme --text-* (with --line-height, --font-weight and --letter-spacing pairs) and --font-* vars, tokens.json typography, CSS vars in :root, then the DESIGN.md typography section. Returns name, size, weight, line-height, letter-spacing, family and source. The limit caps the styles. Read only.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_text_styles"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List the recent edits that undo and redo would step through, newest first: label, version id and files. This is the same undo history as the studio window (Cmd+Z). The history lives in memory and clears when Design Studio restarts. Read only.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Direction id. Use the main direction id for the main one."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Entries per side, 1 to 50."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "edit_history"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Write or replace one text file in the project folder and save it as a version labelled \"Edit by <client>\", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "File path relative to the project folder, for example \"index.html\" or \"styles/site.css\"."
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 524288,
+            "description": "The full new text of the file."
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "path", "content"],
+        "additionalProperties": false
+      },
+      "name": "write_file"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Change the style, the Tailwind classes or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. In a Tailwind project style changes become theme classes; the result lists the classes and says when the edit fell back to inline style. Pass variant (\"md:\", \"hover:\", \"md:hover:\", \"dark:\") to set the style for a breakpoint or state only. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. The ops refuse elements made by .map(), a condition or a function call. Text that comes from a prop, a literal array or object (also through .map()), a constant, a default prop value or an i18n messages JSON key changes where it is written, and textSource in the result says where; text from fetched or runtime data is refused with the reason. In an attached app, the outer element of a shared component use (such as <Button>, <Badge> or <CardTitle> from packages/ui) is edited where it is used by default: its className prop and text in the page file, so only this use changes; target \"component\" edits the component file and changes every use. The result says which file and line changed (at, editedAt). The source file changes and a version is saved, so the user can undo it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "CSS selector of one element on the page."
+          },
+          "style": {
+            "description": "CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits.",
+            "type": "object",
+            "properties": {
+              "color": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "background-color": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "font-family": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "font-size": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "font-weight": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "line-height": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "letter-spacing": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "text-align": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "padding-top": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "padding-right": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "padding-bottom": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "padding-left": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "margin-top": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "margin-right": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "margin-bottom": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "margin-left": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "border-radius": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "border-width": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "border-style": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "border-color": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "display": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "gap": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "width": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "height": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "opacity": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "flex-direction": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "flex-wrap": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "justify-content": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "align-items": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "align-self": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "flex": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "box-shadow": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "filter": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "font-style": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "text-decoration-line": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "text-transform": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "overflow": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "text-shadow": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "transform": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "top": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "right": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "bottom": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "left": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "min-width": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "max-width": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "min-height": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "max-height": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "row-gap": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "column-gap": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "justify-items": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "object-fit": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "object-position": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "background-image": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "background-size": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "background-position": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "background-repeat": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "mix-blend-mode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "background-blend-mode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "grid-template-columns": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "grid-template-rows": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "grid-column": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "grid-row": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "text": {
+            "description": "New text content of the element.",
+            "type": "string",
+            "maxLength": 5000
+          },
+          "classes": {
+            "type": "object",
+            "properties": {
+              "add": {
+                "maxItems": 30,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                }
+              },
+              "remove": {
+                "maxItems": 30,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                }
+              }
+            },
+            "additionalProperties": false,
+            "description": "Tailwind classes to add or remove, with any variant prefix (md:p-8, hover:bg-primary). An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge(); a class built at runtime or a cva() result is refused."
+          },
+          "target": {
+            "description": "Attached apps only. Leave out: an element that is the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes; other elements are edited in their own file. \"component\" edits the element in the shared component file, which changes every use (\"element\" is the same). \"use\" asks for the use site and fails when there is none.",
+            "type": "string",
+            "enum": ["use", "component", "element"]
+          },
+          "variant": {
+            "type": "string",
+            "maxLength": 60,
+            "description": "Breakpoint and state the style applies to, with the same code path as the studio inspector variant bar: \"md:\" (768 px and up), \"lg:\", \"hover:\", \"focus:\", \"active:\", \"dark:\" or a mix such as \"md:hover:\". In a Tailwind project style becomes prefixed classes (md:p-6, hover:bg-primary); in a plain HTML page it becomes a media query or :hover rule; other files refuse it. Leave out for the base style."
+          },
+          "op": {
+            "description": "Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name=\"Group\"> with no layout, like Cmd+G), unwrap (keep the children, drop the element; also ungroups) or move (into targetSelector, as its last child).",
+            "type": "string",
+            "enum": [
+              "delete",
+              "duplicate",
+              "wrap",
+              "unwrap",
+              "move",
+              "clear",
+              "group"
+            ]
+          },
+          "targetSelector": {
+            "description": "For op move: CSS selector of the new parent element.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "also": {
+            "description": "With op: more elements to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Layer ids from select_matching work here.",
+            "minItems": 1,
+            "maxItems": 49,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "selector": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "CSS selector or layer id."
+                }
+              },
+              "required": ["selector"],
+              "additionalProperties": false
+            }
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "selector"],
+        "additionalProperties": false
+      },
+      "name": "edit_element"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Make several changes as ONE version and one undo step. Pass edits (style, text and class edits on elements found by CSS selector, on one or more pages; the same code path as a multi-select in the studio inspector; a shared component use such as <Button> or <CardTitle> is edited where it is used unless the edit has target \"component\") or files (whole files, the same path rules as write_file). Up to 50 edits or 20 files. Structure ops (delete, duplicate, wrap, group, unwrap, move) are not part of a batch; use edit_element with op.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "edits": {
+            "description": "Style, text and class edits, each on one element. They can be on several pages and files.",
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+                  "type": "string",
+                  "maxLength": 300
+                },
+                "selector": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "CSS selector of one element on the page."
+                },
+                "style": {
+                  "description": "CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property.",
+                  "type": "object",
+                  "properties": {
+                    "color": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "background-color": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "font-family": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "font-size": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "font-weight": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "line-height": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "letter-spacing": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "text-align": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "padding-top": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "padding-right": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "padding-bottom": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "padding-left": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "margin-top": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "margin-right": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "margin-bottom": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "margin-left": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "border-radius": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "border-width": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "border-style": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "border-color": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "display": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "gap": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "width": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "height": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "opacity": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "flex-direction": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "flex-wrap": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "justify-content": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "align-items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "align-self": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "flex": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "box-shadow": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "filter": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "font-style": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "text-decoration-line": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "text-transform": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "overflow": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "text-shadow": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "transform": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "position": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "top": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "right": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "bottom": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "left": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "min-width": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "max-width": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "min-height": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "max-height": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "row-gap": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "column-gap": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "justify-items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "object-fit": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "object-position": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "background-image": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "background-size": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "background-position": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "background-repeat": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "mix-blend-mode": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "background-blend-mode": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "grid-template-columns": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "grid-template-rows": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "grid-column": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "grid-row": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 5000
+                },
+                "classes": {
+                  "type": "object",
+                  "properties": {
+                    "add": {
+                      "maxItems": 30,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      }
+                    },
+                    "remove": {
+                      "maxItems": 30,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "Tailwind classes to add or remove, with any variant prefix (md:p-8, hover:bg-primary). An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge(); a class built at runtime or a cva() result is refused."
+                },
+                "variant": {
+                  "type": "string",
+                  "maxLength": 60,
+                  "description": "Breakpoint and state the style applies to, with the same code path as the studio inspector variant bar: \"md:\" (768 px and up), \"lg:\", \"hover:\", \"focus:\", \"active:\", \"dark:\" or a mix such as \"md:hover:\". In a Tailwind project style becomes prefixed classes (md:p-6, hover:bg-primary); in a plain HTML page it becomes a media query or :hover rule; other files refuse it. Leave out for the base style."
+                },
+                "target": {
+                  "description": "Attached apps only, the same as edit_element target. Leave out to edit a shared component use (<Button>, <CardTitle>) where it is used; \"component\" edits the component file and changes every use.",
+                  "type": "string",
+                  "enum": ["use", "component", "element"]
+                }
+              },
+              "required": ["selector"],
+              "additionalProperties": false
+            }
+          },
+          "files": {
+            "description": "Whole files to write, with the same path rules as write_file.",
+            "minItems": 1,
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 300
+                },
+                "content": {
+                  "type": "string",
+                  "maxLength": 524288
+                }
+              },
+              "required": ["path", "content"],
+              "additionalProperties": false
+            }
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "batch_edit"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "List the colors, font sizes, radii and spacing used in one canvas frame, like the Selection colors panel of the studio inspector: each distinct value with its element count, the token or class it comes from, and state token, palette (a Tailwind palette class such as text-slate-500, not a project token), raw or mixed; color rows also give hex. With value (and property) it lists the matching elements as matches with their source file:line:col, the same as \"Select all with this value\" in the inspector; pass them to replace_style. Inherited values count only on the element that sets them. Read only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frame": {
+            "description": "Canvas frame id or @label from canvas_list. Its page, size and direction are used. Default f1, the entry page.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "property": {
+            "type": "string",
+            "enum": [
+              "color",
+              "font-size",
+              "radius",
+              "spacing",
+              "background-color",
+              "border-color",
+              "border-radius",
+              "padding-top",
+              "padding-right",
+              "padding-bottom",
+              "padding-left",
+              "margin-top",
+              "margin-right",
+              "margin-bottom",
+              "margin-left",
+              "gap"
+            ],
+            "description": "A kind (color, font-size, radius, spacing) or one CSS property (color, background-color, border-color, font-size, border-radius, padding-top … margin-left, gap). Leave out for all of them."
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Value to match, for example \"#1c1f23\", \"14px\" or \"0.75rem\". It is compared with the computed value, so 1rem finds 16px, and colors compare in one color space with a small delta: #009966 also finds rgb(0, 153, 102) and the lab()/oklch() colors of Tailwind v4."
+          },
+          "className": {
+            "description": "Only elements with this class, for example \"p-[13px]\".",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "find_styles"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Rewrite one style value to a token on many elements at once, with the same code path as \"Replace with token…\" in the studio inspector: pass the matches from find_styles, or value (and property) to replace it everywhere in the frame. In a Tailwind project it writes theme classes (text-[#1c1f23] becomes text-primary). Elements made by .map(), elements whose className is built in code, and shared elements where only some copies use the value are skipped; the result lists each skip with a count and reason. All changes are one version and one undo step.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frame": {
+            "description": "Canvas frame id or @label from canvas_list. Its page, size and direction are used. Default f1, the entry page.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "property": {
+            "type": "string",
+            "enum": [
+              "color",
+              "font-size",
+              "radius",
+              "spacing",
+              "background-color",
+              "border-color",
+              "border-radius",
+              "padding-top",
+              "padding-right",
+              "padding-bottom",
+              "padding-left",
+              "margin-top",
+              "margin-right",
+              "margin-bottom",
+              "margin-left",
+              "gap"
+            ],
+            "description": "A kind (color, font-size, radius, spacing) or one CSS property (color, background-color, border-color, font-size, border-radius, padding-top … margin-left, gap). Leave out for all of them."
+          },
+          "value": {
+            "description": "Replace every element in the frame with this value. Use this or matches.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "matches": {
+            "description": "The matches from find_styles to change. Use this or value.",
+            "minItems": 1,
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000
+                    },
+                    "line": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "col": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": ["file", "line", "col"],
+                  "additionalProperties": false
+                },
+                "selector": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "tag": {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                "property": {
+                  "type": "string",
+                  "enum": [
+                    "color",
+                    "background-color",
+                    "border-color",
+                    "font-size",
+                    "border-radius",
+                    "padding-top",
+                    "padding-right",
+                    "padding-bottom",
+                    "padding-left",
+                    "margin-top",
+                    "margin-right",
+                    "margin-bottom",
+                    "margin-left",
+                    "gap"
+                  ]
+                },
+                "repeats": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": ["source", "selector", "property"],
+              "additionalProperties": false
+            }
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "The token to write: a CSS variable (\"--primary\" or \"var(--primary)\") or, in a Tailwind project, a theme class (\"bg-primary\", \"text-sm\", \"rounded-lg\", \"p-4\"). In a Tailwind project the server writes classes, not inline style."
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "token"],
+        "additionalProperties": false
+      },
+      "name": "replace_style"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Build a group of elements in one call: insert a JSX snippet (or an HTML snippet in an HTML project) inside, before, after or in place of the target element. Use the app's own components and Tailwind token classes, for example <Card><CardHeader><CardTitle>Recent documents</CardTitle></CardHeader><CardContent>…<Badge variant=\"outline\">Signed</Badge><Button size=\"sm\">Open</Button></CardContent></Card>. Each component tag that the target file does not import is found in the project library and its import line is added or extended with the path the project uses (all parts of a module in one line). The snippet keeps your line breaks and gets the file's indent. Markup only: text, string props, numbers, style objects and plain references such as onClick={handleSave} to names the file has; functions, hook or other calls, conditions, .map() and {...spread} are refused with a reason. Targets made by .map() are refused. Before or after an element that is the whole branch of a ? : or && condition, the branch is wrapped in a <> fragment with the snippet next to the element. One version and one undo step. To remove placeholder text next to child elements, use clear_text.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "targetSelector": {
+            "description": "CSS selector of the target element on the page, for example \"main\" or \"[data-name='Hero'] h2\".",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "targetSource": {
+            "description": "Or the target element as file:line:col of its JSX tag, for example \"src/App.tsx:12:7\" (as get_layers prints it, or the at of an earlier insert). file:line works when one JSX tag starts on that line. Use this or targetSelector.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "position": {
+            "default": "inside",
+            "description": "inside: after the last child of the target. before / after: a sibling of the target. replace: the snippet takes the place of the target element.",
+            "type": "string",
+            "enum": ["inside", "before", "after", "replace"]
+          },
+          "jsx": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000,
+            "description": "The snippet: one or more elements, with line breaks and any indent."
+          },
+          "imports": {
+            "description": "Only when two library components have the same name: component name to its file, relative to the project, for example {\"Button\": \"packages/ui/src/components/button.tsx\"}.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z0-9_$]{0,63}$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            }
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "jsx"],
+        "additionalProperties": false
+      },
+      "name": "insert_jsx"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Remove the plain text inside an element and keep its child elements, for example the placeholder \"Card\" that insert_component leaves next to the CardHeader you added. On a library component (Card, Button) it clears the text where the page uses it, not in the component file. Text from a prop or a { } expression stays. One version and one undo step. edit_element op \"clear\" does the same on an element in its own file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "targetSelector": {
+            "description": "CSS selector of the element whose text to clear, for example \"[data-slot=card]\".",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "targetSource": {
+            "description": "Or the element as file:line:col of its JSX tag (as get_layers prints it, or the at of insert_component). file:line works when one JSX tag starts on that line.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "clear_text"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "List the elements of a rendered page as a compact tree, one element per line: layer id, tag, <Component> when the element is the root of a component (Card, Badge), source file:line:col (the use site for a component root, else the JSX that makes the element; pass it as targetSource or source), a text preview, and \"+N inside\" when deeper levels are cut. Top-level layers with no app source (the Next dev overlay, dev toolbars) are left out and the first line counts them. Each layer id (such as \"e0k3pz\") works in place of a CSS selector in every tool that takes selector or targetSelector (edit_element, batch_edit, set_props, insert_component, add_link, add_comment, canvas_point) and as element in get_screenshot. Ids stay the same after edits, inserts, undo and redo made through the studio, also when lines move; an id stops working only when its element is removed or its file changes outside the studio. Use root to list one part of the page.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frame": {
+            "description": "Canvas frame id or @label from canvas_list. It sets the page, the size and the direction.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "root": {
+            "description": "Layer id from an earlier get_layers or a CSS selector: list only this element and what is inside it. Leave out for the whole page.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "depth": {
+            "default": 8,
+            "description": "Levels below the root to list. Default 8. Deeper children show as \"+N inside\".",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 30
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "get_layers"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Align, distribute or tidy up sibling elements like Figma, with the same code path as the studio arrange bar. In an auto layout (flex) parent it writes the parent layout: align across the axis sets align-items (all children selected) or align-self (some), align along the axis and distribute need all children selected and set justify-content. In a grid it sets justify-items or align-items. Absolute children move by left/top to the selection bounds (one element: to its parent box); distribute needs three or more. A parent with no auto layout refuses align and distribute; tidy adds auto layout to it. In a Tailwind project it writes classes (items-center, justify-between, gap-6, left-4). All changes are one version and one undo step.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frame": {
+            "description": "Canvas frame id or @label from canvas_list. Its page, size and direction are used. Default f1, the entry page.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "path": {
+            "description": "Page path instead of the frame page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "targets": {
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "selector": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "CSS selector or layer id from get_layers."
+                },
+                "path": {
+                  "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+                  "type": "string",
+                  "maxLength": 300
+                }
+              },
+              "required": ["selector"],
+              "additionalProperties": false
+            },
+            "description": "The elements to arrange. They must be siblings (one parent)."
+          },
+          "align": {
+            "description": "Align left, center, right (horizontal) or top, middle, bottom (vertical).",
+            "type": "string",
+            "enum": ["left", "center", "right", "top", "middle", "bottom"]
+          },
+          "distribute": {
+            "description": "Equal spacing between the elements along this axis.",
+            "type": "string",
+            "enum": ["horizontal", "vertical"]
+          },
+          "tidy": {
+            "description": "Set one equal gap. On a parent with no auto layout it adds auto layout (flex) and removes the margins between the children.",
+            "type": "boolean",
+            "const": true
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "targets"],
+        "additionalProperties": false
+      },
+      "name": "arrange"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Measure the distance between two elements on the live page, like holding Alt in the studio: their boxes, how they relate (apart, overlap, a-inside-b, b-inside-a), the horizontal and vertical gap (null when they overlap on that axis), the inset when one is inside the other, the center offset and the red guide lines. Page pixels at the frame size. Read only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frame": {
+            "description": "Canvas frame id or @label from canvas_list. Its page, size and direction are used. Default f1, the entry page.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "path": {
+            "description": "Page path instead of the frame page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "a": {
+            "type": "object",
+            "properties": {
+              "selector": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "description": "CSS selector or layer id from get_layers."
+              },
+              "path": {
+                "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+                "type": "string",
+                "maxLength": 300
+              }
+            },
+            "required": ["selector"],
+            "additionalProperties": false
+          },
+          "b": {
+            "type": "object",
+            "properties": {
+              "selector": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "description": "CSS selector or layer id from get_layers."
+              },
+              "path": {
+                "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+                "type": "string",
+                "maxLength": 300
+              }
+            },
+            "required": ["selector"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["projectId", "a", "b"],
+        "additionalProperties": false
+      },
+      "name": "measure"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Find the elements that match one element, like Select matching in the studio inspector, and return their layer ids (the same ids get_layers lists) with tag and text. Use it before a change that should apply to every copy: pass the ids to edit_element or batch_edit as selectors, or to arrange as targets. Read only; it does not change the studio selection.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frame": {
+            "description": "Canvas frame id or @label from canvas_list. Its page, size and direction are used. Default f1, the entry page.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "path": {
+            "description": "Page path instead of the frame page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "The element to match: a layer id from get_layers or a CSS selector."
+          },
+          "by": {
+            "type": "string",
+            "enum": ["component", "classes", "text-style"],
+            "description": "component: every copy of the same element or component (the same JSX source; for a component root such as a Card, every Card); classes: elements with exactly the same class list; text-style: elements with their own text and the same font family, size, weight, style, line height, tracking and text transform (color is ignored)."
+          }
+        },
+        "required": ["projectId", "selector", "by"],
+        "additionalProperties": false
+      },
+      "name": "select_matching"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "List the tweak controls of a direction with their type, CSS variable, limits or options, default and current value. Tweaks are the controls (sliders, colors, toggles, selects) that the studio agent made with define_tweaks; the user sees them in the Tweaks panel. Each control sets one CSS variable. An empty list means the agent has not made tweaks for this design. Read only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_tweaks"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Set one tweak control to a new value with the same code path as the studio Tweaks panel: it rewrites the CSS variable declaration (or the design token behind it) and saves one version the user can undo. Tweaks are the controls (sliders, colors, toggles, selects) that the studio agent made with define_tweaks; the user sees them in the Tweaks panel. Each control sets one CSS variable. This is a direct edit; it does not start an AI run. Use list_tweaks first for the ids and valid values.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "Tweak control id from list_tweaks."
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "boolean"
+              }
+            ],
+            "description": "New value: a number inside min and max for a range, a CSS color for a color, true or false for a toggle, one option value for a select."
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "id", "value"],
+        "additionalProperties": false
+      },
+      "name": "set_tweak"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Place or change an image, like the Image section of the studio inspector. On an <img> it copies the file into the project (the app public/ folder for Next and Vite, assets/ for HTML) with a content-hashed name and writes src (srcset is removed), alt, fit (object-fit) and focal (object-position). On an element with a background image it writes background-image, background-size and background-position. On any other element it inserts a new <img> inside it (position \"after\" puts it after). In a Tailwind file fit and focal become classes (object-cover, object-[50%_30%]). One version and one undo step. url must be https, at most 10 MB, and an image content type; path is a local image file. src from a data expression such as {item.image} is refused with a reason.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "page": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page. (path is the image file.)",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "description": "CSS selector or layer id of the element, for example \"img.hero\" or \"e0k3pz\".",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "source": {
+            "description": "Or the element as file:line:col of its tag, as get_layers prints it.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "path": {
+            "description": "Local image file: an absolute path, or a path relative to the project folder.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "url": {
+            "description": "https URL of the image. The studio fetches it (10 MB at most, image types only).",
+            "type": "string",
+            "maxLength": 2000,
+            "format": "uri"
+          },
+          "fit": {
+            "description": "cover crops to fill, contain shows all of it, fill stretches.",
+            "type": "string",
+            "enum": ["cover", "contain", "fill"]
+          },
+          "focal": {
+            "description": "Focal point as \"x% y%\", for example \"50% 30%\". The part of the image that stays in view with fit cover.",
+            "type": "string",
+            "maxLength": 40
+          },
+          "alt": {
+            "description": "Alt text of an <img>. \"\" marks it as decorative.",
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "description": "auto (default): img for an <img>, background for an element with a background image, insert for others. background sets a background image on any element.",
+            "type": "string",
+            "enum": ["auto", "img", "background", "insert"]
+          },
+          "position": {
+            "description": "For insert: inside the element (default) or after it.",
+            "type": "string",
+            "enum": ["inside", "after"]
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "set_image"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Draw a rectangle, an ellipse or a pen path into an element, like the studio Rectangle (R), Ellipse (O) and Pen (Shift+P) tools: it writes an inline <svg> with a fitted viewBox, placed with position: absolute at x, y in the parent, holding one <rect>, <ellipse> or <path>. HTML and JSX. One version and one undo step. Path default: 2 px #1E1E1E stroke, no fill; shapes default to #D9D9D9 fill.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "targetSelector": {
+            "description": "CSS selector of the parent element to draw into, for example \"main\" or \"body\".",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "targetSource": {
+            "description": "Or the element as file:line:col of its tag, as get_layers prints it.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "shape": {
+            "type": "string",
+            "enum": ["rect", "ellipse", "path"],
+            "description": "rect or ellipse: pass x, y, width, height. path: pass d."
+          },
+          "x": {
+            "default": 0,
+            "description": "Left edge in px from the parent padding box.",
+            "type": "number",
+            "minimum": -100000,
+            "maximum": 100000
+          },
+          "y": {
+            "default": 0,
+            "description": "Top edge in px from the parent padding box.",
+            "type": "number",
+            "minimum": -100000,
+            "maximum": 100000
+          },
+          "width": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "height": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "d": {
+            "description": "SVG path data in px from the parent padding box, for example \"M0 0 C40 0 60 80 100 80\". End with Z to close it.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "name": {
+            "description": "Layer name (data-name). Default Rectangle, Ellipse or Vector.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "makeParentRelative": {
+            "default": false,
+            "description": "Also set position: relative on the parent, so x and y count from it. Leave false when the parent is already positioned.",
+            "type": "boolean"
+          },
+          "fill": {
+            "description": "Fill color, for example \"#3b82f6\" or \"var(--primary)\". null or \"none\" for no fill.",
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgb|rgba|hsl|hsla|oklch|oklab)\\([^()]{1,80}\\)|var\\(--[\\w-]{1,60}\\))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stroke": {
+            "description": "Stroke color. null removes the stroke.",
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgb|rgba|hsl|hsla|oklch|oklab)\\([^()]{1,80}\\)|var\\(--[\\w-]{1,60}\\))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "strokeWidth": {
+            "description": "Stroke width in px.",
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "shape"],
+        "additionalProperties": false
+      },
+      "name": "draw_vector"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Union, subtract, intersect or exclude two SVG shapes, like the studio Boolean buttons: it writes one <path> (fill-rule evenodd, curves as short lines) in place of the first shape, with its paint, and removes the second shape (or its <svg> when nothing else is in it). Both shapes must be in one file. One version and one undo step.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selectors": {
+            "description": "Two CSS selectors of SVG shapes: an <svg>, or a <path>, <rect>, <circle>, <ellipse> or <polygon> in one. The first one keeps its place and paint.",
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            ],
+            "items": false,
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "sources": {
+            "description": "Or the two shapes as file:line:col. Without selectors, two separate <svg> elements must be placed with left and top in px.",
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string",
+                "maxLength": 1100
+              },
+              {
+                "type": "string",
+                "maxLength": 1100
+              }
+            ],
+            "items": false,
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "op": {
+            "type": "string",
+            "enum": ["union", "subtract", "intersect", "exclude"],
+            "description": "union, subtract (first minus second), intersect or exclude."
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "op"],
+        "additionalProperties": false
+      },
+      "name": "boolean_shapes"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Set the fill, stroke color or stroke width of an SVG shape, like the studio Fill and Stroke rows: it writes the fill, stroke and stroke-width attributes. On an <svg> it sets the shapes in it that have their own value, else the <svg>. One version and one undo step.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "targetSelector": {
+            "description": "CSS selector of the element, for example \"main\" or \"[data-name='Hero']\".",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "targetSource": {
+            "description": "Or the element as file:line:col of its tag, as get_layers prints it.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "fill": {
+            "description": "Fill color, for example \"#3b82f6\" or \"var(--primary)\". null or \"none\" for no fill.",
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgb|rgba|hsl|hsla|oklch|oklab)\\([^()]{1,80}\\)|var\\(--[\\w-]{1,60}\\))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stroke": {
+            "description": "Stroke color. null removes the stroke.",
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgb|rgba|hsl|hsla|oklch|oklab)\\([^()]{1,80}\\)|var\\(--[\\w-]{1,60}\\))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "strokeWidth": {
+            "description": "Stroke width in px.",
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "paint_shape"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Lock or unlock, hide or show, or rename one layer, like the lock, eye and name in the studio Layers panel. Lock, hide and rename use the same server code as the eye, lock and name in the studio Layers panel. Lock is studio state saved in the Design Studio data folder (not in the project files and not a version): a click on the canvas passes through a locked layer and its children, in the studio and for every MCP client. Hide writes display: none and rename writes data-name in the source, each as one version the user can undo.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "Layer id from get_layers or a CSS selector of one element."
+          },
+          "locked": {
+            "description": "true locks the layer, false unlocks it.",
+            "type": "boolean"
+          },
+          "hidden": {
+            "description": "true hides the layer (display: none in the source), false shows it again.",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "New layer name (data-name). null or \"\" removes the name.",
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["projectId", "selector"],
+        "additionalProperties": false
+      },
+      "name": "set_layer_state"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "List the locked layers of a direction, with the page of each and whether it is on the page (path) now. Lock, hide and rename use the same server code as the eye, lock and name in the studio Layers panel. Lock is studio state saved in the Design Studio data folder (not in the project files and not a version): a click on the canvas passes through a locked layer and its children, in the studio and for every MCP client. Hide writes display: none and rename writes data-name in the source, each as one version the user can undo.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "list_locked_layers"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Reorder an element among its siblings, like a drag on the studio canvas inside an auto layout (flex, grid) or a normal flow parent: it moves the JSX or HTML of the element to just before or after another element, with the same code path as the canvas drag. Pass copy to duplicate the element at that place instead (Alt+drag). Both elements must be in the same file; elements made by .map() are refused. To move an absolute or fixed element, pass left and/or top in px instead of before or after: it writes left and top like a canvas drag. One call makes one version, so the user can undo it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "CSS selector or layer id of the element to move."
+          },
+          "before": {
+            "description": "Put the element just before this sibling (CSS selector or layer id).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "after": {
+            "description": "Put the element just after this sibling (CSS selector or layer id).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "copy": {
+            "description": "true leaves the element where it is and puts a copy at the new place, like Alt+drag in the studio.",
+            "type": "boolean"
+          },
+          "left": {
+            "description": "Absolute move: the new CSS left in px, like a drag of an absolute element on the canvas. Leave out before and after.",
+            "type": "number"
+          },
+          "top": {
+            "description": "Absolute move: the new CSS top in px. Leave out before and after.",
+            "type": "number"
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "selector"],
+        "additionalProperties": false
+      },
+      "name": "move_element"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Turn one Figma frame into editable markup on a page, like pasting Figma JSON in the studio (Paste JSX). Pass nodesFile: a local .json file with the body of the Figma REST call GET /v1/files/:key/nodes?ids=<node id> (or GET /v1/files/:key); this tool does not call Figma. Auto layout becomes flex with gap, padding and alignment; Fixed, Hug and Fill sizing become widths, flex: 1 or align-self: stretch; text keeps its size, weight, line height and characters; fills, strokes, radius and shadows become CSS, and a color that matches a project token is written as that token (in a Tailwind app as a theme class such as bg-card). An instance whose name matches a kit component (Button, Badge, Card) becomes that component with its text and matching variant props, and its import line is added. Image fills become placeholder <img> elements (use set_image after). Hidden layers are skipped. dryRun: true returns the markup and the stats without a write. One version and one undo step.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "nodesFile": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "description": "Absolute path of the Figma nodes JSON file, for example \"/Users/me/Downloads/card.json\"."
+          },
+          "nodeId": {
+            "description": "Figma node id of the frame to import, for example \"12:345\" (the node-id in a Figma link, with - or :). Leave out for the first frame in the file.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "targetSelector": {
+            "description": "CSS selector or layer id of the element to insert into or next to, for example \"main\".",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "targetSource": {
+            "description": "Or the target element as file:line:col of its tag, as get_layers prints it. Use this or targetSelector.",
+            "type": "string",
+            "maxLength": 1100
+          },
+          "position": {
+            "default": "inside",
+            "description": "inside: after the last child of the target. before / after: a sibling. replace: in place of the target.",
+            "type": "string",
+            "enum": ["inside", "before", "after", "replace"]
+          },
+          "dryRun": {
+            "description": "true: return the markup, the frames in the file and the stats, and write nothing.",
+            "type": "boolean"
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "nodesFile"],
+        "additionalProperties": false
+      },
+      "name": "import_figma_frame"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Place one search_images result on a layer as one version. The studio downloads the photo by its id, copies it into the project assets folder with a content-hashed name, sets it with the set_image code (src on an img, background-image on an element with a background image or with mode background, or a new img inside other elements), writes alt, and adds the author, license and source link to ASSETS.md. One undo step. Needs image search to be on.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "alt": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Alt text of the photo. \"\" marks it as decorative."
+          },
+          "fit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["cover", "contain", "fill"],
+                "description": "cover crops to fill, contain shows all of it, fill stretches."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "focal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "description": "Focal point as \"x% y%\", for example \"50% 30%\"."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "imageId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "The id of one search_images result."
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["auto", "img", "background", "insert"],
+                "description": "auto (default): img for an <img>, background for an element with a background image, insert for others. background sets a background image on any element."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["inside", "after"],
+                "description": "For insert: inside the element (default) or after it."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "background": {
+                "type": "boolean"
+              },
+              "html": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "owners": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "maxLength": 64
+                    },
+                    "stack": {
+                      "type": "string",
+                      "maxLength": 2000
+                    }
+                  },
+                  "required": ["name", "stack"],
+                  "additionalProperties": false
+                },
+                "maxItems": 20
+              },
+              "selector": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "col": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      },
+                      "file": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1000
+                      },
+                      "line": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": ["col", "file", "line"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tag": {
+                "type": "string",
+                "maxLength": 100
+              }
+            },
+            "required": ["tag"],
+            "additionalProperties": false,
+            "description": "The layer to set: source (file, line, col of its tag) and tag, as get_layers prints them. selector is the CSS selector or layer id."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page. Used with targetSelector.",
+            "maxLength": 300,
+            "type": "string"
+          },
+          "targetSelector": {
+            "description": "CSS selector or layer id of the element. Use this, targetSource or the new target fields.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "targetSource": {
+            "description": "Or the element as file:line:col of its tag, as get_layers prints it. file:line works when one tag starts on that line.",
+            "maxLength": 1100,
+            "type": "string"
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "type": "object",
+        "required": ["projectId", "alt", "imageId"],
+        "additionalProperties": false
+      },
+      "name": "place_image"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Show one canvas frame in a state without a real pointer, so get_screenshot with frameId shows it. state hover, focus-visible, active or disabled applies the rules of that state to the layer, a CSS selector. dark puts the dark class on the page root and applies the dark rules; layer is not needed. Pass state null to show the frame as it is. The source files do not change.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "frameId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "layer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["hover", "focus-visible", "active", "disabled", "dark"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": ["projectId", "state"],
+        "additionalProperties": false
+      },
+      "name": "set_forced_state"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Detach one text element from its text style: write its computed font size, weight, line-height, letter-spacing and family as literal values on the element, so a later change to the style no longer reaches it. Pass styles and target, or pass selector (and path) to read both from the live element on the page. One version and one undo step.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "targetSelector": {
+            "description": "CSS selector or layer id of the element.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "styles": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "selector": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "col": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "file": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "line": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": ["col", "file", "line"],
+                "additionalProperties": false
+              },
+              "tag": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": ["source"],
+            "additionalProperties": false
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "detach_text_style"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Redo the newest undone edit in the direction's edit history. This is the same undo history as the studio window (Cmd+Z), so the user and you share it. It holds direct edits, structure ops, batches, token and tweak edits, write_file changes to existing files, finished studio runs and version restores that changed text files, and prototype link and canvas frame changes, in the order they were made. For anything else (a new file, a design system apply) use restore_version. A new edit clears the redo list.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Direction id. Use the main direction id for the main one."
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "redo"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Undo one change (one @@ hunk) of a saved version, the same as Undo this change in Compare > Code in the studio. It reverses only that hunk in the current file of the direction head and saves the result as one new version, which undo (Cmd+Z) can take back. Other changes in the file stay. When the hunk text is no longer in the file (it was undone or edited later), it changes nothing and says why. Use diff_versions first to see the hunks.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Direction id. Use the main direction id for the main one."
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "Project-relative path of the file, as diff_versions returns it."
+          },
+          "from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[\\w-]{1,64}$",
+                "description": "The older version of the diff. Leave out for the parent of versionId."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hunk": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000,
+            "description": "Which change in the file to undo: 1 is the first @@ hunk of the file in diff_versions."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          },
+          "versionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "The version that made the change, from list_versions. The hunk is from the diff of from and this version."
+          }
+        },
+        "type": "object",
+        "required": ["file", "hunk", "projectId", "versionId"],
+        "additionalProperties": false
+      },
+      "name": "revert_hunk"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Undo the newest edit in the direction's edit history and save the result as a version. This is the same undo history as the studio window (Cmd+Z), so the user and you share it. It holds direct edits, structure ops, batches, token and tweak edits, write_file changes to existing files, finished studio runs and version restores that changed text files, and prototype link and canvas frame changes, in the order they were made. For anything else (a new file, a design system apply) use restore_version. The result names the edit it undid (label); version is the version the direction is on now.",
+      "inputSchema": {
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Direction id. Use the main direction id for the main one."
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "description": "Project id from list_projects"
+          }
+        },
+        "type": "object",
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "undo"
+    }
+  ]
+}

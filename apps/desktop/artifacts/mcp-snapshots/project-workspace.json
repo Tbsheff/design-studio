@@ -1,0 +1,109 @@
+{
+  "tools": [
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Create an empty design project in the default projects folder. Returns the project id and the direction id.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Project name."
+          },
+          "kind": {
+            "default": "html",
+            "description": "html (static pages) or react (Vite + React). Default html.",
+            "type": "string",
+            "enum": ["html", "react"]
+          },
+          "designSystemId": {
+            "description": "Design system (pack) id to apply. Leave out for none.",
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "name": "create_project"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Open an existing Next.js app (or a monorepo with apps/*) as a project. The project points at the folder; nothing is copied. With url the studio proxies your running dev server; without it the studio starts next dev on a free port. A folder that is not attached yet waits for the user to approve it in Design Studio. Returns the project id. Edits from the studio agent and write_file then go to the real files in that folder. A Next.js app folder inside a monorepo (pnpm-workspace.yaml, turbo.json or package.json workspaces) opens at the workspace root with that folder as appDir, so the shared kit, Tailwind CSS and root DESIGN.md are found; the result has workspaceRoot and appDir (workspaceRoot is null outside a monorepo).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "folder": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "Absolute path of the app folder or the monorepo root, for example \"~/code/my-app\"."
+          },
+          "url": {
+            "description": "URL of a dev server you already run, for example \"http://localhost:3000\". Leave out and the studio starts next dev itself.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "appDir": {
+            "description": "App folder inside a monorepo, for example \"apps/dashboard\". Needed when the folder has more than one Next.js app.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": ["folder"],
+        "additionalProperties": false
+      },
+      "name": "attach_app"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Apply the one-click fix of one app_doctor problem, with the same server code as the fix button on the studio doctor card, then restart the dev server. The studio runs the doctor again and applies only the fix it computed: set env keys found in the app env schema or .env.example (example values only), copy .env.example to .env.local, use a running dev server URL, or restart. You cannot pass env values; ask the user for secrets. Wait for the restart, then call app_doctor again. The doctor reads the dev server log of the current start and one request to the app root. Fixes only set env keys the studio found in the app env schema or .env.example (with the example values), copy .env.example, switch to a running dev server or restart; they never write secret values.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "env-validation",
+              "missing-env-file",
+              "port-in-use",
+              "install",
+              "auth-redirect"
+            ],
+            "description": "Problem kind from app_doctor."
+          }
+        },
+        "required": ["projectId", "kind"],
+        "additionalProperties": false
+      },
+      "name": "apply_app_fix"
+    }
+  ]
+}

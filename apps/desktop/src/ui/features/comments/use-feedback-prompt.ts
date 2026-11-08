@@ -3,7 +3,7 @@ import type { RefObject } from "react";
 
 import { selectionKey } from "./comment-layer-model.js";
 import type { Props } from "./comment-layer-types.js";
-import { INLINE_PROMPT_OPEN_EVENT, isTypingTarget } from "./deps.js";
+import { ASK_CHAT_EVENT, isTypingTarget } from "./deps.js";
 import { useLatest } from "./use-latest.js";
 
 interface FeedbackPrompt {
@@ -113,10 +113,9 @@ const useFeedbackPrompt = (props: Props): FeedbackPrompt => {
   );
 
   useEffect(() => {
-    globalThis.addEventListener(INLINE_PROMPT_OPEN_EVENT, dismiss);
+    globalThis.addEventListener(ASK_CHAT_EVENT, dismiss);
 
-    return (): void =>
-      globalThis.removeEventListener(INLINE_PROMPT_OPEN_EVENT, dismiss);
+    return (): void => globalThis.removeEventListener(ASK_CHAT_EVENT, dismiss);
   }, [dismiss]);
 
   useEffect(() => {

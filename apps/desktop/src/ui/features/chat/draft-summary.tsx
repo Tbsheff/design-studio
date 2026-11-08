@@ -5,6 +5,7 @@ import type {
 import type { ReactElement } from "react";
 
 import { CheckStatus } from "./check-status.js";
+import { copy } from "./copy.js";
 import { CoverageNote } from "./coverage-note.js";
 import { DraftFallbacks } from "./draft-fallbacks.js";
 import { DraftGuessed } from "./draft-guessed.js";

@@ -1,17 +1,10 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
+import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import { copy } from "./copy.js";
 import { TopBarFileMenu } from "./top-bar-file-menu.js";
 import type { Props } from "./top-bar-props.js";
-
-const toTweakTip = (isOpen: boolean): string | null => {
-  if (isOpen) {
-    return null;
-  }
-
-  return "Describe a tweak";
-};
 
 const TopBarStart = ({ props }: { props: Props }): ReactElement => (
   <>
@@ -40,12 +33,9 @@ const TopBarStart = ({ props }: { props: Props }): ReactElement => (
     <button
       type="button"
       className="icon-btn topbar-icon topbar-fold-narrow"
-      aria-label={copy.tweak}
-      aria-pressed={props.tweakOpen}
-      aria-expanded={props.tweakOpen}
-      disabled={props.tweakDisabled}
-      data-tip={toTweakTip(props.tweakOpen)}
-      onClick={props.onTweak}
+      aria-label={copy.askChat}
+      data-tip={tipWithKey(copy.askChatTip, "inline-prompt")}
+      onClick={props.onAskChat}
     >
       <Icon name="sliders" size={14} />
     </button>

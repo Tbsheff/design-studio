@@ -12,10 +12,7 @@ const focusIsFree = (): boolean => {
   }
 
   return (
-    findElement(
-      document.body,
-      '[role="dialog"], [aria-modal="true"], .inline-prompt'
-    ) === null
+    findElement(document.body, '[role="dialog"], [aria-modal="true"]') === null
   );
 };
 

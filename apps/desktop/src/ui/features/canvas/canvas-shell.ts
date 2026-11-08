@@ -18,7 +18,6 @@ interface CanvasShell {
   onExpandPane: () => void;
   canExport: boolean;
   onExport: () => void;
-  onTweak: ((prompt: string) => void) | null;
   onShip?: (() => void) | null;
   onShareLink?: ((mode?: "link" | "publish") => void) | null;
   onAskAgent?: (text: string) => void;

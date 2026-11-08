@@ -71,7 +71,7 @@ export type { DraftStore } from "../../platform/storage.js";
 
 export type { JsonBody } from "../../platform/http.js";
 
-export { INLINE_PROMPT_OPEN_EVENT } from "../chat/use-inline-prompt.js";
+export { ASK_CHAT_EVENT } from "../../platform/ask-chat.js";
 
 export { useMentions } from "../chat/use-mentions.js";
 

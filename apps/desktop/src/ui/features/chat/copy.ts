@@ -97,6 +97,7 @@ const copy = {
   ofTheContextWindow:
     "% of the context window. Start a new direction to keep runs fast and focused.",
   on: " on",
+  onElement: "On ",
   onPage: "On page ",
   openDesignSystems: "Open design systems",
   orTypeAn: "Or type an answer",

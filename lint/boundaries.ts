@@ -92,7 +92,6 @@ const UI_CROSS_FEATURE_FILES = [
   "apps/desktop/src/ui/features/chat/run-comments.tsx",
   "apps/desktop/src/ui/features/chat/run-settings.tsx",
   "apps/desktop/src/ui/features/chat/use-first-build.ts",
-  "apps/desktop/src/ui/features/chat/use-inline-prompt.ts",
   "apps/desktop/src/ui/features/chat/use-run-canvas.ts",
   "apps/desktop/src/ui/features/commands/deps.ts",
   "apps/desktop/src/ui/features/comments/deps.ts",

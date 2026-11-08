@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { ReactElement } from "react";
 
 import type { StageSlotProps } from "./canvas-stage-types.js";
@@ -10,21 +9,14 @@ const StageLayers = ({
   edits,
   preview,
   props,
-  slots,
   stage,
 }: StageSlotProps): ReactElement => {
   const { active, pz, viewport } = stage;
-  const { InlinePrompt } = slots;
   const { frames } = preview;
-  const { freeMove, inlinePrompt, layerEdits } = edits;
+  const { freeMove, layerEdits } = edits;
 
   return (
     <>
-      {inlinePrompt && (
-        <Suspense fallback={null}>
-          <InlinePrompt view={inlinePrompt} zoom={pz.zoom} frame={viewport} />
-        </Suspense>
-      )}
       <MarqueeLayer listen={frames.listen} />
       <VectorSlot
         projectId={props.projectId}

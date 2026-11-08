@@ -10,7 +10,7 @@ interface OverflowProps {
   viewOpen: boolean;
   onToggleView: () => void;
   onReload: () => void;
-  tweak: { open: boolean; disabled: boolean; run: () => void };
+  askChat: { run: () => void };
 }
 
 type ActiveTool = ReturnType<typeof useVectorTool>;
@@ -50,16 +50,14 @@ const toViewGroup = (props: OverflowProps): MenuGroup => ({
   ],
 });
 
-const toTweakGroup = (props: OverflowProps): MenuGroup => ({
+const toAskChatGroup = (props: OverflowProps): MenuGroup => ({
   fold: "narrow",
   items: [
     {
-      checked: props.tweak.open,
-      disabled: props.tweak.disabled,
       icon: "sliders",
-      id: "tweak",
-      label: "Describe a tweak",
-      run: props.tweak.run,
+      id: "ask-chat",
+      label: "Ask the chat",
+      run: props.askChat.run,
     },
   ],
 });
@@ -84,7 +82,7 @@ const toOverflowGroups = (
 ): MenuGroup[] => [
   toViewGroup(props),
   { fold: "wide", items: props.present, label: "Present" },
-  toTweakGroup(props),
+  toAskChatGroup(props),
   {
     fold: "narrow",
     items: toZoomEntries(props.zoom),

@@ -1,6 +1,5 @@
 import type { Project, RunRequest } from "@design-studio/contracts";
 import { statesPrompt } from "@design-studio/contracts/states";
-import type { InlineRunExtras } from "@design-studio/contracts/usage-scope";
 
 import { api } from "../../api";
 import { canvasStore } from "../../features/canvas/canvas-frames-model";
@@ -145,28 +144,6 @@ const useStudioStart = (input: StudioRunInput): StudioStart => {
   return { runControls, startRun };
 };
 
-const tweakRequestOf = (
-  input: StudioRunInput,
-  text: string,
-  extras?: InlineRunExtras
-): RunRequest => {
-  const { project, ui, core } = input;
-
-  return {
-    ...composeRequest({
-      attachmentIds: [],
-      canvas: core.runCanvas.current(),
-      effort: null,
-      level: project.settings.defaultLevel,
-      mentions: [],
-      mode: "edit",
-      prompt: text,
-      selection: ui.selection,
-    }),
-    ...extras,
-  };
-};
-
 const suggestRequestOf = (prompt?: string): RunRequest => {
   if (prompt) {
     return {
@@ -213,11 +190,6 @@ const useStudioQuick = (
     return startRun(withCommentIds(request, commentIds ?? []), true);
   };
 
-  const tweak = (prompt: string, extras?: InlineRunExtras): Promise<void> =>
-    act((): Promise<void> =>
-      startRun(tweakRequestOf(input, prompt, extras), true)
-    );
-
   const suggestTweaks = (prompt?: string): Promise<void> =>
     act((): Promise<void> => startRun(suggestRequestOf(prompt)));
 
@@ -237,7 +209,7 @@ const useStudioQuick = (
     }
   };
 
-  return { approvePlan, polish, retryRun, send, suggestTweaks, tweak };
+  return { approvePlan, polish, retryRun, send, suggestTweaks };
 };
 
 const useStudioRun = (input: StudioRunInput): StudioRun => {

@@ -21,6 +21,7 @@ const ImpactActions = (props: ImpactActionsProps): ReactElement => {
       <button
         className="btn small"
         data-tip={copy.baselineTip}
+        data-tip-align="start"
         disabled={isBusy || !hasFile}
         onClick={onBaseline}
         type="button"
@@ -30,6 +31,7 @@ const ImpactActions = (props: ImpactActionsProps): ReactElement => {
       <button
         className="btn small"
         data-tip={copy.compareTip}
+        data-tip-align="start"
         disabled={isBusy || !canCompare}
         onClick={onCompare}
         type="button"

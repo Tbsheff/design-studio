@@ -16,7 +16,7 @@ import { useShellPane } from "./canvas-shell.js";
 import type { ViewProps } from "./canvas-types.js";
 import { markOf, withElementMark } from "./element-mark-model.js";
 import { useFrameStates } from "./frame-states-model.js";
-import { useResetPassiveGateInFirstRender } from "./passive-frame.js";
+import { useResetPassiveGateInFirstRender } from "./passive-mount.js";
 import {
   unionRect,
   useCanvasFrames,

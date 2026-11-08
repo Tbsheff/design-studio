@@ -4,7 +4,7 @@ interface Ranked<T> {
   marks: number[];
 }
 
-function words(text: string): { word: string; at: number }[] {
+const words = (text: string): { word: string; at: number }[] => {
   const out: { word: string; at: number }[] = [];
   const re = /[\p{L}\p{N}]+/gu;
 
@@ -13,9 +13,9 @@ function words(text: string): { word: string; at: number }[] {
   }
 
   return out;
-}
+};
 
-function subsequence(token: string, text: string): number[] | null {
+const subsequence = (token: string, text: string): number[] | null => {
   const marks: number[] = [];
   let from = 0;
 
@@ -31,7 +31,7 @@ function subsequence(token: string, text: string): number[] | null {
   }
 
   return marks;
-}
+};
 
 interface TokenContext {
   title: string;
@@ -40,10 +40,10 @@ interface TokenContext {
   extra: string;
 }
 
-function tokenScore(
+const tokenScore = (
   token: string,
   { title, list, used, extra }: TokenContext
-): { score: number; marks: number[] } | null {
+): { score: number; marks: number[] } | null => {
   const prefix = list.findIndex(
     (w, i) => !used.has(i) && w.word.startsWith(token)
   );
@@ -81,13 +81,13 @@ function tokenScore(
   }
 
   return null;
-}
+};
 
-function rank<T>(
+const rank = <T>(
   items: readonly T[],
   query: string,
   text: (item: T) => { title: string; keywords?: string }
-): Ranked<T>[] {
+): Ranked<T>[] => {
   const tokens = query.toLowerCase().split(/\s+/u).filter(Boolean);
 
   if (tokens.length === 0) {
@@ -132,7 +132,7 @@ function rank<T>(
   }
 
   return out.sort((a, b) => b.score - a.score);
-}
+};
 
 export { rank };
 

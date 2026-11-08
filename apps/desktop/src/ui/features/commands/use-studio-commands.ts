@@ -46,7 +46,7 @@ const REGIONS = [
   '.prompt [data-slot="composer-input"]',
 ];
 
-function regionOf(element: Element | null): number {
+const regionOf = (element: Element | null): number => {
   if (!element) {
     return -1;
   }
@@ -68,9 +68,9 @@ function regionOf(element: Element | null): number {
   }
 
   return -1;
-}
+};
 
-function moveRegion(step: 1 | -1): void {
+const moveRegion = (step: 1 | -1): void => {
   const from = regionOf(document.activeElement);
 
   for (let i = 1; i <= REGIONS.length; i += 1) {
@@ -90,9 +90,9 @@ function moveRegion(step: 1 | -1): void {
 
     return;
   }
-}
+};
 
-function stepDirection(a: StudioActions, step: 1 | -1): (() => void) | null {
+const stepDirection = (a: StudioActions, step: 1 | -1): (() => void) | null => {
   if (a.directions.length < 2) {
     return null;
   }
@@ -103,9 +103,9 @@ function stepDirection(a: StudioActions, step: 1 | -1): (() => void) | null {
     a.directions[(at + step + a.directions.length) % a.directions.length];
 
   return next ? () => a.onDirection(next.id) : null;
-}
+};
 
-function studioCommands(a: StudioActions): Command[] {
+const studioCommands = (a: StudioActions): Command[] => {
   const next = stepDirection(a, 1);
   const prev = stepDirection(a, -1);
 
@@ -265,14 +265,14 @@ function studioCommands(a: StudioActions): Command[] {
       title: "Focus the next region",
     },
   ];
-}
+};
 
-function focusComposer(a: StudioActions): void {
+const focusComposer = (a: StudioActions): void => {
   a.onPanel("chat");
   window.requestAnimationFrame(() =>
     findElement(document.body, '.prompt [data-slot="composer-input"]')?.focus()
   );
-}
+};
 
 const KEYED: [KeyId, string][] = [
   ["home", "go.home"],
@@ -281,7 +281,7 @@ const KEYED: [KeyId, string][] = [
   ["prev-direction", "direction.prev"],
 ];
 
-function useStudioKeys(): void {
+const useStudioKeys = (): void => {
   useEffect(() => {
     listenForCommands();
 
@@ -323,15 +323,15 @@ function useStudioKeys(): void {
 
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-}
+};
 
-function useStudioCommands(): RefObject<StudioActions | null> {
+const useStudioCommands = (): RefObject<StudioActions | null> => {
   const actions = useRef<StudioActions | null>(null);
   useCommands(() => (actions.current ? studioCommands(actions.current) : []));
   useStudioKeys();
 
   return actions;
-}
+};
 
 export { moveRegion, useStudioCommands };
 

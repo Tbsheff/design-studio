@@ -18,13 +18,12 @@ const GROUPS: KeyGroup[] = [
   "Home",
 ];
 
-function pressedIds(event: KeyboardEvent): string[] {
-  return KEYMAP.filter((entry) =>
+const pressedIds = (event: KeyboardEvent): string[] =>
+  KEYMAP.filter((entry) =>
     entry.keys.some((keys) => chordMatches(keys, event, IS_MAC))
   ).map((entry) => entry.id);
-}
 
-function ShortcutSheet({ onClose }: { onClose: () => void }): ReactElement {
+const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
   const [query, setQuery] = useState("");
   const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
   const timers = useRef(new Map<string, number>());
@@ -164,6 +163,6 @@ function ShortcutSheet({ onClose }: { onClose: () => void }): ReactElement {
       </div>
     </aside>
   );
-}
+};
 
 export { ShortcutSheet };

@@ -24,7 +24,7 @@ type Source = () => Command[];
 
 const sources = createLiveStore<readonly { current: Source }[]>([]);
 
-export function collectCommands(): Command[] {
+export const collectCommands = (): Command[] => {
   const seen = new Set<string>();
   const out: Command[] = [];
 
@@ -40,9 +40,9 @@ export function collectCommands(): Command[] {
   }
 
   return out;
-}
+};
 
-export function runCommand(id: string): boolean {
+export const runCommand = (id: string): boolean => {
   const command = collectCommands().find((c) => c.id === id);
 
   if (!command || command.disabled) {
@@ -52,19 +52,19 @@ export function runCommand(id: string): boolean {
   command.run();
 
   return true;
-}
+};
 
-export function commandBlocker(id: string): string | null {
+export const commandBlocker = (id: string): string | null => {
   const command = collectCommands().find((c) => c.id === id);
 
   return command ? (command.disabled ?? null) : "Not available here";
-}
+};
 
-export function openLayer(layer: CommandLayer): void {
+export const openLayer = (layer: CommandLayer): void => {
   window.dispatchEvent(new CustomEvent(LAYER_EVENT, { detail: layer }));
-}
+};
 
-export function useCommands(source: Source): void {
+export const useCommands = (source: Source): void => {
   const ref = useRef(source);
   ref.current = source;
   useEffect(() => {
@@ -75,11 +75,11 @@ export function useCommands(source: Source): void {
       sources.set(sources.get().filter((e) => e !== entry));
     };
   }, []);
-}
+};
 
 let listening = false;
 
-export function listenForCommands(): void {
+export const listenForCommands = (): void => {
   if (listening) {
     return;
   }
@@ -92,6 +92,6 @@ export function listenForCommands(): void {
       runCommand(id);
     }
   });
-}
+};
 
 export { IS_MAC, tipWithKey } from "./keys.js";

@@ -23,7 +23,7 @@ const removeRule = (
 ): Promise<{ rules: string[] }> =>
   json<{ rules: string[] }>("POST", `${rulesPath(projectId)}/remove`, { rule });
 
-function CommandRules({ projectId }: { projectId: string }): ReactElement {
+const CommandRules = ({ projectId }: { projectId: string }): ReactElement => {
   const [rules, setRules] = useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +98,6 @@ function CommandRules({ projectId }: { projectId: string }): ReactElement {
       )}
     </fieldset>
   );
-}
+};
 
 export { CommandRules };

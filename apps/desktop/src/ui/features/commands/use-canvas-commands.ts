@@ -53,7 +53,7 @@ const ZOOMS: { key: ZoomKey; title: string; keyId: KeyId; keywords: string }[] =
     { key: "out", keyId: "zoom-out", keywords: "smaller", title: "Zoom out" },
   ];
 
-function canvasCommands(a: CanvasActions): Command[] {
+const canvasCommands = (a: CanvasActions): Command[] => {
   const needLive = a.live ? {} : { disabled: "Only in the live preview" };
 
   const out: Command[] = [
@@ -179,7 +179,7 @@ function canvasCommands(a: CanvasActions): Command[] {
   }
 
   return out;
-}
+};
 
 interface CanvasInput {
   live: boolean;
@@ -203,35 +203,33 @@ interface CanvasInput {
   play: () => void;
 }
 
-function actionsOf(i: CanvasInput): CanvasActions {
-  return {
-    checking: i.check.checking,
-    comment: i.comment,
-    dark: i.dark ? { on: i.dark.dark, toggle: i.dark.onToggle } : null,
-    draw: i.draw.available ? i.draw : null,
-    hasHead: i.hasHead,
-    layersOpen: i.layersOpen,
-    live: i.live,
-    lofi: i.lofi ? { on: i.lofi.on, toggle: i.lofi.onToggle } : null,
-    onCheck: i.check.run,
-    onLayers: i.onLayers,
-    onSelect: () => {
-      i.comment.setOn(false);
-      i.setSelectMode((m) => !m);
-    },
-    onSource: (kind) => i.onSource({ kind }),
-    play: i.play,
-    presets: PRESETS,
-    selectMode: i.selectMode,
-    zoom: (key) => i.zoomBy(key, "menu"),
-  };
-}
+const actionsOf = (i: CanvasInput): CanvasActions => ({
+  checking: i.check.checking,
+  comment: i.comment,
+  dark: i.dark ? { on: i.dark.dark, toggle: i.dark.onToggle } : null,
+  draw: i.draw.available ? i.draw : null,
+  hasHead: i.hasHead,
+  layersOpen: i.layersOpen,
+  live: i.live,
+  lofi: i.lofi ? { on: i.lofi.on, toggle: i.lofi.onToggle } : null,
+  onCheck: i.check.run,
+  onLayers: i.onLayers,
+  onSelect: () => {
+    i.comment.setOn(false);
+    i.setSelectMode((m) => !m);
+  },
+  onSource: (kind) => i.onSource({ kind }),
+  play: i.play,
+  presets: PRESETS,
+  selectMode: i.selectMode,
+  zoom: (key) => i.zoomBy(key, "menu"),
+});
 
-function useCanvasCommands(input: CanvasInput): void {
+const useCanvasCommands = (input: CanvasInput): void => {
   const latest = useRef(input);
   latest.current = input;
   useCommands(() => canvasCommands(actionsOf(latest.current)));
-}
+};
 
 export { useCanvasCommands };
 

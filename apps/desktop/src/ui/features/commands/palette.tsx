@@ -40,7 +40,7 @@ const RECENT_KEY = "design-studio.commands.recent.v1";
 const RECENT_MAX = 5;
 const DESKTOP = typeof window !== "undefined" && isDesktop();
 
-function readRecent(): string[] {
+const readRecent = (): string[] => {
   try {
     const raw: unknown = JSON.parse(readStored(RECENT_KEY) ?? "[]");
 
@@ -52,18 +52,24 @@ function readRecent(): string[] {
   } catch {
     return [];
   }
-}
+};
 
-function noteRecent(id: string): void {
+const noteRecent = (id: string): void => {
   writeStored(
     RECENT_KEY,
     JSON.stringify(
       [id, ...readRecent().filter((x) => x !== id)].slice(0, RECENT_MAX)
     )
   );
-}
+};
 
-function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
+const Marked = ({
+  text,
+  marks,
+}: {
+  text: string;
+  marks: number[];
+}): ReactNode => {
   if (marks.length === 0) {
     return text;
   }
@@ -94,9 +100,9 @@ function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
   flush(text.length);
 
   return out;
-}
+};
 
-function RowLead({ row }: { row: Row }): ReactElement {
+const RowLead = ({ row }: { row: Row }): ReactElement => {
   if (row.hit && row.kind === "project" && !row.icon) {
     return <ProjectThumb hit={row.hit} />;
   }
@@ -106,9 +112,9 @@ function RowLead({ row }: { row: Row }): ReactElement {
       <Icon name={row.icon ?? "dot"} size={14} />
     </span>
   );
-}
+};
 
-function RowEnd({
+const RowEnd = ({
   row,
   active,
   typing,
@@ -116,7 +122,7 @@ function RowEnd({
   row: Row;
   active: boolean;
   typing: boolean;
-}): ReactElement {
+}): ReactElement => {
   const enter = typing && active && !row.disabled;
 
   return (
@@ -142,9 +148,9 @@ function RowEnd({
       )}
     </span>
   );
-}
+};
 
-function stepOf(event: ReactKeyboardEvent): number {
+const stepOf = (event: ReactKeyboardEvent): number => {
   if (event.key === "ArrowDown" || (event.ctrlKey && event.key === "n")) {
     return 1;
   }
@@ -154,23 +160,25 @@ function stepOf(event: ReactKeyboardEvent): number {
   }
 
   return 0;
-}
+};
 
-function recentRowFor(event: ReactKeyboardEvent, rows: Row[]): Row | undefined {
-  return rows.find(
+const recentRowFor = (
+  event: ReactKeyboardEvent,
+  rows: Row[]
+): Row | undefined =>
+  rows.find(
     (row) =>
       row.group === "Recent" &&
       row.keys !== undefined &&
       chordMatches(row.keys, event.nativeEvent, IS_MAC)
   );
-}
 
-function usePaletteRows(
+const usePaletteRows = (
   query: string,
   onShortcuts: () => void,
   onClose: () => void,
   setError: (error: string | null) => void
-) {
+) => {
   const current = uiStore.get().activeProjectId;
   const hits = useProjectHits(current);
   const routes = useRouteHits(query, current, hits?.routes ?? []);
@@ -229,15 +237,15 @@ function usePaletteRows(
   );
 
   return { busy, loading: hits === null, rows };
-}
+};
 
-function Palette({
+const Palette = ({
   onClose,
   onShortcuts,
 }: {
   onClose: () => void;
   onShortcuts: () => void;
-}): ReactElement {
+}): ReactElement => {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -426,6 +434,6 @@ function Palette({
       </div>
     </div>
   );
-}
+};
 
 export { Palette };

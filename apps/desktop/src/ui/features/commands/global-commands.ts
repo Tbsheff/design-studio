@@ -9,13 +9,13 @@ import {
 } from "./deps.js";
 import type { Command } from "./registry.js";
 
-function focusNewProject(): void {
+const focusNewProject = (): void => {
   window.requestAnimationFrame(() =>
     findElement(document.body, '[aria-label="Describe the design"]')?.focus()
   );
-}
+};
 
-async function openFolder(): Promise<void> {
+const openFolder = async (): Promise<void> => {
   const picked = await pickFolder({ title: "Open a folder" });
 
   if (picked.kind === "canceled") {
@@ -24,15 +24,15 @@ async function openFolder(): Promise<void> {
 
   goHome();
   requestOpenApp(picked.kind === "picked" ? picked.path : "");
-}
+};
 
 type ThemePref = "system" | "light" | "dark";
 
-function setTheme(pref: ThemePref): void {
+const setTheme = (pref: ThemePref): void => {
   (
     window as unknown as { studioTheme?: { set: (pref: ThemePref) => void } }
   ).studioTheme?.set(pref);
-}
+};
 
 const THEME_COMMANDS: Command[] = [
   {
@@ -61,20 +61,18 @@ const THEME_COMMANDS: Command[] = [
   },
 ];
 
-function findTextCommand(inProject: boolean): Command {
-  return {
-    group: "Edit",
-    icon: "search",
-    id: FIND_TEXT_COMMAND,
-    keyId: "find-text",
-    keywords: "search replace copy words rename text",
-    run: () => window.dispatchEvent(new CustomEvent(FIND_TEXT_EVENT)),
-    title: "Find and replace text",
-    ...(inProject ? {} : { disabled: "Open a project to find text" }),
-  };
-}
+const findTextCommand = (inProject: boolean): Command => ({
+  group: "Edit",
+  icon: "search",
+  id: FIND_TEXT_COMMAND,
+  keyId: "find-text",
+  keywords: "search replace copy words rename text",
+  run: () => window.dispatchEvent(new CustomEvent(FIND_TEXT_EVENT)),
+  title: "Find and replace text",
+  ...(inProject ? {} : { disabled: "Open a project to find text" }),
+});
 
-function globalCommands(openShortcuts: () => void): Command[] {
+const globalCommands = (openShortcuts: () => void): Command[] => {
   const inProject = uiStore.get().activeProjectId !== null;
   const home = (): void =>
     uiStore.set({ activeProjectId: null, screen: "home" });
@@ -149,6 +147,6 @@ function globalCommands(openShortcuts: () => void): Command[] {
       title: "Keyboard shortcuts",
     },
   ];
-}
+};
 
 export { focusNewProject, globalCommands };

@@ -1917,3 +1917,9 @@
 .home-send[aria-busy] .home-send-glyph {
   animation: glyph-in var(--dur-slow) var(--ease-out);
 }
+
+fieldset.home-view-toggle {
+  margin: 0;
+  border: 0;
+  min-inline-size: 0;
+}

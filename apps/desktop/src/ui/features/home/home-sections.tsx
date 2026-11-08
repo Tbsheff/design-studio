@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";
-import type { CardActions } from "./project-grid.js";
+import type { CardActions } from "./project-card-model.js";
 import { projectsApi, useProjects } from "./projects-store-model.js";
 
 const useOnboarding = (): {

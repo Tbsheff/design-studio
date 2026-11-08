@@ -8,8 +8,9 @@ import { copy } from "./copy.js";
 import type { AppHealth } from "./deps.js";
 import { homePrefs } from "./home-prefs-model.js";
 import type { HomeFilter } from "./home-prefs-model.js";
-import { isFolderProject, projectBadge, useThumbnail } from "./project-grid.js";
+import { isFolderProject, toProjectBadge } from "./project-card-model.js";
 import { listRecentRuns } from "./use-last-runs.js";
+import { useThumbnail } from "./use-thumbnail.js";
 
 export { ProjectGrid } from "./project-grid.js";
 
@@ -151,7 +152,7 @@ export const ContinueCard = ({
 }): ReactElement => {
   const thumb = useThumbnail(project);
   const last = useLastRun(project);
-  const badge = projectBadge(project);
+  const badge = toProjectBadge(project);
   const line = getRouteLine(project, last);
   const server = project.app && health ? SERVER_TEXT[health.state] : undefined;
 

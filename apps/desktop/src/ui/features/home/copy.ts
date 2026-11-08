@@ -6,6 +6,7 @@ const copy = {
   addFolder2: "Add folder",
   addTheOtherFoldersYou:
     "Add the other folders you work in. Then you can make new projects there and see which projects each one holds.",
+  addToFavorites: "Add to favorites",
   advanced: "Advanced",
   allProjects: "All projects",
   alreadyAProjectReturnOpens: "Already a project. Return opens it.",
@@ -18,6 +19,7 @@ const copy = {
   change: "Change…",
   changeTheDefaultFolder: "Change the default folder",
   checks: "Checks",
+  clearSearch: "Clear search",
   clickThroughAFinishedPrototype:
     "Click through a finished prototype. No cost.",
   close: "Close",
@@ -42,9 +44,11 @@ const copy = {
   designMdOptionalTheAgent:
     "DESIGN.md (optional). The agent reads it before the first run.",
   designStudio: "Design Studio",
+  designSystemPrefix: "Design system:",
   designs: "Designs",
   devServer: "Dev server",
   devServerUrl: "Dev server URL",
+  directions: "directions",
   dismiss: "Dismiss",
   done: "Done",
   dropAnAppFolderAn: "Drop an app folder, an image or a link to build on it",
@@ -77,6 +81,7 @@ const copy = {
   labelUseOnlyItsTokens: "Use only its tokens",
   labelUsePicksTheAppReturn:
     "“Use” picks the app. Return opens it in the studio, and your changes go to its files. Recent work shows here after your first project.",
+  lastRunFailed: "Last run failed",
   layout: "Layout",
   level: "Level",
   list: "List",
@@ -87,6 +92,7 @@ const copy = {
   model: "Model",
   monorepo: "monorepo.",
   moreActions: "More actions",
+  moreActionsFor: "More actions for",
   newDesignSystem: "New design system",
   newFolder: "New folder ",
   newHere: "New here?",
@@ -98,6 +104,10 @@ const copy = {
   noAppFoldersFoundIn: "No app folders found in ",
   noDesignSystem: "No design system",
   noDevServer: "No dev server",
+  noFavoritesYet: "No favorites yet. Use the star on a project to add it.",
+  noProjectsMatch: "No projects match",
+  noProjectsYet:
+    "No projects yet. Describe a design above, pick a starter, or open a folder that already holds one.",
   none: "None",
   openAnyway: "Open anyway",
   openFolderHere: "Open folder here…",
@@ -116,6 +126,7 @@ const copy = {
   projects: "Projects",
   reactViteProject: "React + Vite project",
   recentProjects: "Recent projects",
+  removeFromFavorites: "Remove from favorites",
   removeFromListFilesStay: "Remove from list. Files stay on disk.",
   rename: "Rename",
   restore: "Restore",
@@ -129,10 +140,12 @@ const copy = {
     "Set up a design system so every project starts from your colors, type and components.",
   setUpYourDesignSystem: "Set up your design system",
   show: "Show",
+  showAll: "Show all",
   showFavoritesOnly: "Show favorites only",
   showProjects: "Show projects",
   skillsLimitsAndDesignMd: "Skills, limits and DESIGN.md…",
   skipEnvValidationTrue: "SKIP_ENV_VALIDATION=true",
+  slash: "/",
   sortProjects: "Sort projects",
   startNextDev: "Start next dev",
   starter: "starter",
@@ -152,6 +165,7 @@ const copy = {
   trashIsEmpty: "Trash is empty",
   usersMeProjects: "/Users/me/projects",
   whatShouldWeDesign: "What should we design?",
+  yet: "yet.",
 };
 
 export { copy };

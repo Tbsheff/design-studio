@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import type { CardAction, MenuAt } from "./project-grid.js";
+import type { CardAction, MenuAt } from "./project-card-model.js";
 
 const CardMenu = ({
   project,

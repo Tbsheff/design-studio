@@ -1,320 +1,180 @@
-import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
-import { withFrameStateHost } from "@design-studio/contracts/frame-state";
-import { targetFrame } from "@design-studio/contracts/link-interaction";
-import {
-  ACTION_LABELS,
-  isBackTarget,
-  linkAction,
-  sourceName,
-  startFrameOf,
-  withImplicit,
-} from "@design-studio/contracts/links";
+import type { SelectionContext } from "@design-studio/contracts";
 import type { PrototypeLink } from "@design-studio/contracts/links";
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import type { MutableRefObject, ReactNode } from "react";
+import { Suspense, useCallback } from "react";
+import type { ReactNode } from "react";
 
-import { api } from "../../api.js";
-
-import "../../styles/prototype.css";
-import { frameDirection } from "./canvas-direction-ops.js";
-import { frameName, withFramePath } from "./canvas-frame-ops.js";
-import type { CanvasFrame } from "./canvas-frames-model.js";
-import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
+import { PlayMode } from "./lazy-play-mode.js";
 import { LinkArrows } from "./link-arrows.js";
 import { LinkDragLine } from "./link-drag-line.js";
 import { LinkHandle } from "./link-handle.js";
 import { linkOfSelection } from "./link-view.js";
-import { linksApi, useImplicitLinks, useLinks } from "./links-api.js";
 import { PrototypeBar } from "./prototype-bar.js";
-import { playStartOf, toLinkSource } from "./prototype-model.js";
-import { runOrReport, toValueOr } from "./settle-model.js";
-import { useLinkDrag } from "./use-link-drag.js";
+import { toLinkRectsInput } from "./prototype-links-input.js";
+import type { PrototypeOptions } from "./prototype-options-model.js";
+import { toFrameTitle, toLinkTitle } from "./prototype-titles-model.js";
 import { useLinkRects } from "./use-link-rects.js";
 import type { LinkState } from "./use-link-rects.js";
+import {
+  usePrototypeDrag,
+  usePrototypeFile,
+  usePrototypeView,
+} from "./use-prototype-state.js";
+import type {
+  PrototypeFile,
+  PrototypeView,
+  ViewToggle,
+} from "./use-prototype-state.js";
+import { usePrototypeUrls } from "./use-prototype-urls.js";
 
-const PlayMode = lazy(() => import("./play-mode.js"));
+type LinkDragState = ReturnType<typeof usePrototypeDrag>;
 
-interface Options {
-  projectId: string;
-  kind: ProjectKind;
-  directionId: string | null;
-  frames: CanvasFrame[];
-  shown: CanvasFrame[];
-  active: CanvasFrame;
-  baseUrl: string | null;
-  live: boolean;
-  selection: SelectionContext[];
-  clearSelection: () => void;
-  sandbox?: string;
-  notify: (message: string) => void;
-  on: boolean;
-  preview: {
-    frontToken: string | null;
-    slots: { token: string; src: string }[];
-    elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>;
-  };
-  passive: {
-    slots: { id: string; token: string; src: string | null }[];
-    elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>;
-  };
+interface PrototypeParts {
+  readonly artboard: ReactNode;
+  readonly play: () => void;
+  readonly stage: ReactNode;
+  readonly viewToggle: ViewToggle | undefined;
 }
 
-const errorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
+interface PrototypeScene {
+  readonly linkTitle: (link: PrototypeLink) => string;
+  readonly options: PrototypeOptions;
+  readonly prototypeFile: PrototypeFile;
+  readonly view: PrototypeView;
+  readonly states: LinkState[];
+  readonly drag: LinkDragState;
+  readonly single: SelectionContext | null;
+  readonly selected: LinkState | null;
+}
+
+const toSingleSelection = (
+  selection: SelectionContext[]
+): SelectionContext | null => {
+  if (selection.length === 1) {
+    return selection[0] ?? null;
   }
 
-  return String(error);
+  return null;
 };
 
-const usePrototype = (options: Options) => {
-  const { on } = options;
-  const [arrows, setArrows] = useState(true);
-  const [playing, setPlaying] = useState(false);
-  const saved = useLinks(options.projectId);
+const toSelectedLink = (
+  scene: Pick<PrototypeScene, "options" | "states" | "single">
+): LinkState | null => {
+  if (scene.options.on) {
+    return linkOfSelection(scene.states, scene.single, scene.options.active.id);
+  }
 
-  const implicit = useImplicitLinks(
-    options.projectId,
-    options.frames.map((frame) => `${frame.id}:${frame.path ?? ""}`).join(",")
-  );
+  return null;
+};
 
-  const file = withImplicit(saved, implicit);
-  const clear = useRef(options.clearSelection);
-  useLayoutEffect(() => {
-    clear.current = options.clearSelection;
-  });
-  const lastActive = useRef(options.active.id);
-  useEffect(() => {
-    if (lastActive.current === options.active.id) {
-      return;
-    }
+const toArtboardNode = (scene: PrototypeScene): ReactNode => {
+  const { options, prototypeFile, view, states, drag, single, selected } =
+    scene;
 
-    lastActive.current = options.active.id;
+  const { begin: onBegin } = drag;
 
-    if (on) {
-      clear.current();
-    }
-  }, [options.active.id, on]);
-
-  const startId = playStartOf(
-    file,
-    options.frames,
-    startFrameOf(file, options.frames)
-  );
-
-  const states = useLinkRects({
-    active: {
-      elements: options.preview.elements,
-      frameId: options.active.id,
-      src:
-        options.preview.slots.find(
-          (slot) => slot.token === options.preview.frontToken
-        )?.src ?? null,
-      token: options.preview.frontToken,
-    },
-    enabled: on,
-    file,
-    frames: options.frames,
-    kind: options.kind,
-    passive: options.passive,
-  });
-
-  const drag = useLinkDrag((selection, frameId) => {
-    void runOrReport(
-      linksApi.add(options.projectId, {
-        from: toLinkSource(selection, options.active),
-        to: { frame: frameId },
-        transition: "instant",
-      }),
-      (error) => options.notify(errorMessage(error))
-    );
-  });
-
-  const frameTitle = (frame: CanvasFrame): string =>
-    frame.label ?? frame.path ?? frameName(frame);
-
-  const titleById = (id: string): string => {
-    const frame = options.frames.find((item) => item.id === id);
-
-    if (frame) {
-      return frameTitle(frame);
-    }
-
-    return "missing frame";
-  };
-
-  const targetName = (link: PrototypeLink): string => {
-    if (isBackTarget(link.to)) {
-      return "Back";
-    }
-
-    const to = targetFrame(link.to);
-
-    if (to) {
-      return titleById(to);
-    }
-
-    return ACTION_LABELS[linkAction(link)];
-  };
-
-  const linkTitle = (link: PrototypeLink): string =>
-    `${sourceName(link.from)} in ${titleById(link.from.frame)} → ${targetName(link)}`;
-
-  const urls = useRef(new Map<string, Promise<string>>());
-  const frameStates = useCurrentFrameStates();
-
-  const withState = (frame: CanvasFrame, url: string): string => {
-    if (frameStates) {
-      return withFrameStateHost(url, frameStateOf(frameStates.view, frame.id));
-    }
-
-    return url;
-  };
-
-  const urlOf = async (frame: CanvasFrame): Promise<string | null> => {
-    const url = await baseUrlOf(frame);
-
-    if (url) {
-      return withState(frame, url);
-    }
-
+  if (!options.on) {
     return null;
-  };
-
-  const fetchDirectionUrl = async (did: string): Promise<string> => {
-    const result = await api.directionPreview(options.projectId, did);
-
-    return result.url;
-  };
-
-  const baseUrlOf = async (frame: CanvasFrame): Promise<string | null> => {
-    const did = frameDirection(frame, options.directionId);
-
-    if (!did) {
-      return null;
-    }
-
-    if (did === options.directionId && options.baseUrl) {
-      return withFramePath(options.baseUrl, frame.path);
-    }
-
-    let url = urls.current.get(did);
-
-    if (!url) {
-      url = fetchDirectionUrl(did);
-      urls.current.set(did, url);
-      void runOrReport(url, () => urls.current.delete(did));
-    }
-
-    const base = await toValueOr(url, null);
-
-    if (base === null) {
-      return null;
-    }
-
-    return withFramePath(base, frame.path);
-  };
-
-  const play = (): void => setPlaying(true);
-
-  const single: SelectionContext | undefined = (():
-    | SelectionContext
-    | undefined => {
-    if (options.selection.length !== 1) {
-      return undefined;
-    }
-
-    return options.selection[0];
-  })();
-
-  let selected: LinkState | null = null;
-
-  if (on) {
-    selected = linkOfSelection(states, single ?? null, options.active.id);
   }
 
-  let artboard: ReactNode = null;
-
-  if (on) {
-    artboard = (
-      <>
-        <LinkArrows
-          states={states}
-          frames={options.shown}
-          active={options.active}
-          startId={startId}
-          arrows={arrows}
-          selectedId={selected?.link.id ?? null}
-          dropTarget={drag.drag?.target ?? null}
+  return (
+    <>
+      <LinkArrows
+        states={states}
+        frames={options.shown}
+        active={options.active}
+        startId={prototypeFile.startId}
+        arrows={view.arrows}
+        selectedId={selected?.link.id ?? null}
+        dropTarget={drag.drag?.target ?? null}
+      />
+      {single && options.live && (
+        <LinkHandle
+          selection={single}
+          activeId={options.active.id}
+          onBegin={onBegin}
         />
-        {single && options.live && (
-          <LinkHandle
-            selection={single}
-            activeId={options.active.id}
-            onBegin={drag.begin}
-          />
-        )}
-      </>
-    );
+      )}
+    </>
+  );
+};
+
+const toBarNode = (scene: PrototypeScene): ReactNode => {
+  const { options, prototypeFile, states, single, selected } = scene;
+  const { linkTitle } = scene;
+  const { notify: onError } = options;
+
+  if (!options.on) {
+    return null;
   }
+
+  return (
+    <PrototypeBar
+      projectId={options.projectId}
+      file={prototypeFile.file}
+      states={states}
+      frames={options.shown}
+      startId={prototypeFile.startId}
+      selected={selected}
+      hasSelection={single !== null}
+      selection={single}
+      linkTitle={linkTitle}
+      onError={onError}
+    />
+  );
+};
+
+const usePrototype = (options: PrototypeOptions): PrototypeParts => {
+  const prototypeFile = usePrototypeFile(options);
+  const view = usePrototypeView(options.on);
+  const drag = usePrototypeDrag(options);
+  const urlOf = usePrototypeUrls(options);
+  const states = useLinkRects(toLinkRectsInput(options, prototypeFile));
+  const single = toSingleSelection(options.selection);
+  const selected = toSelectedLink({ options, single, states });
+  const { frames } = options;
+  const { onClosePlay, play, viewToggle } = view;
+
+  const linkTitle = useCallback(
+    (link: PrototypeLink): string => toLinkTitle(frames, link),
+    [frames]
+  );
+
+  const scene = {
+    drag,
+    linkTitle,
+    options,
+    prototypeFile,
+    selected,
+    single,
+    states,
+    view,
+  };
 
   const stage: ReactNode = (
     <>
-      {on && (
-        <PrototypeBar
-          projectId={options.projectId}
-          file={file}
-          states={states}
-          frames={options.shown}
-          startId={startId}
-          selected={selected}
-          hasSelection={single !== undefined}
-          selection={single ?? null}
-          linkTitle={linkTitle}
-          onError={options.notify}
-        />
-      )}
+      {toBarNode(scene)}
       <LinkDragLine drag={drag.drag} />
-      {playing && (
+      {view.playing && (
         <Suspense fallback={null}>
           <PlayMode
             kind={options.kind}
-            file={file}
+            file={prototypeFile.file}
             frames={options.frames}
-            startId={startId}
+            startId={prototypeFile.startId}
             sandbox={options.sandbox}
             urlOf={urlOf}
-            frameTitle={frameTitle}
-            onClose={() => setPlaying(false)}
+            frameTitle={toFrameTitle}
+            onClose={onClosePlay}
+            onRestoreFocus={options.focusStage}
           />
         </Suspense>
       )}
     </>
   );
 
-  const viewToggle2: { on: boolean; onToggle: () => void } | undefined = (():
-    | { on: boolean; onToggle: () => void }
-    | undefined => {
-    if (on) {
-      return { on: arrows, onToggle: () => setArrows((value) => !value) };
-    }
+  const artboard = toArtboardNode(scene);
 
-    return undefined;
-  })();
-
-  return {
-    artboard,
-    play,
-    stage,
-    viewToggle: viewToggle2,
-  };
+  return { artboard, play, stage, viewToggle };
 };
 
 export { usePrototype };

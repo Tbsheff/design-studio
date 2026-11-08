@@ -199,12 +199,18 @@ const toPrototypeInput = (
   const on = text.protoOn;
   const preview = previewState.frames;
   const clearSelection = (): void => props.setSelection(() => []);
+  const { stageRef } = text;
+
+  const focusStage = (): void => {
+    stageRef.current?.focus({ preventScroll: true });
+  };
 
   return {
     active,
     baseUrl,
     clearSelection,
     directionId,
+    focusStage,
     frames,
     kind,
     live,

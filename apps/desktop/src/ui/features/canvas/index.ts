@@ -2,7 +2,11 @@ import { lazy } from "react";
 
 import { Canvas } from "./canvas.js";
 
-const PlayMode = lazy(() => import("./play-mode.js"));
+const PlayMode = lazy(async () => {
+  const loaded = await import("./play-mode.js");
+
+  return { default: loaded.PlayMode };
+});
 
 export {
   activeFrame,

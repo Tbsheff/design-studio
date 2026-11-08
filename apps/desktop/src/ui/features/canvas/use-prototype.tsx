@@ -133,6 +133,7 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
   const selected = toSelectedLink({ options, single, states });
   const { frames } = options;
   const { onClosePlay, play, viewToggle } = view;
+  const { focusStage: onRestoreFocus } = options;
 
   const linkTitle = useCallback(
     (link: PrototypeLink): string => toLinkTitle(frames, link),
@@ -165,7 +166,7 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
             urlOf={urlOf}
             frameTitle={toFrameTitle}
             onClose={onClosePlay}
-            onRestoreFocus={options.focusStage}
+            onRestoreFocus={onRestoreFocus}
           />
         </Suspense>
       )}

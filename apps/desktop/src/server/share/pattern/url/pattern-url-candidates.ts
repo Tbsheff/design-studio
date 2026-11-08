@@ -4,10 +4,7 @@ import path from "node:path";
 
 import type { Page } from "playwright-core";
 
-import {
-  PAGE_IMPORT_DEADLINE_MS,
-  PageImportError,
-} from "../../page-import/index.js";
+import { PAGE_IMPORT_DEADLINE_MS } from "../../page-import/index.js";
 import { loadConfig } from "../deps.js";
 import { toWithUrlPage } from "./pattern-url-browser.js";
 import { CANDIDATES_SCRIPT } from "./pattern-url-script.js";
@@ -119,8 +116,8 @@ const toInspectUrl = async (
 
     return { candidates, ok: true };
   } catch (error) {
-    if (error instanceof PageImportError) {
-      return toUnavailable(error.message);
+    if (error instanceof Error) {
+      return toUnavailable(error.message.split("\n")[0] ?? null);
     }
 
     return toUnavailable(null);

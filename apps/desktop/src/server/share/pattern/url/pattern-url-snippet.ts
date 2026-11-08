@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { buildClassSheet, renderPage } from "../../page-import/index.js";
 import type {
   Capture,
+  CapturedNode,
   ClassSheet,
   CompiledTokenEntry,
 } from "../../page-import/index.js";
@@ -23,6 +24,8 @@ const TOKEN_USE = /var\((?<name>--[\w-]+)/gu;
 
 const CLASS_RULE = /^\.(?<name>s\d+)\{/u;
 
+const UNSAFE_CSS = /[<>{};]/gu;
+
 const GLOBAL_LINES = new Set([
   "*,*::before,*::after{box-sizing:border-box}",
   "body{margin:0}",
@@ -32,6 +35,7 @@ interface SnippetRequest {
   readonly capture: Capture;
   readonly entries: readonly CompiledTokenEntry[];
   readonly local: ReadonlyMap<string, string>;
+  readonly pins: Readonly<Record<string, string>>;
   readonly seed: string;
 }
 
@@ -71,6 +75,41 @@ const toScopedSheet = (
   tokens: sheet.tokens,
 });
 
+const toPinnedSheet = (
+  sheet: ClassSheet,
+  root: CapturedNode,
+  prefix: string,
+  pins: Readonly<Record<string, string>>
+): ClassSheet => {
+  const own = sheet.classOf.get(root) ?? null;
+  const name = `${prefix}-root`;
+
+  const declared = sheet.rules.find(
+    (rule) => own !== null && rule.startsWith(`.${own}{`)
+  );
+
+  const inner = (declared ?? "").replace(/^[^{]*\{/u, "").replace(/\}$/u, "");
+
+  const pinned = Object.entries(pins)
+    .flatMap(([key, value]) => {
+      if (value === "") {
+        return [];
+      }
+
+      return [`${key}:${value.replaceAll(UNSAFE_CSS, "")}`];
+    })
+    .join(";");
+
+  return {
+    classOf: new Map([...sheet.classOf, [root, name]]),
+    rules: [
+      ...sheet.rules,
+      `.${name}{${[pinned, inner].filter(Boolean).join(";")}}`,
+    ],
+    tokens: sheet.tokens,
+  };
+};
+
 const toTokenNames = (rules: readonly string[]): readonly string[] => [
   ...new Set(
     rules.flatMap((rule) =>
@@ -90,10 +129,13 @@ const toCaptureSnippet = (request: SnippetRequest): Snippet | null => {
     request.entries.map((entry) => [entry.cssVar, entry.value])
   );
 
-  const scoped = toScopedSheet(
-    buildClassSheet(rootNode, request.entries),
-    toPrefix(request.seed),
-    values
+  const prefix = toPrefix(request.seed);
+
+  const scoped = toPinnedSheet(
+    toScopedSheet(buildClassSheet(rootNode, request.entries), prefix, values),
+    rootNode,
+    prefix,
+    request.pins
   );
 
   const document = renderPage({

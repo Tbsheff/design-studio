@@ -60,4 +60,23 @@ const CANDIDATES_SCRIPT = String.raw`(() => {
   });
 })()`;
 
-export { CANDIDATES_SCRIPT };
+const PINS_SCRIPT = String.raw`(selector) => {
+  const el = document.querySelector(selector);
+  if (!el) return {};
+  const names = ["color","font-family","font-size","font-style","font-weight","letter-spacing","line-height","text-align","text-transform","white-space","word-spacing"];
+  const cs = getComputedStyle(el);
+  const pins = {};
+  for (const name of names) pins[name] = cs.getPropertyValue(name);
+  const isClear = (value) => !value || value === "transparent" || /rgba\(.*,\s*0\)$/.test(value);
+  let node = el;
+  let background = "";
+  while (node && node.nodeType === 1) {
+    const value = getComputedStyle(node).getPropertyValue("background-color");
+    if (!isClear(value)) { background = value; break; }
+    node = node.parentElement;
+  }
+  if (isClear(cs.getPropertyValue("background-color"))) pins["background-color"] = background || "rgb(255, 255, 255)";
+  return pins;
+}`;
+
+export { CANDIDATES_SCRIPT, PINS_SCRIPT };

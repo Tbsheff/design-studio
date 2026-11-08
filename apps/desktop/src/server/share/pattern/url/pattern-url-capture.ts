@@ -4,7 +4,6 @@ import path from "node:path";
 import {
   capturePage,
   PAGE_IMPORT_DEADLINE_MS,
-  PageImportError,
 } from "../../page-import/index.js";
 import type { CompiledTokenEntry } from "../../page-import/index.js";
 import { loadConfig } from "../deps.js";
@@ -13,6 +12,7 @@ import { toPatternId } from "../pattern-text.js";
 import { toPatternAssets } from "./pattern-url-assets.js";
 import type { PatternAssets } from "./pattern-url-assets.js";
 import { toWithUrlPage } from "./pattern-url-browser.js";
+import { PINS_SCRIPT } from "./pattern-url-script.js";
 import { toCaptureSnippet } from "./pattern-url-snippet.js";
 import type { Snippet } from "./pattern-url-snippet.js";
 import { toUnavailable, toUrlTarget } from "./pattern-url-target.js";
@@ -44,6 +44,7 @@ type UrlCaptureResult =
   | UrlFailure;
 
 interface SectionShots {
+  readonly pins: Readonly<Record<string, string>>;
   readonly png: Buffer;
   readonly thumbnail: string | null;
 }
@@ -63,22 +64,25 @@ const toShootSection = (
     async (page) => {
       const section = page.locator(request.selector).first();
 
-      const [png, jpeg] = await Promise.all([
+      const [png, jpeg, pins] = await Promise.all([
         section.screenshot({ timeout: SHOT_MS, type: "png" }),
         section.screenshot({
           quality: THUMBNAIL_QUALITY,
           timeout: SHOT_MS,
           type: "jpeg",
         }),
+        page.evaluate<Record<string, string>>(
+          `(${PINS_SCRIPT})(${JSON.stringify(request.selector)})`
+        ),
       ]);
 
       const thumbnail = `data:image/jpeg;base64,${jpeg.toString("base64")}`;
 
       if (thumbnail.length > THUMBNAIL_CHARS_MAX) {
-        return { png, thumbnail: null };
+        return { pins, png, thumbnail: null };
       }
 
-      return { png, thumbnail };
+      return { pins, png, thumbnail };
     }
   );
 
@@ -92,7 +96,12 @@ const toWriteReference = async (id: string, png: Buffer): Promise<string> => {
   return file;
 };
 
+const TAG_CHARS_MAX = 32;
+
 const toHostOf = (url: string): string => new URL(url).host;
+
+const toHostTag = (host: string): string =>
+  host.replace(/^www\./u, "").slice(0, TAG_CHARS_MAX);
 
 interface CapturedParts {
   readonly assets: PatternAssets;
@@ -128,6 +137,7 @@ const toGatherParts = async (
     capture: captured,
     entries: request.entries,
     local: assets.local,
+    pins: shots.pins,
     seed: `${target.url}\u0000${request.selector}`,
   });
 
@@ -160,7 +170,7 @@ const toStoredPattern = (
     sourceName: host,
     sourceProjectId: request.projectId,
     sourceUrl: url,
-    tags: ["url", host],
+    tags: ["url", toHostTag(host)],
     thumbnail: parts.shots.thumbnail,
     tokenCount: parts.snippet.tokens.length,
     tokens: parts.snippet.tokens,
@@ -201,8 +211,8 @@ const toCaptureUrlPattern = async (
 
     return { ok: true, pattern: { ...draft, referencePath } };
   } catch (error) {
-    if (error instanceof PageImportError) {
-      return toUnavailable(error.message);
+    if (error instanceof Error) {
+      return toUnavailable(error.message.split("\n")[0] ?? null);
     }
 
     return toUnavailable(null);

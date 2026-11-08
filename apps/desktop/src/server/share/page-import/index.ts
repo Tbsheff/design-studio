@@ -26,7 +26,7 @@ export { toTargetUrl } from "./target-url.js";
 
 export { PAGE_IMPORT_DEADLINE_MS, tokenEntriesFor } from "./deps.js";
 
-export type { Capture } from "./captured.js";
+export type { Capture, CapturedNode } from "./captured.js";
 
 export type { ClassSheet } from "./styles.js";
 

@@ -24,10 +24,10 @@ type State =
 
 const RESET_MS = 1600;
 
-function menuKeys(
+const menuKeys = (
   event: KeyboardEvent<HTMLElement>,
   close: (refocus: boolean) => void
-): void {
+): void => {
   if (event.key === "Tab") {
     close(false);
   }
@@ -49,9 +49,9 @@ function menuKeys(
 
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
   items[(Math.max(0, index) + step + items.length) % items.length]?.focus();
-}
+};
 
-function writeWhenReady(text: Promise<string>): Promise<void> {
+const writeWhenReady = (text: Promise<string>): Promise<void> => {
   if (
     typeof ClipboardItem !== "undefined" &&
     typeof navigator.clipboard?.write === "function"
@@ -71,9 +71,9 @@ function writeWhenReady(text: Promise<string>): Promise<void> {
   }
 
   return text.then((value) => navigator.clipboard.writeText(value));
-}
+};
 
-function TriggerContent({
+const TriggerContent = ({
   variant,
   open,
   busy,
@@ -85,7 +85,7 @@ function TriggerContent({
   busy: boolean;
   text: string;
   icon: IconName;
-}) {
+}) => {
   if (variant === "row") {
     return (
       <>
@@ -96,14 +96,14 @@ function TriggerContent({
   }
 
   return busy ? <span className="spinner" /> : <Icon name={icon} size={14} />;
-}
+};
 
-function CopyCodeMenu({
+const CopyCodeMenu = ({
   projectId,
   directionId,
   selector,
   variant = "icon",
-}: Props) {
+}: Props) => {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<State>({ kind: "idle" });
   const root = useRef<HTMLDivElement>(null);
@@ -276,6 +276,6 @@ function CopyCodeMenu({
       ) : null}
     </div>
   );
-}
+};
 
 export { CopyCodeMenu };

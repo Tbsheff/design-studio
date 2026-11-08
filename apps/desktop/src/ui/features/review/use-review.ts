@@ -30,22 +30,20 @@ interface ReviewState {
   fix: (findings: ReviewFinding[]) => Promise<void>;
 }
 
-function side(value: number): number {
-  return Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(value)));
-}
+const side = (value: number): number =>
+  Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(value)));
 
-function frameKey(directionId: string | null, frame: CanvasFrame): string {
-  return `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
-}
+const frameKey = (directionId: string | null, frame: CanvasFrame): string =>
+  `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
 
-function useLatest<T>(value: T) {
+const useLatest = <T>(value: T) => {
   const ref = useRef(value);
   ref.current = value;
 
   return ref;
-}
+};
 
-function useReview(input: ReviewInput): ReviewState {
+const useReview = (input: ReviewInput): ReviewState => {
   const [result, setResult] = useState<ReviewResult | null>(null);
   const [resultKey, setResultKey] = useState<string | null>(null);
   const [changedAt, setChangedAt] = useState(0);
@@ -154,7 +152,8 @@ function useReview(input: ReviewInput): ReviewState {
     run,
     stale,
   };
-}
+};
 
 export { frameKey, useReview };
+
 export type { ReviewInput, ReviewState };

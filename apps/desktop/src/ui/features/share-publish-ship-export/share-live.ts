@@ -22,7 +22,7 @@ const FRAME_SELECTOR = ".artboard[data-frame-id], .canvas-frame[data-frame-id]";
 const ARROW =
   '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1l5.5 13 2-5.5L14 6.5z" fill="currentColor" stroke="white" stroke-width="1.2" stroke-linejoin="round"/></svg>';
 
-function hueOf(id: string): number {
+const hueOf = (id: string): number => {
   let h = 0;
 
   for (const ch of id) {
@@ -30,18 +30,17 @@ function hueOf(id: string): number {
   }
 
   return h;
-}
+};
 
-function frameEl(stage: HTMLElement, frameId: string): HTMLElement | null {
-  return stage.querySelector<HTMLElement>(
+const frameEl = (stage: HTMLElement, frameId: string): HTMLElement | null =>
+  stage.querySelector<HTMLElement>(
     `.artboard[data-frame-id="${CSS.escape(frameId)}"], .canvas-frame[data-frame-id="${CSS.escape(frameId)}"]`
   );
-}
 
-async function readEvents(
+const readEvents = async (
   res: Response,
   onEvent: (event: SharePresenceEvent) => void
-): Promise<void> {
+): Promise<void> => {
   const reader = res.body?.getReader();
 
   if (!reader) {
@@ -81,7 +80,7 @@ async function readEvents(
       }
     }
   }
-}
+};
 
 class CursorLayer {
   private layer: HTMLDivElement | null = null;
@@ -223,7 +222,7 @@ class CursorLayer {
   }
 }
 
-function studioPointer(projectId: string, stage: () => HTMLElement | null) {
+const studioPointer = (projectId: string, stage: () => HTMLElement | null) => {
   let on = false;
   let pending: StudioCursorInput | null | undefined;
   let timer: ReturnType<typeof globalThis.setTimeout> | null = null;
@@ -335,12 +334,12 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
       onLeave();
     },
   };
-}
+};
 
-function startShareLive(
+const startShareLive = (
   projectId: string,
   stage: () => HTMLElement | null
-): () => void {
+): (() => void) => {
   const layer = new CursorLayer(stage);
   const pointer = studioPointer(projectId, stage);
   let stopped = false;
@@ -386,6 +385,7 @@ function startShareLive(
     if (retry !== null) {
       globalThis.clearTimeout(retry);
     }
+
     control?.abort();
 
     if (stopped) {
@@ -412,13 +412,15 @@ function startShareLive(
   return () => {
     stopped = true;
     globalThis.removeEventListener(SHARES_CHANGED, onChanged);
+
     if (retry !== null) {
       globalThis.clearTimeout(retry);
     }
+
     control?.abort();
     pointer.set(false);
     layer.destroy();
   };
-}
+};
 
 export { startShareLive };

@@ -10,7 +10,7 @@ import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
 import { isReadOnlyPublication, publishApi } from "./publish-api.js";
 
-function statusText(p: Publication, now: number): string {
+const statusText = (p: Publication, now: number): string => {
   if (p.status === "removed") {
     return "Unpublished";
   }
@@ -39,7 +39,7 @@ function statusText(p: Publication, now: number): string {
   ]
     .filter(Boolean)
     .join(" · ");
-}
+};
 
 interface RowProps {
   p: Publication;
@@ -52,48 +52,46 @@ interface RowProps {
   onChanged: () => void;
 }
 
-function Versions({
+const Versions = ({
   p,
   busy,
   onRollback,
-}: Pick<RowProps, "p" | "busy" | "onRollback">) {
-  return (
-    <ol
-      className="publish-versions"
-      aria-label={copy.versions}
-      data-testid="publish-versions"
-    >
-      {p.versions.map((v) => (
-        <li key={v.id} className="publish-version">
-          <span className="truncate">
-            {v.committedAt
-              ? new Date(v.committedAt).toLocaleString([], {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })
-              : "Pending"}{" "}
-            · v {v.sourceVersion.slice(0, 7)} · {v.fileCount} files
-          </span>
-          {v.live ? (
-            <span className="publish-live-tag">Live</span>
-          ) : (
-            <button
-              type="button"
-              className="btn ghost small"
-              disabled={busy}
-              onClick={() => onRollback(p, v.id)}
-              data-tip={copy.restoreTip}
-            >
-              Make live
-            </button>
-          )}
-        </li>
-      ))}
-    </ol>
-  );
-}
+}: Pick<RowProps, "p" | "busy" | "onRollback">) => (
+  <ol
+    className="publish-versions"
+    aria-label={copy.versions}
+    data-testid="publish-versions"
+  >
+    {p.versions.map((v) => (
+      <li key={v.id} className="publish-version">
+        <span className="truncate">
+          {v.committedAt
+            ? new Date(v.committedAt).toLocaleString([], {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })
+            : "Pending"}{" "}
+          · v {v.sourceVersion.slice(0, 7)} · {v.fileCount} files
+        </span>
+        {v.live ? (
+          <span className="publish-live-tag">Live</span>
+        ) : (
+          <button
+            type="button"
+            className="btn ghost small"
+            disabled={busy}
+            onClick={() => onRollback(p, v.id)}
+            data-tip={copy.restoreTip}
+          >
+            Make live
+          </button>
+        )}
+      </li>
+    ))}
+  </ol>
+);
 
-function Comments({
+const Comments = ({
   p,
   projectId,
   onChanged,
@@ -101,7 +99,7 @@ function Comments({
   p: Publication;
   projectId: string;
   onChanged: () => void;
-}) {
+}) => {
   const [list, setList] = useState<PublicationComment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -153,9 +151,9 @@ function Comments({
       </ol>
     </div>
   );
-}
+};
 
-function RowActions({
+const RowActions = ({
   p,
   busy,
   onRepublish,
@@ -165,7 +163,7 @@ function RowActions({
 }: Pick<RowProps, "p" | "busy" | "onRepublish" | "onUnpublish"> & {
   open: string | null;
   setOpen: (v: string | null) => void;
-}) {
+}) => {
   const app = p.backend === "app" && !isReadOnlyPublication(p);
   const toggle = (name: string) => setOpen(open === name ? null : name);
 
@@ -219,9 +217,9 @@ function RowActions({
       </button>
     </>
   );
-}
+};
 
-function PublicationRow({
+const PublicationRow = ({
   p,
   now,
   projectId,
@@ -230,7 +228,7 @@ function PublicationRow({
   onUnpublish,
   onRollback,
   onChanged,
-}: RowProps) {
+}: RowProps) => {
   const [open, setOpen] = useState<string | null>(null);
   const active = p.status !== "removed";
 
@@ -304,7 +302,8 @@ function PublicationRow({
       {p.error && <p className="publish-error">{p.error}</p>}
     </li>
   );
-}
+};
 
 export { PublicationRow };
+
 export type { RowProps };

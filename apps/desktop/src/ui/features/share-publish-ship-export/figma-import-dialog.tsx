@@ -36,11 +36,10 @@ const POSITIONS: { value: JsxInsertPosition; label: string }[] = [
   { label: "Before the selection", value: "before" },
 ];
 
-function route(ids: Props["ids"]): string {
-  return `/api/projects/${encodeURIComponent(ids.projectId)}/d/${encodeURIComponent(ids.directionId)}/figma/import`;
-}
+const route = (ids: Props["ids"]): string =>
+  `/api/projects/${encodeURIComponent(ids.projectId)}/d/${encodeURIComponent(ids.directionId)}/figma/import`;
 
-function messageOf(error: unknown): string {
+const messageOf = (error: unknown): string => {
   if (
     error instanceof ApiError &&
     error.data &&
@@ -50,13 +49,12 @@ function messageOf(error: unknown): string {
   }
 
   return error instanceof Error ? error.message : String(error);
-}
+};
 
-function plural(count: number, word: string): string {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
-}
+const plural = (count: number, word: string): string =>
+  `${count} ${word}${count === 1 ? "" : "s"}`;
 
-function facts(stats: FigmaImportStats): string[] {
+const facts = (stats: FigmaImportStats): string[] => {
   const out = [
     plural(stats.layers, "layer"),
     `${plural(stats.tokens, "token color")}`,
@@ -75,15 +73,15 @@ function facts(stats: FigmaImportStats): string[] {
   }
 
   return out;
-}
+};
 
-function usePreview(
+const usePreview = (
   ids: Props["ids"],
   base: FigmaImportSource,
   target: InsertTarget,
   nodeId: string,
   position: JsxInsertPosition
-) {
+) => {
   const [preview, setPreview] = useState<FigmaImportPreview | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,7 +112,7 @@ function usePreview(
   }, [ids, base, target, nodeId, position]);
 
   return { failure, loading, preview, setFailure };
-}
+};
 
 interface PlainFailure {
   text: string;
@@ -122,7 +120,7 @@ interface PlainFailure {
   details: string | null;
 }
 
-function plainFailure(raw: string): PlainFailure {
+const plainFailure = (raw: string): PlainFailure => {
   if (LINKS_OFF.test(raw)) {
     return {
       details: raw,
@@ -146,25 +144,25 @@ function plainFailure(raw: string): PlainFailure {
   }
 
   return { details: null, fix: null, text: raw };
-}
+};
 
 const LINKS_OFF = /Figma API, which is off/;
 
-function nodesUrl(link: string): string {
+const nodesUrl = (link: string): string => {
   const match = /figma\.com\/(?:file|design|proto)\/([A-Za-z0-9]+)/.exec(link);
   const node = /[?&]node-id=([^&#]+)/.exec(link)?.[1];
   const ids = node ? decodeURIComponent(node).replace("-", ":") : "<node id>";
 
   return `https://api.figma.com/v1/files/${match?.[1] ?? "<file key>"}/nodes?ids=${ids}`;
-}
+};
 
-function JsonPaste({
+const JsonPaste = ({
   link,
   onUse,
 }: {
   link: string;
   onUse: (nodes: string) => void;
-}) {
+}) => {
   const [text, setText] = useState("");
   const [bad, setBad] = useState(false);
 
@@ -213,9 +211,9 @@ function JsonPaste({
       </div>
     </div>
   );
-}
+};
 
-function JsonFallback({
+const JsonFallback = ({
   base,
   failure,
   onUse,
@@ -223,15 +221,15 @@ function JsonFallback({
   base: FigmaImportSource;
   failure: string | null;
   onUse: (nodes: string) => void;
-}) {
+}) => {
   if (!failure || !("link" in base) || !LINKS_OFF.test(failure)) {
     return null;
   }
 
   return <JsonPaste link={base.link} onUse={onUse} />;
-}
+};
 
-function FailureNote({ failure }: { failure: string }) {
+const FailureNote = ({ failure }: { failure: string }) => {
   const [open, setOpen] = useState(false);
   const plain = plainFailure(failure);
 
@@ -257,9 +255,9 @@ function FailureNote({ failure }: { failure: string }) {
       )}
     </div>
   );
-}
+};
 
-function Summary({ preview }: { preview: FigmaImportPreview }) {
+const Summary = ({ preview }: { preview: FigmaImportPreview }) => {
   const { frame, stats } = preview;
 
   return (
@@ -295,16 +293,16 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
       </div>
     </div>
   );
-}
+};
 
-function FigmaImportDialog({
+const FigmaImportDialog = ({
   ids,
   target,
   text,
   canNest,
   onDone,
   onClose,
-}: Props) {
+}: Props) => {
   const [base, setBase] = useState<FigmaImportSource>(() =>
     looksLikeFigmaLink(text) ? { link: text.trim() } : { nodes: text }
   );
@@ -458,6 +456,6 @@ function FigmaImportDialog({
       </form>
     </dialog>
   );
-}
+};
 
 export { FigmaImportDialog };

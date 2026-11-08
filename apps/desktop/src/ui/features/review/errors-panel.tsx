@@ -21,25 +21,20 @@ const DEV_NOISE = [
   /\bnext-dev-overlay\b|\b__nextjs_original-stack-frame/,
 ];
 
-function isDevNoise(e: BuildError): boolean {
-  return (
-    e.source === "console" &&
-    DEV_NOISE.some((pattern) => pattern.test(e.message))
-  );
-}
+const isDevNoise = (e: BuildError): boolean =>
+  e.source === "console" &&
+  DEV_NOISE.some((pattern) => pattern.test(e.message));
 
-function countText(n: number): string {
-  return n === 1 ? "1 error" : `${n} errors`;
-}
+const countText = (n: number): string => (n === 1 ? "1 error" : `${n} errors`);
 
-function fixPrompt(e: BuildError): string {
+const fixPrompt = (e: BuildError): string => {
   const where = e.file ? ` in ${e.file}${e.line ? `:${e.line}` : ""}` : "";
   const what = e.source === "build" ? "build error" : `${e.source} error`;
 
   return `Fix this ${what}${where}:\n\n${e.message}`;
-}
+};
 
-function ErrorsChip({
+const ErrorsChip = ({
   count,
   onOpen,
   onClear,
@@ -47,35 +42,33 @@ function ErrorsChip({
   count: number;
   onOpen: () => void;
   onClear: () => void;
-}) {
-  return (
-    <div className="errors-chip" role="region" aria-label={copy.previewErrors}>
-      <button
-        type="button"
-        className="errors-chip-open"
-        aria-expanded={false}
-        data-tip={copy.showTheErrors}
-        onClick={onOpen}
-      >
-        <Icon name="alert" size={14} />
-        <span>{countText(count)}</span>
-        <Icon name="chevronRight" size={12} />
-      </button>
-      <button
-        type="button"
-        className="icon-btn"
-        aria-label={copy.clearErrors}
-        data-tip={copy.clear}
-        data-tip-align="end"
-        onClick={onClear}
-      >
-        <Icon name="close" size={12} />
-      </button>
-    </div>
-  );
-}
+}) => (
+  <div className="errors-chip" role="region" aria-label={copy.previewErrors}>
+    <button
+      type="button"
+      className="errors-chip-open"
+      aria-expanded={false}
+      data-tip={copy.showTheErrors}
+      onClick={onOpen}
+    >
+      <Icon name="alert" size={14} />
+      <span>{countText(count)}</span>
+      <Icon name="chevronRight" size={12} />
+    </button>
+    <button
+      type="button"
+      className="icon-btn"
+      aria-label={copy.clearErrors}
+      data-tip={copy.clear}
+      data-tip-align="end"
+      onClick={onClear}
+    >
+      <Icon name="close" size={12} />
+    </button>
+  </div>
+);
 
-function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
+const ErrorsPanel = ({ errors, onSendToAgent, onClear, pane }: Props) => {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (pane === "design") {
@@ -141,6 +134,6 @@ function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
       </ul>
     </div>
   );
-}
+};
 
 export { isDevNoise, fixPrompt, ErrorsPanel };

@@ -10,7 +10,7 @@ import { errorText } from "../../api.js";
 import { copy } from "./copy.js";
 import { publishApi } from "./publish-api.js";
 
-function usePublishBackend() {
+const usePublishBackend = () => {
   const [backend, setBackend] = useState<PublishBackendState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +47,7 @@ function usePublishBackend() {
   }, []);
 
   return { backend, error, load, setup };
-}
+};
 
 type BackendHook = ReturnType<typeof usePublishBackend>;
 
@@ -59,31 +59,29 @@ const MARK: Record<SetupStep["status"], string> = {
   skipped: "–",
 };
 
-function StepRow({ step }: { step: SetupStep }) {
-  return (
-    <li
-      className={`publish-setup-step is-${step.status}`}
-      data-testid="setup-step"
-      data-step={step.id}
-      data-status={step.status}
-    >
-      <span className="publish-setup-mark" aria-hidden="true">
-        {MARK[step.status]}
-      </span>
-      <div className="publish-setup-text">
-        <span className="publish-setup-label">{step.label}</span>
-        {step.detail && (
-          <span className="publish-setup-detail">{step.detail}</span>
-        )}
-        {step.command && (
-          <code className="mono publish-setup-command">{step.command}</code>
-        )}
-      </div>
-    </li>
-  );
-}
+const StepRow = ({ step }: { step: SetupStep }) => (
+  <li
+    className={`publish-setup-step is-${step.status}`}
+    data-testid="setup-step"
+    data-step={step.id}
+    data-status={step.status}
+  >
+    <span className="publish-setup-mark" aria-hidden="true">
+      {MARK[step.status]}
+    </span>
+    <div className="publish-setup-text">
+      <span className="publish-setup-label">{step.label}</span>
+      {step.detail && (
+        <span className="publish-setup-detail">{step.detail}</span>
+      )}
+      {step.command && (
+        <code className="mono publish-setup-command">{step.command}</code>
+      )}
+    </div>
+  </li>
+);
 
-function summary(backend: PublishBackendState): string {
+const summary = (backend: PublishBackendState): string => {
   if (backend.running) {
     return "Setting up. Each step shows its result below.";
   }
@@ -97,15 +95,15 @@ function summary(backend: PublishBackendState): string {
   }
 
   return "Not set up. Setup makes an R2 bucket, a D1 database and one publish Worker in your Cloudflare account. A re-run is safe.";
-}
+};
 
-function BackendSetup({
+const BackendSetup = ({
   hook,
   cli,
 }: {
   hook: BackendHook;
   cli: PublishCliState | null;
-}) {
+}) => {
   const { backend, error, setup, load } = hook;
 
   if (!backend) {
@@ -190,7 +188,8 @@ function BackendSetup({
       </div>
     </div>
   );
-}
+};
 
 export { usePublishBackend, BackendSetup };
+
 export type { BackendHook };

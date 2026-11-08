@@ -106,4 +106,5 @@ const publishApi = {
 };
 
 export { isReadOnlyPublication, publishApi };
+
 export type { PublishRequest };

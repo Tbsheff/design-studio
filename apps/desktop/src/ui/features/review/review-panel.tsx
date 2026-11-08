@@ -43,25 +43,24 @@ const SEVERITY_WORD: Record<ReviewSeverity, string> = {
   medium: "Medium",
 };
 
-function fixBlocked(live: boolean, running: boolean): string | null {
+const fixBlocked = (live: boolean, running: boolean): string | null => {
   if (!live) {
     return "Fixes work on the live design";
   }
 
   return running ? "A run is editing this design" : null;
-}
+};
 
-function grouped(findings: ReviewFinding[]): [ReviewKind, ReviewFinding[]][] {
-  return REVIEW_KINDS.map(
+const grouped = (findings: ReviewFinding[]): [ReviewKind, ReviewFinding[]][] =>
+  REVIEW_KINDS.map(
     (kind) =>
       [kind, findings.filter((finding) => finding.kind === kind)] as [
         ReviewKind,
         ReviewFinding[],
       ]
   ).filter(([, list]) => list.length > 0);
-}
 
-function FindingRow({ finding, a }: { finding: ReviewFinding; a: Actions }) {
+const FindingRow = ({ finding, a }: { finding: ReviewFinding; a: Actions }) => {
   const busy = a.fixing?.includes(finding.id) ?? false;
 
   return (
@@ -131,9 +130,9 @@ function FindingRow({ finding, a }: { finding: ReviewFinding; a: Actions }) {
       </div>
     </li>
   );
-}
+};
 
-function Group({
+const Group = ({
   kind,
   list,
   a,
@@ -141,7 +140,7 @@ function Group({
   kind: ReviewKind;
   list: ReviewFinding[];
   a: Actions;
-}) {
+}) => {
   const fixable = list.filter((finding) => finding.fix);
 
   return (
@@ -172,9 +171,9 @@ function Group({
       </ul>
     </section>
   );
-}
+};
 
-function Summary({ review }: { review: ReviewState }) {
+const Summary = ({ review }: { review: ReviewState }) => {
   const { result } = review;
 
   if (!result) {
@@ -196,9 +195,9 @@ function Summary({ review }: { review: ReviewState }) {
       ))}
     </div>
   );
-}
+};
 
-function Body({
+const Body = ({
   review,
   live,
   a,
@@ -208,7 +207,7 @@ function Body({
   live: boolean;
   a: Actions;
   children: ReactNode;
-}) {
+}) => {
   const { result } = review;
 
   return (
@@ -234,12 +233,12 @@ function Body({
       {children}
     </div>
   );
-}
+};
 
-function useEscapeClose(
+const useEscapeClose = (
   panel: RefObject<HTMLDivElement | null>,
   onClose: () => void
-) {
+) => {
   const latest = useRef(onClose);
   latest.current = onClose;
   useEffect(() => {
@@ -267,9 +266,9 @@ function useEscapeClose(
       globalThis.removeEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
     };
   }, [panel]);
-}
+};
 
-function ReviewPanel(p: Props) {
+const ReviewPanel = (p: Props) => {
   const panel = useRef<HTMLDivElement>(null);
   useEscapeClose(panel, p.onClose);
 
@@ -325,6 +324,8 @@ function ReviewPanel(p: Props) {
       </Body>
     </div>
   );
-}
+};
 
 export { ReviewPanel };
+
+export type { Props };

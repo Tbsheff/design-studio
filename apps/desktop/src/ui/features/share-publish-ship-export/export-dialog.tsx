@@ -30,7 +30,7 @@ import {
 import "../../styles/export.css";
 import type { ExportTarget, FrameChoice } from "./export-api.js";
 
-interface Props {
+export interface Props {
   target: ExportTarget;
   onClose: () => void;
 }
@@ -111,7 +111,7 @@ const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
   ArrowUp: (i, n) => (i - 1 + n) % n,
 };
 
-function onRadioKey(event: KeyboardEvent<HTMLDivElement>): void {
+const onRadioKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   const step = RADIO_STEP[event.key];
 
   if (!step) {
@@ -134,9 +134,9 @@ function onRadioKey(event: KeyboardEvent<HTMLDivElement>): void {
   const next = radios[step(index, radios.length)];
   next?.focus();
   next?.click();
-}
+};
 
-function Segmented<T extends string | number>({
+const Segmented = <T extends string | number>({
   label,
   value,
   options,
@@ -146,33 +146,30 @@ function Segmented<T extends string | number>({
   value: T;
   options: { id: T; label: string; icon?: IconName }[];
   onChange: (value: T) => void;
-}) {
-  return (
-    <div
-      className="segmented export-seg"
-      role="radiogroup"
-      aria-label={label}
-      onKeyDown={onRadioKey}
-    >
-      {options.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          role="radio"
-          aria-checked={value === option.id}
-          tabIndex={value === option.id ? 0 : -1}
-          className={value === option.id ? "on" : ""}
-          onClick={() => onChange(option.id)}
-        >
-          {option.icon ? <Icon name={option.icon} size={14} /> : null}
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function useElapsed(status: Status): number {
+}) => (
+  <div
+    className="segmented export-seg"
+    role="radiogroup"
+    aria-label={label}
+    onKeyDown={onRadioKey}
+  >
+    {options.map((option) => (
+      <button
+        key={option.id}
+        type="button"
+        role="radio"
+        aria-checked={value === option.id}
+        tabIndex={value === option.id ? 0 : -1}
+        className={value === option.id ? "on" : ""}
+        onClick={() => onChange(option.id)}
+      >
+        {option.icon ? <Icon name={option.icon} size={14} /> : null}
+        {option.label}
+      </button>
+    ))}
+  </div>
+);
+const useElapsed = (status: Status): number => {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (status.kind !== "busy") {
@@ -187,9 +184,9 @@ function useElapsed(status: Status): number {
   return status.kind === "busy"
     ? Math.max(0, Math.floor((now - status.startedAt) / 1000))
     : 0;
-}
+};
 
-function useCopied(): [string | null, (key: string, text: string) => void] {
+const useCopied = (): [string | null, (key: string, text: string) => void] => {
   const [copied, setCopied] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
   useEffect(
@@ -217,9 +214,9 @@ function useCopied(): [string | null, (key: string, text: string) => void] {
   };
 
   return [copied, copy];
-}
+};
 
-function HandoffResultView({
+const HandoffResultView = ({
   target,
   result,
   editors,
@@ -229,7 +226,7 @@ function HandoffResultView({
   result: HandoffResult;
   editors: EditorInfo[];
   onError: (text: string) => void;
-}) {
+}) => {
   const [copied, copy] = useCopied();
   const folder = result.path.split("/").pop() ?? "";
 
@@ -307,9 +304,9 @@ function HandoffResultView({
       ) : null}
     </div>
   );
-}
+};
 
-function ConnectClaudeCode() {
+const ConnectClaudeCode = () => {
   const [status, setStatus] = useState<McpStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -428,7 +425,7 @@ function ConnectClaudeCode() {
       ) : null}
     </section>
   );
-}
+};
 
 interface Options {
   projectId: string;
@@ -446,7 +443,7 @@ interface Options {
   toggle: (id: string) => void;
 }
 
-function useExportOptions(target: ExportTarget): Options {
+const useExportOptions = (target: ExportTarget): Options => {
   const initial = useMemo(readExportPrefs, []);
 
   const [format, setFormat] = useState<ExportFormat>(
@@ -503,9 +500,9 @@ function useExportOptions(target: ExportTarget): Options {
         return next;
       }),
   };
-}
+};
 
-function useEditors(active: boolean): EditorInfo[] {
+const useEditors = (active: boolean): EditorInfo[] => {
   const [editors, setEditors] = useState<EditorInfo[]>([]);
   useEffect(() => {
     if (!active || editors.length > 0) {
@@ -524,12 +521,12 @@ function useEditors(active: boolean): EditorInfo[] {
   }, [active, editors.length]);
 
   return editors;
-}
+};
 
-async function exportOnce(
+const exportOnce = async (
   target: ExportTarget,
   options: Options
-): Promise<Status> {
+): Promise<Status> => {
   const selectionFrame =
     options.frames.find((f) => f.active)?.frame ?? options.chosen[0];
 
@@ -553,46 +550,43 @@ async function exportOnce(
     reveal: canRevealDownload(),
     text: `Saved ${file.name}`,
   };
-}
+};
 
-function handoffFrames(chosen: ExportFrame[]): ExportFrame[] {
-  return chosen.some((f) => f.width <= MOBILE_MAX)
+const handoffFrames = (chosen: ExportFrame[]): ExportFrame[] =>
+  chosen.some((f) => f.width <= MOBILE_MAX)
     ? chosen
     : [...chosen, MOBILE_FRAME];
-}
 
-function FrameList({ options }: { options: Options }) {
-  return (
-    <fieldset className="export-field export-frames">
-      <legend className="export-label">
-        {options.format === "html" ? "Pages from frames" : "Frames"}
-      </legend>
-      {options.frames.map((choice) => (
-        <label key={choice.id} className="export-frame">
-          <input
-            type="checkbox"
-            checked={options.picked.has(choice.id)}
-            onChange={() => options.toggle(choice.id)}
-          />
-          <span className="export-frame-name">
-            {canvasFrameName(options.projectId, choice.id, choice.frame.name)}
-          </span>
-          <span
-            className="export-frame-path truncate"
-            data-tip={frameRoute(choice.frame)}
-          >
-            {framePage(choice.frame.path)}
-          </span>
-          <span className="export-frame-size">
-            {choice.frame.width} × {choice.frame.height}
-          </span>
-        </label>
-      ))}
-    </fieldset>
-  );
-}
+const FrameList = ({ options }: { options: Options }) => (
+  <fieldset className="export-field export-frames">
+    <legend className="export-label">
+      {options.format === "html" ? "Pages from frames" : "Frames"}
+    </legend>
+    {options.frames.map((choice) => (
+      <label key={choice.id} className="export-frame">
+        <input
+          type="checkbox"
+          checked={options.picked.has(choice.id)}
+          onChange={() => options.toggle(choice.id)}
+        />
+        <span className="export-frame-name">
+          {canvasFrameName(options.projectId, choice.id, choice.frame.name)}
+        </span>
+        <span
+          className="export-frame-path truncate"
+          data-tip={frameRoute(choice.frame)}
+        >
+          {framePage(choice.frame.path)}
+        </span>
+        <span className="export-frame-size">
+          {choice.frame.width} × {choice.frame.height}
+        </span>
+      </label>
+    ))}
+  </fieldset>
+);
 
-function OptionFields({ options }: { options: Options }) {
+const OptionFields = ({ options }: { options: Options }) => {
   const { format, chosen, scale, scope, selectionOnly } = options;
   const first = chosen[0];
 
@@ -641,9 +635,15 @@ function OptionFields({ options }: { options: Options }) {
       ) : null}
     </>
   );
-}
+};
 
-function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
+const StatusLine = ({
+  status,
+  handoff,
+}: {
+  status: Status;
+  handoff: boolean;
+}) => {
   const elapsed = useElapsed(status);
 
   return (
@@ -675,21 +675,21 @@ function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
       ) : null}
     </div>
   );
-}
+};
 
-function actionLabel(
+const actionLabel = (
   info: FormatInfo,
   status: Status,
   rebuilt: boolean
-): string {
+): string => {
   if (status.kind === "error") {
     return "Try again";
   }
 
   return rebuilt ? "Rebuild handoff" : info.action;
-}
+};
 
-export function ExportDialog({ target, onClose }: Props) {
+export const ExportDialog = ({ target, onClose }: Props) => {
   const options = useExportOptions(target);
   const { format } = options;
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -815,4 +815,4 @@ export function ExportDialog({ target, onClose }: Props) {
       </div>
     </dialog>
   );
-}
+};

@@ -22,7 +22,7 @@ interface Props {
   onClose: () => void;
 }
 
-function CheckScreenshot({
+const CheckScreenshot = ({
   projectId,
   filePath,
   label,
@@ -30,7 +30,7 @@ function CheckScreenshot({
   projectId: string;
   filePath: string;
   label: string;
-}) {
+}) => {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -72,21 +72,21 @@ function CheckScreenshot({
       alt={`${label} render check screenshot`}
     />
   );
-}
+};
 
 const SHOT_SUFFIX = /-(?:desktop|tablet|mobile)\.png$/;
 
-function directionOf(results: RenderCheckResult[] | null): string | null {
+const directionOf = (results: RenderCheckResult[] | null): string | null => {
   const shot = results?.find((r) => r.screenshotPath)?.screenshotPath;
   const name = shot?.split(/[\\/]/).pop() ?? "";
 
   return SHOT_SUFFIX.test(name) ? name.replace(SHOT_SUFFIX, "") : null;
-}
+};
 
-function useOldKeys(
+const useOldKeys = (
   projectId: string,
   results: RenderCheckResult[] | null
-): string[] | null {
+): string[] | null => {
   const [keys, setKeys] = useState<string[] | null>(null);
   const did = directionOf(results);
   useEffect(() => {
@@ -121,7 +121,7 @@ function useOldKeys(
   }, [projectId, did, results]);
 
   return keys;
-}
+};
 
 interface ShownResult {
   result: RenderCheckResult;
@@ -130,10 +130,10 @@ interface ShownResult {
   overflow: boolean;
 }
 
-function hideOld(
+const hideOld = (
   results: RenderCheckResult[] | null,
   keys: string[] | null
-): { shown: ShownResult[]; hidden: number } {
+): { shown: ShownResult[]; hidden: number } => {
   const counts = keyCounts(keys ?? []);
   let hidden = 0;
 
@@ -159,9 +159,9 @@ function hideOld(
   }));
 
   return { hidden, shown };
-}
+};
 
-function RenderCheckPanel({ projectId, results, error, onClose }: Props) {
+const RenderCheckPanel = ({ projectId, results, error, onClose }: Props) => {
   const { shown, hidden } = hideOld(results, useOldKeys(projectId, results));
 
   return (
@@ -255,6 +255,6 @@ function RenderCheckPanel({ projectId, results, error, onClose }: Props) {
       </div>
     </div>
   );
-}
+};
 
 export { RenderCheckPanel };

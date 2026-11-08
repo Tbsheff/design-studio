@@ -43,15 +43,12 @@ interface Props {
   toolKey: string;
 }
 
-function labelOf(frame: CanvasFrame): string {
-  return [frame.label ?? frameName(frame), frame.path]
-    .filter(Boolean)
-    .join(" · ");
-}
+const labelOf = (frame: CanvasFrame): string =>
+  [frame.label ?? frameName(frame), frame.path].filter(Boolean).join(" · ");
 
-function useSlot(
+const useSlot = (
   marker: RefObject<HTMLSpanElement | null>
-): HTMLElement | null {
+): HTMLElement | null => {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   useLayoutEffect(() => {
     const found =
@@ -65,17 +62,16 @@ function useSlot(
   });
 
   return slot;
-}
+};
 
-function badgeText(count: number): string {
-  return count > 99 ? "99+" : String(count);
-}
+const badgeText = (count: number): string =>
+  count > 99 ? "99+" : String(count);
 
-function entryTip(
+const entryTip = (
   open: boolean,
   count: number | null,
   stale: boolean
-): string | undefined {
+): string | undefined => {
   if (open) {
     return undefined;
   }
@@ -85,9 +81,9 @@ function entryTip(
   }
 
   return `${count} review ${count === 1 ? "finding" : "findings"}${stale ? " (from an older render)" : ""}`;
-}
+};
 
-function worst(result: ReviewResult | null): ReviewSeverity | null {
+const worst = (result: ReviewResult | null): ReviewSeverity | null => {
   if (!result) {
     return null;
   }
@@ -97,9 +93,9 @@ function worst(result: ReviewResult | null): ReviewSeverity | null {
       (sev) => result.counts[sev] > 0
     ) ?? null
   );
-}
+};
 
-function useCloseOnToolChange(toolKey: string, close: () => void) {
+const useCloseOnToolChange = (toolKey: string, close: () => void) => {
   const last = useRef(toolKey);
   useEffect(() => {
     if (last.current === toolKey) {
@@ -109,9 +105,9 @@ function useCloseOnToolChange(toolKey: string, close: () => void) {
     last.current = toolKey;
     close();
   }, [toolKey, close]);
-}
+};
 
-function ReviewEntry(p: Props) {
+const ReviewEntry = (p: Props) => {
   const marker = useRef<HTMLSpanElement>(null);
   const slot = useSlot(marker);
   const [open, setOpen] = useState(false);
@@ -202,6 +198,6 @@ function ReviewEntry(p: Props) {
       )}
     </>
   );
-}
+};
 
 export { ReviewEntry };

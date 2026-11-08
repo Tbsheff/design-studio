@@ -38,7 +38,7 @@ const EXPIRIES: { id: PublishExpiryDays; label: string }[] = [
   { id: 0, label: "No end" },
 ];
 
-function usePublications(projectId: string) {
+const usePublications = (projectId: string) => {
   const [list, setList] = useState<Publication[]>([]);
   const [backendError, setBackendError] = useState<string | null>(null);
 
@@ -53,9 +53,9 @@ function usePublications(projectId: string) {
   }, [reload]);
 
   return { backendError, list, reload };
-}
+};
 
-function Toggle({
+const Toggle = ({
   on,
   label,
   onChange,
@@ -63,20 +63,18 @@ function Toggle({
   on: boolean;
   label: string;
   onChange: (on: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      className={`export-switch${on ? " on" : ""}`}
-      onClick={() => onChange(!on)}
-    >
-      <span className="export-switch-knob" />
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    className={`export-switch${on ? " on" : ""}`}
+    onClick={() => onChange(!on)}
+  >
+    <span className="export-switch-knob" />
+  </button>
+);
 
 interface FormState {
   picked: Set<string>;
@@ -88,7 +86,7 @@ interface FormState {
   indexable: boolean;
 }
 
-function FramePicker({
+const FramePicker = ({
   target,
   form,
   setForm,
@@ -96,7 +94,7 @@ function FramePicker({
   target: PublishTarget;
   form: FormState;
   setForm: (f: FormState) => void;
-}) {
+}) => {
   const frames = useMemo(
     () => canvasFrameChoices(target.projectId, target.directionId),
     [target.projectId, target.directionId]
@@ -134,9 +132,9 @@ function FramePicker({
       ))}
     </fieldset>
   );
-}
+};
 
-function SwitchRow({
+const SwitchRow = ({
   title,
   help,
   on,
@@ -146,19 +144,17 @@ function SwitchRow({
   help: string;
   on: boolean;
   onChange: (on: boolean) => void;
-}) {
-  return (
-    <div className="share-lan-row">
-      <div className="share-lan-text">
-        <span className="share-lan-title">{title}</span>
-        <span className="share-lan-help">{help}</span>
-      </div>
-      <Toggle on={on} label={title} onChange={onChange} />
+}) => (
+  <div className="share-lan-row">
+    <div className="share-lan-text">
+      <span className="share-lan-title">{title}</span>
+      <span className="share-lan-help">{help}</span>
     </div>
-  );
-}
+    <Toggle on={on} label={title} onChange={onChange} />
+  </div>
+);
 
-function PublishForm({
+const PublishForm = ({
   target,
   form,
   setForm,
@@ -166,105 +162,103 @@ function PublishForm({
   target: PublishTarget;
   form: FormState;
   setForm: (f: FormState) => void;
-}) {
-  return (
-    <div className="publish-form">
-      {target.kind === "site" ? (
-        <p className="publish-step-text">
-          Every page of the saved version goes up as a static site: HTML, CSS,
-          scripts, images and fonts. Source files, .env, node_modules and studio
-          scripts stay on this Mac.
-        </p>
-      ) : (
-        <FramePicker target={target} form={form} setForm={setForm} />
-      )}
-      <SwitchRow
-        title={copy.password}
-        help={
-          form.passwordOn
-            ? "Viewers type it on a sign-in page."
-            : "Off: anyone with the URL can open it."
-        }
-        on={form.passwordOn}
-        onChange={(on) => setForm({ ...form, passwordOn: on })}
-      />
-      {form.passwordOn && (
-        <label className="field">
-          <span>Password ({PUBLISH_PASSWORD_MIN} or more characters)</span>
-          <input
-            type="password"
-            autoComplete="new-password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-        </label>
-      )}
-      <div className="export-field">
-        <span className="export-label">Stops working after</span>
-        <div
-          className="segmented export-seg"
-          role="radiogroup"
-          aria-label={copy.stopsWorkingAfter}
-        >
-          {EXPIRIES.map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              role="radio"
-              aria-checked={form.expiry === o.id}
-              className={form.expiry === o.id ? "on" : ""}
-              onClick={() => setForm({ ...form, expiry: o.id })}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      {target.kind === "viewer" && (
-        <SwitchRow
-          title={copy.showOpenComments}
-          help={
-            form.comments
-              ? "Open studio comments show as read-only text next to the frames."
-              : "Off: only the images go up."
-          }
-          on={form.comments}
-          onChange={(on) => setForm({ ...form, comments: on })}
+}) => (
+  <div className="publish-form">
+    {target.kind === "site" ? (
+      <p className="publish-step-text">
+        Every page of the saved version goes up as a static site: HTML, CSS,
+        scripts, images and fonts. Source files, .env, node_modules and studio
+        scripts stay on this Mac.
+      </p>
+    ) : (
+      <FramePicker target={target} form={form} setForm={setForm} />
+    )}
+    <SwitchRow
+      title={copy.password}
+      help={
+        form.passwordOn
+          ? "Viewers type it on a sign-in page."
+          : "Off: anyone with the URL can open it."
+      }
+      on={form.passwordOn}
+      onChange={(on) => setForm({ ...form, passwordOn: on })}
+    />
+    {form.passwordOn && (
+      <label className="field">
+        <span>Password ({PUBLISH_PASSWORD_MIN} or more characters)</span>
+        <input
+          type="password"
+          autoComplete="new-password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
-      )}
-      <SwitchRow
-        title={copy.viewerComments}
-        help={
-          form.viewerComments
-            ? "Viewers can leave a name and a comment on a comments page. You can delete them here."
-            : "Off: viewers cannot comment."
-        }
-        on={form.viewerComments}
-        onChange={(on) => setForm({ ...form, viewerComments: on })}
-      />
-      <SwitchRow
-        title={copy.searchEngines}
-        help={
-          form.indexable
-            ? "On: search engines may list this design."
-            : "Off: pages send noindex."
-        }
-        on={form.indexable}
-        onChange={(on) => setForm({ ...form, indexable: on })}
-      />
+      </label>
+    )}
+    <div className="export-field">
+      <span className="export-label">Stops working after</span>
+      <div
+        className="segmented export-seg"
+        role="radiogroup"
+        aria-label={copy.stopsWorkingAfter}
+      >
+        {EXPIRIES.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            role="radio"
+            aria-checked={form.expiry === o.id}
+            className={form.expiry === o.id ? "on" : ""}
+            onClick={() => setForm({ ...form, expiry: o.id })}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
     </div>
-  );
-}
+    {target.kind === "viewer" && (
+      <SwitchRow
+        title={copy.showOpenComments}
+        help={
+          form.comments
+            ? "Open studio comments show as read-only text next to the frames."
+            : "Off: only the images go up."
+        }
+        on={form.comments}
+        onChange={(on) => setForm({ ...form, comments: on })}
+      />
+    )}
+    <SwitchRow
+      title={copy.viewerComments}
+      help={
+        form.viewerComments
+          ? "Viewers can leave a name and a comment on a comments page. You can delete them here."
+          : "Off: viewers cannot comment."
+      }
+      on={form.viewerComments}
+      onChange={(on) => setForm({ ...form, viewerComments: on })}
+    />
+    <SwitchRow
+      title={copy.searchEngines}
+      help={
+        form.indexable
+          ? "On: search engines may list this design."
+          : "Off: pages send noindex."
+      }
+      on={form.indexable}
+      onChange={(on) => setForm({ ...form, indexable: on })}
+    />
+  </div>
+);
 
-function filesText(plan: PublishPlan): string {
+const filesText = (plan: PublishPlan): string => {
   const base = `${plan.fileCount} file${plan.fileCount === 1 ? "" : "s"}, ${publishSize(plan.bytes)}`;
 
   return plan.changedFiles === null
     ? base
     : `${base} (${plan.changedFiles} changed since the live version)`;
-}
+};
 
-function PlanView({ plan }: { plan: PublishPlan }) {
+const PlanView = ({ plan }: { plan: PublishPlan }) => {
   const rows: [string, string][] = [
     ["Address", plan.url ?? plan.urlPattern],
     [plan.kind === "site" ? "Pages" : "Frames", plan.pages.join(", ")],
@@ -314,9 +308,12 @@ function PlanView({ plan }: { plan: PublishPlan }) {
       </p>
     </div>
   );
-}
+};
 
-function planInputOf(target: PublishTarget, form: FormState): PublishRequest {
+const planInputOf = (
+  target: PublishTarget,
+  form: FormState
+): PublishRequest => {
   const frames = canvasFrameChoices(
     target.projectId,
     target.directionId
@@ -339,9 +336,9 @@ function planInputOf(target: PublishTarget, form: FormState): PublishRequest {
   }
 
   return input;
-}
+};
 
-function formError(target: PublishTarget, form: FormState): string | null {
+const formError = (target: PublishTarget, form: FormState): string | null => {
   if (!target.versionId) {
     return "Save a version first. Publish takes a saved version.";
   }
@@ -358,9 +355,9 @@ function formError(target: PublishTarget, form: FormState): string | null {
   }
 
   return null;
-}
+};
 
-function usePublishFlow(target: PublishTarget) {
+const usePublishFlow = (target: PublishTarget) => {
   const pubs = usePublications(target.projectId);
   const [plan, setPlan] = useState<PublishPlan | null>(null);
   const [asked, setAsked] = useState<PublishRequest | null>(null);
@@ -427,9 +424,9 @@ function usePublishFlow(target: PublishTarget) {
     setPlan,
     unpublish,
   };
-}
+};
 
-function DoneNote({ done }: { done: Publication }) {
+const DoneNote = ({ done }: { done: Publication }) => {
   if (done.status !== "live" || !done.url) {
     return null;
   }
@@ -450,11 +447,11 @@ function DoneNote({ done }: { done: Publication }) {
       {upload && <span className="publish-done-upload">{upload.trim()}</span>}
     </div>
   );
-}
+};
 
 type Flow = ReturnType<typeof usePublishFlow>;
 
-function PaneFoot({
+const PaneFoot = ({
   flow,
   ready,
   problem,
@@ -466,63 +463,61 @@ function PaneFoot({
   problem: string | null;
   onClose: () => void;
   onCheck: () => void;
-}) {
-  return (
-    <div className="modal-foot">
-      <span className="share-foot-note">
-        {flow.plan
-          ? "Nothing is uploaded until you click Publish."
-          : ready && problem
-            ? problem
-            : "Hosted by your own publish Worker."}
-      </span>
-      <span className="share-spacer" />
-      {flow.plan ? (
-        <>
-          <button
-            type="button"
-            className="btn ghost"
-            disabled={flow.busy !== null}
-            onClick={() => flow.setPlan(null)}
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            className="btn primary"
-            disabled={flow.busy !== null}
-            onClick={() => void flow.confirm()}
-            data-autofocus
-          >
-            {flow.busy ?? (flow.plan.republishOf ? "Republish" : "Publish")}
-          </button>
-        </>
-      ) : (
-        <>
-          <button type="button" className="btn ghost" onClick={onClose}>
-            Close
-          </button>
-          <button
-            type="button"
-            className="btn primary"
-            disabled={!ready || problem !== null || flow.busy !== null}
-            onClick={onCheck}
-          >
-            {flow.busy ?? "Check what goes public"}
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
+}) => (
+  <div className="modal-foot">
+    <span className="share-foot-note">
+      {flow.plan
+        ? "Nothing is uploaded until you click Publish."
+        : ready && problem
+          ? problem
+          : "Hosted by your own publish Worker."}
+    </span>
+    <span className="share-spacer" />
+    {flow.plan ? (
+      <>
+        <button
+          type="button"
+          className="btn ghost"
+          disabled={flow.busy !== null}
+          onClick={() => flow.setPlan(null)}
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          className="btn primary"
+          disabled={flow.busy !== null}
+          onClick={() => void flow.confirm()}
+          data-autofocus
+        >
+          {flow.busy ?? (flow.plan.republishOf ? "Republish" : "Publish")}
+        </button>
+      </>
+    ) : (
+      <>
+        <button type="button" className="btn ghost" onClick={onClose}>
+          Close
+        </button>
+        <button
+          type="button"
+          className="btn primary"
+          disabled={!ready || problem !== null || flow.busy !== null}
+          onClick={onCheck}
+        >
+          {flow.busy ?? "Check what goes public"}
+        </button>
+      </>
+    )}
+  </div>
+);
 
-function PublishPane({
+const PublishPane = ({
   target,
   onClose,
 }: {
   target: PublishTarget;
   onClose: () => void;
-}) {
+}) => {
   const cli = usePublishCli();
   const backend = usePublishBackend();
   const flow = usePublishFlow(target);
@@ -595,6 +590,6 @@ function PublishPane({
       />
     </>
   );
-}
+};
 
 export { PublishPane };

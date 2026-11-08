@@ -21,7 +21,7 @@ interface Props {
 const PLACEHOLDER =
   "One rule per line, for example:\ncontrols: h-9 rounded-md\ncards: rounded-xl p-6\nno raw hex\nfont: Inter\nuse Button from @/components/ui/button, not <button>\nKeep labels short and plain.";
 
-function originText(state: DesignRulesState): string {
+const originText = (state: DesignRulesState): string => {
   if (state.origin === "design-md") {
     return "Saved in the rules block of DESIGN.md. Save makes a version you can undo.";
   }
@@ -35,9 +35,9 @@ function originText(state: DesignRulesState): string {
   }
 
   return "No rules yet. Write some, or import them from the project docs.";
-}
+};
 
-function hitText(rule: DesignRule, hit: DesignRuleHit | undefined): string {
+const hitText = (rule: DesignRule, hit: DesignRuleHit | undefined): string => {
   if (rule.kind === "text" || !hit) {
     return "";
   }
@@ -45,9 +45,9 @@ function hitText(rule: DesignRule, hit: DesignRuleHit | undefined): string {
   return hit.count === 0
     ? "Pass"
     : `${hit.count} ${hit.count === 1 ? "break" : "breaks"}`;
-}
+};
 
-function hitTip(rule: DesignRule, hit: DesignRuleHit | undefined): string {
+const hitTip = (rule: DesignRule, hit: DesignRuleHit | undefined): string => {
   if (rule.kind === "text") {
     return `${rule.text}. The agent and the critic get this rule. Review cannot check it.`;
   }
@@ -57,15 +57,15 @@ function hitTip(rule: DesignRule, hit: DesignRuleHit | undefined): string {
   return sample
     ? `${rule.text}. First break: ${sample.element}${sample.source ? ` at ${sample.source}` : ""}`
     : rule.text;
-}
+};
 
-function RuleRow({
+const RuleRow = ({
   rule,
   hit,
 }: {
   rule: DesignRule;
   hit: DesignRuleHit | undefined;
-}) {
+}) => {
   const tone =
     rule.kind === "text" || !hit ? "idle" : hit.count === 0 ? "ok" : "bad";
 
@@ -78,9 +78,9 @@ function RuleRow({
       <span className="rules-hits">{hitText(rule, hit)}</span>
     </li>
   );
-}
+};
 
-function liveFrame(projectId: string) {
+const liveFrame = (projectId: string) => {
   const layout = canvasStore.get(projectId);
 
   if (!layout) {
@@ -98,17 +98,15 @@ function liveFrame(projectId: string) {
     width: side(frame.width),
     height: side(frame.height),
   };
-}
+};
 
-function frameText(result: DesignRulesTestResult): string {
-  return `Tested on ${result.frame.path ?? "the entry page"} at ${result.frame.width} px.`;
-}
+const frameText = (result: DesignRulesTestResult): string =>
+  `Tested on ${result.frame.path ?? "the entry page"} at ${result.frame.width} px.`;
 
-function withImport(text: string, imported: string): string {
-  return text.trim() ? `${text.trimEnd()}\n\n${imported}` : imported;
-}
+const withImport = (text: string, imported: string): string =>
+  text.trim() ? `${text.trimEnd()}\n\n${imported}` : imported;
 
-function RulesEditor({ projectId, directionId }: Props) {
+const RulesEditor = ({ projectId, directionId }: Props) => {
   const [state, setState] = useState<DesignRulesState | null>(null);
   const [text, setText] = useState("");
   const [result, setResult] = useState<DesignRulesTestResult | null>(null);
@@ -249,6 +247,8 @@ function RulesEditor({ projectId, directionId }: Props) {
       )}
     </section>
   );
-}
+};
 
 export { RulesEditor };
+
+export type { Props };

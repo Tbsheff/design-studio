@@ -27,18 +27,32 @@ const fileName = (file: RepoContextFile): string =>
 const label = (file: RepoContextFile): string => {
   const note = USE_NOTE[file.use];
 
-  return `${file.path}${note ? ` (${note})` : ""}`;
+  if (note) {
+    return `${file.path} (${note})`;
+  }
+
+  return file.path;
 };
 
 const tipFor = (files: RepoContextFile[]): string => {
-  const read = files.filter(sent).map(label).join(", ");
+  const read: string[] = [];
+  const skipped: string[] = [];
 
-  const skipped = files
-    .filter((file) => !sent(file))
-    .map(label)
-    .join(", ");
+  for (const file of files) {
+    if (sent(file)) {
+      read.push(label(file));
+    } else {
+      skipped.push(label(file));
+    }
+  }
 
-  return `Each run reads ${read}.${skipped ? ` Not sent: ${skipped}.` : ""} Lines that look like secrets are left out.`;
+  let skippedText = "";
+
+  if (skipped.length > 0) {
+    skippedText = ` Not sent: ${skipped.join(", ")}.`;
+  }
+
+  return `Each run reads ${read.join(", ")}.${skippedText} Lines that look like secrets are left out.`;
 };
 
 const useRunContext = (
@@ -78,17 +92,16 @@ const useRunContext = (
   return files;
 };
 
-export default function RepoContextChip({
+const RepoContextChip = ({
   projectId,
   directionId,
 }: {
   projectId: string;
   directionId?: string | null;
-}): ReactElement {
+}): ReactElement => {
   const files = useRunContext(projectId, directionId);
-  const shown = files.filter(sent);
-
-  const names = [...new Set(shown.map(fileName))].join(", ");
+  const shown = files.filter((file) => sent(file));
+  const names = [...new Set(shown.map((file) => fileName(file)))].join(", ");
 
   return (
     <>
@@ -96,4 +109,6 @@ export default function RepoContextChip({
       <RepoChip isShown={shown.length > 0} names={names} tip={tipFor(files)} />
     </>
   );
-}
+};
+
+export { RepoContextChip };

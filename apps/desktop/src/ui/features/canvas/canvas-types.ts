@@ -101,6 +101,7 @@ interface StageSlots {
 }
 
 export type {
+  CanvasCommandsInput,
   CanvasCommentTools,
   CanvasDirections,
   Props,

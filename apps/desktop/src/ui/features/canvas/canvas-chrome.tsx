@@ -6,15 +6,15 @@ import { useRulersKey } from "./chrome-rulers.js";
 import { ChromeTopBar } from "./chrome-top-bar.js";
 import { useChromeHandlers } from "./use-chrome-handlers.js";
 
-const CanvasChrome = (chromeProps: ChromeProps): ReactElement => {
-  const handlers = useChromeHandlers(chromeProps);
+const CanvasChrome = ({ chrome }: { chrome: ChromeProps }): ReactElement => {
+  const handlers = useChromeHandlers(chrome);
 
   useRulersKey();
 
   return (
     <>
-      <ChromeTopBar chrome={chromeProps} handlers={handlers} />
-      <ChromeOverlays chrome={chromeProps} handlers={handlers} />
+      <ChromeTopBar chrome={chrome} handlers={handlers} />
+      <ChromeOverlays chrome={chrome} handlers={handlers} />
     </>
   );
 };

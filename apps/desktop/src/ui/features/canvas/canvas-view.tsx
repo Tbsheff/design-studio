@@ -7,26 +7,25 @@ import { ReviewEntry } from "../review/review-entry.js";
 import { ScenarioSection } from "../scenario/index.js";
 import { FindPanelSlot, useFindHost } from "../text-search/index.js";
 import { MatrixSlot } from "../viewport/index.js";
+import { CanvasBody } from "./canvas-body.js";
 import type { ChromeImportPage } from "./canvas-chrome-menu.js";
 import { CanvasChrome } from "./canvas-chrome.js";
-import { frameDirection } from "./canvas-direction-ops.js";
-import { frameName } from "./canvas-frame-ops.js";
-import {
-  canvasClass,
-  frameLabelOf,
-  hostedClose,
-  jumpToFrame,
-} from "./canvas-helpers.js";
-import { CanvasLayersPanel } from "./canvas-layers.js";
-import { CanvasStage } from "./canvas-stage.js";
+import { CanvasCommandsSlot } from "./canvas-commands-slot.js";
+import { canvasClass, frameLabelOf, jumpToFrame } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
-import { FrameStateSlotContext } from "./frame-state-slot-context.js";
 import type { FrameStateSlotArgs } from "./frame-state-slot-context.js";
 import { CheckResults } from "./stage-parts.js";
 import { useCanvasEdits } from "./use-canvas-edits.js";
 import { useCanvasPreview } from "./use-canvas-preview.js";
 import { useCanvasStage } from "./use-canvas-stage.js";
 import { useCanvasWiring } from "./use-canvas-wiring.js";
+import { useChromeProps } from "./use-chrome-props.js";
+import type { ChromeExtra } from "./use-chrome-props.js";
+
+interface ViewSlots {
+  readonly extra: ChromeExtra;
+  readonly findHost: ReturnType<typeof useFindHost>;
+}
 
 const renderScenarioSlot = (args: FrameStateSlotArgs): ReactElement => (
   <ScenarioSection
@@ -40,11 +39,7 @@ const useViewSlots = (
   props: ViewProps,
   text: ReturnType<typeof useCanvasStage>,
   pv: ReturnType<typeof useCanvasPreview>
-): {
-  findHost: ReturnType<typeof useFindHost>;
-  importPage: ChromeImportPage;
-  matrixSlot: ReactElement;
-} => {
+): ViewSlots => {
   const { projectId, directionId } = props;
   const { active, canvasFrames, pz } = text;
 
@@ -54,7 +49,7 @@ const useViewSlots = (
     post: pv.frames.post,
   });
 
-  const matrixSlot = useMemo(
+  const matrix = useMemo(
     () => (
       <Suspense fallback={null}>
         <MatrixSlot
@@ -93,101 +88,26 @@ const useViewSlots = (
     [renderImport]
   );
 
-  return { findHost, importPage, matrixSlot };
+  const extra = useMemo(() => ({ importPage, matrix }), [importPage, matrix]);
+
+  return { extra, findHost };
 };
 
 const CanvasView = (props: ViewProps): ReactElement => {
-  const textValue = useCanvasStage(props);
-  const pv = useCanvasPreview(props, textValue);
-  const ed = useCanvasEdits(props, textValue, pv);
-  const width = useCanvasWiring(props, textValue, pv, ed);
-
-  const { findHost, importPage, matrixSlot } = useViewSlots(
-    props,
-    textValue,
-    pv
-  );
-
-  const CommandsHost = props.commandsHost;
-  const { projectId, directionId, kind, source, headVersionId } = props;
-
-  const {
-    ui,
-    stageRef,
-    canvasFrames,
-    layout,
-    active,
-    pz,
-    selectMode,
-    setSelectMode,
-    check,
-    comment,
-    live,
-    pane,
-    protoOn,
-    layersOpen,
-    toggleEdit,
-    setProto,
-    draw,
-    liveUrl,
-  } = textValue;
-
-  const { inline, frames } = pv;
-  const { layerEdits, previewMenu } = ed;
-
-  const {
-    darkSwitch,
-    lofiSwitch,
-    sandbox,
-    addFrameAt,
-    labelProps,
-    proto,
-    commandsInput,
-    appCanvas,
-  } = width;
+  const stage = useCanvasStage(props);
+  const preview = useCanvasPreview(props, stage);
+  const edits = useCanvasEdits(props, stage, preview);
+  const wiring = useCanvasWiring(props, stage, preview, edits);
+  const { extra, findHost } = useViewSlots(props, stage, preview);
+  const chrome = useChromeProps(props, stage, wiring, extra);
+  const { projectId, directionId, commandsHost } = props;
+  const { active, check, comment, layersOpen, live, protoOn } = stage;
+  const { frames } = preview;
 
   return (
-    <div className={canvasClass(inline.editing)}>
-      <CanvasChrome
-        matrix={matrixSlot}
-        importPage={importPage}
-        shell={props.shell}
-        kind={kind}
-        projectId={projectId}
-        directionId={directionId}
-        live={live}
-        ui={ui}
-        zoom={pz}
-        comment={comment}
-        selectMode={selectMode}
-        setSelectMode={setSelectMode}
-        toggleEdit={toggleEdit}
-        layout={layout}
-        active={active}
-        frames={canvasFrames}
-        label={(canvasFrame) =>
-          labelProps(canvasFrame, frameDirection(canvasFrame, directionId))
-        }
-        addFrame={addFrameAt}
-        presentUrl={liveUrl}
-        sandbox={sandbox}
-        selection={props.selection}
-        stage={() => stageRef.current}
-        view={{
-          checking: check.checking,
-          drawMode: draw.toolbarMode,
-          hasHead: headVersionId !== null,
-          links: proto.viewToggle,
-          lofi: lofiSwitch,
-          onCheck: check.run,
-          onSource: props.onSource,
-          onToggleDraw: draw.toggle,
-          source,
-          theme: darkSwitch,
-        }}
-        proto={{ on: protoOn, play: proto.play, set: setProto }}
-      />
-      {appCanvas.bar}
+    <div className={canvasClass(preview.inline.editing)}>
+      <CanvasChrome chrome={chrome} />
+      {wiring.appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
       <FindPanelSlot
         projectId={projectId}
@@ -215,30 +135,18 @@ const CanvasView = (props: ViewProps): ReactElement => {
           />
         </Suspense>
       )}
-      {previewMenu.menu}
-      {CommandsHost && <CommandsHost {...commandsInput} />}
-      <div className="canvas-body">
-        {layersOpen &&
-          pane.place(
-            <CanvasLayersPanel
-              frames={frames}
-              edits={layerEdits}
-              frameName={frameName(active)}
-              selection={props.selection}
-              onSelectMode={() => setSelectMode(true)}
-              onClose={hostedClose(props.shell, pane.closeLayers)}
-            />
-          )}
-        <FrameStateSlotContext.Provider value={renderScenarioSlot}>
-          <CanvasStage
-            props={props}
-            stage={textValue}
-            preview={pv}
-            edits={ed}
-            wiring={width}
-          />
-        </FrameStateSlotContext.Provider>
-      </div>
+      {edits.previewMenu.menu}
+      {commandsHost && (
+        <CanvasCommandsSlot host={commandsHost} input={wiring.commandsInput} />
+      )}
+      <CanvasBody
+        props={props}
+        stage={stage}
+        preview={preview}
+        edits={edits}
+        wiring={wiring}
+        renderSlot={renderScenarioSlot}
+      />
     </div>
   );
 };

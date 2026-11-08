@@ -1,4 +1,10 @@
-export { AnimationStore, AnimationWriter } from "./animation/index.js";
+export {
+  AnimationStore,
+  AnimationWriter,
+  CaptureUnavailableError,
+  getFfmpeg,
+  toUnavailable,
+} from "./animation/index.js";
 
 export { StateStyleError } from "./errors.js";
 

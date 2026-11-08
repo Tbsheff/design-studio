@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { CanvasService } from "../canvas/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
-import type { KnownFailure } from "../platform/attempt/index.js";
+import type { KnownFailure, Refine } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import {
   makeRuntimeSlot,
@@ -30,14 +30,19 @@ const bindExportRuntime = (dataDir: string, runtime: ExportRuntime): void => {
 const toExportRuntime = (dataDir: string): ExportRuntime | null =>
   runtimes.peekAt(dataDir);
 
-const attemptExport = <Value>(
-  task: (runtime: ExportRuntime) => Promise<Value>
-): Effect.Effect<Value, ExportError> =>
+const attemptExport = <Value, Extra = never>(
+  task: (runtime: ExportRuntime) => Promise<Value>,
+  refine: Refine<Extra> | null = null
+): Effect.Effect<Value, ExportError | Extra> =>
   Effect.gen(function* withRuntime() {
     const { dataDir } = loadConfig();
     const runtime = yield* requireBound("Export", toExportRuntime(dataDir));
 
-    return yield* attemptKnown(() => task(runtime));
+    if (refine === null) {
+      return yield* attemptKnown(() => task(runtime));
+    }
+
+    return yield* attemptKnown(() => task(runtime), refine);
   });
 
 export { attemptExport, bindExportRuntime, toExportRuntime };

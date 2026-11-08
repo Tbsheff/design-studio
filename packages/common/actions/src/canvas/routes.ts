@@ -24,6 +24,12 @@ const routes = {
     method: "DELETE",
     path: "/api/projects/:projectId/links/:linkId",
   },
+  exportFlowCanvas: {
+    id: "canvas.exportFlow",
+    invalidates: ["canvas.listLinks"],
+    method: "POST",
+    path: "/api/projects/:projectId/flow/export",
+  },
   getDocCanvas: {
     id: "canvas.getDoc",
     invalidates: [],

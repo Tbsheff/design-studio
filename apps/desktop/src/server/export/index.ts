@@ -15,3 +15,5 @@ export type {
   ListFixtureCommand,
   StoredFixture,
 } from "./fixture/index.js";
+
+export { FlowVideoWriter } from "./flow-video/index.js";

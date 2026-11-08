@@ -16,7 +16,9 @@ import {
   LINK_SELECTOR_MAX,
   LINK_TRANSITIONS,
 } from "@design-studio/contracts/links";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
+
+import { FrameIdSchema } from "../_core/ids.js";
 
 const FRAME_REF_MAX = 120;
 
@@ -375,8 +377,82 @@ const FrameStateSetSchema = Schema.Struct({
   view: FrameStatesViewSchema,
 });
 
+const FLOW_STEPS_MAX = 20;
+
+const FLOW_STEPS_DEFAULT = 8;
+
+const FLOW_WIDTH_DEFAULT = 1440;
+
+const FLOW_STEP_MS_DEFAULT = 1200;
+
+const FlowVideoFormatSchema = Schema.Literals(["webm", "mp4", "gif"]);
+
+const FlowVideoStepSchema = Schema.Struct({
+  atMs: Schema.Int,
+  frameId: Schema.String,
+  index: Schema.Int,
+  linkId: Schema.NullOr(Schema.String),
+  selector: Schema.NullOr(Schema.String),
+});
+
+const FlowBrokenLinkSchema = Schema.Struct({
+  linkId: Schema.String,
+  reason: Schema.String,
+});
+
+const FlowVideoResultSchema = Schema.Struct({
+  brokenLinks: Schema.Array(FlowBrokenLinkSchema),
+  bytes: Schema.Int,
+  durationMs: Schema.Int,
+  mediaType: Schema.String,
+  path: Schema.String,
+  steps: Schema.Array(FlowVideoStepSchema),
+});
+
+const FlowVideoFields = {
+  format: FlowVideoFormatSchema.annotate({
+    description: "webm, mp4 or gif. Default webm. mp4 and gif need ffmpeg.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed("webm" as const))),
+  linkIds: Schema.NullOr(
+    Schema.Array(Schema.String).check(Schema.isMaxLength(FLOW_STEPS_MAX))
+  )
+    .annotate({
+      description:
+        "Link ids from list_links in click order. Leave null to follow the first click link of each frame.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  maxSteps: Schema.Int.check(
+    Schema.isBetween({ maximum: FLOW_STEPS_MAX, minimum: 1 })
+  )
+    .annotate({ description: "Most clicks to record, 1 to 20. Default 8." })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(FLOW_STEPS_DEFAULT))),
+  startFrameId: Schema.NullOr(FrameIdSchema)
+    .annotate({
+      description:
+        "Frame where the video starts. Leave null for the start frame, or the first frame.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  stepMs: Schema.Int.check(Schema.isBetween({ maximum: 5000, minimum: 400 }))
+    .annotate({ description: "Time for each click in ms, 400 to 5000." })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(FLOW_STEP_MS_DEFAULT))),
+  width: Schema.Int.check(Schema.isBetween({ maximum: 3840, minimum: 320 }))
+    .annotate({ description: "Video width in pixels. Default 1440." })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(FLOW_WIDTH_DEFAULT))),
+} as const;
+
+type FlowVideoResult = typeof FlowVideoResultSchema.Type;
+
+type FlowVideoStep = typeof FlowVideoStepSchema.Type;
+
+type FlowBrokenLink = typeof FlowBrokenLinkSchema.Type;
+
 export {
   BaseHashSchema,
+  FlowBrokenLinkSchema,
+  FlowVideoFields,
+  FlowVideoFormatSchema,
+  FlowVideoResultSchema,
+  FlowVideoStepSchema,
   CanvasDocSchema,
   CanvasPresenceSavedSchema,
   FlowBuiltSchema,
@@ -404,3 +480,5 @@ export {
   LinkSavedSchema,
   LinkSelectorSchema,
 };
+
+export type { FlowBrokenLink, FlowVideoResult, FlowVideoStep };

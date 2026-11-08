@@ -35,10 +35,12 @@ const shownCommands = (
   }
 
   const hits = commands.filter((command) => {
-    const words = (command.slash ?? "").toLowerCase().split(/[\s-]+/u);
+    const slash = (command.slash ?? "").toLowerCase();
+    const words = slash.split(/[\s-]+/u);
 
-    return tokens.every((token) =>
-      words.some((word) => word.startsWith(token))
+    return tokens.every(
+      (token) =>
+        slash.startsWith(token) || words.some((word) => word.startsWith(token))
     );
   });
 

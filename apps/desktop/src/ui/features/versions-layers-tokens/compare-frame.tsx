@@ -1,14 +1,14 @@
 import type { ProjectKind, Version } from "@design-studio/contracts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
+import type { ReactNode } from "react";
 
-import { api, errorText } from "../../api.js";
-import {
-  HTML_FRAME_SANDBOX,
-  frameSrc,
-  tagFrame,
-} from "../../platform/bridge.js";
-import { randomToken } from "../../platform/session.js";
+import { HTML_FRAME_SANDBOX, tagFrame } from "../../platform/bridge.js";
 import { useTokenFrames } from "../design-system/token-frames.js";
+import { useVersionSlot } from "./use-version-slot.js";
+
+const SANDBOX_BY_KIND: Partial<Record<ProjectKind, string>> = {
+  html: HTML_FRAME_SANDBOX,
+};
 
 interface Props {
   projectId: string;
@@ -20,7 +20,7 @@ interface Props {
   onError: (message: string) => void;
 }
 
-function CompareFrame({
+const CompareFrame = ({
   projectId,
   version,
   title,
@@ -28,39 +28,30 @@ function CompareFrame({
   viewport,
   scale,
   onError,
-}: Props) {
-  const [slot, setSlot] = useState<{ token: string; src: string } | null>(null);
+}: Props): ReactNode => {
+  const slot = useVersionSlot(projectId, version.id, onError);
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
-  const slots = useMemo(() => (slot ? [slot] : []), [slot]);
-  const report = useRef(onError);
-  report.current = onError;
+
+  const slots = useMemo(() => {
+    if (slot) {
+      return [slot];
+    }
+
+    return [];
+  }, [slot]);
+
   useTokenFrames(slots, elements, kind);
-  useEffect(() => {
-    let alive = true;
-    const token = randomToken();
 
-    const load = async () => {
-      try {
-        const { url } = await api.versionPreview(projectId, version.id);
+  const token = slot?.token ?? "";
 
-        if (alive) {
-          setSlot({ src: frameSrc(url), token });
-        }
-      } catch (error) {
-        if (alive) {
-          report.current(
-            `Could not load this version. ${errorText(error)} Close compare and try again.`
-          );
-        }
-      }
-    };
+  const handleRef = useCallback(
+    (frame: HTMLIFrameElement | null): void => {
+      elements.current[token] = tagFrame(frame, token);
+    },
+    [token]
+  );
 
-    void load();
-
-    return () => {
-      alive = false;
-    };
-  }, [projectId, version.id]);
+  const frameStyle = useMemo(() => ({ transform: `scale(${scale})` }), [scale]);
 
   if (!slot) {
     return null;
@@ -68,17 +59,15 @@ function CompareFrame({
 
   return (
     <iframe
-      ref={(el) => {
-        elements.current[slot.token] = tagFrame(el, slot.token);
-      }}
+      ref={handleRef}
       title={`Version ${title}`}
       src={slot.src}
-      sandbox={kind === "html" ? HTML_FRAME_SANDBOX : undefined}
+      sandbox={SANDBOX_BY_KIND[kind]}
       width={viewport.width}
       height={viewport.height}
-      style={{ transform: `scale(${scale})` }}
+      style={frameStyle}
     />
   );
-}
+};
 
 export { CompareFrame };

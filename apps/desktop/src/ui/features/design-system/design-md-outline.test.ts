@@ -5,6 +5,7 @@ import { outlineOf } from "./design-md-outline.js";
 describe(outlineOf, () => {
   it("lists headings with line and offset and skips code fences", () => {
     expect.hasAssertions();
+
     const md =
       "# Brand\n\nIntro\n\n## Color\n\n```md\n## Not a heading\n```\n\n### Type **scale**\n";
 
@@ -18,5 +19,5 @@ describe(outlineOf, () => {
         text: "Type scale",
       },
     ]);
-  });
+  }, 0);
 });

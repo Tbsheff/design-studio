@@ -8,10 +8,8 @@ import { PromptBox } from "../../features/chat/prompt-box";
 import { RunDetails } from "../../features/chat/run-details";
 import type { RunView } from "../../features/chat/run-state-model";
 import { TodoPanel } from "../../features/chat/todo-panel";
-import {
-  CommentsPanel,
-  QueuedComposerBar,
-} from "../../features/comments/comments-panel";
+import { QueuedComposerBar } from "../../features/comments";
+import { CommentsPanel } from "../../features/comments/comments-panel";
 import { Inspector, TweaksPanel } from "../../features/inspector";
 import { ErrorsPanel } from "../../features/review/errors-panel";
 import { TokensPanel } from "../../features/versions-layers-tokens/tokens-panel";
@@ -197,7 +195,9 @@ const LeftPane = (props: Props): ReactElement => {
       </div>
       {createElement(ErrorsPanel, { ...props.errors, pane: tab })}
       {comments && tab !== "comments" && (
-        <QueuedComposerBar control={comments.control} onShow={showComments} />
+        <Suspense fallback={null}>
+          <QueuedComposerBar control={comments.control} onShow={showComments} />
+        </Suspense>
       )}
       {props.todos && chat && createElement(TodoPanel, props.todos)}
       <div className="pane-composer" hidden={!chat}>

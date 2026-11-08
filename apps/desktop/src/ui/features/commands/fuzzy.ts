@@ -1,31 +1,39 @@
 const FIRST_PREFIX_SCORE = 12;
 const PREFIX_SCORE = 10;
+const INSIDE_SCORE = 6;
+const EXTRA_SCORE = 5;
+const LOOSE_SCORE = 2;
 const SPAN_DIVISOR = 100;
 const LENGTH_DIVISOR = 200;
 
-interface Ranked<T> {
-  item: T;
-  score: number;
+interface Ranked<Entry> {
+  item: Entry;
   marks: number[];
+  score: number;
 }
 
-const words = (text: string): { word: string; at: number }[] => {
-  const out: { word: string; at: number }[] = [];
-  const re = /[\p{L}\p{N}]+/gu;
+interface Word {
+  at: number;
+  word: string;
+}
 
-  for (let match = re.exec(text); match; match = re.exec(text)) {
-    out.push({ word: match[0].toLowerCase(), at: match.index });
+const toWords = (text: string): Word[] => {
+  const out: Word[] = [];
+  const pattern = /[\p{L}\p{N}]+/gu;
+
+  for (let match = pattern.exec(text); match; match = pattern.exec(text)) {
+    out.push({ at: match.index, word: match[0].toLowerCase() });
   }
 
   return out;
 };
 
-const subsequence = (token: string, text: string): number[] | null => {
+const toSubsequence = (token: string, text: string): number[] | null => {
   const marks: number[] = [];
   let from = 0;
 
-  for (const ch of token) {
-    const at = text.indexOf(ch, from);
+  for (const char of token) {
+    const at = text.indexOf(char, from);
 
     if (at === -1) {
       return null;
@@ -38,88 +46,86 @@ const subsequence = (token: string, text: string): number[] | null => {
   return marks;
 };
 
+const toRange = (start: number, length: number): number[] =>
+  [...Array.from({ length }).keys()].map((offset) => start + offset);
+
 interface TokenContext {
-  title: string;
-  list: { word: string; at: number }[];
-  used: Set<number>;
   extra: string;
+  list: Word[];
+  title: string;
+  used: Set<number>;
 }
 
-const tokenScore = (
+const toTokenScore = (
   token: string,
-  { title, list, used, extra }: TokenContext
-): { score: number; marks: number[] } | null => {
+  { extra, list, title, used }: TokenContext
+): { marks: number[]; score: number } | null => {
   const prefix = list.findIndex(
-    (entry, idx) => !used.has(idx) && entry.word.startsWith(token)
+    (entry, index) => !used.has(index) && entry.word.startsWith(token)
   );
 
   if (prefix !== -1) {
     used.add(prefix);
     const at = list[prefix]?.at ?? 0;
+    let score = PREFIX_SCORE;
 
-    return {
-      score: prefix === 0 ? FIRST_PREFIX_SCORE : PREFIX_SCORE,
-      marks: Array.from({ length: token.length }, (_, idxNext) => at + idxNext),
-    };
+    if (prefix === 0) {
+      score = FIRST_PREFIX_SCORE;
+    }
+
+    return { marks: toRange(at, token.length), score };
   }
 
   const inside = title.indexOf(token);
 
   if (inside !== -1) {
-    return {
-      score: 6,
-      marks: Array.from(
-        { length: token.length },
-        (_, indexNext) => inside + indexNext
-      ),
-    };
+    return { marks: toRange(inside, token.length), score: INSIDE_SCORE };
   }
 
   if (extra.split(/\s+/u).some((wide) => wide.startsWith(token))) {
-    return { score: 5, marks: [] };
+    return { marks: [], score: EXTRA_SCORE };
   }
 
-  const loose = subsequence(token, title);
+  const loose = toSubsequence(token, title);
 
   if (loose) {
+    const last = loose.at(-1) ?? 0;
+    const first = loose[0] ?? 0;
+
     return {
-      score: 2 - (loose.at(-1)! - loose[0]!) / SPAN_DIVISOR,
       marks: loose,
+      score: LOOSE_SCORE - (last - first) / SPAN_DIVISOR,
     };
   }
 
   return null;
 };
 
-const rank = <T>(
-  items: readonly T[],
+const rank = <Entry>(
+  items: readonly Entry[],
   query: string,
-  text: (item: T) => { title: string; keywords?: string }
-): Ranked<T>[] => {
+  text: (item: Entry) => { keywords?: string; title: string }
+): Ranked<Entry>[] => {
   const tokens = query.toLowerCase().split(/\s+/u).filter(Boolean);
 
   if (tokens.length === 0) {
-    return items.map((item) => ({ item, score: 0, marks: [] }));
+    return items.map((item) => ({ item, marks: [], score: 0 }));
   }
 
-  const out: Ranked<T>[] = [];
+  const out: Ranked<Entry>[] = [];
 
   for (const item of items) {
-    const { title, keywords = "" } = text(item);
-    const lower = title.toLowerCase();
-    const list = words(title);
+    const { keywords = "", title: rawTitle } = text(item);
+    const title = rawTitle.toLowerCase();
+    const extra = keywords.toLowerCase();
+    const list = toWords(rawTitle);
     const used = new Set<number>();
     let score = 0;
     const marks: number[] = [];
     let ok = true;
 
     for (const token of tokens) {
-      const hit = tokenScore(token, {
-        extra: keywords.toLowerCase(),
-        title: lower,
-        list,
-        used,
-      });
+      const hit = toTokenScore(token, { extra, list, title, used });
 
       if (!hit) {
         ok = false;
@@ -133,13 +139,13 @@ const rank = <T>(
     if (ok) {
       out.push({
         item,
-        score: score - title.length / LENGTH_DIVISOR,
-        marks: [...new Set(marks)].sort((first, second) => first - second),
+        marks: [...new Set(marks)].toSorted((first, second) => first - second),
+        score: score - rawTitle.length / LENGTH_DIVISOR,
       });
     }
   }
 
-  return out.sort((left, right) => right.score - left.score);
+  return out.toSorted((left, right) => right.score - left.score);
 };
 
 export { rank };

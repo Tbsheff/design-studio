@@ -2,7 +2,7 @@ import { Icon } from "@design-studio/ui";
 import type { PointerEvent, ReactElement } from "react";
 
 import type { McpPointBadge as Badge } from "../canvas/use-canvas-point.js";
-import { authorInitial } from "../comments/comment-avatar.js";
+import { authorInitial } from "../comments/index.js";
 import { copy } from "./copy.js";
 
 const stopPropagation = (event: PointerEvent<HTMLElement>): void =>

@@ -2,216 +2,39 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
-import { componentPreviewPath } from "../../../shared/component-preview.js";
-import { getRaw, readBlob } from "../../platform/http.js";
+import { BlobImage } from "./blob-image.js";
+import { keepReady, loadPreviewBlob } from "./thumb-preview.js";
+import type { PreviewBlob, PreviewLoad, Shown } from "./thumb-preview.js";
+import { useThumbVisible } from "./use-thumb-visible.js";
 
-type Shown =
-  | { state: "idle" | "loading" }
-  | { state: "ready"; src: string }
-  | { state: "none"; reason: string };
+const ICON_SIZE = 20;
 
-interface Box {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-const TRIM_PAD = 8;
-const TRIM_DIFF = 24;
-
-const differs = (data: Uint8ClampedArray, at: number): boolean =>
-  Math.abs(data[at]! - data[0]!) +
-    Math.abs(data[at + 1]! - data[1]!) +
-    Math.abs(data[at + 2]! - data[2]!) +
-    Math.abs(data[at + 3]! - data[3]!) >
-  TRIM_DIFF;
-
-const contentBox = (
-  data: Uint8ClampedArray,
-  width: number,
-  height: number
-): Box | null => {
-  let left = width;
-  let right = -1;
-  let top = height;
-  let bottom = -1;
-
-  for (let posY = 0; posY < height; posY += 1) {
-    for (let posX = 0; posX < width; posX += 1) {
-      if (!differs(data, (posY * width + posX) * 4)) {
-        continue;
-      }
-
-      left = Math.min(left, posX);
-      right = Math.max(right, posX);
-      top = Math.min(top, posY);
-      bottom = Math.max(bottom, posY);
-    }
-  }
-
-  if (right < 0) {
-    return null;
-  }
-
-  const leftNext = Math.max(0, left - TRIM_PAD);
-  const topNext = Math.max(0, top - TRIM_PAD);
-
-  return {
-    h: Math.min(height, bottom + TRIM_PAD + 1) - topNext,
-    w: Math.min(width, right + TRIM_PAD + 1) - leftNext,
-    x: leftNext,
-    y: topNext,
-  };
-};
-
-const trimmed = async (blob: Blob): Promise<Blob> => {
-  const bitmap = await createImageBitmap(blob);
-  const canvas = document.createElement("canvas");
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-  if (!ctx) {
-    return blob;
-  }
-
-  ctx.drawImage(bitmap, 0, 0);
-
-  const box = contentBox(
-    ctx.getImageData(0, 0, bitmap.width, bitmap.height).data,
-    bitmap.width,
-    bitmap.height
-  );
-
-  if (!box || (box.w >= bitmap.width * 0.9 && box.h >= bitmap.height * 0.9)) {
-    return blob;
-  }
-
-  const out = document.createElement("canvas");
-  out.width = box.w;
-  out.height = box.h;
-  out
-    .getContext("2d")
-    ?.drawImage(canvas, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
-
-  return new Promise((resolve) => out.toBlob((next) => resolve(next ?? blob)));
-};
-
-const trimmedUrl = async (url: string | null): Promise<string | null> => {
-  if (!url) {
-    return url;
-  }
-
-  const blob = await readBlob(url);
-  const next = await trimmed(blob).catch(() => blob);
-
-  if (next === blob) {
-    return url;
-  }
-
-  URL.revokeObjectURL(url);
-
-  return URL.createObjectURL(next);
-};
-
-const fetchPreview = async (
-  projectId: string,
-  directionId: string,
-  id: string,
-  signal: AbortSignal
-): Promise<Shown> => {
-  const res = await getRaw(
-    componentPreviewPath(projectId, directionId, id),
-    signal
-  );
-
-  if (res.ok) {
-    const blob = await res.blob();
-
-    return {
-      src: URL.createObjectURL(await trimmed(blob).catch(() => blob)),
-      state: "ready",
-    };
-  }
-
-  const body = (await res.json().catch(() => null)) as {
-    message?: unknown;
-  } | null;
-
-  return {
-    reason:
-      typeof body?.message === "string"
-        ? body.message
-        : "No preview for this component.",
-    state: "none",
-  };
-};
-
-const useVisible = (
-  ref: React.RefObject<HTMLElement | null>,
-  active: boolean
-): boolean => {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const node = ref.current;
-
-    if (!node || !active || visible) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setVisible(true);
-        }
-      },
-      { rootMargin: "160px 0px" }
-    );
-
-    observer.observe(node);
-
-    return (): void => observer.disconnect();
-  }, [ref, active, visible]);
-
-  return visible;
-};
-
-interface PreviewLoad {
-  readonly controller: AbortController;
-  readonly directionId: string;
-  readonly id: string;
-  readonly projectId: string;
-  readonly setShown: (update: (prev: Shown) => Shown) => void;
-}
-
-const keepReady = (prev: Shown, next: Shown): Shown => {
-  if (next.state === "none" && prev.state === "ready") {
+const toLoadingShown = (prev: Shown): Shown => {
+  if (prev.state === "ready") {
     return prev;
   }
 
-  return next;
+  return { state: "loading" };
+};
+
+const toLoadedShown = (loaded: PreviewBlob): Shown => {
+  if (loaded.kind !== "blob") {
+    return { reason: loaded.reason, state: "none" };
+  }
+
+  return { blob: loaded.blob, state: "ready" };
 };
 
 const showPreview = async (load: PreviewLoad): Promise<void> => {
   const { controller } = load;
+  load.setShown((prev) => toLoadingShown(prev));
 
   try {
-    const next = await fetchPreview(
-      load.projectId,
-      load.directionId,
-      load.id,
-      controller.signal
-    );
+    const loaded = await loadPreviewBlob(load);
 
     if (!controller.signal.aborted) {
+      const next = toLoadedShown(loaded);
       load.setShown((prev) => keepReady(prev, next));
-
-      return;
-    }
-
-    if (next.state === "ready") {
-      URL.revokeObjectURL(next.src);
     }
   } catch {
     if (!controller.signal.aborted) {
@@ -221,6 +44,30 @@ const showPreview = async (load: PreviewLoad): Promise<void> => {
       }));
     }
   }
+};
+
+const toStateClass = (shown: Shown): string => {
+  if (shown.state === "idle") {
+    return "loading";
+  }
+
+  return shown.state;
+};
+
+const toTip = (shown: Shown): string | null => {
+  if (shown.state === "none") {
+    return shown.reason;
+  }
+
+  return null;
+};
+
+const toBlob = (shown: Shown): Blob | null => {
+  if (shown.state === "ready") {
+    return shown.blob;
+  }
+
+  return null;
 };
 
 const ComponentPreviewThumb = ({
@@ -239,45 +86,45 @@ const ComponentPreviewThumb = ({
   className?: string;
 }): ReactElement => {
   const ref = useRef<HTMLSpanElement>(null);
-  const visible = useVisible(ref, active);
+  const visible = useThumbVisible(ref, active);
   const [shown, setShown] = useState<Shown>({ state: "idle" });
+
   useEffect(() => {
     if (!visible) {
       return;
     }
 
     const controller = new AbortController();
-    setShown((prev) => (prev.state === "ready" ? prev : { state: "loading" }));
-    void showPreview({ controller, directionId, id, projectId, setShown });
+
+    showPreview({
+      controller,
+      directionId,
+      id,
+      projectId,
+      setShown,
+      version,
+    });
 
     return (): void => controller.abort();
   }, [projectId, directionId, id, version, visible]);
-  const src = shown.state === "ready" ? shown.src : null;
-  useEffect(
-    () => (): void => {
-      if (src) {
-        URL.revokeObjectURL(src);
-      }
-    },
-    [src]
-  );
+
+  const blob = toBlob(shown);
 
   return (
     <span
       ref={ref}
-      className={`cmp-thumb cmp-preview ${shown.state === "idle" ? "loading" : shown.state} ${className}`}
+      className={`cmp-thumb cmp-preview ${toStateClass(shown)} ${className}`}
       aria-hidden="true"
       data-testid="component-preview"
       data-state={shown.state}
-      {...(shown.state === "none" ? { "data-tip": shown.reason } : {})}
+      data-tip={toTip(shown)}
     >
-      {src ? (
-        <img src={src} alt="" draggable={false} />
-      ) : shown.state === "none" ? (
-        <Icon name="component" size={20} />
-      ) : null}
+      {blob && <BlobImage blob={blob} />}
+      {!blob && shown.state === "none" && (
+        <Icon name="component" size={ICON_SIZE} />
+      )}
     </span>
   );
 };
 
-export { trimmedUrl, ComponentPreviewThumb };
+export { ComponentPreviewThumb };

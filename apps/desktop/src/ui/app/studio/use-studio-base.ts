@@ -85,13 +85,11 @@ const useStudioBase = (projectId: string, ui: StudioUi): StudioBase => {
     [prefillChat]
   );
 
-  const comments = useComments(
-    projectId,
-    directionId,
-    ui.composerActive,
-    activeRun !== null,
-    onPrefill
-  );
+  const comments = useComments(projectId, directionId, {
+    composerActive: ui.composerActive,
+    onPrefill: onPrefill ?? null,
+    running: activeRun !== null,
+  });
 
   return {
     activeRun,

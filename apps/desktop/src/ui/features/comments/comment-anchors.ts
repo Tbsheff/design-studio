@@ -7,9 +7,6 @@ import type {
 } from "./deps.js";
 import type { CommentPatch } from "./use-comments.js";
 
-const LINE_GROUP = 2;
-const COL_GROUP = 3;
-
 interface ReportReview {
   patch: CommentPatch | null;
   missing: boolean;
@@ -77,28 +74,37 @@ const parseLoc = (value: string | null | undefined): SourceLoc | null => {
     return null;
   }
 
-  const match = /^(.*):(\d+):(\d+)$/u.exec(value);
+  const match = /^(?<file>.*):(?<line>\d+):(?<col>\d+)$/u.exec(value);
 
-  if (!match || !match[1]) {
+  const fileName = match?.groups?.["file"] ?? "";
+
+  if (!match || !fileName) {
     return null;
   }
 
   return {
-    col: Number(match[COL_GROUP]),
-    file: match[1],
-    line: Number(match[LINE_GROUP]),
+    col: Number(match.groups?.["col"]),
+    file: fileName,
+    line: Number(match.groups?.["line"]),
   };
 };
 
 const movedTarget = (
   comment: DesignComment,
   report: AnchorReport
-): CommentPatch["target"] => ({
-  ...comment.target,
-  selector: report.selector ?? comment.target.selector,
-  sourceLoc: parseLoc(report.sourceLoc) ?? comment.target.sourceLoc,
-  ...(report.rect ? { rectHint: report.rect } : {}),
-});
+): CommentPatch["target"] => {
+  const target = {
+    ...comment.target,
+    selector: report.selector ?? comment.target.selector,
+    sourceLoc: parseLoc(report.sourceLoc) ?? comment.target.sourceLoc,
+  };
+
+  if (report.rect) {
+    return { ...target, rectHint: report.rect };
+  }
+
+  return target;
+};
 
 const needsRetarget = (
   comment: DesignComment,

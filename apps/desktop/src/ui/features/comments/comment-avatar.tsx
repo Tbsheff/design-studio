@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { copy } from "./copy.js";
+import { authorInitial } from "./author-initial.js";
 import { Icon } from "./deps.js";
 
 const COUNT_MAX = 9;
@@ -13,8 +13,32 @@ interface AvatarProps {
   author?: string | undefined;
 }
 
-const authorInitial = (author: string): string =>
-  (author.trim()[0] ?? "?").toUpperCase();
+const toFace = (
+  initial: string | null,
+  author: string | undefined
+): string | null => {
+  if (author) {
+    return authorInitial(author);
+  }
+
+  return initial;
+};
+
+const toSuffix = (isOn: boolean, text: string): string => {
+  if (isOn) {
+    return text;
+  }
+
+  return "";
+};
+
+const toCountLabel = (count: number): string | number => {
+  if (count > COUNT_MAX) {
+    return `${COUNT_MAX}+`;
+  }
+
+  return count;
+};
 
 const AvatarFace = ({
   initial,
@@ -23,49 +47,19 @@ const AvatarFace = ({
   count = 0,
   author,
 }: AvatarProps): ReactElement => {
-  const face = author ? authorInitial(author) : initial;
+  const face = toFace(initial, author);
 
   return (
     <span
-      className={`avatar-pin ${tone}${flip ? " flip" : ""}${author ? " agent" : ""}`}
+      className={`avatar-pin ${tone}${toSuffix(flip, " flip")}${toSuffix(Boolean(author), " agent")}`}
       aria-hidden="true"
     >
       <span className="avatar-face">
         {face ?? <Icon name="comment" size={12} />}
       </span>
-      {count > 0 && (
-        <span className="avatar-count">
-          {count > COUNT_MAX ? `${COUNT_MAX}+` : count}
-        </span>
-      )}
+      {count > 0 && <span className="avatar-count">{toCountLabel(count)}</span>}
     </span>
   );
 };
 
-const CommentAuthor = ({
-  author,
-  viewer = false,
-}: {
-  author: string | undefined;
-  viewer?: boolean;
-}): ReactElement | null => {
-  if (!author) {
-    return null;
-  }
-
-  return (
-    <span className="comment-author" data-testid="comment-author">
-      <span className="comment-author-face" aria-hidden="true">
-        {authorInitial(author)}
-      </span>
-      {author}
-      {viewer && (
-        <span className="comment-viewer-tag" data-tip={copy.viewerTag}>
-          {copy.textViewer}
-        </span>
-      )}
-    </span>
-  );
-};
-
-export { authorInitial, AvatarFace, CommentAuthor };
+export { AvatarFace };

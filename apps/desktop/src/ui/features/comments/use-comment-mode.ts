@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { isTypingTarget } from "./deps.js";
 import type { SelectionContext } from "./deps.js";
+import { useCommentKeys } from "./use-comment-keys.js";
 import type { CommentsControl } from "./use-comments.js";
 
 type SetSelection = (
@@ -18,6 +18,17 @@ const sameSelectors = (
       selectionContext.selector === next[index]?.selector
   );
 
+const toGuardedSelection = (
+  prev: SelectionContext[],
+  next: SelectionContext[]
+): SelectionContext[] => {
+  if (sameSelectors(prev, next)) {
+    return next;
+  }
+
+  return prev;
+};
+
 interface CommentMode {
   available: boolean;
   on: boolean;
@@ -32,11 +43,32 @@ const useCommentMode = (
   setSelectMode: (on: boolean) => void
 ): CommentMode => {
   const [on, setOn] = useState(false);
+  const [seenLive, setSeenLive] = useState(live);
+  const [seenRepinId, setSeenRepinId] = useState<string | null>(null);
   const available = Boolean(control) && live;
   const availableRef = useRef(available);
-  availableRef.current = available;
   const repinId = control?.repinId ?? null;
   const setRepinId = control?.setRepinId;
+
+  if (seenLive !== live) {
+    setSeenLive(live);
+
+    if (!live) {
+      setOn(false);
+    }
+  }
+
+  if (seenRepinId !== repinId) {
+    setSeenRepinId(repinId);
+
+    if (repinId) {
+      setOn(true);
+    }
+  }
+
+  useEffect(() => {
+    availableRef.current = available;
+  }, [available]);
 
   const toggle = useCallback(() => {
     setSelectMode(false);
@@ -44,61 +76,27 @@ const useCommentMode = (
   }, [setSelectMode]);
 
   useEffect(() => {
-    if (!live) {
-      setOn(false);
+    if (repinId) {
+      setSelectMode(false);
     }
-  }, [live]);
-
-  useEffect(() => {
-    if (!repinId) {
-      return;
-    }
-    setSelectMode(false);
-    setOn(true);
   }, [repinId, setSelectMode]);
 
   useEffect(() => {
     if (!on && repinId) {
       setRepinId?.(null);
     }
-  }, [on]);
+  }, [on, repinId, setRepinId]);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      if (
-        isTypingTarget(event.target) ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.altKey
-      ) {
-        return;
-      }
-      const key = event.key.toLowerCase();
-
-      if (key === "c" && availableRef.current) {
-        event.preventDefault();
-        toggle();
-      } else if (key === "v" || key === "escape") {
-        setOn(false);
-      }
-    };
-
-    globalThis.addEventListener("keydown", onKey);
-
-    return (): void => globalThis.removeEventListener("keydown", onKey);
-  }, [toggle]);
+  useCommentKeys(availableRef, toggle, setOn);
 
   const guard = useCallback(
     (setSelection: SetSelection): SetSelection => {
       if (!on) {
         return setSelection;
       }
-      return (updater) =>
-        setSelection((prev) => {
-          const next = updater(prev);
 
-          return sameSelectors(prev, next) ? next : prev;
-        });
+      return (updater) =>
+        setSelection((prev) => toGuardedSelection(prev, updater(prev)));
     },
     [on]
   );

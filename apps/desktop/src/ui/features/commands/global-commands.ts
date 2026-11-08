@@ -1,3 +1,4 @@
+import { withDisabled } from "./command-disabled.js";
 import {
   FIND_TEXT_COMMAND,
   FIND_TEXT_EVENT,
@@ -23,17 +24,34 @@ const openFolder = async (): Promise<void> => {
   }
 
   goHome();
-  requestOpenApp(picked.kind === "picked" ? picked.path : "");
+
+  if (picked.kind === "picked") {
+    requestOpenApp(picked.path);
+
+    return;
+  }
+
+  requestOpenApp("");
+};
+
+const runOpenFolder = async (): Promise<void> => {
+  try {
+    await openFolder();
+  } catch {
+    globalThis.console.debug("open folder failed");
+  }
 };
 
 type ThemePref = "system" | "light" | "dark";
 
+declare global {
+  interface Window {
+    studioTheme?: { set: (pref: ThemePref) => void };
+  }
+}
+
 const setTheme = (pref: ThemePref): void => {
-  (
-    globalThis as unknown as {
-      studioTheme?: { set: (pref: ThemePref) => void };
-    }
-  ).studioTheme?.set(pref);
+  globalThis.window.studioTheme?.set(pref);
 };
 
 const THEME_COMMANDS: Command[] = [
@@ -63,36 +81,54 @@ const THEME_COMMANDS: Command[] = [
   },
 ];
 
-const findTextCommand = (inProject: boolean): Command => ({
-  group: "Edit",
-  icon: "search",
-  id: FIND_TEXT_COMMAND,
-  keyId: "find-text",
-  keywords: "search replace copy words rename text",
-  run: () => globalThis.dispatchEvent(new CustomEvent(FIND_TEXT_EVENT)),
-  title: "Find and replace text",
-  ...(inProject ? {} : { disabled: "Open a project to find text" }),
-});
+const toFindTextReason = (inProject: boolean): string | null => {
+  if (inProject) {
+    return null;
+  }
+
+  return "Open a project to find text";
+};
+
+const findTextCommand = (inProject: boolean): Command =>
+  withDisabled(
+    {
+      group: "Edit",
+      icon: "search",
+      id: FIND_TEXT_COMMAND,
+      keyId: "find-text",
+      keywords: "search replace copy words rename text",
+      run: () => globalThis.dispatchEvent(new CustomEvent(FIND_TEXT_EVENT)),
+      title: "Find and replace text",
+    },
+    toFindTextReason(inProject)
+  );
+
+const home = (): void => uiStore.set({ activeProjectId: null, screen: "home" });
+
+const toHomeReason = (inProject: boolean): string | null => {
+  if (inProject || uiStore.get().screen !== "home") {
+    return null;
+  }
+
+  return "You are on Home";
+};
 
 const globalCommands = (openShortcuts: () => void): Command[] => {
   const inProject = uiStore.get().activeProjectId !== null;
 
-  const home = (): void =>
-    uiStore.set({ activeProjectId: null, screen: "home" });
-
   return [
-    {
-      group: "Go",
-      icon: "folder",
-      id: "go.home",
-      keyId: "home",
-      keywords: "projects back",
-      run: home,
-      title: "Go to Home",
-      ...(inProject || uiStore.get().screen !== "home"
-        ? {}
-        : { disabled: "You are on Home" }),
-    },
+    withDisabled(
+      {
+        group: "Go",
+        icon: "folder",
+        id: "go.home",
+        keyId: "home",
+        keywords: "projects back",
+        run: home,
+        title: "Go to Home",
+      },
+      toHomeReason(inProject)
+    ),
     {
       group: "Go",
       icon: "plus",
@@ -109,7 +145,7 @@ const globalCommands = (openShortcuts: () => void): Command[] => {
       icon: "folder",
       id: "project.open-folder",
       keywords: "import vite html",
-      run: () => void openFolder().catch(() => undefined),
+      run: runOpenFolder,
       title: "Open a folder…",
     },
     {
@@ -120,8 +156,8 @@ const globalCommands = (openShortcuts: () => void): Command[] => {
       run: () =>
         uiStore.set({
           activeProjectId: null,
-          screen: "design-systems",
           libraryFrom: null,
+          screen: "design-systems",
         }),
       title: "Design systems",
     },
@@ -133,8 +169,8 @@ const globalCommands = (openShortcuts: () => void): Command[] => {
       run: () =>
         uiStore.set({
           activeProjectId: null,
-          screen: "new-design-system",
           returnTo: "home",
+          screen: "new-design-system",
         }),
       title: "New design system",
     },

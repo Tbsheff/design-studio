@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { Keys } from "./keys.js";
+import { Keys } from "./keys-view.js";
 
 const PaletteFoot = (): ReactElement => (
   <footer className="cmdk-foot" aria-hidden="true">
@@ -19,7 +19,7 @@ const PaletteFoot = (): ReactElement => (
       {` ${copy.textClose}`}
     </span>
     <span className="cmdk-foot-end">
-      <Keys keys="?" />
+      <Keys extraClass={null} keys="?" />
       {` ${copy.textAllShortcuts}`}
     </span>
   </footer>

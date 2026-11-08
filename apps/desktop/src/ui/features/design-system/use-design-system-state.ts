@@ -39,10 +39,52 @@ const touchesDesignSystem = (
   return 0;
 };
 
+interface Loaded {
+  key: string;
+  state: DesignSystemState;
+}
+
+const toSourceFile = (loaded: Loaded | null, key: string): string | null => {
+  if (loaded?.key === key) {
+    return loaded.state.source?.file ?? null;
+  }
+
+  return null;
+};
+
+const toLoadedState = (
+  loaded: Loaded | null,
+  key: string
+): DesignSystemState | null => {
+  if (loaded?.key === key) {
+    return loaded.state;
+  }
+
+  return null;
+};
+
 interface DesignSystemView {
   tokens: DesignTokens | null;
   state: DesignSystemState | null;
 }
+
+interface StateRequest {
+  readonly directionId: string;
+  readonly headVersionId: string | null;
+  readonly packId: string | null;
+  readonly projectId: string;
+  readonly stamp: number;
+}
+
+const readState = async (
+  request: StateRequest
+): Promise<DesignSystemState | null> => {
+  try {
+    return await api.getDesignSystem(request.projectId, request.directionId);
+  } catch {
+    return null;
+  }
+};
 
 const useDesignSystemState = (
   projectId: string,
@@ -50,10 +92,7 @@ const useDesignSystemState = (
   directionId: string | null,
   lastChange: FilesChange | null
 ): DesignSystemView => {
-  const [loaded, setLoaded] = useState<{
-    key: string;
-    state: DesignSystemState;
-  } | null>(null);
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
 
   const packId = project?.packId ?? null;
 
@@ -63,12 +102,14 @@ const useDesignSystemState = (
 
   const key = `${projectId}:${directionId}`;
 
-  const sourceFile =
-    loaded?.key === key ? (loaded.state.source?.file ?? null) : null;
+  const sourceFile = toSourceFile(loaded, key);
 
   const stamp = touchesDesignSystem(lastChange, directionId, sourceFile);
   const live = useRef(key);
-  live.current = key;
+
+  useEffect(() => {
+    live.current = key;
+  }, [key]);
 
   useEffect(() => {
     if (!directionId) {
@@ -79,20 +120,20 @@ const useDesignSystemState = (
     let cancelled = false;
 
     const read = async (): Promise<void> => {
-      let state: DesignSystemState | null = null;
-
-      try {
-        state = await api.getDesignSystem(projectId, directionId);
-      } catch {
-        state = null;
-      }
+      const state = await readState({
+        directionId,
+        headVersionId,
+        packId,
+        projectId,
+        stamp,
+      });
 
       if (state && !cancelled && live.current === want) {
         setLoaded({ key: want, state });
       }
     };
 
-    void read();
+    read();
 
     return (): void => {
       cancelled = true;
@@ -105,7 +146,7 @@ const useDesignSystemState = (
   );
 
   return useMemo(() => {
-    const state = loaded?.key === key ? loaded.state : null;
+    const state = toLoadedState(loaded, key);
 
     if (!state || state.entries.length === 0) {
       return { state, tokens: null };

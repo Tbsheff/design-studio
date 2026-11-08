@@ -1,12 +1,12 @@
-import { routes as studioRoutes } from "@design-studio/actions/studio/routes";
 import type { DoctorCause } from "@design-studio/contracts/app-doctor";
-import { CopyButton, Icon } from "@design-studio/ui";
+import { CopyButton } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 
 import { api, errorText } from "../../api.js";
-import { call } from "../../platform/http.js";
-import { COPY } from "./copy.js";
+import { DoctorCardFoot } from "./doctor-card-foot.js";
+import { DoctorCardHead } from "./doctor-card-head.js";
+import { useDoctorVersion } from "./use-doctor-version.js";
 
 interface DoctorCardProps {
   projectId: string;
@@ -25,62 +25,25 @@ const DoctorCard = ({
   onClose,
   onRestart,
 }: DoctorCardProps): ReactElement => {
-  const [busy, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [version, setVersion] = useState<string | null>(null);
-  useEffect(() => {
-    let live = true;
+  const [isBusy, startTransition] = useTransition();
+  const [message, setMessage] = useState<string | null>(null);
+  const version = useDoctorVersion();
 
-    const read = async (): Promise<void> => {
-      try {
-        const health = await call(studioRoutes.healthStudio, {});
-
-        if (live) {
-          setVersion(health.version);
-        }
-      } catch {
-        if (live) {
-          setVersion(null);
-        }
-      }
-    };
-
-    void read();
-
-    return (): void => {
-      live = false;
-    };
-  }, []);
-
-  const fix = (): void => {
-    setError(null);
+  const fix = useCallback((): void => {
+    setMessage(null);
     startTransition(async () => {
       try {
         await api.appFix(projectId, cause.kind);
         onFixed();
-      } catch (err: unknown) {
-        setError(errorText(err));
+      } catch (error: unknown) {
+        setMessage(errorText(error));
       }
     });
-  };
-
-  const iconNode = <Icon name="close" size={12} />;
+  }, [cause.kind, onFixed, projectId]);
 
   return (
     <div className="app-fail app-doctor" role="alert" data-kind={cause.kind}>
-      <div className="app-fail-head">
-        <Icon name="alert" size={14} />
-        <strong className="grow">{cause.title}</strong>
-        <button
-          type="button"
-          className="icon-btn small"
-          aria-label={COPY.labelDismiss}
-          data-tip={COPY.tipDismiss}
-          onClick={onClose}
-        >
-          {iconNode}
-        </button>
-      </div>
+      <DoctorCardHead onClose={onClose} title={cause.title} />
       <p className="app-fail-message">{cause.detail}</p>
       {cause.evidence[0] && (
         <span
@@ -97,39 +60,15 @@ const DoctorCard = ({
           <CopyButton text={cause.command} label="Copy the command" />
         </div>
       )}
-      {error && <span className="app-fail-error">{error}</span>}
-      <div className="app-fail-foot">
-        <button type="button" className="btn small ghost" onClick={onLog}>
-          {COPY.textShowTheLog}
-        </button>
-        <span className="grow" />
-        {version && (
-          <span className="mono" data-tip={COPY.tipDesignStudioVersion}>
-            {COPY.textV}
-            {version}
-          </span>
-        )}
-        {cause.fix && (
-          <button
-            type="button"
-            className="btn small primary"
-            disabled={busy}
-            onClick={fix}
-          >
-            {busy && "Restarting…"}
-            {!busy && cause.fix.label}
-          </button>
-        )}
-        {!cause.fix && onRestart && cause.severity === "error" && (
-          <button
-            type="button"
-            className="btn small primary"
-            onClick={onRestart}
-          >
-            {COPY.textRestartDevServer}
-          </button>
-        )}
-      </div>
+      {message && <span className="app-fail-error">{message}</span>}
+      <DoctorCardFoot
+        cause={cause}
+        isBusy={isBusy}
+        onFix={fix}
+        onLog={onLog}
+        onRestart={onRestart}
+        version={version}
+      />
     </div>
   );
 };

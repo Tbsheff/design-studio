@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
+import { CommandRuleList } from "./command-rule-list.js";
 import { copy } from "./copy.js";
 import { errorText, json } from "./deps.js";
 
@@ -27,7 +28,7 @@ const removeRule = (
 const CommandRules = ({ projectId }: { projectId: string }): ReactElement => {
   const [rules, setRules] = useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -39,9 +40,9 @@ const CommandRules = ({ projectId }: { projectId: string }): ReactElement => {
         if (live) {
           setRules(result.rules);
         }
-      } catch (err) {
+      } catch (error) {
         if (live) {
-          setError(errorText(err));
+          setMessage(errorText(error));
         }
       }
     };
@@ -53,18 +54,21 @@ const CommandRules = ({ projectId }: { projectId: string }): ReactElement => {
     };
   }, [projectId]);
 
-  const remove = (rule: string): void => {
-    setError(null);
-    startTransition(async () => {
-      try {
-        const result = await removeRule(projectId, rule);
+  const remove = useCallback(
+    (rule: string): void => {
+      setMessage(null);
+      startTransition(async () => {
+        try {
+          const result = await removeRule(projectId, rule);
 
-        startTransition(() => setRules(result.rules));
-      } catch (err) {
-        startTransition(() => setError(errorText(err)));
-      }
-    });
-  };
+          startTransition(() => setRules(result.rules));
+        } catch (error) {
+          startTransition(() => setMessage(errorText(error)));
+        }
+      });
+    },
+    [projectId]
+  );
 
   return (
     <fieldset
@@ -72,30 +76,16 @@ const CommandRules = ({ projectId }: { projectId: string }): ReactElement => {
       data-testid="command-rules"
     >
       <legend>{copy.textAllowedCommands}</legend>
-      {rules !== null &&
-        ((rules.length === 0 && (
-          <p className="command-rules-empty">{copy.textNoCommandsAreAlways}</p>
-        )) || (
-          <ul>
-            {rules.map((rule) => (
-              <li key={rule}>
-                <code>{rule}</code>
-                <button
-                  type="button"
-                  className="btn small"
-                  disabled={isPending}
-                  aria-label={`Remove ${rule}`}
-                  onClick={() => remove(rule)}
-                >
-                  {copy.textRemove}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ))}
-      {error && (
+      {rules !== null && (
+        <CommandRuleList
+          isPending={isPending}
+          onRemove={remove}
+          rules={rules}
+        />
+      )}
+      {message && (
         <p className="permission-error" role="alert">
-          {error}
+          {message}
         </p>
       )}
     </fieldset>

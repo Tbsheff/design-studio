@@ -1,5 +1,6 @@
 interface DesignSystemActions {
   onApply: (packId: string) => Promise<void>;
+  onSaveNamed: (name: string, asNew: boolean) => Promise<void>;
   onSave: (
     name: string,
     packId?: string,

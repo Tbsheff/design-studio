@@ -228,6 +228,15 @@ dialog.comment-card {
   border: 0;
 }
 
+dialog.comment-card {
+  inset: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  overflow: visible;
+}
+
 .comment-card.closing {
   opacity: 0;
   translate: 0 2px;
@@ -1035,7 +1044,8 @@ dialog.comment-card {
   font-weight: 400;
 }
 
-.comment-row-actions .icon.flip {
+.comment-row-actions .icon.flip,
+.comment-row-actions .flip-up .icon {
   rotate: 180deg;
 }
 

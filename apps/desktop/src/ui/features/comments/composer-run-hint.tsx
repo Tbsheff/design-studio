@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
-import { MOD_LABEL } from "./comment-popover.js";
 import { copy } from "./copy.js";
+import { MOD_LABEL } from "./mod-label.js";
 
 const RunHint = ({ queueOnly }: { queueOnly: boolean }): ReactElement => (
   <p className="comment-card-hint" role="note" data-testid="comment-run-hint">

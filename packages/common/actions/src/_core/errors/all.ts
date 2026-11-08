@@ -8,6 +8,7 @@ import type { CritiqueError } from "../../critique/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
 import type { EffectError } from "../../effect/errors/index.js";
 import type { FillError } from "../../fill/errors/index.js";
+import type { FixtureError } from "../../fixture/errors/index.js";
 import type { GalleryError } from "../../gallery/errors/index.js";
 import type { GridError } from "../../grid/errors/index.js";
 import type { IconError } from "../../icon/errors/index.js";
@@ -29,6 +30,7 @@ import type { TextError } from "../../text/errors/index.js";
 import type { ThemeError } from "../../theme/errors/index.js";
 import type { TokenError } from "../../token/errors/index.js";
 import type { ViewportError } from "../../viewport/errors/index.js";
+import type { WalkthroughError } from "../../walkthrough/errors/index.js";
 import type { CoreError } from "./index.js";
 
 type StudioError =
@@ -42,6 +44,7 @@ type StudioError =
   | DirectEditError
   | EffectError
   | FillError
+  | FixtureError
   | GalleryError
   | GridError
   | IconError
@@ -62,7 +65,8 @@ type StudioError =
   | TextStyleError
   | ThemeError
   | TokenError
-  | ViewportError;
+  | ViewportError
+  | WalkthroughError;
 
 type StudioErrorTag = StudioError["_tag"];
 

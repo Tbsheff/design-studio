@@ -12,9 +12,8 @@ import {
   tokensForProperty,
 } from "../../../shared/token-match.js";
 import type { TokenMode } from "../../../shared/token-match.js";
-import { parseDeclarations } from "../inspector/authored-css.js";
-import type { AuthoredCss } from "../inspector/authored-css.js";
-import type { StyleValues } from "../inspector/css-values.js";
+import { toDeclarations } from "../inspector/index.js";
+import type { AuthoredCss, StyleValues } from "../inspector/index.js";
 
 type LintKind = "color" | "size" | "font";
 
@@ -26,13 +25,16 @@ interface LintIssue {
   deltaE: number | null;
 }
 
-const SHORTHANDS: Record<string, DirectStyleProperty[]> = {
-  background: ["background-color"],
-  border: ["border-color"],
-  font: ["font-family", "font-size"],
-  margin: ["margin-top", "margin-right", "margin-bottom", "margin-left"],
-  padding: ["padding-top", "padding-right", "padding-bottom", "padding-left"],
-};
+const SHORTHANDS = new Map<string, DirectStyleProperty[]>([
+  ["background", ["background-color"]],
+  ["border", ["border-color"]],
+  ["font", ["font-family", "font-size"]],
+  ["margin", ["margin-top", "margin-right", "margin-bottom", "margin-left"]],
+  [
+    "padding",
+    ["padding-top", "padding-right", "padding-bottom", "padding-left"],
+  ],
+]);
 
 const LINTED = Object.keys(TOKEN_GROUP_FOR_PROPERTY) as DirectStyleProperty[];
 
@@ -46,6 +48,11 @@ const COLOR_SCALE = 1000;
 const PERCENT_DIVISOR = 10;
 const FONT_FALLBACK_DISTANCE = 1;
 
+const LEADING_NUMBER = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/iu;
+
+const toLeadingNumber = (text: string): number =>
+  Number(LEADING_NUMBER.exec(text.trim())?.[0] ?? "");
+
 const borderHasColor = (value: string): boolean =>
   value
     .split(/\s+/u)
@@ -55,7 +62,7 @@ const isLintedProp = (prop: string): prop is DirectStyleProperty =>
   LINTED.some((linted) => linted === prop);
 
 const toTargets = (prop: string): DirectStyleProperty[] => {
-  const shorthand = SHORTHANDS[prop];
+  const shorthand = SHORTHANDS.get(prop);
 
   if (shorthand) {
     return shorthand;
@@ -72,7 +79,7 @@ const takeDeclarations = (
   text: string,
   out: Map<DirectStyleProperty, string>
 ): void => {
-  for (const { prop, value } of parseDeclarations(text)) {
+  for (const { prop, value } of toDeclarations(text)) {
     if (prop !== "border" || borderHasColor(value)) {
       for (const target of toTargets(prop)) {
         out.set(target, value);
@@ -136,13 +143,10 @@ const toFontFallback = (
 
 const hasNoBorder = (values: StyleValues): boolean => {
   const style = values["border-style"] ?? "";
+  const width = toLeadingNumber(values["border-width"] ?? "");
+  const hasWidth = width > 0;
 
-  return (
-    style === "" ||
-    style === "none" ||
-    style === "hidden" ||
-    !(Number.parseFloat(values["border-width"] ?? "") > 0)
-  );
+  return style === "" || style === "none" || style === "hidden" || !hasWidth;
 };
 
 const toFontToken = (
@@ -186,35 +190,47 @@ const toIssue = ({
     return null;
   }
 
-  const best = matchForProperty(prop, value, entries, mode)[0];
-  const kind = toKind(prop);
+  const [best] = matchForProperty(prop, value, entries, mode);
+  const lintKind = toKind(prop);
 
-  if (kind === "color") {
+  if (lintKind === "color") {
     if (!best) {
       return null;
     }
 
     return {
       deltaE: Math.round(best.distance * COLOR_SCALE) / PERCENT_DIVISOR,
-      kind,
+      kind: lintKind,
       props: [prop],
       token: best,
       value,
     };
   }
 
-  if (kind === "font") {
-    const token = toFontToken(best, prop, entries);
+  if (lintKind === "font") {
+    const fontToken = toFontToken(best, prop, entries);
 
-    if (!token) {
+    if (!fontToken) {
       return null;
     }
 
-    return { deltaE: null, kind, props: [prop], token, value };
+    return {
+      deltaE: null,
+      kind: lintKind,
+      props: [prop],
+      token: fontToken,
+      value,
+    };
   }
 
   if (best && isSnappable(group, best)) {
-    return { deltaE: null, kind, props: [prop], token: best, value };
+    return {
+      deltaE: null,
+      kind: lintKind,
+      props: [prop],
+      token: best,
+      value,
+    };
   }
 
   return null;
@@ -240,32 +256,31 @@ const isSkippedProp = (
   values: StyleValues
 ): boolean => prop === "border-color" && hasNoBorder(values);
 
+interface LintSource {
+  readonly css: AuthoredCss | null;
+  readonly dirty: readonly DirectStyleProperty[];
+}
+
 const lintValues = (
   values: StyleValues,
   entries: CompiledTokenEntry[],
   mode: TokenMode,
-  css: AuthoredCss | null,
-  dirty: readonly DirectStyleProperty[] = []
+  source: LintSource
 ): LintIssue[] => {
-  const authored = authoredProps(css);
+  const authoredMap = authoredProps(source.css);
 
-  for (const prop of dirty) {
-    authored.set(prop, values[prop]);
+  for (const prop of source.dirty) {
+    authoredMap.set(prop, values[prop]);
   }
 
   const issues: LintIssue[] = [];
 
   for (const prop of LINTED) {
-    const source = authored.get(prop) ?? "";
+    const authored = authoredMap.get(prop) ?? "";
+    const value = values[prop];
 
-    if (authored.has(prop) && !isSkippedProp(prop, values)) {
-      const issue = toIssue({
-        authored: source,
-        entries,
-        mode,
-        prop,
-        value: values[prop],
-      });
+    if (authoredMap.has(prop) && !isSkippedProp(prop, values)) {
+      const issue = toIssue({ authored, entries, mode, prop, value });
 
       if (issue) {
         addIssue(issues, issue);
@@ -278,4 +293,4 @@ const lintValues = (
 
 export { authoredProps, lintValues };
 
-export type { LintKind, LintIssue };
+export type { LintIssue, LintKind, LintSource };

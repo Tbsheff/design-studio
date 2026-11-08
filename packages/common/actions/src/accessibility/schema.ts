@@ -171,7 +171,93 @@ const AccessibilityChangeSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
+const VISION_KINDS = [
+  "protanopia",
+  "deuteranopia",
+  "tritanopia",
+  "achromatopsia",
+  "blurred-vision",
+  "reduced-contrast",
+] as const;
+
+const VISION_LIST_MAX = 100;
+
+const VisionKindSchema = Schema.Literals(VISION_KINDS);
+
+const VisionKindsSchema = Schema.Array(VisionKindSchema).check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(VISION_KINDS.length)
+);
+
+const VisionFrameIdSchema = Schema.String.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(FRAME_MAX)
+);
+
+const VisionDirectionSchema = Schema.NullOr(DirectionIdSchema).pipe(
+  Schema.withDecodingDefaultKey(Effect.succeed(null))
+);
+
+const VisionLayerSchema = Schema.NullOr(
+  Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(SELECTOR_MAX))
+).pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
+
+const VisionKindsFieldSchema = VisionKindsSchema.pipe(
+  Schema.withDecodingDefaultKey(Effect.succeed([...VISION_KINDS]))
+);
+
+const VisionFields = {
+  directionId: VisionDirectionSchema,
+  frameId: VisionFrameIdSchema,
+  kinds: VisionKindsFieldSchema,
+  layer: VisionLayerSchema,
+  projectId: ProjectIdSchema,
+} as const;
+
+const VisionLostPairSchema = Schema.Struct({
+  after: Schema.Number,
+  afterForeground: Schema.String,
+  background: Schema.String,
+  before: Schema.Number,
+  foreground: Schema.String,
+  layerId: Schema.String,
+  nearestToken: Schema.NullOr(PassingTokenSchema),
+  need: Schema.Number,
+  text: Schema.String,
+});
+
+const VisionCellSchema = Schema.Struct({
+  kind: VisionKindSchema,
+  lostPairs: Schema.Array(VisionLostPairSchema),
+  shotPath: Schema.String,
+});
+
+const VisionColorSchema = Schema.Struct({
+  color: Schema.String,
+  label: Schema.String,
+  layerId: Schema.String,
+});
+
+const VisionConfusedPairSchema = Schema.Struct({
+  after: Schema.Number,
+  before: Schema.Number,
+  first: VisionColorSchema,
+  kind: VisionKindSchema,
+  second: VisionColorSchema,
+});
+
+const VisionReportSchema = Schema.Struct({
+  cells: Schema.Array(VisionCellSchema),
+  confusedPairs: Schema.Array(VisionConfusedPairSchema),
+  frameId: Schema.String,
+  sheetPath: Schema.String,
+});
+
 export {
+  VISION_KINDS,
+  VISION_LIST_MAX,
+  VisionFields,
+  VisionReportSchema,
   AccessibilityChangeSchema,
   AccessibilityElementSchema,
   AccessibilityInspectFields,

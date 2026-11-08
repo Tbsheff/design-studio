@@ -3,17 +3,18 @@ import type { ReactElement } from "react";
 
 import type { Publication } from "../../../shared/publish.js";
 import { useNow } from "../../platform/clock.js";
-import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
+import { canvasFrameName, framePage } from "../canvas/index.js";
 import { toFrameLabels } from "./frame-labels.js";
-import { usePublishBackend } from "./publish-backend-setup.js";
 import { PublishDoneNote } from "./publish-done-note.js";
 import { PublishForm } from "./publish-form.js";
 import { PublishPaneFoot } from "./publish-pane-foot.js";
 import { PublishPlanView } from "./publish-plan-view.js";
 import { PublishPublicationList } from "./publish-publication-list.js";
 import { toFormError, toPlanInput } from "./publish-request.js";
-import { PublishSetupBody, usePublishCli } from "./publish-setup.js";
+import { PublishSetupBody } from "./publish-setup-body.js";
 import type { PublishTarget } from "./publish-types.js";
+import { usePublishBackend } from "./use-publish-backend.js";
+import { usePublishCli } from "./use-publish-cli.js";
 import { usePublishFlow } from "./use-publish-flow.js";
 import { usePublishForm } from "./use-publish-form.js";
 

@@ -9,7 +9,7 @@ import { DRAW_COLORS } from "./drawing-model.js";
 interface DrawTool {
   available: boolean;
   on: boolean;
-  toolbarMode: boolean | undefined;
+  toolbarMode: boolean | null;
   setOn: (on: boolean) => void;
   toggle: () => void;
   color: string;
@@ -130,9 +130,9 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
 
   const used = strokes.reduce((sum, stroke) => sum + stroke.points.length, 0);
 
-  const toolbarMode2: boolean | undefined = ((): boolean | undefined => {
+  const toolbarMode2: boolean | null = ((): boolean | null => {
     if (!available) {
-      return undefined;
+      return null;
     }
 
     return on;

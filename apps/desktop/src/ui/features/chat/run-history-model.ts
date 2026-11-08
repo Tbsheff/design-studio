@@ -134,7 +134,12 @@ const publishOlderRuns = (next: OlderRuns, load: (() => void) | null): void => {
     return;
   }
 
-  older = next.more || next.loading ? next : NONE;
+  older = NONE;
+
+  if (next.more || next.loading) {
+    older = next;
+  }
+
   for (const listener of listeners) {
     listener();
   }

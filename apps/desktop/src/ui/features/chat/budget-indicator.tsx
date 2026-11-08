@@ -1,53 +1,10 @@
 import type { Project, ProjectSettings } from "@design-studio/contracts";
-import { useEffect, useRef, useState, startTransition } from "react";
-import type { FormEvent, ReactElement } from "react";
+import { useCallback, useState, startTransition } from "react";
+import type { MouseEvent, ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
-import { copy } from "./copy.js";
-
-const MIN_LIMIT_USD = 0.01;
-const MAX_LIMIT_USD = 50;
-const CENTS = 100;
-const HALF_DOLLAR = 0.5;
-const FIVE_DOLLARS = 5;
-
-const PRESETS: (number | null)[] = [null, HALF_DOLLAR, 1, 2, FIVE_DOLLARS];
-
-const money = (value: number): string => {
-  if (Number.isInteger(value)) {
-    return `$${value}`;
-  }
-
-  return `$${value.toFixed(2)}`;
-};
-
-const limitLabel = (value: number | null): string => {
-  if (value === null) {
-    return "No limit";
-  }
-
-  return money(value);
-};
-
-const parseLimit = (raw: string): number | null | "bad" => {
-  const text = raw.trim().replace(/^\$/u, "");
-
-  if (text === "") {
-    return null;
-  }
-
-  const value = Number(text);
-
-  if (
-    Number.isFinite(value) &&
-    value >= MIN_LIMIT_USD &&
-    value <= MAX_LIMIT_USD
-  ) {
-    return Math.round(value * CENTS) / CENTS;
-  }
-
-  return "bad";
-};
+import { limitLabel, money } from "./budget-limit-model.js";
+import { BudgetMenu } from "./budget-menu.js";
 
 interface Props {
   projectId: string;
@@ -55,38 +12,59 @@ interface Props {
   onSaved: (project: Project) => void;
 }
 
+interface PendingLimit {
+  readonly value: number | null;
+}
+
+const stopMouseDown = (event: MouseEvent<HTMLElement>): void =>
+  event.stopPropagation();
+
+const toTip = (current: number | null): string => {
+  if (current === null) {
+    return "No spending limit per run. Click to set one.";
+  }
+
+  return `Each run stops at ${money(current)}. Click to change.`;
+};
+
 const BudgetIndicator = ({
   projectId,
   settings,
   onSaved,
 }: Props): ReactElement => {
   const [open, setOpen] = useState(false);
-  const [pending, setPending] = useState<number | null | undefined>();
+  const [pending, setPending] = useState<PendingLimit | null>(null);
   const [error, setError] = useState<string | null>(null);
   let current = settings.maxBudgetUsd;
 
-  if (pending !== undefined) {
-    current = pending;
+  if (pending !== null) {
+    current = pending.value;
   }
 
-  const save = (value: number | null): void => {
-    setPending(value);
-    setError(null);
-    startTransition(async () => {
-      try {
-        const project = await api.updateSettings(projectId, {
-          maxBudgetUsd: value,
-        });
+  const handleSave = useCallback(
+    (value: number | null): void => {
+      setPending({ value });
+      setError(null);
+      startTransition(async () => {
+        try {
+          const project = await api.updateSettings(projectId, {
+            maxBudgetUsd: value,
+          });
 
-        onSaved(project);
-        setPending(undefined);
-        setOpen(false);
-      } catch (thrownError: unknown) {
-        setPending(undefined);
-        setError(errorText(thrownError));
-      }
-    });
-  };
+          onSaved(project);
+          setPending(null);
+          setOpen(false);
+        } catch (thrownError: unknown) {
+          setPending(null);
+          setError(errorText(thrownError));
+        }
+      });
+    },
+    [projectId, onSaved]
+  );
+
+  const handleToggle = useCallback(() => setOpen((wasOpen) => !wasOpen), []);
+  const handleClose = useCallback(() => setOpen(false), []);
 
   return (
     <span className="budget-ind-wrap">
@@ -98,13 +76,9 @@ const BudgetIndicator = ({
         aria-haspopup="menu"
         data-tip-side="top"
         data-tip-align="end"
-        data-tip={
-          current === null
-            ? "No spending limit per run. Click to set one."
-            : `Each run stops at ${money(current)}. Click to change.`
-        }
-        onMouseDown={(event) => event.stopPropagation()}
-        onClick={() => setOpen((wasOpen) => !wasOpen)}
+        data-tip={toTip(current)}
+        onMouseDown={stopMouseDown}
+        onClick={handleToggle}
       >
         {limitLabel(current)}
       </button>
@@ -112,106 +86,11 @@ const BudgetIndicator = ({
         <BudgetMenu
           current={current}
           error={error}
-          onPick={save}
-          onClose={() => setOpen(false)}
+          onPick={handleSave}
+          onClose={handleClose}
         />
       )}
     </span>
-  );
-};
-
-const BudgetMenu = ({
-  current,
-  error,
-  onPick,
-  onClose,
-}: {
-  current: number | null;
-  error: string | null;
-  onPick: (value: number | null) => void;
-  onClose: () => void;
-}): ReactElement => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [custom, setCustom] = useState("");
-  const [bad, setBad] = useState(false);
-  useEffect(() => {
-    const onDown = (event: MouseEvent): void => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("mousedown", onDown);
-    globalThis.addEventListener("keydown", onKey);
-
-    return (): void => {
-      document.removeEventListener("mousedown", onDown);
-      globalThis.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
-
-  const submit = (event: FormEvent): void => {
-    event.preventDefault();
-    const value = parseLimit(custom);
-    setBad(value === "bad");
-
-    if (value !== "bad") {
-      onPick(value);
-    }
-  };
-
-  return (
-    <div
-      ref={ref}
-      className="ui-menu budget-pop"
-      role="menu"
-      aria-label={copy.spendingLimitPer}
-      data-testid="budget-menu"
-    >
-      <div className="ui-menu-section">
-        <div className="ui-menu-label">{copy.spendingLimitPer}</div>
-        {PRESETS.map((value) => (
-          <button
-            key={value ?? "none"}
-            type="button"
-            role="menuitemradio"
-            aria-checked={current === value}
-            className="ui-menu-item"
-            onClick={() => onPick(value)}
-          >
-            {value === null && "No limit"}
-            {value !== null && money(value)}
-          </button>
-        ))}
-      </div>
-      <form className="ui-menu-section budget-custom" onSubmit={submit}>
-        <label className="budget-custom-row">
-          <span>{copy.other}</span>
-          <input
-            aria-label={copy.otherSpendingLimit}
-            inputMode="decimal"
-            placeholder={copy.text001To}
-            value={custom}
-            aria-invalid={bad || undefined}
-            onChange={(event) => setCustom(event.target.value)}
-          />
-        </label>
-        <button type="submit" className="btn small">
-          {copy.set}
-        </button>
-      </form>
-      {(bad || error) && (
-        <p className="ui-menu-note budget-error" role="alert">
-          {error ?? "Enter $0.01 to $50, or leave it empty for no limit."}
-        </p>
-      )}
-    </div>
   );
 };
 

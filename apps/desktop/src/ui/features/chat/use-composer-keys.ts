@@ -40,35 +40,28 @@ interface UseComposerKeysResult {
   readonly setQueue: (items: QueuedMessage[]) => void;
 }
 
-const useComposerKeys = (options: Options): UseComposerKeysResult => {
+interface HistoryRecall {
+  readonly historyKey: (
+    event: KeyboardEvent<HTMLDivElement>,
+    area: HTMLTextAreaElement
+  ) => boolean;
+  readonly resetHistory: () => number;
+}
+
+const toRecalled = (history: string[], next: number): string => {
+  if (next === -1) {
+    return "";
+  }
+
+  return history[history.length - 1 - next] ?? "";
+};
+
+const useHistoryRecall = (
+  history: string[],
+  draft: string,
+  setDraft: (value: string) => void
+): HistoryRecall => {
   const historyIndex = useRef(-1);
-  const { draft, setDraft, running } = options;
-  const queue = options.queue ?? NONE;
-  const history = options.history ?? NO_HISTORY;
-
-  const canQueue =
-    running &&
-    draft.trim().length > 0 &&
-    !options.blocked &&
-    queue.length < QUEUE_MAX;
-
-  const queueDraft = (): void => {
-    if (!canQueue || !options.onQueueChange) {
-      return;
-    }
-
-    options.onQueueChange([...queue, newQueued(draft.trim())]);
-    setDraft("");
-  };
-
-  const steerDraft = (): void => {
-    if (!canQueue || !options.onSteer) {
-      return;
-    }
-
-    options.onSteer(draft.trim());
-    setDraft("");
-  };
 
   const recall = (step: 1 | -1): boolean => {
     const next = historyIndex.current + step;
@@ -78,7 +71,7 @@ const useComposerKeys = (options: Options): UseComposerKeysResult => {
     }
 
     historyIndex.current = next;
-    setDraft(next === -1 ? "" : (history[history.length - 1 - next] ?? ""));
+    setDraft(toRecalled(history, next));
 
     return true;
   };
@@ -103,6 +96,49 @@ const useComposerKeys = (options: Options): UseComposerKeysResult => {
     }
 
     return false;
+  };
+
+  return {
+    historyKey,
+    resetHistory: (): number => (historyIndex.current = -1),
+  };
+};
+
+const useComposerKeys = (options: Options): UseComposerKeysResult => {
+  const { draft, setDraft, running } = options;
+
+  const queue = options.queue ?? NONE;
+
+  const history = options.history ?? NO_HISTORY;
+
+  const { historyKey, resetHistory } = useHistoryRecall(
+    history,
+    draft,
+    setDraft
+  );
+
+  const canQueue =
+    running &&
+    draft.trim().length > 0 &&
+    !options.blocked &&
+    queue.length < QUEUE_MAX;
+
+  const queueDraft = (): void => {
+    if (!canQueue || !options.onQueueChange) {
+      return;
+    }
+
+    options.onQueueChange([...queue, newQueued(draft.trim())]);
+    setDraft("");
+  };
+
+  const steerDraft = (): void => {
+    if (!canQueue || !options.onSteer) {
+      return;
+    }
+
+    options.onSteer(draft.trim());
+    setDraft("");
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -142,7 +178,7 @@ const useComposerKeys = (options: Options): UseComposerKeysResult => {
     onKeyDown,
     queue,
     queueDraft,
-    resetHistory: (): number => (historyIndex.current = -1),
+    resetHistory,
     setQueue,
   };
 };

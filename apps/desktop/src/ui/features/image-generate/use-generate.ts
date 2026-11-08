@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { copy } from "./copy.js";
-import { imageRoutes, imageTargetOf, useAction } from "./deps.js";
+import { imageRoutes, toImageTarget, useAction } from "./deps.js";
 import type { SelectionContext } from "./deps.js";
 import type { Aspect, Style, Variant } from "./generate-model.js";
 import { useVariants } from "./use-variants.js";
@@ -47,7 +47,7 @@ const useGenerate = (setup: GenerateSetup): Generate => {
 
   const handleUse = useCallback(
     (variant: Variant): void => {
-      const layer = imageTargetOf(target);
+      const layer = toImageTarget(target);
       const reuse = variant.asset;
 
       const place = async (): Promise<void> => {

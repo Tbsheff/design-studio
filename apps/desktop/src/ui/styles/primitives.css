@@ -267,6 +267,13 @@
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
+fieldset.ui-tools {
+  margin: 0;
+  min-inline-size: 0;
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
 .ui-tools > button {
   display: inline-flex;
   align-items: center;
@@ -829,4 +836,10 @@
   font-size: var(--t-xs);
   line-height: var(--lh-xs);
   white-space: normal;
+}
+
+fieldset.ui-menu-section {
+  min-inline-size: 0;
+  margin: 0;
+  border: 0;
 }

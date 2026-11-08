@@ -1,9 +1,30 @@
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 
-import { formatMeasure } from "../../../shared/measure.js";
-import { SnapGuides } from "./artboard-overlay.js";
-import { gapStyle } from "./canvas-overlays.js";
+import { FreeMoveSpacing } from "./free-move-spacing.js";
+import { SnapGuides } from "./snap-guides.js";
 import type { FreeMoveView } from "./use-free-move.js";
+
+const toBoxStyle = (box: {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+}): CSSProperties => ({
+  height: box.height,
+  left: box.x,
+  top: box.y,
+  width: box.width,
+});
+
+const toInsertStyle = (
+  line: NonNullable<FreeMoveView["line"]>
+): CSSProperties => {
+  if (line.axis === "x") {
+    return { height: line.to - line.from, left: line.at, top: line.from };
+  }
+
+  return { left: line.from, top: line.at, width: line.to - line.from };
+};
 
 const FreeMoveLayer = ({
   view,
@@ -24,40 +45,14 @@ const FreeMoveLayer = ({
 
   return (
     <div className="overlay" aria-hidden="true" data-testid="free-move">
-      <div
-        className={`box move-ghost${part}`}
-        style={{
-          height: box.height,
-          left: box.x,
-          top: box.y,
-          width: box.width,
-        }}
-      />
+      <div className={`box move-ghost${part}`} style={toBoxStyle(box)} />
       <SnapGuides guides={view.guides} full />
-      {view.spacing.length > 0 && (
-        <div className="snap-guides">
-          {view.spacing.map((spacingBadge) => (
-            <div
-              key={`s-${spacingBadge.axis}-${spacingBadge.from}-${spacingBadge.to}`}
-              className={`snap-gap ${spacingBadge.axis}`}
-              style={gapStyle(spacingBadge)}
-            >
-              <span className="snap-gap-label" data-value={spacingBadge.value}>
-                {formatMeasure(spacingBadge.value)}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      <FreeMoveSpacing spacing={view.spacing} />
       {line && (
         <div
           className={`move-insert ${line.axis}`}
           data-testid="move-insert"
-          style={
-            line.axis === "x"
-              ? { height: line.to - line.from, left: line.at, top: line.from }
-              : { left: line.from, top: line.at, width: line.to - line.from }
-          }
+          style={toInsertStyle(line)}
         />
       )}
     </div>

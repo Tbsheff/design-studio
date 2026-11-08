@@ -80,7 +80,7 @@ const isSharedStreamSupported = (): boolean =>
 const holdLock = async (name: string, onAcquire: () => void): Promise<void> => {
   await navigator.locks.request(name, async () => {
     onAcquire();
-    await new Promise<void>(() => null);
+    await Promise.withResolvers<null>().promise;
   });
 };
 
@@ -109,10 +109,16 @@ const sendWatch = async (
   );
 };
 
+const openChannel = (): BroadcastChannel | null => {
+  if (isSharedStreamSupported()) {
+    return new BroadcastChannel(CHANNEL);
+  }
+
+  return null;
+};
+
 const startStream = (): AppStream => {
-  const channel = isSharedStreamSupported()
-    ? new BroadcastChannel(CHANNEL)
-    : null;
+  const link = { channel: openChannel() };
 
   let leader: StreamLeader | null = null;
 
@@ -123,13 +129,17 @@ const startStream = (): AppStream => {
       return;
     }
 
-    channel?.postMessage({ kind: "want", tab: tab.id, wants } satisfies Wire);
+    const wire: Wire = { kind: "want", tab: tab.id, wants };
+
+    link.channel?.postMessage(wire);
   });
 
   const lead = (): void => {
-    leader = new StreamLeader({ channel, sendWatch, tab });
+    leader = new StreamLeader({ channel: link.channel, sendWatch, tab });
     leader.start();
   };
+
+  const { channel } = link;
 
   if (channel) {
     channel.addEventListener("message", (event: MessageEvent<Wire>) => {
@@ -140,15 +150,16 @@ const startStream = (): AppStream => {
     void holdLock(LEADER_LOCK, lead);
     globalThis.addEventListener("pagehide", () => {
       if (leader) {
-        channel.postMessage({
-          kind: "state",
-          state: "reconnecting",
-        } satisfies Wire);
+        const state: Wire = { kind: "state", state: "reconnecting" };
+
+        link.channel?.postMessage(state);
 
         return;
       }
 
-      channel.postMessage({ kind: "bye", tab: tab.id } satisfies Wire);
+      const bye: Wire = { kind: "bye", tab: tab.id };
+
+      link.channel?.postMessage(bye);
     });
     tab.changed();
   } else {

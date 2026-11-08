@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import type { CommentPrefill, DraftStore, PendingAttachment } from "./deps.js";
@@ -22,17 +22,53 @@ const filesOf = (prefill: CommentPrefill): PendingAttachment[] =>
     previewUrl: item.dataUrl,
   }));
 
+interface CommentPrefillState {
+  clear: () => void;
+  linked: string[];
+}
+
+const toFresh = (
+  incoming: PendingAttachment[],
+  prev: PendingAttachment[]
+): PendingAttachment[] =>
+  incoming.filter(
+    (file) => !prev.some((pending) => pending.localId === file.localId)
+  );
+
+interface PrefillTarget {
+  readonly draft: DraftStore;
+  readonly maxImages: number;
+  readonly onFocus: () => void;
+  readonly setFiles: Dispatch<SetStateAction<PendingAttachment[]>>;
+  readonly setLinked: Dispatch<SetStateAction<string[]>>;
+}
+
+const applyPrefill = (target: PrefillTarget, request: PrefillRequest): void => {
+  const { draft, maxImages, onFocus, setFiles, setLinked } = target;
+  const current = draft.get().trim();
+  draft.set((current && `${current}\n\n${request.text}`) || request.text);
+  const incoming = filesOf(request);
+  setFiles((prev) => [...prev, ...toFresh(incoming, prev)].slice(0, maxImages));
+  setLinked((prev) => [...new Set([...prev, ...request.commentIds])]);
+  onFocus();
+};
+
 const useCommentPrefill = ({
   request,
   draft,
   setFiles,
   maxImages,
   focus,
-}: Options) => {
+}: Options): CommentPrefillState => {
   const [linked, setLinked] = useState<string[]>([]);
   const seen = useRef<number | null>(null);
   const focusRef = useRef(focus);
-  focusRef.current = focus;
+
+  useEffect(() => {
+    focusRef.current = focus;
+  }, [focus]);
+
+  const onFocus = useCallback((): void => focusRef.current(), []);
 
   useEffect(() => {
     if (!request || seen.current === request.seq) {
@@ -40,24 +76,21 @@ const useCommentPrefill = ({
     }
 
     seen.current = request.seq;
-    const current = draft.get().trim();
-    draft.set((current && `${current}\n\n${request.text}`) || request.text);
-    const incoming = filesOf(request);
-    setFiles((prev) => {
-      const fresh = incoming.filter(
-        (file) =>
-          !prev.some(
-            (pendingAttachment) => pendingAttachment.localId === file.localId
-          )
-      );
+    applyPrefill(
+      {
+        draft,
+        maxImages,
+        onFocus,
+        setFiles,
+        setLinked,
+      },
+      request
+    );
+  }, [request, draft, setFiles, maxImages, onFocus]);
 
-      return [...prev, ...fresh].slice(0, maxImages);
-    });
-    setLinked((prev) => [...new Set([...prev, ...request.commentIds])]);
-    focusRef.current();
-  }, [request, draft, setFiles, maxImages]);
+  const clear = useCallback((): void => setLinked([]), []);
 
-  return { clear: (): void => setLinked([]), linked };
+  return { clear, linked };
 };
 
 export { useCommentPrefill };

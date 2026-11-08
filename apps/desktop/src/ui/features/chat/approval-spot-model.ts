@@ -9,6 +9,7 @@ const setInline = (projectId: string | null): void => {
   }
 
   inlineProject = projectId;
+
   for (const listener of listeners) {
     listener();
   }
@@ -29,7 +30,11 @@ const useInlineApprovals = (
 ): void => {
   const shown = !paneCollapsed && tab === "chat";
   useEffect(() => {
-    setInline(shown ? projectId : null);
+    if (shown) {
+      setInline(projectId);
+    } else {
+      setInline(null);
+    }
 
     return (): void => setInline(null);
   }, [projectId, shown]);

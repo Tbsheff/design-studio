@@ -1,116 +1,86 @@
-import type { ReactNode, ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { MODEL_OPTIONS } from "../../features/chat/settings-draft-model";
 import type { SettingsDraft } from "../../features/chat/settings-draft-model";
 import { SkillsChecklist } from "../../features/chat/skills-checklist";
 import { copy } from "./copy";
+import { SettingsCheckField } from "./settings-check-field";
+import { SettingsModelField } from "./settings-model-field";
+import { SettingsNumberField } from "./settings-number-field";
+import { useSettingsDraft } from "./use-settings-draft";
 
-export {
-  modelLabel,
-  parseDraft,
-  toDraft,
-  type SettingsDraft,
-} from "../../features/chat/settings-draft-model";
-
-interface Props {
+interface SettingsFieldsProps {
   draft: SettingsDraft;
   onChange: (next: SettingsDraft) => void;
-  shellExtra?: ReactNode;
+  children?: ReactNode;
 }
 
-export const SettingsFields = ({
+const SettingsFields = ({
   draft,
   onChange,
-  shellExtra,
-}: Props): ReactElement => {
-  const set = (patch: Partial<SettingsDraft>): void =>
-    onChange({ ...draft, ...patch });
-
-  const known = MODEL_OPTIONS.some(
-    (modelValue) => modelValue.id === draft.model
-  );
+  children,
+}: SettingsFieldsProps): ReactElement => {
+  const handlers = useSettingsDraft(draft, onChange);
 
   return (
     <div className="settings-fields">
-      <label className="field">
-        <span>{copy.model}</span>
-        <select
-          className="select"
-          aria-label="Model"
-          value={draft.model}
-          onChange={(event) => set({ model: event.target.value })}
-        >
-          {MODEL_OPTIONS.map((modelValue) => (
-            <option key={modelValue.id} value={modelValue.id}>
-              {modelValue.label}
-            </option>
-          ))}
-          {!known && <option value={draft.model}>{draft.model}</option>}
-        </select>
-      </label>
-      <label className="field">
-        <span>{copy.spendingLimitPerRun}</span>
-        <input
-          aria-label="Spending limit per run"
-          type="number"
-          min={0.01}
-          max={50}
-          step={0.01}
-          placeholder="No limit"
-          value={draft.maxBudgetUsd}
-          onChange={(event) => set({ maxBudgetUsd: event.target.value })}
-        />
-      </label>
-      <label className="field">
-        <span>{copy.maxTurnsPerRun}</span>
-        <input
-          aria-label="Max turns"
-          type="number"
-          min={1}
-          max={200}
-          step={1}
-          value={draft.maxTurns}
-          onChange={(event) => set({ maxTurns: event.target.value })}
-        />
-      </label>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={draft.allowBash}
-          onChange={(event) =>
-            set({
-              allowBash: event.target.checked,
-              allowInstall: event.target.checked && draft.allowInstall,
-            })
-          }
-        />
-        <span>{copy.allowAgentToRunShell}</span>
-      </label>
-      <label className={`check ${draft.allowBash ? "" : "disabled"}`}>
-        <input
-          type="checkbox"
-          checked={draft.allowBash && draft.allowInstall}
-          disabled={!draft.allowBash}
-          onChange={(event) => set({ allowInstall: event.target.checked })}
-        />
-        <span>{copy.allowInstallingPackages}</span>
-      </label>
-      <label className={`check ${draft.allowBash ? "" : "disabled"}`}>
-        <input
-          type="checkbox"
-          checked={draft.allowBash && draft.autoApprove}
-          disabled={!draft.allowBash}
-          onChange={(event) => set({ autoApprove: event.target.checked })}
-        />
-        <span>{copy.autoModeRunCommandsWithout}</span>
-      </label>
+      <SettingsModelField
+        model={draft.model}
+        onChange={handlers.handleModel}
+        options={MODEL_OPTIONS}
+      />
+      <SettingsNumberField
+        ariaLabel="Spending limit per run"
+        label={copy.spendingLimitPerRun}
+        max={50}
+        min={0.01}
+        name="maxBudgetUsd"
+        onChange={handlers.handleBudget}
+        placeholder="No limit"
+        step={0.01}
+        value={draft.maxBudgetUsd}
+      />
+      <SettingsNumberField
+        ariaLabel="Max turns"
+        label={copy.maxTurnsPerRun}
+        max={200}
+        min={1}
+        name="maxTurns"
+        onChange={handlers.handleTurns}
+        placeholder={null}
+        step={1}
+        value={draft.maxTurns}
+      />
+      <SettingsCheckField
+        isChecked={draft.allowBash}
+        isDisabled={false}
+        label={copy.allowAgentToRunShell}
+        name="allowBash"
+        onChange={handlers.handleBash}
+      />
+      <SettingsCheckField
+        isChecked={draft.allowBash && draft.allowInstall}
+        isDisabled={!draft.allowBash}
+        label={copy.allowInstallingPackages}
+        name="allowInstall"
+        onChange={handlers.handleInstall}
+      />
+      <SettingsCheckField
+        isChecked={draft.allowBash && draft.autoApprove}
+        isDisabled={!draft.allowBash}
+        label={copy.autoModeRunCommandsWithout}
+        name="autoApprove"
+        onChange={handlers.handleAuto}
+      />
       <p className="warn-line">{copy.theseAreOnByDefault}</p>
-      {shellExtra}
+      {children}
       <SkillsChecklist
         disabled={draft.disabledSkills}
         allowBash={draft.allowBash}
-        onChange={(disabledSkills) => set({ disabledSkills })}
+        onChange={handlers.handleSkills}
       />
     </div>
   );
 };
+
+export { SettingsFields };

@@ -28,8 +28,9 @@ import {
   lockOutcome,
   memoPage,
   probeLock,
-  resolveLayerRefs,
+  getLayerRefPaths,
   scopeOf,
+  toProbeTarget,
 } from "../page-probe/index.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
@@ -116,11 +117,8 @@ async function resolved(
     return { selector: raw, url };
   }
 
-  const paths = await resolveLayerRefs(
-    deps.preview,
-    url,
-    VIEWPORT,
-    scope,
+  const paths = await getLayerRefPaths(
+    toProbeTarget(deps.preview, url, VIEWPORT, scope),
     [raw],
     input.hidden === undefined && input.name === undefined
   );

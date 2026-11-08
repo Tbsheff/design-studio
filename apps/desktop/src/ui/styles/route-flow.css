@@ -95,3 +95,15 @@
   width: 10px;
   height: 10px;
 }
+
+ul.flow-routes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+fieldset.segmented {
+  margin: 0;
+  min-width: 0;
+  border: 0;
+}

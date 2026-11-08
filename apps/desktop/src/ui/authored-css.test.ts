@@ -1,66 +1,38 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  collapseCrumbs,
-  formatCopyCss,
+  toCollapsedCrumbs,
+  toCopyCss,
   isCoveredDeclaration,
-  otherStyles,
-  parseAuthoredReply,
-  parseDeclarations,
-  parseSelectionPath,
-  pathCrumbs,
-} from "./features/inspector/index.js";
+  toOtherStyles,
+  toAuthoredReply,
+  toDeclarations,
+  toSelectionPath,
+  toPathCrumbs,
+} from "./features/inspector/index";
 
-const EXPECTED_20 = 20;
-const EXPECTED_4 = 4;
-const EXPECTED_60 = 60;
-const SAMPLE_19990 = 19_990;
-const SAMPLE_3 = 3;
-const SAMPLE_4 = 4;
-const SAMPLE_5 = 5;
-const SAMPLE_6 = 6;
-
-const IS_FALSE = false;
-const IS_TRUE = true;
-
-type Crumb = ReturnType<typeof collapseCrumbs>[number];
-
-const toCrumbLabel = (crumb: Crumb): number | string => {
-  if (crumb.kind === "node") {
-    return crumb.levels;
-  }
-
-  return `gap:${crumb.hidden.map((entry) => entry.levels).join(",")}`;
-};
-
-describe(parseDeclarations, () => {
+describe(toDeclarations, () => {
   it("keeps semicolons inside url() and quotes, and keeps !important", () => {
-    expect.hasAssertions();
-
     expect(
-      parseDeclarations(
+      toDeclarations(
         'background: url(data:image/png;base64,AAA); content: "a;b"; color: red !important;'
       )
-    ).toStrictEqual([
+    ).toEqual([
       { prop: "background", value: "url(data:image/png;base64,AAA)" },
       { prop: "content", value: '"a;b"' },
       { prop: "color", value: "red !important" },
     ]);
-  }, 0);
+  });
 
   it("drops empty and broken declarations and keeps custom property case", () => {
-    expect.hasAssertions();
-
-    expect(
-      parseDeclarations(" ; nope; --Brand: #fff; /* c: d */ ")
-    ).toStrictEqual([{ prop: "--Brand", value: "#fff" }]);
-  }, 0);
+    expect(toDeclarations(" ; nope; --Brand: #fff; /* c: d */ ")).toEqual([
+      { prop: "--Brand", value: "#fff" },
+    ]);
+  });
 });
 
 describe(isCoveredDeclaration, () => {
   it("covers panel properties, their shorthands and longhands", () => {
-    expect.hasAssertions();
-
     for (const prop of [
       "color",
       "filter",
@@ -77,28 +49,24 @@ describe(isCoveredDeclaration, () => {
       "flex-basis",
       "flex-flow",
     ]) {
-      expect(isCoveredDeclaration(prop, "1px")).toBe(IS_TRUE);
+      expect(isCoveredDeclaration(prop, "1px"), prop).toBe(true);
     }
-  }, 0);
+  });
 
   it("treats background as covered only when it is a color", () => {
-    expect.hasAssertions();
-
-    expect(isCoveredDeclaration("background", "#fff")).toBe(IS_TRUE);
+    expect(isCoveredDeclaration("background", "#fff")).toBe(true);
     expect(isCoveredDeclaration("background", "var(--bg) !important")).toBe(
-      IS_TRUE
+      true
     );
     expect(isCoveredDeclaration("background", "url(a.png) no-repeat")).toBe(
-      IS_FALSE
+      false
     );
     expect(
       isCoveredDeclaration("background", "linear-gradient(red, blue)")
-    ).toBe(IS_FALSE);
-  }, 0);
+    ).toBe(false);
+  });
 
   it("leaves other properties uncovered", () => {
-    expect.hasAssertions();
-
     for (const prop of [
       "transform",
       "mix-blend-mode",
@@ -108,145 +76,119 @@ describe(isCoveredDeclaration, () => {
       "transition",
       "--x",
     ]) {
-      expect(isCoveredDeclaration(prop, "1px")).toBe(IS_FALSE);
+      expect(isCoveredDeclaration(prop, "1px"), prop).toBe(false);
     }
-  }, 0);
+  });
 });
 
-describe(otherStyles, () => {
+describe(toOtherStyles, () => {
   it("lists uncovered declarations once, the last one winning, with the source", () => {
-    expect.hasAssertions();
-
-    const rows = otherStyles({
-      inline: "mix-blend-mode: multiply; padding: 4px",
+    const rows = toOtherStyles({
       rules: [
         {
-          css: "color: red; transform: rotate(1deg); filter: blur(2px);",
           selector: ".card",
+          css: "color: red; transform: rotate(1deg); filter: blur(2px);",
           source: "site.css",
         },
         {
-          css: "transform: rotate(2deg); position: relative;",
           selector: ".card.big",
+          css: "transform: rotate(2deg); position: relative;",
           source: null,
         },
       ],
+      inline: "mix-blend-mode: multiply; padding: 4px",
     });
-
-    expect(rows).toStrictEqual([
-      { prop: "transform", source: ".card.big", value: "rotate(2deg)" },
-      { prop: "position", source: ".card.big", value: "relative" },
-      { prop: "mix-blend-mode", source: "inline", value: "multiply" },
+    expect(rows).toEqual([
+      { prop: "transform", value: "rotate(2deg)", source: ".card.big" },
+      { prop: "position", value: "relative", source: ".card.big" },
+      { prop: "mix-blend-mode", value: "multiply", source: "inline" },
     ]);
-  }, 0);
+  });
 });
 
-describe(formatCopyCss, () => {
+describe(toCopyCss, () => {
   it("writes rules in order and then the inline style", () => {
-    expect.hasAssertions();
-
-    const text = formatCopyCss({
-      inline: "opacity: 0.5",
+    const text = toCopyCss({
       rules: [
-        { css: "color: red; margin: 0px;", selector: ".a", source: "a.css" },
+        { selector: ".a", css: "color: red; margin: 0px;", source: "a.css" },
       ],
+      inline: "opacity: 0.5",
     });
-
     expect(text).toBe(
       ".a {\n  color: red;\n  margin: 0px;\n}\n\n/* inline */ {\n  opacity: 0.5;\n}"
     );
-  }, 0);
+  });
 
   it("skips an empty inline style", () => {
-    expect.hasAssertions();
-
     expect(
-      formatCopyCss({
+      toCopyCss({
+        rules: [{ selector: "p", css: "color: red;", source: null }],
         inline: " ",
-        rules: [{ css: "color: red;", selector: "p", source: null }],
       })
     ).toBe("p {\n  color: red;\n}");
-  }, 0);
+  });
 });
 
-describe(parseAuthoredReply, () => {
+describe(toAuthoredReply, () => {
   it("keeps only well-formed rules and caps them", () => {
-    expect.hasAssertions();
-
-    const big = "x".repeat(SAMPLE_19990);
-
-    const parsed = parseAuthoredReply({
-      inline: "color: blue",
+    const big = "x".repeat(19_990);
+    const parsed = toAuthoredReply({
       rules: [
-        { css: "color: red;", selector: "p", source: "a.css" },
-        { css: "", selector: 1 },
-        { css: "a: b", selector: "q", source: 5 },
-        { css: big, selector: "big", source: null },
+        { selector: "p", css: "color: red;", source: "a.css" },
+        { selector: 1, css: "" },
+        { selector: "q", css: "a: b", source: 5 },
+        { selector: "big", css: big, source: null },
       ],
-    });
-
-    expect(parsed).toStrictEqual({
       inline: "color: blue",
-      rules: [{ css: "color: red;", selector: "p", source: "a.css" }],
+    });
+    expect(parsed).toEqual({
+      rules: [{ selector: "p", css: "color: red;", source: "a.css" }],
+      inline: "color: blue",
     });
     expect(
-      parseAuthoredReply({
-        inline: "",
+      toAuthoredReply({
         rules: Array.from({ length: 80 }, () => ({
-          css: "a: b",
           selector: "p",
+          css: "a: b",
           source: null,
         })),
+        inline: "",
       })?.rules
-    ).toHaveLength(EXPECTED_60);
-  }, 0);
+    ).toHaveLength(60);
+  });
 
   it("refuses a reply without rules or inline text", () => {
-    expect.hasAssertions();
-
-    expect(parseAuthoredReply({ inline: "", rules: "x" })).toBeNull();
-    expect(parseAuthoredReply({ inline: 3, rules: [] })).toBeNull();
-  }, 0);
+    expect(toAuthoredReply({ rules: "x", inline: "" })).toBeNull();
+    expect(toAuthoredReply({ rules: [], inline: 3 })).toBeNull();
+  });
 });
 
 describe("breadcrumb path", () => {
-  const path = [1, 2, SAMPLE_3, SAMPLE_4, SAMPLE_5, SAMPLE_6].map(
-    (step) => `div.n${step}`
-  );
+  const path = [1, 2, 3, 4, 5, 6].map((n) => `div.n${n}`);
 
   it("parses a valid path, caps it, and refuses bad entries", () => {
-    expect.hasAssertions();
-
-    expect(parseSelectionPath(path.slice(0, 2))).toStrictEqual([
-      "div.n1",
-      "div.n2",
-    ]);
+    expect(toSelectionPath(path.slice(0, 2))).toEqual(["div.n1", "div.n2"]);
     expect(
-      parseSelectionPath(
-        Array.from({ length: 30 }, (_unusedItem, index) => `p${index}`)
-      )
-    ).toHaveLength(EXPECTED_20);
-    expect(parseSelectionPath(["a", SAMPLE_3])).toStrictEqual([]);
-    expect(parseSelectionPath(["a", ""])).toStrictEqual([]);
-    expect(parseSelectionPath("x")).toStrictEqual([]);
-  }, 0);
+      toSelectionPath(Array.from({ length: 30 }, (_, i) => `p${i}`))
+    ).toHaveLength(20);
+    expect(toSelectionPath(["a", 3])).toEqual([]);
+    expect(toSelectionPath(["a", ""])).toEqual([]);
+    expect(toSelectionPath("x")).toEqual([]);
+  });
 
   it("counts parent levels from the element and collapses the middle of a long path", () => {
-    expect.hasAssertions();
-
-    expect(pathCrumbs(["main", "div"])).toStrictEqual([
+    expect(toPathCrumbs(["main", "div"])).toEqual([
       { label: "main", levels: 2 },
       { label: "div", levels: 1 },
     ]);
-    const shortCrumbs = collapseCrumbs(pathCrumbs(path.slice(0, SAMPLE_4)));
-    expect(shortCrumbs).toHaveLength(EXPECTED_4);
-    const crumbs = collapseCrumbs(pathCrumbs(path));
-    expect(crumbs.map((crumb) => toCrumbLabel(crumb))).toStrictEqual([
-      SAMPLE_6,
-      "gap:5,4",
-      SAMPLE_3,
-      2,
-      1,
-    ]);
-  }, 0);
+    expect(toCollapsedCrumbs(toPathCrumbs(path.slice(0, 4)))).toHaveLength(4);
+    const crumbs = toCollapsedCrumbs(toPathCrumbs(path));
+    expect(
+      crumbs.map((crumb) =>
+        crumb.kind === "node"
+          ? crumb.levels
+          : `gap:${crumb.hidden.map((entry) => entry.levels).join(",")}`
+      )
+    ).toEqual([6, "gap:5,4", 3, 2, 1]);
+  });
 });

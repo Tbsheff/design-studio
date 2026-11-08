@@ -2,11 +2,13 @@ export { BrandMark } from "./brand-mark.js";
 
 export { ChipButton } from "./chip-button.js";
 
-export { CopyButton, copyText } from "./CopyButton.js";
+export { CopyButton } from "./copy-button.js";
+
+export { copyText } from "./copy-text.js";
 
 export { Disclosure } from "./disclosure.js";
 
-export { Icon } from "./Icon.js";
+export { Icon } from "./icon.js";
 
 export { LazySelect } from "./lazy-select.js";
 
@@ -21,18 +23,16 @@ export { PanelHead, SheetSlot } from "./sheet-head.js";
 
 export { ThemeButton } from "./theme-button.js";
 
-export { UiSelect } from "./UiSelect.js";
+export { UiSelect } from "./ui-select.js";
 
 export { useAnchoredPopover } from "./use-anchored-popover.js";
 
-export {
-  useModalDialog,
-  usePopover,
-  useReturnFocusOnUnmount,
-} from "./use-popover.js";
+export { useModalDialog } from "./use-modal-dialog.js";
 
-export type { IconName } from "./Icon.js";
+export { usePopover, useReturnFocusOnUnmount } from "./use-popover.js";
+
+export type { IconName } from "./icon.js";
 
 export type { FixedPlacement, PopoverBounds } from "./popover-placement.js";
 
-export type { UiSelectOption, UiSelectProps } from "./UiSelect.js";
+export type { UiSelectOption, UiSelectProps } from "./ui-select-model.js";

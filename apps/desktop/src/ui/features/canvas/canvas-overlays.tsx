@@ -1,17 +1,9 @@
-import type {
-  BridgeToParent,
-  SelectionContext,
-} from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
-import { formatMeasure } from "../../../shared/measure.js";
-import { guideStyle } from "./artboard-overlay.js";
 import { copy } from "./copy.js";
 import { toValueOr } from "./settle-model.js";
-import type { SpacingBadge } from "./snap-model.js";
-import { frameSnapStore } from "./use-frame-resize.js";
 
 const PresentLayer = ({
   url,
@@ -24,7 +16,10 @@ const PresentLayer = ({
   fullscreen: boolean;
   onClose: () => void;
 }): ReactElement => {
-  const root = useRef<HTMLDivElement>(null);
+  const root = useRef<HTMLDialogElement>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
+  const close = useEffectEvent(onClose);
+
   useEffect(() => {
     const el = root.current;
 
@@ -39,18 +34,18 @@ const PresentLayer = ({
 
       event.preventDefault();
       event.stopImmediatePropagation();
-      onClose();
+      close();
     };
 
     const onFullscreen = (): void => {
       if (fullscreen && !document.fullscreenElement) {
-        onClose();
+        close();
       }
     };
 
     globalThis.addEventListener("keydown", onKey, true);
     document.addEventListener("fullscreenchange", onFullscreen);
-    root.current?.querySelector<HTMLButtonElement>(".present-close")?.focus();
+    closeButton.current?.focus();
 
     return (): void => {
       globalThis.removeEventListener("keydown", onKey, true);
@@ -60,13 +55,13 @@ const PresentLayer = ({
         void toValueOr(document.exitFullscreen(), null);
       }
     };
-  }, [fullscreen, onClose]);
+  }, [fullscreen]);
 
   return (
-    <div
+    <dialog
       ref={root}
+      open
       className="present-layer"
-      role="dialog"
       aria-modal="true"
       aria-label={copy.present}
     >
@@ -77,6 +72,7 @@ const PresentLayer = ({
         sandbox={sandbox}
       />
       <button
+        ref={closeButton}
         type="button"
         className="btn small present-close"
         onClick={onClose}
@@ -85,208 +81,8 @@ const PresentLayer = ({
         {copy.exit}
         <kbd>{copy.esc}</kbd>
       </button>
-    </div>
+    </dialog>
   );
 };
 
-const TweakPrompt = ({
-  scope,
-  onSend,
-  onClose,
-}: {
-  scope: string | null;
-  onSend: (text: string) => void;
-  onClose: () => void;
-}): ReactElement => {
-  const [text, setText] = useState("");
-  const root = useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    const onDown = (event: MouseEvent): void => {
-      const target = event.target as Element;
-
-      if (
-        !root.current?.contains(target) &&
-        !target.closest?.('[aria-label="Tweak"]')
-      ) {
-        onClose();
-      }
-    };
-
-    document.addEventListener("mousedown", onDown);
-
-    return (): void => document.removeEventListener("mousedown", onDown);
-  }, [onClose]);
-
-  const send = (): void => {
-    const prompt = text.trim();
-
-    if (!prompt) {
-      return;
-    }
-
-    onSend(prompt);
-    setText("");
-    onClose();
-  };
-
-  let placeholder2 = "Describe a tweak…";
-
-  if (scope) {
-    placeholder2 = `Describe a tweak to ${scope}…`;
-  }
-
-  return (
-    <form
-      ref={root}
-      className="tweak-prompt ui-popover"
-      onSubmit={(eventValue) => {
-        eventValue.preventDefault();
-        send();
-      }}
-    >
-      <input
-        autoFocus
-        aria-label={copy.describeATweak}
-        placeholder={placeholder2}
-        value={text}
-        onChange={(event3) => setText(event3.target.value)}
-        onKeyDown={(event4) => {
-          if (event4.key !== "Escape") {
-            return;
-          }
-
-          event4.preventDefault();
-          event4.stopPropagation();
-          onClose();
-        }}
-      />
-      <button
-        type="submit"
-        className="icon-btn small send"
-        aria-label={copy.sendTweak}
-        disabled={!text.trim()}
-      >
-        <Icon name="arrowUp" size={14} />
-      </button>
-    </form>
-  );
-};
-
-const gapStyle = (
-  spacingBadge: SpacingBadge
-):
-  | { left: number; top: number; width: number; height?: undefined }
-  | { height: number; left: number; top: number; width?: undefined } => {
-  if (spacingBadge.axis === "x") {
-    return {
-      left: spacingBadge.from,
-      top: spacingBadge.at,
-      width: spacingBadge.to - spacingBadge.from,
-    };
-  }
-
-  return {
-    height: spacingBadge.to - spacingBadge.from,
-    left: spacingBadge.at,
-    top: spacingBadge.from,
-  };
-};
-
-const FrameSnapLayer = ({
-  origin,
-}: {
-  origin: { x: number; y: number };
-}): ReactElement | null => {
-  const view = useSyncExternalStore(
-    frameSnapStore.subscribe,
-    frameSnapStore.get
-  );
-
-  if (view.guides.length === 0 && view.spacing.length === 0) {
-    return null;
-  }
-
-  const style = {
-    left: -origin.x,
-    top: -origin.y,
-    translate: `${view.shift.x}px ${view.shift.y}px`,
-  };
-
-  return (
-    <div
-      className="snap-guides frame-snap"
-      data-testid="frame-snap"
-      style={style}
-    >
-      {view.guides.map((snapGuide) => (
-        <div
-          key={`g-${snapGuide.axis}-${snapGuide.at}`}
-          className={`snap-guide ${snapGuide.axis}`}
-          style={guideStyle(snapGuide)}
-        />
-      ))}
-      {view.spacing.map((spacingBadgeValue) => (
-        <div
-          key={`s-${spacingBadgeValue.axis}-${spacingBadgeValue.from}-${spacingBadgeValue.to}`}
-          className={`snap-gap ${spacingBadgeValue.axis}`}
-          style={gapStyle(spacingBadgeValue)}
-        >
-          <span className="snap-gap-label" data-value={spacingBadgeValue.value}>
-            {formatMeasure(spacingBadgeValue.value)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const MarqueeLayer = ({
-  listen,
-}: {
-  listen: (handler: (message: BridgeToParent) => void) => () => void;
-}): ReactElement | null => {
-  const [rect, setRect] = useState<SelectionContext["rect"] | null>(null);
-  useEffect(
-    () =>
-      listen((message) => {
-        if (message.type === "marquee") {
-          setRect(message.rect);
-        } else if (message.type === "ready" || message.type === "mode-exited") {
-          setRect(null);
-        }
-      }),
-    [listen]
-  );
-  const shown = rect !== null;
-  useEffect(() => {
-    if (!shown) {
-      return;
-    }
-
-    const clear = (): void => setRect(null);
-    globalThis.addEventListener("pointerup", clear);
-
-    return (): void => globalThis.removeEventListener("pointerup", clear);
-  }, [shown]);
-
-  if (!rect) {
-    return null;
-  }
-
-  return (
-    <div className="overlay" aria-hidden="true">
-      <div
-        className="box marquee"
-        data-testid="marquee"
-        style={{
-          height: rect.height,
-          left: rect.x,
-          top: rect.y,
-          width: rect.width,
-        }}
-      />
-    </div>
-  );
-};
-
-export { FrameSnapLayer, MarqueeLayer, PresentLayer, TweakPrompt, gapStyle };
+export { PresentLayer };

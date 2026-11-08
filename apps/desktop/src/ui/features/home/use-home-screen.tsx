@@ -1,436 +1,124 @@
 import { DEFAULT_SETTINGS } from "@design-studio/contracts";
-import type {
-  ClarifyQuestion,
-  ProjectKind,
-  Starter,
-} from "@design-studio/contracts";
-import { needsQuestions } from "@design-studio/contracts/clarify";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { FormEvent, KeyboardEvent, ReactNode } from "react";
+import type { PackSummary } from "@design-studio/contracts";
 
-import { api, errorText } from "../../api.js";
-import { prefetchScreensWhenIdle } from "../../app/screen-preload.js";
-import { uiStore, useUi } from "../../platform/storage.js";
-import { reportAppStart } from "../../platform/telemetry.js";
+import { useUi } from "../../platform/storage.js";
 import { maxVariationsFor } from "../canvas/variations-api.js";
+import { ClarifyForm } from "../chat/index.js";
 import {
   MODEL_OPTIONS,
   parseDraft,
   toDraft,
 } from "../chat/settings-draft-model.js";
+import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { usePresence } from "../chat/use-presence.js";
-import { findPack, usePacks } from "../design-system/packs.js";
-import { AppChipView } from "./home-app-chip.js";
-import { useComposerAttachments } from "./home-composer-parts.js";
-import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
 import {
-  createFromHome,
-  focusIn,
-  focusPrompt,
-  folderLabel,
-  homeOf,
-  homeSendBlocker,
-  isEmpty,
-  modelSummary,
-} from "./home-model.js";
-import type { Busy } from "./home-model.js";
-import type { ModelSettings } from "./home-popovers.js";
-import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
-import { useHomeProjects, useProjectActions } from "./home-sections.js";
-import type { HomeToastState } from "./home-sections.js";
-import type { HomeTemplate } from "./home-templates.js";
-import {
-  loadExtras,
-  loadLibrary,
-  loadSlash,
-  loadTemplates,
-} from "./lazy-parts.js";
-import { useAppHealth } from "./projects-store-model.js";
-import { useChipFlow } from "./use-chip-flow.js";
-import { useDoctorGate } from "./use-doctor-gate.js";
-import { useFolderChooser } from "./use-folder-chooser.js";
-import { useModule } from "./use-module.js";
-import { useOpenFlows } from "./use-open-flows.js";
-import { useRootDrop } from "./use-root-drop.js";
-import { locationFor, useWorkspaces } from "./use-workspaces.js";
+  findPack,
+  fontStack,
+  loadPackFonts,
+  usePacks,
+} from "../design-system/packs.js";
+import type { PacksState } from "../design-system/packs.js";
+import { useHomePrefs } from "./home-prefs-model.js";
+import { useHomeBase } from "./use-home-base.js";
+import { useHomeComposer } from "./use-home-composer.js";
+import { useHomeDraft } from "./use-home-draft.js";
+import { useHomeLibrary } from "./use-home-library.js";
+import { useHomeModules } from "./use-home-modules.js";
+import { useHomeRefs } from "./use-home-refs.js";
+import { useHomeStartup } from "./use-home-startup.js";
+import { useHomeToast } from "./use-home-toast.js";
+import { toMenuPresence, useHomeUi } from "./use-home-ui.js";
+import type { HomeScreenOf } from "./use-home-ui.js";
+import { useScreenSubmit } from "./use-screen-submit.js";
 
-const useHomeScreen = (onOpen: (projectId: string) => void) => {
-  const [prompt, setPrompt] = useState("");
-  const [kind, setKind] = useState<ProjectKind>("html");
-  const [busy, setBusy] = useState<Busy>(null);
-  const [formError, setFormError] = useState<string | null>(null);
+type HomeScreen = HomeScreenOf<SettingsDraft, PacksState> & {
+  readonly ClarifyForm: typeof ClarifyForm;
+};
 
-  const [settingsDraft, setSettingsDraft] = useState(() =>
-    toDraft(DEFAULT_SETTINGS)
-  );
+const MODEL_IDS = MODEL_OPTIONS.map((option) => option.id);
 
-  const [designMd, setDesignMd] = useState("");
-  const [designs, setDesigns] = useState(1);
-  const maxDesigns = maxVariationsFor(kind);
-  const designCount = Math.min(designs, maxDesigns);
+const toInitialDraft = (): SettingsDraft => toDraft(DEFAULT_SETTINGS);
+
+const useHomeScreen = (openHome: (projectId: string) => void): HomeScreen => {
+  const base = useHomeBase();
+  const refs = useHomeRefs();
+  const toasts = useHomeToast();
+  const homePrefs = useHomePrefs();
+  const { lastPackId } = useUi();
   const packs = usePacks();
-  const { lastPackId, lastLocation } = useUi();
-  const prefs = useHomePrefs();
-  const pack = findPack(packs.packs, lastPackId);
-  const [advancedOpened, setAdvancedOpened] = useState(0);
+  const pack: PackSummary | null = findPack(packs.packs, lastPackId);
 
-  const [template, setTemplate] = useState<{
-    readonly id: string;
-    readonly label: string;
-    readonly starter: Starter | null;
-  } | null>(null);
-
-  const chooser = useFolderChooser(setFormError);
-  const homeRef = useRef<HTMLDivElement>(null);
-
-  const slashKeys = useRef<
-    ((keyboardEvent: KeyboardEvent<HTMLElement>) => boolean) | null
-  >(null);
-
-  const { workspaces, addFolder } = useWorkspaces(setFormError);
-  const [questions, setQuestions] = useState<ClarifyQuestion[] | null>(null);
-  const [query, setQuery] = useState("");
-  const [toast, setToast] = useState<HomeToastState | null>(null);
-  const [trashOpen, setTrashOpen] = useState(false);
-  const chipRef = useRef<HTMLDivElement>(null);
-  const doctor = useDoctorGate();
-  const { projects, listError, loadProjects, searchRef } = useHomeProjects();
-  const health = useAppHealth(projects);
-  const homeDir = homeOf(workspaces);
-
-  const attached = useRef<{
-    readonly images: ImageDraft[];
-    readonly references: ReferenceDraft[];
-  }>({ images: [], references: [] });
-
-  const flow = useChipFlow({
-    attached,
-    doctor,
-    homeDir,
-    homeRef,
-    level: settingsDraft.defaultLevel,
-    onOpen,
-    setBusy,
-    setFormError,
+  const draft = useHomeDraft({
+    initialDraft: toInitialDraft,
+    maxDesignsFor: maxVariationsFor,
+    modelIds: MODEL_IDS,
   });
 
-  const {
-    app,
-    folderPop,
-    setFolderPop,
-    appMenu,
-    setAppMenu,
-    putFolder,
-    takeDrop,
-    addAppFolder,
-    openChip,
-    chipDoctor,
-    submitChip,
-  } = flow;
-
-  const shownAppMenu = usePresence(appMenu ? "menu" : null);
-  const templates = useModule(loadTemplates, prefs.hasTemplatesShown);
-  const extras = useModule(loadExtras, true);
-  const library = useModule(loadLibrary, true);
-  const listed = projects !== null || listError !== null;
-  const empty = isEmpty(projects);
-  useEffect(() => {
-    if (!listed) {
-      return;
-    }
-
-    reportAppStart("home");
-    prefetchScreensWhenIdle();
-  }, [listed]);
-
-  const {
-    images,
-    references,
-    dragging,
-    fileRef,
-    addImages,
-    removeImage,
-    removeReference,
-    onPromptPaste,
-    dropHandlers,
-  } = useComposerAttachments(setFormError, takeDrop);
-
-  attached.current = { images, references };
-  const { windowDrag, rootDrop } = useRootDrop(takeDrop, setFormError);
-
-  const showToast = useCallback(
-    (next: Omit<HomeToastState, "id">) => setToast({ ...next, id: Date.now() }),
-    []
-  );
-
-  const clearToast = useCallback(() => setToast(null), []);
-
-  const location = locationFor(workspaces, lastLocation);
-
-  const { openStarter, openSample, openProject } = useOpenFlows({
-    doctor,
-    health,
-    homeDir,
-    location,
-    onOpen,
-    setBusy,
-    setFormError,
-  });
-
-  const setLocation = (path: string | null): void =>
-    uiStore.set({ lastLocation: path });
-
-  const locationLabel = folderLabel(workspaces, location);
-
-  const build = async (finalPrompt: string): Promise<void> => {
-    const parsed = parseDraft(settingsDraft);
-
-    if ("error" in parsed) {
-      setFormError(parsed.error);
-
-      return;
-    }
-
-    setBusy("create");
-    setFormError(null);
-
-    try {
-      const project = await createFromHome({
-        designCount,
-        designMd,
-        images,
-        kind,
-        location,
-        packId: pack?.id ?? null,
-        prompt: finalPrompt,
-        references,
-        settings: parsed.settings,
-      });
-
-      onOpen(project.id);
-    } catch (error) {
-      setFormError(errorText(error));
-      setBusy(null);
-    }
-  };
-
-  const create = async (formEvent: FormEvent): Promise<void> => {
-    formEvent.preventDefault();
-    const text = prompt.trim();
-
-    if (busy !== null) {
-      return;
-    }
-
-    if (app.chip) {
-      return submitChip(text);
-    }
-
-    if (!text) {
-      return;
-    }
-
-    if (questions !== null) {
-      document.querySelector<HTMLFormElement>("form.clarify")?.requestSubmit();
-
-      return;
-    }
-
-    if (needsQuestions(text)) {
-      setBusy("ask");
-      setFormError(null);
-
-      let asked: { questions: ClarifyQuestion[] } = { questions: [] };
-
-      try {
-        asked = await api.clarify(text);
-      } catch {
-        asked = { questions: [] };
-      }
-
-      setBusy(null);
-
-      if (asked.questions.length > 0) {
-        setQuestions(asked.questions);
-
-        return;
-      }
-    }
-
-    await build(text);
-  };
-
-  const actions = useProjectActions({
-    homeDir,
-    onOpen: openProject,
-    onOpenTrash: () => setTrashOpen(true),
-    showToast,
-  });
-
-  const pickTemplate = (
-    picked: HomeTemplate,
-    starter: Starter | null
-  ): void => {
-    if (template?.id === picked.id) {
-      setTemplate(null);
-
-      return;
-    }
-
-    setTemplate({ id: picked.id, label: picked.label, starter });
-    setPrompt(picked.prompt);
-    setQuestions(null);
-
-    if (picked.kind) {
-      setKind(picked.kind);
-    }
-
-    const { level } = picked;
-
-    if (level) {
-      setSettingsDraft((detail) => ({ ...detail, defaultLevel: level }));
-    }
-
-    focusPrompt(null, true);
-  };
-
-  const changeKind = (next: ProjectKind): void => {
-    setKind(next);
-    setDesigns((count) => Math.min(count, maxVariationsFor(next)));
-  };
-
-  const modelValue = modelSummary(settingsDraft.model, designCount);
-
-  const modelSizes = MODEL_OPTIONS.map((option) =>
-    modelSummary(option.id, designCount)
-  );
-
-  const openAdvanced = (): void => {
-    setAdvancedOpened((countArg) => countArg + 1);
-    focusIn(".advanced summary");
-  };
-
-  const plusActions = {
-    hasTemplatesShown: prefs.hasTemplatesShown,
-    onAttachFile: () => fileRef.current?.click(),
-    onImportSystem: () =>
-      uiStore.set({ libraryFrom: null, screen: "design-systems" }),
-    onLinkCode: () => addAppFolder(),
-    onLocation: () => focusIn("#new-project-location"),
-    onSkills: openAdvanced,
-    onTemplates: () =>
-      homePrefs.set({ hasTemplatesShown: !prefs.hasTemplatesShown }),
-  };
-
-  const sendBlocker = homeSendBlocker(
-    busy,
-    prompt,
-    questions !== null,
-    app.chip
-  );
-
-  const modelSettings: ModelSettings = {
-    designs: { max: maxDesigns, onChange: setDesigns, value: designCount },
-    level: settingsDraft.defaultLevel,
-    model: settingsDraft.model,
-    onLevel: (defaultLevel) =>
-      setSettingsDraft((detailArg) => ({ ...detailArg, defaultLevel })),
-    onModel: (model) =>
-      setSettingsDraft((detailNext) => ({ ...detailNext, model })),
-    onMore: openAdvanced,
-  };
-
-  const slashMod = useModule(loadSlash, prompt.startsWith("/"));
-
-  const chipLead: ReactNode = app.chip ? (
-    <AppChipView
-      chip={app.chip}
-      isMenuOpen={appMenu}
-      onMenu={() => setAppMenu((open) => !open)}
-      onRemove={app.clear}
-    />
-  ) : null;
-
-  return {
-    actions,
-    addAppFolder,
-    addFolder,
-    addImages,
-    advancedOpened,
-    app,
-    build,
-    busy,
-    changeKind,
-    chipDoctor,
-    chipLead,
-    chipRef,
-    chooser,
-    clearToast,
-    create,
-    designMd,
-    doctor,
-    dragging,
-    dropHandlers,
-    empty,
-    extras,
-    fileRef,
-    folderPop,
-    formError,
-    health,
-    homeDir,
-    homeRef,
-    images,
-    kind,
-    lastPackId,
-    library,
-    listError,
-    loadProjects,
-    location,
-    locationLabel,
-    modelSettings,
-    modelSizes,
-    modelValue,
-    onPromptPaste,
-    openChip,
-    openSample,
-    openStarter,
+  const lib = useHomeLibrary({
+    homeBase: base,
+    onOpen: openHome,
     pack,
     packs,
-    pickTemplate,
-    plusActions,
-    prefs,
-    projects,
-    prompt,
-    putFolder,
-    query,
-    questions,
-    references,
-    removeImage,
-    removeReference,
-    rootDrop,
-    searchRef,
-    sendBlocker,
-    setAppMenu,
-    setDesignMd,
-    setFolderPop,
-    setFormError,
-    setLocation,
-    setPrompt,
-    setQuery,
-    setQuestions,
-    setSettingsDraft,
-    setTrashOpen,
-    settingsDraft,
-    shownAppMenu,
-    slashKeys,
-    slashMod,
-    template,
-    templates,
-    toast,
-    trashOpen,
-    windowDrag,
-    workspaces,
+    toasts,
+  });
+
+  const composer = useHomeComposer({
+    base,
+    composerRef: refs.composerRef,
+    homeDir: lib.homeDir,
+    homeRef: refs.homeRef,
+    level: draft.settingsDraft.defaultLevel,
+    onOpen: openHome,
+  });
+
+  const { attach, flow } = composer;
+
+  const packId = pack?.id ?? null;
+  const parsed = parseDraft(draft.settingsDraft);
+
+  const submit = useScreenSubmit({
+    base,
+    composer,
+    draft,
+    lib,
+    openHome,
+    packId,
+    parsed,
+    refs,
+  });
+
+  const presence = usePresence(toMenuPresence(flow.isAppMenuOpen));
+  useHomeStartup(lib.projects !== null || lib.listError !== null);
+
+  const modules = useHomeModules(homePrefs.hasTemplatesShown, draft.prompt);
+
+  const { busy } = base;
+
+  const ui = useHomeUi({
+    attach,
+    busy,
+    draft,
+    flow,
+    homePrefs,
+    isMenuClosing: presence.closing,
+    isMenuShown: presence.shown !== null,
+    projects: lib.projects,
+  });
+
+  return {
+    ClarifyForm,
+    base,
+    composer,
+    draft,
+    lib,
+    modules,
+    refs,
+    submit,
+    toasts,
+    ui,
   };
 };
 
-export { useHomeScreen };
+export { fontStack, loadPackFonts, useHomeScreen };
+
+export type { HomeScreen };

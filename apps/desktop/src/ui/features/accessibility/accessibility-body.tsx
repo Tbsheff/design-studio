@@ -11,6 +11,7 @@ import { NameLine } from "./name-line.js";
 import { RoleSelect } from "./role-select.js";
 import type { AccessibilityHandlers } from "./use-accessibility-handlers.js";
 import type { Accessibility } from "./use-accessibility.js";
+import { VisionRow } from "./vision-row.js";
 
 import styles from "./accessibility.module.css";
 
@@ -64,6 +65,7 @@ const AccessibilityBody = ({
         pair={pair}
         onFix={accessibility.handleFix}
       />
+      <VisionRow ids={accessibility.ids} onFix={accessibility.handleFix} />
     </div>
   );
 };

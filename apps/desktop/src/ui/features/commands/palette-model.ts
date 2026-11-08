@@ -1,7 +1,7 @@
 import { copy } from "./copy.js";
 import { chordMatches, readStored, writeStored } from "./deps.js";
-import { IS_MAC } from "./key-model.js";
-import type { Row } from "./palette-rows.js";
+import { IS_MAC } from "./keys.js";
+import type { Row } from "./palette-row-types.js";
 
 interface MarkedSegment {
   id: number;

@@ -3,6 +3,7 @@ import type { TelemetrySample } from "@design-studio/contracts";
 import { sendTelemetry } from "../api-telemetry";
 import { desktopBridge } from "./desktop";
 import { pick } from "./pick.js";
+import { isNumber } from "./value-guards.js";
 
 interface DesktopBoot {
   startedAt: number;
@@ -19,12 +20,14 @@ const FLUSH_MS = 5000;
 
 let scope: Scope = {};
 let appStartSent = false;
-let flushLongFrames: () => void = () => null;
+const flushNothing = (): null => null;
+
+let flushLongFrames: () => void = flushNothing;
 
 const desktopBoot = (): DesktopBoot | null => {
   const boot = desktopBridge<{ boot?: DesktopBoot }>()?.boot;
 
-  if (boot && typeof boot.startedAt === "number") {
+  if (boot && isNumber(boot.startedAt)) {
     return boot;
   }
 
@@ -50,10 +53,12 @@ const reportAppStart = (screen: "home" | "studio"): void => {
       performance.now()
     );
 
+    const surface = pick(Boolean(boot), "desktop", "web");
+
     sendTelemetry({
       detail: {
         screen,
-        surface: pick(Boolean(boot), "desktop", "web"),
+        surface,
         ...boot?.marks,
       },
       kind: "app.start",
@@ -68,13 +73,15 @@ const reportFirstToken = (
   runId: string,
   sentAt: number
 ): void => {
+  const stage = "visible";
+  const ids = { directionId, projectId };
+
   afterPaint(() =>
     sendTelemetry({
-      detail: { runId, stage: "visible" },
-      directionId,
+      ...ids,
+      detail: { runId, stage },
       kind: "run.first_token",
       ms: Date.now() - sentAt,
-      projectId,
     })
   );
 };
@@ -106,25 +113,30 @@ const watchLongFrames = (): (() => void) => {
 
   let count = 0;
   let worst = 0;
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
   const flush = (): void => {
-    window.clearTimeout(timer);
-    timer = undefined;
+    if (timer !== null) {
+      globalThis.clearTimeout(timer);
+    }
+
+    timer = null;
 
     if (count === 0) {
       return;
     }
 
+    const screen = pick(Boolean(scope.projectId), "studio", "home");
+
     const sample: Omit<TelemetrySample, "ts"> = {
-      kind: "frame.long",
       ...scope,
-      ms: Math.round(worst),
       detail: {
         count,
-        screen: pick(Boolean(scope.projectId), "studio", "home"),
+        screen,
         type,
       },
+      kind: "frame.long",
+      ms: Math.round(worst),
     };
 
     count = 0;
@@ -136,16 +148,14 @@ const watchLongFrames = (): (() => void) => {
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      if (entry.duration < LONG_FRAME_MS) {
-        continue;
+      if (entry.duration >= LONG_FRAME_MS) {
+        count += 1;
+        worst = Math.max(worst, entry.duration);
       }
-
-      count += 1;
-      worst = Math.max(worst, entry.duration);
     }
 
-    if (count > 0 && timer === undefined) {
-      timer = window.setTimeout(flush, FLUSH_MS);
+    if (count > 0 && timer === null) {
+      timer = globalThis.setTimeout(flush, FLUSH_MS);
     }
   });
 
@@ -163,7 +173,7 @@ const watchLongFrames = (): (() => void) => {
     document.removeEventListener("visibilitychange", onHide);
     observer.disconnect();
     flush();
-    flushLongFrames = (): undefined => undefined;
+    flushLongFrames = flushNothing;
   };
 };
 

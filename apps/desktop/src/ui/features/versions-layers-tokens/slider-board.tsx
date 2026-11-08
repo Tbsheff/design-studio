@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { BoardProps } from "./compare-board-types.js";
+import type { BoardEntry } from "./compare-board-types.js";
 import { CompareFrame } from "./compare-frame.js";
 import { CompareLabel } from "./compare-label.js";
 import { CompareStage } from "./compare-stage.js";
@@ -10,7 +10,8 @@ import { useWipe } from "./use-wipe.js";
 import { WipeBoard } from "./wipe-board.js";
 import { toWipeHandle } from "./wipe-handle.js";
 
-const SliderBoard = (props: BoardProps): ReactNode => {
+const SliderBoard = ({ board }: BoardEntry): ReactNode => {
+  const props = board;
   const { scale, viewport } = props;
   const width = viewport.width * scale;
   const wipe = useWipe();

@@ -1,6 +1,6 @@
 import type { DirectStyleProperty } from "@design-studio/contracts";
 
-import type { ShiftPart, StyleValues } from "./css-values.js";
+import type { ShiftPart, StyleValues } from "./css-value-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 interface ProxyOptions {

@@ -1,97 +1,18 @@
-import { shortenHome } from "@design-studio/contracts/folders";
 import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
 import { Disclosure } from "@design-studio/ui";
+import { createElement } from "react";
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
 
-import { api, errorText } from "../../api.js";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
-import { LocationField } from "./folder-controls.js";
+import { HiddenProjectsNote } from "./hidden-projects-note.js";
+import { LocationField } from "./location-field.js";
 import { NewProjectAdvanced } from "./new-project-advanced.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
 
-export { FoldersSection } from "./folder-controls.js";
-
-const HiddenProjectsNote = ({
-  homeDir,
-  onMoved,
-}: {
-  readonly homeDir: string | null;
-  readonly onMoved: () => void;
-}): ReactElement | null => {
-  const [hidden, setHidden] = useState<{
-    readonly count: number;
-    readonly target: string;
-  } | null>(null);
-
-  const [moving, setMoving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = async (): Promise<void> => {
-    try {
-      setHidden(await api.hiddenProjects());
-    } catch {
-      setHidden(null);
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  if (!hidden || hidden.count === 0) {
-    return null;
-  }
-
-  const move = async (): Promise<void> => {
-    setMoving(true);
-    setError(null);
-
-    try {
-      const result = await api.moveHiddenProjects();
-      const first = result.failed[0];
-
-      if (first) {
-        setError(
-          `Could not move ${result.failed.length} project${result.failed.length === 1 ? "" : "s"}: ${first.error}`
-        );
-      }
-
-      if (result.moved.length > 0) {
-        onMoved();
-      }
-    } catch (failure) {
-      setError(errorText(failure));
-    } finally {
-      setMoving(false);
-      await load();
-    }
-  };
-
-  return (
-    <div className="home-hidden-note" role="status">
-      <span>
-        {hidden.count === 1
-          ? "1 project is in the app's hidden folder"
-          : `${hidden.count} projects are in the app's hidden folder`}
-      </span>
-      <button
-        type="button"
-        className="btn small"
-        onClick={() => move()}
-        disabled={moving}
-      >
-        {moving ? "Moving…" : `Move to ${shortenHome(hidden.target, homeDir)}`}
-      </button>
-      {error && <span className="home-hidden-error">{error}</span>}
-    </div>
-  );
-};
-
-export interface ComposerFootProps {
+interface ComposerFootProps {
   readonly workspaces: WorkspaceList | null;
   readonly location: string | null;
   readonly prompt: string;
@@ -109,7 +30,9 @@ export interface ComposerFootProps {
   readonly onHiddenMoved: () => void;
 }
 
-export const ComposerFoot = ({
+const EMPTY_FOLDERS: WorkspaceFolder[] = [];
+
+const ComposerFoot = ({
   workspaces,
   location,
   prompt,
@@ -120,12 +43,13 @@ export const ComposerFoot = ({
   onHiddenMoved,
 }: ComposerFootProps): ReactElement => {
   const homeDir = workspaces?.homeDir ?? null;
+  const { designMd, draft, onDesignMd, onDraft, onError, opened } = advanced;
 
   return (
     <div className="home-foot">
       <div className="home-foot-row">
         <LocationField
-          folders={workspaces?.folders ?? []}
+          folders={workspaces?.folders ?? EMPTY_FOLDERS}
           value={location}
           homeDir={homeDir}
           prompt={prompt}
@@ -135,16 +59,20 @@ export const ComposerFoot = ({
         />
       </div>
       <NewProjectAdvanced
-        key={advanced.opened}
-        isInitiallyOpen={advanced.opened > 0}
-        draft={advanced.draft}
-        onDraft={advanced.onDraft}
-        designMd={advanced.designMd}
-        onDesignMd={advanced.onDesignMd}
-        onError={advanced.onError}
+        key={opened}
+        isInitiallyOpen={opened > 0}
+        draft={draft}
+        onDraft={onDraft}
+        designMd={designMd}
+        onDesignMd={onDesignMd}
+        onError={onError}
       />
-      <Disclosure className="home-disclosure" />
+      {createElement(Disclosure, { className: "home-disclosure" })}
       <HiddenProjectsNote homeDir={homeDir} onMoved={onHiddenMoved} />
     </div>
   );
 };
+
+export { ComposerFoot };
+
+export type { ComposerFootProps };

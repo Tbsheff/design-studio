@@ -29,14 +29,26 @@ const prettyToolName = (name: string): string => {
   return name;
 };
 
+const SLASH_CODE = 47;
+
 const isAbsolutePath = (value: string): boolean =>
   value.startsWith("/") ||
   /^[A-Za-z]:[\\/]/u.test(value) ||
   value.startsWith("~/");
 
+const trimTrailingSlashes = (text: string): string => {
+  let end = text.length;
+
+  while (end > 0 && text.codePointAt(end - 1) === SLASH_CODE) {
+    end -= 1;
+  }
+
+  return text.slice(0, end);
+};
+
 const relativePath = (file: string, workTree: string | null): string => {
   const norm = file.replaceAll("\\", "/");
-  const root = workTree?.replaceAll("\\", "/").replace(/\/+$/u, "");
+  const root = trimTrailingSlashes(workTree?.replaceAll("\\", "/") ?? "");
 
   if (root && norm.startsWith(`${root}/`)) {
     return norm.slice(root.length + 1);

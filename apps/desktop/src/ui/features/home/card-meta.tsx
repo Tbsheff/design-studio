@@ -6,8 +6,8 @@ import { CardPack } from "./card-pack.js";
 import { copy } from "./copy.js";
 import type { AppHealth } from "./deps.js";
 import { HealthCell } from "./health-cell.js";
-import type { PackSwatches } from "./project-card-model.js";
 import { toProjectBadge } from "./project-card-model.js";
+import type { PackSwatches } from "./project-card-model.js";
 
 interface CardMetaProps {
   readonly project: Project;

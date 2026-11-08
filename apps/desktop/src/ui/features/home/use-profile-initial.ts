@@ -33,7 +33,10 @@ const useProfileInitial = (): string | null => {
     let alive = true;
 
     const apply = async (): Promise<void> => {
-      profile ??= getProfileInitial();
+      if (profile === null) {
+        profile = getProfileInitial();
+      }
+
       const value = await profile;
 
       if (alive) {

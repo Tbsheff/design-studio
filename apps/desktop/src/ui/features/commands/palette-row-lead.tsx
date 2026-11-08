@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
 import { Icon, ProjectThumb } from "./deps.js";
-import type { Row } from "./palette-rows.js";
+import type { Row } from "./palette-row-types.js";
 
 const RowLead = ({ row }: { row: Row }): ReactElement => {
   if (row.hit && row.kind === "project" && !row.icon) {

@@ -67,6 +67,7 @@ import {
   scopeOf,
   textHintsOf,
   type Viewport,
+  toProbeTarget,
 } from "../page-probe/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
@@ -268,11 +269,9 @@ async function alsoSelectors(
   const refs = list
     .filter((item) => isLayerRef(item))
     .map((item) => item.trim());
+  const { ctx, preview } = deps;
   const paths = await resolveLayerRefs(
-    deps.preview,
-    editPageUrl(deps.ctx, page),
-    EDIT_VIEWPORT,
-    scope,
+    toProbeTarget(preview, editPageUrl(ctx, page), EDIT_VIEWPORT, scope),
     refs
   );
   return list.map((item) =>

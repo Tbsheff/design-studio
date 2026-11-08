@@ -4,7 +4,7 @@ import type { AppChip } from "./app-chip-model.js";
 import { AppMenuHead } from "./app-menu-head.js";
 import { AppMenuNext } from "./app-menu-next.js";
 import { copy } from "./copy.js";
-import { Pop } from "./home-popovers.js";
+import { Pop } from "./pop.js";
 
 interface AppMenuProps {
   readonly chip: AppChip;

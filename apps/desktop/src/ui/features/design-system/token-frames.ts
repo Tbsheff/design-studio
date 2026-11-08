@@ -17,6 +17,8 @@ type FrameSource = () => BridgeFrame;
 const sources = new Map<string, FrameSource>();
 const liveTokens = new Set<string>();
 const HOLD_FALLBACK_MS = 4000;
+const NO_CSS = "";
+const SHARE_POINTER = "share-pointer";
 
 interface HoldState {
   timer: ReturnType<typeof globalThis.setTimeout> | null;
@@ -34,7 +36,7 @@ interface CssChannel {
 }
 
 const createChannel = (type: CssMessage): CssChannel => ({
-  css: "",
+  css: NO_CSS,
   hold: { expired: false, fresh: new Set(), painted: new Set(), timer: null },
   type,
 });
@@ -43,7 +45,12 @@ const tokenChannel = createChannel("tokens-preview");
 const tweakChannel = createChannel("tweaks-preview");
 const channels = [tokenChannel, tweakChannel];
 
-const current: { theme: ThemeChoice; pointer: boolean } = {
+interface CurrentState {
+  pointer: boolean;
+  theme: ThemeChoice;
+}
+
+const current: CurrentState = {
   pointer: false,
   theme: null,
 };
@@ -54,7 +61,12 @@ const pointerListeners = new Set<
   (frame: BridgeFrame, message: SharePointerMessage) => void
 >();
 
-const canvas: { front: string | null; swapping: boolean } = {
+interface CanvasState {
+  front: string | null;
+  swapping: boolean;
+}
+
+const canvas: CanvasState = {
   front: null,
   swapping: false,
 };
@@ -75,6 +87,31 @@ const endHold = (channel: CssChannel): void => {
   hold.painted.clear();
 };
 
+const tokenFrames = (): BridgeFrame[] =>
+  [...sources.values()].flatMap((source) => {
+    const frame = source();
+
+    if (frame.element === null) {
+      return [];
+    }
+
+    return [frame];
+  });
+
+const broadcastCss = (channel: CssChannel, css: string): void => {
+  endHold(channel);
+
+  if (css === channel.css) {
+    return;
+  }
+
+  channel.css = css;
+
+  for (const frame of tokenFrames()) {
+    postToFrame(frame, { css, type: channel.type });
+  }
+};
+
 const releaseHold = (channel: CssChannel): void => {
   if (!holding(channel)) {
     return;
@@ -84,7 +121,7 @@ const releaseHold = (channel: CssChannel): void => {
   const freshFront = front !== null && channel.hold.painted.has(front);
 
   if (freshFront || (channel.hold.expired && !canvas.swapping)) {
-    broadcastCss(channel, "");
+    broadcastCss(channel, NO_CSS);
   }
 };
 
@@ -127,29 +164,10 @@ const postToLiveFrames = (body: ParentMessageBody): void => {
   }
 };
 
-const tokenFrames = (): BridgeFrame[] =>
-  [...sources.values()]
-    .map((source) => source())
-    .filter((frame) => frame.element !== null);
-
-const broadcastCss = (channel: CssChannel, css: string): void => {
-  endHold(channel);
-
-  if (css === channel.css) {
-    return;
-  }
-
-  channel.css = css;
-
-  for (const frame of tokenFrames()) {
-    postToFrame(frame, { css, type: channel.type });
-  }
-};
-
 const holdUntilReload = (channel: CssChannel): void => {
   endHold(channel);
 
-  if (channel.css === "") {
+  if (channel.css === NO_CSS) {
     return;
   }
 
@@ -209,7 +227,7 @@ const setSharePointer = (on: boolean): void => {
   current.pointer = on;
 
   for (const frame of tokenFrames()) {
-    postToFrame(frame, { on, type: "share-pointer" });
+    postToFrame(frame, { on, type: SHARE_POINTER });
   }
 };
 
@@ -221,13 +239,21 @@ const onSharePointer = (
   return () => pointerListeners.delete(listener);
 };
 
+const syncChannel = (frame: BridgeFrame, channel: CssChannel): void => {
+  if (holding(channel)) {
+    channel.hold.fresh.add(frame.token);
+
+    return;
+  }
+
+  if (channel.css !== NO_CSS) {
+    postToFrame(frame, { css: channel.css, type: channel.type });
+  }
+};
+
 const syncTokenFrame = (frame: BridgeFrame): void => {
   for (const channel of channels) {
-    if (holding(channel)) {
-      channel.hold.fresh.add(frame.token);
-    } else if (channel.css !== "") {
-      postToFrame(frame, { css: channel.css, type: channel.type });
-    }
+    syncChannel(frame, channel);
   }
 
   if (current.theme !== null) {
@@ -235,7 +261,7 @@ const syncTokenFrame = (frame: BridgeFrame): void => {
   }
 
   if (current.pointer) {
-    postToFrame(frame, { on: true, type: "share-pointer" });
+    postToFrame(frame, { on: true, type: SHARE_POINTER });
   }
 };
 
@@ -249,7 +275,7 @@ const onTokenFrameMessage = (
     return;
   }
 
-  if (message.type === "share-pointer") {
+  if (message.type === SHARE_POINTER) {
     for (const listener of pointerListeners) {
       listener(frame, message);
     }
@@ -261,11 +287,11 @@ const onTokenFrameMessage = (
     return;
   }
 
-  for (const channel of channels) {
-    if (!channel.hold.fresh.has(frame.token)) {
-      continue;
-    }
+  const waiting = channels.filter((channel) =>
+    channel.hold.fresh.has(frame.token)
+  );
 
+  for (const channel of waiting) {
     channel.hold.painted.add(frame.token);
     releaseHold(channel);
   }
@@ -286,7 +312,7 @@ const useTokenFrameSync = (): void => {
     () => (): void => {
       for (const channel of channels) {
         endHold(channel);
-        channel.css = "";
+        channel.css = NO_CSS;
       }
 
       broadcastTheme(null);
@@ -298,7 +324,7 @@ const useTokenFrameSync = (): void => {
 const useTokenFrames = (
   slots: FrameSlot[],
   elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>,
-  kind: ProjectKind,
+  frameKind: ProjectKind,
   live = false
 ): void => {
   useEffect(() => {
@@ -308,7 +334,7 @@ const useTokenFrames = (
         () => ({
           element: elements.current[slot.token] ?? null,
           key: slot.token,
-          kind,
+          kind: frameKind,
           token: slot.token,
           url: slot.src,
         }),
@@ -316,8 +342,12 @@ const useTokenFrames = (
       )
     );
 
-    return (): void => offs.forEach((off) => off());
-  }, [slots, elements, kind, live]);
+    return (): void => {
+      for (const off of offs) {
+        off();
+      }
+    };
+  }, [slots, elements, frameKind, live]);
 };
 
 export {

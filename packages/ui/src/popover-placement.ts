@@ -5,6 +5,7 @@ import { pick } from "./pick.js";
 
 const POPOVER_GAP = 4;
 const MARGIN = 8;
+const RESIZE_EVENT = "resize";
 
 interface PopoverBounds {
   left: number;
@@ -78,13 +79,31 @@ const placeFixed = (
   return placement;
 };
 
-const layoutRect = (
-  panel: HTMLElement
-): {
-  left: number;
-  top: number;
-  right: number;
-} => {
+interface LayoutRect {
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+}
+
+const PX_KEYS = new Set(["left", "top", "bottom", "maxHeight", "maxWidth"]);
+
+const toKebab = (key: string): string =>
+  key.replaceAll(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`);
+
+const writeFixed = (panel: HTMLElement, placed: CSSProperties): void => {
+  const { style } = panel;
+  style.removeProperty("opacity");
+  style.removeProperty("pointer-events");
+
+  for (const [key, value] of Object.entries(placed)) {
+    style.setProperty(
+      toKebab(key),
+      `${value}${pick(PX_KEYS.has(key), "px", "")}`
+    );
+  }
+};
+
+const layoutRect = (panel: HTMLElement): LayoutRect => {
   const parent = panel.offsetParent;
 
   if (!parent) {
@@ -190,15 +209,15 @@ const useFitPopover = (
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(node);
-    window.addEventListener("resize", fit);
+    globalThis.addEventListener(RESIZE_EVENT, fit);
 
     return (): void => {
       observer.disconnect();
-      window.removeEventListener("resize", fit);
+      globalThis.removeEventListener(RESIZE_EVENT, fit);
     };
   }, [open, panel, trigger]);
 };
 
-export { POPOVER_GAP, popoverBounds, placeFixed, useFitPopover };
+export { POPOVER_GAP, popoverBounds, placeFixed, useFitPopover, writeFixed };
 
 export type { PopoverBounds, FixedPlacement };

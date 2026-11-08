@@ -3,21 +3,19 @@ import { Icon } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import { ConversationContent } from "../../ai/components/ai/conversation-content.js";
-import { ConversationScrollButton } from "../../ai/components/ai/conversation-scroll-button.js";
-import { Conversation } from "../../ai/components/ai/conversation.js";
 import {
-  ChatLead,
-  RunAnnouncer,
-  StickOnNewRun,
-  WindowedTimeline,
-} from "./chat-panel-parts.js";
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "../../ai/components/ai/conversation.js";
 import { PendingEntry, RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";
 import { copy } from "./copy.js";
+import { EmptyState } from "./empty-state.js";
 import { McpItem } from "./mcp-feed.js";
-import { feedShown, timelineOf } from "./mcp-timeline.js";
+import { isChatEmpty, timelineOf } from "./mcp-timeline.js";
+import { RunAnnouncer } from "./run-announcer.js";
 import type { RunView } from "./run-state-model.js";
 import {
   useLatest,
@@ -27,6 +25,7 @@ import {
 } from "./use-chat-panel.js";
 import type { McpFeedControl } from "./use-mcp-feed.js";
 import type { RewindControl } from "./use-rewind.js";
+import { WindowedTimeline } from "./windowed-timeline.js";
 
 interface Props {
   rewind?: RewindControl;
@@ -133,14 +132,15 @@ const ChatPanel = ({
         data-searching={search.open || null}
       >
         <ConversationContent className="chat">
-          <ChatLead
+          <EmptyState
             lead={lead}
-            empty={runs.length === 0 && !pending && !feedShown(mcp)}
+            empty={isChatEmpty(runs.length, pending, mcp)}
           />
           <WindowedTimeline
             items={timeline}
             resetKey={direction?.id ?? null}
             reveal={search.target}
+            stickRunId={pending?.runId ?? lastId ?? null}
             onRevealed={search.onFound}
             render={(item) => {
               if (item.kind === "run") {
@@ -152,7 +152,6 @@ const ChatPanel = ({
           />
           {pending && <PendingEntry run={pending} workTree={workTree} />}
         </ConversationContent>
-        <StickOnNewRun runId={pending?.runId ?? lastId ?? null} />
         <ConversationScrollButton className="btn small chat-scroll-btn">
           <Icon name="chevronDown" size={14} />
           {copy.jumpToLatest}

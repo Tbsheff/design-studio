@@ -2,8 +2,8 @@ import type { Project } from "@design-studio/contracts";
 import { useCallback } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { CardAction, CardActions } from "./project-card-model.js";
 import { toCardKeyIntent } from "./project-card-model.js";
+import type { CardAction, CardActions } from "./project-card-model.js";
 
 interface CardIntentDeps {
   readonly project: Project;

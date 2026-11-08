@@ -8,9 +8,10 @@ import {
   memoPage,
   noteShownFiles,
   resolveLayerRef,
-  resolveLayerRefs,
+  getLayerRefPaths,
   scanLayers,
   scopeOf,
+  toProbeTarget,
 } from "../page-probe/index.js";
 import type { Layer, Viewport } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
@@ -145,20 +146,14 @@ export async function layerTreeText(
   const root = input.root
     ? isLayerRef(input.root)
       ? await resolveLayerRef(
-          preview,
-          input.url,
-          input.viewport,
-          input.scope,
+          toProbeTarget(preview, input.url, input.viewport, input.scope),
           input.root.trim()
         )
       : input.root
     : null;
   noteRenderedPage(input.scope.split("/")[0] ?? "", input.page);
   const tree = await scanLayers(
-    preview,
-    input.url,
-    input.viewport,
-    input.scope,
+    toProbeTarget(preview, input.url, input.viewport, input.scope),
     input.page,
     { root, depth: input.depth, max: LAYERS_MAX }
   );
@@ -317,7 +312,10 @@ async function resolveForEdit(
   ref: string
 ): Promise<string> {
   try {
-    return await resolveLayerRef(deps.preview, url, viewport, scope, ref);
+    return await resolveLayerRef(
+      toProbeTarget(deps.preview, url, viewport, scope),
+      ref
+    );
   } catch (error) {
     if (error instanceof LayerRefError) throw new EditError(error.message);
     throw error;
@@ -384,11 +382,8 @@ async function resolveRefs(
   layoutOnly: boolean
 ): Promise<Map<string, string>> {
   try {
-    return await resolveLayerRefs(
-      deps.preview,
-      url,
-      EDIT_VIEWPORT,
-      scope,
+    return await getLayerRefPaths(
+      toProbeTarget(deps.preview, url, EDIT_VIEWPORT, scope),
       refs,
       layoutOnly
     );

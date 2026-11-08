@@ -4,7 +4,7 @@ import type {
 } from "@design-studio/contracts";
 import type { MutableRefObject, ReactNode, ComponentProps } from "react";
 
-import { isSvgShapeTag } from "../../../shared/vector.js";
+import { isSvgDrawingTag } from "../../../shared/vector.js";
 import type { ComponentsPanel } from "../../app/components-panel-host.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
@@ -60,7 +60,7 @@ const isDirectEditable = (
   compareOpen: boolean
 ): boolean => source.kind === "live" && !compareOpen;
 
-const inspectorEmptyReason = (
+const toInspectorEmptyReason = (
   selection: SelectionContext[],
   editable: boolean
 ): string | null => {
@@ -82,14 +82,14 @@ const inspectorEmptyReason = (
 const isVectorShown = (selection: SelectionContext[]): boolean =>
   selection.length > 0 &&
   selection.length <= 2 &&
-  selection.every((item) => isSvgShapeTag(item.tag));
+  selection.every((item) => isSvgDrawingTag(item.tag));
 
 export {
   EMPTY_HINT,
   TABS,
-  inspectorEmptyReason,
+  toInspectorEmptyReason,
   isDirectEditable,
-  isVectorShown as vectorShown,
+  isVectorShown,
 };
 
 export type { InspectorProps, InspectorTab };

@@ -1,17 +1,13 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactNode, ReactElement } from "react";
 
-import { formatMeasure, measureBetween } from "../../../shared/measure.js";
-import type { MeasureLine } from "../../../shared/measure.js";
-import { copy } from "./copy.js";
+import { Measurements } from "./measurements.js";
+import { toRectStyle } from "./overlay-styles.js";
 import type { HoverBox } from "./preview-rect-model.js";
+import { ResizeHandles } from "./resize-handles.js";
+import { SnapGuides } from "./snap-guides.js";
 import { unionBox } from "./snap-model.js";
-import type { SnapGuide } from "./snap-model.js";
-import type {
-  ResizeControl,
-  ResizeEdge,
-  ResizeLive,
-} from "./use-resize-handles.js";
+import type { ResizeControl, ResizeLive } from "./use-resize-handles.js";
 
 const ABS_0_5 = 0.5;
 
@@ -26,206 +22,6 @@ interface Props {
   spacing?: ReactNode;
 }
 
-const EDGES: ResizeEdge[] = ["e", "s", "se"];
-const COMPACT_EDGES: ResizeEdge[] = ["se"];
-const COMPACT_PX = 40;
-
-const ResizeHandles = ({
-  control,
-  rect,
-  zoom,
-}: {
-  control: ResizeControl;
-  rect: SelectionContext["rect"];
-  zoom: number;
-}): ReactElement => {
-  const { live } = control;
-  const compact = Math.min(rect.width, rect.height) * zoom < COMPACT_PX;
-
-  let part: "" | " active" = "";
-
-  if (live) {
-    part = " active";
-  }
-
-  let part3: "" | " compact" = "";
-
-  if (compact) {
-    part3 = " compact";
-  }
-
-  let result: ResizeEdge[] = EDGES;
-
-  if (compact) {
-    result = COMPACT_EDGES;
-  }
-
-  return (
-    <div
-      className={`resize-frame${part}${part3}`}
-      data-testid="resize-frame"
-      style={{
-        height: live?.boxHeight ?? rect.height,
-        left: rect.x,
-        top: rect.y,
-        width: live?.boxWidth ?? rect.width,
-      }}
-    >
-      {result.map((edge) => (
-        <div
-          key={edge}
-          className={`resize-handle ${edge}`}
-          aria-hidden="true"
-          onPointerDown={(event) => control.onHandleDown(edge, event)}
-        />
-      ))}
-      {live && (
-        <span className="resize-label" data-testid="resize-label">
-          {live.width}
-          {copy.times2}
-          {live.height}
-        </span>
-      )}
-    </div>
-  );
-};
-
-const guideStyle = (
-  snapGuide: SnapGuide
-):
-  | { height: number; left: number; top: number; width?: undefined }
-  | { left: number; top: number; width: number; height?: undefined } => {
-  if (snapGuide.axis === "x") {
-    return {
-      height: snapGuide.to - snapGuide.from,
-      left: snapGuide.at,
-      top: snapGuide.from,
-    };
-  }
-
-  return {
-    left: snapGuide.from,
-    top: snapGuide.at,
-    width: snapGuide.to - snapGuide.from,
-  };
-};
-
-const fullStyle = (
-  snapGuideValue: SnapGuide
-):
-  | { bottom: number; left: number; top: number; right?: undefined }
-  | { left: number; right: number; top: number; bottom?: undefined } => {
-  if (snapGuideValue.axis === "x") {
-    return { bottom: 0, left: snapGuideValue.at, top: 0 };
-  }
-
-  return { left: 0, right: 0, top: snapGuideValue.at };
-};
-
-const SnapGuides = ({
-  guides,
-  full,
-}: {
-  guides: SnapGuide[];
-  full?: boolean;
-}): ReactElement | null => {
-  if (guides.length === 0) {
-    return null;
-  }
-
-  let part2: "" | " full" = "";
-
-  if (full) {
-    part2 = " full";
-  }
-
-  return (
-    <div className={`snap-guides${part2}`} data-testid="snap-guides">
-      {guides.map((snapGuide3) => {
-        const style2:
-          | { height: number; left: number; top: number; width?: undefined }
-          | { left: number; top: number; width: number; height?: undefined }
-          | { bottom: number; left: number; top: number; right?: undefined }
-          | { left: number; right: number; top: number; bottom?: undefined } =
-          (():
-            | { height: number; left: number; top: number; width?: undefined }
-            | { left: number; top: number; width: number; height?: undefined }
-            | { bottom: number; left: number; top: number; right?: undefined }
-            | {
-                left: number;
-                right: number;
-                top: number;
-                bottom?: undefined;
-              } => {
-            if (full) {
-              return fullStyle(snapGuide3);
-            }
-
-            return guideStyle(snapGuide3);
-          })();
-
-        return (
-          <div
-            key={`${snapGuide3.axis}-${snapGuide3.at}`}
-            className={`snap-guide ${snapGuide3.axis}`}
-            style={style2}
-          />
-        );
-      })}
-    </div>
-  );
-};
-
-const lineStyle = (
-  measureLine: MeasureLine
-):
-  | { left: number; top: number; width: number; height?: undefined }
-  | { height: number; left: number; top: number; width?: undefined } => {
-  if (measureLine.axis === "x") {
-    return {
-      left: measureLine.from,
-      top: measureLine.at,
-      width: measureLine.to - measureLine.from,
-    };
-  }
-
-  return {
-    height: measureLine.to - measureLine.from,
-    left: measureLine.at,
-    top: measureLine.from,
-  };
-};
-
-const Measurements = ({
-  from,
-  to,
-}: {
-  from: SelectionContext["rect"];
-  to: SelectionContext["rect"];
-}): ReactElement => {
-  const lines = measureBetween(from, to);
-
-  return (
-    <div className="measure" data-testid="measure">
-      <div
-        className="box measure-target"
-        style={{ height: to.height, left: to.x, top: to.y, width: to.width }}
-      />
-      {lines.map((measureLineValue) => (
-        <div
-          key={`${measureLineValue.axis}-${measureLineValue.from}-${measureLineValue.to}`}
-          className={`measure-line ${measureLineValue.axis}`}
-          style={lineStyle(measureLineValue)}
-        >
-          <span className="measure-label" data-value={measureLineValue.value}>
-            {formatMeasure(measureLineValue.value)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 const sameRect = (
   first: SelectionContext["rect"],
   second: SelectionContext["rect"]
@@ -234,6 +30,24 @@ const sameRect = (
   Math.abs(first.y - second.y) < ABS_0_5 &&
   Math.abs(first.width - second.width) < ABS_0_5 &&
   Math.abs(first.height - second.height) < ABS_0_5;
+
+const labelPlace = (screenTop: number): "" | " inside" => {
+  if (screenTop < LABEL_ROOM) {
+    return " inside";
+  }
+
+  return "";
+};
+
+const toLiveSize = (
+  live: ResizeLive | null
+): { height: number; width: number } | null => {
+  if (live) {
+    return { height: live.boxHeight, width: live.boxWidth };
+  }
+
+  return null;
+};
 
 const ArtboardOverlay = ({
   hover,
@@ -258,19 +72,9 @@ const ArtboardOverlay = ({
   return (
     <div className="overlay">
       {hover && !measuring && !onSelected && (
-        <div
-          className="box hover"
-          style={{
-            height: hover.rect.height,
-            left: hover.rect.x,
-            top: hover.rect.y,
-            width: hover.rect.width,
-          }}
-        >
+        <div className="box hover" style={toRectStyle(hover.rect, null)}>
           {hover.label && (
-            <span
-              className={`box-label${hover.rect.y * zoom < LABEL_ROOM ? " inside" : ""}`}
-            >
+            <span className={`box-label${labelPlace(hover.rect.y * zoom)}`}>
               {hover.label}
             </span>
           )}
@@ -280,7 +84,7 @@ const ArtboardOverlay = ({
         let live: ResizeLive | null = null;
 
         if (resize?.target?.selector === selectionContext3.selector) {
-          live = resize.live;
+          ({ live } = resize);
         }
 
         return (
@@ -288,12 +92,7 @@ const ArtboardOverlay = ({
             key={selectionContext3.selector}
             className="box selected"
             data-selector={selectionContext3.selector}
-            style={{
-              height: live?.boxHeight ?? selectionContext3.rect.height,
-              left: selectionContext3.rect.x,
-              top: selectionContext3.rect.y,
-              width: live?.boxWidth ?? selectionContext3.rect.width,
-            }}
+            style={toRectStyle(selectionContext3.rect, toLiveSize(live))}
           />
         );
       })}
@@ -310,4 +109,4 @@ const ArtboardOverlay = ({
   );
 };
 
-export { ArtboardOverlay, SnapGuides, guideStyle };
+export { ArtboardOverlay };

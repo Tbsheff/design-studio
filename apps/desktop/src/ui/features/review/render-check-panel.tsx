@@ -1,8 +1,8 @@
 import type { RenderCheckResult } from "@design-studio/contracts";
-import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { CheckPanelBody } from "./check-panel-body.js";
+import { CheckPanelHead } from "./check-panel-head.js";
 import { copy } from "./copy.js";
 import { hideOldFindings } from "./render-check-model.js";
 import { useOldKeys } from "./use-old-keys.js";
@@ -33,19 +33,7 @@ const RenderCheckPanel = ({
       role={REGION_ROLE}
       aria-label={copy.renderCheckResults}
     >
-      <div className="check-head">
-        <Icon name="scan" />
-        <strong>{copy.renderCheck}</strong>
-        <div className="spacer" />
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={copy.close}
-          onClick={onClose}
-        >
-          <Icon name="close" />
-        </button>
-      </div>
+      <CheckPanelHead onClose={onClose} />
       <CheckPanelBody
         projectId={projectId}
         error={error}

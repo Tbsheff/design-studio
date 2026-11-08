@@ -3,28 +3,20 @@ import type {
   DirectStyleProperty,
 } from "@design-studio/contracts";
 import { useAnchoredPopover } from "@design-studio/ui";
-import { useCallback, useMemo } from "react";
-import type { CSSProperties, ReactNode, RefObject } from "react";
-import { createPortal } from "react-dom";
+import { useMemo } from "react";
+import type { ReactNode } from "react";
 
-import {
-  tokenFieldState,
-  tokensForProperty,
-} from "../../../shared/token-match.js";
-import type {
-  TokenFieldState,
-  TokenMode,
-} from "../../../shared/token-match.js";
+import type { TokenFieldState } from "../../../shared/token-match.js";
 import type { DirectEdit } from "../inspector/use-direct-edit.js";
 import { useTokenUi } from "../inspector/use-token-snap.js";
-import type { TokenUi } from "../inspector/use-token-snap.js";
-import { COPY } from "./copy.js";
-import { toMiniLabel, toMiniTip } from "./token-control-model.js";
-import { TokenFieldButton } from "./token-field-button.js";
-import { TokenPicker } from "./token-picker.js";
-import { TokenRawMenu } from "./token-raw-menu.js";
+import { toFieldView } from "./token-control-model.js";
+import { TokenControlPopup } from "./token-control-popup.js";
+import { TokenControlTrigger } from "./token-control-trigger.js";
+import { useTokenControlActions } from "./use-token-control-actions.js";
 
 type View = "picker";
+
+const NO_ENTRIES: CompiledTokenEntry[] = [];
 
 interface ControlProps {
   edit: DirectEdit;
@@ -32,19 +24,6 @@ interface ControlProps {
   prop: DirectStyleProperty;
   targets?: DirectStyleProperty[];
   variant?: "field" | "mini";
-}
-
-interface PopupProps {
-  readonly current: string | null;
-  readonly label: string;
-  readonly mode: TokenMode;
-  readonly nearest: string | null;
-  readonly onCreate: (() => void) | null;
-  readonly onWrite: (cssVar: string) => void;
-  readonly panel: RefObject<HTMLDivElement | null>;
-  readonly pool: CompiledTokenEntry[];
-  readonly state: TokenFieldState;
-  readonly popStyle: CSSProperties;
 }
 
 const toFieldAnchor = (trigger: HTMLElement): HTMLElement =>
@@ -58,150 +37,66 @@ const toNearClass = (state: TokenFieldState): string => {
   return "";
 };
 
-const ControlPopup = ({
-  current,
-  label,
-  mode,
-  nearest,
-  onCreate,
-  onWrite,
-  panel,
-  pool,
-  popStyle,
-  state,
-}: PopupProps): ReactNode => {
-  const handleSnap = useCallback((): void => {
-    if (state.kind === "raw" && state.snap) {
-      onWrite(state.snap.cssVar);
-    }
-  }, [onWrite, state]);
-
-  const handleChoose = useCallback(
-    (choice: CompiledTokenEntry): void => {
-      onWrite(choice.cssVar);
-    },
-    [onWrite]
-  );
-
-  return (
-    <>
-      {createPortal(
-        <div
-          className="tk-pop"
-          ref={panel}
-          style={popStyle}
-          role="dialog"
-          aria-label={`${label}${COPY.controlTokensSuffix}`}
-        >
-          {state.kind === "raw" && (
-            <TokenRawMenu
-              state={state}
-              onSnap={handleSnap}
-              onCreate={onCreate}
-            />
-          )}
-          <TokenPicker
-            label={label}
-            entries={pool}
-            mode={mode}
-            current={current}
-            nearest={nearest}
-            onChoose={handleChoose}
-          />
-        </div>,
-        document.body
-      )}
-    </>
-  );
-};
-
-const Control = ({
+const TokenControl = ({
   edit,
   label,
   prop,
-  targets,
-  ui,
+  targets: requested,
   variant = "field",
-}: ControlProps & { readonly ui: TokenUi }): ReactNode => {
-  const pop = useAnchoredPopover<View>(toFieldAnchor);
-  const { close, open, view } = pop;
+}: ControlProps): ReactNode => {
+  const ui = useTokenUi();
+  const pop = useAnchoredPopover<View, HTMLDialogElement>(toFieldAnchor);
+  const { close, open, trigger, view } = pop;
   const { commit, preview } = edit;
-  const { requestCreate } = ui;
+  const entries = ui?.entries ?? NO_ENTRIES;
+  const mode = ui?.mode ?? "light";
+  const requestCreate = ui?.requestCreate ?? null;
   const value = edit.values[prop];
-  const state = tokenFieldState(prop, value, ui.entries, ui.mode);
-  const pool = tokensForProperty(prop, ui.entries);
-  const props = useMemo(() => targets ?? [prop], [prop, targets]);
+  const targets = useMemo(() => requested ?? [prop], [prop, requested]);
 
-  let current: string | null = null;
-  let nearest: string | null = null;
-
-  if (state.kind === "token") {
-    current = state.match.cssVar;
-  }
-
-  if (state.kind === "raw") {
-    nearest = state.nearest?.cssVar ?? null;
-  }
-
-  const handleWrite = useCallback(
-    (cssVar: string): void => {
-      close(true);
-      preview(
-        Object.fromEntries(props.map((name) => [name, `var(${cssVar})`]))
-      );
-      commit();
-    },
-    [close, commit, preview, props]
+  const { current, nearest, pool, state } = toFieldView(
+    prop,
+    value,
+    entries,
+    mode
   );
 
-  const handleToggle = useCallback((): void => {
-    if (view === "picker") {
-      close(false);
-    } else {
-      open("picker");
-    }
-  }, [close, open, view]);
+  const { create, handleToggle, handleWrite } = useTokenControlActions({
+    close,
+    commit,
+    open,
+    preview,
+    prop,
+    requestCreate,
+    targets,
+    value,
+    view,
+  });
 
-  const handleCreate = useCallback((): void => {
-    close(false);
-    requestCreate?.({ targets: props, prop, value });
-  }, [close, prop, props, requestCreate, value]);
-
-  let create: (() => void) | null = null;
-
-  if (requestCreate) {
-    create = handleCreate;
+  if (pool.length === 0) {
+    return null;
   }
 
   return (
     <span
       className={`tk-control ${variant} ${state.kind} ${toNearClass(state)}`}
-      ref={pop.trigger}
+      ref={trigger}
     >
-      {variant === "field" && (
-        <TokenFieldButton
-          state={state}
-          entries={ui.entries}
-          mode={ui.mode}
-          label={label}
-          isExpanded={view === "picker"}
-          onClick={handleToggle}
-        />
-      )}
-      {variant === "mini" && (
-        <button
-          type="button"
-          className="tk-dot"
-          aria-label={toMiniLabel(state, label)}
-          data-tip={toMiniTip(state, current)}
-          onClick={handleToggle}
-        />
-      )}
+      <TokenControlTrigger
+        current={current}
+        entries={entries}
+        isExpanded={view === "picker"}
+        label={label}
+        mode={mode}
+        onToggle={handleToggle}
+        state={state}
+        variant={variant}
+      />
       {view && (
-        <ControlPopup
+        <TokenControlPopup
           current={current}
           label={label}
-          mode={ui.mode}
+          mode={mode}
           nearest={nearest}
           onCreate={create}
           onWrite={handleWrite}
@@ -213,16 +108,6 @@ const Control = ({
       )}
     </span>
   );
-};
-
-const TokenControl = (props: ControlProps): ReactNode => {
-  const ui = useTokenUi();
-
-  if (!ui || tokensForProperty(props.prop, ui.entries).length === 0) {
-    return null;
-  }
-
-  return <Control {...props} ui={ui} />;
 };
 
 export { TokenControl };

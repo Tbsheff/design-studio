@@ -1,7 +1,8 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { StudioModals, StudioToast } from "../shell/studio-parts";
+import { StudioModals } from "../shell/studio-modals";
+import { StudioToast } from "../shell/studio-toast";
 import { ExportLayer } from "./export-layer";
 import { firstText } from "./request-model";
 import { ShareLayer } from "./share-layer";

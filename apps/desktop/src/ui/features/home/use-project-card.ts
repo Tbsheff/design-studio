@@ -2,8 +2,8 @@ import type { Project } from "@design-studio/contracts";
 import { useCallback, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, RefObject } from "react";
 
-import type { CardAction, CardActions, MenuAt } from "./project-card-model.js";
 import { toClassName } from "./project-card-model.js";
+import type { CardAction, CardActions, MenuAt } from "./project-card-model.js";
 import { useCardIntents } from "./use-card-intents.js";
 import { useCardMenu } from "./use-card-menu.js";
 import { useCardWarm } from "./use-card-warm.js";

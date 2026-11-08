@@ -1,188 +1,125 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { nextSelection } from "./features/canvas/index.js";
+import { nextSelection } from "./features/canvas/index";
+import { toStyleValues } from "./features/inspector/index";
 import {
-  valuesFromStyles,
   batchEdits,
   hasCurrentDependency,
   mergeValues,
   multiBlockReason,
-} from "./features/inspector/index.js";
+} from "./features/inspector/mixed-values";
 
-const xAxis = "x";
-const yAxis = "y";
-
-const CARD_ARG_3 = 3;
-const CARD_ARG_4 = 4;
-const CARD_ARG_5 = 5;
-const SAMPLE_3 = 3;
-const SAMPLE_4 = 4;
-
-const IS_FALSE = false;
-const IS_TRUE = true;
-
-const ARTICLE_TAG = "ARTICLE";
-
-const toSource = (
+function card(
   line: number,
-  hasSource: boolean
-): SelectionContext["source"] => {
-  if (hasSource) {
-    return { col: 7, file: "index.html", line };
-  }
-
-  return null;
-};
-
-const card = (
-  line: number,
-  cardStyles: Record<string, string>,
-  hasSource = true
-): SelectionContext => {
-  const tag = ARTICLE_TAG.toLowerCase();
-
+  styles: Record<string, string>,
+  source = true
+): SelectionContext {
   return {
-    ancestors: [],
-    outerHTML: `<${tag}></${tag}>`,
-    rect: { height: 10, width: 10, [xAxis]: 0, [yAxis]: 0 },
-    selector: `${tag}:nth-of-type(${line})`,
-    source: toSource(line, hasSource),
-    styles: cardStyles,
-    tag: ARTICLE_TAG,
+    selector: `article:nth-of-type(${line})`,
+    tag: "ARTICLE",
     text: "",
+    outerHTML: "<article></article>",
+    styles,
+    rect: { x: 0, y: 0, width: 10, height: 10 },
+    source: source ? { file: "index.html", line, col: 7 } : null,
+    ancestors: [],
   };
-};
+}
 
 describe(mergeValues, () => {
   it("keeps shared values and marks differing ones as mixed with an empty value", () => {
-    expect.hasAssertions();
-
     const merged = mergeValues([
-      valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
-      valuesFromStyles({ "border-radius": "4px", color: "rgb(0, 0, 0)" }),
-      valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
+      toStyleValues({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
+      toStyleValues({ "border-radius": "4px", color: "rgb(0, 0, 0)" }),
+      toStyleValues({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
     ]);
-
     expect(merged.values["border-radius"]).toBe("");
-    expect(merged.mixed.has("border-radius")).toBe(IS_TRUE);
+    expect(merged.mixed.has("border-radius")).toBe(true);
     expect(merged.values.color).toBe("rgb(0, 0, 0)");
-    expect(merged.mixed.has("color")).toBe(IS_FALSE);
-  }, 0);
+    expect(merged.mixed.has("color")).toBe(false);
+  });
 
   it("marks a padding side as mixed when only that side differs", () => {
-    expect.hasAssertions();
-
     const merged = mergeValues([
-      valuesFromStyles({ padding: "8px" }),
-      valuesFromStyles({ padding: "8px 8px 16px" }),
+      toStyleValues({ padding: "8px" }),
+      toStyleValues({ padding: "8px 8px 16px" }),
     ]);
-
-    expect(merged.mixed.has("padding-bottom")).toBe(IS_TRUE);
-    expect(merged.mixed.has("padding-top")).toBe(IS_FALSE);
+    expect(merged.mixed.has("padding-bottom")).toBe(true);
+    expect(merged.mixed.has("padding-top")).toBe(false);
     expect(merged.values["padding-top"]).toBe("8px");
-  }, 0);
+  });
 });
 
 describe(batchEdits, () => {
   it("writes the value to every element whose own value differs, in one list", () => {
-    expect.hasAssertions();
-
     const selections = [
-      card(CARD_ARG_3, { "border-radius": "4px" }),
-      card(CARD_ARG_4, { "border-radius": "12px" }),
-      card(CARD_ARG_5, { "border-radius": "8px" }),
+      card(3, { "border-radius": "4px" }),
+      card(4, { "border-radius": "12px" }),
+      card(5, { "border-radius": "8px" }),
     ];
-
-    const bases = selections.map((selection) =>
-      valuesFromStyles(selection.styles)
-    );
-
+    const bases = selections.map((s) => toStyleValues(s.styles));
     const edits = batchEdits(selections, bases, { "border-radius": "8px" });
-    expect(edits.map((edit) => [edit.source.line, edit.style])).toStrictEqual([
-      [SAMPLE_3, { "border-radius": "8px" }],
-      [SAMPLE_4, { "border-radius": "8px" }],
+    expect(edits.map((e) => [e.source.line, e.style])).toEqual([
+      [3, { "border-radius": "8px" }],
+      [4, { "border-radius": "8px" }],
     ]);
     expect(edits[0]?.tag).toBe("article");
-  }, 0);
+  });
 
   it("returns no edits when nothing changes", () => {
-    expect.hasAssertions();
-
-    const selections = [
-      card(CARD_ARG_3, { color: "red" }),
-      card(CARD_ARG_4, { color: "red" }),
-    ];
-
+    const selections = [card(3, { color: "red" }), card(4, { color: "red" })];
     expect(
       batchEdits(
         selections,
-        selections.map((selection) => valuesFromStyles(selection.styles)),
+        selections.map((s) => toStyleValues(s.styles)),
         { color: "red" }
       )
-    ).toStrictEqual([]);
-  }, 0);
+    ).toEqual([]);
+  });
 });
 
 describe(multiBlockReason, () => {
   it("allows distinct source locations", () => {
-    expect.hasAssertions();
-
-    expect(
-      multiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {})])
-    ).toBeNull();
-  }, 0);
+    expect(multiBlockReason([card(3, {}), card(4, {})])).toBeNull();
+  });
 
   it("refuses elements without a source", () => {
-    expect.hasAssertions();
-
-    expect(
-      multiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {}, false)])
-    ).toMatch(/no source location/u);
-  }, 0);
+    expect(multiBlockReason([card(3, {}), card(4, {}, false)])).toMatch(
+      /no source location/
+    );
+  });
 
   it("refuses elements that share one source location, as from a .map()", () => {
-    expect.hasAssertions();
-
     expect(
       multiBlockReason([
-        card(CARD_ARG_3, {}),
-        { ...card(CARD_ARG_3, {}), selector: "li:nth-child(2)" },
+        card(3, {}),
+        { ...card(3, {}), selector: "li:nth-child(2)" },
       ])
-    ).toMatch(/one line of code/u);
-  }, 0);
+    ).toMatch(/one line of code/);
+  });
 
   it("refuses more elements than one batch takes", () => {
-    expect.hasAssertions();
-
     expect(
-      multiBlockReason(
-        Array.from({ length: 51 }, (_unusedItem, index) => card(index + 1, {}))
-      )
-    ).toMatch(/50 elements or fewer/u);
-  }, 0);
+      multiBlockReason(Array.from({ length: 51 }, (_, i) => card(i + 1, {})))
+    ).toMatch(/50 elements or fewer/);
+  });
 });
 
 describe(hasCurrentDependency, () => {
   it("flags relative math and allows plain or absolute input", () => {
-    expect.hasAssertions();
-
-    expect(hasCurrentDependency("+8", "px")).toBe(IS_TRUE);
-    expect(hasCurrentDependency("8", "px")).toBe(IS_FALSE);
-    expect(hasCurrentDependency("8*2", "px")).toBe(IS_FALSE);
-    expect(hasCurrentDependency("", "px")).toBe(IS_FALSE);
-  }, 0);
+    expect(hasCurrentDependency("+8", "px")).toBe(true);
+    expect(hasCurrentDependency("8", "px")).toBe(false);
+    expect(hasCurrentDependency("8*2", "px")).toBe(false);
+    expect(hasCurrentDependency("", "px")).toBe(false);
+  });
 });
 
 describe(nextSelection, () => {
   it("replaces on a plain click, adds and removes on Shift+click", () => {
-    expect.hasAssertions();
-
-    const [first, second] = [card(CARD_ARG_3, {}), card(CARD_ARG_4, {})];
-    expect(nextSelection([first], second, false)).toStrictEqual([second]);
-    expect(nextSelection([first], second, true)).toStrictEqual([first, second]);
-    expect(nextSelection([first, second], { ...first }, true)).toStrictEqual([
-      second,
-    ]);
-  }, 0);
+    const [a, b] = [card(3, {}), card(4, {})];
+    expect(nextSelection([a], b, false)).toEqual([b]);
+    expect(nextSelection([a], b, true)).toEqual([a, b]);
+    expect(nextSelection([a, b], { ...a }, true)).toEqual([b]);
+  });
 });

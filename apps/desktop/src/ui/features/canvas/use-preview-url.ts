@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import type { MutableRefObject } from "react";
 
 import { api, errorText } from "../../api.js";
+import type { CanvasSource } from "../../domain/canvas-presets.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { NO_VERSION_TEXT, RECT_REFRESH_MS } from "./canvas-helpers.js";
-import type { CanvasSource } from "./canvas-toolbar.js";
 
 const usePreviewUrl = (
   projectId: string,

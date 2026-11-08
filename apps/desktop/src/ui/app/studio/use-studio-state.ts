@@ -6,10 +6,10 @@ import type {
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 
 import { errorText } from "../../api";
-import type { CanvasSource } from "../../features/canvas/canvas-toolbar";
+import type { CanvasSource } from "../../domain/canvas-presets.js";
 import type { MentionRequest } from "../../features/chat/use-mentions";
 import type { PrefillRequest } from "../../features/comments";
-import { useRail } from "../../features/home/project-rail";
+import { useRail } from "../../features/home/index.js";
 import type { InspectorTab } from "../../features/inspector/inspector";
 import type { DirectEditControl } from "../../features/inspector/use-direct-edit";
 import type { EditSessionHandle } from "../../features/inspector/use-edit-session";

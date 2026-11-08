@@ -2,75 +2,7 @@ import type { ReactElement } from "react";
 
 import { pageFileOf } from "../chat/use-first-build.js";
 import type { PageWait } from "../chat/use-first-build.js";
-import { copy } from "./copy.js";
-
-const SkeletonPage = (): ReactElement => (
-  <div className="frame-skeleton-page" aria-hidden="true">
-    <div className="sk-nav">
-      <span className="sk-block sk-logo" />
-      <span className="sk-block sk-link" />
-      <span className="sk-block sk-link" />
-      <span className="sk-block sk-link" />
-    </div>
-    <div className="sk-hero">
-      <span className="sk-block sk-title" />
-      <span className="sk-block sk-title short" />
-      <span className="sk-block sk-text" />
-      <span className="sk-block sk-button" />
-    </div>
-    <div className="sk-grid">
-      <span className="sk-block sk-card" />
-      <span className="sk-block sk-card" />
-      <span className="sk-block sk-card" />
-    </div>
-  </div>
-);
-
-const FrameSkeleton = ({
-  step,
-  page,
-  missing,
-}: {
-  step: string | null;
-  page?: string;
-  missing?: string;
-}): ReactElement => {
-  if (missing) {
-    return (
-      <div
-        className="frame-skeleton idle"
-        role="status"
-        data-testid="frame-missing"
-      >
-        <div className="frame-skeleton-step">
-          <span className="frame-skeleton-text">
-            {copy.noPageAt}
-            {missing}
-            {copy.yet}
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="frame-skeleton"
-      role="status"
-      aria-live="polite"
-      data-testid="frame-skeleton"
-    >
-      <SkeletonPage />
-      <div className="frame-skeleton-step">
-        <span className="spinner" aria-hidden="true" />
-        <span className="frame-skeleton-text">
-          {step ?? "Building the first version"}
-        </span>
-        {page && <span className="frame-skeleton-page-name">{page}</span>}
-      </div>
-    </div>
-  );
-};
+import { FrameSkeleton } from "./frame-skeleton-view.js";
 
 const FirstBuildCover = ({
   covered,
@@ -94,4 +26,4 @@ const FirstBuildCover = ({
   return null;
 };
 
-export { FirstBuildCover, FrameSkeleton };
+export { FirstBuildCover };

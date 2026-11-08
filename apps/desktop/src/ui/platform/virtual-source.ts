@@ -2,9 +2,6 @@ import type { EventSourceLike } from "./event-hub";
 import { GAP_MAX, GAP_MS } from "./stream-types";
 
 class VirtualSource implements EventSourceLike {
-  public onopen: EventSourceLike["onopen"] = null;
-  public onmessage: EventSourceLike["onmessage"] = null;
-  public onerror: EventSourceLike["onerror"] = null;
   public opened = false;
   public closed = false;
   public readonly projectId: string;
@@ -47,7 +44,7 @@ class VirtualSource implements EventSourceLike {
     }
 
     this.opened = true;
-    this.onopen?.(new Event("open"));
+    this.dispatch("open", new Event("open"));
   }
 
   public fail(): void {
@@ -55,7 +52,7 @@ class VirtualSource implements EventSourceLike {
       return;
     }
 
-    this.onerror?.(new Event("error"));
+    this.dispatch("error", new Event("error"));
   }
 
   public deliver(type: string, seq: number, data: string): void {
@@ -145,7 +142,13 @@ class VirtualSource implements EventSourceLike {
       return;
     }
 
-    this.onmessage?.(message);
+    this.dispatch("message", message);
+  }
+
+  private dispatch(type: string, event: Event): void {
+    for (const listener of this.typed.get(type) ?? []) {
+      listener(event);
+    }
   }
 }
 

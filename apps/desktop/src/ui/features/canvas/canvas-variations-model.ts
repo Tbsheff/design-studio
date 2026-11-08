@@ -54,10 +54,11 @@ const framesOnCanvas = (projectId: string, directionIds: string[]): number => {
   const layout = canvasStore.get(projectId);
 
   if (layout) {
+    const wanted = new Set(directionIds);
+
     return layout.frames.filter(
       (canvasFrame) =>
-        canvasFrame.directionId &&
-        directionIds.includes(canvasFrame.directionId)
+        canvasFrame.directionId && wanted.has(canvasFrame.directionId)
     ).length;
   }
 

@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { FindingsList } from "./findings-list.js";
+import { FixSection } from "./fix-section.js";
 import { SchemeChips } from "./scheme-chips.js";
 import type { MatrixView } from "./use-matrix.js";
 import { WidthChips } from "./width-chips.js";
@@ -50,6 +51,7 @@ const MatrixPanel = ({ matrix, onJump }: MatrixPanelProps): ReactElement => (
         <span className={styles.path}>{matrix.report.contactSheet}</span>
       </>
     )}
+    <FixSection fix={matrix.fix} />
   </section>
 );
 

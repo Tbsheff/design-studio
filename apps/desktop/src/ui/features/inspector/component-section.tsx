@@ -4,20 +4,22 @@ import { Suspense, lazy } from "react";
 import type { InspectorProps } from "./inspector-model.js";
 
 const InspectorPropsPanel = lazy(async () => {
+  await import("../../styles/inspector-props.css");
   const loaded = await import("./inspector-props.js");
 
   return { default: loaded.InspectorPropsPanel };
 });
 
 const ComponentSection = (props: InspectorProps): ReactElement | null => {
-  const target = props.selection[0];
+  const [target] = props.selection;
 
-  if (
-    props.selection.length !== 1 ||
-    !target ||
-    !props.directionId ||
-    (!target.owners?.length && !target.usedAt)
-  ) {
+  if (props.selection.length !== 1 || !target || !props.directionId) {
+    return null;
+  }
+
+  const hasOwners = Boolean(target.owners?.length);
+
+  if (!hasOwners && !target.usedAt) {
     return null;
   }
 

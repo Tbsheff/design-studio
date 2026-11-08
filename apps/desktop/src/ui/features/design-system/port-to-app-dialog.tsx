@@ -1,8 +1,7 @@
-import { useModalDialog } from "@design-studio/ui";
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { pageName } from "../canvas/frame-controls.js";
+import { pageName } from "../canvas/index.js";
 import { canvasFrameChoices } from "../share-publish-ship-export/export-api.js";
 import type { FrameChoice } from "../share-publish-ship-export/export-api.js";
 import { COPY } from "./copy.js";
@@ -10,10 +9,9 @@ import { PortDialogBody } from "./port-dialog-body.js";
 import { PortDialogHead } from "./port-dialog-head.js";
 import { toPagePath } from "./port-model.js";
 import type { PortTarget, PortFrameOption } from "./port-model.js";
+import { useBackdropDialog } from "./use-backdrop-dialog.js";
 import { usePortForm } from "./use-port-form.js";
 import { usePortStart } from "./use-port-start.js";
-
-import "../../styles/port.css";
 
 type PortDialogTarget = PortTarget;
 
@@ -31,7 +29,7 @@ const PortToAppDialog = ({
   target: PortTarget;
   onClose: () => void;
 }): ReactElement => {
-  const { onMouseDown, ref } = useModalDialog(onClose);
+  const ref = useBackdropDialog(onClose);
   const { directionId, projectId } = target;
 
   const frames = useMemo(
@@ -54,7 +52,6 @@ const PortToAppDialog = ({
       ref={ref}
       className="modal port-dialog"
       aria-label={COPY.labelMoveToApp}
-      onMouseDown={onMouseDown}
     >
       <form className="modal-form" onSubmit={submit} noValidate>
         <PortDialogHead onClose={onClose} />

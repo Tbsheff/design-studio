@@ -8,9 +8,9 @@ import { isTypingTarget } from "../../platform/typing-target.js";
 import { PREVIEW_ARRANGE_KEY_EVENT } from "../canvas/use-preview-frames.js";
 import {
   OK_MS,
-  successText,
-  commitWrites,
-  frameRequest,
+  toSuccessText,
+  applyWrites,
+  getFrameRequest,
 } from "./arrange-model.js";
 import type { Props, Message } from "./arrange-model.js";
 
@@ -63,13 +63,13 @@ const useArrange = (
       const result = await arrangeRequest(cur.projectId, cur.directionId, {
         action,
         targets,
-        ...frameRequest(cur.projectId),
+        ...getFrameRequest(cur.projectId),
       });
 
-      commitWrites(cur, result);
+      applyWrites(cur, result);
       setMessage(
         result.changed
-          ? { kind: "ok", text: successText(result) }
+          ? { kind: "ok", text: toSuccessText(result) }
           : { kind: "note", text: result.note ?? "Already aligned." }
       );
     } catch (error) {

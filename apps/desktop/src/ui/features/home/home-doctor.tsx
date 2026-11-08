@@ -1,23 +1,14 @@
-import { CopyButton, Icon, useModalDialog } from "@design-studio/ui";
+import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { DoctorBox } from "./doctor-box.js";
+import { DoctorHead } from "./doctor-head.js";
+import type { DoctorProblem } from "./doctor-model.js";
+import { DoctorStepRow } from "./doctor-step-row.js";
+import { useHomeDialog } from "./use-home-dialog.js";
 
-export interface DoctorStep {
-  readonly isOk: boolean;
-  readonly text: string;
-}
-
-export interface DoctorProblem {
-  readonly name: string;
-  readonly place: string;
-  readonly badge: { readonly label: string; readonly tone: string };
-  readonly steps: DoctorStep[];
-  readonly detail: string;
-  readonly command: string | null;
-}
-
-export default function HomeDoctor({
+const HomeDoctor = ({
   problem,
   isChecking,
   onCheck,
@@ -29,73 +20,35 @@ export default function HomeDoctor({
   readonly onCheck: () => void;
   readonly onOpenAnyway: () => void;
   readonly onClose: () => void;
-}): ReactElement {
-  const dialog = useModalDialog(() => onClose());
+}): ReactElement => {
+  const handleDismiss = useCallback((): boolean => {
+    onClose();
+
+    return true;
+  }, [onClose]);
+
+  const ref = useHomeDialog(handleDismiss);
 
   return (
     <dialog
-      ref={dialog.ref}
+      ref={ref}
       className="modal home-doctor"
       aria-label={`${problem.name} cannot start yet`}
-      onMouseDown={dialog.onMouseDown}
     >
-      <div className="home-doctor-head">
-        <span className={`home-badge ${problem.badge.tone}`}>
-          {problem.badge.label}
-        </span>
-        <b>{problem.name}</b>
-        <span className="mono truncate">{problem.place}</span>
-        <button
-          type="button"
-          className="icon-btn small"
-          aria-label={copy.close}
-          onClick={onClose}
-        >
-          <Icon name="close" size={14} />
-        </button>
-      </div>
+      <DoctorHead problem={problem} onClose={onClose} />
       <ul className="home-doctor-steps" aria-label={copy.checks}>
         {problem.steps.map((step) => (
-          <li key={step.text} className={step.isOk ? "ok" : "bad"}>
-            <Icon name={step.isOk ? "check" : "alert"} size={12} />
-            {step.text}
-          </li>
+          <DoctorStepRow key={step.text} step={step} />
         ))}
       </ul>
-      <div className="home-doctor-box" role="status">
-        <div className="home-doctor-text">
-          <Icon name="alert" size={14} />
-          <p>{problem.detail}</p>
-        </div>
-        {problem.command && (
-          <div className="home-doctor-cmd">
-            <code className="truncate">{problem.command}</code>
-            <CopyButton
-              text={problem.command}
-              label="Copy the install command"
-            />
-          </div>
-        )}
-        <div className="home-doctor-actions">
-          <button
-            type="button"
-            className="btn small primary"
-            data-autofocus
-            disabled={isChecking}
-            onClick={onCheck}
-          >
-            {isChecking ? "Checking…" : "Check again"}
-          </button>
-          <div className="spacer" />
-          <button
-            type="button"
-            className="btn small ghost"
-            onClick={onOpenAnyway}
-          >
-            {copy.openAnyway}
-          </button>
-        </div>
-      </div>
+      <DoctorBox
+        problem={problem}
+        isChecking={isChecking}
+        onCheck={onCheck}
+        onOpenAnyway={onOpenAnyway}
+      />
     </dialog>
   );
-}
+};
+
+export { HomeDoctor };

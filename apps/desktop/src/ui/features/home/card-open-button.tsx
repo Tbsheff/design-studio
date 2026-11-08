@@ -5,8 +5,8 @@ import type { KeyboardEvent, ReactElement } from "react";
 import { CardBody } from "./card-body.js";
 import { CardPreview } from "./card-preview.js";
 import type { AppHealth } from "./deps.js";
-import type { CardActions, PackSwatches } from "./project-card-model.js";
 import { toTabIndex } from "./project-card-model.js";
+import type { CardActions, PackSwatches } from "./project-card-model.js";
 
 interface CardOpenButtonProps {
   readonly project: Project;

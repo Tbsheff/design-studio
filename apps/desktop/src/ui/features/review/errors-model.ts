@@ -4,8 +4,8 @@ import { pick } from "./pick.js";
 interface ErrorLike {
   readonly source: string;
   readonly message: string;
-  readonly file?: string;
-  readonly line?: number;
+  readonly file?: string | null;
+  readonly line?: number | null;
 }
 
 const DEV_NOISE = [

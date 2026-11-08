@@ -1,22 +1,26 @@
-import { useLayoutEffect, useRef } from "react";
+import { useCallback } from "react";
 import type {
+  ChangeEvent,
   ClipboardEvent,
   FormEvent,
   KeyboardEvent,
   ReactElement,
+  RefObject,
 } from "react";
 
 import { copy } from "./copy.js";
 import { useExample } from "./use-example.js";
+import { usePromptElement } from "./use-prompt-element.js";
 
 interface PromptAreaProps {
+  readonly textareaRef: RefObject<HTMLTextAreaElement | null>;
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly onSubmit: (formEvent: FormEvent) => void;
   readonly onPaste: (
     clipboardEvent: ClipboardEvent<HTMLTextAreaElement>
   ) => void;
-  readonly describedBy?: string | undefined;
+  readonly describedBy: string | null;
   readonly menuKeys: {
     readonly current:
       | ((keyboardEvent: KeyboardEvent<HTMLTextAreaElement>) => boolean)
@@ -25,7 +29,11 @@ interface PromptAreaProps {
   readonly placeholder: string | null;
 }
 
+const isSubmitKey = (event: KeyboardEvent<HTMLTextAreaElement>): boolean =>
+  event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing;
+
 const PromptArea = ({
+  textareaRef,
   value,
   onChange,
   onSubmit,
@@ -34,42 +42,39 @@ const PromptArea = ({
   menuKeys,
   placeholder,
 }: PromptAreaProps): ReactElement => {
-  const ref = useRef<HTMLTextAreaElement>(null);
+  usePromptElement(textareaRef, value, describedBy);
   const example = useExample(value !== "", placeholder === null);
-  useLayoutEffect(() => {
-    const el = ref.current;
 
-    if (!el) {
-      return;
-    }
+  const updateValue = useCallback(
+    (event: ChangeEvent<HTMLTextAreaElement>): void => {
+      onChange(event.target.value);
+    },
+    [onChange]
+  );
 
-    el.style.height = "auto";
-    el.style.height = `${Math.min(320, el.scrollHeight)}px`;
-  }, [value]);
+  const submitOnEnter = useCallback(
+    (event: KeyboardEvent<HTMLTextAreaElement>): void => {
+      if (menuKeys.current?.(event)) {
+        return;
+      }
+
+      if (isSubmitKey(event)) {
+        onSubmit(event);
+      }
+    },
+    [menuKeys, onSubmit]
+  );
 
   return (
     <textarea
-      ref={ref}
+      ref={textareaRef}
       aria-label={copy.describeTheDesign}
-      aria-describedby={describedBy}
       rows={2}
       autoFocus
       value={value}
-      onChange={(event) => onChange(event.target.value)}
+      onChange={updateValue}
       onPaste={onPaste}
-      onKeyDown={(eventArg) => {
-        if (menuKeys.current?.(eventArg)) {
-          return;
-        }
-
-        if (
-          eventArg.key === "Enter" &&
-          !eventArg.shiftKey &&
-          !eventArg.nativeEvent.isComposing
-        ) {
-          onSubmit(eventArg);
-        }
-      }}
+      onKeyDown={submitOnEnter}
       placeholder={placeholder ?? example}
     />
   );

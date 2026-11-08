@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
 
+import { ColorField } from "./color-field.js";
 import type { DirectEdit } from "./deps.js";
-import { ColorField, SelectField } from "./inspector-fields.js";
+import { SelectField } from "./select-field.js";
 import { BORDER_STYLES, BORDER_WIDTH } from "./simple-model.js";
 import { SpecNumberField } from "./spec-number-field.js";
 

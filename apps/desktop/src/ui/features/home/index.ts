@@ -14,4 +14,6 @@ export {
   toNextGridIndex,
 } from "./project-list-model.js";
 
+export { setRailToggled, useRail } from "./rail-store-model.js";
+
 export { Home };

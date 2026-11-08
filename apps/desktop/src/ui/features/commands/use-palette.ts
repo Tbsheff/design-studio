@@ -2,7 +2,7 @@ import { useCallback, useId, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
 
 import { noteRecent, toActiveId } from "./palette-model.js";
-import type { Row } from "./palette-rows.js";
+import type { Row } from "./palette-row-types.js";
 import { usePaletteFocus } from "./use-palette-focus.js";
 import { usePaletteKeys } from "./use-palette-keys.js";
 import { usePaletteRows } from "./use-palette-rows.js";

@@ -1,4 +1,5 @@
 import type { Starter } from "@design-studio/contracts";
+import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
@@ -16,7 +17,13 @@ const StarterRow = ({
   readonly busy: Busy;
   readonly onOpen: (starter: Starter) => void;
 }): ReactElement | null => {
-  const starter = template?.starter;
+  const starter = template?.starter ?? null;
+
+  const handleOpen = useCallback((): void => {
+    if (starter) {
+      onOpen(starter);
+    }
+  }, [onOpen, starter]);
 
   if (!template || !starter) {
     return null;
@@ -32,9 +39,10 @@ const StarterRow = ({
         type="button"
         className="link"
         disabled={busy !== null}
-        onClick={() => onOpen(starter)}
+        onClick={handleOpen}
       >
-        {busy === "starter" ? "Opening…" : "Open it now"}
+        {busy === "starter" && "Opening…"}
+        {busy !== "starter" && "Open it now"}
       </button>
       <span className="home-starter-hint">{copy.noAgentRunNoCost}</span>
     </div>

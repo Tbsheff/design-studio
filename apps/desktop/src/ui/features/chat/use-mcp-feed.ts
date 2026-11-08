@@ -55,6 +55,17 @@ const replaceActivity = (
   );
 };
 
+const addApproval = (
+  list: McpApprovalCard[],
+  approval: McpApprovalRecord
+): McpApprovalCard[] => {
+  if (list.some((card) => card.approval.id === approval.id)) {
+    return list;
+  }
+
+  return [...list, { approval, outcome: null }];
+};
+
 const useMcpFeed = (
   projectId: string,
   directionId: string | null
@@ -72,7 +83,7 @@ const useMcpFeed = (
           setActivity((prev) => replaceActivity(prev, res.activity));
         }
       } catch {
-        return;
+        live = false;
       }
     });
 
@@ -85,23 +96,21 @@ const useMcpFeed = (
   useProjectEvents(projectId, (event) => {
     if (event.type === "versions.changed") {
       reload();
-    } else if (event.type === "mcp.activity") {
+    }
+
+    if (event.type === "mcp.activity") {
       setActivity((prev) => mergeActivity(prev, [event.activity]));
-    } else if (event.type === "mcp.approval") {
+    }
+
+    if (event.type === "mcp.approval") {
       const { approval } = event;
 
-      if (approval.expiresAt <= Date.now()) {
-        return;
+      if (approval.expiresAt > Date.now()) {
+        setApprovals((prev) => addApproval(prev, approval));
       }
+    }
 
-      setApprovals((prev) => {
-        if (prev.some((card) => card.approval.id === approval.id)) {
-          return prev;
-        }
-
-        return [...prev, { approval, outcome: null }];
-      });
-    } else if (event.type === "mcp.approval.resolved") {
+    if (event.type === "mcp.approval.resolved") {
       setApprovals((prev) =>
         prev.map((card) => {
           if (card.approval.id === event.approvalId) {

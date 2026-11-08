@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { InspectorSelect } from "./inspector-fields.js";
+import { InspectorSelect } from "./inspector-select.js";
 
 interface VariantPickerProps {
   readonly groups: VariantGroup[];

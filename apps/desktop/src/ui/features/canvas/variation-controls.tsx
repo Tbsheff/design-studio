@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { menuKeys, useMenu } from "./frame-resize-handles.js";
+import { menuKeys, useMenu } from "./frame-menu-model.js";
 
 const LENGTH_60 = 60;
 

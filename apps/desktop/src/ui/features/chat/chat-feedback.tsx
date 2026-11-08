@@ -1,170 +1,16 @@
-import type { RunStatus } from "@design-studio/contracts";
-import { CopyButton, Icon } from "@design-studio/ui";
-import { memo, useMemo } from "react";
-import type { ReactElement } from "react";
+import { CopyButton } from "@design-studio/ui";
+import { memo, useCallback, useMemo } from "react";
 
-import { baseName, formatMs, formatUsd } from "../../domain/format.js";
-import { copy } from "./copy.js";
-import { DiffBadge } from "./diff-badge.js";
+import { FileChips } from "./file-chips.js";
 import { useRunFeedback } from "./run-feedback-model.js";
-import type { Thumb } from "./run-feedback-model.js";
+import { RunFootActions } from "./run-foot-actions.js";
+import { RunFootMeta } from "./run-foot-meta.js";
 import type { RunView } from "./run-state-model.js";
 import { runText } from "./run-state-model.js";
-import type { FileChange } from "./tool-chips-model.js";
+import { RunStatusBadge } from "./run-status-badge.js";
+import { RunThumbs } from "./run-thumbs.js";
+import { StopNote } from "./stop-note.js";
 import { fileChanges } from "./tool-rows-model.js";
-
-const COST_DIGITS = 4;
-
-const STATUS_LABEL: Record<RunStatus, string> = {
-  budget_exceeded: "Limit reached",
-  canceled: "Stopped",
-  completed: "Completed",
-  failed: "Failed",
-  running: "Running",
-};
-
-const THUMB_PATH =
-  "M5 7.25v6.25H2.5V7.25zM5 7.25 7.6 2.5c.9 0 1.6.7 1.6 1.6v2.4h3.3c.8 0 1.4.7 1.3 1.5l-.8 4.4c-.1.6-.7 1.1-1.3 1.1H5";
-
-const ThumbIcon = ({ down = false }: { down?: boolean }): ReactElement => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={1.5}
-    strokeLinejoin="round"
-    aria-hidden="true"
-    focusable="false"
-  >
-    <path
-      d={THUMB_PATH}
-      transform={down ? "matrix(1 0 0 -1 0 16)" : undefined}
-    />
-  </svg>
-);
-
-const ThumbButton = ({
-  value,
-  on,
-  onPick,
-}: {
-  value: Thumb;
-  on: boolean;
-  onPick: (value: Thumb | null) => void;
-}): ReactElement => {
-  let label: "Good response" | "Bad response" = "Bad response";
-
-  if (value === "up") {
-    label = "Good response";
-  }
-
-  return (
-    <button
-      type="button"
-      className="icon-btn small feedback-thumb"
-      aria-label={label}
-      aria-pressed={on}
-      data-tip={label}
-      data-tip-side="top"
-      onClick={() => onPick(on ? null : value)}
-    >
-      <ThumbIcon down={value === "down"} />
-    </button>
-  );
-};
-
-const fileLabel = (change: FileChange): string =>
-  `${change.created ? "Created" : "Edited"} ${baseName(change.path)}`;
-
-const FileChips = ({
-  changes,
-  quiet,
-  onOpen,
-  reviews,
-}: {
-  changes: FileChange[];
-  quiet: boolean;
-  onOpen: () => void;
-  reviews: boolean;
-}): ReactElement | null => {
-  let action: "Review the changes" | "Open run details" = "Open run details";
-
-  if (reviews) {
-    action = "Review the changes";
-  }
-
-  if (changes.length === 0) {
-    if (quiet) {
-      return <p className="run-no-changes">{copy.noFilesChanged}</p>;
-    }
-
-    return null;
-  }
-
-  return (
-    <ul
-      className="run-changes"
-      aria-label={copy.changedFiles}
-      data-testid="run-changes"
-    >
-      {changes.map((change) => (
-        <li key={change.path} className="run-change">
-          <button
-            type="button"
-            className="ui-file-chip"
-            data-tip-align="start"
-            data-tip={`${change.path} (+${change.added} −${change.removed}). ${action}`}
-            onClick={onOpen}
-          >
-            <Icon name={change.created ? "doc" : "file"} size={14} />
-            <span className="run-change-path">{fileLabel(change)}</span>
-            <DiffBadge added={change.added} removed={change.removed} />
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-};
-
-const stopNote = (run: RunView): string | null => {
-  const { summary } = run;
-
-  if (!summary || run.status === "running" || run.status === "completed") {
-    return null;
-  }
-
-  const restored = summary.restoredFiles ?? [];
-
-  let putBack = "";
-
-  if (restored.length > 0) {
-    putBack = `Put back ${restored.map(baseName).join(", ")}: the write was cut off.`;
-  }
-
-  let saved: "" | "Saved what it changed as a version." = "";
-
-  if (summary.versionId) {
-    saved = "Saved what it changed as a version.";
-  }
-
-  return [putBack, saved].filter(Boolean).join(" ") || null;
-};
-
-const StopNote = ({ run }: { run: RunView }): ReactElement | null => {
-  const note = stopNote(run);
-
-  if (note) {
-    return (
-      <p className="run-no-changes" data-testid="run-stop-note">
-        {note}
-      </p>
-    );
-  }
-
-  return null;
-};
 
 const RunFeedbackRow = memo(
   ({
@@ -186,85 +32,40 @@ const RunFeedbackRow = memo(
       return fileChanges(run.tools);
     }, [run.status, run.tools]);
 
+    const readReply = useCallback(() => runText(run), [run]);
     const { summary } = run;
     const done = run.status === "completed";
+    const hasReview = Boolean(onReview);
 
     return (
       <div className="run-feedback">
         <FileChips
           changes={changes}
-          quiet={
+          isQuiet={
             run.status !== "running" &&
             run.tools.length > 0 &&
             !run.request?.plan
           }
+          hasReview={hasReview}
           onOpen={onReview ?? onDetails}
-          reviews={onReview !== undefined}
         />
         <StopNote run={run} />
         <div className="run-foot" data-status={run.status}>
-          {done && (
-            <span
-              className="run-thumbs"
-              role="group"
-              aria-label={copy.rateThisResponse}
-            >
-              <ThumbButton
-                value="up"
-                on={feedback.thumb === "up"}
-                onPick={(thumb) => setFeedback({ thumb })}
-              />
-              <ThumbButton
-                value="down"
-                on={feedback.thumb === "down"}
-                onPick={(thumb) => setFeedback({ thumb })}
-              />
-            </span>
-          )}
-          {!done && (
-            <span className={`status ${run.status}`}>
-              <span className="status-dot" aria-hidden="true" />
-              {STATUS_LABEL[run.status]}
-            </span>
-          )}
+          {done && <RunThumbs thumb={feedback.thumb} onChange={setFeedback} />}
+          {!done && <RunStatusBadge status={run.status} />}
           {run.status !== "running" && runText(run) && (
             <CopyButton
-              text={() => runText(run)}
+              getText={readReply}
               label="Copy reply"
               className="reply-copy"
             />
           )}
-          {summary && (
-            <span
-              className="run-foot-meta tabular-nums"
-              data-tip-side="top"
-              data-tip={`$${summary.costUsd.toFixed(COST_DIGITS)}`}
-            >
-              {formatMs(summary.durationMs)}
-              {copy.text}
-              {formatUsd(summary.costUsd)}
-            </span>
-          )}
-          <span className="ml-auto flex items-center gap-1">
-            {onReview && changes.length > 0 && (
-              <button
-                type="button"
-                className="btn ghost small run-foot-details"
-                data-tip={copy.keepOrUndo}
-                data-tip-side="top"
-                onClick={onReview}
-              >
-                {copy.review}
-              </button>
-            )}
-            <button
-              type="button"
-              className="btn ghost small run-foot-details"
-              onClick={onDetails}
-            >
-              {copy.details}
-            </button>
-          </span>
+          {summary && <RunFootMeta summary={summary} />}
+          <RunFootActions
+            hasChanges={changes.length > 0}
+            onReview={onReview ?? null}
+            onDetails={onDetails}
+          />
         </div>
       </div>
     );

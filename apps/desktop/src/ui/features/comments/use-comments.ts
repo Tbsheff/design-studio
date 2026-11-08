@@ -1,691 +1,177 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
-import type { MutableRefObject } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
-import {
-  ApiError,
-  anchorQueryOf,
-  api,
-  canPickForChat,
-  drawingTarget,
-  errorText,
-  json,
-  readStored,
-  targetFromSelection,
-  useProjectEvents,
-  writeStored,
-} from "./deps.js";
 import type {
-  AnchorQuery,
-  CommentDrawing,
-  CommentFrame,
-  CommentPrefill,
-  CommentStatus,
-  CommentTarget,
-  DesignComment,
-  JsonBody,
-  RunMention,
-  SelectionContext,
-} from "./deps.js";
-
-export type DescribeAnchors = (
-  queries: AnchorQuery[]
-) => Promise<(SelectionContext | null)[]>;
-
-export interface CommentPatch {
-  text?: string;
-  status?: CommentStatus;
-  target?: CommentTarget;
-  context?: SelectionContext;
-}
-
-export interface CommentExtras {
-  mentions?: RunMention[];
-  attachmentIds?: string[];
-  offset?: CommentTarget["offset"];
-}
-
-const targetWith = (
-  selection: SelectionContext,
-  offset: CommentTarget["offset"]
-): CommentTarget => {
-  const target = targetFromSelection(selection);
-
-  return offset ? { ...target, offset } : target;
-};
-
-export interface CommentsControl {
-  directionId: string | null;
-  composerActive: boolean;
-  running: boolean;
-  comments: DesignComment[];
-  queued: DesignComment[];
-  inChat: DesignComment[];
-  notice: string | null;
-  sending: boolean;
-  openId: string | null;
-  repinId: string | null;
-  describeRef: MutableRefObject<DescribeAnchors | null>;
-  setOpenId: (id: string | null) => void;
-  setRepinId: (id: string | null) => void;
-  clearNotice: () => void;
-  add: (
-    selections: SelectionContext[],
-    text: string,
-    toClaude: boolean,
-    extras?: CommentExtras
-  ) => Promise<boolean>;
-  update: (id: string, patch: CommentPatch) => Promise<void>;
-  remove: (id: string) => Promise<void>;
-  move: (id: string, delta: -1 | 1) => Promise<void>;
-  send: (ids?: string[]) => Promise<void>;
-  repin: (
-    id: string,
-    selection: SelectionContext,
-    offset?: CommentTarget["offset"]
-  ) => Promise<void>;
-  addDrawing: (input: {
-    text: string;
-    drawing: CommentDrawing;
-    image: Blob;
-    toClaude: boolean;
-    extras?: CommentExtras;
-  }) => Promise<boolean>;
-  reply: (id: string, text: string) => Promise<boolean>;
-  removeReply: (id: string, replyId: string) => Promise<void>;
-  showResolved: boolean;
-  setShowResolved: (on: boolean) => void;
-  frameRef: MutableRefObject<CommentFrame | null>;
-  picked: string[];
-  togglePick: (id: string) => void;
-  clearPicked: () => void;
-  toChat: (ids: string[]) => Promise<void>;
-  preparing: boolean;
-}
-
-export type OnPrefill = (prefill: CommentPrefill) => void;
+  CommentExtras,
+  CommentPatch,
+  CommentsControl,
+  DescribeAnchors,
+  OnPrefill,
+} from "./comments-control.js";
+import { readStored, writeStored } from "./deps.js";
+import type { CommentFrame } from "./deps.js";
+import { useCommentCall } from "./use-comment-call.js";
+import { useCommentChat } from "./use-comment-chat.js";
+import type { CommentChat } from "./use-comment-chat.js";
+import { useCommentCreates } from "./use-comment-creates.js";
+import type { CommentCreates } from "./use-comment-creates.js";
+import { useCommentEdits } from "./use-comment-edits.js";
+import type { CommentEdits } from "./use-comment-edits.js";
+import { usePicks } from "./use-comment-picks.js";
+import type { CommentPicks } from "./use-comment-picks.js";
+import { useCommentReplies } from "./use-comment-replies.js";
+import type { CommentReplies } from "./use-comment-replies.js";
+import { useCommentSend } from "./use-comment-send.js";
+import type { CommentSend } from "./use-comment-send.js";
+import { useCommentStore } from "./use-comment-store.js";
+import type { CommentsStore } from "./use-comment-store.js";
+import { useLatest } from "./use-latest.js";
 
 const SHOW_RESOLVED_KEY = "studio.comments.showResolved";
 
 const readShowResolved = (): boolean => readStored(SHOW_RESOLVED_KEY) === "1";
 
-const RUNNING_NOTICE = "Agent is running: queued";
-const DESCRIBE_TIMEOUT_MS = 800;
-
-const base = (projectId: string, directionId: string): string =>
-  `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/comments`;
-
-const queuedOf = (comments: DesignComment[]): DesignComment[] =>
-  comments.filter((comment) => comment.status === "queued");
-
-const describeWithTimeout = async (
-  describe: DescribeAnchors | null,
-  comments: DesignComment[]
-): Promise<Record<string, SelectionContext>> => {
-  if (!describe || comments.length === 0) {
-    return {};
+const toStoredFlag = (isOn: boolean): string => {
+  if (isOn) {
+    return "1";
   }
 
-  const timeout = new Promise<null>((resolve) =>
-    globalThis.setTimeout(() => resolve(null), DESCRIBE_TIMEOUT_MS)
-  );
-
-  const contexts = await Promise.race([
-    describe(comments.map(anchorQueryOf)).catch(() => null),
-    timeout,
-  ]);
-
-  const out: Record<string, SelectionContext> = {};
-  comments.forEach((comment, index) => {
-    const context = contexts?.[index];
-
-    if (context) {
-      out[comment.id] = context;
-    }
-  });
-
-  return out;
+  return "0";
 };
 
-const frameField = (
-  ref: MutableRefObject<CommentFrame | null>
-): {
-  frame?: CommentFrame;
-} => (ref.current ? { frame: ref.current } : {});
+interface CommentRefs {
+  readonly describeRef: CommentsControl["describeRef"];
+  readonly frameRef: CommentsControl["frameRef"];
+}
 
-const usePicks = (comments: DesignComment[]) => {
-  const [picked, setPicked] = useState<string[]>([]);
-  useEffect(() => {
-    setPicked((prev) => {
-      const next = prev.filter((id) =>
-        comments.some(
-          (comment) => comment.id === id && canPickForChat(comment.status)
-        )
-      );
+interface CommentsFlags {
+  readonly composerActive: boolean;
+  readonly onPrefill: OnPrefill | null;
+  readonly running: boolean;
+}
 
-      return next.length === prev.length ? prev : next;
-    });
-  }, [comments]);
+interface ControlParts {
+  readonly chat: CommentChat;
+  readonly creates: CommentCreates;
+  readonly describeRef: CommentsControl["describeRef"];
+  readonly directionId: string | null;
+  readonly edits: CommentEdits;
+  readonly flags: CommentsFlags;
+  readonly frameRef: CommentsControl["frameRef"];
+  readonly picks: CommentPicks;
+  readonly replies: CommentReplies;
+  readonly sender: CommentSend;
+  readonly showResolved: boolean;
+  readonly store: CommentsStore;
+  readonly storeShowResolved: (isOn: boolean) => void;
+}
 
-  const togglePick = useCallback(
-    (id: string) =>
-      setPicked((prev) =>
-        prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-      ),
-    []
-  );
+const toControl = (parts: ControlParts): CommentsControl => ({
+  ...parts.picks,
+  ...parts.creates,
+  ...parts.edits,
+  ...parts.replies,
+  clearNotice: () => parts.store.setNotice(null),
+  comments: parts.store.comments,
+  composerActive: parts.flags.composerActive,
+  describeRef: parts.describeRef,
+  directionId: parts.directionId,
+  frameRef: parts.frameRef,
+  inChat: parts.chat.inChat,
+  notice: parts.store.notice,
+  openId: parts.store.openId,
+  preparing: parts.chat.preparing,
+  queued: parts.chat.queued,
+  repinId: parts.store.repinId,
+  running: parts.flags.running,
+  send: parts.sender.send,
+  sending: parts.sender.sending,
+  setOpenId: parts.store.setOpenId,
+  setRepinId: parts.store.setRepinId,
+  setShowResolved: parts.storeShowResolved,
+  showResolved: parts.showResolved,
+  toChat: parts.chat.toChat,
+});
 
-  const clearPicked = useCallback(() => setPicked([]), []);
-
-  return { clearPicked, picked, togglePick };
-};
-
-export const useComments = (
-  projectId: string,
-  directionId: string | null,
-  composerActive = false,
-  running = false,
-  onPrefill?: OnPrefill
-): CommentsControl => {
-  const [comments, setComments] = useState<DesignComment[]>([]);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [sending, startSending] = useTransition();
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [repinId, setRepinId] = useState<string | null>(null);
-  const [showResolved, setShowResolvedState] = useState(readShowResolved);
+const useCommentRefs = (): CommentRefs => {
   const describeRef = useRef<DescribeAnchors | null>(null);
   const frameRef = useRef<CommentFrame | null>(null);
-  const [preparing, startPreparing] = useTransition();
-  const prefillRef = useRef(onPrefill);
-  prefillRef.current = onPrefill;
-  const didRef = useRef(directionId);
-  didRef.current = directionId;
-  const listRef = useRef(comments);
-  listRef.current = comments;
-  const runningRef = useRef(running);
-  runningRef.current = running;
-  const afterRun = useRef(new Set<string>());
-  const [chatIds, setChatIds] = useState<string[]>([]);
-  const chatRef = useRef(chatIds);
-  chatRef.current = chatIds;
 
-  useEffect(() => {
-    setComments([]);
-    setOpenId(null);
-    setRepinId(null);
-    setNotice(null);
-    afterRun.current.clear();
+  return { describeRef, frameRef };
+};
 
-    if (!directionId) {
-      return;
-    }
+const useComments = (
+  projectId: string,
+  directionId: string | null,
+  flags: CommentsFlags
+): CommentsControl => {
+  const [showResolved, setShowResolved] = useState(readShowResolved);
+  const { describeRef, frameRef } = useCommentRefs();
+  const runningRef = useLatest(flags.running);
+  const store = useCommentStore(projectId, directionId);
+  const call = useCommentCall(projectId, store.didRef);
+  const picks = usePicks(store.comments);
+  const { clearPicked } = picks;
+  const { onPrefill } = flags;
+  const isRunning = flags.running;
 
-    let alive = true;
-
-    const load = async () => {
-      try {
-        const list = await json<DesignComment[]>(
-          "GET",
-          base(projectId, directionId)
-        );
-
-        if (alive) {
-          setComments(list);
-        }
-      } catch (error: unknown) {
-        if (alive) {
-          setNotice(errorText(error));
-        }
-      }
-    };
-
-    void load();
-
-    return () => {
-      alive = false;
-    };
-  }, [projectId, directionId]);
-
-  useProjectEvents(projectId, (event) => {
-    if (
-      event.type === "comments.changed" &&
-      event.directionId === didRef.current
-    ) {
-      setComments(event.comments);
-    }
-  });
-
-  const call = useCallback(
-    async <T>(
-      method: string,
-      suffix: string,
-      body?: JsonBody
-    ): Promise<T | null> => {
-      const did = didRef.current;
-
-      if (!did) {
-        return null;
-      }
-
-      return json<T>(method, `${base(projectId, did)}${suffix}`, body);
-    },
-    [projectId]
+  const chat = useCommentChat(
+    useMemo(
+      () => ({ call, clearPicked, onPrefill, store }),
+      [call, clearPicked, onPrefill, store]
+    )
   );
 
-  const send = useCallback(
-    async (ids?: string[]) => {
-      const chosen = ids
-        ? listRef.current.filter((comment) => ids.includes(comment.id))
-        : queuedOf(listRef.current).filter(
-            (comment) => !chatRef.current.includes(comment.id)
-          );
+  const { chatRef } = chat;
 
-      if (chosen.length === 0) {
-        return;
-      }
-
-      const pending = (async (): Promise<void> => {
-        try {
-          const contexts = await describeWithTimeout(
-            describeRef.current,
-            chosen.filter((comment) => !comment.drawing)
-          );
-
-          await call("POST", "/send", {
-            contexts,
-            ids: chosen.map((comment) => comment.id),
-          });
-          setNotice(null);
-        } catch (error) {
-          setNotice(
-            error instanceof ApiError &&
-              error.status === 409 &&
-              error.tag === "run_in_progress"
-              ? RUNNING_NOTICE
-              : errorText(error)
-          );
-        }
-      })();
-
-      startSending(async () => {
-        await pending;
-      });
-
-      await pending;
-    },
-    [call]
+  const sender = useCommentSend(
+    useMemo(
+      () => ({ call, chatRef, describeRef, isRunning, runningRef, store }),
+      [call, chatRef, describeRef, isRunning, runningRef, store]
+    )
   );
 
-  const deliver = useCallback(
-    async (created: DesignComment[], toClaude: boolean) => {
-      if (!toClaude || created.length === 0) {
-        return;
-      }
+  const send = sender;
 
-      const ids = created.map((comment) => comment.id);
-
-      if (runningRef.current) {
-        for (const id of ids) {
-          afterRun.current.add(id);
-        }
-
-        return;
-      }
-
-      listRef.current = [
-        ...listRef.current.filter((c) => !ids.includes(c.id)),
-        ...created,
-      ];
-      await send(ids);
-    },
-    [send]
+  const creates = useCommentCreates(
+    useMemo(
+      () => ({ call, frameRef, projectId, runningRef, send, store }),
+      [call, frameRef, projectId, runningRef, send, store]
+    )
   );
 
-  const add = useCallback(
-    async (
-      selections: SelectionContext[],
-      text: string,
-      toClaude: boolean,
-      extras: CommentExtras = {}
-    ): Promise<boolean> => {
-      const clean = text.trim();
+  const editContext = useMemo(() => ({ call, store }), [call, store]);
+  const edits = useCommentEdits(editContext);
+  const replies = useCommentReplies(editContext);
 
-      if (!clean || selections.length === 0) {
-        return false;
-      }
-
-      const now = toClaude && !runningRef.current;
-
-      try {
-        const created: DesignComment[] = [];
-
-        for (const selection of selections) {
-          const comment = await call<DesignComment>("POST", "", {
-            context: selection,
-            status: now ? "draft" : "queued",
-            target: targetWith(
-              selection,
-              selections.length === 1 ? extras.offset : undefined
-            ),
-            text: clean,
-            ...frameField(frameRef),
-            ...(extras.mentions?.length ? { mentions: extras.mentions } : {}),
-            ...(extras.attachmentIds?.length
-              ? { attachmentIds: extras.attachmentIds }
-              : {}),
-          });
-
-          if (comment) {
-            created.push(comment);
-          }
-        }
-
-        setComments((prev) => [
-          ...prev.filter((c) => !created.some((n) => n.id === c.id)),
-          ...created,
-        ]);
-        await deliver(created, toClaude);
-
-        return true;
-      } catch (error) {
-        setNotice(errorText(error));
-
-        return false;
-      }
-    },
-    [call, deliver]
-  );
-
-  useEffect(() => {
-    for (const id of [...afterRun.current]) {
-      if (comments.find((comment) => comment.id === id)?.status !== "queued") {
-        afterRun.current.delete(id);
-      }
-    }
-  }, [comments]);
-
-  useEffect(() => {
-    if (running || afterRun.current.size === 0) {
-      return;
-    }
-
-    const ready = listRef.current.filter(
-      (comment) =>
-        afterRun.current.has(comment.id) && comment.status === "queued"
-    );
-
-    if (ready.length > 0) {
-      void send(ready.map((comment) => comment.id));
-    }
-  }, [running, send]);
-
-  const update = useCallback(
-    async (id: string, patch: CommentPatch) => {
-      try {
-        await call("PATCH", `/${encodeURIComponent(id)}`, patch);
-      } catch (error) {
-        setNotice(errorText(error));
-      }
-    },
-    [call]
-  );
-
-  const remove = useCallback(
-    async (id: string) => {
-      try {
-        await call("DELETE", `/${encodeURIComponent(id)}`);
-        setOpenId((current) => (current === id ? null : current));
-      } catch (error) {
-        setNotice(errorText(error));
-      }
-    },
-    [call]
-  );
-
-  const move = useCallback(
-    async (id: string, delta: -1 | 1) => {
-      const ids = queuedOf(listRef.current).map((comment) => comment.id);
-      const at = ids.indexOf(id);
-      const to = at + delta;
-
-      if (at === -1 || to < 0 || to >= ids.length) {
-        return;
-      }
-
-      [ids[at], ids[to]] = [ids[to] as string, ids[at] as string];
-
-      try {
-        await call("POST", "/reorder", { ids });
-      } catch (error) {
-        setNotice(errorText(error));
-      }
-    },
-    [call]
-  );
-
-  const repin = useCallback(
-    async (
-      id: string,
-      selection: SelectionContext,
-      offset?: CommentTarget["offset"]
-    ) => {
-      const comment = listRef.current.find((item) => item.id === id);
-      setRepinId(null);
-
-      if (!comment) {
-        return;
-      }
-
-      await update(id, {
-        context: selection,
-        target: targetWith(selection, offset),
-        ...(comment.status === "orphaned" ? { status: "queued" as const } : {}),
-      });
-    },
-    [update]
-  );
-
-  const merge = useCallback((comment: DesignComment) => {
-    setComments((prev) =>
-      prev.some((c) => c.id === comment.id)
-        ? prev.map((c) => (c.id === comment.id ? comment : c))
-        : [...prev, comment]
-    );
+  const storeShowResolved = useCallback((isOn: boolean): void => {
+    setShowResolved(isOn);
+    writeStored(SHOW_RESOLVED_KEY, toStoredFlag(isOn));
   }, []);
 
-  const addDrawing = useCallback(
-    async (input: {
-      text: string;
-      drawing: CommentDrawing;
-      image: Blob;
-      toClaude: boolean;
-      extras?: CommentExtras;
-    }): Promise<boolean> => {
-      const clean = input.text.trim();
-
-      if (!clean) {
-        return false;
-      }
-
-      const now = input.toClaude && !runningRef.current;
-
-      try {
-        const attachment = await api.uploadAttachment(
-          projectId,
-          new File([input.image], "drawing.png", { type: "image/png" })
-        );
-
-        const comment = await call<DesignComment>("POST", "", {
-          text: clean,
-          target: drawingTarget(input.drawing.box),
-          status: now ? "draft" : "queued",
-          attachmentIds: [
-            attachment.id,
-            ...(input.extras?.attachmentIds ?? []),
-          ].slice(0, 4),
-          ...(input.extras?.mentions?.length
-            ? { mentions: input.extras.mentions }
-            : {}),
-          drawing: input.drawing,
-          ...frameField(frameRef),
-        });
-
-        if (!comment) {
-          return false;
-        }
-
-        merge(comment);
-        await deliver([comment], input.toClaude);
-
-        return true;
-      } catch (error) {
-        setNotice(errorText(error));
-
-        return false;
-      }
-    },
-    [call, deliver, merge, projectId]
-  );
-
-  const reply = useCallback(
-    async (id: string, text: string): Promise<boolean> => {
-      const clean = text.trim();
-
-      if (!clean) {
-        return false;
-      }
-
-      try {
-        const comment = await call<DesignComment>(
-          "POST",
-          `/${encodeURIComponent(id)}/replies`,
-          { text: clean }
-        );
-
-        if (comment) {
-          merge(comment);
-        }
-
-        return comment !== null;
-      } catch (error) {
-        setNotice(errorText(error));
-
-        return false;
-      }
-    },
-    [call, merge]
-  );
-
-  const removeReply = useCallback(
-    async (id: string, replyId: string) => {
-      try {
-        const comment = await call<DesignComment>(
-          "DELETE",
-          `/${encodeURIComponent(id)}/replies/${encodeURIComponent(replyId)}`
-        );
-
-        if (comment) {
-          merge(comment);
-        }
-      } catch (error) {
-        setNotice(errorText(error));
-      }
-    },
-    [call, merge]
-  );
-
-  const setShowResolved = useCallback((on: boolean) => {
-    setShowResolvedState(on);
-
-    writeStored(SHOW_RESOLVED_KEY, on ? "1" : "0");
-  }, []);
-
-  const queued = useMemo(
-    () => queuedOf(comments).filter((comment) => !chatIds.includes(comment.id)),
-    [comments, chatIds]
-  );
-
-  const inChat = useMemo(
-    () =>
-      comments.filter(
-        (comment) => chatIds.includes(comment.id) && comment.status === "queued"
-      ),
-    [comments, chatIds]
-  );
-
-  const picks = usePicks(comments);
-  const clearPicks = picks.clearPicked;
-
-  const toChat = useCallback(
-    async (ids: string[]) => {
-      if (ids.length === 0) {
-        return;
-      }
-
-      const pending = (async (): Promise<void> => {
-        try {
-          const prefill = await call<CommentPrefill>("POST", "/prefill", {
-            ids,
-          });
-
-          if (prefill) {
-            prefillRef.current?.(prefill);
-            setChatIds((prev) => [
-              ...new Set([...prev, ...prefill.commentIds]),
-            ]);
-          }
-
-          clearPicks();
-          setNotice(null);
-        } catch (error) {
-          setNotice(errorText(error));
-        }
-      })();
-
-      startPreparing(async () => {
-        await pending;
-      });
-
-      await pending;
-    },
-    [call, clearPicks]
-  );
-
-  return {
-    directionId,
-    composerActive,
-    running,
-    comments,
-    queued,
-    inChat,
-    notice,
-    sending,
-    openId,
-    repinId,
+  return toControl({
+    chat,
+    creates,
     describeRef,
-    setOpenId,
-    setRepinId,
-    clearNotice: () => setNotice(null),
-    add,
-    update,
-    remove,
-    move,
-    send,
-    repin,
-    addDrawing,
-    reply,
-    removeReply,
-    showResolved,
-    setShowResolved,
+    directionId,
+    edits,
+    flags,
     frameRef,
-    ...picks,
-    toChat,
-    preparing,
-  };
+    picks,
+    replies,
+    sender,
+    showResolved,
+    store,
+    storeShowResolved,
+  });
+};
+
+export { useComments };
+
+export type {
+  CommentExtras,
+  CommentPatch,
+  CommentsControl,
+  CommentsFlags,
+  DescribeAnchors,
+  OnPrefill,
 };

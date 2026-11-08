@@ -1,8 +1,7 @@
 import { memo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
-import { normalizeLength, stepValue } from "./css-values.js";
-import { isInherited, useVariantScope } from "./edit-variant.js";
+import { toNormalizedLength, toSteppedValue } from "./css-value-model.js";
 import { resolveNumberInput } from "./math-input.js";
 import { hasCurrentDependency } from "./mixed-values.js";
 import {
@@ -17,6 +16,7 @@ import {
   sameSpec,
 } from "./number-field-model.js";
 import type { NumberSpec } from "./number-field-model.js";
+import { isInherited, useVariantScope } from "./use-edit-variant.js";
 import { useTokenUi } from "./use-token-snap.js";
 
 interface InputProps {
@@ -63,7 +63,7 @@ const useNumberText = (spec: NumberSpec): UseNumberTextResult => {
       return;
     }
 
-    const next = clamp(math ?? normalizeLength(raw, unit), spec);
+    const next = clamp(math ?? toNormalizedLength(raw, unit), spec);
     last.current = next;
     edit.preview(patchFor(spec, next));
   };
@@ -84,7 +84,7 @@ const useNumberText = (spec: NumberSpec): UseNumberTextResult => {
   const nudge = (delta: number, from: string): void => {
     start.current = null;
     last.current = null;
-    const next = clamp(stepValue(from, delta, unit), spec);
+    const next = clamp(toSteppedValue(from, delta, unit), spec);
     setText(next);
     edit.preview(patchFor(spec, next));
     edit.commitSoon();

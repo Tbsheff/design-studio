@@ -3,6 +3,8 @@ import type { RefObject } from "react";
 
 import type { SelectionContext } from "./deps.js";
 
+const AXIS_X = "x";
+const AXIS_Y = "y";
 const UNIT_SCALE = 1000;
 const DEFAULT_CARD_HEIGHT = 112;
 const HTML_SNIPPET_MAX = 4000;
@@ -38,10 +40,7 @@ interface ComposerPlacement {
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(value, Math.max(min, max)));
 
-interface PinOffset {
-  x: number;
-  y: number;
-}
+type PinOffset = Record<"x" | "y", number>;
 
 const unit = (value: number): number => {
   if (Number.isFinite(value)) {
@@ -49,19 +48,21 @@ const unit = (value: number): number => {
       Math.round(Math.max(0, Math.min(1, value)) * UNIT_SCALE) / UNIT_SCALE
     );
   }
+
   return 0;
 };
 
 const offsetIn = (
   rect: Rect,
-  point: { x: number; y: number } | undefined
+  point: PinOffset | undefined
 ): PinOffset | undefined => {
   if (!point || rect.width <= 0 || rect.height <= 0) {
-    return undefined;
+    return;
   }
+
   return {
-    x: unit((point.x - rect.x) / rect.width),
-    y: unit((point.y - rect.y) / rect.height),
+    [AXIS_X]: unit((point.x - rect.x) / rect.width),
+    [AXIS_Y]: unit((point.y - rect.y) / rect.height),
   };
 };
 
@@ -69,12 +70,26 @@ const pinAnchor = (rect: Rect, offset: PinOffset | undefined): Rect => {
   if (!offset) {
     return rect;
   }
+
   return {
+    [AXIS_X]: rect.x + offset.x * rect.width,
+    [AXIS_Y]: rect.y + offset.y * rect.height,
     height: 0,
     width: 0,
-    x: rect.x + offset.x * rect.width,
-    y: rect.y + offset.y * rect.height,
   };
+};
+
+const toPinLeft = (
+  isFlipped: boolean,
+  start: number,
+  pin: number,
+  right: number
+): number => {
+  if (isFlipped) {
+    return start - pin;
+  }
+
+  return right;
 };
 
 const pinPlacement = (
@@ -87,7 +102,7 @@ const pinPlacement = (
   const pin = PIN_SIZE / zoom;
   const right = rect.x + rect.width;
   const flip = right + pin > frame.width;
-  const left = flip ? rect.x - pin : right;
+  const left = toPinLeft(flip, rect.x, pin, right);
 
   return {
     flip,
@@ -116,6 +131,17 @@ interface PlaceView {
 }
 
 const SIDE_ORDER: CardSide[] = ["right", "left", "below", "above"];
+
+const toSide = (
+  prefer: CardSide | undefined,
+  fitting: (side: CardSide) => boolean
+): CardSide => {
+  if (prefer && prefer !== "over" && fitting(prefer)) {
+    return prefer;
+  }
+
+  return SIDE_ORDER.find((candidate) => fitting(candidate)) ?? "over";
+};
 
 const placeAround = (
   rect: Rect,
@@ -178,12 +204,10 @@ const placeAround = (
     );
   };
 
-  const side =
-    prefer && prefer !== "over" && fitting(prefer)
-      ? prefer
-      : (SIDE_ORDER.find(fitting) ?? "over");
+  const side = toSide(prefer, fitting);
 
   const chosen = options[side];
+
   return {
     card: {
       left: clamp(chosen.card.left, 0, frame.width - width),
@@ -209,14 +233,13 @@ const placeComposer = (
   if (!offset) {
     return placed;
   }
+
   const pin = pinPlacement(target, view.zoom, view.frame, offset);
 
   return { ...placed, pin };
 };
 
-const useCardSize = (
-  card: RefObject<HTMLElement | null>
-): { height: number; width: number } => {
+const useCardSize = (card: RefObject<HTMLElement | null>): CardSize => {
   const [height, setHeight] = useState(DEFAULT_CARD_HEIGHT);
   useLayoutEffect(() => {
     const element = card.current;
@@ -224,7 +247,7 @@ const useCardSize = (
     if (!element) {
       return;
     }
-    setHeight(element.offsetHeight);
+
     const observer = new ResizeObserver(() => setHeight(element.offsetHeight));
     observer.observe(element);
 
@@ -233,6 +256,11 @@ const useCardSize = (
 
   return { height, width: CARD_WIDTH };
 };
+
+interface CardSize {
+  readonly height: number;
+  readonly width: number;
+}
 
 const TEXT_TAGS = new Set([
   "h1",
@@ -256,21 +284,21 @@ const TEXT_TAGS = new Set([
   "th",
 ]);
 
-const KIND_OF_TAG: Record<string, string> = {
-  a: "link",
-  button: "button",
-  footer: "footer",
-  form: "form",
-  header: "header",
-  img: "image",
-  input: "field",
-  nav: "nav",
-  picture: "image",
-  select: "field",
-  svg: "icon",
-  textarea: "field",
-  video: "video",
-};
+const KIND_OF_TAG = new Map([
+  ["a", "link"],
+  ["button", "button"],
+  ["footer", "footer"],
+  ["form", "form"],
+  ["header", "header"],
+  ["img", "image"],
+  ["input", "field"],
+  ["nav", "nav"],
+  ["picture", "image"],
+  ["select", "field"],
+  ["svg", "icon"],
+  ["textarea", "field"],
+  ["video", "video"],
+]);
 
 const snippet = (text: string, max: number): string => {
   const line = text.replaceAll(/\s+/gu, " ").trim();
@@ -278,15 +306,16 @@ const snippet = (text: string, max: number): string => {
   if (line.length > max) {
     return `${line.slice(0, max - 1)}…`;
   }
+
   return line;
 };
 
 const className = (selection: SelectionContext): string | null => {
-  const match = /^<[^>]*\bclass="([^"]*)"/u.exec(
+  const match = /^<[^>]*\bclass="(?<names>[^"]*)"/u.exec(
     selection.outerHTML.slice(0, HTML_SNIPPET_MAX)
   );
 
-  const first = match?.[1]?.trim().split(/\s+/u)[0];
+  const first = match?.groups?.["names"]?.trim().split(/\s+/u)[0];
 
   return first || null;
 };
@@ -294,22 +323,26 @@ const className = (selection: SelectionContext): string | null => {
 const elementLabel = (selection: SelectionContext): string => {
   const tag = selection.tag.toLowerCase();
   const text = snippet(selection.text, TEXT_SNIPPET_MAX);
-  const kind = (TEXT_TAGS.has(tag) && "text") || (KIND_OF_TAG[tag] ?? null);
+  const kind = (TEXT_TAGS.has(tag) && "text") || (KIND_OF_TAG.get(tag) ?? null);
 
   if (kind && text) {
     return `${kind} “${text}”`;
   }
+
   if (kind) {
     return kind;
   }
+
   const cls = className(selection);
 
   if (cls) {
     return `${tag}.${cls}`;
   }
+
   if (text) {
     return `${tag} “${text}”`;
   }
+
   return tag;
 };
 
@@ -346,8 +379,12 @@ const breadcrumbOf = (
   if (!last) {
     return { full: page, short: page };
   }
+
   if (selections.length > 1) {
-    const full = [page, ...selections.map(elementLabel)].join(" › ");
+    const full = [
+      page,
+      ...selections.map((selection) => elementLabel(selection)),
+    ].join(" › ");
 
     return { full, short: `${page} › ${selections.length} elements` };
   }

@@ -253,6 +253,10 @@
 }
 
 .lib-actions {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);

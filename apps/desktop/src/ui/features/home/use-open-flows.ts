@@ -5,6 +5,7 @@ import type { AppHealth } from "./deps.js";
 import { healthProblem } from "./doctor-model.js";
 import { shortHome } from "./home-model.js";
 import type { Busy } from "./home-model.js";
+import { toOptionalArg } from "./optional-arg-model.js";
 import { projectsApi } from "./projects-store-model.js";
 import type { useDoctorGate } from "./use-doctor-gate.js";
 
@@ -18,6 +19,23 @@ interface FlowDeps {
   readonly doctor: ReturnType<typeof useDoctorGate>;
 }
 
+interface OpenFlows {
+  readonly openProject: (project: Project) => void;
+  readonly openSample: () => Promise<void>;
+  readonly openStarter: (starter: Starter) => Promise<void>;
+}
+
+const isHealthBroken = (state: AppHealth | null): boolean =>
+  state !== null && (state.state === "install" || state.state === "failed");
+
+const toProjectSource = (project: Project, homeDir: string | null): string => {
+  if (project.imported) {
+    return shortHome(project.imported.sourcePath, homeDir);
+  }
+
+  return project.name;
+};
+
 const useOpenFlows = ({
   onOpen,
   setBusy,
@@ -26,7 +44,7 @@ const useOpenFlows = ({
   health,
   homeDir,
   doctor,
-}: FlowDeps) => {
+}: FlowDeps): OpenFlows => {
   const openStarter = async (starter: Starter): Promise<void> => {
     setBusy("starter");
     setFormError(null);
@@ -34,7 +52,7 @@ const useOpenFlows = ({
     try {
       const { project } = await api.createFromStarter(
         starter.id,
-        location ?? undefined
+        ...toOptionalArg(location)
       );
 
       onOpen(project.id);
@@ -48,7 +66,7 @@ const useOpenFlows = ({
     setBusy("starter");
 
     try {
-      const { project } = await api.createSample(location ?? undefined);
+      const { project } = await api.createSample(...toOptionalArg(location));
       onOpen(project.id);
     } catch (error) {
       setFormError(errorText(error));
@@ -57,31 +75,28 @@ const useOpenFlows = ({
   };
 
   const openProject = (project: Project): void => {
-    const state = health.get(project.id);
+    const state = health.get(project.id) ?? null;
 
-    if (!state || (state.state !== "install" && state.state !== "failed")) {
-      return onOpen(project.id);
+    if (!state || !isHealthBroken(state)) {
+      onOpen(project.id);
+
+      return;
     }
 
     doctor.open({
-      check: async () => {
-        const fresh = (await projectsApi.health()).find(
-          (item) => item.projectId === project.id
-        );
+      check: async (): Promise<boolean> => {
+        const all = await projectsApi.health();
+        const fresh = all.find((item) => item.projectId === project.id) ?? null;
 
-        return (
-          !fresh || (fresh.state !== "install" && fresh.state !== "failed")
-        );
+        return !fresh || !isHealthBroken(fresh);
       },
       problem: healthProblem(
         project,
         state,
-        project.imported
-          ? shortHome(project.imported.sourcePath, homeDir)
-          : project.name,
+        toProjectSource(project, homeDir),
         homeDir
       ),
-      proceed: () => onOpen(project.id),
+      proceed: (): void => onOpen(project.id),
     });
   };
 
@@ -90,4 +105,4 @@ const useOpenFlows = ({
 
 export { useOpenFlows };
 
-export type { FlowDeps };
+export type { FlowDeps, OpenFlows };

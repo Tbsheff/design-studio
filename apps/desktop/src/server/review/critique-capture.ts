@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { scanLayers } from "../page-probe/index.js";
+import { scanLayers, toProbeTarget } from "../page-probe/index.js";
 import type { Layer } from "../page-probe/index.js";
 import type { PreviewService } from "../preview/index.js";
 import type { CritiqueShot } from "./critique-model.js";
@@ -63,11 +63,15 @@ const createFrameCapture = async (
 
   const [shots, scanned] = await Promise.all([
     createShots(preview, target),
-    scanLayers(preview, target.url, viewport, target.scope, target.page, {
-      depth: SCAN_DEPTH,
-      max: SCAN_MAX,
-      root: null,
-    }),
+    scanLayers(
+      toProbeTarget(preview, target.url, viewport, target.scope),
+      target.page,
+      {
+        depth: SCAN_DEPTH,
+        max: SCAN_MAX,
+        root: null,
+      }
+    ),
   ]);
 
   return { layers: scanned?.layers ?? [], shots };

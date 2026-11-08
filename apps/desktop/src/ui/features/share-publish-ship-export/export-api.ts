@@ -16,11 +16,40 @@ import type {
 
 import { desktopBridge } from "../../platform/desktop.js";
 import { call as callAction, getJson, sendJson } from "../../platform/http.js";
+import { isFieldSource } from "../../platform/json-guard.js";
 import { readStored, uiStore, writeStored } from "../../platform/storage.js";
 import { canvasStore } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { activeFrame, defaultLayout, frameName } from "../canvas/index.js";
 import { pick } from "./pick.js";
+
+interface PathFields {
+  path?: string;
+}
+
+interface EditorBody {
+  editor: EditorId;
+  file?: string;
+}
+
+const toPathFields = (path: string | undefined): PathFields => {
+  if (path) {
+    return { path };
+  }
+
+  return {};
+};
+
+const toEditorBody = (
+  editor: EditorId,
+  file: string | undefined
+): EditorBody => {
+  if (file) {
+    return { editor, file };
+  }
+
+  return { editor };
+};
 
 const item = (pid: string): string =>
   `/api/projects/${encodeURIComponent(pid)}`;
@@ -59,7 +88,7 @@ const exportApi = {
       targetSelector: request.selector,
       versionId: request.versionId ?? null,
       width: request.frame.width,
-      ...(request.frame.path ? { path: request.frame.path } : {}),
+      ...toPathFields(request.frame.path),
     }),
   editors: async (): Promise<EditorInfo[]> =>
     (await getJson<EditorInfo[]>("/api/editors")) ?? [],
@@ -100,7 +129,7 @@ const exportApi = {
     await sendJson(
       "POST",
       `${item(pid)}/d/${encodeURIComponent(did)}/open-in-editor`,
-      file ? { editor, file } : { editor }
+      toEditorBody(editor, file)
     );
   },
   revealHandoff: async (pid: string, folder: string): Promise<void> => {
@@ -120,7 +149,7 @@ interface ExportPrefs {
 
 const DEFAULT_PREFS: ExportPrefs = { format: "png", scale: 2, scope: "page" };
 
-const FORMATS: ReadonlySet<ExportFormat> = new Set<ExportFormat>([
+const FORMAT_LIST: readonly ExportFormat[] = [
   "png",
   "pdf",
   "html",
@@ -128,24 +157,35 @@ const FORMATS: ReadonlySet<ExportFormat> = new Set<ExportFormat>([
   "handoff",
   "svg",
   "pptx",
-]);
+];
+
+const SCALE_THREE = 3;
+const SCALE_LIST: readonly ExportScale[] = [1, 2, SCALE_THREE];
+
+const toPrefs = (raw: ReadonlyMap<string, unknown>): ExportPrefs => {
+  const format = raw.get("format");
+  const scale = raw.get("scale");
+
+  return {
+    format:
+      FORMAT_LIST.find((candidate) => candidate === format) ??
+      DEFAULT_PREFS.format,
+    scale:
+      SCALE_LIST.find((candidate) => candidate === scale) ??
+      DEFAULT_PREFS.scale,
+    scope: pick(raw.get("scope") === "frame", "frame", "page"),
+  };
+};
 
 const readExportPrefs = (): ExportPrefs => {
   try {
-    const raw = JSON.parse(
-      readStored(PREFS_KEY) ?? "{}"
-    ) as Partial<ExportPrefs>;
+    const parsed: unknown = JSON.parse(readStored(PREFS_KEY) ?? "{}");
 
-    return {
-      format: FORMATS.has(raw.format as ExportFormat)
-        ? (raw.format as ExportFormat)
-        : DEFAULT_PREFS.format,
-      scale:
-        raw.scale === 1 || raw.scale === 2 || raw.scale === 3
-          ? raw.scale
-          : DEFAULT_PREFS.scale,
-      scope: pick(raw.scope === "frame", "frame", "page"),
-    };
+    if (isFieldSource(parsed)) {
+      return toPrefs(new Map(Object.entries(parsed)));
+    }
+
+    return DEFAULT_PREFS;
   } catch {
     return DEFAULT_PREFS;
   }
@@ -168,7 +208,7 @@ const toExport = (
   height: frame.height,
   name,
   width: frame.width,
-  ...(frame.path ? { path: frame.path } : {}),
+  ...toPathFields(frame.path),
 });
 
 const frameRoute = (frame: ExportFrame): string =>
@@ -199,7 +239,12 @@ const canvasFrameChoices = (
     (frame) => !frame.directionId || frame.directionId === directionId
   );
 
-  const list = own.length > 0 ? own : [active];
+  let list = [active];
+
+  if (own.length > 0) {
+    list = own;
+  }
+
   const names = choiceNames(list);
 
   return list.map((frame, index) => ({
@@ -209,12 +254,12 @@ const canvasFrameChoices = (
   }));
 };
 
-const activeExportFrame = (projectId: string): ExportFrame =>
-  toExport(
-    activeFrame(
-      canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport)
-    )
-  );
+const activeExportFrame = (projectId: string): ExportFrame => {
+  const layout =
+    canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport);
+
+  return toExport(activeFrame(layout));
+};
 
 interface ExportTarget {
   projectId: string;
@@ -253,7 +298,7 @@ interface RevealBridge {
 }
 
 const canRevealDownload = (): boolean =>
-  typeof desktopBridge<RevealBridge>()?.revealExport === "function";
+  Boolean(desktopBridge<RevealBridge>()?.revealExport);
 
 const revealDownload = (): void => {
   desktopBridge<RevealBridge>()?.revealExport?.();

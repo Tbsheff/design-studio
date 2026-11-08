@@ -38,8 +38,8 @@ import {
 import type { BridgeFrame } from "../../platform/bridge.js";
 import { randomToken } from "../../platform/session.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
-import { frameTitle } from "./canvas-frames.js";
 import { copy } from "./copy.js";
+import { frameTitle } from "./frame-label-model.js";
 import { hasOutgoing, playStartOf } from "./prototype-layer.js";
 
 import "../../styles/prototype.css";

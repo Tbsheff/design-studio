@@ -4,7 +4,11 @@ import { lazy } from "react";
 
 import type { ComposerMode } from "./run-settings.js";
 
-const RepoContextChip = lazy(() => import("./repo-context-chip.js"));
+const RepoContextChip = lazy(async () => {
+  const loaded = await import("./repo-context-chip.js");
+
+  return { default: loaded.RepoContextChip };
+});
 
 interface VariationsPromptProps {
   count: number;

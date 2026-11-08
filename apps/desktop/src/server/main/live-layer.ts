@@ -15,6 +15,7 @@ import { EffectLive } from "../handlers/effect/live.js";
 import { EventsLive } from "../handlers/events/live.js";
 import { ExportLive } from "../handlers/export/live.js";
 import { FillLive } from "../handlers/fill/live.js";
+import { FixtureLive } from "../handlers/fixture/live.js";
 import { GalleryLive } from "../handlers/gallery/live.js";
 import { GridLive } from "../handlers/grid/live.js";
 import { IconLive } from "../handlers/icon/live.js";
@@ -44,6 +45,7 @@ import { ThemeLive } from "../handlers/theme/live.js";
 import { TokenLive } from "../handlers/token/live.js";
 import { VersionLive } from "../handlers/version/live.js";
 import { ViewportLive } from "../handlers/viewport/live.js";
+import { WalkthroughLive } from "../handlers/walkthrough/live.js";
 import { WorkspaceLive } from "../handlers/workspace/live.js";
 import {
   Authorizer,
@@ -72,6 +74,7 @@ const liveLayer = Layer.mergeAll(
   EventsLive,
   ExportLive,
   FillLive,
+  FixtureLive,
   GalleryLive,
   GridLive,
   IconLive,
@@ -101,6 +104,7 @@ const liveLayer = Layer.mergeAll(
   TokenLive,
   VersionLive,
   ViewportLive,
+  WalkthroughLive,
   WorkspaceLive
 );
 

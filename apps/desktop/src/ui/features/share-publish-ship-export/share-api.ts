@@ -29,7 +29,7 @@ const sharesChanged = (projectId: string): void => {
 
 const shareApi = {
   create: (
-    projectId: string,
+    ownerProjectId: string,
     input: CreateRequest
   ): Promise<UiOutput<typeof createShare>> =>
     call(routes.createShare, {
@@ -37,7 +37,7 @@ const shareApi = {
       expiresInHours: input.expiresInHours,
       frames: [...input.frameIds],
       live: input.live,
-      projectId,
+      projectId: ownerProjectId,
       versionId: input.versionId,
     }),
   list: (projectId: string): Promise<UiOutput<typeof listShare>> =>

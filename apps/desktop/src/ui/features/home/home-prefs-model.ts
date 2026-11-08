@@ -6,11 +6,11 @@ type HomeView = "list" | "grid";
 
 type HomeFilter = "all" | "prototypes" | "apps" | "systems";
 
-const FILTERS: ReadonlySet<string> = new Set([
-  "all",
-  "prototypes",
-  "apps",
-  "systems",
+const FILTERS: ReadonlyMap<string, HomeFilter> = new Map([
+  ["all", "all"],
+  ["prototypes", "prototypes"],
+  ["apps", "apps"],
+  ["systems", "systems"],
 ]);
 
 interface HomePrefs {
@@ -19,11 +19,6 @@ interface HomePrefs {
   readonly view: HomeView;
   readonly hasTemplatesShown: boolean;
   readonly filter: HomeFilter;
-}
-
-interface LegacyHomePrefs {
-  readonly favoritesOnly: unknown;
-  readonly templatesShown: unknown;
 }
 
 const KEY = "studio.home.v1";
@@ -36,23 +31,59 @@ const DEFAULTS: HomePrefs = {
   view: "list",
 };
 
+type StoredValue =
+  | string
+  | number
+  | boolean
+  | null
+  | StoredValue[]
+  | { readonly [key: string]: StoredValue };
+
+interface StoredPrefs {
+  readonly favorites: StoredValue;
+  readonly favoritesOnly: StoredValue;
+  readonly filter: StoredValue;
+  readonly hasTemplatesShown: StoredValue;
+  readonly isFavoritesOnly: StoredValue;
+  readonly templatesShown: StoredValue;
+  readonly view: StoredValue;
+}
+
+const toFavorites = (value: StoredValue): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((id): id is string => typeof id === "string");
+};
+
+const toFilter = (value: StoredValue): HomeFilter =>
+  FILTERS.get(String(value)) ?? "all";
+
+const toView = (value: StoredValue): HomeView => {
+  if (value === "grid") {
+    return "grid";
+  }
+
+  return "list";
+};
+
 const getPrefs = (): HomePrefs => {
   try {
-    const raw = JSON.parse(readStored(KEY) ?? "{}") as Partial<HomePrefs> &
-      Partial<LegacyHomePrefs>;
+    const raw: StoredPrefs | null = JSON.parse(readStored(KEY) ?? "{}");
+
+    if (raw === null) {
+      return DEFAULTS;
+    }
 
     return {
-      favorites: Array.isArray(raw.favorites)
-        ? raw.favorites.filter((id): id is string => typeof id === "string")
-        : [],
-      filter: FILTERS.has(String(raw.filter))
-        ? (raw.filter as HomeFilter)
-        : "all",
+      favorites: toFavorites(raw.favorites),
+      filter: toFilter(raw.filter),
       hasTemplatesShown:
         raw.hasTemplatesShown === true || raw.templatesShown === true,
       isFavoritesOnly:
         raw.isFavoritesOnly === true || raw.favoritesOnly === true,
-      view: raw.view === "grid" ? "grid" : "list",
+      view: toView(raw.view),
     };
   } catch {
     return DEFAULTS;
@@ -63,27 +94,36 @@ const setPrefsQuietly = (prefs: HomePrefs): void => {
   writeStored(KEY, JSON.stringify(prefs));
 };
 
+const toFavoritesWith = (favorites: string[], id: string): string[] => {
+  if (favorites.includes(id)) {
+    return favorites.filter((item) => item !== id);
+  }
+
+  return [...favorites, id];
+};
+
 let current = getPrefs();
 const listeners = new Set<() => void>();
 
+const runListeners = (): void => {
+  for (const listener of listeners) {
+    listener();
+  }
+};
+
 const homePrefs = {
-  get: () => current,
+  get: (): HomePrefs => current,
   set(patch: Partial<HomePrefs>): void {
     current = { ...current, ...patch };
     setPrefsQuietly(current);
-    listeners.forEach((listener) => listener());
+    runListeners();
   },
   toggleFavorite(id: string): void {
-    const has = current.favorites.includes(id);
-    homePrefs.set({
-      favorites: has
-        ? current.favorites.filter((item) => item !== id)
-        : [...current.favorites, id],
-    });
+    homePrefs.set({ favorites: toFavoritesWith(current.favorites, id) });
   },
 };
 
-const startPrefsSubscription = (listener: () => void) => {
+const startPrefsSubscription = (listener: () => void): (() => void) => {
   listeners.add(listener);
 
   return (): void => {

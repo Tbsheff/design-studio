@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { KeyboardEvent } from "react";
 
 import { toRecentRow, toStep } from "./palette-model.js";
-import type { Row } from "./palette-rows.js";
+import type { Row } from "./palette-row-types.js";
 
 interface PaletteKeyInput {
   current: number;

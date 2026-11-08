@@ -1,14 +1,30 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
 import type { ReactElement, RefObject } from "react";
 
-import { uiStore } from "../../platform/storage.js";
 import { pickable } from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
-import { copy } from "./copy.js";
 import type { AppHealth } from "./deps.js";
-import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
-import type { useProjectActions } from "./home-sections.js";
-import type { LibraryModule } from "./lazy-parts.js";
+import { useHomePrefs } from "./home-prefs-model.js";
+import type { LibraryModule } from "./lazy-parts-model.js";
+import { LibraryBody } from "./library-body.js";
+import type { CardActions } from "./project-card-model.js";
+
+interface LibraryProps {
+  readonly lib: LibraryModule | null;
+  readonly projects: Project[];
+  readonly health: Map<string, AppHealth>;
+  readonly homeDir: string | null;
+  readonly actions: CardActions;
+  readonly packs: PacksState;
+  readonly pack: PackSummary | null;
+  readonly query: string;
+  readonly onQuery: (queryArg: string) => void;
+  readonly searchRef: RefObject<HTMLInputElement | null>;
+  readonly listError: string | null;
+  readonly onPickPack: (id: string | null) => void;
+}
+
+const NO_PACKS: PackSummary[] = [];
 
 const Library = ({
   lib,
@@ -23,103 +39,30 @@ const Library = ({
   searchRef,
   listError,
   onPickPack,
-}: {
-  readonly lib: LibraryModule | null;
-  readonly projects: Project[];
-  readonly health: Map<string, AppHealth>;
-  readonly homeDir: string | null;
-  readonly actions: ReturnType<typeof useProjectActions>;
-  readonly packs: PacksState;
-  readonly pack: PackSummary | null;
-  readonly query: string;
-  readonly onQuery: (queryArg: string) => void;
-  readonly searchRef: RefObject<HTMLInputElement | null>;
-  readonly listError: string | null;
-  readonly onPickPack: (id: string | null) => void;
-}): ReactElement => {
+}: LibraryProps): ReactElement => {
   const { filter } = useHomePrefs();
 
   if (!lib) {
     return <div className="home-continue placeholder" aria-hidden="true" />;
   }
 
-  const latest = [...projects]
-    .filter((project) => !project.designSystemFor)
-    .sort((first, second) => second.updatedAt - first.updatedAt)[0];
-
-  const systems = filter === "systems";
-
-  const systemActions = systems && (
-    <>
-      <button
-        type="button"
-        className="btn small"
-        onClick={() =>
-          uiStore.set({ returnTo: "home", screen: "new-design-system" })
-        }
-      >
-        {copy.newDesignSystem}
-      </button>
-      <button
-        type="button"
-        className="btn small"
-        onClick={() =>
-          uiStore.set({ libraryFrom: null, screen: "design-systems" })
-        }
-      >
-        {copy.openLibrary}
-      </button>
-    </>
-  );
-
   return (
-    <>
-      {latest && (
-        <lib.ContinueCard
-          project={latest}
-          health={health.get(latest.id) ?? null}
-          onOpen={actions.onOpen}
-        />
-      )}
-      <lib.ProjectGrid
-        projects={lib.listFilteredLibrary(projects, filter)}
-        packs={packs.packs}
-        health={health}
-        homeDir={homeDir}
-        error={listError}
-        actions={actions}
-        query={query}
-        onQuery={onQuery}
-        searchRef={searchRef}
-        filter={
-          filter === "all"
-            ? null
-            : {
-                label: lib.FILTER_EMPTY[filter],
-                onClear: () => homePrefs.set({ filter: "all" }),
-                ...(systems
-                  ? {
-                      empty:
-                        "Your design systems show here. Start from one below, or make a new one.",
-                    }
-                  : {}),
-              }
-        }
-        tabs={<lib.FilterChips filter={filter} />}
-        headActions={systemActions}
-      />
-      {systems && (
-        <section className="home-list" aria-label={copy.pickADesignSystem}>
-          <p className="home-section-hint">{copy.pickOneForYourNext}</p>
-          <lib.PackCards
-            packs={pickable(packs).packs ?? []}
-            value={pack?.id ?? null}
-            shouldIncludeNone={false}
-            onPick={(picked) => onPickPack(picked?.id ?? null)}
-          />
-        </section>
-      )}
-    </>
+    <LibraryBody
+      lib={lib}
+      filter={filter}
+      projects={projects}
+      health={health}
+      homeDir={homeDir}
+      actions={actions}
+      packs={packs.packs}
+      pickablePacks={pickable(packs).packs ?? NO_PACKS}
+      pack={pack}
+      query={query}
+      onQuery={onQuery}
+      searchRef={searchRef}
+      listError={listError}
+      onPickPack={onPickPack}
+    />
   );
 };
 

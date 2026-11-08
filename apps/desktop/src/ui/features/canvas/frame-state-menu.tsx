@@ -1,149 +1,17 @@
-import type { FrameStatesView } from "@design-studio/contracts/frame-state";
-import { Icon, usePopover } from "@design-studio/ui";
-import type { ReactElement } from "react";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Icon } from "@design-studio/ui";
+import { useCallback, useState } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
-import { copy } from "./copy.js";
-import {
-  stop,
-  menuKeys,
-  StateRows,
-  SessionRows,
-  UserForm,
-  MockForm,
-} from "./frame-state-parts.js";
-import type { Panel } from "./frame-state-parts.js";
-import {
-  frameStateOf,
-  setFrameSession,
-  setFrameState,
-  useCurrentFrameStates,
-} from "./frame-states-model.js";
-import { useFrameStateSlot } from "./use-frame-state-slot.js";
+import { stop } from "./frame-state-ui-model.js";
+import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
+import { MenuBody } from "./menu-body.js";
+import { usePanelMenu } from "./use-panel-menu.js";
 
-const usePanelMenu = () => {
-  const [open, setOpen] = useState(false);
-  const [panel, setPanel] = useState<Panel>("list");
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
+const STATE_TIP =
+  "Preview state: signed in, empty, loading, error or mock data";
 
-  const close = useCallback((refocus: boolean) => {
-    setOpen(false);
-    setPanel("list");
-
-    if (refocus) {
-      trigger.current?.focus();
-    }
-  }, []);
-
-  usePopover(open, root, close);
-  useEffect(() => {
-    if (open && panel === "list") {
-      root.current
-        ?.querySelector<HTMLButtonElement>(
-          '[role^="menuitem"][aria-checked="true"]'
-        )
-        ?.focus();
-    }
-  }, [open, panel]);
-
-  return { close, open, panel, root, setOpen, setPanel, trigger };
-};
-
-const MenuBody = ({
-  projectId,
-  frameId,
-  directionId,
-  view,
-  chosen,
-  menu,
-  onError,
-}: {
-  projectId: string;
-  frameId: string;
-  directionId: string | null;
-  view: FrameStatesView;
-  chosen: string;
-  menu: ReturnType<typeof usePanelMenu>;
-  onError: (message: string | null) => void;
-}): ReactElement => {
-  const slot = useFrameStateSlot();
-
-  const run = async (task: Promise<unknown>): Promise<void> => {
-    onError(null);
-
-    try {
-      await task;
-      menu.close(true);
-    } catch (error: unknown) {
-      const argument: string = ((): string => {
-        if (error instanceof Error) {
-          return error.message;
-        }
-
-        return String(error);
-      })();
-
-      onError(argument);
-    }
-  };
-
-  if (menu.panel === "user") {
-    return (
-      <UserForm
-        user={view.session.user}
-        onBack={() => menu.setPanel("list")}
-        onSave={async (user) => {
-          await setFrameSession(projectId, { user });
-          menu.close(true);
-        }}
-      />
-    );
-  }
-
-  if (menu.panel === "mock") {
-    return (
-      <MockForm
-        onBack={() => menu.setPanel("list")}
-        onSave={async (name, rules) => {
-          await setFrameState(projectId, frameId, "mock", { name, rules });
-          menu.close(true);
-        }}
-      />
-    );
-  }
-
-  return (
-    <div role="menu" aria-label={copy.frameState} onKeyDown={menuKeys}>
-      <StateRows
-        view={view}
-        chosen={chosen}
-        onPick={(state) => run(setFrameState(projectId, frameId, state.id))}
-      />
-      <div className="ui-menu-section">
-        <button
-          type="button"
-          role="menuitem"
-          className="ui-menu-item"
-          tabIndex={-1}
-          onClick={() => menu.setPanel("mock")}
-        >
-          <Icon name="plus" size={14} />
-          <span>{copy.newMockData}</span>
-        </button>
-      </div>
-      <Suspense fallback={null}>
-        {slot?.({ directionId, frameId, projectId })}
-      </Suspense>
-      <SessionRows
-        view={view}
-        onPanel={menu.setPanel}
-        onSession={(change) => run(setFrameSession(projectId, change))}
-      />
-      <p className="frame-state-note">{copy.toSignInFor}</p>
-    </div>
-  );
-};
+const stopKeys = (event: KeyboardEvent<HTMLElement>): void =>
+  event.stopPropagation();
 
 const FrameStateMenu = ({
   frameId,
@@ -156,7 +24,9 @@ const FrameStateMenu = ({
 }): ReactElement | null => {
   const states = useCurrentFrameStates();
   const menu = usePanelMenu();
+  const { root, setOpen, trigger } = menu;
   const [error, setError] = useState<string | null>(null);
+  const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
 
   if (!states) {
     return null;
@@ -165,39 +35,29 @@ const FrameStateMenu = ({
   const chosen = frameStateOf(states.view, frameId);
   const def = states.view.states.find((state) => state.id === chosen);
   const set = chosen !== "default";
+  let part: "" | " set" = "";
+  let datatip = "";
 
-  const part: "" | " set" = ((): "" | " set" => {
-    if (set) {
-      return " set";
-    }
+  if (set) {
+    part = " set";
+  }
 
-    return "";
-  })();
-
-  const datatip:
-    | "Preview state: signed in, empty, loading, error or mock data"
-    | undefined = (():
-    | "Preview state: signed in, empty, loading, error or mock data"
-    | undefined => {
-    if (menu.open) {
-      return undefined;
-    }
-
-    return "Preview state: signed in, empty, loading, error or mock data";
-  })();
+  if (!menu.open) {
+    datatip = STATE_TIP;
+  }
 
   return (
-    <div className="frame-menu-root frame-state-root" ref={menu.root}>
+    <div className="frame-menu-root frame-state-root" ref={root}>
       <button
-        ref={menu.trigger}
+        ref={trigger}
         type="button"
         className={`frame-chip state${part}`}
         aria-haspopup="menu"
         aria-expanded={menu.open}
         aria-label={`Preview state for ${frameName}: ${def?.name ?? chosen}`}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((value) => !value)}
-        data-tip={datatip}
+        onClick={toggle}
+        data-tip={datatip || null}
       >
         <Icon name="sliders" size={12} />
         {set && <span className="frame-state-name">{def?.name ?? chosen}</span>}
@@ -205,7 +65,8 @@ const FrameStateMenu = ({
       {menu.open && (
         <div
           className="ui-menu project-menu canvas-menu frame-menu frame-state-menu"
-          onKeyDown={(event) => event.stopPropagation()}
+          role="presentation"
+          onKeyDown={stopKeys}
         >
           <MenuBody
             projectId={states.projectId}

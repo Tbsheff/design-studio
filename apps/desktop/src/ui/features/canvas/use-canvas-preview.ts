@@ -8,11 +8,11 @@ import {
 } from "../design-system/token-frames.js";
 import { usePlannedEdits } from "../inspector/use-planned-edits.js";
 import { knownList, marqueeAllowed } from "./canvas-helpers.js";
-import { useLayersWatch, useSelectMoveKeys } from "./canvas-layers.js";
 import type { ViewProps } from "./canvas-types.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import { useDirectionFrames } from "./use-direction-frames.js";
 import { useInlineTextEdit } from "./use-inline-text-edit.js";
+import { useLayersWatch, useSelectMoveKeys } from "./use-layers-watch.js";
 import { usePreviewFrames } from "./use-preview-frames.js";
 import { useFramePort } from "./use-preview-url.js";
 import { useStageKeys } from "./use-stage-keys.js";

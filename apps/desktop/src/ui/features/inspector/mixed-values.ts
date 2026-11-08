@@ -6,12 +6,12 @@ import type {
 } from "@design-studio/contracts";
 
 import {
-  changedProps,
-  shiftedPart,
-  shiftedValue,
-  valuesFromStyles,
-} from "./css-values.js";
-import type { Shift, ShiftPart, StyleValues } from "./css-values.js";
+  toChangedProps,
+  toShiftedPart,
+  toShiftedValue,
+  toStyleValues,
+} from "./css-value-model.js";
+import type { Shift, ShiftPart, StyleValues } from "./css-value-model.js";
 import { resolveNumberInput } from "./math-input.js";
 import { buildEditRequest } from "./use-direct-edit.js";
 
@@ -22,10 +22,10 @@ interface MergedValues {
   readonly mixed: ReadonlySet<DirectStyleProperty>;
 }
 
-const ALL_PROPS = Object.keys(valuesFromStyles({})) as DirectStyleProperty[];
+const ALL_PROPS = Object.keys(toStyleValues({})) as DirectStyleProperty[];
 
 const mergeValues = (list: StyleValues[]): MergedValues => {
-  const first = list[0] ?? valuesFromStyles({});
+  const first = list[0] ?? toStyleValues({});
   const values = { ...first };
   const mixed = new Set<DirectStyleProperty>();
 
@@ -89,7 +89,7 @@ const shiftedProp = (raw: string, shift: PropShift): string | null => {
   let value: string | null = raw;
 
   if (shift.delta !== 0) {
-    value = shiftedValue(raw, shift);
+    value = toShiftedValue(raw, shift);
   }
 
   if (value === null) {
@@ -97,7 +97,7 @@ const shiftedProp = (raw: string, shift: PropShift): string | null => {
   }
 
   for (const part of Object.values(shift.parts ?? {})) {
-    value = shiftedPart(value, part.part, part);
+    value = toShiftedPart(value, part.part, part);
   }
 
   return value;
@@ -120,7 +120,7 @@ const shiftedStyle = (
     }
   }
 
-  return changedProps(style, base);
+  return toChangedProps(style, base);
 };
 
 const withPart = (
@@ -239,8 +239,11 @@ const ownEdits = (
 ): OwnEdit[] => {
   const out: OwnEdit[] = [];
   selections.forEach((selection, index) => {
-    const base = bases[index] ?? valuesFromStyles(selection.styles);
-    const own = { ...changedProps(style, base), ...shiftedStyle(base, shifts) };
+    const base = bases[index] ?? toStyleValues(selection.styles);
+    const own = {
+      ...toChangedProps(style, base),
+      ...shiftedStyle(base, shifts),
+    };
     const edit = buildEditRequest(selection, own);
 
     if (edit) {

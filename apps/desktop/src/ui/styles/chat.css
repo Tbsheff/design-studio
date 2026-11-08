@@ -334,6 +334,9 @@
 }
 
 .permission {
+  min-width: 0;
+  margin: 0;
+  border: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--s-2);
@@ -1098,6 +1101,10 @@
 
 .run-thumbs {
   display: inline-flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .feedback-thumb {

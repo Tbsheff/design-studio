@@ -3,8 +3,8 @@ import type { ComponentProps } from "react";
 
 import { api } from "../../api";
 import { shownPending } from "../../features/chat/run-state-model";
-import { toggleRail } from "../../features/home/project-rail";
-import { fixPrompt } from "../../features/review/errors-panel";
+import { setRailToggled as toggleRail } from "../../features/home/index.js";
+import { toFixPrompt } from "../../features/review/index";
 import { uiStore } from "../../platform/storage";
 import type { LeftPane } from "../shell/left-pane";
 import type { StudioPaneHeader } from "../shell/studio-pane-header";
@@ -73,8 +73,8 @@ const chatProps = (ctx: StudioCtx): LeftProps["chat"] => {
 const errorsProps = (ctx: StudioCtx): LeftProps["errors"] => ({
   errors: ctx.core.data.errors,
   onClear: ctx.core.data.clearErrors,
-  onSendToAgent: (error: Parameters<typeof fixPrompt>[0]): void =>
-    ctx.ui.draft.set(fixPrompt(error)),
+  onSendToAgent: (error: Parameters<typeof toFixPrompt>[0]): void =>
+    ctx.ui.draft.set(toFixPrompt(error)),
 });
 
 const promptProps = (ctx: StudioCtx): LeftProps["prompt"] => {

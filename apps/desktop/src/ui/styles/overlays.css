@@ -507,3 +507,14 @@
     outline-offset: -2px;
   }
 }
+
+dialog.drawer {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+}

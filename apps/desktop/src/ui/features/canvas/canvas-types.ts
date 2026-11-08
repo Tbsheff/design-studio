@@ -7,15 +7,23 @@ import type {
   SelectionContext,
   ZoomKey,
 } from "@design-studio/contracts";
-import type { ComponentType, MutableRefObject } from "react";
+import type {
+  ComponentType,
+  LazyExoticComponent,
+  MutableRefObject,
+} from "react";
 
+import type { CanvasSource } from "../../domain/canvas-presets.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { LiveStore } from "../../platform/live-store.js";
+import type { TabOrderSlot } from "../accessibility/index.js";
+import type { InlinePromptView } from "../chat/index.js";
 import type { CommentsControl } from "../comments/use-comments.js";
+import type { GridOverlay } from "../grid/index.js";
 import type { BuildError, FilesChange } from "../home/use-studio-data.js";
+import type { SpacingHandles } from "../spacing/index.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasShell } from "./canvas-shell.js";
-import type { CanvasSource } from "./canvas-toolbar.js";
 import type { TextCommitHandler } from "./use-inline-text-edit.js";
 import type { FrameVariation } from "./variation-controls.js";
 
@@ -87,4 +95,24 @@ interface CanvasCommandsInput {
   play: () => void;
 }
 
-export type { CanvasCommentTools, CanvasDirections, Props, ViewProps };
+interface StageSlots {
+  readonly Grid: LazyExoticComponent<typeof GridOverlay>;
+  readonly InlinePrompt: LazyExoticComponent<
+    ComponentType<{
+      frame: { width: number; height: number };
+      view: InlinePromptView;
+      zoom: number;
+    }>
+  >;
+  readonly Spacing: LazyExoticComponent<typeof SpacingHandles>;
+  readonly TabOrder: typeof TabOrderSlot;
+}
+
+export type {
+  CanvasCommandsInput,
+  CanvasCommentTools,
+  CanvasDirections,
+  Props,
+  StageSlots,
+  ViewProps,
+};

@@ -3,8 +3,8 @@ import type { ReactElement, RefObject } from "react";
 
 import type { PopState } from "./composer-pop-model.js";
 import { copy } from "./copy.js";
-import type { ModelSettings } from "./home-popovers.js";
-import { ModelPopover } from "./lazy-parts.js";
+import { ModelPopover } from "./lazy-parts-model.js";
+import type { ModelSettings } from "./model-settings-model.js";
 import { PillSelect } from "./pill-select.js";
 
 interface ModelAnchorProps {

@@ -494,6 +494,13 @@
   padding: 0 3px;
 }
 
+fieldset.ins-toggles {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .ins-toggles button {
   border: 0;
   background: transparent;
@@ -798,7 +805,7 @@
   bottom: var(--s-2);
 }
 
-.edit-pane .box-ring .side {
+.edit-pane .box-ring .side-cell .ins-input {
   padding: 0 2px;
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -1013,7 +1020,7 @@
   display: none;
 }
 
-.ins-arrange-wrap[data-shown] {
+.ins-arrange-wrap[data-shown="true"] {
   border-bottom: 1px solid var(--line);
 }
 
@@ -1052,7 +1059,7 @@
   gap: var(--s-2);
 }
 
-.ins-gap-mode .ins-select {
+.ins-gap-mode .ui-select-root {
   padding-left: var(--s-2);
 }
 
@@ -1083,4 +1090,23 @@
   margin: 0 0 var(--s-2);
   color: var(--text-2);
   font-size: var(--t-xs);
+}
+
+fieldset.ins-select-matching {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0 0 var(--s-1);
+  border: 0;
+}
+
+output.ins-select-matching-note {
+  display: block;
+}
+
+.ins-code-figure {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
 }

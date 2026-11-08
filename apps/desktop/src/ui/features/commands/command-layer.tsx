@@ -1,11 +1,12 @@
 import type { ReactElement } from "react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { Palette } from "./palette.js";
 import type { CommandLayer as Layer } from "./registry.js";
 import { ShortcutSheet } from "./shortcut-sheet.js";
 
-import "./commands.css";
+const readActiveElement = (): Element | null =>
+  globalThis.document.activeElement;
 
 const CommandLayer = ({
   layer,
@@ -14,37 +15,28 @@ const CommandLayer = ({
   layer: Layer;
   onLayer: (next: Layer | null) => void;
 }): ReactElement => {
-  const opener = useRef<Element | null>(null);
-
-  if (opener.current === null) {
-    opener.current = document.activeElement;
-  }
+  const opener = useMemo(() => readActiveElement(), []);
+  const close = useCallback(() => onLayer(null), [onLayer]);
+  const openShortcuts = useCallback(() => onLayer("shortcuts"), [onLayer]);
 
   useEffect(
     () => (): void => {
-      const back = opener.current;
-
       if (
-        back instanceof HTMLElement &&
-        back.isConnected &&
+        opener instanceof HTMLElement &&
+        opener.isConnected &&
         document.activeElement === document.body
       ) {
-        back.focus({ preventScroll: true });
+        opener.focus({ preventScroll: true });
       }
     },
-    []
+    [opener]
   );
 
   if (layer === "palette") {
-    return (
-      <Palette
-        onClose={() => onLayer(null)}
-        onShortcuts={() => onLayer("shortcuts")}
-      />
-    );
+    return <Palette onClose={close} onShortcuts={openShortcuts} />;
   }
 
-  return <ShortcutSheet onClose={() => onLayer(null)} />;
+  return <ShortcutSheet onClose={close} />;
 };
 
 export { CommandLayer };

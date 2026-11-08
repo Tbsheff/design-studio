@@ -1,8 +1,6 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
-import { copy } from "./copy.js";
-import { InspectorSection } from "./inspector-fields.js";
 import { isPositioned, PositionRows } from "./position-rows.js";
 import { AlignSelf, MinMaxRows } from "./size-limits.js";
 import { SizeRow } from "./size-row.js";
@@ -34,16 +32,4 @@ const SizeRows = ({
   );
 };
 
-const SizeSection = ({
-  edit,
-  selection,
-}: {
-  readonly edit: DirectEdit;
-  readonly selection: SelectionContext;
-}): ReactElement => (
-  <InspectorSection title={copy.size}>
-    <SizeRows edit={edit} selection={selection} />
-  </InspectorSection>
-);
-
-export { SizeRows, SizeSection };
+export { SizeRows };

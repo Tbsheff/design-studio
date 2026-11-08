@@ -6,7 +6,7 @@ export type { PreviewMenuItem } from "../canvas/preview-menu.js";
 
 export { insertError } from "../design-system/component-insert-api.js";
 
-export { imageTargetOf } from "../inspector/image-api.js";
+export { toImageTarget } from "../inspector/index.js";
 
 export { useModalDialog } from "@design-studio/ui";
 

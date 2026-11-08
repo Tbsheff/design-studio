@@ -63,7 +63,7 @@ const usePortDialog = (
 const DropMenu = ({
   label,
   groups,
-  className,
+  triggerClass,
   anchorClass,
   align = "start",
   tip,
@@ -72,7 +72,7 @@ const DropMenu = ({
 }: {
   label: string;
   groups: () => MenuGroup[];
-  className: string;
+  triggerClass: string;
   anchorClass?: string;
   align?: "start" | "end";
   tip?: string;
@@ -117,7 +117,7 @@ const DropMenu = ({
       <button
         ref={trigger}
         type="button"
-        className={className}
+        className={triggerClass}
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}

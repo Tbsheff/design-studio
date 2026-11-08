@@ -1,8 +1,13 @@
 import type { CompiledTokenEntry } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { valuesFromStyles } from "../inspector/css-values.js";
+import { toStyleValues } from "../inspector/index.js";
 import { lintValues } from "./token-lint.js";
+import type { LintSource } from "./token-lint.js";
+
+type CssInput = NonNullable<LintSource["css"]>;
+
+const MAX_DELTA_E = 10;
 
 const entries: CompiledTokenEntry[] = [
   {
@@ -35,72 +40,82 @@ const entries: CompiledTokenEntry[] = [
   },
 ];
 
-const css = (text: string) => ({
+const css = (text: string): CssInput => ({
   inline: "",
-  rules: [{ selector: ".x", css: text, source: "index.html" }],
+  rules: [{ css: text, selector: ".x", source: "index.html" }],
 });
 
 describe(lintValues, () => {
   it("names the nearest token and its ΔE for an off-palette color", () => {
-    const values = valuesFromStyles({ color: "rgb(250, 10, 20)" });
-    const [issue] = lintValues(
-      values,
-      entries,
-      "light",
-      css("color: #fa0a14;")
-    );
+    expect.hasAssertions();
+
+    const values = toStyleValues({ color: "rgb(250, 10, 20)" });
+
+    const [issue] = lintValues(values, entries, "light", {
+      css: css("color: #fa0a14;"),
+      dirty: [],
+    });
 
     expect(issue?.kind).toBe("color");
     expect(issue?.token.cssVar).toBe("--primary");
     expect(issue?.deltaE).toBeGreaterThan(0);
-    expect(issue?.deltaE).toBeLessThan(10);
-  });
+    expect(issue?.deltaE).toBeLessThan(MAX_DELTA_E);
+  }, 0);
 
   it("flags a raw value that equals a token, and skips values written as var()", () => {
-    const values = valuesFromStyles({
+    expect.hasAssertions();
+
+    const values = toStyleValues({
       "background-color": "rgb(17, 17, 17)",
       color: "rgb(255, 0, 0)",
     });
 
-    const issues = lintValues(
-      values,
-      entries,
-      "light",
-      css("color: #ff0000; background-color: var(--fg);")
-    );
+    const issues = lintValues(values, entries, "light", {
+      css: css("color: #ff0000; background-color: var(--fg);"),
+      dirty: [],
+    });
+
     expect(
       issues.map((issue) => [
         issue.props,
         issue.token.cssVar,
         issue.token.exact,
       ])
-    ).toEqual([[["color"], "--primary", true]]);
-  });
+    ).toStrictEqual([[["color"], "--primary", true]]);
+  }, 0);
 
   it("skips values the element only inherits", () => {
-    const values = valuesFromStyles({ color: "rgb(250, 10, 20)" });
-    expect(
-      lintValues(values, entries, "light", css("display: block;"))
-    ).toEqual([]);
-  });
+    expect.hasAssertions();
 
+    const values = toStyleValues({ color: "rgb(250, 10, 20)" });
+    expect(
+      lintValues(values, entries, "light", {
+        css: css("display: block;"),
+        dirty: [],
+      })
+    ).toStrictEqual([]);
+  }, 0);
+});
+
+describe("lintValues shorthands", () => {
   it("groups a padding shorthand near a space token and flags a font outside the font tokens", () => {
-    const values = valuesFromStyles({
+    expect.hasAssertions();
+
+    const values = toStyleValues({
       "font-family": "Comic Sans MS",
       "padding-bottom": "15px",
       "padding-left": "15px",
       "padding-right": "15px",
       "padding-top": "15px",
     });
-    const issues = lintValues(
-      values,
-      entries,
-      "light",
-      css('padding: 15px; font-family: "Comic Sans MS";')
-    );
+
+    const issues = lintValues(values, entries, "light", {
+      css: css('padding: 15px; font-family: "Comic Sans MS";'),
+      dirty: [],
+    });
 
     const padding = issues.find((issue) => issue.kind === "size");
-    expect(padding?.props).toEqual([
+    expect(padding?.props).toStrictEqual([
       "padding-top",
       "padding-right",
       "padding-bottom",
@@ -110,12 +125,14 @@ describe(lintValues, () => {
     expect(issues.find((issue) => issue.kind === "font")?.token.cssVar).toBe(
       "--font-body"
     );
-  });
+  }, 0);
 
   it("counts unsaved edits as authored", () => {
-    const values = valuesFromStyles({ color: "#00ff00" });
-    expect(lintValues(values, entries, "light", null, ["color"])).toHaveLength(
-      1
-    );
-  });
+    expect.hasAssertions();
+
+    const values = toStyleValues({ color: "#00ff00" });
+    expect(
+      lintValues(values, entries, "light", { css: null, dirty: ["color"] })
+    ).toHaveLength(1);
+  }, 0);
 });

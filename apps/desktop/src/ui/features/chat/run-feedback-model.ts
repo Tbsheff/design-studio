@@ -13,9 +13,29 @@ const KEY = "design-studio.run-feedback.v1";
 const MAX_ENTRIES = 500;
 const EMPTY: RunFeedback = { stars: 0, thumb: null };
 
-type Store = Record<string, RunFeedback & { at: number }>;
+interface StoredFeedback extends RunFeedback {
+  at: number;
+}
+
+type Store = Map<string, StoredFeedback>;
 
 let cache: Store | null = null;
+
+const toStore = (raw: string | null): Store => {
+  const store: Store = new Map();
+
+  if (!raw) {
+    return store;
+  }
+
+  const parsed: Record<string, StoredFeedback> | null = JSON.parse(raw);
+
+  for (const [id, entry] of Object.entries(parsed ?? {})) {
+    store.set(id, entry);
+  }
+
+  return store;
+};
 
 const load = (): Store => {
   if (cache) {
@@ -23,38 +43,30 @@ const load = (): Store => {
   }
 
   try {
-    const raw = readStored(KEY);
-    let parsed: unknown = {};
-
-    if (raw) {
-      parsed = JSON.parse(raw);
-    }
-
-    cache = parsed && typeof parsed === "object" ? (parsed as Store) : {};
+    cache = toStore(readStored(KEY));
   } catch {
-    cache = {};
+    cache = new Map();
   }
 
   return cache;
 };
 
 const save = (store: Store): void => {
-  const ids = Object.keys(store);
+  if (store.size > MAX_ENTRIES) {
+    const oldest = [...store.entries()]
+      .toSorted((entry, right) => entry[1].at - right[1].at)
+      .slice(0, store.size - MAX_ENTRIES);
 
-  if (ids.length > MAX_ENTRIES) {
-    ids
-      .toSorted(
-        (entry, right) => (store[entry]?.at ?? 0) - (store[right]?.at ?? 0)
-      )
-      .slice(0, ids.length - MAX_ENTRIES)
-      .forEach((id) => delete store[id]);
+    for (const [id] of oldest) {
+      store.delete(id);
+    }
   }
 
-  writeStored(KEY, JSON.stringify(store));
+  writeStored(KEY, JSON.stringify(Object.fromEntries(store)));
 };
 
 const readRunFeedback = (runId: string): RunFeedback => {
-  const entry = load()[runId];
+  const entry = load().get(runId);
 
   if (entry) {
     return { stars: entry.stars ?? 0, thumb: entry.thumb ?? null };
@@ -64,12 +76,12 @@ const readRunFeedback = (runId: string): RunFeedback => {
 };
 
 const writeRunFeedback = (runId: string, feedback: RunFeedback): void => {
-  const store = { ...load() };
+  const store = new Map(load());
 
   if (feedback.thumb === null && feedback.stars === 0) {
-    delete store[runId];
+    store.delete(runId);
   } else {
-    store[runId] = { ...feedback, at: Date.now() };
+    store.set(runId, { ...feedback, at: Date.now() });
   }
 
   cache = store;

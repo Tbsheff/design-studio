@@ -74,13 +74,17 @@ const zoomGroups = ({
   },
 ];
 
-const ZoomPill = (zoomProps: ZoomProps): ReactElement => {
+const ZoomPill = ({
+  control: zoomProps,
+}: {
+  control: ZoomProps;
+}): ReactElement => {
   const percent = useLive(zoomProps.zoom);
 
   return (
     <DropMenu
       label={`Zoom ${percent}%`}
-      className="topbar-zoom"
+      triggerClass="topbar-zoom"
       anchorClass="topbar-fold-narrow"
       groups={() => zoomGroups(zoomProps)}
       align="end"
@@ -168,7 +172,7 @@ const OverflowMenu = (overflowProps: OverflowProps): ReactElement => {
   return (
     <DropMenu
       label="More actions"
-      className="icon-btn topbar-icon topbar-overflow"
+      triggerClass="icon-btn topbar-icon topbar-overflow"
       anchorClass="topbar-overflow-anchor"
       groups={groups}
       align="end"

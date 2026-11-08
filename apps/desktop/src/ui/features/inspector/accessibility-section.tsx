@@ -5,7 +5,7 @@ import { AccessibilitySlot } from "../../inspector-slots.js";
 import type { InspectorProps } from "./inspector-model.js";
 
 const AccessibilitySection = (props: InspectorProps): ReactElement | null => {
-  const target = props.selection[0];
+  const [target] = props.selection;
 
   if (
     props.selection.length !== 1 ||

@@ -39,21 +39,19 @@ export type {
   ViewportPreset,
 } from "../../domain/canvas-presets.js";
 
-export { pickFolder } from "../../platform/desktop.js";
-
 export { Icon } from "@design-studio/ui";
 
 export type { IconName } from "@design-studio/ui";
 
 export { requestOpenApp } from "../../platform/app-events.js";
 
-export { isDesktop } from "../../platform/desktop.js";
+export { isDesktop, pickFolder } from "../../platform/desktop.js";
 
 export { findElement } from "../../platform/find-element.js";
 
 export { createLiveStore } from "../../platform/live-store.js";
 
-export { readStored, writeStored } from "../../platform/storage.js";
+export { readStored, uiStore, writeStored } from "../../platform/storage.js";
 
 export { isTypingTarget } from "../../platform/typing-target.js";
 
@@ -62,8 +60,6 @@ export { useProjectHits, useRouteHits } from "../home/project-hits-model.js";
 export { goHome, openProject } from "../../app/project-nav.js";
 
 export { projectsApi } from "../home/projects-store-model.js";
-
-export { uiStore } from "../../platform/storage.js";
 
 export type { PanelTab } from "../../platform/use-panel-tab.js";
 

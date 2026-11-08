@@ -1,0 +1,313 @@
+import type { ReactNode } from "react";
+
+import { copy } from "./copy.js";
+import { Art } from "./template-art-frame.js";
+
+const ART = {
+  animation: (
+    <Art>
+      <rect
+        x="8"
+        y="5"
+        width="40"
+        height="27"
+        rx="3"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <circle
+        cx="28"
+        cy="18.5"
+        r="6"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+      <path d="M26.5 16v5l4-2.5z" fill="currentColor" stroke="none" />
+      <path d="M8 40h40" strokeOpacity={0.4} strokeWidth={3} />
+      <path d="M8 40h16" strokeWidth={3} />
+      <circle cx="24" cy="40" r="2.5" fill="currentColor" />
+    </Art>
+  ),
+  blank: (
+    <Art>
+      <path d="M16 4h17l8 8v32H16z" fill="currentColor" fillOpacity={0.14} />
+      <path d="M33 4v8h8" />
+    </Art>
+  ),
+  dashboard: (
+    <Art>
+      <rect
+        x="5"
+        y="6"
+        width="46"
+        height="36"
+        rx="3"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <path d="M5 13h46M14 13v29" />
+      <path d="M8 18h3M8 22h3M8 26h3" />
+      <path
+        d="M21 36V27M28 36V21M35 36V24M42 36V18"
+        strokeWidth={3}
+        strokeOpacity={0.7}
+      />
+    </Art>
+  ),
+  document: (
+    <Art>
+      <path d="M15 4h18l8 8v32H15z" fill="currentColor" fillOpacity={0.14} />
+      <path d="M33 4v8h8M20 14h9M20 20h16M20 25h16M20 30h16M20 35h10" />
+      <path d="M20 40h6" strokeOpacity={0.55} strokeWidth={2.5} />
+    </Art>
+  ),
+  email: (
+    <Art>
+      <rect
+        x="10"
+        y="4"
+        width="36"
+        height="40"
+        rx="3"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <circle
+        cx="16"
+        cy="11"
+        r="2"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+      <path d="M21 11h12M16 19h24M16 24h24M16 29h18" />
+      <rect
+        x="16"
+        y="34"
+        width="24"
+        height="5"
+        rx="2.5"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+    </Art>
+  ),
+  form: (
+    <Art>
+      <rect
+        x="11"
+        y="4"
+        width="34"
+        height="40"
+        rx="3"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <path d="M16 10h10" />
+      <rect x="16" y="14" width="24" height="6" rx="1.5" />
+      <rect x="16" y="24" width="24" height="6" rx="1.5" />
+      <rect
+        x="16"
+        y="34"
+        width="12"
+        height="5"
+        rx="2.5"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+    </Art>
+  ),
+  landing: (
+    <Art>
+      <rect
+        x="5"
+        y="5"
+        width="46"
+        height="38"
+        rx="3"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <path d="M5 12h46" />
+      <circle cx="9" cy="8.5" r=".8" fill="currentColor" />
+      <circle cx="12" cy="8.5" r=".8" fill="currentColor" />
+      <path d="M16 20h24M20 25h16" />
+      <rect
+        x="22"
+        y="30"
+        width="12"
+        height="5"
+        rx="2.5"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+    </Art>
+  ),
+  mobile: (
+    <Art>
+      <rect
+        x="19"
+        y="3"
+        width="18"
+        height="42"
+        rx="3.5"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <rect
+        x="23"
+        y="10"
+        width="10"
+        height="8"
+        rx="1.5"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+      <path d="M23 23h10M23 27h7M23 31h10" />
+      <rect
+        x="23"
+        y="36"
+        width="10"
+        height="4"
+        rx="2"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+    </Art>
+  ),
+  mockups: (
+    <Art>
+      <rect x="5" y="12" width="30" height="26" rx="3" />
+      <rect
+        x="17"
+        y="6"
+        width="34"
+        height="28"
+        rx="3"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <path d="M22 12h12M22 16h20" />
+      <rect
+        x="22"
+        y="21"
+        width="9"
+        height="8"
+        rx="1"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+      <path d="M35 22h11M35 26h8" />
+    </Art>
+  ),
+  pairing: (
+    <Art>
+      <rect
+        x="7"
+        y="5"
+        width="42"
+        height="38"
+        rx="3"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <text
+        x="12"
+        y="25"
+        fill="currentColor"
+        stroke="none"
+        fontFamily="var(--serif)"
+        fontSize="15"
+      >
+        {copy.aa}
+      </text>
+      <path d="M33 15h10M36 19h7" />
+      <rect
+        x="12"
+        y="31"
+        width="8"
+        height="7"
+        rx="1.5"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+      <rect
+        x="23"
+        y="31"
+        width="8"
+        height="7"
+        rx="1.5"
+        fill="currentColor"
+        fillOpacity={0.3}
+        stroke="none"
+      />
+      <rect x="34" y="31" width="8" height="7" rx="1.5" />
+    </Art>
+  ),
+  slides: (
+    <Art>
+      <rect x="6" y="10" width="30" height="22" rx="2" />
+      <rect
+        x="13"
+        y="15"
+        width="34"
+        height="24"
+        rx="2"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <path d="M18 21h12M18 25h8" />
+      <rect
+        x="34"
+        y="20"
+        width="9"
+        height="12"
+        rx="1"
+        fill="currentColor"
+        fillOpacity={0.55}
+        stroke="none"
+      />
+    </Art>
+  ),
+  wireframe: (
+    <Art>
+      <rect
+        x="5"
+        y="7"
+        width="46"
+        height="34"
+        rx="3"
+        fill="currentColor"
+        fillOpacity={0.14}
+      />
+      <path d="M10 13h10M10 19h36" />
+      <path
+        d="M11 23l34 12M45 23L11 35"
+        strokeDasharray="2.5 2.5"
+        strokeOpacity={0.7}
+      />
+      <rect
+        x="11"
+        y="23"
+        width="34"
+        height="12"
+        rx="1"
+        strokeDasharray="2.5 2.5"
+      />
+    </Art>
+  ),
+};
+
+const ART_BY_ID: ReadonlyMap<string, ReactNode> = new Map(Object.entries(ART));
+
+const toTemplateArt = (id: string): ReactNode => ART_BY_ID.get(id) ?? null;
+
+export { toTemplateArt };

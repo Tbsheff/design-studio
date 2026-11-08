@@ -24,9 +24,11 @@ const useImpact = (setup: ImpactSetup): Impact => {
   const { directionId, file: source, projectId } = setup;
   const [isWorking, startWork] = useTransition();
 
+  const limit = 8;
+
   const input = useMemo(
-    () => ({ directionId, projectId }),
-    [directionId, projectId]
+    () => ({ directionId, limit, projectId }),
+    [directionId, limit, projectId]
   );
 
   const read = useGetImpact(input);
@@ -35,7 +37,6 @@ const useImpact = (setup: ImpactSetup): Impact => {
 
   const start = useCallback(
     (phase: "baseline" | "compare") => {
-      const limit = 8;
       const file = source.trim();
 
       if (file === "") {
@@ -46,7 +47,7 @@ const useImpact = (setup: ImpactSetup): Impact => {
         await run({ directionId, file, limit, phase, projectId });
       });
     },
-    [directionId, projectId, run, source]
+    [directionId, limit, projectId, run, source]
   );
 
   const handleBaseline = useCallback(() => start("baseline"), [start]);

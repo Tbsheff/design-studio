@@ -10,10 +10,12 @@ type GetImpactInput = Input<typeof getImpact>;
 const handle = Effect.fn("impact.get")(function* run(input: GetImpactInput) {
   const store = yield* ImpactStore;
 
-  return yield* store.get({
+  const result = yield* store.get({
     directionId: input.directionId,
     projectId: input.projectId,
   });
+
+  return { ...result, routes: result.routes.slice(0, input.limit) };
 }) satisfies Handle<typeof getImpact>;
 
 export { handle };

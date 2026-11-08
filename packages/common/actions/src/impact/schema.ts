@@ -23,8 +23,17 @@ const ImpactDirectionField = Schema.NullOr(DirectionIdSchema)
   })
   .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
 
+const ImpactLimitField = Schema.Int.check(
+  Schema.isBetween({ maximum: IMPACT_ROUTES_MAX, minimum: 1 })
+).annotate({
+  description: "Most routes to return. 1 to 12.",
+});
+
 const ImpactGetFields = {
   directionId: ImpactDirectionField,
+  limit: ImpactLimitField.pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed(IMPACT_ROUTES_MAX))
+  ),
 } as const;
 
 const ImpactRunFields = {

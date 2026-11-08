@@ -1,5 +1,6 @@
 import type { TokenChange } from "@design-studio/contracts";
 
+import { copy } from "./copy.js";
 import type { RouteOutput, themeRoutes } from "./deps.js";
 
 type ThemeList = RouteOutput<typeof themeRoutes.listTheme>;
@@ -57,8 +58,29 @@ const toTokenChanges = (item: ThemeItem): TokenChange[] =>
     };
   });
 
+const toSourceLabel = (item: ThemeItem): string | null => {
+  const source = item.source ?? null;
+
+  if (source === null) {
+    return null;
+  }
+
+  if (source.kind === "image") {
+    return source.value.split("/").pop() ?? source.value;
+  }
+
+  try {
+    return new URL(source.value).hostname;
+  } catch {
+    return source.value;
+  }
+};
+
+const toSourceTip = (item: ThemeItem): string =>
+  `${copy.sourceTip}: ${item.source?.value ?? ""}`;
+
 const toRandomSeed = (): number => Math.floor(Math.random() * SEED_RANGE);
 
-export { toLook, toRandomSeed, toTokenChanges };
+export { toLook, toRandomSeed, toSourceLabel, toSourceTip, toTokenChanges };
 
 export type { ThemeItem, ThemeLook, ThemeMode };

@@ -46,106 +46,144 @@ interface Options {
   };
 }
 
-const linkQuery = (link: PrototypeLink): LinkQuery => ({
-  id: link.id,
-  selector: link.from.selector,
-  ...(link.from.tag ? { tag: link.from.tag } : {}),
-  ...(link.from.text ? { text: link.from.text } : {}),
-});
+interface LinkReport {
+  readonly token: string;
+  readonly rects: RectMap;
+}
 
-const slotsOf = (options: Options): FrameSlot[] => {
-  const list: FrameSlot[] = [];
+interface PostedLinks {
+  readonly element: HTMLIFrameElement | null;
+  readonly token: string;
+  readonly text: string;
+}
 
-  if (options.active.token && options.active.src) {
-    list.push({
-      element: options.active.elements.current[options.active.token] ?? null,
-      frameId: options.active.frameId,
-      src: options.active.src,
-      token: options.active.token,
-    });
+type RectMap = Map<string, Rect | null>;
+
+type SlotsRef = MutableRefObject<FrameSlot[]>;
+
+const linkQuery = (link: PrototypeLink): LinkQuery => {
+  const query: LinkQuery = { id: link.id, selector: link.from.selector };
+
+  if (link.from.tag) {
+    query.tag = link.from.tag;
   }
 
-  for (const slot of options.passive.slots) {
-    if (!slot.src || slot.id === options.active.frameId) {
-      continue;
-    }
+  if (link.from.text) {
+    query.text = link.from.text;
+  }
 
-    list.push({
-      element: options.passive.elements.current[slot.token] ?? null,
-      frameId: slot.id,
-      src: slot.src,
-      token: slot.token,
-    });
+  return query;
+};
+
+const toActiveSlot = (options: Options): FrameSlot | null => {
+  const { frameId, token, src, elements } = options.active;
+
+  if (!token || !src) {
+    return null;
+  }
+
+  const element = elements.current[token] ?? null;
+
+  return { element, frameId, src, token };
+};
+
+const toPassiveSlots = (options: Options): FrameSlot[] => {
+  const list: FrameSlot[] = [];
+
+  for (const slot of options.passive.slots) {
+    if (slot.src && slot.id !== options.active.frameId) {
+      const { src, token } = slot;
+      const frameId = slot.id;
+      const element = options.passive.elements.current[token] ?? null;
+      list.push({ element, frameId, src, token });
+    }
   }
 
   return list;
 };
 
-const bridgeFrame = (slot: FrameSlot, kind: ProjectKind): BridgeFrame => ({
-  element: slot.element,
-  key: slot.frameId,
-  kind,
-  token: slot.token,
-  url: slot.src,
-});
+const slotsOf = (options: Options): FrameSlot[] => {
+  const active = toActiveSlot(options);
 
-const useLinkRects = (optionsValue: Options): LinkState[] => {
-  const [reports, setReports] = useState<
-    Record<string, { token: string; rects: Record<string, Rect | null> }>
-  >({});
+  if (active) {
+    return [active, ...toPassiveSlots(options)];
+  }
 
-  const queriesOf = (frameId: string): LinkQuery[] => {
-    if (optionsValue.enabled) {
-      return optionsValue.file.links
-        .filter(
-          (link) =>
-            link.from.frame === frameId &&
-            staticLinkIssue(link, optionsValue.frames) === null
-        )
-        .map(linkQuery);
+  return toPassiveSlots(options);
+};
+
+const bridgeFrame = (slot: FrameSlot, kind: ProjectKind): BridgeFrame => {
+  const { element, frameId: key, src: url, token } = slot;
+
+  return { element, key, kind, token, url };
+};
+
+const toQueries = (options: Options, frameId: string): LinkQuery[] => {
+  const queries: LinkQuery[] = [];
+
+  if (!options.enabled) {
+    return queries;
+  }
+
+  for (const link of options.file.links) {
+    if (
+      link.from.frame === frameId &&
+      staticLinkIssue(link, options.frames) === null
+    ) {
+      queries.push(linkQuery(link));
     }
+  }
 
-    return [];
-  };
+  return queries;
+};
 
-  const slots = slotsOf(optionsValue);
-  const slotsRef = useRef(slots);
+const toRects = (links: LinkRectReport[]): RectMap => {
+  const rects: RectMap = new Map();
+
+  if (!Array.isArray(links)) {
+    return rects;
+  }
+
+  for (const report of links) {
+    if (report?.id) {
+      rects.set(report.id, report.rect ?? null);
+    }
+  }
+
+  return rects;
+};
+
+const isPosted = (
+  last: PostedLinks | undefined,
+  slot: FrameSlot,
+  text: string
+): boolean =>
+  Boolean(last) &&
+  last?.element === slot.element &&
+  last.token === slot.token &&
+  last.text === text;
+
+const useLinkPoster = (
+  options: Options,
+  slotsRef: SlotsRef
+): ((slot: FrameSlot, force: boolean) => void) => {
+  const queriesRef = useRef(options);
   useLayoutEffect(() => {
-    slotsRef.current = slots;
+    queriesRef.current = options;
   });
-  const queriesRef = useRef(queriesOf);
-  useLayoutEffect(() => {
-    queriesRef.current = queriesOf;
-  });
-
-  const posted = useRef(
-    new Map<
-      string,
-      { element: HTMLIFrameElement | null; token: string; text: string }
-    >()
-  );
+  const posted = useRef(new Map<string, PostedLinks>());
 
   const send = (slot: FrameSlot, force: boolean): void => {
-    const queries = queriesRef.current(slot.frameId);
+    const queries = toQueries(queriesRef.current, slot.frameId);
     const text = JSON.stringify(queries);
-    const last = posted.current.get(slot.frameId);
 
-    if (
-      !force &&
-      last &&
-      last.element === slot.element &&
-      last.token === slot.token &&
-      last.text === text
-    ) {
+    if (!force && isPosted(posted.current.get(slot.frameId), slot, text)) {
       return;
     }
 
-    posted.current.set(slot.frameId, {
-      element: slot.element,
-      text,
-      token: slot.token,
-    });
-    postToFrame(bridgeFrame(slot, optionsValue.kind), {
+    const { element, token } = slot;
+    posted.current.set(slot.frameId, { element, text, token });
+    postToFrame(bridgeFrame(slot, options.kind), {
       links: queries,
       type: "track-links",
     });
@@ -157,8 +195,18 @@ const useLinkRects = (optionsValue: Options): LinkState[] => {
     }
   });
 
+  return send;
+};
+
+const useLinkReports = (
+  kind: ProjectKind,
+  slotsRef: SlotsRef,
+  send: (slot: FrameSlot, force: boolean) => void
+): Record<string, LinkReport> => {
+  const [reports, setReports] = useState<Record<string, LinkReport>>({});
+
   useBridge(
-    () => slotsRef.current.map((slot) => bridgeFrame(slot, optionsValue.kind)),
+    () => slotsRef.current.map((slot) => bridgeFrame(slot, kind)),
     (frame, message: BridgeToParent) => {
       const slot = slotsRef.current.find((item) => item.frameId === frame.key);
 
@@ -170,60 +218,77 @@ const useLinkRects = (optionsValue: Options): LinkState[] => {
         send(slot, true);
       }
 
-      if (message.type !== "link-rects") {
-        return;
+      if (message.type === "link-rects") {
+        const rects = toRects(message.links);
+        setReports((prev) => ({
+          ...prev,
+          [frame.key]: { rects, token: frame.token },
+        }));
       }
-
-      const rects: Record<string, Rect | null> = {};
-
-      let result: LinkRectReport[] = [];
-
-      if (Array.isArray(message.links)) {
-        result = message.links;
-      }
-
-      for (const report of result) {
-        if (typeof report?.id === "string") {
-          rects[report.id] = report.rect ?? null;
-        }
-      }
-
-      setReports((prev) => ({
-        ...prev,
-        [frame.key]: { rects, token: frame.token },
-      }));
     }
   );
 
-  return optionsValue.file.links.map((link) => {
-    const issue = staticLinkIssue(link, optionsValue.frames);
+  return reports;
+};
 
-    if (issue) {
-      return { issue, link, rect: null };
-    }
+const toState = (
+  link: PrototypeLink,
+  issue: LinkIssue | null,
+  rect: Rect | null
+): LinkState => ({ issue, link, rect });
 
-    const report = reports[link.from.frame];
-    const slot = slots.find((item) => item.frameId === link.from.frame);
+const isReportCurrent = (
+  report: LinkReport | undefined,
+  slot: FrameSlot | undefined,
+  linkId: string
+): report is LinkReport => {
+  if (!report || !slot) {
+    return false;
+  }
 
-    if (
-      !report ||
-      !slot ||
-      report.token !== slot.token ||
-      !(link.id in report.rects)
-    ) {
-      return { issue: null, link, rect: null };
-    }
+  return report.token === slot.token && report.rects.has(linkId);
+};
 
-    const rect = report.rects[link.id] ?? null;
+const toLinkState = (
+  link: PrototypeLink,
+  options: Options,
+  reports: Record<string, LinkReport>,
+  slots: FrameSlot[]
+): LinkState => {
+  const issue = staticLinkIssue(link, options.frames);
 
-    let issue2: "element-missing" | null = "element-missing";
+  if (issue) {
+    return toState(link, issue, null);
+  }
 
-    if (rect) {
-      issue2 = null;
-    }
+  const report = reports[link.from.frame];
+  const slot = slots.find((item) => item.frameId === link.from.frame);
 
-    return { issue: issue2, link, rect };
+  if (!isReportCurrent(report, slot, link.id)) {
+    return toState(link, null, null);
+  }
+
+  const rect = report.rects.get(link.id) ?? null;
+
+  if (rect) {
+    return toState(link, null, rect);
+  }
+
+  return toState(link, "element-missing", null);
+};
+
+const useLinkRects = (options: Options): LinkState[] => {
+  const slots = slotsOf(options);
+  const slotsRef = useRef(slots);
+  useLayoutEffect(() => {
+    slotsRef.current = slots;
   });
+  const send = useLinkPoster(options, slotsRef);
+  const reports = useLinkReports(options.kind, slotsRef, send);
+
+  return options.file.links.map((link) =>
+    toLinkState(link, options, reports, slots)
+  );
 };
 
 export { linkQuery, useLinkRects };

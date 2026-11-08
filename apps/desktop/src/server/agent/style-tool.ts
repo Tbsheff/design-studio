@@ -72,9 +72,9 @@ const replaceStyleFields = {
   }),
 };
 
-export const findStylesShape = toSdkFieldSet(findStylesFields);
+export const findStylesSdkFields = toSdkFieldSet(findStylesFields);
 
-export const replaceStyleShape = toSdkFieldSet(replaceStyleFields);
+export const replaceStyleSdkFields = toSdkFieldSet(replaceStyleFields);
 
 const findSchema = toToolInput(findStylesFields);
 

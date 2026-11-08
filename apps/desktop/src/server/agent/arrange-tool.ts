@@ -75,9 +75,9 @@ const measureFields = {
   b: selectorTarget,
 };
 
-const arrangeShape = toSdkFieldSet(arrangeFields);
+const arrangeSdkFields = toSdkFieldSet(arrangeFields);
 
-const measureShape = toSdkFieldSet(measureFields);
+const measureSdkFields = toSdkFieldSet(measureFields);
 
 const arrangeSchema = toRefinedToolInput(arrangeFields, (input) => {
   const count = [input.align, input.distribute, input.tidy].filter(
@@ -303,4 +303,4 @@ export async function runMeasure(
   }
 }
 
-export { arrangeShape, measureShape };
+export { arrangeSdkFields, measureSdkFields };

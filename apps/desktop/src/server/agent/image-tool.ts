@@ -87,7 +87,7 @@ const setImageFields = {
   ),
 };
 
-export const setImageShape = toSdkFieldSet(setImageFields);
+export const setImageSdkFields = toSdkFieldSet(setImageFields);
 
 const schema = toToolInput(setImageFields);
 type Input = ToolDecoded<typeof schema>;

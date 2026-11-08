@@ -133,9 +133,9 @@ const booleanShapesFields = {
 
 const paintShapeFields = { ...where, ...paint };
 
-export const drawVectorShape = toSdkFieldSet(drawVectorFields);
-export const booleanShapesShape = toSdkFieldSet(booleanShapesFields);
-export const paintShapeShape = toSdkFieldSet(paintShapeFields);
+export const drawVectorSdkFields = toSdkFieldSet(drawVectorFields);
+export const booleanOpsSdkFields = toSdkFieldSet(booleanShapesFields);
+export const paintVectorSdkFields = toSdkFieldSet(paintShapeFields);
 
 const drawSchema = toToolInput(drawVectorFields);
 const booleanSchema = toToolInput(booleanShapesFields);
@@ -308,7 +308,7 @@ async function rectsOf(
   return a && b ? [a.rect, b.rect] : undefined;
 }
 
-export function runBooleanShapes(
+export function runBooleanOps(
   deps: DirectToolDeps,
   args: ToolArgs<typeof booleanSchema>
 ): Promise<ToolText> {
@@ -355,7 +355,7 @@ export function runBooleanShapes(
   });
 }
 
-export function runPaintShape(
+export function runPaintVector(
   deps: DirectToolDeps,
   args: ToolArgs<typeof paintSchema>
 ): Promise<ToolText> {

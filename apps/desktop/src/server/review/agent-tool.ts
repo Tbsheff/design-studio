@@ -50,7 +50,7 @@ const reviewFrameFields = {
   ),
 };
 
-const reviewFrameShape = toSdkFieldSet(reviewFrameFields);
+const reviewFrameSdkFields = toSdkFieldSet(reviewFrameFields);
 
 const schema = toToolInput(reviewFrameFields);
 
@@ -202,4 +202,4 @@ async function runReviewFrameTool(
   }
 }
 
-export { reviewFrameShape, runReviewFrameTool };
+export { reviewFrameSdkFields, runReviewFrameTool };

@@ -46,7 +46,7 @@ const selectMatchingFields = {
   }),
 };
 
-export const selectMatchingShape = toSdkFieldSet(selectMatchingFields);
+export const selectMatchingSdkFields = toSdkFieldSet(selectMatchingFields);
 
 const schema = toToolInput(selectMatchingFields);
 

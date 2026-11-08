@@ -1,0 +1,192 @@
+{
+  "tools": [
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Apply a design system to a direction. This overwrites the tokens, tokens.css and DESIGN.md (project notes stay) as one new version.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "packId": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+            "description": "Design system (pack) id."
+          }
+        },
+        "required": ["projectId", "packId"],
+        "additionalProperties": false
+      },
+      "name": "apply_design_system"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Change one design token value with the same code path as the studio Tokens panel. In a studio design system it edits tokens.json. In an imported app folder it rewrites only that declaration in the app CSS file (for example the Tailwind @theme, :root or .dark block). A version is saved.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 120,
+            "description": "Token CSS variable from get_tokens, for example \"--primary\", or its path, for example \"color.primary\"."
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400,
+            "description": "New value, for example \"#015A5D\" or \"var(--color-brand-teal-500)\"."
+          },
+          "theme": {
+            "default": "light",
+            "description": "light changes the main declaration. dark changes (or adds) the dark declaration. Default light.",
+            "type": "string",
+            "enum": ["light", "dark"]
+          },
+          "wait": {
+            "type": "string",
+            "enum": ["render"],
+            "description": "Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. \"render\": also wait until the dev server has rebuilt the page."
+          }
+        },
+        "required": ["projectId", "name", "value"],
+        "additionalProperties": false
+      },
+      "name": "set_token"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Read the design rules of a project, the same list as the Rules editor in the Design system panel. Each rule has a kind: class, token, font and component rules are checked by review_frame; text rules go only to the studio agent and the critic. origin says where the rules come from (design-md: the rules block in DESIGN.md; studio: saved in the studio for an attached app; app-docs: a rules block in the app's own DESIGN.md or AGENTS.md, read only; none). imported has rules derived from the app's DESIGN.md and AGENTS.md that the user can accept with set_design_rules. Read only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "get_design_rules"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "description": "Replace the design rules of a project, with the same code path as Save in the Rules editor. In a studio project the rules go into a rules block in DESIGN.md as one version the user can undo. In an attached app they are saved in the studio data folder, never in the app repo. The next studio run and review_frame use them.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 20000,
+            "description": "Rules, one per line. \"cards: rounded-xl p-6\" and \"controls: h-9|h-8 rounded-md\" are class rules (| gives choices, a `css selector` in backticks is a target too); \"no raw hex\" and \"no raw values\" are token-only rules; \"font: Inter\" is a font rule; \"use Button from @/components/ui/button, not <button>\" is a component rule; any other line is a free-text rule for the agent and the critic. Lines that start with # are comments."
+          }
+        },
+        "required": ["projectId", "text"],
+        "additionalProperties": false
+      },
+      "name": "set_design_rules"
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Check design rules on one canvas frame without saving them, with the same code path as Test in the Rules editor. Returns each rule with the number of elements that break it and up to 5 samples. Text rules are not checked. Read only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "text": {
+            "description": "Rules to test without saving them. Leave out to test the saved rules.",
+            "type": "string",
+            "maxLength": 20000
+          },
+          "frame": {
+            "description": "Frame id or @label from canvas_list. Leave out for the live frame or the first frame.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "viewport": {
+            "type": "string",
+            "enum": ["desktop", "tablet", "mobile"]
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "name": "test_design_rules"
+    }
+  ]
+}

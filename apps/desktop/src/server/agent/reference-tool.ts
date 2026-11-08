@@ -40,7 +40,7 @@ const compareReferenceFields = {
   path: toOptionalText(0, 500, "Page path instead of the frame page."),
 };
 
-export const compareReferenceShape = toSdkFieldSet(compareReferenceFields);
+export const compareReferenceSdkFields = toSdkFieldSet(compareReferenceFields);
 
 const compareReferenceInput = toToolInput(compareReferenceFields);
 

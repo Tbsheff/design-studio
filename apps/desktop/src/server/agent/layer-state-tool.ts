@@ -67,9 +67,11 @@ const layerStateFields = {
   }),
 };
 
-export const layerStateShape = toSdkFieldSet(layerStateFields);
+export const layerStateSdkFields = toSdkFieldSet(layerStateFields);
 
-export const listLocksShape = toSdkFieldSet({ path: layerStateFields.path });
+export const listLocksSdkFields = toSdkFieldSet({
+  path: layerStateFields.path,
+});
 
 const layerStateSchema = toRefinedToolInput(layerStateFields, (input) => {
   if (

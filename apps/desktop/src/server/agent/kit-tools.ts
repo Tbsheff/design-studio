@@ -88,9 +88,9 @@ const getLayersFields = {
   ),
 };
 
-export const listComponentsShape = toSdkFieldSet(listComponentsFields);
+export const listComponentsSdkFields = toSdkFieldSet(listComponentsFields);
 
-export const getLayersShape = toSdkFieldSet(getLayersFields);
+export const getLayersSdkFields = toSdkFieldSet(getLayersFields);
 
 const listSchema = toToolInput(listComponentsFields);
 const layersSchema = toToolInput(getLayersFields);

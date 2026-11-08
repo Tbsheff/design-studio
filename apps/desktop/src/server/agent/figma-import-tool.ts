@@ -63,7 +63,7 @@ const figmaImportFields = {
   dryRun: toOptionalFlag("true: return the markup and write nothing."),
 };
 
-export const figmaImportShape = toSdkFieldSet(figmaImportFields);
+export const figmaImportSdkFields = toSdkFieldSet(figmaImportFields);
 
 const schema = toToolInput(figmaImportFields);
 

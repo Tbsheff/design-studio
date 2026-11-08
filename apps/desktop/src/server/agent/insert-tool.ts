@@ -77,7 +77,7 @@ const insertComponentFields = {
   ),
 };
 
-export const insertComponentShape = toSdkFieldSet(insertComponentFields);
+export const insertComponentSdkFields = toSdkFieldSet(insertComponentFields);
 
 const schema = toToolInput(insertComponentFields);
 

@@ -1,3 +1,7 @@
+import type { getVersion as getVersionAction } from "@design-studio/actions/version/get";
+import type { listHistoryVersion } from "@design-studio/actions/version/list-history";
+import type { listHunksVersion } from "@design-studio/actions/version/list-hunks";
+import type { renameVersion as renameVersionAction } from "@design-studio/actions/version/rename";
 import { routes } from "@design-studio/actions/version/routes";
 import type {
   SessionEndSchema,
@@ -16,9 +20,12 @@ import type {
   HunkRevertResult,
 } from "../../../shared/hunk.js";
 import { call, getRaw } from "../../platform/http.js";
+import type { UiOutput } from "../../platform/http.js";
+import { isFieldSource, isText } from "../../platform/json-guard.js";
 import { writeStored } from "../../platform/storage.js";
 
 const MAX_THUMB_FETCHES = 2;
+const NOT_FOUND_STATUS = 404;
 
 type WireVersion = typeof VersionSchema.Encoded;
 
@@ -43,22 +50,22 @@ const toChanges = (
   thumbs: wire.thumbs && { ...wire.thumbs },
 });
 
-const base = (projectId: string, versionId: string) =>
+const base = (projectId: string, versionId: string): string =>
   `/api/projects/${encodeURIComponent(projectId)}/versions/${encodeURIComponent(versionId)}`;
 
 const COMPARE_MODE_KEY = "design-studio.compare-mode";
 
 const revertHunk = async (
-  projectId: string,
-  directionId: string,
+  ownerProjectId: string,
+  ownerDirectionId: string,
   request: HunkRevertRequest
 ): Promise<HunkRevertResult> => {
   const out = await call(routes.applyHunkVersion, {
-    directionId,
-    projectId,
+    directionId: ownerDirectionId,
     file: request.file,
     from: request.from ?? null,
     hunk: request.hunk,
+    projectId: ownerProjectId,
     versionId: request.to,
   });
 
@@ -120,35 +127,48 @@ const endEditSession = async (
   );
 
 const versionChanges = async (
-  projectId: string,
-  from: string,
-  to: string
+  ownerProjectId: string,
+  fromId: string,
+  toId: string
 ): Promise<VersionChanges> =>
   toChanges(
     await call(routes.inspectDiffVersion, {
-      from,
-      projectId,
-      to,
+      from: fromId,
+      projectId: ownerProjectId,
       thumbnails: false,
+      to: toId,
     })
   );
 
-const getVersion = (projectId: string, versionId: string) =>
+const getVersion = (
+  projectId: string,
+  versionId: string
+): Promise<UiOutput<typeof getVersionAction>> =>
   call(routes.getVersion, { projectId, versionId });
 
 const listEditHistory = (
-  projectId: string,
-  directionId: string,
-  limit: number
-) =>
+  ownerProjectId: string,
+  ownerDirectionId: string,
+  count: number
+): Promise<UiOutput<typeof listHistoryVersion>> =>
   call(routes.listHistoryVersion, {
-    directionId,
-    limit,
-    projectId,
+    directionId: ownerDirectionId,
+    limit: count,
+    projectId: ownerProjectId,
   });
 
-const listHunks = (projectId: string, from: string, to: string, file: string) =>
-  call(routes.listHunksVersion, { file, from, projectId, to });
+const listHunks = (
+  ownerProjectId: string,
+  fromId: string,
+  toId: string,
+  file: string
+): Promise<UiOutput<typeof listHunksVersion>> =>
+  call(routes.listHunksVersion, {
+    file,
+    from: fromId,
+    projectId: ownerProjectId,
+    to: toId,
+  });
 
 const openCompareInCode = (): void => {
   writeStored(COMPARE_MODE_KEY, "code");
@@ -158,7 +178,7 @@ const renameVersion = (
   projectId: string,
   versionId: string,
   name: string | null
-) =>
+): Promise<UiOutput<typeof renameVersionAction>> =>
   call(routes.renameVersion, {
     name,
     projectId,
@@ -208,7 +228,7 @@ const finish = (
 const readThumb = async (request: ThumbRequest): Promise<void> => {
   const res = await fetchPng(request.url, request.controller.signal);
 
-  if (res.status === 404) {
+  if (res.status === NOT_FOUND_STATUS) {
     finish(request, null, true);
 
     return;
@@ -309,25 +329,25 @@ const requestThumb = (
   versionId: string,
   onResult: (result: ThumbResult) => void
 ): (() => void) => {
-  const key = `${projectId}/${versionId}`;
+  const thumbKey = `${projectId}/${versionId}`;
 
-  if (thumbs.has(key)) {
-    onResult(thumbs.get(key) ?? null);
+  if (thumbs.has(thumbKey)) {
+    onResult(thumbs.get(thumbKey) ?? null);
 
     return () => 0;
   }
 
-  let request = requests.get(key);
+  let request = requests.get(thumbKey);
 
   if (!request) {
     request = {
-      key,
       controller: new AbortController(),
+      key: thumbKey,
       listeners: new Set(),
       started: false,
       url: `${base(projectId, versionId)}/thumb`,
     };
-    requests.set(key, request);
+    requests.set(thumbKey, request);
     waiting.push(request);
   }
 
@@ -338,11 +358,11 @@ const requestThumb = (
   return () => {
     live.listeners.delete(onResult);
 
-    if (live.listeners.size > 0 || requests.get(key) !== live) {
+    if (live.listeners.size > 0 || requests.get(thumbKey) !== live) {
       return;
     }
 
-    requests.delete(key);
+    requests.delete(thumbKey);
 
     if (live.started) {
       live.controller.abort();
@@ -352,33 +372,60 @@ const requestThumb = (
   };
 };
 
-interface DiffMaskResult {
-  url: string;
+interface DiffMaskBlob {
+  blob: Blob;
   changedPct: number;
 }
 
+interface DiffRequest {
+  readonly afterId: string;
+  readonly beforeId: string;
+  readonly projectId: string;
+  readonly viewport: { readonly height: number; readonly width: number };
+}
+
+const readErrorText = async (res: Response): Promise<string | null> => {
+  try {
+    const body: unknown = await res.json();
+
+    if (!isFieldSource(body)) {
+      return null;
+    }
+
+    const message = new Map(Object.entries(body)).get("error");
+
+    if (isText(message)) {
+      return message;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const versionDiff = async (
-  projectId: string,
-  beforeId: string,
-  afterId: string,
-  viewport: { width: number; height: number },
+  request: DiffRequest,
   signal: AbortSignal
-): Promise<DiffMaskResult> => {
+): Promise<DiffMaskBlob> => {
+  const { afterId, beforeId, projectId, viewport } = request;
+
   const res = await fetchPng(
     `${base(projectId, beforeId)}/diff/${encodeURIComponent(afterId)}?w=${viewport.width}&h=${viewport.height}`,
     signal
   );
 
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    const message = await readErrorText(res);
+
     throw new Error(
-      body.error ?? `Could not compare these versions (${res.status}).`
+      message ?? `Could not compare these versions (${res.status}).`
     );
   }
 
   return {
+    blob: await res.blob(),
     changedPct: Number(res.headers.get("x-changed-pct") ?? 0),
-    url: URL.createObjectURL(await res.blob()),
   };
 };
 
@@ -398,4 +445,4 @@ export {
   versionDiff,
 };
 
-export type { ThumbResult, DiffMaskResult };
+export type { DiffMaskBlob, ThumbResult };

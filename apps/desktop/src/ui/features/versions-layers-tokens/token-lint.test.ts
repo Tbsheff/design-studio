@@ -3,18 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import { valuesFromStyles } from "../inspector/css-values.js";
 import { lintValues } from "./token-lint.js";
+import type { LintSource } from "./token-lint.js";
 
-type CssInput = NonNullable<
-  Parameters<typeof lintValues> extends readonly [
-    unknown,
-    unknown,
-    unknown,
-    infer Css,
-    ...unknown[],
-  ]
-    ? Css
-    : never
->;
+type CssInput = NonNullable<LintSource["css"]>;
 
 const MAX_DELTA_E = 10;
 
@@ -60,12 +51,10 @@ describe(lintValues, () => {
 
     const values = valuesFromStyles({ color: "rgb(250, 10, 20)" });
 
-    const [issue] = lintValues(
-      values,
-      entries,
-      "light",
-      css("color: #fa0a14;")
-    );
+    const [issue] = lintValues(values, entries, "light", {
+      css: css("color: #fa0a14;"),
+      dirty: [],
+    });
 
     expect(issue?.kind).toBe("color");
     expect(issue?.token.cssVar).toBe("--primary");
@@ -81,12 +70,10 @@ describe(lintValues, () => {
       color: "rgb(255, 0, 0)",
     });
 
-    const issues = lintValues(
-      values,
-      entries,
-      "light",
-      css("color: #ff0000; background-color: var(--fg);")
-    );
+    const issues = lintValues(values, entries, "light", {
+      css: css("color: #ff0000; background-color: var(--fg);"),
+      dirty: [],
+    });
 
     expect(
       issues.map((issue) => [
@@ -102,7 +89,10 @@ describe(lintValues, () => {
 
     const values = valuesFromStyles({ color: "rgb(250, 10, 20)" });
     expect(
-      lintValues(values, entries, "light", css("display: block;"))
+      lintValues(values, entries, "light", {
+        css: css("display: block;"),
+        dirty: [],
+      })
     ).toStrictEqual([]);
   }, 0);
 });
@@ -119,12 +109,10 @@ describe("lintValues shorthands", () => {
       "padding-top": "15px",
     });
 
-    const issues = lintValues(
-      values,
-      entries,
-      "light",
-      css('padding: 15px; font-family: "Comic Sans MS";')
-    );
+    const issues = lintValues(values, entries, "light", {
+      css: css('padding: 15px; font-family: "Comic Sans MS";'),
+      dirty: [],
+    });
 
     const padding = issues.find((issue) => issue.kind === "size");
     expect(padding?.props).toStrictEqual([
@@ -143,8 +131,8 @@ describe("lintValues shorthands", () => {
     expect.hasAssertions();
 
     const values = valuesFromStyles({ color: "#00ff00" });
-    expect(lintValues(values, entries, "light", null, ["color"])).toHaveLength(
-      1
-    );
+    expect(
+      lintValues(values, entries, "light", { css: null, dirty: ["color"] })
+    ).toHaveLength(1);
   }, 0);
 });

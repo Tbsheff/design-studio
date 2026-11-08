@@ -255,11 +255,16 @@ const TokenLint = ({
   readonly edit: DirectEdit;
   readonly css: AuthoredCss | null;
 }): ReactElement | null => {
-  const issues = useMemo(
-    () =>
-      ui ? lintValues(edit.values, ui.entries, ui.mode, css, edit.dirty) : [],
-    [ui, edit.values, edit.dirty, css]
-  );
+  const issues = useMemo(() => {
+    if (!ui) {
+      return [];
+    }
+
+    return lintValues(edit.values, ui.entries, ui.mode, {
+      css,
+      dirty: edit.dirty,
+    });
+  }, [ui, edit.values, edit.dirty, css]);
 
   const [all, setAll] = useState(false);
 

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 
 import { versionDiff } from "./versions-api.js";
-import type { DiffMaskResult } from "./versions-api.js";
+
+interface DiffMask {
+  changedPct: number;
+  url: string;
+}
 
 type MaskState =
   | { status: "loading" }
-  | { status: "ready"; mask: DiffMaskResult }
+  | { status: "ready"; mask: DiffMask }
   | { status: "error"; message: string };
 
 interface DiffMaskInput {
@@ -24,9 +28,9 @@ interface KeyedMask {
 const LOADING: MaskState = { status: "loading" };
 
 const useDiffMask = (input: DiffMaskInput): MaskState => {
-  const { attempt, newer, older, projectId, viewport } = input;
+  const { attempt, newer, older, projectId: ownerProjectId, viewport } = input;
   const { height, width } = viewport;
-  const key = [projectId, older, newer, width, height, attempt].join("|");
+  const key = [ownerProjectId, older, newer, width, height, attempt].join("|");
   const [keyed, setKeyed] = useState<KeyedMask>({ key, value: LOADING });
 
   useEffect(() => {
@@ -42,22 +46,29 @@ const useDiffMask = (input: DiffMaskInput): MaskState => {
     const load = async (): Promise<void> => {
       try {
         const mask = await versionDiff(
-          projectId,
-          older,
-          newer,
-          { height, width },
+          {
+            afterId: newer,
+            beforeId: older,
+            projectId: ownerProjectId,
+            viewport: { height, width },
+          },
           controller.signal
         );
 
-        ({ url } = mask);
+        const maskUrl = URL.createObjectURL(mask.blob);
+
+        url = maskUrl;
 
         if (controller.signal.aborted) {
-          URL.revokeObjectURL(mask.url);
+          URL.revokeObjectURL(maskUrl);
 
           return;
         }
 
-        settle({ mask, status: "ready" });
+        settle({
+          mask: { changedPct: mask.changedPct, url: maskUrl },
+          status: "ready",
+        });
       } catch (error: unknown) {
         let message = String(error);
 
@@ -69,7 +80,7 @@ const useDiffMask = (input: DiffMaskInput): MaskState => {
       }
     };
 
-    void load();
+    load();
 
     return (): void => {
       controller.abort();
@@ -78,7 +89,7 @@ const useDiffMask = (input: DiffMaskInput): MaskState => {
         URL.revokeObjectURL(url);
       }
     };
-  }, [key, projectId, older, newer, width, height]);
+  }, [key, ownerProjectId, older, newer, width, height]);
 
   if (keyed.key !== key) {
     return LOADING;

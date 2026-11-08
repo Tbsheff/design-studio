@@ -1,7 +1,7 @@
 import type { Context, Hono } from "hono";
 
+import type { ActivityLog } from "../../shared/mcp-ports.js";
 import type { AgentRunner } from "../../shared/server-ports.js";
-import type { ActivityLog } from "../mcp/activity.js";
 import { bindShipRuntime } from "../ship/ship-core.js";
 import type { StudioProjectStore } from "../store/projects.js";
 

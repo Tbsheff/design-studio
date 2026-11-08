@@ -2,8 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Direction, Project } from "@design-studio/contracts";
-import type { AppFixResult } from "@design-studio/contracts/app-doctor";
 
+import type { FixApp } from "../../shared/mcp-ports.js";
 import type { AgentRunner } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
@@ -36,11 +36,6 @@ export interface EditDeps extends ExportDeps {
   keepVariant: KeepVariant;
   layerLocks: LayerLockStore | null;
 }
-
-export type FixApp = (
-  projectId: string,
-  kind: unknown
-) => Promise<AppFixResult>;
 
 export { EditError } from "../page-probe/index.js";
 
@@ -197,3 +192,5 @@ export function oneLine(text: string, max = 80): string {
 
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
+
+export type { FixApp };

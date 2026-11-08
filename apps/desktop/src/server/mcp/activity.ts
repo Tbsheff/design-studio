@@ -4,34 +4,13 @@ import path from "node:path";
 
 import type { McpActivity } from "@design-studio/contracts";
 
+import type { ActivityDraft, ActivityLog } from "../../shared/mcp-ports.js";
 import type { EventBus } from "../events/index.js";
 import { assertSafeId } from "../platform/errors/index.js";
 
 export const ACTIVITY_KEEP = 200;
 const FILE = "mcp-activity.json";
 const SUMMARY_MAX = 140;
-
-export interface ActivityDraft {
-  projectId: string;
-  directionId: string | null;
-  summary: string;
-  versionId?: string | null;
-  beforeVersionId?: string | null;
-  frameId?: string | null;
-}
-
-export interface ActivityLog {
-  record(
-    tool: string,
-    client: string,
-    draft: ActivityDraft
-  ): Promise<McpActivity>;
-  list(projectId: string): Promise<McpActivity[]>;
-  remap(
-    projectId: string,
-    remapped: Record<string, { id: string; parentId: string }>
-  ): Promise<void>;
-}
 
 function clean(text: string, max: number): string {
   const flat = text.replaceAll(/[\p{Cc}\s]+/gu, " ").trim();
@@ -150,3 +129,5 @@ export function createActivityLog(dataDir: string, bus: EventBus): ActivityLog {
       }),
   };
 }
+
+export type { ActivityDraft, ActivityLog };

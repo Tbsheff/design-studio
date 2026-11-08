@@ -1,6 +1,7 @@
 import type { McpApprovalPoll } from "@design-studio/contracts/export";
 import type { Hono } from "hono";
 
+import type { ActivityLog, FixApp } from "../../shared/mcp-ports.js";
 import type { AgentRunner } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
@@ -17,7 +18,6 @@ import {
   createMcpService,
   runAgentTool,
 } from "../mcp/index.js";
-import type { ActivityLog, FixApp } from "../mcp/index.js";
 import { warmUpstream } from "../preview/warm-upstream.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { KeepVariant } from "../variations/routes.js";

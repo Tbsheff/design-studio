@@ -8,6 +8,4 @@ export { createCloudIntrospect } from "./key-introspect.js";
 
 export { createMcpService } from "./server.js";
 
-export type { ActivityLog } from "./activity.js";
-
-export type { FixApp } from "./edit-guards.js";
+export type { ActivityLog, FixApp } from "../../shared/mcp-ports.js";

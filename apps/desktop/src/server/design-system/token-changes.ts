@@ -3,11 +3,13 @@ import type {
   TokenFile,
   TokenGroupName,
 } from "@design-studio/contracts";
+import { Schema } from "effect";
 
 import { DirectEditError } from "../events/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { cssVarFor } from "./compile.js";
 import { VALUE_CHECKS } from "./create-token.js";
+import { toIssueLines, toParser } from "./parse-schema.js";
+import { toTrimmed } from "./schema-fields.js";
 
 const MAX_CHANGES = 100;
 const MAX_PATH = 120;
@@ -19,26 +21,40 @@ const MODES = "studio.modes";
 
 type TokenNode = Record<string, unknown>;
 
-const valueSchema = z.string().trim().min(1).max(MAX_VALUE);
+const valueSchema = toTrimmed(1, MAX_VALUE);
 
-const changeSchema = z
-  .object({
-    darkValue: valueSchema.nullable().optional(),
-    path: z
-      .string()
-      .max(MAX_PATH)
-      .regex(PATH_PATTERN, "path must look like color.primary"),
-    value: valueSchema.optional(),
-  })
-  .strict()
-  .refine(
-    (change) => change.value !== undefined || change.darkValue !== undefined,
-    "a change needs value or darkValue"
-  );
+const PathMessage = { message: "path must look like color.primary" };
 
-const requestSchema = z
-  .object({ changes: z.array(changeSchema).min(1).max(MAX_CHANGES) })
-  .strict();
+const PathSchema = Schema.String.check(
+  Schema.isMaxLength(MAX_PATH),
+  Schema.isPattern(PATH_PATTERN, PathMessage)
+);
+
+const ChangeFieldsSchema = Schema.Struct({
+  darkValue: Schema.optionalKey(Schema.NullOr(valueSchema)),
+  path: PathSchema,
+  value: Schema.optionalKey(valueSchema),
+});
+
+const hasChangedValue = (
+  change: typeof ChangeFieldsSchema.Type
+): true | string =>
+  change.value !== undefined ||
+  change.darkValue !== undefined ||
+  "a change needs value or darkValue";
+
+const changeSchema = ChangeFieldsSchema.check(
+  Schema.makeFilter(hasChangedValue)
+);
+
+const ChangeListSchema = Schema.Array(changeSchema).check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(MAX_CHANGES)
+);
+
+const RequestSchema = Schema.Struct({ changes: ChangeListSchema });
+
+const parseChangesRequest = toParser(RequestSchema, "error");
 
 function invalid(message: string): DirectEditError {
   return new DirectEditError("invalid_request", message);
@@ -48,7 +64,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function toChange(raw: z.infer<typeof changeSchema>): TokenChange {
+function toChange(raw: typeof changeSchema.Type): TokenChange {
   const change: TokenChange = { path: raw.path };
 
   if (raw.value !== undefined) {
@@ -63,17 +79,17 @@ function toChange(raw: z.infer<typeof changeSchema>): TokenChange {
 }
 
 export function parseTokenChanges(raw: unknown): TokenChange[] {
-  const parsed = requestSchema.safeParse(raw);
+  const parsed = parseChangesRequest(raw);
 
-  if (!parsed.success) {
-    const detail = parsed.error.issues
-      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+  if (!parsed.isValid) {
+    const detail = toIssueLines("", parsed.issues)
+      .map((line) => line.trim())
       .join("; ");
 
     throw invalid(`Invalid token changes: ${detail}`);
   }
 
-  const changes = parsed.data.changes.map(toChange);
+  const changes = parsed.value.changes.map(toChange);
   const seen = new Set<string>();
 
   for (const change of changes) {

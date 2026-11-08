@@ -55,9 +55,7 @@ export {
   WIRED_FILES,
   applyPack,
   createPackRegistry,
-  formatIssues,
   loadAllPacks,
-  manifestSchema,
   packProblems,
   packRegistry,
   wiresReact,
@@ -181,10 +179,11 @@ export {
   createFetcher,
   draftBase,
   draftName,
-  draftRequestSchema,
   emptyHarvested,
   parseDraftRequest,
 } from "../extract/draft.js";
+
+export { draftRequestSchema } from "../extract/draft-request.js";
 
 export type {
   Draft,

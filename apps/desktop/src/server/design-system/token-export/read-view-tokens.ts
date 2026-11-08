@@ -1,4 +1,4 @@
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 
 import { toAliasVar } from "./engine/token-model.js";
 import type { ExportToken } from "./engine/token-model.js";
@@ -21,11 +21,13 @@ const AppEntrySchema = Schema.Struct({
   value: Schema.String,
 });
 
-const readAppEntry = Schema.decodeUnknownOption(AppEntrySchema);
-
-const readPackEntry = Schema.decodeUnknownOption(PackEntrySchema);
+type PackEntry = typeof PackEntrySchema.Type;
 
 type AppEntry = typeof AppEntrySchema.Type;
+
+const isAppEntry = Schema.is(AppEntrySchema);
+
+const isPackEntry = Schema.is(PackEntrySchema);
 
 const toAppValue = (
   raw: string | null,
@@ -54,39 +56,39 @@ const toAppToken = (entry: AppEntry): ExportToken | null => {
   };
 };
 
-const toViewToken = (entry: typeof Schema.Unknown.Type): ExportToken | null => {
-  const app = readAppEntry(entry);
-
-  if (Option.isSome(app)) {
-    return toAppToken(app.value);
-  }
-
-  const pack = readPackEntry(entry);
-
-  if (Option.isNone(pack) || pack.value.value.trim() === "") {
+const toPackToken = (entry: PackEntry): ExportToken | null => {
+  if (entry.value.trim() === "") {
     return null;
   }
 
   return {
-    cssVar: pack.value.cssVar,
-    dark: pack.value.dark,
-    path: pack.value.token,
-    type: pack.value.type,
-    value: pack.value.value,
+    cssVar: entry.cssVar,
+    dark: entry.dark,
+    path: entry.token,
+    type: entry.type,
+    value: entry.value,
   };
 };
 
-const toViewTokens = (
-  entries: readonly (typeof Schema.Unknown.Type)[]
-): readonly ExportToken[] =>
-  entries.flatMap((entry) => {
-    const token = toViewToken(entry);
+const toTokenList = (token: ExportToken | null): ExportToken[] => {
+  if (token === null) {
+    return [];
+  }
 
-    if (token === null) {
-      return [];
+  return [token];
+};
+
+const toViewTokens = (entries: readonly unknown[]): readonly ExportToken[] =>
+  entries.flatMap((entry) => {
+    if (isAppEntry(entry)) {
+      return toTokenList(toAppToken(entry));
     }
 
-    return [token];
+    if (isPackEntry(entry)) {
+      return toTokenList(toPackToken(entry));
+    }
+
+    return [];
   });
 
 export { toViewTokens };

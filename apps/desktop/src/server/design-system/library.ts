@@ -15,6 +15,7 @@ import {
   slugCandidate,
   slugify,
 } from "@design-studio/contracts/folders";
+import { Schema } from "effect";
 
 import {
   BadRequestError,
@@ -22,7 +23,6 @@ import {
   isNodeError,
 } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { checkDesignSystemFiles } from "./check.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import { removeTokenBlock } from "./design-md.js";
@@ -32,13 +32,10 @@ import {
   readPackZip,
 } from "./pack-import.js";
 import type { ImportMode } from "./pack-import.js";
-import {
-  DESIGN_MD_FILE,
-  USER_PACK_PREFIX,
-  formatIssues,
-  manifestSchema,
-} from "./packs.js";
+import { manifestSchema, parseManifestFields } from "./pack-manifest.js";
+import { DESIGN_MD_FILE, USER_PACK_PREFIX } from "./packs.js";
 import type { LoadedPack, PackRegistry } from "./packs.js";
+import { toIssueLines, toParser } from "./parse-schema.js";
 import { buildErrorMessage } from "./sync.js";
 import { zipFiles } from "./zip.js";
 
@@ -48,24 +45,28 @@ const NAME_MAX = 80;
 const DEFAULT_LICENSE = "Custom";
 const COPY_SUFFIX = " copy";
 
-const fieldsSchema = z
-  .object({
-    name: z.string().trim().min(1).max(NAME_MAX),
-    description: z.string().trim().max(400).optional(),
-    mode: z.enum(["light", "dark"]),
-    fonts: manifestSchema.shape.fonts,
-    tokensJson: z.union([
-      z.string().max(MAX_TOKENS_BYTES),
-      z.record(z.string(), z.unknown()),
+const parseFieldsInput = toParser(
+  Schema.Struct({
+    copiedFrom: manifestSchema.fields.copiedFrom,
+    description: Schema.optionalKey(Schema.Trim.check(Schema.isMaxLength(400))),
+    designMd: Schema.String.check(Schema.isMaxLength(MAX_DESIGN_MD_BYTES)),
+    draft: Schema.optionalKey(Schema.Boolean),
+    fonts: manifestSchema.fields.fonts,
+    license: Schema.optionalKey(manifestSchema.fields.license),
+    mode: manifestSchema.fields.mode,
+    name: Schema.Trim.check(
+      Schema.isMinLength(1),
+      Schema.isMaxLength(NAME_MAX)
+    ),
+    provenance: manifestSchema.fields.provenance,
+    tags: Schema.optionalKey(manifestSchema.fields.tags),
+    tokensJson: Schema.Union([
+      Schema.String.check(Schema.isMaxLength(MAX_TOKENS_BYTES)),
+      Schema.Record(Schema.String, Schema.Unknown),
     ]),
-    designMd: z.string().max(MAX_DESIGN_MD_BYTES),
-    provenance: z.enum(["original", "imported", "extracted"]),
-    tags: z.array(z.string().min(1).max(40)).max(20).optional(),
-    license: z.string().trim().min(1).max(40).optional(),
-    draft: z.boolean().optional(),
-    copiedFrom: manifestSchema.shape.copiedFrom,
-  })
-  .strict();
+  }),
+  "error"
+);
 
 export interface PackFiles {
   manifest: PackManifest;
@@ -95,17 +96,17 @@ export interface PackLibrary {
 }
 
 function parseFields(raw: unknown, label: string): CreateUserPackInput {
-  const parsed = fieldsSchema.safeParse(raw);
+  const parsed = parseFieldsInput(raw);
 
-  if (!parsed.success) {
+  if (!parsed.isValid) {
     throw new BadRequestError(
-      `invalid ${label}: ${formatIssues("", parsed.error)
+      `invalid ${label}: ${toIssueLines("", parsed.issues)
         .map((line) => line.trim())
         .join("; ")}`
     );
   }
 
-  return parsed.data as CreateUserPackInput;
+  return parsed.value as CreateUserPackInput;
 }
 
 function tokensTextOf(value: CreateUserPackInput["tokensJson"]): string {
@@ -137,11 +138,11 @@ export function buildPackFiles(
     ...(input.copiedFrom ? { copiedFrom: input.copiedFrom } : {}),
   };
 
-  const manifest = manifestSchema.safeParse(candidate);
+  const manifest = parseManifestFields(candidate);
 
-  if (!manifest.success) {
+  if (!manifest.isValid) {
     throw new BadRequestError(
-      `invalid pack.json: ${formatIssues("pack.json", manifest.error).join("; ")}`
+      `invalid pack.json: ${toIssueLines("pack.json", manifest.issues).join("; ")}`
     );
   }
 
@@ -176,7 +177,7 @@ export function buildPackFiles(
   }
 
   return {
-    manifest: manifest.data as PackManifest,
+    manifest: manifest.value as PackManifest,
     tokensText,
     designMd: `${prose}\n`,
   };

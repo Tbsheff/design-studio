@@ -48,13 +48,13 @@ const pathInput = (input: unknown): string | null => {
     return null;
   }
 
-  const o = input as Record<string, unknown>;
+  const record = input as Record<string, unknown>;
 
   for (const key of PATH_KEYS) {
-    const v = o[key];
+    const value = record[key];
 
-    if (typeof v === "string" && v) {
-      return v;
+    if (typeof value === "string" && value) {
+      return value;
     }
   }
 

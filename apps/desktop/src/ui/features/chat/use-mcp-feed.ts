@@ -37,7 +37,9 @@ const mergeActivity = (
     return list;
   }
 
-  return [...list, ...fresh].toSorted((a, b) => a.at - b.at).slice(-KEEP);
+  return [...list, ...fresh]
+    .toSorted((left, right) => left.at - right.at)
+    .slice(-KEEP);
 };
 
 const replaceActivity = (

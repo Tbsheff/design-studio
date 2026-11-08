@@ -66,7 +66,7 @@ const parseDraft = (
 };
 
 const modelLabel = (id: string): string =>
-  MODEL_OPTIONS.find((m) => m.id === id)?.label ?? id;
+  MODEL_OPTIONS.find((options) => options.id === id)?.label ?? id;
 
 export { MODEL_OPTIONS, modelLabel, parseDraft, toDraft };
 

@@ -52,23 +52,23 @@ const ChatSplitter = ({
       : MIN_CHAT;
   };
 
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>): void => {
-    if (e.button !== 0) {
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>): void => {
+    if (event.button !== 0) {
       return;
     }
 
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
     dragging.current = true;
     document.body.classList.add("resizing");
   };
 
-  const onPointerMove = (e: PointerEvent<HTMLDivElement>): void => {
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>): void => {
     if (!dragging.current) {
       return;
     }
 
-    const next = widthAt(e.clientX);
+    const next = widthAt(event.clientX);
 
     if (next !== null) {
       uiStore.set({ chatWidth: next });
@@ -80,17 +80,17 @@ const ChatSplitter = ({
     document.body.classList.remove("resizing");
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
-    const step = e.shiftKey ? 48 : 16;
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    const step = event.shiftKey ? 48 : 16;
 
     const delta =
-      e.key === "ArrowRight" ? step : e.key === "ArrowLeft" ? -step : 0;
+      event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0;
 
     if (delta === 0) {
       return;
     }
 
-    e.preventDefault();
+    event.preventDefault();
     const container = columnsRef.current?.getBoundingClientRect().width ?? 0;
     uiStore.set({ chatWidth: clampWidth(currentWidth() + delta, container) });
   };

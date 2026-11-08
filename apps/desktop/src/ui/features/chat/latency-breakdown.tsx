@@ -13,17 +13,17 @@ const LONG_FRAME_FLUSH_GRACE_MS = 6000;
 
 const fileWriteMs = (run: RunView): number =>
   run.tools.reduce(
-    (sum, t) =>
-      FILE_WRITE_TOOLS.has(t.name) && !t.isError
-        ? sum + (t.durationMs ?? 0)
+    (sum, tool) =>
+      FILE_WRITE_TOOLS.has(tool.name) && !tool.isError
+        ? sum + (tool.durationMs ?? 0)
         : sum,
     0
   );
 
 const firstWriteAt = (run: RunView): number | null => {
   const starts = run.tools
-    .filter((t) => FILE_WRITE_TOOLS.has(t.name))
-    .map((t) => t.startedAt);
+    .filter((tool) => FILE_WRITE_TOOLS.has(tool.name))
+    .map((tool) => tool.startedAt);
 
   return starts.length > 0 ? Math.min(...starts) : null;
 };
@@ -40,11 +40,12 @@ const previewSamplesForRun = (
   }
 
   return samples.filter(
-    (s) =>
-      s.kind === "preview.latency" &&
-      (s.directionId === undefined || s.directionId === run.directionId) &&
-      s.ts >= from &&
-      s.ts <= finishedAt + PREVIEW_GRACE_MS
+    (sample) =>
+      sample.kind === "preview.latency" &&
+      (sample.directionId === undefined ||
+        sample.directionId === run.directionId) &&
+      sample.ts >= from &&
+      sample.ts <= finishedAt + PREVIEW_GRACE_MS
   );
 };
 
@@ -58,7 +59,7 @@ const previewText = (samples: TelemetrySample[] | null): string => {
   }
 
   const last = samples.at(-1) as TelemetrySample;
-  const max = Math.max(...samples.map((s) => s.ms));
+  const max = Math.max(...samples.map((sample) => sample.ms));
 
   return samples.length === 1
     ? formatMs(last.ms)
@@ -74,11 +75,12 @@ const firstTokenText = (
   }
 
   const ofRun = samples.filter(
-    (s) => s.kind === "run.first_token" && s.detail?.runId === runId
+    (sample) =>
+      sample.kind === "run.first_token" && sample.detail?.runId === runId
   );
 
-  const visible = ofRun.find((s) => s.detail?.stage === "visible");
-  const server = ofRun.find((s) => s.detail?.stage === "server");
+  const visible = ofRun.find((sample) => sample.detail?.stage === "visible");
+  const server = ofRun.find((sample) => sample.detail?.stage === "server");
 
   if (!visible && !server) {
     return "n/a";
@@ -106,15 +108,16 @@ const longFramesText = (
   }
 
   const during = samples.filter(
-    (s) =>
-      s.kind === "frame.long" &&
-      s.ts >= run.startedAt &&
-      s.ts <= finishedAt + LONG_FRAME_FLUSH_GRACE_MS
+    (sample) =>
+      sample.kind === "frame.long" &&
+      sample.ts >= run.startedAt &&
+      sample.ts <= finishedAt + LONG_FRAME_FLUSH_GRACE_MS
   );
 
   const count = during.reduce(
-    (sum, s) =>
-      sum + (typeof s.detail?.count === "number" ? s.detail.count : 1),
+    (sum, sample) =>
+      sum +
+      (typeof sample.detail?.count === "number" ? sample.detail.count : 1),
     0
   );
 
@@ -122,7 +125,7 @@ const longFramesText = (
     return "none";
   }
 
-  return `${count}, longest ${formatMs(Math.max(...during.map((s) => s.ms)))}`;
+  return `${count}, longest ${formatMs(Math.max(...during.map((sample) => sample.ms)))}`;
 };
 
 const LatencyBreakdown = ({
@@ -156,15 +159,15 @@ const LatencyBreakdown = ({
     };
   }, [projectId, run.runId, finishedAt]);
 
-  const s = run.summary;
+  const runSummary = run.summary;
 
-  if (!s) {
+  if (!runSummary) {
     return null;
   }
 
   const rows: [string, string][] = [
-    ["Model", formatMs(s.modelMs)],
-    ["Tools", formatMs(s.toolMs)],
+    ["Model", formatMs(runSummary.modelMs)],
+    ["Tools", formatMs(runSummary.toolMs)],
     ["File writes", formatMs(fileWriteMs(run))],
     ["First token", firstTokenText(samples, run.runId)],
     [
@@ -178,10 +181,10 @@ const LatencyBreakdown = ({
     <>
       <h4>{copy.latency}</h4>
       <dl className="kv" aria-label={copy.latencyBreakdown}>
-        {rows.map(([k, v]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd>{v}</dd>
+        {rows.map(([name, value]) => (
+          <div key={name}>
+            <dt>{name}</dt>
+            <dd>{value}</dd>
           </div>
         ))}
       </dl>

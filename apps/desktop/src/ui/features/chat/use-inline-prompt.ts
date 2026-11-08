@@ -35,20 +35,20 @@ interface InlinePromptView {
   close: () => void;
 }
 
-const blockerOf = (o: InlinePromptOptions): string | null => {
-  if (!o.onSubmit) {
+const blockerOf = (options: InlinePromptOptions): string | null => {
+  if (!options.onSubmit) {
     return "Open a direction first";
   }
 
-  if (!o.live) {
+  if (!options.live) {
     return "Go back to the live canvas first";
   }
 
-  if (o.selection.length === 0) {
+  if (options.selection.length === 0) {
     return "Select an element first";
   }
 
-  return o.running ? "Wait for the current run to finish" : null;
+  return options.running ? "Wait for the current run to finish" : null;
 };
 
 const SNIPPET_MAX = 16;
@@ -93,11 +93,13 @@ const restoreFocus = (
   target?.focus({ preventScroll: true });
 };
 
-const useInlinePrompt = (o: InlinePromptOptions): InlinePromptView | null => {
+const useInlinePrompt = (
+  options: InlinePromptOptions
+): InlinePromptView | null => {
   const [open, setOpen] = useState(false);
   const returnTo = useRef<Element | null>(null);
-  const latest = useRef(o);
-  latest.current = o;
+  const latest = useRef(options);
+  latest.current = options;
 
   const show = useCallback(() => {
     const cur = latest.current;
@@ -142,7 +144,7 @@ const useInlinePrompt = (o: InlinePromptOptions): InlinePromptView | null => {
     return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [show]);
 
-  const empty = o.selection.length === 0 || !o.live;
+  const empty = options.selection.length === 0 || !options.live;
   useEffect(() => {
     if (empty) {
       setOpen(false);
@@ -164,18 +166,18 @@ const useInlinePrompt = (o: InlinePromptOptions): InlinePromptView | null => {
     },
   ]);
 
-  const rect = unionRect(o.selection);
+  const rect = unionRect(options.selection);
 
-  if (!open || !rect || !o.live) {
+  if (!open || !rect || !options.live) {
     return null;
   }
 
   return {
-    blocked: blockerOf(o),
+    blocked: blockerOf(options),
     close,
-    label: labelOf(o.selection),
+    label: labelOf(options.selection),
     rect,
-    route: o.route ?? null,
+    route: options.route ?? null,
     submit: (prompt, editScope) => {
       const cur = latest.current;
 
@@ -189,8 +191,8 @@ const useInlinePrompt = (o: InlinePromptOptions): InlinePromptView | null => {
       );
       close();
     },
-    usageFile: usageFileOf(o.selection),
-    usedAtFile: usedAtFileOf(o.selection),
+    usageFile: usageFileOf(options.selection),
+    usedAtFile: usedAtFileOf(options.selection),
   };
 };
 

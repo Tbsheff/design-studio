@@ -58,11 +58,11 @@ const ToolSegment = memo(
     running: boolean;
     workTree: string | null;
   }) => <ToolChips tools={tools} running={running} workTree={workTree} flat />,
-  (a, b) =>
-    a.running === b.running &&
-    a.workTree === b.workTree &&
-    a.tools.length === b.tools.length &&
-    a.tools.every((tool, index) => tool === b.tools[index])
+  (left, right) =>
+    left.running === right.running &&
+    left.workTree === right.workTree &&
+    left.tools.length === right.tools.length &&
+    left.tools.every((tool, index) => tool === right.tools[index])
 );
 ToolSegment.displayName = "ToolSegment";
 

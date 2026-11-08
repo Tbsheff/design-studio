@@ -13,12 +13,12 @@ const STEP: Record<string, number> = {
   ArrowUp: -1,
 };
 
-const nextRadioOption = <T,>(
-  options: readonly T[],
-  current: T,
+const nextRadioOption = <Option,>(
+  options: readonly Option[],
+  current: Option,
   key: string,
-  isDisabled: (option: T) => boolean = () => false
-): T | null => {
+  isDisabled: (option: Option) => boolean = () => false
+): Option | null => {
   const enabled = options.filter((option) => !isDisabled(option));
 
   if (enabled.length === 0) {
@@ -53,18 +53,18 @@ interface ItemResult {
   readonly tabIndex: number;
 }
 
-interface UseRovingRadioGroupResult<T> {
-  readonly item: (option: T) => ItemResult;
+interface UseRovingRadioGroupResult<Option> {
+  readonly item: (option: Option) => ItemResult;
   readonly onKeyDown: (event: KeyboardEvent) => void;
 }
 
-const useRovingRadioGroup = <T extends string | number>(
-  options: readonly T[],
-  value: T,
-  onChange: (next: T) => void,
-  isDisabled?: (option: T) => boolean
-): UseRovingRadioGroupResult<T> => {
-  const refs = useRef(new Map<T, HTMLButtonElement | null>());
+const useRovingRadioGroup = <Option extends string | number>(
+  options: readonly Option[],
+  value: Option,
+  onChange: (next: Option) => void,
+  isDisabled?: (option: Option) => boolean
+): UseRovingRadioGroupResult<Option> => {
+  const refs = useRef(new Map<Option, HTMLButtonElement | null>());
 
   const onKeyDown = (event: KeyboardEvent): void => {
     const next = nextRadioOption(options, value, event.key, isDisabled);
@@ -82,7 +82,7 @@ const useRovingRadioGroup = <T extends string | number>(
     refs.current.get(next)?.focus();
   };
 
-  const item = (option: T): ItemResult => ({
+  const item = (option: Option): ItemResult => ({
     ref: (el: HTMLButtonElement | null): void => {
       refs.current.set(option, el);
     },

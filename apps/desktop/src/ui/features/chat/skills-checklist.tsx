@@ -53,7 +53,7 @@ const SkillRow = ({
       type="checkbox"
       aria-label={`Skill ${skill.id}`}
       checked={on}
-      onChange={(e) => onToggle(e.target.checked)}
+      onChange={(event) => onToggle(event.target.checked)}
     />
     <span className="skill-text">
       <span className="skill-name">
@@ -142,7 +142,7 @@ const SkillsChecklist = ({
               type="search"
               placeholder={copy.filter}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(event) => setQuery(event.target.value)}
             />
             <button
               type="button"

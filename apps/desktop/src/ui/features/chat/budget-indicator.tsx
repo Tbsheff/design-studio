@@ -76,8 +76,8 @@ const BudgetIndicator = ({
             ? "No spending limit per run. Click to set one."
             : `Each run stops at ${money(current)}. Click to change.`
         }
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={() => setOpen((x) => !x)}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={() => setOpen((wasOpen) => !wasOpen)}
       >
         {limitLabel(current)}
       </button>
@@ -108,14 +108,14 @@ const BudgetMenu = ({
   const [custom, setCustom] = useState("");
   const [bad, setBad] = useState(false);
   useEffect(() => {
-    const onDown = (e: MouseEvent): void => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+    const onDown = (event: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         onClose();
       }
     };
 
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === "Escape") {
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
         onClose();
       }
     };
@@ -128,8 +128,8 @@ const BudgetMenu = ({
     };
   }, [onClose]);
 
-  const submit = (e: FormEvent): void => {
-    e.preventDefault();
+  const submit = (event: FormEvent): void => {
+    event.preventDefault();
     const value = parseLimit(custom);
     setBad(value === "bad");
 
@@ -170,7 +170,7 @@ const BudgetMenu = ({
             placeholder={copy.text001To}
             value={custom}
             aria-invalid={bad || undefined}
-            onChange={(e) => setCustom(e.target.value)}
+            onChange={(event) => setCustom(event.target.value)}
           />
         </label>
         <button type="submit" className="btn small">

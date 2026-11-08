@@ -31,9 +31,9 @@ interface Options {
   busy: boolean;
   running: RunView | null;
   act: (fn: () => Promise<unknown>) => Promise<void>;
-  guard: <A extends unknown[]>(
-    fn: (...args: A) => unknown
-  ) => (...args: A) => Promise<void>;
+  guard: <Args extends unknown[]>(
+    fn: (...args: Args) => unknown
+  ) => (...args: Args) => Promise<void>;
   seedRun: (runId: string, directionId: string, request: RunRequest) => void;
   setDirectionId: (id: string) => void;
   refreshVersions: () => void;

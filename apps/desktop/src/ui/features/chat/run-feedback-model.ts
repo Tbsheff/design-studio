@@ -38,7 +38,9 @@ const save = (store: Store): void => {
 
   if (ids.length > MAX_ENTRIES) {
     ids
-      .toSorted((a, b) => (store[a]?.at ?? 0) - (store[b]?.at ?? 0))
+      .toSorted(
+        (entry, right) => (store[entry]?.at ?? 0) - (store[right]?.at ?? 0)
+      )
       .slice(0, ids.length - MAX_ENTRIES)
       .forEach((id) => delete store[id]);
   }

@@ -14,8 +14,8 @@ const FIRST = 12;
 const STEP = 16;
 const NEAR_TOP_PX = 800;
 
-interface HistoryWindow<T> {
-  shown: T[];
+interface HistoryWindow<Entry> {
+  shown: Entry[];
   hidden: number;
   more: () => void;
 }
@@ -57,11 +57,11 @@ const nextCount = (
   return state.count + live;
 };
 
-const useHistoryWindow = <T extends Item>(
-  items: T[],
+const useHistoryWindow = <Entry extends Item>(
+  items: Entry[],
   resetKey: string | null,
   reveal: string | null
-): HistoryWindow<T> => {
+): HistoryWindow<Entry> => {
   const { viewportRef } = useConversation();
   const [since] = useState(() => Date.now());
 
@@ -96,10 +96,10 @@ const useHistoryWindow = <T extends Item>(
   const shortBy = start - STEP;
 
   const more = useCallback(() => {
-    const v = viewportRef.current;
+    const viewport = viewportRef.current;
 
-    if (v) {
-      fromBottom.current = v.scrollHeight - v.scrollTop;
+    if (viewport) {
+      fromBottom.current = viewport.scrollHeight - viewport.scrollTop;
     }
 
     setState((prev) => ({ ...prev, count: prev.count + STEP }));
@@ -110,13 +110,13 @@ const useHistoryWindow = <T extends Item>(
   }, [viewportRef, shortBy]);
 
   useLayoutEffect(() => {
-    const v = viewportRef.current;
+    const viewport = viewportRef.current;
 
-    if (!v || fromBottom.current === null) {
+    if (!viewport || fromBottom.current === null) {
       return;
     }
 
-    v.scrollTop = v.scrollHeight - fromBottom.current;
+    viewport.scrollTop = viewport.scrollHeight - fromBottom.current;
     fromBottom.current = null;
   }, [start, items.length, viewportRef]);
 

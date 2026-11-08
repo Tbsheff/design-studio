@@ -39,20 +39,22 @@ const shownCommands = (
   const tokens = query.trim().toLowerCase().split(/\s+/u).filter(Boolean);
 
   if (tokens.length === 0) {
-    return [...commands].toSorted((a, b) =>
-      (a.slash ?? "").localeCompare(b.slash ?? "")
+    return [...commands].toSorted((left, right) =>
+      (left.slash ?? "").localeCompare(right.slash ?? "")
     );
   }
 
-  const hits = commands.filter((c) => {
-    const words = (c.slash ?? "").toLowerCase().split(/[\s-]+/u);
+  const hits = commands.filter((command) => {
+    const words = (command.slash ?? "").toLowerCase().split(/[\s-]+/u);
 
-    return tokens.every((t) => words.some((w) => w.startsWith(t)));
+    return tokens.every((token) =>
+      words.some((word) => word.startsWith(token))
+    );
   });
 
-  return rank(hits, tokens.join(" "), (c) => ({
-    title: c.slash ?? c.title,
-  })).map((r) => r.item);
+  return rank(hits, tokens.join(" "), (command) => ({
+    title: command.slash ?? command.title,
+  })).map((ranked) => ranked.item);
 };
 
 const commandChoice = (
@@ -144,7 +146,9 @@ const useSlashSections = ({
       },
       {
         items: (query === ""
-          ? [...skills].sort((a, b) => a.name.localeCompare(b.name))
+          ? [...skills].sort((left, right) =>
+              left.name.localeCompare(right.name)
+            )
           : skills
         ).map((skill) => skillChoice(skill, onSkill)),
         label: "Skills",
@@ -167,8 +171,8 @@ const useSlashSections = ({
 const useDismiss = (onClose: () => void) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+    const onDown = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -261,8 +265,8 @@ const IndicatorPop = (props: {
   const ref = useDismiss(props.onClose);
   useFitAbove(ref, 520);
   useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) =>
-      e.key === "Escape" && props.onClose();
+    const onKey = (event: globalThis.KeyboardEvent) =>
+      event.key === "Escape" && props.onClose();
 
     globalThis.addEventListener("keydown", onKey);
 
@@ -327,8 +331,8 @@ const SkillsIndicator = ({ projectId, settings, onSaved }: IndicatorProps) => {
             ? `${plural(count, "skill")} on for this project, ${plural(enabledSkills(catalog, disabled).filter((skill) => !skill.modelInvocable).length, "manual-only skill")} the agent cannot load`
             : "Claude skills for this project"
         }
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={() => setOpen((x) => !x)}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={() => setOpen((wasOpen) => !wasOpen)}
       >
         <Icon name="book" size={12} />
         {catalog ? `${count} skill${count === 1 ? "" : "s"}` : "Skills"}

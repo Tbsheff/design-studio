@@ -36,24 +36,24 @@ const SelectionChips = ({
 
   return (
     <div className="chips flex flex-wrap gap-1 px-2 pt-2">
-      {selection.map((s) => (
+      {selection.map((selected) => (
         <Chip
-          key={s.selector}
+          key={selected.selector}
           size="sm"
           className="chip max-w-full py-0.5 pr-0.5 text-primary"
-          data-tip={s.selector}
+          data-tip={selected.selector}
           data-tip-side="top"
         >
           <Icon name="pointer" size={12} />
           <span className="chip-text min-w-0 truncate font-mono">
-            <span className="chip-tag font-bold">{s.tag}</span>
-            {s.text ? ` "${s.text.slice(0, 24)}"` : ""}
+            <span className="chip-tag font-bold">{selected.tag}</span>
+            {selected.text ? ` "${selected.text.slice(0, 24)}"` : ""}
           </span>
           <button
             type="button"
             className="icon-btn chip-x"
-            aria-label={`Remove ${s.selector}`}
-            onClick={() => onRemove(s.selector)}
+            aria-label={`Remove ${selected.selector}`}
+            onClick={() => onRemove(selected.selector)}
           >
             <Icon name="close" size={12} />
           </button>
@@ -153,7 +153,7 @@ const useReferenceToggle = (
     files.forEach(unmark);
 
     if (on) {
-      return setTick((n) => n + 1);
+      return setTick((previous) => previous + 1);
     }
 
     setBusy(file.localId);
@@ -164,7 +164,7 @@ const useReferenceToggle = (
       file.error = error instanceof Error ? error.message : String(error);
     } finally {
       setBusy(null);
-      setTick((n) => n + 1);
+      setTick((previous) => previous + 1);
     }
   };
 
@@ -225,35 +225,35 @@ const AttachmentThumbs = ({
 
   return (
     <div className="thumbs flex flex-wrap gap-2 px-2 pt-2">
-      {files.map((f, index) => (
+      {files.map((found, index) => (
         <Attachment
-          key={f.localId}
+          key={found.localId}
           layout="card"
-          state={f.error ? "error" : "default"}
-          className={`thumb size-13 ${f.attachment && isReferenceName(f.attachment.name) ? "is-reference" : ""}`}
-          data-tip={f.error ?? shortName(f.name)}
+          state={found.error ? "error" : "default"}
+          className={`thumb size-13 ${found.attachment && isReferenceName(found.attachment.name) ? "is-reference" : ""}`}
+          data-tip={found.error ?? shortName(found.name)}
           data-tip-side="top"
           data-tip-align={index < 2 ? "start" : "end"}
         >
           <AttachmentMedia>
             <img
               data-slot="attachment-media-img"
-              src={f.previewUrl}
-              alt={f.name}
-              className={f.error ? "opacity-35" : ""}
+              src={found.previewUrl}
+              alt={found.name}
+              className={found.error ? "opacity-35" : ""}
             />
           </AttachmentMedia>
-          <ThumbState file={f} />
+          <ThumbState file={found} />
           <ReferenceToggle
-            file={f}
-            busy={reference.busy === f.localId}
-            onToggle={() => void reference.toggle(f)}
+            file={found}
+            busy={reference.busy === found.localId}
+            onToggle={() => void reference.toggle(found)}
           />
           <button
             type="button"
-            aria-label={`Remove ${f.name}`}
+            aria-label={`Remove ${found.name}`}
             className="icon-btn thumb-x"
-            onClick={() => onRemove(f.localId)}
+            onClick={() => onRemove(found.localId)}
           >
             <Icon name="close" size={10} />
           </button>

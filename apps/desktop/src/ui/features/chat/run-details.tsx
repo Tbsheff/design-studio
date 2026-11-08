@@ -28,17 +28,18 @@ const SMALL_COST = new Intl.NumberFormat("en-US", {
   style: "currency",
 });
 
-const preciseUsd = (n: number): string =>
-  n < 0.01 ? SMALL_COST.format(n) : `$${n.toFixed(4)}`;
+const preciseUsd = (amount: number): string =>
+  amount < 0.01 ? SMALL_COST.format(amount) : `$${amount.toFixed(4)}`;
 
-const costText = (s: NonNullable<RunView["summary"]>): string => {
-  const roundingHidesCost = s.costUsd !== Number(s.costUsd.toFixed(2));
+const costText = (summary: NonNullable<RunView["summary"]>): string => {
+  const roundingHidesCost =
+    summary.costUsd !== Number(summary.costUsd.toFixed(2));
 
   const shown = roundingHidesCost
-    ? `${formatUsd(s.costUsd)} (${preciseUsd(s.costUsd)})`
-    : formatUsd(s.costUsd);
+    ? `${formatUsd(summary.costUsd)} (${preciseUsd(summary.costUsd)})`
+    : formatUsd(summary.costUsd);
 
-  return s.status === "canceled" ? `${shown} (estimate)` : shown;
+  return summary.status === "canceled" ? `${shown} (estimate)` : shown;
 };
 
 const RunDetails = ({
@@ -50,22 +51,22 @@ const RunDetails = ({
   run: RunView;
   onClose: () => void;
 }): ReactElement => {
-  const s = run.summary;
+  const runSummary = run.summary;
 
-  const rows: [string, string][] = s
+  const rows: [string, string][] = runSummary
     ? [
-        ["Status", STATUS_TEXT[s.status] ?? s.status],
-        ["Model", s.model],
-        ["Cost", costText(s)],
-        ["Duration", formatMs(s.durationMs)],
-        ["Model time", formatMs(s.modelMs)],
-        ["Tool time", formatMs(s.toolMs)],
-        ["Input tokens", s.usage.inputTokens.toLocaleString()],
-        ["Output tokens", s.usage.outputTokens.toLocaleString()],
-        ["Cache read", s.usage.cacheReadTokens.toLocaleString()],
-        ["Cache write", s.usage.cacheWriteTokens.toLocaleString()],
-        ["Version", s.versionId ?? "None"],
-        ["Session", s.sessionId ?? "None"],
+        ["Status", STATUS_TEXT[runSummary.status] ?? runSummary.status],
+        ["Model", runSummary.model],
+        ["Cost", costText(runSummary)],
+        ["Duration", formatMs(runSummary.durationMs)],
+        ["Model time", formatMs(runSummary.modelMs)],
+        ["Tool time", formatMs(runSummary.toolMs)],
+        ["Input tokens", runSummary.usage.inputTokens.toLocaleString()],
+        ["Output tokens", runSummary.usage.outputTokens.toLocaleString()],
+        ["Cache read", runSummary.usage.cacheReadTokens.toLocaleString()],
+        ["Cache write", runSummary.usage.cacheWriteTokens.toLocaleString()],
+        ["Version", runSummary.versionId ?? "None"],
+        ["Session", runSummary.sessionId ?? "None"],
       ]
     : [
         ["Status", STATUS_TEXT[run.status] ?? run.status],
@@ -75,24 +76,24 @@ const RunDetails = ({
   const skills = [
     ...new Set(
       run.tools
-        .filter((t) => t.name === SKILL_TOOL)
-        .map((t) => skillToolName(t.input) || "unknown")
+        .filter((tool) => tool.name === SKILL_TOOL)
+        .map((tool) => skillToolName(tool.input) || "unknown")
     ),
   ];
 
   rows.push(["Skills used", skills.length > 0 ? skills.join(", ") : "None"]);
-  const anyError = run.tools.some((t) => t.isError);
+  const anyError = run.tools.some((tool) => tool.isError);
   const closeButton = useRef<HTMLButtonElement>(null);
   useReturnFocusOnUnmount();
   useEffect(() => closeButton.current?.focus(), []);
 
-  const onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key !== "Escape") {
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== "Escape") {
       return;
     }
 
-    e.preventDefault();
-    e.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
     onClose();
   };
 
@@ -123,15 +124,17 @@ const RunDetails = ({
           <span className="mono muted truncate">{run.runId}</span>
         </div>
         <dl className="kv">
-          {rows.map(([k, v]) => (
-            <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
+          {rows.map(([name, value]) => (
+            <div key={name}>
+              <dt>{name}</dt>
+              <dd>{value}</dd>
             </div>
           ))}
         </dl>
         <LatencyBreakdown projectId={projectId} run={run} />
-        {s?.error && <div className="alert error">{s.error}</div>}
+        {runSummary?.error && (
+          <div className="alert error">{runSummary.error}</div>
+        )}
         <h4>
           {copy.toolCalls}
           {run.tools.length}
@@ -154,22 +157,22 @@ const RunDetails = ({
               </tr>
             </thead>
             <tbody>
-              {run.tools.map((t) => (
-                <tr key={t.toolUseId} data-tip={JSON.stringify(t.input)}>
-                  <td className="truncate">{prettyToolName(t.name)}</td>
+              {run.tools.map((tool) => (
+                <tr key={tool.toolUseId} data-tip={JSON.stringify(tool.input)}>
+                  <td className="truncate">{prettyToolName(tool.name)}</td>
                   <td className="mono truncate">
-                    {t.name === SKILL_TOOL
-                      ? skillToolName(t.input)
-                      : toolTarget(t.input, null)}
+                    {tool.name === SKILL_TOOL
+                      ? skillToolName(tool.input)
+                      : toolTarget(tool.input, null)}
                   </td>
                   <td className="num">
-                    {t.durationMs === null
+                    {tool.durationMs === null
                       ? "Running…"
-                      : formatMs(t.durationMs)}
+                      : formatMs(tool.durationMs)}
                   </td>
                   {anyError && (
                     <td>
-                      {t.isError && (
+                      {tool.isError && (
                         <span className="badge fail">{copy.error}</span>
                       )}
                     </td>

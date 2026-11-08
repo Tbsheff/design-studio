@@ -20,7 +20,7 @@ import { loadRunsThrough, renameRun } from "./run-history-model.js";
 import type { RunView } from "./run-state-model.js";
 import type { RewindControl } from "./use-rewind.js";
 
-const useLatest = <T>(value: T): { readonly current: T } => {
+const useLatest = <Value>(value: Value): { readonly current: Value } => {
   const ref = useRef(value);
   ref.current = value;
 

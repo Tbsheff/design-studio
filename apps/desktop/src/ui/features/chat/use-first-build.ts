@@ -34,29 +34,32 @@ interface Options {
   lastChange: FilesChange | null;
 }
 
-const usePageFiles = (o: Options): ((path: string | undefined) => PageWait) => {
-  const gated = o.live && o.kind === "html" && o.directionId !== null;
+const usePageFiles = (
+  options: Options
+): ((path: string | undefined) => PageWait) => {
+  const gated =
+    options.live && options.kind === "html" && options.directionId !== null;
   const [files, setFiles] = useState<ReadonlySet<string> | "all" | null>(null);
 
   const changeAt =
-    o.lastChange?.directionId === o.directionId
-      ? o.lastChange?.changedAt
+    options.lastChange?.directionId === options.directionId
+      ? options.lastChange?.changedAt
       : undefined;
 
   useEffect(() => {
     setFiles(null);
-  }, [gated, o.projectId, o.directionId]);
+  }, [gated, options.projectId, options.directionId]);
   useEffect(() => {
-    if (!gated || !o.directionId) {
+    if (!gated || !options.directionId) {
       return;
     }
 
     let alive = true;
-    const { directionId } = o;
+    const { directionId } = options;
     startTransition(async () => {
       try {
         const { files: list } = await api.workTreeFiles(
-          o.projectId,
+          options.projectId,
           directionId
         );
 
@@ -73,8 +76,14 @@ const usePageFiles = (o: Options): ((path: string | undefined) => PageWait) => {
     return (): void => {
       alive = false;
     };
-  }, [gated, o.projectId, o.directionId, changeAt, o.building]);
-  const { building } = o;
+  }, [
+    gated,
+    options.projectId,
+    options.directionId,
+    changeAt,
+    options.building,
+  ]);
+  const { building } = options;
 
   return useCallback(
     (path: string | undefined) => {
@@ -145,20 +154,24 @@ interface FirstBuildGate {
   waitFor: (path: string | undefined, directionId: string | null) => PageWait;
 }
 
-const useFirstBuildGate = (o: GateOptions): FirstBuildGate => {
-  const building = o.live && o.running === true && !o.hasHead && !o.urlError;
+const useFirstBuildGate = (options: GateOptions): FirstBuildGate => {
+  const building =
+    options.live &&
+    options.running === true &&
+    !options.hasHead &&
+    !options.urlError;
 
   const pageWait = usePageFiles({
     building,
-    directionId: o.directionId,
-    kind: o.kind,
-    lastChange: o.lastChange,
-    live: o.live,
-    projectId: o.projectId,
+    directionId: options.directionId,
+    kind: options.kind,
+    lastChange: options.lastChange,
+    live: options.live,
+    projectId: options.projectId,
   });
 
-  const wait = pageWait(o.path);
-  const own = o.directionId;
+  const wait = pageWait(options.path);
+  const own = options.directionId;
 
   const waitFor = useCallback(
     (path: string | undefined, directionId: string | null) =>
@@ -166,7 +179,12 @@ const useFirstBuildGate = (o: GateOptions): FirstBuildGate => {
     [own, pageWait]
   );
 
-  return { building, url: wait || o.emptyStage ? null : o.url, wait, waitFor };
+  return {
+    building,
+    url: wait || options.emptyStage ? null : options.url,
+    wait,
+    waitFor,
+  };
 };
 
 const useFirstBuildCover = (gate: FirstBuildGate, slots: number): boolean => {

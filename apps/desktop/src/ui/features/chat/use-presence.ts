@@ -6,13 +6,13 @@ const reducedMotion = (): boolean =>
   globalThis.window !== undefined &&
   globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const usePresence = <T>(
-  value: T | null
+const usePresence = <Value>(
+  value: Value | null
 ): {
-  shown: T | null;
+  shown: Value | null;
   closing: boolean;
 } => {
-  const [kept, setKept] = useState<T | null>(value);
+  const [kept, setKept] = useState<Value | null>(value);
   useEffect(() => {
     if (value !== null) {
       setKept(value);

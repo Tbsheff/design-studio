@@ -8,9 +8,9 @@ const contextWindowFor = (model: string): number =>
 const contextShare = (tokens: number, model: string): number =>
   Math.min(1, Math.max(0, tokens / contextWindowFor(model)));
 
-const R = 6;
+const RADIUS = 6;
 const SHOW_FROM = 0.5;
-const C = 2 * Math.PI * R;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 const ContextMeter = ({
   tokens,
@@ -47,13 +47,13 @@ const ContextMeter = ({
       data-tip-side="top"
     >
       <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-        <circle cx="8" cy="8" r={R} className="context-track" />
+        <circle cx="8" cy="8" r={RADIUS} className="context-track" />
         <circle
           cx="8"
           cy="8"
-          r={R}
+          r={RADIUS}
           className="context-fill"
-          strokeDasharray={`${C * share} ${C}`}
+          strokeDasharray={`${CIRCUMFERENCE * share} ${CIRCUMFERENCE}`}
           transform="rotate(-90 8 8)"
         />
       </svg>

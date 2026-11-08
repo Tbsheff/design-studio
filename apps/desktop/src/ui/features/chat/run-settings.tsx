@@ -128,13 +128,13 @@ const placeAboveOrBelow = (
   const placed = placeFixed(trigger, panel, { prefer: "above" });
   const rect = trigger.getBoundingClientRect();
   const left = typeof placed.left === "number" ? placed.left : rect.left;
-  const x = Math.round(rect.left + rect.width / 2 - left);
+  const centerX = Math.round(rect.left + rect.width / 2 - left);
   const above = placed.bottom !== undefined;
 
   return {
     ...placed,
     "--pop-dy": above ? "4px" : "-4px",
-    transformOrigin: `${x}px ${above ? "bottom" : "top"}`,
+    transformOrigin: `${centerX}px ${above ? "bottom" : "top"}`,
   } as CSSProperties;
 };
 
@@ -165,17 +165,17 @@ const EffortToggle = ({
       aria-describedby={hintId}
       onKeyDown={radios.onKeyDown}
     >
-      {EFFORTS.map((e) => (
+      {EFFORTS.map((effortOption) => (
         <button
-          key={e}
-          {...radios.item(e)}
+          key={effortOption}
+          {...radios.item(effortOption)}
           type="button"
           role="radio"
-          aria-checked={choice === e}
-          className={choice === e ? "on" : ""}
-          onClick={() => pick(e)}
+          aria-checked={choice === effortOption}
+          className={choice === effortOption ? "on" : ""}
+          onClick={() => pick(effortOption)}
         >
-          {EFFORT_LABEL[e]}
+          {EFFORT_LABEL[effortOption]}
         </button>
       ))}
     </div>
@@ -202,17 +202,17 @@ const ModeToggle = ({
       aria-describedby={hintId}
       onKeyDown={radios.onKeyDown}
     >
-      {MODES.map((m) => (
+      {MODES.map((choice) => (
         <button
-          key={m}
-          {...radios.item(m)}
+          key={choice}
+          {...radios.item(choice)}
           type="button"
           role="radio"
-          aria-checked={mode.value === m}
-          className={mode.value === m ? "on" : ""}
-          onClick={() => mode.onChange(m)}
+          aria-checked={mode.value === choice}
+          className={mode.value === choice ? "on" : ""}
+          onClick={() => mode.onChange(choice)}
         >
-          {MODE_LABEL[m]}
+          {MODE_LABEL[choice]}
         </button>
       ))}
     </div>

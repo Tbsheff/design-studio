@@ -9,14 +9,14 @@ const setInline = (projectId: string | null): void => {
   }
 
   inlineProject = projectId;
-  listeners.forEach((l) => l());
+  listeners.forEach((listener) => listener());
 };
 
-const subscribe = (l: () => void): (() => void) => {
-  listeners.add(l);
+const subscribe = (listener: () => void): (() => void) => {
+  listeners.add(listener);
 
   return () => {
-    listeners.delete(l);
+    listeners.delete(listener);
   };
 };
 

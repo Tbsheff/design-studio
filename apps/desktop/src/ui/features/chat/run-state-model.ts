@@ -79,23 +79,24 @@ const runText = (run: RunView): string => partsText(run.parts);
 type RunMap = Record<string, RunView>;
 
 const toolRows = (summary: RunSummary): ToolRow[] =>
-  summary.toolCalls.map((t) => ({
-    durationMs: t.finishedAt === null ? null : t.finishedAt - t.startedAt,
-    input: t.input,
-    isError: t.isError,
-    name: t.name,
-    startedAt: t.startedAt,
-    summary: t.summary ?? "",
-    toolUseId: t.toolUseId,
-    ...(t.diff ? { diff: t.diff } : {}),
-    ...(t.diffs ? { diffs: t.diffs } : {}),
-    ...(t.denied ? { denied: true } : {}),
+  summary.toolCalls.map((tool) => ({
+    durationMs:
+      tool.finishedAt === null ? null : tool.finishedAt - tool.startedAt,
+    input: tool.input,
+    isError: tool.isError,
+    name: tool.name,
+    startedAt: tool.startedAt,
+    summary: tool.summary ?? "",
+    toolUseId: tool.toolUseId,
+    ...(tool.diff ? { diff: tool.diff } : {}),
+    ...(tool.diffs ? { diffs: tool.diffs } : {}),
+    ...(tool.denied ? { denied: true } : {}),
   }));
 
 const legacyParts = (summary: RunSummary): RunPart[] => {
-  const tools: RunPart[] = summary.toolCalls.map((t) => ({
+  const tools: RunPart[] = summary.toolCalls.map((tool) => ({
     kind: "tool",
-    toolUseId: t.toolUseId,
+    toolUseId: tool.toolUseId,
   }));
 
   return summary.finalText
@@ -140,26 +141,26 @@ const runFromSummary = (summary: RunSummary): RunView => ({
 });
 
 const mergeTools = (live: ToolRow[], final: ToolRow[]): ToolRow[] => {
-  const byId = new Map(final.map((t) => [t.toolUseId, t]));
+  const byId = new Map(final.map((tool) => [tool.toolUseId, tool]));
 
-  return live.map((t) => {
-    const f = byId.get(t.toolUseId);
+  return live.map((tool) => {
+    const found = byId.get(tool.toolUseId);
 
-    if (!f) {
-      return t;
+    if (!found) {
+      return tool;
     }
 
-    const diff = f.diff ?? t.diff;
-    const diffs = f.diffs ?? t.diffs;
+    const diff = found.diff ?? tool.diff;
+    const diffs = found.diffs ?? tool.diffs;
 
     return {
-      ...t,
-      durationMs: f.durationMs ?? t.durationMs,
-      isError: f.isError,
-      summary: f.summary || t.summary,
+      ...tool,
+      durationMs: found.durationMs ?? tool.durationMs,
+      isError: found.isError,
+      summary: found.summary || tool.summary,
       ...(diff ? { diff } : {}),
       ...(diffs ? { diffs } : {}),
-      ...(f.denied || t.denied ? { denied: true } : {}),
+      ...(found.denied || tool.denied ? { denied: true } : {}),
     };
   });
 };
@@ -197,7 +198,7 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
   if (event.type === "run.tool.started") {
     run.retry = null;
     run.tools = [
-      ...run.tools.filter((t) => t.toolUseId !== event.toolUseId),
+      ...run.tools.filter((tool) => tool.toolUseId !== event.toolUseId),
       {
         durationMs: null,
         input: event.input,
@@ -209,10 +210,10 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
       },
     ];
   } else if (event.type === "run.tool.finished") {
-    run.tools = run.tools.map((t) =>
-      t.toolUseId === event.toolUseId
+    run.tools = run.tools.map((tool) =>
+      tool.toolUseId === event.toolUseId
         ? {
-            ...t,
+            ...tool,
             durationMs: event.durationMs,
             isError: event.isError,
             summary: event.summary,
@@ -220,7 +221,7 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
             ...(event.diffs ? { diffs: event.diffs } : {}),
             ...(event.denied ? { denied: true } : {}),
           }
-        : t
+        : tool
     );
   }
 };
@@ -239,14 +240,18 @@ const applyControlEvent = (run: RunView, event: StudioEvent): void => {
 
     case "run.permission": {
       run.permissions = [
-        ...run.permissions.filter((p) => p.id !== event.request.id),
+        ...run.permissions.filter(
+          (permission) => permission.id !== event.request.id
+        ),
         event.request,
       ];
       break;
     }
 
     case "run.permission.resolved": {
-      run.permissions = run.permissions.filter((p) => p.id !== event.requestId);
+      run.permissions = run.permissions.filter(
+        (permission) => permission.id !== event.requestId
+      );
       break;
     }
 
@@ -351,7 +356,7 @@ const shortInput = (input: unknown): string => {
     return String(input);
   }
 
-  const o = input as Record<string, unknown>;
+  const record = input as Record<string, unknown>;
 
   for (const key of [
     "file_path",
@@ -362,10 +367,10 @@ const shortInput = (input: unknown): string => {
     "url",
     "query",
   ]) {
-    const v = o[key];
+    const value = record[key];
 
-    if (typeof v === "string") {
-      return v.slice(0, 80);
+    if (typeof value === "string") {
+      return value.slice(0, 80);
     }
   }
 

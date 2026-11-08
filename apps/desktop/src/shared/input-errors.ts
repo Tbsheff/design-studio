@@ -1,173 +1,188 @@
-import type { z } from "zod";
-
-interface Def {
-  type: string;
-  innerType?: z.ZodType;
-  in?: z.ZodType;
-  out?: z.ZodType;
-  element?: z.ZodType;
-  options?: z.ZodType[];
-  entries?: Record<string, unknown>;
-  values?: unknown[];
-  shape?: Record<string, z.ZodType>;
-}
-
-const WRAPPERS = new Set([
-  "optional",
-  "nullable",
-  "default",
-  "prefault",
-  "readonly",
-  "catch",
-  "nonoptional",
-]);
+import { SchemaAST, SchemaIssue } from "effect";
+import type { Schema } from "effect";
 
 const MAX_ISSUES = 3;
+const MAX_DEPTH = 1;
 
-function defOf(schema: z.ZodType): Def {
-  return (schema as unknown as { _zod: { def: Def } })._zod.def;
-}
+const MISSING_MESSAGE = "Missing key";
+const UNEXPECTED_PREFIX = "Unexpected key";
 
-function unwrap(schema: z.ZodType): z.ZodType {
-  let current = schema;
+const formatIssues = SchemaIssue.makeFormatterStandardSchemaV1();
 
-  for (let step = 0; step < 8; step += 1) {
-    const def = defOf(current);
+const toEncodedAst = (schema: Schema.Top): SchemaAST.AST =>
+  SchemaAST.toEncoded(schema.ast);
 
-    if (WRAPPERS.has(def.type) && def.innerType) {
-      current = def.innerType;
-    } else if (def.type === "pipe" && def.in && def.out) {
-      current = defOf(def.out).type === "transform" ? def.in : def.out;
-    } else {
-      return current;
-    }
-  }
+const isObjectAst = (ast: SchemaAST.AST): ast is SchemaAST.Objects =>
+  ast._tag === "Objects";
 
-  return current;
-}
+const isArrayAst = (ast: SchemaAST.AST): ast is SchemaAST.Arrays =>
+  ast._tag === "Arrays";
 
-function isOptional(schema: z.ZodType): boolean {
-  return (
-    (schema as unknown as { _zod: { optin?: string } })._zod.optin ===
-    "optional"
-  );
-}
+const isUnionAst = (ast: SchemaAST.AST): ast is SchemaAST.Union =>
+  ast._tag === "Union";
 
-function objectShape(schema: z.ZodType): Record<string, z.ZodType> | null {
-  const { shape } = schema as unknown as { shape?: Record<string, z.ZodType> };
+const isLiteralAst = (ast: SchemaAST.AST): ast is SchemaAST.Literal =>
+  ast._tag === "Literal";
 
-  return defOf(schema).type === "object" && shape ? shape : null;
-}
+const isEnumAst = (ast: SchemaAST.AST): ast is SchemaAST.Enum =>
+  ast._tag === "Enum";
 
-function describeObject(
-  shape: Record<string, z.ZodType>,
-  depth: number
-): string {
-  if (depth > 1) {
+const toTypeName = (ast: SchemaAST.AST): string => ast._tag.toLowerCase();
+
+const describeObject = (ast: SchemaAST.Objects, depth: number): string => {
+  if (depth > MAX_DEPTH) {
     return "object";
   }
 
-  const fields = Object.entries(shape).map(
-    ([key, value]) =>
-      `"${key}"${isOptional(value) ? "?" : ""}: ${describe(value, depth + 1)}`
-  );
+  const fields = ast.propertySignatures.map((field) => {
+    const mark = SchemaAST.isOptional(field.type) ? "?" : "";
+
+    return `"${String(field.name)}"${mark}: ${describeAst(field.type, depth + 1)}`;
+  });
 
   return `{${fields.join(", ")}}`;
-}
+};
 
-function describe(schema: z.ZodType, depth = 0): string {
-  const inner = unwrap(schema);
-  const def = defOf(inner);
-  const shape = objectShape(inner);
-
-  if (shape) {
-    return describeObject(shape, depth);
+const describeAst = (ast: SchemaAST.AST, depth: number): string => {
+  if (isObjectAst(ast)) {
+    return describeObject(ast, depth);
   }
 
-  if (def.type === "array" && def.element) {
-    return `[${describe(def.element, depth + 1)}, ...]`;
+  const [item] = isArrayAst(ast) ? ast.rest : [];
+
+  if (item) {
+    return `[${describeAst(item, depth + 1)}, ...]`;
   }
 
-  if (def.type === "enum" && def.entries) {
-    return Object.values(def.entries)
-      .map((value) => JSON.stringify(value))
-      .join(" | ");
+  if (isEnumAst(ast)) {
+    return ast.enums.map(([, value]) => JSON.stringify(value)).join(" | ");
   }
 
-  if (def.type === "literal" && def.values) {
-    return def.values.map((value) => JSON.stringify(value)).join(" | ");
+  if (isLiteralAst(ast)) {
+    return JSON.stringify(ast.literal);
   }
 
-  if (def.type === "union" && def.options) {
-    return def.options.map((option) => describe(option, depth + 1)).join(" | ");
+  if (isUnionAst(ast)) {
+    return ast.types.map((type) => describeAst(type, depth + 1)).join(" | ");
   }
 
-  return def.type;
-}
+  return toTypeName(ast);
+};
 
-function schemaAt(
-  schema: z.ZodType,
+const toChildAst = (
+  ast: SchemaAST.AST,
+  key: PropertyKey
+): SchemaAST.AST | null => {
+  if (isObjectAst(ast)) {
+    const field = ast.propertySignatures.find((item) => item.name === key);
+
+    return field?.type ?? null;
+  }
+
+  if (isArrayAst(ast)) {
+    return ast.rest[0] ?? ast.elements[Number(key)] ?? null;
+  }
+
+  if (isUnionAst(ast)) {
+    const found = ast.types
+      .map((type) => toChildAst(type, key))
+      .find((child) => child !== null);
+
+    return found ?? null;
+  }
+
+  return null;
+};
+
+const toAstAt = (
+  schema: Schema.Top,
   path: readonly PropertyKey[]
-): z.ZodType | null {
-  let current: z.ZodType | null = schema;
+): SchemaAST.AST | null => {
+  let current: SchemaAST.AST | null = toEncodedAst(schema);
 
   for (const key of path) {
-    if (!current) {
+    if (current === null) {
       return null;
     }
 
-    const inner = unwrap(current);
-    const def = defOf(inner);
-    const shape = objectShape(inner);
-
-    if (shape) {
-      current = shape[String(key)] ?? null;
-    } else if (def.type === "array" && def.element) {
-      current = def.element;
-    } else {
-      return null;
-    }
+    current = toChildAst(current, key);
   }
 
   return current;
-}
+};
 
-function issueText(schema: z.ZodType, issue: z.core.$ZodIssue): string {
-  const field = issue.path.map(String).join(".") || "input";
-
-  const missing =
-    issue.code === "invalid_type" && /received undefined/.test(issue.message);
-
-  const node = schemaAt(schema, issue.path);
-
-  const keys =
-    node && issue.path.length === 0 ? objectShape(unwrap(node)) : null;
-
-  if (keys && issue.code === "unrecognized_keys") {
-    return `${issue.message}. Allowed keys: ${Object.keys(keys).join(", ")}`;
+const toObjectAst = (ast: SchemaAST.AST | null): SchemaAST.Objects | null => {
+  if (ast === null) {
+    return null;
   }
 
-  const shape =
-    node &&
-    (issue.code === "invalid_type" ||
-      issue.code === "unrecognized_keys" ||
-      issue.code === "invalid_union")
-      ? describe(node)
-      : null;
-
-  if (missing) {
-    return `${field} is required${shape ? `, as ${shape}` : ""}`;
+  if (isObjectAst(ast)) {
+    return ast;
   }
 
-  return `${field}: ${issue.message.replace(/^Invalid input: /, "")}${shape ? `. Expected ${field} as ${shape}` : ""}`;
-}
+  if (isUnionAst(ast)) {
+    return ast.types.find((type) => isObjectAst(type)) ?? null;
+  }
 
-export function inputIssues(schema: z.ZodType, error: z.ZodError): string {
-  const shown = error.issues
+  return null;
+};
+
+const toUnexpectedText = (
+  schema: Schema.Top,
+  path: readonly PropertyKey[]
+): string | null => {
+  const parent = toObjectAst(toAstAt(schema, path.slice(0, -1)));
+
+  if (parent === null || path.length > 1) {
+    return null;
+  }
+
+  const names = parent.propertySignatures.map((field) => String(field.name));
+
+  return `${path.map(String).join(".")} is not allowed. Allowed keys: ${names.join(", ")}`;
+};
+
+const toIssueText = (
+  schema: Schema.Top,
+  issue: { readonly message: string; readonly path?: readonly unknown[] | null }
+): string => {
+  const path = (issue.path ?? []) as readonly PropertyKey[];
+
+  const field = path.map(String).join(".") || "input";
+
+  if (issue.message.startsWith(UNEXPECTED_PREFIX)) {
+    return toUnexpectedText(schema, path) ?? `${field}: ${issue.message}`;
+  }
+
+  const node = toAstAt(schema, path);
+  const shape = node === null ? null : describeAst(node, 0);
+  const expected = shape === null ? "" : `. Expected ${field} as ${shape}`;
+
+  if (issue.message === MISSING_MESSAGE) {
+    const parent = toAstAt(schema, path.slice(0, -1));
+    const own = toObjectAst(parent)?.propertySignatures.find(
+      (item) => String(item.name) === field.split(".").at(-1)
+    );
+    const hint = own ? `, as ${describeAst(own.type, 0)}` : "";
+
+    return `${field} is required${hint}`;
+  }
+
+  return `${field}: ${issue.message}${expected}`;
+};
+
+const toInputIssues = (
+  schema: Schema.Top,
+  error: Schema.SchemaError
+): string => {
+  const issues = formatIssues(error.issue).issues;
+  const shown = issues
     .slice(0, MAX_ISSUES)
-    .map((issue) => issueText(schema, issue));
+    .map((issue) => toIssueText(schema, issue));
+  const more = issues.length - shown.length;
+  const tail = more > 0 ? `; and ${more} more` : "";
 
-  const more = error.issues.length - shown.length;
+  return `${shown.join("; ")}${tail}`;
+};
 
-  return `${shown.join("; ")}${more > 0 ? `; and ${more} more` : ""}`;
-}
+export { toInputIssues as inputIssues };

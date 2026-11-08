@@ -67,5 +67,3 @@ export type {
   PageImportRequest,
   PageImportResult,
 } from "@design-studio/contracts/page-import";
-
-export { z } from "../../platform/zod-bridge/index.js";

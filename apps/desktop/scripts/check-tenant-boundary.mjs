@@ -106,6 +106,7 @@ const RULES = [
       `${CLOUD}/tenant/db.ts`,
       `${CLOUD}/tenant/viewer-db.ts`,
       `${CLOUD}/tenant/resolver.ts`,
+      `${CLOUD}/tenant/sweep-db.ts`,
       `${CLOUD}/auth/gateway.ts`,
       `${CLOUD}/auth/member-roles.ts`,
     ],

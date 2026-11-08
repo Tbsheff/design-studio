@@ -1,9 +1,10 @@
+import type { Permission } from "@design-studio/actions/_core/permissions";
 import { Effect, Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import type { HttpApiBuilder } from "effect/http-api";
 
-import type { Permission } from "@design-studio/actions/_core/permissions";
 import { ProjectsRepo } from "../../tenant/repos/projects.js";
+import { ORG_PATH, OrgParams } from "../org-params.js";
 import { requireOrg, requirePerm } from "./authorizer.js";
 import { MemberGate } from "./gates.js";
 import { MEMBER_ERRORS, NotFoundWire } from "./wire-errors.js";
@@ -16,11 +17,7 @@ const PROJECT_NEEDS = {
   rename: "project.update",
 } as const satisfies Record<string, Permission>;
 
-const ORG_PATH = "/v1/o/:orgId";
-
 const PAGE_DEFAULT = 50;
-
-const OrgParams = { orgId: Schema.String };
 
 const ProjectParams = { ...OrgParams, projectId: Schema.String };
 

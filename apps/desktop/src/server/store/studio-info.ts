@@ -1,9 +1,9 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { Context, Effect, Layer, Schema } from "effect";
 
 import { REPO_ROOT, loadConfig } from "../platform/config/index.js";
+import { toJsonFileReader } from "../platform/local-file/index.js";
 
 interface StudioInfoApi {
   readonly previewOrigin: string;
@@ -14,16 +14,14 @@ const UNKNOWN_VERSION = "0.0.0";
 
 const PackageSchema = Schema.Struct({ version: Schema.String });
 
-const decodePackage = Schema.decodeUnknownEffect(
-  Schema.fromJsonString(PackageSchema)
-);
+const readPackage = toJsonFileReader(PackageSchema);
 
 const readVersion = Effect.fn("StudioInfo.readVersion")(function* run() {
-  const text = yield* Effect.tryPromise(() =>
-    readFile(path.join(REPO_ROOT, "package.json"), "utf-8")
-  );
+  const parsed = yield* readPackage(path.join(REPO_ROOT, "package.json"));
 
-  const parsed = yield* decodePackage(text);
+  if (parsed === null) {
+    return UNKNOWN_VERSION;
+  }
 
   return parsed.version;
 });
@@ -37,7 +35,7 @@ class StudioInfo extends Context.Service<StudioInfo, StudioInfoApi>()(
     StudioInfo,
     Effect.gen(function* build() {
       const version = yield* readVersion().pipe(
-        Effect.orElseSucceed(() => UNKNOWN_VERSION)
+        Effect.catchCause(() => Effect.succeed(UNKNOWN_VERSION))
       );
 
       return StudioInfo.of({

@@ -2,18 +2,9 @@ import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer } from "effect";
 
 import { CloudBindings } from "../../platform/bindings.js";
+import { createKeyMetaStore } from "../../platform/key-meta-store.js";
+import type { KeyRow } from "../../platform/key-meta-store.js";
 import { CurrentOrg } from "../current-org.js";
-
-interface KeyRow {
-  readonly acting_user_id: string;
-  readonly created_at: number;
-  readonly enabled: number;
-  readonly expires_at: string | null;
-  readonly id: string;
-  readonly name: string | null;
-  readonly org_id: string;
-  readonly permissions: string | null;
-}
 
 interface KeyRecordWire {
   readonly actingUserId: string;
@@ -45,12 +36,6 @@ interface KeyPermRepoApi {
   >;
   readonly revoke: (keyId: string) => Effect.Effect<void, NotFound, CurrentOrg>;
 }
-
-const SELECT_KEY = `SELECT m.org_id AS org_id, m.key_id AS id, m.acting_user_id AS acting_user_id, m.created_at AS created_at, k."name" AS name, k."enabled" AS enabled, k."expiresAt" AS expires_at, k."permissions" AS permissions
-  FROM key_meta m JOIN "apikey" k ON k."id" = m.key_id
-  WHERE m.org_id = ?`;
-
-const LIST_LIMIT = 100;
 
 const parsePerms = (text: string | null): readonly string[] => {
   if (text === null) {
@@ -92,38 +77,21 @@ class KeyPermRepo extends Context.Service<KeyPermRepo, KeyPermRepoApi>()(
     Effect.gen(function* make() {
       const { db } = yield* CloudBindings;
 
+      const store = createKeyMetaStore(db);
+
       const insertMeta = Effect.fn("KeyPermRepo.insertMeta")(function* run(
         input: KeyMetaInput
       ) {
         const org = yield* CurrentOrg;
 
-        yield* Effect.promise(() =>
-          db
-            .prepare(
-              "INSERT INTO key_meta (key_id, org_id, acting_user_id, created_by, created_at) VALUES (?, ?, ?, ?, ?)"
-            )
-            .bind(
-              input.keyId,
-              org.orgId,
-              input.actingUserId,
-              input.createdBy,
-              Date.now()
-            )
-            .run()
-        );
+        yield* store.insertMeta({ ...input, orgId: org.orgId });
       });
 
       const introspect = Effect.fn("KeyPermRepo.introspect")(function* run(
         keyId: string
       ) {
         const org = yield* CurrentOrg;
-
-        const row = yield* Effect.promise(() =>
-          db
-            .prepare(`${SELECT_KEY} AND m.key_id = ?`)
-            .bind(org.orgId, keyId)
-            .first<KeyRow>()
-        );
+        const row = yield* store.findKey(org.orgId, keyId);
 
         if (row === null) {
           return yield* toMissing();
@@ -134,32 +102,18 @@ class KeyPermRepo extends Context.Service<KeyPermRepo, KeyPermRepoApi>()(
 
       const list = Effect.fn("KeyPermRepo.list")(function* run() {
         const org = yield* CurrentOrg;
+        const rows = yield* store.listKeys(org.orgId);
 
-        const result = yield* Effect.promise(() =>
-          db
-            .prepare(`${SELECT_KEY} ORDER BY m.created_at DESC LIMIT ?`)
-            .bind(org.orgId, LIST_LIMIT)
-            .all<KeyRow>()
-        );
-
-        return result.results.map(toRecord);
+        return rows.map((row) => toRecord(row));
       });
 
       const revoke = Effect.fn("KeyPermRepo.revoke")(function* run(
         keyId: string
       ) {
         const org = yield* CurrentOrg;
+        const changes = yield* store.revokeKey(org.orgId, keyId);
 
-        const result = yield* Effect.promise(() =>
-          db
-            .prepare(
-              'UPDATE "apikey" SET "enabled" = 0 WHERE "id" = ? AND "id" IN (SELECT key_id FROM key_meta WHERE org_id = ? AND key_id = ?)'
-            )
-            .bind(keyId, org.orgId, keyId)
-            .run()
-        );
-
-        if (result.meta.changes === 0) {
+        if (changes === 0) {
           return yield* toMissing();
         }
       });

@@ -57,7 +57,6 @@ const ZOD_BRIDGE_FILES = new Set([
   "apps/desktop/src/server/mcp/variant-tools.ts",
   "apps/desktop/src/server/mcp/vector-tools.ts",
   "apps/desktop/src/server/page-import/deps.ts",
-  "apps/desktop/src/server/platform/json-file/index.ts",
   "apps/desktop/src/server/project-source/source.ts",
   "apps/desktop/src/server/review/agent-tool.ts",
   "apps/desktop/src/server/share/viewer-app.ts",

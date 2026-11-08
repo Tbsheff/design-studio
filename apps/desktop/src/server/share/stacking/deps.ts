@@ -46,5 +46,3 @@ export type {
   StackingSetResult,
   StackingValues,
 } from "@design-studio/contracts/stacking";
-
-export { z } from "../../platform/zod-bridge/index.js";

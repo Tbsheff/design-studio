@@ -2,9 +2,10 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 
 import { RULE_MAX_CHARS } from "../../shared/permissionRules.js";
+import { toDecoder } from "../platform/decode/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 
 const COMMAND_RULES_MAX = 200;
@@ -72,8 +73,9 @@ const RuleFileSchema = Schema.Struct({
 
 type RuleFile = typeof RuleFileSchema.Type;
 
-const decodeRuleFile = Schema.decodeUnknownOption(
-  Schema.fromJsonString(RuleFileSchema)
+const decodeRuleFile = toDecoder(
+  Schema.fromJsonString(RuleFileSchema),
+  "ignore"
 );
 
 const toRuleList = (parsed: RuleFile | null): string[] => {
@@ -94,7 +96,11 @@ const getRuleFile = async (file: string): Promise<string[]> => {
   try {
     const decoded = decodeRuleFile(await readFile(file, "utf-8"));
 
-    return toRuleList(Option.getOrNull(decoded));
+    if (decoded._tag === "Failure") {
+      return [];
+    }
+
+    return toRuleList(decoded.success);
   } catch (error) {
     console.error("[command-rules] unreadable file", file, error);
 

@@ -228,4 +228,10 @@ const withMember =
 
 export { MemberAuth, withMember };
 
-export type { MemberAuthApi, MemberAuthError, MemberRequest, RouteClass };
+export type {
+  MemberAuthApi,
+  MemberAuthError,
+  MemberGrant,
+  MemberRequest,
+  RouteClass,
+};

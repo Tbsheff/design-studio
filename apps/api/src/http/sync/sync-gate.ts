@@ -3,15 +3,16 @@ import { Effect, Layer } from "effect";
 import { HttpServerRequest } from "effect/http";
 import { HttpApiMiddleware } from "effect/http-api";
 
-import { CurrentOrg } from "../../tenant/current-org.js";
+import type { CurrentOrg } from "../../tenant/current-org.js";
 import { MEMBER_ERRORS } from "../groups/wire-errors.js";
-import { CurrentUser } from "../middleware/current-user.js";
+import type { CurrentUser } from "../middleware/current-user.js";
 import { MemberAuth } from "../middleware/member-auth.js";
+import { provideMemberGrant } from "../middleware/provide-grant.js";
 
 const ORG_PATH = /\/v1\/o\/(?<org>[^/?]+)/u;
 
 const toOrgId = (url: string): string | null =>
-  ORG_PATH.exec(url)?.groups?.org ?? null;
+  url.match(ORG_PATH)?.groups?.org ?? null;
 
 class SyncGate extends HttpApiMiddleware.Service<
   SyncGate,
@@ -41,10 +42,7 @@ const SyncGateLive = Layer.effect(
           route: "device",
         });
 
-        return yield* httpEffect.pipe(
-          Effect.provideService(CurrentOrg, grant.org),
-          Effect.provideService(CurrentUser, grant.user)
-        );
+        return yield* provideMemberGrant(grant)(httpEffect);
       })
     );
   })

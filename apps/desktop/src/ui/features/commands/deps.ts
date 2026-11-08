@@ -64,3 +64,10 @@ export { projectsApi } from "../home/projects-store-model.js";
 export type { PanelTab } from "../../platform/use-panel-tab.js";
 
 export { FIND_TEXT_COMMAND, FIND_TEXT_EVENT } from "../../domain/find-text.js";
+
+export {
+  DEV_STATUS_MARK_COMMAND,
+  DEV_STATUS_MARK_EVENT,
+  DEV_STATUS_OPEN_COMMAND,
+  DEV_STATUS_OPEN_EVENT,
+} from "../../domain/dev-status-events.js";

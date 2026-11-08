@@ -9,6 +9,7 @@ import { ConnectionActions } from "./connection/index.js";
 import { ContentActions } from "./content/index.js";
 import { CritiqueActions } from "./critique/index.js";
 import { DevServerActions } from "./dev-server/index.js";
+import { DevStatusActions } from "./dev-status/index.js";
 import { DirectEditActions } from "./direct-edit/index.js";
 import { EffectActions } from "./effect/index.js";
 import { EventsActions } from "./events/index.js";
@@ -58,6 +59,7 @@ const ALL_ACTIONS = {
   content: ContentActions,
   critique: CritiqueActions,
   devServer: DevServerActions,
+  devStatus: DevStatusActions,
   directEdit: DirectEditActions,
   effect: EffectActions,
   events: EventsActions,

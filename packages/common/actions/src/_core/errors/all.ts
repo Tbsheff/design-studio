@@ -5,6 +5,7 @@ import type { CommentError } from "../../comment/errors/index.js";
 import type { ComponentVariantError } from "../../component-variant/errors/index.js";
 import type { ContentError } from "../../content/errors/index.js";
 import type { CritiqueError } from "../../critique/errors/index.js";
+import type { DevStatusError } from "../../dev-status/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
 import type { EffectError } from "../../effect/errors/index.js";
 import type { FillError } from "../../fill/errors/index.js";
@@ -41,6 +42,7 @@ type StudioError =
   | ComponentVariantError
   | ContentError
   | CritiqueError
+  | DevStatusError
   | DirectEditError
   | EffectError
   | FillError

@@ -9,6 +9,7 @@ import { ConnectionLive } from "./connection/live.js";
 import { ContentLive } from "./content/live.js";
 import { CritiqueLive } from "./critique/live.js";
 import { DevServerLive } from "./dev-server/live.js";
+import { DevStatusLive } from "./dev-status/live.js";
 import { DirectEditLive } from "./direct-edit/live.js";
 import { EffectLive } from "./effect/live.js";
 import { EventsLive } from "./events/live.js";
@@ -58,6 +59,7 @@ const ALL_LIVE = {
   content: ContentLive,
   critique: CritiqueLive,
   devServer: DevServerLive,
+  devStatus: DevStatusLive,
   directEdit: DirectEditLive,
   effect: EffectLive,
   events: EventsLive,

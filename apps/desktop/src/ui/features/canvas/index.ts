@@ -31,6 +31,8 @@ export {
   placeDirections,
 } from "./canvas-direction-ops.js";
 
+export { canvasVariations } from "./canvas-variations.js";
+
 export type { CanvasCommentTools, CanvasDirections } from "./canvas-types.js";
 
 export { Canvas, PlayMode };

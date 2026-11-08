@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-import { canvasVariations } from "../../features/canvas/variations-layer";
+import { canvasVariations } from "../../features/canvas";
 import { uiStore } from "../../platform/storage";
 import { CanvasCommandsHost } from "../canvas-commands-host";
 import type { CenterView } from "../shell/studio-parts";

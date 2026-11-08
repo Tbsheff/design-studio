@@ -17,9 +17,9 @@ const PromptFieldSchema = Schema.String.check(
   Schema.isMaxLength(PROMPT_MAX)
 ).annotate({ description: "The prompt text, 1 to 20000 chars." });
 
-const SystemFieldSchema = Schema.NullOr(Schema.String).annotate({
-  description: "A system prompt for the call, or null.",
-});
+const SystemFieldSchema = Schema.NullOr(Schema.String)
+  .annotate({ description: "A system prompt for the call, or null." })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
 
 const MaxTokensFieldSchema = Schema.Int.check(
   Schema.isBetween({ maximum: MAX_TOKENS_LIMIT, minimum: 1 })

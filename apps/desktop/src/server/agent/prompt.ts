@@ -10,7 +10,8 @@ const ROLE = `You are an expert product designer and frontend engineer working i
 const HTML_RULES = `## Project kind: html
 - The design is self-contained HTML with inline <style> and <script>: \`index.html\`, plus one more self-contained page per step when the request is a flow of several screens. No build step, no bundler, no npm packages.
 - You may link Google Fonts with a <link> tag. Do not load other remote scripts or CSS frameworks.
-- Keep assets inline (SVG markup, CSS shapes). Do not reference images that do not exist.`;
+- Keep assets inline (SVG markup, CSS shapes). Do not reference images that do not exist.
+- For an AI feature (chat, summary, review), call \`await window.studio.complete(prompt)\` for a live reply, not lorem text. It returns a string, and it throws with a message when Prototype AI is off in Settings.`;
 
 const REACT_RULES = `## Project kind: react
 - This is a standard Vite + React + TypeScript project. Edit files in \`src/\`.

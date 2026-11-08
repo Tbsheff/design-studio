@@ -17,6 +17,10 @@ interface Insertion {
 
 export const BRIDGE_SCRIPT_TAG = `<script src="${BRIDGE_SCRIPT_PATH}"></script>`;
 
+export const COMPLETE_SCRIPT_PATH = "/__studio/complete.js";
+
+export const COMPLETE_SCRIPT_TAG = `<script src="${COMPLETE_SCRIPT_PATH}"></script>`;
+
 function isElement(node: ChildNode | ParentNode): node is Element {
   return "tagName" in node;
 }
@@ -125,7 +129,7 @@ export function annotateHtml(
   if (options.injectBridge !== false) {
     insertions.push({
       offset: bridgeInsertionOffset(document),
-      text: BRIDGE_SCRIPT_TAG,
+      text: `${BRIDGE_SCRIPT_TAG}${COMPLETE_SCRIPT_TAG}`,
     });
   }
 

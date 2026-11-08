@@ -24,8 +24,6 @@ const CORE_TOOLS = [
   "arrange",
   "measure",
   "select_matching",
-  "insert_jsx",
-  "clear_text",
   "list_breakpoints",
   "set_breakpoint_style",
   "diff_versions",

@@ -4,7 +4,6 @@ import { COMPONENT_PREVIEW_TOOLS } from "../component-preview-tools.js";
 import { FIGMA_IMPORT_TOOLS } from "../figma-import-tools.js";
 import { IMAGE_TOOLS } from "../image-tools.js";
 import { INSERT_TOOLS } from "../insert-tools.js";
-import { JSX_INSERT_TOOLS } from "../jsx-insert-tools.js";
 import { LAYER_STATE_TOOLS } from "../layer-state-tools.js";
 import { LAYER_TOOLS } from "../layer-tools.js";
 import { MOVE_TOOLS } from "../move-tools.js";
@@ -25,7 +24,6 @@ const DIRECT_EDIT_LEGACY_TOOLS_UNGUARDED = [
   ...STYLE_TOOLS,
   ...REVIEW_TOOLS,
   ...INSERT_TOOLS,
-  ...JSX_INSERT_TOOLS,
   ...LAYER_TOOLS,
   ...RULES_TOOLS,
   ...ARRANGE_TOOLS,

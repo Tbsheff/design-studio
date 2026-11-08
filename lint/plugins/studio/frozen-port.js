@@ -25,7 +25,6 @@ const ZOD_BRIDGE_FILES = new Set([
   "apps/desktop/src/server/mcp/history-tools.ts",
   "apps/desktop/src/server/mcp/image-tools.ts",
   "apps/desktop/src/server/mcp/insert-tools.ts",
-  "apps/desktop/src/server/mcp/jsx-insert-tools.ts",
   "apps/desktop/src/server/mcp/layer-state-tools.ts",
   "apps/desktop/src/server/mcp/layer-tools.ts",
   "apps/desktop/src/server/mcp/legacy/canvas-schema.ts",

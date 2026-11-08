@@ -18,12 +18,6 @@ import { editElementFields, runEditElement } from "../direct-tools.js";
 import { figmaImportSdkFields, runFigmaImport } from "../figma-import-tool.js";
 import { runSetImage, setImageSdkFields } from "../image-tool.js";
 import {
-  clearTextSdkFields,
-  insertJsxSdkFields,
-  runClearText,
-  runInsertJsx,
-} from "../jsx-insert-tool.js";
-import {
   getLayersSdkFields,
   runGetLayers,
   withLayerIds,
@@ -121,24 +115,12 @@ const toElementStyleTools = (
     setBreakpointStyleInput,
     withLayerIds(deps, (args) => runSetBreakpointStyle(deps, args))
   ),
-  tool(
-    "insert_jsx",
-    TOOL_SHORT.insert_jsx,
-    insertJsxSdkFields,
-    withLayerIds(deps, (args) => runInsertJsx(deps, args))
-  ),
 ];
 
 const toElementLayerTools = (
   deps: StudioToolDeps,
   tool: ToolFactory
 ): readonly object[] => [
-  tool(
-    "clear_text",
-    TOOL_SHORT.clear_text,
-    clearTextSdkFields,
-    withLayerIds(deps, (args) => runClearText(deps, args))
-  ),
   tool(
     "get_layers",
     TOOL_SHORT.get_layers,

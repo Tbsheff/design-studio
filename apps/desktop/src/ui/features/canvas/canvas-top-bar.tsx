@@ -15,8 +15,9 @@ import type {
   MenuEntry,
   MenuGroup,
 } from "./top-bar-menu.js";
-import { ZoomPill, OverflowMenu } from "./top-bar-zoom.js";
-import type { ZoomProps } from "./top-bar-zoom.js";
+import { OverflowMenu } from "./overflow-menu.js";
+import { ZoomPill } from "./top-bar-zoom.js";
+import type { ZoomProps } from "./zoom-menu-model.js";
 
 interface Props {
   shapeTools?: ReactNode;
@@ -161,7 +162,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
       </button>
       <DropMenu
         label="Pages and frames"
-        className="topbar-file"
+        triggerClass="topbar-file"
         groups={props.fileMenu}
         onOpen={props.onFileMenuOpen}
         tip="Pages and frames"
@@ -236,7 +237,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
       <span data-topbar-slot="review" style={{ display: "contents" }} />
       <DropMenu
         label="Present"
-        className="btn ghost topbar-present"
+        triggerClass="btn ghost topbar-present"
         anchorClass="topbar-fold-wide"
         groups={() => [{ items: present }]}
         align="end"
@@ -249,18 +250,16 @@ const CanvasTopBar = (props: Props): ReactElement => {
       <OverflowMenu
         zoom={zoom}
         present={present}
-        viewOpen={props.viewOpen}
+        isViewOpen={props.viewOpen}
         onToggleView={props.onToggleView}
         onReload={props.onReload}
-        tweak={{
-          disabled: props.tweakDisabled,
-          open: props.tweakOpen,
-          run: props.onTweak,
-        }}
+        isTweakOpen={props.tweakOpen}
+        isTweakDisabled={props.tweakDisabled}
+        onTweak={props.onTweak}
       />
       <DropMenu
         label="Share"
-        className="btn strong topbar-share"
+        triggerClass="btn strong topbar-share"
         groups={() => shareGroups(props, onPort)}
         align="end"
         tip={tip2}

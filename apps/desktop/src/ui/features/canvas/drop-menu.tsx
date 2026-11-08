@@ -31,7 +31,7 @@ const toTipAlign = (align: "start" | "end"): "end" | null => {
 interface DropMenuProps {
   readonly label: string;
   readonly groups: () => MenuGroup[];
-  readonly className: string;
+  readonly triggerClass: string;
   readonly anchorClass?: string;
   readonly align?: "start" | "end";
   readonly tip?: string;
@@ -42,7 +42,7 @@ interface DropMenuProps {
 const DropMenu = ({
   label,
   groups,
-  className,
+  triggerClass,
   anchorClass,
   align = "start",
   tip,
@@ -73,7 +73,7 @@ const DropMenu = ({
       <button
         ref={trigger}
         type="button"
-        className={className}
+        className={triggerClass}
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={isOpen}

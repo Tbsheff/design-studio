@@ -9,7 +9,9 @@ import type {
   ParentToBridge,
   ProjectKind,
 } from "@design-studio/contracts";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+
+import { useLatest } from "./use-latest.js";
 
 interface BridgeFrame {
   key: string;
@@ -24,6 +26,7 @@ const FRAME_TOKEN_ATTR = "data-frame-token";
 const MAX_PENDING = 50;
 
 const ports = new Map<string, MessagePort>();
+const taggedFrames = new Map<string, WeakRef<HTMLIFrameElement>>();
 const documents = new Map<string, string>();
 const pending = new Map<string, ParentToBridge[]>();
 const listeners = new Set<(token: string, message: BridgeToParent) => void>();
@@ -58,7 +61,10 @@ const tagFrame = (
   element: HTMLIFrameElement | null,
   token: string
 ): HTMLIFrameElement | null => {
-  element?.setAttribute(FRAME_TOKEN_ATTR, token);
+  if (element) {
+    element.setAttribute(FRAME_TOKEN_ATTR, token);
+    taggedFrames.set(token, new WeakRef(element));
+  }
 
   return element;
 };
@@ -132,11 +138,15 @@ const isBridgeMessage = (data: unknown): data is BridgeToParent => {
 const frameElementOf = (
   source: MessageEventSource | null
 ): HTMLIFrameElement | null => {
-  for (const element of document.querySelectorAll<HTMLIFrameElement>(
-    `iframe[${FRAME_TOKEN_ATTR}]`
-  )) {
-    if (element.contentWindow === source) {
+  for (const [token, ref] of taggedFrames) {
+    const element = ref.deref();
+
+    if (element?.contentWindow === source && element) {
       return element;
+    }
+
+    if (!element) {
+      taggedFrames.delete(token);
     }
   }
 
@@ -233,10 +243,8 @@ const useBridge = (
   getFrames: () => BridgeFrame[],
   onMessage: (frame: BridgeFrame, message: BridgeToParent) => void
 ): void => {
-  const framesRef = useRef(getFrames);
-  framesRef.current = getFrames;
-  const handlerRef = useRef(onMessage);
-  handlerRef.current = onMessage;
+  const framesRef = useLatest(getFrames);
+  const handlerRef = useLatest(onMessage);
 
   useEffect(() => {
     const listener = (token: string, message: BridgeToParent): void => {
@@ -258,7 +266,7 @@ const useBridge = (
     return (): void => {
       listeners.delete(listener);
     };
-  }, []);
+  }, [framesRef, handlerRef]);
 };
 
 export {

@@ -1,22 +1,51 @@
 import type { AppServerStatus } from "@design-studio/contracts";
+import type { DoctorCause } from "@design-studio/contracts/app-doctor";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { focusStageQuietly } from "../../features/canvas/use-inline-text-edit";
 import { APP_PANEL_EVENT } from "../../platform/app-status";
 import type { Tab } from "./app-tabs";
 
-const usePanelFocus = (setOpen: (open: boolean) => void) => {
+interface PanelFocus {
+  readonly close: () => void;
+  readonly remember: () => void;
+}
+
+interface AlertState {
+  readonly cause: DoctorCause | null;
+  readonly doctorKey: string | null;
+  readonly failKey: string | null;
+  readonly failed: boolean;
+  readonly setHidden: (key: string | null) => void;
+  readonly showDoctor: boolean;
+}
+
+const SWITCHABLE: readonly Tab[] = ["logs", "settings", "flow"];
+
+const toTab = (value: string): Tab => {
+  const found = SWITCHABLE.find((tab) => tab === value);
+
+  return found ?? "routes";
+};
+
+const usePanelFocus = (setOpen: (open: boolean) => void): PanelFocus => {
   const opener = useRef<HTMLElement | null>(null);
 
   const remember = useCallback(() => {
     const active = document.activeElement;
-    opener.current =
-      active instanceof HTMLElement && active !== document.body ? active : null;
+
+    opener.current = null;
+
+    if (active instanceof HTMLElement && active !== document.body) {
+      opener.current = active;
+    }
   }, []);
 
-  const close = (): void => {
+  const close = useCallback((): void => {
     setOpen(false);
+
     const back = opener.current;
+
     requestAnimationFrame(() => {
       if (document.activeElement && document.activeElement !== document.body) {
         return;
@@ -28,7 +57,7 @@ const usePanelFocus = (setOpen: (open: boolean) => void) => {
         focusStageQuietly();
       }
     });
-  };
+  }, [setOpen]);
 
   return { close, remember };
 };
@@ -41,12 +70,8 @@ const useOpenRequests = (
   useEffect(() => {
     const show = (event: Event): void => {
       remember();
-      const next = (event as CustomEvent<unknown>).detail;
-      setTab(
-        next === "logs" || next === "settings" || next === "flow"
-          ? next
-          : "routes"
-      );
+      const next = (event as CustomEvent<string>).detail;
+      setTab(toTab(next));
       setOpen(true);
     };
 
@@ -56,22 +81,39 @@ const useOpenRequests = (
   }, [setTab, setOpen, remember]);
 };
 
-const useAlerts = (status: AppServerStatus | null, open: boolean) => {
+const toFailKey = (status: AppServerStatus | null): string | null => {
+  if (status?.state === "failed") {
+    return `${status.startedAt ?? 0}|${status.message ?? ""}`;
+  }
+
+  return null;
+};
+
+const toDoctorKey = (
+  status: AppServerStatus | null,
+  cause: DoctorCause | null
+): string | null => {
+  if (cause) {
+    return `doctor|${status?.startedAt ?? 0}|${cause.kind}|${cause.title}`;
+  }
+
+  return null;
+};
+
+const useAlerts = (
+  status: AppServerStatus | null,
+  open: boolean
+): AlertState => {
   const [hidden, setHidden] = useState<string | null>(null);
 
   const cause =
     status?.doctor?.causes.find((item) => item.severity === "error") ?? null;
 
-  const doctorKey = cause
-    ? `doctor|${status?.startedAt ?? 0}|${cause.kind}|${cause.title}`
-    : null;
+  const doctorKey = toDoctorKey(status, cause);
 
   const showDoctor = doctorKey !== null && doctorKey !== hidden && !open;
 
-  const failKey =
-    status?.state === "failed"
-      ? `${status.startedAt ?? 0}|${status.message ?? ""}`
-      : null;
+  const failKey = toFailKey(status);
 
   const failed = failKey !== null && failKey !== hidden && !open && !showDoctor;
 

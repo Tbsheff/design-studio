@@ -7,6 +7,7 @@ import {
   LayerRefError,
   resolveLayerRef,
   scopeOf,
+  toProbeTarget,
 } from "../page-probe/index.js";
 import type { ExportRuntime } from "./export-core.js";
 import { withPagePath } from "./source.js";
@@ -35,10 +36,12 @@ const resolveFrameSelector = async (
 
   try {
     return await resolveLayerRef(
-      runtime.preview,
-      url,
-      { height: frame.height, width: frame.width },
-      scopeOf(project.id, direction.id),
+      toProbeTarget(
+        runtime.preview,
+        url,
+        { height: frame.height, width: frame.width },
+        scopeOf(project.id, direction.id)
+      ),
       raw.trim()
     );
   } catch (error) {

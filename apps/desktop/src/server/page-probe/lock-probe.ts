@@ -15,6 +15,12 @@ interface LockProbe {
   resolved: Record<string, boolean>;
 }
 
+interface LockDelta {
+  add: string[];
+  remove: string[];
+}
+
+const SELECTOR_PREFIX = "sel:";
 const VIEWPORT = { height: 900, width: 1440 };
 
 const PROBE = String.raw`async (input) => {
@@ -106,10 +112,7 @@ const probeLock = (
     { layoutOnly: true }
   );
 
-const lockDelta = (
-  probe: LockProbe,
-  locked: boolean
-): { add: string[]; remove: string[] } => {
+const lockDelta = (probe: LockProbe, locked: boolean): LockDelta => {
   if (locked) {
     return { add: toChoice(probe.own.length > 0, [], [probe.key]), remove: [] };
   }
@@ -117,10 +120,7 @@ const lockDelta = (
   return { add: [], remove: [...new Set([probe.key, ...probe.own])] };
 };
 
-const applyDelta = (
-  keys: string[],
-  delta: { add: string[]; remove: string[] }
-): string[] => {
+const applyDelta = (keys: string[], delta: LockDelta): string[] => {
   const remove = new Set(delta.remove);
 
   return [...keys.filter((key) => !remove.has(key)), ...delta.add];
@@ -155,8 +155,8 @@ const lockOutcome = (
 };
 
 const lockLabel = (what: string): string => {
-  if (what.startsWith("sel:")) {
-    return what.slice(4);
+  if (what.startsWith(SELECTOR_PREFIX)) {
+    return what.slice(SELECTOR_PREFIX.length);
   }
 
   const use = /^use:(?<name>[^|]*)\|loc:(?<loc>.*)$/u.exec(what);

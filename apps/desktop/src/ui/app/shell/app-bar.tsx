@@ -1,113 +1,86 @@
 import type { AttachedApp } from "@design-studio/contracts";
-import { lazy, Suspense, useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import type { ReactElement } from "react";
 
-import { api } from "../../api";
 import { AppBarAccount } from "./app-bar-account.js";
-import { AppFailure } from "./app-failure";
+import { AppBarAlerts } from "./app-bar-alerts";
+import { AppBarToggle } from "./app-bar-toggle";
 import { AppPanel } from "./app-panel";
 import { stateText } from "./app-state-text";
 import type { Tab } from "./app-tabs";
-import { PrepChip } from "./prep-chip";
 import { usePanelFocus, useOpenRequests, useAlerts } from "./use-app-alerts";
+import { useAppBarActions } from "./use-app-bar-actions";
 import { useAppState } from "./use-app-state";
 
-import "../../styles/attach-app.css";
-
-const DoctorCard = lazy(async () => {
-  const loaded = await import("../../features/design-system/doctor-card");
-
-  return { default: loaded.DoctorCard };
-});
-
-export interface AppBarProps {
+interface AppBarProps {
   projectId: string;
   app: AttachedApp;
   onAddRoute: (route: string) => void;
 }
 
-export default function AppBar({
-  projectId,
-  app,
-  onAddRoute,
-}: AppBarProps): ReactElement {
+const AppBar = ({ projectId, app, onAddRoute }: AppBarProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("routes");
-  const { status, firstVersion, refresh } = useAppState(projectId, false);
+  const { status, firstVersion, refresh } = useAppState(projectId);
   const state = status?.state ?? "idle";
   const managed = (status?.mode ?? app.mode) === "managed";
-  const focus = usePanelFocus(setOpen);
-  useOpenRequests(setTab, setOpen, focus.remember);
+  const { close, remember } = usePanelFocus(setOpen);
+
+  useOpenRequests(setTab, setOpen, remember);
 
   const { cause, doctorKey, showDoctor, failKey, failed, setHidden } =
     useAlerts(status, open);
 
-  const [, startTransition] = useTransition();
+  const { retry, showLog, toggle } = useAppBarActions({
+    isManaged: managed,
+    projectId,
+    refresh,
+    remember,
+    setOpen,
+    setTab,
+  });
 
-  const retry = (): void => {
-    startTransition(async () => {
-      try {
-        await api.appControl(projectId, managed ? "restart" : "start");
-        refresh();
-      } catch {
-        refresh();
-      }
-    });
-  };
+  const hideDoctor = useCallback(
+    () => setHidden(doctorKey),
+    [doctorKey, setHidden]
+  );
 
-  const showLog = (): void => {
-    setTab("logs");
-    setOpen(true);
-  };
+  const hideFailure = useCallback(
+    () => setHidden(failKey),
+    [failKey, setHidden]
+  );
 
   return (
     <div className="app-bar-root">
       <AppBarAccount />
-      {showDoctor && cause && (
-        <Suspense fallback={null}>
-          <DoctorCard
-            projectId={projectId}
-            cause={cause}
-            onFixed={refresh}
-            onLog={showLog}
-            onClose={() => setHidden(doctorKey)}
-            onRestart={managed ? retry : undefined}
-          />
-        </Suspense>
-      )}
-      {failed && status && (
-        <AppFailure
-          projectId={projectId}
-          app={app}
-          status={status}
-          onRetry={retry}
-          onLog={showLog}
-          onClose={() => setHidden(failKey)}
-          onSaved={refresh}
-        />
-      )}
-      <button
-        type="button"
-        className="btn small app-bar-button"
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        onClick={() => {
-          focus.remember();
-          setOpen((isOpen) => !isOpen);
-        }}
-        data-tip="Routes, dev server and log"
-      >
-        <span className="app-status-dot" data-state={state} />
-        <span>{app.framework === "next" ? "Next.js" : "App"}</span>
-        <span className="app-panel-sub">{stateText(status, managed)}</span>
-        <PrepChip firstVersion={firstVersion} />
-      </button>
+      <AppBarAlerts
+        app={app}
+        cause={cause}
+        isFailed={failed}
+        isManaged={managed}
+        onFixed={refresh}
+        onHideDoctor={hideDoctor}
+        onHideFailure={hideFailure}
+        onLog={showLog}
+        onRetry={retry}
+        projectId={projectId}
+        showDoctor={showDoctor}
+        status={status}
+      />
+      <AppBarToggle
+        firstVersion={firstVersion}
+        framework={app.framework}
+        isOpen={open}
+        onToggle={toggle}
+        state={state}
+        statusText={stateText(status, managed)}
+      />
       {open && (
         <AppPanel
           projectId={projectId}
           app={app}
           onAddRoute={onAddRoute}
-          onClose={focus.close}
+          onClose={close}
           tab={tab}
           setTab={setTab}
           initial={status}
@@ -115,4 +88,8 @@ export default function AppBar({
       )}
     </div>
   );
-}
+};
+
+export { AppBar };
+
+export type { AppBarProps };

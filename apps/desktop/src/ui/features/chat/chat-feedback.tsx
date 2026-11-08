@@ -229,7 +229,7 @@ const RunFeedbackRow = memo(
           )}
           {run.status !== "running" && runText(run) && (
             <CopyButton
-              text={() => runText(run)}
+              getText={() => runText(run)}
               label="Copy reply"
               className="reply-copy"
             />

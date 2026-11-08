@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 
-import { directEditRoutes, galleryRoutes, useAction } from "./deps.js";
+import { galleryRoutes, propRoutes, useAction } from "./deps.js";
 import type { SourceLoc } from "./deps.js";
 import { toCellViews } from "./gallery-model.js";
 import type { CellView } from "./gallery-model.js";
@@ -111,7 +111,7 @@ const useGallery = (setup: GallerySetup): Gallery => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [applied, setApplied] = useState(false);
   const [isWorking, startWork] = useTransition();
-  const setter = useAction(directEditRoutes.setPropsDirectEdit);
+  const setter = useAction(propRoutes.setProp);
   const { run: runSet } = setter;
 
   const handleBuilt = useCallback(() => setApplied(false), []);

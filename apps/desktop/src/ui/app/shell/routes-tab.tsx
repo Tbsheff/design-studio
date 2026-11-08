@@ -1,160 +1,92 @@
 import type { AppRoute } from "@design-studio/contracts";
 import { cleanRoute } from "@design-studio/contracts/app";
-import { Icon } from "@design-studio/ui";
-import { useEffect, useMemo, useState } from "react";
-import type { ReactElement, FormEvent } from "react";
+import { useCallback, useState } from "react";
+import type { ReactElement } from "react";
 
-import { api, errorText } from "../../api";
 import { copy } from "./copy";
+import { RouteRow } from "./route-row";
+import { RoutesCustomForm } from "./routes-custom-form";
+import { RoutesFilter } from "./routes-filter";
+import {
+  ROUTES_SHOWN_MAX,
+  filterRoutes,
+  isRouteUnsafe,
+  toFilterPlaceholder,
+} from "./routes-model";
+import { useRoutes } from "./use-routes";
 
-const RoutesTab = ({
-  projectId,
-  onAddRoute,
-}: {
-  projectId: string;
-  onAddRoute: (route: string) => void;
-}): ReactElement => {
-  const [routes, setRoutes] = useState<AppRoute[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+interface RoutesTabProps {
+  readonly onAddRoute: (route: string) => void;
+  readonly projectId: string;
+}
+
+const RoutesTab = ({ onAddRoute, projectId }: RoutesTabProps): ReactElement => {
+  const { error, routes } = useRoutes(projectId);
   const [filter, setFilter] = useState("");
   const [custom, setCustom] = useState("");
-  useEffect(() => {
-    let isLive = true;
+  const matches = filterRoutes(routes, filter);
+  const shown = matches.slice(0, ROUTES_SHOWN_MAX);
 
-    const loadRoutes = async (): Promise<void> => {
-      try {
-        const result = await api.appRoutes(projectId);
-
-        if (isLive) {
-          setRoutes(result.routes);
-        }
-      } catch (caught: unknown) {
-        if (isLive) {
-          setError(errorText(caught));
-        }
+  const pickRoute = useCallback(
+    (route: AppRoute): void => {
+      if (route.dynamic) {
+        setCustom(route.route);
+      } else {
+        onAddRoute(route.route);
       }
-    };
+    },
+    [onAddRoute]
+  );
 
-    void loadRoutes();
+  const addFirst = useCallback((): void => {
+    const [first] = filterRoutes(routes, filter);
 
-    return (): void => {
-      isLive = false;
-    };
-  }, [projectId]);
+    if (first) {
+      pickRoute(first);
+    }
+  }, [filter, pickRoute, routes]);
 
-  const matches = useMemo(() => {
-    const needle = filter.trim().toLowerCase();
-
-    return (routes ?? []).filter(
-      (route) =>
-        needle === "" ||
-        route.route.toLowerCase().includes(needle) ||
-        route.file.toLowerCase().includes(needle)
-    );
-  }, [routes, filter]);
-
-  const shown = matches.slice(0, 200);
-
-  const addCustom = (event: FormEvent): void => {
-    event.preventDefault();
+  const addCustom = useCallback((): void => {
     const route = cleanRoute(custom);
 
-    if (!route || /[[\]]/u.test(route)) {
-      return;
+    if (route && !isRouteUnsafe(route)) {
+      setCustom("");
+      onAddRoute(route);
     }
-
-    onAddRoute(route);
-    setCustom("");
-  };
+  }, [custom, onAddRoute]);
 
   return (
     <div className="app-routes">
-      <input
-        className="app-routes-filter"
-        autoFocus
-        value={filter}
-        placeholder={
-          routes
-            ? `Filter ${routes.length} routes · Enter adds the first`
-            : "Loading routes…"
-        }
-        aria-label="Filter routes"
-        onChange={(event) => setFilter(event.target.value)}
-        onKeyDown={(event) => {
-          const first = shown[0];
-
-          if (
-            event.key !== "Enter" ||
-            !first ||
-            event.nativeEvent.isComposing
-          ) {
-            return;
-          }
-
-          event.preventDefault();
-
-          if (first.dynamic) {
-            setCustom(first.route);
-          } else {
-            onAddRoute(first.route);
-          }
-        }}
+      <RoutesFilter
+        filter={filter}
+        onChange={setFilter}
+        onEnter={addFirst}
+        placeholder={toFilterPlaceholder(routes)}
       />
       {error && <div className="alert error small">{error}</div>}
-      <div role="list" aria-label="App routes">
+      <ul className="app-routes-list" aria-label="App routes">
         {shown.map((route) => (
-          <button
+          <RouteRow
             key={`${route.route}|${route.file}`}
-            type="button"
-            role="listitem"
-            className="app-route"
-            data-tip={
-              route.dynamic
-                ? "Fill in the dynamic segments, then add the frame"
-                : `Add a frame for ${route.route}`
-            }
-            data-tip-align="start"
-            onClick={() =>
-              route.dynamic ? setCustom(route.route) : onAddRoute(route.route)
-            }
-          >
-            <span>
-              <span className="mono">{route.route}</span>
-              <span className="file"> {route.file}</span>
-            </span>
-            {route.dynamic ? (
-              <span className="tag">{copy.dynamic}</span>
-            ) : (
-              <Icon name="plus" size={12} />
-            )}
-          </button>
+            onPick={pickRoute}
+            route={route}
+          />
         ))}
-        {matches.length > shown.length && (
-          <div className="app-routes-more">
-            {copy.showing}
-            {shown.length}
-            {copy.countSeparator}
-            {matches.length}
-            {copy.typeInTheFilterTo}
-          </div>
-        )}
-      </div>
-      <form className="app-route-custom" onSubmit={addCustom}>
-        <input
-          className="mono"
-          value={custom}
-          placeholder="/patients/123"
-          aria-label="Route to add"
-          onChange={(event) => setCustom(event.target.value)}
-        />
-        <button
-          type="submit"
-          className="btn small"
-          disabled={!custom.trim() || /[[\]]/u.test(custom)}
-        >
-          {copy.addFrame}
-        </button>
-      </form>
+      </ul>
+      {matches.length > shown.length && (
+        <div className="app-routes-more">
+          {copy.showing}
+          {shown.length}
+          {copy.countSeparator}
+          {matches.length}
+          {copy.typeInTheFilterTo}
+        </div>
+      )}
+      <RoutesCustomForm
+        custom={custom}
+        onChange={setCustom}
+        onSubmit={addCustom}
+      />
     </div>
   );
 };

@@ -1,13 +1,27 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import type { ReactElement } from "react";
 
-import { Icon } from "./Icon";
+import { Icon } from "./icon.js";
 
-const ThemeMenu = lazy(() => import("./theme-menu.js"));
+const ThemeMenu = lazy(async () => {
+  const loaded = await import("./theme-menu.js");
+
+  return { default: loaded.ThemeMenu };
+});
 
 export const ThemeButton = (): ReactElement => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
+
+  const toggle = useCallback(() => setOpen((isOpen) => !isOpen), []);
+
+  const close = useCallback((refocus: boolean) => {
+    setOpen(false);
+
+    if (refocus) {
+      ref.current?.focus();
+    }
+  }, []);
 
   return (
     <span className="theme-anchor">
@@ -19,22 +33,13 @@ export const ThemeButton = (): ReactElement => {
         data-tip="Theme"
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen(!open)}
+        onClick={toggle}
       >
         <Icon name="moon" />
       </button>
       {open && (
         <Suspense fallback={null}>
-          <ThemeMenu
-            trigger={ref}
-            onClose={(refocus) => {
-              setOpen(false);
-
-              if (refocus) {
-                ref.current?.focus();
-              }
-            }}
-          />
+          <ThemeMenu trigger={ref} onClose={close} />
         </Suspense>
       )}
     </span>

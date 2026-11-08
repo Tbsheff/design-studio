@@ -102,9 +102,11 @@ const PATHS = {
 
 type IconName = keyof typeof PATHS;
 
+const DEFAULT_ICON_SIZE = 16;
+
 const IconView = ({
   name,
-  size = 16,
+  size = DEFAULT_ICON_SIZE,
   className,
 }: {
   name: IconName;

@@ -6,7 +6,11 @@ import { CommandLayer } from "../features/commands";
 import type { CommandLayerName } from "../features/commands";
 import { isDesktop } from "../platform/desktop";
 
-const DesktopApp = lazy(() => import("./shell/desktop-app"));
+const DesktopApp = lazy(async () => {
+  const loaded = await import("./shell/desktop-app");
+
+  return { default: loaded.DesktopApp };
+});
 
 interface AppNoticeProps {
   activeProjectId: string | null;

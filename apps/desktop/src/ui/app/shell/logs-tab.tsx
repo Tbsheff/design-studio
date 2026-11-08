@@ -1,7 +1,13 @@
 import type { AppLogLine } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
 
-function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
+const LogsTab = ({
+  logs,
+  managed,
+}: {
+  logs: AppLogLine[];
+  managed: boolean;
+}) => {
   const ref = useRef<HTMLPreElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -32,6 +38,6 @@ function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
           ))}
     </pre>
   );
-}
+};
 
 export { LogsTab };

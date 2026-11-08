@@ -84,7 +84,7 @@ function tagStartsOn(root: t.Node, line: number): number[] {
     }
   }
 
-  return cols.sort((a, b) => a - b);
+  return cols.toSorted((a, b) => a - b);
 }
 
 async function colOnLine(

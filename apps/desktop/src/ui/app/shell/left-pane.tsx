@@ -70,7 +70,7 @@ export function visiblePane(
   return missing[tab] ? "chat" : tab;
 }
 
-function SheetHead({
+const SheetHead = ({
   id,
   title,
   onClose,
@@ -80,28 +80,26 @@ function SheetHead({
   title: string;
   onClose: () => void;
   onSlot: (el: HTMLDivElement | null) => void;
-}) {
-  return (
-    <div className="pane-sheet-head">
-      <h2 className="pane-sheet-title" id={id}>
-        {title}
-      </h2>
-      <div className="pane-sheet-slot" ref={onSlot} />
-      <button
-        type="button"
-        className="icon-btn small"
-        aria-label="Back to chat"
-        data-tip="Back to chat"
-        data-tip-align="end"
-        onClick={onClose}
-      >
-        <Icon name="close" size={14} />
-      </button>
-    </div>
-  );
-}
+}) => (
+  <div className="pane-sheet-head">
+    <h2 className="pane-sheet-title" id={id}>
+      {title}
+    </h2>
+    <div className="pane-sheet-slot" ref={onSlot} />
+    <button
+      type="button"
+      className="icon-btn small"
+      aria-label="Back to chat"
+      data-tip="Back to chat"
+      data-tip-align="end"
+      onClick={onClose}
+    >
+      <Icon name="close" size={14} />
+    </button>
+  </div>
+);
 
-function Sheet(props: Props & { tab: PanelTab }) {
+const Sheet = (props: Props & { tab: PanelTab }) => {
   const close = () => props.onTab("chat");
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const sheet = useMemo(() => ({ slot }), [slot]);
@@ -161,9 +159,9 @@ function Sheet(props: Props & { tab: PanelTab }) {
       </SheetSlot.Provider>
     </section>
   );
-}
+};
 
-export function LeftPane(props: Props) {
+export const LeftPane = (props: Props) => {
   const tab = visiblePane(props.tab, {
     comments: Boolean(props.comments),
     components: Boolean(props.components),
@@ -215,4 +213,4 @@ export function LeftPane(props: Props) {
       <ChatSplitter columnsRef={props.columnsRef} />
     </aside>
   );
-}
+};

@@ -22,7 +22,7 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export function CopyButton({
+export const CopyButton = ({
   text,
   label = "Copy",
   className = "",
@@ -30,7 +30,7 @@ export function CopyButton({
   text: string | (() => string);
   label?: string;
   className?: string;
-}) {
+}) => {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   useEffect(() => {
@@ -70,4 +70,4 @@ export function CopyButton({
       </span>
     </button>
   );
-}
+};

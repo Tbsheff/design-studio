@@ -6,7 +6,7 @@ export const SheetSlot = createContext<{ slot: HTMLElement | null } | null>(
   null
 );
 
-export function PanelHead({
+export const PanelHead = ({
   title,
   className,
   titleClassName,
@@ -16,7 +16,7 @@ export function PanelHead({
   className: string;
   titleClassName: string;
   children?: ReactNode;
-}) {
+}) => {
   const sheet = useContext(SheetSlot);
 
   if (sheet) {
@@ -29,4 +29,4 @@ export function PanelHead({
       {children}
     </div>
   );
-}
+};

@@ -2,7 +2,6 @@ import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
 import type {
   ComponentUse,
   SelectionContext,
-  SourceLoc,
   TextSourceHints,
 } from "@design-studio/contracts";
 import type { ComponentOwner } from "@design-studio/contracts/props";

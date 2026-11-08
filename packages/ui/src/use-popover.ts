@@ -45,11 +45,11 @@ export function usePopover(
     };
 
     document.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
     return () => {
       document.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
     };
   }, [open, root, onClose, trigger]);
 }

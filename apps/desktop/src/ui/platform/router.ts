@@ -33,14 +33,14 @@ export function installRouting(): void {
   }
 
   installed = true;
-  let current = projectFromPath(window.location.pathname);
+  let current = projectFromPath(globalThis.location.pathname);
   const canonical = pathForProject(current);
 
-  if (window.location.pathname !== canonical) {
-    window.history.replaceState(
+  if (globalThis.location.pathname !== canonical) {
+    globalThis.history.replaceState(
       null,
       "",
-      `${canonical}${window.location.search}${window.location.hash}`
+      `${canonical}${globalThis.location.search}${globalThis.location.hash}`
     );
   }
 
@@ -60,13 +60,13 @@ export function installRouting(): void {
     }
 
     current = next;
-    window.history.pushState(null, "", pathForProject(next));
+    globalThis.history.pushState(null, "", pathForProject(next));
   });
-  window.addEventListener("popstate", () => {
-    const next = projectFromPath(window.location.pathname);
+  globalThis.addEventListener("popstate", () => {
+    const next = projectFromPath(globalThis.location.pathname);
 
     if (current !== null && next !== current && leaveCheck && !leaveCheck()) {
-      window.history.pushState(null, "", pathForProject(current));
+      globalThis.history.pushState(null, "", pathForProject(current));
 
       return;
     }

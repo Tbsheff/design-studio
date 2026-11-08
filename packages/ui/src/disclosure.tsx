@@ -6,7 +6,7 @@ import { Icon } from "./Icon";
 const DATA_DISCLOSURE =
   "Prompts, selected element code, attached images and project files the agent reads are sent to Anthropic's API to generate designs. Projects, versions and history stay on this computer.";
 
-export function Disclosure({
+export const Disclosure = ({
   className = "",
   lead,
   trail,
@@ -14,7 +14,7 @@ export function Disclosure({
   className?: string;
   lead?: ReactNode;
   trail?: ReactNode;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -51,4 +51,4 @@ export function Disclosure({
       {trail}
     </div>
   );
-}
+};

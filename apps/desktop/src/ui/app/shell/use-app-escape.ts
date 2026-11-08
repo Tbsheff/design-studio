@@ -14,9 +14,9 @@ function useEscape(onClose: () => void): void {
       close.current();
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
-    return () => window.removeEventListener("keydown", onKey, true);
+    return () => globalThis.removeEventListener("keydown", onKey, true);
   }, []);
 }
 

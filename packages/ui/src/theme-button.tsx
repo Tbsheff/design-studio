@@ -4,7 +4,7 @@ import { Icon } from "./Icon";
 
 const ThemeMenu = lazy(() => import("./theme-menu.js"));
 
-export function ThemeButton() {
+export const ThemeButton = () => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
 
@@ -38,4 +38,4 @@ export function ThemeButton() {
       )}
     </span>
   );
-}
+};

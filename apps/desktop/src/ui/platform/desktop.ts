@@ -25,7 +25,7 @@ export function desktopBridge<
   Bridge extends object = DesktopBridge,
 >(): Bridge | null {
   return (
-    (window as unknown as { studioDesktop?: Bridge }).studioDesktop ?? null
+    (globalThis as unknown as { studioDesktop?: Bridge }).studioDesktop ?? null
   );
 }
 
@@ -63,7 +63,7 @@ function dispatchDesktopCommand(command: DesktopCommand): void {
     return;
   }
 
-  for (const handler of [...handlers].reverse()) {
+  for (const handler of [...handlers].toReversed()) {
     if (handler(command)) {
       return;
     }
@@ -76,7 +76,7 @@ function install(): void {
   }
 
   installed = true;
-  window.addEventListener(
+  globalThis.addEventListener(
     "keydown",
     (event) => {
       const name = shortcutName(event);

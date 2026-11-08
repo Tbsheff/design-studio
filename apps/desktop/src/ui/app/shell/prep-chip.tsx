@@ -20,11 +20,11 @@ function prepTip(firstVersion: FirstVersionState): string {
   return `Saving the first version${files} so edits can be undone. Screenshots work now; edits wait for it. About ${firstVersion.etaSeconds} s left.`;
 }
 
-function PrepChip({
+const PrepChip = ({
   firstVersion,
 }: {
   firstVersion: FirstVersionState | null;
-}) {
+}) => {
   const seconds = useSecondsSince(
     firstVersion?.pending ? firstVersion.startedAt : null
   );
@@ -53,6 +53,6 @@ function PrepChip({
       Preparing… {seconds} s
     </span>
   );
-}
+};
 
 export { useSecondsSince, prepTip, PrepChip };

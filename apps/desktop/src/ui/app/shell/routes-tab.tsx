@@ -6,13 +6,13 @@ import type { FormEvent } from "react";
 
 import { api, errorText } from "../../api";
 
-function RoutesTab({
+const RoutesTab = ({
   projectId,
   onAddRoute,
 }: {
   projectId: string;
   onAddRoute: (route: string) => void;
-}) {
+}) => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
@@ -149,6 +149,6 @@ function RoutesTab({
       </form>
     </div>
   );
-}
+};
 
 export { RoutesTab };

@@ -9,8 +9,8 @@ import {
 import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 
-import { placeFixed } from "./popover-placement.js";
 import { Icon } from "./Icon";
+import { placeFixed } from "./popover-placement.js";
 
 export interface UiSelectOption<V extends string = string> {
   value: V;
@@ -45,7 +45,7 @@ function step(
   from: number,
   delta: 1 | -1
 ): number {
-  for (let i = 1; i <= options.length; i++) {
+  for (let i = 1; i <= options.length; i += 1) {
     const at = (from + delta * i + options.length * 2) % options.length;
 
     if (!options[at]?.disabled) {
@@ -73,7 +73,7 @@ function typeahead(
 ): number {
   const q = query.toLowerCase();
 
-  for (let i = 1; i <= options.length; i++) {
+  for (let i = 1; i <= options.length; i += 1) {
     const at = (from + i) % options.length;
     const option = options[at];
 
@@ -143,7 +143,7 @@ function openKey(key: string): boolean {
   );
 }
 
-export function UiSelect<V extends string>(p: Props<V>) {
+export const UiSelect = <V extends string>(p: Props<V>) => {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN);
@@ -356,6 +356,6 @@ export function UiSelect<V extends string>(p: Props<V>) {
         )}
     </span>
   );
-}
+};
 
 export type UiSelectProps<V extends string> = Props<V>;

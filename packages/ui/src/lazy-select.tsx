@@ -14,7 +14,7 @@ const UiSelect = lazy(() =>
   })()
 );
 
-function Placeholder<V extends string>(p: UiSelectProps<V>) {
+const Placeholder = <V extends string>(p: UiSelectProps<V>) => {
   const label =
     p.options.find((o) => o.value === p.value)?.label ?? p.placeholder ?? "";
 
@@ -36,12 +36,10 @@ function Placeholder<V extends string>(p: UiSelectProps<V>) {
       </button>
     </span>
   );
-}
+};
 
-export function LazySelect<V extends string>(p: UiSelectProps<V>) {
-  return (
-    <Suspense fallback={<Placeholder {...p} />}>
-      <UiSelect {...(p as unknown as UiSelectProps<string>)} />
-    </Suspense>
-  );
-}
+export const LazySelect = <V extends string>(p: UiSelectProps<V>) => (
+  <Suspense fallback={<Placeholder {...p} />}>
+    <UiSelect {...(p as unknown as UiSelectProps<string>)} />
+  </Suspense>
+);

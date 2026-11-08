@@ -87,13 +87,13 @@ export function useAnchoredPopover<T extends string>(
     const onScroll = onDown;
 
     document.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onScroll);
 
     return () => {
       document.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", onScroll);
     };

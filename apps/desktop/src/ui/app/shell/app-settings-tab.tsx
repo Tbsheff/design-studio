@@ -15,7 +15,7 @@ function envSuggestion(
   return fix?.kind === "set-env" ? fix.env : null;
 }
 
-function SettingsTab({
+const SettingsTab = ({
   projectId,
   app,
   suggested,
@@ -25,7 +25,7 @@ function SettingsTab({
   app: AttachedApp;
   suggested: Record<string, string> | null;
   onSaved: () => void;
-}) {
+}) => {
   const [url, setUrl] = useState(app.url ?? "");
   const [env, setEnv] = useState(() => envText(app.env));
   const [note, setNote] = useState<string | null>(null);
@@ -114,6 +114,6 @@ function SettingsTab({
       </div>
     </form>
   );
-}
+};
 
 export { envSuggestion, SettingsTab };

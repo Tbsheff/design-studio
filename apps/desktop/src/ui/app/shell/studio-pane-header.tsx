@@ -21,7 +21,7 @@ interface ThemeApi {
 }
 
 const themeApi = (): ThemeApi | undefined =>
-  (window as unknown as { studioTheme?: ThemeApi }).studioTheme;
+  (globalThis as unknown as { studioTheme?: ThemeApi }).studioTheme;
 
 interface Props {
   name: string;
@@ -97,13 +97,13 @@ function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
   next?.focus();
 }
 
-function ProjectMenu(
+const ProjectMenu = (
   props: Props & {
     onClose: (refocus: boolean) => void;
     onStartRename: () => void;
     trigger: RefObject<HTMLButtonElement | null>;
   }
-) {
+) => {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, props.onClose, props.trigger);
   const done = () => props.onClose(false);
@@ -229,15 +229,15 @@ function ProjectMenu(
       </div>
     </div>
   );
-}
+};
 
-function RenameField({
+const RenameField = ({
   name,
   onDone,
 }: {
   name: string;
   onDone: (next: string | null) => void;
-}) {
+}) => {
   const [value, setValue] = useState(name);
   const done = useRef(false);
 
@@ -270,9 +270,9 @@ function RenameField({
       }}
     />
   );
-}
+};
 
-function Status({
+const Status = ({
   connection,
   error,
   onDismiss,
@@ -280,42 +280,38 @@ function Status({
   connection: string;
   error: string | null;
   onDismiss: () => void;
-}): ReactNode {
-  return (
-    <>
-      {connection !== "open" && (
-        <span
-          className="conn pane-conn"
-          role="status"
-          data-tip={
-            connection === "connecting" ? "Connecting…" : "Reconnecting…"
-          }
-        >
-          <span className="spinner" />
-          <span className="sr-only">
-            {connection === "connecting" ? "Connecting…" : "Reconnecting…"}
-          </span>
+}): ReactNode => (
+  <>
+    {connection !== "open" && (
+      <span
+        className="conn pane-conn"
+        role="status"
+        data-tip={connection === "connecting" ? "Connecting…" : "Reconnecting…"}
+      >
+        <span className="spinner" />
+        <span className="sr-only">
+          {connection === "connecting" ? "Connecting…" : "Reconnecting…"}
         </span>
-      )}
-      {error && (
-        <div className="pane-error ui-notice" role="alert">
-          <Icon name="alert" size={14} />
-          <span className="pane-error-text">{error}</span>
-          <button
-            type="button"
-            className="icon-btn small"
-            aria-label="Dismiss"
-            onClick={onDismiss}
-          >
-            <Icon name="close" size={12} />
-          </button>
-        </div>
-      )}
-    </>
-  );
-}
+      </span>
+    )}
+    {error && (
+      <div className="pane-error ui-notice" role="alert">
+        <Icon name="alert" size={14} />
+        <span className="pane-error-text">{error}</span>
+        <button
+          type="button"
+          className="icon-btn small"
+          aria-label="Dismiss"
+          onClick={onDismiss}
+        >
+          <Icon name="close" size={12} />
+        </button>
+      </div>
+    )}
+  </>
+);
 
-export function StudioPaneHeader(props: Props) {
+export const StudioPaneHeader = (props: Props) => {
   const [open, setOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -422,4 +418,4 @@ export function StudioPaneHeader(props: Props) {
       />
     </>
   );
-}
+};

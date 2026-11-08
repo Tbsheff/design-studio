@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 export const APP_PANEL_EVENT = "studio:app-panel";
 
 export function openAppPanel(tab: "routes" | "logs" | "settings"): void {
-  window.dispatchEvent(new CustomEvent(APP_PANEL_EVENT, { detail: tab }));
+  globalThis.dispatchEvent(new CustomEvent(APP_PANEL_EVENT, { detail: tab }));
 }
 
 const statuses = new Map<string, AppServerStatus | null>();

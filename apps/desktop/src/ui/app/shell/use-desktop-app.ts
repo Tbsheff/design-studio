@@ -119,19 +119,19 @@ function useFolderDrop(): void {
       }
     };
 
-    window.addEventListener("dragover", onDragOver);
-    window.addEventListener("drop", onDrop);
+    globalThis.addEventListener("dragover", onDragOver);
+    globalThis.addEventListener("drop", onDrop);
 
     return () => {
-      window.removeEventListener("dragover", onDragOver);
-      window.removeEventListener("drop", onDrop);
+      globalThis.removeEventListener("dragover", onDragOver);
+      globalThis.removeEventListener("drop", onDrop);
     };
   }, []);
 }
 
 function runAppCommand(id: string): void {
   const layer = id === "palette" || id === "shortcuts";
-  window.dispatchEvent(
+  globalThis.dispatchEvent(
     new CustomEvent(layer ? LAYER_EVENT : COMMAND_EVENT, { detail: id })
   );
 }

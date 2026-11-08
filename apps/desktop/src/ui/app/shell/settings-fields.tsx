@@ -17,7 +17,7 @@ interface Props {
   shellExtra?: ReactNode;
 }
 
-export function SettingsFields({ draft, onChange, shellExtra }: Props) {
+export const SettingsFields = ({ draft, onChange, shellExtra }: Props) => {
   const set = (patch: Partial<SettingsDraft>) =>
     onChange({ ...draft, ...patch });
 
@@ -110,4 +110,4 @@ export function SettingsFields({ draft, onChange, shellExtra }: Props) {
       />
     </div>
   );
-}
+};

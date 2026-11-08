@@ -23,7 +23,7 @@ interface CenterProps {
   canvas: ComponentProps<typeof Canvas>;
 }
 
-export function CenterView(props: CenterProps) {
+export const CenterView = (props: CenterProps) => {
   const { left, right } = props;
 
   if (props.compareOpen && left && right) {
@@ -40,7 +40,7 @@ export function CenterView(props: CenterProps) {
   }
 
   return <Canvas {...props.canvas} />;
-}
+};
 
 const STOPPED: ReadonlySet<RunStatus> = new Set([
   "canceled",
@@ -60,14 +60,14 @@ export function runStoppedUnsaved(
   return runs.some((run) => run.startedAt > head && STOPPED.has(run.status));
 }
 
-export function UnfinishedSlot(props: {
+export const UnfinishedSlot = (props: {
   visible: boolean;
   count: number;
   busy: boolean;
   runStopped: boolean;
   onKeep: () => void;
   onDiscard: () => void;
-}) {
+}) => {
   if (!props.visible) {
     return null;
   }
@@ -81,7 +81,7 @@ export function UnfinishedSlot(props: {
       onDiscard={props.onDiscard}
     />
   );
-}
+};
 
 interface ModalsProps {
   project: Project;
@@ -92,33 +92,31 @@ interface ModalsProps {
   onCloseSettings: () => void;
 }
 
-export function StudioModals(props: ModalsProps) {
-  return (
-    <>
-      {props.designOpen && (
-        <DesignMdModal
-          projectId={props.project.id}
-          onClose={props.onCloseDesign}
-        />
-      )}
-      {props.settingsOpen && (
-        <SettingsModal
-          project={props.project}
-          onSaved={props.onSaved}
-          onClose={props.onCloseSettings}
-        />
-      )}
-    </>
-  );
-}
+export const StudioModals = (props: ModalsProps) => (
+  <>
+    {props.designOpen && (
+      <DesignMdModal
+        projectId={props.project.id}
+        onClose={props.onCloseDesign}
+      />
+    )}
+    {props.settingsOpen && (
+      <SettingsModal
+        project={props.project}
+        onSaved={props.onSaved}
+        onClose={props.onCloseSettings}
+      />
+    )}
+  </>
+);
 
-export function StudioBoot({
+export const StudioBoot = ({
   message,
   onExit,
 }: {
   message: string | null;
   onExit: () => void;
-}) {
+}) => {
   if (message === null) {
     return <div className="boot muted">Loading project…</div>;
   }
@@ -134,12 +132,10 @@ export function StudioBoot({
       </div>
     </div>
   );
-}
+};
 
-export function StudioToast({ text }: { text: string | null }) {
-  return (
-    <div className="ds-toast-slot" role="status" aria-live="polite">
-      {text && <div className="ds-toast">{text}</div>}
-    </div>
-  );
-}
+export const StudioToast = ({ text }: { text: string | null }) => (
+  <div className="ds-toast-slot" role="status" aria-live="polite">
+    {text && <div className="ds-toast">{text}</div>}
+  </div>
+);

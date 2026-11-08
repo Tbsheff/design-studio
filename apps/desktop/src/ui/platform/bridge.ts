@@ -45,7 +45,7 @@ export interface PreviewPort {
 
 function urlOrigin(url: string): string {
   try {
-    return new URL(url, window.location.href).origin;
+    return new URL(url, globalThis.location.href).origin;
   } catch {
     return "";
   }
@@ -72,8 +72,8 @@ export function frameSrc(
   previewUrl: string,
   extra?: Record<string, string>
 ): string {
-  const url = new URL(previewUrl, window.location.href);
-  url.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, window.location.origin);
+  const url = new URL(previewUrl, globalThis.location.href);
+  url.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, globalThis.location.origin);
 
   if (extra) {
     for (const [k, v] of Object.entries(extra)) {

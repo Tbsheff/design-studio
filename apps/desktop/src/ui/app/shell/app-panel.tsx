@@ -16,7 +16,7 @@ import { ServerButtons } from "./server-buttons";
 import { useEscape } from "./use-app-escape";
 import { useAppState } from "./use-app-state";
 
-function AppPanel({
+const AppPanel = ({
   projectId,
   app,
   onAddRoute,
@@ -29,7 +29,7 @@ function AppPanel({
   tab: Tab;
   setTab: (tab: Tab) => void;
   initial: AppServerStatus | null;
-}) {
+}) => {
   const {
     status,
     app: fresh,
@@ -121,6 +121,6 @@ function AppPanel({
       )}
     </div>
   );
-}
+};
 
 export { AppPanel };

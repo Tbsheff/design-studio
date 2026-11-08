@@ -62,7 +62,7 @@ function useInstallHint(
   return hint;
 }
 
-function InstallFix({ hint }: { hint: FolderInspection | null }) {
+const InstallFix = ({ hint }: { hint: FolderInspection | null }) => {
   const install = hint?.install;
 
   if (!hint || hint.depsInstalled !== false || !install) {
@@ -82,9 +82,9 @@ function InstallFix({ hint }: { hint: FolderInspection | null }) {
       </div>
     </div>
   );
-}
+};
 
-function UrlForm({
+const UrlForm = ({
   projectId,
   app,
   suggested,
@@ -94,7 +94,7 @@ function UrlForm({
   app: AttachedApp;
   suggested: string;
   onSaved: () => void;
-}) {
+}) => {
   const [url, setUrl] = useState(
     app.mode === "url" ? (app.url ?? "") : suggested
   );
@@ -148,9 +148,9 @@ function UrlForm({
       {error && <span className="app-fail-error">{error}</span>}
     </form>
   );
-}
+};
 
-export function AppFailure({
+export const AppFailure = ({
   projectId,
   app,
   status,
@@ -158,7 +158,7 @@ export function AppFailure({
   onLog,
   onClose,
   onSaved,
-}: AppFailureProps) {
+}: AppFailureProps) => {
   const managed = status.mode === "managed";
   const [retries, setRetries] = useState(0);
   const hint = useInstallHint(projectId, app, managed, retries);
@@ -210,4 +210,4 @@ export function AppFailure({
       </div>
     </div>
   );
-}
+};

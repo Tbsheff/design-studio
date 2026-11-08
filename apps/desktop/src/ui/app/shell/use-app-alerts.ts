@@ -50,9 +50,9 @@ function useOpenRequests(
       setOpen(true);
     };
 
-    window.addEventListener(APP_PANEL_EVENT, show);
+    globalThis.addEventListener(APP_PANEL_EVENT, show);
 
-    return () => window.removeEventListener(APP_PANEL_EVENT, show);
+    return () => globalThis.removeEventListener(APP_PANEL_EVENT, show);
   }, [setTab, setOpen, remember]);
 }
 

@@ -15,7 +15,7 @@ interface Props {
   onClose: () => void;
 }
 
-export function SettingsModal({ project, onSaved, onClose }: Props) {
+export const SettingsModal = ({ project, onSaved, onClose }: Props) => {
   const [draft, setDraft] = useState(() => toDraft(project.settings));
   const [saving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -97,4 +97,4 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
       </div>
     </dialog>
   );
-}
+};

@@ -4,7 +4,7 @@ let pending: { path: string } | null = null;
 
 export function requestOpenApp(path = ""): void {
   pending = { path };
-  window.dispatchEvent(new CustomEvent(EVENT));
+  globalThis.dispatchEvent(new CustomEvent(EVENT));
 }
 
 export function takeOpenAppRequest(): { path: string } | null {
@@ -15,7 +15,7 @@ export function takeOpenAppRequest(): { path: string } | null {
 }
 
 export function onOpenAppRequest(handler: () => void): () => void {
-  window.addEventListener(EVENT, handler);
+  globalThis.addEventListener(EVENT, handler);
 
-  return () => window.removeEventListener(EVENT, handler);
+  return () => globalThis.removeEventListener(EVENT, handler);
 }

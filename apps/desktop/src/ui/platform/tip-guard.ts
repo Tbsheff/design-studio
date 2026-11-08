@@ -140,8 +140,8 @@ function fitSide(
 function fitTip(host: Element): void {
   restoreAuto(host);
   const tip = getComputedStyle(host, "::after");
-  const width = Number.parseFloat(tip.width);
-  const height = Number.parseFloat(tip.height);
+  const width = Number(tip.width);
+  const height = Number(tip.height);
 
   if (!width || !height) {
     return;

@@ -39,7 +39,7 @@ export function openProject(projectId: string, route?: string): void {
     pending = null;
 
     if (route) {
-      window.dispatchEvent(
+      globalThis.dispatchEvent(
         new CustomEvent(OPEN_ROUTE_EVENT, { detail: { projectId, route } })
       );
     }

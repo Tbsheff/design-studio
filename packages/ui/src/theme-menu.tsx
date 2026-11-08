@@ -9,12 +9,12 @@ interface ThemeApi {
 }
 
 const api = (): ThemeApi | undefined =>
-  (window as unknown as { studioTheme?: ThemeApi }).studioTheme;
+  (globalThis as unknown as { studioTheme?: ThemeApi }).studioTheme;
 
 const subscribe = (notify: () => void) => {
-  window.addEventListener("studio-theme", notify);
+  globalThis.addEventListener("studio-theme", notify);
 
-  return () => window.removeEventListener("studio-theme", notify);
+  return () => globalThis.removeEventListener("studio-theme", notify);
 };
 
 const OPTIONS: { pref: ThemePref; label: string; path: string }[] = [
@@ -104,6 +104,7 @@ export default function ThemeMenu({
 
   return (
     <div
+      tabIndex={0}
       ref={ref}
       className="theme-menu"
       role="menu"

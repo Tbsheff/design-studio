@@ -1,6 +1,6 @@
 import type { AppServerStatus } from "@design-studio/contracts";
 
-function ServerButtons({
+const ServerButtons = ({
   state,
   managed,
   control,
@@ -8,7 +8,7 @@ function ServerButtons({
   state: AppServerStatus["state"];
   managed: boolean;
   control: (action: "start" | "stop" | "restart") => void;
-}) {
+}) => {
   if (!managed) {
     return state === "starting" ? null : (
       <button
@@ -45,6 +45,6 @@ function ServerButtons({
       )}
     </>
   );
-}
+};
 
 export { ServerButtons };

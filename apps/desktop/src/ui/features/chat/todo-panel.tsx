@@ -1,104 +1,10 @@
 import type { TodoItem } from "@design-studio/contracts";
-import { Icon } from "@design-studio/ui";
 import { memo, useState } from "react";
-import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-
-const todoProgress = (
-  todos: TodoItem[]
-): {
-  current: number;
-  total: number;
-} => {
-  const done = todos.filter((todo) => todo.status === "completed").length;
-  const active = todos.some((todo) => todo.status === "in_progress");
-
-  return {
-    current: Math.min(todos.length, done + (active ? 1 : 0)),
-    total: todos.length,
-  };
-};
-
-const rowState = (
-  todo: TodoItem
-): {
-  className: string;
-  label: string;
-  tag: string | null;
-} => {
-  if (todo.skipped) {
-    return { className: "skipped", label: "skipped", tag: "Skipped" };
-  }
-
-  if (todo.status === "completed") {
-    return {
-      className: todo.by === "run" ? "completed by-run" : "completed",
-      label: todo.by === "run" ? "done, not shown by a step" : "done",
-      tag: todo.by === "run" ? "Unverified" : null,
-    };
-  }
-
-  return {
-    className: todo.status,
-    label: todo.status === "in_progress" ? "in progress" : "to do",
-    tag: null,
-  };
-};
-
-const TodoMark = ({
-  todo,
-  running,
-}: {
-  todo: TodoItem;
-  running: boolean;
-}): ReactElement | null => {
-  if (todo.skipped) {
-    return <Icon name="minus" size={12} />;
-  }
-
-  if (todo.status === "completed") {
-    return <Icon name="check" size={12} />;
-  }
-
-  if (todo.status === "in_progress" && running) {
-    return <span className="spinner" />;
-  }
-
-  return null;
-};
-
-const TodoRow = ({
-  todo,
-  running,
-}: {
-  todo: TodoItem;
-  running: boolean;
-}): ReactElement => {
-  const view = rowState(todo);
-
-  return (
-    <li
-      className={`todo-item ${view.className}`}
-      aria-current={
-        todo.status === "in_progress" && !todo.skipped ? "step" : undefined
-      }
-      data-tip={todo.note}
-      data-by={todo.by}
-    >
-      <span className="todo-mark" aria-hidden="true">
-        <TodoMark todo={todo} running={running} />
-      </span>
-      <span className="todo-text">
-        {todo.status === "in_progress" && todo.activeForm
-          ? todo.activeForm
-          : todo.content}
-      </span>
-      {view.tag && <span className="todo-tag">{view.tag}</span>}
-      <span className="sr-only">{view.label}</span>
-    </li>
-  );
-};
+import { TodoHead } from "./todo-head.js";
+import { todoProgress } from "./todo-model.js";
+import { TodoRow } from "./todo-row.js";
 
 const TodoPanel = memo(
   ({ todos, running }: { todos: TodoItem[]; running: boolean }) => {
@@ -124,20 +30,12 @@ const TodoPanel = memo(
         aria-label={copy.todoList}
         data-testid="todo-panel"
       >
-        <button
-          type="button"
-          className="todo-head"
-          aria-expanded={open}
-          onClick={() => setChoice(!open)}
-        >
-          <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
-          <span>{copy.todos}</span>
-          <span className="todo-count tabular-nums" data-testid="todo-count">
-            {current}
-            {copy.of}
-            {total}
-          </span>
-        </button>
+        <TodoHead
+          isOpen={open}
+          current={current}
+          total={total}
+          onToggle={setChoice}
+        />
         {open && (
           <ol className="todo-list">
             {todos.map((todo, index) => (
@@ -156,4 +54,4 @@ const TodoPanel = memo(
 
 TodoPanel.displayName = "TodoPanel";
 
-export { TodoPanel, todoProgress };
+export { TodoPanel };

@@ -16,6 +16,15 @@
   background: var(--scrim);
 }
 
+dialog.cmdk {
+  position: static;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  max-width: none;
+}
+
 .cmdk {
   width: min(600px, 100%);
   max-height: min(480px, 76vh);

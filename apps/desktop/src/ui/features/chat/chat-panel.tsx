@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 
 import { ChatConversation } from "./chat-conversation.js";
 import { ChatSearch } from "./chat-search.js";
-import { McpItem } from "./mcp-feed.js";
+import { McpItem } from "./mcp-item.js";
 import { isChatEmpty } from "./mcp-timeline.js";
 import { RunAnnouncer } from "./run-announcer.js";
 import { TimelineRun } from "./timeline-run.js";

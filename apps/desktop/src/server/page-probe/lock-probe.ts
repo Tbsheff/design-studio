@@ -3,6 +3,7 @@ import { APP_SOURCE_PATH } from "@design-studio/contracts/app";
 
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
+import { toChoice } from "./choice.js";
 
 interface LockProbe {
   found: boolean;
@@ -110,7 +111,7 @@ const lockDelta = (
   locked: boolean
 ): { add: string[]; remove: string[] } => {
   if (locked) {
-    return { add: probe.own.length > 0 ? [] : [probe.key], remove: [] };
+    return { add: toChoice(probe.own.length > 0, [], [probe.key]), remove: [] };
   }
 
   return { add: [], remove: [...new Set([probe.key, ...probe.own])] };
@@ -125,19 +126,33 @@ const applyDelta = (
   return [...keys.filter((key) => !remove.has(key)), ...delta.add];
 };
 
-function lockOutcome(probe: LockProbe, locked: boolean, count: number): string {
+const toLockedCount = (count: number): string =>
+  `${count} locked layer${toChoice(count === 1, "", "s")} in this direction.`;
+
+const lockOutcome = (
+  probe: LockProbe,
+  locked: boolean,
+  count: number
+): string => {
   const what = `${probe.tag} on ${probe.page}`;
+  const isOwn = probe.own.length > 0;
 
   if (locked) {
-    return `${probe.own.length > 0 ? "Already locked" : "Locked"}: ${what}. A click on the canvas now passes through it and its children. ${count} locked layer${count === 1 ? "" : "s"} in this direction.`;
+    const head = toChoice(isOwn, "Already locked", "Locked");
+
+    return `${head}: ${what}. A click on the canvas now passes through it and its children. ${toLockedCount(count)}`;
   }
 
-  const note = probe.inside
-    ? " A parent layer is still locked, so clicks still pass through it."
-    : "";
+  const note = toChoice(
+    probe.inside,
+    " A parent layer is still locked, so clicks still pass through it.",
+    ""
+  );
 
-  return `${probe.own.length > 0 ? "Unlocked" : "Was not locked"}: ${what}.${note} ${count} locked layer${count === 1 ? "" : "s"} in this direction.`;
-}
+  const head = toChoice(isOwn, "Unlocked", "Was not locked");
+
+  return `${head}: ${what}.${note} ${toLockedCount(count)}`;
+};
 
 const lockLabel = (what: string): string => {
   if (what.startsWith("sel:")) {
@@ -153,32 +168,40 @@ const lockLabel = (what: string): string => {
   return what.replace(/^loc:/u, "");
 };
 
-function describeLocks(
+const toLockState = (
+  resolved: Record<string, boolean> | null,
+  key: string,
+  isOnPage: boolean
+): string => {
+  if (!resolved || !isOnPage || resolved[key]) {
+    return "";
+  }
+
+  return " (not found on the page now)";
+};
+
+const describeLocks = (
   keys: string[],
   resolved: Record<string, boolean> | null,
   page: string | null
-): string {
+): string => {
   if (keys.length === 0) {
     return "No layer is locked in this direction.";
   }
 
   const lines = keys.map((key) => {
     const at = key.indexOf("|");
-    const where = at === -1 ? "" : key.slice(0, at);
-    const what = at === -1 ? key : key.slice(at + 1);
-
-    const state =
-      resolved && where === page
-        ? resolved[key]
-          ? ""
-          : " (not found on the page now)"
-        : "";
+    const where = toChoice(at === -1, "", key.slice(0, at));
+    const what = toChoice(at === -1, key, key.slice(at + 1));
+    const state = toLockState(resolved, key, where === page);
 
     return `- ${where || "/"} ${lockLabel(what)}${state}`;
   });
 
-  return `${keys.length} locked layer${keys.length === 1 ? "" : "s"} (a click on the canvas passes through a locked layer and its children):\n${lines.join("\n")}`;
-}
+  const count = `${keys.length} locked layer${toChoice(keys.length === 1, "", "s")}`;
+
+  return `${count} (a click on the canvas passes through a locked layer and its children):\n${lines.join("\n")}`;
+};
 
 export { probeLock, lockDelta, applyDelta, lockOutcome, describeLocks };
 

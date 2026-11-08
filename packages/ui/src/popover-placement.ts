@@ -1,6 +1,8 @@
 import { useLayoutEffect } from "react";
 import type { CSSProperties, RefObject } from "react";
 
+import { pick } from "./pick.js";
+
 const POPOVER_GAP = 4;
 const MARGIN = 8;
 
@@ -47,25 +49,33 @@ const placeFixed = (
   const height = panel.scrollHeight;
   const above = rect.top - POPOVER_GAP - bounds.top;
   const below = bounds.bottom - rect.bottom - POPOVER_GAP;
-  const first = prefer === "above" ? above : below;
-  const second = prefer === "above" ? below : above;
+  const isAbovePreferred = prefer === "above";
+  const first = pick(isAbovePreferred, above, below);
+  const second = pick(isAbovePreferred, below, above);
   const keep = first >= height || first >= second;
-  const onTop = prefer === "above" ? keep : !keep;
-  const wanted = align === "end" ? rect.right - width : rect.left;
+  const onTop = pick(isAbovePreferred, keep, !keep);
+  const wanted = pick(align === "end", rect.right - width, rect.left);
   const left = Math.min(Math.max(bounds.left, wanted), bounds.right - width);
-  const space = Math.max(0, onTop ? above : below);
+  const space = Math.max(0, pick(onTop, above, below));
 
-  const vertical: CSSProperties = onTop
-    ? { bottom: window.innerHeight - rect.top + POPOVER_GAP }
-    : { top: rect.bottom + POPOVER_GAP };
+  const vertical: CSSProperties = pick(
+    onTop,
+    { bottom: window.innerHeight - rect.top + POPOVER_GAP },
+    { top: rect.bottom + POPOVER_GAP }
+  );
 
-  return {
+  const placement: CSSProperties = {
     ...vertical,
     left,
     maxHeight: space,
     maxWidth: room,
-    overflowY: height > space ? "auto" : undefined,
   };
+
+  if (height > space) {
+    placement.overflowY = "auto";
+  }
+
+  return placement;
 };
 
 const layoutRect = (
@@ -123,7 +133,7 @@ const fitVertical = (
   }
 
   if (height > below) {
-    style.maxHeight = `${Math.max(0, flip ? above : below)}px`;
+    style.maxHeight = `${Math.max(0, pick(flip, above, below))}px`;
   }
 
   if (height > Math.max(above, below)) {
@@ -136,10 +146,13 @@ const fitHorizontal = (
   rect: { left: number; right: number },
   bounds: PopoverBounds
 ): void => {
-  const shift = rect.right > bounds.right ? bounds.right - rect.right : 0;
+  const shift = pick(rect.right > bounds.right, bounds.right - rect.right, 0);
 
-  const moved =
-    rect.left + shift < bounds.left ? bounds.left - rect.left : shift;
+  const moved = pick(
+    rect.left + shift < bounds.left,
+    bounds.left - rect.left,
+    shift
+  );
 
   const parent = panel.offsetParent;
 

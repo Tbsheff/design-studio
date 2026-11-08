@@ -7,6 +7,7 @@ import { shortcutLabel } from "../../../shared/keymap";
 import {
   chatSearchAvailable,
   chatSearchOpen,
+  registerChatSearchButton,
 } from "../../features/chat/chat-search-model";
 import { IS_MAC } from "../../features/commands/keys";
 import { findElements } from "../../platform/find-element";
@@ -390,6 +391,7 @@ export const StudioPaneHeader = (props: Props): ReactElement => {
         </button>
         {searchShown && (
           <button
+            ref={registerChatSearchButton}
             type="button"
             className="icon-btn pane-head-btn pane-head-search"
             aria-label="Search runs"

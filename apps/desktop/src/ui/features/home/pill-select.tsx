@@ -1,6 +1,6 @@
 import type { ReactElement, RefObject } from "react";
 
-import { StableText } from "../chat/stable-text.js";
+import { StableText, toStableSizes } from "../chat/stable-text.js";
 import { loadPops } from "./lazy-parts.js";
 
 const PillSelect = ({
@@ -35,7 +35,7 @@ const PillSelect = ({
   >
     <span className="ui-pill-select-label">{label}</span>
     <span className="ui-pill-select-value truncate">
-      <StableText sizes={sizes}>{value}</StableText>
+      <StableText sizes={toStableSizes(sizes)}>{value}</StableText>
     </span>
     <svg
       className="ui-pill-select-caret"

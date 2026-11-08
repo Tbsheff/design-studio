@@ -18,7 +18,7 @@ const UnfinishedBanner = ({
   onKeep,
   onDiscard,
 }: Props): ReactElement => (
-  <div className="banner" role="status">
+  <output className="banner">
     <Icon name="alert" />
     <span>
       {copy.unfinishedChangesIn}
@@ -48,7 +48,7 @@ const UnfinishedBanner = ({
     >
       {copy.keep}
     </button>
-  </div>
+  </output>
 );
 
 export { UnfinishedBanner };

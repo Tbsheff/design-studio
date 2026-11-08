@@ -376,6 +376,89 @@ const toUseArgs = async (
   }
 };
 
+const ItemsSchema = Schema.Array(Schema.Record(Schema.String, Schema.Json));
+
+const readItems = Schema.is(ItemsSchema);
+
+const NO_TARGET = "pass targetSelector or targetSource, not both";
+
+const toItemTarget = async (
+  deps: TargetDeps,
+  scope: LegacyScope,
+  item: LegacyArgs
+): Promise<LegacyArgs> => {
+  const selector = toText(item, "targetSelector");
+  const source = toText(item, "targetSource");
+
+  if ((selector === null) === (source === null)) {
+    throw new EditError(NO_TARGET);
+  }
+
+  const { direction, project } = scope;
+  const path = toText(item, "path") ?? toText(scope.args, "path");
+  const pick: InsertPick = {};
+
+  if (path !== null) {
+    pick.path = path;
+  }
+
+  if (selector !== null) {
+    pick.targetSelector = selector;
+  }
+
+  if (source !== null) {
+    pick.targetSource = source;
+  }
+
+  const target = await targetOf(deps, project, direction, pick);
+
+  return toWireTarget("owner", target);
+};
+
+const toItemTargets = async (
+  deps: TargetDeps,
+  scope: LegacyScope,
+  items: readonly LegacyArgs[]
+): Promise<readonly LegacyArgs[]> => {
+  const [first = null, ...rest] = items;
+
+  if (first === null) {
+    return [];
+  }
+
+  const head = await toItemTarget(deps, scope, first);
+
+  return [head, ...(await toItemTargets(deps, scope, rest))];
+};
+
+const toListArgs = async (
+  deps: TargetDeps,
+  args: LegacyArgs
+): Promise<LegacyOutcome> => {
+  const items = args["targets"] ?? null;
+
+  if (!readItems(items)) {
+    return { args, isOk: true };
+  }
+
+  try {
+    const scope = await toScope(deps, args);
+    const targets = await toItemTargets(deps, scope, items);
+
+    const kept = Object.fromEntries(
+      Object.entries(args).filter(([key]) => key !== "path")
+    );
+
+    return { args: { ...kept, targets }, isOk: true };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { isOk: false, message: error.message };
+    }
+
+    return { isOk: false, message: String(error) };
+  }
+};
+
 const hasUseTarget = (args: LegacyArgs): boolean =>
   toText(args, "selector") !== null || toText(args, "source") !== null;
 
@@ -386,6 +469,10 @@ const toLegacyTargetArgs = (
 ): Promise<LegacyOutcome> => {
   const nested = toNestedArgs(name, args);
   const kind = toKind(name);
+
+  if (kind === "list") {
+    return toListArgs(deps, nested);
+  }
 
   if (kind === "use") {
     if (!hasUseTarget(nested)) {

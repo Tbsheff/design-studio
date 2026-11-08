@@ -42,6 +42,10 @@ const QUERY_TEXT_MAX = 100;
 
 const COMPONENT_FILE_MAX = 1000;
 
+const CREATE_TARGETS_MAX = 24;
+
+const FOLDER_TEXT_MAX = 500;
+
 const SourceLocationSchema = Schema.Struct(SourceUseFields);
 
 const SideSchema = Schema.Int.check(
@@ -319,8 +323,31 @@ const InsertComponentFields = {
   ),
 } as const;
 
+const CreateComponentFields = {
+  folder: Schema.optionalKey(
+    Schema.String.check(
+      Schema.isMinLength(1),
+      Schema.isMaxLength(FOLDER_TEXT_MAX)
+    ).annotate({
+      description:
+        'Folder for the new file, relative to the project, for example "packages/ui/src/components" or "src/components". Leave out for the app components folder.',
+    })
+  ),
+  name: Schema.String.check(
+    Schema.isPattern(/^[A-Z][A-Za-z0-9]{0,63}$/u)
+  ).annotate({
+    description:
+      'PascalCase component name, for example "StatRow". The file name follows the folder (stat-row.tsx in a kit of kebab-case files, StatRow.tsx in a folder of PascalCase files).',
+  }),
+  targets: Schema.Array(JsxTargetSchema).check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(CREATE_TARGETS_MAX)
+  ),
+} as const;
+
 export {
   ComponentPreviewFields,
+  CreateComponentFields,
   InsertComponentFields,
   FigmaImportFields,
   PropsComponentQueryFields,

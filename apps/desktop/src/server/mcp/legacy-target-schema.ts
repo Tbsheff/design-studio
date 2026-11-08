@@ -1,6 +1,6 @@
 import type { Schema } from "effect";
 
-type TargetKind = "element" | "loc" | "owner" | "place" | "use";
+type TargetKind = "element" | "list" | "loc" | "owner" | "place" | "use";
 
 interface NestedFields {
   readonly fields: readonly string[];
@@ -22,6 +22,7 @@ interface LegacyFields {
 
 const TARGET_KINDS = {
   apply_text_style: "element",
+  create_component: "list",
   get_fill: "loc",
   get_spacing: "loc",
   get_stacking: "loc",
@@ -142,6 +143,44 @@ const USE_PROPERTIES = {
   source: USE_SOURCE_PROPERTY,
 } satisfies Record<string, Schema.Json>;
 
+const LIST_TARGETS_PROPERTY = {
+  description:
+    'The elements, one item per element: [{"targetSelector": "e0k3pz"}, {"targetSelector": "e0k4a1"}, {"targetSelector": "e0k4b7"}].',
+  items: {
+    additionalProperties: false,
+    properties: {
+      path: {
+        description:
+          "Page path of this element. Leave out to use the top-level path.",
+        maxLength: 300,
+        type: "string",
+      },
+      targetSelector: {
+        description:
+          'CSS selector or get_layers id of the element, for example "e0k3pz".',
+        maxLength: 2000,
+        minLength: 1,
+        type: "string",
+      },
+      targetSource: {
+        description:
+          'Or file:line:col of its JSX tag, for example "src/App.tsx:14:9".',
+        maxLength: 1100,
+        type: "string",
+      },
+    },
+    type: "object",
+  },
+  maxItems: 24,
+  minItems: 1,
+  type: "array",
+} satisfies Schema.Json;
+
+const LIST_PROPERTIES = {
+  path: USE_PATH_PROPERTY,
+  targets: LIST_TARGETS_PROPERTY,
+} satisfies Record<string, Schema.Json>;
+
 const TARGET_PROPERTIES = {
   path: PATH_PROPERTY,
   targetSelector: SELECTOR_PROPERTY,
@@ -188,7 +227,7 @@ const toDroppedKeys = (name: string): ReadonlySet<string> => {
     keys.push(USE_KEY);
   }
 
-  if (kind !== null && kind !== "loc" && kind !== "use") {
+  if (kind !== null && kind !== "loc" && kind !== "use" && kind !== "list") {
     keys.push(TARGET_KEY);
   }
 
@@ -239,11 +278,17 @@ const toAddedProperties = (
   const nested = toNested(name);
   const added: Record<string, Schema.Json> = {};
 
-  if (toKind(name) === "use") {
+  const kind = toKind(name);
+
+  if (kind === "use") {
     Object.assign(added, USE_PROPERTIES);
   }
 
-  if (toKind(name) !== "use" && toKind(name) !== null) {
+  if (kind === "list") {
+    Object.assign(added, LIST_PROPERTIES);
+  }
+
+  if (kind !== "use" && kind !== "list" && kind !== null) {
     Object.assign(added, TARGET_PROPERTIES);
   }
 

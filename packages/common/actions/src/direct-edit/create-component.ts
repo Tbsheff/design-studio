@@ -8,6 +8,7 @@ import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
 import { DirectEditFailed } from "./errors/direct-edit-failed.js";
 import { DirectEditNotFound } from "./errors/direct-edit-not-found.js";
+import { CreateComponentFields } from "./payload/schema.js";
 import { CreateComponentResultSchema } from "./schema.js";
 
 const createComponentDirectEdit = defineAction({
@@ -15,7 +16,7 @@ const createComponentDirectEdit = defineAction({
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
-    "Extract the selected elements into a new component file. Replaces them with one use and saves one version.",
+    "Turn repeated markup into a React component, like Figma Create component: pass one element, or several look-alike elements. The studio writes the component file in folder, with a prop for each part that differs between the elements and a cva() variant prop when their classes differ. Then it replaces each element with the new component and adds the import. One version and one undo step; undo also removes the new file. Elements that a .map() draws, that a condition shows, that spread props, or whose structure differs are refused with a reason.",
   errors: [
     BadRequest,
     Conflict,
@@ -30,11 +31,9 @@ const createComponentDirectEdit = defineAction({
   },
   id: "direct-edit.createComponent",
   input: Schema.Struct({
+    ...CreateComponentFields,
     directionId: DirectionIdSchema,
-    folder: Schema.optionalKey(Schema.Unknown),
-    name: Schema.optionalKey(Schema.Unknown),
     projectId: ProjectIdSchema,
-    targets: Schema.Unknown,
   }),
   invalidates: [
     "direct-edit.getTree",
@@ -44,7 +43,7 @@ const createComponentDirectEdit = defineAction({
     "version.list",
     "version.listHistory",
   ],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "create_component" },
   needs: "project.update",
   output: CreateComponentResultSchema,
   scope: "project",

@@ -62,7 +62,6 @@ const LEGACY_ORDER: readonly string[] = [
   "list_publications",
   "unpublish_design",
   "rollback_publication",
-  "create_component",
   "swap_instance",
   "select_matching",
   "diff_versions",

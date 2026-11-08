@@ -33,7 +33,11 @@ const LiveStatus = ({
       <span className="live-label min-w-0 truncate">
         {statusLabel(run, workTree, run.startedAt + elapsed, isOffline)}
       </span>
-      <span className="live-elapsed tabular-nums">{elapsedText(elapsed)}</span>
+      {run.hasStarted && (
+        <span className="live-elapsed tabular-nums">
+          {elapsedText(elapsed)}
+        </span>
+      )}
       {onStop && (
         <button
           type="button"

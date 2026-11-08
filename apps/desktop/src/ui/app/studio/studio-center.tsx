@@ -4,10 +4,9 @@ import type { ReactElement } from "react";
 
 import { VariationsTop } from "../../features/canvas/variations-layer";
 import { DraftBar } from "../../features/chat/draft-bar";
-import { ImproveControl } from "../../features/chat/draft-improve";
 import { CenterView } from "../shell/center-view";
 import { UnfinishedSlot } from "../shell/unfinished-slot";
-import { improveProps, saveHandlerOf, unfinishedProps } from "./center-bars";
+import { saveHandlerOf, unfinishedProps } from "./center-bars";
 import { canvasProps } from "./center-props";
 import type { StudioCtxProps } from "./studio-context";
 
@@ -22,7 +21,6 @@ const StudioCenter = ({ ctx }: StudioCtxProps): ReactElement => {
   const { projectId, project, ui, core } = ctx;
   const { data, direction, draftChrome, activeRun } = core;
   const [left, right] = comparedOf(ctx);
-  const improve = createElement(ImproveControl, improveProps(ctx));
   const unfinished = createElement(UnfinishedSlot, unfinishedProps(ctx));
   const { setCompareOpen } = ui;
 
@@ -41,7 +39,6 @@ const StudioCenter = ({ ctx }: StudioCtxProps): ReactElement => {
         lastRun={core.improveRun}
         reading={draftChrome.reading}
         running={activeRun !== null}
-        improve={improve}
       />
       {unfinished}
       <VariationsTop

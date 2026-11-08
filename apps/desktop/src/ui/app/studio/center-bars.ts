@@ -1,9 +1,7 @@
 import type { ComponentProps } from "react";
 
 import { api } from "../../api";
-import { improveRequest } from "../../features/chat";
 import type { DraftBar } from "../../features/chat/draft-bar";
-import type { ImproveControl } from "../../features/chat/draft-improve";
 import { runStoppedUnsaved } from "../shell/unfinished-model";
 import type { UnfinishedSlot } from "../shell/unfinished-slot";
 import type { StudioCtx } from "./studio-context";
@@ -15,21 +13,6 @@ const saveHandlerOf = (
 
   return (name, packId, force): Promise<void> =>
     onSave(name, packId, false, force);
-};
-
-const improveProps = (
-  ctx: StudioCtx
-): ComponentProps<typeof ImproveControl> => {
-  const { project, ui, core, run } = ctx;
-
-  return {
-    onImprove: (focus): Promise<void> =>
-      ui.act((): Promise<void> =>
-        run.startRun(improveRequest(focus, project.settings.defaultLevel))
-      ),
-    run: core.improveRun,
-    running: core.draftChrome.locked(core.activeRun !== null),
-  };
 };
 
 const unfinishedProps = (
@@ -59,4 +42,4 @@ const unfinishedProps = (
   };
 };
 
-export { improveProps, saveHandlerOf, unfinishedProps };
+export { saveHandlerOf, unfinishedProps };

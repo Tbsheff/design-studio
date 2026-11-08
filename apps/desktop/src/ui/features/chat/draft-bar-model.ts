@@ -49,11 +49,11 @@ const saveReason = (
   running: boolean
 ): string | null => {
   if (reading) {
-    return "Save is off while the studio reads your sources.";
+    return "Wait while the studio reads your sources.";
   }
 
   if (running) {
-    return "Save is off while the AI works on this design system.";
+    return "Wait for the chat to finish its work on this design system.";
   }
 
   if (!check || check.passed) {
@@ -62,7 +62,7 @@ const saveReason = (
 
   const count = check.problems.length;
 
-  return `Save is off: the check found ${count} problem${toPlural(count)}. Improve with AI fixes them.`;
+  return `The check found ${count} problem${toPlural(count)}. Ask the chat to fix them, or use Save anyway.`;
 };
 
 export { GRADE_LABELS, cssVarOf, guessedKeys, saveReason, toCssVarList };

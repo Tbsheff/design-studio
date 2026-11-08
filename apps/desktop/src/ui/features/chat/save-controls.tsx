@@ -1,11 +1,13 @@
 import type { DesignSystemCheckResult } from "@design-studio/contracts";
-import { useCallback, useId, useState, useTransition } from "react";
+import { useCallback, useId } from "react";
 import type { ReactElement } from "react";
 
 import { cn } from "../../ai/lib/utils.js";
-import { errorText } from "../../api.js";
+import { uiStore } from "../../platform/storage.js";
 import { saveReason } from "./draft-bar-model.js";
 import { SaveAnyway } from "./save-anyway.js";
+import { SavedNote } from "./saved-note.js";
+import { useSaveAction } from "./use-save-action.js";
 
 interface SaveControlsProps {
   readonly check: DesignSystemCheckResult | null;
@@ -21,7 +23,7 @@ const toSaveLabel = (isPending: boolean): string => {
     return "Saving…";
   }
 
-  return "Save to library";
+  return "Use for new projects";
 };
 
 const toDescribedBy = (
@@ -44,33 +46,20 @@ const SaveControls = ({
   running,
   onSave,
 }: SaveControlsProps): ReactElement => {
-  const [isPending, startTransition] = useTransition();
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const { isPending, isSaved, onSaveForced, onSavePlain, saveError } =
+    useSaveAction(onSave);
+
   const reasonId = useId();
   const reason = saveReason(check, reading, running);
   const isFailing = check !== null && !check.passed;
 
-  const save = useCallback(
-    (force: boolean): void => {
-      setSaveError(null);
-      startTransition(async () => {
-        try {
-          await onSave(force);
-        } catch (error: unknown) {
-          setSaveError(errorText(error));
-        }
-      });
-    },
-    [onSave]
-  );
-
-  const onSaveForced = useCallback((): void => {
-    save(true);
-  }, [save]);
-
-  const onSavePlain = useCallback((): void => {
-    save(false);
-  }, [save]);
+  const onOpenLibrary = useCallback((): void => {
+    uiStore.set({
+      activeProjectId: null,
+      libraryFrom: null,
+      screen: "design-systems",
+    });
+  }, []);
 
   return (
     <>
@@ -79,6 +68,7 @@ const SaveControls = ({
           {saveError}
         </span>
       )}
+      {isSaved && !saveError && <SavedNote onOpen={onOpenLibrary} />}
       {isFailing && !reading && (
         <SaveAnyway
           count={check.problems.length}

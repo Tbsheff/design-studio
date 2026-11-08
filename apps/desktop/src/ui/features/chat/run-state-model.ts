@@ -20,6 +20,10 @@ import {
 import type { ToolInput } from "./tool-input-model.js";
 
 const PENDING_CLOCK_SLACK_MS = 1000;
+const RECENT_START_MS = 3_600_000;
+
+const isRecentStart = (startedAt: number): boolean =>
+  Date.now() - startedAt < RECENT_START_MS;
 
 interface ToolRow {
   toolUseId: string;
@@ -44,6 +48,7 @@ interface RetryState {
 interface RunView {
   runId: string;
   directionId: string | null;
+  hasStarted: boolean;
   request: RunRequest | null;
   startedAt: number;
   status: RunStatus;
@@ -151,6 +156,7 @@ const emptyRun = (
 ): RunView => ({
   contextTokens: null,
   directionId: owner,
+  hasStarted: false,
   parts: [],
   permissions: [],
   queue: [],
@@ -172,6 +178,7 @@ const runFromSummary = (summary: RunSummary): RunView => ({
     summary.request
   ),
   contextTokens: summary.contextTokens ?? null,
+  hasStarted: isRecentStart(summary.startedAt),
   parts: summary.parts ?? legacyParts(summary),
   status: summary.status,
   summary,
@@ -386,6 +393,7 @@ const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   if (event.type === "run.started") {
     run.request = event.request;
     run.startedAt = event.ts;
+    run.hasStarted = true;
 
     if (run.status !== "canceled") {
       run.status = "running";

@@ -11,7 +11,6 @@ const DraftBar = ({
   state,
   lastChange,
   onSave,
-  improve,
   lastRun,
   reading,
   running,
@@ -31,7 +30,6 @@ const DraftBar = ({
       state={state}
       lastChange={lastChange}
       onSave={onSave}
-      improve={improve}
       lastRun={lastRun}
       reading={reading}
       running={running}

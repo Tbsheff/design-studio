@@ -79,10 +79,10 @@ const toStartedNote = (end: RunStatus | null): string => {
   }
 
   if (end === "canceled") {
-    return "The AI step was stopped. Use Improve with AI to run it again.";
+    return "The AI step was stopped. Ask the chat to improve this design system to run it again.";
   }
 
-  return "The AI step did not finish. See the chat below, then use Improve with AI.";
+  return "The AI step did not finish. See the chat, then ask it to improve this design system.";
 };
 
 const toImproveNote = (

@@ -11,10 +11,12 @@ import {
 import type { KeyboardEvent } from "react";
 
 import { readStored, useUi, writeStored } from "../../platform/storage.js";
+import type { BoardProps } from "./compare-board-types.js";
 import { CompareFrame } from "./compare-frame.js";
-import { OverlayBoard, ReferenceBoard, SliderBoard } from "./compare-modes.js";
-import type { BoardProps } from "./compare-modes.js";
 import { COPY } from "./copy.js";
+import { OverlayBoard } from "./overlay-board.js";
+import { ReferenceBoard } from "./reference-board.js";
+import { SliderBoard } from "./slider-board.js";
 
 import "../../styles/reference.css";
 import { displayTitle, indexVersions } from "./version-labels.js";

@@ -55,6 +55,17 @@ const COPY = {
   noticeNoSource:
     "This element has no source location, so it cannot be changed here.",
   noticeSelectAgain: "The element moved. Select it again.",
+  overlayFinding: "Finding changes…",
+  overlayNoChanges: "No visible changes",
+  overlayPixelsChanged: "% of pixels changed",
+  overlayRetry: "Retry",
+  overlayShowChanges: "Show changes",
+  pictureChange: "Change picture…",
+  pictureChoose: "Choose picture…",
+  pictureDrop:
+    "Drop a screenshot or mock here to lay it over the newer version.",
+  pictureReference: "Reference: ",
+  pictureReferenceAlt: "Reference ",
   placeholderFilterTokens: "Filter tokens",
   placeholderNameThisLayer: "Name this layer",
   placeholderSearchTokens: "Search tokens",

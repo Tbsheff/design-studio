@@ -25,7 +25,7 @@ const toStatusLabel = (state: CopyState): string => {
     }
 
     case "failed": {
-      return `Copy failed: ${state.message}`;
+      return `Could not copy: ${state.message}`;
     }
 
     default: {

@@ -14,11 +14,8 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { MutableRefObject, ReactNode } from "react";
 
 import { api } from "../../api.js";
-import {
-  frameDirection,
-  frameName,
-  withFramePath,
-} from "./canvas-frames-model.js";
+import { frameDirection } from "./canvas-direction-ops.js";
+import { frameName, withFramePath } from "./canvas-frame-ops.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
 import { linksApi, useImplicitLinks, useLinks } from "./links-api.js";

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { useProjectEvents } from "../../platform/events.js";
-import { setFrameHidden } from "./canvas-frames-model.js";
+import { setFrameHidden } from "./canvas-frame-ops.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
 
 const ITEM_900 = 900;

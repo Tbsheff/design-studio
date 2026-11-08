@@ -1,5 +1,10 @@
 const MAX_0_01 = 0.01;
 
+const toPosition = (left: number, top: number): { x: number; y: number } => ({
+  x: left,
+  y: top,
+});
+
 interface Rect {
   x: number;
   y: number;
@@ -464,7 +469,7 @@ const unionBox = (rects: Rect[]): Rect | null => {
   return { height: bottom - top, width: right - left, x: left, y: top };
 };
 
-export { SNAP_PX, snapOff, snapRect, unionBox };
+export { SNAP_PX, snapOff, snapRect, toPosition, unionBox };
 
 export type {
   Axis,

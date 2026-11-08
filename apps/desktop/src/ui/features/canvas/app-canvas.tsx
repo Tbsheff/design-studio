@@ -15,7 +15,8 @@ import {
   writeHiddenRedirects,
 } from "./app-canvas-routes.js";
 import type { Listen } from "./app-canvas-routes.js";
-import { canAddFrame, canvasStore } from "./canvas-frames-model.js";
+import { canAddFrame } from "./canvas-frame-ops.js";
+import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 import { FrameRedirectNote } from "./canvas-frames.js";
 import { copy } from "./copy.js";

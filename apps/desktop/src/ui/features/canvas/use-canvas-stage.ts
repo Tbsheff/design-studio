@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { useUi } from "../../platform/storage.js";
 import { useFirstBuildGate } from "../chat/use-first-build.js";
 import { useCommentMode } from "../comments/use-comment-mode.js";
-import { boundsOf, shownFrames } from "./canvas-frames-model.js";
+import { boundsOf, shownFrames } from "./canvas-frame-ops.js";
 import {
   activateOf,
   knownIds,

@@ -9,7 +9,8 @@ import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 
 import { errorText, rulesApi } from "../../api.js";
-import { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
+import { canvasStore } from "../canvas/canvas-frames-model.js";
+import { activeFrame } from "../canvas/index.js";
 
 import "../../styles/rules.css";
 import { copy } from "./copy.js";

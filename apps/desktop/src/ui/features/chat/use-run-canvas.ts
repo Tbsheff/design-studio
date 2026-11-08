@@ -7,13 +7,10 @@ import { stateLabel } from "@design-studio/contracts/frame-state";
 import { useState, useSyncExternalStore } from "react";
 
 import { uiStore } from "../../platform/storage.js";
-import {
-  activeFrame,
-  canvasStore,
-  defaultLayout,
-} from "../canvas/canvas-frames-model.js";
+import { canvasStore } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { frameStateOf, useFrameStates } from "../canvas/frame-states-model.js";
+import { activeFrame, defaultLayout } from "../canvas/index.js";
 import { inViewIds } from "../canvas/use-canvas-presence.js";
 
 interface RunCanvasChip {

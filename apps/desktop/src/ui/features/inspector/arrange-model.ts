@@ -5,11 +5,8 @@ import type { ArrangeAction, ArrangeResult } from "../../../shared/arrange.js";
 import type { KeyId } from "../../../shared/keymap.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
-import {
-  activeFrame,
-  canvasStore,
-  defaultLayout,
-} from "../canvas/canvas-frames-model.js";
+import { canvasStore } from "../canvas/canvas-frames-model.js";
+import { activeFrame, defaultLayout } from "../canvas/index.js";
 import { parentLayout } from "./sizing.js";
 import type { DirectEditCommit, DirectEditControl } from "./use-direct-edit.js";
 

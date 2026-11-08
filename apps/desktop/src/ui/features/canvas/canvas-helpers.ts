@@ -8,7 +8,7 @@ import type { CommentTools } from "../comments/comment-layer.js";
 import type { CommentsControl } from "../comments/use-comments.js";
 import { broadcastTheme } from "../design-system/token-frames.js";
 import type { ThemeChoice } from "../design-system/token-frames.js";
-import { withFramePath } from "./canvas-frames-model.js";
+import { withFramePath } from "./canvas-frame-ops.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import type { CanvasDirections, Props } from "./canvas-types.js";

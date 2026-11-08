@@ -2,16 +2,18 @@ import { zoomKeyOf } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
 import {
+  cleanFramePath,
+  parseLayout,
+} from "./features/canvas/canvas-frames-model";
+import {
   addFrame,
   boundsOf,
-  cleanFramePath,
   defaultLayout,
   followDirection,
   FRAME_GAP,
   frameName,
   keepDirection,
   moveFrame,
-  parseLayout,
   placeDirections,
   removeFrame,
   resizeActive,
@@ -19,7 +21,7 @@ import {
   setFramePath,
   viewportOf,
   withFramePath,
-} from "./features/canvas/canvas-frames-model";
+} from "./features/canvas/index";
 
 const desktop = { preset: "desktop" as const, width: 1440, height: 900 };
 

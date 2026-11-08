@@ -1,12 +1,7 @@
 import { uiStore } from "../../platform/storage.js";
-import {
-  activeFrame,
-  canvasStore,
-  defaultLayout,
-  keepDirection,
-  placeDirections,
-  viewportOf,
-} from "./canvas-frames-model.js";
+import { keepDirection, placeDirections } from "./canvas-direction-ops.js";
+import { activeFrame, defaultLayout, viewportOf } from "./canvas-frame-ops.js";
+import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
 const apply = (

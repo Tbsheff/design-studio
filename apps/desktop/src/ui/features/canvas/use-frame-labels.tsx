@@ -8,7 +8,7 @@ import {
   frameName,
   setFrameHidden,
   setFramePath,
-} from "./canvas-frames-model.js";
+} from "./canvas-frame-ops.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasDirections, Props } from "./canvas-types.js";
 import { FramePageMenu } from "./frame-controls.js";

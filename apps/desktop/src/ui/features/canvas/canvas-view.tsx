@@ -9,7 +9,8 @@ import { FindPanelSlot, useFindHost } from "../text-search/index.js";
 import { MatrixSlot } from "../viewport/index.js";
 import type { ChromeImportPage } from "./canvas-chrome-menu.js";
 import { CanvasChrome } from "./canvas-chrome.js";
-import { frameDirection, frameName } from "./canvas-frames-model.js";
+import { frameDirection } from "./canvas-direction-ops.js";
+import { frameName } from "./canvas-frame-ops.js";
 import {
   canvasClass,
   frameLabelOf,

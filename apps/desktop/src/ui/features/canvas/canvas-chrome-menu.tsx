@@ -8,10 +8,10 @@ import type { UiState } from "../../platform/storage.js";
 import {
   FRAME_PRESETS,
   canAddFrame,
-  canvasStore,
   setFrameHidden,
   setFramePath,
-} from "./canvas-frames-model.js";
+} from "./canvas-frame-ops.js";
+import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
 import { frameBaseName, framePage } from "./canvas-frames.js";
 import type {

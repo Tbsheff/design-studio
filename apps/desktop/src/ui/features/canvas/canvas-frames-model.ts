@@ -1,6 +1,5 @@
 import type { StudioEvent } from "@design-studio/contracts";
 import {
-  CANVAS_MAX_FRAMES,
   cleanFramePath,
   isFrameId,
   normalizeCanvasFile,
@@ -13,10 +12,21 @@ import { ApiError, api } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
+import {
+  MAX_FRAMES,
+  MAX_SIDE,
+  defaultLayout,
+  firstShown,
+  withoutKey,
+} from "./canvas-frame-ops.js";
 
-export { cleanFramePath } from "@design-studio/contracts/canvas-file";
+const TO_STRING_36 = 36;
 
-export interface CanvasFrame {
+const SLICE_12 = 12;
+
+const STATUS_409 = 409;
+
+interface CanvasFrame {
   id: string;
   width: number;
   height: number;
@@ -28,454 +38,55 @@ export interface CanvasFrame {
   hidden?: boolean;
 }
 
-export interface CanvasLayout {
+interface CanvasLayout {
   frames: CanvasFrame[];
   activeId: string;
 }
 
-export interface Box {
+interface Box {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-export interface FramePreset {
+interface FramePreset {
   preset: Exclude<Viewport["preset"], "custom">;
   label: string;
   width: number;
   height: number;
 }
 
-export const FRAME_PRESETS: FramePreset[] = [
-  { height: 900, label: "Desktop 1440", preset: "desktop", width: 1440 },
-  { height: 1024, label: "Tablet 768", preset: "tablet", width: 768 },
-  { height: 844, label: "Mobile 390", preset: "mobile", width: 390 },
-];
-
-export const FRAME_GAP = 80;
-const MAX_FRAMES = CANVAS_MAX_FRAMES;
 const MIN_SIDE = 200;
-export const RESIZE_MIN = 240;
-const ROW_GAP = FRAME_GAP * 2;
+
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
-const MAX_SIDE = 4000;
+
 const MAX_COORD = 100_000;
+
 const KEY = "design-studio.canvas.v1";
+
 const ACTIVE_KEY = "design-studio.canvas.active.v1";
+
 const MIGRATED_KEY = "design-studio.canvas.migrated.v1";
+
 const WRITE_DELAY_MS = 400;
+
 const RETRY_MS = 2000;
-const writerId = `w${Math.random().toString(36).slice(2, 12)}`;
 
-export function frameName(
-  frame: Pick<CanvasFrame, "width" | "height">
-): string {
-  const preset = FRAME_PRESETS.find(
-    (p) => p.width === frame.width && p.height === frame.height
-  );
+const writerId = `w${Math.random().toString(TO_STRING_36).slice(2, SLICE_12)}`;
 
-  return preset ? preset.label : `${frame.width} × ${frame.height}`;
-}
+const isSide = (value: unknown): value is number =>
+  typeof value === "number" &&
+  Number.isInteger(value) &&
+  value >= MIN_SIDE &&
+  value <= MAX_SIDE;
 
-export function viewportOf(
-  frame: Pick<CanvasFrame, "width" | "height">
-): Viewport {
-  const preset = FRAME_PRESETS.find(
-    (p) => p.width === frame.width && p.height === frame.height
-  );
+const isCoord = (value: unknown): value is number =>
+  typeof value === "number" &&
+  Number.isFinite(value) &&
+  Math.abs(value) <= MAX_COORD;
 
-  return {
-    height: frame.height,
-    preset: preset?.preset ?? "custom",
-    width: frame.width,
-  };
-}
-
-export function defaultLayout(viewport: Viewport): CanvasLayout {
-  return {
-    activeId: "f1",
-    frames: [
-      { height: viewport.height, id: "f1", width: viewport.width, x: 0, y: 0 },
-    ],
-  };
-}
-
-export function activeFrame(layout: CanvasLayout): CanvasFrame {
-  return (
-    layout.frames.find((f) => f.id === layout.activeId) ??
-    (layout.frames[0] as CanvasFrame)
-  );
-}
-
-export function shownFrames(layout: CanvasLayout): CanvasFrame[] {
-  return layout.frames.filter((f) => !f.hidden || f.id === layout.activeId);
-}
-
-export function boundsOf(frames: CanvasFrame[]): Box {
-  if (frames.length === 0) {
-    return { height: 0, width: 0, x: 0, y: 0 };
-  }
-
-  const left = Math.min(...frames.map((f) => f.x));
-  const top = Math.min(...frames.map((f) => f.y));
-  const right = Math.max(...frames.map((f) => f.x + f.width));
-  const bottom = Math.max(...frames.map((f) => f.y + f.height));
-
-  return { height: bottom - top, width: right - left, x: left, y: top };
-}
-
-function nextId(frames: CanvasFrame[]): string {
-  let n = frames.length + 1;
-
-  while (frames.some((f) => f.id === `f${n}`)) {
-    n += 1;
-  }
-
-  return `f${n}`;
-}
-
-export function canAddFrame(layout: CanvasLayout): boolean {
-  return layout.frames.length < MAX_FRAMES;
-}
-
-function nextLabel(frames: CanvasFrame[]): string {
-  let n = frames.length + 1;
-
-  while (frames.some((f) => f.label === `Frame ${n}`)) {
-    n += 1;
-  }
-
-  return `Frame ${n}`;
-}
-
-export function addFrame(
-  layout: CanvasLayout,
-  size: { width: number; height: number }
-): CanvasLayout {
-  if (!canAddFrame(layout)) {
-    return layout;
-  }
-
-  const bounds = boundsOf(shownFrames(layout));
-
-  const frame: CanvasFrame = {
-    height: size.height,
-    id: nextId(layout.frames),
-    label: nextLabel(layout.frames),
-    width: size.width,
-    x: bounds.x + bounds.width + FRAME_GAP,
-    y: bounds.y,
-  };
-
-  return { ...layout, frames: [...layout.frames, frame] };
-}
-
-export function moveFrame(
-  layout: CanvasLayout,
-  id: string,
-  dx: number,
-  dy: number
-): CanvasLayout {
-  if (dx === 0 && dy === 0) {
-    return layout;
-  }
-
-  return {
-    ...layout,
-    frames: layout.frames.map((f) =>
-      f.id === id
-        ? { ...f, x: Math.round(f.x + dx), y: Math.round(f.y + dy) }
-        : f
-    ),
-  };
-}
-
-function firstShown(frames: CanvasFrame[]): CanvasFrame {
-  return frames.find((f) => !f.hidden) ?? (frames[0] as CanvasFrame);
-}
-
-export function removeFrame(layout: CanvasLayout, id: string): CanvasLayout {
-  if (layout.frames.length <= 1) {
-    return layout;
-  }
-
-  const frames = layout.frames.filter((f) => f.id !== id);
-
-  const activeId =
-    layout.activeId === id ? firstShown(frames).id : layout.activeId;
-
-  return { activeId, frames };
-}
-
-export function canHideFrame(layout: CanvasLayout, id: string): boolean {
-  return shownFrames(layout).some((f) => f.id !== id);
-}
-
-export function setFrameHidden(
-  layout: CanvasLayout,
-  id: string,
-  hidden: boolean
-): CanvasLayout {
-  const frame = layout.frames.find((f) => f.id === id);
-
-  if (
-    !frame ||
-    Boolean(frame.hidden) === hidden ||
-    (hidden && !canHideFrame(layout, id))
-  ) {
-    return layout;
-  }
-
-  const frames = layout.frames.map((f) =>
-    f.id === id
-      ? hidden
-        ? { ...f, hidden: true }
-        : withoutKey(f, "hidden")
-      : f
-  );
-
-  const activeId =
-    hidden && layout.activeId === id ? firstShown(frames).id : layout.activeId;
-
-  return { activeId, frames };
-}
-
-export function resizeFrame(
-  layout: CanvasLayout,
-  id: string,
-  width: number,
-  height: number
-): CanvasLayout {
-  const w = Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, width)));
-  const h = Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, height)));
-  const frame = layout.frames.find((f) => f.id === id);
-
-  if (!frame || (frame.width === w && frame.height === h)) {
-    return layout;
-  }
-
-  return {
-    ...layout,
-    frames: layout.frames.map((f) =>
-      f.id === id ? { ...f, height: h, width: w } : f
-    ),
-  };
-}
-
-export function setFramePath(
-  layout: CanvasLayout,
-  id: string,
-  raw: string
-): CanvasLayout {
-  const path = cleanFramePath(raw);
-  const frame = layout.frames.find((f) => f.id === id);
-
-  if (path === null || !frame || (frame.path ?? "") === path) {
-    return layout;
-  }
-
-  return {
-    ...layout,
-    frames: layout.frames.map((f) =>
-      f.id === id ? (path ? { ...f, path } : withoutKey(f, "path")) : f
-    ),
-  };
-}
-
-export function withFramePath(url: string, path: string | undefined): string {
-  if (!path) {
-    return url;
-  }
-
-  const base = new URL(url, globalThis.location?.href);
-
-  if (!base.pathname.endsWith("/")) {
-    base.pathname = base.pathname.replace(/[^/]*$/, "");
-  }
-
-  const next = new URL(path, base);
-  next.search = base.search;
-
-  return next.toString();
-}
-
-function withoutKey<K extends "path" | "directionId" | "hidden">(
-  frame: CanvasFrame,
-  key: K
-): CanvasFrame {
-  const copy = { ...frame };
-  delete copy[key];
-
-  return copy;
-}
-
-export function frameDirection(
-  frame: CanvasFrame,
-  currentId: string | null
-): string | null {
-  return frame.directionId ?? currentId;
-}
-
-export function placeDirections(
-  layout: CanvasLayout,
-  directionIds: string[],
-  currentId: string | null,
-  dropCurrent: boolean
-): CanvasLayout {
-  const size = activeFrame(layout);
-
-  let frames = layout.frames.map((f) =>
-    f.directionId || !currentId ? f : { ...f, directionId: currentId }
-  );
-
-  if (dropCurrent && currentId && !directionIds.includes(currentId)) {
-    frames = frames.filter((f) => f.directionId !== currentId);
-  }
-
-  const missing = directionIds.filter(
-    (id) => !frames.some((f) => f.directionId === id)
-  );
-
-  const group = frames.filter(
-    (f) => f.directionId && directionIds.includes(f.directionId)
-  );
-
-  const others = frames.filter((f) => !group.includes(f) && !f.hidden);
-  const row = group.length > 0 ? boundsOf(group) : null;
-  const rest = boundsOf(others);
-  let x = row ? row.x + row.width + FRAME_GAP : rest.x;
-
-  const y = row
-    ? row.y
-    : others.length > 0
-      ? rest.y + rest.height + ROW_GAP
-      : 0;
-
-  for (const id of missing) {
-    if (frames.length >= MAX_FRAMES) {
-      break;
-    }
-
-    frames = [
-      ...frames,
-      {
-        directionId: id,
-        height: size.height,
-        id: nextId(frames),
-        width: size.width,
-        x,
-        y,
-      },
-    ];
-    x += size.width + FRAME_GAP;
-  }
-
-  if (frames.length === 0) {
-    return layout;
-  }
-
-  const activeId = frames.some((f) => f.id === layout.activeId)
-    ? layout.activeId
-    : (frames[0] as CanvasFrame).id;
-
-  return { activeId, frames };
-}
-
-export function keepDirection(
-  layout: CanvasLayout,
-  keepId: string,
-  groupIds: string[]
-): CanvasLayout {
-  const frames = layout.frames.filter(
-    (f) =>
-      !f.directionId ||
-      f.directionId === keepId ||
-      !groupIds.includes(f.directionId)
-  );
-
-  const kept = frames.find((f) => f.directionId === keepId);
-
-  if (frames.length === 0) {
-    return layout;
-  }
-
-  const activeId =
-    kept?.id ??
-    (frames.some((f) => f.id === layout.activeId)
-      ? layout.activeId
-      : (frames[0] as CanvasFrame).id);
-
-  if (frames.length === layout.frames.length && activeId === layout.activeId) {
-    return layout;
-  }
-
-  return { activeId, frames };
-}
-
-export function followDirection(
-  layout: CanvasLayout,
-  currentId: string | null
-): CanvasLayout {
-  const active = activeFrame(layout);
-
-  if (!currentId || frameDirection(active, currentId) === currentId) {
-    return layout;
-  }
-
-  const match =
-    layout.frames.find((f) => f.directionId === currentId && !f.hidden) ??
-    layout.frames.find((f) => !f.directionId && !f.hidden);
-
-  if (match) {
-    return { ...layout, activeId: match.id };
-  }
-
-  return {
-    ...layout,
-    frames: layout.frames.map((f) =>
-      f.id === active.id ? { ...f, directionId: currentId } : f
-    ),
-  };
-}
-
-export function resizeActive(
-  layout: CanvasLayout,
-  width: number,
-  height: number
-): CanvasLayout {
-  const active = activeFrame(layout);
-
-  if (active.width === width && active.height === height) {
-    return layout;
-  }
-
-  return {
-    ...layout,
-    frames: layout.frames.map((f) =>
-      f.id === active.id ? { ...f, height, width } : f
-    ),
-  };
-}
-
-function isSide(value: unknown): value is number {
-  return (
-    typeof value === "number" &&
-    Number.isInteger(value) &&
-    value >= MIN_SIDE &&
-    value <= MAX_SIDE
-  );
-}
-
-function isCoord(value: unknown): value is number {
-  return (
-    typeof value === "number" &&
-    Number.isFinite(value) &&
-    Math.abs(value) <= MAX_COORD
-  );
-}
-
-export function parseLayout(raw: unknown): CanvasLayout | null {
+const parseLayout = (raw: unknown): CanvasLayout | null => {
   if (!raw || typeof raw !== "object") {
     return null;
   }
@@ -489,34 +100,44 @@ export function parseLayout(raw: unknown): CanvasLayout | null {
   const frames: CanvasFrame[] = [];
 
   for (const item of record.frames.slice(0, MAX_FRAMES)) {
-    const f = item as Record<string, unknown>;
+    const frame2 = item as Record<string, unknown>;
 
-    if (!isFrameId(f.id) || frames.some((other) => other.id === f.id)) {
+    if (
+      !isFrameId(frame2.id) ||
+      frames.some((other) => other.id === frame2.id)
+    ) {
       continue;
     }
 
     if (
-      !isSide(f.width) ||
-      !isSide(f.height) ||
-      !isCoord(f.x) ||
-      !isCoord(f.y)
+      !isSide(frame2.width) ||
+      !isSide(frame2.height) ||
+      !isCoord(frame2.x) ||
+      !isCoord(frame2.y)
     ) {
       continue;
     }
 
     const frame: CanvasFrame = {
-      height: f.height,
-      id: f.id,
-      width: f.width,
-      x: Math.round(f.x),
-      y: Math.round(f.y),
+      height: frame2.height,
+      id: frame2.id,
+      width: frame2.width,
+      x: Math.round(frame2.x),
+      y: Math.round(frame2.y),
     };
 
-    if (typeof f.directionId === "string" && ID_RE.test(f.directionId)) {
-      frame.directionId = f.directionId;
+    if (
+      typeof frame2.directionId === "string" &&
+      ID_RE.test(frame2.directionId)
+    ) {
+      frame.directionId = frame2.directionId;
     }
 
-    const path = typeof f.path === "string" ? cleanFramePath(f.path) : null;
+    let path: string | null = null;
+
+    if (typeof frame2.path === "string") {
+      path = cleanFramePath(frame2.path);
+    }
 
     if (path) {
       frame.path = path;
@@ -529,14 +150,16 @@ export function parseLayout(raw: unknown): CanvasLayout | null {
     return null;
   }
 
-  const activeId = frames.some((f) => f.id === record.activeId)
-    ? record.activeId
-    : (frames[0] as CanvasFrame).id;
+  let activeId: string = (frames[0] as CanvasFrame).id;
+
+  if (frames.some((canvasFrame32) => canvasFrame32.id === record.activeId)) {
+    activeId = record.activeId;
+  }
 
   return { activeId, frames };
-}
+};
 
-function readJson(key: string): Record<string, unknown> {
+const readJson = (key: string): Record<string, unknown> => {
   try {
     const parsed = JSON.parse(readStored(key) ?? "{}") as unknown;
 
@@ -546,9 +169,9 @@ function readJson(key: string): Record<string, unknown> {
   } catch {
     return {};
   }
-}
+};
 
-function writeJson(key: string, value: Record<string, unknown>): boolean {
+const writeJson = (key: string, value: Record<string, unknown>): boolean => {
   try {
     writeStored(key, JSON.stringify(value));
 
@@ -556,17 +179,17 @@ function writeJson(key: string, value: Record<string, unknown>): boolean {
   } catch {
     return false;
   }
-}
+};
 
-function legacyLayout(projectId: string): CanvasLayout | null {
+const legacyLayout = (projectId: string): CanvasLayout | null => {
   if (readJson(MIGRATED_KEY)[projectId] === true) {
     return null;
   }
 
   return parseLayout(readJson(KEY)[projectId]);
-}
+};
 
-function markMigrated(projectId: string): void {
+const markMigrated = (projectId: string): void => {
   if (readJson(MIGRATED_KEY)[projectId] !== true) {
     writeJson(MIGRATED_KEY, { ...readJson(MIGRATED_KEY), [projectId]: true });
   }
@@ -579,38 +202,42 @@ function markMigrated(projectId: string): void {
 
   delete legacy[projectId];
   writeJson(KEY, legacy);
-}
+};
 
-function storedActive(projectId: string): string | null {
+const storedActive = (projectId: string): string | null => {
   const value = readJson(ACTIVE_KEY)[projectId];
 
-  return typeof value === "string" ? value : null;
-}
+  if (typeof value === "string") {
+    return value;
+  }
 
-function saveActive(projectId: string, activeId: string): void {
+  return null;
+};
+
+const saveActive = (projectId: string, activeId: string): void => {
   if (storedActive(projectId) === activeId) {
     return;
   }
 
   writeJson(ACTIVE_KEY, { ...readJson(ACTIVE_KEY), [projectId]: activeId });
-}
+};
 
-export function toCanvasFile(
+const toCanvasFile = (
   layout: CanvasLayout | null,
   lofi: readonly string[]
-): CanvasFile {
+): CanvasFile => {
   const frames = (layout?.frames ?? []).map((frame, order) => ({
     ...frame,
     order,
   }));
 
   return normalizeCanvasFile({ frames, lofi: [...lofi], version: 1 });
-}
+};
 
-export function fromCanvasFile(
+const fromCanvasFile = (
   file: CanvasFile,
   activeId: string | null
-): CanvasLayout | null {
+): CanvasLayout | null => {
   const frames: CanvasFrame[] = file.frames.map(
     ({ order: _order, ...frame }) => frame
   );
@@ -620,15 +247,21 @@ export function fromCanvasFile(
   }
 
   const pick =
-    frames.find((f) => f.id === activeId && !f.hidden) ?? firstShown(frames);
+    frames.find(
+      (canvasFrame33) => canvasFrame33.id === activeId && !canvasFrame33.hidden
+    ) ?? firstShown(frames);
 
   return {
     activeId: pick.id,
-    frames: frames.map((f) =>
-      f.id === pick.id && f.hidden ? withoutKey(f, "hidden") : f
-    ),
+    frames: frames.map((canvasFrame34) => {
+      if (canvasFrame34.id === pick.id && canvasFrame34.hidden) {
+        return withoutKey(canvasFrame34, "hidden");
+      }
+
+      return canvasFrame34;
+    }),
   };
-}
+};
 
 interface Entry {
   layout: CanvasLayout | null;
@@ -643,9 +276,10 @@ interface Entry {
 }
 
 const entries = new Map<string, Entry>();
+
 const listeners = new Set<() => void>();
 
-function entryOf(projectId: string): Entry {
+const entryOf = (projectId: string): Entry => {
   let entry = entries.get(projectId);
 
   if (!entry) {
@@ -664,21 +298,20 @@ function entryOf(projectId: string): Entry {
   }
 
   return entry;
-}
+};
 
-function notify(): void {
-  listeners.forEach((l) => l());
-}
+const notify = (): void => {
+  listeners.forEach((listener) => listener());
+};
 
-function fileText(entry: Pick<Entry, "layout" | "lofi">): string {
-  return serializeCanvasFile(toCanvasFile(entry.layout, entry.lofi));
-}
+const fileText = (entry: Pick<Entry, "layout" | "lofi">): string =>
+  serializeCanvasFile(toCanvasFile(entry.layout, entry.lofi));
 
-function applySnapshot(
+const applySnapshot = (
   projectId: string,
   canvas: CanvasFile | null,
   hash: string | null
-): void {
+): void => {
   const entry = entryOf(projectId);
 
   if (entry.timer !== null) {
@@ -690,11 +323,64 @@ function applySnapshot(
   entry.hash = hash;
   entry.lofi = canvas?.lofi ?? [];
   const active = entry.layout?.activeId ?? storedActive(projectId);
-  entry.layout = canvas ? fromCanvasFile(canvas, active) : null;
-  notify();
-}
+  entry.layout = null;
 
-async function flush(projectId: string): Promise<void> {
+  if (canvas) {
+    entry.layout = fromCanvasFile(canvas, active);
+  }
+
+  notify();
+};
+
+const migrate = async (
+  projectId: string,
+  legacy: CanvasLayout
+): Promise<void> => {
+  const entry = entryOf(projectId);
+  entry.layout = legacy;
+  notify();
+
+  try {
+    const result = await api.putCanvas(projectId, {
+      baseHash: entry.hash,
+      canvas: toCanvasFile(legacy, entry.lofi),
+      migrate: true,
+      writer: writerId,
+    });
+
+    entry.hash = result.hash;
+    markMigrated(projectId);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === STATUS_409) {
+      await reloadCanvas(projectId);
+    } else {
+      console.error("[canvas] migration failed", error);
+    }
+  }
+};
+
+const reloadCanvas = async (projectId: string): Promise<void> => {
+  const entry = entryOf(projectId);
+  entry.requestedAt = Date.now();
+  const snapshot = await api.getCanvas(projectId);
+  applySnapshot(projectId, snapshot.canvas, snapshot.hash);
+  entry.loaded = true;
+  const hasFrames = (snapshot.canvas?.frames.length ?? 0) > 0;
+
+  let legacy: CanvasLayout | null = null;
+
+  if (!hasFrames) {
+    legacy = legacyLayout(projectId);
+  }
+
+  if (legacy) {
+    await migrate(projectId, legacy);
+  } else {
+    markMigrated(projectId);
+  }
+};
+
+const flush = async (projectId: string): Promise<void> => {
   const entry = entryOf(projectId);
   entry.timer = null;
 
@@ -717,7 +403,7 @@ async function flush(projectId: string): Promise<void> {
 
     entry.hash = result.hash;
   } catch (error) {
-    stale = error instanceof ApiError && error.status === 409;
+    stale = error instanceof ApiError && error.status === STATUS_409;
 
     if (!stale) {
       console.error("[canvas] save failed", error);
@@ -742,9 +428,9 @@ async function flush(projectId: string): Promise<void> {
     entry.again = false;
     void flush(projectId);
   }
-}
+};
 
-function schedule(projectId: string): void {
+const schedule = (projectId: string): void => {
   const entry = entryOf(projectId);
 
   if (entry.timer !== null) {
@@ -752,49 +438,9 @@ function schedule(projectId: string): void {
   }
 
   entry.timer = window.setTimeout(() => void flush(projectId), WRITE_DELAY_MS);
-}
+};
 
-async function migrate(projectId: string, legacy: CanvasLayout): Promise<void> {
-  const entry = entryOf(projectId);
-  entry.layout = legacy;
-  notify();
-
-  try {
-    const result = await api.putCanvas(projectId, {
-      baseHash: entry.hash,
-      canvas: toCanvasFile(legacy, entry.lofi),
-      migrate: true,
-      writer: writerId,
-    });
-
-    entry.hash = result.hash;
-    markMigrated(projectId);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 409) {
-      await reloadCanvas(projectId);
-    } else {
-      console.error("[canvas] migration failed", error);
-    }
-  }
-}
-
-export async function reloadCanvas(projectId: string): Promise<void> {
-  const entry = entryOf(projectId);
-  entry.requestedAt = Date.now();
-  const snapshot = await api.getCanvas(projectId);
-  applySnapshot(projectId, snapshot.canvas, snapshot.hash);
-  entry.loaded = true;
-  const hasFrames = (snapshot.canvas?.frames.length ?? 0) > 0;
-  const legacy = hasFrames ? null : legacyLayout(projectId);
-
-  if (legacy) {
-    await migrate(projectId, legacy);
-  } else {
-    markMigrated(projectId);
-  }
-}
-
-function ensureLoaded(projectId: string): void {
+const ensureLoaded = (projectId: string): void => {
   const entry = entryOf(projectId);
 
   if (entry.loaded || entry.loading) {
@@ -806,9 +452,9 @@ function ensureLoaded(projectId: string): void {
     .finally(() => {
       entry.loading = null;
     });
-}
+};
 
-export function receiveCanvasEvent(event: StudioEvent): void {
+const receiveCanvasEvent = (event: StudioEvent): void => {
   if (event.type !== "canvas.changed") {
     return;
   }
@@ -824,9 +470,11 @@ export function receiveCanvasEvent(event: StudioEvent): void {
   }
 
   applySnapshot(event.projectId, event.canvas, event.hash);
-}
+};
 
-export const canvasStore = {
+const NO_LOFI: string[] = [];
+
+const canvasStore = {
   get: (projectId: string): CanvasLayout | undefined =>
     entries.get(projectId)?.layout ?? undefined,
   load: ensureLoaded,
@@ -857,28 +505,30 @@ export const canvasStore = {
       return;
     }
 
-    entry.lofi = on
-      ? [...entry.lofi, directionId].sort()
-      : entry.lofi.filter((id) => id !== directionId);
+    entry.lofi = ((): string[] => {
+      if (on) {
+        return [...entry.lofi, directionId].sort();
+      }
+
+      return entry.lofi.filter((id) => id !== directionId);
+    })();
     entry.layout ??= fallback;
     notify();
     schedule(projectId);
   },
-  subscribe: (l: () => void) => {
-    listeners.add(l);
+  subscribe: (listener2: () => void) => {
+    listeners.add(listener2);
 
     return (): void => {
-      listeners.delete(l);
+      listeners.delete(listener2);
     };
   },
 };
 
-const NO_LOFI: string[] = [];
-
-export function useCanvasLayout(
+const useCanvasLayout = (
   projectId: string,
   viewport: Viewport
-): [CanvasLayout, (update: (layout: CanvasLayout) => CanvasLayout) => void] {
+): [CanvasLayout, (update: (layout: CanvasLayout) => CanvasLayout) => void] => {
   useEffect(() => canvasStore.load(projectId), [projectId]);
   useProjectEvents(projectId, receiveCanvasEvent);
 
@@ -898,10 +548,23 @@ export function useCanvasLayout(
   };
 
   return [layout, update];
-}
+};
 
-export function useCanvasLofi(projectId: string): string[] {
-  return useSyncExternalStore(canvasStore.subscribe, () =>
+const useCanvasLofi = (projectId: string): string[] =>
+  useSyncExternalStore(canvasStore.subscribe, () =>
     canvasStore.lofi(projectId)
   );
-}
+
+export {
+  canvasStore,
+  cleanFramePath,
+  fromCanvasFile,
+  parseLayout,
+  receiveCanvasEvent,
+  reloadCanvas,
+  toCanvasFile,
+  useCanvasLayout,
+  useCanvasLofi,
+};
+
+export type { Box, CanvasFrame, CanvasLayout, FramePreset };

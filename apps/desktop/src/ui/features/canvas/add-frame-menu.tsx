@@ -2,7 +2,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
-import { FRAME_PRESETS } from "./canvas-frames-model.js";
+import { FRAME_PRESETS } from "./canvas-frame-ops.js";
 import { copy } from "./copy.js";
 
 const SET_TIMEOUT_8000 = 8000;

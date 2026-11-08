@@ -16,18 +16,17 @@ import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 import { useDesktopCommand } from "../../platform/desktop.js";
 import { uiStore, useUi } from "../../platform/storage.js";
 import type { FilesChange } from "../home/use-studio-data.js";
+import { followDirection } from "./canvas-direction-ops.js";
 import {
   activeFrame,
   addFrame,
-  canvasStore,
   defaultLayout,
-  followDirection,
   moveFrame,
   removeFrame,
   resizeActive,
-  useCanvasLayout,
   viewportOf,
-} from "./canvas-frames-model.js";
+} from "./canvas-frame-ops.js";
+import { canvasStore, useCanvasLayout } from "./canvas-frames-model.js";
 import type { Box, CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
 import { snapOff, snapRect } from "./snap-model.js";
 import type { ClickThrough } from "./use-click-through.js";

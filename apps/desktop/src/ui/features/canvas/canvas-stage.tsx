@@ -8,7 +8,8 @@ import type { GridOverlayProps } from "../grid/index.js";
 import { useEditVariant } from "../inspector/index.js";
 import type { SpacingHandlesProps } from "../spacing/index.js";
 import { FrameUndoBar } from "./add-frame-menu.js";
-import { frameDirection, frameName } from "./canvas-frames-model.js";
+import { frameDirection } from "./canvas-direction-ops.js";
+import { frameName } from "./canvas-frame-ops.js";
 import { FrameLabel } from "./canvas-frames.js";
 import {
   activeFrameOf,

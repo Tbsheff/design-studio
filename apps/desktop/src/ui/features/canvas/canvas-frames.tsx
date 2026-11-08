@@ -7,7 +7,8 @@ import type {
 } from "react";
 
 import { openAppPanel } from "../../platform/app-status.js";
-import { canvasStore, frameName } from "./canvas-frames-model.js";
+import { frameName } from "./canvas-frame-ops.js";
+import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 import { FlowFromHere } from "./flow-from-here.js";

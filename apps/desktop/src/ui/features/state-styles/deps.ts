@@ -6,7 +6,9 @@ export { call } from "../../platform/http.js";
 
 export type { PreviewPort } from "../../platform/bridge.js";
 
-export { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
+export { canvasStore } from "../canvas/canvas-frames-model.js";
+
+export { activeFrame } from "../canvas/index.js";
 
 export {
   editVariantStore,

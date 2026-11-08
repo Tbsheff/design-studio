@@ -35,7 +35,9 @@ export { postToFrame, useBridge } from "../../platform/bridge.js";
 
 export type { BridgeFrame } from "../../platform/bridge.js";
 
-export { canvasStore, shownFrames } from "../canvas/canvas-frames-model.js";
+export { canvasStore } from "../canvas/canvas-frames-model.js";
+
+export { shownFrames } from "../canvas/index.js";
 
 export { DrawingStrokes, PenIcon } from "../canvas/draw-layer.js";
 

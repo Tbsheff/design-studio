@@ -6,7 +6,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 
 import { api } from "../../api.js";
 import { readStored, writeStored } from "../../platform/storage.js";
-import { addFrame, canAddFrame, setFramePath } from "./canvas-frames-model.js";
+import { addFrame, canAddFrame, setFramePath } from "./canvas-frame-ops.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
 const AppBar = lazy(() => import("../../app/shell/app-bar.js"));

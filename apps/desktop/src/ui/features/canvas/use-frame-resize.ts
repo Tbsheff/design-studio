@@ -8,7 +8,7 @@ import {
   resizeFrame,
   viewportOf,
   shownFrames,
-} from "./canvas-frames-model.js";
+} from "./canvas-frame-ops.js";
 import type { Box, CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { snapOff, snapRect } from "./snap-model.js";

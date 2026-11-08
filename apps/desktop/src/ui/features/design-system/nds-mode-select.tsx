@@ -1,4 +1,5 @@
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { COPY } from "./copy.js";
 import { MODES } from "./nds-model.js";
@@ -9,22 +10,16 @@ const ModeSelect = ({
   onChange,
 }: {
   value: Mode;
-  onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  onChange: (mode: Mode) => void;
 }): ReactElement => (
   <label className="field">
     <span>{COPY.labelMode}</span>
-    <select
-      className="select"
-      value={value}
+    <UiSelect
       aria-label={COPY.labelMode}
+      options={MODES}
+      value={value}
       onChange={onChange}
-    >
-      {MODES.map((mode) => (
-        <option key={mode.value} value={mode.value}>
-          {mode.label}
-        </option>
-      ))}
-    </select>
+    />
   </label>
 );
 

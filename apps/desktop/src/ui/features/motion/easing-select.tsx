@@ -1,10 +1,10 @@
-import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { copy, EASING_LABELS } from "./copy.js";
 import { EASING_PRESETS } from "./deps.js";
-
-import styles from "./motion.module.css";
 
 interface EasingSelectProps {
   readonly disabled: boolean;
@@ -13,8 +13,17 @@ interface EasingSelectProps {
   readonly onValue: (easing: string) => void;
 }
 
-const isNamed = (value: string): boolean =>
-  (EASING_PRESETS as readonly string[]).includes(value);
+const PRESET_OPTIONS: readonly UiSelectOption[] = EASING_PRESETS.map(
+  (name) => ({ label: EASING_LABELS[name], value: name })
+);
+
+const toEasingOptions = (value: string): readonly UiSelectOption[] => {
+  if (PRESET_OPTIONS.some((option) => option.value === value)) {
+    return PRESET_OPTIONS;
+  }
+
+  return [...PRESET_OPTIONS, { label: value, value }];
+};
 
 const EasingSelect = ({
   disabled,
@@ -22,29 +31,18 @@ const EasingSelect = ({
   value,
   onValue,
 }: EasingSelectProps): ReactElement => {
-  const handleEasingPick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      onValue(event.target.value);
-    },
-    [onValue]
-  );
+  const options = useMemo(() => toEasingOptions(value), [value]);
 
   return (
-    <select
+    <UiSelect
       aria-label={`${copy.easingLabel}: ${value}`}
-      className={styles.select}
       disabled={disabled}
       id={id}
+      options={options}
+      size="sm"
       value={value}
-      onChange={handleEasingPick}
-    >
-      {EASING_PRESETS.map((name) => (
-        <option key={name} value={name}>
-          {EASING_LABELS[name]}
-        </option>
-      ))}
-      {!isNamed(value) && <option value={value}>{value}</option>}
-    </select>
+      onChange={onValue}
+    />
   );
 };
 

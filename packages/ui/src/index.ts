@@ -1,5 +1,7 @@
 export { BrandMark } from "./brand-mark.js";
 
+export { Button } from "./button.js";
+
 export { ChipButton } from "./chip-button.js";
 
 export { CopyButton } from "./copy-button.js";
@@ -30,6 +32,10 @@ export { useAnchoredPopover } from "./use-anchored-popover.js";
 export { useModalDialog } from "./use-modal-dialog.js";
 
 export { usePopover, useReturnFocusOnUnmount } from "./use-popover.js";
+
+export type { ButtonProps } from "./button.js";
+
+export type { ButtonSize, ButtonVariant } from "./button-model.js";
 
 export type { IconName } from "./icon.js";
 

@@ -1,5 +1,7 @@
-import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useCallback, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import type { FillDraft } from "./fill-model.js";
@@ -22,42 +24,49 @@ const ANGLES: readonly number[] = Array.from(
 
 const ANGLE_ID = "fill-angle";
 
+const toAngleOption = (angle: number): UiSelectOption => ({
+  label: `${angle}°`,
+  value: String(angle),
+});
+
+const toAngleOptions = (current: number): readonly UiSelectOption[] => {
+  const options = ANGLES.map((angle) => toAngleOption(angle));
+
+  if (ANGLES.includes(current)) {
+    return options;
+  }
+
+  return [toAngleOption(current), ...options];
+};
+
 const AngleSelect = ({
   disabled,
   draft,
   onDraft,
 }: AngleSelectProps): ReactElement => {
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      onDraft({ ...draft, angle: Number(event.target.value) });
+  const options = useMemo(() => toAngleOptions(draft.angle), [draft.angle]);
+
+  const pickAngle = useCallback(
+    (next: string): void => {
+      onDraft({ ...draft, angle: Number(next) });
     },
     [draft, onDraft]
   );
-
-  const custom = !ANGLES.includes(draft.angle);
 
   return (
     <div className={styles.field}>
       <label className={styles.label} htmlFor={ANGLE_ID}>
         {copy.angle}
       </label>
-      <select
+      <UiSelect
         aria-label={`${copy.angleLabel}: ${draft.angle}°`}
-        className={styles.select}
         disabled={disabled}
         id={ANGLE_ID}
+        options={options}
+        size="sm"
         value={String(draft.angle)}
-        onChange={handlePick}
-      >
-        {custom && (
-          <option value={String(draft.angle)}>{`${draft.angle}°`}</option>
-        )}
-        {ANGLES.map((angle) => (
-          <option key={angle} value={String(angle)}>
-            {`${angle}°`}
-          </option>
-        ))}
-      </select>
+        onChange={pickAngle}
+      />
     </div>
   );
 };

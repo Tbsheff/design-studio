@@ -10,7 +10,8 @@
   ],
   "exports": {
     ".": "./src/index.ts",
-    "./chip-button.module.css": "./src/chip-button.module.css"
+    "./chip-button.module.css": "./src/chip-button.module.css",
+    "./controls.css": "./src/controls.css"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

@@ -3,8 +3,7 @@ import type { ChangeEvent, ReactElement } from "react";
 
 import { COPY } from "./copy.js";
 import { ModeSelect } from "./nds-mode-select.js";
-import { toMode } from "./nds-model.js";
-import type { DraftForm, Patch } from "./new-design-system-values.js";
+import type { DraftForm, Mode, Patch } from "./new-design-system-values.js";
 
 const NAME_MAX = 80;
 
@@ -21,11 +20,7 @@ const Basics = ({
     [set]
   );
 
-  const pickMode = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void =>
-      set({ mode: toMode(event.target.value) }),
-    [set]
-  );
+  const pickMode = useCallback((mode: Mode): void => set({ mode }), [set]);
 
   return (
     <fieldset

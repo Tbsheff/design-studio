@@ -1,33 +1,43 @@
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useId } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import type { IntegrationDraft } from "./integration-model.js";
+import type {
+  IntegrationDraft,
+  IntegrationTransport,
+} from "./integration-model.js";
 
 import styles from "./integration.module.css";
 
 interface IntegrationTransportSelectProps {
   readonly draft: IntegrationDraft;
-  readonly onChange: (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => void;
+  readonly onChange: (transport: IntegrationTransport) => void;
 }
+
+const TRANSPORT_OPTIONS: readonly UiSelectOption<IntegrationTransport>[] = [
+  { label: copy.transportStdio, value: "stdio" },
+  { label: copy.transportHttp, value: "http" },
+];
 
 const IntegrationTransportSelect = ({
   draft,
   onChange,
-}: IntegrationTransportSelectProps): ReactElement => (
-  <label className={styles.field}>
-    {copy.transportLabel}
-    <select
-      className={styles.select}
-      name="transport"
-      onChange={onChange}
-      value={draft.transport}
-    >
-      <option value="stdio">{copy.transportStdio}</option>
-      <option value="http">{copy.transportHttp}</option>
-    </select>
-  </label>
-);
+}: IntegrationTransportSelectProps): ReactElement => {
+  const transportId = useId();
+
+  return (
+    <div className={styles.field}>
+      <label htmlFor={transportId}>{copy.transportLabel}</label>
+      <UiSelect
+        id={transportId}
+        options={TRANSPORT_OPTIONS}
+        value={draft.transport}
+        onChange={onChange}
+      />
+    </div>
+  );
+};
 
 export { IntegrationTransportSelect };

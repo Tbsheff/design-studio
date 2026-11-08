@@ -1,5 +1,7 @@
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
 import { useCallback, useState } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { isPosition, POSITIONS } from "./pattern-model.js";
@@ -18,6 +20,11 @@ interface PatternInsertControlsProps {
   readonly target: PatternTarget | null;
 }
 
+const PLACE_OPTIONS: readonly UiSelectOption[] = POSITIONS.map((option) => ({
+  label: option.label,
+  value: option.id,
+}));
+
 const PatternInsertControls = ({
   isBusy,
   onInsert,
@@ -26,16 +33,11 @@ const PatternInsertControls = ({
 }: PatternInsertControlsProps): ReactElement => {
   const [position, setPosition] = useState<PatternPosition>("inside");
 
-  const handlePosition = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      const { value } = event.target;
-
-      if (isPosition(value)) {
-        setPosition(value);
-      }
-    },
-    []
-  );
+  const handlePosition = useCallback((value: string): void => {
+    if (isPosition(value)) {
+      setPosition(value);
+    }
+  }, []);
 
   const handleInsert = useCallback((): void => {
     if (target !== null) {
@@ -51,18 +53,13 @@ const PatternInsertControls = ({
 
   return (
     <div className={styles.actions}>
-      <select
+      <UiSelect
         aria-label={copy.placeLabel}
-        className={styles.select}
-        onChange={handlePosition}
+        options={PLACE_OPTIONS}
+        size="sm"
         value={position}
-      >
-        {POSITIONS.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        onChange={handlePosition}
+      />
       <button
         className={styles.small}
         data-tip={tip}

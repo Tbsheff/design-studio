@@ -31,6 +31,7 @@ const HIDDEN: CSSProperties = {
 };
 
 const TYPEAHEAD_RESET_MS = 700;
+const MENU_EXIT_MS = 100;
 const CHEVRON_SIZE = 12;
 const COMBOBOX_ROLE = "combobox";
 const LISTBOX_ROLE = "listbox";
@@ -136,6 +137,7 @@ export {
   COMBOBOX_ROLE,
   HIDDEN,
   LISTBOX_ROLE,
+  MENU_EXIT_MS,
   OPTION_ROLE,
   TYPEAHEAD_RESET_MS,
   isOpenKey,

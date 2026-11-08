@@ -9,16 +9,12 @@ import type {
 
 interface IntegrationForm {
   readonly draft: IntegrationDraft;
-  readonly handleDraft: (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => void;
+  readonly handleDraft: (event: ChangeEvent<HTMLInputElement>) => void;
   readonly handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  readonly handleTransport: (transport: IntegrationTransport) => void;
   readonly isNameBad: boolean;
   readonly isReady: boolean;
 }
-
-const isTransport = (value: string): value is IntegrationTransport =>
-  value === "stdio" || value === "http";
 
 const useIntegrationForm = (
   onCreate: (draft: IntegrationDraft) => void
@@ -26,17 +22,17 @@ const useIntegrationForm = (
   const [draft, setDraft] = useState<IntegrationDraft>(EMPTY_DRAFT);
 
   const handleDraft = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+    (event: ChangeEvent<HTMLInputElement>): void => {
       const { name, value } = event.currentTarget;
 
-      setDraft((prev) => {
-        if (name === "transport" && isTransport(value)) {
-          return { ...prev, transport: value };
-        }
-
-        return { ...prev, [name]: value };
-      });
+      setDraft((prev) => ({ ...prev, [name]: value }));
     },
+    []
+  );
+
+  const handleTransport = useCallback(
+    (transport: IntegrationTransport): void =>
+      setDraft((prev) => ({ ...prev, transport })),
     []
   );
 
@@ -55,7 +51,14 @@ const useIntegrationForm = (
 
   const isNameBad = draft.name !== "" && !isNameValid(draft.name);
 
-  return { draft, handleDraft, handleSubmit, isNameBad, isReady };
+  return {
+    draft,
+    handleDraft,
+    handleSubmit,
+    handleTransport,
+    isNameBad,
+    isReady,
+  };
 };
 
 export { useIntegrationForm };

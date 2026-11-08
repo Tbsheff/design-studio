@@ -3,6 +3,7 @@ import type { CSSProperties, KeyboardEvent, RefObject } from "react";
 
 import { toStartIndex } from "./ui-select-model.js";
 import type { UiSelectProps } from "./ui-select-model.js";
+import { useMenuExit } from "./use-menu-exit.js";
 import { useOutsideClose } from "./use-outside-close.js";
 import { usePickOption } from "./use-pick-option.js";
 import { useSelectKeys } from "./use-select-keys.js";
@@ -15,6 +16,7 @@ interface UiSelectState {
   readonly close: () => void;
   readonly current: number;
   readonly host: Element | null;
+  readonly isMounted: boolean;
   readonly isOpen: boolean;
   readonly listId: string;
   readonly onHover: (index: number) => void;
@@ -31,6 +33,7 @@ const useUiSelect = <OptionValue extends string>(
 ): UiSelectState => {
   const { options, value, onChange } = props;
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [active, setActive] = useState(-1);
   const [host, setHost] = useState<Element | null>(null);
   const root = useRef<HTMLSpanElement>(null);
@@ -41,14 +44,21 @@ const useUiSelect = <OptionValue extends string>(
 
   const close = useCallback(() => {
     setIsOpen(false);
+  }, []);
+
+  const unmount = useCallback(() => {
+    setIsMounted(false);
     hide();
   }, [hide]);
+
+  useMenuExit(isOpen, isMounted, unmount);
 
   useOutsideClose(isOpen, close, root, panel);
 
   const show = useCallback(() => {
     setActive(toStartIndex(options, current));
     setHost(button.current?.closest("dialog") ?? document.body);
+    setIsMounted(true);
     setIsOpen(true);
   }, [options, current]);
 
@@ -84,6 +94,7 @@ const useUiSelect = <OptionValue extends string>(
     close,
     current,
     host,
+    isMounted,
     isOpen,
     listId,
     onHover,

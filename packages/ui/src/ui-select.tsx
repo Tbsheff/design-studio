@@ -17,7 +17,7 @@ const UiSelect = <OptionValue extends string>(
   props: UiSelectProps<OptionValue>
 ): ReactElement => {
   const select = useUiSelect(props);
-  const { active, current, host, isOpen, listId } = select;
+  const { active, current, host, isMounted, isOpen, listId } = select;
   const { button, onHover, onKeyDown, onPick, onToggle, root } = select;
   const hasActive = isOpen && active >= 0;
   const hasTip = !isOpen && Boolean(props.tip);
@@ -33,6 +33,7 @@ const UiSelect = <OptionValue extends string>(
       options={props.options}
       value={props.value}
       active={active}
+      isOpen={isOpen}
       label={props["aria-label"]}
       labelledBy={props["aria-labelledby"]}
       onPick={onPick}
@@ -65,7 +66,7 @@ const UiSelect = <OptionValue extends string>(
         </span>
         <Icon name="chevronDown" size={CHEVRON_SIZE} />
       </button>
-      {isOpen && host && createPortal(menu, host)}
+      {isMounted && host && createPortal(menu, host)}
     </span>
   );
 };

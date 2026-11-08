@@ -1,5 +1,7 @@
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
 import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
 
 import { blendLabel, copy } from "./copy.js";
 import { BLEND_MODES } from "./deps.js";
@@ -17,6 +19,10 @@ interface BlendSelectProps {
 const BLEND_ID = "fill-blend";
 const NORMAL: BlendMode = "normal";
 
+const BLEND_OPTIONS: readonly UiSelectOption<BlendMode>[] = BLEND_MODES.map(
+  (mode) => ({ label: blendLabel(mode), value: mode })
+);
+
 const BlendSelect = ({
   disabled,
   draft,
@@ -24,10 +30,8 @@ const BlendSelect = ({
 }: BlendSelectProps): ReactElement => {
   const value = draft.blend ?? NORMAL;
 
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      const mode = event.target.value as BlendMode;
-
+  const pickBlend = useCallback(
+    (mode: BlendMode): void => {
       if (mode === NORMAL && draft.blend === null) {
         return;
       }
@@ -42,20 +46,15 @@ const BlendSelect = ({
       <label className={styles.label} htmlFor={BLEND_ID}>
         {copy.blend}
       </label>
-      <select
+      <UiSelect
         aria-label={`${copy.blendLabel}: ${blendLabel(value)}`}
-        className={styles.select}
         disabled={disabled}
         id={BLEND_ID}
+        options={BLEND_OPTIONS}
+        size="sm"
         value={value}
-        onChange={handlePick}
-      >
-        {BLEND_MODES.map((mode) => (
-          <option key={mode} value={mode}>
-            {blendLabel(mode)}
-          </option>
-        ))}
-      </select>
+        onChange={pickBlend}
+      />
     </div>
   );
 };

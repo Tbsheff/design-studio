@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
 
 import { DesignCountButton } from "./design-count-button.js";
-import { designsHint } from "./run-settings.js";
-import type { DesignsSetting } from "./run-settings.js";
+import { designsHint } from "./run-settings-model.js";
+import type { DesignsSetting } from "./run-settings-model.js";
 
 const MAX_DESIGN_COUNT = 4;
 

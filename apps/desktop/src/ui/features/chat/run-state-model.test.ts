@@ -30,7 +30,28 @@ const PLAIN_PROMPT = "x";
 const PLAIN_REQUEST = { mode: EDIT, prompt: PLAIN_PROMPT } as const;
 const issued = new Set<number>();
 
-const ev = (body: Record<string, unknown>): StudioEvent => {
+interface LooseFields {
+  readonly durationMs?: number;
+  readonly finalText?: string;
+  readonly id?: string;
+  readonly input?: Record<string, never>;
+  readonly isError?: false;
+  readonly items?: readonly { id: string; text: string }[];
+  readonly name?: string;
+  readonly request?: typeof PLAIN_REQUEST;
+  readonly runId?: string;
+  readonly status?: string;
+  readonly summary?: string | RunSummary;
+  readonly text?: string;
+  readonly title?: string;
+  readonly toolCalls?: readonly object[];
+  readonly toolUseId?: string;
+  readonly type?: string;
+}
+
+const toTyped = <Target>(value: LooseFields): Target => value as Target;
+
+const ev = (body: LooseFields): StudioEvent => {
   const seq = issued.size + 1;
   issued.add(seq);
 
@@ -43,7 +64,7 @@ const ev = (body: Record<string, unknown>): StudioEvent => {
     ...body,
   };
 
-  return event as unknown as StudioEvent;
+  return toTyped<StudioEvent>(event);
 };
 
 const applyAll = (events: readonly StudioEvent[]): RunMap => {
@@ -64,7 +85,7 @@ const textOf = (run: RunView | undefined): string => {
   return runText(run);
 };
 
-const toSummary = (fields: Record<string, unknown>): RunSummary => {
+const toSummary = (fields: LooseFields): RunSummary => {
   const summary = {
     directionId: "d",
     id: RUN_ONE,
@@ -73,7 +94,7 @@ const toSummary = (fields: Record<string, unknown>): RunSummary => {
     ...fields,
   };
 
-  return summary as unknown as RunSummary;
+  return toTyped<RunSummary>(summary);
 };
 
 describe("run state", () => {
@@ -145,7 +166,9 @@ describe("run state", () => {
       expect(live.r1?.tools).toStrictEqual([]);
     }
   );
+});
 
+describe("run state seed", () => {
   it(
     "keeps a run seeded as stopped stopped when run.started arrives late",
     { timeout: 5000 },

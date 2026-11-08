@@ -60,6 +60,15 @@
   box-shadow: var(--shadow-pop);
 }
 
+dialog.run-settings-pop {
+  right: auto;
+  height: auto;
+  margin: 0;
+  border: 0;
+  color: inherit;
+  overflow: visible;
+}
+
 .composer-menu,
 .run-settings-pop {
   --pop-dy: 4px;

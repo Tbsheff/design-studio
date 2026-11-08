@@ -330,6 +330,9 @@ const applyControlEvent = (run: RunView, event: StudioEvent): void => {
   }
 };
 
+const toRunMapWith = (runs: RunMap, runId: string, view: RunView): RunMap =>
+  Object.fromEntries([...Object.entries(runs), [runId, view]]);
+
 const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   if (!event.type.startsWith("run.") || !("runId" in event)) {
     return runs;
@@ -339,7 +342,7 @@ const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   const prev = runs[runId];
 
   if (event.type === "run.finished") {
-    return { ...runs, [runId]: finishedView(prev, event.summary) };
+    return toRunMapWith(runs, runId, finishedView(prev, event.summary));
   }
 
   if (prev?.summary) {
@@ -356,16 +359,13 @@ const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   }
 
   if (event.type === "run.stopping") {
-    return {
-      ...runs,
-      [runId]: {
-        ...run,
-        permissions: [],
-        queue: [],
-        retry: null,
-        status: "canceled",
-      },
-    };
+    return toRunMapWith(runs, runId, {
+      ...run,
+      permissions: [],
+      queue: [],
+      retry: null,
+      status: "canceled",
+    });
   }
 
   if (run.status === "canceled" && isPartEvent(event)) {
@@ -395,7 +395,7 @@ const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   applyToolEvent(run, event);
   applyControlEvent(run, event);
 
-  return { ...runs, [runId]: run };
+  return toRunMapWith(runs, runId, run);
 };
 
 export { applyRunEvent, emptyRun, runFromSummary, runText, shownPending };

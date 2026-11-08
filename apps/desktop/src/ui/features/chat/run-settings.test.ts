@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createDraftStore, homeVariations } from "../../platform/storage.js";
 import { nextRadioOption } from "./radio-nav-model.js";
-import { designsHint, runSettingsSummary } from "./run-settings.js";
+import { designsHint, runSettingsSummary } from "./run-settings-model.js";
 
 const VARIATIONS = 3;
 

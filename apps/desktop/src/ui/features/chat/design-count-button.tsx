@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import type { DesignsSetting } from "./run-settings.js";
+import type { DesignsSetting } from "./run-settings-model.js";
 
 const toCountLabel = (count: number): string => {
   if (count === 1) {

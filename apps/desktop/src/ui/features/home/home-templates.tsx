@@ -243,10 +243,15 @@ const HomeTemplateGrid = ({
 }): ReactElement => {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
-    api
-      .starters()
-      .then(setStarters)
-      .catch(() => setStarters([]));
+    const load = async (): Promise<void> => {
+      try {
+        setStarters(await api.starters());
+      } catch {
+        setStarters([]);
+      }
+    };
+
+    load();
   }, []);
 
   return (

@@ -18,6 +18,12 @@ const TYPE_ICON: Record<ProjectType, IconName> = {
   vite: "code",
 };
 
+const loadThumbUrl = async (id: string, thumbnail: string): Promise<string> => {
+  const blob = await api.thumbnail(id, thumbnail);
+
+  return URL.createObjectURL(blob);
+};
+
 function useThumb(hit: ProjectHit): string | null {
   const key = hit.thumbnail ? `${hit.id}/${hit.thumbnail}` : null;
 
@@ -35,17 +41,23 @@ function useThumb(hit: ProjectHit): string | null {
     let pending = cache.get(key);
 
     if (!pending) {
-      pending = api
-        .thumbnail(hit.id, hit.thumbnail)
-        .then((blob) => URL.createObjectURL(blob));
-      pending.catch(() => cache.delete(key));
+      pending = loadThumbUrl(hit.id, hit.thumbnail);
       cache.set(key, pending);
     }
 
-    pending.then(
-      (next) => live && setUrl({ key, url: next }),
-      () => null
-    );
+    const apply = async (): Promise<void> => {
+      try {
+        const next = await pending;
+
+        if (live) {
+          setUrl({ key, url: next });
+        }
+      } catch {
+        cache.delete(key);
+      }
+    };
+
+    apply();
 
     return (): void => {
       live = false;

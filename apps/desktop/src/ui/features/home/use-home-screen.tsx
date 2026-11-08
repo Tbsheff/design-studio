@@ -240,9 +240,13 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
       setBusy("ask");
       setFormError(null);
 
-      const asked = await api
-        .clarify(text)
-        .catch(() => ({ questions: [] as ClarifyQuestion[] }));
+      let asked: { questions: ClarifyQuestion[] } = { questions: [] };
+
+      try {
+        asked = await api.clarify(text);
+      } catch {
+        asked = { questions: [] };
+      }
 
       setBusy(null);
 

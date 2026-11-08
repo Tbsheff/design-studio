@@ -54,6 +54,26 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
+const runProjectHits = async (current: string | null): Promise<void> => {
+  try {
+    latest = await api.searchProjects("", current, ALL_LIMIT);
+
+    for (const listener of listeners) {
+      listener();
+    }
+  } catch {
+    return;
+  } finally {
+    loading = null;
+    const next = again;
+    again = undefined;
+
+    if (next !== undefined) {
+      refreshProjectHits(next);
+    }
+  }
+};
+
 const refreshProjectHits = (
   current: string | null,
   fresh = false
@@ -66,34 +86,23 @@ const refreshProjectHits = (
     return loading;
   }
 
-  loading ??= api
-    .searchProjects("", current, ALL_LIMIT)
-    .then((result) => {
-      latest = result;
-
-      for (const listener of listeners) {
-        listener();
-      }
-    })
-    .catch(() => undefined)
-    .finally(() => {
-      loading = null;
-      const next = again;
-      again = undefined;
-
-      if (next !== undefined) {
-        void refreshProjectHits(next);
-      }
-    });
+  loading ??= runProjectHits(current);
 
   return loading;
 };
 
 const noteProjectOpened = (projectId: string): void => {
-  void api
-    .markProjectOpened(projectId)
-    .catch(() => undefined)
-    .then(() => refreshProjectHits(projectId, true));
+  const mark = async (): Promise<void> => {
+    try {
+      await api.markProjectOpened(projectId);
+    } catch {
+      return;
+    } finally {
+      await refreshProjectHits(projectId, true);
+    }
+  };
+
+  mark();
 };
 
 const useProjectHits = (
@@ -128,12 +137,19 @@ const useRouteHits = (
     let live = true;
 
     const timer = globalThis.setTimeout(() => {
-      api
-        .searchProjects(text, current, 8)
-        .then(
-          (result) => live && setFound({ query: text, routes: result.routes })
-        )
-        .catch(() => undefined);
+      const search = async (): Promise<void> => {
+        try {
+          const result = await api.searchProjects(text, current, 8);
+
+          if (live) {
+            setFound({ query: text, routes: result.routes });
+          }
+        } catch {
+          return;
+        }
+      };
+
+      search();
     }, ROUTE_DELAY_MS);
 
     return (): void => {

@@ -24,10 +24,22 @@ function useFound(): FoundApps | null | "error" {
   const [found, setFound] = useState<FoundApps | null | "error">(null);
   useEffect(() => {
     let live = true;
-    projectsApi
-      .found()
-      .then((next) => live && setFound(next))
-      .catch(() => live && setFound("error"));
+
+    const load = async (): Promise<void> => {
+      try {
+        const next = await projectsApi.found();
+
+        if (live) {
+          setFound(next);
+        }
+      } catch {
+        if (live) {
+          setFound("error");
+        }
+      }
+    };
+
+    load();
 
     return (): void => {
       live = false;
@@ -110,10 +122,16 @@ const StartCards = ({
 }): ReactElement => {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
-    void api
-      .starters()
-      .then((list) => setStarters(list.slice(0, MAX_STARTERS)))
-      .catch(() => null);
+    const load = async (): Promise<void> => {
+      try {
+        const list = await api.starters();
+        setStarters(list.slice(0, MAX_STARTERS));
+      } catch {
+        setStarters([]);
+      }
+    };
+
+    load();
   }, []);
 
   return (

@@ -11,7 +11,16 @@ function useModule<Value>(
     }
 
     let live = true;
-    void load().then((loaded) => live && setMod(loaded));
+
+    const run = async (): Promise<void> => {
+      const loaded = await load();
+
+      if (live) {
+        setMod(loaded);
+      }
+    };
+
+    run();
 
     return (): void => {
       live = false;

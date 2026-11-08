@@ -12,7 +12,13 @@ function useDoctorGate() {
     }
 
     setGate({ ...gate, isChecking: true });
-    const fixed = await gate.check().catch(() => false);
+    let fixed = false;
+
+    try {
+      fixed = await gate.check();
+    } catch {
+      fixed = false;
+    }
 
     if (fixed) {
       setGate(null);

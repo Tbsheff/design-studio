@@ -426,26 +426,26 @@ const FoldersSection = ({
         <PastePath
           label="Folder to add"
           action="Add"
-          onSubmit={(path) =>
-            onAdd(path).then((saved) => {
-              if (saved) {
-                setPasting(false);
-              }
-            })
-          }
+          onSubmit={async (path) => {
+            const saved = await onAdd(path);
+
+            if (saved) {
+              setPasting(false);
+            }
+          }}
         />
       )}
       {pastingDefault && (
         <PastePath
           label="Default folder for new projects"
           action="Use as default"
-          onSubmit={(path) =>
-            onSetDefault(path).then((ok) => {
-              if (ok) {
-                setPastingDefault(false);
-              }
-            })
-          }
+          onSubmit={async (path) => {
+            const isSaved = await onSetDefault(path);
+
+            if (isSaved) {
+              setPastingDefault(false);
+            }
+          }}
         />
       )}
       {folders.length > 0 && (

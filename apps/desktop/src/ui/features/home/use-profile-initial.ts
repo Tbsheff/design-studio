@@ -10,18 +10,34 @@ function initialOf(name: string | null): string | null {
   return first ? first.toLocaleUpperCase() : null;
 }
 
+const getProfileInitial = async (): Promise<string | null> => {
+  try {
+    const result = await json<{ readonly name: string | null }>(
+      "GET",
+      "/api/profile"
+    );
+
+    return initialOf(result.name);
+  } catch {
+    return null;
+  }
+};
+
 const useProfileInitial = (): string | null => {
   const [initial, setInitial] = useState<string | null>(null);
   useEffect(() => {
-    profile ??= json<{ readonly name: string | null }>(
-      "GET",
-      "/api/profile"
-    ).then(
-      (result) => initialOf(result.name),
-      () => null
-    );
     let alive = true;
-    void profile.then((value) => alive && setInitial(value));
+
+    const apply = async (): Promise<void> => {
+      profile ??= getProfileInitial();
+      const value = await profile;
+
+      if (alive) {
+        setInitial(value);
+      }
+    };
+
+    apply();
 
     return (): void => {
       alive = false;

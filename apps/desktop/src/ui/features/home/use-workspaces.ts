@@ -53,14 +53,29 @@ const useWorkspaces = (onError: (message: string | null) => void) => {
   const [workspaces, setWorkspaces] = useState<WorkspaceList | null>(null);
 
   useEffect(() => {
-    api
-      .listWorkspaces()
-      .then(setWorkspaces)
-      .catch((error) =>
-        onError(
-          `Could not load your folders: ${errorText(error)}. Reload to try again.`
-        )
-      );
+    let live = true;
+
+    const load = async (): Promise<void> => {
+      try {
+        const list = await api.listWorkspaces();
+
+        if (live) {
+          setWorkspaces(list);
+        }
+      } catch (error: unknown) {
+        if (live) {
+          onError(
+            `Could not load your folders: ${errorText(error)}. Reload to try again.`
+          );
+        }
+      }
+    };
+
+    load();
+
+    return (): void => {
+      live = false;
+    };
   }, [onError]);
 
   const update = (change: Folders): void =>

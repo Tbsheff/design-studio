@@ -2,9 +2,9 @@ import { lazy } from "react";
 
 const clarifyChunk = import("../chat/clarify-form.js");
 
-const ClarifyForm = lazy(() =>
-  clarifyChunk.then((entry) => ({ default: entry.ClarifyForm }))
-);
+const ClarifyForm = lazy(async () => ({
+  default: (await clarifyChunk).ClarifyForm,
+}));
 
 const libraryChunk = import("./home-library.js");
 
@@ -16,21 +16,19 @@ const HomeTrash = lazy(loadTrash);
 
 const loadPops = () => import("./home-popovers.js");
 
-const PlusMenu = lazy(() =>
-  loadPops().then((entryArg) => ({ default: entryArg.PlusMenu }))
-);
+const PlusMenu = lazy(async () => ({ default: (await loadPops()).PlusMenu }));
 
-const PackPopover = lazy(() =>
-  loadPops().then((entryNext) => ({ default: entryNext.PackPopover }))
-);
+const PackPopover = lazy(async () => ({
+  default: (await loadPops()).PackPopover,
+}));
 
-const ModelPopover = lazy(() =>
-  loadPops().then((entryOther) => ({ default: entryOther.ModelPopover }))
-);
+const ModelPopover = lazy(async () => ({
+  default: (await loadPops()).ModelPopover,
+}));
 
-const LevelPopover = lazy(() =>
-  loadPops().then((entryExtra) => ({ default: entryExtra.LevelPopover }))
-);
+const LevelPopover = lazy(async () => ({
+  default: (await loadPops()).LevelPopover,
+}));
 
 const loadTemplates = () => import("./home-templates.js");
 
@@ -38,13 +36,11 @@ const loadExtras = () => import("./home-extras.js");
 
 const loadAppMenu = () => import("./home-app-menu.js");
 
-const AppMenu = lazy(() =>
-  loadAppMenu().then((entryLast) => ({ default: entryLast.AppMenu }))
-);
+const AppMenu = lazy(async () => ({ default: (await loadAppMenu()).AppMenu }));
 
-const FolderPathPop = lazy(() =>
-  loadAppMenu().then((m) => ({ default: m.FolderPathPop }))
-);
+const FolderPathPop = lazy(async () => ({
+  default: (await loadAppMenu()).FolderPathPop,
+}));
 
 const HomeDoctor = lazy(() => import("./home-doctor.js"));
 

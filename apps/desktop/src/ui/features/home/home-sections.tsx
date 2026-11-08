@@ -15,15 +15,30 @@ const useOnboarding = (): {
 } => {
   const [show, setShow] = useState(false);
   useEffect(() => {
-    api
-      .onboarding()
-      .then((state) => setShow(!state.dismissed))
-      .catch(() => setShow(false));
+    const load = async (): Promise<void> => {
+      try {
+        const state = await api.onboarding();
+        setShow(!state.dismissed);
+      } catch {
+        setShow(false);
+      }
+    };
+
+    load();
   }, []);
 
   const dismiss = (): void => {
     setShow(false);
-    void api.dismissOnboarding().catch(() => null);
+
+    const send = async (): Promise<void> => {
+      try {
+        await api.dismissOnboarding();
+      } catch {
+        setShow(false);
+      }
+    };
+
+    send();
   };
 
   return { dismiss, shouldShow: show };
@@ -134,13 +149,16 @@ const useProjectActions = ({
     try {
       const trashed = await projectsApi.trash(project);
 
-      const undo = (): Promise<void> =>
-        projectsApi.restore(trashed.trashId).catch((error: unknown) =>
+      const undo = async (): Promise<void> => {
+        try {
+          await projectsApi.restore(trashed.trashId);
+        } catch (error: unknown) {
           showToast({
             text: `Could not restore: ${errorText(error)}`,
             hasError: true,
-          })
-        );
+          });
+        }
+      };
 
       showToast({
         action: { label: "Undo", run: undo },
@@ -172,20 +190,24 @@ const useProjectActions = ({
   },
   onOpen,
   onRename: async (project, name) => {
-    await projectsApi.rename(project, name).catch((error: unknown) =>
+    try {
+      await projectsApi.rename(project, name);
+    } catch (error: unknown) {
       showToast({
         text: `Could not rename: ${errorText(error)}`,
         hasError: true,
-      })
-    );
+      });
+    }
   },
-  onReveal: (project) => {
-    void projectsApi.reveal(project).catch((error: unknown) =>
+  onReveal: async (project) => {
+    try {
+      await projectsApi.reveal(project);
+    } catch (error: unknown) {
       showToast({
         text: `Could not show the folder: ${errorText(error)}`,
         hasError: true,
-      })
-    );
+      });
+    }
   },
 });
 

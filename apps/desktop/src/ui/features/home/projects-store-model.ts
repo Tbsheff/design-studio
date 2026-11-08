@@ -19,14 +19,19 @@ function emit(next: ProjectsState): void {
   listeners.forEach((listener) => listener());
 }
 
+const fetchProjects = async (): Promise<void> => {
+  try {
+    const projects = await api.listProjects();
+    emit({ error: null, projects });
+  } catch (error: unknown) {
+    emit({ ...state, error: errorText(error) });
+  } finally {
+    inflight = null;
+  }
+};
+
 function load(): Promise<void> {
-  inflight ??= api
-    .listProjects()
-    .then((projects) => emit({ error: null, projects }))
-    .catch((error: unknown) => emit({ ...state, error: errorText(error) }))
-    .finally(() => {
-      inflight = null;
-    });
+  inflight ??= fetchProjects();
 
   return inflight;
 }
@@ -147,10 +152,22 @@ const useAppHealth = (projects: Project[] | null): Map<string, AppHealth> => {
     }
 
     let live = true;
-    projectsApi
-      .health()
-      .then((next) => live && setHealth(next))
-      .catch(() => null);
+
+    const refresh = async (): Promise<void> => {
+      try {
+        const next = await projectsApi.health();
+
+        if (live) {
+          setHealth(next);
+        }
+      } catch {
+        if (live) {
+          setHealth((previous) => previous);
+        }
+      }
+    };
+
+    refresh();
 
     return (): void => {
       live = false;

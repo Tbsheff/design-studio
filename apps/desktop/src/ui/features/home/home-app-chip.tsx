@@ -146,26 +146,29 @@ const useAppChip = () => {
     setChip((current) =>
       current ? { ...current, checking: true, error: null } : current
     );
-    api
-      .inspectFolder(path, appDir ?? undefined)
-      .then(
-        (inspection) =>
-          live &&
+    const inspect = async (): Promise<void> => {
+      try {
+        const inspection = await api.inspectFolder(path, appDir ?? undefined);
+
+        if (live) {
           setChip((current) =>
             current?.path === path
               ? { ...current, checking: false, inspection }
               : current
-          )
-      )
-      .catch(
-        (error: unknown) =>
-          live &&
+          );
+        }
+      } catch (error: unknown) {
+        if (live) {
           setChip((current) =>
             current?.path === path
               ? { ...current, checking: false, error: errorText(error) }
               : current
-          )
-      );
+          );
+        }
+      }
+    };
+
+    inspect();
 
     return (): void => {
       live = false;

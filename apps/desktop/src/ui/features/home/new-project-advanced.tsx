@@ -7,9 +7,9 @@ import { copy } from "./copy.js";
 
 const loadFields = () => import("../../app/shell/settings-fields.js");
 
-const SettingsFields = lazy(() =>
-  loadFields().then((entry) => ({ default: entry.SettingsFields }))
-);
+const SettingsFields = lazy(async () => ({
+  default: (await loadFields()).SettingsFields,
+}));
 
 interface Props {
   readonly draft: SettingsDraft;
@@ -31,10 +31,15 @@ const NewProjectAdvanced = (props: Props): ReactElement => {
       return;
     }
 
-    file
-      .text()
-      .then(props.onDesignMd)
-      .catch(() => props.onError(`Could not read ${file.name}.`));
+    const read = async (): Promise<void> => {
+      try {
+        props.onDesignMd(await file.text());
+      } catch {
+        props.onError(`Could not read ${file.name}.`);
+      }
+    };
+
+    read();
   };
 
   return (

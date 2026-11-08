@@ -27,10 +27,15 @@ const StarterGallery = ({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    api
-      .starters()
-      .then(setStarters)
-      .catch(() => setStarters([]));
+    const load = async (): Promise<void> => {
+      try {
+        setStarters(await api.starters());
+      } catch {
+        setStarters([]);
+      }
+    };
+
+    load();
   }, []);
 
   if (starters !== null && starters.length === 0) {

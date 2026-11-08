@@ -30,14 +30,16 @@ const HiddenProjectsNote = ({
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = (): Promise<void> =>
-    api
-      .hiddenProjects()
-      .then(setHidden)
-      .catch(() => setHidden(null));
+  const load = async (): Promise<void> => {
+    try {
+      setHidden(await api.hiddenProjects());
+    } catch {
+      setHidden(null);
+    }
+  };
 
   useEffect(() => {
-    void load();
+    load();
   }, []);
 
   if (!hidden || hidden.count === 0) {

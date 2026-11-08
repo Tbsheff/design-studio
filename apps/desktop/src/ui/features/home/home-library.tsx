@@ -89,8 +89,11 @@ function useLastRun(project: Project): LastRun | null {
   const [last, setLast] = useState<LastRun | null>(null);
   useEffect(() => {
     let live = true;
-    listRecentRuns(project.id, 5)
-      .then((items) => {
+
+    const load = async (): Promise<void> => {
+      try {
+        const items = await listRecentRuns(project.id, 5);
+
         const run = [...items].sort(
           (first, second) => second.startedAt - first.startedAt
         )[0];
@@ -102,8 +105,14 @@ function useLastRun(project: Project): LastRun | null {
             route: run.request.canvas?.path ?? null,
           });
         }
-      })
-      .catch(() => null);
+      } catch {
+        if (live) {
+          setLast((previous) => previous);
+        }
+      }
+    };
+
+    load();
 
     return (): void => {
       live = false;

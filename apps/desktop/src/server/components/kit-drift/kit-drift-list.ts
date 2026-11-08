@@ -40,10 +40,20 @@ const toOffset = (cursor: string | null): number => {
   return 0;
 };
 
+const toRank = (located: Located): number => {
+  if (located.match.confidence === "high") {
+    return 0;
+  }
+
+  return 1;
+};
+
 const listLocated = (files: readonly FileDrift[]): Located[] =>
-  files.flatMap((entry) =>
-    entry.matches.map((match) => ({ absolute: entry.absolute, match }))
-  );
+  files
+    .flatMap((entry) =>
+      entry.matches.map((match) => ({ absolute: entry.absolute, match }))
+    )
+    .toSorted((left, right) => toRank(left) - toRank(right));
 
 const toItem = (located: Located, importPath: string): KitDrift => {
   const { match } = located;

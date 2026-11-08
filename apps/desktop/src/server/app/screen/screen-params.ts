@@ -1,17 +1,17 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
+
+import { toDecoder } from "../../platform/decode/index.js";
 
 const FLOW_FILE = "flow.json";
 
-const FlowFileSchema = Schema.fromJsonString(
-  Schema.Struct({
-    params: Schema.Record(Schema.String, Schema.String),
-  })
-);
+const FlowSchema = Schema.Struct({
+  params: Schema.Record(Schema.String, Schema.String),
+});
 
-const decodeFlowFile = Schema.decodeUnknownOption(FlowFileSchema);
+const toFlowFile = toDecoder(Schema.fromJsonString(FlowSchema), "ignore");
 
 const getFlowText = async (projectDir: string): Promise<string | null> => {
   try {
@@ -30,13 +30,13 @@ const getSavedParams = async (
     return {};
   }
 
-  const decoded = decodeFlowFile(text);
+  const decoded = toFlowFile(text);
 
-  if (decoded._tag === "None") {
+  if (Result.isFailure(decoded)) {
     return {};
   }
 
-  return decoded.value.params;
+  return decoded.success.params;
 };
 
 export { getSavedParams };

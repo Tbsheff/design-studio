@@ -9,7 +9,7 @@ import { AppServerStatusSchema } from "./schema.js";
 
 const startDevServer = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "run-control" },
   confirm: "none",
   description:
     "Start the dev server of an attached app. The server starts in the background. Read its status with devserver.get.",
@@ -22,7 +22,7 @@ const startDevServer = defineAction({
     }),
   }),
   invalidates: ["dev-server.get"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { off: "run-control" },
   needs: "project.update",
   output: AppServerStatusSchema,
   scope: "project",

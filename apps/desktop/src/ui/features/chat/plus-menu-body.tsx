@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 
 import { MODES } from "./composer-menu-model.js";
 import type { PlusMenuProps } from "./composer-menu-model.js";
+import { copy } from "./copy.js";
 import { DesignCounts } from "./design-counts.js";
 import { MenuItem } from "./menu-item.js";
 import { MenuSection } from "./menu-section.js";
@@ -26,6 +27,16 @@ const PlusMenuBody = ({
           icon="paperclip"
           label="Attach image"
           onPick={onAct(menuProps.onAttach)}
+        />
+        <MenuItem
+          icon="folder"
+          label={copy.attachFolder}
+          onPick={onAct(menuProps.onAttachFolder)}
+        />
+        <MenuItem
+          icon="file"
+          label={copy.attachZipOrFile}
+          onPick={onAct(menuProps.onAttachZip)}
         />
         <MenuItem
           icon="file"

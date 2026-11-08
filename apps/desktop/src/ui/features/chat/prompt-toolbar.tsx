@@ -12,6 +12,7 @@ import { ModelPill } from "./model-pill.js";
 import { PlusMenu } from "./plus-menu.js";
 import type { SendProps } from "./prompt-box-model.js";
 import { ReasonText } from "./reason-text.js";
+import { ReferenceFileInput } from "./reference-file-input.js";
 import { SendButton } from "./send-button.js";
 
 const TOOLBAR_CLASS = cn(
@@ -37,6 +38,8 @@ interface PromptToolbarProps {
   readonly onCloseSlash: () => void;
   readonly onEffort: (effort: RunEffort | null) => void;
   readonly onFiles: (files: File[]) => void;
+  readonly onReferenceFiles: (files: File[]) => void;
+  readonly onReferenceFolder: () => Promise<void>;
   readonly onMention: () => void;
   readonly onMode: (mode: ComposerMode) => void;
   readonly onOpenSkills: () => void;
@@ -49,6 +52,10 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { designs, mode, onMode, send } = props;
   const attach = useCallback((): void => inputRef.current?.click(), []);
+
+  const referenceRef = useRef<HTMLInputElement>(null);
+  const attachZip = useCallback((): void => referenceRef.current?.click(), []);
+  const { onReferenceFiles, onReferenceFolder } = props;
 
   const resetMode = useCallback((): void => onMode("edit"), [onMode]);
 
@@ -80,6 +87,8 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
     <div data-slot="composer-toolbar" className={TOOLBAR_CLASS}>
       <PlusMenu
         onAttach={attach}
+        onAttachFolder={onReferenceFolder}
+        onAttachZip={attachZip}
         onMention={props.onMention}
         onSkills={props.onOpenSkills}
         onOpen={props.onCloseSlash}
@@ -97,6 +106,7 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
         hidden
         onChange={pickFiles}
       />
+      <ReferenceFileInput inputRef={referenceRef} onFiles={onReferenceFiles} />
       <div data-slot="composer-toolbar-spacer" className={SPACER_CLASS}>
         <LevelPill
           level={props.level}

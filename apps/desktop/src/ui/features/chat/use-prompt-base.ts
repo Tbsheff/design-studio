@@ -3,12 +3,15 @@ import { useId, useRef, useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import type { PendingAttachment } from "../../domain/pending-attachment.js";
+import { toDroppedFiles } from "../../domain/reference-files.js";
 import { useDraft } from "../../platform/storage.js";
 import { useComposerFocus } from "./composer-focus.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import type { PromptBoxProps } from "./prompt-box-props.js";
 import { useModelChoice } from "./use-model-choice.js";
 import { FILE_RULES, usePromptFiles } from "./use-prompt-files.js";
+import { usePromptReferences } from "./use-prompt-references.js";
+import type { PromptReferences } from "./use-prompt-references.js";
 import { useRunLevel } from "./use-run-level.js";
 import type { RunLevelState } from "./use-run-level.js";
 
@@ -23,6 +26,7 @@ interface PromptBase {
   readonly mode: ComposerMode;
   readonly promptRef: RefObject<HTMLDivElement | null>;
   readonly reasonId: string;
+  readonly references: PromptReferences;
   readonly removeFile: (localId: string) => void;
   readonly runLevel: RunLevelState;
   readonly setDraft: (value: string) => void;
@@ -61,11 +65,22 @@ const usePromptBase = (props: PromptBoxProps): PromptBase => {
     setError
   );
 
-  const { addFiles, files, removeFile, setFiles, uploading } = usePromptFiles(
-    props.projectId,
-    setError,
-    FILE_RULES
-  );
+  const {
+    addFiles: addImageFiles,
+    files,
+    removeFile,
+    setFiles,
+    uploading,
+  } = usePromptFiles(props.projectId, setError, FILE_RULES);
+
+  const references = usePromptReferences(props.projectId, setError);
+  const { addReferenceFiles } = references;
+
+  const addFiles = (list: Iterable<File>): void => {
+    const dropped = toDroppedFiles(list);
+    addImageFiles([...dropped.images, ...dropped.others]);
+    addReferenceFiles(dropped.references);
+  };
 
   useComposerFocus(props.running, !props.disabled);
 
@@ -80,6 +95,7 @@ const usePromptBase = (props: PromptBoxProps): PromptBase => {
     mode,
     promptRef,
     reasonId,
+    references,
     removeFile,
     runLevel,
     setDraft,

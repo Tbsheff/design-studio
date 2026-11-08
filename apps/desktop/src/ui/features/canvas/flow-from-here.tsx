@@ -49,6 +49,7 @@ const FlowFromHere = ({
         depth: 1,
         from: frameId,
       });
+
       setNote(doneText(result));
     } catch (error: unknown) {
       setNote(errorText(error));

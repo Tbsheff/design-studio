@@ -52,6 +52,7 @@ const framePage = (path: string | undefined): string => {
   if (clean === "" || /\.html?$/i.test(clean)) {
     return clean.replace(/^.*\//, "").replace(/\.html?$/i, "") || "index";
   }
+
   return `/${clean}`;
 };
 

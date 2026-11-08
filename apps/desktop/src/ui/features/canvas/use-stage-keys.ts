@@ -160,6 +160,7 @@ const useLayoutKeyFallback = (o: {
           forwardLayoutKeyWhenShown();
         }
       };
+
       void forwardWhenOpened();
 
       return true;

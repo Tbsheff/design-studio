@@ -58,6 +58,7 @@ const useShellState = (
         commentRef.current.setOn(false);
       }
     };
+
     void openPane();
   }, [comment.on]);
   const prevPane = useRef(pane);

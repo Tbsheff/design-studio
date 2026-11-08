@@ -28,6 +28,7 @@ const fetchLofiCss = async (): Promise<string> => {
         import.meta.url
       ).href
     );
+
     const buffer = await blob.arrayBuffer();
 
     return lofiCss(
@@ -135,6 +136,7 @@ const useLofiFrames = (
         postToFrame(frame, { css, type: "lofi-preview" });
       }
     };
+
     void sendCss();
   };
 

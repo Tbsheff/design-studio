@@ -92,6 +92,7 @@ const MenuBody = ({
       />
     );
   }
+
   if (menu.panel === "mock") {
     return (
       <MockForm
@@ -103,6 +104,7 @@ const MenuBody = ({
       />
     );
   }
+
   return (
     <div role="menu" aria-label={copy.frameState} onKeyDown={menuKeys}>
       <StateRows
@@ -155,6 +157,7 @@ const FrameStateMenu = ({
   if (!states) {
     return null;
   }
+
   const chosen = frameStateOf(states.view, frameId);
   const def = states.view.states.find((state) => state.id === chosen);
   const set = chosen !== "default";

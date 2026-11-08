@@ -49,6 +49,7 @@ const useDirectionUrls = (
     asked.current = new Set();
     setUrls({});
   }, [projectId]);
+
   const fetchUrl = useCallback(
     async (id: string): Promise<void> => {
       try {
@@ -60,6 +61,7 @@ const useDirectionUrls = (
     },
     [projectId]
   );
+
   useEffect(() => {
     for (const id of key ? key.split(",") : []) {
       if (asked.current.has(id)) {

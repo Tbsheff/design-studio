@@ -45,6 +45,7 @@ const menuKeys = (event: ReactKeyboardEvent<HTMLElement>): void => {
   if (next === null || items.length === 0) {
     return;
   }
+
   event.preventDefault();
   items[(next + items.length) % items.length]?.focus();
 };

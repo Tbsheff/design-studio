@@ -111,6 +111,7 @@ const scaleOf = (element: Element): number => {
   if (!overlay || overlay.offsetWidth === 0) {
     return 1;
   }
+
   return overlay.getBoundingClientRect().width / overlay.offsetWidth;
 };
 
@@ -147,6 +148,7 @@ const requestNeighbors = (d: Drag, o: Options): void => {
   if (!o.listen) {
     return;
   }
+
   neighborSeq += 1;
   const requestId = `nb-${neighborSeq}`;
 
@@ -154,6 +156,7 @@ const requestNeighbors = (d: Drag, o: Options): void => {
     if (message.type !== "neighbors" || message.requestId !== requestId) {
       return;
     }
+
     d.candidates = message.parent
       ? [message.parent, ...message.siblings]
       : message.siblings;
@@ -172,6 +175,7 @@ const snapSize = (
   if (off || d.candidates.length === 0) {
     return { guides: [], size: next };
   }
+
   const r = d.target.rect;
 
   const box = {
@@ -203,9 +207,11 @@ const axisStyle = (d: Drag, size: Size): Record<string, string> => {
   if (d.axes.has("width")) {
     style.width = `${size.w}px`;
   }
+
   if (d.axes.has("height")) {
     style.height = `${size.h}px`;
   }
+
   return style;
 };
 
@@ -215,9 +221,11 @@ const styleFor = (size: Size, base: Size): Record<string, string> => {
   if (size.w !== base.w) {
     style.width = `${size.w}px`;
   }
+
   if (size.h !== base.h) {
     style.height = `${size.h}px`;
   }
+
   return style;
 };
 
@@ -247,9 +255,11 @@ const useResizeHandles = (o: Options): ResizeHandles => {
     if (d.edge !== "s" || keepRatio) {
       d.axes.add("width");
     }
+
     if (d.edge !== "e" || keepRatio) {
       d.axes.add("height");
     }
+
     setSize({
       base: d.base,
       guides: d.guides,
@@ -283,6 +293,7 @@ const useResizeHandles = (o: Options): ResizeHandles => {
     if (!d) {
       return;
     }
+
     live.current.post({
       selector: d.target.selector,
       style: axisStyle(d, d.base),
@@ -299,6 +310,7 @@ const useResizeHandles = (o: Options): ResizeHandles => {
     if (!req || !cur.directionId) {
       return;
     }
+
     const { selector } = d.target;
     cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
 
@@ -317,6 +329,7 @@ const useResizeHandles = (o: Options): ResizeHandles => {
         height: d.target.styles.height ?? "",
         width: d.target.styles.width ?? "",
       };
+
       optimistic.failed(errorText(error));
       live.current.setSelection((prev) =>
         mergeCommit(prev, { selector, style: back })
@@ -332,6 +345,7 @@ const useResizeHandles = (o: Options): ResizeHandles => {
       if (e.button !== 0 || !sel) {
         return;
       }
+
       e.preventDefault();
       e.stopPropagation();
       const handle = e.currentTarget;
@@ -367,6 +381,7 @@ const useResizeHandles = (o: Options): ResizeHandles => {
         if (ev.pointerId !== d.pointerId || drag.current !== d) {
           return;
         }
+
         const raw = resizedSize(
           d.edge,
           d.base,
@@ -391,11 +406,13 @@ const useResizeHandles = (o: Options): ResizeHandles => {
         if (ev.pointerId !== d.pointerId) {
           return;
         }
+
         detach();
 
         if (drag.current !== d) {
           return;
         }
+
         const changed = d.size.w !== d.base.w || d.size.h !== d.base.h;
         end(changed);
 
@@ -413,6 +430,7 @@ const useResizeHandles = (o: Options): ResizeHandles => {
         if (ev.key !== "Escape") {
           return;
         }
+
         ev.preventDefault();
         ev.stopPropagation();
         onCancel();

@@ -60,6 +60,7 @@ const usePreviewUrl = (
         );
       }
     };
+
     void fetchBase();
 
     return (): void => {

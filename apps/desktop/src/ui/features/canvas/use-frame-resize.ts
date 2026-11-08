@@ -81,6 +81,7 @@ const resizedSize = (
     } else {
       width = height * ratio;
     }
+
     const scale = Math.max(1, RESIZE_MIN / width, RESIZE_MIN / height);
     width *= scale;
     height *= scale;
@@ -145,6 +146,7 @@ const paintSize = (
   if (readout) {
     readout.textContent = size ? `${size.width} × ${size.height}` : "";
   }
+
   host.classList.toggle("frame-resizing", size !== null);
 };
 
@@ -160,6 +162,7 @@ const useFrameResize = (
     if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld || dragging.current) {
       return;
     }
+
     e.preventDefault();
     e.stopPropagation();
 
@@ -171,6 +174,7 @@ const useFrameResize = (
     if (!host) {
       return;
     }
+
     pz.freeze();
     const target = e.currentTarget as HTMLElement;
     target.setPointerCapture(e.pointerId);
@@ -218,6 +222,7 @@ const useFrameResize = (
       if (ev.key !== "Shift") {
         return;
       }
+
       shift = ev.type === "keydown";
       place();
     };
@@ -236,6 +241,7 @@ const useFrameResize = (
       if (size.width === start.width && size.height === start.height) {
         return;
       }
+
       frames.update((l) => resizeFrame(l, frame.id, size.width, size.height));
 
       if (frame.id === frames.layout.activeId) {

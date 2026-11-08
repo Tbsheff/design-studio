@@ -110,6 +110,7 @@ const useFileMenu = (p: ChromeProps, onImport: () => void) => {
       api.workTreeFiles(p.projectId, p.directionId),
       { files: [] as string[] }
     );
+
     setPages(files.filter((f) => f.endsWith(".html")).sort());
   };
 

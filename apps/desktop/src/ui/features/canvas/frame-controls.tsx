@@ -55,6 +55,7 @@ const FramePageMenu = ({
     }
 
     let alive = true;
+
     const fill = async (): Promise<void> => {
       const list = await toValueOr(load(), []);
 
@@ -62,6 +63,7 @@ const FramePageMenu = ({
         setPages(list);
       }
     };
+
     void fill();
 
     return (): void => {

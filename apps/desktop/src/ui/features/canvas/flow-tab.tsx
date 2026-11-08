@@ -32,6 +32,7 @@ const useRoutesAndParams = (projectId: string) => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
   const [params, setParams] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+
   const loadRoutes = useCallback(async (): Promise<void> => {
     try {
       const result = await api.appRoutes(projectId);
@@ -40,6 +41,7 @@ const useRoutesAndParams = (projectId: string) => {
       setError(errorText(failure));
     }
   }, [projectId]);
+
   const loadParams = useCallback(async (): Promise<void> => {
     const result = await toValueOr(api.flowParams(projectId), null);
 
@@ -47,6 +49,7 @@ const useRoutesAndParams = (projectId: string) => {
       setParams(result.params);
     }
   }, [projectId]);
+
   useEffect(() => {
     void loadRoutes();
     void loadParams();

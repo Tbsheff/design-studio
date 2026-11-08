@@ -38,15 +38,18 @@ const addRouteFrame = (
       ),
     };
   }
+
   if (!canAddFrame(layout)) {
     return layout;
   }
+
   const added = addFrame(layout, size);
   const frame = added.frames.at(-1);
 
   if (!frame) {
     return layout;
   }
+
   const withPath = setFramePath(added, frame.id, path);
   const label = cleanFrameLabel(routeLabel(route));
 
@@ -74,6 +77,7 @@ const appRoutePages = (
   if (!app) {
     return null;
   }
+
   return async () => {
     const { routes } = await api.appRoutes(projectId);
 
@@ -112,10 +116,12 @@ const useRedirectNote = (
     if (!enabled) {
       return undefined;
     }
+
     return listen((message) => {
       if (message.type !== "ready") {
         return;
       }
+
       if (!message.redirectedFrom) {
         setNote(null);
 

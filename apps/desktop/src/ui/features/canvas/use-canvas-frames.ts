@@ -49,6 +49,7 @@ const unionRect = (selection: SelectionContext[]): Box | null => {
   if (selection.length === 0) {
     return null;
   }
+
   const left = Math.min(...selection.map((s) => s.rect.x));
   const top = Math.min(...selection.map((s) => s.rect.y));
   const right = Math.max(...selection.map((s) => s.rect.x + s.rect.width));
@@ -65,9 +66,11 @@ const passiveSrc = (
   if (!baseUrl) {
     return null;
   }
+
   if (kind !== "html" || !change) {
     return baseUrl;
   }
+
   const url = new URL(baseUrl, globalThis.location.href);
   url.searchParams.set("v", String(change.changedAt));
 
@@ -102,6 +105,7 @@ const useCanvasFrames = (
       ) {
         uiStore.set({ viewport: viewportOf(active) });
       }
+
       return;
     }
 
@@ -113,17 +117,20 @@ const useCanvasFrames = (
     if (!directionId) {
       return;
     }
+
     const current = canvasStore.get(projectId) ?? defaultLayout(viewport);
     const bound = activeFrame(current).directionId;
 
     if (bound && knownIds && !knownIds.includes(bound)) {
       return;
     }
+
     const next = followDirection(current, directionId);
 
     if (next === current) {
       return;
     }
+
     canvasStore.set(projectId, next);
     const a = activeFrame(next);
 
@@ -136,6 +143,7 @@ const useCanvasFrames = (
     if (frame.id === layout.activeId) {
       return;
     }
+
     update((l) => ({ ...l, activeId: frame.id }));
     uiStore.set({ viewport: viewportOf(frame) });
 
@@ -169,6 +177,7 @@ const useZoomInput = (
       ) {
         return;
       }
+
       lastZoom.current = { at: now, key, source: from };
       apply(key);
     },
@@ -179,6 +188,7 @@ const useZoomInput = (
     if (command.type !== "zoom") {
       return false;
     }
+
     zoomBy(command.key, "menu");
 
     return true;
@@ -190,6 +200,7 @@ const useZoomInput = (
       if (!key || blocksZoomKey(e)) {
         return;
       }
+
       e.preventDefault();
       zoomBy(key, "key");
     };
@@ -258,6 +269,7 @@ const placeDrag = (
     if (artboard) {
       artboard.style.translate = clear ? "" : `${dx}px ${dy}px`;
     }
+
     for (const el of state.passive) {
       el.style.translate = clear ? "" : `${-wx}px ${-wy}px`;
     }
@@ -334,6 +346,7 @@ const useFrameActions = (
     if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld) {
       return;
     }
+
     e.preventDefault();
     e.stopPropagation();
     const target = e.currentTarget as HTMLElement;
@@ -363,9 +376,11 @@ const useFrameActions = (
       if (!moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) {
         return;
       }
+
       if (!moved) {
         document.body.classList.add("frame-dragging");
       }
+
       moved = true;
       world = snapMove(
         state,
@@ -396,6 +411,7 @@ const useFrameActions = (
         if (point) {
           clickThrough?.(point);
         }
+
         return;
       }
 
@@ -426,6 +442,7 @@ const useFrameActions = (
     ) {
       return onFramePointerDown(e, frame);
     }
+
     e.preventDefault();
     e.stopPropagation();
     lastTitle.current = null;

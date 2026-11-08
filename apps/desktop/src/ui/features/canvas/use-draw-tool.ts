@@ -37,11 +37,13 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
     if (next && !live.current.available) {
       return;
     }
+
     if (next) {
       live.current.onActivate();
     } else {
       setStrokes([]);
     }
+
     setOnState(next);
   }, []);
 
@@ -77,6 +79,7 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
         if (hasText(event.target)) {
           return;
         }
+
         event.preventDefault();
         event.stopPropagation();
         undo();
@@ -87,6 +90,7 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
       if (isTypingTarget(event.target) || mod || event.altKey) {
         return;
       }
+
       const key = event.key.toLowerCase();
 
       if (key === "p" && !event.shiftKey && live.current.available) {
@@ -108,6 +112,7 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
     if (!live.current.on || command.type !== "undo") {
       return false;
     }
+
     undo();
 
     return true;

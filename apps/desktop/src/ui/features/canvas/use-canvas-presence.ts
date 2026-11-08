@@ -98,6 +98,7 @@ const useCanvasPresence = (o: PresenceInput): void => {
   useEffect(() => {
     let stop: (() => void) | null = null;
     let gone = false;
+
     const startLive = async (): Promise<void> => {
       const mod = await import("../share-publish-ship-export/share-live.js");
 
@@ -105,6 +106,7 @@ const useCanvasPresence = (o: PresenceInput): void => {
         stop = mod.startShareLive(o.projectId, () => latest.current.stage());
       }
     };
+
     void startLive();
 
     return (): void => {

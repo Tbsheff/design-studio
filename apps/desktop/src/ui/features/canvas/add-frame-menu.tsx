@@ -19,6 +19,7 @@ const AddFrameMenu = ({
     if (!open) {
       return;
     }
+
     menu.current
       ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
       ?.focus();
@@ -78,6 +79,7 @@ const AddFrameMenu = ({
     if (next === null) {
       return;
     }
+
     event.preventDefault();
     items[(next + items.length) % items.length]?.focus();
   };
@@ -141,6 +143,7 @@ const FrameUndoBar = ({
     if (!onUndo) {
       return;
     }
+
     const timer = window.setTimeout(onDismiss, 8000);
 
     return (): void => window.clearTimeout(timer);
@@ -149,6 +152,7 @@ const FrameUndoBar = ({
   if (!onUndo) {
     return null;
   }
+
   return (
     <div className="frame-undo" role="status">
       <span>Frame removed.</span>

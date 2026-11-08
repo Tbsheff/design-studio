@@ -23,6 +23,7 @@ const resetPassiveMountGate = (): void => {
   if (paintListening || typeof window === "undefined") {
     return;
   }
+
   paintListening = true;
   globalThis.addEventListener(PREVIEW_PAINTED_EVENT, () => {
     frontPainted = true;
@@ -37,6 +38,7 @@ const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
     if (armed || !el) {
       return;
     }
+
     let front = frontPainted;
     let seen = false;
 
@@ -60,6 +62,7 @@ const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
         if (!entries.some((e) => e.isIntersecting)) {
           return;
         }
+
         seen = true;
         tryArm();
       },
@@ -190,8 +193,10 @@ const StablePassiveFrame = memo(
     entries: RefObject<Map<string, PassiveEntry>>;
   }) => {
     const cur = entries.current.get(id);
+
     if (!cur) return null;
     const live = (): PassiveProps => entries.current.get(id) ?? cur;
+
     return (
       <PassiveFrame
         {...cur}

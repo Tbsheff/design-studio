@@ -41,6 +41,7 @@ const needsReload = (
   if (!prev || next?.state !== "ready") {
     return false;
   }
+
   return prev.state !== "ready" || prev.upstream !== next.upstream;
 };
 
@@ -69,6 +70,7 @@ const useServerFrames = (
     if (!ready || loaded) {
       return undefined;
     }
+
     const timer = window.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
 
     return (): void => window.clearTimeout(timer);
@@ -77,6 +79,7 @@ const useServerFrames = (
     if (!enabled) {
       return undefined;
     }
+
     return listen((message) => {
       if (message.type === "ready") {
         setLoaded(true);
@@ -109,6 +112,7 @@ const serverHint = (
       text: `${managed ? "The dev server is not running" : "Your dev server does not answer"}. Press ${name} at the bottom left for the fix.`,
     };
   }
+
   if (state !== "ready") {
     return {
       busy: true,
@@ -118,6 +122,7 @@ const serverHint = (
         : "Checking your dev server…",
     };
   }
+
   if (!loaded) {
     return {
       busy: true,
@@ -125,6 +130,7 @@ const serverHint = (
       text: "Loading the page. The first visit to a route can take a while.",
     };
   }
+
   return null;
 };
 
@@ -132,6 +138,7 @@ const routeHint = (layout: CanvasLayout): Hint | null => {
   if (layout.frames.some((frame) => frame.path !== undefined)) {
     return null;
   }
+
   return {
     busy: false,
     kind: "route",
@@ -143,6 +150,7 @@ const HintIcon = ({ hint }: { hint: Hint }): ReactElement => {
   if (hint.busy) {
     return <span className="spinner" aria-hidden="true" />;
   }
+
   return <Icon name={hint.kind === "route" ? "file" : "alert"} size={14} />;
 };
 
@@ -194,15 +202,18 @@ const useRouteRequests = (
     if (!isApp) {
       return;
     }
+
     const runPending = (): boolean => {
       if (!canvasStore.loaded(projectId)) {
         return false;
       }
+
       const route = takePendingRoute(projectId);
 
       if (route) {
         add.current(route);
       }
+
       return true;
     };
 

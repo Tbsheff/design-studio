@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home IDE prototype</title>
+<style>
+:root {
+  --hue: 90;
+  --bg: #faf9f5;
+  --surface: #faf9f5;
+  --surface-2: #f4f3ee;
+  --surface-raised: #ffffff;
+  --surface-hover: #efeee8;
+  --surface-active: #e7e5de;
+  --surface-inset: #f4f3ee;
+  --surface-inverse: #1c1b19;
+  --line: rgb(28 27 25 / 0.12);
+  --line-strong: rgb(28 27 25 / 0.22);
+  --text: rgb(28 27 25 / 0.94);
+  --text-2: rgb(28 27 25 / 0.72);
+  --text-3: rgb(28 27 25 / 0.66);
+  --text-faint: rgb(28 27 25 / 0.46);
+  --on-accent: oklch(0.99 0.003 var(--hue));
+
+  --accent: oklch(0.53 0.125 250);
+  --accent-hover: oklch(0.48 0.125 250);
+  --accent-soft: oklch(0.95 0.025 250);
+  --accent-line: oklch(0.8 0.07 250);
+  --accent-text: oklch(0.5 0.125 250);
+
+  --brand: #e08968;
+  --brand-hover: #d97a57;
+  --brand-press: #cc6d4b;
+  --brand-soft: rgb(224 137 104 / 0.16);
+  --on-brand: #1c1b19;
+
+  --strong: #1c1b19;
+  --strong-hover: #33322f;
+  --on-strong: #f0eee6;
+
+  --danger: oklch(0.54 0.19 25);
+  --danger-soft: oklch(0.965 0.02 25);
+  --danger-line: oklch(0.86 0.07 25);
+  --ok: oklch(0.52 0.12 152);
+  --ok-soft: oklch(0.965 0.03 152);
+  --warn: oklch(0.5 0.11 65);
+  --warn-soft: oklch(0.965 0.04 85);
+  --warn-line: oklch(0.86 0.08 80);
+  --diff-add: oklch(0.955 0.045 152);
+  --diff-add-text: oklch(0.42 0.11 152);
+  --diff-del: oklch(0.955 0.03 25);
+  --diff-del-text: oklch(0.47 0.17 25);
+
+  --stage: #f0efe9;
+  --stage-dot: rgb(28 27 25 / 0.1);
+  --stage-text: oklch(0.478 0.006 var(--hue));
+  --select: oklch(0.6 0.2 254);
+  --select-tint: oklch(0.6 0.2 254 / 0.06);
+  --measure: oklch(0.54 0.2 25);
+  --on-measure: oklch(0.99 0.006 25);
+  --on-warn: oklch(0.2 0.02 var(--hue));
+  --frame-bg: oklch(0.995 0 0);
+  --frame-skeleton: oklch(0.2 0.01 var(--hue) / 0.06);
+  --frame-skeleton-text: oklch(0.45 0.006 var(--hue));
+  --frame-shadow:
+    0 0 0 1px oklch(0.2 0.01 var(--hue) / 0.08),
+    0 2px 4px oklch(0.2 0.01 var(--hue) / 0.04),
+    0 12px 32px -8px oklch(0.2 0.01 var(--hue) / 0.16);
+  --halo: oklch(1 0 0 / 0.85);
+  --halo-solid: oklch(1 0 0);
+  --halo-soft: oklch(1 0 0 / 0.35);
+  --pin-shadow: 0 2px 6px oklch(0.2 0.02 var(--hue) / 0.3);
+  --hit-clear: oklch(0 0 0 / 0.001);
+
+  --tip-bg: oklch(0.236 0.003 var(--hue));
+  --tip-text: oklch(0.967 0.007 var(--hue));
+  --tip-line: oklch(1 0 0 / 0.06);
+  --scrim: oklch(0.2 0.01 var(--hue) / 0.32);
+  --tint-hover: rgb(28 27 25 / 0.05);
+  --tint-press: rgb(28 27 25 / 0.09);
+  --edge: rgb(28 27 25 / 0.1);
+  --edge-soft: rgb(28 27 25 / 0.06);
+  --edge-strong: rgb(28 27 25 / 0.14);
+  --float-hue: 70;
+  --float-bg: oklch(0.235 0.005 var(--float-hue));
+  --float-bg-hover: oklch(0.29 0.006 var(--float-hue));
+  --float-fg: oklch(0.96 0.004 var(--float-hue));
+  --float-fg-muted: oklch(0.96 0.004 var(--float-hue) / 0.62);
+  --float-fg-faint: oklch(0.96 0.004 var(--float-hue) / 0.42);
+  --float-line: oklch(1 0 0 / 0.08);
+  --float-line-strong: oklch(1 0 0 / 0.14);
+  --float-accent: oklch(0.62 0.16 254);
+  --float-accent-text: oklch(0.8 0.1 254);
+  --float-accent-line: oklch(0.7 0.12 254 / 0.5);
+  --float-accent-tint: oklch(0.62 0.16 254 / 0.16);
+  --float-danger: oklch(0.74 0.14 25);
+  --float-shadow:
+    inset 0 0 0 1px var(--float-line),
+    0 1px 2px oklch(0.2 0.01 var(--float-hue) / 0.2),
+    0 8px 16px -4px oklch(0.2 0.01 var(--float-hue) / 0.18),
+    0 24px 48px -12px oklch(0.2 0.01 var(--float-hue) / 0.28);
+  --pin-bg: oklch(0.3 0.006 var(--float-hue));
+  --pin-fg: oklch(0.97 0.004 var(--float-hue));
+  --pin-ring: var(--float-accent);
+  --agent-bg: oklch(0.8 0.025 70);
+  --agent-fg: oklch(0.24 0.01 70);
+  --edge-inverse: oklch(1 0 0 / 0.16);
+  --line-input: rgb(28 27 25 / 0.2);
+  --accent-press: oklch(0.92 0.04 250);
+  --accent-tint: oklch(0.53 0.125 250 / 0.12);
+  --danger-tint: oklch(0.54 0.19 25 / 0.16);
+  --btn-primary-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.1), 0 1px 2px oklch(0.2 0.01 var(--hue) / 0.2);
+  --knob-shadow:
+    0 0 0 1px oklch(0 0 0 / 0.08), 0 2px 8px -2px oklch(0 0 0 / 0.24);
+  --selection: oklch(0.53 0.125 250 / 0.2);
+
+  --s-1: 4px;
+  --s-1-5: 6px;
+  --s-2: 8px;
+  --s-2-5: 10px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --bar-h: 40px;
+  --composer-ctl: var(--s-8);
+  --pane-inset: 16px;
+
+  --t-2xs: 11px;
+  --t-xs: 12px;
+  --t-sm: 13px;
+  --t-md: 14px;
+  --t-lg: 16px;
+  --t-xl: 20px;
+  --t-2xl: 28px;
+  --t-display: 40px;
+  --lh-tight: 16px;
+  --lh-body: 20px;
+  --lh-loose: 24px;
+  --lh-2xs: 14px;
+  --lh-xs: 16px;
+  --lh-sm: 18px;
+  --lh-md: 20px;
+  --lh-lg: 24px;
+  --lh-xl: 28px;
+  --lh-2xl: 34px;
+  --lh-display: 46px;
+  --w-regular: 400;
+  --w-medium: 500;
+  --disabled-opacity: 0.45;
+  --track-display: -0.015em;
+
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-2xl: 24px;
+  --r-full: 999px;
+  --r-control: 10px;
+  --r-control-sm: 8px;
+  --r-control-xs: 6px;
+
+  --shadow-xs: 0 1px 1px oklch(0.2 0.01 var(--hue) / 0.04);
+  --shadow-sm:
+    0 0 0 1px oklch(0.2 0.01 var(--hue) / 0.06),
+    0 1px 2px oklch(0.2 0.01 var(--hue) / 0.06);
+  --shadow-md:
+    0 0 0 1px oklch(0.2 0.01 var(--hue) / 0.07),
+    0 4px 12px -2px oklch(0.2 0.01 var(--hue) / 0.1),
+    0 2px 4px oklch(0.2 0.01 var(--hue) / 0.04);
+  --shadow-lg:
+    0 0 0 1px oklch(0.2 0.01 var(--hue) / 0.08),
+    0 24px 48px -12px oklch(0.2 0.01 var(--hue) / 0.2),
+    0 8px 16px -8px oklch(0.2 0.01 var(--hue) / 0.1);
+  --shadow-pop:
+    0 0 0 1px oklch(0.2 0.01 var(--hue) / 0.08),
+    0 2px 4px oklch(0.2 0.01 var(--hue) / 0.04),
+    0 12px 28px -6px oklch(0.2 0.01 var(--hue) / 0.16);
+  --shadow-inset: inset 0 0 0 1px var(--line);
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --ring-soft: 0 0 0 3px oklch(0.53 0.125 250 / 0.22);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease: var(--ease-out);
+  --dur-exit: 100ms;
+  --dur-fast: 120ms;
+  --dur: 140ms;
+  --dur-slow: 200ms;
+  --dur-pulse: 1800ms;
+  --dur-tip-delay: 350ms;
+  --dur-reveal-delay: 300ms;
+  --dur-spin: 800ms;
+  --dur-loop: 1200ms;
+  --dur-loop-slow: 1400ms;
+  --loader-duration: var(--dur-loop-slow);
+
+  --font:
+    "Inter Variable", "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", system-ui, sans-serif;
+  --serif:
+    "Source Serif 4 Variable", "Source Serif 4", "Iowan Old Style", Georgia,
+    "Times New Roman", serif;
+  --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --text-prose: rgb(28 27 25 / 0.84);
+  --icon: rgb(28 27 25 / 0.62);
+  --info: #3f74a6;
+  --info-tint: rgb(63 116 166 / 0.12);
+  --info-tint-strong: rgb(63 116 166 / 0.18);
+  --home-shell: #f4f3ee;
+  --home-input: #ffffff;
+  --home-pill-label: rgb(28 27 25 / 0.66);
+  --home-pill-value: rgb(28 27 25 / 0.8);
+  --home-tile-on: rgb(28 27 25 / 0.07);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #1c1b19;
+  --surface: #1c1b19;
+  --surface-2: #222220;
+  --surface-raised: #2a2927;
+  --surface-hover: #31302d;
+  --surface-active: #383734;
+  --surface-inset: #222220;
+  --surface-inverse: #f0eee6;
+  --line: rgb(250 249 245 / 0.12);
+  --line-strong: rgb(250 249 245 / 0.24);
+  --text: rgb(250 249 245 / 0.92);
+  --text-2: rgb(250 249 245 / 0.64);
+  --text-3: rgb(250 249 245 / 0.6);
+  --text-faint: rgb(250 249 245 / 0.46);
+  --on-accent: #1c1b19;
+
+  --accent: #7eaeda;
+  --accent-hover: #94bde3;
+  --accent-soft: rgb(126 174 218 / 0.14);
+  --accent-line: rgb(126 174 218 / 0.4);
+  --accent-text: #7eaeda;
+
+  --brand: #e08968;
+  --brand-hover: #e89a7c;
+  --brand-press: #d27b5a;
+  --brand-soft: rgb(224 137 104 / 0.16);
+  --on-brand: #1c1b19;
+
+  --strong: #f0eee6;
+  --strong-hover: #ffffff;
+  --on-strong: #1c1b19;
+
+  --danger: oklch(0.7 0.16 25);
+  --danger-soft: oklch(0.28 0.05 25);
+  --danger-line: oklch(0.46 0.1 25);
+  --ok: oklch(0.76 0.13 152);
+  --ok-soft: oklch(0.28 0.045 152);
+  --warn: oklch(0.83 0.11 82);
+  --warn-soft: oklch(0.29 0.035 82);
+  --warn-line: oklch(0.42 0.06 82);
+  --diff-add: oklch(0.3 0.055 152);
+  --diff-add-text: oklch(0.84 0.11 152);
+  --diff-del: oklch(0.3 0.055 25);
+  --diff-del-text: oklch(0.82 0.1 25);
+
+  --stage: #222220;
+  --stage-dot: rgb(250 249 245 / 0.08);
+  --stage-text: rgb(250 249 245 / 0.64);
+  --frame-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.06), 0 2px 4px oklch(0 0 0 / 0.24),
+    0 12px 32px -8px oklch(0 0 0 / 0.5);
+
+  --tip-bg: #3a3936;
+  --tip-text: rgb(250 249 245 / 0.92);
+  --tip-line: rgb(250 249 245 / 0.08);
+  --scrim: oklch(0.1 0.003 var(--hue) / 0.6);
+  --tint-hover: rgb(250 249 245 / 0.06);
+  --tint-press: rgb(250 249 245 / 0.1);
+  --edge: rgb(250 249 245 / 0.12);
+  --edge-soft: rgb(250 249 245 / 0.06);
+  --edge-strong: rgb(250 249 245 / 0.18);
+  --line-input: rgb(250 249 245 / 0.16);
+  --accent-press: rgb(126 174 218 / 0.26);
+  --accent-tint: rgb(126 174 218 / 0.18);
+  --float-bg: #2a2927;
+  --float-bg-hover: #34332f;
+  --float-line: rgb(250 249 245 / 0.12);
+  --float-line-strong: rgb(250 249 245 / 0.2);
+  --float-shadow:
+    inset 0 0 0 1px var(--float-line), 0 1px 2px oklch(0 0 0 / 0.4),
+    0 8px 16px -4px oklch(0 0 0 / 0.4), 0 24px 48px -12px oklch(0 0 0 / 0.6);
+  --danger-tint: oklch(0.7 0.16 25 / 0.22);
+  --btn-primary-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.12), 0 1px 2px oklch(0 0 0 / 0.4);
+  --knob-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.1), 0 2px 8px -2px oklch(0 0 0 / 0.6);
+  --selection: oklch(0.71 0.105 247 / 0.3);
+
+  --shadow-xs: 0 1px 1px oklch(0 0 0 / 0.3);
+  --shadow-sm: 0 0 0 1px oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-md:
+    0 0 0 1px oklch(1 0 0 / 0.07), 0 4px 12px -2px oklch(0 0 0 / 0.5),
+    0 2px 4px oklch(0 0 0 / 0.3);
+  --shadow-lg:
+    0 0 0 1px oklch(1 0 0 / 0.08), 0 24px 48px -12px oklch(0 0 0 / 0.65),
+    0 8px 16px -8px oklch(0 0 0 / 0.4);
+  --shadow-pop:
+    0 0 0 1px oklch(1 0 0 / 0.07), 0 2px 4px oklch(0 0 0 / 0.3),
+    0 16px 32px -8px oklch(0 0 0 / 0.55);
+  --ring-soft: 0 0 0 3px oklch(0.71 0.105 247 / 0.28);
+  --text-prose: rgb(250 249 245 / 0.8);
+  --icon: rgb(250 249 245 / 0.6);
+  --info: #7eaeda;
+  --info-tint: rgb(126 174 218 / 0.14);
+  --info-tint-strong: rgb(126 174 218 / 0.22);
+  --home-shell: rgb(250 249 245 / 0.025);
+  --home-input: #20201f;
+  --home-pill-label: #898781;
+  --home-pill-value: #c3c2b7;
+  --home-tile-on: rgb(240 239 236 / 0.13);
+  color-scheme: dark;
+}
+</style>
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { font-family: var(--font); font-size: var(--t-sm); line-height: var(--lh-body); color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.app { display: grid; grid-template-rows: minmax(0, 1fr) 26px; height: 100vh; }
+.main { display: grid; grid-template-columns: 260px minmax(0, 1fr) 320px; min-height: 0; }
+.side { display: grid; grid-template-rows: 48px auto minmax(0, 1fr) auto; background: var(--home-shell); border-right: 1px solid var(--line); min-width: 0; }
+.side-top { display: flex; align-items: center; gap: var(--s-2); padding: 0 var(--s-3) 0 84px; position: relative; font-weight: var(--w-medium); }
+.lights { position: absolute; left: 14px; top: 18px; display: flex; gap: 8px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; background: var(--line-strong); display: block; }
+.search { margin: 0 var(--s-2) var(--s-2); height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 var(--s-2); border-radius: var(--r-control-sm); background: var(--surface-raised); box-shadow: var(--shadow-sm); color: var(--text-faint); }
+.search kbd, .row kbd, .sb kbd { margin-left: auto; font-family: var(--font); font-size: var(--t-2xs); color: var(--text-faint); }
+.tree { overflow: auto; padding: 0 var(--s-1) var(--s-2); }
+.group { padding: var(--s-3) var(--s-2) 4px; font-size: var(--t-2xs); font-weight: var(--w-medium); letter-spacing: 0.04em; color: var(--text-faint); text-transform: uppercase; }
+.row { display: flex; align-items: center; gap: 6px; width: 100%; height: 28px; padding: 0 var(--s-2); border-radius: var(--r-control-xs); color: var(--text-2); white-space: nowrap; text-align: left; }
+.row:hover { background: var(--tint-hover); }
+.row.on { background: var(--home-tile-on); color: var(--text); }
+.row .caret { width: 12px; flex: none; color: var(--text-faint); font-size: 10px; }
+.row .meta { margin-left: auto; color: var(--text-faint); font-size: var(--t-xs); font-variant-numeric: tabular-nums; }
+.row .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); flex: none; }
+.row .ico { width: 16px; height: 16px; flex: none; display: grid; place-items: center; color: var(--icon); }
+.attach { margin: var(--s-2); }
+.center { overflow: auto; display: grid; justify-items: center; align-content: start; padding: 72px var(--s-8) var(--s-8); }
+.wrap { width: 100%; max-width: 680px; display: grid; gap: var(--s-6); }
+.ws-head { display: grid; gap: 4px; }
+.ws-head h1 { margin: 0; font-family: var(--serif); font-weight: var(--w-regular); font-size: var(--t-2xl); line-height: var(--lh-2xl); letter-spacing: var(--track-display); }
+.ws-head p { margin: 0; color: var(--text-3); }
+.composer { padding: var(--s-3); border-radius: var(--r-xl); background: var(--home-input); box-shadow: var(--shadow-md); display: grid; gap: var(--s-3); }
+.composer:focus-within { box-shadow: var(--shadow-md), var(--ring-soft); }
+.composer textarea { border: 0; outline: 0; resize: none; background: transparent; min-height: 64px; padding: 4px; font-size: var(--t-md); }
+.composer textarea::placeholder { color: var(--text-faint); }
+.comp-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pill { height: var(--composer-ctl); display: inline-flex; align-items: center; gap: 6px; padding: 0 var(--s-2-5); border-radius: var(--r-full); box-shadow: inset 0 0 0 1px var(--line); font-size: var(--t-xs); }
+.pill:hover { background: var(--tint-hover); }
+.pill b { color: var(--home-pill-label); font-weight: var(--w-regular); }
+.pill span { color: var(--home-pill-value); }
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+.create { margin-left: auto; height: var(--composer-ctl); padding: 0 var(--s-3); border-radius: var(--r-full); background: var(--brand); color: var(--on-brand); font-weight: var(--w-medium); display: inline-flex; align-items: center; gap: 8px; }
+.create:hover { background: var(--brand-hover); }
+.create kbd { font-family: var(--font); opacity: 0.7; }
+.starters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2); }
+.starter { padding: var(--s-3); border-radius: var(--r-lg); background: var(--surface-raised); box-shadow: var(--shadow-sm); text-align: left; display: grid; gap: 2px; }
+.starter:hover { box-shadow: var(--shadow-md); }
+.starter strong { font-weight: var(--w-medium); }
+.starter span { color: var(--text-3); font-size: var(--t-xs); }
+.recent h2 { margin: 0 0 var(--s-2); font-size: var(--t-xs); font-weight: var(--w-medium); color: var(--text-2); }
+.thumbs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); }
+.thumb { display: grid; gap: 6px; text-align: left; }
+.thumb i { display: block; aspect-ratio: 16 / 10; border-radius: var(--r-md); background: var(--surface-2); box-shadow: var(--shadow-inset); }
+.thumb span { font-size: var(--t-xs); color: var(--text-2); }
+.activity { border-left: 1px solid var(--line); background: var(--surface); overflow: auto; min-width: 0; }
+.act-head { height: 48px; display: flex; align-items: center; padding: 0 var(--s-4); font-weight: var(--w-medium); border-bottom: 1px solid var(--line); }
+.act-head .live { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-xs); font-weight: var(--w-regular); color: var(--text-3); }
+.act-head .live i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); animation: pulse var(--dur-pulse) var(--ease-in-out) infinite; }
+@keyframes pulse { 50% { opacity: 0.35; } }
+.act-sec { padding: var(--s-2) var(--s-2) var(--s-3); border-bottom: 1px solid var(--line); }
+.act-sec h3 { margin: 0; padding: var(--s-1) var(--s-2) var(--s-1); font-size: var(--t-2xs); font-weight: var(--w-medium); letter-spacing: 0.04em; color: var(--text-faint); text-transform: uppercase; display: flex; }
+.act-sec h3 span { margin-left: auto; letter-spacing: 0; }
+.item { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 2px var(--s-2); align-items: center; width: 100%; padding: 6px var(--s-2); border-radius: var(--r-control-sm); text-align: left; }
+.item:hover { background: var(--tint-hover); }
+.item .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .s { grid-column: 2; color: var(--text-3); font-size: var(--t-xs); font-variant-numeric: tabular-nums; }
+.item .go { grid-row: 1 / span 2; grid-column: 3; color: var(--text-faint); }
+.item .ic { grid-row: 1; display: grid; place-items: center; }
+.spin { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--accent); border-right-color: transparent; animation: spin var(--dur-spin) linear infinite; }
+@keyframes spin { to { rotate: 360deg; } }
+.badge { width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: var(--w-medium); }
+.b-warn { background: var(--warn-soft); color: var(--warn); }
+.b-info { background: var(--info-tint); color: var(--info); }
+.b-ok { background: var(--ok-soft); color: var(--ok); }
+.b-off { background: var(--surface-2); color: var(--text-faint); }
+.mini { height: 24px; padding: 0 8px; border-radius: var(--r-control-xs); box-shadow: inset 0 0 0 1px var(--line); font-size: var(--t-xs); }
+.mini:hover { background: var(--tint-hover); }
+.sb { display: flex; align-items: center; gap: var(--s-4); padding: 0 var(--s-3); border-top: 1px solid var(--line); background: var(--home-shell); color: var(--text-3); font-size: var(--t-xs); white-space: nowrap; }
+.sb .seg { display: inline-flex; align-items: center; gap: 6px; height: 20px; padding: 0 6px; border-radius: var(--r-xs); }
+.sb .seg:hover { background: var(--tint-hover); color: var(--text-2); }
+.sb .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+.sb .right { margin-left: auto; }
+.harness { position: fixed; right: 12px; bottom: 36px; z-index: 50; display: flex; align-items: center; gap: var(--s-2); padding: 6px 6px 6px 12px; border-radius: var(--r-full); background: var(--float-bg); color: var(--float-fg); box-shadow: var(--float-shadow); font-size: var(--t-xs); }
+.harness .log { color: var(--float-fg-muted); min-width: 220px; }
+.harness button { height: 24px; padding: 0 10px; border-radius: var(--r-full); color: var(--float-fg); box-shadow: inset 0 0 0 1px var(--float-line-strong); }
+.harness button:hover { background: var(--float-bg-hover); }
+.harness .tag { color: var(--float-accent-text); font-weight: var(--w-medium); }
+svg { display: block; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="main">
+    <aside class="side" aria-label="Workspaces">
+      <div class="side-top"><div class="lights"><i></i><i></i><i></i></div>Design Studio</div>
+      <button class="search" id="searchBtn"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 9l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Search and commands<kbd>⌘K</kbd></button>
+      <nav class="tree" id="tree" aria-label="Workspace tree"></nav>
+      <button class="row attach"><span class="ico">＋</span>Attach app folder</button>
+    </aside>
+    <main class="center">
+      <div class="wrap">
+        <div class="ws-head">
+          <h1 id="wsTitle">Bonaparte</h1>
+          <p id="wsSub">App folder · ~/code/bonaparte · design system Bonaparte DS</p>
+        </div>
+        <form class="composer" onsubmit="return false">
+          <textarea id="prompt" rows="3" placeholder="Describe a screen for Bonaparte…"></textarea>
+          <div class="comp-row" id="compRow"></div>
+        </form>
+        <div class="starters" id="starters"></div>
+        <section class="recent">
+          <h2 id="recentTitle">Recent in Bonaparte</h2>
+          <div class="thumbs" id="thumbs"></div>
+        </section>
+      </div>
+    </main>
+    <aside class="activity" aria-label="Activity">
+      <div class="act-head">Activity <span class="live"><i></i>Live</span></div>
+      <section class="act-sec">
+        <h3>Running <span>2</span></h3>
+        <button class="item"><span class="ic"><span class="spin"></span></span><span class="t">Redesign /billing</span><span class="go">→</span><span class="s">Bonaparte · chat · $0.42 · 3m</span></button>
+        <button class="item"><span class="ic"><span class="spin"></span></span><span class="t">create_comment</span><span class="go">→</span><span class="s">Kiln Coffee · MCP · Cursor · 12s</span></button>
+      </section>
+      <section class="act-sec">
+        <h3>Waiting on you <span>3</span></h3>
+        <button class="item"><span class="ic"><span class="badge b-warn">!</span></span><span class="t">Approve publish</span><span class="go">Review</span><span class="s">Kiln Coffee · from Claude Code</span></button>
+        <button class="item"><span class="ic"><span class="badge b-info">3</span></span><span class="t">New comments</span><span class="go">→</span><span class="s">Kiln Coffee · Home page</span></button>
+        <button class="item"><span class="ic"><span class="badge b-info">◇</span></span><span class="t">Design system draft to save</span><span class="go">→</span><span class="s">Bonaparte DS · 81/100</span></button>
+      </section>
+      <section class="act-sec">
+        <h3>Recent runs</h3>
+        <button class="item"><span class="ic"><span class="badge b-ok">✓</span></span><span class="t">Tighten settings form</span><span class="go">→</span><span class="s">Bonaparte · $0.18 · 1h</span></button>
+        <button class="item"><span class="ic"><span class="badge b-ok">✓</span></span><span class="t">Sample edit: new headline</span><span class="go">→</span><span class="s">Kiln Coffee · $0.05 · 2h</span></button>
+      </section>
+      <section class="act-sec">
+        <h3>Dev servers</h3>
+        <div class="item"><span class="ic"><span class="badge b-ok">●</span></span><span class="t">Bonaparte</span><button class="mini go">Stop</button><span class="s">localhost:5173 · vite</span></div>
+        <div class="item"><span class="ic"><span class="badge b-off">○</span></span><span class="t">Kiln Coffee</span><button class="mini go">Start</button><span class="s">stopped</span></div>
+      </section>
+    </aside>
+  </div>
+  <footer class="sb" aria-label="Status">
+    <span class="seg">claude-opus</span>
+    <span class="seg"><span class="dot"></span>MCP on :7781</span>
+    <span class="seg">2 clients · Claude Code, Cursor</span>
+    <span class="seg" id="sbBranch">⎇ main ↑1</span>
+    <span class="seg right">⌘N new · ⌘O open · ⌘1–9 workspace</span>
+  </footer>
+</div>
+<div class="harness" aria-label="Prototype controls">
+  <span class="tag">Prototype</span>
+  <span class="log" id="log">Try ⌘1, ⌘2, ⌘3, ⌘N, ⌘O, ⌘K</span>
+  <button id="themeBtn">Dark</button>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const root = document.documentElement;
+const log = document.getElementById("log");
+const themeBtn = document.getElementById("themeBtn");
+const WORKSPACES = [
+  { id: "bonaparte", name: "Bonaparte", sub: "App folder · ~/code/bonaparte · design system Bonaparte DS", ds: "Bonaparte DS", kit: "tres", dev: ":5173", isDevOn: true, branch: "main ↑1",
+    groups: [["Design systems", ["Bonaparte DS"]], ["Screens", ["Billing", "Settings", "Onboarding"]], ["Prototypes", ["Checkout flow"]]],
+    starters: [["New screen in Bonaparte", "Uses Bonaparte DS and the tres kit"], ["Redesign a route", "Pick a route from the dev server"], ["Start from a template", "Dashboard, settings, list"]] },
+  { id: "kiln", name: "Kiln Coffee", sub: "App folder · ~/code/kiln · design system Kiln DS", ds: "Kiln DS", kit: "none", dev: "stopped", isDevOn: false, branch: "feat/hero",
+    groups: [["Design systems", ["Kiln DS"]], ["Screens", ["Home page", "Menu"]], ["Prototypes", []]],
+    starters: [["New screen in Kiln Coffee", "Uses Kiln DS"], ["Redesign a route", "Start the dev server first"], ["Start from a template", "Landing, menu, checkout"]] },
+  { id: "prototypes", name: "Prototypes", sub: "Standalone designs, no app folder", ds: "Pick one", kit: "none", dev: "none", isDevOn: false, branch: "no git",
+    groups: [["Prototypes", ["Pricing page", "Mood board"]]],
+    starters: [["New prototype", "A blank canvas with a design system"], ["Import a page", "From a url or Figma"], ["Start from a template", "Landing, app, deck"]] }
+];
+const state = { ws: 0, open: { bonaparte: true }, openGroup: { "bonaparte:Screens": true } };
+const setTheme = (theme) => {
+  if (theme === "dark") { root.dataset.theme = "dark"; themeBtn.textContent = "Light"; return; }
+  delete root.dataset.theme; themeBtn.textContent = "Dark";
+};
+const say = (text) => { log.textContent = text; };
+const toRow = (cls, caret, label, meta, attrs) => '<button class="row ' + cls + '" ' + attrs + '><span class="caret">' + caret + "</span>" + label + (meta ? '<span class="meta">' + meta + "</span>" : "") + "</button>";
+const renderTree = () => {
+  let html = '<div class="group">Pinned</div>' + toRow("", "★", "Billing redesign", "", "") + '<div class="group">Recent</div>' + toRow("", "", "Kiln Coffee · Home page", "2m", "") + toRow("", "", "Bonaparte · Settings", "1h", "") + '<div class="group">Workspaces</div>';
+  WORKSPACES.forEach((ws, index) => {
+    const isOpen = Boolean(state.open[ws.id]);
+    html += toRow(index === state.ws ? "on" : "", isOpen ? "▾" : "▸", ws.name, "⌘" + (index + 1), 'data-ws="' + index + '"');
+    if (!isOpen) { return; }
+    ws.groups.forEach(([group, rows]) => {
+      const key = ws.id + ":" + group;
+      const isGroupOpen = Boolean(state.openGroup[key]);
+      html += toRow("", isGroupOpen ? "▾" : "▸", group, String(rows.length), 'data-group="' + key + '" style="padding-left:22px"');
+      if (isGroupOpen) { rows.forEach((row) => { html += toRow("", "", row, "", 'style="padding-left:40px"'); }); }
+    });
+  });
+  document.getElementById("tree").innerHTML = html;
+};
+const renderCenter = () => {
+  const ws = WORKSPACES[state.ws];
+  document.getElementById("wsTitle").textContent = ws.name;
+  document.getElementById("wsSub").textContent = ws.sub;
+  document.getElementById("prompt").placeholder = "Describe a screen for " + ws.name + "…";
+  document.getElementById("recentTitle").textContent = "Recent in " + ws.name;
+  document.getElementById("compRow").innerHTML = '<button type="button" class="pill"><b>Design system</b><span>' + ws.ds + ' ▾</span></button><button type="button" class="pill"><b>Kit</b><span>' + ws.kit + ' ▾</span></button><button type="button" class="pill">' + (ws.isDevOn ? '<span class="dot"></span>' : "") + "<b>Dev</b><span>" + ws.dev + '</span></button><button type="button" class="create">Create <kbd>⏎</kbd></button>';
+  document.getElementById("starters").innerHTML = ws.starters.map(([title, sub]) => '<button class="starter"><strong>' + title + "</strong><span>" + sub + "</span></button>").join("");
+  const items = ws.groups.flatMap(([, rows]) => rows).slice(0, 3);
+  document.getElementById("thumbs").innerHTML = items.map((name) => '<button class="thumb"><i></i><span>' + name + "</span></button>").join("");
+  document.getElementById("sbBranch").textContent = "⎇ " + ws.branch;
+};
+const selectWorkspace = (index) => {
+  state.ws = index;
+  state.open[WORKSPACES[index].id] = true;
+  renderTree(); renderCenter();
+  say("Workspace: " + WORKSPACES[index].name + ". Composer is bound to it");
+};
+document.getElementById("tree").addEventListener("click", (event) => {
+  const ws = event.target.closest("[data-ws]");
+  if (ws) {
+    const index = Number(ws.dataset.ws);
+    if (index === state.ws) { state.open[WORKSPACES[index].id] = !state.open[WORKSPACES[index].id]; renderTree(); return; }
+    selectWorkspace(index); return;
+  }
+  const group = event.target.closest("[data-group]");
+  if (group) { state.openGroup[group.dataset.group] = !state.openGroup[group.dataset.group]; renderTree(); }
+});
+document.getElementById("searchBtn").addEventListener("click", () => say("⌘K: command palette opens here"));
+themeBtn.addEventListener("click", () => setTheme(root.dataset.theme === "dark" ? "light" : "dark"));
+document.addEventListener("keydown", (event) => {
+  if (!event.metaKey && !event.ctrlKey) { return; }
+  const key = event.key.toLowerCase();
+  if (/^Digit[1-9]$/.test(event.code)) {
+    event.preventDefault();
+    const index = Number(event.code.slice(5)) - 1;
+    if (index < WORKSPACES.length) { selectWorkspace(index); } else { say("⌘" + (index + 1) + ": no workspace there"); }
+    return;
+  }
+  if (key === "n") { event.preventDefault(); document.getElementById("prompt").focus(); say("⌘N: new design in " + WORKSPACES[state.ws].name); return; }
+  if (key === "o") { event.preventDefault(); say("⌘O: palette filtered to projects"); return; }
+  if (key === "k") { event.preventDefault(); say("⌘K: command palette"); }
+});
+setTheme(params.get("theme") === "dark" ? "dark" : "light");
+renderTree(); renderCenter();
+if (params.get("ws")) { selectWorkspace(Number(params.get("ws"))); }
+</script>
+</body>
+</html>

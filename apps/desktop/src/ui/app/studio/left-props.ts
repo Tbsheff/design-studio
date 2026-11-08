@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 
 import { api } from "../../api";
 import { shownPending } from "../../features/chat/run-state-model";
-import { toggleRail } from "../../features/home/project-rail";
+import { setRailToggled as toggleRail } from "../../features/home/index.js";
 import { fixPrompt } from "../../features/review/errors-panel";
 import { uiStore } from "../../platform/storage";
 import type { LeftPane } from "../shell/left-pane";

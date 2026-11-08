@@ -55,7 +55,11 @@ const getFolderLabel = (
 };
 
 const getModelSummary = (model: string, count: number): string => {
-  const extra = count > 1 ? ` · ${count}×` : "";
+  let extra = "";
+
+  if (count > 1) {
+    extra = ` · ${count}×`;
+  }
 
   return `${modelLabel(model).replace(/^Claude /u, "")}${extra}`;
 };
@@ -101,34 +105,74 @@ interface HomeCreateInput {
   readonly references: ReferenceDraft[];
 }
 
-const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
-  const extra = {
-    ...(input.designMd.trim() ? { designMd: input.designMd } : {}),
-    ...(input.packId ? { packId: input.packId } : {}),
-  };
+type CreateRequest = Parameters<typeof api.createProject>[0];
 
-  const fanOut = input.designCount > 1;
-  const level = input.settings.defaultLevel;
-  const where = input.location ? { parentPath: input.location } : {};
-  const referenceUrls = input.references.map((reference) => reference.url);
-  const refs = referenceUrls.length > 0 ? { referenceUrls } : {};
-  const separateRun = !fanOut && input.images.length > 0;
-
-  const { project } = await api.createProject({
+const toCreateRequest = (
+  input: HomeCreateInput,
+  isStartingRun: boolean
+): CreateRequest => {
+  const request: CreateRequest = {
     kind: input.kind,
-    level,
+    level: input.settings.defaultLevel,
     prompt: input.prompt,
     settings: input.settings,
-    ...extra,
-    ...where,
-    ...(fanOut || separateRun ? { startRun: false } : {}),
-    ...refs,
-  });
+  };
+
+  if (input.designMd.trim()) {
+    request.designMd = input.designMd;
+  }
+
+  if (input.packId) {
+    request.packId = input.packId;
+  }
+
+  if (input.location) {
+    request.parentPath = input.location;
+  }
+
+  if (!isStartingRun) {
+    request.startRun = false;
+  }
+
+  if (input.references.length > 0) {
+    request.referenceUrls = input.references.map((reference) => reference.url);
+  }
+
+  return request;
+};
+
+type RunRequestInput = Parameters<typeof api.startRun>[2];
+
+const toEditRunRequest = (
+  input: HomeCreateInput,
+  attachmentIds: string[]
+): RunRequestInput => {
+  const request: RunRequestInput = {
+    attachmentIds,
+    level: input.settings.defaultLevel,
+    mode: "edit",
+    prompt: input.prompt,
+  };
+
+  if (input.references.length > 0) {
+    request.referenceUrls = input.references.map((reference) => reference.url);
+  }
+
+  return request;
+};
+
+const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
+  const fanOut = input.designCount > 1;
+  const separateRun = !fanOut && input.images.length > 0;
+
+  const { project } = await api.createProject(
+    toCreateRequest(input, !(fanOut || separateRun))
+  );
 
   if (fanOut) {
     homeVariations.set({
       count: input.designCount,
-      level,
+      level: input.settings.defaultLevel,
       projectId: project.id,
       prompt: input.prompt,
     });
@@ -143,13 +187,14 @@ const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
       input.images.map((image) => api.uploadAttachment(project.id, image.file))
     );
 
-    await api.startRun(project.id, main.id, {
-      attachmentIds: uploaded.map((item) => item.id),
-      level,
-      mode: "edit",
-      prompt: input.prompt,
-      ...refs,
-    });
+    await api.startRun(
+      project.id,
+      main.id,
+      toEditRunRequest(
+        input,
+        uploaded.map((item) => item.id)
+      )
+    );
   }
 
   return project;

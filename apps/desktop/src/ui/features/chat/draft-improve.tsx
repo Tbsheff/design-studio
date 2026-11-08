@@ -138,7 +138,7 @@ const RULE_ORDER: DesignSystemCheckRule[] = [
   "design-md",
 ];
 
-const MORE = /^(\d+) more .+ not listed\.?$/u;
+const MORE = /^(?<count>\d+) more .+ not listed\.?$/u;
 
 const problemText = (rule: DesignSystemCheckRule, message: string): string => {
   const more = MORE.exec(message)?.[1];
@@ -151,7 +151,7 @@ const problemText = (rule: DesignSystemCheckRule, message: string): string => {
     return message;
   }
 
-  const todo = /to-do line:\s*_?\s*To do:\s*(.+?)_?\s*$/iu.exec(message);
+  const todo = /to-do line:\s*_?\s*To do:\s*(?<todo>.+?)_?\s*$/iu.exec(message);
   const found = todo?.[1];
 
   if (!found) {

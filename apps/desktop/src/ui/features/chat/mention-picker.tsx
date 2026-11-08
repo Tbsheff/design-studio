@@ -60,7 +60,7 @@ const mentionTitle = (mention: RunMention): string => {
 };
 
 const mentionQueryOf = (draft: string): string | null => {
-  const match = /(?:^|\s)@([^\s@]*)$/u.exec(draft);
+  const match = /(?:^|\s)@(?<query>[^\s@]*)$/u.exec(draft);
 
   if (match) {
     return match[1] ?? "";

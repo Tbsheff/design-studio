@@ -22,7 +22,7 @@ const pageFileOf = (path: string | undefined): string => {
   return clean;
 };
 
-const UNLISTED = /^(\.|node_modules\/|dist\/|\.vite\/|vite-cache\/)|\/\./u;
+const UNLISTED = /^(?:\.|node_modules\/|dist\/|\.vite\/|vite-cache\/)|\/\./u;
 
 const hasPage = (files: ReadonlySet<string>, file: string): boolean =>
   files.has(file) || files.has(`${file}/index.html`);

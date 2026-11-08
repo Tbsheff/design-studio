@@ -323,7 +323,7 @@ const ERROR_HINTS: [RegExp, string][] = [
   ],
   [/credit|billing|quota/iu, "Check your plan or credits, then retry."],
   [
-    /prompt is too long|context (window|length)|too many tokens/iu,
+    /prompt is too long|context (?:window|length)|too many tokens/iu,
     "Start a new direction, or send a shorter message.",
   ],
   [

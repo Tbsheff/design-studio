@@ -90,7 +90,7 @@ const skillInstruction = (ids: readonly string[]): string =>
   ids.map((id) => `Use the ${id} skill.`).join("\n");
 
 const skillsFromPrompt = (prompt: string): string[] =>
-  [...prompt.matchAll(/^Use the (\S+:\S+) skill\.$/gmu)].map(
+  [...prompt.matchAll(/^Use the (?<skill>\S+:\S+) skill\.$/gmu)].map(
     (match) => match[1] ?? ""
   );
 

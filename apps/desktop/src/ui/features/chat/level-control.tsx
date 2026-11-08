@@ -158,7 +158,9 @@ const levelGist = (
   hint: string;
   cost: string | null;
 } => {
-  const match = /^(.*?) \(usually ([^,)]+)/u.exec(LEVEL_PRESETS[level].hint);
+  const match = /^(?<head>.*?) \(usually (?<usual>[^,)]+)/u.exec(
+    LEVEL_PRESETS[level].hint
+  );
 
   if (!match) {
     return { cost: null, hint: levelShortHint(level) };
@@ -169,7 +171,7 @@ const levelGist = (
 
 const levelShortHint = (level: RunLevel): string => {
   const { hint } = LEVEL_PRESETS[level];
-  const match = /^(.*?) \(usually ([^,)]+)/u.exec(hint);
+  const match = /^(?<head>.*?) \(usually (?<usual>[^,)]+)/u.exec(hint);
 
   if (match) {
     return `${match[1]}, ${match[2]}`;

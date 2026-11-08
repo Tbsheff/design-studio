@@ -351,7 +351,7 @@ function modeGroup(
   };
 }
 
-const SLASH_HIDDEN = /^composer\.(mode|level)-/;
+const SLASH_HIDDEN = /^composer\.(?:mode|level)-/;
 
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> =
   {

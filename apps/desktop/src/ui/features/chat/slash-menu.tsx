@@ -44,7 +44,7 @@ type Row =
   | { key: string; kind: "group"; group: SlashGroup }
   | { key: string; kind: "choice"; choice: SlashChoice; section: string };
 
-const SLASH_QUERY = /^\/(\S*)$/u;
+const SLASH_QUERY = /^\/(?<query>\S*)$/u;
 
 const wordsStart = (text: string, query: string): boolean => {
   const needle = query.toLowerCase();

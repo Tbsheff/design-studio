@@ -6,7 +6,7 @@ const PATH_KEYS = ["file_path", "path", "filePath", "notebook_path"];
 const humanize = (raw: string): string => {
   const words = raw
     .replaceAll(/[_-]+/gu, " ")
-    .replaceAll(/([a-z])([A-Z])/gu, "$1 $2")
+    .replaceAll(/(?<lower>[a-z])(?<upper>[A-Z])/gu, "$<lower> $<upper>")
     .trim()
     .toLowerCase();
 

@@ -5,6 +5,7 @@ import type {
   AgentRunner,
   PreviewService,
 } from "../../../shared/server-ports.js";
+import type { EventBus } from "../../events/index.js";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import type { KnownFailure } from "../../platform/attempt/index.js";
 import {
@@ -17,9 +18,13 @@ import type { CanvasService } from "../service.js";
 import { LinkError } from "./link-tools.js";
 
 interface LinkRuntime {
+  readonly bus: Pick<EventBus, "emit">;
   readonly canvas: CanvasService;
   readonly frameStates: FrameStateDeps;
-  readonly preview: Pick<PreviewService, "directionUrl" | "withPage"> | null;
+  readonly preview: Pick<
+    PreviewService,
+    "apps" | "directionUrl" | "withPage"
+  > | null;
   readonly runner: Pick<AgentRunner, "isRunning">;
   readonly projects: Pick<StudioProjectStore, "get" | "projectDir">;
 }

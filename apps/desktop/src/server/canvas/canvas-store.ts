@@ -1,3 +1,4 @@
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
 import type { FrameStatesView } from "@design-studio/contracts/frame-state";
 import { Context, Effect, Layer } from "effect";
 
@@ -11,8 +12,14 @@ import {
 import type { CanvasDocRead } from "./canvas-ops.js";
 import { attemptCanvas } from "./canvas-runtime.js";
 import type { CanvasFailure } from "./canvas-runtime.js";
+import { getCanvasDeleteCard, inspectCanvasFrames } from "./frame-ops.js";
+import type { FrameDeleteQuery, FrameTarget } from "./frame-ops.js";
+import type { CanvasListing } from "./tools.js";
 
 interface CanvasStoreApi {
+  readonly deleteCard: (
+    query: FrameDeleteQuery
+  ) => Effect.Effect<ApprovalCard, CanvasFailure>;
   readonly flowLinks: (
     projectId: string,
     route: string
@@ -26,6 +33,9 @@ interface CanvasStoreApi {
   readonly getDoc: (
     projectId: string
   ) => Effect.Effect<CanvasDocRead, CanvasFailure>;
+  readonly inspectFrames: (
+    target: FrameTarget
+  ) => Effect.Effect<CanvasListing, CanvasFailure>;
 }
 
 class CanvasStore extends Context.Service<CanvasStore, CanvasStoreApi>()(
@@ -36,6 +46,13 @@ class CanvasStore extends Context.Service<CanvasStore, CanvasStoreApi>()(
   public static readonly layer = Layer.succeed(
     CanvasStore,
     CanvasStore.of({
+      deleteCard: Effect.fn("CanvasStore.deleteCard")(function* run(
+        query: FrameDeleteQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          getCanvasDeleteCard(runtime, query)
+        );
+      }),
       flowLinks: Effect.fn("CanvasStore.flowLinks")(function* run(
         projectId: string,
         route: string
@@ -60,6 +77,13 @@ class CanvasStore extends Context.Service<CanvasStore, CanvasStoreApi>()(
       }),
       getDoc: Effect.fn("CanvasStore.getDoc")(function* run(projectId: string) {
         return yield* attemptCanvas((runtime) => readDoc(runtime, projectId));
+      }),
+      inspectFrames: Effect.fn("CanvasStore.inspectFrames")(function* run(
+        target: FrameTarget
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          inspectCanvasFrames(runtime, target)
+        );
       }),
     })
   );

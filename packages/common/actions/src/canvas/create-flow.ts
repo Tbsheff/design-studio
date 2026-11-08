@@ -13,7 +13,13 @@ import {
 
 const createFlowCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "add_flow",
+    set: "app",
+    short:
+      "Attached apps only. Lay out route frames left to right and link them from the links in their source.",
+  },
   confirm: "none",
   description:
     "Lay out app route frames left to right and make prototype links from the links in their source. Pass routes, or from with depth. Frames already on the canvas are reused. Attached Next.js apps only. Dynamic segments get the sample params, saved for the next flow.",

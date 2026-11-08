@@ -37,6 +37,8 @@ const isOwnAgentRun = (projectId: string, directionId: string): boolean => {
 
 const isOutsideRequest = (): boolean => Boolean(store.getStore());
 
+const toCallClient = (): string | null => store.getStore()?.client ?? null;
+
 const stampOrigin = <Meta extends VersionMeta>(meta: Meta): Meta => {
   const origin = store.getStore();
 
@@ -60,5 +62,6 @@ export {
   isOwnEdit,
   stampOrigin,
   runAsAgent,
+  toCallClient,
   withCallOrigin,
 };

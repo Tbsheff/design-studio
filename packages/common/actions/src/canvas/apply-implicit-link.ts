@@ -18,7 +18,13 @@ const LinkIdsSchema = Schema.Union([
 
 const applyImplicitLinkCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "keep_links",
+    set: "core",
+    short:
+      "Save implicit links from page code as normal prototype links, by id or all.",
+  },
   confirm: "none",
   description:
     "Save implicit links (found from a href or location.href between pages, or Next.js Link) as normal prototype links, so they show solid on the canvas and can change action or transition. Pass the ids from list_implicit_links, or all. Play already uses implicit links without this.",

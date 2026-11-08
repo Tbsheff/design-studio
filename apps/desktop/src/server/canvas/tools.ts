@@ -19,68 +19,6 @@ import type { CanvasService } from "./service.js";
 
 export const frameRef = z.string().trim().min(1).max(60);
 
-export const placeSchema = z
-  .object({
-    above: frameRef.optional(),
-    below: frameRef
-      .optional()
-      .describe(
-        "Put the frame under this frame (id or @label), left edges lined up."
-      ),
-    frame: frameRef
-      .optional()
-      .describe(
-        "Id or @label of a frame to move or change. Leave out to add a new frame."
-      ),
-    gap: z
-      .number()
-      .int()
-      .min(0)
-      .max(2000)
-      .optional()
-      .describe("Space between the frames in px. Default 80."),
-    height: z.number().int().min(200).max(4000).optional(),
-    hidden: z.boolean().optional(),
-    label: z
-      .string()
-      .max(40)
-      .optional()
-      .describe(
-        'Short name shown on the frame label, for example "Empty" or "Pricing".'
-      ),
-    leftOf: frameRef.optional(),
-    path: z
-      .string()
-      .max(200)
-      .optional()
-      .describe(
-        'Page the frame shows, relative to the project root, for example "states/empty.html". Empty string = the entry page.'
-      ),
-    rightOf: frameRef
-      .optional()
-      .describe(
-        "Put the frame to the right of this frame, top edges lined up."
-      ),
-    viewport: z
-      .enum(["desktop", "tablet", "mobile"])
-      .optional()
-      .describe(
-        "Frame size preset: desktop 1440x900, tablet 768x1024, mobile 390x844."
-      ),
-    width: z.number().int().min(200).max(4000).optional(),
-    x: z
-      .number()
-      .int()
-      .optional()
-      .describe("Absolute canvas x. Overrides the relative x."),
-    y: z
-      .number()
-      .int()
-      .optional()
-      .describe("Absolute canvas y. Overrides the relative y."),
-  })
-  .strict();
-
 export const CANVAS_VIEWPORTS = {
   desktop: { height: 900, width: 1440 },
   mobile: { height: 844, width: 390 },
@@ -130,7 +68,7 @@ const RELATIONS = ["below", "rightOf", "leftOf", "above"] as const;
 
 type Relation = (typeof RELATIONS)[number];
 
-class PlaceError extends Error {}
+export class PlaceError extends Error {}
 
 function text(value: unknown): ToolText {
   return {
@@ -491,31 +429,63 @@ export function applyPlacement(
   return { file: { ...file, frames }, placed };
 }
 
-export async function canvasList(ctx: CanvasToolContext): Promise<ToolText> {
+export interface FrameView {
+  direction: string;
+  hidden?: boolean;
+  height: number;
+  id: string;
+  label: string | null;
+  page: string;
+  width: number;
+  x: number;
+  y: number;
+}
+
+export interface CanvasListing {
+  frames: FrameView[];
+  lofi: string[];
+  note: string | null;
+  thisRun: { direction: string };
+  user: {
+    currentDirection: string | null;
+    inView: string[];
+    liveFrame: string | null;
+    note: string | null;
+    selection: { selector: string; tag: string; text: string }[];
+  };
+}
+
+const NO_LAYOUT_NOTE =
+  'No saved layout yet. The canvas shows one frame (f1) with the entry page at the size the user picked. canvas_place with frame "f1" or a new frame saves the layout.';
+
+const NO_WINDOW_NOTE =
+  "The studio window is not open, so the selection and the frame in view are not known.";
+
+export async function inspectCanvasListing(
+  ctx: CanvasToolContext
+): Promise<CanvasListing> {
   const owner = ctx.canvas.ownerOf(ctx.project);
   const { canvas } = await ctx.canvas.read(ctx.project);
   const presence = ctx.canvas.presence(ctx.project.id);
   const frames = canvas?.frames ?? [];
 
-  return text({
+  return {
     frames: frames.map((frame) => describeFrame(frame, owner.id)),
     lofi: canvas?.lofi ?? [],
-    note:
-      frames.length === 0
-        ? 'No saved layout yet. The canvas shows one frame (f1) with the entry page at the size the user picked. canvas_place with frame "f1" or a new frame saves the layout.'
-        : undefined,
+    note: frames.length === 0 ? NO_LAYOUT_NOTE : null,
     thisRun: { direction: ctx.direction.id },
-    user: presence
-      ? {
-          currentDirection: presence.directionId,
-          liveFrame: presence.activeFrameId,
-          inView: presence.inView,
-          selection: presence.selection,
-        }
-      : {
-          note: "The studio window is not open, so the selection and the frame in view are not known.",
-        },
-  });
+    user: {
+      currentDirection: presence?.directionId ?? null,
+      inView: presence?.inView ?? [],
+      liveFrame: presence?.activeFrameId ?? null,
+      note: presence ? null : NO_WINDOW_NOTE,
+      selection: presence?.selection ?? [],
+    },
+  };
+}
+
+export async function canvasList(ctx: CanvasToolContext): Promise<ToolText> {
+  return text(await inspectCanvasListing(ctx));
 }
 
 function withoutQuery(spec: PlaceSpec): {
@@ -541,15 +511,65 @@ function withoutQuery(spec: PlaceSpec): {
   };
 }
 
+export interface PlaceOutcome {
+  frames: number;
+  placed: FrameView[];
+  warnings: string[];
+}
+
+export async function updateCanvasPlacement(
+  ctx: CanvasToolContext,
+  input: readonly PlaceSpec[],
+  options: { seed?: boolean } = {}
+): Promise<PlaceOutcome> {
+  const cleaned = input.map(withoutQuery);
+  const specs = cleaned.map((item) => item.spec);
+  const notes = cleaned.flatMap((item) => (item.note ? [item.note] : []));
+
+  if (specs.length === 0) {
+    throw new PlaceError("Pass at least one frame to place.");
+  }
+
+  let placed: CanvasFileFrame[] = [];
+  let warnings: string[] = [];
+
+  const result = await ctx.canvas.update(
+    ctx.project,
+    (file) => {
+      const next = applyPlacement(
+        options.seed === false ? file : seedDefault(file, ctx),
+        specs,
+        ctx.direction.id
+      );
+
+      placed = next.placed;
+      warnings = [
+        ...notes,
+        ...overlapWarnings(
+          next.file.frames,
+          placed.map((frame) => frame.id)
+        ),
+      ];
+
+      return next.file;
+    },
+    { source: "agent" }
+  );
+
+  return {
+    frames: result.canvas?.frames.length ?? 0,
+    placed: placed.map((frame) =>
+      describeFrame(frame, ctx.canvas.ownerOf(ctx.project).id)
+    ),
+    warnings,
+  };
+}
+
 export async function canvasPlace(
   ctx: CanvasToolContext,
   input: readonly PlaceSpec[],
   options: { seed?: boolean } = {}
 ): Promise<ToolText> {
-  const cleaned = input.map(withoutQuery);
-  const specs = cleaned.map((item) => item.spec);
-  const notes = cleaned.flatMap((item) => (item.note ? [item.note] : []));
-
   if (ctx.plan) {
     return failure(
       "Plan mode is on, so the canvas stays as it is. Describe the frames in the plan."
@@ -562,44 +582,8 @@ export async function canvasPlace(
     );
   }
 
-  if (specs.length === 0) {
-    return failure("Pass at least one frame to place.");
-  }
-
-  let placed: CanvasFileFrame[] = [];
-  let warnings: string[] = [];
-
   try {
-    const result = await ctx.canvas.update(
-      ctx.project,
-      (file) => {
-        const next = applyPlacement(
-          options.seed === false ? file : seedDefault(file, ctx),
-          specs,
-          ctx.direction.id
-        );
-
-        placed = next.placed;
-        warnings = [
-          ...notes,
-          ...overlapWarnings(
-            next.file.frames,
-            placed.map((frame) => frame.id)
-          ),
-        ];
-
-        return next.file;
-      },
-      { source: "agent" }
-    );
-
-    return text({
-      frames: result.canvas?.frames.length ?? 0,
-      placed: placed.map((frame) =>
-        describeFrame(frame, ctx.canvas.ownerOf(ctx.project).id)
-      ),
-      warnings,
-    });
+    return text(await updateCanvasPlacement(ctx, input, options));
   } catch (error) {
     if (error instanceof PlaceError) {
       return failure(error.message);

@@ -10,11 +10,6 @@ const CORE_TOOLS = [
   "screenshot",
   "render_check",
   "design_review",
-  "canvas_list",
-  "canvas_place",
-  "canvas_point",
-  "list_links",
-  "edit_links",
   "get_layers",
   "review_frame",
   "edit_element",
@@ -56,14 +51,6 @@ const LEAN_TOOLS = new Set([
   HELP_TOOL,
 ]);
 
-const APP_TOOLS = [
-  "list_frame_states",
-  "set_frame_state",
-  "set_frame_session",
-  "list_route_links",
-  "add_flow",
-];
-
 export type ToolScopeProject = Pick<
   Project,
   "kind" | "app" | "designSystemFor"
@@ -83,7 +70,7 @@ function scopedTools(project: ToolScopeProject): string[] {
       ? withDerived(DESIGN_SYSTEM_TOOLS, "design-system")
       : []),
     ...(project.kind === "react" || app ? withDerived(KIT_TOOLS, "kit") : []),
-    ...(app ? withDerived(APP_TOOLS, "app") : []),
+    ...(app ? withDerived([], "app") : []),
   ];
 }
 

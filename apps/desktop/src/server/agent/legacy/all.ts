@@ -1,4 +1,3 @@
-import { CANVAS_AGENT_TOOLS } from "./canvas.js";
 import { CLOUD_AGENT_TOOLS } from "./cloud.js";
 import { DEVSERVER_AGENT_TOOLS } from "./devserver.js";
 import { DIRECT_EDIT_AGENT_TOOLS } from "./direct-edit.js";
@@ -15,7 +14,6 @@ import { SHIP_AGENT_TOOLS } from "./ship.js";
 import { STUDIO_AGENT_TOOLS } from "./studio.js";
 
 const LEGACY_AGENT_TOOLS: readonly string[] = [
-  ...CANVAS_AGENT_TOOLS,
   ...CLOUD_AGENT_TOOLS,
   ...DEVSERVER_AGENT_TOOLS,
   ...DIRECT_EDIT_AGENT_TOOLS,

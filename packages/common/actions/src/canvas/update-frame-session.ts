@@ -9,7 +9,13 @@ import { FrameStatesViewSchema, MockUserSchema } from "./schema.js";
 
 const updateFrameSessionCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_frame_session",
+    set: "app",
+    short:
+      "Attached apps only. Change the mock user of signed-in frame states, or forget app cookies. Changes no file.",
+  },
   confirm: "none",
   description:
     "Change the session that signed-in frame states use: the mock user, or forget the cookies kept from a real sign-in.",

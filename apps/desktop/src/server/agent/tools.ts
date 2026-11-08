@@ -4,7 +4,6 @@ import path from "node:path";
 import type { query, tool as createTool } from "@anthropic-ai/claude-agent-sdk";
 import type { Schema } from "effect";
 
-import type { FlowInput } from "../../shared/route-flow.js";
 import {
   levelOf,
   resolveRunConfig,
@@ -17,33 +16,13 @@ import type {
 } from "../../shared/server-ports.js";
 import { toToolRun } from "../agent-tools/index.js";
 import type { ToolFields, ToolInput } from "../agent-tools/index.js";
-import {
-  applyFrameSession,
-  applyFrameState,
-  buildFlow,
-  describeFlow,
-  describeFrameStates,
-  describeRouteLinks,
-  listRouteLinks,
-  readFrameStates,
-  toFlowDeps,
-} from "../canvas/app-flow/index.js";
-import type {
-  FrameStateDeps,
-  FrameStateInput,
-} from "../canvas/app-flow/index.js";
+import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type {
   CanvasService,
   CanvasToolContext,
   PlaceSpec,
 } from "../canvas/index.js";
 import { canvasList, canvasPlace, canvasPoint } from "../canvas/index.js";
-import {
-  editLinks,
-  listLinks,
-  probeWithPreview,
-} from "../canvas/links/index.js";
-import type { EditLinksArgs, LinkProbe } from "../canvas/links/index.js";
 import { checkDesignSystem, describeCheck } from "../design-system/check.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { TileResult } from "../preview/browser.js";
@@ -152,161 +131,6 @@ async function withCanvas(
   } catch (error) {
     return errorText(`${name} failed: ${describeError(error)}`);
   }
-}
-
-export function runCanvasList(deps: Pick<StudioToolDeps, "ctx" | "canvas">) {
-  return withCanvas(deps, "canvas_list", canvasList);
-}
-
-export function runCanvasPlace(
-  deps: Pick<StudioToolDeps, "ctx" | "canvas">,
-  frames: readonly PlaceSpec[]
-) {
-  return withCanvas(deps, "canvas_place", (ctx) => canvasPlace(ctx, frames));
-}
-
-export function runCanvasPoint(
-  deps: Pick<StudioToolDeps, "ctx" | "canvas">,
-  args: { frame: string; selector?: string }
-) {
-  return withCanvas(deps, "canvas_point", (ctx) => canvasPoint(ctx, args));
-}
-
-function agentLinkProbe(
-  deps: Pick<StudioToolDeps, "ctx" | "preview" | "frameStates">
-): LinkProbe | undefined {
-  return probeWithPreview(
-    deps.preview,
-    deps.ctx.project,
-    deps.ctx.direction,
-    deps.frameStates ?? null
-  );
-}
-
-export function runListLinks(
-  deps: Pick<StudioToolDeps, "ctx" | "canvas" | "preview">
-) {
-  return withCanvas(deps, "list_links", (ctx) =>
-    listLinks(ctx, agentLinkProbe(deps))
-  );
-}
-
-export function runEditLinks(
-  deps: Pick<StudioToolDeps, "ctx" | "canvas" | "preview">,
-  args: EditLinksArgs
-) {
-  return withCanvas(deps, "edit_links", (ctx) =>
-    editLinks(ctx, args, agentLinkProbe(deps))
-  );
-}
-
-async function withFrameStates(
-  deps: Pick<StudioToolDeps, "ctx" | "frameStates">,
-  name: string,
-  run: (stateDeps: FrameStateDeps) => Promise<string>
-) {
-  const stateDeps = deps.frameStates ?? null;
-
-  if (!stateDeps) {
-    return errorText("Frame states are not available in this run.");
-  }
-
-  try {
-    return { content: [{ text: await run(stateDeps), type: "text" as const }] };
-  } catch (error) {
-    return errorText(`${name} failed: ${describeError(error)}`);
-  }
-}
-
-export function runListFrameStates(
-  deps: Pick<StudioToolDeps, "ctx" | "frameStates">
-) {
-  return withFrameStates(deps, "list_frame_states", async (stateDeps) =>
-    describeFrameStates(
-      deps.ctx.project,
-      await readFrameStates(stateDeps, deps.ctx.project)
-    )
-  );
-}
-
-export function runSetFrameState(
-  deps: Pick<StudioToolDeps, "ctx" | "frameStates">,
-  args: FrameStateInput
-) {
-  return withFrameStates(deps, "set_frame_state", async (stateDeps) => {
-    const done = await applyFrameState(stateDeps, deps.ctx.project, args);
-
-    return `Frame ${done.frameId} now shows ${done.state.name} (${done.state.id}).\n${describeFrameStates(deps.ctx.project, done.view)}`;
-  });
-}
-
-export function runSetFrameSession(
-  deps: Pick<StudioToolDeps, "ctx" | "frameStates">,
-  args: { user?: { name: string; email: string }; forgetCookies?: boolean }
-) {
-  return withFrameStates(deps, "set_frame_session", async (stateDeps) =>
-    describeFrameStates(
-      deps.ctx.project,
-      await applyFrameSession(stateDeps, deps.ctx.project, {
-        ...(args.user ? { user: args.user } : {}),
-        ...(args.forgetCookies ? { forget: true } : {}),
-      })
-    )
-  );
-}
-
-export async function runListRouteLinks(
-  deps: Pick<StudioToolDeps, "ctx">,
-  route: string
-) {
-  try {
-    return {
-      content: [
-        {
-          text: describeRouteLinks(
-            await listRouteLinks(deps.ctx.project, route)
-          ),
-          type: "text" as const,
-        },
-      ],
-    };
-  } catch (error) {
-    return errorText(`list_route_links failed: ${describeError(error)}`);
-  }
-}
-
-export function runAddFlow(
-  deps: Pick<StudioToolDeps, "ctx" | "canvas" | "frameStates">,
-  args: FlowInput
-) {
-  return withCanvas(deps, "add_flow", async (ctx) => {
-    if (ctx.plan) {
-      return errorText(
-        "Plan mode is on, so the canvas stays as it is. Describe the flow in the plan."
-      );
-    }
-
-    if (ctx.mode === "critique") {
-      return errorText("add_flow is not available in critique runs.");
-    }
-
-    const flowDeps = toFlowDeps(ctx.canvas, deps.frameStates);
-
-    if (!flowDeps) {
-      return errorText("Flow is not available in this run.");
-    }
-
-    return {
-      content: [
-        {
-          text: describeFlow(
-            await buildFlow(flowDeps, ctx.project, ctx.direction, args, "agent")
-          ),
-          type: "text" as const,
-        },
-      ],
-    };
-  });
 }
 
 function errorText(message: string) {

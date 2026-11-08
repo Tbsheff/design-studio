@@ -18,7 +18,13 @@ const ToFrameSchema = FrameRefSchema.annotate({
 
 const updateLinkCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "update_link",
+    set: "core",
+    short:
+      "Change the target, action or transition of one saved prototype link by id.",
+  },
   confirm: "none",
   description:
     "Change one saved prototype link: its target frame (or back), action, transition, duration or easing. Fields you leave out stay as they are. Each link change is one step in the edit history.",

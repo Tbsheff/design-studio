@@ -22,7 +22,6 @@ import type {
   StudioToolDeps,
   ToolFactory,
 } from "../tools.js";
-import { toCanvasTools } from "./canvas.js";
 import { toDesignSystemTools } from "./design-system.js";
 import { toDirectEditComponentTools } from "./direct-edit-component.js";
 import { toDirectEditElementTools } from "./direct-edit-element.js";
@@ -91,7 +90,6 @@ const createStudioMcpServer = async (
 
   const all = [
     ...toAgentOnlyTools(deps, counters, allowed, tool),
-    ...toCanvasTools(deps, tool),
     ...toDirectEditElementTools(deps, tool),
     ...toDirectEditComponentTools(deps, tool),
     ...toDesignSystemTools(deps, tool),

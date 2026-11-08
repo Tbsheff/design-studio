@@ -15,10 +15,10 @@ import { editLinks, listLinks } from "../canvas/links/index.js";
 import type { LinkProbe } from "../canvas/links/index.js";
 import type { DriverInput, DriverSink } from "./lifecycle.js";
 import {
+  ADD_LINK_TOOL,
   CANVAS_LIST_TOOL,
   CANVAS_PLACE_TOOL,
   CANVAS_POINT_TOOL,
-  EDIT_LINKS_TOOL,
   LIST_LINKS_TOOL,
 } from "./permissions.js";
 
@@ -311,7 +311,7 @@ export async function runMockLinks(
 
   const result = await mockCanvasTool(
     session,
-    EDIT_LINKS_TOOL,
+    ADD_LINK_TOOL,
     { add: [spec] },
     () => editLinks(ctx, { add: [spec] }, probe)
   );

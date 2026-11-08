@@ -1,10 +1,12 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
-import type { ReactElement } from "react";
-import { useEffect } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
+import { useCallback, useEffect } from "react";
 
 import { openPortDialog, portAvailable } from "../design-system/port-api.js";
+import { FrameMenuItemButton } from "./frame-menu-item.js";
 import { menuKeys, useMenu } from "./frame-menu-model.js";
+import { toMenuItems } from "./menu-items-model.js";
 import { stop } from "./variation-controls.js";
 
 interface FrameMenuItem {
@@ -39,36 +41,38 @@ const FrameMoreMenu = ({
   items: FrameMenuItem[];
 }): ReactElement | null => {
   const menu = useMenu();
+  const { close, root, setOpen } = menu;
+  const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
+
+  const handleKeys = useCallback(
+    (event: KeyboardEvent<HTMLElement>): void => menuKeys(event, close),
+    [close]
+  );
+
   useEffect(() => {
-    if (menu.open) {
-      menu.root.current
-        ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
-        ?.focus();
+    if (menu.open && root.current) {
+      toMenuItems(root.current)[0]?.focus();
     }
-  }, [menu.open, menu.root]);
+  }, [menu.open, root]);
 
   let items: FrameMenuItem[] = own;
 
   if (menu.open) {
-    items = [...portItem(menu.root.current), ...own];
+    items = [...portItem(root.current), ...own];
   }
 
   if (items.length === 0 && !portAvailable()) {
     return null;
   }
 
-  const datatip: "More frame actions" | undefined = (():
-    | "More frame actions"
-    | undefined => {
-    if (menu.open) {
-      return undefined;
-    }
+  let datatip = "More frame actions";
 
-    return "More frame actions";
-  })();
+  if (menu.open) {
+    datatip = "";
+  }
 
   return (
-    <div className="frame-menu-root" ref={menu.root}>
+    <div className="frame-menu-root" ref={root}>
       <button
         ref={menu.trigger}
         type="button"
@@ -77,8 +81,8 @@ const FrameMoreMenu = ({
         aria-expanded={menu.open}
         aria-label={`More actions for ${name}`}
         onPointerDown={stop}
-        onClick={() => menu.setOpen((value) => !value)}
-        data-tip={datatip}
+        onClick={toggle}
+        data-tip={datatip || null}
       >
         <Icon name="more" size={14} />
       </button>
@@ -86,37 +90,13 @@ const FrameMoreMenu = ({
         <div
           className="ui-menu project-menu canvas-menu frame-menu"
           role="menu"
+          tabIndex={-1}
           aria-label={`${name} actions`}
-          onKeyDown={(event) => menuKeys(event, menu.close)}
+          onKeyDown={handleKeys}
         >
-          {items.map((item) => {
-            let part: "" | " has-hint" = "";
-
-            if (item.disabled) {
-              part = " has-hint";
-            }
-
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="menuitem"
-                className={`ui-menu-item${part}`}
-                tabIndex={-1}
-                disabled={Boolean(item.disabled)}
-                onClick={() => {
-                  menu.close(true);
-                  item.run();
-                }}
-              >
-                <Icon name={item.icon} size={14} />
-                <span>{item.label}</span>
-                {item.disabled && (
-                  <span className="ui-menu-hint">{item.disabled}</span>
-                )}
-              </button>
-            );
-          })}
+          {items.map((item) => (
+            <FrameMenuItemButton key={item.id} entry={item} close={close} />
+          ))}
         </div>
       )}
     </div>

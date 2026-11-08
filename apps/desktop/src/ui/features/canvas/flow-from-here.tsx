@@ -1,5 +1,5 @@
 import { Icon } from "@design-studio/ui";
-import { useState } from "react";
+import { useCallback, useState, useTransition } from "react";
 import type {
   PointerEvent as ReactPointerEvent,
   ReactElement,
@@ -50,30 +50,36 @@ const FlowFromHere = ({
   frameName: string;
 }): ReactElement | null => {
   const states = useCurrentFrameStates();
-  const [busy, setBusy] = useState(false);
+  const [busy, startTransition] = useTransition();
   const [note, setNote] = useState<string | null>(null);
+
+  const clearNote = useCallback(() => setNote(null), []);
+  const projectId = states?.projectId ?? null;
+
+  const run = useCallback((): void => {
+    if (projectId === null) {
+      return;
+    }
+
+    setNote(null);
+
+    startTransition(async () => {
+      try {
+        const result = await api.buildFlow(projectId, {
+          depth: 1,
+          from: frameId,
+        });
+
+        setNote(doneText(result));
+      } catch (error: unknown) {
+        setNote(errorText(error));
+      }
+    });
+  }, [projectId, frameId]);
 
   if (!states) {
     return null;
   }
-
-  const run = async (): Promise<void> => {
-    setBusy(true);
-    setNote(null);
-
-    try {
-      const result = await api.buildFlow(states.projectId, {
-        depth: 1,
-        from: frameId,
-      });
-
-      setNote(doneText(result));
-    } catch (error: unknown) {
-      setNote(errorText(error));
-    } finally {
-      setBusy(false);
-    }
-  };
 
   let part2: "" | " busy" = "";
 
@@ -102,18 +108,14 @@ const FlowFromHere = ({
       disabled={busy}
       onPointerDown={stop}
       onClick={run}
-      onBlur={() => setNote(null)}
+      onBlur={clearNote}
       data-tip={
         note ??
         "Flow from here: add the routes this page links to, with prototype links"
       }
     >
       {content}
-      {note && (
-        <span className="sr-only" role="status">
-          {note}
-        </span>
-      )}
+      {note && <output className="sr-only">{note}</output>}
     </button>
   );
 };

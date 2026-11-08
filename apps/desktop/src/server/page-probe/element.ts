@@ -1,4 +1,3 @@
-import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
 import type {
   ComponentUse,
   SelectionContext,
@@ -8,27 +7,11 @@ import type { ComponentOwner } from "@design-studio/contracts/props";
 
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
-import { appSourceBody, ownerWalk, parseLoc } from "./owner-probe.js";
-
-const STYLE_KEYS = [
-  "display",
-  "position",
-  "color",
-  "background-color",
-  "font-family",
-  "font-size",
-  "font-weight",
-  "line-height",
-  "padding",
-  "margin",
-  "border-radius",
-  "width",
-  "height",
-  "gap",
-  "object-fit",
-  "object-position",
-  "background-image",
-];
+import {
+  toElementProbeSource,
+  toElementsProbeSource,
+} from "../preview/probe-source/index.js";
+import { parseLoc } from "./owner-probe.js";
 
 interface RawElement {
   tag: string;
@@ -42,27 +25,6 @@ interface RawElement {
   owners: ComponentOwner[];
   ancestors: string[];
 }
-
-const probeBody = (): string => `(async (selector) => {
-    let el;
-    try { el = document.querySelector(selector); } catch { return null; }
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    const cs = getComputedStyle(el);
-    const styles = {};
-    for (const key of ${JSON.stringify(STYLE_KEYS)}) styles[key] = cs.getPropertyValue(key);
-    const ancestors = [];
-    for (let p = el.parentElement; p && ancestors.length < 6; p = p.parentElement) ancestors.push(p.tagName.toLowerCase() + (p.id ? '#' + p.id : ''));
-    const tagged = el.getAttribute(${JSON.stringify(SOURCE_LOC_ATTR)});
-    const app = tagged ? null : await (${appSourceBody()})(el);
-    return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().slice(0, 2000), outerHTML: el.outerHTML.slice(0, 10000), styles, rect: { x: Math.round(r.x), y: Math.round(r.y + scrollY), width: Math.round(r.width), height: Math.round(r.height) }, loc: tagged || app?.loc || null, usedAt: app?.usedAt ?? null, usedBy: app?.usedBy ?? null, owners: ${ownerWalk()}(el), ancestors };
-  })`;
-
-const probe = (selector: string): string =>
-  `(${probeBody()})(${JSON.stringify(selector)})`;
-
-const probeAll = (selectors: string[]): string =>
-  `Promise.all((${JSON.stringify(selectors)}).map(${probeBody()}))`;
 
 const contextOf = (
   selectorText: string,
@@ -98,7 +60,7 @@ const describeElements = async (
   const raws = await onProbePage<(RawElement | null)[]>(
     preview,
     url,
-    probeAll(selectors)
+    toElementsProbeSource(selectors)
   );
 
   return selectors.map((selector, index) => {
@@ -120,7 +82,7 @@ const describeElement = async (
   const raw = await onProbePage<RawElement | null>(
     preview,
     url,
-    probe(selector)
+    toElementProbeSource(selector)
   );
 
   if (raw) {

@@ -17,7 +17,7 @@ export {
 } from "../../direct-edit/commit/index.js";
 
 export {
-  appSourceBody,
+  toAppSourceBody,
   parseLoc,
   probeOnPage,
 } from "../../page-probe/index.js";

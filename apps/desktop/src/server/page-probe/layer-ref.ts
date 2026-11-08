@@ -3,9 +3,9 @@ import { onSourceChange } from "../events/index.js";
 import type { SourceChange } from "../events/index.js";
 import type { PreviewService } from "../preview/index.js";
 import { onProbePage } from "../preview/probe-page.js";
+import { SCAN_SOURCE } from "../preview/probe-source/index.js";
 import { isGoneRef, refForKey, remapIds } from "./layer-ids.js";
 import type { Move } from "./layer-ids.js";
-import { SCAN_SOURCE } from "./layer-scan-source.js";
 
 interface Viewport {
   width: number;

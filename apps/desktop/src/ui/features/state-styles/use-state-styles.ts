@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import type { MutableRefObject } from "react";
 
-import { editVariantStore, postForceState, useEditVariant } from "./deps.js";
+import { editVariantStore, setForceState, useEditVariant } from "./deps.js";
 import type {
   PreviewPort,
   SaveStatus,
@@ -101,7 +101,7 @@ const applyChip = (
 
   frame?.post({ type: "preview-reset" });
   editVariantStore.set(next);
-  postForceState(frame, selector, next);
+  setForceState(frame, selector, next);
   pushForced(ids, selector, stateWire(chip));
 };
 

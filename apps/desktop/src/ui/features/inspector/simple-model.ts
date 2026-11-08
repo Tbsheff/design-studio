@@ -18,8 +18,8 @@ import type {
   DirectEditControl,
   SaveStatus,
   AuthoredCssState,
+  VariantScope,
 } from "./deps.js";
-import type { VariantScope } from "./edit-variant.js";
 import type { ElementClasses } from "./inspector-classes.js";
 import type {
   ScopeInput,

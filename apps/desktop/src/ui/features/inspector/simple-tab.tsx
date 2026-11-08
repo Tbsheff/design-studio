@@ -4,23 +4,23 @@ import { imageKindOf } from "../../../shared/image.js";
 import { AccessibilitySection } from "./accessibility-section.js";
 import { ComponentSection } from "./component-section.js";
 import { copy } from "./copy.js";
-import { useEditVariant } from "./edit-variant.js";
 import { EffectLayersSection } from "./effect-section.js";
 import { EmptyState } from "./empty-state.js";
 import { GridSection } from "./grid-section.js";
 import { ImageSection } from "./image-section.js";
-import { inspectorEmptyReason } from "./inspector-model.js";
+import { toInspectorEmptyReason } from "./inspector-model.js";
 import type { InspectorProps } from "./inspector-model.js";
 import { SimpleEditor } from "./inspector-simple.js";
 import { SimpleMultiEditor } from "./simple-multi-editor.js";
 import { StackingSection } from "./stacking-section.js";
+import { useEditVariant } from "./use-edit-variant.js";
 import { useUseSite } from "./use-use-site.js";
 import { VectorSection } from "./vector-section.js";
 
 const SimpleTab = (props: InspectorProps): ReactElement => {
   const variant = useEditVariant();
   const site = useUseSite(props);
-  const reason = inspectorEmptyReason(props.selection, props.isEditable);
+  const reason = toInspectorEmptyReason(props.selection, props.isEditable);
   const target = props.selection[0];
 
   if (

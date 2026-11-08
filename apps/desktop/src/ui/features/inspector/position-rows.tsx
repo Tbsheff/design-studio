@@ -6,9 +6,9 @@ import { useCallback, useEffect, useState } from "react";
 import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch } from "./constraints.js";
 import type { InsetProp, PinAxis, PinMode } from "./constraints.js";
 import { copy } from "./copy.js";
-import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { setEdit } from "./use-layout-keys.js";
 
 const IN_FLOW = { bottom: "", left: "", position: "", right: "", top: "" };
 
@@ -26,9 +26,9 @@ const PositionRows = ({
 
   const toggle = (): void => {
     if (on) {
-      write(edit, IN_FLOW);
+      setEdit(edit, IN_FLOW);
     } else {
-      write(edit, {
+      setEdit(edit, {
         left: selection.styles["offset-left"] || "0px",
         position: "absolute",
         top: selection.styles["offset-top"] || "0px",

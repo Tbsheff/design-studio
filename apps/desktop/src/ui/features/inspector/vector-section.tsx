@@ -1,13 +1,13 @@
 import type { ReactElement } from "react";
 import { Suspense, lazy } from "react";
 
-import { vectorShown } from "./inspector-model.js";
+import { isVectorShown } from "./inspector-model.js";
 import type { InspectorProps } from "./inspector-model.js";
 
 const InspectorVector = lazy(() => import("./inspector-vector.js"));
 
 const VectorSection = (props: InspectorProps): ReactElement | null => {
-  if (!vectorShown(props.selection)) {
+  if (!isVectorShown(props.selection)) {
     return null;
   }
 

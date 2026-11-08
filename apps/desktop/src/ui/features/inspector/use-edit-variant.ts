@@ -5,12 +5,19 @@ import { parseVariant } from "../../../shared/variants.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
 
+interface Restore {
+  readonly width: number;
+  readonly set: number;
+}
+
 let prefix = "";
-let restore: { readonly width: number; readonly set: number } | null = null;
+let restore: Restore | null = null;
 const listeners = new Set<() => void>();
 
-const emit = (): void => {
-  listeners.forEach((listener) => listener());
+const runListeners = (): void => {
+  for (const listener of listeners) {
+    listener();
+  }
 };
 
 const editVariantStore = {
@@ -21,7 +28,7 @@ const editVariantStore = {
     }
 
     prefix = next;
-    emit();
+    runListeners();
   },
   subscribe: (listener: () => void): (() => void) => {
     listeners.add(listener);
@@ -35,7 +42,19 @@ const editVariantStore = {
 const useEditVariant = (): string =>
   useSyncExternalStore(editVariantStore.subscribe, editVariantStore.get);
 
-const fitFrameTo = (width: number | null): void => {
+const toRestore = (
+  current: Restore | null,
+  width: number,
+  viewportWidth: number
+): Restore => {
+  if (!current || viewportWidth !== current.set) {
+    return { set: width, width: viewportWidth };
+  }
+
+  return { ...current, set: width };
+};
+
+const setFrameWidth = (width: number | null): void => {
   const { viewport } = uiStore.get();
 
   if (width === null) {
@@ -54,10 +73,7 @@ const fitFrameTo = (width: number | null): void => {
     return;
   }
 
-  restore =
-    !restore || viewport.width !== restore.set
-      ? { set: width, width: viewport.width }
-      : { ...restore, set: width };
+  restore = toRestore(restore, width, viewport.width);
 
   if (viewport.width !== width) {
     uiStore.set({
@@ -66,7 +82,7 @@ const fitFrameTo = (width: number | null): void => {
   }
 };
 
-const postForceState = (
+const setForceState = (
   port: PreviewPort | null,
   selector: string | null,
   variant: string
@@ -83,14 +99,14 @@ const postForceState = (
   });
 };
 
-const resetEditVariant = (port: PreviewPort | null): void => {
+const restoreEditVariant = (port: PreviewPort | null): void => {
   if (prefix === "") {
     return;
   }
 
   editVariantStore.set("");
-  fitFrameTo(null);
-  postForceState(port, null, "");
+  setFrameWidth(null);
+  setForceState(port, null, "");
 };
 
 interface VariantScope {
@@ -111,9 +127,9 @@ const isInherited = (scope: VariantScope, prop: DirectStyleProperty): boolean =>
 export {
   editVariantStore,
   useEditVariant,
-  fitFrameTo,
-  postForceState,
-  resetEditVariant,
+  setFrameWidth,
+  setForceState,
+  restoreEditVariant,
   VariantScopeContext,
   useVariantScope,
   isInherited,

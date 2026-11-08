@@ -5,9 +5,9 @@ import { useState } from "react";
 
 import { copy } from "./copy.js";
 import { AddButton } from "./inspector-shared.js";
-import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { setEdit } from "./use-layout-keys.js";
 
 const SELF: {
   readonly value: string;
@@ -56,7 +56,7 @@ const AlignSelf = ({
           aria-pressed={current === option.value}
           data-tip={option.label}
           onClick={() =>
-            write(edit, {
+            setEdit(edit, {
               "align-self": current === option.value ? "" : option.value,
             })
           }

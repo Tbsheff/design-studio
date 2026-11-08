@@ -19,8 +19,14 @@ const TweaksPanel: LazyExoticComponent<typeof TweaksPanelView> = lazy(
 
 export { Inspector, TweaksPanel };
 
-export { useEditVariant } from "./edit-variant.js";
+export {
+  editVariantStore,
+  setForceState,
+  useEditVariant,
+} from "./use-edit-variant.js";
 
-export { inspectorEmptyReason, isDirectEditable } from "./inspector-model.js";
+export { toInspectorEmptyReason, isDirectEditable } from "./inspector-model.js";
 
 export { canPolishRun, POLISH_REQUEST } from "./polish-model.js";
+
+export { toJoinedCorners } from "./corners-model.js";

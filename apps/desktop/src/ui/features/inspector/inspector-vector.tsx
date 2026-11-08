@@ -6,7 +6,7 @@ import type { KeyboardEvent, ReactElement } from "react";
 import {
   BOOLEAN_OPS,
   VECTOR_COLOR,
-  isSvgShapeTag,
+  isSvgDrawingTag,
 } from "../../../shared/vector.js";
 import type {
   BooleanOpName,
@@ -448,7 +448,7 @@ export default function InspectorVector(props: Props): ReactElement | null {
   if (
     !props.directionId ||
     props.selection.length > 2 ||
-    !props.selection.every((item) => isSvgShapeTag(item.tag) && item.source)
+    !props.selection.every((item) => isSvgDrawingTag(item.tag) && item.source)
   ) {
     return null;
   }

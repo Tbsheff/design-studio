@@ -6,7 +6,6 @@ import type { ReactNode, ReactElement } from "react";
 import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
-import { write, useLayoutKeys } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import { SelectField } from "./select-field.js";
 import {
@@ -16,6 +15,7 @@ import {
   isGridDisplay,
 } from "./sizing.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { setEdit, useLayoutKeys } from "./use-layout-keys.js";
 
 const DIRECTIONS: {
   readonly value: string;
@@ -84,7 +84,7 @@ const AlignGrid = ({
               data-tip={label}
               onClick={() => {
                 const cell = alignCell(col, row, isRow);
-                write(
+                setEdit(
                   edit,
                   grid
                     ? {
@@ -143,7 +143,7 @@ const GapModeField = ({
       return;
     }
 
-    write(
+    setEdit(
       edit,
       next === "auto"
         ? { gap: "", "justify-content": "space-between" }
@@ -251,7 +251,9 @@ const FlexControls = ({
                 aria-label={option.label}
                 aria-pressed={direction === option.value}
                 data-tip={option.label}
-                onClick={() => write(edit, { "flex-direction": option.value })}
+                onClick={() =>
+                  setEdit(edit, { "flex-direction": option.value })
+                }
               >
                 <Icon name={option.icon} size={14} />
               </button>
@@ -264,7 +266,7 @@ const FlexControls = ({
             aria-pressed={wraps}
             data-tip={wraps ? "Wrap: on" : "Wrap: off"}
             onClick={() =>
-              write(edit, { "flex-wrap": wraps ? "nowrap" : "wrap" })
+              setEdit(edit, { "flex-wrap": wraps ? "nowrap" : "wrap" })
             }
           >
             <Icon name="wrap" size={14} />
@@ -298,12 +300,12 @@ const AutoLayoutSection = ({
         !isFlexDisplay(edit.values.display) &&
         !isGridDisplay(edit.values.display)
       ) {
-        write(edit, { display: "flex" });
+        setEdit(edit, { display: "flex" });
       }
     },
     () => {
       if (isFlexDisplay(edit.values.display)) {
-        write(edit, { display: "block" });
+        setEdit(edit, { display: "block" });
       }
     }
   );
@@ -316,7 +318,7 @@ const AutoLayoutSection = ({
       aria-keyshortcuts="Alt+Shift+A"
       data-tip={copy.removeAutoLayoutA}
       data-tip-align="end"
-      onClick={() => write(edit, { display: "block" })}
+      onClick={() => setEdit(edit, { display: "block" })}
     >
       <Icon name="close" size={12} />
     </button>
@@ -339,7 +341,7 @@ const AutoLayoutSection = ({
               label="Auto layout"
               tip="Add auto layout ⇧A"
               shortcut="Shift+A"
-              onClick={() => write(edit, { display: "flex" })}
+              onClick={() => setEdit(edit, { display: "flex" })}
             />
           )}
         </div>

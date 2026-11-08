@@ -2,7 +2,6 @@ import { memo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { normalizeLength, stepValue } from "./css-values.js";
-import { isInherited, useVariantScope } from "./edit-variant.js";
 import { resolveNumberInput } from "./math-input.js";
 import { hasCurrentDependency } from "./mixed-values.js";
 import {
@@ -17,6 +16,7 @@ import {
   sameSpec,
 } from "./number-field-model.js";
 import type { NumberSpec } from "./number-field-model.js";
+import { isInherited, useVariantScope } from "./use-edit-variant.js";
 import { useTokenUi } from "./use-token-snap.js";
 
 interface InputProps {

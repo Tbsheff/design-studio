@@ -13,6 +13,8 @@ const ComponentsTab = ({
     return <p className="ins-hint edit-tab-empty">{copy.componentsHint}</p>;
   }
 
+  const { onMention: handleMention } = components;
+
   return (
     <div className="edit-components">
       <ComponentsPanel
@@ -20,7 +22,7 @@ const ComponentsTab = ({
         directionId={components.directionId}
         list={components.list}
         active
-        onMention={components.onMention}
+        onMention={handleMention}
         kind={components.kind}
         selection={components.selection}
       />

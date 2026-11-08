@@ -4,7 +4,6 @@ import type { ReactElement } from "react";
 import { copy } from "./copy.js";
 import { displayColor, isValidColor } from "./css-values.js";
 import { TokenControl } from "./deps.js";
-import { isInherited, useVariantScope } from "./edit-variant.js";
 import {
   toColorHex,
   toModifiedClass,
@@ -12,6 +11,7 @@ import {
   toResolvedColor,
 } from "./field-model.js";
 import { useColorField } from "./use-color-field.js";
+import { isInherited, useVariantScope } from "./use-edit-variant.js";
 import { isSameField } from "./use-same-field.js";
 import type { FieldProps } from "./use-same-field.js";
 import { useTokenUi } from "./use-token-snap.js";

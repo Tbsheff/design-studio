@@ -6,7 +6,7 @@ export type { MotionSetBody, MotionSpecBody } from "../../api.js";
 
 export type { PreviewPort } from "../../platform/bridge.js";
 
-export { postForceState, useEditVariant } from "../inspector/edit-variant.js";
+export { setForceState, useEditVariant } from "../inspector/index.js";
 
 export { InspectorSection } from "../inspector/inspector-fields.js";
 

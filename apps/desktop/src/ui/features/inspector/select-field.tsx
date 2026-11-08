@@ -3,8 +3,8 @@ import { memo, useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { isInherited, useVariantScope } from "./edit-variant.js";
 import { toModifiedClass, toPlaceholder, toSelectList } from "./field-model.js";
+import { isInherited, useVariantScope } from "./use-edit-variant.js";
 import { isSameField } from "./use-same-field.js";
 import type { FieldProps } from "./use-same-field.js";
 

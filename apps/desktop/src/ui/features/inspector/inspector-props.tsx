@@ -34,9 +34,9 @@ const InspectorPropsPanel = ({
     projectId,
     selection,
   });
-  const { instance, status, sheet, isStylesOpen } = panel;
-  const { onChange, setStatus, onToggleStyles } = panel;
-  const { onOpenSheet: handleOpenSheet } = panel;
+
+  const { instance, status, sheet, isStylesOpen, onChange, setStatus } = panel;
+  const { onToggleStyles, onOpenSheet: handleOpenSheet } = panel;
   const { onCloseSheet: handleCloseSheet } = panel;
   const component = instance?.component;
 

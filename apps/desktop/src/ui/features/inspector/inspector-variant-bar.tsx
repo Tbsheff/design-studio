@@ -17,10 +17,10 @@ import type { PreviewPort } from "../../platform/bridge.js";
 import { copy } from "./copy.js";
 import {
   editVariantStore,
-  fitFrameTo,
-  postForceState,
+  setFrameWidth,
+  setForceState,
   useEditVariant,
-} from "./edit-variant.js";
+} from "./use-edit-variant.js";
 
 import "../../styles/inspector-variants.css";
 
@@ -104,7 +104,7 @@ const InspectorVariantBarView = ({
 
   useEffect(() => {
     if (prefix !== "") {
-      postForceState(port.current, selector, prefix);
+      setForceState(port.current, selector, prefix);
     }
   }, [port, selector, prefix]);
 
@@ -118,8 +118,8 @@ const InspectorVariantBarView = ({
 
     port.current?.post({ type: "preview-reset" });
     editVariantStore.set(value);
-    fitFrameTo(width);
-    postForceState(port.current, selector, value);
+    setFrameWidth(width);
+    setForceState(port.current, selector, value);
   };
 
   const note = summary(prefix, support);

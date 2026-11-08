@@ -1,6 +1,6 @@
 import type { SelectionContext } from "@design-studio/contracts";
 
-import { vectorShown } from "./inspector-model.js";
+import { isVectorShown } from "./inspector-model.js";
 
 const UNSHARED_PROPS = new Set([
   "layers",
@@ -42,7 +42,7 @@ const isSameSelection = (
     return true;
   }
 
-  if (first.length !== second.length || vectorShown(second)) {
+  if (first.length !== second.length || isVectorShown(second)) {
     return false;
   }
 

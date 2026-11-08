@@ -18,9 +18,9 @@ import {
   valuesFromStyles,
 } from "./css-values.js";
 import type { Shift, ShiftPart, StyleValues } from "./css-values.js";
-import { editVariantStore } from "./edit-variant.js";
 import { startOptimistic } from "./optimistic-edit.js";
 import { isApiConflict, isApiError } from "./use-api-error.js";
+import { editVariantStore } from "./use-edit-variant.js";
 
 export type SaveStatus =
   | { readonly kind: "idle" }

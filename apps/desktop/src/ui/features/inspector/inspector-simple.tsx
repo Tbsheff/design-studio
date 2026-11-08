@@ -4,7 +4,6 @@ import type { ReactElement } from "react";
 
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
 import type { StyleValues } from "./css-values.js";
-import { useEditVariant } from "./edit-variant.js";
 import { useElementClasses } from "./inspector-classes.js";
 import type { ElementClasses } from "./inspector-classes.js";
 import { CreateTokenHost, useInspectorTokens } from "./inspector-tokens.js";
@@ -16,6 +15,7 @@ import { toSavedAt } from "./simple-model.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 import { useAuthoredCss } from "./use-authored-css.js";
 import { useDirectEdit } from "./use-direct-edit.js";
+import { useEditVariant } from "./use-edit-variant.js";
 import { useSettled } from "./use-settled.js";
 
 const toClassInfo = (

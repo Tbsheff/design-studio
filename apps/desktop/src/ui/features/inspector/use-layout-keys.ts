@@ -1,37 +1,33 @@
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
-import { isTypingTarget } from "../../platform/typing-target.js";
 import {
   PREVIEW_ARRANGE_KEY_EVENT,
   PREVIEW_LAYOUT_KEY_EVENT,
-} from "../canvas/use-preview-frames.js";
+} from "../../platform/preview-key-events.js";
+import { isTypingTarget } from "../../platform/typing-target.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 type Patch = Parameters<DirectEdit["preview"]>[0];
 
-const write = (edit: DirectEdit, patch: Patch): void => {
+const setEdit = (edit: DirectEdit, patch: Patch): void => {
   edit.preview(patch);
   edit.commit();
 };
 
+const isKeyAChord = (event: KeyboardEvent): boolean =>
+  event.code === "KeyA" && event.shiftKey && !event.repeat;
+
+const hasNoCommandKey = (event: KeyboardEvent): boolean =>
+  !event.metaKey && !event.ctrlKey;
+
 const isLayoutShortcut = (event: KeyboardEvent): boolean =>
-  event.code === "KeyA" &&
-  event.shiftKey &&
-  !event.metaKey &&
-  !event.ctrlKey &&
-  !event.altKey &&
-  !event.repeat;
+  isKeyAChord(event) && hasNoCommandKey(event) && !event.altKey;
 
 const REMOVE_LAYOUT_CHORD = "Alt+Shift+KeyA";
 
 const isRemoveShortcut = (event: KeyboardEvent): boolean =>
-  event.code === "KeyA" &&
-  event.shiftKey &&
-  event.altKey &&
-  !event.metaKey &&
-  !event.ctrlKey &&
-  !event.repeat;
+  isKeyAChord(event) && hasNoCommandKey(event) && event.altKey;
 
 const useLayoutKeys = (
   root: RefObject<HTMLElement | null>,
@@ -39,7 +35,11 @@ const useLayoutKeys = (
   onRemove: () => void
 ): void => {
   const latest = useRef({ onAdd, onRemove });
-  latest.current = { onAdd, onRemove };
+
+  useEffect(() => {
+    latest.current = { onAdd, onRemove };
+  }, [onAdd, onRemove]);
+
   useEffect(() => {
     const visible = (): boolean =>
       Boolean(root.current && !root.current.closest("[inert]"));
@@ -92,4 +92,4 @@ const useLayoutKeys = (
   }, [root]);
 };
 
-export { useLayoutKeys, write };
+export { setEdit, useLayoutKeys };

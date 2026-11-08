@@ -28,6 +28,7 @@ import {
 } from "./canvas-frame-ops.js";
 import { canvasStore, useCanvasLayout } from "./canvas-frames-model.js";
 import type { Box, CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
+import { blocksZoomKey } from "./pan-zoom-model.js";
 import { snapOff, snapRect } from "./snap-model.js";
 import type { ClickThrough } from "./use-click-through.js";
 import {
@@ -35,7 +36,6 @@ import {
   otherFrames,
   useFrameResize,
 } from "./use-frame-resize.js";
-import { blocksZoomKey } from "./use-pan-zoom.js";
 import type { PanZoom } from "./use-pan-zoom.js";
 
 const ZOOM_ECHO_MS = 150;

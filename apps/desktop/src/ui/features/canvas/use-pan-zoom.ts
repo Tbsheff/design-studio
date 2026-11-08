@@ -1,4 +1,3 @@
-import { isModZoomKey } from "@design-studio/contracts";
 import type { ZoomKey } from "@design-studio/contracts";
 import {
   useCallback,
@@ -8,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
@@ -16,36 +15,22 @@ import { uiStore } from "../../platform/storage.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import type { Box } from "./canvas-frames-model.js";
+import {
+  CLICK_ZOOM,
+  LINE_PX,
+  SELECTION_PAD,
+  WHEEL_IDLE_MS,
+  ZOOM_100,
+  ZOOM_STEP,
+  clampZoom,
+  fitTop,
+  fitZoomFor,
+  wheelZoomFactor,
+} from "./pan-zoom-model.js";
+import type { Options, PanZoomLayout } from "./pan-zoom-types.js";
+import type { FrameWheel, WheelInput } from "./pan-zoom-wheel-types.js";
 
-export { isTypingTarget };
-
-const PAD = 24;
-const FRAME_LABEL_H = 28;
-const SELECTION_PAD = 64;
-const MIN_ZOOM = 0.1;
-const MAX_ZOOM = 4;
-const ZOOM_STEP = 1.25;
-const LINE_PX = 16;
-const WHEEL_RATE = 0.01;
-const WHEEL_IDLE_MS = 160;
-const CLICK_ZOOM = 2;
-
-interface WheelInput {
-  deltaX: number;
-  deltaY: number;
-  deltaMode: number;
-}
-
-interface FrameWheel extends WheelInput {
-  clientX: number;
-  clientY: number;
-}
-
-export interface PanZoomLayout {
-  activeId: string;
-  active: Box;
-  bounds: Box;
-}
+const CREATE_LIVE_STORE_100 = 100;
 
 interface Stage {
   w: number;
@@ -59,58 +44,45 @@ interface View {
 }
 
 const wheelPixels = (
-  e: WheelInput,
+  wheelInput: WheelInput,
   pageHeight: number
 ): { dx: number; dy: number } => {
-  const unit = e.deltaMode === 1 ? LINE_PX : e.deltaMode === 2 ? pageHeight : 1;
+  const unit: number = ((): number => {
+    if (wheelInput.deltaMode === 1) {
+      return LINE_PX;
+    }
 
-  return { dx: e.deltaX * unit, dy: e.deltaY * unit };
-};
+    if (wheelInput.deltaMode === 2) {
+      return pageHeight;
+    }
 
-const wheelZoomFactor = (dy: number): number =>
-  Math.min(ZOOM_STEP, Math.max(1 / ZOOM_STEP, Math.exp(-dy * WHEEL_RATE)));
-
-const clampZoom = (z: number): number =>
-  Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)) * 10_000) / 10_000;
-
-const fitZoomFor = (stage: Stage, bounds: Box): number => {
-  if (stage.w <= 0 || stage.h <= 0 || bounds.width <= 0 || bounds.height <= 0) {
     return 1;
-  }
+  })();
 
-  return Math.max(
-    MIN_ZOOM,
-    Math.min(
-      1,
-      (stage.w - PAD * 2) / bounds.width,
-      (stage.h - PAD * 2 - FRAME_LABEL_H) / bounds.height
-    )
-  );
+  return { dx: wheelInput.deltaX * unit, dy: wheelInput.deltaY * unit };
 };
-
-const fitTop = (stage: Stage, height: number): number =>
-  FRAME_LABEL_H +
-  Math.max(PAD, Math.round((stage.h - FRAME_LABEL_H - height) / 2));
 
 const numericBase = (
   stage: Stage,
   active: Box,
-  z: number
+  zoom2: number
 ): { x: number; y: number } => ({
-  x: Math.round((stage.w - active.width * z) / 2),
-  y: fitTop(stage, active.height * z),
+  x: Math.round((stage.w - active.width * zoom2) / 2),
+  y: fitTop(stage.h, active.height * zoom2),
 });
 
 const fitBase = (
   stage: Stage,
   layout: PanZoomLayout,
-  z: number
+  zoom3: number
 ): { x: number; y: number } => {
   const { bounds, active } = layout;
 
   return {
-    x: Math.round((stage.w - bounds.width * z) / 2) + (active.x - bounds.x) * z,
-    y: fitTop(stage, bounds.height * z) + (active.y - bounds.y) * z,
+    x:
+      Math.round((stage.w - bounds.width * zoom3) / 2) +
+      (active.x - bounds.x) * zoom3,
+    y: fitTop(stage.h, bounds.height * zoom3) + (active.y - bounds.y) * zoom3,
   };
 };
 
@@ -134,57 +106,41 @@ const paintScreenSizeChrome = (artboard: HTMLElement, zoom: number): void => {
   }
 };
 
-export function blocksZoomKey(event: KeyboardEvent): boolean {
-  if (!isTypingTarget(event.target)) {
-    return false;
-  }
-
-  return !(isModZoomKey(event) && event.target instanceof HTMLSelectElement);
-}
-
-interface Options {
-  stageRef: RefObject<HTMLDivElement | null>;
-  artboardRef: RefObject<HTMLDivElement | null>;
-  layout: PanZoomLayout;
-  setting: ZoomSetting;
-  selectionRect: () => Box | null;
-}
-
-export interface PanZoom {
+interface PanZoom {
   zoom: number;
   zoomPercent: LiveStore<number>;
   panning: boolean;
   spaceHeld: boolean;
   zoomHeld: boolean;
-  onPointerDown: (e: ReactPointerEvent) => void;
+  onPointerDown: (event2: ReactPointerEvent) => void;
   zoomAt: (stageX: number, stageY: number, factor: number) => void;
-  zoomTo: (z: number) => void;
+  zoomTo: (zoom4: number) => void;
   zoomStep: (direction: 1 | -1) => void;
   fit: () => void;
   zoomToActive: () => void;
   freeze: () => void;
   applyZoomKey: (key: ZoomKey) => void;
-  frameWheel: (frame: HTMLIFrameElement | null, e: FrameWheel) => void;
+  frameWheel: (frame: HTMLIFrameElement | null, frameWheel: FrameWheel) => void;
 }
 
-export function usePanZoom({
+const usePanZoom = ({
   stageRef,
   artboardRef,
   layout,
   setting,
   selectionRect,
-}: Options): PanZoom {
+}: Options): PanZoom => {
   const [stage, setStage] = useState<Stage>({ h: 0, w: 0 });
   const [panning, setPanning] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [zoomHeld, setZoomHeld] = useState(false);
-  const [, rerender] = useReducer((n: number) => n + 1, 0);
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
   const offset = useRef({ x: 0, y: 0 });
   const zoomOverride = useRef<number | null>(null);
   const wheelTimer = useRef<number | null>(null);
   const paintFrame = useRef(0);
   const painted = useRef<View | null>(null);
-  const [zoomPercent] = useState(() => createLiveStore(100));
+  const [zoomPercent] = useState(() => createLiveStore(CREATE_LIVE_STORE_100));
 
   useLayoutEffect(() => {
     const el = stageRef.current;
@@ -203,8 +159,13 @@ export function usePanZoom({
     return (): void => ro.disconnect();
   }, [stageRef]);
 
-  const committedZoom =
-    setting === "fit" ? fitZoomFor(stage, layout.bounds) : setting;
+  const committedZoom: number = ((): number => {
+    if (setting === "fit") {
+      return fitZoomFor(stage.w, stage.h, layout.bounds);
+    }
+
+    return setting;
+  })();
 
   const live = useRef({ committedZoom, layout, selectionRect, setting, stage });
   live.current = { committedZoom, layout, selectionRect, setting, stage };
@@ -214,10 +175,13 @@ export function usePanZoom({
     const override = zoomOverride.current;
     const zoom = override ?? cur.committedZoom;
 
-    const base =
-      override === null && cur.setting === "fit"
-        ? fitBase(cur.stage, cur.layout, zoom)
-        : numericBase(cur.stage, cur.layout.active, zoom);
+    const base: { x: number; y: number } = ((): { x: number; y: number } => {
+      if (override === null && cur.setting === "fit") {
+        return fitBase(cur.stage, cur.layout, zoom);
+      }
+
+      return numericBase(cur.stage, cur.layout.active, zoom);
+    })();
 
     return { x: base.x + offset.current.x, y: base.y + offset.current.y, zoom };
   }, []);
@@ -229,22 +193,22 @@ export function usePanZoom({
       return;
     }
 
-    const v = view();
-    el.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.zoom})`;
+    const view2 = view();
+    el.style.transform = `translate(${view2.x}px, ${view2.y}px) scale(${view2.zoom})`;
 
-    if (painted.current?.zoom !== v.zoom) {
-      paintScreenSizeChrome(el, v.zoom);
+    if (painted.current?.zoom !== view2.zoom) {
+      paintScreenSizeChrome(el, view2.zoom);
     }
 
     if (
       zoomOverride.current === null &&
-      el.style.getPropertyValue("--inv-zoom") !== String(1 / v.zoom)
+      el.style.getPropertyValue("--inv-zoom") !== String(1 / view2.zoom)
     ) {
-      setZoomVars(el, v.zoom);
+      setZoomVars(el, view2.zoom);
     }
 
-    painted.current = v;
-    zoomPercent.set(Math.round(v.zoom * 100));
+    painted.current = view2;
+    zoomPercent.set(Math.round(view2.zoom * ZOOM_100));
   }, [artboardRef, view, zoomPercent]);
 
   const schedulePaint = useCallback(() => {
@@ -267,11 +231,11 @@ export function usePanZoom({
   useLayoutEffect(() => {
     const prev = prevActive.current;
     prevActive.current = { id: activeId, x: ax, y: ay };
-    const p = painted.current;
+    const point = painted.current;
 
     if (
       !prev ||
-      !p ||
+      !point ||
       (prev.id === activeId && prev.x === ax && prev.y === ay)
     ) {
       return;
@@ -283,10 +247,10 @@ export function usePanZoom({
       return;
     }
 
-    const base = numericBase(cur.stage, cur.layout.active, p.zoom);
+    const base = numericBase(cur.stage, cur.layout.active, point.zoom);
     offset.current = {
-      x: p.x + (ax - prev.x) * p.zoom - base.x,
-      y: p.y + (ay - prev.y) * p.zoom - base.y,
+      x: point.x + (ax - prev.x) * point.zoom - base.x,
+      y: point.y + (ay - prev.y) * point.zoom - base.y,
     };
   }, [activeId, ax, ay]);
 
@@ -309,12 +273,22 @@ export function usePanZoom({
 
       wheelTimer.current = null;
       zoomOverride.current = null;
+
+      const committedZoom2: number = ((): number => {
+        if (zoom === "fit") {
+          return fitZoomFor(
+            live.current.stage.w,
+            live.current.stage.h,
+            live.current.layout.bounds
+          );
+        }
+
+        return zoom;
+      })();
+
       live.current = {
         ...live.current,
-        committedZoom:
-          zoom === "fit"
-            ? fitZoomFor(live.current.stage, live.current.layout.bounds)
-            : zoom,
+        committedZoom: committedZoom2,
         setting: zoom,
       };
       paint();
@@ -363,10 +337,10 @@ export function usePanZoom({
 
       wheelTimer.current = window.setTimeout(() => {
         wheelTimer.current = null;
-        const z = zoomOverride.current;
+        const zoom5 = zoomOverride.current;
 
-        if (z !== null) {
-          commit(z);
+        if (zoom5 !== null) {
+          commit(zoom5);
         }
       }, WHEEL_IDLE_MS);
     },
@@ -374,9 +348,9 @@ export function usePanZoom({
   );
 
   const zoomTo = useCallback(
-    (z: number) => {
-      const { stage: s } = live.current;
-      zoomAt(s.w / 2, s.h / 2, z / view().zoom);
+    (zoom6: number) => {
+      const { stage: stage2 } = live.current;
+      zoomAt(stage2.w / 2, stage2.h / 2, zoom6 / view().zoom);
     },
     [zoomAt, view]
   );
@@ -393,21 +367,21 @@ export function usePanZoom({
 
   const zoomToBox = useCallback(
     (box: Box) => {
-      const { stage: s, layout: l } = live.current;
+      const { stage: stage3, layout: panZoomLayout } = live.current;
 
-      const z = clampZoom(
+      const zoom7 = clampZoom(
         Math.min(
-          (s.w - SELECTION_PAD * 2) / Math.max(1, box.width),
-          (s.h - SELECTION_PAD * 2) / Math.max(1, box.height)
+          (stage3.w - SELECTION_PAD * 2) / Math.max(1, box.width),
+          (stage3.h - SELECTION_PAD * 2) / Math.max(1, box.height)
         )
       );
 
-      const base = numericBase(s, l.active, z);
+      const base = numericBase(stage3, panZoomLayout.active, zoom7);
       offset.current = {
-        x: Math.round(s.w / 2 - (box.x + box.width / 2) * z) - base.x,
-        y: Math.round(s.h / 2 - (box.y + box.height / 2) * z) - base.y,
+        x: Math.round(stage3.w / 2 - (box.x + box.width / 2) * zoom7) - base.x,
+        y: Math.round(stage3.h / 2 - (box.y + box.height / 2) * zoom7) - base.y,
       };
-      commit(z);
+      commit(zoom7);
     },
     [commit]
   );
@@ -436,10 +410,10 @@ export function usePanZoom({
       return;
     }
 
-    const v = painted.current ?? view();
-    const base = numericBase(cur.stage, cur.layout.active, v.zoom);
-    offset.current = { x: v.x - base.x, y: v.y - base.y };
-    commit(v.zoom);
+    const view3 = painted.current ?? view();
+    const base = numericBase(cur.stage, cur.layout.active, view3.zoom);
+    offset.current = { x: view3.x - base.x, y: view3.y - base.y };
+    commit(view3.zoom);
   }, [commit, view]);
 
   const applyZoomKey = useCallback(
@@ -476,7 +450,7 @@ export function usePanZoom({
   } | null>(null);
 
   const frameWheel = useCallback(
-    (frame: HTMLIFrameElement | null, e: FrameWheel) => {
+    (frame: HTMLIFrameElement | null, frameWheel2: FrameWheel) => {
       const el = stageRef.current;
 
       if (!el || !frame) {
@@ -484,28 +458,32 @@ export function usePanZoom({
       }
 
       const now = performance.now();
-      let o = frameOrigin.current;
+      let option = frameOrigin.current;
 
-      if (!o || o.frame !== frame || now - o.at > WHEEL_IDLE_MS) {
+      if (
+        !option ||
+        option.frame !== frame ||
+        now - option.at > WHEEL_IDLE_MS
+      ) {
         const frameRect = frame.getBoundingClientRect();
         const stageRect = el.getBoundingClientRect();
-        const v = view();
-        o = {
+        const view4 = view();
+        option = {
           at: now,
           frame,
           h: frame.clientHeight,
-          x: (frameRect.left - stageRect.left - v.x) / v.zoom,
-          y: (frameRect.top - stageRect.top - v.y) / v.zoom,
+          x: (frameRect.left - stageRect.left - view4.x) / view4.zoom,
+          y: (frameRect.top - stageRect.top - view4.y) / view4.zoom,
         };
       }
 
-      o.at = now;
-      frameOrigin.current = o;
-      const v = view();
-      const { dy } = wheelPixels(e, o.h);
+      option.at = now;
+      frameOrigin.current = option;
+      const view5 = view();
+      const { dy } = wheelPixels(frameWheel2, option.h);
       wheelZoomAt(
-        v.x + (o.x + e.clientX) * v.zoom,
-        v.y + (o.y + e.clientY) * v.zoom,
+        view5.x + (option.x + frameWheel2.clientX) * view5.zoom,
+        view5.y + (option.y + frameWheel2.clientY) * view5.zoom,
         wheelZoomFactor(dy)
       );
     },
@@ -523,21 +501,21 @@ export function usePanZoom({
     let height = 0;
     let lastAt = 0;
 
-    const onWheel = (e: WheelEvent): void => {
-      e.preventDefault();
+    const onWheel = (event3: WheelEvent): void => {
+      event3.preventDefault();
 
-      if (!rect || e.timeStamp - lastAt > WHEEL_IDLE_MS) {
+      if (!rect || event3.timeStamp - lastAt > WHEEL_IDLE_MS) {
         rect = el.getBoundingClientRect();
         height = el.clientHeight;
       }
 
-      lastAt = e.timeStamp;
-      const { dx, dy } = wheelPixels(e, height);
+      lastAt = event3.timeStamp;
+      const { dx, dy } = wheelPixels(event3, height);
 
-      if (e.ctrlKey || e.metaKey) {
+      if (event3.ctrlKey || event3.metaKey) {
         wheelZoomAt(
-          e.clientX - rect.left,
-          e.clientY - rect.top,
+          event3.clientX - rect.left,
+          event3.clientY - rect.top,
           wheelZoomFactor(dy)
         );
       } else {
@@ -552,30 +530,35 @@ export function usePanZoom({
   }, [stageRef, wheelZoomAt, schedulePaint]);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent): void => {
-      if (isTypingTarget(e.target)) {
+    const down = (event4: KeyboardEvent): void => {
+      if (isTypingTarget(event4.target)) {
         return;
       }
 
-      if (e.code === "Space") {
-        e.preventDefault();
+      if (event4.code === "Space") {
+        event4.preventDefault();
 
-        if (!e.repeat) {
+        if (!event4.repeat) {
           setSpaceHeld(true);
         }
-      } else if (e.code === "KeyZ" && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
-        if (!e.repeat) {
+      } else if (
+        event4.code === "KeyZ" &&
+        !event4.metaKey &&
+        !event4.ctrlKey &&
+        !event4.shiftKey
+      ) {
+        if (!event4.repeat) {
           setZoomHeld(true);
         }
       }
     };
 
-    const up = (e: KeyboardEvent): void => {
-      if (e.code === "Space") {
+    const up = (event5: KeyboardEvent): void => {
+      if (event5.code === "Space") {
         setSpaceHeld(false);
       }
 
-      if (e.code === "KeyZ") {
+      if (event5.code === "KeyZ") {
         setZoomHeld(false);
       }
     };
@@ -597,29 +580,34 @@ export function usePanZoom({
   }, []);
 
   const onPointerDown = useCallback(
-    (e: ReactPointerEvent) => {
-      if (e.button === 0 && zoomHeld && !spaceHeld) {
-        e.preventDefault();
-        const rect = e.currentTarget.getBoundingClientRect();
-        zoomAt(
-          e.clientX - rect.left,
-          e.clientY - rect.top,
-          e.altKey ? 1 / CLICK_ZOOM : CLICK_ZOOM
-        );
+    (event6: ReactPointerEvent) => {
+      if (event6.button === 0 && zoomHeld && !spaceHeld) {
+        event6.preventDefault();
+        const rect = event6.currentTarget.getBoundingClientRect();
+
+        const argument: number = ((): number => {
+          if (event6.altKey) {
+            return 1 / CLICK_ZOOM;
+          }
+
+          return CLICK_ZOOM;
+        })();
+
+        zoomAt(event6.clientX - rect.left, event6.clientY - rect.top, argument);
 
         return;
       }
 
-      if (!(e.button === 1 || (e.button === 0 && spaceHeld))) {
+      if (!(event6.button === 1 || (event6.button === 0 && spaceHeld))) {
         return;
       }
 
-      e.preventDefault();
-      const target = e.currentTarget;
-      target.setPointerCapture(e.pointerId);
+      event6.preventDefault();
+      const target = event6.currentTarget;
+      target.setPointerCapture(event6.pointerId);
       setPanning(true);
-      let lastX = e.clientX;
-      let lastY = e.clientY;
+      let lastX = event6.clientX;
+      let lastY = event6.clientY;
 
       const move = (ev: PointerEvent): void => {
         const dx = ev.clientX - lastX;
@@ -666,4 +654,10 @@ export function usePanZoom({
     zoomTo,
     zoomToActive,
   };
-}
+};
+
+export { isTypingTarget, usePanZoom };
+
+export type { PanZoom };
+
+export type { Stage };

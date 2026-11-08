@@ -903,6 +903,7 @@
 }
 
 .tool-summary-caret {
+  display: inline-flex;
   flex: none;
   color: var(--text-3);
   transition: rotate var(--dur) var(--ease);

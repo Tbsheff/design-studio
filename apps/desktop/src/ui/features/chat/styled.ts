@@ -17,4 +17,28 @@ const toStyled = <Props extends ClassProps>(
   return styled;
 };
 
-export { toStyled };
+interface VariantProps {
+  readonly "data-variant": string;
+}
+
+const toStyledByKey = <Props extends ClassProps>(
+  Base: ComponentType<Props>,
+  classes: ReadonlyMap<string, string>
+): ComponentType<Omit<Props, "className"> & VariantProps> => {
+  const built = new Map(
+    [...classes].map(([key, className]) => [key, toStyled(Base, className)])
+  );
+
+  const fallback = toStyled(Base, "");
+
+  const variant = (
+    props: Omit<Props, "className"> & VariantProps
+  ): ReactElement =>
+    createElement(built.get(props["data-variant"]) ?? fallback, props);
+
+  variant.displayName = `Variant(${Base.displayName ?? Base.name})`;
+
+  return variant;
+};
+
+export { toStyled, toStyledByKey };

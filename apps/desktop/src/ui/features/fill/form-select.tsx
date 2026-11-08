@@ -1,5 +1,7 @@
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
 import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
 
 import { copy, FORM_LABELS } from "./copy.js";
 import { RADIAL_FORMS } from "./deps.js";
@@ -16,14 +18,18 @@ interface FormSelectProps {
 
 const FORM_ID = "fill-form";
 
+const FORM_OPTIONS: readonly UiSelectOption<RadialForm>[] = RADIAL_FORMS.map(
+  (form) => ({ label: FORM_LABELS[form], value: form })
+);
+
 const FormSelect = ({
   disabled,
   draft,
   onDraft,
 }: FormSelectProps): ReactElement => {
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      onDraft({ ...draft, form: event.target.value as RadialForm });
+  const pickForm = useCallback(
+    (form: RadialForm): void => {
+      onDraft({ ...draft, form });
     },
     [draft, onDraft]
   );
@@ -33,20 +39,15 @@ const FormSelect = ({
       <label className={styles.label} htmlFor={FORM_ID}>
         {copy.form}
       </label>
-      <select
+      <UiSelect
         aria-label={`${copy.formLabel}: ${FORM_LABELS[draft.form]}`}
-        className={styles.select}
         disabled={disabled}
         id={FORM_ID}
+        options={FORM_OPTIONS}
+        size="sm"
         value={draft.form}
-        onChange={handlePick}
-      >
-        {RADIAL_FORMS.map((form) => (
-          <option key={form} value={form}>
-            {FORM_LABELS[form]}
-          </option>
-        ))}
-      </select>
+        onChange={pickForm}
+      />
     </div>
   );
 };

@@ -6,9 +6,7 @@ import type { IntegrationDraft } from "./integration-model.js";
 
 interface IntegrationTransportFieldsProps {
   readonly draft: IntegrationDraft;
-  readonly onChange: (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => void;
+  readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 const IntegrationTransportFields = ({

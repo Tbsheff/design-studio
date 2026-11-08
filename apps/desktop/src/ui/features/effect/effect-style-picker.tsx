@@ -1,5 +1,7 @@
-import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useCallback, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import type { EffectStyle } from "./effect-types.js";
@@ -13,37 +15,45 @@ interface EffectStylePickerProps {
   readonly onPick: (name: string | null) => void;
 }
 
+const STYLE_ID = "effect-style";
+
+const toStyleOptions = (
+  saved: readonly EffectStyle[]
+): readonly UiSelectOption[] => [
+  { label: copy.styleNone, value: "" },
+  ...saved.map((entry) => ({ label: entry.name, value: entry.name })),
+];
+
 const EffectStylePicker = ({
   disabled,
   styleName,
   styles: saved,
   onPick,
 }: EffectStylePickerProps): ReactElement => {
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      onPick(event.target.value || null);
+  const options = useMemo(() => toStyleOptions(saved), [saved]);
+
+  const pickStyle = useCallback(
+    (next: string): void => {
+      onPick(next || null);
     },
     [onPick]
   );
 
   return (
-    <label className="ins-field select" data-tip={copy.styleTip}>
-      <span className={styles.label}>{copy.style}</span>
-      <select
+    <div className="ins-field select">
+      <label className={styles.label} htmlFor={STYLE_ID}>
+        {copy.style}
+      </label>
+      <UiSelect
         aria-label={copy.style}
-        className="ins-input"
         disabled={disabled}
+        id={STYLE_ID}
+        options={options}
+        tip={copy.styleTip}
         value={styleName ?? ""}
-        onChange={handlePick}
-      >
-        <option value="">{copy.styleNone}</option>
-        {saved.map((entry) => (
-          <option key={entry.name} value={entry.name}>
-            {entry.name}
-          </option>
-        ))}
-      </select>
-    </label>
+        onChange={pickStyle}
+      />
+    </div>
   );
 };
 

@@ -1,5 +1,6 @@
-import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { ACCESSIBILITY_ROLES } from "./deps.js";
@@ -14,43 +15,31 @@ interface RoleSelectProps {
 
 const ROLE_ID = "accessibility-role";
 
+const ROLE_OPTIONS: readonly UiSelectOption[] = [
+  { label: copy.unset, value: "" },
+  ...ACCESSIBILITY_ROLES.map((role) => ({ label: role, value: role })),
+];
+
 const RoleSelect = ({
   disabled,
   value,
   onPick,
-}: RoleSelectProps): ReactElement => {
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      onPick(event.target.value);
-    },
-    [onPick]
-  );
-
-  return (
-    <label
-      className="ins-field select"
-      data-tip={copy.roleTip}
-      htmlFor={ROLE_ID}
-    >
-      <span className={styles.label}>{copy.role}</span>
-      <select
-        aria-label={copy.role}
-        className="ins-input"
-        disabled={disabled}
-        id={ROLE_ID}
-        value={value}
-        onChange={handlePick}
-      >
-        <option value="">{copy.unset}</option>
-        {ACCESSIBILITY_ROLES.map((role) => (
-          <option key={role} value={role}>
-            {role}
-          </option>
-        ))}
-      </select>
+}: RoleSelectProps): ReactElement => (
+  <div className="ins-field select">
+    <label className={styles.label} htmlFor={ROLE_ID}>
+      {copy.role}
     </label>
-  );
-};
+    <UiSelect
+      aria-label={copy.role}
+      disabled={disabled}
+      id={ROLE_ID}
+      options={ROLE_OPTIONS}
+      tip={copy.roleTip}
+      value={value}
+      onChange={onPick}
+    />
+  </div>
+);
 
 export { RoleSelect };
 

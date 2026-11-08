@@ -1,5 +1,7 @@
-import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useCallback, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import type { PublishCliState } from "../../../shared/publish.js";
 import { copy } from "./copy.js";
@@ -12,10 +14,17 @@ interface Props {
   run: PublishCli["run"];
 }
 
+const toAccountOptions = (
+  accounts: PublishCliState["accounts"]
+): readonly UiSelectOption[] =>
+  accounts.map((account) => ({ label: account.name, value: account.id }));
+
 const AccountPicker = ({ busy, cli, run }: Props): ReactElement => {
+  const options = useMemo(() => toAccountOptions(cli.accounts), [cli.accounts]);
+
   const pick = useCallback(
-    (changeEvent: ChangeEvent<HTMLSelectElement>): void => {
-      run(() => publishApi.setAccount(changeEvent.target.value || null));
+    (accountId: string): void => {
+      run(() => publishApi.setAccount(accountId || null));
     },
     [run]
   );
@@ -23,14 +32,14 @@ const AccountPicker = ({ busy, cli, run }: Props): ReactElement => {
   return (
     <label className="field">
       <span>{copy.account}</span>
-      <select value={cli.accountId ?? ""} disabled={busy} onChange={pick}>
-        <option value="">{copy.pickAnAccount}</option>
-        {cli.accounts.map((account) => (
-          <option key={account.id} value={account.id}>
-            {account.name}
-          </option>
-        ))}
-      </select>
+      <UiSelect
+        aria-label={copy.account}
+        disabled={busy}
+        options={options}
+        placeholder={copy.pickAnAccount}
+        value={cli.accountId ?? ""}
+        onChange={pick}
+      />
     </label>
   );
 };

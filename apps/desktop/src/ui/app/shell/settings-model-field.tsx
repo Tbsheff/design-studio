@@ -1,5 +1,7 @@
-import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy";
 
@@ -14,36 +16,38 @@ interface SettingsModelFieldProps {
   readonly options: readonly ModelOption[];
 }
 
+const toModelOptions = (
+  options: readonly ModelOption[],
+  model: string
+): readonly UiSelectOption[] => {
+  const list = options.map((option) => ({
+    label: option.label,
+    value: option.id,
+  }));
+
+  if (options.some((option) => option.id === model)) {
+    return list;
+  }
+
+  return [...list, { label: model, value: model }];
+};
+
 const SettingsModelField = ({
   model,
   onChange,
   options,
 }: SettingsModelFieldProps): ReactElement => {
-  const known = options.some((option) => option.id === model);
-
-  const changeModel = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void =>
-      onChange(event.target.value),
-    [onChange]
-  );
+  const list = useMemo(() => toModelOptions(options, model), [options, model]);
 
   return (
     <label className="field">
       <span>{copy.model}</span>
-      <select
-        name="model"
-        className="select"
+      <UiSelect
         aria-label="Model"
+        options={list}
         value={model}
-        onChange={changeModel}
-      >
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.label}
-          </option>
-        ))}
-        {!known && <option value={model}>{model}</option>}
-      </select>
+        onChange={onChange}
+      />
     </label>
   );
 };

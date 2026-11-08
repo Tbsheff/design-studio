@@ -1,7 +1,7 @@
-import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
-
-import styles from "./animation.module.css";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useMemo } from "react";
+import type { ReactElement } from "react";
 
 interface ChoiceSelectProps {
   readonly label: string;
@@ -16,26 +16,19 @@ const ChoiceSelect = ({
   options,
   value,
 }: ChoiceSelectProps): ReactElement => {
-  const handleChoose = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      onChoose(event.target.value);
-    },
-    [onChoose]
+  const list = useMemo<readonly UiSelectOption[]>(
+    () => options.map((option) => ({ label: option.label, value: option.id })),
+    [options]
   );
 
   return (
-    <select
+    <UiSelect
       aria-label={label}
-      className={styles.input}
-      onChange={handleChoose}
+      options={list}
+      size="sm"
       value={value}
-    >
-      {options.map((option) => (
-        <option key={option.id} value={option.id}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+      onChange={onChoose}
+    />
   );
 };
 

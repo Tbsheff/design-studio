@@ -1,5 +1,7 @@
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
 import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { STACKING_OVERFLOWS } from "./deps.js";
@@ -14,6 +16,14 @@ interface OverflowSelectProps {
   readonly onPick: (axis: OverflowAxis, next: string | null) => void;
 }
 
+const OVERFLOW_OPTIONS: readonly UiSelectOption[] = [
+  { label: copy.unset, value: "" },
+  ...STACKING_OVERFLOWS.map((overflow) => ({
+    label: copy.overflow[overflow],
+    value: overflow,
+  })),
+];
+
 const OverflowSelect = ({
   axis,
   disabled,
@@ -22,38 +32,28 @@ const OverflowSelect = ({
 }: OverflowSelectProps): ReactElement => {
   const id = `stacking-${axis}`;
 
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      onPick(axis, event.target.value || null);
+  const pickOverflow = useCallback(
+    (next: string): void => {
+      onPick(axis, next || null);
     },
     [axis, onPick]
   );
 
   return (
-    <label
-      className="ins-field select"
-      data-tip={copy.axisTip[axis]}
-      htmlFor={id}
-    >
-      <span className={`${styles.label} ${styles.wide}`}>
+    <div className="ins-field select">
+      <label className={`${styles.label} ${styles.wide}`} htmlFor={id}>
         {copy.axisLabel[axis]}
-      </span>
-      <select
+      </label>
+      <UiSelect
         aria-label={copy.axisLabel[axis]}
-        className="ins-input"
         disabled={disabled}
         id={id}
+        options={OVERFLOW_OPTIONS}
+        tip={copy.axisTip[axis]}
         value={value}
-        onChange={handlePick}
-      >
-        <option value="">{copy.unset}</option>
-        {STACKING_OVERFLOWS.map((overflow) => (
-          <option key={overflow} value={overflow}>
-            {copy.overflow[overflow]}
-          </option>
-        ))}
-      </select>
-    </label>
+        onChange={pickOverflow}
+      />
+    </div>
   );
 };
 

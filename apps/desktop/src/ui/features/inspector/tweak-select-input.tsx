@@ -1,5 +1,6 @@
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
 import { useCallback } from "react";
+import type { ReactElement } from "react";
 
 import type { SelectTweak } from "../../../shared/tweaks.js";
 import type { EditFn } from "./tweaks-model.js";
@@ -14,24 +15,18 @@ const TweakSelectInput = ({
   readonly onEdit: EditFn;
 }): ReactElement => {
   const change = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>) =>
-      onEdit(control, event.currentTarget.value),
+    (next: string) => onEdit(control, next),
     [onEdit, control]
   );
 
   return (
-    <select
+    <UiSelect
       id={`twk-${control.id}`}
-      className="ins-input twk-select"
+      options={control.options}
+      size="sm"
       value={value}
       onChange={change}
-    >
-      {control.options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    />
   );
 };
 

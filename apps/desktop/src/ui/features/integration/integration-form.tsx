@@ -47,7 +47,10 @@ const IntegrationForm = ({
       {form.isNameBad && (
         <span className={styles.error}>{copy.nameProblem}</span>
       )}
-      <IntegrationTransportSelect draft={draft} onChange={handleDraft} />
+      <IntegrationTransportSelect
+        draft={draft}
+        onChange={form.handleTransport}
+      />
       <IntegrationTransportFields draft={draft} onChange={handleDraft} />
       <IntegrationField
         isInvalid={false}

@@ -1,5 +1,7 @@
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
 import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { EFFECT_KINDS } from "./deps.js";
@@ -12,15 +14,20 @@ interface EffectAddMenuProps {
   readonly onAdd: (kind: EffectKind) => void;
 }
 
+const ADD_ID = "effect-add";
+
+const KIND_OPTIONS: readonly UiSelectOption[] = EFFECT_KINDS.map((kind) => ({
+  label: copy.kind[kind],
+  value: kind,
+}));
+
 const EffectAddMenu = ({
   disabled,
   onAdd,
 }: EffectAddMenuProps): ReactElement => {
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      const picked = EFFECT_KINDS.find((kind) => kind === event.target.value);
-
-      event.target.value = "";
+  const addKind = useCallback(
+    (next: string): void => {
+      const picked = EFFECT_KINDS.find((kind) => kind === next);
 
       if (picked) {
         onAdd(picked);
@@ -30,23 +37,21 @@ const EffectAddMenu = ({
   );
 
   return (
-    <label className="ins-field select" data-tip={copy.addTip}>
-      <span className={styles.label}>{copy.add}</span>
-      <select
+    <div className="ins-field select">
+      <label className={styles.label} htmlFor={ADD_ID}>
+        {copy.add}
+      </label>
+      <UiSelect
         aria-label={copy.add}
-        className="ins-input"
-        defaultValue=""
         disabled={disabled}
-        onChange={handlePick}
-      >
-        <option value="">{copy.add}</option>
-        {EFFECT_KINDS.map((kind) => (
-          <option key={kind} value={kind}>
-            {copy.kind[kind]}
-          </option>
-        ))}
-      </select>
-    </label>
+        id={ADD_ID}
+        options={KIND_OPTIONS}
+        placeholder={copy.add}
+        tip={copy.addTip}
+        value=""
+        onChange={addKind}
+      />
+    </div>
   );
 };
 

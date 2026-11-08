@@ -1,5 +1,7 @@
-import { useCallback } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useId } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { SHADER_PRESETS } from "./deps.js";
@@ -13,41 +15,33 @@ interface EffectPresetSelectProps {
   readonly onPick: (preset: ShaderPreset) => void;
 }
 
+const PRESET_OPTIONS: readonly UiSelectOption<ShaderPreset>[] =
+  SHADER_PRESETS.map((preset) => ({
+    label: copy.presetLabel[preset],
+    value: preset,
+  }));
+
 const EffectPresetSelect = ({
   disabled,
   value,
   onPick,
 }: EffectPresetSelectProps): ReactElement => {
-  const handlePick = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>): void => {
-      const picked = SHADER_PRESETS.find(
-        (preset) => preset === event.target.value
-      );
-
-      if (picked) {
-        onPick(picked);
-      }
-    },
-    [onPick]
-  );
+  const presetId = useId();
 
   return (
-    <label className="ins-field select">
-      <span className={styles.label}>{copy.preset}</span>
-      <select
+    <div className="ins-field select">
+      <label className={styles.label} htmlFor={presetId}>
+        {copy.preset}
+      </label>
+      <UiSelect
         aria-label={copy.preset}
-        className="ins-input"
         disabled={disabled}
+        id={presetId}
+        options={PRESET_OPTIONS}
         value={value}
-        onChange={handlePick}
-      >
-        {SHADER_PRESETS.map((preset) => (
-          <option key={preset} value={preset}>
-            {copy.presetLabel[preset]}
-          </option>
-        ))}
-      </select>
-    </label>
+        onChange={onPick}
+      />
+    </div>
   );
 };
 

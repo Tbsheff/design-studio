@@ -7,6 +7,7 @@ import { ComponentVariantStatus } from "../component-variant/errors/status.js";
 import { ContentStatus } from "../content/errors/status.js";
 import { CritiqueStatus } from "../critique/errors/status.js";
 import { DataModelStatus } from "../data-model/errors/status.js";
+import { DevNoteStatus } from "../dev-note/errors/status.js";
 import { DevStatusStatus } from "../dev-status/errors/status.js";
 import { DirectEditStatus } from "../direct-edit/errors/status.js";
 import { EffectStatus } from "../effect/errors/status.js";
@@ -50,6 +51,7 @@ const HTTP_STATUS = {
   ...ContentStatus,
   ...CritiqueStatus,
   ...DataModelStatus,
+  ...DevNoteStatus,
   ...DevStatusStatus,
   ...DirectEditStatus,
   ...EffectStatus,

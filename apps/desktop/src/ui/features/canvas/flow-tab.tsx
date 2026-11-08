@@ -60,10 +60,15 @@ const useRoutesAndParams = (projectId: string) => {
 
 const FlowResultView = ({ result }: { result: FlowResult }): ReactElement => (
   <div className="flow-result" role="status">
-    <div>{flowSummary(result)}.</div>
+    <div>
+      {flowSummary(result)}
+      {copy.text}
+    </div>
     {result.missingParams.length > 0 && (
       <div className="flow-warn">
-        Set {result.missingParams.join(", ")} so the frames show real pages.
+        {copy.set}
+        {result.missingParams.join(", ")}
+        {copy.soTheFramesShow}
       </div>
     )}
     {result.skipped.slice(0, 4).map((item) => (
@@ -178,7 +183,7 @@ export default function FlowTab({
       </div>
       <div className="flow-controls">
         <div className="flow-row">
-          <span className="flow-label">Follow links</span>
+          <span className="flow-label">{copy.followLinks}</span>
           <div
             className="segmented"
             role="radiogroup"

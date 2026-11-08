@@ -3,6 +3,7 @@ import type { ReactNode, ReactElement } from "react";
 
 import { formatMeasure, measureBetween } from "../../../shared/measure.js";
 import type { MeasureLine } from "../../../shared/measure.js";
+import { copy } from "./copy.js";
 import { unionBox } from "./snap-model.js";
 import type { SnapGuide } from "./snap-model.js";
 import type { HoverBox } from "./use-preview-frames.js";
@@ -56,7 +57,9 @@ const ResizeHandles = ({
       ))}
       {live && (
         <span className="resize-label" data-testid="resize-label">
-          {live.width} × {live.height}
+          {live.width}
+          {copy.times2}
+          {live.height}
         </span>
       )}
     </div>

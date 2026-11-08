@@ -50,7 +50,7 @@ const StageMessage = ({
     return (
       <div className="stage-message" role="status">
         <span className="spinner" aria-hidden="true" />
-        Building the first version…
+        {copy.buildingTheFirstVersion}
       </div>
     );
   }
@@ -58,7 +58,7 @@ const StageMessage = ({
   if (note === "empty") {
     return (
       <div className="stage-message" role="status">
-        No design yet. Send a prompt, or start the variations.
+        {copy.noDesignYetSend}
       </div>
     );
   }

@@ -380,7 +380,8 @@ const DrawBar = ({ draw }: { draw: DrawTool }): ReactElement | null => {
         aria-keyshortcuts="Escape"
         onClick={() => draw.setOn(false)}
       >
-        Done <kbd>Esc</kbd>
+        {copy.done}
+        <kbd>{copy.esc}</kbd>
       </button>
     </div>
   );

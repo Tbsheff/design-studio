@@ -60,7 +60,7 @@ const StateRows = ({
   onPick: (state: FrameStateDef) => void;
 }): ReactElement => (
   <div className="ui-menu-section">
-    <div className="ui-menu-label">Preview state</div>
+    <div className="ui-menu-label">{copy.previewState}</div>
     {view.states.map((state) => (
       <button
         key={state.id}
@@ -98,7 +98,7 @@ const SessionRows = ({
 
   return (
     <div className="ui-menu-section">
-      <div className="ui-menu-label">Signed-in states use</div>
+      <div className="ui-menu-label">{copy.signedInStatesUse}</div>
       {view.session.usesMockUser ? (
         <button
           type="button"
@@ -114,7 +114,7 @@ const SessionRows = ({
       ) : (
         <div className="frame-state-line">
           <Icon name="lock" size={14} />
-          <span>A real sign-in from a signed-in frame</span>
+          <span>{copy.aRealSignIn}</span>
         </div>
       )}
       {kept > 0 && (
@@ -127,7 +127,7 @@ const SessionRows = ({
           onClick={() => onSession({ forget: true })}
         >
           <Icon name="trash" size={14} />
-          <span>Forget kept cookies</span>
+          <span>{copy.forgetKeptCookies}</span>
           <span className="ui-menu-meta">{kept}</span>
         </button>
       )}
@@ -159,7 +159,7 @@ const UserForm = ({
       }}
     >
       <label className="frame-page-field">
-        <span>Name</span>
+        <span>{copy.name}</span>
         <input
           value={name}
           autoFocus
@@ -167,7 +167,7 @@ const UserForm = ({
         />
       </label>
       <label className="frame-page-field">
-        <span>Email</span>
+        <span>{copy.email}</span>
         <input
           value={email}
           spellCheck={false}
@@ -178,10 +178,10 @@ const UserForm = ({
       {error && <p className="frame-page-hint error">{error}</p>}
       <div className="frame-state-actions">
         <button type="button" className="btn small ghost" onClick={onBack}>
-          Back
+          {copy.back}
         </button>
         <button type="submit" className="btn small strong">
-          Save
+          {copy.save}
         </button>
       </div>
     </form>
@@ -230,7 +230,7 @@ const MockForm = ({
       }}
     >
       <label className="frame-page-field">
-        <span>Name</span>
+        <span>{copy.name}</span>
         <input
           value={name}
           autoFocus
@@ -238,7 +238,7 @@ const MockForm = ({
         />
       </label>
       <label className="frame-page-field">
-        <span>Answers for calls from the browser</span>
+        <span>{copy.answersForCallsFrom}</span>
         <textarea
           className="frame-state-rules"
           value={rules}
@@ -248,17 +248,14 @@ const MockForm = ({
           onChange={(e) => setRules(e.target.value)}
         />
       </label>
-      <p className="frame-page-hint">
-        A path that ends in * matches the start. Calls that match no rule go to
-        the app.
-      </p>
+      <p className="frame-page-hint">{copy.aPathThatEnds}</p>
       {error && <p className="frame-page-hint error">{error}</p>}
       <div className="frame-state-actions">
         <button type="button" className="btn small ghost" onClick={onBack}>
-          Back
+          {copy.back}
         </button>
         <button type="submit" className="btn small strong">
-          Show in this frame
+          {copy.showInThisFrame}
         </button>
       </div>
     </form>

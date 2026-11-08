@@ -167,7 +167,7 @@ const CanvasTopBar = (p: Props): ReactElement => {
           onClick={() => p.onTool("select")}
         >
           <Icon name="pointer" size={14} />
-          <span>Select</span>
+          <span>{copy.select}</span>
         </button>
         <button
           type="button"
@@ -183,7 +183,7 @@ const CanvasTopBar = (p: Props): ReactElement => {
           onClick={() => p.onTool("comment")}
         >
           <Icon name="comment" size={14} />
-          <span>Comment</span>
+          <span>{copy.comment}</span>
         </button>
         <button
           type="button"
@@ -194,7 +194,7 @@ const CanvasTopBar = (p: Props): ReactElement => {
           onClick={() => p.onTool("edit")}
         >
           <Icon name="edit" size={14} />
-          <span>Edit</span>
+          <span>{copy.edit}</span>
         </button>
         <button
           type="button"
@@ -204,7 +204,7 @@ const CanvasTopBar = (p: Props): ReactElement => {
           onClick={() => p.onTool("prototype")}
         >
           <Icon name="link" size={14} />
-          <span>Prototype</span>
+          <span>{copy.prototype}</span>
         </button>
       </div>
       {p.shapeTools}
@@ -219,7 +219,7 @@ const CanvasTopBar = (p: Props): ReactElement => {
         tip="Present"
       >
         <Icon name="play" size={14} />
-        <span className="topbar-label">Present</span>
+        <span className="topbar-label">{copy.present}</span>
         <Icon name="chevronDown" size={12} />
       </DropMenu>
       <OverflowMenu
@@ -242,7 +242,7 @@ const CanvasTopBar = (p: Props): ReactElement => {
         }
       >
         <Icon name="share" size={14} />
-        <span className="topbar-label">Share</span>
+        <span className="topbar-label">{copy.share}</span>
         <Icon name="chevronDown" size={12} />
       </DropMenu>
       <span
@@ -252,7 +252,7 @@ const CanvasTopBar = (p: Props): ReactElement => {
         data-tip={copy.youOnThis}
         data-tip-align="end"
       >
-        Y
+        {copy.keyY}
       </span>
       {port.target && (
         <Suspense fallback={null}>

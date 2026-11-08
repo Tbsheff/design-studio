@@ -6,6 +6,7 @@ import { IS_MAC, tipWithKey } from "../../canvas-toolbar-slots.js";
 import { useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
+import { copy } from "./copy.js";
 import { DropMenu } from "./top-bar-drop-menu.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 import {
@@ -77,7 +78,10 @@ const ZoomPill = (p: ZoomProps): ReactElement => {
       align="end"
       tip={tipWithKey(`Zoom ${percent}%`, "zoom-fit")}
     >
-      <span className="topbar-zoom-value">{percent}%</span>
+      <span className="topbar-zoom-value">
+        {percent}
+        {copy.text2}
+      </span>
       <Icon name="search" size={14} className="topbar-zoom-icon" />
     </DropMenu>
   );

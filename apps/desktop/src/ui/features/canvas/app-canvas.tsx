@@ -175,7 +175,7 @@ const AppStageHint = ({
           className="btn small"
           onClick={() => openAppPanel("routes")}
         >
-          Pick a route
+          {copy.pickARoute}
         </button>
         <button
           type="button"

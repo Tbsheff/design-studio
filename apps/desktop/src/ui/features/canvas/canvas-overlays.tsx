@@ -82,8 +82,8 @@ const PresentLayer = ({
         onClick={onClose}
       >
         <Icon name="close" size={12} />
-        Exit
-        <kbd>Esc</kbd>
+        {copy.exit}
+        <kbd>{copy.esc}</kbd>
       </button>
     </div>
   );

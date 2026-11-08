@@ -60,7 +60,7 @@ const LofiSwitch = ({
     onClick={onToggle}
   >
     <Icon name="pencil" size={14} />
-    <span className="label">Lo-fi look</span>
+    <span className="label">{copy.loFiLook}</span>
   </button>
 );
 
@@ -79,7 +79,7 @@ const LinksSwitch = ({
     onClick={onToggle}
   >
     <Icon name="link" size={14} />
-    <span className="label">Link arrows</span>
+    <span className="label">{copy.linkArrows}</span>
   </button>
 );
 
@@ -113,7 +113,7 @@ const RulersSwitch = ({
     >
       <path d="M2.5 2.5h11v4h-11zM5 2.5v2M8 2.5v2M11 2.5v2M2.5 6.5v7h4v-7M2.5 9h2M2.5 11.5h2" />
     </svg>
-    <span className="label">Rulers</span> <kbd>⇧R</kbd>
+    <span className="label">{copy.rulers}</span> <kbd>{copy.keyR}</kbd>
   </button>
 );
 
@@ -182,7 +182,7 @@ const InsertIconButton = (): ReactElement => (
     >
       <path d="M8 2l1.6 3.6L13.5 6l-2.9 2.6.8 3.9L8 10.6l-3.4 1.9.8-3.9L2.5 6l3.9-.4z" />
     </svg>
-    <span className="label">Icon</span> <kbd>I</kbd>
+    <span className="label">{copy.icon}</span> <kbd>{copy.keyI}</kbd>
   </button>
 );
 
@@ -195,7 +195,7 @@ const FindPhotoButton = (): ReactElement => (
     onClick={() => runCommand("image.find")}
   >
     <Icon name="image" size={14} />
-    <span className="label">Photo</span>
+    <span className="label">{copy.photo}</span>
   </button>
 );
 
@@ -241,7 +241,7 @@ export function CanvasViewRow(props: Props): ReactElement {
           onClick={props.onToggleDraw}
         >
           <PenIcon size={14} />
-          <span className="label">Draw</span> <kbd>P</kbd>
+          <span className="label">{copy.draw}</span> <kbd>{copy.keyP}</kbd>
         </button>
       )}
       <button

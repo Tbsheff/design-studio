@@ -200,7 +200,7 @@ const FrameRedirectNote = ({
       <span className="frame-redirect-text">{text}</span>
       {auth && (
         <button type="button" className="btn ghost small" onClick={onSignIn}>
-          Sign in
+          {copy.signIn}
         </button>
       )}
       <button
@@ -208,7 +208,7 @@ const FrameRedirectNote = ({
         className="btn ghost small"
         onClick={() => openAppPanel("routes")}
       >
-        Pick a route
+        {copy.pickARoute}
       </button>
       <button
         type="button"

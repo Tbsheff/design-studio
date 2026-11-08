@@ -121,7 +121,7 @@ const MenuBody = ({
           onClick={() => menu.setPanel("mock")}
         >
           <Icon name="plus" size={14} />
-          <span>New mock data…</span>
+          <span>{copy.newMockData}</span>
         </button>
       </div>
       <Suspense fallback={null}>
@@ -132,11 +132,7 @@ const MenuBody = ({
         onPanel={menu.setPanel}
         onSession={(change) => run(setFrameSession(projectId, change))}
       />
-      <p className="frame-state-note">
-        To sign in for real, sign in inside a signed-in frame. The proxy changes
-        only calls from the browser. Data the app loads on the server can read
-        the x-studio-state header.
-      </p>
+      <p className="frame-state-note">{copy.toSignInFor}</p>
     </div>
   );
 };

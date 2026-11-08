@@ -115,7 +115,7 @@ const FramePageMenu = ({
             }}
           >
             <label className="frame-page-field">
-              <span>Path</span>
+              <span>{copy.path}</span>
               <input
                 ref={input}
                 value={draft}
@@ -145,10 +145,10 @@ const FramePageMenu = ({
               onKeyDown={(e) => menuKeys(e, menu.close)}
             >
               {pages === null && (
-                <p className="frame-page-hint">Loading pages…</p>
+                <p className="frame-page-hint">{copy.loadingPages}</p>
               )}
               {pages?.length === 0 && (
-                <p className="frame-page-hint">No other pages yet.</p>
+                <p className="frame-page-hint">{copy.noOtherPagesYet}</p>
               )}
               {pages?.map((page) => (
                 <button

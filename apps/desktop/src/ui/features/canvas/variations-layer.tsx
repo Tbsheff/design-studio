@@ -145,14 +145,18 @@ const VariationBar = ({
           <>
             <span className="badge accent">{variation.label}</span>
             <span className="truncate">
-              {variation.title} · one of {variation.count} variations
+              {variation.title}
+              {copy.oneOf}
+              {variation.count}
+              {copy.variations}
             </span>
           </>
         ) : (
           <>
             <Icon name="compare" size={14} />
             <strong className="variation-bar-title">
-              {group.length} variations
+              {group.length}
+              {copy.variations}
             </strong>
             <span className="truncate variation-bar-prompt">
               {first.prompt}
@@ -170,7 +174,7 @@ const VariationBar = ({
             onClick={() => void cancelAll()}
           >
             <Icon name="stop" size={14} />
-            Cancel all
+            {copy.cancelAll}
           </button>
         )}
         <button
@@ -179,7 +183,7 @@ const VariationBar = ({
           data-tip={copy.putEveryVariation}
         >
           <Icon name="compare" size={14} />
-          Show all
+          {copy.showAll}
         </button>
       </div>
       {(state.notice || cancelError) && (

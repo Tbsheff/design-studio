@@ -152,7 +152,7 @@ const ViewportControls = ({
             onBlur={applyCustom}
             onKeyDown={onDimKey}
           />
-          <span className="x">×</span>
+          <span className="x">{copy.times}</span>
           <input
             aria-label={copy.height}
             value={customH}
@@ -163,7 +163,9 @@ const ViewportControls = ({
         </form>
       ) : (
         <span className="dims-readout">
-          {viewport.width} × {viewport.height}
+          {viewport.width}
+          {copy.times2}
+          {viewport.height}
         </span>
       )}
     </div>
@@ -192,7 +194,7 @@ const SourceControls = ({
         onClick={() => onSource({ kind: "live" })}
       >
         <Icon name="radio" className="seg-icon" />
-        <span className="seg-label">Live</span>
+        <span className="seg-label">{copy.live}</span>
       </button>
       <button
         role="radio"
@@ -205,15 +207,18 @@ const SourceControls = ({
         onClick={() => onSource({ kind: "last" })}
       >
         <Icon name="history" className="seg-icon" />
-        <span className="seg-label">Last completed</span>
+        <span className="seg-label">{copy.lastCompleted}</span>
       </button>
     </div>
     {source.kind === "version" && (
       <span className="pill">
         <Icon name="eye" size={14} />
-        <span className="pill-text">Viewing {source.title}</span>
+        <span className="pill-text">
+          {copy.viewing}
+          {source.title}
+        </span>
         <button className="link" onClick={() => onSource({ kind: "live" })}>
-          Back to live
+          {copy.backToLive}
         </button>
       </span>
     )}

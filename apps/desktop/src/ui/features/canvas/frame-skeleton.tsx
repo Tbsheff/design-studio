@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 
 import { pageFileOf } from "../chat/use-first-build.js";
 import type { PageWait } from "../chat/use-first-build.js";
+import { copy } from "./copy.js";
 
 const SkeletonPage = (): ReactElement => (
   <div className="frame-skeleton-page" aria-hidden="true">
@@ -42,7 +43,11 @@ const FrameSkeleton = ({
         data-testid="frame-missing"
       >
         <div className="frame-skeleton-step">
-          <span className="frame-skeleton-text">No page at {missing} yet</span>
+          <span className="frame-skeleton-text">
+            {copy.noPageAt}
+            {missing}
+            {copy.yet}
+          </span>
         </div>
       </div>
     );

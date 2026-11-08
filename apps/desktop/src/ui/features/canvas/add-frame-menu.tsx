@@ -122,7 +122,9 @@ const AddFrameMenu = ({
               <Icon name={p.preset} size={14} />
               <span>{p.label}</span>
               <kbd aria-hidden="true">
-                {p.width} × {p.height}
+                {p.width}
+                {copy.times2}
+                {p.height}
               </kbd>
             </button>
           ))}
@@ -155,9 +157,9 @@ const FrameUndoBar = ({
 
   return (
     <div className="frame-undo" role="status">
-      <span>Frame removed.</span>
+      <span>{copy.frameRemoved}</span>
       <button type="button" className="link" onClick={onUndo}>
-        Undo
+        {copy.undo}
       </button>
     </div>
   );

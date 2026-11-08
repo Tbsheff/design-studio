@@ -101,14 +101,20 @@ const BudgetLine = ({
 
   return (
     <p className="variation-budget" data-testid="variation-budget">
-      {LEVEL_PRESETS[draft.level].label} ·{" "}
+      {LEVEL_PRESETS[draft.level].label}
+      {copy.middot}{" "}
       {limited ? (
         <>
-          up to {money(budget.perRun ?? 0)} per run ·{" "}
-          <strong>{money(budget.total ?? 0)} total</strong>
+          {copy.upTo}
+          {money(budget.perRun ?? 0)}
+          {copy.perRun}{" "}
+          <strong>
+            {money(budget.total ?? 0)}
+            {copy.total}
+          </strong>
         </>
       ) : (
-        <>no spending limit</>
+        <>{copy.noSpendingLimit}</>
       )}
       {briefCost > 0 ? ` + ${money(briefCost)} for the briefs` : ""}
     </p>
@@ -222,7 +228,7 @@ const VariationBriefCard = ({
             disabled={busy || draft.autoStart}
             data-tip={copy.startNowWith}
           >
-            Skip review
+            {copy.skipReview}
           </button>
           <button
             className="btn small primary"

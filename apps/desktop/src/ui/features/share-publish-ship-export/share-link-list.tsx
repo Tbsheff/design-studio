@@ -16,6 +16,7 @@ interface ShareLinkListProps {
   readonly copied: string | null;
   readonly onRevoke: (id: string) => void;
   readonly onCursor: (id: string, isOn: boolean) => void;
+  readonly onLan: (isOn: boolean) => void;
 }
 
 const ShareLinkList = ({
@@ -24,6 +25,7 @@ const ShareLinkList = ({
   links,
   now,
   onCursor,
+  onLan,
   onRevoke,
   server,
 }: ShareLinkListProps): ReactElement | null => {
@@ -44,6 +46,7 @@ const ShareLinkList = ({
             copied={copied}
             onRevoke={onRevoke}
             onCursor={onCursor}
+            onLan={onLan}
           />
         ))}
       </ul>

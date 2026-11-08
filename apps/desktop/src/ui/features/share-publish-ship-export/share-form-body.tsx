@@ -66,6 +66,7 @@ const ShareFormBody = ({
         copied={copied.id}
         onRevoke={onRevoke}
         onCursor={onCursor}
+        onLan={onLan}
       />
       <ShareLanSwitch
         server={shares.server}

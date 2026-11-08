@@ -140,3 +140,34 @@
   color: var(--warn);
   box-shadow: inset 0 0 0 1px var(--warn-line);
 }
+
+.share-qr {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-1);
+  margin: 0;
+}
+
+.share-qr-image {
+  shape-rendering: crispEdges;
+  width: 132px;
+  height: 132px;
+  border-radius: var(--r-sm);
+}
+
+.share-qr-back {
+  fill: #fff;
+}
+
+.share-qr-dark {
+  fill: #000;
+}
+
+.share-qr-caption {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.share-lan-prompt {
+  display: flex;
+}

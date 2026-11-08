@@ -14,6 +14,8 @@ export { ComponentVariantStore } from "./variant-write/component-variant-store.j
 
 export { ComponentVariantWriter } from "./variant-write/component-variant-writer.js";
 
+export { KitDriftStore, KitDriftWriter } from "./kit-drift/index.js";
+
 export { createComponentService } from "./thumbs.js";
 
 export { humanize, propsFor } from "./component-search.js";
@@ -50,6 +52,8 @@ export type {
 export type { ComponentVariantStoreApi } from "./variant-write/component-variant-store.js";
 
 export type { ComponentVariantWriterApi } from "./variant-write/component-variant-writer.js";
+
+export type { KitDriftStoreApi, KitDriftWriterApi } from "./kit-drift/index.js";
 
 export type { LibraryEntry } from "./insert-list.js";
 

@@ -23,6 +23,7 @@ import { IconEntries } from "../icon/handlers.js";
 import { ImageSearchEntries } from "../image-search/handlers.js";
 import { ImageEntries } from "../image/handlers.js";
 import { IntegrationEntries } from "../integration/handlers.js";
+import { KitDriftEntries } from "../kit-drift/handlers.js";
 import { LayerStyleEntries } from "../layer-style/handlers.js";
 import { MotionEntries } from "../motion/handlers.js";
 import { OrgScopeEntries } from "../org-scope/handlers.js";
@@ -75,6 +76,7 @@ const ALL_ENTRIES = {
   image: ImageEntries,
   imageSearch: ImageSearchEntries,
   integration: IntegrationEntries,
+  kitDrift: KitDriftEntries,
   layerStyle: LayerStyleEntries,
   motion: MotionEntries,
   orgScope: OrgScopeEntries,

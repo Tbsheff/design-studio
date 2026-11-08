@@ -24,6 +24,7 @@ import { IconLive } from "../handlers/icon/live.js";
 import { ImageSearchLive } from "../handlers/image-search/live.js";
 import { ImageLive } from "../handlers/image/live.js";
 import { IntegrationLive } from "../handlers/integration/live.js";
+import { KitDriftLive } from "../handlers/kit-drift/live.js";
 import { LayerStyleLive } from "../handlers/layer-style/live.js";
 import { MotionLive } from "../handlers/motion/live.js";
 import { OrgScopeLive } from "../handlers/org-scope/live.js";
@@ -86,6 +87,7 @@ const liveLayer = Layer.mergeAll(
   ImageLive,
   ImageSearchLive,
   IntegrationLive,
+  KitDriftLive,
   LayerStyleLive,
   MotionLive,
   OrgScopeLive,

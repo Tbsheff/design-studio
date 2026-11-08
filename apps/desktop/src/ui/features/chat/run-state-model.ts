@@ -84,19 +84,51 @@ const runText = (run: RunView): string => partsText(run.parts);
 
 type RunMap = Record<string, RunView>;
 
+type ToolExtras = Pick<ToolRow, "denied" | "diff" | "diffs">;
+
+const toToolExtras = (source: {
+  denied?: boolean | null;
+  diff?: ToolDiff | null;
+  diffs?: ToolDiff[] | null;
+}): ToolExtras => {
+  const extras: ToolExtras = {};
+
+  if (source.diff) {
+    extras.diff = source.diff;
+  }
+
+  if (source.diffs) {
+    extras.diffs = source.diffs;
+  }
+
+  if (source.denied) {
+    extras.denied = true;
+  }
+
+  return extras;
+};
+
+const toDuration = (
+  finishedAt: number | null,
+  startedAt: number
+): number | null => {
+  if (finishedAt === null) {
+    return null;
+  }
+
+  return finishedAt - startedAt;
+};
+
 const toolRows = (summary: RunSummary): ToolRow[] =>
   summary.toolCalls.map((tool) => ({
-    durationMs:
-      tool.finishedAt === null ? null : tool.finishedAt - tool.startedAt,
+    durationMs: toDuration(tool.finishedAt, tool.startedAt),
     input: tool.input,
     isError: tool.isError,
     name: tool.name,
     startedAt: tool.startedAt,
     summary: tool.summary ?? "",
     toolUseId: tool.toolUseId,
-    ...(tool.diff ? { diff: tool.diff } : {}),
-    ...(tool.diffs ? { diffs: tool.diffs } : {}),
-    ...(tool.denied ? { denied: true } : {}),
+    ...toToolExtras(tool),
   }));
 
 const legacyParts = (summary: RunSummary): RunPart[] => {
@@ -113,20 +145,20 @@ const legacyParts = (summary: RunSummary): RunPart[] => {
 };
 
 const emptyRun = (
-  runId: string,
-  directionId: string | null,
-  startedAt: number,
-  request: RunRequest | null = null
+  newRunId: string,
+  owner: string | null,
+  startMs: number,
+  initial: RunRequest | null = null
 ): RunView => ({
   contextTokens: null,
-  directionId,
+  directionId: owner,
   parts: [],
   permissions: [],
   queue: [],
-  request,
+  request: initial,
   retry: null,
-  runId,
-  startedAt,
+  runId: newRunId,
+  startedAt: startMs,
   status: "running",
   summary: null,
   todos: null,
@@ -166,9 +198,11 @@ const mergeTools = (live: ToolRow[], final: ToolRow[]): ToolRow[] => {
       durationMs: found.durationMs ?? tool.durationMs,
       isError: found.isError,
       summary: found.summary || tool.summary,
-      ...(diff ? { diff } : {}),
-      ...(diffs ? { diffs } : {}),
-      ...(found.denied || tool.denied ? { denied: true } : {}),
+      ...toToolExtras({
+        denied: found.denied || tool.denied,
+        diff,
+        diffs,
+      }),
     };
   });
 };
@@ -193,10 +227,11 @@ const finishedView = (
   const parts =
     summary.parts ?? withFinalText(closeParts(prev.parts), summary.finalText);
 
-  const tools =
-    prev.tools.length >= finished.tools.length
-      ? mergeTools(prev.tools, finished.tools)
-      : finished.tools;
+  let { tools } = finished;
+
+  if (prev.tools.length >= finished.tools.length) {
+    tools = mergeTools(prev.tools, finished.tools);
+  }
 
   return {
     ...finished,
@@ -222,7 +257,9 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
         toolUseId: event.toolUseId,
       },
     ];
-  } else if (event.type === "run.tool.finished") {
+  }
+
+  if (event.type === "run.tool.finished") {
     run.tools = run.tools.map((tool) => {
       if (tool.toolUseId === event.toolUseId) {
         return {
@@ -230,9 +267,7 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
           durationMs: event.durationMs,
           isError: event.isError,
           summary: event.summary,
-          ...(event.diff ? { diff: event.diff } : {}),
-          ...(event.diffs ? { diffs: event.diffs } : {}),
-          ...(event.denied ? { denied: true } : {}),
+          ...toToolExtras(event),
         };
       }
 
@@ -312,9 +347,14 @@ const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
     return runs;
   }
 
-  const run: RunView = prev
-    ? { ...prev, directionId: prev.directionId ?? event.directionId ?? null }
-    : emptyRun(runId, event.directionId ?? null, event.ts);
+  let run = emptyRun(runId, event.directionId ?? null, event.ts);
+
+  if (prev) {
+    run = {
+      ...prev,
+      directionId: prev.directionId ?? event.directionId ?? null,
+    };
+  }
 
   if (event.type === "run.stopping") {
     return {

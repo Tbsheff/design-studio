@@ -32,6 +32,62 @@ interface TurnProps {
 
 const WAIT_TIP = "Wait for the run to finish";
 
+interface UndoProps {
+  undoVersionId: string | null;
+  undoTip: string | null;
+}
+
+const toRestoreTip = (
+  running: boolean,
+  rewind: RewindControl,
+  versionId: string | null
+): string | null => {
+  if (running || rewind.locked) {
+    return WAIT_TIP;
+  }
+
+  if (versionId === null) {
+    return "This message made no version";
+  }
+
+  if (versionId === rewind.headVersionId) {
+    return "The code is already at this message";
+  }
+
+  if (versionId === rewind.headRestoredFrom) {
+    return "The code is already at this message";
+  }
+
+  return null;
+};
+
+const toEditTip = (
+  running: boolean,
+  forkBase: string | null
+): string | null => {
+  if (running) {
+    return WAIT_TIP;
+  }
+
+  if (forkBase === null) {
+    return "No earlier version to start from";
+  }
+
+  return null;
+};
+
+const toUndoTip = (rewind: RewindControl): string | null => {
+  if (rewind.locked) {
+    return WAIT_TIP;
+  }
+
+  if (rewind.dirtyCount > 0) {
+    return "Save or discard your edits first";
+  }
+
+  return null;
+};
+
 const turnProps = (
   run: RunView,
   rewind: RewindControl | undefined,
@@ -61,28 +117,21 @@ const turnProps = (
     );
   }
 
-  const restoreTip =
-    running || rewind.locked
-      ? WAIT_TIP
-      : versionId === null
-        ? "This message made no version"
-        : versionId === rewind.headVersionId ||
-            versionId === rewind.headRestoredFrom
-          ? "The code is already at this message"
-          : null;
+  const restoreTip = toRestoreTip(running, rewind, versionId);
+  const editTip = toEditTip(running, forkBase);
 
-  const editTip = running
-    ? WAIT_TIP
-    : forkBase === null
-      ? "No earlier version to start from"
-      : null;
+  let restoreVersionId: string | null = null;
+
+  if (restoreTip === null) {
+    restoreVersionId = versionId;
+  }
 
   return {
     actions,
     editTip,
     forkBase,
     restoreTip,
-    restoreVersionId: restoreTip === null ? versionId : null,
+    restoreVersionId,
     title,
   };
 };
@@ -90,7 +139,7 @@ const turnProps = (
 const undoProps = (
   run: RunView,
   rewind: RewindControl | undefined
-): { undoVersionId: string | null; undoTip: string | null } => {
+): UndoProps => {
   const versionId = run.summary?.versionId;
 
   let parentId: string | null | undefined = null;
@@ -110,14 +159,7 @@ const undoProps = (
     return { undoTip: null, undoVersionId: null };
   }
 
-  return {
-    undoTip: rewind.locked
-      ? WAIT_TIP
-      : rewind.dirtyCount > 0
-        ? "Save or discard your edits first"
-        : null,
-    undoVersionId: parentId,
-  };
+  return { undoTip: toUndoTip(rewind), undoVersionId: parentId };
 };
 
 const reviewOf = (

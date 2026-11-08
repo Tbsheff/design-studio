@@ -6,6 +6,7 @@ import type {
 import { stateLabel } from "@design-studio/contracts/frame-state";
 import { useState, useSyncExternalStore } from "react";
 
+import { findElement } from "../../platform/find-element.js";
 import { uiStore } from "../../platform/storage.js";
 import { canvasStore } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
@@ -44,7 +45,7 @@ const elementName = (selection: readonly SelectionContext[]): string | null => {
 };
 
 const stage = (): HTMLElement | null =>
-  document.querySelector<HTMLElement>('.stage[aria-label="Canvas"]');
+  findElement(document.body, '.stage[aria-label="Canvas"]');
 
 const refOf = (frame: CanvasFrame): RunCanvasRef => {
   const inView = inViewIds(stage()).filter((id) => id !== frame.id);

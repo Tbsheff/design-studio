@@ -2,11 +2,8 @@ import type { RunLevel } from "@design-studio/contracts";
 import type { IconName } from "@design-studio/ui";
 import type { CSSProperties } from "react";
 
-import type {
-  ComposerMode,
-  DesignsSetting,
-  EffortSetting,
-} from "./run-settings.js";
+import type { ComposerMode } from "./composer-mode-model.js";
+import type { DesignsSetting, EffortSetting } from "./run-settings-model.js";
 
 interface ItemProps {
   icon?: IconName;
@@ -55,7 +52,13 @@ interface ModelPillProps {
   onOpen?: () => void;
 }
 
-export { ITEM, MODES, MODE_SHORT_HINT };
+const LEVEL_FOCUS: readonly string[] = ['[aria-checked="true"]', ITEM];
+
+const MODEL_FOCUS: readonly string[] = ['[tabindex="0"]:not(:disabled)'];
+
+const ITEM_FOCUS: readonly string[] = [ITEM];
+
+export { ITEM, ITEM_FOCUS, LEVEL_FOCUS, MODEL_FOCUS, MODES, MODE_SHORT_HINT };
 
 export type {
   ItemProps,

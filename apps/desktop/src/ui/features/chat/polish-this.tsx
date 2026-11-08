@@ -2,7 +2,7 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { levelHint } from "./level-control.js";
+import { levelHint } from "./level-model.js";
 
 const SPARKLE_ICON_SIZE = 14;
 

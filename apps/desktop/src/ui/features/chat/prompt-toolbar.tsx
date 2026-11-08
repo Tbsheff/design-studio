@@ -4,10 +4,12 @@ import type { ChangeEvent, ReactElement } from "react";
 
 import { cn } from "../../ai/lib/utils.js";
 import type { PlusMenuProps } from "./composer-menu-model.js";
-import { LevelPill, ModelPill, PlusMenu } from "./composer-menu.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import { DesignsChip } from "./designs-chip.js";
+import { LevelPill } from "./level-pill.js";
 import { ModeChip } from "./mode-chip.js";
+import { ModelPill } from "./model-pill.js";
+import { PlusMenu } from "./plus-menu.js";
 import type { SendProps } from "./prompt-box-model.js";
 import { ReasonText } from "./reason-text.js";
 import { SendButton } from "./send-button.js";

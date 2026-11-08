@@ -56,3 +56,5 @@ const useRunLevel = (
 };
 
 export { useRunLevel };
+
+export type { RunLevelState };

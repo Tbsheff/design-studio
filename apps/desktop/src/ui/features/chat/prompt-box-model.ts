@@ -2,7 +2,7 @@ import type { RunLevel } from "@design-studio/contracts";
 import type { IconName } from "@design-studio/ui";
 import { lazy } from "react";
 
-import type { ComposerMode } from "./run-settings.js";
+import type { ComposerMode } from "./composer-mode-model.js";
 
 const RepoContextChip = lazy(async () => {
   const loaded = await import("./repo-context-chip.js");

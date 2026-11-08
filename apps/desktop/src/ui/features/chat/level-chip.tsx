@@ -1,7 +1,7 @@
 import type { RunLevel } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
-import { levelLabel } from "./level-control.js";
+import { levelLabel } from "./level-model.js";
 
 const LevelChip = ({
   level,

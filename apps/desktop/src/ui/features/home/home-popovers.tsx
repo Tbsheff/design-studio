@@ -3,12 +3,8 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { VariationsControl } from "../canvas/variations-control.js";
-import {
-  ChoiceItem,
-  levelGist,
-  levelHint,
-  levelLabel,
-} from "../chat/level-control.js";
+import { levelGist, levelHint, levelLabel } from "../chat/index.js";
+import { LevelChoiceItem } from "./level-choice-item.js";
 
 interface LevelChoiceProps {
   readonly item: RunLevel;
@@ -29,7 +25,7 @@ const LevelChoice = ({
   }, [item, onClose, onLevel]);
 
   return (
-    <ChoiceItem
+    <LevelChoiceItem
       label={levelLabel(item)}
       hint={levelGist(item).hint}
       meta={levelGist(item).cost}

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { findElement } from "../../platform/find-element.js";
+
 const INPUT = '.prompt [data-slot="composer-input"]';
 
 const focusIsFree = (): boolean => {
@@ -9,40 +11,38 @@ const focusIsFree = (): boolean => {
     return false;
   }
 
-  return !document.querySelector(
-    '[role="dialog"], [aria-modal="true"], .inline-prompt'
+  return (
+    findElement(
+      document.body,
+      '[role="dialog"], [aria-modal="true"], .inline-prompt'
+    ) === null
   );
 };
 
 const focusComposer = (): void => {
   globalThis.requestAnimationFrame(() => {
     if (focusIsFree()) {
-      document
-        .querySelector<HTMLTextAreaElement>(INPUT)
-        ?.focus({ preventScroll: true });
+      findElement(document.body, INPUT)?.focus({ preventScroll: true });
     }
   });
 };
 
 const focusComposerInput = (): number =>
   globalThis.requestAnimationFrame(() =>
-    document.querySelector<HTMLTextAreaElement>(INPUT)?.focus()
+    findElement(document.body, INPUT)?.focus()
   );
 
-const focusPromptInput = (): void =>
-  document.querySelector<HTMLTextAreaElement>(INPUT)?.focus();
+const focusPromptInput = (): void => findElement(document.body, INPUT)?.focus();
 
 const focusPromptTextarea = (): void =>
-  document.querySelector<HTMLTextAreaElement>(".prompt textarea")?.focus();
+  findElement(document.body, ".prompt textarea")?.focus();
 
 const leaveComposer = (input: HTMLElement): void => {
-  const stage = document.querySelector<HTMLElement>(".stage");
+  const stage =
+    findElement(document.body, ".stage") ??
+    input.closest<HTMLElement>("[tabindex]");
 
-  if (stage) {
-    stage.focus({ preventScroll: true });
-  } else {
-    input.blur();
-  }
+  stage?.focus({ preventScroll: true });
 };
 
 const useComposerFocus = (running: boolean, ready: boolean): void => {

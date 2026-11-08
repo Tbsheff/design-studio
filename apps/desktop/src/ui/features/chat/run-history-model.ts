@@ -81,6 +81,8 @@ const listRunPage = async (
 
 const SEARCH_LIMIT = 20;
 
+const SEARCH_KEY = "q";
+
 const searchRunPage = async (
   directionId: string,
   query: string
@@ -93,12 +95,12 @@ const searchRunPage = async (
 
   return toPage(
     await call(runsRoutes.listRun, {
+      [SEARCH_KEY]: query,
       cursor: null,
       direction: directionId,
       light: true,
       limit: SEARCH_LIMIT,
       projectId: ownerProjectId,
-      q: query,
     })
   );
 };

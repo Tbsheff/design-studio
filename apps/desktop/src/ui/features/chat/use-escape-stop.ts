@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 
+import { findElements } from "../../platform/find-element.js";
+
 const PREVIEW_ESCAPE_EVENT = "studio:preview-escape";
 const PREVIEW_STOP_EVENT = "studio:preview-stop";
 
@@ -12,7 +14,7 @@ const isStopKey = (event: KeyboardEvent): boolean =>
   event.key === "." && hasStopModifier(event);
 
 const overlayOpen = (): boolean =>
-  [...document.querySelectorAll<HTMLElement>(OVERLAY_SELECTOR)].some(
+  findElements(document.body, OVERLAY_SELECTOR).some(
     (element) => element.getClientRects().length > 0
   );
 

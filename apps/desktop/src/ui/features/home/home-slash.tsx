@@ -7,8 +7,9 @@ import type {
   RefObject,
 } from "react";
 
+import { useSlashMenu } from "../chat/index.js";
 import { levelGroup, modelGroup } from "../chat/slash-groups.js";
-import { SlashMenu, useSlashMenu } from "../chat/slash-menu.js";
+import { SlashMenu } from "../chat/slash-menu.js";
 
 const INPUT_ATTRS = [
   "aria-controls",

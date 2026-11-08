@@ -19,7 +19,7 @@ const LiveStatus = ({
   run: RunView;
   workTree: string | null;
   isOffline: boolean;
-  onStop?: () => void;
+  onStop: (() => void) | null;
 }): ReactElement => {
   const elapsed = useElapsed(run.startedAt, true);
 

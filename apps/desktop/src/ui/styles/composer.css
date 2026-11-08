@@ -60,6 +60,15 @@
   box-shadow: var(--shadow-pop);
 }
 
+dialog.run-settings-pop {
+  right: auto;
+  height: auto;
+  margin: 0;
+  border: 0;
+  color: inherit;
+  overflow: visible;
+}
+
 .composer-menu,
 .run-settings-pop {
   --pop-dy: 4px;
@@ -1226,6 +1235,15 @@
   border-radius: var(--r-md);
   cursor: pointer;
   user-select: none;
+}
+
+button.slash-row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
 }
 
 .slash-row[data-highlighted] {

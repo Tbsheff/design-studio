@@ -6,6 +6,7 @@ import {
   toFrameSchedule,
   toMergedDeltas,
 } from "./delta-batch-model.js";
+import { levelGist, levelHint, levelLabel } from "./level-model.js";
 import { runStepText } from "./live-status-model.js";
 import { parseDraft, toDraft } from "./settings-draft-model.js";
 import type { SettingsDraft } from "./settings-draft-model.js";
@@ -40,7 +41,11 @@ const McpPointBadge = lazy(async () => {
   return { default: loaded.McpPointBadge };
 });
 
-const InlinePrompt = lazy(() => import("./inline-prompt.js"));
+const InlinePrompt = lazy(async () => {
+  const loaded = await import("./inline-prompt.js");
+
+  return { default: loaded.InlinePrompt };
+});
 
 export {
   ChatPanel,
@@ -50,6 +55,9 @@ export {
   McpToasts,
   chatWidthStyle,
   createDeltaBatcher,
+  levelGist,
+  levelHint,
+  levelLabel,
   parseDraft,
   runStepText,
   toDraft,
@@ -67,3 +75,7 @@ export { applyRunEvent, runText } from "./run-state-model.js";
 export type { RunMap } from "./run-state-model.js";
 
 export type { DeltaBatcher } from "./delta-batch-model.js";
+
+export { useSlashMenu } from "./use-slash-menu.js";
+
+export { improveRequest, lastImproveRun } from "./draft-improve-model.js";

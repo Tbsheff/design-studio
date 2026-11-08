@@ -1,0 +1,47 @@
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
+import { useCallback } from "react";
+import type { MouseEvent, ReactElement } from "react";
+
+const TURN_ICON_SIZE = 14;
+
+const TurnButton = ({
+  label,
+  icon,
+  tip,
+  onClick,
+}: {
+  label: string;
+  icon: IconName;
+  tip: string | null;
+  onClick: () => void;
+}): ReactElement => {
+  const off = tip !== null;
+
+  const activate = useCallback(
+    (event: MouseEvent<HTMLButtonElement>): void => {
+      event.stopPropagation();
+
+      if (!off) {
+        onClick();
+      }
+    },
+    [off, onClick]
+  );
+
+  return (
+    <button
+      type="button"
+      className="icon-btn small msg-action"
+      aria-label={label}
+      aria-disabled={off}
+      data-tip={tip ?? label}
+      data-tip-side="top"
+      onClick={activate}
+    >
+      <Icon name={icon} size={TURN_ICON_SIZE} />
+    </button>
+  );
+};
+
+export { TurnButton };

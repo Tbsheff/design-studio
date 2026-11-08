@@ -184,3 +184,5 @@ const useComposerKeys = (options: Options): UseComposerKeysResult => {
 };
 
 export { QUEUE_MAX, useComposerKeys };
+
+export type { UseComposerKeysResult };

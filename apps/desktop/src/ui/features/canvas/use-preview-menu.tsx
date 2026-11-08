@@ -28,6 +28,7 @@ import {
   toStructureMenuEntries,
 } from "../inspector/index.js";
 import { getAuthoredCss } from "../inspector/use-authored-css.js";
+import { LayerStyleSlot, useLayerStyleHost } from "../layer-style/index.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
@@ -264,6 +265,7 @@ interface HostBase {
 
 interface MenuHosts {
   readonly icons: ReturnType<typeof useIconHost>;
+  readonly layerStyle: ReturnType<typeof useLayerStyleHost>;
   readonly photos: ReturnType<typeof useImageSearchHost>;
   readonly props: ReturnType<typeof usePropHost>;
   readonly patterns: ReturnType<typeof usePatternHost>;
@@ -285,6 +287,30 @@ const toHostItems = (
   ...hosts.props.items(item),
   ...hosts.patterns.items(item),
 ];
+
+const toAfterCopyCss = (
+  items: PreviewMenuItem[],
+  extra: PreviewMenuItem[]
+): PreviewMenuItem[] =>
+  items.flatMap((item) => {
+    if (item.id === "copy-css") {
+      return [item, ...extra];
+    }
+
+    return [item];
+  });
+
+const toLayerStyleSlot = (hosts: MenuHosts): ReactNode => {
+  if (!hosts.layerStyle.opened) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <LayerStyleSlot host={hosts.layerStyle} />
+    </Suspense>
+  );
+};
 
 const toCreateDialog = (
   options: Options,
@@ -387,8 +413,9 @@ const toMenuNode = (
     return null;
   }
 
-  const items = menuItems(options, target, onCreate, (item) =>
-    toHostItems(hosts, item)
+  const items = toAfterCopyCss(
+    menuItems(options, target, onCreate, (item) => toHostItems(hosts, item)),
+    hosts.layerStyle.items(target)
   );
 
   return (
@@ -421,6 +448,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
 
   const hosts: MenuHosts = {
     icons: useIconHost({ ...base, selection }),
+    layerStyle: useLayerStyleHost({ ...base, selection }),
     patterns: usePatternHost({ ...base, isReact }),
     photos: useImageSearchHost({ ...base, selection }),
     props: usePropHost({ ...base, isReact }),
@@ -447,6 +475,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
       {toMenuNode(options, hosts, at, handlers)}
       {toCreateDialog(options, creating, createIds, closeCreate)}
       {toIconSlot(options, hosts)}
+      {toLayerStyleSlot(hosts)}
       {toPropSlot(options, hosts)}
       {toPatternSlot(options, hosts)}
       <ImageSearchMount

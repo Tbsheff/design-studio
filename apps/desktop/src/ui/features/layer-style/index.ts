@@ -1,9 +1,17 @@
 import { lazy } from "react";
 
-const LayerStylePanel = lazy(async () => {
-  const loaded = await import("./layer-style-panel.js");
+const LayerStyleSlot = lazy(async () => {
+  const loaded = await import("./layer-style-slot.js");
 
-  return { default: loaded.LayerStylePanel };
+  return { default: loaded.LayerStyleSlot };
 });
 
-export { LayerStylePanel };
+export { useLayerStyleHost } from "./use-layer-style-host.js";
+
+export { LayerStyleSlot };
+
+export type {
+  LayerStyleHost,
+  LayerStyleHostOptions,
+  LayerStyleMenuItem,
+} from "./use-layer-style-host.js";

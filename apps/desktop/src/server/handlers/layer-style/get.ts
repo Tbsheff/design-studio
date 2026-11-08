@@ -12,12 +12,14 @@ const handle = Effect.fn("layer-style.get")(function* run(
 ) {
   const store = yield* LayerStyleStore;
 
-  return yield* store.get({
+  const info = yield* store.get({
     directionId: input.directionId,
     groups: input.groups,
     layerId: input.layerId,
     projectId: input.projectId,
   });
+
+  return { ...info, groups: info.groups.slice(0, input.limit) };
 }) satisfies Handle<typeof getLayerStyle>;
 
 export { handle };

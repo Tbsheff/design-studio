@@ -5,6 +5,7 @@ import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
+import { PageFields } from "../_core/list-page.js";
 import {
   DirectionFieldSchema,
   GetGroupsSchema,
@@ -31,6 +32,7 @@ const getLayerStyle = defineAction({
     directionId: DirectionFieldSchema,
     groups: GetGroupsSchema,
     layerId: LayerIdSchema,
+    limit: PageFields.limit,
     projectId: ProjectIdSchema,
   }),
   invalidates: [],

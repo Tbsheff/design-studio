@@ -5,9 +5,9 @@ import type {
 } from "@design-studio/contracts/props";
 import { startTransition, useCallback } from "react";
 
-import { propsApi } from "./props-api.js";
 import { toErrorMessage } from "./props-model.js";
 import type { ClassBody, PropsStatus } from "./props-model.js";
+import { propsApi } from "./use-props-api.js";
 
 interface VariantSendInput {
   readonly projectId: string;

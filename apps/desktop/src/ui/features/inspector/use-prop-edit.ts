@@ -5,9 +5,9 @@ import type {
 import { startTransition, useCallback } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
-import { propsApi } from "./props-api.js";
 import { toErrorMessage, toSavedStatus, toValuesWith } from "./props-model.js";
 import type { PropsStatus } from "./props-model.js";
+import { propsApi } from "./use-props-api.js";
 
 interface PropEditInput {
   readonly projectId: string;

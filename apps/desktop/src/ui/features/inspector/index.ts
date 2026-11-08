@@ -68,3 +68,7 @@ export {
 export type { LayerDrop, SelectionOp } from "./structure-edits-model.js";
 
 export { applyPasteJsx } from "./use-paste-jsx.js";
+
+export { propsApi } from "./use-props-api.js";
+
+export type { VariantPreviewQuery } from "./use-props-api.js";

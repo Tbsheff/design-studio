@@ -1,8 +1,8 @@
 export { insertError } from "../design-system/component-insert-api.js";
 
-export { propsApi } from "../inspector/props-api.js";
+export { propsApi } from "../inspector/index.js";
 
-export type { VariantPreviewQuery } from "../inspector/props-api.js";
+export type { VariantPreviewQuery } from "../inspector/index.js";
 
 export {
   VARIANT_CLASSES,

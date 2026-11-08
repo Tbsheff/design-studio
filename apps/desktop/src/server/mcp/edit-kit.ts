@@ -9,7 +9,6 @@ import {
   type Version,
 } from "@design-studio/contracts";
 
-import { inputIssues } from "../../shared/input-errors.js";
 import { kebabKeys } from "../../shared/style-keys.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
 import { withPagePath } from "../export/source.js";
@@ -110,6 +109,33 @@ export interface ToolSpec {
   ): Promise<Done>;
 }
 
+const MAX_ISSUES = 3;
+
+const toIssueText = (issue: z.core.$ZodIssue): string => {
+  const field = issue.path.map(String).join(".") || "input";
+  const message = issue.message.replace(/^Invalid input: /u, "");
+
+  if (issue.code === "invalid_type" && /received undefined/u.test(message)) {
+    return `${field} is required`;
+  }
+
+  return `${field}: ${message}`;
+};
+
+const toZodIssues = (error: z.ZodError): string => {
+  const shown = error.issues
+    .slice(0, MAX_ISSUES)
+    .map((issue) => toIssueText(issue));
+  const more = error.issues.length - shown.length;
+  const text = shown.join("; ");
+
+  if (more > 0) {
+    return `${text}; and ${more} more`;
+  }
+
+  return text;
+};
+
 export function parseInput<S extends z.ZodType>(
   schema: S,
   args: Record<string, unknown>
@@ -119,7 +145,7 @@ export function parseInput<S extends z.ZodType>(
   if (!result.success) {
     throw new EditError(
       result.error.issues.length > 0
-        ? inputIssues(schema, result.error)
+        ? toZodIssues(result.error)
         : "input is not valid"
     );
   }

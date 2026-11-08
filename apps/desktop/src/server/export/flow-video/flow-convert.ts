@@ -12,6 +12,7 @@ import type { CapturedFrame } from "./flow-capture.js";
 type FlowFormat = "gif" | "mp4" | "webm";
 
 interface EncodeJob {
+  readonly endMs: number;
   readonly format: FlowFormat;
   readonly frames: readonly CapturedFrame[];
   readonly output: string;
@@ -35,19 +36,25 @@ const LAST_FRAME_MS = 200;
 
 const DURATION_DIGITS = 3;
 
-const toDurations = (frames: readonly CapturedFrame[]): readonly number[] =>
+const toDurations = (
+  frames: readonly CapturedFrame[],
+  endMs: number
+): readonly number[] =>
   frames.map((frame, index) => {
     const next = frames[index + 1] ?? null;
 
     if (next === null) {
-      return LAST_FRAME_MS / MS_PER_SECOND;
+      return Math.max(LAST_FRAME_MS, endMs - frame.atMs) / MS_PER_SECOND;
     }
 
     return (next.atMs - frame.atMs) / MS_PER_SECOND;
   });
 
-const toConcatText = (frames: readonly CapturedFrame[]): string => {
-  const durations = toDurations(frames);
+const toConcatText = (
+  frames: readonly CapturedFrame[],
+  endMs: number
+): string => {
+  const durations = toDurations(frames, endMs);
 
   const lines = frames.map(
     (frame, index) =>
@@ -110,7 +117,7 @@ const runEncode = async (job: EncodeJob): Promise<void> => {
   const ffmpeg = await getFfmpeg();
   const list = path.join(job.workDir, "frames.txt");
 
-  await writeFile(list, toConcatText(job.frames));
+  await writeFile(list, toConcatText(job.frames, job.endMs));
 
   const args = [
     "-y",

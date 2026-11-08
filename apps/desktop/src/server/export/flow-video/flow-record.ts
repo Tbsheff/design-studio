@@ -20,6 +20,7 @@ import { runWalk } from "./flow-walk.js";
 import type { WalkRun, WalkState } from "./flow-walk.js";
 
 interface Recorded {
+  readonly endMs: number;
   readonly frames: readonly CapturedFrame[];
   readonly nativePath: string | null;
   readonly size: RecordingSize;
@@ -60,9 +61,11 @@ const toNativeDir = (isNative: boolean, dir: string): string | null => {
   return null;
 };
 
-const startOrSkip = (job: RecordJob, page: Page): FlowCapture => {
+const startOrSkip = (job: RecordJob, page: Page): Promise<FlowCapture> => {
   if (job.isNative) {
-    return { stop: () => Promise.resolve([]) };
+    return Promise.resolve({
+      stop: () => Promise.resolve({ endMs: 0, frames: [] }),
+    });
   }
 
   return startCapture(page, job.workDir);
@@ -93,7 +96,7 @@ const runRecording = async (job: RecordJob): Promise<Recorded> => {
     await hideDevChrome(page);
     await setCursor(page, { isFirst: true, ...at });
 
-    const capture = startOrSkip(job, page);
+    const capture = await startOrSkip(job, page);
 
     await page.waitForTimeout(request.stepMs);
 
@@ -117,7 +120,13 @@ const runRecording = async (job: RecordJob): Promise<Recorded> => {
 
     const nativePath = await video?.path();
 
-    return { frames: shots, nativePath: nativePath ?? null, size, state };
+    return {
+      endMs: shots.endMs,
+      frames: shots.frames,
+      nativePath: nativePath ?? null,
+      size,
+      state,
+    };
   } finally {
     await browser.close();
   }

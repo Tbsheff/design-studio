@@ -1,23 +1,20 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Page } from "playwright-core";
+import type { CDPSession, Page } from "playwright-core";
 
 interface CapturedFrame {
   readonly atMs: number;
   readonly file: string;
 }
 
-interface FlowCapture {
-  readonly stop: () => Promise<readonly CapturedFrame[]>;
+interface CapturedVideo {
+  readonly endMs: number;
+  readonly frames: readonly CapturedFrame[];
 }
 
-interface CaptureLoop {
-  readonly dir: string;
-  readonly frames: CapturedFrame[];
-  readonly isStopped: () => boolean;
-  readonly page: Page;
-  readonly startedAt: number;
+interface FlowCapture {
+  readonly stop: () => Promise<CapturedVideo>;
 }
 
 const JPEG_QUALITY = 85;
@@ -26,54 +23,91 @@ const PAD_WIDTH = 6;
 
 const SHOT_TIMEOUT_MS = 3000;
 
-const createShot = async (page: Page): Promise<Buffer | null> => {
+const toFramePath = (dir: string, index: number): string =>
+  path.join(dir, `f${String(index).padStart(PAD_WIDTH, "0")}.jpg`);
+
+const createFirstFrame = async (
+  page: Page,
+  dir: string
+): Promise<CapturedFrame | null> => {
   try {
-    return await page.screenshot({
+    const bytes = await page.screenshot({
       quality: JPEG_QUALITY,
       timeout: SHOT_TIMEOUT_MS,
       type: "jpeg",
     });
+
+    const file = toFramePath(dir, 0);
+
+    await writeFile(file, bytes);
+
+    return { atMs: 0, file };
   } catch {
     return null;
   }
 };
 
-const runCaptureLoop = async (loop: CaptureLoop): Promise<void> => {
-  if (loop.isStopped()) {
-    return;
+const stopSession = async (session: CDPSession): Promise<boolean> => {
+  try {
+    await session.send("Page.stopScreencast");
+
+    return true;
+  } catch {
+    return false;
   }
-
-  const atMs = Date.now() - loop.startedAt;
-  const bytes = await createShot(loop.page);
-
-  if (bytes !== null) {
-    const name = `f${String(loop.frames.length).padStart(PAD_WIDTH, "0")}.jpg`;
-    const file = path.join(loop.dir, name);
-
-    await writeFile(file, bytes);
-    loop.frames.push({ atMs, file });
-  }
-
-  await runCaptureLoop(loop);
 };
 
-const startCapture = (source: Page, dir: string): FlowCapture => {
-  const frames: CapturedFrame[] = [];
-  const control = { isStopped: false };
+const runAck = async (
+  session: CDPSession,
+  sessionId: number
+): Promise<boolean> => {
+  try {
+    await session.send("Page.screencastFrameAck", { sessionId });
 
-  const loop = runCaptureLoop({
-    dir,
-    frames,
-    isStopped: () => control.isStopped,
-    page: source,
-    startedAt: Date.now(),
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const startCapture = async (
+  source: Page,
+  dir: string
+): Promise<FlowCapture> => {
+  const frames: CapturedFrame[] = [];
+  const writes: Promise<unknown>[] = [];
+  const startedAt = Date.now();
+  const first = await createFirstFrame(source, dir);
+
+  if (first !== null) {
+    frames.push(first);
+  }
+
+  const session = await source.context().newCDPSession(source);
+
+  session.on("Page.screencastFrame", (event) => {
+    const file = toFramePath(dir, frames.length);
+
+    frames.push({ atMs: Date.now() - startedAt, file });
+    writes.push(
+      writeFile(file, Buffer.from(event.data, "base64")),
+      runAck(session, event.sessionId)
+    );
   });
 
-  const stop = async (): Promise<readonly CapturedFrame[]> => {
-    control.isStopped = true;
-    await loop;
+  await session.send("Page.startScreencast", {
+    everyNthFrame: 1,
+    format: "jpeg",
+    quality: JPEG_QUALITY,
+  });
 
-    return frames;
+  const stop = async (): Promise<CapturedVideo> => {
+    const endMs = Date.now() - startedAt;
+
+    await stopSession(session);
+    await Promise.all(writes);
+
+    return { endMs, frames };
   };
 
   return { stop };
@@ -81,4 +115,4 @@ const startCapture = (source: Page, dir: string): FlowCapture => {
 
 export { startCapture };
 
-export type { CapturedFrame, FlowCapture };
+export type { CapturedFrame, CapturedVideo, FlowCapture };

@@ -57,6 +57,7 @@ const runOutput = async (
   }
 
   await runEncode({
+    endMs: recorded.endMs,
     format: request.format,
     frames: recorded.frames,
     output: paths.out,

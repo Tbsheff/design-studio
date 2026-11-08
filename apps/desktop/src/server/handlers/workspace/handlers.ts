@@ -2,6 +2,7 @@
 import type { WorkspaceActions } from "@design-studio/actions/workspace/index";
 
 import type { Entries } from "../_core/handler.js";
+import { handle as applyFixWorkspaceHandle } from "./apply-fix.js";
 import { handle as createFolderWorkspaceHandle } from "./create-folder.js";
 import {
   handle as deleteFolderWorkspaceHandle,
@@ -28,6 +29,7 @@ import { handle as searchProjectsWorkspaceHandle } from "./search-projects.js";
 import { handle as setDefaultFolderWorkspaceHandle } from "./set-default-folder.js";
 
 const WorkspaceEntries = {
+  applyFixWorkspace: { handle: applyFixWorkspaceHandle },
   createFolderWorkspace: { handle: createFolderWorkspaceHandle },
   deleteFolderWorkspace: {
     handle: deleteFolderWorkspaceHandle,

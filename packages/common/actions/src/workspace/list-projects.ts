@@ -8,7 +8,13 @@ import { ProjectSummaryListSchema } from "./schema.js";
 
 const listProjectsWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_projects",
+    set: "core",
+    short:
+      "Read only. List the design projects with their directions and newest version ids.",
+  },
   confirm: "none",
   description:
     "List the design projects in Design Studio with their directions and newest version ids.",

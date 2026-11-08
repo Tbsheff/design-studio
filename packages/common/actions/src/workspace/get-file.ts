@@ -26,7 +26,13 @@ const PathFieldSchema = PathTextSchema.annotate({
 
 const getFileWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "read_file",
+    set: "core",
+    short:
+      "Read only. Read one text file of a project by path. Get paths from list_files.",
+  },
   confirm: "none",
   description:
     "Read one text source file of a version. Returns path and text. Read only.",

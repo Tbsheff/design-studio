@@ -50,7 +50,13 @@ const RouteFieldSchema = RouteTextSchema.annotate({
 
 const getPortPlanWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "get_port_plan",
+    set: "app",
+    short:
+      "Read only. Plan how to move an HTML page into the attached app as one React route.",
+  },
   confirm: "none",
   description:
     'Plan how to move an HTML prototype page into an attached app as one React route, the same plan the studio "Move to app" dialog uses: sections, steps, repeated blocks, headings, actions, images, links, tokens mapped to the app tokens, parts to leave out, and kit (app components that fit). With route it also returns the route file and routeExists. With flow: true or paths it plans a whole flow: pages in flow order with routes, the link map, unselected and unreached pages. Read only: it never starts a run.',

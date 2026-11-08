@@ -9,7 +9,13 @@ import { DesignMdSavedSchema } from "./schema.js";
 
 const setDesignMdProject = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_design_md_project",
+    set: "core",
+    short:
+      "Write the DESIGN.md of one project and save it as a version. Read it first with get_design_md.",
+  },
   confirm: "none",
   description:
     "Write the DESIGN.md of one project and save it as a version on the main direction.",
@@ -21,7 +27,7 @@ const setDesignMdProject = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["project.getDesignMd"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_design_md_project" },
   needs: "project.update",
   output: DesignMdSavedSchema,
   scope: "project",

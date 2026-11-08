@@ -17,7 +17,12 @@ const DirectionFieldSchema = DirectionIdSchema.annotate({
 
 const listVersionsWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_versions",
+    set: "core",
+    short: "Read only. List the saved versions of one direction, newest first.",
+  },
   confirm: "none",
   description: "List the saved versions of one direction, newest first.",
   errors: [BadRequest, Conflict, NotFound],

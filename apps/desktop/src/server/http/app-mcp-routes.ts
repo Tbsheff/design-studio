@@ -1,9 +1,7 @@
 import type { Hono } from "hono";
 
-import type { FixApp } from "../../shared/mcp-ports.js";
 import type { KeepVariant } from "../variations/routes.js";
 import type { AppContext } from "./app-context.js";
-import { fixApp } from "./doctor-routes.js";
 import { registerMcpRoutes } from "./mcp-routes.js";
 import { registerStreamRoutes } from "./stream-routes.js";
 
@@ -14,19 +12,6 @@ interface McpSlot {
 }
 
 const createMcpSlot = (): McpSlot => ({ routes: null });
-
-const toFixApp =
-  (ctx: AppContext): FixApp =>
-  (projectId, kind) =>
-    fixApp(
-      {
-        preview: ctx.preview,
-        projects: ctx.projects,
-        readBody: () => Promise.resolve({}),
-      },
-      projectId,
-      kind
-    );
 
 const registerAppMcpRoutes = (
   app: Hono,
@@ -47,7 +32,6 @@ const registerAppMcpRoutes = (
     studioToken: config.studioToken,
     projectsFolder: () => ctx.defaultFolder.ensure(),
     appOpen: ctx.appOpen,
-    fixApp: toFixApp(ctx),
     history: ctx.editHistory,
     keepVariant: variations.keepVariant,
     layerLocks: ctx.layerLocks ?? null,

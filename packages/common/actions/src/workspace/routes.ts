@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  applyFixWorkspace: {
+    id: "workspace.applyFix",
+    invalidates: ["workspace.getDoctor"],
+    method: "POST",
+    path: "/api/projects/:projectId/app/doctor/fix",
+  },
   createFolderWorkspace: {
     id: "workspace.createFolder",
     invalidates: ["workspace.getFolders"],

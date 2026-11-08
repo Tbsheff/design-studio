@@ -27,7 +27,12 @@ const PageFieldSchema = PathTextSchema.annotate({
 
 const getFrameHtmlWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "get_frame_html",
+    set: "core",
+    short: "Read only. Read the rendered HTML of one canvas frame.",
+  },
   confirm: "none",
   description:
     "Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM. Read only.",

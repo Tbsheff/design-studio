@@ -3,7 +3,7 @@ import type { Hono } from "hono";
 import type { AppContext } from "./app-context.js";
 import type { McpRoutes } from "./app-mcp-routes.js";
 import { readBody } from "./app-request.js";
-import { registerDoctorRoutes } from "./doctor-routes.js";
+import { setDoctorRuntime } from "./doctor-routes.js";
 import { registerShipRoutes } from "./ship-routes.js";
 
 const registerAppShipRoutes = (
@@ -19,7 +19,7 @@ const registerAppShipRoutes = (
     activity: mcpRoutes.activity,
     readBody,
   });
-  registerDoctorRoutes(app, { projects, preview, readBody });
+  setDoctorRuntime({ preview, projects });
 };
 
 export { registerAppShipRoutes };

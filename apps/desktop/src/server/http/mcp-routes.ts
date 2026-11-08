@@ -1,7 +1,7 @@
 import type { McpApprovalPoll } from "@design-studio/contracts/export";
 import type { Hono } from "hono";
 
-import type { ActivityLog, FixApp } from "../../shared/mcp-ports.js";
+import type { ActivityLog } from "../../shared/mcp-ports.js";
 import type { AgentRunner } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
@@ -34,7 +34,6 @@ interface McpRouteDeps extends ExportDeps {
   appOpen: () => boolean;
   history?: EditRecorder;
   listener: McpListenerRunnerApi | null;
-  fixApp: FixApp;
   keepVariant: KeepVariant;
   layerLocks: LayerLockStore | null;
   isAgentToolOpen: boolean;

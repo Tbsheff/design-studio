@@ -22,7 +22,12 @@ const DirectionFieldSchema = DirectionIdSchema.annotate({
 
 const getDesignMdWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "get_design_md",
+    set: "core",
+    short: "Read only. Read the DESIGN.md of a project.",
+  },
   confirm: "none",
   description:
     "Get the DESIGN.md rules of the project. Returns text, or a short note when the project has no DESIGN.md. Read only.",

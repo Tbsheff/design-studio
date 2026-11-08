@@ -1,54 +1,54 @@
-import { z } from "../../platform/zod-bridge/index.js";
-import { packId } from "../edit-kit.js";
+import { Schema } from "effect";
+
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalText,
+  toTrimmedText,
+} from "../../agent-tools/index.js";
 
 const NAME_MAX = 120;
 const FOLDER_MAX = 4096;
 const URL_MAX = 300;
 const APP_DIR_MAX = 300;
 
-const createProjectSchema = z.strictObject({
-  name: z.string().trim().min(1).max(NAME_MAX).describe("Project name."),
-  kind: z
-    .enum(["html", "react"])
-    .default("html")
-    .describe("html (static pages) or react (Vite + React). Default html."),
-  designSystemId: packId
-    .optional()
-    .describe("Design system (pack) id to apply. Leave out for none."),
-});
+const PACK_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/u;
 
-const attachAppSchema = z.strictObject({
-  folder: z
-    .string()
-    .trim()
-    .min(1)
-    .max(FOLDER_MAX)
-    .describe(
-      'Absolute path of the app folder or the monorepo root, for example "~/code/my-app".'
-    ),
-  url: z
-    .string()
-    .trim()
-    .max(URL_MAX)
-    .optional()
-    .describe(
-      'URL of a dev server you already run, for example "http://localhost:3000". Leave out and the studio starts next dev itself.'
-    ),
-  appDir: z
-    .string()
-    .trim()
-    .max(APP_DIR_MAX)
-    .optional()
-    .describe(
-      'App folder inside a monorepo, for example "apps/dashboard". Needed when the folder has more than one Next.js app.'
-    ),
-  name: z.string().trim().min(1).max(NAME_MAX).optional(),
-});
+const createProjectFields = {
+  designSystemId: toOptional(
+    Schema.String.check(Schema.isPattern(PACK_ID_PATTERN)),
+    "Design system (pack) id to apply. Leave out for none."
+  ),
+  kind: toDefaulted(
+    Schema.Literals(["html", "react"]),
+    "html",
+    "html (static pages) or react (Vite + React). Default html."
+  ),
+  name: toTrimmedText(1, NAME_MAX).annotate({ description: "Project name." }),
+};
 
-type CreateProjectInput = z.output<typeof createProjectSchema>;
+const attachAppFields = {
+  appDir: toOptionalText(
+    0,
+    APP_DIR_MAX,
+    'App folder inside a monorepo, for example "apps/dashboard". Needed when the folder has more than one Next.js app.'
+  ),
+  folder: toTrimmedText(1, FOLDER_MAX).annotate({
+    description:
+      'Absolute path of the app folder or the monorepo root, for example "~/code/my-app".',
+  }),
+  name: Schema.optionalKey(toTrimmedText(1, NAME_MAX)),
+  url: toOptionalText(
+    0,
+    URL_MAX,
+    'URL of a dev server you already run, for example "http://localhost:3000". Leave out and the studio starts next dev itself.'
+  ),
+};
 
-type AttachAppInput = z.output<typeof attachAppSchema>;
+type CreateProjectInput = Schema.Struct.Type<typeof createProjectFields>;
 
-export { attachAppSchema, createProjectSchema };
+type AttachAppInput = Schema.Struct.Type<typeof attachAppFields>;
+
+export { attachAppFields, createProjectFields };
 
 export type { AttachAppInput, CreateProjectInput };

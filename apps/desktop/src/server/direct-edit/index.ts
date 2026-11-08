@@ -148,6 +148,7 @@ export type {
 export {
   AccessibilityStore,
   AccessibilityWriter,
+  VisionRunner,
 } from "../accessibility/index.js";
 
 export type {

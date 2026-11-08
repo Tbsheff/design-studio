@@ -33,6 +33,7 @@
     "./accessibility/index": "./src/accessibility/index.ts",
     "./accessibility/inspect": "./src/accessibility/inspect.ts",
     "./accessibility/routes": "./src/accessibility/routes.ts",
+    "./accessibility/run-vision": "./src/accessibility/run-vision.ts",
     "./accessibility/schema": "./src/accessibility/schema.ts",
     "./accessibility/set": "./src/accessibility/set.ts",
     "./animation/create": "./src/animation/create.ts",

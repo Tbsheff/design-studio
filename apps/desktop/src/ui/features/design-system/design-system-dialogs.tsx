@@ -28,7 +28,7 @@ const ChangePackDialog = ({
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));
-  const title = currentId ? "Change design system" : "Add design system";
+  const title = (currentId && "Change design system") || "Add design system";
 
   const choose = (packId: string | undefined): void => {
     if (!packId || busy) {
@@ -178,11 +178,12 @@ const SavePackDialog = ({
           <div className="titles">
             <h2>{COPY.labelSaveToLibrary}</h2>
             <p>
-              {asNew
-                ? "Saves a new design system. This project then uses the new one."
-                : updating
-                  ? `Updates ${defaultName} in your library with this direction's tokens and DESIGN.md.`
-                  : "Saves this direction's tokens and DESIGN.md as a design system you can use in other projects."}
+              {asNew &&
+                "Saves a new design system. This project then uses the new one."}
+              {!asNew &&
+                ((updating &&
+                  `Updates ${defaultName} in your library with this direction's tokens and DESIGN.md.`) ||
+                  "Saves this direction's tokens and DESIGN.md as a design system you can use in other projects.")}
             </p>
           </div>
           <button

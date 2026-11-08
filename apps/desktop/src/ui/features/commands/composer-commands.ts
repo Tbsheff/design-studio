@@ -67,22 +67,22 @@ const composerCommands = (composerActions: ComposerActions): Command[] => {
 
   const callback = composerActions.variations;
 
-  const variations: Command[] = callback
-    ? [
-        {
-          group: "Run",
-          icon: "compare",
-          id: "composer.variations",
-          keywords: "directions options alternatives",
-          run: () => {
-            callback.onCount(Math.min(VARIATION_COUNT, callback.max));
-            composerActions.focus();
-          },
-          slash: "variations",
-          title: `Make ${Math.min(VARIATION_COUNT, callback.max)} variations of the next prompt`,
+  const variations: Command[] =
+    (callback && [
+      {
+        group: "Run",
+        icon: "compare",
+        id: "composer.variations",
+        keywords: "directions options alternatives",
+        run: () => {
+          callback.onCount(Math.min(VARIATION_COUNT, callback.max));
+          composerActions.focus();
         },
-      ]
-    : [];
+        slash: "variations",
+        title: `Make ${Math.min(VARIATION_COUNT, callback.max)} variations of the next prompt`,
+      },
+    ]) ||
+    [];
 
   return [...modes, ...levels, ...variations];
 };

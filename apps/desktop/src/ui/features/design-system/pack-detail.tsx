@@ -151,7 +151,7 @@ const ActionBar = ({
       {usable && (
         <button
           type="button"
-          className={`btn small ${actions.onApply ? "" : "primary"}`}
+          className={`btn small ${(!actions.onApply && "primary") || ""}`}
           disabled={busy}
           onClick={() => actions.onUseInNew(pack)}
         >

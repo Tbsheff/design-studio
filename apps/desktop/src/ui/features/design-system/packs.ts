@@ -137,7 +137,7 @@ const fontStack = (family: string, fallback: string): string => {
     return trimmed;
   }
 
-  const name = /^['"]/u.test(trimmed) ? trimmed : `'${trimmed}'`;
+  const name = (!/^['"]/u.test(trimmed) && `'${trimmed}'`) || trimmed;
 
   return `${name}, ${fallback}`;
 };

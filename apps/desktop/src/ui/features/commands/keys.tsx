@@ -13,7 +13,7 @@ export const Keys = ({
   keys: string;
   className?: string;
 }): ReactElement => (
-  <span className={`keys${className ? ` ${className}` : ""}`}>
+  <span className={`keys${(className && ` ${className}`) || ""}`}>
     {keyParts(keys, IS_MAC).map((part, index) => (
       <kbd key={`${part}-${index}`}>{part}</kbd>
     ))}

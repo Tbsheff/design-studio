@@ -41,7 +41,7 @@ const useCommentPrefill = ({
 
     seen.current = request.seq;
     const current = draft.get().trim();
-    draft.set(current ? `${current}\n\n${request.text}` : request.text);
+    draft.set((current && `${current}\n\n${request.text}`) || request.text);
     const incoming = filesOf(request);
     setFiles((prev) => {
       const fresh = incoming.filter(

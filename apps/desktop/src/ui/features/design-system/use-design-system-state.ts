@@ -113,7 +113,7 @@ const useDesignSystemState = (
 
     const { entries } = state;
     const file = state.tokens;
-    const mode = state.manifest?.mode === "dark" ? "dark" : "light";
+    const mode = (state.manifest?.mode === "dark" && "dark") || "light";
     const source = state.source ?? null;
     const tokens: DesignTokens = { entries, file, mode, replace, source };
 

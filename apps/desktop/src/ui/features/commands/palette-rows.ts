@@ -193,7 +193,7 @@ const emptyRows = (input: RowInput): Row[] => {
     .slice(0, context.length > 0 ? RECENT_IN_STUDIO : RECENT_PROJECTS)
     .map((hit, i) =>
       projectRow(hit, "Recent", input.actions, {
-        keys: input.mac ? `Ctrl+${i + 1}` : undefined,
+        keys: (input.mac && `Ctrl+${i + 1}`) || undefined,
       })
     );
 
@@ -356,7 +356,7 @@ const actionMatches = (input: RowInput): Scored => {
       ...r,
       score:
         r.score +
-        (input.recent.includes(r.item.id) ? 1 : 0) -
+        ((input.recent.includes(r.item.id) && 1) || 0) -
         (r.item.disabled ? DISABLED_PENALTY : 0),
     }))
     .sort((a, b) => b.score - a.score)

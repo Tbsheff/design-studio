@@ -67,12 +67,12 @@ const PackPicker = ({ state, value, onChange, onNew }: Props): ReactElement => {
       <button
         ref={trigger}
         type="button"
-        className={`btn ghost small pack-trigger ${selected ? "chosen" : ""}`}
+        className={`btn ghost small pack-trigger ${(selected && "chosen") || ""}`}
         aria-label={COPY.labelDesignSystem}
         aria-haspopup="listbox"
         aria-expanded={open}
         data-tip={
-          selected ? `Design system: ${selected.name}` : "Design system"
+          (selected && `Design system: ${selected.name}`) || "Design system"
         }
         onPointerEnter={() => void loadList()}
         onFocus={() => void loadList()}

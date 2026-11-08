@@ -33,7 +33,7 @@ const onPage = (
 ): boolean => {
   const { frame } = comment;
 
-  return matchesFrame(frame ? { frame: { path: frame.path } } : {}, "", {
+  return matchesFrame((frame && { frame: { path: frame.path } }) || {}, "", {
     path,
   });
 };

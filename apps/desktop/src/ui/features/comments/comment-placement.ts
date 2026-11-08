@@ -294,7 +294,7 @@ const className = (selection: SelectionContext): string | null => {
 const elementLabel = (selection: SelectionContext): string => {
   const tag = selection.tag.toLowerCase();
   const text = snippet(selection.text, TEXT_SNIPPET_MAX);
-  const kind = TEXT_TAGS.has(tag) ? "text" : (KIND_OF_TAG[tag] ?? null);
+  const kind = (TEXT_TAGS.has(tag) && "text") || (KIND_OF_TAG[tag] ?? null);
 
   if (kind && text) {
     return `${kind} “${text}”`;

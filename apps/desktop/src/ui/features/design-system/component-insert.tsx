@@ -192,7 +192,7 @@ const useComponentDrag = (): ComponentDrag => {
         insertBus
           .get()
           ?.dragMove(posX, posY, (hint) =>
-            setGhost((prev) => (prev ? { ...prev, hint } : prev))
+            setGhost((prev) => (prev && { ...prev, hint }) || prev)
           );
       });
     },
@@ -231,7 +231,7 @@ const DragGhost = ({
     >
       <span className="cmp-ghost-name">{ghost.name}</span>
       <span
-        className={`cmp-ghost-hint${ghost.hint && !ghost.hint.ok ? " bad" : ""}`}
+        className={`cmp-ghost-hint${(ghost.hint && !ghost.hint.ok && " bad") || ""}`}
       >
         {ghost.hint?.text ?? "Drop on an element in the frame"}
       </span>

@@ -14,7 +14,7 @@ const ComposerComments = ({
     return null;
   }
 
-  const noun = count === 1 ? "comment" : "comments";
+  const noun = (count === 1 && "comment") || "comments";
 
   return (
     <div className="composer-comments" data-testid="composer-comments">

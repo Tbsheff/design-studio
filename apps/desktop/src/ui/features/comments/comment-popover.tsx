@@ -11,10 +11,10 @@ import type { DesignComment, SelectionContext } from "./deps.js";
 type Rect = SelectionContext["rect"];
 
 const MOD_LABEL =
-  typeof navigator !== "undefined" &&
-  /Mac|iPhone|iPad/u.test(navigator.platform)
-    ? "⌘"
-    : "Ctrl+";
+  (typeof navigator !== "undefined" &&
+    /Mac|iPhone|iPad/u.test(navigator.platform) &&
+    "⌘") ||
+  "Ctrl+";
 
 const STATUS_LABEL: Record<DesignComment["status"], string> = {
   draft: "Draft",

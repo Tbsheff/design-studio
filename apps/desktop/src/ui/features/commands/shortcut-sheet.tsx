@@ -142,7 +142,7 @@ const ShortcutSheet = ({ onClose }: { onClose: () => void }): ReactElement => {
               {entries.map((entry) => (
                 <li
                   key={entry.id}
-                  className={marked.has(entry.id) ? "on" : undefined}
+                  className={(marked.has(entry.id) && "on") || undefined}
                   data-key-id={entry.id}
                 >
                   <span className="keysheet-label">

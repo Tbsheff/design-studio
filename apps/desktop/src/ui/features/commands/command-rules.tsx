@@ -72,26 +72,27 @@ const CommandRules = ({ projectId }: { projectId: string }): ReactElement => {
       data-testid="command-rules"
     >
       <legend>{copy.textAllowedCommands}</legend>
-      {rules === null ? null : rules.length === 0 ? (
-        <p className="command-rules-empty">{copy.textNoCommandsAreAlways}</p>
-      ) : (
-        <ul>
-          {rules.map((rule) => (
-            <li key={rule}>
-              <code>{rule}</code>
-              <button
-                type="button"
-                className="btn small"
-                disabled={isPending}
-                aria-label={`Remove ${rule}`}
-                onClick={() => remove(rule)}
-              >
-                {copy.textRemove}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {rules !== null &&
+        ((rules.length === 0 && (
+          <p className="command-rules-empty">{copy.textNoCommandsAreAlways}</p>
+        )) || (
+          <ul>
+            {rules.map((rule) => (
+              <li key={rule}>
+                <code>{rule}</code>
+                <button
+                  type="button"
+                  className="btn small"
+                  disabled={isPending}
+                  aria-label={`Remove ${rule}`}
+                  onClick={() => remove(rule)}
+                >
+                  {copy.textRemove}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ))}
       {error && (
         <p className="permission-error" role="alert">
           {error}

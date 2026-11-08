@@ -127,9 +127,9 @@ const hintOf = (drop: DropAt | null): DropHint | null => {
 
   return {
     ok: true,
-    text: drop.inside
-      ? `Insert into ${drop.label}`
-      : `Insert after ${drop.label}`,
+    text:
+      (drop.inside && `Insert into ${drop.label}`) ||
+      `Insert after ${drop.label}`,
   };
 };
 
@@ -308,7 +308,11 @@ const useComponentInsert = (options: Options): void => {
           );
         }
 
-        void run(component, last.inside ? "inside" : "after", last.selection);
+        void run(
+          component,
+          (last.inside && "inside") || "after",
+          last.selection
+        );
       },
       dragMove(posXNext, posYNext, onHint): void {
         const point = localPoint(live.current.frames, posXNext, posYNext);

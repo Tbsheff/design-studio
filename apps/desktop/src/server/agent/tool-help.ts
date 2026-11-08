@@ -34,8 +34,6 @@ export const TOOL_SHORT = {
     "Remove the plain text inside an element and keep its child elements.",
   compare_to_reference:
     "Score a frame against the reference picture the user attached (0-100) and get a diff image. Changes nothing.",
-  component_preview:
-    "Read only. Render one library component alone with default props, as an image.",
   create_component:
     "Turn one element into a reusable React component file with inferred props and cva variants, and use it at the old place.",
   define_tweaks:
@@ -127,8 +125,6 @@ export const TOOL_HELP: Record<
   clear_text:
     "Remove the plain text inside an element and keep its child elements, such as placeholder text next to children you inserted. On a library component it clears the text where the page uses it. Text from a prop or a { } expression stays.",
   compare_to_reference: COMPARE_REFERENCE_DESCRIPTION,
-  component_preview:
-    "Read only. Render one component of the project library alone with its default props, with the same server code as the studio Components panel tiles and the MCP component_preview tool, and see it as an image. Use it to check what a kit component looks like before you use it. Components that need data, server code or an open state return the reason.",
   create_component: CREATE_COMPONENT_AGENT_DESCRIPTION,
   define_tweaks:
     "Save the Tweaks panel controls for this design (replaces the whole list). Each control sets one CSS custom property: range {min, max, step?, unit?, default: number}, color {default}, toggle {on, off, default: boolean}, select {options: [{label, value}], default}. The user drags them for a live preview with no model call, and Commit writes the values into the :root declaration. Every cssVar must be declared in a top-level :root rule of the page CSS with the default value (a design-system token from tokens.css is already declared; Commit then updates tokens.json) and used with var() in the rules it changes. The result lists any var that is not declared or not used.",

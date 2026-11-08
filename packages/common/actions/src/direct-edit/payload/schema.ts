@@ -39,6 +39,8 @@ const CLASS_LIST_MAX = 30;
 
 const QUERY_TEXT_MAX = 100;
 
+const COMPONENT_FILE_MAX = 1000;
+
 const SourceLocationSchema = Schema.Struct(SourceUseFields);
 
 const SideSchema = Schema.Int.check(
@@ -160,6 +162,34 @@ const SetPropsFields = {
   source: SourceLocationSchema,
 } as const;
 
+const ComponentNameSchema = Schema.String.check(
+  Schema.isPattern(/^[A-Z][A-Za-z0-9_$]{0,63}$/u)
+);
+
+const ComponentFileSchema = Schema.String.check(
+  Schema.isMaxLength(COMPONENT_FILE_MAX)
+);
+
+const ComponentPreviewFields = {
+  file: Schema.optionalKey(
+    ComponentFileSchema.annotate({
+      description:
+        "File of the component, relative to the project, when two components have the same name.",
+    })
+  ),
+  id: Schema.optionalKey(
+    ComponentFileSchema.annotate({
+      description:
+        'Or the component id as the studio Components panel lists it: "<file>#<Name>".',
+    })
+  ),
+  name: Schema.optionalKey(
+    ComponentNameSchema.annotate({
+      description: 'Component name from list_components, for example "Button".',
+    })
+  ),
+} as const;
+
 const ClassNamesSchema = Schema.Array(ClassNameSchema).check(
   Schema.isMaxLength(CLASS_LIST_MAX)
 );
@@ -202,6 +232,7 @@ const FigmaImportFields = {
 } as const;
 
 export {
+  ComponentPreviewFields,
   FigmaImportFields,
   PropsComponentQueryFields,
   PropsInstanceFields,

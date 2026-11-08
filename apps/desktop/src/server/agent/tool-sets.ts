@@ -47,7 +47,6 @@ const DESIGN_SYSTEM_TOOLS = ["design_system_check"];
 
 const KIT_TOOLS = [
   "list_components",
-  "component_preview",
   "insert_component",
   "set_props",
   "create_component",

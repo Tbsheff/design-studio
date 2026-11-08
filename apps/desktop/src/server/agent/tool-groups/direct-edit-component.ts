@@ -10,10 +10,6 @@ import {
   swapInstanceSdkFields,
 } from "../component-create-tool.js";
 import {
-  componentPreviewSdkFields,
-  runComponentPreview,
-} from "../component-preview-tool.js";
-import {
   insertComponentSdkFields,
   runInsertComponent,
 } from "../insert-tool.js";
@@ -55,13 +51,6 @@ const toDirectEditComponentTools = (
     TOOL_SHORT.list_components,
     listComponentsSdkFields,
     (args) => runListComponents(deps, args),
-    { annotations: { readOnlyHint: true } }
-  ),
-  tool(
-    "component_preview",
-    TOOL_SHORT.component_preview,
-    componentPreviewSdkFields,
-    (args) => runComponentPreview(deps, args),
     { annotations: { readOnlyHint: true } }
   ),
   tool(

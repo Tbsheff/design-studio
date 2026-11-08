@@ -43,6 +43,31 @@ const imageResult = (value: ImageOutput): TextResult => ({
 const isImageAction = (action: AnyAction): boolean =>
   action.output === ImageOutputSchema;
 
+const PREVIEW_ACTION_ID = "direct-edit.getComponentPreview";
+
+const PREVIEW_TEXT = "Component preview.";
+
+const PreviewOutputSchema = Schema.Struct({
+  png: Schema.String,
+  text: Schema.NullOr(Schema.String),
+});
+
+const readPreviewOutput = toDecoder(PreviewOutputSchema, "ignore");
+
+const toPreviewResult = (value: Schema.Json): TextResult | null => {
+  const preview = readPreviewOutput(value);
+
+  if (preview._tag === "Failure") {
+    return null;
+  }
+
+  return imageResult({
+    data: preview.success.png,
+    mimeType: "image/png",
+    text: preview.success.text || PREVIEW_TEXT,
+  });
+};
+
 const PageSchema = Schema.Struct({
   items: Schema.Array(Schema.Json),
   next: Schema.optionalKey(Schema.NullOr(Schema.String)),
@@ -132,6 +157,14 @@ const toLegacyText = (text: string, actionId: string): string => {
 const toToolResult = (action: AnyAction, exit: ActionExit): TextResult => {
   if (Exit.isSuccess(exit) && isImageAction(action)) {
     return imageResult(exit.value as ImageOutput);
+  }
+
+  if (Exit.isSuccess(exit) && action.id === PREVIEW_ACTION_ID) {
+    const preview = toPreviewResult(exit.value as Schema.Json);
+
+    if (preview !== null) {
+      return preview;
+    }
   }
 
   if (Exit.isSuccess(exit)) {

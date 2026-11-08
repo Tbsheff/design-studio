@@ -60,7 +60,6 @@ const LEGACY_ORDER: readonly string[] = [
   "get_run_context",
   "app_doctor",
   "apply_app_fix",
-  "component_preview",
   "create_share_link",
   "list_share_links",
   "revoke_share_link",

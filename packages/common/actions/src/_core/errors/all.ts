@@ -21,6 +21,7 @@ import type { GridError } from "../../grid/errors/index.js";
 import type { IconError } from "../../icon/errors/index.js";
 import type { ImageSearchError } from "../../image-search/errors/index.js";
 import type { ImageError } from "../../image/errors/index.js";
+import type { ImpactError } from "../../impact/errors/index.js";
 import type { IntegrationError } from "../../integration/errors/index.js";
 import type { KitDriftError } from "../../kit-drift/errors/index.js";
 import type { LayerStyleError } from "../../layer-style/errors/index.js";
@@ -69,6 +70,7 @@ type StudioError =
   | IconError
   | ImageError
   | ImageSearchError
+  | ImpactError
   | IntegrationError
   | KitDriftError
   | LayerStyleError

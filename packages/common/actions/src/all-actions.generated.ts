@@ -27,6 +27,7 @@ import { GridActions } from "./grid/index.js";
 import { IconActions } from "./icon/index.js";
 import { ImageSearchActions } from "./image-search/index.js";
 import { ImageActions } from "./image/index.js";
+import { ImpactActions } from "./impact/index.js";
 import { IntegrationActions } from "./integration/index.js";
 import { KitDriftActions } from "./kit-drift/index.js";
 import { LayerStyleActions } from "./layer-style/index.js";
@@ -88,6 +89,7 @@ const ALL_ACTIONS = {
   icon: IconActions,
   image: ImageActions,
   imageSearch: ImageSearchActions,
+  impact: ImpactActions,
   integration: IntegrationActions,
   kitDrift: KitDriftActions,
   layerStyle: LayerStyleActions,

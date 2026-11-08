@@ -1,0 +1,26 @@
+const copy = {
+  after: "After",
+  baselineAction: "Save baseline",
+  baselineTip: "Shoot every page that uses this file before you edit it",
+  before: "Before",
+  changedLabel: "Changed",
+  close: "Close",
+  compareAction: "Compare",
+  compareNeedsBaseline: "Save a baseline first",
+  compareTip: "Shoot the same pages again and show what changed",
+  diff: "Diff",
+  empty: "No page uses this file",
+  failedLabel: "Not shot",
+  fileLabel: "Shared file",
+  filePlaceholder: "src/components/Button.tsx",
+  noChange: "No change",
+  readFailed: "Could not read the last check. Try again.",
+  runFailed: "Could not check the pages. Try again.",
+  running: "Shooting the pages…",
+  sameLabel: "Same",
+  savedLabel: "Baseline saved",
+  savedNote: "Baseline saved. Edit the file, then press Compare.",
+  title: "Check other pages",
+} as const;
+
+export { copy };

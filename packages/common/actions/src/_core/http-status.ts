@@ -21,6 +21,7 @@ import { GridStatus } from "../grid/errors/status.js";
 import { IconStatus } from "../icon/errors/status.js";
 import { ImageSearchStatus } from "../image-search/errors/status.js";
 import { ImageStatus } from "../image/errors/status.js";
+import { ImpactStatus } from "../impact/errors/status.js";
 import { IntegrationStatus } from "../integration/errors/status.js";
 import { KitDriftStatus } from "../kit-drift/errors/status.js";
 import { LayerStyleStatus } from "../layer-style/errors/status.js";
@@ -71,6 +72,7 @@ const HTTP_STATUS = {
   ...IconStatus,
   ...ImageStatus,
   ...ImageSearchStatus,
+  ...ImpactStatus,
   ...IntegrationStatus,
   ...KitDriftStatus,
   ...LayerStyleStatus,

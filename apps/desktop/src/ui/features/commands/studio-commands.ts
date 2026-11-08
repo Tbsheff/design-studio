@@ -5,6 +5,8 @@ import {
   DEV_STATUS_MARK_EVENT,
   DEV_STATUS_OPEN_COMMAND,
   DEV_STATUS_OPEN_EVENT,
+  IMPACT_OPEN_COMMAND,
+  IMPACT_OPEN_EVENT,
   findElement,
 } from "./deps.js";
 import type { Command } from "./registry.js";
@@ -276,6 +278,17 @@ const devStatusCommands = (): Command[] => [
   },
 ];
 
+const impactCommands = (): Command[] => [
+  {
+    group: "View",
+    icon: "check",
+    id: IMPACT_OPEN_COMMAND,
+    keywords: "impact shared component edit routes pages compare baseline",
+    run: () => globalThis.dispatchEvent(new CustomEvent(IMPACT_OPEN_EVENT)),
+    title: "Check other pages",
+  },
+];
+
 const studioCommands = (studioActions: StudioActions): Command[] => [
   ...goCommands(studioActions),
   ...directionCommands(studioActions),
@@ -283,6 +296,7 @@ const studioCommands = (studioActions: StudioActions): Command[] => [
   ...runCommands(studioActions),
   ...versionCommands(studioActions),
   ...devStatusCommands(),
+  ...impactCommands(),
   {
     group: "View",
     icon: "sidebar",

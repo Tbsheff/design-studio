@@ -306,7 +306,8 @@ const importHits = (source: Source): Hit[] => {
   return matching(
     source,
     TEXT.import,
-    (line) => own !== "" && crossesContext(source.file, own, line)
+    (line) =>
+      own !== "" && own !== "_core" && crossesContext(source.file, own, line)
   );
 };
 

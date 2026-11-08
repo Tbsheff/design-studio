@@ -1,7 +1,8 @@
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 import type { JsonSchema } from "effect";
 
 import type { WireArgs } from "../handlers/_core/run-action.js";
+import { toDecoder } from "../platform/decode/index.js";
 import { toLegacyTargetFields } from "./legacy-target-schema.js";
 
 type LegacyArgs = WireArgs;
@@ -164,7 +165,7 @@ const InputFieldsSchema = Schema.Struct({
   required: Schema.Array(Schema.String),
 });
 
-const readInputFields = Schema.decodeUnknownOption(InputFieldsSchema);
+const readInputFields = toDecoder(InputFieldsSchema, "ignore");
 
 const toOptionalKeys = (name: string, takesDirection: boolean): string[] => {
   const keys = Object.keys(toDefaults(name));
@@ -209,7 +210,7 @@ const toLegacySchema = (
     required: schema.required ?? [],
   });
 
-  if (Option.isNone(fields)) {
+  if (fields._tag === "Failure") {
     return schema;
   }
 
@@ -221,12 +222,12 @@ const toLegacySchema = (
     properties: {
       ...toExtraProperties(name, takesDirection),
       ...Object.fromEntries(
-        Object.entries(fields.value.properties).filter(
+        Object.entries(fields.success.properties).filter(
           ([key]) => !hidden.has(key)
         )
       ),
     },
-    required: fields.value.required.filter((key) => !optional.has(key)),
+    required: fields.success.required.filter((key) => !optional.has(key)),
   });
 
   return { ...schema, ...legacy };

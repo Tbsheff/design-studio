@@ -1,9 +1,10 @@
 import type { AnyAction } from "@design-studio/actions/_core/action";
 import type { StudioError } from "@design-studio/actions/_core/errors/all";
 import { ImageOutputSchema } from "@design-studio/actions/_core/image-output";
-import { Exit, Option, Schema } from "effect";
+import { Exit, Schema } from "effect";
 
 import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
+import { toDecoder } from "../platform/decode/index.js";
 import { RUN_BUSY } from "./edit-guards.js";
 import { mcpErrorText } from "./error-copy.js";
 
@@ -53,17 +54,15 @@ const LinkListSchema = Schema.Struct({
   startFrame: Schema.String,
 });
 
-const readLastPage = Schema.decodeUnknownOption(PageSchema, {
-  onExcessProperty: "error",
-});
+const readLastPage = toDecoder(PageSchema, "error");
 
-const readLinkList = Schema.decodeUnknownOption(LinkListSchema);
+const readLinkList = toDecoder(LinkListSchema, "ignore");
 
 const toLegacyValue = (value: Schema.Json): Schema.Json => {
   const list = readLinkList(value);
 
-  if (Option.isSome(list)) {
-    const { items, note, startFrame } = list.value;
+  if (list._tag === "Success") {
+    const { items, note, startFrame } = list.success;
 
     const base = { links: items, startFrame };
 
@@ -76,9 +75,9 @@ const toLegacyValue = (value: Schema.Json): Schema.Json => {
 
   const page = readLastPage(value);
 
-  if (Option.isSome(page)) {
-    const { items } = page.value;
-    const next = page.value.next ?? null;
+  if (page._tag === "Success") {
+    const { items } = page.success;
+    const next = page.success.next ?? null;
 
     if (next === null) {
       return items;
@@ -90,28 +89,28 @@ const toLegacyValue = (value: Schema.Json): Schema.Json => {
   return value;
 };
 
-const readJsonText = Schema.decodeUnknownOption(
-  Schema.fromJsonString(Schema.Json)
+const readJsonText = toDecoder(Schema.fromJsonString(Schema.Json), "ignore");
+
+const readFileText = toDecoder(
+  Schema.Struct({ text: Schema.String }),
+  "ignore"
 );
 
-const readFileText = Schema.decodeUnknownOption(
-  Schema.Struct({ text: Schema.String })
-);
-
-const readFrameHtml = Schema.decodeUnknownOption(
-  Schema.Struct({ html: Schema.String })
+const readFrameHtml = toDecoder(
+  Schema.Struct({ html: Schema.String }),
+  "ignore"
 );
 
 const toRawText = (actionId: string, value: Schema.Json): string | null => {
   const file = readFileText(value);
   const frame = readFrameHtml(value);
 
-  if (actionId === "workspace.getFile" && Option.isSome(file)) {
-    return file.value.text;
+  if (actionId === "workspace.getFile" && file._tag === "Success") {
+    return file.success.text;
   }
 
-  if (actionId === "workspace.getFrameHtml" && Option.isSome(frame)) {
-    return frame.value.html;
+  if (actionId === "workspace.getFrameHtml" && frame._tag === "Success") {
+    return frame.success.html;
   }
 
   return null;
@@ -120,13 +119,13 @@ const toRawText = (actionId: string, value: Schema.Json): string | null => {
 const toLegacyText = (text: string, actionId: string): string => {
   const parsed = readJsonText(text);
 
-  if (Option.isNone(parsed)) {
+  if (parsed._tag === "Failure") {
     return text;
   }
 
   return (
-    toRawText(actionId, parsed.value) ??
-    JSON.stringify(toLegacyValue(parsed.value))
+    toRawText(actionId, parsed.success) ??
+    JSON.stringify(toLegacyValue(parsed.success))
   );
 };
 

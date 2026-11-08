@@ -6,28 +6,45 @@ import { lazy, Suspense, useEffect, useState } from "react";
 
 import { api } from "../../api.js";
 import { readStored, writeStored } from "../../platform/storage.js";
-import { addFrame, canAddFrame, setFramePath } from "./canvas-frame-ops.js";
+import {
+  addFrame,
+  canAddFrame,
+  setFramePath,
+  withoutKey,
+} from "./canvas-frame-ops.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
 const AppBar = lazy(() => import("../../app/shell/app-bar.js"));
 
+const trimSlashes = (text: string, isLeadingTrimmed: boolean): string => {
+  let start = 0;
+  let end = text.length;
+
+  if (isLeadingTrimmed) {
+    while (start < end && text[start] === "/") {
+      start += 1;
+    }
+  }
+
+  while (end > start && text[end - 1] === "/") {
+    end -= 1;
+  }
+
+  return text.slice(start, end);
+};
+
 const routeFrameId = (layout: CanvasLayout, route: string): string | null => {
-  const path = route.replace(/^\/+/u, "").replace(/\/+$/u, "");
+  const path = trimSlashes(route, true);
 
   return (
-    layout.frames.find(
-      (frame) => (frame.path ?? "").replace(/\/+$/u, "") === path
-    )?.id ?? null
+    layout.frames.find((frame) => trimSlashes(frame.path ?? "", false) === path)
+      ?.id ?? null
   );
 };
 
 const withoutHidden = (
   frame: CanvasLayout["frames"][number]
-): CanvasLayout["frames"][number] => {
-  const { hidden: _hidden, ...rest } = frame;
-
-  return rest;
-};
+): CanvasLayout["frames"][number] => withoutKey(frame, "hidden");
 
 const addRouteFrame = (
   layout: CanvasLayout,
@@ -91,7 +108,7 @@ const appRoutePages = (
 
     return routes
       .filter((route) => !route.dynamic)
-      .map((route) => route.route.replace(/^\/+/u, ""));
+      .map((route) => trimSlashes(route.route, true));
   };
 };
 
@@ -169,11 +186,13 @@ const readHiddenRedirects = (): string[] => {
   }
 };
 
-const writeHiddenRedirects = (keys: string[]): void => {
+const writeHiddenRedirects = (keys: string[]): boolean => {
   try {
     writeStored(HIDDEN_REDIRECTS_KEY, JSON.stringify(keys));
+
+    return true;
   } catch {
-    return;
+    return false;
   }
 };
 

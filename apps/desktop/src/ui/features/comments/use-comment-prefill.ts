@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import type { CommentPrefill, DraftStore, PendingAttachment } from "./deps.js";
@@ -22,17 +22,33 @@ const filesOf = (prefill: CommentPrefill): PendingAttachment[] =>
     previewUrl: item.dataUrl,
   }));
 
+interface CommentPrefillState {
+  clear: () => void;
+  linked: string[];
+}
+
+const toFresh = (
+  incoming: PendingAttachment[],
+  prev: PendingAttachment[]
+): PendingAttachment[] =>
+  incoming.filter(
+    (file) => !prev.some((pending) => pending.localId === file.localId)
+  );
+
 const useCommentPrefill = ({
   request,
   draft,
   setFiles,
   maxImages,
   focus,
-}: Options) => {
+}: Options): CommentPrefillState => {
   const [linked, setLinked] = useState<string[]>([]);
   const seen = useRef<number | null>(null);
   const focusRef = useRef(focus);
-  focusRef.current = focus;
+
+  useEffect(() => {
+    focusRef.current = focus;
+  }, [focus]);
 
   useEffect(() => {
     if (!request || seen.current === request.seq) {
@@ -43,21 +59,16 @@ const useCommentPrefill = ({
     const current = draft.get().trim();
     draft.set((current && `${current}\n\n${request.text}`) || request.text);
     const incoming = filesOf(request);
-    setFiles((prev) => {
-      const fresh = incoming.filter(
-        (file) =>
-          !prev.some(
-            (pendingAttachment) => pendingAttachment.localId === file.localId
-          )
-      );
-
-      return [...prev, ...fresh].slice(0, maxImages);
-    });
+    setFiles((prev) =>
+      [...prev, ...toFresh(incoming, prev)].slice(0, maxImages)
+    );
     setLinked((prev) => [...new Set([...prev, ...request.commentIds])]);
     focusRef.current();
   }, [request, draft, setFiles, maxImages]);
 
-  return { clear: (): void => setLinked([]), linked };
+  const clear = useCallback((): void => setLinked([]), []);
+
+  return { clear, linked };
 };
 
 export { useCommentPrefill };

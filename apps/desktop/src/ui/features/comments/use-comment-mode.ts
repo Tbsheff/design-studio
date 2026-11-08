@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { isTypingTarget } from "./deps.js";
 import type { SelectionContext } from "./deps.js";
+import { useCommentKeys } from "./use-comment-keys.js";
 import type { CommentsControl } from "./use-comments.js";
 
 type SetSelection = (
@@ -17,6 +17,17 @@ const sameSelectors = (
     (selectionContext, index) =>
       selectionContext.selector === next[index]?.selector
   );
+
+const toGuardedSelection = (
+  prev: SelectionContext[],
+  next: SelectionContext[]
+): SelectionContext[] => {
+  if (sameSelectors(prev, next)) {
+    return next;
+  }
+
+  return prev;
+};
 
 interface CommentMode {
   available: boolean;
@@ -34,7 +45,11 @@ const useCommentMode = (
   const [on, setOn] = useState(false);
   const available = Boolean(control) && live;
   const availableRef = useRef(available);
-  availableRef.current = available;
+
+  useEffect(() => {
+    availableRef.current = available;
+  }, [available]);
+
   const repinId = control?.repinId ?? null;
   const setRepinId = control?.setRepinId;
 
@@ -53,6 +68,7 @@ const useCommentMode = (
     if (!repinId) {
       return;
     }
+
     setSelectMode(false);
     setOn(true);
   }, [repinId, setSelectMode]);
@@ -63,42 +79,16 @@ const useCommentMode = (
     }
   }, [on]);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      if (
-        isTypingTarget(event.target) ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.altKey
-      ) {
-        return;
-      }
-      const key = event.key.toLowerCase();
-
-      if (key === "c" && availableRef.current) {
-        event.preventDefault();
-        toggle();
-      } else if (key === "v" || key === "escape") {
-        setOn(false);
-      }
-    };
-
-    globalThis.addEventListener("keydown", onKey);
-
-    return (): void => globalThis.removeEventListener("keydown", onKey);
-  }, [toggle]);
+  useCommentKeys(availableRef, toggle, setOn);
 
   const guard = useCallback(
     (setSelection: SetSelection): SetSelection => {
       if (!on) {
         return setSelection;
       }
-      return (updater) =>
-        setSelection((prev) => {
-          const next = updater(prev);
 
-          return sameSelectors(prev, next) ? next : prev;
-        });
+      return (updater) =>
+        setSelection((prev) => toGuardedSelection(prev, updater(prev)));
     },
     [on]
   );

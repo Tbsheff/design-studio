@@ -34,6 +34,7 @@ import "../styles/frames.css";
 import "../styles/studio.css";
 import "../styles/commands.css";
 import "../styles/create-component.css";
+import "../styles/port.css";
 import "../styles/responsive.css";
 import "../styles/shell.css";
 import "../styles/port-flow.css";

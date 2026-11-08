@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useState, useTransition, useSyncExternalStore } from "react";
 
 import { commentPageName, pageShown } from "./comment-anchors.js";
-import { CommentAuthor } from "./comment-avatar.js";
+import { CommentAuthor } from "./comment-author.js";
 import { CommentReplies } from "./comment-popover.js";
 import { copy } from "./copy.js";
 import {

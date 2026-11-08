@@ -13,8 +13,6 @@ import type { PortTarget, PortFrameOption } from "./port-model.js";
 import { usePortForm } from "./use-port-form.js";
 import { usePortStart } from "./use-port-start.js";
 
-import "../../styles/port.css";
-
 type PortDialogTarget = PortTarget;
 
 const toFrameOption = (choice: FrameChoice): PortFrameOption => ({

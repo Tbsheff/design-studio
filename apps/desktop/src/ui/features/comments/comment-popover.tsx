@@ -1,7 +1,8 @@
 import type { KeyboardEvent, ReactElement, ReactNode } from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
-import { AvatarFace, CommentAuthor } from "./comment-avatar.js";
+import { CommentAuthor } from "./comment-author.js";
+import { AvatarFace } from "./comment-avatar.js";
 import type { Breadcrumb, CardSide } from "./comment-placement.js";
 import { CARD_WIDTH, placeComposer, useCardSize } from "./comment-placement.js";
 import { copy } from "./copy.js";

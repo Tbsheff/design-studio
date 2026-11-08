@@ -53,6 +53,25 @@ interface ComponentList {
   retry?: () => void;
 }
 
+const toChangedAt = (
+  lastChange: FilesChange | null,
+  directionId: string | null
+): number => {
+  if (lastChange && lastChange.directionId === directionId) {
+    return lastChange.changedAt;
+  }
+
+  return 0;
+};
+
+const toRefreshDelay = (changedAt: number): number => {
+  if (changedAt === 0) {
+    return 0;
+  }
+
+  return REFRESH_MS;
+};
+
 const useComponents = (
   projectId: string,
   directionId: string | null,
@@ -64,10 +83,7 @@ const useComponents = (
     version: "0",
   });
 
-  const changedAt =
-    lastChange && lastChange.directionId === directionId
-      ? lastChange.changedAt
-      : 0;
+  const changedAt = toChangedAt(lastChange, directionId);
 
   const seq = useRef(0);
   const [attempt, setAttempt] = useState(0);
@@ -80,28 +96,28 @@ const useComponents = (
     const my = seq.current;
     const version = String(changedAt);
 
-    const timer = globalThis.setTimeout(
-      async () => {
-        try {
-          const result = await json<{ components: ComponentInfo[] }>(
-            "GET",
-            base(projectId, directionId)
-          );
+    const timer = globalThis.setTimeout(async () => {
+      try {
+        const result = await json<{ components: ComponentInfo[] }>(
+          "GET",
+          base(projectId, directionId)
+        );
 
-          if (my === seq.current) {
-            setState({ components: result.components, error: null, version });
-          }
-        } catch (error: unknown) {
-          if (my === seq.current) {
-            setState((prev) => ({
-              ...prev,
-              error: error instanceof Error ? error.message : String(error),
-            }));
-          }
+        if (my === seq.current) {
+          setState({ components: result.components, error: null, version });
         }
-      },
-      changedAt === 0 ? 0 : REFRESH_MS
-    );
+      } catch (error: unknown) {
+        let message = String(error);
+
+        if (error instanceof Error) {
+          ({ message } = error);
+        }
+
+        if (my === seq.current) {
+          setState((prev) => ({ ...prev, error: message }));
+        }
+      }
+    }, toRefreshDelay(changedAt));
 
     return (): void => globalThis.clearTimeout(timer);
   }, [projectId, directionId, changedAt, attempt]);

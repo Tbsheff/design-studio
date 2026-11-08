@@ -39,6 +39,30 @@ const touchesDesignSystem = (
   return 0;
 };
 
+interface Loaded {
+  key: string;
+  state: DesignSystemState;
+}
+
+const toSourceFile = (loaded: Loaded | null, key: string): string | null => {
+  if (loaded?.key === key) {
+    return loaded.state.source?.file ?? null;
+  }
+
+  return null;
+};
+
+const toLoadedState = (
+  loaded: Loaded | null,
+  key: string
+): DesignSystemState | null => {
+  if (loaded?.key === key) {
+    return loaded.state;
+  }
+
+  return null;
+};
+
 interface DesignSystemView {
   tokens: DesignTokens | null;
   state: DesignSystemState | null;
@@ -50,10 +74,7 @@ const useDesignSystemState = (
   directionId: string | null,
   lastChange: FilesChange | null
 ): DesignSystemView => {
-  const [loaded, setLoaded] = useState<{
-    key: string;
-    state: DesignSystemState;
-  } | null>(null);
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
 
   const packId = project?.packId ?? null;
 
@@ -63,12 +84,14 @@ const useDesignSystemState = (
 
   const key = `${projectId}:${directionId}`;
 
-  const sourceFile =
-    loaded?.key === key ? (loaded.state.source?.file ?? null) : null;
+  const sourceFile = toSourceFile(loaded, key);
 
   const stamp = touchesDesignSystem(lastChange, directionId, sourceFile);
   const live = useRef(key);
-  live.current = key;
+
+  useEffect(() => {
+    live.current = key;
+  }, [key]);
 
   useEffect(() => {
     if (!directionId) {
@@ -92,7 +115,7 @@ const useDesignSystemState = (
       }
     };
 
-    void read();
+    read();
 
     return (): void => {
       cancelled = true;
@@ -105,7 +128,7 @@ const useDesignSystemState = (
   );
 
   return useMemo(() => {
-    const state = loaded?.key === key ? loaded.state : null;
+    const state = toLoadedState(loaded, key);
 
     if (!state || state.entries.length === 0) {
       return { state, tokens: null };

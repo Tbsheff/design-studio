@@ -1,11 +1,11 @@
+import { useState } from "react";
 import type { ReactElement } from "react";
 
+import { AttentionPanel } from "./attention-panel.js";
 import { copy } from "./copy.js";
-import { CritiqueHead } from "./critique-head.js";
-import { CritiqueResult } from "./critique-result.js";
-import { useCritique } from "./use-critique.js";
-
-import styles from "./critique.module.css";
+import type { CritiqueTab } from "./critique-model.js";
+import { CritiqueScoresPanel } from "./critique-scores-panel.js";
+import { CritiqueTabs } from "./critique-tabs.js";
 
 interface PanelProps {
   readonly directionId: string | null;
@@ -16,26 +16,28 @@ interface PanelProps {
 }
 
 const CritiquePanel = (props: PanelProps): ReactElement => {
-  const { critique, error, handleRun, isBusy } = useCritique({
-    directionId: props.directionId,
-    frameId: props.frameId,
-    projectId: props.projectId,
-  });
+  const [tab, setTab] = useState<CritiqueTab>("scores");
 
   return (
     <section aria-label={copy.title} className="review-group">
-      <CritiqueHead
-        count={critique?.issues.length ?? null}
-        isBusy={isBusy}
-        isDisabled={!props.isLive || props.directionId === null}
-        onRun={handleRun}
-      />
-      {error !== null && <div className="alert error">{error}</div>}
-      {critique === null && !isBusy && (
-        <p className={styles.empty}>{copy.empty}</p>
+      <CritiqueTabs onSelect={setTab} tab={tab} />
+      {tab === "attention" && (
+        <AttentionPanel
+          directionId={props.directionId}
+          frameId={props.frameId}
+          isLive={props.isLive}
+          onSelect={props.onSelect}
+          projectId={props.projectId}
+        />
       )}
-      {critique !== null && (
-        <CritiqueResult critique={critique} onSelect={props.onSelect} />
+      {tab === "scores" && (
+        <CritiqueScoresPanel
+          directionId={props.directionId}
+          frameId={props.frameId}
+          isLive={props.isLive}
+          onSelect={props.onSelect}
+          projectId={props.projectId}
+        />
       )}
     </section>
   );

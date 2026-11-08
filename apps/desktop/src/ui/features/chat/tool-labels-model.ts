@@ -1,6 +1,8 @@
 import { baseName } from "../../domain/format.js";
 import { shortInput } from "./run-state-model.js";
 
+const MCP_NAME_PARTS = 3;
+
 const PATH_KEYS = ["file_path", "path", "filePath", "notebook_path"];
 
 const humanize = (raw: string): string => {
@@ -16,7 +18,7 @@ const humanize = (raw: string): string => {
 const prettyToolName = (name: string): string => {
   const parts = name.split("__");
 
-  if (parts[0] === "mcp" && parts.length >= 3) {
+  if (parts[0] === "mcp" && parts.length >= MCP_NAME_PARTS) {
     return humanize(parts.slice(2).join(" "));
   }
 

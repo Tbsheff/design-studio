@@ -2,12 +2,18 @@ import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
+const LARGE_WINDOW = 1_000_000;
+const DEFAULT_WINDOW = 200_000;
+const PERCENT = 100;
+const DANGER_FROM = 0.9;
+const WARN_FROM = 0.7;
+
 const contextWindowFor = (model: string): number => {
   if (/\[1m\]|-1m\b/iu.test(model)) {
-    return 1_000_000;
+    return LARGE_WINDOW;
   }
 
-  return 200_000;
+  return DEFAULT_WINDOW;
 };
 
 const contextShare = (tokens: number, model: string): number =>
@@ -34,13 +40,13 @@ const ContextMeter = ({
     return null;
   }
 
-  const percent = Math.round(share * 100);
+  const percent = Math.round(share * PERCENT);
   const window = contextWindowFor(model);
   let tone: "" | "danger" | "warn" = "";
 
-  if (share >= 0.9) {
+  if (share >= DANGER_FROM) {
     tone = "danger";
-  } else if (share >= 0.7) {
+  } else if (share >= WARN_FROM) {
     tone = "warn";
   }
 

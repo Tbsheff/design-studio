@@ -21,6 +21,9 @@ import { projectFromPath } from "../../platform/router.js";
 import { copy } from "./copy.js";
 import { modelLabel } from "./settings-draft-model.js";
 
+const SNIPPET_CHARS = 24;
+const TAIL_CHARS = 12;
+
 export type { PendingAttachment } from "../../domain/pending-attachment.js";
 
 const SelectionChips = ({
@@ -47,7 +50,7 @@ const SelectionChips = ({
           <Icon name="pointer" size={12} />
           <span className="chip-text min-w-0 truncate font-mono">
             <span className="chip-tag font-bold">{selected.tag}</span>
-            {selected.text ? ` "${selected.text.slice(0, 24)}"` : ""}
+            {selected.text ? ` "${selected.text.slice(0, SNIPPET_CHARS)}"` : ""}
           </span>
           <button
             type="button"
@@ -95,7 +98,7 @@ const shortName = (name: string): string => {
     return name;
   }
 
-  const tail = name.slice(-12);
+  const tail = name.slice(-TAIL_CHARS);
 
   return `${name.slice(0, NAME_ROOM - tail.length - 1)}…${tail}`;
 };

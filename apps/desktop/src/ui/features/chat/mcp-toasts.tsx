@@ -12,6 +12,8 @@ import "../../styles/mcp.css";
 import { McpApproval } from "./mcp-feed.js";
 import type { McpApprovalCard } from "./use-mcp-feed.js";
 
+const EXPIRY_GRACE_MS = 1000;
+
 const DONE_MS = 5000;
 
 const useApprovalFeed = (): [
@@ -31,7 +33,7 @@ const useApprovalFeed = (): [
 
           const outcome =
             answered.current.get(card.approval.id) ??
-            (Date.now() >= card.approval.expiresAt - 1000
+            (Date.now() >= card.approval.expiresAt - EXPIRY_GRACE_MS
               ? "timeout"
               : "closed");
 

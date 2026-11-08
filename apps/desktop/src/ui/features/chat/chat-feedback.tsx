@@ -12,6 +12,8 @@ import { runText } from "./run-state-model.js";
 import { fileChanges, DiffBadge } from "./tool-chips.js";
 import type { FileChange } from "./tool-chips.js";
 
+const COST_DIGITS = 4;
+
 const STATUS_LABEL: Record<RunStatus, string> = {
   budget_exceeded: "Limit reached",
   canceled: "Stopped",
@@ -235,7 +237,7 @@ const RunFeedbackRow = memo(
             <span
               className="run-foot-meta tabular-nums"
               data-tip-side="top"
-              data-tip={`$${summary.costUsd.toFixed(4)}`}
+              data-tip={`$${summary.costUsd.toFixed(COST_DIGITS)}`}
             >
               {formatMs(summary.durationMs)}
               {copy.text}

@@ -1,5 +1,9 @@
 import type { ProjectSettings, RunLevel } from "@design-studio/contracts";
 
+const MIN_BUDGET_USD = 0.01;
+const MAX_BUDGET_USD = 50;
+const MAX_TURNS_LIMIT = 200;
+
 const MODEL_OPTIONS = [
   { id: "claude-haiku-5-5", label: "Claude Haiku 5.5" },
   { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
@@ -41,7 +45,9 @@ const parseDraft = (
 
   if (
     budget !== null &&
-    (!Number.isFinite(budget) || budget < 0.01 || budget > 50)
+    (!Number.isFinite(budget) ||
+      budget < MIN_BUDGET_USD ||
+      budget > MAX_BUDGET_USD)
   ) {
     return {
       error:
@@ -51,7 +57,7 @@ const parseDraft = (
 
   const turns = Number(draft.maxTurns);
 
-  if (!Number.isInteger(turns) || turns < 1 || turns > 200) {
+  if (!Number.isInteger(turns) || turns < 1 || turns > MAX_TURNS_LIMIT) {
     return { error: "Enter a whole number of max turns from 1 to 200." };
   }
 

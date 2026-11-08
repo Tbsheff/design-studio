@@ -4,6 +4,8 @@ import type { Dispatch, ReactElement, SetStateAction } from "react";
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { copy } from "./copy.js";
 
+const MAX_HITS = 20;
+
 interface UseHistorySearchResult {
   readonly close: () => void;
   readonly current: string | null;
@@ -23,7 +25,8 @@ const useHistorySearch = (
   const [active, setActive] = useState(0);
 
   const shown = useMemo(
-    () => fuzzyRank([...history].toReversed(), query, (prompt) => prompt, 20),
+    () =>
+      fuzzyRank([...history].toReversed(), query, (prompt) => prompt, MAX_HITS),
     [history, query]
   );
 

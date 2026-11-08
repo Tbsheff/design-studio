@@ -9,6 +9,9 @@ import type {
 import { uiStore, useUi } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 
+const STEP_PX = 16;
+const SHIFT_STEP_PX = 48;
+
 const MIN_CHAT = 300;
 const MAX_CHAT = 640;
 
@@ -88,10 +91,10 @@ const ChatSplitter = ({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    let step: 48 | 16 = 16;
+    let step = STEP_PX;
 
     if (event.shiftKey) {
-      step = 48;
+      step = SHIFT_STEP_PX;
     }
 
     let delta = 0;

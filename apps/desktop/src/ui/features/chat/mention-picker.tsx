@@ -7,6 +7,8 @@ import type { Dispatch, ReactElement, SetStateAction } from "react";
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { copy } from "./copy.js";
 
+const MAX_MATCHES = 30;
+
 interface MentionOption {
   key: string;
   label: string;
@@ -83,7 +85,7 @@ const rankMentions = (
 
       return option.label;
     },
-    30
+    MAX_MATCHES
   );
 
 interface UseMentionPickerResult {

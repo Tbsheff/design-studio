@@ -22,6 +22,9 @@ import {
 } from "./skills-model.js";
 import type { SlashChoice, SlashSection } from "./slash-menu.js";
 
+const MIN_POPOVER_HEIGHT = 120;
+const SKILL_POPOVER_HEIGHT = 520;
+
 const matches = (skill: SkillInfo, query: string): boolean => {
   const needle = query.trim().toLowerCase();
 
@@ -204,7 +207,7 @@ const useFitAbove = (ref: RefObject<HTMLDivElement | null>, max: number) => {
       const room =
         anchor.getBoundingClientRect().top - Math.max(0, bounds.top) - POP_GAP;
 
-      pop.style.maxHeight = `${Math.max(120, Math.min(max, room))}px`;
+      pop.style.maxHeight = `${Math.max(MIN_POPOVER_HEIGHT, Math.min(max, room))}px`;
     };
 
     fit();
@@ -263,7 +266,7 @@ const IndicatorPop = (props: {
   onClose: () => void;
 }) => {
   const ref = useDismiss(props.onClose);
-  useFitAbove(ref, 520);
+  useFitAbove(ref, SKILL_POPOVER_HEIGHT);
   useEffect(() => {
     const onKey = (event: globalThis.KeyboardEvent) =>
       event.key === "Escape" && props.onClose();

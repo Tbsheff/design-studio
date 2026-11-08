@@ -18,6 +18,8 @@ import {
   withFinalText,
 } from "../../../shared/run-parts.js";
 
+const SHORT_INPUT_CHARS = 80;
+
 const PENDING_CLOCK_SLACK_MS = 1000;
 
 interface ToolRow {
@@ -363,7 +365,7 @@ const shortInput = (input: unknown): string => {
   }
 
   if (typeof input === "string") {
-    return input.slice(0, 80);
+    return input.slice(0, SHORT_INPUT_CHARS);
   }
 
   if (typeof input !== "object") {
@@ -384,11 +386,11 @@ const shortInput = (input: unknown): string => {
     const value = record[key];
 
     if (typeof value === "string") {
-      return value.slice(0, 80);
+      return value.slice(0, SHORT_INPUT_CHARS);
     }
   }
 
-  return JSON.stringify(input).slice(0, 80);
+  return JSON.stringify(input).slice(0, SHORT_INPUT_CHARS);
 };
 
 export {

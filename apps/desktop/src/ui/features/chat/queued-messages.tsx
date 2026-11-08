@@ -5,6 +5,8 @@ import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
+const MAX_ROWS = 4;
+
 const move = (
   items: QueuedMessage[],
   from: number,
@@ -100,7 +102,7 @@ const QueuedItem = ({
           aria-label={copy.editQueuedMessage}
           value={text}
 
-          rows={Math.min(4, text.split("\n").length)}
+          rows={Math.min(MAX_ROWS, text.split("\n").length)}
           onChange={(event) => setText(event.target.value)}
           onBlur={() => finish(true)}
           onKeyDown={(event) => {

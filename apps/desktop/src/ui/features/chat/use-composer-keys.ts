@@ -2,6 +2,8 @@ import type { QueuedMessage } from "@design-studio/contracts";
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
 
+const ID_RADIX = 36;
+
 const QUEUE_MAX = 20;
 
 let queueCounter = 0;
@@ -9,7 +11,7 @@ let queueCounter = 0;
 const newQueued = (text: string): QueuedMessage => {
   queueCounter += 1;
 
-  return { id: `q${Date.now().toString(36)}${queueCounter}`, text };
+  return { id: `q${Date.now().toString(ID_RADIX)}${queueCounter}`, text };
 };
 
 interface Options {

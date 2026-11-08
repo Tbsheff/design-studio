@@ -13,6 +13,8 @@ import { useProjectEvents } from "../../platform/events.js";
 import { packApi } from "../../platform/pack-api.js";
 import { copy } from "./copy.js";
 
+const MS_PER_SECOND = 1000;
+
 type ImproveEnd = { runId: string; status: RunStatus } | null;
 
 const useDraftSources = (
@@ -113,11 +115,11 @@ const seconds = (ms: number | undefined): string | null => {
     return null;
   }
 
-  if (ms < 1000) {
+  if (ms < MS_PER_SECOND) {
     return `${ms} ms`;
   }
 
-  return `${(ms / 1000).toFixed(1)} s`;
+  return `${(ms / MS_PER_SECOND).toFixed(1)} s`;
 };
 
 const StateMark = ({

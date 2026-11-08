@@ -8,6 +8,9 @@ import { UserMessage } from "./chat-parts.js";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
+const MIN_ROWS = 2;
+const MAX_ROWS = 8;
+
 interface TurnRewind {
   restoreTip: string | null;
   restoreVersionId: string | null;
@@ -148,7 +151,7 @@ const MessageEditor = ({
       <textarea
         ref={ref}
         aria-label={copy.editMessage}
-        rows={Math.min(8, Math.max(2, text.split("\n").length))}
+        rows={Math.min(MAX_ROWS, Math.max(MIN_ROWS, text.split("\n").length))}
         value={text}
         onChange={(event) => setText(event.target.value)}
         onKeyDown={onKeyDown}

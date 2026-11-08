@@ -14,6 +14,9 @@ import {
   toolTarget,
 } from "./tool-labels-model.js";
 
+const SMALL_COST_BELOW = 0.01;
+const PRECISE_DIGITS = 4;
+
 const STATUS_TEXT: Record<RunStatus, string> = {
   budget_exceeded: "Spending limit reached",
   canceled: "Canceled",
@@ -29,11 +32,11 @@ const SMALL_COST = new Intl.NumberFormat("en-US", {
 });
 
 const preciseUsd = (amount: number): string => {
-  if (amount < 0.01) {
+  if (amount < SMALL_COST_BELOW) {
     return SMALL_COST.format(amount);
   }
 
-  return `$${amount.toFixed(4)}`;
+  return `$${amount.toFixed(PRECISE_DIGITS)}`;
 };
 
 const costText = (summary: NonNullable<RunView["summary"]>): string => {

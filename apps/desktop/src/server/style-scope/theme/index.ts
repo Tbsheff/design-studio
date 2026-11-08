@@ -12,4 +12,6 @@ export type {
   SetThemeCommand,
 } from "./theme-run.js";
 
+export type { ImportThemeCommand } from "./theme-import-run.js";
+
 export type { ThemeWriterApi } from "./theme-writer.js";

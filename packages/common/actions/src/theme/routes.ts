@@ -12,6 +12,12 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/themes",
   },
+  importTheme: {
+    id: "theme.import",
+    invalidates: ["theme.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/themes/import",
+  },
   listTheme: {
     id: "theme.list",
     invalidates: [],

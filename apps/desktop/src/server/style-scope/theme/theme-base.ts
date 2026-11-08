@@ -36,6 +36,28 @@ const toRoleTokens = (known: ReadonlySet<string>): ThemeRoleTokens => ({
   surface: toFirstPath(known, ROLE_PATHS.surface),
 });
 
+const RADIUS_ORDER: readonly string[] = [
+  "radius.lg",
+  "radius.md",
+  "radius.base",
+  "radius.default",
+  "radius.DEFAULT",
+  "radius",
+];
+
+const toRadiusPath = (base: ThemeTokenBase): string | null => {
+  const plain = base.entries.filter(
+    (entry) =>
+      (entry.path === "radius" || entry.path.startsWith("radius.")) &&
+      !entry.value.includes("var(") &&
+      !entry.value.includes("calc(")
+  );
+
+  const known = new Set(plain.map((entry) => entry.path));
+
+  return toFirstPath(known, RADIUS_ORDER) ?? plain[0]?.path ?? null;
+};
+
 interface ThemeSource {
   readonly baseColor: string | null;
   readonly fonts: readonly string[];
@@ -62,6 +84,6 @@ const toThemeSource = (base: ThemeTokenBase): ThemeSource => {
   };
 };
 
-export { toThemeSource };
+export { toRadiusPath, toThemeSource };
 
 export type { ThemeSource };

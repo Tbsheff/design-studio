@@ -1,5 +1,6 @@
 import type {
   ThemeAppliedSchema,
+  ThemeImportedSchema,
   ThemeBodySchema,
   ThemeCreatedSchema,
   ThemeSchema,
@@ -11,6 +12,8 @@ type StoredTheme = typeof ThemeBodySchema.Type;
 type ThemeItem = typeof ThemeSchema.Type;
 
 type ThemeCreated = typeof ThemeCreatedSchema.Type;
+
+type ThemeImported = typeof ThemeImportedSchema.Type;
 
 type ThemeSetResult = typeof ThemeSetResultSchema.Type;
 
@@ -35,6 +38,7 @@ export type {
   ThemeApplied,
   ThemeCreated,
   ThemeFile,
+  ThemeImported,
   ThemeItem,
   ThemeSetResult,
 };

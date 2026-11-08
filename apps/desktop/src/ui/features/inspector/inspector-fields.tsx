@@ -9,8 +9,8 @@ import { readStored, writeStored } from "../../platform/storage.js";
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { copy } from "./copy.js";
 import { colorToHex, displayColor, isValidColor } from "./css-values.js";
+import { isSameEditValues } from "./edit-request-model.js";
 import { isInherited, useVariantScope } from "./edit-variant.js";
-import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { useTokenUi } from "./use-token-snap.js";
 

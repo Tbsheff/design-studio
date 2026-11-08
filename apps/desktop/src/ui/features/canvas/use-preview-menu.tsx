@@ -21,10 +21,10 @@ import type { GenerateTabProps } from "../../canvas-preview-slots.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
 import { formatCopyCss } from "../inspector/authored-css.js";
-import { pasteJsx } from "../inspector/paste-jsx.js";
+import { applyPasteJsx } from "../inspector/paste-jsx.js";
 import {
-  selectionTargets,
-  structureMenuItems,
+  toSelectionTargets,
+  toStructureMenuEntries,
 } from "../inspector/structure-edits.js";
 import { getAuthoredCss } from "../inspector/use-authored-css.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
@@ -82,11 +82,11 @@ const structureItems = (options: Options): PreviewMenuItem[] => {
   const state = {
     canPaste: edits.canPaste,
     count: options.selection.length,
-    hasSource: selectionTargets(options.selection) !== null,
+    hasSource: toSelectionTargets(options.selection) !== null,
     isBusy: edits.busy,
   };
 
-  return structureMenuItems(state, edits.structureKey, true);
+  return toStructureMenuEntries(state, edits.structureKey, true);
 };
 
 const disabledBy = (reason: string | null): { disabled?: string } =>
@@ -128,7 +128,7 @@ const pasteItem = (
       icon: "code",
       id: "paste-jsx",
       label: "Paste JSX or Figma",
-      run: () => pasteJsx(ids, target, optionsValue.edits.notify),
+      run: () => applyPasteJsx(ids, target, optionsValue.edits.notify),
       ...disabledBy(blocked),
     },
   ];

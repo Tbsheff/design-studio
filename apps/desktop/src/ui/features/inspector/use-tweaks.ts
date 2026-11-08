@@ -45,13 +45,13 @@ interface Options {
   readonly onCommitted: (version: Version) => void;
 }
 
-const changeStamp = (
+const toChangeStamp = (
   change: FilesChange | null,
   directionId: string | null
 ): number =>
   change && change.directionId === directionId ? change.receivedAt : 0;
 
-const baseValue = (
+const toBaseValue = (
   state: TweaksState | null,
   control: TweakControl
 ): TweakValue => state?.current[control.id] ?? control.default;
@@ -75,7 +75,7 @@ const useTweaksState = (
       (direction) => direction.id === options.directionId
     )?.headVersionId ?? null;
 
-  const stamp = changeStamp(options.lastChange, options.directionId);
+  const stamp = toChangeStamp(options.lastChange, options.directionId);
   const key = `${options.projectId}:${options.directionId}`;
   const live = useRef(key);
   live.current = key;
@@ -208,7 +208,7 @@ const useTweaks = (options: Options): UseTweaksResult => {
 
       const next = { ...map };
 
-      if (value === baseValue(stateRef.current, control)) {
+      if (value === toBaseValue(stateRef.current, control)) {
         delete next[control.id];
       } else {
         next[control.id] = value;
@@ -310,7 +310,7 @@ const useTweaks = (options: Options): UseTweaksResult => {
     const out: TweakMap = {};
 
     for (const control of state?.controls ?? []) {
-      out[control.id] = pending[control.id] ?? baseValue(state, control);
+      out[control.id] = pending[control.id] ?? toBaseValue(state, control);
     }
 
     return out;

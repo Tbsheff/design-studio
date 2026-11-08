@@ -8,8 +8,8 @@ import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { copy } from "./copy.js";
-import { shownValue, StateTag, Swatch } from "./match-candidates.js";
-import { ROWS_SHOWN, KIND_LABEL, rowKey } from "./match-scan.js";
+import { toShownValue, StateTag, Swatch } from "./match-candidates.js";
+import { ROWS_SHOWN, KIND_LABEL, toRowKey } from "./match-scan.js";
 import type { Scope, Status } from "./match-scan.js";
 
 interface RowActions {
@@ -64,7 +64,7 @@ const RowMenu = ({
         className="icon-btn small"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Actions for ${shownValue(row)}`}
+        aria-label={`Actions for ${toShownValue(row)}`}
         data-tip={open ? undefined : "Select or replace"}
         data-tip-align="end"
         onClick={() => setOpen((valueValue) => !valueValue)}
@@ -75,7 +75,7 @@ const RowMenu = ({
         <div
           className="ui-menu sm-menu"
           role="menu"
-          aria-label={`${shownValue(row)} actions`}
+          aria-label={`${toShownValue(row)} actions`}
         >
           <button
             type="button"
@@ -128,9 +128,9 @@ const ValueRow = ({
   readonly actions: RowActions;
   readonly replaceLabel: string;
 }): ReactElement => (
-  <li className="sm-row" data-testid="style-value" data-row={rowKey(row)}>
+  <li className="sm-row" data-testid="style-value" data-row={toRowKey(row)}>
     <Swatch kind={row.kind} value={row.value} />
-    <span className="sm-value">{shownValue(row)}</span>
+    <span className="sm-value">{toShownValue(row)}</span>
     <StateTag row={row} onReplace={() => actions.replace(row)} />
     <span
       className="sm-count"
@@ -167,7 +167,7 @@ const KindGroup = ({
       <ul className="sm-list">
         {shown.map((row) => (
           <ValueRow
-            key={rowKey(row)}
+            key={toRowKey(row)}
             row={row}
             actions={actions}
             replaceLabel={replaceLabel}

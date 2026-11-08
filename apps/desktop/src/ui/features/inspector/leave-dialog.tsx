@@ -2,7 +2,7 @@ import { useModalDialog } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { unsavedLabel } from "./use-edit-session.js";
+import { toUnsavedLabel } from "./use-edit-session.js";
 import type { EditSession } from "./use-edit-session.js";
 
 const LeaveDialog = ({
@@ -26,7 +26,7 @@ const LeaveDialog = ({
           <h2 id="edit-leave-title">{copy.leaveTitle}</h2>
           <p id="edit-leave-text">
             {copy.youHave}
-            {unsavedLabel(session.net).toLowerCase()}
+            {toUnsavedLabel(session.net).toLowerCase()}
             {copy.saveVersionKeepsThemAs}
           </p>
           {session.error && <p className="edit-leave-error">{session.error}</p>}

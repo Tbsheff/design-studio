@@ -12,8 +12,8 @@ import {
   valuesFromStyles,
 } from "./css-values.js";
 import type { Shift, ShiftPart, StyleValues } from "./css-values.js";
-import { resolveNumberInput } from "./math-input.js";
-import { buildEditRequest } from "./use-direct-edit.js";
+import { createCurrentEditRequest } from "./edit-request-model.js";
+import { toNumberInput } from "./math-input.js";
 
 const MAX_MULTI_EDIT = 50;
 
@@ -24,7 +24,7 @@ interface MergedValues {
 
 const ALL_PROPS = Object.keys(valuesFromStyles({})) as DirectStyleProperty[];
 
-const mergeValues = (list: StyleValues[]): MergedValues => {
+const toMergedValues = (list: StyleValues[]): MergedValues => {
   const first = list[0] ?? valuesFromStyles({});
   const values = { ...first };
   const mixed = new Set<DirectStyleProperty>();
@@ -47,7 +47,7 @@ const toLocEntry = (selection: SelectionContext): SourceLoc | null => {
   return selection.source;
 };
 
-const locKey = (selection: SelectionContext): string | null => {
+const toLocKey = (selection: SelectionContext): string | null => {
   const entry = toLocEntry(selection);
 
   if (!entry) {
@@ -57,7 +57,7 @@ const locKey = (selection: SelectionContext): string | null => {
   return `${entry.file}:${entry.line}:${entry.col}`;
 };
 
-const multiBlockReason = (selections: SelectionContext[]): string | null => {
+const toMultiBlockReason = (selections: SelectionContext[]): string | null => {
   if (selections.length > MAX_MULTI_EDIT) {
     return `Select ${MAX_MULTI_EDIT} elements or fewer to edit them together.`;
   }
@@ -66,7 +66,7 @@ const multiBlockReason = (selections: SelectionContext[]): string | null => {
     return "Some elements have no source location. Ask the agent to change them in Chat.";
   }
 
-  const keys = selections.map(locKey);
+  const keys = selections.map(toLocKey);
 
   if (new Set(keys).size !== keys.length) {
     return "Some elements come from one line of code, such as a list. Select one of them, or ask the agent in Chat.";
@@ -85,7 +85,7 @@ interface PropShift extends Shift {
 
 type Shifts = Partial<Record<DirectStyleProperty, PropShift>>;
 
-const shiftedProp = (raw: string, shift: PropShift): string | null => {
+const toShiftedProp = (raw: string, shift: PropShift): string | null => {
   let value: string | null = raw;
 
   if (shift.delta !== 0) {
@@ -103,7 +103,7 @@ const shiftedProp = (raw: string, shift: PropShift): string | null => {
   return value;
 };
 
-const shiftedStyle = (
+const toShiftedStyle = (
   base: StyleValues,
   shifts: Shifts
 ): Partial<StyleValues> => {
@@ -113,7 +113,7 @@ const shiftedStyle = (
     DirectStyleProperty,
     PropShift,
   ][]) {
-    const next = shiftedProp(base[prop], shift);
+    const next = toShiftedProp(base[prop], shift);
 
     if (next !== null) {
       style[prop] = next;
@@ -123,7 +123,7 @@ const shiftedStyle = (
   return changedProps(style, base);
 };
 
-const withPart = (
+const toWithPart = (
   prev: PropShift | undefined,
   part: ShiftPart,
   delta: number,
@@ -142,7 +142,7 @@ const withPart = (
   return { delta: prev?.delta ?? 0, max: prev?.max, min: prev?.min, parts };
 };
 
-const addShift = (
+const insertShift = (
   shifts: Shifts,
   props: readonly DirectStyleProperty[],
   delta: number,
@@ -153,14 +153,14 @@ const addShift = (
 
   for (const prop of props) {
     next[prop] = part
-      ? withPart(next[prop], part, delta, bounds)
+      ? toWithPart(next[prop], part, delta, bounds)
       : { ...next[prop], ...bounds, delta: (next[prop]?.delta ?? 0) + delta };
   }
 
   return next;
 };
 
-const leftParts = (
+const toLeftParts = (
   cur: PropShift,
   done: PropShift
 ): Record<string, PartShift> => {
@@ -187,9 +187,9 @@ const leftParts = (
   return parts;
 };
 
-const leftShift = (cur: PropShift, done: PropShift): PropShift | null => {
+const toLeftShift = (cur: PropShift, done: PropShift): PropShift | null => {
   const delta = cur.delta - done.delta;
-  const parts = leftParts(cur, done);
+  const parts = toLeftParts(cur, done);
 
   if (delta === 0 && Object.keys(parts).length === 0) {
     return null;
@@ -198,7 +198,7 @@ const leftShift = (cur: PropShift, done: PropShift): PropShift | null => {
   return { ...cur, delta, parts };
 };
 
-const withoutShifts = (
+const toWithoutShifts = (
   shifts: Shifts,
   props: readonly string[],
   sent?: Shifts
@@ -214,7 +214,7 @@ const withoutShifts = (
     PropShift,
   ][]) {
     const cur = next[prop];
-    const left = cur ? leftShift(cur, done) : null;
+    const left = cur ? toLeftShift(cur, done) : null;
 
     if (left) {
       next[prop] = left;
@@ -231,7 +231,7 @@ interface OwnEdit {
   readonly style: Partial<StyleValues>;
 }
 
-const ownEdits = (
+const toOwnEdits = (
   selections: SelectionContext[],
   bases: StyleValues[],
   style: Partial<StyleValues>,
@@ -240,8 +240,11 @@ const ownEdits = (
   const out: OwnEdit[] = [];
   selections.forEach((selection, index) => {
     const base = bases[index] ?? valuesFromStyles(selection.styles);
-    const own = { ...changedProps(style, base), ...shiftedStyle(base, shifts) };
-    const edit = buildEditRequest(selection, own);
+    const own = {
+      ...changedProps(style, base),
+      ...toShiftedStyle(base, shifts),
+    };
+    const edit = createCurrentEditRequest(selection, own);
 
     if (edit) {
       out.push({ edit, style: own });
@@ -251,26 +254,25 @@ const ownEdits = (
   return out;
 };
 
-const batchEdits = (
+const toBatchEdits = (
   selections: SelectionContext[],
   bases: StyleValues[],
   style: Partial<StyleValues>
 ): DirectEditRequest[] =>
-  ownEdits(selections, bases, style).map((item) => item.edit);
+  toOwnEdits(selections, bases, style).map((item) => item.edit);
 
 const hasCurrentDependency = (raw: string, unit: string): boolean =>
-  resolveNumberInput(raw, `0${unit}`, unit) !==
-  resolveNumberInput(raw, `1${unit}`, unit);
+  toNumberInput(raw, `0${unit}`, unit) !== toNumberInput(raw, `1${unit}`, unit);
 
 export {
   MAX_MULTI_EDIT,
-  mergeValues,
-  multiBlockReason,
-  shiftedStyle,
-  addShift,
-  withoutShifts,
-  ownEdits,
-  batchEdits,
+  toMergedValues,
+  toMultiBlockReason,
+  toShiftedStyle,
+  insertShift,
+  toWithoutShifts,
+  toOwnEdits,
+  toBatchEdits,
   hasCurrentDependency,
 };
 

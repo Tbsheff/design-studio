@@ -9,8 +9,8 @@ import { AddButton } from "./inspector-shared.js";
 import { write, useLayoutKeys } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import {
-  activeCell,
-  alignCell,
+  toActiveCell,
+  toAlignCell,
   isFlexDisplay,
   isGridDisplay,
 } from "./sizing.js";
@@ -60,7 +60,7 @@ const AlignGrid = ({
 }): ReactElement => {
   const justifyProp = grid ? "justify-items" : "justify-content";
 
-  const active = activeCell(
+  const active = toActiveCell(
     edit.values[justifyProp],
     edit.values["align-items"],
     isRow
@@ -82,7 +82,7 @@ const AlignGrid = ({
               aria-pressed={on}
               data-tip={label}
               onClick={() => {
-                const cell = alignCell(col, row, isRow);
+                const cell = toAlignCell(col, row, isRow);
                 write(
                   edit,
                   grid

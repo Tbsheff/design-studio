@@ -21,18 +21,18 @@ import { copy } from "./copy.js";
 import "../../styles/inspector-match.css";
 import { InspectorSection } from "./inspector-fields.js";
 import {
-  classCandidates,
-  designCandidates,
-  uniqueTokens,
-  varCandidates,
+  listClassCandidates,
+  listDesignCandidates,
+  listUniqueTokens,
+  listVarCandidates,
 } from "./match-candidates.js";
 import { KindGroup, ScopeToggle, StatusLine } from "./match-rows.js";
 import type { RowActions } from "./match-rows.js";
 import {
   usePageVars,
-  rowKey,
-  requestStyles,
-  lookupFor,
+  toRowKey,
+  getStyles,
+  toLookup,
   useStyleScan,
 } from "./match-scan.js";
 import type { InspectorMatchProps, Scope, Status } from "./match-scan.js";
@@ -125,7 +125,7 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
 
   const page = useStyleScan(props.port, {}, "page");
   const vars = usePageVars(props.port, picking !== null);
-  const lookup = useMemo(() => lookupFor(props.tokens), [props.tokens]);
+  const lookup = useMemo(() => toLookup(props.tokens), [props.tokens]);
 
   const rows = useMemo(
     () => summarizeHits(scanned.hits ?? [], lookup),
@@ -148,7 +148,7 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
     async (row: StyleValueRow, extra: StyleQuery) => {
       setStatus({ kind: "busy", text: "Finding matches…" });
 
-      const reply = await requestStyles(
+      const reply = await getStyles(
         props.port.current,
         { property: row.kind, ...extra },
         true
@@ -183,18 +183,22 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
     : [];
 
   const candidates = picking
-    ? uniqueTokens([
-        ...varCandidates(picking, vars),
-        ...classCandidates(picking, page.hits ?? []),
+    ? listUniqueTokens([
+        ...listVarCandidates(picking, vars),
+        ...listClassCandidates(picking, page.hits ?? []),
         ...(props.tokens
-          ? designCandidates(picking, props.tokens.entries, props.tokens.mode)
+          ? listDesignCandidates(
+              picking,
+              props.tokens.entries,
+              props.tokens.mode
+            )
           : []),
       ])
     : [];
 
   const closePicker = (): void => {
     if (picking) {
-      focusRow(rowKey(picking));
+      focusRow(toRowKey(picking));
     }
 
     setPicking(null);

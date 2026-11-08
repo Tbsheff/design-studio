@@ -83,7 +83,7 @@ const useArrange = (
   return { isBusy: busy, message, run };
 };
 
-const chordOf = (event: KeyboardEvent): string | null => {
+const toChord = (event: KeyboardEvent): string | null => {
   if (event.metaKey || event.repeat || !event.altKey) {
     return null;
   }
@@ -116,7 +116,7 @@ const useArrangeKeys = (
 
     const onKey = (event: KeyboardEvent): void => {
       if (!isTypingTarget(event.target)) {
-        fire(chordOf(event), event);
+        fire(toChord(event), event);
       }
     };
 

@@ -7,8 +7,8 @@ import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { textEditability } from "./css-values.js";
+import { isSameEditValues } from "./edit-request-model.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
-import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const useRowKeys =

@@ -25,7 +25,7 @@ interface Options {
 
 type FileDrop = Extract<BridgeToParent, { readonly type: "file-drop" }>;
 
-const place = async (
+const insertImage = async (
   options: Options,
   directionId: string,
   drop: FileDrop,
@@ -63,7 +63,7 @@ const place = async (
   }
 };
 
-const refusal = (options: Options, drop: FileDrop): string | null => {
+const toRefusal = (options: Options, drop: FileDrop): string | null => {
   if (!drop.files[0]) {
     return "Drop an image file: PNG, JPEG, WebP, AVIF, GIF or SVG.";
   }
@@ -105,7 +105,7 @@ const useImageDrop = (options: Options): void => {
       }
 
       const cur = live.current;
-      const problem = refusal(cur, msg);
+      const problem = toRefusal(cur, msg);
 
       if (problem) {
         return cur.notify(problem);
@@ -118,7 +118,7 @@ const useImageDrop = (options: Options): void => {
       busy.current = true;
       startTransition(async () => {
         try {
-          await place(
+          await insertImage(
             cur,
             cur.directionId as string,
             msg,

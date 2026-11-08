@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { api } from "../../api";
 import { componentMention } from "../../features/chat/use-mentions";
 import { runCommand } from "../../features/commands";
-import { mergeCommit } from "../../features/inspector/use-direct-edit";
+import { applyCommit } from "../../features/inspector/index.js";
 import { renameVersion } from "../../features/versions-layers-tokens/versions-api";
 import { focusComposer } from "../../platform/focus";
 import type { DraftStore } from "../../platform/storage";
@@ -85,8 +85,8 @@ const inspectorProps = (ctx: StudioCtx): LeftProps["inspector"] => {
       askAgent(prompt, ui.draft, (): Promise<boolean> =>
         panes.showPane("chat")
       ),
-    onCommitted: (commit: Parameters<typeof mergeCommit>[1]): void => {
-      ui.setSelection((prev): SelectionContext[] => mergeCommit(prev, commit));
+    onCommitted: (commit: Parameters<typeof applyCommit>[1]): void => {
+      ui.setSelection((prev): SelectionContext[] => applyCommit(prev, commit));
       port.current?.refreshRects();
     },
     onExit: (): void => panes.panel.choose("chat"),

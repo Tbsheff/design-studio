@@ -1,5 +1,5 @@
 import type { ShiftPart } from "./css-values.js";
-import { formatShadows, parseShadows } from "./shadows.js";
+import { toShadowsText, toShadows } from "./shadows.js";
 import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
@@ -31,9 +31,9 @@ const eachList = (
   raw: string,
   change: (list: Shadow[]) => Shadow[]
 ): string => {
-  const list = parseShadows(raw);
+  const list = toShadows(raw);
 
-  return list ? formatShadows(change(list)) : raw;
+  return list ? toShadowsText(change(list)) : raw;
 };
 
 const fieldPart = (index: number, field: Field): ShiftPart => ({
@@ -67,7 +67,7 @@ const writeShadows = (
       { key: `op${opCount}`, map: (raw) => eachList(raw, change), set: "" }
     );
   } else {
-    edit.preview({ "box-shadow": formatShadows(change(view.list)) });
+    edit.preview({ "box-shadow": toShadowsText(change(view.list)) });
   }
 
   edit.commit();
@@ -89,13 +89,13 @@ const mixedFields = (lists: Shadow[][]): Set<string> => {
 
 const shadowView = (edit: DirectEdit): ShadowView | null => {
   if (!edit.mixed.has("box-shadow")) {
-    const list = parseShadows(edit.values["box-shadow"]);
+    const list = toShadows(edit.values["box-shadow"]);
 
     return list ? { list, mixed: null } : null;
   }
 
   const lists = (edit.each ?? []).map((values) =>
-    parseShadows(values["box-shadow"])
+    toShadows(values["box-shadow"])
   );
 
   const first = lists[0];

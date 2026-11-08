@@ -16,13 +16,13 @@ interface OptimisticEdit {
 
 let counter = 0;
 
-const nextId = (): string => {
+const createId = (): string => {
   counter += 1;
 
   return `ui-${Date.now().toString(36)}-${counter}`;
 };
 
-const domPatchFor = (req: DirectEditRequest): DomPatch | null => {
+const toDomPatch = (req: DirectEditRequest): DomPatch | null => {
   if (req.variant || req.move !== undefined || req.insert !== undefined) {
     return null;
   }
@@ -44,7 +44,7 @@ const domPatchFor = (req: DirectEditRequest): DomPatch | null => {
   };
 };
 
-const watchResult = (
+const startResultWatch = (
   port: PreviewPort,
   id: string,
   onProblem: (reason: string) => void
@@ -79,15 +79,15 @@ const startOptimistic = (
   req: DirectEditRequest,
   onProblem: (reason: string) => void
 ): OptimisticEdit => {
-  const patch = domPatchFor(req);
+  const patch = toDomPatch(req);
 
   if (!port || !patch) {
     return NOOP;
   }
 
-  const id = nextId();
+  const id = createId();
   port.post({ id, patch, type: "optimistic-apply", written: false });
-  watchResult(port, id, onProblem);
+  startResultWatch(port, id, onProblem);
 
   return {
     failed: (reason) =>
@@ -104,6 +104,6 @@ const startOptimistic = (
   };
 };
 
-export { domPatchFor, startOptimistic };
+export { toDomPatch, startOptimistic };
 
 export type { OptimisticEdit };

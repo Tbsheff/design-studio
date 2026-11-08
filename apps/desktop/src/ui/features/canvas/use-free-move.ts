@@ -13,9 +13,9 @@ import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
+import { applyCommit, createCurrentEditRequest } from "../inspector/index.js";
 import { startOptimistic } from "../inspector/optimistic-edit.js";
-import { selectionTargets } from "../inspector/structure-edits.js";
-import { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
+import { toSelectionTargets } from "../inspector/structure-edits.js";
 import { snapRect } from "./snap-model.js";
 import type {
   Rect,
@@ -310,7 +310,7 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
         return null;
       }
 
-      const target = selectionTargets([session5.target])?.[0];
+      const target = toSelectionTargets([session5.target])?.[0];
 
       if (!target) {
         return null;
@@ -371,14 +371,14 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
       style: Record<string, string>
     ): Promise<void> => {
       const cur = live.current;
-      const req = buildEditRequest(target, style);
+      const req = createCurrentEditRequest(target, style);
 
       if (!req || !cur.directionId) {
         return;
       }
 
       const { selector } = target;
-      cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
+      cur.setSelection((prev) => applyCommit(prev, { selector, style }));
 
       const optimistic = startOptimistic(
         { post: cur.post, refreshRects: cur.refreshRects },
@@ -403,7 +403,7 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
         );
 
         live.current.setSelection((prev) =>
-          mergeCommit(prev, { selector, style: back })
+          applyCommit(prev, { selector, style: back })
         );
         live.current.onError(errorText(error));
       }

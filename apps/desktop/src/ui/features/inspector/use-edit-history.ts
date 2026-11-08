@@ -63,7 +63,7 @@ const isHistoryStep = (version: Version | undefined): boolean =>
   version.meta.kind === "manual" &&
   HISTORY_STEP_TITLE.test(version.title);
 
-const stepToast = (kind: HistoryKind, label: string | null): string => {
+const toStepToast = (kind: HistoryKind, label: string | null): string => {
   const word = kind === "undo" ? "Undid" : "Redid";
 
   if (!label) {
@@ -79,7 +79,7 @@ const stepToast = (kind: HistoryKind, label: string | null): string => {
   return `${word} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 };
 
-const refreshedSelection = (
+const toRefreshedSelection = (
   prev: SelectionContext[],
   selectors: string[],
   contexts: (SelectionContext | null)[]
@@ -228,7 +228,7 @@ const useEditHistory = (options: Options): UseEditHistoryResult => {
 
         apply(result.state);
         showToast(
-          stepToast(kind, kind === "undo" ? known.undoLabel : known.redoLabel)
+          toStepToast(kind, kind === "undo" ? known.undoLabel : known.redoLabel)
         );
         cur.onStepped(result.version);
       } catch (error) {
@@ -369,7 +369,7 @@ const useSelectionRefresh = (
         dropDrafts.current();
       }
 
-      setSelection((prev) => refreshedSelection(prev, selectors, settled));
+      setSelection((prev) => toRefreshedSelection(prev, selectors, settled));
     });
   }, [describeRef, setSelection]);
 
@@ -457,8 +457,8 @@ const useSelectionRefresh = (
 export {
   PREVIEW_PAINTED_EVENT,
   isHistoryStep,
-  stepToast,
-  refreshedSelection,
+  toStepToast,
+  toRefreshedSelection,
   useEditHistory,
   useSelectionRefresh,
 };

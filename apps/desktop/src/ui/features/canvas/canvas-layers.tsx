@@ -12,8 +12,8 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { LiveStore } from "../../platform/live-store.js";
 import { canvasHasKeys } from "../../platform/typing-target.js";
 import {
-  selectionTargets,
-  structureMenuItems,
+  toSelectionTargets,
+  toStructureMenuEntries,
 } from "../inspector/structure-edits.js";
 import type { LayerDrop } from "../inspector/structure-edits.js";
 import { LayersPanel } from "../versions-layers-tokens/layers-panel.js";
@@ -59,7 +59,7 @@ const CanvasLayersPanel = ({
   const menuState = {
     canPaste: edits.canPaste,
     count: selection.length,
-    hasSource: selectionTargets(selection) !== null,
+    hasSource: toSelectionTargets(selection) !== null,
     isBusy: edits.busy,
   };
 
@@ -75,7 +75,7 @@ const CanvasLayersPanel = ({
 
   if (edits.enabled) {
     actions = {
-      menuItems: () => structureMenuItems(menuState, edits.structureKey),
+      menuItems: () => toStructureMenuEntries(menuState, edits.structureKey),
       onDrop: edits.dropNode,
       onMove: edits.moveNode,
       onMoveSelected: edits.moveSelected,

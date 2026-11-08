@@ -83,7 +83,7 @@ interface QueuedPins {
   >;
 }
 
-const pinStyles = (
+const toPinStyles = (
   edit: DirectEdit,
   selection: SelectionContext
 ): Record<string, string> => {
@@ -129,7 +129,7 @@ const useQueuedPins = (
     ).reduce<Record<string, string>>(
       (all, [axis, pin]) => ({
         ...all,
-        ...pinPatch(axis, pin.mode, pinStyles(edit, selection), pin.from),
+        ...pinPatch(axis, pin.mode, toPinStyles(edit, selection), pin.from),
       }),
       {}
     );
@@ -198,7 +198,10 @@ const PinSelect = ({
       return queue(axis, next, mode);
     }
 
-    edit.preview(pinPatch(axis, next, pinStyles(edit, selection), mode), true);
+    edit.preview(
+      pinPatch(axis, next, toPinStyles(edit, selection), mode),
+      true
+    );
     edit.commit();
   };
 

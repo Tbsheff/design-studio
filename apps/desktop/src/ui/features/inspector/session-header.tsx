@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 
 import { toChoice } from "./choice-model.js";
 import { copy } from "./copy.js";
-import { unsavedLabel } from "./use-edit-session.js";
+import { toUnsavedLabel } from "./use-edit-session.js";
 import type { EditSession, SessionAction } from "./use-edit-session.js";
 
 const SessionHeader = ({
@@ -44,7 +44,7 @@ const SessionHeader = ({
     <div className="edit-head">
       <h2 className="edit-title">{copy.editTitle}</h2>
       {session.isDirty && session.net > 0 && (
-        <output className="edit-count" data-tip={unsavedLabel(session.net)}>
+        <output className="edit-count" data-tip={toUnsavedLabel(session.net)}>
           {session.net}
           <span className="sr-only"> {copy.unsavedEdits}</span>
         </output>

@@ -17,7 +17,7 @@ import type { TokenMode } from "../../../shared/token-match.js";
 import { copy } from "./copy.js";
 import type { PageVar } from "./match-scan.js";
 
-const shownValue = (row: Pick<StyleValueRow, "kind" | "value">): string =>
+const toShownValue = (row: Pick<StyleValueRow, "kind" | "value">): string =>
   row.kind === "color" ? (colorHex(row.value) ?? row.value) : row.value;
 
 const StateTag = ({
@@ -33,7 +33,7 @@ const StateTag = ({
         type="button"
         className="sm-tag raw"
         style={{ border: 0, cursor: "pointer" }}
-        aria-label={`Replace ${shownValue(row)} with a token`}
+        aria-label={`Replace ${toShownValue(row)} with a token`}
         data-tip={copy.notATokenReplaceIt}
         onClick={onReplace}
       >
@@ -77,7 +77,7 @@ interface Candidate {
   readonly hint: string;
 }
 
-const designCandidates = (
+const listDesignCandidates = (
   row: StyleValueRow,
   entries: CompiledTokenEntry[],
   mode: TokenMode
@@ -112,7 +112,7 @@ const isSameValue = (
 const canFitKind = (kind: StyleKind, value: string): boolean =>
   kind === "color" ? colorHex(value) !== null : lengthToPx(value) !== null;
 
-const varCandidates = (row: StyleValueRow, vars: PageVar[]): Candidate[] =>
+const listVarCandidates = (row: StyleValueRow, vars: PageVar[]): Candidate[] =>
   vars
     .filter((pageVar) => canFitKind(row.kind, pageVar.value))
     .map((pageVarValue) => ({
@@ -128,7 +128,7 @@ const varCandidates = (row: StyleValueRow, vars: PageVar[]): Candidate[] =>
         first.token.localeCompare(second.token)
     );
 
-const uniqueTokens = (list: Candidate[]): Candidate[] => {
+const listUniqueTokens = (list: Candidate[]): Candidate[] => {
   const seen = new Set<string>();
 
   return list.filter(
@@ -137,7 +137,10 @@ const uniqueTokens = (list: Candidate[]): Candidate[] => {
   );
 };
 
-const classCandidates = (row: StyleValueRow, page: StyleHit[]): Candidate[] => {
+const listClassCandidates = (
+  row: StyleValueRow,
+  page: StyleHit[]
+): Candidate[] => {
   const seen = new Map<string, Candidate>();
 
   for (const hit of page) {
@@ -187,11 +190,11 @@ const Swatch = ({
 export {
   StateTag,
   Swatch,
-  classCandidates,
-  designCandidates,
-  shownValue,
-  uniqueTokens,
-  varCandidates,
+  listClassCandidates,
+  listDesignCandidates,
+  toShownValue,
+  listUniqueTokens,
+  listVarCandidates,
 };
 
 export type { Candidate };

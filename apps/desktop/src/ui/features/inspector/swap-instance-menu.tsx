@@ -32,7 +32,7 @@ interface Props {
   readonly onClose: () => void;
 }
 
-const hintOf = (item: SwapCandidate): string => {
+const toHint = (item: SwapCandidate): string => {
   if (item.drop.length > 0) {
     return `drops ${item.drop.join(", ")}`;
   }
@@ -135,7 +135,7 @@ export default function SwapInstanceMenu({
           >
             <span>{item.name}</span>
             <span className="prp-swap-hint">
-              {busy === item.name ? "Swapping…" : hintOf(item)}
+              {busy === item.name ? "Swapping…" : toHint(item)}
             </span>
           </button>
         ))}

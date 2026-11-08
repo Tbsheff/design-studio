@@ -3,17 +3,17 @@ import type { KeyboardEvent, ReactElement } from "react";
 
 import { normalizeLength, stepValue } from "./css-values.js";
 import { isInherited, useVariantScope } from "./edit-variant.js";
-import { resolveNumberInput } from "./math-input.js";
+import { toNumberInput } from "./math-input.js";
 import { hasCurrentDependency } from "./mixed-values.js";
 import {
-  plainLength,
-  displayLength,
-  clamp,
-  patchFor,
-  shiftMixed,
-  stepOf,
+  toPlainLength,
+  toDisplayLength,
+  toClamped,
+  toPatch,
+  applyMixedShift,
+  toStep,
   isValidValue,
-  selectSoon,
+  startSelect,
   sameSpec,
 } from "./number-field-model.js";
 import type { NumberSpec } from "./number-field-model.js";
@@ -43,7 +43,7 @@ const useNumberText = (spec: NumberSpec): UseNumberTextResult => {
   const last = useRef<string | null>(null);
   const ui = useTokenUi();
   const unit = spec.unit ?? "px";
-  const current = plainLength(edit.values[prop], ui);
+  const current = toPlainLength(edit.values[prop], ui);
   const mixed = edit.mixed.has(prop);
 
   const apply = (raw: string): void => {
@@ -57,15 +57,15 @@ const useNumberText = (spec: NumberSpec): UseNumberTextResult => {
       return;
     }
 
-    const math = resolveNumberInput(raw, start.current, unit);
+    const math = toNumberInput(raw, start.current, unit);
 
     if (math === null && /[-+*/(]\s*$/u.test(raw)) {
       return;
     }
 
-    const next = clamp(math ?? normalizeLength(raw, unit), spec);
+    const next = toClamped(math ?? normalizeLength(raw, unit), spec);
     last.current = next;
-    edit.preview(patchFor(spec, next));
+    edit.preview(toPatch(spec, next));
   };
 
   const settle = (): void => {
@@ -84,9 +84,9 @@ const useNumberText = (spec: NumberSpec): UseNumberTextResult => {
   const nudge = (delta: number, from: string): void => {
     start.current = null;
     last.current = null;
-    const next = clamp(stepValue(from, delta, unit), spec);
+    const next = toClamped(stepValue(from, delta, unit), spec);
     setText(next);
-    edit.preview(patchFor(spec, next));
+    edit.preview(toPatch(spec, next));
     edit.commitSoon();
   };
 
@@ -108,7 +108,9 @@ const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
 
   const shown =
     field.text ??
-    (focused ? field.current : (spec.display ?? displayLength(field.current)));
+    (focused
+      ? field.current
+      : (spec.display ?? toDisplayLength(field.current)));
 
   const refused =
     field.isMixed &&
@@ -120,21 +122,21 @@ const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
 
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
-      const delta = stepOf(event, spec) * (event.key === "ArrowUp" ? 1 : -1);
+      const delta = toStep(event, spec) * (event.key === "ArrowUp" ? 1 : -1);
 
       if (field.isMixed) {
-        shiftMixed(spec, delta);
+        applyMixedShift(spec, delta);
         spec.edit.commitSoon();
 
         return;
       }
 
       field.nudge(delta, shown);
-      selectSoon(input);
+      startSelect(input);
     } else if (event.key === "Enter") {
       event.preventDefault();
       field.settle();
-      selectSoon(input);
+      startSelect(input);
     } else if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { shownValue, Swatch } from "./match-candidates.js";
+import { toShownValue, Swatch } from "./match-candidates.js";
 import type { Candidate } from "./match-candidates.js";
 import { PICK_SHOWN, KIND_EXAMPLE } from "./match-scan.js";
 
@@ -50,11 +50,11 @@ const TokenPicker = (props: {
     <div
       className="sm-picker"
       role="group"
-      aria-label={`Replace ${shownValue(props.row)} with a token`}
+      aria-label={`Replace ${toShownValue(props.row)} with a token`}
     >
       <p className="sm-picker-head">
         {copy.replace}
-        <code>{shownValue(props.row)}</code> {copy.on}
+        <code>{toShownValue(props.row)}</code> {copy.on}
         {props.target}
       </p>
       <input
@@ -82,7 +82,7 @@ const TokenPicker = (props: {
             <code className="sm-pick-token">{candidate.token}</code>
             <span className="ui-menu-meta">
               {candidate.hint ||
-                shownValue({ kind: props.row.kind, value: candidate.value })}
+                toShownValue({ kind: props.row.kind, value: candidate.value })}
             </span>
           </button>
         ))}

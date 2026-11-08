@@ -55,7 +55,7 @@ const EMPTY: SessionView = {
 const UNDO_PROMPT = 'Undo of "';
 const REFRESH_MS = 120;
 
-const unsavedLabel = (count: number): string => {
+const toUnsavedLabel = (count: number): string => {
   if (count === 0) {
     return "No unsaved edits";
   }
@@ -63,7 +63,7 @@ const unsavedLabel = (count: number): string => {
   return count === 1 ? "1 unsaved edit" : `${count} unsaved edits`;
 };
 
-const netSteps = (
+const toNetSteps = (
   versions: Version[],
   base: string,
   fallback: number
@@ -83,7 +83,7 @@ const netSteps = (
   return at ? net : fallback;
 };
 
-const readSession = async (
+const getSession = async (
   projectId: string,
   directionId: string,
   base: string
@@ -116,11 +116,11 @@ const readSession = async (
 
   return {
     ...view,
-    net: versions ? netSteps(versions, base, state.count) : state.count,
+    net: versions ? toNetSteps(versions, base, state.count) : state.count,
   };
 };
 
-const fresh = (base: string | null): SessionView => ({ ...EMPTY, base });
+const toFresh = (base: string | null): SessionView => ({ ...EMPTY, base });
 
 interface UseEditSessionResult {
   readonly answer: (choice: SessionAction | "cancel") => Promise<void>;
@@ -161,7 +161,7 @@ const useEditSession = (options: Options): UseEditSessionResult => {
         const state = await api.editSession(projectId, directionId);
 
         if (opts.current.directionId === directionId) {
-          setView(fresh(state.baseVersionId || null));
+          setView(toFresh(state.baseVersionId || null));
         }
       } catch (failure: unknown) {
         setError(errorText(failure));
@@ -181,10 +181,10 @@ const useEditSession = (options: Options): UseEditSessionResult => {
     globalThis.clearTimeout(timer.current);
     timer.current = globalThis.setTimeout(() => {
       startTransition(async () => {
-        let next: Awaited<ReturnType<typeof readSession>> | null = null;
+        let next: Awaited<ReturnType<typeof getSession>> | null = null;
 
         try {
-          next = await readSession(projectId, directionId, base);
+          next = await getSession(projectId, directionId, base);
         } catch {
           next = null;
         }
@@ -212,7 +212,7 @@ const useEditSession = (options: Options): UseEditSessionResult => {
       outside &&
       viewRef.current.count === 0
     ) {
-      setView(fresh(event.version.id));
+      setView(toFresh(event.version.id));
 
       return;
     }
@@ -251,7 +251,7 @@ const useEditSession = (options: Options): UseEditSessionResult => {
         base
       );
 
-      setView(fresh(result.headVersionId));
+      setView(toFresh(result.headVersionId));
       cur.onEnded?.(action, result);
 
       return true;
@@ -320,6 +320,6 @@ const useEditSession = (options: Options): UseEditSessionResult => {
 
 type EditSession = ReturnType<typeof useEditSession>;
 
-export { unsavedLabel, useEditSession };
+export { toUnsavedLabel, useEditSession };
 
 export type { SessionAction, EditSessionHandle, EditSession };

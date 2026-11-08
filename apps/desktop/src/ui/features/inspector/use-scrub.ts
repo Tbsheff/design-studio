@@ -4,11 +4,11 @@ import type { MouseEvent, PointerEvent } from "react";
 import { formatNumber, parseNumber } from "./css-values.js";
 import {
   SCRUB_PX_PER_STEP,
-  plainLength,
-  clamp,
-  patchFor,
-  shiftMixed,
-  stepOf,
+  toPlainLength,
+  toClamped,
+  toPatch,
+  applyMixedShift,
+  toStep,
 } from "./number-field-model.js";
 import type { NumberSpec } from "./number-field-model.js";
 import { useTokenUi } from "./use-token-snap.js";
@@ -29,7 +29,9 @@ const startScrub = (
 ): Scrub => {
   const unit = spec.unit ?? "px";
 
-  const parsed = parseNumber(plainLength(spec.edit.values[spec.prop], ui)) ?? {
+  const parsed = parseNumber(
+    toPlainLength(spec.edit.values[spec.prop], ui)
+  ) ?? {
     unit,
     value: 0,
   };
@@ -63,17 +65,17 @@ const applyScrubMove = (
   document.body.classList.add("ins-scrubbing");
 
   if (moved.isMixed) {
-    shiftMixed(spec, steps * stepOf(event, spec));
+    applyMixedShift(spec, steps * toStep(event, spec));
 
     return moved;
   }
 
   const amount = formatNumber(
-    moved.value + steps * stepOf(event, spec),
+    moved.value + steps * toStep(event, spec),
     moved.unit
   );
-  const value = parseNumber(clamp(amount, spec))?.value ?? moved.value;
-  spec.edit.preview(patchFor(spec, formatNumber(value, moved.unit)));
+  const value = parseNumber(toClamped(amount, spec))?.value ?? moved.value;
+  spec.edit.preview(toPatch(spec, formatNumber(value, moved.unit)));
 
   return { ...moved, value };
 };

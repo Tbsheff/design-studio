@@ -7,9 +7,9 @@ import { BoxModel } from "./box-model.js";
 import { copy } from "./copy.js";
 import { SIDES } from "./css-values.js";
 import type { DirectEdit } from "./deps.js";
+import { isSameEditValues } from "./edit-request-model.js";
 import { LayoutLead } from "./layout-lead.js";
 import { BOX_PROPS, toDeclaredMargins } from "./simple-model.js";
-import { isSameEditValues } from "./use-direct-edit.js";
 
 interface LayoutSectionProps {
   readonly edit: DirectEdit;

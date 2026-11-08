@@ -8,24 +8,24 @@ import { InspectorSection } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
 import { PlainNumberField } from "./plain-number-field.js";
 import { ShadowRow } from "./shadow-row.js";
-import { NEW_SHADOW, blurOf, withBlur } from "./shadows.js";
+import { NEW_SHADOW, toBlur, toWithBlur } from "./shadows.js";
 import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { createProxyEdit } from "./use-proxy-edit.js";
 
 const BLUR_PART: ShiftPart = {
   key: "blur",
-  map: (raw, change) => withBlur(raw, change(blurOf(raw) || "0")),
+  map: (raw, change) => toWithBlur(raw, change(toBlur(raw) || "0")),
 };
 
 const LayerBlur = ({ edit }: { readonly edit: DirectEdit }): ReactElement => {
   const { filter } = edit.values;
 
-  const blur = createProxyEdit(edit, "width", blurOf(filter), {
+  const blur = createProxyEdit(edit, "width", toBlur(filter), {
     isMixed: null,
     part: BLUR_PART,
     real: ["filter"],
-    write: (value) => ({ filter: withBlur(filter, value) }),
+    write: (value) => ({ filter: toWithBlur(filter, value) }),
   });
 
   return (

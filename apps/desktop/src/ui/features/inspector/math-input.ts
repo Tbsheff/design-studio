@@ -7,7 +7,7 @@ type Token =
 const TOKEN_RE = /\s*(?:(\d*\.?\d+)(px|rem|em|%)?|([-+*/()]))/iuy;
 const OPERATOR_RE = /[-+*/()]/u;
 
-const tokenize = (raw: string): Token[] | null => {
+const listTokens = (raw: string): Token[] | null => {
   const tokens: Token[] = [];
   TOKEN_RE.lastIndex = 0;
   let at = 0;
@@ -45,7 +45,7 @@ interface Evaluated {
   readonly units: Set<string>;
 }
 
-const evaluateTokens = (tokens: Token[]): Evaluated | null => {
+const runTokens = (tokens: Token[]): Evaluated | null => {
   let index = 0;
   const units = new Set<string>();
   const peek = (): Token | undefined => tokens[index];
@@ -145,16 +145,16 @@ const evaluateTokens = (tokens: Token[]): Evaluated | null => {
   return { units, value };
 };
 
-const evaluateMath = (
+const runMath = (
   raw: string
 ): { readonly value: number; readonly unit: string } | null => {
-  const tokens = tokenize(raw);
+  const tokens = listTokens(raw);
 
   if (!tokens || tokens.length === 0) {
     return null;
   }
 
-  const result = evaluateTokens(tokens);
+  const result = runTokens(tokens);
 
   if (!result || result.units.size > 1) {
     return null;
@@ -165,7 +165,7 @@ const evaluateMath = (
 
 const RELATIVE_RE = /^(\+=?|-=)/u;
 
-const resolveNumberInput = (
+const toNumberInput = (
   raw: string,
   current: string,
   defaultUnit: string
@@ -177,7 +177,7 @@ const resolveNumberInput = (
   }
 
   const relative = RELATIVE_RE.exec(text)?.[0] ?? "";
-  const result = evaluateMath(text.slice(relative.length));
+  const result = runMath(text.slice(relative.length));
 
   if (!result) {
     return null;
@@ -202,4 +202,4 @@ const resolveNumberInput = (
   );
 };
 
-export { evaluateMath, resolveNumberInput };
+export { runMath, toNumberInput };

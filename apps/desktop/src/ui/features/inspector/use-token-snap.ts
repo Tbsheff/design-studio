@@ -49,7 +49,7 @@ const useTokenUi = (): TokenUi | null => useContext(TokenUiContext);
 
 const NOTE_MS = 8000;
 
-const snapTarget = (
+const toSnapTarget = (
   prop: DirectStyleProperty,
   value: string,
   entries: CompiledTokenEntry[],
@@ -120,7 +120,7 @@ const useTokenSnap = (
         continue;
       }
 
-      const target = snapTarget(prop, value, token.entries, token.mode);
+      const target = toSnapTarget(prop, value, token.entries, token.mode);
 
       if (!target) {
         continue;
@@ -159,6 +159,12 @@ const useTokenSnap = (
   );
 };
 
-export { TokenUiContext, useTokenUi, snapTarget, useSnapSetting, useTokenSnap };
+export {
+  TokenUiContext,
+  useTokenUi,
+  toSnapTarget,
+  useSnapSetting,
+  useTokenSnap,
+};
 
 export type { SnapNote, CreateRequest, TokenUi };

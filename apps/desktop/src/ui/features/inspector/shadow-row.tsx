@@ -7,7 +7,7 @@ import { PARTS, fieldPart, writeShadows } from "./effects-model.js";
 import type { Field, ShadowView } from "./effects-model.js";
 import { ColorField } from "./inspector-fields.js";
 import { PlainNumberField } from "./plain-number-field.js";
-import { formatShadows } from "./shadows.js";
+import { toShadowsText } from "./shadows.js";
 import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { createProxyEdit } from "./use-proxy-edit.js";
@@ -29,7 +29,7 @@ const ShadowRow = ({
   const replace = (
     patch: Partial<Shadow>
   ): { readonly "box-shadow": string } => ({
-    "box-shadow": formatShadows(
+    "box-shadow": toShadowsText(
       list.map((shadowValue, indexValue) =>
         indexValue === index ? { ...shadowValue, ...patch } : shadowValue
       )

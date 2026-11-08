@@ -29,7 +29,7 @@ const isFlexDisplay = (display: string): boolean =>
 const isGridDisplay = (display: string): boolean =>
   display === "grid" || display === "inline-grid";
 
-const parentLayout = (styles: Record<string, string>): ParentLayout => {
+const toParentLayout = (styles: Record<string, string>): ParentLayout => {
   const display = (styles["parent-display"] ?? "").trim();
   const direction = (styles["parent-flex-direction"] ?? "").trim();
 
@@ -40,7 +40,7 @@ const parentLayout = (styles: Record<string, string>): ParentLayout => {
   };
 };
 
-const axisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
+const toAxisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
   if (!parent.isFlex) {
     return "none";
   }
@@ -52,7 +52,7 @@ const axisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
   return "cross";
 };
 
-const flexGrow = (flex: string): number => {
+const toFlexGrow = (flex: string): number => {
   const first = flex.trim().split(/\s+/u)[0] ?? "";
 
   if (first === "auto") {
@@ -87,7 +87,7 @@ const BLOCK_DISPLAYS = new Set([
   "flow-root",
 ]);
 
-const sizeFacts = (styles: Record<string, string>): SizeFacts => ({
+const toSizeFacts = (styles: Record<string, string>): SizeFacts => ({
   authored: {
     height: (styles["authored-height"] ?? "").trim(),
     width: (styles["authored-width"] ?? "").trim(),
@@ -152,16 +152,16 @@ const toFillOrHug = (isFill: boolean): SizeMode => {
   return "hug";
 };
 
-const naturalMode = (
+const toNaturalMode = (
   axis: Axis,
   values: Values,
   parent: ParentLayout,
   facts: SizeFacts
 ): SizeMode => {
-  const role = axisRole(axis, parent);
+  const role = toAxisRole(axis, parent);
 
   if (role === "main") {
-    return toFillOrHug(flexGrow(values.flex) > 0);
+    return toFillOrHug(toFlexGrow(values.flex) > 0);
   }
 
   if (role === "cross") {
@@ -175,7 +175,7 @@ const naturalMode = (
   return toFillOrHug(axis === "width" && BLOCK_DISPLAYS.has(facts.display));
 };
 
-const authoredMode = (size: string): SizeMode | null => {
+const toAuthoredMode = (size: string): SizeMode | null => {
   if (size === "" || size === "auto") {
     return null;
   }
@@ -191,15 +191,15 @@ const authoredMode = (size: string): SizeMode | null => {
   return "fixed";
 };
 
-const sizeModeOf = (
+const toSizeMode = (
   axis: Axis,
   values: Values,
   parent: ParentLayout,
   facts?: SizeFacts
 ): SizeMode => {
-  const role = axisRole(axis, parent);
+  const role = toAxisRole(axis, parent);
 
-  if (role === "main" && flexGrow(values.flex) > 0) {
+  if (role === "main" && toFlexGrow(values.flex) > 0) {
     return "fill";
   }
 
@@ -208,25 +208,25 @@ const sizeModeOf = (
       return "fill";
     }
 
-    return authoredMode(values[axis].trim()) ?? "fixed";
+    return toAuthoredMode(values[axis].trim()) ?? "fixed";
   }
 
   return (
-    authoredMode(facts.authored[axis]) ??
-    naturalMode(axis, values, parent, facts)
+    toAuthoredMode(facts.authored[axis]) ??
+    toNaturalMode(axis, values, parent, facts)
   );
 };
 
-const clearing = (
+const toClearing = (
   axis: Axis,
   values: Values,
   parent: ParentLayout
 ): Partial<StyleValues> => {
-  const role = axisRole(axis, parent);
+  const role = toAxisRole(axis, parent);
 
   const patch: Partial<StyleValues> = {};
 
-  if (role === "main" && flexGrow(values.flex) > 0) {
+  if (role === "main" && toFlexGrow(values.flex) > 0) {
     patch.flex = "";
   }
 
@@ -237,13 +237,13 @@ const clearing = (
   return patch;
 };
 
-const fillPatch = (
+const toFillPatch = (
   axis: Axis,
   values: Values,
   parent: ParentLayout,
   facts: SizeFacts
 ): Partial<StyleValues> => {
-  const role = axisRole(axis, parent);
+  const role = toAxisRole(axis, parent);
   if (role === "main") {
     if (facts.authored[axis]) {
       return { [axis]: "", flex: "1" };
@@ -271,7 +271,7 @@ const toNaturalSelf = (alignSelf: string): string => {
   return alignSelf;
 };
 
-const sizePatch = (
+const toSizePatch = (
   axis: Axis,
   mode: SizeMode,
   values: Values,
@@ -279,23 +279,23 @@ const sizePatch = (
   usedPx: string,
   facts?: SizeFacts
 ): Partial<StyleValues> => {
-  const clear = clearing(axis, values, parent);
+  const clear = toClearing(axis, values, parent);
 
   if (mode === "fixed") {
     return { [axis]: usedPx, ...clear };
   }
 
   if (!facts) {
-    return legacyPatch(axis, mode, values, parent, clear);
+    return toLegacyPatch(axis, mode, values, parent, clear);
   }
 
   if (mode === "fill") {
-    return fillPatch(axis, values, parent, facts);
+    return toFillPatch(axis, values, parent, facts);
   }
 
   const naturalSelf = toNaturalSelf(values["align-self"]);
 
-  const natural = naturalMode(
+  const natural = toNaturalMode(
     axis,
     { ...values, "align-self": naturalSelf, flex: "" },
     parent,
@@ -307,8 +307,8 @@ const sizePatch = (
   const sizedByRule =
     ruleSize !== "" &&
     ruleSize !== values[axis].trim() &&
-    authoredMode(ruleSize) !== "hug" &&
-    authoredMode(ruleSize) !== null;
+    toAuthoredMode(ruleSize) !== "hug" &&
+    toAuthoredMode(ruleSize) !== null;
 
   if (natural === "hug" && !sizedByRule) {
     return { [axis]: "", ...clear };
@@ -317,14 +317,14 @@ const sizePatch = (
   return { [axis]: "fit-content", ...clear };
 };
 
-const legacyPatch = (
+const toLegacyPatch = (
   axis: Axis,
   mode: SizeMode,
   values: Values,
   parent: ParentLayout,
   clear: Partial<StyleValues>
 ): Partial<StyleValues> => {
-  const role = axisRole(axis, parent);
+  const role = toAxisRole(axis, parent);
 
   const authoredSize =
     HUG_VALUES.has(values[axis].trim()) || values[axis].trim() === "100%";
@@ -355,7 +355,7 @@ interface AlignCell {
 
 const AXIS_VALUES = ["flex-start", "center", "flex-end"] as const;
 
-const alignSlot = (value: string): number | null => {
+const toAlignIndex = (value: string): number | null => {
   const valueValue = value.trim();
 
   if (
@@ -384,7 +384,7 @@ const alignSlot = (value: string): number | null => {
   return null;
 };
 
-const alignCell = (col: number, row: number, isRow: boolean): AlignCell => {
+const toAlignCell = (col: number, row: number, isRow: boolean): AlignCell => {
   const across = AXIS_VALUES[col] ?? "flex-start";
   const down = AXIS_VALUES[row] ?? "flex-start";
 
@@ -400,15 +400,15 @@ const toAlignSlot = (align: string): number | null => {
     return null;
   }
 
-  return alignSlot(align);
+  return toAlignIndex(align);
 };
 
-const activeCell = (
+const toActiveCell = (
   justify: string,
   align: string,
   isRow: boolean
 ): { readonly col: number; readonly row: number } | null => {
-  const offset = alignSlot(justify);
+  const offset = toAlignIndex(justify);
 
   const first = toAlignSlot(align);
 
@@ -427,15 +427,15 @@ export {
   SIZE_MODES,
   isFlexDisplay,
   isGridDisplay,
-  parentLayout,
-  axisRole,
-  flexGrow,
-  sizeFacts,
-  sizeModeOf,
-  sizePatch,
-  alignSlot,
-  alignCell,
-  activeCell,
+  toParentLayout,
+  toAxisRole,
+  toFlexGrow,
+  toSizeFacts,
+  toSizeMode,
+  toSizePatch,
+  toAlignIndex,
+  toAlignCell,
+  toActiveCell,
 };
 
 export type { Axis, SizeMode, AxisRole, ParentLayout, SizeFacts, AlignCell };

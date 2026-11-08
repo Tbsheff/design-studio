@@ -16,9 +16,9 @@ import {
   isTypingTarget,
 } from "../../platform/typing-target.js";
 import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
-import { multiBlockReason } from "./mixed-values.js";
+import { applyCommit, createCurrentEditRequest } from "./edit-request-model.js";
+import { toMultiBlockReason } from "./mixed-values.js";
 import { startOptimistic } from "./optimistic-edit.js";
-import { buildEditRequest, mergeCommit } from "./use-direct-edit.js";
 
 const SAVE_MS = 300;
 
@@ -74,20 +74,20 @@ const FLUSH_ON = new Set<BridgeToParent["type"]>([
 
 const shown = new Set<string>();
 
-const axisStyle = (
+const toAxisStyle = (
   prop: string,
   start: number,
   delta: number
 ): Record<string, string> =>
   delta === 0 ? {} : { [prop]: `${Math.round(start + delta)}px` };
 
-const nudgeStyle = (step: Step): Record<string, string> => {
+const toNudgeStyle = (step: Step): Record<string, string> => {
   const { base, dx, dy } = step;
 
   if (base.mode === "margin") {
     return {
-      ...axisStyle("margin-left", base.x, base.lockX ? 0 : dx),
-      ...axisStyle("margin-top", base.y, base.lockY ? 0 : dy),
+      ...toAxisStyle("margin-left", base.x, base.lockX ? 0 : dx),
+      ...toAxisStyle("margin-top", base.y, base.lockY ? 0 : dy),
     };
   }
 
@@ -96,12 +96,12 @@ const nudgeStyle = (step: Step): Record<string, string> => {
   }
 
   return {
-    ...axisStyle(
+    ...toAxisStyle(
       base.fromRight ? "right" : "left",
       base.x,
       base.fromRight ? -dx : dx
     ),
-    ...axisStyle(
+    ...toAxisStyle(
       base.fromBottom ? "bottom" : "top",
       base.y,
       base.fromBottom ? -dy : dy
@@ -120,7 +120,7 @@ const isMovable = (base: NudgeBase, dx: number, dy: number): boolean => {
   );
 };
 
-const burstKey = (selectors: string[]): string =>
+const toBurstKey = (selectors: string[]): string =>
   selectors.toSorted().join("\n");
 
 interface Saved {
@@ -130,10 +130,10 @@ interface Saved {
   readonly back: Record<string, string>;
 }
 
-const savedOf = (batch: Burst): Saved[] =>
+const toSaved = (batch: Burst): Saved[] =>
   batch.items.flatMap((item) => {
-    const style = nudgeStyle({ base: item.base, dx: batch.dx, dy: batch.dy });
-    const edit = buildEditRequest(item.target, style);
+    const style = toNudgeStyle({ base: item.base, dx: batch.dx, dy: batch.dy });
+    const edit = createCurrentEditRequest(item.target, style);
 
     if (!edit) {
       return [];
@@ -166,10 +166,12 @@ const shouldPickNew = (
     return true;
   }
 
-  return burstKey(picked) !== burstKey(current.map((entry) => entry.selector));
+  return (
+    toBurstKey(picked) !== toBurstKey(current.map((entry) => entry.selector))
+  );
 };
 
-const keysToCanvas = (): void => {
+const toCanvasKeys = (): void => {
   const focused = document.activeElement;
 
   if (
@@ -253,7 +255,7 @@ const useElementNudge = (options: Options): void => {
 
       for (const one of list) {
         live.current.setSelection((prev) =>
-          mergeCommit(prev, { selector: one.selector, style: one.back })
+          applyCommit(prev, { selector: one.selector, style: one.back })
         );
       }
 
@@ -262,7 +264,7 @@ const useElementNudge = (options: Options): void => {
 
     const save = async (batch: Burst): Promise<void> => {
       const cur = live.current;
-      const list = savedOf(batch);
+      const list = toSaved(batch);
 
       if (list.length === 0 || !cur.directionId) {
         return;
@@ -270,7 +272,7 @@ const useElementNudge = (options: Options): void => {
 
       for (const one of list) {
         cur.setSelection((prev) =>
-          mergeCommit(prev, { selector: one.selector, style: one.style })
+          applyCommit(prev, { selector: one.selector, style: one.style })
         );
       }
 
@@ -348,7 +350,7 @@ const useElementNudge = (options: Options): void => {
 
       const reason =
         picked.length > 1
-          ? multiBlockReason(picked.map((item) => item.target))
+          ? toMultiBlockReason(picked.map((item) => item.target))
           : picked[0]?.target.source
             ? null
             : NO_SOURCE_HINT;
@@ -377,7 +379,7 @@ const useElementNudge = (options: Options): void => {
     };
 
     const press = (wanted: NudgeItem[], dx: number, dy: number): void => {
-      const key = burstKey(wanted.map((item) => item.selector));
+      const key = toBurstKey(wanted.map((item) => item.selector));
 
       if (burst.current && burst.current.key !== key) {
         flush();
@@ -399,7 +401,7 @@ const useElementNudge = (options: Options): void => {
       for (const item of batch.items) {
         live.current.post({
           selector: item.target.selector,
-          style: nudgeStyle({ base: item.base, dx: batch.dx, dy: batch.dy }),
+          style: toNudgeStyle({ base: item.base, dx: batch.dx, dy: batch.dy }),
           type: "preview-style",
         });
       }
@@ -470,7 +472,7 @@ const useElementNudge = (options: Options): void => {
       }
 
       if (shouldPickNew(message, live.current.selection)) {
-        globalThis.setTimeout(() => editing || keysToCanvas(), 0);
+        globalThis.setTimeout(() => editing || toCanvasKeys(), 0);
       }
     });
 
@@ -483,7 +485,7 @@ const useElementNudge = (options: Options): void => {
     };
   }, [options.listen]);
 
-  const key = burstKey(options.selection.map((entry) => entry.selector));
+  const key = toBurstKey(options.selection.map((entry) => entry.selector));
   useEffect(() => {
     if (burst.current && key !== burst.current.key) {
       flushNow.current();
@@ -491,4 +493,4 @@ const useElementNudge = (options: Options): void => {
   }, [key]);
 };
 
-export { nudgeStyle, useElementNudge };
+export { toNudgeStyle, useElementNudge };

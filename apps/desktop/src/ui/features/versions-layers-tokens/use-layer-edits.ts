@@ -12,11 +12,11 @@ import { api, errorText } from "../../api.js";
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
 import { IS_MAC } from "../commands/index.js";
-import { pasteJsx } from "../inspector/paste-jsx.js";
+import { applyPasteJsx } from "../inspector/paste-jsx.js";
 import {
   NO_SOURCE,
-  dropRequest,
-  selectionTargets,
+  toDropRequest,
+  toSelectionTargets,
 } from "../inspector/structure-edits.js";
 import type { LayerDrop, SelectionOp } from "../inspector/structure-edits.js";
 import { COPY } from "./copy.js";
@@ -232,7 +232,7 @@ export function useLayerEdits(o: LayerEditsOptions): LayerEdits {
 
   const runOp = useCallback(
     (op: SelectionOp) => {
-      const targets = selectionTargets(live.current.selection);
+      const targets = toSelectionTargets(live.current.selection);
 
       if (targets) {
         void applyStructure({ op, targets });
@@ -244,7 +244,7 @@ export function useLayerEdits(o: LayerEditsOptions): LayerEdits {
   );
 
   const cutSelection = useCallback(() => {
-    const targets = selectionTargets(live.current.selection);
+    const targets = toSelectionTargets(live.current.selection);
 
     if (!targets) {
       return notify(NO_SOURCE);
@@ -255,11 +255,11 @@ export function useLayerEdits(o: LayerEditsOptions): LayerEdits {
 
   const pasteInto = useCallback(() => {
     const cur = live.current;
-    const into = selectionTargets(cur.selection.slice(-1))?.[0];
+    const into = toSelectionTargets(cur.selection.slice(-1))?.[0];
     const last = cur.selection.at(-1);
 
     if (!cut && cur.enabled && cur.directionId && last) {
-      return void pasteJsx(
+      return void applyPasteJsx(
         { projectId: cur.projectId, directionId: cur.directionId },
         last,
         notify
@@ -296,7 +296,7 @@ export function useLayerEdits(o: LayerEditsOptions): LayerEdits {
 
   const dropNode = useCallback(
     (id: number, drop: LayerDrop) => {
-      const request = dropRequest(
+      const request = toDropRequest(
         live.current.frames.tree?.nodes ?? [],
         id,
         drop,

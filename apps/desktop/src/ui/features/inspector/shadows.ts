@@ -21,7 +21,7 @@ const NEW_SHADOW: Shadow = {
 const LENGTH_RE = /^-?\d*\.?\d+(px|rem|em)?$/iu;
 const BLUR_RE = /^blur\(\s*([^()]*)\s*\)$/iu;
 
-const splitTopLevel = (value: string, separator: "," | " "): string[] => {
+const listTopLevel = (value: string, separator: "," | " "): string[] => {
   const parts: string[] = [];
   let depth = 0;
   let current = "";
@@ -55,7 +55,7 @@ const splitTopLevel = (value: string, separator: "," | " "): string[] => {
   return parts;
 };
 
-const tidyLength = (raw: string): string => {
+const toTidyLength = (raw: string): string => {
   const parsed = parseNumber(raw);
 
   if (!parsed) {
@@ -67,16 +67,16 @@ const tidyLength = (raw: string): string => {
     : formatNumber(parsed.value, parsed.unit || "px");
 };
 
-const parseOne = (raw: string): Shadow | null => {
+const toShadow = (raw: string): Shadow | null => {
   const lengths: string[] = [];
   const colors: string[] = [];
   let inset = false;
 
-  for (const token of splitTopLevel(raw, " ")) {
+  for (const token of listTopLevel(raw, " ")) {
     if (token.toLowerCase() === "inset") {
       inset = true;
     } else if (LENGTH_RE.test(token)) {
-      lengths.push(tidyLength(token));
+      lengths.push(toTidyLength(token));
     } else {
       colors.push(token);
     }
@@ -98,7 +98,7 @@ const parseOne = (raw: string): Shadow | null => {
   };
 };
 
-const parseShadows = (value: string): Shadow[] | null => {
+const toShadows = (value: string): Shadow[] | null => {
   const text = value.trim();
 
   if (text === "" || text.toLowerCase() === "none") {
@@ -107,8 +107,8 @@ const parseShadows = (value: string): Shadow[] | null => {
 
   const list: Shadow[] = [];
 
-  for (const part of splitTopLevel(text, ",")) {
-    const shadow = parseOne(part);
+  for (const part of listTopLevel(text, ",")) {
+    const shadow = toShadow(part);
 
     if (!shadow) {
       return null;
@@ -120,36 +120,36 @@ const parseShadows = (value: string): Shadow[] | null => {
   return list;
 };
 
-const formatOne = (shadow: Shadow): string => {
+const toShadowText = (shadow: Shadow): string => {
   const parts = [
     shadow.isInset ? "inset" : "",
-    tidyLength(shadow.x || "0"),
-    tidyLength(shadow.y || "0"),
-    tidyLength(shadow.blur || "0"),
-    tidyLength(shadow.spread || "0"),
+    toTidyLength(shadow.x || "0"),
+    toTidyLength(shadow.y || "0"),
+    toTidyLength(shadow.blur || "0"),
+    toTidyLength(shadow.spread || "0"),
     shadow.color.trim(),
   ];
 
   return parts.filter(Boolean).join(" ");
 };
 
-const formatShadows = (list: Shadow[]): string =>
-  list.map(formatOne).join(", ");
+const toShadowsText = (list: Shadow[]): string =>
+  list.map(toShadowText).join(", ");
 
-const blurOf = (filter: string): string => {
-  for (const part of splitTopLevel(filter, " ")) {
+const toBlur = (filter: string): string => {
+  for (const part of listTopLevel(filter, " ")) {
     const match = BLUR_RE.exec(part);
 
     if (match) {
-      return tidyLength(match[1] ?? "");
+      return toTidyLength(match[1] ?? "");
     }
   }
 
   return "";
 };
 
-const withBlur = (filter: string, blur: string): string => {
-  const others = splitTopLevel(
+const toWithBlur = (filter: string, blur: string): string => {
+  const others = listTopLevel(
     filter.trim().toLowerCase() === "none" ? "" : filter,
     " "
   ).filter((part) => !BLUR_RE.test(part));
@@ -162,11 +162,11 @@ const withBlur = (filter: string, blur: string): string => {
 
 export {
   NEW_SHADOW,
-  splitTopLevel,
-  parseShadows,
-  formatShadows,
-  blurOf,
-  withBlur,
+  listTopLevel,
+  toShadows,
+  toShadowsText,
+  toBlur,
+  toWithBlur,
 };
 
 export type { Shadow };

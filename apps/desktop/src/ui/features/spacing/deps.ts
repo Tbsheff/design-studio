@@ -17,7 +17,7 @@ export { resizeReadout } from "../canvas/use-resize-handles.js";
 
 export { useLive } from "../../platform/live-store.js";
 
-export { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
+export { applyCommit, createCurrentEditRequest } from "../inspector/index.js";
 
 export { BOX_SIDES } from "@design-studio/contracts/spacing";
 

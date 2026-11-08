@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  activeCell,
-  alignCell,
-  axisRole,
-  parentLayout,
-  sizeModeOf,
-  sizePatch,
+  toActiveCell,
+  toAlignCell,
+  toAxisRole,
+  toParentLayout,
+  toSizeMode,
+  toSizePatch,
 } from "./features/inspector/sizing";
 
-const rowParent = parentLayout({
+const rowParent = toParentLayout({
   "parent-display": "flex",
   "parent-flex-direction": "row",
 });
-const columnParent = parentLayout({
+const columnParent = toParentLayout({
   "parent-display": "inline-flex",
   "parent-flex-direction": "column",
 });
-const blockParent = parentLayout({
+const blockParent = toParentLayout({
   "parent-display": "block",
   "parent-flex-direction": "row",
 });
@@ -28,42 +28,42 @@ const plain = {
   "align-self": "auto",
 };
 
-describe(axisRole, () => {
+describe(toAxisRole, () => {
   it("maps width and height to the main and cross axis of a flex parent", () => {
-    expect(axisRole("width", rowParent)).toBe("main");
-    expect(axisRole("height", rowParent)).toBe("cross");
-    expect(axisRole("width", columnParent)).toBe("cross");
-    expect(axisRole("height", columnParent)).toBe("main");
-    expect(axisRole("width", blockParent)).toBe("none");
+    expect(toAxisRole("width", rowParent)).toBe("main");
+    expect(toAxisRole("height", rowParent)).toBe("cross");
+    expect(toAxisRole("width", columnParent)).toBe("cross");
+    expect(toAxisRole("height", columnParent)).toBe("main");
+    expect(toAxisRole("width", blockParent)).toBe("none");
   });
 });
 
-describe(sizePatch, () => {
+describe(toSizePatch, () => {
   it("fill writes flex: 1 on the main axis of a flex parent", () => {
-    expect(sizePatch("width", "fill", plain, rowParent, "240px")).toEqual({
+    expect(toSizePatch("width", "fill", plain, rowParent, "240px")).toEqual({
       flex: "1",
     });
-    expect(sizePatch("height", "fill", plain, columnParent, "80px")).toEqual({
+    expect(toSizePatch("height", "fill", plain, columnParent, "80px")).toEqual({
       flex: "1",
     });
   });
 
   it("fill writes align-self: stretch and clears the size on the cross axis", () => {
-    expect(sizePatch("height", "fill", plain, rowParent, "80px")).toEqual({
+    expect(toSizePatch("height", "fill", plain, rowParent, "80px")).toEqual({
       "align-self": "stretch",
       height: "",
     });
   });
 
   it("fill writes 100% outside flex", () => {
-    expect(sizePatch("width", "fill", plain, blockParent, "240px")).toEqual({
+    expect(toSizePatch("width", "fill", plain, blockParent, "240px")).toEqual({
       width: "100%",
     });
   });
 
   it("hug writes fit-content and clears a flex grow", () => {
     expect(
-      sizePatch(
+      toSizePatch(
         "width",
         "hug",
         { ...plain, flex: "1 1 0%" },
@@ -71,14 +71,14 @@ describe(sizePatch, () => {
         "240px"
       )
     ).toEqual({ width: "fit-content", flex: "" });
-    expect(sizePatch("height", "hug", plain, blockParent, "80px")).toEqual({
+    expect(toSizePatch("height", "hug", plain, blockParent, "80px")).toEqual({
       height: "fit-content",
     });
   });
 
   it("fixed writes the used px and clears stretch", () => {
     expect(
-      sizePatch(
+      toSizePatch(
         "height",
         "fixed",
         { ...plain, height: "", "align-self": "stretch" },
@@ -87,7 +87,7 @@ describe(sizePatch, () => {
       )
     ).toEqual({ height: "80px", "align-self": "" });
     expect(
-      sizePatch(
+      toSizePatch(
         "width",
         "fixed",
         { ...plain, width: "fit-content" },
@@ -97,15 +97,15 @@ describe(sizePatch, () => {
     ).toEqual({ width: "132px" });
   });
 
-  it("round-trips each mode through sizeModeOf", () => {
+  it("round-trips each mode through toSizeMode", () => {
     for (const parent of [rowParent, columnParent, blockParent]) {
       for (const axis of ["width", "height"] as const) {
         for (const mode of ["hug", "fill", "fixed"] as const) {
           const next = {
             ...plain,
-            ...sizePatch(axis, mode, plain, parent, "100px"),
+            ...toSizePatch(axis, mode, plain, parent, "100px"),
           };
-          expect(sizeModeOf(axis, next, parent)).toBe(mode);
+          expect(toSizeMode(axis, next, parent)).toBe(mode);
         }
       }
     }
@@ -114,19 +114,25 @@ describe(sizePatch, () => {
 
 describe("align grid", () => {
   it("maps a cell to justify and align by direction", () => {
-    expect(alignCell(1, 2, true)).toEqual({
+    expect(toAlignCell(1, 2, true)).toEqual({
       justify: "center",
       align: "flex-end",
     });
-    expect(alignCell(1, 2, false)).toEqual({
+    expect(toAlignCell(1, 2, false)).toEqual({
       justify: "flex-end",
       align: "center",
     });
   });
 
   it("finds the active cell and none for stretch", () => {
-    expect(activeCell("center", "flex-end", true)).toEqual({ col: 1, row: 2 });
-    expect(activeCell("flex-end", "center", false)).toEqual({ col: 1, row: 2 });
-    expect(activeCell("normal", "normal", true)).toBeNull();
+    expect(toActiveCell("center", "flex-end", true)).toEqual({
+      col: 1,
+      row: 2,
+    });
+    expect(toActiveCell("flex-end", "center", false)).toEqual({
+      col: 1,
+      row: 2,
+    });
+    expect(toActiveCell("normal", "normal", true)).toBeNull();
   });
 });

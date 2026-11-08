@@ -13,19 +13,19 @@ import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import {
   SIZE_MODES,
-  parentLayout,
-  sizeFacts,
-  sizeModeOf,
-  sizePatch,
+  toParentLayout,
+  toSizeFacts,
+  toSizeMode,
+  toSizePatch,
 } from "./sizing.js";
 import type { Axis, SizeFacts, SizeMode } from "./sizing.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-const liveFacts = (
+const toLiveFacts = (
   edit: DirectEdit,
   selection: SelectionContext
 ): SizeFacts => {
-  const facts = sizeFacts(selection.styles);
+  const facts = toSizeFacts(selection.styles);
 
   const drafted = (["width", "height"] as const).filter((axis) =>
     edit.dirty.includes(axis)
@@ -44,7 +44,7 @@ const liveFacts = (
       };
 };
 
-const roundedPx = (value: string): string => {
+const toRoundedPx = (value: string): string => {
   const px = Number.parseFloat(value);
 
   return value.endsWith("px") && Number.isFinite(px)
@@ -55,7 +55,7 @@ const roundedPx = (value: string): string => {
 interface FixedDrag {
   readonly axis: Axis;
   readonly edit: DirectEdit;
-  readonly parent: ReturnType<typeof parentLayout>;
+  readonly parent: ReturnType<typeof toParentLayout>;
   readonly facts: SizeFacts;
   readonly used: string;
 }
@@ -89,7 +89,7 @@ const startFixedDrag = (
     document.body.classList.add("ins-scrubbing");
     const next = Math.max(0, start.value + steps * (ev.shiftKey ? 10 : 1));
     fixedDrag.edit.preview(
-      sizePatch(
+      toSizePatch(
         fixedDrag.axis,
         "fixed",
         start.values,
@@ -212,7 +212,7 @@ const SizeValue = ({
   const label =
     SIZE_MODES.find((option) => option.value === mode)?.label ?? mode;
 
-  const px = roundedPx(used);
+  const px = toRoundedPx(used);
 
   return (
     <div
@@ -252,9 +252,9 @@ const SizeRow = ({
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
 }): ReactElement => {
-  const parent = parentLayout(selection.styles);
-  const facts = liveFacts(edit, selection);
-  const mode = sizeModeOf(axis, edit.values, parent, facts);
+  const parent = toParentLayout(selection.styles);
+  const facts = toLiveFacts(edit, selection);
+  const mode = toSizeMode(axis, edit.values, parent, facts);
   const name = axis === "width" ? "Width" : "Height";
   const used = selection.styles[`used-${axis}`] ?? edit.values[axis];
   const live = useLive(resizeReadout);
@@ -286,7 +286,10 @@ const SizeRow = ({
           value={mode}
           options={SIZE_MODES}
           onChange={(next: SizeMode) =>
-            write(edit, sizePatch(axis, next, edit.values, parent, used, facts))
+            write(
+              edit,
+              toSizePatch(axis, next, edit.values, parent, used, facts)
+            )
           }
         />
       </div>

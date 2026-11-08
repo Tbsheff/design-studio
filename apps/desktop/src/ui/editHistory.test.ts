@@ -8,8 +8,8 @@ import {
 import type { ShortcutState } from "./features/canvas/use-undo-shortcut";
 import {
   isHistoryStep,
-  refreshedSelection,
-  stepToast,
+  toRefreshedSelection,
+  toStepToast,
 } from "./features/inspector/use-edit-history";
 
 function key(
@@ -70,11 +70,11 @@ describe("history shortcut routing", () => {
 
 describe("edit history helpers", () => {
   it("words the status message plainly", () => {
-    expect(stepToast("undo", "Edit h1: color")).toBe("Undid edit h1: color");
-    expect(stepToast("redo", "Update tokens: --primary")).toBe(
+    expect(toStepToast("undo", "Edit h1: color")).toBe("Undid edit h1: color");
+    expect(toStepToast("redo", "Update tokens: --primary")).toBe(
       "Redid update tokens: --primary"
     );
-    expect(stepToast("undo", null)).toBe("Undid the last edit");
+    expect(toStepToast("undo", null)).toBe("Undid the last edit");
   });
 
   it("knows a history step version so a later Cmd+Z does not version-undo it", () => {
@@ -103,7 +103,11 @@ describe("edit history helpers", () => {
       text: "Old",
       styles: { color: "blue" },
     } as unknown as SelectionContext;
-    const next = refreshedSelection([base, other], ["h1", "p"], [fresh, null]);
+    const next = toRefreshedSelection(
+      [base, other],
+      ["h1", "p"],
+      [fresh, null]
+    );
     expect(next[0]).toMatchObject({
       selector: "h1",
       text: "Old",

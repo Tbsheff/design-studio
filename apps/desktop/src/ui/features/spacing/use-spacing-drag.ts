@@ -9,9 +9,9 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 
 import {
   api,
-  buildEditRequest,
+  createCurrentEditRequest,
   errorText,
-  mergeCommit,
+  applyCommit,
   snapOff,
   startOptimistic,
 } from "./deps.js";
@@ -41,7 +41,7 @@ import type {
   StyleMap,
 } from "./spacing-model.js";
 
-type EditStyle = Parameters<typeof buildEditRequest>[1];
+type EditStyle = Parameters<typeof createCurrentEditRequest>[1];
 
 interface SpacingHost {
   readonly directionId: string | null;
@@ -244,7 +244,7 @@ const saveDrag = async (
   const style = committedStyle(values, session.plan.property) as EditStyle;
   const back = committedStyle(session.base, session.plan.property) as EditStyle;
 
-  const req = buildEditRequest(
+  const req = createCurrentEditRequest(
     session.target,
     styleOf(session.plan.slots, session.result.px) as EditStyle
   );
@@ -253,7 +253,7 @@ const saveDrag = async (
     return false;
   }
 
-  host.setSelection((prev) => mergeCommit(prev, { selector, style }));
+  host.setSelection((prev) => applyCommit(prev, { selector, style }));
 
   const optimistic = startOptimistic(
     { post: host.post, refreshRects: host.refreshRects },
@@ -271,7 +271,7 @@ const saveDrag = async (
   } catch (error) {
     optimistic.failed(errorText(error));
     input().host.setSelection((prev) =>
-      mergeCommit(prev, { selector, style: back })
+      applyCommit(prev, { selector, style: back })
     );
     input().host.onError(errorText(error));
 

@@ -63,7 +63,7 @@ interface PageVar {
   readonly value: string;
 }
 
-const parseVars = (css: string[]): PageVar[] => {
+const listVars = (css: string[]): PageVar[] => {
   const found = new Map<string, string>();
 
   for (const text of css) {
@@ -92,7 +92,7 @@ const usePageVars = (
       const css = await getAuthoredCss(port.current, "html");
 
       if (live && css) {
-        setVars(parseVars([...css.rules.map((rule) => rule.css), css.inline]));
+        setVars(listVars([...css.rules.map((rule) => rule.css), css.inline]));
       }
     });
 
@@ -104,10 +104,10 @@ const usePageVars = (
   return vars;
 };
 
-const rowKey = (row: Pick<StyleValueRow, "kind" | "value">): string =>
+const toRowKey = (row: Pick<StyleValueRow, "kind" | "value">): string =>
   `${row.kind}|${row.value}`;
 
-const requestStyles = (
+const getStyles = (
   port: PreviewPort | null,
   query: StyleQuery,
   select: boolean
@@ -149,7 +149,7 @@ const requestStyles = (
   });
 };
 
-const lookupFor = (tokens: DesignTokens | null): TokenLookup | null => {
+const toLookup = (tokens: DesignTokens | null): TokenLookup | null => {
   if (!tokens || tokens.entries.length === 0) {
     return null;
   }
@@ -173,7 +173,7 @@ const useStyleScan = (
   useEffect(() => {
     let live = true;
     startTransition(async () => {
-      const reply = await requestStyles(port.current, queryRef.current, false);
+      const reply = await getStyles(port.current, queryRef.current, false);
 
       if (live) {
         setHits(reply ? reply.result.hits : []);
@@ -209,9 +209,9 @@ export {
   KIND_LABEL,
   PICK_SHOWN,
   ROWS_SHOWN,
-  lookupFor,
-  requestStyles,
-  rowKey,
+  toLookup,
+  getStyles,
+  toRowKey,
   usePageVars,
   useStyleScan,
 };

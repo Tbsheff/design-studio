@@ -24,3 +24,5 @@ export { useEditVariant } from "./edit-variant.js";
 export { inspectorEmptyReason, isDirectEditable } from "./inspector-model.js";
 
 export { canPolishRun, POLISH_REQUEST } from "./polish-model.js";
+
+export { applyCommit, createCurrentEditRequest } from "./edit-request-model.js";

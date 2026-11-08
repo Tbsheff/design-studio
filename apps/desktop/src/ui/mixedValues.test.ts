@@ -4,10 +4,10 @@ import { describe, expect, it } from "vitest";
 import { nextSelection } from "./features/canvas/index";
 import { valuesFromStyles } from "./features/inspector/css-values";
 import {
-  batchEdits,
+  toBatchEdits,
   hasCurrentDependency,
-  mergeValues,
-  multiBlockReason,
+  toMergedValues,
+  toMultiBlockReason,
 } from "./features/inspector/mixed-values";
 
 function card(
@@ -27,9 +27,9 @@ function card(
   };
 }
 
-describe(mergeValues, () => {
+describe(toMergedValues, () => {
   it("keeps shared values and marks differing ones as mixed with an empty value", () => {
-    const merged = mergeValues([
+    const merged = toMergedValues([
       valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
       valuesFromStyles({ "border-radius": "4px", color: "rgb(0, 0, 0)" }),
       valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
@@ -41,7 +41,7 @@ describe(mergeValues, () => {
   });
 
   it("marks a padding side as mixed when only that side differs", () => {
-    const merged = mergeValues([
+    const merged = toMergedValues([
       valuesFromStyles({ padding: "8px" }),
       valuesFromStyles({ padding: "8px 8px 16px" }),
     ]);
@@ -51,7 +51,7 @@ describe(mergeValues, () => {
   });
 });
 
-describe(batchEdits, () => {
+describe(toBatchEdits, () => {
   it("writes the value to every element whose own value differs, in one list", () => {
     const selections = [
       card(3, { "border-radius": "4px" }),
@@ -59,7 +59,7 @@ describe(batchEdits, () => {
       card(5, { "border-radius": "8px" }),
     ];
     const bases = selections.map((s) => valuesFromStyles(s.styles));
-    const edits = batchEdits(selections, bases, { "border-radius": "8px" });
+    const edits = toBatchEdits(selections, bases, { "border-radius": "8px" });
     expect(edits.map((e) => [e.source.line, e.style])).toEqual([
       [3, { "border-radius": "8px" }],
       [4, { "border-radius": "8px" }],
@@ -70,7 +70,7 @@ describe(batchEdits, () => {
   it("returns no edits when nothing changes", () => {
     const selections = [card(3, { color: "red" }), card(4, { color: "red" })];
     expect(
-      batchEdits(
+      toBatchEdits(
         selections,
         selections.map((s) => valuesFromStyles(s.styles)),
         { color: "red" }
@@ -79,20 +79,20 @@ describe(batchEdits, () => {
   });
 });
 
-describe(multiBlockReason, () => {
+describe(toMultiBlockReason, () => {
   it("allows distinct source locations", () => {
-    expect(multiBlockReason([card(3, {}), card(4, {})])).toBeNull();
+    expect(toMultiBlockReason([card(3, {}), card(4, {})])).toBeNull();
   });
 
   it("refuses elements without a source", () => {
-    expect(multiBlockReason([card(3, {}), card(4, {}, false)])).toMatch(
+    expect(toMultiBlockReason([card(3, {}), card(4, {}, false)])).toMatch(
       /no source location/
     );
   });
 
   it("refuses elements that share one source location, as from a .map()", () => {
     expect(
-      multiBlockReason([
+      toMultiBlockReason([
         card(3, {}),
         { ...card(3, {}), selector: "li:nth-child(2)" },
       ])
@@ -101,7 +101,7 @@ describe(multiBlockReason, () => {
 
   it("refuses more elements than one batch takes", () => {
     expect(
-      multiBlockReason(Array.from({ length: 51 }, (_, i) => card(i + 1, {})))
+      toMultiBlockReason(Array.from({ length: 51 }, (_, i) => card(i + 1, {})))
     ).toMatch(/50 elements or fewer/);
   });
 });

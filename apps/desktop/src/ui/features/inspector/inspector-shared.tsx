@@ -18,7 +18,7 @@ import type { KeyboardEvent, ReactElement } from "react";
 
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
-import { textHints } from "./use-direct-edit.js";
+import { toTextHints } from "./edit-request-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 interface InspectorApp {
@@ -73,7 +73,7 @@ const useTextSource = (
     savedAt,
   ]);
 
-  const hints = textHints(selection);
+  const hints = toTextHints(selection);
   useEffect(() => {
     if (!directionId || !source) {
       return setAnswer(null);

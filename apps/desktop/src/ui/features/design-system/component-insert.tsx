@@ -240,7 +240,7 @@ const DragGhost = ({
   );
 };
 
-const blockReason = (
+const toBlockReason = (
   selection: SelectionContext | undefined
 ): string | undefined => {
   if (!selection) {
@@ -265,7 +265,7 @@ const InsertMenu = ({
   selection: SelectionContext | undefined;
   onClose: () => void;
 }): ReactElement => {
-  const disabled = blockReason(selection);
+  const disabled = toBlockReason(selection);
   const tag = selection?.tag.toLowerCase() ?? "selection";
 
   const run = (position: InsertPosition) => (): void => {

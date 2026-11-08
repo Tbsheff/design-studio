@@ -30,14 +30,14 @@ const VOID = new Set([
   "embed",
 ]);
 
-const targetOf = (selection: SelectionContext): InsertTarget => ({
+const toTarget = (selection: SelectionContext): InsertTarget => ({
   selector: selection.selector,
   source: selection.source,
   tag: selection.tag.toLowerCase(),
   ...(selection.owners?.length ? { owners: selection.owners } : {}),
 });
 
-const clipboardText = async (): Promise<string | null> => {
+const getClipboardText = async (): Promise<string | null> => {
   try {
     return await navigator.clipboard.readText();
   } catch {
@@ -45,7 +45,7 @@ const clipboardText = async (): Promise<string | null> => {
   }
 };
 
-const openFigmaImport = async (
+const startFigmaImport = async (
   ids: { readonly projectId: string; readonly directionId: string },
   selection: SelectionContext,
   text: string,
@@ -74,18 +74,18 @@ const openFigmaImport = async (
       ids,
       onClose: close,
       onDone: notify,
-      target: targetOf(selection),
+      target: toTarget(selection),
       text,
     })
   );
 };
 
-const pasteJsx = async (
+const applyPasteJsx = async (
   ids: { readonly projectId: string; readonly directionId: string },
   selection: SelectionContext,
   notify: (message: string) => void
 ): Promise<void> => {
-  const jsx = (await clipboardText())?.trim();
+  const jsx = (await getClipboardText())?.trim();
 
   if (jsx === undefined) {
     return notify(
@@ -94,7 +94,7 @@ const pasteJsx = async (
   }
 
   if (looksLikeFigmaNodes(jsx) || looksLikeFigmaLink(jsx)) {
-    return openFigmaImport(ids, selection, jsx, notify);
+    return startFigmaImport(ids, selection, jsx, notify);
   }
 
   if (!jsx.startsWith("<")) {
@@ -111,7 +111,7 @@ const pasteJsx = async (
     const result = await insertApi.insertJsx(ids.projectId, ids.directionId, {
       jsx,
       position,
-      target: targetOf(selection),
+      target: toTarget(selection),
     });
 
     const added = (result.imports ?? []).filter((item) => item.added).length;
@@ -123,4 +123,4 @@ const pasteJsx = async (
   }
 };
 
-export { pasteJsx };
+export { applyPasteJsx };

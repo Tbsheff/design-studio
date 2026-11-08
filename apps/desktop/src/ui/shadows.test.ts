@@ -2,22 +2,22 @@ import { describe, expect, it } from "vitest";
 
 import {
   NEW_SHADOW,
-  blurOf,
-  formatShadows,
-  parseShadows,
-  splitTopLevel,
-  withBlur,
+  toBlur,
+  toShadowsText,
+  toShadows,
+  listTopLevel,
+  toWithBlur,
 } from "./features/inspector/shadows";
 
-describe(parseShadows, () => {
+describe(toShadows, () => {
   it("reads none and empty as no shadows", () => {
-    expect(parseShadows("none")).toEqual([]);
-    expect(parseShadows("")).toEqual([]);
+    expect(toShadows("none")).toEqual([]);
+    expect(toShadows("")).toEqual([]);
   });
 
   it("reads the authored order with commas inside rgb() and var()", () => {
     expect(
-      parseShadows(
+      toShadows(
         "0 4px 12px 0 rgb(0 0 0 / 0.12), inset 0 1px 2px var(--shadow, rgba(0, 0, 0, 0.2))"
       )
     ).toEqual([
@@ -41,7 +41,7 @@ describe(parseShadows, () => {
   });
 
   it("reads the computed order with the color first", () => {
-    expect(parseShadows("rgba(0, 0, 0, 0.12) 0px 4px 12px 0px")).toEqual([
+    expect(toShadows("rgba(0, 0, 0, 0.12) 0px 4px 12px 0px")).toEqual([
       {
         x: "0",
         y: "4px",
@@ -54,7 +54,7 @@ describe(parseShadows, () => {
   });
 
   it("fills missing blur and spread with 0", () => {
-    expect(parseShadows("2px 3px red")).toEqual([
+    expect(toShadows("2px 3px red")).toEqual([
       {
         x: "2px",
         y: "3px",
@@ -67,50 +67,52 @@ describe(parseShadows, () => {
   });
 
   it("refuses values it cannot map to fields", () => {
-    expect(parseShadows("4px red blue")).toBeNull();
-    expect(parseShadows("red")).toBeNull();
+    expect(toShadows("4px red blue")).toBeNull();
+    expect(toShadows("red")).toBeNull();
   });
 });
 
-describe(formatShadows, () => {
+describe(toShadowsText, () => {
   it("writes the default new shadow", () => {
-    expect(formatShadows([NEW_SHADOW])).toBe("0 4px 12px 0 rgb(0 0 0 / 0.12)");
+    expect(toShadowsText([NEW_SHADOW])).toBe("0 4px 12px 0 rgb(0 0 0 / 0.12)");
   });
 
   it("round-trips a list", () => {
     const value =
       "0 4px 12px 0 var(--color-ink), inset 1px 1px 0 0 rgb(255 255 255 / 0.5)";
-    const parsed = parseShadows(value);
+    const parsed = toShadows(value);
     expect(parsed).not.toBeNull();
-    expect(formatShadows(parsed ?? [])).toBe(value);
-    expect(parseShadows(formatShadows(parsed ?? []))).toEqual(parsed);
+    expect(toShadowsText(parsed ?? [])).toBe(value);
+    expect(toShadows(toShadowsText(parsed ?? []))).toEqual(parsed);
   });
 
   it("writes an empty list as an empty value", () => {
-    expect(formatShadows([])).toBe("");
+    expect(toShadowsText([])).toBe("");
   });
 });
 
 describe("layer blur", () => {
   it("reads blur from a filter list", () => {
-    expect(blurOf("none")).toBe("");
-    expect(blurOf("blur(4px)")).toBe("4px");
-    expect(blurOf("brightness(1.2) blur(2px)")).toBe("2px");
+    expect(toBlur("none")).toBe("");
+    expect(toBlur("blur(4px)")).toBe("4px");
+    expect(toBlur("brightness(1.2) blur(2px)")).toBe("2px");
   });
 
   it("sets, replaces and removes blur and keeps other filters", () => {
-    expect(withBlur("none", "4px")).toBe("blur(4px)");
-    expect(withBlur("brightness(1.2) blur(2px)", "8px")).toBe(
+    expect(toWithBlur("none", "4px")).toBe("blur(4px)");
+    expect(toWithBlur("brightness(1.2) blur(2px)", "8px")).toBe(
       "brightness(1.2) blur(8px)"
     );
-    expect(withBlur("brightness(1.2) blur(2px)", "0")).toBe("brightness(1.2)");
-    expect(withBlur("blur(2px)", "")).toBe("");
+    expect(toWithBlur("brightness(1.2) blur(2px)", "0")).toBe(
+      "brightness(1.2)"
+    );
+    expect(toWithBlur("blur(2px)", "")).toBe("");
   });
 });
 
-describe(splitTopLevel, () => {
+describe(listTopLevel, () => {
   it("ignores separators inside parentheses", () => {
-    expect(splitTopLevel("a(1, 2), b", ",")).toEqual(["a(1, 2)", "b"]);
-    expect(splitTopLevel("rgb(0 0 0) 1px", " ")).toEqual(["rgb(0 0 0)", "1px"]);
+    expect(listTopLevel("a(1, 2), b", ",")).toEqual(["a(1, 2)", "b"]);
+    expect(listTopLevel("rgb(0 0 0) 1px", " ")).toEqual(["rgb(0 0 0)", "1px"]);
   });
 });

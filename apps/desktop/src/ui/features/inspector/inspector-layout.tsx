@@ -7,7 +7,7 @@ import { InspectorSection } from "./inspector-fields.js";
 import { MinMaxRows } from "./min-max-rows.js";
 import { isPositioned, PositionRows } from "./position-rows.js";
 import { SizeRow } from "./size-row.js";
-import { parentLayout } from "./sizing.js";
+import { toParentLayout } from "./sizing.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const SizeRows = ({
@@ -17,7 +17,7 @@ const SizeRows = ({
   readonly edit: DirectEdit;
   readonly selection: SelectionContext;
 }): ReactElement => {
-  const parent = parentLayout(selection.styles);
+  const parent = toParentLayout(selection.styles);
 
   return (
     <>

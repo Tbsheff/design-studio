@@ -20,7 +20,7 @@ type LayerDrop =
 const NO_SOURCE =
   "This element has no source location, so it cannot be changed here.";
 
-const selectionTargets = (
+const toSelectionTargets = (
   selection: SelectionContext[]
 ): StructureTarget[] | null => {
   if (selection.length === 0 || selection.some((entry) => !entry.source)) {
@@ -46,7 +46,7 @@ const toRefId = (drop: LayerDrop): number => {
   return drop.after;
 };
 
-const nodeTarget = (node: LayerNode | undefined): StructureTarget | null => {
+const toNodeTarget = (node: LayerNode | undefined): StructureTarget | null => {
   const source = parseLoc(node?.loc);
 
   return node && source ? { source, tag: node.tag } : null;
@@ -72,14 +72,14 @@ const toDragTargets = (
   return [dragged];
 };
 
-const dropRequest = (
+const toDropRequest = (
   nodes: LayerNode[],
   id: number,
   drop: LayerDrop,
   selection: SelectionContext[]
 ): StructureEditRequest | null => {
   const byId = (key: number): StructureTarget | null =>
-    nodeTarget(nodes.find((node) => node.id === key));
+    toNodeTarget(nodes.find((node) => node.id === key));
 
   const dragged = byId(id);
 
@@ -89,7 +89,7 @@ const dropRequest = (
     return null;
   }
 
-  const selected = selectionTargets(selection);
+  const selected = toSelectionTargets(selection);
 
   const targets = toDragTargets(selected, dragged);
 
@@ -151,7 +151,7 @@ const MENU_ORDER: StructureKey[] = [
   "delete",
 ];
 
-const blockReason = (
+const toBlockReason = (
   key: StructureKey,
   state: StructureMenuState
 ): string | undefined => {
@@ -170,13 +170,13 @@ const blockReason = (
   return undefined;
 };
 
-const structureMenuItems = (
+const toStructureMenuEntries = (
   state: StructureMenuState,
   run: (key: StructureKey) => void,
   leadDivider = false
 ): PreviewMenuItem[] =>
   MENU_ORDER.map((key, index) => {
-    const disabled = blockReason(key, state);
+    const disabled = toBlockReason(key, state);
 
     const label = toMenuLabel(key, state.count);
 
@@ -193,10 +193,10 @@ const structureMenuItems = (
 
 export {
   NO_SOURCE,
-  selectionTargets,
-  nodeTarget,
-  dropRequest,
-  structureMenuItems,
+  toSelectionTargets,
+  toNodeTarget,
+  toDropRequest,
+  toStructureMenuEntries,
 };
 
 export type { SelectionOp, LayerDrop, StructureMenuState };

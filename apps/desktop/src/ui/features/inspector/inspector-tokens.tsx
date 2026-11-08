@@ -24,7 +24,7 @@ import type { LintIssue } from "../versions-layers-tokens/token-lint.js";
 import type { AuthoredCss } from "./authored-css.js";
 import { copy } from "./copy.js";
 import type { StyleValues } from "./css-values.js";
-import { buildEditRequest } from "./use-direct-edit.js";
+import { createCurrentEditRequest } from "./edit-request-model.js";
 import type { DirectEdit, DirectEditCommit } from "./use-direct-edit.js";
 import { useSnapSetting, useTokenSnap } from "./use-token-snap.js";
 import type { CreateRequest, SnapNote, TokenUi } from "./use-token-snap.js";
@@ -356,7 +356,9 @@ const CreateTokenHost = (
       request.targets.map((part) => [part, `var(${cssVar})`])
     );
 
-    const apply = input.apply ? buildEditRequest(props.selection, style) : null;
+    const apply = input.apply
+      ? createCurrentEditRequest(props.selection, style)
+      : null;
 
     const result = await api.createToken(props.projectId, props.directionId, {
       group: input.group,

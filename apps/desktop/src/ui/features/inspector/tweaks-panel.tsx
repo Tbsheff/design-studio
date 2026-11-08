@@ -25,7 +25,7 @@ interface Group {
   readonly controls: TweakControl[];
 }
 
-const groupControls = (controls: TweakControl[]): Group[] => {
+const toGroupControls = (controls: TweakControl[]): Group[] => {
   const groups = new Map<string, TweakControl[]>();
 
   for (const control of controls) {
@@ -36,10 +36,10 @@ const groupControls = (controls: TweakControl[]): Group[] => {
   return [...groups].map(([label, list]) => ({ controls: list, label }));
 };
 
-const slug = (value: string): string =>
+const toSlug = (value: string): string =>
   value.toLowerCase().replaceAll(/[^a-z0-9]+/gu, "-");
 
-const readout = (control: TweakControl, value: TweakValue): string => {
+const toReadout = (control: TweakControl, value: TweakValue): string => {
   if (control.type === "range") {
     return `${value}${control.unit ?? ""}`;
   }
@@ -80,7 +80,7 @@ const RangeInput = ({
       max={control.max}
       step={control.step ?? "any"}
       value={value}
-      aria-valuetext={readout(control, value)}
+      aria-valuetext={toReadout(control, value)}
       onChange={(event) => onEdit(control, Number(event.currentTarget.value))}
     />
   );
@@ -200,7 +200,7 @@ const ControlRow = ({
           {control.label}
         </label>
         {control.type !== "color" && (
-          <span className="twk-readout">{readout(control, value)}</span>
+          <span className="twk-toReadout">{toReadout(control, value)}</span>
         )}
         <button
           type="button"
@@ -366,7 +366,7 @@ const TweaksPanel = ({
   const { state } = draft;
 
   const groups = useMemo(
-    () => groupControls(state?.controls ?? []),
+    () => toGroupControls(state?.controls ?? []),
     [state?.controls]
   );
 
@@ -401,11 +401,11 @@ const TweaksPanel = ({
           <section
             key={group.label}
             className="twk-section"
-            aria-labelledby={`twk-sec-${slug(group.label)}`}
+            aria-labelledby={`twk-sec-${toSlug(group.label)}`}
           >
             <h3
               className="twk-section-head"
-              id={`twk-sec-${slug(group.label)}`}
+              id={`twk-sec-${toSlug(group.label)}`}
             >
               {group.label}
             </h3>

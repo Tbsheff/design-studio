@@ -11,12 +11,12 @@ import { isApiConflict, isApiError } from "./api-error.js";
 import { changedProps, valuesFromStyles } from "./css-values.js";
 import type { StyleValues } from "./css-values.js";
 import {
-  addShift,
-  mergeValues,
-  multiBlockReason,
-  ownEdits,
-  shiftedStyle,
-  withoutShifts,
+  insertShift,
+  toMergedValues,
+  toMultiBlockReason,
+  toOwnEdits,
+  toShiftedStyle,
+  toWithoutShifts,
 } from "./mixed-values.js";
 import type { Shift, ShiftPart, Shifts } from "./mixed-values.js";
 import { startOptimistic } from "./optimistic-edit.js";
@@ -42,7 +42,7 @@ interface Options {
 
 const DEBOUNCE_MS = 250;
 
-const failureText = (err: unknown): string => {
+const toFailureText = (err: unknown): string => {
   if (isApiConflict(err)) {
     return "Agent is running. Wait or cancel.";
   }
@@ -66,12 +66,12 @@ const useDirectEdits = (
 
   const basesRef = useRef(bases);
   basesRef.current = bases;
-  const merged = useMemo(() => mergeValues(bases), [bases]);
+  const merged = useMemo(() => toMergedValues(bases), [bases]);
   const mergedRef = useRef(merged);
   mergedRef.current = merged;
 
   const blocked = useMemo(
-    () => multiBlockReason(options.selections),
+    () => toMultiBlockReason(options.selections),
     [options.selections]
   );
 
@@ -139,7 +139,7 @@ const useDirectEdits = (
       resetPreview();
       setDraft({});
       setShifts({});
-      setStatus({ kind: "error", message: failureText(err) });
+      setStatus({ kind: "error", message: toFailureText(err) });
     },
     [cancel, resetPreview, setDraft, setShifts]
   );
@@ -181,7 +181,7 @@ const useDirectEdits = (
 
     const style = pendingStyle();
     const sent = shifts.current;
-    const items = ownEdits(cur.selections, basesRef.current, style, sent);
+    const items = toOwnEdits(cur.selections, basesRef.current, style, sent);
     const edits = items.map((item) => item.edit);
 
     if (edits.length === 0) {
@@ -211,11 +211,11 @@ const useDirectEdits = (
           cur.onCommitted({ selector: item.edit.selector, style: item.style });
         }
 
-        setShifts(withoutShifts(shifts.current, [], sent));
+        setShifts(toWithoutShifts(shifts.current, [], sent));
         setStatus({ at: Date.now(), kind: "saved" });
       } catch (error: unknown) {
         for (const one of optimistic) {
-          one.failed(failureText(error));
+          one.failed(toFailureText(error));
         }
 
         fail(error);
@@ -255,7 +255,7 @@ const useDirectEdits = (
       }
 
       if (Object.keys(patch).some((prop) => prop in shifts.current)) {
-        setShifts(withoutShifts(shifts.current, Object.keys(patch)));
+        setShifts(toWithoutShifts(shifts.current, Object.keys(patch)));
       }
 
       setDraft({ ...draftRef.current, ...patch });
@@ -278,7 +278,7 @@ const useDirectEdits = (
         return;
       }
 
-      const next = addShift(shifts.current, props, delta, bounds, part);
+      const next = insertShift(shifts.current, props, delta, bounds, part);
       setShifts(next);
       const draft = { ...draftRef.current };
 
@@ -295,7 +295,7 @@ const useDirectEdits = (
 
       opts.current.selections.forEach((selectionContextValue2, indexValue) => {
         const own = basesRef.current[indexValue];
-        const style = own ? shiftedStyle(own, only) : {};
+        const style = own ? toShiftedStyle(own, only) : {};
 
         if (Object.keys(style).length > 0) {
           port?.post({
@@ -321,7 +321,7 @@ const useDirectEdits = (
       }
 
       setDraft(next);
-      setShifts(withoutShifts(shifts.current, props));
+      setShifts(toWithoutShifts(shifts.current, props));
       const port = opts.current.port.current;
       opts.current.selections.forEach((selectionContextValue3, indexValue2) => {
         const own = basesRef.current[indexValue2];
@@ -374,7 +374,7 @@ const useDirectEdits = (
       }
 
       setDraft(next);
-      setShifts(withoutShifts(shifts.current, Object.keys(style)));
+      setShifts(toWithoutShifts(shifts.current, Object.keys(style)));
       setStatus({ at: Date.now(), kind: "saved" });
     },
     [setDraft, setShifts]

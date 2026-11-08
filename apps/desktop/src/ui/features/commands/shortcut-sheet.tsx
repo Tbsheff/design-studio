@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { copy } from "./copy.js";
@@ -23,7 +24,11 @@ function pressedIds(event: KeyboardEvent): string[] {
   ).map((entry) => entry.id);
 }
 
-export function ShortcutSheet({ onClose }: { onClose: () => void }) {
+export function ShortcutSheet({
+  onClose,
+}: {
+  onClose: () => void;
+}): ReactElement {
   const [query, setQuery] = useState("");
   const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
   const timers = useRef(new Map<string, number>());
@@ -32,7 +37,7 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const live = timers.current;
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.repeat) {
         return;
       }
@@ -75,7 +80,7 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
 
     window.addEventListener("keydown", onKey, true);
 
-    return () => {
+    return (): void => {
       window.removeEventListener("keydown", onKey, true);
 
       for (const timer of live.values()) {

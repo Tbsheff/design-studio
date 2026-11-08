@@ -1,8 +1,8 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { InsertTarget } from "@design-studio/contracts/insert";
 import { UiSelect, useModalDialog } from "@design-studio/ui";
+import type { FormEvent, KeyboardEvent, ReactElement } from "react";
 import { useEffect, useState, useTransition } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
 
 import { COMPONENT_NAME } from "../../../shared/component-create.js";
 import type { ComponentFolder } from "../../../shared/component-create.js";
@@ -71,7 +71,7 @@ const useFolders = (ids: Props["ids"]) => {
   useEffect(() => {
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const list = await componentCreateApi.folders(
           ids.projectId,
@@ -98,7 +98,7 @@ const useFolders = (ids: Props["ids"]) => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [ids.projectId, ids.directionId]);
@@ -111,7 +111,7 @@ export const CreateComponentDialog = ({
   selection,
   onDone,
   onClose,
-}: Props) => {
+}: Props): ReactElement => {
   const [name, setName] = useState(() => suggestName(selection));
   const { folders, folder, setFolder, note } = useFolders(ids);
   const [busy, startTransition] = useTransition();
@@ -131,7 +131,7 @@ export const CreateComponentDialog = ({
 
   const count = selection.length;
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent): void => {
     event.preventDefault();
 
     if (nameProblem || busy || !folder) {
@@ -158,7 +158,7 @@ export const CreateComponentDialog = ({
     });
   };
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === "Escape") {
       event.stopPropagation();
     }

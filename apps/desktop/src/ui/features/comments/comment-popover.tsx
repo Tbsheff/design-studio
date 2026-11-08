@@ -1,5 +1,5 @@
+import type { KeyboardEvent, ReactElement, ReactNode } from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
 
 import { AvatarFace, CommentAuthor } from "./comment-avatar.js";
 import type { Breadcrumb, CardSide } from "./comment-placement.js";
@@ -84,7 +84,7 @@ export const CommentReplies = ({
 }: {
   comment: DesignComment;
   onDelete: (replyId: string) => void;
-}) => {
+}): ReactElement | null => {
   const initial = useProfileInitial();
   const replies = comment.replies ?? [];
 
@@ -133,7 +133,7 @@ const GrowingArea = (props: {
   onChange: (value: string) => void;
   onEnter: () => void;
   className?: string;
-}) => (
+}): ReactElement => (
   <textarea
     className={`comment-area ${props.className ?? ""}`}
     rows={1}
@@ -164,11 +164,11 @@ const ReplyBox = ({
 }: {
   comment: DesignComment;
   onReply: (text: string) => Promise<boolean>;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
   const [busy, startTransition] = useTransition();
 
-  const send = () => {
+  const send = (): void => {
     if (busy || text.trim() === "") {
       return;
     }
@@ -195,7 +195,7 @@ const ReplyBox = ({
   );
 };
 
-export const OpenCommentPopover = (props: OpenProps) => {
+export const OpenCommentPopover = (props: OpenProps): ReactElement => {
   const { comment } = props;
   const [text, setText] = useState(comment.text);
   const root = useRef<HTMLDivElement>(null);
@@ -213,7 +213,7 @@ export const OpenCommentPopover = (props: OpenProps) => {
     target?.focus({ preventScroll: true });
   }, [comment.id]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();

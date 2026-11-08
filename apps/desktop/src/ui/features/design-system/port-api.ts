@@ -94,6 +94,6 @@ const readFlowPlan = async (input: PlanRequest): Promise<PortFlowPlan> => {
 export const portApi = {
   flowPlan: readFlowPlan,
   plan: readPagePlan,
-  start: (input: PortStartRequest) =>
+  start: (input: PortStartRequest): Promise<PortStartResult> =>
     json<PortStartResult>("POST", "/api/port/start", input),
 };

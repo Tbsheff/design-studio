@@ -286,7 +286,7 @@ export const setCanvasFront = (
 export const useTokenFrameSync = (): void => {
   useBridge(tokenFrames, onTokenFrameMessage);
   useEffect(
-    () => () => {
+    () => (): void => {
       for (const channel of channels) {
         endHold(channel);
         channel.css = "";
@@ -319,6 +319,6 @@ export const useTokenFrames = (
       )
     );
 
-    return () => offs.forEach((off) => off());
+    return (): void => offs.forEach((off) => off());
   }, [slots, elements, kind, live]);
 };

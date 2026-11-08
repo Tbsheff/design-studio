@@ -284,7 +284,7 @@ export const useComponentInsert = (o: Options): void => {
 
   const host = useMemo<InsertHost>(
     () => ({
-      dragEnd(component, x, y) {
+      dragEnd(component, x, y): void {
         const last = drop.current;
         drop.current = null;
         pending.current = null;
@@ -301,7 +301,7 @@ export const useComponentInsert = (o: Options): void => {
 
         void run(component, last.inside ? "inside" : "after", last.selection);
       },
-      dragMove(x, y, onHint) {
+      dragMove(x, y, onHint): void {
         const point = localPoint(live.current.frames, x, y);
 
         if (!point) {
@@ -321,7 +321,7 @@ export const useComponentInsert = (o: Options): void => {
           y: point.y,
         });
       },
-      insert: (component, position) =>
+      insert: (component, position): undefined =>
         void run(component, position, live.current.selection.at(-1)),
     }),
     [run]
@@ -330,6 +330,6 @@ export const useComponentInsert = (o: Options): void => {
   useEffect(() => {
     insertBus.set(host);
 
-    return () => insertBus.clear(host);
+    return (): void => insertBus.clear(host);
   }, [host]);
 };

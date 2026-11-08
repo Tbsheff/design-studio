@@ -1,7 +1,7 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { KeyboardEvent, ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
 
 import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
@@ -46,7 +46,7 @@ const nextIndex = (
   return Math.min(count - 1, Math.max(0, target));
 };
 
-const NoneCard = () => (
+const NoneCard = (): ReactElement => (
   <>
     <span className="pack-specimen none" aria-hidden="true">
       <Icon name="close" size={14} />
@@ -63,7 +63,7 @@ const NoneCard = () => (
 const swatchValue = (pack: PackSummary, name: string): string | undefined =>
   pack.swatches.find((swatch) => swatch.name === name)?.value;
 
-const PackCard = ({ pack }: { pack: PackSummary }) => {
+const PackCard = ({ pack }: { pack: PackSummary }): ReactElement => {
   const colors = {
     background: swatchValue(pack, "bg"),
     color: swatchValue(pack, "fg"),
@@ -111,7 +111,7 @@ export const PackList = ({
   includeNone,
   onChoose,
   onTab,
-}: ListProps) => {
+}: ListProps): ReactElement => {
   const options: (PackSummary | null)[] = includeNone
     ? [null, ...(packs ?? [])]
     : (packs ?? []);
@@ -147,7 +147,7 @@ export const PackList = ({
     cards.current[active]?.focus({ preventScroll: false });
   }, [active, ready]);
 
-  const onKey = (e: KeyboardEvent) => {
+  const onKey = (e: KeyboardEvent): void => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
 

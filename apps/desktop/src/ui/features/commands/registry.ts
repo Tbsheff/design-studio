@@ -68,10 +68,10 @@ export function useCommands(source: Source): void {
   const ref = useRef(source);
   ref.current = source;
   useEffect(() => {
-    const entry = { current: () => ref.current() };
+    const entry = { current: (): Command[] => ref.current() };
     sources.set([...sources.get(), entry]);
 
-    return () => {
+    return (): void => {
       sources.set(sources.get().filter((e) => e !== entry));
     };
   }, []);

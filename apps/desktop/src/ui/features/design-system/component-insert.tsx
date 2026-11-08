@@ -4,8 +4,12 @@ import type {
   InsertableComponent,
   InsertableList,
 } from "@design-studio/contracts/insert";
+import type {
+  PointerEvent as ReactPointerEvent,
+  ReactElement,
+  ReactPortal,
+} from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 
 import { PreviewMenu } from "../canvas/preview-menu.js";
@@ -35,7 +39,7 @@ export const useInsertable = (
 
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const list = await insertApi.list(projectId, directionId);
 
@@ -51,7 +55,7 @@ export const useInsertable = (
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId, enabled, version, attempt]);
@@ -60,7 +64,7 @@ export const useInsertable = (
     [projectId, directionId]
   );
 
-  return { ...state, retry: () => setAttempt((n) => n + 1) };
+  return { ...state, retry: (): void => setAttempt((n) => n + 1) };
 };
 
 interface Drag {
@@ -106,17 +110,21 @@ const useCancelOnEscape = (active: boolean, cancel: () => void): void => {
       return;
     }
 
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && cancel();
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        cancel();
+      }
+    };
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [active, cancel]);
 };
 
 const swallowClick = (
   dragged: { current: boolean },
   event: React.MouseEvent
-) => {
+): void => {
   if (!dragged.current) {
     return;
   }
@@ -140,9 +148,10 @@ export const useComponentDrag = (): ComponentDrag => {
   useCancelOnEscape(ghost !== null, cancel);
 
   const handlers = (component: InsertableComponent) => ({
-    onClickCapture: (event: React.MouseEvent) => swallowClick(dragged, event),
+    onClickCapture: (event: React.MouseEvent): void =>
+      swallowClick(dragged, event),
     onPointerCancel: cancel,
-    onPointerDown(event: ReactPointerEvent<HTMLElement>) {
+    onPointerDown(event: ReactPointerEvent<HTMLElement>): void {
       if (event.button !== 0) {
         return;
       }
@@ -151,7 +160,7 @@ export const useComponentDrag = (): ComponentDrag => {
       drag.current = startDrag(component, event);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    onPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    onPointerMove(event: ReactPointerEvent<HTMLElement>): void {
       const cur = drag.current;
 
       if (!cur || cur.pointerId !== event.pointerId) {
@@ -184,7 +193,7 @@ export const useComponentDrag = (): ComponentDrag => {
           );
       });
     },
-    onPointerUp(event: ReactPointerEvent<HTMLElement>) {
+    onPointerUp(event: ReactPointerEvent<HTMLElement>): void {
       const cur = drag.current;
       drag.current = null;
       setGhost(null);
@@ -201,7 +210,11 @@ export const useComponentDrag = (): ComponentDrag => {
   return { ghost, handlers };
 };
 
-export const DragGhost = ({ ghost }: { ghost: ComponentDrag["ghost"] }) => {
+export const DragGhost = ({
+  ghost,
+}: {
+  ghost: ComponentDrag["ghost"];
+}): ReactPortal | null => {
   if (!ghost) {
     return null;
   }
@@ -248,12 +261,13 @@ export const InsertMenu = ({
   at: { x: number; y: number };
   selection: SelectionContext | undefined;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const disabled = blockReason(selection);
   const tag = selection?.tag.toLowerCase() ?? "selection";
 
-  const run = (position: InsertPosition) => () =>
+  const run = (position: InsertPosition) => (): void => {
     insertBus.get()?.insert(component, position);
+  };
 
   const items: PreviewMenuItem[] = [
     {

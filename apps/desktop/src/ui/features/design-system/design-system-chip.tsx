@@ -4,6 +4,7 @@ import type {
   CompiledTokenEntry,
 } from "@design-studio/contracts";
 import { Icon, useFitPopover, usePopover } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useCallback, useRef, useState, useEffect } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -68,7 +69,7 @@ const ChipDialogs = ({
   userPack,
   actions,
   onClose,
-}: ChipDialogsProps) => {
+}: ChipDialogsProps): ReactElement | null => {
   if (dialog === "change") {
     const from = system.directionId
       ? { directionId: system.directionId, projectId: system.projectId }
@@ -104,7 +105,13 @@ interface Load {
   error: string | null;
 }
 
-const ValueCell = ({ value, color }: { value: string; color: boolean }) => (
+const ValueCell = ({
+  value,
+  color,
+}: {
+  value: string;
+  color: boolean;
+}): ReactElement => (
   <span className="ds-value" data-tip={value}>
     {color && (
       <span
@@ -117,7 +124,7 @@ const ValueCell = ({ value, color }: { value: string; color: boolean }) => (
   </span>
 );
 
-const TokenRow = ({ entry }: { entry: CompiledTokenEntry }) => {
+const TokenRow = ({ entry }: { entry: CompiledTokenEntry }): ReactElement => {
   const color = entry.type === "color";
 
   return (
@@ -133,7 +140,7 @@ const TokenRow = ({ entry }: { entry: CompiledTokenEntry }) => {
   );
 };
 
-const TokenList = ({ load }: { load: Load }) => {
+const TokenList = ({ load }: { load: Load }): ReactElement => {
   if (load.error) {
     return (
       <div className="alert error small" role="alert">
@@ -188,7 +195,7 @@ const useDesignSystem = (ref: DesignSystemRef, open: boolean): Load => {
 
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const state = await api.getDesignSystem(projectId, directionId);
 
@@ -204,7 +211,7 @@ const useDesignSystem = (ref: DesignSystemRef, open: boolean): Load => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [open, projectId, directionId]);
@@ -220,7 +227,7 @@ export const DesignSystemChip = ({
   system: DesignSystemRef;
   actions: DesignSystemActions;
   onOpenDesignMd: () => void;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -248,7 +255,7 @@ export const DesignSystemChip = ({
   usePopover(open, root, close);
   useFitPopover(popover, trigger, open);
 
-  const openDialog = (next: Dialog) => {
+  const openDialog = (next: Dialog): void => {
     close(false);
     setDialog(next);
   };

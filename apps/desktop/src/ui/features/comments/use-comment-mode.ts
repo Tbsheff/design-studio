@@ -61,7 +61,7 @@ export const useCommentMode = (
   }, [on]);
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         isTypingTarget(event.target) ||
         event.metaKey ||
@@ -82,7 +82,7 @@ export const useCommentMode = (
 
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [toggle]);
 
   const guard = useCallback(

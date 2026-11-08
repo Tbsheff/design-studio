@@ -160,7 +160,7 @@ const placeAround = (
     },
   };
 
-  const fitting = (side: CardSide) => {
+  const fitting = (side: CardSide): boolean => {
     const option = options[side];
 
     return (
@@ -205,7 +205,9 @@ export const placeComposer = (
   return { ...placed, pin };
 };
 
-export const useCardSize = (card: RefObject<HTMLDivElement | null>) => {
+export const useCardSize = (
+  card: RefObject<HTMLDivElement | null>
+): { height: number; width: number } => {
   const [height, setHeight] = useState(112);
   useLayoutEffect(() => {
     const element = card.current;
@@ -217,7 +219,7 @@ export const useCardSize = (card: RefObject<HTMLDivElement | null>) => {
     const observer = new ResizeObserver(() => setHeight(element.offsetHeight));
     observer.observe(element);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [card]);
 
   return { height, width: CARD_WIDTH };

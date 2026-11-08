@@ -1,7 +1,13 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type {
+  DragEvent,
+  FormEvent,
+  KeyboardEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 import { useEffect, useState, useTransition, useRef } from "react";
-import type { DragEvent, KeyboardEvent, FormEvent, ReactNode } from "react";
 
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
@@ -54,7 +60,7 @@ const allUrls = (form: DraftForm): string[] => {
 };
 
 const hasSource = (form: DraftForm): boolean => {
-  const filled = (text: string) => text.trim() !== "";
+  const filled = (text: string): boolean => text.trim() !== "";
 
   return (
     allUrls(form).length > 0 ||
@@ -104,7 +110,7 @@ const Section = ({
   hint?: string;
   children: ReactNode;
   className?: string;
-}) => (
+}): ReactElement => (
   <section
     className={`nds-section${className ? ` ${className}` : ""}`}
     aria-label={title}
@@ -119,7 +125,7 @@ const Section = ({
 
 const useDropGuard = (): void => {
   useEffect(() => {
-    const outside = (event: globalThis.DragEvent) => {
+    const outside = (event: globalThis.DragEvent): void => {
       const { target } = event;
 
       if (target instanceof Element && target.closest("[data-drop-target]")) {
@@ -136,7 +142,7 @@ const useDropGuard = (): void => {
     globalThis.addEventListener("dragover", outside);
     globalThis.addEventListener("drop", outside);
 
-    return () => {
+    return (): void => {
       globalThis.removeEventListener("dragover", outside);
       globalThis.removeEventListener("drop", outside);
     };
@@ -193,7 +199,7 @@ const Chip = ({
   icon: Parameters<typeof Icon>[0]["name"];
   label: string;
   onRemove: () => void;
-}) => (
+}): ReactElement => (
   <li className="nds-chip">
     <Icon name={icon} size={12} />
     <span className="truncate">{label}</span>
@@ -214,12 +220,12 @@ const DropZone = ({
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) => {
+}): ReactElement => {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
-  const add = async (files: File[]) => {
+  const add = async (files: File[]): Promise<void> => {
     const { patch, skipped } = await routeFiles(files, form);
     set(patch);
     setNote(
@@ -229,7 +235,7 @@ const DropZone = ({
     );
   };
 
-  const onDrop = (event: DragEvent) => {
+  const onDrop = (event: DragEvent): void => {
     event.preventDefault();
     setOver(false);
     void add([...event.dataTransfer.files]);
@@ -323,10 +329,10 @@ const UrlField = ({
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) => {
+}): ReactElement => {
   const full = form.urls.length >= MAX_URLS;
 
-  const add = () => {
+  const add = (): void => {
     const url = form.urlInput.trim();
 
     if (!url || full || form.urls.includes(url)) {
@@ -336,7 +342,7 @@ const UrlField = ({
     set({ urlInput: "", urls: [...form.urls, url] });
   };
 
-  const onKey = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKey = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key !== "Enter") {
       return;
     }
@@ -391,7 +397,7 @@ const DesignMdField = ({
 }: {
   value: string;
   onChange: (value: string) => void;
-}) => {
+}): ReactElement => {
   const [view, setView] = useState<"edit" | "preview">("edit");
 
   return (
@@ -441,7 +447,7 @@ const TokensField = ({
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
-}) => {
+}): ReactElement => {
   const input = useRef<HTMLInputElement>(null);
 
   return (

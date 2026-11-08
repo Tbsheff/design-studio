@@ -1,4 +1,5 @@
 import type { PackSummary } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
 const PROVENANCE: Record<PackSummary["provenance"], string> = {
   extracted: "From sources",
@@ -6,7 +7,7 @@ const PROVENANCE: Record<PackSummary["provenance"], string> = {
   original: "Made here",
 };
 
-const ProvenanceBadge = ({ pack }: { pack: PackSummary }) => {
+const ProvenanceBadge = ({ pack }: { pack: PackSummary }): ReactElement => {
   if (pack.copiedFrom && pack.provenance === "original") {
     return (
       <span className="badge accent" data-tip={`Copy of ${pack.copiedFrom}`}>
@@ -24,7 +25,7 @@ export const PackBadges = ({
 }: {
   pack: PackSummary;
   tags?: number;
-}) => (
+}): ReactElement => (
   <span className="lib-badges">
     <span className="badge">{pack.mode === "dark" ? "Dark" : "Light"}</span>
     {pack.source === "user" ? (

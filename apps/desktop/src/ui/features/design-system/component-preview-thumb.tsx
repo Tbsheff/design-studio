@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { componentPreviewPath } from "../../../shared/component-preview.js";
@@ -172,7 +173,7 @@ const useVisible = (
 
     observer.observe(node);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [ref, active, visible]);
 
   return visible;
@@ -233,7 +234,7 @@ export const ComponentPreviewThumb = ({
   version: string;
   active: boolean;
   className?: string;
-}) => {
+}): ReactElement => {
   const ref = useRef<HTMLSpanElement>(null);
   const visible = useVisible(ref, active);
   const [shown, setShown] = useState<Shown>({ state: "idle" });
@@ -246,11 +247,11 @@ export const ComponentPreviewThumb = ({
     setShown((prev) => (prev.state === "ready" ? prev : { state: "loading" }));
     void showPreview({ controller, directionId, id, projectId, setShown });
 
-    return () => controller.abort();
+    return (): void => controller.abort();
   }, [projectId, directionId, id, version, visible]);
   const src = shown.state === "ready" ? shown.src : null;
   useEffect(
-    () => () => {
+    () => (): void => {
       if (src) {
         URL.revokeObjectURL(src);
       }

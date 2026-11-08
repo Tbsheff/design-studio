@@ -31,7 +31,7 @@ const DoctorCard = ({
   useEffect(() => {
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const health = await call(studioRoutes.healthStudio, {});
 
@@ -47,12 +47,12 @@ const DoctorCard = ({
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, []);
 
-  const fix = () => {
+  const fix = (): void => {
     setError(null);
     startTransition(async () => {
       try {

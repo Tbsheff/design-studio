@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
 import { findElement, isTypingTarget, matchesKey } from "./deps.js";
 import type { KeyId, PanelTab } from "./deps.js";
@@ -324,7 +325,7 @@ function useStudioKeys(): void {
   }, []);
 }
 
-export function useStudioCommands() {
+export function useStudioCommands(): RefObject<StudioActions | null> {
   const actions = useRef<StudioActions | null>(null);
   useCommands(() => (actions.current ? studioCommands(actions.current) : []));
   useStudioKeys();

@@ -41,7 +41,7 @@ export function composerCommands(a: ComposerActions): Command[] {
     icon: "chat" as const,
     id: `composer.mode-${mode}`,
     keywords: "mode composer",
-    run: () => {
+    run: (): void => {
       a.setMode(mode);
       a.focus();
     },
@@ -55,7 +55,7 @@ export function composerCommands(a: ComposerActions): Command[] {
     icon: "sliders" as const,
     id: `composer.level-${level}`,
     keywords: "quality speed cost",
-    run: () => {
+    run: (): void => {
       a.setLevel(level);
       a.focus();
     },

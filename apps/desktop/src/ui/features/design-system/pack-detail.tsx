@@ -4,6 +4,7 @@ import type {
   PackSummary,
 } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState, useTransition } from "react";
 
 import { Markdown } from "../../ai/components/ai/markdown.js";
@@ -34,7 +35,7 @@ const useLoad = <T,>(load: () => Promise<T>, key: string): Load<T> => {
     let live = true;
     setState({ error: null, value: null });
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const value = await load();
 
@@ -50,7 +51,7 @@ const useLoad = <T,>(load: () => Promise<T>, key: string): Load<T> => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [key]);
@@ -58,7 +59,11 @@ const useLoad = <T,>(load: () => Promise<T>, key: string): Load<T> => {
   return state;
 };
 
-const CheckResult = ({ check }: { check: Load<DesignSystemCheckResult> }) => {
+const CheckResult = ({
+  check,
+}: {
+  check: Load<DesignSystemCheckResult>;
+}): ReactElement => {
   if (check.error) {
     return (
       <div className="alert error small">
@@ -125,7 +130,7 @@ const ActionBar = ({
   actions: PackDetailActions;
   busy: boolean;
   run: (task: () => Promise<void>) => void;
-}) => {
+}): ReactElement => {
   const user = pack.source === "user";
   const usable = !pack.draft;
 
@@ -221,7 +226,7 @@ export const PackDetailDialog = ({
   pack: PackSummary;
   actions: PackDetailActions;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const detail = useLoad<PackDetail>(
     () => packApi.getPack(pack.id),
     `${pack.id}:${pack.name}`
@@ -236,7 +241,7 @@ export const PackDetailDialog = ({
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));
 
-  const run = (task: () => Promise<void>) => {
+  const run = (task: () => Promise<void>): void => {
     if (busy) {
       return;
     }

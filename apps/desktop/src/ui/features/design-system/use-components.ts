@@ -84,7 +84,7 @@ export const useComponents = (
       changedAt === 0 ? 0 : REFRESH_MS
     );
 
-    return () => globalThis.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [projectId, directionId, changedAt, attempt]);
   useEffect(
     () => setState({ components: null, error: null, version: "0" }),

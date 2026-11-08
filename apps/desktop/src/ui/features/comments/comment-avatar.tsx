@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { copy } from "./copy.js";
 import { Icon } from "./deps.js";
 
@@ -18,7 +20,7 @@ export const AvatarFace = ({
   tone = "queued",
   count = 0,
   author,
-}: AvatarProps) => {
+}: AvatarProps): ReactElement => {
   const face = author ? authorInitial(author) : initial;
 
   return (
@@ -42,7 +44,7 @@ export const CommentAuthor = ({
 }: {
   author: string | undefined;
   viewer?: boolean;
-}) => {
+}): ReactElement | null => {
   if (!author) {
     return null;
   }

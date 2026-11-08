@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { Icon } from "./deps.js";
 
 export const ComposerComments = ({
@@ -6,7 +8,7 @@ export const ComposerComments = ({
 }: {
   count: number;
   onClear: () => void;
-}) => {
+}): ReactElement | null => {
   if (count === 0) {
     return null;
   }

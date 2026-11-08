@@ -1,7 +1,7 @@
 import type { PackSummary } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
+import type { FormEvent, ReactElement } from "react";
 import { useState, useTransition } from "react";
-import type { FormEvent } from "react";
 
 import { errorText } from "../../api.js";
 import { COPY } from "./copy.js";
@@ -10,7 +10,7 @@ const useBusyAction = (onClose: () => void) => {
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const run = (task: () => Promise<void>) => {
+  const run = (task: () => Promise<void>): void => {
     if (busy) {
       return;
     }
@@ -39,7 +39,7 @@ const Head = ({
   text: string;
   busy: boolean;
   onClose: () => void;
-}) => (
+}): ReactElement => (
   <div className="modal-head">
     <div className="titles">
       <h2>{title}</h2>
@@ -57,7 +57,11 @@ const Head = ({
   </div>
 );
 
-const ErrorLine = ({ error }: { error: string | null }) => {
+const ErrorLine = ({
+  error,
+}: {
+  error: string | null;
+}): ReactElement | null => {
   if (!error) {
     return null;
   }
@@ -77,12 +81,12 @@ export const RenamePackDialog = ({
   pack: PackSummary;
   onClose: () => void;
   onRename: (name: string) => Promise<void>;
-}) => {
+}): ReactElement => {
   const [name, setName] = useState(pack.name);
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
 
-  const submit = (e: FormEvent) => {
+  const submit = (e: FormEvent): void => {
     e.preventDefault();
 
     if (name.trim() && name.trim() !== pack.name) {
@@ -147,7 +151,7 @@ export const DeletePackDialog = ({
   pack: PackSummary;
   onClose: () => void;
   onDelete: () => Promise<void>;
-}) => {
+}): ReactElement => {
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
 

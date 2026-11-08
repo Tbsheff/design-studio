@@ -1,6 +1,6 @@
 import { REQUIRED_TOKENS } from "@design-studio/contracts";
 import type { CompiledTokenEntry, PackSummary } from "@design-studio/contracts";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactElement } from "react";
 
 import { COPY } from "./copy.js";
 
@@ -17,7 +17,7 @@ const varsFor = (entries: CompiledTokenEntry[], mode: Mode): CSSProperties => {
   return vars as CSSProperties;
 };
 
-const Palette = () => (
+const Palette = (): ReactElement => (
   <ul className="pv-palette" aria-label={COPY.labelColors}>
     {REQUIRED_TOKENS.color.map((name) => (
       <li key={name} className="pv-color">
@@ -32,7 +32,7 @@ const Palette = () => (
   </ul>
 );
 
-const Components = ({ name }: { name: string }) => (
+const Components = ({ name }: { name: string }): ReactElement => (
   <div className="pv-components">
     <div className="pv-card">
       <h4>{name}</h4>
@@ -83,7 +83,7 @@ const Surface = ({
   mode: Mode;
   label: string;
   name: string;
-}) => (
+}): ReactElement => (
   <section
     className="pv-surface"
     style={varsFor(entries, mode)}
@@ -98,7 +98,11 @@ const Surface = ({
 
 const TYPE_STEPS = ["4xl", "2xl", "xl", "base", "sm"] as const;
 
-const TypeScale = ({ entries }: { entries: CompiledTokenEntry[] }) => (
+const TypeScale = ({
+  entries,
+}: {
+  entries: CompiledTokenEntry[];
+}): ReactElement => (
   <section
     className="pv-surface pv-type"
     style={varsFor(entries, "light")}
@@ -135,7 +139,7 @@ export const PackPreview = ({
 }: {
   pack: PackSummary;
   entries: CompiledTokenEntry[];
-}) => {
+}): ReactElement => {
   const dual =
     pack.mode === "light" && entries.some((entry) => entry.darkValue !== null);
 

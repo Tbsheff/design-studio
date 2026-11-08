@@ -42,12 +42,12 @@ export const usePackActions = ({
       TOAST_MS
     );
 
-    return () => clearTimeout(timer);
+    return (): void => clearTimeout(timer);
   }, [toast]);
 
   const actions = useMemo<DesignSystemActions>(
     () => ({
-      onApply: async (packId) => {
+      onApply: async (packId): Promise<void> => {
         if (!directionId) {
           return;
         }
@@ -57,7 +57,7 @@ export const usePackActions = ({
         onCommitted();
         show(result.notice ?? `${result.version.title}.`);
       },
-      onSave: async (name, packId, asNew, force) => {
+      onSave: async (name, packId, asNew, force): Promise<void> => {
         if (!directionId) {
           return;
         }

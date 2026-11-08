@@ -50,10 +50,10 @@ export const usePacks = (): PacksState => {
   const [state, setState] = useState<PacksState>({ error: null, packs: null });
   const [generation, setGeneration] = useState(0);
   useEffect(() => {
-    const listener = () => setGeneration((n) => n + 1);
+    const listener = (): void => setGeneration((n) => n + 1);
     listeners.add(listener);
 
-    return () => {
+    return (): void => {
       listeners.delete(listener);
     };
   }, []);
@@ -76,7 +76,7 @@ export const usePacks = (): PacksState => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [generation]);
@@ -142,7 +142,7 @@ export const fontStack = (family: string, fallback: string): string => {
 const KEY_SWATCHES = ["primary", "accent", "fg", "bg"];
 
 export const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
-  const rank = (name: string) => {
+  const rank = (name: string): number => {
     const index = KEY_SWATCHES.indexOf(name);
 
     return index === -1 ? KEY_SWATCHES.length : index;

@@ -1,5 +1,6 @@
 import type { PackProblem, PackSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { ApiError, errorText } from "../../api.js";
@@ -41,7 +42,11 @@ const leave = (patch: Parameters<typeof uiStore.set>[0]): void => {
   uiStore.set({ libraryFrom: null, screen: "home", ...patch });
 };
 
-const Problems = ({ problems }: { problems: PackProblem[] }) => {
+const Problems = ({
+  problems,
+}: {
+  problems: PackProblem[];
+}): ReactElement | null => {
   if (problems.length === 0) {
     return null;
   }
@@ -72,7 +77,7 @@ const SANS = "system-ui, sans-serif";
 const swatch = (pack: PackSummary, name: string): string | undefined =>
   pack.swatches.find((item) => item.name === name)?.value;
 
-const ModeSwatches = ({ pack }: { pack: PackSummary }) => {
+const ModeSwatches = ({ pack }: { pack: PackSummary }): ReactElement => {
   const light = pack.mode === "light" ? pack.swatches : null;
 
   const dark =
@@ -102,7 +107,7 @@ const LibraryCard = ({
 }: {
   pack: PackSummary;
   onOpen: () => void;
-}) => {
+}): ReactElement => {
   const display = fontStack(pack.fonts.display, SERIF);
   const body = fontStack(pack.fonts.body, SANS);
 
@@ -152,7 +157,7 @@ const Group = ({
   packs: PackSummary[];
   onOpen: (pack: PackSummary) => void;
   empty?: React.ReactNode;
-}) => {
+}): ReactElement => {
   const id = `lib-${title.toLowerCase().replaceAll(/\W+/gu, "-")}`;
 
   return (
@@ -191,13 +196,17 @@ const useToast = (): [string | null, (text: string) => void] => {
       TOAST_MS
     );
 
-    return () => clearTimeout(timer);
+    return (): void => clearTimeout(timer);
   }, [toast]);
 
   return [toast?.text ?? null, (text) => setToast({ id: Date.now(), text })];
 };
 
-export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
+export const DesignSystems = ({
+  from,
+}: {
+  from: LibraryFrom | null;
+}): ReactElement => {
   const { packs, error } = usePacks();
   const [problems, setProblems] = useState<PackProblem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -210,7 +219,7 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
   useEffect(() => {
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       let next: PackProblem[] = [];
 
       try {
@@ -226,7 +235,7 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [packs]);
@@ -235,16 +244,16 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
   const builtin = (packs ?? []).filter((pack) => pack.source === "builtin");
   const selected = packs?.find((pack) => pack.id === selectedId) ?? null;
 
-  const back = () =>
+  const back = (): void =>
     from ? leave({ activeProjectId: from.projectId }) : leave({});
 
-  const imported = (pack: PackSummary, replaced: boolean) => {
+  const imported = (pack: PackSummary, replaced: boolean): void => {
     refreshPacks();
     show(replaced ? `Replaced ${pack.name}.` : `Imported ${pack.name}.`);
     setSelectedId(pack.id);
   };
 
-  const importFile = (file: File) => {
+  const importFile = (file: File): void => {
     setImportError(null);
     startImport(async () => {
       try {

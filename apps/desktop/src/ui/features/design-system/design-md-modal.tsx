@@ -1,4 +1,5 @@
 import { Icon, useModalDialog } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import {
   useDeferredValue,
   useEffect,
@@ -60,7 +61,7 @@ const Outline = ({
 }: {
   items: OutlineItem[];
   onJump: (item: OutlineItem, index: number) => void;
-}) => (
+}): ReactElement => (
   <nav className="dmd-outline" aria-label={COPY.labelOutline}>
     <p className="dmd-pane-label">Outline</p>
     {items.length === 0 ? (
@@ -95,7 +96,7 @@ const UnsavedBar = ({
   onSave: () => void;
   onDiscard: () => void;
   onKeep: () => void;
-}) => {
+}): ReactElement => {
   const keep = useRef<HTMLButtonElement>(null);
   useEffect(() => keep.current?.focus(), []);
 
@@ -134,7 +135,7 @@ export const DesignMdModal = ({
 }: {
   projectId: string;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const [content, setContent] = useState<string | null>(null);
   const [original, setOriginal] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
@@ -144,7 +145,7 @@ export const DesignMdModal = ({
   useEffect(() => {
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       try {
         const result = await api.getDesignMd(projectId);
 
@@ -164,7 +165,7 @@ export const DesignMdModal = ({
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId]);
@@ -173,7 +174,7 @@ export const DesignMdModal = ({
   const state = useRef({ asking, dirty });
   state.current = { asking, dirty };
 
-  const requestClose = () => {
+  const requestClose = (): false | undefined => {
     if (state.current.asking) {
       setAsking(false);
 
@@ -204,7 +205,7 @@ export const DesignMdModal = ({
     }
   }, [loaded]);
 
-  const save = () => {
+  const save = (): void => {
     if (content === null) {
       return;
     }

@@ -5,8 +5,8 @@ import type {
 } from "@design-studio/contracts";
 import type { InsertableComponent } from "@design-studio/contracts/insert";
 import { Icon, PanelHead } from "@design-studio/ui";
+import type { ReactElement, ReactNode } from "react";
 import { useState, useEffect, useMemo, useRef } from "react";
-import type { ReactNode } from "react";
 
 import {
   DragGhost,
@@ -137,12 +137,12 @@ const Thumb = ({
   component: ComponentInfo;
   version: string;
   active: boolean;
-}) => {
+}): ReactElement => {
   const [src, setSrc] = useState<string | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "none">("loading");
   const shown = useRef<string | null>(null);
   useEffect(
-    () => () => {
+    () => (): void => {
       if (shown.current) {
         URL.revokeObjectURL(shown.current);
       }
@@ -162,7 +162,7 @@ const Thumb = ({
 
     let live = true;
 
-    const read = async () => {
+    const read = async (): Promise<void> => {
       let next: string | null = null;
 
       try {
@@ -204,7 +204,7 @@ const Thumb = ({
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [
@@ -245,7 +245,13 @@ interface CardProps {
   onGallery: (component: InsertableComponent) => void;
 }
 
-const Card = ({ item, props, drag, onInsertMenu, onGallery }: CardProps) => {
+const Card = ({
+  item,
+  props,
+  drag,
+  onInsertMenu,
+  onGallery,
+}: CardProps): ReactElement => {
   const { info, insert } = item;
 
   const tip = insert
@@ -315,7 +321,7 @@ const Card = ({ item, props, drag, onInsertMenu, onGallery }: CardProps) => {
   );
 };
 
-export const ComponentsPanel = (props: Props) => {
+export const ComponentsPanel = (props: Props): ReactElement => {
   const { list, directionId } = props;
   const canInsert = props.kind === "react";
   const [query, setQuery] = useState("");

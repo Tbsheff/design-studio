@@ -1,4 +1,5 @@
 import { Icon, useModalDialog } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState, useTransition } from "react";
 
 import { errorText } from "../../api.js";
@@ -20,14 +21,14 @@ export const ChangePackDialog = ({
   from,
   onClose,
   onApply,
-}: ChangeProps) => {
+}: ChangeProps): ReactElement => {
   const state = pickable(usePacks());
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));
   const title = currentId ? "Change design system" : "Add design system";
 
-  const choose = (packId: string | undefined) => {
+  const choose = (packId: string | undefined): void => {
     if (!packId || busy) {
       return;
     }

@@ -54,5 +54,5 @@ export const useCommentPrefill = ({
     focusRef.current();
   }, [request, draft, setFiles, maxImages]);
 
-  return { clear: () => setLinked([]), linked };
+  return { clear: (): void => setLinked([]), linked };
 };

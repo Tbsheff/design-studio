@@ -1,3 +1,8 @@
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 import {
   useId,
   useLayoutEffect,
@@ -6,7 +11,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 
 import { copy } from "./copy.js";
 import {
@@ -69,7 +73,7 @@ function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
   let run = "";
   let on = false;
 
-  const flush = (key: number) => {
+  const flush = (key: number): void => {
     if (run) {
       out.push(on ? <mark key={key}>{run}</mark> : run);
     }
@@ -92,7 +96,7 @@ function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
   return out;
 }
 
-function RowLead({ row }: { row: Row }) {
+function RowLead({ row }: { row: Row }): ReactElement {
   if (row.hit && row.kind === "project" && !row.icon) {
     return <ProjectThumb hit={row.hit} />;
   }
@@ -112,7 +116,7 @@ function RowEnd({
   row: Row;
   active: boolean;
   typing: boolean;
-}) {
+}): ReactElement {
   const enter = typing && active && !row.disabled;
 
   return (
@@ -184,7 +188,7 @@ function usePaletteRows(
 
   const actions = useMemo(
     () => ({
-      newPrototype: (prompt: string) => {
+      newPrototype: (prompt: string): void => {
         setError(null);
         startTransition(async () => {
           try {
@@ -200,7 +204,7 @@ function usePaletteRows(
           }
         });
       },
-      openProject: (id: string, route?: string) => {
+      openProject: (id: string, route?: string): void => {
         onClose();
         window.setTimeout(() => openProject(id, route), 0);
       },
@@ -233,7 +237,7 @@ export function Palette({
 }: {
   onClose: () => void;
   onShortcuts: () => void;
-}) {
+}): ReactElement {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -260,7 +264,7 @@ export function Palette({
     }
   }, [current, rows]);
 
-  const run = (row: Row | undefined) => {
+  const run = (row: Row | undefined): void => {
     if (!row || row.disabled || busy) {
       return;
     }
@@ -279,7 +283,7 @@ export function Palette({
     window.setTimeout(() => row.run(), 0);
   };
 
-  const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>): void => {
     const step = stepOf(event);
     const recentRow = typing ? undefined : recentRowFor(event, rows);
 

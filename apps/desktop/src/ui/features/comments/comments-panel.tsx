@@ -1,5 +1,5 @@
+import type { ReactElement, ReactNode } from "react";
 import { useState, useTransition, useSyncExternalStore } from "react";
-import type { ReactNode } from "react";
 
 import { commentPageName, pageShown } from "./comment-anchors.js";
 import { CommentAuthor } from "./comment-avatar.js";
@@ -25,7 +25,7 @@ const Section = ({
   count: number;
   action?: ReactNode;
   children: ReactNode;
-}) => {
+}): ReactElement | null => {
   if (count === 0) {
     return null;
   }
@@ -64,7 +64,7 @@ const SendQueuedButton = ({
 }: {
   control: CommentsControl;
   className?: string;
-}) => {
+}): ReactElement => {
   const count = control.queued.length;
 
   return (
@@ -85,13 +85,13 @@ const CommentsComposer = ({
 }: {
   control: CommentsControl;
   selection: SelectionContext[];
-}) => {
+}): ReactElement => {
   const [text, setText] = useState("");
   const [busy, startTransition] = useTransition();
   const target = composerTarget(selection);
   const ready = target !== null && text.trim().length > 0 && !busy;
 
-  const submit = () => {
+  const submit = (): void => {
     if (!ready) {
       return;
     }
@@ -644,7 +644,7 @@ export const CommentsPanel = ({
   onOpenVersion,
   selection = [],
 }: Props) => {
-  const by = (status: DesignComment["status"]) =>
+  const by = (status: DesignComment["status"]): DesignComment[] =>
     control.comments.filter((comment) => comment.status === status);
 
   const sent = by("sent");

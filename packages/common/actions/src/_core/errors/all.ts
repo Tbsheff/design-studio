@@ -29,6 +29,7 @@ import type { TextError } from "../../text/errors/index.js";
 import type { ThemeError } from "../../theme/errors/index.js";
 import type { TokenError } from "../../token/errors/index.js";
 import type { ViewportError } from "../../viewport/errors/index.js";
+import type { WalkthroughError } from "../../walkthrough/errors/index.js";
 import type { CoreError } from "./index.js";
 
 type StudioError =
@@ -62,7 +63,8 @@ type StudioError =
   | TextStyleError
   | ThemeError
   | TokenError
-  | ViewportError;
+  | ViewportError
+  | WalkthroughError;
 
 type StudioErrorTag = StudioError["_tag"];
 

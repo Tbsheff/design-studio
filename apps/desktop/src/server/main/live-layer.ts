@@ -44,6 +44,7 @@ import { ThemeLive } from "../handlers/theme/live.js";
 import { TokenLive } from "../handlers/token/live.js";
 import { VersionLive } from "../handlers/version/live.js";
 import { ViewportLive } from "../handlers/viewport/live.js";
+import { WalkthroughLive } from "../handlers/walkthrough/live.js";
 import { WorkspaceLive } from "../handlers/workspace/live.js";
 import {
   Authorizer,
@@ -101,6 +102,7 @@ const liveLayer = Layer.mergeAll(
   TokenLive,
   VersionLive,
   ViewportLive,
+  WalkthroughLive,
   WorkspaceLive
 );
 

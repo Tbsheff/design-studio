@@ -24,6 +24,24 @@ const focusComposer = (): void => {
   });
 };
 
+const focusComposerInput = (): number =>
+  globalThis.requestAnimationFrame(() =>
+    document.querySelector<HTMLTextAreaElement>(INPUT)?.focus()
+  );
+
+const focusPromptTextarea = (): void =>
+  document.querySelector<HTMLTextAreaElement>(".prompt textarea")?.focus();
+
+const leaveComposer = (input: HTMLElement): void => {
+  const stage = document.querySelector<HTMLElement>(".stage");
+
+  if (stage) {
+    stage.focus({ preventScroll: true });
+  } else {
+    input.blur();
+  }
+};
+
 const useComposerFocus = (running: boolean, ready: boolean): void => {
   const was = useRef<boolean | null>(null);
   useEffect(() => {
@@ -39,4 +57,9 @@ const useComposerFocus = (running: boolean, ready: boolean): void => {
   }, [running, ready]);
 };
 
-export { useComposerFocus };
+export {
+  focusComposerInput,
+  focusPromptTextarea,
+  leaveComposer,
+  useComposerFocus,
+};

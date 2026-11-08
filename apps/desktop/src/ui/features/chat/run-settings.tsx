@@ -1,4 +1,4 @@
-import type { RunEffort, RunLevel, RunMode } from "@design-studio/contracts";
+import type { RunEffort, RunLevel } from "@design-studio/contracts";
 import { Icon, placeFixed, usePopover } from "@design-studio/ui";
 import {
   useCallback,
@@ -12,6 +12,8 @@ import type { CSSProperties, KeyboardEvent, ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 import { VariationsControl } from "../canvas/variations-control.js";
+import { MODE_LABEL } from "./composer-mode-model.js";
+import type { ComposerMode } from "./composer-mode-model.js";
 import { copy } from "./copy.js";
 import {
   LevelControl,
@@ -37,8 +39,6 @@ const EFFORT_HINT: Record<EffortChoice, string> = {
   low: "Fastest and cheapest. Good for small changes.",
   medium: "A balance of speed and care.",
 };
-
-type ComposerMode = RunMode | "plan";
 
 interface ModeSetting {
   value: ComposerMode;
@@ -77,12 +77,6 @@ const EFFORT_LABEL: Record<EffortChoice, string> = {
   high: "High",
   low: "Low",
   medium: "Medium",
-};
-
-const MODE_LABEL: Record<ComposerMode, string> = {
-  critique: "Critique",
-  edit: "Edit",
-  plan: "Plan",
 };
 
 const runSettingsSummary = (input: {

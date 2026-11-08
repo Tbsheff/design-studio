@@ -5,7 +5,7 @@ import { useEffect } from "react";
 
 import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
-import { stop } from "./variation-controls.js";
+import { stop } from "./variation-model.js";
 
 interface FrameMenuItem {
   id: string;

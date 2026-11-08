@@ -6,7 +6,7 @@ import { cleanFramePath } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { toValueOr } from "./settle-model.js";
-import { stop } from "./variation-controls.js";
+import { stop } from "./variation-model.js";
 
 const pageName = (path: string | undefined): string => {
   const clean = (path ?? "").replace(/^\/+/u, "").replace(/\.html$/u, "");

@@ -20,6 +20,7 @@ interface ShareLinkRowProps {
   readonly copied: string | null;
   readonly onRevoke: (id: string) => void;
   readonly onCursor: (id: string, isOn: boolean) => void;
+  readonly onLan: (isOn: boolean) => void;
 }
 
 const ShareLinkRow = ({
@@ -28,6 +29,7 @@ const ShareLinkRow = ({
   link,
   now,
   onCursor,
+  onLan,
   onRevoke,
   server,
 }: ShareLinkRowProps): ReactElement => {
@@ -45,7 +47,14 @@ const ShareLinkRow = ({
         isBusy={isBusy}
         onRevoke={onRevoke}
       />
-      {link.active && token && <ShareLinkUrls token={token} server={server} />}
+      {link.active && token && (
+        <ShareLinkUrls
+          token={token}
+          server={server}
+          isBusy={isBusy}
+          onLan={onLan}
+        />
+      )}
       {copied === link.id && (
         <p className="share-link-note" role={STATUS_ROLE}>
           {copy.linkCopiedPasteIt}

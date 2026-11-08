@@ -43,15 +43,32 @@ const useCommentMode = (
   setSelectMode: (on: boolean) => void
 ): CommentMode => {
   const [on, setOn] = useState(false);
+  const [seenLive, setSeenLive] = useState(live);
+  const [seenRepinId, setSeenRepinId] = useState<string | null>(null);
   const available = Boolean(control) && live;
   const availableRef = useRef(available);
+  const repinId = control?.repinId ?? null;
+  const setRepinId = control?.setRepinId;
+
+  if (seenLive !== live) {
+    setSeenLive(live);
+
+    if (!live) {
+      setOn(false);
+    }
+  }
+
+  if (seenRepinId !== repinId) {
+    setSeenRepinId(repinId);
+
+    if (repinId) {
+      setOn(true);
+    }
+  }
 
   useEffect(() => {
     availableRef.current = available;
   }, [available]);
-
-  const repinId = control?.repinId ?? null;
-  const setRepinId = control?.setRepinId;
 
   const toggle = useCallback(() => {
     setSelectMode(false);
@@ -59,25 +76,16 @@ const useCommentMode = (
   }, [setSelectMode]);
 
   useEffect(() => {
-    if (!live) {
-      setOn(false);
+    if (repinId) {
+      setSelectMode(false);
     }
-  }, [live]);
-
-  useEffect(() => {
-    if (!repinId) {
-      return;
-    }
-
-    setSelectMode(false);
-    setOn(true);
   }, [repinId, setSelectMode]);
 
   useEffect(() => {
     if (!on && repinId) {
       setRepinId?.(null);
     }
-  }, [on]);
+  }, [on, repinId, setRepinId]);
 
   useCommentKeys(availableRef, toggle, setOn);
 

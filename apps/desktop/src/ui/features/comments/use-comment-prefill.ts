@@ -35,6 +35,24 @@ const toFresh = (
     (file) => !prev.some((pending) => pending.localId === file.localId)
   );
 
+interface PrefillTarget {
+  readonly draft: DraftStore;
+  readonly maxImages: number;
+  readonly onFocus: () => void;
+  readonly setFiles: Dispatch<SetStateAction<PendingAttachment[]>>;
+  readonly setLinked: Dispatch<SetStateAction<string[]>>;
+}
+
+const applyPrefill = (target: PrefillTarget, request: PrefillRequest): void => {
+  const { draft, maxImages, onFocus, setFiles, setLinked } = target;
+  const current = draft.get().trim();
+  draft.set((current && `${current}\n\n${request.text}`) || request.text);
+  const incoming = filesOf(request);
+  setFiles((prev) => [...prev, ...toFresh(incoming, prev)].slice(0, maxImages));
+  setLinked((prev) => [...new Set([...prev, ...request.commentIds])]);
+  onFocus();
+};
+
 const useCommentPrefill = ({
   request,
   draft,
@@ -50,21 +68,25 @@ const useCommentPrefill = ({
     focusRef.current = focus;
   }, [focus]);
 
+  const onFocus = useCallback((): void => focusRef.current(), []);
+
   useEffect(() => {
     if (!request || seen.current === request.seq) {
       return;
     }
 
     seen.current = request.seq;
-    const current = draft.get().trim();
-    draft.set((current && `${current}\n\n${request.text}`) || request.text);
-    const incoming = filesOf(request);
-    setFiles((prev) =>
-      [...prev, ...toFresh(incoming, prev)].slice(0, maxImages)
+    applyPrefill(
+      {
+        draft,
+        maxImages,
+        onFocus,
+        setFiles,
+        setLinked,
+      },
+      request
     );
-    setLinked((prev) => [...new Set([...prev, ...request.commentIds])]);
-    focusRef.current();
-  }, [request, draft, setFiles, maxImages]);
+  }, [request, draft, setFiles, maxImages, onFocus]);
 
   const clear = useCallback((): void => setLinked([]), []);
 

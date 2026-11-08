@@ -42,6 +42,7 @@ export type {
   CommentPatch,
   CommentsControl,
   DescribeAnchors,
+  CommentsFlags,
   OnPrefill,
 } from "./use-comments.js";
 

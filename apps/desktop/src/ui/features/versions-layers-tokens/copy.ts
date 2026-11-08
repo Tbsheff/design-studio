@@ -27,6 +27,13 @@ const COPY = {
   layersShowingPrefix: "Showing the first ",
   layersShowingSuffix: " layers.",
   layersTitle: "Layers",
+  noticeChangedAfterCut:
+    "The design changed after the cut. Cut the layer again.",
+  noticeHiddenElsewhere:
+    "Its CSS or a parent hides this element, so Show cannot change it here.",
+  noticeNoSource:
+    "This element has no source location, so it cannot be changed here.",
+  noticeSelectAgain: "The element moved. Select it again.",
   placeholderFilterTokens: "Filter tokens",
   placeholderNameThisLayer: "Name this layer",
   placeholderSearchTokens: "Search tokens",

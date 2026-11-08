@@ -1,11 +1,10 @@
 import { BRIDGE_PASSIVE_PARAM } from "@design-studio/contracts";
 import type { Direction, ProjectKind } from "@design-studio/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
 import { api } from "../../api.js";
 import { frameSrc } from "../../platform/bridge.js";
-import { randomToken } from "../../platform/session.js";
 import { useTokenFrames } from "../design-system/token-frames.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { useSwapGate } from "../inspector/use-swap-gate.js";
@@ -17,6 +16,8 @@ import { markOf, withElementMark } from "./element-mark-model.js";
 import { frameStateUrl } from "./frame-states-model.js";
 import type { FrameStatesRead } from "./frame-states-model.js";
 import { passiveSrc } from "./use-canvas-frames.js";
+import { useStableByKey } from "./use-stable-by-key.js";
+import { useTokenCache } from "./use-token-cache.js";
 
 interface PassiveSlot {
   id: string;
@@ -40,238 +41,320 @@ interface Options {
   frameStates: FrameStatesRead;
 }
 
-const useDirectionUrls = (
-  projectId: string,
-  ids: string[]
-): Record<string, string> => {
-  const [urls, setUrls] = useState<Record<string, string>>({});
-  const asked = useRef(new Set<string>());
+type DirectionUrls = Map<string, string>;
+
+interface DirectionUrlState {
+  readonly projectId: string;
+  readonly urls: DirectionUrls;
+}
+
+interface AskedIds {
+  readonly projectId: string;
+  readonly ids: Set<string>;
+}
+
+interface ResolvedFrame {
+  readonly directionId: string | null;
+  readonly frame: CanvasFrame;
+}
+
+interface TokenedFrame extends ResolvedFrame {
+  readonly token: string;
+}
+
+interface DirectionFrames {
+  readonly elements: RefObject<Record<string, HTMLIFrameElement | null>>;
+  readonly onSwapDone: (key: string) => void;
+  readonly slots: PassiveSlot[];
+}
+
+const NO_URLS: DirectionUrls = new Map();
+
+const useDirectionUrls = (projectId: string, ids: string[]): DirectionUrls => {
+  const [state, setState] = useState<DirectionUrlState>({
+    projectId,
+    urls: NO_URLS,
+  });
+
+  const asked = useRef<AskedIds>({ ids: new Set(), projectId });
   const key = ids.join(",");
-  useEffect(() => {
-    asked.current = new Set();
-    setUrls({});
-  }, [projectId]);
 
   const fetchUrl = useCallback(
     async (id: string): Promise<void> => {
       try {
         const { url } = await api.directionPreview(projectId, id);
-        setUrls((prev) => ({ ...prev, [id]: url }));
+
+        setState((prev) => {
+          if (prev.projectId !== projectId) {
+            return { projectId, urls: new Map([[id, url]]) };
+          }
+
+          return { projectId, urls: new Map(prev.urls).set(id, url) };
+        });
       } catch {
-        asked.current.delete(id);
+        asked.current.ids.delete(id);
       }
     },
     [projectId]
   );
 
   useEffect(() => {
-    let result2: string[] = [];
-
-    if (key) {
-      result2 = key.split(",");
+    if (asked.current.projectId !== projectId) {
+      asked.current = { ids: new Set(), projectId };
     }
 
-    for (const id of result2) {
-      if (asked.current.has(id)) {
-        continue;
+    const wanted = key.split(",").filter(Boolean);
+
+    for (const id of wanted) {
+      if (!asked.current.ids.has(id)) {
+        asked.current.ids.add(id);
+        void fetchUrl(id);
       }
-
-      asked.current.add(id);
-      void fetchUrl(id);
     }
-  }, [key, fetchUrl]);
+  }, [key, fetchUrl, projectId]);
 
-  return urls;
+  if (state.projectId === projectId) {
+    return state.urls;
+  }
+
+  return NO_URLS;
 };
 
-const useDirectionFrames = (
-  options: Options
-): {
-  elements: RefObject<Record<string, HTMLIFrameElement | null>>;
-  onSwapDone: (key: string) => void;
-  slots: PassiveSlot[];
-} => {
-  const tokens = useRef(new Map<string, string>());
-  const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
+const toDirectionId = (
+  options: Options,
+  known: Set<string>,
+  frame: CanvasFrame
+): string | null => {
+  const own = frameDirection(frame, options.currentId);
 
-  const passive = options.frames.filter(
-    (canvasFrame) => canvasFrame.id !== options.activeId
-  );
+  if (
+    own &&
+    (own === options.currentId || !options.directions || known.has(own))
+  ) {
+    return own;
+  }
 
+  return options.currentId;
+};
+
+const toResolvedFrames = (options: Options): ResolvedFrame[] => {
   const known = new Set(options.directions?.map((direction) => direction.id));
+  const resolved: ResolvedFrame[] = [];
 
-  const resolved = passive.map((canvasFrameValue) => {
-    const own = frameDirection(canvasFrameValue, options.currentId);
-
-    let directionId2: string | null = options.currentId;
-
-    if (
-      own &&
-      (own === options.currentId || !options.directions || known.has(own))
-    ) {
-      directionId2 = own;
+  for (const frame of options.frames) {
+    if (frame.id !== options.activeId) {
+      resolved.push({
+        directionId: toDirectionId(options, known, frame),
+        frame,
+      });
     }
+  }
 
-    return {
-      directionId: directionId2,
-      frame: canvasFrameValue,
-    };
-  });
+  return resolved;
+};
 
-  const others = [
-    ...new Set(
-      resolved
-        .map((result) => result.directionId)
-        .filter((id): id is string => id !== null && id !== options.currentId)
-    ),
-  ].sort();
+const toOtherDirectionIds = (
+  resolved: ResolvedFrame[],
+  currentId: string | null
+): string[] => {
+  const others = new Set<string>();
 
-  const urls = useDirectionUrls(options.projectId, others);
+  for (const { directionId } of resolved) {
+    if (directionId !== null && directionId !== currentId) {
+      others.add(directionId);
+    }
+  }
 
+  return [...others].toSorted();
+};
+
+const toGateTargets = (
+  options: Options,
+  resolved: ResolvedFrame[]
+): GateTarget[] => {
   const heads = new Map(
-    options.directions?.map((directionValue) => [
-      directionValue.id,
-      directionValue.headVersionId,
+    options.directions?.map((direction) => [
+      direction.id,
+      direction.headVersionId,
     ])
   );
 
-  const targets: GateTarget[] = resolved
-    .filter(
-      (resultValue) =>
-        resultValue.directionId !== null &&
-        (resultValue.directionId !== options.currentId || options.live)
-    )
-    .map((result3) => ({
-      directionId: result3.directionId as string,
-      headVersionId: heads.get(result3.directionId as string) ?? null,
-      key: result3.frame.id,
-    }));
+  const targets: GateTarget[] = [];
 
-  let argument: string | null = null;
-
-  if (options.live) {
-    argument = options.currentId;
+  for (const { directionId, frame } of resolved) {
+    if (
+      directionId !== null &&
+      (directionId !== options.currentId || options.live)
+    ) {
+      targets.push({
+        directionId,
+        headVersionId: heads.get(directionId) ?? null,
+        key: frame.id,
+      });
+    }
   }
+
+  return targets;
+};
+
+const toBaseUrl = (
+  options: Options,
+  urls: DirectionUrls,
+  directionId: string | null
+): string | null => {
+  if (directionId === null) {
+    return null;
+  }
+
+  if (directionId === options.currentId) {
+    return options.currentUrl;
+  }
+
+  return withElementMark(
+    urls.get(directionId) ?? null,
+    markOf(options.directions, directionId)
+  );
+};
+
+const toPassiveUrl = (
+  options: Options,
+  frame: CanvasFrame,
+  base: string | null,
+  change: FilesChange | null
+): string | null => {
+  if (!base) {
+    return null;
+  }
+
+  const page = frameStateUrl(
+    passiveSrc(withFramePath(base, frame.path), options.kind, change) as string,
+    options.frameStates,
+    frame.id
+  );
+
+  if (page) {
+    return frameSrc(page, { [BRIDGE_PASSIVE_PARAM]: "1" });
+  }
+
+  return null;
+};
+
+const toGatedChange = (
+  isGated: boolean,
+  read: (frameId: string) => FilesChange | null,
+  frameId: string
+): FilesChange | null => {
+  if (isGated) {
+    return read(frameId);
+  }
+
+  return null;
+};
+
+const toPassiveSlot = (
+  options: Options,
+  urls: DirectionUrls,
+  gate: ReturnType<typeof useSwapGate>,
+  resolved: TokenedFrame
+): PassiveSlot => {
+  const { directionId, frame, token } = resolved;
+  const isCurrent = directionId !== null && directionId === options.currentId;
+  const base = toBaseUrl(options, urls, directionId);
+  const isGated = !isCurrent || options.live;
+  const shown = toGatedChange(isGated, gate.shownFor, frame.id);
+  const next = toGatedChange(isGated, gate.nextFor, frame.id);
+  const src = toPassiveUrl(options, frame, base, shown);
+  let nextSrc: string | null = null;
+
+  if (next) {
+    nextSrc = toPassiveUrl(options, frame, base, next);
+  }
+
+  if (nextSrc === src) {
+    nextSrc = null;
+  }
+
+  const { id } = frame;
+
+  return { directionId, id, nextSrc, src, token };
+};
+
+const toGateHold = (options: Options): string | null => {
+  if (options.live) {
+    return options.currentId;
+  }
+
+  return null;
+};
+
+const toSlotKey = (slots: PassiveSlot[], currentId: string | null): string => {
+  const parts: string[] = [];
+
+  for (const slot of slots) {
+    let part: string | null = "";
+
+    if (slot.directionId === currentId) {
+      part = slot.src;
+    }
+
+    parts.push(`${slot.id}:${part}`);
+  }
+
+  return parts.join("|");
+};
+
+const toTokenSlots = (
+  slots: PassiveSlot[],
+  currentId: string | null
+): { src: string; token: string }[] => {
+  const tokenSlots: { src: string; token: string }[] = [];
+
+  for (const slot of slots) {
+    if (slot.src && slot.directionId === currentId) {
+      tokenSlots.push({ src: slot.src, token: slot.token });
+    }
+  }
+
+  return tokenSlots;
+};
+
+const useDirectionFrames = (options: Options): DirectionFrames => {
+  const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
+  const toToken = useTokenCache();
+
+  const resolved = toResolvedFrames(options);
+
+  const urls = useDirectionUrls(
+    options.projectId,
+    toOtherDirectionIds(resolved, options.currentId)
+  );
 
   const gate = useSwapGate({
     isHeld: options.hold,
     kind: options.kind,
     lastChange: options.lastChange,
-    liveDirectionId: argument,
-    targets,
+    liveDirectionId: toGateHold(options),
+    targets: toGateTargets(options, resolved),
   });
 
-  const slots: PassiveSlot[] = resolved.map(({ frame, directionId }) => {
-    const token = tokens.current.get(frame.id) ?? randomToken();
-    tokens.current.set(frame.id, token);
-    const isCurrent = directionId !== null && directionId === options.currentId;
-
-    const base: string | null = ((): string | null => {
-      if (directionId === null) {
-        return null;
-      }
-      if (isCurrent) {
-        return options.currentUrl;
-      }
-
-      return withElementMark(
-        urls[directionId] ?? null,
-        markOf(options.directions, directionId)
-      );
-    })();
-
-    const gated = !isCurrent || options.live;
-
-    const build = (change: FilesChange | null): string | null => {
-      let page: string | null = null;
-
-      if (base) {
-        page = frameStateUrl(
-          passiveSrc(
-            withFramePath(base, frame.path),
-            options.kind,
-            change
-          ) as string,
-          options.frameStates,
-          frame.id
-        );
-      }
-
-      if (page) {
-        return frameSrc(page, { [BRIDGE_PASSIVE_PARAM]: "1" });
-      }
-
-      return null;
-    };
-
-    let argument2: FilesChange | null = null;
-
-    if (gated) {
-      argument2 = gate.shownFor(frame.id);
-    }
-
-    const src = build(argument2);
-
-    let next: FilesChange | null = null;
-
-    if (gated) {
-      next = gate.nextFor(frame.id);
-    }
-
-    let nextSrc: string | null = null;
-
-    if (next) {
-      nextSrc = build(next);
-    }
-
-    let nextSrc2: string | null = nextSrc;
-
-    if (nextSrc === src) {
-      nextSrc2 = null;
-    }
-
-    return {
-      directionId,
-      id: frame.id,
-      nextSrc: nextSrc2,
-      src,
-      token,
-    };
-  });
-
-  const slotKey = slots
-    .map((passiveSlot) => {
-      let part: string | null = "";
-
-      if (passiveSlot.directionId === options.currentId) {
-        part = passiveSlot.src;
-      }
-
-      return `${passiveSlot.id}:${part}`;
+  const slots = resolved.map((item) =>
+    toPassiveSlot(options, urls, gate, {
+      ...item,
+      token: toToken(item.frame.id),
     })
-    .join("|");
+  );
 
-  const tokenSlots = useMemo(
-    () =>
-      slots
-        .filter(
-          (passiveSlotValue) =>
-            passiveSlotValue.src &&
-            passiveSlotValue.directionId === options.currentId
-        )
-        .map((passiveSlot3) => ({
-          src: passiveSlot3.src as string,
-          token: passiveSlot3.token,
-        })),
-    [slotKey]
+  const tokenSlots = useStableByKey(
+    toTokenSlots(slots, options.currentId),
+    toSlotKey(slots, options.currentId)
   );
 
   useTokenFrames(tokenSlots, elements, options.kind, options.live);
 
-  return { elements, onSwapDone: gate.onSwapDone, slots };
-};
+  const { onSwapDone } = gate;
 
-type DirectionFrames = ReturnType<typeof useDirectionFrames>;
+  return { elements, onSwapDone, slots };
+};
 
 export { useDirectionFrames };
 

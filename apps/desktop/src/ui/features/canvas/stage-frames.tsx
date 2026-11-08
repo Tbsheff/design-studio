@@ -7,7 +7,7 @@ import { FrameLabel } from "./frame-label.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameSnapLayer } from "./frame-snap-layer.js";
-import { OtherFrames } from "./stage-parts.js";
+import { OtherFrames } from "./other-frames.js";
 
 const StageFrames = ({
   preview,

@@ -1,214 +1,89 @@
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent, ReactElement, ReactNode } from "react";
+import { useCallback, useMemo, useRef } from "react";
+import type { KeyboardEvent, MouseEvent, ReactElement } from "react";
 
-import type { KeyId } from "../../../shared/keymap.js";
-import { KeyHint } from "../../canvas-preview-slots.js";
+import {
+  moveItemFocus,
+  toMenuStyle,
+  toVisibleItems,
+} from "./preview-menu-model.js";
+import type { MenuPoint, PreviewMenuItem } from "./preview-menu-model.js";
+import { PreviewMenuRow } from "./preview-menu-row.js";
+import { useMenuItemRefs } from "./use-menu-item-refs.js";
+import {
+  useMenuDismiss,
+  usePreviewMenuPlacement,
+} from "./use-preview-menu-placement.js";
 
-interface PreviewMenuItem {
-  id: string;
-  label: string;
-  icon: IconName;
-  keyId?: KeyId;
-  run: () => void | Promise<unknown>;
-  hidden?: boolean;
-  disabled?: string;
-  divider?: boolean;
+interface PreviewMenuProps {
+  readonly at: MenuPoint;
+  readonly label: string;
+  readonly items: PreviewMenuItem[];
+  readonly onClose: () => void;
 }
 
-const EDGE = 8;
-
-const step = (key: string, index: number, count: number): number | null => {
-  if (key === "ArrowDown") {
-    return (index + 1) % count;
-  }
-
-  if (key === "ArrowUp") {
-    return (index - 1 + count) % count;
-  }
-
-  if (key === "Home") {
-    return 0;
-  }
-
-  if (key === "End") {
-    return count - 1;
-  }
-
-  return null;
-};
-
-const MenuRow = ({
-  item,
-  onClose,
-}: {
-  item: PreviewMenuItem;
-  onClose: () => void;
-}): ReactElement => {
-  const ariadisabled: true | undefined = ((): true | undefined => {
-    if (!item.disabled) {
-      return undefined;
-    }
-
-    return true;
-  })();
-
-  let content: ReactNode = <span />;
-
-  if (item.keyId) {
-    content = <KeyHint id={item.keyId} />;
-  }
-
-  return (
-    <>
-      {item.divider && (
-        <div className="preview-menu-divider" role="separator" />
-      )}
-      <button
-        type="button"
-        role="menuitem"
-        aria-disabled={ariadisabled}
-        data-tip={item.disabled}
-        data-tip-align="end"
-        onClick={() => {
-          if (item.disabled) {
-            return;
-          }
-
-          onClose();
-          void item.run();
-        }}
-      >
-        <Icon name={item.icon} size={14} />
-        <span>{item.label}</span>
-        {content}
-      </button>
-    </>
-  );
-};
+const stopContextMenu = (event: MouseEvent<HTMLElement>): void =>
+  event.preventDefault();
 
 const PreviewMenu = ({
   at,
   label,
   items,
   onClose,
-}: {
-  at: { x: number; y: number };
-  label: string;
-  items: PreviewMenuItem[];
-  onClose: () => void;
-}): ReactElement => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState(at);
-  const [scrolls, setScrolls] = useState(false);
+}: PreviewMenuProps): ReactElement => {
+  const root = useRef<HTMLDivElement>(null);
+  const { bind, focusItem, list } = useMenuItemRefs();
+  const visible = toVisibleItems(items);
+  const firstId = visible[0]?.id ?? "";
 
-  useLayoutEffect(() => {
-    const el = ref.current;
+  const focusFirst = useCallback((): void => {
+    focusItem(firstId, { preventScroll: true });
+  }, [focusItem, firstId]);
 
-    if (!el) {
-      return;
-    }
+  const { isScrollable, point } = usePreviewMenuPlacement(root, at, focusFirst);
+  useMenuDismiss(root, onClose);
 
-    const clamp = (): void => {
-      const width = el.offsetWidth;
-      const height = el.offsetHeight;
-      const last = el.lastElementChild as HTMLElement | null;
-
-      let operand: number = height;
-
-      if (last) {
-        operand = last.offsetTop + last.offsetHeight;
-      }
-
-      setScrolls(operand > globalThis.innerHeight - EDGE * 2);
-      setPos({
-        x: Math.max(EDGE, Math.min(at.x, globalThis.innerWidth - width - EDGE)),
-        y: Math.max(
-          EDGE,
-          Math.min(at.y, globalThis.innerHeight - height - EDGE)
-        ),
-      });
-    };
-
-    clamp();
-    el.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus({
-      preventScroll: true,
-    });
-    const observer = new ResizeObserver(clamp);
-    observer.observe(el);
-
-    return (): void => observer.disconnect();
-  }, [at]);
-
-  useEffect(() => {
-    const onDown = (event: MouseEvent): void => {
-      if (!ref.current?.contains(event.target as Node)) {
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>): void => {
+      if (event.key === "Escape" || event.key === "Tab") {
+        event.preventDefault();
+        event.stopPropagation();
         onClose();
+
+        return;
       }
-    };
 
-    globalThis.addEventListener("mousedown", onDown, true);
-    globalThis.addEventListener("blur", onClose);
-    globalThis.addEventListener("resize", onClose);
+      moveItemFocus(event, list(visible.map((item) => item.id)));
+    },
+    [visible, list, onClose]
+  );
 
-    return (): void => {
-      globalThis.removeEventListener("mousedown", onDown, true);
-      globalThis.removeEventListener("blur", onClose);
-      globalThis.removeEventListener("resize", onClose);
-    };
-  }, [onClose]);
+  const style = useMemo(() => toMenuStyle(point), [point]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === "Escape" || event.key === "Tab") {
-      event.preventDefault();
-      event.stopPropagation();
-      onClose();
+  let scrollClass = "";
 
-      return;
-    }
-
-    const buttons = [
-      ...(ref.current?.querySelectorAll<HTMLButtonElement>(
-        '[role="menuitem"]'
-      ) ?? []),
-    ];
-
-    const next = step(
-      event.key,
-      buttons.indexOf(document.activeElement as HTMLButtonElement),
-      buttons.length
-    );
-
-    if (next === null) {
-      return;
-    }
-
-    event.preventDefault();
-    buttons[next]?.focus();
-  };
-
-  let part: "" | " scrolls" = "";
-
-  if (scrolls) {
-    part = " scrolls";
+  if (isScrollable) {
+    scrollClass = " scrolls";
   }
 
   return (
     <div
-      ref={ref}
-      className={`project-menu at-pointer preview-menu${part}`}
+      ref={root}
+      className={`project-menu at-pointer preview-menu${scrollClass}`}
       role="menu"
+      tabIndex={-1}
       aria-label={label}
-      style={{ left: pos.x, position: "fixed", right: "auto", top: pos.y }}
+      style={style}
       onKeyDown={onKeyDown}
-      onContextMenu={(event) => event.preventDefault()}
+      onContextMenu={stopContextMenu}
     >
-      {items
-        .filter((item) => !item.hidden)
-        .map((item) => (
-          <MenuRow key={item.id} item={item} onClose={onClose} />
-        ))}
+      {visible.map((item) => (
+        <PreviewMenuRow
+          key={item.id}
+          item={item}
+          onClose={onClose}
+          bindRef={bind}
+        />
+      ))}
     </div>
   );
 };

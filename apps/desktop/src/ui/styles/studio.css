@@ -449,7 +449,8 @@
   flex: 0 0 var(--s-2);
 }
 
-.pane-canvas .canvas-viewrow .segmented > button {
+.pane-canvas .canvas-viewrow .segmented > button,
+.pane-canvas .canvas-viewrow .segmented > .seg-radio {
   height: 24px;
 }
 

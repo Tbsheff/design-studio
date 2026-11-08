@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { activeFrameOf, commentToolsOf, inEditPane } from "./canvas-helpers.js";
 import type { StageSlotProps } from "./canvas-stage-types.js";
 import { CanvasComments } from "./canvas-tool-slots.js";
-import { LiveOverlay } from "./stage-parts.js";
+import { LiveOverlay } from "./live-overlay.js";
 
 const StageOverlay = ({
   edits,

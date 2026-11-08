@@ -1,6 +1,7 @@
+import { useId } from "react";
 import type { ReactElement } from "react";
 
-import { useRovingRadioGroup } from "../chat/level-control.js";
+import { VariationsControlOption } from "./variations-control-option.js";
 
 const ITEM_3 = 3;
 
@@ -16,6 +17,20 @@ interface Props {
 
 const OPTIONS = [1, 2, ITEM_3, ITEM_4] as const;
 
+const toGroupLabel = (labelledBy: string | undefined): string | undefined => {
+  if (!labelledBy) {
+    return "Designs";
+  }
+};
+
+const toOptionLabel = (count: number): string => {
+  if (count === 1) {
+    return "1 design (variations off)";
+  }
+
+  return `${count} variations`;
+};
+
 const VariationsControl = ({
   value,
   max,
@@ -23,59 +38,27 @@ const VariationsControl = ({
   disabled,
   labelledBy,
 }: Props): ReactElement => {
-  const radios = useRovingRadioGroup<number>(
-    OPTIONS,
-    value,
-    onChange,
-    (countValue) => Boolean(disabled) || countValue > max
-  );
-
-  const arialabel: "Designs" | undefined = ((): "Designs" | undefined => {
-    if (labelledBy) {
-      return undefined;
-    }
-
-    return "Designs";
-  })();
+  const name = useId();
 
   return (
     <div
       className="segmented variations-control"
       role="radiogroup"
-      aria-label={arialabel}
+      aria-label={toGroupLabel(labelledBy)}
       aria-labelledby={labelledBy}
       data-testid="variations-control"
-      onKeyDown={radios.onKeyDown}
     >
-      {OPTIONS.map((count3) => {
-        let arialabel2 = `${count3} variations`;
-
-        if (count3 === 1) {
-          arialabel2 = "1 design (variations off)";
-        }
-
-        let className2: "" | "on" = "";
-
-        if (count3 === value) {
-          className2 = "on";
-        }
-
-        return (
-          <button
-            key={count3}
-            {...radios.item(count3)}
-            type="button"
-            role="radio"
-            aria-checked={count3 === value}
-            aria-label={arialabel2}
-            disabled={disabled || count3 > max}
-            className={className2}
-            onClick={() => onChange(count3)}
-          >
-            {count3}
-          </button>
-        );
-      })}
+      {OPTIONS.map((count) => (
+        <VariationsControlOption
+          key={count}
+          count={count}
+          isDisabled={Boolean(disabled) || count > max}
+          isOn={count === value}
+          label={toOptionLabel(count)}
+          name={name}
+          onChange={onChange}
+        />
+      ))}
     </div>
   );
 };

@@ -33,11 +33,15 @@ const useShowFrame = (
   pointInput: PointInput
 ): ((frameId: string, selector: string | undefined) => boolean) => {
   const latest = useRef(pointInput);
-  latest.current = pointInput;
-  const timers = useRef<number[]>([]);
+  useEffect(() => {
+    latest.current = pointInput;
+  });
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(
     () => (): void => {
-      timers.current.forEach((target) => globalThis.clearTimeout(target));
+      for (const target of timers.current) {
+        globalThis.clearTimeout(target);
+      }
     },
     []
   );
@@ -54,9 +58,9 @@ const useShowFrame = (
         return false;
       }
 
-      timers.current.forEach((targetValue) =>
-        globalThis.clearTimeout(targetValue)
-      );
+      for (const targetValue of timers.current) {
+        globalThis.clearTimeout(targetValue);
+      }
 
       if (frame.hidden) {
         cur.frames.update((canvasLayout) =>
@@ -68,7 +72,7 @@ const useShowFrame = (
       cur.clearSelection();
 
       const later = (ms: number, fn: () => void): number =>
-        timers.current.push(window.setTimeout(fn, ms));
+        timers.current.push(globalThis.setTimeout(fn, ms));
 
       later(ZOOM_AT_MS, () => latest.current.zoom("selection"));
 
@@ -109,7 +113,7 @@ const useCanvasPoint = (pointInputValue: PointInput): McpPointBadge => {
       return;
     }
 
-    const timer = window.setTimeout(
+    const timer = globalThis.setTimeout(
       () => setPoint(null),
       Math.max(0, point.at + MCP_POINT_MS - Date.now())
     );

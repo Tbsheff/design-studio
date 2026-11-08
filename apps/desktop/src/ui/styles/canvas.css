@@ -978,6 +978,7 @@ fieldset.compare-modes {
 }
 
 .preview-menu-divider {
+  border: 0;
   height: 1px;
   margin: 4px var(--s-1);
   background: var(--line);
@@ -1377,4 +1378,8 @@ dialog.canvas-menu {
   max-height: none;
   margin: 0;
   color: inherit;
+}
+
+.passive-frames {
+  display: contents;
 }

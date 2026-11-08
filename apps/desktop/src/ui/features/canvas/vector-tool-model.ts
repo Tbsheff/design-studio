@@ -1,4 +1,9 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 
 import { shortcutLabel } from "../../../shared/keymap.js";
 import type { KeyId } from "../../../shared/keymap.js";
@@ -10,6 +15,7 @@ import type {
 } from "../../../shared/vector.js";
 import { json } from "../../api.js";
 import { IS_MAC } from "../../canvas-hook-slots.js";
+import { findElement } from "../../platform/find-element.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 
 const PREVIEW_TOOL_KEY_EVENT = "studio:preview-tool-key";
@@ -35,17 +41,17 @@ const emit = (next: Partial<State>): void => {
 };
 
 const vectorTool = {
-  get: () => state,
-  set: (tool: VectorToolId | null) => {
+  get: (): State => state,
+  set: (tool: VectorToolId | null): void => {
     let tool2: VectorToolId | null = null;
 
     if (state.available) {
       tool2 = tool;
     }
 
-    return emit({ tool: tool2 });
+    emit({ tool: tool2 });
   },
-  setAvailable: (available: boolean) => {
+  setAvailable: (available: boolean): void => {
     if (available !== state.available) {
       emit({ available });
     }
@@ -55,14 +61,14 @@ const vectorTool = {
 
     return (): boolean => listeners.delete(listener);
   },
-  toggle: (tool: VectorToolId) => {
+  toggle: (tool: VectorToolId): void => {
     let tool3: VectorToolId | null = null;
 
     if (state.available && state.tool !== tool) {
       tool3 = tool;
     }
 
-    return emit({ tool: tool3 });
+    emit({ tool: tool3 });
   },
 };
 
@@ -97,8 +103,11 @@ const VECTOR_TOOL_LIST: {
 ];
 
 const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({
-  ...item,
+  glyph: item.glyph,
+  id: item.id,
+  keyId: item.keyId,
   keyLabel: shortcutLabel(item.keyId, IS_MAC),
+  label: item.label,
 }));
 
 const useVectorToolKeys = (available: boolean): void => {
@@ -109,7 +118,7 @@ const useVectorToolKeys = (available: boolean): void => {
       if (
         event.defaultPrevented ||
         isTypingTarget(event.target) ||
-        document.querySelector(".play-bar")
+        findElement(document.body, ".play-bar")
       ) {
         return;
       }
@@ -130,7 +139,7 @@ const useVectorToolKeys = (available: boolean): void => {
       if (
         tool &&
         vectorTool.get().available &&
-        !document.querySelector(".play-bar")
+        !findElement(document.body, ".play-bar")
       ) {
         vectorTool.toggle(tool);
       }
@@ -152,7 +161,9 @@ const useVectorToolGuards = (
   stopOthers: () => void
 ): void => {
   const stop = useRef(stopOthers);
-  stop.current = stopOthers;
+  useLayoutEffect(() => {
+    stop.current = stopOthers;
+  });
   useEffect(() => {
     if (tool) {
       stop.current();

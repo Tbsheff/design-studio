@@ -9,8 +9,9 @@ import { LinksSwitch } from "./links-switch.js";
 import { LofiSwitch } from "./lofi-switch.js";
 import { PenIcon } from "./pen-icon.js";
 import { RulersSwitch } from "./rulers-switch.js";
+import { SourceControls } from "./source-controls.js";
 import { ThemeSwitch } from "./theme-switch.js";
-import { ViewportControls, SourceControls } from "./toolbar-viewport.js";
+import { ViewportControls } from "./toolbar-viewport.js";
 import type { Props } from "./toolbar-viewport.js";
 
 const CanvasViewRow = (props: Props): ReactElement => {

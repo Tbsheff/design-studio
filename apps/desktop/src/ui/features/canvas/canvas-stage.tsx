@@ -16,7 +16,7 @@ import { DrawBar } from "./draw-bar.js";
 import { EditNotice } from "./edit-notice.js";
 import { FrameUndoBar } from "./frame-undo-bar.js";
 import { StageArtboard } from "./stage-artboard.js";
-import { StageMessage } from "./stage-parts.js";
+import { StageMessage } from "./stage-message.js";
 import { StageRulers } from "./stage-rulers.js";
 import { unionRect } from "./use-canvas-frames.js";
 

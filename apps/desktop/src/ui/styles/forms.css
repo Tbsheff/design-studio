@@ -15,7 +15,8 @@
   border: 0;
 }
 
-.segmented button {
+.segmented button,
+.segmented .seg-radio {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -37,11 +38,13 @@
   transition-timing-function: var(--ease);
 }
 
-.segmented button:hover:not(:disabled):not(.on) {
+.segmented button:hover:not(:disabled):not(.on),
+.segmented .seg-radio:hover:not(.disabled):not(.on) {
   color: var(--text);
 }
 
-.segmented button.on {
+.segmented button.on,
+.segmented .seg-radio.on {
   background: var(--surface-raised);
   color: var(--text);
   box-shadow:
@@ -49,14 +52,32 @@
     var(--shadow-xs);
 }
 
-.segmented button:disabled {
+.segmented button:disabled,
+.segmented .seg-radio.disabled {
   color: var(--text-faint);
   cursor: default;
 }
 
-.segmented.icons button {
+.segmented.icons button,
+.segmented.icons .seg-radio {
   width: 30px;
   padding: 0;
+}
+
+.segmented .seg-radio > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.segmented .seg-radio:has(> input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 input,

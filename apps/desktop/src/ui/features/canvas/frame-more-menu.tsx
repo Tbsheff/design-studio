@@ -8,7 +8,7 @@ import { FrameMenuItemButton } from "./frame-menu-item.js";
 import { menuKeys, useMenu } from "./frame-menu-model.js";
 import { toMenuItems } from "./menu-items-model.js";
 import { usePortEntry } from "./use-port-entry.js";
-import { stop } from "./variation-controls.js";
+import { stop } from "./variation-model.js";
 
 interface FrameMenuItem {
   id: string;

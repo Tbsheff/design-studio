@@ -285,6 +285,17 @@ body:has(.ds-toast) .proto-bar,
   color: var(--text-faint);
 }
 
+dialog.play-layer {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+}
+
 .play-layer {
   flex-direction: column;
   background: var(--stage);
@@ -529,4 +540,28 @@ body:has(.ds-toast) .proto-bar,
   background: var(--accent-soft);
   border-color: var(--accent-line);
   color: var(--accent-text);
+}
+
+.proto-slot {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 180px;
+}
+
+.proto-slot.narrow {
+  max-width: 110px;
+}
+
+.proto-slot > .ui-select-root {
+  min-width: 0;
+  max-width: 100%;
+}
+
+ul.proto-list {
+  margin: 0;
+  list-style: none;
+}
+
+li.proto-row {
+  list-style: none;
 }

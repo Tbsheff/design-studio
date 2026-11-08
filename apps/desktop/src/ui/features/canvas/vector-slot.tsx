@@ -3,7 +3,11 @@ import type { ComponentProps, ReactElement } from "react";
 
 import { useVectorTool } from "./vector-tool-model.js";
 
-const VectorLayer = lazy(() => import("./vector-layer.js"));
+const VectorLayer = lazy(async () => {
+  const loaded = await import("./vector-layer.js");
+
+  return { default: loaded.VectorLayer };
+});
 
 const VectorSlot = ({
   directionId,

@@ -1,4 +1,6 @@
+import type { ZoomKey } from "@design-studio/contracts";
 import { useCallback, useEffect, useRef } from "react";
+import type { MutableRefObject } from "react";
 
 import { useFirstBuildCover } from "../chat/use-first-build.js";
 import {
@@ -11,46 +13,63 @@ import { knownList, marqueeAllowed } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import { useDirectionFrames } from "./use-direction-frames.js";
-import { useInlineTextEdit } from "./use-inline-text-edit.js";
+import { useInlineTextEdit, useResetOnChange } from "./use-inline-text-edit.js";
 import { useLayersWatch, useSelectMoveKeys } from "./use-layers-watch.js";
 import { usePreviewFrames } from "./use-preview-frames.js";
 import { useFramePort } from "./use-preview-url.js";
 import { useStageKeys } from "./use-stage-keys.js";
 
-const useCanvasPreview = (
+type CanvasStageState = ReturnType<typeof useCanvasStage>;
+
+type PreviewFrames = ReturnType<typeof usePreviewFrames>;
+
+interface MenuPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+type MenuOpener = MutableRefObject<(at: MenuPoint) => void>;
+
+interface PreviewState {
+  readonly covered: ReturnType<typeof useFirstBuildCover>;
+  readonly frames: PreviewFrames;
+  readonly inline: ReturnType<typeof useInlineTextEdit>;
+  readonly stageEl: () => HTMLDivElement | null;
+}
+
+interface CanvasPreview extends PreviewState {
+  readonly editsEnabled: boolean;
+  readonly openMenu: MenuOpener;
+  readonly passive: ReturnType<typeof useDirectionFrames>;
+  readonly theme: ReturnType<typeof useCanvasTheme>;
+}
+
+const toLiveFrames = (
+  live: boolean,
+  frames: PreviewFrames
+): PreviewFrames | null => {
+  if (live) {
+    return frames;
+  }
+
+  return null;
+};
+
+const usePreviewState = (
   props: ViewProps,
-  text: ReturnType<typeof useCanvasStage>
-) => {
-  const { projectId, directionId, kind } = props;
-
-  const {
-    stageRef,
-    active,
-    shown,
-    pz,
-    zoomBy,
-    selectMode,
-    setSelectMode,
-    comment,
-    commentMode,
-    live,
-    pane,
-    protoOn,
-    setProtoOn,
-    layersOpen,
-    toggleEdit,
-    picking,
-    baseUrl,
-    frameStates,
-    firstBuild,
-  } = text;
-
+  text: CanvasStageState,
+  openMenu: MenuOpener
+): PreviewState => {
+  const { projectId, directionId, kind, lastChange, selection } = props;
+  const { stageRef, pane, pz, zoomBy, setSelectMode, setProtoOn } = text;
+  const { comment, commentMode, live, picking, protoOn, firstBuild } = text;
   const textEditAllowed = live && !props.running && !commentMode;
 
-  const resetPreview = (): void | undefined =>
+  const resetPreview = (): void => {
     props.port?.current?.post({ type: "preview-reset" });
+  };
 
-  const stageEl = useCallback(() => stageRef.current, []);
+  const stageEl = useCallback(() => stageRef.current, [stageRef]);
 
   const inline = useInlineTextEdit(
     textEditAllowed,
@@ -59,95 +78,135 @@ const useCanvasPreview = (
     stageEl
   );
 
-  const openMenu = useRef<(at: { x: number; y: number }) => void>(() => null);
+  const baseUrl = firstBuild.url;
+  const marquee = marqueeAllowed(pane.picking, protoOn, commentMode);
+  const onContextMenu = (at: MenuPoint): void => openMenu.current(at);
+  const { onError } = props;
+  const onFrameWheel = pz.frameWheel;
+
+  const onModeExited = (): void => {
+    setSelectMode(false);
+    setProtoOn(false);
+    comment.setOn(false);
+  };
+
+  const onTextEdit = inline.onMessage;
+  const onZoomKey = (key: ZoomKey): void => zoomBy(key, "frame");
+  const selectMode = picking || commentMode;
+  const setSelection = comment.guard(props.setSelection);
 
   const frames = usePreviewFrames({
-    baseUrl: firstBuild.url,
+    baseUrl,
     directionId,
     kind,
-    lastChange: props.lastChange,
+    lastChange,
     live,
-    marquee: marqueeAllowed(pane.picking, protoOn, commentMode),
-    onContextMenu: (at) => openMenu.current(at),
-    onError: props.onError,
-    onFrameWheel: pz.frameWheel,
-    onModeExited: () => {
-      setSelectMode(false);
-      setProtoOn(false);
-      comment.setOn(false);
-    },
-    onTextEdit: inline.onMessage,
-    onZoomKey: (key) => zoomBy(key, "frame"),
+    marquee,
+    onContextMenu,
+    onError,
+    onFrameWheel,
+    onModeExited,
+    onTextEdit,
+    onZoomKey,
     projectId,
-    selectMode: picking || commentMode,
-    selection: props.selection,
-    setSelection: comment.guard(props.setSelection),
+    selectMode,
+    selection,
+    setSelection,
     textEditAllowed,
   });
 
   const covered = useFirstBuildCover(firstBuild, frames.slots.length);
-  const resetInline = inline.reset;
-  useEffect(() => resetInline(), [frames.frontToken, resetInline]);
+  useResetOnChange(frames.frontToken, inline.reset);
   useTokenFrames(frames.slots, frames.elements, kind, live);
   usePlannedEdits(projectId, directionId, live);
 
-  const passive = useDirectionFrames({
-    activeId: active.id,
-    currentId: directionId,
-    currentUrl: baseUrl,
-    directions: knownList(props.directions),
+  return { covered, frames, inline, stageEl };
+};
+
+const toDirectionInput = (
+  props: ViewProps,
+  text: CanvasStageState,
+  hold: boolean
+): Parameters<typeof useDirectionFrames>[0] => {
+  const { projectId, kind, lastChange } = props;
+  const { frameStates, live } = text;
+  const activeId = text.active.id;
+  const currentId = props.directionId;
+  const currentUrl = text.baseUrl;
+  const directions = knownList(props.directions);
+  const frames = text.shown;
+
+  return {
+    activeId,
+    currentId,
+    currentUrl,
+    directions,
     frameStates,
-    frames: shown,
-    hold: frames.slots.length > 1,
+    frames,
+    hold,
     kind,
-    lastChange: props.lastChange,
+    lastChange,
     live,
     projectId,
-  });
+  };
+};
 
+const useCanvasPreview = (
+  props: ViewProps,
+  text: CanvasStageState
+): CanvasPreview => {
+  const { directionId, running, selection, setSelection, shell } = props;
+  const { comment, commentMode, live, picking, protoOn } = text;
+  const { selectMode, setProtoOn, setSelectMode } = text;
+  const { layersOpen, toggleEdit } = text;
+
+  const openMenu = useRef<(at: MenuPoint) => void>(() => null);
+  const state = usePreviewState(props, text, openMenu);
+  const { frames, stageEl: stage } = state;
+  const hold = frames.slots.length > 1;
+  const passive = useDirectionFrames(toDirectionInput(props, text, hold));
   const theme = useCanvasTheme();
+
   useEffect(
-    () => setCanvasFront(frames.frontToken, frames.slots.length > 1),
-    [frames.frontToken, frames.slots.length]
+    () => setCanvasFront(frames.frontToken, hold),
+    [frames.frontToken, hold]
   );
   useEffect(() => (): void => setCanvasFront(null, false), []);
 
-  useFramePort(props.port, live ? frames : null, props.lastChange, kind);
+  const portFrames = toLiveFrames(live, frames);
+  useFramePort(props.port, portFrames, props.lastChange, props.kind);
+
+  const offProto = (): void => setProtoOn(false);
+  const { post } = frames;
 
   useStageKeys({
     commentMode,
     directionId,
     live,
-    offProto: () => setProtoOn(false),
+    offProto,
     picking,
-    post: frames.post,
+    post,
     protoOn,
-    running: props.running,
-    selection: props.selection,
+    running,
+    selection,
     setSelectMode,
-    setSelection: props.setSelection,
-    shell: props.shell,
-    stage: stageEl,
+    setSelection,
+    shell,
+    stage,
   });
+
+  const commentOn = comment.on;
+
   useEffect(() => {
-    if (selectMode || comment.on) {
+    if (selectMode || commentOn) {
       setProtoOn(false);
     }
-  }, [selectMode, comment.on]);
+  }, [selectMode, commentOn, setProtoOn]);
   useLayersWatch(frames.watchTree, layersOpen, frames.frontToken, toggleEdit);
-  useSelectMoveKeys(picking, props.selection, frames.selectRelative);
-  const editsEnabled = live && !props.running && directionId !== null;
+  useSelectMoveKeys(picking, selection, frames.selectRelative);
+  const editsEnabled = live && !running && directionId !== null;
 
-  return {
-    covered,
-    editsEnabled,
-    frames,
-    inline,
-    openMenu,
-    passive,
-    stageEl,
-    theme,
-  };
+  return { ...state, editsEnabled, openMenu, passive, theme };
 };
 
 export { useCanvasPreview };

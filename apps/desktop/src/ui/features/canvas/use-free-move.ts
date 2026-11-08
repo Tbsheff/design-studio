@@ -1,16 +1,12 @@
 import type {
-  BridgeToParent,
   FreeMoveDrag,
-  FreeMoveLine,
-  FreeMoveStart,
   SelectionContext,
-  StructureEditRequest,
   StructureTarget,
 } from "@design-studio/contracts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import type { RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
-import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import {
@@ -19,416 +15,219 @@ import {
   startOptimistic,
   toSelectionTargets,
 } from "../inspector/index.js";
-import { snapRect } from "./snap-model.js";
+import { createMoveController } from "./free-move-controller.js";
+import { absoluteStyle } from "./free-move-model.js";
 import type {
-  Rect,
-  SnapGuide,
-  SpacingBadge,
-  SnapResult,
-} from "./snap-model.js";
+  AbsoluteStyle,
+  FreeMoveOptions,
+  FreeMoveSession,
+  FreeMoveView,
+  Placed,
+} from "./free-move-model.js";
 
-interface FreeMoveView {
-  box: Rect;
-  guides: SnapGuide[];
-  spacing: SpacingBadge[];
-  line: FreeMoveLine | null;
-  copy: boolean;
-}
+type CommitWrite = (() => Promise<void>) | null;
 
-interface Options {
-  projectId: string;
-  directionId: string | null;
-  selection: SelectionContext[];
-  enabled: boolean;
-  busy: boolean;
-  zoom: number;
-  post: (body: ParentMessageBody) => void;
-  listen: (handler: (message: BridgeToParent) => void) => () => void;
-  holdSwap?: (held: boolean, settle: boolean) => void;
-  setSelection: (
-    updater: (prev: SelectionContext[]) => SelectionContext[]
-  ) => void;
-  refreshRects: () => void;
-  onError: (message: string) => void;
-  applyStructure: (request: StructureEditRequest) => Promise<void>;
-}
+const toRevertStyle = (
+  target: SelectionContext,
+  style: AbsoluteStyle
+): Record<string, string> =>
+  Object.fromEntries(
+    Object.keys(style).map((key) => [key, target.styles[key] ?? ""])
+  );
 
-interface Session {
-  start: FreeMoveStart;
-  target: SelectionContext;
-  candidates: Rect[];
-}
+const saveStyle = async (
+  live: RefObject<FreeMoveOptions>,
+  target: SelectionContext,
+  style: AbsoluteStyle
+): Promise<void> => {
+  const cur = live.current;
+  const req = createCurrentEditRequest(target, style);
 
-interface Placed {
-  dx: number;
-  dy: number;
-  view: FreeMoveView;
-}
+  if (!req || !cur.directionId) {
+    return;
+  }
 
-const place = (
-  sessionValue: Session,
+  const { selector } = target;
+  cur.setSelection((prev) => applyCommit(prev, { selector, style }));
+
+  const optimistic = startOptimistic(
+    { post: cur.post, refreshRects: cur.refreshRects },
+    req,
+    (message) => live.current.onError(message)
+  );
+
+  try {
+    const result = await api.directEdit(cur.projectId, cur.directionId, req);
+    optimistic.saved(result.tailwind ?? null);
+    live.current.refreshRects();
+  } catch (error) {
+    optimistic.failed(errorText(error));
+    const back = toRevertStyle(target, style);
+
+    live.current.setSelection((prev) =>
+      applyCommit(prev, { selector, style: back })
+    );
+    live.current.onError(errorText(error));
+  }
+};
+
+const isMoved = (drag: FreeMoveDrag, placed: Placed): boolean =>
+  Boolean(drag.insert) || placed.dx !== 0 || placed.dy !== 0;
+
+const toBlockedMessage = (
   drag: FreeMoveDrag,
-  zoom: number
-): Placed => {
-  const base = sessionValue.start.rect;
-  const moved = { ...base, x: base.x + drag.dx, y: base.y + drag.dy };
-  const absolute = sessionValue.start.mode === "absolute";
-
-  let snapped: SnapResult = { guides: [], rect: moved, spacing: [] };
-
-  if (!(!absolute || drag.free || sessionValue.candidates.length === 0)) {
-    snapped = snapRect({
-      candidates: sessionValue.candidates,
-      rect: moved,
-      x: "move",
-      y: "move",
-      zoom,
-    });
+  placed: Placed
+): string | null => {
+  if (drag.note || isMoved(drag, placed)) {
+    return drag.note ?? "Wait for the last edit to finish.";
   }
 
-  const box = snapped.rect;
+  return null;
+};
 
-  return {
-    dx: Math.round(box.x - base.x),
-    dy: Math.round(box.y - base.y),
-    view: {
-      box,
-      copy: drag.alt,
-      guides: snapped.guides,
-      line: drag.insert?.line ?? null,
-      spacing: snapped.spacing,
-    },
+const toFlowWrite = (
+  cur: FreeMoveOptions,
+  drag: FreeMoveDrag,
+  target: StructureTarget
+): CommitWrite => {
+  const ref = drag.insert?.ref;
+
+  if (!ref) {
+    return null;
+  }
+
+  let self: StructureTarget = target;
+
+  if (drag.insert?.self) {
+    self = { ...drag.insert.self, selector: target.selector };
+  }
+
+  let op: "move" | "duplicate" = "move";
+
+  if (drag.alt) {
+    op = "duplicate";
+  }
+
+  let placement: { after: StructureTarget } | { before: StructureTarget } = {
+    before: ref,
   };
+
+  if (drag.insert?.after) {
+    placement = { after: ref };
+  }
+
+  return () => cur.applyStructure({ op, targets: [self], ...placement });
 };
 
-const transformOf = (session3: Session, dx: number, dy: number): string => {
-  let own = "";
+const toAbsoluteWrite = (
+  live: RefObject<FreeMoveOptions>,
+  session: FreeMoveSession,
+  drag: FreeMoveDrag,
+  placed: Placed
+): CommitWrite => {
+  const target = toSelectionTargets([session.target])?.[0];
 
-  if (session3.start.transform && session3.start.transform !== "none") {
-    own = ` ${session3.start.transform}`;
+  if (!target || (placed.dx === 0 && placed.dy === 0)) {
+    return null;
   }
 
-  return `translate(${dx}px, ${dy}px)${own}`;
+  const style = absoluteStyle(session, placed.dx, placed.dy);
+
+  if (drag.alt) {
+    const targets = [target];
+
+    return () =>
+      live.current.applyStructure({ op: "duplicate", style, targets });
+  }
+
+  return () => saveStyle(live, session.target, style);
 };
 
-const absoluteStyle = (
-  session4: Session,
-  dx: number,
-  dy: number
-): Record<string, string> => {
-  const style: Record<string, string> = {};
-  const { fromRight, fromBottom } = session4.start;
+const commitPlan = (
+  live: RefObject<FreeMoveOptions>,
+  session: FreeMoveSession,
+  drag: FreeMoveDrag,
+  placed: Placed
+): CommitWrite => {
+  const cur = live.current;
 
-  if (dx !== 0 || session4.start.convert) {
-    let result2: "right" | "left" = "left";
+  if (drag.note || cur.busy) {
+    const message = toBlockedMessage(drag, placed);
 
-    if (fromRight) {
-      result2 = "right";
+    if (message) {
+      cur.onError(message);
     }
 
-    let operand: number = dx;
-
-    if (fromRight) {
-      operand = -dx;
-    }
-
-    style[result2] = `${Math.round(session4.start.left + operand)}px`;
+    return null;
   }
 
-  if (dy !== 0 || session4.start.convert) {
-    let result3: "bottom" | "top" = "top";
+  const target = toSelectionTargets([session.target])?.[0];
 
-    if (fromBottom) {
-      result3 = "bottom";
-    }
-
-    let operand2: number = dy;
-
-    if (fromBottom) {
-      operand2 = -dy;
-    }
-
-    style[result3] = `${Math.round(session4.start.top + operand2)}px`;
+  if (target && session.start.mode === "flow") {
+    return toFlowWrite(cur, drag, target);
   }
 
-  if (session4.start.convert) {
-    Object.assign(style, {
-      position: "absolute",
-      width: `${Math.round(session4.start.rect.width)}px`,
-    });
-  }
-
-  return style;
+  return toAbsoluteWrite(live, session, drag, placed);
 };
 
-const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
+const useFreeMove = (
+  options: FreeMoveOptions
+): LiveStore<FreeMoveView | null> => {
   const live = useRef(options);
-  live.current = options;
-  const session = useRef<Session | null>(null);
-  const [view] = useState(() => createLiveStore<FreeMoveView | null>(null));
+  useLayoutEffect(() => {
+    live.current = options;
+  });
+  const session = useRef<FreeMoveSession | null>(null);
+  const view = useMemo(() => createLiveStore<FreeMoveView | null>(null), []);
   const setView = view.set;
+  const { listen } = options;
 
   useEffect(() => {
-    const end = (committing: boolean): void => {
-      if (!session.current) {
-        return;
-      }
-
-      session.current = null;
-      setView(null);
-      document.body.classList.remove("element-moving");
-      globalThis.removeEventListener("keydown", onKey, true);
-      live.current.post({ type: "preview-reset" });
-      live.current.holdSwap?.(false, !committing);
-    };
-
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key !== "Escape" || !session.current) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      live.current.post({ type: "move-cancel" });
-      end(false);
-    };
-
-    const begin = (start: FreeMoveStart): void => {
-      const cur = live.current;
-
-      const target: SelectionContext | undefined = (():
-        | SelectionContext
-        | undefined => {
-        if (cur.selection.length !== 1) {
-          return undefined;
-        }
-
-        return cur.selection[0];
-      })();
-
-      if (
-        !cur.enabled ||
-        !cur.directionId ||
-        !target?.source ||
-        target.selector !== start.selector
-      ) {
-        cur.post({ type: "move-cancel" });
-
-        if (
-          cur.enabled &&
-          !target?.source &&
-          target?.selector === start.selector
-        ) {
-          cur.onError(
-            "This element has no source location, so it cannot move here."
-          );
-        }
-
-        return;
-      }
-
-      let candidates2: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-      }[] = start.siblings;
-
-      if (start.parent) {
-        candidates2 = [start.parent, ...start.siblings];
-      }
-
-      session.current = {
-        candidates: candidates2,
-        start,
-        target,
-      };
-      document.body.classList.add("element-moving");
-      globalThis.addEventListener("keydown", onKey, true);
-      cur.holdSwap?.(true, false);
-      setView({
-        box: start.rect,
-        copy: false,
-        guides: [],
-        line: null,
-        spacing: [],
-      });
-    };
-
-    const update = (drag: FreeMoveDrag): void => {
-      const text = session.current;
-
-      if (!text) {
-        return;
-      }
-
-      const placed = place(text, drag, live.current.zoom);
-
-      const transform2: string = ((): string => {
-        if (drag.alt) {
-          return transformOf(text, 0, 0);
-        }
-
-        return transformOf(text, placed.dx, placed.dy);
-      })();
-
-      live.current.post({
-        selector: text.start.selector,
-        style: {
-          transform: transform2,
-        },
-        type: "preview-style",
-      });
-      setView(placed.view);
-    };
-
-    const drop = (drag: FreeMoveDrag): void => {
-      const textValue = session.current;
-
-      if (!textValue) {
-        return;
-      }
-
-      const placed = place(textValue, drag, live.current.zoom);
-      const write = commitPlan(textValue, drag, placed);
-      end(write !== null);
-
-      if (write) {
-        void write();
-      }
-    };
-
-    const commitPlan = (
-      session5: Session,
+    const commit = (
+      current: FreeMoveSession,
       drag: FreeMoveDrag,
       placed: Placed
-    ): (() => Promise<void>) | null => {
-      const cur = live.current;
+    ): CommitWrite => commitPlan(live, current, drag, placed);
 
-      if (drag.note || cur.busy) {
-        if (drag.note || drag.insert || placed.dx !== 0 || placed.dy !== 0) {
-          cur.onError(drag.note ?? "Wait for the last edit to finish.");
+    const controller = createMoveController({ commit, live, session, setView });
+
+    globalThis.addEventListener("keydown", controller.onKey, true);
+
+    const stop = listen((message) => {
+      switch (message.type) {
+        case "move-start": {
+          controller.begin(message.move);
+          break;
         }
 
-        return null;
-      }
-
-      const target = toSelectionTargets([session5.target])?.[0];
-
-      if (!target) {
-        return null;
-      }
-
-      if (session5.start.mode === "flow") {
-        const ref = drag.insert?.ref;
-
-        if (!ref) {
-          return null;
+        case "move-live": {
+          controller.update(message.drag);
+          break;
         }
 
-        let self: StructureTarget = target;
-
-        if (drag.insert?.self) {
-          self = { ...drag.insert.self, selector: target.selector };
+        case "move-drop": {
+          controller.drop(message.drag);
+          break;
         }
 
-        return () => {
-          let op2: "move" | "duplicate" = "move";
+        case "move-cancel":
+        case "ready": {
+          controller.end(false);
+          break;
+        }
 
-          if (drag.alt) {
-            op2 = "duplicate";
-          }
-
-          let result4:
-            | { after: StructureTarget }
-            | { before: StructureTarget } = { before: ref };
-
-          if (drag.insert?.after) {
-            result4 = { after: ref };
-          }
-
-          return cur.applyStructure({
-            op: op2,
-            targets: [self],
-            ...result4,
-          });
-        };
-      }
-
-      if (placed.dx === 0 && placed.dy === 0) {
-        return null;
-      }
-
-      const style = absoluteStyle(session5, placed.dx, placed.dy);
-
-      if (drag.alt) {
-        return () =>
-          cur.applyStructure({ op: "duplicate", style, targets: [target] });
-      }
-
-      return () => saveStyle(session5.target, style);
-    };
-
-    const saveStyle = async (
-      target: SelectionContext,
-      style: Record<string, string>
-    ): Promise<void> => {
-      const cur = live.current;
-      const req = createCurrentEditRequest(target, style);
-
-      if (!req || !cur.directionId) {
-        return;
-      }
-
-      const { selector } = target;
-      cur.setSelection((prev) => applyCommit(prev, { selector, style }));
-
-      const optimistic = startOptimistic(
-        { post: cur.post, refreshRects: cur.refreshRects },
-        req,
-        (message) => live.current.onError(message)
-      );
-
-      try {
-        const result = await api.directEdit(
-          cur.projectId,
-          cur.directionId,
-          req
-        );
-
-        optimistic.saved(result.tailwind ?? null);
-        live.current.refreshRects();
-      } catch (error) {
-        optimistic.failed(errorText(error));
-
-        const back = Object.fromEntries(
-          Object.keys(style).map((key) => [key, target.styles[key] ?? ""])
-        );
-
-        live.current.setSelection((prev) =>
-          applyCommit(prev, { selector, style: back })
-        );
-        live.current.onError(errorText(error));
-      }
-    };
-
-    const stop = options.listen((message) => {
-      if (message.type === "move-start") {
-        begin(message.move);
-      } else if (message.type === "move-live") {
-        update(message.drag);
-      } else if (message.type === "move-drop") {
-        drop(message.drag);
-      } else if (message.type === "move-cancel" || message.type === "ready") {
-        end(false);
+        default: {
+          break;
+        }
       }
     });
 
     return (): void => {
       stop();
-      end(false);
+      controller.end(false);
+      globalThis.removeEventListener("keydown", controller.onKey, true);
     };
-  }, [options.listen]);
+  }, [listen, setView]);
 
   return view;
 };

@@ -2,11 +2,12 @@ import { useMemo } from "react";
 import type { ReactElement } from "react";
 
 import type { StageSlotProps } from "./canvas-stage-types.js";
+import { PreviewSlots } from "./preview-slots.js";
 import { toArtboardStyle } from "./stage-artboard-model.js";
 import { StageFrames } from "./stage-frames.js";
 import { StageLayers } from "./stage-layers.js";
 import { StageOverlay } from "./stage-overlay.js";
-import { PreviewSlots, StepCover } from "./stage-parts.js";
+import { StepCover } from "./step-cover.js";
 
 const StageArtboard = ({
   edits,

@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import {
   noteHandledShortcut,
   recentDesktopCommand,
   useDesktopCommand,
 } from "../../platform/desktop.js";
+import { findElement } from "../../platform/find-element.js";
 import { editsText } from "../../platform/typing-target.js";
 
 const PREVIEW_HISTORY_EVENT = "studio:preview-history";
@@ -44,7 +45,7 @@ const historyKeyOf = (
 };
 
 const modalOpen = (): boolean =>
-  document.querySelector('[role="dialog"][aria-modal="true"]') !== null;
+  findElement(document.body, '[role="dialog"][aria-modal="true"]') !== null;
 
 interface ShortcutState {
   enabled: boolean;
@@ -82,7 +83,9 @@ const useUndoShortcut = (
   redo?: RedoShortcut
 ): void => {
   const state = useRef<ShortcutState>({ enabled, onUndo, redo });
-  state.current = { enabled, onUndo, redo };
+  useLayoutEffect(() => {
+    state.current = { enabled, onUndo, redo };
+  });
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       const kind = historyKeyOf(event);

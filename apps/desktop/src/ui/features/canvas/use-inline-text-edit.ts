@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
+import { findElement } from "../../platform/find-element.js";
+import { isText } from "../../platform/json-guard.js";
 import type { TextEditMessage } from "./use-preview-frames.js";
 
 const LENGTH_2000 = 2000;
@@ -10,9 +12,7 @@ const REFOCUS_MS = 50;
 const QUIET_FOCUS_ATTR = "data-quiet-focus";
 
 const focusStageQuietly = (
-  stage: HTMLElement | null = document.querySelector<HTMLElement>(
-    ".canvas .stage"
-  )
+  stage: HTMLElement | null = findElement(document.body, ".canvas .stage")
 ): void => {
   if (!stage) {
     return;
@@ -43,19 +43,30 @@ const parseTextCommit = (
 
   const { selector, text } = message as { selector: unknown; text: unknown };
 
-  if (
-    typeof selector !== "string" ||
-    selector === "" ||
-    selector.length > LENGTH_2000
-  ) {
+  if (!isText(selector) || selector === "" || selector.length > LENGTH_2000) {
     return null;
   }
 
-  if (typeof text !== "string" || text.length > MAX_INLINE_TEXT) {
+  if (!isText(text) || text.length > MAX_INLINE_TEXT) {
     return null;
   }
 
   return { selector, text };
+};
+
+interface InlineTextEdit {
+  readonly editing: boolean;
+  readonly onMessage: (message: TextEditMessage) => void;
+  readonly reset: () => void;
+}
+
+const useResetOnChange = (token: string | null, reset: () => void): void => {
+  const [seen, setSeen] = useState(token);
+
+  if (seen !== token) {
+    setSeen(token);
+    reset();
+  }
 };
 
 const useInlineTextEdit = (
@@ -63,18 +74,26 @@ const useInlineTextEdit = (
   onCommit: TextCommitHandler | undefined,
   onReject: () => void,
   stage: () => HTMLElement | null
-): {
-  editing: boolean;
-  onMessage: (message: TextEditMessage) => void;
-  reset: () => void;
-} => {
+): InlineTextEdit => {
   const [editing, setEditing] = useState(false);
+  const [wasAllowed, setWasAllowed] = useState(allowed);
+
+  if (wasAllowed !== allowed) {
+    setWasAllowed(allowed);
+
+    if (!allowed) {
+      setEditing(false);
+    }
+  }
+
   const live = useRef({ onCommit, onReject, stage });
-  live.current = { onCommit, onReject, stage };
+  useLayoutEffect(() => {
+    live.current = { onCommit, onReject, stage };
+  });
   const editingRef = useRef(false);
 
   const refocusStage = useCallback(() => {
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       const el = live.current.stage();
 
       if (!el || editingRef.current || focusLeftCanvas(el)) {
@@ -84,12 +103,6 @@ const useInlineTextEdit = (
       focusStageQuietly(el);
     }, REFOCUS_MS);
   }, []);
-
-  useEffect(() => {
-    if (!allowed) {
-      setEditing(false);
-    }
-  }, [allowed]);
 
   const onMessage = useCallback(
     (message: TextEditMessage) => {
@@ -129,6 +142,7 @@ export {
   focusStageQuietly,
   parseTextCommit,
   useInlineTextEdit,
+  useResetOnChange,
 };
 
-export type { TextCommitHandler };
+export type { InlineTextEdit, TextCommitHandler };

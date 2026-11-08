@@ -2,8 +2,8 @@ import type { ReactElement } from "react";
 import { useSyncExternalStore } from "react";
 
 import { formatMeasure } from "../../../shared/measure.js";
+import { frameSnapStore } from "./frame-snap-store.js";
 import { gapStyle, guideStyle, toSnapOriginStyle } from "./overlay-styles.js";
-import { frameSnapStore } from "./use-frame-resize.js";
 
 const FrameSnapLayer = ({
   origin,

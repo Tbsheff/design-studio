@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 
 import { penPath } from "./drawing-model.js";
 import type { PenAnchor } from "./drawing-model.js";
-import type { Point } from "./vector-layer.js";
+import type { Point } from "./vector-layer-types.js";
 import {
   PREVIEW_STROKE,
   toAnchorClass,

@@ -1,6 +1,11 @@
 const MAX_0_01 = 0.01;
 
-const toPosition = (left: number, top: number): { x: number; y: number } => ({
+interface Position {
+  x: number;
+  y: number;
+}
+
+const toPosition = (left: number, top: number): Position => ({
   x: left,
   y: top,
 });
@@ -124,15 +129,15 @@ const edgeDeltas = (
 interface Neighbours {
   before: Span | null;
   after: Span | null;
-  gaps: { a: Span; b: Span; at: number }[];
+  gaps: { first: Span; second: Span; at: number }[];
 }
 
 const crossMid = (rect4: Rect, rect5: Rect, axis: Axis): number => {
   const axisValue = cross(axis);
-  const sa = span(rect4, axisValue);
-  const sb = span(rect5, axisValue);
+  const spanA = span(rect4, axisValue);
+  const spanB = span(rect5, axisValue);
 
-  return (Math.max(sa.lo, sb.lo) + Math.min(sa.hi, sb.hi)) / 2;
+  return (Math.max(spanA.lo, spanB.lo) + Math.min(spanA.hi, spanB.hi)) / 2;
 };
 
 const existingGaps = (candidates: Rect[], axis: Axis): Neighbours["gaps"] => {
@@ -146,24 +151,21 @@ const existingGaps = (candidates: Rect[], axis: Axis): Neighbours["gaps"] => {
     for (const rect of candidates) {
       const sb = span(rect, axis);
 
-      if (
-        rect === rect6 ||
-        sb.lo < sa.hi ||
-        !overlaps(span(rect6, axis3), span(rect, axis3))
-      ) {
-        continue;
-      }
+      const isNextCandidate =
+        rect !== rect6 &&
+        sb.lo >= sa.hi &&
+        overlaps(span(rect6, axis3), span(rect, axis3));
 
-      if (!next || sb.lo < span(next, axis).lo) {
+      if (isNextCandidate && (!next || sb.lo < span(next, axis).lo)) {
         next = rect;
       }
     }
 
     if (next && span(next, axis).lo - sa.hi > 0) {
       gaps.push({
-        a: sa,
         at: crossMid(rect6, next, axis),
-        b: span(next, axis),
+        first: sa,
+        second: span(next, axis),
       });
     }
   }
@@ -181,11 +183,11 @@ const neighboursOf = (
   let before: Span | null = null;
   let after: Span | null = null;
 
-  for (const cand of candidates) {
-    if (!overlaps(span(rect, axis4), span(cand, axis4))) {
-      continue;
-    }
+  const sideBySide = candidates.filter((cand) =>
+    overlaps(span(rect, axis4), span(cand, axis4))
+  );
 
+  for (const cand of sideBySide) {
     const span6 = span(cand, axis);
 
     if (span6.hi <= own.lo && (!before || span6.hi > before.hi)) {
@@ -204,7 +206,7 @@ const spacingDeltas = (own: Span, count: Neighbours): number[] => {
   const out: number[] = [];
 
   for (const group of count.gaps) {
-    const value = group.b.lo - group.a.hi;
+    const value = group.second.lo - group.first.hi;
 
     if (count.before) {
       out.push(count.before.hi + value - own.lo);
@@ -283,18 +285,17 @@ const guidesFor = (
     const other = span(cand, axis5);
 
     for (const targetValue of linesOf(span(cand, axis))) {
-      const pointValue = points.find(
-        (valueValue) => Math.abs(valueValue - targetValue) < SAME
-      );
+      const pointValue =
+        points.find(
+          (valueValue) => Math.abs(valueValue - targetValue) < SAME
+        ) ?? null;
 
-      if (pointValue === undefined) {
-        continue;
+      if (pointValue !== null) {
+        const prev = byAt.get(pointValue);
+        const from = Math.min(own.lo, other.lo, prev?.from ?? Infinity);
+        const to = Math.max(own.hi, other.hi, prev?.to ?? -Infinity);
+        byAt.set(pointValue, { at: pointValue, axis, from, to });
       }
-
-      const prev = byAt.get(pointValue);
-      const from = Math.min(own.lo, other.lo, prev?.from ?? Infinity);
-      const to = Math.max(own.hi, other.hi, prev?.to ?? -Infinity);
-      byAt.set(pointValue, { at: pointValue, axis, from, to });
     }
   }
 
@@ -336,13 +337,31 @@ const ownGapAt = (
 const near = (first: number | null, second: number): boolean =>
   first !== null && Math.abs(first - second) < SAME;
 
+interface OwnBadgeInput {
+  rect: Rect;
+  candidates: Rect[];
+  axis: Axis;
+}
+
+const hasBadge = (
+  neighbour: Span | null,
+  gap: number | null,
+  isEven: boolean,
+  values: number[]
+): boolean => {
+  if (!neighbour || gap === null || gap <= 0) {
+    return false;
+  }
+
+  return isEven || values.some((value3) => near(gap, value3));
+};
+
 const ownBadges = (
-  rect: Rect,
-  candidates: Rect[],
-  axis: Axis,
+  badgeInput: OwnBadgeInput,
   countValue: Neighbours,
   values: number[]
 ): SpacingBadge[] => {
+  const { rect, candidates, axis } = badgeInput;
   const own = span(rect, axis);
 
   let left: number | null = null;
@@ -356,15 +375,11 @@ const ownBadges = (
   if (countValue.after) {
     right = countValue.after.lo - own.hi;
   }
-  const even = left !== null && left > 0 && near(right, left);
+
+  const isEven = left !== null && left > 0 && near(right, left);
   const out: SpacingBadge[] = [];
 
-  if (
-    countValue.before &&
-    left !== null &&
-    left > 0 &&
-    (even || values.some((value3) => near(left, value3)))
-  ) {
+  if (countValue.before && hasBadge(countValue.before, left, isEven, values)) {
     out.push(
       badge(
         axis,
@@ -375,12 +390,7 @@ const ownBadges = (
     );
   }
 
-  if (
-    countValue.after &&
-    right !== null &&
-    right > 0 &&
-    (even || values.some((value4) => near(right, value4)))
-  ) {
+  if (countValue.after && hasBadge(countValue.after, right, isEven, values)) {
     out.push(
       badge(
         axis,
@@ -416,15 +426,17 @@ const spacingFor = (
 
   const matched = count3.gaps.filter(
     (groupValue) =>
-      near(left, groupValue.b.lo - groupValue.a.hi) ||
-      near(right, groupValue.b.lo - groupValue.a.hi)
+      near(left, groupValue.second.lo - groupValue.first.hi) ||
+      near(right, groupValue.second.lo - groupValue.first.hi)
   );
 
-  const values = matched.map((group3) => group3.b.lo - group3.a.hi);
+  const values = matched.map((group3) => group3.second.lo - group3.first.hi);
 
   return [
-    ...matched.map((group4) => badge(axis, group4.a, group4.b, group4.at)),
-    ...ownBadges(rect, candidates, axis, count3, values),
+    ...matched.map((group4) =>
+      badge(axis, group4.first, group4.second, group4.at)
+    ),
+    ...ownBadges({ axis, candidates, rect }, count3, values),
   ];
 };
 
@@ -439,11 +451,9 @@ const snapRect = (input: SnapInput): SnapResult => {
   for (const axis of ["x", "y"] as const) {
     const kind = input[axis];
 
-    if (!kind) {
-      continue;
+    if (kind) {
+      guides.push(...guidesFor(rect, input.candidates, axis, kind));
     }
-
-    guides.push(...guidesFor(rect, input.candidates, axis, kind));
 
     if (kind === "move") {
       spacing.push(...spacingFor(rect, input.candidates, axis));

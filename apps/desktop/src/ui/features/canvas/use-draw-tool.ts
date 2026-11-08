@@ -1,5 +1,11 @@
 import type { DrawStroke } from "@design-studio/contracts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { DRAW_POINTS_MAX, DRAW_STROKES_MAX } from "../../../shared/comments.js";
 import { useDesktopCommand } from "../../platform/desktop.js";
@@ -32,28 +38,78 @@ const hasText = (target: EventTarget | null): boolean => {
   return isTypingTarget(target);
 };
 
-const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
-  const [on, setOnState] = useState(false);
-  const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
+const toToolbarMode = (isAvailable: boolean, isOn: boolean): boolean | null => {
+  if (isAvailable) {
+    return isOn;
+  }
+
+  return null;
+};
+
+const hasCommandModifier = (event: KeyboardEvent): boolean =>
+  event.metaKey || event.ctrlKey;
+
+const isPlainCommand = (event: KeyboardEvent): boolean =>
+  hasCommandModifier(event) && !event.altKey && !event.shiftKey;
+
+const isUndoKey = (event: KeyboardEvent, isActive: boolean): boolean =>
+  isActive && isPlainCommand(event) && event.key.toLowerCase() === "z";
+
+const isCloseKey = (key: string): boolean =>
+  key === "escape" || key === "v" || key === "c";
+
+interface DrawKeyHandlers {
+  readonly toggle: () => void;
+  readonly undo: () => void;
+  readonly setOn: (on: boolean) => void;
+}
+
+const handleDrawKey = (
+  event: KeyboardEvent,
+  live: { readonly current: { available: boolean; on: boolean } },
+  handlers: DrawKeyHandlers
+): void => {
+  if (isUndoKey(event, live.current.on)) {
+    if (!hasText(event.target)) {
+      event.preventDefault();
+      event.stopPropagation();
+      handlers.undo();
+    }
+
+    return;
+  }
+
+  if (
+    isTypingTarget(event.target) ||
+    hasCommandModifier(event) ||
+    event.altKey
+  ) {
+    return;
+  }
+
+  const key = event.key.toLowerCase();
+
+  if (key === "p" && !event.shiftKey && live.current.available) {
+    event.preventDefault();
+    handlers.toggle();
+
+    return;
+  }
+
+  if (isCloseKey(key) && live.current.on) {
+    handlers.setOn(false);
+  }
+};
+
+interface DrawStrokes {
+  readonly strokes: DrawStroke[];
+  readonly undo: () => void;
+  readonly clear: () => void;
+  readonly push: (stroke: DrawStroke) => void;
+}
+
+const useDrawStrokes = (): DrawStrokes => {
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
-  const live = useRef({ available, on, onActivate });
-  live.current = { available, on, onActivate };
-
-  const setOn = useCallback((next: boolean) => {
-    if (next && !live.current.available) {
-      return;
-    }
-
-    if (next) {
-      live.current.onActivate();
-    } else {
-      setStrokes([]);
-    }
-
-    setOnState(next);
-  }, []);
-
-  const toggle = useCallback(() => setOn(!live.current.on), [setOn]);
   const undo = useCallback(() => setStrokes((prev) => prev.slice(0, -1)), []);
   const clear = useCallback(() => setStrokes([]), []);
 
@@ -69,49 +125,51 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
     []
   );
 
-  useEffect(() => {
+  return { clear, push, strokes, undo };
+};
+
+const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
+  const [isOn, setIsOn] = useState(false);
+  const on = isOn;
+  const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
+  const [wasAvailable, setWasAvailable] = useState(available);
+  const { clear, push, strokes, undo } = useDrawStrokes();
+  const live = useRef({ available, on, onActivate });
+  useLayoutEffect(() => {
+    live.current = { available, on, onActivate };
+  });
+
+  const setOn = useCallback(
+    (next: boolean) => {
+      if (next && !live.current.available) {
+        return;
+      }
+
+      if (next) {
+        live.current.onActivate();
+      } else {
+        clear();
+      }
+
+      setIsOn(next);
+    },
+    [clear]
+  );
+
+  if (wasAvailable !== available) {
+    setWasAvailable(available);
+
     if (!available) {
-      setOn(false);
+      clear();
+      setIsOn(false);
     }
-  }, [available, setOn]);
+  }
+
+  const toggle = useCallback(() => setOn(!live.current.on), [setOn]);
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      const mod = event.metaKey || event.ctrlKey;
-
-      if (
-        live.current.on &&
-        mod &&
-        !event.altKey &&
-        !event.shiftKey &&
-        event.key.toLowerCase() === "z"
-      ) {
-        if (hasText(event.target)) {
-          return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-        undo();
-
-        return;
-      }
-
-      if (isTypingTarget(event.target) || mod || event.altKey) {
-        return;
-      }
-
-      const key = event.key.toLowerCase();
-
-      if (key === "p" && !event.shiftKey && live.current.available) {
-        event.preventDefault();
-        toggle();
-      } else if (key === "escape" || key === "v" || key === "c") {
-        if (live.current.on) {
-          setOn(false);
-        }
-      }
-    };
+    const onKey = (event: KeyboardEvent): void =>
+      handleDrawKey(event, live, { setOn, toggle, undo });
 
     globalThis.addEventListener("keydown", onKey, true);
 
@@ -130,26 +188,21 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
 
   const used = strokes.reduce((sum, stroke) => sum + stroke.points.length, 0);
 
-  const toolbarMode2: boolean | null = ((): boolean | null => {
-    if (!available) {
-      return null;
-    }
-
-    return on;
-  })();
+  const pointsLeft = Math.max(0, DRAW_POINTS_MAX - used);
+  const toolbarMode = toToolbarMode(available, on);
 
   return {
     available,
     clear,
     color,
     on,
-    pointsLeft: Math.max(0, DRAW_POINTS_MAX - used),
+    pointsLeft,
     push,
     setColor,
     setOn,
     strokes,
     toggle,
-    toolbarMode: toolbarMode2,
+    toolbarMode,
     undo,
   };
 };
@@ -167,11 +220,16 @@ const useCanvasDraw = (
   });
 
   const setDraw = draw.setOn;
-  useEffect(() => {
-    if (comment.on || selectMode) {
+  const isBlocked = comment.on || selectMode;
+  const [wasBlocked, setWasBlocked] = useState(isBlocked);
+
+  if (wasBlocked !== isBlocked) {
+    setWasBlocked(isBlocked);
+
+    if (isBlocked) {
       setDraw(false);
     }
-  }, [comment.on, selectMode, setDraw]);
+  }
 
   return draw;
 };

@@ -9,7 +9,7 @@ import { toChipClass, toChipTip } from "./frame-page-chip-model.js";
 import { FramePageForm } from "./frame-page-form.js";
 import { FramePageList } from "./frame-page-list.js";
 import { pageName } from "./page-name-model.js";
-import { stop } from "./variation-controls.js";
+import { stop } from "./variation-model.js";
 
 const FramePageMenu = ({
   path,

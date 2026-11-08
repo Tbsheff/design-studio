@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import type { ReactElement } from "react";
 
 import type { StageSlotProps } from "./canvas-stage-types.js";
+import { FreeMoveSlot } from "./free-move-slot.js";
 import { MarqueeLayer } from "./marquee-layer.js";
-import { FreeMoveSlot } from "./stage-parts.js";
 import { VectorSlot } from "./vector-slot.js";
 
 const StageLayers = ({

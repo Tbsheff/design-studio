@@ -1,8 +1,7 @@
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 
 import { FrameResizeEdge } from "./frame-resize-edge.js";
-
-type ResizeEdge = "right" | "bottom" | "corner";
+import type { ResizeEdge } from "./resize-edge-model.js";
 
 const EDGES: { edge: ResizeEdge; label: string }[] = [
   { edge: "right", label: "Resize width" },

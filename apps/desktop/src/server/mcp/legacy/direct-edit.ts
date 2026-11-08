@@ -7,7 +7,6 @@ import { JSX_INSERT_TOOLS } from "../jsx-insert-tools.js";
 import { LAYER_STATE_TOOLS } from "../layer-state-tools.js";
 import { LAYER_TOOLS } from "../layer-tools.js";
 import { MOVE_TOOLS } from "../move-tools.js";
-import { PROPS_TOOLS } from "../props-tools.js";
 import { RULES_TOOLS } from "../rules-tools.js";
 import { SELECT_TOOLS } from "../select-tools.js";
 import { STYLE_TOOLS } from "../style-tools.js";
@@ -20,7 +19,6 @@ import { guardTools } from "./guard.js";
 const DIRECT_EDIT_LEGACY_TOOLS_UNGUARDED = [
   ...DIRECT_EDIT_INLINE_TOOLS,
   ...VARIANT_TOOLS,
-  ...PROPS_TOOLS,
   ...STYLE_TOOLS,
   ...INSERT_TOOLS,
   ...JSX_INSERT_TOOLS,

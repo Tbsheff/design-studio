@@ -16,7 +16,7 @@ const setProp = defineAction({
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
-    "Set, replace or remove the props of one component instance at its JSX use site. Saves one version.",
+    'Change the props of one component instance, the same as the Component section of the studio inspector: it adds, replaces or removes JSX attributes at the use site (for example <Button variant="outline"> to variant="destructive") and keeps the rest of the file as it was. One version and one undo step. Props set by an expression are refused.',
   errors: [
     BadRequest,
     Conflict,
@@ -36,7 +36,7 @@ const setProp = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["version.list", "version.get"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_props" },
   needs: "project.update",
   output: SetPropsResultSchema,
   scope: "project",

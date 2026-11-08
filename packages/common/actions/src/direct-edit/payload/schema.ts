@@ -199,7 +199,12 @@ const SetPropsFields = {
   props: Schema.Record(
     Schema.String.check(Schema.isPattern(PROP_NAME)),
     PropValueSchema
-  ).check(Schema.isMinProperties(1), Schema.isMaxProperties(PROPS_MAX)),
+  )
+    .check(Schema.isMinProperties(1), Schema.isMaxProperties(PROPS_MAX))
+    .annotate({
+      description:
+        "Props to set: a string, number or boolean. null removes the prop. A value equal to the default removes the attribute. Variant props take one of the cva option names from list_components.",
+    }),
   source: SourceLocationSchema,
 } as const;
 

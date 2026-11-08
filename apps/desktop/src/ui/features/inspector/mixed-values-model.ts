@@ -13,7 +13,7 @@ import {
 } from "./css-values.js";
 import type { Shift, ShiftPart, StyleValues } from "./css-values.js";
 import { createCurrentEditRequest } from "./edit-request-model.js";
-import { toNumberInput } from "./math-input.js";
+import { toNumberInput } from "./math-input-model.js";
 
 const MAX_MULTI_EDIT = 50;
 
@@ -66,7 +66,7 @@ const toMultiBlockReason = (selections: SelectionContext[]): string | null => {
     return "Some elements have no source location. Ask the agent to change them in Chat.";
   }
 
-  const keys = selections.map(toLocKey);
+  const keys = selections.map((entry) => toLocKey(entry));
 
   if (new Set(keys).size !== keys.length) {
     return "Some elements come from one line of code, such as a list. Select one of them, or ask the agent in Chat.";
@@ -79,8 +79,10 @@ interface PartShift extends Shift {
   readonly part: ShiftPart;
 }
 
+type PartShifts = Record<string, PartShift>;
+
 interface PropShift extends Shift {
-  readonly parts?: Record<string, PartShift>;
+  readonly parts?: PartShifts;
 }
 
 type Shifts = Partial<Record<DirectStyleProperty, PropShift>>;
@@ -123,69 +125,139 @@ const toShiftedStyle = (
   return changedProps(style, base);
 };
 
+const toBoundsOf = (shift: PropShift | null): Omit<Shift, "delta"> => {
+  if (!shift) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(shift).filter(([key]) => key === "max" || key === "min")
+  ) as Omit<Shift, "delta">;
+};
+
+const toPartSet = (part: ShiftPart, set: string | null): ShiftPart => {
+  const base = { key: part.key, map: part.map };
+
+  if (set === null) {
+    return base;
+  }
+
+  return { ...base, set };
+};
+
+const toPartDelta = (
+  part: ShiftPart,
+  old: PartShift | null,
+  delta: number
+): number => {
+  if (Object.hasOwn(part, "set")) {
+    return 0;
+  }
+
+  return (old?.delta ?? 0) + delta;
+};
+
 const toWithPart = (
-  prev: PropShift | undefined,
+  prev: PropShift | null,
   part: ShiftPart,
   delta: number,
   bounds: Omit<Shift, "delta">
 ): PropShift => {
-  const parts = { ...prev?.parts };
-  const old = parts[part.key];
-  delete parts[part.key];
-  const set = part.set ?? old?.part.set;
-  parts[part.key] = {
+  const old = prev?.parts?.[part.key] ?? null;
+
+  const others = Object.entries(prev?.parts ?? {}).filter(
+    ([key]) => key !== part.key
+  );
+
+  const set = part.set ?? old?.part.set ?? null;
+
+  const entry: PartShift = {
     ...bounds,
-    delta: part.set === undefined ? (old?.delta ?? 0) + delta : 0,
-    part: { ...part, ...(set === undefined ? {} : { set }) },
+    delta: toPartDelta(part, old, delta),
+    part: toPartSet(part, set),
   };
 
-  return { delta: prev?.delta ?? 0, max: prev?.max, min: prev?.min, parts };
+  return {
+    ...toBoundsOf(prev),
+    delta: prev?.delta ?? 0,
+    parts: Object.fromEntries([...others, [part.key, entry]]),
+  };
+};
+
+const toPropShift = (
+  prev: PropShift | null,
+  delta: number,
+  bounds: Omit<Shift, "delta">
+): PropShift => ({
+  ...prev,
+  ...bounds,
+  delta: (prev?.delta ?? 0) + delta,
+});
+
+interface ShiftChange {
+  readonly bounds: Omit<Shift, "delta">;
+  readonly delta: number;
+  readonly part: ShiftPart | null;
+}
+
+const toNextShift = (
+  prev: PropShift | null,
+  change: ShiftChange
+): PropShift => {
+  if (change.part) {
+    return toWithPart(prev, change.part, change.delta, change.bounds);
+  }
+
+  return toPropShift(prev, change.delta, change.bounds);
 };
 
 const insertShift = (
   shifts: Shifts,
   props: readonly DirectStyleProperty[],
-  delta: number,
-  bounds: Omit<Shift, "delta">,
-  part: ShiftPart | null
+  change: ShiftChange
 ): Shifts => {
   const next = { ...shifts };
 
   for (const prop of props) {
-    next[prop] = part
-      ? toWithPart(next[prop], part, delta, bounds)
-      : { ...next[prop], ...bounds, delta: (next[prop]?.delta ?? 0) + delta };
+    next[prop] = toNextShift(next[prop] ?? null, change);
   }
 
   return next;
 };
 
-const toLeftParts = (
-  cur: PropShift,
-  done: PropShift
-): Record<string, PartShift> => {
-  const parts: Record<string, PartShift> = {};
+const toLeftPart = (
+  part: PartShift,
+  sent: PartShift | null
+): PartShift | null => {
+  const isSame = sent !== null && sent.part.set === part.part.set;
 
-  for (const [key, part] of Object.entries(cur.parts ?? {})) {
-    const sent = done.parts?.[key];
-    const same = sent !== undefined && sent.part.set === part.part.set;
-    const delta = same ? part.delta - sent.delta : part.delta;
-    const set = same ? undefined : part.part.set;
+  let { delta } = part;
+  let set = part.part.set ?? null;
 
-    if (delta === 0 && set === undefined) {
-      continue;
-    }
-
-    const { set: _drop, ...rest } = part.part;
-    parts[key] = {
-      ...part,
-      delta,
-      part: set === undefined ? rest : { ...rest, set },
-    };
+  if (isSame) {
+    delta = part.delta - sent.delta;
+    set = null;
   }
 
-  return parts;
+  if (delta === 0 && set === null) {
+    return null;
+  }
+
+  return { ...part, delta, part: toPartSet(part.part, set) };
 };
+
+const toLeftParts = (cur: PropShift, done: PropShift): PartShifts =>
+  Object.fromEntries(
+    Object.entries(cur.parts ?? {}).flatMap(([key, part]) => {
+      const left = toLeftPart(part, done.parts?.[key] ?? null);
+
+      if (left) {
+        return [[key, left]];
+      }
+
+      return [];
+    })
+  );
 
 const toLeftShift = (cur: PropShift, done: PropShift): PropShift | null => {
   const delta = cur.delta - done.delta;
@@ -203,27 +275,29 @@ const toWithoutShifts = (
   props: readonly string[],
   sent: Shifts
 ): Shifts => {
-  const next = { ...shifts };
+  const removed = new Set<string>(props);
 
-  for (const prop of props as DirectStyleProperty[]) {
-    delete next[prop];
-  }
+  return Object.fromEntries(
+    Object.entries(shifts).flatMap(([prop, cur]) => {
+      if (removed.has(prop)) {
+        return [];
+      }
 
-  for (const [prop, done] of Object.entries(sent) as [
-    DirectStyleProperty,
-    PropShift,
-  ][]) {
-    const cur = next[prop];
-    const left = cur ? toLeftShift(cur, done) : null;
+      const done = sent[prop as DirectStyleProperty];
 
-    if (left) {
-      next[prop] = left;
-    } else {
-      delete next[prop];
-    }
-  }
+      if (!done) {
+        return [[prop, cur]];
+      }
 
-  return next;
+      const left = toLeftShift(cur, done);
+
+      if (left) {
+        return [[prop, left]];
+      }
+
+      return [];
+    })
+  );
 };
 
 interface OwnEdit {
@@ -238,18 +312,21 @@ const toOwnEdits = (
   shifts: Shifts
 ): OwnEdit[] => {
   const out: OwnEdit[] = [];
-  selections.forEach((selection, index) => {
+
+  for (const [index, selection] of selections.entries()) {
     const base = bases[index] ?? valuesFromStyles(selection.styles);
+
     const own = {
       ...changedProps(style, base),
       ...toShiftedStyle(base, shifts),
     };
+
     const edit = createCurrentEditRequest(selection, own);
 
     if (edit) {
       out.push({ edit, style: own });
     }
-  });
+  }
 
   return out;
 };
@@ -277,6 +354,7 @@ export {
 };
 
 export type {
+  ShiftChange,
   MergedValues,
   Shift,
   ShiftPart,

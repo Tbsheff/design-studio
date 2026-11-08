@@ -7,8 +7,8 @@ import {
   insertShift,
   toShiftedStyle,
   toWithoutShifts,
-} from "./mixed-values.js";
-import type { Shift, ShiftPart, Shifts } from "./mixed-values.js";
+} from "./mixed-values-model.js";
+import type { Shift, ShiftPart, Shifts } from "./mixed-values-model.js";
 import { stopTimer } from "./timer-model.js";
 import {
   runMultiDrain,
@@ -134,13 +134,11 @@ const toMultiShift =
       return;
     }
 
-    const next = insertShift(
-      core.shiftsRef.current,
-      props,
-      delta,
+    const next = insertShift(core.shiftsRef.current, props, {
       bounds,
-      part
-    );
+      delta,
+      part,
+    });
 
     core.storeShifts(next);
     core.storeDraft(toDraftWithout(core.draftRef.current, props));

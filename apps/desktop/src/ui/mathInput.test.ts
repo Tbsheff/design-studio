@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { runMath, toNumberInput } from "./features/inspector/math-input";
+import { runMath, toNumberInput } from "./features/inspector/index";
 
 describe(runMath, () => {
   it("handles operator precedence and parentheses", () => {

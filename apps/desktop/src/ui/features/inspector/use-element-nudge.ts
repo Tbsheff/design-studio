@@ -109,8 +109,8 @@ const useNudgeListeners = (
 const useElementNudge = (options: NudgeOptions): void => {
   const live = useLatestRef(options);
   const burst = useCell<Burst | null>(null);
-
   const timer: TimerRef = useCell(null);
+
   const core: NudgeCore = useMemo(
     () => ({ burst, live, timer }),
     [burst, live, timer]

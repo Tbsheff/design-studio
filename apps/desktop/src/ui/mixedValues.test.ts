@@ -8,7 +8,7 @@ import {
   hasCurrentDependency,
   toMergedValues,
   toMultiBlockReason,
-} from "./features/inspector/mixed-values";
+} from "./features/inspector/index";
 
 function card(
   line: number,

@@ -3,8 +3,8 @@ import type { KeyboardEvent, ReactElement } from "react";
 
 import { normalizeLength, stepValue } from "./css-values.js";
 import { isInherited, useVariantScope } from "./edit-variant.js";
-import { toNumberInput } from "./math-input.js";
-import { hasCurrentDependency } from "./mixed-values.js";
+import { toNumberInput } from "./math-input-model.js";
+import { hasCurrentDependency } from "./mixed-values-model.js";
 import {
   toPlainLength,
   toDisplayLength,

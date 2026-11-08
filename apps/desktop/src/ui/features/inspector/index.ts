@@ -28,3 +28,12 @@ export { canPolishRun, POLISH_REQUEST } from "./polish-model.js";
 export { applyCommit, createCurrentEditRequest } from "./edit-request-model.js";
 
 export { useSelectionRefresh } from "./use-selection-refresh.js";
+
+export { runMath, toNumberInput } from "./math-input-model.js";
+
+export {
+  hasCurrentDependency,
+  toBatchEdits,
+  toMergedValues,
+  toMultiBlockReason,
+} from "./mixed-values-model.js";

@@ -8,7 +8,7 @@ import type { MutableRefObject, RefObject } from "react";
 import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { applyCommit, createCurrentEditRequest } from "./edit-request-model.js";
-import { toMultiBlockReason } from "./mixed-values.js";
+import { toMultiBlockReason } from "./mixed-values-model.js";
 import {
   FLOW_HINT,
   SAVE_MS,

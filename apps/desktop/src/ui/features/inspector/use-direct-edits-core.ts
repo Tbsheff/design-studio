@@ -16,8 +16,8 @@ import type {
   DirectEditControl,
   SaveStatus,
 } from "./direct-edit-model.js";
-import { toOwnEdits, toWithoutShifts } from "./mixed-values.js";
-import type { MergedValues, OwnEdit, Shifts } from "./mixed-values.js";
+import { toOwnEdits, toWithoutShifts } from "./mixed-values-model.js";
+import type { MergedValues, OwnEdit, Shifts } from "./mixed-values-model.js";
 import { startOptimistic } from "./optimistic-edit.js";
 import { stopTimer } from "./timer-model.js";
 import type { TimerRef } from "./timer-model.js";

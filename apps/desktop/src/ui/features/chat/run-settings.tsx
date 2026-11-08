@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent, ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 import { VariationsControl } from "../canvas/variations-control.js";
@@ -20,7 +20,7 @@ import {
   useRovingRadioGroup,
 } from "./level-control.js";
 
-export interface DesignsSetting {
+interface DesignsSetting {
   value: number;
   max: number;
   onChange: (count: number) => void;
@@ -31,21 +31,21 @@ const EFFORTS = ["auto", "low", "medium", "high"] as const;
 
 type EffortChoice = (typeof EFFORTS)[number];
 
-export const EFFORT_HINT: Record<EffortChoice, string> = {
+const EFFORT_HINT: Record<EffortChoice, string> = {
   auto: "The model picks how hard to think.",
   high: "Thinks the longest. Best for large or tricky work.",
   low: "Fastest and cheapest. Good for small changes.",
   medium: "A balance of speed and care.",
 };
 
-export type ComposerMode = RunMode | "plan";
+type ComposerMode = RunMode | "plan";
 
 interface ModeSetting {
   value: ComposerMode;
   onChange: (mode: ComposerMode) => void;
 }
 
-export interface EffortSetting {
+interface EffortSetting {
   value: RunEffort | null;
   onChange: (effort: RunEffort | null) => void;
 }
@@ -59,33 +59,33 @@ interface Props {
   onOpen?: () => void;
 }
 
-export const MODE_HINT: Record<ComposerMode, string> = {
+const MODE_HINT: Record<ComposerMode, string> = {
   critique: "Send asks for a review. The design does not change.",
   edit: "Send changes the design.",
   plan: "Send makes a plan first. Files change only after you approve it.",
 };
 
-export const UNPLACED: CSSProperties = {
+const UNPLACED: CSSProperties = {
   left: 0,
   opacity: 0,
   pointerEvents: "none",
   top: 0,
 };
 
-export const EFFORT_LABEL: Record<EffortChoice, string> = {
+const EFFORT_LABEL: Record<EffortChoice, string> = {
   auto: "Auto",
   high: "High",
   low: "Low",
   medium: "Medium",
 };
 
-export const MODE_LABEL: Record<ComposerMode, string> = {
+const MODE_LABEL: Record<ComposerMode, string> = {
   critique: "Critique",
   edit: "Edit",
   plan: "Plan",
 };
 
-export const runSettingsSummary = (input: {
+const runSettingsSummary = (input: {
   mode?: ComposerMode;
   level: RunLevel;
   designs?: number;
@@ -109,7 +109,7 @@ export const runSettingsSummary = (input: {
   return parts.filter(Boolean).join(" · ");
 };
 
-export const designsHint = (designs: DesignsSetting): string => {
+const designsHint = (designs: DesignsSetting): string => {
   if (designs.disabledReason) {
     return designs.disabledReason;
   }
@@ -121,20 +121,20 @@ export const designsHint = (designs: DesignsSetting): string => {
   return `Pick 2 to ${designs.max} to compare options.`;
 };
 
-export const placeAboveOrBelow = (
+const placeAboveOrBelow = (
   trigger: HTMLElement,
   panel: HTMLElement
 ): CSSProperties => {
   const placed = placeFixed(trigger, panel, { prefer: "above" });
   const rect = trigger.getBoundingClientRect();
   const left = typeof placed.left === "number" ? placed.left : rect.left;
-  const x = Math.round(rect.left + rect.width / 2 - left);
+  const centerX = Math.round(rect.left + rect.width / 2 - left);
   const above = placed.bottom !== undefined;
 
   return {
     ...placed,
     "--pop-dy": above ? "4px" : "-4px",
-    transformOrigin: `${x}px ${above ? "bottom" : "top"}`,
+    transformOrigin: `${centerX}px ${above ? "bottom" : "top"}`,
   } as CSSProperties;
 };
 
@@ -142,16 +142,16 @@ const tabStops = (panel: HTMLElement): HTMLElement[] => [
   ...panel.querySelectorAll<HTMLElement>('[tabindex="0"]:not(:disabled)'),
 ];
 
-export const EffortToggle = ({
+const EffortToggle = ({
   effort,
   hintId,
 }: {
   effort: EffortSetting;
   hintId: string;
-}) => {
+}): ReactElement => {
   const choice: EffortChoice = effort.value ?? "auto";
 
-  const pick = (next: EffortChoice) =>
+  const pick = (next: EffortChoice): void =>
     effort.onChange(next === "auto" ? null : next);
 
   const radios = useRovingRadioGroup(EFFORTS, choice, pick);
@@ -165,17 +165,17 @@ export const EffortToggle = ({
       aria-describedby={hintId}
       onKeyDown={radios.onKeyDown}
     >
-      {EFFORTS.map((e) => (
+      {EFFORTS.map((effortOption) => (
         <button
-          key={e}
-          {...radios.item(e)}
+          key={effortOption}
+          {...radios.item(effortOption)}
           type="button"
           role="radio"
-          aria-checked={choice === e}
-          className={choice === e ? "on" : ""}
-          onClick={() => pick(e)}
+          aria-checked={choice === effortOption}
+          className={choice === effortOption ? "on" : ""}
+          onClick={() => pick(effortOption)}
         >
-          {EFFORT_LABEL[e]}
+          {EFFORT_LABEL[effortOption]}
         </button>
       ))}
     </div>
@@ -190,7 +190,7 @@ const ModeToggle = ({
 }: {
   mode: ModeSetting;
   hintId: string;
-}) => {
+}): ReactElement => {
   const radios = useRovingRadioGroup(MODES, mode.value, mode.onChange);
 
   return (
@@ -202,37 +202,41 @@ const ModeToggle = ({
       aria-describedby={hintId}
       onKeyDown={radios.onKeyDown}
     >
-      {MODES.map((m) => (
+      {MODES.map((choice) => (
         <button
-          key={m}
-          {...radios.item(m)}
+          key={choice}
+          {...radios.item(choice)}
           type="button"
           role="radio"
-          aria-checked={mode.value === m}
-          className={mode.value === m ? "on" : ""}
-          onClick={() => mode.onChange(m)}
+          aria-checked={mode.value === choice}
+          className={mode.value === choice ? "on" : ""}
+          onClick={() => mode.onChange(choice)}
         >
-          {MODE_LABEL[m]}
+          {MODE_LABEL[choice]}
         </button>
       ))}
     </div>
   );
 };
 
-export const RunSettings = ({
+const RunSettings = ({
   mode,
   level,
   onLevel,
   designs,
   onOpen,
   effort,
-}: Props) => {
+}: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>(UNPLACED);
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
-  const designsOn = designs ? designs.disabledReason === null : false;
+  let designsOn = false;
+
+  if (designs) {
+    designsOn = designs.disabledReason === null;
+  }
 
   const summary = runSettingsSummary({
     designs: designs?.value,
@@ -258,7 +262,7 @@ export const RunSettings = ({
       return;
     }
 
-    const place = () => {
+    const place = (): void => {
       if (trigger.current && panel.current) {
         setStyle(placeAboveOrBelow(trigger.current, panel.current));
       }
@@ -276,7 +280,7 @@ export const RunSettings = ({
       observer.observe(trigger.current);
     }
 
-    return () => {
+    return (): void => {
       window.removeEventListener("resize", place);
       observer.disconnect();
     };
@@ -288,7 +292,7 @@ export const RunSettings = ({
     }
   }, [open]);
 
-  const onPanelKey = (event: KeyboardEvent) => {
+  const onPanelKey = (event: KeyboardEvent): void => {
     if (event.key !== "Tab" || !panel.current) {
       return;
     }
@@ -344,7 +348,7 @@ export const RunSettings = ({
           >
             {mode && (
               <section className="rs-group">
-                <h3 className="rs-label">Mode</h3>
+                <h3 className="rs-label">{copy.mode}</h3>
                 <ModeToggle mode={mode} hintId={`${id}-mode-hint`} />
                 <p className="rs-hint" id={`${id}-mode-hint`}>
                   {MODE_HINT[mode.value]}
@@ -352,13 +356,13 @@ export const RunSettings = ({
               </section>
             )}
             <section className="rs-group">
-              <h3 className="rs-label">Level</h3>
+              <h3 className="rs-label">{copy.level}</h3>
               <LevelControl value={level} onChange={onLevel} />
               <p className="rs-hint">{levelHint(level)}</p>
             </section>
             {effort && (
               <section className="rs-group">
-                <h3 className="rs-label">Effort</h3>
+                <h3 className="rs-label">{copy.effort}</h3>
                 <EffortToggle effort={effort} hintId={`${id}-effort-hint`} />
                 <p className="rs-hint" id={`${id}-effort-hint`}>
                   {EFFORT_HINT[effort.value ?? "auto"]}
@@ -368,7 +372,7 @@ export const RunSettings = ({
             {designs && (
               <section className="rs-group">
                 <h3 className="rs-label" id={`${id}-designs`}>
-                  Designs
+                  {copy.designs}
                 </h3>
                 <VariationsControl
                   value={designs.value}
@@ -386,3 +390,18 @@ export const RunSettings = ({
     </span>
   );
 };
+
+export {
+  EFFORT_HINT,
+  EFFORT_LABEL,
+  EffortToggle,
+  MODE_HINT,
+  MODE_LABEL,
+  RunSettings,
+  UNPLACED,
+  designsHint,
+  placeAboveOrBelow,
+  runSettingsSummary,
+};
+
+export type { ComposerMode, DesignsSetting, EffortSetting };

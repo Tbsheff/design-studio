@@ -4,6 +4,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
+import type { ReactElement } from "react";
 
 import { asReferenceName, isReferenceName } from "../../../shared/reference.js";
 import {
@@ -17,41 +18,45 @@ import { api } from "../../api.js";
 import type { PendingAttachment } from "../../domain/pending-attachment.js";
 import { readBlob } from "../../platform/http.js";
 import { projectFromPath } from "../../platform/router.js";
+import { copy } from "./copy.js";
 import { modelLabel } from "./settings-draft-model.js";
+
+const SNIPPET_CHARS = 24;
+const TAIL_CHARS = 12;
 
 export type { PendingAttachment } from "../../domain/pending-attachment.js";
 
-export const SelectionChips = ({
+const SelectionChips = ({
   selection,
   onRemove,
 }: {
   selection: SelectionContext[];
   onRemove: (selector: string) => void;
-}) => {
+}): ReactElement | null => {
   if (selection.length === 0) {
     return null;
   }
 
   return (
     <div className="chips flex flex-wrap gap-1 px-2 pt-2">
-      {selection.map((s) => (
+      {selection.map((selected) => (
         <Chip
-          key={s.selector}
+          key={selected.selector}
           size="sm"
           className="chip max-w-full py-0.5 pr-0.5 text-primary"
-          data-tip={s.selector}
+          data-tip={selected.selector}
           data-tip-side="top"
         >
           <Icon name="pointer" size={12} />
           <span className="chip-text min-w-0 truncate font-mono">
-            <span className="chip-tag font-bold">{s.tag}</span>
-            {s.text ? ` "${s.text.slice(0, 24)}"` : ""}
+            <span className="chip-tag font-bold">{selected.tag}</span>
+            {selected.text ? ` "${selected.text.slice(0, SNIPPET_CHARS)}"` : ""}
           </span>
           <button
             type="button"
             className="icon-btn chip-x"
-            aria-label={`Remove ${s.selector}`}
-            onClick={() => onRemove(s.selector)}
+            aria-label={`Remove ${selected.selector}`}
+            onClick={() => onRemove(selected.selector)}
           >
             <Icon name="close" size={12} />
           </button>
@@ -61,11 +66,15 @@ export const SelectionChips = ({
   );
 };
 
-const ThumbState = ({ file }: { file: PendingAttachment }) => {
+const ThumbState = ({
+  file,
+}: {
+  file: PendingAttachment;
+}): ReactElement | null => {
   if (file.error) {
     return (
       <AttachmentOverlay className="rounded-outer bg-destructive/15 text-xs font-semibold text-destructive">
-        Failed
+        {copy.failed}
       </AttachmentOverlay>
     );
   }
@@ -77,7 +86,7 @@ const ThumbState = ({ file }: { file: PendingAttachment }) => {
   return (
     <AttachmentOverlay className="rounded-outer">
       <AttachmentProgress className="size-5" />
-      <span className="sr-only">Uploading</span>
+      <span className="sr-only">{copy.uploading}</span>
     </AttachmentOverlay>
   );
 };
@@ -89,7 +98,7 @@ const shortName = (name: string): string => {
     return name;
   }
 
-  const tail = name.slice(-12);
+  const tail = name.slice(-TAIL_CHARS);
 
   return `${name.slice(0, NAME_ROOM - tail.length - 1)}…${tail}`;
 };
@@ -127,11 +136,18 @@ const markAsReference = async (file: PendingAttachment): Promise<void> => {
   file.attachment = uploaded;
 };
 
-const useReferenceToggle = (files: PendingAttachment[]) => {
+interface UseReferenceToggleResult {
+  readonly busy: string | null;
+  readonly toggle: (file: PendingAttachment) => Promise<void>;
+}
+
+const useReferenceToggle = (
+  files: PendingAttachment[]
+): UseReferenceToggleResult => {
   const [busy, setBusy] = useState<string | null>(null);
   const [, setTick] = useState(0);
 
-  const toggle = async (file: PendingAttachment) => {
+  const toggle = async (file: PendingAttachment): Promise<void> => {
     if (busy || !file.attachment) {
       return;
     }
@@ -140,7 +156,7 @@ const useReferenceToggle = (files: PendingAttachment[]) => {
     files.forEach(unmark);
 
     if (on) {
-      return setTick((n) => n + 1);
+      return setTick((previous) => previous + 1);
     }
 
     setBusy(file.localId);
@@ -151,7 +167,7 @@ const useReferenceToggle = (files: PendingAttachment[]) => {
       file.error = error instanceof Error ? error.message : String(error);
     } finally {
       setBusy(null);
-      setTick((n) => n + 1);
+      setTick((previous) => previous + 1);
     }
   };
 
@@ -166,7 +182,7 @@ const ReferenceToggle = ({
   file: PendingAttachment;
   busy: boolean;
   onToggle: () => void;
-}) => {
+}): ReactElement | null => {
   if (!file.attachment || file.error) {
     return null;
   }
@@ -192,18 +208,19 @@ const ReferenceToggle = ({
       disabled={busy}
       onClick={onToggle}
     >
-      {busy ? "…" : "Ref"}
+      {busy && "…"}
+      {!busy && "Ref"}
     </button>
   );
 };
 
-export const AttachmentThumbs = ({
+const AttachmentThumbs = ({
   files,
   onRemove,
 }: {
   files: PendingAttachment[];
   onRemove: (localId: string) => void;
-}) => {
+}): ReactElement | null => {
   const reference = useReferenceToggle(files);
 
   if (files.length === 0) {
@@ -212,35 +229,35 @@ export const AttachmentThumbs = ({
 
   return (
     <div className="thumbs flex flex-wrap gap-2 px-2 pt-2">
-      {files.map((f, index) => (
+      {files.map((found, index) => (
         <Attachment
-          key={f.localId}
+          key={found.localId}
           layout="card"
-          state={f.error ? "error" : "default"}
-          className={`thumb size-13 ${f.attachment && isReferenceName(f.attachment.name) ? "is-reference" : ""}`}
-          data-tip={f.error ?? shortName(f.name)}
+          state={found.error ? "error" : "default"}
+          className={`thumb size-13 ${found.attachment && isReferenceName(found.attachment.name) ? "is-reference" : ""}`}
+          data-tip={found.error ?? shortName(found.name)}
           data-tip-side="top"
           data-tip-align={index < 2 ? "start" : "end"}
         >
           <AttachmentMedia>
             <img
               data-slot="attachment-media-img"
-              src={f.previewUrl}
-              alt={f.name}
-              className={f.error ? "opacity-35" : ""}
+              src={found.previewUrl}
+              alt={found.name}
+              className={found.error ? "opacity-35" : ""}
             />
           </AttachmentMedia>
-          <ThumbState file={f} />
+          <ThumbState file={found} />
           <ReferenceToggle
-            file={f}
-            busy={reference.busy === f.localId}
-            onToggle={() => void reference.toggle(f)}
+            file={found}
+            busy={reference.busy === found.localId}
+            onToggle={() => void reference.toggle(found)}
           />
           <button
             type="button"
-            aria-label={`Remove ${f.name}`}
+            aria-label={`Remove ${found.name}`}
             className="icon-btn thumb-x"
-            onClick={() => onRemove(f.localId)}
+            onClick={() => onRemove(found.localId)}
           >
             <Icon name="close" size={10} />
           </button>
@@ -250,7 +267,7 @@ export const AttachmentThumbs = ({
   );
 };
 
-export const ModelTag = ({ model }: { model: string }) => (
+const ModelTag = ({ model }: { model: string }): ReactElement => (
   <Chip
     size="sm"
     className="model-tag mr-1 shrink-0 font-semibold whitespace-nowrap"
@@ -259,6 +276,12 @@ export const ModelTag = ({ model }: { model: string }) => (
   >
     <Icon name="sparkle" size={12} />
     {modelLabel(model).replace(/^Claude /u, "")}
-    <span className="sr-only">({model})</span>
+    <span className="sr-only">
+      {copy.text3}
+      {model}
+      {copy.text4}
+    </span>
   </Chip>
 );
+
+export { AttachmentThumbs, ModelTag, SelectionChips };

@@ -1,15 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, ReactElement, SetStateAction } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { copy } from "./copy.js";
 
-export const useHistorySearch = (history: readonly string[]) => {
+const MAX_HITS = 20;
+
+interface UseHistorySearchResult {
+  readonly close: () => void;
+  readonly current: string | null;
+  readonly move: (step: 1 | -1) => void;
+  readonly open: boolean;
+  readonly query: string;
+  readonly setQuery: Dispatch<SetStateAction<string>>;
+  readonly shown: string[];
+  readonly start: () => void;
+}
+
+const useHistorySearch = (
+  history: readonly string[]
+): UseHistorySearchResult => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
 
   const shown = useMemo(
-    () => fuzzyRank([...history].toReversed(), query, (prompt) => prompt, 20),
+    () =>
+      fuzzyRank([...history].toReversed(), query, (prompt) => prompt, MAX_HITS),
     [history, query]
   );
 
@@ -19,30 +36,34 @@ export const useHistorySearch = (history: readonly string[]) => {
     shown[Math.min(active, Math.max(0, shown.length - 1))] ?? null;
 
   return {
-    close: () => setOpen(false),
+    close: (): void => setOpen(false),
     current,
-    move: (step: 1 | -1) =>
-      setActive((index) =>
-        shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
-      ),
+    move: (step: 1 | -1): void =>
+      setActive((index) => {
+        if (shown.length === 0) {
+          return 0;
+        }
+
+        return (index + step + shown.length) % shown.length;
+      }),
     open,
     query,
     setQuery,
     shown,
-    start: () => {
+    start: (): void => {
       setQuery("");
       setOpen(true);
     },
   };
 };
 
-export const HistorySearch = ({
+const HistorySearch = ({
   search,
   onPick,
 }: {
   search: ReturnType<typeof useHistorySearch>;
   onPick: (prompt: string) => void;
-}) => {
+}): ReactElement | null => {
   if (!search.open) {
     return null;
   }
@@ -94,12 +115,12 @@ export const HistorySearch = ({
           </li>
         ))}
         {search.shown.length === 0 && (
-          <li className="skill-empty">No past prompt matches.</li>
+          <li className="skill-empty">{copy.noPastPromptMatches}</li>
         )}
       </ul>
-      <p className="skill-pop-foot">
-        Ctrl+R or ↓ for the next match, Enter to use, Esc to close
-      </p>
+      <p className="skill-pop-foot">{copy.ctrlROrFor}</p>
     </div>
   );
 };
+
+export { HistorySearch, useHistorySearch };

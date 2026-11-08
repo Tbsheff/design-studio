@@ -1,7 +1,7 @@
 import type { ClarifyQuestion } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { useRovingRadioGroup } from "./level-control.js";
@@ -16,9 +16,14 @@ const ClarifyQuestionField = ({
   answer: string;
   onAnswer: (value: string) => void;
   first: boolean;
-}) => {
+}): ReactElement => {
   const legendId = useId();
-  const picked = item.options.includes(answer) ? answer : "";
+  let picked = "";
+
+  if (item.options.includes(answer)) {
+    picked = answer;
+  }
+
   const radios = useRovingRadioGroup(item.options, picked, onAnswer);
   const firstRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
@@ -83,7 +88,7 @@ const ClarifyQuestionField = ({
 
 const MOD = /Mac|iPhone|iPad/u.test(navigator.platform) ? "⌘" : "Ctrl+";
 
-export const ClarifyForm = ({
+const ClarifyForm = ({
   questions,
   busy,
   onBuild,
@@ -95,10 +100,10 @@ export const ClarifyForm = ({
   onBuild: (answers: { question: string; answer: string }[]) => void;
   onSkip: () => void;
   onCancel: () => void;
-}) => {
+}): ReactElement => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent): void => {
     event.preventDefault();
     onBuild(
       questions.map((item) => ({
@@ -108,7 +113,7 @@ export const ClarifyForm = ({
     );
   };
 
-  const set = (id: string, value: string) =>
+  const set = (id: string, value: string): void =>
     setAnswers((current) => ({ ...current, [id]: value }));
 
   return (
@@ -132,10 +137,8 @@ export const ClarifyForm = ({
     >
       <div className="clarify-head">
         <Icon name="sparkle" size={14} />
-        <h2 id="clarify-heading">A few quick questions</h2>
-        <span className="clarify-hint">
-          Short briefs build better with these answers. All are optional.
-        </span>
+        <h2 id="clarify-heading">{copy.aFewQuickQuestions}</h2>
+        <span className="clarify-hint">{copy.shortBriefsBuildBetter}</span>
       </div>
       {questions.map((item, index) => (
         <ClarifyQuestionField
@@ -153,7 +156,7 @@ export const ClarifyForm = ({
           onClick={onSkip}
           disabled={busy}
         >
-          Skip questions
+          {copy.skipQuestions}
         </button>
         <button
           type="submit"
@@ -163,14 +166,14 @@ export const ClarifyForm = ({
           data-tip-side="top"
           aria-keyshortcuts="Meta+Enter Control+Enter"
         >
-          {busy ? (
-            <span className="spinner" />
-          ) : (
-            <Icon name="arrowUp" size={14} />
-          )}
-          {busy ? "Creating…" : "Build with answers"}
+          {busy && <span className="spinner" />}
+          {!busy && <Icon name="arrowUp" size={14} />}
+          {busy && "Creating…"}
+          {!busy && "Build with answers"}
         </button>
       </div>
     </form>
   );
 };
+
+export { ClarifyForm };

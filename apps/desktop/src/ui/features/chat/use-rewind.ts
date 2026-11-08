@@ -9,7 +9,7 @@ import { useCallback, useMemo, useRef } from "react";
 import { api } from "../../api.js";
 import type { RunView } from "./run-state-model.js";
 
-export interface RewindControl {
+interface RewindControl {
   versions: readonly Version[];
   headVersionId: string | null;
   headRestoredFrom: string | null;
@@ -31,18 +31,15 @@ interface Options {
   busy: boolean;
   running: RunView | null;
   act: (fn: () => Promise<unknown>) => Promise<void>;
-  guard: <A extends unknown[]>(
-    fn: (...args: A) => unknown
-  ) => (...args: A) => Promise<void>;
+  guard: <Args extends unknown[]>(
+    fn: (...args: Args) => unknown
+  ) => (...args: Args) => Promise<void>;
   seedRun: (runId: string, directionId: string, request: RunRequest) => void;
   setDirectionId: (id: string) => void;
   refreshVersions: () => void;
 }
 
-export const editedRequest = (
-  request: RunRequest,
-  prompt: string
-): RunRequest => {
+const editedRequest = (request: RunRequest, prompt: string): RunRequest => {
   const {
     retryOf: _retry,
     variation: _variation,
@@ -53,7 +50,7 @@ export const editedRequest = (
   return { ...rest, prompt };
 };
 
-export const useRewind = (options: Options): RewindControl => {
+const useRewind = (options: Options): RewindControl => {
   const ref = useRef(options);
   ref.current = options;
 
@@ -100,7 +97,12 @@ export const useRewind = (options: Options): RewindControl => {
   );
 
   const { versions, status, busy, running } = options;
-  const dirtyCount = status?.dirty ? status.changed.length : 0;
+  let dirtyCount = 0;
+
+  if (status?.dirty) {
+    dirtyCount = status.changed.length;
+  }
+
   const locked = busy || running !== null;
   const headVersionId = options.direction?.headVersionId ?? null;
 
@@ -129,3 +131,7 @@ export const useRewind = (options: Options): RewindControl => {
     ]
   );
 };
+
+export { editedRequest, useRewind };
+
+export type { RewindControl };

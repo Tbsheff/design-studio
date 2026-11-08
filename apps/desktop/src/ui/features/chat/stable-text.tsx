@@ -1,12 +1,12 @@
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
-export const StableText = ({
+const StableText = ({
   children,
   sizes,
 }: {
   children: ReactNode;
   sizes: readonly ReactNode[];
-}) => (
+}): ReactElement => (
   <span className="stable-text">
     <span>{children}</span>
     {sizes.map((size, index) => (
@@ -16,3 +16,5 @@ export const StableText = ({
     ))}
   </span>
 );
+
+export { StableText };

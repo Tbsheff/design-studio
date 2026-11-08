@@ -18,9 +18,11 @@ import {
   withFinalText,
 } from "../../../shared/run-parts.js";
 
+const SHORT_INPUT_CHARS = 80;
+
 const PENDING_CLOCK_SLACK_MS = 1000;
 
-export interface ToolRow {
+interface ToolRow {
   toolUseId: string;
   name: string;
   input: unknown;
@@ -33,14 +35,14 @@ export interface ToolRow {
   denied?: boolean;
 }
 
-export interface RetryState {
+interface RetryState {
   attempt: number;
   max: number;
   until: number;
   error: string;
 }
 
-export interface RunView {
+interface RunView {
   runId: string;
   directionId: string | null;
   request: RunRequest | null;
@@ -56,7 +58,7 @@ export interface RunView {
   summary: RunSummary | null;
 }
 
-export const shownPending = (
+const shownPending = (
   pending: RunView | null,
   runs: RunView[],
   directionId: string | null
@@ -71,39 +73,46 @@ export const shownPending = (
       run.request?.prompt === pending.request?.prompt
   );
 
-  return started ? null : pending;
+  if (started) {
+    return null;
+  }
+
+  return pending;
 };
 
-export const runText = (run: RunView): string => partsText(run.parts);
+const runText = (run: RunView): string => partsText(run.parts);
 
-export type RunMap = Record<string, RunView>;
+type RunMap = Record<string, RunView>;
 
 const toolRows = (summary: RunSummary): ToolRow[] =>
-  summary.toolCalls.map((t) => ({
-    durationMs: t.finishedAt === null ? null : t.finishedAt - t.startedAt,
-    input: t.input,
-    isError: t.isError,
-    name: t.name,
-    startedAt: t.startedAt,
-    summary: t.summary ?? "",
-    toolUseId: t.toolUseId,
-    ...(t.diff ? { diff: t.diff } : {}),
-    ...(t.diffs ? { diffs: t.diffs } : {}),
-    ...(t.denied ? { denied: true } : {}),
+  summary.toolCalls.map((tool) => ({
+    durationMs:
+      tool.finishedAt === null ? null : tool.finishedAt - tool.startedAt,
+    input: tool.input,
+    isError: tool.isError,
+    name: tool.name,
+    startedAt: tool.startedAt,
+    summary: tool.summary ?? "",
+    toolUseId: tool.toolUseId,
+    ...(tool.diff ? { diff: tool.diff } : {}),
+    ...(tool.diffs ? { diffs: tool.diffs } : {}),
+    ...(tool.denied ? { denied: true } : {}),
   }));
 
 const legacyParts = (summary: RunSummary): RunPart[] => {
-  const tools: RunPart[] = summary.toolCalls.map((t) => ({
+  const tools: RunPart[] = summary.toolCalls.map((tool) => ({
     kind: "tool",
-    toolUseId: t.toolUseId,
+    toolUseId: tool.toolUseId,
   }));
 
-  return summary.finalText
-    ? [...tools, { kind: "text", text: summary.finalText }]
-    : tools;
+  if (summary.finalText) {
+    return [...tools, { kind: "text", text: summary.finalText }];
+  }
+
+  return tools;
 };
 
-export const emptyRun = (
+const emptyRun = (
   runId: string,
   directionId: string | null,
   startedAt: number,
@@ -124,7 +133,7 @@ export const emptyRun = (
   tools: [],
 });
 
-export const runFromSummary = (summary: RunSummary): RunView => ({
+const runFromSummary = (summary: RunSummary): RunView => ({
   ...emptyRun(
     summary.id,
     summary.directionId,
@@ -140,26 +149,26 @@ export const runFromSummary = (summary: RunSummary): RunView => ({
 });
 
 const mergeTools = (live: ToolRow[], final: ToolRow[]): ToolRow[] => {
-  const byId = new Map(final.map((t) => [t.toolUseId, t]));
+  const byId = new Map(final.map((tool) => [tool.toolUseId, tool]));
 
-  return live.map((t) => {
-    const f = byId.get(t.toolUseId);
+  return live.map((tool) => {
+    const found = byId.get(tool.toolUseId);
 
-    if (!f) {
-      return t;
+    if (!found) {
+      return tool;
     }
 
-    const diff = f.diff ?? t.diff;
-    const diffs = f.diffs ?? t.diffs;
+    const diff = found.diff ?? tool.diff;
+    const diffs = found.diffs ?? tool.diffs;
 
     return {
-      ...t,
-      durationMs: f.durationMs ?? t.durationMs,
-      isError: f.isError,
-      summary: f.summary || t.summary,
+      ...tool,
+      durationMs: found.durationMs ?? tool.durationMs,
+      isError: found.isError,
+      summary: found.summary || tool.summary,
       ...(diff ? { diff } : {}),
       ...(diffs ? { diffs } : {}),
-      ...(f.denied || t.denied ? { denied: true } : {}),
+      ...(found.denied || tool.denied ? { denied: true } : {}),
     };
   });
 };
@@ -169,7 +178,12 @@ const finishedView = (
   event: RunSummary
 ): RunView => {
   const title = event.title ?? prev?.summary?.title;
-  const summary = title ? { ...event, title } : event;
+  let summary: RunSummary = event;
+
+  if (title) {
+    summary = { ...event, title };
+  }
+
   const finished = runFromSummary(summary);
 
   if (!prev) {
@@ -197,7 +211,7 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
   if (event.type === "run.tool.started") {
     run.retry = null;
     run.tools = [
-      ...run.tools.filter((t) => t.toolUseId !== event.toolUseId),
+      ...run.tools.filter((tool) => tool.toolUseId !== event.toolUseId),
       {
         durationMs: null,
         input: event.input,
@@ -209,19 +223,21 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
       },
     ];
   } else if (event.type === "run.tool.finished") {
-    run.tools = run.tools.map((t) =>
-      t.toolUseId === event.toolUseId
-        ? {
-            ...t,
-            durationMs: event.durationMs,
-            isError: event.isError,
-            summary: event.summary,
-            ...(event.diff ? { diff: event.diff } : {}),
-            ...(event.diffs ? { diffs: event.diffs } : {}),
-            ...(event.denied ? { denied: true } : {}),
-          }
-        : t
-    );
+    run.tools = run.tools.map((tool) => {
+      if (tool.toolUseId === event.toolUseId) {
+        return {
+          ...tool,
+          durationMs: event.durationMs,
+          isError: event.isError,
+          summary: event.summary,
+          ...(event.diff ? { diff: event.diff } : {}),
+          ...(event.diffs ? { diffs: event.diffs } : {}),
+          ...(event.denied ? { denied: true } : {}),
+        };
+      }
+
+      return tool;
+    });
   }
 };
 
@@ -239,14 +255,18 @@ const applyControlEvent = (run: RunView, event: StudioEvent): void => {
 
     case "run.permission": {
       run.permissions = [
-        ...run.permissions.filter((p) => p.id !== event.request.id),
+        ...run.permissions.filter(
+          (permission) => permission.id !== event.request.id
+        ),
         event.request,
       ];
       break;
     }
 
     case "run.permission.resolved": {
-      run.permissions = run.permissions.filter((p) => p.id !== event.requestId);
+      run.permissions = run.permissions.filter(
+        (permission) => permission.id !== event.requestId
+      );
       break;
     }
 
@@ -269,13 +289,14 @@ const applyControlEvent = (run: RunView, event: StudioEvent): void => {
       };
       break;
     }
+
     default: {
       break;
     }
   }
 };
 
-export const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
+const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   if (!event.type.startsWith("run.") || !("runId" in event)) {
     return runs;
   }
@@ -338,20 +359,20 @@ export const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   return { ...runs, [runId]: run };
 };
 
-export const shortInput = (input: unknown): string => {
+const shortInput = (input: unknown): string => {
   if (input === null || input === undefined) {
     return "";
   }
 
   if (typeof input === "string") {
-    return input.slice(0, 80);
+    return input.slice(0, SHORT_INPUT_CHARS);
   }
 
   if (typeof input !== "object") {
     return String(input);
   }
 
-  const o = input as Record<string, unknown>;
+  const record = input as Record<string, unknown>;
 
   for (const key of [
     "file_path",
@@ -362,12 +383,23 @@ export const shortInput = (input: unknown): string => {
     "url",
     "query",
   ]) {
-    const v = o[key];
+    const value = record[key];
 
-    if (typeof v === "string") {
-      return v.slice(0, 80);
+    if (typeof value === "string") {
+      return value.slice(0, SHORT_INPUT_CHARS);
     }
   }
 
-  return JSON.stringify(input).slice(0, 80);
+  return JSON.stringify(input).slice(0, SHORT_INPUT_CHARS);
 };
+
+export {
+  applyRunEvent,
+  emptyRun,
+  runFromSummary,
+  runText,
+  shortInput,
+  shownPending,
+};
+
+export type { RetryState, RunMap, RunView, ToolRow };

@@ -1,15 +1,18 @@
 import type { McpApprovalOutcome } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
+import type { ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 import { appStream } from "../../platform/stream.js";
 import { useInlineApprovalProject } from "./approval-spot-model.js";
 import { copy } from "./copy.js";
-import { McpApproval } from "./mcp-feed.js";
 
 import "../../styles/mcp.css";
+import { McpApproval } from "./mcp-feed.js";
 import type { McpApprovalCard } from "./use-mcp-feed.js";
+
+const EXPIRY_GRACE_MS = 1000;
 
 const DONE_MS = 5000;
 
@@ -21,7 +24,7 @@ const useApprovalFeed = (): [
   const [cards, setCards] = useState<McpApprovalCard[]>([]);
   const answered = useRef(new Map<string, McpApprovalOutcome>());
   useEffect(() => {
-    const settle = (ids: Set<string>) =>
+    const settle = (ids: Set<string>): void =>
       setCards((prev) =>
         prev.map((card) => {
           if (card.outcome || ids.has(card.approval.id)) {
@@ -30,7 +33,7 @@ const useApprovalFeed = (): [
 
           const outcome =
             answered.current.get(card.approval.id) ??
-            (Date.now() >= card.approval.expiresAt - 1000
+            (Date.now() >= card.approval.expiresAt - EXPIRY_GRACE_MS
               ? "timeout"
               : "closed");
 
@@ -49,16 +52,20 @@ const useApprovalFeed = (): [
     });
   }, []);
 
-  const mark = (id: string, outcome: McpApprovalOutcome) => {
+  const mark = (id: string, outcome: McpApprovalOutcome): void => {
     answered.current.set(id, outcome);
     setCards((prev) =>
-      prev.map((card) =>
-        card.approval.id === id ? { ...card, outcome } : card
-      )
+      prev.map((card) => {
+        if (card.approval.id === id) {
+          return { ...card, outcome };
+        }
+
+        return card;
+      })
     );
   };
 
-  const drop = (id: string) =>
+  const drop = (id: string): void =>
     setCards((prev) => prev.filter((card) => card.approval.id !== id));
 
   return [cards, mark, drop];
@@ -77,7 +84,7 @@ const useTopModal = (watch: boolean): HTMLDialogElement | null => {
       return setModal(null);
     }
 
-    const check = () => setModal(topModal());
+    const check = (): void => setModal(topModal());
     check();
     const observer = new MutationObserver(check);
     observer.observe(document.body, {
@@ -87,7 +94,7 @@ const useTopModal = (watch: boolean): HTMLDialogElement | null => {
       subtree: true,
     });
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [watch]);
 
   return modal;
@@ -121,7 +128,7 @@ const Toast = ({
   focus: boolean;
   onAnswer: (allow: boolean) => void;
   onDrop: () => void;
-}) => {
+}): ReactElement => {
   const dropRef = useRef(onDrop);
   dropRef.current = onDrop;
   useEffect(() => {
@@ -131,7 +138,7 @@ const Toast = ({
 
     const timer = globalThis.setTimeout(() => dropRef.current(), DONE_MS);
 
-    return () => globalThis.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [card.outcome]);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -165,7 +172,7 @@ const Toast = ({
   );
 };
 
-export const McpToasts = () => {
+const McpToasts = (): ReactElement | null => {
   const [cards, mark, drop] = useApprovalFeed();
   const inlineProject = useInlineApprovalProject();
   const modal = useTopModal(cards.length > 0);
@@ -212,3 +219,5 @@ export const McpToasts = () => {
     modal
   );
 };
+
+export { McpToasts };

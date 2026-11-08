@@ -1,12 +1,16 @@
 import type { ProjectSettings, RunLevel } from "@design-studio/contracts";
 
-export const MODEL_OPTIONS = [
+const MIN_BUDGET_USD = 0.01;
+const MAX_BUDGET_USD = 50;
+const MAX_TURNS_LIMIT = 200;
+
+const MODEL_OPTIONS = [
   { id: "claude-haiku-5-5", label: "Claude Haiku 5.5" },
   { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
   { id: "claude-opus-5-5", label: "Claude Opus 5.5" },
 ];
 
-export interface SettingsDraft {
+interface SettingsDraft {
   model: string;
   maxBudgetUsd: string;
   maxTurns: string;
@@ -17,7 +21,7 @@ export interface SettingsDraft {
   defaultLevel: RunLevel;
 }
 
-export const toDraft = (settings: ProjectSettings): SettingsDraft => ({
+const toDraft = (settings: ProjectSettings): SettingsDraft => ({
   allowBash: settings.allowBash,
   allowInstall: settings.allowInstall,
   autoApprove: settings.autoApprove ?? true,
@@ -29,15 +33,21 @@ export const toDraft = (settings: ProjectSettings): SettingsDraft => ({
   model: settings.model,
 });
 
-export const parseDraft = (
+const parseDraft = (
   draft: SettingsDraft
 ): { settings: ProjectSettings } | { error: string } => {
   const rawBudget = draft.maxBudgetUsd.trim();
-  const budget = rawBudget === "" ? null : Number(rawBudget);
+  let budget: number | null = null;
+
+  if (rawBudget !== "") {
+    budget = Number(rawBudget);
+  }
 
   if (
     budget !== null &&
-    (!Number.isFinite(budget) || budget < 0.01 || budget > 50)
+    (!Number.isFinite(budget) ||
+      budget < MIN_BUDGET_USD ||
+      budget > MAX_BUDGET_USD)
   ) {
     return {
       error:
@@ -47,7 +57,7 @@ export const parseDraft = (
 
   const turns = Number(draft.maxTurns);
 
-  if (!Number.isInteger(turns) || turns < 1 || turns > 200) {
+  if (!Number.isInteger(turns) || turns < 1 || turns > MAX_TURNS_LIMIT) {
     return { error: "Enter a whole number of max turns from 1 to 200." };
   }
 
@@ -65,5 +75,9 @@ export const parseDraft = (
   };
 };
 
-export const modelLabel = (id: string): string =>
-  MODEL_OPTIONS.find((m) => m.id === id)?.label ?? id;
+const modelLabel = (id: string): string =>
+  MODEL_OPTIONS.find((options) => options.id === id)?.label ?? id;
+
+export { MODEL_OPTIONS, modelLabel, parseDraft, toDraft };
+
+export type { SettingsDraft };

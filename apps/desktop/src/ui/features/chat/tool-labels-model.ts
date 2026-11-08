@@ -1,22 +1,24 @@
 import { baseName } from "../../domain/format.js";
 import { shortInput } from "./run-state-model.js";
 
+const MCP_NAME_PARTS = 3;
+
 const PATH_KEYS = ["file_path", "path", "filePath", "notebook_path"];
 
 const humanize = (raw: string): string => {
   const words = raw
     .replaceAll(/[_-]+/gu, " ")
-    .replaceAll(/([a-z])([A-Z])/gu, "$1 $2")
+    .replaceAll(/(?<lower>[a-z])(?<upper>[A-Z])/gu, "$<lower> $<upper>")
     .trim()
     .toLowerCase();
 
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
-export const prettyToolName = (name: string): string => {
+const prettyToolName = (name: string): string => {
   const parts = name.split("__");
 
-  if (parts[0] === "mcp" && parts.length >= 3) {
+  if (parts[0] === "mcp" && parts.length >= MCP_NAME_PARTS) {
     return humanize(parts.slice(2).join(" "));
   }
 
@@ -40,7 +42,11 @@ const relativePath = (file: string, workTree: string | null): string => {
     return norm.slice(root.length + 1);
   }
 
-  return isAbsolutePath(norm) ? baseName(norm) : norm;
+  if (isAbsolutePath(norm)) {
+    return baseName(norm);
+  }
+
+  return norm;
 };
 
 const pathInput = (input: unknown): string | null => {
@@ -48,20 +54,20 @@ const pathInput = (input: unknown): string | null => {
     return null;
   }
 
-  const o = input as Record<string, unknown>;
+  const record = input as Record<string, unknown>;
 
   for (const key of PATH_KEYS) {
-    const v = o[key];
+    const value = record[key];
 
-    if (typeof v === "string" && v) {
-      return v;
+    if (typeof value === "string" && value) {
+      return value;
     }
   }
 
   return null;
 };
 
-export const toolTarget = (input: unknown, workTree: string | null): string => {
+const toolTarget = (input: unknown, workTree: string | null): string => {
   const file = pathInput(input);
 
   if (file) {
@@ -70,12 +76,16 @@ export const toolTarget = (input: unknown, workTree: string | null): string => {
 
   const raw = shortInput(input);
 
-  return isAbsolutePath(raw) ? relativePath(raw, workTree) : raw;
+  if (isAbsolutePath(raw)) {
+    return relativePath(raw, workTree);
+  }
+
+  return raw;
 };
 
-export const SKILL_TOOL = "Skill";
+const SKILL_TOOL = "Skill";
 
-export const skillToolName = (input: unknown): string => {
+const skillToolName = (input: unknown): string => {
   if (!input || typeof input !== "object") {
     return "";
   }
@@ -86,19 +96,25 @@ export const skillToolName = (input: unknown): string => {
     return "";
   }
 
-  return value.startsWith("personal:")
-    ? value.slice("personal:".length)
-    : value;
+  if (value.startsWith("personal:")) {
+    return value.slice("personal:".length);
+  }
+
+  return value;
 };
 
-export const toolLabel = (name: string, input: unknown): string => {
+const toolLabel = (name: string, input: unknown): string => {
   if (name !== SKILL_TOOL) {
     return prettyToolName(name);
   }
 
   const skill = skillToolName(input);
 
-  return skill ? `Skill · ${skill}` : "Skill";
+  if (skill) {
+    return `Skill · ${skill}`;
+  }
+
+  return "Skill";
 };
 
 const TOOL_VERBS: Record<string, string> = {
@@ -119,7 +135,7 @@ const TOOL_VERBS: Record<string, string> = {
   mcp__studio__screenshot: "Screenshot",
 };
 
-export const toolVerb = (name: string): string =>
+const toolVerb = (name: string): string =>
   TOOL_VERBS[name] ?? prettyToolName(name);
 
 const TOOL_GROUPS: Record<string, string> = {
@@ -142,15 +158,15 @@ const TOOL_GROUPS: Record<string, string> = {
   mcp__studio__screenshot: "Checked",
 };
 
-export const toolGroupLabel = (name: string): string =>
+const toolGroupLabel = (name: string): string =>
   TOOL_GROUPS[name] ?? prettyToolName(name);
 
-export interface ToolTally {
+interface ToolTally {
   label: string;
   count: number;
 }
 
-export const toolTally = (names: Iterable<string>): ToolTally[] => {
+const toolTally = (names: Iterable<string>): ToolTally[] => {
   const counts = new Map<string, number>();
 
   for (const name of names) {
@@ -161,7 +177,7 @@ export const toolTally = (names: Iterable<string>): ToolTally[] => {
   return [...counts].map(([label, count]) => ({ count, label }));
 };
 
-export const toolSubject = (
+const toolSubject = (
   name: string,
   input: unknown,
   workTree: string | null
@@ -188,3 +204,17 @@ export const toolSubject = (
 
   return toolTarget(input, workTree);
 };
+
+export {
+  SKILL_TOOL,
+  prettyToolName,
+  skillToolName,
+  toolGroupLabel,
+  toolLabel,
+  toolSubject,
+  toolTally,
+  toolTarget,
+  toolVerb,
+};
+
+export type { ToolTally };

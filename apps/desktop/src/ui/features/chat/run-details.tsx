@@ -1,7 +1,7 @@
 import type { RunStatus } from "@design-studio/contracts";
 import { Icon, useReturnFocusOnUnmount } from "@design-studio/ui";
 import { useEffect, useRef } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { formatMs, formatTime, formatUsd } from "../../domain/format.js";
 import { copy } from "./copy.js";
@@ -13,6 +13,9 @@ import {
   skillToolName,
   toolTarget,
 } from "./tool-labels-model.js";
+
+const SMALL_COST_BELOW = 0.01;
+const PRECISE_DIGITS = 4;
 
 const STATUS_TEXT: Record<RunStatus, string> = {
   budget_exceeded: "Spending limit reached",
@@ -28,20 +31,30 @@ const SMALL_COST = new Intl.NumberFormat("en-US", {
   style: "currency",
 });
 
-const preciseUsd = (n: number): string =>
-  n < 0.01 ? SMALL_COST.format(n) : `$${n.toFixed(4)}`;
+const preciseUsd = (amount: number): string => {
+  if (amount < SMALL_COST_BELOW) {
+    return SMALL_COST.format(amount);
+  }
 
-const costText = (s: NonNullable<RunView["summary"]>): string => {
-  const roundingHidesCost = s.costUsd !== Number(s.costUsd.toFixed(2));
-
-  const shown = roundingHidesCost
-    ? `${formatUsd(s.costUsd)} (${preciseUsd(s.costUsd)})`
-    : formatUsd(s.costUsd);
-
-  return s.status === "canceled" ? `${shown} (estimate)` : shown;
+  return `$${amount.toFixed(PRECISE_DIGITS)}`;
 };
 
-export const RunDetails = ({
+const costText = (summary: NonNullable<RunView["summary"]>): string => {
+  const roundingHidesCost =
+    summary.costUsd !== Number(summary.costUsd.toFixed(2));
+
+  const shown = roundingHidesCost
+    ? `${formatUsd(summary.costUsd)} (${preciseUsd(summary.costUsd)})`
+    : formatUsd(summary.costUsd);
+
+  if (summary.status === "canceled") {
+    return `${shown} (estimate)`;
+  }
+
+  return shown;
+};
+
+const RunDetails = ({
   projectId,
   run,
   onClose,
@@ -49,23 +62,23 @@ export const RunDetails = ({
   projectId: string;
   run: RunView;
   onClose: () => void;
-}) => {
-  const s = run.summary;
+}): ReactElement => {
+  const runSummary = run.summary;
 
-  const rows: [string, string][] = s
+  const rows: [string, string][] = runSummary
     ? [
-        ["Status", STATUS_TEXT[s.status] ?? s.status],
-        ["Model", s.model],
-        ["Cost", costText(s)],
-        ["Duration", formatMs(s.durationMs)],
-        ["Model time", formatMs(s.modelMs)],
-        ["Tool time", formatMs(s.toolMs)],
-        ["Input tokens", s.usage.inputTokens.toLocaleString()],
-        ["Output tokens", s.usage.outputTokens.toLocaleString()],
-        ["Cache read", s.usage.cacheReadTokens.toLocaleString()],
-        ["Cache write", s.usage.cacheWriteTokens.toLocaleString()],
-        ["Version", s.versionId ?? "None"],
-        ["Session", s.sessionId ?? "None"],
+        ["Status", STATUS_TEXT[runSummary.status] ?? runSummary.status],
+        ["Model", runSummary.model],
+        ["Cost", costText(runSummary)],
+        ["Duration", formatMs(runSummary.durationMs)],
+        ["Model time", formatMs(runSummary.modelMs)],
+        ["Tool time", formatMs(runSummary.toolMs)],
+        ["Input tokens", runSummary.usage.inputTokens.toLocaleString()],
+        ["Output tokens", runSummary.usage.outputTokens.toLocaleString()],
+        ["Cache read", runSummary.usage.cacheReadTokens.toLocaleString()],
+        ["Cache write", runSummary.usage.cacheWriteTokens.toLocaleString()],
+        ["Version", runSummary.versionId ?? "None"],
+        ["Session", runSummary.sessionId ?? "None"],
       ]
     : [
         ["Status", STATUS_TEXT[run.status] ?? run.status],
@@ -75,24 +88,24 @@ export const RunDetails = ({
   const skills = [
     ...new Set(
       run.tools
-        .filter((t) => t.name === SKILL_TOOL)
-        .map((t) => skillToolName(t.input) || "unknown")
+        .filter((tool) => tool.name === SKILL_TOOL)
+        .map((tool) => skillToolName(tool.input) || "unknown")
     ),
   ];
 
   rows.push(["Skills used", skills.length > 0 ? skills.join(", ") : "None"]);
-  const anyError = run.tools.some((t) => t.isError);
+  const anyError = run.tools.some((tool) => tool.isError);
   const closeButton = useRef<HTMLButtonElement>(null);
   useReturnFocusOnUnmount();
   useEffect(() => closeButton.current?.focus(), []);
 
-  const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key !== "Escape") {
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== "Escape") {
       return;
     }
 
-    e.preventDefault();
-    e.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
     onClose();
   };
 
@@ -104,10 +117,11 @@ export const RunDetails = ({
       onKeyDown={onKeyDown}
     >
       <div className="drawer-head">
-        <strong>Run details</strong>
+        <strong>{copy.runDetails}</strong>
         <div className="spacer" />
         <button
           ref={closeButton}
+          type="button"
           className="icon-btn"
           aria-label={copy.close}
           data-tip={copy.close}
@@ -119,20 +133,26 @@ export const RunDetails = ({
       </div>
       <div className="drawer-body">
         <div className="drawer-id" data-tip={run.runId}>
-          <span className="badge">Run</span>
+          <span className="badge">{copy.run}</span>
           <span className="mono muted truncate">{run.runId}</span>
         </div>
         <dl className="kv">
-          {rows.map(([k, v]) => (
-            <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
+          {rows.map(([name, value]) => (
+            <div key={name}>
+              <dt>{name}</dt>
+              <dd>{value}</dd>
             </div>
           ))}
         </dl>
         <LatencyBreakdown projectId={projectId} run={run} />
-        {s?.error && <div className="alert error">{s.error}</div>}
-        <h4>Tool calls ({run.tools.length})</h4>
+        {runSummary?.error && (
+          <div className="alert error">{runSummary.error}</div>
+        )}
+        <h4>
+          {copy.toolCalls}
+          {run.tools.length}
+          {copy.text4}
+        </h4>
         <div className="tools-table">
           <table className="table compact">
             <colgroup>
@@ -143,29 +163,29 @@ export const RunDetails = ({
             </colgroup>
             <thead>
               <tr>
-                <th>Tool</th>
-                <th>Input</th>
-                <th className="num">Time</th>
+                <th>{copy.tool}</th>
+                <th>{copy.input}</th>
+                <th className="num">{copy.time}</th>
                 {anyError && <th />}
               </tr>
             </thead>
             <tbody>
-              {run.tools.map((t) => (
-                <tr key={t.toolUseId} data-tip={JSON.stringify(t.input)}>
-                  <td className="truncate">{prettyToolName(t.name)}</td>
+              {run.tools.map((tool) => (
+                <tr key={tool.toolUseId} data-tip={JSON.stringify(tool.input)}>
+                  <td className="truncate">{prettyToolName(tool.name)}</td>
                   <td className="mono truncate">
-                    {t.name === SKILL_TOOL
-                      ? skillToolName(t.input)
-                      : toolTarget(t.input, null)}
+                    {tool.name === SKILL_TOOL && skillToolName(tool.input)}
+                    {tool.name !== SKILL_TOOL && toolTarget(tool.input, null)}
                   </td>
                   <td className="num">
-                    {t.durationMs === null
-                      ? "Running…"
-                      : formatMs(t.durationMs)}
+                    {tool.durationMs === null && "Running…"}
+                    {tool.durationMs !== null && formatMs(tool.durationMs)}
                   </td>
                   {anyError && (
                     <td>
-                      {t.isError && <span className="badge fail">Error</span>}
+                      {tool.isError && (
+                        <span className="badge fail">{copy.error}</span>
+                      )}
                     </td>
                   )}
                 </tr>
@@ -177,3 +197,5 @@ export const RunDetails = ({
     </div>
   );
 };
+
+export { RunDetails };

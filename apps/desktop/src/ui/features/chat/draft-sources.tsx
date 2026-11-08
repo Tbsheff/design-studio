@@ -5,25 +5,30 @@ import type {
   RunStatus,
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useEffect, useId, useState } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useId, useState, startTransition } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { api } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { packApi } from "../../platform/pack-api.js";
 import { copy } from "./copy.js";
 
+const MS_PER_SECOND = 1000;
+
 type ImproveEnd = { runId: string; status: RunStatus } | null;
 
-export const useDraftSources = (
+const useDraftSources = (
   projectId: string,
   enabled: boolean
 ): { state: DraftSourcesState | null; improveEnd: RunStatus | null } => {
   const [state, setState] = useState<DraftSourcesState | null>(null);
   const [end, setEnd] = useState<ImproveEnd>(null);
 
-  const runId =
-    state?.improve.state === "started" ? (state.improve.runId ?? null) : null;
+  let runId: string | null = null;
+
+  if (state?.improve.state === "started") {
+    runId = state.improve.runId ?? null;
+  }
 
   useEffect(() => {
     if (!runId) {
@@ -31,17 +36,19 @@ export const useDraftSources = (
     }
 
     let live = true;
-    api
-      .getRun(projectId, runId)
-      .then(
-        (run) =>
-          live &&
-          run.summary.status !== "running" &&
-          setEnd({ runId, status: run.summary.status })
-      )
-      .catch(() => null);
+    startTransition(async () => {
+      try {
+        const run = await api.getRun(projectId, runId);
 
-    return () => {
+        if (live && run.summary.status !== "running") {
+          setEnd({ runId, status: run.summary.status });
+        }
+      } catch {
+        return;
+      }
+    });
+
+    return (): void => {
       live = false;
     };
   }, [projectId, runId]);
@@ -53,12 +60,19 @@ export const useDraftSources = (
     }
 
     let live = true;
-    packApi
-      .getDesignSystemDraft(projectId)
-      .then((info) => live && setState((prev) => prev ?? info.sources ?? null))
-      .catch(() => null);
+    startTransition(async () => {
+      try {
+        const info = await packApi.getDesignSystemDraft(projectId);
 
-    return () => {
+        if (live) {
+          setState((prev) => prev ?? info.sources ?? null);
+        }
+      } catch {
+        return;
+      }
+    });
+
+    return (): void => {
       live = false;
     };
   }, [projectId, enabled]);
@@ -101,10 +115,18 @@ const seconds = (ms: number | undefined): string | null => {
     return null;
   }
 
-  return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
+  if (ms < MS_PER_SECOND) {
+    return `${ms} ms`;
+  }
+
+  return `${(ms / MS_PER_SECOND).toFixed(1)} s`;
 };
 
-const StateMark = ({ state }: { state: DraftSourceStatus["state"] }) => {
+const StateMark = ({
+  state,
+}: {
+  state: DraftSourceStatus["state"];
+}): ReactElement => {
   if (state === "reading") {
     return <span className="spinner" aria-hidden="true" />;
   }
@@ -120,7 +142,7 @@ const StateMark = ({ state }: { state: DraftSourceStatus["state"] }) => {
   return <span className="ds-src-dot" aria-hidden="true" />;
 };
 
-const SourceRow = ({ source }: { source: DraftSourceStatus }) => {
+const SourceRow = ({ source }: { source: DraftSourceStatus }): ReactElement => {
   const time = seconds(source.ms);
 
   return (
@@ -139,10 +161,13 @@ const SourceRow = ({ source }: { source: DraftSourceStatus }) => {
         <p className="ds-src-detail">
           {source.detail}
           {source.method === "browser" && (
-            <span className="ds-src-time"> · read in a browser</span>
+            <span className="ds-src-time">{copy.readInABrowser}</span>
           )}
           {time && source.state !== "reading" && (
-            <span className="ds-src-time"> · {time}</span>
+            <span className="ds-src-time">
+              {copy.text}
+              {time}
+            </span>
           )}
         </p>
         {source.note && <p className="ds-src-note-line">{source.note}</p>}
@@ -166,9 +191,11 @@ const summary = (state: DraftSourcesState): string => {
     (source) => source.state === "blocked" || source.state === "failed"
   ).length;
 
-  return problems > 0
-    ? `${real.length - problems} of ${real.length} read`
-    : "All read";
+  if (problems > 0) {
+    return `${real.length - problems} of ${real.length} read`;
+  }
+
+  return "All read";
 };
 
 const startedNote = (end: RunStatus | null): string => {
@@ -216,13 +243,13 @@ const NEEDS_LOOK = new Set<DraftSourceStatus["state"]>([
   "failed",
 ]);
 
-export const DraftSources = ({
+const DraftSources = ({
   state,
   improveEnd,
 }: {
   state: DraftSourcesState | null;
   improveEnd: RunStatus | null;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
   const listId = useId();
 
@@ -250,7 +277,7 @@ export const DraftSources = ({
       aria-busy={!state.done}
     >
       <div className="ds-src-head">
-        <strong>Sources</strong>
+        <strong>{copy.sources}</strong>
         <span className="ds-src-summary" role="status">
           {!state.done && <span className="spinner" aria-hidden="true" />}
           {summary(state)}
@@ -282,7 +309,7 @@ export const DraftSources = ({
   );
 };
 
-export interface DraftChrome {
+interface DraftChrome {
   banner: ReactNode;
   reading: boolean;
   waitReason: string | null;
@@ -290,7 +317,7 @@ export interface DraftChrome {
   unfinished: (visible: boolean) => boolean;
 }
 
-export const useDraftChrome = (
+const useDraftChrome = (
   projectId: string,
   project: Project | null
 ): DraftChrome => {
@@ -308,3 +335,7 @@ export const useDraftChrome = (
     waitReason: reading ? "Wait for the sources to finish reading..." : null,
   };
 };
+
+export { DraftSources, useDraftChrome, useDraftSources };
+
+export type { DraftChrome };

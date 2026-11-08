@@ -1,5 +1,5 @@
 import type { QueuedMessage } from "@design-studio/contracts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, startTransition } from "react";
 
 import { api } from "../../api.js";
 import type { DraftStore } from "../../platform/storage.js";
@@ -9,21 +9,27 @@ import { useEscapeStop } from "./use-escape-stop.js";
 const NO_QUEUE: QueuedMessage[] = [];
 
 const cancelQuietly = (projectId: string, runId: string): void => {
-  void api.cancelRun(projectId, runId).catch(() => null);
+  startTransition(async () => {
+    try {
+      await api.cancelRun(projectId, runId);
+    } catch {
+      return;
+    }
+  });
 };
 
-export interface RunControls {
+interface RunControls {
   onCancel: () => void;
   queue: QueuedMessage[];
   onQueueChange: (items: QueuedMessage[]) => void;
   onSteer: (text: string) => void;
 }
 
-export type TrackSend = (
+type TrackSend = (
   start: () => Promise<{ runId: string }>
 ) => Promise<{ runId: string; stopped: boolean }>;
 
-export const useRunControls = (
+const useRunControls = (
   projectId: string,
   activeRun: RunView | null,
   draft: DraftStore,
@@ -68,7 +74,7 @@ export const useRunControls = (
       }
     };
 
-    const withRun = (fn: (run: RunView) => Promise<unknown>) => {
+    const withRun = (fn: (run: RunView) => Promise<unknown>): void => {
       const run = live.current.activeRun;
 
       if (run) {
@@ -77,7 +83,7 @@ export const useRunControls = (
     };
 
     return {
-      onCancel: () => {
+      onCancel: (): void => {
         if (!live.current.activeRun && pending.current.count > 0) {
           pending.current.stop = true;
 
@@ -104,7 +110,7 @@ export const useRunControls = (
           return api.cancelRun(live.current.projectId, run.runId);
         });
       },
-      onQueueChange: (items: QueuedMessage[]) =>
+      onQueueChange: (items: QueuedMessage[]): void =>
         withRun(async (run) => {
           putting.current += 1;
           setLocal({ items, runId: run.runId });
@@ -118,7 +124,7 @@ export const useRunControls = (
             putting.current -= 1;
           }
         }),
-      onSteer: (text: string) =>
+      onSteer: (text: string): void =>
         withRun((run) => api.steerRun(live.current.projectId, run.runId, text)),
       trackSend,
     };
@@ -145,3 +151,7 @@ export const useRunControls = (
 
   return { ...controls, queue };
 };
+
+export { useRunControls };
+
+export type { RunControls, TrackSend };

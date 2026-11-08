@@ -1,4 +1,5 @@
 import { memo, Suspense, useCallback, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { Message, MessageContent } from "../../ai/components/ai/message.js";
 import { ApprovalCard, canPolishRun } from "../../chat-slots.js";
@@ -67,21 +68,21 @@ const RunEntry = memo(
     const { runId } = run;
     const details = useCallback(() => onDetails(runId), [onDetails, runId]);
 
-    const review = useMemo(
-      () =>
-        onReview && reviewVersionId
-          ? () => onReview(reviewVersionId)
-          : undefined,
-      [onReview, reviewVersionId]
-    );
+    const review = useMemo(() => {
+      if (onReview && reviewVersionId) {
+        return (): void => onReview(reviewVersionId);
+      }
 
-    const onUndo = useMemo(
-      () =>
-        actions && undoVersionId
-          ? () => actions.onRestore(undoVersionId)
-          : undefined,
-      [actions, undoVersionId]
-    );
+      return undefined;
+    }, [onReview, reviewVersionId]);
+
+    const onUndo = useMemo(() => {
+      if (actions && undoVersionId) {
+        return (): void => actions.onRestore(undoVersionId);
+      }
+
+      return undefined;
+    }, [actions, undoVersionId]);
 
     const running = run.status === "running";
 
@@ -102,24 +103,28 @@ const RunEntry = memo(
           <MessageContent className="run-body gap-3">
             <RunParts run={run} running={running} workTree={workTree} />
             {running &&
-              run.permissions.map((request) =>
-                request.card ? (
-                  <Suspense key={request.id} fallback={null}>
-                    <ApprovalCard
-                      projectId={runProjectId()}
-                      runId={runId}
-                      request={request}
-                    />
-                  </Suspense>
-                ) : (
+              run.permissions.map((request) => {
+                if (request.card) {
+                  return (
+                    <Suspense key={request.id} fallback={null}>
+                      <ApprovalCard
+                        projectId={runProjectId()}
+                        runId={runId}
+                        request={request}
+                      />
+                    </Suspense>
+                  );
+                }
+
+                return (
                   <PermissionPrompt
                     key={request.id}
                     projectId={runProjectId()}
                     runId={runId}
                     request={request}
                   />
-                )
-              )}
+                );
+              })}
             {running && (
               <LiveStatus
                 run={run}
@@ -133,14 +138,14 @@ const RunEntry = memo(
               latest={latest}
               undo={onUndo ? { onUndo, tip: undoTip } : undefined}
               {...(polish.onRetry
-                ? { onRetry: () => polish.onRetry?.(run) }
+                ? { onRetry: (): void => polish.onRetry?.(run) }
                 : {})}
             />
             <RunNotice
               run={run}
               latest={latest}
               {...(polish.onRetry
-                ? { onRetry: () => polish.onRetry?.(run) }
+                ? { onRetry: (): void => polish.onRetry?.(run) }
                 : {})}
             />
             {hasComments(run) && <RunCommentsCard run={run} />}
@@ -163,6 +168,7 @@ const RunEntry = memo(
     );
   }
 );
+
 RunEntry.displayName = "RunEntry";
 
 const PendingEntry = ({
@@ -171,7 +177,7 @@ const PendingEntry = ({
 }: {
   run: RunView;
   workTree: string | null;
-}) => (
+}): ReactElement => (
   <div className="run flex min-w-0 flex-col gap-3.5" data-pending-run="">
     <UserMessage run={run} />
     <Message type="incoming" className="msg assistant">
@@ -182,4 +188,4 @@ const PendingEntry = ({
   </div>
 );
 
-export { RunEntry, PendingEntry };
+export { PendingEntry, RunEntry };

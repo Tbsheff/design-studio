@@ -23,7 +23,7 @@ describe(nextRadioOption, () => {
 
   it("skips disabled options", () => {
     expect.hasAssertions();
-    const overMax = (n: number) => n > 3;
+    const overMax = (n: number): boolean => n > 3;
     expect(nextRadioOption(options, 3, "ArrowRight", overMax)).toBe(1);
     expect(nextRadioOption(options, 1, "End", overMax)).toBe(3);
     expect(nextRadioOption(options, 1, "ArrowRight", () => true)).toBeNull();

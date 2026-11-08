@@ -1,7 +1,6 @@
 import { RUN_LEVELS } from "@design-studio/contracts";
 import type { RunLevel } from "@design-studio/contracts";
 import { Icon, usePopover } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 import {
   useEffect,
   useId,
@@ -10,9 +9,22 @@ import {
   useLayoutEffect,
   useState,
 } from "react";
-import type { KeyboardEvent, ReactNode, CSSProperties, RefObject } from "react";
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  ReactElement,
+  ReactNode,
+  RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 
+import { ITEM, MODES, MODE_SHORT_HINT } from "./composer-menu-model.js";
+import type {
+  ItemProps,
+  ModelPillProps,
+  PlusMenuProps,
+  UsePlacedPopoverResult,
+} from "./composer-menu-model.js";
 import { copy } from "./copy.js";
 import {
   ChoiceItem,
@@ -30,25 +42,10 @@ import {
   MODE_LABEL,
   EffortToggle,
 } from "./run-settings.js";
-import type {
-  DesignsSetting,
-  ComposerMode,
-  EffortSetting,
-} from "./run-settings.js";
 import { MODEL_OPTIONS } from "./settings-draft-model.js";
 import { effectiveModel, shortModel } from "./slash-groups.js";
 import { StableText } from "./stable-text.js";
 import { usePresence } from "./use-presence.js";
-
-interface ItemProps {
-  icon?: IconName;
-  label: string;
-  meta?: string;
-  checked?: boolean;
-  disabledReason?: string | null;
-  hint?: string;
-  onPick: () => void;
-}
 
 const MenuItem = ({
   icon,
@@ -58,7 +55,7 @@ const MenuItem = ({
   disabledReason,
   hint,
   onPick,
-}: ItemProps) => {
+}: ItemProps): ReactElement => {
   const off = Boolean(disabledReason);
   const note = disabledReason ?? hint;
 
@@ -84,42 +81,23 @@ const MenuItem = ({
   );
 };
 
-interface PlusMenuProps {
-  onAttach: () => void;
-  onMention: () => void;
-  onSkills: () => void;
-  onOpen?: () => void;
-  mode: ComposerMode;
-  onMode: (mode: ComposerMode) => void;
-  designs?: DesignsSetting | undefined;
-}
-
-const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
-
-export const MODE_SHORT_HINT: Record<ComposerMode, string> = {
-  critique: "Review only",
-  edit: "Changes the design",
-  plan: "You approve first",
-};
-
 const DESIGN_COUNTS = [1, 2, 3, 4] as const;
-
-const ITEM = '[role^="menuitem"]:not([aria-disabled="true"])';
 
 const menuKeys = (
   event: KeyboardEvent<HTMLDivElement>,
   close: (refocus: boolean) => void
-) => {
+): void => {
   const items = [...event.currentTarget.querySelectorAll<HTMLElement>(ITEM)];
 
   const at = items.indexOf(document.activeElement as HTMLElement);
 
-  const step =
-    event.key === "ArrowDown" || event.key === "ArrowRight"
-      ? 1
-      : event.key === "ArrowUp" || event.key === "ArrowLeft"
-        ? -1
-        : 0;
+  let step: 0 | 1 | -1 = 0;
+
+  if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+    step = 1;
+  } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+    step = -1;
+  }
 
   if (step !== 0) {
     event.preventDefault();
@@ -139,7 +117,7 @@ const Section = ({
 }: {
   label: string;
   children: ReactNode;
-}) => {
+}): ReactElement => {
   const id = useId();
 
   return (
@@ -155,7 +133,7 @@ const Section = ({
 const usePlacedPopover = (
   trigger: RefObject<HTMLButtonElement | null>,
   panel: RefObject<HTMLDivElement | null>
-) => {
+): UsePlacedPopoverResult => {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>(UNPLACED);
   const presence = usePresence(open ? true : null);
@@ -177,7 +155,7 @@ const usePlacedPopover = (
       return;
     }
 
-    const place = () => {
+    const place = (): void => {
       if (trigger.current && panel.current) {
         setStyle(placeAboveOrBelow(trigger.current, panel.current));
       }
@@ -191,13 +169,13 @@ const usePlacedPopover = (
       observer.observe(panel.current);
     }
 
-    return () => {
+    return (): void => {
       window.removeEventListener("resize", place);
       observer.disconnect();
     };
   }, [open, trigger, panel]);
 
-  const show = () => {
+  const show = (): void => {
     setStyle(UNPLACED);
     setOpen(true);
   };
@@ -208,11 +186,17 @@ const usePlacedPopover = (
     open,
     shown: presence.shown !== null,
     style,
-    toggle: () => (open ? close(false) : show()),
+    toggle: (): void => {
+      if (open) {
+        return close(false);
+      }
+
+      return show();
+    },
   };
 };
 
-export const PlusMenu = (props: PlusMenuProps) => {
+const PlusMenu = (props: PlusMenuProps): ReactElement => {
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const menu = usePlacedPopover(trigger, panel);
@@ -222,7 +206,7 @@ export const PlusMenu = (props: PlusMenuProps) => {
     }
   }, [menu.open]);
 
-  const act = (run: () => void) => () => {
+  const act = (run: () => void) => (): void => {
     menu.close(false);
     run();
   };
@@ -345,7 +329,7 @@ export const PlusMenu = (props: PlusMenuProps) => {
   );
 };
 
-const PillCaret = () => (
+const PillCaret = (): ReactElement => (
   <svg
     className="ui-pill-select-caret"
     width="10"
@@ -360,7 +344,7 @@ const PillCaret = () => (
   </svg>
 );
 
-export const LevelPill = ({
+const LevelPill = ({
   level,
   onLevel,
   onOpen,
@@ -368,7 +352,7 @@ export const LevelPill = ({
   level: RunLevel;
   onLevel: (level: RunLevel) => void;
   onOpen?: () => void;
-}) => {
+}): ReactElement => {
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const menu = usePlacedPopover(trigger, panel);
@@ -399,7 +383,7 @@ export const LevelPill = ({
           menu.toggle();
         }}
       >
-        <span className="ui-pill-select-label">Level</span>
+        <span className="ui-pill-select-label">{copy.level}</span>
         <span className="ui-pill-select-value">
           <StableText sizes={RUN_LEVELS.map(levelLabel)}>
             {levelLabel(level)}
@@ -441,7 +425,7 @@ export const LevelPill = ({
   );
 };
 
-const ModelName = ({ name }: { name: string }) => {
+const ModelName = ({ name }: { name: string }): ReactElement => {
   const at = name.lastIndexOf(" ");
 
   if (at === -1) {
@@ -464,7 +448,7 @@ const ModelToggle = ({
   value: string;
   onChange: (id: string) => void;
   locked: boolean;
-}) => {
+}): ReactElement => {
   const ids = MODEL_OPTIONS.map((option) => option.id);
   const known = ids.includes(value);
 
@@ -501,21 +485,13 @@ const ModelToggle = ({
   );
 };
 
-interface ModelPillProps {
-  model: string;
-  level: RunLevel;
-  effort: EffortSetting;
-  onModel: (id: string) => void;
-  onOpen?: () => void;
-}
-
-export const ModelPill = ({
+const ModelPill = ({
   model,
   level,
   effort,
   onModel,
   onOpen,
-}: ModelPillProps) => {
+}: ModelPillProps): ReactElement => {
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const pop = usePlacedPopover(trigger, panel);
@@ -549,7 +525,7 @@ export const ModelPill = ({
           pop.toggle();
         }}
       >
-        <span className="ui-pill-select-label">Model</span>
+        <span className="ui-pill-select-label">{copy.model}</span>
         <span
           className="ui-pill-select-value model-pill-name"
           data-testid="active-model"
@@ -575,16 +551,16 @@ export const ModelPill = ({
             data-testid="run-settings-popover"
           >
             <section className="rs-group">
-              <h3 className="rs-label">Model</h3>
+              <h3 className="rs-label">{copy.model}</h3>
               <ModelToggle value={shown} onChange={onModel} locked={locked} />
               <p className="rs-hint">
-                {locked
-                  ? `${levelLabel(level)} runs always use ${shortModel(shown)}. Pick another level in the Level menu to change the model.`
-                  : "Saved for this project."}
+                {locked &&
+                  `${levelLabel(level)} runs always use ${shortModel(shown)}. Pick another level in the Level menu to change the model.`}
+                {!locked && "Saved for this project."}
               </p>
             </section>
             <section className="rs-group">
-              <h3 className="rs-label">Effort</h3>
+              <h3 className="rs-label">{copy.effort}</h3>
               <EffortToggle effort={effort} hintId={`${id}-effort-hint`} />
               <p className="rs-hint" id={`${id}-effort-hint`}>
                 {EFFORT_HINT[choice]}
@@ -602,3 +578,5 @@ const panelProps = (menu: { closing: boolean; style: CSSProperties }) => ({
   inert: menu.closing || undefined,
   style: menu.style,
 });
+
+export { LevelPill, MODE_SHORT_HINT, ModelPill, PlusMenu };

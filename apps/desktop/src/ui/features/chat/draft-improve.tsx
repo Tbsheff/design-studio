@@ -6,20 +6,24 @@ import type {
 } from "@design-studio/contracts";
 import { useFitPopover } from "@design-studio/ui";
 import { useId, useRef, useState } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
-export const IMPROVE_PROMPT = "Improve this design system.";
+const IMPROVE_PROMPT = "Improve this design system.";
 
-export const improveRequest = (
+const improveRequest = (
   focus: string,
   defaultLevel: RunLevel | undefined
 ): RunRequest => {
   const trimmed = focus.trim();
 
-  const level: RunLevel =
-    !defaultLevel || defaultLevel === "wireframe" ? "prototype" : defaultLevel;
+  let level: RunLevel = "prototype";
+
+  if (defaultLevel && defaultLevel !== "wireframe") {
+    level = defaultLevel;
+  }
 
   return {
     level,
@@ -29,11 +33,11 @@ export const improveRequest = (
   };
 };
 
-export const lastImproveRun = (runs: readonly RunView[]): RunView | null =>
+const lastImproveRun = (runs: readonly RunView[]): RunView | null =>
   [...runs].toReversed().find((run) => run.request?.task === "design-system") ??
   null;
 
-export const improvePassed = (run: RunView | null): boolean =>
+const improvePassed = (run: RunView | null): boolean =>
   run?.summary?.status === "completed" &&
   run.summary.designSystemCheck?.passed === true;
 
@@ -43,13 +47,17 @@ interface ImproveProps {
   onImprove: (focus: string) => Promise<void>;
 }
 
-export const ImproveControl = ({ running, run, onImprove }: ImproveProps) => {
+const ImproveControl = ({
+  running,
+  run,
+  onImprove,
+}: ImproveProps): ReactElement => {
   const improving = run?.status === "running";
   const primary = !improvePassed(run);
   const [focus, setFocus] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const start = async () => {
+  const start = async (): Promise<void> => {
     setBusy(true);
 
     try {
@@ -85,7 +93,8 @@ export const ImproveControl = ({ running, run, onImprove }: ImproveProps) => {
         className={`btn small${primary ? " primary" : ""}`}
         disabled={running || busy}
       >
-        {improving ? "Improving…" : "Improve with AI"}
+        {improving && "Improving…"}
+        {!improving && "Improve with AI"}
       </button>
     </form>
   );
@@ -129,7 +138,7 @@ const RULE_ORDER: DesignSystemCheckRule[] = [
   "design-md",
 ];
 
-const MORE = /^(\d+) more .+ not listed\.?$/u;
+const MORE = /^(?<count>\d+) more .+ not listed\.?$/u;
 
 const problemText = (rule: DesignSystemCheckRule, message: string): string => {
   const more = MORE.exec(message)?.[1];
@@ -142,7 +151,7 @@ const problemText = (rule: DesignSystemCheckRule, message: string): string => {
     return message;
   }
 
-  const todo = /to-do line:\s*_?\s*To do:\s*(.+?)_?\s*$/iu.exec(message);
+  const todo = /to-do line:\s*_?\s*To do:\s*(?<todo>.+?)_?\s*$/iu.exec(message);
   const found = todo?.[1];
 
   if (!found) {
@@ -164,13 +173,13 @@ const groupProblems = (
     rule,
   })).filter((group) => group.items.length > 0);
 
-export const CheckStatus = ({
+const CheckStatus = ({
   check,
   run,
 }: {
   check: DesignSystemCheckResult | null;
   run: RunView | null;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
   const listId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -186,7 +195,7 @@ export const CheckStatus = ({
   if (check.passed) {
     return (
       <span className="draft-check passed" role="status">
-        Check passed
+        {copy.checkPassed}
       </span>
     );
   }
@@ -203,7 +212,10 @@ export const CheckStatus = ({
         aria-controls={listId}
         onClick={() => setOpen((value) => !value)}
       >
-        {count} problem{count === 1 ? "" : "s"}
+        {count}
+        {copy.problem}
+        {count === 1 && ""}
+        {count !== 1 && "s"}
       </button>
       {open && (
         <div
@@ -229,11 +241,18 @@ export const CheckStatus = ({
               </ul>
             </section>
           ))}
-          <p className="draft-problems-hint">
-            Improve with AI fills these in, or edit DESIGN.md yourself.
-          </p>
+          <p className="draft-problems-hint">{copy.improveWithAiFills}</p>
         </div>
       )}
     </span>
   );
+};
+
+export {
+  CheckStatus,
+  IMPROVE_PROMPT,
+  ImproveControl,
+  improvePassed,
+  improveRequest,
+  lastImproveRun,
 };

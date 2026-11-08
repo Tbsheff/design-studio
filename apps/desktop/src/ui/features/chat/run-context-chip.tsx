@@ -1,19 +1,25 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { Chip } from "../../ai/components/ai/chip.js";
 import { copy } from "./copy.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 
-export const RunContextChip = ({
+const RunContextChip = ({
   chip,
 }: {
   chip: RunCanvasChip | null | undefined;
-}) => {
+}): ReactElement | null => {
   if (!chip) {
     return null;
   }
 
-  const state = chip.state ? `, ${chip.state}` : "";
+  let state = "";
+
+  if (chip.state) {
+    state = `, ${chip.state}`;
+  }
+
   const tip = `The agent works on frame ${chip.frameId} (${chip.page}${state}) and checks it there. Remove to send without it.`;
 
   return (
@@ -26,7 +32,8 @@ export const RunContextChip = ({
       >
         <Icon name="frame" size={12} />
         <span className="chip-text min-w-0 truncate">
-          On page <span className="font-mono text-foreground">{chip.page}</span>
+          {copy.onPage}
+          <span className="font-mono text-foreground">{chip.page}</span>
           {chip.state ? ` (${chip.state})` : ""}
           {chip.element ? ` · ${chip.element}` : ""}
         </span>
@@ -43,3 +50,5 @@ export const RunContextChip = ({
     </div>
   );
 };
+
+export { RunContextChip };

@@ -5,7 +5,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import { rank } from "../../chat-slots.js";
@@ -20,7 +20,10 @@ import {
   useSkillCatalog,
   skillDisplayName,
 } from "./skills-model.js";
-import type { SlashChoice, SlashSection } from "./slash-menu.js";
+import type { SlashChoice, SlashSection } from "./slash-menu-model.js";
+
+const MIN_POPOVER_HEIGHT = 120;
+const SKILL_POPOVER_HEIGHT = 520;
 
 const matches = (skill: SkillInfo, query: string): boolean => {
   const needle = query.trim().toLowerCase();
@@ -39,20 +42,22 @@ const shownCommands = (
   const tokens = query.trim().toLowerCase().split(/\s+/u).filter(Boolean);
 
   if (tokens.length === 0) {
-    return [...commands].toSorted((a, b) =>
-      (a.slash ?? "").localeCompare(b.slash ?? "")
+    return [...commands].toSorted((left, right) =>
+      (left.slash ?? "").localeCompare(right.slash ?? "")
     );
   }
 
-  const hits = commands.filter((c) => {
-    const words = (c.slash ?? "").toLowerCase().split(/[\s-]+/u);
+  const hits = commands.filter((command) => {
+    const words = (command.slash ?? "").toLowerCase().split(/[\s-]+/u);
 
-    return tokens.every((t) => words.some((w) => w.startsWith(t)));
+    return tokens.every((token) =>
+      words.some((word) => word.startsWith(token))
+    );
   });
 
-  return rank(hits, tokens.join(" "), (c) => ({
-    title: c.slash ?? c.title,
-  })).map((r) => r.item);
+  return rank(hits, tokens.join(" "), (command) => ({
+    title: command.slash ?? command.title,
+  })).map((ranked) => ranked.item);
 };
 
 const commandChoice = (
@@ -77,7 +82,9 @@ const skillChoice = (
   label: skill.name,
   meta: originText(skill.origin),
   pick: () => onPick(skill.id),
-  tag: skill.needsBash ? <span className="skill-tag">Needs shell</span> : null,
+  tag: skill.needsBash ? (
+    <span className="skill-tag">{copy.needsShell}</span>
+  ) : null,
   tip: `${skill.description}\n${skill.sourcePath}`,
 });
 
@@ -113,13 +120,18 @@ interface SlashSourceProps {
   onCommand: (command: Command) => void;
 }
 
-export const useSlashSections = ({
+interface UseSlashSectionsResult {
+  readonly note: ReactElement | null;
+  readonly sections: (query: string) => SlashSection[];
+}
+
+const useSlashSections = ({
   disabled,
   exclude,
   commands,
   onSkill,
   onCommand,
-}: SlashSourceProps) => {
+}: SlashSourceProps): UseSlashSectionsResult => {
   const { catalog, error } = useSkillCatalog();
   const on = enabledSkills(catalog, disabled);
 
@@ -142,7 +154,9 @@ export const useSlashSections = ({
       },
       {
         items: (query === ""
-          ? [...skills].sort((a, b) => a.name.localeCompare(b.name))
+          ? [...skills].sort((left, right) =>
+              left.name.localeCompare(right.name)
+            )
           : skills
         ).map((skill) => skillChoice(skill, onSkill)),
         label: "Skills",
@@ -154,25 +168,26 @@ export const useSlashSections = ({
   const note =
     manualCount > 0 ? (
       <span data-tip-side="top" data-tip={copy.theseSkillsSet}>
-        {plural(manualCount, "manual-only skill")} not listed
+        {plural(manualCount, "manual-only skill")}
+        {copy.notListed}
       </span>
     ) : null;
 
   return { note, sections };
 };
 
-const useDismiss = (onClose: () => void) => {
+const useDismiss = (onClose: () => void): RefObject<HTMLDivElement | null> => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+    const onDown = (event: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         onClose();
       }
     };
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
 
   return ref;
@@ -180,9 +195,12 @@ const useDismiss = (onClose: () => void) => {
 
 const POP_GAP = 8;
 
-const useFitAbove = (ref: RefObject<HTMLDivElement | null>, max: number) => {
+const useFitAbove = (
+  ref: RefObject<HTMLDivElement | null>,
+  max: number
+): void => {
   useLayoutEffect(() => {
-    const fit = () => {
+    const fit = (): void => {
       const pop = ref.current;
       const anchor = pop?.parentElement;
 
@@ -197,23 +215,23 @@ const useFitAbove = (ref: RefObject<HTMLDivElement | null>, max: number) => {
       const room =
         anchor.getBoundingClientRect().top - Math.max(0, bounds.top) - POP_GAP;
 
-      pop.style.maxHeight = `${Math.max(120, Math.min(max, room))}px`;
+      pop.style.maxHeight = `${Math.max(MIN_POPOVER_HEIGHT, Math.min(max, room))}px`;
     };
 
     fit();
     window.addEventListener("resize", fit);
 
-    return () => window.removeEventListener("resize", fit);
+    return (): void => window.removeEventListener("resize", fit);
   }, [ref, max]);
 };
 
-export const SkillChips = ({
+const SkillChips = ({
   ids,
   onRemove,
 }: {
   ids: string[];
   onRemove: (id: string) => void;
-}) => {
+}): ReactElement | null => {
   if (ids.length === 0) {
     return null;
   }
@@ -254,16 +272,19 @@ const IndicatorPop = (props: {
   error: string | null;
   onChange: (next: string[]) => void;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const ref = useDismiss(props.onClose);
-  useFitAbove(ref, 520);
+  useFitAbove(ref, SKILL_POPOVER_HEIGHT);
   useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) =>
-      e.key === "Escape" && props.onClose();
+    const onKey = (event: globalThis.KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        props.onClose();
+      }
+    };
 
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [props]);
 
   return (
@@ -287,11 +308,11 @@ const IndicatorPop = (props: {
   );
 };
 
-export const SkillsIndicator = ({
+const SkillsIndicator = ({
   projectId,
   settings,
   onSaved,
-}: IndicatorProps) => {
+}: IndicatorProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { catalog } = useSkillCatalog();
@@ -299,20 +320,27 @@ export const SkillsIndicator = ({
   const disabled = pending ?? settings.disabledSkills ?? [];
   const count = enabledSkills(catalog, disabled).length;
 
-  const save = (next: string[]) => {
+  const save = async (next: string[]): Promise<void> => {
     setPending(next);
 
-    return api.updateSettings(projectId, { disabledSkills: next }).then(
-      (project) => {
-        setError(null);
-        onSaved(project);
-        setPending((current) => (current === next ? null : current));
-      },
-      (caught: unknown) => {
-        setError(errorText(caught));
-        setPending(null);
-      }
-    );
+    try {
+      const project = await api.updateSettings(projectId, {
+        disabledSkills: next,
+      });
+
+      setError(null);
+      onSaved(project);
+      setPending((current) => {
+        if (current === next) {
+          return null;
+        }
+
+        return current;
+      });
+    } catch (thrownError: unknown) {
+      setError(errorText(thrownError));
+      setPending(null);
+    }
   };
 
   return (
@@ -328,11 +356,12 @@ export const SkillsIndicator = ({
             ? `${plural(count, "skill")} on for this project, ${plural(enabledSkills(catalog, disabled).filter((skill) => !skill.modelInvocable).length, "manual-only skill")} the agent cannot load`
             : "Claude skills for this project"
         }
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={() => setOpen((x) => !x)}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={() => setOpen((wasOpen) => !wasOpen)}
       >
         <Icon name="book" size={12} />
-        {catalog ? `${count} skill${count === 1 ? "" : "s"}` : "Skills"}
+        {catalog && `${count} skill${count === 1 ? "" : "s"}`}
+        {!catalog && "Skills"}
       </button>
       {open && (
         <IndicatorPop
@@ -346,3 +375,5 @@ export const SkillsIndicator = ({
     </span>
   );
 };
+
+export { SkillChips, SkillsIndicator, useSlashSections };

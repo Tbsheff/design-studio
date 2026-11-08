@@ -9,18 +9,20 @@ const setInline = (projectId: string | null): void => {
   }
 
   inlineProject = projectId;
-  listeners.forEach((l) => l());
+  for (const listener of listeners) {
+    listener();
+  }
 };
 
-const subscribe = (l: () => void): (() => void) => {
-  listeners.add(l);
+const subscribe = (listener: () => void): (() => void) => {
+  listeners.add(listener);
 
   return () => {
-    listeners.delete(l);
+    listeners.delete(listener);
   };
 };
 
-export const useInlineApprovals = (
+const useInlineApprovals = (
   projectId: string,
   paneCollapsed: boolean,
   tab: string
@@ -29,9 +31,11 @@ export const useInlineApprovals = (
   useEffect(() => {
     setInline(shown ? projectId : null);
 
-    return () => setInline(null);
+    return (): void => setInline(null);
   }, [projectId, shown]);
 };
 
-export const useInlineApprovalProject = (): string | null =>
+const useInlineApprovalProject = (): string | null =>
   useSyncExternalStore(subscribe, () => inlineProject);
+
+export { useInlineApprovalProject, useInlineApprovals };

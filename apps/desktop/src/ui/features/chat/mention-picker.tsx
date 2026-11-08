@@ -2,11 +2,14 @@ import type { RunMention } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, ReactElement, SetStateAction } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { copy } from "./copy.js";
 
-export interface MentionOption {
+const MAX_MATCHES = 30;
+
+interface MentionOption {
   key: string;
   label: string;
   detail: string;
@@ -14,25 +17,35 @@ export interface MentionOption {
   icon?: IconName;
 }
 
-export const mentionKey = (mention: RunMention): string =>
-  mention.kind === "file"
-    ? `file:${mention.path}`
-    : `${mention.kind}:${mention.name}`;
+const mentionKey = (mention: RunMention): string => {
+  if (mention.kind === "file") {
+    return `file:${mention.path}`;
+  }
 
-export const mentionLabel = (mention: RunMention): string =>
-  mention.kind === "file"
-    ? (mention.path.split("/").pop() ?? mention.path)
-    : mention.name;
+  return `${mention.kind}:${mention.name}`;
+};
 
-export const mentionIcon = (mention: RunMention): IconName => {
+const mentionLabel = (mention: RunMention): string => {
+  if (mention.kind === "file") {
+    return mention.path.split("/").pop() ?? mention.path;
+  }
+
+  return mention.name;
+};
+
+const mentionIcon = (mention: RunMention): IconName => {
   if (mention.kind === "file") {
     return "file";
   }
 
-  return mention.kind === "token" ? "token" : "component";
+  if (mention.kind === "token") {
+    return "token";
+  }
+
+  return "component";
 };
 
-export const mentionTitle = (mention: RunMention): string => {
+const mentionTitle = (mention: RunMention): string => {
   if (mention.kind === "file") {
     return mention.path;
   }
@@ -41,54 +54,80 @@ export const mentionTitle = (mention: RunMention): string => {
     return `${mention.name}: ${mention.value}`;
   }
 
-  return mention.file
-    ? `@${mention.name} · ${mention.file}`
-    : `@${mention.name}`;
+  if (mention.file) {
+    return `@${mention.name} · ${mention.file}`;
+  }
+
+  return `@${mention.name}`;
 };
 
-export const mentionQueryOf = (draft: string): string | null => {
-  const match = /(?:^|\s)@([^\s@]*)$/u.exec(draft);
+const mentionQueryOf = (draft: string): string | null => {
+  const match = /(?:^|\s)@(?<query>[^\s@]*)$/u.exec(draft);
 
-  return match ? (match[1] ?? "") : null;
+  if (match) {
+    return match[1] ?? "";
+  }
+
+  return null;
 };
 
-export const rankMentions = (
+const rankMentions = (
   options: readonly MentionOption[],
   query: string
 ): MentionOption[] =>
   fuzzyRank(
     options,
     query,
-    (option) =>
-      option.mention.kind === "file" ? option.mention.path : option.label,
-    30
+    (option) => {
+      if (option.mention.kind === "file") {
+        return option.mention.path;
+      }
+
+      return option.label;
+    },
+    MAX_MATCHES
   );
 
-export const useMentionPicker = (
+interface UseMentionPickerResult {
+  readonly current: MentionOption | null;
+  readonly move: (step: 1 | -1) => void;
+  readonly open: boolean;
+  readonly setActive: Dispatch<SetStateAction<number>>;
+  readonly shown: MentionOption[];
+}
+
+const useMentionPicker = (
   options: readonly MentionOption[],
   query: string | null
-) => {
+): UseMentionPickerResult => {
   const [active, setActive] = useState(0);
 
-  const shown = useMemo(
-    () => (query === null ? [] : rankMentions(options, query)),
-    [options, query]
-  );
+  const shown = useMemo(() => {
+    if (query === null) {
+      return [];
+    }
+
+    return rankMentions(options, query);
+  }, [options, query]);
 
   useEffect(() => setActive(0), [query]);
 
   const current =
     shown[Math.min(active, Math.max(0, shown.length - 1))] ?? null;
 
-  const move = (step: 1 | -1) =>
-    setActive((index) =>
-      shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
-    );
+  const move = (step: 1 | -1): void =>
+    setActive((index) => {
+      if (shown.length === 0) {
+        return 0;
+      }
+
+      return (index + step + shown.length) % shown.length;
+    });
 
   return { current, move, open: query !== null, setActive, shown };
 };
 
-export const MentionList = ({
+const MentionList = ({
   shown,
   current,
   loading,
@@ -102,7 +141,7 @@ export const MentionList = ({
   onPick: (option: MentionOption) => void;
   onHover: (index: number) => void;
   className?: string;
-}) => {
+}): ReactElement => {
   useEffect(() => {
     if (current) {
       document
@@ -149,22 +188,23 @@ export const MentionList = ({
         ))}
         {shown.length === 0 && (
           <li className="skill-empty">
-            {loading ? "Loading files…" : "Nothing matches."}
+            {loading && "Loading files…"}
+            {!loading && "Nothing matches."}
           </li>
         )}
       </ul>
-      <p className="skill-pop-foot">↑↓ move · ↵ or Tab add · Esc close</p>
+      <p className="skill-pop-foot">{copy.moveOrTabAdd}</p>
     </div>
   );
 };
 
-export const MentionChips = ({
+const MentionChips = ({
   mentions,
   onRemove,
 }: {
   mentions: RunMention[];
   onRemove: (key: string) => void;
-}) => {
+}): ReactElement | null => {
   if (mentions.length === 0) {
     return null;
   }
@@ -197,3 +237,17 @@ export const MentionChips = ({
     </div>
   );
 };
+
+export {
+  MentionChips,
+  MentionList,
+  mentionIcon,
+  mentionKey,
+  mentionLabel,
+  mentionQueryOf,
+  mentionTitle,
+  rankMentions,
+  useMentionPicker,
+};
+
+export type { MentionOption };

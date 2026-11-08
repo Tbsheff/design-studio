@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { AssistantText, SentWhileRunning, Thinking } from "./chat-parts.js";
 import type { RunView, ToolRow } from "./run-state-model.js";
@@ -57,12 +58,13 @@ const ToolSegment = memo(
     running: boolean;
     workTree: string | null;
   }) => <ToolChips tools={tools} running={running} workTree={workTree} flat />,
-  (a, b) =>
-    a.running === b.running &&
-    a.workTree === b.workTree &&
-    a.tools.length === b.tools.length &&
-    a.tools.every((tool, index) => tool === b.tools[index])
+  (left, right) =>
+    left.running === right.running &&
+    left.workTree === right.workTree &&
+    left.tools.length === right.tools.length &&
+    left.tools.every((tool, index) => tool === right.tools[index])
 );
+
 ToolSegment.displayName = "ToolSegment";
 
 const SegmentView = ({
@@ -73,7 +75,7 @@ const SegmentView = ({
   segment: Segment;
   running: boolean;
   workTree: string | null;
-}) => {
+}): ReactElement => {
   if (segment.kind === "tools") {
     return (
       <ToolSegment
@@ -151,7 +153,7 @@ const RunParts = ({
   run: RunView;
   running: boolean;
   workTree: string | null;
-}) => {
+}): ReactElement => {
   const layout = useMemo(
     () => layoutOf(segmentsOf(run), running),
     [run.parts, run.tools, running]

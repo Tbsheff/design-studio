@@ -1,6 +1,7 @@
 import type { SkillInfo } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { NO_SKILLS_TEXT, plural, useSkillCatalog } from "./skills-model.js";
@@ -21,10 +22,13 @@ const groupByOrigin = (skills: SkillInfo[]): [string, SkillInfo[]][] => {
   return [...groups.entries()];
 };
 
-const originLabel = (origin: string): string =>
-  origin === "personal"
-    ? "Personal skills (~/.claude/skills)"
-    : `Plugin ${origin.slice("plugin:".length)}`;
+const originLabel = (origin: string): string => {
+  if (origin === "personal") {
+    return "Personal skills (~/.claude/skills)";
+  }
+
+  return `Plugin ${origin.slice("plugin:".length)}`;
+};
 
 const matches = (skill: SkillInfo, query: string): boolean => {
   const needle = query.trim().toLowerCase();
@@ -46,20 +50,20 @@ const SkillRow = ({
   on: boolean;
   allowBash: boolean;
   onToggle: (on: boolean) => void;
-}) => (
+}): ReactElement => (
   <label className="check skill-row" data-tip={skill.sourcePath}>
     <input
       type="checkbox"
       aria-label={`Skill ${skill.id}`}
       checked={on}
-      onChange={(e) => onToggle(e.target.checked)}
+      onChange={(event) => onToggle(event.target.checked)}
     />
     <span className="skill-text">
       <span className="skill-name">
         {skill.name}
         {skill.needsBash && !allowBash && (
           <span className="skill-tag" data-tip={copy.thisSkillRuns}>
-            Needs shell
+            {copy.needsShell}
           </span>
         )}
         {!skill.modelInvocable && (
@@ -68,7 +72,7 @@ const SkillRow = ({
             data-tip-align="end"
             data-tip={copy.skillMdSets}
           >
-            Manual only
+            {copy.manualOnly}
           </span>
         )}
       </span>
@@ -77,7 +81,11 @@ const SkillRow = ({
   </label>
 );
 
-export const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
+const SkillsChecklist = ({
+  disabled,
+  allowBash,
+  onChange,
+}: Props): ReactElement => {
   const { catalog, error, reload } = useSkillCatalog();
   const [query, setQuery] = useState("");
 
@@ -96,26 +104,28 @@ export const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
     (skill) => skill.needsBash && !disabled.includes(skill.id)
   ).length;
 
-  const toggle = (id: string, on: boolean) => {
+  const toggle = (id: string, on: boolean): void => {
     const rest = disabled.filter((item) => item !== id);
     onChange(on ? rest : [...rest, id]);
   };
 
-  const setAll = (on: boolean) =>
+  const setAll = (on: boolean): void =>
     onChange(on ? [] : skills.map((skill) => skill.id));
 
   return (
     <fieldset className="skills-field">
-      <legend>Claude skills</legend>
+      <legend>{copy.claudeSkills}</legend>
       {error && (
         <p className="skills-note" role="alert">
-          Could not load skills. Check your connection, then try again.{" "}
+          {copy.couldNotLoadSkills}{" "}
           <button type="button" className="link" onClick={reload}>
-            Try again
+            {copy.tryAgain}
           </button>
         </p>
       )}
-      {!error && !catalog && <p className="skills-note">Loading skills…</p>}
+      {!error && !catalog && (
+        <p className="skills-note">{copy.loadingSkills}</p>
+      )}
       {catalog && catalog.skills.length === 0 && (
         <p className="skills-note" data-testid="skills-empty">
           {NO_SKILLS_TEXT}
@@ -125,28 +135,31 @@ export const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
         <>
           <div className="skills-bar">
             <span className="skills-note" aria-live="polite">
-              {onCount} of {skills.length} on
+              {onCount}
+              {copy.of}
+              {skills.length}
+              {copy.on}
             </span>
             <input
               aria-label={copy.filterSkills}
               type="search"
               placeholder={copy.filter}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(event) => setQuery(event.target.value)}
             />
             <button
               type="button"
               className="btn small ghost"
               onClick={() => setAll(true)}
             >
-              All on
+              {copy.allOn}
             </button>
             <button
               type="button"
               className="btn small ghost"
               onClick={() => setAll(false)}
             >
-              All off
+              {copy.allOff}
             </button>
           </div>
           <div className="skills-list">
@@ -170,44 +183,43 @@ export const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
               </div>
             ))}
             {groups.length === 0 && (
-              <p className="skills-note">No skills match.</p>
+              <p className="skills-note">{copy.noSkillsMatch}</p>
             )}
           </div>
           {!allowBash && bashCount > 0 && (
             <p className="skills-note">
-              {plural(bashCount, "skill")} that{" "}
-              {bashCount === 1 ? "is on needs" : "are on need"} shell commands.
-              To let {bashCount === 1 ? "it" : "them"} run scripts, turn on
-              &quot;Allow agent to run shell commands&quot;.
+              {plural(bashCount, "skill")}
+              {copy.that} {bashCount === 1 && "is on needs"}
+              {bashCount !== 1 && "are on need"}
+              {copy.shellCommandsToLet}
+              {bashCount === 1 && "it"}
+              {bashCount !== 1 && "them"}
+              {copy.runScriptsTurnOn}
             </p>
           )}
           {catalog.problems.length > 0 && (
             <details className="skills-problems">
               <summary>
                 <Icon name="chevronRight" size={12} />
-                {plural(catalog.problems.length, "folder")} did not load
+                {plural(catalog.problems.length, "folder")}
+                {copy.didNotLoad}
               </summary>
               <ul>
                 {catalog.problems.map((problem) => (
                   <li key={problem.source}>
-                    <span className="mono">{problem.source}</span>:{" "}
-                    {problem.reason}
+                    <span className="mono">{problem.source}</span>
+                    {copy.text10} {problem.reason}
                   </li>
                 ))}
               </ul>
-              <p className="skills-note">
-                Fix or remove the SKILL.md in that folder, then open this list
-                again.
-              </p>
+              <p className="skills-note">{copy.fixOrRemoveThe}</p>
             </details>
           )}
-          <p className="skills-note">
-            Skills come from ~/.claude/skills and your enabled Claude Code
-            plugins. The agent can read the files in a skill folder that is on,
-            and their text goes to the model.
-          </p>
+          <p className="skills-note">{copy.skillsComeFromClaude}</p>
         </>
       )}
     </fieldset>
   );
 };
+
+export { SkillsChecklist };

@@ -1,7 +1,7 @@
 import type { Direction } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import {
   Conversation,
@@ -17,7 +17,7 @@ import {
 import { PendingEntry, RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";
-import type { McpFeedControl } from "./mcp-feed.js";
+import { copy } from "./copy.js";
 import { feedShown, McpItem, timelineOf } from "./mcp-feed.js";
 import type { RunView } from "./run-state-model.js";
 import {
@@ -26,6 +26,7 @@ import {
   useRunSearch,
   useTurnActions,
 } from "./use-chat-panel.js";
+import type { McpFeedControl } from "./use-mcp-feed.js";
 import type { RewindControl } from "./use-rewind.js";
 
 interface Props {
@@ -62,7 +63,7 @@ const ChatPanel = ({
   offline,
   onStop,
   onReview,
-}: Props) => {
+}: Props): ReactElement => {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
@@ -93,7 +94,7 @@ const ChatPanel = ({
   const timeline = useMemo(() => timelineOf(runs, mcp), [runs, mcp]);
   const isOffline = Boolean(offline);
 
-  const renderRun = (run: RunView) => (
+  const renderRun = (run: RunView): ReactElement => (
     <RunEntry
       key={run.runId}
       run={run}
@@ -130,7 +131,7 @@ const ChatPanel = ({
       <Conversation
         className="chat-conversation min-h-0 flex-1"
         data-ai-scope=""
-        data-searching={search.open || undefined}
+        data-searching={search.open || null}
       >
         <ConversationContent className="chat">
           <ChatLead
@@ -142,20 +143,20 @@ const ChatPanel = ({
             resetKey={direction?.id ?? null}
             reveal={search.target}
             onRevealed={search.onFound}
-            render={(item) =>
-              item.kind === "run" ? (
-                renderRun(item.run)
-              ) : (
-                <McpItem key={item.key} item={item} mcp={mcp} />
-              )
-            }
+            render={(item) => {
+              if (item.kind === "run") {
+                return renderRun(item.run);
+              }
+
+              return <McpItem key={item.key} item={item} mcp={mcp} />;
+            }}
           />
           {pending && <PendingEntry run={pending} workTree={workTree} />}
         </ConversationContent>
         <StickOnNewRun runId={pending?.runId ?? lastId ?? null} />
         <ConversationScrollButton className="btn small chat-scroll-btn">
           <Icon name="chevronDown" size={14} />
-          Jump to latest
+          {copy.jumpToLatest}
         </ConversationScrollButton>
       </Conversation>
     </div>
@@ -163,4 +164,5 @@ const ChatPanel = ({
 };
 
 export { ChatPanel };
+
 export type { Props as ChatPanelProps };

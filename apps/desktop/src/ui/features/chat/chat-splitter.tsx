@@ -1,8 +1,16 @@
 import { useCallback, useRef } from "react";
-import type { KeyboardEvent, PointerEvent, RefObject } from "react";
+import type {
+  KeyboardEvent,
+  PointerEvent,
+  ReactElement,
+  RefObject,
+} from "react";
 
 import { uiStore, useUi } from "../../platform/storage.js";
 import { copy } from "./copy.js";
+
+const STEP_PX = 16;
+const SHIFT_STEP_PX = 48;
 
 const MIN_CHAT = 300;
 const MAX_CHAT = 640;
@@ -13,14 +21,19 @@ const clampWidth = (width: number, container: number): number => {
   return Math.round(Math.max(MIN_CHAT, Math.min(max, width)));
 };
 
-export const chatWidthStyle = (width: number | null): Record<string, string> =>
-  width === null ? {} : { "--chat-w": `${width}px` };
+const chatWidthStyle = (width: number | null): Record<string, string> => {
+  if (width === null) {
+    return {};
+  }
 
-export const ChatSplitter = ({
+  return { "--chat-w": `${width}px` };
+};
+
+const ChatSplitter = ({
   columnsRef,
 }: {
   columnsRef: RefObject<HTMLDivElement | null>;
-}) => {
+}): ReactElement => {
   const { chatWidth } = useUi();
   const dragging = useRef(false);
 
@@ -39,53 +52,64 @@ export const ChatSplitter = ({
     [columnsRef]
   );
 
-  const currentWidth = () => {
+  const currentWidth = (): number => {
     const panel = columnsRef.current?.querySelector(".pane-left");
 
-    return panel instanceof HTMLElement
-      ? panel.getBoundingClientRect().width
-      : MIN_CHAT;
+    if (panel instanceof HTMLElement) {
+      return panel.getBoundingClientRect().width;
+    }
+
+    return MIN_CHAT;
   };
 
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) {
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>): void => {
+    if (event.button !== 0) {
       return;
     }
 
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
     dragging.current = true;
     document.body.classList.add("resizing");
   };
 
-  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>): void => {
     if (!dragging.current) {
       return;
     }
 
-    const next = widthAt(e.clientX);
+    const next = widthAt(event.clientX);
 
     if (next !== null) {
       uiStore.set({ chatWidth: next });
     }
   };
 
-  const stop = () => {
+  const stop = (): void => {
     dragging.current = false;
     document.body.classList.remove("resizing");
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const step = e.shiftKey ? 48 : 16;
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    let step = STEP_PX;
 
-    const delta =
-      e.key === "ArrowRight" ? step : e.key === "ArrowLeft" ? -step : 0;
+    if (event.shiftKey) {
+      step = SHIFT_STEP_PX;
+    }
+
+    let delta = 0;
+
+    if (event.key === "ArrowRight") {
+      delta = step;
+    } else if (event.key === "ArrowLeft") {
+      delta = -step;
+    }
 
     if (delta === 0) {
       return;
     }
 
-    e.preventDefault();
+    event.preventDefault();
     const container = columnsRef.current?.getBoundingClientRect().width ?? 0;
     uiStore.set({ chatWidth: clampWidth(currentWidth() + delta, container) });
   };
@@ -111,3 +135,5 @@ export const ChatSplitter = ({
     />
   );
 };
+
+export { ChatSplitter, chatWidthStyle };

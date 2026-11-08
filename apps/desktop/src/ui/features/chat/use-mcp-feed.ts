@@ -3,17 +3,24 @@ import type {
   McpApprovalOutcome,
   McpApprovalRecord,
 } from "@design-studio/contracts";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  startTransition,
+} from "react";
 
 import { useProjectEvents } from "../../platform/events.js";
 import { mcpApi } from "./mcp-model.js";
+import type { RunView } from "./run-state-model.js";
 
-export interface McpApprovalCard {
+interface McpApprovalCard {
   approval: McpApprovalRecord;
   outcome: McpApprovalOutcome | null;
 }
 
-export interface McpFeedState {
+interface McpFeedState {
   activity: McpActivity[];
   approvals: McpApprovalCard[];
 }
@@ -31,7 +38,9 @@ const mergeActivity = (
     return list;
   }
 
-  return [...list, ...fresh].toSorted((a, b) => a.at - b.at).slice(-KEEP);
+  return [...list, ...fresh]
+    .toSorted((left, right) => left.at - right.at)
+    .slice(-KEEP);
 };
 
 const replaceActivity = (
@@ -46,7 +55,7 @@ const replaceActivity = (
   );
 };
 
-export const useMcpFeed = (
+const useMcpFeed = (
   projectId: string,
   directionId: string | null
 ): McpFeedState => {
@@ -55,15 +64,19 @@ export const useMcpFeed = (
 
   const reload = useCallback(() => {
     let live = true;
-    mcpApi
-      .activity(projectId)
-      .then(
-        (res) =>
-          live && setActivity((prev) => replaceActivity(prev, res.activity))
-      )
-      .catch(() => null);
+    startTransition(async () => {
+      try {
+        const res = await mcpApi.activity(projectId);
 
-    return () => {
+        if (live) {
+          setActivity((prev) => replaceActivity(prev, res.activity));
+        }
+      } catch {
+        return;
+      }
+    });
+
+    return (): void => {
       live = false;
     };
   }, [projectId]);
@@ -81,18 +94,22 @@ export const useMcpFeed = (
         return;
       }
 
-      setApprovals((prev) =>
-        prev.some((card) => card.approval.id === approval.id)
-          ? prev
-          : [...prev, { approval, outcome: null }]
-      );
+      setApprovals((prev) => {
+        if (prev.some((card) => card.approval.id === approval.id)) {
+          return prev;
+        }
+
+        return [...prev, { approval, outcome: null }];
+      });
     } else if (event.type === "mcp.approval.resolved") {
       setApprovals((prev) =>
-        prev.map((card) =>
-          card.approval.id === event.approvalId
-            ? { ...card, outcome: event.outcome }
-            : card
-        )
+        prev.map((card) => {
+          if (card.approval.id === event.approvalId) {
+            return { ...card, outcome: event.outcome };
+          }
+
+          return card;
+        })
       );
     }
   });
@@ -107,3 +124,23 @@ export const useMcpFeed = (
 
   return useMemo(() => ({ activity: shown, approvals }), [shown, approvals]);
 };
+
+type TimelineItem =
+  | { kind: "run"; key: string; at: number; run: RunView }
+  | {
+      kind: "block";
+      key: string;
+      at: number;
+      client: string;
+      entries: McpActivity[];
+    }
+  | { kind: "approval"; key: string; at: number; card: McpApprovalCard };
+
+interface McpFeedControl extends McpFeedState {
+  locked: boolean;
+  onUndo: (versionId: string) => void;
+}
+
+export { useMcpFeed };
+
+export type { McpApprovalCard, McpFeedControl, McpFeedState, TimelineItem };

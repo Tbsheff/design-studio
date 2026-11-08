@@ -16,7 +16,7 @@ import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { frameStateOf, useFrameStates } from "../canvas/frame-states-model.js";
 import { inViewIds } from "../canvas/use-canvas-presence.js";
 
-export interface RunCanvasChip {
+interface RunCanvasChip {
   frameId: string;
   page: string;
   element: string | null;
@@ -24,7 +24,7 @@ export interface RunCanvasChip {
   onRemove: () => void;
 }
 
-export interface RunCanvas {
+interface RunCanvas {
   chip: RunCanvasChip | null;
   current: () => RunCanvasRef | undefined;
 }
@@ -33,7 +33,7 @@ const frameKey = (frame: CanvasFrame): string =>
   `${frame.id}|${frame.path ?? ""}`;
 
 const elementName = (selection: readonly SelectionContext[]): string | null => {
-  const first = selection[0];
+  const [first] = selection;
 
   if (!first) {
     return null;
@@ -58,7 +58,7 @@ const refOf = (frame: CanvasFrame): RunCanvasRef => {
   };
 };
 
-export const useRunCanvas = (
+const useRunCanvas = (
   projectId: string,
   project: Project | null,
   selection: readonly SelectionContext[]
@@ -78,7 +78,7 @@ export const useRunCanvas = (
     : {
         element: elementName(selection),
         frameId: frame.id,
-        onRemove: () => setRemoved(key),
+        onRemove: (): void => setRemoved(key),
         page: `/${frame.path ?? ""}`,
         state: stateLabel(
           states ?? null,
@@ -86,5 +86,18 @@ export const useRunCanvas = (
         ),
       };
 
-  return { chip, current: () => (off ? undefined : refOf(frame)) };
+  return {
+    chip,
+    current: () => {
+      if (off) {
+        return undefined;
+      }
+
+      return refOf(frame);
+    },
+  };
 };
+
+export { useRunCanvas };
+
+export type { RunCanvas, RunCanvasChip };

@@ -1,13 +1,14 @@
 import type { DesignComment, RunRequest } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { createContext, useContext, useState } from "react";
+import type { ReactElement } from "react";
 
 import { commentsDone } from "../../../shared/comments.js";
 import type { CommentsControl } from "../comments/use-comments.js";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
-export const RunCommentsContext = createContext<CommentsControl | null>(null);
+const RunCommentsContext = createContext<CommentsControl | null>(null);
 
 const idsOf = (request: RunRequest | null | undefined): string[] => {
   if (!request) {
@@ -26,7 +27,13 @@ const replyText = (run: RunView): string => {
   }
 
   return run.parts
-    .flatMap((part) => (part.kind === "text" ? [part.text] : []))
+    .flatMap((part) => {
+      if (part.kind === "text") {
+        return [part.text];
+      }
+
+      return [];
+    })
     .join("\n");
 };
 
@@ -37,7 +44,11 @@ const stateOf = (comment: DesignComment, done: number[] | null): LinkState => {
     return "resolved";
   }
 
-  return done?.includes(comment.n) ? "done" : "open";
+  if (done?.includes(comment.n)) {
+    return "done";
+  }
+
+  return "open";
 };
 
 const STATE_TIP: Record<LinkState, string> = {
@@ -54,7 +65,7 @@ const CommentLink = ({
   comment: DesignComment;
   state: LinkState;
   control: CommentsControl;
-}) => (
+}): ReactElement => (
   <li>
     <button
       type="button"
@@ -65,10 +76,11 @@ const CommentLink = ({
       onClick={() => control.setOpenId(comment.id)}
     >
       <span className="num">
-        {state === "resolved" || state === "done" ? (
+        {(state === "resolved" || state === "done") && (
           <Icon name="check" size={12} />
-        ) : null}
-        #{comment.n}
+        )}
+        {copy.text9}
+        {comment.n}
       </span>
       <span className="text">{comment.text}</span>
     </button>
@@ -83,12 +95,14 @@ const resolvable = (
     (comment) => comment.status !== "resolved" && comment.status !== "sent"
   );
 
-  return done === null
-    ? open
-    : open.filter((comment) => done.includes(comment.n));
+  if (done === null) {
+    return open;
+  }
+
+  return open.filter((comment) => done.includes(comment.n));
 };
 
-export const RunCommentsCard = ({ run }: { run: RunView }) => {
+const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
   const control = useContext(RunCommentsContext);
   const [busy, setBusy] = useState(false);
   const ids = new Set([...idsOf(run.summary?.request), ...idsOf(run.request)]);
@@ -104,9 +118,13 @@ export const RunCommentsCard = ({ run }: { run: RunView }) => {
   }
 
   const done = commentsDone(replyText(run));
-  const toResolve = run.status === "completed" ? resolvable(linked, done) : [];
+  let toResolve: DesignComment[] = [];
 
-  const resolve = async () => {
+  if (run.status === "completed") {
+    toResolve = resolvable(linked, done);
+  }
+
+  const resolve = async (): Promise<void> => {
     setBusy(true);
 
     try {
@@ -118,7 +136,11 @@ export const RunCommentsCard = ({ run }: { run: RunView }) => {
     }
   };
 
-  const noun = toResolve.length === 1 ? "comment" : "comments";
+  let noun: "comment" | "comments" = "comments";
+
+  if (toResolve.length === 1) {
+    noun = "comment";
+  }
 
   return (
     <section
@@ -129,7 +151,8 @@ export const RunCommentsCard = ({ run }: { run: RunView }) => {
       <div className="run-comments-head">
         <Icon name="comment" size={14} />
         <span>
-          {linked.length} {linked.length === 1 ? "comment" : "comments"}
+          {linked.length} {linked.length === 1 && "comment"}
+          {linked.length !== 1 && "comments"}
         </span>
         <span className="spacer" />
         {toResolve.length > 0 && (
@@ -141,7 +164,8 @@ export const RunCommentsCard = ({ run }: { run: RunView }) => {
             onClick={() => void resolve()}
           >
             <Icon name="check" size={14} />
-            Resolve {toResolve.length} {noun}
+            {copy.resolve}
+            {toResolve.length} {noun}
           </button>
         )}
       </div>
@@ -158,3 +182,5 @@ export const RunCommentsCard = ({ run }: { run: RunView }) => {
     </section>
   );
 };
+
+export { RunCommentsCard, RunCommentsContext };

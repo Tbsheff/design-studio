@@ -24,7 +24,7 @@ const focusComposer = (): void => {
   });
 };
 
-export const useComposerFocus = (running: boolean, ready: boolean): void => {
+const useComposerFocus = (running: boolean, ready: boolean): void => {
   const was = useRef<boolean | null>(null);
   useEffect(() => {
     if (!ready) {
@@ -38,3 +38,5 @@ export const useComposerFocus = (running: boolean, ready: boolean): void => {
     was.current = running;
   }, [running, ready]);
 };
+
+export { useComposerFocus };

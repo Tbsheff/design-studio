@@ -3,7 +3,8 @@ import type {
   PermissionRequest,
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useState } from "react";
+import { useState, startTransition } from "react";
+import type { ReactElement } from "react";
 
 import {
   RULE_MAX_CHARS,
@@ -12,7 +13,7 @@ import {
 import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";
 
-export const PermissionPrompt = ({
+const PermissionPrompt = ({
   projectId,
   runId,
   request,
@@ -20,21 +21,23 @@ export const PermissionPrompt = ({
   projectId: string;
   runId: string;
   request: PermissionRequest;
-}) => {
+}): ReactElement => {
   const [note, setNote] = useState("");
   const [denying, setDenying] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const answer = (decision: PermissionDecision) => {
+  const answer = (decision: PermissionDecision): void => {
     setBusy(true);
     setError(null);
-    api
-      .answerPermission(projectId, runId, request.id, decision)
-      .catch((caught: unknown) => {
+    startTransition(async () => {
+      try {
+        await api.answerPermission(projectId, runId, request.id, decision);
+      } catch (thrownError: unknown) {
         setBusy(false);
-        setError(errorText(caught));
-      });
+        setError(errorText(thrownError));
+      }
+    });
   };
 
   const command =
@@ -42,14 +45,17 @@ export const PermissionPrompt = ({
       ? (request.input as { command?: unknown } | null)?.command
       : undefined;
 
-  const rule =
+  let rule: string | null = null;
+
+  if (
     typeof command === "string" &&
     command.trim() !== "" &&
     command.trim().length <= RULE_MAX_CHARS
-      ? ruleForCommand(command)
-      : null;
+  ) {
+    rule = ruleForCommand(command);
+  }
 
-  const deny = () =>
+  const deny = (): void =>
     answer({ allow: false, ...(note.trim() ? { note: note.trim() } : {}) });
 
   return (
@@ -66,7 +72,7 @@ export const PermissionPrompt = ({
       {request.detail && (
         <pre className="permission-detail">{request.detail}</pre>
       )}
-      {denying ? (
+      {denying && (
         <form
           className="permission-deny"
           onSubmit={(event) => {
@@ -89,10 +95,11 @@ export const PermissionPrompt = ({
             }}
           />
           <button type="submit" className="btn small danger" disabled={busy}>
-            Deny
+            {copy.deny}
           </button>
         </form>
-      ) : (
+      )}
+      {!denying && (
         <div className="permission-actions">
           <button
             type="button"
@@ -100,7 +107,7 @@ export const PermissionPrompt = ({
             disabled={busy}
             onClick={() => answer({ allow: true })}
           >
-            Allow once
+            {copy.allowOnce}
           </button>
           {rule && (
             <button
@@ -111,7 +118,8 @@ export const PermissionPrompt = ({
               aria-label={`Always allow ${rule}`}
               onClick={() => answer({ allow: true, always: rule })}
             >
-              Always <code className="permission-rule">{rule}</code>
+              {copy.always}
+              <code className="permission-rule">{rule}</code>
             </button>
           )}
           <button
@@ -120,7 +128,7 @@ export const PermissionPrompt = ({
             disabled={busy}
             onClick={() => setDenying(true)}
           >
-            Deny…
+            {copy.deny2}
           </button>
         </div>
       )}
@@ -132,3 +140,5 @@ export const PermissionPrompt = ({
     </section>
   );
 };
+
+export { PermissionPrompt };

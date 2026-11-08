@@ -3,8 +3,8 @@ import type {
   ComponentInfo,
   RunMention,
 } from "@design-studio/contracts";
-import { useEffect, useMemo, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, startTransition } from "react";
+import type { Dispatch, KeyboardEvent, SetStateAction } from "react";
 
 import { api } from "../../api.js";
 import {
@@ -15,6 +15,19 @@ import {
 import type { MentionOption } from "./mention-picker.js";
 
 const fileCache = new Map<string, Promise<string[]>>();
+
+const requestFiles = async (
+  projectId: string,
+  directionId: string
+): Promise<string[]> => {
+  try {
+    const result = await api.workTreeFiles(projectId, directionId);
+
+    return result.files;
+  } catch {
+    return [];
+  }
+};
 
 const loadFiles = (
   projectId: string,
@@ -28,10 +41,7 @@ const loadFiles = (
     return known;
   }
 
-  const next = api.workTreeFiles(projectId, directionId).then(
-    (result) => result.files,
-    () => []
-  );
+  const next = requestFiles(projectId, directionId);
 
   fileCache.set(key, next);
 
@@ -50,19 +60,35 @@ interface Options {
   onLead?: (option: MentionOption) => void;
 }
 
-export interface MentionRequest {
+interface MentionRequest {
   mention: RunMention;
   seq: number;
 }
 
-export const componentMention = (component: ComponentInfo): RunMention => ({
+const componentMention = (component: ComponentInfo): RunMention => ({
   file: component.file,
   kind: "component",
   name: component.name,
   selector: component.selector,
 });
 
-export const useMentions = ({
+interface UseMentionsResult {
+  readonly clear: () => void;
+  readonly loading: boolean;
+  readonly mentions: RunMention[];
+  readonly onKeyDown: (event: KeyboardEvent<HTMLElement>) => boolean;
+  readonly pick: (option: MentionOption) => void;
+  readonly picker: {
+    readonly current: MentionOption | null;
+    readonly move: (step: 1 | -1) => void;
+    readonly open: boolean;
+    readonly setActive: Dispatch<SetStateAction<number>>;
+    readonly shown: MentionOption[];
+  };
+  readonly remove: (key: string) => void;
+}
+
+const useMentions = ({
   projectId,
   directionId,
   tokens,
@@ -72,16 +98,22 @@ export const useMentions = ({
   request,
   lead,
   onLead,
-}: Options) => {
+}: Options): UseMentionsResult => {
   const [files, setFiles] = useState<string[] | null>(null);
   const [mentions, setMentions] = useState<RunMention[]>([]);
   const [dismissed, setDismissed] = useState<string | null>(null);
   const rawQuery = mentionQueryOf(draft);
-  const query = rawQuery !== null && draft !== dismissed ? rawQuery : null;
+  let query: string | null = null;
 
-  const refresh = (fresh: boolean) => {
+  if (rawQuery !== null && draft !== dismissed) {
+    query = rawQuery;
+  }
+
+  const refresh = (fresh: boolean): void => {
     if (directionId) {
-      void loadFiles(projectId, directionId, fresh).then(setFiles);
+      startTransition(async () => {
+        setFiles(await loadFiles(projectId, directionId, fresh));
+      });
     }
   };
 
@@ -128,12 +160,14 @@ export const useMentions = ({
     ].filter((option) => !picked.has(option.key));
   }, [files, tokens, mentions, components, lead]);
 
-  const add = (mention: RunMention) =>
-    setMentions((prev) =>
-      prev.some((item) => mentionKey(item) === mentionKey(mention))
-        ? prev
-        : [...prev, mention]
-    );
+  const add = (mention: RunMention): void =>
+    setMentions((prev) => {
+      if (prev.some((item) => mentionKey(item) === mentionKey(mention))) {
+        return prev;
+      }
+
+      return [...prev, mention];
+    });
 
   const requestSeq = request?.seq;
   useEffect(() => {
@@ -143,7 +177,7 @@ export const useMentions = ({
   }, [requestSeq]);
   const picker = useMentionPicker(options, query);
 
-  const pick = (option: MentionOption) => {
+  const pick = (option: MentionOption): void => {
     if (lead?.some((item) => item.key === option.key)) {
       onLead?.(option);
     } else {
@@ -151,9 +185,13 @@ export const useMentions = ({
     }
 
     setDraft(
-      draft
-        .replace(/@[^\s@]*$/u, "")
-        .replace(/\s+$/u, (space) => (space ? " " : ""))
+      draft.replace(/@[^\s@]*$/u, "").replace(/\s+$/u, (space) => {
+        if (space) {
+          return " ";
+        }
+
+        return "";
+      })
     );
   };
 
@@ -184,15 +222,19 @@ export const useMentions = ({
   };
 
   return {
-    clear: () => setMentions([]),
+    clear: (): void => setMentions([]),
     loading: files === null,
     mentions,
     onKeyDown,
     pick,
     picker,
-    remove: (key: string) =>
+    remove: (key: string): void =>
       setMentions((prev) =>
         prev.filter((mention) => mentionKey(mention) !== key)
       ),
   };
 };
+
+export { componentMention, useMentions };
+
+export type { MentionRequest };

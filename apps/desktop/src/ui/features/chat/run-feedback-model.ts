@@ -2,9 +2,9 @@ import { useCallback, useState } from "react";
 
 import { readStored, writeStored } from "../../platform/storage.js";
 
-export type Thumb = "up" | "down";
+type Thumb = "up" | "down";
 
-export interface RunFeedback {
+interface RunFeedback {
   thumb: Thumb | null;
   stars: number;
 }
@@ -24,7 +24,12 @@ const load = (): Store => {
 
   try {
     const raw = readStored(KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    let parsed: unknown = {};
+
+    if (raw) {
+      parsed = JSON.parse(raw);
+    }
+
     cache = parsed && typeof parsed === "object" ? (parsed as Store) : {};
   } catch {
     cache = {};
@@ -38,7 +43,9 @@ const save = (store: Store): void => {
 
   if (ids.length > MAX_ENTRIES) {
     ids
-      .toSorted((a, b) => (store[a]?.at ?? 0) - (store[b]?.at ?? 0))
+      .toSorted(
+        (entry, right) => (store[entry]?.at ?? 0) - (store[right]?.at ?? 0)
+      )
       .slice(0, ids.length - MAX_ENTRIES)
       .forEach((id) => delete store[id]);
   }
@@ -46,18 +53,17 @@ const save = (store: Store): void => {
   writeStored(KEY, JSON.stringify(store));
 };
 
-export const readRunFeedback = (runId: string): RunFeedback => {
+const readRunFeedback = (runId: string): RunFeedback => {
   const entry = load()[runId];
 
-  return entry
-    ? { stars: entry.stars ?? 0, thumb: entry.thumb ?? null }
-    : EMPTY;
+  if (entry) {
+    return { stars: entry.stars ?? 0, thumb: entry.thumb ?? null };
+  }
+
+  return EMPTY;
 };
 
-export const writeRunFeedback = (
-  runId: string,
-  feedback: RunFeedback
-): void => {
+const writeRunFeedback = (runId: string, feedback: RunFeedback): void => {
   const store = { ...load() };
 
   if (feedback.thumb === null && feedback.stars === 0) {
@@ -70,7 +76,7 @@ export const writeRunFeedback = (
   save(store);
 };
 
-export const useRunFeedback = (
+const useRunFeedback = (
   runId: string
 ): [RunFeedback, (patch: Partial<RunFeedback>) => void] => {
   const [feedback, setFeedback] = useState(() => readRunFeedback(runId));
@@ -88,3 +94,7 @@ export const useRunFeedback = (
 
   return [feedback, update];
 };
+
+export { readRunFeedback, useRunFeedback, writeRunFeedback };
+
+export type { RunFeedback, Thumb };

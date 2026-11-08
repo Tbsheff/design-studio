@@ -1,5 +1,5 @@
 import type { ProjectKind } from "@design-studio/contracts";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, startTransition } from "react";
 
 import { api } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";
@@ -8,22 +8,26 @@ import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 const TREE_CAP = 3000;
 const PAINT_FALLBACK_MS = 5000;
 
-export const pageFileOf = (path: string | undefined): string => {
+const pageFileOf = (path: string | undefined): string => {
   const clean = (path ?? "").split(/[?#]/u)[0]?.replace(/^\/+/u, "") ?? "";
 
   if (!clean) {
     return "index.html";
   }
 
-  return clean.endsWith("/") ? `${clean}index.html` : clean;
+  if (clean.endsWith("/")) {
+    return `${clean}index.html`;
+  }
+
+  return clean;
 };
 
-const UNLISTED = /^(\.|node_modules\/|dist\/|\.vite\/|vite-cache\/)|\/\./u;
+const UNLISTED = /^(?:\.|node_modules\/|dist\/|\.vite\/|vite-cache\/)|\/\./u;
 
 const hasPage = (files: ReadonlySet<string>, file: string): boolean =>
   files.has(file) || files.has(`${file}/index.html`);
 
-export type PageWait = "building" | "missing" | null;
+type PageWait = "building" | "missing" | null;
 
 interface Options {
   projectId: string;
@@ -34,39 +38,57 @@ interface Options {
   lastChange: FilesChange | null;
 }
 
-export const usePageFiles = (
-  o: Options
+const usePageFiles = (
+  options: Options
 ): ((path: string | undefined) => PageWait) => {
-  const gated = o.live && o.kind === "html" && o.directionId !== null;
+  const gated =
+    options.live && options.kind === "html" && options.directionId !== null;
+
   const [files, setFiles] = useState<ReadonlySet<string> | "all" | null>(null);
 
   const changeAt =
-    o.lastChange?.directionId === o.directionId
-      ? o.lastChange?.changedAt
+    options.lastChange?.directionId === options.directionId
+      ? options.lastChange?.changedAt
       : undefined;
 
   useEffect(() => {
     setFiles(null);
-  }, [gated, o.projectId, o.directionId]);
+  }, [gated, options.projectId, options.directionId]);
   useEffect(() => {
-    if (!gated || !o.directionId) {
+    if (!gated || !options.directionId) {
       return;
     }
 
     let alive = true;
-    api
-      .workTreeFiles(o.projectId, o.directionId)
-      .then(
-        ({ files: list }) =>
-          alive && setFiles(list.length >= TREE_CAP ? "all" : new Set(list))
-      )
-      .catch(() => alive && setFiles("all"));
+    const { directionId } = options;
+    startTransition(async () => {
+      try {
+        const { files: list } = await api.workTreeFiles(
+          options.projectId,
+          directionId
+        );
 
-    return () => {
+        if (alive) {
+          setFiles(list.length >= TREE_CAP ? "all" : new Set(list));
+        }
+      } catch {
+        if (alive) {
+          setFiles("all");
+        }
+      }
+    });
+
+    return (): void => {
       alive = false;
     };
-  }, [gated, o.projectId, o.directionId, changeAt, o.building]);
-  const { building } = o;
+  }, [
+    gated,
+    options.projectId,
+    options.directionId,
+    changeAt,
+    options.building,
+  ]);
+  const { building } = options;
 
   return useCallback(
     (path: string | undefined) => {
@@ -77,23 +99,28 @@ export const usePageFiles = (
       }
 
       if (files === null) {
-        return building ? "building" : null;
+        if (building) {
+          return "building";
+        }
+
+        return null;
       }
 
       if (hasPage(files, file)) {
         return null;
       }
 
-      return building ? "building" : "missing";
+      if (building) {
+        return "building";
+      }
+
+      return "missing";
     },
     [gated, files, building]
   );
 };
 
-export const useFramePainted = (
-  waiting: boolean,
-  mounted: boolean
-): boolean => {
+const useFramePainted = (waiting: boolean, mounted: boolean): boolean => {
   const [painted, setPainted] = useState(false);
   useEffect(() => {
     if (!waiting) {
@@ -106,11 +133,11 @@ export const useFramePainted = (
       return;
     }
 
-    const done = () => setPainted(true);
+    const done = (): void => setPainted(true);
     globalThis.addEventListener(PREVIEW_PAINTED_EVENT, done);
     const timer = globalThis.setTimeout(done, PAINT_FALLBACK_MS);
 
-    return () => {
+    return (): void => {
       globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, done);
       globalThis.clearTimeout(timer);
     };
@@ -133,41 +160,52 @@ interface GateOptions {
   url: string | null;
 }
 
-export interface FirstBuildGate {
+interface FirstBuildGate {
   building: boolean;
   wait: PageWait;
   url: string | null;
   waitFor: (path: string | undefined, directionId: string | null) => PageWait;
 }
 
-export const useFirstBuildGate = (o: GateOptions): FirstBuildGate => {
-  const building = o.live && o.running === true && !o.hasHead && !o.urlError;
+const useFirstBuildGate = (options: GateOptions): FirstBuildGate => {
+  const building =
+    options.live &&
+    options.running === true &&
+    !options.hasHead &&
+    !options.urlError;
 
   const pageWait = usePageFiles({
     building,
-    directionId: o.directionId,
-    kind: o.kind,
-    lastChange: o.lastChange,
-    live: o.live,
-    projectId: o.projectId,
+    directionId: options.directionId,
+    kind: options.kind,
+    lastChange: options.lastChange,
+    live: options.live,
+    projectId: options.projectId,
   });
 
-  const wait = pageWait(o.path);
-  const own = o.directionId;
+  const wait = pageWait(options.path);
+  const own = options.directionId;
 
   const waitFor = useCallback(
-    (path: string | undefined, directionId: string | null) =>
-      directionId === own ? pageWait(path) : null,
+    (path: string | undefined, directionId: string | null) => {
+      if (directionId === own) {
+        return pageWait(path);
+      }
+
+      return null;
+    },
     [own, pageWait]
   );
 
-  return { building, url: wait || o.emptyStage ? null : o.url, wait, waitFor };
+  return {
+    building,
+    url: wait || options.emptyStage ? null : options.url,
+    wait,
+    waitFor,
+  };
 };
 
-export const useFirstBuildCover = (
-  gate: FirstBuildGate,
-  slots: number
-): boolean => {
+const useFirstBuildCover = (gate: FirstBuildGate, slots: number): boolean => {
   const painted = useFramePainted(
     gate.building,
     gate.url !== null && slots > 0
@@ -175,3 +213,13 @@ export const useFirstBuildCover = (
 
   return gate.building && !painted;
 };
+
+export {
+  pageFileOf,
+  useFirstBuildCover,
+  useFirstBuildGate,
+  useFramePainted,
+  usePageFiles,
+};
+
+export type { FirstBuildGate, PageWait };

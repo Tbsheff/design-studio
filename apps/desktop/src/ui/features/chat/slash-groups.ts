@@ -4,15 +4,19 @@ import type { RunEffort, RunLevel } from "@design-studio/contracts";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { levelGist, levelHint, levelLabel } from "./level-control.js";
 import { MODEL_OPTIONS, modelLabel } from "./settings-draft-model.js";
-import type { SlashGroup } from "./slash-menu.js";
+import type { SlashGroup } from "./slash-menu-model.js";
 
-export const effectiveModel = (model: string, level: RunLevel): string => {
+const effectiveModel = (model: string, level: RunLevel): string => {
   const preset = LEVEL_PRESETS[level].model;
 
-  return preset === "project" ? model : preset;
+  if (preset === "project") {
+    return model;
+  }
+
+  return preset;
 };
 
-export const shortModel = (id: string): string =>
+const shortModel = (id: string): string =>
   modelLabel(id).replace(/^Claude /u, "");
 
 const MODEL_HINT: Record<string, string> = {
@@ -35,7 +39,7 @@ const EFFORT_NAME: Record<RunEffort | "auto", string> = {
   medium: "Medium",
 };
 
-export const levelGroup = (
+const levelGroup = (
   level: RunLevel,
   onLevel: (level: RunLevel) => void
 ): SlashGroup => ({
@@ -55,18 +59,24 @@ export const levelGroup = (
   value: levelLabel(level),
 });
 
-export const modelGroup = (
+const modelGroup = (
   model: string,
   level: RunLevel | null,
   onModel: (model: string) => void
 ): SlashGroup => {
-  const shown = level ? effectiveModel(model, level) : model;
+  let shown: string = model;
+
+  if (level) {
+    shown = effectiveModel(model, level);
+  }
+
   const locked = shown !== model;
 
-  const reason =
-    locked && level
-      ? `${levelLabel(level)} runs always use ${shortModel(shown)}`
-      : null;
+  let reason: string | null = null;
+
+  if (locked && level) {
+    reason = `${levelLabel(level)} runs always use ${shortModel(shown)}`;
+  }
 
   return {
     choices: MODEL_OPTIONS.map((option) => ({
@@ -85,7 +95,7 @@ export const modelGroup = (
   };
 };
 
-export const effortGroup = (
+const effortGroup = (
   effort: RunEffort | null,
   onEffort: (effort: RunEffort | null) => void
 ): SlashGroup => {
@@ -107,3 +117,5 @@ export const effortGroup = (
     value: EFFORT_NAME[now],
   };
 };
+
+export { effectiveModel, effortGroup, levelGroup, modelGroup, shortModel };

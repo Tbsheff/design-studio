@@ -1,4 +1,7 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
+
+import { copy } from "./copy.js";
 
 interface Props {
   count: number;
@@ -8,33 +11,44 @@ interface Props {
   onDiscard: () => void;
 }
 
-export const UnfinishedBanner = ({
+const UnfinishedBanner = ({
   count,
   busy,
   runStopped,
   onKeep,
   onDiscard,
-}: Props) => (
+}: Props): ReactElement => (
   <div className="banner" role="status">
     <Icon name="alert" />
     <span>
-      Unfinished changes in {count} file{count === 1 ? "" : "s"}
+      {copy.unfinishedChangesIn}
+      {count}
+      {copy.file}
+      {count === 1 && ""}
+      {count !== 1 && "s"}
     </span>
     <span className="sub">
-      {runStopped
-        ? "A run stopped before it saved a version."
-        : "Files changed outside a run since the last version."}
+      {runStopped && "A run stopped before it saved a version."}
+      {!runStopped && "Files changed outside a run since the last version."}
     </span>
     <div className="spacer" />
     <button
+      type="button"
       className="btn small ghost danger"
       disabled={busy}
       onClick={onDiscard}
     >
-      Discard
+      {copy.discard}
     </button>
-    <button className="btn small" disabled={busy} onClick={onKeep}>
-      Keep
+    <button
+      type="button"
+      className="btn small"
+      disabled={busy}
+      onClick={onKeep}
+    >
+      {copy.keep}
     </button>
   </div>
 );
+
+export { UnfinishedBanner };

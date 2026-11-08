@@ -1,6 +1,7 @@
 import type { RunStatus } from "@design-studio/contracts";
 import { CopyButton, Icon } from "@design-studio/ui";
 import { memo, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { baseName, formatMs, formatUsd } from "../../domain/format.js";
 import { copy } from "./copy.js";
@@ -10,6 +11,8 @@ import type { RunView } from "./run-state-model.js";
 import { runText } from "./run-state-model.js";
 import { fileChanges, DiffBadge } from "./tool-chips.js";
 import type { FileChange } from "./tool-chips.js";
+
+const COST_DIGITS = 4;
 
 const STATUS_LABEL: Record<RunStatus, string> = {
   budget_exceeded: "Limit reached",
@@ -22,7 +25,7 @@ const STATUS_LABEL: Record<RunStatus, string> = {
 const THUMB_PATH =
   "M5 7.25v6.25H2.5V7.25zM5 7.25 7.6 2.5c.9 0 1.6.7 1.6 1.6v2.4h3.3c.8 0 1.4.7 1.3 1.5l-.8 4.4c-.1.6-.7 1.1-1.3 1.1H5";
 
-const ThumbIcon = ({ down = false }: { down?: boolean }) => (
+const ThumbIcon = ({ down = false }: { down?: boolean }): ReactElement => (
   <svg
     width="14"
     height="14"
@@ -49,8 +52,12 @@ const ThumbButton = ({
   value: Thumb;
   on: boolean;
   onPick: (value: Thumb | null) => void;
-}) => {
-  const label = value === "up" ? "Good response" : "Bad response";
+}): ReactElement => {
+  let label: "Good response" | "Bad response" = "Bad response";
+
+  if (value === "up") {
+    label = "Good response";
+  }
 
   return (
     <button
@@ -80,11 +87,19 @@ const FileChips = ({
   quiet: boolean;
   onOpen: () => void;
   reviews: boolean;
-}) => {
-  const action = reviews ? "Review the changes" : "Open run details";
+}): ReactElement | null => {
+  let action: "Review the changes" | "Open run details" = "Open run details";
+
+  if (reviews) {
+    action = "Review the changes";
+  }
 
   if (changes.length === 0) {
-    return quiet ? <p className="run-no-changes">No files changed.</p> : null;
+    if (quiet) {
+      return <p className="run-no-changes">{copy.noFilesChanged}</p>;
+    }
+
+    return null;
   }
 
   return (
@@ -121,27 +136,36 @@ const stopNote = (run: RunView): string | null => {
 
   const restored = summary.restoredFiles ?? [];
 
-  const putBack =
-    restored.length > 0
-      ? `Put back ${restored.map(baseName).join(", ")}: the write was cut off.`
-      : "";
+  let putBack = "";
 
-  const saved = summary.versionId ? "Saved what it changed as a version." : "";
+  if (restored.length > 0) {
+    putBack = `Put back ${restored.map(baseName).join(", ")}: the write was cut off.`;
+  }
+
+  let saved: "" | "Saved what it changed as a version." = "";
+
+  if (summary.versionId) {
+    saved = "Saved what it changed as a version.";
+  }
 
   return [putBack, saved].filter(Boolean).join(" ") || null;
 };
 
-const StopNote = ({ run }: { run: RunView }) => {
+const StopNote = ({ run }: { run: RunView }): ReactElement | null => {
   const note = stopNote(run);
 
-  return note ? (
-    <p className="run-no-changes" data-testid="run-stop-note">
-      {note}
-    </p>
-  ) : null;
+  if (note) {
+    return (
+      <p className="run-no-changes" data-testid="run-stop-note">
+        {note}
+      </p>
+    );
+  }
+
+  return null;
 };
 
-export const RunFeedbackRow = memo(
+const RunFeedbackRow = memo(
   ({
     run,
     onDetails,
@@ -153,10 +177,13 @@ export const RunFeedbackRow = memo(
   }) => {
     const [feedback, setFeedback] = useRunFeedback(run.runId);
 
-    const changes = useMemo(
-      () => (run.status === "running" ? [] : fileChanges(run.tools)),
-      [run.status, run.tools]
-    );
+    const changes = useMemo(() => {
+      if (run.status === "running") {
+        return [];
+      }
+
+      return fileChanges(run.tools);
+    }, [run.status, run.tools]);
 
     const { summary } = run;
     const done = run.status === "completed";
@@ -210,9 +237,11 @@ export const RunFeedbackRow = memo(
             <span
               className="run-foot-meta tabular-nums"
               data-tip-side="top"
-              data-tip={`$${summary.costUsd.toFixed(4)}`}
+              data-tip={`$${summary.costUsd.toFixed(COST_DIGITS)}`}
             >
-              {formatMs(summary.durationMs)} · {formatUsd(summary.costUsd)}
+              {formatMs(summary.durationMs)}
+              {copy.text}
+              {formatUsd(summary.costUsd)}
             </span>
           )}
           <span className="ml-auto flex items-center gap-1">
@@ -224,7 +253,7 @@ export const RunFeedbackRow = memo(
                 data-tip-side="top"
                 onClick={onReview}
               >
-                Review
+                {copy.review}
               </button>
             )}
             <button
@@ -232,7 +261,7 @@ export const RunFeedbackRow = memo(
               className="btn ghost small run-foot-details"
               onClick={onDetails}
             >
-              Details
+              {copy.details}
             </button>
           </span>
         </div>
@@ -240,4 +269,7 @@ export const RunFeedbackRow = memo(
     );
   }
 );
+
 RunFeedbackRow.displayName = "RunFeedbackRow";
+
+export { RunFeedbackRow };

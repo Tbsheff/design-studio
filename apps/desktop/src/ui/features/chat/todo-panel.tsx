@@ -1,10 +1,11 @@
 import type { TodoItem } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { memo, useState } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
-export const todoProgress = (
+const todoProgress = (
   todos: TodoItem[]
 ): {
   current: number;
@@ -45,7 +46,13 @@ const rowState = (
   };
 };
 
-const TodoMark = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
+const TodoMark = ({
+  todo,
+  running,
+}: {
+  todo: TodoItem;
+  running: boolean;
+}): ReactElement | null => {
   if (todo.skipped) {
     return <Icon name="minus" size={12} />;
   }
@@ -54,12 +61,20 @@ const TodoMark = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
     return <Icon name="check" size={12} />;
   }
 
-  return todo.status === "in_progress" && running ? (
-    <span className="spinner" />
-  ) : null;
+  if (todo.status === "in_progress" && running) {
+    return <span className="spinner" />;
+  }
+
+  return null;
 };
 
-const TodoRow = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
+const TodoRow = ({
+  todo,
+  running,
+}: {
+  todo: TodoItem;
+  running: boolean;
+}): ReactElement => {
   const view = rowState(todo);
 
   return (
@@ -85,7 +100,7 @@ const TodoRow = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
   );
 };
 
-export const TodoPanel = memo(
+const TodoPanel = memo(
   ({ todos, running }: { todos: TodoItem[]; running: boolean }) => {
     const [choice, setChoice] = useState<boolean | null>(null);
     const [ranWith, setRanWith] = useState(running);
@@ -116,9 +131,11 @@ export const TodoPanel = memo(
           onClick={() => setChoice(!open)}
         >
           <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
-          <span>Todos</span>
+          <span>{copy.todos}</span>
           <span className="todo-count tabular-nums" data-testid="todo-count">
-            {current} of {total}
+            {current}
+            {copy.of}
+            {total}
           </span>
         </button>
         {open && (
@@ -136,4 +153,7 @@ export const TodoPanel = memo(
     );
   }
 );
+
 TodoPanel.displayName = "TodoPanel";
+
+export { TodoPanel, todoProgress };

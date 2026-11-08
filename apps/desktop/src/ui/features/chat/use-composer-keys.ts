@@ -2,14 +2,16 @@ import type { QueuedMessage } from "@design-studio/contracts";
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
 
-export const QUEUE_MAX = 20;
+const ID_RADIX = 36;
+
+const QUEUE_MAX = 20;
 
 let queueCounter = 0;
 
 const newQueued = (text: string): QueuedMessage => {
   queueCounter += 1;
 
-  return { id: `q${Date.now().toString(36)}${queueCounter}`, text };
+  return { id: `q${Date.now().toString(ID_RADIX)}${queueCounter}`, text };
 };
 
 interface Options {
@@ -29,7 +31,16 @@ const NO_HISTORY: string[] = [];
 const onFirstLine = (area: HTMLTextAreaElement): boolean =>
   !area.value.slice(0, area.selectionStart).includes("\n");
 
-export const useComposerKeys = (options: Options) => {
+interface UseComposerKeysResult {
+  readonly canQueue: boolean;
+  readonly onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
+  readonly queue: QueuedMessage[];
+  readonly queueDraft: () => void;
+  readonly resetHistory: () => number;
+  readonly setQueue: (items: QueuedMessage[]) => void;
+}
+
+const useComposerKeys = (options: Options): UseComposerKeysResult => {
   const historyIndex = useRef(-1);
   const { draft, setDraft, running } = options;
   const queue = options.queue ?? NONE;
@@ -41,7 +52,7 @@ export const useComposerKeys = (options: Options) => {
     !options.blocked &&
     queue.length < QUEUE_MAX;
 
-  const queueDraft = () => {
+  const queueDraft = (): void => {
     if (!canQueue || !options.onQueueChange) {
       return;
     }
@@ -50,7 +61,7 @@ export const useComposerKeys = (options: Options) => {
     setDraft("");
   };
 
-  const steerDraft = () => {
+  const steerDraft = (): void => {
     if (!canQueue || !options.onSteer) {
       return;
     }
@@ -94,7 +105,7 @@ export const useComposerKeys = (options: Options) => {
     return false;
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const target = event.target as HTMLElement;
 
     if (
@@ -123,14 +134,17 @@ export const useComposerKeys = (options: Options) => {
     }
   };
 
-  const setQueue = (items: QueuedMessage[]) => options.onQueueChange?.(items);
+  const setQueue = (items: QueuedMessage[]): void =>
+    options.onQueueChange?.(items);
 
   return {
     canQueue,
     onKeyDown,
     queue,
     queueDraft,
-    resetHistory: () => (historyIndex.current = -1),
+    resetHistory: (): number => (historyIndex.current = -1),
     setQueue,
   };
 };
+
+export { QUEUE_MAX, useComposerKeys };

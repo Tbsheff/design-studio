@@ -10,9 +10,9 @@ import { IS_MAC, useCommands } from "../../chat-slots.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { unionRect } from "../canvas/use-canvas-frames.js";
 
-export const INLINE_PROMPT_COMMAND = "selection.ask-inline";
+const INLINE_PROMPT_COMMAND = "selection.ask-inline";
 
-export interface InlinePromptOptions {
+interface InlinePromptOptions {
   selection: SelectionContext[];
   live: boolean;
   running: boolean | undefined;
@@ -24,7 +24,7 @@ export interface InlinePromptOptions {
   route?: string | null | undefined;
 }
 
-export interface InlinePromptView {
+interface InlinePromptView {
   rect: NonNullable<ReturnType<typeof unionRect>>;
   label: string;
   blocked: string | null;
@@ -35,24 +35,28 @@ export interface InlinePromptView {
   close: () => void;
 }
 
-const blockerOf = (o: InlinePromptOptions): string | null => {
-  if (!o.onSubmit) {
+const blockerOf = (options: InlinePromptOptions): string | null => {
+  if (!options.onSubmit) {
     return "Open a direction first";
   }
 
-  if (!o.live) {
+  if (!options.live) {
     return "Go back to the live canvas first";
   }
 
-  if (o.selection.length === 0) {
+  if (options.selection.length === 0) {
     return "Select an element first";
   }
 
-  return o.running ? "Wait for the current run to finish" : null;
+  if (options.running) {
+    return "Wait for the current run to finish";
+  }
+
+  return null;
 };
 
 const SNIPPET_MAX = 16;
-export const INLINE_PROMPT_OPEN_EVENT = "studio:inline-prompt-open";
+const INLINE_PROMPT_OPEN_EVENT = "studio:inline-prompt-open";
 
 const labelOf = (selection: SelectionContext[]): string => {
   const last = selection.at(-1);
@@ -67,39 +71,59 @@ const labelOf = (selection: SelectionContext[]): string => {
 
   const text = last?.text.replaceAll(/\s+/gu, " ").trim() ?? "";
 
-  const snippet =
-    text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
+  let snippet: string = text;
 
-  return snippet ? `“${snippet}”` : last?.tag || "element";
+  if (text.length > SNIPPET_MAX) {
+    snippet = `${text.slice(0, SNIPPET_MAX - 1)}…`;
+  }
+
+  if (snippet) {
+    return `“${snippet}”`;
+  }
+
+  return last?.tag || "element";
 };
 
-const usageFileOf = (selection: SelectionContext[]): string | null =>
-  selection.length === 1 ? (selection[0]?.source?.file ?? null) : null;
+const usageFileOf = (selection: SelectionContext[]): string | null => {
+  if (selection.length === 1) {
+    return selection[0]?.source?.file ?? null;
+  }
 
-const usedAtFileOf = (selection: SelectionContext[]): string | null =>
-  selection.length === 1 ? (selection[0]?.usedAt?.file ?? null) : null;
+  return null;
+};
+
+const usedAtFileOf = (selection: SelectionContext[]): string | null => {
+  if (selection.length === 1) {
+    return selection[0]?.usedAt?.file ?? null;
+  }
+
+  return null;
+};
 
 const restoreFocus = (
   previous: Element | null,
   stage: HTMLElement | null
 ): void => {
-  const target =
+  let target: HTMLElement | null = stage;
+
+  if (
     previous instanceof HTMLElement &&
     previous.isConnected &&
     previous !== document.body
-      ? previous
-      : stage;
+  ) {
+    target = previous;
+  }
 
   target?.focus({ preventScroll: true });
 };
 
-export const useInlinePrompt = (
-  o: InlinePromptOptions
+const useInlinePrompt = (
+  options: InlinePromptOptions
 ): InlinePromptView | null => {
   const [open, setOpen] = useState(false);
   const returnTo = useRef<Element | null>(null);
-  const latest = useRef(o);
-  latest.current = o;
+  const latest = useRef(options);
+  latest.current = options;
 
   const show = useCallback(() => {
     const cur = latest.current;
@@ -119,7 +143,7 @@ export const useInlinePrompt = (
   }, []);
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         event.defaultPrevented ||
         event.repeat ||
@@ -141,10 +165,10 @@ export const useInlinePrompt = (
 
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [show]);
 
-  const empty = o.selection.length === 0 || !o.live;
+  const empty = options.selection.length === 0 || !options.live;
   useEffect(() => {
     if (empty) {
       setOpen(false);
@@ -166,18 +190,18 @@ export const useInlinePrompt = (
     },
   ]);
 
-  const rect = unionRect(o.selection);
+  const rect = unionRect(options.selection);
 
-  if (!open || !rect || !o.live) {
+  if (!open || !rect || !options.live) {
     return null;
   }
 
   return {
-    blocked: blockerOf(o),
+    blocked: blockerOf(options),
     close,
-    label: labelOf(o.selection),
+    label: labelOf(options.selection),
     rect,
-    route: o.route ?? null,
+    route: options.route ?? null,
     submit: (prompt, editScope) => {
       const cur = latest.current;
 
@@ -191,7 +215,11 @@ export const useInlinePrompt = (
       );
       close();
     },
-    usageFile: usageFileOf(o.selection),
-    usedAtFile: usedAtFileOf(o.selection),
+    usageFile: usageFileOf(options.selection),
+    usedAtFile: usedAtFileOf(options.selection),
   };
 };
+
+export { INLINE_PROMPT_COMMAND, INLINE_PROMPT_OPEN_EVENT, useInlinePrompt };
+
+export type { InlinePromptOptions, InlinePromptView };

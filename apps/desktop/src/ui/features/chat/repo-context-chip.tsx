@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import type {
   RepoContextFile,
@@ -69,7 +70,7 @@ const useRunContext = (
 
     void read();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, directionId]);
@@ -83,7 +84,7 @@ export default function RepoContextChip({
 }: {
   projectId: string;
   directionId?: string | null;
-}) {
+}): ReactElement {
   const files = useRunContext(projectId, directionId);
   const shown = files.filter(sent);
 

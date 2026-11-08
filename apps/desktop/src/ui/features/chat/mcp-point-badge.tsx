@@ -1,16 +1,17 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import type { McpPointBadge as Badge } from "../canvas/use-canvas-point.js";
 import { authorInitial } from "../comments/comment-avatar.js";
 import { copy } from "./copy.js";
 
-export const McpPointBadge = ({
+const McpPointBadge = ({
   badge,
   frameName,
 }: {
   badge: Badge;
   frameName: (frameId: string) => string;
-}) => {
+}): ReactElement | null => {
   const { point } = badge;
 
   if (!point) {
@@ -23,7 +24,7 @@ export const McpPointBadge = ({
     <div
       className="mcp-point"
       role="status"
-      data-tip={point.selector ? `${where}, ${point.selector}` : undefined}
+      data-tip={point.selector ? `${where}, ${point.selector}` : null}
       data-testid="mcp-point"
       onPointerDown={(event) => event.stopPropagation()}
     >
@@ -31,10 +32,12 @@ export const McpPointBadge = ({
         {authorInitial(point.client)}
       </span>
       <span className="mcp-point-text">
-        <strong>{point.client}</strong> is pointing at <strong>{where}</strong>
+        <strong>{point.client}</strong>
+        {copy.isPointingAt}
+        <strong>{where}</strong>
       </span>
       <button type="button" className="btn small" onClick={badge.show}>
-        Show
+        {copy.show2}
       </button>
       <button
         type="button"
@@ -47,3 +50,5 @@ export const McpPointBadge = ({
     </div>
   );
 };
+
+export { McpPointBadge };

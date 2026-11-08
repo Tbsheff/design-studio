@@ -1,21 +1,24 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
-import { useState, useEffect, useRef } from "react";
-import type { KeyboardEvent } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { RUN_TITLE_MAX } from "../../../shared/rewind.js";
 import { UserMessage } from "./chat-parts.js";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
 
-export interface TurnRewind {
+const MIN_ROWS = 2;
+const MAX_ROWS = 8;
+
+interface TurnRewind {
   restoreTip: string | null;
   restoreVersionId: string | null;
   forkBase: string | null;
   editTip: string | null;
 }
 
-export interface TurnActions {
+interface TurnActions {
   onRestore: (versionId: string) => void;
   onEditResend: (
     run: RunView,
@@ -36,7 +39,7 @@ const TurnButton = ({
   icon: IconName;
   tip: string | null;
   onClick: () => void;
-}) => {
+}): ReactElement => {
   const off = tip !== null;
 
   return (
@@ -70,7 +73,7 @@ const RestoreConfirm = ({
   count: number;
   onCancel: () => void;
   onConfirm: () => void;
-}) => (
+}): ReactElement => (
   <div
     className="msg-confirm"
     role="alertdialog"
@@ -78,12 +81,16 @@ const RestoreConfirm = ({
     data-testid="restore-confirm"
   >
     <p>
-      Unfinished changes in {count} file{count === 1 ? "" : "s"}. Restore
-      replaces edits to files a version tracks; other files stay.
+      {copy.unfinishedChangesIn}
+      {count}
+      {copy.file}
+      {count === 1 && ""}
+      {count !== 1 && "s"}
+      {copy.restoreReplacesEditsTo}
     </p>
     <div className="msg-confirm-actions">
       <button type="button" className="btn ghost small" onClick={onCancel}>
-        Cancel
+        {copy.cancel}
       </button>
       <button
         type="button"
@@ -91,7 +98,7 @@ const RestoreConfirm = ({
 
         onClick={onConfirm}
       >
-        Restore
+        {copy.restore}
       </button>
     </div>
   </div>
@@ -105,7 +112,7 @@ const MessageEditor = ({
   initial: string;
   onCancel: () => void;
   onSend: (prompt: string) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState(initial);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
@@ -120,7 +127,7 @@ const MessageEditor = ({
   }, []);
   const ready = text.trim() !== "";
 
-  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
     event.stopPropagation();
 
     if (event.key === "Escape") {
@@ -144,7 +151,7 @@ const MessageEditor = ({
       <textarea
         ref={ref}
         aria-label={copy.editMessage}
-        rows={Math.min(8, Math.max(2, text.split("\n").length))}
+        rows={Math.min(MAX_ROWS, Math.max(MIN_ROWS, text.split("\n").length))}
         value={text}
         onChange={(event) => setText(event.target.value)}
         onKeyDown={onKeyDown}
@@ -152,10 +159,10 @@ const MessageEditor = ({
       <div className="msg-editor-foot">
         <span className="msg-editor-hint">
           <Icon name="branch" size={12} />
-          Sends to a new direction
+          {copy.sendsToANew}
         </span>
         <button type="button" className="btn ghost small" onClick={onCancel}>
-          Cancel
+          {copy.cancel}
         </button>
         <button
           type="button"
@@ -163,7 +170,7 @@ const MessageEditor = ({
           disabled={!ready}
           onClick={() => onSend(text.trim())}
         >
-          Send
+          {copy.send}
         </button>
       </div>
     </div>
@@ -176,11 +183,11 @@ const TitleField = ({
 }: {
   initial: string;
   onDone: (title: string | null) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState(initial);
   const done = useRef(false);
 
-  const finish = (value: string | null) => {
+  const finish = (value: string | null): void => {
     if (done.current) {
       return;
     }
@@ -212,7 +219,7 @@ const TitleField = ({
   );
 };
 
-export const UserTurn = ({
+const UserTurn = ({
   run,
   title,
   rewind,
@@ -222,7 +229,7 @@ export const UserTurn = ({
   title: string | undefined;
   rewind: TurnRewind | null;
   actions: TurnActions | null;
-}) => {
+}): ReactElement => {
   const [mode, setMode] = useState<Mode>("idle");
   const [renameFailed, setRenameFailed] = useState(false);
   const { request } = run;
@@ -231,7 +238,7 @@ export const UserTurn = ({
     return <UserMessage run={run} title={title} />;
   }
 
-  const restore = () => {
+  const restore = (): void => {
     if (!rewind.restoreVersionId) {
       return;
     }
@@ -290,9 +297,13 @@ export const UserTurn = ({
           setRenameFailed(false);
 
           if (next !== null && next !== (title ?? "")) {
-            actions
-              .onRename(run.runId, next)
-              .catch(() => setRenameFailed(true));
+            startTransition(async () => {
+              try {
+                await actions.onRename(run.runId, next);
+              } catch {
+                setRenameFailed(true);
+              }
+            });
           }
         }}
       />
@@ -310,7 +321,7 @@ export const UserTurn = ({
       />
       {renameFailed && (
         <p className="msg-turn-error" role="alert">
-          Could not rename this run. Try again.
+          {copy.couldNotRenameThis}
         </p>
       )}
       {mode === "confirm" && rewind.restoreVersionId && (
@@ -329,3 +340,7 @@ export const UserTurn = ({
     </>
   );
 };
+
+export { UserTurn };
+
+export type { TurnActions, TurnRewind };

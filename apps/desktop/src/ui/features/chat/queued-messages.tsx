@@ -1,9 +1,11 @@
 import type { QueuedMessage } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
+
+const MAX_ROWS = 4;
 
 const move = (
   items: QueuedMessage[],
@@ -42,11 +44,11 @@ const QueuedItem = ({
   onMove: (to: number) => void;
   onDragStart: () => void;
   onDropAt: () => void;
-}) => {
+}): ReactElement => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(item.text);
 
-  const finish = (save: boolean) => {
+  const finish = (save: boolean): void => {
     setEditing(false);
 
     if (save && text.trim() && text !== item.text) {
@@ -56,7 +58,7 @@ const QueuedItem = ({
     }
   };
 
-  const onKey = (event: KeyboardEvent<HTMLLIElement>) => {
+  const onKey = (event: KeyboardEvent<HTMLLIElement>): void => {
     if (editing || !event.altKey) {
       return;
     }
@@ -91,16 +93,16 @@ const QueuedItem = ({
           data-tip-side="top"
           data-tip-align="start"
         >
-          ⋮⋮
+          {copy.text8}
         </span>
       )}
-      {editing ? (
+      {editing && (
         <textarea
           className="queued-edit"
           aria-label={copy.editQueuedMessage}
           value={text}
 
-          rows={Math.min(4, text.split("\n").length)}
+          rows={Math.min(MAX_ROWS, text.split("\n").length)}
           onChange={(event) => setText(event.target.value)}
           onBlur={() => finish(true)}
           onKeyDown={(event) => {
@@ -114,7 +116,8 @@ const QueuedItem = ({
             }
           }}
         />
-      ) : (
+      )}
+      {!editing && (
         <button
           type="button"
           className="queued-text"
@@ -137,13 +140,13 @@ const QueuedItem = ({
   );
 };
 
-export const QueuedMessages = ({
+const QueuedMessages = ({
   items,
   onChange,
 }: {
   items: QueuedMessage[];
   onChange: (items: QueuedMessage[]) => void;
-}) => {
+}): ReactElement | null => {
   const [dragFrom, setDragFrom] = useState<number | null>(null);
 
   if (items.length === 0) {
@@ -152,7 +155,7 @@ export const QueuedMessages = ({
 
   return (
     <div className="queued" aria-label={copy.queuedMessages} role="group">
-      <span className="queued-head">Queued · sent at the next step</span>
+      <span className="queued-head">{copy.queuedSentAtThe}</span>
       <ol className="queued-list">
         {items.map((item, index) => (
           <QueuedItem
@@ -162,9 +165,13 @@ export const QueuedMessages = ({
             count={items.length}
             onChange={(text) =>
               onChange(
-                items.map((entry) =>
-                  entry.id === item.id ? { ...entry, text } : entry
-                )
+                items.map((entry) => {
+                  if (entry.id === item.id) {
+                    return { ...entry, text };
+                  }
+
+                  return entry;
+                })
               )
             }
             onRemove={() =>
@@ -185,3 +192,5 @@ export const QueuedMessages = ({
     </div>
   );
 };
+
+export { QueuedMessages };

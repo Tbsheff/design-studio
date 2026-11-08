@@ -2,26 +2,22 @@ import type { McpActivity, McpApprovalOutcome } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useEffect, useState, useTransition } from "react";
+import type { ReactElement } from "react";
 
 import { errorText } from "../../api.js";
 import { formatTime } from "../../domain/format.js";
 import { copy } from "./copy.js";
+import { FOLD_AT, MCP_ACTIVE_MS, OUTCOME_VIEW } from "./mcp-feed-model.js";
 import { mcpApi } from "./mcp-model.js";
 import type { RunView } from "./run-state-model.js";
-import type { McpApprovalCard, McpFeedState } from "./use-mcp-feed.js";
+import type {
+  McpApprovalCard,
+  McpFeedControl,
+  McpFeedState,
+  TimelineItem,
+} from "./use-mcp-feed.js";
 
-export type TimelineItem =
-  | { kind: "run"; key: string; at: number; run: RunView }
-  | {
-      kind: "block";
-      key: string;
-      at: number;
-      client: string;
-      entries: McpActivity[];
-    }
-  | { kind: "approval"; key: string; at: number; card: McpApprovalCard };
-
-export const timelineOf = (
+const timelineOf = (
   runs: readonly RunView[],
   feed: McpFeedState | null
 ): TimelineItem[] => {
@@ -53,7 +49,9 @@ export const timelineOf = (
     kind: "block",
   }));
 
-  const sorted = [...items, ...singles].toSorted((a, b) => a.at - b.at);
+  const sorted = [...items, ...singles].toSorted(
+    (left, right) => left.at - right.at
+  );
   const out: TimelineItem[] = [];
 
   for (const item of sorted) {
@@ -75,33 +73,28 @@ export const timelineOf = (
   return out;
 };
 
-export interface McpFeedControl extends McpFeedState {
-  locked: boolean;
-  onUndo: (versionId: string) => void;
-}
-
-export const feedShown = (mcp: McpFeedControl | null): boolean =>
+const feedShown = (mcp: McpFeedControl | null): boolean =>
   mcp !== null && (mcp.activity.length > 0 || mcp.approvals.length > 0);
 
-const DisconnectButton = () => {
+const DisconnectButton = (): ReactElement => {
   const [isDone, setIsDone] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const disconnect = () => {
+  const disconnect = (): void => {
     setError(null);
     startTransition(async () => {
       try {
         await mcpApi.disconnect();
         setIsDone(true);
-      } catch (caught: unknown) {
-        setError(errorText(caught));
+      } catch (thrownError: unknown) {
+        setError(errorText(thrownError));
       }
     });
   };
 
   if (isDone) {
-    return <span className="mcp-block-note">Edits off</span>;
+    return <span className="mcp-block-note">{copy.editsOff}</span>;
   }
 
   return (
@@ -119,14 +112,11 @@ const DisconnectButton = () => {
         data-tip-align="end"
         onClick={disconnect}
       >
-        Disconnect
+        {copy.disconnect}
       </button>
     </>
   );
 };
-
-export const MCP_ACTIVE_MS = 60_000;
-const FOLD_AT = 5;
 
 const useNow = (stepMs: number, active: boolean): number => {
   const [now, setNow] = useState(() => Date.now());
@@ -138,7 +128,7 @@ const useNow = (stepMs: number, active: boolean): number => {
     setNow(Date.now());
     const id = globalThis.setInterval(() => setNow(Date.now()), stepMs);
 
-    return () => globalThis.clearInterval(id);
+    return (): void => globalThis.clearInterval(id);
   }, [stepMs, active]);
 
   return now;
@@ -184,7 +174,7 @@ const ActivityRow = ({
   locked: boolean;
   onUndo: (versionId: string) => void;
   readOnly?: boolean;
-}) => {
+}): ReactElement => {
   const [undone, setUndone] = useState(false);
   const before = entry.versionId ? entry.beforeVersionId : null;
 
@@ -199,7 +189,7 @@ const ActivityRow = ({
       {before &&
         !readOnly &&
         (undone ? (
-          <span className="mcp-row-undone">Undone</span>
+          <span className="mcp-row-undone">{copy.undone}</span>
         ) : (
           <button
             type="button"
@@ -216,7 +206,7 @@ const ActivityRow = ({
               onUndo(before);
             }}
           >
-            Undo
+            {copy.undo}
           </button>
         ))}
       <time
@@ -229,7 +219,7 @@ const ActivityRow = ({
   );
 };
 
-export const McpBlock = ({
+const McpBlock = ({
   client,
   entries,
   locked,
@@ -239,7 +229,7 @@ export const McpBlock = ({
   entries: McpActivity[];
   locked: boolean;
   onUndo: (versionId: string) => void;
-}) => {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
   const lastAt = entries.at(-1)?.at ?? 0;
   const now = useNow(10_000, Date.now() - lastAt < MCP_ACTIVE_MS);
@@ -255,7 +245,7 @@ export const McpBlock = ({
       <header className="mcp-block-head">
         <span
           className="mcp-block-dot"
-          data-active={active || undefined}
+          data-active={active || null}
           aria-hidden="true"
         />
         <strong className="mcp-block-name">{client}</strong>
@@ -273,7 +263,9 @@ export const McpBlock = ({
           className="mcp-more"
           onClick={() => setOpen(true)}
         >
-          Show {hidden} earlier
+          {copy.show}
+          {hidden}
+          {copy.earlier}
         </button>
       )}
       <ul className="mcp-rows">
@@ -292,21 +284,11 @@ export const McpBlock = ({
           className="mcp-more"
           onClick={() => setOpen(false)}
         >
-          Show fewer
+          {copy.showFewer}
         </button>
       )}
     </section>
   );
-};
-
-const OUTCOME_VIEW: Record<
-  McpApprovalOutcome,
-  { readonly icon: IconName; readonly text: string }
-> = {
-  allow: { icon: "check", text: "Allowed" },
-  closed: { icon: "alert", text: "Closed" },
-  deny: { icon: "close", text: "Denied" },
-  timeout: { icon: "alert", text: "Expired" },
 };
 
 const countdown = (ms: number): string => {
@@ -315,7 +297,7 @@ const countdown = (ms: number): string => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 };
 
-export const McpApproval = ({
+const McpApproval = ({
   card,
   compact = false,
   onAnswer,
@@ -323,7 +305,7 @@ export const McpApproval = ({
   card: McpApprovalCard;
   compact?: boolean;
   onAnswer?: (allow: boolean) => void;
-}) => {
+}): ReactElement => {
   const { approval } = card;
   const [local, setLocal] = useState<McpApprovalOutcome | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -349,15 +331,15 @@ export const McpApproval = ({
     );
   }
 
-  const answer = (allow: boolean) => {
+  const answer = (allow: boolean): void => {
     setError(null);
     startTransition(async () => {
       try {
         await mcpApi.answer(approval.id, allow);
         setLocal(allow ? "allow" : "deny");
         onAnswer?.(allow);
-      } catch (caught: unknown) {
-        const text = errorText(caught);
+      } catch (thrownError: unknown) {
+        const text = errorText(thrownError);
 
         if (/not open/u.test(text)) {
           setLocal("timeout");
@@ -390,7 +372,7 @@ export const McpApproval = ({
           disabled={isPending}
           onClick={() => answer(true)}
         >
-          Allow once
+          {copy.allowOnce}
         </button>
         <button
           type="button"
@@ -398,10 +380,11 @@ export const McpApproval = ({
           disabled={isPending}
           onClick={() => answer(false)}
         >
-          Deny
+          {copy.deny}
         </button>
         <span className="mcp-approval-time" aria-live="off">
-          {countdown(approval.expiresAt - now)} left
+          {countdown(approval.expiresAt - now)}
+          {copy.left}
         </span>
       </div>
       {error && (
@@ -413,13 +396,13 @@ export const McpApproval = ({
   );
 };
 
-export const McpItem = ({
+const McpItem = ({
   item,
   mcp,
 }: {
   item: Exclude<TimelineItem, { kind: "run" }>;
   mcp: McpFeedControl | null;
-}) => {
+}): ReactElement => {
   if (item.kind === "approval") {
     return <McpApproval card={item.card} />;
   }
@@ -436,7 +419,11 @@ export const McpItem = ({
 
 const RECENT_MS = 10 * 60_000;
 
-export const McpEditStrip = ({ mcp }: { mcp: McpFeedControl | null }) => {
+const McpEditStrip = ({
+  mcp,
+}: {
+  mcp: McpFeedControl | null;
+}): ReactElement | null => {
   const last = mcp?.activity.at(-1) ?? null;
   const now = useNow(10_000, last !== null);
   const [open, setOpen] = useState(false);
@@ -478,11 +465,11 @@ export const McpEditStrip = ({ mcp }: { mcp: McpFeedControl | null }) => {
             : "Show the recent outside edits. Undo them from the chat after you save or discard."
         }
         data-tip-side="top"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((value) => !value)}
       >
         <span
           className="mcp-block-dot"
-          data-active={now - last.at < MCP_ACTIVE_MS || undefined}
+          data-active={now - last.at < MCP_ACTIVE_MS || null}
           aria-hidden="true"
         />
         <strong className="mcp-edit-client">{last.client}</strong>
@@ -498,3 +485,15 @@ export const McpEditStrip = ({ mcp }: { mcp: McpFeedControl | null }) => {
     </section>
   );
 };
+
+export {
+  MCP_ACTIVE_MS,
+  McpApproval,
+  McpBlock,
+  McpEditStrip,
+  McpItem,
+  feedShown,
+  timelineOf,
+};
+
+export type { McpFeedControl, TimelineItem };

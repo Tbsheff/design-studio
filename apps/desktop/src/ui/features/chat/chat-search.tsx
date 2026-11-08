@@ -1,7 +1,7 @@
 import type { RunStatus, RunSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { useEffect, useId, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useEffect, useId, useState, startTransition } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { runQueryTerms } from "../../../shared/rewind.js";
 import { formatRelative } from "../../domain/format.js";
@@ -46,25 +46,27 @@ const useRunHits = (directionId: string | null, query: string): Hits | null => {
     let alive = true;
 
     const timer = globalThis.setTimeout(() => {
-      searchRunPage(directionId, text)
-        .then(
-          (page) =>
-            alive &&
+      startTransition(async () => {
+        try {
+          const page = await searchRunPage(directionId, text);
+
+          if (alive) {
             setHits({
               failed: false,
               more: page.nextBefore !== null,
               query: text,
               runs: page.runs,
-            })
-        )
-        .catch(
-          () =>
-            alive &&
-            setHits({ failed: true, more: false, query: text, runs: [] })
-        );
+            });
+          }
+        } catch {
+          if (alive) {
+            setHits({ failed: true, more: false, query: text, runs: [] });
+          }
+        }
+      });
     }, DEBOUNCE_MS);
 
-    return () => {
+    return (): void => {
       alive = false;
       globalThis.clearTimeout(timer);
     };
@@ -88,7 +90,11 @@ const countText = (hits: Hits | null, searching: boolean): string => {
     return "";
   }
 
-  return hits.more ? `${SEARCH_LIMIT}+` : String(hits.runs.length);
+  if (hits.more) {
+    return `${SEARCH_LIMIT}+`;
+  }
+
+  return String(hits.runs.length);
 };
 
 const HitList = ({
@@ -105,17 +111,27 @@ const HitList = ({
   searching: boolean;
   onPick: (runId: string) => void;
   onActive: (index: number) => void;
-}) => {
+}): ReactElement | null => {
   if (!hits) {
-    return searching ? <p className="chat-search-note">Searching…</p> : null;
+    if (searching) {
+      return <p className="chat-search-note">{copy.searching}</p>;
+    }
+
+    return null;
   }
 
   if (hits.failed) {
-    return <p className="chat-search-note">Search failed. Try again.</p>;
+    return <p className="chat-search-note">{copy.searchFailedTryAgain}</p>;
   }
 
   if (hits.runs.length === 0) {
-    return <p className="chat-search-note">No run matches “{hits.query}”.</p>;
+    return (
+      <p className="chat-search-note">
+        {copy.noRunMatches}
+        {hits.query}
+        {copy.text2}
+      </p>
+    );
   }
 
   return (
@@ -132,7 +148,7 @@ const HitList = ({
           role="option"
           aria-selected={index === active}
           className="ui-menu-item chat-search-hit"
-          data-highlighted={index === active || undefined}
+          data-highlighted={index === active || null}
           onMouseEnter={() => onActive(index)}
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => onPick(run.id)}
@@ -154,13 +170,13 @@ const HitList = ({
   );
 };
 
-export const ChatSearch = ({
+const ChatSearch = ({
   query,
   directionId,
   onClose,
   onQuery,
   onPick,
-}: Props) => {
+}: Props): ReactElement => {
   const id = useId();
   const hits = useRunHits(directionId, query);
   const [active, setActive] = useState(0);
@@ -169,7 +185,7 @@ export const ChatSearch = ({
   const runs = hits?.runs ?? [];
   useEffect(() => setActive(0), [hits]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
@@ -184,7 +200,12 @@ export const ChatSearch = ({
       }
 
       event.preventDefault();
-      const step = event.key === "ArrowDown" ? 1 : -1;
+      let step: 1 | -1 = -1;
+
+      if (event.key === "ArrowDown") {
+        step = 1;
+      }
+
       setActive((index) => (index + step + runs.length) % runs.length);
 
       return;
@@ -253,3 +274,5 @@ export const ChatSearch = ({
     </div>
   );
 };
+
+export { ChatSearch };

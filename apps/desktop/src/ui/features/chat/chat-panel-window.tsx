@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { ReactElement } from "react";
 
 import { useConversation } from "../../ai/components/ai/conversation.js";
 import { requestOlderRuns, useOlderRuns } from "./run-history-model.js";
@@ -13,8 +14,8 @@ const FIRST = 12;
 const STEP = 16;
 const NEAR_TOP_PX = 800;
 
-interface HistoryWindow<T> {
-  shown: T[];
+interface HistoryWindow<Entry> {
+  shown: Entry[];
   hidden: number;
   more: () => void;
 }
@@ -56,11 +57,11 @@ const nextCount = (
   return state.count + live;
 };
 
-export const useHistoryWindow = <T extends Item>(
-  items: T[],
+const useHistoryWindow = <Entry extends Item>(
+  items: Entry[],
   resetKey: string | null,
   reveal: string | null
-): HistoryWindow<T> => {
+): HistoryWindow<Entry> => {
   const { viewportRef } = useConversation();
   const [since] = useState(() => Date.now());
 
@@ -72,8 +73,11 @@ export const useHistoryWindow = <T extends Item>(
 
   const last = items.at(-1)?.key ?? null;
 
-  const count =
-    state.reset === resetKey ? nextCount(state, items, since) : FIRST;
+  let count: number = FIRST;
+
+  if (state.reset === resetKey) {
+    count = nextCount(state, items, since);
+  }
 
   if (state.reset !== resetKey) {
     setState({ count: FIRST, last: null, reset: resetKey });
@@ -81,10 +85,17 @@ export const useHistoryWindow = <T extends Item>(
     setState({ ...state, count, last });
   }
 
-  const revealAt =
-    reveal === null ? -1 : items.findIndex((item) => item.key === reveal);
+  let revealAt = -1;
 
-  const need = revealAt === -1 ? 0 : items.length - revealAt;
+  if (reveal !== null) {
+    revealAt = items.findIndex((item) => item.key === reveal);
+  }
+
+  let need = 0;
+
+  if (revealAt !== -1) {
+    need = items.length - revealAt;
+  }
 
   if (need > count && state.reset === resetKey) {
     setState((prev) => ({ ...prev, count: Math.max(prev.count, need) }));
@@ -95,10 +106,10 @@ export const useHistoryWindow = <T extends Item>(
   const shortBy = start - STEP;
 
   const more = useCallback(() => {
-    const v = viewportRef.current;
+    const viewport = viewportRef.current;
 
-    if (v) {
-      fromBottom.current = v.scrollHeight - v.scrollTop;
+    if (viewport) {
+      fromBottom.current = viewport.scrollHeight - viewport.scrollTop;
     }
 
     setState((prev) => ({ ...prev, count: prev.count + STEP }));
@@ -109,26 +120,26 @@ export const useHistoryWindow = <T extends Item>(
   }, [viewportRef, shortBy]);
 
   useLayoutEffect(() => {
-    const v = viewportRef.current;
+    const viewport = viewportRef.current;
 
-    if (!v || fromBottom.current === null) {
+    if (!viewport || fromBottom.current === null) {
       return;
     }
 
-    v.scrollTop = v.scrollHeight - fromBottom.current;
+    viewport.scrollTop = viewport.scrollHeight - fromBottom.current;
     fromBottom.current = null;
   }, [start, items.length, viewportRef]);
 
   return { hidden: start, more, shown: start > 0 ? items.slice(start) : items };
 };
 
-export const EarlierRuns = ({
+const EarlierRuns = ({
   hidden,
   onMore,
 }: {
   hidden: number;
   onMore: () => void;
-}) => {
+}): ReactElement | null => {
   const { viewportRef, wasAtBottomRef } = useConversation();
   const ref = useRef<HTMLButtonElement | null>(null);
   const older = useOlderRuns();
@@ -160,7 +171,7 @@ export const EarlierRuns = ({
 
     observer.observe(el);
 
-    return () => {
+    return (): void => {
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
@@ -177,11 +188,11 @@ export const EarlierRuns = ({
       className="btn ghost small chat-earlier"
       onClick={onMore}
     >
-      {hidden > 0
-        ? `Show ${hidden} earlier ${hidden === 1 ? "run" : "runs"}`
-        : older.loading
-          ? "Loading earlier runs"
-          : "Show earlier runs"}
+      {hidden > 0 && `Show ${hidden} earlier ${hidden === 1 ? "run" : "runs"}`}
+      {hidden <= 0 &&
+        (older.loading ? "Loading earlier runs" : "Show earlier runs")}
     </button>
   );
 };
+
+export { EarlierRuns, useHistoryWindow };

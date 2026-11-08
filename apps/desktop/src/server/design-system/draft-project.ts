@@ -100,7 +100,7 @@ function valuesOf(node: TokenNode | null, flattenDark: boolean): string {
   return JSON.stringify([node.$value, dark ?? null]);
 }
 
-const AGENT_EVIDENCE = "changed by an Improve with AI run";
+const AGENT_EVIDENCE = "changed by an improve run in the chat";
 
 export function updateCoverage(
   coverage: DesignSystemCoverage,

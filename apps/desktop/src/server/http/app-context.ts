@@ -758,7 +758,7 @@ const createAppContext = (deps: AppDeps) => {
           start: {
             state: "skipped",
             reason:
-              "Another run was in progress, so the AI step did not start. Use Improve with AI.",
+              "Another run was in progress, so the AI step did not start. Ask the chat to improve this design system.",
           },
         };
       }

@@ -81,7 +81,7 @@ export interface LiveDraftStart {
 }
 
 export const IMPROVE_IN_APP =
-  "Started from an outside agent, so the AI step did not start. Use Improve with AI in Design Studio.";
+  "Started from an outside agent, so the AI step did not start. Ask the chat to improve this design system.";
 
 export interface LiveDrafts {
   plan(request: DraftRequest, imageCount: number): DraftSourcesState;
@@ -794,7 +794,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
         ...job.state,
         improve: {
           reason:
-            "No source could be read. Fix the sources above, or use Improve with AI.",
+            "No source could be read. Fix the sources above, or ask the chat to improve this design system.",
           state: "skipped",
         },
       };

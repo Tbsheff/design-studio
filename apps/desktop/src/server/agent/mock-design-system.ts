@@ -103,8 +103,7 @@ async function improveTokens(
     string,
     unknown
   >;
-  tokens["$description"] =
-    "Design system tokens, checked by the Improve with AI run.";
+  tokens["$description"] = "Design system tokens, checked by the improve run.";
   await session.writeFileAsTool(
     "Edit",
     TOKENS_FILE,

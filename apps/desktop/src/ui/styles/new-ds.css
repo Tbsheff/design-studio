@@ -604,6 +604,14 @@
   gap: var(--s-2);
 }
 
+fieldset.nds-basics,
+fieldset.nds-presets {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .nds-preset {
   display: grid;
   gap: var(--s-2);

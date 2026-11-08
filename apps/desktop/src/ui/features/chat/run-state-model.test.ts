@@ -8,172 +8,246 @@ import {
   runText,
   shownPending,
 } from "./run-state-model.js";
-import type { RunMap } from "./run-state-model.js";
+import type { RunMap, RunView } from "./run-state-model.js";
 
-const counter = { seq: 0 };
+const TS_BASE = 1000;
+const NEAR_START = 10_000;
+const NEAR_AFTER = 10_050;
+const NEAR_BEFORE = 9500;
+const OLD_START = 2000;
+const TOOL_MS = 5;
+const FINISHED_AT = 6;
+const EDIT = "edit";
+const MAIN = "main";
+const RUN_ONE = "r1";
+const RUN_STARTED = "run.started";
+const RUN_FINISHED = "run.finished";
+const TEXT_DELTA = "run.text.delta";
+const TOOL_STARTED = "run.tool.started";
+const TOOL_ONE = "t1";
+const READ = "Read";
+const PLAIN_PROMPT = "x";
+const PLAIN_REQUEST = { mode: EDIT, prompt: PLAIN_PROMPT } as const;
+const issued = new Set<number>();
 
-const ev = (body: Record<string, unknown>): StudioEvent =>
-  ({
+const ev = (body: Record<string, unknown>): StudioEvent => {
+  const seq = issued.size + 1;
+  issued.add(seq);
+
+  const event = {
     directionId: "d",
     projectId: "p",
-    runId: "r1",
-    seq: ++counter.seq,
-    ts: 1000 + counter.seq,
+    runId: RUN_ONE,
+    seq,
+    ts: TS_BASE + seq,
     ...body,
-  }) as unknown as StudioEvent;
+  };
+
+  return event as unknown as StudioEvent;
+};
+
+const applyAll = (events: readonly StudioEvent[]): RunMap => {
+  let runs: RunMap = {};
+
+  for (const event of events) {
+    runs = applyRunEvent(runs, event);
+  }
+
+  return runs;
+};
+
+const textOf = (run: RunView | undefined): string => {
+  if (!run) {
+    return "";
+  }
+
+  return runText(run);
+};
+
+const toSummary = (fields: Record<string, unknown>): RunSummary => {
+  const summary = {
+    directionId: "d",
+    id: RUN_ONE,
+    request: PLAIN_REQUEST,
+    startedAt: 1,
+    ...fields,
+  };
+
+  return summary as unknown as RunSummary;
+};
 
 describe("run state", () => {
-  it("keeps live thinking and order when the run finishes with an old summary", () => {
-    expect.hasAssertions();
+  it(
+    "keeps live thinking and order when the run finishes with an old summary",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
 
-    const events = [
-      ev({ request: { mode: "edit", prompt: "x" }, type: "run.started" }),
-      ev({ text: "A", type: "run.thinking" }),
-      ev({
-        input: {},
-        name: "Read",
-        toolUseId: "t1",
-        type: "run.tool.started",
-      }),
-      ev({
-        durationMs: 5,
-        isError: false,
-        summary: "Read",
-        toolUseId: "t1",
-        type: "run.tool.finished",
-      }),
-      ev({ text: "B", type: "run.thinking" }),
-      ev({ text: "Partial", type: "run.text.delta" }),
-    ];
-
-    const live = events.reduce(applyRunEvent, {} as RunMap);
-
-    const summary = {
-      directionId: "d",
-      finalText: "",
-      id: "r1",
-      request: { mode: "edit", prompt: "x" },
-      startedAt: 1,
-      status: "canceled",
-      toolCalls: [
-        {
-          finishedAt: 6,
-          input: {},
+      const live = applyAll([
+        ev({ request: PLAIN_REQUEST, type: RUN_STARTED }),
+        ev({ text: "A", type: "run.thinking" }),
+        ev({ input: {}, name: READ, toolUseId: TOOL_ONE, type: TOOL_STARTED }),
+        ev({
+          durationMs: TOOL_MS,
           isError: false,
-          name: "Read",
-          startedAt: 1,
-          toolUseId: "t1",
-        },
-      ],
-    } as unknown as RunSummary;
+          summary: READ,
+          toolUseId: TOOL_ONE,
+          type: "run.tool.finished",
+        }),
+        ev({ text: "B", type: "run.thinking" }),
+        ev({ text: "Partial", type: TEXT_DELTA }),
+      ]);
 
-    const done = applyRunEvent(live, ev({ summary, type: "run.finished" }));
-    expect(done.r1?.parts).toStrictEqual([
-      { kind: "thinking", text: "A" },
-      { kind: "tool", toolUseId: "t1" },
-      { kind: "thinking", text: "B" },
-      { kind: "text", text: "Partial" },
-    ]);
-    expect(runText(done.r1!)).toBe("Partial");
-  }, 5000);
+      const summary = toSummary({
+        finalText: "",
+        status: "canceled",
+        toolCalls: [
+          {
+            finishedAt: FINISHED_AT,
+            input: {},
+            isError: false,
+            name: READ,
+            startedAt: 1,
+            toolUseId: TOOL_ONE,
+          },
+        ],
+      });
 
-  it("shows Stopped as soon as the stop is asked, and drops late stream events", () => {
-    expect.hasAssertions();
+      const done = applyRunEvent(live, ev({ summary, type: RUN_FINISHED }));
+      expect(done.r1?.parts).toStrictEqual([
+        { kind: "thinking", text: "A" },
+        { kind: "tool", toolUseId: TOOL_ONE },
+        { kind: "thinking", text: "B" },
+        { kind: "text", text: "Partial" },
+      ]);
+      expect(textOf(done.r1)).toBe("Partial");
+    }
+  );
 
-    const live = [
-      ev({ request: { mode: "edit", prompt: "x" }, type: "run.started" }),
-      ev({ text: "Kept", type: "run.text.delta" }),
-      ev({ items: [{ id: "q", text: "later" }], type: "run.queue" }),
-      ev({ type: "run.stopping" }),
-      ev({ text: " late", type: "run.text.delta" }),
-      ev({
-        input: {},
-        name: "Read",
-        toolUseId: "t9",
-        type: "run.tool.started",
-      }),
-    ].reduce(applyRunEvent, {} as RunMap);
+  it(
+    "shows Stopped as soon as the stop is asked, and drops late stream events",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
 
-    expect(live.r1?.status).toBe("canceled");
-    expect(live.r1?.queue).toStrictEqual([]);
-    expect(runText(live.r1!)).toBe("Kept");
-    expect(live.r1?.tools).toStrictEqual([]);
-  }, 5000);
+      const live = applyAll([
+        ev({ request: PLAIN_REQUEST, type: RUN_STARTED }),
+        ev({ text: "Kept", type: TEXT_DELTA }),
+        ev({ items: [{ id: "q", text: "later" }], type: "run.queue" }),
+        ev({ type: "run.stopping" }),
+        ev({ text: " late", type: TEXT_DELTA }),
+        ev({ input: {}, name: READ, toolUseId: "t9", type: TOOL_STARTED }),
+      ]);
 
-  it("keeps a run seeded as stopped stopped when run.started arrives late", () => {
-    expect.hasAssertions();
+      expect(live.r1?.status).toBe("canceled");
+      expect(live.r1?.queue).toStrictEqual([]);
+      expect(textOf(live.r1)).toBe("Kept");
+      expect(live.r1?.tools).toStrictEqual([]);
+    }
+  );
 
-    const seeded: RunMap = {
-      r1: { ...emptyRun("r1", "d", 1), status: "canceled" },
-    };
+  it(
+    "keeps a run seeded as stopped stopped when run.started arrives late",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
 
-    const live = applyRunEvent(
-      seeded,
-      ev({ request: { mode: "edit", prompt: "x" }, type: "run.started" })
-    );
+      const seeded: RunMap = {
+        r1: { ...emptyRun(RUN_ONE, "d", 1), status: "canceled" },
+      };
 
-    expect(live.r1?.status).toBe("canceled");
-    expect(live.r1?.request?.prompt).toBe("x");
-  }, 5000);
+      const live = applyRunEvent(
+        seeded,
+        ev({ request: PLAIN_REQUEST, type: RUN_STARTED })
+      );
+
+      expect(live.r1?.status).toBe("canceled");
+      expect(live.r1?.request?.prompt).toBe(PLAIN_PROMPT);
+    }
+  );
 });
 
 describe(shownPending, () => {
-  const request = { mode: "edit" as const, prompt: "Make it blue" };
-  const pending = emptyRun("pending-1", "main", 10_000, request);
+  const request = { mode: EDIT, prompt: "Make it blue" } as const;
+  const pending = emptyRun("pending-1", MAIN, NEAR_START, request);
 
-  it("shows the pending send until a run with the same prompt starts in the direction", () => {
-    expect.hasAssertions();
-    expect(shownPending(pending, [], "main")).toBe(pending);
-    expect(
-      shownPending(pending, [emptyRun("old", "main", 2000, request)], "main")
-    ).toBe(pending);
-    expect(
-      shownPending(
-        pending,
-        [emptyRun("other", "main", 10_050, { mode: "edit", prompt: "Other" })],
-        "main"
-      )
-    ).toBe(pending);
-    expect(
-      shownPending(pending, [emptyRun("r1", "main", 10_050, request)], "main")
-    ).toBeNull();
-    expect(
-      shownPending(pending, [emptyRun("r1", "main", 9500, request)], "main")
-    ).toBeNull();
-  }, 5000);
+  it(
+    "shows the pending send until a run with the same prompt starts in the direction",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
+      expect(shownPending(pending, [], MAIN)).toBe(pending);
+      expect(
+        shownPending(pending, [emptyRun("old", MAIN, OLD_START, request)], MAIN)
+      ).toBe(pending);
+      expect(
+        shownPending(
+          pending,
+          [
+            emptyRun("other", MAIN, NEAR_AFTER, {
+              mode: EDIT,
+              prompt: "Other",
+            }),
+          ],
+          MAIN
+        )
+      ).toBe(pending);
+      expect(
+        shownPending(
+          pending,
+          [emptyRun(RUN_ONE, MAIN, NEAR_AFTER, request)],
+          MAIN
+        )
+      ).toBeNull();
+      expect(
+        shownPending(
+          pending,
+          [emptyRun(RUN_ONE, MAIN, NEAR_BEFORE, request)],
+          MAIN
+        )
+      ).toBeNull();
+    }
+  );
 
-  it("hides the pending send in another direction or when there is none", () => {
-    expect.hasAssertions();
-    expect(shownPending(pending, [], "alt")).toBeNull();
-    expect(shownPending(null, [], "main")).toBeNull();
-  }, 5000);
+  it(
+    "hides the pending send in another direction or when there is none",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
+      expect(shownPending(pending, [], "alt")).toBeNull();
+      expect(shownPending(null, [], MAIN)).toBeNull();
+    }
+  );
+});
 
-  it("keeps a stored run title when a replayed run.finished has none", () => {
-    expect.hasAssertions();
+describe(runFromSummary, () => {
+  it(
+    "keeps a stored run title when a replayed run.finished has none",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
 
-    const plain = {
-      directionId: "d",
-      finalText: "Done",
-      id: "r9",
-      request: { mode: "edit", prompt: "x" },
-      startedAt: 1,
-      status: "completed",
-      toolCalls: [],
-    } as unknown as RunSummary;
+      const plain = toSummary({
+        finalText: "Done",
+        id: "r9",
+        status: "completed",
+        toolCalls: [],
+      });
 
-    const stored = runFromSummary({ ...plain, title: "Menu pass" });
+      const stored = runFromSummary({ ...plain, title: "Menu pass" });
 
-    const replayed = applyRunEvent(
-      { r9: stored },
-      ev({ runId: "r9", summary: plain, type: "run.finished" })
-    );
+      const replayed = applyRunEvent(
+        { r9: stored },
+        ev({ runId: "r9", summary: plain, type: RUN_FINISHED })
+      );
 
-    expect(replayed.r9?.summary?.title).toBe("Menu pass");
-    expect(
-      applyRunEvent(
-        {},
-        ev({ runId: "r9", summary: plain, type: "run.finished" })
-      ).r9?.summary?.title
-    ).toBeUndefined();
-  }, 5000);
+      expect(replayed.r9?.summary?.title).toBe("Menu pass");
+      expect(
+        applyRunEvent(
+          {},
+          ev({ runId: "r9", summary: plain, type: RUN_FINISHED })
+        ).r9?.summary?.title
+      ).toBeUndefined();
+    }
+  );
 });

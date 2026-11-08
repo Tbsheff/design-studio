@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   ChangeEvent,
   FocusEvent,
@@ -18,6 +18,8 @@ const TitleField = ({
 }): ReactElement => {
   const [text, setText] = useState(initial);
   const done = useRef(false);
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => ref.current?.focus(), []);
 
   const finish = useCallback(
     (value: string | null): void => {
@@ -60,6 +62,7 @@ const TitleField = ({
 
   return (
     <input
+      ref={ref}
       className="run-title-input"
       aria-label={copy.runName}
       placeholder={copy.nameThisRun}

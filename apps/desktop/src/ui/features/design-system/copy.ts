@@ -51,6 +51,8 @@ const COPY = {
   placeholderCalmPreciseBankingAppFor:
     "Calm, precise banking app for small teams",
   placeholderCodeMyApp: "~/code/my-app",
+  placeholderDesignMd:
+    "# Brand\nPrimary color, type, spacing and voice rules the agent should follow.",
   placeholderExampleClasses: "Example: /classes",
   placeholderFromTheWebsiteOrBrief: "From the website or brief",
   placeholderHttpsExampleCom: "https://example.com",

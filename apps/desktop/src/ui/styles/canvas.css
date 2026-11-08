@@ -972,6 +972,7 @@ body.element-resizing .frame {
 }
 
 .preview-menu-divider {
+  border: 0;
   height: 1px;
   margin: 4px var(--s-1);
   background: var(--line);

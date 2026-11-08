@@ -2,6 +2,8 @@ import { useCallback, useRef } from "react";
 import type { RefObject } from "react";
 
 interface MenuItemRefs {
+  readonly list: (ids: string[]) => HTMLButtonElement[];
+  readonly focusItem: (id: string, options: FocusOptions) => void;
   readonly refs: RefObject<Map<string, HTMLButtonElement>>;
   readonly bind: (id: string) => (element: HTMLButtonElement | null) => void;
 }
@@ -33,7 +35,25 @@ const useMenuItemRefs = (): MenuItemRefs => {
     return binder;
   }, []);
 
-  return { bind, refs: refsHolder };
+  const list = useCallback((ids: string[]): HTMLButtonElement[] => {
+    const buttons: HTMLButtonElement[] = [];
+
+    for (const id of ids) {
+      const button = refsHolder.current.get(id);
+
+      if (button) {
+        buttons.push(button);
+      }
+    }
+
+    return buttons;
+  }, []);
+
+  const focusItem = useCallback((id: string, options: FocusOptions): void => {
+    refsHolder.current.get(id)?.focus(options);
+  }, []);
+
+  return { bind, focusItem, list, refs: refsHolder };
 };
 
 export { useMenuItemRefs };

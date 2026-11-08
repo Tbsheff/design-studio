@@ -1,3 +1,4 @@
+import { routes as canvasRoutes } from "@design-studio/actions/canvas/routes";
 import { routes as exportRoutes } from "@design-studio/actions/export/routes";
 import type { ExportFileResultWire } from "@design-studio/actions/export/schema";
 import type {
@@ -78,6 +79,15 @@ const toExportedFile = (file: ExportFileResultWire): ExportedFile => {
   };
 };
 
+interface FlowRequest {
+  readonly directionId: string | null;
+  readonly format: "gif" | "mp4" | "webm";
+  readonly maxSteps: number;
+  readonly stepMs: number;
+}
+
+const FLOW_WIDTH = 1440;
+
 const exportApi = {
   copyCode: (pid: string, request: CopyCodeRequest): Promise<CopyCodeResult> =>
     callAction(exportRoutes.getCodeExport, {
@@ -107,6 +117,25 @@ const exportApi = {
         versionId: request.versionId,
       })
     ),
+  exportFlow: (pid: string, request: FlowRequest) =>
+    callAction(canvasRoutes.exportFlowCanvas, {
+      directionId: request.directionId,
+      format: request.format,
+      linkIds: null,
+      maxSteps: request.maxSteps,
+      projectId: pid,
+      startFrameId: null,
+      stepMs: request.stepMs,
+      width: FLOW_WIDTH,
+    }),
+  getFlowVideo: async (pid: string, file: string): Promise<ExportedFile> => {
+    const video = await callAction(canvasRoutes.getFlowVideoCanvas, {
+      file,
+      projectId: pid,
+    });
+
+    return toExportedFile({ ...video, note: null });
+  },
   handoff: (pid: string, request: HandoffRequest): Promise<HandoffResult> =>
     callAction(exportRoutes.exportHandoffExport, {
       frames: request.frames,
@@ -319,6 +348,7 @@ export {
 
 export type {
   ExportedFile,
+  FlowRequest,
   ExportPrefs,
   FrameChoice,
   ExportTarget,

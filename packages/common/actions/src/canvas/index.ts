@@ -3,7 +3,9 @@ import { applyImplicitLinkCanvas } from "./apply-implicit-link.js";
 import { createFlowCanvas } from "./create-flow.js";
 import { createLinkCanvas } from "./create-link.js";
 import { deleteLinkCanvas } from "./delete-link.js";
+import { exportFlowCanvas } from "./export-flow.js";
 import { getDocCanvas } from "./get-doc.js";
+import { getFlowVideoCanvas } from "./get-flow-video.js";
 import { inspectLinkInteractionCanvas } from "./inspect-link-interaction.js";
 import { listFlowLinksCanvas } from "./list-flow-links.js";
 import { listFlowParamsCanvas } from "./list-flow-params.js";
@@ -23,7 +25,9 @@ const CanvasActions = {
   createFlowCanvas,
   createLinkCanvas,
   deleteLinkCanvas,
+  exportFlowCanvas,
   getDocCanvas,
+  getFlowVideoCanvas,
   inspectLinkInteractionCanvas,
   listFlowLinksCanvas,
   listFlowParamsCanvas,

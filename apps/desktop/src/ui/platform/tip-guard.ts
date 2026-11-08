@@ -1,3 +1,5 @@
+import { pick } from "./pick.js";
+
 const OFF = "data-tip-off";
 const AUTO = "data-tip-auto";
 const TIP_ALIGN = "data-tip-align";
@@ -109,7 +111,7 @@ const fitAlign = (
     return [];
   }
 
-  host.setAttribute(TIP_ALIGN, overRight ? "end" : "start");
+  host.setAttribute(TIP_ALIGN, pick(overRight, "end", "start"));
 
   return ["align"];
 };
@@ -162,8 +164,13 @@ const fitTip = (host: Element): void => {
   }
 };
 
-const tipHost = (target: EventTarget | null): Element | null =>
-  target instanceof Element ? target.closest("[data-tip]") : null;
+const tipHost = (target: EventTarget | null): Element | null => {
+  if (target instanceof Element) {
+    return target.closest("[data-tip]");
+  }
+
+  return null;
+};
 
 const WARM = "data-tip-warm";
 const WARM_AFTER_MS = 500;
@@ -242,7 +249,11 @@ export function installTipGuard(): void {
       return;
     }
 
-    const from = event instanceof PointerEvent ? event.relatedTarget : null;
+    let from: EventTarget | null = null;
+
+    if (event instanceof PointerEvent) {
+      from = event.relatedTarget;
+    }
 
     if (from instanceof Node && host.contains(from)) {
       return;

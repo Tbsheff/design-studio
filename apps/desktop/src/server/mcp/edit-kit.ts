@@ -8,8 +8,11 @@ import {
   type Project,
   type Version,
 } from "@design-studio/contracts";
+import type { Schema } from "effect";
 
 import { kebabKeys } from "../../shared/style-keys.js";
+import { toSdkFieldSet, toToolInput } from "../agent-tools/index.js";
+import type { ToolFields } from "../agent-tools/index.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
 import { withPagePath } from "../export/source.js";
 import { describeElement } from "../page-probe/index.js";
@@ -164,6 +167,34 @@ export function defineTool<S extends z.ZodType>(
     schema,
     meta,
     run: (deps, args, client) => run(deps, parseInput(schema, args), client),
+  };
+}
+
+export function toFieldTool<Fields extends ToolFields>(
+  name: string,
+  fields: Fields,
+  meta: Meta,
+  run: (
+    deps: EditDeps,
+    input: Schema.Struct.Type<Fields>,
+    client: string
+  ) => Promise<Done>
+): ToolSpec {
+  const input = toToolInput(fields);
+
+  return {
+    name,
+    schema: z.object(toSdkFieldSet(fields)).strict(),
+    meta,
+    run: (deps, args, client) => {
+      const parsed = input.safeParse(args as never);
+
+      if (!parsed.success) {
+        throw new EditError(parsed.error);
+      }
+
+      return run(deps, parsed.data, client);
+    },
   };
 }
 

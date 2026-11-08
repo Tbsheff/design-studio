@@ -2,12 +2,13 @@ import path from "node:path";
 
 import { importProject } from "@design-studio/actions/project/import";
 import type { Direction, Project } from "@design-studio/contracts";
+import type { Schema } from "effect";
 
-import { z } from "../../platform/zod-bridge/index.js";
+import { toTrimmedText } from "../../agent-tools/index.js";
 import { callAction } from "../action-call.js";
 import { approve, oneLine } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";
-import { defineTool, ok } from "../edit-kit.js";
+import { toFieldTool, ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { isInside, safeFolder } from "../folders.js";
 import {
@@ -41,16 +42,12 @@ const NAME_TEXT_MAX = 60;
 const OPEN_FOLDER_TEXT =
   "Open an existing folder as a Design Studio project, the same as Open folder on the studio Home. The studio then edits the files in that folder in place. The same folder rules as the studio apply, and system folders, the home folder itself and the studio data dir are refused. A folder outside the projects folder waits for the user to approve it in Design Studio. A folder that is already a project returns that project. A Next.js app folder inside a monorepo (pnpm-workspace.yaml, turbo.json or package.json workspaces) opens at the workspace root with that folder as appDir, so the shared kit, Tailwind CSS and root DESIGN.md are found; the result has workspaceRoot and appDir (workspaceRoot is null outside a monorepo).";
 
-const PathFieldSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(PATH_MAX)
-  .describe(
-    "Absolute path (or ~/...) of a folder with an index.html, a Vite app, or an app with a token CSS file."
-  );
-
-const openFolderSchema = z.strictObject({ path: PathFieldSchema });
+const openFolderFields = {
+  path: toTrimmedText(1, PATH_MAX).annotate({
+    description:
+      "Absolute path (or ~/...) of a folder with an index.html, a Vite app, or an app with a token CSS file.",
+  }),
+};
 
 const toProjectsFolder = async (deps: EditDeps): Promise<string | null> => {
   try {
@@ -145,7 +142,7 @@ const importFolder = async (deps: EditDeps, folder: string): Promise<Done> => {
 
 const openFolder = async (
   deps: EditDeps,
-  input: z.infer<typeof openFolderSchema>,
+  input: Schema.Struct.Type<typeof openFolderFields>,
   client: string
 ): Promise<Done> => {
   const folder = await safeFolder(input.path, deps.dataDir);
@@ -165,9 +162,9 @@ const openFolder = async (
   return importFolder(deps, folder);
 };
 
-const openFolderTool = defineTool(
+const openFolderTool = toFieldTool(
   "open_folder",
-  openFolderSchema,
+  openFolderFields,
   { description: OPEN_FOLDER_TEXT, title: "Open folder as project" },
   openFolder
 );

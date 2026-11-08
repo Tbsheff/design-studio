@@ -1,6 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { KeyboardEvent, ReactNode, ReactElement } from "react";
 
 import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
@@ -33,7 +33,7 @@ const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
   Home: () => 0,
 };
 
-function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>) {
+function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>): void {
   const step = RADIO_STEP[event.key];
 
   if (!step) {
@@ -58,7 +58,7 @@ function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>) {
   next?.click();
 }
 
-function ViewportControls({ viewport }: { viewport: Viewport }) {
+function ViewportControls({ viewport }: { viewport: Viewport }): ReactElement {
   const [customW, setCustomW] = useState(String(viewport.width));
   const [customH, setCustomH] = useState(String(viewport.height));
   const [shown, setShown] = useState(`${viewport.width}x${viewport.height}`);
@@ -69,7 +69,7 @@ function ViewportControls({ viewport }: { viewport: Viewport }) {
     setCustomH(String(viewport.height));
   }
 
-  const applyCustom = () => {
+  const applyCustom = (): void => {
     const w = Math.max(
       200,
       Math.min(4000, Number.parseInt(customW, 10) || viewport.width)
@@ -85,7 +85,7 @@ function ViewportControls({ viewport }: { viewport: Viewport }) {
     uiStore.set({ viewport: { height: h, preset: "custom", width: w } });
   };
 
-  const onDimKey = (e: KeyboardEvent<HTMLInputElement>) => {
+  const onDimKey = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key !== "Enter") {
       return;
     }
@@ -170,7 +170,7 @@ function SourceControls({
   source,
   onSource,
   hasHead,
-}: Pick<Props, "source" | "onSource" | "hasHead">) {
+}: Pick<Props, "source" | "onSource" | "hasHead">): ReactElement {
   return (
     <div className="toolbar-group source">
       <div

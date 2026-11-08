@@ -49,7 +49,7 @@ function stepFor(zoom: number): number {
 
 function colorsOf(el: HTMLElement): Colors {
   const css = getComputedStyle(el);
-  const v = (name: string) => css.getPropertyValue(name).trim();
+  const v = (name: string): string => css.getPropertyValue(name).trim();
 
   return {
     bg: v("--ruler-bg"),

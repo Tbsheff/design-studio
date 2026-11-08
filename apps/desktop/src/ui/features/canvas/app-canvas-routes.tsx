@@ -1,6 +1,7 @@
 import type { AttachedApp, BridgeToParent } from "@design-studio/contracts";
 import { routeLabel } from "@design-studio/contracts/app";
 import { cleanFrameLabel } from "@design-studio/contracts/canvas-file";
+import type { ReactElement } from "react";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 import { api } from "../../api.js";
@@ -91,7 +92,7 @@ function AppCanvasBar({
   projectId: string;
   app: AttachedApp;
   onAddRoute: (route: string) => void;
-}) {
+}): ReactElement {
   return (
     <div className="app-canvas-bar">
       <Suspense fallback={null}>

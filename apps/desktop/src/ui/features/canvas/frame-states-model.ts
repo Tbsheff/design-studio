@@ -86,7 +86,7 @@ function useFrameStates(projectId: string, isApp: boolean): FrameStatesRead {
     notify();
     load(projectId);
 
-    return () => {
+    return (): void => {
       if (current === projectId) {
         current = null;
       }

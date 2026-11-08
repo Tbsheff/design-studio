@@ -69,7 +69,7 @@ function useCanvasPresence(o: PresenceInput): void {
     let last = "";
     let sentAt = 0;
 
-    const send = () => {
+    const send = (): void => {
       if (document.hidden) {
         return;
       }
@@ -91,7 +91,7 @@ function useCanvasPresence(o: PresenceInput): void {
     send();
     const timer = window.setInterval(send, PRESENCE_MS);
 
-    return () => window.clearInterval(timer);
+    return (): void => window.clearInterval(timer);
   }, [o.projectId]);
   useEffect(() => {
     let stop: (() => void) | null = null;
@@ -102,7 +102,7 @@ function useCanvasPresence(o: PresenceInput): void {
       }
     });
 
-    return () => {
+    return (): void => {
       gone = true;
       stop?.();
     };

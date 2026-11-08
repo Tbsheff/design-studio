@@ -83,7 +83,7 @@ function useUndoShortcut(
   const state = useRef<ShortcutState>({ enabled, onUndo, redo });
   state.current = { enabled, onUndo, redo };
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       const kind = historyKeyOf(event);
 
       if (!kind || editsText(event.target)) {
@@ -98,7 +98,7 @@ function useUndoShortcut(
       routeHistoryCommand(kind, state.current);
     };
 
-    const fromPreview = (event: Event) => {
+    const fromPreview = (event: Event): void => {
       const kind: HistoryKind =
         (event as CustomEvent<{ redo?: unknown }>).detail?.redo === true
           ? "redo"
@@ -115,7 +115,7 @@ function useUndoShortcut(
     window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
 
-    return () => {
+    return (): void => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
     };

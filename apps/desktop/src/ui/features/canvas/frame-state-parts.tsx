@@ -9,6 +9,7 @@ import { useState } from "react";
 import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
+  ReactElement,
 } from "react";
 
 import { copy } from "./copy.js";
@@ -20,7 +21,7 @@ type MockRules = NonNullable<FrameStateDef["mocks"]>;
 
 type Panel = "list" | "user" | "mock";
 
-const stop = (e: ReactPointerEvent) => e.stopPropagation();
+const stop = (e: ReactPointerEvent): void => e.stopPropagation();
 
 const MOCK_EXAMPLE = '[\n  { "path": "/api/items", "body": [] }\n]';
 
@@ -55,7 +56,7 @@ function StateRows({
   view: FrameStatesView;
   chosen: string;
   onPick: (state: FrameStateDef) => void;
-}) {
+}): ReactElement {
   return (
     <div className="ui-menu-section">
       <div className="ui-menu-label">Preview state</div>
@@ -92,7 +93,7 @@ function SessionRows({
   view: FrameStatesView;
   onPanel: (panel: Panel) => void;
   onSession: (change: Parameters<typeof setFrameSession>[1]) => void;
-}) {
+}): ReactElement {
   const kept = view.session.captured.length;
 
   return (
@@ -142,7 +143,7 @@ function UserForm({
   user: MockUser;
   onSave: (user: MockUser) => Promise<void>;
   onBack: () => void;
-}) {
+}): ReactElement {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [error, setError] = useState<string | null>(null);
@@ -193,12 +194,12 @@ function MockForm({
 }: {
   onSave: (name: string, rules: MockRules) => Promise<void>;
   onBack: () => void;
-}) {
+}): ReactElement {
   const [name, setName] = useState("Mock data");
   const [rules, setRules] = useState(MOCK_EXAMPLE);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = () => {
+  const submit = (): void => {
     let parsed: MockRules | null = null;
 
     try {

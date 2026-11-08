@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC, tipWithKey } from "../../canvas-toolbar-slots.js";
@@ -66,7 +67,7 @@ function zoomGroups({
   ];
 }
 
-function ZoomPill(p: ZoomProps) {
+function ZoomPill(p: ZoomProps): ReactElement {
   const percent = useLive(p.zoom);
 
   return (
@@ -93,7 +94,7 @@ interface OverflowProps {
   tweak: { open: boolean; disabled: boolean; run: () => void };
 }
 
-function OverflowMenu(p: OverflowProps) {
+function OverflowMenu(p: OverflowProps): ReactElement {
   const percent = useLive(p.zoom.zoom);
   const shape = useVectorTool();
   const zoom = zoomGroups(p.zoom);

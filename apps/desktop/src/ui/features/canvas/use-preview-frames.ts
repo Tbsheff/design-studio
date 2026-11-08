@@ -899,7 +899,7 @@ export function usePreviewFrames(o: Options) {
   useBridge(() => slotsRef.current.map(frameFor), onMessage);
 
   useEffect(
-    () => () => {
+    () => (): void => {
       if (treeTimer.current !== null) {
         window.clearTimeout(treeTimer.current);
       }
@@ -929,7 +929,7 @@ export function usePreviewFrames(o: Options) {
   const listen = useCallback((handler: (message: BridgeToParent) => void) => {
     listeners.current.add(handler);
 
-    return () => {
+    return (): void => {
       listeners.current.delete(handler);
     };
   }, []);
@@ -982,7 +982,7 @@ export function usePreviewFrames(o: Options) {
         return;
       }
 
-      const release = () => {
+      const release = (): void => {
         const cur = pendingSwap.current;
 
         if (

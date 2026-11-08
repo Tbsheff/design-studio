@@ -3,6 +3,7 @@ import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
   ReactNode,
+  ReactElement,
 } from "react";
 
 import { openAppPanel } from "../../platform/app-status.js";
@@ -102,7 +103,7 @@ function FrameLabel({
   onActivate,
   onRemove,
   onNudge,
-}: LabelProps) {
+}: LabelProps): ReactElement {
   const size = frameName(frame);
   const base = frameBaseName(frame);
   const name = badge ? `Variation ${badge.label}` : base;
@@ -191,7 +192,7 @@ function FrameRedirectNote({
   redirect: FrameRedirect;
   onSignIn: () => void;
   onDismiss: () => void;
-}) {
+}): ReactElement {
   const auth = isAuthRoute(redirect.to);
   const text = `${redirect.from} goes to ${redirect.to}.${auth ? " Sign in, or pick a public route." : ""}`;
 

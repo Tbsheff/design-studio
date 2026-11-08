@@ -212,7 +212,7 @@ export function usePanZoom({
     ro.observe(el);
     setStage({ h: el.clientHeight, w: el.clientWidth });
 
-    return () => ro.disconnect();
+    return (): void => ro.disconnect();
   }, [stageRef]);
 
   const committedZoom =
@@ -270,7 +270,7 @@ export function usePanZoom({
     });
   }, [paint]);
 
-  useEffect(() => () => cancelAnimationFrame(paintFrame.current), []);
+  useEffect(() => (): void => cancelAnimationFrame(paintFrame.current), []);
 
   const prevActive = useRef<{ id: string; x: number; y: number } | null>(null);
   const { activeId } = layout;
@@ -535,7 +535,7 @@ export function usePanZoom({
     let height = 0;
     let lastAt = 0;
 
-    const onWheel = (e: WheelEvent) => {
+    const onWheel = (e: WheelEvent): void => {
       e.preventDefault();
 
       if (!rect || e.timeStamp - lastAt > WHEEL_IDLE_MS) {
@@ -560,11 +560,11 @@ export function usePanZoom({
 
     el.addEventListener("wheel", onWheel, { passive: false });
 
-    return () => el.removeEventListener("wheel", onWheel);
+    return (): void => el.removeEventListener("wheel", onWheel);
   }, [stageRef, wheelZoomAt, schedulePaint]);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
+    const down = (e: KeyboardEvent): void => {
       if (isTypingTarget(e.target)) {
         return;
       }
@@ -582,7 +582,7 @@ export function usePanZoom({
       }
     };
 
-    const up = (e: KeyboardEvent) => {
+    const up = (e: KeyboardEvent): void => {
       if (e.code === "Space") {
         setSpaceHeld(false);
       }
@@ -592,7 +592,7 @@ export function usePanZoom({
       }
     };
 
-    const blur = () => {
+    const blur = (): void => {
       setSpaceHeld(false);
       setZoomHeld(false);
     };
@@ -601,7 +601,7 @@ export function usePanZoom({
     window.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
 
-    return () => {
+    return (): void => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
@@ -633,7 +633,7 @@ export function usePanZoom({
       let lastX = e.clientX;
       let lastY = e.clientY;
 
-      const move = (ev: PointerEvent) => {
+      const move = (ev: PointerEvent): void => {
         const dx = ev.clientX - lastX;
         const dy = ev.clientY - lastY;
         lastX = ev.clientX;
@@ -647,7 +647,7 @@ export function usePanZoom({
         schedulePaint();
       };
 
-      const end = () => {
+      const end = (): void => {
         setPanning(false);
         rerender();
         target.removeEventListener("pointermove", move as EventListener);

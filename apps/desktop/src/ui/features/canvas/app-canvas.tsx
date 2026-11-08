@@ -1,7 +1,7 @@
 import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../app/project-nav.js";
 import { openAppPanel, useAppStatus } from "../../platform/app-status.js";
@@ -71,7 +71,7 @@ function useServerFrames(
     }
     const timer = window.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [ready, loaded]);
   useEffect(() => {
     if (!enabled) {
@@ -139,14 +139,20 @@ function routeHint(layout: CanvasLayout): Hint | null {
   };
 }
 
-function HintIcon({ hint }: { hint: Hint }) {
+function HintIcon({ hint }: { hint: Hint }): ReactElement {
   if (hint.busy) {
     return <span className="spinner" aria-hidden="true" />;
   }
   return <Icon name={hint.kind === "route" ? "file" : "alert"} size={14} />;
 }
 
-function AppStageHint({ hint, onClose }: { hint: Hint; onClose: () => void }) {
+function AppStageHint({
+  hint,
+  onClose,
+}: {
+  hint: Hint;
+  onClose: () => void;
+}): ReactElement {
   return (
     <div
       className="stage-message app-stage-note"
@@ -190,7 +196,7 @@ function useRouteRequests(
     if (!isApp) {
       return;
     }
-    const runPending = () => {
+    const runPending = (): boolean => {
       if (!canvasStore.loaded(projectId)) {
         return false;
       }
@@ -208,7 +214,7 @@ function useRouteRequests(
           queueMicrotask(() => runPending() && unsubscribe?.())
         );
 
-    const onRoute = (event: Event) => {
+    const onRoute = (event: Event): void => {
       const { detail } = event as CustomEvent<{
         projectId?: string;
         route?: string;
@@ -221,7 +227,7 @@ function useRouteRequests(
 
     window.addEventListener(OPEN_ROUTE_EVENT, onRoute);
 
-    return () => {
+    return (): void => {
       unsubscribe?.();
       window.removeEventListener(OPEN_ROUTE_EVENT, onRoute);
     };
@@ -249,7 +255,7 @@ function useAppCanvas(o: AppCanvasInput): {
   note: ReactNode;
   stage: ReactNode;
 } {
-  const addRoute = (route: string) => {
+  const addRoute = (route: string): void => {
     const shown = routeFrameId(o.frames.layout, route) !== null;
 
     if (!shown && !canAddFrame(o.frames.layout)) {
@@ -289,7 +295,7 @@ function useAppCanvas(o: AppCanvasInput): {
       (routeDismissed || shownRedirect ? null : routeHint(o.frames.layout)))
     : null;
 
-  const hide = (value: string) => {
+  const hide = (value: string): void => {
     const next = [...hidden.filter((item) => item !== value), value].slice(
       -MAX_HIDDEN_REDIRECTS
     );
@@ -298,13 +304,13 @@ function useAppCanvas(o: AppCanvasInput): {
     setHidden(next);
   };
 
-  const dismissRedirect = () => {
+  const dismissRedirect = (): void => {
     if (key) {
       hide(key);
     }
   };
 
-  const signIn = () => {
+  const signIn = (): void => {
     dismissRedirect();
     o.onSignIn();
   };

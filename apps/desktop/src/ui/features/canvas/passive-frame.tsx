@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import type { RefObject, ReactElement } from "react";
 
 import { pageFileOf } from "../chat/use-first-build.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
@@ -40,13 +40,13 @@ function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
     let front = frontPainted;
     let seen = false;
 
-    const tryArm = () => {
+    const tryArm = (): void => {
       if (front && seen) {
         setArmed(true);
       }
     };
 
-    const onPaint = () => {
+    const onPaint = (): void => {
       front = true;
       tryArm();
     };
@@ -68,7 +68,7 @@ function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
 
     io.observe(el);
 
-    return () => {
+    return (): void => {
       window.removeEventListener(PREVIEW_PAINTED_EVENT, onPaint);
       window.clearTimeout(timer);
       io.disconnect();
@@ -102,7 +102,7 @@ function PassiveFrame({
   register,
   frameRef,
   onNextLoad,
-}: PassiveProps) {
+}: PassiveProps): ReactElement {
   const name = label.badge
     ? `Variation ${label.badge.label}`
     : frameBaseName(frame);
@@ -138,7 +138,7 @@ function PassiveFrame({
             width={frame.width}
             height={frame.height}
             tabIndex={-1}
-            onLoad={index === 0 ? undefined : () => onNextLoad(frame.id)}
+            onLoad={index === 0 ? undefined : (): void => onNextLoad(frame.id)}
           />
         ) : null
       )}
@@ -193,7 +193,7 @@ const StablePassiveFrame = memo(
   }) => {
     const cur = entries.current.get(id);
     if (!cur) return null;
-    const live = () => entries.current.get(id) ?? cur;
+    const live = (): PassiveProps => entries.current.get(id) ?? cur;
     return (
       <PassiveFrame
         {...cur}

@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { useRovingRadioGroup } from "../chat/level-control.js";
 
 interface Props {
@@ -16,7 +18,7 @@ function VariationsControl({
   onChange,
   disabled,
   labelledBy,
-}: Props) {
+}: Props): ReactElement {
   const radios = useRovingRadioGroup<number>(
     OPTIONS,
     value,

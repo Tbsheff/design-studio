@@ -1,6 +1,6 @@
 import { PORT_OPEN_EVENT } from "@design-studio/contracts/port";
 import { lazy, useCallback, useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { uiStore } from "../../platform/storage.js";
 import { setPortAvailable } from "../design-system/port-api.js";
@@ -42,17 +42,17 @@ function usePortDialog(available: boolean): {
   useEffect(() => {
     setPortAvailable(available);
 
-    return () => setPortAvailable(false);
+    return (): void => setPortAvailable(false);
   }, [available]);
   useEffect(() => {
-    const onOpen = (event: Event) => {
+    const onOpen = (event: Event): void => {
       const { detail } = event as CustomEvent<PortOpenDetail>;
       open(detail?.frameId ?? null, detail?.directionId ?? null);
     };
 
     window.addEventListener(PORT_OPEN_EVENT, onOpen);
 
-    return () => window.removeEventListener(PORT_OPEN_EVENT, onOpen);
+    return (): void => window.removeEventListener(PORT_OPEN_EVENT, onOpen);
   }, [open]);
 
   return { close: useCallback(() => setTarget(null), []), open, target };
@@ -76,7 +76,7 @@ function DropMenu({
   tip?: string;
   children: ReactNode;
   onOpen?: () => void;
-}) {
+}): ReactElement {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
 

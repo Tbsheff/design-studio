@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
+  ReactElement,
 } from "react";
 
 type ResizeEdge = "right" | "bottom" | "corner";
@@ -74,7 +75,7 @@ function FrameResizeHandles({
   onPointerDown,
 }: {
   onPointerDown: (e: ReactPointerEvent, edge: ResizeEdge) => void;
-}) {
+}): ReactElement {
   return (
     <>
       {EDGES.map(({ edge, label }) => (
@@ -103,7 +104,7 @@ const MENU_STEP: Record<string, (index: number, count: number) => number> = {
 function menuKeys(
   event: ReactKeyboardEvent<HTMLElement>,
   close: (refocus: boolean) => void
-) {
+): void {
   const step = MENU_STEP[event.key];
 
   if (event.key === "Tab") {

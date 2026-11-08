@@ -177,8 +177,8 @@ function stageCursor(pz: {
 
 function quietOnPointer(
   onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void
-) {
-  return (e: ReactPointerEvent<HTMLDivElement>) => {
+): (e: ReactPointerEvent<HTMLDivElement>) => void {
+  return (e: ReactPointerEvent<HTMLDivElement>): void => {
     e.currentTarget.setAttribute(QUIET_FOCUS_ATTR, "");
     onPointerDown(e);
   };

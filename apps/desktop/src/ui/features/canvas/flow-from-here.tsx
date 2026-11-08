@@ -1,6 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 
 import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";
@@ -8,7 +8,7 @@ import { useCurrentFrameStates } from "./frame-states-model.js";
 
 import "../../styles/route-flow.css";
 
-const stop = (e: ReactPointerEvent) => e.stopPropagation();
+const stop = (e: ReactPointerEvent): void => e.stopPropagation();
 
 function doneText(result: FlowResult): string {
   const added = result.frames.filter((frame) => frame.added).length;
@@ -31,7 +31,7 @@ function FlowFromHere({
 }: {
   frameId: string;
   frameName: string;
-}) {
+}): ReactElement | null {
   const states = useCurrentFrameStates();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -40,7 +40,7 @@ function FlowFromHere({
     return null;
   }
 
-  const run = () => {
+  const run = (): void => {
     setBusy(true);
     setNote(null);
     api

@@ -1,5 +1,6 @@
 import type { AppRoute } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import { dynamicNames } from "../../../shared/route-flow.js";
@@ -44,7 +45,7 @@ function useRoutesAndParams(projectId: string) {
   return { error, params, routes, setError, setParams };
 }
 
-function FlowResultView({ result }: { result: FlowResult }) {
+function FlowResultView({ result }: { result: FlowResult }): ReactElement {
   return (
     <div className="flow-result" role="status">
       <div>{flowSummary(result)}.</div>
@@ -67,7 +68,11 @@ function FlowResultView({ result }: { result: FlowResult }) {
   );
 }
 
-export default function FlowTab({ projectId }: { projectId: string }) {
+export default function FlowTab({
+  projectId,
+}: {
+  projectId: string;
+}): ReactElement {
   const { routes, params, setParams, error, setError } =
     useRoutesAndParams(projectId);
 
@@ -87,7 +92,7 @@ export default function FlowTab({ projectId }: { projectId: string }) {
         route.file.toLowerCase().includes(needle)
     );
 
-    const picked = (route: AppRoute) =>
+    const picked = (route: AppRoute): number =>
       chosen.includes(route.route)
         ? chosen.indexOf(route.route)
         : chosen.length;
@@ -97,14 +102,14 @@ export default function FlowTab({ projectId }: { projectId: string }) {
 
   const names = [...new Set(chosen.flatMap(dynamicNames))];
 
-  const toggle = (route: string) =>
+  const toggle = (route: string): void =>
     setChosen((list) =>
       list.includes(route)
         ? list.filter((item) => item !== route)
         : [...list, route]
     );
 
-  const build = () => {
+  const build = (): void => {
     setBusy(true);
     setError(null);
     const single = chosen.length === 1 && depth > 0;

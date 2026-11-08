@@ -1,7 +1,7 @@
 import { Icon, usePopover } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useRef } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import type { KeyboardEvent, RefObject, ReactElement } from "react";
 
 type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
 
@@ -25,7 +25,7 @@ interface MenuGroup {
   fold?: "wide" | "narrow" | "tight";
 }
 
-function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
+function onMenuKey(event: KeyboardEvent<HTMLDivElement>): void {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
     return;
   }
@@ -55,7 +55,7 @@ function MenuPopover({
   align: "start" | "end";
   onClose: (refocus: boolean) => void;
   trigger: RefObject<HTMLButtonElement | null>;
-}) {
+}): ReactElement {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, onClose, trigger);
 

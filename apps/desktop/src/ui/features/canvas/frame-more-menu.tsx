@@ -1,5 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect } from "react";
 
 import { openPortDialog, portAvailable } from "../design-system/port-api.js";
@@ -21,7 +22,7 @@ function portItem(root: HTMLElement | null): FrameMenuItem[] {
 
   const frame = root?.closest<HTMLElement>("[data-frame-id]") ?? null;
 
-  const run = () =>
+  const run = (): void =>
     openPortDialog({
       directionId: frame?.dataset.directionId ?? null,
       frameId: frame?.dataset.frameId ?? null,
@@ -36,7 +37,7 @@ function FrameMoreMenu({
 }: {
   name: string;
   items: FrameMenuItem[];
-}) {
+}): ReactElement | null {
   const menu = useMenu();
   useEffect(() => {
     if (menu.open) {

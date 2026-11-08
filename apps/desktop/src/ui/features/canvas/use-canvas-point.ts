@@ -25,12 +25,14 @@ interface McpPointBadge {
   dismiss: () => void;
 }
 
-function useShowFrame(o: PointInput) {
+function useShowFrame(
+  o: PointInput
+): (frameId: string, selector: string | undefined) => boolean {
   const latest = useRef(o);
   latest.current = o;
   const timers = useRef<number[]>([]);
   useEffect(
-    () => () => {
+    () => (): void => {
       timers.current.forEach((t) => window.clearTimeout(t));
     },
     []
@@ -54,7 +56,7 @@ function useShowFrame(o: PointInput) {
       cur.frames.activate(frame);
       cur.clearSelection();
 
-      const later = (ms: number, fn: () => void) =>
+      const later = (ms: number, fn: () => void): number =>
         timers.current.push(window.setTimeout(fn, ms));
 
       later(ZOOM_AT_MS, () => latest.current.zoom("selection"));
@@ -101,7 +103,7 @@ function useCanvasPoint(o: PointInput): McpPointBadge {
       Math.max(0, point.at + MCP_POINT_MS - Date.now())
     );
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [point]);
 
   const show = useCallback(() => {

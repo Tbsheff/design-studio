@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Suspense, lazy } from "react";
 
 import { TabOrderSlot } from "../accessibility/index.js";
@@ -49,7 +50,11 @@ const LazySpacingHandles = lazy(async () => {
   return { default: loaded.SpacingHandles };
 });
 
-const SpacingLayer = ({ host, selection, zoom }: SpacingHandlesProps) => (
+const SpacingLayer = ({
+  host,
+  selection,
+  zoom,
+}: SpacingHandlesProps): ReactElement => (
   <Suspense fallback={null}>
     <LazySpacingHandles host={host} selection={selection} zoom={zoom} />
   </Suspense>
@@ -61,7 +66,12 @@ const LazyGridOverlay = lazy(async () => {
   return { default: loaded.GridOverlay };
 });
 
-const GridLayer = ({ host, selection, variant, zoom }: GridOverlayProps) => (
+const GridLayer = ({
+  host,
+  selection,
+  variant,
+  zoom,
+}: GridOverlayProps): ReactElement => (
   <Suspense fallback={null}>
     <LazyGridOverlay
       host={host}
@@ -80,7 +90,13 @@ interface CanvasStageProps {
   w: ReturnType<typeof useCanvasWiring>;
 }
 
-const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
+const CanvasStage = ({
+  props,
+  s,
+  pv,
+  ed,
+  w,
+}: CanvasStageProps): ReactElement => {
   const editVariant = useEditVariant();
 
   const { projectId, directionId, kind } = props;

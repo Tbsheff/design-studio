@@ -73,7 +73,10 @@ interface ChromeProps {
   proto: { on: boolean; set: (on: boolean) => void; play: () => void };
 }
 
-function addAndShow(p: ChromeProps, size: { width: number; height: number }) {
+function addAndShow(
+  p: ChromeProps,
+  size: { width: number; height: number }
+): void {
   const before = new Set(
     (canvasStore.get(p.projectId)?.frames ?? p.layout.frames).map(
       (frame) => frame.id
@@ -97,7 +100,7 @@ function addAndShow(p: ChromeProps, size: { width: number; height: number }) {
 function useFileMenu(p: ChromeProps, onImport: () => void) {
   const [pages, setPages] = useState<string[]>([]);
 
-  const load = () => {
+  const load = (): void => {
     if (p.kind !== "html" || !p.directionId) {
       return;
     }
@@ -127,7 +130,7 @@ function useFileMenu(p: ChromeProps, onImport: () => void) {
       items: p.layout.frames.map((f, i) => {
         const info = p.label(f);
 
-        const show = () => {
+        const show = (): void => {
           if (f.hidden) {
             p.frames.update((l) => setFrameHidden(l, f.id, false));
           }

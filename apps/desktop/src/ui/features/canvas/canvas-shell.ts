@@ -36,7 +36,7 @@ function useShellState(
   shell: CanvasShell | undefined,
   comment: CommentTool,
   setSelectMode: SetSelectMode
-) {
+): void {
   const onPane = useRef(shell?.onPane);
   onPane.current = shell?.onPane;
   const pane = shell?.pane;
@@ -90,13 +90,13 @@ function useShellPane(
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
 
-  const toggleEdit = () =>
+  const toggleEdit = (): void | Promise<boolean> | undefined =>
     shell?.onPane(shell.pane === "design" ? "chat" : "design");
 
-  const closeLayers = () =>
+  const closeLayers = (): void | Promise<boolean> =>
     shell ? shell.onPane("chat") : uiStore.set({ layersOpen: false });
 
-  const place = (panel: ReactNode) =>
+  const place = (panel: ReactNode): ReactNode =>
     shell?.layersHost ? createPortal(panel, shell.layersHost) : panel;
 
   return { closeLayers, layersOpen, picking, place, toggleEdit };
@@ -139,7 +139,7 @@ function toolOf(
   return select ? "select" : null;
 }
 
-function reloadFrames(stage: HTMLElement | null) {
+function reloadFrames(stage: HTMLElement | null): void {
   stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame").forEach((el) => {
     const { src } = el;
 

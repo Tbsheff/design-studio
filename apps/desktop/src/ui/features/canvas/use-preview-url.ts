@@ -55,7 +55,7 @@ function usePreviewUrl(
         );
       });
 
-    return () => {
+    return (): void => {
       alive = false;
     };
   }, [projectId, directionId, source.kind, versionId]);
@@ -68,7 +68,7 @@ function useRenderCheck(projectId: string, directionId: string | null) {
   const [results, setResults] = useState<RenderCheckResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const run = async () => {
+  const run = async (): Promise<void> => {
     if (!directionId) {
       return;
     }
@@ -86,7 +86,7 @@ function useRenderCheck(projectId: string, directionId: string | null) {
     }
   };
 
-  const close = () => {
+  const close = (): void => {
     setResults(null);
     setError(null);
   };
@@ -99,7 +99,7 @@ function useFramePort(
   frames: PreviewPort | null,
   lastChange: FilesChange | null,
   kind: ProjectKind
-) {
+): void {
   useEffect(() => {
     if (!port) {
       return;
@@ -122,7 +122,7 @@ function useFramePort(
       window.setTimeout(() => port?.current?.refreshRects(), ms)
     );
 
-    return () => timers.forEach((t) => window.clearTimeout(t));
+    return (): void => timers.forEach((t) => window.clearTimeout(t));
   }, [lastChange, kind, port]);
 }
 

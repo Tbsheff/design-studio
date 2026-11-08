@@ -6,7 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import {
   commandBlocker,
@@ -33,7 +33,7 @@ import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 
-const renderGenerateTab = (props: GenerateTabProps) => (
+const renderGenerateTab = (props: GenerateTabProps): ReactElement => (
   <ImageGenerateSlot
     directionId={props.directionId}
     projectId={props.projectId}
@@ -231,7 +231,7 @@ function usePreviewMenu(o: Options) {
   const close = useCallback(() => setAt(null), []);
   const [creating, setCreating] = useState<SelectionContext[] | null>(null);
   const target = o.selection.at(-1);
-  const openCreate = () => setCreating(latest.current.selection);
+  const openCreate = (): void => setCreating(latest.current.selection);
   const { directionId } = o.ids;
 
   const hostOptions = {

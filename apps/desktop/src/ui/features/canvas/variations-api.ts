@@ -16,7 +16,7 @@ import type { JsonBody } from "../../platform/http.js";
 const post = <T>(path: string, body: JsonBody = {}): Promise<T> =>
   sendJson<T>("POST", path, body);
 
-const base = (pid: string) =>
+const base = (pid: string): string =>
   `/api/projects/${encodeURIComponent(pid)}/variations`;
 
 const variationsApi = {

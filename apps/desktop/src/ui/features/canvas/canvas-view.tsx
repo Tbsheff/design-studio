@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Suspense, useCallback, useMemo } from "react";
 
 import { AnimationEntry } from "../animation/index.js";
@@ -26,7 +27,7 @@ import { useCanvasPreview } from "./use-canvas-preview.js";
 import { useCanvasStage } from "./use-canvas-stage.js";
 import { useCanvasWiring } from "./use-canvas-wiring.js";
 
-const renderScenarioSlot = (args: FrameStateSlotArgs) => (
+const renderScenarioSlot = (args: FrameStateSlotArgs): ReactElement => (
   <ScenarioSection
     projectId={args.projectId}
     directionId={args.directionId}
@@ -90,7 +91,7 @@ const useViewSlots = (
   return { findHost, importPage, matrixSlot };
 };
 
-const CanvasView = (props: ViewProps) => {
+const CanvasView = (props: ViewProps): ReactElement => {
   const s = useCanvasStage(props);
   const pv = useCanvasPreview(props, s);
   const ed = useCanvasEdits(props, s, pv);

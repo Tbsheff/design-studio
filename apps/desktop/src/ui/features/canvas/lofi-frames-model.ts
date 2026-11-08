@@ -88,18 +88,18 @@ function useLofiFrames(
   const latest = useRef({ currentId, kind, lofi });
   latest.current = { currentId, kind, lofi };
 
-  const frames = () =>
+  const frames = (): LofiFrame[] =>
     stageFrames(
       stageRef.current,
       latest.current.kind,
       latest.current.currentId
     );
 
-  const wants = (frame: LofiFrame) =>
+  const wants = (frame: LofiFrame): boolean =>
     frame.directionId !== null &&
     latest.current.lofi.includes(frame.directionId);
 
-  const sync = (frame: LofiFrame, force: boolean) => {
+  const sync = (frame: LofiFrame, force: boolean): void => {
     const { element } = frame;
 
     if (!element) {

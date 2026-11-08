@@ -1,7 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import type { KeyId } from "../../../shared/keymap.js";
 import { KeyHint } from "../../canvas-preview-slots.js";
@@ -49,7 +49,7 @@ function PreviewMenu({
   label: string;
   items: PreviewMenuItem[];
   onClose: () => void;
-}) {
+}): ReactElement {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(at);
   const [scrolls, setScrolls] = useState(false);
@@ -61,7 +61,7 @@ function PreviewMenu({
       return;
     }
 
-    const clamp = () => {
+    const clamp = (): void => {
       const width = el.offsetWidth;
       const height = el.offsetHeight;
       const last = el.lastElementChild as HTMLElement | null;
@@ -82,11 +82,11 @@ function PreviewMenu({
     const observer = new ResizeObserver(clamp);
     observer.observe(el);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [at]);
 
   useEffect(() => {
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       if (!ref.current?.contains(event.target as Node)) {
         onClose();
       }
@@ -96,14 +96,14 @@ function PreviewMenu({
     window.addEventListener("blur", onClose);
     window.addEventListener("resize", onClose);
 
-    return () => {
+    return (): void => {
       window.removeEventListener("mousedown", onDown, true);
       window.removeEventListener("blur", onClose);
       window.removeEventListener("resize", onClose);
     };
   }, [onClose]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === "Escape" || event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
@@ -157,7 +157,7 @@ function MenuRow({
 }: {
   item: PreviewMenuItem;
   onClose: () => void;
-}) {
+}): ReactElement {
   return (
     <>
       {item.divider && (

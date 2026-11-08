@@ -4,7 +4,7 @@ import type {
 } from "@design-studio/contracts";
 import type { InsertTarget } from "@design-studio/contracts/insert";
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, PointerEvent } from "react";
+import type { CSSProperties, PointerEvent, ReactElement } from "react";
 
 import type { VectorRequest, VectorResult } from "../../../shared/vector.js";
 import { errorText } from "../../api.js";
@@ -138,7 +138,7 @@ function boxOf(a: Point, b: Point, square: boolean) {
 function useCommit(p: Props, dropAt: (point: Point) => Promise<Drop>) {
   const busy = useRef(false);
 
-  return async (at: Point, build: (origin: Point) => Placed) => {
+  return async (at: Point, build: (origin: Point) => Placed): Promise<void> => {
     if (busy.current) {
       return;
     }
@@ -195,7 +195,7 @@ function ShapePreview({
   tool: VectorToolId;
   box: { x: number; y: number; width: number; height: number };
   zoom: number;
-}) {
+}): ReactElement {
   const stroke = 1.5 / zoom;
 
   return (
@@ -246,7 +246,7 @@ function useShapeTool(
     square: boolean;
   } | null>(null);
 
-  const onDown = (event: PointerEvent<HTMLDivElement>) => {
+  const onDown = (event: PointerEvent<HTMLDivElement>): void => {
     const point = pointOf(event);
 
     if (event.button !== 0 || !point) {
@@ -257,7 +257,7 @@ function useShapeTool(
     setDrag({ from: point, square: event.shiftKey, to: point });
   };
 
-  const onMove = (event: PointerEvent<HTMLDivElement>) => {
+  const onMove = (event: PointerEvent<HTMLDivElement>): void => {
     const point = pointOf(event);
 
     if (drag && point) {
@@ -265,7 +265,7 @@ function useShapeTool(
     }
   };
 
-  const onUp = (event: PointerEvent<HTMLDivElement>) => {
+  const onUp = (event: PointerEvent<HTMLDivElement>): void => {
     if (!drag) {
       return;
     }
@@ -318,7 +318,7 @@ function PenPreview({
   hover: Point | null;
   zoom: number;
   closing: boolean;
-}) {
+}): ReactElement {
   const last = anchors.at(-1);
   const first = anchors[0];
   const stroke = 1.5 / zoom;
@@ -379,7 +379,7 @@ function usePenTool(
   const live = useRef(anchors);
   live.current = anchors;
 
-  const nearFirst = (point: Point | null) => {
+  const nearFirst = (point: Point | null): boolean => {
     const first = live.current[0];
 
     return Boolean(
@@ -391,7 +391,7 @@ function usePenTool(
     );
   };
 
-  const finish = (closed: boolean) => {
+  const finish = (closed: boolean): void => {
     const list = live.current;
     setAnchors([]);
     setHover(null);
@@ -407,7 +407,7 @@ function usePenTool(
     }));
   };
 
-  const onDown = (event: PointerEvent<HTMLDivElement>) => {
+  const onDown = (event: PointerEvent<HTMLDivElement>): void => {
     const point = pointOf(event);
 
     if (event.button !== 0 || !point) {
@@ -423,7 +423,7 @@ function usePenTool(
     setAnchors((prev) => [...prev, { x: point.x, y: point.y }]);
   };
 
-  const onMove = (event: PointerEvent<HTMLDivElement>) => {
+  const onMove = (event: PointerEvent<HTMLDivElement>): void => {
     const point = pointOf(event);
 
     if (!point) {
@@ -455,7 +455,7 @@ function usePenTool(
     });
   };
 
-  const onUp = () => {
+  const onUp = (): void => {
     dragging.current = false;
   };
 
@@ -490,7 +490,7 @@ const HINTS: Record<VectorToolId, string> = {
   rect: "Drag to draw a rectangle. Shift keeps it square. Esc stops.",
 };
 
-export default function VectorLayer(p: Props) {
+export default function VectorLayer(p: Props): ReactElement | null {
   const { tool } = useVectorTool();
   const root = useRef<HTMLDivElement>(null);
   const dropAt = useDropAt(p.post, p.listen);
@@ -522,7 +522,7 @@ export default function VectorLayer(p: Props) {
     if (!active) {
       return;
     }
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (penOn && penKey.current(event.key)) {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -535,7 +535,7 @@ export default function VectorLayer(p: Props) {
 
     window.addEventListener("keydown", onKey, true);
 
-    return () => window.removeEventListener("keydown", onKey, true);
+    return (): void => window.removeEventListener("keydown", onKey, true);
   }, [active, penOn]);
 
   if (!tool) {

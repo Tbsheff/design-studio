@@ -132,7 +132,7 @@ function useCanvasFrames(
     }
   }, [projectId, directionId, layout]);
 
-  const activate = (frame: CanvasFrame) => {
+  const activate = (frame: CanvasFrame): void => {
     if (frame.id === layout.activeId) {
       return;
     }
@@ -184,7 +184,7 @@ function useZoomInput(
     return true;
   });
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       const key = zoomKeyOf(e);
 
       if (!key || blocksZoomKey(e)) {
@@ -196,7 +196,7 @@ function useZoomInput(
 
     window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => window.removeEventListener("keydown", onKey);
   }, [zoomBy]);
 
   return zoomBy;
@@ -293,14 +293,14 @@ function useFrameActions(
     []
   );
 
-  const addFrameAt = (size: { width: number; height: number }) => {
+  const addFrameAt = (size: { width: number; height: number }): void => {
     pz.freeze();
     frames.update((l) => addFrame(l, size));
   };
 
   const [removed, setRemoved] = useState<CanvasLayout | null>(null);
 
-  const removeFrameAt = (frame: CanvasFrame) => {
+  const removeFrameAt = (frame: CanvasFrame): void => {
     pz.freeze();
     const next = removeFrame(layout, frame.id);
     setRemoved(layout);
@@ -312,7 +312,7 @@ function useFrameActions(
   };
 
   const undoRemove = removed
-    ? () => {
+    ? (): void => {
         frames.update(() => removed);
         uiStore.set({ viewport: viewportOf(activeFrame(removed)) });
         setRemoved(null);
@@ -321,7 +321,7 @@ function useFrameActions(
 
   const dismissUndo = useCallback(() => setRemoved(null), []);
 
-  const nudge = (frame: CanvasFrame, dx: number, dy: number) => {
+  const nudge = (frame: CanvasFrame, dx: number, dy: number): void => {
     pz.freeze();
     frames.update((l) => moveFrame(l, frame.id, dx, dy));
   };
@@ -330,7 +330,7 @@ function useFrameActions(
     e: ReactPointerEvent,
     frame: CanvasFrame,
     body?: boolean
-  ) => {
+  ): void => {
     if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld) {
       return;
     }
@@ -356,7 +356,7 @@ function useFrameActions(
     let moved = false;
     let world = { x: 0, y: 0 };
 
-    const move = (ev: PointerEvent) => {
+    const move = (ev: PointerEvent): void => {
       const dx = ev.clientX - startX;
       const dy = ev.clientY - startY;
 
@@ -382,7 +382,7 @@ function useFrameActions(
       );
     };
 
-    const end = () => {
+    const end = (): void => {
       target.removeEventListener("pointermove", move as EventListener);
       target.removeEventListener("pointerup", end);
       target.removeEventListener("pointercancel", end);
@@ -410,7 +410,10 @@ function useFrameActions(
 
   const lastTitle = useRef<{ id: string; at: number } | null>(null);
 
-  const onTitlePointerDown = (e: ReactPointerEvent, frame: CanvasFrame) => {
+  const onTitlePointerDown = (
+    e: ReactPointerEvent,
+    frame: CanvasFrame
+  ): void => {
     const last = lastTitle.current;
     const now = performance.now();
     lastTitle.current = { at: now, id: frame.id };

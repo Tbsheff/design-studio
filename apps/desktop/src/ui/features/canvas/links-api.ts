@@ -256,12 +256,12 @@ function useImplicitLinks(
   const timer = useRef(0);
   const seq = useRef(0);
   const fetchNow = useRef(() => undefined as void);
-  fetchNow.current = () => {
+  fetchNow.current = (): void => {
     const at = ++seq.current;
     void fetchImplicit(projectId, () => at === seq.current, setLinks);
   };
 
-  const later = () => {
+  const later = (): void => {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(
       () => fetchNow.current(),
@@ -274,7 +274,7 @@ function useImplicitLinks(
   useEffect(() => {
     fetchNow.current();
 
-    return () => window.clearTimeout(timer.current);
+    return (): void => window.clearTimeout(timer.current);
   }, [projectId]);
   useEffect(() => {
     const before = lastKey.current;

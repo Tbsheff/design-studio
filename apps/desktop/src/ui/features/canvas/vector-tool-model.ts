@@ -43,10 +43,10 @@ const vectorTool = {
       emit({ available });
     }
   },
-  subscribe(listener: () => void) {
+  subscribe(listener: () => void): () => boolean {
     listeners.add(listener);
 
-    return () => listeners.delete(listener);
+    return (): boolean => listeners.delete(listener);
   },
   toggle: (tool: VectorToolId) =>
     emit({ tool: state.available && state.tool !== tool ? tool : null }),
@@ -94,9 +94,9 @@ const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({
 
 function useVectorToolKeys(available: boolean): void {
   useEffect(() => vectorTool.setAvailable(available), [available]);
-  useEffect(() => () => vectorTool.setAvailable(false), []);
+  useEffect(() => (): void => vectorTool.setAvailable(false), []);
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         event.defaultPrevented ||
         isTypingTarget(event.target) ||
@@ -115,7 +115,7 @@ function useVectorToolKeys(available: boolean): void {
       vectorTool.toggle(tool);
     };
 
-    const onForwarded = (event: Event) => {
+    const onForwarded = (event: Event): void => {
       const tool = (event as CustomEvent<{ tool?: VectorToolId }>).detail?.tool;
 
       if (
@@ -130,7 +130,7 @@ function useVectorToolKeys(available: boolean): void {
     window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
 
-    return () => {
+    return (): void => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
     };

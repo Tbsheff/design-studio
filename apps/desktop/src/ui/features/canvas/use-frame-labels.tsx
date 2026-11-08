@@ -1,6 +1,6 @@
 import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 import { useCallback, useRef } from "react";
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import { api } from "../../api.js";
 import {
@@ -109,7 +109,8 @@ function liveVariation(
   did: string,
   live: MutableRefObject<LabelInput>
 ): FrameVariation {
-  const now = () => live.current.directions?.variationOf(did) ?? variation;
+  const now = (): FrameVariation =>
+    live.current.directions?.variationOf(did) ?? variation;
 
   return {
     ...variation,
@@ -139,7 +140,7 @@ function useFrameLabels(o: LabelInput) {
   live.current = o;
 
   const listPages = useCallback(
-    (did: string) => () =>
+    (did: string) => (): Promise<string[]> =>
       api
         .workTreeFiles(projectId, did)
         .then(({ files }) => files.filter((f) => f.endsWith(".html")).sort()),

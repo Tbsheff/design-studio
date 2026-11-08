@@ -1,6 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import { Suspense } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import type { LiveStore } from "../../platform/live-store.js";
@@ -80,9 +80,9 @@ function presentItems(onPresent: (mode: PresentMode) => void): MenuEntry[] {
   ];
 }
 
-function CanvasTopBar(p: Props) {
+function CanvasTopBar(p: Props): ReactElement {
   const port = usePortDialog(!p.onShip);
-  const onPort = p.onShip ? null : () => port.open(null);
+  const onPort = p.onShip ? null : (): void => port.open(null);
   const present = presentItems(p.onPresent);
 
   const zoom: ZoomProps = {

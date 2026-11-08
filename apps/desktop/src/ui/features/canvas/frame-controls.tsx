@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { cleanFramePath } from "./canvas-frames-model.js";
@@ -30,7 +31,7 @@ function FramePageMenu({
   listPages: (() => Promise<string[]>) | null;
   onPath: (path: string) => void;
   routes?: boolean;
-}) {
+}): ReactElement {
   const menu = useMenu();
   const [draft, setDraft] = useState(path);
   const [pages, setPages] = useState<string[] | null>(null);
@@ -59,12 +60,12 @@ function FramePageMenu({
       .then((list) => alive && setPages(list))
       .catch(() => alive && setPages([]));
 
-    return () => {
+    return (): void => {
       alive = false;
     };
   }, [menu.open, path, hasPages]);
 
-  const apply = (raw: string) => {
+  const apply = (raw: string): void => {
     const clean = cleanFramePath(raw);
 
     if (clean === null) {

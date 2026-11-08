@@ -122,7 +122,7 @@ function useLinkRects(o: Options): LinkState[] {
     >()
   );
 
-  const send = (slot: FrameSlot, force: boolean) => {
+  const send = (slot: FrameSlot, force: boolean): void => {
     const queries = queriesRef.current(slot.frameId);
     const text = JSON.stringify(queries);
     const last = posted.current.get(slot.frameId);

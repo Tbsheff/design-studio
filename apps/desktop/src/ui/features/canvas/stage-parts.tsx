@@ -1,6 +1,11 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { useRef } from "react";
-import type { ComponentProps, MutableRefObject, ReactNode } from "react";
+import type {
+  ComponentProps,
+  MutableRefObject,
+  ReactNode,
+  ReactElement,
+} from "react";
 
 import { tagFrame } from "../../platform/bridge.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
@@ -34,7 +39,7 @@ function StageMessage({
   covered: boolean;
   urlError: string | null;
   app: ReactNode;
-}) {
+}): ReactNode {
   const note = covered ? null : given;
 
   if (urlError) {
@@ -76,7 +81,7 @@ function PreviewSlots({
   frames: SlotFrames;
   sandbox?: string;
   viewport: { width: number; height: number };
-}) {
+}): ReactElement[] {
   return frames.slots.map((slot) => (
     <iframe
       key={slot.token}
@@ -112,7 +117,7 @@ function OtherFrames({
   register: (id: string, el: HTMLDivElement | null) => void;
   waiting: (path: string | undefined, directionId: string | null) => PageWait;
   steps: LiveStore<string | null>;
-}) {
+}): ReactElement[] {
   const step = useLive(steps);
   const entries = useRef(new Map<string, PassiveEntry>());
   const live = entries.current;
@@ -183,7 +188,7 @@ function LiveOverlay({
   resize,
   selection,
   ...rest
-}: LiveOverlayProps) {
+}: LiveOverlayProps): ReactElement {
   const box = useLive(hover);
   const early = useLive(commenting ? NO_PICK : picked);
 
@@ -202,11 +207,15 @@ function StepCover({
   ...rest
 }: Omit<ComponentProps<typeof FirstBuildCover>, "step"> & {
   steps: LiveStore<string | null>;
-}) {
+}): ReactElement {
   return <FirstBuildCover {...rest} step={useLive(steps)} />;
 }
 
-function FreeMoveSlot({ view }: { view: LiveStore<FreeMoveView | null> }) {
+function FreeMoveSlot({
+  view,
+}: {
+  view: LiveStore<FreeMoveView | null>;
+}): ReactElement {
   return <FreeMoveLayer view={useLive(view)} />;
 }
 
@@ -216,7 +225,7 @@ function CheckResults({
 }: {
   projectId: string;
   check: ReturnType<typeof useRenderCheck>;
-}) {
+}): ReactElement | null {
   if (!check.results && !check.error) {
     return null;
   }

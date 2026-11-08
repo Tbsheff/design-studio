@@ -132,7 +132,7 @@ function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
   const setView = view.set;
 
   useEffect(() => {
-    const end = (committing: boolean) => {
+    const end = (committing: boolean): void => {
       if (!session.current) {
         return;
       }
@@ -145,7 +145,7 @@ function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       live.current.holdSwap?.(false, !committing);
     };
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.key !== "Escape" || !session.current) {
         return;
       }
@@ -156,7 +156,7 @@ function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       end(false);
     };
 
-    const begin = (start: FreeMoveStart) => {
+    const begin = (start: FreeMoveStart): void => {
       const cur = live.current;
       const target = cur.selection.length === 1 ? cur.selection[0] : undefined;
 
@@ -200,7 +200,7 @@ function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       });
     };
 
-    const update = (drag: FreeMoveDrag) => {
+    const update = (drag: FreeMoveDrag): void => {
       const s = session.current;
 
       if (!s) {
@@ -220,7 +220,7 @@ function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       setView(placed.view);
     };
 
-    const drop = (drag: FreeMoveDrag) => {
+    const drop = (drag: FreeMoveDrag): void => {
       const s = session.current;
 
       if (!s) {
@@ -293,7 +293,7 @@ function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
     const saveStyle = async (
       target: SelectionContext,
       style: Record<string, string>
-    ) => {
+    ): Promise<void> => {
       const cur = live.current;
       const req = buildEditRequest(target, style);
 
@@ -345,7 +345,7 @@ function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       }
     });
 
-    return () => {
+    return (): void => {
       stop();
       end(false);
     };

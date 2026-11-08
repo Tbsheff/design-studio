@@ -1,9 +1,15 @@
+import type { ReactElement } from "react";
+
 import { formatMeasure } from "../../../shared/measure.js";
 import { SnapGuides } from "./artboard-overlay.js";
 import { gapStyle } from "./canvas-overlays.js";
 import type { FreeMoveView } from "./use-free-move.js";
 
-function FreeMoveLayer({ view }: { view: FreeMoveView | null }) {
+function FreeMoveLayer({
+  view,
+}: {
+  view: FreeMoveView | null;
+}): ReactElement | null {
   if (!view) {
     return null;
   }

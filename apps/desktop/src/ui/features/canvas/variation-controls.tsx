@@ -1,7 +1,7 @@
 import type { RunStatus, SelectionContext } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
@@ -33,7 +33,7 @@ interface FrameVariation {
   onMix: (toDirectionId: string, element: SelectionContext) => Promise<void>;
 }
 
-const stop = (e: ReactPointerEvent) => e.stopPropagation();
+const stop = (e: ReactPointerEvent): void => e.stopPropagation();
 
 function UseInMenu({
   siblings,
@@ -43,7 +43,7 @@ function UseInMenu({
   siblings: Sibling[];
   busy: boolean;
   onPick: (id: string) => void;
-}) {
+}): ReactElement {
   const menu = useMenu();
   useEffect(() => {
     if (menu.open) {
@@ -121,13 +121,13 @@ function VariationControls({
   active: boolean;
   element: SelectionContext | null;
   onMixed: () => void;
-}) {
+}): ReactElement {
   const [mixing, setMixing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [keeping, setKeeping] = useState(false);
   const { status } = variation;
 
-  const keep = async () => {
+  const keep = async (): Promise<void> => {
     if (variation.keepBlocked || keeping) {
       return;
     }
@@ -146,7 +146,7 @@ function VariationControls({
     }
   };
 
-  const mix = async (to: string) => {
+  const mix = async (to: string): Promise<void> => {
     if (!element) {
       return;
     }

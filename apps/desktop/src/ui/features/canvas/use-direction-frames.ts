@@ -130,7 +130,7 @@ function useDirectionFrames(o: Options) {
 
     const gated = !isCurrent || o.live;
 
-    const build = (change: FilesChange | null) => {
+    const build = (change: FilesChange | null): string | null => {
       const page = base
         ? frameStateUrl(
             passiveSrc(

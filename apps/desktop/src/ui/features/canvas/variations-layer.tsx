@@ -6,6 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import type { ElementScope } from "@design-studio/contracts/element-variants";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useState, useSyncExternalStore } from "react";
 
 import { errorText } from "../../api.js";
@@ -89,7 +90,7 @@ function VariationBar({
   direction,
   group,
   runs,
-}: TopProps & { group: Direction[] }) {
+}: TopProps & { group: Direction[] }): ReactElement | null {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const first = group[0]?.variation;
 
@@ -117,7 +118,7 @@ function VariationBar({
     group.length
   );
 
-  const showAll = () => {
+  const showAll = (): void => {
     state.keepNotice(null);
     showVariationFrames(
       project.id,
@@ -127,7 +128,7 @@ function VariationBar({
     );
   };
 
-  const cancelAll = async () => {
+  const cancelAll = async (): Promise<void> => {
     setCancelError(null);
 
     try {
@@ -201,7 +202,7 @@ function VariationBar({
   );
 }
 
-function VariationsTop(props: TopProps) {
+function VariationsTop(props: TopProps): ReactElement {
   const { state, project, direction } = props;
   const group = useShownGroup(project, state, direction);
 

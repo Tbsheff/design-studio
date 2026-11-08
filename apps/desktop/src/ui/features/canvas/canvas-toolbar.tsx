@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { runCommand, TabOrderToggle } from "../../canvas-toolbar-slots.js";
 import { PRESETS } from "../../domain/canvas-presets.js";
@@ -28,7 +29,7 @@ function ThemeSwitch({
 }: {
   dark: boolean;
   onToggle: () => void;
-}) {
+}): ReactElement {
   return (
     <button
       type="button"
@@ -43,7 +44,13 @@ function ThemeSwitch({
   );
 }
 
-function LofiSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+function LofiSwitch({
+  on,
+  onToggle,
+}: {
+  on: boolean;
+  onToggle: () => void;
+}): ReactElement {
   return (
     <button
       type="button"
@@ -62,7 +69,13 @@ function LofiSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
-function LinksSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+function LinksSwitch({
+  on,
+  onToggle,
+}: {
+  on: boolean;
+  onToggle: () => void;
+}): ReactElement {
   return (
     <button
       type="button"
@@ -77,7 +90,13 @@ function LinksSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
-function RulersSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+function RulersSwitch({
+  on,
+  onToggle,
+}: {
+  on: boolean;
+  onToggle: () => void;
+}): ReactElement {
   return (
     <button
       type="button"
@@ -107,7 +126,7 @@ function RulersSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
-export function VectorToolButtons() {
+export function VectorToolButtons(): ReactElement {
   const { tool, available } = useVectorTool();
 
   return (
@@ -148,7 +167,7 @@ export function VectorToolButtons() {
   );
 }
 
-function InsertIconButton() {
+function InsertIconButton(): ReactElement {
   return (
     <button
       type="button"
@@ -178,7 +197,7 @@ function InsertIconButton() {
   );
 }
 
-function FindPhotoButton() {
+function FindPhotoButton(): ReactElement {
   return (
     <button
       type="button"
@@ -193,7 +212,7 @@ function FindPhotoButton() {
   );
 }
 
-export function CanvasViewRow(props: Props) {
+export function CanvasViewRow(props: Props): ReactElement {
   return (
     <div
       className="toolbar canvas-viewrow"

@@ -3,6 +3,7 @@ import type {
   SelectionContext,
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { formatMeasure } from "../../../shared/measure.js";
@@ -21,7 +22,7 @@ function PresentLayer({
   sandbox?: string;
   fullscreen: boolean;
   onClose: () => void;
-}) {
+}): ReactElement {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = root.current;
@@ -30,7 +31,7 @@ function PresentLayer({
       void el.requestFullscreen().catch(() => null);
     }
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.key !== "Escape") {
         return;
       }
@@ -40,7 +41,7 @@ function PresentLayer({
       onClose();
     };
 
-    const onFullscreen = () => {
+    const onFullscreen = (): void => {
       if (fullscreen && !document.fullscreenElement) {
         onClose();
       }
@@ -50,7 +51,7 @@ function PresentLayer({
     document.addEventListener("fullscreenchange", onFullscreen);
     root.current?.querySelector<HTMLButtonElement>(".present-close")?.focus();
 
-    return () => {
+    return (): void => {
       window.removeEventListener("keydown", onKey, true);
       document.removeEventListener("fullscreenchange", onFullscreen);
 
@@ -95,11 +96,11 @@ function TweakPrompt({
   scope: string | null;
   onSend: (text: string) => void;
   onClose: () => void;
-}) {
+}): ReactElement {
   const [text, setText] = useState("");
   const root = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       const target = event.target as Element;
 
       if (
@@ -112,10 +113,10 @@ function TweakPrompt({
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
 
-  const send = () => {
+  const send = (): void => {
     const prompt = text.trim();
 
     if (!prompt) {
@@ -172,7 +173,11 @@ function gapStyle(b: SpacingBadge) {
     : { height: b.to - b.from, left: b.at, top: b.from };
 }
 
-function FrameSnapLayer({ origin }: { origin: { x: number; y: number } }) {
+function FrameSnapLayer({
+  origin,
+}: {
+  origin: { x: number; y: number };
+}): ReactElement | null {
   const view = useSyncExternalStore(
     frameSnapStore.subscribe,
     frameSnapStore.get
@@ -220,7 +225,7 @@ function MarqueeLayer({
   listen,
 }: {
   listen: (handler: (message: BridgeToParent) => void) => () => void;
-}) {
+}): ReactElement | null {
   const [rect, setRect] = useState<SelectionContext["rect"] | null>(null);
   useEffect(
     () =>
@@ -239,10 +244,10 @@ function MarqueeLayer({
       return;
     }
 
-    const clear = () => setRect(null);
+    const clear = (): void => setRect(null);
     window.addEventListener("pointerup", clear);
 
-    return () => window.removeEventListener("pointerup", clear);
+    return (): void => window.removeEventListener("pointerup", clear);
   }, [shown]);
 
   if (!rect) {

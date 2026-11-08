@@ -13,11 +13,11 @@ function useSelectKey(
   setSelectMode: (update: (m: boolean) => boolean) => void,
   onEscape: () => void,
   clearSelection: () => boolean
-) {
+): void {
   const latest = useRef(clearSelection);
   latest.current = clearSelection;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) {
         return;
       }
@@ -42,7 +42,7 @@ function useSelectKey(
 
     window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => window.removeEventListener("keydown", onKey);
   }, []);
 }
 
@@ -72,11 +72,11 @@ function useFirstSelectKeys(
     selectFirst: () => void;
     startPicking: () => void;
   }
-) {
+): void {
   const latest = useRef(o);
   latest.current = o;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       const cur = latest.current;
 
       if (
@@ -100,7 +100,7 @@ function useFirstSelectKeys(
 
     window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => window.removeEventListener("keydown", onKey);
   }, [stage]);
 }
 
@@ -130,7 +130,7 @@ function isAddLayoutKey(e: KeyboardEvent): boolean {
 function forwardLayoutKeyWhenShown(): void {
   const until = performance.now() + LAYOUT_WAIT_MS;
 
-  const wait = () => {
+  const wait = (): void => {
     if (layoutSectionShown()) {
       window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
     } else if (performance.now() < until) {
@@ -145,7 +145,7 @@ function useLayoutKeyFallback(o: {
   on: boolean;
   hasSelection: boolean;
   openEdit: (() => void | Promise<boolean>) | null;
-}) {
+}): void {
   const latest = useRef(o);
   latest.current = o;
   useEffect(() => {
@@ -165,7 +165,7 @@ function useLayoutKeyFallback(o: {
       return true;
     };
 
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       if (
         isAddLayoutKey(e) &&
         !isTypingTarget(e.target) &&
@@ -176,11 +176,11 @@ function useLayoutKeyFallback(o: {
       }
     };
 
-    const onForwarded = () => void run();
+    const onForwarded = (): undefined => void run();
     window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
 
-    return () => {
+    return (): void => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
     };
@@ -209,7 +209,7 @@ function editOpener(
   return shell && shell.pane !== "design" ? () => shell.onPane("design") : null;
 }
 
-function useStageKeys(o: StageKeys) {
+function useStageKeys(o: StageKeys): void {
   const selection = useRef(o.selection);
   selection.current = o.selection;
   const { setSelection } = o;
@@ -237,7 +237,7 @@ function useStageKeys(o: StageKeys) {
   });
 }
 
-function useFrameChange(key: string, onChange: (() => void) | undefined) {
+function useFrameChange(key: string, onChange: (() => void) | undefined): void {
   const last = useRef(key);
   const latest = useRef(onChange);
   latest.current = onChange;

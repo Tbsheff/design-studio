@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { uiStore } from "../../platform/storage.js";
@@ -11,13 +12,13 @@ import { CanvasTopBar } from "./canvas-top-bar.js";
 import type { CanvasTool, PresentMode } from "./top-bar-menu.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 
-const NOOP = () => null;
+const NOOP = (): null => null;
 
-const toggleRulers = () => uiStore.set((st) => ({ rulers: !st.rulers }));
+const toggleRulers = (): void => uiStore.set((st) => ({ rulers: !st.rulers }));
 
-function useRulersKey() {
+function useRulersKey(): void {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       if (
         e.code !== "KeyR" ||
         !e.shiftKey ||
@@ -40,7 +41,7 @@ function useRulersKey() {
 
     window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => window.removeEventListener("keydown", onKey);
   }, []);
 }
 
@@ -60,7 +61,7 @@ function barShell(shell: CanvasShell | undefined) {
   return shell;
 }
 
-function CanvasChrome(p: ChromeProps) {
+function CanvasChrome(p: ChromeProps): ReactElement {
   const [present, setPresent] = useState<Exclude<
     PresentMode,
     "new-window" | "play"
@@ -76,7 +77,7 @@ function CanvasChrome(p: ChromeProps) {
   const { shell } = p;
   const viewOpen = p.ui.viewRowOpen || p.view.source.kind === "version";
 
-  const onTool = (next: Exclude<CanvasTool, null>) => {
+  const onTool = (next: Exclude<CanvasTool, null>): void => {
     if (next === "prototype") {
       return p.proto.set(!p.proto.on);
     }
@@ -106,7 +107,7 @@ function CanvasChrome(p: ChromeProps) {
     p.setSelectMode((m) => editing || !m);
   };
 
-  const onPresent = (mode: PresentMode) => {
+  const onPresent = (mode: PresentMode): void => {
     if (mode === "play") {
       return p.proto.play();
     }

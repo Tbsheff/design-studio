@@ -46,7 +46,7 @@ function createSnapStore() {
     subscribe: (fn: () => void) => {
       subs.add(fn);
 
-      return () => subs.delete(fn);
+      return (): boolean => subs.delete(fn);
     },
   };
 }
@@ -64,7 +64,7 @@ function resizedSize(
   dy: number,
   keepRatio: boolean
 ): { width: number; height: number } {
-  const clamp = (v: number) =>
+  const clamp = (v: number): number =>
     Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
 
   let width = edge === "bottom" ? start.width : start.width + dx;
@@ -118,7 +118,7 @@ function snapSize(
     spacing: [],
   });
 
-  const clamp = (v: number) =>
+  const clamp = (v: number): number =>
     Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
 
   return { height: clamp(res.rect.height), width: clamp(res.rect.width) };
@@ -128,7 +128,7 @@ function paintSize(
   host: HTMLElement,
   size: { width: number; height: number } | null,
   restore: { width: string; height: string }
-) {
+): void {
   host.style.width = size ? `${size.width}px` : restore.width;
   host.style.height = size ? `${size.height}px` : restore.height;
 
@@ -154,10 +154,10 @@ function useFrameResize(
   pz: PanZoom,
   artboardRef: RefObject<HTMLDivElement | null>,
   passive: RefObject<Record<string, HTMLDivElement | null>>
-) {
+): (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => void {
   const dragging = useRef(false);
 
-  return (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => {
+  return (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge): void => {
     if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld || dragging.current) {
       return;
     }
@@ -188,7 +188,7 @@ function useFrameResize(
     const restore = { height: host.style.height, width: host.style.width };
     document.body.classList.add(`frame-resize-${edge}`);
 
-    const place = () => {
+    const place = (): void => {
       size = snapSize(
         frame,
         edge,
@@ -208,14 +208,14 @@ function useFrameResize(
 
     place();
 
-    const move = (ev: PointerEvent) => {
+    const move = (ev: PointerEvent): void => {
       last = { x: ev.clientX, y: ev.clientY };
       shift = ev.shiftKey;
       off = snapOff(ev);
       place();
     };
 
-    const key = (ev: KeyboardEvent) => {
+    const key = (ev: KeyboardEvent): void => {
       if (ev.key !== "Shift") {
         return;
       }
@@ -223,7 +223,7 @@ function useFrameResize(
       place();
     };
 
-    const end = () => {
+    const end = (): void => {
       target.removeEventListener("pointermove", move as EventListener);
       target.removeEventListener("pointerup", end);
       target.removeEventListener("pointercancel", end);

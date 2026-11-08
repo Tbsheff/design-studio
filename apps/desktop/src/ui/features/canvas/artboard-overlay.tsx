@@ -1,5 +1,5 @@
 import type { SelectionContext } from "@design-studio/contracts";
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { formatMeasure, measureBetween } from "../../../shared/measure.js";
 import type { MeasureLine } from "../../../shared/measure.js";
@@ -31,7 +31,7 @@ function ResizeHandles({
   control: ResizeControl;
   rect: SelectionContext["rect"];
   zoom: number;
-}) {
+}): ReactElement {
   const { live } = control;
   const compact = Math.min(rect.width, rect.height) * zoom < COMPACT_PX;
 
@@ -75,7 +75,13 @@ function fullStyle(g: SnapGuide) {
     : { left: 0, right: 0, top: g.at };
 }
 
-function SnapGuides({ guides, full }: { guides: SnapGuide[]; full?: boolean }) {
+function SnapGuides({
+  guides,
+  full,
+}: {
+  guides: SnapGuide[];
+  full?: boolean;
+}): ReactElement | null {
   if (guides.length === 0) {
     return null;
   }
@@ -108,7 +114,7 @@ function Measurements({
 }: {
   from: SelectionContext["rect"];
   to: SelectionContext["rect"];
-}) {
+}): ReactElement {
   const lines = measureBetween(from, to);
 
   return (
@@ -151,7 +157,7 @@ function ArtboardOverlay({
   zoom,
   resize,
   spacing,
-}: Props) {
+}: Props): ReactElement {
   const anchor = unionBox(selection.map((s) => s.rect));
   const measuring = hover?.altKey && anchor && !hover.fromTree;
 

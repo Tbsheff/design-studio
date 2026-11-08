@@ -1,7 +1,9 @@
+import type { ReactElement } from "react";
+
 import { pageFileOf } from "../chat/use-first-build.js";
 import type { PageWait } from "../chat/use-first-build.js";
 
-function SkeletonPage() {
+function SkeletonPage(): ReactElement {
   return (
     <div className="frame-skeleton-page" aria-hidden="true">
       <div className="sk-nav">
@@ -33,7 +35,7 @@ function FrameSkeleton({
   step: string | null;
   page?: string;
   missing?: string;
-}) {
+}): ReactElement {
   if (missing) {
     return (
       <div
@@ -77,7 +79,7 @@ function FirstBuildCover({
   wait: PageWait;
   step: string | null | undefined;
   path: string | undefined;
-}) {
+}): ReactElement | null {
   if (wait === "missing") {
     return <FrameSkeleton step={null} missing={pageFileOf(path)} />;
   }

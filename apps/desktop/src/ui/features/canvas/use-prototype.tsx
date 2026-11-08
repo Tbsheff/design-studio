@@ -119,16 +119,16 @@ function usePrototype(o: Options) {
       .catch((error: unknown) => o.notify(errorMessage(error)));
   });
 
-  const frameTitle = (frame: CanvasFrame) =>
+  const frameTitle = (frame: CanvasFrame): string =>
     frame.label ?? frame.path ?? frameName(frame);
 
-  const titleById = (id: string) => {
+  const titleById = (id: string): string => {
     const frame = o.frames.find((item) => item.id === id);
 
     return frame ? frameTitle(frame) : "missing frame";
   };
 
-  const targetName = (link: PrototypeLink) => {
+  const targetName = (link: PrototypeLink): string => {
     if (isBackTarget(link.to)) {
       return "Back";
     }
@@ -138,7 +138,7 @@ function usePrototype(o: Options) {
     return to ? titleById(to) : ACTION_LABELS[linkAction(link)];
   };
 
-  const linkTitle = (link: PrototypeLink) =>
+  const linkTitle = (link: PrototypeLink): string =>
     `${sourceName(link.from)} in ${titleById(link.from.frame)} → ${targetName(link)}`;
 
   const urls = useRef(new Map<string, Promise<string>>());
@@ -176,7 +176,7 @@ function usePrototype(o: Options) {
       .catch(() => null);
   };
 
-  const play = () => setPlaying(true);
+  const play = (): void => setPlaying(true);
   const single = o.selection.length === 1 ? o.selection[0] : undefined;
   const selected = on ? linkOfSelection(states, single, o.active.id) : null;
 

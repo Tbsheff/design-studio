@@ -363,7 +363,7 @@ function useResizeHandles(o: Options): ResizeHandles {
       setSize({ base, guides: [], rect: sel.rect, size: base });
       requestNeighbors(d, live.current);
 
-      const onMove = (ev: PointerEvent) => {
+      const onMove = (ev: PointerEvent): void => {
         if (ev.pointerId !== d.pointerId || drag.current !== d) {
           return;
         }
@@ -380,14 +380,14 @@ function useResizeHandles(o: Options): ResizeHandles {
         preview(d, snapped.size, ev.shiftKey);
       };
 
-      const detach = () => {
+      const detach = (): void => {
         handle.removeEventListener("pointermove", onMove);
         handle.removeEventListener("pointerup", onUp);
         handle.removeEventListener("pointercancel", onCancel);
         window.removeEventListener("keydown", onKey, true);
       };
 
-      const onUp = (ev: PointerEvent) => {
+      const onUp = (ev: PointerEvent): void => {
         if (ev.pointerId !== d.pointerId) {
           return;
         }
@@ -404,12 +404,12 @@ function useResizeHandles(o: Options): ResizeHandles {
         }
       };
 
-      const onCancel = () => {
+      const onCancel = (): void => {
         detach();
         cancel();
       };
 
-      const onKey = (ev: KeyboardEvent) => {
+      const onKey = (ev: KeyboardEvent): void => {
         if (ev.key !== "Escape") {
           return;
         }
@@ -426,7 +426,7 @@ function useResizeHandles(o: Options): ResizeHandles {
     [target, preview, end, cancel, commit]
   );
 
-  useEffect(() => () => cancel(), [cancel]);
+  useEffect(() => (): void => cancel(), [cancel]);
 
   return { onHandleDown, sizes, target };
 }

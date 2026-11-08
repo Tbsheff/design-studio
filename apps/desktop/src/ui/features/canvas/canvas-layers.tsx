@@ -1,6 +1,7 @@
 import { selectMoveOf } from "@design-studio/contracts";
 import type { SelectMove, SelectionContext } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import type { LiveStore } from "../../platform/live-store.js";
@@ -26,7 +27,7 @@ interface TreeFrames {
 }
 
 function useHoveredNode(hover: LiveStore<HoverBox | null>): number | null {
-  const read = () => hover.get()?.node ?? null;
+  const read = (): number | null => hover.get()?.node ?? null;
 
   return useSyncExternalStore(hover.subscribe, read, read);
 }
@@ -45,7 +46,7 @@ function CanvasLayersPanel({
   selection: SelectionContext[];
   onSelectMode: () => void;
   onClose?: () => void;
-}) {
+}): ReactElement {
   const hasSelection = selection.length > 0;
   const hoveredNode = useHoveredNode(frames.hover);
 
@@ -91,7 +92,7 @@ function EditNotice({
   edits,
 }: {
   edits: Pick<LayerEdits, "notice" | "clearNotice">;
-}) {
+}): ReactElement | null {
   if (!edits.notice) {
     return null;
   }
@@ -123,7 +124,7 @@ function useLayersWatch(
     watch(open);
   }, [watch, open, frontToken]);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       if (
         !e.altKey ||
         e.metaKey ||
@@ -141,7 +142,7 @@ function useLayersWatch(
 
     window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => window.removeEventListener("keydown", onKey);
   }, []);
 }
 
@@ -153,7 +154,7 @@ function useSelectMoveKeys(
   const live = useRef({ selectMode, selectRelative, selection });
   live.current = { selectMode, selectRelative, selection };
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       const cur = live.current;
       const last = cur.selection.at(-1);
 
@@ -173,7 +174,7 @@ function useSelectMoveKeys(
 
     window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return (): void => window.removeEventListener("keydown", onKey);
   }, []);
 }
 

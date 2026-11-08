@@ -1,6 +1,7 @@
 import { VARIATION_BRIEF_MAX, VARIATION_MIN } from "@design-studio/contracts";
 import type { Project, VariationBrief } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { copy } from "./copy.js";
@@ -17,7 +18,7 @@ interface Props {
   onDismiss: () => void;
 }
 
-function BriefSkeleton({ count }: { count: number }) {
+function BriefSkeleton({ count }: { count: number }): ReactElement {
   return (
     <ol className="variation-briefs" aria-busy="true">
       {Array.from({ length: count }, (_, index) => (
@@ -43,7 +44,7 @@ function BriefRows({
   busy: boolean;
   onEdit: Props["onEdit"];
   onRemove: Props["onRemove"];
-}) {
+}): ReactElement {
   const canRemove = briefs.length > VARIATION_MIN;
 
   return (
@@ -95,7 +96,7 @@ function BudgetLine({
   project: Project;
   draft: BriefDraft;
   count: number;
-}) {
+}): ReactElement {
   const budget = budgetFor(project, draft.level, count);
   const briefCost = draft.result?.costUsd ?? 0;
   const limited = budget.perRun !== null && budget.total !== null;
@@ -133,7 +134,7 @@ function CardBody({
   draft,
   onEdit,
   onRemove,
-}: Pick<Props, "draft" | "onEdit" | "onRemove">) {
+}: Pick<Props, "draft" | "onEdit" | "onRemove">): ReactElement | null {
   if (draft.briefs) {
     return (
       <BriefRows
@@ -169,7 +170,7 @@ function VariationBriefCard({
   onStart,
   onSkip,
   onDismiss,
-}: Props) {
+}: Props): ReactElement {
   const count = draft.briefs?.length ?? draft.count;
   const busy = draft.starting;
 

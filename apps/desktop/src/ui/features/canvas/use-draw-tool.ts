@@ -66,7 +66,7 @@ function useDrawTool(available: boolean, onActivate: () => void): DrawTool {
   }, [available, setOn]);
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       const mod = event.metaKey || event.ctrlKey;
 
       if (
@@ -103,7 +103,7 @@ function useDrawTool(available: boolean, onActivate: () => void): DrawTool {
 
     window.addEventListener("keydown", onKey, true);
 
-    return () => window.removeEventListener("keydown", onKey, true);
+    return (): void => window.removeEventListener("keydown", onKey, true);
   }, [setOn, toggle, undo]);
 
   useDesktopCommand((command) => {

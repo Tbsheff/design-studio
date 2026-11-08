@@ -1,5 +1,6 @@
 import type { FrameStatesView } from "@design-studio/contracts/frame-state";
 import { Icon, usePopover } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { copy } from "./copy.js";
@@ -65,10 +66,10 @@ function MenuBody({
   chosen: string;
   menu: ReturnType<typeof usePanelMenu>;
   onError: (message: string | null) => void;
-}) {
+}): ReactElement {
   const slot = useFrameStateSlot();
 
-  const run = (task: Promise<unknown>) => {
+  const run = (task: Promise<unknown>): void => {
     onError(null);
     task
       .then(() => menu.close(true))
@@ -144,7 +145,7 @@ function FrameStateMenu({
   frameId: string;
   frameName: string;
   directionId: string | null;
-}) {
+}): ReactElement | null {
   const states = useCurrentFrameStates();
   const menu = usePanelMenu();
   const [error, setError] = useState<string | null>(null);

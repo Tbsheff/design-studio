@@ -1,7 +1,7 @@
 import type { CommentDrawing, DrawStroke } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, PointerEvent } from "react";
+import type { KeyboardEvent, PointerEvent, ReactElement } from "react";
 
 import { strokesBox } from "../../../shared/comments.js";
 import { CommentComposer } from "../comments/comment-composer.js";
@@ -33,7 +33,7 @@ interface Frame {
 const MAX_BACKING_SIDE = 8192;
 const MAX_BACKING_AREA = 24_000_000;
 
-function PenIcon({ size = 16 }: { size?: number }) {
+function PenIcon({ size = 16 }: { size?: number }): ReactElement {
   return (
     <svg
       className="icon"
@@ -71,7 +71,13 @@ interface SurfaceProps {
   tools: CommentTools;
 }
 
-function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
+function DrawSurface({
+  draw,
+  control,
+  zoom,
+  frame,
+  tools,
+}: SurfaceProps): ReactElement {
   const initial = useProfileInitial();
   const canvas = useRef<HTMLCanvasElement>(null);
 
@@ -84,7 +90,7 @@ function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
   const [drawing, setDrawing] = useState(false);
   const scale = backingScale(frame, zoom);
 
-  const paint = () => {
+  const paint = (): void => {
     const ctx = canvas.current?.getContext("2d");
 
     if (!ctx) {
@@ -116,7 +122,7 @@ function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
     };
   };
 
-  const onDown = (event: PointerEvent<HTMLCanvasElement>) => {
+  const onDown = (event: PointerEvent<HTMLCanvasElement>): void => {
     if (event.button !== 0 || active.current || draw.pointsLeft < 2) {
       return;
     }
@@ -144,7 +150,7 @@ function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
     paint();
   };
 
-  const onMove = (event: PointerEvent<HTMLCanvasElement>) => {
+  const onMove = (event: PointerEvent<HTMLCanvasElement>): void => {
     const { current } = active;
 
     if (!current || current.pointer !== event.pointerId) {
@@ -171,7 +177,7 @@ function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
     }
   };
 
-  const onUp = (event: PointerEvent<HTMLCanvasElement>) => {
+  const onUp = (event: PointerEvent<HTMLCanvasElement>): void => {
     const { current } = active;
 
     if (!current || current.pointer !== event.pointerId) {
@@ -277,7 +283,7 @@ function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
   );
 }
 
-function onSwatchKey(event: KeyboardEvent<HTMLDivElement>) {
+function onSwatchKey(event: KeyboardEvent<HTMLDivElement>): void {
   const step =
     event.key === "ArrowRight" || event.key === "ArrowDown"
       ? 1
@@ -307,7 +313,7 @@ function onSwatchKey(event: KeyboardEvent<HTMLDivElement>) {
   next?.click();
 }
 
-function DrawBar({ draw }: { draw: DrawTool }) {
+function DrawBar({ draw }: { draw: DrawTool }): ReactElement | null {
   if (!draw.on) {
     return null;
   }
@@ -381,7 +387,11 @@ function DrawBar({ draw }: { draw: DrawTool }) {
   );
 }
 
-function DrawingStrokes({ drawing }: { drawing: CommentDrawing }) {
+function DrawingStrokes({
+  drawing,
+}: {
+  drawing: CommentDrawing;
+}): ReactElement {
   const { width, height } = drawing.frame;
 
   return (

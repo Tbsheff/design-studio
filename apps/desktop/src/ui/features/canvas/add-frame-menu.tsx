@@ -1,6 +1,6 @@
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { FRAME_PRESETS } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
@@ -11,7 +11,7 @@ function AddFrameMenu({
 }: {
   disabled: boolean;
   onAdd: (size: { width: number; height: number }) => void;
-}) {
+}): ReactElement {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
@@ -23,7 +23,7 @@ function AddFrameMenu({
       ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
       ?.focus();
 
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       const target = event.target as Node;
 
       if (
@@ -36,10 +36,10 @@ function AddFrameMenu({
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  const close = (refocus: boolean) => {
+  const close = (refocus: boolean): void => {
     setOpen(false);
 
     if (refocus) {
@@ -47,7 +47,7 @@ function AddFrameMenu({
     }
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const items = [
       ...(menu.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitem"]'
@@ -136,14 +136,14 @@ function FrameUndoBar({
 }: {
   onUndo: (() => void) | null;
   onDismiss: () => void;
-}) {
+}): ReactElement | null {
   useEffect(() => {
     if (!onUndo) {
       return;
     }
     const timer = window.setTimeout(onDismiss, 8000);
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [onUndo, onDismiss]);
 
   if (!onUndo) {

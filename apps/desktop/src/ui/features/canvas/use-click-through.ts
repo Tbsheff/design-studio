@@ -64,7 +64,7 @@ function useClickThrough(port: Port, enabled: boolean): ClickThrough {
   );
 
   useEffect(
-    () => () => timers.current.forEach((t) => window.clearTimeout(t)),
+    () => (): void => timers.current.forEach((t) => window.clearTimeout(t)),
     []
   );
 

@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactElement } from "react";
 
 import type { InlinePromptView } from "../chat/use-inline-prompt.js";
 import { CommentLayer } from "../comments/comment-layer.js";
@@ -25,7 +25,7 @@ function CanvasComments(
     control: Props["comments"];
     draw: DrawTool;
   } & Omit<CommentLayerProps, "control" | "commentMode" | "onExitCommentMode">
-) {
+): ReactElement | null {
   const { comment, control, draw, ...rest } = p;
 
   if (!comment.available || !control) {
@@ -58,7 +58,7 @@ function useCanvasVectorTools(
   protoOn: boolean,
   draw: DrawTool,
   comment: { on: boolean; setOn: (on: boolean) => void }
-) {
+): void {
   const { tool } = useVectorTool();
   useVectorToolKeys(editsEnabled && !protoOn);
   useVectorToolGuards(tool, draw.on || comment.on, () => {
@@ -71,7 +71,7 @@ function VectorSlot(
   p: Omit<ComponentProps<typeof VectorLayer>, "directionId"> & {
     directionId: string | null;
   }
-) {
+): ReactElement | null {
   const { available } = useVectorTool();
   const { directionId } = p;
 
@@ -94,7 +94,7 @@ function InlinePromptSlot({
   view: InlinePromptView | null;
   zoom: number;
   frame: { width: number; height: number };
-}) {
+}): ReactElement | null {
   if (!view) {
     return null;
   }

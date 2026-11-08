@@ -12,8 +12,16 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   secondary: "btn",
 };
 
+const toSizeClass = (variant: ButtonVariant, size: ButtonSize): string => {
+  if (variant === "icon") {
+    return pick(size === "md", " md", "");
+  }
+
+  return pick(size === "sm", " small", "");
+};
+
 const toButtonClass = (variant: ButtonVariant, size: ButtonSize): string =>
-  `${VARIANT_CLASS[variant]}${pick(size === "sm" && variant !== "icon", " small", "")}`;
+  `${VARIANT_CLASS[variant]}${toSizeClass(variant, size)}`;
 
 const toButtonTip = (
   disabledReason: string | null,

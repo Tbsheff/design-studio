@@ -263,7 +263,7 @@
 }
 
 .lib-actions .btn {
-  height: 30px;
+  --btn-h: var(--control-h);
   border-radius: var(--r-control);
 }
 

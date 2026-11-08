@@ -53,6 +53,8 @@ export const pagePath = z
     'Page path in the project, for example "about.html". Leave out for the entry page.'
   );
 
+export const frameRef = z.string().trim().min(1).max(60);
+
 export const packId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 const styleValue = z.string().max(200).nullable();
 

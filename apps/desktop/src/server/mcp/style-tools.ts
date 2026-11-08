@@ -11,7 +11,7 @@ import {
   type StyleReplaceResult,
 } from "@design-studio/contracts/style-search";
 
-import { findFrame, frameRef } from "../canvas/index.js";
+import { findFrame } from "../canvas/index.js";
 import {
   scanPageStyles,
   styleReport,
@@ -29,6 +29,7 @@ import {
 import {
   defineTool,
   directionId,
+  frameRef,
   ok,
   pageUrl,
   projectId,

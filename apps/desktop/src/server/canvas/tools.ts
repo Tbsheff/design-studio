@@ -14,10 +14,7 @@ import type {
   CanvasFileFrame,
 } from "@design-studio/contracts/canvas-file";
 
-import { z } from "../platform/zod-bridge/index.js";
 import type { CanvasService } from "./service.js";
-
-export const frameRef = z.string().trim().min(1).max(60);
 
 export const CANVAS_VIEWPORTS = {
   desktop: { height: 900, width: 1440 },

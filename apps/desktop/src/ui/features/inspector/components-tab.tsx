@@ -15,7 +15,15 @@ const ComponentsTab = ({
 
   return (
     <div className="edit-components">
-      <ComponentsPanel {...components} active />
+      <ComponentsPanel
+        projectId={components.projectId}
+        directionId={components.directionId}
+        list={components.list}
+        active
+        onMention={components.onMention}
+        kind={components.kind}
+        selection={components.selection}
+      />
     </div>
   );
 };

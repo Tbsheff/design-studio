@@ -21,7 +21,7 @@ import {
 } from "../design-system/token-frames.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { AGENT_BUSY_MESSAGE } from "../versions-layers-tokens/use-token-draft.js";
-import { isApiConflict } from "./api-error.js";
+import { isApiConflict } from "./use-api-error.js";
 
 type TweakMap = Record<string, TweakValue>;
 

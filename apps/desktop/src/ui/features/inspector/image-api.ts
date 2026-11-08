@@ -4,7 +4,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { IMAGE_BYTES_MAX, imageKindOf } from "../../../shared/image.js";
 import type { SetImageRequest } from "../../../shared/image.js";
 import { call } from "../../platform/http.js";
-import { isApiError } from "./api-error.js";
+import { isApiError } from "./use-api-error.js";
 
 const imageTargetOf = (
   selection: SelectionContext

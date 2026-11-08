@@ -11,7 +11,6 @@ import type { MutableRefObject } from "react";
 import type { ApiError } from "../../api.js";
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
-import { isApiConflict, isApiError } from "./api-error.js";
 import {
   changedProps,
   shiftedPart,
@@ -21,6 +20,7 @@ import {
 import type { Shift, ShiftPart, StyleValues } from "./css-values.js";
 import { editVariantStore } from "./edit-variant.js";
 import { startOptimistic } from "./optimistic-edit.js";
+import { isApiConflict, isApiError } from "./use-api-error.js";
 
 export type SaveStatus =
   | { readonly kind: "idle" }

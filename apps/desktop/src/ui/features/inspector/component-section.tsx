@@ -10,14 +10,15 @@ const InspectorPropsPanel = lazy(async () => {
 });
 
 const ComponentSection = (props: InspectorProps): ReactElement | null => {
-  const target = props.selection[0];
+  const [target] = props.selection;
 
-  if (
-    props.selection.length !== 1 ||
-    !target ||
-    !props.directionId ||
-    (!target.owners?.length && !target.usedAt)
-  ) {
+  if (props.selection.length !== 1 || !target || !props.directionId) {
+    return null;
+  }
+
+  const hasOwners = Boolean(target.owners?.length);
+
+  if (!hasOwners && !target.usedAt) {
     return null;
   }
 

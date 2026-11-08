@@ -7,7 +7,6 @@ import type { MutableRefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
-import { isApiConflict, isApiError } from "./api-error.js";
 import { changedProps, valuesFromStyles } from "./css-values.js";
 import type { StyleValues } from "./css-values.js";
 import {
@@ -20,6 +19,7 @@ import {
 } from "./mixed-values.js";
 import type { Shift, ShiftPart, Shifts } from "./mixed-values.js";
 import { startOptimistic } from "./optimistic-edit.js";
+import { isApiConflict, isApiError } from "./use-api-error.js";
 import type {
   DirectEdit,
   DirectEditCommit,

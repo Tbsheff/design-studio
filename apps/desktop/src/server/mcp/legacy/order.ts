@@ -39,8 +39,6 @@ const LEGACY_ORDER: readonly string[] = [
   "set_props",
   "find_styles",
   "replace_style",
-  "review_frame",
-  "apply_fix",
   "insert_component",
   "list_frame_states",
   "set_frame_state",

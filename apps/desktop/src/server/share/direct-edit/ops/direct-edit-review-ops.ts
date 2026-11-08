@@ -199,6 +199,40 @@ const getReviewOf = async (
   return { review: lastReview(project.id, direction.id) };
 };
 
+const VIEWPORT_SIZES = {
+  desktop: { height: 900, width: 1440 },
+  mobile: { height: 844, width: 390 },
+  tablet: { height: 1024, width: 768 },
+} as const;
+
+const toSizedBody = (body: ReviewRunBody): ReviewRunBody => {
+  const { viewport } = body;
+
+  if (!viewport) {
+    return body;
+  }
+
+  return { ...body, ...VIEWPORT_SIZES[viewport] };
+};
+
+const toFindingIds = (body: ReviewFixBody): readonly string[] => {
+  const { findingId, findingIds } = body;
+
+  if (findingIds && findingId) {
+    throw new BadRequestError("pass findingId or findingIds");
+  }
+
+  if (findingIds) {
+    return findingIds;
+  }
+
+  if (findingId) {
+    return [findingId];
+  }
+
+  throw new BadRequestError("pass findingId or findingIds");
+};
+
 const runReviewIn = async (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
@@ -213,7 +247,7 @@ const runReviewIn = async (
     runtime.canvas,
     project,
     direction,
-    body
+    toSizedBody(body)
   );
 
   const result = await runReview(runtime.preview, {
@@ -331,7 +365,7 @@ const applyReviewFixes = async (
 
   const { chosen, skipped } = toSortedFindings(
     review,
-    body.findingIds,
+    toFindingIds(body),
     body.allowShared === true
   );
 

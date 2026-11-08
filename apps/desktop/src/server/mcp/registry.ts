@@ -75,13 +75,15 @@ const LEGACY_DESTRUCTIVE: ReadonlySet<string> = new Set([
   "restore_version",
 ]);
 
+const LEGACY_READ_ONLY: ReadonlySet<string> = new Set(["review_frame"]);
+
 const toToolDef = (action: AnyAction, toolName: string): ToolDef => ({
   annotations: {
     destructiveHint:
       action.access === "destructive" || LEGACY_DESTRUCTIVE.has(toolName),
-    idempotentHint: action.access === "read",
+    idempotentHint: action.access === "read" || LEGACY_READ_ONLY.has(toolName),
     openWorldHint: false,
-    readOnlyHint: action.access === "read",
+    readOnlyHint: action.access === "read" || LEGACY_READ_ONLY.has(toolName),
   },
   description: action.description,
   inputSchema: toLegacySchema(

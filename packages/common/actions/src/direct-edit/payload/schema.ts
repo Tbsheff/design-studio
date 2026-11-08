@@ -118,14 +118,49 @@ const RulesTestFields = {
 
 const ReviewRunFields = {
   ...ReviewFrameFields,
-  selector: Schema.optionalKey(ReviewSelectorSchema),
+  frame: Schema.optionalKey(
+    FrameTextSchema.annotate({
+      description:
+        "Frame id or @label from canvas_list. Leave out for the frame the user has live, or the first frame.",
+    })
+  ),
+  path: Schema.optionalKey(
+    PathTextSchema.annotate({
+      description:
+        'Page path in the project, for example "about.html". Leave out for the entry page.',
+    })
+  ),
+  selector: Schema.optionalKey(
+    ReviewSelectorSchema.annotate({
+      description:
+        'CSS selector of one element, for example [data-slot="card"]. Only findings inside its subtree are returned. A layer id from get_layers works too.',
+    })
+  ),
+  viewport: Schema.optionalKey(
+    Schema.Literals(["desktop", "tablet", "mobile"]).annotate({
+      description: "Render size instead of the frame size.",
+    })
+  ),
 } as const;
 
 const ReviewFixFields = {
-  allowShared: Schema.optionalKey(Schema.Boolean),
-  findingIds: Schema.Array(FindingIdSchema).check(
-    Schema.isMinLength(1),
-    Schema.isMaxLength(REVIEW_FIX_MAX)
+  allowShared: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description:
+        "Apply fixes whose finding has shared set: they edit a file outside the page's own route folder (a shared component), so the change reaches every page that uses it. Without it those fixes are skipped.",
+    })
+  ),
+  findingId: Schema.optionalKey(
+    FindingIdSchema.annotate({
+      description: "id of one finding from review_frame.",
+    })
+  ),
+  findingIds: Schema.optionalKey(
+    Schema.Array(FindingIdSchema)
+      .check(Schema.isMinLength(1), Schema.isMaxLength(REVIEW_FIX_MAX))
+      .annotate({
+        description: "Or several finding ids, applied as one version.",
+      })
   ),
 } as const;
 

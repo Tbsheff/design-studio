@@ -19,3 +19,11 @@ export {
 } from "./theme-tokens.js";
 
 export type { ThemeTokenBase, ThemeTokensWritten } from "./theme-tokens.js";
+
+export { toTokenExport } from "./token-export/index.js";
+
+export type {
+  ExportFormat,
+  TokenExportOptions,
+  TokenExportResult,
+} from "./token-export/index.js";

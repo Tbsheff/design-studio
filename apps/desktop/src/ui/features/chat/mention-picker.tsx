@@ -2,6 +2,7 @@ import type { RunMention } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, ReactElement, SetStateAction } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { copy } from "./copy.js";
@@ -64,10 +65,18 @@ const rankMentions = (
     30
   );
 
+interface UseMentionPickerResult {
+  readonly current: MentionOption | null;
+  readonly move: (step: 1 | -1) => void;
+  readonly open: boolean;
+  readonly setActive: Dispatch<SetStateAction<number>>;
+  readonly shown: MentionOption[];
+}
+
 const useMentionPicker = (
   options: readonly MentionOption[],
   query: string | null
-) => {
+): UseMentionPickerResult => {
   const [active, setActive] = useState(0);
 
   const shown = useMemo(
@@ -80,7 +89,7 @@ const useMentionPicker = (
   const current =
     shown[Math.min(active, Math.max(0, shown.length - 1))] ?? null;
 
-  const move = (step: 1 | -1) =>
+  const move = (step: 1 | -1): void =>
     setActive((index) =>
       shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
     );
@@ -102,7 +111,7 @@ const MentionList = ({
   onPick: (option: MentionOption) => void;
   onHover: (index: number) => void;
   className?: string;
-}) => {
+}): ReactElement => {
   useEffect(() => {
     if (current) {
       document
@@ -164,7 +173,7 @@ const MentionChips = ({
 }: {
   mentions: RunMention[];
   onRemove: (key: string) => void;
-}) => {
+}): ReactElement | null => {
   if (mentions.length === 0) {
     return null;
   }

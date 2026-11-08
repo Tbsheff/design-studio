@@ -1,9 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, ReactElement, SetStateAction } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { copy } from "./copy.js";
 
-const useHistorySearch = (history: readonly string[]) => {
+interface UseHistorySearchResult {
+  readonly close: () => void;
+  readonly current: string | null;
+  readonly move: (step: 1 | -1) => void;
+  readonly open: boolean;
+  readonly query: string;
+  readonly setQuery: Dispatch<SetStateAction<string>>;
+  readonly shown: string[];
+  readonly start: () => void;
+}
+
+const useHistorySearch = (
+  history: readonly string[]
+): UseHistorySearchResult => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -19,9 +33,9 @@ const useHistorySearch = (history: readonly string[]) => {
     shown[Math.min(active, Math.max(0, shown.length - 1))] ?? null;
 
   return {
-    close: () => setOpen(false),
+    close: (): void => setOpen(false),
     current,
-    move: (step: 1 | -1) =>
+    move: (step: 1 | -1): void =>
       setActive((index) =>
         shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
       ),
@@ -29,7 +43,7 @@ const useHistorySearch = (history: readonly string[]) => {
     query,
     setQuery,
     shown,
-    start: () => {
+    start: (): void => {
       setQuery("");
       setOpen(true);
     },
@@ -42,7 +56,7 @@ const HistorySearch = ({
 }: {
   search: ReturnType<typeof useHistorySearch>;
   onPick: (prompt: string) => void;
-}) => {
+}): ReactElement | null => {
   if (!search.open) {
     return null;
   }

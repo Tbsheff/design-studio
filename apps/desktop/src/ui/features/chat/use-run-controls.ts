@@ -68,7 +68,7 @@ const useRunControls = (
       }
     };
 
-    const withRun = (fn: (run: RunView) => Promise<unknown>) => {
+    const withRun = (fn: (run: RunView) => Promise<unknown>): void => {
       const run = live.current.activeRun;
 
       if (run) {
@@ -77,7 +77,7 @@ const useRunControls = (
     };
 
     return {
-      onCancel: () => {
+      onCancel: (): void => {
         if (!live.current.activeRun && pending.current.count > 0) {
           pending.current.stop = true;
 
@@ -104,7 +104,7 @@ const useRunControls = (
           return api.cancelRun(live.current.projectId, run.runId);
         });
       },
-      onQueueChange: (items: QueuedMessage[]) =>
+      onQueueChange: (items: QueuedMessage[]): void =>
         withRun(async (run) => {
           putting.current += 1;
           setLocal({ items, runId: run.runId });
@@ -118,7 +118,7 @@ const useRunControls = (
             putting.current -= 1;
           }
         }),
-      onSteer: (text: string) =>
+      onSteer: (text: string): void =>
         withRun((run) => api.steerRun(live.current.projectId, run.runId, text)),
       trackSend,
     };

@@ -1,7 +1,7 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useState, useEffect, useRef } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { RUN_TITLE_MAX } from "../../../shared/rewind.js";
 import { UserMessage } from "./chat-parts.js";
@@ -36,7 +36,7 @@ const TurnButton = ({
   icon: IconName;
   tip: string | null;
   onClick: () => void;
-}) => {
+}): ReactElement => {
   const off = tip !== null;
 
   return (
@@ -70,7 +70,7 @@ const RestoreConfirm = ({
   count: number;
   onCancel: () => void;
   onConfirm: () => void;
-}) => (
+}): ReactElement => (
   <div
     className="msg-confirm"
     role="alertdialog"
@@ -105,7 +105,7 @@ const MessageEditor = ({
   initial: string;
   onCancel: () => void;
   onSend: (prompt: string) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState(initial);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
@@ -120,7 +120,7 @@ const MessageEditor = ({
   }, []);
   const ready = text.trim() !== "";
 
-  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
     event.stopPropagation();
 
     if (event.key === "Escape") {
@@ -176,11 +176,11 @@ const TitleField = ({
 }: {
   initial: string;
   onDone: (title: string | null) => void;
-}) => {
+}): ReactElement => {
   const [text, setText] = useState(initial);
   const done = useRef(false);
 
-  const finish = (value: string | null) => {
+  const finish = (value: string | null): void => {
     if (done.current) {
       return;
     }
@@ -222,7 +222,7 @@ const UserTurn = ({
   title: string | undefined;
   rewind: TurnRewind | null;
   actions: TurnActions | null;
-}) => {
+}): ReactElement => {
   const [mode, setMode] = useState<Mode>("idle");
   const [renameFailed, setRenameFailed] = useState(false);
   const { request } = run;
@@ -231,7 +231,7 @@ const UserTurn = ({
     return <UserMessage run={run} title={title} />;
   }
 
-  const restore = () => {
+  const restore = (): void => {
     if (!rewind.restoreVersionId) {
       return;
     }

@@ -4,6 +4,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
+import type { ReactElement } from "react";
 
 import {
   RULE_MAX_CHARS,
@@ -20,13 +21,13 @@ const PermissionPrompt = ({
   projectId: string;
   runId: string;
   request: PermissionRequest;
-}) => {
+}): ReactElement => {
   const [note, setNote] = useState("");
   const [denying, setDenying] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const answer = (decision: PermissionDecision) => {
+  const answer = (decision: PermissionDecision): void => {
     setBusy(true);
     setError(null);
     api
@@ -49,7 +50,7 @@ const PermissionPrompt = ({
       ? ruleForCommand(command)
       : null;
 
-  const deny = () =>
+  const deny = (): void =>
     answer({ allow: false, ...(note.trim() ? { note: note.trim() } : {}) });
 
   return (

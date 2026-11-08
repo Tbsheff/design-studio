@@ -1,7 +1,7 @@
 import type { RunStatus, RunSummary } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { runQueryTerms } from "../../../shared/rewind.js";
 import { formatRelative } from "../../domain/format.js";
@@ -64,7 +64,7 @@ const useRunHits = (directionId: string | null, query: string): Hits | null => {
         );
     }, DEBOUNCE_MS);
 
-    return () => {
+    return (): void => {
       alive = false;
       globalThis.clearTimeout(timer);
     };
@@ -105,7 +105,7 @@ const HitList = ({
   searching: boolean;
   onPick: (runId: string) => void;
   onActive: (index: number) => void;
-}) => {
+}): ReactElement | null => {
   if (!hits) {
     return searching ? <p className="chat-search-note">Searching…</p> : null;
   }
@@ -160,7 +160,7 @@ const ChatSearch = ({
   onClose,
   onQuery,
   onPick,
-}: Props) => {
+}: Props): ReactElement => {
   const id = useId();
   const hits = useRunHits(directionId, query);
   const [active, setActive] = useState(0);
@@ -169,7 +169,7 @@ const ChatSearch = ({
   const runs = hits?.runs ?? [];
   useEffect(() => setActive(0), [hits]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();

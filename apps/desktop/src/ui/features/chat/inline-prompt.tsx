@@ -7,7 +7,7 @@ import type {
 } from "@design-studio/contracts/usage-scope";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { call } from "../../platform/http.js";
 import { uiStore } from "../../platform/storage.js";
@@ -89,7 +89,7 @@ const useUsage = (
 
     void apply();
 
-    return () => {
+    return (): void => {
       isLive = false;
     };
   }, [file, usedAt, route]);
@@ -122,7 +122,11 @@ const scopeOf = (
   };
 };
 
-const SharedLayoutNote = ({ usage }: { usage: ComponentUsage }) => {
+const SharedLayoutNote = ({
+  usage,
+}: {
+  usage: ComponentUsage;
+}): ReactElement => {
   const site = usage.callSite;
   const count = Math.max(site?.routes ?? 0, usage.routes.length);
 
@@ -143,7 +147,7 @@ interface ScopeProps {
   onChoice: (choice: EditScopeChoice) => void;
 }
 
-const ScopeChoice = ({ usage, choice, onChoice }: ScopeProps) => {
+const ScopeChoice = ({ usage, choice, onChoice }: ScopeProps): ReactElement => {
   const name = usage.component ?? usage.file;
 
   const options: { id: EditScopeChoice; label: string; tip: string }[] = [
@@ -183,7 +187,11 @@ const ScopeChoice = ({ usage, choice, onChoice }: ScopeProps) => {
   );
 };
 
-export default function InlinePrompt({ view, zoom, frame }: Props) {
+export default function InlinePrompt({
+  view,
+  zoom,
+  frame,
+}: Props): ReactElement {
   const [text, setText] = useState("");
   const [choice, setChoice] = useState<EditScopeChoice>("this");
   const input = useRef<HTMLInputElement>(null);
@@ -196,9 +204,9 @@ export default function InlinePrompt({ view, zoom, frame }: Props) {
     rect.y > BOX_ROOM / zoom;
 
   const left = Math.max(0, Math.min(rect.x, frame.width - BOX_WIDTH / zoom));
-  const submit = () => view.submit(text, scopeOf(usage, choice));
+  const submit = (): void => view.submit(text, scopeOf(usage, choice));
 
-  const onBoxKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onBoxKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     event.stopPropagation();
 
     if (event.key === "Escape") {
@@ -207,7 +215,7 @@ export default function InlinePrompt({ view, zoom, frame }: Props) {
     }
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter" && !event.nativeEvent.isComposing) {
       event.preventDefault();
       submit();

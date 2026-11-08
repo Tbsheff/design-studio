@@ -49,7 +49,7 @@ const useSkillCatalog = (): {
       (caught: unknown) => live && setError(errorText(caught))
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, []);

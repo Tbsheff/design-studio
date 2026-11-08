@@ -29,7 +29,7 @@ const useInlineApprovals = (
   useEffect(() => {
     setInline(shown ? projectId : null);
 
-    return () => setInline(null);
+    return (): void => setInline(null);
   }, [projectId, shown]);
 };
 

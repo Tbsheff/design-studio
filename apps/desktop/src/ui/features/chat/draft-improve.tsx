@@ -6,6 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import { useFitPopover } from "@design-studio/ui";
 import { useId, useRef, useState } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";
@@ -43,13 +44,17 @@ interface ImproveProps {
   onImprove: (focus: string) => Promise<void>;
 }
 
-const ImproveControl = ({ running, run, onImprove }: ImproveProps) => {
+const ImproveControl = ({
+  running,
+  run,
+  onImprove,
+}: ImproveProps): ReactElement => {
   const improving = run?.status === "running";
   const primary = !improvePassed(run);
   const [focus, setFocus] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const start = async () => {
+  const start = async (): Promise<void> => {
     setBusy(true);
 
     try {
@@ -170,7 +175,7 @@ const CheckStatus = ({
 }: {
   check: DesignSystemCheckResult | null;
   run: RunView | null;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
   const listId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);

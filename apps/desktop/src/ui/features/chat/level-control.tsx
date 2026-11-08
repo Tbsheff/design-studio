@@ -1,7 +1,7 @@
 import { RUN_LEVELS } from "@design-studio/contracts";
 import type { RunLevel } from "@design-studio/contracts";
 import { useId, useRef } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { copy } from "./copy.js";
@@ -48,15 +48,25 @@ const nextRadioOption = <T,>(
   return enabled[(at + step + enabled.length) % enabled.length] ?? null;
 };
 
+interface ItemResult {
+  readonly ref: (el: HTMLButtonElement | null) => void;
+  readonly tabIndex: number;
+}
+
+interface UseRovingRadioGroupResult<T> {
+  readonly item: (option: T) => ItemResult;
+  readonly onKeyDown: (event: KeyboardEvent) => void;
+}
+
 const useRovingRadioGroup = <T extends string | number>(
   options: readonly T[],
   value: T,
   onChange: (next: T) => void,
   isDisabled?: (option: T) => boolean
-) => {
+): UseRovingRadioGroupResult<T> => {
   const refs = useRef(new Map<T, HTMLButtonElement | null>());
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent): void => {
     const next = nextRadioOption(options, value, event.key, isDisabled);
 
     if (next === null) {
@@ -72,8 +82,8 @@ const useRovingRadioGroup = <T extends string | number>(
     refs.current.get(next)?.focus();
   };
 
-  const item = (option: T) => ({
-    ref: (el: HTMLButtonElement | null) => {
+  const item = (option: T): ItemResult => ({
+    ref: (el: HTMLButtonElement | null): void => {
       refs.current.set(option, el);
     },
     tabIndex: option === value ? 0 : -1,
@@ -94,7 +104,7 @@ const LevelControl = ({
   onChange,
   disabled,
   tipSide = "top",
-}: Props) => {
+}: Props): ReactElement => {
   const baseId = useId();
   const radios = useRovingRadioGroup(RUN_LEVELS, value, onChange);
 
@@ -180,7 +190,7 @@ const ChoiceItem = ({
   checked: boolean;
   focusable?: boolean;
   onPick: () => void;
-}) => {
+}): ReactElement => {
   const id = useId();
 
   return (

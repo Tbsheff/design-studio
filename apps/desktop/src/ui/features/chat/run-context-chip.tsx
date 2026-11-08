@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { Chip } from "../../ai/components/ai/chip.js";
 import { copy } from "./copy.js";
@@ -8,7 +9,7 @@ const RunContextChip = ({
   chip,
 }: {
   chip: RunCanvasChip | null | undefined;
-}) => {
+}): ReactElement | null => {
   if (!chip) {
     return null;
   }

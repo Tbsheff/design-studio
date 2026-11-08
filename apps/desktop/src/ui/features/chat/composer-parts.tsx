@@ -4,6 +4,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
+import type { ReactElement } from "react";
 
 import { asReferenceName, isReferenceName } from "../../../shared/reference.js";
 import {
@@ -27,7 +28,7 @@ const SelectionChips = ({
 }: {
   selection: SelectionContext[];
   onRemove: (selector: string) => void;
-}) => {
+}): ReactElement | null => {
   if (selection.length === 0) {
     return null;
   }
@@ -61,7 +62,11 @@ const SelectionChips = ({
   );
 };
 
-const ThumbState = ({ file }: { file: PendingAttachment }) => {
+const ThumbState = ({
+  file,
+}: {
+  file: PendingAttachment;
+}): ReactElement | null => {
   if (file.error) {
     return (
       <AttachmentOverlay className="rounded-outer bg-destructive/15 text-xs font-semibold text-destructive">
@@ -127,11 +132,18 @@ const markAsReference = async (file: PendingAttachment): Promise<void> => {
   file.attachment = uploaded;
 };
 
-const useReferenceToggle = (files: PendingAttachment[]) => {
+interface UseReferenceToggleResult {
+  readonly busy: string | null;
+  readonly toggle: (file: PendingAttachment) => Promise<void>;
+}
+
+const useReferenceToggle = (
+  files: PendingAttachment[]
+): UseReferenceToggleResult => {
   const [busy, setBusy] = useState<string | null>(null);
   const [, setTick] = useState(0);
 
-  const toggle = async (file: PendingAttachment) => {
+  const toggle = async (file: PendingAttachment): Promise<void> => {
     if (busy || !file.attachment) {
       return;
     }
@@ -166,7 +178,7 @@ const ReferenceToggle = ({
   file: PendingAttachment;
   busy: boolean;
   onToggle: () => void;
-}) => {
+}): ReactElement | null => {
   if (!file.attachment || file.error) {
     return null;
   }
@@ -203,7 +215,7 @@ const AttachmentThumbs = ({
 }: {
   files: PendingAttachment[];
   onRemove: (localId: string) => void;
-}) => {
+}): ReactElement | null => {
   const reference = useReferenceToggle(files);
 
   if (files.length === 0) {
@@ -250,7 +262,7 @@ const AttachmentThumbs = ({
   );
 };
 
-const ModelTag = ({ model }: { model: string }) => (
+const ModelTag = ({ model }: { model: string }): ReactElement => (
   <Chip
     size="sm"
     className="model-tag mr-1 shrink-0 font-semibold whitespace-nowrap"

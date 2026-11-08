@@ -1,6 +1,7 @@
 import type { DesignComment, RunRequest } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { createContext, useContext, useState } from "react";
+import type { ReactElement } from "react";
 
 import { commentsDone } from "../../../shared/comments.js";
 import type { CommentsControl } from "../comments/use-comments.js";
@@ -54,7 +55,7 @@ const CommentLink = ({
   comment: DesignComment;
   state: LinkState;
   control: CommentsControl;
-}) => (
+}): ReactElement => (
   <li>
     <button
       type="button"
@@ -88,7 +89,7 @@ const resolvable = (
     : open.filter((comment) => done.includes(comment.n));
 };
 
-const RunCommentsCard = ({ run }: { run: RunView }) => {
+const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
   const control = useContext(RunCommentsContext);
   const [busy, setBusy] = useState(false);
   const ids = new Set([...idsOf(run.summary?.request), ...idsOf(run.request)]);
@@ -106,7 +107,7 @@ const RunCommentsCard = ({ run }: { run: RunView }) => {
   const done = commentsDone(replyText(run));
   const toResolve = run.status === "completed" ? resolvable(linked, done) : [];
 
-  const resolve = async () => {
+  const resolve = async (): Promise<void> => {
     setBusy(true);
 
     try {

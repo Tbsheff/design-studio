@@ -1,6 +1,7 @@
 import type { TodoItem } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { memo, useState } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
@@ -45,7 +46,13 @@ const rowState = (
   };
 };
 
-const TodoMark = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
+const TodoMark = ({
+  todo,
+  running,
+}: {
+  todo: TodoItem;
+  running: boolean;
+}): ReactElement | null => {
   if (todo.skipped) {
     return <Icon name="minus" size={12} />;
   }
@@ -59,7 +66,13 @@ const TodoMark = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
   ) : null;
 };
 
-const TodoRow = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
+const TodoRow = ({
+  todo,
+  running,
+}: {
+  todo: TodoItem;
+  running: boolean;
+}): ReactElement => {
   const view = rowState(todo);
 
   return (

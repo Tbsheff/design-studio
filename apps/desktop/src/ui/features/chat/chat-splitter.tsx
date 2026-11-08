@@ -1,5 +1,10 @@
 import { useCallback, useRef } from "react";
-import type { KeyboardEvent, PointerEvent, RefObject } from "react";
+import type {
+  KeyboardEvent,
+  PointerEvent,
+  ReactElement,
+  RefObject,
+} from "react";
 
 import { uiStore, useUi } from "../../platform/storage.js";
 import { copy } from "./copy.js";
@@ -20,7 +25,7 @@ const ChatSplitter = ({
   columnsRef,
 }: {
   columnsRef: RefObject<HTMLDivElement | null>;
-}) => {
+}): ReactElement => {
   const { chatWidth } = useUi();
   const dragging = useRef(false);
 
@@ -39,7 +44,7 @@ const ChatSplitter = ({
     [columnsRef]
   );
 
-  const currentWidth = () => {
+  const currentWidth = (): number => {
     const panel = columnsRef.current?.querySelector(".pane-left");
 
     return panel instanceof HTMLElement
@@ -47,7 +52,7 @@ const ChatSplitter = ({
       : MIN_CHAT;
   };
 
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>): void => {
     if (e.button !== 0) {
       return;
     }
@@ -58,7 +63,7 @@ const ChatSplitter = ({
     document.body.classList.add("resizing");
   };
 
-  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>): void => {
     if (!dragging.current) {
       return;
     }
@@ -70,12 +75,12 @@ const ChatSplitter = ({
     }
   };
 
-  const stop = () => {
+  const stop = (): void => {
     dragging.current = false;
     document.body.classList.remove("resizing");
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
     const step = e.shiftKey ? 48 : 16;
 
     const delta =

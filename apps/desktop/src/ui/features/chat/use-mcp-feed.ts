@@ -63,7 +63,7 @@ const useMcpFeed = (
       )
       .catch(() => null);
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId]);

@@ -4,7 +4,7 @@ import type {
   RunMention,
 } from "@design-studio/contracts";
 import { useEffect, useMemo, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { Dispatch, KeyboardEvent, SetStateAction } from "react";
 
 import { api } from "../../api.js";
 import {
@@ -62,6 +62,22 @@ const componentMention = (component: ComponentInfo): RunMention => ({
   selector: component.selector,
 });
 
+interface UseMentionsResult {
+  readonly clear: () => void;
+  readonly loading: boolean;
+  readonly mentions: RunMention[];
+  readonly onKeyDown: (event: KeyboardEvent<HTMLElement>) => boolean;
+  readonly pick: (option: MentionOption) => void;
+  readonly picker: {
+    readonly current: MentionOption | null;
+    readonly move: (step: 1 | -1) => void;
+    readonly open: boolean;
+    readonly setActive: Dispatch<SetStateAction<number>>;
+    readonly shown: MentionOption[];
+  };
+  readonly remove: (key: string) => void;
+}
+
 const useMentions = ({
   projectId,
   directionId,
@@ -72,14 +88,14 @@ const useMentions = ({
   request,
   lead,
   onLead,
-}: Options) => {
+}: Options): UseMentionsResult => {
   const [files, setFiles] = useState<string[] | null>(null);
   const [mentions, setMentions] = useState<RunMention[]>([]);
   const [dismissed, setDismissed] = useState<string | null>(null);
   const rawQuery = mentionQueryOf(draft);
   const query = rawQuery !== null && draft !== dismissed ? rawQuery : null;
 
-  const refresh = (fresh: boolean) => {
+  const refresh = (fresh: boolean): void => {
     if (directionId) {
       void loadFiles(projectId, directionId, fresh).then(setFiles);
     }
@@ -128,7 +144,7 @@ const useMentions = ({
     ].filter((option) => !picked.has(option.key));
   }, [files, tokens, mentions, components, lead]);
 
-  const add = (mention: RunMention) =>
+  const add = (mention: RunMention): void =>
     setMentions((prev) =>
       prev.some((item) => mentionKey(item) === mentionKey(mention))
         ? prev
@@ -143,7 +159,7 @@ const useMentions = ({
   }, [requestSeq]);
   const picker = useMentionPicker(options, query);
 
-  const pick = (option: MentionOption) => {
+  const pick = (option: MentionOption): void => {
     if (lead?.some((item) => item.key === option.key)) {
       onLead?.(option);
     } else {
@@ -184,13 +200,13 @@ const useMentions = ({
   };
 
   return {
-    clear: () => setMentions([]),
+    clear: (): void => setMentions([]),
     loading: files === null,
     mentions,
     onKeyDown,
     pick,
     picker,
-    remove: (key: string) =>
+    remove: (key: string): void =>
       setMentions((prev) =>
         prev.filter((mention) => mentionKey(mention) !== key)
       ),

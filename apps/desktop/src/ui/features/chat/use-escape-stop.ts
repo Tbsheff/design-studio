@@ -24,7 +24,7 @@ const useEscapeStop = (active: boolean, onStop: () => void): void => {
       return;
     }
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         !isStopKey(event) ||
         event.defaultPrevented ||
@@ -38,7 +38,7 @@ const useEscapeStop = (active: boolean, onStop: () => void): void => {
       stop.current();
     };
 
-    const onFrameStop = () => {
+    const onFrameStop = (): void => {
       if (!overlayOpen()) {
         stop.current();
       }
@@ -47,7 +47,7 @@ const useEscapeStop = (active: boolean, onStop: () => void): void => {
     globalThis.addEventListener("keydown", onKey, { capture: true });
     globalThis.addEventListener(PREVIEW_STOP_EVENT, onFrameStop);
 
-    return () => {
+    return (): void => {
       globalThis.removeEventListener("keydown", onKey, { capture: true });
       globalThis.removeEventListener(PREVIEW_STOP_EVENT, onFrameStop);
     };

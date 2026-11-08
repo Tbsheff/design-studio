@@ -25,7 +25,7 @@ const useRunLevel = (
     }
   }, [saved, projectId]);
 
-  const choose = (next: RunLevel) => {
+  const choose = (next: RunLevel): void => {
     if (next === level) {
       return;
     }

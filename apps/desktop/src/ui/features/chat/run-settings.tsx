@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent, ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 import { VariationsControl } from "../canvas/variations-control.js";
@@ -148,10 +148,10 @@ const EffortToggle = ({
 }: {
   effort: EffortSetting;
   hintId: string;
-}) => {
+}): ReactElement => {
   const choice: EffortChoice = effort.value ?? "auto";
 
-  const pick = (next: EffortChoice) =>
+  const pick = (next: EffortChoice): void =>
     effort.onChange(next === "auto" ? null : next);
 
   const radios = useRovingRadioGroup(EFFORTS, choice, pick);
@@ -190,7 +190,7 @@ const ModeToggle = ({
 }: {
   mode: ModeSetting;
   hintId: string;
-}) => {
+}): ReactElement => {
   const radios = useRovingRadioGroup(MODES, mode.value, mode.onChange);
 
   return (
@@ -226,7 +226,7 @@ const RunSettings = ({
   designs,
   onOpen,
   effort,
-}: Props) => {
+}: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>(UNPLACED);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -258,7 +258,7 @@ const RunSettings = ({
       return;
     }
 
-    const place = () => {
+    const place = (): void => {
       if (trigger.current && panel.current) {
         setStyle(placeAboveOrBelow(trigger.current, panel.current));
       }
@@ -276,7 +276,7 @@ const RunSettings = ({
       observer.observe(trigger.current);
     }
 
-    return () => {
+    return (): void => {
       window.removeEventListener("resize", place);
       observer.disconnect();
     };
@@ -288,7 +288,7 @@ const RunSettings = ({
     }
   }, [open]);
 
-  const onPanelKey = (event: KeyboardEvent) => {
+  const onPanelKey = (event: KeyboardEvent): void => {
     if (event.key !== "Tab" || !panel.current) {
       return;
     }

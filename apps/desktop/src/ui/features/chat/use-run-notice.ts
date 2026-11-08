@@ -47,13 +47,14 @@ const useRunNotice = (projectName: string | null, runs: RunMap): void => {
   const hiddenAt = useRef<number | null>(null);
   const shown = useRef(new Set<string>());
   useEffect(() => {
-    const onVisibility = () => {
+    const onVisibility = (): void => {
       hiddenAt.current = document.hidden ? Date.now() : null;
     };
 
     document.addEventListener("visibilitychange", onVisibility);
 
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    return (): void =>
+      document.removeEventListener("visibilitychange", onVisibility);
   }, []);
   useEffect(() => {
     if (hiddenAt.current === null || !canNotify()) {
@@ -72,7 +73,7 @@ const useRunNotice = (projectName: string | null, runs: RunMap): void => {
         : `${finished.length} runs ended`;
 
     const notice = new Notification(projectName || "Run finished", { body });
-    notice.onclick = () => window.focus();
+    notice.onclick = (): void => window.focus();
   }, [projectName, runs]);
 };
 

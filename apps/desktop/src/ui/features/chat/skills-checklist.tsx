@@ -1,6 +1,7 @@
 import type { SkillInfo } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { NO_SKILLS_TEXT, plural, useSkillCatalog } from "./skills-model.js";
@@ -46,7 +47,7 @@ const SkillRow = ({
   on: boolean;
   allowBash: boolean;
   onToggle: (on: boolean) => void;
-}) => (
+}): ReactElement => (
   <label className="check skill-row" data-tip={skill.sourcePath}>
     <input
       type="checkbox"
@@ -77,7 +78,11 @@ const SkillRow = ({
   </label>
 );
 
-const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
+const SkillsChecklist = ({
+  disabled,
+  allowBash,
+  onChange,
+}: Props): ReactElement => {
   const { catalog, error, reload } = useSkillCatalog();
   const [query, setQuery] = useState("");
 
@@ -96,12 +101,12 @@ const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
     (skill) => skill.needsBash && !disabled.includes(skill.id)
   ).length;
 
-  const toggle = (id: string, on: boolean) => {
+  const toggle = (id: string, on: boolean): void => {
     const rest = disabled.filter((item) => item !== id);
     onChange(on ? rest : [...rest, id]);
   };
 
-  const setAll = (on: boolean) =>
+  const setAll = (on: boolean): void =>
     onChange(on ? [] : skills.map((skill) => skill.id));
 
   return (

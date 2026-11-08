@@ -60,7 +60,7 @@ const usePageFiles = (o: Options): ((path: string | undefined) => PageWait) => {
       )
       .catch(() => alive && setFiles("all"));
 
-    return () => {
+    return (): void => {
       alive = false;
     };
   }, [gated, o.projectId, o.directionId, changeAt, o.building]);
@@ -101,11 +101,11 @@ const useFramePainted = (waiting: boolean, mounted: boolean): boolean => {
       return;
     }
 
-    const done = () => setPainted(true);
+    const done = (): void => setPainted(true);
     globalThis.addEventListener(PREVIEW_PAINTED_EVENT, done);
     const timer = globalThis.setTimeout(done, PAINT_FALLBACK_MS);
 
-    return () => {
+    return (): void => {
       globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, done);
       globalThis.clearTimeout(timer);
     };

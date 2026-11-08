@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { copy } from "./copy.js";
 
 const contextWindowFor = (model: string): number =>
@@ -16,7 +18,7 @@ const ContextMeter = ({
 }: {
   tokens: number | null;
   model: string;
-}) => {
+}): ReactElement | null => {
   if (tokens === null || tokens <= 0) {
     return null;
   }

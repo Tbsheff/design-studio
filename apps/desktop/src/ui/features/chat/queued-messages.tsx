@@ -1,7 +1,7 @@
 import type { QueuedMessage } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
@@ -42,11 +42,11 @@ const QueuedItem = ({
   onMove: (to: number) => void;
   onDragStart: () => void;
   onDropAt: () => void;
-}) => {
+}): ReactElement => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(item.text);
 
-  const finish = (save: boolean) => {
+  const finish = (save: boolean): void => {
     setEditing(false);
 
     if (save && text.trim() && text !== item.text) {
@@ -56,7 +56,7 @@ const QueuedItem = ({
     }
   };
 
-  const onKey = (event: KeyboardEvent<HTMLLIElement>) => {
+  const onKey = (event: KeyboardEvent<HTMLLIElement>): void => {
     if (editing || !event.altKey) {
       return;
     }
@@ -143,7 +143,7 @@ const QueuedMessages = ({
 }: {
   items: QueuedMessage[];
   onChange: (items: QueuedMessage[]) => void;
-}) => {
+}): ReactElement | null => {
   const [dragFrom, setDragFrom] = useState<number | null>(null);
 
   if (items.length === 0) {

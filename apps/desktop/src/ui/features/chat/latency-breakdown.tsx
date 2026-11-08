@@ -1,5 +1,6 @@
 import type { TelemetrySample } from "@design-studio/contracts";
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { api } from "../../api.js";
 import { formatMs } from "../../domain/format.js";
@@ -130,7 +131,7 @@ const LatencyBreakdown = ({
 }: {
   projectId: string;
   run: RunView;
-}) => {
+}): ReactElement | null => {
   const [samples, setSamples] = useState<TelemetrySample[] | null>(null);
   const finishedAt = run.summary?.finishedAt ?? null;
 
@@ -141,7 +142,7 @@ const LatencyBreakdown = ({
       .then((list) => alive && setSamples(list))
       .catch(() => alive && setSamples([]));
 
-    return () => {
+    return (): void => {
       alive = false;
     };
   }, [projectId, run.runId, finishedAt]);

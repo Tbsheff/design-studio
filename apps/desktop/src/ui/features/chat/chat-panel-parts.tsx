@@ -1,13 +1,13 @@
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { useConversation } from "../../ai/components/ai/conversation.js";
 import { EarlierRuns, useHistoryWindow } from "./chat-panel-window.js";
 import type { TimelineItem } from "./mcp-feed.js";
 import type { RunView } from "./run-state-model.js";
 
-const StickOnNewRun = ({ runId }: { runId: string | null }) => {
+const StickOnNewRun = ({ runId }: { runId: string | null }): null => {
   const { stickToBottom } = useConversation();
   const first = useRef(true);
   useEffect(() => {
@@ -39,7 +39,7 @@ const WindowedTimeline = ({
   reveal,
   onRevealed,
   render,
-}: TimelineProps) => {
+}: TimelineProps): ReactElement => {
   const { shown, hidden, more } = useHistoryWindow(items, resetKey, reveal);
   const inView = reveal !== null && shown.some((item) => item.key === reveal);
 
@@ -52,7 +52,7 @@ const WindowedTimeline = ({
   );
 };
 
-const EmptyChat = () => (
+const EmptyChat = (): ReactElement => (
   <div className="chat-empty">
     <span className="chat-empty-icon">
       <Icon name="sparkle" size={18} />
@@ -65,7 +65,7 @@ const EmptyChat = () => (
   </div>
 );
 
-const EmptyState = ({ empty }: { empty: boolean }) =>
+const EmptyState = ({ empty }: { empty: boolean }): ReactElement | null =>
   empty ? <EmptyChat /> : null;
 
 const FOUND_MS = 1600;
@@ -78,7 +78,7 @@ const ScrollToRun = ({
   runId: string | null;
   shown: boolean;
   onDone: () => void;
-}) => {
+}): null => {
   const { viewportRef, wasAtBottomRef } = useConversation();
   useEffect(() => {
     if (!runId || !shown) {
@@ -111,7 +111,7 @@ const RUN_ANNOUNCE: Record<RunView["status"], string> = {
   running: "Run started",
 };
 
-const RunAnnouncer = ({ run }: { run: RunView | undefined }) => {
+const RunAnnouncer = ({ run }: { run: RunView | undefined }): ReactElement => {
   const queued = run?.status === "running" ? run.queue.length : 0;
   const asking = run?.status === "running" ? run.permissions[0] : undefined;
 
@@ -128,8 +128,12 @@ const RunAnnouncer = ({ run }: { run: RunView | undefined }) => {
   );
 };
 
-const ChatLead = ({ lead, empty }: { lead: ReactNode; empty: boolean }) => (
-  <>{lead ?? <EmptyState empty={empty} />}</>
-);
+const ChatLead = ({
+  lead,
+  empty,
+}: {
+  lead: ReactNode;
+  empty: boolean;
+}): ReactElement => <>{lead ?? <EmptyState empty={empty} />}</>;
 
 export { ChatLead, EmptyState, RunAnnouncer, StickOnNewRun, WindowedTimeline };

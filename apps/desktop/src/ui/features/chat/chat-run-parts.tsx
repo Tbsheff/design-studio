@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { AssistantText, SentWhileRunning, Thinking } from "./chat-parts.js";
 import type { RunView, ToolRow } from "./run-state-model.js";
@@ -73,7 +74,7 @@ const SegmentView = ({
   segment: Segment;
   running: boolean;
   workTree: string | null;
-}) => {
+}): ReactElement => {
   if (segment.kind === "tools") {
     return (
       <ToolSegment
@@ -151,7 +152,7 @@ const RunParts = ({
   run: RunView;
   running: boolean;
   workTree: string | null;
-}) => {
+}): ReactElement => {
   const layout = useMemo(
     () => layoutOf(segmentsOf(run), running),
     [run.parts, run.tools, running]

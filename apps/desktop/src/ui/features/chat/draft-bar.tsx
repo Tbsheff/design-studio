@@ -7,7 +7,7 @@ import type {
 } from "@design-studio/contracts";
 import { useFitPopover } from "@design-studio/ui";
 import { useId, useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { errorText } from "../../api.js";
 import { packApi } from "../../platform/pack-api.js";
@@ -63,7 +63,7 @@ const useDraftInfo = (
           setState({ check: null, coverage: null, error: errorText(error) })
       );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, lastChange, runStatus]);
@@ -84,7 +84,7 @@ const cssVarOf = (token: string): string => {
   return group === "color" ? `--${name}` : `--${group}-${name}`;
 };
 
-const Fallbacks = ({ tokens }: { tokens: string[] }) => {
+const Fallbacks = ({ tokens }: { tokens: string[] }): ReactElement => {
   if (tokens.length === 0) {
     return <span className="draft-fallbacks">No fallback tokens</span>;
   }
@@ -118,7 +118,11 @@ const guessedKeys = (coverage: DesignSystemCoverage): string[] | null => {
   );
 };
 
-const Guessed = ({ coverage }: { coverage: DesignSystemCoverage }) => {
+const Guessed = ({
+  coverage,
+}: {
+  coverage: DesignSystemCoverage;
+}): ReactElement | null => {
   const keys = guessedKeys(coverage);
 
   if (keys === null) {
@@ -155,7 +159,7 @@ const DraftSummary = ({
   check: DesignSystemCheckResult | null;
   run: RunView | null;
   error: string | null;
-}) => (
+}): ReactElement => (
   <div className="draft-main">
     <strong className="truncate">{name}</strong>
     {coverage && (
@@ -183,7 +187,7 @@ const SaveAnyway = ({
   count: number;
   busy: boolean;
   onSave: () => void;
-}) => {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
@@ -197,7 +201,7 @@ const SaveAnyway = ({
 
     confirmRef.current?.focus();
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.key !== "Escape") {
         return;
       }
@@ -206,7 +210,7 @@ const SaveAnyway = ({
       toggleRef.current?.focus();
     };
 
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       const target = event.target as Node;
 
       if (
@@ -220,7 +224,7 @@ const SaveAnyway = ({
     globalThis.addEventListener("keydown", onKey);
     globalThis.addEventListener("mousedown", onDown);
 
-    return () => {
+    return (): void => {
       globalThis.removeEventListener("keydown", onKey);
       globalThis.removeEventListener("mousedown", onDown);
     };
@@ -315,14 +319,14 @@ const SaveControls = ({
   reading,
   running,
   onSave,
-}: SaveProps) => {
+}: SaveProps): ReactElement => {
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const reasonId = useId();
   const reason = saveReason(check, reading, running);
   const failing = check !== null && !check.passed;
 
-  const save = async (force: boolean) => {
+  const save = async (force: boolean): Promise<void> => {
     setBusy(true);
     setSaveError(null);
 
@@ -384,7 +388,7 @@ const DraftBar = ({
   lastRun = null,
   reading = false,
   running = false,
-}: Props) => {
+}: Props): ReactElement | null => {
   const packId = project.designSystemFor ?? null;
   const { packs } = usePacks();
 

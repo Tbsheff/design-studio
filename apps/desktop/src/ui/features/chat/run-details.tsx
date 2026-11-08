@@ -1,7 +1,7 @@
 import type { RunStatus } from "@design-studio/contracts";
 import { Icon, useReturnFocusOnUnmount } from "@design-studio/ui";
 import { useEffect, useRef } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 import { formatMs, formatTime, formatUsd } from "../../domain/format.js";
 import { copy } from "./copy.js";
@@ -49,7 +49,7 @@ const RunDetails = ({
   projectId: string;
   run: RunView;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const s = run.summary;
 
   const rows: [string, string][] = s
@@ -86,7 +86,7 @@ const RunDetails = ({
   useReturnFocusOnUnmount();
   useEffect(() => closeButton.current?.focus(), []);
 
-  const onKeyDown = (e: KeyboardEvent) => {
+  const onKeyDown = (e: KeyboardEvent): void => {
     if (e.key !== "Escape") {
       return;
     }

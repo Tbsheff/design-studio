@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import type { McpPointBadge as Badge } from "../canvas/use-canvas-point.js";
 import { authorInitial } from "../comments/comment-avatar.js";
@@ -10,7 +11,7 @@ const McpPointBadge = ({
 }: {
   badge: Badge;
   frameName: (frameId: string) => string;
-}) => {
+}): ReactElement | null => {
   const { point } = badge;
 
   if (!point) {

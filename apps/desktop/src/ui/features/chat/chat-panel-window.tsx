@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { ReactElement } from "react";
 
 import { useConversation } from "../../ai/components/ai/conversation.js";
 import { requestOlderRuns, useOlderRuns } from "./run-history-model.js";
@@ -128,7 +129,7 @@ const EarlierRuns = ({
 }: {
   hidden: number;
   onMore: () => void;
-}) => {
+}): ReactElement | null => {
   const { viewportRef, wasAtBottomRef } = useConversation();
   const ref = useRef<HTMLButtonElement | null>(null);
   const older = useOlderRuns();
@@ -160,7 +161,7 @@ const EarlierRuns = ({
 
     observer.observe(el);
 
-    return () => {
+    return (): void => {
       cancelAnimationFrame(frame);
       observer.disconnect();
     };

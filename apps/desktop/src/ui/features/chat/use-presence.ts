@@ -28,7 +28,7 @@ const usePresence = <T>(
 
     const timer = globalThis.setTimeout(() => setKept(null), CSS_DUR_EXIT_MS);
 
-    return () => globalThis.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [value]);
 
   return { closing: value === null && kept !== null, shown: value ?? kept };

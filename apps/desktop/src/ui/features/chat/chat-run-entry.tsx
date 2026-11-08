@@ -1,4 +1,5 @@
 import { memo, Suspense, useCallback, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { Message, MessageContent } from "../../ai/components/ai/message.js";
 import { ApprovalCard, canPolishRun } from "../../chat-slots.js";
@@ -70,7 +71,7 @@ const RunEntry = memo(
     const review = useMemo(
       () =>
         onReview && reviewVersionId
-          ? () => onReview(reviewVersionId)
+          ? (): void => onReview(reviewVersionId)
           : undefined,
       [onReview, reviewVersionId]
     );
@@ -78,7 +79,7 @@ const RunEntry = memo(
     const onUndo = useMemo(
       () =>
         actions && undoVersionId
-          ? () => actions.onRestore(undoVersionId)
+          ? (): void => actions.onRestore(undoVersionId)
           : undefined,
       [actions, undoVersionId]
     );
@@ -133,14 +134,14 @@ const RunEntry = memo(
               latest={latest}
               undo={onUndo ? { onUndo, tip: undoTip } : undefined}
               {...(polish.onRetry
-                ? { onRetry: () => polish.onRetry?.(run) }
+                ? { onRetry: (): void => polish.onRetry?.(run) }
                 : {})}
             />
             <RunNotice
               run={run}
               latest={latest}
               {...(polish.onRetry
-                ? { onRetry: () => polish.onRetry?.(run) }
+                ? { onRetry: (): void => polish.onRetry?.(run) }
                 : {})}
             />
             {hasComments(run) && <RunCommentsCard run={run} />}
@@ -171,7 +172,7 @@ const PendingEntry = ({
 }: {
   run: RunView;
   workTree: string | null;
-}) => (
+}): ReactElement => (
   <div className="run flex min-w-0 flex-col gap-3.5" data-pending-run="">
     <UserMessage run={run} />
     <Message type="incoming" className="msg assistant">

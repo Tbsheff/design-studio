@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { useLive } from "../../platform/live-store.js";
 import type { TurnActions } from "./chat-rewind.js";
@@ -19,7 +20,17 @@ const useLatest = <T>(value: T): { readonly current: T } => {
   return ref;
 };
 
-const useRunSearch = (available: boolean) => {
+interface UseRunSearchResult {
+  readonly onClose: () => void;
+  readonly onFound: () => void;
+  readonly onPick: (runId: string) => void;
+  readonly onQuery: Dispatch<SetStateAction<string>>;
+  readonly open: boolean;
+  readonly query: string;
+  readonly target: string | null;
+}
+
+const useRunSearch = (available: boolean): UseRunSearchResult => {
   const open = useLive(chatSearchOpen);
   const [query, setQuery] = useState("");
   const [target, setTarget] = useState<string | null>(null);
@@ -37,7 +48,7 @@ const useRunSearch = (available: boolean) => {
     }
   }, [available]);
   useEffect(
-    () => () => {
+    () => (): void => {
       chatSearchAvailable.set(false);
       chatSearchOpen.set(false);
     },
@@ -109,7 +120,14 @@ const usePolish = (input: PolishInput): PolishProps => {
   );
 };
 
-const useTurnActions = (rewind: RewindControl | undefined) => {
+interface UseTurnActionsResult {
+  readonly actions: TurnActions | null;
+  readonly titles: Record<string, string>;
+}
+
+const useTurnActions = (
+  rewind: RewindControl | undefined
+): UseTurnActionsResult => {
   const [titles, setTitles] = useState<Record<string, string>>({});
   const rewindRef = useLatest(rewind);
   const hasRewind = rewind !== undefined;
@@ -118,15 +136,16 @@ const useTurnActions = (rewind: RewindControl | undefined) => {
     () =>
       hasRewind
         ? {
-            dirtyCount: () => rewindRef.current?.dirtyCount ?? 0,
-            onEditResend: (run, prompt, base) =>
+            dirtyCount: (): number => rewindRef.current?.dirtyCount ?? 0,
+            onEditResend: (run, prompt, base): Promise<void> =>
               rewindRef.current?.onEditResend(run, prompt, base) ??
               Promise.resolve(),
-            onRename: async (runId, title) => {
+            onRename: async (runId, title): Promise<void> => {
               const summary = await renameRun(runId, title);
               setTitles((prev) => ({ ...prev, [runId]: summary.title ?? "" }));
             },
-            onRestore: (versionId) => rewindRef.current?.onRestore(versionId),
+            onRestore: (versionId): void =>
+              rewindRef.current?.onRestore(versionId),
           }
         : null,
     [hasRewind, rewindRef]

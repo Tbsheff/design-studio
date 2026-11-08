@@ -117,7 +117,7 @@ const useInlinePrompt = (o: InlinePromptOptions): InlinePromptView | null => {
   }, []);
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (
         event.defaultPrevented ||
         event.repeat ||
@@ -139,7 +139,7 @@ const useInlinePrompt = (o: InlinePromptOptions): InlinePromptView | null => {
 
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [show]);
 
   const empty = o.selection.length === 0 || !o.live;

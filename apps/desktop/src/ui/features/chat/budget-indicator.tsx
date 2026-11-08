@@ -1,6 +1,6 @@
 import type { Project, ProjectSettings } from "@design-studio/contracts";
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactElement } from "react";
 
 import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";
@@ -33,13 +33,17 @@ interface Props {
   onSaved: (project: Project) => void;
 }
 
-const BudgetIndicator = ({ projectId, settings, onSaved }: Props) => {
+const BudgetIndicator = ({
+  projectId,
+  settings,
+  onSaved,
+}: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<number | null | undefined>();
   const [error, setError] = useState<string | null>(null);
   const current = pending === undefined ? settings.maxBudgetUsd : pending;
 
-  const save = (value: number | null) => {
+  const save = (value: number | null): void => {
     setPending(value);
     setError(null);
     api.updateSettings(projectId, { maxBudgetUsd: value }).then(
@@ -97,28 +101,32 @@ const BudgetMenu = ({
   error: string | null;
   onPick: (value: number | null) => void;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const ref = useRef<HTMLDivElement>(null);
   const [custom, setCustom] = useState("");
   const [bad, setBad] = useState(false);
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: MouseEvent): void => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         onClose();
       }
     };
 
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
     document.addEventListener("mousedown", onDown);
     globalThis.addEventListener("keydown", onKey);
 
-    return () => {
+    return (): void => {
       document.removeEventListener("mousedown", onDown);
       globalThis.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
 
-  const submit = (e: FormEvent) => {
+  const submit = (e: FormEvent): void => {
     e.preventDefault();
     const value = parseLimit(custom);
     setBad(value === "bad");

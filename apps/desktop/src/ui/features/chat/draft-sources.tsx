@@ -6,7 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { api } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
@@ -41,7 +41,7 @@ const useDraftSources = (
       )
       .catch(() => null);
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, runId]);
@@ -58,7 +58,7 @@ const useDraftSources = (
       .then((info) => live && setState((prev) => prev ?? info.sources ?? null))
       .catch(() => null);
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, enabled]);
@@ -104,7 +104,11 @@ const seconds = (ms: number | undefined): string | null => {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
 };
 
-const StateMark = ({ state }: { state: DraftSourceStatus["state"] }) => {
+const StateMark = ({
+  state,
+}: {
+  state: DraftSourceStatus["state"];
+}): ReactElement => {
   if (state === "reading") {
     return <span className="spinner" aria-hidden="true" />;
   }
@@ -120,7 +124,7 @@ const StateMark = ({ state }: { state: DraftSourceStatus["state"] }) => {
   return <span className="ds-src-dot" aria-hidden="true" />;
 };
 
-const SourceRow = ({ source }: { source: DraftSourceStatus }) => {
+const SourceRow = ({ source }: { source: DraftSourceStatus }): ReactElement => {
   const time = seconds(source.ms);
 
   return (
@@ -222,7 +226,7 @@ const DraftSources = ({
 }: {
   state: DraftSourcesState | null;
   improveEnd: RunStatus | null;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
   const listId = useId();
 

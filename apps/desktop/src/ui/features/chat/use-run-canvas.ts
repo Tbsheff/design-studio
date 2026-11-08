@@ -78,7 +78,7 @@ const useRunCanvas = (
     : {
         element: elementName(selection),
         frameId: frame.id,
-        onRemove: () => setRemoved(key),
+        onRemove: (): void => setRemoved(key),
         page: `/${frame.path ?? ""}`,
         state: stateLabel(
           states ?? null,

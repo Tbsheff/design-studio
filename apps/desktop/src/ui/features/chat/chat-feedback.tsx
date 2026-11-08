@@ -1,6 +1,7 @@
 import type { RunStatus } from "@design-studio/contracts";
 import { CopyButton, Icon } from "@design-studio/ui";
 import { memo, useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { baseName, formatMs, formatUsd } from "../../domain/format.js";
 import { copy } from "./copy.js";
@@ -22,7 +23,7 @@ const STATUS_LABEL: Record<RunStatus, string> = {
 const THUMB_PATH =
   "M5 7.25v6.25H2.5V7.25zM5 7.25 7.6 2.5c.9 0 1.6.7 1.6 1.6v2.4h3.3c.8 0 1.4.7 1.3 1.5l-.8 4.4c-.1.6-.7 1.1-1.3 1.1H5";
 
-const ThumbIcon = ({ down = false }: { down?: boolean }) => (
+const ThumbIcon = ({ down = false }: { down?: boolean }): ReactElement => (
   <svg
     width="14"
     height="14"
@@ -49,7 +50,7 @@ const ThumbButton = ({
   value: Thumb;
   on: boolean;
   onPick: (value: Thumb | null) => void;
-}) => {
+}): ReactElement => {
   const label = value === "up" ? "Good response" : "Bad response";
 
   return (
@@ -80,7 +81,7 @@ const FileChips = ({
   quiet: boolean;
   onOpen: () => void;
   reviews: boolean;
-}) => {
+}): ReactElement | null => {
   const action = reviews ? "Review the changes" : "Open run details";
 
   if (changes.length === 0) {
@@ -131,7 +132,7 @@ const stopNote = (run: RunView): string | null => {
   return [putBack, saved].filter(Boolean).join(" ") || null;
 };
 
-const StopNote = ({ run }: { run: RunView }) => {
+const StopNote = ({ run }: { run: RunView }): ReactElement | null => {
   const note = stopNote(run);
 
   return note ? (

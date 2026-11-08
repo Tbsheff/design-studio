@@ -1,4 +1,5 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 interface Props {
   count: number;
@@ -14,7 +15,7 @@ const UnfinishedBanner = ({
   runStopped,
   onKeep,
   onDiscard,
-}: Props) => (
+}: Props): ReactElement => (
   <div className="banner" role="status">
     <Icon name="alert" />
     <span>

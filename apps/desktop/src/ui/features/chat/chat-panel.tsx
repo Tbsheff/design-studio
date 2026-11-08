@@ -1,7 +1,7 @@
 import type { Direction } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import {
   Conversation,
@@ -62,7 +62,7 @@ const ChatPanel = ({
   offline,
   onStop,
   onReview,
-}: Props) => {
+}: Props): ReactElement => {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
@@ -93,7 +93,7 @@ const ChatPanel = ({
   const timeline = useMemo(() => timelineOf(runs, mcp), [runs, mcp]);
   const isOffline = Boolean(offline);
 
-  const renderRun = (run: RunView) => (
+  const renderRun = (run: RunView): ReactElement => (
     <RunEntry
       key={run.runId}
       run={run}

@@ -19,7 +19,7 @@ const Header = ({
         className="btn small ghost home-goto"
         data-tip={copy.findAProjectFolderOr}
         onClick={() =>
-          window.dispatchEvent(
+          globalThis.dispatchEvent(
             new CustomEvent("studio:command-layer", { detail: "palette" })
           )
         }

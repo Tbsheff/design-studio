@@ -213,7 +213,7 @@ const FolderRow = ({
   const renameRef = useRef<HTMLButtonElement>(null);
   const stopEditing = (): void => {
     setEditing(false);
-    window.requestAnimationFrame(() => renameRef.current?.focus());
+    globalThis.requestAnimationFrame(() => renameRef.current?.focus());
   };
   const save = async (formEvent: FormEvent): Promise<void> => {
     formEvent.preventDefault();

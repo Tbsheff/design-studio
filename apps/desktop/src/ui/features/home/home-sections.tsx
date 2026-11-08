@@ -67,9 +67,9 @@ const HomeToast = ({
       return;
     }
 
-    const timer = window.setTimeout(onDone, TOAST_MS);
+    const timer = globalThis.setTimeout(onDone, TOAST_MS);
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [toast, held, onDone]);
 
   return (
@@ -154,8 +154,8 @@ const useProjectActions = ({
           await projectsApi.restore(trashed.trashId);
         } catch (error: unknown) {
           showToast({
-            text: `Could not restore: ${errorText(error)}`,
             hasError: true,
+            text: `Could not restore: ${errorText(error)}`,
           });
         }
       };
@@ -168,8 +168,8 @@ const useProjectActions = ({
       });
     } catch (error) {
       showToast({
-        text: `Could not move to Trash: ${errorText(error)}`,
         hasError: true,
+        text: `Could not move to Trash: ${errorText(error)}`,
       });
     }
   },
@@ -183,8 +183,8 @@ const useProjectActions = ({
       });
     } catch (error) {
       showToast({
-        text: `Could not duplicate: ${errorText(error)}`,
         hasError: true,
+        text: `Could not duplicate: ${errorText(error)}`,
       });
     }
   },
@@ -194,8 +194,8 @@ const useProjectActions = ({
       await projectsApi.rename(project, name);
     } catch (error: unknown) {
       showToast({
-        text: `Could not rename: ${errorText(error)}`,
         hasError: true,
+        text: `Could not rename: ${errorText(error)}`,
       });
     }
   },
@@ -204,8 +204,8 @@ const useProjectActions = ({
       await projectsApi.reveal(project);
     } catch (error: unknown) {
       showToast({
-        text: `Could not show the folder: ${errorText(error)}`,
         hasError: true,
+        text: `Could not show the folder: ${errorText(error)}`,
       });
     }
   },

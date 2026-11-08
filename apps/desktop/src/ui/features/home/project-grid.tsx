@@ -1,10 +1,10 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon, LazySelect } from "@design-studio/ui";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
 
-import { projectTypeOf, TYPE_LABELS } from "../../../shared/project-search.js";
+import { TYPE_LABELS, projectTypeOf } from "../../../shared/project-search.js";
 import { api, warmProject } from "../../api.js";
 import { prefetchStudio } from "../../app/screen-preload.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
@@ -61,7 +61,7 @@ export function useLastRunFailed(project: Project): boolean {
       () => undefined
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [key, project.id]);
@@ -105,7 +105,7 @@ export function useThumbnail(project: Project): string | null {
       () => undefined
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [key, project.id, thumb]);
@@ -117,7 +117,7 @@ export function useThumbnail(project: Project): string | null {
   return null;
 }
 
-const Star = ({ isFilled, size = 14 }: StarProps) => (
+const Star = ({ isFilled, size = 14 }: StarProps): ReactElement => (
   <svg
     width={size}
     height={size}
@@ -209,7 +209,7 @@ export const HealthCell = ({
 }: {
   readonly health: AppHealth | null;
   readonly hasRunFailed: boolean;
-}) => {
+}): ReactElement | null => {
   const state = health?.state ?? "static";
 
   if (hasRunFailed && state !== "install" && state !== "failed") {
@@ -248,7 +248,7 @@ const ProjectCard = ({
   isFavorite,
   actions,
   onFocusCard,
-}: CardProps) => {
+}: CardProps): ReactElement => {
   const html = project.kind === "html";
   const count = project.directions.length;
   const thumb = useThumbnail(project);
@@ -259,7 +259,7 @@ const ProjectCard = ({
   const moreRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const closeMenu = (refocus: boolean) => {
+  const closeMenu = (refocus: boolean): void => {
     setMenu(null);
 
     if (refocus) {
@@ -267,7 +267,7 @@ const ProjectCard = ({
     }
   };
 
-  const pick = (action: CardAction) => {
+  const pick = (action: CardAction): void => {
     closeMenu(action === "duplicate" || action === "reveal");
 
     if (action === "rename") {
@@ -283,7 +283,7 @@ const ProjectCard = ({
     }
   };
 
-  const onContextMenu = (event: MouseEvent<HTMLDivElement>) => {
+  const onContextMenu = (event: MouseEvent<HTMLDivElement>): void => {
     event.preventDefault();
     const box = cardRef.current?.getBoundingClientRect();
     setMenu(
@@ -293,7 +293,7 @@ const ProjectCard = ({
     );
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
     const mod = event.metaKey || event.ctrlKey;
 
     if (event.key === "F2") {
@@ -314,9 +314,9 @@ const ProjectCard = ({
     }
   };
 
-  const finishRename = (name: string | null) => {
+  const finishRename = (name: string | null): void => {
     setRenaming(false);
-    window.requestAnimationFrame(() => openRef.current?.focus());
+    globalThis.requestAnimationFrame(() => openRef.current?.focus());
 
     if (name) {
       void actions.onRename(project, name);
@@ -492,10 +492,10 @@ const ProjectListTools = ({
   readonly onFirst: () => void;
   readonly onOpenFirst: () => void;
   readonly canOpen: boolean;
-}) => {
+}): ReactElement => {
   const { homeSort } = useUi();
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "ArrowDown" && canOpen) {
       event.preventDefault();
       onFirst();
@@ -540,7 +540,7 @@ const ProjectListTools = ({
   );
 };
 
-const ViewTools = () => {
+const ViewTools = (): ReactElement => {
   const { view, favoritesOnly } = useHomeView();
 
   return (
@@ -635,7 +635,7 @@ const ProjectListStates = ({
   readonly query: string;
   readonly shownCount: number;
   readonly onClearQuery: () => void;
-}) => (
+}): ReactElement => (
   <>
     {error && (
       <div className="alert error" role="alert">
@@ -689,7 +689,7 @@ function useGridFocus(shown: readonly Project[]) {
     ? activeId
     : (shown[0]?.id ?? null);
 
-  const focusAt = (index: number) => {
+  const focusAt = (index: number): void => {
     const target = shown[index];
 
     if (!target) {
@@ -704,7 +704,7 @@ function useGridFocus(shown: readonly Project[]) {
       ?.focus();
   };
 
-  const onGridKey = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onGridKey = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (
       !(event.target instanceof HTMLElement) ||
       !event.target.classList.contains("project-open")
@@ -743,7 +743,7 @@ export const ProjectGrid = ({
   filter = null,
   tabs,
   headActions,
-}: Props) => {
+}: Props): ReactElement => {
   const { homeSort } = useUi();
   const { view, favoritesOnly, favorites } = useHomeView();
   const matched = toSortedProjects(
@@ -775,7 +775,7 @@ export const ProjectGrid = ({
         return;
       }
 
-      window.requestAnimationFrame(() => {
+      globalThis.requestAnimationFrame(() => {
         const buttons =
           gridRef.current?.querySelectorAll<HTMLButtonElement>(".project-open");
 

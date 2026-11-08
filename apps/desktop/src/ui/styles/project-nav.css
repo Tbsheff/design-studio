@@ -133,6 +133,7 @@
 }
 
 .prail-head {
+  align-self: stretch;
   gap: var(--s-2);
   padding: 0 var(--s-2) 0 var(--s-3);
 }

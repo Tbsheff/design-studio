@@ -35,3 +35,12 @@ export type {
   WalkthroughRunnerApi,
   WalkthroughStoreApi,
 } from "./walkthrough/index.js";
+
+export { AttentionRunner, AttentionStore } from "./attention/index.js";
+
+export type {
+  AttentionRunnerApi,
+  AttentionStoreApi,
+  GetAttentionCommand,
+  RunAttentionCommand,
+} from "./attention/index.js";

@@ -18,7 +18,10 @@ const ClarifyQuestionField = ({
   first: boolean;
 }): ReactElement => {
   const legendId = useId();
-  const picked = item.options.includes(answer) ? answer : "";
+  let picked = "";
+  if (item.options.includes(answer)) {
+    picked = answer;
+  }
   const radios = useRovingRadioGroup(item.options, picked, onAnswer);
   const firstRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
@@ -161,12 +164,10 @@ const ClarifyForm = ({
           data-tip-side="top"
           aria-keyshortcuts="Meta+Enter Control+Enter"
         >
-          {busy ? (
-            <span className="spinner" />
-          ) : (
-            <Icon name="arrowUp" size={14} />
-          )}
-          {busy ? "Creating…" : "Build with answers"}
+          {busy && <span className="spinner" />}
+          {!busy && <Icon name="arrowUp" size={14} />}
+          {busy && "Creating…"}
+          {!busy && "Build with answers"}
         </button>
       </div>
     </form>

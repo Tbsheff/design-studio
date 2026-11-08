@@ -42,9 +42,13 @@ const turnProps = (
   const running = run.status === "running" || !run.summary;
   const versionId = run.summary?.versionId ?? null;
 
-  const forkBase = running
-    ? null
-    : forkBaseOf({ startedAt: run.startedAt, versionId }, rewind.versions);
+  let forkBase: string | null = null;
+  if (!running) {
+    forkBase = forkBaseOf(
+      { startedAt: run.startedAt, versionId },
+      rewind.versions
+    );
+  }
 
   const restoreTip =
     running || rewind.locked
@@ -78,13 +82,17 @@ const undoProps = (
 ): { undoVersionId: string | null; undoTip: string | null } => {
   const versionId = run.summary?.versionId;
 
-  const parentId =
+  let parentId: string | null | undefined = null;
+  if (
     rewind &&
     run.status === "failed" &&
     versionId &&
     versionId === rewind.headVersionId
-      ? rewind.versions.find((version) => version.id === versionId)?.parentId
-      : null;
+  ) {
+    parentId = rewind.versions.find(
+      (version) => version.id === versionId
+    )?.parentId;
+  }
 
   if (!rewind || !parentId) {
     return { undoTip: null, undoVersionId: null };
@@ -110,11 +118,14 @@ const reviewOf = (
     return null;
   }
 
-  return rewind.versions.some(
-    (version) => version.id === versionId && version.parentId !== null
-  )
-    ? versionId
-    : null;
+  if (
+    rewind.versions.some(
+      (version) => version.id === versionId && version.parentId !== null
+    )
+  ) {
+    return versionId;
+  }
+  return null;
 };
 
 export { reviewOf, turnProps, undoProps };

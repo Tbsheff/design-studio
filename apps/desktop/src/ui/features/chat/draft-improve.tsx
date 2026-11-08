@@ -19,8 +19,10 @@ const improveRequest = (
 ): RunRequest => {
   const trimmed = focus.trim();
 
-  const level: RunLevel =
-    !defaultLevel || defaultLevel === "wireframe" ? "prototype" : defaultLevel;
+  let level: RunLevel = "prototype";
+  if (defaultLevel && defaultLevel !== "wireframe") {
+    level = defaultLevel;
+  }
 
   return {
     level,
@@ -90,7 +92,8 @@ const ImproveControl = ({
         className={`btn small${primary ? " primary" : ""}`}
         disabled={running || busy}
       >
-        {improving ? "Improving…" : "Improve with AI"}
+        {improving && "Improving…"}
+        {!improving && "Improve with AI"}
       </button>
     </form>
   );
@@ -210,7 +213,8 @@ const CheckStatus = ({
       >
         {count}
         {copy.problem}
-        {count === 1 ? "" : "s"}
+        {count === 1 && ""}
+        {count !== 1 && "s"}
       </button>
       {open && (
         <div

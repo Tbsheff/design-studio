@@ -205,7 +205,8 @@ const ReferenceToggle = ({
       disabled={busy}
       onClick={onToggle}
     >
-      {busy ? "…" : "Ref"}
+      {busy && "…"}
+      {!busy && "Ref"}
     </button>
   );
 };

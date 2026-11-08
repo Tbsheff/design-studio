@@ -22,8 +22,10 @@ const useDraftSources = (
   const [state, setState] = useState<DraftSourcesState | null>(null);
   const [end, setEnd] = useState<ImproveEnd>(null);
 
-  const runId =
-    state?.improve.state === "started" ? (state.improve.runId ?? null) : null;
+  let runId: string | null = null;
+  if (state?.improve.state === "started") {
+    runId = state.improve.runId ?? null;
+  }
 
   useEffect(() => {
     if (!runId) {
@@ -110,7 +112,10 @@ const seconds = (ms: number | undefined): string | null => {
     return null;
   }
 
-  return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
+  if (ms < 1000) {
+    return `${ms} ms`;
+  }
+  return `${(ms / 1000).toFixed(1)} s`;
 };
 
 const StateMark = ({
@@ -182,9 +187,10 @@ const summary = (state: DraftSourcesState): string => {
     (source) => source.state === "blocked" || source.state === "failed"
   ).length;
 
-  return problems > 0
-    ? `${real.length - problems} of ${real.length} read`
-    : "All read";
+  if (problems > 0) {
+    return `${real.length - problems} of ${real.length} read`;
+  }
+  return "All read";
 };
 
 const startedNote = (end: RunStatus | null): string => {

@@ -171,7 +171,10 @@ const levelShortHint = (level: RunLevel): string => {
   const { hint } = LEVEL_PRESETS[level];
   const match = /^(.*?) \(usually ([^,)]+)/u.exec(hint);
 
-  return match ? `${match[1]}, ${match[2]}` : (hint.split(". ")[0] ?? hint);
+  if (match) {
+    return `${match[1]}, ${match[2]}`;
+  }
+  return hint.split(". ")[0] ?? hint;
 };
 
 const ChoiceItem = ({

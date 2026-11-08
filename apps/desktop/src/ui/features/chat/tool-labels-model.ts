@@ -40,7 +40,10 @@ const relativePath = (file: string, workTree: string | null): string => {
     return norm.slice(root.length + 1);
   }
 
-  return isAbsolutePath(norm) ? baseName(norm) : norm;
+  if (isAbsolutePath(norm)) {
+    return baseName(norm);
+  }
+  return norm;
 };
 
 const pathInput = (input: unknown): string | null => {
@@ -70,7 +73,10 @@ const toolTarget = (input: unknown, workTree: string | null): string => {
 
   const raw = shortInput(input);
 
-  return isAbsolutePath(raw) ? relativePath(raw, workTree) : raw;
+  if (isAbsolutePath(raw)) {
+    return relativePath(raw, workTree);
+  }
+  return raw;
 };
 
 const SKILL_TOOL = "Skill";
@@ -86,9 +92,10 @@ const skillToolName = (input: unknown): string => {
     return "";
   }
 
-  return value.startsWith("personal:")
-    ? value.slice("personal:".length)
-    : value;
+  if (value.startsWith("personal:")) {
+    return value.slice("personal:".length);
+  }
+  return value;
 };
 
 const toolLabel = (name: string, input: unknown): string => {
@@ -98,7 +105,10 @@ const toolLabel = (name: string, input: unknown): string => {
 
   const skill = skillToolName(input);
 
-  return skill ? `Skill · ${skill}` : "Skill";
+  if (skill) {
+    return `Skill · ${skill}`;
+  }
+  return "Skill";
 };
 
 const TOOL_VERBS: Record<string, string> = {

@@ -7,11 +7,19 @@ import { copy } from "./copy.js";
 
 const PRESETS: (number | null)[] = [null, 0.5, 1, 2, 5];
 
-const money = (value: number): string =>
-  Number.isInteger(value) ? `$${value}` : `$${value.toFixed(2)}`;
+const money = (value: number): string => {
+  if (Number.isInteger(value)) {
+    return `$${value}`;
+  }
+  return `$${value.toFixed(2)}`;
+};
 
-const limitLabel = (value: number | null): string =>
-  value === null ? "No limit" : money(value);
+const limitLabel = (value: number | null): string => {
+  if (value === null) {
+    return "No limit";
+  }
+  return money(value);
+};
 
 const parseLimit = (raw: string): number | null | "bad" => {
   const text = raw.trim().replace(/^\$/u, "");
@@ -22,9 +30,10 @@ const parseLimit = (raw: string): number | null | "bad" => {
 
   const value = Number(text);
 
-  return Number.isFinite(value) && value >= 0.01 && value <= 50
-    ? Math.round(value * 100) / 100
-    : "bad";
+  if (Number.isFinite(value) && value >= 0.01 && value <= 50) {
+    return Math.round(value * 100) / 100;
+  }
+  return "bad";
 };
 
 interface Props {
@@ -41,7 +50,10 @@ const BudgetIndicator = ({
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<number | null | undefined>();
   const [error, setError] = useState<string | null>(null);
-  const current = pending === undefined ? settings.maxBudgetUsd : pending;
+  let current = settings.maxBudgetUsd;
+  if (pending !== undefined) {
+    current = pending;
+  }
 
   const save = (value: number | null): void => {
     setPending(value);
@@ -157,7 +169,8 @@ const BudgetMenu = ({
             className="ui-menu-item"
             onClick={() => onPick(value)}
           >
-            {value === null ? "No limit" : money(value)}
+            {value === null && "No limit"}
+            {value !== null && money(value)}
           </button>
         ))}
       </div>

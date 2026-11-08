@@ -73,8 +73,10 @@ const useHistoryWindow = <Entry extends Item>(
 
   const last = items.at(-1)?.key ?? null;
 
-  const count =
-    state.reset === resetKey ? nextCount(state, items, since) : FIRST;
+  let count: number = FIRST;
+  if (state.reset === resetKey) {
+    count = nextCount(state, items, since);
+  }
 
   if (state.reset !== resetKey) {
     setState({ count: FIRST, last: null, reset: resetKey });
@@ -82,10 +84,15 @@ const useHistoryWindow = <Entry extends Item>(
     setState({ ...state, count, last });
   }
 
-  const revealAt =
-    reveal === null ? -1 : items.findIndex((item) => item.key === reveal);
+  let revealAt = -1;
+  if (reveal !== null) {
+    revealAt = items.findIndex((item) => item.key === reveal);
+  }
 
-  const need = revealAt === -1 ? 0 : items.length - revealAt;
+  let need = 0;
+  if (revealAt !== -1) {
+    need = items.length - revealAt;
+  }
 
   if (need > count && state.reset === resetKey) {
     setState((prev) => ({ ...prev, count: Math.max(prev.count, need) }));
@@ -178,11 +185,9 @@ const EarlierRuns = ({
       className="btn ghost small chat-earlier"
       onClick={onMore}
     >
-      {hidden > 0
-        ? `Show ${hidden} earlier ${hidden === 1 ? "run" : "runs"}`
-        : older.loading
-          ? "Loading earlier runs"
-          : "Show earlier runs"}
+      {hidden > 0 && `Show ${hidden} earlier ${hidden === 1 ? "run" : "runs"}`}
+      {hidden <= 0 &&
+        (older.loading ? "Loading earlier runs" : "Show earlier runs")}
     </button>
   );
 };

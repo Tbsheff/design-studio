@@ -22,10 +22,12 @@ const groupByOrigin = (skills: SkillInfo[]): [string, SkillInfo[]][] => {
   return [...groups.entries()];
 };
 
-const originLabel = (origin: string): string =>
-  origin === "personal"
-    ? "Personal skills (~/.claude/skills)"
-    : `Plugin ${origin.slice("plugin:".length)}`;
+const originLabel = (origin: string): string => {
+  if (origin === "personal") {
+    return "Personal skills (~/.claude/skills)";
+  }
+  return `Plugin ${origin.slice("plugin:".length)}`;
+};
 
 const matches = (skill: SkillInfo, query: string): boolean => {
   const needle = query.trim().toLowerCase();
@@ -186,9 +188,11 @@ const SkillsChecklist = ({
           {!allowBash && bashCount > 0 && (
             <p className="skills-note">
               {plural(bashCount, "skill")}
-              {copy.that} {bashCount === 1 ? "is on needs" : "are on need"}
+              {copy.that} {bashCount === 1 && "is on needs"}
+              {bashCount !== 1 && "are on need"}
               {copy.shellCommandsToLet}
-              {bashCount === 1 ? "it" : "them"}
+              {bashCount === 1 && "it"}
+              {bashCount !== 1 && "them"}
               {copy.runScriptsTurnOn}
             </p>
           )}

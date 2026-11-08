@@ -12,20 +12,22 @@ const PREVIEW_GRACE_MS = 15_000;
 const LONG_FRAME_FLUSH_GRACE_MS = 6000;
 
 const fileWriteMs = (run: RunView): number =>
-  run.tools.reduce(
-    (sum, tool) =>
-      FILE_WRITE_TOOLS.has(tool.name) && !tool.isError
-        ? sum + (tool.durationMs ?? 0)
-        : sum,
-    0
-  );
+  run.tools.reduce((sum, tool) => {
+    if (FILE_WRITE_TOOLS.has(tool.name) && !tool.isError) {
+      return sum + (tool.durationMs ?? 0);
+    }
+    return sum;
+  }, 0);
 
 const firstWriteAt = (run: RunView): number | null => {
   const starts = run.tools
     .filter((tool) => FILE_WRITE_TOOLS.has(tool.name))
     .map((tool) => tool.startedAt);
 
-  return starts.length > 0 ? Math.min(...starts) : null;
+  if (starts.length > 0) {
+    return Math.min(...starts);
+  }
+  return null;
 };
 
 const previewSamplesForRun = (
@@ -61,9 +63,10 @@ const previewText = (samples: TelemetrySample[] | null): string => {
   const last = samples.at(-1) as TelemetrySample;
   const max = Math.max(...samples.map((sample) => sample.ms));
 
-  return samples.length === 1
-    ? formatMs(last.ms)
-    : `${formatMs(last.ms)} last, ${formatMs(max)} max (${samples.length} updates)`;
+  if (samples.length === 1) {
+    return formatMs(last.ms);
+  }
+  return `${formatMs(last.ms)} last, ${formatMs(max)} max (${samples.length} updates)`;
 };
 
 const firstTokenText = (

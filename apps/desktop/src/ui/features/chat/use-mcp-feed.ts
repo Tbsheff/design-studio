@@ -93,18 +93,20 @@ const useMcpFeed = (
         return;
       }
 
-      setApprovals((prev) =>
-        prev.some((card) => card.approval.id === approval.id)
-          ? prev
-          : [...prev, { approval, outcome: null }]
-      );
+      setApprovals((prev) => {
+        if (prev.some((card) => card.approval.id === approval.id)) {
+          return prev;
+        }
+        return [...prev, { approval, outcome: null }];
+      });
     } else if (event.type === "mcp.approval.resolved") {
       setApprovals((prev) =>
-        prev.map((card) =>
-          card.approval.id === event.approvalId
-            ? { ...card, outcome: event.outcome }
-            : card
-        )
+        prev.map((card) => {
+          if (card.approval.id === event.approvalId) {
+            return { ...card, outcome: event.outcome };
+          }
+          return card;
+        })
       );
     }
   });

@@ -64,11 +64,19 @@ const useSkillCatalog = (): {
   return { catalog, error, reload: () => void load(true) };
 };
 
-const skillDisplayName = (id: string): string =>
-  id.startsWith("personal:") ? id.slice("personal:".length) : id;
+const skillDisplayName = (id: string): string => {
+  if (id.startsWith("personal:")) {
+    return id.slice("personal:".length);
+  }
+  return id;
+};
 
-const originText = (origin: SkillInfo["origin"]): string =>
-  origin === "personal" ? "personal" : origin.slice("plugin:".length);
+const originText = (origin: SkillInfo["origin"]): string => {
+  if (origin === "personal") {
+    return "personal";
+  }
+  return origin.slice("plugin:".length);
+};
 
 const enabledSkills = (
   catalog: SkillCatalog | null,

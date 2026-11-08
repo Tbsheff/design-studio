@@ -24,7 +24,10 @@ const load = (): Store => {
 
   try {
     const raw = readStored(KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    let parsed: unknown = {};
+    if (raw) {
+      parsed = JSON.parse(raw);
+    }
     cache = parsed && typeof parsed === "object" ? (parsed as Store) : {};
   } catch {
     cache = {};
@@ -51,9 +54,10 @@ const save = (store: Store): void => {
 const readRunFeedback = (runId: string): RunFeedback => {
   const entry = load()[runId];
 
-  return entry
-    ? { stars: entry.stars ?? 0, thumb: entry.thumb ?? null }
-    : EMPTY;
+  if (entry) {
+    return { stars: entry.stars ?? 0, thumb: entry.thumb ?? null };
+  }
+  return EMPTY;
 };
 
 const writeRunFeedback = (runId: string, feedback: RunFeedback): void => {

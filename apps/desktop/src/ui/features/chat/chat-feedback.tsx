@@ -51,7 +51,10 @@ const ThumbButton = ({
   on: boolean;
   onPick: (value: Thumb | null) => void;
 }): ReactElement => {
-  const label = value === "up" ? "Good response" : "Bad response";
+  let label: "Good response" | "Bad response" = "Bad response";
+  if (value === "up") {
+    label = "Good response";
+  }
 
   return (
     <button
@@ -82,12 +85,16 @@ const FileChips = ({
   onOpen: () => void;
   reviews: boolean;
 }): ReactElement | null => {
-  const action = reviews ? "Review the changes" : "Open run details";
+  let action: "Review the changes" | "Open run details" = "Open run details";
+  if (reviews) {
+    action = "Review the changes";
+  }
 
   if (changes.length === 0) {
-    return quiet ? (
-      <p className="run-no-changes">{copy.noFilesChanged}</p>
-    ) : null;
+    if (quiet) {
+      return <p className="run-no-changes">{copy.noFilesChanged}</p>;
+    }
+    return null;
   }
 
   return (
@@ -124,12 +131,15 @@ const stopNote = (run: RunView): string | null => {
 
   const restored = summary.restoredFiles ?? [];
 
-  const putBack =
-    restored.length > 0
-      ? `Put back ${restored.map(baseName).join(", ")}: the write was cut off.`
-      : "";
+  let putBack = "";
+  if (restored.length > 0) {
+    putBack = `Put back ${restored.map(baseName).join(", ")}: the write was cut off.`;
+  }
 
-  const saved = summary.versionId ? "Saved what it changed as a version." : "";
+  let saved: "" | "Saved what it changed as a version." = "";
+  if (summary.versionId) {
+    saved = "Saved what it changed as a version.";
+  }
 
   return [putBack, saved].filter(Boolean).join(" ") || null;
 };
@@ -137,11 +147,14 @@ const stopNote = (run: RunView): string | null => {
 const StopNote = ({ run }: { run: RunView }): ReactElement | null => {
   const note = stopNote(run);
 
-  return note ? (
-    <p className="run-no-changes" data-testid="run-stop-note">
-      {note}
-    </p>
-  ) : null;
+  if (note) {
+    return (
+      <p className="run-no-changes" data-testid="run-stop-note">
+        {note}
+      </p>
+    );
+  }
+  return null;
 };
 
 const RunFeedbackRow = memo(
@@ -156,10 +169,12 @@ const RunFeedbackRow = memo(
   }) => {
     const [feedback, setFeedback] = useRunFeedback(run.runId);
 
-    const changes = useMemo(
-      () => (run.status === "running" ? [] : fileChanges(run.tools)),
-      [run.status, run.tools]
-    );
+    const changes = useMemo(() => {
+      if (run.status === "running") {
+        return [];
+      }
+      return fileChanges(run.tools);
+    }, [run.status, run.tools]);
 
     const { summary } = run;
     const done = run.status === "completed";

@@ -94,7 +94,7 @@ const QueuedItem = ({
           {copy.text8}
         </span>
       )}
-      {editing ? (
+      {editing && (
         <textarea
           className="queued-edit"
           aria-label={copy.editQueuedMessage}
@@ -114,7 +114,8 @@ const QueuedItem = ({
             }
           }}
         />
-      ) : (
+      )}
+      {!editing && (
         <button
           type="button"
           className="queued-text"
@@ -162,9 +163,12 @@ const QueuedMessages = ({
             count={items.length}
             onChange={(text) =>
               onChange(
-                items.map((entry) =>
-                  entry.id === item.id ? { ...entry, text } : entry
-                )
+                items.map((entry) => {
+                  if (entry.id === item.id) {
+                    return { ...entry, text };
+                  }
+                  return entry;
+                })
               )
             }
             onRemove={() =>

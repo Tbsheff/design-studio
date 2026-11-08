@@ -36,9 +36,12 @@ const useHistorySearch = (
     close: (): void => setOpen(false),
     current,
     move: (step: 1 | -1): void =>
-      setActive((index) =>
-        shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
-      ),
+      setActive((index) => {
+        if (shown.length === 0) {
+          return 0;
+        }
+        return (index + step + shown.length) % shown.length;
+      }),
     open,
     query,
     setQuery,

@@ -61,9 +61,10 @@ const TodoMark = ({
     return <Icon name="check" size={12} />;
   }
 
-  return todo.status === "in_progress" && running ? (
-    <span className="spinner" />
-  ) : null;
+  if (todo.status === "in_progress" && running) {
+    return <span className="spinner" />;
+  }
+  return null;
 };
 
 const TodoRow = ({

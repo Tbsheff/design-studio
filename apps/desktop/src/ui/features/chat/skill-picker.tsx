@@ -311,7 +311,12 @@ const SkillsIndicator = ({ projectId, settings, onSaved }: IndicatorProps) => {
       });
       setError(null);
       onSaved(project);
-      setPending((current) => (current === next ? null : current));
+      setPending((current) => {
+        if (current === next) {
+          return null;
+        }
+        return current;
+      });
     } catch (thrownError: unknown) {
       setError(errorText(thrownError));
       setPending(null);
@@ -335,7 +340,8 @@ const SkillsIndicator = ({ projectId, settings, onSaved }: IndicatorProps) => {
         onClick={() => setOpen((wasOpen) => !wasOpen)}
       >
         <Icon name="book" size={12} />
-        {catalog ? `${count} skill${count === 1 ? "" : "s"}` : "Skills"}
+        {catalog && `${count} skill${count === 1 ? "" : "s"}`}
+        {!catalog && "Skills"}
       </button>
       {open && (
         <IndicatorPop

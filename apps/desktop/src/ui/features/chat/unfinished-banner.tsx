@@ -24,12 +24,12 @@ const UnfinishedBanner = ({
       {copy.unfinishedChangesIn}
       {count}
       {copy.file}
-      {count === 1 ? "" : "s"}
+      {count === 1 && ""}
+      {count !== 1 && "s"}
     </span>
     <span className="sub">
-      {runStopped
-        ? "A run stopped before it saved a version."
-        : "Files changed outside a run since the last version."}
+      {runStopped && "A run stopped before it saved a version."}
+      {!runStopped && "Files changed outside a run since the last version."}
     </span>
     <div className="spacer" />
     <button

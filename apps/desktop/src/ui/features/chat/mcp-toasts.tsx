@@ -53,9 +53,12 @@ const useApprovalFeed = (): [
   const mark = (id: string, outcome: McpApprovalOutcome): void => {
     answered.current.set(id, outcome);
     setCards((prev) =>
-      prev.map((card) =>
-        card.approval.id === id ? { ...card, outcome } : card
-      )
+      prev.map((card) => {
+        if (card.approval.id === id) {
+          return { ...card, outcome };
+        }
+        return card;
+      })
     );
   };
 

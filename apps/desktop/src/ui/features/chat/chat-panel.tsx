@@ -143,13 +143,12 @@ const ChatPanel = ({
             resetKey={direction?.id ?? null}
             reveal={search.target}
             onRevealed={search.onFound}
-            render={(item) =>
-              item.kind === "run" ? (
-                renderRun(item.run)
-              ) : (
-                <McpItem key={item.key} item={item} mcp={mcp} />
-              )
-            }
+            render={(item) => {
+              if (item.kind === "run") {
+                return renderRun(item.run);
+              }
+              return <McpItem key={item.key} item={item} mcp={mcp} />;
+            }}
           />
           {pending && <PendingEntry run={pending} workTree={workTree} />}
         </ConversationContent>

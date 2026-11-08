@@ -143,24 +143,22 @@ const useTurnActions = (
   const rewindRef = useLatest(rewind);
   const hasRewind = rewind !== undefined;
 
-  const actions = useMemo<TurnActions | null>(
-    () =>
-      hasRewind
-        ? {
-            dirtyCount: (): number => rewindRef.current?.dirtyCount ?? 0,
-            onEditResend: (run, prompt, base): Promise<void> =>
-              rewindRef.current?.onEditResend(run, prompt, base) ??
-              Promise.resolve(),
-            onRename: async (runId, title): Promise<void> => {
-              const summary = await renameRun(runId, title);
-              setTitles((prev) => ({ ...prev, [runId]: summary.title ?? "" }));
-            },
-            onRestore: (versionId): void =>
-              rewindRef.current?.onRestore(versionId),
-          }
-        : null,
-    [hasRewind, rewindRef]
-  );
+  const actions = useMemo<TurnActions | null>(() => {
+    if (hasRewind) {
+      return {
+        dirtyCount: (): number => rewindRef.current?.dirtyCount ?? 0,
+        onEditResend: (run, prompt, base): Promise<void> =>
+          rewindRef.current?.onEditResend(run, prompt, base) ??
+          Promise.resolve(),
+        onRename: async (runId, title): Promise<void> => {
+          const summary = await renameRun(runId, title);
+          setTitles((prev) => ({ ...prev, [runId]: summary.title ?? "" }));
+        },
+        onRestore: (versionId): void => rewindRef.current?.onRestore(versionId),
+      };
+    }
+    return null;
+  }, [hasRewind, rewindRef]);
 
   return { actions, titles };
 };

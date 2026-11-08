@@ -18,8 +18,12 @@ const clampWidth = (width: number, container: number): number => {
   return Math.round(Math.max(MIN_CHAT, Math.min(max, width)));
 };
 
-const chatWidthStyle = (width: number | null): Record<string, string> =>
-  width === null ? {} : { "--chat-w": `${width}px` };
+const chatWidthStyle = (width: number | null): Record<string, string> => {
+  if (width === null) {
+    return {};
+  }
+  return { "--chat-w": `${width}px` };
+};
 
 const ChatSplitter = ({
   columnsRef,
@@ -47,9 +51,10 @@ const ChatSplitter = ({
   const currentWidth = (): number => {
     const panel = columnsRef.current?.querySelector(".pane-left");
 
-    return panel instanceof HTMLElement
-      ? panel.getBoundingClientRect().width
-      : MIN_CHAT;
+    if (panel instanceof HTMLElement) {
+      return panel.getBoundingClientRect().width;
+    }
+    return MIN_CHAT;
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>): void => {
@@ -81,10 +86,17 @@ const ChatSplitter = ({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    const step = event.shiftKey ? 48 : 16;
+    let step: 48 | 16 = 16;
+    if (event.shiftKey) {
+      step = 48;
+    }
 
-    const delta =
-      event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0;
+    let delta = 0;
+    if (event.key === "ArrowRight") {
+      delta = step;
+    } else if (event.key === "ArrowLeft") {
+      delta = -step;
+    }
 
     if (delta === 0) {
       return;

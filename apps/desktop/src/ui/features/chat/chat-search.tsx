@@ -90,7 +90,10 @@ const countText = (hits: Hits | null, searching: boolean): string => {
     return "";
   }
 
-  return hits.more ? `${SEARCH_LIMIT}+` : String(hits.runs.length);
+  if (hits.more) {
+    return `${SEARCH_LIMIT}+`;
+  }
+  return String(hits.runs.length);
 };
 
 const HitList = ({
@@ -109,9 +112,10 @@ const HitList = ({
   onActive: (index: number) => void;
 }): ReactElement | null => {
   if (!hits) {
-    return searching ? (
-      <p className="chat-search-note">{copy.searching}</p>
-    ) : null;
+    if (searching) {
+      return <p className="chat-search-note">{copy.searching}</p>;
+    }
+    return null;
   }
 
   if (hits.failed) {
@@ -194,7 +198,10 @@ const ChatSearch = ({
       }
 
       event.preventDefault();
-      const step = event.key === "ArrowDown" ? 1 : -1;
+      let step: 1 | -1 = -1;
+      if (event.key === "ArrowDown") {
+        step = 1;
+      }
       setActive((index) => (index + step + runs.length) % runs.length);
 
       return;

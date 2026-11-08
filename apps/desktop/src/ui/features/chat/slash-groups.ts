@@ -9,7 +9,10 @@ import type { SlashGroup } from "./slash-menu.js";
 const effectiveModel = (model: string, level: RunLevel): string => {
   const preset = LEVEL_PRESETS[level].model;
 
-  return preset === "project" ? model : preset;
+  if (preset === "project") {
+    return model;
+  }
+  return preset;
 };
 
 const shortModel = (id: string): string =>
@@ -60,13 +63,16 @@ const modelGroup = (
   level: RunLevel | null,
   onModel: (model: string) => void
 ): SlashGroup => {
-  const shown = level ? effectiveModel(model, level) : model;
+  let shown: string = model;
+  if (level) {
+    shown = effectiveModel(model, level);
+  }
   const locked = shown !== model;
 
-  const reason =
-    locked && level
-      ? `${levelLabel(level)} runs always use ${shortModel(shown)}`
-      : null;
+  let reason: string | null = null;
+  if (locked && level) {
+    reason = `${levelLabel(level)} runs always use ${shortModel(shown)}`;
+  }
 
   return {
     choices: MODEL_OPTIONS.map((option) => ({

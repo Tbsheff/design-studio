@@ -232,7 +232,10 @@ const RunSettings = ({
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
-  const designsOn = designs ? designs.disabledReason === null : false;
+  let designsOn = false;
+  if (designs) {
+    designsOn = designs.disabledReason === null;
+  }
 
   const summary = runSettingsSummary({
     designs: designs?.value,

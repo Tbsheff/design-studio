@@ -82,7 +82,10 @@ const GRADE_LABELS: Record<CoverageGrade, string> = {
 const cssVarOf = (token: string): string => {
   const [group, name] = token.split(".");
 
-  return group === "color" ? `--${name}` : `--${group}-${name}`;
+  if (group === "color") {
+    return `--${name}`;
+  }
+  return `--${group}-${name}`;
 };
 
 const Fallbacks = ({ tokens }: { tokens: string[] }): ReactElement => {
@@ -270,7 +273,8 @@ const SaveAnyway = ({
             {copy.theCheckFound}
             {count}
             {copy.problem}
-            {count === 1 ? "" : "s"}
+            {count === 1 && ""}
+            {count !== 1 && "s"}
             {copy.saveAnyway2}
           </p>
           <div className="draft-confirm-actions">
@@ -385,7 +389,8 @@ const SaveControls = ({
           disabled={busy || reason !== null}
           aria-describedby={describedBy}
         >
-          {busy ? "Saving…" : "Save to library"}
+          {busy && "Saving…"}
+          {!busy && "Save to library"}
         </button>
       </span>
       {reason && (

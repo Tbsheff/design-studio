@@ -225,7 +225,10 @@ export default function InlinePrompt({
   };
 
   const ready = text.trim().length > 0 && !view.blocked;
-  const shared = usage && usage.routes.length > 1 ? usage : null;
+  let shared: ComponentUsage | null = null;
+  if (usage && usage.routes.length > 1) {
+    shared = usage;
+  }
 
   return (
     <div
@@ -267,12 +270,12 @@ export default function InlinePrompt({
           {copy.text7}
         </button>
       </div>
-      {shared && isSharedLayout(shared.callSite) ? (
+      {shared && isSharedLayout(shared.callSite) && (
         <SharedLayoutNote usage={shared} />
-      ) : null}
-      {shared && !isSharedLayout(shared.callSite) ? (
+      )}
+      {shared && !isSharedLayout(shared.callSite) && (
         <ScopeChoice usage={shared} choice={choice} onChoice={setChoice} />
-      ) : null}
+      )}
     </div>
   );
 }

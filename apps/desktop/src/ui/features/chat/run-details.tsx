@@ -28,8 +28,12 @@ const SMALL_COST = new Intl.NumberFormat("en-US", {
   style: "currency",
 });
 
-const preciseUsd = (amount: number): string =>
-  amount < 0.01 ? SMALL_COST.format(amount) : `$${amount.toFixed(4)}`;
+const preciseUsd = (amount: number): string => {
+  if (amount < 0.01) {
+    return SMALL_COST.format(amount);
+  }
+  return `$${amount.toFixed(4)}`;
+};
 
 const costText = (summary: NonNullable<RunView["summary"]>): string => {
   const roundingHidesCost =
@@ -39,7 +43,10 @@ const costText = (summary: NonNullable<RunView["summary"]>): string => {
     ? `${formatUsd(summary.costUsd)} (${preciseUsd(summary.costUsd)})`
     : formatUsd(summary.costUsd);
 
-  return summary.status === "canceled" ? `${shown} (estimate)` : shown;
+  if (summary.status === "canceled") {
+    return `${shown} (estimate)`;
+  }
+  return shown;
 };
 
 const RunDetails = ({
@@ -161,14 +168,12 @@ const RunDetails = ({
                 <tr key={tool.toolUseId} data-tip={JSON.stringify(tool.input)}>
                   <td className="truncate">{prettyToolName(tool.name)}</td>
                   <td className="mono truncate">
-                    {tool.name === SKILL_TOOL
-                      ? skillToolName(tool.input)
-                      : toolTarget(tool.input, null)}
+                    {tool.name === SKILL_TOOL && skillToolName(tool.input)}
+                    {tool.name !== SKILL_TOOL && toolTarget(tool.input, null)}
                   </td>
                   <td className="num">
-                    {tool.durationMs === null
-                      ? "Running…"
-                      : formatMs(tool.durationMs)}
+                    {tool.durationMs === null && "Running…"}
+                    {tool.durationMs !== null && formatMs(tool.durationMs)}
                   </td>
                   {anyError && (
                     <td>

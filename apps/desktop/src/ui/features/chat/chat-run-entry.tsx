@@ -68,21 +68,19 @@ const RunEntry = memo(
     const { runId } = run;
     const details = useCallback(() => onDetails(runId), [onDetails, runId]);
 
-    const review = useMemo(
-      () =>
-        onReview && reviewVersionId
-          ? (): void => onReview(reviewVersionId)
-          : undefined,
-      [onReview, reviewVersionId]
-    );
+    const review = useMemo(() => {
+      if (onReview && reviewVersionId) {
+        return (): void => onReview(reviewVersionId);
+      }
+      return undefined;
+    }, [onReview, reviewVersionId]);
 
-    const onUndo = useMemo(
-      () =>
-        actions && undoVersionId
-          ? (): void => actions.onRestore(undoVersionId)
-          : undefined,
-      [actions, undoVersionId]
-    );
+    const onUndo = useMemo(() => {
+      if (actions && undoVersionId) {
+        return (): void => actions.onRestore(undoVersionId);
+      }
+      return undefined;
+    }, [actions, undoVersionId]);
 
     const running = run.status === "running";
 
@@ -103,24 +101,27 @@ const RunEntry = memo(
           <MessageContent className="run-body gap-3">
             <RunParts run={run} running={running} workTree={workTree} />
             {running &&
-              run.permissions.map((request) =>
-                request.card ? (
-                  <Suspense key={request.id} fallback={null}>
-                    <ApprovalCard
-                      projectId={runProjectId()}
-                      runId={runId}
-                      request={request}
-                    />
-                  </Suspense>
-                ) : (
+              run.permissions.map((request) => {
+                if (request.card) {
+                  return (
+                    <Suspense key={request.id} fallback={null}>
+                      <ApprovalCard
+                        projectId={runProjectId()}
+                        runId={runId}
+                        request={request}
+                      />
+                    </Suspense>
+                  );
+                }
+                return (
                   <PermissionPrompt
                     key={request.id}
                     projectId={runProjectId()}
                     runId={runId}
                     request={request}
                   />
-                )
-              )}
+                );
+              })}
             {running && (
               <LiveStatus
                 run={run}

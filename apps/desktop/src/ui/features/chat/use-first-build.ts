@@ -15,7 +15,10 @@ const pageFileOf = (path: string | undefined): string => {
     return "index.html";
   }
 
-  return clean.endsWith("/") ? `${clean}index.html` : clean;
+  if (clean.endsWith("/")) {
+    return `${clean}index.html`;
+  }
+  return clean;
 };
 
 const UNLISTED = /^(\.|node_modules\/|dist\/|\.vite\/|vite-cache\/)|\/\./u;
@@ -94,14 +97,20 @@ const usePageFiles = (
       }
 
       if (files === null) {
-        return building ? "building" : null;
+        if (building) {
+          return "building";
+        }
+        return null;
       }
 
       if (hasPage(files, file)) {
         return null;
       }
 
-      return building ? "building" : "missing";
+      if (building) {
+        return "building";
+      }
+      return "missing";
     },
     [gated, files, building]
   );
@@ -174,8 +183,12 @@ const useFirstBuildGate = (options: GateOptions): FirstBuildGate => {
   const own = options.directionId;
 
   const waitFor = useCallback(
-    (path: string | undefined, directionId: string | null) =>
-      directionId === own ? pageWait(path) : null,
+    (path: string | undefined, directionId: string | null) => {
+      if (directionId === own) {
+        return pageWait(path);
+      }
+      return null;
+    },
     [own, pageWait]
   );
 

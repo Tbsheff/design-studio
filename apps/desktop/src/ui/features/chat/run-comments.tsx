@@ -27,7 +27,12 @@ const replyText = (run: RunView): string => {
   }
 
   return run.parts
-    .flatMap((part) => (part.kind === "text" ? [part.text] : []))
+    .flatMap((part) => {
+      if (part.kind === "text") {
+        return [part.text];
+      }
+      return [];
+    })
     .join("\n");
 };
 
@@ -38,7 +43,10 @@ const stateOf = (comment: DesignComment, done: number[] | null): LinkState => {
     return "resolved";
   }
 
-  return done?.includes(comment.n) ? "done" : "open";
+  if (done?.includes(comment.n)) {
+    return "done";
+  }
+  return "open";
 };
 
 const STATE_TIP: Record<LinkState, string> = {
@@ -66,9 +74,9 @@ const CommentLink = ({
       onClick={() => control.setOpenId(comment.id)}
     >
       <span className="num">
-        {state === "resolved" || state === "done" ? (
+        {(state === "resolved" || state === "done") && (
           <Icon name="check" size={12} />
-        ) : null}
+        )}
         {copy.text9}
         {comment.n}
       </span>
@@ -85,9 +93,10 @@ const resolvable = (
     (comment) => comment.status !== "resolved" && comment.status !== "sent"
   );
 
-  return done === null
-    ? open
-    : open.filter((comment) => done.includes(comment.n));
+  if (done === null) {
+    return open;
+  }
+  return open.filter((comment) => done.includes(comment.n));
 };
 
 const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
@@ -106,7 +115,10 @@ const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
   }
 
   const done = commentsDone(replyText(run));
-  const toResolve = run.status === "completed" ? resolvable(linked, done) : [];
+  let toResolve: DesignComment[] = [];
+  if (run.status === "completed") {
+    toResolve = resolvable(linked, done);
+  }
 
   const resolve = async (): Promise<void> => {
     setBusy(true);
@@ -120,7 +132,10 @@ const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
     }
   };
 
-  const noun = toResolve.length === 1 ? "comment" : "comments";
+  let noun: "comment" | "comments" = "comments";
+  if (toResolve.length === 1) {
+    noun = "comment";
+  }
 
   return (
     <section
@@ -131,7 +146,8 @@ const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
       <div className="run-comments-head">
         <Icon name="comment" size={14} />
         <span>
-          {linked.length} {linked.length === 1 ? "comment" : "comments"}
+          {linked.length} {linked.length === 1 && "comment"}
+          {linked.length !== 1 && "comments"}
         </span>
         <span className="spacer" />
         {toResolve.length > 0 && (

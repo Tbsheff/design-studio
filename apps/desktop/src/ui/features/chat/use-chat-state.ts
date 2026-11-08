@@ -11,10 +11,10 @@ const promptHistoryOf = (
   for (const run of runs) {
     const { request } = run;
 
-    const prompt =
-      request && !request.task && !request.variation && !request.retryOf
-        ? request.prompt.trim()
-        : "";
+    let prompt = "";
+    if (request && !request.task && !request.variation && !request.retryOf) {
+      prompt = request.prompt.trim();
+    }
 
     if (prompt && prompts.at(-1) !== prompt) {
       prompts.push(prompt);
@@ -36,11 +36,12 @@ const useChatState = (
   const todoList = last?.todos ?? null;
   const running = last?.status === "running";
 
-  const todos = useMemo(
-    () =>
-      todoList && todoList.length > 0 ? { running, todos: todoList } : null,
-    [todoList, running]
-  );
+  const todos = useMemo(() => {
+    if (todoList && todoList.length > 0) {
+      return { running, todos: todoList };
+    }
+    return null;
+  }, [todoList, running]);
 
   return { contextTokens: last?.contextTokens ?? null, history, todos };
 };

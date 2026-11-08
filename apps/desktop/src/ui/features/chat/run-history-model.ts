@@ -109,8 +109,12 @@ const publishRunHistory = (next: RunHistory | null): void => {
 
 const runProjectId = (): string => history?.projectId ?? "";
 
-const loadRunsThrough = (runId: string): Promise<boolean> =>
-  history ? history.through(runId) : Promise.resolve(false);
+const loadRunsThrough = (runId: string): Promise<boolean> => {
+  if (history) {
+    return history.through(runId);
+  }
+  return Promise.resolve(false);
+};
 
 interface OlderRuns {
   more: boolean;

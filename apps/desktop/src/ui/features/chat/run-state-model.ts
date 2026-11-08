@@ -71,7 +71,10 @@ const shownPending = (
       run.request?.prompt === pending.request?.prompt
   );
 
-  return started ? null : pending;
+  if (started) {
+    return null;
+  }
+  return pending;
 };
 
 const runText = (run: RunView): string => partsText(run.parts);
@@ -99,9 +102,10 @@ const legacyParts = (summary: RunSummary): RunPart[] => {
     toolUseId: tool.toolUseId,
   }));
 
-  return summary.finalText
-    ? [...tools, { kind: "text", text: summary.finalText }]
-    : tools;
+  if (summary.finalText) {
+    return [...tools, { kind: "text", text: summary.finalText }];
+  }
+  return tools;
 };
 
 const emptyRun = (
@@ -170,7 +174,10 @@ const finishedView = (
   event: RunSummary
 ): RunView => {
   const title = event.title ?? prev?.summary?.title;
-  const summary = title ? { ...event, title } : event;
+  let summary: RunSummary = event;
+  if (title) {
+    summary = { ...event, title };
+  }
   const finished = runFromSummary(summary);
 
   if (!prev) {
@@ -210,19 +217,20 @@ const applyToolEvent = (run: RunView, event: StudioEvent): void => {
       },
     ];
   } else if (event.type === "run.tool.finished") {
-    run.tools = run.tools.map((tool) =>
-      tool.toolUseId === event.toolUseId
-        ? {
-            ...tool,
-            durationMs: event.durationMs,
-            isError: event.isError,
-            summary: event.summary,
-            ...(event.diff ? { diff: event.diff } : {}),
-            ...(event.diffs ? { diffs: event.diffs } : {}),
-            ...(event.denied ? { denied: true } : {}),
-          }
-        : tool
-    );
+    run.tools = run.tools.map((tool) => {
+      if (tool.toolUseId === event.toolUseId) {
+        return {
+          ...tool,
+          durationMs: event.durationMs,
+          isError: event.isError,
+          summary: event.summary,
+          ...(event.diff ? { diff: event.diff } : {}),
+          ...(event.diffs ? { diffs: event.diffs } : {}),
+          ...(event.denied ? { denied: true } : {}),
+        };
+      }
+      return tool;
+    });
   }
 };
 

@@ -63,8 +63,12 @@ const EmptyChat = (): ReactElement => (
   </div>
 );
 
-const EmptyState = ({ empty }: { empty: boolean }): ReactElement | null =>
-  empty ? <EmptyChat /> : null;
+const EmptyState = ({ empty }: { empty: boolean }): ReactElement | null => {
+  if (empty) {
+    return <EmptyChat />;
+  }
+  return null;
+};
 
 const FOUND_MS = 1600;
 
@@ -110,7 +114,10 @@ const RUN_ANNOUNCE: Record<RunView["status"], string> = {
 };
 
 const RunAnnouncer = ({ run }: { run: RunView | undefined }): ReactElement => {
-  const queued = run?.status === "running" ? run.queue.length : 0;
+  let queued = 0;
+  if (run?.status === "running") {
+    queued = run.queue.length;
+  }
   const asking = run?.status === "running" ? run.permissions[0] : undefined;
 
   const text = run

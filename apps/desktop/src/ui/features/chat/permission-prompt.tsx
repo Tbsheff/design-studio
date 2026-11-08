@@ -45,12 +45,14 @@ const PermissionPrompt = ({
       ? (request.input as { command?: unknown } | null)?.command
       : undefined;
 
-  const rule =
+  let rule: string | null = null;
+  if (
     typeof command === "string" &&
     command.trim() !== "" &&
     command.trim().length <= RULE_MAX_CHARS
-      ? ruleForCommand(command)
-      : null;
+  ) {
+    rule = ruleForCommand(command);
+  }
 
   const deny = (): void =>
     answer({ allow: false, ...(note.trim() ? { note: note.trim() } : {}) });
@@ -69,7 +71,7 @@ const PermissionPrompt = ({
       {request.detail && (
         <pre className="permission-detail">{request.detail}</pre>
       )}
-      {denying ? (
+      {denying && (
         <form
           className="permission-deny"
           onSubmit={(event) => {
@@ -95,7 +97,8 @@ const PermissionPrompt = ({
             {copy.deny}
           </button>
         </form>
-      ) : (
+      )}
+      {!denying && (
         <div className="permission-actions">
           <button
             type="button"

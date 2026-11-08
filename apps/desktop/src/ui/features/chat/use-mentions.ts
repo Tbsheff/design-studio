@@ -103,7 +103,10 @@ const useMentions = ({
   const [mentions, setMentions] = useState<RunMention[]>([]);
   const [dismissed, setDismissed] = useState<string | null>(null);
   const rawQuery = mentionQueryOf(draft);
-  const query = rawQuery !== null && draft !== dismissed ? rawQuery : null;
+  let query: string | null = null;
+  if (rawQuery !== null && draft !== dismissed) {
+    query = rawQuery;
+  }
 
   const refresh = (fresh: boolean): void => {
     if (directionId) {
@@ -157,11 +160,12 @@ const useMentions = ({
   }, [files, tokens, mentions, components, lead]);
 
   const add = (mention: RunMention): void =>
-    setMentions((prev) =>
-      prev.some((item) => mentionKey(item) === mentionKey(mention))
-        ? prev
-        : [...prev, mention]
-    );
+    setMentions((prev) => {
+      if (prev.some((item) => mentionKey(item) === mentionKey(mention))) {
+        return prev;
+      }
+      return [...prev, mention];
+    });
 
   const requestSeq = request?.seq;
   useEffect(() => {
@@ -179,9 +183,12 @@ const useMentions = ({
     }
 
     setDraft(
-      draft
-        .replace(/@[^\s@]*$/u, "")
-        .replace(/\s+$/u, (space) => (space ? " " : ""))
+      draft.replace(/@[^\s@]*$/u, "").replace(/\s+$/u, (space) => {
+        if (space) {
+          return " ";
+        }
+        return "";
+      })
     );
   };
 

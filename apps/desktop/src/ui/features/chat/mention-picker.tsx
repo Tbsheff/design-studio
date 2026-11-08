@@ -15,22 +15,29 @@ interface MentionOption {
   icon?: IconName;
 }
 
-const mentionKey = (mention: RunMention): string =>
-  mention.kind === "file"
-    ? `file:${mention.path}`
-    : `${mention.kind}:${mention.name}`;
+const mentionKey = (mention: RunMention): string => {
+  if (mention.kind === "file") {
+    return `file:${mention.path}`;
+  }
+  return `${mention.kind}:${mention.name}`;
+};
 
-const mentionLabel = (mention: RunMention): string =>
-  mention.kind === "file"
-    ? (mention.path.split("/").pop() ?? mention.path)
-    : mention.name;
+const mentionLabel = (mention: RunMention): string => {
+  if (mention.kind === "file") {
+    return mention.path.split("/").pop() ?? mention.path;
+  }
+  return mention.name;
+};
 
 const mentionIcon = (mention: RunMention): IconName => {
   if (mention.kind === "file") {
     return "file";
   }
 
-  return mention.kind === "token" ? "token" : "component";
+  if (mention.kind === "token") {
+    return "token";
+  }
+  return "component";
 };
 
 const mentionTitle = (mention: RunMention): string => {
@@ -42,15 +49,19 @@ const mentionTitle = (mention: RunMention): string => {
     return `${mention.name}: ${mention.value}`;
   }
 
-  return mention.file
-    ? `@${mention.name} · ${mention.file}`
-    : `@${mention.name}`;
+  if (mention.file) {
+    return `@${mention.name} · ${mention.file}`;
+  }
+  return `@${mention.name}`;
 };
 
 const mentionQueryOf = (draft: string): string | null => {
   const match = /(?:^|\s)@([^\s@]*)$/u.exec(draft);
 
-  return match ? (match[1] ?? "") : null;
+  if (match) {
+    return match[1] ?? "";
+  }
+  return null;
 };
 
 const rankMentions = (
@@ -60,8 +71,12 @@ const rankMentions = (
   fuzzyRank(
     options,
     query,
-    (option) =>
-      option.mention.kind === "file" ? option.mention.path : option.label,
+    (option) => {
+      if (option.mention.kind === "file") {
+        return option.mention.path;
+      }
+      return option.label;
+    },
     30
   );
 
@@ -79,10 +94,12 @@ const useMentionPicker = (
 ): UseMentionPickerResult => {
   const [active, setActive] = useState(0);
 
-  const shown = useMemo(
-    () => (query === null ? [] : rankMentions(options, query)),
-    [options, query]
-  );
+  const shown = useMemo(() => {
+    if (query === null) {
+      return [];
+    }
+    return rankMentions(options, query);
+  }, [options, query]);
 
   useEffect(() => setActive(0), [query]);
 
@@ -90,9 +107,12 @@ const useMentionPicker = (
     shown[Math.min(active, Math.max(0, shown.length - 1))] ?? null;
 
   const move = (step: 1 | -1): void =>
-    setActive((index) =>
-      shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
-    );
+    setActive((index) => {
+      if (shown.length === 0) {
+        return 0;
+      }
+      return (index + step + shown.length) % shown.length;
+    });
 
   return { current, move, open: query !== null, setActive, shown };
 };
@@ -158,7 +178,8 @@ const MentionList = ({
         ))}
         {shown.length === 0 && (
           <li className="skill-empty">
-            {loading ? "Loading files…" : "Nothing matches."}
+            {loading && "Loading files…"}
+            {!loading && "Nothing matches."}
           </li>
         )}
       </ul>

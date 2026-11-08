@@ -48,7 +48,10 @@ const blockerOf = (options: InlinePromptOptions): string | null => {
     return "Select an element first";
   }
 
-  return options.running ? "Wait for the current run to finish" : null;
+  if (options.running) {
+    return "Wait for the current run to finish";
+  }
+  return null;
 };
 
 const SNIPPET_MAX = 16;
@@ -67,28 +70,43 @@ const labelOf = (selection: SelectionContext[]): string => {
 
   const text = last?.text.replaceAll(/\s+/gu, " ").trim() ?? "";
 
-  const snippet =
-    text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
+  let snippet: string = text;
+  if (text.length > SNIPPET_MAX) {
+    snippet = `${text.slice(0, SNIPPET_MAX - 1)}…`;
+  }
 
-  return snippet ? `“${snippet}”` : last?.tag || "element";
+  if (snippet) {
+    return `“${snippet}”`;
+  }
+  return last?.tag || "element";
 };
 
-const usageFileOf = (selection: SelectionContext[]): string | null =>
-  selection.length === 1 ? (selection[0]?.source?.file ?? null) : null;
+const usageFileOf = (selection: SelectionContext[]): string | null => {
+  if (selection.length === 1) {
+    return selection[0]?.source?.file ?? null;
+  }
+  return null;
+};
 
-const usedAtFileOf = (selection: SelectionContext[]): string | null =>
-  selection.length === 1 ? (selection[0]?.usedAt?.file ?? null) : null;
+const usedAtFileOf = (selection: SelectionContext[]): string | null => {
+  if (selection.length === 1) {
+    return selection[0]?.usedAt?.file ?? null;
+  }
+  return null;
+};
 
 const restoreFocus = (
   previous: Element | null,
   stage: HTMLElement | null
 ): void => {
-  const target =
+  let target: HTMLElement | null = stage;
+  if (
     previous instanceof HTMLElement &&
     previous.isConnected &&
     previous !== document.body
-      ? previous
-      : stage;
+  ) {
+    target = previous;
+  }
 
   target?.focus({ preventScroll: true });
 };

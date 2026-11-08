@@ -81,7 +81,8 @@ const RestoreConfirm = ({
       {copy.unfinishedChangesIn}
       {count}
       {copy.file}
-      {count === 1 ? "" : "s"}
+      {count === 1 && ""}
+      {count !== 1 && "s"}
       {copy.restoreReplacesEditsTo}
     </p>
     <div className="msg-confirm-actions">

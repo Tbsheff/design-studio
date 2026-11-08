@@ -86,7 +86,15 @@ const useRunCanvas = (
         ),
       };
 
-  return { chip, current: () => (off ? undefined : refOf(frame)) };
+  return {
+    chip,
+    current: () => {
+      if (off) {
+        return undefined;
+      }
+      return refOf(frame);
+    },
+  };
 };
 
 export { useRunCanvas };

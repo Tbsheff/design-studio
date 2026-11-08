@@ -14,7 +14,10 @@ const RunContextChip = ({
     return null;
   }
 
-  const state = chip.state ? `, ${chip.state}` : "";
+  let state = "";
+  if (chip.state) {
+    state = `, ${chip.state}`;
+  }
   const tip = `The agent works on frame ${chip.frameId} (${chip.page}${state}) and checks it there. Remove to send without it.`;
 
   return (

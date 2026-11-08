@@ -33,7 +33,10 @@ const parseDraft = (
   draft: SettingsDraft
 ): { settings: ProjectSettings } | { error: string } => {
   const rawBudget = draft.maxBudgetUsd.trim();
-  const budget = rawBudget === "" ? null : Number(rawBudget);
+  let budget: number | null = null;
+  if (rawBudget !== "") {
+    budget = Number(rawBudget);
+  }
 
   if (
     budget !== null &&

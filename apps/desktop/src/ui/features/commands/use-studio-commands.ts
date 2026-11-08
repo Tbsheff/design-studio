@@ -7,6 +7,8 @@ import { IS_MAC } from "./key-model.js";
 import { listenForCommands, runCommand, useCommands } from "./registry.js";
 import type { Command } from "./registry.js";
 
+const PROMPT_REGION = 3;
+
 interface StudioActions {
   running: boolean;
   directions: { id: string; name: string }[];
@@ -60,7 +62,7 @@ const regionOf = (element: Element | null): number => {
   }
 
   if (element.closest(".prompt")) {
-    return 3;
+    return PROMPT_REGION;
   }
 
   if (element.closest(".pane-left")) {

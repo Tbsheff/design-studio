@@ -9,6 +9,8 @@ import { COPY } from "./copy.js";
 import { PackList } from "./pack-list.js";
 import { pickable, usePacks } from "./packs.js";
 
+const NAME_MAX = 80;
+
 interface ChangeProps {
   currentId: string | null;
   from: LibraryFrom | null;
@@ -218,7 +220,7 @@ const SavePackDialog = ({
                   onChange={() => {
                     setAsNew(true);
                     setName(
-                      `${defaultName.slice(0, 80 - COPY_SUFFIX.length)}${COPY_SUFFIX}`
+                      `${defaultName.slice(0, NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`
                     );
                   }}
                 />

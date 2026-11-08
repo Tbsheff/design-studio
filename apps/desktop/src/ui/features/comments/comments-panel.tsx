@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { useState, useTransition, useSyncExternalStore } from "react";
 
 import { commentPageName, pageShown } from "./comment-anchors.js";
@@ -13,34 +13,8 @@ import {
   shownFrames,
 } from "./deps.js";
 import type { DesignComment, SelectionContext } from "./deps.js";
+import { Section } from "./section.js";
 import type { CommentsControl } from "./use-comments.js";
-
-const Section = ({
-  title,
-  count,
-  action,
-  children,
-}: {
-  title: string;
-  count: number;
-  action?: ReactNode;
-  children: ReactNode;
-}): ReactElement | null => {
-  if (count === 0) {
-    return null;
-  }
-
-  return (
-    <section className="comments-section" aria-label={title}>
-      <h3>
-        {title} <span className="count">{count}</span>
-        <span className="spacer" />
-        {action}
-      </h3>
-      <ul className="comments-list">{children}</ul>
-    </section>
-  );
-};
 
 const PICK_HINT = "Press C or choose Comment, then click an element.";
 
@@ -139,14 +113,14 @@ const CommentsComposer = ({
           onClick={() => submit()}
         >
           <Icon name="arrowUp" size={12} />
-          Comment
+          {copy.comment}
         </button>
       </div>
     </div>
   );
 };
 
-export const ChatPickBar = ({
+const ChatPickBar = ({
   control,
   className,
 }: {
@@ -166,13 +140,15 @@ export const ChatPickBar = ({
       aria-label={copy.selected}
       data-testid="comments-pick-bar"
     >
-      <span className="label">{count} selected</span>
+      <span className="label">
+        {count} {copy.textSelected}
+      </span>
       <button
         type="button"
         className="btn small ghost"
         onClick={control.clearPicked}
       >
-        Clear
+        {copy.textClear}
       </button>
       <span className="spacer" />
       <button
@@ -533,7 +509,8 @@ const DoneRow = ({
                   onClick={() => onOpenVersion(versionId)}
                   data-testid="comment-version-link"
                 >
-                  Version {versionId.slice(0, 7)}
+                  {copy.textVersion}
+                  {versionId.slice(0, 7)}
                 </button>
               </>
             )}
@@ -550,7 +527,7 @@ const DoneRow = ({
                 }
               >
                 <Icon name="check" size={14} />
-                Resolve
+                {copy.resolve}
               </button>
             )}
             {comment.status === "resolved" && (
@@ -563,7 +540,7 @@ const DoneRow = ({
                 }
               >
                 <Icon name="undo" size={14} />
-                Reopen
+                {copy.reopen}
               </button>
             )}
             <button
@@ -637,7 +614,7 @@ const OrphanRow = ({
   );
 };
 
-export const CommentsPanel = ({
+const CommentsPanel = ({
   control,
   running,
   onOpenRun,
@@ -686,11 +663,7 @@ export const CommentsPanel = ({
         )}
         <ChatPickBar control={control} />
         {empty && (
-          <p className="comments-empty">
-            No comments yet. Press C or choose Comment in the toolbar, then
-            click an element to pin one. Select several by their numbers, then
-            send them to the chat.
-          </p>
+          <p className="comments-empty">{copy.textNoCommentsYetPress}</p>
         )}
         {resolved.length > 0 && (
           <div className="comments-filter">
@@ -702,11 +675,11 @@ export const CommentsPanel = ({
                   control.setShowResolved(event.target.checked)
                 }
               />
-              Show resolved
+              {copy.textShowResolved}
             </label>
             {!showResolved && (
               <span className="count" data-testid="resolved-hidden">
-                {resolved.length} hidden
+                {resolved.length} {copy.textHidden}
               </span>
             )}
           </div>
@@ -756,9 +729,7 @@ export const CommentsPanel = ({
           ))}
         </Section>
         {running && queued.length > 0 && (
-          <p className="comments-empty">
-            The agent is running. Queued comments wait until it finishes.
-          </p>
+          <p className="comments-empty">{copy.textTheAgentIsRunning}</p>
         )}
         <Section title={copy.sent} count={sent.length}>
           {sent.map((comment) => (
@@ -796,7 +767,7 @@ export const CommentsPanel = ({
   );
 };
 
-export const QueuedComposerBar = ({
+const QueuedComposerBar = ({
   control,
   onShow,
 }: {
@@ -813,11 +784,19 @@ export const QueuedComposerBar = ({
     <div className="comments-queue-bar" data-testid="queued-bar">
       <span className="label">
         <button type="button" className="link" onClick={onShow}>
-          {count} queued
+          {count} {copy.textQueued}
         </button>
-        {control.notice && <span className="notice"> · {control.notice}</span>}
+        {control.notice && (
+          <span className="notice">
+            {" "}
+            {copy.textGlyph3}
+            {control.notice}
+          </span>
+        )}
       </span>
       {count > 0 && <SendQueuedButton control={control} />}
     </div>
   );
 };
+
+export { ChatPickBar, CommentsPanel, QueuedComposerBar };

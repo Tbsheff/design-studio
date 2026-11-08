@@ -7,6 +7,9 @@ import type {
 } from "./deps.js";
 import type { CommentPatch } from "./use-comments.js";
 
+const LINE_GROUP = 2;
+const COL_GROUP = 3;
+
 interface ReportReview {
   patch: CommentPatch | null;
   missing: boolean;
@@ -80,7 +83,11 @@ const parseLoc = (value: string | null | undefined): SourceLoc | null => {
     return null;
   }
 
-  return { col: Number(match[3]), file: match[1], line: Number(match[2]) };
+  return {
+    col: Number(match[COL_GROUP]),
+    file: match[1],
+    line: Number(match[LINE_GROUP]),
+  };
 };
 
 const movedTarget = (

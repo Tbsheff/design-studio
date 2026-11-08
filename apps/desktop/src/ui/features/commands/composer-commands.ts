@@ -4,6 +4,8 @@ import { IS_MAC } from "./key-model.js";
 import { collectCommands } from "./registry.js";
 import type { Command } from "./registry.js";
 
+const VARIATION_COUNT = 3;
+
 const MODE_ORDER: ComposerMode[] = ["edit", "plan", "critique"];
 
 const MODE_TITLES: Record<ComposerMode, string> = {
@@ -73,11 +75,11 @@ const composerCommands = (composerActions: ComposerActions): Command[] => {
           id: "composer.variations",
           keywords: "directions options alternatives",
           run: () => {
-            callback.onCount(Math.min(3, callback.max));
+            callback.onCount(Math.min(VARIATION_COUNT, callback.max));
             composerActions.focus();
           },
           slash: "variations",
-          title: `Make ${Math.min(3, callback.max)} variations of the next prompt`,
+          title: `Make ${Math.min(VARIATION_COUNT, callback.max)} variations of the next prompt`,
         },
       ]
     : [];

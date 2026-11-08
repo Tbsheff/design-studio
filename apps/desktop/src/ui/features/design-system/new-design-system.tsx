@@ -13,6 +13,7 @@ import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { packApi } from "../../platform/pack-api.js";
+import { Chip } from "./chip.js";
 import { COPY } from "./copy.js";
 import { refreshPacks, pickable, usePacks } from "./packs.js";
 
@@ -190,29 +191,6 @@ const routeFiles = async (
 
   return { patch, skipped };
 };
-
-const Chip = ({
-  icon,
-  label,
-  onRemove,
-}: {
-  icon: Parameters<typeof Icon>[0]["name"];
-  label: string;
-  onRemove: () => void;
-}): ReactElement => (
-  <li className="nds-chip">
-    <Icon name={icon} size={12} />
-    <span className="truncate">{label}</span>
-    <button
-      type="button"
-      className="icon-btn small"
-      aria-label={`Remove ${label}`}
-      onClick={onRemove}
-    >
-      <Icon name="close" size={12} />
-    </button>
-  </li>
-);
 
 const DropZone = ({
   form,
@@ -486,11 +464,11 @@ const FolderField = ({
 }: {
   value: string;
   onChange: (value: string) => void;
-}) => {
+}): ReactElement => {
   const [manual, setManual] = useState(() => !hasNativePicker());
   const [error, setError] = useState<string | null>(null);
 
-  const choose = async () => {
+  const choose = async (): Promise<void> => {
     setError(null);
 
     try {
@@ -555,7 +533,7 @@ const Advanced = ({
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) => {
+}): ReactElement => {
   const count = [
     form.tokensFile,
     form.folder.trim(),
@@ -613,7 +591,7 @@ const Advanced = ({
   );
 };
 
-const PackSwatches = ({ pack }: { pack: PackSummary }) => (
+const PackSwatches = ({ pack }: { pack: PackSummary }): ReactElement => (
   <span className="nds-preset-swatches" aria-hidden="true">
     {pack.swatches.slice(0, 4).map((swatch) => (
       <span key={swatch.name} style={{ background: swatch.value }} />
@@ -627,7 +605,7 @@ const Presets = ({
 }: {
   value: string;
   onChange: (id: string) => void;
-}) => {
+}): ReactElement | null => {
   const { packs } = pickable(usePacks());
 
   if (!packs) {
@@ -696,7 +674,7 @@ const sourceList = (
   return list;
 };
 
-const SourceSummary = ({ form }: { form: DraftForm }) => {
+const SourceSummary = ({ form }: { form: DraftForm }): ReactElement => {
   const list = sourceList(form);
 
   return (
@@ -724,7 +702,7 @@ const Basics = ({
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) => (
+}): ReactElement => (
   <div
     className="nds-basics"
     role="group"
@@ -764,15 +742,18 @@ const NewDesignSystem = ({
 }: {
   onCancel: () => void;
   onCreated: (projectId: string) => void;
-}) => {
+}): ReactElement => {
   const [form, setForm] = useState<DraftForm>(EMPTY);
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const set = (patch: Patch) => setForm((prev) => ({ ...prev, ...patch }));
+
+  const set = (patch: Patch): void =>
+    setForm((prev) => ({ ...prev, ...patch }));
+
   const ready = hasSource(form) && !busy;
   useDropGuard();
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent): void => {
     event.preventDefault();
 
     if (!ready) {

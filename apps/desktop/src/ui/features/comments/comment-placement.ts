@@ -3,6 +3,11 @@ import type { RefObject } from "react";
 
 import type { SelectionContext } from "./deps.js";
 
+const UNIT_SCALE = 1000;
+const DEFAULT_CARD_HEIGHT = 112;
+const HTML_SNIPPET_MAX = 4000;
+const TEXT_SNIPPET_MAX = 32;
+
 type Rect = SelectionContext["rect"];
 
 interface Size {
@@ -40,7 +45,9 @@ interface PinOffset {
 
 const unit = (value: number): number => {
   if (Number.isFinite(value)) {
-    return Math.round(Math.max(0, Math.min(1, value)) * 1000) / 1000;
+    return (
+      Math.round(Math.max(0, Math.min(1, value)) * UNIT_SCALE) / UNIT_SCALE
+    );
   }
   return 0;
 };
@@ -210,7 +217,7 @@ const placeComposer = (
 const useCardSize = (
   card: RefObject<HTMLDivElement | null>
 ): { height: number; width: number } => {
-  const [height, setHeight] = useState(112);
+  const [height, setHeight] = useState(DEFAULT_CARD_HEIGHT);
   useLayoutEffect(() => {
     const element = card.current;
 
@@ -276,7 +283,7 @@ const snippet = (text: string, max: number): string => {
 
 const className = (selection: SelectionContext): string | null => {
   const match = /^<[^>]*\bclass="([^"]*)"/u.exec(
-    selection.outerHTML.slice(0, 4000)
+    selection.outerHTML.slice(0, HTML_SNIPPET_MAX)
   );
 
   const first = match?.[1]?.trim().split(/\s+/u)[0];
@@ -286,7 +293,7 @@ const className = (selection: SelectionContext): string | null => {
 
 const elementLabel = (selection: SelectionContext): string => {
   const tag = selection.tag.toLowerCase();
-  const text = snippet(selection.text, 32);
+  const text = snippet(selection.text, TEXT_SNIPPET_MAX);
   const kind = TEXT_TAGS.has(tag) ? "text" : (KIND_OF_TAG[tag] ?? null);
 
   if (kind && text) {

@@ -16,6 +16,9 @@ import { COPY } from "./copy.js";
 import { outlineOf } from "./design-md-outline.js";
 import type { OutlineItem } from "./design-md-outline.js";
 
+const DEFAULT_LINE_HEIGHT = 20;
+const SCROLL_PADDING = 8;
+
 const HEADING_TAGS = new Set(["H1", "H2", "H3"]);
 
 const collectHeadings = (
@@ -43,7 +46,8 @@ const jumpTo = (
     editor.focus();
     editor.setSelectionRange(item.offset, item.offset);
 
-    const lineHeight = Number(getComputedStyle(editor).lineHeight) || 20;
+    const lineHeight =
+      Number(getComputedStyle(editor).lineHeight) || DEFAULT_LINE_HEIGHT;
 
     editor.scrollTop = Math.max(0, item.line * lineHeight - lineHeight);
   }
@@ -51,7 +55,7 @@ const jumpTo = (
   const heading = preview ? collectHeadings(preview, [])[index] : null;
 
   if (heading instanceof HTMLElement && preview) {
-    preview.scrollTop = heading.offsetTop - preview.offsetTop - 8;
+    preview.scrollTop = heading.offsetTop - preview.offsetTop - SCROLL_PADDING;
   }
 };
 

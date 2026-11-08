@@ -18,6 +18,8 @@ import { NO_SOURCE } from "../inspector/structure-edits.js";
 import { insertApi, insertBus, insertError } from "./component-insert-api.js";
 import type { DropHint } from "./component-insert-api.js";
 
+const GHOST_OFFSET = 12;
+
 const DRAG_START_PX = 4;
 
 const useInsertable = (
@@ -223,7 +225,7 @@ const DragGhost = ({
   return createPortal(
     <div
       className="cmp-ghost"
-      style={{ left: ghost.x + 12, top: ghost.y + 12 }}
+      style={{ left: ghost.x + GHOST_OFFSET, top: ghost.y + GHOST_OFFSET }}
       role="status"
       aria-live="polite"
     >

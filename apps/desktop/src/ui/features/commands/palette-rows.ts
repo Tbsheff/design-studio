@@ -4,6 +4,10 @@ import { rank } from "./fuzzy.js";
 import type { Ranked } from "./fuzzy.js";
 import type { Command } from "./registry.js";
 
+const WORD_MIN = 3;
+const ROUTE_MAX = 3;
+const DISABLED_PENALTY = 4;
+
 type RowKind = "command" | "project" | "route" | "new";
 
 interface Row {
@@ -286,7 +290,7 @@ const looseMatches = (input: RowInput): Row[] => {
   const words = input.query
     .toLowerCase()
     .split(/\s+/u)
-    .filter((w) => w.length >= 3);
+    .filter((w) => w.length >= WORD_MIN);
 
   if (words.length < 2) {
     return [];
@@ -314,7 +318,7 @@ const looseMatches = (input: RowInput): Row[] => {
     }
   }
 
-  return out.slice(0, 3);
+  return out.slice(0, ROUTE_MAX);
 };
 
 const projectMatches = (input: RowInput): Row[] => {
@@ -353,7 +357,7 @@ const actionMatches = (input: RowInput): Scored => {
       score:
         r.score +
         (input.recent.includes(r.item.id) ? 1 : 0) -
-        (r.item.disabled ? 4 : 0),
+        (r.item.disabled ? DISABLED_PENALTY : 0),
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, MAX_ACTIONS);

@@ -23,6 +23,9 @@ import { COPY } from "./copy.js";
 import { componentThumb } from "./use-components.js";
 import type { ComponentList } from "./use-components.js";
 
+const MENU_GAP = 4;
+const SEARCH_MIN_COUNT = 6;
+
 interface GalleryRender {
   component: InsertableComponent | null;
   onClose: () => void;
@@ -299,7 +302,7 @@ const Card = ({
           data-testid="component-insert"
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
-            onInsertMenu(insert, { x: rect.left, y: rect.bottom + 4 });
+            onInsertMenu(insert, { x: rect.left, y: rect.bottom + MENU_GAP });
           }}
         >
           <Icon name="plus" size={14} />
@@ -346,7 +349,7 @@ const ComponentsPanel = (props: Props): ReactElement => {
       >
         {all && <span className="count cmp-count">{count}</span>}
       </PanelHead>
-      {count > 6 && (
+      {count > SEARCH_MIN_COUNT && (
         <div className="tk-search cmp-search">
           <Icon name="search" size={13} />
           <input

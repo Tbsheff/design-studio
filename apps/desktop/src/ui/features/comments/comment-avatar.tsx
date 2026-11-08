@@ -3,6 +3,8 @@ import type { ReactElement } from "react";
 import { copy } from "./copy.js";
 import { Icon } from "./deps.js";
 
+const COUNT_MAX = 9;
+
 interface AvatarProps {
   initial: string | null;
   flip?: boolean;
@@ -32,7 +34,9 @@ const AvatarFace = ({
         {face ?? <Icon name="comment" size={12} />}
       </span>
       {count > 0 && (
-        <span className="avatar-count">{count > 9 ? "9+" : count}</span>
+        <span className="avatar-count">
+          {count > COUNT_MAX ? `${COUNT_MAX}+` : count}
+        </span>
       )}
     </span>
   );

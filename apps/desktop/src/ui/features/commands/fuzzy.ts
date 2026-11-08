@@ -1,3 +1,8 @@
+const FIRST_PREFIX_SCORE = 12;
+const PREFIX_SCORE = 10;
+const SPAN_DIVISOR = 100;
+const LENGTH_DIVISOR = 200;
+
 interface Ranked<T> {
   item: T;
   score: number;
@@ -53,7 +58,7 @@ const tokenScore = (
     const at = list[prefix]?.at ?? 0;
 
     return {
-      score: prefix === 0 ? 12 : 10,
+      score: prefix === 0 ? FIRST_PREFIX_SCORE : PREFIX_SCORE,
       marks: Array.from({ length: token.length }, (_, idxNext) => at + idxNext),
     };
   }
@@ -78,7 +83,7 @@ const tokenScore = (
 
   if (loose) {
     return {
-      score: 2 - (loose.at(-1)! - loose[0]!) / 100,
+      score: 2 - (loose.at(-1)! - loose[0]!) / SPAN_DIVISOR,
       marks: loose,
     };
   }
@@ -128,7 +133,7 @@ const rank = <T>(
     if (ok) {
       out.push({
         item,
-        score: score - title.length / 200,
+        score: score - title.length / LENGTH_DIVISOR,
         marks: [...new Set(marks)].sort((first, second) => first - second),
       });
     }

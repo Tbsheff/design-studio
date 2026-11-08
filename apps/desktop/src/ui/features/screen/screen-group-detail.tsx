@@ -27,7 +27,8 @@ const ScreenGroupDetail = ({ group }: ScreenGroupDetailProps): ReactElement => {
       </div>
       {group.isAuthRequired && (
         <div className={styles.detailRow}>
-          <dt className={styles.detailKey}>{copy.groupAuth}</dt>
+          <dt className={styles.detailKey}>{copy.groupAccess}</dt>
+          <dd className={styles.detailValue}>{copy.groupAuth}</dd>
         </div>
       )}
     </dl>

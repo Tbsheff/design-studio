@@ -47,7 +47,9 @@ const ScreenPathStatus = ({
   return (
     <p className={`${styles.status} ${styles.statusFree}`}>
       <span>{copy.pathFree}</span>
-      {showFile && <span className="mono">{plan.filePath}</span>}
+      {showFile && (
+        <span className={`mono ${styles.statusFile}`}>{plan.filePath}</span>
+      )}
     </p>
   );
 };

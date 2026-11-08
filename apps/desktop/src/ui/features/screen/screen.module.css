@@ -43,6 +43,7 @@
 
 .status {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--s-1);
   min-height: 20px;
@@ -164,4 +165,13 @@
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+.group legend {
+  padding: 0;
+}
+
+.statusFile {
+  flex-basis: 100%;
+  color: var(--text-3);
 }

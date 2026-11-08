@@ -9,6 +9,7 @@ const copy = {
   copying: "Duplicating",
   create: "Create screen",
   creating: "Creating",
+  groupAccess: "Access",
   groupAuth: "Needs sign-in",
   groupLabel: "Layout group",
   groupNoShell: "No layout file",

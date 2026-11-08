@@ -12,6 +12,7 @@ import type { PlanGroup } from "./screen-model.js";
 import { ScreenPathBlock } from "./screen-path-block.js";
 import { ScreenTitleField } from "./screen-title-field.js";
 import { useCreateScreen } from "./use-create-screen.js";
+import { useDebouncedPath } from "./use-debounced-path.js";
 import { useScreenDraft } from "./use-screen-draft.js";
 import { useScreenPlan } from "./use-screen-plan.js";
 import { useScreenSubmit } from "./use-screen-submit.js";
@@ -34,7 +35,8 @@ const ScreenCreateForm = ({
   projectId,
 }: ScreenCreateFormProps): ReactElement => {
   const draft = useScreenDraft(initialPath);
-  const plan = useScreenPlan(projectId, draft.path);
+  const lookup = useDebouncedPath(draft.path);
+  const plan = useScreenPlan(projectId, lookup);
   const create = useCreateScreen();
   const { group, layout, path, title } = draft;
   const { run } = create;
@@ -48,7 +50,10 @@ const ScreenCreateForm = ({
   const defaultName = toPickedGroup(plan.data);
   const pickedName = group ?? defaultName;
   const isTaken = plan.data !== null && !plan.data.isPathFree;
-  const isReady = hasPath(path) && plan.data !== null && !isTaken;
+
+  const isReady =
+    hasPath(path) && lookup === path && plan.data !== null && !isTaken;
+
   const isBusy = submit.isPending || create.pending;
 
   return (
@@ -56,7 +61,7 @@ const ScreenCreateForm = ({
       <ScreenDialogHead onClose={onClose} title={copy.title} />
       <ScreenPathBlock
         error={plan.error}
-        isLoading={plan.loading}
+        isLoading={plan.loading || lookup !== path}
         label={copy.pathLabel}
         onChange={draft.handlePath}
         plan={plan.data}

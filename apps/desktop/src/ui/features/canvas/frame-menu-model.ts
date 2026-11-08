@@ -7,7 +7,10 @@ import type {
   SetStateAction,
 } from "react";
 
-import { SCREEN_DUPLICATE_EVENT } from "../../domain/screen-events.js";
+import {
+  SCREEN_CREATE_EVENT,
+  SCREEN_DUPLICATE_EVENT,
+} from "../../domain/screen-events.js";
 import { toMenuItems } from "./menu-items-model.js";
 
 interface FrameMenu {
@@ -109,6 +112,10 @@ const useScreenEntry = (root: RefObject<HTMLElement | null>): ScreenEntry => {
   );
 };
 
-export { menuKeys, useMenu, useScreenEntry };
+const openScreenCreate = (): void => {
+  globalThis.dispatchEvent(new CustomEvent(SCREEN_CREATE_EVENT));
+};
+
+export { menuKeys, openScreenCreate, useMenu, useScreenEntry };
 
 export type { ScreenEntry };

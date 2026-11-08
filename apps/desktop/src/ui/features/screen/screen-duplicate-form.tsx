@@ -8,6 +8,7 @@ import { ScreenErrorLine } from "./screen-error-line.js";
 import { hasPath, toCopyPath } from "./screen-model.js";
 import { ScreenPathBlock } from "./screen-path-block.js";
 import { ScreenSourceLine } from "./screen-source-line.js";
+import { useDebouncedPath } from "./use-debounced-path.js";
 import { useDuplicateScreen } from "./use-duplicate-screen.js";
 import { useScreenPlan } from "./use-screen-plan.js";
 import { useScreenSubmit } from "./use-screen-submit.js";
@@ -29,7 +30,8 @@ const ScreenDuplicateForm = ({
 }: ScreenDuplicateFormProps): ReactElement => {
   const initial = useMemo(() => toCopyPath(from), [from]);
   const [path, setPath] = useState(initial);
-  const plan = useScreenPlan(projectId, path);
+  const lookup = useDebouncedPath(path);
+  const plan = useScreenPlan(projectId, lookup);
   const duplicate = useDuplicateScreen();
   const { run } = duplicate;
 
@@ -45,7 +47,10 @@ const ScreenDuplicateForm = ({
 
   const submit = useScreenSubmit(send, onClose);
   const isTaken = plan.data !== null && !plan.data.isPathFree;
-  const isReady = hasPath(path) && plan.data !== null && !isTaken;
+
+  const isReady =
+    hasPath(path) && lookup === path && plan.data !== null && !isTaken;
+
   const isBusy = submit.isPending || duplicate.pending;
 
   return (
@@ -54,7 +59,7 @@ const ScreenDuplicateForm = ({
       <ScreenSourceLine from={from} />
       <ScreenPathBlock
         error={plan.error}
-        isLoading={plan.loading}
+        isLoading={plan.loading || lookup !== path}
         label={copy.copyToLabel}
         onChange={handlePath}
         plan={plan.data}

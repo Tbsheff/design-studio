@@ -299,7 +299,7 @@ const useStudioKeys = (): void => {
   useEffect(() => {
     listenForCommands();
 
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.defaultPrevented || event.repeat) {
         return;
       }
@@ -335,7 +335,7 @@ const useStudioKeys = (): void => {
 
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, []);
 };
 

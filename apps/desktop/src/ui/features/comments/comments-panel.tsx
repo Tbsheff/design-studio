@@ -126,7 +126,7 @@ const ChatPickBar = ({
 }: {
   control: CommentsControl;
   className?: string;
-}) => {
+}): ReactElement | null => {
   const count = control.picked.length;
 
   if (count === 0) {
@@ -165,7 +165,7 @@ const ChatPickBar = ({
   );
 };
 
-const focusNode = (node: HTMLInputElement | null) => {
+const focusNode = (node: HTMLInputElement | null): void => {
   node?.focus();
 };
 
@@ -249,7 +249,7 @@ const TargetLink = ({
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) => {
+}): ReactElement => {
   const away = notShownText(comment, useShownPaths());
 
   return (
@@ -275,7 +275,7 @@ const PickNum = ({
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) => {
+}): ReactElement => {
   if (!canPickForChat(comment.status)) {
     return <span className={`comment-num ${comment.status}`}>{comment.n}</span>;
   }
@@ -304,7 +304,7 @@ const FixButton = ({
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) => {
+}): ReactElement | null => {
   if (!canPickForChat(comment.status)) {
     return null;
   }
@@ -334,11 +334,11 @@ const QueuedRow = ({
   index: number;
   total: number;
   control: CommentsControl;
-}) => {
+}): ReactElement => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(comment.text);
 
-  const save = () => {
+  const save = (): void => {
     const clean = text.trim();
     setEditing(false);
 
@@ -471,7 +471,7 @@ const DoneRow = ({
 }: { comment: DesignComment; control: CommentsControl } & Pick<
   Props,
   "onOpenRun" | "onOpenVersion"
->) => {
+>): ReactElement => {
   const { runId, versionId } = comment;
 
   return (
@@ -564,7 +564,7 @@ const OrphanRow = ({
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) => {
+}): ReactElement => {
   const active = control.repinId === comment.id;
   const away = notShownText(comment, useShownPaths());
 
@@ -620,7 +620,7 @@ const CommentsPanel = ({
   onOpenRun,
   onOpenVersion,
   selection = [],
-}: Props) => {
+}: Props): ReactElement => {
   const by = (status: DesignComment["status"]): DesignComment[] =>
     control.comments.filter((comment) => comment.status === status);
 
@@ -773,7 +773,7 @@ const QueuedComposerBar = ({
 }: {
   control: CommentsControl;
   onShow: () => void;
-}) => {
+}): ReactElement | null => {
   const count = control.queued.length;
 
   if (count === 0 && !control.notice) {

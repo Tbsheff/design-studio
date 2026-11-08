@@ -518,7 +518,7 @@ const AttachField = ({
   );
 };
 
-const AppField = ({ form }: { form: PortForm }) => {
+const AppField = ({ form }: { form: PortForm }): ReactElement => {
   const { apps, error } = form.targets;
 
   const options: UiSelectOption[] = (apps ?? []).map((a) => ({
@@ -526,7 +526,7 @@ const AppField = ({ form }: { form: PortForm }) => {
     value: a.id,
   }));
 
-  const attached = (projectId: string) => {
+  const attached = (projectId: string): void => {
     form.setAppId(projectId);
     form.targets.reload();
   };
@@ -558,7 +558,7 @@ const PageRow = ({
   page: PortFlowPage;
   checked: boolean;
   onToggle: () => void;
-}) => (
+}): ReactElement => (
   <label
     className="export-frame port-page"
     data-tip={page.routeFile ?? undefined}
@@ -572,7 +572,7 @@ const PageRow = ({
   </label>
 );
 
-const PageList = ({ form }: { form: PortForm }) => {
+const PageList = ({ form }: { form: PortForm }): ReactElement | null => {
   const { all, picked, toggle } = form.pages;
 
   if (all.length < 2) {
@@ -643,7 +643,7 @@ const PlanSummary = ({
   links: number;
   loading: boolean;
   error: string | null;
-}) => {
+}): ReactElement => {
   if (error) {
     return <p className="port-note error">{error}</p>;
   }
@@ -706,7 +706,7 @@ const FormBody = ({
 }: {
   form: PortForm;
   error: string | null;
-}) => {
+}): ReactElement => {
   const frameOptions: UiSelectOption[] = form.frames.map((f) => ({
     label: `${f.frame.name} · ${pageName(f.frame.path)}`,
     value: f.id,
@@ -776,7 +776,7 @@ const FormFoot = ({
   count: number;
   appName: string;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const noApp = form.targets.apps?.length === 0;
 
   return (
@@ -816,7 +816,7 @@ const Started = ({
   result: PortStartResult;
   appName: string;
   onClose: () => void;
-}) => (
+}): ReactElement => (
   <>
     <div className="modal-body port-body">
       <p className="port-done" role="status">
@@ -850,7 +850,7 @@ export const PortToAppDialog = ({
 }: {
   target: PortDialogTarget;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const dialog = useModalDialog(onClose);
   const form = usePortForm(target);
   const { busy, error, started, submit } = usePortStart(target, form);

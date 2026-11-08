@@ -7,6 +7,7 @@ import { api, errorText } from "../../api";
 import { CommandRules } from "../../features/commands/command-rules";
 import { PublishSetup } from "../../features/share-publish-ship-export/index.js";
 import { ShipTemplates } from "../../features/share-publish-ship-export/ship-templates";
+import { copy } from "./copy";
 import { parseDraft, SettingsFields, toDraft } from "./settings-fields";
 import { SettingsPanels } from "./settings-panels";
 
@@ -58,8 +59,8 @@ export const SettingsModal = ({
     >
       <div className="modal-head">
         <div className="titles">
-          <h2>Project settings</h2>
-          <p>Applies to the next run.</p>
+          <h2>{copy.projectSettings}</h2>
+          <p>{copy.appliesToTheNextRun}</p>
         </div>
         <button
           className="icon-btn"
@@ -90,7 +91,7 @@ export const SettingsModal = ({
       </div>
       <div className="modal-foot">
         <button className="btn ghost" onClick={onClose}>
-          Cancel
+          {copy.cancel}
         </button>
         <button
           className="btn primary"

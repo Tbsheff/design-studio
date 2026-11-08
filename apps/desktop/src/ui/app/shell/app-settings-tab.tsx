@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import type { ReactElement, FormEvent } from "react";
 
 import { api, errorText } from "../../api";
+import { copy } from "./copy";
 
 const envSuggestion = (
   status: AppServerStatus | null
@@ -60,7 +61,7 @@ const SettingsTab = ({
   return (
     <form className="app-settings" onSubmit={save}>
       <label className="field">
-        <span>Dev server URL</span>
+        <span>{copy.devServerUrl}</span>
         <input
           className="mono"
           value={url}
@@ -70,7 +71,7 @@ const SettingsTab = ({
         />
       </label>
       <label className="field">
-        <span>Environment for next dev</span>
+        <span>{copy.environmentForNextDev}</span>
         <textarea
           className="mono"
           rows={5}
@@ -79,10 +80,7 @@ const SettingsTab = ({
           spellCheck={false}
           onChange={(event) => setEnv(event.target.value)}
         />
-        <small className="field-help">
-          One KEY=value per line. The studio keeps these in the project file, so
-          do not paste secrets.
-        </small>
+        <small className="field-help">{copy.oneKeyValuePerLine}</small>
       </label>
       {suggested &&
         !Object.keys(suggested).every(
@@ -90,7 +88,7 @@ const SettingsTab = ({
         ) && (
           <div className="app-env-suggest">
             <span className="app-panel-sub grow">
-              The doctor suggests{" "}
+              {copy.theDoctorSuggests}{" "}
               <span className="mono">{envText(suggested)}</span>
             </span>
             <button
@@ -102,7 +100,7 @@ const SettingsTab = ({
                 )
               }
             >
-              Add
+              {copy.add}
             </button>
           </div>
         )}
@@ -113,7 +111,7 @@ const SettingsTab = ({
           </span>
         )}
         <button type="submit" className="btn small primary" disabled={busy}>
-          Save and restart
+          {copy.saveAndRestart}
         </button>
       </div>
     </form>

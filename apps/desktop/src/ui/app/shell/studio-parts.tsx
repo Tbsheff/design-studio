@@ -10,6 +10,7 @@ import { Canvas } from "../../features/canvas/canvas";
 import { UnfinishedBanner } from "../../features/chat/unfinished-banner";
 import { DesignMdModal } from "../../features/design-system/design-md-modal";
 import { CompareView } from "../../features/versions-layers-tokens/compare-view";
+import { copy } from "./copy";
 import { SettingsModal } from "./settings-modal";
 
 interface CenterProps {
@@ -118,16 +119,16 @@ const StudioBoot = ({
   onExit: () => void;
 }): ReactElement => {
   if (message === null) {
-    return <div className="boot muted">Loading project…</div>;
+    return <div className="boot muted">{copy.loadingProject}</div>;
   }
 
   return (
     <div className="boot">
       <div className="boot-card">
-        <h1>Cannot open project</h1>
+        <h1>{copy.cannotOpenProject}</h1>
         <p className="muted">{message}</p>
         <button className="btn" onClick={onExit}>
-          Back to projects
+          {copy.backToProjects}
         </button>
       </div>
     </div>

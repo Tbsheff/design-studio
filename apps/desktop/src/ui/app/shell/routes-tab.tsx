@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactElement, FormEvent } from "react";
 
 import { api, errorText } from "../../api";
+import { copy } from "./copy";
 
 const RoutesTab = ({
   projectId,
@@ -122,7 +123,7 @@ const RoutesTab = ({
               <span className="file"> {route.file}</span>
             </span>
             {route.dynamic ? (
-              <span className="tag">dynamic</span>
+              <span className="tag">{copy.dynamic}</span>
             ) : (
               <Icon name="plus" size={12} />
             )}
@@ -130,8 +131,11 @@ const RoutesTab = ({
         ))}
         {matches.length > shown.length && (
           <div className="app-routes-more">
-            Showing {shown.length} of {matches.length}. Type in the filter to
-            find the rest.
+            {copy.showing}
+            {shown.length}
+            {copy.countSeparator}
+            {matches.length}
+            {copy.typeInTheFilterTo}
           </div>
         )}
       </div>
@@ -148,7 +152,7 @@ const RoutesTab = ({
           className="btn small"
           disabled={!custom.trim() || /[[\]]/u.test(custom)}
         >
-          Add frame
+          {copy.addFrame}
         </button>
       </form>
     </div>

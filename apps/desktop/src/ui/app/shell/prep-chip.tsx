@@ -2,6 +2,7 @@ import type { FirstVersionState } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
 import { useNow } from "../../platform/clock";
+import { copy } from "./copy";
 
 const SECOND_MS = 1000;
 
@@ -38,7 +39,7 @@ const PrepChip = ({
         className="app-prep-chip failed"
         data-tip={`The first version was not saved: ${firstVersion.error}`}
       >
-        Not saved
+        {copy.notSaved}
       </span>
     );
   }
@@ -53,7 +54,9 @@ const PrepChip = ({
       role="status"
       data-tip={prepTip(firstVersion)}
     >
-      Preparing… {seconds} s
+      {copy.preparing}
+      {seconds}
+      {copy.secondsSuffix}
     </span>
   );
 };

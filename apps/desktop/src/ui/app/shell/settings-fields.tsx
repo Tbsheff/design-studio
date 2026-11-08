@@ -3,6 +3,7 @@ import type { ReactNode, ReactElement } from "react";
 import { MODEL_OPTIONS } from "../../features/chat/settings-draft-model";
 import type { SettingsDraft } from "../../features/chat/settings-draft-model";
 import { SkillsChecklist } from "../../features/chat/skills-checklist";
+import { copy } from "./copy";
 
 export {
   modelLabel,
@@ -32,7 +33,7 @@ export const SettingsFields = ({
   return (
     <div className="settings-fields">
       <label className="field">
-        <span>Model</span>
+        <span>{copy.model}</span>
         <select
           className="select"
           aria-label="Model"
@@ -48,7 +49,7 @@ export const SettingsFields = ({
         </select>
       </label>
       <label className="field">
-        <span>Spending limit per run</span>
+        <span>{copy.spendingLimitPerRun}</span>
         <input
           aria-label="Spending limit per run"
           type="number"
@@ -61,7 +62,7 @@ export const SettingsFields = ({
         />
       </label>
       <label className="field">
-        <span>Max turns per run</span>
+        <span>{copy.maxTurnsPerRun}</span>
         <input
           aria-label="Max turns"
           type="number"
@@ -83,7 +84,7 @@ export const SettingsFields = ({
             })
           }
         />
-        <span>Allow agent to run shell commands</span>
+        <span>{copy.allowAgentToRunShell}</span>
       </label>
       <label className={`check ${draft.allowBash ? "" : "disabled"}`}>
         <input
@@ -92,7 +93,7 @@ export const SettingsFields = ({
           disabled={!draft.allowBash}
           onChange={(event) => set({ allowInstall: event.target.checked })}
         />
-        <span>Allow installing packages</span>
+        <span>{copy.allowInstallingPackages}</span>
       </label>
       <label className={`check ${draft.allowBash ? "" : "disabled"}`}>
         <input
@@ -101,13 +102,9 @@ export const SettingsFields = ({
           disabled={!draft.allowBash}
           onChange={(event) => set({ autoApprove: event.target.checked })}
         />
-        <span>Auto mode: run commands without asking</span>
+        <span>{copy.autoModeRunCommandsWithout}</span>
       </label>
-      <p className="warn-line">
-        These are on by default. Shell commands run on this computer in the
-        project folder, and installs download and run third-party code. Turn
-        them off for projects you do not trust.
-      </p>
+      <p className="warn-line">{copy.theseAreOnByDefault}</p>
       {shellExtra}
       <SkillsChecklist
         disabled={draft.disabledSkills}

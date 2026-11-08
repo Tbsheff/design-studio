@@ -5,6 +5,7 @@ import type { ReactElement, FormEvent } from "react";
 
 import type { FolderInspection } from "../../../shared/open-app";
 import { api, errorText } from "../../api";
+import { copy } from "./copy";
 
 interface AppFailureProps {
   projectId: string;
@@ -77,9 +78,7 @@ const InstallFix = ({
 
   return (
     <div className="app-fail-fix">
-      <span className="app-fail-label">
-        Install the dependencies in a terminal, then press Restart dev server
-      </span>
+      <span className="app-fail-label">{copy.installTheDependenciesInA}</span>
       <div className="app-fail-cmd">
         <code className="truncate">{full}</code>
         <CopyButton text={full} label="Copy the install command" />
@@ -146,7 +145,7 @@ const UrlForm = ({
           className="btn small"
           disabled={busy || !url.trim()}
         >
-          Use this URL
+          {copy.confirmUrl}
         </button>
       </div>
       {error && <span className="app-fail-error">{error}</span>}

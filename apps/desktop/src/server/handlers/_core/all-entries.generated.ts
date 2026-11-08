@@ -5,6 +5,7 @@ import { CanvasEntries } from "../canvas/handlers.js";
 import { ChartEntries } from "../chart/handlers.js";
 import { CloudEntries } from "../cloud/handlers.js";
 import { CommentEntries } from "../comment/handlers.js";
+import { CompletionEntries } from "../completion/handlers.js";
 import { ComponentVariantEntries } from "../component-variant/handlers.js";
 import { ConnectionEntries } from "../connection/handlers.js";
 import { ContentEntries } from "../content/handlers.js";
@@ -59,6 +60,7 @@ const ALL_ENTRIES = {
   chart: ChartEntries,
   cloud: CloudEntries,
   comment: CommentEntries,
+  completion: CompletionEntries,
   componentVariant: ComponentVariantEntries,
   connection: ConnectionEntries,
   content: ContentEntries,

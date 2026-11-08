@@ -19,3 +19,15 @@ export type {
   ListCommand,
   SetCommand,
 } from "./dev-status/index.js";
+
+export { CompletionRunner, CompletionStore } from "./completion/index.js";
+
+export type {
+  CompletionPage,
+  CompletionResult,
+  CompletionRunnerApi,
+  CompletionStoreApi,
+  CreateCommand as CreateCompletionCommand,
+  ListCommand as ListCompletionCommand,
+  SetCommand as SetCompletionCommand,
+} from "./completion/index.js";

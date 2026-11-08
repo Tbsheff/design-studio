@@ -12,13 +12,20 @@ import type { Context } from "hono";
 
 import type { AppProxy } from "../app/proxy.js";
 import { injectForPreview } from "../design-system/html-link.js";
-import { annotateHtml } from "./annotate.js";
+import type { ServerConfig } from "../platform/config/index.js";
+import { annotateHtml, COMPLETE_SCRIPT_PATH } from "./annotate.js";
+import {
+  COMPLETE_POST_PATH,
+  COMPLETE_SCRIPT,
+  runCompleteForward,
+  toProjectIdFromHost,
+} from "./complete-script.js";
 
 export type RootKind = "direction" | "snapshot";
 
 interface HtmlServerOptions {
   port: number;
-  studioOrigin: string;
+  studio: Pick<ServerConfig, "studioOrigin" | "studioToken">;
   hostname?: string;
   bridgeScript: () => Promise<string>;
   resolveRoot: (
@@ -254,7 +261,7 @@ export async function startHtmlServer(
   const app = new Hono();
 
   const securityHeaders = {
-    "content-security-policy": frameAncestors(options.studioOrigin),
+    "content-security-policy": frameAncestors(options.studio.studioOrigin),
     "cross-origin-resource-policy": "same-origin",
     "referrer-policy": "no-referrer",
     "x-content-type-options": "nosniff",
@@ -267,6 +274,35 @@ export async function startHtmlServer(
       ...securityHeaders,
       "cache-control": "no-store",
       "content-type": "text/javascript; charset=utf-8",
+    });
+  });
+
+  app.get(COMPLETE_SCRIPT_PATH, (c) =>
+    c.body(COMPLETE_SCRIPT, 200, {
+      ...securityHeaders,
+      "cache-control": "no-store",
+      "content-type": "text/javascript; charset=utf-8",
+    })
+  );
+
+  app.post(COMPLETE_POST_PATH, async (c) => {
+    const projectId = toProjectIdFromHost(c.req.header("host") ?? null);
+
+    if (projectId === null) {
+      return c.text("Not found", 404, securityHeaders);
+    }
+
+    const forwarded = await runCompleteForward(
+      options.studio.studioOrigin,
+      options.studio.studioToken,
+      projectId,
+      await c.req.text()
+    );
+
+    return c.body(forwarded.body, forwarded.status as 200, {
+      ...securityHeaders,
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
     });
   });
 

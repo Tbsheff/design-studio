@@ -379,7 +379,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       starting = (async () => {
         htmlServer = await startHtmlServer({
           port: config.previewPort,
-          studioOrigin: config.studioOrigin,
+          studio: config,
           bridgeScript: loadBridgeScript,
           resolveRoot,
           appProxy,

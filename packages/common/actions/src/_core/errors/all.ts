@@ -3,6 +3,7 @@ import type { AccessibilityError } from "../../accessibility/errors/index.js";
 import type { AnimationError } from "../../animation/errors/index.js";
 import type { ChartError } from "../../chart/errors/index.js";
 import type { CommentError } from "../../comment/errors/index.js";
+import type { CompletionError } from "../../completion/errors/index.js";
 import type { ComponentVariantError } from "../../component-variant/errors/index.js";
 import type { ContentError } from "../../content/errors/index.js";
 import type { CritiqueError } from "../../critique/errors/index.js";
@@ -44,6 +45,7 @@ type StudioError =
   | AnimationError
   | ChartError
   | CommentError
+  | CompletionError
   | ComponentVariantError
   | ContentError
   | CritiqueError

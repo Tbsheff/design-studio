@@ -52,7 +52,12 @@ const importTrash = async (): Promise<void> => {
 };
 
 const importPopovers = async (): Promise<void> => {
-  await import("./home-popovers.js");
+  await Promise.all([
+    import("./home-popovers.js"),
+    import("./pack-popover.js"),
+    import("./model-popover.js"),
+    import("./level-popover.js"),
+  ]);
 };
 
 const importSlash = async (): Promise<SlashModule> => {
@@ -111,19 +116,19 @@ const PlusMenu = lazy(async () => {
 });
 
 const PackPopover = lazy(async () => {
-  const loaded = await import("./home-popovers.js");
+  const loaded = await import("./pack-popover.js");
 
   return { default: loaded.PackPopover };
 });
 
 const ModelPopover = lazy(async () => {
-  const loaded = await import("./home-popovers.js");
+  const loaded = await import("./model-popover.js");
 
   return { default: loaded.ModelPopover };
 });
 
 const LevelPopover = lazy(async () => {
-  const loaded = await import("./home-popovers.js");
+  const loaded = await import("./level-popover.js");
 
   return { default: loaded.LevelPopover };
 });

@@ -7,7 +7,7 @@ import type {
 } from "react";
 
 import { copy } from "./copy.js";
-import { Pop } from "./home-popovers.js";
+import { Pop } from "./pop.js";
 
 interface FolderPathPopProps {
   readonly trigger: RefObject<HTMLElement | null>;

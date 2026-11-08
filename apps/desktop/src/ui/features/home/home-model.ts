@@ -9,7 +9,7 @@ import type { WorkspaceList } from "@design-studio/contracts/folders";
 
 import { api } from "../../api.js";
 import { homeVariations } from "../../platform/storage.js";
-import { modelLabel } from "../chat/settings-draft-model.js";
+import { MODEL_OPTIONS, modelLabel } from "../chat/settings-draft-model.js";
 import type { AppChip } from "./app-chip-model.js";
 import { chipName, chipProblem } from "./chip-logic-model.js";
 import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
@@ -268,6 +268,7 @@ export {
   EXAMPLE_MS,
   HOME_REASON_ID,
   LEVEL_LABEL,
+  MODEL_OPTIONS,
   PLACEHOLDER,
   createFromHome,
   getFolderLabel as folderLabel,

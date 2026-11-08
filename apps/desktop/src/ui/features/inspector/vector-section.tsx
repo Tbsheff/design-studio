@@ -4,7 +4,12 @@ import { Suspense, lazy } from "react";
 import { isVectorShown } from "./inspector-model.js";
 import type { InspectorProps } from "./inspector-model.js";
 
-const InspectorVector = lazy(() => import("./inspector-vector.js"));
+const InspectorVector = lazy(async () => {
+  await import("../../styles/vector.css");
+  const loaded = await import("./inspector-vector.js");
+
+  return { default: loaded.InspectorVector };
+});
 
 const VectorSection = (props: InspectorProps): ReactElement | null => {
   if (!isVectorShown(props.selection)) {

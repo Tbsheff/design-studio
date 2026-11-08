@@ -29,3 +29,5 @@ export type { AuthoredCssState } from "./use-authored-css.js";
 export type { CreateRequest, SnapNote, TokenUi } from "./use-token-snap.js";
 
 export type { VariantScope } from "./use-edit-variant.js";
+
+export { runVector } from "../canvas/index.js";

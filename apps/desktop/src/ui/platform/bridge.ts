@@ -31,9 +31,9 @@ let helloInstalled = false;
 
 const HTML_FRAME_SANDBOX = "allow-scripts allow-same-origin allow-forms";
 
-type ParentMessageBody = ParentToBridge extends infer M
-  ? M extends ParentToBridge
-    ? Omit<M, "ns" | "token">
+type ParentMessageBody = ParentToBridge extends infer Message
+  ? Message extends ParentToBridge
+    ? Omit<Message, "ns" | "token">
     : never
   : never;
 
@@ -74,8 +74,8 @@ const frameSrc = (
   url.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, globalThis.location.origin);
 
   if (extra) {
-    for (const [k, v] of Object.entries(extra)) {
-      url.searchParams.set(k, v);
+    for (const [key, value] of Object.entries(extra)) {
+      url.searchParams.set(key, value);
     }
   }
 
@@ -122,9 +122,11 @@ const isBridgeMessage = (data: unknown): data is BridgeToParent => {
     return false;
   }
 
-  const m = data as { ns?: unknown; token?: unknown; type?: unknown };
+  const message = data as { ns?: unknown; token?: unknown; type?: unknown };
 
-  return m.ns === "studio" && Boolean(m.token) && Boolean(m.type);
+  return (
+    message.ns === "studio" && Boolean(message.token) && Boolean(message.type)
+  );
 };
 
 const frameElementOf = (
@@ -238,7 +240,9 @@ const useBridge = (
 
   useEffect(() => {
     const listener = (token: string, message: BridgeToParent): void => {
-      const frame = framesRef.current().find((f) => f.token === token);
+      const frame = framesRef
+        .current()
+        .find((frameValue) => frameValue.token === token);
 
       if (!frame || isCloudBlocked(frame, message)) {
         return;

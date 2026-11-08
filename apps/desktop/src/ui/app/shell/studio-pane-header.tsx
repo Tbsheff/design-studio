@@ -261,15 +261,15 @@ const RenameField = ({
       aria-label="Project name"
       autoFocus
       value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onFocus={(e) => e.currentTarget.select()}
+      onChange={(event) => setValue(event.target.value)}
+      onFocus={(event) => event.currentTarget.select()}
       onBlur={() => finish(true)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
           finish(true);
-        } else if (e.key === "Escape") {
-          e.preventDefault();
-          e.stopPropagation();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          event.stopPropagation();
           finish(false);
         }
       }}
@@ -357,7 +357,7 @@ export const StudioPaneHeader = (props: Props): ReactElement => {
               aria-expanded={open}
               data-tip={open ? undefined : props.name}
               data-tip-align="start"
-              onClick={() => setOpen((v) => !v)}
+              onClick={() => setOpen((isOpen) => !isOpen)}
               onDoubleClick={() => setRenaming(true)}
             >
               <span className="truncate">{props.name}</span>

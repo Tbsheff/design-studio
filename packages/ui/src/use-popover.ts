@@ -18,8 +18,8 @@ const usePopover = (
       return;
     }
 
-    const onDown = (e: MouseEvent): void => {
-      const target = e.target as Node;
+    const onDown = (event: MouseEvent): void => {
+      const target = event.target as Node;
 
       if (trigger?.current?.contains(target)) {
         return;
@@ -30,8 +30,8 @@ const usePopover = (
       }
     };
 
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key !== "Escape") {
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") {
         return;
       }
 
@@ -39,8 +39,8 @@ const usePopover = (
         return;
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
       onClose(true);
     };
 
@@ -78,7 +78,7 @@ const useReturnFocusOnUnmount = (): void => {
 const useModalDialog = (
   onDismiss: () => boolean | void
 ): {
-  onMouseDown: (e: ReactMouseEvent<HTMLDialogElement>) => void;
+  onMouseDown: (event: ReactMouseEvent<HTMLDialogElement>) => void;
   ref: RefObject<HTMLDialogElement | null>;
 } => {
   const ref = useRef<HTMLDialogElement>(null);
@@ -107,8 +107,8 @@ const useModalDialog = (
       firstFocusable(el)
     )?.focus();
 
-    const onCancel = (e: Event): void => {
-      e.preventDefault();
+    const onCancel = (event: Event): void => {
+      event.preventDefault();
       dismiss.current();
     };
 
@@ -135,18 +135,20 @@ const useModalDialog = (
     };
   }, []);
 
-  const onBackdropMouseDown = (e: ReactMouseEvent<HTMLDialogElement>): void => {
-    if (e.target !== e.currentTarget) {
+  const onBackdropMouseDown = (
+    event: ReactMouseEvent<HTMLDialogElement>
+  ): void => {
+    if (event.target !== event.currentTarget) {
       return;
     }
 
-    const r = e.currentTarget.getBoundingClientRect();
+    const rect = event.currentTarget.getBoundingClientRect();
 
     const inside =
-      e.clientX >= r.left &&
-      e.clientX <= r.right &&
-      e.clientY >= r.top &&
-      e.clientY <= r.bottom;
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom;
 
     if (!inside) {
       dismiss.current();

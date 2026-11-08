@@ -93,7 +93,7 @@ export default function AppBar({
         aria-haspopup="dialog"
         onClick={() => {
           focus.remember();
-          setOpen((v) => !v);
+          setOpen((isOpen) => !isOpen);
         }}
         data-tip="Routes, dev server and log"
       >

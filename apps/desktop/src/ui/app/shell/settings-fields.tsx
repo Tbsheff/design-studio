@@ -25,7 +25,9 @@ export const SettingsFields = ({
   const set = (patch: Partial<SettingsDraft>): void =>
     onChange({ ...draft, ...patch });
 
-  const known = MODEL_OPTIONS.some((m) => m.id === draft.model);
+  const known = MODEL_OPTIONS.some(
+    (modelValue) => modelValue.id === draft.model
+  );
 
   return (
     <div className="settings-fields">
@@ -35,11 +37,11 @@ export const SettingsFields = ({
           className="select"
           aria-label="Model"
           value={draft.model}
-          onChange={(e) => set({ model: e.target.value })}
+          onChange={(event) => set({ model: event.target.value })}
         >
-          {MODEL_OPTIONS.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label}
+          {MODEL_OPTIONS.map((modelValue) => (
+            <option key={modelValue.id} value={modelValue.id}>
+              {modelValue.label}
             </option>
           ))}
           {!known && <option value={draft.model}>{draft.model}</option>}
@@ -55,7 +57,7 @@ export const SettingsFields = ({
           step={0.01}
           placeholder="No limit"
           value={draft.maxBudgetUsd}
-          onChange={(e) => set({ maxBudgetUsd: e.target.value })}
+          onChange={(event) => set({ maxBudgetUsd: event.target.value })}
         />
       </label>
       <label className="field">
@@ -67,17 +69,17 @@ export const SettingsFields = ({
           max={200}
           step={1}
           value={draft.maxTurns}
-          onChange={(e) => set({ maxTurns: e.target.value })}
+          onChange={(event) => set({ maxTurns: event.target.value })}
         />
       </label>
       <label className="check">
         <input
           type="checkbox"
           checked={draft.allowBash}
-          onChange={(e) =>
+          onChange={(event) =>
             set({
-              allowBash: e.target.checked,
-              allowInstall: e.target.checked && draft.allowInstall,
+              allowBash: event.target.checked,
+              allowInstall: event.target.checked && draft.allowInstall,
             })
           }
         />
@@ -88,7 +90,7 @@ export const SettingsFields = ({
           type="checkbox"
           checked={draft.allowBash && draft.allowInstall}
           disabled={!draft.allowBash}
-          onChange={(e) => set({ allowInstall: e.target.checked })}
+          onChange={(event) => set({ allowInstall: event.target.checked })}
         />
         <span>Allow installing packages</span>
       </label>
@@ -97,7 +99,7 @@ export const SettingsFields = ({
           type="checkbox"
           checked={draft.allowBash && draft.autoApprove}
           disabled={!draft.allowBash}
-          onChange={(e) => set({ autoApprove: e.target.checked })}
+          onChange={(event) => set({ autoApprove: event.target.checked })}
         />
         <span>Auto mode: run commands without asking</span>
       </label>

@@ -62,7 +62,7 @@ const SettingsTab = ({
           value={url}
           placeholder="Empty: the studio starts next dev"
           spellCheck={false}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(event) => setUrl(event.target.value)}
         />
       </label>
       <label className="field">
@@ -73,7 +73,7 @@ const SettingsTab = ({
           value={env}
           placeholder="No variables set"
           spellCheck={false}
-          onChange={(e) => setEnv(e.target.value)}
+          onChange={(event) => setEnv(event.target.value)}
         />
         <small className="field-help">
           One KEY=value per line. The studio keeps these in the project file, so

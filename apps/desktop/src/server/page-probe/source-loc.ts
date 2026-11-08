@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type * as t from "@babel/types";
+import type * as babelTypes from "@babel/types";
 import type { SourceLoc } from "@design-studio/contracts";
 
 import { parseSource } from "../direct-edit/engine/index.js";
@@ -53,7 +53,7 @@ const insideTree = (workTree: string, file: string): string => {
   return absolute;
 };
 
-const tagStartsOn = (root: t.Node, line: number): number[] => {
+const tagStartsOn = (root: babelTypes.Node, line: number): number[] => {
   const cols: number[] = [];
   const stack: unknown[] = [root];
 
@@ -70,7 +70,7 @@ const tagStartsOn = (root: t.Node, line: number): number[] => {
     }
 
     if (node.type === "JSXOpeningElement") {
-      const start = (node.loc as t.SourceLocation | undefined)?.start;
+      const start = (node.loc as babelTypes.SourceLocation | undefined)?.start;
 
       if (start?.line === line) {
         cols.push(start.column + 1);
@@ -84,7 +84,7 @@ const tagStartsOn = (root: t.Node, line: number): number[] => {
     }
   }
 
-  return cols.toSorted((a, b) => a - b);
+  return cols.toSorted((left, right) => left - right);
 };
 
 const colOnLine = async (

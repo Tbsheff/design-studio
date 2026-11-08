@@ -83,11 +83,12 @@ const contextOf = (
 
 const PROBE_VIEWPORT = { height: 900, width: 1440 };
 
-const onProbePage = <T>(
+const onProbePage = <Value>(
   preview: PreviewService,
   url: string,
   expression: string
-): Promise<T> => probeOnPage<T>(preview, url, PROBE_VIEWPORT, expression);
+): Promise<Value> =>
+  probeOnPage<Value>(preview, url, PROBE_VIEWPORT, expression);
 
 const describeElements = async (
   preview: PreviewService,

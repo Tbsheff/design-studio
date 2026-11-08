@@ -78,15 +78,19 @@ const RoutesTab = ({
             : "Loading routes…"
         }
         aria-label="Filter routes"
-        onChange={(e) => setFilter(e.target.value)}
-        onKeyDown={(e) => {
+        onChange={(event) => setFilter(event.target.value)}
+        onKeyDown={(event) => {
           const first = shown[0];
 
-          if (e.key !== "Enter" || !first || e.nativeEvent.isComposing) {
+          if (
+            event.key !== "Enter" ||
+            !first ||
+            event.nativeEvent.isComposing
+          ) {
             return;
           }
 
-          e.preventDefault();
+          event.preventDefault();
 
           if (first.dynamic) {
             setCustom(first.route);
@@ -137,7 +141,7 @@ const RoutesTab = ({
           value={custom}
           placeholder="/patients/123"
           aria-label="Route to add"
-          onChange={(e) => setCustom(e.target.value)}
+          onChange={(event) => setCustom(event.target.value)}
         />
         <button
           type="submit"

@@ -139,7 +139,7 @@ const UrlForm = ({
           placeholder="http://localhost:3000"
           spellCheck={false}
           autoComplete="off"
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(event) => setUrl(event.target.value)}
         />
         <button
           type="submit"
@@ -168,7 +168,7 @@ export const AppFailure = ({
   const hint = useInstallHint(projectId, app, managed, retries);
 
   const retry = (): void => {
-    setRetries((n) => n + 1);
+    setRetries((attempt) => attempt + 1);
     onRetry();
   };
 

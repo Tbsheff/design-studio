@@ -137,17 +137,19 @@ const listeners = new Set<() => void>();
 
 const uiStore = {
   get: (): UiState => state,
-  set: (patch: Partial<UiState> | ((s: UiState) => Partial<UiState>)): void => {
+  set: (
+    patch: Partial<UiState> | ((previous: UiState) => Partial<UiState>)
+  ): void => {
     const next = typeof patch === "function" ? patch(state) : patch;
     state = { ...state, ...next };
     saveUiState(state);
-    listeners.forEach((l) => l());
+    listeners.forEach((listener) => listener());
   },
-  subscribe: (l: () => void) => {
-    listeners.add(l);
+  subscribe: (listener: () => void) => {
+    listeners.add(listener);
 
     return (): void => {
-      listeners.delete(l);
+      listeners.delete(listener);
     };
   },
 };
@@ -173,13 +175,13 @@ const createDraftStore = (initial = ""): DraftStore => {
       }
 
       value = next;
-      draftListeners.forEach((l) => l());
+      draftListeners.forEach((listener) => listener());
     },
-    subscribe: (l) => {
-      draftListeners.add(l);
+    subscribe: (listener) => {
+      draftListeners.add(listener);
 
       return () => {
-        draftListeners.delete(l);
+        draftListeners.delete(listener);
       };
     },
   };

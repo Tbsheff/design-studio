@@ -41,11 +41,11 @@ const refForKey = (scope: string, key: string): string => {
   let ref = layerRef(key);
 
   for (
-    let n = 1;
+    let counter = 1;
     ids.keyByRef.has(ref) && ids.keyByRef.get(ref) !== key;
-    n += 1
+    counter += 1
   ) {
-    ref = layerRef(`${key}^${n}`);
+    ref = layerRef(`${key}^${counter}`);
   }
 
   ids.refByKey.set(key, ref);

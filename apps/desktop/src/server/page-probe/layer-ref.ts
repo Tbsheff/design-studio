@@ -51,7 +51,7 @@ interface ScanResult {
   roots: number[] | null;
 }
 
-type ScanPage = { evaluate<T>(expression: string): Promise<T> };
+type ScanPage = { evaluate<Value>(expression: string): Promise<Value> };
 
 interface Memo {
   key: string;
@@ -215,13 +215,13 @@ const keyed = (raws: RawLayer[], scope: string): Layer[] => {
 const scanIn = (page: ScanPage, input: ScanInput): Promise<ScanResult> =>
   page.evaluate<ScanResult>(`(${SCAN_SOURCE})(${JSON.stringify(input)})`);
 
-const onPage = async <T>(
+const onPage = async <Value>(
   preview: PreviewService,
   url: string,
   viewport: Viewport,
-  task: (page: ScanPage) => Promise<T>,
+  task: (page: ScanPage) => Promise<Value>,
   layoutOnly = false
-): Promise<T> => onProbePage(preview, url, viewport, task, { layoutOnly });
+): Promise<Value> => onProbePage(preview, url, viewport, task, { layoutOnly });
 
 const remember = (
   scope: string,
@@ -416,19 +416,19 @@ const resolveLayerRef = async (
     ref
   ) as string;
 
-interface PathMatch<T> {
+interface PathMatch<Value> {
   layers: (Layer | null)[];
-  extra: T;
+  extra: Value;
 }
 
-const layersAtPaths = async <T>(
+const layersAtPaths = async <Value>(
   preview: PreviewService,
   url: string,
   viewport: Viewport,
   scope: string,
   page: string | undefined,
-  find: (probe: ScanPage) => Promise<{ paths: string[]; extra: T }>
-): Promise<PathMatch<T>> =>
+  find: (probe: ScanPage) => Promise<{ paths: string[]; extra: Value }>
+): Promise<PathMatch<Value>> =>
   onPage(preview, url, viewport, async (probe) => {
     const found = await find(probe);
     if (found.paths.length === 0) return { layers: [], extra: found.extra };

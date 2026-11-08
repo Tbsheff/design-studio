@@ -34,7 +34,7 @@ export const Disclosure = ({
         aria-expanded={open}
         aria-controls="data-disclosure-text"
         aria-label={open ? "Hide data use details" : "Show data use details"}
-        onClick={() => setOpen((x) => !x)}
+        onClick={() => setOpen((isOpen) => !isOpen)}
       >
         {open ? (
           "Less"

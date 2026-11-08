@@ -170,7 +170,6 @@ const fileNameOf = (
 const toolOf = (
   pane: PanelTab | undefined,
   comment: boolean,
-  select: boolean,
   proto: boolean
 ): CanvasTool => {
   if (proto) {
@@ -185,11 +184,7 @@ const toolOf = (
     return "edit";
   }
 
-  if (select) {
-    return "select";
-  }
-
-  return null;
+  return "select";
 };
 
 const reloadFrames = (stage: HTMLElement | null): void => {

@@ -2,6 +2,7 @@
 import { AccessibilityEntries } from "../accessibility/handlers.js";
 import { AnimationEntries } from "../animation/handlers.js";
 import { CanvasEntries } from "../canvas/handlers.js";
+import { ChartEntries } from "../chart/handlers.js";
 import { CloudEntries } from "../cloud/handlers.js";
 import { CommentEntries } from "../comment/handlers.js";
 import { ComponentVariantEntries } from "../component-variant/handlers.js";
@@ -55,6 +56,7 @@ const ALL_ENTRIES = {
   accessibility: AccessibilityEntries,
   animation: AnimationEntries,
   canvas: CanvasEntries,
+  chart: ChartEntries,
   cloud: CloudEntries,
   comment: CommentEntries,
   componentVariant: ComponentVariantEntries,

@@ -1,6 +1,11 @@
 import { Suspense, useCallback } from "react";
 import type { ComponentProps, ReactElement } from "react";
 
+import {
+  ChartPanel,
+  ChartTabBar,
+  useChartTab,
+} from "../features/chart/index.js";
 import { ComponentsPanel as FeatureComponentsPanel } from "../features/design-system/components-panel.js";
 import { GalleryHost } from "../features/gallery/gallery-host.js";
 import {
@@ -41,6 +46,8 @@ const ComponentsPanel = ({
   );
 
   const { select: handleSelect, tab } = useInsertTab();
+  const chartTab = useChartTab();
+  const handleChartToggle = chartTab.toggle;
 
   let panel = (
     <FeatureComponentsPanel
@@ -68,10 +75,24 @@ const ComponentsPanel = ({
     );
   }
 
+  if (chartTab.isOpen) {
+    panel = (
+      <Suspense fallback={null}>
+        <ChartPanel
+          directionId={directionId}
+          kind={kind}
+          projectId={projectId}
+          selection={selection}
+        />
+      </Suspense>
+    );
+  }
+
   return (
     <>
       <Suspense fallback={null}>
         <PatternTabs onSelect={handleSelect} tab={tab} />
+        <ChartTabBar isOpen={chartTab.isOpen} onToggle={handleChartToggle} />
       </Suspense>
       {panel}
     </>

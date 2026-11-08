@@ -2,6 +2,7 @@
 import { AccessibilityLive } from "./accessibility/live.js";
 import { AnimationLive } from "./animation/live.js";
 import { CanvasLive } from "./canvas/live.js";
+import { ChartLive } from "./chart/live.js";
 import { CloudLive } from "./cloud/live.js";
 import { CommentLive } from "./comment/live.js";
 import { ComponentVariantLive } from "./component-variant/live.js";
@@ -55,6 +56,7 @@ const ALL_LIVE = {
   accessibility: AccessibilityLive,
   animation: AnimationLive,
   canvas: CanvasLive,
+  chart: ChartLive,
   cloud: CloudLive,
   comment: CommentLive,
   componentVariant: ComponentVariantLive,

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import { useUi } from "../../platform/storage.js";
 import { useFirstBuildGate } from "../chat/use-first-build.js";
@@ -26,8 +27,75 @@ import { useCanvasDraw } from "./use-draw-tool.js";
 import { usePanZoom } from "./use-pan-zoom.js";
 import { usePreviewUrl, useRenderCheck } from "./use-preview-url.js";
 
-const useCanvasStage = (props: ViewProps) => {
-  const { projectId, directionId, kind, source, headVersionId } = props;
+type CanvasFramesState = ReturnType<typeof useCanvasFrames>;
+
+type ShellPane = ReturnType<typeof useShellPane>;
+
+type CommentMode = ReturnType<typeof useCommentMode>;
+
+type StageSetter = Dispatch<SetStateAction<boolean>>;
+
+interface StageViewport {
+  readonly active: CanvasFramesState["active"];
+  readonly artboardRef: RefObject<HTMLDivElement | null>;
+  readonly canvasFrames: CanvasFramesState;
+  readonly layout: CanvasFramesState["layout"];
+  readonly pz: ReturnType<typeof usePanZoom>;
+  readonly shown: ReturnType<typeof shownFrames>;
+  readonly stageRef: RefObject<HTMLDivElement | null>;
+  readonly ui: ReturnType<typeof useUi>;
+  readonly viewport: { readonly height: number; readonly width: number };
+  readonly zoomBy: ReturnType<typeof useZoomInput>;
+}
+
+interface StageModes {
+  readonly comment: CommentMode;
+  readonly commentMode: boolean;
+  readonly draw: ReturnType<typeof useCanvasDraw>;
+  readonly layersOpen: ShellPane["layersOpen"];
+  readonly live: boolean;
+  readonly pane: ShellPane;
+  readonly picking: boolean;
+  readonly protoOn: boolean;
+  readonly selectMode: boolean;
+  readonly setProto: (next: boolean) => void;
+  readonly setProtoOn: StageSetter;
+  readonly setSelectMode: StageSetter;
+  readonly toggleEdit: ShellPane["toggleEdit"];
+}
+
+interface CanvasStage extends StageViewport, StageModes {
+  readonly baseUrl: ReturnType<typeof withElementMark>;
+  readonly check: ReturnType<typeof useRenderCheck>;
+  readonly firstBuild: ReturnType<typeof useFirstBuildGate>;
+  readonly frameStates: ReturnType<typeof useFrameStates>;
+  readonly liveUrl: ReturnType<typeof livePageUrl>;
+  readonly note: ReturnType<typeof stageNote>;
+  readonly urlError: ReturnType<typeof usePreviewUrl>["urlError"];
+}
+
+interface PanZoomInput {
+  readonly active: CanvasFramesState["active"];
+  readonly shown: ReturnType<typeof shownFrames>;
+  readonly ui: ReturnType<typeof useUi>;
+}
+
+const toPanZoomLayout = ({
+  active,
+  shown,
+  ui,
+}: PanZoomInput): Pick<
+  Parameters<typeof usePanZoom>[0],
+  "layout" | "setting"
+> => {
+  const layout = { active, activeId: active.id, bounds: boundsOf(shown) };
+  const setting = ui.zoom;
+
+  return { layout, setting };
+};
+
+const useStageViewport = (props: ViewProps): StageViewport => {
+  const { projectId, directionId } = props;
   const ui = useUi();
   useResetPassiveGateInFirstRender();
   const stageRef = useRef<HTMLDivElement>(null);
@@ -48,27 +116,45 @@ const useCanvasStage = (props: ViewProps) => {
     selectionRef.current = props.selection;
   });
 
+  const selectionRect = (): ReturnType<typeof unionRect> =>
+    unionRect(selectionRef.current);
+
   const pz = usePanZoom({
+    ...toPanZoomLayout({ active, shown, ui }),
     artboardRef,
-    layout: { active, activeId: active.id, bounds: boundsOf(shown) },
-    selectionRect: () => unionRect(selectionRef.current),
-    setting: ui.zoom,
+    selectionRect,
     stageRef,
   });
 
   const zoomBy = useZoomInput(pz.applyZoomKey);
+
+  return {
+    active,
+    artboardRef,
+    canvasFrames,
+    layout,
+    pz,
+    shown,
+    stageRef,
+    ui,
+    viewport,
+    zoomBy,
+  };
+};
+
+const useStageModes = (props: ViewProps, view: StageViewport): StageModes => {
+  const { active, ui } = view;
   const [selectMode, setSelectMode] = useState(false);
-  const check = useRenderCheck(projectId, directionId);
 
   const comment = useCommentMode(
     props.comments,
-    source.kind === "live",
+    props.source.kind === "live",
     setSelectMode
   );
 
   noteCommentFrame(props.comments, active);
   const commentMode = comment.on;
-  const live = source.kind === "live";
+  const live = props.source.kind === "live";
 
   const pane = useShellPane(
     props.shell,
@@ -100,6 +186,30 @@ const useCanvasStage = (props: ViewProps) => {
 
   const draw = useCanvasDraw(comment, picking, setSelectMode);
 
+  return {
+    comment,
+    commentMode,
+    draw,
+    layersOpen,
+    live,
+    pane,
+    picking,
+    protoOn,
+    selectMode,
+    setProto,
+    setProtoOn,
+    setSelectMode,
+    toggleEdit,
+  };
+};
+
+const useCanvasStage = (props: ViewProps): CanvasStage => {
+  const { projectId, directionId, kind, source, headVersionId } = props;
+  const view = useStageViewport(props);
+  const { active } = view;
+  const check = useRenderCheck(projectId, directionId);
+  const modes = useStageModes(props, view);
+  const { live } = modes;
   const preview = usePreviewUrl(projectId, directionId, source, headVersionId);
   const { urlError } = preview;
 
@@ -111,60 +221,39 @@ const useCanvasStage = (props: ViewProps) => {
   const frameStates = useFrameStates(projectId, Boolean(props.app));
   const liveUrl = livePageUrl(baseUrl, active, frameStates);
 
-  const note = stageNote({
-    app: props.app,
-    hasHead: headVersionId !== null,
-    live,
-    noRuns: props.noRuns,
-    running: props.running,
-    urlError,
-  });
+  const { app, noRuns, running } = props;
+  const hasHead = headVersionId !== null;
+  const note = stageNote({ app, hasHead, live, noRuns, running, urlError });
+
+  const emptyStage = note === "empty";
+  const { lastChange } = props;
+  const { path } = active;
+  const url = liveUrl;
 
   const firstBuild = useFirstBuildGate({
     directionId,
-    emptyStage: note === "empty",
-    hasHead: headVersionId !== null,
+    emptyStage,
+    hasHead,
     kind,
-    lastChange: props.lastChange,
+    lastChange,
     live,
-    path: active.path,
+    path,
     projectId,
-    running: props.running,
-    url: liveUrl,
+    running,
+    url,
     urlError,
   });
 
   return {
-    active,
-    artboardRef,
+    ...view,
+    ...modes,
     baseUrl,
-    canvasFrames,
     check,
-    comment,
-    commentMode,
-    draw,
     firstBuild,
     frameStates,
-    layersOpen,
-    layout,
-    live,
     liveUrl,
     note,
-    pane,
-    picking,
-    protoOn,
-    pz,
-    selectMode,
-    setProto,
-    setProtoOn,
-    setSelectMode,
-    shown,
-    stageRef,
-    toggleEdit,
-    ui,
     urlError,
-    viewport,
-    zoomBy,
   };
 };
 

@@ -132,22 +132,20 @@ export function useThumbnail(project: Project): string | null {
   return null;
 }
 
-function Star({ isFilled, size = 14 }: StarProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      fill={isFilled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth={1.4}
-      strokeLinejoin="round"
-    >
-      <path d="M8 1.9l1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z" />
-    </svg>
-  );
-}
+const Star = ({ isFilled, size = 14 }: StarProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    aria-hidden="true"
+    fill={isFilled ? "currentColor" : "none"}
+    stroke="currentColor"
+    strokeWidth={1.4}
+    strokeLinejoin="round"
+  >
+    <path d="M8 1.9l1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z" />
+  </svg>
+);
 
 export interface CardActions {
   readonly onOpen: (project: Project) => void;
@@ -220,13 +218,13 @@ const HEALTH_TEXT: Record<AppHealth["state"], string> = {
   static: "Static",
 };
 
-export function HealthCell({
+export const HealthCell = ({
   health,
   hasRunFailed = false,
 }: {
   readonly health: AppHealth | null;
   readonly hasRunFailed: boolean;
-}) {
+}) => {
   const state = health?.state ?? "static";
 
   if (hasRunFailed && state !== "install" && state !== "failed") {
@@ -254,9 +252,9 @@ export function HealthCell({
       {HEALTH_TEXT[state]}
     </span>
   );
-}
+};
 
-function ProjectCard({
+const ProjectCard = ({
   project,
   pack,
   health,
@@ -265,7 +263,7 @@ function ProjectCard({
   isFavorite,
   actions,
   onFocusCard,
-}: CardProps) {
+}: CardProps) => {
   const html = project.kind === "html";
   const count = project.directions.length;
   const thumb = useThumbnail(project);
@@ -478,7 +476,7 @@ function ProjectCard({
       )}
     </div>
   );
-}
+};
 
 interface Props {
   readonly projects: Project[] | null;
@@ -495,7 +493,7 @@ interface Props {
   readonly headActions?: ReactNode;
 }
 
-function ProjectListTools({
+const ProjectListTools = ({
   query,
   onQuery,
   searchRef,
@@ -509,7 +507,7 @@ function ProjectListTools({
   readonly onFirst: () => void;
   readonly onOpenFirst: () => void;
   readonly canOpen: boolean;
-}) {
+}) => {
   const { homeSort } = useUi();
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -555,9 +553,9 @@ function ProjectListTools({
       />
     </div>
   );
-}
+};
 
-function ViewTools() {
+const ViewTools = () => {
   const { view, favoritesOnly } = useHomeView();
 
   return (
@@ -620,7 +618,7 @@ function ViewTools() {
       </div>
     </>
   );
-}
+};
 
 function useHomeView() {
   const prefs = useHomePrefs();
@@ -638,7 +636,7 @@ export interface ListFilter {
   readonly empty?: string;
 }
 
-function ProjectListStates({
+const ProjectListStates = ({
   projects,
   error,
   filter,
@@ -652,53 +650,51 @@ function ProjectListStates({
   readonly query: string;
   readonly shownCount: number;
   readonly onClearQuery: () => void;
-}) {
-  return (
-    <>
-      {error && (
-        <div className="alert error" role="alert">
-          {error}
-        </div>
-      )}
-      {projects === null && !error && (
-        <div className="project-grid" aria-busy="true">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="project-card skeleton" />
-          ))}
-        </div>
-      )}
-      {filter && projects?.length === 0 && (
-        <div className="home-empty">
-          <Icon name="folder" size={16} />
-          <span>{filter.empty ?? `No ${filter.label} yet.`}</span>
-          {!filter.empty && (
-            <button type="button" className="link" onClick={filter.onClear}>
-              Show all
-            </button>
-          )}
-        </div>
-      )}
-      {!filter && projects?.length === 0 && (
-        <div className="home-empty">
-          <Icon name="folder" size={16} />
-          <span>
-            No projects yet. Describe a design above, pick a starter, or open a
-            folder that already holds one.
-          </span>
-        </div>
-      )}
-      {projects && projects.length > 0 && shownCount === 0 && (
-        <div className="home-empty" role="status">
-          <Icon name="search" size={16} />
-          <span>No projects match “{query.trim()}”.</span>
-          <button type="button" className="link" onClick={() => onClearQuery()}>
-            Clear search
+}) => (
+  <>
+    {error && (
+      <div className="alert error" role="alert">
+        {error}
+      </div>
+    )}
+    {projects === null && !error && (
+      <div className="project-grid" aria-busy="true">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="project-card skeleton" />
+        ))}
+      </div>
+    )}
+    {filter && projects?.length === 0 && (
+      <div className="home-empty">
+        <Icon name="folder" size={16} />
+        <span>{filter.empty ?? `No ${filter.label} yet.`}</span>
+        {!filter.empty && (
+          <button type="button" className="link" onClick={filter.onClear}>
+            Show all
           </button>
-        </div>
-      )}
-    </>
-  );
-}
+        )}
+      </div>
+    )}
+    {!filter && projects?.length === 0 && (
+      <div className="home-empty">
+        <Icon name="folder" size={16} />
+        <span>
+          No projects yet. Describe a design above, pick a starter, or open a
+          folder that already holds one.
+        </span>
+      </div>
+    )}
+    {projects && projects.length > 0 && shownCount === 0 && (
+      <div className="home-empty" role="status">
+        <Icon name="search" size={16} />
+        <span>No projects match “{query.trim()}”.</span>
+        <button type="button" className="link" onClick={() => onClearQuery()}>
+          Clear search
+        </button>
+      </div>
+    )}
+  </>
+);
 
 function useGridFocus(shown: readonly Project[]) {
   const gridRef = useRef<HTMLDivElement>(null);
@@ -749,7 +745,7 @@ function useGridFocus(shown: readonly Project[]) {
   return { gridRef, active, setActiveId, focusAt, onGridKey };
 }
 
-export function ProjectGrid({
+export const ProjectGrid = ({
   projects,
   packs,
   health,
@@ -762,7 +758,7 @@ export function ProjectGrid({
   filter = null,
   tabs,
   headActions,
-}: Props) {
+}: Props) => {
   const { homeSort } = useUi();
   const { view, favoritesOnly, favorites } = useHomeView();
   const matched = toSortedProjects(
@@ -861,4 +857,4 @@ export function ProjectGrid({
       )}
     </section>
   );
-}
+};

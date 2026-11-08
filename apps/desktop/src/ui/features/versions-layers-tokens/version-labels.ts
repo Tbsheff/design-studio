@@ -16,8 +16,6 @@ interface KindInfo {
   hint: string;
 }
 
-const MAX_CHAIN = 64;
-
 const KIND_INFO: Record<
   Exclude<Version["meta"]["kind"], "manual">,
   KindInfo
@@ -60,14 +58,15 @@ const EDIT_INFO: Record<
   tokens: { hint: "You changed design tokens", icon: "token", label: "Tokens" },
 };
 
-function indexVersions(versions: Version[]): VersionIndex {
-  return new Map(versions.map((v) => [v.id, v]));
-}
+const MAX_CHAIN = 64;
 
-function manualSort(raw: string): keyof typeof EDIT_INFO {
-  const title = raw.replace(/^(Undo|Redo): /, "");
+const indexVersions = (versions: Version[]): VersionIndex =>
+  new Map(versions.map((version) => [version.id, version]));
 
-  if (/^(Update tokens|Add token)\b/.test(title)) {
+const toManualSort = (raw: string): keyof typeof EDIT_INFO => {
+  const title = raw.replace(/^(?:Undo|Redo): /u, "");
+
+  if (/^(?:Update tokens|Add token)\b/u.test(title)) {
     return "tokens";
   }
 
@@ -75,84 +74,119 @@ function manualSort(raw: string): keyof typeof EDIT_INFO {
     return "design-md";
   }
 
-  if (/^(Apply|Switch to) .+ design system$/.test(title)) {
+  if (/^(?:Apply|Switch to) .+ design system$/u.test(title)) {
     return "design-system";
   }
 
   return "element";
-}
+};
 
-function kindInfo(v: Version): KindInfo {
-  return v.meta.kind === "manual"
-    ? EDIT_INFO[manualSort(v.title)]
-    : KIND_INFO[v.meta.kind];
-}
+const kindInfo = (version: Version): KindInfo => {
+  const { kind } = version.meta;
 
-function originOf(v: Version, index: VersionIndex): Version | null {
-  let current: Version | undefined = v;
+  if (kind === "manual") {
+    return EDIT_INFO[toManualSort(version.title)];
+  }
+
+  return KIND_INFO[kind];
+};
+
+const toRunTitle = (version: Version): string => {
+  if (version.meta.kind === "run") {
+    return runTitle(version.title);
+  }
+
+  return version.title;
+};
+
+const toRestoredParent = (
+  version: Version,
+  index: VersionIndex
+): Version | null => {
+  const restoredFrom: string | undefined = version.meta.restoredFrom;
+
+  if (!restoredFrom) {
+    return null;
+  }
+
+  return index.get(restoredFrom) ?? null;
+};
+
+const originOf = (version: Version, index: VersionIndex): Version | null => {
+  let current: Version | null = version;
 
   for (
     let depth = 0;
     depth < MAX_CHAIN && current && isRestoreKind(current.meta.kind);
     depth += 1
   ) {
-    const from: string | undefined = current.meta.restoredFrom;
-    current = from ? index.get(from) : undefined;
+    current = toRestoredParent(current, index);
   }
 
-  return current && current !== v ? current : null;
-}
-
-function plainTitle(v: Version): string {
-  if (v.name) {
-    return v.name;
+  if (current && current !== version) {
+    return current;
   }
 
-  return v.meta.kind === "run" ? runTitle(v.title) : v.title;
-}
+  return null;
+};
 
-function displayTitle(v: Version, index: VersionIndex): string {
-  return v.name ?? autoTitle(v, index);
-}
+const plainTitle = (version: Version): string => {
+  if (version.name) {
+    return version.name;
+  }
 
-function autoTitle(v: Version, index: VersionIndex): string {
-  const { kind } = v.meta;
+  return toRunTitle(version);
+};
+
+const autoTitle = (version: Version, index: VersionIndex): string => {
+  const { kind } = version.meta;
 
   if (!isRestoreKind(kind)) {
-    return v.meta.kind === "run" ? runTitle(v.title) : v.title;
+    return toRunTitle(version);
   }
 
-  const origin = originOf(v, index);
+  const origin = originOf(version, index);
+  let base = baseTitle(version.title, kind);
 
-  return restoreTitle(
-    kind,
-    origin ? plainTitle(origin) : baseTitle(v.title, kind)
-  );
-}
+  if (origin) {
+    base = plainTitle(origin);
+  }
 
-function undoneOf(v: Version, index: VersionIndex): Version | null {
-  if (v.meta.kind !== "undo" || !v.parentId) {
+  return restoreTitle(kind, base);
+};
+
+const displayTitle = (version: Version, index: VersionIndex): string =>
+  version.name ?? autoTitle(version, index);
+
+const undoneOf = (version: Version, index: VersionIndex): Version | null => {
+  if (version.meta.kind !== "undo" || !version.parentId) {
     return null;
   }
 
-  return index.get(v.parentId) ?? null;
-}
+  return index.get(version.parentId) ?? null;
+};
 
-const EDIT_LABEL = /^Edit (.+?): (.+?)( \([^)]*\))?$/;
-const TEXT_LABEL = /^Edit text of (.+?)( \([^)]*\))?$/;
-const MANY = /^\d+ elements$/;
+const EDIT_LABEL =
+  /^Edit (?<subject>.+?): (?<props>.+?)(?<suffix> \([^)]*\))?$/u;
+
+const TEXT_LABEL = /^Edit text of (?<subject>.+?)(?<suffix> \([^)]*\))?$/u;
+const MANY = /^\d+ elements$/u;
 const SIZE_PROPS = new Set(["width", "height"]);
-const PLACE_PROPS = /^(left|right|top|bottom|margin(-.+)?|translate)$/;
-const SPACE_PROPS = /^(padding(-.+)?|gap|row-gap|column-gap)$/;
-const COLOR_PROPS = /^(color|background(-color)?|border-color|fill|stroke)$/;
+const PLACE_PROPS = /^(?:left|right|top|bottom|margin(?:-.+)?|translate)$/u;
+const SPACE_PROPS = /^(?:padding(?:-.+)?|gap|row-gap|column-gap)$/u;
 
-function layerName(subject: string): string {
-  return MANY.test(subject)
-    ? subject
-    : `${subject.charAt(0).toUpperCase()}${subject.slice(1)}`;
-}
+const COLOR_PROPS =
+  /^(?:color|background(?:-color)?|border-color|fill|stroke)$/u;
 
-function editAction(props: string[]): string {
+const layerName = (subject: string): string => {
+  if (MANY.test(subject)) {
+    return subject;
+  }
+
+  return `${subject.charAt(0).toUpperCase()}${subject.slice(1)}`;
+};
+
+const editAction = (props: string[]): string => {
   if (props.every((prop) => SIZE_PROPS.has(prop))) {
     return "resize";
   }
@@ -170,41 +204,45 @@ function editAction(props: string[]): string {
   }
 
   return "edit";
-}
+};
 
-function historyPhrase(label: string): string | null {
-  const text = TEXT_LABEL.exec(label);
+const historyPhrase = (label: string): string | null => {
+  const text = TEXT_LABEL.exec(label)?.groups;
 
-  if (text?.[1]) {
-    return `text edit of ${layerName(text[1])}${text[2] ?? ""}`;
+  if (text?.subject) {
+    return `text edit of ${layerName(text.subject)}${text.suffix ?? ""}`;
   }
 
-  const edit = EDIT_LABEL.exec(label);
+  const edit = EDIT_LABEL.exec(label)?.groups;
 
-  if (!edit?.[1] || !edit[2]) {
+  if (!edit?.subject || !edit.props) {
     return null;
   }
 
-  const props = edit[2].split(", ").map((prop) => prop.trim());
+  const props = edit.props.split(", ").map((prop) => prop.trim());
 
-  return `${editAction(props)} of ${layerName(edit[1])}${edit[3] ?? ""}`;
-}
+  return `${editAction(props)} of ${layerName(edit.subject)}${edit.suffix ?? ""}`;
+};
 
-function fullText(v: Version): string | null {
-  const prompt = v.meta.prompt?.trim();
+const fullText = (version: Version): string | null => {
+  const prompt = version.meta.prompt?.trim();
 
-  return prompt ? prompt : null;
-}
+  if (prompt) {
+    return prompt;
+  }
+
+  return null;
+};
 
 export {
+  autoTitle,
+  displayTitle,
+  fullText,
+  historyPhrase,
   indexVersions,
   kindInfo,
   originOf,
-  displayTitle,
-  autoTitle,
   undoneOf,
-  historyPhrase,
-  fullText,
 };
 
 export type { VersionIndex };

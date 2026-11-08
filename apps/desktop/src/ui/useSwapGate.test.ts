@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { SwapQueue } from "./features/inspector/use-swap-gate";
 
+const CHANGE_ARG_3 = 3;
+const EXPECTED_3 = 3;
+
 const IS_FALSE = false;
 const IS_TRUE = true;
 
@@ -28,14 +31,14 @@ describe(SwapQueue, () => {
     const queue = new SwapQueue();
     queue.offer("a", change("a", 1));
     queue.offer("b", change("b", 2));
-    queue.offer("b", change("b", 3));
+    queue.offer("b", change("b", CHANGE_ARG_3));
     expect(queue.inFlight).toBe("a");
     expect([...queue.next.keys()]).toStrictEqual(["a"]);
     expect(queue.done("b")).toBe(IS_FALSE);
     expect(queue.done("a")).toBe(IS_TRUE);
     expect(queue.shown.get("a")?.changedAt).toBe(1);
     expect(queue.inFlight).toBe("b");
-    expect(queue.next.get("b")?.changedAt).toBe(3);
+    expect(queue.next.get("b")?.changedAt).toBe(EXPECTED_3);
     queue.done("b");
     expect(queue.inFlight).toBeNull();
     expect(queue.next.size).toBe(0);

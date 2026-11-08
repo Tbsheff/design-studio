@@ -10,6 +10,12 @@ import {
   multiBlockReason,
 } from "./features/inspector/mixed-values";
 
+const CARD_ARG_3 = 3;
+const CARD_ARG_4 = 4;
+const CARD_ARG_5 = 5;
+const SAMPLE_3 = 3;
+const SAMPLE_4 = 4;
+
 const IS_FALSE = false;
 const IS_TRUE = true;
 
@@ -65,9 +71,9 @@ describe(batchEdits, () => {
     expect.hasAssertions();
 
     const selections = [
-      card(3, { "border-radius": "4px" }),
-      card(4, { "border-radius": "12px" }),
-      card(5, { "border-radius": "8px" }),
+      card(CARD_ARG_3, { "border-radius": "4px" }),
+      card(CARD_ARG_4, { "border-radius": "12px" }),
+      card(CARD_ARG_5, { "border-radius": "8px" }),
     ];
 
     const bases = selections.map((selection) =>
@@ -75,8 +81,8 @@ describe(batchEdits, () => {
     );
     const edits = batchEdits(selections, bases, { "border-radius": "8px" });
     expect(edits.map((edit) => [edit.source.line, edit.style])).toStrictEqual([
-      [3, { "border-radius": "8px" }],
-      [4, { "border-radius": "8px" }],
+      [SAMPLE_3, { "border-radius": "8px" }],
+      [SAMPLE_4, { "border-radius": "8px" }],
     ]);
     expect(edits[0]?.tag).toBe("article");
   }, 0);
@@ -84,7 +90,10 @@ describe(batchEdits, () => {
   it("returns no edits when nothing changes", () => {
     expect.hasAssertions();
 
-    const selections = [card(3, { color: "red" }), card(4, { color: "red" })];
+    const selections = [
+      card(CARD_ARG_3, { color: "red" }),
+      card(CARD_ARG_4, { color: "red" }),
+    ];
     expect(
       batchEdits(
         selections,
@@ -99,15 +108,17 @@ describe(multiBlockReason, () => {
   it("allows distinct source locations", () => {
     expect.hasAssertions();
 
-    expect(multiBlockReason([card(3, {}), card(4, {})])).toBeNull();
+    expect(
+      multiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {})])
+    ).toBeNull();
   }, 0);
 
   it("refuses elements without a source", () => {
     expect.hasAssertions();
 
-    expect(multiBlockReason([card(3, {}), card(4, {}, false)])).toMatch(
-      /no source location/
-    );
+    expect(
+      multiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {}, false)])
+    ).toMatch(/no source location/);
   }, 0);
 
   it("refuses elements that share one source location, as from a .map()", () => {
@@ -115,8 +126,8 @@ describe(multiBlockReason, () => {
 
     expect(
       multiBlockReason([
-        card(3, {}),
-        { ...card(3, {}), selector: "li:nth-child(2)" },
+        card(CARD_ARG_3, {}),
+        { ...card(CARD_ARG_3, {}), selector: "li:nth-child(2)" },
       ])
     ).toMatch(/one line of code/);
   }, 0);
@@ -147,7 +158,7 @@ describe(nextSelection, () => {
   it("replaces on a plain click, adds and removes on Shift+click", () => {
     expect.hasAssertions();
 
-    const [first, second] = [card(3, {}), card(4, {})];
+    const [first, second] = [card(CARD_ARG_3, {}), card(CARD_ARG_4, {})];
     expect(nextSelection([first], second, false)).toStrictEqual([second]);
     expect(nextSelection([first], second, true)).toStrictEqual([first, second]);
     expect(nextSelection([first, second], { ...first }, true)).toStrictEqual([

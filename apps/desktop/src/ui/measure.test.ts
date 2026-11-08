@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { formatMeasure, measureBetween } from "../shared/measure";
 
+const FORMAT_MEASURE_ARG_12_345 = 12.345;
+const FORMAT_MEASURE_ARG_16 = 16;
+const SAMPLE_10 = 10;
+const SAMPLE_20 = 20;
+const SAMPLE_50 = 50;
+const SAMPLE_60 = 60;
+
 describe(measureBetween, () => {
   it("measures the gap to a sibling on the right and below", () => {
     expect.hasAssertions();
@@ -28,13 +35,18 @@ describe(measureBetween, () => {
       { height: 100, width: 100, x: 0, y: 0 }
     );
 
-    expect(lines.map((line) => line.value)).toStrictEqual([20, 50, 10, 60]);
+    expect(lines.map((line) => line.value)).toStrictEqual([
+      SAMPLE_20,
+      SAMPLE_50,
+      SAMPLE_10,
+      SAMPLE_60,
+    ]);
   }, 0);
 
   it("formats with at most one decimal", () => {
     expect.hasAssertions();
 
-    expect(formatMeasure(16)).toBe("16");
-    expect(formatMeasure(12.345)).toBe("12.3");
+    expect(formatMeasure(FORMAT_MEASURE_ARG_16)).toBe("16");
+    expect(formatMeasure(FORMAT_MEASURE_ARG_12_345)).toBe("12.3");
   }, 0);
 });

@@ -4,6 +4,14 @@ import { describe, expect, it } from "vitest";
 import { createEventHub } from "./platform/event-hub";
 import type { EventHub, EventSourceLike } from "./platform/event-hub";
 
+const EXPECTED_7 = 7;
+const FILES_ARG_3 = 3;
+const FILES_ARG_4 = 4;
+const FILES_ARG_5 = 5;
+const FILES_ARG_7 = 7;
+const SAMPLE_3 = 3;
+const SAMPLE_4 = 4;
+
 const IS_FALSE = false;
 const IS_TRUE = true;
 
@@ -100,11 +108,11 @@ describe("event hub", () => {
     const { hub, sources } = setup();
     const seen: number[] = [];
     hub.subscribe("p1", (event) => seen.push(event.seq));
-    sources[0]?.send(files(3));
-    sources[0]?.send(files(3));
+    sources[0]?.send(files(FILES_ARG_3));
+    sources[0]?.send(files(FILES_ARG_3));
     sources[0]?.send(files(2));
-    sources[0]?.send(files(4));
-    expect(seen).toStrictEqual([3, 4]);
+    sources[0]?.send(files(FILES_ARG_4));
+    expect(seen).toStrictEqual([SAMPLE_3, SAMPLE_4]);
   }, 0);
 
   it("reconnects after the last seq and reports the state", () => {
@@ -115,13 +123,13 @@ describe("event hub", () => {
     hub.subscribe("p1", ignoreEvent);
     hub.watchState("p1", () => states.push(hub.state("p1")));
     sources[0]?.open();
-    sources[0]?.send(files(7));
+    sources[0]?.send(files(FILES_ARG_7));
     sources[0]?.fail();
     expect(sources[0]?.closed).toBe(IS_TRUE);
     expect(hub.state("p1")).toBe("reconnecting");
     timers.shift()?.();
     expect(sources).toHaveLength(2);
-    expect(sources[1]?.after).toBe(7);
+    expect(sources[1]?.after).toBe(EXPECTED_7);
     sources[1]?.open();
     expect(states).toStrictEqual(["open", "reconnecting", "open"]);
   }, 0);
@@ -145,7 +153,7 @@ describe("event hub lifecycle", () => {
 
     const { hub, sources, flushDeferred } = setup();
     const off = hub.subscribe("p1", ignoreEvent);
-    sources[0]?.send(files(5));
+    sources[0]?.send(files(FILES_ARG_5));
     off();
     flushDeferred();
     expect(sources[0]?.closed).toBe(IS_TRUE);

@@ -24,6 +24,21 @@ import {
   withFramePath,
 } from "./features/canvas/index";
 
+const EXPECTED_4 = 4;
+const MOVE_FRAME_ARG_10_4 = 10.4;
+const MOVE_FRAME_ARG_NEG_20_6 = -20.6;
+const RESIZE_ACTIVE_ARG_1000 = 1000;
+const RESIZE_ACTIVE_ARG_700 = 700;
+const RESIZE_FRAME_ARG_1000_6 = 1000.6;
+const RESIZE_FRAME_ARG_100_4 = 100.4;
+const RESIZE_FRAME_ARG_500 = 500;
+const SAMPLE_1440 = 1440;
+const SAMPLE_768 = 768;
+const SAMPLE_900 = 900;
+const WIDTH_1440 = 1440;
+const WIDTH_390 = 390;
+const WIDTH_768 = 768;
+
 const desktop = { height: 900, preset: "desktop" as const, width: 1440 };
 
 describe("canvas frames", () => {
@@ -37,12 +52,12 @@ describe("canvas frames", () => {
       layout.frames.map((frame) => [frame.id, frame.x, frame.y])
     ).toStrictEqual([
       ["f1", 0, 0],
-      ["f2", 1440 + FRAME_GAP, 0],
-      ["f3", 1440 + 768 + FRAME_GAP * 2, 0],
+      ["f2", SAMPLE_1440 + FRAME_GAP, 0],
+      ["f3", SAMPLE_1440 + SAMPLE_768 + FRAME_GAP * 2, 0],
     ]);
     expect(boundsOf(layout.frames)).toStrictEqual({
       height: 1024,
-      width: 1440 + 768 + 390 + FRAME_GAP * 2,
+      width: WIDTH_1440 + WIDTH_768 + WIDTH_390 + FRAME_GAP * 2,
       x: 0,
       y: 0,
     });
@@ -52,9 +67,18 @@ describe("canvas frames", () => {
     expect.hasAssertions();
 
     let layout = addFrame(defaultLayout(desktop), { height: 844, width: 390 });
-    layout = moveFrame(layout, "f2", 10.4, -20.6);
+    layout = moveFrame(
+      layout,
+      "f2",
+      MOVE_FRAME_ARG_10_4,
+      MOVE_FRAME_ARG_NEG_20_6
+    );
     expect(layout.frames[1]).toMatchObject({ x: 1530, y: -21 });
-    layout = resizeActive(layout, 1000, 700);
+    layout = resizeActive(
+      layout,
+      RESIZE_ACTIVE_ARG_1000,
+      RESIZE_ACTIVE_ARG_700
+    );
     expect(
       frameName(layout.frames[0] as { width: number; height: number })
     ).toBe("1000 × 700");
@@ -166,9 +190,9 @@ describe("frames per direction", () => {
       ])
     ).toStrictEqual([
       ["f1", "main", 0, 0],
-      ["f2", "va", 0, 900 + FRAME_GAP * 2],
-      ["f3", "vb", 1440 + FRAME_GAP, 900 + FRAME_GAP * 2],
-      ["f4", "vc", (1440 + FRAME_GAP) * 2, 900 + FRAME_GAP * 2],
+      ["f2", "va", 0, SAMPLE_900 + FRAME_GAP * 2],
+      ["f3", "vb", SAMPLE_1440 + FRAME_GAP, SAMPLE_900 + FRAME_GAP * 2],
+      ["f4", "vc", (SAMPLE_1440 + FRAME_GAP) * 2, SAMPLE_900 + FRAME_GAP * 2],
     ]);
     expect(placeDirections(layout, group, "main", false)).toStrictEqual(layout);
   }, 0);
@@ -206,7 +230,7 @@ describe("frames per direction", () => {
       "vb",
       "vc",
     ]);
-    expect(new Set(back.frames.map((frame) => frame.id)).size).toBe(4);
+    expect(new Set(back.frames.map((frame) => frame.id)).size).toBe(EXPECTED_4);
   }, 0);
 
   it("follows a direction change from outside the canvas", () => {
@@ -237,9 +261,16 @@ describe("frames per direction", () => {
   it("resizes a frame with a floor of 240 and whole pixels", () => {
     expect.hasAssertions();
 
-    const layout = resizeFrame(defaultLayout(desktop), "f1", 100.4, 1000.6);
+    const layout = resizeFrame(
+      defaultLayout(desktop),
+      "f1",
+      RESIZE_FRAME_ARG_100_4,
+      RESIZE_FRAME_ARG_1000_6
+    );
     expect(layout.frames[0]).toMatchObject({ height: 1001, width: 240 });
-    expect(resizeFrame(layout, "nope", 500, 500)).toBe(layout);
+    expect(
+      resizeFrame(layout, "nope", RESIZE_FRAME_ARG_500, RESIZE_FRAME_ARG_500)
+    ).toBe(layout);
   }, 0);
 
   it("accepts only relative paths without dot segments", () => {

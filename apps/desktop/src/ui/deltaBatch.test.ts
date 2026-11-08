@@ -9,6 +9,9 @@ import {
 } from "./features/inspector/delta-batch";
 import type { DeltaBatcher } from "./features/inspector/delta-batch";
 
+const SAMPLE_20 = 20;
+const TS_1000 = 1000;
+
 let seq = 0;
 
 interface BaseEvent {
@@ -22,7 +25,7 @@ const base = (): BaseEvent => ({
   directionId: "d1",
   projectId: "p1",
   seq: ++seq,
-  ts: 1000 + seq,
+  ts: TS_1000 + seq,
 });
 
 const delta = (runId: string, text: string): StudioEvent => ({
@@ -152,7 +155,10 @@ describe("delta batcher", () => {
 
     const text = "one two three four five six seven eight nine ten";
     const small = text.split(/(?<= )/).map((part) => delta("r1", part));
-    const big = [delta("r1", text.slice(0, 20)), delta("r1", text.slice(20))];
+    const big = [
+      delta("r1", text.slice(0, SAMPLE_20)),
+      delta("r1", text.slice(SAMPLE_20)),
+    ];
 
     for (const chunks of [small, big]) {
       const fixture = harness();

@@ -11,6 +11,15 @@ import {
   pathCrumbs,
 } from "./features/inspector/authored-css";
 
+const EXPECTED_20 = 20;
+const EXPECTED_4 = 4;
+const EXPECTED_60 = 60;
+const SAMPLE_19990 = 19_990;
+const SAMPLE_3 = 3;
+const SAMPLE_4 = 4;
+const SAMPLE_5 = 5;
+const SAMPLE_6 = 6;
+
 const IS_FALSE = false;
 const IS_TRUE = true;
 
@@ -154,7 +163,7 @@ describe(parseAuthoredReply, () => {
   it("keeps only well-formed rules and caps them", () => {
     expect.hasAssertions();
 
-    const big = "x".repeat(19_990);
+    const big = "x".repeat(SAMPLE_19990);
 
     const parsed = parseAuthoredReply({
       inline: "color: blue",
@@ -179,7 +188,7 @@ describe(parseAuthoredReply, () => {
           source: null,
         })),
       })?.rules
-    ).toHaveLength(60);
+    ).toHaveLength(EXPECTED_60);
   }, 0);
 
   it("refuses a reply without rules or inline text", () => {
@@ -191,7 +200,9 @@ describe(parseAuthoredReply, () => {
 });
 
 describe("breadcrumb path", () => {
-  const path = [1, 2, 3, 4, 5, 6].map((step) => `div.n${step}`);
+  const path = [1, 2, SAMPLE_3, SAMPLE_4, SAMPLE_5, SAMPLE_6].map(
+    (step) => `div.n${step}`
+  );
 
   it("parses a valid path, caps it, and refuses bad entries", () => {
     expect.hasAssertions();
@@ -204,8 +215,8 @@ describe("breadcrumb path", () => {
       parseSelectionPath(
         Array.from({ length: 30 }, (_unusedItem, index) => `p${index}`)
       )
-    ).toHaveLength(20);
-    expect(parseSelectionPath(["a", 3])).toStrictEqual([]);
+    ).toHaveLength(EXPECTED_20);
+    expect(parseSelectionPath(["a", SAMPLE_3])).toStrictEqual([]);
     expect(parseSelectionPath(["a", ""])).toStrictEqual([]);
     expect(parseSelectionPath("x")).toStrictEqual([]);
   }, 0);
@@ -217,7 +228,9 @@ describe("breadcrumb path", () => {
       { label: "main", levels: 2 },
       { label: "div", levels: 1 },
     ]);
-    expect(collapseCrumbs(pathCrumbs(path.slice(0, 4)))).toHaveLength(4);
+    expect(collapseCrumbs(pathCrumbs(path.slice(0, SAMPLE_4)))).toHaveLength(
+      EXPECTED_4
+    );
     const crumbs = collapseCrumbs(pathCrumbs(path));
     expect(
       crumbs.map((crumb) =>
@@ -225,6 +238,6 @@ describe("breadcrumb path", () => {
           ? crumb.levels
           : `gap:${crumb.hidden.map((entry) => entry.levels).join(",")}`
       )
-    ).toStrictEqual([6, "gap:5,4", 3, 2, 1]);
+    ).toStrictEqual([SAMPLE_6, "gap:5,4", SAMPLE_3, 2, 1]);
   }, 0);
 });

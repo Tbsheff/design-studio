@@ -12,6 +12,9 @@ import {
   valuesFromStyles,
 } from "./features/inspector/css-values";
 
+const STEP_VALUE_ARG_0_1 = 0.1;
+const STEP_VALUE_ARG_10 = 10;
+
 const IS_FALSE = false;
 const IS_TRUE = true;
 
@@ -28,9 +31,9 @@ describe("cssValues", () => {
   it("steps and normalizes lengths", () => {
     expect.hasAssertions();
 
-    expect(stepValue("16px", 10, "px")).toBe("26px");
+    expect(stepValue("16px", STEP_VALUE_ARG_10, "px")).toBe("26px");
     expect(stepValue("normal", 1, "px")).toBe("1px");
-    expect(stepValue("1.2", 0.1, "")).toBe("1.3");
+    expect(stepValue("1.2", STEP_VALUE_ARG_0_1, "")).toBe("1.3");
     expect(normalizeLength("48", "px")).toBe("48px");
     expect(normalizeLength("1.4", "")).toBe("1.4");
     expect(normalizeLength("2rem", "px")).toBe("2rem");

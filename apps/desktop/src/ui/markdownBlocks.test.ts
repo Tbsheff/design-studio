@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { splitMarkdownBlocks } from "./domain/markdown-blocks";
 
+const SAMPLE_25 = 25;
+
 describe(splitMarkdownBlocks, () => {
   it("splits paragraphs on blank lines", () => {
     expect.hasAssertions();
@@ -43,7 +45,7 @@ describe(splitMarkdownBlocks, () => {
     expect.hasAssertions();
 
     const full = "First para.\n\nSecond para here.\n\nThird.";
-    const early = splitMarkdownBlocks(full.slice(0, 25));
+    const early = splitMarkdownBlocks(full.slice(0, SAMPLE_25));
     expect(splitMarkdownBlocks(full).slice(0, early.length - 1)).toStrictEqual(
       early.slice(0, -1)
     );

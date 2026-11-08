@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+const EXPECTED_20 = 20;
+
 const css = readFileSync(
   fileURLToPath(new URL("inspector.css", import.meta.url)),
   "utf-8"
@@ -31,7 +33,7 @@ describe("inspector.css spacing", () => {
       /^(padding|margin|gap|row-gap|column-gap)(-|$)/.test(declaration.prop)
     );
 
-    expect(spacing.length).toBeGreaterThan(20);
+    expect(spacing.length).toBeGreaterThan(EXPECTED_20);
 
     const raw = spacing
       .filter((declaration) => /\d(\.\d+)?px\b/.test(declaration.value))

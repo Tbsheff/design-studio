@@ -1,0 +1,32 @@
+const copy = {
+  add: "Add to prompt",
+  close: "Close",
+  copied: "Copied",
+  copyFailed: "Copy failed",
+  copyTs: "Copy as TypeScript",
+  dialog: "Sample data from a model",
+  empty: "No model matches. Try another name.",
+  fieldCol: "Field",
+  fieldsLabel: "Fields",
+  flagCol: "Flags",
+  kinds: { enum: "enum", model: "model" },
+  listLabel: "Models and enums",
+  loading: "Loading",
+  menuItem: "Sample data from a model",
+  noApp: "Attach an app to this project to read its Prisma models.",
+  pick: "Pick a model to see its fields and sample rows.",
+  rowsLabel: "Sample rows",
+  search: "Search models",
+  searchHint: "Search by model or enum name",
+  title: "Sample data",
+  typeCol: "Type",
+  valueCol: "Values",
+  variantLabel: "Sample variant",
+  variants: {
+    filled: "Filled",
+    long: "Long",
+    sparse: "Sparse",
+  },
+} as const;
+
+export { copy };

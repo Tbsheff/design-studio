@@ -128,6 +128,7 @@ const copy = {
   runName: "Run name",
   runScriptsTurnOn: 'run scripts, turn on "Allow agent to run shell commands".',
   runSettings: "Run settings",
+  sampleData: "Sample data from a model",
   saveAnyway: "Save anyway",
   saveAnyway2: ". Save anyway?",
   searchAllRuns: "Search all runs by prompt or name",

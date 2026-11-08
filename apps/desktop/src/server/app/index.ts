@@ -123,3 +123,7 @@ export {
 } from "./workspace-root.js";
 
 export type { WorkspaceRoot } from "./workspace-root.js";
+
+export { DataModelStore, toAppRoot } from "./data-model/index.js";
+
+export type { DataModelStoreApi } from "./data-model/index.js";

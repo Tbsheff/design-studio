@@ -3,19 +3,20 @@ import { startTransition, useCallback, useEffect, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
+import { CreateTokenHost } from "./create-token-host.js";
 import type { StyleValues } from "./css-value-model.js";
 import type { ElementClasses } from "./element-classes-model.js";
-import { CreateTokenHost, useInspectorTokens } from "./inspector-tokens.js";
-import type { ScopeInput } from "./inspector-tokens.js";
 import { SAVE_SETTLE_MS } from "./save-model.js";
 import { SimpleContexts } from "./simple-contexts.js";
 import { SimpleEditorBody } from "./simple-editor-body.js";
 import { toSavedAt } from "./simple-model.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
+import type { ScopeInput } from "./token-scope-model.js";
 import { useAuthoredCss } from "./use-authored-css.js";
 import { useDirectEdit } from "./use-direct-edit.js";
 import { useEditVariant } from "./use-edit-variant.js";
 import { useElementClasses } from "./use-element-classes.js";
+import { useInspectorTokens } from "./use-inspector-tokens.js";
 import { useSettled } from "./use-settled.js";
 
 const toClassInfo = (
@@ -86,11 +87,14 @@ const useSimpleEditor = (props: SimpleEditorProps): SimpleEditorState => {
     [tokens.snap, edit]
   );
 
+  const { directionId, projectId } = props;
+  const { source } = props.target;
+
   const classes = useElementClasses({
-    directionId: props.directionId,
-    projectId: props.projectId,
+    directionId,
+    projectId,
     savedAt,
-    source: props.target.source,
+    source,
     variant,
   });
 

@@ -3,9 +3,9 @@ import type { ReactElement } from "react";
 
 import { FillSlot, MotionSlot, TextStyleSlot } from "../../inspector-slots.js";
 import { BackgroundField } from "./background-field.js";
-import { TokenLint } from "./inspector-tokens.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 import { SimpleSections } from "./simple-sections.js";
+import { TokenLint } from "./token-lint.js";
 
 interface SimpleMiddleProps {
   readonly props: SimpleEditorProps;

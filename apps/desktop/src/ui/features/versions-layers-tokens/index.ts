@@ -45,3 +45,7 @@ export {
 export { TokenControl } from "./token-control.js";
 
 export type { CreateTokenSubmit } from "./create-token-dialog.js";
+
+export { lintValues } from "./token-lint.js";
+
+export type { LintIssue } from "./token-lint.js";

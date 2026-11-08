@@ -21,11 +21,11 @@ import type {
   VariantScope,
 } from "./deps.js";
 import type { ElementClasses } from "./element-classes-model.js";
+import type { NumberSpec } from "./number-field-model.js";
 import type {
   ScopeInput,
   UseInspectorTokensResult,
-} from "./inspector-tokens.js";
-import type { NumberSpec } from "./number-field-model.js";
+} from "./token-scope-model.js";
 
 const TEXT_SHADOW = "text-shadow";
 

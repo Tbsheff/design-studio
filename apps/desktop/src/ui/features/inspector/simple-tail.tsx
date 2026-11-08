@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { InspectorOtherStyles } from "./inspector-other-styles.js";
-import { MatchSection } from "./inspector-tokens.js";
+import { MatchSection } from "./match-section.js";
 import { SelectMatchingSection } from "./select-matching-section.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 

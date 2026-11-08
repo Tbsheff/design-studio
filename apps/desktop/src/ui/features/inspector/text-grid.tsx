@@ -6,7 +6,7 @@ import { ColorField } from "./color-field.js";
 import { ContentRow } from "./content-row.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
-import { FontField } from "./inspector-tokens.js";
+import { FontField } from "./font-field.js";
 import { SelectField } from "./select-field.js";
 import {
   CASES,

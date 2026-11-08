@@ -3,12 +3,12 @@ import { useCallback } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import type { StyleValues } from "./css-value-model.js";
-import { useInspectorTokens } from "./inspector-tokens.js";
-import type { ScopeInput } from "./inspector-tokens.js";
 import { MultiCreateTokenHost } from "./multi-create-token-host.js";
 import type { EditorProps } from "./simple-model.js";
 import { SimpleMultiBody } from "./simple-multi-body.js";
+import type { ScopeInput } from "./token-scope-model.js";
 import { useDirectEdits } from "./use-direct-edits.js";
+import { useInspectorTokens } from "./use-inspector-tokens.js";
 import { TokenUiContext } from "./use-token-snap.js";
 
 const SimpleMultiEditor = (

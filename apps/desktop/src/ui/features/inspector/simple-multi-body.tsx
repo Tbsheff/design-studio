@@ -4,13 +4,14 @@ import { useMemo } from "react";
 import { TextStyleSlot } from "../../inspector-slots.js";
 import { copy } from "./copy.js";
 import { ErrorLine } from "./error-line.js";
-import { MatchSection, TokenNotes } from "./inspector-tokens.js";
-import type { UseInspectorTokensResult } from "./inspector-tokens.js";
+import { MatchSection } from "./match-section.js";
 import { MetaRow } from "./meta-row.js";
 import { MultiFieldset } from "./multi-fieldset.js";
 import { MultiNote } from "./multi-note.js";
 import { SelectMatchingSection } from "./select-matching-section.js";
 import type { EditorProps, MultiEdit } from "./simple-model.js";
+import { TokenNotes } from "./token-notes.js";
+import type { UseInspectorTokensResult } from "./token-scope-model.js";
 
 interface SimpleMultiBodyProps {
   readonly props: EditorProps;

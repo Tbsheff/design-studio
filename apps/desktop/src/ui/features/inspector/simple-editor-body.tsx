@@ -1,12 +1,12 @@
 import type { ReactElement, ReactNode } from "react";
 
 import { copy } from "./copy.js";
-import { TokenNotes } from "./inspector-tokens.js";
 import { SimpleHead } from "./simple-head.js";
 import { SimpleLead } from "./simple-lead.js";
 import { SimpleMiddle } from "./simple-middle.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 import { SimpleTail } from "./simple-tail.js";
+import { TokenNotes } from "./token-notes.js";
 
 interface SimpleEditorBodyProps {
   readonly props: SimpleEditorProps;

@@ -6,12 +6,12 @@ const SheetSlot = createContext<{ slot: HTMLElement | null } | null>(null);
 
 const PanelHead = ({
   title,
-  className,
+  headClass,
   titleClassName,
   children,
 }: {
   title: string;
-  className: string;
+  headClass: string;
   titleClassName: string;
   children?: ReactNode;
 }): ReactElement | null => {
@@ -26,7 +26,7 @@ const PanelHead = ({
   }
 
   return (
-    <div className={className}>
+    <div className={headClass}>
       <strong className={titleClassName}>{title}</strong>
       {children}
     </div>

@@ -30,7 +30,7 @@ const TweaksPanel = ({
     <div className="twk">
       <PanelHead
         title={copy.tabTweaks}
-        className="twk-header"
+        headClass="twk-header"
         titleClassName="twk-title"
       >
         <TweaksHeaderEnd

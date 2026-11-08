@@ -20,7 +20,7 @@ import type {
   AuthoredCssState,
 } from "./deps.js";
 import type { VariantScope } from "./edit-variant.js";
-import type { ElementClasses } from "./inspector-classes.js";
+import type { ElementClasses } from "./element-classes-model.js";
 import type {
   ScopeInput,
   UseInspectorTokensResult,

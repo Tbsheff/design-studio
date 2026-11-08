@@ -66,7 +66,7 @@ const TokensPanel = ({ tokens, draft, sweep }: TokensPanelProps): ReactNode => {
     <div className="tkp">
       <PanelHead
         title={COPY.titleTokens}
-        className="ins-header tkp-header"
+        headClass="ins-header tkp-header"
         titleClassName="tkp-title"
       >
         <TokensHeaderEnd

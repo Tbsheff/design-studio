@@ -1,82 +1,8 @@
-import type {
-  ElementSourceInfo,
-  SourceLoc,
-  TailwindOutcome,
-} from "@design-studio/contracts";
+import type { TailwindOutcome } from "@design-studio/contracts";
 import type { ReactElement } from "react";
-import { startTransition, useEffect, useState } from "react";
 
-import type { VariantSupport } from "../../../shared/variants.js";
-import { api } from "../../api.js";
 import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
-
-interface ElementClasses {
-  readonly tailwind: TailwindOutcome | null;
-  readonly element: ElementSourceInfo | null;
-  readonly variants: VariantSupport | null;
-}
-
-const NO_CLASSES: ElementClasses = {
-  element: null,
-  tailwind: null,
-  variants: null,
-};
-
-const useElementClasses = (
-  projectId: string,
-  directionId: string | null,
-  source: SourceLoc | null,
-  savedAt: number,
-  variant = ""
-): ElementClasses => {
-  const [info, setInfo] = useState<ElementClasses>(NO_CLASSES);
-  const file = source?.file;
-  const line = source?.line;
-  const col = source?.col;
-  useEffect(() => {
-    if (
-      !directionId ||
-      file === undefined ||
-      line === undefined ||
-      col === undefined
-    ) {
-      setInfo(NO_CLASSES);
-
-      return;
-    }
-
-    let live = true;
-    startTransition(async () => {
-      try {
-        const result = await api.elementClasses(
-          projectId,
-          directionId,
-          { col, file, line },
-          variant
-        );
-
-        if (live) {
-          setInfo({
-            element: result.element ?? null,
-            tailwind: result.tailwind,
-            variants: result.variants ?? null,
-          });
-        }
-      } catch {
-        if (live) {
-          setInfo(NO_CLASSES);
-        }
-      }
-    });
-
-    return (): void => {
-      live = false;
-    };
-  }, [projectId, directionId, file, line, col, savedAt, variant]);
-
-  return info;
-};
 
 const domClasses = (outerHTML: string): string[] => {
   const raw =
@@ -126,6 +52,4 @@ const ClassLine = ({
   );
 };
 
-export { useElementClasses, domClasses, ClassLine };
-
-export type { ElementClasses };
+export { domClasses, ClassLine };

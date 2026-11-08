@@ -3,8 +3,8 @@ import { sharedSourceOf } from "@design-studio/contracts/app";
 import type { SharedSource } from "@design-studio/contracts/app";
 import { useState } from "react";
 
-import { useElementClasses } from "./inspector-classes.js";
 import type { InspectorProps } from "./inspector-model.js";
+import { useElementClasses } from "./use-element-classes.js";
 
 interface UseUseSiteResult {
   readonly isEditingUse: boolean;
@@ -103,12 +103,13 @@ const useUseSite = (props: InspectorProps): UseUseSiteResult => {
   const shared = toSharedSource(target, props.appDir);
   const use = toUse(shared);
 
-  const component = useElementClasses(
-    props.projectId,
-    props.directionId,
-    toUseSource(use, target),
-    0
-  );
+  const component = useElementClasses({
+    directionId: props.directionId,
+    projectId: props.projectId,
+    savedAt: 0,
+    source: toUseSource(use, target),
+    variant: "",
+  });
 
   const editingUse =
     Boolean(use) &&

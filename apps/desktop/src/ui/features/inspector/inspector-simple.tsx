@@ -8,8 +8,7 @@ import type { ReactElement, ReactNode } from "react";
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
 import type { StyleValues } from "./css-values.js";
 import { useEditVariant } from "./edit-variant.js";
-import { useElementClasses } from "./inspector-classes.js";
-import type { ElementClasses } from "./inspector-classes.js";
+import type { ElementClasses } from "./element-classes-model.js";
 import { MultiCreateTokenHost } from "./inspector-multi.js";
 import { CreateTokenHost, useInspectorTokens } from "./inspector-tokens.js";
 import type { ScopeInput } from "./inspector-tokens.js";
@@ -26,6 +25,7 @@ import { SimpleMultiBody } from "./simple-multi-body.js";
 import { useAuthoredCss } from "./use-authored-css.js";
 import { useDirectEdit } from "./use-direct-edit.js";
 import { useDirectEdits } from "./use-direct-edits.js";
+import { useElementClasses } from "./use-element-classes.js";
 import { useSettled } from "./use-settled.js";
 import { TokenUiContext } from "./use-token-snap.js";
 
@@ -97,13 +97,13 @@ const useSimpleEditor = (props: SimpleEditorProps): SimpleEditorState => {
     [tokens.snap, edit]
   );
 
-  const classes = useElementClasses(
-    props.projectId,
-    props.directionId,
-    props.target.source,
+  const classes = useElementClasses({
+    directionId: props.directionId,
+    projectId: props.projectId,
     savedAt,
-    variant
-  );
+    source: props.target.source,
+    variant,
+  });
 
   const classLine = toClassLine(
     toClassInfo(classes, Boolean(props.target.component)),

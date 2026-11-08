@@ -7,8 +7,6 @@ import {
   apiMessage,
   componentCreateApi,
 } from "../design-system/component-create-api.js";
-
-import "../../styles/create-component.css";
 import { copy } from "./copy.js";
 import { SwapCandidateRow } from "./swap-candidate-row.js";
 import { toCandidateKey, toDroppedText, toSwapLabel } from "./swap-model.js";

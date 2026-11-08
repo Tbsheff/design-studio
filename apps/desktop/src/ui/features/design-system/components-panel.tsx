@@ -344,7 +344,7 @@ const ComponentsPanel = (props: Props): ReactElement => {
     <div className="cmp">
       <PanelHead
         title={COPY.titleComponents}
-        className="ins-header cmp-header"
+        headClass="ins-header cmp-header"
         titleClassName="cmp-title"
       >
         {all && <span className="count cmp-count">{count}</span>}

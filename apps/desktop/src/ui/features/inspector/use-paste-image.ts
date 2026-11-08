@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { isTypingTarget } from "../../platform/typing-target.js";
-import { imageFileOf } from "./image-api.js";
+import { toImageFile } from "./use-image-api.js";
 
 const usePasteImage = (
   enabled: boolean,
@@ -19,7 +19,7 @@ const usePasteImage = (
         return;
       }
 
-      const file = imageFileOf(event.clipboardData?.items);
+      const file = toImageFile(event.clipboardData?.items ?? null);
 
       if (!file) {
         return;

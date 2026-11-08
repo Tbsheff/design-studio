@@ -2,7 +2,7 @@ export { routes as imageRoutes } from "@design-studio/actions/image/routes";
 
 export { openAppPanel } from "../../platform/app-status.js";
 
-export { imageTargetOf } from "../inspector/image-api.js";
+export { toImageTarget } from "../inspector/index.js";
 
 export { useAction } from "../../platform/query.js";
 

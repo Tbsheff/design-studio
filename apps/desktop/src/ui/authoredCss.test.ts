@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  collapseCrumbs,
-  formatCopyCss,
+  toCollapsedCrumbs,
+  toCopyCss,
   isCoveredDeclaration,
-  otherStyles,
-  parseAuthoredReply,
-  parseDeclarations,
-  parseSelectionPath,
-  pathCrumbs,
-} from "./features/inspector/authored-css";
+  toOtherStyles,
+  toAuthoredReply,
+  toDeclarations,
+  toSelectionPath,
+  toPathCrumbs,
+} from "./features/inspector/index";
 
-describe(parseDeclarations, () => {
+describe(toDeclarations, () => {
   it("keeps semicolons inside url() and quotes, and keeps !important", () => {
     expect(
-      parseDeclarations(
+      toDeclarations(
         'background: url(data:image/png;base64,AAA); content: "a;b"; color: red !important;'
       )
     ).toEqual([
@@ -25,7 +25,7 @@ describe(parseDeclarations, () => {
   });
 
   it("drops empty and broken declarations and keeps custom property case", () => {
-    expect(parseDeclarations(" ; nope; --Brand: #fff; /* c: d */ ")).toEqual([
+    expect(toDeclarations(" ; nope; --Brand: #fff; /* c: d */ ")).toEqual([
       { prop: "--Brand", value: "#fff" },
     ]);
   });
@@ -81,9 +81,9 @@ describe(isCoveredDeclaration, () => {
   });
 });
 
-describe(otherStyles, () => {
+describe(toOtherStyles, () => {
   it("lists uncovered declarations once, the last one winning, with the source", () => {
-    const rows = otherStyles({
+    const rows = toOtherStyles({
       rules: [
         {
           selector: ".card",
@@ -106,9 +106,9 @@ describe(otherStyles, () => {
   });
 });
 
-describe(formatCopyCss, () => {
+describe(toCopyCss, () => {
   it("writes rules in order and then the inline style", () => {
-    const text = formatCopyCss({
+    const text = toCopyCss({
       rules: [
         { selector: ".a", css: "color: red; margin: 0px;", source: "a.css" },
       ],
@@ -121,7 +121,7 @@ describe(formatCopyCss, () => {
 
   it("skips an empty inline style", () => {
     expect(
-      formatCopyCss({
+      toCopyCss({
         rules: [{ selector: "p", css: "color: red;", source: null }],
         inline: " ",
       })
@@ -129,10 +129,10 @@ describe(formatCopyCss, () => {
   });
 });
 
-describe(parseAuthoredReply, () => {
+describe(toAuthoredReply, () => {
   it("keeps only well-formed rules and caps them", () => {
     const big = "x".repeat(19_990);
-    const parsed = parseAuthoredReply({
+    const parsed = toAuthoredReply({
       rules: [
         { selector: "p", css: "color: red;", source: "a.css" },
         { selector: 1, css: "" },
@@ -146,7 +146,7 @@ describe(parseAuthoredReply, () => {
       inline: "color: blue",
     });
     expect(
-      parseAuthoredReply({
+      toAuthoredReply({
         rules: Array.from({ length: 80 }, () => ({
           selector: "p",
           css: "a: b",
@@ -158,8 +158,8 @@ describe(parseAuthoredReply, () => {
   });
 
   it("refuses a reply without rules or inline text", () => {
-    expect(parseAuthoredReply({ rules: "x", inline: "" })).toBeNull();
-    expect(parseAuthoredReply({ rules: [], inline: 3 })).toBeNull();
+    expect(toAuthoredReply({ rules: "x", inline: "" })).toBeNull();
+    expect(toAuthoredReply({ rules: [], inline: 3 })).toBeNull();
   });
 });
 
@@ -167,22 +167,22 @@ describe("breadcrumb path", () => {
   const path = [1, 2, 3, 4, 5, 6].map((n) => `div.n${n}`);
 
   it("parses a valid path, caps it, and refuses bad entries", () => {
-    expect(parseSelectionPath(path.slice(0, 2))).toEqual(["div.n1", "div.n2"]);
+    expect(toSelectionPath(path.slice(0, 2))).toEqual(["div.n1", "div.n2"]);
     expect(
-      parseSelectionPath(Array.from({ length: 30 }, (_, i) => `p${i}`))
+      toSelectionPath(Array.from({ length: 30 }, (_, i) => `p${i}`))
     ).toHaveLength(20);
-    expect(parseSelectionPath(["a", 3])).toEqual([]);
-    expect(parseSelectionPath(["a", ""])).toEqual([]);
-    expect(parseSelectionPath("x")).toEqual([]);
+    expect(toSelectionPath(["a", 3])).toEqual([]);
+    expect(toSelectionPath(["a", ""])).toEqual([]);
+    expect(toSelectionPath("x")).toEqual([]);
   });
 
   it("counts parent levels from the element and collapses the middle of a long path", () => {
-    expect(pathCrumbs(["main", "div"])).toEqual([
+    expect(toPathCrumbs(["main", "div"])).toEqual([
       { label: "main", levels: 2 },
       { label: "div", levels: 1 },
     ]);
-    expect(collapseCrumbs(pathCrumbs(path.slice(0, 4)))).toHaveLength(4);
-    const crumbs = collapseCrumbs(pathCrumbs(path));
+    expect(toCollapsedCrumbs(toPathCrumbs(path.slice(0, 4)))).toHaveLength(4);
+    const crumbs = toCollapsedCrumbs(toPathCrumbs(path));
     expect(
       crumbs.map((crumb) =>
         crumb.kind === "node"

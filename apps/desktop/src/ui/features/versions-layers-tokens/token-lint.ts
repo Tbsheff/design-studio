@@ -12,9 +12,8 @@ import {
   tokensForProperty,
 } from "../../../shared/token-match.js";
 import type { TokenMode } from "../../../shared/token-match.js";
-import { parseDeclarations } from "../inspector/authored-css.js";
-import type { AuthoredCss } from "../inspector/authored-css.js";
-import type { StyleValues } from "../inspector/index.js";
+import { toDeclarations } from "../inspector/index.js";
+import type { AuthoredCss, StyleValues } from "../inspector/index.js";
 
 type LintKind = "color" | "size" | "font";
 
@@ -72,7 +71,7 @@ const takeDeclarations = (
   text: string,
   out: Map<DirectStyleProperty, string>
 ): void => {
-  for (const { prop, value } of parseDeclarations(text)) {
+  for (const { prop, value } of toDeclarations(text)) {
     if (prop !== "border" || borderHasColor(value)) {
       for (const target of toTargets(prop)) {
         out.set(target, value);

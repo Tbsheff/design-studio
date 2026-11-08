@@ -1,6 +1,6 @@
 import { startTransition, useCallback } from "react";
 
-import { clipboardImage } from "./image-api.js";
+import { getClipboardImage } from "./use-image-api.js";
 
 type RunImage = (change: Record<string, never>, file: Blob) => Promise<void>;
 
@@ -17,7 +17,7 @@ const useImageClipboard = (
   useCallback((): void => {
     startTransition(async () => {
       try {
-        const blob = await clipboardImage();
+        const blob = await getClipboardImage();
 
         if (blob) {
           await run({}, blob);

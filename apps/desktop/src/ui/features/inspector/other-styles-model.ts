@@ -1,5 +1,5 @@
-import { otherStyles } from "./authored-css.js";
-import type { AuthoredCss, AuthoredDeclaration } from "./authored-css.js";
+import { toOtherStyles } from "./authored-css-model.js";
+import type { AuthoredCss, AuthoredDeclaration } from "./authored-css-model.js";
 import { copy } from "./copy.js";
 
 type CopyState = "idle" | "copied" | "failed";
@@ -37,7 +37,7 @@ const getOtherRows = (css: AuthoredCss | null): AuthoredDeclaration[] => {
     return [];
   }
 
-  return otherStyles(css);
+  return toOtherStyles(css);
 };
 
 export { getOtherRows, toCopyIcon, toCopyLabel, toToggleIcon };

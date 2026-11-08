@@ -1,7 +1,7 @@
 import {
   call,
   imageSearchRoutes,
-  imageTargetOf,
+  toImageTarget,
   projectRoutes,
 } from "./deps.js";
 import type {
@@ -67,7 +67,7 @@ const placePhoto = (
     directionId: ids.directionId,
     imageId: request.imageId,
     projectId: ids.projectId,
-    target: imageTargetOf(request.target),
+    target: toImageTarget(request.target),
   });
 
 export { placePhoto, readStatus, searchPhotos, writeSetting };

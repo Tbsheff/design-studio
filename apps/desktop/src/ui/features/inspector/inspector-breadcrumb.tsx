@@ -4,7 +4,7 @@ import type { MutableRefObject, ReactElement } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
 import { findElement } from "../../platform/find-element.js";
-import { parseSelectionPath, pathCrumbs } from "./authored-css.js";
+import { toSelectionPath, toPathCrumbs } from "./authored-css-model.js";
 import { toElementLabel } from "./breadcrumb-model.js";
 import { copy } from "./copy.js";
 import { CrumbButton } from "./crumb-button.js";
@@ -22,7 +22,7 @@ const InspectorBreadcrumbView = ({
   port,
 }: Props): ReactElement | null => {
   const list = useRef<HTMLOListElement>(null);
-  const path = pathCrumbs(parseSelectionPath(selection.path));
+  const path = toPathCrumbs(toSelectionPath(selection.path ?? null));
   const count = useFitCount(list, path.length);
 
   const handleSelect = useCallback(

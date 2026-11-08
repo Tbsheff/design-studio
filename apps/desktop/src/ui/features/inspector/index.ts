@@ -50,3 +50,26 @@ export {
 } from "./css-value-model.js";
 
 export type { Shift, ShiftPart, Side, StyleValues } from "./css-value-model.js";
+
+export {
+  INLINE_SOURCE,
+  MAX_BYTES,
+  MAX_RULES,
+  isCoveredDeclaration,
+  toAuthoredReply,
+  toCollapsedCrumbs,
+  toCopyCss,
+  toDeclarations,
+  toOtherStyles,
+  toPathCrumbs,
+  toSelectionPath,
+} from "./authored-css-model.js";
+
+export type {
+  AuthoredCss,
+  AuthoredDeclaration,
+  Crumb,
+  PathCrumb,
+} from "./authored-css-model.js";
+
+export { toImageTarget } from "./use-image-api.js";

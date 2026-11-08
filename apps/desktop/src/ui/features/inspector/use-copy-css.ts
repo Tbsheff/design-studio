@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { formatCopyCss } from "./authored-css.js";
+import { toCopyCss } from "./authored-css-model.js";
 import type { CopyState } from "./other-styles-model.js";
 import type { AuthoredCssState } from "./use-authored-css.js";
 
@@ -30,7 +30,7 @@ const useCopyCss = (authored: AuthoredCssState): CopyCss => {
 
     if (css) {
       try {
-        await navigator.clipboard.writeText(formatCopyCss(css));
+        await navigator.clipboard.writeText(toCopyCss(css));
         next = "copied";
       } catch {
         next = "failed";

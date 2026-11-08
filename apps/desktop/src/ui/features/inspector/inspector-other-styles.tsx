@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { useCallback, useState } from "react";
 
-import type { AuthoredCss } from "./authored-css.js";
+import type { AuthoredCss } from "./authored-css-model.js";
 import { copy } from "./copy.js";
 import { OtherStyleRow } from "./other-style-row.js";
 import { getOtherRows } from "./other-styles-model.js";

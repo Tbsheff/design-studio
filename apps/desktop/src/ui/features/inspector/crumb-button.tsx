@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import type { PathCrumb } from "./authored-css.js";
+import type { PathCrumb } from "./authored-css-model.js";
 import { CrumbSeparator } from "./crumb-separator.js";
 
 interface CrumbButtonProps {

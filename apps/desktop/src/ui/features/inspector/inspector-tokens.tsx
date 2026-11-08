@@ -21,7 +21,7 @@ import type { CreateTokenSubmit } from "../versions-layers-tokens/create-token-d
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { lintValues } from "../versions-layers-tokens/token-lint.js";
 import type { LintIssue } from "../versions-layers-tokens/token-lint.js";
-import type { AuthoredCss } from "./authored-css.js";
+import type { AuthoredCss } from "./authored-css-model.js";
 import { copy } from "./copy.js";
 import type { StyleValues } from "./css-value-model.js";
 import { buildEditRequest } from "./use-direct-edit.js";

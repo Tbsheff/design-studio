@@ -13,7 +13,13 @@ const ProjectFieldSchema = ProjectIdSchema.annotate({
 
 const inspectDraftPack = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "design_system_status",
+    set: "design-system",
+    short:
+      "Read a design system draft: the state of each source, the coverage grade and the design system check.",
+  },
   confirm: "none",
   description:
     "Read a design system draft: each source (queued, reading, read, thin, blocked, failed, with a plain sentence), whether all sources are done, the coverage grade, and the design system check (passed or the problems). The save gate uses the same check.",

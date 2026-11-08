@@ -81,7 +81,13 @@ const UrlsFieldSchema = Schema.Array(UrlSchema)
 
 const createDraftPack = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "create_design_system",
+    set: "design-system",
+    short:
+      "Start a design system draft from sources: websites, a brief, a DESIGN.md, a code folder or a tokens file.",
+  },
   confirm: "user",
   description:
     "Start a new design system draft from sources (websites, a brief, a DESIGN.md, a code folder, a tokens file such as a Figma variables export), the same as New design system in the studio. It answers at once with the draft project; the sources are read in the background. Poll design_system_status until sources.done is true, then fix problems with set_token and write_file in that project and save it with save_design_system. The AI step (Improve with AI) is a studio run, so it does not start from here.",

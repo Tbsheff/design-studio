@@ -14,7 +14,6 @@ const LEGACY_ORDER: readonly string[] = [
   "attach_app",
   "add_route_frame",
   "apply_design_system",
-  "set_token",
   "export",
   "undo",
   "redo",

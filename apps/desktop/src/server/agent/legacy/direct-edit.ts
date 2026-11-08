@@ -1,7 +1,6 @@
 import { TWEAKS_TOOL } from "../../../shared/tweaks.js";
 
 const EDIT_ELEMENT_TOOL = "mcp__studio__edit_element";
-const SET_TOKEN_TOOL = "mcp__studio__set_token";
 const SET_PROPS_TOOL = "mcp__studio__set_props";
 const INSERT_COMPONENT_TOOL = "mcp__studio__insert_component";
 const INSERT_JSX_TOOL = "mcp__studio__insert_jsx";
@@ -31,7 +30,6 @@ const STUDIO_EDIT_TOOLS_R13: readonly string[] = [
 const DIRECT_EDIT_AGENT_TOOLS: readonly string[] = [
   TWEAKS_TOOL,
   EDIT_ELEMENT_TOOL,
-  SET_TOKEN_TOOL,
   SET_PROPS_TOOL,
   FIND_STYLES_TOOL,
   REPLACE_STYLE_TOOL,
@@ -71,7 +69,6 @@ export {
   SELECT_MATCHING_TOOL,
   SET_IMAGE_TOOL,
   SET_PROPS_TOOL,
-  SET_TOKEN_TOOL,
   STUDIO_EDIT_TOOLS_R13,
   SWAP_INSTANCE_TOOL,
 };

@@ -15,7 +15,13 @@ import { SaveResultSchema } from "./schema.js";
 
 const setPackPack = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_pack_pack",
+    set: "design-system",
+    short:
+      "Save the design system of a direction to the studio library. A draft must pass the check unless force is true.",
+  },
   confirm: "none",
   description:
     "Save the design system of a direction to the studio library. asNew makes a new user pack; else it updates packId or the pack named in pack.json. A draft must pass the check unless force is true.",
@@ -40,7 +46,7 @@ const setPackPack = defineAction({
     "pack.getDraft",
     "pack.inspectDraft",
   ],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_pack_pack" },
   needs: "pack.write",
   output: SaveResultSchema,
   scope: "project",

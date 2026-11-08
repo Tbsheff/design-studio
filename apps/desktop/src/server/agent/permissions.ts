@@ -44,7 +44,6 @@ import {
   SELECT_MATCHING_TOOL,
   SET_IMAGE_TOOL,
   SET_PROPS_TOOL,
-  SET_TOKEN_TOOL,
   STUDIO_EDIT_TOOLS_R13,
   SWAP_INSTANCE_TOOL,
 } from "./legacy/direct-edit.js";
@@ -82,7 +81,6 @@ export {
   SELECT_MATCHING_TOOL,
   SET_IMAGE_TOOL,
   SET_PROPS_TOOL,
-  SET_TOKEN_TOOL,
   SWAP_INSTANCE_TOOL,
 } from "./legacy/direct-edit.js";
 
@@ -129,7 +127,6 @@ const SET_BREAKPOINT_STYLE_TOOL = "mcp__studio__set_breakpoint_style";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   EDIT_ELEMENT_TOOL,
-  SET_TOKEN_TOOL,
   SET_PROPS_TOOL,
   REPLACE_STYLE_TOOL,
   INSERT_COMPONENT_TOOL,

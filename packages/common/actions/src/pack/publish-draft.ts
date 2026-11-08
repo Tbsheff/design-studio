@@ -38,7 +38,13 @@ const ReasonFieldSchema = Schema.String.check(
 
 const publishDraftPack = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "save_design_system",
+    set: "design-system",
+    short:
+      "Save a design system draft to the studio library, the same as Save in the draft bar.",
+  },
   confirm: "none",
   description:
     "Save a design system draft to the studio library, the same as Save in the draft bar. Refused while the sources are read or a studio run is active. The design system check must pass, unless force is true with a reason; call design_system_status to see the problems first.",

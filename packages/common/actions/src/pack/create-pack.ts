@@ -18,7 +18,13 @@ const TagsSchema = Schema.Array(Schema.String);
 
 const createPackPack = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "create_pack_pack",
+    set: "design-system",
+    short:
+      "Create a user design system in the studio library from a name, a mode, fonts and tokens.",
+  },
   confirm: "none",
   description:
     "Create a user design system in the studio library from a name, a mode, fonts and tokens. The new pack id is user- and a slug of the name.",
@@ -39,7 +45,7 @@ const createPackPack = defineAction({
     tokensJson: TokensJsonSchema,
   }),
   invalidates: ["pack.listSummary", "pack.list", "pack.getPack"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "create_pack_pack" },
   needs: "pack.write",
   output: PackSummarySchema,
   scope: "org",

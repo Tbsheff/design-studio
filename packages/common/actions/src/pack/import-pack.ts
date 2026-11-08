@@ -16,7 +16,13 @@ const ContentSchema = Schema.String.annotate({
 
 const importPackPack = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "import_pack_pack",
+    set: "design-system",
+    short:
+      "Import a design system zip (base64, at most 2 MB) as a new user pack. Mode ask fails when the id or name is taken.",
+  },
   confirm: "none",
   description:
     "Import a design system zip in the export format as a new user pack. Mode ask fails with pack_exists when a user pack has the same id or name; replace and copy settle it.",
@@ -28,7 +34,7 @@ const importPackPack = defineAction({
     mode: Schema.optionalKey(ImportModeSchema),
   }),
   invalidates: ["pack.listSummary", "pack.list", "pack.getPack"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "import_pack_pack" },
   needs: "pack.write",
   output: ImportResultSchema,
   scope: "org",

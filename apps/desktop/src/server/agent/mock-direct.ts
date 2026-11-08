@@ -1,9 +1,9 @@
 import type { PreviewService } from "../../shared/server-ports.js";
-import { runEditElement, runSetToken } from "./direct-tools.js";
+import { runEditElement } from "./direct-tools.js";
 import type { DriverInput } from "./lifecycle.js";
 import { mockCanvasTool } from "./mock-canvas.js";
 import type { MockToolSession } from "./mock-canvas.js";
-import { EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL } from "./permissions.js";
+import { EDIT_ELEMENT_TOOL } from "./permissions.js";
 
 export const MOCK_DIRECT_TAG = "[direct]";
 const HEADING_COLOR = "#0f766e";
@@ -26,16 +26,6 @@ export async function runMockDirect(
 
   const edited = await mockCanvasTool(session, EDIT_ELEMENT_TOOL, heading, () =>
     runEditElement(deps, heading)
-  );
-
-  const token = {
-    name: "--primary",
-    theme: "light" as const,
-    value: HEADING_COLOR,
-  };
-
-  const set = await mockCanvasTool(session, SET_TOKEN_TOOL, token, () =>
-    runSetToken(deps, token)
   );
 
   const classes = { classes: { add: ["mock-direct"] }, selector: "h1" };
@@ -62,7 +52,6 @@ export async function runMockDirect(
 
   return [
     line(edited, `Made the heading ${HEADING_COLOR}.`, "The heading edit"),
-    line(set, `Set --primary to ${HEADING_COLOR}.`, "The token edit"),
     line(tagged, "Added the mock-direct class.", "The class edit"),
     line(copied, "Duplicated the section paragraph.", "The duplicate"),
   ].join(" ");

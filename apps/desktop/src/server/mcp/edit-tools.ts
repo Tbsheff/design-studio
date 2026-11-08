@@ -78,7 +78,6 @@ export const RENDER_WAIT_TOOLS = new Set([
   "replace_style",
   "undo",
   "redo",
-  "set_token",
   "create_component",
   "swap_instance",
   "set_tweak",

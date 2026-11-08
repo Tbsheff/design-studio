@@ -97,7 +97,7 @@ const LEGACY_APP_IMPORTS = [
 
 const PROMISE_TASK_FILES = ["apps/desktop/src/server/content/write-content.ts"];
 
-const LEGACY_DEEP_IMPORTS = [];
+const LEGACY_DEEP_IMPORTS: readonly string[] = [];
 
 const LEGACY_LIST_PAGES = [
   "packages/common/actions/src/canvas/{list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links}.ts",

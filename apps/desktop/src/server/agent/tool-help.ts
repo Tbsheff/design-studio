@@ -8,7 +8,6 @@ import {
   SWAP_INSTANCE_AGENT_DESCRIPTION,
 } from "./component-create-tool.js";
 import { COPY_CODE_AGENT_DESCRIPTION } from "./copy-code-tool.js";
-import { APP_DOCTOR_DESCRIPTION } from "./doctor-tool.js";
 import { EXPORT_FRAME_AGENT_DESCRIPTION } from "./export-tool.js";
 import { FIGMA_IMPORT_TOOL_DESCRIPTION } from "./figma-import-tool.js";
 import { SET_IMAGE_AGENT_DESCRIPTION } from "./image-tool.js";
@@ -24,8 +23,6 @@ import { DIFF_VERSIONS_DESCRIPTION } from "./version-diff-tool.js";
 export const TOOL_SHORT = {
   add_flow:
     "Attached apps only. Lay out route frames left to right and link them from the links in their source.",
-  app_doctor:
-    "Read only. Diagnose why the attached app dev server or a route does not render.",
   arrange:
     "Align, distribute or tidy sibling elements by writing the parent auto layout. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
@@ -64,8 +61,6 @@ export const TOOL_SHORT = {
     "Read only. Colors, font sizes, radii and spacing on the page with counts and token/raw status; with value, the elements that use it.",
   get_layers:
     "Read only. The rendered page as a tree of layer ids with tag, component and source line. Layer ids work as selectors in the edit tools.",
-  get_run_context:
-    "Read only. The repo context (AGENTS.md, CLAUDE.md, DESIGN.md, PRODUCT.md) again. The message already has it as <repo_context>.",
   import_figma_frame:
     "Turn a Figma nodes JSON file (exported by the user) into flex markup with token colors and kit components, as one version.",
   insert_component:
@@ -128,7 +123,6 @@ export const TOOL_HELP: Record<
   string
 > = {
   add_flow: `Attached apps only. Lay out route frames left to right with the same code as Flow in the studio, and make prototype links from the links in their source. routes: routes in order; or from: a route or frame id/@label, with depth (default 1) to add the routes it links to. params: sample values for dynamic segments. ${FLOW_NOTE}`,
-  app_doctor: APP_DOCTOR_DESCRIPTION,
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
@@ -162,8 +156,6 @@ export const TOOL_HELP: Record<
     "Read only. List the colors, font sizes, radii and spacing used on the page (or one canvas frame) with element counts and whether each value is a token, raw or mixed, like the inspector Selection colors panel. With value (and property) it lists the elements that use that computed value; inherited values count only on the element that sets them.",
   get_layers:
     'Read only. List the elements of the rendered page (or one canvas frame) as a compact tree with the same server code as the MCP get_layers tool: one line per element with a layer id, tag, <Component> when the element is the root of a component use, source file:line, a text preview and "+N inside" when deeper levels are cut. A layer id (such as "e0k3pz") works in place of a CSS selector in selector or targetSelector of edit_element, set_props, insert_component, insert_jsx, clear_text and review_frame; the page of the id is used when you leave out path. Ids come from the source location, so they stay the same after edits while that JSX stays on the same line. Use root to list one part of the page.',
-  get_run_context:
-    "Read only. Read the repo context of this run again with the same server code as the MCP get_run_context tool: the app folder and workspace root AGENTS.md, CLAUDE.md, DESIGN.md and PRODUCT.md, cut to about 8 KB, secret-looking lines left out. The run message already has it as <repo_context>; call this only when you need the file list or a fresh copy.",
   import_figma_frame: FIGMA_IMPORT_TOOL_DESCRIPTION,
   insert_component:
     "Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.",

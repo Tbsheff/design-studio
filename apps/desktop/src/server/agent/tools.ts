@@ -81,7 +81,6 @@ import {
   TWEAKS_TOOL,
   canvasPlaceInput,
   canvasPointInput,
-  doctorInput,
   frameSessionInput,
   frameStateInput,
   routeLinkInput,
@@ -109,7 +108,6 @@ import {
   componentPreviewShape,
   runComponentPreview,
 } from "./component-preview-tool.js";
-import { getRunContextShape, runGetRunContext } from "./context-tool.js";
 import { copyCodeInput, runCopyCode } from "./copy-code-tool.js";
 import {
   beforeImages,
@@ -125,7 +123,6 @@ import {
   runSetToken,
   setTokenShape,
 } from "./direct-tools.js";
-import { runAppDoctor } from "./doctor-tool.js";
 import { exportFrameShape, runExportFrame } from "./export-tool.js";
 import { figmaImportShape, runFigmaImport } from "./figma-import-tool.js";
 import { baselineNote } from "./final-check.js";
@@ -1299,24 +1296,6 @@ export async function createStudioMcpServer(
     )
   );
 
-  const getRunContextTool = tool(
-    "get_run_context",
-    TOOL_SHORT.get_run_context,
-    getRunContextShape,
-    () => runGetRunContext(deps),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const appDoctorTool = tool(
-    "app_doctor",
-    TOOL_SHORT.app_doctor,
-    doctorInput.sdkFields,
-    toDecodedRun(doctorInput.input, (args) =>
-      runAppDoctor(deps, args.fresh === true)
-    ),
-    { annotations: { readOnlyHint: true } }
-  );
-
   const componentPreviewTool = tool(
     "component_preview",
     TOOL_SHORT.component_preview,
@@ -1458,8 +1437,6 @@ export async function createStudioMcpServer(
     addFlowTool,
     arrangeTool,
     measureTool,
-    getRunContextTool,
-    appDoctorTool,
     componentPreviewTool,
     createComponentTool,
     swapInstanceTool,

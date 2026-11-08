@@ -72,8 +72,6 @@ const APP_TOOLS = [
   "list_route_links",
   "add_flow",
   "prepare_ship",
-  "app_doctor",
-  "get_run_context",
 ];
 
 export type ToolScopeProject = Pick<

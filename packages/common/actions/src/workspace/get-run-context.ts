@@ -17,7 +17,13 @@ const DirectionFieldSchema = DirectionIdSchema.annotate({
 
 const getRunContextWorkspace = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "get_run_context",
+    set: "app",
+    short:
+      "Read only. The repo context (AGENTS.md, CLAUDE.md, DESIGN.md, PRODUCT.md) again. The message already has it as <repo_context>.",
+  },
   confirm: "none",
   description:
     "Read the repo context that every studio run of this direction gets: the AGENTS.md, CLAUDE.md, DESIGN.md and PRODUCT.md of the app folder and the workspace root, cut to about 32 KB in total, with lines that look like secrets left out. Returns workspaceRoot, appDir, files (path, scope app or workspace, bytes, sentBytes, use: full, cut, design_md (the project DESIGN.md, sent as its own block), duplicate, import_only or too_large) and text, the exact <repo_context> block of the run message. Only attached apps have repo context. Read only; it does not start a run.",

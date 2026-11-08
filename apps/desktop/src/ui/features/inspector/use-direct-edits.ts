@@ -35,7 +35,9 @@ interface Options {
   readonly control: MutableRefObject<DirectEditControl | null>;
   readonly onCommitted: (commit: DirectEditCommit) => void;
   readonly onStale: (message: string) => void;
-  readonly rewrite?: (style: Partial<StyleValues>) => Partial<StyleValues>;
+  readonly rewrite:
+    | ((style: Partial<StyleValues>) => Partial<StyleValues>)
+    | null;
 }
 
 const DEBOUNCE_MS = 250;
@@ -67,10 +69,12 @@ const useDirectEdits = (
   const merged = useMemo(() => mergeValues(bases), [bases]);
   const mergedRef = useRef(merged);
   mergedRef.current = merged;
+
   const blocked = useMemo(
     () => multiBlockReason(options.selections),
     [options.selections]
   );
+
   const [draft, setDraftState] = useState<Partial<StyleValues>>({});
   const draftRef = useRef(draft);
   const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });

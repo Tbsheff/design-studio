@@ -58,8 +58,8 @@ const useImageSet = (props: Props): UseImageSetResult => {
       if (result.changed) {
         reselect();
       }
-    } catch (err) {
-      setError(imageError(err));
+    } catch (failure) {
+      setError(imageError(failure));
     }
   };
 

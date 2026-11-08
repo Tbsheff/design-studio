@@ -215,4 +215,5 @@ export {
   usePageVars,
   useStyleScan,
 };
+
 export type { InspectorMatchProps, PageVar, Scope, Status };

@@ -319,11 +319,11 @@ const useTweaks = (options: Options): UseTweaksResult => {
   return {
     commit,
     commitError,
-    isCommitting: committing,
     confirmLeave,
     count,
     discard,
     edit,
+    isCommitting: committing,
     loadError,
     pending,
     revert,

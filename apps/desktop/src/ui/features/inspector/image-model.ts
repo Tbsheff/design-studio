@@ -44,35 +44,50 @@ const currentFit = (
   selection: SelectionContext,
   background: boolean
 ): ImageFit | null => {
-  const raw =
-    (background
-      ? selection.styles["background-size"]
-      : selection.styles["object-fit"]) ?? "";
+  let raw = selection.styles["object-fit"] ?? "";
+
+  if (background) {
+    raw = selection.styles["background-size"] ?? "";
+  }
 
   if (raw === "cover" || raw === "contain" || raw === "fill") {
     return raw;
   }
 
-  return background && /^100% 100%$/u.test(raw) ? "fill" : null;
+  if (background && /^100% 100%$/u.test(raw)) {
+    return "fill";
+  }
+
+  return null;
 };
 
 const sourceName = (
   selection: SelectionContext,
   background: boolean
 ): string => {
-  const raw = background
-    ? (/url\(["']?([^"')]+)/u.exec(
+  let raw = attrOf(selection.outerHTML, "src") ?? "";
+
+  if (background) {
+    raw =
+      /url\(["']?([^"')]+)/u.exec(
         selection.styles["background-image"] ?? ""
-      )?.[1] ?? "")
-    : (attrOf(selection.outerHTML, "src") ?? "");
+      )?.[1] ?? "";
+  }
 
   const nextUrl = /\/_next\/image\?(?:.*&)?url=([^&]+)/u.exec(raw)?.[1];
-  const path = nextUrl ? decodeURIComponent(nextUrl) : raw;
+  let path = raw;
+
+  if (nextUrl) {
+    path = decodeURIComponent(nextUrl);
+  }
+
   const last = path.split(/[?#]/u)[0]?.split("/").pop() ?? "";
 
-  return last.startsWith("data:") || last === ""
-    ? "Inline image"
-    : decodeURIComponent(last).slice(0, 60);
+  if (last.startsWith("data:") || last === "") {
+    return "Inline image";
+  }
+
+  return decodeURIComponent(last).slice(0, 60);
 };
 
 export {

@@ -47,15 +47,31 @@ const BOOLEAN_TIP: Record<BooleanOpName, string> = {
 const BOOLEAN_GLYPH: Record<
   BooleanOpName,
   {
-    readonly a: string;
-    readonly b: string;
+    readonly first: string;
+    readonly second: string;
     readonly fill: "a" | "b" | "both" | "cut";
   }
 > = {
-  exclude: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "both" },
-  intersect: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "cut" },
-  subtract: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "a" },
-  union: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "both" },
+  exclude: {
+    first: "M2.5 2.5h7v7h-7z",
+    second: "M6.5 6.5h7v7h-7z",
+    fill: "both",
+  },
+  intersect: {
+    first: "M2.5 2.5h7v7h-7z",
+    second: "M6.5 6.5h7v7h-7z",
+    fill: "cut",
+  },
+  subtract: {
+    first: "M2.5 2.5h7v7h-7z",
+    second: "M6.5 6.5h7v7h-7z",
+    fill: "a",
+  },
+  union: {
+    first: "M2.5 2.5h7v7h-7z",
+    second: "M6.5 6.5h7v7h-7z",
+    fill: "both",
+  },
 };
 
 const attrOf = (tag: string, name: string): string | null => {
@@ -258,12 +274,12 @@ const BooleanGlyph = ({ op }: { readonly op: BooleanOpName }): ReactElement => {
       aria-hidden="true"
     >
       <path
-        d={glyph.a}
+        d={glyph.first}
         fill={filled("a") ? "currentColor" : "none"}
         fillOpacity={0.35}
       />
       <path
-        d={glyph.b}
+        d={glyph.second}
         fill={filled("b") ? "currentColor" : "none"}
         fillOpacity={op === "subtract" ? 0 : 0.35}
       />
@@ -299,8 +315,8 @@ const useRun = (
       await runVector(props.projectId, props.directionId, request);
 
       return true;
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
 
       return false;
     } finally {
@@ -385,6 +401,7 @@ const PaintRows = ({
 
 const BooleanRow = ({ props }: { readonly props: Props }): ReactElement => {
   const { error, isBusy: busy, run } = useRun(props);
+
   const [first, second] = props.selection as [
     SelectionContext,
     SelectionContext,

@@ -52,7 +52,7 @@ interface Options {
   readonly control: MutableRefObject<DirectEditControl | null>;
   readonly onCommitted: (commit: DirectEditCommit) => void;
   readonly onStale: (message: string) => void;
-  readonly rewrite?: StyleRewrite;
+  readonly rewrite: StyleRewrite | null;
   readonly variant?: string;
 }
 

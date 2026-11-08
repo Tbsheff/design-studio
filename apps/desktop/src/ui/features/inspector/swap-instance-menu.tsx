@@ -94,10 +94,12 @@ export default function SwapInstanceMenu({
             name: item.name,
           }
         );
+
         const dropped =
           result.dropped.length > 0
             ? `, dropped ${result.dropped.join(", ")}`
             : "";
+
         onDone({ isOk: true, text: `${result.title}${dropped}` });
       } catch (error: unknown) {
         onDone({ isOk: false, text: apiMessage(error) });

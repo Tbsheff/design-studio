@@ -109,18 +109,18 @@ class Stabilizer {
     return same && prev ? prev : out;
   }
 
-  run<T extends object>(next: T, nested: ReadonlySet<string>): T {
+  run<Value extends object>(next: Value, nested: ReadonlySet<string>): Value {
     this.latest = next as Bag;
     this.last = this.bag([], next as Bag, this.last, nested, 0);
 
-    return this.last as T;
+    return this.last as Value;
   }
 }
 
-const useStableProps = <T extends object>(
-  next: T,
+const useStableProps = <Value extends object>(
+  next: Value,
   nested: ReadonlySet<string> = new Set()
-): T => {
+): Value => {
   const ref = useRef<Stabilizer | null>(null);
   ref.current ??= new Stabilizer();
 

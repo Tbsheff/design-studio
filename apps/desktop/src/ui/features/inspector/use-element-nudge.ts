@@ -81,8 +81,8 @@ const axisStyle = (
 ): Record<string, string> =>
   delta === 0 ? {} : { [prop]: `${Math.round(start + delta)}px` };
 
-const nudgeStyle = (b: Step): Record<string, string> => {
-  const { base, dx, dy } = b;
+const nudgeStyle = (step: Step): Record<string, string> => {
+  const { base, dx, dy } = step;
 
   if (base.mode === "margin") {
     return {
@@ -130,9 +130,9 @@ interface Saved {
   readonly back: Record<string, string>;
 }
 
-const savedOf = (b: Burst): Saved[] =>
-  b.items.flatMap((item) => {
-    const style = nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy });
+const savedOf = (batch: Burst): Saved[] =>
+  batch.items.flatMap((item) => {
+    const style = nudgeStyle({ base: item.base, dx: batch.dx, dy: batch.dy });
     const edit = buildEditRequest(item.target, style);
 
     if (!edit) {
@@ -160,13 +160,13 @@ const shouldPickNew = (
   const picked =
     message.type === "select"
       ? [message.selection.selector]
-      : message.selections.map((s) => s.selector);
+      : message.selections.map((entry) => entry.selector);
 
   if (message.additive) {
     return true;
   }
 
-  return burstKey(picked) !== burstKey(current.map((s) => s.selector));
+  return burstKey(picked) !== burstKey(current.map((entry) => entry.selector));
 };
 
 const keysToCanvas = (): void => {
@@ -231,9 +231,9 @@ const shouldTakeArrowKeys = (): boolean => {
   return true;
 };
 
-const useElementNudge = (o: Options): void => {
-  const live = useRef(o);
-  live.current = o;
+const useElementNudge = (options: Options): void => {
+  const live = useRef(options);
+  live.current = options;
   const burst = useRef<Burst | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flushNow = useRef<() => void>(() => undefined);
@@ -260,9 +260,9 @@ const useElementNudge = (o: Options): void => {
       live.current.onError(message);
     };
 
-    const save = async (b: Burst): Promise<void> => {
+    const save = async (batch: Burst): Promise<void> => {
       const cur = live.current;
-      const list = savedOf(b);
+      const list = savedOf(batch);
 
       if (list.length === 0 || !cur.directionId) {
         return;
@@ -319,11 +319,11 @@ const useElementNudge = (o: Options): void => {
       }
 
       timer.current = null;
-      const b = burst.current;
+      const batch = burst.current;
       burst.current = null;
 
-      if (b && (b.dx !== 0 || b.dy !== 0)) {
-        void save(b);
+      if (batch && (batch.dx !== 0 || batch.dy !== 0)) {
+        void save(batch);
       }
     };
 
@@ -335,7 +335,9 @@ const useElementNudge = (o: Options): void => {
       }
 
       const picked = wanted.flatMap((item) => {
-        const target = cur.selection.find((s) => s.selector === item.selector);
+        const target = cur.selection.find(
+          (entry) => entry.selector === item.selector
+        );
 
         return target ? [{ base: item.base, target }] : [];
       });
@@ -391,13 +393,13 @@ const useElementNudge = (o: Options): void => {
         return hintOnce(FLOW_HINT);
       }
 
-      const b = { ...current, dx: current.dx + dx, dy: current.dy + dy };
-      burst.current = b;
+      const batch = { ...current, dx: current.dx + dx, dy: current.dy + dy };
+      burst.current = batch;
 
-      for (const item of b.items) {
+      for (const item of batch.items) {
         live.current.post({
           selector: item.target.selector,
-          style: nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy }),
+          style: nudgeStyle({ base: item.base, dx: batch.dx, dy: batch.dy }),
           type: "preview-style",
         });
       }
@@ -447,7 +449,7 @@ const useElementNudge = (o: Options): void => {
     flushNow.current = flush;
     let editing = false;
 
-    const stop = o.listen((message) => {
+    const stop = options.listen((message) => {
       if (message.type === "nudge-key") {
         press(
           [
@@ -479,9 +481,9 @@ const useElementNudge = (o: Options): void => {
       globalThis.removeEventListener("keydown", onKey, true);
       flush();
     };
-  }, [o.listen]);
+  }, [options.listen]);
 
-  const key = burstKey(o.selection.map((s) => s.selector));
+  const key = burstKey(options.selection.map((entry) => entry.selector));
   useEffect(() => {
     if (burst.current && key !== burst.current.key) {
       flushNow.current();

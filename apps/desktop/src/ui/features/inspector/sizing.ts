@@ -45,7 +45,11 @@ const axisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
     return "none";
   }
 
-  return (axis === "width") === parent.isRow ? "main" : "cross";
+  if ((axis === "width") === parent.isRow) {
+    return "main";
+  }
+
+  return "cross";
 };
 
 const flexGrow = (flex: string): number => {
@@ -57,7 +61,11 @@ const flexGrow = (flex: string): number => {
 
   const grow = Number(first);
 
-  return Number.isFinite(grow) ? grow : 0;
+  if (Number.isFinite(grow)) {
+    return grow;
+  }
+
+  return 0;
 };
 
 type Values = Pick<StyleValues, Axis | "flex" | "align-self">;
@@ -114,8 +122,12 @@ const isGridStretched = (
   values: Values,
   facts: SizeFacts
 ): boolean => {
-  const self =
-    axis === "width" ? facts.justifySelf : values["align-self"].trim();
+  const isWidth = axis === "width";
+  let self = values["align-self"].trim();
+
+  if (isWidth) {
+    self = facts.justifySelf;
+  }
 
   if (self === "stretch") {
     return true;
@@ -125,9 +137,19 @@ const isGridStretched = (
     return false;
   }
 
-  return STRETCHY.has(
-    axis === "width" ? facts.parentJustifyItems : facts.parentAlignItems
-  );
+  if (isWidth) {
+    return STRETCHY.has(facts.parentJustifyItems);
+  }
+
+  return STRETCHY.has(facts.parentAlignItems);
+};
+
+const toFillOrHug = (isFill: boolean): SizeMode => {
+  if (isFill) {
+    return "fill";
+  }
+
+  return "hug";
 };
 
 const naturalMode = (
@@ -139,18 +161,18 @@ const naturalMode = (
   const role = axisRole(axis, parent);
 
   if (role === "main") {
-    return flexGrow(values.flex) > 0 ? "fill" : "hug";
+    return toFillOrHug(flexGrow(values.flex) > 0);
   }
 
   if (role === "cross") {
-    return isStretchedByDefault(values, facts) ? "fill" : "hug";
+    return toFillOrHug(isStretchedByDefault(values, facts));
   }
 
   if (parent.isGrid) {
-    return isGridStretched(axis, values, facts) ? "fill" : "hug";
+    return toFillOrHug(isGridStretched(axis, values, facts));
   }
 
-  return axis === "width" && BLOCK_DISPLAYS.has(facts.display) ? "fill" : "hug";
+  return toFillOrHug(axis === "width" && BLOCK_DISPLAYS.has(facts.display));
 };
 
 const authoredMode = (size: string): SizeMode | null => {
@@ -202,12 +224,17 @@ const clearing = (
 ): Partial<StyleValues> => {
   const role = axisRole(axis, parent);
 
-  return {
-    ...(role === "main" && flexGrow(values.flex) > 0 ? { flex: "" } : {}),
-    ...(role === "cross" && values["align-self"] === "stretch"
-      ? { "align-self": "" }
-      : {}),
-  };
+  const patch: Partial<StyleValues> = {};
+
+  if (role === "main" && flexGrow(values.flex) > 0) {
+    patch.flex = "";
+  }
+
+  if (role === "cross" && values["align-self"] === "stretch") {
+    patch["align-self"] = "";
+  }
+
+  return patch;
 };
 
 const fillPatch = (
@@ -217,19 +244,31 @@ const fillPatch = (
   facts: SizeFacts
 ): Partial<StyleValues> => {
   const role = axisRole(axis, parent);
-  const size = facts.authored[axis] ? { [axis]: "" } : {};
-
   if (role === "main") {
-    return { flex: "1", ...size };
+    if (facts.authored[axis]) {
+      return { [axis]: "", flex: "1" };
+    }
+
+    return { flex: "1" };
   }
 
   if (role === "cross") {
-    return isStretchedByDefault(values, facts)
-      ? { [axis]: "" }
-      : { "align-self": "stretch", [axis]: "" };
+    if (isStretchedByDefault(values, facts)) {
+      return { [axis]: "" };
+    }
+
+    return { "align-self": "stretch", [axis]: "" };
   }
 
   return { [axis]: "100%" };
+};
+
+const toNaturalSelf = (alignSelf: string): string => {
+  if (alignSelf === "stretch") {
+    return "";
+  }
+
+  return alignSelf;
 };
 
 const sizePatch = (
@@ -254,14 +293,11 @@ const sizePatch = (
     return fillPatch(axis, values, parent, facts);
   }
 
+  const naturalSelf = toNaturalSelf(values["align-self"]);
+
   const natural = naturalMode(
     axis,
-    {
-      ...values,
-      "align-self":
-        values["align-self"] === "stretch" ? "" : values["align-self"],
-      flex: "",
-    },
+    { ...values, "align-self": naturalSelf, flex: "" },
     parent,
     facts
   );
@@ -274,10 +310,11 @@ const sizePatch = (
     authoredMode(ruleSize) !== "hug" &&
     authoredMode(ruleSize) !== null;
 
-  return {
-    [axis]: natural === "hug" && !sizedByRule ? "" : "fit-content",
-    ...clear,
-  };
+  if (natural === "hug" && !sizedByRule) {
+    return { [axis]: "", ...clear };
+  }
+
+  return { [axis]: "fit-content", ...clear };
 };
 
 const legacyPatch = (
@@ -297,7 +334,11 @@ const legacyPatch = (
   }
 
   if (role === "main") {
-    return { flex: "1", ...(authoredSize ? { [axis]: "" } : {}) };
+    if (authoredSize) {
+      return { [axis]: "", flex: "1" };
+    }
+
+    return { flex: "1" };
   }
 
   if (role === "cross") {
@@ -347,9 +388,19 @@ const alignCell = (col: number, row: number, isRow: boolean): AlignCell => {
   const across = AXIS_VALUES[col] ?? "flex-start";
   const down = AXIS_VALUES[row] ?? "flex-start";
 
-  return isRow
-    ? { align: down, justify: across }
-    : { align: across, justify: down };
+  if (isRow) {
+    return { align: down, justify: across };
+  }
+
+  return { align: across, justify: down };
+};
+
+const toAlignSlot = (align: string): number | null => {
+  if (align.trim() === "normal" || align.trim() === "stretch") {
+    return null;
+  }
+
+  return alignSlot(align);
 };
 
 const activeCell = (
@@ -359,16 +410,17 @@ const activeCell = (
 ): { readonly col: number; readonly row: number } | null => {
   const offset = alignSlot(justify);
 
-  const first =
-    align.trim() === "normal" || align.trim() === "stretch"
-      ? null
-      : alignSlot(align);
+  const first = toAlignSlot(align);
 
   if (offset === null || first === null) {
     return null;
   }
 
-  return isRow ? { col: offset, row: first } : { col: first, row: offset };
+  if (isRow) {
+    return { col: offset, row: first };
+  }
+
+  return { col: first, row: offset };
 };
 
 export {

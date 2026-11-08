@@ -107,6 +107,7 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
   const [scope, setScope] = useState<Scope>("selection");
   const [picking, setPicking] = useState<StyleValueRow | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+
   const selectors = props.selection.map(
     (selectionContext) => selectionContext.selector
   );

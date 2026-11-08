@@ -193,3 +193,7 @@
 .prp-swap {
   position: relative;
 }
+
+output.prp-status {
+  display: block;
+}

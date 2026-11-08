@@ -46,7 +46,7 @@ const imageFileOf = (
     return null;
   }
 
-  for (const item of Array.from(list as ArrayLike<DataTransferItem | File>)) {
+  for (const item of list) {
     const file =
       item instanceof File
         ? item

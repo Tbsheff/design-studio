@@ -9,6 +9,7 @@ const registerAppCommentsRoutes = (app: Hono, ctx: AppContext): void => {
   const {
     comments,
     config,
+    editDeps,
     loadDirection,
     preview,
     projects,
@@ -32,19 +33,27 @@ const registerAppCommentsRoutes = (app: Hono, ctx: AppContext): void => {
     ) => projects.saveAttachment(pid, file),
   };
   const watcher = createRunWatcher({ files: comments, runner, runsDir });
+  const loadReferenceTarget = async (pid: string, did: string | null) => {
+    const project = await projects.get(pid);
+    const direction =
+      did === null
+        ? projects.mainDirection(project)
+        : projects.directionOf(project, did);
+    return { direction, project };
+  };
   bindCommentRuntime(config.dataDir, {
     files: comments,
     hasAttachment,
-    loadTarget: async (pid, did) => {
-      const project = await projects.get(pid);
-      const direction =
-        did === null
-          ? projects.mainDirection(project)
-          : projects.directionOf(project, did);
-      return { direction, project };
-    },
+    loadTarget: loadReferenceTarget,
     prefill,
     projectDir: (id) => projects.projectDir(id),
+    reference: {
+      dataDir: config.dataDir,
+      listFrames: async (project) =>
+        (await editDeps.canvas.read(project)).canvas?.frames ?? [],
+      loadTarget: loadReferenceTarget,
+      preview,
+    },
     runs: { runner, startRun, watcher, withDirection },
   });
   registerCommentRoutes(app, { comments, loadDirection, watcher });

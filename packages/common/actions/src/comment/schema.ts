@@ -301,6 +301,38 @@ const PagePathFieldSchema = Schema.String.check(
     'Page path in the project, for example "about.html". Leave out for the entry page.',
 });
 
+const ReferenceRegionSchema = Schema.Struct({
+  contentDiffersPct: Schema.Number,
+  differsPct: Schema.Number,
+  edgeMatchPct: Schema.Number,
+  height: Schema.Number,
+  name: Schema.String,
+  width: Schema.Number,
+  x: Schema.Number,
+  y: Schema.Number,
+});
+
+const ReferenceFrameSchema = Schema.Struct({
+  id: Schema.String,
+  label: Schema.NullOr(Schema.String),
+  path: Schema.String,
+});
+
+const ReferenceScoreSchema = Schema.Struct({
+  contentScore: Schema.Number,
+  diffPath: Schema.String,
+  differsPct: Schema.Number,
+  edgeScore: Schema.Number,
+  frame: Schema.NullOr(ReferenceFrameSchema),
+  matches: Schema.Boolean,
+  ms: Schema.Number,
+  notes: Schema.Array(Schema.String),
+  renderPath: Schema.String,
+  score: Schema.Number,
+  size: Schema.String,
+  worst: Schema.Array(ReferenceRegionSchema),
+});
+
 type Comment = typeof CommentSchema.Type;
 
 type CommentWire = typeof CommentSchema.Encoded;
@@ -339,6 +371,7 @@ export {
   PagePathFieldSchema,
   PrefillIdsSchema,
   ProjectFieldSchema,
+  ReferenceScoreSchema,
   ReorderIdsSchema,
   RunLevelSchema,
   RunMentionSchema,

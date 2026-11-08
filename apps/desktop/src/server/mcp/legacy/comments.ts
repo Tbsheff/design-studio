@@ -1,8 +1,7 @@
 import type { ToolSpec } from "../edit-kit.js";
-import { REFERENCE_TOOLS } from "../reference-tools.js";
 import { guardTools } from "./guard.js";
 
-const COMMENTS_LEGACY_TOOLS_UNGUARDED: ToolSpec[] = [...REFERENCE_TOOLS];
+const COMMENTS_LEGACY_TOOLS_UNGUARDED: ToolSpec[] = [];
 
 const COMMENTS_LEGACY_TOOLS = guardTools(COMMENTS_LEGACY_TOOLS_UNGUARDED);
 

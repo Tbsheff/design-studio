@@ -6,8 +6,13 @@ import type { CommentError } from "./comment-core.js";
 import type { CommentPage } from "./comment-page.js";
 import { listComments, searchMentionFiles } from "./comment-reads.js";
 import type { ListRequest, MentionRequest } from "./comment-reads.js";
+import { inspectReferenceFrame } from "./reference-compare.js";
+import type { ReferenceQuery, ReferenceView } from "./reference-compare.js";
 
 interface CommentStoreApi {
+  readonly inspectReference: (
+    query: ReferenceQuery
+  ) => Effect.Effect<ReferenceView, CommentError>;
   readonly list: (
     request: ListRequest
   ) => Effect.Effect<CommentPage, CommentError>;
@@ -24,6 +29,13 @@ class CommentStore extends Context.Service<CommentStore, CommentStoreApi>()(
   public static readonly layer = Layer.succeed(
     CommentStore,
     CommentStore.of({
+      inspectReference: Effect.fn("CommentStore.inspectReference")(
+        function* run(query: ReferenceQuery) {
+          return yield* attemptComments((runtime) =>
+            inspectReferenceFrame(runtime.reference, query)
+          );
+        }
+      ),
       list: Effect.fn("CommentStore.list")(function* run(request: ListRequest) {
         return yield* attemptComments((runtime) =>
           listComments(runtime, request)

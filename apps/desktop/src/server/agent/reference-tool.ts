@@ -13,7 +13,7 @@ import {
   toSdkFieldSet,
   toToolInput,
 } from "../agent-tools/index.js";
-import { scoreOutput } from "../mcp/reference-tools.js";
+import { toScoreFields } from "../comments/reference-compare.js";
 import { compareToReference, referenceAttachment } from "./reference-check.js";
 import { resolveShotTarget } from "./run-target.js";
 import type { TargetDeps } from "./run-target.js";
@@ -135,7 +135,7 @@ export async function runCompareToReference(
             {
               reference: plainAttachmentName(attachment.name),
               frame: shot.label,
-              ...scoreOutput(score),
+              ...toScoreFields(score),
             },
             null,
             2

@@ -1,3 +1,4 @@
+import type { ZoomKey } from "@design-studio/contracts";
 import { useMemo } from "react";
 
 import { useInlinePrompt } from "../chat/use-inline-prompt.js";
@@ -15,178 +16,244 @@ import { useFreeMove } from "./use-free-move.js";
 import { usePreviewMenu } from "./use-preview-menu.js";
 import { useResizeHandles } from "./use-resize-handles.js";
 
-const useCanvasEdits = (
+type CanvasStageState = ReturnType<typeof useCanvasStage>;
+
+type CanvasPreviewState = ReturnType<typeof useCanvasPreview>;
+
+type LayerEdits = ReturnType<typeof useLayerEdits>;
+
+interface EditTools {
+  readonly inlinePrompt: ReturnType<typeof useInlinePrompt>;
+  readonly layerEdits: LayerEdits;
+  readonly previewMenu: ReturnType<typeof usePreviewMenu>;
+}
+
+interface EditHandles {
+  readonly freeMove: ReturnType<typeof useFreeMove>;
+  readonly handlesOn: boolean;
+  readonly resize: ReturnType<typeof useResizeHandles>;
+  readonly spacingHost: SpacingHost;
+}
+
+interface SpacingHost {
+  readonly directionId: string | null;
+  readonly enabled: boolean;
+  readonly holdSwap: CanvasPreviewState["frames"]["holdSwap"];
+  readonly listen: CanvasPreviewState["frames"]["listen"];
+  readonly onError: LayerEdits["notify"];
+  readonly post: CanvasPreviewState["frames"]["post"];
+  readonly projectId: string;
+  readonly refreshRects: CanvasPreviewState["frames"]["refreshRects"];
+  readonly setSelection: ViewProps["setSelection"];
+}
+
+interface CanvasEdits extends EditTools, EditHandles {
+  readonly pointBadge: ReturnType<typeof useCanvasPoint>;
+}
+
+const setMenuOpener = (
+  menu: CanvasPreviewState["openMenu"],
+  handler: ReturnType<typeof usePreviewMenu>["onContextMenu"]
+): void => {
+  menu.current = handler;
+};
+
+const useEditTools = (
   props: ViewProps,
-  text: ReturnType<typeof useCanvasStage>,
-  pv: ReturnType<typeof useCanvasPreview>
-) => {
+  text: CanvasStageState,
+  pv: CanvasPreviewState
+): EditTools => {
   const { projectId, directionId, kind, headVersionId } = props;
-
-  const {
-    stageRef,
-    canvasFrames,
-    active,
-    viewport,
-    pz,
-    zoomBy,
-    comment,
-    commentMode,
-    live,
-    protoOn,
-    layersOpen,
-    picking,
-    draw,
-  } = text;
-
+  const { selection, setSelection } = props;
+  const { active, comment, draw, layersOpen, live, picking, protoOn } = text;
+  const { stageRef, zoomBy } = text;
   const { openMenu, frames, editsEnabled } = pv;
+  const selectMode = picking;
+  const treeWanted = layersOpen;
+  const enabled = editsEnabled;
 
   const layerEdits = useLayerEdits({
     directionId,
-    enabled: editsEnabled,
+    enabled,
     frames,
     headVersionId,
     kind,
     projectId,
-    selectMode: picking,
-    selection: props.selection,
-    setSelection: props.setSelection,
-    treeWanted: layersOpen,
+    selectMode,
+    selection,
+    setSelection,
+    treeWanted,
   });
 
+  const { notify } = layerEdits;
   useComponentInsert({
     directionId,
-    enabled: editsEnabled,
+    enabled,
     frames,
     kind,
-    notify: layerEdits.notify,
+    notify,
     projectId,
-    selection: props.selection,
+    selection,
   });
   useCanvasVectorTools(editsEnabled, protoOn, draw, comment);
-  useImageDrop({
-    directionId,
-    frames,
-    isEnabled: editsEnabled,
-    kind,
-    notify: layerEdits.notify,
-    projectId,
-  });
+  const isEnabled = editsEnabled;
+  useImageDrop({ directionId, frames, isEnabled, kind, notify, projectId });
+  const { port } = props;
+  const { selectRelative } = frames;
+
+  const edits = layerEdits;
+  const ids = { directionId, kind, projectId };
+  const zoom = (key: ZoomKey): void => zoomBy(key, "menu");
 
   const previewMenu = usePreviewMenu({
-    edits: layerEdits,
-    ids: { directionId, kind, projectId },
-    port: props.port,
-    selectRelative: frames.selectRelative,
-    selection: props.selection,
-    zoom: (key) => zoomBy(key, "menu"),
+    edits,
+    ids,
+    port,
+    selectRelative,
+    selection,
+    zoom,
   });
 
-  openMenu.current = previewMenu.onContextMenu;
+  setMenuOpener(openMenu, previewMenu.onContextMenu);
+  const { running } = props;
+  const onSubmit = props.onInlinePrompt;
+  const route = active.path;
+  const stage = (): HTMLDivElement | null => stageRef.current;
 
   const inlinePrompt = useInlinePrompt({
     live,
-    onSubmit: props.onInlinePrompt,
-    route: active.path,
-    running: props.running,
-    selection: props.selection,
-    stage: () => stageRef.current,
+    onSubmit,
+    route,
+    running,
+    selection,
+    stage,
   });
 
-  const handlesOn = editsEnabled && !commentMode;
+  return { inlinePrompt, layerEdits, previewMenu };
+};
+
+const useEditHandles = (
+  props: ViewProps,
+  text: CanvasStageState,
+  pv: CanvasPreviewState,
+  layerEdits: LayerEdits
+): EditHandles => {
+  const { projectId, directionId, selection, setSelection } = props;
+  const { holdSwap, listen, post, refreshRects } = pv.frames;
+  const { notify } = layerEdits;
+  const onError = notify;
+  const handlesOn = pv.editsEnabled && !text.commentMode;
+  const enabled = handlesOn;
+  const { applyStructure, busy } = layerEdits;
+  const { zoom } = text.pz;
 
   const resize = useResizeHandles({
     directionId,
-    enabled: handlesOn,
-    holdSwap: frames.holdSwap,
-    listen: frames.listen,
-    onError: layerEdits.notify,
-    post: frames.post,
+    enabled,
+    holdSwap,
+    listen,
+    onError,
+    post,
     projectId,
-    refreshRects: frames.refreshRects,
-    selection: props.selection,
-    setSelection: props.setSelection,
+    refreshRects,
+    selection,
+    setSelection,
   });
 
   const spacingHost = useMemo(
     () => ({
       directionId,
-      enabled: handlesOn,
-      holdSwap: frames.holdSwap,
-      listen: frames.listen,
-      onError: layerEdits.notify,
-      post: frames.post,
+      enabled,
+      holdSwap,
+      listen,
+      onError,
+      post,
       projectId,
-      refreshRects: frames.refreshRects,
-      setSelection: props.setSelection,
+      refreshRects,
+      setSelection,
     }),
     [
-      projectId,
       directionId,
-      handlesOn,
-      frames.post,
-      frames.listen,
-      frames.holdSwap,
-      props.setSelection,
-      frames.refreshRects,
-      layerEdits.notify,
+      enabled,
+      holdSwap,
+      listen,
+      onError,
+      post,
+      projectId,
+      refreshRects,
+      setSelection,
     ]
   );
 
   const freeMove = useFreeMove({
-    applyStructure: layerEdits.applyStructure,
-    busy: layerEdits.busy,
+    applyStructure,
+    busy,
     directionId,
-    enabled: handlesOn,
-    holdSwap: frames.holdSwap,
-    listen: frames.listen,
-    onError: layerEdits.notify,
-    post: frames.post,
+    enabled,
+    holdSwap,
+    listen,
+    onError,
+    post,
     projectId,
-    refreshRects: frames.refreshRects,
-    selection: props.selection,
-    setSelection: props.setSelection,
-    zoom: pz.zoom,
+    refreshRects,
+    selection,
+    setSelection,
+    zoom,
   });
+
+  return { freeMove, handlesOn, resize, spacingHost };
+};
+
+const useCanvasEdits = (
+  props: ViewProps,
+  text: CanvasStageState,
+  pv: CanvasPreviewState
+): CanvasEdits => {
+  const { projectId, directionId, selection, setSelection } = props;
+  const { active, canvasFrames, stageRef, viewport, zoomBy } = text;
+  const tools = useEditTools(props, text, pv);
+  const handles = useEditHandles(props, text, pv, tools.layerEdits);
+  const { listen, post, refreshRects } = pv.frames;
+  const { notify } = tools.layerEdits;
+  const onError = notify;
+  const isEnabled = handles.handlesOn;
 
   useElementNudge({
     directionId,
-    isEnabled: handlesOn,
-    listen: frames.listen,
-    onError: layerEdits.notify,
-    post: frames.post,
+    isEnabled,
+    listen,
+    onError,
+    post,
     projectId,
-    refreshRects: frames.refreshRects,
-    selection: props.selection,
-    setSelection: props.setSelection,
+    refreshRects,
+    selection,
+    setSelection,
   });
 
+  const activeId = active.id;
+  const liveSize = viewport;
+  const stage = (): HTMLDivElement | null => stageRef.current;
   useCanvasPresence({
-    activeId: active.id,
+    activeId,
     directionId,
-    liveSize: viewport,
+    liveSize,
     projectId,
-    selection: props.selection,
-    stage: () => stageRef.current,
+    selection,
+    stage,
   });
+  const clearSelection = (): void => setSelection(() => []);
+  const frames = canvasFrames;
+  const zoom = (key: ZoomKey): void => zoomBy(key, "menu");
 
   const pointBadge = useCanvasPoint({
-    clearSelection: () => props.setSelection(() => []),
-    frames: canvasFrames,
-    post: frames.post,
+    clearSelection,
+    frames,
+    post,
     projectId,
-    zoom: (key) => zoomBy(key, "menu"),
+    zoom,
   });
 
-  return {
-    freeMove,
-    handlesOn,
-    inlinePrompt,
-    layerEdits,
-    pointBadge,
-    previewMenu,
-    resize,
-    spacingHost,
-  };
+  return { ...tools, ...handles, pointBadge };
 };
 
 export { useCanvasEdits };

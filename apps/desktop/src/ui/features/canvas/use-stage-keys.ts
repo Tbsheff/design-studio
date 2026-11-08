@@ -2,6 +2,7 @@ import { selectMoveOf } from "@design-studio/contracts";
 import type { SelectionContext } from "@design-studio/contracts";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
+import { findElement } from "../../platform/find-element.js";
 import { canvasHasKeys } from "../../platform/typing-target.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import type { Props } from "./canvas-types.js";
@@ -9,43 +10,75 @@ import { isTypingTarget } from "./use-pan-zoom.js";
 import { PREVIEW_LAYOUT_KEY_EVENT } from "./use-preview-frames.js";
 import type { usePreviewFrames } from "./use-preview-frames.js";
 
+type SetSelectMode = (update: (match: boolean) => boolean) => void;
+
+interface SelectKeyHandlers {
+  readonly setSelectMode: SetSelectMode;
+  readonly onEscape: () => void;
+  readonly clearSelection: () => boolean;
+}
+
+const hasCommandModifier = (event: KeyboardEvent): boolean =>
+  event.metaKey || event.ctrlKey || event.altKey;
+
+const isSelectToggleKey = (event: KeyboardEvent): boolean =>
+  event.key === "v" || event.key === "V";
+
+const isEscapeConsumed = (
+  event: KeyboardEvent,
+  clearSelection: () => boolean
+): boolean =>
+  !event.defaultPrevented &&
+  !event.repeat &&
+  canvasHasKeys() &&
+  clearSelection();
+
+const routeSelectKey = (
+  event: KeyboardEvent,
+  handlers: SelectKeyHandlers
+): void => {
+  if (isTypingTarget(event.target) || hasCommandModifier(event)) {
+    return;
+  }
+
+  if (isSelectToggleKey(event)) {
+    event.preventDefault();
+    handlers.setSelectMode((matchValue) => !matchValue);
+
+    return;
+  }
+
+  if (event.key !== "Escape") {
+    return;
+  }
+
+  if (isEscapeConsumed(event, handlers.clearSelection)) {
+    event.preventDefault();
+
+    return;
+  }
+
+  handlers.setSelectMode(() => false);
+  handlers.onEscape();
+};
+
 const useSelectKey = (
-  setSelectMode: (update: (match: boolean) => boolean) => void,
+  setSelectMode: SetSelectMode,
   onEscape: () => void,
   clearSelection: () => boolean
 ): void => {
-  const latest = useRef(clearSelection);
+  const latest = useRef<SelectKeyHandlers>({
+    clearSelection,
+    onEscape,
+    setSelectMode,
+  });
+
   useLayoutEffect(() => {
-    latest.current = clearSelection;
+    latest.current = { clearSelection, onEscape, setSelectMode };
   });
   useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      if (
-        isTypingTarget(event.target) ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.altKey
-      ) {
-        return;
-      }
-
-      if (event.key === "v" || event.key === "V") {
-        event.preventDefault();
-        setSelectMode((matchValue) => !matchValue);
-      } else if (event.key === "Escape") {
-        if (
-          !event.defaultPrevented &&
-          !event.repeat &&
-          canvasHasKeys() &&
-          latest.current()
-        ) {
-          return event.preventDefault();
-        }
-
-        setSelectMode(() => false);
-        onEscape();
-      }
-    };
+    const onKey = (event: KeyboardEvent): void =>
+      routeSelectKey(event, latest.current);
 
     globalThis.addEventListener("keydown", onKey);
 
@@ -60,20 +93,15 @@ const FIRST_SELECT_KEYS = new Set([
   "ArrowLeft",
 ]);
 
+const isPlainArrow = (event: KeyboardEvent): boolean =>
+  !event.shiftKey && FIRST_SELECT_KEYS.has(event.key);
+
 const firstSelectKey = (eventValue: KeyboardEvent): boolean => {
-  if (
-    eventValue.repeat ||
-    eventValue.metaKey ||
-    eventValue.ctrlKey ||
-    eventValue.altKey
-  ) {
+  if (eventValue.repeat || hasCommandModifier(eventValue)) {
     return false;
   }
 
-  return (
-    selectMoveOf(eventValue) !== null ||
-    (!eventValue.shiftKey && FIRST_SELECT_KEYS.has(eventValue.key))
-  );
+  return selectMoveOf(eventValue) !== null || isPlainArrow(eventValue);
 };
 
 const useFirstSelectKeys = (
@@ -94,13 +122,11 @@ const useFirstSelectKeys = (
     const onKey = (event3: KeyboardEvent): void => {
       const cur = latest.current;
 
-      if (
-        !cur.on ||
-        !cur.empty ||
-        event3.defaultPrevented ||
-        document.activeElement !== stage() ||
-        !firstSelectKey(event3)
-      ) {
+      if (!cur.on || !cur.empty || event3.defaultPrevented) {
+        return;
+      }
+
+      if (document.activeElement !== stage() || !firstSelectKey(event3)) {
         return;
       }
 
@@ -122,21 +148,19 @@ const useFirstSelectKeys = (
 const LAYOUT_WAIT_MS = 1500;
 
 const layoutSectionShown = (): boolean => {
-  const section = document.querySelector(".ins-layout");
+  const section = findElement(document.body, ".ins-layout");
 
-  return Boolean(
-    section &&
-    !section.closest("[inert]") &&
-    section.getClientRects().length > 0
-  );
+  if (!section || section.closest("[inert]")) {
+    return false;
+  }
+
+  return section.getClientRects().length > 0;
 };
 
 const isAddLayoutKey = (event4: KeyboardEvent): boolean =>
   event4.code === "KeyA" &&
   event4.shiftKey &&
-  !event4.metaKey &&
-  !event4.ctrlKey &&
-  !event4.altKey &&
+  !hasCommandModifier(event4) &&
   !event4.repeat;
 
 const forwardLayoutKeyWhenShown = (): void => {
@@ -145,7 +169,11 @@ const forwardLayoutKeyWhenShown = (): void => {
   const wait = (): void => {
     if (layoutSectionShown()) {
       globalThis.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
-    } else if (performance.now() < until) {
+
+      return;
+    }
+
+    if (performance.now() < until) {
       globalThis.requestAnimationFrame(wait);
     }
   };
@@ -153,10 +181,12 @@ const forwardLayoutKeyWhenShown = (): void => {
   wait();
 };
 
+type OpenEdit = () => ReturnType<CanvasShell["onPane"]>;
+
 const useLayoutKeyFallback = (optionsValue: {
   on: boolean;
   hasSelection: boolean;
-  openEdit: (() => void | Promise<boolean>) | null;
+  openEdit: OpenEdit | null;
 }): void => {
   const latest = useRef(optionsValue);
   useLayoutEffect(() => {
@@ -194,7 +224,10 @@ const useLayoutKeyFallback = (optionsValue: {
       }
     };
 
-    const onForwarded = (): undefined => void run();
+    const onForwarded = (): void => {
+      run();
+    };
+
     globalThis.addEventListener("keydown", onKey);
     globalThis.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
 
@@ -221,9 +254,7 @@ interface StageKeys {
   protoOn: boolean;
 }
 
-const editOpener = (
-  shell: CanvasShell | undefined
-): (() => void | Promise<boolean>) | null => {
+const editOpener = (shell: CanvasShell | undefined): OpenEdit | null => {
   if (shell && shell.pane !== "design") {
     return () => shell.onPane("design");
   }

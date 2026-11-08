@@ -36,7 +36,11 @@ const shortcutName = (event: KeyboardEvent): string | null => {
   const key = event.key.toLowerCase();
 
   if (key === "z") {
-    return event.shiftKey ? "redo" : "undo";
+    if (event.shiftKey) {
+      return "redo";
+    }
+
+    return "undo";
   }
 
   if (key === "enter") {
@@ -152,7 +156,11 @@ const pickFolder = async (options: {
     ...(options.defaultPath ? { defaultPath: options.defaultPath } : {}),
   });
 
-  return chosen ? { kind: "picked", path: chosen } : { kind: "canceled" };
+  if (chosen) {
+    return { kind: "picked", path: chosen };
+  }
+
+  return { kind: "canceled" };
 };
 
 export {

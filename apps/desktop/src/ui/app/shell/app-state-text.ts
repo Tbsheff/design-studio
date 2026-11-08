@@ -18,13 +18,19 @@ const stateText = (
     return STATE_TEXT[state];
   }
 
-  return state === "ready"
-    ? "Answers"
-    : state === "failed"
-      ? "No answer"
-      : state === "starting"
-        ? "Checking"
-        : "Not checked";
+  if (state === "ready") {
+    return "Answers";
+  }
+
+  if (state === "failed") {
+    return "No answer";
+  }
+
+  if (state === "starting") {
+    return "Checking";
+  }
+
+  return "Not checked";
 };
 
 const statusLine = (

@@ -82,7 +82,11 @@ const movedKey = (key: string, maps: Map<string, LineMap>): string | null => {
     }
   );
 
-  return gone ? null : next;
+  if (gone) {
+    return null;
+  }
+
+  return next;
 };
 
 const remapIds = (scope: string, files: SourceFileChange[]): Move[] => {

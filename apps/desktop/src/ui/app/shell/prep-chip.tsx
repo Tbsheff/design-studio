@@ -8,9 +8,11 @@ const SECOND_MS = 1000;
 const useSecondsSince = (startedAt: number | null): number => {
   const now = useNow(startedAt !== null, SECOND_MS);
 
-  return startedAt === null
-    ? 0
-    : Math.max(0, Math.round((now - startedAt) / 1000));
+  if (startedAt === null) {
+    return 0;
+  }
+
+  return Math.max(0, Math.round((now - startedAt) / 1000));
 };
 
 const prepTip = (firstVersion: FirstVersionState): string => {

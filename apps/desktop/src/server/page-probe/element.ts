@@ -104,7 +104,11 @@ const describeElements = async (
   return selectors.map((selector, index) => {
     const raw = raws[index];
 
-    return raw ? contextOf(selector, raw) : null;
+    if (raw) {
+      return contextOf(selector, raw);
+    }
+
+    return null;
   });
 };
 
@@ -119,7 +123,11 @@ const describeElement = async (
     probe(selector)
   );
 
-  return raw ? contextOf(selector, raw) : null;
+  if (raw) {
+    return contextOf(selector, raw);
+  }
+
+  return null;
 };
 
 const textHintsOf = (element: SelectionContext): TextSourceHints => ({

@@ -91,9 +91,11 @@ const probeOwners = async (
     probe(selector)
   );
 
-  return raw
-    ? { owners: raw.owners, tag: raw.tag, usedAt: parseLoc(raw.usedAt) }
-    : null;
+  if (raw) {
+    return { owners: raw.owners, tag: raw.tag, usedAt: parseLoc(raw.usedAt) };
+  }
+
+  return null;
 };
 
 const parseLoc = (raw: string | null): SourceLoc | null => {
@@ -101,13 +103,15 @@ const parseLoc = (raw: string | null): SourceLoc | null => {
     ? /^(?<file>.+):(?<line>\d+):(?<column>\d+)$/u.exec(raw)
     : null;
 
-  return match
-    ? {
-        col: Number(match[3]),
-        file: match[1] as string,
-        line: Number(match[2]),
-      }
-    : null;
+  if (match) {
+    return {
+      col: Number(match[3]),
+      file: match[1] as string,
+      line: Number(match[2]),
+    };
+  }
+
+  return null;
 };
 
 export { appSourceBody, ownerWalk, probeOwners, parseLoc };

@@ -18,7 +18,11 @@ const PanelHead = ({
   const sheet = useContext(SheetSlot);
 
   if (sheet) {
-    return sheet.slot && children ? createPortal(children, sheet.slot) : null;
+    if (sheet.slot && children) {
+      return createPortal(children, sheet.slot);
+    }
+
+    return null;
   }
 
   return (

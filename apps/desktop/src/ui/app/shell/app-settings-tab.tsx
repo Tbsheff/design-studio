@@ -12,7 +12,11 @@ const envSuggestion = (
     (cause) => cause.fix?.kind === "set-env"
   )?.fix;
 
-  return fix?.kind === "set-env" ? fix.env : null;
+  if (fix?.kind === "set-env") {
+    return fix.env;
+  }
+
+  return null;
 };
 
 const SettingsTab = ({

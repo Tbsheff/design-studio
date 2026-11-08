@@ -146,9 +146,11 @@ const lockLabel = (what: string): string => {
 
   const use = /^use:(?<name>[^|]*)\|loc:(?<loc>.*)$/u.exec(what);
 
-  return use
-    ? `${use[1]} (component part ${use[2]})`
-    : what.replace(/^loc:/u, "");
+  if (use) {
+    return `${use[1]} (component part ${use[2]})`;
+  }
+
+  return what.replace(/^loc:/u, "");
 };
 
 function describeLocks(

@@ -69,10 +69,14 @@ const defaults: UiState = {
 const libraryFromOf = (value: unknown): LibraryFrom | null => {
   const from = value as Partial<LibraryFrom> | null | undefined;
 
-  return typeof from?.projectId === "string" &&
+  if (
+    typeof from?.projectId === "string" &&
     typeof from.directionId === "string"
-    ? { directionId: from.directionId, projectId: from.projectId }
-    : null;
+  ) {
+    return { directionId: from.directionId, projectId: from.projectId };
+  }
+
+  return null;
 };
 
 const loadUiState = (): UiState => {

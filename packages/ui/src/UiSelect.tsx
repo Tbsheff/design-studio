@@ -114,7 +114,11 @@ const useOutsideClose = (
     const spot = (): string => {
       const box = root.current?.getBoundingClientRect();
 
-      return box ? `${box.top},${box.left}` : "";
+      if (box) {
+        return `${box.top},${box.left}`;
+      }
+
+      return "";
     };
 
     const openedAt = spot();

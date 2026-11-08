@@ -11,7 +11,11 @@ const ServerButtons = ({
   control: (action: "start" | "stop" | "restart") => void;
 }): ReactElement | null => {
   if (!managed) {
-    return state === "starting" ? null : (
+    if (state === "starting") {
+      return null;
+    }
+
+    return (
       <button
         type="button"
         className="btn small"

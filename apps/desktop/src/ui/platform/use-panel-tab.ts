@@ -32,9 +32,11 @@ const readAll = (): Record<string, PanelTab> => {
   try {
     const raw: unknown = JSON.parse(readStored(TAB_KEY) ?? "{}");
 
-    return raw && typeof raw === "object"
-      ? (raw as Record<string, PanelTab>)
-      : {};
+    if (raw && typeof raw === "object") {
+      return raw as Record<string, PanelTab>;
+    }
+
+    return {};
   } catch {
     return {};
   }

@@ -203,7 +203,11 @@ const movedTo = (
     return null;
   }
 
-  return candidates.length === 1 ? (candidates[0] as number) : null;
+  if (candidates.length === 1) {
+    return candidates[0] as number;
+  }
+
+  return null;
 };
 
 const matchMovedLines = (
@@ -279,7 +283,11 @@ const lineMapOf = (before: string, after: string): LineMap => {
     line: (oldLine) => {
       const mapped = mapping[oldLine - 1];
 
-      return mapped === undefined || mapped < 0 ? null : mapped + 1;
+      if (mapped === undefined || mapped < 0) {
+        return null;
+      }
+
+      return mapped + 1;
     },
   };
 };

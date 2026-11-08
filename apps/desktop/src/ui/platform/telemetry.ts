@@ -23,7 +23,11 @@ let flushLongFrames: () => void = () => undefined;
 const desktopBoot = (): DesktopBoot | null => {
   const boot = desktopBridge<{ boot?: DesktopBoot }>()?.boot;
 
-  return boot && typeof boot.startedAt === "number" ? boot : null;
+  if (boot && typeof boot.startedAt === "number") {
+    return boot;
+  }
+
+  return null;
 };
 
 const afterPaint = (fn: () => void): void => {
@@ -79,7 +83,11 @@ const longFrameType = (): string | null => {
     return "long-animation-frame";
   }
 
-  return types.includes("longtask") ? "longtask" : null;
+  if (types.includes("longtask")) {
+    return "longtask";
+  }
+
+  return null;
 };
 
 const watchLongFrames = (): (() => void) => {

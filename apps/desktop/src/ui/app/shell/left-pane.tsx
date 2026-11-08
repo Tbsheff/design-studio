@@ -67,7 +67,11 @@ const visiblePane = (
     tweaks: !has.tweaks,
   };
 
-  return missing[tab] ? "chat" : tab;
+  if (missing[tab]) {
+    return "chat";
+  }
+
+  return tab;
 };
 
 const SheetHead = ({
@@ -112,25 +116,39 @@ const Sheet = (props: Props & { tab: PanelTab }): ReactElement => {
       }
 
       case "tokens": {
-        return props.tokens ? <TokensPanel {...props.tokens} /> : null;
+        if (props.tokens) {
+          return <TokensPanel {...props.tokens} />;
+        }
+
+        return null;
       }
 
       case "components": {
-        return props.components ? (
-          <ComponentsPanel {...props.components} />
-        ) : null;
+        if (props.components) {
+          return <ComponentsPanel {...props.components} />;
+        }
+
+        return null;
       }
 
       case "tweaks": {
-        return props.tweaks ? (
-          <Suspense fallback={null}>
-            <TweaksPanel {...props.tweaks} />
-          </Suspense>
-        ) : null;
+        if (props.tweaks) {
+          return (
+            <Suspense fallback={null}>
+              <TweaksPanel {...props.tweaks} />
+            </Suspense>
+          );
+        }
+
+        return null;
       }
 
       case "comments": {
-        return props.comments ? <CommentsPanel {...props.comments} /> : null;
+        if (props.comments) {
+          return <CommentsPanel {...props.comments} />;
+        }
+
+        return null;
       }
 
       case "system": {

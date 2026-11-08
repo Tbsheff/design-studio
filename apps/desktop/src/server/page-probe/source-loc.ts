@@ -34,7 +34,11 @@ const fullFile = (scope: string, file: string): string => {
 
   const known = [...(shownFiles.get(scope)?.get(file) ?? [])];
 
-  return known.length === 1 ? (known[0] as string) : file;
+  if (known.length === 1) {
+    return known[0] as string;
+  }
+
+  return file;
 };
 
 const insideTree = (workTree: string, file: string): string => {

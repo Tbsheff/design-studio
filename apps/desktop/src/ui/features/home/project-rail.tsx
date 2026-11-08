@@ -380,14 +380,18 @@ const OpenRail = ({
           aria-label={copy.findAProject}
           spellCheck={false}
           onChange={(eventArg) => setFilter(eventArg.target.value)}
-          onKeyDown={(e) => {
+          onKeyDown={(eventNext) => {
             const first = shown[0];
 
-            if (e.key === "Enter" && first && !e.nativeEvent.isComposing) {
+            if (
+              eventNext.key === "Enter" &&
+              first &&
+              !eventNext.nativeEvent.isComposing
+            ) {
               pickProject(first.id);
-            } else if (e.key === "Escape" && filter) {
-              e.preventDefault();
-              e.stopPropagation();
+            } else if (eventNext.key === "Escape" && filter) {
+              eventNext.preventDefault();
+              eventNext.stopPropagation();
               setFilter("");
             }
           }}

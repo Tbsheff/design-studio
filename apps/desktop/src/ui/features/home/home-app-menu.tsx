@@ -224,7 +224,7 @@ const DevServer = ({
           spellCheck={false}
           autoComplete="off"
           onKeyDown={(eventArg) => keepEnter(eventArg)}
-          onChange={(e) => onChange({ url: e.target.value })}
+          onChange={(eventNext) => onChange({ url: eventNext.target.value })}
         />
       )}
       <button
@@ -244,7 +244,7 @@ const DevServer = ({
           placeholder={copy.skipEnvValidationTrue}
           spellCheck={false}
           aria-label={copy.environmentForNextDev}
-          onChange={(e) => onChange({ env: e.target.value })}
+          onChange={(eventOther) => onChange({ env: eventOther.target.value })}
         />
       )}
     </div>
@@ -364,8 +364,8 @@ const FolderPathPop = ({
           placeholder={copy.codeMyApp}
           spellCheck={false}
           autoComplete="off"
-          onKeyDown={(e) => keepEnter(e, submit)}
-          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(eventExtra) => keepEnter(eventExtra, submit)}
+          onChange={(eventLast) => setValue(eventLast.target.value)}
         />
         <p className="home-app-note">
           The desktop app opens the macOS folder picker here, and you can drop a

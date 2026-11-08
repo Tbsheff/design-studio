@@ -331,7 +331,8 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     model: settingsDraft.model,
     onLevel: (defaultLevel) =>
       setSettingsDraft((detailArg) => ({ ...detailArg, defaultLevel })),
-    onModel: (model) => setSettingsDraft((d) => ({ ...d, model })),
+    onModel: (model) =>
+      setSettingsDraft((detailNext) => ({ ...detailNext, model })),
     onMore: openAdvanced,
   };
 

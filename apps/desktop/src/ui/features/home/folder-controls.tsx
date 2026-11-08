@@ -232,16 +232,19 @@ const FolderRow = ({
       className={`folder-row${folder.missing ? " missing" : ""}${isActive ? " active" : ""}`}
     >
       {editing ? (
-        <form className="folder-rename" onSubmit={(e) => save(e)}>
+        <form
+          className="folder-rename"
+          onSubmit={(eventNext) => save(eventNext)}
+        >
           <input
             aria-label={`Name for ${folder.label}`}
             value={label}
             maxLength={80}
             autoFocus
-            onChange={(e) => setLabel(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                e.preventDefault();
+            onChange={(eventOther) => setLabel(eventOther.target.value)}
+            onKeyDown={(eventExtra) => {
+              if (eventExtra.key === "Escape") {
+                eventExtra.preventDefault();
                 setLabel(folder.label);
                 stopEditing();
               }

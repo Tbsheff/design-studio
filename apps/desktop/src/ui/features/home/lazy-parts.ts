@@ -21,15 +21,15 @@ const PlusMenu = lazy(() =>
 );
 
 const PackPopover = lazy(() =>
-  loadPops().then((m) => ({ default: m.PackPopover }))
+  loadPops().then((entryNext) => ({ default: entryNext.PackPopover }))
 );
 
 const ModelPopover = lazy(() =>
-  loadPops().then((m) => ({ default: m.ModelPopover }))
+  loadPops().then((entryOther) => ({ default: entryOther.ModelPopover }))
 );
 
 const LevelPopover = lazy(() =>
-  loadPops().then((m) => ({ default: m.LevelPopover }))
+  loadPops().then((entryExtra) => ({ default: entryExtra.LevelPopover }))
 );
 
 const loadTemplates = () => import("./home-templates.js");
@@ -38,7 +38,9 @@ const loadExtras = () => import("./home-extras.js");
 
 const loadAppMenu = () => import("./home-app-menu.js");
 
-const AppMenu = lazy(() => loadAppMenu().then((m) => ({ default: m.AppMenu })));
+const AppMenu = lazy(() =>
+  loadAppMenu().then((entryLast) => ({ default: entryLast.AppMenu }))
+);
 
 const FolderPathPop = lazy(() =>
   loadAppMenu().then((m) => ({ default: m.FolderPathPop }))

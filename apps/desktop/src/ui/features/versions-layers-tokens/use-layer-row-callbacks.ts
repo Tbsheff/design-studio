@@ -11,7 +11,7 @@ interface LayerRowCallbacksInput {
   readonly onRenameDone: LayerRowCallbacks["handleRenameDone"];
   readonly onSelect: (id: number, isAdditive: boolean) => void;
   readonly onSetEditing: (id: number | null) => void;
-  readonly onToggle: (id: number, open?: boolean) => void;
+  readonly onToggle: (id: number, open: boolean | null) => void;
   readonly onToggleHidden: ((id: number, hidden: boolean) => void) | null;
   readonly onToggleLocked: ((id: number, locked: boolean) => void) | undefined;
 }
@@ -25,7 +25,11 @@ const useLayerRowCallbacks = (
   const handlePress = useLatest(input.onPress);
   const handleSelect = useLatest(input.onSelect);
   const handleStartRename = useLatest(input.onSetEditing);
-  const handleToggle = useLatest(input.onToggle);
+  const { onToggle } = input;
+
+  const handleToggle = useLatest((id: number): void => {
+    onToggle(id, null);
+  });
 
   const toggleHidden = useLatest((node: LayerNode): void => {
     onToggleHidden?.(node.id, !node.hidden);

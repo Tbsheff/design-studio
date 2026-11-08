@@ -84,3 +84,5 @@ const useLayerRename = (input: LayerRenameInput): LayerRenameApi => {
 };
 
 export { useLayerRename };
+
+export type { LayerRenameApi };

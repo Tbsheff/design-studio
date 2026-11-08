@@ -34,7 +34,7 @@ interface LayerKeysInput {
   readonly rows: LayerNode[];
   readonly selectedIndex: number;
   readonly selectedNode: number | null;
-  readonly toggle: (id: number, open?: boolean) => void;
+  readonly toggle: (id: number, open: boolean | null) => void;
 }
 
 interface EditKeyInput {
@@ -120,7 +120,7 @@ const runTreeKey = (
   if ("select" in action) {
     onSelect(action.select, false);
   } else {
-    toggle(action.toggle, action.open);
+    toggle(action.toggle, action.open ?? null);
   }
 
   return true;

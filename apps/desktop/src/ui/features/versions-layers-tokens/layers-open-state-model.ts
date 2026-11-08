@@ -1,6 +1,7 @@
 import type { LayerNode, StructureKey } from "@design-studio/contracts";
 
 import { OPEN_DEPTH, OVERSCAN, ROW } from "./layers-constants.js";
+import { ancestorsOf } from "./layers-tree.js";
 
 interface OpenState {
   collapsed: Set<string>;
@@ -9,6 +10,15 @@ interface OpenState {
 }
 
 const openStates = new Map<string, OpenState>();
+const listeners = new Set<() => void>();
+
+const subscribeOpenState = (listener: () => void): (() => void) => {
+  listeners.add(listener);
+
+  return (): void => {
+    listeners.delete(listener);
+  };
+};
 
 const toOpenState = (scope: string): OpenState => {
   const existing = openStates.get(scope);
@@ -68,7 +78,59 @@ const applyDefaultCollapse = (
     }
   }
 
+  if (isChanged) {
+    state.collapsed = new Set(state.collapsed);
+  }
+
   return isChanged;
+};
+
+const revealNode = (
+  nodes: LayerNode[],
+  keys: Map<number, string>,
+  state: OpenState,
+  selectedNode: number | null
+): void => {
+  if (selectedNode === null) {
+    return;
+  }
+
+  const hidden = ancestorsOf(nodes, selectedNode).filter((id) =>
+    state.collapsed.has(keys.get(id) ?? "")
+  );
+
+  if (hidden.length === 0) {
+    return;
+  }
+
+  const next = new Set(state.collapsed);
+
+  for (const id of hidden) {
+    next.delete(keys.get(id) ?? "");
+  }
+
+  state.collapsed = next;
+};
+
+const toggleCollapsed = (
+  state: OpenState,
+  key: string,
+  open: boolean | null
+): void => {
+  const next = new Set(state.collapsed);
+  const shouldOpen = open ?? next.has(key);
+
+  if (shouldOpen) {
+    next.delete(key);
+  } else {
+    next.add(key);
+  }
+
+  state.collapsed = next;
+
+  for (const listener of listeners) {
+    listener();
+  }
 };
 
 const toLayersScope = (frameName: string): string => {
@@ -124,8 +186,11 @@ const toRunTool = (
 
 export {
   applyDefaultCollapse,
+  revealNode,
   saveScrollTop,
+  subscribeOpenState,
   toCollapsedIds,
+  toggleCollapsed,
   toLayersScope,
   toOpenState,
   toRowWindow,

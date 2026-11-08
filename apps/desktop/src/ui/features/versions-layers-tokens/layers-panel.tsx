@@ -1,10 +1,5 @@
-import type {
-  LayerNode,
-  ReorderMove,
-  StructureKey,
-} from "@design-studio/contracts";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { MouseEvent, ReactNode } from "react";
+import type { ReorderMove, StructureKey } from "@design-studio/contracts";
+import type { ReactNode } from "react";
 
 import { PreviewMenu } from "../canvas/preview-menu.js";
 import type { PreviewMenuItem } from "../canvas/preview-menu.js";
@@ -14,22 +9,11 @@ import type { LayerDrop } from "../inspector/structure-edits.js";
 import { COPY } from "./copy.js";
 import { LayersHeader } from "./layers-header.js";
 import { LayersList } from "./layers-list.js";
-import {
-  applyDefaultCollapse,
-  toCollapsedIds,
-  toLayersScope,
-  toOpenState,
-  toRunTool,
-} from "./layers-open-state-model.js";
+import { toRunTool } from "./layers-open-state-model.js";
 import { LayersRows } from "./layers-rows.js";
-import { ancestorsOf, layerKeys, visibleRows } from "./layers-tree.js";
 import type { LayerTree } from "./layers-tree.js";
-import { useLatest } from "./use-latest.js";
-import { useLayerKeys } from "./use-layer-keys.js";
-import { useLayerListState } from "./use-layer-list-state.js";
-import { useLayerRename } from "./use-layer-rename.js";
-import { useLayerRowCallbacks } from "./use-layer-row-callbacks.js";
-import { usePendingSelect } from "./use-pending-select.js";
+import { usePanelState } from "./use-layers-panel-state.js";
+import type { RowMenuApi } from "./use-row-menu.js";
 
 interface LayerEditActions {
   onRename: (id: number, name: string | null) => void;
@@ -54,119 +38,24 @@ interface LayersPanelProps {
   hoveredNode?: number | null;
 }
 
-interface CollapsedApi {
-  collapsed: Set<number>;
-  keys: Map<number, string>;
-  toggle: (id: number, open?: boolean) => void;
-}
+const toMenu = (
+  rowMenu: RowMenuApi,
+  edits: LayerEditActions | null
+): ReactNode => {
+  const { at, close: handleClose } = rowMenu;
 
-interface RowMenuApi {
-  menu: ReactNode;
-  open: (node: LayerNode, event: MouseEvent<HTMLDivElement>) => void;
-}
-
-const useCollapsed = (
-  nodes: LayerNode[],
-  selectedNode: number | null,
-  scope: string
-): CollapsedApi => {
-  const keys = useMemo(() => layerKeys(nodes), [nodes]);
-  const state = toOpenState(scope);
-  const [version, setVersion] = useState(0);
-  const bump = useCallback(() => setVersion((current) => current + 1), []);
-
-  if (applyDefaultCollapse(nodes, keys, state)) {
-    state.collapsed = new Set(state.collapsed);
+  if (!at || !edits?.menuItems) {
+    return null;
   }
 
-  const collapsed = useMemo(
-    () => toCollapsedIds(nodes, keys, state.collapsed),
-    [nodes, keys, state.collapsed, version]
+  return (
+    <PreviewMenu
+      at={at}
+      label={COPY.labelLayerActions}
+      items={edits.menuItems()}
+      onClose={handleClose}
+    />
   );
-
-  useLayoutEffect(() => {
-    if (selectedNode === null) {
-      return;
-    }
-
-    const open = ancestorsOf(nodes, selectedNode).filter((id) =>
-      collapsed.has(id)
-    );
-
-    if (open.length === 0) {
-      return;
-    }
-
-    const next = new Set(state.collapsed);
-
-    for (const id of open) {
-      next.delete(keys.get(id) ?? "");
-    }
-
-    state.collapsed = next;
-    bump();
-  }, [nodes, keys, selectedNode, collapsed, state, bump]);
-
-  const toggle = useCallback(
-    (id: number, open?: boolean): void => {
-      const key = keys.get(id);
-
-      if (key === undefined) {
-        return;
-      }
-
-      const next = new Set(state.collapsed);
-      const shouldOpen = open ?? next.has(key);
-
-      if (shouldOpen) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-
-      state.collapsed = next;
-      bump();
-    },
-    [keys, state, bump]
-  );
-
-  return { collapsed, keys, toggle };
-};
-
-const useRowMenu = (
-  edits: LayerEditActions | null,
-  selectedNode: number | null,
-  onSelect: (id: number, additive: boolean) => void
-): RowMenuApi => {
-  const [at, setAt] = useState<{ x: number; y: number } | null>(null);
-
-  const open = (node: LayerNode, event: MouseEvent<HTMLDivElement>): void => {
-    if (!edits?.menuItems) {
-      return;
-    }
-
-    if (node.id !== selectedNode) {
-      onSelect(node.id, false);
-    }
-
-    setAt({ x: event.clientX, y: event.clientY });
-  };
-
-  const close = (): void => setAt(null);
-  let menu: ReactNode = null;
-
-  if (at && edits?.menuItems) {
-    menu = (
-      <PreviewMenu
-        at={at}
-        label={COPY.labelLayerActions}
-        items={edits.menuItems()}
-        onClose={close}
-      />
-    );
-  }
-
-  return { menu, open };
 };
 
 const LayersPanel = ({
@@ -174,82 +63,32 @@ const LayersPanel = ({
   frameName,
   selectedNode: confirmed,
   onHover,
-  onSelect: onSelectProp,
+  onSelect,
   onClose,
   edits: editsProp,
   onToggleLocked,
   busy = false,
   hoveredNode = null,
 }: LayersPanelProps): ReactNode => {
-  const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
-  const latestSelect = useLatest(onSelectProp);
-
-  const { shown: selectedNode, select: onSelect } = usePendingSelect(
-    confirmed,
-    latestSelect
-  );
-
-  const scope = toLayersScope(frameName);
-  const { collapsed, toggle, keys } = useCollapsed(nodes, selectedNode, scope);
-  const rows = useMemo(() => visibleRows(nodes, collapsed), [nodes, collapsed]);
-  const listRef = useRef<HTMLDivElement>(null);
-  const rowsRef = useRef<HTMLDivElement>(null);
-  const editActions = editsProp ?? null;
-
-  const onDrop = editActions?.onDrop ?? null;
-  const onMove = editActions?.onMove ?? null;
-
-  const { drag, onScroll, rowWindow, selectedIndex } = useLayerListState({
-    handlers: { onDrop, onMove },
-    listRef,
-    rows,
-    rowsRef,
-    scope,
-    selectedNode,
-  });
-
-  const onRename = editActions?.onRename ?? null;
-  const rename = useLayerRename({ keys, listRef, onRename, onSelect, rows });
-  const rowMenu = useRowMenu(editActions, selectedNode, onSelect);
-
+  const edits = editsProp ?? null;
   const isMac = IS_MAC;
   const onEscape = focusStageQuietly;
-  const { setEditing: onStartEdit } = rename;
-  const edits = editActions;
 
-  const onKeyDown = useLayerKeys({
-    collapsed,
+  const state = usePanelState({
+    confirmed,
     edits,
+    frameName,
     isMac,
-    nodes,
     onEscape,
-    onSelect,
-    onStartEdit,
-    onToggleLocked,
-    rows,
-    selectedIndex,
-    selectedNode,
-    toggle,
-  });
-
-  const { open: onMenu } = rowMenu;
-  const onToggle = toggle;
-  const onToggleHidden = editActions?.onToggleHidden ?? null;
-
-  const { onPress } = drag;
-  const { finishRename: onRenameDone, setEditing: onSetEditing } = rename;
-
-  const callbacks = useLayerRowCallbacks({
     onHover,
-    onMenu,
-    onPress,
-    onRenameDone,
     onSelect,
-    onSetEditing,
-    onToggle,
-    onToggleHidden,
     onToggleLocked,
+    tree,
   });
+
+  const { list, rename, rowMenu, selectedNode } = state;
+  const { drag } = list;
+  const { listRef, onKeyDown, rowsRef } = state;
 
   return (
     <aside className="layers" aria-label={COPY.labelLayers}>
@@ -257,40 +96,40 @@ const LayersPanel = ({
         frameName={frameName}
         isBusy={busy}
         onClose={onClose ?? null}
-        onRunTool={toRunTool(selectedNode, editActions)}
+        onRunTool={toRunTool(selectedNode, edits)}
         toTip={tipWithKey}
       />
       <LayersList
         ref={listRef}
         isBusy={busy}
         isDragging={drag.dragging !== null}
-        rowCount={rows.length}
-        selectedIndex={selectedIndex}
+        rowCount={state.rows.length}
+        selectedIndex={list.selectedIndex}
         selectedNode={selectedNode}
         tree={tree}
         onKeyDown={onKeyDown}
-        onPointerCancel={drag.onPointerCancel}
-        onPointerMove={drag.onPointerMove}
-        onPointerUp={drag.onPointerUp}
-        onScroll={onScroll}
+        onPointerCancel={state.handlePointerCancel}
+        onPointerMove={state.handlePointerMove}
+        onPointerUp={state.handlePointerUp}
+        onScroll={state.handleScroll}
       >
         <LayersRows
           ref={rowsRef}
-          callbacks={callbacks}
-          collapsed={collapsed}
+          callbacks={state.callbacks}
+          collapsed={state.collapsed}
           dropInto={drag.drop?.into ?? null}
           dropLine={drag.drop?.line ?? null}
           editingKey={rename.editingKey}
-          first={rowWindow.first}
+          first={list.rowWindow.first}
           hoveredNode={hoveredNode}
-          isEditable={editActions !== null}
-          keys={keys}
-          last={rowWindow.last}
-          rows={rows}
+          isEditable={edits !== null}
+          keys={state.keys}
+          last={list.rowWindow.last}
+          rows={state.rows}
           selectedNode={selectedNode}
         />
       </LayersList>
-      {rowMenu.menu}
+      {toMenu(rowMenu, edits)}
     </aside>
   );
 };

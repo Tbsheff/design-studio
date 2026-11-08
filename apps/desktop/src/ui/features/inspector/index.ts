@@ -74,3 +74,20 @@ export type {
 } from "./authored-css-model.js";
 
 export { toImageTarget } from "./use-image-api.js";
+
+export { evaluateMath, resolveNumberInput } from "./math-input.js";
+
+export {
+  batchEdits,
+  hasCurrentDependency,
+  mergeValues,
+  multiBlockReason,
+} from "./mixed-values.js";
+
+export {
+  isHistoryStep,
+  refreshedSelection,
+  stepToast,
+} from "./use-edit-history.js";
+
+export { SwapQueue } from "./use-swap-gate.js";

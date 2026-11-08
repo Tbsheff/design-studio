@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 
-import { useConversation } from "../../ai/components/ai/conversation.js";
+import { useConversation } from "../../ai/components/ai/use-conversation.js";
 import { EarlierRuns } from "./earlier-runs.js";
 import { useScrollToRun } from "./use-chat-panel.js";
 import { useHistoryWindow } from "./use-history-window.js";

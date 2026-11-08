@@ -2,19 +2,15 @@ import { Icon } from "@design-studio/ui";
 import { useCallback, useMemo, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import {
-  Action,
-  ActionContent,
-  ActionIcon,
-  ActionLabel,
-  ActionTrigger,
-} from "../../ai/components/ai/action.js";
-import {
-  ChainOfThought,
-  ChainOfThoughtContent,
-  ChainOfThoughtHeader,
-  ChainOfThoughtIcon,
-} from "../../ai/components/ai/chain-of-thought.js";
+import { ActionContent } from "../../ai/components/ai/action-content.js";
+import { ActionIcon } from "../../ai/components/ai/action-icon.js";
+import { ActionLabel } from "../../ai/components/ai/action-label.js";
+import { ActionTrigger } from "../../ai/components/ai/action-trigger.js";
+import { Action } from "../../ai/components/ai/action.js";
+import { ChainOfThoughtContent } from "../../ai/components/ai/chain-of-thought-content.js";
+import { ChainOfThoughtHeader } from "../../ai/components/ai/chain-of-thought-header.js";
+import { ChainOfThoughtIcon } from "../../ai/components/ai/chain-of-thought-icon.js";
+import { ChainOfThought } from "../../ai/components/ai/chain-of-thought.js";
 import { Chip } from "../../ai/components/ai/chip.js";
 import { CheckDetail } from "./check-detail.js";
 import { copy } from "./copy.js";

@@ -1,202 +1,60 @@
-// Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
-import { useRender } from "@base-ui/react/use-render";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import type { ReactElement } from "react";
+
 import { cn } from "../../lib/utils";
+import { ConversationContext } from "./conversation-context";
+import { toBottomFlag } from "./conversation-flag";
+import type { SlotProps } from "./slot-props";
 
-type ConversationContextValue = {
-  viewportRef: React.RefObject<HTMLDivElement | null>;
-  isAtBottom: boolean;
-  setIsAtBottom: (value: boolean) => void;
-  wasAtBottomRef: React.RefObject<boolean>;
-  scrollToBottom: (behavior?: ScrollBehavior) => void;
-};
-
-const ConversationContext = createContext<ConversationContextValue | null>(
-  null,
-);
-
-function useConversationContext() {
-  const ctx = useContext(ConversationContext);
-  if (!ctx) {
-    throw new Error("Conversation parts must be used inside <Conversation>");
-  }
-  return ctx;
+interface ConversationProps extends SlotProps {
+  readonly "data-ai-scope"?: string;
+  readonly "data-searching"?: boolean | null;
 }
 
-export function useConversation() {
-  const { isAtBottom, scrollToBottom, wasAtBottomRef, viewportRef } = useConversationContext();
-  const stickToBottom = useCallback(() => {
-    wasAtBottomRef.current = true;
-    scrollToBottom("instant");
-  }, [scrollToBottom, wasAtBottomRef]);
-  return { isAtBottom, scrollToBottom, stickToBottom, viewportRef, wasAtBottomRef };
-}
-
-export function Conversation({
+const Conversation = ({
+  children,
   className,
-  render,
-  ...props
-}: useRender.ComponentProps<"div">) {
+  "data-ai-scope": scope,
+  "data-searching": isSearching,
+}: ConversationProps): ReactElement => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const wasAtBottomRef = useRef(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
-    const v = viewportRef.current;
-    if (!v) return;
-    v.scrollTo({ top: v.scrollHeight, behavior });
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    viewport.scrollTo({ behavior, top: viewport.scrollHeight });
   }, []);
 
-  const element = useRender({
-    render,
-    defaultTagName: "div",
-    props: {
-      ...props,
-      "data-slot": "conversation",
-      "data-at-bottom": isAtBottom ? "true" : "false",
-      className: cn("relative overflow-hidden", className),
-    },
-  });
+  const value = useMemo(
+    () => ({
+      isAtBottom,
+      scrollToBottom,
+      setIsAtBottom,
+      viewportRef,
+      wasAtBottomRef,
+    }),
+    [isAtBottom, scrollToBottom]
+  );
 
   return (
-    <ConversationContext.Provider
-      value={{
-        viewportRef,
-        isAtBottom,
-        setIsAtBottom,
-        wasAtBottomRef,
-        scrollToBottom,
-      }}
-    >
-      {element}
+    <ConversationContext.Provider value={value}>
+      <div
+        className={cn("relative overflow-hidden", className)}
+        data-ai-scope={scope}
+        data-at-bottom={toBottomFlag(isAtBottom)}
+        data-searching={isSearching}
+        data-slot="conversation"
+      >
+        {children}
+      </div>
     </ConversationContext.Provider>
   );
-}
+};
 
-export function ConversationContent({
-  className,
-  children,
-  onScroll,
-  render,
-  ...props
-}: useRender.ComponentProps<"div">) {
-  const { viewportRef, isAtBottom, setIsAtBottom, wasAtBottomRef } =
-    useConversationContext();
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const draggingRef = useRef(false);
-  const touchYRef = useRef<number | null>(null);
-
-  const recompute = useCallback(() => {
-    const v = viewportRef.current;
-    if (!v) return;
-    const distance = v.scrollHeight - v.scrollTop - v.clientHeight;
-    const atBottom = distance < 24;
-    if (atBottom) wasAtBottomRef.current = true;
-    setIsAtBottom(atBottom);
-  }, [viewportRef, setIsAtBottom, wasAtBottomRef]);
-
-  useEffect(() => {
-    const v = viewportRef.current;
-    if (!v) return;
-    v.scrollTop = v.scrollHeight;
-    recompute();
-  }, [recompute, viewportRef]);
-
-  useEffect(() => {
-    const c = contentRef.current;
-    const v = viewportRef.current;
-    if (!c || !v) return;
-    const ro = new ResizeObserver(() => {
-      if (wasAtBottomRef.current) {
-        v.scrollTop = v.scrollHeight;
-      }
-      recompute();
-    });
-    ro.observe(c);
-    ro.observe(v);
-    return () => ro.disconnect();
-  }, [recompute, viewportRef, wasAtBottomRef]);
-
-  return useRender({
-    render,
-    defaultTagName: "div",
-    ref: viewportRef,
-    props: {
-      ...props,
-      "data-slot": "conversation-content",
-      "data-at-bottom": isAtBottom ? "true" : "false",
-      onScroll: (event: React.UIEvent<HTMLDivElement>) => {
-        const v = event.currentTarget;
-        if (draggingRef.current) wasAtBottomRef.current = v.scrollHeight - v.scrollTop - v.clientHeight < 24;
-        recompute();
-        onScroll?.(event);
-      },
-      onWheel: (event: React.WheelEvent<HTMLDivElement>) => {
-        if (event.deltaY < 0) wasAtBottomRef.current = false;
-      },
-      onTouchStart: (event: React.TouchEvent<HTMLDivElement>) => {
-        touchYRef.current = event.touches[0]?.clientY ?? null;
-      },
-      onTouchMove: (event: React.TouchEvent<HTMLDivElement>) => {
-        const y = event.touches[0]?.clientY;
-        if (y !== undefined && touchYRef.current !== null && y > touchYRef.current + 2) wasAtBottomRef.current = false;
-        touchYRef.current = y ?? null;
-      },
-      onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === "PageUp" || event.key === "ArrowUp" || event.key === "Home" || (event.key === " " && event.shiftKey)) wasAtBottomRef.current = false;
-      },
-      onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => {
-        if (event.target !== event.currentTarget) return;
-        draggingRef.current = true;
-        const release = () => {
-          draggingRef.current = false;
-          window.removeEventListener("pointerup", release);
-          window.removeEventListener("pointercancel", release);
-        };
-        window.addEventListener("pointerup", release);
-        window.addEventListener("pointercancel", release);
-      },
-      className: cn(
-        "overflow-y-auto overscroll-contain size-full",
-        className,
-      ),
-      children: (
-        <div ref={contentRef} className="flex flex-col gap-6">
-          {children}
-        </div>
-      ),
-    },
-  });
-}
-
-export function ConversationScrollButton({
-  render,
-  onClick,
-  ...props
-}: useRender.ComponentProps<"button">) {
-  const { isAtBottom, scrollToBottom, wasAtBottomRef } = useConversationContext();
-
-  return useRender({
-    render,
-    defaultTagName: "button",
-    props: {
-      ...props,
-      type: "button",
-      "data-slot": "conversation-scroll-button",
-      "data-at-bottom": isAtBottom ? "true" : "false",
-      "aria-label": "Jump to latest",
-      onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
-        wasAtBottomRef.current = true;
-        scrollToBottom();
-        onClick?.(event);
-      },
-    },
-  });
-}
+export { Conversation };

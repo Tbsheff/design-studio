@@ -22,4 +22,5 @@ export {
   slashCommands,
   useCommands,
 };
+
 export type { Command };

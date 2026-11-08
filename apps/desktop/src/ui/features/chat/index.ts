@@ -60,3 +60,9 @@ export {
 
 export type { SettingsDraft };
 export type { InlinePromptView } from "./use-inline-prompt.js";
+
+export { applyRunEvent, runText } from "./run-state-model.js";
+
+export type { RunMap } from "./run-state-model.js";
+
+export type { DeltaBatcher } from "./delta-batch-model.js";

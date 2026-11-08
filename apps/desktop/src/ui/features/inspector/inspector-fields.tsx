@@ -296,9 +296,44 @@ const AlignField = memo(AlignFieldView, (first, second) =>
   isSameEditValues(first.edit, second.edit, ["text-align"])
 );
 
+interface InspectorSelectProps {
+  readonly id: string;
+  readonly label: string;
+  readonly value: string;
+  readonly placeholder: string;
+  readonly isDisabled: boolean;
+  readonly options: readonly {
+    readonly label: string;
+    readonly value: string;
+  }[];
+  readonly onChange: (value: string) => void;
+}
+
+const InspectorSelect = ({
+  id,
+  label,
+  value,
+  placeholder,
+  isDisabled,
+  options,
+  onChange,
+}: InspectorSelectProps): ReactElement => (
+  <UiSelect
+    id={id}
+    className="ins-select"
+    aria-label={label}
+    value={value}
+    placeholder={placeholder}
+    disabled={isDisabled}
+    options={options}
+    onChange={onChange}
+  />
+);
+
 export {
   useSectionOpen,
   InspectorSection,
+  InspectorSelect,
   ColorField,
   SelectField,
   AlignField,

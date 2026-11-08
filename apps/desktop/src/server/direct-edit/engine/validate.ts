@@ -1,331 +1,249 @@
-import {
-  DIRECT_STYLE_PROPERTIES,
-  INSERT_KINDS,
-  STRUCTURE_OPS,
-} from "@design-studio/contracts";
 import type {
+  ClassChange,
   DirectEditBatch,
   DirectEditRequest,
   StructureEditRequest,
 } from "@design-studio/contracts";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
-import { z } from "zod";
 
 import { normalizeVariant } from "../../../shared/variants.js";
-import { CLASS_NAME, MAX_CLASS_NAME, MAX_CLASS_NAMES } from "./classes.js";
+import {
+  MAX_BATCH,
+  decodeEditBatch,
+  decodeEditRequest,
+  decodeStructureEdit,
+} from "../request/edit-request-schema.js";
+import type {
+  DecodedEditRequest,
+  DecodedStructureEdit,
+} from "../request/edit-request-schema.js";
+import { toIssueText } from "../request/request-fields.js";
 import { DirectEditError } from "./errors.js";
 
-const MAX_VALUE = 200;
-const MAX_TEXT = 5000;
-const UNSAFE_VALUE = /[;{}<>\\\u0000-\u001F\u007F]/;
-const SCRIPT_URL = /javascript\s*:|expression\s*\(/i;
-const MAX_NAME = 60;
-const UNSAFE_NAME = /["'`<>{}&\\\u0000-\u001F\u007F]/;
-const COMPONENT_NAME = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
-
-const styleValueSchema = z
-  .string()
-  .max(MAX_VALUE)
-  .refine((value) => value.trim() !== "", "value must not be empty")
-  .refine(
-    (value) => !UNSAFE_VALUE.test(value),
-    "value has a character that is not allowed"
-  )
-  .refine((value) => !SCRIPT_URL.test(value), "value has a script URL")
-  .nullable();
-
-const styleSchema = z
-  .object(
-    Object.fromEntries(
-      DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValueSchema])
-    )
-  )
-  .partial()
-  .strict();
-
-const nameSchema = z
-  .string()
-  .min(1)
-  .max(MAX_NAME)
-  .refine(
-    (value) => value.trim() === value && value !== "",
-    "name must not start or end with a space"
-  )
-  .refine(
-    (value) => !UNSAFE_NAME.test(value),
-    "name has a character that is not allowed"
-  )
-  .nullable();
-
-const classList = z
-  .array(
-    z
-      .string()
-      .min(1)
-      .max(MAX_CLASS_NAME)
-      .regex(CLASS_NAME, "class name has a character that is not allowed")
-  )
-  .max(MAX_CLASS_NAMES);
-const classesSchema = z
-  .object({ add: classList.optional(), remove: classList.optional() })
-  .strict();
-const hasClasses = (
-  classes: { add?: string[]; remove?: string[] } | undefined
-) => (classes?.add?.length ?? 0) + (classes?.remove?.length ?? 0) > 0;
-
-const locSchema = z
-  .object({
-    file: z.string().min(1).max(1024),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
-  })
-  .strict();
-const hintsSchema = z
-  .object({
-    text: z.string().max(MAX_TEXT),
-    usedAt: locSchema.nullable().optional(),
-    owners: z
-      .array(
-        z
-          .object({
-            name: z.string().max(64),
-            stack: z.string().max(OWNER_STACK_MAX),
-          })
-          .strict()
-      )
-      .max(OWNERS_MAX)
-      .optional(),
-  })
-  .strict();
-
-const requestSchema = z
-  .object({
-    source: z
-      .object({
-        file: z.string().min(1).max(1024),
-        line: z.number().int().min(1),
-        col: z.number().int().min(1),
-      })
-      .strict(),
-    selector: z.string().max(2000),
-    tag: z
-      .string()
-      .max(100)
-      .regex(/^[a-z][a-z0-9-]*$/, "tag must be a lowercase tag name")
-      .optional(),
-    style: styleSchema.optional(),
-    text: z.string().max(MAX_TEXT).optional(),
-    name: nameSchema.optional(),
-    move: z.enum(["up", "down"]).optional(),
-    insert: z.enum(INSERT_KINDS).optional(),
-    classes: classesSchema.optional(),
-    component: z
-      .string()
-      .max(100)
-      .regex(
-        COMPONENT_NAME,
-        "component must be a component name such as Button"
-      )
-      .optional(),
-    variant: z
-      .string()
-      .max(60)
-      .refine(
-        (value) => normalizeVariant(value) !== null,
-        'variant must be a breakpoint, dark and hover, focus or active, for example "md:hover:"'
-      )
-      .optional(),
-    hints: hintsSchema.optional(),
-  })
-  .strict()
-  .refine(
-    (request) =>
-      request.component === undefined ||
-      (request.name === undefined &&
-        request.move === undefined &&
-        request.insert === undefined),
-    "a component use takes style, classes and text only"
-  )
-  .refine(
-    (request) =>
-      request.text !== undefined ||
-      request.name !== undefined ||
-      request.move !== undefined ||
-      request.insert !== undefined ||
-      hasClasses(request.classes) ||
-      Object.keys(request.style ?? {}).length > 0,
-    "style, text, classes, name, move or insert is required"
-  )
-  .refine(
-    (request) =>
-      request.insert === undefined ||
-      (request.move === undefined &&
-        request.text === undefined &&
-        request.name === undefined &&
-        request.style === undefined &&
-        request.classes === undefined),
-    "insert must be the only change"
-  )
-  .refine(
-    (request) =>
-      request.move === undefined ||
-      (request.text === undefined &&
-        request.name === undefined &&
-        request.style === undefined &&
-        request.classes === undefined),
-    "move must be the only change"
-  )
-  .refine(
-    (request) =>
-      !normalizeVariant(request.variant) ||
-      (request.name === undefined &&
-        request.move === undefined &&
-        request.insert === undefined),
-    "variant works with style, classes and text only (text has no variant)"
-  );
-
-export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
-  const parsed = requestSchema.safeParse(raw);
-  if (!parsed.success) {
-    const detail = parsed.error.issues
-      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
-      .join("; ");
-    throw new DirectEditError(
-      "invalid_request",
-      `Invalid direct edit: ${detail}`
-    );
-  }
-  const request: DirectEditRequest = {
-    source: parsed.data.source,
-    selector: parsed.data.selector,
-  };
-  if (parsed.data.tag !== undefined) request.tag = parsed.data.tag;
-  if (parsed.data.style !== undefined) {
-    const style: Record<string, string | null> = {};
-    for (const [prop, value] of Object.entries(parsed.data.style))
-      if (value !== undefined) style[prop] = value;
-    request.style = style;
-  }
-  if (parsed.data.text !== undefined) request.text = parsed.data.text;
-  if (parsed.data.name !== undefined) request.name = parsed.data.name;
-  if (parsed.data.move !== undefined) request.move = parsed.data.move;
-  if (parsed.data.insert !== undefined) request.insert = parsed.data.insert;
-  if (hasClasses(parsed.data.classes)) request.classes = parsed.data.classes;
-  if (parsed.data.component !== undefined)
-    request.component = parsed.data.component;
-  const variant = normalizeVariant(parsed.data.variant);
-  if (variant) request.variant = variant;
-  if (parsed.data.hints && request.text !== undefined)
-    request.hints = parsed.data.hints;
-  return request;
+interface ClassCounts {
+  readonly add?: readonly string[] | undefined;
+  readonly remove?: readonly string[] | undefined;
 }
 
-const MAX_BATCH = 50;
-const batchSchema = z
-  .object({ edits: z.array(z.unknown()).min(1).max(MAX_BATCH) })
-  .strict();
+const hasClasses = (classes: ClassCounts | undefined): boolean =>
+  (classes?.add?.length ?? 0) + (classes?.remove?.length ?? 0) > 0;
+
+const hasAny = (values: readonly unknown[]): boolean =>
+  values.some((value) => value !== undefined);
+
+const toRequestConflicts = (draft: DecodedEditRequest): string[] => {
+  const { classes, component, insert, move, name, style, text, variant } =
+    draft;
+
+  const conflicts: string[] = [];
+
+  if (component !== undefined && hasAny([name, move, insert])) {
+    conflicts.push("a component use takes style, classes and text only");
+  }
+
+  if (
+    !hasAny([text, name, move, insert]) &&
+    !hasClasses(classes) &&
+    Object.keys(style ?? {}).length === 0
+  ) {
+    conflicts.push("style, text, classes, name, move or insert is required");
+  }
+
+  if (insert !== undefined && hasAny([move, text, name, style, classes])) {
+    conflicts.push("insert must be the only change");
+  }
+
+  if (move !== undefined && hasAny([text, name, style, classes])) {
+    conflicts.push("move must be the only change");
+  }
+
+  if (normalizeVariant(variant) && hasAny([name, move, insert])) {
+    conflicts.push(
+      "variant works with style, classes and text only (text has no variant)"
+    );
+  }
+
+  return conflicts;
+};
+
+const toClassChange = (
+  classes: NonNullable<DecodedEditRequest["classes"]>
+): ClassChange => {
+  const change: ClassChange = {};
+
+  if (classes.add !== undefined) {
+    change.add = [...classes.add];
+  }
+
+  if (classes.remove !== undefined) {
+    change.remove = [...classes.remove];
+  }
+
+  return change;
+};
+
+const toEditRequest = (draft: DecodedEditRequest): DirectEditRequest => {
+  const request: DirectEditRequest = {
+    selector: draft.selector,
+    source: { ...draft.source },
+  };
+
+  const classes = draft.classes && toClassChange(draft.classes);
+  const variant = normalizeVariant(draft.variant);
+
+  if (draft.tag !== undefined) request.tag = draft.tag;
+  if (draft.style !== undefined) request.style = { ...draft.style };
+  if (draft.text !== undefined) request.text = draft.text;
+  if (draft.name !== undefined) request.name = draft.name;
+  if (draft.move !== undefined) request.move = draft.move;
+  if (draft.insert !== undefined) request.insert = draft.insert;
+  if (hasClasses(classes)) request.classes = classes;
+  if (draft.component !== undefined) request.component = draft.component;
+  if (variant) request.variant = variant;
+  if (draft.hints && request.text !== undefined) {
+    request.hints = {
+      text: draft.hints.text,
+      ...(draft.hints.usedAt !== undefined && { usedAt: draft.hints.usedAt }),
+      ...(draft.hints.owners !== undefined && {
+        owners: [...draft.hints.owners],
+      }),
+    };
+  }
+
+  return request;
+};
+
+export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
+  const parsed = decodeEditRequest(raw);
+
+  if (parsed._tag === "Failure") {
+    throw new DirectEditError(
+      "invalid_request",
+      `Invalid direct edit: ${toIssueText(parsed, "(root)")}`
+    );
+  }
+
+  const conflicts = toRequestConflicts(parsed.success);
+
+  if (conflicts.length > 0) {
+    throw new DirectEditError(
+      "invalid_request",
+      `Invalid direct edit: (root): ${conflicts.join("; (root): ")}`
+    );
+  }
+
+  return toEditRequest(parsed.success);
+}
 
 export function isDirectEditBatch(raw: unknown): boolean {
   return typeof raw === "object" && raw !== null && "edits" in raw;
 }
 
+const toBatchEntry = (entry: unknown, index: number): DirectEditRequest => {
+  const label = `Edit ${index + 1}`;
+  let request: DirectEditRequest;
+
+  try {
+    request = parseDirectEditRequest(entry);
+  } catch (error) {
+    if (error instanceof DirectEditError) {
+      throw new DirectEditError(
+        "invalid_request",
+        `${label}: ${error.message}`
+      );
+    }
+
+    throw error;
+  }
+
+  if (hasAny([request.name, request.move, request.insert])) {
+    throw new DirectEditError(
+      "invalid_request",
+      `${label}: a batch can only change style, text and classes`
+    );
+  }
+
+  return request;
+};
+
 export function parseDirectEditBatch(raw: unknown): DirectEditBatch {
-  const parsed = batchSchema.safeParse(raw);
-  if (!parsed.success) {
+  const parsed = decodeEditBatch(raw);
+
+  if (parsed._tag === "Failure") {
     throw new DirectEditError(
       "invalid_request",
       `Invalid direct edit batch: send 1 to ${MAX_BATCH} edits`
     );
   }
-  const edits = parsed.data.edits.map((entry, index) => {
-    let request: DirectEditRequest;
-    try {
-      request = parseDirectEditRequest(entry);
-    } catch (error) {
-      if (error instanceof DirectEditError)
-        throw new DirectEditError(
-          "invalid_request",
-          `Edit ${index + 1}: ${error.message}`
-        );
-      throw error;
-    }
-    if (
-      request.name !== undefined ||
-      request.move !== undefined ||
-      request.insert !== undefined
-    ) {
-      throw new DirectEditError(
-        "invalid_request",
-        `Edit ${index + 1}: a batch can only change style, text and classes`
-      );
-    }
-    return request;
-  });
-  return { edits };
+
+  return {
+    edits: parsed.success.edits.map((entry, index) =>
+      toBatchEntry(entry, index)
+    ),
+  };
 }
 
-const structureTargetSchema = z
-  .object({
-    source: z
-      .object({
-        file: z.string().min(1).max(1024),
-        line: z.number().int().min(1),
-        col: z.number().int().min(1),
-      })
-      .strict(),
-    selector: z.string().max(2000).optional(),
-    tag: z
-      .string()
-      .max(100)
-      .regex(/^[a-z][a-z0-9-]*$/, "tag must be a lowercase tag name")
-      .optional(),
-  })
-  .strict();
+const isPlaceCountOk = (
+  op: StructureEditRequest["op"],
+  count: number
+): boolean => {
+  if (op === "move") {
+    return count === 1;
+  }
 
-const structureSchema = z
-  .object({
-    op: z.enum(STRUCTURE_OPS),
-    targets: z.array(structureTargetSchema).min(1).max(MAX_BATCH),
-    into: structureTargetSchema.optional(),
-    before: structureTargetSchema.optional(),
-    after: structureTargetSchema.optional(),
-    style: styleSchema.optional(),
-  })
-  .strict()
-  .refine(
-    (request) =>
-      placeCountOk(
-        request.op,
-        [request.into, request.before, request.after].filter(Boolean).length
-      ),
-    "move needs exactly one of into, before or after; duplicate takes at most one; other ops take none"
-  )
-  .refine(
-    (request) =>
-      request.style === undefined ||
-      (request.op === "duplicate" && request.targets.length === 1),
-    "style works only with duplicate of one target (it styles the copy)"
-  );
+  if (op === "duplicate") {
+    return count <= 1;
+  }
 
-function placeCountOk(op: StructureEditRequest["op"], count: number): boolean {
-  if (op === "move") return count === 1;
-  return count <= (op === "duplicate" ? 1 : 0);
-}
+  return count === 0;
+};
+
+const toStructureConflicts = (request: DecodedStructureEdit): string[] => {
+  const conflicts: string[] = [];
+
+  const places = [request.into, request.before, request.after].filter(
+    Boolean
+  ).length;
+
+  if (!isPlaceCountOk(request.op, places)) {
+    conflicts.push(
+      "move needs exactly one of into, before or after; duplicate takes at most one; other ops take none"
+    );
+  }
+
+  if (
+    request.style !== undefined &&
+    !(request.op === "duplicate" && request.targets.length === 1)
+  ) {
+    conflicts.push(
+      "style works only with duplicate of one target (it styles the copy)"
+    );
+  }
+
+  return conflicts;
+};
 
 export function isStructureEdit(raw: unknown): boolean {
   return typeof raw === "object" && raw !== null && "op" in raw;
 }
 
 export function parseStructureEdit(raw: unknown): StructureEditRequest {
-  const parsed = structureSchema.safeParse(raw);
-  if (!parsed.success) {
-    const detail = parsed.error.issues
-      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
-      .join("; ");
+  const parsed = decodeStructureEdit(raw);
+
+  if (parsed._tag === "Failure") {
     throw new DirectEditError(
       "invalid_request",
-      `Invalid structure edit: ${detail}`
+      `Invalid structure edit: ${toIssueText(parsed, "(root)")}`
     );
   }
-  return parsed.data;
+
+  const conflicts = toStructureConflicts(parsed.success);
+
+  if (conflicts.length > 0) {
+    throw new DirectEditError(
+      "invalid_request",
+      `Invalid structure edit: (root): ${conflicts.join("; (root): ")}`
+    );
+  }
+
+  return parsed.success as StructureEditRequest;
 }

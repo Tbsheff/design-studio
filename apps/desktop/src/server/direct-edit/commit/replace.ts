@@ -21,45 +21,47 @@ import {
   type StyleReplaceResult,
   type StyleSkip,
 } from "@design-studio/contracts/style-search";
+import { Schema } from "effect";
 
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
+import { toDecoder } from "../../platform/decode/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { findJsxElement, parseSource } from "../engine/jsx.js";
 import { assertNotMapped, jsxAncestors } from "../engine/structure.js";
 import { assertKnownTokens, knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditRequest } from "../engine/validate.js";
+import {
+  LocSchema,
+  toIssueText,
+  toText,
+  toTrimmed,
+} from "../request/request-fields.js";
 import type { TailwindTheme, ThemeNamespace } from "../tailwind/theme.js";
 import { writeAndCommitAll, type WrittenFile } from "./batch.js";
 import { patchSource, resolveSource, themeForFile } from "./edit-source.js";
 import { assertCanEdit, publishVersion } from "./publish.js";
 
-const sourceSchema = z
-  .object({
-    file: z.string().min(1).max(1000),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
-  })
-  .strict();
+const repeatsSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: 100_000, minimum: 1 })
+);
 
-const matchSchema = z
-  .object({
-    source: sourceSchema,
-    selector: z.string().min(1).max(2000),
-    tag: z.string().max(60).optional(),
-    property: z.enum(
-      SEARCH_PROPERTIES as [SearchProperty, ...SearchProperty[]]
-    ),
-    repeats: z.number().int().min(1).max(100_000).optional(),
-  })
-  .strict();
+const matchSchema = Schema.Struct({
+  property: Schema.Literals(SEARCH_PROPERTIES),
+  repeats: Schema.optional(repeatsSchema),
+  selector: toText(1, 2000),
+  source: LocSchema,
+  tag: Schema.optional(toText(0, 60)),
+});
 
-const requestSchema = z
-  .object({
-    matches: z.array(matchSchema).min(1).max(STYLE_REPLACE_MAX),
-    token: z.string().trim().min(1).max(STYLE_TOKEN_MAX),
-  })
-  .strict();
+const requestSchema = Schema.Struct({
+  matches: Schema.Array(matchSchema).check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(STYLE_REPLACE_MAX)
+  ),
+  token: toTrimmed(1, STYLE_TOKEN_MAX),
+});
+
+const decodeRequest = toDecoder(requestSchema, "error");
 
 const REASON = {
   mapped: "made by .map() (one line of code draws every copy)",
@@ -104,19 +106,16 @@ function invalid(message: string): DirectEditError {
 }
 
 export function parseStyleReplace(raw: unknown): StyleReplaceRequest {
-  const parsed = requestSchema.safeParse(raw);
+  const parsed = decodeRequest(raw);
 
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
+  if (parsed._tag === "Failure") {
     throw new DirectEditError(
       "invalid_request",
-      issue
-        ? `${issue.path.join(".") || "replaceStyle"}: ${issue.message}`
-        : "replaceStyle is not valid"
+      `replaceStyle: ${toIssueText(parsed, "replaceStyle is not valid")}`
     );
   }
 
-  return parsed.data;
+  return parsed.success as StyleReplaceRequest;
 }
 
 function groupSites(matches: StyleMatch[]): Site[] {

@@ -15,7 +15,7 @@ import type {
   SourceLoc,
   VersionMeta,
 } from "@design-studio/contracts";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
+import { Schema } from "effect";
 
 import {
   IMAGE_ALT_MAX,
@@ -25,9 +25,16 @@ import {
   type SetImageResult,
 } from "../../../shared/image.js";
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
+import { toDecoder } from "../../platform/decode/index.js";
 import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
+import {
+  LocSchema,
+  OwnersSchema,
+  toIssueText,
+  toText,
+  toTrimmed,
+} from "../request/request-fields.js";
 import { loadLibrary, ownerUseSite } from "./deps.js";
 import {
   patchSource,
@@ -52,68 +59,49 @@ import { planInsertJsx } from "./jsx-insert.js";
 import { assertCanEdit, publishVersion, saveDeferred } from "./publish.js";
 import { savesSettled } from "./save-queue.js";
 
-const loc = z
-  .object({
-    file: z.string().min(1).max(1000),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
+const FOCAL =
+  /^(\d{1,3}(\.\d+)?%|left|right|center|top|bottom)(\s+(\d{1,3}(\.\d+)?%|left|right|center|top|bottom))?$/;
+
+const focal = toTrimmed(0, Number.MAX_SAFE_INTEGER).check(
+  Schema.isPattern(FOCAL, {
+    message: 'focal must be "x% y%", for example "50% 30%"',
   })
-  .strict();
+);
 
-const focal = z
-  .string()
-  .trim()
-  .regex(
-    /^(\d{1,3}(\.\d+)?%|left|right|center|top|bottom)(\s+(\d{1,3}(\.\d+)?%|left|right|center|top|bottom))?$/,
-    'focal must be "x% y%", for example "50% 30%"'
-  );
-
-const requestSchema = z
-  .object({
-    target: z
-      .object({
-        source: loc.nullable(),
-        tag: z.string().min(1).max(100),
-        selector: z.string().max(2000).optional(),
-        owners: z
-          .array(
-            z.object({
-              name: z.string().max(64),
-              stack: z.string().max(OWNER_STACK_MAX),
-            })
-          )
-          .max(OWNERS_MAX)
-          .optional(),
-        background: z.boolean().optional(),
-        html: z.string().max(4000).optional(),
-      })
-      .strict(),
-    mode: z.enum(IMAGE_MODES).optional(),
-    image: z
-      .object({ name: z.string().max(300), data: z.string().min(1) })
-      .strict()
-      .optional(),
-    url: z.string().trim().min(1).max(2000).optional(),
-    fit: z.enum(IMAGE_FITS).optional(),
-    focal: focal.optional(),
-    alt: z
-      .string()
-      .max(IMAGE_ALT_MAX)
-      .refine(
-        (value) => !/[\u0000-\u001F]/.test(value),
-        "alt has control characters"
+const requestSchema = Schema.Struct({
+  alt: Schema.optional(
+    Schema.NullOr(
+      toText(0, IMAGE_ALT_MAX).check(
+        Schema.isPattern(/^[^\u0000-\u001F]*$/, {
+          message: "alt has control characters",
+        })
       )
-      .nullable()
-      .optional(),
-    position: z.enum(["inside", "after"]).optional(),
-  })
-  .strict()
-  .refine(
-    (input) => !(input.image && input.url),
-    "pass image or url, not both"
-  );
+    )
+  ),
+  fit: Schema.optional(Schema.Literals(IMAGE_FITS)),
+  focal: Schema.optional(focal),
+  image: Schema.optional(
+    Schema.Struct({
+      data: toText(1, Number.MAX_SAFE_INTEGER),
+      name: toText(0, 300),
+    })
+  ),
+  mode: Schema.optional(Schema.Literals(IMAGE_MODES)),
+  position: Schema.optional(Schema.Literals(["inside", "after"])),
+  target: Schema.Struct({
+    background: Schema.optional(Schema.Boolean),
+    html: Schema.optional(toText(0, 4000)),
+    owners: Schema.optional(OwnersSchema),
+    selector: Schema.optional(toText(0, 2000)),
+    source: Schema.NullOr(LocSchema),
+    tag: toText(1, 100),
+  }),
+  url: Schema.optional(toTrimmed(1, 2000)),
+});
 
-export type ParsedImageRequest = z.output<typeof requestSchema>;
+const decodeRequest = toDecoder(requestSchema, "error");
+
+export type ParsedImageRequest = Schema.Schema.Type<typeof requestSchema>;
 
 export interface AssetPlan {
   file: string;
@@ -149,19 +137,23 @@ const FIT_SIZE: Record<ImageFit, string> = {
 };
 
 export function parseSetImage(raw: unknown): ParsedImageRequest {
-  const parsed = requestSchema.safeParse(raw);
+  const parsed = decodeRequest(raw);
 
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
+  if (parsed._tag === "Failure") {
     throw new DirectEditError(
       "invalid_request",
-      issue
-        ? `${issue.path.join(".") || "request"}: ${issue.message}`
-        : "The image request is not valid"
+      `request: ${toIssueText(parsed, "The image request is not valid")}`
     );
   }
 
-  return parsed.data;
+  if (parsed.success.image && parsed.success.url) {
+    throw new DirectEditError(
+      "invalid_request",
+      "request: pass image or url, not both"
+    );
+  }
+
+  return parsed.success;
 }
 
 function isHtml(relative: string): boolean {

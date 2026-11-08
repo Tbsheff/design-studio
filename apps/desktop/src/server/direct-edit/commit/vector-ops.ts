@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import type { Direction, VersionMeta } from "@design-studio/contracts";
 import type { InsertTarget } from "@design-studio/contracts/insert";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
+import { Schema } from "effect";
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import {
@@ -18,7 +18,7 @@ import {
   type VectorResult,
 } from "../../../shared/vector.js";
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
+import { toDecoder } from "../../platform/decode/index.js";
 import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
 import { planBoolean } from "../engine/vector-boolean.js";
@@ -30,6 +30,11 @@ import {
 } from "../engine/vector-geometry.js";
 import { elementText, jsxAttrName, svgText } from "../engine/vector-snippet.js";
 import { isHtmlFile, vectorDoc, type VNode } from "../engine/vector-source.js";
+import {
+  TargetSchema,
+  toIssueText,
+  toTrimmed,
+} from "../request/request-fields.js";
 import { writeAndCommitAll } from "./batch.js";
 import { patchSource, resolveSource } from "./edit-source.js";
 import { setHtmlAttrs, setJsxAttrs, type AttrChanges } from "./image-attrs.js";
@@ -48,104 +53,86 @@ export interface VectorPlan {
 
 const MIN_SIZE = 1;
 
-const loc = z
-  .object({
-    file: z.string().min(1).max(1000),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
+const coord = Schema.Finite.check(
+  Schema.isBetween({ maximum: 100_000, minimum: -100_000 })
+);
+
+const size = Schema.Finite.check(
+  Schema.isBetween({ maximum: 100_000, minimum: 0 })
+);
+
+const box = Schema.Struct({
+  height: size,
+  width: size,
+  x: coord,
+  y: coord,
+});
+
+const color = toTrimmed(0, 100).check(
+  Schema.isPattern(VECTOR_COLOR, {
+    message:
+      "must be a color such as #1e1e1e, rgb(…), a CSS color name, none or var(--token)",
   })
-  .strict();
-
-const target = z
-  .object({
-    source: loc.nullable(),
-    tag: z.string().max(100).optional(),
-    selector: z.string().max(2000).optional(),
-    owners: z
-      .array(
-        z.object({
-          name: z.string().max(64),
-          stack: z.string().max(OWNER_STACK_MAX),
-        })
-      )
-      .max(OWNERS_MAX)
-      .optional(),
-  })
-  .strict();
-
-const coord = z.number().finite().min(-100_000).max(100_000);
-const size = z.number().finite().min(0).max(100_000);
-
-const box = z
-  .object({ x: coord, y: coord, width: size, height: size })
-  .strict();
-
-const color = z
-  .string()
-  .trim()
-  .max(100)
-  .regex(
-    VECTOR_COLOR,
-    "must be a color such as #1e1e1e, rgb(…), a CSS color name, none or var(--token)"
-  );
+);
 
 const paint = {
-  fill: color.nullable().optional(),
-  stroke: color.nullable().optional(),
-  strokeWidth: z.number().finite().min(0).max(1000).nullable().optional(),
+  fill: Schema.optional(Schema.NullOr(color)),
+  stroke: Schema.optional(Schema.NullOr(color)),
+  strokeWidth: Schema.optional(
+    Schema.NullOr(
+      Schema.Finite.check(Schema.isBetween({ maximum: 1000, minimum: 0 }))
+    )
+  ),
 };
 
 const place = {
-  target,
-  relativeParent: z.boolean().optional(),
-  page: z.string().trim().max(300).optional(),
+  page: Schema.optional(toTrimmed(0, 300)),
+  relativeParent: Schema.optional(Schema.Boolean),
+  target: TargetSchema,
 };
 
-const schema = z.discriminatedUnion("op", [
-  z
-    .object({
-      op: z.literal("shape"),
-      shape: z.enum(VECTOR_SHAPES),
-      box,
-      name: z.string().trim().min(1).max(60).optional(),
-      ...place,
-      ...paint,
-    })
-    .strict(),
-  z
-    .object({
-      op: z.literal("path"),
-      d: z.string().trim().min(1).max(VECTOR_PATH_MAX),
-      name: z.string().trim().min(1).max(60).optional(),
-      ...place,
-      ...paint,
-    })
-    .strict(),
-  z
-    .object({
-      op: z.literal("boolean"),
-      boolean: z.enum(BOOLEAN_OPS),
-      targets: z.tuple([target, target]),
-      rects: z.tuple([box, box]).optional(),
-    })
-    .strict(),
-  z.object({ op: z.literal("paint"), target, ...paint }).strict(),
+const schema = Schema.Union([
+  Schema.Struct({
+    box,
+    name: Schema.optional(toTrimmed(1, 60)),
+    op: Schema.Literal("shape"),
+    shape: Schema.Literals(VECTOR_SHAPES),
+    ...place,
+    ...paint,
+  }),
+  Schema.Struct({
+    d: toTrimmed(1, VECTOR_PATH_MAX),
+    name: Schema.optional(toTrimmed(1, 60)),
+    op: Schema.Literal("path"),
+    ...place,
+    ...paint,
+  }),
+  Schema.Struct({
+    boolean: Schema.Literals(BOOLEAN_OPS),
+    op: Schema.Literal("boolean"),
+    rects: Schema.optional(Schema.Tuple([box, box])),
+    targets: Schema.Tuple([TargetSchema, TargetSchema]),
+  }),
+  Schema.Struct({
+    op: Schema.Literal("paint"),
+    target: TargetSchema,
+    ...paint,
+  }),
 ]);
 
-export function parseVectorRequest(raw: unknown): VectorRequest {
-  const parsed = schema.safeParse(raw);
+const decodeRequest = toDecoder(schema, "error");
 
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
+export function parseVectorRequest(raw: unknown): VectorRequest {
+  const parsed = decodeRequest(raw);
+
+  if (parsed._tag === "Failure") {
     throw new DirectEditError(
       "invalid_request",
-      issue
-        ? `${issue.path.join(".") || "request"}: ${issue.message}`
-        : "The vector request is not valid"
+      `request: ${toIssueText(parsed, "The vector request is not valid")}`
     );
   }
 
-  return parsed.data as VectorRequest;
+  return parsed.success as VectorRequest;
 }
 
 function paintAttrs(

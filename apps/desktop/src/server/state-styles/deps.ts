@@ -61,5 +61,3 @@ export type {
   StateStyleResult,
   StyleState,
 } from "@design-studio/contracts/state-styles";
-
-export { z } from "../platform/zod-bridge/index.js";

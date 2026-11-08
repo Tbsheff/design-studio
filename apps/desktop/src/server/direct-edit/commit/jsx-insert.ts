@@ -15,10 +15,10 @@ import {
   type InsertJsxRequest,
   type InsertJsxResult,
 } from "@design-studio/contracts/insert";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
+import { Schema } from "effect";
 
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
+import { toDecoder } from "../../platform/decode/index.js";
 import {
   resolveTarget,
   seenImports,
@@ -47,6 +47,11 @@ import {
   type StructNode,
 } from "../engine/structure-ops.js";
 import { jsxElementAt } from "../engine/structure.js";
+import {
+  TargetSchema,
+  toIssueText,
+  toTrimmed,
+} from "../request/request-fields.js";
 import { writeAndCommitAll } from "./batch.js";
 import {
   type ImportItem,
@@ -71,50 +76,27 @@ export interface JsxInsertPlan {
   request: InsertJsxRequest;
 }
 
-const loc = z
-  .object({
-    file: z.string().min(1).max(1000),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
-  })
-  .strict();
+const clearSchema = Schema.Struct({ target: TargetSchema });
 
-const targetSchema = z
-  .object({
-    source: loc.nullable(),
-    tag: z.string().max(100).optional(),
-    selector: z.string().max(2000).optional(),
-    owners: z
-      .array(
-        z.object({
-          name: z.string().max(64),
-          stack: z.string().max(OWNER_STACK_MAX),
-        })
-      )
-      .max(OWNERS_MAX)
-      .optional(),
-  })
-  .strict();
+const requestSchema = Schema.Struct({
+  imports: Schema.optional(
+    Schema.Record(
+      Schema.String.check(Schema.isPattern(/^[A-Z][A-Za-z0-9_$]{0,63}$/)),
+      toTrimmed(1, 1000)
+    ).check(
+      Schema.isMaxProperties(JSX_IMPORTS_MAX, {
+        message: `at most ${JSX_IMPORTS_MAX} imports`,
+      })
+    )
+  ),
+  jsx: toTrimmed(1, JSX_SNIPPET_MAX),
+  position: Schema.Literals(JSX_INSERT_POSITIONS),
+  target: TargetSchema,
+});
 
-const clearSchema = z.object({ target: targetSchema }).strict();
+const decodeRequest = toDecoder(requestSchema, "error");
 
-const requestSchema = z
-  .object({
-    target: targetSchema,
-    position: z.enum(JSX_INSERT_POSITIONS as [string, ...string[]]),
-    jsx: z.string().trim().min(1, "jsx is empty").max(JSX_SNIPPET_MAX),
-    imports: z
-      .record(
-        z.string().regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/),
-        z.string().trim().min(1).max(1000)
-      )
-      .refine(
-        (value) => Object.keys(value).length <= JSX_IMPORTS_MAX,
-        `at most ${JSX_IMPORTS_MAX} imports`
-      )
-      .optional(),
-  })
-  .strict();
+const decodeClear = toDecoder(clearSchema, "error");
 
 const VOID_TAGS = new Set([
   "area",
@@ -155,19 +137,16 @@ const GLOBALS = new Set([
 ]);
 
 export function parseInsertJsxRequest(raw: unknown): InsertJsxRequest {
-  const parsed = requestSchema.safeParse(raw);
+  const parsed = decodeRequest(raw);
 
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
+  if (parsed._tag === "Failure") {
     throw new DirectEditError(
       "invalid_request",
-      issue
-        ? `${issue.path.join(".") || "request"}: ${issue.message}`
-        : "The insert request is not valid"
+      `request: ${toIssueText(parsed, "The insert request is not valid")}`
     );
   }
 
-  return parsed.data as InsertJsxRequest;
+  return parsed.success as InsertJsxRequest;
 }
 
 function isHtml(file: string): boolean {
@@ -714,19 +693,16 @@ export interface ClearTextPlan extends Omit<
 }
 
 export function parseClearTextRequest(raw: unknown): ClearTextRequest {
-  const parsed = clearSchema.safeParse(raw);
+  const parsed = decodeClear(raw);
 
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
+  if (parsed._tag === "Failure") {
     throw new DirectEditError(
       "invalid_request",
-      issue
-        ? `${issue.path.join(".") || "request"}: ${issue.message}`
-        : "The clear request is not valid"
+      `request: ${toIssueText(parsed, "The clear request is not valid")}`
     );
   }
 
-  return parsed.data as ClearTextRequest;
+  return parsed.success as ClearTextRequest;
 }
 
 export async function planClearText(

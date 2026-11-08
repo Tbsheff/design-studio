@@ -1,11 +1,9 @@
 import type { ReactElement } from "react";
 
-import {
-  DeletePackDialog,
-  ImportConflictDialog,
-  RenamePackDialog,
-} from "./library-dialogs.js";
+import { DeletePackDialog } from "./delete-pack-dialog.js";
+import { ImportConflictDialog } from "./import-conflict-dialog.js";
 import { PackDetailDialog } from "./pack-detail.js";
+import { RenamePackDialog } from "./rename-pack-dialog.js";
 import type { Library } from "./use-library.js";
 
 const LibraryDialogHost = ({

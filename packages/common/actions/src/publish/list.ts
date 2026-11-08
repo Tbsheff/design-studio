@@ -3,7 +3,8 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { Unauthenticated } from "../_core/errors/unauthenticated.js";
 import { Unavailable } from "../_core/errors/unavailable.js";
-import { ListProjectIdSchema, PublicationListSchema } from "./schema.js";
+import { PageFields, pageOf } from "../_core/list-page.js";
+import { ListProjectIdSchema, PublicationSchema } from "./schema.js";
 
 const listPublish = defineAction({
   access: "read",
@@ -21,12 +22,15 @@ const listPublish = defineAction({
   http: { method: "GET", path: "/api/projects/:projectId/publications" },
   id: "publish.list",
   input: Schema.Struct({
+    ...PageFields,
     projectId: ListProjectIdSchema,
   }),
   invalidates: [],
   mcp: { name: "list_publications" },
   needs: "publication.read",
-  output: PublicationListSchema,
+  output: pageOf(PublicationSchema, {
+    backendError: Schema.NullOr(Schema.String),
+  }),
   scope: "project",
 });
 

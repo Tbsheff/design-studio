@@ -29,7 +29,7 @@ const useShares = (projectId: string): ShareState => {
     await settle(
       shareApi.list(projectId),
       (list) => {
-        setLinks(list.links);
+        setLinks(list.items);
         setServer(list.server);
       },
       (failure) => setError(errorText(failure))

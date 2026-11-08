@@ -16,7 +16,7 @@ const usePublications = (projectId: string): Publications => {
 
   const reload = useCallback(async (): Promise<void> => {
     const next = await publishApi.list(projectId);
-    setList(next.publications);
+    setList(next.items);
     setBackendError(next.backendError);
   }, [projectId]);
 
@@ -24,7 +24,7 @@ const usePublications = (projectId: string): Publications => {
     let isLive = true;
     void settleValue(publishApi.list(projectId), (next) => {
       if (isLive) {
-        setList(next.publications);
+        setList(next.items);
         setBackendError(next.backendError);
       }
     });

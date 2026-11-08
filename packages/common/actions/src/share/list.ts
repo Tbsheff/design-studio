@@ -2,7 +2,8 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { ProjectIdSchema } from "../_core/ids.js";
-import { ShareListSchema } from "./schema.js";
+import { PageFields, pageOf } from "../_core/list-page.js";
+import { ShareLinkSchema, ShareServerStateSchema } from "./schema.js";
 
 const listShare = defineAction({
   access: "read",
@@ -20,6 +21,7 @@ const listShare = defineAction({
   http: { method: "GET", path: "/api/projects/:projectId/shares" },
   id: "share.list",
   input: Schema.Struct({
+    ...PageFields,
     projectId: ProjectIdSchema.annotate({
       description: "Project id from list_projects.",
     }),
@@ -27,7 +29,7 @@ const listShare = defineAction({
   invalidates: [],
   mcp: { name: "list_share_links" },
   needs: "project.read",
-  output: ShareListSchema,
+  output: pageOf(ShareLinkSchema, { server: ShareServerStateSchema }),
   scope: "project",
 });
 

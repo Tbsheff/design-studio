@@ -22,7 +22,7 @@ const usePublicationComments = (
   const load = useCallback(async () => {
     await settle(
       publishApi.comments(projectId, publicationId),
-      (result) => setList(result.comments),
+      (result) => setList(result.items),
       (failure) => setError(errorText(failure))
     );
   }, [projectId, publicationId]);

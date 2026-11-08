@@ -1,6 +1,6 @@
 import { Icon } from "@design-studio/ui";
-import { useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import { cachedThumb, requestThumb } from "./versions-api.js";
 import type { ThumbResult } from "./versions-api.js";
@@ -13,34 +13,61 @@ interface Props {
   onOpen: () => void;
 }
 
-function useInView(
+const THUMB_ICON_SIZE = 14;
+
+const toThumbState = (
+  result: ThumbResult | undefined,
+  isLoaded: boolean
+): string => {
+  if (result === undefined) {
+    return "loading";
+  }
+
+  if (result === null) {
+    return "none";
+  }
+
+  if (isLoaded) {
+    return "ready";
+  }
+
+  return "loading";
+};
+
+const useInView = (
   ref: RefObject<HTMLElement | null>,
   enabled: boolean
-): boolean {
+): boolean => {
   const [seen, setSeen] = useState(false);
   useEffect(() => {
-    const el = ref.current;
+    const element = ref.current;
 
-    if (!enabled || !el) {
+    if (!enabled || !element) {
       setSeen(false);
 
       return;
     }
 
-    const io = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => setSeen(entries.some((entry) => entry.isIntersecting)),
       { rootMargin: "64px 0px" }
     );
 
-    io.observe(el);
+    observer.observe(element);
 
-    return () => io.disconnect();
+    return (): void => observer.disconnect();
   }, [ref, enabled]);
 
   return seen;
-}
+};
 
-function VersionThumb({ projectId, versionId, active, label, onOpen }: Props) {
+const VersionThumb = ({
+  projectId,
+  versionId,
+  active,
+  label,
+  onOpen,
+}: Props): ReactNode => {
   const ref = useRef<HTMLSpanElement>(null);
 
   const [result, setResult] = useState<ThumbResult | undefined>(() =>
@@ -57,14 +84,11 @@ function VersionThumb({ projectId, versionId, active, label, onOpen }: Props) {
     return requestThumb(projectId, versionId, setResult);
   }, [inView, result, projectId, versionId]);
 
-  const state =
-    result === undefined
-      ? "loading"
-      : result === null
-        ? "none"
-        : loaded
-          ? "ready"
-          : "loading";
+  const state = toThumbState(result, loaded);
+
+  const handleLoad = useCallback((): void => {
+    setLoaded(true);
+  }, []);
 
   return (
     <span
@@ -75,18 +99,12 @@ function VersionThumb({ projectId, versionId, active, label, onOpen }: Props) {
       aria-hidden="true"
       onClick={onOpen}
     >
-      {result ? (
-        <img
-          src={result}
-          alt=""
-          draggable={false}
-          onLoad={() => setLoaded(true)}
-        />
-      ) : result === null ? (
-        <Icon name="file" size={14} />
-      ) : null}
+      {result && (
+        <img src={result} alt="" draggable={false} onLoad={handleLoad} />
+      )}
+      {result === null && <Icon name="file" size={THUMB_ICON_SIZE} />}
     </span>
   );
-}
+};
 
 export { VersionThumb };

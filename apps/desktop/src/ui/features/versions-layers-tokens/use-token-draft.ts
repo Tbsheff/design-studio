@@ -51,12 +51,12 @@ interface PreviewOutcome {
   errors: Record<string, string>;
 }
 
-function substitute(
+const substitute = (
   changes: TokenChange[],
   bad: Record<string, string>,
   good: PendingMap
-): TokenChange[] {
-  return changes.flatMap((change) => {
+): TokenChange[] =>
+  changes.flatMap((change) => {
     if (bad[change.path] === undefined) {
       return [change];
     }
@@ -70,14 +70,13 @@ function substitute(
 
     return last && !same ? [{ path: change.path, ...last }] : [];
   });
-}
 
-async function previewWithFallback(
+const previewWithFallback = async (
   pid: string,
   did: string,
   changes: TokenChange[],
   good: PendingMap
-): Promise<PreviewOutcome> {
+): Promise<PreviewOutcome> => {
   const errors: Record<string, string> = {};
   let rest = changes;
 
@@ -114,15 +113,14 @@ async function previewWithFallback(
   }
 
   return { css: rest.length === 0 ? "" : null, errors };
-}
+};
 
-function commitMessage(err: unknown): string {
-  return err instanceof ApiError && err.status === 409
+const commitMessage = (err: unknown): string =>
+  err instanceof ApiError && err.status === 409
     ? AGENT_BUSY_MESSAGE
     : errorText(err);
-}
 
-function useTokenDraft(o: Options) {
+const useTokenDraft = (o: Options) => {
   const [pending, setPendingMap] = useState<PendingMap>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const theme = useCanvasTheme();
@@ -335,7 +333,7 @@ function useTokenDraft(o: Options) {
     theme,
     undoLast,
   };
-}
+};
 
 type TokenDraft = ReturnType<typeof useTokenDraft>;
 

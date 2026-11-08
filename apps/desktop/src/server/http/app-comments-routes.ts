@@ -7,9 +7,9 @@ import { registerCommentRoutes } from "./comments-routes.js";
 
 const registerAppCommentsRoutes = (app: Hono, ctx: AppContext): void => {
   const {
+    canvas,
     comments,
     config,
-    editDeps,
     loadDirection,
     preview,
     projects,
@@ -50,7 +50,7 @@ const registerAppCommentsRoutes = (app: Hono, ctx: AppContext): void => {
     reference: {
       dataDir: config.dataDir,
       listFrames: async (project) =>
-        (await editDeps.canvas.read(project)).canvas?.frames ?? [],
+        (await canvas.read(project)).canvas?.frames ?? [],
       loadTarget: loadReferenceTarget,
       preview,
     },

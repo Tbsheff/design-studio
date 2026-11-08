@@ -31,6 +31,30 @@ const toBaseQuery = (base?: string): string => {
 
 const COMMIT_HISTORY_LIMIT = 1;
 
+const VERSION_PAGE_LIMIT = 200;
+
+const collectVersions = async (
+  pid: string,
+  did: string,
+  cursor: string | null,
+  seen: readonly Version[]
+): Promise<Version[]> => {
+  const page = await call(versionsRoutes.listVersion, {
+    cursor,
+    directionId: did,
+    limit: VERSION_PAGE_LIMIT,
+    projectId: pid,
+  });
+
+  const versions = [...seen, ...page.items];
+
+  if (page.next === null) {
+    return versions;
+  }
+
+  return collectVersions(pid, did, page.next, versions);
+};
+
 const versionApi = {
   commitTweaks: async (
     pid: string,
@@ -95,16 +119,8 @@ const versionApi = {
     json<TweaksState>("GET", `${toDirectionPath(pid, did)}/tweaks`),
   keep: (pid: string, did: string): Promise<Version> =>
     call(versionsRoutes.createVersion, { directionId: did, projectId: pid }),
-  listVersions: async (pid: string, did: string): Promise<Version[]> => {
-    const list = await call(versionsRoutes.listVersion, {
-      directionId: did,
-      projectId: pid,
-    });
-
-    const items: Version[] = list.items;
-
-    return items;
-  },
+  listVersions: (pid: string, did: string): Promise<Version[]> =>
+    collectVersions(pid, did, null, []),
   restore: (pid: string, did: string, versionId: string): Promise<Version> =>
     restoreVersionAt(pid, did, versionId),
   undo: (pid: string, did: string): Promise<Version> =>

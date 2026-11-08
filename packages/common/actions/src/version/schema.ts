@@ -72,10 +72,6 @@ const VersionSchema = Schema.Struct({
   title: Schema.String,
 });
 
-const VersionListSchema = Schema.Struct({
-  items: Schema.Array(VersionSchema),
-});
-
 const VersionChangesSchema = Schema.Struct({
   files: Schema.Array(VersionFileDiffSchema),
   from: Schema.String,
@@ -154,7 +150,6 @@ export {
   VersionRenamedSchema,
   VersionChangesSchema,
   VersionExportSchema,
-  VersionListSchema,
   VersionPreviewSchema,
   VersionSchema,
   WorkTreeStatusSchema,

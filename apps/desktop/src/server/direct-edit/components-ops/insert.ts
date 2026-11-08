@@ -7,20 +7,12 @@ import type {
   SourceLoc,
   VersionMeta,
 } from "@design-studio/contracts";
-import {
-  INSERT_POSITIONS,
-  INSERT_TEXT_MAX,
-  type InsertComponentRequest,
-  type InsertComponentResult,
-  type InsertTarget,
+import type {
+  InsertComponentRequest,
+  InsertComponentResult,
+  InsertTarget,
 } from "@design-studio/contracts/insert";
-import {
-  OWNERS_MAX,
-  OWNER_STACK_MAX,
-  PROP_NAME,
-  PROP_TEXT_MAX,
-  PROPS_MAX,
-} from "@design-studio/contracts/props";
+import type { Schema } from "effect";
 
 import { jsxFor } from "../../components/component-search.js";
 import {
@@ -40,13 +32,13 @@ import {
 } from "../../components/props-schema.js";
 import { ownerUseSite } from "../../components/use-site.js";
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
 import { writeAndCommitAll } from "../commit/batch.js";
 import { resolveSource } from "../commit/edit-source.js";
 import { assertCanEdit, publishVersion } from "../commit/publish.js";
 import { DirectEditError } from "../engine/errors.js";
 import { structureDoc } from "../engine/structure-docs.js";
 import { planInsert, positionAt, refuse } from "../engine/structure-ops.js";
+import { decodeInsertRequest } from "./request-schema.js";
 
 export {
   humanize,
@@ -73,61 +65,6 @@ export interface InsertPlan {
   request: InsertComponentRequest;
 }
 
-const loc = z
-  .object({
-    file: z.string().min(1).max(1000),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
-  })
-  .strict();
-
-const propValue = z.union([
-  z.string().max(PROP_TEXT_MAX),
-  z.number(),
-  z.boolean(),
-]);
-
-const requestSchema = z
-  .object({
-    component: z
-      .object({
-        name: z
-          .string()
-          .regex(
-            /^[A-Z][A-Za-z0-9_$]{0,63}$/,
-            "must be a component name such as Button"
-          ),
-        file: z.string().min(1).max(1000).optional(),
-      })
-      .strict(),
-    target: z
-      .object({
-        source: loc.nullable(),
-        tag: z.string().max(100).optional(),
-        selector: z.string().max(2000).optional(),
-        owners: z
-          .array(
-            z.object({
-              name: z.string().max(64),
-              stack: z.string().max(OWNER_STACK_MAX),
-            })
-          )
-          .max(OWNERS_MAX)
-          .optional(),
-      })
-      .strict(),
-    position: z.enum(INSERT_POSITIONS as [string, ...string[]]),
-    props: z
-      .record(z.string().regex(PROP_NAME), propValue)
-      .refine(
-        (value) => Object.keys(value).length <= PROPS_MAX,
-        `at most ${PROPS_MAX} props`
-      )
-      .optional(),
-    text: z.string().max(INSERT_TEXT_MAX).optional(),
-  })
-  .strict();
-
 const VOID_TAGS = new Set([
   "area",
   "base",
@@ -147,19 +84,7 @@ const VOID_TAGS = new Set([
 ]);
 
 export function parseInsertRequest(raw: unknown): InsertComponentRequest {
-  const parsed = requestSchema.safeParse(raw);
-
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    throw new DirectEditError(
-      "invalid_request",
-      issue
-        ? `${issue.path.join(".") || "request"}: ${issue.message}`
-        : "The insert request is not valid"
-    );
-  }
-
-  return parsed.data as InsertComponentRequest;
+  return decodeInsertRequest(raw as Schema.Json) as InsertComponentRequest;
 }
 
 function pickEntry(

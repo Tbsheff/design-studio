@@ -3,15 +3,22 @@ import {
   withFrameStateHost,
 } from "@design-studio/contracts/frame-state";
 import type { ReviewFrame } from "@design-studio/contracts/review";
+import { Schema } from "effect";
 
 import type { RunTarget } from "../../shared/run-target.js";
 import type {
   AgentRunContext,
   PreviewService,
 } from "../../shared/server-ports.js";
+import {
+  toOptional,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import type { CanvasService } from "../canvas/index.js";
-import { frameRef } from "../canvas/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { resolveReviewFrame } from "./frame.js";
 import { runReview } from "./run.js";
 
@@ -21,34 +28,31 @@ const VIEWPORTS = {
   mobile: { width: 390, height: 844 },
 } as const;
 
-export const reviewFrameShape = {
-  frame: frameRef
-    .optional()
-    .describe(
-      "Frame id or @label from canvas_list. Leave out for the frame from <canvas-context>, else the live frame or the first frame."
-    ),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe("Page path instead of the frame page."),
-  viewport: z
-    .enum(["desktop", "tablet", "mobile"])
-    .optional()
-    .describe("Render size instead of the frame size."),
-  selector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe(
-      "CSS selector of one element. Only findings inside its subtree are returned."
-    ),
+const FRAME_REF_MAX = 60;
+
+const PATH_MAX = 300;
+
+const SELECTOR_MAX = 2000;
+
+const reviewFrameFields = {
+  frame: toOptional(
+    toTrimmedText(1, FRAME_REF_MAX),
+    "Frame id or @label from canvas_list. Leave out for the frame from <canvas-context>, else the live frame or the first frame."
+  ),
+  path: toOptionalText(0, PATH_MAX, "Page path instead of the frame page."),
+  selector: toOptional(
+    toTrimmedText(1, SELECTOR_MAX),
+    "CSS selector of one element. Only findings inside its subtree are returned."
+  ),
+  viewport: toOptional(
+    Schema.Literals(["desktop", "tablet", "mobile"]),
+    "Render size instead of the frame size."
+  ),
 };
 
-const schema = z.object(reviewFrameShape).strict();
+const reviewFrameShape = toSdkFieldSet(reviewFrameFields);
+
+const schema = toToolInput(reviewFrameFields);
 
 interface ReviewToolDeps {
   preview: PreviewService;
@@ -91,7 +95,7 @@ function targetFrame(
 
 async function reviewFrameOf(
   deps: ReviewToolDeps,
-  data: z.output<typeof schema>,
+  data: ToolDecoded<typeof schema>,
   target: RunTarget | null
 ): Promise<ReviewFrame> {
   const size = data.viewport ? VIEWPORTS[data.viewport] : null;
@@ -122,9 +126,9 @@ async function reviewFrameOf(
   }
 }
 
-export async function runReviewFrameTool(
+async function runReviewFrameTool(
   deps: ReviewToolDeps,
-  args: z.input<typeof schema>
+  args: ToolArgs<typeof schema>
 ): Promise<ToolText> {
   const parsed = schema.safeParse(args);
   if (!parsed.success)
@@ -132,7 +136,7 @@ export async function runReviewFrameTool(
       content: [
         {
           type: "text",
-          text: `review_frame: ${parsed.error.issues.map((issue) => issue.message).join("; ")}`,
+          text: `review_frame: ${parsed.error}`,
         },
       ],
       isError: true,
@@ -197,3 +201,5 @@ export async function runReviewFrameTool(
     };
   }
 }
+
+export { reviewFrameShape, runReviewFrameTool };

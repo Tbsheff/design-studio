@@ -2,127 +2,45 @@ import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-import {
-  DIRECT_STYLE_PROPERTIES,
-  type Direction,
-  type Project,
-  type Version,
+import type {
+  ClassChange,
+  Direction,
+  Project,
+  Version,
 } from "@design-studio/contracts";
-import {
-  PROP_NAME,
-  PROP_TEXT_MAX,
-  PROPS_MAX,
-  type ComponentInstance,
-  type ComponentSchema,
-  type PropValue,
-  type SetPropsResult,
-  type VariantClassResult,
+import type {
+  ComponentInstance,
+  ComponentSchema,
+  PropValue,
+  SetPropsResult,
+  VariantClassResult,
 } from "@design-studio/contracts/props";
+import type { Schema } from "effect";
 import MagicString from "magic-string";
 
 import { cvaCalls, parseModuleFile } from "../../components/props-schema.js";
 import { sourceFiles, usesIn } from "../../components/props-service.js";
 import { elementAt, readInstance } from "../../components/use-site.js";
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { parseSource } from "../engine/jsx.js";
 import { applySplices } from "../engine/splice.js";
 import { decideClassEdit } from "../engine/tailwind/index.js";
 import type { ClassSite } from "../engine/tailwind/plan.js";
 import { resolveSource, themeForFile, writeAtomic } from "./edit-source.js";
+import { toSetProps, toVariantClassEdit } from "./props-request.js";
+import type { SetProps, VariantClassEdit } from "./props-request.js";
 import { assertCanEdit, publishVersion, saveDeferred } from "./publish.js";
 import { savesSettled } from "./save-queue.js";
 
-const RESERVED = new Set([
-  "className",
-  "class",
-  "style",
-  "children",
-  "key",
-  "ref",
-  "dangerouslySetInnerHTML",
-]);
-const loc = z
-  .object({
-    file: z.string().trim().min(1).max(1000),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
-  })
-  .strict();
-const propValue = z.union([
-  z
-    .string()
-    .max(PROP_TEXT_MAX)
-    .refine(
-      (value) => !/[\u0000-\u0008\u000B-\u001F]/.test(value),
-      "control characters are not allowed"
-    ),
-  z.number().finite(),
-  z.boolean(),
-  z.null(),
-]);
-const propName = z
-  .string()
-  .regex(PROP_NAME, "must be a prop name")
-  .refine((name) => !RESERVED.has(name), "this prop is not edited here");
-
-export const setPropsSchema = z
-  .object({
-    source: loc,
-    props: z.record(propName, propValue).refine((props) => {
-      const count = Object.keys(props).length;
-      return count > 0 && count <= PROPS_MAX;
-    }, `pass 1 to ${PROPS_MAX} props`),
-  })
-  .strict();
-
-const styleValue = z.string().max(200).nullable();
-const classNames = z.array(z.string().trim().min(1).max(100)).max(30);
-export const variantClassSchema = z
-  .object({
-    file: z.string().trim().min(1).max(1000),
-    cva: z.string().regex(/^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/),
-    prop: z.string().min(1).max(64),
-    value: z.string().min(1).max(64),
-    style: z
-      .object(
-        Object.fromEntries(
-          DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])
-        )
-      )
-      .strict()
-      .optional(),
-    classes: z
-      .object({ add: classNames.optional(), remove: classNames.optional() })
-      .strict()
-      .optional(),
-  })
-  .strict();
-
-export type SetProps = z.output<typeof setPropsSchema>;
-export type VariantClassEdit = z.output<typeof variantClassSchema>;
-
-function invalid(error: z.ZodError): DirectEditError {
-  const issue = error.issues[0];
-  return new DirectEditError(
-    "invalid_request",
-    issue
-      ? `${issue.path.join(".") || "request"}: ${issue.message}`
-      : "The request is not valid"
-  );
-}
-
-export function parseSetProps(raw: unknown): SetProps {
-  const parsed = setPropsSchema.safeParse(raw);
-  if (!parsed.success) throw invalid(parsed.error);
-  return parsed.data;
-}
-
-export function parseVariantClassEdit(raw: unknown): VariantClassEdit {
-  const parsed = variantClassSchema.safeParse(raw);
-  if (!parsed.success) throw invalid(parsed.error);
-  return parsed.data;
+function toClassChange(
+  classes: VariantClassEdit["classes"]
+): ClassChange | undefined {
+  if (!classes) return undefined;
+  const change: ClassChange = {};
+  if (classes.add) change.add = [...classes.add];
+  if (classes.remove) change.remove = [...classes.remove];
+  return change;
 }
 
 export function rangeOf(node: t.Node): { start: number; end: number } {
@@ -446,7 +364,7 @@ export async function applySetProps(
   direction: Direction,
   raw: unknown
 ): Promise<SetPropsResult> {
-  const request = parseSetProps(raw);
+  const request = toSetProps(raw as Schema.Json);
   const head = assertCanEdit(deps, project, direction);
   const { target, original, instance, plan } = await planSetProps(
     direction.workTree,
@@ -608,7 +526,7 @@ export async function planVariantClasses(
   const decision = decideClassEdit(
     () => literalSite(original, literal),
     style,
-    edit.classes,
+    toClassChange(edit.classes),
     theme
   );
   if (decision.kind === "none")
@@ -652,7 +570,7 @@ export async function applyVariantClasses(
   direction: Direction,
   raw: unknown
 ): Promise<VariantClassResult> {
-  const edit = parseVariantClassEdit(raw);
+  const edit = toVariantClassEdit(raw as Schema.Json);
   const head = assertCanEdit(deps, project, direction);
   const plan = await planVariantClasses(direction.workTree, project.kind, edit);
   if (plan.code === plan.original)
@@ -679,3 +597,5 @@ export async function applyVariantClasses(
     note: plan.note,
   };
 }
+
+export { toSetProps as parseSetProps };

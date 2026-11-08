@@ -59,7 +59,9 @@ const confirmDiscard = (count: number): boolean => {
     noun = "change";
   }
 
-  return globalThis.confirm(`Discard ${count} token ${noun}?`);
+  const { confirm: askUser } = globalThis;
+
+  return askUser(`Discard ${count} token ${noun}?`);
 };
 
 const endTheme = (): void => {

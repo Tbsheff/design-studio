@@ -8,6 +8,11 @@ import {
   handle as deleteCommandRuleProjectHandle,
   preview as deleteCommandRuleProjectPreview,
 } from "./delete-command-rule.js";
+import {
+  handle as deleteProjectHandle,
+  preview as deleteProjectPreview,
+} from "./delete.js";
+import { handle as duplicateProjectHandle } from "./duplicate.js";
 import { handle as getDesignMdProjectHandle } from "./get-design-md.js";
 import { handle as getFileProjectHandle } from "./get-file.js";
 import { handle as getHiddenProjectHandle } from "./get-hidden.js";
@@ -27,6 +32,8 @@ const ProjectEntries = {
     handle: deleteCommandRuleProjectHandle,
     preview: deleteCommandRuleProjectPreview,
   },
+  deleteProject: { handle: deleteProjectHandle, preview: deleteProjectPreview },
+  duplicateProject: { handle: duplicateProjectHandle },
   getDesignMdProject: { handle: getDesignMdProjectHandle },
   getFileProject: { handle: getFileProjectHandle },
   getHiddenProject: { handle: getHiddenProjectHandle },

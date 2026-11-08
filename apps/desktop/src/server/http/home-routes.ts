@@ -172,14 +172,6 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
     return c.json(await projects.rename(c.req.param("pid"), body.name));
   });
 
-  app.post("/api/projects/:pid/duplicate", async (c) =>
-    c.json({ project: await library.duplicate(c.req.param("pid")) })
-  );
-
-  app.delete("/api/projects/:pid", async (c) =>
-    c.json(await library.trash(c.req.param("pid")))
-  );
-
   app.get("/api/trash", async (c) => c.json(await library.listTrash()));
 
   app.get("/api/trash/:trashId/thumbnail", async (c) => {

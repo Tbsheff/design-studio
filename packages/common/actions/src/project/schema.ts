@@ -119,6 +119,12 @@ const HiddenMovedSchema = Schema.Struct({
   moved: Schema.Array(Schema.String),
 });
 
+const ProjectTrashedSchema = Schema.Struct({
+  name: Schema.String,
+  projectId: Schema.String,
+  trashId: Schema.String,
+});
+
 const CommandRulesSchema = Schema.Struct({
   rules: Schema.Array(Schema.String),
 });
@@ -158,6 +164,7 @@ export {
   ProjectImportedSchema,
   ProjectSchema,
   ProjectSearchFields,
+  ProjectTrashedSchema,
   SearchHitSchema,
   SettingsFields,
 };

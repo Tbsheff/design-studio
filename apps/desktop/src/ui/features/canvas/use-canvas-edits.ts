@@ -13,7 +13,6 @@ import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import { useCanvasVectorTools } from "./use-canvas-vector-tools.js";
 import { useFreeMove } from "./use-free-move.js";
-import { usePreviewMenu } from "./use-preview-menu.js";
 import { useResizeHandles } from "./use-resize-handles.js";
 
 type CanvasStageState = ReturnType<typeof useCanvasStage>;
@@ -25,7 +24,6 @@ type LayerEdits = ReturnType<typeof useLayerEdits>;
 interface EditTools {
   readonly inlinePrompt: ReturnType<typeof useInlinePrompt>;
   readonly layerEdits: LayerEdits;
-  readonly previewMenu: ReturnType<typeof usePreviewMenu>;
 }
 
 interface EditHandles {
@@ -51,13 +49,6 @@ interface CanvasEdits extends EditTools, EditHandles {
   readonly pointBadge: ReturnType<typeof useCanvasPoint>;
 }
 
-const setMenuOpener = (
-  menu: CanvasPreviewState["openMenu"],
-  handler: ReturnType<typeof usePreviewMenu>["onContextMenu"]
-): void => {
-  menu.current = handler;
-};
-
 const useEditTools = (
   props: ViewProps,
   text: CanvasStageState,
@@ -66,8 +57,8 @@ const useEditTools = (
   const { projectId, directionId, kind, headVersionId } = props;
   const { selection, setSelection } = props;
   const { active, comment, draw, layersOpen, live, picking, protoOn } = text;
-  const { stageRef, zoomBy } = text;
-  const { openMenu, frames, editsEnabled } = pv;
+  const { stageRef } = text;
+  const { frames, editsEnabled } = pv;
   const selectMode = picking;
   const treeWanted = layersOpen;
   const enabled = editsEnabled;
@@ -98,23 +89,6 @@ const useEditTools = (
   useCanvasVectorTools(editsEnabled, protoOn, draw, comment);
   const isEnabled = editsEnabled;
   useImageDrop({ directionId, frames, isEnabled, kind, notify, projectId });
-  const { port } = props;
-  const { selectRelative } = frames;
-
-  const edits = layerEdits;
-  const ids = { directionId, kind, projectId };
-  const zoom = (key: ZoomKey): void => zoomBy(key, "menu");
-
-  const previewMenu = usePreviewMenu({
-    edits,
-    ids,
-    port,
-    selectRelative,
-    selection,
-    zoom,
-  });
-
-  setMenuOpener(openMenu, previewMenu.onContextMenu);
   const { running } = props;
   const onSubmit = props.onInlinePrompt;
   const route = active.path;
@@ -129,7 +103,7 @@ const useEditTools = (
     stage,
   });
 
-  return { inlinePrompt, layerEdits, previewMenu };
+  return { inlinePrompt, layerEdits };
 };
 
 const useEditHandles = (

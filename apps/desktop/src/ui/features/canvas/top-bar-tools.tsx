@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import { copy } from "./copy.js";
-import type { CanvasTool } from "./top-bar-menu.js";
+import type { CanvasTool } from "./top-bar-menu-model.js";
 import { TopBarToolButton } from "./top-bar-tool-button.js";
 import type { ToolId } from "./top-bar-tool-button.js";
 

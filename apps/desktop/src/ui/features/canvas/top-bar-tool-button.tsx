@@ -3,7 +3,7 @@ import type { IconName } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import type { CanvasTool } from "./top-bar-menu.js";
+import type { CanvasTool } from "./top-bar-menu-model.js";
 
 type ToolId = Exclude<CanvasTool, null>;
 

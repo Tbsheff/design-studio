@@ -580,7 +580,8 @@
   }
 
   .canvas-topbar .topbar-zoom-icon {
-    display: block;
+    display: grid;
+    place-items: center;
   }
 }
 

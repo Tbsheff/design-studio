@@ -57,23 +57,24 @@ const ReviewEntry = (props: Props): ReactElement => {
   );
 
   const critique = (
-    <>
-      <Suspense fallback={null}>
-        <CritiquePanel
-          directionId={directionId}
-          frameId={frame.id}
-          isLive={live}
-          onSelect={selectSelector}
-          projectId={projectId}
-        />
-      </Suspense>
-      <WalkthroughSection
+    <Suspense fallback={null}>
+      <CritiquePanel
         directionId={directionId}
         frameId={frame.id}
         isLive={live}
+        onSelect={selectSelector}
         projectId={projectId}
       />
-    </>
+    </Suspense>
+  );
+
+  const walkthrough = (
+    <WalkthroughSection
+      directionId={directionId}
+      frameId={frame.id}
+      isLive={live}
+      projectId={projectId}
+    />
   );
 
   let panel: ReactElement | null = null;
@@ -91,6 +92,7 @@ const ReviewEntry = (props: Props): ReactElement => {
         onClose={close}
       >
         {critique}
+        {walkthrough}
       </ReviewEntryPanel>
     );
   }

@@ -17,12 +17,11 @@ import { useLayerCore } from "./use-layer-core.js";
 import { useStructureOps } from "./use-structure-ops.js";
 
 const isMac = IS_MAC;
-const noSource = NO_SOURCE;
 
 const STRUCTURE_DEPS: StructureDeps = {
   dropRequest: toDropRequest,
-  isMac,
-  noSource,
+  isMac: IS_MAC,
+  noSource: NO_SOURCE,
   pasteJsx: applyPasteJsx,
   selectionTargets: toSelectionTargets,
 };

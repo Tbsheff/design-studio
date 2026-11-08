@@ -3,8 +3,8 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { DropMenu } from "./top-bar-drop-menu.js";
-import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
+import { DropMenu } from "./top-bar-drop.js";
+import type { MenuEntry, MenuGroup } from "./top-bar-menu-model.js";
 
 const TopBarPresent = ({ present }: { present: MenuEntry[] }): ReactElement => {
   const groups = useCallback(

@@ -20,6 +20,7 @@ import { useCanvasStage } from "./use-canvas-stage.js";
 import { useCanvasWiring } from "./use-canvas-wiring.js";
 import { useChromeProps } from "./use-chrome-props.js";
 import type { ChromeExtra } from "./use-chrome-props.js";
+import { usePreviewMenu } from "./use-preview-menu.js";
 
 interface ViewSlots {
   readonly extra: ChromeExtra;
@@ -94,10 +95,32 @@ const useViewSlots = (
   return { extra, findHost };
 };
 
+const setMenuOpener = (
+  menu: ReturnType<typeof useCanvasPreview>["openMenu"],
+  handler: ReturnType<typeof usePreviewMenu>["onContextMenu"]
+): void => {
+  menu.current = handler;
+};
+
 const CanvasView = (props: ViewProps): ReactElement => {
   const stage = useCanvasStage(props);
   const preview = useCanvasPreview(props, stage);
   const edits = useCanvasEdits(props, stage, preview);
+
+  const previewMenu = usePreviewMenu({
+    edits: edits.layerEdits,
+    ids: {
+      directionId: props.directionId,
+      kind: props.kind,
+      projectId: props.projectId,
+    },
+    port: props.port,
+    selectRelative: preview.frames.selectRelative,
+    selection: props.selection,
+    zoom: (key) => stage.zoomBy(key, "menu"),
+  });
+
+  setMenuOpener(preview.openMenu, previewMenu.onContextMenu);
   const wiring = useCanvasWiring(props, stage, preview, edits);
   const { extra, findHost } = useViewSlots(props, stage, preview);
   const chrome = useChromeProps(props, stage, wiring, extra);
@@ -136,7 +159,7 @@ const CanvasView = (props: ViewProps): ReactElement => {
           />
         </Suspense>
       )}
-      {edits.previewMenu.menu}
+      {previewMenu.menu}
       {commandsHost && (
         <CanvasCommandsSlot host={commandsHost} input={wiring.commandsInput} />
       )}

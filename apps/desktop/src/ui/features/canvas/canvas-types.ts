@@ -105,7 +105,7 @@ interface StageSlots {
     }>
   >;
   readonly Spacing: LazyExoticComponent<typeof SpacingHandles>;
-  readonly TabOrder: typeof TabOrderSlot;
+  readonly TabOrder: LazyExoticComponent<typeof TabOrderSlot>;
 }
 
 export type {

@@ -7,7 +7,7 @@ import { reloadFramesMatching } from "../../platform/stage-dom.js";
 import { uiStore } from "../../platform/storage.js";
 import type { PanelTab } from "../../platform/use-panel-tab.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
-import type { CanvasTool } from "./top-bar-menu.js";
+import type { CanvasTool } from "./top-bar-menu-model.js";
 
 interface CanvasShell {
   pane: PanelTab;

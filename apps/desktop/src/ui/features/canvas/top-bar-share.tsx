@@ -3,9 +3,9 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { DropMenu } from "./top-bar-drop-menu.js";
-import { shareGroups } from "./top-bar-menu.js";
-import type { MenuGroup } from "./top-bar-menu.js";
+import { DropMenu } from "./top-bar-drop.js";
+import { shareGroups } from "./top-bar-menu-model.js";
+import type { MenuGroup } from "./top-bar-menu-model.js";
 import type { Props } from "./top-bar-props.js";
 
 const toShareTip = (hasShip: boolean): string => {

@@ -2,14 +2,14 @@ import { Suspense, useCallback, useMemo } from "react";
 import type { CSSProperties, ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { PortToAppDialog, usePortDialog } from "./top-bar-drop-menu.js";
+import { lazyPortToAppDialog, usePortDialog } from "./top-bar-drop-menu.js";
 import { TopBarEnd } from "./top-bar-end.js";
-import type { MenuEntry, PresentMode } from "./top-bar-menu.js";
+import type { MenuEntry, PresentMode } from "./top-bar-menu-model.js";
 import type { Props } from "./top-bar-props.js";
 import { TopBarStart } from "./top-bar-start.js";
 import { TopBarTools } from "./top-bar-tools.js";
+import type { ZoomProps } from "./top-bar-zoom-model.js";
 import { ZoomPill } from "./top-bar-zoom.js";
-import type { ZoomProps } from "./top-bar-zoom.js";
 
 const CONTENTS_STYLE: CSSProperties = { display: "contents" };
 
@@ -39,6 +39,8 @@ const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
     run: () => onPresent("new-window"),
   },
 ];
+
+const PortToAppDialog = lazyPortToAppDialog;
 
 const CanvasTopBar = (props: Props): ReactElement => {
   const port = usePortDialog(!props.onShip);

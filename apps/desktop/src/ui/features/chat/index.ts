@@ -8,6 +8,12 @@ const ChatPanel = lazy(async () => {
   return { default: loaded.ChatPanel };
 });
 
+const ClarifyForm = lazy(async () => {
+  const loaded = await import("./clarify-form.js");
+
+  return { default: loaded.ClarifyForm };
+});
+
 const McpToasts = lazy(async () => {
   const loaded = await import("./mcp-toasts.js");
 
@@ -20,4 +26,4 @@ const McpPointBadge = lazy(async () => {
   return { default: loaded.McpPointBadge };
 });
 
-export { ChatPanel, McpPointBadge, McpToasts, runStepText };
+export { ChatPanel, ClarifyForm, McpPointBadge, McpToasts, runStepText };

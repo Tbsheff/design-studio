@@ -6,7 +6,6 @@ import type {
 } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import type { WorkspaceList } from "@design-studio/contracts/folders";
-import type { DragEvent } from "react";
 
 import { api } from "../../api.js";
 import { homeVariations } from "../../platform/storage.js";
@@ -41,29 +40,6 @@ const PLACEHOLDER =
 const HOME_REASON_ID = "home-send-reason";
 
 const EMPTY_PROMPT = "Describe the design first";
-
-const setPromptFocus = (home: HTMLElement | null, atEnd = false): void => {
-  home?.scrollTo({ behavior: "smooth", top: 0 });
-  globalThis.requestAnimationFrame(() => {
-    const area = document.querySelector<HTMLTextAreaElement>(
-      '[aria-label="Describe the design"]'
-    );
-
-    area?.focus();
-
-    if (atEnd && area) {
-      area.setSelectionRange(area.value.length, area.value.length);
-    }
-  });
-};
-
-const setFocusIn = (selector: string): void => {
-  globalThis.setTimeout(() => {
-    const el = document.querySelector<HTMLElement>(selector);
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
-    el?.focus();
-  }, 60);
-};
 
 const getFolderLabel = (
   list: WorkspaceList | null,
@@ -180,7 +156,7 @@ const createFromHome = async (input: HomeCreateInput): Promise<Project> => {
 };
 
 const hasFiles = (event: DragEvent): boolean =>
-  [...event.dataTransfer.types].includes("Files");
+  [...(event.dataTransfer?.types ?? [])].includes("Files");
 
 const getPromptPlaceholder = (
   chip: AppChip | null,
@@ -197,12 +173,12 @@ const getPromptPlaceholder = (
   return null;
 };
 
-const getReasonId = (blocker: string | null): string | undefined => {
+const getReasonId = (blocker: string | null): string | null => {
   if (blocker && blocker !== EMPTY_PROMPT) {
     return HOME_REASON_ID;
   }
 
-  return undefined;
+  return null;
 };
 
 const isEmpty = (projects: Project[] | null): boolean =>
@@ -249,8 +225,6 @@ export {
   LEVEL_LABEL,
   PLACEHOLDER,
   createFromHome,
-  setFocusIn as focusIn,
-  setPromptFocus as focusPrompt,
   getFolderLabel as folderLabel,
   hasFiles,
   getHome as homeOf,

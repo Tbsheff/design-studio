@@ -4,7 +4,7 @@ import type { ReactElement, RefObject } from "react";
 import type { AppChip } from "./app-chip-model.js";
 import { AppSlot } from "./app-slot.js";
 import type { PopState } from "./composer-pop-model.js";
-import { FolderPathPop } from "./lazy-parts.js";
+import { FolderPathPop } from "./lazy-parts-model.js";
 
 interface FolderAnchorProps {
   readonly pops: PopState;

@@ -23,6 +23,7 @@ import type { PacksState } from "../design-system/packs.js";
 import type { RunMode } from "./app-chip-model.js";
 import { copy } from "./copy.js";
 import type { DesignCount } from "./home-model.js";
+import type { ModelSettings } from "./model-settings-model.js";
 import { NoneCard } from "./none-card.js";
 import { toClassName } from "./project-card-model.js";
 
@@ -269,15 +270,6 @@ const PackPopover = ({
   </Pop>
 );
 
-interface ModelSettings {
-  readonly model: string;
-  readonly onModel: (model: string) => void;
-  readonly level: RunLevel;
-  readonly onLevel: (level: RunLevel) => void;
-  readonly designs: DesignCount;
-  readonly onMore: () => void;
-}
-
 const ModelPopover = ({
   trigger,
   onClose,
@@ -467,4 +459,4 @@ export {
   moveFocus,
 };
 
-export type { Close, ModelSettings };
+export type { Close };

@@ -1,54 +1,48 @@
 import { useState } from "react";
-import type { DragEvent } from "react";
+import type { RefObject } from "react";
 
 import { getSoleUrl } from "./composer-drafts-model.js";
 import type { ReferenceDraft } from "./composer-drafts-model.js";
-
-interface DropHandlers {
-  readonly onDragLeave: (event: DragEvent<HTMLFormElement>) => void;
-  readonly onDragOver: (event: DragEvent<HTMLFormElement>) => void;
-  readonly onDrop: (event: DragEvent<HTMLFormElement>) => void;
-}
+import { useDropTarget } from "./use-drop-target.js";
 
 interface ComposerDrop {
-  readonly dropHandlers: DropHandlers;
   readonly isDragging: boolean;
 }
 
-const isAcceptedDrag = (event: DragEvent<HTMLFormElement>): boolean =>
-  [...event.dataTransfer.types].some(
+const isAcceptedDrag = (event: DragEvent): boolean =>
+  [...(event.dataTransfer?.types ?? [])].some(
     (type) => type === "Files" || type === "text/uri-list"
   );
 
 const useComposerDrop = (
+  formRef: RefObject<HTMLElement | null>,
   addImages: (picked: File[]) => void,
   addReference: (reference: ReferenceDraft) => void,
   onFolder: ((data: DataTransfer) => boolean) | null
 ): ComposerDrop => {
   const [isDragging, setIsDragging] = useState(false);
 
-  const onDragOver = (event: DragEvent<HTMLFormElement>): void => {
-    if (!isAcceptedDrag(event)) {
+  const onDragOver = (event: DragEvent): void => {
+    if (!isAcceptedDrag(event) || !event.dataTransfer) {
       return;
     }
 
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
-
-    if (!isDragging) {
-      setIsDragging(true);
-    }
+    setIsDragging(true);
   };
 
-  const onDrop = (event: DragEvent<HTMLFormElement>): void => {
+  const onDrop = (event: DragEvent): void => {
     event.preventDefault();
     setIsDragging(false);
 
-    if (onFolder?.(event.dataTransfer)) {
+    const data = event.dataTransfer;
+
+    if (!data || onFolder?.(data)) {
       return;
     }
 
-    const files = [...event.dataTransfer.files];
+    const files = [...data.files];
 
     if (files.length > 0) {
       addImages(files);
@@ -57,7 +51,7 @@ const useComposerDrop = (
     }
 
     const reference = getSoleUrl(
-      event.dataTransfer.getData("text/uri-list").split("\n")[0] ?? ""
+      data.getData("text/uri-list").split("\n")[0] ?? ""
     );
 
     if (reference) {
@@ -65,15 +59,19 @@ const useComposerDrop = (
     }
   };
 
-  const onDragLeave = (event: DragEvent<HTMLFormElement>): void => {
-    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+  const onDragLeave = (event: DragEvent): void => {
+    const next = event.relatedTarget;
+
+    if (!(next instanceof Node && formRef.current?.contains(next))) {
       setIsDragging(false);
     }
   };
 
-  return { dropHandlers: { onDragLeave, onDragOver, onDrop }, isDragging };
+  useDropTarget(formRef, { onDragLeave, onDragOver, onDrop });
+
+  return { isDragging };
 };
 
 export { useComposerDrop };
 
-export type { DropHandlers, ComposerDrop };
+export type { ComposerDrop };

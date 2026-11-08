@@ -1,5 +1,5 @@
 import { Icon } from "@design-studio/ui";
-import type { ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { ChipFileIcon } from "./chip-file-icon.js";
 
@@ -9,14 +9,17 @@ const AppChipMain = ({
   tip,
   isMenuOpen,
   onMenu,
+  triggerRef,
 }: {
   readonly name: string;
   readonly label: string;
   readonly tip: string;
   readonly isMenuOpen: boolean;
   readonly onMenu: () => void;
+  readonly triggerRef: RefObject<HTMLButtonElement | null>;
 }): ReactElement => (
   <button
+    ref={triggerRef}
     type="button"
     className="home-chip-app"
     aria-haspopup="dialog"

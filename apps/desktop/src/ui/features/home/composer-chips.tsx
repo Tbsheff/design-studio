@@ -1,30 +1,48 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement, RefObject } from "react";
 
+import type { AppChip } from "./app-chip-model.js";
 import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 import { copy } from "./copy.js";
+import { AppChipView } from "./home-app-chip.js";
 import { ImageChip } from "./image-chip.js";
 import { ReferenceChip } from "./reference-chip.js";
 
 const ComposerChips = ({
-  lead,
+  chip,
+  isChipMenuOpen,
+  chipTriggerRef,
+  onChipMenu,
+  onChipRemove,
   images,
   references,
   onRemoveImage,
   onRemoveReference,
 }: {
-  readonly lead?: ReactNode;
+  readonly chip: AppChip | null;
+  readonly isChipMenuOpen: boolean;
+  readonly chipTriggerRef: RefObject<HTMLButtonElement | null>;
+  readonly onChipMenu: () => void;
+  readonly onChipRemove: () => void;
   readonly images: ImageDraft[];
   readonly references: ReferenceDraft[];
   readonly onRemoveImage: (id: string) => void;
   readonly onRemoveReference: (url: string) => void;
 }): ReactElement | null => {
-  if (!lead && images.length === 0 && references.length === 0) {
+  if (!chip && images.length === 0 && references.length === 0) {
     return null;
   }
 
   return (
     <ul className="home-chips" aria-label={copy.attachedToThisPrompt}>
-      {lead}
+      {chip && (
+        <AppChipView
+          chip={chip}
+          isMenuOpen={isChipMenuOpen}
+          onMenu={onChipMenu}
+          onRemove={onChipRemove}
+          triggerRef={chipTriggerRef}
+        />
+      )}
       {images.map((image) => (
         <ImageChip key={image.id} image={image} onRemove={onRemoveImage} />
       ))}

@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 import { copy } from "./copy.js";
 import { homePrefs } from "./home-prefs-model.js";
 import type { HomeTemplate } from "./home-templates.js";
-import type { TemplatesModule } from "./lazy-parts.js";
+import type { TemplatesModule } from "./lazy-parts-model.js";
 
 const setTemplatesHidden = (): void => {
   homePrefs.set({ hasTemplatesShown: false });

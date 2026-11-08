@@ -2,7 +2,7 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { loadTrash } from "./lazy-parts.js";
+import { loadTrash } from "./lazy-parts-model.js";
 
 const preloadTrash = (): void => {
   loadTrash();

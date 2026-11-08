@@ -1,9 +1,9 @@
 import { Suspense, useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { HomeToast } from "./home-sections.js";
-import type { HomeToastState } from "./home-sections.js";
-import { HomeDoctor, HomeTrash } from "./lazy-parts.js";
+import type { HomeToastState } from "./home-toast-model.js";
+import { HomeToast } from "./home-toast.js";
+import { HomeDoctor, HomeTrash } from "./lazy-parts-model.js";
 import type { useDoctorGate } from "./use-doctor-gate.js";
 
 const HomeOverlays = ({

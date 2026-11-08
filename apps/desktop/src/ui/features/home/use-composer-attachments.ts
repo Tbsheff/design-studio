@@ -9,7 +9,6 @@ import { useReferenceDrafts } from "./use-reference-drafts.js";
 
 interface ComposerAttachments {
   readonly addImages: (picked: File[]) => void;
-  readonly dropHandlers: ReturnType<typeof useComposerDrop>["dropHandlers"];
   readonly fileRef: RefObject<HTMLInputElement | null>;
   readonly images: ImageDraft[];
   readonly isDragging: boolean;
@@ -20,6 +19,7 @@ interface ComposerAttachments {
 }
 
 const useComposerAttachments = (
+  formRef: RefObject<HTMLElement | null>,
   setFormError: (message: string | null) => void,
   onFolder: ((data: DataTransfer) => boolean) | null
 ): ComposerAttachments => {
@@ -28,7 +28,8 @@ const useComposerAttachments = (
   const { addReference, references, removeReference } =
     useReferenceDrafts(setFormError);
 
-  const { dropHandlers, isDragging } = useComposerDrop(
+  const { isDragging } = useComposerDrop(
+    formRef,
     addImages,
     addReference,
     onFolder
@@ -56,7 +57,6 @@ const useComposerAttachments = (
 
   return {
     addImages,
-    dropHandlers,
     fileRef,
     images,
     isDragging,

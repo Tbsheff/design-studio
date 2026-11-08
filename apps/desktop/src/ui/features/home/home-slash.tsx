@@ -1,5 +1,5 @@
 import type { RunLevel } from "@design-studio/contracts";
-import { useLayoutEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect } from "react";
 import type {
   KeyboardEvent,
   MutableRefObject,
@@ -16,6 +16,15 @@ const INPUT_ATTRS = [
   "aria-activedescendant",
 ] as const;
 
+type SlashKeys = (event: KeyboardEvent<HTMLElement>) => boolean;
+
+const setSlashKeys = (
+  target: MutableRefObject<SlashKeys | null>,
+  handler: SlashKeys
+): void => {
+  target.current = handler;
+};
+
 interface Props {
   readonly prompt: string;
   readonly setPrompt: (value: string) => void;
@@ -23,10 +32,9 @@ interface Props {
   readonly onLevel: (level: RunLevel) => void;
   readonly model: string;
   readonly onModel: (model: string) => void;
-  readonly keys: MutableRefObject<
-    ((event: KeyboardEvent<HTMLElement>) => boolean) | null
-  >;
-  readonly home: RefObject<HTMLElement | null>;
+  readonly keys: MutableRefObject<SlashKeys | null>;
+  readonly promptRef: RefObject<HTMLElement | null>;
+  readonly composerRef: RefObject<HTMLElement | null>;
 }
 
 const HomeSlashMenu = ({
@@ -37,7 +45,8 @@ const HomeSlashMenu = ({
   model,
   onModel,
   keys,
-  home,
+  promptRef,
+  composerRef,
 }: Props): ReactElement | null => {
   const slash = useSlashMenu({
     draft: prompt,
@@ -46,23 +55,30 @@ const HomeSlashMenu = ({
     setDraft: setPrompt,
   });
 
-  keys.current = slash.onKeyDown;
+  const { close, inputProps, onKeyDown } = slash;
+  useEffect(() => {
+    setSlashKeys(keys, onKeyDown);
+  }, [keys, onKeyDown]);
 
-  const input = (): HTMLElement | null =>
-    home.current?.querySelector<HTMLElement>(
-      '[aria-label="Describe the design"]'
-    ) ?? null;
+  const readInput = useCallback(
+    (): HTMLElement | null => promptRef.current,
+    [promptRef]
+  );
 
-  const attrs: Record<string, string | undefined> = { ...slash.inputProps };
+  const readAnchor = useCallback(
+    (): HTMLElement | null => composerRef.current,
+    [composerRef]
+  );
+
   useLayoutEffect(() => {
-    const area = input();
+    const area = promptRef.current;
 
     if (!area) {
       return;
     }
 
     for (const name of INPUT_ATTRS) {
-      const value = attrs[name];
+      const value = inputProps[name];
 
       if (value) {
         area.setAttribute(name, value);
@@ -79,13 +95,13 @@ const HomeSlashMenu = ({
   return (
     <SlashMenu
       view={slash.view}
-      anchor={() =>
-        home.current?.querySelector<HTMLElement>(".home-composer") ?? null
-      }
-      input={input}
-      onClose={slash.close}
+      anchor={readAnchor}
+      input={readInput}
+      onClose={close}
     />
   );
 };
 
 export { HomeSlashMenu };
+
+export type { SlashKeys };

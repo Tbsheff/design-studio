@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { AppChipMain } from "./app-chip-main.js";
 import type { AppChip } from "./app-chip-model.js";
@@ -23,11 +23,13 @@ const AppChipView = ({
   isMenuOpen,
   onMenu,
   onRemove,
+  triggerRef,
 }: {
   readonly chip: AppChip;
   readonly isMenuOpen: boolean;
   readonly onMenu: () => void;
   readonly onRemove: () => void;
+  readonly triggerRef: RefObject<HTMLButtonElement | null>;
 }): ReactElement => {
   const name = chipName(chip);
 
@@ -39,6 +41,7 @@ const AppChipView = ({
         tip={chip.inspection?.path ?? chip.path}
         isMenuOpen={isMenuOpen}
         onMenu={onMenu}
+        triggerRef={triggerRef}
       />
       <AppChipRemove name={name} onRemove={onRemove} />
     </li>

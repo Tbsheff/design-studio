@@ -7,8 +7,8 @@ import type { PacksState } from "../design-system/packs.js";
 import { copy } from "./copy.js";
 import type { AppHealth } from "./deps.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
-import type { useProjectActions } from "./home-sections.js";
-import type { LibraryModule } from "./lazy-parts.js";
+import type { LibraryModule } from "./lazy-parts-model.js";
+import type { CardActions } from "./project-card-model.js";
 
 const Library = ({
   lib,
@@ -28,7 +28,7 @@ const Library = ({
   readonly projects: Project[];
   readonly health: Map<string, AppHealth>;
   readonly homeDir: string | null;
-  readonly actions: ReturnType<typeof useProjectActions>;
+  readonly actions: CardActions;
   readonly packs: PacksState;
   readonly pack: PackSummary | null;
   readonly query: string;

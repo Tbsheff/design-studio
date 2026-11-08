@@ -84,6 +84,30 @@ const usePackActions = ({
     return (): void => clearTimeout(timer);
   }, [toast]);
 
+  const save = useCallback(
+    async (name: string, options: SaveOptions): Promise<void> => {
+      if (!directionId) {
+        return;
+      }
+
+      const result = await packApi.savePack(
+        projectId,
+        directionId,
+        toSaveBody(name, options)
+      );
+
+      refreshPacks();
+      setProject(result.project);
+
+      if (result.version) {
+        onCommitted();
+      }
+
+      show(`Saved ${result.pack.name} to your library.`);
+    },
+    [projectId, directionId, setProject, onCommitted, show]
+  );
+
   const actions = useMemo<DesignSystemActions>(
     () => ({
       onApply: async (packId): Promise<void> => {
@@ -96,28 +120,11 @@ const usePackActions = ({
         onCommitted();
         show(result.notice ?? `${result.version.title}.`);
       },
-      onSave: async (name, packId, asNew, force): Promise<void> => {
-        if (!directionId) {
-          return;
-        }
-
-        const result = await packApi.savePack(
-          projectId,
-          directionId,
-          toSaveBody(name, { asNew, force, packId })
-        );
-
-        refreshPacks();
-        setProject(result.project);
-
-        if (result.version) {
-          onCommitted();
-        }
-
-        show(`Saved ${result.pack.name} to your library.`);
-      },
+      onSave: (name, packId, asNew, force): Promise<void> =>
+        save(name, { asNew, force, packId }),
+      onSaveNamed: (name, asNew): Promise<void> => save(name, { asNew }),
     }),
-    [projectId, directionId, setProject, onCommitted, show]
+    [projectId, directionId, setProject, onCommitted, show, save]
   );
 
   return { actions, toast };

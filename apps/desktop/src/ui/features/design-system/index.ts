@@ -62,7 +62,9 @@ export {
   PortToAppDialog,
 };
 
-export { designSystemRef, DesignSystemChip } from "./design-system-chip.js";
+export { DesignSystemChip } from "./design-system-chip.js";
+
+export { designSystemRef } from "./design-system-ref.js";
 
 export { ChangePackDialog, SavePackDialog } from "./design-system-dialogs.js";
 
@@ -72,7 +74,7 @@ export { useDesignSystemState } from "./use-design-system-state.js";
 
 export { usePackActions } from "./use-pack-actions.js";
 
-export type { DesignSystemRef } from "./design-system-chip.js";
+export type { DesignSystemRef } from "./design-system-ref.js";
 
 export type { ComponentList } from "./use-components.js";
 

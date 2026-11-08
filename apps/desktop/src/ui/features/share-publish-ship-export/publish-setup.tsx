@@ -40,9 +40,9 @@ export function usePublishCli() {
       run(() => publishApi.cli());
     };
 
-    window.addEventListener("focus", refresh);
+    globalThis.addEventListener("focus", refresh);
 
-    return () => window.removeEventListener("focus", refresh);
+    return () => globalThis.removeEventListener("focus", refresh);
   }, [waiting, run]);
 
   return { busy: isPending, cli, error, run };

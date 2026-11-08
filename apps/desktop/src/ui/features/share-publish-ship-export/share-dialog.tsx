@@ -362,12 +362,12 @@ function useShares(projectId: string) {
       return;
     }
 
-    const timer = window.setInterval(
+    const timer = globalThis.setInterval(
       () => void reload().catch(() => null),
       3000
     );
 
-    return () => window.clearInterval(timer);
+    return () => globalThis.clearInterval(timer);
   }, [watching, reload]);
 
   const act = useCallback(

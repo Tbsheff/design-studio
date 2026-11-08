@@ -179,9 +179,9 @@ function useElapsed(status: Status): number {
       return;
     }
 
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const timer = globalThis.setInterval(() => setNow(Date.now()), 1000);
 
-    return () => window.clearInterval(timer);
+    return () => globalThis.clearInterval(timer);
   }, [status.kind]);
 
   return status.kind === "busy"
@@ -191,11 +191,11 @@ function useElapsed(status: Status): number {
 
 function useCopied(): [string | null, (key: string, text: string) => void] {
   const [copied, setCopied] = useState<string | null>(null);
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
   useEffect(
     () => () => {
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
     },
     []
@@ -207,10 +207,10 @@ function useCopied(): [string | null, (key: string, text: string) => void] {
         setCopied(key);
 
         if (timer.current !== null) {
-          window.clearTimeout(timer.current);
+          globalThis.clearTimeout(timer.current);
         }
 
-        timer.current = window.setTimeout(() => setCopied(null), 1500);
+        timer.current = globalThis.setTimeout(() => setCopied(null), 1500);
       },
       () => setCopied(null)
     );

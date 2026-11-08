@@ -112,7 +112,7 @@ class CursorLayer {
   }
 
   destroy(): void {
-    window.cancelAnimationFrame(this.raf);
+    globalThis.cancelAnimationFrame(this.raf);
     this.layer?.remove();
     this.layer = null;
     this.nodes.clear();
@@ -120,7 +120,7 @@ class CursorLayer {
 
   private kick(): void {
     if (!this.raf) {
-      this.raf = window.requestAnimationFrame(() => this.paint());
+      this.raf = globalThis.requestAnimationFrame(() => this.paint());
     }
   }
 
@@ -219,18 +219,18 @@ class CursorLayer {
       this.place(this.node(key, cursor, layer), cursor, stage, box);
     }
 
-    this.raf = window.requestAnimationFrame(() => this.paint());
+    this.raf = globalThis.requestAnimationFrame(() => this.paint());
   }
 }
 
 function studioPointer(projectId: string, stage: () => HTMLElement | null) {
   let on = false;
   let pending: StudioCursorInput | null | undefined;
-  let timer = 0;
+  let timer: ReturnType<typeof globalThis.setTimeout> | null = null;
   let lastFrame: string | null = null;
 
   const flush = () => {
-    timer = 0;
+    timer = null;
 
     if (pending === undefined) {
       return;
@@ -250,7 +250,7 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
     pending = value;
 
     if (!timer) {
-      timer = window.setTimeout(flush, SEND_MS);
+      timer = globalThis.setTimeout(flush, SEND_MS);
     }
   };
 
@@ -345,7 +345,7 @@ export function startShareLive(
   const pointer = studioPointer(projectId, stage);
   let stopped = false;
   let control: AbortController | null = null;
-  let retry = 0;
+  let retry: ReturnType<typeof globalThis.setTimeout> | null = null;
 
   const handle = (event: SharePresenceEvent) => {
     if (event.type === "state") {
@@ -377,13 +377,15 @@ export function startShareLive(
       if (control === own && !stopped) {
         layer.set([]);
         pointer.set(false);
-        retry = window.setTimeout(reconnect, RETRY_MS);
+        retry = globalThis.setTimeout(reconnect, RETRY_MS);
       }
     }
   };
 
   const connect = () => {
-    window.clearTimeout(retry);
+    if (retry !== null) {
+      globalThis.clearTimeout(retry);
+    }
     control?.abort();
 
     if (stopped) {
@@ -404,13 +406,15 @@ export function startShareLive(
     }
   };
 
-  window.addEventListener(SHARES_CHANGED, onChanged);
+  globalThis.addEventListener(SHARES_CHANGED, onChanged);
   connect();
 
   return () => {
     stopped = true;
-    window.removeEventListener(SHARES_CHANGED, onChanged);
-    window.clearTimeout(retry);
+    globalThis.removeEventListener(SHARES_CHANGED, onChanged);
+    if (retry !== null) {
+      globalThis.clearTimeout(retry);
+    }
     control?.abort();
     pointer.set(false);
     layer.destroy();

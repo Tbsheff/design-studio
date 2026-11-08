@@ -143,9 +143,9 @@ export function useReview(input: ReviewInput): ReviewState {
       return;
     }
 
-    const timer = window.setTimeout(run, result ? RERUN_MS : 0);
+    const timer = globalThis.setTimeout(run, result ? RERUN_MS : 0);
 
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [open, stale, result, busy, fixing, error, run]);
 
   return {

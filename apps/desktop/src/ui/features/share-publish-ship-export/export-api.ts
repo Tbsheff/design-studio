@@ -235,7 +235,7 @@ export interface OpenExportDetail {
 }
 
 export function openExport(detail: OpenExportDetail = {}): void {
-  window.dispatchEvent(
+  globalThis.dispatchEvent(
     new CustomEvent<OpenExportDetail>(OPEN_EVENT, { detail })
   );
 }
@@ -246,9 +246,9 @@ export function onOpenExport(
   const listener = (event: Event) =>
     handler((event as CustomEvent<OpenExportDetail>).detail ?? {});
 
-  window.addEventListener(OPEN_EVENT, listener);
+  globalThis.addEventListener(OPEN_EVENT, listener);
 
-  return () => window.removeEventListener(OPEN_EVENT, listener);
+  return () => globalThis.removeEventListener(OPEN_EVENT, listener);
 }
 
 interface RevealBridge {

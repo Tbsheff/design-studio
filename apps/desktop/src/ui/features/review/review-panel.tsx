@@ -259,12 +259,12 @@ function useEscapeClose(
     };
 
     const onFrameEscape = () => latest.current();
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
 
     return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
     };
   }, [panel]);
 }

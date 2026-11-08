@@ -32,9 +32,9 @@ export function usePublishBackend() {
       return;
     }
 
-    const timer = window.setInterval(() => void load(), 1000);
+    const timer = globalThis.setInterval(() => void load(), 1000);
 
-    return () => window.clearInterval(timer);
+    return () => globalThis.clearInterval(timer);
   }, [running, load]);
 
   const setup = useCallback(async (mode: PublishBackendMode) => {

@@ -108,7 +108,7 @@ export function CopyCodeMenu({
   const [state, setState] = useState<State>({ kind: "idle" });
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
@@ -122,7 +122,7 @@ export function CopyCodeMenu({
   useEffect(
     () => () => {
       if (timer.current !== null) {
-        window.clearTimeout(timer.current);
+        globalThis.clearTimeout(timer.current);
       }
     },
     []
@@ -139,10 +139,10 @@ export function CopyCodeMenu({
     setState(next);
 
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
 
-    timer.current = window.setTimeout(
+    timer.current = globalThis.setTimeout(
       () => setState({ kind: "idle" }),
       RESET_MS
     );

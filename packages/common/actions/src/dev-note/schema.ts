@@ -23,7 +23,7 @@ const DevNoteTextSchema = Schema.String.check(
 const DevNoteIdSchema = Schema.String.check(
   Schema.isPattern(/^[\w-]{1,64}$/u)
 ).annotate({
-  description: "The dev note id from list_dev_notes.",
+  description: "The dev note id from list_dev_note.",
 });
 
 const LayerFieldSchema = Schema.NullOr(Schema.String).annotate({

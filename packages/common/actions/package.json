@@ -55,6 +55,7 @@
     "./canvas/delete-link": "./src/canvas/delete-link.ts",
     "./canvas/export-flow": "./src/canvas/export-flow.ts",
     "./canvas/get-doc": "./src/canvas/get-doc.ts",
+    "./canvas/get-flow-video": "./src/canvas/get-flow-video.ts",
     "./canvas/index": "./src/canvas/index.ts",
     "./canvas/inspect-link-interaction": "./src/canvas/inspect-link-interaction.ts",
     "./canvas/list-flow-links": "./src/canvas/list-flow-links.ts",

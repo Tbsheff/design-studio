@@ -6,13 +6,14 @@ import {
   LinkStore,
   LinkWriter,
 } from "../../canvas/index.js";
-import { FlowVideoWriter } from "../../export/index.js";
+import { FlowVideoStore, FlowVideoWriter } from "../../export/index.js";
 
 const CanvasLive = Layer.mergeAll(
   CanvasStore.layer,
   CanvasWriter.layer,
   LinkStore.layer,
   LinkWriter.layer,
+  FlowVideoStore.layer,
   FlowVideoWriter.layer
 );
 

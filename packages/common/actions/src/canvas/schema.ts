@@ -409,6 +409,16 @@ const FlowVideoResultSchema = Schema.Struct({
   steps: Schema.Array(FlowVideoStepSchema),
 });
 
+const FlowVideoNameSchema = Schema.String.check(
+  Schema.isPattern(/^flow-[0-9a-f]{12}\.(?<ext>webm|mp4|gif)$/u)
+);
+
+const FlowVideoFileSchema = Schema.Struct({
+  content: Schema.String,
+  name: Schema.String,
+  type: Schema.String,
+});
+
 const FlowVideoFields = {
   format: FlowVideoFormatSchema.annotate({
     description: "webm, mp4 or gif. Default webm. mp4 and gif need ffmpeg.",
@@ -450,6 +460,8 @@ export {
   BaseHashSchema,
   FlowBrokenLinkSchema,
   FlowVideoFields,
+  FlowVideoFileSchema,
+  FlowVideoNameSchema,
   FlowVideoFormatSchema,
   FlowVideoResultSchema,
   FlowVideoStepSchema,

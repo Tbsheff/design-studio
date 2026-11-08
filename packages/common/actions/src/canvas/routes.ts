@@ -36,6 +36,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/canvas",
   },
+  getFlowVideoCanvas: {
+    id: "canvas.getFlowVideo",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/flow/video",
+  },
   inspectLinkInteractionCanvas: {
     id: "canvas.inspectLinkInteraction",
     invalidates: [],

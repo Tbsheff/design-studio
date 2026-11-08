@@ -16,4 +16,4 @@ export type {
   StoredFixture,
 } from "./fixture/index.js";
 
-export { FlowVideoWriter } from "./flow-video/index.js";
+export { FlowVideoStore, FlowVideoWriter } from "./flow-video/index.js";

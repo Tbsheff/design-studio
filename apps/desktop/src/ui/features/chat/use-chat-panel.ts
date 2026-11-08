@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -9,20 +10,21 @@ import {
 import type { Dispatch, SetStateAction } from "react";
 
 import { useLive } from "../../platform/live-store.js";
-import type { TurnActions } from "./chat-rewind.js";
 import {
   chatSearchAvailable,
   chatSearchOpen,
   focusChatSearchButton,
 } from "./chat-search-model.js";
-import type { PolishProps } from "./chat-turn-model.js";
+import type { PolishProps, TurnActions } from "./chat-turn-model.js";
 import { loadRunsThrough, renameRun } from "./run-history-model.js";
 import type { RunView } from "./run-state-model.js";
 import type { RewindControl } from "./use-rewind.js";
 
 const useLatest = <Value>(value: Value): { readonly current: Value } => {
   const ref = useRef(value);
-  ref.current = value;
+  useLayoutEffect(() => {
+    ref.current = value;
+  }, [value]);
 
   return ref;
 };
@@ -141,7 +143,7 @@ const useTurnActions = (
 ): UseTurnActionsResult => {
   const [titles, setTitles] = useState<Record<string, string>>({});
   const rewindRef = useLatest(rewind);
-  const hasRewind = rewind !== undefined;
+  const hasRewind = Boolean(rewind);
 
   const actions = useMemo<TurnActions | null>(() => {
     if (hasRewind) {

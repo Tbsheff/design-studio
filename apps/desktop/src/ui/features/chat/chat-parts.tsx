@@ -25,7 +25,7 @@ import { AnsweredCard } from "./answered-card.js";
 import { CONTEXT_WARN, errorHint, splitAnswers } from "./chat-parts-model.js";
 import type { RunUndoAction, UserMessageSlots } from "./chat-parts-model.js";
 import { focusPromptInput } from "./composer-focus.js";
-import { contextShare } from "./context-meter.js";
+import { contextShare } from "./context-share-model.js";
 import { copy } from "./copy.js";
 import { RequestChips } from "./request-chips.js";
 import type { RunView } from "./run-state-model.js";

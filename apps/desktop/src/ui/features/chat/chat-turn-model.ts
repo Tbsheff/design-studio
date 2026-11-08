@@ -1,7 +1,17 @@
 import { forkBaseOf } from "../../../shared/rewind.js";
-import type { TurnActions } from "./chat-rewind.js";
 import type { RunView } from "./run-state-model.js";
 import type { RewindControl } from "./use-rewind.js";
+
+interface TurnActions {
+  onRestore: (versionId: string) => void;
+  onEditResend: (
+    run: RunView,
+    prompt: string,
+    fromVersionId: string
+  ) => Promise<void>;
+  onRename: (runId: string, title: string) => Promise<void>;
+  dirtyCount: () => number;
+}
 
 interface PolishProps {
   headVersionId: string | null;
@@ -133,4 +143,4 @@ const reviewOf = (
 
 export { reviewOf, turnProps, undoProps };
 
-export type { PolishProps, TurnProps };
+export type { PolishProps, TurnActions, TurnProps };

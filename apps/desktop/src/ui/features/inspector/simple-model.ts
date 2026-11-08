@@ -7,7 +7,7 @@ import type { SharedSource } from "@design-studio/contracts/app";
 import type { MutableRefObject, ReactNode } from "react";
 
 import type { PreviewPort } from "../../platform/bridge.js";
-import type { DeclaredMargins } from "./box-model.js";
+import type { DeclaredMargins } from "./box-model-model.js";
 import { copy } from "./copy.js";
 import { SIDES } from "./css-value-model.js";
 import type { StyleValues } from "./css-value-model.js";

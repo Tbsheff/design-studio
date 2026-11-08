@@ -805,7 +805,7 @@ fieldset.ins-toggles {
   bottom: var(--s-2);
 }
 
-.edit-pane .box-ring .side {
+.edit-pane .box-ring .side-cell .ins-input {
   padding: 0 2px;
   text-align: center;
   font-variant-numeric: tabular-nums;

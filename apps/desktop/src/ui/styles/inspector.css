@@ -472,7 +472,7 @@ body.ins-scrubbing * {
   inset: -4px;
 }
 
-.box-ring .side {
+.box-ring .side-cell .ins-input {
   height: 28px;
   padding: 0 var(--s-1);
   border-radius: var(--r-control-sm);
@@ -483,11 +483,11 @@ body.ins-scrubbing * {
   line-height: 28px;
 }
 
-.box-ring .side:hover {
+.box-ring .side-cell .ins-input:hover {
   box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
-.box-ring .side:focus {
+.box-ring .side-cell .ins-input:focus {
   background: var(--surface);
   box-shadow:
     inset 0 0 0 1px var(--accent),

@@ -21,7 +21,7 @@ const BoxModelMemo = memo(
   (first, second) =>
     isSameEditValues(first.edit, second.edit, BOX_PROPS) &&
     first.edit.dirty.join(",") === second.edit.dirty.join(",") &&
-    SIDES.every((side) => first.declared?.[side] === second.declared?.[side])
+    SIDES.every((side) => first.declared[side] === second.declared[side])
 );
 
 const LayoutSection = ({

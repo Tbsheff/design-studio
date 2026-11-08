@@ -684,7 +684,7 @@ const createAppContext = (deps: AppDeps) => {
         .then(({ direction }) =>
           invalidateTokenSourceOnChange(direction.workTree, paths)
         )
-        .catch(() => {});
+        .catch(() => null);
     });
   };
 

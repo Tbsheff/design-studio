@@ -5,7 +5,7 @@ import { streamSSE } from "hono/streaming";
 import type { AppContext } from "./app-context.js";
 import { HEARTBEAT_MS } from "./app-request.js";
 
-const toIgnoredFailure = (): void => {};
+const toIgnoredFailure = (): null => null;
 
 const registerEventsRoutes = (app: Hono, ctx: AppContext): void => {
   const { bus, projects, streamTracker } = ctx;

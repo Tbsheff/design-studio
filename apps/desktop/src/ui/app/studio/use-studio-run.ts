@@ -66,7 +66,11 @@ const sendRequest = async (job: SendJob): Promise<void> => {
         api.startRun(input.projectId, directionId, request)
     );
 
-    data.seedRun(runId, directionId, request, stopped);
+    if (stopped) {
+      data.seedStoppedRun(runId, directionId, request);
+    } else {
+      data.seedRun(runId, directionId, request);
+    }
   } catch (error) {
     cancelSend();
     throw error;

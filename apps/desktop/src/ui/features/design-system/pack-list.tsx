@@ -61,7 +61,8 @@ const PackList = ({
     <div
       ref={list}
       className="pack-list"
-      role="listbox"
+      role="menu"
+      tabIndex={-1}
       aria-label={COPY.labelDesignSystems}
       onKeyDown={onKey}
       onClick={onClick}
@@ -70,10 +71,10 @@ const PackList = ({
       {options.map((pack, index) => (
         <div
           key={toPackKey(pack)}
-          role="option"
+          role="menuitemradio"
           data-index={index}
           aria-label={toOptionLabel(pack)}
-          aria-selected={isSelectedPack(pack, selected)}
+          aria-checked={isSelectedPack(pack, selected)}
           tabIndex={toTabIndex(index, active)}
           className={toCardClass(isSelectedPack(pack, selected))}
         >

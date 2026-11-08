@@ -1,3 +1,10 @@
+import { routes as fillRoutes } from "@design-studio/actions/fill/routes";
+import { routes as motionRoutes } from "@design-studio/actions/motion/routes";
+import { routes as projectsRoutes } from "@design-studio/actions/project/routes";
+import { routes as spacingRoutes } from "@design-studio/actions/spacing/routes";
+import { routes } from "@design-studio/actions/studio/routes";
+import { routes as textRoutes } from "@design-studio/actions/text/routes";
+import { routes as versionsRoutes } from "@design-studio/actions/version/routes";
 import type {
   AppLogLine,
   AppRoute,
@@ -51,25 +58,18 @@ import type {
 } from "@design-studio/contracts/app-doctor";
 import type { CanvasFile } from "@design-studio/contracts/canvas-file";
 import type {
-  BlendMode,
-  BlendProperty,
-  FillType,
-  RadialForm,
-} from "@design-studio/contracts/fill";
+  DesignRulesState,
+  DesignRulesTestResult,
+} from "@design-studio/contracts/design-rules";
 import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
 import type {
-  MotionKind,
-  MotionState,
-  EntrancePreset,
-} from "@design-studio/contracts/motion";
-import type {
-  SpacingInfo,
-  SpacingProperty,
-  SpacingSide,
-} from "@design-studio/contracts/spacing";
+  ReviewFixResult,
+  ReviewRequest,
+  ReviewResult,
+} from "@design-studio/contracts/review";
 import type {
   StyleReplaceRequest,
   StyleReplaceResult,
@@ -83,36 +83,28 @@ import type {
 } from "@design-studio/contracts/text-search";
 
 import type { FolderInspection } from "../shared/open-app";
-
-export interface CanvasSnapshot {
-  directionId: string;
-  canvas: CanvasFile | null;
-  hash: string | null;
-}
-
-import { routes as fillRoutes } from "@design-studio/actions/fill/routes";
-import { routes as motionRoutes } from "@design-studio/actions/motion/routes";
-import { routes as projectsRoutes } from "@design-studio/actions/project/routes";
-import { routes as spacingRoutes } from "@design-studio/actions/spacing/routes";
-import { routes } from "@design-studio/actions/studio/routes";
-import { routes as textRoutes } from "@design-studio/actions/text/routes";
-import { routes as versionsRoutes } from "@design-studio/actions/version/routes";
-import type {
-  DesignRulesState,
-  DesignRulesTestResult,
-} from "@design-studio/contracts/design-rules";
-import type {
-  ReviewFixResult,
-  ReviewRequest,
-  ReviewResult,
-} from "@design-studio/contracts/review";
-
 import type { FlowInput, FlowResult } from "../shared/route-flow";
 import type {
   CommitTweaksResult,
   TweaksState,
   TweakValue,
 } from "../shared/tweaks";
+import type {
+  CanvasSnapshot,
+  FillInputBody,
+  FillSetBody,
+  FillStopBody,
+  MotionSetBody,
+  MotionSpecBody,
+  SpacingBox,
+  SpacingComputed,
+  SpacingSetBody,
+  SpacingStep,
+  TextStyleApplyBody,
+  TextStyleCreateBody,
+  TextStyleDetachBody,
+  TextStyleTargetBody,
+} from "./api-body-types.js";
 import {
   endEditSession,
   restoreVersion,
@@ -133,101 +125,6 @@ import {
 } from "./platform/text-style-api";
 import { startBody } from "./start-body.js";
 
-export { ApiError } from "./platform/http";
-
-export type {
-  IconInsertBody,
-  IconInsertReply,
-  IconListQuery,
-} from "./platform/icon-api";
-
-export interface TextStyleTargetBody {
-  selector?: string;
-  source: SourceLoc;
-  tag?: string;
-}
-
-export interface MotionSpecBody {
-  kind: MotionKind;
-  delayMs?: number;
-  durationMs?: number;
-  easing?: string;
-  end?: Record<string, string>;
-  preset?: EntrancePreset;
-  properties?: string[];
-  staggerMs?: number;
-  state?: MotionState;
-}
-
-export interface FillStopBody {
-  color?: string;
-  position?: number;
-  token?: string;
-}
-
-export interface FillInputBody {
-  type: FillType;
-  angle?: number;
-  at?: string;
-  blendMode?: BlendMode;
-  blendProperty?: BlendProperty;
-  color?: string;
-  form?: RadialForm;
-  stops?: FillStopBody[];
-  token?: string;
-}
-
-export interface FillSetBody {
-  fill: FillInputBody;
-  target: TextStyleTargetBody;
-}
-
-export interface SpacingStep {
-  px: number;
-  token: string;
-}
-
-export interface SpacingBox extends SpacingInfo {
-  scale: SpacingStep[];
-}
-
-export interface SpacingComputed {
-  gap: string;
-  margin: string;
-  padding: string;
-}
-
-export interface SpacingSetBody {
-  spacing: {
-    property: SpacingProperty;
-    side: SpacingSide;
-    snap?: boolean;
-    token?: string;
-    value?: number;
-  };
-  target: TextStyleTargetBody;
-}
-
-export interface MotionSetBody {
-  spec: MotionSpecBody;
-  target: TextStyleTargetBody;
-}
-
-export interface TextStyleApplyBody {
-  style: string;
-  target: TextStyleTargetBody;
-}
-
-export interface TextStyleCreateBody {
-  name: string;
-  styles: Record<string, string>;
-}
-
-export interface TextStyleDetachBody {
-  styles: Record<string, string>;
-  target: TextStyleTargetBody;
-}
-
 const sendPresence = async (
   pid: string,
   body: Omit<CanvasPresence, "at">
@@ -239,11 +136,7 @@ const sendPresence = async (
   );
 };
 
-export function json<T>(
-  method: string,
-  path: string,
-  body?: JsonBody
-): Promise<T> {
+function json<T>(method: string, path: string, body?: JsonBody): Promise<T> {
   const load = async (): Promise<T> => {
     const res = await request(method, path, body ?? null);
 
@@ -257,7 +150,7 @@ export function json<T>(
   return load();
 }
 
-export async function getBlob(path: string): Promise<Blob> {
+async function getBlob(path: string): Promise<Blob> {
   const res = await request("GET", path);
 
   return res.blob();
@@ -279,7 +172,7 @@ const warmPath = (path: string): void => {
   });
 };
 
-export function warmProject(pid: string, directionId: string | null): void {
+function warmProject(pid: string, directionId: string | null): void {
   warmPath(p(pid));
   warmPath(`${p(pid)}${RUNS_PAGE}`);
   warmPath(`${p(pid)}/canvas`);
@@ -387,7 +280,7 @@ const toStyleQuery = (
   projectId,
 });
 
-export const api = {
+const api = {
   addWorkspace: (path: string, label?: string) =>
     json<WorkspaceFolder>("POST", "/api/workspaces", {
       path,
@@ -921,15 +814,15 @@ async function timedEdit<T>(
   return result;
 }
 
-export function sendTelemetry(sample: Omit<TelemetrySample, "ts">): void {
+function sendTelemetry(sample: Omit<TelemetrySample, "ts">): void {
   api.postTelemetry({ ...sample, ts: Date.now() }).catch(() => {});
 }
 
-export function errorText(err: unknown): string {
+function errorText(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-export function replaceStyle(
+function replaceStyle(
   pid: string,
   did: string,
   req: StyleReplaceRequest
@@ -951,7 +844,7 @@ export function replaceStyle(
   );
 }
 
-export const rulesApi = {
+const rulesApi = {
   get: (pid: string, did: string) =>
     json<DesignRulesState>("GET", `${d(pid, did)}/rules`),
   save: (pid: string, did: string, text: string) =>
@@ -972,7 +865,7 @@ export const rulesApi = {
     }),
 };
 
-export function arrange(
+function arrange(
   projectId: string,
   directionId: string,
   req: import("../shared/arrange").ArrangeRequest
@@ -993,3 +886,39 @@ export function arrange(
       ).json()) as import("../shared/arrange").ArrangeResult
   );
 }
+
+export { ApiError } from "./platform/http";
+export type {
+  IconInsertBody,
+  IconInsertReply,
+  IconListQuery,
+} from "./platform/icon-api";
+
+export {
+  api,
+  arrange,
+  errorText,
+  getBlob,
+  json,
+  replaceStyle,
+  rulesApi,
+  sendTelemetry,
+  warmProject,
+};
+
+export type {
+  CanvasSnapshot,
+  FillInputBody,
+  FillSetBody,
+  FillStopBody,
+  MotionSetBody,
+  MotionSpecBody,
+  SpacingBox,
+  SpacingComputed,
+  SpacingSetBody,
+  SpacingStep,
+  TextStyleApplyBody,
+  TextStyleCreateBody,
+  TextStyleDetachBody,
+  TextStyleTargetBody,
+};

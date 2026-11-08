@@ -17,6 +17,7 @@ import { annotateHtml, COMPLETE_SCRIPT_PATH } from "./annotate.js";
 import {
   COMPLETE_POST_PATH,
   COMPLETE_SCRIPT,
+  isPreviewOrigin,
   runCompleteForward,
   toProjectIdFromHost,
 } from "./complete-script.js";
@@ -290,6 +291,15 @@ export async function startHtmlServer(
 
     if (projectId === null) {
       return c.text("Not found", 404, securityHeaders);
+    }
+
+    if (
+      !isPreviewOrigin(
+        c.req.header("origin") ?? null,
+        c.req.header("host") ?? null
+      )
+    ) {
+      return c.text("Forbidden", 403, securityHeaders);
     }
 
     const forwarded = await runCompleteForward(

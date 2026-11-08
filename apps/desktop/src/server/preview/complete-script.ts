@@ -96,9 +96,23 @@ const runCompleteForward = async (
   return { body: await response.text(), status: response.status };
 };
 
+const isPreviewOrigin = (
+  originHeader: string | null,
+  hostHeader: string | null
+): boolean => {
+  if (originHeader === null) {
+    return true;
+  }
+
+  return (
+    originHeader.toLowerCase() === `http://${(hostHeader ?? "").toLowerCase()}`
+  );
+};
+
 export {
   COMPLETE_POST_PATH,
   COMPLETE_SCRIPT,
+  isPreviewOrigin,
   runCompleteForward,
   toProjectIdFromHost,
 };

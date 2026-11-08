@@ -8,7 +8,14 @@ const CSS_FILE = /\.css$/iu;
 
 const DECLARATION = /(?<name>--[\w-]{1,80}):(?<value>[^;{}]{1,200});/gu;
 
-const CSS_FOLDERS = ["", "css", "styles", "assets", "src"] as const;
+const CSS_FOLDERS = [
+  "",
+  "css",
+  "design-system",
+  "styles",
+  "assets",
+  "src",
+] as const;
 
 const FILE_LIMIT = 12;
 

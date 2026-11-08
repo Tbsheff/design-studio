@@ -1,7 +1,9 @@
 .panel {
   display: grid;
+  align-content: start;
   gap: var(--s-2);
   padding: var(--s-3);
+  overflow-y: auto;
 }
 
 .head {

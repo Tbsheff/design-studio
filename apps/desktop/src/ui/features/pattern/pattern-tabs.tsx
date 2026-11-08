@@ -8,7 +8,7 @@ import styles from "./pattern.module.css";
 
 interface PatternTabsProps {
   readonly onSelect: (tab: InsertTab) => void;
-  readonly tab: InsertTab;
+  readonly tab: InsertTab | null;
 }
 
 const PatternTabs = ({ onSelect, tab }: PatternTabsProps): ReactElement => (

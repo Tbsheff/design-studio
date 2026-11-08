@@ -19,6 +19,8 @@ interface ScreenDuplicateRequest {
 
 type ScreenRequest = ScreenCreateRequest | ScreenDuplicateRequest;
 
+const ROOT_ROUTE = "/";
+
 const isDuplicateDetail = (value: unknown): value is ScreenDuplicateDetail =>
   typeof value === "object" && value !== null && "frameId" in value;
 
@@ -37,7 +39,7 @@ const toFramePath = (projectId: string, frameId: string | null): string => {
   const frame =
     layout.frames.find((item) => item.id === frameId) ?? activeFrame(layout);
 
-  return frame.path ?? "";
+  return frame.path ?? ROOT_ROUTE;
 };
 
 const toDuplicateRequest = (projectId: string, event: Event): ScreenRequest => {

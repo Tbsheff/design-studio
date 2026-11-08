@@ -237,6 +237,20 @@
   min-height: 0;
 }
 
+.pane-sheet-body > .pane-insert-tabs {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  padding-inline: var(--s-2);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.pane-insert-tabs > [role="tablist"] {
+  padding-inline: 0;
+  border-bottom: 0;
+}
+
 .pane-system {
   flex: none;
   display: grid;

@@ -7,7 +7,7 @@ interface PatternTabButtonProps<Tab extends string> {
   readonly id: Tab;
   readonly label: string;
   readonly onSelect: (tab: Tab) => void;
-  readonly tab: Tab;
+  readonly tab: Tab | null;
 }
 
 const PatternTabButton = <Tab extends string>({

@@ -1,6 +1,6 @@
 import { Layer } from "effect";
 
-import { PatternStore, PatternWriter } from "../../components/index.js";
+import { PatternStore, PatternWriter } from "../../share/index.js";
 
 const PatternLive = Layer.mergeAll(PatternStore.layer, PatternWriter.layer);
 

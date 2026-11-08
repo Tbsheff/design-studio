@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
-import { attemptDirectEdit } from "./direct-edit-core.js";
-import type { DirectEditFailure } from "./direct-edit-core.js";
+import { attemptDirectEdit } from "../../direct-edit/index.js";
+import type { DirectEditFailure } from "../../direct-edit/index.js";
 import {
   applySwapIn,
   createComponentIn,
@@ -10,26 +10,20 @@ import {
   insertJsxIn,
   setImageIn,
   setVectorIn,
-} from "./direct-edit-insert-ops.js";
-import {
   applyEditBody,
   commitTweaksIn,
   createTokenIn,
   renderCheckOf,
   updateTokensIn,
-} from "./direct-edit-ops.js";
-import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
-import {
   importFigmaIn,
   setPropsIn,
   setVariantClassesIn,
-} from "./direct-edit-props-ops.js";
-import {
   applyReviewFixIn,
   runReviewIn,
   runRulesTestIn,
   setRulesIn,
-} from "./direct-edit-review-ops.js";
+} from "../../direct-edit/ops/index.js";
+import type { DirectionRef, EditBody } from "../../direct-edit/ops/index.js";
 
 interface DirectEditWriterApi {
   readonly apply: (
@@ -160,7 +154,7 @@ interface DirectEditWriterApi {
 class DirectEditWriter extends Context.Service<
   DirectEditWriter,
   DirectEditWriterApi
->()("design-studio/direct-edit/DirectEditWriter") {
+>()("design-studio/share/DirectEditWriter") {
   declare public readonly access: "write";
 
   public static readonly layer = Layer.succeed(

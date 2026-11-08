@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { getPattern } from "@design-studio/actions/pattern/get";
 import { Effect } from "effect";
 
-import { PatternStore } from "../../components/index.js";
+import { PatternStore } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetPatternInput = Input<typeof getPattern>;

@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { importPage } from "@design-studio/actions/page/import";
 import { Effect } from "effect";
 
-import { PageWriter } from "../../components/index.js";
+import { PageWriter } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ImportPageInput = Input<typeof importPage>;

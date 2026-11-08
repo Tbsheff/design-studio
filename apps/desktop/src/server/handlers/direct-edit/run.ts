@@ -1,8 +1,9 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { runDirectEdit } from "@design-studio/actions/direct-edit/run";
-import { DirectEditWriter, toRef } from "../../direct-edit/index.js";
+import { Effect } from "effect";
+
+import { toRef } from "../../direct-edit/index.js";
+import { DirectEditWriter } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type RunDirectEditInput = Input<typeof runDirectEdit>;

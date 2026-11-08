@@ -1,8 +1,9 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { setImageDirectEdit } from "@design-studio/actions/direct-edit/set-image";
-import { DirectEditWriter, toBody, toRef } from "../../direct-edit/index.js";
+import { Effect } from "effect";
+
+import { toBody, toRef } from "../../direct-edit/index.js";
+import { DirectEditWriter } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetImageDirectEditInput = Input<typeof setImageDirectEdit>;

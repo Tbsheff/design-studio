@@ -1,6 +1,5 @@
 import type { Direction, Project } from "@design-studio/contracts";
 
-import type { PreviewService } from "../../shared/server-ports.js";
 import { listInsertable, PreviewTargetError } from "../components/index.js";
 import type { PreviewResult, PreviewTarget } from "../components/index.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
@@ -17,6 +16,7 @@ import {
 import type { DirectEditRuntime } from "./direct-edit-core.js";
 import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
 import { DirectEditError } from "./engine/errors.js";
+import { toPreviewOrigin } from "./preview-origin.js";
 
 const NAME_RE = /^[A-Z][A-Za-z0-9_$]{0,63}$/u;
 
@@ -47,22 +47,6 @@ type Applier<Value> = (
   body: EditBody
 ) => Promise<Value>;
 
-const previewOriginOf = async (
-  preview: PreviewService,
-  project: Project,
-  direction: Direction
-): Promise<string | null> => {
-  if (project.kind !== "react") {
-    return null;
-  }
-
-  try {
-    return new URL(await preview.directionUrl(project, direction)).origin;
-  } catch {
-    return null;
-  }
-};
-
 const applyWith = <Value>(
   runtime: DirectEditRuntime,
   ref: DirectionRef,
@@ -73,7 +57,7 @@ const applyWith = <Value>(
     ref.projectId,
     ref.directionId,
     async (project, direction) => {
-      const previewOrigin = await previewOriginOf(
+      const previewOrigin = await toPreviewOrigin(
         runtime.preview,
         project,
         direction
@@ -307,7 +291,6 @@ export {
   listComponentsOf,
   listInsertableOf,
   listSwapCandidatesOf,
-  previewOriginOf,
   setImageIn,
   setVectorIn,
   thumbOf,

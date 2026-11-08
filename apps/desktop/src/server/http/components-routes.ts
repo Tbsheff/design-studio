@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
 
-import { directEditRuntimeOf, thumbOf } from "../direct-edit/index.js";
+import { directEditRuntimeOf } from "../direct-edit/index.js";
+import { thumbOf } from "../direct-edit/ops/index.js";
 
 const UNAVAILABLE = 503;
 

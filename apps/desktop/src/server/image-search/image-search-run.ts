@@ -1,6 +1,6 @@
 import type { Effect } from "effect";
 
-import { previewOriginOf, runDirectionWrite } from "../direct-edit/index.js";
+import { toPreviewOrigin, runDirectionWrite } from "../direct-edit/index.js";
 import type { DirectionIds } from "../direct-edit/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
@@ -69,7 +69,7 @@ const runImagePlace = (
   runDirectionWrite(
     command,
     async ({ direction, project, runtime }): Promise<PlaceImageResult> => {
-      const previewOrigin = await previewOriginOf(
+      const previewOrigin = await toPreviewOrigin(
         runtime.preview,
         project,
         direction

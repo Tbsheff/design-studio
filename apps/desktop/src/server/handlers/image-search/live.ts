@@ -1,6 +1,6 @@
 import { Layer } from "effect";
 
-import { ImageSearchStore, ImageSearchWriter } from "../../components/index.js";
+import { ImageSearchStore, ImageSearchWriter } from "../../share/index.js";
 
 const ImageSearchLive = Layer.mergeAll(
   ImageSearchStore.layer,

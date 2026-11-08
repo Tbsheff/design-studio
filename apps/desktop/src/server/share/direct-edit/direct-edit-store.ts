@@ -1,28 +1,28 @@
 import { Context, Effect, Layer } from "effect";
 
-import { attemptDirectEdit } from "./direct-edit-core.js";
-import type { DirectEditFailure } from "./direct-edit-core.js";
+import { attemptDirectEdit } from "../../direct-edit/index.js";
+import type { DirectEditFailure } from "../../direct-edit/index.js";
 import {
   getComponentPreviewOf,
   listComponentFoldersOf,
   listComponentsOf,
   listInsertableOf,
   listSwapCandidatesOf,
-} from "./direct-edit-insert-ops.js";
-import type { SourceUse } from "./direct-edit-insert-ops.js";
-import {
   designSystemOf,
   previewTokenChanges,
   previewUrlOf,
   readTweaks,
   treeOf,
-} from "./direct-edit-ops.js";
-import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
-import {
   listPropsComponentsOf,
   propsInstanceOf,
-} from "./direct-edit-props-ops.js";
-import { getReviewOf, getRulesOf } from "./direct-edit-review-ops.js";
+  getReviewOf,
+  getRulesOf,
+} from "../../direct-edit/ops/index.js";
+import type {
+  SourceUse,
+  DirectionRef,
+  EditBody,
+} from "../../direct-edit/ops/index.js";
 
 interface DirectEditStoreApi {
   readonly getDesignSystem: (
@@ -107,7 +107,7 @@ interface DirectEditStoreApi {
 class DirectEditStore extends Context.Service<
   DirectEditStore,
   DirectEditStoreApi
->()("design-studio/direct-edit/DirectEditStore") {
+>()("design-studio/share/DirectEditStore") {
   declare public readonly access: "read";
 
   public static readonly layer = Layer.succeed(

@@ -1,7 +1,7 @@
 import type { Effect } from "effect";
 
 import {
-  previewOriginOf,
+  toPreviewOrigin,
   runDirectionRead,
   runDirectionWrite,
 } from "../direct-edit/index.js";
@@ -145,7 +145,7 @@ const runIconInsert = (
   runDirectionWrite(
     command,
     async ({ direction, project, runtime }): Promise<IconInserted> => {
-      const previewOrigin = await previewOriginOf(
+      const previewOrigin = await toPreviewOrigin(
         runtime.preview,
         project,
         direction

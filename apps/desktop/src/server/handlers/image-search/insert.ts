@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { insertImageSearch } from "@design-studio/actions/image-search/insert";
 import { Effect } from "effect";
 
-import { ImageSearchWriter } from "../../components/index.js";
+import { ImageSearchWriter } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InsertImageSearchInput = Input<typeof insertImageSearch>;

@@ -1,8 +1,9 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { inspectTokensDirectEdit } from "@design-studio/actions/direct-edit/inspect-tokens";
-import { DirectEditStore, toRef } from "../../direct-edit/index.js";
+import { Effect } from "effect";
+
+import { toRef } from "../../direct-edit/index.js";
+import { DirectEditStore } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectTokensDirectEditInput = Input<typeof inspectTokensDirectEdit>;

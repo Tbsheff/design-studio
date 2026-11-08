@@ -32,9 +32,9 @@ import { assertCanEdit, publishVersion } from "./commit/index.js";
 import { planInsertJsx } from "./commit/jsx-insert.js";
 import { applySetProps, applyVariantClasses } from "./commit/props.js";
 import type { DirectEditRuntime } from "./direct-edit-core.js";
-import { previewOriginOf } from "./direct-edit-insert-ops.js";
 import type { DirectionRef } from "./direct-edit-ops.js";
 import { DirectEditError } from "./engine/errors.js";
+import { toPreviewOrigin } from "./preview-origin.js";
 
 type RefKeys = "directionId" | "projectId";
 
@@ -347,7 +347,7 @@ const importFigmaFor = async (
 ): Promise<FigmaImportPreview | FigmaImportResult> => {
   const { direction, project } = target;
 
-  const previewOrigin = await previewOriginOf(
+  const previewOrigin = await toPreviewOrigin(
     runtime.preview,
     project,
     direction

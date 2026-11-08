@@ -1,27 +1,37 @@
-// Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
-import { useRender } from "@base-ui/react/use-render";
-import type { VariantProps } from 'class-variance-authority';
-import { cn } from "../../lib/utils";
-import { chipVariants } from "./chip-variants.js";
+import type { VariantProps } from "class-variance-authority";
+import type { ReactElement, ReactNode } from "react";
 
-type ChipProps = useRender.ComponentProps<"span"> &
-  VariantProps<typeof chipVariants>;
+import { cn } from "../../lib/utils";
+import { chipVariants } from "./chip-variants";
+
+type TipSide = "bottom" | "left" | "right" | "top";
+
+interface ChipProps extends VariantProps<typeof chipVariants> {
+  readonly children?: ReactNode;
+  readonly className?: string;
+  readonly "data-testid"?: string;
+  readonly "data-tip"?: string;
+  readonly "data-tip-side"?: TipSide;
+}
 
 const Chip = ({
-  size = "default",
+  children,
   className,
-  render,
-  ...props
-}: ChipProps): React.JSX.Element =>
-  useRender({
-    defaultTagName: "span",
-    props: {
-      ...props,
-      className: cn(chipVariants({ className, size })),
-      "data-size": size,
-      "data-slot": "chip",
-    },
-    render,
-  });
+  "data-testid": testId,
+  "data-tip": tip,
+  "data-tip-side": tipSide,
+  size = "default",
+}: ChipProps): ReactElement => (
+  <span
+    className={cn(chipVariants({ className, size }))}
+    data-size={size}
+    data-slot="chip"
+    data-testid={testId}
+    data-tip={tip}
+    data-tip-side={tipSide}
+  >
+    {children}
+  </span>
+);
 
 export { Chip };

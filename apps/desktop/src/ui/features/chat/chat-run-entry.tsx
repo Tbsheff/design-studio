@@ -1,7 +1,8 @@
 import { memo, Suspense, useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { Message, MessageContent } from "../../ai/components/ai/message.js";
+import { MessageContent } from "../../ai/components/ai/message-content.js";
+import { Message } from "../../ai/components/ai/message.js";
 import { ApprovalCard, canPolishRun } from "../../chat-slots.js";
 import { RunFeedbackRow } from "./chat-feedback.js";
 import { PlanCard, RunError, RunNotice, UserMessage } from "./chat-parts.js";

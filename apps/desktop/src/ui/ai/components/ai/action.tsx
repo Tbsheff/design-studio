@@ -1,109 +1,45 @@
-// Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
 import { Collapsible } from "@base-ui/react/collapsible";
+import type { ReactElement } from "react";
+
 import { cn } from "../../lib/utils";
+import type { SlotProps } from "./slot-props";
+import { useElementRender } from "./use-element-render";
 
-const Action = ({ className, ...props }: Collapsible.Root.Props): React.JSX.Element => 
-  (
-    <Collapsible.Root
-      data-slot="action"
-      className={cn("group/action flex flex-col text-sm", className)}
-      {...props}
-    />
-  )
-;
+interface ActionProps extends SlotProps {
+  readonly "data-shell-edits"?: number | string | null;
+  readonly "data-state"?: string;
+  readonly "data-tool"?: string;
+  readonly onOpenChange?: (open: boolean) => void;
+  readonly open?: boolean;
+}
 
-const ActionTrigger = ({
-  className,
+const Action = ({
   children,
-  ...props
-}: Collapsible.Trigger.Props): React.JSX.Element => 
-  (
-    <Collapsible.Trigger
-      data-slot="action-trigger"
-      className={cn(
-        "inline-flex items-center self-start gap-2 cursor-pointer select-none text-left bg-transparent",
-        "-mx-2 px-2 py-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-        "transition-colors",
-        className,
-      )}
-      {...props}
+  className,
+  "data-shell-edits": shellEdits,
+  "data-state": state,
+  "data-tool": tool,
+  onOpenChange,
+  open,
+}: ActionProps): ReactElement => {
+  const root = useElementRender(
+    "div",
+    cn("group/action flex flex-col text-sm", className)
+  );
+
+  return (
+    <Collapsible.Root
+      data-shell-edits={shellEdits}
+      data-slot="action"
+      data-state={state}
+      data-tool={tool}
+      onOpenChange={onOpenChange}
+      open={open}
+      render={root}
     >
       {children}
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-        className={cn(
-          "size-4 shrink-0 transition-transform duration-200",
-          "group-data-open/action:rotate-90",
-        )}
-      >
-        <path d="m9 18 6-6-6-6" />
-      </svg>
-    </Collapsible.Trigger>
-  )
-;
+    </Collapsible.Root>
+  );
+};
 
-const ActionIcon = ({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"span">): React.JSX.Element => 
-  (
-    <span
-      data-slot="action-icon"
-      aria-hidden
-      className={cn(
-        "size-4 inline-flex items-center justify-center shrink-0",
-        className,
-      )}
-      {...props}
-    >
-      {children ?? <span className="size-2 rounded-full bg-current" />}
-    </span>
-  )
-;
-
-const ActionLabel = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">): React.JSX.Element => 
-  (
-    <span
-      data-slot="action-label"
-      className={cn("text-foreground", className)}
-      {...props}
-    />
-  )
-;
-
-const ActionContent = ({
-  className,
-  children,
-  ...props
-}: Collapsible.Panel.Props): React.JSX.Element => 
-  (
-    <Collapsible.Panel
-      data-slot="action-content"
-      className={cn(
-        "overflow-hidden",
-        "h-(--collapsible-panel-height)",
-        "transition-[height] duration-150 ease-out",
-        "data-starting-style:h-0 data-ending-style:h-0",
-        className,
-      )}
-      {...props}
-    >
-      <div className="py-2 text-muted-foreground">{children}</div>
-    </Collapsible.Panel>
-  )
-;
-
-export { Action, ActionContent, ActionIcon, ActionLabel, ActionTrigger };
+export { Action };

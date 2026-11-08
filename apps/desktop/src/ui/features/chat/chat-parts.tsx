@@ -2,23 +2,17 @@ import { CopyButton, Icon } from "@design-studio/ui";
 import { memo, useEffect, useRef } from "react";
 import type { ReactElement } from "react";
 
-import {
-  Exception,
-  ExceptionHeader,
-  ExceptionMessage,
-  ExceptionType,
-} from "../../ai/components/ai/exception.js";
+import { ExceptionHeader } from "../../ai/components/ai/exception-header.js";
+import { ExceptionMessage } from "../../ai/components/ai/exception-message.js";
+import { ExceptionType } from "../../ai/components/ai/exception-type.js";
+import { Exception } from "../../ai/components/ai/exception.js";
 import { Markdown } from "../../ai/components/ai/markdown.js";
-import {
-  Message,
-  MessageContent,
-  MessageText,
-} from "../../ai/components/ai/message.js";
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from "../../ai/components/ai/reasoning.js";
+import { MessageContent } from "../../ai/components/ai/message-content.js";
+import { MessageText } from "../../ai/components/ai/message-text.js";
+import { Message } from "../../ai/components/ai/message.js";
+import { ReasoningContent } from "../../ai/components/ai/reasoning-content.js";
+import { ReasoningTrigger } from "../../ai/components/ai/reasoning-trigger.js";
+import { Reasoning } from "../../ai/components/ai/reasoning.js";
 import { formatTime, formatUsd } from "../../domain/format.js";
 import { splitMarkdownBlocks } from "../../domain/markdown-blocks.js";
 import { AnsweredCard } from "./answered-card.js";

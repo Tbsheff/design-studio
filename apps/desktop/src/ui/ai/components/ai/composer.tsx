@@ -1,446 +1,55 @@
-// Copied from github.com/nauvalazhar/ai at 9944bcffc7412b27315ce853a49b4ea6035dea98, adapted for the studio. See THIRD_PARTY_NOTICES.md.
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useRender } from "@base-ui/react/use-render";
+import { useMemo, useState } from "react";
+import type { MouseEventHandler, ReactElement } from "react";
+
 import { cn } from "../../lib/utils";
+import { ComposerContext } from "./composer-context";
+import type { SlotProps } from "./slot-props";
 
-interface ComposerContextValue {
-  rootId: string;
-  isEmpty: boolean;
-  isFocused: boolean;
-  disabled: boolean;
-  setEmpty: (b: boolean) => void;
-  setFocused: (b: boolean) => void;
-  registerSubmit: (fn: () => void) => () => void;
-  triggerSubmit: () => void;
-  containerRef: React.RefObject<HTMLDivElement | null>;
+interface ComposerProps extends SlotProps {
+  readonly onClick?: MouseEventHandler<HTMLDivElement>;
 }
 
-const ComposerContext = createContext<ComposerContextValue | null>(null);
-
-interface ComposerExtensionContextValue {
-  state: unknown;
-  setState: (s: unknown) => void;
-}
-
-const ComposerExtensionContext =
-  createContext<ComposerExtensionContextValue | null>(null);
-
-const useComposerContext = (): ComposerContextValue => {
-  const ctx = useContext(ComposerContext);
-
-  if (!ctx) {
-    throw new Error("Composer parts must be used inside <Composer>");
+const toFlag = (isOn: boolean): "false" | "true" => {
+  if (isOn) {
+    return "true";
   }
 
-  return ctx;
-};
-
-const useComposerExtensionContext = (): ComposerExtensionContextValue => {
-  const ctx = useContext(ComposerExtensionContext);
-
-  if (!ctx) {
-    throw new Error("Composer parts must be used inside <Composer>");
-  }
-
-  return ctx;
-};
-
-interface ComposerState {
-  disabled: boolean;
-  isEmpty: boolean;
-  isFocused: boolean;
-  submit: () => void;
-}
-
-const useComposer = (): ComposerState => {
-  const ctx = useComposerContext();
-
-  return {
-    disabled: ctx.disabled,
-    isEmpty: ctx.isEmpty,
-    isFocused: ctx.isFocused,
-    submit: ctx.triggerSubmit,
-  };
+  return "false";
 };
 
 const Composer = ({
-  disabled = false,
-  className,
   children,
-  onHeightChange,
-  ...props
-}: React.ComponentProps<"div"> & {
-  disabled?: boolean;
-  onHeightChange?: (height: number) => void;
-}): React.JSX.Element => {
-  const rootId = useId();
+  className,
+  onClick,
+}: ComposerProps): ReactElement => {
   const [isEmpty, setIsEmpty] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
-  const [extState, setExtState] = useState<unknown>(null);
-  const submitFnRef = useRef<(() => void) | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const onHeightChangeRef = useRef(onHeightChange);
-  onHeightChangeRef.current = onHeightChange;
 
-  const registerSubmit = useCallback((fn: () => void) => {
-    submitFnRef.current = fn;
-
-    return (): void => {
-      if (submitFnRef.current === fn) {submitFnRef.current = null;}
-    };
-  }, []);
-
-  const triggerSubmit = useCallback(() => {
-    submitFnRef.current?.();
-  }, []);
-
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-
-    if (!el) {return;}
-
-    let last = -1;
-
-    const emit = (): void => {
-      const next = el.offsetHeight;
-
-      if (next === last) {return;}
-
-      last = next;
-      onHeightChangeRef.current?.(next);
-    };
-
-    emit();
-    const ro = new ResizeObserver(emit);
-    ro.observe(el);
-
-    return (): void => ro.disconnect();
-  }, []);
-
-  const ctxValue = useMemo<ComposerContextValue>(
-    () => ({
-      containerRef,
-      disabled,
-      isEmpty,
-      isFocused,
-      registerSubmit,
-      rootId,
-      setEmpty: setIsEmpty,
-      setFocused: setIsFocused,
-      triggerSubmit,
-    }),
-    [rootId, isEmpty, isFocused, disabled, registerSubmit, triggerSubmit],
-  );
-
-  const extCtxValue = useMemo<ComposerExtensionContextValue>(
-    () => ({ setState: setExtState, state: extState }),
-    [extState],
+  const contextValue = useMemo(
+    () => ({ setEmpty: setIsEmpty, setFocused: setIsFocused }),
+    []
   );
 
   return (
-    <ComposerContext.Provider value={ctxValue}>
-      <ComposerExtensionContext.Provider value={extCtxValue}>
-        <div
-          ref={containerRef}
-          data-slot="composer"
-          data-empty={isEmpty ? "true" : "false"}
-          data-focus={isFocused ? "true" : "false"}
-          data-disabled={disabled ? "true" : undefined}
-          aria-disabled={disabled || undefined}
-          className={cn(
-            "relative flex flex-col gap-1 rounded-outer border border-border bg-surface",
-            "focus-within:border-primary/60",
-            "transition-[box-shadow,border-color] shadow-xs",
-            "data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed",
-            className,
-          )}
-          {...props}
-        >
-          {children}
-        </div>
-      </ComposerExtensionContext.Provider>
+    <ComposerContext.Provider value={contextValue}>
+      <div
+        className={cn(
+          "relative flex flex-col gap-1 rounded-outer border border-border bg-surface",
+          "focus-within:border-primary/60",
+          "transition-[box-shadow,border-color] shadow-xs",
+          "data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed",
+          className
+        )}
+        data-empty={toFlag(isEmpty)}
+        data-focus={toFlag(isFocused)}
+        data-slot="composer"
+        onClick={onClick}
+        role="presentation"
+      >
+        {children}
+      </div>
     </ComposerContext.Provider>
   );
 };
 
-const autosize = (el: HTMLTextAreaElement, maxRows: number): void => {
-  el.style.height = "auto";
-  const styles = window.getComputedStyle(el);
-  const lineHeight = Number.parseFloat(styles.lineHeight) || 20;
-  const paddingTop = Number.parseFloat(styles.paddingTop) || 0;
-  const paddingBottom = Number.parseFloat(styles.paddingBottom) || 0;
-  const maxHeight = lineHeight * maxRows + paddingTop + paddingBottom;
-  const next = Math.min(el.scrollHeight, maxHeight);
-  el.style.height = `${next}px`;
-  el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
-};
-
-const ComposerInput = ({
-  onSubmit,
-  onValueChange,
-  value: valueProp,
-  defaultValue,
-  placeholder,
-  autoFocus = false,
-  maxRows = 8,
-  submitOnEnter = true,
-  className,
-  ...props
-}: Omit<
-  React.ComponentProps<"textarea">,
-  "onSubmit" | "onChange" | "rows" | "value" | "defaultValue"
-> & {
-  onSubmit?: (text: string) => void;
-  onValueChange?: (text: string) => void;
-  value?: string;
-  defaultValue?: string;
-  autoFocus?: boolean;
-  maxRows?: number;
-  submitOnEnter?: boolean;
-}): React.JSX.Element => {
-  const ctx = useComposerContext();
-  const inputRef = useRef<HTMLTextAreaElement | null>(null);
-  const isComposingRef = useRef(false);
-  const isControlled = valueProp !== undefined;
-  const [internalValue, setInternalValue] = useState(defaultValue ?? "");
-  const value = isControlled ? valueProp : internalValue;
-  const valueRef = useRef(value);
-  valueRef.current = value;
-  const isControlledRef = useRef(isControlled);
-  isControlledRef.current = isControlled;
-
-  const onSubmitRef = useRef(onSubmit);
-  onSubmitRef.current = onSubmit;
-  const onValueChangeRef = useRef(onValueChange);
-  onValueChangeRef.current = onValueChange;
-
-  useLayoutEffect(() => {
-    const el = inputRef.current;
-
-    if (!el) {return;}
-
-    ctx.setEmpty(value.trim().length === 0);
-    autosize(el, maxRows);
-  }, [value, maxRows, ctx]);
-
-  useLayoutEffect(() => {
-    if (autoFocus && !ctx.disabled) {inputRef.current?.focus();}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const doSubmit = useCallback(() => {
-    const text = valueRef.current;
-
-    if (!text.trim()) {return;}
-
-    onSubmitRef.current?.(text);
-
-    if (!isControlledRef.current) {
-      setInternalValue("");
-      onValueChangeRef.current?.("");
-    }
-  }, []);
-
-  useEffect(() => ctx.registerSubmit(doSubmit), [ctx, doSubmit]);
-
-  const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
-    const next = e.target.value;
-
-    if (!isControlled) {setInternalValue(next);}
-
-    onValueChangeRef.current?.(next);
-  };
-
-  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
-    if (e.nativeEvent.isComposing || isComposingRef.current) {return;}
-
-    const submitKey = submitOnEnter ? !e.shiftKey : e.metaKey || e.ctrlKey;
-
-    if (e.key === "Enter" && submitKey) {
-      e.preventDefault();
-      doSubmit();
-    }
-  };
-
-  return (
-    <textarea
-      ref={inputRef}
-      data-slot="composer-input"
-      placeholder={placeholder}
-      disabled={ctx.disabled}
-      rows={1}
-      value={value}
-      onChange={onChange}
-      onKeyDown={onKeyDown}
-      onFocus={() => ctx.setFocused(true)}
-      onBlur={() => ctx.setFocused(false)}
-      onCompositionStart={() => {
-        isComposingRef.current = true;
-      }}
-      onCompositionEnd={() => {
-        isComposingRef.current = false;
-      }}
-      className={cn(
-        "w-full resize-none outline-none bg-transparent",
-        "min-h-9 px-3 py-2 text-sm leading-relaxed text-foreground",
-        "placeholder:text-muted-foreground",
-        "disabled:cursor-not-allowed",
-        className,
-      )}
-      {...props}
-    />
-  );
-};
-
-const ComposerQuote = ({
-  className,
-  ...props
-}: React.ComponentProps<"div">): React.JSX.Element => 
-  (
-    <div
-      data-slot="composer-quote"
-      className={cn(
-        "mx-1 mt-1 flex items-start gap-2 rounded bg-surface-elevated px-2.5 py-1.5 text-xs text-muted-foreground",
-        className,
-      )}
-      {...props}
-    />
-  )
-;
-
-const ComposerQuoteIcon = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">): React.JSX.Element => 
-  (
-    <span
-      data-slot="composer-quote-icon"
-      aria-hidden
-      className={cn(
-        "mt-0.5 inline-flex shrink-0 items-center justify-center text-muted-foreground",
-        "[&>svg]:size-4",
-        className,
-      )}
-      {...props}
-    />
-  )
-;
-
-const ComposerQuoteContent = ({
-  className,
-  ...props
-}: React.ComponentProps<"div">): React.JSX.Element => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [overflows, setOverflows] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-
-    if (!el) {return;}
-
-    const update = (): void => {
-      setOverflows(el.scrollHeight > el.clientHeight + 1);
-    };
-
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-
-    return (): void => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      data-slot="composer-quote-content"
-      data-overflows={overflows || undefined}
-      className={cn(
-        "min-w-0 flex-1 overflow-hidden italic max-h-[3lh] whitespace-pre-wrap",
-        "data-overflows:mask-[linear-gradient(to_bottom,black_55%,transparent)]",
-        className,
-      )}
-      {...props}
-    />
-  );
-};
-
-const ComposerQuoteDismiss = ({
-  className,
-  type,
-  ...props
-}: React.ComponentProps<"button">): React.JSX.Element => 
-  (
-    <button
-      type={type ?? "button"}
-      data-slot="composer-quote-dismiss"
-      className={cn(
-        "shrink-0 cursor-pointer text-muted-foreground transition-colors hover:text-foreground",
-        "[&>svg]:size-3.5",
-        className,
-      )}
-      {...props}
-    />
-  )
-;
-
-const ComposerToolbar = ({
-  className,
-  ...props
-}: React.ComponentProps<"div">): React.JSX.Element => 
-  (
-    <div
-      data-slot="composer-toolbar"
-      className={cn("flex items-center gap-1.5 px-3 py-2", className)}
-      {...props}
-    />
-  )
-;
-
-const ComposerToolbarSpacer = ({
-  className,
-  ...props
-}: React.ComponentProps<"div">): React.JSX.Element => 
-  (
-    <div
-      data-slot="composer-toolbar-spacer"
-      className={cn("ml-auto flex items-center gap-1.5", className)}
-      {...props}
-    />
-  )
-;
-
-const ComposerSubmit = ({
-  render,
-  disabled: disabledProp,
-  ...props
-}: useRender.ComponentProps<"button">): React.JSX.Element => {
-  const ctx = useComposerContext();
-  const blocked = ctx.isEmpty || ctx.disabled || Boolean(disabledProp);
-  const ariaLabel = props["aria-label"] ?? "Send";
-
-  return useRender({
-    defaultTagName: "button",
-    props: {
-      ...props,
-      "aria-label": ariaLabel,
-      "data-empty": ctx.isEmpty || undefined,
-      "data-slot": "composer-submit",
-      disabled: blocked,
-      onClick: () => ctx.triggerSubmit(),
-      type: "button",
-    },
-    render,
-  });
-};
-
-export { Composer, ComposerContext, ComposerExtensionContext, ComposerInput, ComposerQuote, ComposerQuoteContent, ComposerQuoteDismiss, ComposerQuoteIcon, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer, useComposer, useComposerContext, useComposerExtensionContext };
+export { Composer };

@@ -13,7 +13,8 @@ import { Disclosure } from "@design-studio/ui";
 import { Suspense, useId, useRef, useState } from "react";
 import type { ClipboardEvent, DragEvent, ReactElement } from "react";
 
-import { Composer, ComposerInput } from "../../ai/components/ai/composer.js";
+import { ComposerInput } from "../../ai/components/ai/composer-input.js";
+import { Composer } from "../../ai/components/ai/composer.js";
 import { composerCommands, useCommands } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
 import { useDraft } from "../../platform/storage.js";

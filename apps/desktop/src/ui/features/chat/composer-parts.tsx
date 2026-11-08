@@ -7,12 +7,10 @@ import { useState } from "react";
 import type { ReactElement } from "react";
 
 import { asReferenceName, isReferenceName } from "../../../shared/reference.js";
-import {
-  Attachment,
-  AttachmentMedia,
-  AttachmentOverlay,
-  AttachmentProgress,
-} from "../../ai/components/ai/attachment.js";
+import { AttachmentMedia } from "../../ai/components/ai/attachment-media.js";
+import { AttachmentOverlay } from "../../ai/components/ai/attachment-overlay.js";
+import { AttachmentProgress } from "../../ai/components/ai/attachment-progress.js";
+import { Attachment } from "../../ai/components/ai/attachment.js";
 import { Chip } from "../../ai/components/ai/chip.js";
 import { cn } from "../../ai/lib/utils.js";
 import { api } from "../../api.js";

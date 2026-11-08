@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { ReactElement } from "react";
 
-import { useConversation } from "../../ai/components/ai/conversation.js";
+import { useConversation } from "../../ai/components/ai/use-conversation.js";
 import { requestOlderRuns, useOlderRuns } from "./run-history-model.js";
 
 const FIRST = 12;

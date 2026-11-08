@@ -2,7 +2,7 @@ import { Icon } from "@design-studio/ui";
 import { useEffect, useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import { useConversation } from "../../ai/components/ai/conversation.js";
+import { useConversation } from "../../ai/components/ai/use-conversation.js";
 import { EarlierRuns, useHistoryWindow } from "./chat-panel-window.js";
 import { copy } from "./copy.js";
 import type { RunView } from "./run-state-model.js";

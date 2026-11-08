@@ -11,21 +11,25 @@ import {
 } from "@design-studio/contracts/canvas-file";
 import { parseStatesRequest } from "@design-studio/contracts/states";
 import { parseEditScope } from "@design-studio/contracts/usage-scope";
+import { Result, Schema } from "effect";
 
+import { toDecoder } from "../platform/decode/index.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
-import { z } from "../platform/zod-bridge/index.js";
 import { isRecord, requireString } from "./app-request.js";
 import { parseMentions } from "./mentions.js";
 
-const StartRunFlag = z.boolean().optional();
+const decodeStartRunFlag = toDecoder(
+  Schema.UndefinedOr(Schema.Boolean),
+  "ignore"
+);
 
 function parseStartRun(raw: unknown): boolean {
-  const result = StartRunFlag.safeParse(raw);
+  const result = decodeStartRunFlag(raw);
 
-  if (!result.success) {
+  if (Result.isFailure(result)) {
     throw new BadRequestError("startRun must be true or false");
   }
-  return result.data ?? true;
+  return result.success ?? true;
 }
 
 function parseLevel(raw: unknown): RunLevel | undefined {
@@ -222,52 +226,52 @@ function parseRunTask(
   request.states = states;
 }
 
-const settingsSchema = z
-  .object({
-    allowBash: z.boolean(),
-    allowInstall: z.boolean(),
-    autoApprove: z.boolean(),
-    defaultLevel: z.enum(RUN_LEVELS as unknown as [RunLevel, ...RunLevel[]]),
-    disabledSkills: z
-      .array(
-        z
-          .string()
-          .regex(
-            /^[^:\s]+:[^:\s]+$/,
-            "must be a skill id like plugin:skill; see GET /api/skills"
-          )
-      )
-      .max(1000)
-      .transform((ids) => [...new Set(ids)]),
-    imageSearch: z.boolean(),
-    maxBudgetUsd: z.number().min(0.01).max(50).nullable(),
-    maxTurns: z.number().int().min(1).max(200),
-    model: z.string().trim().min(1).max(200),
+const SkillIdSchema = Schema.String.check(
+  Schema.isPattern(/^[^:\s]+:[^:\s]+$/u, {
+    message: "must be a skill id like plugin:skill; see GET /api/skills",
   })
-  .partial()
-  .strict();
+);
+
+const SettingsSchema = Schema.Struct({
+  allowBash: Schema.optionalKey(Schema.Boolean),
+  allowInstall: Schema.optionalKey(Schema.Boolean),
+  autoApprove: Schema.optionalKey(Schema.Boolean),
+  defaultLevel: Schema.optionalKey(Schema.Literals(RUN_LEVELS)),
+  disabledSkills: Schema.optionalKey(
+    Schema.Array(SkillIdSchema).check(Schema.isMaxLength(1000))
+  ),
+  imageSearch: Schema.optionalKey(Schema.Boolean),
+  maxBudgetUsd: Schema.optionalKey(
+    Schema.NullOr(
+      Schema.Number.check(Schema.isBetween({ maximum: 50, minimum: 0.01 }))
+    )
+  ),
+  maxTurns: Schema.optionalKey(
+    Schema.Int.check(Schema.isBetween({ maximum: 200, minimum: 1 }))
+  ),
+  model: Schema.optionalKey(
+    Schema.Trim.check(Schema.isMinLength(1), Schema.isMaxLength(200))
+  ),
+});
+
+const decodeSettings = toDecoder(SettingsSchema, "error");
 
 function parseSettings(raw: unknown): Partial<ProjectSettings> | undefined {
   if (raw === undefined || raw === null) {
     return undefined;
   }
-  const parsed = settingsSchema.safeParse(raw);
+  const parsed = decodeSettings(raw);
 
-  if (!parsed.success) {
-    const detail = parsed.error.issues
-      .map(
-        (issue) =>
-          `settings.${issue.path.join(".") || "(root)"}: ${issue.message}`
-      )
-      .join("; ");
-
-    throw new BadRequestError(`invalid settings: ${detail}`);
+  if (Result.isFailure(parsed)) {
+    throw new BadRequestError(`invalid settings: ${parsed.failure.message}`);
   }
 
   const settings: Partial<ProjectSettings> = {};
 
-  for (const [key, value] of Object.entries(parsed.data)) {
-    if (value !== undefined) {
+  for (const [key, value] of Object.entries(parsed.success)) {
+    if (key === "disabledSkills" && Array.isArray(value)) {
+      Object.assign(settings, { [key]: [...new Set(value)] });
+    } else if (value !== undefined) {
       Object.assign(settings, { [key]: value });
     }
   }
@@ -284,5 +288,4 @@ export {
   parseRunTask,
   parseSettings,
   parseStartRun,
-  settingsSchema,
 };

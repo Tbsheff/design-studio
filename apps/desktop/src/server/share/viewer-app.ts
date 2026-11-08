@@ -8,12 +8,13 @@ import {
   SHARE_NAME_MAX,
 } from "@design-studio/contracts/share";
 import { getConnInfo } from "@hono/node-server/conninfo";
+import { Result, Schema } from "effect";
 import { Hono } from "hono";
 import type { Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { streamSSE } from "hono/streaming";
 
-import { z } from "../platform/zod-bridge/index.js";
+import { toDecoder } from "../platform/decode/index.js";
 import type { CommentStore } from "../store/comments.js";
 import { FAVICON_PNG_16, FAVICON_PNG_32, FAVICON_SVG } from "./favicon.js";
 import type { LiveHub } from "./live.js";
@@ -29,25 +30,43 @@ const CURSOR_BODY_MAX = 512;
 const JOIN_MAX = 30;
 const PING_MS = 15_000;
 
-const cursorSchema = z
-  .object({
-    frame: z.number().int().min(0).max(100).nullable(),
-    key: z.string().regex(/^[A-Za-z0-9_-]{24}$/),
-    name: z.string().trim().max(SHARE_NAME_MAX),
-    x: z.number().min(0).max(100_000),
-    y: z.number().min(0).max(100_000),
-  })
-  .strict();
+const CURSOR_KEY = /^[A-Za-z0-9_-]{24}$/u;
+const COORD_MAX = 100_000;
+const FRAME_MAX = 100;
 
-const postSchema = z
-  .object({
-    frame: z.number().int().min(0).max(100),
-    name: z.string().trim().min(1).max(SHARE_NAME_MAX),
-    text: z.string().trim().min(1).max(SHARE_COMMENT_MAX),
-    x: z.number().int().min(0).max(100_000).nullable(),
-    y: z.number().int().min(0).max(100_000).nullable(),
-  })
-  .strict();
+const toCoordinate = (): Schema.Number =>
+  Schema.Number.check(Schema.isBetween({ maximum: COORD_MAX, minimum: 0 }));
+
+const toWholeCoordinate = (): Schema.Int =>
+  Schema.Int.check(Schema.isBetween({ maximum: COORD_MAX, minimum: 0 }));
+
+const toFrameNumber = (): Schema.Int =>
+  Schema.Int.check(Schema.isBetween({ maximum: FRAME_MAX, minimum: 0 }));
+
+const CursorSchema = Schema.Struct({
+  frame: Schema.NullOr(toFrameNumber()),
+  key: Schema.String.check(Schema.isPattern(CURSOR_KEY)),
+  name: Schema.Trim.check(Schema.isMaxLength(SHARE_NAME_MAX)),
+  x: toCoordinate(),
+  y: toCoordinate(),
+});
+
+const PostSchema = Schema.Struct({
+  frame: toFrameNumber(),
+  name: Schema.Trim.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(SHARE_NAME_MAX)
+  ),
+  text: Schema.Trim.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(SHARE_COMMENT_MAX)
+  ),
+  x: Schema.NullOr(toWholeCoordinate()),
+  y: Schema.NullOr(toWholeCoordinate()),
+});
+
+const decodeCursor = toDecoder(CursorSchema, "error");
+const decodePost = toDecoder(PostSchema, "error");
 
 export interface ViewerAppDeps {
   shares: ShareStore;
@@ -189,7 +208,7 @@ async function linkComments(
 async function postComment(
   deps: ViewerAppDeps,
   record: ShareRecord,
-  input: z.infer<typeof postSchema>
+  input: typeof PostSchema.Type
 ): Promise<ViewerComment> {
   const frame = record.frames[input.frame] ?? record.frames[0];
 
@@ -363,14 +382,14 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
         );
       }
 
-      const parsed = postSchema.safeParse(await c.req.json().catch(() => null));
+      const parsed = decodePost(await c.req.json().catch(() => null));
 
-      if (!parsed.success) {
+      if (Result.isFailure(parsed)) {
         return c.json({ error: "Type your name and a comment." }, 400);
       }
 
       return c.json(
-        { comment: await postComment(deps, record, parsed.data) },
+        { comment: await postComment(deps, record, parsed.success) },
         201
       );
     }
@@ -447,17 +466,15 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
         return c.body(null, 403);
       }
 
-      const parsed = cursorSchema.safeParse(
-        await c.req.json().catch(() => null)
-      );
+      const parsed = decodeCursor(await c.req.json().catch(() => null));
 
-      if (!parsed.success) {
+      if (Result.isFailure(parsed)) {
         return c.body(null, 400);
       }
 
       const result = deps.hub.cursor(record.id, {
-        ...parsed.data,
-        name: parsed.data.name.replaceAll(/[\p{Cc}]+/gu, "") || "Viewer",
+        ...parsed.success,
+        name: parsed.success.name.replaceAll(/[\p{Cc}]+/gu, "") || "Viewer",
       });
 
       return c.body(null, result === "gone" ? 410 : 204);

@@ -51,11 +51,14 @@ const useShellState = (
       return;
     }
 
-    void Promise.resolve(onPane.current?.("comments")).then((moved) => {
+    const openPane = async (): Promise<void> => {
+      const moved = await onPane.current?.("comments");
+
       if (moved === false) {
         commentRef.current.setOn(false);
       }
-    });
+    };
+    void openPane();
   }, [comment.on]);
   const prevPane = useRef(pane);
   useEffect(() => {

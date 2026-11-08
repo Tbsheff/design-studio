@@ -74,14 +74,13 @@ const appRoutePages = (
   if (!app) {
     return null;
   }
-  return () =>
-    api
-      .appRoutes(projectId)
-      .then(({ routes }) =>
-        routes
-          .filter((route) => !route.dynamic)
-          .map((route) => route.route.replace(/^\/+/, ""))
-      );
+  return async () => {
+    const { routes } = await api.appRoutes(projectId);
+
+    return routes
+      .filter((route) => !route.dynamic)
+      .map((route) => route.route.replace(/^\/+/, ""));
+  };
 };
 
 const AppCanvasBar = ({

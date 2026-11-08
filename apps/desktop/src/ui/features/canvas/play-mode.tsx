@@ -293,7 +293,8 @@ const usePlay = (p: Props) => {
         ? { ...motion, transition: "dissolve" }
         : motion;
 
-    void props.current.urlOf(frame).then((url) => {
+    const placeWhenReady = async (): Promise<void> => {
+      const url = await props.current.urlOf(frame);
       if (!url) {
         return setError("The preview for that frame is not ready.");
       }
@@ -304,14 +305,12 @@ const usePlay = (p: Props) => {
         pendingFx.current.set(token, layers);
       }
 
-      const first = slotsRef.current.length === 0;
-
       const slot: Slot = {
         key: token,
         frame,
         src: frameSrc(url, { [BRIDGE_PASSIVE_PARAM]: "1" }),
         token,
-        ...(first ? INSTANT : effective),
+        ...(slotsRef.current.length === 0 ? INSTANT : effective),
         phase: "loading",
         ...(overlay ? { overlay } : {}),
       };
@@ -319,7 +318,8 @@ const usePlay = (p: Props) => {
       after();
       setSlots((prev) => placed(prev, slot));
       later(() => reveal(token), NO_BRIDGE_MS);
-    });
+    };
+    void placeWhenReady();
   };
 
   const show = useCallback(

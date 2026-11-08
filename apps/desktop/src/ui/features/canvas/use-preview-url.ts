@@ -39,9 +39,14 @@ const usePreviewUrl = (
           ? api.versionPreview(projectId, versionId)
           : Promise.reject(new Error(NO_VERSION_TEXT));
 
-    load
-      .then(({ url }) => alive && setBaseUrl(url))
-      .catch((error) => {
+    const fetchBase = async (): Promise<void> => {
+      try {
+        const { url } = await load;
+
+        if (alive) {
+          setBaseUrl(url);
+        }
+      } catch (error: unknown) {
         if (!alive) {
           return;
         }
@@ -53,7 +58,9 @@ const usePreviewUrl = (
             ? text
             : `Could not load the preview. ${text} Reload the page to try again.`
         );
-      });
+      }
+    };
+    void fetchBase();
 
     return (): void => {
       alive = false;

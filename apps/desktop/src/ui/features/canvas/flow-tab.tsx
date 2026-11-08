@@ -1,7 +1,7 @@
 import type { AppRoute } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { dynamicNames } from "../../../shared/route-flow.js";
 import type { FlowResult } from "../../../shared/route-flow.js";
@@ -9,6 +9,7 @@ import { api, errorText } from "../../api.js";
 
 import "../../styles/route-flow.css";
 import { copy } from "./copy.js";
+import { toValueOr } from "./settle-model.js";
 
 const DEPTHS = [0, 1, 2] as const;
 
@@ -31,16 +32,25 @@ const useRoutesAndParams = (projectId: string) => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
   const [params, setParams] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    api
-      .appRoutes(projectId)
-      .then((result) => setRoutes(result.routes))
-      .catch((failure: unknown) => setError(errorText(failure)));
-    api
-      .flowParams(projectId)
-      .then((result) => setParams(result.params))
-      .catch(() => null);
+  const loadRoutes = useCallback(async (): Promise<void> => {
+    try {
+      const result = await api.appRoutes(projectId);
+      setRoutes(result.routes);
+    } catch (failure: unknown) {
+      setError(errorText(failure));
+    }
   }, [projectId]);
+  const loadParams = useCallback(async (): Promise<void> => {
+    const result = await toValueOr(api.flowParams(projectId), null);
+
+    if (result) {
+      setParams(result.params);
+    }
+  }, [projectId]);
+  useEffect(() => {
+    void loadRoutes();
+    void loadParams();
+  }, [loadRoutes, loadParams]);
 
   return { error, params, routes, setError, setParams };
 };
@@ -107,7 +117,7 @@ export default function FlowTab({
         : [...list, route]
     );
 
-  const build = (): void => {
+  const build = async (): Promise<void> => {
     setBusy(true);
     setError(null);
     const single = chosen.length === 1 && depth > 0;
@@ -118,11 +128,13 @@ export default function FlowTab({
       params,
     };
 
-    api
-      .buildFlow(projectId, input)
-      .then(setResult)
-      .catch((failure: unknown) => setError(errorText(failure)))
-      .finally(() => setBusy(false));
+    try {
+      setResult(await api.buildFlow(projectId, input));
+    } catch (failure: unknown) {
+      setError(errorText(failure));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

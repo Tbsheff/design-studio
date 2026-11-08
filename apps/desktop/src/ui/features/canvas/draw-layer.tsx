@@ -23,6 +23,7 @@ import {
 import type { StrokeBuilder } from "./drawing-model.js";
 
 import "../../styles/drawing.css";
+import { toValueOr } from "./settle-model.js";
 import type { DrawTool } from "./use-draw-tool.js";
 
 interface Frame {
@@ -216,7 +217,7 @@ const DrawSurface = ({
       strokes,
     };
 
-    const image = await renderDrawingPng(value).catch(() => null);
+    const image = await toValueOr(renderDrawingPng(value), null);
 
     if (!image) {
       return false;

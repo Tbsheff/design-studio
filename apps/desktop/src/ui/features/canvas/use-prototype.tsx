@@ -32,6 +32,7 @@ import {
   PrototypeBar,
   useLinkDrag,
 } from "./prototype-layer.js";
+import { runOrReport, toValueOr } from "./settle-model.js";
 import { useLinkRects } from "./use-link-rects.js";
 
 const PlayMode = lazy(() => import("./play-mode.js"));
@@ -109,13 +110,14 @@ const usePrototype = (o: Options) => {
   });
 
   const drag = useLinkDrag((selection, frameId) => {
-    void linksApi
-      .add(o.projectId, {
+    void runOrReport(
+      linksApi.add(o.projectId, {
         from: linkSourceOf(selection, o.active),
         to: { frame: frameId },
         transition: "instant",
-      })
-      .catch((error: unknown) => o.notify(errorMessage(error)));
+      }),
+      (error) => o.notify(errorMessage(error))
+    );
   });
 
   const frameTitle = (frame: CanvasFrame): string =>
@@ -148,31 +150,44 @@ const usePrototype = (o: Options) => {
       ? withFrameStateHost(url, frameStateOf(frameStates.view, frame.id))
       : url;
 
-  const urlOf = (frame: CanvasFrame): Promise<string | null> =>
-    baseUrlOf(frame).then((url) => (url ? withState(frame, url) : null));
+  const urlOf = async (frame: CanvasFrame): Promise<string | null> => {
+    const url = await baseUrlOf(frame);
 
-  const baseUrlOf = (frame: CanvasFrame): Promise<string | null> => {
+    return url ? withState(frame, url) : null;
+  };
+
+  const fetchDirectionUrl = async (did: string): Promise<string> => {
+    const result = await api.directionPreview(o.projectId, did);
+
+    return result.url;
+  };
+
+  const baseUrlOf = async (frame: CanvasFrame): Promise<string | null> => {
     const did = frameDirection(frame, o.directionId);
 
     if (!did) {
-      return Promise.resolve(null);
+      return null;
     }
 
     if (did === o.directionId && o.baseUrl) {
-      return Promise.resolve(withFramePath(o.baseUrl, frame.path));
+      return withFramePath(o.baseUrl, frame.path);
     }
 
     let url = urls.current.get(did);
 
     if (!url) {
-      url = api.directionPreview(o.projectId, did).then((result) => result.url);
+      url = fetchDirectionUrl(did);
       urls.current.set(did, url);
-      url.catch(() => urls.current.delete(did));
+      void runOrReport(url, () => urls.current.delete(did));
     }
 
-    return url
-      .then((base) => withFramePath(base, frame.path))
-      .catch(() => null);
+    const base = await toValueOr(url, null);
+
+    if (base === null) {
+      return null;
+    }
+
+    return withFramePath(base, frame.path);
   };
 
   const play = (): void => setPlaying(true);

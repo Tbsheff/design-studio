@@ -69,13 +69,15 @@ const MenuBody = ({
 }): ReactElement => {
   const slot = useFrameStateSlot();
 
-  const run = (task: Promise<unknown>): void => {
+  const run = async (task: Promise<unknown>): Promise<void> => {
     onError(null);
-    task
-      .then(() => menu.close(true))
-      .catch((error: unknown) =>
-        onError(error instanceof Error ? error.message : String(error))
-      );
+
+    try {
+      await task;
+      menu.close(true);
+    } catch (error: unknown) {
+      onError(error instanceof Error ? error.message : String(error));
+    }
   };
 
   if (menu.panel === "user") {
@@ -83,9 +85,10 @@ const MenuBody = ({
       <UserForm
         user={view.session.user}
         onBack={() => menu.setPanel("list")}
-        onSave={(user) =>
-          setFrameSession(projectId, { user }).then(() => menu.close(true))
-        }
+        onSave={async (user) => {
+          await setFrameSession(projectId, { user });
+          menu.close(true);
+        }}
       />
     );
   }
@@ -93,11 +96,10 @@ const MenuBody = ({
     return (
       <MockForm
         onBack={() => menu.setPanel("list")}
-        onSave={(name, rules) =>
-          setFrameState(projectId, frameId, "mock", { name, rules }).then(() =>
-            menu.close(true)
-          )
-        }
+        onSave={async (name, rules) => {
+          await setFrameState(projectId, frameId, "mock", { name, rules });
+          menu.close(true);
+        }}
       />
     );
   }

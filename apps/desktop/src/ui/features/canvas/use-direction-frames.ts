@@ -1,6 +1,6 @@
 import { BRIDGE_PASSIVE_PARAM } from "@design-studio/contracts";
 import type { Direction, ProjectKind } from "@design-studio/contracts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { api } from "../../api.js";
 import { frameSrc } from "../../platform/bridge.js";
@@ -49,6 +49,17 @@ const useDirectionUrls = (
     asked.current = new Set();
     setUrls({});
   }, [projectId]);
+  const fetchUrl = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        const { url } = await api.directionPreview(projectId, id);
+        setUrls((prev) => ({ ...prev, [id]: url }));
+      } catch {
+        asked.current.delete(id);
+      }
+    },
+    [projectId]
+  );
   useEffect(() => {
     for (const id of key ? key.split(",") : []) {
       if (asked.current.has(id)) {
@@ -56,12 +67,9 @@ const useDirectionUrls = (
       }
 
       asked.current.add(id);
-      api
-        .directionPreview(projectId, id)
-        .then(({ url }) => setUrls((prev) => ({ ...prev, [id]: url })))
-        .catch(() => asked.current.delete(id));
+      void fetchUrl(id);
     }
-  }, [projectId, key]);
+  }, [key, fetchUrl]);
 
   return urls;
 };

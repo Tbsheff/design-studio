@@ -20,6 +20,7 @@ import type {
   SetSelectMode,
 } from "./canvas-shell.js";
 import type { CanvasViewRow } from "./canvas-toolbar.js";
+import { toValueOr } from "./settle-model.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 
 interface FrameLabelInfo {
@@ -100,17 +101,16 @@ const addAndShow = (
 const useFileMenu = (p: ChromeProps, onImport: () => void) => {
   const [pages, setPages] = useState<string[]>([]);
 
-  const load = (): void => {
+  const load = async (): Promise<void> => {
     if (p.kind !== "html" || !p.directionId) {
       return;
     }
 
-    void api
-      .workTreeFiles(p.projectId, p.directionId)
-      .then(({ files }) =>
-        setPages(files.filter((f) => f.endsWith(".html")).sort())
-      )
-      .catch(() => setPages([]));
+    const { files } = await toValueOr(
+      api.workTreeFiles(p.projectId, p.directionId),
+      { files: [] as string[] }
+    );
+    setPages(files.filter((f) => f.endsWith(".html")).sort());
   };
 
   const current = p.active.path || "index.html";

@@ -16,6 +16,7 @@ import { copy } from "./copy.js";
 
 import "../../styles/frame-state.css";
 import type { setFrameSession } from "./frame-states-model.js";
+import { runOrReport } from "./settle-model.js";
 
 type MockRules = NonNullable<FrameStateDef["mocks"]>;
 
@@ -151,7 +152,7 @@ const UserForm = ({
       className="frame-state-form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSave({ email, name }).catch((failure: unknown) =>
+        void runOrReport(onSave({ email, name }), (failure) =>
           setError(failure instanceof Error ? failure.message : String(failure))
         );
       }}
@@ -214,7 +215,7 @@ const MockForm = ({
       return;
     }
 
-    onSave(name, parsed).catch((failure: unknown) =>
+    void runOrReport(onSave(name, parsed), (failure) =>
       setError(failure instanceof Error ? failure.message : String(failure))
     );
   };

@@ -40,14 +40,21 @@ const FlowFromHere = ({
     return null;
   }
 
-  const run = (): void => {
+  const run = async (): Promise<void> => {
     setBusy(true);
     setNote(null);
-    api
-      .buildFlow(states.projectId, { depth: 1, from: frameId })
-      .then((result) => setNote(doneText(result)))
-      .catch((error: unknown) => setNote(errorText(error)))
-      .finally(() => setBusy(false));
+
+    try {
+      const result = await api.buildFlow(states.projectId, {
+        depth: 1,
+        from: frameId,
+      });
+      setNote(doneText(result));
+    } catch (error: unknown) {
+      setNote(errorText(error));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

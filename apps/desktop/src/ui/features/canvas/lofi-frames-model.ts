@@ -20,21 +20,29 @@ const toBase64 = (bytes: Uint8Array): string => {
   return btoa(text);
 };
 
-const loadLofiCss = (): Promise<string> => {
-  cssLoad ??= readBlob(
-    new URL("../../assets/fonts/kalam-latin-400-normal.woff2", import.meta.url)
-      .href
-  )
-    .then((blob) => blob.arrayBuffer())
-    .then((buffer) =>
-      lofiCss(`data:font/woff2;base64,${toBase64(new Uint8Array(buffer))}`)
-    )
-    .catch((error: unknown) => {
-      cssLoad = null;
-      console.error("[lofi] font load failed", error);
+const fetchLofiCss = async (): Promise<string> => {
+  try {
+    const blob = await readBlob(
+      new URL(
+        "../../assets/fonts/kalam-latin-400-normal.woff2",
+        import.meta.url
+      ).href
+    );
+    const buffer = await blob.arrayBuffer();
 
-      return lofiCss("data:font/woff2;base64,");
-    });
+    return lofiCss(
+      `data:font/woff2;base64,${toBase64(new Uint8Array(buffer))}`
+    );
+  } catch (error: unknown) {
+    cssLoad = null;
+    console.error("[lofi] font load failed", error);
+
+    return lofiCss("data:font/woff2;base64,");
+  }
+};
+
+const loadLofiCss = (): Promise<string> => {
+  cssLoad ??= fetchLofiCss();
 
   return cssLoad;
 };
@@ -120,11 +128,14 @@ const useLofiFrames = (
       return;
     }
 
-    void loadLofiCss().then((css) => {
+    const sendCss = async (): Promise<void> => {
+      const css = await loadLofiCss();
+
       if (sent.current.get(element) === true && wants(frame)) {
         postToFrame(frame, { css, type: "lofi-preview" });
       }
-    });
+    };
+    void sendCss();
   };
 
   useBridge(frames, (frame: BridgeFrame, message: BridgeToParent) => {

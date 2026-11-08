@@ -153,11 +153,14 @@ const useLayoutKeyFallback = (o: {
         return false;
       }
 
-      void Promise.resolve(openEdit()).then((moved) => {
+      const forwardWhenOpened = async (): Promise<void> => {
+        const moved = await openEdit();
+
         if (moved !== false) {
           forwardLayoutKeyWhenShown();
         }
-      });
+      };
+      void forwardWhenOpened();
 
       return true;
     };

@@ -2,6 +2,7 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
 
 import { api } from "../../api.js";
+import { runOrReport } from "./settle-model.js";
 
 const PRESENCE_MS = 1500;
 const RESEND_MS = 60_000;
@@ -81,9 +82,12 @@ const useCanvasPresence = (o: PresenceInput): void => {
 
       last = key;
       sentAt = Date.now();
-      api.putCanvasPresence(latest.current.projectId, body).catch(() => {
-        last = "";
-      });
+      void runOrReport(
+        api.putCanvasPresence(latest.current.projectId, body),
+        () => {
+          last = "";
+        }
+      );
     };
 
     send();
@@ -94,11 +98,14 @@ const useCanvasPresence = (o: PresenceInput): void => {
   useEffect(() => {
     let stop: (() => void) | null = null;
     let gone = false;
-    void import("../share-publish-ship-export/share-live.js").then((mod) => {
+    const startLive = async (): Promise<void> => {
+      const mod = await import("../share-publish-ship-export/share-live.js");
+
       if (!gone) {
         stop = mod.startShareLive(o.projectId, () => latest.current.stage());
       }
-    });
+    };
+    void startLive();
 
     return (): void => {
       gone = true;

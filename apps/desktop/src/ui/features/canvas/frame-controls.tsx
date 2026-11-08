@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { cleanFramePath } from "./canvas-frames-model.js";
 import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
+import { toValueOr } from "./settle-model.js";
 import { stop } from "./variation-controls.js";
 
 const pageName = (path: string | undefined): string => {
@@ -54,9 +55,14 @@ const FramePageMenu = ({
     }
 
     let alive = true;
-    load()
-      .then((list) => alive && setPages(list))
-      .catch(() => alive && setPages([]));
+    const fill = async (): Promise<void> => {
+      const list = await toValueOr(load(), []);
+
+      if (alive) {
+        setPages(list);
+      }
+    };
+    void fill();
 
     return (): void => {
       alive = false;

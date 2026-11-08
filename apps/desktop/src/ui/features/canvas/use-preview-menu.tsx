@@ -32,6 +32,7 @@ import { PropSlot, usePropHost } from "../prop/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
+import { toValueOr } from "./settle-model.js";
 
 const renderGenerateTab = (props: GenerateTabProps): ReactElement => (
   <ImageGenerateSlot
@@ -67,7 +68,7 @@ const copyCss = async (
   const css = await requestAuthoredCss(port, selector);
 
   if (css) {
-    await navigator.clipboard.writeText(formatCopyCss(css)).catch(() => null);
+    await toValueOr(navigator.clipboard.writeText(formatCopyCss(css)), null);
   }
 };
 

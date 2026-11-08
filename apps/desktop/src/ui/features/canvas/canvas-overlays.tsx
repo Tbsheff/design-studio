@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { formatMeasure } from "../../../shared/measure.js";
 import { guideStyle } from "./artboard-overlay.js";
 import { copy } from "./copy.js";
+import { toValueOr } from "./settle-model.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";
 
@@ -28,7 +29,7 @@ const PresentLayer = ({
     const el = root.current;
 
     if (fullscreen && el?.requestFullscreen) {
-      void el.requestFullscreen().catch(() => null);
+      void toValueOr(el.requestFullscreen(), null);
     }
 
     const onKey = (event: KeyboardEvent): void => {
@@ -56,7 +57,7 @@ const PresentLayer = ({
       document.removeEventListener("fullscreenchange", onFullscreen);
 
       if (document.fullscreenElement) {
-        void document.exitFullscreen().catch(() => null);
+        void toValueOr(document.exitFullscreen(), null);
       }
     };
   }, [fullscreen, onClose]);

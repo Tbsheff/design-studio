@@ -139,10 +139,11 @@ const useFrameLabels = (o: LabelInput) => {
   live.current = o;
 
   const listPages = useCallback(
-    (did: string) => (): Promise<string[]> =>
-      api
-        .workTreeFiles(projectId, did)
-        .then(({ files }) => files.filter((f) => f.endsWith(".html")).sort()),
+    (did: string) => async (): Promise<string[]> => {
+      const { files } = await api.workTreeFiles(projectId, did);
+
+      return files.filter((f) => f.endsWith(".html")).sort();
+    },
     [projectId]
   );
 

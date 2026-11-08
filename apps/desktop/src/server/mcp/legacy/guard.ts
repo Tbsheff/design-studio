@@ -1,6 +1,7 @@
 import type { Permission } from "@design-studio/actions/_core/permissions";
+import { Schema } from "effect";
 
-import { z } from "../../platform/zod-bridge/index.js";
+import { toDecoder } from "../../platform/decode/index.js";
 import { LOCAL_ORG_ID, isOrgInScope, toOrgScope } from "../../store/index.js";
 import { isPermitted } from "../../store/principal.js";
 import type { Principal } from "../../store/principal.js";
@@ -18,10 +19,24 @@ const TOOL_PERMS = new Map<string, Permission>([
 
 type ToolArgs = Parameters<ToolSpec["run"]>[1];
 
-const TargetSchema = z.object({
-  body: z.string().optional(),
-  projectId: z.string().optional(),
+type Target = typeof TargetSchema.Type;
+
+const TargetSchema = Schema.Struct({
+  body: Schema.optionalKey(Schema.String),
+  projectId: Schema.optionalKey(Schema.String),
 });
+
+const readTarget = toDecoder(TargetSchema, "ignore");
+
+const toTarget = (args: ToolArgs): Target => {
+  const parsed = readTarget(args);
+
+  if (parsed._tag === "Failure") {
+    throw new EditError("The tool arguments are not valid.");
+  }
+
+  return parsed.success;
+};
 
 const COMMENT_WRITES = new Set(["reply_to_comment", "resolve_comment"]);
 const UNTRUSTED_REPLY_TOOLS = new Set(["reply_to_comment"]);
@@ -63,7 +78,7 @@ const checkProjectScope = async (
   principal: Principal,
   args: ToolArgs
 ): Promise<void> => {
-  const projectId = TargetSchema.parse(args).projectId ?? null;
+  const projectId = toTarget(args).projectId ?? null;
 
   if (principal.kind !== "key" || projectId === null) {
     return;
@@ -86,7 +101,7 @@ const holdReply = async (
     return;
   }
 
-  const target = TargetSchema.parse(args);
+  const target = toTarget(args);
 
   const who = { client };
 

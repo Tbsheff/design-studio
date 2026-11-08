@@ -47,6 +47,8 @@ export {
   probeLock,
 } from "./lock-probe.js";
 
-export { appSourceBody, parseLoc, probeOwners } from "./owner-probe.js";
+export { parseLoc, probeOwners } from "./owner-probe.js";
+
+export { toAppSourceBody } from "../preview/probe-source/index.js";
 
 export { noteShownFiles, resolveSourceLoc } from "./source-loc.js";

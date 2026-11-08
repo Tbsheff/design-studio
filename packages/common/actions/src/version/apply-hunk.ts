@@ -39,7 +39,13 @@ const NullableFromSchema = Schema.NullOr(FromSchema);
 
 const applyHunkVersion = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "revert_hunk",
+    set: "core",
+    short:
+      "Revert one change (hunk) of one file between two saved versions. Count hunks from 1 as list_hunks does.",
+  },
   confirm: "none",
   description:
     "Undo one change (one @@ hunk) of a saved version, the same as Undo this change in Compare > Code in the studio. It reverses only that hunk in the current file of the direction head and saves the result as one new version, which undo (Cmd+Z) can take back. Other changes in the file stay. When the hunk text is no longer in the file (it was undone or edited later), it changes nothing and says why. Use diff_versions first to see the hunks.",

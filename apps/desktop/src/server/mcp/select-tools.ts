@@ -5,7 +5,7 @@ import {
 } from "@design-studio/contracts";
 
 import type { PreviewService } from "../../shared/server-ports.js";
-import { findFrame, frameRef } from "../canvas/index.js";
+import { findFrame } from "../canvas/index.js";
 import {
   isLayerRef,
   LayerRefError,
@@ -21,6 +21,7 @@ import { EditError, loadTarget, type EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId,
+  frameRef,
   ok,
   pagePath,
   pageUrl,

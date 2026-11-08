@@ -13,7 +13,13 @@ import { VersionSchema } from "./schema.js";
 
 const restoreVersion = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "restore_version",
+    set: "core",
+    short:
+      "Make an older version the current design of a direction. Saved as a new version that undo takes back.",
+  },
   confirm: "none",
   description:
     "Make an older version the current design of a direction. Saved as a new version that undo takes back. The current prototype links and canvas frames stay; only the page files change.",

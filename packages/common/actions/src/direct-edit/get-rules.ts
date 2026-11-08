@@ -12,7 +12,13 @@ import { RulesStateSchema } from "./schema.js";
 
 const getRulesDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "get_design_rules",
+    set: "core",
+    short:
+      "Read only. The design rules of a project, the same list as the Rules editor. Each rule has a kind.",
+  },
   confirm: "none",
   description:
     "Read the design rules of a project, the same list as the Rules editor in the Design system panel. Each rule has a kind. Class, token, font and component rules are checked by review_frame. Text rules go only to the studio agent and the critic. The origin says where the rules come from. Imported rules come from the DESIGN.md and AGENTS.md of the app. Save them with set_design_rules.",

@@ -5,13 +5,13 @@ import {
   type DesignRulesTestResult,
 } from "@design-studio/contracts/design-rules";
 
-import { frameRef } from "../canvas/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { loadTarget } from "./edit-guards.js";
 import {
   defineTool,
   directionId,
+  frameRef,
   ok,
   pagePath,
   projectId,

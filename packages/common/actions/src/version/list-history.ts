@@ -13,7 +13,13 @@ const LimitSchema = Schema.Int.annotate({
 
 const listHistoryVersion = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "edit_history",
+    set: "core",
+    short:
+      "Read only. The undo and redo entries of the direction's edit history, with the position of the cursor.",
+  },
   confirm: "none",
   description:
     "List the recent edits that undo and redo would step through, newest first: label, version id and files. This is the same undo history as the studio window (Cmd+Z). The history lives in memory and clears when Design Studio restarts. Read only.",

@@ -16,7 +16,13 @@ const FileSchema = Schema.String.check(
 
 const listHunksVersion = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_hunks",
+    set: "core",
+    short:
+      "Read only. The changes (hunks) of one file between two saved versions, numbered from 1 as revert_hunk counts them.",
+  },
   confirm: "none",
   description:
     "List the changes (hunks) of one file between two saved versions, numbered from 1 as revert_hunk counts them. Each hunk has its header, start lines and signed lines. Read only.",

@@ -15,7 +15,13 @@ import {
 
 const createReplyComment = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "reply_comment",
+    set: "core",
+    short:
+      "Reply to a pinned comment by comment id. The reply shows the author name you give, or your client name.",
+  },
   confirm: "none",
   description:
     "Add a reply to a pinned comment. The reply shows the author name, or your client name when you give it.",

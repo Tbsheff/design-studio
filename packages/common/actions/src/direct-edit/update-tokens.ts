@@ -12,7 +12,13 @@ import { TokenChangesFields, UpdateTokensResultSchema } from "./schema.js";
 
 const updateTokensDirectEdit = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "update_tokens_direct_edit",
+    set: "core",
+    short:
+      "Change the values of design tokens in a direction. Writes the token source and saves a version.",
+  },
   confirm: "none",
   description:
     "Change the values of design tokens in a direction. Writes the token source and saves a version.",
@@ -35,7 +41,7 @@ const updateTokensDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["direct-edit.getDesignSystem"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "update_tokens_direct_edit" },
   needs: "project.update",
   output: UpdateTokensResultSchema,
   scope: "project",

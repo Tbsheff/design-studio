@@ -13,7 +13,13 @@ import { CommentSchema, SafeIdTextSchema } from "./schema.js";
 
 const deleteReplyComment = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "delete_reply_comment",
+    set: "core",
+    short:
+      "Delete one reply from a pinned comment. The comment and its other replies stay.",
+  },
   confirm: "none",
   description:
     "Delete one reply from a pinned comment, from the studio Comments pane. The comment and its other replies stay.",
@@ -30,7 +36,7 @@ const deleteReplyComment = defineAction({
     replyId: SafeIdTextSchema,
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "delete_reply_comment" },
   needs: "comment.delete",
   output: CommentSchema,
   scope: "project",

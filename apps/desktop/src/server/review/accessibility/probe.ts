@@ -1,4 +1,4 @@
-import { appSourceBody, SOURCE_LOC_ATTR } from "./deps.js";
+import { toAppSourceBody, SOURCE_LOC_ATTR } from "./deps.js";
 
 interface ProbeInput {
   readonly max: number;
@@ -47,7 +47,7 @@ interface RawProbe {
 
 const PROBE_SOURCE = String.raw`async (input) => {
   const LOC = ${JSON.stringify(SOURCE_LOC_ATTR)};
-  const appLoc = ${appSourceBody()};
+  const appLoc = ${toAppSourceBody()};
   const ROLES = { a: 'link', button: 'button', select: 'combobox', textarea: 'textbox', img: 'img', nav: 'navigation', main: 'main', header: 'banner', footer: 'contentinfo', aside: 'complementary', form: 'form', ul: 'list', ol: 'list', li: 'listitem', dialog: 'dialog', h1: 'heading', h2: 'heading', h3: 'heading', h4: 'heading', h5: 'heading', h6: 'heading', table: 'table', section: 'region', summary: 'button' };
   const INPUT_ROLES = { checkbox: 'checkbox', radio: 'radio', range: 'slider', button: 'button', submit: 'button', reset: 'button', search: 'searchbox' };
   const FOCUSABLE = 'a[href], button, input, select, textarea, summary, iframe, [tabindex], [contenteditable=""], [contenteditable="true"]';

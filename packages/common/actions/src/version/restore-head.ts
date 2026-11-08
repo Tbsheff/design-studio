@@ -9,7 +9,13 @@ import { VersionSchema } from "./schema.js";
 
 const restoreHeadVersion = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "restore_head_version",
+    set: "core",
+    short:
+      "Undo the last saved change of a direction by restoring the version before its head. Saved as a new version.",
+  },
   confirm: "none",
   description:
     "Undo the last saved change of a direction by restoring the version before its head. Saved as a new version.",
@@ -30,7 +36,7 @@ const restoreHeadVersion = defineAction({
     "version.listHistory",
     "version.listHunks",
   ],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "restore_head_version" },
   needs: "project.update",
   output: VersionSchema,
   scope: "project",

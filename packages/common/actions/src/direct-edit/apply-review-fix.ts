@@ -13,7 +13,13 @@ import { ReviewFixResultSchema } from "./schema.js";
 
 const applyReviewFixDirectEdit = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "apply_fix",
+    set: "core",
+    short:
+      "Apply the direct fix of one or more review_frame findings by id. Several ids make one version and one undo step.",
+  },
   confirm: "none",
   description:
     "Apply the direct fix of one or more review_frame findings, with the same code path as the Fix button in the Review panel. Several ids make one version and one undo step. Fixes of findings with shared set edit a shared component file and are skipped unless allowShared is true. Findings with fix null need judgment and are skipped. Runs review_frame again first when the design changed since the last review.",

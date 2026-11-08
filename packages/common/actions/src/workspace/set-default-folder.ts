@@ -8,7 +8,13 @@ import { WorkspaceListSchema } from "./schema.js";
 
 const setDefaultFolderWorkspace = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_default_folder_workspace",
+    set: "core",
+    short:
+      "Set the default projects folder. The old default stays in the folder list. Returns the folder list.",
+  },
   confirm: "none",
   description:
     "Set the default projects folder. The old default stays in the folder list. Returns the folder list.",
@@ -19,7 +25,7 @@ const setDefaultFolderWorkspace = defineAction({
     path: Schema.String,
   }),
   invalidates: ["workspace.getFolders", "project.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_default_folder_workspace" },
   needs: "studio.write",
   output: WorkspaceListSchema,
   scope: "org",

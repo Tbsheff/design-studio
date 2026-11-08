@@ -9,7 +9,12 @@ import { ProjectSchema, SettingsFields } from "./schema.js";
 
 const updateProject = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "update_project",
+    set: "core",
+    short: "Update the settings of one project. Returns the project.",
+  },
   confirm: "none",
   description: "Update the settings of one project. Returns the project.",
   errors: [BadRequest, Conflict, NotFound],
@@ -20,7 +25,7 @@ const updateProject = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["image-search.get", "project.get", "project.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "update_project" },
   needs: "project.update",
   output: ProjectSchema,
   scope: "project",

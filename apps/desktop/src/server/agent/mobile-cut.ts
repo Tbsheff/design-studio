@@ -1,5 +1,5 @@
 import type { PreviewService } from "../../shared/server-ports.js";
-import { appSourceBody } from "../page-probe/index.js";
+import { toAppSourceBody } from "../page-probe/index.js";
 import { onProbePage } from "../preview/probe-page.js";
 
 const MOBILE = { height: 844, width: 390 };
@@ -16,7 +16,7 @@ export interface CutElement {
 
 function cutExpression(): string {
   return `(async () => {
-    const appSource = ${appSourceBody()};
+    const appSource = ${toAppSourceBody()};
     const width = window.innerWidth;
     const picks = [...document.querySelectorAll('button, a, input, select, textarea, label, h1, h2, h3, h4, h5, h6, p, li, td, th, [role=button], img, svg')];
     const cut = [];

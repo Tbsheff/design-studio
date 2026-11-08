@@ -36,7 +36,7 @@ const inspectPropsInstanceDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { off: "ui-bootstrap" },
   needs: "project.read",
   output: PropsInstanceSchema,
   scope: "project",

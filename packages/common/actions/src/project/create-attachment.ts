@@ -9,7 +9,13 @@ import { AttachmentSchema } from "./schema.js";
 
 const createAttachmentProject = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "create_attachment_project",
+    set: "core",
+    short:
+      "Save an attachment file in a project. The file bytes go in as base64. Returns the attachment.",
+  },
   confirm: "none",
   description:
     "Save an attachment file in a project. The file bytes go in as base64. Returns the attachment.",
@@ -23,7 +29,7 @@ const createAttachmentProject = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["project.get"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "create_attachment_project" },
   needs: "project.update",
   output: AttachmentSchema,
   scope: "project",

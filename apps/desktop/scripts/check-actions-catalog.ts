@@ -51,7 +51,7 @@ const AGENT_OFF_REASONS = new Set([...OFF_REASONS, "legacy-agent"]);
 
 const MCP_OFF_REASONS = new Set([...OFF_REASONS, "legacy-mcp"]);
 
-const LEGACY_AGENT_MAX = 78;
+const LEGACY_AGENT_MAX = 11;
 
 const TOOL_NAME = /^[a-z][a-z0-9_]*$/u;
 

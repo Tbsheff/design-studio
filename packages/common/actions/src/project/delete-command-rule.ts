@@ -9,7 +9,13 @@ import { CommandRulesSchema } from "./schema.js";
 
 const deleteCommandRuleProject = defineAction({
   access: "destructive",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "delete_command_rule_project",
+    set: "core",
+    short:
+      "Delete one saved command rule of a project so the shell command asks again. The user must allow it.",
+  },
   confirm: "user",
   description:
     "Delete one saved command rule of a project, so that the shell command asks again before it runs. Returns the remaining rules.",
@@ -24,7 +30,7 @@ const deleteCommandRuleProject = defineAction({
     rule: Schema.String,
   }),
   invalidates: ["project.listCommandRules"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "delete_command_rule_project" },
   needs: "project.update",
   output: CommandRulesSchema,
   scope: "project",

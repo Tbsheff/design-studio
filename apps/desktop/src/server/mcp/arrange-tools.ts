@@ -8,7 +8,7 @@ import {
   type ArrangeAction,
   type ArrangeResult,
 } from "../../shared/arrange.js";
-import { findFrame, frameRef } from "../canvas/index.js";
+import { findFrame } from "../canvas/index.js";
 import {
   ARRANGE_TARGETS_MAX,
   DEFAULT_ARRANGE_VIEWPORT,
@@ -26,6 +26,7 @@ import {
 import {
   defineTool,
   directionId,
+  frameRef,
   ok,
   pagePath,
   pageUrl,

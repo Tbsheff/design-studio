@@ -1,7 +1,7 @@
 import type { Project } from "@design-studio/contracts";
 
 import type { PreviewService } from "../../shared/server-ports.js";
-import { findFrame, frameRef, readProjectCanvas } from "../canvas/index.js";
+import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { noteRenderedPage } from "../events/index.js";
 import {
   isLayerRef,
@@ -21,6 +21,7 @@ import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId,
+  frameRef,
   ok,
   pageName,
   pagePath,

@@ -19,7 +19,13 @@ import {
 
 const updateComment = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "update_comment",
+    set: "core",
+    short:
+      "Change the text, status, target or element of one comment in a direction. A status change follows the comment status rules.",
+  },
   confirm: "none",
   description:
     "Change the text, status, target or element of one comment in a direction, from the studio Comments pane. A status change follows the comment status rules.",
@@ -39,7 +45,7 @@ const updateComment = defineAction({
     text: Schema.optionalKey(CommentTextSchema),
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "update_comment" },
   needs: "comment.write",
   output: CommentSchema,
   scope: "project",

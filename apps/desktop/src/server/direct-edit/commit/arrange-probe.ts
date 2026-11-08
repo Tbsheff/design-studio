@@ -11,7 +11,7 @@ import type {
 } from "../../../shared/arrange-plan.js";
 import type { MeasureRect } from "../../../shared/arrange.js";
 import type { PreviewService } from "../../../shared/server-ports.js";
-import { appSourceBody, parseLoc } from "../../page-probe/index.js";
+import { toAppSourceBody, parseLoc } from "../../page-probe/index.js";
 import { probeOnPage } from "../../preview/probe-page.js";
 
 type Viewport = { width: number; height: number };
@@ -54,7 +54,7 @@ const HELPERS = `
   const uniqueId = (el) => { if (!el.id) return null; const s = '#' + CSS.escape(el.id); try { return document.querySelectorAll(s).length === 1 ? s : null; } catch { return null; } };
   const nthOfType = (el) => { const tag = el.tagName.toLowerCase(); const p = el.parentElement; if (!p) return tag; let index = 0; let count = 0; for (const sib of Array.from(p.children)) { if (sib.tagName === el.tagName) { count += 1; if (sib === el) index = count; } } return count > 1 ? tag + ':nth-of-type(' + index + ')' : tag; };
   const selectorFor = (el) => { const own = uniqueId(el); if (own) return own; const parts = []; let cur = el; while (cur && cur !== document.body && cur !== document.documentElement) { if (parts.length >= 12) break; const id = parts.length > 0 ? uniqueId(cur) : null; if (id) { parts.unshift(id); return parts.join(' > '); } parts.unshift(nthOfType(cur)); cur = cur.parentElement; } if (cur === document.body) parts.unshift('body'); return parts.length ? parts.join(' > ') : el.tagName.toLowerCase(); };
-  const appSource = ${appSourceBody()};
+  const appSource = ${toAppSourceBody()};
   const sourceOf = async (el) => { const tagged = el.getAttribute(${JSON.stringify(SOURCE_LOC_ATTR)}); if (tagged) return { loc: tagged, usedAt: null, usedBy: null }; const app = await appSource(el); return { loc: app?.loc || null, usedAt: app?.usedAt ?? null, usedBy: app?.usedBy ?? null }; };
   const paddingBox = (el) => { if (!el) return { x: scrollX, y: scrollY, width: innerWidth, height: innerHeight }; const r = el.getBoundingClientRect(); const b = sides(getComputedStyle(el), 'border'); return { x: r.x + scrollX + b.left, y: r.y + scrollY + b.top, width: el.clientWidth, height: el.clientHeight }; };
   const inFlow = (el) => { const cs = getComputedStyle(el); return cs.display !== 'none' && cs.position !== 'absolute' && cs.position !== 'fixed'; };

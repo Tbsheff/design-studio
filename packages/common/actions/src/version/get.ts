@@ -9,7 +9,13 @@ import { VersionSchema } from "./schema.js";
 
 const getVersion = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "get_version",
+    set: "core",
+    short:
+      "Read only. One saved version by id: title, kind, name, parent, time and changed files.",
+  },
   confirm: "none",
   description:
     "Get one saved version by id: title, kind, name, parent, time and changed files.",

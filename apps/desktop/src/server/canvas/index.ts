@@ -29,7 +29,6 @@ export {
   canvasPlace,
   canvasPoint,
   findFrame,
-  frameRef,
 } from "./tools.js";
 
 export type { CanvasToolContext, PlaceSpec, ToolText } from "./tools.js";

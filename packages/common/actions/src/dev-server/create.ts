@@ -8,7 +8,13 @@ import { DevServerAttachedSchema, SourceFieldSchema } from "./schema.js";
 
 const createDevServer = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "create_dev_server",
+    set: "app",
+    short:
+      "Attach an app to a project: a folder where the studio starts the dev server, or the url of a dev server you run. Nothing is copied.",
+  },
   confirm: "none",
   description:
     "Attach an app: a folder where the studio starts the dev server, or a url of a dev server you run. The project points at the folder and nothing is copied. A new attach saves the first version in the background.",
@@ -25,7 +31,7 @@ const createDevServer = defineAction({
     url: Schema.optionalKey(Schema.NullOr(SourceFieldSchema)),
   }),
   invalidates: ["dev-server.get"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "create_dev_server" },
   needs: "project.create",
   output: DevServerAttachedSchema,
   scope: "org",

@@ -34,7 +34,7 @@ const runDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "run_direct_edit" },
   needs: "project.update",
   output: RenderCheckListSchema,
   scope: "project",

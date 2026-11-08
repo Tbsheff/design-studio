@@ -17,13 +17,9 @@ import type {
 import { desktopBridge } from "../../platform/desktop.js";
 import { call as callAction, getJson, sendJson } from "../../platform/http.js";
 import { readStored, uiStore, writeStored } from "../../platform/storage.js";
-import {
-  activeFrame,
-  canvasStore,
-  defaultLayout,
-  frameName,
-} from "../canvas/canvas-frames-model.js";
+import { canvasStore } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
+import { activeFrame, defaultLayout, frameName } from "../canvas/index.js";
 import { pick } from "./pick.js";
 
 const item = (pid: string): string =>

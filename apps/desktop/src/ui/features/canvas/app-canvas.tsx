@@ -15,7 +15,8 @@ import {
   writeHiddenRedirects,
 } from "./app-canvas-routes.js";
 import type { Listen } from "./app-canvas-routes.js";
-import { canAddFrame, canvasStore } from "./canvas-frames-model.js";
+import { canAddFrame } from "./canvas-frame-ops.js";
+import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 import { FrameRedirectNote } from "./canvas-frames.js";
 import { copy } from "./copy.js";
@@ -68,16 +69,16 @@ const useServerFrames = (
   }, [ready]);
   useEffect(() => {
     if (!ready || loaded) {
-      return undefined;
+      return;
     }
 
     const timer = window.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [ready, loaded]);
   useEffect(() => {
     if (!enabled) {
-      return undefined;
+      return;
     }
 
     return listen((message) => {
@@ -101,25 +102,47 @@ const serverHint = (
   status: AppServerStatus | null,
   loaded: boolean
 ): Hint | null => {
-  const name = app.framework === "next" ? "Next.js" : "App";
+  let name: "Next.js" | "App" = "App";
+
+  if (app.framework === "next") {
+    name = "Next.js";
+  }
   const managed = (status?.mode ?? app.mode) === "managed";
   const state = status?.state ?? "idle";
 
   if (state === "failed" || state === "stopped") {
+    let part:
+      | "The dev server is not running"
+      | "Your dev server does not answer" = "Your dev server does not answer";
+
+    if (managed) {
+      part = "The dev server is not running";
+    }
+
     return {
       busy: false,
       kind: "failed",
-      text: `${managed ? "The dev server is not running" : "Your dev server does not answer"}. Press ${name} at the bottom left for the fix.`,
+      text: `${part}. Press ${name} at the bottom left for the fix.`,
     };
   }
 
   if (state !== "ready") {
+    let text2 = "Checking your dev server…";
+
+    if (managed) {
+      let part2: "next dev" | "the dev server" = "the dev server";
+
+      if (app.framework === "next") {
+        part2 = "next dev";
+      }
+
+      text2 = `Starting ${part2}…`;
+    }
+
     return {
       busy: true,
       kind: "starting",
-      text: managed
-        ? `Starting ${app.framework === "next" ? "next dev" : "the dev server"}…`
-        : "Checking your dev server…",
+      text: text2,
     };
   }
 
@@ -151,7 +174,13 @@ const HintIcon = ({ hint }: { hint: Hint }): ReactElement => {
     return <span className="spinner" aria-hidden="true" />;
   }
 
-  return <Icon name={hint.kind === "route" ? "file" : "alert"} size={14} />;
+  let name2: "alert" | "file" = "alert";
+
+  if (hint.kind === "route") {
+    name2 = "file";
+  }
+
+  return <Icon name={name2} size={14} />;
 };
 
 const AppStageHint = ({
@@ -217,11 +246,13 @@ const useRouteRequests = (
       return true;
     };
 
-    const unsubscribe = runPending()
-      ? null
-      : canvasStore.subscribe(() =>
-          queueMicrotask(() => runPending() && unsubscribe?.())
-        );
+    let unsubscribe: (() => void) | null = null;
+
+    if (!runPending()) {
+      unsubscribe = canvasStore.subscribe(() =>
+        queueMicrotask(() => runPending() && unsubscribe?.())
+      );
+    }
 
     const onRoute = (event: Event): void => {
       const { detail } = event as CustomEvent<{
@@ -282,11 +313,14 @@ const useAppCanvas = (
       addRouteFrame(layout, route, appCanvasInput.size)
     );
     appCanvasInput.focus();
-    appCanvasInput.notify(
-      shown
-        ? `${route} is already on the canvas. Showing it.`
-        : `Added a frame for ${route}`
-    );
+
+    let argument = `Added a frame for ${route}`;
+
+    if (shown) {
+      argument = `${route} is already on the canvas. Showing it.`;
+    }
+
+    appCanvasInput.notify(argument);
   };
 
   useRouteRequests(
@@ -294,35 +328,45 @@ const useAppCanvas = (
     Boolean(appCanvasInput.app),
     addRoute
   );
+
   const redirect = useRedirectNote(
     appCanvasInput.listen,
     Boolean(appCanvasInput.app),
     appCanvasInput.resetKey
   );
+
   const status = useAppStatus(appCanvasInput.projectId);
+
   const loaded = useServerFrames(
     status,
     appCanvasInput.listen,
     Boolean(appCanvasInput.app)
   );
+
   const [routeDismissed, setRouteDismissed] = useState(false);
   const [hidden, setHidden] = useState(() => readHiddenRedirects());
 
-  const key = redirect
-    ? `${appCanvasInput.projectId} ${redirect.from}>${redirect.to}`
-    : null;
+  let key: string | null = null;
 
-  const shownRedirect =
-    appCanvasInput.app && redirect && key && !hidden.includes(key)
-      ? redirect
-      : null;
+  if (redirect) {
+    key = `${appCanvasInput.projectId} ${redirect.from}>${redirect.to}`;
+  }
 
-  const hint = appCanvasInput.app
-    ? (serverHint(appCanvasInput.app, status, loaded) ??
+  let shownRedirect: { from: string; to: string } | null = null;
+
+  if (appCanvasInput.app && redirect && key && !hidden.includes(key)) {
+    shownRedirect = redirect;
+  }
+
+  let hint: Hint | null = null;
+
+  if (appCanvasInput.app) {
+    hint =
+      serverHint(appCanvasInput.app, status, loaded) ??
       (routeDismissed || shownRedirect
         ? null
-        : routeHint(appCanvasInput.frames.layout)))
-    : null;
+        : routeHint(appCanvasInput.frames.layout));
+  }
 
   const hide = (value: string): void => {
     const next = [...hidden.filter((item) => item !== value), value].slice(
@@ -344,24 +388,42 @@ const useAppCanvas = (
     appCanvasInput.onSignIn();
   };
 
-  return {
-    bar: appCanvasInput.app ? (
+  let bar2: ReactNode = null;
+
+  if (appCanvasInput.app) {
+    bar2 = (
       <AppCanvasBar
         projectId={appCanvasInput.projectId}
         app={appCanvasInput.app}
         onAddRoute={addRoute}
       />
-    ) : null,
-    note: shownRedirect ? (
+    );
+  }
+
+  let note2: ReactNode = null;
+
+  if (shownRedirect) {
+    note2 = (
       <FrameRedirectNote
         redirect={shownRedirect}
         onSignIn={signIn}
         onDismiss={dismissRedirect}
       />
-    ) : null,
-    stage: hint ? (
+    );
+  }
+
+  let stage2: ReactNode = null;
+
+  if (hint) {
+    stage2 = (
       <AppStageHint hint={hint} onClose={() => setRouteDismissed(true)} />
-    ) : null,
+    );
+  }
+
+  return {
+    bar: bar2,
+    note: note2,
+    stage: stage2,
   };
 };
 

@@ -53,7 +53,8 @@ const PenIcon = ({ size = 16 }: { size?: number }): ReactElement => (
 );
 
 const backingScale = (frame: Frame, zoom: number): number => {
-  const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
+  const dpr =
+    typeof globalThis === "undefined" ? 1 : globalThis.devicePixelRatio || 1;
 
   return Math.min(
     dpr * zoom,
@@ -108,7 +109,10 @@ const DrawSurface = ({
 
   useEffect(paint, [draw.strokes, scale, frame.width, frame.height]);
 
-  const pointOf = (event: { clientX: number; clientY: number }) => {
+  const pointOf = (event: {
+    clientX: number;
+    clientY: number;
+  }): { x: number; y: number } | null => {
     const rect = canvas.current?.getBoundingClientRect();
 
     if (!rect || rect.width === 0 || rect.height === 0) {

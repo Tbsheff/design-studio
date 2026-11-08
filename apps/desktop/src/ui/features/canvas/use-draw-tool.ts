@@ -21,10 +21,16 @@ interface DrawTool {
   clear: () => void;
 }
 
-const hasText = (target: EventTarget | null): boolean =>
-  target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
-    ? target.value !== ""
-    : isTypingTarget(target);
+const hasText = (target: EventTarget | null): boolean => {
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement
+  ) {
+    return target.value !== "";
+  }
+
+  return isTypingTarget(target);
+};
 
 const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
   const [on, setOnState] = useState(false);
@@ -53,9 +59,13 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
 
   const push = useCallback(
     (stroke: DrawStroke) =>
-      setStrokes((prev) =>
-        prev.length >= DRAW_STROKES_MAX ? prev : [...prev, stroke]
-      ),
+      setStrokes((prev) => {
+        if (prev.length >= DRAW_STROKES_MAX) {
+          return prev;
+        }
+
+        return [...prev, stroke];
+      }),
     []
   );
 
@@ -120,6 +130,14 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
 
   const used = strokes.reduce((sum, stroke) => sum + stroke.points.length, 0);
 
+  const toolbarMode2: boolean | undefined = ((): boolean | undefined => {
+    if (!available) {
+      return undefined;
+    }
+
+    return on;
+  })();
+
   return {
     available,
     clear,
@@ -131,7 +149,7 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
     setOn,
     strokes,
     toggle,
-    toolbarMode: available ? on : undefined,
+    toolbarMode: toolbarMode2,
     undo,
   };
 };

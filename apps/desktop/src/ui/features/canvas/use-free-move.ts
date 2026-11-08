@@ -5,6 +5,7 @@ import type {
   FreeMoveStart,
   SelectionContext,
   StructureEditRequest,
+  StructureTarget,
 } from "@design-studio/contracts";
 import { useEffect, useRef, useState } from "react";
 
@@ -16,7 +17,12 @@ import { startOptimistic } from "../inspector/optimistic-edit.js";
 import { selectionTargets } from "../inspector/structure-edits.js";
 import { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
 import { snapRect } from "./snap-model.js";
-import type { Rect, SnapGuide, SpacingBadge } from "./snap-model.js";
+import type {
+  Rect,
+  SnapGuide,
+  SpacingBadge,
+  SnapResult,
+} from "./snap-model.js";
 
 interface FreeMoveView {
   box: Rect;
@@ -65,16 +71,17 @@ const place = (
   const moved = { ...base, x: base.x + drag.dx, y: base.y + drag.dy };
   const absolute = sessionValue.start.mode === "absolute";
 
-  const snapped =
-    !absolute || drag.free || sessionValue.candidates.length === 0
-      ? { guides: [], rect: moved, spacing: [] }
-      : snapRect({
-          candidates: sessionValue.candidates,
-          rect: moved,
-          x: "move",
-          y: "move",
-          zoom,
-        });
+  let snapped: SnapResult = { guides: [], rect: moved, spacing: [] };
+
+  if (!(!absolute || drag.free || sessionValue.candidates.length === 0)) {
+    snapped = snapRect({
+      candidates: sessionValue.candidates,
+      rect: moved,
+      x: "move",
+      y: "move",
+      zoom,
+    });
+  }
 
   const box = snapped.rect;
 
@@ -92,10 +99,11 @@ const place = (
 };
 
 const transformOf = (session3: Session, dx: number, dy: number): string => {
-  const own =
-    session3.start.transform && session3.start.transform !== "none"
-      ? ` ${session3.start.transform}`
-      : "";
+  let own = "";
+
+  if (session3.start.transform && session3.start.transform !== "none") {
+    own = ` ${session3.start.transform}`;
+  }
 
   return `translate(${dx}px, ${dy}px)${own}`;
 };
@@ -109,13 +117,35 @@ const absoluteStyle = (
   const { fromRight, fromBottom } = session4.start;
 
   if (dx !== 0 || session4.start.convert) {
-    style[fromRight ? "right" : "left"] =
-      `${Math.round(session4.start.left + (fromRight ? -dx : dx))}px`;
+    let result2: "right" | "left" = "left";
+
+    if (fromRight) {
+      result2 = "right";
+    }
+
+    let operand: number = dx;
+
+    if (fromRight) {
+      operand = -dx;
+    }
+
+    style[result2] = `${Math.round(session4.start.left + operand)}px`;
   }
 
   if (dy !== 0 || session4.start.convert) {
-    style[fromBottom ? "bottom" : "top"] =
-      `${Math.round(session4.start.top + (fromBottom ? -dy : dy))}px`;
+    let result3: "bottom" | "top" = "top";
+
+    if (fromBottom) {
+      result3 = "bottom";
+    }
+
+    let operand2: number = dy;
+
+    if (fromBottom) {
+      operand2 = -dy;
+    }
+
+    style[result3] = `${Math.round(session4.start.top + operand2)}px`;
   }
 
   if (session4.start.convert) {
@@ -162,7 +192,16 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
 
     const begin = (start: FreeMoveStart): void => {
       const cur = live.current;
-      const target = cur.selection.length === 1 ? cur.selection[0] : undefined;
+
+      const target: SelectionContext | undefined = (():
+        | SelectionContext
+        | undefined => {
+        if (cur.selection.length !== 1) {
+          return undefined;
+        }
+
+        return cur.selection[0];
+      })();
 
       if (
         !cur.enabled ||
@@ -185,10 +224,19 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
         return;
       }
 
+      let candidates2: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      }[] = start.siblings;
+
+      if (start.parent) {
+        candidates2 = [start.parent, ...start.siblings];
+      }
+
       session.current = {
-        candidates: start.parent
-          ? [start.parent, ...start.siblings]
-          : start.siblings,
+        candidates: candidates2,
         start,
         target,
       };
@@ -212,12 +260,19 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
       }
 
       const placed = place(text, drag, live.current.zoom);
+
+      const transform2: string = ((): string => {
+        if (drag.alt) {
+          return transformOf(text, 0, 0);
+        }
+
+        return transformOf(text, placed.dx, placed.dy);
+      })();
+
       live.current.post({
         selector: text.start.selector,
         style: {
-          transform: drag.alt
-            ? transformOf(text, 0, 0)
-            : transformOf(text, placed.dx, placed.dy),
+          transform: transform2,
         },
         type: "preview-style",
       });
@@ -268,16 +323,33 @@ const useFreeMove = (options: Options): LiveStore<FreeMoveView | null> => {
           return null;
         }
 
-        const self = drag.insert?.self
-          ? { ...drag.insert.self, selector: target.selector }
-          : target;
+        let self: StructureTarget = target;
 
-        return () =>
-          cur.applyStructure({
-            op: drag.alt ? "duplicate" : "move",
+        if (drag.insert?.self) {
+          self = { ...drag.insert.self, selector: target.selector };
+        }
+
+        return () => {
+          let op2: "move" | "duplicate" = "move";
+
+          if (drag.alt) {
+            op2 = "duplicate";
+          }
+
+          let result4:
+            | { after: StructureTarget }
+            | { before: StructureTarget } = { before: ref };
+
+          if (drag.insert?.after) {
+            result4 = { after: ref };
+          }
+
+          return cur.applyStructure({
+            op: op2,
             targets: [self],
-            ...(drag.insert?.after ? { after: ref } : { before: ref }),
+            ...result4,
           });
+        };
       }
 
       if (placed.dx === 0 && placed.dy === 0) {

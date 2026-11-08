@@ -38,9 +38,14 @@ const onMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
 
   const at = items.indexOf(document.activeElement as HTMLButtonElement);
   event.preventDefault();
-  items[
-    (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
-  ]?.focus();
+
+  let operand: 1 | -1 = -1;
+
+  if (event.key === "ArrowDown") {
+    operand = 1;
+  }
+
+  items[(at + operand + items.length) % items.length]?.focus();
 };
 
 const MenuPopover = ({
@@ -76,26 +81,36 @@ const MenuPopover = ({
             data-fold={group.fold}
           >
             {group.label && <div className="ui-menu-label">{group.label}</div>}
-            {group.items.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                role={item.checked === undefined ? "menuitem" : "menuitemradio"}
-                aria-checked={item.checked}
-                className="ui-menu-item"
-                disabled={item.disabled}
-                data-tip={item.tip}
-                data-tip-align="start"
-                onClick={() => {
-                  onClose(true);
-                  item.run();
-                }}
-              >
-                {item.icon && <Icon name={item.icon} size={14} />}
-                <span className="truncate">{item.label}</span>
-                {item.meta && <span className="ui-menu-meta">{item.meta}</span>}
-              </button>
-            ))}
+            {group.items.map((item) => {
+              let role2: "menuitem" | "menuitemradio" = "menuitemradio";
+
+              if (item.checked === undefined) {
+                role2 = "menuitem";
+              }
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role={role2}
+                  aria-checked={item.checked}
+                  className="ui-menu-item"
+                  disabled={item.disabled}
+                  data-tip={item.tip}
+                  data-tip-align="start"
+                  onClick={() => {
+                    onClose(true);
+                    item.run();
+                  }}
+                >
+                  {item.icon && <Icon name={item.icon} size={14} />}
+                  <span className="truncate">{item.label}</span>
+                  {item.meta && (
+                    <span className="ui-menu-meta">{item.meta}</span>
+                  )}
+                </button>
+              );
+            })}
             {group.note && <p className="ui-menu-note">{group.note}</p>}
           </div>
         ))}
@@ -124,64 +139,85 @@ const shareGroups = (
 
   const ship = point.onShip;
 
-  const shipItem: MenuEntry[] = ship
-    ? [
-        {
-          icon: "branch",
-          id: "ship",
-          label: "Ship as a pull request…",
-          meta: "Branch and PR",
-          run: ship,
-        },
-      ]
-    : [];
+  let shipItem: MenuEntry[] = [];
 
-  const portItem: MenuEntry[] = onPort
-    ? [
-        {
-          icon: "react",
-          id: "port",
-          label: "Move to app…",
-          meta: "Route in your app",
-          run: onPort,
-          tip: "The agent rebuilds a page as a route in an attached app, with its kit components",
-        },
-      ]
-    : [];
+  if (ship) {
+    shipItem = [
+      {
+        icon: "branch",
+        id: "ship",
+        label: "Ship as a pull request…",
+        meta: "Branch and PR",
+        run: ship,
+      },
+    ];
+  }
+
+  let portItem: MenuEntry[] = [];
+
+  if (onPort) {
+    portItem = [
+      {
+        icon: "react",
+        id: "port",
+        label: "Move to app…",
+        meta: "Route in your app",
+        run: onPort,
+        tip: "The agent rebuilds a page as a route in an attached app, with its kit components",
+      },
+    ];
+  }
 
   const link = point.onShareLink;
 
-  const linkItem: MenuEntry[] = link
-    ? [
-        {
-          disabled: !point.canExport,
-          icon: "link",
-          id: "share-link",
-          label: "Share a read-only link…",
-          meta: "View and comment",
-          run: () => link("link"),
-          tip: point.canExport
-            ? "Others see still images of the frames and can comment"
-            : "Save a version to share",
-        },
-      ]
-    : [];
+  let linkItem: MenuEntry[] = [];
 
-  const publishItem: MenuEntry[] = link
-    ? [
-        {
-          disabled: !point.canExport,
-          icon: "globe",
-          id: "publish",
-          label: "Publish on Cloudflare…",
-          meta: "Your publish Worker",
-          run: () => link("publish"),
-          tip: point.canExport
-            ? "Uploads a copy of a saved version to your publish Worker after you confirm"
-            : "Save a version to publish",
-        },
-      ]
-    : [];
+  if (link) {
+    let tip2:
+      | "Others see still images of the frames and can comment"
+      | "Save a version to share" = "Save a version to share";
+
+    if (point.canExport) {
+      tip2 = "Others see still images of the frames and can comment";
+    }
+
+    linkItem = [
+      {
+        disabled: !point.canExport,
+        icon: "link",
+        id: "share-link",
+        label: "Share a read-only link…",
+        meta: "View and comment",
+        run: () => link("link"),
+        tip: tip2,
+      },
+    ];
+  }
+
+  let publishItem: MenuEntry[] = [];
+
+  if (link) {
+    let tip3:
+      | "Uploads a copy of a saved version to your publish Worker after you confirm"
+      | "Save a version to publish" = "Save a version to publish";
+
+    if (point.canExport) {
+      tip3 =
+        "Uploads a copy of a saved version to your publish Worker after you confirm";
+    }
+
+    publishItem = [
+      {
+        disabled: !point.canExport,
+        icon: "globe",
+        id: "publish",
+        label: "Publish on Cloudflare…",
+        meta: "Your publish Worker",
+        run: () => link("publish"),
+        tip: tip3,
+      },
+    ];
+  }
 
   return [
     { items: [exportItem, ...shipItem, ...portItem] },

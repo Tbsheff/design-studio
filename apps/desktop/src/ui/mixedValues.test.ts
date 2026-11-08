@@ -1,7 +1,7 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { nextSelection } from "./features/canvas/use-preview-frames";
+import { nextSelection } from "./features/canvas/index";
 import { valuesFromStyles } from "./features/inspector/css-values";
 import {
   batchEdits,

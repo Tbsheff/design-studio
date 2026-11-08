@@ -8,7 +8,8 @@ import type { GridOverlayProps } from "../grid/index.js";
 import { useEditVariant } from "../inspector/index.js";
 import type { SpacingHandlesProps } from "../spacing/index.js";
 import { FrameUndoBar } from "./add-frame-menu.js";
-import { frameDirection, frameName } from "./canvas-frames-model.js";
+import { frameDirection } from "./canvas-direction-ops.js";
+import { frameName } from "./canvas-frame-ops.js";
 import { FrameLabel } from "./canvas-frames.js";
 import {
   activeFrameOf,
@@ -146,10 +147,24 @@ const CanvasStage = ({
     stageMode,
   } = widthValue;
 
+  let part: "" | " panning" = "";
+
+  if (pz.panning) {
+    part = " panning";
+  }
+
+  const visibility2: "hidden" | undefined = ((): "hidden" | undefined => {
+    if (note !== "empty") {
+      return undefined;
+    }
+
+    return "hidden";
+  })();
+
   return (
     <div
       ref={stageRef}
-      className={`stage ${stageMode}${pz.panning ? " panning" : ""}`}
+      className={`stage ${stageMode}${part}`}
       tabIndex={-1}
       aria-label={copy.canvas}
       onPointerDown={quietOnPointer(pz.onPointerDown)}
@@ -168,7 +183,7 @@ const CanvasStage = ({
         data-direction-id={directionId || undefined}
         style={{
           height: viewport.height,
-          visibility: note === "empty" ? "hidden" : undefined,
+          visibility: visibility2,
           width: viewport.width,
         }}
       >
@@ -283,7 +298,11 @@ const CanvasStage = ({
               (item) => item.id === id
             );
 
-            return frameValue ? frameName(frameValue) : id;
+            if (frameValue) {
+              return frameName(frameValue);
+            }
+
+            return id;
           }}
         />
       </Suspense>

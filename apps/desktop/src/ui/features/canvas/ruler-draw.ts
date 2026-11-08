@@ -2,8 +2,64 @@ import type { RefObject } from "react";
 
 import type { Rect } from "./snap-model.js";
 
+const ITEM_5 = 5;
+
+const ITEM_10 = 10;
+
+const ITEM_20 = 20;
+
+const ITEM_50 = 50;
+
+const ITEM_100 = 100;
+
+const ITEM_200 = 200;
+
+const ITEM_500 = 500;
+
+const ITEM_1000 = 1000;
+
+const ITEM_2000 = 2000;
+
+const ITEM_5000 = 5000;
+
+const ITEM_10_000 = 10_000;
+
+const POS_0_5 = 0.5;
+
+const ZOOM_3 = 3;
+
+const WIDTH_6 = 6;
+
+const POS_3 = 3;
+
+const FILL_TEXT_9 = 9;
+
+const TRANSLATE_9 = 9;
+
+const STEP_5 = 5;
+
+const INDEX_5 = 5;
+
+const TICK_4 = 4;
+
 const RULER_SIZE = 20;
-const STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000];
+
+const STEPS = [
+  1,
+  2,
+  ITEM_5,
+  ITEM_10,
+  ITEM_20,
+  ITEM_50,
+  ITEM_100,
+  ITEM_200,
+  ITEM_500,
+  ITEM_1000,
+  ITEM_2000,
+  ITEM_5000,
+  ITEM_10_000,
+];
+
 const MIN_LABEL_PX = 56;
 
 interface View {
@@ -18,6 +74,16 @@ interface Props {
   selection: Rect | null;
 }
 
+const tick = (axisDrawValue: AxisDraw, pos: number, len: number): void => {
+  if (axisDrawValue.vertical) {
+    axisDrawValue.ctx.moveTo(RULER_SIZE - len, pos + POS_0_5);
+    axisDrawValue.ctx.lineTo(RULER_SIZE, pos + POS_0_5);
+  } else {
+    axisDrawValue.ctx.moveTo(pos + POS_0_5, RULER_SIZE - len);
+    axisDrawValue.ctx.lineTo(pos + POS_0_5, RULER_SIZE);
+  }
+};
+
 interface Colors {
   bg: string;
   tick: string;
@@ -28,11 +94,14 @@ interface Colors {
 }
 
 const viewOf = (el: HTMLElement | null): View | null => {
-  const match = el
-    ? /translate\(([-\d.e]+)px,\s*([-\d.e]+)px\)\s*scale\(([-\d.e]+)\)/.exec(
+  let match: RegExpExecArray | null = null;
+
+  if (el) {
+    match =
+      /translate\(([-\d.e]+)px,\s*([-\d.e]+)px\)\s*scale\(([-\d.e]+)\)/u.exec(
         el.style.transform
-      )
-    : null;
+      );
+  }
 
   if (!match) {
     return null;
@@ -41,7 +110,7 @@ const viewOf = (el: HTMLElement | null): View | null => {
   return {
     x: Number(match[1]),
     y: Number(match[2]),
-    zoom: Number(match[3]) || 1,
+    zoom: Number(match[ZOOM_3]) || 1,
   };
 };
 
@@ -51,6 +120,7 @@ const stepFor = (zoom: number): number =>
 
 const colorsOf = (el: HTMLElement): Colors => {
   const css = getComputedStyle(el);
+
   const valueValue = (name: string): string =>
     css.getPropertyValue(name).trim();
 
@@ -67,7 +137,7 @@ const colorsOf = (el: HTMLElement): Colors => {
 const sizeCanvas = (
   canvas: HTMLCanvasElement
 ): CanvasRenderingContext2D | null => {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = globalThis.devicePixelRatio || 1;
   const widthValue = canvas.clientWidth;
   const heightValue = canvas.clientHeight;
 
@@ -99,16 +169,6 @@ interface AxisDraw {
 const toScreen = (axisDraw: AxisDraw, value: number): number =>
   axisDraw.offset + (value - axisDraw.origin) * axisDraw.zoom;
 
-const tick = (axisDrawValue: AxisDraw, pos: number, len: number): void => {
-  if (axisDrawValue.vertical) {
-    axisDrawValue.ctx.moveTo(RULER_SIZE - len, pos + 0.5);
-    axisDrawValue.ctx.lineTo(RULER_SIZE, pos + 0.5);
-  } else {
-    axisDrawValue.ctx.moveTo(pos + 0.5, RULER_SIZE - len);
-    axisDrawValue.ctx.lineTo(pos + 0.5, RULER_SIZE);
-  }
-};
-
 const markSpans = (axisDraw3: AxisDraw): [number, number][] => {
   if (!axisDraw3.range) {
     return [];
@@ -118,7 +178,9 @@ const markSpans = (axisDraw3: AxisDraw): [number, number][] => {
     const pos = toScreen(axisDraw3, value);
 
     const half =
-      (axisDraw3.ctx.measureText(String(Math.round(value))).width + 6) / 2 + 2;
+      (axisDraw3.ctx.measureText(String(Math.round(value))).width + WIDTH_6) /
+        2 +
+      2;
 
     return [pos - half, pos + half];
   });
@@ -133,22 +195,26 @@ const label = (
   const { ctx } = axisDraw4;
   const { width } = ctx.measureText(text);
 
-  const [from, to] = axisDraw4.vertical
-    ? [pos - 3 - width, pos - 3]
-    : [pos + 3, pos + 3 + width];
+  let result: [number, number] = [pos + POS_3, pos + POS_3 + width];
+
+  if (axisDraw4.vertical) {
+    result = [pos - POS_3 - width, pos - POS_3];
+  }
+
+  const [from, to] = result;
 
   if (marks.some(([lo, hi]) => from < hi && to > lo)) {
     return;
   }
 
   if (!axisDraw4.vertical) {
-    ctx.fillText(text, pos + 3, 9);
+    ctx.fillText(text, pos + POS_3, FILL_TEXT_9);
 
     return;
   }
 
   ctx.save();
-  ctx.translate(9, pos - 3);
+  ctx.translate(TRANSLATE_9, pos - POS_3);
   ctx.rotate(-Math.PI / 2);
   ctx.fillText(text, 0, 0);
   ctx.restore();
@@ -162,6 +228,7 @@ const drawRange = (axisDraw5: AxisDraw): void => {
   const [lo, hi] = axisDraw5.range.map((value3) =>
     toScreen(axisDraw5, value3)
   ) as [number, number];
+
   axisDraw5.ctx.fillStyle = axisDraw5.colors.mark;
   axisDraw5.ctx.globalAlpha = 0.18;
 
@@ -172,18 +239,58 @@ const drawRange = (axisDraw5: AxisDraw): void => {
   }
 
   axisDraw5.ctx.globalAlpha = 1;
-  axisDraw5.ctx.fillRect(
-    axisDraw5.vertical ? 0 : lo,
-    axisDraw5.vertical ? lo : 0,
-    axisDraw5.vertical ? RULER_SIZE : 1,
-    axisDraw5.vertical ? 1 : RULER_SIZE
-  );
-  axisDraw5.ctx.fillRect(
-    axisDraw5.vertical ? 0 : hi - 1,
-    axisDraw5.vertical ? hi - 1 : 0,
-    axisDraw5.vertical ? RULER_SIZE : 1,
-    axisDraw5.vertical ? 1 : RULER_SIZE
-  );
+
+  let argument: number = lo;
+
+  if (axisDraw5.vertical) {
+    argument = 0;
+  }
+
+  let argument5 = 0;
+
+  if (axisDraw5.vertical) {
+    argument5 = lo;
+  }
+
+  let argument9: 20 | 1 = 1;
+
+  if (axisDraw5.vertical) {
+    argument9 = RULER_SIZE;
+  }
+
+  let argument11: 20 | 1 = RULER_SIZE;
+
+  if (axisDraw5.vertical) {
+    argument11 = 1;
+  }
+
+  axisDraw5.ctx.fillRect(argument, argument5, argument9, argument11);
+
+  let argument2: number = hi - 1;
+
+  if (axisDraw5.vertical) {
+    argument2 = 0;
+  }
+
+  let argument6 = 0;
+
+  if (axisDraw5.vertical) {
+    argument6 = hi - 1;
+  }
+
+  let argument10: 20 | 1 = 1;
+
+  if (axisDraw5.vertical) {
+    argument10 = RULER_SIZE;
+  }
+
+  let argument12: 20 | 1 = RULER_SIZE;
+
+  if (axisDraw5.vertical) {
+    argument12 = 1;
+  }
+
+  axisDraw5.ctx.fillRect(argument2, argument6, argument10, argument12);
 };
 
 const drawRangeLabels = (axisDraw6: AxisDraw): void => {
@@ -196,7 +303,7 @@ const drawRangeLabels = (axisDraw6: AxisDraw): void => {
   for (const value of axisDraw6.range) {
     const pos = toScreen(axisDraw6, value);
     const text = String(Math.round(value));
-    const width3 = axisDraw6.ctx.measureText(text).width + 6;
+    const width3 = axisDraw6.ctx.measureText(text).width + WIDTH_6;
 
     if (axisDraw6.vertical) {
       axisDraw6.ctx.fillRect(1, pos - width3 / 2, RULER_SIZE - 2, width3);
@@ -208,10 +315,20 @@ const drawRangeLabels = (axisDraw6: AxisDraw): void => {
     axisDraw6.ctx.save();
     axisDraw6.ctx.textAlign = "center";
     axisDraw6.ctx.textBaseline = "middle";
-    axisDraw6.ctx.translate(
-      axisDraw6.vertical ? RULER_SIZE / 2 : pos,
-      axisDraw6.vertical ? pos : RULER_SIZE / 2
-    );
+
+    let argument3: number = pos;
+
+    if (axisDraw6.vertical) {
+      argument3 = RULER_SIZE / 2;
+    }
+
+    let argument7: number = RULER_SIZE / 2;
+
+    if (axisDraw6.vertical) {
+      argument7 = pos;
+    }
+
+    axisDraw6.ctx.translate(argument3, argument7);
 
     if (axisDraw6.vertical) {
       axisDraw6.ctx.rotate(-Math.PI / 2);
@@ -223,46 +340,62 @@ const drawRangeLabels = (axisDraw6: AxisDraw): void => {
   }
 };
 
-const drawAxis = (a: AxisDraw): void => {
-  const { ctx } = a;
-  ctx.fillStyle = a.colors.bg;
-  ctx.fillRect(
-    0,
-    0,
-    a.vertical ? RULER_SIZE : a.length,
-    a.vertical ? a.length : RULER_SIZE
-  );
-  drawRange(a);
-  const step = stepFor(a.zoom);
-  const minor = step / 5;
-  const first = Math.floor((a.origin + (0 - a.offset) / a.zoom) / step) * step;
-  const last = a.origin + (a.length - a.offset) / a.zoom;
-  ctx.strokeStyle = a.colors.tick;
-  ctx.fillStyle = a.colors.text;
+const drawAxis = (axisDraw: AxisDraw): void => {
+  const { ctx } = axisDraw;
+  ctx.fillStyle = axisDraw.colors.bg;
+
+  let argument4: number = axisDraw.length;
+
+  if (axisDraw.vertical) {
+    argument4 = RULER_SIZE;
+  }
+
+  let argument8: number = RULER_SIZE;
+
+  if (axisDraw.vertical) {
+    argument8 = axisDraw.length;
+  }
+
+  ctx.fillRect(0, 0, argument4, argument8);
+  drawRange(axisDraw);
+  const step = stepFor(axisDraw.zoom);
+  const minor = step / STEP_5;
+  const first =
+    Math.floor(
+      (axisDraw.origin + (0 - axisDraw.offset) / axisDraw.zoom) / step
+    ) * step;
+  const last =
+    axisDraw.origin + (axisDraw.length - axisDraw.offset) / axisDraw.zoom;
+  ctx.strokeStyle = axisDraw.colors.tick;
+  ctx.fillStyle = axisDraw.colors.text;
   ctx.lineWidth = 1;
-  const marks = markSpans(a);
+  const marks = markSpans(axisDraw);
   ctx.beginPath();
 
   for (let value4 = first; value4 <= last; value4 += step) {
-    const pos = Math.round(toScreen(a, value4));
-    tick(a, pos, RULER_SIZE);
-    label(a, pos, String(Math.round(value4)), marks);
+    const pos = Math.round(toScreen(axisDraw, value4));
+    tick(axisDraw, pos, RULER_SIZE);
+    label(axisDraw, pos, String(Math.round(value4)), marks);
 
-    for (let index = 1; index < 5; index += 1) {
-      tick(a, Math.round(toScreen(a, value4 + minor * index)), 4);
+    for (let index = 1; index < INDEX_5; index += 1) {
+      tick(
+        axisDraw,
+        Math.round(toScreen(axisDraw, value4 + minor * index)),
+        TICK_4
+      );
     }
   }
 
   ctx.stroke();
-  ctx.fillStyle = a.colors.line;
+  ctx.fillStyle = axisDraw.colors.line;
 
-  if (a.vertical) {
-    ctx.fillRect(RULER_SIZE - 1, 0, 1, a.length);
+  if (axisDraw.vertical) {
+    ctx.fillRect(RULER_SIZE - 1, 0, 1, axisDraw.length);
   } else {
-    ctx.fillRect(0, RULER_SIZE - 1, a.length, 1);
+    ctx.fillRect(0, RULER_SIZE - 1, axisDraw.length, 1);
   }
 
-  drawRangeLabels(a);
+  drawRangeLabels(axisDraw);
 };
 
 export { RULER_SIZE, colorsOf, drawAxis, sizeCanvas, viewOf };

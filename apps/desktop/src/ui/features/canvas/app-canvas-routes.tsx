@@ -6,19 +6,27 @@ import { lazy, Suspense, useEffect, useState } from "react";
 
 import { api } from "../../api.js";
 import { readStored, writeStored } from "../../platform/storage.js";
-import { addFrame, canAddFrame, setFramePath } from "./canvas-frames-model.js";
+import { addFrame, canAddFrame, setFramePath } from "./canvas-frame-ops.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
 const AppBar = lazy(() => import("../../app/shell/app-bar.js"));
 
 const routeFrameId = (layout: CanvasLayout, route: string): string | null => {
-  const path = route.replace(/^\/+/, "").replace(/\/+$/, "");
+  const path = route.replace(/^\/+/u, "").replace(/\/+$/u, "");
 
   return (
     layout.frames.find(
-      (frame) => (frame.path ?? "").replace(/\/+$/, "") === path
+      (frame) => (frame.path ?? "").replace(/\/+$/u, "") === path
     )?.id ?? null
   );
+};
+
+const withoutHidden = (
+  frame: CanvasLayout["frames"][number]
+): CanvasLayout["frames"][number] => {
+  const { hidden: _hidden, ...rest } = frame;
+
+  return rest;
 };
 
 const addRouteFrame = (
@@ -26,18 +34,20 @@ const addRouteFrame = (
   route: string,
   size: { width: number; height: number }
 ): CanvasLayout => {
-  const path = route.replace(/^\/+/, "");
+  const path = route.replace(/^\/+/u, "");
   const existing = routeFrameId(layout, route);
 
   if (existing) {
     return {
       ...layout,
       activeId: existing,
-      frames: layout.frames.map((canvasFrame) =>
-        canvasFrame.id === existing && canvasFrame.hidden
-          ? withoutHidden(canvasFrame)
-          : canvasFrame
-      ),
+      frames: layout.frames.map((canvasFrame) => {
+        if (canvasFrame.id === existing && canvasFrame.hidden) {
+          return withoutHidden(canvasFrame);
+        }
+
+        return canvasFrame;
+      }),
     };
   }
 
@@ -58,20 +68,14 @@ const addRouteFrame = (
   return {
     ...withPath,
     activeId: frame.id,
-    frames: withPath.frames.map((canvasFrameValue) =>
-      canvasFrameValue.id === frame.id && label
-        ? { ...canvasFrameValue, label }
-        : canvasFrameValue
-    ),
+    frames: withPath.frames.map((canvasFrameValue) => {
+      if (canvasFrameValue.id === frame.id && label) {
+        return { ...canvasFrameValue, label };
+      }
+
+      return canvasFrameValue;
+    }),
   };
-};
-
-const withoutHidden = (
-  frame: CanvasLayout["frames"][number]
-): CanvasLayout["frames"][number] => {
-  const { hidden: _hidden, ...rest } = frame;
-
-  return rest;
 };
 
 const appRoutePages = (
@@ -87,7 +91,7 @@ const appRoutePages = (
 
     return routes
       .filter((route) => !route.dynamic)
-      .map((route) => route.route.replace(/^\/+/, ""));
+      .map((route) => route.route.replace(/^\/+/u, ""));
   };
 };
 
@@ -118,7 +122,7 @@ const useRedirectNote = (
   useEffect(() => setNote(null), [resetKey]);
   useEffect(() => {
     if (!enabled) {
-      return undefined;
+      return;
     }
 
     return listen((message) => {
@@ -148,15 +152,18 @@ const useRedirectNote = (
 };
 
 const HIDDEN_REDIRECTS_KEY = "design-studio.hidden-redirects.v1";
+
 const MAX_HIDDEN_REDIRECTS = 50;
 
 const readHiddenRedirects = (): string[] => {
   try {
     const raw: unknown = JSON.parse(readStored(HIDDEN_REDIRECTS_KEY) ?? "[]");
 
-    return Array.isArray(raw)
-      ? raw.filter((item): item is string => typeof item === "string")
-      : [];
+    if (Array.isArray(raw)) {
+      return raw.filter((item): item is string => typeof item === "string");
+    }
+
+    return [];
   } catch {
     return [];
   }

@@ -3,12 +3,9 @@ import { statesPrompt } from "@design-studio/contracts/states";
 import type { InlineRunExtras } from "@design-studio/contracts/usage-scope";
 
 import { api } from "../../api";
-import {
-  activeFrame,
-  canvasStore,
-  defaultLayout,
-} from "../../features/canvas/canvas-frames-model";
+import { canvasStore } from "../../features/canvas/canvas-frames-model";
 import type { CanvasFrame } from "../../features/canvas/canvas-frames-model";
+import { activeFrame, defaultLayout } from "../../features/canvas/index";
 import { emptyRun } from "../../features/chat/run-state-model";
 import type { RunView } from "../../features/chat/run-state-model";
 import { useRunControls } from "../../features/chat/use-run-controls";

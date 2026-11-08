@@ -13,16 +13,20 @@ const usePreviewUrl = (
   directionId: string | null,
   source: CanvasSource,
   headVersionId: string | null
-) => {
+): { baseUrl: string | null; urlError: string | null } => {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
 
-  const versionId =
-    source.kind === "version"
-      ? source.versionId
-      : source.kind === "last"
-        ? headVersionId
-        : null;
+  const versionId: string | null = ((): string | null => {
+    if (source.kind === "version") {
+      return source.versionId;
+    }
+    if (source.kind === "last") {
+      return headVersionId;
+    }
+
+    return null;
+  })();
 
   useEffect(() => {
     let alive = true;
@@ -32,12 +36,16 @@ const usePreviewUrl = (
       return;
     }
 
-    const load =
-      source.kind === "live"
-        ? api.directionPreview(projectId, directionId)
-        : versionId
-          ? api.versionPreview(projectId, versionId)
-          : Promise.reject(new Error(NO_VERSION_TEXT));
+    const load: Promise<{ url: string }> = ((): Promise<{ url: string }> => {
+      if (source.kind === "live") {
+        return api.directionPreview(projectId, directionId);
+      }
+      if (versionId) {
+        return api.versionPreview(projectId, versionId);
+      }
+
+      return Promise.reject(new Error(NO_VERSION_TEXT));
+    })();
 
     const fetchBase = async (): Promise<void> => {
       try {
@@ -53,11 +61,14 @@ const usePreviewUrl = (
 
         setBaseUrl(null);
         const text = errorText(error);
-        setUrlError(
-          text === NO_VERSION_TEXT
-            ? text
-            : `Could not load the preview. ${text} Reload the page to try again.`
-        );
+
+        let argument = `Could not load the preview. ${text} Reload the page to try again.`;
+
+        if (text === NO_VERSION_TEXT) {
+          argument = text;
+        }
+
+        setUrlError(argument);
       }
     };
 
@@ -71,7 +82,16 @@ const usePreviewUrl = (
   return { baseUrl, urlError };
 };
 
-const useRenderCheck = (projectId: string, directionId: string | null) => {
+const useRenderCheck = (
+  projectId: string,
+  directionId: string | null
+): {
+  checking: boolean;
+  close: () => void;
+  error: string | null;
+  results: RenderCheckResult[] | null;
+  run: () => Promise<void>;
+} => {
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState<RenderCheckResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,8 +106,8 @@ const useRenderCheck = (projectId: string, directionId: string | null) => {
 
     try {
       setResults(await api.renderCheck(projectId, directionId));
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (caught) {
+      setError(errorText(caught));
       setResults(null);
     } finally {
       setChecking(false);
@@ -113,13 +133,15 @@ const useFramePort = (
       return;
     }
 
-    port.current = frames
-      ? {
-          listen: frames.listen,
-          post: frames.post,
-          refreshRects: frames.refreshRects,
-        }
-      : null;
+    port.current = null;
+
+    if (frames) {
+      port.current = {
+        listen: frames.listen,
+        post: frames.post,
+        refreshRects: frames.refreshRects,
+      };
+    }
   });
   useEffect(() => {
     if (!lastChange || kind !== "react") {
@@ -130,7 +152,8 @@ const useFramePort = (
       window.setTimeout(() => port?.current?.refreshRects(), ms)
     );
 
-    return (): void => timers.forEach((target) => window.clearTimeout(target));
+    return (): void =>
+      timers.forEach((target) => globalThis.clearTimeout(target));
   }, [lastChange, kind, port]);
 };
 

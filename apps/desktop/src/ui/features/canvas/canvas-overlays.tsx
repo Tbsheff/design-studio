@@ -129,6 +129,12 @@ const TweakPrompt = ({
     onClose();
   };
 
+  let placeholder2 = "Describe a tweak…";
+
+  if (scope) {
+    placeholder2 = `Describe a tweak to ${scope}…`;
+  }
+
   return (
     <form
       ref={root}
@@ -141,9 +147,7 @@ const TweakPrompt = ({
       <input
         autoFocus
         aria-label={copy.describeATweak}
-        placeholder={
-          scope ? `Describe a tweak to ${scope}…` : "Describe a tweak…"
-        }
+        placeholder={placeholder2}
         value={text}
         onChange={(event3) => setText(event3.target.value)}
         onKeyDown={(event4) => {
@@ -168,18 +172,25 @@ const TweakPrompt = ({
   );
 };
 
-const gapStyle = (spacingBadge: SpacingBadge) =>
-  spacingBadge.axis === "x"
-    ? {
-        left: spacingBadge.from,
-        top: spacingBadge.at,
-        width: spacingBadge.to - spacingBadge.from,
-      }
-    : {
-        height: spacingBadge.to - spacingBadge.from,
-        left: spacingBadge.at,
-        top: spacingBadge.from,
-      };
+const gapStyle = (
+  spacingBadge: SpacingBadge
+):
+  | { left: number; top: number; width: number; height?: undefined }
+  | { height: number; left: number; top: number; width?: undefined } => {
+  if (spacingBadge.axis === "x") {
+    return {
+      left: spacingBadge.from,
+      top: spacingBadge.at,
+      width: spacingBadge.to - spacingBadge.from,
+    };
+  }
+
+  return {
+    height: spacingBadge.to - spacingBadge.from,
+    left: spacingBadge.at,
+    top: spacingBadge.from,
+  };
+};
 
 const FrameSnapLayer = ({
   origin,

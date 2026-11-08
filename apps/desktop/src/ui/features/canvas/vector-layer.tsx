@@ -11,15 +11,26 @@ import { errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { penPath } from "./drawing-model.js";
 import type { PenAnchor } from "./drawing-model.js";
+import { PenPreview } from "./pen-preview.js";
+import { DragBoxPreview } from "./shape-preview.js";
+
+import "../../styles/vector.css";
 import { runVector, useVectorTool, vectorTool } from "./vector-tool-model.js";
 import type { VectorToolId } from "./vector-tool-model.js";
 
-import "../../styles/vector.css";
+const ITEM_500 = 500;
+
+const ITEM_1200 = 1200;
+
+const ITEM_2500 = 2500;
+
+const PX_3 = 3;
 
 interface Point {
   x: number;
   y: number;
 }
+
 type Placed =
   | Omit<Extract<VectorRequest, { op: "shape" }>, "target" | "relativeParent">
   | Omit<Extract<VectorRequest, { op: "path" }>, "target" | "relativeParent">;
@@ -44,9 +55,9 @@ const CLOSE_HIT_SCREEN = 8;
 const DRAG_SCREEN = 3;
 const DEFAULT_SIZE = 100;
 const DROP_WAIT_MS = 1500;
-const RESELECT_MS = [500, 1200, 2500];
+const RESELECT_MS = [ITEM_500, ITEM_1200, ITEM_2500];
 
-function useDropAt(post: Props["post"], listen: Props["listen"]) {
+const useDropAt = (post: Props["post"], listen: Props["listen"]) => {
   const waiting = useRef(new Map<string, (drop: Drop) => void>());
   const seq = useRef(0);
   useEffect(
@@ -55,11 +66,13 @@ function useDropAt(post: Props["post"], listen: Props["listen"]) {
         if (message.type !== "element-at") {
           return;
         }
+
         const done = waiting.current.get(message.requestId);
 
         if (!done) {
           return;
         }
+
         waiting.current.delete(message.requestId);
         done({ inside: message.inside, selection: message.selection });
       }),
@@ -77,32 +90,36 @@ function useDropAt(post: Props["post"], listen: Props["listen"]) {
       }, DROP_WAIT_MS);
       post({ requestId: id, type: "element-at", x: point.x, y: point.y });
     });
-}
+};
 
-function px(value: string | undefined, index: number): number {
+const px = (value: string | undefined, index: number): number => {
   const parts = (value ?? "").trim().split(/\s+/);
   const raw = parts[index] ?? parts[index % 2] ?? parts[0] ?? "0";
 
   return Number.parseFloat(raw) || 0;
-}
+};
 
-function placeOf(
+const placeOf = (
   drop: Drop
-): { target: InsertTarget; origin: Point; relativeParent: boolean } | string {
+):
+  | { target: InsertTarget; origin: Point; relativeParent: boolean }
+  | string => {
   const { selection } = drop;
 
   if (!selection) {
     return "Start the drawing on an element in the frame.";
   }
+
   const body = selection.tag.toLowerCase() === "body";
 
   if (!selection.source && !selection.owners?.length && !body) {
     return "This element has no source location, so the studio cannot draw into it.";
   }
+
   const border = selection.styles["border-width"];
 
   const origin = {
-    x: selection.rect.x + px(border, 3),
+    x: selection.rect.x + px(border, PX_3),
     y: selection.rect.y + px(border, 0),
   };
 
@@ -118,48 +135,55 @@ function placeOf(
     relativeParent: (selection.styles.position ?? "static") === "static",
     target,
   };
-}
+};
 
-function boxOf(a: Point, b: Point, square: boolean) {
-  let width = Math.abs(b.x - a.x);
-  let height = Math.abs(b.y - a.y);
+const boxOf = (
+  point: Point,
+  point2: Point,
+  square: boolean
+): { height: number; width: number; x: number; y: number } => {
+  let width = Math.abs(point2.x - point.x);
+  let height = Math.abs(point2.y - point.y);
 
   if (square) {
     width = height = Math.max(width, height);
   }
+
   return {
     height,
     width,
-    x: b.x < a.x ? a.x - width : a.x,
-    y: b.y < a.y ? a.y - height : a.y,
+    x: point2.x < point.x ? point.x - width : point.x,
+    y: point2.y < point.y ? point.y - height : point.y,
   };
-}
+};
 
-function useCommit(p: Props, dropAt: (point: Point) => Promise<Drop>) {
+const useCommit = (props: Props, dropAt: (point: Point) => Promise<Drop>) => {
   const busy = useRef(false);
 
   return async (at: Point, build: (origin: Point) => Placed): Promise<void> => {
     if (busy.current) {
       return;
     }
+
     busy.current = true;
 
     try {
       const place = placeOf(await dropAt(at));
 
       if (typeof place === "string") {
-        return p.notify(place);
+        return props.notify(place);
       }
+
       const request = {
         ...build(place.origin),
         relativeParent: place.relativeParent,
         target: place.target,
-        ...(p.page ? { page: p.page } : {}),
+        ...(props.page ? { page: props.page } : {}),
       } as VectorRequest;
 
       const result: VectorResult = await runVector(
-        p.projectId,
-        p.directionId,
+        props.projectId,
+        props.directionId,
         request
       );
 
@@ -167,10 +191,10 @@ function useCommit(p: Props, dropAt: (point: Point) => Promise<Drop>) {
       const at0 = result.select[0];
 
       if (at0) {
-        for (const wait of RESELECT_MS)
+        for (const wait of RESELECT_MS) {
           window.setTimeout(
             () =>
-              p.post({
+              props.post({
                 sourceLoc: `${at0.file}:${at0.line}:${at0.col}`,
                 tag: at0.tag,
                 text: "",
@@ -178,68 +202,27 @@ function useCommit(p: Props, dropAt: (point: Point) => Promise<Drop>) {
               }),
             wait
           );
+        }
       }
     } catch (error) {
-      p.notify(errorText(error));
+      props.notify(errorText(error));
     } finally {
       busy.current = false;
     }
   };
-}
+};
 
-function ShapePreview({
-  tool,
-  box,
-  zoom,
-}: {
-  tool: VectorToolId;
-  box: { x: number; y: number; width: number; height: number };
-  zoom: number;
-}): ReactElement {
-  const stroke = 1.5 / zoom;
-
-  return (
-    <>
-      <svg
-        className="vector-preview"
-        width="100%"
-        height="100%"
-        aria-hidden="true"
-      >
-        {tool === "ellipse" ? (
-          <ellipse
-            cx={box.x + box.width / 2}
-            cy={box.y + box.height / 2}
-            rx={box.width / 2}
-            ry={box.height / 2}
-            strokeWidth={stroke}
-          />
-        ) : (
-          <rect
-            x={box.x}
-            y={box.y}
-            width={box.width}
-            height={box.height}
-            strokeWidth={stroke}
-          />
-        )}
-      </svg>
-      <span
-        className="vector-size"
-        style={{ left: box.x + box.width / 2, top: box.y + box.height }}
-      >
-        {Math.round(box.width)} × {Math.round(box.height)}
-      </span>
-    </>
-  );
-}
-
-function useShapeTool(
-  p: Props,
+const useShapeTool = (
+  props2: Props,
   tool: VectorToolId,
   commit: ReturnType<typeof useCommit>,
   pointOf: (event: PointerEvent) => Point | null
-) {
+): {
+  onDown: (event: PointerEvent<HTMLDivElement>) => void;
+  onMove: (event: PointerEvent<HTMLDivElement>) => void;
+  onUp: (event: PointerEvent<HTMLDivElement>) => void;
+  preview: ReactElement | null;
+} => {
   const [drag, setDrag] = useState<{
     from: Point;
     to: Point;
@@ -252,6 +235,7 @@ function useShapeTool(
     if (event.button !== 0 || !point) {
       return;
     }
+
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     setDrag({ from: point, square: event.shiftKey, to: point });
@@ -269,11 +253,13 @@ function useShapeTool(
     if (!drag) {
       return;
     }
+
     setDrag(null);
     const to = pointOf(event) ?? drag.to;
 
     const moved =
-      Math.hypot(to.x - drag.from.x, to.y - drag.from.y) * p.zoom > DRAG_SCREEN;
+      Math.hypot(to.x - drag.from.x, to.y - drag.from.y) * props2.zoom >
+      DRAG_SCREEN;
 
     const box = moved
       ? boxOf(drag.from, to, event.shiftKey)
@@ -298,81 +284,28 @@ function useShapeTool(
   };
 
   const preview = drag ? (
-    <ShapePreview
+    <DragBoxPreview
       tool={tool}
       box={boxOf(drag.from, drag.to, drag.square)}
-      zoom={p.zoom}
+      zoom={props2.zoom}
     />
   ) : null;
 
   return { onDown, onMove, onUp, preview };
-}
+};
 
-function PenPreview({
-  anchors,
-  hover,
-  zoom,
-  closing,
-}: {
-  anchors: PenAnchor[];
-  hover: Point | null;
-  zoom: number;
-  closing: boolean;
-}): ReactElement {
-  const last = anchors.at(-1);
-  const first = anchors[0];
-  const stroke = 1.5 / zoom;
-  const r = 4 / zoom;
-
-  const rubber =
-    last && hover ? penPath([last, { x: hover.x, y: hover.y }], false) : "";
-
-  return (
-    <svg
-      className="vector-preview pen"
-      width="100%"
-      height="100%"
-      aria-hidden="true"
-    >
-      <path d={penPath(anchors, false)} strokeWidth={stroke} />
-      {rubber && <path className="rubber" d={rubber} strokeWidth={stroke} />}
-      {anchors.map((anchor, index) => (
-        <g key={index}>
-          {anchor.hout && anchor.hin && (
-            <path
-              className="handle"
-              d={`M${anchor.hin.x} ${anchor.hin.y}L${anchor.hout.x} ${anchor.hout.y}`}
-              strokeWidth={stroke / 1.5}
-            />
-          )}
-          <rect
-            className={index === 0 && closing ? "anchor closing" : "anchor"}
-            x={anchor.x - r}
-            y={anchor.y - r}
-            width={r * 2}
-            height={r * 2}
-            strokeWidth={stroke}
-          />
-        </g>
-      ))}
-      {first && closing && (
-        <circle
-          className="close-ring"
-          cx={first.x}
-          cy={first.y}
-          r={r * 2}
-          strokeWidth={stroke}
-        />
-      )}
-    </svg>
-  );
-}
-
-function usePenTool(
-  p: Props,
+const usePenTool = (
+  props3: Props,
   commit: ReturnType<typeof useCommit>,
   pointOf: (event: PointerEvent) => Point | null
-) {
+): {
+  drawing: boolean;
+  onDown: (event: PointerEvent<HTMLDivElement>) => void;
+  onKey: (key: string) => boolean;
+  onMove: (event: PointerEvent<HTMLDivElement>) => void;
+  onUp: () => void;
+  preview: ReactElement;
+} => {
   const [anchors, setAnchors] = useState<PenAnchor[]>([]);
   const [hover, setHover] = useState<Point | null>(null);
   const dragging = useRef(false);
@@ -386,7 +319,7 @@ function usePenTool(
       point &&
       first &&
       live.current.length >= 2 &&
-      Math.hypot(point.x - first.x, point.y - first.y) * p.zoom <=
+      Math.hypot(point.x - first.x, point.y - first.y) * props3.zoom <=
         CLOSE_HIT_SCREEN
     );
   };
@@ -400,6 +333,7 @@ function usePenTool(
     if (!first || list.length < 2) {
       return vectorTool.set(null);
     }
+
     void commit(first, (origin) => ({
       d: penPath(list, closed, -origin.x, -origin.y),
       op: "path",
@@ -413,11 +347,13 @@ function usePenTool(
     if (event.button !== 0 || !point) {
       return;
     }
+
     event.preventDefault();
 
     if (nearFirst(point)) {
       return finish(true);
     }
+
     event.currentTarget.setPointerCapture(event.pointerId);
     dragging.current = true;
     setAnchors((prev) => [...prev, { x: point.x, y: point.y }]);
@@ -429,20 +365,24 @@ function usePenTool(
     if (!point) {
       return;
     }
+
     setHover(point);
 
     if (!dragging.current) {
       return;
     }
+
     setAnchors((prev) => {
       const last = prev.at(-1);
 
       if (
         !last ||
-        Math.hypot(point.x - last.x, point.y - last.y) * p.zoom < DRAG_SCREEN
+        Math.hypot(point.x - last.x, point.y - last.y) * props3.zoom <
+          DRAG_SCREEN
       ) {
         return prev;
       }
+
       return [
         ...prev.slice(0, -1),
         {
@@ -469,6 +409,7 @@ function usePenTool(
     } else {
       return false;
     }
+
     return true;
   };
 
@@ -476,13 +417,13 @@ function usePenTool(
     <PenPreview
       anchors={anchors}
       hover={dragging.current ? null : hover}
-      zoom={p.zoom}
+      zoom={props3.zoom}
       closing={nearFirst(hover)}
     />
   );
 
   return { drawing: anchors.length > 0, onDown, onKey, onMove, onUp, preview };
-}
+};
 
 const HINTS: Record<VectorToolId, string> = {
   ellipse: "Drag to draw an ellipse. Shift keeps it round. Esc stops.",
@@ -490,11 +431,11 @@ const HINTS: Record<VectorToolId, string> = {
   rect: "Drag to draw a rectangle. Shift keeps it square. Esc stops.",
 };
 
-export default function VectorLayer(p: Props): ReactElement | null {
+export default function VectorLayer(props4: Props): ReactElement | null {
   const { tool } = useVectorTool();
   const root = useRef<HTMLDivElement>(null);
-  const dropAt = useDropAt(p.post, p.listen);
-  const commit = useCommit(p, dropAt);
+  const dropAt = useDropAt(props4.post, props4.listen);
+  const commit = useCommit(props4, dropAt);
 
   const pointOf = (event: {
     clientX: number;
@@ -505,14 +446,15 @@ export default function VectorLayer(p: Props): ReactElement | null {
     if (!rect || rect.width === 0) {
       return null;
     }
+
     return {
-      x: ((event.clientX - rect.left) * p.frame.width) / rect.width,
-      y: ((event.clientY - rect.top) * p.frame.height) / rect.height,
+      x: ((event.clientX - rect.left) * props4.frame.width) / rect.width,
+      y: ((event.clientY - rect.top) * props4.frame.height) / rect.height,
     };
   };
 
-  const shape = useShapeTool(p, tool ?? "rect", commit, pointOf);
-  const pen = usePenTool(p, commit, pointOf);
+  const shape = useShapeTool(props4, tool ?? "rect", commit, pointOf);
+  const pen = usePenTool(props4, commit, pointOf);
   const penOn = tool === "pen";
   const penKey = useRef(pen.onKey);
   penKey.current = pen.onKey;
@@ -522,6 +464,7 @@ export default function VectorLayer(p: Props): ReactElement | null {
     if (!active) {
       return;
     }
+
     const onKey = (event: KeyboardEvent): void => {
       if (penOn && penKey.current(event.key)) {
         event.preventDefault();
@@ -541,6 +484,7 @@ export default function VectorLayer(p: Props): ReactElement | null {
   if (!tool) {
     return null;
   }
+
   const handlers = penOn ? pen : shape;
 
   return (
@@ -551,9 +495,9 @@ export default function VectorLayer(p: Props): ReactElement | null {
       aria-label={`${tool === "pen" ? "Pen" : tool === "rect" ? "Rectangle" : "Ellipse"} tool`}
       style={
         {
-          width: p.frame.width,
-          height: p.frame.height,
-          ["--inv-zoom" as string]: 1 / p.zoom,
+          width: props4.frame.width,
+          height: props4.frame.height,
+          ["--inv-zoom" as string]: 1 / props4.zoom,
         } as CSSProperties
       }
       tabIndex={-1}
@@ -572,3 +516,5 @@ export default function VectorLayer(p: Props): ReactElement | null {
     </div>
   );
 }
+
+export type { Point };

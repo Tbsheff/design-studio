@@ -4,6 +4,16 @@ import { useEffect, useRef } from "react";
 import { api } from "../../api.js";
 import { runOrReport } from "./settle-model.js";
 
+const WIDTH_VALUE_0_25 = 0.25;
+
+const SLICE_20 = 20;
+
+const SLICE_400 = 400;
+
+const SLICE_40 = 40;
+
+const SLICE_200 = 200;
+
 const PRESENCE_MS = 1500;
 const RESEND_MS = 60_000;
 
@@ -28,8 +38,10 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
     ".artboard[data-frame-id], .canvas-frame[data-frame-id]"
   )) {
     const dOMRect = el.getBoundingClientRect();
+
     const widthValue =
       Math.min(dOMRect.right, box.right) - Math.max(dOMRect.left, box.left);
+
     const heightValue =
       Math.min(dOMRect.bottom, box.bottom) - Math.max(dOMRect.top, box.top);
 
@@ -43,8 +55,9 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
     }
 
     if (
-      (widthValue * heightValue) / (dOMRect.width * dOMRect.height) >= 0.25 ||
-      (widthValue * heightValue) / (box.width * box.height) >= 0.25
+      (widthValue * heightValue) / (dOMRect.width * dOMRect.height) >=
+        WIDTH_VALUE_0_25 ||
+      (widthValue * heightValue) / (box.width * box.height) >= WIDTH_VALUE_0_25
     ) {
       ids.push(el.dataset.frameId as string);
     }
@@ -53,7 +66,15 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
   return [...new Set(ids)].sort();
 };
 
-const presenceBody = (presenceInput: PresenceInput) => ({
+const presenceBody = (
+  presenceInput: PresenceInput
+): {
+  activeFrameId: string;
+  directionId: string | null;
+  inView: string[];
+  liveSize: { height: number; width: number };
+  selection: { selector: string; tag: string; text: string }[];
+} => ({
   activeFrameId: presenceInput.activeId,
   directionId: presenceInput.directionId,
   inView: inViewIds(presenceInput.stage()),
@@ -61,11 +82,13 @@ const presenceBody = (presenceInput: PresenceInput) => ({
     height: Math.round(presenceInput.liveSize.height),
     width: Math.round(presenceInput.liveSize.width),
   },
-  selection: presenceInput.selection.slice(0, 20).map((selectionContext) => ({
-    selector: selectionContext.selector.slice(0, 400),
-    tag: selectionContext.tag.slice(0, 40),
-    text: selectionContext.text.slice(0, 200),
-  })),
+  selection: presenceInput.selection
+    .slice(0, SLICE_20)
+    .map((selectionContext) => ({
+      selector: selectionContext.selector.slice(0, SLICE_400),
+      tag: selectionContext.tag.slice(0, SLICE_40),
+      text: selectionContext.text.slice(0, SLICE_200),
+    })),
 });
 
 const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
@@ -100,7 +123,7 @@ const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
     send();
     const timer = window.setInterval(send, PRESENCE_MS);
 
-    return (): void => window.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [presenceInputValue.projectId]);
   useEffect(() => {
     let stop: (() => void) | null = null;

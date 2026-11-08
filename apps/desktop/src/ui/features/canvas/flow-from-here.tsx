@@ -1,6 +1,10 @@
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
+import type {
+  PointerEvent as ReactPointerEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 
 import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";
@@ -17,12 +21,25 @@ const doneText = (result: FlowResult): string => {
     return "No new routes or links found in the source of this route.";
   }
 
-  const missing =
-    result.missingParams.length > 0
-      ? ` Set ${result.missingParams.join(", ")} in App > Flow.`
-      : "";
+  let missing = "";
 
-  return `Added ${added} ${added === 1 ? "route" : "routes"} and ${result.links.length} ${result.links.length === 1 ? "link" : "links"}.${missing}`;
+  if (result.missingParams.length > 0) {
+    missing = ` Set ${result.missingParams.join(", ")} in App > Flow.`;
+  }
+
+  let part: "route" | "routes" = "routes";
+
+  if (added === 1) {
+    part = "route";
+  }
+
+  let part3: "link" | "links" = "links";
+
+  if (result.links.length === 1) {
+    part3 = "link";
+  }
+
+  return `Added ${added} ${part} and ${result.links.length} ${part3}.${missing}`;
 };
 
 const FlowFromHere = ({
@@ -58,10 +75,28 @@ const FlowFromHere = ({
     }
   };
 
+  let part2: "" | " busy" = "";
+
+  if (busy) {
+    part2 = " busy";
+  }
+
+  let part4: "" | " done" = "";
+
+  if (note) {
+    part4 = " done";
+  }
+
+  let content: ReactNode = <Icon name="branch" size={12} />;
+
+  if (busy) {
+    content = <span className="spinner" aria-hidden="true" />;
+  }
+
   return (
     <button
       type="button"
-      className={`frame-chip flow${busy ? " busy" : ""}${note ? " done" : ""}`}
+      className={`frame-chip flow${part2}${part4}`}
       aria-label={`Flow from ${frameName}`}
       aria-busy={busy}
       disabled={busy}
@@ -73,11 +108,7 @@ const FlowFromHere = ({
         "Flow from here: add the routes this page links to, with prototype links"
       }
     >
-      {busy ? (
-        <span className="spinner" aria-hidden="true" />
-      ) : (
-        <Icon name="branch" size={12} />
-      )}
+      {content}
       {note && (
         <span className="sr-only" role="status">
           {note}

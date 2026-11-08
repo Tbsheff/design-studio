@@ -9,7 +9,8 @@ import { FindPanelSlot, useFindHost } from "../text-search/index.js";
 import { MatrixSlot } from "../viewport/index.js";
 import type { ChromeImportPage } from "./canvas-chrome-menu.js";
 import { CanvasChrome } from "./canvas-chrome.js";
-import { frameDirection, frameName } from "./canvas-frames-model.js";
+import { frameDirection } from "./canvas-direction-ops.js";
+import { frameName } from "./canvas-frame-ops.js";
 import {
   canvasClass,
   frameLabelOf,
@@ -39,7 +40,11 @@ const useViewSlots = (
   props: ViewProps,
   text: ReturnType<typeof useCanvasStage>,
   pv: ReturnType<typeof useCanvasPreview>
-) => {
+): {
+  findHost: ReturnType<typeof useFindHost>;
+  importPage: ChromeImportPage;
+  matrixSlot: ReactElement;
+} => {
   const { projectId, directionId } = props;
   const { active, canvasFrames, pz } = text;
 
@@ -96,11 +101,13 @@ const CanvasView = (props: ViewProps): ReactElement => {
   const pv = useCanvasPreview(props, textValue);
   const ed = useCanvasEdits(props, textValue, pv);
   const width = useCanvasWiring(props, textValue, pv, ed);
+
   const { findHost, importPage, matrixSlot } = useViewSlots(
     props,
     textValue,
     pv
   );
+
   const CommandsHost = props.commandsHost;
   const { projectId, directionId, kind, source, headVersionId } = props;
 

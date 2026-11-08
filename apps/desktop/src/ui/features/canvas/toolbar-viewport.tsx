@@ -8,6 +8,10 @@ import { uiStore } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 
+const MAX_200 = 200;
+
+const MIN_4000 = 4000;
+
 interface Props {
   viewport: Viewport;
   drawMode?: boolean;
@@ -75,13 +79,13 @@ const ViewportControls = ({
 
   const applyCustom = (): void => {
     const widthValue = Math.max(
-      200,
-      Math.min(4000, Number.parseInt(customW, 10) || viewport.width)
+      MAX_200,
+      Math.min(MIN_4000, Number.parseInt(customW, 10) || viewport.width)
     );
 
     const heightValue = Math.max(
-      200,
-      Math.min(4000, Number.parseInt(customH, 10) || viewport.height)
+      MAX_200,
+      Math.min(MIN_4000, Number.parseInt(customH, 10) || viewport.height)
     );
 
     setCustomW(String(widthValue));
@@ -100,6 +104,54 @@ const ViewportControls = ({
     applyCustom();
   };
 
+  let tabIndex5: 0 | -1 = -1;
+
+  if (viewport.preset === "custom") {
+    tabIndex5 = 0;
+  }
+
+  let className5: "" | "on" = "";
+
+  if (viewport.preset === "custom") {
+    className5 = "on";
+  }
+
+  let content: ReactNode = (
+    <span className="dims-readout">
+      {viewport.width}
+      {copy.times2}
+      {viewport.height}
+    </span>
+  );
+
+  if (viewport.preset === "custom") {
+    content = (
+      <form
+        className="dims"
+        onSubmit={(event3) => {
+          event3.preventDefault();
+          applyCustom();
+        }}
+      >
+        <input
+          aria-label={copy.width}
+          value={customW}
+          onChange={(event4) => setCustomW(event4.target.value)}
+          onBlur={applyCustom}
+          onKeyDown={onDimKey}
+        />
+        <span className="x">{copy.times}</span>
+        <input
+          aria-label={copy.height}
+          value={customH}
+          onChange={(event5) => setCustomH(event5.target.value)}
+          onBlur={applyCustom}
+          onKeyDown={onDimKey}
+        />
+      </form>
+    );
+  }
+
   return (
     <div className="toolbar-group">
       <div
@@ -108,74 +160,68 @@ const ViewportControls = ({
         aria-label={copy.viewport}
         onKeyDown={onRadioGroupKey}
       >
-        {PRESETS.map((viewportPreset) => (
-          <button
-            key={viewportPreset.id}
-            role="radio"
-            aria-label={viewportPreset.label}
-            data-tip={viewportPreset.label}
-            data-tip-align={
-              viewportPreset.id === "desktop" ? "start" : undefined
+        {PRESETS.map((viewportPreset) => {
+          const datatipalign: "start" | undefined = (():
+            | "start"
+            | undefined => {
+            if (viewportPreset.id !== "desktop") {
+              return undefined;
             }
-            aria-checked={viewport.preset === viewportPreset.id}
-            tabIndex={viewport.preset === viewportPreset.id ? 0 : -1}
-            className={viewport.preset === viewportPreset.id ? "on" : ""}
-            onClick={() =>
-              uiStore.set({
-                viewport: {
-                  height: viewportPreset.height,
-                  preset: viewportPreset.id,
-                  width: viewportPreset.width,
-                },
-              })
-            }
-          >
-            <Icon name={viewportPreset.icon} />
-          </button>
-        ))}
+
+            return "start";
+          })();
+
+          let tabIndex3: 0 | -1 = -1;
+
+          if (viewport.preset === viewportPreset.id) {
+            tabIndex3 = 0;
+          }
+
+          let className3: "" | "on" = "";
+
+          if (viewport.preset === viewportPreset.id) {
+            className3 = "on";
+          }
+
+          return (
+            <button
+              type="button"
+              key={viewportPreset.id}
+              role="radio"
+              aria-label={viewportPreset.label}
+              data-tip={viewportPreset.label}
+              data-tip-align={datatipalign}
+              aria-checked={viewport.preset === viewportPreset.id}
+              tabIndex={tabIndex3}
+              className={className3}
+              onClick={() =>
+                uiStore.set({
+                  viewport: {
+                    height: viewportPreset.height,
+                    preset: viewportPreset.id,
+                    width: viewportPreset.width,
+                  },
+                })
+              }
+            >
+              <Icon name={viewportPreset.icon} />
+            </button>
+          );
+        })}
         <button
+          type="button"
           role="radio"
           aria-label={copy.custom}
           data-tip={copy.customSize}
           aria-checked={viewport.preset === "custom"}
-          tabIndex={viewport.preset === "custom" ? 0 : -1}
-          className={viewport.preset === "custom" ? "on" : ""}
+          tabIndex={tabIndex5}
+          className={className5}
           onClick={applyCustom}
         >
           <Icon name="custom" />
         </button>
       </div>
-      {viewport.preset === "custom" ? (
-        <form
-          className="dims"
-          onSubmit={(event3) => {
-            event3.preventDefault();
-            applyCustom();
-          }}
-        >
-          <input
-            aria-label={copy.width}
-            value={customW}
-            onChange={(event4) => setCustomW(event4.target.value)}
-            onBlur={applyCustom}
-            onKeyDown={onDimKey}
-          />
-          <span className="x">{copy.times}</span>
-          <input
-            aria-label={copy.height}
-            value={customH}
-            onChange={(event5) => setCustomH(event5.target.value)}
-            onBlur={applyCustom}
-            onKeyDown={onDimKey}
-          />
-        </form>
-      ) : (
-        <span className="dims-readout">
-          {viewport.width}
-          {copy.times2}
-          {viewport.height}
-        </span>
-      )}
+      {content}
     </div>
   );
 };
@@ -184,54 +230,86 @@ const SourceControls = ({
   source,
   onSource,
   hasHead,
-}: Pick<Props, "source" | "onSource" | "hasHead">): ReactElement => (
-  <div className="toolbar-group source">
-    <div
-      className="segmented source-seg"
-      role="radiogroup"
-      aria-label={copy.previewSource}
-      onKeyDown={onRadioGroupKey}
-    >
-      <button
-        role="radio"
-        aria-checked={source.kind === "live"}
-        tabIndex={source.kind === "last" ? -1 : 0}
-        className={source.kind === "live" ? "on" : ""}
-        aria-label={copy.live}
-        data-tip={copy.livePreview}
-        onClick={() => onSource({ kind: "live" })}
+}: Pick<Props, "source" | "onSource" | "hasHead">): ReactElement => {
+  let tabIndex2: 0 | -1 = 0;
+
+  if (source.kind === "last") {
+    tabIndex2 = -1;
+  }
+
+  let className2: "" | "on" = "";
+
+  if (source.kind === "live") {
+    className2 = "on";
+  }
+
+  let tabIndex4: 0 | -1 = -1;
+
+  if (source.kind === "last") {
+    tabIndex4 = 0;
+  }
+
+  let className4: "" | "on" = "";
+
+  if (source.kind === "last") {
+    className4 = "on";
+  }
+
+  return (
+    <div className="toolbar-group source">
+      <div
+        className="segmented source-seg"
+        role="radiogroup"
+        aria-label={copy.previewSource}
+        onKeyDown={onRadioGroupKey}
       >
-        <Icon name="radio" className="seg-icon" />
-        <span className="seg-label">{copy.live}</span>
-      </button>
-      <button
-        role="radio"
-        aria-checked={source.kind === "last"}
-        tabIndex={source.kind === "last" ? 0 : -1}
-        className={source.kind === "last" ? "on" : ""}
-        disabled={!hasHead}
-        aria-label={copy.lastCompleted}
-        data-tip={copy.lastCompletedVersion}
-        onClick={() => onSource({ kind: "last" })}
-      >
-        <Icon name="history" className="seg-icon" />
-        <span className="seg-label">{copy.lastCompleted}</span>
-      </button>
-    </div>
-    {source.kind === "version" && (
-      <span className="pill">
-        <Icon name="eye" size={14} />
-        <span className="pill-text">
-          {copy.viewing}
-          {source.title}
-        </span>
-        <button className="link" onClick={() => onSource({ kind: "live" })}>
-          {copy.backToLive}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={source.kind === "live"}
+          tabIndex={tabIndex2}
+          className={className2}
+          aria-label={copy.live}
+          data-tip={copy.livePreview}
+          onClick={() => onSource({ kind: "live" })}
+        >
+          <Icon name="radio" className="seg-icon" />
+          <span className="seg-label">{copy.live}</span>
         </button>
-      </span>
-    )}
-  </div>
-);
+        <button
+          type="button"
+          role="radio"
+          aria-checked={source.kind === "last"}
+          tabIndex={tabIndex4}
+          className={className4}
+          disabled={!hasHead}
+          aria-label={copy.lastCompleted}
+          data-tip={copy.lastCompletedVersion}
+          onClick={() => onSource({ kind: "last" })}
+        >
+          <Icon name="history" className="seg-icon" />
+          <span className="seg-label">{copy.lastCompleted}</span>
+        </button>
+      </div>
+      {source.kind === "version" && (
+        <span className="pill">
+          <Icon name="eye" size={14} />
+          <span className="pill-text">
+            {copy.viewing}
+            {source.title}
+          </span>
+          <button
+            type="button"
+            className="link"
+            onClick={() => onSource({ kind: "live" })}
+          >
+            {copy.backToLive}
+          </button>
+        </span>
+      )}
+    </div>
+  );
+};
 
 export { SourceControls, ViewportControls };
 

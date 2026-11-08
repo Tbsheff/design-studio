@@ -87,21 +87,42 @@ const useShellPane = (
   setSelectMode: SetSelectMode,
   live: boolean,
   layersOpenSetting: boolean
-) => {
+): {
+  closeLayers: () => void | Promise<boolean>;
+  layersOpen: boolean;
+  picking: boolean;
+  place: (panel: ReactNode) => ReactNode;
+  toggleEdit: () => void | Promise<boolean> | undefined;
+} => {
   useShellState(shell, comment, setSelectMode);
   const picking = selectMode || (shell?.pane === "design" && !comment.on);
-  const editOpen = shell ? shell.pane === "design" : layersOpenSetting;
+
+  let editOpen: boolean = layersOpenSetting;
+
+  if (shell) {
+    editOpen = shell.pane === "design";
+  }
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
 
   const toggleEdit = (): void | Promise<boolean> | undefined =>
     shell?.onPane(shell.pane === "design" ? "chat" : "design");
 
-  const closeLayers = (): void | Promise<boolean> =>
-    shell ? shell.onPane("chat") : uiStore.set({ layersOpen: false });
+  const closeLayers = (): void | Promise<boolean> => {
+    if (shell) {
+      return shell.onPane("chat");
+    }
 
-  const place = (panel: ReactNode): ReactNode =>
-    shell?.layersHost ? createPortal(panel, shell.layersHost) : panel;
+    return uiStore.set({ layersOpen: false });
+  };
+
+  const place = (panel: ReactNode): ReactNode => {
+    if (shell?.layersHost) {
+      return createPortal(panel, shell.layersHost);
+    }
+
+    return panel;
+  };
 
   return { closeLayers, layersOpen, picking, place, toggleEdit };
 };
@@ -114,8 +135,8 @@ const fileNameOf = (
   if (kind === "html") {
     return (
       (frame.path || "index.html")
-        .replace(/\.html$/, "")
-        .replace(/^.*\//, "") || "index"
+        .replace(/\.html$/u, "")
+        .replace(/^.*\//u, "") || "index"
     );
   }
 
@@ -140,7 +161,11 @@ const toolOf = (
     return "edit";
   }
 
-  return select ? "select" : null;
+  if (select) {
+    return "select";
+  }
+
+  return null;
 };
 
 const reloadFrames = (stage: HTMLElement | null): void => {
@@ -160,7 +185,11 @@ const scopeOf = (selection: SelectionContext[]): string | null => {
 
   const first = selection[0];
 
-  return first ? `the ${first.tag}` : null;
+  if (first) {
+    return `the ${first.tag}`;
+  }
+
+  return null;
 };
 
 export { fileNameOf, reloadFrames, scopeOf, toolOf, useShellPane };

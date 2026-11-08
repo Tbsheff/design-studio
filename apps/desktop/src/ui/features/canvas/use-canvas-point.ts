@@ -3,12 +3,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { useProjectEvents } from "../../platform/events.js";
-import { setFrameHidden } from "./canvas-frames-model.js";
+import { setFrameHidden } from "./canvas-frame-ops.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";
+
+const ITEM_900 = 900;
+
+const ITEM_1700 = 1700;
 
 const POINT_FRESH_MS = 8000;
 const MCP_POINT_MS = 20_000;
-const SELECT_AT_MS = [900, 1700];
+const SELECT_AT_MS = [ITEM_900, ITEM_1700];
 const ZOOM_AT_MS = 500;
 
 interface PointInput {
@@ -33,7 +37,7 @@ const useShowFrame = (
   const timers = useRef<number[]>([]);
   useEffect(
     () => (): void => {
-      timers.current.forEach((target) => window.clearTimeout(target));
+      timers.current.forEach((target) => globalThis.clearTimeout(target));
     },
     []
   );
@@ -41,6 +45,7 @@ const useShowFrame = (
   return useCallback(
     (frameId: string, selector: string | undefined): boolean => {
       const cur = latest.current;
+
       const frame = cur.frames.layout.frames.find(
         (canvasFrame) => canvasFrame.id === frameId
       );
@@ -49,7 +54,9 @@ const useShowFrame = (
         return false;
       }
 
-      timers.current.forEach((targetValue) => window.clearTimeout(targetValue));
+      timers.current.forEach((targetValue) =>
+        globalThis.clearTimeout(targetValue)
+      );
 
       if (frame.hidden) {
         cur.frames.update((canvasLayout) =>
@@ -107,7 +114,7 @@ const useCanvasPoint = (pointInputValue: PointInput): McpPointBadge => {
       Math.max(0, point.at + MCP_POINT_MS - Date.now())
     );
 
-    return (): void => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [point]);
 
   const show = useCallback(() => {

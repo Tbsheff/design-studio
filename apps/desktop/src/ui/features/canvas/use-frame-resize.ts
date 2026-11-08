@@ -8,7 +8,7 @@ import {
   resizeFrame,
   viewportOf,
   shownFrames,
-} from "./canvas-frames-model.js";
+} from "./canvas-frame-ops.js";
 import type { Box, CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { snapOff, snapRect } from "./snap-model.js";
@@ -30,7 +30,11 @@ const EMPTY_SNAP: FrameSnapView = {
   spacing: [],
 };
 
-const createSnapStore = () => {
+const createSnapStore = (): {
+  get: () => FrameSnapView;
+  set: (next: FrameSnapView | null) => void;
+  subscribe: (fn: () => void) => () => boolean;
+} => {
   let view = EMPTY_SNAP;
   const subs = new Set<() => void>();
 
@@ -66,8 +70,17 @@ const resizedSize = (
   const clamp = (value: number): number =>
     Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, value)));
 
-  let width = edge === "bottom" ? start.width : start.width + dx;
-  let height = edge === "right" ? start.height : start.height + dy;
+  let width: number = start.width + dx;
+
+  if (edge === "bottom") {
+    width = start.width;
+  }
+
+  let height: number = start.height + dy;
+
+  if (edge === "right") {
+    height = start.height;
+  }
 
   if (keepRatio) {
     const ratio = start.width / start.height;
@@ -97,18 +110,30 @@ const snapSize = (
   candidates: Box[],
   zoom: number,
   off: boolean
-) => {
+): { width: number; height: number } => {
   if (off || candidates.length === 0) {
     frameSnapStore.set(null);
 
     return size;
   }
 
+  let result: "end" | null = "end";
+
+  if (edge === "bottom") {
+    result = null;
+  }
+
+  let result2: "end" | null = "end";
+
+  if (edge === "right") {
+    result2 = null;
+  }
+
   const res = snapRect({
     candidates,
     rect: { x: frame.x, y: frame.y, ...size },
-    x: edge === "bottom" ? null : "end",
-    y: edge === "right" ? null : "end",
+    x: result,
+    y: result2,
     zoom,
   });
 
@@ -129,14 +154,30 @@ const paintSize = (
   size: { width: number; height: number } | null,
   restore: { width: string; height: string }
 ): void => {
-  host.style.width = size ? `${size.width}px` : restore.width;
-  host.style.height = size ? `${size.height}px` : restore.height;
+  host.style.width = restore.width;
+
+  if (size) {
+    host.style.width = `${size.width}px`;
+  }
+  host.style.height = restore.height;
+
+  if (size) {
+    host.style.height = `${size.height}px`;
+  }
 
   for (const frame of host.querySelectorAll<HTMLIFrameElement>(
     ":scope > iframe"
   )) {
-    frame.style.width = size ? `${size.width}px` : "";
-    frame.style.height = size ? `${size.height}px` : "";
+    frame.style.width = "";
+
+    if (size) {
+      frame.style.width = `${size.width}px`;
+    }
+    frame.style.height = "";
+
+    if (size) {
+      frame.style.height = `${size.height}px`;
+    }
   }
 
   const readout = host.querySelector<HTMLElement>(
@@ -144,7 +185,11 @@ const paintSize = (
   );
 
   if (readout) {
-    readout.textContent = size ? `${size.width} × ${size.height}` : "";
+    readout.textContent = "";
+
+    if (size) {
+      readout.textContent = `${size.width} × ${size.height}`;
+    }
   }
 
   host.classList.toggle("frame-resizing", size !== null);
@@ -179,10 +224,11 @@ const useFrameResize = (
     eventValue.preventDefault();
     eventValue.stopPropagation();
 
-    const host =
-      frame.id === frames.layout.activeId
-        ? artboardRef.current
-        : (passive.current?.[frame.id] ?? null);
+    let host: HTMLDivElement | null = passive.current?.[frame.id] ?? null;
+
+    if (frame.id === frames.layout.activeId) {
+      host = artboardRef.current;
+    }
 
     if (!host) {
       return;

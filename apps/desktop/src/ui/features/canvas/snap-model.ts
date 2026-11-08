@@ -1,3 +1,10 @@
+const MAX_0_01 = 0.01;
+
+const toPosition = (left: number, top: number): { x: number; y: number } => ({
+  x: left,
+  y: top,
+});
+
 interface Rect {
   x: number;
   y: number;
@@ -46,12 +53,21 @@ interface Span {
   hi: number;
 }
 
-const span = (rectValue: Rect, axis: Axis): Span =>
-  axis === "x"
-    ? { hi: rectValue.x + rectValue.width, lo: rectValue.x }
-    : { hi: rectValue.y + rectValue.height, lo: rectValue.y };
+const span = (rectValue: Rect, axis: Axis): Span => {
+  if (axis === "x") {
+    return { hi: rectValue.x + rectValue.width, lo: rectValue.x };
+  }
 
-const cross = (axis: Axis): Axis => (axis === "x" ? "y" : "x");
+  return { hi: rectValue.y + rectValue.height, lo: rectValue.y };
+};
+
+const cross = (axis: Axis): Axis => {
+  if (axis === "x") {
+    return "y";
+  }
+
+  return "x";
+};
 
 const linesOf = (spanValue: Span): number[] => [
   spanValue.lo,
@@ -62,8 +78,13 @@ const linesOf = (spanValue: Span): number[] => [
 const overlaps = (span3: Span, span4: Span): boolean =>
   Math.min(span3.hi, span4.hi) - Math.max(span3.lo, span4.lo) > 0;
 
-const movingPoints = (span5: Span, kind: Exclude<SnapKind, null>): number[] =>
-  kind === "move" ? linesOf(span5) : [span5.hi];
+const movingPoints = (span5: Span, kind: Exclude<SnapKind, null>): number[] => {
+  if (kind === "move") {
+    return linesOf(span5);
+  }
+
+  return [span5.hi];
+};
 
 const nearest = (deltas: number[], threshold: number): number | null => {
   let best: number | null = null;
@@ -122,19 +143,19 @@ const existingGaps = (candidates: Rect[], axis: Axis): Neighbours["gaps"] => {
     const sa = span(rect6, axis);
     let next: Rect | null = null;
 
-    for (const b of candidates) {
-      const sb = span(b, axis);
+    for (const rect of candidates) {
+      const sb = span(rect, axis);
 
       if (
-        b === rect6 ||
+        rect === rect6 ||
         sb.lo < sa.hi ||
-        !overlaps(span(rect6, axis3), span(b, axis3))
+        !overlaps(span(rect6, axis3), span(rect, axis3))
       ) {
         continue;
       }
 
       if (!next || sb.lo < span(next, axis).lo) {
-        next = b;
+        next = rect;
       }
     }
 
@@ -233,14 +254,18 @@ const shifted = (
   }
 
   if (kind === "move") {
-    return axis === "x"
-      ? { ...rect, x: rect.x + delta }
-      : { ...rect, y: rect.y + delta };
+    if (axis === "x") {
+      return { ...rect, x: rect.x + delta };
+    }
+
+    return { ...rect, y: rect.y + delta };
   }
 
-  return axis === "x"
-    ? { ...rect, width: Math.max(1, rect.width + delta) }
-    : { ...rect, height: Math.max(1, rect.height + delta) };
+  if (axis === "x") {
+    return { ...rect, width: Math.max(1, rect.width + delta) };
+  }
+
+  return { ...rect, height: Math.max(1, rect.height + delta) };
 };
 
 const guidesFor = (
@@ -276,12 +301,17 @@ const guidesFor = (
   return [...byAt.values()];
 };
 
-const badge = (axis: Axis, a: Span, b: Span, at: number): SpacingBadge => ({
+const badge = (
+  axis: Axis,
+  span2: Span,
+  span3: Span,
+  at: number
+): SpacingBadge => ({
   at,
   axis,
-  from: a.hi,
-  to: b.lo,
-  value: b.lo - a.hi,
+  from: span2.hi,
+  to: span3.lo,
+  value: span3.lo - span2.hi,
 });
 
 const ownGapAt = (
@@ -290,13 +320,17 @@ const ownGapAt = (
   candidates: Rect[],
   axis: Axis
 ): number => {
-  const match = candidates.find((c) => {
-    const s = span(c, axis);
+  const match = candidates.find((rect2) => {
+    const span4 = span(rect2, axis);
 
-    return s.lo === other.lo && s.hi === other.hi;
+    return span4.lo === other.lo && span4.hi === other.hi;
   });
 
-  return match ? crossMid(rect, match, axis) : span(rect, cross(axis)).lo;
+  if (match) {
+    return crossMid(rect, match, axis);
+  }
+
+  return span(rect, cross(axis)).lo;
 };
 
 const near = (first: number | null, second: number): boolean =>
@@ -310,8 +344,18 @@ const ownBadges = (
   values: number[]
 ): SpacingBadge[] => {
   const own = span(rect, axis);
-  const left = countValue.before ? own.lo - countValue.before.hi : null;
-  const right = countValue.after ? countValue.after.lo - own.hi : null;
+
+  let left: number | null = null;
+
+  if (countValue.before) {
+    left = own.lo - countValue.before.hi;
+  }
+
+  let right: number | null = null;
+
+  if (countValue.after) {
+    right = countValue.after.lo - own.hi;
+  }
   const even = left !== null && left > 0 && near(right, left);
   const out: SpacingBadge[] = [];
 
@@ -357,8 +401,18 @@ const spacingFor = (
 ): SpacingBadge[] => {
   const count3 = neighboursOf(rect, candidates, axis);
   const own = span(rect, axis);
-  const left = count3.before ? own.lo - count3.before.hi : null;
-  const right = count3.after ? count3.after.lo - own.hi : null;
+
+  let left: number | null = null;
+
+  if (count3.before) {
+    left = own.lo - count3.before.hi;
+  }
+
+  let right: number | null = null;
+
+  if (count3.after) {
+    right = count3.after.lo - own.hi;
+  }
 
   const matched = count3.gaps.filter(
     (groupValue) =>
@@ -375,7 +429,7 @@ const spacingFor = (
 };
 
 const snapRect = (input: SnapInput): SnapResult => {
-  const threshold = SNAP_PX / Math.max(input.zoom, 0.01);
+  const threshold = SNAP_PX / Math.max(input.zoom, MAX_0_01);
   let { rect } = input;
   rect = shifted(rect, "x", input.x, axisDelta(input, "x", threshold));
   rect = shifted(rect, "y", input.y, axisDelta(input, "y", threshold));
@@ -407,15 +461,15 @@ const unionBox = (rects: Rect[]): Rect | null => {
     return null;
   }
 
-  const left = Math.min(...rects.map((r) => r.x));
-  const top = Math.min(...rects.map((r) => r.y));
-  const right = Math.max(...rects.map((r) => r.x + r.width));
-  const bottom = Math.max(...rects.map((r) => r.y + r.height));
+  const left = Math.min(...rects.map((rect3) => rect3.x));
+  const top = Math.min(...rects.map((rect4) => rect4.y));
+  const right = Math.max(...rects.map((rect5) => rect5.x + rect5.width));
+  const bottom = Math.max(...rects.map((rect6) => rect6.y + rect6.height));
 
   return { height: bottom - top, width: right - left, x: left, y: top };
 };
 
-export { SNAP_PX, snapOff, snapRect, unionBox };
+export { SNAP_PX, snapOff, snapRect, toPosition, unionBox };
 
 export type {
   Axis,

@@ -6,6 +6,10 @@ import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 import { copy } from "./copy.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 
+const LENGTH_60 = 60;
+
+const SLICE_60 = 60;
+
 const STATUS_TEXT: Record<RunStatus, string> = {
   budget_exceeded: "Budget limit",
   canceled: "Canceled",
@@ -53,6 +57,21 @@ const UseInMenu = ({
     }
   }, [menu.open, menu.root]);
 
+  const datatip: "Use the selected element in another variation" | undefined =
+    ((): "Use the selected element in another variation" | undefined => {
+      if (menu.open) {
+        return undefined;
+      }
+
+      return "Use the selected element in another variation";
+    })();
+
+  let content: "Starting…" | "Use in…" = "Use in…";
+
+  if (busy) {
+    content = "Starting…";
+  }
+
   return (
     <div className="frame-menu-root" ref={menu.root}>
       <button
@@ -64,13 +83,9 @@ const UseInMenu = ({
         disabled={busy}
         onPointerDown={stop}
         onClick={() => menu.setOpen((value) => !value)}
-        data-tip={
-          menu.open
-            ? undefined
-            : "Use the selected element in another variation"
-        }
+        data-tip={datatip}
       >
-        {busy ? "Starting…" : "Use in…"}
+        {content}
         <Icon name="chevronDown" size={12} />
       </button>
       {menu.open && (
@@ -103,12 +118,18 @@ const UseInMenu = ({
 
 const shortRejection = (error: string): string => {
   if (!error.startsWith("Rejected:")) {
-    return error.length > 60 ? `${error.slice(0, 60)}…` : error;
+    if (error.length > LENGTH_60) {
+      return `${error.slice(0, SLICE_60)}…`;
+    }
+
+    return error;
   }
 
-  return /another file|other files/.test(error)
-    ? "Rejected: changed another file"
-    : "Rejected: changed code outside the element";
+  if (/another file|other files/u.test(error)) {
+    return "Rejected: changed another file";
+  }
+
+  return "Rejected: changed code outside the element";
 };
 
 const VariationControls = ({
@@ -137,10 +158,16 @@ const VariationControls = ({
 
     try {
       await variation.onKeep();
-    } catch (failure) {
-      setError(
-        `Could not keep it. ${failure instanceof Error ? failure.message : String(failure)}`
-      );
+    } catch (caught) {
+      const part: string = ((): string => {
+        if (caught instanceof Error) {
+          return caught.message;
+        }
+
+        return String(caught);
+      })();
+
+      setError(`Could not keep it. ${part}`);
     } finally {
       setKeeping(false);
     }
@@ -157,14 +184,36 @@ const VariationControls = ({
     try {
       await variation.onMix(to, element);
       onMixed();
-    } catch (failure) {
+    } catch (caught) {
+      const part2: string = ((): string => {
+        if (caught instanceof Error) {
+          return caught.message;
+        }
+
+        return String(caught);
+      })();
+
       setError(
-        `Could not use the element. ${failure instanceof Error ? failure.message : String(failure)} Pick it again, then try again.`
+        `Could not use the element. ${part2} Pick it again, then try again.`
       );
     } finally {
       setMixing(false);
     }
   };
+
+  const ariadisabled: true | undefined = ((): true | undefined => {
+    if (variation.keepBlocked) {
+      return true;
+    }
+
+    return undefined;
+  })();
+
+  let content2: "Keeping…" | "Keep this one" = "Keep this one";
+
+  if (keeping) {
+    content2 = "Keeping…";
+  }
 
   return (
     <>
@@ -190,7 +239,7 @@ const VariationControls = ({
       <button
         type="button"
         className="frame-chip keep"
-        aria-disabled={variation.keepBlocked ? true : undefined}
+        aria-disabled={ariadisabled}
         data-tip={
           variation.keepBlocked ??
           (variation.scoped
@@ -201,7 +250,7 @@ const VariationControls = ({
         onPointerDown={stop}
         onClick={() => void keep()}
       >
-        {keeping ? "Keeping…" : "Keep this one"}
+        {content2}
       </button>
       {variation.error && (
         <span

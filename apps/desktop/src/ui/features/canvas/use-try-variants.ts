@@ -16,9 +16,11 @@ const useTryVariants = (
   selection: SelectionContext[],
   variations: VariationsState
 ): ((prompt: string, count: number, level: RunLevel) => Promise<void>) => {
-  const blocker = project
-    ? elementVariantsBlocker(project, selection)
-    : "Wait for the design to load";
+  let blocker: string | null = "Wait for the design to load";
+
+  if (project) {
+    blocker = elementVariantsBlocker(project, selection);
+  }
 
   useCommands(() => [
     {

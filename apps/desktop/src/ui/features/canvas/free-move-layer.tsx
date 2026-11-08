@@ -16,10 +16,16 @@ const FreeMoveLayer = ({
 
   const { box, line } = view;
 
+  let part: "" | " copy" = "";
+
+  if (view.copy) {
+    part = " copy";
+  }
+
   return (
     <div className="overlay" aria-hidden="true" data-testid="free-move">
       <div
-        className={`box move-ghost${view.copy ? " copy" : ""}`}
+        className={`box move-ghost${part}`}
         style={{
           height: box.height,
           left: box.x,

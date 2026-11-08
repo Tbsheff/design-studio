@@ -1,12 +1,7 @@
 import { uiStore } from "../../platform/storage.js";
-import {
-  activeFrame,
-  canvasStore,
-  defaultLayout,
-  keepDirection,
-  placeDirections,
-  viewportOf,
-} from "./canvas-frames-model.js";
+import { keepDirection, placeDirections } from "./canvas-direction-ops.js";
+import { activeFrame, defaultLayout, viewportOf } from "./canvas-frame-ops.js";
+import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasLayout } from "./canvas-frames-model.js";
 
 const apply = (
@@ -58,13 +53,15 @@ const keepVariationFrame = (
 const framesOnCanvas = (projectId: string, directionIds: string[]): number => {
   const layout = canvasStore.get(projectId);
 
-  return layout
-    ? layout.frames.filter(
-        (canvasFrame) =>
-          canvasFrame.directionId &&
-          directionIds.includes(canvasFrame.directionId)
-      ).length
-    : 0;
+  if (layout) {
+    return layout.frames.filter(
+      (canvasFrame) =>
+        canvasFrame.directionId &&
+        directionIds.includes(canvasFrame.directionId)
+    ).length;
+  }
+
+  return 0;
 };
 
 export { framesOnCanvas, keepVariationFrame, showVariationFrames };

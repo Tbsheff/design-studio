@@ -17,8 +17,8 @@ import type { RefObject, ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
-import { frameName } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
+import { frameName } from "../canvas/index.js";
 import { CritiquePanel } from "../critique/index.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { copy } from "./copy.js";

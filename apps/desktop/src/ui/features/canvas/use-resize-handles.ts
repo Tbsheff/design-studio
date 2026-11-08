@@ -427,6 +427,7 @@ const useResizeHandles = (optionsValue: Options): ResizeHandles => {
 
         const changed =
           drag6.size.w !== drag6.base.w || drag6.size.h !== drag6.base.h;
+
         end(changed);
 
         if (changed) {

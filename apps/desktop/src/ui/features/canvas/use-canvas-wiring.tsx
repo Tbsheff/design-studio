@@ -1,11 +1,8 @@
 import { HTML_FRAME_SANDBOX } from "../../platform/bridge.js";
 import { appRoutePages } from "./app-canvas-routes.js";
 import { useAppCanvas } from "./app-canvas.js";
-import {
-  canvasStore,
-  frameDirection,
-  useCanvasLofi,
-} from "./canvas-frames-model.js";
+import { frameDirection } from "./canvas-direction-ops.js";
+import { canvasStore, useCanvasLofi } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import {
   shellDirectionName,
@@ -63,8 +60,11 @@ const useCanvasWiring = (
   useLofiFrames(stageRef, kind, directionId, lofiList);
   const liveDirection = frameDirection(active, directionId);
 
-  const lofiSwitch = liveDirection
-    ? {
+  const lofiSwitch: { on: boolean; onToggle: () => void } | undefined = (():
+    | { on: boolean; onToggle: () => void }
+    | undefined => {
+    if (liveDirection) {
+      return {
         on: lofiList.includes(liveDirection),
         onToggle: () =>
           canvasStore.setLofi(
@@ -73,15 +73,31 @@ const useCanvasWiring = (
             !lofiList.includes(liveDirection),
             layout
           ),
-      }
-    : undefined;
+      };
+    }
+
+    return undefined;
+  })();
 
   const darkSwitch = themeSwitch(props.darkPreview, theme);
 
-  const sandbox = kind === "html" ? HTML_FRAME_SANDBOX : undefined;
+  const sandbox: "allow-scripts allow-same-origin allow-forms" | undefined =
+    ((): "allow-scripts allow-same-origin allow-forms" | undefined => {
+      if (kind !== "html") {
+        return undefined;
+      }
+
+      return HTML_FRAME_SANDBOX;
+    })();
   const clickThrough = useClickThrough(frames, picking);
   useFrameChange(`${active.id}|${String(liveUrl)}`, () => {
-    props.setSelection((prev) => (prev.length > 0 ? [] : prev));
+    props.setSelection((prev) => {
+      if (prev.length > 0) {
+        return [];
+      }
+
+      return prev;
+    });
     props.onFrameChange?.();
   });
 
@@ -104,11 +120,22 @@ const useCanvasWiring = (
       return [];
     }
 
-    const blocked = props.running
-      ? "A run is going."
-      : did === directionId
-        ? undefined
-        : "Open this direction first.";
+    const blocked:
+      | "A run is going."
+      | "Open this direction first."
+      | undefined = (():
+      | "A run is going."
+      | "Open this direction first."
+      | undefined => {
+      if (props.running) {
+        return "A run is going.";
+      }
+      if (did === directionId) {
+        return undefined;
+      }
+
+      return "Open this direction first.";
+    })();
 
     return [
       {

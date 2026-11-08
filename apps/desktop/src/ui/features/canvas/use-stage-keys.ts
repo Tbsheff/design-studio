@@ -217,8 +217,13 @@ interface StageKeys {
 
 const editOpener = (
   shell: CanvasShell | undefined
-): (() => void | Promise<boolean>) | null =>
-  shell && shell.pane !== "design" ? () => shell.onPane("design") : null;
+): (() => void | Promise<boolean>) | null => {
+  if (shell && shell.pane !== "design") {
+    return () => shell.onPane("design");
+  }
+
+  return null;
+};
 
 const useStageKeys = (stageKeys: StageKeys): void => {
   const selection = useRef(stageKeys.selection);

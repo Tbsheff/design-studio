@@ -80,7 +80,12 @@ const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
 
 const CanvasTopBar = (props: Props): ReactElement => {
   const port = usePortDialog(!props.onShip);
-  const onPort = props.onShip ? null : (): void => port.open(null);
+
+  let onPort: (() => void) | null = null;
+
+  if (!props.onShip) {
+    onPort = (): void => port.open(null);
+  }
   const present = presentItems(props.onPresent);
 
   const zoom: ZoomProps = {
@@ -90,6 +95,30 @@ const CanvasTopBar = (props: Props): ReactElement => {
     setting: props.zoomSetting,
     zoom: props.zoom,
   };
+
+  const datatip: "Describe a tweak" | undefined = (():
+    | "Describe a tweak"
+    | undefined => {
+    if (props.tweakOpen) {
+      return undefined;
+    }
+
+    return "Describe a tweak";
+  })();
+
+  let datatip2 = "Comments work on the live preview";
+
+  if (props.commentAvailable) {
+    datatip2 = tipWithKey("Comment", "tool-comment");
+  }
+
+  let tip2:
+    | "Export, or ship as a pull request"
+    | "Export images, files or a handoff" = "Export images, files or a handoff";
+
+  if (props.onShip) {
+    tip2 = "Export, or ship as a pull request";
+  }
 
   return (
     <div
@@ -126,7 +155,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
         aria-pressed={props.tweakOpen}
         aria-expanded={props.tweakOpen}
         disabled={props.tweakDisabled}
-        data-tip={props.tweakOpen ? undefined : "Describe a tweak"}
+        data-tip={datatip}
         onClick={props.onTweak}
       >
         <Icon name="sliders" size={14} />
@@ -175,11 +204,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
           aria-pressed={props.tool === "comment"}
           aria-keyshortcuts="C"
           disabled={!props.commentAvailable}
-          data-tip={
-            props.commentAvailable
-              ? tipWithKey("Comment", "tool-comment")
-              : "Comments work on the live preview"
-          }
+          data-tip={datatip2}
           onClick={() => props.onTool("comment")}
         >
           <Icon name="comment" size={14} />
@@ -239,11 +264,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
         className="btn strong topbar-share"
         groups={() => shareGroups(props, onPort)}
         align="end"
-        tip={
-          props.onShip
-            ? "Export, or ship as a pull request"
-            : "Export images, files or a handoff"
-        }
+        tip={tip2}
       >
         <Icon name="share" size={14} />
         <span className="topbar-label">{copy.share}</span>

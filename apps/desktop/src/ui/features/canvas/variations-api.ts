@@ -13,8 +13,8 @@ import type {
 import { sendJson } from "../../platform/http.js";
 import type { JsonBody } from "../../platform/http.js";
 
-const post = <T>(path: string, body: JsonBody = {}): Promise<T> =>
-  sendJson<T>("POST", path, body);
+const post = <Item>(path: string, body: JsonBody = {}): Promise<Item> =>
+  sendJson<Item>("POST", path, body);
 
 const base = (pid: string): string =>
   `/api/projects/${encodeURIComponent(pid)}/variations`;
@@ -37,8 +37,13 @@ const variationsApi = {
     post<VariationStartResult>(base(pid), { ...req }),
 };
 
-const maxVariationsFor = (kind: ProjectKind): number =>
-  kind === "react" ? VARIATION_MAX_REACT : VARIATION_MAX;
+const maxVariationsFor = (kind: ProjectKind): number => {
+  if (kind === "react") {
+    return VARIATION_MAX_REACT;
+  }
+
+  return VARIATION_MAX;
+};
 
 const groupOf = (
   project: Project | null,

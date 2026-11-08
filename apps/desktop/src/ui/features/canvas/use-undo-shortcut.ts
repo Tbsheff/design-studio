@@ -36,7 +36,11 @@ const historyKeyOf = (
     return null;
   }
 
-  return event.shiftKey ? "redo" : "undo";
+  if (event.shiftKey) {
+    return "redo";
+  }
+
+  return "undo";
 };
 
 const modalOpen = (): boolean =>
@@ -96,10 +100,11 @@ const useUndoShortcut = (
     };
 
     const fromPreview = (event: Event): void => {
-      const kind: HistoryKind =
-        (event as CustomEvent<{ redo?: unknown }>).detail?.redo === true
-          ? "redo"
-          : "undo";
+      let kind: HistoryKind = "undo";
+
+      if ((event as CustomEvent<{ redo?: unknown }>).detail?.redo === true) {
+        kind = "redo";
+      }
 
       if (recentDesktopCommand(kind)) {
         return;

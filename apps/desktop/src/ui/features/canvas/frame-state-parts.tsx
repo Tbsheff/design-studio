@@ -10,6 +10,7 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
   ReactElement,
+  ReactNode,
 } from "react";
 
 import { copy } from "./copy.js";
@@ -36,12 +37,16 @@ const menuKeys = (event: ReactKeyboardEvent<HTMLElement>): void => {
 
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
 
-  const next =
-    event.key === "ArrowDown"
-      ? index + 1
-      : event.key === "ArrowUp"
-        ? index - 1
-        : null;
+  const next: number | null = ((): number | null => {
+    if (event.key === "ArrowDown") {
+      return index + 1;
+    }
+    if (event.key === "ArrowUp") {
+      return index - 1;
+    }
+
+    return null;
+  })();
 
   if (next === null || items.length === 0) {
     return;
@@ -97,27 +102,33 @@ const SessionRows = ({
 }): ReactElement => {
   const kept = view.session.captured.length;
 
+  let content: ReactNode = (
+    <div className="frame-state-line">
+      <Icon name="lock" size={14} />
+      <span>{copy.aRealSignIn}</span>
+    </div>
+  );
+
+  if (view.session.usesMockUser) {
+    content = (
+      <button
+        type="button"
+        role="menuitem"
+        className="ui-menu-item"
+        tabIndex={-1}
+        data-tip={copy.changeTheName}
+        onClick={() => onPanel("user")}
+      >
+        <Icon name="edit" size={14} />
+        <span className="frame-state-user">{view.session.user.email}</span>
+      </button>
+    );
+  }
+
   return (
     <div className="ui-menu-section">
       <div className="ui-menu-label">{copy.signedInStatesUse}</div>
-      {view.session.usesMockUser ? (
-        <button
-          type="button"
-          role="menuitem"
-          className="ui-menu-item"
-          tabIndex={-1}
-          data-tip={copy.changeTheName}
-          onClick={() => onPanel("user")}
-        >
-          <Icon name="edit" size={14} />
-          <span className="frame-state-user">{view.session.user.email}</span>
-        </button>
-      ) : (
-        <div className="frame-state-line">
-          <Icon name="lock" size={14} />
-          <span>{copy.aRealSignIn}</span>
-        </div>
-      )}
+      {content}
       {kept > 0 && (
         <button
           type="button"
@@ -154,9 +165,15 @@ const UserForm = ({
       className="frame-state-form"
       onSubmit={(event3) => {
         event3.preventDefault();
-        void runOrReport(onSave({ email, name }), (failure) =>
-          setError(failure instanceof Error ? failure.message : String(failure))
-        );
+        void runOrReport(onSave({ email, name }), (failure) => {
+          let argument: string = failure.message;
+
+          if (!(failure instanceof Error)) {
+            argument = String(failure);
+          }
+
+          return setError(argument);
+        });
       }}
     >
       <label className="frame-page-field">
@@ -217,9 +234,15 @@ const MockForm = ({
       return;
     }
 
-    void runOrReport(onSave(name, parsed), (failure) =>
-      setError(failure instanceof Error ? failure.message : String(failure))
-    );
+    void runOrReport(onSave(name, parsed), (failure) => {
+      let argument2: string = failure.message;
+
+      if (!(failure instanceof Error)) {
+        argument2 = String(failure);
+      }
+
+      return setError(argument2);
+    });
   };
 
   return (
@@ -235,7 +258,7 @@ const MockForm = ({
         <input
           value={name}
           autoFocus
-          onChange={(e) => setName(e.target.value)}
+          onChange={(event2) => setName(event2.target.value)}
         />
       </label>
       <label className="frame-page-field">
@@ -246,7 +269,7 @@ const MockForm = ({
           spellCheck={false}
           rows={6}
           aria-invalid={Boolean(error)}
-          onChange={(e) => setRules(e.target.value)}
+          onChange={(event3) => setRules(event3.target.value)}
         />
       </label>
       <p className="frame-page-hint">{copy.aPathThatEnds}</p>

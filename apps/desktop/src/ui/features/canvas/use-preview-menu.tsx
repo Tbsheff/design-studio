@@ -6,7 +6,7 @@ import type {
 } from "@design-studio/contracts";
 import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
-import type { MutableRefObject, ReactElement } from "react";
+import type { MutableRefObject, ReactElement, ReactNode } from "react";
 
 import {
   commandBlocker,
@@ -89,6 +89,9 @@ const structureItems = (options: Options): PreviewMenuItem[] => {
   return structureMenuItems(state, edits.structureKey, true);
 };
 
+const disabledBy = (reason: string | null): { disabled?: string } =>
+  reason ? { disabled: reason } : {};
+
 const pasteItem = (
   optionsValue: Options,
   target: SelectionContext
@@ -97,12 +100,22 @@ const pasteItem = (
     return [];
   }
 
-  const blocked =
-    !target.source && !target.owners?.length
-      ? "This element has no source location"
-      : optionsValue.edits.busy
-        ? "Wait for the last edit to finish"
-        : null;
+  const blocked:
+    | "This element has no source location"
+    | "Wait for the last edit to finish"
+    | null = (():
+    | "This element has no source location"
+    | "Wait for the last edit to finish"
+    | null => {
+    if (!target.source && !target.owners?.length) {
+      return "This element has no source location";
+    }
+    if (optionsValue.edits.busy) {
+      return "Wait for the last edit to finish";
+    }
+
+    return null;
+  })();
 
   const ids = {
     directionId: optionsValue.ids.directionId,
@@ -121,6 +134,22 @@ const pasteItem = (
   ];
 };
 
+const createBlocker = (options4: Options): string | null => {
+  if (options4.ids.kind !== "react") {
+    return "Components need a React project. This is a plain HTML page";
+  }
+
+  if (options4.selection.some((item) => !item.source && !item.owners?.length)) {
+    return "An element has no source location";
+  }
+
+  if (options4.edits.busy) {
+    return "Wait for the last edit to finish";
+  }
+
+  return null;
+};
+
 const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
   if (!options3.edits.enabled || !options3.ids.directionId) {
     return [];
@@ -128,10 +157,11 @@ const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
 
   const blocked = createBlocker(options3);
 
-  const label =
-    options3.selection.length > 1
-      ? `Create component from ${options3.selection.length}…`
-      : "Create component…";
+  let label = "Create component…";
+
+  if (options3.selection.length > 1) {
+    label = `Create component from ${options3.selection.length}…`;
+  }
 
   return [
     {
@@ -143,21 +173,6 @@ const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
     },
   ];
 };
-
-const createBlocker = (options4: Options): string | null => {
-  if (options4.ids.kind !== "react") {
-    return "Components need a React project. This is a plain HTML page";
-  }
-
-  if (options4.selection.some((item) => !item.source && !item.owners?.length)) {
-    return "An element has no source location";
-  }
-
-  return options4.edits.busy ? "Wait for the last edit to finish" : null;
-};
-
-const disabledBy = (reason: string | null): { disabled?: string } =>
-  reason ? { disabled: reason } : {};
 
 const menuItems = (
   options5: Options,
@@ -221,7 +236,12 @@ const menuItems = (
   ...createItem(options5, openCreate),
 ];
 
-const usePreviewMenu = (options6: Options) => {
+const usePreviewMenu = (
+  options6: Options
+): {
+  menu: ReactElement;
+  onContextMenu: (point: { x: number; y: number }) => void;
+} => {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const latest = useRef(options6);
   latest.current = options6;
@@ -267,8 +287,10 @@ const usePreviewMenu = (options6: Options) => {
     projectId: options6.ids.projectId,
   });
 
-  const dialog =
-    creating && directionId ? (
+  let dialog: ReactNode = null;
+
+  if (creating && directionId) {
+    dialog = (
       <Suspense fallback={null}>
         <CreateComponentDialog
           ids={{ directionId, projectId: options6.ids.projectId }}
@@ -277,61 +299,87 @@ const usePreviewMenu = (options6: Options) => {
           onClose={() => setCreating(null)}
         />
       </Suspense>
-    ) : null;
+    );
+  }
 
-  const items =
-    at && target
-      ? menuItems(latest.current, target, openCreate, (item) => [
-          ...icons.items(item),
-          ...photos.items(item),
-          ...props.items(item),
-          ...patterns.items(item),
-        ])
-      : [];
+  let items: PreviewMenuItem[] = [];
+
+  if (at && target) {
+    items = menuItems(latest.current, target, openCreate, (item) => [
+      ...icons.items(item),
+      ...photos.items(item),
+      ...props.items(item),
+      ...patterns.items(item),
+    ]);
+  }
+
+  let content: ReactNode = null;
+
+  if (at && target) {
+    content = (
+      <PreviewMenu
+        at={at}
+        label={`Actions for ${target.tag}`}
+        items={items}
+        onClose={close}
+      />
+    );
+  }
+
+  let content2: ReactNode = null;
+
+  if (icons.opened && directionId) {
+    content2 = (
+      <IconSlot
+        projectId={options6.ids.projectId}
+        directionId={directionId}
+        mode={icons.opened.mode}
+        target={icons.opened.target}
+        onClose={icons.close}
+        onDone={options6.edits.notify}
+      />
+    );
+  }
+
+  let content3: ReactNode = null;
+
+  if (props.opened) {
+    content3 = (
+      <Suspense fallback={null}>
+        <PropSlot
+          isDialog
+          layer={props.opened.layer}
+          target={props.opened.target}
+          onClose={props.close}
+          onDone={options6.edits.notify}
+        />
+      </Suspense>
+    );
+  }
+
+  let content4: ReactNode = null;
+
+  if (patterns.opened && directionId) {
+    content4 = (
+      <Suspense fallback={null}>
+        <PatternSlot
+          directionId={directionId}
+          projectId={options6.ids.projectId}
+          target={patterns.opened}
+          onClose={patterns.close}
+          onDone={options6.edits.notify}
+        />
+      </Suspense>
+    );
+  }
 
   const menu = (
     <>
-      {at && target ? (
-        <PreviewMenu
-          at={at}
-          label={`Actions for ${target.tag}`}
-          items={items}
-          onClose={close}
-        />
-      ) : null}
+      {content}
       {dialog}
-      {icons.opened && directionId ? (
-        <IconSlot
-          projectId={options6.ids.projectId}
-          directionId={directionId}
-          mode={icons.opened.mode}
-          target={icons.opened.target}
-          onClose={icons.close}
-          onDone={options6.edits.notify}
-        />
-      ) : null}
-      {props.opened ? (
-        <Suspense fallback={null}>
-          <PropSlot
-            isDialog
-            layer={props.opened.layer}
-            target={props.opened.target}
-            onClose={props.close}
-            onDone={options6.edits.notify}
-          />
-        </Suspense>
-      ) : null}
-      {patterns.opened && directionId ? (
-        <Suspense fallback={null}>
-          <PatternSlot
-            directionId={directionId}
-            projectId={options6.ids.projectId}
-            target={patterns.opened}
-            onClose={patterns.close}
-            onDone={options6.edits.notify}
-          />
-        </Suspense>
-      ) : null}
+      {content2}
+      {content3}
+      {content4}
       <ImageSearchMount
         directionId={directionId}
         host={photos}

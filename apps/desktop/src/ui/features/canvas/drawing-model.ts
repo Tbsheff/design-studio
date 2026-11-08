@@ -1,5 +1,21 @@
 import type { CommentDrawing, DrawStroke } from "@design-studio/contracts";
 
+const VALUE_10 = 10;
+
+const ROUND_10 = 10;
+
+const LENGTH_4 = 4;
+
+const MAX_0_05 = 0.05;
+
+const INDEX_3 = 3;
+
+const X0_0_01 = 0.01;
+
+const INDEX_VALUE_3 = 3;
+
+const WIDTH_3 = 3;
+
 const DRAW_COLORS = [
   { id: "red", label: "Red", value: "#ff3b30" },
   { id: "blue", label: "Blue", value: "#0a84ff" },
@@ -8,9 +24,13 @@ const DRAW_COLORS = [
 ] as const;
 
 const DRAW_SCREEN_WIDTH = 3;
+
 const SMOOTHING = 0.45;
+
 const MIN_STEP_SCREEN = 1.5;
+
 const PNG_MAX_SIDE = 4096;
+
 const HALO = "rgba(255, 255, 255, 0.9)";
 
 interface StrokeBuilder {
@@ -18,6 +38,9 @@ interface StrokeBuilder {
   end(pointXValue: number, pointYValue: number): void;
   points(): number[];
 }
+
+const round = (value: number): number =>
+  Math.round(value * VALUE_10) / ROUND_10;
 
 const createStrokeBuilder = (
   pointX3: number,
@@ -45,7 +68,7 @@ const createStrokeBuilder = (
     },
     end(rawX, rawY) {
       if (
-        points.length >= 4 &&
+        points.length >= LENGTH_4 &&
         Math.hypot(rawX - lastX, rawY - lastY) < minStep / 2
       ) {
         return;
@@ -60,9 +83,7 @@ const createStrokeBuilder = (
 };
 
 const minStepFor = (zoom: number): number =>
-  MIN_STEP_SCREEN / Math.max(zoom, 0.05);
-
-const round = (value: number): number => Math.round(value * 10) / 10;
+  MIN_STEP_SCREEN / Math.max(zoom, MAX_0_05);
 
 const strokePath = (points: number[]): string => {
   const count = points.length / 2;
@@ -84,7 +105,7 @@ const strokePath = (points: number[]): string => {
     const pointX4 = points[index * 2] as number;
     const pointY4 = points[index * 2 + 1] as number;
     const mx = (pointX4 + (points[index * 2 + 2] as number)) / 2;
-    const my = (pointY4 + (points[index * 2 + 3] as number)) / 2;
+    const my = (pointY4 + (points[index * 2 + INDEX_3] as number)) / 2;
     path += `Q${pointX4} ${pointY4} ${round(mx)} ${round(my)}`;
   }
 
@@ -99,7 +120,7 @@ const traceStroke = (ctx: CanvasRenderingContext2D, points: number[]): void => {
   ctx.moveTo(x0, y0);
 
   if (count === 1) {
-    ctx.lineTo(x0 + 0.01, y0);
+    ctx.lineTo(x0 + X0_0_01, y0);
   }
 
   for (let indexValue = 1; indexValue < count - 1; indexValue += 1) {
@@ -109,7 +130,7 @@ const traceStroke = (ctx: CanvasRenderingContext2D, points: number[]): void => {
       pointX5,
       pointY5,
       (pointX5 + (points[indexValue * 2 + 2] as number)) / 2,
-      (pointY5 + (points[indexValue * 2 + 3] as number)) / 2
+      (pointY5 + (points[indexValue * 2 + INDEX_VALUE_3] as number)) / 2
     );
   }
 
@@ -138,7 +159,7 @@ const paintStrokes = (
 
     if (halo) {
       ctx.strokeStyle = HALO;
-      ctx.lineWidth = stroke.width + 3;
+      ctx.lineWidth = stroke.width + WIDTH_3;
       ctx.stroke();
     }
 
@@ -164,13 +185,13 @@ const renderDrawingPng = (drawing: CommentDrawing): Promise<Blob> => {
   paintStrokes(ctx, drawing.strokes, true);
 
   return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (blob) =>
-        blob
-          ? resolve(blob)
-          : reject(new Error("Could not make the drawing image")),
-      "image/png"
-    )
+    canvas.toBlob((blob) => {
+      if (blob) {
+        return resolve(blob);
+      }
+
+      return reject(new Error("Could not make the drawing image"));
+    }, "image/png")
   );
 };
 
@@ -193,7 +214,7 @@ const penSegment = (from: PenAnchor, to: PenAnchor): string => {
 };
 
 const shiftAnchor = (anchor: PenAnchor, dx: number, dy: number): PenAnchor => {
-  const move = (point: { x: number; y: number }) => ({
+  const move = (point: { x: number; y: number }): { x: number; y: number } => ({
     x: point.x + dx,
     y: point.y + dy,
   });
@@ -212,10 +233,11 @@ const penPath = (
   dx = 0,
   dy = 0
 ): string => {
-  const moved =
-    dx === 0 && dy === 0
-      ? anchors
-      : anchors.map((anchor) => shiftAnchor(anchor, dx, dy));
+  let moved: PenAnchor[] = anchors;
+
+  if (!(dx === 0 && dy === 0)) {
+    moved = anchors.map((anchor) => shiftAnchor(anchor, dx, dy));
+  }
 
   const first = moved[0];
 

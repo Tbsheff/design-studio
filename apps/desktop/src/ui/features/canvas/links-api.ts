@@ -120,7 +120,11 @@ const frameRefOf = (target: LinkTarget): string | undefined => {
     return "back";
   }
 
-  return "frame" in target ? target.frame : undefined;
+  if ("frame" in target) {
+    return target.frame;
+  }
+
+  return undefined;
 };
 
 const linksApi = {
@@ -192,7 +196,13 @@ const linksApi = {
     id: string,
     change: { to?: LinkTarget } & LinkMotion
   ) => {
-    const toFrame = change.to ? frameRefOf(change.to) : undefined;
+    const toFrame: string | undefined = ((): string | undefined => {
+      if (change.to) {
+        return frameRefOf(change.to);
+      }
+
+      return undefined;
+    })();
 
     const { links } = await callAction(routes.updateLinkCanvas, {
       ...frameAction(change.action),
@@ -262,7 +272,7 @@ const useImplicitLinks = (
   };
 
   const later = (): void => {
-    window.clearTimeout(timer.current);
+    globalThis.clearTimeout(timer.current);
     timer.current = window.setTimeout(
       () => fetchNow.current(),
       IMPLICIT_DEBOUNCE_MS
@@ -274,7 +284,7 @@ const useImplicitLinks = (
   useEffect(() => {
     fetchNow.current();
 
-    return (): void => window.clearTimeout(timer.current);
+    return (): void => globalThis.clearTimeout(timer.current);
   }, [projectId]);
   useEffect(() => {
     const before = lastKey.current;

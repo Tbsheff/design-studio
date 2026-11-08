@@ -9,16 +9,30 @@ import { toValueOr } from "./settle-model.js";
 import { stop } from "./variation-controls.js";
 
 const pageName = (path: string | undefined): string => {
-  const clean = (path ?? "").replace(/^\/+/, "").replace(/\.html$/, "");
+  const clean = (path ?? "").replace(/^\/+/u, "").replace(/\.html$/u, "");
 
   return clean || "index";
 };
 
-const pageLabel = (page: string, routes: boolean): string =>
-  routes ? `/${page}` : page;
+const pageLabel = (page: string, routes: boolean): string => {
+  if (routes) {
+    return `/${page}`;
+  }
 
-const isCurrentPage = (page: string, path: string, routes: boolean): boolean =>
-  routes ? page === path : page === (path || "index.html");
+  return page;
+};
+
+const isCurrentPage = (
+  page: string,
+  path: string,
+  routes: boolean
+): boolean => {
+  if (routes) {
+    return page === path;
+  }
+
+  return page === (path || "index.html");
+};
 
 const FramePageMenu = ({
   path,
@@ -84,20 +98,32 @@ const FramePageMenu = ({
     menu.close(true);
   };
 
+  let part: "" | " set" = "";
+
+  if (path) {
+    part = " set";
+  }
+
+  const datatip: string | undefined = ((): string | undefined => {
+    if (menu.open) {
+      return undefined;
+    }
+
+    return `/${path} · Show another page in this frame`;
+  })();
+
   return (
     <div className="frame-menu-root" ref={menu.root}>
       <button
         ref={menu.trigger}
         type="button"
-        className={`frame-chip page${path ? " set" : ""}`}
+        className={`frame-chip page${part}`}
         aria-haspopup="dialog"
         aria-expanded={menu.open}
         aria-label={`Page: ${pageName(path)}`}
         onPointerDown={stop}
         onClick={() => menu.setOpen((valueValue) => !valueValue)}
-        data-tip={
-          menu.open ? undefined : `/${path} · Show another page in this frame`
-        }
+        data-tip={datatip}
       >
         <Icon name="file" size={12} />
         <span className="frame-path">{pageName(path)}</span>
@@ -150,23 +176,41 @@ const FramePageMenu = ({
               {pages?.length === 0 && (
                 <p className="frame-page-hint">{copy.noOtherPagesYet}</p>
               )}
-              {pages?.map((page) => (
-                <button
-                  key={page}
-                  type="button"
-                  role="menuitem"
-                  aria-current={
-                    isCurrentPage(page, path, routes) ? "true" : undefined
+              {pages?.map((page) => {
+                const ariacurrent: "true" | undefined = (():
+                  | "true"
+                  | undefined => {
+                  if (!isCurrentPage(page, path, routes)) {
+                    return undefined;
                   }
-                  onClick={() => apply(page === "index.html" ? "" : page)}
-                >
-                  <Icon name="file" size={14} />
-                  <span className="truncate">{pageLabel(page, routes)}</span>
-                  {isCurrentPage(page, path, routes) && (
-                    <Icon name="check" size={14} />
-                  )}
-                </button>
-              ))}
+
+                  return "true";
+                })();
+
+                return (
+                  <button
+                    key={page}
+                    type="button"
+                    role="menuitem"
+                    aria-current={ariacurrent}
+                    onClick={() => {
+                      let argument: string = page;
+
+                      if (page === "index.html") {
+                        argument = "";
+                      }
+
+                      return apply(argument);
+                    }}
+                  >
+                    <Icon name="file" size={14} />
+                    <span className="truncate">{pageLabel(page, routes)}</span>
+                    {isCurrentPage(page, path, routes) && (
+                      <Icon name="check" size={14} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

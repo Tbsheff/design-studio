@@ -10,17 +10,15 @@ import { FrameResizeHandles } from "./frame-resize-handles.js";
 import { FrameSkeleton } from "./frame-skeleton.js";
 
 const MOUNT_FALLBACK_MS = 1200;
-let frontPainted = false;
-let paintListening = false;
 
-const useResetPassiveGateInFirstRender = (): void => {
-  useState(resetPassiveMountGate);
-};
+let frontPainted = false;
+
+let paintListening = false;
 
 const resetPassiveMountGate = (): void => {
   frontPainted = false;
 
-  if (paintListening || typeof window === "undefined") {
+  if (paintListening || typeof globalThis === "undefined") {
     return;
   }
 
@@ -28,6 +26,10 @@ const resetPassiveMountGate = (): void => {
   globalThis.addEventListener(PREVIEW_PAINTED_EVENT, () => {
     frontPainted = true;
   });
+};
+
+const useResetPassiveGateInFirstRender = (): void => {
+  useState(resetPassiveMountGate);
 };
 
 const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
@@ -73,7 +75,7 @@ const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
 
     return (): void => {
       globalThis.removeEventListener(PREVIEW_PAINTED_EVENT, onPaint);
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
       io.disconnect();
     };
   }, [armed, ref]);
@@ -199,7 +201,10 @@ const StablePassiveFrame = memo(
   }) => {
     const cur = entries.current.get(id);
 
-    if (!cur) return null;
+    if (!cur) {
+      return null;
+    }
+
     const live = (): PassiveProps => entries.current.get(id) ?? cur;
 
     return (

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import type { BoardProps } from "./compare-board-types.js";
+import type { BoardEntry } from "./compare-board-types.js";
 import { CompareFrame } from "./compare-frame.js";
 import { CompareLabel } from "./compare-label.js";
 import { CompareStage } from "./compare-stage.js";
@@ -11,7 +11,8 @@ import { useDiffMask } from "./use-diff-mask.js";
 
 const DEFAULT_OPACITY = 70;
 
-const OverlayBoard = (props: BoardProps): ReactNode => {
+const OverlayBoard = ({ board }: BoardEntry): ReactNode => {
+  const props = board;
   const { scale, viewport } = props;
   const [attempt, setAttempt] = useState(0);
   const [isShown, setIsShown] = useState(true);

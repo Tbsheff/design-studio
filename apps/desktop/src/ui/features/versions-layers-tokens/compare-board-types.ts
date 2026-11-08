@@ -12,4 +12,8 @@ interface BoardProps {
   readonly onError: (message: string) => void;
 }
 
-export type { BoardProps };
+interface BoardEntry {
+  readonly board: BoardProps;
+}
+
+export type { BoardEntry, BoardProps };

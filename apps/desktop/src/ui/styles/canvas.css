@@ -449,6 +449,12 @@ body.element-resizing .frame {
   max-width: 100%;
 }
 
+fieldset.compare-modes {
+  min-inline-size: 0;
+  margin: 0 0 0 var(--s-2);
+  border: 0;
+}
+
 .compare-modes {
   margin-left: var(--s-2);
 }

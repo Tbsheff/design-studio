@@ -9,7 +9,7 @@ import type { ReactElement, ReactNode } from "react";
 
 import type { PublishKind } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
-import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
+import { canvasFrameName, framePage } from "../canvas/index.js";
 import { copy } from "./copy.js";
 import { canvasFrameChoices } from "./export-api.js";
 import { toFrameLabels } from "./frame-labels.js";

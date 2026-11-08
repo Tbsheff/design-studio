@@ -32,8 +32,8 @@ import { createPortal } from "react-dom";
 
 import { loadLinkInteraction } from "../../canvas-link-slots.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
-import { framePage, frameTitle } from "./canvas-frames.js";
 import { copy } from "./copy.js";
+import { framePage, frameTitle } from "./frame-label-model.js";
 import { linksApi } from "./links-api.js";
 
 import "../../styles/prototype.css";

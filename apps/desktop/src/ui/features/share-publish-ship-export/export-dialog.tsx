@@ -3,7 +3,7 @@ import { useModalDialog } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
+import { canvasFrameName, framePage } from "../canvas/index.js";
 import { copy as uiCopy } from "./copy.js";
 import type { ExportTarget } from "./export-api.js";
 import { ExportDialogBody } from "./export-dialog-body.js";

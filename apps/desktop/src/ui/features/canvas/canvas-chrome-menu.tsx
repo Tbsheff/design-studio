@@ -13,13 +13,13 @@ import {
 } from "./canvas-frame-ops.js";
 import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
-import { frameBaseName, framePage } from "./canvas-frames.js";
 import type {
   CanvasShell,
   CommentTool,
   SetSelectMode,
 } from "./canvas-shell.js";
 import type { CanvasViewRow } from "./canvas-view-row.js";
+import { frameBaseName, framePage } from "./frame-label-model.js";
 import { toValueOr } from "./settle-model.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 

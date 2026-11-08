@@ -4,8 +4,9 @@ import type { RefObject, ReactElement } from "react";
 import { pageFileOf } from "../chat/use-first-build.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
-import { frameBaseName, FrameLabel } from "./canvas-frames.js";
-import type { LabelProps } from "./canvas-frames.js";
+import { frameBaseName } from "./frame-label-model.js";
+import { FrameLabel } from "./frame-label.js";
+import type { LabelProps } from "./frame-label.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import { FrameSkeleton } from "./frame-skeleton-view.js";
 

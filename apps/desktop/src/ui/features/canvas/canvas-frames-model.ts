@@ -35,7 +35,15 @@ const WRITE_DELAY_MS = 400;
 
 const RETRY_MS = 2000;
 
-const writerId = `w${Math.random().toString(TO_STRING_36).slice(2, SLICE_12)}`;
+let writerSlot: string | null = null;
+
+const toWriterId = (): string => {
+  if (writerSlot === null) {
+    writerSlot = `w${Math.random().toString(TO_STRING_36).slice(2, SLICE_12)}`;
+  }
+
+  return writerSlot;
+};
 
 const toCanvasFile = (
   layout: CanvasLayout | null,
@@ -163,7 +171,7 @@ const migrate = async (
       baseHash: entry.hash,
       canvas: toCanvasFile(legacy, entry.lofi),
       migrate: true,
-      writer: writerId,
+      writer: toWriterId(),
     });
 
     entry.hash = result.hash;
@@ -173,7 +181,7 @@ const migrate = async (
       return true;
     }
 
-    console.error("[canvas] migration failed", error);
+    reportError(error);
   }
 
   return false;
@@ -222,7 +230,7 @@ const flush = async (projectId: string): Promise<void> => {
     const result = await api.putCanvas(projectId, {
       baseHash: entry.hash,
       canvas: toCanvasFile(entry.layout, entry.lofi),
-      writer: writerId,
+      writer: toWriterId(),
     });
 
     entry.hash = result.hash;
@@ -230,7 +238,7 @@ const flush = async (projectId: string): Promise<void> => {
     stale = error instanceof ApiError && error.status === STATUS_409;
 
     if (!stale) {
-      console.error("[canvas] save failed", error);
+      reportError(error);
     }
 
     if (!stale && fileText(entry) === sent) {
@@ -244,7 +252,7 @@ const flush = async (projectId: string): Promise<void> => {
     try {
       await reloadCanvas(projectId);
     } catch (error) {
-      console.error("[canvas] reload failed", error);
+      reportError(error);
     }
 
     return;
@@ -270,7 +278,7 @@ const loadCanvas = async (projectId: string, entry: Entry): Promise<void> => {
   try {
     await reloadCanvas(projectId);
   } catch (error) {
-    console.error("[canvas] load failed", error);
+    reportError(error);
   } finally {
     entry.loading = null;
   }
@@ -297,7 +305,7 @@ const receiveCanvasEvent = (event: StudioEvent): void => {
     return;
   }
 
-  if (event.writer === writerId || event.hash === entry.hash) {
+  if (event.writer === toWriterId() || event.hash === entry.hash) {
     return;
   }
 
@@ -307,8 +315,8 @@ const receiveCanvasEvent = (event: StudioEvent): void => {
 const NO_LOFI: string[] = [];
 
 const canvasStore = {
-  get: (projectId: string): CanvasLayout | undefined =>
-    entries.get(projectId)?.layout ?? undefined,
+  get: (projectId: string): CanvasLayout | null =>
+    entries.get(projectId)?.layout ?? null,
   load: ensureLoaded,
   loaded: (projectId: string): boolean =>
     entries.get(projectId)?.loaded ?? false,

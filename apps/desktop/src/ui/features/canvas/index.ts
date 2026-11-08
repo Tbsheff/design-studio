@@ -31,4 +31,6 @@ export type { CanvasCommentTools, CanvasDirections } from "./canvas-types.js";
 
 export { Canvas, PlayMode };
 
+export { canvasFrameName, framePage } from "./frame-label-model.js";
+
 export { nextSelection } from "./preview-selection-model.js";

@@ -9,7 +9,6 @@ import { useEditVariant } from "../inspector/index.js";
 import type { SpacingHandlesProps } from "../spacing/index.js";
 import { frameDirection } from "./canvas-direction-ops.js";
 import { frameName } from "./canvas-frame-ops.js";
-import { FrameLabel } from "./canvas-frames.js";
 import {
   activeFrameOf,
   commentToolsOf,
@@ -22,6 +21,7 @@ import type { ViewProps } from "./canvas-types.js";
 import { copy } from "./copy.js";
 import { DrawBar } from "./draw-bar.js";
 import { EditNotice } from "./edit-notice.js";
+import { FrameLabel } from "./frame-label.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import { FrameSnapLayer } from "./frame-snap-layer.js";
 import { FrameUndoBar } from "./frame-undo-bar.js";

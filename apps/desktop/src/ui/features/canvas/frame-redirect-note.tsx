@@ -3,9 +3,9 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { openAppPanel } from "../../platform/app-status.js";
-import { isAuthRoute } from "./canvas-frames.js";
-import type { FrameRedirect } from "./canvas-frames.js";
 import { copy } from "./copy.js";
+import { isAuthRoute } from "./frame-label-model.js";
+import type { FrameRedirect } from "./frame-label-model.js";
 
 const FrameRedirectNote = ({
   redirect,

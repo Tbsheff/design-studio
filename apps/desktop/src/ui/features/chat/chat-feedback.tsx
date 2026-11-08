@@ -5,12 +5,13 @@ import type { ReactElement } from "react";
 
 import { baseName, formatMs, formatUsd } from "../../domain/format.js";
 import { copy } from "./copy.js";
+import { DiffBadge } from "./diff-badge.js";
 import { useRunFeedback } from "./run-feedback-model.js";
 import type { Thumb } from "./run-feedback-model.js";
 import type { RunView } from "./run-state-model.js";
 import { runText } from "./run-state-model.js";
-import { fileChanges, DiffBadge } from "./tool-chips.js";
-import type { FileChange } from "./tool-chips.js";
+import type { FileChange } from "./tool-chips-model.js";
+import { fileChanges } from "./tool-rows-model.js";
 
 const COST_DIGITS = 4;
 

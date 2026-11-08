@@ -1,5 +1,5 @@
 import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -10,7 +10,7 @@ import type { CanvasTool } from "./top-bar-menu.js";
 
 interface CanvasShell {
   pane: PanelTab;
-  onPane: (tab: PanelTab) => void | Promise<boolean>;
+  onPane: (tab: PanelTab) => Promise<boolean>;
   layersHost: HTMLElement | null;
   directionName: string | null;
   paneCollapsed: boolean;
@@ -37,12 +37,23 @@ const useShellState = (
   comment: CommentTool,
   setSelectMode: SetSelectMode
 ): void => {
-  const onPane = useRef(shell?.onPane);
-  onPane.current = shell?.onPane;
   const pane = shell?.pane;
-  const commentRef = useRef(comment);
-  commentRef.current = comment;
   const wasOn = useRef(comment.on);
+
+  const openPane = useEffectEvent(async (): Promise<void> => {
+    const moved = await shell?.onPane("comments");
+
+    if (moved === false) {
+      comment.setOn(false);
+    }
+  });
+
+  const closeComment = useEffectEvent((): void => {
+    if (comment.on) {
+      comment.setOn(false);
+    }
+  });
+
   useEffect(() => {
     const before = wasOn.current;
     wasOn.current = comment.on;
@@ -51,16 +62,9 @@ const useShellState = (
       return;
     }
 
-    const openPane = async (): Promise<void> => {
-      const moved = await onPane.current?.("comments");
-
-      if (moved === false) {
-        commentRef.current.setOn(false);
-      }
-    };
-
-    void openPane();
+    openPane();
   }, [comment.on]);
+
   const prevPane = useRef(pane);
   useEffect(() => {
     const before = prevPane.current;
@@ -70,8 +74,8 @@ const useShellState = (
       return;
     }
 
-    if (pane !== "comments" && commentRef.current.on) {
-      commentRef.current.setOn(false);
+    if (pane !== "comments") {
+      closeComment();
     }
 
     if (before === "design") {
@@ -88,11 +92,11 @@ const useShellPane = (
   live: boolean,
   layersOpenSetting: boolean
 ): {
-  closeLayers: () => void | Promise<boolean>;
+  closeLayers: () => void;
   layersOpen: boolean;
   picking: boolean;
   place: (panel: ReactNode) => ReactNode;
-  toggleEdit: () => void | Promise<boolean> | undefined;
+  toggleEdit: () => void;
 } => {
   useShellState(shell, comment, setSelectMode);
   const picking = selectMode || (shell?.pane === "design" && !comment.on);
@@ -106,15 +110,26 @@ const useShellPane = (
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
 
-  const toggleEdit = (): void | Promise<boolean> | undefined =>
-    shell?.onPane(shell.pane === "design" ? "chat" : "design");
-
-  const closeLayers = (): void | Promise<boolean> => {
-    if (shell) {
-      return shell.onPane("chat");
+  const toggleEdit = (): void => {
+    if (!shell) {
+      return;
     }
 
-    return uiStore.set({ layersOpen: false });
+    if (shell.pane === "design") {
+      shell.onPane("chat");
+    } else {
+      shell.onPane("design");
+    }
+  };
+
+  const closeLayers = (): void => {
+    if (shell) {
+      shell.onPane("chat");
+
+      return;
+    }
+
+    uiStore.set({ layersOpen: false });
   };
 
   const place = (panel: ReactNode): ReactNode => {

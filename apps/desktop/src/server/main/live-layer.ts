@@ -38,6 +38,7 @@ import { PatternLive } from "../handlers/pattern/live.js";
 import { ProjectLive } from "../handlers/project/live.js";
 import { PropLive } from "../handlers/prop/live.js";
 import { PublishLive } from "../handlers/publish/live.js";
+import { ReferenceLive } from "../handlers/reference/live.js";
 import { RunLive } from "../handlers/run/live.js";
 import { ScenarioLive } from "../handlers/scenario/live.js";
 import { ScreenLive } from "../handlers/screen/live.js";
@@ -106,6 +107,7 @@ const liveLayer = Layer.mergeAll(
   ProjectLive,
   PropLive,
   PublishLive,
+  ReferenceLive,
   RunLive,
   ScenarioLive,
   ScreenLive,

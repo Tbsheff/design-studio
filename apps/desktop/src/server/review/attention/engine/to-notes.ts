@@ -43,6 +43,19 @@ const toName = (element: AttentionElement): string => {
 
 const toPercent = (share: number): number => Math.round(share * PERCENT);
 
+const ACTION_VERBS =
+  /^(?<verb>upload|save|submit|create|add|continue|send|confirm|next|publish|start|sign|log|get|book|buy|apply|done|finish|run|new|invite|share)\b/iu;
+
+const toPrimaryScore = (element: AttentionElement): number => {
+  const area = element.box.width * element.box.height;
+
+  if (ACTION_VERBS.test(element.label.trim())) {
+    return area + Number.MAX_SAFE_INTEGER / 2;
+  }
+
+  return area;
+};
+
 const toPrimary = (
   elements: readonly AttentionElement[]
 ): AttentionElement | null => {
@@ -50,10 +63,7 @@ const toPrimary = (
   let best: AttentionElement | null = null;
 
   for (const element of candidates) {
-    const area = element.box.width * element.box.height;
-    const bestArea = (best?.box.width ?? 0) * (best?.box.height ?? 0);
-
-    if (best === null || area >= bestArea) {
+    if (best === null || toPrimaryScore(element) >= toPrimaryScore(best)) {
       best = element;
     }
   }

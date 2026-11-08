@@ -32,7 +32,7 @@ interface AttentionProbeInput {
 const PROBE_SOURCE = String.raw`(input) => {
   const SKIP = new Set(['script', 'style', 'noscript', 'template', 'head', 'meta', 'link', 'br', 'hr', 'title', 'path', 'defs', 'source']);
   const MEDIA = new Set(['img', 'svg', 'canvas', 'video', 'picture', 'iframe']);
-  const INTERACTIVE = 'a[href], button, input, select, textarea, summary, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [tabindex]:not([tabindex="-1"])';
+  const INTERACTIVE = 'a[href], button, input, select, textarea, summary, [role="button"], [role="link"], [role="tab"], [role="menuitem"]';
   const ROLES = { a: 'link', button: 'button', select: 'combobox', textarea: 'textbox', img: 'img', nav: 'navigation', h1: 'heading', h2: 'heading', h3: 'heading', h4: 'heading', h5: 'heading', h6: 'heading', summary: 'button' };
   const INPUT_ROLES = { checkbox: 'checkbox', radio: 'radio', range: 'slider', button: 'button', submit: 'button', reset: 'button' };
   let scopeEl = null;
@@ -79,7 +79,7 @@ const PROBE_SOURCE = String.raw`(input) => {
     if (isVisible) {
       const text = isInteractive || isMedia ? clean(isInteractive ? el.innerText || el.textContent : '') : ownText(el);
       const fill = opaque(cs.backgroundColor) ? cs.backgroundColor : null;
-      const isSmallFill = fill !== null && box.width * box.height < viewArea * 0.6;
+      const isSmallFill = fill !== null && box.width * box.height < viewArea * 0.02;
       if (isInteractive || isMedia || text.length > 0 || isSmallFill) {
         const role = roleOf(el, tag);
         const inputType = (el.getAttribute('type') || '').toLowerCase();
@@ -92,8 +92,8 @@ const PROBE_SOURCE = String.raw`(input) => {
           fontSize: parseFloat(cs.fontSize) || 16,
           fontWeight: parseInt(cs.fontWeight, 10) || 400,
           isInteractive,
-          isPrimaryCandidate: isInteractive && isButton,
-          label: (nameOf(el, tag) || text).slice(0, 80),
+          isPrimaryCandidate: isInteractive && isButton && text.length <= 40 && !el.closest('nav, aside, header, [role="navigation"], [role="tablist"], [role="menu"]'),
+          label: (isInteractive || isMedia ? nameOf(el, tag) || text : clean(el.getAttribute('aria-label')) || text || tag).slice(0, 80),
           path: pathOf(el),
           role,
           textLength: text.length,

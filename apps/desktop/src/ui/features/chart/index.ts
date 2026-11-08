@@ -6,4 +6,14 @@ const ChartPanel = lazy(async () => {
   return { default: loaded.ChartPanel };
 });
 
-export { ChartPanel };
+const ChartTabBar = lazy(async () => {
+  const loaded = await import("./chart-tab-bar.js");
+
+  return { default: loaded.ChartTabBar };
+});
+
+export { useChartTab } from "./use-chart-tab.js";
+
+export { ChartPanel, ChartTabBar };
+
+export type { ChartTabState } from "./use-chart-tab.js";

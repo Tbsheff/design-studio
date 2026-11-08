@@ -7,7 +7,7 @@ import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameBaseName, FrameLabel } from "./canvas-frames.js";
 import type { LabelProps } from "./canvas-frames.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
-import { FrameSkeleton } from "./frame-skeleton.js";
+import { FrameSkeleton } from "./frame-skeleton-view.js";
 
 const MOUNT_FALLBACK_MS = 1200;
 

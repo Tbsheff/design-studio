@@ -20,11 +20,7 @@ import {
 } from "./canvas-helpers.js";
 import { EditNotice } from "./canvas-layers.js";
 import { FrameSnapLayer, MarqueeLayer } from "./canvas-overlays.js";
-import {
-  CanvasComments,
-  InlinePromptSlot,
-  VectorSlot,
-} from "./canvas-tool-slots.js";
+import { CanvasComments, InlinePromptSlot } from "./canvas-tool-slots.js";
 import type { ViewProps } from "./canvas-types.js";
 import { copy } from "./copy.js";
 import { DrawBar } from "./draw-layer.js";
@@ -42,6 +38,7 @@ import { unionRect } from "./use-canvas-frames.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import type { useCanvasWiring } from "./use-canvas-wiring.js";
+import { VectorSlot } from "./vector-slot.js";
 
 const CanvasRulers = lazy(() => import("./canvas-rulers.js"));
 

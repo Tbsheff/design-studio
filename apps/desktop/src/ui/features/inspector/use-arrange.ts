@@ -35,7 +35,9 @@ const useArrange = (
 
     return (): void => globalThis.clearTimeout(timer);
   }, [message]);
-  const key = props.selection.map((s) => s.selector).join("\n");
+  const key = props.selection
+    .map((selectionContext) => selectionContext.selector)
+    .join("\n");
   useEffect(() => setMessage(null), [key]);
 
   const run = async (action: ArrangeAction): Promise<void> => {
@@ -51,7 +53,9 @@ const useArrange = (
 
     try {
       await cur.control.current?.settle();
-      const targets = cur.selection.map((s) => ({ selector: s.selector }));
+      const targets = cur.selection.map((selectionContextValue) => ({
+        selector: selectionContextValue.selector,
+      }));
 
       const result = await arrangeRequest(cur.projectId, cur.directionId, {
         action,

@@ -138,16 +138,16 @@ interface UseEditSessionResult {
   readonly blocked: string | null;
 }
 
-const useEditSession = (o: Options): UseEditSessionResult => {
-  const { projectId, directionId } = o;
+const useEditSession = (options: Options): UseEditSessionResult => {
+  const { projectId, directionId } = options;
   const [view, setView] = useState<SessionView>(EMPTY);
   const [busy, setBusy] = useState<SessionAction | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
   const viewRef = useRef(view);
   viewRef.current = view;
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const exitResolve = useRef<((leave: boolean) => void) | null>(null);
 

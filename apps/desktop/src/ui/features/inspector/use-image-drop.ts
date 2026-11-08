@@ -26,7 +26,7 @@ interface Options {
 type FileDrop = Extract<BridgeToParent, { readonly type: "file-drop" }>;
 
 const place = async (
-  o: Options,
+  options: Options,
   directionId: string,
   drop: FileDrop,
   file: File
@@ -56,19 +56,19 @@ const place = async (
           }),
     };
 
-    const result = await imageApi.set(o.projectId, directionId, request);
-    o.notify(`${result.title}.`);
+    const result = await imageApi.set(options.projectId, directionId, request);
+    options.notify(`${result.title}.`);
   } catch (error) {
-    o.notify(imageError(error));
+    options.notify(imageError(error));
   }
 };
 
-const refusal = (o: Options, drop: FileDrop): string | null => {
+const refusal = (options: Options, drop: FileDrop): string | null => {
   if (!drop.files[0]) {
     return "Drop an image file: PNG, JPEG, WebP, AVIF, GIF or SVG.";
   }
 
-  if (!o.isEnabled || !o.directionId) {
+  if (!options.isEnabled || !options.directionId) {
     return "Edits are paused here. Wait for the run to finish, or open the latest version.";
   }
 
@@ -83,9 +83,9 @@ const refusal = (o: Options, drop: FileDrop): string | null => {
   return null;
 };
 
-const useImageDrop = (o: Options): void => {
-  const live = useRef(o);
-  live.current = o;
+const useImageDrop = (options: Options): void => {
+  const live = useRef(options);
+  live.current = options;
   const busy = useRef(false);
   useBridge(
     () =>

@@ -197,12 +197,12 @@ const InspectorBreadcrumbView = ({
 
 const InspectorBreadcrumb = memo(
   InspectorBreadcrumbView,
-  (a, b) =>
-    a.port === b.port &&
-    a.selection.selector === b.selection.selector &&
-    a.selection.tag === b.selection.tag &&
-    a.selection.outerHTML === b.selection.outerHTML &&
-    a.selection.path === b.selection.path
+  (first, second) =>
+    first.port === second.port &&
+    first.selection.selector === second.selection.selector &&
+    first.selection.tag === second.selection.tag &&
+    first.selection.outerHTML === second.selection.outerHTML &&
+    first.selection.path === second.selection.path
 );
 
 export { InspectorBreadcrumb };

@@ -193,12 +193,15 @@ const useStyleScan = (
 
     return listen((message) => {
       if (message.type === "ready") {
-        setNonce((n) => n + 1);
+        setNonce((count) => count + 1);
       }
     });
   }, [port]);
 
-  return { hits, refresh: useCallback(() => setNonce((n) => n + 1), []) };
+  return {
+    hits,
+    refresh: useCallback(() => setNonce((countValue) => countValue + 1), []),
+  };
 };
 
 export {

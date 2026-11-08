@@ -272,7 +272,7 @@ const TokenLint = ({
   const use = (issue: LintIssue): void => {
     edit.preview(
       Object.fromEntries(
-        issue.props.map((p) => [p, `var(${issue.token.cssVar})`])
+        issue.props.map((part) => [part, `var(${issue.token.cssVar})`])
       )
     );
     edit.commit();
@@ -353,7 +353,7 @@ const CreateTokenHost = (
     const cssVar = cssVarFor(input.group, input.name);
 
     const style: Partial<StyleValues> = Object.fromEntries(
-      request.targets.map((p) => [p, `var(${cssVar})`])
+      request.targets.map((part) => [part, `var(${cssVar})`])
     );
 
     const apply = input.apply ? buildEditRequest(props.selection, style) : null;

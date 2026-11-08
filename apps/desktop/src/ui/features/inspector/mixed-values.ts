@@ -29,7 +29,7 @@ const mergeValues = (list: StyleValues[]): MergedValues => {
   const mixed = new Set<DirectStyleProperty>();
 
   for (const prop of ALL_PROPS) {
-    if (list.some((v) => v[prop] !== first[prop])) {
+    if (list.some((styleValues) => styleValues[prop] !== first[prop])) {
       values[prop] = "";
       mixed.add(prop);
     }
@@ -39,12 +39,12 @@ const mergeValues = (list: StyleValues[]): MergedValues => {
 };
 
 const locKey = (selection: SelectionContext): string | null => {
-  const s =
+  const entry =
     selection.usedBy?.root && selection.usedAt
       ? selection.usedAt
       : selection.source;
 
-  return s ? `${s.file}:${s.line}:${s.col}` : null;
+  return entry ? `${entry.file}:${entry.line}:${entry.col}` : null;
 };
 
 const multiBlockReason = (selections: SelectionContext[]): string | null => {
@@ -52,7 +52,7 @@ const multiBlockReason = (selections: SelectionContext[]): string | null => {
     return `Select ${MAX_MULTI_EDIT} elements or fewer to edit them together.`;
   }
 
-  if (selections.some((s) => !s.source)) {
+  if (selections.some((selectionContext) => !selectionContext.source)) {
     return "Some elements have no source location. Ask the agent to change them in Chat.";
   }
 
@@ -224,8 +224,8 @@ const ownEdits = (
   shifts: Shifts = {}
 ): OwnEdit[] => {
   const out: OwnEdit[] = [];
-  selections.forEach((selection, i) => {
-    const base = bases[i] ?? valuesFromStyles(selection.styles);
+  selections.forEach((selection, index) => {
+    const base = bases[index] ?? valuesFromStyles(selection.styles);
     const own = { ...changedProps(style, base), ...shiftedStyle(base, shifts) };
     const edit = buildEditRequest(selection, own);
 

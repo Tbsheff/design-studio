@@ -24,10 +24,10 @@ const TokenPicker = (props: {
 
   const shown = props.candidates
     .filter(
-      (c) =>
+      (candidateValue) =>
         !filter ||
-        c.token.toLowerCase().includes(filter) ||
-        c.hint.toLowerCase().includes(filter)
+        candidateValue.token.toLowerCase().includes(filter) ||
+        candidateValue.hint.toLowerCase().includes(filter)
     )
     .slice(0, PICK_SHOWN);
 
@@ -63,7 +63,7 @@ const TokenPicker = (props: {
         value={text}
         spellCheck={false}
         autoComplete="off"
-        onChange={(e) => setText(e.target.value)}
+        onChange={(changeEvent) => setText(changeEvent.target.value)}
         onKeyDown={onKeyDown}
       />
       <div className="sm-picker-list" role="listbox" aria-label={copy.tokens}>

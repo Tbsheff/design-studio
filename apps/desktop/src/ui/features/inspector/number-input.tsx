@@ -183,8 +183,10 @@ const NumberInputView = ({ spec, id, className }: InputProps): ReactElement => {
 
 const NumberInput = memo(
   NumberInputView,
-  (a, b) =>
-    a.id === b.id && a.className === b.className && sameSpec(a.spec, b.spec)
+  (first, second) =>
+    first.id === second.id &&
+    first.className === second.className &&
+    sameSpec(first.spec, second.spec)
 );
 
 export { useNumberText, NumberInputView, NumberInput };

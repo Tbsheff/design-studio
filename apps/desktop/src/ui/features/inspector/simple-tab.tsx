@@ -46,7 +46,9 @@ const SimpleTab = (props: InspectorProps): ReactElement => {
   if (props.selection.length > 1) {
     return (
       <SimpleMultiEditor
-        key={props.selection.map((s) => s.selector).join("\n")}
+        key={props.selection
+          .map((selectionContext) => selectionContext.selector)
+          .join("\n")}
         {...props}
         component={<VectorSection {...props} />}
       />

@@ -100,7 +100,7 @@ const MultiCreateTokenHost = ({
       const cssVar = cssVarFor(input.group, input.name);
 
       const style: Partial<StyleValues> = Object.fromEntries(
-        request.targets.map((p) => [p, `var(${cssVar})`])
+        request.targets.map((part) => [part, `var(${cssVar})`])
       );
 
       edit.preview(style);
@@ -252,10 +252,10 @@ const SelectMatchingView = ({
 
 const SelectMatchingSection = memo(
   SelectMatchingView,
-  (a, b) =>
-    a.port === b.port &&
-    a.selection.length === b.selection.length &&
-    a.selection.every((item, i) => item === b.selection[i])
+  (first, second) =>
+    first.port === second.port &&
+    first.selection.length === second.selection.length &&
+    first.selection.every((item, index) => item === second.selection[index])
 );
 
 export {

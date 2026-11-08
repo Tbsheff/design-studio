@@ -223,8 +223,11 @@ const TextStyleTogglesView = ({
   );
 };
 
-const TextStyleToggles = memo(TextStyleTogglesView, (a, b) =>
-  isSameEditValues(a.edit, b.edit, ["font-style", "text-decoration-line"])
+const TextStyleToggles = memo(TextStyleTogglesView, (first, second) =>
+  isSameEditValues(first.edit, second.edit, [
+    "font-style",
+    "text-decoration-line",
+  ])
 );
 
 export { ContentRow, CssTextRow, TextStyleToggles };

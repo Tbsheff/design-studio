@@ -32,7 +32,7 @@ interface Props {
   readonly onRedo?: () => void;
 }
 
-const Glyph = ({ d }: { readonly d: string }): ReactElement => (
+const Glyph = ({ d: diff }: { readonly d: string }): ReactElement => (
   <svg
     width="14"
     height="14"
@@ -44,7 +44,7 @@ const Glyph = ({ d }: { readonly d: string }): ReactElement => (
     strokeLinejoin="round"
     aria-hidden="true"
   >
-    <path d={d} />
+    <path d={diff} />
   </svg>
 );
 

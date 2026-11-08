@@ -86,9 +86,16 @@ const parseOne = (raw: string): Shadow | null => {
     return null;
   }
 
-  const [x = "0", y = "0", blur = "0", spread = "0"] = lengths;
+  const [positionX = "0", positionY = "0", blur = "0", spread = "0"] = lengths;
 
-  return { blur, color: colors[0] ?? "", isInset: inset, spread, x, y };
+  return {
+    blur,
+    color: colors[0] ?? "",
+    isInset: inset,
+    spread,
+    x: positionX,
+    y: positionY,
+  };
 };
 
 const parseShadows = (value: string): Shadow[] | null => {

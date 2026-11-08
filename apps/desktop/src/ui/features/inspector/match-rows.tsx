@@ -67,7 +67,7 @@ const RowMenu = ({
         aria-label={`Actions for ${shownValue(row)}`}
         data-tip={open ? undefined : "Select or replace"}
         data-tip-align="end"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((valueValue) => !valueValue)}
       >
         <Icon name="more" size={14} />
       </button>

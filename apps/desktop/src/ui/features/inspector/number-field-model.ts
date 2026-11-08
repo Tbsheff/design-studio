@@ -104,22 +104,22 @@ const selectSoon = (input: HTMLInputElement): void => {
   });
 };
 
-const isSameSpec = (a: NumberSpec, b: NumberSpec): boolean => {
-  const targets = a.targets ?? [a.prop];
+const isSameSpec = (first: NumberSpec, second: NumberSpec): boolean => {
+  const targets = first.targets ?? [first.prop];
 
   const sameShape =
-    a.prop === b.prop &&
-    a.label === b.label &&
-    a.unit === b.unit &&
-    a.step === b.step &&
-    a.min === b.min &&
-    a.max === b.max &&
-    a.display === b.display;
+    first.prop === second.prop &&
+    first.label === second.label &&
+    first.unit === second.unit &&
+    first.step === second.step &&
+    first.min === second.min &&
+    first.max === second.max &&
+    first.display === second.display;
 
   return (
     sameShape &&
-    targets.join(",") === (b.targets ?? [b.prop]).join(",") &&
-    isSameEditValues(a.edit, b.edit, targets)
+    targets.join(",") === (second.targets ?? [second.prop]).join(",") &&
+    isSameEditValues(first.edit, second.edit, targets)
   );
 };
 

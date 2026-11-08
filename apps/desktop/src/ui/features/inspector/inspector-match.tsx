@@ -106,7 +106,9 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
   const [scope, setScope] = useState<Scope>("selection");
   const [picking, setPicking] = useState<StyleValueRow | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const selectors = props.selection.map((s) => s.selector);
+  const selectors = props.selection.map(
+    (selectionContext) => selectionContext.selector
+  );
 
   const query = useMemo<StyleQuery>(
     () => (scope === "page" ? {} : { within: selectors }),
@@ -236,7 +238,7 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
         <TokenPicker
           row={picking}
           candidates={candidates}
-          target={`${targets.length === 1 ? "1 element" : `${new Set(targets.map((t) => t.selector)).size} elements`}${pageWide ? " on this page" : " in the selection"}`}
+          target={`${targets.length === 1 ? "1 element" : `${new Set(targets.map((styleHit) => styleHit.selector)).size} elements`}${pageWide ? " on this page" : " in the selection"}`}
           onPick={pick}
           onClose={closePicker}
         />
@@ -246,16 +248,20 @@ const InspectorMatch = (props: InspectorMatchProps): ReactElement => {
   );
 };
 
-const isSameItems = (a: SelectionContext[], b: SelectionContext[]): boolean =>
-  a.length === b.length && a.every((item, i) => item === b[i]);
+const isSameItems = (
+  first: SelectionContext[],
+  second: SelectionContext[]
+): boolean =>
+  first.length === second.length &&
+  first.every((item, index) => item === second[index]);
 
 export default memo(
   InspectorMatch,
-  (a, b) =>
-    a.projectId === b.projectId &&
-    a.directionId === b.directionId &&
-    a.port === b.port &&
-    a.tokens === b.tokens &&
-    a.drain === b.drain &&
-    isSameItems(a.selection, b.selection)
+  (first, second) =>
+    first.projectId === second.projectId &&
+    first.directionId === second.directionId &&
+    first.port === second.port &&
+    first.tokens === second.tokens &&
+    first.drain === second.drain &&
+    isSameItems(first.selection, second.selection)
 );

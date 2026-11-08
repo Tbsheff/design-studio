@@ -40,10 +40,10 @@ const nodeTarget = (node: LayerNode | undefined): StructureTarget | null => {
   return node && source ? { source, tag: node.tag } : null;
 };
 
-const isSameLoc = (a: StructureTarget, b: StructureTarget): boolean =>
-  a.source.file === b.source.file &&
-  a.source.line === b.source.line &&
-  a.source.col === b.source.col;
+const isSameLoc = (first: StructureTarget, second: StructureTarget): boolean =>
+  first.source.file === second.source.file &&
+  first.source.line === second.source.line &&
+  first.source.col === second.source.col;
 
 const dropRequest = (
   nodes: LayerNode[],

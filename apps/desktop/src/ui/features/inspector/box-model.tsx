@@ -176,13 +176,13 @@ const BoxModel = ({
         edit={edit}
         isLinked={linkMargin}
         declared={declared}
-        onToggle={() => setLinkMargin((x) => !x)}
+        onToggle={() => setLinkMargin((positionX) => !positionX)}
       >
         <BoxRing
           box="padding"
           edit={edit}
           isLinked={linkPadding}
-          onToggle={() => setLinkPadding((x) => !x)}
+          onToggle={() => setLinkPadding((positionXValue) => !positionXValue)}
         >
           <span className="box-content" aria-hidden="true" />
         </BoxRing>

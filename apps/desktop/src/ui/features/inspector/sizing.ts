@@ -315,23 +315,28 @@ interface AlignCell {
 const AXIS_VALUES = ["flex-start", "center", "flex-end"] as const;
 
 const alignSlot = (value: string): number | null => {
-  const v = value.trim();
+  const valueValue = value.trim();
 
   if (
-    v === "flex-start" ||
-    v === "start" ||
-    v === "left" ||
-    v === "normal" ||
-    v === "self-start"
+    valueValue === "flex-start" ||
+    valueValue === "start" ||
+    valueValue === "left" ||
+    valueValue === "normal" ||
+    valueValue === "self-start"
   ) {
     return 0;
   }
 
-  if (v === "center") {
+  if (valueValue === "center") {
     return 1;
   }
 
-  if (v === "flex-end" || v === "end" || v === "right" || v === "self-end") {
+  if (
+    valueValue === "flex-end" ||
+    valueValue === "end" ||
+    valueValue === "right" ||
+    valueValue === "self-end"
+  ) {
     return 2;
   }
 
@@ -352,18 +357,18 @@ const activeCell = (
   align: string,
   isRow: boolean
 ): { readonly col: number; readonly row: number } | null => {
-  const j = alignSlot(justify);
+  const offset = alignSlot(justify);
 
-  const a =
+  const first =
     align.trim() === "normal" || align.trim() === "stretch"
       ? null
       : alignSlot(align);
 
-  if (j === null || a === null) {
+  if (offset === null || first === null) {
     return null;
   }
 
-  return isRow ? { col: j, row: a } : { col: a, row: j };
+  return isRow ? { col: offset, row: first } : { col: first, row: offset };
 };
 
 export {

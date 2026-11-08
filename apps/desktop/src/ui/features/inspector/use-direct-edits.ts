@@ -49,14 +49,17 @@ const failureText = (err: unknown): string => {
 };
 
 const useDirectEdits = (
-  o: Options
+  options: Options
 ): DirectEdit & { readonly blocked: string | null } => {
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
 
   const bases = useMemo(
-    () => o.selections.map((s) => valuesFromStyles(s.styles)),
-    [o.selections]
+    () =>
+      options.selections.map((selectionContext) =>
+        valuesFromStyles(selectionContext.styles)
+      ),
+    [options.selections]
   );
 
   const basesRef = useRef(bases);
@@ -64,7 +67,10 @@ const useDirectEdits = (
   const merged = useMemo(() => mergeValues(bases), [bases]);
   const mergedRef = useRef(merged);
   mergedRef.current = merged;
-  const blocked = useMemo(() => multiBlockReason(o.selections), [o.selections]);
+  const blocked = useMemo(
+    () => multiBlockReason(options.selections),
+    [options.selections]
+  );
   const [draft, setDraftState] = useState<Partial<StyleValues>>({});
   const draftRef = useRef(draft);
   const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });
@@ -87,8 +93,12 @@ const useDirectEdits = (
   const postAll = useCallback((style: Record<string, string | null>) => {
     const port = opts.current.port.current;
 
-    for (const s of opts.current.selections) {
-      port?.post({ selector: s.selector, style, type: "preview-style" });
+    for (const selectionContextValue of opts.current.selections) {
+      port?.post({
+        selector: selectionContextValue.selector,
+        style,
+        type: "preview-style",
+      });
     }
   }, []);
 
@@ -246,7 +256,9 @@ const useDirectEdits = (
 
       setDraft({ ...draftRef.current, ...patch });
       postAll(patch);
-      setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
+      setStatus((saveStatus) =>
+        saveStatus.kind === "error" ? { kind: "idle" } : saveStatus
+      );
     },
     [blocked, postAll, setDraft, setShifts]
   );
@@ -277,15 +289,21 @@ const useDirectEdits = (
         props.flatMap((prop) => (next[prop] ? [[prop, next[prop]]] : []))
       ) as Shifts;
 
-      opts.current.selections.forEach((s, i) => {
-        const own = basesRef.current[i];
+      opts.current.selections.forEach((selectionContextValue2, indexValue) => {
+        const own = basesRef.current[indexValue];
         const style = own ? shiftedStyle(own, only) : {};
 
         if (Object.keys(style).length > 0) {
-          port?.post({ selector: s.selector, style, type: "preview-style" });
+          port?.post({
+            selector: selectionContextValue2.selector,
+            style,
+            type: "preview-style",
+          });
         }
       });
-      setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
+      setStatus((saveStatusValue) =>
+        saveStatusValue.kind === "error" ? { kind: "idle" } : saveStatusValue
+      );
     },
     [blocked, setDraft, setShifts]
   );
@@ -301,14 +319,18 @@ const useDirectEdits = (
       setDraft(next);
       setShifts(withoutShifts(shifts.current, props));
       const port = opts.current.port.current;
-      opts.current.selections.forEach((s, i) => {
-        const own = basesRef.current[i];
+      opts.current.selections.forEach((selectionContextValue3, indexValue2) => {
+        const own = basesRef.current[indexValue2];
 
         const style = Object.fromEntries(
           props.map((prop) => [prop, own?.[prop] ? own[prop] : null])
         );
 
-        port?.post({ selector: s.selector, style, type: "preview-style" });
+        port?.post({
+          selector: selectionContextValue3.selector,
+          style,
+          type: "preview-style",
+        });
       });
     },
     [setDraft, setShifts]
@@ -358,11 +380,11 @@ const useDirectEdits = (
   const noop = useCallback(() => undefined, []);
 
   useEffect(() => {
-    o.control.current = { cancel, commitText, settle };
+    options.control.current = { cancel, commitText, settle };
 
     return (): void => {
-      if (o.control.current?.cancel === cancel) {
-        o.control.current = null;
+      if (options.control.current?.cancel === cancel) {
+        options.control.current = null;
       }
 
       if (timer.current !== null) {
@@ -370,7 +392,7 @@ const useDirectEdits = (
         void flush();
       }
     };
-  }, [cancel, settle, commitText, flush, o.control]);
+  }, [cancel, settle, commitText, flush, options.control]);
 
   const values = useMemo(
     () => ({ ...merged.values, ...draft }),
@@ -398,8 +420,8 @@ const useDirectEdits = (
   );
 
   const scope = useMemo(
-    () => ({ directionId: o.directionId, projectId: o.projectId }),
-    [o.projectId, o.directionId]
+    () => ({ directionId: options.directionId, projectId: options.projectId }),
+    [options.projectId, options.directionId]
   );
 
   return {

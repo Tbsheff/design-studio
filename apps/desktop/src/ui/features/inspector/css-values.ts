@@ -122,7 +122,7 @@ const colorToHex = (raw: string): string | null => {
     const body = value.slice(1);
 
     return body.length === 3
-      ? `#${[...body].map((c) => c + c).join("")}`.toLowerCase()
+      ? `#${[...body].map((item) => item + item).join("")}`.toLowerCase()
       : value.toLowerCase();
   }
 

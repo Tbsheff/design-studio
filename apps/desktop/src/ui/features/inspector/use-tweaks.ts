@@ -57,7 +57,7 @@ const baseValue = (
 ): TweakValue => state?.current[control.id] ?? control.default;
 
 const useTweaksState = (
-  o: Options
+  options: Options
 ): {
   readonly loadError: string | null;
   readonly replace: (state: TweaksState) => void;
@@ -71,25 +71,26 @@ const useTweaksState = (
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const headVersionId =
-    o.project?.directions.find((x) => x.id === o.directionId)?.headVersionId ??
-    null;
+    options.project?.directions.find(
+      (direction) => direction.id === options.directionId
+    )?.headVersionId ?? null;
 
-  const stamp = changeStamp(o.lastChange, o.directionId);
-  const key = `${o.projectId}:${o.directionId}`;
+  const stamp = changeStamp(options.lastChange, options.directionId);
+  const key = `${options.projectId}:${options.directionId}`;
   const live = useRef(key);
   live.current = key;
 
   useEffect(() => {
-    const { directionId } = o;
+    const { directionId } = options;
 
     if (!directionId) {
       return;
     }
 
-    const want = `${o.projectId}:${directionId}`;
+    const want = `${options.projectId}:${directionId}`;
     startTransition(async () => {
       try {
-        const state = await api.getTweaks(o.projectId, directionId);
+        const state = await api.getTweaks(options.projectId, directionId);
 
         if (live.current !== want) {
           return;
@@ -103,7 +104,7 @@ const useTweaksState = (
         }
       }
     });
-  }, [o.projectId, o.directionId, headVersionId, stamp]);
+  }, [options.projectId, options.directionId, headVersionId, stamp]);
 
   const replace = useCallback(
     (state: TweaksState) => setLoaded({ key: live.current, state }),
@@ -135,8 +136,8 @@ interface UseTweaksResult {
   readonly values: TweakMap;
 }
 
-const useTweaks = (o: Options): UseTweaksResult => {
-  const { state, loadError, replace } = useTweaksState(o);
+const useTweaks = (options: Options): UseTweaksResult => {
+  const { state, loadError, replace } = useTweaksState(options);
   const [pending, setPendingMap] = useState<TweakMap>({});
   const [committing, setCommitting] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
@@ -146,8 +147,8 @@ const useTweaks = (o: Options): UseTweaksResult => {
   pendingRef.current = pending;
   const stateRef = useRef(state);
   stateRef.current = state;
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
 
   const stopPreview = useCallback(() => {
     if (frame.current !== null) {
@@ -183,7 +184,7 @@ const useTweaks = (o: Options): UseTweaksResult => {
     broadcastTweakCss("");
   }, [clearDraft]);
 
-  const scope = `${o.projectId}:${o.directionId}`;
+  const scope = `${options.projectId}:${options.directionId}`;
   useEffect(() => discard, [scope, discard]);
 
   const apply = useCallback(

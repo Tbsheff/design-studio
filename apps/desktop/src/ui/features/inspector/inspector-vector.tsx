@@ -385,14 +385,17 @@ const PaintRows = ({
 
 const BooleanRow = ({ props }: { readonly props: Props }): ReactElement => {
   const { error, isBusy: busy, run } = useRun(props);
-  const [a, b] = props.selection as [SelectionContext, SelectionContext];
+  const [first, second] = props.selection as [
+    SelectionContext,
+    SelectionContext,
+  ];
 
   const go = (op: BooleanOpName): undefined =>
     void run({
       boolean: op,
       op: "boolean",
-      rects: [a.rect, b.rect],
-      targets: [targetOf(a), targetOf(b)],
+      rects: [first.rect, second.rect],
+      targets: [targetOf(first), targetOf(second)],
     });
 
   return (

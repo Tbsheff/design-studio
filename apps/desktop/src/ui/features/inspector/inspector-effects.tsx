@@ -84,7 +84,7 @@ const EffectsSection = ({
       ) : (
         view.list.length > 0 && (
           <ul className="ins-shadows">
-            {view.list.map((_, index) => (
+            {view.list.map((_shadowValue, index) => (
               <ShadowRow key={index} edit={edit} view={view} index={index} />
             ))}
           </ul>

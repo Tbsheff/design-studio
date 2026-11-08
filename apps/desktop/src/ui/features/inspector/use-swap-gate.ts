@@ -105,7 +105,7 @@ const useSwapGate = (
   liveDirectionId: string | null = null
 ): SwapGate => {
   const queue = useRef(new SwapQueue());
-  const [version, bump] = useReducer((n: number) => n + 1, 0);
+  const [version, bump] = useReducer((count: number) => count + 1, 0);
   const heads = useRef<Record<string, string>>({});
   const live = useRef(targets);
   live.current = targets;
@@ -129,7 +129,7 @@ const useSwapGate = (
       lastChange.directionId === liveDirectionId &&
       queue.current.hold(true)
     ) {
-      setLiveWait((n) => n + 1);
+      setLiveWait((countValue) => countValue + 1);
     }
 
     const hits = live.current.filter(

@@ -17,7 +17,7 @@ const TabBar = ({
   );
 
   const onKeyDown = (event: KeyboardEvent): void => {
-    const at = TABS.findIndex((t) => t.id === tab);
+    const at = TABS.findIndex((token) => token.id === tab);
 
     const target = {
       ArrowLeft: at - 1,
@@ -43,22 +43,22 @@ const TabBar = ({
       aria-label={copy.editMode}
       onKeyDown={onKeyDown}
     >
-      {TABS.map((t) => (
+      {TABS.map((tokenValue) => (
         <button
-          key={t.id}
+          key={tokenValue.id}
           ref={(el) => {
-            refs.current[t.id] = el;
+            refs.current[tokenValue.id] = el;
           }}
           type="button"
           role="tab"
-          id={`edit-tab-${t.id}`}
-          aria-selected={tab === t.id}
-          aria-controls={`edit-pane-${t.id}`}
-          tabIndex={tab === t.id ? 0 : -1}
-          className={`edit-tab ${tab === t.id ? "on" : ""}`}
-          onClick={() => onTab(t.id)}
+          id={`edit-tab-${tokenValue.id}`}
+          aria-selected={tab === tokenValue.id}
+          aria-controls={`edit-pane-${tokenValue.id}`}
+          tabIndex={tab === tokenValue.id ? 0 : -1}
+          className={`edit-tab ${tab === tokenValue.id ? "on" : ""}`}
+          onClick={() => onTab(tokenValue.id)}
         >
-          {t.label}
+          {tokenValue.label}
         </button>
       ))}
     </div>

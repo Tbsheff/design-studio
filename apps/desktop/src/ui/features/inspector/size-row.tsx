@@ -62,7 +62,7 @@ interface FixedDrag {
 
 const startFixedDrag = (
   event: ReactPointerEvent<HTMLLabelElement>,
-  o: FixedDrag
+  fixedDrag: FixedDrag
 ): void => {
   if (event.button !== 0) {
     return;
@@ -71,8 +71,8 @@ const startFixedDrag = (
   event.preventDefault();
 
   const start = {
-    value: Math.round(Number.parseFloat(o.used) || 0),
-    values: o.edit.values,
+    value: Math.round(Number.parseFloat(fixedDrag.used) || 0),
+    values: fixedDrag.edit.values,
     x: event.clientX,
   };
 
@@ -88,8 +88,15 @@ const startFixedDrag = (
     moved = true;
     document.body.classList.add("ins-scrubbing");
     const next = Math.max(0, start.value + steps * (ev.shiftKey ? 10 : 1));
-    o.edit.preview(
-      sizePatch(o.axis, "fixed", start.values, o.parent, `${next}px`, o.facts)
+    fixedDrag.edit.preview(
+      sizePatch(
+        fixedDrag.axis,
+        "fixed",
+        start.values,
+        fixedDrag.parent,
+        `${next}px`,
+        fixedDrag.facts
+      )
     );
   };
 
@@ -103,7 +110,7 @@ const startFixedDrag = (
       return;
     }
 
-    o.edit.commit();
+    fixedDrag.edit.commit();
 
     const eat = (click: MouseEvent): void => {
       click.preventDefault();

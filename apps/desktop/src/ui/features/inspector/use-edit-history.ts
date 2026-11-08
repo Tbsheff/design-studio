@@ -109,12 +109,12 @@ interface UseEditHistoryResult {
   ) => { readonly canUndo: boolean; readonly onUndo: () => void };
 }
 
-const useEditHistory = (o: Options): UseEditHistoryResult => {
-  const { projectId, directionId } = o;
+const useEditHistory = (options: Options): UseEditHistoryResult => {
+  const { projectId, directionId } = options;
   const [state, setState] = useState<EditHistoryState>(EMPTY);
   const [toast, setToast] = useState<string | null>(null);
-  const opts = useRef(o);
-  opts.current = o;
+  const opts = useRef(options);
+  opts.current = options;
   const stateRef = useRef(state);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const generation = useRef(0);
@@ -256,12 +256,12 @@ const useEditHistory = (o: Options): UseEditHistoryResult => {
   );
 
   const redo: RedoShortcut = {
-    enabled: state.canRedo && !o.isLocked,
+    enabled: state.canRedo && !options.isLocked,
     onRedo: () => step("redo"),
   };
 
-  const head = o.versions.find(
-    (version) => version.id === o.direction?.headVersionId
+  const head = options.versions.find(
+    (version) => version.id === options.direction?.headVersionId
   );
 
   const versionFallback = (fallback: () => void): (() => void) =>
@@ -271,7 +271,7 @@ const useEditHistory = (o: Options): UseEditHistoryResult => {
     canUndo: boolean,
     fallback: () => void
   ): { readonly canUndo: boolean; readonly onUndo: () => void } => ({
-    canUndo: canUndo || (state.canUndo && !o.isLocked),
+    canUndo: canUndo || (state.canUndo && !options.isLocked),
     onUndo: () => step("undo", versionFallback(fallback)),
   });
 
@@ -288,14 +288,14 @@ interface RefreshWatch {
 }
 
 const isSameStyles = (
-  a: Record<string, string>,
-  b: Record<string, string>
+  first: Record<string, string>,
+  second: Record<string, string>
 ): boolean => {
-  const keys = Object.keys(a);
+  const keys = Object.keys(first);
 
   return (
-    keys.length === Object.keys(b).length &&
-    keys.every((key) => a[key] === b[key])
+    keys.length === Object.keys(second).length &&
+    keys.every((key) => first[key] === second[key])
   );
 };
 

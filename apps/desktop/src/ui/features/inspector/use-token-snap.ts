@@ -74,8 +74,8 @@ const useSnapSetting = (
 
   const set = useCallback(
     (next: boolean) =>
-      uiStore.set((s) => ({
-        snapByProject: { ...s.snapByProject, [projectId]: next },
+      uiStore.set((uiState) => ({
+        snapByProject: { ...uiState.snapByProject, [projectId]: next },
       })),
     [projectId]
   );
@@ -100,9 +100,9 @@ const useTokenSnap = (
   live.current = { snapOn, tokens };
 
   const rewrite = useCallback((style: Partial<StyleValues>) => {
-    const { tokens: t, snapOn: on } = live.current;
+    const { tokens: token, snapOn: on } = live.current;
 
-    if (!t || !on) {
+    if (!token || !on) {
       setNote(null);
 
       return style;
@@ -120,7 +120,7 @@ const useTokenSnap = (
         continue;
       }
 
-      const target = snapTarget(prop, value, t.entries, t.mode);
+      const target = snapTarget(prop, value, token.entries, token.mode);
 
       if (!target) {
         continue;

@@ -23,11 +23,11 @@ interface FieldProps {
 
 const NEUTRAL_SWATCH = "#ffffff";
 
-const isSameField = (a: FieldProps, b: FieldProps): boolean =>
-  a.prop === b.prop &&
-  a.label === b.label &&
-  a.short === b.short &&
-  isSameEditValues(a.edit, b.edit, [a.prop]);
+const isSameField = (first: FieldProps, second: FieldProps): boolean =>
+  first.prop === second.prop &&
+  first.label === second.label &&
+  first.short === second.short &&
+  isSameEditValues(first.edit, second.edit, [first.prop]);
 
 const ColorFieldView = ({
   prop,
@@ -287,11 +287,13 @@ const ColorField = memo(ColorFieldView, isSameField);
 
 const SelectField = memo(
   SelectFieldView,
-  (a, b) => isSameField(a, b) && a.options.join(",") === b.options.join(",")
+  (first, second) =>
+    isSameField(first, second) &&
+    first.options.join(",") === second.options.join(",")
 );
 
-const AlignField = memo(AlignFieldView, (a, b) =>
-  isSameEditValues(a.edit, b.edit, ["text-align"])
+const AlignField = memo(AlignFieldView, (first, second) =>
+  isSameEditValues(first.edit, second.edit, ["text-align"])
 );
 
 export {

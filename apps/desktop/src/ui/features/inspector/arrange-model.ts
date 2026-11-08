@@ -136,7 +136,9 @@ const minCount = (
 };
 
 const successText = (result: ArrangeResult): string => {
-  const styles = result.writes.flatMap((w) => Object.entries(w.style));
+  const styles = result.writes.flatMap((arrangeWrite) =>
+    Object.entries(arrangeWrite.style)
+  );
 
   const set = styles
     .filter(([, value]) => value !== null)
@@ -181,7 +183,9 @@ const frameRequest = (
 };
 
 const commitWrites = (props: Props, result: ArrangeResult): void => {
-  const selected = new Set(props.selection.map((s) => s.selector));
+  const selected = new Set(
+    props.selection.map((selectionContext) => selectionContext.selector)
+  );
 
   for (const entry of result.writes) {
     if (!selected.has(entry.selector)) {

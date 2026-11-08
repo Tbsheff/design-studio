@@ -37,12 +37,15 @@ const ElementVariantsDialog = ({
       aria-modal="false"
       aria-labelledby="element-variants-title"
       data-testid="element-variants-dialog"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
+      onKeyDown={(keyboardEvent) => {
+        if (keyboardEvent.key === "Escape") {
           onCancel();
         }
 
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        if (
+          keyboardEvent.key === "Enter" &&
+          (keyboardEvent.metaKey || keyboardEvent.ctrlKey)
+        ) {
           start();
         }
       }}
@@ -71,7 +74,7 @@ const ElementVariantsDialog = ({
           value={note}
           maxLength={2000}
           placeholder={copy.forExampleMoreCompactOr}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={(changeEvent) => setNote(changeEvent.target.value)}
         />
       </label>
       <div

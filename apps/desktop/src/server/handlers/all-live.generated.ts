@@ -23,6 +23,7 @@ import { IconLive } from "./icon/live.js";
 import { ImageSearchLive } from "./image-search/live.js";
 import { ImageLive } from "./image/live.js";
 import { IntegrationLive } from "./integration/live.js";
+import { LayerStyleLive } from "./layer-style/live.js";
 import { MotionLive } from "./motion/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
@@ -74,6 +75,7 @@ const ALL_LIVE = {
   image: ImageLive,
   imageSearch: ImageSearchLive,
   integration: IntegrationLive,
+  layerStyle: LayerStyleLive,
   motion: MotionLive,
   orgScope: OrgScopeLive,
   pack: PackLive,

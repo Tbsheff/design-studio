@@ -1,0 +1,27 @@
+const copy = {
+  apply: "Paste",
+  applying: "Pasting…",
+  cancel: "Cancel",
+  close: "Close",
+  copied: "Style copied",
+  copy: "Copy style",
+  failed: "Could not paste the style.",
+  groupBorder: "Border",
+  groupEffect: "Effects",
+  groupFill: "Fill",
+  groupLayout: "Layout",
+  groupRadius: "Radius",
+  groupSize: "Size",
+  groupSpacing: "Padding and gap",
+  groupText: "Text",
+  groupsLabel: "Style groups to paste",
+  needCopy: "Copy a style first",
+  needSource: "This element has no source location",
+  otherProject: "The copied style is from another project or direction",
+  paste: "Paste style",
+  pasteSome: "Paste some…",
+  pickTitle: "Paste some of the style",
+  wait: "Wait for the last edit to finish",
+} as const;
+
+export { copy };

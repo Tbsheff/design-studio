@@ -23,6 +23,7 @@ import { IconActions } from "./icon/index.js";
 import { ImageSearchActions } from "./image-search/index.js";
 import { ImageActions } from "./image/index.js";
 import { IntegrationActions } from "./integration/index.js";
+import { LayerStyleActions } from "./layer-style/index.js";
 import { MotionActions } from "./motion/index.js";
 import { OrgScopeActions } from "./org-scope/index.js";
 import { PackActions } from "./pack/index.js";
@@ -74,6 +75,7 @@ const ALL_ACTIONS = {
   image: ImageActions,
   imageSearch: ImageSearchActions,
   integration: IntegrationActions,
+  layerStyle: LayerStyleActions,
   motion: MotionActions,
   orgScope: OrgScopeActions,
   pack: PackActions,

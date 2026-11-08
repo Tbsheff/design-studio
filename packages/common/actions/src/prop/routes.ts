@@ -24,6 +24,12 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/prop/rename",
   },
+  setProp: {
+    id: "prop.set",
+    invalidates: ["version.list", "version.get"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/props",
+  },
 } as const;
 
 export { routes };

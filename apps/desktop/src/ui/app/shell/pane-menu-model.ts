@@ -67,6 +67,7 @@ const toItem = (
 
 const toPanelItems = (header: StudioPaneHeaderProps): MenuItem[] => {
   const { onTab } = header;
+
   const items = [
     toItem("versions", "history", "Versions", () => onTab("versions")),
   ];

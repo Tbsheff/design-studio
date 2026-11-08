@@ -29,7 +29,6 @@ import { handle as runReviewDirectEditHandle } from "./run-review.js";
 import { handle as runRulesTestDirectEditHandle } from "./run-rules-test.js";
 import { handle as runDirectEditHandle } from "./run.js";
 import { handle as setImageDirectEditHandle } from "./set-image.js";
-import { handle as setPropsDirectEditHandle } from "./set-props.js";
 import { handle as setRulesDirectEditHandle } from "./set-rules.js";
 import { handle as setVariantClassesDirectEditHandle } from "./set-variant-classes.js";
 import { handle as setVectorDirectEditHandle } from "./set-vector.js";
@@ -72,7 +71,6 @@ const DirectEditEntries = {
   runReviewDirectEdit: { handle: runReviewDirectEditHandle },
   runRulesTestDirectEdit: { handle: runRulesTestDirectEditHandle },
   setImageDirectEdit: { handle: setImageDirectEditHandle },
-  setPropsDirectEdit: { handle: setPropsDirectEditHandle },
   setRulesDirectEdit: { handle: setRulesDirectEditHandle },
   setVariantClassesDirectEdit: { handle: setVariantClassesDirectEditHandle },
   setVectorDirectEdit: { handle: setVectorDirectEditHandle },

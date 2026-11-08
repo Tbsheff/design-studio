@@ -169,12 +169,6 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/image",
   },
-  setPropsDirectEdit: {
-    id: "direct-edit.setProps",
-    invalidates: ["version.list", "version.get"],
-    method: "POST",
-    path: "/api/projects/:projectId/d/:directionId/props",
-  },
   setRulesDirectEdit: {
     id: "direct-edit.setRules",
     invalidates: ["direct-edit.getRules"],

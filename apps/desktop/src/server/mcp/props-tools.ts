@@ -1,6 +1,6 @@
 import { inspectPropsInstanceDirectEdit } from "@design-studio/actions/direct-edit/inspect-props-instance";
 import { listPropsComponentsDirectEdit } from "@design-studio/actions/direct-edit/list-props-components";
-import { setPropsDirectEdit } from "@design-studio/actions/direct-edit/set-props";
+import { setProp } from "@design-studio/actions/prop/set";
 import type { Project, SourceLoc } from "@design-studio/contracts";
 import {
   COMPONENT_LIST_MAX,
@@ -283,7 +283,7 @@ const setProps = defineTool(
           )
         ).use;
 
-    const result = await callAction<SetPropsResult>(deps, setPropsDirectEdit, {
+    const result = await callAction<SetPropsResult>(deps, setProp, {
       source,
       props: input.props,
       directionId: direction.id,

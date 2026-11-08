@@ -24,6 +24,9 @@ import {
   withFramePath,
 } from "./features/canvas/index";
 
+const xAxis = "x";
+const yAxis = "y";
+
 const EXPECTED_4 = 4;
 const MOVE_FRAME_ARG_10_4 = 10.4;
 const MOVE_FRAME_ARG_NEG_20_6 = -20.6;
@@ -58,8 +61,8 @@ describe("canvas frames", () => {
     expect(boundsOf(layout.frames)).toStrictEqual({
       height: 1024,
       width: WIDTH_1440 + WIDTH_768 + WIDTH_390 + FRAME_GAP * 2,
-      x: 0,
-      y: 0,
+      [xAxis]: 0,
+      [yAxis]: 0,
     });
   }, 0);
 
@@ -73,7 +76,7 @@ describe("canvas frames", () => {
       MOVE_FRAME_ARG_10_4,
       MOVE_FRAME_ARG_NEG_20_6
     );
-    expect(layout.frames[1]).toMatchObject({ x: 1530, y: -21 });
+    expect(layout.frames[1]).toMatchObject({ [xAxis]: 1530, [yAxis]: -21 });
     layout = resizeActive(
       layout,
       RESIZE_ACTIVE_ARG_1000,
@@ -98,23 +101,25 @@ describe("canvas frames", () => {
     expect(
       parseLayout({
         activeId: "f1",
-        frames: [{ height: 900, id: "f1", width: 10, x: 0, y: 0 }],
+        frames: [{ height: 900, id: "f1", width: 10, [xAxis]: 0, [yAxis]: 0 }],
       })
     ).toBeNull();
     expect(
       parseLayout({
         activeId: "x",
-        frames: [{ height: 900, id: "x", width: 1440, x: 0, y: 0 }],
+        frames: [{ height: 900, id: "x", width: 1440, [xAxis]: 0, [yAxis]: 0 }],
       })
     ).toBeNull();
     expect(
       parseLayout({
         activeId: "f9",
-        frames: [{ height: 900, id: "f2", width: 1440, x: 5, y: 6 }],
+        frames: [
+          { height: 900, id: "f2", width: 1440, [xAxis]: 5, [yAxis]: 6 },
+        ],
       })
     ).toStrictEqual({
       activeId: "f2",
-      frames: [{ height: 900, id: "f2", width: 1440, x: 5, y: 6 }],
+      frames: [{ height: 900, id: "f2", width: 1440, [xAxis]: 5, [yAxis]: 6 }],
     });
   }, 0);
 });
@@ -127,7 +132,7 @@ describe("frames per direction", () => {
 
     const old = {
       activeId: "f1",
-      frames: [{ height: 900, id: "f1", width: 1440, x: 0, y: 0 }],
+      frames: [{ height: 900, id: "f1", width: 1440, [xAxis]: 0, [yAxis]: 0 }],
     };
 
     expect(parseLayout(old)).toStrictEqual(old);
@@ -141,8 +146,8 @@ describe("frames per direction", () => {
           id: "f1",
           path: "about.html",
           width: 1440,
-          x: 0,
-          y: 0,
+          [xAxis]: 0,
+          [yAxis]: 0,
         },
         {
           directionId: "../x",
@@ -150,8 +155,8 @@ describe("frames per direction", () => {
           id: "f2",
           path: "../secret",
           width: 390,
-          x: 0,
-          y: 0,
+          [xAxis]: 0,
+          [yAxis]: 0,
         },
       ],
     };
@@ -163,10 +168,10 @@ describe("frames per direction", () => {
         id: "f1",
         path: "about.html",
         width: 1440,
-        x: 0,
-        y: 0,
+        [xAxis]: 0,
+        [yAxis]: 0,
       },
-      { height: 844, id: "f2", width: 390, x: 0, y: 0 },
+      { height: 844, id: "f2", width: 390, [xAxis]: 0, [yAxis]: 0 },
     ]);
   }, 0);
 

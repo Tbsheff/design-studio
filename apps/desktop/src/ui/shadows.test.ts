@@ -9,6 +9,19 @@ import {
   withBlur,
 } from "./features/inspector/shadows";
 
+const xAxis = "x";
+const yAxis = "y";
+
+const toShadowList = (
+  parsed: ReturnType<typeof parseShadows>
+): Exclude<ReturnType<typeof parseShadows>, null> => {
+  if (parsed === null) {
+    return [];
+  }
+
+  return parsed;
+};
+
 describe(parseShadows, () => {
   it("reads none and empty as no shadows", () => {
     expect.hasAssertions();
@@ -30,16 +43,16 @@ describe(parseShadows, () => {
         color: "rgb(0 0 0 / 0.12)",
         inset: false,
         spread: "0",
-        x: "0",
-        y: "4px",
+        [xAxis]: "0",
+        [yAxis]: "4px",
       },
       {
         blur: "2px",
         color: "var(--shadow, rgba(0, 0, 0, 0.2))",
         inset: true,
         spread: "0",
-        x: "0",
-        y: "1px",
+        [xAxis]: "0",
+        [yAxis]: "1px",
       },
     ]);
   }, 0);
@@ -53,8 +66,8 @@ describe(parseShadows, () => {
         color: "rgba(0, 0, 0, 0.12)",
         inset: false,
         spread: "0",
-        x: "0",
-        y: "4px",
+        [xAxis]: "0",
+        [yAxis]: "4px",
       },
     ]);
   }, 0);
@@ -68,8 +81,8 @@ describe(parseShadows, () => {
         color: "red",
         inset: false,
         spread: "0",
-        x: "2px",
-        y: "3px",
+        [xAxis]: "2px",
+        [yAxis]: "3px",
       },
     ]);
   }, 0);
@@ -96,9 +109,10 @@ describe(formatShadows, () => {
       "0 4px 12px 0 var(--color-ink), inset 1px 1px 0 0 rgb(255 255 255 / 0.5)";
 
     const parsed = parseShadows(value);
+    const list = toShadowList(parsed);
     expect(parsed).not.toBeNull();
-    expect(formatShadows(parsed ?? [])).toBe(value);
-    expect(parseShadows(formatShadows(parsed ?? []))).toStrictEqual(parsed);
+    expect(formatShadows(list)).toBe(value);
+    expect(parseShadows(formatShadows(list))).toStrictEqual(parsed);
   }, 0);
 
   it("writes an empty list as an empty value", () => {

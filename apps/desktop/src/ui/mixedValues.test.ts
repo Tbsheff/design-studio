@@ -10,6 +10,9 @@ import {
   multiBlockReason,
 } from "./features/inspector/mixed-values";
 
+const xAxis = "x";
+const yAxis = "y";
+
 const CARD_ARG_3 = 3;
 const CARD_ARG_4 = 4;
 const CARD_ARG_5 = 5;
@@ -19,22 +22,37 @@ const SAMPLE_4 = 4;
 const IS_FALSE = false;
 const IS_TRUE = true;
 
-function card(
+const ARTICLE_TAG = "ARTICLE";
+
+const toSource = (
   line: number,
-  styles: Record<string, string>,
-  source = true
-): SelectionContext {
+  hasSource: boolean
+): SelectionContext["source"] => {
+  if (hasSource) {
+    return { col: 7, file: "index.html", line };
+  }
+
+  return null;
+};
+
+const card = (
+  line: number,
+  cardStyles: Record<string, string>,
+  hasSource = true
+): SelectionContext => {
+  const tag = ARTICLE_TAG.toLowerCase();
+
   return {
     ancestors: [],
-    outerHTML: "<article></article>",
-    rect: { height: 10, width: 10, x: 0, y: 0 },
-    selector: `article:nth-of-type(${line})`,
-    source: source ? { col: 7, file: "index.html", line } : null,
-    styles,
-    tag: "ARTICLE",
+    outerHTML: `<${tag}></${tag}>`,
+    rect: { height: 10, width: 10, [xAxis]: 0, [yAxis]: 0 },
+    selector: `${tag}:nth-of-type(${line})`,
+    source: toSource(line, hasSource),
+    styles: cardStyles,
+    tag: ARTICLE_TAG,
     text: "",
   };
-}
+};
 
 describe(mergeValues, () => {
   it("keeps shared values and marks differing ones as mixed with an empty value", () => {
@@ -79,6 +97,7 @@ describe(batchEdits, () => {
     const bases = selections.map((selection) =>
       valuesFromStyles(selection.styles)
     );
+
     const edits = batchEdits(selections, bases, { "border-radius": "8px" });
     expect(edits.map((edit) => [edit.source.line, edit.style])).toStrictEqual([
       [SAMPLE_3, { "border-radius": "8px" }],
@@ -94,6 +113,7 @@ describe(batchEdits, () => {
       card(CARD_ARG_3, { color: "red" }),
       card(CARD_ARG_4, { color: "red" }),
     ];
+
     expect(
       batchEdits(
         selections,
@@ -118,7 +138,7 @@ describe(multiBlockReason, () => {
 
     expect(
       multiBlockReason([card(CARD_ARG_3, {}), card(CARD_ARG_4, {}, false)])
-    ).toMatch(/no source location/);
+    ).toMatch(/no source location/u);
   }, 0);
 
   it("refuses elements that share one source location, as from a .map()", () => {
@@ -129,7 +149,7 @@ describe(multiBlockReason, () => {
         card(CARD_ARG_3, {}),
         { ...card(CARD_ARG_3, {}), selector: "li:nth-child(2)" },
       ])
-    ).toMatch(/one line of code/);
+    ).toMatch(/one line of code/u);
   }, 0);
 
   it("refuses more elements than one batch takes", () => {
@@ -139,7 +159,7 @@ describe(multiBlockReason, () => {
       multiBlockReason(
         Array.from({ length: 51 }, (_unusedItem, index) => card(index + 1, {}))
       )
-    ).toMatch(/50 elements or fewer/);
+    ).toMatch(/50 elements or fewer/u);
   }, 0);
 });
 

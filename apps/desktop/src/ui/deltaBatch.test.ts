@@ -12,7 +12,7 @@ import type { DeltaBatcher } from "./features/inspector/delta-batch";
 const SAMPLE_20 = 20;
 const TS_1000 = 1000;
 
-let seq = 0;
+const counter = { seq: 0 };
 
 interface BaseEvent {
   directionId: string;
@@ -21,12 +21,16 @@ interface BaseEvent {
   ts: number;
 }
 
-const base = (): BaseEvent => ({
-  directionId: "d1",
-  projectId: "p1",
-  seq: ++seq,
-  ts: TS_1000 + seq,
-});
+const base = (): BaseEvent => {
+  counter.seq += 1;
+
+  return {
+    directionId: "d1",
+    projectId: "p1",
+    seq: counter.seq,
+    ts: TS_1000 + counter.seq,
+  };
+};
 
 const delta = (runId: string, text: string): StudioEvent => ({
   ...base(),
@@ -49,20 +53,35 @@ const started = (runId: string): StudioEvent => ({
   type: "run.started",
 });
 
-const finished = (runId: string, finalText: string): StudioEvent => ({
+const finished = (runId: string, text: string): StudioEvent => ({
   ...base(),
   runId,
   summary: {
+    costUsd: 0,
     directionId: "d1",
-    finalText,
+    durationMs: 0,
+    error: null,
+    finalText: text,
     finishedAt: 2,
     id: runId,
+    level: "prototype",
+    model: "test",
+    modelMs: 0,
     projectId: "p1",
     request: { mode: "edit", prompt: "x" },
+    sessionId: null,
     startedAt: 1,
     status: "completed",
     toolCalls: [],
-  } as unknown as RunSummary,
+    toolMs: 0,
+    usage: {
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+    },
+    versionId: null,
+  } satisfies RunSummary,
   type: "run.finished",
 });
 
@@ -73,7 +92,7 @@ interface Harness {
   updates: () => number;
 }
 
-function harness(): Harness {
+const harness = (): Harness => {
   let runs: RunMap = {};
   let updates = 0;
   const queued: (() => void)[] = [];
@@ -103,11 +122,27 @@ function harness(): Harness {
     runs: (): RunMap => runs,
     updates: (): number => updates,
   };
-}
+};
 
-function direct(events: StudioEvent[]): RunMap {
-  return events.reduce(applyRunEvent, {} as RunMap);
-}
+const direct = (events: StudioEvent[]): RunMap => {
+  let runs: RunMap = {};
+
+  for (const event of events) {
+    runs = applyRunEvent(runs, event);
+  }
+
+  return runs;
+};
+
+const textOf = (fixture: Harness, runId: string): string => {
+  const run = fixture.runs()[runId];
+
+  if (!run) {
+    return "";
+  }
+
+  return runText(run);
+};
 
 describe("delta batcher", () => {
   it("applies many deltas in one update per frame", () => {
@@ -123,7 +158,7 @@ describe("delta batcher", () => {
     expect(fixture.updates()).toBe(1);
     fixture.frame();
     expect(fixture.updates()).toBe(2);
-    expect(runText(fixture.runs().r1!)).toBe("a b c d");
+    expect(textOf(fixture, "r1")).toBe("a b c d");
   }, 0);
 
   it("flushes pending deltas before a non-delta run event so order holds", () => {
@@ -149,12 +184,15 @@ describe("delta batcher", () => {
     fixture.frame();
     expect(fixture.runs()).toStrictEqual(direct(events));
   }, 0);
+});
 
+describe("delta batcher chunks", () => {
   it("gives the same text for small and big chunks", () => {
     expect.hasAssertions();
 
     const text = "one two three four five six seven eight nine ten";
-    const small = text.split(/(?<= )/).map((part) => delta("r1", part));
+    const small = text.split(/(?<= )/u).map((part) => delta("r1", part));
+
     const big = [
       delta("r1", text.slice(0, SAMPLE_20)),
       delta("r1", text.slice(SAMPLE_20)),
@@ -169,7 +207,7 @@ describe("delta batcher", () => {
       }
 
       fixture.frame();
-      expect(runText(fixture.runs().r1!)).toBe(text);
+      expect(textOf(fixture, "r1")).toBe(text);
     }
   }, 0);
 
@@ -192,10 +230,12 @@ describe("delta batcher", () => {
     }
 
     fixture.frame();
-    expect(runText(fixture.runs().r1!)).toBe("ab");
-    expect(runText(fixture.runs().r2!)).toBe("xy");
+    expect(textOf(fixture, "r1")).toBe("ab");
+    expect(textOf(fixture, "r2")).toBe("xy");
   }, 0);
+});
 
+describe("delta batcher lifecycle", () => {
   it("skips updates for non-run events when nothing is pending", () => {
     expect.hasAssertions();
 
@@ -238,11 +278,8 @@ describe("delta batcher", () => {
       { type: "run.text.delta" }
     >;
 
-    expect(
-      mergeDeltas(mergeDeltas(mergeDeltas([], first), second), third).map(
-        (merged) => merged.text
-      )
-    ).toStrictEqual(["a", "b", "c"]);
+    const all = mergeDeltas(mergeDeltas(mergeDeltas([], first), second), third);
+    expect(all.map((merged) => merged.text)).toStrictEqual(["a", "b", "c"]);
     expect(
       mergeDeltas([first], third).map((merged) => merged.text)
     ).toStrictEqual(["ac"]);

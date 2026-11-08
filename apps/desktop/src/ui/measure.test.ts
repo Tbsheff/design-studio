@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { formatMeasure, measureBetween } from "../shared/measure";
 
+const xAxis = "x";
+const yAxis = "y";
+
 const FORMAT_MEASURE_ARG_12_345 = 12.345;
 const FORMAT_MEASURE_ARG_16 = 16;
 const SAMPLE_10 = 10;
@@ -15,14 +18,14 @@ describe(measureBetween, () => {
 
     expect(
       measureBetween(
-        { height: 50, width: 100, x: 0, y: 0 },
-        { height: 20, width: 40, x: 124, y: 10 }
+        { height: 50, width: 100, [xAxis]: 0, [yAxis]: 0 },
+        { height: 20, width: 40, [xAxis]: 124, [yAxis]: 10 }
       )
     ).toStrictEqual([{ at: 20, axis: "x", from: 100, to: 124, value: 24 }]);
     expect(
       measureBetween(
-        { height: 50, width: 100, x: 0, y: 0 },
-        { height: 20, width: 100, x: 0, y: 66 }
+        { height: 50, width: 100, [xAxis]: 0, [yAxis]: 0 },
+        { height: 20, width: 100, [xAxis]: 0, [yAxis]: 66 }
       )
     ).toStrictEqual([{ at: 50, axis: "y", from: 50, to: 66, value: 16 }]);
   }, 0);
@@ -31,8 +34,8 @@ describe(measureBetween, () => {
     expect.hasAssertions();
 
     const lines = measureBetween(
-      { height: 30, width: 30, x: 10, y: 20 },
-      { height: 100, width: 100, x: 0, y: 0 }
+      { height: 30, width: 30, [xAxis]: 10, [yAxis]: 20 },
+      { height: 100, width: 100, [xAxis]: 0, [yAxis]: 0 }
     );
 
     expect(lines.map((line) => line.value)).toStrictEqual([

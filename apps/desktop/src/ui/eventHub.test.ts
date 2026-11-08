@@ -16,32 +16,44 @@ const IS_FALSE = false;
 const IS_TRUE = true;
 
 class FakeSource implements EventSourceLike {
-  onopen: EventSourceLike["onopen"] = null;
-  onmessage: EventSourceLike["onmessage"] = null;
-  onerror: EventSourceLike["onerror"] = null;
-  closed = false;
-  listeners = new Map<string, EventListener[]>();
-  constructor(
-    readonly projectId: string,
-    readonly after: number
-  ) {}
-  addEventListener(type: string, listener: EventListener): void {
+  public onopen: EventSourceLike["onopen"] = null;
+  public onmessage: EventSourceLike["onmessage"] = null;
+  public onerror: EventSourceLike["onerror"] = null;
+  public closed = false;
+  public listeners = new Map<string, EventListener[]>();
+  public readonly projectId: string;
+  public readonly after: number;
+
+  public constructor(projectId: string, after: number) {
+    this.projectId = projectId;
+    this.after = after;
+  }
+
+  public addEventListener(type: string, listener: EventListener): void {
     this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
   }
-  close(): void {
+
+  public close(): void {
     this.closed = true;
   }
-  open(): void {
-    this.onopen?.call(this as unknown as EventSource, new Event("open"));
+
+  public open(): void {
+    this.onopen?.(new Event("open"));
   }
-  fail(): void {
-    this.onerror?.call(this as unknown as EventSource, new Event("error"));
+
+  public fail(): void {
+    this.onerror?.(new Event("error"));
   }
-  send(event: Partial<StudioEvent> & { type: string; seq: number }): void {
-    const msg = { data: JSON.stringify(event) } as MessageEvent<string>;
+
+  public send(
+    event: Partial<StudioEvent> & { type: string; seq: number }
+  ): void {
+    const message = new MessageEvent("message", {
+      data: JSON.stringify(event),
+    });
 
     for (const listener of this.listeners.get(event.type) ?? []) {
-      listener(msg as unknown as Event);
+      listener(message);
     }
   }
 }
@@ -55,7 +67,7 @@ interface HubSetup {
   timers: (() => void)[];
 }
 
-function setup(): HubSetup {
+const setup = (): HubSetup => {
   const sources: FakeSource[] = [];
   const timers: (() => void)[] = [];
   const deferred: (() => void)[] = [];
@@ -79,10 +91,14 @@ function setup(): HubSetup {
   };
 
   return { flushDeferred, hub, sources, timers };
-}
+};
 
-const files = (seq: number) =>
-  ({ projectId: "p1", seq, ts: seq, type: "files.changed" }) as const;
+const files = (seq: number) => {
+  const projectId = "p1";
+  const ts = seq;
+
+  return { projectId, seq, ts, type: "files.changed" } as const;
+};
 
 describe("event hub", () => {
   it("opens one connection per project for many subscribers", () => {

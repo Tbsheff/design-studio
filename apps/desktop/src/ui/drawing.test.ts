@@ -7,6 +7,9 @@ import {
   strokePath,
 } from "./features/canvas/drawing-model";
 
+const xAxis = "x";
+const yAxis = "y";
+
 const EXPECTED_4 = 4;
 const SAMPLE_0_2 = 0.2;
 const SAMPLE_0_5 = 0.5;
@@ -21,6 +24,14 @@ const SAMPLE_NEG_4 = -4;
 
 const IS_FALSE = false;
 
+const toJitter = (offset: number): number => {
+  if (offset % SAMPLE_20 === 0) {
+    return SAMPLE_4;
+  }
+
+  return SAMPLE_NEG_4;
+};
+
 describe("drawing strokes", () => {
   it("smooths jitter, drops tiny steps, and ends at the pointer", () => {
     expect.hasAssertions();
@@ -29,13 +40,15 @@ describe("drawing strokes", () => {
     expect(builder.add(SAMPLE_0_5, SAMPLE_0_2)).toBe(IS_FALSE);
 
     for (let offset = 10; offset <= SAMPLE_100; offset += SAMPLE_10) {
-      builder.add(offset, offset % SAMPLE_20 === 0 ? SAMPLE_4 : SAMPLE_NEG_4);
+      builder.add(offset, toJitter(offset));
     }
 
     builder.end(SAMPLE_100, 0);
     const points = builder.points();
     const ys = points.filter((_unusedItem, index) => index % 2 === 1);
-    expect(Math.max(...ys.map(Math.abs))).toBeLessThan(EXPECTED_4);
+    expect(Math.max(...ys.map((value) => Math.abs(value)))).toBeLessThan(
+      EXPECTED_4
+    );
     expect(points.slice(SAMPLE_NEG_2)).toStrictEqual([SAMPLE_100, 0]);
   }, 0);
 
@@ -60,7 +73,7 @@ describe("drawing strokes", () => {
           width: 4,
         },
       ])
-    ).toStrictEqual({ height: 54, width: 104, x: 8, y: 18 });
+    ).toStrictEqual({ height: 54, width: 104, [xAxis]: 8, [yAxis]: 18 });
   }, 0);
 
   it("puts replies in the text for the agent", () => {

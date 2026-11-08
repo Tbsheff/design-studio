@@ -73,8 +73,8 @@ const useReview = (input: ReviewInput): ReviewState => {
         const next = await api.review(projectId, directionId, {
           frame: frame.id,
           ...(frame.path ? { path: frame.path } : {}),
-          width: side(frame.width),
           height: side(frame.height),
+          width: side(frame.width),
         });
 
         if (ticket !== pending.current) {

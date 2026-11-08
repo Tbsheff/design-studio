@@ -9,6 +9,7 @@ const copy = {
   allowOnLocalNetwork: "Allow on local network",
   anyoneOnThisNetwork:
     "Anyone on this network who has a link can open it and comment. Use this only on networks you trust, and turn it off when the review ends.",
+  applyJson: "Use JSON",
   area: "Area",
   askOnlyForWorkers: "Ask only for Workers access",
   asksCfWho: "Asks cf who is signed in. It changes nothing.",
@@ -133,7 +134,6 @@ const copy = {
   theDiffIsCut: "The diff is cut here. The full file ships.",
   thisComputer: "This computer",
   unpublish: "Unpublish",
-  applyJson: "Use JSON",
   versionPrefix: "· v ",
   versions: "Published versions",
   versions2: "Versions ",

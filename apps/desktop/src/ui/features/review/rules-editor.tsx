@@ -100,8 +100,8 @@ const liveFrame = (
   return {
     frame: frame.id,
     ...(frame.path ? { path: frame.path } : {}),
-    width: side(frame.width),
     height: side(frame.height),
+    width: side(frame.width),
   };
 };
 

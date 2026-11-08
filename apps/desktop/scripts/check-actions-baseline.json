@@ -28,12 +28,10 @@
     "apps/api/src/mcp/mount.ts": 1,
     "apps/api/src/tenant/repos/key-perm.ts": 1,
     "apps/desktop/src/server/events/event-file.ts": 2,
-    "apps/desktop/src/ui/platform/http.ts": 2,
     "apps/desktop/src/ui/platform/session.ts": 1
   },
   "R6": {
     "apps/desktop/src/server/http/app.ts": 1,
-    "apps/desktop/src/server/mcp/server.ts": 3,
     "apps/desktop/src/server/share/viewer-app.ts": 1
   },
   "S11": {
@@ -50,7 +48,7 @@
     "apps/api/src/tenant/probes/planted-tq.ts": 1,
     "apps/api/src/tenant/registry.ts": 1,
     "apps/api/src/tenant/sql-tokens.ts": 1,
-    "apps/desktop/src/server/events/bus.ts": 6,
+    "apps/desktop/src/server/events/bus.ts": 2,
     "apps/desktop/src/server/events/event-file.ts": 37,
     "apps/desktop/src/server/events/planned-feed.ts": 1,
     "apps/desktop/src/server/events/render-wait.ts": 15,

@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { ColorField } from "./color-field.js";
 import { copy } from "./copy.js";
-import { PARTS, fieldPart, writeShadows } from "./effects-model.js";
+import { PARTS, toFieldPart, setShadows } from "./effects-model.js";
 import type { Field, ShadowView } from "./effects-model.js";
 import { PlainNumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
@@ -49,7 +49,7 @@ const ShadowRow = ({
       ["box-shadow"],
       {
         isMixed: view.mixed?.has(`${index}.${field}`) ?? false,
-        part: fieldPart(index, field),
+        part: toFieldPart(index, field),
       }
     );
 
@@ -85,7 +85,7 @@ const ShadowRow = ({
           aria-label={`Shadow ${count} inset`}
           data-tip={shadow.isInset ? "Inner shadow" : "Drop shadow"}
           onClick={() =>
-            writeShadows(edit, view, (own) =>
+            setShadows(edit, view, (own) =>
               own.map((shadowValue2, indexValue2) =>
                 indexValue2 === index
                   ? { ...shadowValue2, isInset: !shadow.isInset }
@@ -103,7 +103,7 @@ const ShadowRow = ({
           data-tip={copy.removeShadow}
           data-tip-align="end"
           onClick={() =>
-            writeShadows(edit, view, (own) =>
+            setShadows(edit, view, (own) =>
               own.filter((_shadowValue3, indexValue3) => indexValue3 !== index)
             )
           }

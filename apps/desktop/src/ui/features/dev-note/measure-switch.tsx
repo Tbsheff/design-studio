@@ -21,10 +21,10 @@ const MeasureSwitch = ({
     tip = copy.measureNeedsSource;
   }
 
-  let switchClass = "prp-switch";
+  let switchClass = styles.switch;
 
   if (isOn) {
-    switchClass = "prp-switch on";
+    switchClass = `${styles.switch} ${styles.switchOn}`;
   }
 
   return (
@@ -39,7 +39,7 @@ const MeasureSwitch = ({
         role="switch"
         type="button"
       >
-        <span className="prp-switch-knob" />
+        <span className={styles.knob} />
       </button>
     </div>
   );

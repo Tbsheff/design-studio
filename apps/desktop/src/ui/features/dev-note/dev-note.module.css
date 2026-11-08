@@ -56,6 +56,46 @@
   font-size: var(--t-sm);
 }
 
+.switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition-property: background-color, border-color;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+.switch:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.switchOn {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  transition: transform var(--dur) var(--ease);
+}
+
+.switchOn .knob {
+  transform: translateX(14px);
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

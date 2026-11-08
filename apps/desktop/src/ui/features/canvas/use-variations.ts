@@ -16,7 +16,7 @@ import { readStored, writeStored } from "../../platform/storage.js";
 import { showVariationFrames } from "./canvas-variations-model.js";
 import { maxVariationsFor, variationsApi } from "./variations-api.js";
 
-export interface BriefDraft {
+interface BriefDraft {
   prompt: string;
   level: RunLevel;
   attachmentIds: string[];
@@ -55,11 +55,11 @@ const relabel = (briefs: VariationBrief[]): VariationBrief[] =>
 
 export { formatUsd as money } from "../../domain/format.js";
 
-export function budgetFor(
+const budgetFor = (
   project: Project | null,
   level: RunLevel,
   count: number
-): { perRun: number | null; total: number | null } {
+): { perRun: number | null; total: number | null } => {
   if (!project) {
     return { perRun: 0, total: 0 };
   }
@@ -70,9 +70,9 @@ export function budgetFor(
     perRun,
     total: perRun === null ? null : Math.round(perRun * count * 100) / 100,
   };
-}
+};
 
-export function useVariations(options: Options) {
+const useVariations = (options: Options) => {
   const [count, setCountState] = useState(storedCount);
   const [draft, setDraft] = useState<BriefDraft | null>(null);
   const [groupId, setGroupId] = useState<string | null>(null);
@@ -443,6 +443,10 @@ export function useVariations(options: Options) {
     skip,
     start,
   };
-}
+};
 
-export type VariationsState = ReturnType<typeof useVariations>;
+type VariationsState = ReturnType<typeof useVariations>;
+
+export { budgetFor, useVariations };
+
+export type { BriefDraft, VariationsState };

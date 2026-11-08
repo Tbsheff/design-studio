@@ -137,9 +137,9 @@ const VariationControls = ({
 
     try {
       await variation.onKeep();
-    } catch (failure) {
+    } catch (caught) {
       setError(
-        `Could not keep it. ${failure instanceof Error ? failure.message : String(failure)}`
+        `Could not keep it. ${caught instanceof Error ? caught.message : String(caught)}`
       );
     } finally {
       setKeeping(false);
@@ -157,9 +157,9 @@ const VariationControls = ({
     try {
       await variation.onMix(to, element);
       onMixed();
-    } catch (failure) {
+    } catch (caught) {
       setError(
-        `Could not use the element. ${failure instanceof Error ? failure.message : String(failure)} Pick it again, then try again.`
+        `Could not use the element. ${caught instanceof Error ? caught.message : String(caught)} Pick it again, then try again.`
       );
     } finally {
       setMixing(false);

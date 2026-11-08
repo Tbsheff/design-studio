@@ -13,7 +13,7 @@ import { toValueOr } from "./settle-model.js";
 
 const DEPTHS = [0, 1, 2] as const;
 
-export function flowSummary(result: FlowResult): string {
+export const flowSummary = (result: FlowResult): string => {
   const added = result.frames.filter((frame) => frame.added).length;
 
   const parts = [
@@ -26,7 +26,7 @@ export function flowSummary(result: FlowResult): string {
   }
 
   return parts.join(", ");
-}
+};
 
 const useRoutesAndParams = (projectId: string) => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
@@ -37,8 +37,8 @@ const useRoutesAndParams = (projectId: string) => {
     try {
       const result = await api.appRoutes(projectId);
       setRoutes(result.routes);
-    } catch (failure: unknown) {
-      setError(errorText(failure));
+    } catch (caught: unknown) {
+      setError(errorText(caught));
     }
   }, [projectId]);
 
@@ -142,8 +142,8 @@ export default function FlowTab({
 
     try {
       setResult(await api.buildFlow(projectId, input));
-    } catch (failure: unknown) {
-      setError(errorText(failure));
+    } catch (caught: unknown) {
+      setError(errorText(caught));
     } finally {
       setBusy(false);
     }
@@ -170,7 +170,7 @@ export default function FlowTab({
               type="button"
               role="listitem"
               className="app-route"
-              aria-pressed={at > -1}
+              aria-pressed={at !== -1}
               data-tip={at === -1 ? "Add to the flow" : "Remove from the flow"}
               data-tip-align="start"
               onClick={() => toggle(route.route)}

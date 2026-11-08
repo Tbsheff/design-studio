@@ -3,7 +3,9 @@ import type { RefObject } from "react";
 import type { Rect } from "./snap-model.js";
 
 const RULER_SIZE = 20;
+
 const STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000];
+
 const MIN_LABEL_PX = 56;
 
 interface View {
@@ -17,6 +19,16 @@ interface Props {
   origin: { x: number; y: number };
   selection: Rect | null;
 }
+
+const tick = (axisDrawValue: AxisDraw, pos: number, len: number): void => {
+  if (axisDrawValue.vertical) {
+    axisDrawValue.ctx.moveTo(RULER_SIZE - len, pos + 0.5);
+    axisDrawValue.ctx.lineTo(RULER_SIZE, pos + 0.5);
+  } else {
+    axisDrawValue.ctx.moveTo(pos + 0.5, RULER_SIZE - len);
+    axisDrawValue.ctx.lineTo(pos + 0.5, RULER_SIZE);
+  }
+};
 
 interface Colors {
   bg: string;
@@ -99,16 +111,6 @@ interface AxisDraw {
 
 const toScreen = (axisDraw: AxisDraw, value: number): number =>
   axisDraw.offset + (value - axisDraw.origin) * axisDraw.zoom;
-
-const tick = (axisDrawValue: AxisDraw, pos: number, len: number): void => {
-  if (axisDrawValue.vertical) {
-    axisDrawValue.ctx.moveTo(RULER_SIZE - len, pos + 0.5);
-    axisDrawValue.ctx.lineTo(RULER_SIZE, pos + 0.5);
-  } else {
-    axisDrawValue.ctx.moveTo(pos + 0.5, RULER_SIZE - len);
-    axisDrawValue.ctx.lineTo(pos + 0.5, RULER_SIZE);
-  }
-};
 
 const markSpans = (axisDraw3: AxisDraw): [number, number][] => {
   if (!axisDraw3.range) {

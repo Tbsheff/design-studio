@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 
 import { runCommand, TabOrderToggle } from "../../canvas-toolbar-slots.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
+import { PRESETS } from "../../domain/canvas-presets.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { copy } from "./copy.js";
 import { PenIcon } from "./draw-layer.js";
@@ -14,13 +15,10 @@ import {
   vectorTool,
 } from "./vector-tool-model.js";
 
-export { PRESETS } from "../../domain/canvas-presets.js";
-
 export type { CanvasSource } from "../../domain/canvas-presets.js";
 
-export function zoomOptionLabel(setting: ZoomSetting, zoom: number): string {
-  return setting === "fit" ? `Fit ${Math.round(zoom * 100)}%` : "Fit";
-}
+const zoomOptionLabel = (setting: ZoomSetting, zoom: number): string =>
+  setting === "fit" ? `Fit ${Math.round(zoom * 100)}%` : "Fit";
 
 const ThemeSwitch = ({
   dark,
@@ -117,7 +115,7 @@ const RulersSwitch = ({
   </button>
 );
 
-export function VectorToolButtons(): ReactElement {
+const VectorToolButtons = (): ReactElement => {
   const { tool, available } = useVectorTool();
 
   return (
@@ -156,7 +154,7 @@ export function VectorToolButtons(): ReactElement {
       ))}
     </div>
   );
-}
+};
 
 const InsertIconButton = (): ReactElement => (
   <button
@@ -199,65 +197,65 @@ const FindPhotoButton = (): ReactElement => (
   </button>
 );
 
-export function CanvasViewRow(props: Props): ReactElement {
-  return (
-    <div
-      className="toolbar canvas-viewrow"
-      role="toolbar"
-      aria-label={copy.viewOptions}
-    >
-      <ViewportControls viewport={props.viewport} />
-      {props.addFrame}
-      {props.theme && (
-        <ThemeSwitch dark={props.theme.dark} onToggle={props.theme.onToggle} />
-      )}
-      {props.lofi && (
-        <LofiSwitch on={props.lofi.on} onToggle={props.lofi.onToggle} />
-      )}
-      {props.links && (
-        <LinksSwitch on={props.links.on} onToggle={props.links.onToggle} />
-      )}
-      {props.rulers && (
-        <RulersSwitch on={props.rulers.on} onToggle={props.rulers.onToggle} />
-      )}
-      <div className="toolbar-sep" />
-      <SourceControls
-        source={props.source}
-        onSource={props.onSource}
-        hasHead={props.hasHead}
-      />
-      <div className="spacer" />
-      <InsertIconButton />
-      <FindPhotoButton />
-      <TabOrderToggle />
-      {props.drawMode !== undefined && (
-        <button
-          className="btn small ghost select-toggle draw-toggle"
-          aria-pressed={props.drawMode}
-          aria-label={copy.draw}
-          aria-keyshortcuts="P"
-          data-tip={copy.drawOnThe}
-          data-tip-align="end"
-          onClick={props.onToggleDraw}
-        >
-          <PenIcon size={14} />
-          <span className="label">{copy.draw}</span> <kbd>{copy.keyP}</kbd>
-        </button>
-      )}
+const CanvasViewRow = (props: Props): ReactElement => (
+  <div
+    className="toolbar canvas-viewrow"
+    role="toolbar"
+    aria-label={copy.viewOptions}
+  >
+    <ViewportControls viewport={props.viewport} />
+    {props.addFrame}
+    {props.theme && (
+      <ThemeSwitch dark={props.theme.dark} onToggle={props.theme.onToggle} />
+    )}
+    {props.lofi && (
+      <LofiSwitch on={props.lofi.on} onToggle={props.lofi.onToggle} />
+    )}
+    {props.links && (
+      <LinksSwitch on={props.links.on} onToggle={props.links.onToggle} />
+    )}
+    {props.rulers && (
+      <RulersSwitch on={props.rulers.on} onToggle={props.rulers.onToggle} />
+    )}
+    <div className="toolbar-sep" />
+    <SourceControls
+      source={props.source}
+      onSource={props.onSource}
+      hasHead={props.hasHead}
+    />
+    <div className="spacer" />
+    <InsertIconButton />
+    <FindPhotoButton />
+    <TabOrderToggle />
+    {props.drawMode !== undefined && (
       <button
-        className="icon-btn small"
-        aria-label={props.checking ? "Checking…" : "Check render"}
-        data-tip={props.checking ? "Checking render…" : "Check render"}
+        className="btn small ghost select-toggle draw-toggle"
+        aria-pressed={props.drawMode}
+        aria-label={copy.draw}
+        aria-keyshortcuts="P"
+        data-tip={copy.drawOnThe}
         data-tip-align="end"
-        onClick={props.onCheck}
-        disabled={props.checking}
+        onClick={props.onToggleDraw}
       >
-        {props.checking ? (
-          <span className="spinner" />
-        ) : (
-          <Icon name="scan" size={14} />
-        )}
+        <PenIcon size={14} />
+        <span className="label">{copy.draw}</span> <kbd>{copy.keyP}</kbd>
       </button>
-    </div>
-  );
-}
+    )}
+    <button
+      className="icon-btn small"
+      aria-label={props.checking ? "Checking…" : "Check render"}
+      data-tip={props.checking ? "Checking render…" : "Check render"}
+      data-tip-align="end"
+      onClick={props.onCheck}
+      disabled={props.checking}
+    >
+      {props.checking ? (
+        <span className="spinner" />
+      ) : (
+        <Icon name="scan" size={14} />
+      )}
+    </button>
+  </div>
+);
+
+export { CanvasViewRow, PRESETS, VectorToolButtons, zoomOptionLabel };

@@ -21,6 +21,14 @@ const routeFrameId = (layout: CanvasLayout, route: string): string | null => {
   );
 };
 
+const withoutHidden = (
+  frame: CanvasLayout["frames"][number]
+): CanvasLayout["frames"][number] => {
+  const { hidden: _hidden, ...rest } = frame;
+
+  return rest;
+};
+
 const addRouteFrame = (
   layout: CanvasLayout,
   route: string,
@@ -64,14 +72,6 @@ const addRouteFrame = (
         : canvasFrameValue
     ),
   };
-};
-
-const withoutHidden = (
-  frame: CanvasLayout["frames"][number]
-): CanvasLayout["frames"][number] => {
-  const { hidden: _hidden, ...rest } = frame;
-
-  return rest;
 };
 
 const appRoutePages = (
@@ -148,6 +148,7 @@ const useRedirectNote = (
 };
 
 const HIDDEN_REDIRECTS_KEY = "design-studio.hidden-redirects.v1";
+
 const MAX_HIDDEN_REDIRECTS = 50;
 
 const readHiddenRedirects = (): string[] => {

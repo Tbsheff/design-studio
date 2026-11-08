@@ -86,8 +86,8 @@ const useRenderCheck = (projectId: string, directionId: string | null) => {
 
     try {
       setResults(await api.renderCheck(projectId, directionId));
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (caught) {
+      setError(errorText(caught));
       setResults(null);
     } finally {
       setChecking(false);

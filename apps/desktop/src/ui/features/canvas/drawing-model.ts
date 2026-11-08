@@ -8,9 +8,13 @@ const DRAW_COLORS = [
 ] as const;
 
 const DRAW_SCREEN_WIDTH = 3;
+
 const SMOOTHING = 0.45;
+
 const MIN_STEP_SCREEN = 1.5;
+
 const PNG_MAX_SIDE = 4096;
+
 const HALO = "rgba(255, 255, 255, 0.9)";
 
 interface StrokeBuilder {
@@ -18,6 +22,8 @@ interface StrokeBuilder {
   end(pointXValue: number, pointYValue: number): void;
   points(): number[];
 }
+
+const round = (value: number): number => Math.round(value * 10) / 10;
 
 const createStrokeBuilder = (
   pointX3: number,
@@ -61,8 +67,6 @@ const createStrokeBuilder = (
 
 const minStepFor = (zoom: number): number =>
   MIN_STEP_SCREEN / Math.max(zoom, 0.05);
-
-const round = (value: number): number => Math.round(value * 10) / 10;
 
 const strokePath = (points: number[]): string => {
   const count = points.length / 2;

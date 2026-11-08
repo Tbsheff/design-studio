@@ -10,12 +10,10 @@ import { FrameResizeHandles } from "./frame-resize-handles.js";
 import { FrameSkeleton } from "./frame-skeleton.js";
 
 const MOUNT_FALLBACK_MS = 1200;
-let frontPainted = false;
-let paintListening = false;
 
-const useResetPassiveGateInFirstRender = (): void => {
-  useState(resetPassiveMountGate);
-};
+let frontPainted = false;
+
+let paintListening = false;
 
 const resetPassiveMountGate = (): void => {
   frontPainted = false;
@@ -28,6 +26,10 @@ const resetPassiveMountGate = (): void => {
   globalThis.addEventListener(PREVIEW_PAINTED_EVENT, () => {
     frontPainted = true;
   });
+};
+
+const useResetPassiveGateInFirstRender = (): void => {
+  useState(resetPassiveMountGate);
 };
 
 const usePassiveMount = (ref: RefObject<HTMLDivElement | null>): boolean => {
@@ -202,6 +204,7 @@ const StablePassiveFrame = memo(
     if (!cur) {
       return null;
     }
+
     const live = (): PassiveProps => entries.current.get(id) ?? cur;
 
     return (

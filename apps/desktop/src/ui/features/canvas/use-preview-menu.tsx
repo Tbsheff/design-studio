@@ -89,6 +89,9 @@ const structureItems = (options: Options): PreviewMenuItem[] => {
   return structureMenuItems(state, edits.structureKey, true);
 };
 
+const disabledBy = (reason: string | null): { disabled?: string } =>
+  reason ? { disabled: reason } : {};
+
 const pasteItem = (
   optionsValue: Options,
   target: SelectionContext
@@ -121,6 +124,18 @@ const pasteItem = (
   ];
 };
 
+const createBlocker = (options4: Options): string | null => {
+  if (options4.ids.kind !== "react") {
+    return "Components need a React project. This is a plain HTML page";
+  }
+
+  if (options4.selection.some((item) => !item.source && !item.owners?.length)) {
+    return "An element has no source location";
+  }
+
+  return options4.edits.busy ? "Wait for the last edit to finish" : null;
+};
+
 const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
   if (!options3.edits.enabled || !options3.ids.directionId) {
     return [];
@@ -143,21 +158,6 @@ const createItem = (options3: Options, open: () => void): PreviewMenuItem[] => {
     },
   ];
 };
-
-const createBlocker = (options4: Options): string | null => {
-  if (options4.ids.kind !== "react") {
-    return "Components need a React project. This is a plain HTML page";
-  }
-
-  if (options4.selection.some((item) => !item.source && !item.owners?.length)) {
-    return "An element has no source location";
-  }
-
-  return options4.edits.busy ? "Wait for the last edit to finish" : null;
-};
-
-const disabledBy = (reason: string | null): { disabled?: string } =>
-  reason ? { disabled: reason } : {};
 
 const menuItems = (
   options5: Options,

@@ -106,6 +106,7 @@ const VariationBar = ({
   const groupRuns = group.map((direction3) =>
     groupRun(runs ?? {}, direction3.id)
   );
+
   const total = groupRuns.reduce((sum, run) => sum + run.costUsd, 0);
   const anyRunning = groupRuns.some((run) => run.running);
 
@@ -277,85 +278,6 @@ interface CanvasProps {
   setDirectionId: (id: string) => void;
 }
 
-const canvasVariations = ({
-  state,
-  project,
-  runs,
-  setDirectionId,
-}: CanvasProps): CanvasDirections => ({
-  list: project.directions,
-  onActivate: setDirectionId,
-  variationOf: (directionId) => {
-    const direction = project.directions.find(
-      (direction6) => direction6.id === directionId
-    );
-    const variation = direction?.variation;
-
-    if (!direction || !variation) {
-      return;
-    }
-
-    const group = groupOf(project, variation.groupId);
-    const run = groupRun(runs, directionId);
-
-    if (variation.scope) {
-      return elementVariation({
-        direction,
-        group,
-        project,
-        run,
-        scope: variation.scope,
-        setDirectionId,
-        state,
-        variation,
-      });
-    }
-
-    return {
-      costText: `${money(run.costUsd)} spent`,
-      label: variation.label,
-      onKeep: () => {
-        keepVariationFrame(
-          project.id,
-          directionId,
-          group.map((d) => d.id)
-        );
-        setDirectionId(directionId);
-        state.setGroupId(variation.groupId);
-        state.keepNotice(keptText(direction));
-      },
-      onMix: async (to, element) => {
-        await state.mix(
-          directionId,
-          to,
-          element,
-          project.settings.defaultLevel
-        );
-      },
-      siblings: group
-        .filter((d) => d.id !== directionId)
-        .map((d) => ({
-          id: d.id,
-          label: labelOf(d),
-          title: d.variation?.title ?? d.name,
-        })),
-      status: run.status,
-      title: variation.title,
-    };
-  },
-});
-
-interface ElementVariationInput {
-  state: VariationsState;
-  project: Project;
-  setDirectionId: (id: string) => void;
-  direction: Direction;
-  variation: DirectionVariation;
-  scope: ElementScope;
-  group: Direction[];
-  run: GroupRun;
-}
-
 const keepBlocker = (
   variation: DirectionVariation,
   run: GroupRun,
@@ -422,5 +344,85 @@ const elementVariation = ({
     title: variation.title,
   };
 };
+
+const canvasVariations = ({
+  state,
+  project,
+  runs,
+  setDirectionId,
+}: CanvasProps): CanvasDirections => ({
+  list: project.directions,
+  onActivate: setDirectionId,
+  variationOf: (directionId) => {
+    const direction = project.directions.find(
+      (direction6) => direction6.id === directionId
+    );
+
+    const variation = direction?.variation;
+
+    if (!direction || !variation) {
+      return;
+    }
+
+    const group = groupOf(project, variation.groupId);
+    const run = groupRun(runs, directionId);
+
+    if (variation.scope) {
+      return elementVariation({
+        direction,
+        group,
+        project,
+        run,
+        scope: variation.scope,
+        setDirectionId,
+        state,
+        variation,
+      });
+    }
+
+    return {
+      costText: `${money(run.costUsd)} spent`,
+      label: variation.label,
+      onKeep: () => {
+        keepVariationFrame(
+          project.id,
+          directionId,
+          group.map((d) => d.id)
+        );
+        setDirectionId(directionId);
+        state.setGroupId(variation.groupId);
+        state.keepNotice(keptText(direction));
+      },
+      onMix: async (to, element) => {
+        await state.mix(
+          directionId,
+          to,
+          element,
+          project.settings.defaultLevel
+        );
+      },
+      siblings: group
+        .filter((d) => d.id !== directionId)
+        .map((d) => ({
+          id: d.id,
+          label: labelOf(d),
+          title: d.variation?.title ?? d.name,
+        })),
+      status: run.status,
+      title: variation.title,
+    };
+  },
+});
+
+interface ElementVariationInput {
+  state: VariationsState;
+  project: Project;
+  setDirectionId: (id: string) => void;
+  direction: Direction;
+  variation: DirectionVariation;
+  scope: ElementScope;
+  group: Direction[];
+  run: GroupRun;
+}
 
 export { VariationsTop, canvasVariations };

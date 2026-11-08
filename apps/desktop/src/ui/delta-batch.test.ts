@@ -1,13 +1,10 @@
 import type { RunSummary, StudioEvent } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { applyRunEvent, runText } from "./features/chat/run-state-model";
-import type { RunMap } from "./features/chat/run-state-model";
-import {
-  createDeltaBatcher,
-  mergeDeltas,
-} from "./features/inspector/delta-batch";
-import type { DeltaBatcher } from "./features/inspector/delta-batch";
+import { applyRunEvent, runText } from "./features/chat/index.js";
+import type { RunMap } from "./features/chat/index.js";
+import { createDeltaBatcher, mergeDeltas } from "./features/inspector/index.js";
+import type { DeltaBatcher } from "./features/inspector/index.js";
 
 const SAMPLE_20 = 20;
 const TS_1000 = 1000;

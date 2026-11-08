@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SwapQueue } from "./features/inspector/use-swap-gate";
+import { SwapQueue } from "./features/inspector/index.js";
 
 const CHANGE_ARG_3 = 3;
 const EXPECTED_3 = 3;

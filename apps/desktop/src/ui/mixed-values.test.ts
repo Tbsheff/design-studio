@@ -1,14 +1,14 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { nextSelection } from "./features/canvas/index";
-import { valuesFromStyles } from "./features/inspector/css-values";
+import { nextSelection } from "./features/canvas/index.js";
 import {
+  valuesFromStyles,
   batchEdits,
   hasCurrentDependency,
   mergeValues,
   multiBlockReason,
-} from "./features/inspector/mixed-values";
+} from "./features/inspector/index.js";
 
 const xAxis = "x";
 const yAxis = "y";

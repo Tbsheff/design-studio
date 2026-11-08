@@ -30,4 +30,13 @@ export {
 export type { CanvasCommentTools, CanvasDirections } from "./canvas-types.js";
 
 export { Canvas, PlayMode };
+
 export { nextSelection } from "./preview-selection-model.js";
+
+export { cleanFramePath, parseLayout } from "./canvas-frames-model.js";
+
+export { historyKeyOf, routeHistoryCommand } from "./use-undo-shortcut.js";
+
+export type { ShortcutState } from "./use-undo-shortcut.js";
+
+export { MAX_INLINE_TEXT, parseTextCommit } from "./use-inline-text-edit.js";

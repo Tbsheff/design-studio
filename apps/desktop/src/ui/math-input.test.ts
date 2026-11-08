@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   evaluateMath,
   resolveNumberInput,
-} from "./features/inspector/math-input";
+} from "./features/inspector/index.js";
 
 describe(evaluateMath, () => {
   it("handles operator precedence and parentheses", () => {

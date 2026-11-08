@@ -5,8 +5,6 @@ import { describe, expect, it } from "vitest";
 import {
   cleanFramePath,
   parseLayout,
-} from "./features/canvas/canvas-frames-model";
-import {
   addFrame,
   boundsOf,
   defaultLayout,
@@ -22,7 +20,7 @@ import {
   setFramePath,
   viewportOf,
   withFramePath,
-} from "./features/canvas/index";
+} from "./features/canvas/index.js";
 
 const ABSENT = JSON.parse("{}").path;
 const xAxis = "x";

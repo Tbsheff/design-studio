@@ -21,3 +21,7 @@ const McpPointBadge = lazy(async () => {
 });
 
 export { ChatPanel, McpPointBadge, McpToasts, runStepText };
+
+export { applyRunEvent, runText } from "./run-state-model.js";
+
+export type { RunMap } from "./run-state-model.js";

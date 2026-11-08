@@ -10,7 +10,7 @@ import {
   parseNumber,
   stepValue,
   valuesFromStyles,
-} from "./features/inspector/css-values";
+} from "./features/inspector/index.js";
 
 const STEP_VALUE_ARG_0_1 = 0.1;
 const STEP_VALUE_ARG_10 = 10;

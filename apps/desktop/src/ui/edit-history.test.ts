@@ -1,16 +1,13 @@
 import type { SelectionContext, Version } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import {
-  historyKeyOf,
-  routeHistoryCommand,
-} from "./features/canvas/use-undo-shortcut";
-import type { ShortcutState } from "./features/canvas/use-undo-shortcut";
+import { historyKeyOf, routeHistoryCommand } from "./features/canvas/index.js";
+import type { ShortcutState } from "./features/canvas/index.js";
 import {
   isHistoryStep,
   refreshedSelection,
   stepToast,
-} from "./features/inspector/use-edit-history";
+} from "./features/inspector/index.js";
 
 const xAxis = "x";
 const yAxis = "y";

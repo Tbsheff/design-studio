@@ -9,7 +9,7 @@ import {
   parseDeclarations,
   parseSelectionPath,
   pathCrumbs,
-} from "./features/inspector/authored-css";
+} from "./features/inspector/index.js";
 
 const EXPECTED_20 = 20;
 const EXPECTED_4 = 4;

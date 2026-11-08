@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  MAX_INLINE_TEXT,
-  parseTextCommit,
-} from "./features/canvas/use-inline-text-edit";
+import { MAX_INLINE_TEXT, parseTextCommit } from "./features/canvas/index.js";
 
 const base = { at: 1, ns: "studio", token: "t", type: "text-commit" } as const;
 

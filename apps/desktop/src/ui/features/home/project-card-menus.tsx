@@ -73,7 +73,7 @@ const CardMenu = ({
   const style =
     typeof at === "string"
       ? undefined
-      : { left: at.valueArg, right: "auto", top: at.offset };
+      : { left: at.x, right: "auto", top: at.y };
 
   const mode =
     typeof at === "string" ? (at === "keys" ? " instant" : "") : " at-pointer";

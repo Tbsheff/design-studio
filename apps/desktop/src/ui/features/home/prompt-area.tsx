@@ -11,7 +11,7 @@ import { useExample } from "./use-example.js";
 
 interface PromptAreaProps {
   readonly value: string;
-  readonly onChange: (valueArg: string) => void;
+  readonly onChange: (value: string) => void;
   readonly onSubmit: (formEvent: FormEvent) => void;
   readonly onPaste: (
     clipboardEvent: ClipboardEvent<HTMLTextAreaElement>

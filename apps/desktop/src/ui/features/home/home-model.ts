@@ -216,8 +216,8 @@ interface DesignCount {
 }
 
 interface Point {
-  readonly valueArg: number;
-  readonly offset: number;
+  readonly x: number;
+  readonly y: number;
 }
 
 interface KeyedFlag {

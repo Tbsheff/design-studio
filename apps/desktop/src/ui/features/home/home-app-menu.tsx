@@ -231,7 +231,7 @@ const DevServer = ({
         type="button"
         className="ui-menu-item"
         aria-expanded={envOpen}
-        onClick={() => setEnvOpen((valueArg) => !valueArg)}
+        onClick={() => setEnvOpen((isOpen) => !isOpen)}
       >
         <Icon name={envOpen ? "chevronDown" : "chevronRight"} size={14} />
         <span>Environment for next dev</span>

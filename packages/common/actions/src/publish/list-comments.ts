@@ -5,7 +5,8 @@ import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema, PublicationIdSchema } from "../_core/ids.js";
-import { PublicationCommentListSchema } from "./schema.js";
+import { PageFields, pageOf } from "../_core/list-page.js";
+import { PublicationCommentSchema } from "./schema.js";
 
 const listCommentsPublish = defineAction({
   access: "read",
@@ -20,13 +21,14 @@ const listCommentsPublish = defineAction({
   },
   id: "publish.listComments",
   input: Schema.Struct({
+    ...PageFields,
     projectId: ProjectIdSchema,
     publicationId: PublicationIdSchema,
   }),
   invalidates: [],
   mcp: { off: "ui-bootstrap" },
   needs: "publication.read",
-  output: PublicationCommentListSchema,
+  output: pageOf(PublicationCommentSchema),
   scope: "project",
 });
 

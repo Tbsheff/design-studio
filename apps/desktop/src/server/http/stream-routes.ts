@@ -9,7 +9,7 @@ import type {
   ActionDone,
   StreamWatch,
 } from "@design-studio/actions/app-stream";
-import { Effect, Option, Schema, Stream } from "effect";
+import { Effect, Result, Stream } from "effect";
 import type { Fiber } from "effect";
 import type { Context, Hono } from "hono";
 import { streamSSE } from "hono/streaming";
@@ -23,6 +23,7 @@ import {
 import type { ProjectStore } from "../../shared/server-ports.js";
 import type { RecordedEvent } from "../events/index.js";
 import { EventQueue } from "../events/index.js";
+import { toDecoder } from "../platform/decode/index.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { ApprovalFeed } from "./mcp-routes.js";
@@ -63,7 +64,17 @@ type Push = (item: Outgoing) => void;
 
 type Follow = Fiber.Fiber<void>;
 
-const decodeWatch = Schema.decodeUnknownOption(StreamWatchSchema);
+const decodeWatchResult = toDecoder(StreamWatchSchema, "ignore");
+
+const decodeWatch = (raw: unknown): StreamWatch | null => {
+  const result = decodeWatchResult(raw);
+
+  if (Result.isFailure(result)) {
+    return null;
+  }
+
+  return result.success;
+};
 
 const toOutgoing = (recorded: RecordedEvent): Outgoing => ({
   data: recorded.line,
@@ -187,9 +198,9 @@ const watchKnown = (
 
 const readWatch = async (c: Context): Promise<StreamWatch | null> => {
   try {
-    return Option.getOrNull(decodeWatch(await c.req.json()));
+    return decodeWatch(await c.req.json());
   } catch {
-    return Option.getOrNull(decodeWatch({}));
+    return decodeWatch({});
   }
 };
 

@@ -198,6 +198,7 @@ export {
   ShipModeSchema,
   ShipPlanSchema,
   ShipPrepareSchema,
+  ShipRecordSchema,
   ShipResultSchema,
   ShipSettingsSchema,
   ShipTitleSchema,

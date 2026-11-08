@@ -1,15 +1,15 @@
 import type { ShipSettings } from "@design-studio/contracts/ship";
 
 import { readShipState, saveShipSettings } from "../git/ship-store.js";
-import type { ShipTarget } from "./ship-core.js";
+import type { ShipTarget } from "./ship-target.js";
 
-const readSettings = async (target: ShipTarget): Promise<ShipSettings> => {
+const getSettings = async (target: ShipTarget): Promise<ShipSettings> => {
   const state = await readShipState(target.projectDir);
 
   return state.settings;
 };
 
-const writeSettings = (
+const updateSettings = (
   target: ShipTarget,
   settings: ShipSettings
 ): Promise<ShipSettings> =>
@@ -20,4 +20,4 @@ const writeSettings = (
     user: settings.user.trim(),
   });
 
-export { readSettings, writeSettings };
+export { getSettings, updateSettings };

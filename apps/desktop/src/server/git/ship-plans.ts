@@ -12,7 +12,7 @@ import type {
 import { prepareShip } from "../git/ship-prepare.js";
 import { ship } from "../git/ship.js";
 import { BadRequestError } from "../platform/errors/index.js";
-import type { ShipTarget } from "./ship-core.js";
+import type { ShipTarget } from "./ship-target.js";
 
 interface PlanQuery {
   readonly baseVersionId?: string;
@@ -48,7 +48,7 @@ const COMPLETE_KEYS = [
   "title",
 ] as const;
 
-const cut = (text: string, max: number): string => {
+const toCut = (text: string, max: number): string => {
   if (text.length > max) {
     return `${text.slice(0, max)}\n[cut at ${max} characters]`;
   }
@@ -56,7 +56,7 @@ const cut = (text: string, max: number): string => {
   return text;
 };
 
-const oneLine = (text: string, max: number): string => {
+const toOneLine = (text: string, max: number): string => {
   const flat = text.replaceAll(/\s+/gu, " ").trim();
 
   if (flat.length > max) {
@@ -66,7 +66,7 @@ const oneLine = (text: string, max: number): string => {
   return flat;
 };
 
-const titleOf = (query: PlanQuery): Pick<PlanQuery, "title"> => {
+const toTitle = (query: PlanQuery): Pick<PlanQuery, "title"> => {
   const trimmed = query.title?.trim() ?? "";
 
   if (trimmed === "") {
@@ -76,14 +76,14 @@ const titleOf = (query: PlanQuery): Pick<PlanQuery, "title"> => {
   return { title: trimmed };
 };
 
-const readPrepare = (
+const getPrepare = (
   target: ShipTarget,
   query: PlanQuery
 ): Promise<ShipPrepare> =>
   prepareShip(
     { project: target.project, projectDir: target.projectDir },
     query.baseVersionId,
-    titleOf(query)
+    toTitle(query)
   );
 
 const toPlanRepo = (repo: ShipRepoInfo | null): ShipPlan["repo"] => {
@@ -110,7 +110,7 @@ const toPlanFile = (
     additions: file.additions,
     conflict: file.conflict,
     deletions: file.deletions,
-    diff: `${cut(file.diff, DIFF_MAX)}${tail || ""}`,
+    diff: `${toCut(file.diff, DIFF_MAX)}${tail || ""}`,
     path: file.path,
     refused: file.refused,
     status: file.status,
@@ -135,9 +135,9 @@ const toPlan = (plan: ShipPrepare): ShipPlan => ({
 const inspectPlan = async (
   target: ShipTarget,
   query: PlanQuery
-): Promise<ShipPlan> => toPlan(await readPrepare(target, query));
+): Promise<ShipPlan> => toPlan(await getPrepare(target, query));
 
-const shippableFiles = (plan: ShipPrepare): string[] =>
+const listShippableFiles = (plan: ShipPrepare): string[] =>
   plan.files.flatMap((file) => {
     if (file.refused || file.conflict) {
       return [];
@@ -165,7 +165,7 @@ const fromPlan = (plan: ShipPrepare, query: PublishQuery): ShipRequest => {
     throw new BadRequestError(plan.blocked ?? "Nothing to ship.");
   }
 
-  const picked = [...(query.files ?? shippableFiles(plan))];
+  const picked = [...(query.files ?? listShippableFiles(plan))];
 
   if (picked.length === 0) {
     throw new BadRequestError(
@@ -193,10 +193,10 @@ const toRequest = async (
     return fromQuery(query);
   }
 
-  return fromPlan(await readPrepare(target, query), query);
+  return fromPlan(await getPrepare(target, query), query);
 };
 
-const whereOf = (result: ShipResult): string => {
+const toWhere = (result: ShipResult): string => {
   if (result.prUrl) {
     return `, PR ${result.prUrl}`;
   }
@@ -208,7 +208,7 @@ const whereOf = (result: ShipResult): string => {
   return "";
 };
 
-const plural = (count: number): string => {
+const toPlural = (count: number): string => {
   if (count === 1) {
     return "";
   }
@@ -237,17 +237,17 @@ const publishPlan = async (
   await activity.record("ship", "You", {
     directionId: main.id,
     projectId: target.project.id,
-    summary: `Shipped ${result.files.length} file${plural(result.files.length)} as ${result.branch} (${result.sha.slice(0, SHA_SHORT)})${whereOf(result)}`,
+    summary: `Shipped ${result.files.length} file${toPlural(result.files.length)} as ${result.branch} (${result.sha.slice(0, SHA_SHORT)})${toWhere(result)}`,
   });
 
   return result;
 };
 
-const doingOf = (repo: ShipRepoInfo, mode: ShipMode, title: string): string => {
+const toDoing = (repo: ShipRepoInfo, mode: ShipMode, title: string): string => {
   const remote = repo.remote ?? "the remote";
 
   if (mode === "pr") {
-    return `push it to ${remote} and open a pull request “${oneLine(title, LINE_MAX)}”`;
+    return `push it to ${remote} and open a pull request “${toOneLine(title, LINE_MAX)}”`;
   }
 
   if (mode === "push") {
@@ -261,7 +261,7 @@ const publishCard = async (
   target: ShipTarget,
   query: PublishQuery
 ): Promise<ApprovalCard> => {
-  const plan = await readPrepare(target, query);
+  const plan = await getPrepare(target, query);
   const request = fromPlan(plan, query);
   const repo = plan.repo as ShipRepoInfo;
   const from = repo.branch ?? repo.head.slice(0, SHA_SHORT);
@@ -270,11 +270,11 @@ const publishCard = async (
 
   return {
     action: "Commit studio changes to a new branch in your repo",
-    detail: `Commit on a new branch from ${from} and ${doingOf(repo, request.mode, request.title)}. Your checked-out branch and files do not change. ${hooks} Files: ${oneLine(request.files.join(", "), FILES_LINE_MAX)}`,
-    title: `Ship ${files} file${plural(files)} as branch ${oneLine(request.branch, LINE_MAX)}`,
+    detail: `Commit on a new branch from ${from} and ${toDoing(repo, request.mode, request.title)}. Your checked-out branch and files do not change. ${hooks} Files: ${toOneLine(request.files.join(", "), FILES_LINE_MAX)}`,
+    title: `Ship ${files} file${toPlural(files)} as branch ${toOneLine(request.branch, LINE_MAX)}`,
   };
 };
 
-export { inspectPlan, publishCard, publishPlan, readPrepare };
+export { inspectPlan, publishCard, publishPlan, getPrepare };
 
 export type { PlanQuery, PublishQuery };

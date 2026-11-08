@@ -3,11 +3,11 @@ import type { ShipPlan } from "@design-studio/actions/ship/schema";
 import type { ShipPrepare, ShipSettings } from "@design-studio/contracts/ship";
 import { Context, Effect, Layer } from "effect";
 
+import { inspectPlan, publishCard, getPrepare } from "../git/ship-plans.js";
+import type { PlanQuery, PublishQuery } from "../git/ship-plans.js";
+import { getSettings } from "../git/ship-settings.js";
 import { attemptShip } from "./ship-core.js";
 import type { ShipError } from "./ship-core.js";
-import { inspectPlan, publishCard, readPrepare } from "./ship-plans.js";
-import type { PlanQuery, PublishQuery } from "./ship-plans.js";
-import { readSettings } from "./ship-settings.js";
 
 interface ShipStoreApi {
   readonly get: (
@@ -40,7 +40,7 @@ class ShipStore extends Context.Service<ShipStore, ShipStoreApi>()(
         query: PlanQuery
       ) {
         return yield* attemptShip(projectId, (target) =>
-          readPrepare(target, query)
+          getPrepare(target, query)
         );
       }),
       inspect: Effect.fn("ShipStore.inspect")(function* run(
@@ -62,7 +62,7 @@ class ShipStore extends Context.Service<ShipStore, ShipStoreApi>()(
       settings: Effect.fn("ShipStore.settings")(function* run(
         projectId: string
       ) {
-        return yield* attemptShip(projectId, (target) => readSettings(target));
+        return yield* attemptShip(projectId, (target) => getSettings(target));
       }),
     })
   );

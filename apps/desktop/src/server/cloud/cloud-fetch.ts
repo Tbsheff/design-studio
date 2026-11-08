@@ -1,6 +1,8 @@
-import { Effect, Schema } from "effect";
-
 import { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
+import { Effect, Result } from "effect";
+import type { Schema } from "effect";
+
+import { toDecoder } from "../platform/decode/index.js";
 
 const CLOUD_ORIGIN = "https://api.designstudio.app";
 
@@ -44,9 +46,13 @@ const getJsonResponse = <Value>(
       try: () => response.json(),
     });
 
-    return yield* Schema.decodeUnknownEffect(schema)(body).pipe(
-      Effect.mapError(toUnavailable)
-    );
+    const decoded = toDecoder(schema, "ignore")(body);
+
+    if (Result.isFailure(decoded)) {
+      return yield* toUnavailable();
+    }
+
+    return decoded.success;
   });
 
 export { CLOUD_ORIGIN, getJsonResponse, toUnavailable };

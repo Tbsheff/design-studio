@@ -1,26 +1,9 @@
-import { Schema } from "effect";
 import type { Hono } from "hono";
 
-import { publishPublish } from "@design-studio/actions/publish/publish";
-import { assertSafeId, BadRequestError } from "../platform/errors/index.js";
-import { linkLegacy, planFor } from "../publish/legacy-link.js";
-import { toPlanInput } from "../publish/plan-input.js";
+import { linkLegacy } from "../publish/legacy-link.js";
 import { createPublishService } from "../publish/service.js";
 import type { PublishDeps } from "../publish/service.js";
 import type { AppContext } from "./app-context.js";
-import { readBody } from "./app-request.js";
-
-const decodePlanBody = Schema.decodeUnknownPromise(publishPublish.input, {
-  onExcessProperty: "error",
-});
-
-const toDecodedPlan = async (raw: Record<string, unknown>) => {
-  try {
-    return await decodePlanBody(raw);
-  } catch (error) {
-    throw new BadRequestError(String(error));
-  }
-};
 
 const toPublishDeps = (ctx: AppContext): PublishDeps => ({
   comments: ctx.comments,
@@ -31,19 +14,14 @@ const toPublishDeps = (ctx: AppContext): PublishDeps => ({
   versions: ctx.versions,
 });
 
-const registerAppPublishRoutes = (app: Hono, ctx: AppContext): void => {
+const createAppPublishLink = (ctx: AppContext): void => {
   const deps = toPublishDeps(ctx);
-  const link = linkLegacy(deps, createPublishService(deps));
 
-  app.post("/api/projects/:projectId/publish/plan", async (c) => {
-    const projectId = assertSafeId(c.req.param("projectId") ?? "", "projectId");
-    const body = await readBody(c);
-    const input = await toDecodedPlan({ ...body, projectId });
+  linkLegacy(deps, createPublishService(deps));
+};
 
-    return c.json(
-      await planFor(link, projectId, await toPlanInput(link, input))
-    );
-  });
+const registerAppPublishRoutes = (_app: Hono, ctx: AppContext): void => {
+  createAppPublishLink(ctx);
 };
 
 export { registerAppPublishRoutes };

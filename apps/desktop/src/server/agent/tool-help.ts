@@ -7,9 +7,7 @@ import {
   CREATE_COMPONENT_AGENT_DESCRIPTION,
   SWAP_INSTANCE_AGENT_DESCRIPTION,
 } from "./component-create-tool.js";
-import { COPY_CODE_AGENT_DESCRIPTION } from "./copy-code-tool.js";
 import { APP_DOCTOR_DESCRIPTION } from "./doctor-tool.js";
-import { EXPORT_FRAME_AGENT_DESCRIPTION } from "./export-tool.js";
 import { FIGMA_IMPORT_TOOL_DESCRIPTION } from "./figma-import-tool.js";
 import { SET_IMAGE_AGENT_DESCRIPTION } from "./image-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
@@ -41,8 +39,6 @@ export const TOOL_SHORT = {
     "Score a frame against the reference picture the user attached (0-100) and get a diff image. Changes nothing.",
   component_preview:
     "Read only. Render one library component alone with default props, as an image.",
-  copy_code:
-    "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
   create_component:
     "Turn one element into a reusable React component file with inferred props and cva variants, and use it at the old place.",
   define_tweaks:
@@ -58,8 +54,6 @@ export const TOOL_SHORT = {
     "Change one element by CSS selector or layer id: style, leaf text, Tailwind classes {add, remove}, or op (delete, duplicate, wrap, group, unwrap, move). Patches only that element. Elements made by .map(), a condition or a call are refused.",
   edit_links:
     "Add, replace or remove prototype links and set the Play start frame. Links live in the studio, not in page code.",
-  export_frame:
-    "Export canvas frames as SVG or PPTX into the studio data folder. Changes no design file. Only when the user asks for an SVG or a deck.",
   find_styles:
     "Read only. Colors, font sizes, radii and spacing on the page with counts and token/raw status; with value, the elements that use it.",
   get_layers:
@@ -88,8 +82,6 @@ export const TOOL_SHORT = {
   measure:
     "Read only. Distance, gaps and insets between two elements on the live page.",
   paint_shape: VECTOR_PAINT_SHORT,
-  prepare_ship:
-    "Attached apps only. Read only. Files changed since the last ship and the draft PR text. Only the user can ship.",
   render_check:
     "Render one page at the run level sizes. JSON: console and page errors, overflow, `layout` findings and `quality` findings with severity and source.",
   replace_style:
@@ -143,7 +135,6 @@ export const TOOL_HELP: Record<
   compare_to_reference: COMPARE_REFERENCE_DESCRIPTION,
   component_preview:
     "Read only. Render one component of the project library alone with its default props, with the same server code as the studio Components panel tiles and the MCP component_preview tool, and see it as an image. Use it to check what a kit component looks like before you use it. Components that need data, server code or an open state return the reason.",
-  copy_code: COPY_CODE_AGENT_DESCRIPTION,
   create_component: CREATE_COMPONENT_AGENT_DESCRIPTION,
   define_tweaks:
     "Save the Tweaks panel controls for this design (replaces the whole list). Each control sets one CSS custom property: range {min, max, step?, unit?, default: number}, color {default}, toggle {on, off, default: boolean}, select {options: [{label, value}], default}. The user drags them for a live preview with no model call, and Commit writes the values into the :root declaration. Every cssVar must be declared in a top-level :root rule of the page CSS with the default value (a design-system token from tokens.css is already declared; Commit then updates tokens.json) and used with var() in the rules it changes. The result lists any var that is not declared or not used.",
@@ -157,7 +148,6 @@ export const TOOL_HELP: Record<
     "Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.",
   edit_links:
     'Add, replace or remove prototype links and set the Play start frame. add: [{fromFrame, selector, toFrame, transition?}] links the element (CSS selector on the page of fromFrame, which must exist on the rendered page) to toFrame (frame id or @label, or "back"); transition is instant, dissolve, slide-left or slide-right. A new link on the same element replaces the old one. remove: link ids. startFrame: frame id or @label. Links live in the studio, not in the page code.',
-  export_frame: EXPORT_FRAME_AGENT_DESCRIPTION,
   find_styles:
     "Read only. List the colors, font sizes, radii and spacing used on the page (or one canvas frame) with element counts and whether each value is a token, raw or mixed, like the inspector Selection colors panel. With value (and property) it lists the elements that use that computed value; inherited values count only on the element that sets them.",
   get_layers:
@@ -183,8 +173,6 @@ export const TOOL_HELP: Record<
   measure:
     "Read only. Measure the distance between two elements on the live page, like holding Alt in the studio: boxes, relation, horizontal and vertical gap, inset when one is inside the other, center offset and guide lines.",
   paint_shape: VECTOR_PAINT_SHORT,
-  prepare_ship:
-    "Attached app projects only. Read only. Lists the files the studio changed since the last ship (or since the app was attached), the files that cannot ship (secrets, .env, conflicts with the user's own changes) and the default branch name and pull request text. You cannot ship; only the user can, with the Ship button.",
   render_check:
     "Render one page of the current design at the sizes this run level uses. With no frame or path it checks the frame from <canvas-context> (its page and frame state), or the entry page. Returns JSON: `page`, then per viewport console errors, page errors, page-level horizontal overflow and `layout` findings (clipped, scrolls-sideways, past-viewport); then `quality` findings with severity high/medium/low (a11y from axe-core, tap-target, placeholder text, tokens, nav-mobile, visual-diff), selectors and source locations; then timings and the budget used.",
   replace_style:

@@ -5,6 +5,7 @@ import { CanvasActions } from "./canvas/index.js";
 import { ChartActions } from "./chart/index.js";
 import { CloudActions } from "./cloud/index.js";
 import { CommentActions } from "./comment/index.js";
+import { CompletionActions } from "./completion/index.js";
 import { ComponentVariantActions } from "./component-variant/index.js";
 import { ConnectionActions } from "./connection/index.js";
 import { ContentActions } from "./content/index.js";
@@ -59,6 +60,7 @@ const ALL_ACTIONS = {
   chart: ChartActions,
   cloud: CloudActions,
   comment: CommentActions,
+  completion: CompletionActions,
   componentVariant: ComponentVariantActions,
   connection: ConnectionActions,
   content: ContentActions,

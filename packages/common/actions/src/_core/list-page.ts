@@ -2,10 +2,18 @@ import { Effect, Schema } from "effect";
 
 type Item = Schema.Codec<unknown, unknown, never, never>;
 
-type Page<Of extends Item> = Schema.Struct<{
-  readonly items: Schema.$Array<Of>;
-  readonly next: Schema.NullOr<Schema.String>;
-}>;
+type PageExtra = Schema.Struct.Fields;
+
+type NoExtra = Record<never, never>;
+
+const NO_EXTRA: NoExtra = {};
+
+type Page<Of extends Item, Extra extends PageExtra = NoExtra> = Schema.Struct<
+  {
+    readonly items: Schema.$Array<Of>;
+    readonly next: Schema.NullOr<Schema.String>;
+  } & Extra
+>;
 
 const PAGE_DEFAULT = 50;
 
@@ -22,10 +30,14 @@ const PageFields = {
   limit: LimitSchema,
 };
 
-const pageOf = <Of extends Item>(item: Of): Page<Of> =>
+const pageOf = <Of extends Item, Extra extends PageExtra = NoExtra>(
+  item: Of,
+  extra: Extra = NO_EXTRA as Extra
+): Page<Of, Extra> =>
   Schema.Struct({
     items: Schema.Array(item),
     next: Schema.NullOr(Schema.String),
+    ...extra,
   });
 
 export { PAGE_MAX, PageFields, pageOf };

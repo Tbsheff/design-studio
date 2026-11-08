@@ -5,6 +5,7 @@ import { CanvasLive } from "./canvas/live.js";
 import { ChartLive } from "./chart/live.js";
 import { CloudLive } from "./cloud/live.js";
 import { CommentLive } from "./comment/live.js";
+import { CompletionLive } from "./completion/live.js";
 import { ComponentVariantLive } from "./component-variant/live.js";
 import { ConnectionLive } from "./connection/live.js";
 import { ContentLive } from "./content/live.js";
@@ -59,6 +60,7 @@ const ALL_LIVE = {
   chart: ChartLive,
   cloud: CloudLive,
   comment: CommentLive,
+  completion: CompletionLive,
   componentVariant: ComponentVariantLive,
   connection: ConnectionLive,
   content: ContentLive,

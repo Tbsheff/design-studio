@@ -13,6 +13,7 @@ import {
 
 import { useProjectEvents } from "../../platform/events.js";
 import { mcpApi } from "./mcp-model.js";
+import type { RunView } from "./run-state-model.js";
 
 interface McpApprovalCard {
   approval: McpApprovalRecord;
@@ -124,6 +125,22 @@ const useMcpFeed = (
   return useMemo(() => ({ activity: shown, approvals }), [shown, approvals]);
 };
 
+type TimelineItem =
+  | { kind: "run"; key: string; at: number; run: RunView }
+  | {
+      kind: "block";
+      key: string;
+      at: number;
+      client: string;
+      entries: McpActivity[];
+    }
+  | { kind: "approval"; key: string; at: number; card: McpApprovalCard };
+
+interface McpFeedControl extends McpFeedState {
+  locked: boolean;
+  onUndo: (versionId: string) => void;
+}
+
 export { useMcpFeed };
 
-export type { McpApprovalCard, McpFeedState };
+export type { McpApprovalCard, McpFeedControl, McpFeedState, TimelineItem };

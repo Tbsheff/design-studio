@@ -2,7 +2,7 @@ import type { ToolDiff } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useState, useEffect, useMemo } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { shortcutLabel } from "../../../shared/keymap.js";
 import {
@@ -24,6 +24,18 @@ import { formatMs } from "../../domain/format.js";
 import { copy } from "./copy.js";
 import type { ToolRow, RunView } from "./run-state-model.js";
 import {
+  CHECK_GROUP,
+  COLLAPSE_AFTER,
+  SHOW_MS_FROM,
+  STATE_WORD,
+  canceled,
+  checkParts,
+  failed,
+  planHeld,
+  shortName,
+} from "./tool-chips-model.js";
+import type { FileChange, RowGroup, ToolState } from "./tool-chips-model.js";
+import {
   toolGroupLabel,
   toolSubject,
   toolTally,
@@ -31,20 +43,8 @@ import {
   SKILL_TOOL,
 } from "./tool-labels-model.js";
 
-export const toolDiffs = (tool: Pick<ToolRow, "diff" | "diffs">): ToolDiff[] =>
+const toolDiffs = (tool: Pick<ToolRow, "diff" | "diffs">): ToolDiff[] =>
   tool.diffs ?? (tool.diff ? [tool.diff] : []);
-
-const CANCEL_NOTE = /\bRun canceled\.?$/u;
-
-const canceled = (tool: ToolRow): boolean =>
-  tool.isError && CANCEL_NOTE.test(tool.summary);
-
-const PLAN_NOTE = /^Plan mode is on\b/u;
-
-const planHeld = (tool: ToolRow): boolean =>
-  tool.isError && PLAN_NOTE.test(tool.summary);
-
-type ToolState = "pending" | "done" | "error" | "stopped" | "denied";
 
 const toolState = (tool: ToolRow, running = true): ToolState => {
   if (tool.durationMs === null) {
@@ -65,35 +65,30 @@ const toolState = (tool: ToolRow, running = true): ToolState => {
 const quiet = (tool: ToolRow): boolean =>
   toolDiffs(tool).length === 0 && toolState(tool) === "done";
 
-const CHECK_GROUP = "Checked";
-
-const sameRow = (a: ToolRow, b: ToolRow, workTree: string | null): boolean => {
-  if (!quiet(a) || !quiet(b)) {
+const sameRow = (
+  left: ToolRow,
+  right: ToolRow,
+  workTree: string | null
+): boolean => {
+  if (!quiet(left) || !quiet(right)) {
     return false;
   }
 
   if (
-    toolGroupLabel(a.name) === CHECK_GROUP &&
-    toolGroupLabel(b.name) === CHECK_GROUP
+    toolGroupLabel(left.name) === CHECK_GROUP &&
+    toolGroupLabel(right.name) === CHECK_GROUP
   ) {
     return true;
   }
 
   return (
-    a.name === b.name &&
-    toolSubject(a.name, a.input, workTree) ===
-      toolSubject(b.name, b.input, workTree)
+    left.name === right.name &&
+    toolSubject(left.name, left.input, workTree) ===
+      toolSubject(right.name, right.input, workTree)
   );
 };
 
-interface RowGroup {
-  tool: ToolRow;
-  count: number;
-  durationMs: number | null;
-  members: ToolRow[];
-}
-
-export const groupRepeats = (
+const groupRepeats = (
   tools: ToolRow[],
   workTree: string | null
 ): RowGroup[] => {
@@ -119,11 +114,6 @@ export const groupRepeats = (
   return groups;
 };
 
-const COLLAPSE_AFTER = 5;
-
-const failed = (tool: ToolRow): boolean =>
-  tool.isError && !tool.denied && !canceled(tool) && !planHeld(tool);
-
 const STATE_TONE: Record<ToolState, string> = {
   denied: "text-muted-foreground",
   done: "text-muted-foreground",
@@ -132,16 +122,10 @@ const STATE_TONE: Record<ToolState, string> = {
   stopped: "text-muted-foreground",
 };
 
-const shortName = (target: string): string => {
-  const parts = target.split("/");
-
-  return parts.at(-1) || target;
-};
-
 const shellEdits = (tool: ToolRow): ToolDiff[] =>
   tool.diff ? [] : (tool.diffs ?? []);
 
-export const DiffView = ({ diff }: { diff: ToolDiff }) => {
+const DiffView = ({ diff }: { diff: ToolDiff }): ReactElement => {
   if (diff.hunks.length === 0) {
     return (
       <p className="diff-empty text-xs">
@@ -165,7 +149,7 @@ export const DiffView = ({ diff }: { diff: ToolDiff }) => {
           >
             {index > 0 && (
               <div className="diff-gap" aria-hidden="true">
-                ⋯
+                {copy.text12}
               </div>
             )}
             {hunk.lines.map((line, lineIndex) => {
@@ -214,27 +198,35 @@ export const DiffView = ({ diff }: { diff: ToolDiff }) => {
         );
       })}
       {diff.truncated && (
-        <p className="diff-empty text-xs">The diff is cut short.</p>
+        <p className="diff-empty text-xs">{copy.theDiffIsCut}</p>
       )}
     </div>
   );
 };
 
-export const DiffBadge = ({
+const DiffBadge = ({
   added,
   removed,
 }: {
   added: number;
   removed: number;
-}) => (
+}): ReactElement => (
   <span
     className="diff-badge tabular-nums"
     aria-label={`${added} lines added, ${removed} removed`}
   >
     {(added > 0 || removed === 0) && (
-      <span className="diff-plus">+{added}</span>
+      <span className="diff-plus">
+        {copy.text13}
+        {added}
+      </span>
     )}
-    {removed > 0 && <span className="diff-minus">−{removed}</span>}
+    {removed > 0 && (
+      <span className="diff-minus">
+        {copy.text14}
+        {removed}
+      </span>
+    )}
   </span>
 );
 
@@ -244,7 +236,7 @@ const ShellEditDetail = ({
 }: {
   tool: ToolRow;
   diffs: ToolDiff[];
-}) => (
+}): ReactElement => (
   <div className="flex min-w-0 flex-col gap-2 text-xs">
     {tool.summary && (
       <span className="font-mono break-all text-muted-foreground">
@@ -271,7 +263,7 @@ const ToolDetail = ({
   tool: ToolRow;
   target: string;
   state: ToolState;
-}) => {
+}): ReactElement => {
   if (tool.diff) {
     return <DiffView diff={tool.diff} />;
   }
@@ -313,18 +305,6 @@ const diffTotals = (diffs: ToolDiff[]): { added: number; removed: number } =>
     { added: 0, removed: 0 }
   );
 
-const checkParts = (members: ToolRow[], workTree: string | null): string => {
-  const parts = members.map(
-    (tool) =>
-      toolSubject(tool.name, tool.input, workTree) ||
-      toolVerb(tool.name)
-        .replace(/ check$/u, "")
-        .toLowerCase()
-  );
-
-  return [...new Set(parts)].join(", ");
-};
-
 const rowView = (group: RowGroup, workTree: string | null) => {
   const { tool, members } = group;
   const edits = shellEdits(tool);
@@ -363,14 +343,6 @@ const rowView = (group: RowGroup, workTree: string | null) => {
   };
 };
 
-const STATE_WORD: Partial<Record<ToolState, string>> = {
-  denied: "Denied",
-  error: "Error",
-  stopped: "Stopped",
-};
-
-const SHOW_MS_FROM = 1000;
-
 const ToolMeta = ({
   group,
   state,
@@ -379,7 +351,7 @@ const ToolMeta = ({
   group: RowGroup;
   state: ToolState;
   totals: { added: number; removed: number } | null;
-}) => {
+}): ReactElement => {
   const ms =
     state !== "pending" &&
     state !== "stopped" &&
@@ -391,7 +363,10 @@ const ToolMeta = ({
   return (
     <>
       {group.count > 1 && (
-        <span className="tool-count tabular-nums">×{group.count}</span>
+        <span className="tool-count tabular-nums">
+          {copy.text15}
+          {group.count}
+        </span>
       )}
       {totals && <DiffBadge added={totals.added} removed={totals.removed} />}
       {ms !== null && (
@@ -428,7 +403,7 @@ const ToolStateIcon = ({
 }: {
   tool: ToolRow;
   state: ToolState;
-}) => {
+}): ReactElement => {
   if (state === "pending") {
     return <span className="spinner" />;
   }
@@ -451,7 +426,7 @@ const CheckDetail = ({
 }: {
   members: ToolRow[];
   workTree: string | null;
-}) => (
+}): ReactElement => (
   <ul className="tool-check-list flex flex-col gap-1 text-xs">
     {members.map((tool) => {
       const subject = toolSubject(tool.name, tool.input, workTree);
@@ -461,7 +436,10 @@ const CheckDetail = ({
           <span className="text-foreground">{toolVerb(tool.name)}</span>
           {subject && <span className="font-mono"> {subject}</span>}
           {tool.summary && (
-            <span className="text-muted-foreground"> · {tool.summary}</span>
+            <span className="text-muted-foreground">
+              {copy.text}
+              {tool.summary}
+            </span>
           )}
         </li>
       );
@@ -477,7 +455,7 @@ const ToolItem = ({
   group: RowGroup;
   workTree: string | null;
   running: boolean;
-}) => {
+}): ReactElement => {
   const { tool } = group;
   const state = toolState(tool, running);
   const [open, setOpen] = useState<boolean | null>(null);
@@ -527,22 +505,29 @@ const ToolItem = ({
   );
 };
 
-const GroupSummary = ({ tools }: { tools: ToolRow[] }) => {
+const GroupSummary = ({ tools }: { tools: ToolRow[] }): ReactElement => {
   const errors = tools.filter(failed).length;
-  const total = tools.reduce((sum, t) => sum + (t.durationMs ?? 0), 0);
+  const total = tools.reduce((sum, tool) => sum + (tool.durationMs ?? 0), 0);
 
   return (
     <>
       <span>
-        {tools.length} tool call{tools.length === 1 ? "" : "s"}
+        {tools.length}
+        {copy.toolCall}
+        {tools.length === 1 ? "" : "s"}
       </span>
-      {errors > 0 && <span className="text-destructive">{errors} failed</span>}
+      {errors > 0 && (
+        <span className="text-destructive">
+          {errors}
+          {copy.failed2}
+        </span>
+      )}
       {total > 0 && <span className="tabular-nums">{formatMs(total)}</span>}
     </>
   );
 };
 
-export const ToolChips = ({
+const ToolChips = ({
   tools,
   running,
   workTree,
@@ -552,7 +537,7 @@ export const ToolChips = ({
   running: boolean;
   workTree: string | null;
   flat?: boolean;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState<boolean | null>(null);
 
   if (tools.length === 0) {
@@ -609,14 +594,7 @@ const LIVE_VERB: Record<string, string> = {
   Write: "Writing",
 };
 
-export interface FileChange {
-  path: string;
-  added: number;
-  removed: number;
-  created: boolean;
-}
-
-export const fileChanges = (tools: ToolRow[]): FileChange[] => {
+const fileChanges = (tools: ToolRow[]): FileChange[] => {
   const byPath = new Map<string, FileChange>();
 
   for (const tool of tools) {
@@ -644,13 +622,13 @@ export const fileChanges = (tools: ToolRow[]): FileChange[] => {
   return [...byPath.values()];
 };
 
-export const ToolSummary = ({
+const ToolSummary = ({
   tools,
   children,
 }: {
   tools: ToolRow[];
   children: ReactNode;
-}) => {
+}): ReactElement | null => {
   const [open, setOpen] = useState(false);
 
   const label = useMemo(
@@ -688,11 +666,16 @@ export const ToolSummary = ({
           <Icon name="sparkle" size={14} />
         </span>
         <span className="tool-summary-count tabular-nums">
-          {tools.length} step{tools.length === 1 ? "" : "s"}
+          {tools.length}
+          {copy.step}
+          {tools.length === 1 ? "" : "s"}
         </span>
         <span className="tool-summary-label">{label}</span>
         {failedCount > 0 && (
-          <span className="tool-summary-failed">{failedCount} failed</span>
+          <span className="tool-summary-failed">
+            {failedCount}
+            {copy.failed2}
+          </span>
         )}
         <Icon name="chevronDown" size={14} className="tool-summary-caret" />
       </button>
@@ -710,7 +693,7 @@ const useElapsed = (since: number, active: boolean): number => {
 
     const id = globalThis.setInterval(() => setNow(Date.now()), 1000);
 
-    return () => globalThis.clearInterval(id);
+    return (): void => globalThis.clearInterval(id);
   }, [active]);
 
   return Math.max(0, now - since);
@@ -738,7 +721,7 @@ const statusLabel = (
 
   const pending = [...run.tools]
     .toReversed()
-    .find((t) => t.durationMs === null);
+    .find((tool) => tool.durationMs === null);
 
   if (pending) {
     const target = toolSubject(pending.name, pending.input, workTree);
@@ -759,7 +742,7 @@ const statusLabel = (
   return run.parts.length > 0 ? "Working" : "Starting";
 };
 
-export const runStepText = (
+const runStepText = (
   run: RunView | null,
   workTree: string | null
 ): string | null => {
@@ -789,7 +772,7 @@ const elapsedText = (ms: number): string => {
   return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
 };
 
-export const LiveStatus = ({
+const LiveStatus = ({
   run,
   workTree,
   offline = false,
@@ -799,7 +782,7 @@ export const LiveStatus = ({
   workTree: string | null;
   offline?: boolean;
   onStop?: () => void;
-}) => {
+}): ReactElement => {
   const elapsed = useElapsed(run.startedAt, true);
 
   return (
@@ -828,3 +811,17 @@ export const LiveStatus = ({
     </div>
   );
 };
+
+export {
+  DiffBadge,
+  DiffView,
+  LiveStatus,
+  ToolChips,
+  ToolSummary,
+  fileChanges,
+  groupRepeats,
+  runStepText,
+  toolDiffs,
+};
+
+export type { FileChange };

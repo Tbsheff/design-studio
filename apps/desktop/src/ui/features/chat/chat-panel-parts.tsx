@@ -5,8 +5,8 @@ import type { ReactElement, ReactNode } from "react";
 import { useConversation } from "../../ai/components/ai/conversation.js";
 import { EarlierRuns, useHistoryWindow } from "./chat-panel-window.js";
 import { copy } from "./copy.js";
-import type { TimelineItem } from "./mcp-feed.js";
 import type { RunView } from "./run-state-model.js";
+import type { TimelineItem } from "./use-mcp-feed.js";
 
 const StickOnNewRun = ({ runId }: { runId: string | null }): null => {
   const { stickToBottom } = useConversation();

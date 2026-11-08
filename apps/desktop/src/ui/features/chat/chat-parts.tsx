@@ -1,7 +1,7 @@
 import type { RunLevel } from "@design-studio/contracts";
 import { CopyButton, Icon } from "@design-studio/ui";
 import { memo, useEffect, useRef } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import {
   Exception,
@@ -22,6 +22,17 @@ import {
 } from "../../ai/components/ai/reasoning.js";
 import { formatTime, formatUsd } from "../../domain/format.js";
 import { splitMarkdownBlocks } from "../../domain/markdown-blocks.js";
+import {
+  ANSWERS_HEAD,
+  CONTEXT_WARN,
+  ERROR_HINTS,
+  runLevel,
+} from "./chat-parts-model.js";
+import type {
+  ClarifyAnswer,
+  RunUndoAction,
+  UserMessageSlots,
+} from "./chat-parts-model.js";
 import { contextShare } from "./context-meter.js";
 import { copy } from "./copy.js";
 import { levelLabel, levelHint } from "./level-control.js";
@@ -32,14 +43,6 @@ import {
   skillDisplayName,
 } from "./skills-model.js";
 
-interface UserMessageSlots {
-  title?: string | undefined;
-  tools?: ReactNode;
-  replaceBody?: ReactNode;
-  titleSlot?: ReactNode;
-  onRename?: () => void;
-}
-
 const RunTitle = ({
   title,
   slot,
@@ -48,7 +51,7 @@ const RunTitle = ({
   title: string | undefined;
   slot: ReactNode;
   onRename: (() => void) | undefined;
-}) => {
+}): ReactNode => {
   if (slot) {
     return slot;
   }
@@ -69,14 +72,7 @@ const RunTitle = ({
   );
 };
 
-const ANSWERS_HEAD = "\n\nAnswers to your questions:\n";
-
-export interface ClarifyAnswer {
-  question: string;
-  answer: string;
-}
-
-export const splitAnswers = (
+const splitAnswers = (
   prompt: string
 ): {
   text: string;
@@ -108,7 +104,11 @@ export const splitAnswers = (
   return { answers, text: prompt.slice(0, at) };
 };
 
-const AnsweredCard = ({ answers }: { answers: ClarifyAnswer[] }) => {
+const AnsweredCard = ({
+  answers,
+}: {
+  answers: ClarifyAnswer[];
+}): ReactElement | null => {
   if (answers.length === 0) {
     return null;
   }
@@ -117,7 +117,7 @@ const AnsweredCard = ({ answers }: { answers: ClarifyAnswer[] }) => {
     <div className="msg-answered" data-testid="clarify-answers">
       <span className="msg-answered-head">
         <Icon name="check" size={12} />
-        You answered
+        {copy.youAnswered}
       </span>
       <dl className="msg-answered-list">
         {answers.map((item, index) => (
@@ -131,10 +131,11 @@ const AnsweredCard = ({ answers }: { answers: ClarifyAnswer[] }) => {
   );
 };
 
-const runLevel = (run: RunView): RunLevel | null =>
-  run.summary?.level ?? run.request?.level ?? null;
-
-const LevelChip = ({ level }: { level: RunLevel | null }) => {
+const LevelChip = ({
+  level,
+}: {
+  level: RunLevel | null;
+}): ReactElement | null => {
   if (!level) {
     return null;
   }
@@ -146,7 +147,13 @@ const LevelChip = ({ level }: { level: RunLevel | null }) => {
   );
 };
 
-const RequestChips = ({ run, skills }: { run: RunView; skills: string[] }) => {
+const RequestChips = ({
+  run,
+  skills,
+}: {
+  run: RunView;
+  skills: string[];
+}): ReactElement | null => {
   const req = run.request;
 
   if (!req) {
@@ -168,13 +175,16 @@ const RequestChips = ({ run, skills }: { run: RunView; skills: string[] }) => {
       {selected > 0 && (
         <span className="ui-chip">
           <Icon name="pointer" size={12} />
-          {selected} selected
+          {selected}
+          {copy.selected}
         </span>
       )}
       {files > 0 && (
         <span className="ui-chip">
           <Icon name="image" size={12} />
-          {files} image{files === 1 ? "" : "s"}
+          {files}
+          {copy.image}
+          {files === 1 ? "" : "s"}
         </span>
       )}
       {skills.map((id) => (
@@ -191,14 +201,14 @@ const RequestChips = ({ run, skills }: { run: RunView; skills: string[] }) => {
   );
 };
 
-export const UserMessage = ({
+const UserMessage = ({
   run,
   title,
   tools,
   replaceBody,
   titleSlot,
   onRename,
-}: { run: RunView } & UserMessageSlots) => {
+}: { run: RunView } & UserMessageSlots): ReactElement | null => {
   const req = run.request;
 
   if (!req) {
@@ -212,7 +222,8 @@ export const UserMessage = ({
         data-testid="retry-marker"
       >
         <Icon name="undo" size={12} />
-        Retry · <time>{formatTime(run.startedAt)}</time>
+        {copy.retry}
+        <time>{formatTime(run.startedAt)}</time>
       </div>
     );
   }
@@ -267,7 +278,7 @@ const MarkdownBlock = memo(({ text }: { text: string }) => (
 ));
 MarkdownBlock.displayName = "MarkdownBlock";
 
-export const AssistantText = memo(
+const AssistantText = memo(
   ({ text, streaming = false }: { text: string; streaming?: boolean }) => {
     const blocks = splitMarkdownBlocks(text);
 
@@ -285,65 +296,38 @@ export const AssistantText = memo(
 );
 AssistantText.displayName = "AssistantText";
 
-export const Thinking = memo(
-  ({ text, live }: { text: string; live: boolean }) => {
-    if (!text && !live) {
-      return null;
-    }
-
-    return (
-      <Reasoning className="thinking" data-testid="thinking">
-        <ReasoningTrigger className="text-xs">
-          {live ? "Thinking…" : "Thought"}
-        </ReasoningTrigger>
-        <ReasoningContent>
-          <p className="thinking-text whitespace-pre-wrap text-xs">{text}</p>
-        </ReasoningContent>
-      </Reasoning>
-    );
+const Thinking = memo(({ text, live }: { text: string; live: boolean }) => {
+  if (!text && !live) {
+    return null;
   }
-);
+
+  return (
+    <Reasoning className="thinking" data-testid="thinking">
+      <ReasoningTrigger className="text-xs">
+        {live ? "Thinking…" : "Thought"}
+      </ReasoningTrigger>
+      <ReasoningContent>
+        <p className="thinking-text whitespace-pre-wrap text-xs">{text}</p>
+      </ReasoningContent>
+    </Reasoning>
+  );
+});
 Thinking.displayName = "Thinking";
 
-export const SentWhileRunning = ({ text }: { text: string }) => (
+const SentWhileRunning = ({ text }: { text: string }): ReactElement => (
   <div className="msg-inline-user" data-testid="sent-while-running">
-    <span className="msg-inline-label">You, while it ran</span>
+    <span className="msg-inline-label">{copy.youWhileItRan}</span>
     <p className="whitespace-pre-wrap wrap-anywhere">{text}</p>
   </div>
 );
 
-const ERROR_HINTS: [RegExp, string][] = [
-  [
-    /rate.?limit|\b429\b|overloaded|\b529\b/iu,
-    "The model is busy. Wait a minute, then retry.",
-  ],
-  [
-    /\b401\b|\b403\b|auth|api key|log ?in|credential/iu,
-    "Sign in again or check your API key in Settings, then retry.",
-  ],
-  [/credit|billing|quota/iu, "Check your plan or credits, then retry."],
-  [
-    /prompt is too long|context (?:window|length)|too many tokens/iu,
-    "Start a new direction, or send a shorter message.",
-  ],
-  [
-    /network|fetch failed|econn|etimedout|socket|offline/iu,
-    "Check your connection, then retry.",
-  ],
-];
-
-export const errorHint = (error: string): string => {
+const errorHint = (error: string): string => {
   const hit = ERROR_HINTS.find(([pattern]) => pattern.test(error));
 
   return hit
     ? hit[1]
     : "Retry, or change your message and send it again. Details has the full log.";
 };
-
-interface RunUndoAction {
-  onUndo: () => void;
-  tip: string | null;
-}
 
 const undoRun = (undo: RunUndoAction, button: HTMLButtonElement): void => {
   if (undo.tip !== null) {
@@ -366,7 +350,7 @@ const RunErrorActions = ({
 }: {
   retry: (() => void) | undefined;
   undo: RunUndoAction | undefined;
-}) => {
+}): ReactElement | null => {
   if (!retry && !undo) {
     return null;
   }
@@ -382,19 +366,19 @@ const RunErrorActions = ({
           data-tip-side="top"
           onClick={(event) => undoRun(undo, event.currentTarget)}
         >
-          Undo its changes
+          {copy.undoItsChanges}
         </button>
       )}
       {retry && (
         <button type="button" className="btn small" onClick={retry}>
-          Retry
+          {copy.retry2}
         </button>
       )}
     </span>
   );
 };
 
-export const RunError = ({
+const RunError = ({
   run,
   latest,
   onRetry,
@@ -404,7 +388,7 @@ export const RunError = ({
   latest: boolean;
   onRetry?: () => void;
   undo?: RunUndoAction;
-}) => {
+}): ReactElement | null => {
   const error = run.summary?.error;
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -425,7 +409,7 @@ export const RunError = ({
       data-long={error.length > 60 || undo !== undefined || undefined}
     >
       <ExceptionHeader className="run-error-head">
-        <ExceptionType>Error</ExceptionType>
+        <ExceptionType>{copy.error}</ExceptionType>
         <ExceptionMessage className="wrap-anywhere">{error}</ExceptionMessage>
         <RunErrorActions
           retry={latest && run.status !== "canceled" ? onRetry : undefined}
@@ -439,11 +423,9 @@ export const RunError = ({
   );
 };
 
-const CONTEXT_WARN = 0.7;
+const AlertIcon = (): ReactElement => <Icon name="alert" size={14} />;
 
-const AlertIcon = () => <Icon name="alert" size={14} />;
-
-export const RunNotice = ({
+const RunNotice = ({
   run,
   latest,
   onRetry,
@@ -451,7 +433,7 @@ export const RunNotice = ({
   run: RunView;
   latest: boolean;
   onRetry?: () => void;
-}) => {
+}): ReactElement | null => {
   if (run.status === "budget_exceeded") {
     const spent = run.summary ? ` after ${formatUsd(run.summary.costUsd)}` : "";
 
@@ -463,8 +445,9 @@ export const RunNotice = ({
       >
         <AlertIcon />
         <span className="run-notice-text">
-          This run stopped at the spending limit{spent}. Raise the limit in
-          Settings to let runs go further.
+          {copy.thisRunStoppedAt}
+          {spent}
+          {copy.raiseTheLimitIn}
         </span>
         {latest && onRetry && (
           <button
@@ -472,7 +455,7 @@ export const RunNotice = ({
             className="btn ghost small run-retry"
             onClick={onRetry}
           >
-            Retry
+            {copy.retry2}
           </button>
         )}
       </div>
@@ -497,20 +480,21 @@ export const RunNotice = ({
     >
       <AlertIcon />
       <span>
-        This chat uses {Math.round(share * 100)}% of the context window. Start a
-        new direction to keep runs fast and focused.
+        {copy.thisChatUses}
+        {Math.round(share * 100)}
+        {copy.ofTheContextWindow}
       </span>
     </div>
   );
 };
 
-export const PolishThis = ({
+const PolishThis = ({
   disabled,
   onPolish,
 }: {
   disabled: boolean;
   onPolish: () => void;
-}) => (
+}): ReactElement => (
   <div className="polish-this flex items-center gap-2 text-xs text-muted-foreground">
     <button
       type="button"
@@ -523,13 +507,13 @@ export const PolishThis = ({
       onClick={onPolish}
     >
       <Icon name="sparkle" size={14} />
-      Polish this
+      {copy.polishThis}
     </button>
-    <span>Run every check and fix issues.</span>
+    <span>{copy.runEveryCheckAnd}</span>
   </div>
 );
 
-export const PlanCard = ({ onApprove }: { onApprove: () => void }) => (
+const PlanCard = ({ onApprove }: { onApprove: () => void }): ReactElement => (
   <div
     className="plan-card"
     data-testid="plan-card"
@@ -537,11 +521,12 @@ export const PlanCard = ({ onApprove }: { onApprove: () => void }) => (
     aria-label={copy.planReady}
   >
     <p>
-      <strong>Plan ready.</strong> No files changed yet.
+      <strong>{copy.planReady2}</strong>
+      {copy.noFilesChangedYet}
     </p>
     <div className="plan-actions">
       <button type="button" className="btn small primary" onClick={onApprove}>
-        Approve and build
+        {copy.approveAndBuild}
       </button>
       <button
         type="button"
@@ -554,8 +539,23 @@ export const PlanCard = ({ onApprove }: { onApprove: () => void }) => (
             ?.focus()
         }
       >
-        Keep planning
+        {copy.keepPlanning}
       </button>
     </div>
   </div>
 );
+
+export {
+  AssistantText,
+  PlanCard,
+  PolishThis,
+  RunError,
+  RunNotice,
+  SentWhileRunning,
+  Thinking,
+  UserMessage,
+  errorHint,
+  splitAnswers,
+};
+
+export type { ClarifyAnswer };

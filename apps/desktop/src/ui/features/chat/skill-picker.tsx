@@ -5,7 +5,7 @@ import type {
 } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
 import { rank } from "../../chat-slots.js";
@@ -120,13 +120,18 @@ interface SlashSourceProps {
   onCommand: (command: Command) => void;
 }
 
+interface UseSlashSectionsResult {
+  readonly note: ReactElement | null;
+  readonly sections: (query: string) => SlashSection[];
+}
+
 const useSlashSections = ({
   disabled,
   exclude,
   commands,
   onSkill,
   onCommand,
-}: SlashSourceProps) => {
+}: SlashSourceProps): UseSlashSectionsResult => {
   const { catalog, error } = useSkillCatalog();
   const on = enabledSkills(catalog, disabled);
 
@@ -171,10 +176,10 @@ const useSlashSections = ({
   return { note, sections };
 };
 
-const useDismiss = (onClose: () => void) => {
+const useDismiss = (onClose: () => void): RefObject<HTMLDivElement | null> => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         onClose();
       }
@@ -182,7 +187,7 @@ const useDismiss = (onClose: () => void) => {
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
 
   return ref;
@@ -190,9 +195,12 @@ const useDismiss = (onClose: () => void) => {
 
 const POP_GAP = 8;
 
-const useFitAbove = (ref: RefObject<HTMLDivElement | null>, max: number) => {
+const useFitAbove = (
+  ref: RefObject<HTMLDivElement | null>,
+  max: number
+): void => {
   useLayoutEffect(() => {
-    const fit = () => {
+    const fit = (): void => {
       const pop = ref.current;
       const anchor = pop?.parentElement;
 
@@ -213,7 +221,7 @@ const useFitAbove = (ref: RefObject<HTMLDivElement | null>, max: number) => {
     fit();
     window.addEventListener("resize", fit);
 
-    return () => window.removeEventListener("resize", fit);
+    return (): void => window.removeEventListener("resize", fit);
   }, [ref, max]);
 };
 
@@ -223,7 +231,7 @@ const SkillChips = ({
 }: {
   ids: string[];
   onRemove: (id: string) => void;
-}) => {
+}): ReactElement | null => {
   if (ids.length === 0) {
     return null;
   }
@@ -264,16 +272,19 @@ const IndicatorPop = (props: {
   error: string | null;
   onChange: (next: string[]) => void;
   onClose: () => void;
-}) => {
+}): ReactElement => {
   const ref = useDismiss(props.onClose);
   useFitAbove(ref, SKILL_POPOVER_HEIGHT);
   useEffect(() => {
-    const onKey = (event: globalThis.KeyboardEvent) =>
-      event.key === "Escape" && props.onClose();
+    const onKey = (event: globalThis.KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        props.onClose();
+      }
+    };
 
     globalThis.addEventListener("keydown", onKey);
 
-    return () => globalThis.removeEventListener("keydown", onKey);
+    return (): void => globalThis.removeEventListener("keydown", onKey);
   }, [props]);
 
   return (
@@ -297,7 +308,11 @@ const IndicatorPop = (props: {
   );
 };
 
-const SkillsIndicator = ({ projectId, settings, onSaved }: IndicatorProps) => {
+const SkillsIndicator = ({
+  projectId,
+  settings,
+  onSaved,
+}: IndicatorProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { catalog } = useSkillCatalog();

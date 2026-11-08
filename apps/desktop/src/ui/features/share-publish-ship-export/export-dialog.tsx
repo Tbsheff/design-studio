@@ -11,7 +11,7 @@ import { ExportDialogFoot } from "./export-dialog-foot.js";
 import { ExportDialogHead } from "./export-dialog-head.js";
 import { FORMATS } from "./export-formats.js";
 import type { FormatInfo } from "./export-formats.js";
-import type { FrameLabel } from "./frame-label.js";
+import { toFrameLabels } from "./frame-labels.js";
 import { pick } from "./pick.js";
 import type { SegmentOption } from "./segmented.js";
 import { useEditors } from "./use-editors.js";
@@ -28,18 +28,7 @@ const FORMAT_OPTIONS: readonly SegmentOption<ExportFormat>[] = FORMATS.map(
   (entry) => ({ icon: entry.icon, id: entry.id, label: entry.label })
 );
 
-const toFrameLabels = (
-  options: ExportOptions
-): ReadonlyMap<string, FrameLabel> =>
-  new Map(
-    options.frames.map((choice) => [
-      choice.id,
-      {
-        name: canvasFrameName(options.projectId, choice.id, choice.frame.name),
-        page: framePage(choice.frame.path),
-      },
-    ])
-  );
+const FRAME_NAMERS = { nameOf: canvasFrameName, pageOf: framePage };
 
 const toActionText = (
   info: FormatInfo,
@@ -57,7 +46,12 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
   const options = useExportOptions(target);
   const runner = useExportRunner(target, options);
   const { format } = options;
-  const labels = useMemo(() => toFrameLabels(options), [options]);
+
+  const labels = useMemo(
+    () => toFrameLabels(options.projectId, options.frames, FRAME_NAMERS),
+    [options]
+  );
+
   const isHandoff = format === "handoff";
   const editors = useEditors(isHandoff);
   const { failWith, isBusy, resetStatus } = runner;

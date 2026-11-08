@@ -194,6 +194,34 @@ const copy = {
   diffOf: "Diff of",
   shipFile: "Ship",
   shipBaseLabelId: "ship-base-label",
+  localLink: "Local link",
+  publishTab: "Publish",
+  oneHour: "1 hour",
+  twentyFourHours: "24 hours",
+  sevenDays: "7 days",
+  copyLinkLabel: "Copy link",
+  hiddenLinkNote:
+    "A link shows its address only when you make it. To copy it again, make a new link.",
+  cursorOn:
+    "On: viewers see your pointer over the frames you do not edit now, and over the frame you edit while Comment is on.",
+  cursorOff: "Off: viewers do not see your pointer.",
+  showCursorLabel: "Show my cursor to viewers",
+  revokeLiveTip:
+    "The link stops working at once, open viewers are cut off and its images are deleted",
+  revokeTip: "The link stops working at once and its images are deleted",
+  lanOnPrefix: "On: devices on this network can open links at",
+  lanOff: "Off: only this computer can open links (127.0.0.1).",
+  makeLinkFirst: "Make a link first",
+  allowOnLanLabel: "Allow on local network",
+  liveOn:
+    "Viewers get a new image of each frame each time you save a version, and you see their cursors on the canvas.",
+  liveOff: "Off: viewers see the images from when you made the link.",
+  liveLabel: "Live",
+  working: "Working…",
+  createLink: "Create link",
+  shareLinkAria: "Share a read-only link",
+  publishAria: "Publish on Cloudflare",
+  expiryLabel: "Link ends after",
 } as const;
 
 export { copy };

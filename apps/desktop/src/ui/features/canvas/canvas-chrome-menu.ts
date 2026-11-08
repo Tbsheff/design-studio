@@ -223,4 +223,4 @@ const useFileMenu = (
 
 export { useFileMenu };
 
-export type { ChromeImportPage, ChromeProps };
+export type { ChromeImportPage, ChromeProps, FileMenu };

@@ -7,7 +7,11 @@ let profile: Promise<string | null> | null = null;
 const toInitial = (name: string | null): string | null => {
   const first = name?.trim().match(/\p{L}|\p{N}/u)?.[0];
 
-  return first ? first.toLocaleUpperCase() : null;
+  if (first) {
+    return first.toLocaleUpperCase();
+  }
+
+  return null;
 };
 
 const getProfileInitial = async (): Promise<string | null> => {

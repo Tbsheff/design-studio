@@ -134,10 +134,13 @@ const packVars = (pack: PackSummary): CSSProperties =>
     "--pc-surface": swatch(pack, "surface", "#f5f5f5"),
   }) as CSSProperties;
 
-const rampColor = (step: number, index: number): string =>
-  index <= 5
-    ? `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-bg))`
-    : `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-fg))`;
+const rampColor = (step: number, index: number): string => {
+  if (index <= 5) {
+    return `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-bg))`;
+  }
+
+  return `color-mix(in oklch, var(--pc-primary) ${step}%, var(--pc-fg))`;
+};
 
 const fontNames = (pack: PackSummary): string => {
   const clean = (family: string): string =>
@@ -146,7 +149,11 @@ const fontNames = (pack: PackSummary): string => {
   const display = clean(pack.fonts.display);
   const body = clean(pack.fonts.body);
 
-  return display === body || !body ? display : `${display} / ${body}`;
+  if (display === body || !body) {
+    return display;
+  }
+
+  return `${display} / ${body}`;
 };
 
 const PackPreviewCard = ({

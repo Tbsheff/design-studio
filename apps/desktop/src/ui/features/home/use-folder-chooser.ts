@@ -38,9 +38,11 @@ const useFolderChooser = (
         setUnsupported(true);
       }
 
-      return outcome.kind === "picked"
-        ? { isUnsupported: false, path: outcome.path }
-        : { isUnsupported: outcome.kind === "unsupported", path: null };
+      if (outcome.kind === "picked") {
+        return { isUnsupported: false, path: outcome.path };
+      }
+
+      return { isUnsupported: outcome.kind === "unsupported", path: null };
     } catch (error) {
       onError(errorText(error));
 

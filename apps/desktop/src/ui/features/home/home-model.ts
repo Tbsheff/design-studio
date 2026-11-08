@@ -95,7 +95,11 @@ const getHomeSendBlocker = (
   }
 
   if (chip) {
-    return chip.isChecking ? "Checking the folder" : chipProblem(chip);
+    if (chip.isChecking) {
+      return "Checking the folder";
+    }
+
+    return chipProblem(chip);
   }
 
   if (asking) {
@@ -186,11 +190,20 @@ const getPromptPlaceholder = (
     return `Describe a change to ${chipName(chip)}, or press Return to open it`;
   }
 
-  return empty ? PLACEHOLDER : null;
+  if (empty) {
+    return PLACEHOLDER;
+  }
+
+  return null;
 };
 
-const getReasonId = (blocker: string | null): string | undefined =>
-  blocker && blocker !== EMPTY_PROMPT ? HOME_REASON_ID : undefined;
+const getReasonId = (blocker: string | null): string | undefined => {
+  if (blocker && blocker !== EMPTY_PROMPT) {
+    return HOME_REASON_ID;
+  }
+
+  return undefined;
+};
 
 const isEmpty = (projects: Project[] | null): boolean =>
   projects !== null &&

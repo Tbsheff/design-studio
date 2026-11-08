@@ -26,10 +26,18 @@ const getShellPath = (dir: string, homeDir: string | null): string => {
   if (short.startsWith("~/")) {
     const rest = short.slice(2);
 
-    return SHELL_SAFE.test(rest) ? `~/${rest}` : `~/${JSON.stringify(rest)}`;
+    if (SHELL_SAFE.test(rest)) {
+      return `~/${rest}`;
+    }
+
+    return `~/${JSON.stringify(rest)}`;
   }
 
-  return SHELL_SAFE.test(short) ? short : JSON.stringify(short);
+  if (SHELL_SAFE.test(short)) {
+    return short;
+  }
+
+  return JSON.stringify(short);
 };
 
 const getHomeCommand = (

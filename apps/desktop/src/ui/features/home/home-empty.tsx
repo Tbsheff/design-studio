@@ -17,7 +17,11 @@ const KIND_TONE = { html: "html", next: "next", vite: "vite" } as const;
 const getFoundBadge = (app: FoundApp): string => {
   const base = FOUND_KIND_LABEL[app.kind];
 
-  return app.kind === "next" && app.apps.length > 1 ? `${base} monorepo` : base;
+  if (app.kind === "next" && app.apps.length > 1) {
+    return `${base} monorepo`;
+  }
+
+  return base;
 };
 
 const useFound = (): FoundApps | null | "error" => {

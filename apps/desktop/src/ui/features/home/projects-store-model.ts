@@ -56,7 +56,13 @@ const projectsApi = {
   load: runProjectsLoad,
   rename: async (project: Project, name: string) => {
     update((list) =>
-      list.map((item) => (item.id === project.id ? { ...item, name } : item))
+      list.map((item) => {
+        if (item.id === project.id) {
+          return { ...item, name };
+        }
+
+        return item;
+      })
     );
 
     try {

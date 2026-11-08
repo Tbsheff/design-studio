@@ -64,7 +64,11 @@ const useThumb = (hit: ProjectHit): string | null => {
     };
   }, [key, hit.id, hit.thumbnail]);
 
-  return url && url.key === key ? url.url : null;
+  if (url && url.key === key) {
+    return url.url;
+  }
+
+  return null;
 };
 
 const ProjectThumb = ({

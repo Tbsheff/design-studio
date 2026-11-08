@@ -17,7 +17,11 @@ const useExample = (paused: boolean, fixed: boolean): string => {
     return (): void => globalThis.clearInterval(timer);
   }, [paused, fixed]);
 
-  return fixed ? PLACEHOLDER : (EXAMPLES[index] ?? "");
+  if (fixed) {
+    return PLACEHOLDER;
+  }
+
+  return EXAMPLES[index] ?? "";
 };
 
 export { useExample };

@@ -65,9 +65,11 @@ const getChipLabel = (chip: AppChip): string => {
 
   const dir = chip.appDir ?? found.appDir;
 
-  return dir && dir !== "."
-    ? `${KIND_LABEL[found.kind]} · ${dir}`
-    : KIND_LABEL[found.kind];
+  if (dir && dir !== ".") {
+    return `${KIND_LABEL[found.kind]} · ${dir}`;
+  }
+
+  return KIND_LABEL[found.kind];
 };
 
 interface DropBridge {
@@ -88,7 +90,11 @@ const getDroppedFolder = (
       ? (desktopBridge<DropBridge>()?.pathForFile?.(file) ?? "")
       : "";
 
-    return path ? { path } : { unsupported: true };
+    if (path) {
+      return { path };
+    }
+
+    return { unsupported: true };
   }
 
   return null;
@@ -117,7 +123,13 @@ const useAppChip = () => {
 
   const update = useCallback(
     (patch: Partial<AppChip>) =>
-      setChip((current) => (current ? { ...current, ...patch } : current)),
+      setChip((current) => {
+        if (current) {
+          return { ...current, ...patch };
+        }
+
+        return current;
+      }),
     []
   );
 
@@ -130,28 +142,36 @@ const useAppChip = () => {
     }
 
     let live = true;
-    setChip((current) =>
-      current ? { ...current, checking: true, error: null } : current
-    );
+    setChip((current) => {
+      if (current) {
+        return { ...current, checking: true, error: null };
+      }
+
+      return current;
+    });
 
     const inspect = async (): Promise<void> => {
       try {
         const inspection = await api.inspectFolder(path, appDir ?? undefined);
 
         if (live) {
-          setChip((current) =>
-            current?.path === path
-              ? { ...current, checking: false, inspection }
-              : current
-          );
+          setChip((current) => {
+            if (current?.path === path) {
+              return { ...current, checking: false, inspection };
+            }
+
+            return current;
+          });
         }
       } catch (error: unknown) {
         if (live) {
-          setChip((current) =>
-            current?.path === path
-              ? { ...current, checking: false, error: errorText(error) }
-              : current
-          );
+          setChip((current) => {
+            if (current?.path === path) {
+              return { ...current, checking: false, error: errorText(error) };
+            }
+
+            return current;
+          });
         }
       }
     };

@@ -16,7 +16,7 @@ const setRulesDirectEdit = defineAction({
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
-    "Replace the design rules of a direction. Saves one version when the rules live in the project repo.",
+    "Replace the design rules of a project, with the same code path as Save in the Rules editor. In a studio project the rules go into a rules block in DESIGN.md as one version the user can undo. In an attached app they are saved in the studio data folder, never in the app repo. The next studio run and review_frame use them.",
   errors: [
     BadRequest,
     Conflict,
@@ -36,7 +36,7 @@ const setRulesDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["direct-edit.getRules"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_design_rules" },
   needs: "project.update",
   output: SaveRulesResultSchema,
   scope: "project",

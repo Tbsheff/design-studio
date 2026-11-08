@@ -15,7 +15,7 @@ const getRulesDirectEdit = defineAction({
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
-    "Read the design rules of a direction: text, parsed rules, origin and imported rules.",
+    "Read the design rules of a project, the same list as the Rules editor in the Design system panel. Each rule has a kind. Class, token, font and component rules are checked by review_frame. Text rules go only to the studio agent and the critic. The origin says where the rules come from. Imported rules come from the DESIGN.md and AGENTS.md of the app. Save them with set_design_rules.",
   errors: [
     BadRequest,
     Conflict,
@@ -34,7 +34,7 @@ const getRulesDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "get_design_rules" },
   needs: "project.read",
   output: RulesStateSchema,
   scope: "project",

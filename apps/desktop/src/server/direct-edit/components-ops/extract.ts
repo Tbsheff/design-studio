@@ -4,16 +4,14 @@ import path from "node:path";
 
 import type * as t from "@babel/types";
 import type { Direction, Project, VersionMeta } from "@design-studio/contracts";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
+import type { Schema } from "effect";
 
-import {
-  COMPONENT_NAME,
-  CREATE_TARGETS_MAX,
-  type ComponentFolder,
-  type ComponentFolderList,
-  type CreateComponentRequest,
-  type CreateComponentResult,
-  type CreatedProp,
+import type {
+  ComponentFolder,
+  ComponentFolderList,
+  CreateComponentRequest,
+  CreateComponentResult,
+  CreatedProp,
 } from "../../../shared/component-create.js";
 import { planImport } from "../../components/import-plan.js";
 import { loadLibrary } from "../../components/insert-list.js";
@@ -23,7 +21,6 @@ import {
   resolveImport,
 } from "../../components/props-schema.js";
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
 import { writeAndCommitAll, type WrittenFile } from "../commit/batch.js";
 import { assertCanEdit, publishVersion } from "../commit/publish.js";
 import { DirectEditError } from "../engine/errors.js";
@@ -49,45 +46,10 @@ import {
 } from "./extract-shape.js";
 import { removeImport } from "./import-cleanup.js";
 import { resolveTarget, seenImports, type InsertScope } from "./insert.js";
+import { decodeCreateRequest } from "./request-schema.js";
 
 type Ts = Awaited<ReturnType<typeof loadTypeScript>>;
 type Library = Awaited<ReturnType<typeof loadLibrary>>;
-
-const loc = z
-  .object({
-    file: z.string().min(1).max(1000),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
-  })
-  .strict();
-const target = z
-  .object({
-    source: loc.nullable(),
-    tag: z.string().max(100).optional(),
-    selector: z.string().max(2000).optional(),
-    owners: z
-      .array(
-        z.object({
-          name: z.string().max(64),
-          stack: z.string().max(OWNER_STACK_MAX),
-        })
-      )
-      .max(OWNERS_MAX)
-      .optional(),
-  })
-  .strict();
-const requestSchema = z
-  .object({
-    targets: z
-      .array(target)
-      .min(1, "select at least one element")
-      .max(CREATE_TARGETS_MAX, `select at most ${CREATE_TARGETS_MAX} elements`),
-    name: z
-      .string()
-      .regex(COMPONENT_NAME, "must be a PascalCase name such as StatRow"),
-    folder: z.string().trim().min(1, "pick a folder").max(500),
-  })
-  .strict();
 
 interface Use extends ShapeUse {
   target: ResolvedSource;
@@ -108,17 +70,7 @@ export interface CreatePlan {
 }
 
 export function parseCreateRequest(raw: unknown): CreateComponentRequest {
-  const parsed = requestSchema.safeParse(raw);
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    throw new DirectEditError(
-      "invalid_request",
-      issue
-        ? `${issue.path.join(".") || "request"}: ${issue.message}`
-        : "The create component request is not valid"
-    );
-  }
-  return parsed.data as CreateComponentRequest;
+  return decodeCreateRequest(raw as Schema.Json) as CreateComponentRequest;
 }
 
 function plainReason(error: unknown): never {

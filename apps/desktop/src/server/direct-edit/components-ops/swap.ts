@@ -11,6 +11,7 @@ import type {
   ComponentSchema,
   PropValue,
 } from "@design-studio/contracts/props";
+import type { Schema } from "effect";
 
 import type {
   SwapCandidate,
@@ -30,7 +31,6 @@ import {
 } from "../../components/props-schema.js";
 import { elementAt } from "../../components/use-site.js";
 import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
-import { z } from "../../platform/zod-bridge/index.js";
 import { writeAndCommitAll } from "../commit/batch.js";
 import { resolveSource } from "../commit/edit-source.js";
 import { assertCanEdit, publishVersion } from "../commit/publish.js";
@@ -39,28 +39,11 @@ import { leadingWhitespaceStart } from "../engine/splice.js";
 import { positionAt, refuse } from "../engine/structure-ops.js";
 import { removeImport } from "./import-cleanup.js";
 import { propsFor, seenImports, type InsertScope } from "./insert.js";
+import { decodeSwapRequest } from "./request-schema.js";
 
 type Library = Awaited<ReturnType<typeof loadLibrary>>;
 type Splice = { start: number; end: number; text: string };
 
-const loc = z
-  .object({
-    file: z.string().min(1).max(1000),
-    line: z.number().int().min(1),
-    col: z.number().int().min(1),
-  })
-  .strict();
-const requestSchema = z
-  .object({
-    use: loc,
-    component: z
-      .object({
-        name: z.string().regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/),
-        file: z.string().min(1).max(1000).optional(),
-      })
-      .strict(),
-  })
-  .strict();
 const PASS_THROUGH =
   /^(className|style|id|key|ref|role|title|data-.+|aria-.+|on[A-Z].*)$/;
 const CANDIDATES_MAX = 12;
@@ -96,17 +79,7 @@ export interface SwapPlan {
 }
 
 export function parseSwapRequest(raw: unknown): SwapRequest {
-  const parsed = requestSchema.safeParse(raw);
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    throw new DirectEditError(
-      "invalid_request",
-      issue
-        ? `${issue.path.join(".") || "request"}: ${issue.message}`
-        : "The swap request is not valid"
-    );
-  }
-  return parsed.data as SwapRequest;
+  return decodeSwapRequest(raw as Schema.Json) as SwapRequest;
 }
 
 function attrName(attr: t.JSXAttribute): string {

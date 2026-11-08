@@ -2,9 +2,9 @@ import type { ElementSourceInfo } from "@design-studio/contracts";
 import { useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import { InspectorAppContext, useInspectorApp } from "./inspector-shared.js";
 import { VariantScopeContext } from "./use-edit-variant.js";
 import type { VariantScope } from "./use-edit-variant.js";
+import { InspectorAppContext, useInspectorApp } from "./use-inspector-app.js";
 import { TokenUiContext } from "./use-token-snap.js";
 import type { TokenUi } from "./use-token-snap.js";
 

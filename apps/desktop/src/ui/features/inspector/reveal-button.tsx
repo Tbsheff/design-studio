@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { AddButton } from "./inspector-shared.js";
+import { AddButton } from "./add-button.js";
 import type { Extra } from "./simple-model.js";
 
 interface RevealButtonProps {
@@ -17,7 +17,7 @@ const RevealButton = ({
 }: RevealButtonProps): ReactElement => {
   const reveal = useCallback(() => onReveal(extra), [onReveal, extra]);
 
-  return <AddButton label={label} onClick={reveal} />;
+  return <AddButton label={label} tip={null} onClick={reveal} />;
 };
 
 export { RevealButton };

@@ -4,9 +4,10 @@ import type { ChangeEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { toTextEditability } from "./css-value-model.js";
-import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
+import { DataTextNote } from "./data-text-note.js";
 import { toReadonlyText } from "./rows-model.js";
 import type { DirectEdit } from "./use-direct-edit.js";
+import { useInspectorApp } from "./use-inspector-app.js";
 import { useRowKeys } from "./use-row-keys.js";
 
 interface ContentRowProps {

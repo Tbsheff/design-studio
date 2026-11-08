@@ -6,7 +6,6 @@ import { ComponentsTab } from "./components-tab.js";
 import { InspectorArrange } from "./inspector-arrange.js";
 import { InspectorCode } from "./inspector-code.js";
 import type { InspectorProps, InspectorTab } from "./inspector-model.js";
-import { InspectorAppContext } from "./inspector-shared.js";
 import { InspectorTools } from "./inspector-tools.js";
 import { InspectorTweaks } from "./inspector-tweaks.js";
 import { LeavePrompt } from "./leave-prompt.js";
@@ -18,6 +17,7 @@ import { TabBar } from "./tab-bar.js";
 import { TweaksNote } from "./tweaks-note.js";
 import { useEditSession } from "./use-edit-session.js";
 import { restoreEditVariant } from "./use-edit-variant.js";
+import { InspectorAppContext } from "./use-inspector-app.js";
 import { useSessionHandle } from "./use-session-handle.js";
 import { useStableCallbacks } from "./use-stable-callbacks.js";
 

@@ -1,9 +1,9 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { AddButton } from "./add-button.js";
 import { setShadows, toShadowRows } from "./effects-model.js";
 import type { ShadowView } from "./effects-model.js";
-import { AddButton } from "./inspector-shared.js";
 import { ShadowRow } from "./shadow-row.js";
 import { NEW_SHADOW } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
@@ -28,7 +28,12 @@ const ShadowList = ({ edit, view }: ShadowListProps): ReactElement => {
         </ul>
       )}
       <div className="ins-add-row">
-        <AddButton label="Shadow" onClick={handleAdd} />
+        <AddButton
+          label="Shadow"
+          tip={null}
+
+          onClick={handleAdd}
+        />
       </div>
     </>
   );

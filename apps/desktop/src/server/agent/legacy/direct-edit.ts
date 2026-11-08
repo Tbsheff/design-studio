@@ -11,9 +11,7 @@ const REPLACE_STYLE_TOOL = "mcp__studio__replace_style";
 const ARRANGE_TOOL = "mcp__studio__arrange";
 const MEASURE_TOOL = "mcp__studio__measure";
 const SELECT_MATCHING_TOOL = "mcp__studio__select_matching";
-const COMPONENT_PREVIEW_TOOL = "mcp__studio__component_preview";
 const REVIEW_FRAME_TOOL = "mcp__studio__review_frame";
-const LIST_COMPONENTS_TOOL = "mcp__studio__list_components";
 const GET_LAYERS_TOOL = "mcp__studio__get_layers";
 const CREATE_COMPONENT_TOOL = "mcp__studio__create_component";
 const SWAP_INSTANCE_TOOL = "mcp__studio__swap_instance";
@@ -39,11 +37,9 @@ const DIRECT_EDIT_AGENT_TOOLS: readonly string[] = [
   INSERT_JSX_TOOL,
   CLEAR_TEXT_TOOL,
   REVIEW_FRAME_TOOL,
-  LIST_COMPONENTS_TOOL,
   GET_LAYERS_TOOL,
   ARRANGE_TOOL,
   MEASURE_TOOL,
-  COMPONENT_PREVIEW_TOOL,
   CREATE_COMPONENT_TOOL,
   SWAP_INSTANCE_TOOL,
   SELECT_MATCHING_TOOL,
@@ -55,7 +51,6 @@ const DIRECT_EDIT_AGENT_TOOLS: readonly string[] = [
 export {
   ARRANGE_TOOL,
   CLEAR_TEXT_TOOL,
-  COMPONENT_PREVIEW_TOOL,
   CREATE_COMPONENT_TOOL,
   DIRECT_EDIT_AGENT_TOOLS,
   EDIT_ELEMENT_TOOL,
@@ -63,7 +58,6 @@ export {
   GET_LAYERS_TOOL,
   INSERT_COMPONENT_TOOL,
   INSERT_JSX_TOOL,
-  LIST_COMPONENTS_TOOL,
   LIST_LOCKS_MCP,
   MEASURE_TOOL,
   REPLACE_STYLE_TOOL,

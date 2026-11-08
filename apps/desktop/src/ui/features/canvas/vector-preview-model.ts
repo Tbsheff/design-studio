@@ -1,5 +1,5 @@
 import type { PenAnchor } from "./drawing-model.js";
-import type { Point } from "./vector-layer.js";
+import type { Point } from "./vector-layer-types.js";
 
 const PREVIEW_STROKE = 1.5;
 

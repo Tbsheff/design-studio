@@ -13,7 +13,11 @@ import {
   useVectorToolKeys,
 } from "./vector-tool-model.js";
 
-const VectorLayer = lazy(() => import("./vector-layer.js"));
+const VectorLayer = lazy(async () => {
+  const loaded = await import("./vector-layer.js");
+
+  return { default: loaded.VectorLayer };
+});
 
 const InlinePrompt = lazy(() => import("../chat/inline-prompt.js"));
 

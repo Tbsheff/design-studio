@@ -18,7 +18,7 @@ const TYPE_ICON: Record<ProjectType, IconName> = {
   vite: "code",
 };
 
-const loadThumbUrl = async (id: string, thumbnail: string): Promise<string> => {
+const getThumbUrl = async (id: string, thumbnail: string): Promise<string> => {
   const blob = await api.thumbnail(id, thumbnail);
 
   return URL.createObjectURL(blob);
@@ -41,7 +41,7 @@ function useThumb(hit: ProjectHit): string | null {
     let pending = cache.get(key);
 
     if (!pending) {
-      pending = loadThumbUrl(hit.id, hit.thumbnail);
+      pending = getThumbUrl(hit.id, hit.thumbnail);
       cache.set(key, pending);
     }
 

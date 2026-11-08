@@ -14,7 +14,7 @@ const MAX_FOUND = 6;
 const MAX_STARTERS = 4;
 const KIND_TONE = { html: "html", next: "next", vite: "vite" } as const;
 
-function foundBadge(app: FoundApp): string {
+function getFoundBadge(app: FoundApp): string {
   const base = FOUND_KIND_LABEL[app.kind];
 
   return app.kind === "next" && app.apps.length > 1 ? `${base} monorepo` : base;
@@ -95,7 +95,7 @@ const FoundList = ({
             {found ? shortenHome(app.path, found.home) : app.path}
           </span>
           <span className={`home-badge ${KIND_TONE[app.kind]}`}>
-            {foundBadge(app)}
+            {getFoundBadge(app)}
           </span>
           <button
             type="button"

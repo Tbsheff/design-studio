@@ -16,7 +16,7 @@ const MAX_IMAGES = 4;
 const MAX_REFERENCES = 3;
 const MAX_IMAGE_BYTES = Math.floor(3.75 * 1024 * 1024);
 
-const imageProblem = (file: File): string | null => {
+const getImageProblem = (file: File): string | null => {
   if (!IMAGE_TYPES.includes(file.type)) {
     return `${file.name} is not a PNG, JPEG, GIF or WebP image.`;
   }
@@ -59,7 +59,7 @@ interface ReferenceDraft {
   readonly host: string;
 }
 
-const soleUrl = (text: string): ReferenceDraft | null => {
+const getSoleUrl = (text: string): ReferenceDraft | null => {
   const trimmed = text.trim();
 
   if (!/^https?:\/\/\S+$/iu.test(trimmed)) {
@@ -75,7 +75,7 @@ const soleUrl = (text: string): ReferenceDraft | null => {
   }
 };
 
-const imageFiles = (list: FileList | File[] | null | undefined): File[] =>
+const listImageFiles = (list: FileList | File[] | null | undefined): File[] =>
   [...(list ?? [])].filter((file) => IMAGE_TYPES.includes(file.type));
 
 const ComposerChips = ({
@@ -161,14 +161,14 @@ const useComposerAttachments = (
     }
 
     const problems = picked
-      .map(imageProblem)
+      .map(getImageProblem)
       .filter((problem): problem is string => problem !== null);
 
     if (problems.length > 0) {
       setFormError(problems.join(" "));
     }
 
-    const files = picked.filter((file) => imageProblem(file) === null);
+    const files = picked.filter((file) => getImageProblem(file) === null);
 
     if (files.length === 0) {
       return;
@@ -220,7 +220,7 @@ const useComposerAttachments = (
     });
 
   const onPromptPaste = (event: ClipboardEvent<HTMLTextAreaElement>): void => {
-    const files = imageFiles(event.clipboardData.files);
+    const files = listImageFiles(event.clipboardData.files);
 
     if (files.length > 0) {
       event.preventDefault();
@@ -229,7 +229,7 @@ const useComposerAttachments = (
       return;
     }
 
-    const reference = soleUrl(event.clipboardData.getData("text/plain"));
+    const reference = getSoleUrl(event.clipboardData.getData("text/plain"));
 
     if (reference) {
       event.preventDefault();
@@ -270,7 +270,7 @@ const useComposerAttachments = (
       return;
     }
 
-    const reference = soleUrl(
+    const reference = getSoleUrl(
       event.dataTransfer.getData("text/uri-list").split("\n")[0] ?? ""
     );
 
@@ -312,9 +312,9 @@ export {
   MAX_IMAGES,
   MAX_IMAGE_BYTES,
   MAX_REFERENCES,
-  imageFiles,
-  imageProblem,
-  soleUrl,
+  listImageFiles as imageFiles,
+  getImageProblem as imageProblem,
+  getSoleUrl as soleUrl,
   useComposerAttachments,
 };
 

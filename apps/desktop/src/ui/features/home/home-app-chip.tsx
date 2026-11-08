@@ -27,7 +27,7 @@ const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
   vite: "Vite",
 };
 
-const chipProblem = (chip: AppChip | null): string | null => {
+const getChipProblem = (chip: AppChip | null): string | null => {
   if (!chip || chip.isChecking) {
     return null;
   }
@@ -35,7 +35,7 @@ const chipProblem = (chip: AppChip | null): string | null => {
   return chip.error ?? chip.inspection?.problem ?? null;
 };
 
-const chipBlocker = (
+const getChipBlocker = (
   chip: AppChip | null
 ): { readonly command: string; readonly dir: string } | null => {
   const found = chip?.inspection;
@@ -56,17 +56,17 @@ const chipBlocker = (
   return found.install;
 };
 
-const chipName = (chip: AppChip): string =>
+const getChipName = (chip: AppChip): string =>
   chip.inspection?.name ??
   chip.path.split("/").filter(Boolean).pop() ??
   chip.path;
 
-function chipLabel(chip: AppChip): string {
+function getChipLabel(chip: AppChip): string {
   if (chip.isChecking && !chip.inspection) {
     return "Checking…";
   }
 
-  if (chipProblem(chip)) {
+  if (getChipProblem(chip)) {
     return "Not an app folder";
   }
 
@@ -87,7 +87,7 @@ interface DropBridge {
   readonly pathForFile?: (file: File) => string;
 }
 
-const droppedFolder = (
+const getDroppedFolder = (
   data: DataTransfer
 ): { readonly path: string } | { readonly unsupported: true } | null => {
   for (const item of data.items) {
@@ -190,8 +190,8 @@ const AppChipView = ({
   readonly onMenu: () => void;
   readonly onRemove: () => void;
 }): ReactElement => {
-  const name = chipName(chip);
-  const bad = chipProblem(chip) !== null || chipBlocker(chip) !== null;
+  const name = getChipName(chip);
+  const bad = getChipProblem(chip) !== null || getChipBlocker(chip) !== null;
 
   return (
     <li className={`home-chip app${bad ? " warn" : ""}`}>
@@ -209,7 +209,7 @@ const AppChipView = ({
           <Icon name="code" size={12} />
         </span>
         <b className="truncate">{name}</b>
-        <span className="home-chip-host truncate">{chipLabel(chip)}</span>
+        <span className="home-chip-host truncate">{getChipLabel(chip)}</span>
         <Icon name="chevronDown" size={12} />
       </button>
       <button
@@ -226,10 +226,10 @@ const AppChipView = ({
 
 export {
   AppChipView,
-  chipBlocker,
-  chipName,
-  chipProblem,
-  droppedFolder,
+  getChipBlocker as chipBlocker,
+  getChipName as chipName,
+  getChipProblem as chipProblem,
+  getDroppedFolder as droppedFolder,
   useAppChip,
 };
 

@@ -82,7 +82,7 @@ const Library = ({
         />
       )}
       <lib.ProjectGrid
-        projects={lib.filterLibrary(projects, filter)}
+        projects={lib.listFilteredLibrary(projects, filter)}
         packs={packs.packs}
         health={health}
         homeDir={homeDir}

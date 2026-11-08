@@ -29,7 +29,7 @@ export const FILTER_EMPTY: Record<HomeFilter, string> = {
   systems: "design systems",
 };
 
-function filterTest(filter: HomeFilter): (project: Project) => boolean {
+function isFilterMatch(filter: HomeFilter): (project: Project) => boolean {
   if (filter === "systems") {
     return (project) => Boolean(project.designSystemFor);
   }
@@ -43,7 +43,7 @@ function filterTest(filter: HomeFilter): (project: Project) => boolean {
     isFolderProject(project) === (filter === "apps");
 }
 
-export function filterLibrary(
+export function listFilteredLibrary(
   projects: Project[] | null,
   filter: HomeFilter
 ): Project[] | null {
@@ -51,7 +51,7 @@ export function filterLibrary(
     return projects;
   }
 
-  const test = filterTest(filter);
+  const test = isFilterMatch(filter);
 
   return projects.filter(
     (project) => !project.designSystemDeleted && test(project)
@@ -122,7 +122,7 @@ function useLastRun(project: Project): LastRun | null {
   return last;
 }
 
-function routeLine(project: Project, last: LastRun | null): string {
+function getRouteLine(project: Project, last: LastRun | null): string {
   const dir =
     project.app?.appDir && project.app.appDir !== "."
       ? project.app.appDir
@@ -152,7 +152,7 @@ export const ContinueCard = ({
   const thumb = useThumbnail(project);
   const last = useLastRun(project);
   const badge = projectBadge(project);
-  const line = routeLine(project, last);
+  const line = getRouteLine(project, last);
   const server = project.app && health ? SERVER_TEXT[health.state] : undefined;
 
   return (

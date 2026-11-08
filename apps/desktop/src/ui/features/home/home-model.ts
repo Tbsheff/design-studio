@@ -42,7 +42,7 @@ const HOME_REASON_ID = "home-send-reason";
 
 const EMPTY_PROMPT = "Describe the design first";
 
-function focusPrompt(home: HTMLElement | null, atEnd = false): void {
+function setPromptFocus(home: HTMLElement | null, atEnd = false): void {
   home?.scrollTo({ behavior: "smooth", top: 0 });
   globalThis.requestAnimationFrame(() => {
     const area = document.querySelector<HTMLTextAreaElement>(
@@ -57,7 +57,7 @@ function focusPrompt(home: HTMLElement | null, atEnd = false): void {
   });
 }
 
-function focusIn(selector: string): void {
+function setFocusIn(selector: string): void {
   globalThis.setTimeout(() => {
     const el = document.querySelector<HTMLElement>(selector);
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -65,7 +65,7 @@ function focusIn(selector: string): void {
   }, 60);
 }
 
-function folderLabel(
+function getFolderLabel(
   list: WorkspaceList | null,
   location: string | null
 ): string {
@@ -78,13 +78,13 @@ function folderLabel(
   return match?.label ?? "Design Studio";
 }
 
-function modelSummary(model: string, count: number): string {
+function getModelSummary(model: string, count: number): string {
   const extra = count > 1 ? ` · ${count}×` : "";
 
   return `${modelLabel(model).replace(/^Claude /u, "")}${extra}`;
 }
 
-function homeSendBlocker(
+function getHomeSendBlocker(
   busy: Busy,
   prompt: string,
   asking: boolean,
@@ -179,7 +179,7 @@ function hasFiles(event: DragEvent): boolean {
   return [...event.dataTransfer.types].includes("Files");
 }
 
-function promptPlaceholder(
+function getPromptPlaceholder(
   chip: AppChip | null,
   empty: boolean
 ): string | null {
@@ -190,7 +190,7 @@ function promptPlaceholder(
   return empty ? PLACEHOLDER : null;
 }
 
-function reasonId(blocker: string | null): string | undefined {
+function getReasonId(blocker: string | null): string | undefined {
   return blocker && blocker !== EMPTY_PROMPT ? HOME_REASON_ID : undefined;
 }
 
@@ -201,11 +201,11 @@ function isEmpty(projects: Project[] | null): boolean {
   );
 }
 
-function homeOf(workspaces: WorkspaceList | null): string | null {
+function getHome(workspaces: WorkspaceList | null): string | null {
   return workspaces?.homeDir ?? null;
 }
 
-function shortHome(target: string, homeDir: string | null): string {
+function toShortHome(target: string, homeDir: string | null): string {
   return shortenHome(target.replace(/^\/private(?=\/)/u, ""), homeDir);
 }
 
@@ -243,17 +243,17 @@ export {
   LEVEL_LABEL,
   PLACEHOLDER,
   createFromHome,
-  focusIn,
-  focusPrompt,
-  folderLabel,
+  setFocusIn as focusIn,
+  setPromptFocus as focusPrompt,
+  getFolderLabel as folderLabel,
   hasFiles,
-  homeOf,
-  homeSendBlocker,
+  getHome as homeOf,
+  getHomeSendBlocker as homeSendBlocker,
   isEmpty,
-  modelSummary,
-  promptPlaceholder,
-  reasonId,
-  shortHome,
+  getModelSummary as modelSummary,
+  getPromptPlaceholder as promptPlaceholder,
+  getReasonId as reasonId,
+  toShortHome as shortHome,
 };
 
 export type {

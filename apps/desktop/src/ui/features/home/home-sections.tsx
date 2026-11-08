@@ -129,7 +129,7 @@ interface ActionDeps {
   readonly homeDir: string | null;
 }
 
-function removedText(project: Project, homeDir: string | null): string {
+function getRemovedText(project: Project, homeDir: string | null): string {
   const folder = project.imported?.sourcePath;
 
   if (!folder || project.imported?.created) {
@@ -164,7 +164,7 @@ const useProjectActions = ({
         action: { label: "Undo", run: undo },
         hasError: false,
         more: { label: "Open Trash", run: onOpenTrash },
-        text: removedText(project, homeDir),
+        text: getRemovedText(project, homeDir),
       });
     } catch (error) {
       showToast({

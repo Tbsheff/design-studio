@@ -16,7 +16,7 @@ const INSTALL_DETAIL =
 
 const SHELL_SAFE = /^[\w./-]+$/u;
 
-function shellPath(dir: string, homeDir: string | null): string {
+function getShellPath(dir: string, homeDir: string | null): string {
   const short = shortHome(dir, homeDir);
 
   if (short === "~") {
@@ -32,7 +32,7 @@ function shellPath(dir: string, homeDir: string | null): string {
   return SHELL_SAFE.test(short) ? short : JSON.stringify(short);
 }
 
-function homeCommand(
+function getHomeCommand(
   command: string | null,
   homeDir: string | null
 ): string | null {
@@ -43,13 +43,13 @@ function homeCommand(
   }
 
   try {
-    return `cd ${shellPath(JSON.parse(match[1]) as string, homeDir)} && ${match[2]}`;
+    return `cd ${getShellPath(JSON.parse(match[1]) as string, homeDir)} && ${match[2]}`;
   } catch {
     return command;
   }
 }
 
-function installProblem(
+function getInstallProblem(
   name: string,
   place: string,
   kindLabel: string,
@@ -61,7 +61,7 @@ function installProblem(
 ): DoctorProblem {
   return {
     badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
-    command: `cd ${shellPath(install.dir, install.homeDir)} && ${install.command}`,
+    command: `cd ${getShellPath(install.dir, install.homeDir)} && ${install.command}`,
     detail: INSTALL_DETAIL,
     name,
     place,
@@ -72,7 +72,7 @@ function installProblem(
   };
 }
 
-function healthProblem(
+function getHealthProblem(
   project: Project,
   health: AppHealth,
   place: string,
@@ -82,7 +82,7 @@ function healthProblem(
 
   return {
     badge: { label, tone: label === "Vite" ? "vite" : "next" },
-    command: homeCommand(health.command, homeDir),
+    command: getHomeCommand(health.command, homeDir),
     detail:
       health.state === "install"
         ? INSTALL_DETAIL
@@ -105,10 +105,10 @@ function healthProblem(
 export {
   INSTALL_DETAIL,
   SHELL_SAFE,
-  healthProblem,
-  homeCommand,
-  installProblem,
-  shellPath,
+  getHealthProblem as healthProblem,
+  getHomeCommand as homeCommand,
+  getInstallProblem as installProblem,
+  getShellPath as shellPath,
 };
 
 export type { DoctorGate };

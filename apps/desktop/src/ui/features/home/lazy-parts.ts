@@ -8,49 +8,53 @@ const ClarifyForm = lazy(async () => ({
 
 const libraryChunk = import("./home-library.js");
 
-const loadTrash = () => import("./home-trash.js");
+const importTrash = () => import("./home-trash.js");
 
-const loadSlash = () => import("./home-slash.js");
+const importSlash = () => import("./home-slash.js");
 
-const HomeTrash = lazy(loadTrash);
+const HomeTrash = lazy(importTrash);
 
-const loadPops = () => import("./home-popovers.js");
+const importPopovers = () => import("./home-popovers.js");
 
-const PlusMenu = lazy(async () => ({ default: (await loadPops()).PlusMenu }));
+const PlusMenu = lazy(async () => ({
+  default: (await importPopovers()).PlusMenu,
+}));
 
 const PackPopover = lazy(async () => ({
-  default: (await loadPops()).PackPopover,
+  default: (await importPopovers()).PackPopover,
 }));
 
 const ModelPopover = lazy(async () => ({
-  default: (await loadPops()).ModelPopover,
+  default: (await importPopovers()).ModelPopover,
 }));
 
 const LevelPopover = lazy(async () => ({
-  default: (await loadPops()).LevelPopover,
+  default: (await importPopovers()).LevelPopover,
 }));
 
-const loadTemplates = () => import("./home-templates.js");
+const importTemplates = () => import("./home-templates.js");
 
-const loadExtras = () => import("./home-extras.js");
+const importExtras = () => import("./home-extras.js");
 
-const loadAppMenu = () => import("./home-app-menu.js");
+const importAppMenu = () => import("./home-app-menu.js");
 
-const AppMenu = lazy(async () => ({ default: (await loadAppMenu()).AppMenu }));
+const AppMenu = lazy(async () => ({
+  default: (await importAppMenu()).AppMenu,
+}));
 
 const FolderPathPop = lazy(async () => ({
-  default: (await loadAppMenu()).FolderPathPop,
+  default: (await importAppMenu()).FolderPathPop,
 }));
 
 const HomeDoctor = lazy(() => import("./home-doctor.js"));
 
 const HomeEmpty = lazy(() => import("./home-empty.js"));
 
-const loadLibrary = () => libraryChunk;
+const importLibrary = () => libraryChunk;
 
 type LibraryModule = Awaited<typeof libraryChunk>;
 
-type TemplatesModule = Awaited<ReturnType<typeof loadTemplates>>;
+type TemplatesModule = Awaited<ReturnType<typeof importTemplates>>;
 
 export {
   AppMenu,
@@ -65,13 +69,13 @@ export {
   PlusMenu,
   clarifyChunk,
   libraryChunk,
-  loadAppMenu,
-  loadExtras,
-  loadLibrary,
-  loadPops,
-  loadSlash,
-  loadTemplates,
-  loadTrash,
+  importAppMenu as loadAppMenu,
+  importExtras as loadExtras,
+  importLibrary as loadLibrary,
+  importPopovers as loadPops,
+  importSlash as loadSlash,
+  importTemplates as loadTemplates,
+  importTrash as loadTrash,
 };
 
 export type { LibraryModule, TemplatesModule };

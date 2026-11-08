@@ -5,10 +5,10 @@ import type { ChangeEvent, ReactElement } from "react";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { copy } from "./copy.js";
 
-const loadFields = () => import("../../app/shell/settings-fields.js");
+const importFields = () => import("../../app/shell/settings-fields.js");
 
 const SettingsFields = lazy(async () => ({
-  default: (await loadFields()).SettingsFields,
+  default: (await importFields()).SettingsFields,
 }));
 
 interface Props {
@@ -48,7 +48,10 @@ const NewProjectAdvanced = (props: Props): ReactElement => {
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
-      <summary onPointerEnter={() => loadFields()} onFocus={() => loadFields()}>
+      <summary
+        onPointerEnter={() => importFields()}
+        onFocus={() => importFields()}
+      >
         <Icon name="chevronRight" size={14} />
         {copy.advanced}
       </summary>

@@ -16,7 +16,7 @@ let listSignature = "";
 let stopList: (() => void) | null = null;
 const listeners = new Set<() => void>();
 
-function signatureOf(projects: Project[] | null): string {
+function toSignature(projects: Project[] | null): string {
   return (projects ?? [])
     .map(
       (project) =>
@@ -25,23 +25,23 @@ function signatureOf(projects: Project[] | null): string {
     .join("|");
 }
 
-function onListChange(): void {
-  const next = signatureOf(projectsApi.get().projects);
+function runListChange(): void {
+  const next = toSignature(projectsApi.get().projects);
 
   if (next === listSignature) {
     return;
   }
 
   listSignature = next;
-  void refreshProjectHits(lastCurrent, true);
+  void runProjectHitsRefresh(lastCurrent, true);
 }
 
-function subscribe(listener: () => void): () => void {
+function startHitsSubscription(listener: () => void): () => void {
   listeners.add(listener);
 
   if (!stopList) {
-    listSignature = signatureOf(projectsApi.get().projects);
-    stopList = projectsApi.subscribe(onListChange);
+    listSignature = toSignature(projectsApi.get().projects);
+    stopList = projectsApi.subscribe(runListChange);
   }
 
   return () => {
@@ -69,12 +69,12 @@ const runProjectHits = async (current: string | null): Promise<void> => {
     again = undefined;
 
     if (next !== undefined) {
-      refreshProjectHits(next);
+      runProjectHitsRefresh(next);
     }
   }
 };
 
-const refreshProjectHits = (
+const runProjectHitsRefresh = (
   current: string | null,
   fresh = false
 ): Promise<void> => {
@@ -91,14 +91,14 @@ const refreshProjectHits = (
   return loading;
 };
 
-const noteProjectOpened = (projectId: string): void => {
+const setProjectOpened = (projectId: string): void => {
   const mark = async (): Promise<void> => {
     try {
       await api.markProjectOpened(projectId);
     } catch {
       return;
     } finally {
-      await refreshProjectHits(projectId, true);
+      await runProjectHitsRefresh(projectId, true);
     }
   };
 
@@ -111,11 +111,11 @@ const useProjectHits = (
 ): ProjectSearchResult | null => {
   useEffect(() => {
     if (refresh) {
-      void refreshProjectHits(current);
+      void runProjectHitsRefresh(current);
     }
   }, [current, refresh]);
 
-  return useSyncExternalStore(subscribe, () => latest);
+  return useSyncExternalStore(startHitsSubscription, () => latest);
 };
 
 const useRouteHits = (
@@ -165,4 +165,9 @@ const useRouteHits = (
   return found?.routes ?? [];
 };
 
-export { noteProjectOpened, refreshProjectHits, useProjectHits, useRouteHits };
+export {
+  setProjectOpened as noteProjectOpened,
+  runProjectHitsRefresh as refreshProjectHits,
+  useProjectHits,
+  useRouteHits,
+};

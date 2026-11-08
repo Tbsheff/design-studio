@@ -44,11 +44,11 @@ type RailState = "open" | "mini";
 
 const listeners = new Set<() => void>();
 
-function readRail(): RailState {
+function getRail(): RailState {
   return readStored(KEY) === "open" ? "open" : "mini";
 }
 
-let railState: RailState = readRail();
+let railState: RailState = getRail();
 
 const setRail = (next: RailState): void => {
   railState = next;
@@ -60,7 +60,7 @@ const setRail = (next: RailState): void => {
   }
 };
 
-const toggleRail = (): void => {
+const setRailToggled = (): void => {
   setRail(railState === "open" ? "mini" : "open");
 };
 
@@ -76,12 +76,12 @@ const useRail = (): RailState =>
 
 const OVERLAY_QUERY = "(max-width: 1279px)";
 
-function floating(): boolean {
+function isFloating(): boolean {
   return globalThis.matchMedia(OVERLAY_QUERY).matches;
 }
 
-function pickProject(id: string): void {
-  if (railState === "open" && floating()) {
+function runPickProject(id: string): void {
+  if (railState === "open" && isFloating()) {
     setRail("mini");
   }
 
@@ -97,7 +97,7 @@ function useFloatingDismiss(
       return;
     }
 
-    const close = () => floating() && setRail("mini");
+    const close = () => isFloating() && setRail("mini");
 
     const onPointer = (event: PointerEvent) => {
       if (!rail.current?.contains(event.target as Node)) {
@@ -188,7 +188,7 @@ function useRailKeys(onOpened: () => void): void {
       id: "view.project-rail",
       keyId: "project-rail",
       keywords: "projects switch sidebar recent",
-      run: () => toggleRail(),
+      run: () => setRailToggled(),
       title: "Show or hide the project rail",
     },
   ]);
@@ -207,7 +207,7 @@ function useRailKeys(onOpened: () => void): void {
       }
 
       event.preventDefault();
-      toggleRail();
+      setRailToggled();
 
       if (railState === "open") {
         globalThis.requestAnimationFrame(() => opened.current());
@@ -228,7 +228,7 @@ interface RailProps {
 
 const KIND_LABEL = TYPE_LABELS;
 
-function tipOf(hit: ProjectHit, current: boolean): string {
+function getTip(hit: ProjectHit, current: boolean): string {
   const parts = [hit.name, KIND_LABEL[hit.type], hit.health?.note].filter(
     Boolean
   );
@@ -265,10 +265,10 @@ const MiniRail = ({
             type="button"
             className="prail-item prail-mini"
             aria-current={hit.id === projectId ? "page" : undefined}
-            aria-label={tipOf(hit, hit.id === projectId)}
-            data-tip={tipOf(hit, hit.id === projectId)}
+            aria-label={getTip(hit, hit.id === projectId)}
+            data-tip={getTip(hit, hit.id === projectId)}
             data-tip-align="start"
-            onClick={() => pickProject(hit.id)}
+            onClick={() => runPickProject(hit.id)}
           >
             <ProjectThumb hit={hit} />
             <HealthDot hit={hit} className="prail-mini-dot" />
@@ -321,7 +321,7 @@ const RailRow = ({
         : KIND_LABEL[hit.type]
     }
     data-tip-align="start"
-    onClick={() => pickProject(hit.id)}
+    onClick={() => runPickProject(hit.id)}
   >
     <ProjectThumb hit={hit} />
     <span className="truncate">{hit.name}</span>
@@ -388,7 +388,7 @@ const OpenRail = ({
               first &&
               !eventNext.nativeEvent.isComposing
             ) {
-              pickProject(first.id);
+              runPickProject(first.id);
             } else if (eventNext.key === "Escape" && filter) {
               eventNext.preventDefault();
               eventNext.stopPropagation();
@@ -495,4 +495,4 @@ const ProjectRail = ({ projectId, onHome, onNewPrototype }: RailProps) => {
   );
 };
 
-export { ProjectRail, setRail, toggleRail, useRail };
+export { ProjectRail, setRail, setRailToggled as toggleRail, useRail };

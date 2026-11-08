@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 
-const locationFor = (
+const getLocation = (
   list: WorkspaceList | null,
   lastLocation: string | null
 ): string | null => {
@@ -24,10 +24,10 @@ const locationFor = (
     : null;
 };
 
-const defaultFolderOf = (list: WorkspaceList | null): WorkspaceFolder | null =>
+const getDefaultFolder = (list: WorkspaceList | null): WorkspaceFolder | null =>
   list?.folders.find((folder) => folder.default) ?? null;
 
-const filterByFolder = (
+const listProjectsByFolder = (
   projects: Project[] | null,
   list: WorkspaceList | null,
   filterId: string | null
@@ -144,4 +144,9 @@ const useWorkspaces = (onError: (message: string | null) => void) => {
   };
 };
 
-export { defaultFolderOf, filterByFolder, locationFor, useWorkspaces };
+export {
+  getDefaultFolder as defaultFolderOf,
+  listProjectsByFolder as filterByFolder,
+  getLocation as locationFor,
+  useWorkspaces,
+};

@@ -75,7 +75,7 @@ const PastePath = ({
 const DEFAULT = "default";
 const CHOOSE = "choose";
 
-function locationOptions(
+function listLocationOptions(
   usable: WorkspaceFolder[],
   value: string | null,
   homeDir: string | null,
@@ -149,7 +149,7 @@ const LocationField = ({
         id="new-project-location"
         value={value ?? DEFAULT}
         disabled={chooser.isPicking}
-        options={locationOptions(usable, value, homeDir, {
+        options={listLocationOptions(usable, value, homeDir, {
           fallback: fallback?.label ?? "Design Studio",
           isUnsupported: chooser.isUnsupported,
         })}

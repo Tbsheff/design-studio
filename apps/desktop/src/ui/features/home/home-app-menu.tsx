@@ -16,7 +16,7 @@ import "../../styles/attach-app.css";
 const RETRY_MS = 1000;
 const RETRY_LIMIT = 20;
 
-function attachRequest(chip: AppChip): {
+function getAttachRequest(chip: AppChip): {
   readonly folder: string;
   readonly appDir: string;
   readonly url?: string;
@@ -48,7 +48,10 @@ function attachRequest(chip: AppChip): {
   };
 }
 
-const openChip = async (chip: AppChip, tokensOnly = false): Promise<string> => {
+const startChip = async (
+  chip: AppChip,
+  tokensOnly = false
+): Promise<string> => {
   const found = chip.inspection;
 
   if (!found?.kind || found.problem) {
@@ -69,10 +72,10 @@ const openChip = async (chip: AppChip, tokensOnly = false): Promise<string> => {
     return found.projectId;
   }
 
-  return (await api.attachApp(attachRequest(chip))).project.id;
+  return (await api.attachApp(getAttachRequest(chip))).project.id;
 };
 
-function keepEnter(
+function runKeepEnter(
   event: KeyboardEvent<HTMLInputElement>,
   run?: () => void
 ): void {
@@ -84,7 +87,7 @@ function keepEnter(
   run?.();
 }
 
-const wait = (ms: number): Promise<void> =>
+const runDelay = (ms: number): Promise<void> =>
   new Promise<void>((resolve) => globalThis.setTimeout(resolve, ms));
 
 const runInProject = async (
@@ -136,7 +139,7 @@ const runInProject = async (
         throw error;
       }
 
-      await wait(RETRY_MS);
+      await runDelay(RETRY_MS);
     }
   }
 };
@@ -226,7 +229,7 @@ const DevServer = ({
           placeholder={copy.httpLocalhost3000}
           spellCheck={false}
           autoComplete="off"
-          onKeyDown={(eventArg) => keepEnter(eventArg)}
+          onKeyDown={(eventArg) => runKeepEnter(eventArg)}
           onChange={(eventNext) => onChange({ url: eventNext.target.value })}
         />
       )}
@@ -369,7 +372,7 @@ const FolderPathPop = ({
           placeholder={copy.codeMyApp}
           spellCheck={false}
           autoComplete="off"
-          onKeyDown={(eventExtra) => keepEnter(eventExtra, submit)}
+          onKeyDown={(eventExtra) => runKeepEnter(eventExtra, submit)}
           onChange={(eventLast) => setValue(eventLast.target.value)}
         />
         <p className="home-app-note">{copy.theDesktopAppOpensThe}</p>
@@ -386,6 +389,6 @@ const FolderPathPop = ({
   );
 };
 
-export { AppMenu, FolderPathPop, openChip, runInProject };
+export { AppMenu, FolderPathPop, startChip as openChip, runInProject };
 
 export type { AppMenuProps };

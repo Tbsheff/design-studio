@@ -3,52 +3,23 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import {
+  ShipRecordSchema,
+  ShipSettingsSchema,
+} from "@design-studio/actions/ship/schema";
+import {
   DEFAULT_SHIP_SETTINGS,
-  SHIP_MODES,
-  SHIP_TEXT_MAX,
   type ShipRecord,
   type ShipSettings,
 } from "@design-studio/contracts/ship";
+import { Result } from "effect";
 
-import { z } from "../platform/zod-bridge/index.js";
+import { toDecoder } from "../platform/decode/index.js";
 
 const FILE = "ship.json";
 const HISTORY_KEEP = 20;
 
-export const shipSettingsSchema = z
-  .object({
-    user: z
-      .string()
-      .trim()
-      .max(SHIP_TEXT_MAX.user)
-      .regex(
-        /^[A-Za-z0-9._-]*$/,
-        "user may hold only letters, digits, . _ and -"
-      ),
-    branchTemplate: z.string().trim().min(1).max(SHIP_TEXT_MAX.branchTemplate),
-    bodyTemplate: z.string().max(SHIP_TEXT_MAX.bodyTemplate),
-    issueId: z
-      .string()
-      .trim()
-      .max(SHIP_TEXT_MAX.issueId)
-      .regex(
-        /^[A-Za-z0-9._#-]*$/,
-        "issue id may hold only letters, digits, . _ # and -"
-      ),
-  })
-  .strict();
-
-const recordSchema = z.object({
-  versionId: z.string(),
-  baseVersionId: z.string(),
-  branch: z.string(),
-  sha: z.string(),
-  mode: z.enum(SHIP_MODES as [string, ...string[]]),
-  pushed: z.boolean(),
-  prUrl: z.string().nullable(),
-  files: z.number(),
-  at: z.number(),
-});
+const decodeSettings = toDecoder(ShipSettingsSchema, "error");
+const decodeRecord = toDecoder(ShipRecordSchema, "ignore");
 
 export interface ShipState {
   settings: ShipSettings;
@@ -65,7 +36,7 @@ export async function readShipState(projectDir: string): Promise<ShipState> {
     settings?: unknown;
     history?: unknown;
   };
-  const settings = shipSettingsSchema.safeParse({
+  const settings = decodeSettings({
     ...DEFAULT_SHIP_SETTINGS,
     ...(typeof raw.settings === "object" && raw.settings !== null
       ? raw.settings
@@ -73,12 +44,14 @@ export async function readShipState(projectDir: string): Promise<ShipState> {
   });
   const history = Array.isArray(raw.history)
     ? raw.history.flatMap((item) => {
-        const ok = recordSchema.safeParse(item);
-        return ok.success ? [ok.data as ShipRecord] : [];
+        const decoded = decodeRecord(item);
+        return Result.isSuccess(decoded) ? [decoded.success] : [];
       })
     : [];
   return {
-    settings: settings.success ? settings.data : { ...DEFAULT_SHIP_SETTINGS },
+    settings: Result.isSuccess(settings)
+      ? settings.success
+      : { ...DEFAULT_SHIP_SETTINGS },
     history: history.slice(-HISTORY_KEEP),
   };
 }

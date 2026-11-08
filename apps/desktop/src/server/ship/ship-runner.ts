@@ -1,11 +1,11 @@
 import type { ShipResult, ShipSettings } from "@design-studio/contracts/ship";
 import { Context, Effect, Layer } from "effect";
 
+import { publishPlan } from "../git/ship-plans.js";
+import type { PublishQuery } from "../git/ship-plans.js";
+import { updateSettings } from "../git/ship-settings.js";
 import { attemptShip } from "./ship-core.js";
 import type { ShipError } from "./ship-core.js";
-import { publishPlan } from "./ship-plans.js";
-import type { PublishQuery } from "./ship-plans.js";
-import { writeSettings } from "./ship-settings.js";
 
 interface ShipRunnerApi {
   readonly publish: (
@@ -39,7 +39,7 @@ class ShipRunner extends Context.Service<ShipRunner, ShipRunnerApi>()(
         settings: ShipSettings
       ) {
         return yield* attemptShip(projectId, (target) =>
-          writeSettings(target, settings)
+          updateSettings(target, settings)
         );
       }),
     })

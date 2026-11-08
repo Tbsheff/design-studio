@@ -8,6 +8,7 @@ import { App } from "./app";
 
 import "../styles/tokens.css";
 import "../styles/controls.css";
+import "@design-studio/ui/controls.css";
 import "../styles/forms.css";
 import "../styles/feedback.css";
 import "../styles/overlays.css";

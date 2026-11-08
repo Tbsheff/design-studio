@@ -1,0 +1,205 @@
+@keyframes ui-menu-in {
+  from {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
+
+@keyframes ui-menu-out {
+  to {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
+
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes ui-busy-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.btn {
+  --btn-h: 32px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-control);
+  font-weight: var(--w-medium);
+  transition-duration: var(--dur-fast);
+}
+
+.btn.small {
+  --btn-h: 28px;
+  padding: 0 10px;
+  border-radius: var(--r-control-sm);
+}
+
+.btn:active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--surface-active);
+  scale: 0.97;
+}
+
+.btn.ghost:active:not(:disabled, [aria-disabled="true"]),
+.icon-btn:active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--surface-active);
+  color: var(--text);
+}
+
+:is(.btn.primary, .btn.strong):active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--strong);
+  box-shadow: none;
+}
+
+.btn.danger:active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--danger-tint);
+}
+
+.icon-btn {
+  transition-duration: var(--dur-fast);
+}
+
+:is(.btn, .icon-btn, .ui-select, .ui-pill-select):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+:is(.btn, .icon-btn)[aria-disabled="true"] {
+  opacity: var(--disabled-opacity);
+  cursor: default;
+}
+
+.btn[aria-disabled="true"]:hover {
+  background: var(--surface-raised);
+}
+
+:is(.btn.ghost, .icon-btn)[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--text-2);
+}
+
+:is(.btn.primary, .btn.strong, .btn.send, .icon-btn.send)[aria-disabled="true"],
+:is(
+    .btn.primary,
+    .btn.strong,
+    .btn.send,
+    .icon-btn.send
+  )[aria-disabled="true"]:hover {
+  opacity: 1;
+  background: var(--surface-active);
+  color: var(--text-faint);
+  box-shadow: none;
+}
+
+.btn[aria-busy="true"] {
+  cursor: progress;
+}
+
+.btn[aria-busy="true"]::before {
+  content: "";
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid currentcolor;
+  border-right-color: transparent;
+  border-radius: var(--r-full);
+  animation: ui-spin var(--dur-spin) linear infinite;
+}
+
+.ui-pill-select {
+  transition-property: background-color, box-shadow, scale;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-out);
+}
+
+.ui-pill-select:active:not(:disabled) {
+  background: var(--surface-active);
+  scale: 0.98;
+}
+
+.ui-select {
+  transition-property: background-color, box-shadow, scale;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-out);
+}
+
+.ui-select:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.ui-select:active:not(:disabled) {
+  background: var(--surface-active);
+}
+
+.ui-select > svg:last-child {
+  transition: rotate var(--dur-fast) var(--ease-out);
+}
+
+.ui-select[aria-expanded="true"] > svg:last-child {
+  rotate: 180deg;
+}
+
+.ui-menu,
+.project-menu,
+.theme-menu {
+  transform-origin: top left;
+  animation: ui-menu-in var(--dur-fast) var(--ease-out);
+}
+
+.ui-select-menu {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  overscroll-behavior: contain;
+}
+
+.ui-select-menu[data-side="above"] {
+  transform-origin: bottom left;
+}
+
+.ui-select-menu[data-state="closed"] {
+  pointer-events: none;
+  animation: ui-menu-out var(--dur-exit) var(--ease-in) forwards;
+}
+
+.ui-select-menu [role="option"] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-menu,
+  .project-menu,
+  .theme-menu {
+    animation-name: ui-fade-in;
+  }
+
+  .ui-select-menu[data-state="closed"] {
+    animation-name: ui-fade-out;
+  }
+
+  :is(.btn, .icon-btn, .ui-pill-select, .ui-select):active:not(:disabled) {
+    scale: 1;
+  }
+
+  .ui-select > svg:last-child {
+    transition: none;
+  }
+
+  .btn[aria-busy="true"]::before {
+    animation-name: ui-busy-pulse;
+  }
+}

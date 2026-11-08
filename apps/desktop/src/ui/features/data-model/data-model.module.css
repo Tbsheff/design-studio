@@ -1,0 +1,246 @@
+.sheet {
+  width: min(960px, calc(100vw - 32px));
+  height: min(640px, calc(100vh - 48px));
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--r-xl);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  color: var(--text);
+}
+
+.sheet[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.sheet::backdrop {
+  background: var(--scrim);
+}
+
+.title {
+  margin: 0;
+  padding: var(--s-3) var(--s-4) var(--s-2);
+  box-shadow: inset 0 -1px 0 var(--line);
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--w-medium);
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.side {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--s-2);
+  min-height: 0;
+  padding: var(--s-3);
+  box-shadow: inset -1px 0 0 var(--line);
+}
+
+.list {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  width: 100%;
+  height: 28px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--surface-inset);
+  color: var(--text);
+}
+
+.row[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.rowName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowKind {
+  flex-shrink: 0;
+  font-size: var(--t-2xs);
+  color: var(--text-3);
+}
+
+.main {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--s-3);
+  overflow: auto;
+}
+
+.detail {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.detailHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.detailName {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--w-medium);
+}
+
+.chips {
+  position: relative;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  gap: var(--s-1);
+  margin-left: auto;
+}
+
+.legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.radio {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--surface-inset);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.chip:has(.radio:checked) {
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--text);
+}
+
+.chip:has(.radio:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.scroll {
+  max-height: 260px;
+  overflow: auto;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-2xs);
+  line-height: var(--lh-2xs);
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  padding: var(--s-1) var(--s-2);
+  background: var(--surface-inset);
+  color: var(--text-3);
+  font-weight: var(--w-medium);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  max-width: 220px;
+  padding: var(--s-1) var(--s-2);
+  overflow: hidden;
+  border-top: 1px solid var(--line);
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.note {
+  margin: 0;
+  font-size: var(--t-2xs);
+  line-height: var(--lh-2xs);
+  color: var(--text-3);
+}
+
+.problem {
+  margin: 0;
+  font-size: var(--t-2xs);
+  line-height: var(--lh-2xs);
+  color: var(--danger);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+  padding: var(--s-2-5) var(--s-4);
+  box-shadow: inset 0 1px 0 var(--line);
+}

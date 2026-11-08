@@ -7,6 +7,7 @@ import { DesignCounts } from "./design-counts.js";
 import { MenuItem } from "./menu-item.js";
 import { MenuSection } from "./menu-section.js";
 import { ModeChoice } from "./mode-choice.js";
+import { PlusDataItem } from "./plus-data-item.js";
 
 const PlusMenuBody = ({
   menuProps,
@@ -38,6 +39,7 @@ const PlusMenuBody = ({
           meta="/"
           onPick={onAct(menuProps.onSkills)}
         />
+        <PlusDataItem onAct={onAct} />
       </MenuSection>
       <MenuSection label="Mode">
         {MODES.map((choice) => (

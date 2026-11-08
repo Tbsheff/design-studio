@@ -232,15 +232,58 @@ const predicateName = rule((context) => ({
   },
 }));
 
-const moduleFunctionVerb = rule((context) => ({
-  Program: (program) => {
-    for (const { id } of topLevelFunctions(program)) {
-      if (!MODULE_VERB.test(id.name)) {
-        context.report({ message: VERB_MESSAGE, node: id });
+const HOOK_NAME = /^use[A-Z]/u;
+
+const COMPONENT_NAME = /^[A-Z]/u;
+
+const FUNCTION_TYPES = new Set([
+  "ArrowFunctionExpression",
+  "FunctionDeclaration",
+  "FunctionExpression",
+]);
+
+const toNearestFunction = (node) => {
+  let current = node.parent;
+
+  while (current && !FUNCTION_TYPES.has(current.type)) {
+    current = current.parent;
+  }
+
+  return current ?? null;
+};
+
+const isComponentCandidate = (filename, name) =>
+  filename.endsWith(".tsx") && COMPONENT_NAME.test(name);
+
+const moduleFunctionVerb = rule((context) => {
+  const candidates = [];
+  const jsxFunctions = new Set();
+
+  const markJsx = (node) => {
+    jsxFunctions.add(toNearestFunction(node));
+  };
+
+  return {
+    JSXElement: markJsx,
+    JSXFragment: markJsx,
+    Program: (program) => {
+      for (const { fn, id } of topLevelFunctions(program)) {
+        if (!MODULE_VERB.test(id.name) && !HOOK_NAME.test(id.name)) {
+          candidates.push({ fn, id });
+        }
       }
-    }
-  },
-}));
+    },
+    "Program:exit": () => {
+      for (const { fn, id } of candidates) {
+        const isComponent = isComponentCandidate(context.filename, id.name) && jsxFunctions.has(fn);
+
+        if (!isComponent) {
+          context.report({ message: VERB_MESSAGE, node: id });
+        }
+      }
+    },
+  };
+});
 
 const committedTextAt = (relative) => {
   if (!isCommitted(relative)) {

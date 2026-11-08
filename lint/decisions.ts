@@ -61,7 +61,6 @@ const NATIVE_ON: Record<string, unknown> = {
   "import/no-dynamic-require": "error",
   "import/no-namespace": "error",
   "import/no-nodejs-modules": "error",
-  "import/no-relative-parent-imports": "error",
   "import/no-unassigned-import": "error",
   "import/unambiguous": "error",
   "jsdoc/require-param": "error",
@@ -124,6 +123,8 @@ export const OFF_REASONS: Record<string, string> = {
   "sonarjs/arrow-function-convention":
     "Fights the formatter (arrowParens: always).",
   "import/prefer-default-export": "Contradicts import/no-default-export.",
+  "import/no-relative-parent-imports":
+    "Contradicts AGENTS.md W13, which requires relative ../ imports with a .js suffix. The boundaries rules guard which areas may import which.",
   "import/no-named-export":
     "With import/no-default-export it bans every export.",
   "node/no-top-level-await": "Contradicts unicorn/prefer-top-level-await.",
@@ -245,8 +246,6 @@ const NODE_RUNTIMES = [
 ];
 
 export const SCOPED_OFF_REASONS: Record<string, string> = {
-  "import/no-relative-parent-imports":
-    "Off in apps/desktop/src/ui/app files: the app composes sibling folders (features, platform, domain, kit) and the studio files import from the parent app folder. The budget-0 app folder has no shim to avoid this.",
   "import/no-unassigned-import":
     "Off in apps/desktop/src/ui/app/main.tsx: the Vite entry imports the global css file for its side effect.",
   "import/no-nodejs-modules":
@@ -281,158 +280,10 @@ export const APP_BUDGET_ZERO_GLOBS = [
 
 export const decisionOverrides: OxlintOverride[] = [
   {
-    files: ["apps/desktop/src/server/mcp/legacy-args.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: ["apps/api/src/http/middleware/auth-calls.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/ui/app/app.tsx",
-      "apps/desktop/src/ui/app/app-notice.tsx",
-      "apps/desktop/src/ui/app/app-screen.tsx",
-      "apps/desktop/src/ui/app/main.tsx",
-      "apps/desktop/src/ui/app/screen-boundary.tsx",
-      "apps/desktop/src/ui/app/screen-preload.ts",
-      "apps/desktop/src/ui/app/studio/bind-studio-commands.ts",
-      "apps/desktop/src/ui/app/studio/center-bars.ts",
-      "apps/desktop/src/ui/app/studio/center-props.ts",
-      "apps/desktop/src/ui/app/studio/export-layer.tsx",
-      "apps/desktop/src/ui/app/studio/left-props-panels.tsx",
-      "apps/desktop/src/ui/app/studio/left-props.ts",
-      "apps/desktop/src/ui/app/studio/project-model.ts",
-      "apps/desktop/src/ui/app/studio/request-model.ts",
-      "apps/desktop/src/ui/app/studio/rules-slot.tsx",
-      "apps/desktop/src/ui/app/studio/run-model.ts",
-      "apps/desktop/src/ui/app/studio/share-layer.tsx",
-      "apps/desktop/src/ui/app/studio/ship-layer.tsx",
-      "apps/desktop/src/ui/app/studio/studio-center.tsx",
-      "apps/desktop/src/ui/app/studio/studio-core-types.ts",
-      "apps/desktop/src/ui/app/studio/studio-left.tsx",
-      "apps/desktop/src/ui/app/studio/studio-ready.tsx",
-      "apps/desktop/src/ui/app/studio/studio-right.tsx",
-      "apps/desktop/src/ui/app/studio/studio-run-types.ts",
-      "apps/desktop/src/ui/app/studio/studio-system.tsx",
-      "apps/desktop/src/ui/app/studio/studio-ui-types.ts",
-      "apps/desktop/src/ui/app/studio/use-home-variations-handoff.ts",
-      "apps/desktop/src/ui/app/studio/use-studio-base.ts",
-      "apps/desktop/src/ui/app/studio/use-studio-compose.ts",
-      "apps/desktop/src/ui/app/studio/use-studio-edit.ts",
-      "apps/desktop/src/ui/app/studio/use-studio-effects.ts",
-      "apps/desktop/src/ui/app/studio/use-studio-history.ts",
-      "apps/desktop/src/ui/app/studio/use-studio-panes.ts",
-      "apps/desktop/src/ui/app/studio/use-studio-run.ts",
-      "apps/desktop/src/ui/app/studio/use-studio-state.ts",
-      "apps/desktop/src/ui/app/use-command-layer.ts",
-      "apps/desktop/src/ui/app/use-session.ts",
-    ],
-    rules: {
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
     files: ["apps/desktop/src/ui/app/main.tsx"],
     rules: {
       "import/no-unassigned-import": "off",
     },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/cloud/cloud-link-client.ts",
-      "apps/desktop/src/server/cloud/cloud-link-rows.ts",
-      "apps/desktop/src/server/cloud/cloud-list-client.ts",
-      "apps/desktop/src/server/publish/linked-publication-store.ts",
-      "apps/desktop/src/server/publish/linked-publication-writer.ts",
-      "apps/desktop/src/server/share/linked-share-writer.ts",
-      "apps/desktop/src/ui/features/commands/deps.ts",
-      "apps/desktop/src/ui/features/comments/deps.ts",
-      "apps/desktop/src/ui/features/design-system/deps.ts",
-      "apps/desktop/src/ui/features/home/deps.ts",
-      "apps/desktop/src/ui/features/inspector/deps.ts",
-      "apps/desktop/src/ui/features/settings/keys-model.ts",
-      "apps/desktop/src/ui/features/settings/use-keys.ts",
-      "apps/desktop/src/ui/measure.test.ts",
-    ],
-    rules: {
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: [
-      "apps/api/src/http/share-routes.ts",
-      "apps/api/src/http/viewer-routes.ts",
-      "apps/api/src/mcp/layer.ts",
-      "apps/api/src/mcp/mount.ts",
-      "apps/api/src/mcp/rpc.ts",
-      "apps/api/src/mcp/tools.ts",
-      "apps/api/src/tenant/repos/agent-request.ts",
-      "apps/api/src/viewer/gate.ts",
-      "apps/api/src/viewer/layer.ts",
-      "apps/api/src/viewer/read-password.ts",
-      "apps/api/src/viewer/read-site-file.ts",
-      "apps/api/src/viewer/unlock.ts",
-      "apps/api/src/share/add-comment.ts",
-      "apps/api/src/share/layer.ts",
-      "apps/api/src/share/read-share.ts",
-      "apps/api/src/tenant/repos/share.ts",
-      "apps/api/src/tenant/sweep-db.ts",
-      "apps/desktop/src/server/handlers/run/get-context.ts",
-      "apps/desktop/src/server/handlers/run/get.ts",
-      "apps/desktop/src/server/handlers/run/handlers.ts",
-      "apps/desktop/src/server/handlers/run/list.ts",
-      "apps/desktop/src/server/handlers/run/live.ts",
-      "apps/desktop/src/server/handlers/run/rename.ts",
-      "apps/desktop/src/server/handlers/run/set-permission.ts",
-      "apps/desktop/src/server/handlers/run/set-queue.ts",
-      "apps/desktop/src/server/handlers/run/set-steer.ts",
-      "apps/desktop/src/server/handlers/run/start.ts",
-      "apps/desktop/src/server/handlers/run/stop.ts",
-      "apps/desktop/src/server/run-log/run-log-controls.ts",
-      "apps/desktop/src/server/run-log/run-log-reads.ts",
-      "apps/desktop/src/server/run-log/run-log-runtime.ts",
-      "apps/desktop/src/server/run-log/run-log-store.ts",
-      "apps/desktop/src/server/http/app-run-start.ts",
-      "packages/common/actions/src/run/get-context.ts",
-      "packages/common/actions/src/run/get.ts",
-      "packages/common/actions/src/run/list.ts",
-      "packages/common/actions/src/run/rename.ts",
-      "packages/common/actions/src/run/set-permission.ts",
-      "packages/common/actions/src/run/set-queue.ts",
-      "packages/common/actions/src/run/set-steer.ts",
-      "packages/common/actions/src/run/start.ts",
-      "packages/common/actions/src/run/stop.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: ["apps/desktop/src/server/agent/canvas-tool-fields.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: ["apps/desktop/src/server/agent/critic-reply.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/agent-tools/tool-input.ts",
-      "apps/desktop/src/server/direct-edit/commit/deps.ts",
-      "apps/desktop/src/server/preview/page-capture/index.ts",
-      "apps/desktop/src/server/share/frames.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: ["apps/desktop/src/server/platform/json-file/index.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/store/data-lock.test.ts",
-      "apps/desktop/src/server/store/version-fast.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
@@ -451,117 +302,10 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "apps/api/src/tenant/repos/comments.ts",
-      "packages/common/actions/src/token/apply.ts",
-      "apps/desktop/src/server/handlers/token/{apply,handlers,live}.ts",
-      "packages/common/actions/src/token/errors/status.ts",
-      "apps/desktop/src/server/token-sweep/deps.ts",
-      "apps/desktop/src/ui/features/token-sweep/deps.ts",
-      "packages/common/actions/src/gallery/{create,inspect}.ts",
-      "apps/desktop/src/server/handlers/gallery/{create,handlers,inspect,live}.ts",
-      "packages/common/actions/src/gallery/errors/status.ts",
-      "apps/desktop/src/server/gallery/deps.ts",
-      "apps/desktop/src/ui/features/gallery/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "packages/common/actions/src/critique/{get,run}.ts",
-      "packages/common/actions/src/critique/errors/status.ts",
-      "apps/desktop/src/server/handlers/critique/{get,handlers,live,run}.ts",
-      "apps/desktop/src/server/review/{critique-capture,critique-frame,critique-json,critique-reply,critique-runner,critique-saved,critique-store,critique-target,critique-taste}.ts",
-      "apps/desktop/src/server/agent/mock.ts",
-      "apps/desktop/src/ui/features/critique/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "packages/common/actions/src/scenario/{apply,create,list,run}.ts",
-      "packages/common/actions/src/scenario/errors/status.ts",
-      "apps/desktop/src/server/handlers/scenario/{apply,create,handlers,list,live,run}.ts",
-      "apps/desktop/src/server/review/scenario/{scenario-apply,scenario-create,scenario-observe,scenario-page,scenario-record,scenario-run,scenario-runner,scenario-saved,scenario-store,scenario-target}.ts",
-      "apps/desktop/src/server/app/frame-state-calls.ts",
-      "apps/desktop/src/ui/features/scenario/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "packages/common/actions/src/prop/{create,delete,list,rename,schema}.ts",
-      "packages/common/actions/src/prop/errors/status.ts",
-      "apps/desktop/src/server/handlers/prop/{create,delete,handlers,list,live,rename}.ts",
-      "apps/desktop/src/server/components/prop/deps.ts",
-      "apps/desktop/src/ui/features/prop/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "packages/common/actions/src/grid/{get,schema,set,set-grid-item}.ts",
-      "packages/common/actions/src/grid/errors/status.ts",
-      "apps/desktop/src/server/handlers/grid/{get,handlers,live,set,set-grid-item}.ts",
-      "apps/desktop/src/server/grid/{deps,grid-failure,grid-run,grid-store,grid-writer}.ts",
-      "apps/desktop/src/server/grid/engine/deps.ts",
-      "apps/desktop/src/ui/features/grid/deps.ts",
-      "apps/desktop/src/ui/features/pattern/deps.ts",
-      "apps/desktop/src/ui/features/inspector/grid-section.tsx",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "packages/common/actions/src/pattern/{create,delete,get,insert,list,schema}.ts",
-      "packages/common/actions/src/pattern/errors/status.ts",
-      "apps/desktop/src/server/handlers/pattern/{create,delete,get,handlers,insert,list,live}.ts",
-      "apps/desktop/src/server/pattern/deps.ts",
-      "apps/desktop/src/server/pattern/engine/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "packages/common/actions/src/integration/{create,delete,list,run,update}.ts",
-      "packages/common/actions/src/integration/errors/status.ts",
-      "apps/desktop/src/server/handlers/integration/{create,delete,handlers,list,live,run,update}.ts",
-      "apps/desktop/src/server/integration/deps.ts",
-      "apps/desktop/src/server/agent/integration-run.ts",
-      "apps/desktop/src/server/agent/integration-gate.ts",
-      "apps/desktop/src/ui/features/integration/deps.ts",
-      "apps/desktop/src/ui/features/chat/integration-chip.tsx",
-      "apps/desktop/src/ui/features/chat/repo-chip.tsx",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "packages/common/actions/src/theme/{apply,create,list,set}.ts",
-      "packages/common/actions/src/theme/errors/status.ts",
-      "apps/desktop/src/server/handlers/theme/{apply,create,handlers,list,live,set}.ts",
-      "apps/desktop/src/server/theme/deps.ts",
-      "apps/desktop/src/server/design-system/theme-tokens.ts",
-      "apps/desktop/src/ui/features/theme/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
       "apps/desktop/src/server/pattern/engine/{convert,scan}.ts",
       "apps/desktop/src/server/pattern/{pattern-capture,pattern-imports,snippet-parse}.ts",
     ],
     rules: { "sonarjs/no-implicit-dependencies": "off" },
-  },
-  {
-    files: [
-      "packages/common/actions/src/effect/{create,delete,get,list,schema,set}.ts",
-      "packages/common/actions/src/effect/errors/status.ts",
-      "apps/desktop/src/server/handlers/effect/{create,delete,get,handlers,list,live,set}.ts",
-      "apps/desktop/src/server/effect/{deps,effect-failure,effect-run,effect-store,effect-writer}.ts",
-      "apps/desktop/src/ui/features/effect/deps.ts",
-      "apps/desktop/src/ui/features/inspector/effect-section.tsx",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
@@ -571,190 +315,15 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "sonarjs/no-implicit-dependencies": "off" },
   },
   {
-    files: [
-      "packages/common/actions/src/animation/{create,delete,export,get,list,schema,update}.ts",
-      "packages/common/actions/src/animation/errors/status.ts",
-      "apps/desktop/src/server/handlers/animation/{create,delete,export,get,handlers,list,live,update}.ts",
-      "apps/desktop/src/server/state-styles/animation/deps.ts",
-      "apps/desktop/src/ui/features/animation/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
     files: ["packages/common/actions/src/spacing/schema.ts"],
     rules: {
       "eslint/id-length": "off",
-      "import/no-relative-parent-imports": "off",
     },
   },
   {
     files: ["apps/desktop/src/server/spacing/spacing-scale.ts"],
     rules: {
       "eslint/id-length": "off",
-    },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/accessibility/accessibility-failure.ts",
-      "apps/desktop/src/server/accessibility/accessibility-run.ts",
-      "apps/desktop/src/server/accessibility/accessibility-store.ts",
-      "apps/desktop/src/server/accessibility/accessibility-writer.ts",
-      "apps/desktop/src/server/accessibility/live-frame.ts",
-      "apps/desktop/src/server/components/variant-write/component-variant-failure.ts",
-      "apps/desktop/src/server/components/variant-write/component-variant-run.ts",
-      "apps/desktop/src/server/components/variant-write/component-variant-store.ts",
-      "apps/desktop/src/server/components/variant-write/component-variant-writer.ts",
-      "apps/desktop/src/server/direct-edit/direction-task.ts",
-      "apps/desktop/src/server/fill/fill-failure.ts",
-      "apps/desktop/src/server/fill/fill-run.ts",
-      "apps/desktop/src/server/fill/fill-store.ts",
-      "apps/desktop/src/server/fill/fill-writer.ts",
-      "apps/desktop/src/server/handlers/accessibility/handlers.ts",
-      "apps/desktop/src/server/handlers/accessibility/inspect.ts",
-      "apps/desktop/src/server/handlers/accessibility/live.ts",
-      "apps/desktop/src/server/handlers/accessibility/set.ts",
-      "apps/desktop/src/server/handlers/canvas/inspect-link-interaction.ts",
-      "apps/desktop/src/server/handlers/canvas/set-link-interaction.ts",
-      "apps/desktop/src/server/handlers/component-variant/create.ts",
-      "apps/desktop/src/server/handlers/component-variant/get.ts",
-      "apps/desktop/src/server/handlers/component-variant/handlers.ts",
-      "apps/desktop/src/server/handlers/component-variant/live.ts",
-      "apps/desktop/src/server/handlers/component-variant/update.ts",
-      "apps/desktop/src/server/handlers/fill/get.ts",
-      "apps/desktop/src/server/handlers/fill/handlers.ts",
-      "apps/desktop/src/server/handlers/fill/live.ts",
-      "apps/desktop/src/server/handlers/fill/set.ts",
-      "apps/desktop/src/server/handlers/icon/handlers.ts",
-      "apps/desktop/src/server/handlers/icon/insert.ts",
-      "apps/desktop/src/server/handlers/icon/inspect.ts",
-      "apps/desktop/src/server/handlers/icon/live.ts",
-      "apps/desktop/src/server/handlers/image-search/get.ts",
-      "apps/desktop/src/server/handlers/image-search/handlers.ts",
-      "apps/desktop/src/server/handlers/image-search/insert.ts",
-      "apps/desktop/src/server/handlers/image-search/inspect.ts",
-      "apps/desktop/src/server/handlers/image-search/live.ts",
-      "apps/desktop/src/server/handlers/motion/handlers.ts",
-      "apps/desktop/src/server/handlers/motion/inspect.ts",
-      "apps/desktop/src/server/handlers/motion/live.ts",
-      "apps/desktop/src/server/handlers/motion/set.ts",
-      "apps/desktop/src/server/handlers/page/handlers.ts",
-      "apps/desktop/src/server/handlers/page/import.ts",
-      "apps/desktop/src/server/handlers/page/live.ts",
-      "apps/desktop/src/server/handlers/spacing/get.ts",
-      "apps/desktop/src/server/handlers/spacing/handlers.ts",
-      "apps/desktop/src/server/handlers/spacing/live.ts",
-      "apps/desktop/src/server/handlers/spacing/set.ts",
-      "apps/desktop/src/server/handlers/stacking/get.ts",
-      "apps/desktop/src/server/handlers/stacking/handlers.ts",
-      "apps/desktop/src/server/handlers/stacking/live.ts",
-      "apps/desktop/src/server/handlers/stacking/set.ts",
-      "apps/desktop/src/server/handlers/state-style/handlers.ts",
-      "apps/desktop/src/server/handlers/state-style/inspect.ts",
-      "apps/desktop/src/server/handlers/state-style/live.ts",
-      "apps/desktop/src/server/handlers/state-style/set-forced.ts",
-      "apps/desktop/src/server/handlers/state-style/set.ts",
-      "apps/desktop/src/server/handlers/text-style/apply.ts",
-      "apps/desktop/src/server/handlers/text-style/create.ts",
-      "apps/desktop/src/server/handlers/text-style/handlers.ts",
-      "apps/desktop/src/server/handlers/text-style/inspect.ts",
-      "apps/desktop/src/server/handlers/text-style/live.ts",
-      "apps/desktop/src/server/handlers/text-style/update.ts",
-      "apps/desktop/src/server/handlers/text/handlers.ts",
-      "apps/desktop/src/server/handlers/text/inspect.ts",
-      "apps/desktop/src/server/handlers/text/live.ts",
-      "apps/desktop/src/server/handlers/text/update.ts",
-      "apps/desktop/src/server/icons/icon-failure.ts",
-      "apps/desktop/src/server/icons/icon-run.ts",
-      "apps/desktop/src/server/icons/icon-store.ts",
-      "apps/desktop/src/server/icons/icon-writer.ts",
-      "apps/desktop/src/server/image-search/image-search-failure.ts",
-      "apps/desktop/src/server/image-search/image-search-run.ts",
-      "apps/desktop/src/server/image-search/image-search-store.ts",
-      "apps/desktop/src/server/image-search/image-search-writer.ts",
-      "apps/desktop/src/server/motion/motion-failure.ts",
-      "apps/desktop/src/server/motion/motion-run.ts",
-      "apps/desktop/src/server/motion/motion-store.ts",
-      "apps/desktop/src/server/motion/motion-writer.ts",
-      "apps/desktop/src/server/page-import/page-failure.ts",
-      "apps/desktop/src/server/page-import/page-run.ts",
-      "apps/desktop/src/server/page-import/page-writer.ts",
-      "apps/desktop/src/server/spacing/spacing-failure.ts",
-      "apps/desktop/src/server/spacing/spacing-run.ts",
-      "apps/desktop/src/server/spacing/spacing-store.ts",
-      "apps/desktop/src/server/spacing/spacing-writer.ts",
-      "apps/desktop/src/server/stacking/stacking-failure.ts",
-      "apps/desktop/src/server/stacking/stacking-run.ts",
-      "apps/desktop/src/server/stacking/stacking-store.ts",
-      "apps/desktop/src/server/stacking/stacking-writer.ts",
-      "apps/desktop/src/server/state-styles/state-style-failure.ts",
-      "apps/desktop/src/server/state-styles/state-style-run.ts",
-      "apps/desktop/src/server/state-styles/state-style-store.ts",
-      "apps/desktop/src/server/state-styles/state-style-writer.ts",
-      "apps/desktop/src/server/text-search/text-search-failure.ts",
-      "apps/desktop/src/server/text-search/text-search-run.ts",
-      "apps/desktop/src/server/text-search/text-search-store.ts",
-      "apps/desktop/src/server/text-search/text-search-writer.ts",
-      "apps/desktop/src/server/text-styles/text-style-failure.ts",
-      "apps/desktop/src/server/text-styles/text-style-probe.ts",
-      "apps/desktop/src/server/text-styles/text-style-run.ts",
-      "apps/desktop/src/server/text-styles/text-style-store.ts",
-      "apps/desktop/src/server/text-styles/text-style-writer.ts",
-      "packages/common/actions/src/accessibility/errors/status.ts",
-      "packages/common/actions/src/accessibility/inspect.ts",
-      "packages/common/actions/src/accessibility/schema.ts",
-      "packages/common/actions/src/accessibility/set.ts",
-      "packages/common/actions/src/canvas/inspect-link-interaction.ts",
-      "packages/common/actions/src/canvas/set-link-interaction.ts",
-      "packages/common/actions/src/component-variant/create.ts",
-      "packages/common/actions/src/component-variant/errors/status.ts",
-      "packages/common/actions/src/component-variant/get.ts",
-      "packages/common/actions/src/component-variant/schema.ts",
-      "packages/common/actions/src/component-variant/update.ts",
-      "packages/common/actions/src/fill/errors/status.ts",
-      "packages/common/actions/src/fill/get.ts",
-      "packages/common/actions/src/fill/schema.ts",
-      "packages/common/actions/src/fill/set.ts",
-      "packages/common/actions/src/icon/errors/status.ts",
-      "packages/common/actions/src/icon/insert.ts",
-      "packages/common/actions/src/icon/inspect.ts",
-      "packages/common/actions/src/icon/schema.ts",
-      "packages/common/actions/src/image-search/errors/status.ts",
-      "packages/common/actions/src/image-search/get.ts",
-      "packages/common/actions/src/image-search/insert.ts",
-      "packages/common/actions/src/image-search/inspect.ts",
-      "packages/common/actions/src/image-search/schema.ts",
-      "packages/common/actions/src/motion/errors/status.ts",
-      "packages/common/actions/src/motion/inspect.ts",
-      "packages/common/actions/src/motion/schema.ts",
-      "packages/common/actions/src/motion/set.ts",
-      "packages/common/actions/src/page/errors/status.ts",
-      "packages/common/actions/src/page/import.ts",
-      "packages/common/actions/src/page/schema.ts",
-      "packages/common/actions/src/spacing/errors/status.ts",
-      "packages/common/actions/src/spacing/get.ts",
-      "packages/common/actions/src/spacing/set.ts",
-      "packages/common/actions/src/stacking/errors/status.ts",
-      "packages/common/actions/src/stacking/get.ts",
-      "packages/common/actions/src/stacking/schema.ts",
-      "packages/common/actions/src/stacking/set.ts",
-      "packages/common/actions/src/state-style/errors/status.ts",
-      "packages/common/actions/src/state-style/inspect.ts",
-      "packages/common/actions/src/state-style/schema.ts",
-      "packages/common/actions/src/state-style/set-forced.ts",
-      "packages/common/actions/src/state-style/set.ts",
-      "packages/common/actions/src/text-style/apply.ts",
-      "packages/common/actions/src/text-style/create.ts",
-      "packages/common/actions/src/text-style/errors/status.ts",
-      "packages/common/actions/src/text-style/inspect.ts",
-      "packages/common/actions/src/text-style/schema.ts",
-      "packages/common/actions/src/text-style/update.ts",
-      "packages/common/actions/src/text/errors/status.ts",
-      "packages/common/actions/src/text/inspect.ts",
-      "packages/common/actions/src/text/schema.ts",
-      "packages/common/actions/src/text/update.ts",
-    ],
-    rules: {
-      "import/no-relative-parent-imports": "off",
     },
   },
   {
@@ -783,16 +352,6 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "packages/common/actions/src/image/{create,inspect}.ts",
-      "packages/common/actions/src/image/errors/status.ts",
-      "apps/desktop/src/server/handlers/image/{create,handlers,inspect,live}.ts",
-      "apps/desktop/src/server/image-generate/deps.ts",
-      "apps/desktop/src/ui/features/image-generate/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
       "apps/desktop/src/server/viewport/engine/cells.ts",
       "apps/desktop/src/ui/features/viewport/matrix-model.ts",
     ],
@@ -804,26 +363,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/server/viewport/create-matrix.ts",
     ],
     rules: { "id-length": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/handlers/viewport/{create,handlers,live,run}.ts",
-      "apps/desktop/src/server/viewport/{deps,probe}.ts",
-      "packages/common/actions/src/viewport/{create,run}.ts",
-      "packages/common/actions/src/viewport/errors/status.ts",
-      "apps/desktop/src/ui/features/viewport/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/content/{content-runtime,content-writer,write-content}.ts",
-      "apps/desktop/src/server/handlers/content/{apply,handlers,live}.ts",
-      "packages/common/actions/src/content/apply.ts",
-      "packages/common/actions/src/content/errors/status.ts",
-      "apps/desktop/src/ui/features/content/deps.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: ["apps/desktop/src/server/content/engine/random.ts"],
@@ -849,58 +388,6 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "node/no-process-env": "off", "unicorn/no-process-exit": "off" },
   },
   {
-    files: [
-      "apps/desktop/src/server/events/{bus,event-queue,event-core,event-log,event-writer,render-tracker,save-lanes,save-queue}.ts",
-      "apps/desktop/src/server/handlers/events/live.ts",
-      "apps/desktop/src/server/events/{change-feed,source-change}.ts",
-      "apps/desktop/src/server/events/planned-feed.ts",
-      "apps/desktop/src/server/events/render-wait.ts",
-      "apps/desktop/src/server/platform/git/batch-reader.ts",
-      "apps/desktop/src/server/platform/git/objects.ts",
-      "apps/desktop/src/server/platform/git/run-git.ts",
-      "apps/desktop/src/server/platform/git/user-git.ts",
-      "apps/desktop/src/server/platform/process/worker-client.ts",
-      "apps/desktop/src/server/platform/resources/index.ts",
-      "apps/desktop/src/server/platform/tool-policy/**",
-      "apps/desktop/src/ui/platform/{http,pack-api,session}.ts",
-      "apps/desktop/src/server/project-source/source.ts",
-      "apps/desktop/src/server/run-log/run-list.ts",
-      SERVER_MAIN,
-      "apps/desktop/src/server/preview/{ports,render-contract}.ts",
-      "apps/desktop/src/server/cloud/{cloud-migration-runner,outbox-store,sync-runner}.ts",
-      "apps/desktop/src/server/store/{device-bindings,authorizer,data-lock,default-folder,events,git-objects,local-principal,principal,mutex,project-access,project-org,skill-store,starters,studio-info}.ts",
-      "apps/desktop/src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live}.ts",
-      "packages/common/actions/src/studio/{health,list-skills}.ts",
-      "apps/desktop/src/server/{http/mount,http/mount-all,handlers/_core/wire-error,mcp/registry,agent-tools/registry,agent-tools/sdk-shape}.ts",
-      "{apps/desktop/src/server/handlers/version/{live,handlers,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},apps/desktop/src/server/store/version-{read,read-core,store,write,write-core,writer},packages/common/actions/src/version/{schema,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},apps/desktop/src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},apps/desktop/src/server/publish/{cf-cli,publish-service,publish-core,publish-store,legacy-link,plan-card,plan-input,plan-legacy,publish-planner,publish-remote-reads,publish-remote-writes},packages/common/actions/src/_core/http-status,packages/common/actions/src/_core/errors/all,packages/common/actions/src/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},apps/desktop/src/server/handlers/share/{live,handlers,list,create,delete,update,set-cursor,set-lan},apps/desktop/src/server/share/{share-core,share-store,share-listener,live-refresher,share-attempt,share-cards,share-link-store,share-links},packages/common/actions/src/share/{list,create,delete,update,set-cursor,set-lan},apps/desktop/src/server/handlers/comment/{live,handlers,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},apps/desktop/src/server/comments/{comment-core,comment-reads,comment-run-ops,comment-store,comment-thread-ops,comment-thread-store,comment-page,work-tree,index,comment-insert,frame-target,comment-run-starter,run-payload,run-watch},packages/common/actions/src/comment/{schema,errors/status,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},apps/desktop/src/server/handlers/ship/{live,handlers,get-plan,inspect,publish,get-settings,set-settings},apps/desktop/src/server/ship/{ship-core,ship-plans,ship-settings,ship-store,ship-runner},packages/common/actions/src/ship/{schema,get-plan,inspect,publish,get-settings,set-settings},apps/desktop/src/server/handlers/export/{live,handlers,get-code,export,export-frame,export-folder,export-handoff,get-handoff},apps/desktop/src/server/export/{export-core,export-store,copy-target,export-writer,export-file,export-runs,export-frames,export-write,folder-export,frame-selector},packages/common/actions/src/export/{schema,get-code,export,export-frame,export-folder,export-handoff,get-handoff},apps/desktop/src/server/handlers/pack/{live,handlers,list,get-pack,inspect-pack,get-draft,inspect-draft,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},apps/desktop/src/server/design-system/ops/{library-core,library-reads,pack-store,library-backing,library-cards,library-draft-input,library-drafts,library-writes,pack-writer},packages/common/actions/src/pack/{schema,list,get-pack,inspect-pack,get-draft,inspect-draft,errors/status,errors/pack-exists,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},apps/desktop/src/server/handlers/workspace/{live,handlers,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context},apps/desktop/src/server/variations/element-variants,apps/desktop/src/server/preview/{mcp-read-core,mcp-read-store,doctor-read,usage-read,project-list-read,project-search-read,found-apps-read,version-list-read,file-read,variant-read,route-read,frame-source,frame-html-read,frame-shot-pick,frame-shot-read,token-read,warm-upstream,run-context-read},apps/desktop/src/server/mcp/tool-result,apps/desktop/src/server/platform/attempt/index,packages/common/actions/src/workspace/{schema,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context}}.ts",
-      "apps/desktop/src/server/agent/legacy/direct-edit.ts",
-      "apps/desktop/scripts/stamp/{action-index,call-agent,names,templates,templates-ui,write}.ts",
-      "apps/desktop/e2e/support/{logged-spawn.test,server}.ts",
-      "apps/desktop/scripts/stamp/probes/*.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/direct-edit/{direct-edit-core,direct-edit-insert-ops,direct-edit-ops}.ts",
-      "apps/desktop/src/server/handlers/direct-edit/{get-review,get-rules,import-figma,inspect-props-instance,list-props-components,run-review,run-rules-test,set-props,set-rules,set-variant-classes,apply-review-fix,apply-swap,apply,create-component,create-token,delete-text,get-component-preview,get-design-system,get-preview,get-tree,get-tweaks,handlers,insert-component,insert-jsx,inspect-tokens,list-component-folders,list-components,list-insertable,list-swap-candidates,live,run,set-image,set-vector,update-tokens,update-tweaks}.ts",
-      "apps/desktop/src/server/http/app-direct-edit-routes.ts",
-      "packages/common/actions/src/direct-edit/{get-review,get-rules,import-figma,inspect-props-instance,list-props-components,run-review,run-rules-test,set-props,set-rules,set-variant-classes,apply-review-fix,apply-swap,apply,create-component,create-token,delete-text,get-component-preview,get-design-system,get-preview,get-tree,get-tweaks,insert-component,insert-jsx,inspect-tokens,list-component-folders,list-components,list-insertable,list-swap-candidates,run,set-image,set-vector,update-tokens,update-tweaks}.ts",
-      "packages/common/actions/src/direct-edit/errors/{direct-edit-conflict,direct-edit-failed,direct-edit-not-found,status}.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/direct-edit/{direct-edit-props-ops,direct-edit-review-ops}.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: ["apps/desktop/src/server/agent/types.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
     files: ["apps/desktop/src/server/direct-edit/direct-edit-core.ts"],
     rules: { "sonarjs/max-union-size": "off" },
   },
@@ -909,17 +396,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/server/direct-edit/{direct-edit-ops,direct-edit-ref}.ts",
     ],
     rules: { "anti-slop/no-unsafe-dictionary-type": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/{cloud/{cloud-session,cloud-session-store,cloud-client,cloud-session-writer},handlers/cloud/{get,set,delete,live,handlers}}.ts",
-      "packages/common/actions/src/cloud/{get,set,delete}.ts",
-      "apps/desktop/src/server/canvas/links/link-{ops,runtime,store,writer}.ts",
-      "apps/desktop/src/server/canvas/canvas-{ops,runtime,store,writer}.ts",
-      "apps/desktop/src/server/handlers/canvas/{apply-implicit-link,create-flow,create-link,delete-link,get-doc,handlers,list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links,live,set-doc,set-frame-state,set-presence,set-start-link,update-frame-session,update-link}.ts",
-      "packages/common/actions/src/canvas/{apply-implicit-link,create-flow,create-link,delete-link,get-doc,index,list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links,routes,schema,set-doc,set-frame-state,set-presence,set-start-link,update-frame-session,update-link}.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
@@ -946,14 +422,6 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: [
-      "apps/desktop/src/server/app/dev-server-{attempt,ops,runner,runtime,store}.ts",
-      "apps/desktop/src/server/handlers/dev-server/{create,get,handlers,list-routes,live,run,set,start,stop}.ts",
-      "packages/common/actions/src/dev-server/{create,get,index,list-routes,routes,run,schema,set,start,stop}.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
     files: ["packages/common/actions/src/dev-server/{create,set}.ts"],
     rules: { "unicorn/max-nested-calls": "off" },
   },
@@ -972,15 +440,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "typescript/explicit-module-boundary-types": "warn",
       "unicorn/no-useless-undefined": "warn",
     },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/handlers/connection/{get-status,handlers,list-activity,list-approvals,live,set-approval,set-status}.ts",
-      "packages/common/actions/src/connection/{get-status,index,list-activity,list-approvals,routes,schema,set-approval,set-status}.ts",
-      "apps/desktop/src/server/mcp-life/{approval-window-queue,index,mcp-activity-log,mcp-approval-store,mcp-life-runtime,mcp-listener-runner,mcp-settings-store,mcp-settings-writer}.ts",
-      "apps/desktop/src/server/platform/runtime-slot/index.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
@@ -1065,45 +524,6 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "apps/desktop/src/server/mcp/legacy/attach-app.ts",
-      "apps/desktop/src/server/mcp/legacy/caller-scope.ts",
-      "apps/desktop/src/server/mcp/legacy/guard.ts",
-      "apps/desktop/src/server/mcp/legacy/canvas-frames.ts",
-      "apps/desktop/src/server/mcp/legacy/canvas-schema.ts",
-      "apps/desktop/src/server/mcp/legacy/canvas.ts",
-      "apps/desktop/src/server/mcp/legacy/cloud.ts",
-      "apps/desktop/src/server/mcp/legacy/comments.ts",
-      "apps/desktop/src/server/mcp/legacy/create-project.ts",
-      "apps/desktop/src/server/mcp/legacy/devserver.ts",
-      "apps/desktop/src/server/mcp/legacy/direct-edit-inline.ts",
-      "apps/desktop/src/server/mcp/legacy/direct-edit-result.ts",
-      "apps/desktop/src/server/mcp/legacy/direct-edit-schema.ts",
-      "apps/desktop/src/server/mcp/legacy/direct-edit.ts",
-      "apps/desktop/src/server/mcp/legacy/edit-element.ts",
-      "apps/desktop/src/server/mcp/legacy/events.ts",
-      "apps/desktop/src/server/mcp/legacy/mcp-life.ts",
-      "apps/desktop/src/server/mcp/legacy/mcp-read.ts",
-      "apps/desktop/src/server/mcp/legacy/open-folder.ts",
-      "apps/desktop/src/server/mcp/legacy/org-scope.ts",
-      "apps/desktop/src/server/mcp/legacy/pack-of.ts",
-      "apps/desktop/src/server/mcp/legacy/packs-schema.ts",
-      "apps/desktop/src/server/mcp/legacy/packs.ts",
-      "apps/desktop/src/server/mcp/legacy/projects-result.ts",
-      "apps/desktop/src/server/mcp/legacy/projects-schema.ts",
-      "apps/desktop/src/server/mcp/legacy/projects.ts",
-      "apps/desktop/src/server/mcp/legacy/publish.ts",
-      "apps/desktop/src/server/mcp/legacy/session.ts",
-      "apps/desktop/src/server/mcp/legacy/set-token.ts",
-      "apps/desktop/src/server/mcp/legacy/structure-element.ts",
-      "apps/desktop/src/server/mcp/legacy/studio.ts",
-      "apps/desktop/src/server/mcp/legacy/versions.ts",
-      "apps/desktop/src/server/mcp/legacy/write-file.ts",
-      "apps/desktop/src/server/mcp/run-edit.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
       "apps/desktop/src/server/mcp/legacy/direct-edit.ts",
       "packages/common/actions/src/_core/errors/all.ts",
       "packages/common/actions/src/_core/http-status.ts",
@@ -1127,29 +547,8 @@ export const decisionOverrides: OxlintOverride[] = [
     files: ["apps/desktop/src/server/mcp/{key-auth,key-introspect}.ts"],
     rules: {
       "anti-slop/require-readable-spacing": "warn",
-      "import/no-relative-parent-imports": "off",
       "sonarjs/no-nested-functions": "warn",
     },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/{agent/icon-tool,http/icon-routes,icons/deps,mcp/icon-tools}.ts",
-      "apps/desktop/src/server/{mcp/text-style-tools,agent/text-style-tool,text-styles/deps}.ts",
-      "apps/desktop/src/server/motion/deps.ts",
-      "apps/desktop/src/server/fill/deps.ts",
-      "apps/desktop/src/server/{design-system/model/index,design-system/ops/index,spacing/deps,components/variant-write/deps,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,page-import/deps,text-search/deps,breakpoints/deps,mcp/breakpoints-tools,agent/breakpoints-tool,state-styles/deps,mcp/state-styles-tools,agent/state-styles-tool,style-scope/engine/deps,stacking/deps,stacking/engine/deps,mcp/stacking-tools,agent/stacking-tool,image-search/deps,accessibility/deps}.ts",
-      "apps/desktop/src/server/{mcp/copy-code-tools,agent/copy-code-tool}.ts",
-      "apps/api/src/http/{api,groups/*,groups/keys/*,sync/*}.ts",
-      "apps/api/src/{tenant/{probes/{planted-tq,cross-org},repos/{projects,changes,versions,key-perm},blobs,current-org,db,resolver,viewer-db},auth/{gateway,permissions,rate-limit},http/{errors,middleware/{agent-auth,member-auth,member-directory,org-grant,viewer}}}.ts",
-      "apps/desktop/src/server/export/copy-handler.ts",
-      "apps/desktop/src/server/export/copy-react.ts",
-      "apps/desktop/src/ui/features/icons/deps.ts",
-      "apps/desktop/src/ui/features/text-styles/deps.ts",
-      "apps/desktop/src/ui/features/motion/deps.ts",
-      "apps/desktop/src/server/http/{{text-search,state-style,stacking,accessibility}-routes,app-{context,errors,project-files,request,run-parse,*-routes},loopback-guard}.ts",
-      "apps/desktop/src/{ui/features/{account,settings,fill,spacing,component-variant,link-interaction,page-import,text-search,state-styles,stacking,image-search,accessibility,agent-approval}/deps,bridge/play-triggers}.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
@@ -1177,7 +576,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/ui/platform/{stream,event-hub,live-store}.ts",
     ],
     rules: Object.fromEntries(
-      "anti-slop/no-chained-type-assertions anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unknown-returns anti-slop/require-readable-spacing eslint/curly eslint/default-case eslint/func-style eslint/id-length eslint/init-declarations eslint/max-classes-per-file eslint/max-lines-per-function eslint/no-console eslint/no-continue eslint/no-magic-numbers eslint/no-promise-executor-return eslint/no-ternary eslint/no-undefined eslint/prefer-destructuring eslint/sort-keys github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/no-relative-parent-imports promise/avoid-new promise/prefer-await-to-callbacks promise/prefer-await-to-then sonarjs/elseif-without-else sonarjs/no-undefined-assignment typescript/explicit-function-return-type typescript/explicit-member-accessibility typescript/method-signature-style typescript/parameter-properties unicorn/no-array-sort unicorn/no-useless-spread unicorn/no-useless-undefined unicorn/prefer-add-event-listener unicorn/prefer-global-this unicorn/require-post-message-target-origin sonarjs/max-lines-per-function"
+      "anti-slop/no-chained-type-assertions anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unknown-returns anti-slop/require-readable-spacing eslint/curly eslint/default-case eslint/func-style eslint/id-length eslint/init-declarations eslint/max-classes-per-file eslint/max-lines-per-function eslint/no-console eslint/no-continue eslint/no-magic-numbers eslint/no-promise-executor-return eslint/no-ternary eslint/no-undefined eslint/prefer-destructuring eslint/sort-keys github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports promise/avoid-new promise/prefer-await-to-callbacks promise/prefer-await-to-then sonarjs/elseif-without-else sonarjs/no-undefined-assignment typescript/explicit-function-return-type typescript/explicit-member-accessibility typescript/method-signature-style typescript/parameter-properties unicorn/no-array-sort unicorn/no-useless-spread unicorn/no-useless-undefined unicorn/prefer-add-event-listener unicorn/prefer-global-this unicorn/require-post-message-target-origin sonarjs/max-lines-per-function"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -1185,7 +584,7 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: ["apps/desktop/src/ui/platform/{desktop,storage,app-events}.ts"],
     rules: Object.fromEntries(
-      "anti-slop/no-conditional-empty-object-spread unicorn/prefer-set-has eslint/sort-keys eslint/no-useless-return react/refs unicorn/no-array-reverse react-doctor/no-ref-current-in-render anti-slop/no-chained-type-assertions anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/no-magic-numbers eslint/no-ternary eslint/no-undefined github/array-foreach import/exports-last import/group-exports import/no-relative-parent-imports sonarjs/max-union-size sonarjs/no-duplicate-string typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/no-array-for-each unicorn/no-useless-undefined unicorn/prefer-global-this"
+      "anti-slop/no-conditional-empty-object-spread unicorn/prefer-set-has eslint/sort-keys eslint/no-useless-return react/refs unicorn/no-array-reverse react-doctor/no-ref-current-in-render anti-slop/no-chained-type-assertions anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/no-magic-numbers eslint/no-ternary eslint/no-undefined github/array-foreach import/exports-last import/group-exports sonarjs/max-union-size sonarjs/no-duplicate-string typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/no-array-for-each unicorn/no-useless-undefined unicorn/prefer-global-this"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -1193,7 +592,7 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: ["apps/desktop/src/ui/platform/{router,telemetry}.ts"],
     rules: Object.fromEntries(
-      "anti-slop/no-chained-type-assertions anti-slop/no-runtime-typeof eslint/func-style eslint/init-declarations eslint/no-continue eslint/no-ternary eslint/no-undefined eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys import/exports-last import/group-exports import/no-relative-parent-imports sonarjs/no-undefined-assignment sonarjs/shorthand-property-grouping typescript/explicit-function-return-type unicorn/no-useless-undefined unicorn/prefer-global-this"
+      "anti-slop/no-chained-type-assertions anti-slop/no-runtime-typeof eslint/func-style eslint/init-declarations eslint/no-continue eslint/no-ternary eslint/no-undefined eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys import/exports-last import/group-exports sonarjs/no-undefined-assignment sonarjs/shorthand-property-grouping typescript/explicit-function-return-type unicorn/no-useless-undefined unicorn/prefer-global-this"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -1201,7 +600,7 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: ["packages/ui/src/**", "apps/desktop/src/ui/domain/**"],
     rules: Object.fromEntries(
-      "anti-slop/no-known-value-widening anti-slop/no-runtime-typeof eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/sort-keys github/filenames-match-regex github/prefer-observers import/exports-last import/group-exports import/no-relative-parent-imports jsx-a11y/click-events-have-key-events jsx-a11y/interactive-supports-focus jsx-a11y/prefer-tag-over-role react-doctor/advanced-event-handler-refs react-doctor/only-export-components react-perf/jsx-no-new-function-as-prop react/jsx-max-depth react/only-export-components react/refs sonarjs/no-nested-conditional typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/consistent-existence-index-check unicorn/filename-case unicorn/no-nested-ternary unicorn/prefer-global-this react/function-component-definition"
+      "anti-slop/no-known-value-widening anti-slop/no-runtime-typeof eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/sort-keys github/filenames-match-regex github/prefer-observers import/exports-last import/group-exports jsx-a11y/click-events-have-key-events jsx-a11y/interactive-supports-focus jsx-a11y/prefer-tag-over-role react-doctor/advanced-event-handler-refs react-doctor/only-export-components react-perf/jsx-no-new-function-as-prop react/jsx-max-depth react/only-export-components react/refs sonarjs/no-nested-conditional typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/consistent-existence-index-check unicorn/filename-case unicorn/no-nested-ternary unicorn/prefer-global-this react/function-component-definition"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -1237,7 +636,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/server/{mcp/{element,layer-ref,layer-ids,line-map,source-loc},page-probe/index,canvas/{index,links/index,app-flow/index}}.ts",
     ],
     rules: {
-      "import/no-relative-parent-imports": "off",
       "oxc/no-barrel-file": "off",
       "sonarjs/no-wildcard-import": "off",
     },
@@ -1378,58 +776,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "unicorn/no-await-expression-member": "warn",
       "unicorn/prefer-export-from": "warn",
       "unicorn/prefer-import-meta-properties": "warn",
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/store/{project-store,project-writer,project-runtime,project-library-runtime,project-library-store,project-library-writer,workspace-runtime,workspace-store,workspace-writer}.ts",
-      "apps/desktop/src/server/handlers/project/{create,create-attachment,delete-command-rule,get,get-design-md,get-file,get-hidden,handlers,import,list,list-command-rules,live,move-hidden,search,set-design-md,update}.ts",
-      "apps/desktop/src/server/project-ops/{project-ops-create,project-ops-detail,project-ops-hidden,project-ops-runtime,project-ops-store,project-ops-writer}.ts",
-      "packages/common/actions/src/project/{create,create-attachment,delete-command-rule,get,get-design-md,get-file,get-hidden,import,list,list-command-rules,move-hidden,schema,search,set-design-md,update}.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/ui/features/versions-layers-tokens/compare-code.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/compare-frame.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/compare-view.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/create-token-dialog.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/layers-panel.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/token-control.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/token-draft.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/token-inputs.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/token-lint.test.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/token-lint.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/token-picker.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/tokens-panel.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/use-layer-edits.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/use-layer-locks.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/use-studio-tokens.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/use-hunk-review.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/use-token-draft.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/version-labels.ts",
-      "apps/desktop/src/ui/features/versions-layers-tokens/version-row.tsx",
-      "apps/desktop/src/ui/features/versions-layers-tokens/versions-api.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/server/mcp/action-call.ts",
-      "apps/desktop/src/server/mcp/studio-ports.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "apps/desktop/src/bridge/anchor-tracker.ts",
-      "apps/desktop/src/bridge/live-preview.ts",
-      "apps/desktop/src/bridge/zoom-forward.ts",
-    ],
-    rules: {
-      "import/no-relative-parent-imports": "off",
     },
   },
   {
@@ -1648,12 +994,6 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: ["apps/desktop/src/bridge/keyboard.ts"],
-    rules: {
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
     files: [
       "apps/desktop/src/bridge/message-handlers.ts",
       "apps/desktop/src/bridge/outgoing.ts",
@@ -1672,12 +1012,6 @@ export const decisionOverrides: OxlintOverride[] = [
     ],
     rules: {
       "sonarjs/shorthand-property-grouping": "off",
-    },
-  },
-  {
-    files: ["apps/desktop/desktop/build.ts"],
-    rules: {
-      "import/no-relative-parent-imports": "off",
     },
   },
   {
@@ -1783,7 +1117,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/ui/features/inspector/api-error.ts",
     ],
     rules: Object.fromEntries(
-      "anti-slop/no-known-value-widening eslint/logical-assignment-operators eslint/max-statements eslint/no-alert eslint/no-await-in-loop eslint/no-plusplus github/unescaped-html-literal promise/avoid-new promise/catch-or-return promise/no-callback-in-promise react-doctor/async-await-in-loop react-doctor/no-adjust-state-on-prop-change react-doctor/no-barrel-import react-doctor/no-pass-live-state-to-parent react-doctor/no-stale-timer-ref react/hook-use-state react/immutability react/memo-dependencies react/preserve-manual-memoization react/todo sonarjs/max-lines-per-function sonarjs/max-union-size sonarjs/no-nested-functions sonarjs/no-nested-incdec sonarjs/no-nested-template-literals sonarjs/no-unused-vars studio/no-finally-state-reset typescript/explicit-member-accessibility typescript/method-signature-style typescript/no-dynamic-delete typescript/no-non-null-assertion unicorn/no-array-callback-reference unicorn/no-array-method-this-argument unicorn/no-array-reduce unicorn/no-await-expression-member unicorn/no-useless-undefined unicorn/prefer-at unicorn/prefer-code-point unicorn/prefer-export-from unicorn/prefer-logical-operator-over-ternary unicorn/prefer-number-coercion unicorn/prefer-number-properties vitest/max-expects vitest/no-conditional-in-test vitest/prefer-strict-equal vitest/prefer-to-be-falsy vitest/prefer-to-be-truthy vitest/require-hook vitest/require-test-timeout vitest/valid-expect sonarjs/no-wildcard-import oxc/no-barrel-file anti-slop/no-array-filter-map anti-slop/no-chained-type-assertions anti-slop/no-conditional-empty-object-spread anti-slop/no-object-parameters anti-slop/no-runtime-typeof anti-slop/no-shape-in-symbol-names anti-slop/no-unknown-parameters anti-slop/no-unknown-returns anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing boundaries/dependencies eslint/arrow-body-style eslint/curly eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/max-params eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-restricted-globals eslint/no-shadow eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-use-before-define eslint/no-useless-return eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/array-foreach github/filenames-match-regex github/no-blur github/no-inner-html github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/no-default-export import/no-relative-parent-imports import/no-unassigned-import oxc/no-map-spread promise/always-return promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/js-combine-iterations react-doctor/no-array-index-as-key react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-floating-then-in-jsx-handler react-doctor/no-high-complexity-react-function react-doctor/no-ref-current-in-render react-doctor/no-self-updating-effect react-doctor/only-export-components react-doctor/pointer-capture-needs-cancel-handler react-doctor/prefer-module-scope-pure-function react-doctor/rerender-lazy-ref-init react-hooks/exhaustive-deps react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/jsx-handler-names react/jsx-max-depth react/jsx-no-constructed-context-values react/jsx-no-literals react/jsx-no-undef react/jsx-props-no-spreading react/no-array-index-key react/no-multi-comp react/only-export-components react/purity react/refs react/set-state-in-effect sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/shorthand-property-grouping sonarjs/super-linear-regex sonarjs/too-many-break-or-continue-in-loop studio/boolean-name studio/feature-file-layout studio/module-function-verb studio/no-busy-flag studio/no-dom-query studio/no-hook-component-import studio/no-inline-copy studio/no-then studio/no-undefined-type studio/predicate-name studio/readonly-field typescript/explicit-function-return-type typescript/explicit-module-boundary-types typescript/no-import-type-side-effects unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/filename-case unicorn/max-nested-calls unicorn/no-array-for-each unicorn/no-nested-ternary unicorn/prefer-global-this unicorn/prefer-spread vitest/prefer-expect-assertions vitest/require-test-timeout github/a11y-role-supports-aria-props jsx-a11y/interactive-supports-focus jsx-a11y/no-noninteractive-element-interactions jsx-a11y/no-noninteractive-tabindex jsx-a11y/prefer-tag-over-role jsx-a11y/role-has-required-aria-props"
+      "anti-slop/no-known-value-widening eslint/logical-assignment-operators eslint/max-statements eslint/no-alert eslint/no-await-in-loop eslint/no-plusplus github/unescaped-html-literal promise/avoid-new promise/catch-or-return promise/no-callback-in-promise react-doctor/async-await-in-loop react-doctor/no-adjust-state-on-prop-change react-doctor/no-barrel-import react-doctor/no-pass-live-state-to-parent react-doctor/no-stale-timer-ref react/hook-use-state react/immutability react/memo-dependencies react/preserve-manual-memoization react/todo sonarjs/max-lines-per-function sonarjs/max-union-size sonarjs/no-nested-functions sonarjs/no-nested-incdec sonarjs/no-nested-template-literals sonarjs/no-unused-vars studio/no-finally-state-reset typescript/explicit-member-accessibility typescript/method-signature-style typescript/no-dynamic-delete typescript/no-non-null-assertion unicorn/no-array-callback-reference unicorn/no-array-method-this-argument unicorn/no-array-reduce unicorn/no-await-expression-member unicorn/no-useless-undefined unicorn/prefer-at unicorn/prefer-code-point unicorn/prefer-export-from unicorn/prefer-logical-operator-over-ternary unicorn/prefer-number-coercion unicorn/prefer-number-properties vitest/max-expects vitest/no-conditional-in-test vitest/prefer-strict-equal vitest/prefer-to-be-falsy vitest/prefer-to-be-truthy vitest/require-hook vitest/require-test-timeout vitest/valid-expect sonarjs/no-wildcard-import oxc/no-barrel-file anti-slop/no-array-filter-map anti-slop/no-chained-type-assertions anti-slop/no-conditional-empty-object-spread anti-slop/no-object-parameters anti-slop/no-runtime-typeof anti-slop/no-shape-in-symbol-names anti-slop/no-unknown-parameters anti-slop/no-unknown-returns anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing boundaries/dependencies eslint/arrow-body-style eslint/curly eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/max-params eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-restricted-globals eslint/no-shadow eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-use-before-define eslint/no-useless-return eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/array-foreach github/filenames-match-regex github/no-blur github/no-inner-html github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/no-default-export import/no-unassigned-import oxc/no-map-spread promise/always-return promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/js-combine-iterations react-doctor/no-array-index-as-key react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-floating-then-in-jsx-handler react-doctor/no-high-complexity-react-function react-doctor/no-ref-current-in-render react-doctor/no-self-updating-effect react-doctor/only-export-components react-doctor/pointer-capture-needs-cancel-handler react-doctor/prefer-module-scope-pure-function react-doctor/rerender-lazy-ref-init react-hooks/exhaustive-deps react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/jsx-handler-names react/jsx-max-depth react/jsx-no-constructed-context-values react/jsx-no-literals react/jsx-no-undef react/jsx-props-no-spreading react/no-array-index-key react/no-multi-comp react/only-export-components react/purity react/refs react/set-state-in-effect sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/shorthand-property-grouping sonarjs/super-linear-regex sonarjs/too-many-break-or-continue-in-loop studio/boolean-name studio/feature-file-layout studio/module-function-verb studio/no-busy-flag studio/no-dom-query studio/no-hook-component-import studio/no-inline-copy studio/no-then studio/no-undefined-type studio/predicate-name studio/readonly-field typescript/explicit-function-return-type typescript/explicit-module-boundary-types typescript/no-import-type-side-effects unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/filename-case unicorn/max-nested-calls unicorn/no-array-for-each unicorn/no-nested-ternary unicorn/prefer-global-this unicorn/prefer-spread vitest/prefer-expect-assertions vitest/require-test-timeout github/a11y-role-supports-aria-props jsx-a11y/interactive-supports-focus jsx-a11y/no-noninteractive-element-interactions jsx-a11y/no-noninteractive-tabindex jsx-a11y/prefer-tag-over-role jsx-a11y/role-has-required-aria-props"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -1901,7 +1235,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/ui/features/home/use-studio-data.ts",
     ],
     rules: Object.fromEntries(
-      "anti-slop/no-array-filter-map anti-slop/no-conditional-empty-object-spread anti-slop/no-known-value-widening anti-slop/no-unknown-parameters anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/max-lines eslint/max-lines-per-function eslint/max-params eslint/max-statements eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-imports eslint/sort-keys github/array-foreach github/filenames-match-regex github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/max-dependencies import/no-default-export import/no-relative-parent-imports import/prefer-default-export promise/always-return promise/no-callback-in-promise promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/js-combine-iterations react-doctor/no-adjust-state-on-prop-change react-doctor/no-create-object-url-without-revoke react-doctor/no-img-without-dimensions react-doctor/no-loading-flag-reset-outside-finally react-doctor/no-ref-current-in-render react-doctor/only-export-components react-doctor/prefer-module-scope-pure-function react-doctor/rerender-memo-with-default-value react-doctor/rerender-state-only-in-handlers react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/immutability react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-props-no-spreading react/no-multi-comp react/no-object-type-as-default-prop react/only-export-components react/refs react/set-state-in-effect react/todo sonarjs/expression-complexity sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/max-union-size sonarjs/no-dead-store sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/no-unused-vars sonarjs/shorthand-property-grouping studio/boolean-name studio/feature-file-layout studio/module-function-verb studio/no-busy-flag studio/no-dom-query studio/no-feature-interval studio/no-finally-state-reset studio/no-hook-component-import studio/no-inline-copy studio/no-json-cast studio/no-then studio/no-undefined-type studio/readonly-field typescript/consistent-type-definitions typescript/consistent-type-imports typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/filename-case unicorn/no-array-callback-reference unicorn/no-array-for-each unicorn/no-array-sort unicorn/no-await-expression-member unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-global-this unicorn/prefer-spread"
+      "anti-slop/no-array-filter-map anti-slop/no-conditional-empty-object-spread anti-slop/no-known-value-widening anti-slop/no-unknown-parameters anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/max-lines eslint/max-lines-per-function eslint/max-params eslint/max-statements eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-imports eslint/sort-keys github/array-foreach github/filenames-match-regex github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/max-dependencies import/no-default-export import/prefer-default-export promise/always-return promise/no-callback-in-promise promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/js-combine-iterations react-doctor/no-adjust-state-on-prop-change react-doctor/no-create-object-url-without-revoke react-doctor/no-img-without-dimensions react-doctor/no-loading-flag-reset-outside-finally react-doctor/no-ref-current-in-render react-doctor/only-export-components react-doctor/prefer-module-scope-pure-function react-doctor/rerender-memo-with-default-value react-doctor/rerender-state-only-in-handlers react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/immutability react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-props-no-spreading react/no-multi-comp react/no-object-type-as-default-prop react/only-export-components react/refs react/set-state-in-effect react/todo sonarjs/expression-complexity sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/max-union-size sonarjs/no-dead-store sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/no-unused-vars sonarjs/shorthand-property-grouping studio/boolean-name studio/feature-file-layout studio/module-function-verb studio/no-busy-flag studio/no-dom-query studio/no-feature-interval studio/no-finally-state-reset studio/no-hook-component-import studio/no-inline-copy studio/no-json-cast studio/no-then studio/no-undefined-type studio/readonly-field typescript/consistent-type-definitions typescript/consistent-type-imports typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/filename-case unicorn/no-array-callback-reference unicorn/no-array-for-each unicorn/no-array-sort unicorn/no-await-expression-member unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-global-this unicorn/prefer-spread"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -2037,7 +1371,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/ui/features/review/index.ts",
     ],
     rules: Object.fromEntries(
-      "anti-slop/no-array-filter-map anti-slop/no-chained-type-assertions anti-slop/no-unknown-returns sonarjs/no-unused-vars eslint/default-case unicorn/prefer-add-event-listener typescript/no-non-null-assertion vitest/require-hook vitest/max-expects anti-slop/no-unsafe-dictionary-type react-doctor/no-side-effect-in-state-updater-function eslint/no-useless-return typescript/no-dynamic-delete anti-slop/no-conditional-empty-object-spread anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/require-readable-spacing boundaries/dependencies eslint/complexity eslint/curly eslint/func-style eslint/id-length eslint/max-lines eslint/max-lines-per-function eslint/max-params eslint/max-statements eslint/no-await-in-loop eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-use-before-define eslint/no-void eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/a11y-role-supports-aria-props github/array-foreach github/no-blur github/no-then github/prefer-observers import/consistent-type-specifier-style import/exports-last import/group-exports import/max-dependencies import/no-default-export import/no-relative-parent-imports import/no-unassigned-import jsx-a11y/click-events-have-key-events jsx-a11y/control-has-associated-label jsx-a11y/interactive-supports-focus jsx-a11y/no-autofocus jsx-a11y/no-noninteractive-element-interactions jsx-a11y/no-noninteractive-element-to-interactive-role jsx-a11y/no-static-element-interactions jsx-a11y/prefer-tag-over-role jsx-a11y/role-supports-aria-props promise/always-return promise/catch-or-return promise/prefer-await-to-callbacks promise/prefer-await-to-then promise/prefer-catch react-doctor/async-await-in-loop react-doctor/data-table-requires-accessible-name react-doctor/empty-table-header react-doctor/form-control-requires-name react-doctor/js-combine-iterations react-doctor/js-set-map-lookups react-doctor/no-adjust-state-on-prop-change react-doctor/no-array-index-as-key react-doctor/no-chain-state-updates react-doctor/no-create-object-url-without-revoke react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-event-handler react-doctor/no-giant-component react-doctor/no-high-complexity-react-function react-doctor/no-pass-live-state-to-parent react-doctor/no-ref-current-in-render react-doctor/no-reset-all-state-on-prop-change react-doctor/no-unguarded-browser-global-at-module-scope react-doctor/no-unguarded-browser-global-in-render-or-hook-init react-doctor/only-export-components react-doctor/prefer-html-dialog react-doctor/prefer-module-scope-pure-function react-doctor/rendering-conditional-render react-doctor/rerender-state-only-in-handlers react-hooks/exhaustive-deps react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/button-has-type react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/hook-use-state react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-no-useless-fragment react/jsx-props-no-spreading react/memo-dependencies react/no-array-index-key react/no-multi-comp react/no-unescaped-entities react/only-export-components react/purity react/refs react/set-state-in-effect react/todo sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/no-nested-functions sonarjs/no-nested-incdec sonarjs/no-nested-template-literals sonarjs/no-wildcard-import sonarjs/shorthand-property-grouping sonarjs/super-linear-regex studio/no-busy-flag studio/no-dom-query studio/no-feature-interval studio/no-finally-state-reset studio/no-hook-component-import studio/no-inline-copy studio/no-then typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/explicit-length-check unicorn/no-array-callback-reference unicorn/no-array-for-each unicorn/no-array-reduce unicorn/no-array-reverse unicorn/no-array-sort unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-at unicorn/prefer-export-from unicorn/prefer-global-this unicorn/prefer-query-selector unicorn/prefer-spread vitest/prefer-expect-assertions vitest/prefer-strict-equal vitest/prefer-to-be-falsy vitest/prefer-to-be-truthy vitest/require-test-timeout github/unescaped-html-literal promise/no-callback-in-promise react-doctor/no-derived-state react-doctor/no-derived-state-effect react-doctor/no-derived-useState react-doctor/no-locale-format-in-render unicorn/no-await-expression-member unicorn/no-useless-collection-argument"
+      "anti-slop/no-array-filter-map anti-slop/no-chained-type-assertions anti-slop/no-unknown-returns sonarjs/no-unused-vars eslint/default-case unicorn/prefer-add-event-listener typescript/no-non-null-assertion vitest/require-hook vitest/max-expects anti-slop/no-unsafe-dictionary-type react-doctor/no-side-effect-in-state-updater-function eslint/no-useless-return typescript/no-dynamic-delete anti-slop/no-conditional-empty-object-spread anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/require-readable-spacing boundaries/dependencies eslint/complexity eslint/curly eslint/func-style eslint/id-length eslint/max-lines eslint/max-lines-per-function eslint/max-params eslint/max-statements eslint/no-await-in-loop eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-use-before-define eslint/no-void eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/a11y-role-supports-aria-props github/array-foreach github/no-blur github/no-then github/prefer-observers import/consistent-type-specifier-style import/exports-last import/group-exports import/max-dependencies import/no-default-export import/no-unassigned-import jsx-a11y/click-events-have-key-events jsx-a11y/control-has-associated-label jsx-a11y/interactive-supports-focus jsx-a11y/no-autofocus jsx-a11y/no-noninteractive-element-interactions jsx-a11y/no-noninteractive-element-to-interactive-role jsx-a11y/no-static-element-interactions jsx-a11y/prefer-tag-over-role jsx-a11y/role-supports-aria-props promise/always-return promise/catch-or-return promise/prefer-await-to-callbacks promise/prefer-await-to-then promise/prefer-catch react-doctor/async-await-in-loop react-doctor/data-table-requires-accessible-name react-doctor/empty-table-header react-doctor/form-control-requires-name react-doctor/js-combine-iterations react-doctor/js-set-map-lookups react-doctor/no-adjust-state-on-prop-change react-doctor/no-array-index-as-key react-doctor/no-chain-state-updates react-doctor/no-create-object-url-without-revoke react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-event-handler react-doctor/no-giant-component react-doctor/no-high-complexity-react-function react-doctor/no-pass-live-state-to-parent react-doctor/no-ref-current-in-render react-doctor/no-reset-all-state-on-prop-change react-doctor/no-unguarded-browser-global-at-module-scope react-doctor/no-unguarded-browser-global-in-render-or-hook-init react-doctor/only-export-components react-doctor/prefer-html-dialog react-doctor/prefer-module-scope-pure-function react-doctor/rendering-conditional-render react-doctor/rerender-state-only-in-handlers react-hooks/exhaustive-deps react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/button-has-type react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/hook-use-state react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-no-useless-fragment react/jsx-props-no-spreading react/memo-dependencies react/no-array-index-key react/no-multi-comp react/no-unescaped-entities react/only-export-components react/purity react/refs react/set-state-in-effect react/todo sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/no-nested-functions sonarjs/no-nested-incdec sonarjs/no-nested-template-literals sonarjs/no-wildcard-import sonarjs/shorthand-property-grouping sonarjs/super-linear-regex studio/no-busy-flag studio/no-dom-query studio/no-feature-interval studio/no-finally-state-reset studio/no-hook-component-import studio/no-inline-copy studio/no-then typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/explicit-length-check unicorn/no-array-callback-reference unicorn/no-array-for-each unicorn/no-array-reduce unicorn/no-array-reverse unicorn/no-array-sort unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-at unicorn/prefer-export-from unicorn/prefer-global-this unicorn/prefer-query-selector unicorn/prefer-spread vitest/prefer-expect-assertions vitest/prefer-strict-equal vitest/prefer-to-be-falsy vitest/prefer-to-be-truthy vitest/require-test-timeout github/unescaped-html-literal promise/no-callback-in-promise react-doctor/no-derived-state react-doctor/no-derived-state-effect react-doctor/no-derived-useState react-doctor/no-locale-format-in-render unicorn/no-await-expression-member unicorn/no-useless-collection-argument"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -2048,7 +1382,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "packages/ui/src/{brand-mark,theme-button,theme-menu,disclosure,lazy-select}.tsx",
     ],
     rules: Object.fromEntries(
-      "anti-slop/no-chained-type-assertions anti-slop/no-unknown-parameters anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-ternary eslint/no-undefined eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/a11y-role-supports-aria-props github/a11y-svg-has-accessible-name github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/no-default-export import/no-relative-parent-imports import/no-unassigned-import oxc/no-barrel-file promise/always-return promise/catch-or-return promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/form-control-requires-name react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-ref-current-in-render react-doctor/only-export-components react-doctor/prefer-html-dialog react-doctor/prefer-use-effect-event react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react/button-has-type react/exhaustive-effect-dependencies react/function-component-definition react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-props-no-spreading react/no-array-index-key react/no-multi-comp react/only-export-components react/refs react/todo sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/no-nested-conditional sonarjs/no-wildcard-import sonarjs/shorthand-property-grouping sonarjs/super-linear-regex studio/no-then typescript/consistent-type-definitions typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/no-array-reduce unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-global-this unicorn/prefer-spread jsx-a11y/interactive-supports-focus jsx-a11y/no-autofocus jsx-a11y/prefer-tag-over-role jsx-a11y/no-interactive-element-to-noninteractive-role jsx-a11y/no-noninteractive-element-interactions jsx-a11y/role-has-required-aria-props react-doctor/no-derived-useState"
+      "anti-slop/no-chained-type-assertions anti-slop/no-unknown-parameters anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-ternary eslint/no-undefined eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/a11y-role-supports-aria-props github/a11y-svg-has-accessible-name github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/no-default-export import/no-unassigned-import oxc/no-barrel-file promise/always-return promise/catch-or-return promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/form-control-requires-name react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-ref-current-in-render react-doctor/only-export-components react-doctor/prefer-html-dialog react-doctor/prefer-use-effect-event react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react/button-has-type react/exhaustive-effect-dependencies react/function-component-definition react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-props-no-spreading react/no-array-index-key react/no-multi-comp react/only-export-components react/refs react/todo sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/no-nested-conditional sonarjs/no-wildcard-import sonarjs/shorthand-property-grouping sonarjs/super-linear-regex studio/no-then typescript/consistent-type-definitions typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/no-array-reduce unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-global-this unicorn/prefer-spread jsx-a11y/interactive-supports-focus jsx-a11y/no-autofocus jsx-a11y/prefer-tag-over-role jsx-a11y/no-interactive-element-to-noninteractive-role jsx-a11y/no-noninteractive-element-interactions jsx-a11y/role-has-required-aria-props react-doctor/no-derived-useState"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -2166,7 +1500,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/ui/app/components-panel-host.tsx",
     ],
     rules: Object.fromEntries(
-      "anti-slop/no-array-filter-map anti-slop/no-chained-type-assertions anti-slop/no-unknown-returns sonarjs/no-unused-vars eslint/default-case unicorn/prefer-add-event-listener typescript/no-non-null-assertion vitest/require-hook vitest/max-expects anti-slop/no-unsafe-dictionary-type react-doctor/no-side-effect-in-state-updater-function eslint/no-useless-return typescript/no-dynamic-delete anti-slop/no-conditional-empty-object-spread anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/require-readable-spacing boundaries/dependencies eslint/complexity eslint/curly eslint/func-style eslint/id-length eslint/max-lines eslint/max-lines-per-function eslint/max-params eslint/max-statements eslint/no-await-in-loop eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-use-before-define eslint/no-void eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/a11y-role-supports-aria-props github/array-foreach github/no-blur github/no-then github/prefer-observers import/consistent-type-specifier-style import/exports-last import/group-exports import/max-dependencies import/no-default-export import/no-relative-parent-imports import/no-unassigned-import jsx-a11y/click-events-have-key-events jsx-a11y/control-has-associated-label jsx-a11y/interactive-supports-focus jsx-a11y/no-autofocus jsx-a11y/no-noninteractive-element-interactions jsx-a11y/no-noninteractive-element-to-interactive-role jsx-a11y/no-static-element-interactions jsx-a11y/prefer-tag-over-role jsx-a11y/role-supports-aria-props promise/always-return promise/catch-or-return promise/prefer-await-to-callbacks promise/prefer-await-to-then promise/prefer-catch react-doctor/async-await-in-loop react-doctor/data-table-requires-accessible-name react-doctor/empty-table-header react-doctor/form-control-requires-name react-doctor/js-combine-iterations react-doctor/js-set-map-lookups react-doctor/no-adjust-state-on-prop-change react-doctor/no-array-index-as-key react-doctor/no-chain-state-updates react-doctor/no-create-object-url-without-revoke react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-event-handler react-doctor/no-giant-component react-doctor/no-high-complexity-react-function react-doctor/no-pass-live-state-to-parent react-doctor/no-ref-current-in-render react-doctor/no-reset-all-state-on-prop-change react-doctor/no-unguarded-browser-global-at-module-scope react-doctor/no-unguarded-browser-global-in-render-or-hook-init react-doctor/only-export-components react-doctor/prefer-html-dialog react-doctor/prefer-module-scope-pure-function react-doctor/rendering-conditional-render react-doctor/rerender-state-only-in-handlers react-hooks/exhaustive-deps react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/button-has-type react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/hook-use-state react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-no-useless-fragment react/jsx-props-no-spreading react/memo-dependencies react/no-array-index-key react/no-multi-comp react/no-unescaped-entities react/only-export-components react/purity react/refs react/set-state-in-effect react/todo sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/no-nested-functions sonarjs/no-nested-incdec sonarjs/no-nested-template-literals sonarjs/no-wildcard-import sonarjs/shorthand-property-grouping sonarjs/super-linear-regex studio/no-busy-flag studio/no-dom-query studio/no-feature-interval studio/no-finally-state-reset studio/no-hook-component-import studio/no-inline-copy studio/no-then typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/explicit-length-check unicorn/no-array-callback-reference unicorn/no-array-for-each unicorn/no-array-reduce unicorn/no-array-reverse unicorn/no-array-sort unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-at unicorn/prefer-export-from unicorn/prefer-global-this unicorn/prefer-query-selector unicorn/prefer-spread vitest/prefer-expect-assertions vitest/prefer-strict-equal vitest/prefer-to-be-falsy vitest/prefer-to-be-truthy vitest/require-test-timeout react-doctor/prefer-use-effect-event react/immutability oxc/no-map-spread typescript/no-invalid-void-type typescript/consistent-type-definitions react-doctor/no-barrel-import oxc/no-barrel-file anti-slop/no-shape-in-symbol-names eslint/no-shadow typescript/consistent-type-imports node/no-sync sonarjs/bool-param-default sonarjs/no-unused-function-argument unicorn/prefer-number-coercion react-doctor/no-derived-useState sonarjs/max-union-size react-doctor/effect-needs-cleanup react-doctor/advanced-event-handler-refs promise/avoid-new eslint/no-multi-assign github/a11y-svg-has-accessible-name jsx-a11y/no-interactive-element-to-noninteractive-role unicorn/consistent-existence-index-check unicorn/prefer-array-find eslint/require-await eslint/no-console eslint/no-promise-executor-return github/require-passive-events react-doctor/no-impure-call-at-module-scope react-doctor/rerender-lazy-ref-init sonarjs/no-collapsible-if sonarjs/too-many-break-or-continue-in-loop studio/no-json-cast typescript/method-signature-style typescript/no-import-type-side-effects unicorn/no-lonely-if unicorn/prefer-code-point unicorn/prefer-string-raw unicorn/switch-case-braces vitest/no-conditional-in-test github/filenames-match-regex studio/no-cache-ttl unicorn/filename-case unicorn/prefer-dom-node-append unicorn/prefer-dom-node-dataset unicorn/prefer-number-properties"
+      "anti-slop/no-array-filter-map anti-slop/no-chained-type-assertions anti-slop/no-unknown-returns sonarjs/no-unused-vars eslint/default-case unicorn/prefer-add-event-listener typescript/no-non-null-assertion vitest/require-hook vitest/max-expects anti-slop/no-unsafe-dictionary-type react-doctor/no-side-effect-in-state-updater-function eslint/no-useless-return typescript/no-dynamic-delete anti-slop/no-conditional-empty-object-spread anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/require-readable-spacing boundaries/dependencies eslint/complexity eslint/curly eslint/func-style eslint/id-length eslint/max-lines eslint/max-lines-per-function eslint/max-params eslint/max-statements eslint/no-await-in-loop eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-use-before-define eslint/no-void eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/a11y-role-supports-aria-props github/array-foreach github/no-blur github/no-then github/prefer-observers import/consistent-type-specifier-style import/exports-last import/group-exports import/max-dependencies import/no-default-export import/no-unassigned-import jsx-a11y/click-events-have-key-events jsx-a11y/control-has-associated-label jsx-a11y/interactive-supports-focus jsx-a11y/no-autofocus jsx-a11y/no-noninteractive-element-interactions jsx-a11y/no-noninteractive-element-to-interactive-role jsx-a11y/no-static-element-interactions jsx-a11y/prefer-tag-over-role jsx-a11y/role-supports-aria-props promise/always-return promise/catch-or-return promise/prefer-await-to-callbacks promise/prefer-await-to-then promise/prefer-catch react-doctor/async-await-in-loop react-doctor/data-table-requires-accessible-name react-doctor/empty-table-header react-doctor/form-control-requires-name react-doctor/js-combine-iterations react-doctor/js-set-map-lookups react-doctor/no-adjust-state-on-prop-change react-doctor/no-array-index-as-key react-doctor/no-chain-state-updates react-doctor/no-create-object-url-without-revoke react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-event-handler react-doctor/no-giant-component react-doctor/no-high-complexity-react-function react-doctor/no-pass-live-state-to-parent react-doctor/no-ref-current-in-render react-doctor/no-reset-all-state-on-prop-change react-doctor/no-unguarded-browser-global-at-module-scope react-doctor/no-unguarded-browser-global-in-render-or-hook-init react-doctor/only-export-components react-doctor/prefer-html-dialog react-doctor/prefer-module-scope-pure-function react-doctor/rendering-conditional-render react-doctor/rerender-state-only-in-handlers react-hooks/exhaustive-deps react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/button-has-type react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/hook-use-state react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-no-useless-fragment react/jsx-props-no-spreading react/memo-dependencies react/no-array-index-key react/no-multi-comp react/no-unescaped-entities react/only-export-components react/purity react/refs react/set-state-in-effect react/todo sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/no-nested-functions sonarjs/no-nested-incdec sonarjs/no-nested-template-literals sonarjs/no-wildcard-import sonarjs/shorthand-property-grouping sonarjs/super-linear-regex studio/no-busy-flag studio/no-dom-query studio/no-feature-interval studio/no-finally-state-reset studio/no-hook-component-import studio/no-inline-copy studio/no-then typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/explicit-length-check unicorn/no-array-callback-reference unicorn/no-array-for-each unicorn/no-array-reduce unicorn/no-array-reverse unicorn/no-array-sort unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-at unicorn/prefer-export-from unicorn/prefer-global-this unicorn/prefer-query-selector unicorn/prefer-spread vitest/prefer-expect-assertions vitest/prefer-strict-equal vitest/prefer-to-be-falsy vitest/prefer-to-be-truthy vitest/require-test-timeout react-doctor/prefer-use-effect-event react/immutability oxc/no-map-spread typescript/no-invalid-void-type typescript/consistent-type-definitions react-doctor/no-barrel-import oxc/no-barrel-file anti-slop/no-shape-in-symbol-names eslint/no-shadow typescript/consistent-type-imports node/no-sync sonarjs/bool-param-default sonarjs/no-unused-function-argument unicorn/prefer-number-coercion react-doctor/no-derived-useState sonarjs/max-union-size react-doctor/effect-needs-cleanup react-doctor/advanced-event-handler-refs promise/avoid-new eslint/no-multi-assign github/a11y-svg-has-accessible-name jsx-a11y/no-interactive-element-to-noninteractive-role unicorn/consistent-existence-index-check unicorn/prefer-array-find eslint/require-await eslint/no-console eslint/no-promise-executor-return github/require-passive-events react-doctor/no-impure-call-at-module-scope react-doctor/rerender-lazy-ref-init sonarjs/no-collapsible-if sonarjs/too-many-break-or-continue-in-loop studio/no-json-cast typescript/method-signature-style typescript/no-import-type-side-effects unicorn/no-lonely-if unicorn/prefer-code-point unicorn/prefer-string-raw unicorn/switch-case-braces vitest/no-conditional-in-test github/filenames-match-regex studio/no-cache-ttl unicorn/filename-case unicorn/prefer-dom-node-append unicorn/prefer-dom-node-dataset unicorn/prefer-number-properties"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),
@@ -2174,9 +1508,5 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: ["apps/desktop/src/ui/features/commands/deps.ts"],
     rules: { "import/group-exports": "warn" },
-  },
-  {
-    files: ["apps/desktop/vite.ui.config.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
   },
 ];

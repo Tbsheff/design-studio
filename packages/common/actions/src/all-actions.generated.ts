@@ -2,6 +2,7 @@
 import { AccessibilityActions } from "./accessibility/index.js";
 import { AnimationActions } from "./animation/index.js";
 import { CanvasActions } from "./canvas/index.js";
+import { ChartActions } from "./chart/index.js";
 import { CloudActions } from "./cloud/index.js";
 import { CommentActions } from "./comment/index.js";
 import { ComponentVariantActions } from "./component-variant/index.js";
@@ -51,6 +52,7 @@ const ALL_ACTIONS = {
   accessibility: AccessibilityActions,
   animation: AnimationActions,
   canvas: CanvasActions,
+  chart: ChartActions,
   cloud: CloudActions,
   comment: CommentActions,
   componentVariant: ComponentVariantActions,

@@ -6,6 +6,7 @@ import { CanvasLive } from "../handlers/canvas/live.js";
 import { ChartLive } from "../handlers/chart/live.js";
 import { CloudLive } from "../handlers/cloud/live.js";
 import { CommentLive } from "../handlers/comment/live.js";
+import { CompletionLive } from "../handlers/completion/live.js";
 import { ComponentVariantLive } from "../handlers/component-variant/live.js";
 import { ConnectionLive } from "../handlers/connection/live.js";
 import { ContentLive } from "../handlers/content/live.js";
@@ -70,6 +71,7 @@ const liveLayer = Layer.mergeAll(
   ChartLive,
   CloudLive,
   CommentLive,
+  CompletionLive,
   ComponentVariantLive,
   ConnectionLive,
   ContentLive,

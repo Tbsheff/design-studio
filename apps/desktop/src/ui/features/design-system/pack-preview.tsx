@@ -114,7 +114,8 @@ const TypeScale = ({
         <code>{step}</code>
         <span
           style={{
-            fontFamily: index < 2 ? "var(--font-display)" : "var(--font-body)",
+            fontFamily:
+              (index < 2 && "var(--font-display)") || "var(--font-body)",
             fontSize: `var(--text-${step})`,
           }}
         >
@@ -145,11 +146,11 @@ const PackPreview = ({
 
   return (
     <div className="pv">
-      <div className={`pv-modes ${dual ? "two" : ""}`}>
+      <div className={`pv-modes ${(dual && "two") || ""}`}>
         <Surface
           entries={entries}
           mode="light"
-          label={dual ? "Light" : pack.mode === "dark" ? "Dark" : "Light"}
+          label={dual ? "Light" : (pack.mode === "dark" && "Dark") || "Light"}
           name={pack.name}
         />
         {dual && (

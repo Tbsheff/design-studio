@@ -15,41 +15,15 @@ import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { packApi } from "../../platform/pack-api.js";
 import { Chip } from "./chip.js";
 import { COPY } from "./copy.js";
+import {
+  MAX_URLS,
+  IMAGE_TYPES,
+  MAX_IMAGES,
+  DROP_ACCEPT,
+  EMPTY,
+} from "./new-design-system-values.js";
+import type { DraftForm, Patch, Mode } from "./new-design-system-values.js";
 import { refreshPacks, pickable, usePacks } from "./packs.js";
-
-const DEFAULT_BASE = "modern-minimal";
-
-type Mode = "auto" | "light" | "dark";
-
-interface DraftForm {
-  name: string;
-  mode: Mode;
-  basePackId: string;
-  urls: string[];
-  urlInput: string;
-  designMd: string;
-  designMdFile: string | null;
-  brief: string;
-  tokensFile: File | null;
-  folder: string;
-  images: File[];
-}
-
-const EMPTY: DraftForm = {
-  basePackId: DEFAULT_BASE,
-  brief: "",
-  designMd: "",
-  designMdFile: null,
-  folder: "",
-  images: [],
-  mode: "auto",
-  name: "",
-  tokensFile: null,
-  urlInput: "",
-  urls: [],
-};
-
-const MAX_URLS = 3;
 
 const allUrls = (form: DraftForm): string[] => {
   const typed = form.urlInput.trim();
@@ -149,14 +123,6 @@ const useDropGuard = (): void => {
     };
   }, []);
 };
-
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
-
-const DROP_ACCEPT = `${IMAGE_TYPES.join(",")},.json,application/json,.css,text/css,.md,.markdown,text/markdown`;
-
-const MAX_IMAGES = 8;
-
-type Patch = Partial<DraftForm>;
 
 const routeFiles = async (
   files: File[],

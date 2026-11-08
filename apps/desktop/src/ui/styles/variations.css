@@ -28,6 +28,9 @@
 }
 
 .variation-card {
+  position: static;
+  margin: 0;
+  color: inherit;
   pointer-events: auto;
   width: min(640px, 100%);
   max-height: calc(100vh - 140px);
@@ -67,6 +70,7 @@
 }
 
 .variation-card-status {
+  display: block;
   margin: 0;
   color: var(--text-2);
   font-size: var(--t-sm);

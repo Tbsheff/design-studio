@@ -61,7 +61,7 @@ const runSelectTool = (chrome: ChromeProps): void => {
     shell?.onPane("chat");
   }
 
-  chrome.setSelectMode((match) => editing || !match);
+  chrome.setSelectMode(() => true);
 };
 
 const runTool = (

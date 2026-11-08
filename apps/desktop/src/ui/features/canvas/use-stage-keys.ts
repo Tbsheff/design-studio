@@ -43,7 +43,7 @@ const routeSelectKey = (
 
   if (isSelectToggleKey(event)) {
     event.preventDefault();
-    handlers.setSelectMode((matchValue) => !matchValue);
+    handlers.setSelectMode(() => true);
 
     return;
   }
@@ -58,7 +58,7 @@ const routeSelectKey = (
     return;
   }
 
-  handlers.setSelectMode(() => false);
+  handlers.setSelectMode(() => true);
   handlers.onEscape();
 };
 

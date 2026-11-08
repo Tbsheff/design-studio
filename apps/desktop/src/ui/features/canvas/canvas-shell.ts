@@ -79,7 +79,7 @@ const useShellState = (
     }
 
     if (before === "design") {
-      setSelectMode(() => false);
+      setSelectMode(() => true);
     }
   }, [pane, setSelectMode]);
 };

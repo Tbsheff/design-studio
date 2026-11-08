@@ -71,9 +71,9 @@ const useCommentMode = (
   }, [available]);
 
   const toggle = useCallback(() => {
-    setSelectMode(false);
-    setOn((value) => !value);
-  }, [setSelectMode]);
+    setSelectMode(on);
+    setOn(!on);
+  }, [on, setSelectMode]);
 
   useEffect(() => {
     if (repinId) {

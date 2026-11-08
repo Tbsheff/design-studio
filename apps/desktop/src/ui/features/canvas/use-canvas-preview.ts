@@ -85,7 +85,7 @@ const usePreviewState = (
   const onFrameWheel = pz.frameWheel;
 
   const onModeExited = (): void => {
-    setSelectMode(false);
+    setSelectMode(true);
     setProtoOn(false);
     comment.setOn(false);
   };

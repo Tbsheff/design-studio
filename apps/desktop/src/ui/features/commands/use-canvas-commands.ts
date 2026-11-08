@@ -65,7 +65,7 @@ const actionsOf = (canvasInput: CanvasInput): CanvasActions => ({
   onLayers: canvasInput.onLayers,
   onSelect: () => {
     canvasInput.comment.setOn(false);
-    canvasInput.setSelectMode((match) => !match);
+    canvasInput.setSelectMode(() => true);
   },
   onSource: (kind) => canvasInput.onSource({ kind }),
   play: canvasInput.play,

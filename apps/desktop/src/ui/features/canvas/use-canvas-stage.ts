@@ -141,7 +141,7 @@ const useStageViewport = (props: ViewProps): StageViewport => {
 
 const useStageModes = (props: ViewProps, view: StageViewport): StageModes => {
   const { active, ui } = view;
-  const [selectMode, setSelectMode] = useState(false);
+  const [selectMode, setSelectMode] = useState(true);
 
   const comment = useCommentMode(
     props.comments,

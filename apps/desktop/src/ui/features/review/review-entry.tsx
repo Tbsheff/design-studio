@@ -7,6 +7,7 @@ import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import { frameName } from "../canvas/index.js";
 import { CritiquePanel } from "../critique/index.js";
 import type { FilesChange } from "../home/use-studio-data.js";
+import { KitDriftPanel } from "../kit-drift/index.js";
 import { ReviewEntryButton } from "./review-entry-button.js";
 import { ReviewEntryPanel } from "./review-entry-panel.js";
 import { useReviewEntry } from "./use-review-entry.js";
@@ -65,6 +66,7 @@ const ReviewEntry = (props: Props): ReactElement => {
         onSelect={selectSelector}
         projectId={projectId}
       />
+      <KitDriftPanel onSelect={selectSelector} scope={props} />
     </Suspense>
   );
 

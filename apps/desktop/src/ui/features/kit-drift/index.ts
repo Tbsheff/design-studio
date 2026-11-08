@@ -7,3 +7,5 @@ const KitDriftPanel = lazy(async () => {
 });
 
 export { KitDriftPanel };
+
+export type { KitDriftPanelProps } from "./kit-drift-panel.js";

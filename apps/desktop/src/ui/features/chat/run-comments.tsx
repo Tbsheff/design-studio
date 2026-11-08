@@ -1,146 +1,50 @@
-import type { DesignComment, RunRequest } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { commentsDone } from "../../../shared/comments.js";
-import type { CommentsControl } from "../comments/use-comments.js";
+import type { CommentsControl } from "../comments/index.js";
 import { copy } from "./copy.js";
+import { ResolveButton } from "./resolve-button.js";
+import { CommentLink } from "./run-comment-link.js";
+import {
+  idsOf,
+  replyText,
+  resolvable,
+  stateOf,
+  toNoun,
+} from "./run-comments-model.js";
 import type { RunView } from "./run-state-model.js";
 
 const RunCommentsContext = createContext<CommentsControl | null>(null);
 
-const idsOf = (request: RunRequest | null | undefined): string[] => {
-  if (!request) {
-    return [];
-  }
-
-  return [
-    ...(request.comments ?? []).map((comment) => comment.id),
-    ...(request.commentIds ?? []),
-  ];
-};
-
-const replyText = (run: RunView): string => {
-  if (run.summary?.finalText) {
-    return run.summary.finalText;
-  }
-
-  return run.parts
-    .flatMap((part) => {
-      if (part.kind === "text") {
-        return [part.text];
-      }
-
-      return [];
-    })
-    .join("\n");
-};
-
-type LinkState = "done" | "resolved" | "open";
-
-const stateOf = (comment: DesignComment, done: number[] | null): LinkState => {
-  if (comment.status === "resolved") {
-    return "resolved";
-  }
-
-  if (done?.includes(comment.n)) {
-    return "done";
-  }
-
-  return "open";
-};
-
-const STATE_TIP: Record<LinkState, string> = {
-  done: "The agent says it did this",
-  open: "Still open",
-  resolved: "Resolved",
-};
-
-const CommentLink = ({
-  comment,
-  state,
-  control,
-}: {
-  comment: DesignComment;
-  state: LinkState;
-  control: CommentsControl;
-}): ReactElement => (
-  <li>
-    <button
-      type="button"
-      className="run-comment-link"
-      data-state={state}
-      data-testid="run-comment-link"
-      data-tip={`${STATE_TIP[state]}. Show it on the canvas.`}
-      onClick={() => control.setOpenId(comment.id)}
-    >
-      <span className="num">
-        {(state === "resolved" || state === "done") && (
-          <Icon name="check" size={12} />
-        )}
-        {copy.text9}
-        {comment.n}
-      </span>
-      <span className="text">{comment.text}</span>
-    </button>
-  </li>
-);
-
-const resolvable = (
-  linked: DesignComment[],
-  done: number[] | null
-): DesignComment[] => {
-  const open = linked.filter(
-    (comment) => comment.status !== "resolved" && comment.status !== "sent"
-  );
-
-  if (done === null) {
-    return open;
-  }
-
-  return open.filter((comment) => done.includes(comment.n));
-};
-
 const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
   const control = useContext(RunCommentsContext);
-  const [busy, setBusy] = useState(false);
-  const ids = new Set([...idsOf(run.summary?.request), ...idsOf(run.request)]);
+  const comments = control?.comments;
+  const { request } = run;
+  const summaryRequest = run.summary?.request;
 
-  if (!control || ids.size === 0 || run.status === "running") {
-    return null;
-  }
+  const linked = useMemo(() => {
+    const ids = new Set([...idsOf(summaryRequest), ...idsOf(request)]);
 
-  const linked = control.comments.filter((comment) => ids.has(comment.id));
-
-  if (linked.length === 0) {
-    return null;
-  }
+    return (comments ?? []).filter((comment) => ids.has(comment.id));
+  }, [comments, summaryRequest, request]);
 
   const done = commentsDone(replyText(run));
-  let toResolve: DesignComment[] = [];
 
-  if (run.status === "completed") {
-    toResolve = resolvable(linked, done);
-  }
-
-  const resolve = async (): Promise<void> => {
-    setBusy(true);
-
-    try {
-      for (const comment of toResolve) {
-        await control.update(comment.id, { status: "resolved" });
-      }
-    } finally {
-      setBusy(false);
+  const toResolve = useMemo(() => {
+    if (run.status === "completed") {
+      return resolvable(linked, done);
     }
-  };
 
-  let noun: "comment" | "comments" = "comments";
+    return [];
+  }, [run.status, linked, done]);
 
-  if (toResolve.length === 1) {
-    noun = "comment";
+  if (!control || run.status === "running" || linked.length === 0) {
+    return null;
   }
+
+  const { setOpenId: onOpenComment, update: onUpdateComment } = control;
 
   return (
     <section
@@ -151,22 +55,11 @@ const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
       <div className="run-comments-head">
         <Icon name="comment" size={14} />
         <span>
-          {linked.length} {linked.length === 1 && "comment"}
-          {linked.length !== 1 && "comments"}
+          {linked.length} {toNoun(linked.length)}
         </span>
         <span className="spacer" />
         {toResolve.length > 0 && (
-          <button
-            type="button"
-            className="btn small primary"
-            data-testid="resolve-run-comments"
-            disabled={busy}
-            onClick={() => void resolve()}
-          >
-            <Icon name="check" size={14} />
-            {copy.resolve}
-            {toResolve.length} {noun}
-          </button>
+          <ResolveButton update={onUpdateComment} comments={toResolve} />
         )}
       </div>
       <ul className="run-comments-list">
@@ -175,7 +68,7 @@ const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
             key={comment.id}
             comment={comment}
             state={stateOf(comment, done)}
-            control={control}
+            onOpenComment={onOpenComment}
           />
         ))}
       </ul>

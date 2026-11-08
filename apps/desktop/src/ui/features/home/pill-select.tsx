@@ -35,7 +35,9 @@ const PillSelect = ({
   >
     <span className="ui-pill-select-label">{label}</span>
     <span className="ui-pill-select-value truncate">
-      <StableText sizes={sizes}>{value}</StableText>
+      <StableText sizes={sizes.map((size) => ({ key: size, node: size }))}>
+        {value}
+      </StableText>
     </span>
     <svg
       className="ui-pill-select-caret"

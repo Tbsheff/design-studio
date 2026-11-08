@@ -3,6 +3,7 @@ import type { IconName } from "@design-studio/ui";
 import type { ReactElement, ReactNode } from "react";
 
 interface PaneHeadToggleProps {
+  readonly buttonRef: ((element: HTMLButtonElement | null) => void) | null;
   readonly children?: ReactNode;
   readonly extraClass: string;
   readonly icon: IconName;
@@ -13,6 +14,7 @@ interface PaneHeadToggleProps {
 }
 
 const PaneHeadToggle = ({
+  buttonRef,
   children,
   extraClass,
   icon,
@@ -22,6 +24,7 @@ const PaneHeadToggle = ({
   tip,
 }: PaneHeadToggleProps): ReactElement => (
   <button
+    ref={buttonRef}
     type="button"
     className={`icon-btn pane-head-btn ${extraClass}`}
     aria-label={label}

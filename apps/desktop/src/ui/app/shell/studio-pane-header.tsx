@@ -5,6 +5,7 @@ import { shortcutLabel } from "../../../shared/keymap";
 import {
   chatSearchAvailable,
   chatSearchOpen,
+  registerChatSearchButton,
 } from "../../features/chat/chat-search-model";
 import { IS_MAC } from "../../features/commands/keys";
 import { useLive } from "../../platform/live-store";
@@ -67,6 +68,7 @@ const StudioPaneHeader = (props: StudioPaneHeaderProps): ReactElement => {
         />
         {searchShown && (
           <PaneHeadToggle
+            buttonRef={registerChatSearchButton}
             extraClass="pane-head-search"
             icon="search"
             isPressed={searchOpen}

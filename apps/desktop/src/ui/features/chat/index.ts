@@ -1,5 +1,6 @@
 import { lazy } from "react";
 
+import { chatWidthStyle } from "./chat-splitter-model.js";
 import { runStepText } from "./live-status-model.js";
 import { parseDraft, toDraft } from "./settings-draft-model.js";
 import type { SettingsDraft } from "./settings-draft-model.js";
@@ -32,6 +33,7 @@ export {
   ChatPanel,
   McpPointBadge,
   McpToasts,
+  chatWidthStyle,
   parseDraft,
   runStepText,
   toDraft,

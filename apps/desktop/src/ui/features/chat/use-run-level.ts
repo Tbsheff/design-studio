@@ -1,5 +1,5 @@
 import type { Project, RunLevel } from "@design-studio/contracts";
-import { useEffect, useRef, useState, startTransition } from "react";
+import { useRef, useState, startTransition } from "react";
 
 import { api, errorText } from "../../api.js";
 
@@ -15,25 +15,19 @@ const useRunLevel = (
   saved: RunLevel | undefined,
   onSaved: (project: Project) => void
 ): RunLevelState => {
-  const [level, setLevel] = useState<RunLevel>(saved ?? "prototype");
+  const [pending, setPending] = useState<RunLevel | null>(null);
   const [error, setError] = useState<string | null>(null);
   const seq = useRef(0);
-
-  useEffect(() => {
-    if (saved) {
-      setLevel(saved);
-    }
-  }, [saved, projectId]);
+  const level = pending ?? saved ?? "prototype";
 
   const choose = (next: RunLevel): void => {
     if (next === level) {
       return;
     }
 
-    const previous = level;
     seq.current += 1;
     const ticket = seq.current;
-    setLevel(next);
+    setPending(next);
     setError(null);
     startTransition(async () => {
       try {
@@ -43,19 +37,22 @@ const useRunLevel = (
 
         if (ticket === seq.current) {
           onSaved(project);
+          setPending(null);
         }
       } catch (thrownError: unknown) {
         if (ticket !== seq.current) {
           return;
         }
 
-        setLevel(previous);
+        setPending(null);
         setError(`Could not save the run level: ${errorText(thrownError)}`);
       }
     });
   };
 
-  return { choose, clearError: () => setError(null), error, level };
+  const clearError = (): void => setError(null);
+
+  return { choose, clearError, error, level };
 };
 
 export { useRunLevel };

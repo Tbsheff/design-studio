@@ -45,14 +45,22 @@ const stage = (): HTMLElement | null =>
 const refOf = (frame: CanvasFrame): RunCanvasRef => {
   const inView = inViewIds(stage()).filter((id) => id !== frame.id);
 
-  return {
+  const ref: RunCanvasRef = {
     frameId: frame.id,
     height: frame.height,
     path: frame.path ?? "",
     width: frame.width,
-    ...(frame.label ? { label: frame.label } : {}),
-    ...(inView.length > 0 ? { inView } : {}),
   };
+
+  if (frame.label) {
+    ref.label = frame.label;
+  }
+
+  if (inView.length > 0) {
+    ref.inView = inView;
+  }
+
+  return ref;
 };
 
 const useRunCanvas = (
@@ -70,24 +78,23 @@ const useRunCanvas = (
   const key = frameKey(frame);
   const off = removed === key;
 
-  const chip = off
-    ? null
-    : {
-        element: elementName(selection),
-        frameId: frame.id,
-        onRemove: (): void => setRemoved(key),
-        page: `/${frame.path ?? ""}`,
-        state: stateLabel(
-          states ?? null,
-          frameStateOf(states ?? null, frame.id)
-        ),
-      };
+  let chip: RunCanvasChip | null = null;
+
+  if (!off) {
+    chip = {
+      element: elementName(selection),
+      frameId: frame.id,
+      onRemove: (): void => setRemoved(key),
+      page: `/${frame.path ?? ""}`,
+      state: stateLabel(states ?? null, frameStateOf(states ?? null, frame.id)),
+    };
+  }
 
   return {
     chip,
     current: () => {
       if (off) {
-        return undefined;
+        return;
       }
 
       return refOf(frame);

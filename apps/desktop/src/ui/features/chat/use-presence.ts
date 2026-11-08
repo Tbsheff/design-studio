@@ -3,30 +3,29 @@ import { useEffect, useState } from "react";
 const CSS_DUR_EXIT_MS = 100;
 
 const reducedMotion = (): boolean =>
-  globalThis.window !== undefined &&
+  "window" in globalThis &&
   globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const usePresence = <Value>(
-  value: Value | null
-): {
+interface Presence<Value> {
   shown: Value | null;
   closing: boolean;
-} => {
+}
+
+const toKeepDelay = (isOpen: boolean): number => {
+  if (isOpen || reducedMotion()) {
+    return 0;
+  }
+
+  return CSS_DUR_EXIT_MS;
+};
+
+const usePresence = <Value>(value: Value | null): Presence<Value> => {
   const [kept, setKept] = useState<Value | null>(value);
   useEffect(() => {
-    if (value !== null) {
-      setKept(value);
-
-      return;
-    }
-
-    if (reducedMotion()) {
-      setKept(null);
-
-      return;
-    }
-
-    const timer = globalThis.setTimeout(() => setKept(null), CSS_DUR_EXIT_MS);
+    const timer = globalThis.setTimeout(
+      () => setKept(value),
+      toKeepDelay(value !== null)
+    );
 
     return (): void => globalThis.clearTimeout(timer);
   }, [value]);
@@ -35,3 +34,5 @@ const usePresence = <Value>(
 };
 
 export { CSS_DUR_EXIT_MS, usePresence };
+
+export type { Presence };

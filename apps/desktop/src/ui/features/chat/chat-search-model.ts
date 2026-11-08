@@ -3,10 +3,19 @@ import { createLiveStore } from "../../platform/live-store.js";
 const chatSearchOpen = createLiveStore(false);
 const chatSearchAvailable = createLiveStore(false);
 
-const focusChatSearchButton = (): void => {
-  globalThis.requestAnimationFrame(() =>
-    document.querySelector<HTMLElement>(".pane-head-search")?.focus()
-  );
+let searchButton: HTMLElement | null = null;
+
+const registerChatSearchButton = (element: HTMLElement | null): void => {
+  searchButton = element;
 };
 
-export { chatSearchAvailable, chatSearchOpen, focusChatSearchButton };
+const focusChatSearchButton = (): void => {
+  globalThis.requestAnimationFrame(() => searchButton?.focus());
+};
+
+export {
+  chatSearchAvailable,
+  chatSearchOpen,
+  focusChatSearchButton,
+  registerChatSearchButton,
+};

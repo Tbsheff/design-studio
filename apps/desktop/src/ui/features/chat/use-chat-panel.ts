@@ -1,28 +1,30 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   startTransition,
 } from "react";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import { useLive } from "../../platform/live-store.js";
-import type { TurnActions } from "./chat-rewind.js";
 import {
   chatSearchAvailable,
   chatSearchOpen,
   focusChatSearchButton,
 } from "./chat-search-model.js";
-import type { PolishProps } from "./chat-turn-model.js";
+import type { PolishProps, TurnActions } from "./chat-turn-model.js";
 import { loadRunsThrough, renameRun } from "./run-history-model.js";
 import type { RunView } from "./run-state-model.js";
 import type { RewindControl } from "./use-rewind.js";
 
 const useLatest = <Value>(value: Value): { readonly current: Value } => {
   const ref = useRef(value);
-  ref.current = value;
+  useLayoutEffect(() => {
+    ref.current = value;
+  }, [value]);
 
   return ref;
 };
@@ -141,7 +143,7 @@ const useTurnActions = (
 ): UseTurnActionsResult => {
   const [titles, setTitles] = useState<Record<string, string>>({});
   const rewindRef = useLatest(rewind);
-  const hasRewind = rewind !== undefined;
+  const hasRewind = Boolean(rewind);
 
   const actions = useMemo<TurnActions | null>(() => {
     if (hasRewind) {
@@ -164,4 +166,37 @@ const useTurnActions = (
   return { actions, titles };
 };
 
-export { useLatest, usePolish, useRunSearch, useTurnActions };
+const FOUND_MS = 1600;
+
+interface ScrollToRunOptions {
+  runId: string | null;
+  isShown: boolean;
+  viewportRef: RefObject<HTMLElement | null>;
+  wasAtBottomRef: RefObject<boolean>;
+  onDone: () => void;
+}
+
+const useScrollToRun = (options: ScrollToRunOptions): void => {
+  const { runId, isShown, viewportRef, wasAtBottomRef, onDone } = options;
+  useEffect(() => {
+    if (!runId || !isShown) {
+      return;
+    }
+
+    const el = viewportRef.current?.querySelector<HTMLElement>(
+      `[data-run-id="${CSS.escape(runId)}"]`
+    );
+
+    if (!el) {
+      return;
+    }
+
+    wasAtBottomRef.current = false;
+    el.scrollIntoView({ block: "start" });
+    el.dataset.found = "";
+    globalThis.setTimeout(() => delete el.dataset.found, FOUND_MS);
+    onDone();
+  }, [runId, isShown, onDone, viewportRef, wasAtBottomRef]);
+};
+
+export { useLatest, usePolish, useRunSearch, useScrollToRun, useTurnActions };

@@ -4,55 +4,71 @@ import { createDraftStore, homeVariations } from "../../platform/storage.js";
 import { nextRadioOption } from "./level-control.js";
 import { designsHint, runSettingsSummary } from "./run-settings.js";
 
+const VARIATIONS = 3;
+
 describe(nextRadioOption, () => {
-  const options = [1, 2, 3, 4] as const;
+  const FIRST = 1;
+  const SECOND = 2;
+  const THIRD = 3;
+  const FOURTH = 4;
+  const options = [FIRST, SECOND, THIRD, FOURTH] as const;
 
-  it("moves with arrows, wraps, and jumps with Home and End", () => {
-    expect.hasAssertions();
-    expect(nextRadioOption(options, 1, "ArrowRight")).toBe(2);
-    expect(nextRadioOption(options, 4, "ArrowDown")).toBe(1);
-    expect(nextRadioOption(options, 1, "ArrowLeft")).toBe(4);
-    expect(nextRadioOption(options, 3, "Home")).toBe(1);
-  }, 5000);
+  it(
+    "moves with arrows, wraps, and jumps with Home and End",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
+      expect(nextRadioOption(options, FIRST, "ArrowRight")).toBe(SECOND);
+      expect(nextRadioOption(options, FOURTH, "ArrowDown")).toBe(FIRST);
+      expect(nextRadioOption(options, FIRST, "ArrowLeft")).toBe(FOURTH);
+      expect(nextRadioOption(options, THIRD, "Home")).toBe(FIRST);
+    }
+  );
 
-  it("jumps to the end and ignores other keys", () => {
+  it("jumps to the end and ignores other keys", { timeout: 5000 }, () => {
     expect.hasAssertions();
-    expect(nextRadioOption(options, 1, "End")).toBe(4);
-    expect(nextRadioOption(options, 1, "Enter")).toBeNull();
-  }, 5000);
+    expect(nextRadioOption(options, FIRST, "End")).toBe(FOURTH);
+    expect(nextRadioOption(options, FIRST, "Enter")).toBeNull();
+  });
 
-  it("skips disabled options", () => {
+  it("skips disabled options", { timeout: 5000 }, () => {
     expect.hasAssertions();
-    const overMax = (n: number): boolean => n > 3;
-    expect(nextRadioOption(options, 3, "ArrowRight", overMax)).toBe(1);
-    expect(nextRadioOption(options, 1, "End", overMax)).toBe(3);
-    expect(nextRadioOption(options, 1, "ArrowRight", () => true)).toBeNull();
-  }, 5000);
+    const overMax = (option: number): boolean => option > THIRD;
+    expect(nextRadioOption(options, THIRD, "ArrowRight", overMax)).toBe(FIRST);
+    expect(nextRadioOption(options, FIRST, "End", overMax)).toBe(THIRD);
+    expect(
+      nextRadioOption(options, FIRST, "ArrowRight", () => true)
+    ).toBeNull();
+  });
 });
 
 describe("run settings summary", () => {
-  it("always shows mode and level, and designs only when Send fans out", () => {
-    expect.hasAssertions();
-    expect(
-      runSettingsSummary({ designs: 1, level: "prototype", mode: "edit" })
-    ).toBe("Edit · Prototype");
-    expect(
-      runSettingsSummary({ designs: 3, level: "prototype", mode: "edit" })
-    ).toBe("Edit · Prototype · 3 designs");
-    expect(
-      runSettingsSummary({
-        designs: 3,
-        designsOn: false,
-        level: "polish",
-        mode: "critique",
-      })
-    ).toBe("Critique · Polish");
-    expect(runSettingsSummary({ designs: 2, level: "wireframe" })).toBe(
-      "Wireframe · 2 designs"
-    );
-  }, 5000);
+  it(
+    "always shows mode and level, and designs only when Send fans out",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
+      expect(
+        runSettingsSummary({ designs: 1, level: "prototype", mode: "edit" })
+      ).toBe("Edit · Prototype");
+      expect(
+        runSettingsSummary({ designs: 3, level: "prototype", mode: "edit" })
+      ).toBe("Edit · Prototype · 3 designs");
+      expect(
+        runSettingsSummary({
+          designs: 3,
+          designsOn: false,
+          level: "polish",
+          mode: "critique",
+        })
+      ).toBe("Critique · Polish");
+      expect(runSettingsSummary({ designs: 2, level: "wireframe" })).toBe(
+        "Wireframe · 2 designs"
+      );
+    }
+  );
 
-  it("shows why designs are off as visible text", () => {
+  it("shows why designs are off as visible text", { timeout: 5000 }, () => {
     expect.hasAssertions();
     expect(
       designsHint({
@@ -70,11 +86,11 @@ describe("run settings summary", () => {
         value: 1,
       })
     ).toBe("Pick 2 to 3 to compare options.");
-  }, 5000);
+  });
 });
 
 describe("draft store and Home handoff", () => {
-  it("notifies only on change", () => {
+  it("notifies only on change", { timeout: 5000 }, () => {
     expect.hasAssertions();
     const store = createDraftStore();
     let calls = 0;
@@ -85,18 +101,22 @@ describe("draft store and Home handoff", () => {
     store.set("a");
     expect(store.get()).toBe("a");
     expect(calls).toBe(1);
-  }, 5000);
+  });
 
-  it("hands the Home variations intent to one project once", () => {
-    expect.hasAssertions();
-    homeVariations.set({
-      count: 3,
-      level: "prototype",
-      projectId: "p1",
-      prompt: "A page",
-    });
-    expect(homeVariations.take("p2")).toBeNull();
-    expect(homeVariations.take("p1")?.count).toBe(3);
-    expect(homeVariations.take("p1")).toBeNull();
-  }, 5000);
+  it(
+    "hands the Home variations intent to one project once",
+    { timeout: 5000 },
+    () => {
+      expect.hasAssertions();
+      homeVariations.set({
+        count: VARIATIONS,
+        level: "prototype",
+        projectId: "p1",
+        prompt: "A page",
+      });
+      expect(homeVariations.take("p2")).toBeNull();
+      expect(homeVariations.take("p1")?.count).toBe(VARIATIONS);
+      expect(homeVariations.take("p1")).toBeNull();
+    }
+  );
 });

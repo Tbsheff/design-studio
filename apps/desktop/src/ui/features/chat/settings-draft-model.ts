@@ -21,14 +21,21 @@ interface SettingsDraft {
   defaultLevel: RunLevel;
 }
 
+const toBudgetText = (budget: number | null): string => {
+  if (budget === null) {
+    return "";
+  }
+
+  return String(budget);
+};
+
 const toDraft = (settings: ProjectSettings): SettingsDraft => ({
   allowBash: settings.allowBash,
   allowInstall: settings.allowInstall,
   autoApprove: settings.autoApprove ?? true,
   defaultLevel: settings.defaultLevel ?? "prototype",
   disabledSkills: [...(settings.disabledSkills ?? [])],
-  maxBudgetUsd:
-    settings.maxBudgetUsd === null ? "" : String(settings.maxBudgetUsd),
+  maxBudgetUsd: toBudgetText(settings.maxBudgetUsd),
   maxTurns: String(settings.maxTurns),
   model: settings.model,
 });

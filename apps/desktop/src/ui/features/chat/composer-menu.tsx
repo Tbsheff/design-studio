@@ -308,7 +308,12 @@ const LevelPill = ({
       >
         <span className="ui-pill-select-label">{copy.level}</span>
         <span className="ui-pill-select-value">
-          <StableText sizes={RUN_LEVELS.map(levelLabel)}>
+          <StableText
+            sizes={RUN_LEVELS.map((runLevel) => ({
+              key: levelLabel(runLevel),
+              node: levelLabel(runLevel),
+            }))}
+          >
             {levelLabel(level)}
           </StableText>
         </span>
@@ -439,9 +444,10 @@ const ModelPill = ({
           data-testid="active-model"
         >
           <StableText
-            sizes={MODEL_OPTIONS.map((option) => (
-              <ModelName key={option.id} name={shortModel(option.id)} />
-            ))}
+            sizes={MODEL_OPTIONS.map((option) => ({
+              key: option.id,
+              node: <ModelName name={shortModel(option.id)} />,
+            }))}
           >
             <ModelName name={shortModel(shown)} />
           </StableText>

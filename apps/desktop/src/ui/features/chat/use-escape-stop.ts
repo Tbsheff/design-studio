@@ -1,15 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 const PREVIEW_ESCAPE_EVENT = "studio:preview-escape";
 const PREVIEW_STOP_EVENT = "studio:preview-stop";
 
 const OVERLAY_SELECTOR = 'dialog[open], [role="dialog"][aria-modal="true"]';
 
+const hasStopModifier = (event: KeyboardEvent): boolean =>
+  (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
+
 const isStopKey = (event: KeyboardEvent): boolean =>
-  event.key === "." &&
-  (event.metaKey || event.ctrlKey) &&
-  !event.altKey &&
-  !event.shiftKey;
+  event.key === "." && hasStopModifier(event);
 
 const overlayOpen = (): boolean =>
   [...document.querySelectorAll<HTMLElement>(OVERLAY_SELECTOR)].some(
@@ -18,7 +18,9 @@ const overlayOpen = (): boolean =>
 
 const useEscapeStop = (active: boolean, onStop: () => void): void => {
   const stop = useRef(onStop);
-  stop.current = onStop;
+  useLayoutEffect(() => {
+    stop.current = onStop;
+  }, [onStop]);
   useEffect(() => {
     if (!active) {
       return;

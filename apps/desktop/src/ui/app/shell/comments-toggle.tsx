@@ -25,6 +25,7 @@ const CommentsToggle = ({
 
   return (
     <PaneHeadToggle
+      buttonRef={null}
       extraClass=""
       icon="comment"
       isPressed={isOn}

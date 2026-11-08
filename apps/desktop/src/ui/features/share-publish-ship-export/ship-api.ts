@@ -12,7 +12,7 @@ interface PlanBase {
   readonly baseVersionId?: string;
 }
 
-const baseOf = (baseVersionId?: string): PlanBase => {
+const baseOf = (baseVersionId: string | null): PlanBase => {
   if (baseVersionId) {
     return { baseVersionId };
   }
@@ -41,7 +41,7 @@ const toPublishBody = (request: ShipRequest): ShipRequest => ({
 const shipApi = {
   prepare: (
     projectId: string,
-    baseVersionId?: string
+    baseVersionId: string | null
   ): Promise<UiOutput<typeof getPlanShip>> =>
     call(routes.getPlanShip, { ...baseOf(baseVersionId), projectId }),
   saveSettings: (

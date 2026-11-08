@@ -49,7 +49,13 @@ const VersionFieldSchema = VersionIdSchema.annotate({
 
 const exportFrameExport = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "export_frame",
+    set: "core",
+    short:
+      "Export canvas frames as SVG or PPTX into the studio data folder. Changes no design file. Only when the user asks for an SVG or a deck.",
+  },
   confirm: "none",
   description:
     "Export canvas frames as SVG or PPTX with the same server code as Export > SVG and Export > PPTX in the studio. SVG: one vector file per frame (a zip for several) with shapes, text and embedded images; selector exports one element. PPTX: one slide per frame (or per .slide or [data-slide] section) with native, editable text boxes, boxes, lines, SVG shapes and pictures, on a full-slide picture of the rest. Returns the path of the file in the Design Studio data folder. Changes no design file.",

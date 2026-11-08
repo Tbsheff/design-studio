@@ -52,7 +52,13 @@ const WidthFieldSchema = FrameSideSchema.annotate({
 
 const getCodeExport = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "copy_code",
+    set: "core",
+    short:
+      "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
+  },
   confirm: "none",
   description:
     "Copy one element as code with the same server code as Copy as code in the studio. format html: markup with a <style> block of classes from the computed styles. tailwind: markup with Tailwind classes. react: a JSX component named after the layer with className or style objects, and kit components such as <Button> with their import lines. Read only: changes no file.",

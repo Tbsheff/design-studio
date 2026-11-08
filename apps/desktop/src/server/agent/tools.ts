@@ -52,7 +52,6 @@ import {
 } from "../canvas/links/index.js";
 import type { EditLinksArgs, LinkProbe } from "../canvas/links/index.js";
 import { checkDesignSystem, describeCheck } from "../design-system/check.js";
-import { prepareShip } from "../git/ship-prepare.js";
 import { runActionCaller } from "../mcp/registry.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { TileResult } from "../preview/browser.js";
@@ -110,7 +109,6 @@ import {
   runComponentPreview,
 } from "./component-preview-tool.js";
 import { getRunContextShape, runGetRunContext } from "./context-tool.js";
-import { copyCodeInput, runCopyCode } from "./copy-code-tool.js";
 import {
   beforeImages,
   changedSourceFor,
@@ -126,7 +124,6 @@ import {
   setTokenShape,
 } from "./direct-tools.js";
 import { runAppDoctor } from "./doctor-tool.js";
-import { exportFrameShape, runExportFrame } from "./export-tool.js";
 import { figmaImportShape, runFigmaImport } from "./figma-import-tool.js";
 import { baselineNote } from "./final-check.js";
 import { runSetImage, setImageShape } from "./image-tool.js";
@@ -948,47 +945,6 @@ export async function runDesignSystemCheck(deps: Pick<StudioToolDeps, "ctx">) {
   }
 }
 
-export async function runPrepareShip(
-  deps: Pick<StudioToolDeps, "ctx" | "runsDir">
-) {
-  if (!deps.ctx.project.app) {
-    return errorText("prepare_ship works only in an attached app project.");
-  }
-
-  try {
-    const plan = await prepareShip({
-      project: deps.ctx.project,
-      projectDir: path.dirname(deps.runsDir),
-    });
-
-    const files = plan.files.map((f) => ({
-      additions: f.additions,
-      conflict: f.conflict,
-      deletions: f.deletions,
-      path: f.path,
-      refused: f.refused,
-      status: f.status,
-    }));
-
-    const text = JSON.stringify(
-      {
-        base: plan.base?.title ?? null,
-        blocked: plan.blocked,
-        checkedOut: plan.repo?.branch ?? null,
-        defaults: plan.defaults,
-        files,
-        note: "Only the user can ship, with the Ship button in the studio. Tell them what is ready and what blocks it.",
-      },
-      null,
-      2
-    );
-
-    return { content: [{ text, type: "text" as const }] };
-  } catch (error) {
-    return errorText(`prepare_ship failed: ${describeError(error)}`);
-  }
-}
-
 const toDecodedRun = <Fields extends ToolFields, Reply>(
   input: ToolInput<Fields>,
   run: (data: Schema.Struct.Type<Fields>) => Promise<Reply>
@@ -1144,14 +1100,6 @@ export async function createStudioMcpServer(
     (args) => runSetToken(deps, args)
   );
 
-  const prepareShipTool = tool(
-    "prepare_ship",
-    TOOL_SHORT.prepare_ship,
-    {},
-    () => runPrepareShip(deps),
-    { annotations: { readOnlyHint: true } }
-  );
-
   const setPropsTool = tool(
     "set_props",
     TOOL_SHORT.set_props,
@@ -1242,14 +1190,6 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runSetBreakpointStyle(deps, args))
   );
 
-  const copyCodeTool = tool(
-    "copy_code",
-    TOOL_SHORT.copy_code,
-    copyCodeInput,
-    withLayerIds(deps, (args) => runCopyCode(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
   const insertJsxTool = tool(
     "insert_jsx",
     TOOL_SHORT.insert_jsx,
@@ -1337,13 +1277,6 @@ export async function createStudioMcpServer(
     TOOL_SHORT.swap_instance,
     swapInstanceShape,
     withLayerIds(deps, (args) => runSwapInstance(deps, args))
-  );
-
-  const exportFrameTool = tool(
-    "export_frame",
-    TOOL_SHORT.export_frame,
-    exportFrameShape,
-    withLayerIds(deps, (args) => runExportFrame(deps, args))
   );
 
   const setImageTool = tool(
@@ -1439,7 +1372,6 @@ export async function createStudioMcpServer(
     setFrameSessionTool,
     editElementTool,
     setTokenTool,
-    prepareShipTool,
     setPropsTool,
     findStylesTool,
     replaceStyleTool,
@@ -1448,7 +1380,6 @@ export async function createStudioMcpServer(
     insertJsxTool,
     listBreakpointsTool,
     setBreakpointStyleTool,
-    copyCodeTool,
     clearTextTool,
     listComponentsTool,
     getLayersTool,
@@ -1465,7 +1396,6 @@ export async function createStudioMcpServer(
     swapInstanceTool,
     selectMatchingTool,
     diffVersionsTool,
-    exportFrameTool,
     setImageTool,
     drawVectorTool,
     booleanShapesTool,

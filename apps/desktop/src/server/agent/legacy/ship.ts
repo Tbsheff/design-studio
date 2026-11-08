@@ -1,3 +1,3 @@
-const SHIP_AGENT_TOOLS: readonly string[] = ["mcp__studio__prepare_ship"];
+const SHIP_AGENT_TOOLS: readonly string[] = [];
 
 export { SHIP_AGENT_TOOLS };

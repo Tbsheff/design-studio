@@ -195,10 +195,10 @@ const askMatching = (
 
   const timer = globalThis.setTimeout(() => done(), MATCH_WAIT_MS);
 
-  function done(): void {
+  const done = (): void => {
     globalThis.clearTimeout(timer);
     stop?.();
-  }
+  };
 
   port.post({ by, requestId, selector, type: "select-matching" });
 };

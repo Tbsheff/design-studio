@@ -23,7 +23,7 @@ interface ParsedNumber {
   readonly unit: string;
 }
 
-function parseNumber(raw: string): ParsedNumber | null {
+const parseNumber = (raw: string): ParsedNumber | null => {
   const match = NUMBER_RE.exec(raw.trim());
 
   if (!match) {
@@ -31,21 +31,25 @@ function parseNumber(raw: string): ParsedNumber | null {
   }
 
   return { unit: (match[2] ?? "").toLowerCase(), value: Number(match[1]) };
-}
+};
 
-function round(value: number): number {
+const round = (value: number): number => {
   return Math.round(value * 100) / 100;
-}
+};
 
-function formatNumber(value: number, unit: string): string {
+const formatNumber = (value: number, unit: string): string => {
   return `${round(value)}${unit}`;
-}
+};
 
-function stepValue(raw: string, delta: number, fallbackUnit: string): string {
+const stepValue = (
+  raw: string,
+  delta: number,
+  fallbackUnit: string
+): string => {
   const parsed = parseNumber(raw) ?? { unit: fallbackUnit, value: 0 };
 
   return formatNumber(parsed.value + delta, parsed.unit || fallbackUnit);
-}
+};
 
 interface Shift {
   readonly delta: number;
@@ -59,7 +63,7 @@ interface ShiftPart {
   readonly set?: string;
 }
 
-function shiftedPart(raw: string, part: ShiftPart, shift: Shift): string {
+const shiftedPart = (raw: string, part: ShiftPart, shift: Shift): string => {
   return part.map(raw, (value) => {
     const from = part.set ?? value;
     const next = shift.delta === 0 ? from : (shiftedValue(from, shift) ?? from);
@@ -69,9 +73,9 @@ function shiftedPart(raw: string, part: ShiftPart, shift: Shift): string {
       ? formatNumber(parsed.value, "px")
       : next;
   });
-}
+};
 
-function shiftedValue(raw: string, shift: Shift): string | null {
+const shiftedValue = (raw: string, shift: Shift): string | null => {
   const parsed = parseNumber(raw);
 
   if (!parsed) {
@@ -84,9 +88,9 @@ function shiftedValue(raw: string, shift: Shift): string | null {
   );
 
   return formatNumber(next, parsed.unit);
-}
+};
 
-function normalizeLength(raw: string, defaultUnit: string): string {
+const normalizeLength = (raw: string, defaultUnit: string): string => {
   const trimmed = raw.trim();
   const parsed = parseNumber(trimmed);
 
@@ -95,23 +99,23 @@ function normalizeLength(raw: string, defaultUnit: string): string {
   }
 
   return formatNumber(parsed.value, defaultUnit);
-}
+};
 
-function hexByte(value: number): string {
+const hexByte = (value: number): string => {
   return Math.max(0, Math.min(255, Math.round(value)))
     .toString(16)
     .padStart(2, "0");
-}
+};
 
-function alphaOf(raw: string | undefined): number {
+const alphaOf = (raw: string | undefined): number => {
   if (raw === undefined) {
     return 1;
   }
 
   return raw.endsWith("%") ? Number(raw.slice(0, -1)) / 100 : Number(raw);
-}
+};
 
-function colorToHex(raw: string): string | null {
+const colorToHex = (raw: string): string | null => {
   const value = raw.trim();
 
   if (HEX_RE.test(value)) {
@@ -129,19 +133,19 @@ function colorToHex(raw: string): string | null {
   }
 
   return `#${hexByte(Number(match[1]))}${hexByte(Number(match[2]))}${hexByte(Number(match[3]))}`;
-}
+};
 
 const TRANSPARENT_RE = /^rgba\(\s*0[\s,]+0[\s,]+0\s*[,/]\s*0\s*\)$/i;
 
-function displayColor(raw: string): string {
+const displayColor = (raw: string): string => {
   if (TRANSPARENT_RE.test(raw.trim())) {
     return "transparent";
   }
 
   return colorToHex(raw) ?? raw.trim();
-}
+};
 
-function isValidColor(raw: string): boolean {
+const isValidColor = (raw: string): boolean => {
   const value = raw.trim();
 
   if (value === "") {
@@ -153,20 +157,20 @@ function isValidColor(raw: string): boolean {
   }
 
   return CSS.supports("color", value);
-}
+};
 
-function expandBox(raw: string | undefined): Record<Side, string> {
+const expandBox = (raw: string | undefined): Record<Side, string> => {
   const parts = (raw ?? "").trim().split(/\s+/).filter(Boolean);
   const [top = "", right = top, bottom = top, left = right] = parts;
 
   return { bottom, left, right, top };
-}
+};
 
-function boxValue(
+const boxValue = (
   styles: Record<string, string>,
   box: "padding" | "margin",
   side: Side
-): string {
+): string => {
   const longhand = styles[`${box}-${side}`];
 
   if (longhand !== undefined && longhand !== "") {
@@ -174,16 +178,16 @@ function boxValue(
   }
 
   return tidy(expandBox(styles[box])[side]);
-}
+};
 
-function tidy(raw: string | undefined): string {
+const tidy = (raw: string | undefined): string => {
   const value = (raw ?? "").trim();
   const parsed = parseNumber(value);
 
   return parsed ? formatNumber(parsed.value, parsed.unit) : value;
-}
+};
 
-function valuesFromStyles(styles: Record<string, string>): StyleValues {
+const valuesFromStyles = (styles: Record<string, string>): StyleValues => {
   const values = {} as StyleValues;
 
   for (const prop of DIRECT_STYLE_PROPERTIES) {
@@ -196,9 +200,9 @@ function valuesFromStyles(styles: Record<string, string>): StyleValues {
   }
 
   return values;
-}
+};
 
-function hasChildElements(outerHTML: string): boolean {
+const hasChildElements = (outerHTML: string): boolean => {
   const close = outerHTML.indexOf(">");
 
   if (close === -1) {
@@ -206,11 +210,11 @@ function hasChildElements(outerHTML: string): boolean {
   }
 
   return /<[a-zA-Z]/.test(outerHTML.slice(close + 1));
-}
+};
 
 type TextEditability = "ok" | "children" | "long";
 
-function textEditability(selection: SelectionContext): TextEditability {
+const textEditability = (selection: SelectionContext): TextEditability => {
   if (hasChildElements(selection.outerHTML)) {
     return "children";
   }
@@ -220,12 +224,12 @@ function textEditability(selection: SelectionContext): TextEditability {
   }
 
   return "ok";
-}
+};
 
-function changedProps(
+const changedProps = (
   values: Partial<StyleValues>,
   base: StyleValues
-): Partial<StyleValues> {
+): Partial<StyleValues> => {
   const out: Partial<StyleValues> = {};
 
   for (const [prop, value] of Object.entries(values) as [
@@ -238,7 +242,7 @@ function changedProps(
   }
 
   return out;
-}
+};
 
 export {
   SIDES,
@@ -257,5 +261,4 @@ export {
   textEditability,
   changedProps,
 };
-
 export type { StyleValues, Side, Shift, ShiftPart };

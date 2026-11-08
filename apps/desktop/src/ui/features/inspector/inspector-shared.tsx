@@ -33,36 +33,39 @@ const InspectorAppContext = createContext<InspectorApp>({
   element: null,
 });
 
-function useInspectorApp(): InspectorApp {
+const useInspectorApp = (): InspectorApp => {
   return useContext(InspectorAppContext);
-}
+};
 
-function loc(source: { readonly file: string; readonly line: number }): string {
-  return `${source.file}:${source.line}`;
-}
-
-function shortLoc(source: {
+const loc = (source: {
   readonly file: string;
   readonly line: number;
-}): string {
-  return `${source.file.split("/").pop() ?? source.file}:${source.line}`;
-}
+}): string => {
+  return `${source.file}:${source.line}`;
+};
 
-function dataTextPrompt(text: string, data: TextFromData): string {
+const shortLoc = (source: {
+  readonly file: string;
+  readonly line: number;
+}): string => {
+  return `${source.file.split("/").pop() ?? source.file}:${source.line}`;
+};
+
+const dataTextPrompt = (text: string, data: TextFromData): string => {
   const shown = text.length > 80 ? `${text.slice(0, 79)}…` : text;
 
   return `The text "${shown}" comes from data: ${data.expression} in ${loc(data)}. Change it to: `;
-}
+};
 
 type TextEditScope = Pick<
   DirectEdit,
   "scope" | "text" | "status" | "previewText" | "revertText" | "commit"
 >;
 
-function useTextSource(
+const useTextSource = (
   edit: TextEditScope,
   selection: SelectionContext
-): TextSourceAnswer | null {
+): TextSourceAnswer | null => {
   const [answer, setAnswer] = useState<TextSourceAnswer | null>(null);
   const { projectId, directionId } = edit.scope;
   const { source } = selection;
@@ -108,15 +111,15 @@ function useTextSource(
   }, [projectId, directionId, key]);
 
   return answer;
-}
+};
 
-function SourceTextRow({
+const SourceTextRow = ({
   found,
   edit,
 }: {
   readonly found: TextSourceInfo;
   readonly edit: TextEditScope;
-}): ReactElement {
+}): ReactElement => {
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -154,9 +157,9 @@ function SourceTextRow({
       </div>
     </>
   );
-}
+};
 
-function DataTextNote({
+const DataTextNote = ({
   data,
   selection,
   edit,
@@ -164,7 +167,7 @@ function DataTextNote({
   readonly data: TextFromData;
   readonly selection: SelectionContext;
   readonly edit: TextEditScope;
-}): ReactElement {
+}): ReactElement => {
   const answer = useTextSource(edit, selection);
 
   if (answer && "found" in answer) {
@@ -186,9 +189,9 @@ function DataTextNote({
       reason={answer && "reason" in answer ? answer.reason : null}
     />
   );
-}
+};
 
-function DataTextAsk({
+const DataTextAsk = ({
   data,
   text,
   reason,
@@ -196,7 +199,7 @@ function DataTextAsk({
   readonly data: TextFromData;
   readonly text: string;
   readonly reason: string | null;
-}): ReactElement {
+}): ReactElement => {
   const { ask } = useInspectorApp();
 
   return (
@@ -218,9 +221,9 @@ function DataTextAsk({
       )}
     </div>
   );
-}
+};
 
-function SharedSourceNote({
+const SharedSourceNote = ({
   shared,
   isEditingUse: editingUse,
   canUse,
@@ -230,7 +233,7 @@ function SharedSourceNote({
   readonly isEditingUse: boolean;
   readonly canUse: boolean;
   readonly onToggle: () => void;
-}): ReactElement {
+}): ReactElement => {
   const what = shared.name ?? shared.file.split("/").pop() ?? shared.file;
 
   if (editingUse && shared.use) {
@@ -261,9 +264,9 @@ function SharedSourceNote({
       )}
     </div>
   );
-}
+};
 
-function AddButton({
+const AddButton = ({
   label,
   tip,
   shortcut,
@@ -273,7 +276,7 @@ function AddButton({
   readonly tip?: string;
   readonly shortcut?: string;
   readonly onClick: () => void;
-}): ReactElement {
+}): ReactElement => {
   return (
     <button
       type="button"
@@ -288,7 +291,7 @@ function AddButton({
       {label}
     </button>
   );
-}
+};
 
 export {
   InspectorAppContext,
@@ -298,5 +301,4 @@ export {
   SharedSourceNote,
   AddButton,
 };
-
 export type { InspectorApp };

@@ -11,7 +11,7 @@ import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
 import { isSameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-function useRowKeys(onCommit: () => void, onRevert: () => void) {
+const useRowKeys = (onCommit: () => void, onRevert: () => void) => {
   return (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -22,15 +22,15 @@ function useRowKeys(onCommit: () => void, onRevert: () => void) {
       onRevert();
     }
   };
-}
+};
 
-function ContentRow({
+const ContentRow = ({
   selection,
   edit,
 }: {
   readonly selection: SelectionContext;
   readonly edit: DirectEdit;
-}): ReactElement {
+}): ReactElement => {
   const state = textEditability(selection);
   const onKeyDown = useRowKeys(edit.commit, edit.revertText);
   const data = useInspectorApp().element?.textFromData;
@@ -70,11 +70,11 @@ function ContentRow({
       />
     </div>
   );
-}
+};
 
 const UNSAFE = /[;{}<>\\]/;
 
-function CssTextRow({
+const CssTextRow = ({
   prop,
   label,
   short,
@@ -86,7 +86,7 @@ function CssTextRow({
   readonly short: string;
   readonly edit: DirectEdit;
   readonly placeholder: string;
-}): ReactElement {
+}): ReactElement => {
   const [text, setText] = useState<string | null>(null);
   const value = edit.values[prop];
   const shown = text ?? (value === "none" ? "" : value);
@@ -138,13 +138,13 @@ function CssTextRow({
       />
     </div>
   );
-}
+};
 
-function hasLine(value: string, line: string): boolean {
+const hasLine = (value: string, line: string): boolean => {
   return value.split(/\s+/).includes(line);
-}
+};
 
-function toggleLine(value: string, line: string): string {
+const toggleLine = (value: string, line: string): string => {
   const parts = value
     .split(/\s+/)
     .filter((part) => part !== "" && part !== "none");
@@ -154,13 +154,13 @@ function toggleLine(value: string, line: string): string {
     : [...parts, line];
 
   return next.length === 0 ? "none" : next.join(" ");
-}
+};
 
-function TextStyleTogglesView({
+const TextStyleTogglesView = ({
   edit,
 }: {
   readonly edit: DirectEdit;
-}): ReactElement {
+}): ReactElement => {
   const italic =
     edit.values["font-style"] === "italic" ||
     edit.values["font-style"] === "oblique";
@@ -221,7 +221,7 @@ function TextStyleTogglesView({
       ))}
     </div>
   );
-}
+};
 
 const TextStyleToggles = memo(TextStyleTogglesView, (a, b) =>
   isSameEditValues(a.edit, b.edit, ["font-style", "text-decoration-line"])

@@ -35,11 +35,11 @@ const requestAuthoredCss = (
 
     const timer = globalThis.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
 
-    function finish(result: AuthoredCss | null): void {
+    const finish = (result: AuthoredCss | null): void => {
       globalThis.clearTimeout(timer);
       stop();
       resolve(result);
-    }
+    };
 
     port.post({ requestId, selector, type: "request-authored" });
   });
@@ -75,5 +75,4 @@ const useAuthoredCss = (
 };
 
 export { requestAuthoredCss, useAuthoredCss };
-
 export type { AuthoredCssState };

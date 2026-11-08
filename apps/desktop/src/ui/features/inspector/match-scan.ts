@@ -134,16 +134,16 @@ const requestStyles = (
 
     const timer = globalThis.setTimeout(() => finish(null), REPLY_MS);
 
-    function finish(
+    const finish = (
       value: {
         readonly result: StyleScanResult;
         readonly selected: number;
       } | null
-    ): void {
+    ): void => {
       globalThis.clearTimeout(timer);
       stop();
       resolve(value);
-    }
+    };
 
     port.post({ query, requestId, select, type: "find-styles" });
   });
@@ -212,5 +212,4 @@ export {
   usePageVars,
   useStyleScan,
 };
-
 export type { InspectorMatchProps, PageVar, Scope, Status };

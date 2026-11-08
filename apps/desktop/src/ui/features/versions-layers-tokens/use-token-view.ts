@@ -41,7 +41,7 @@ const useTokenView = (
 
   const shownOf = useCallback(
     (entry: CompiledTokenEntry): RawToken =>
-      shownRaw(baseOf(entry), draft.pending[entry.path]),
+      shownRaw(baseOf(entry), draft.pending[entry.path] ?? null),
     [baseOf, draft.pending]
   );
 

@@ -1,9 +1,12 @@
 import type {
   CompiledTokenEntry,
+  DesignToken,
   TokenChange,
   TokenFile,
+  TokenGroup,
 } from "@design-studio/contracts";
 
+import { isText } from "../../platform/json-guard.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 
 interface PendingToken {
@@ -13,6 +16,8 @@ interface PendingToken {
 
 type PendingMap = Record<string, PendingToken>;
 
+type PathMessages = Record<string, string>;
+
 type TokenField = "value" | "darkValue";
 
 interface RawToken {
@@ -21,9 +26,6 @@ interface RawToken {
 }
 
 const ALIAS_RE = /^\{(?<path>[A-Za-z0-9_.-]+)\}$/u;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
 
 const aliasPath = (value: string): string | null =>
   ALIAS_RE.exec(value.trim())?.groups?.path ?? null;
@@ -52,20 +54,27 @@ const referencedEntry = (
   return entries.find((item) => item.cssVar === cssVar) ?? null;
 };
 
-const darkOf = (node: Record<string, unknown>): string | null => {
-  const { $extensions: modes } = node;
+type TokenNode = DesignToken | TokenFile | TokenGroup;
 
-  if (!isRecord(modes)) {
-    return null;
+const isLeaf = (node: TokenNode): node is DesignToken => "$value" in node;
+
+const findNode = (file: TokenFile | null, path: string): TokenNode | null => {
+  let node: TokenNode | null = file;
+
+  for (const segment of path.split(".")) {
+    if (node === null || isLeaf(node)) {
+      return null;
+    }
+
+    const next: TokenNode | string | undefined = node[segment];
+    node = null;
+
+    if (next && !isText(next)) {
+      node = next;
+    }
   }
 
-  const { "studio.modes": ext } = modes;
-
-  if (isRecord(ext) && typeof ext.dark === "string") {
-    return ext.dark;
-  }
-
-  return null;
+  return node;
 };
 
 const rawToken = (
@@ -76,42 +85,33 @@ const rawToken = (
     return { darkValue: entry.source.darkValue, value: entry.source.value };
   }
 
-  let node: unknown = file;
+  const node = findNode(file, entry.path);
 
-  for (const segment of entry.path.split(".")) {
-    if (isRecord(node)) {
-      node = node[segment];
-    }
-  }
-
-  if (!isRecord(node) || typeof node.$value !== "string") {
+  if (!node || !isLeaf(node)) {
     return { darkValue: entry.darkValue, value: entry.value };
   }
 
-  return { darkValue: darkOf(node), value: node.$value };
+  const darkValue = node.$extensions?.["studio.modes"]?.dark ?? null;
+
+  return { darkValue, value: node.$value };
 };
 
-const shownRaw = (
-  base: RawToken,
-  pending: PendingToken | undefined
-): RawToken => {
+const shownRaw = (base: RawToken, pending: PendingToken | null): RawToken => {
   let { darkValue } = base;
 
-  const pendingDark = pending?.darkValue;
-
-  if (pendingDark !== undefined) {
-    darkValue = pendingDark;
+  if (pending && "darkValue" in pending) {
+    darkValue = pending.darkValue ?? null;
   }
 
   return { darkValue, value: pending?.value ?? base.value };
 };
 
 const withField = (
-  prev: PendingToken | undefined,
+  prev: PendingToken | null,
   field: TokenField,
   next: string | null,
   base: RawToken
-): PendingToken | undefined => {
+): PendingToken | null => {
   const out: PendingToken = { ...prev };
 
   if (field === "value") {
@@ -126,51 +126,60 @@ const withField = (
     out.darkValue = next;
   }
 
-  if (out.value === undefined && out.darkValue === undefined) {
-    return;
+  if (!("value" in out) && !("darkValue" in out)) {
+    return null;
   }
 
   return out;
 };
 
-const setPending = (
+const withPending = (
   map: PendingMap,
   path: string,
-  next: PendingToken | undefined
+  next: PendingToken | null
 ): PendingMap => {
-  const rest = Object.fromEntries(
+  const result: PendingMap = Object.fromEntries(
     Object.entries(map).filter(([key]) => key !== path)
   );
 
   if (next) {
-    return { ...rest, [path]: next };
+    result[path] = next;
   }
 
-  return rest;
+  return result;
 };
 
-const toChanges = (map: PendingMap): TokenChange[] =>
-  Object.entries(map).map(([path, pending]) => ({ path, ...pending }));
+const toChanges = (map: PendingMap): TokenChange[] => {
+  const changes: TokenChange[] = [];
+
+  for (const [path, pending] of Object.entries(map)) {
+    changes.push({ path, ...pending });
+  }
+
+  return changes;
+};
 
 const errorPaths = (
   messages: string[],
   changes: TokenChange[]
-): Record<string, string> => {
-  const byLength = [...changes].sort(
+): PathMessages => {
+  const byLength = changes.toSorted(
     (first, second) => second.path.length - first.path.length
   );
 
-  const out: Record<string, string> = {};
+  const hits = new Map<string, string>();
 
   for (const message of messages) {
     const hit = byLength.find((change) => message.includes(change.path));
 
-    if (hit && !(hit.path in out)) {
-      out[hit.path] = message;
+    if (hit && !hits.has(hit.path)) {
+      hits.set(hit.path, message);
     }
   }
 
-  return out;
+  const result: PathMessages = Object.fromEntries(hits);
+
+  return result;
 };
 
 const resolveCss = (
@@ -199,14 +208,14 @@ const overlayEntry = (
   let { value } = entry;
   let { darkValue } = entry;
 
-  if (pending.value !== undefined) {
-    value = resolveCss(pending.value, entries, false);
+  if ("value" in pending) {
+    value = resolveCss(pending.value ?? entry.value, entries, false);
   }
 
-  if (pending.darkValue !== undefined) {
+  if ("darkValue" in pending) {
     darkValue = null;
 
-    if (pending.darkValue !== null) {
+    if (pending.darkValue) {
       darkValue = resolveCss(pending.darkValue, entries, true);
     }
   }
@@ -304,7 +313,7 @@ export {
   rawToken,
   shownRaw,
   withField,
-  setPending,
+  withPending,
   toChanges,
   errorPaths,
   overlayTokens,

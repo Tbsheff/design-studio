@@ -176,6 +176,10 @@
   animation: ui-menu-in var(--dur-fast) var(--ease-out);
 }
 
+[role="menu"]:focus {
+  outline: none;
+}
+
 .ui-select-menu {
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;

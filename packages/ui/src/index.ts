@@ -29,6 +29,8 @@ export { UiSelect } from "./ui-select.js";
 
 export { useAnchoredPopover } from "./use-anchored-popover.js";
 
+export { useMenuKeyboard } from "./use-menu-keyboard.js";
+
 export { useModalDialog } from "./use-modal-dialog.js";
 
 export { usePopover, useReturnFocusOnUnmount } from "./use-popover.js";

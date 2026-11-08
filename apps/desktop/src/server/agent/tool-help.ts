@@ -1,4 +1,3 @@
-import { FLOW_NOTE, FRAME_STATES_NOTE } from "../canvas/app-flow/index.js";
 import {
   listBreakpointsDescription,
   setBreakpointStyleDescription,
@@ -19,8 +18,6 @@ import {
 import { DIFF_VERSIONS_DESCRIPTION } from "./version-diff-tool.js";
 
 export const TOOL_SHORT = {
-  add_flow:
-    "Attached apps only. Lay out route frames left to right and link them from the links in their source.",
   arrange:
     "Align, distribute or tidy sibling elements by writing the parent auto layout. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
@@ -49,8 +46,6 @@ export const TOOL_SHORT = {
   draw_vector: VECTOR_DRAW_SHORT,
   edit_element:
     "Change one element by CSS selector or layer id: style, leaf text, Tailwind classes {add, remove}, or op (delete, duplicate, wrap, group, unwrap, move). Patches only that element. Elements made by .map(), a condition or a call are refused.",
-  edit_links:
-    "Add, replace or remove prototype links and set the Play start frame. Links live in the studio, not in page code.",
   find_styles:
     "Read only. Colors, font sizes, radii and spacing on the page with counts and token/raw status; with value, the elements that use it.",
   get_layers:
@@ -67,13 +62,7 @@ export const TOOL_SHORT = {
     "Read only. Comments pinned on this direction: number, author, text, element, frame, status.",
   list_components:
     "Read only. Project components, the shared kit first, with import line, JSX example, parts and cva variants. Use query; pages of 20.",
-  list_frame_states:
-    "Attached apps only. Read only. Frame preview states, which frame shows which, and the session in use.",
-  list_links:
-    "Read only. Prototype links of Play mode: id, frame, selector, target, transition, broken, startFrame.",
   list_locked_layers: "List the locked layers of the design with their page.",
-  list_route_links:
-    "Attached apps only. Read only. Links in the source of one app route.",
   measure:
     "Read only. Distance, gaps and insets between two elements on the live page.",
   paint_shape: VECTOR_PAINT_SHORT,
@@ -90,10 +79,6 @@ export const TOOL_SHORT = {
     "Read only. Find elements that match one element (same component, classes or style). Returns ids for edit_element `also`.",
   set_breakpoint_style:
     "Set or reset one style property of one layer at base or one breakpoint: md:/lg: classes in Tailwind, @media rules in HTML.",
-  set_frame_session:
-    "Attached apps only. Change the mock user of signed-in frame states, or forget app cookies. Changes no file.",
-  set_frame_state:
-    "Attached apps only. Show one frame in a preview state (default, session, empty, loading, error, mock). Changes no file.",
   set_image:
     "Place or replace an image (project file, attached image or https url) with src, alt, fit and focal point; copies the file into the project assets.",
   set_layer_state:
@@ -114,7 +99,6 @@ export const TOOL_HELP: Record<
   Exclude<StudioToolName, "studio_help">,
   string
 > = {
-  add_flow: `Attached apps only. Lay out route frames left to right with the same code as Flow in the studio, and make prototype links from the links in their source. routes: routes in order; or from: a route or frame id/@label, with depth (default 1) to add the routes it links to. params: sample values for dynamic segments. ${FLOW_NOTE}`,
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
@@ -140,8 +124,6 @@ export const TOOL_HELP: Record<
   draw_vector: VECTOR_DRAW_SHORT,
   edit_element:
     "Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.",
-  edit_links:
-    'Add, replace or remove prototype links and set the Play start frame. add: [{fromFrame, selector, toFrame, transition?}] links the element (CSS selector on the page of fromFrame, which must exist on the rendered page) to toFrame (frame id or @label, or "back"); transition is instant, dissolve, slide-left or slide-right. A new link on the same element replaces the old one. remove: link ids. startFrame: frame id or @label. Links live in the studio, not in the page code.',
   find_styles:
     "Read only. List the colors, font sizes, radii and spacing used on the page (or one canvas frame) with element counts and whether each value is a token, raw or mixed, like the inspector Selection colors panel. With value (and property) it lists the elements that use that computed value; inherited values count only on the element that sets them.",
   get_layers:
@@ -156,12 +138,8 @@ export const TOOL_HELP: Record<
     "Read only. List the comments pinned on this direction with the same server code as the studio Comments pane and the MCP list_comments tool: number, author (an outside agent or the user), text, replies, element (selector, source file:line, component), frame and status. status: open (default), all or one status; frame: frame id, @label or page path.",
   list_components:
     "Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.",
-  list_frame_states: `Attached apps only. Read only. List the frame preview states (signed in, empty, loading, error, mock), which frame shows which, and the session in use. ${FRAME_STATES_NOTE}`,
-  list_links:
-    'List the prototype links (on click of an element, go to a frame) used by Play mode: id, frame, selector, target frame or "back", transition, broken (null or why the link no longer works) and startFrame. Each page with links is rendered to check the elements.',
   list_locked_layers:
     "List the locked layers of the design, with the page of each and whether it is on the page now. Changes nothing.",
-  list_route_links: `Attached apps only. Read only. List the links found in the source of one app route (route pattern or concrete path): kind, href, target route, element and file:line. ${FLOW_NOTE}`,
   measure:
     "Read only. Measure the distance between two elements on the live page, like holding Alt in the studio: boxes, relation, horizontal and vertical gap, inset when one is inside the other, center offset and guide lines.",
   paint_shape: VECTOR_PAINT_SHORT,
@@ -177,8 +155,6 @@ export const TOOL_HELP: Record<
     "Take PNG screenshots of one page of the live preview. With no frame or path it shows the frame from <canvas-context> (its page, size and frame state), or the entry page. Returns up to four images, top to bottom, starting at the y offset `from`. The text names the page and says whether more of it is below.",
   select_matching: SELECT_MATCHING_DESCRIPTION,
   set_breakpoint_style: setBreakpointStyleDescription,
-  set_frame_session: `Attached apps only. Change the session that signed-in frame states use, with the same code as the frame state menu: user {name, email} sets the mock user; forgetCookies drops the cookies the app set in signed-in frames. Changes no file. ${FRAME_STATES_NOTE}`,
-  set_frame_state: `Attached apps only. Show one canvas frame in a preview state with the same code as the frame state menu: state is default, session, empty, loading, error, a mock state id, or mock with mock {name?, rules: [{path, method?, status?, body?, delayMs?}], signedIn?} to make one. Changes no file. ${FRAME_STATES_NOTE}`,
   set_image: SET_IMAGE_AGENT_DESCRIPTION,
   set_layer_state:
     "Lock or unlock, hide or show, or rename one layer, like the lock, eye and name in the Layers panel. A locked layer ignores canvas clicks. Locks are stored in the studio data folder, not in the source; hide writes display:none and rename writes data-name in the source as one version.",

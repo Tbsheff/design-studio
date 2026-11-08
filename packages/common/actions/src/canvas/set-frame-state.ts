@@ -14,7 +14,13 @@ import {
 
 const setFrameStateCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_frame_state",
+    set: "app",
+    short:
+      "Attached apps only. Show one frame in a preview state (default, session, empty, loading, error, mock). Changes no file.",
+  },
   confirm: "none",
   description:
     "Show one app frame in a preview state: default, session, empty, loading, error, an existing mock state id, or mock to make a new mock state. The frame reloads in the studio. Use get_screenshot with frameId to see it.",

@@ -9,7 +9,13 @@ import { FlowRouteLinksSchema, FlowRouteSchema } from "./schema.js";
 
 const listFlowLinksCanvas = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_route_links",
+    set: "app",
+    short:
+      "Attached apps only. Read only. Links in the source of one app route.",
+  },
   confirm: "none",
   description:
     "List the links found in the source of one app route: kind (link, push, form, redirect), href, the route it goes to, the element to click (selector and text) and file:line. Attached Next.js apps only. The route is a pattern from list_routes or a concrete path.",

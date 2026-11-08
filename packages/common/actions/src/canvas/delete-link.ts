@@ -9,7 +9,12 @@ import { LinkIdSchema, LinkSavedSchema } from "./schema.js";
 
 const deleteLinkCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "remove_link",
+    set: "core",
+    short: "Remove one saved prototype link by id.",
+  },
   confirm: "none",
   description:
     "Remove one saved prototype link. The page and the frames stay. The change is one step in the edit history, so undo brings the link back.",

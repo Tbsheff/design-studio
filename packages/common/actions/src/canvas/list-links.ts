@@ -9,7 +9,13 @@ import { LinkListSchema } from "./schema.js";
 
 const listLinksCanvas = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_links",
+    set: "core",
+    short:
+      "Read only. Prototype links of Play mode: id, frame, selector, target, transition, broken, startFrame.",
+  },
   confirm: "none",
   description:
     "List the saved prototype links of a project: id, frame, selector, target frame (or back), transition, and broken (null, or why the link no longer works). Also returns startFrame and the raw links file. Set check to true to render each page and mark links whose element is gone. Implicit links from page code come from list_implicit_links. Links live in the studio (.studio/links.json), not in the page code.",

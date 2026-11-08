@@ -14,7 +14,13 @@ import {
 
 const createLinkCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "add_link",
+    set: "core",
+    short:
+      "Add a prototype link: clicking a selector on fromFrame goes to toFrame, with a transition.",
+  },
   confirm: "none",
   description:
     "Link an element (CSS selector on the page of fromFrame) to another frame: on click, go to toFrame (action navigate) or open it as a modal or drawer over the current frame, with a transition, a duration and an easing. toFrame back goes back to the frame before. A second link on the same element replaces the first. Each link change is one step in the edit history.",

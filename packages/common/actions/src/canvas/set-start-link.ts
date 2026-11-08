@@ -9,7 +9,12 @@ import { FrameRefSchema, LinkFileSchema } from "./schema.js";
 
 const setStartLinkCanvas = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_start_frame",
+    set: "core",
+    short: "Set the frame where Play mode starts.",
+  },
   confirm: "none",
   description:
     "Set the frame where Play starts in the prototype. Each change is one step in the edit history.",

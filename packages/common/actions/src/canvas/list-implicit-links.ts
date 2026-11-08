@@ -9,7 +9,13 @@ import { ImplicitLinkListSchema } from "./schema.js";
 
 const listImplicitLinksCanvas = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_implicit_links",
+    set: "core",
+    short:
+      "Read only. List links found in page code (a href between pages) that are not saved yet.",
+  },
   confirm: "none",
   description:
     "List the implicit links of a project: links found in the page code from a href, a form action, location.href or Next.js Link between frames. Each has an id that starts with i. Play uses them as they are. Save them with keep_links to change the action or transition.",

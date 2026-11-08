@@ -9,7 +9,13 @@ import { FrameStatesViewSchema } from "./schema.js";
 
 const listFrameStatesCanvas = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "list_frame_states",
+    set: "app",
+    short:
+      "Attached apps only. Read only. Frame preview states, which frame shows which, and the session in use.",
+  },
   confirm: "none",
   description:
     "List the preview states of an attached app (signed in, empty, loading, error and mock states), which frame shows which state, and the session in use.",

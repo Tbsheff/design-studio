@@ -1,10 +1,11 @@
 import type { Starter } from "@design-studio/contracts";
-import { type ReactNode, Suspense } from "react";
+import { Suspense } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { ComposerAlert } from "./home-composer-parts.js";
 import { HomeEmpty } from "./lazy-parts.js";
 
-function LibraryArea({
+const LibraryArea = ({
   isEmpty,
   isBusy,
   listError,
@@ -22,7 +23,7 @@ function LibraryArea({
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
   readonly children: ReactNode;
-}) {
+}): ReactElement => {
   if (isEmpty) {
     return (
       <Suspense fallback={null}>
@@ -44,6 +45,6 @@ function LibraryArea({
       )}
     </>
   );
-}
+};
 
 export { LibraryArea };

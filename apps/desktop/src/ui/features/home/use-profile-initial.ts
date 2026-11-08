@@ -4,26 +4,47 @@ import { json } from "../../api.js";
 
 let profile: Promise<string | null> | null = null;
 
-function initialOf(name: string | null): string | null {
+function toInitial(name: string | null): string | null {
   const first = name?.trim().match(/\p{L}|\p{N}/u)?.[0];
+
   return first ? first.toLocaleUpperCase() : null;
 }
 
-export function useProfileInitial(): string | null {
-  const [initial, setInitial] = useState<string | null>(null);
-  useEffect(() => {
-    profile ??= json<{ readonly name: string | null }>(
+const getProfileInitial = async (): Promise<string | null> => {
+  try {
+    const result = await json<{ readonly name: string | null }>(
       "GET",
       "/api/profile"
-    ).then(
-      (result) => initialOf(result.name),
-      () => null
     );
+
+    return toInitial(result.name);
+  } catch {
+    return null;
+  }
+};
+
+const useProfileInitial = (): string | null => {
+  const [initial, setInitial] = useState<string | null>(null);
+  useEffect(() => {
     let alive = true;
-    void profile.then((value) => alive && setInitial(value));
-    return () => {
+
+    const apply = async (): Promise<void> => {
+      profile ??= getProfileInitial();
+      const value = await profile;
+
+      if (alive) {
+        setInitial(value);
+      }
+    };
+
+    apply();
+
+    return (): void => {
       alive = false;
     };
   }, []);
+
   return initial;
-}
+};
+
+export { useProfileInitial };

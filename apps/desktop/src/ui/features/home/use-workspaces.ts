@@ -1,17 +1,17 @@
 import type { Project } from "@design-studio/contracts";
-import {
-  projectsInFolder,
-  type WorkspaceFolder,
-  type WorkspaceList,
+import { projectsInFolder } from "@design-studio/contracts/folders";
+import type {
+  WorkspaceFolder,
+  WorkspaceList,
 } from "@design-studio/contracts/folders";
 import { useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 
-export function locationFor(
+const getLocation = (
   list: WorkspaceList | null,
   lastLocation: string | null
-): string | null {
+): string | null => {
   if (list === null) {
     return lastLocation;
   }
@@ -22,22 +22,19 @@ export function locationFor(
   )
     ? lastLocation
     : null;
-}
+};
 
-export function defaultFolderOf(
-  list: WorkspaceList | null
-): WorkspaceFolder | null {
-  return list?.folders.find((folder) => folder.default) ?? null;
-}
+const getDefaultFolder = (list: WorkspaceList | null): WorkspaceFolder | null =>
+  list?.folders.find((folder) => folder.default) ?? null;
 
-export function filterByFolder(
+const listProjectsByFolder = (
   projects: Project[] | null,
   list: WorkspaceList | null,
   filterId: string | null
 ): {
   readonly filterFolder: WorkspaceFolder | null;
   readonly shownProjects: Project[] | null;
-} {
+} => {
   const filterFolder =
     list?.folders.find((folder) => folder.id === filterId) ?? null;
 
@@ -48,36 +45,54 @@ export function filterByFolder(
         ? projectsInFolder(projects, filterFolder.path)
         : projects,
   };
-}
+};
 
 type Folders = (folders: WorkspaceFolder[]) => WorkspaceFolder[];
 
-export function useWorkspaces(onError: (message: string | null) => void) {
+const useWorkspaces = (onError: (message: string | null) => void) => {
   const [workspaces, setWorkspaces] = useState<WorkspaceList | null>(null);
 
   useEffect(() => {
-    api
-      .listWorkspaces()
-      .then(setWorkspaces)
-      .catch((err) =>
-        onError(
-          `Could not load your folders: ${errorText(err)}. Reload to try again.`
-        )
-      );
+    let live = true;
+
+    const load = async (): Promise<void> => {
+      try {
+        const list = await api.listWorkspaces();
+
+        if (live) {
+          setWorkspaces(list);
+        }
+      } catch (error: unknown) {
+        if (live) {
+          onError(
+            `Could not load your folders: ${errorText(error)}. Reload to try again.`
+          );
+        }
+      }
+    };
+
+    load();
+
+    return (): void => {
+      live = false;
+    };
   }, [onError]);
 
-  const update = (change: Folders) =>
+  const update = (change: Folders): void =>
     setWorkspaces((list) =>
       list === null ? list : { ...list, folders: change(list.folders) }
     );
 
-  const attempt = async <T>(task: () => Promise<T>, failed: T): Promise<T> => {
+  const attempt = async <Value>(
+    task: () => Promise<Value>,
+    failed: Value
+  ): Promise<Value> => {
     onError(null);
 
     try {
       return await task();
-    } catch (err) {
-      onError(errorText(err));
+    } catch (error) {
+      onError(errorText(error));
 
       return failed;
     }
@@ -121,10 +136,17 @@ export function useWorkspaces(onError: (message: string | null) => void) {
     }, false);
 
   return {
-    workspaces,
     addFolder,
-    renameFolder,
     forgetFolder,
+    renameFolder,
     setDefaultFolder,
+    workspaces,
   };
-}
+};
+
+export {
+  getDefaultFolder as defaultFolderOf,
+  listProjectsByFolder as filterByFolder,
+  getLocation as locationFor,
+  useWorkspaces,
+};

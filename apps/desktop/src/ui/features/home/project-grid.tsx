@@ -1,35 +1,20 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon, LazySelect } from "@design-studio/ui";
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
-import {
-  projectTypeOf,
-  TYPE_LABELS,
-  type ProjectType,
-} from "../../../shared/project-search.js";
+import { TYPE_LABELS, projectTypeOf } from "../../../shared/project-search.js";
 import { api, warmProject } from "../../api.js";
 import { prefetchStudio } from "../../app/screen-preload.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
-import {
-  HOME_SORTS,
-  uiStore,
-  useUi,
-  type HomeSort,
-} from "../../platform/storage.js";
+import { HOME_SORTS, uiStore, useUi } from "../../platform/storage.js";
 import { findPack, keySwatches } from "../design-system/packs.js";
 import { Swatches } from "../inspector/swatches.js";
 import { copy } from "./copy.js";
+import type { AppHealth } from "./deps.js";
+import type { ProjectType } from "./deps.js";
+import type { HomeSort } from "./deps.js";
 import type { KeyedFlag, KeyedUrl, Point, StarProps } from "./home-model.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import {
@@ -41,14 +26,14 @@ import {
 import { listRecentRuns } from "./use-last-runs.js";
 
 const SORT_LABELS: Record<HomeSort, string> = {
-  recent: "Recent",
-  name: "Name",
   created: "Created",
+  name: "Name",
+  recent: "Recent",
 };
 
 const SORT_OPTIONS = HOME_SORTS.map((sort) => ({
-  value: sort,
   label: SORT_LABELS[sort],
+  value: sort,
 }));
 
 const thumbCache = new Map<string, Promise<string>>();
@@ -76,7 +61,7 @@ export function useLastRunFailed(project: Project): boolean {
       () => undefined
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [key, project.id]);
@@ -120,7 +105,7 @@ export function useThumbnail(project: Project): string | null {
       () => undefined
     );
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [key, project.id, thumb]);
@@ -132,22 +117,20 @@ export function useThumbnail(project: Project): string | null {
   return null;
 }
 
-function Star({ isFilled, size = 14 }: StarProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      fill={isFilled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth={1.4}
-      strokeLinejoin="round"
-    >
-      <path d="M8 1.9l1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z" />
-    </svg>
-  );
-}
+const Star = ({ isFilled, size = 14 }: StarProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    aria-hidden="true"
+    fill={isFilled ? "currentColor" : "none"}
+    stroke="currentColor"
+    strokeWidth={1.4}
+    strokeLinejoin="round"
+  >
+    <path d="M8 1.9l1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z" />
+  </svg>
+);
 
 export interface CardActions {
   readonly onOpen: (project: Project) => void;
@@ -180,11 +163,11 @@ interface CardProps {
 }
 
 const TYPE_TONE: Record<ProjectType, string> = {
-  next: "next",
-  vite: "vite",
-  html: "proto",
-  react: "proto",
   "design-system": "dsb",
+  html: "proto",
+  next: "next",
+  react: "proto",
+  vite: "vite",
 };
 
 export function isFolderProject(project: Project): boolean {
@@ -213,20 +196,20 @@ export function projectPlace(project: Project, homeDir: string | null): string {
 }
 
 const HEALTH_TEXT: Record<AppHealth["state"], string> = {
-  ready: "Ready",
-  install: "Needs install",
   building: "Building…",
   failed: "Failed",
+  install: "Needs install",
+  ready: "Ready",
   static: "Static",
 };
 
-export function HealthCell({
+export const HealthCell = ({
   health,
   hasRunFailed = false,
 }: {
   readonly health: AppHealth | null;
   readonly hasRunFailed: boolean;
-}) {
+}): ReactElement | null => {
   const state = health?.state ?? "static";
 
   if (hasRunFailed && state !== "install" && state !== "failed") {
@@ -254,9 +237,9 @@ export function HealthCell({
       {HEALTH_TEXT[state]}
     </span>
   );
-}
+};
 
-function ProjectCard({
+const ProjectCard = ({
   project,
   pack,
   health,
@@ -265,7 +248,7 @@ function ProjectCard({
   isFavorite,
   actions,
   onFocusCard,
-}: CardProps) {
+}: CardProps): ReactElement => {
   const html = project.kind === "html";
   const count = project.directions.length;
   const thumb = useThumbnail(project);
@@ -276,7 +259,7 @@ function ProjectCard({
   const moreRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const closeMenu = (refocus: boolean) => {
+  const closeMenu = (refocus: boolean): void => {
     setMenu(null);
 
     if (refocus) {
@@ -284,7 +267,7 @@ function ProjectCard({
     }
   };
 
-  const pick = (action: CardAction) => {
+  const pick = (action: CardAction): void => {
     closeMenu(action === "duplicate" || action === "reveal");
 
     if (action === "rename") {
@@ -300,7 +283,7 @@ function ProjectCard({
     }
   };
 
-  const onContextMenu = (event: MouseEvent<HTMLDivElement>) => {
+  const onContextMenu = (event: MouseEvent<HTMLDivElement>): void => {
     event.preventDefault();
     const box = cardRef.current?.getBoundingClientRect();
     setMenu(
@@ -310,7 +293,7 @@ function ProjectCard({
     );
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
     const mod = event.metaKey || event.ctrlKey;
 
     if (event.key === "F2") {
@@ -331,9 +314,9 @@ function ProjectCard({
     }
   };
 
-  const finishRename = (name: string | null) => {
+  const finishRename = (name: string | null): void => {
     setRenaming(false);
-    window.requestAnimationFrame(() => openRef.current?.focus());
+    globalThis.requestAnimationFrame(() => openRef.current?.focus());
 
     if (name) {
       void actions.onRename(project, name);
@@ -478,7 +461,7 @@ function ProjectCard({
       )}
     </div>
   );
-}
+};
 
 interface Props {
   readonly projects: Project[] | null;
@@ -495,7 +478,7 @@ interface Props {
   readonly headActions?: ReactNode;
 }
 
-function ProjectListTools({
+const ProjectListTools = ({
   query,
   onQuery,
   searchRef,
@@ -509,10 +492,10 @@ function ProjectListTools({
   readonly onFirst: () => void;
   readonly onOpenFirst: () => void;
   readonly canOpen: boolean;
-}) {
+}): ReactElement => {
   const { homeSort } = useUi();
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "ArrowDown" && canOpen) {
       event.preventDefault();
       onFirst();
@@ -555,9 +538,9 @@ function ProjectListTools({
       />
     </div>
   );
-}
+};
 
-function ViewTools() {
+const ViewTools = (): ReactElement => {
   const { view, favoritesOnly } = useHomeView();
 
   return (
@@ -620,15 +603,15 @@ function ViewTools() {
       </div>
     </>
   );
-}
+};
 
 function useHomeView() {
   const prefs = useHomePrefs();
 
   return {
-    view: prefs.view,
-    favoritesOnly: prefs.isFavoritesOnly,
     favorites: prefs.favorites,
+    favoritesOnly: prefs.isFavoritesOnly,
+    view: prefs.view,
   };
 }
 
@@ -638,7 +621,7 @@ export interface ListFilter {
   readonly empty?: string;
 }
 
-function ProjectListStates({
+const ProjectListStates = ({
   projects,
   error,
   filter,
@@ -652,53 +635,51 @@ function ProjectListStates({
   readonly query: string;
   readonly shownCount: number;
   readonly onClearQuery: () => void;
-}) {
-  return (
-    <>
-      {error && (
-        <div className="alert error" role="alert">
-          {error}
-        </div>
-      )}
-      {projects === null && !error && (
-        <div className="project-grid" aria-busy="true">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="project-card skeleton" />
-          ))}
-        </div>
-      )}
-      {filter && projects?.length === 0 && (
-        <div className="home-empty">
-          <Icon name="folder" size={16} />
-          <span>{filter.empty ?? `No ${filter.label} yet.`}</span>
-          {!filter.empty && (
-            <button type="button" className="link" onClick={filter.onClear}>
-              Show all
-            </button>
-          )}
-        </div>
-      )}
-      {!filter && projects?.length === 0 && (
-        <div className="home-empty">
-          <Icon name="folder" size={16} />
-          <span>
-            No projects yet. Describe a design above, pick a starter, or open a
-            folder that already holds one.
-          </span>
-        </div>
-      )}
-      {projects && projects.length > 0 && shownCount === 0 && (
-        <div className="home-empty" role="status">
-          <Icon name="search" size={16} />
-          <span>No projects match “{query.trim()}”.</span>
-          <button type="button" className="link" onClick={() => onClearQuery()}>
-            Clear search
+}): ReactElement => (
+  <>
+    {error && (
+      <div className="alert error" role="alert">
+        {error}
+      </div>
+    )}
+    {projects === null && !error && (
+      <div className="project-grid" aria-busy="true">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="project-card skeleton" />
+        ))}
+      </div>
+    )}
+    {filter && projects?.length === 0 && (
+      <div className="home-empty">
+        <Icon name="folder" size={16} />
+        <span>{filter.empty ?? `No ${filter.label} yet.`}</span>
+        {!filter.empty && (
+          <button type="button" className="link" onClick={filter.onClear}>
+            Show all
           </button>
-        </div>
-      )}
-    </>
-  );
-}
+        )}
+      </div>
+    )}
+    {!filter && projects?.length === 0 && (
+      <div className="home-empty">
+        <Icon name="folder" size={16} />
+        <span>
+          No projects yet. Describe a design above, pick a starter, or open a
+          folder that already holds one.
+        </span>
+      </div>
+    )}
+    {projects && projects.length > 0 && shownCount === 0 && (
+      <div className="home-empty" role="status">
+        <Icon name="search" size={16} />
+        <span>No projects match “{query.trim()}”.</span>
+        <button type="button" className="link" onClick={() => onClearQuery()}>
+          Clear search
+        </button>
+      </div>
+    )}
+  </>
+);
 
 function useGridFocus(shown: readonly Project[]) {
   const gridRef = useRef<HTMLDivElement>(null);
@@ -708,7 +689,7 @@ function useGridFocus(shown: readonly Project[]) {
     ? activeId
     : (shown[0]?.id ?? null);
 
-  const focusAt = (index: number) => {
+  const focusAt = (index: number): void => {
     const target = shown[index];
 
     if (!target) {
@@ -723,7 +704,7 @@ function useGridFocus(shown: readonly Project[]) {
       ?.focus();
   };
 
-  const onGridKey = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onGridKey = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (
       !(event.target instanceof HTMLElement) ||
       !event.target.classList.contains("project-open")
@@ -746,10 +727,10 @@ function useGridFocus(shown: readonly Project[]) {
     focusAt(next);
   };
 
-  return { gridRef, active, setActiveId, focusAt, onGridKey };
+  return { active, focusAt, gridRef, onGridKey, setActiveId };
 }
 
-export function ProjectGrid({
+export const ProjectGrid = ({
   projects,
   packs,
   health,
@@ -762,7 +743,7 @@ export function ProjectGrid({
   filter = null,
   tabs,
   headActions,
-}: Props) {
+}: Props): ReactElement => {
   const { homeSort } = useUi();
   const { view, favoritesOnly, favorites } = useHomeView();
   const matched = toSortedProjects(
@@ -794,7 +775,7 @@ export function ProjectGrid({
         return;
       }
 
-      window.requestAnimationFrame(() => {
+      globalThis.requestAnimationFrame(() => {
         const buttons =
           gridRef.current?.querySelectorAll<HTMLButtonElement>(".project-open");
 
@@ -861,4 +842,4 @@ export function ProjectGrid({
       )}
     </section>
   );
-}
+};

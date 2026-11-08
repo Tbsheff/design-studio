@@ -3,9 +3,9 @@ import { parseEnvText } from "@design-studio/contracts/app";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
 import { useState } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import type { KeyboardEvent, ReactElement, RefObject } from "react";
 
-import { api, ApiError } from "../../api.js";
+import { ApiError, api } from "../../api.js";
 import { copy } from "./copy.js";
 import type { AppChip, RunMode } from "./home-app-chip.js";
 import { Pop } from "./home-popovers.js";
@@ -16,7 +16,7 @@ import "../../styles/attach-app.css";
 const RETRY_MS = 1000;
 const RETRY_LIMIT = 20;
 
-function attachRequest(chip: AppChip): {
+function getAttachRequest(chip: AppChip): {
   readonly folder: string;
   readonly appDir: string;
   readonly url?: string;
@@ -48,10 +48,10 @@ function attachRequest(chip: AppChip): {
   };
 }
 
-export async function openChip(
+const startChip = async (
   chip: AppChip,
   tokensOnly = false
-): Promise<string> {
+): Promise<string> => {
   const found = chip.inspection;
 
   if (!found?.kind || found.problem) {
@@ -72,10 +72,10 @@ export async function openChip(
     return found.projectId;
   }
 
-  return (await api.attachApp(attachRequest(chip))).project.id;
-}
+  return (await api.attachApp(getAttachRequest(chip))).project.id;
+};
 
-function keepEnter(
+function runKeepEnter(
   event: KeyboardEvent<HTMLInputElement>,
   run?: () => void
 ): void {
@@ -87,10 +87,10 @@ function keepEnter(
   run?.();
 }
 
-const wait = (ms: number) =>
-  new Promise((resolve) => window.setTimeout(resolve, ms));
+const runDelay = (ms: number): Promise<void> =>
+  new Promise<void>((resolve) => globalThis.setTimeout(resolve, ms));
 
-export async function runInProject(
+const runInProject = async (
   projectId: string,
   input: {
     readonly prompt: string;
@@ -98,7 +98,7 @@ export async function runInProject(
     readonly images: File[];
     readonly referenceUrls: string[];
   }
-): Promise<void> {
+): Promise<void> => {
   const project = await api.getProject(projectId);
 
   const main =
@@ -114,9 +114,9 @@ export async function runInProject(
   );
 
   const request = {
-    prompt: input.prompt,
-    mode: "edit" as const,
     level: input.level,
+    mode: "edit" as const,
+    prompt: input.prompt,
     ...(uploaded.length > 0
       ? { attachmentIds: uploaded.map((item) => item.id) }
       : {}),
@@ -130,27 +130,27 @@ export async function runInProject(
       await api.startRun(projectId, main.id, request);
 
       return;
-    } catch (err) {
+    } catch (error) {
       if (
-        !(err instanceof ApiError) ||
-        err.status !== 409 ||
+        !(error instanceof ApiError) ||
+        error.status !== 409 ||
         attempt >= RETRY_LIMIT
       ) {
-        throw err;
+        throw error;
       }
 
-      await wait(RETRY_MS);
+      await runDelay(RETRY_MS);
     }
   }
-}
+};
 
-function Candidates({
+const Candidates = ({
   chip,
   onChange,
 }: {
   readonly chip: AppChip;
   readonly onChange: (patch: Partial<AppChip>) => void;
-}) {
+}): ReactElement | null => {
   const found = chip.inspection;
 
   if (!found || found.candidates.length < 2) {
@@ -162,7 +162,10 @@ function Candidates({
   return (
     <div className="ui-menu-section" role="radiogroup" aria-label={copy.app}>
       <span className="ui-menu-label">
-        {found.name} has {found.candidates.length} Next.js apps
+        {found.name}
+        {copy.has}
+        {found.candidates.length}
+        {copy.nextJsApps}
       </span>
       {found.candidates.map((candidate) => (
         <button
@@ -183,21 +186,21 @@ function Candidates({
       ))}
     </div>
   );
-}
+};
 
-function DevServer({
+const DevServer = ({
   chip,
   onChange,
 }: {
   readonly chip: AppChip;
   readonly onChange: (patch: Partial<AppChip>) => void;
-}) {
+}): ReactElement => {
   const [envOpen, setEnvOpen] = useState(() => chip.env.trim() !== "");
-  const mode = (next: RunMode) => () => onChange({ mode: next });
+  const mode = (next: RunMode) => (): void => onChange({ mode: next });
 
   return (
     <div className="ui-menu-section home-app-server">
-      <span className="ui-menu-label">Dev server</span>
+      <span className="ui-menu-label">{copy.devServer}</span>
       <div className="segmented" role="radiogroup" aria-label={copy.devServer}>
         <button
           type="button"
@@ -206,7 +209,7 @@ function DevServer({
           className={chip.mode === "start" ? "on" : ""}
           onClick={mode("start")}
         >
-          Start next dev
+          {copy.startNextDev}
         </button>
         <button
           type="button"
@@ -215,7 +218,7 @@ function DevServer({
           className={chip.mode === "url" ? "on" : ""}
           onClick={mode("url")}
         >
-          Use my running server
+          {copy.labelUseMyRunningServer}
         </button>
       </div>
       {chip.mode === "url" && (
@@ -226,18 +229,18 @@ function DevServer({
           placeholder={copy.httpLocalhost3000}
           spellCheck={false}
           autoComplete="off"
-          onKeyDown={(e) => keepEnter(e)}
-          onChange={(e) => onChange({ url: e.target.value })}
+          onKeyDown={(eventArg) => runKeepEnter(eventArg)}
+          onChange={(eventNext) => onChange({ url: eventNext.target.value })}
         />
       )}
       <button
         type="button"
         className="ui-menu-item"
         aria-expanded={envOpen}
-        onClick={() => setEnvOpen((v) => !v)}
+        onClick={() => setEnvOpen((isOpen) => !isOpen)}
       >
         <Icon name={envOpen ? "chevronDown" : "chevronRight"} size={14} />
-        <span>Environment for next dev</span>
+        <span>{copy.environmentForNextDev}</span>
       </button>
       {envOpen && (
         <textarea
@@ -247,14 +250,14 @@ function DevServer({
           placeholder={copy.skipEnvValidationTrue}
           spellCheck={false}
           aria-label={copy.environmentForNextDev}
-          onChange={(e) => onChange({ env: e.target.value })}
+          onChange={(eventOther) => onChange({ env: eventOther.target.value })}
         />
       )}
     </div>
   );
-}
+};
 
-export interface AppMenuProps {
+interface AppMenuProps {
   readonly chip: AppChip;
   readonly homeDir: string | null;
   readonly trigger: RefObject<HTMLElement | null>;
@@ -264,7 +267,7 @@ export interface AppMenuProps {
   readonly onTokensOnly: () => void;
 }
 
-export function AppMenu({
+const AppMenu = ({
   chip,
   homeDir,
   trigger,
@@ -272,7 +275,7 @@ export function AppMenu({
   onClose,
   onChange,
   onTokensOnly,
-}: AppMenuProps) {
+}: AppMenuProps): ReactElement => {
   const found = chip.inspection;
   const problem = chip.error ?? found?.problem ?? null;
 
@@ -298,11 +301,13 @@ export function AppMenu({
         )}
         {found?.workspace && (
           <p className="home-app-note">
-            Opens as part of the {found.workspace.name} monorepo.
+            {copy.opensAsPartOfThe}
+            {found.workspace.name}
+            {copy.monorepo}
           </p>
         )}
         {found?.projectId && (
-          <p className="home-app-note">Already a project. Return opens it.</p>
+          <p className="home-app-note">{copy.alreadyAProjectReturnOpens}</p>
         )}
       </div>
       {found?.kind === "next" && !problem && (
@@ -316,17 +321,17 @@ export function AppMenu({
               onClick={onTokensOnly}
             >
               <Icon name="palette" size={14} />
-              <span>Use only its tokens</span>
-              <span className="ui-menu-meta">No dev server</span>
+              <span>{copy.labelUseOnlyItsTokens}</span>
+              <span className="ui-menu-meta">{copy.noDevServer}</span>
             </button>
           </div>
         </>
       )}
     </Pop>
   );
-}
+};
 
-export function FolderPathPop({
+const FolderPathPop = ({
   trigger,
   isClosing,
   onClose,
@@ -336,10 +341,10 @@ export function FolderPathPop({
   readonly isClosing: boolean;
   readonly onClose: Close;
   readonly onPick: (path: string) => void;
-}) {
+}): ReactElement => {
   const [value, setValue] = useState("");
 
-  const submit = () => {
+  const submit = (): void => {
     if (!value.trim()) {
       return;
     }
@@ -358,7 +363,7 @@ export function FolderPathPop({
     >
       <div className="ui-menu-section">
         <label className="ui-menu-label" htmlFor="home-app-path">
-          Folder path
+          {copy.folderPath}
         </label>
         <input
           id="home-app-path"
@@ -367,22 +372,23 @@ export function FolderPathPop({
           placeholder={copy.codeMyApp}
           spellCheck={false}
           autoComplete="off"
-          onKeyDown={(e) => keepEnter(e, submit)}
-          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(eventExtra) => runKeepEnter(eventExtra, submit)}
+          onChange={(eventLast) => setValue(eventLast.target.value)}
         />
-        <p className="home-app-note">
-          The desktop app opens the macOS folder picker here, and you can drop a
-          folder on the window.
-        </p>
+        <p className="home-app-note">{copy.theDesktopAppOpensThe}</p>
         <button
           type="button"
           className="btn small primary"
           disabled={!value.trim()}
           onClick={submit}
         >
-          Add folder
+          {copy.addFolder2}
         </button>
       </div>
     </Pop>
   );
-}
+};
+
+export { AppMenu, FolderPathPop, startChip as openChip, runInProject };
+
+export type { AppMenuProps };

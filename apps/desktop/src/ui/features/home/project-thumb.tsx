@@ -1,31 +1,37 @@
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
-import type {
-  ProjectHit,
-  ProjectType,
-} from "../../../shared/project-search.js";
 import { api } from "../../api.js";
+import type { ProjectHit, ProjectType } from "./deps.js";
 
 import "../../styles/project-nav.css";
 
 const cache = new Map<string, Promise<string>>();
 
 const TYPE_ICON: Record<ProjectType, IconName> = {
-  next: "code",
-  vite: "code",
-  html: "file",
-  react: "react",
   "design-system": "palette",
+  html: "file",
+  next: "code",
+  react: "react",
+  vite: "code",
+};
+
+const getThumbUrl = async (id: string, thumbnail: string): Promise<string> => {
+  const blob = await api.thumbnail(id, thumbnail);
+
+  return URL.createObjectURL(blob);
 };
 
 function useThumb(hit: ProjectHit): string | null {
   const key = hit.thumbnail ? `${hit.id}/${hit.thumbnail}` : null;
+
   const [url, setUrl] = useState<{
     readonly key: string;
     readonly url: string;
   } | null>(null);
+
   useEffect(() => {
     if (!key || !hit.thumbnail) {
       return;
@@ -35,19 +41,25 @@ function useThumb(hit: ProjectHit): string | null {
     let pending = cache.get(key);
 
     if (!pending) {
-      pending = api
-        .thumbnail(hit.id, hit.thumbnail)
-        .then((blob) => URL.createObjectURL(blob));
-      pending.catch(() => cache.delete(key));
+      pending = getThumbUrl(hit.id, hit.thumbnail);
       cache.set(key, pending);
     }
 
-    pending.then(
-      (next) => live && setUrl({ key, url: next }),
-      () => undefined
-    );
+    const apply = async (): Promise<void> => {
+      try {
+        const next = await pending;
 
-    return () => {
+        if (live) {
+          setUrl({ key, url: next });
+        }
+      } catch {
+        cache.delete(key);
+      }
+    };
+
+    apply();
+
+    return (): void => {
       live = false;
     };
   }, [key, hit.id, hit.thumbnail]);
@@ -55,13 +67,13 @@ function useThumb(hit: ProjectHit): string | null {
   return url && url.key === key ? url.url : null;
 }
 
-export function ProjectThumb({
+const ProjectThumb = ({
   hit,
   className,
 }: {
   readonly hit: ProjectHit;
   readonly className?: string;
-}) {
+}): ReactElement => {
   const url = useThumb(hit);
 
   return (
@@ -77,23 +89,21 @@ export function ProjectThumb({
       )}
     </span>
   );
-}
+};
 
-export function TypeBadge({ hit }: { readonly hit: ProjectHit }) {
-  return (
-    <span className="badge pnav-badge" data-type={hit.type}>
-      {hit.typeLabel}
-    </span>
-  );
-}
+const TypeBadge = ({ hit }: { readonly hit: ProjectHit }): ReactElement => (
+  <span className="badge pnav-badge" data-type={hit.type}>
+    {hit.typeLabel}
+  </span>
+);
 
-export function HealthDot({
+const HealthDot = ({
   hit,
   className,
 }: {
   readonly hit: ProjectHit;
   readonly className?: string;
-}) {
+}): ReactElement | null => {
   if (!hit.health) {
     return null;
   }
@@ -107,4 +117,6 @@ export function HealthDot({
       data-tip={hit.health.note}
     />
   );
-}
+};
+
+export { HealthDot, ProjectThumb, TypeBadge };

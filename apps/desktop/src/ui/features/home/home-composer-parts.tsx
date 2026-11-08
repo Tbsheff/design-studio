@@ -1,21 +1,22 @@
 import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useRef, useState } from "react";
-import type { ClipboardEvent, DragEvent, FormEvent, ReactNode } from "react";
+import type {
+  ClipboardEvent,
+  DragEvent,
+  FormEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 
 import { copy } from "./copy.js";
 
-export const IMAGE_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/gif",
-  "image/webp",
-];
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 
-export const MAX_IMAGES = 4;
-export const MAX_REFERENCES = 3;
-export const MAX_IMAGE_BYTES = Math.floor(3.75 * 1024 * 1024);
+const MAX_IMAGES = 4;
+const MAX_REFERENCES = 3;
+const MAX_IMAGE_BYTES = Math.floor(3.75 * 1024 * 1024);
 
-export function imageProblem(file: File): string | null {
+const getImageProblem = (file: File): string | null => {
   if (!IMAGE_TYPES.includes(file.type)) {
     return `${file.name} is not a PNG, JPEG, GIF or WebP image.`;
   }
@@ -25,42 +26,40 @@ export function imageProblem(file: File): string | null {
   }
 
   return null;
-}
+};
 
-export function ComposerAlert({
+const ComposerAlert = ({
   children,
   onClose,
 }: {
   readonly children: ReactNode;
   readonly onClose: () => void;
-}) {
-  return (
-    <div className="alert error composer-alert" role="alert">
-      <span className="composer-alert-text">{children}</span>
-      <button
-        type="button"
-        className="icon-btn composer-alert-close"
-        aria-label={copy.dismiss}
-        onClick={onClose}
-      >
-        <Icon name="close" size={12} />
-      </button>
-    </div>
-  );
-}
+}): ReactElement => (
+  <div className="alert error composer-alert" role="alert">
+    <span className="composer-alert-text">{children}</span>
+    <button
+      type="button"
+      className="icon-btn composer-alert-close"
+      aria-label={copy.dismiss}
+      onClick={onClose}
+    >
+      <Icon name="close" size={12} />
+    </button>
+  </div>
+);
 
-export interface ImageDraft {
+interface ImageDraft {
   readonly id: string;
   readonly file: File;
   readonly url: string;
 }
 
-export interface ReferenceDraft {
+interface ReferenceDraft {
   readonly url: string;
   readonly host: string;
 }
 
-export function soleUrl(text: string): ReferenceDraft | null {
+const getSoleUrl = (text: string): ReferenceDraft | null => {
   const trimmed = text.trim();
 
   if (!/^https?:\/\/\S+$/iu.test(trimmed)) {
@@ -70,17 +69,16 @@ export function soleUrl(text: string): ReferenceDraft | null {
   try {
     const url = new URL(trimmed);
 
-    return { url: url.href, host: url.host.replace(/^www\./u, "") };
+    return { host: url.host.replace(/^www\./u, ""), url: url.href };
   } catch {
     return null;
   }
-}
+};
 
-export function imageFiles(list: FileList | File[] | null | undefined): File[] {
-  return [...(list ?? [])].filter((file) => IMAGE_TYPES.includes(file.type));
-}
+const listImageFiles = (list: FileList | File[] | null | undefined): File[] =>
+  [...(list ?? [])].filter((file) => IMAGE_TYPES.includes(file.type));
 
-export function ComposerChips({
+const ComposerChips = ({
   lead,
   images,
   references,
@@ -92,7 +90,7 @@ export function ComposerChips({
   readonly references: ReferenceDraft[];
   readonly onRemoveImage: (id: string) => void;
   readonly onRemoveReference: (url: string) => void;
-}) {
+}): ReactElement | null => {
   if (!lead && images.length === 0 && references.length === 0) {
     return null;
   }
@@ -125,7 +123,7 @@ export function ComposerChips({
           data-tip={`Use as reference: ${reference.url}`}
         >
           <Icon name="globe" size={14} />
-          <span className="home-chip-label">Use as reference</span>
+          <span className="home-chip-label">{copy.labelUseAsReference}</span>
           <span className="truncate home-chip-host">{reference.host}</span>
           <button
             type="button"
@@ -139,12 +137,12 @@ export function ComposerChips({
       ))}
     </ul>
   );
-}
+};
 
-export function useComposerAttachments(
+const useComposerAttachments = (
   setFormError: (message: string | null) => void,
   onFolder?: (data: DataTransfer) => boolean
-) {
+) => {
   const [images, setImages] = useState<ImageDraft[]>([]);
   const [references, setReferences] = useState<ReferenceDraft[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -152,25 +150,25 @@ export function useComposerAttachments(
   const imagesRef = useRef(images);
   imagesRef.current = images;
   useEffect(
-    () => () =>
+    () => (): void =>
       imagesRef.current.forEach((image) => URL.revokeObjectURL(image.url)),
     []
   );
 
-  const addImages = (picked: File[]) => {
+  const addImages = (picked: File[]): void => {
     if (picked.length === 0) {
       return;
     }
 
     const problems = picked
-      .map(imageProblem)
+      .map(getImageProblem)
       .filter((problem): problem is string => problem !== null);
 
     if (problems.length > 0) {
       setFormError(problems.join(" "));
     }
 
-    const files = picked.filter((file) => imageProblem(file) === null);
+    const files = picked.filter((file) => getImageProblem(file) === null);
 
     if (files.length === 0) {
       return;
@@ -186,15 +184,15 @@ export function useComposerAttachments(
       return [
         ...current,
         ...files.slice(0, room).map((file) => ({
-          id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`,
           file,
+          id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`,
           url: URL.createObjectURL(file),
         })),
       ];
     });
   };
 
-  const addReference = (reference: ReferenceDraft) => {
+  const addReference = (reference: ReferenceDraft): void => {
     setReferences((current) => {
       if (current.some((item) => item.url === reference.url)) {
         return current;
@@ -210,7 +208,7 @@ export function useComposerAttachments(
     });
   };
 
-  const removeImage = (id: string) =>
+  const removeImage = (id: string): void =>
     setImages((current) => {
       const gone = current.find((image) => image.id === id);
 
@@ -221,8 +219,8 @@ export function useComposerAttachments(
       return current.filter((image) => image.id !== id);
     });
 
-  const onPromptPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
-    const files = imageFiles(event.clipboardData.files);
+  const onPromptPaste = (event: ClipboardEvent<HTMLTextAreaElement>): void => {
+    const files = listImageFiles(event.clipboardData.files);
 
     if (files.length > 0) {
       event.preventDefault();
@@ -231,7 +229,7 @@ export function useComposerAttachments(
       return;
     }
 
-    const reference = soleUrl(event.clipboardData.getData("text/plain"));
+    const reference = getSoleUrl(event.clipboardData.getData("text/plain"));
 
     if (reference) {
       event.preventDefault();
@@ -239,7 +237,7 @@ export function useComposerAttachments(
     }
   };
 
-  const onDragOver = (event: DragEvent<HTMLFormElement>) => {
+  const onDragOver = (event: DragEvent<HTMLFormElement>): void => {
     if (
       ![...event.dataTransfer.types].some(
         (type) => type === "Files" || type === "text/uri-list"
@@ -256,7 +254,7 @@ export function useComposerAttachments(
     }
   };
 
-  const onDrop = (event: DragEvent<HTMLFormElement>) => {
+  const onDrop = (event: DragEvent<HTMLFormElement>): void => {
     event.preventDefault();
     setDragging(false);
 
@@ -264,7 +262,7 @@ export function useComposerAttachments(
       return;
     }
 
-    const files = Array.from(event.dataTransfer.files);
+    const files = [...event.dataTransfer.files];
 
     if (files.length > 0) {
       addImages(files);
@@ -272,7 +270,7 @@ export function useComposerAttachments(
       return;
     }
 
-    const reference = soleUrl(
+    const reference = getSoleUrl(
       event.dataTransfer.getData("text/uri-list").split("\n")[0] ?? ""
     );
 
@@ -281,28 +279,43 @@ export function useComposerAttachments(
     }
   };
 
-  const removeReference = (url: string) =>
+  const removeReference = (url: string): void =>
     setReferences((current) => current.filter((item) => item.url !== url));
 
   const dropHandlers = {
-    onDragOver,
-    onDrop,
     onDragLeave: (event: DragEvent<HTMLFormElement>) => {
       if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
         setDragging(false);
       }
     },
+    onDragOver,
+    onDrop,
   };
 
   return {
-    images,
-    references,
-    dragging,
-    fileRef,
     addImages,
+    dragging,
+    dropHandlers,
+    fileRef,
+    images,
+    onPromptPaste,
+    references,
     removeImage,
     removeReference,
-    onPromptPaste,
-    dropHandlers,
   };
-}
+};
+
+export {
+  ComposerAlert,
+  ComposerChips,
+  IMAGE_TYPES,
+  MAX_IMAGES,
+  MAX_IMAGE_BYTES,
+  MAX_REFERENCES,
+  listImageFiles as imageFiles,
+  getImageProblem as imageProblem,
+  getSoleUrl as soleUrl,
+  useComposerAttachments,
+};
+
+export type { ImageDraft, ReferenceDraft };

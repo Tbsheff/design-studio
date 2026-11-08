@@ -1,49 +1,55 @@
 import type { Starter } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
 import { copy } from "./copy.js";
 
 const STARTER_IMAGES: Record<string, string> = {
-  landing: new URL("../assets/starters/landing.png", import.meta.url).href,
   dashboard: new URL("../assets/starters/dashboard.png", import.meta.url).href,
+  deck: new URL("../assets/starters/deck.png", import.meta.url).href,
+  docs: new URL("../assets/starters/docs.png", import.meta.url).href,
+  form: new URL("../assets/starters/form.png", import.meta.url).href,
+  landing: new URL("../assets/starters/landing.png", import.meta.url).href,
   "mobile-app": new URL("../assets/starters/mobile-app.png", import.meta.url)
     .href,
-  deck: new URL("../assets/starters/deck.png", import.meta.url).href,
-  form: new URL("../assets/starters/form.png", import.meta.url).href,
-  docs: new URL("../assets/starters/docs.png", import.meta.url).href,
 };
 
-export function StarterGallery({
+const StarterGallery = ({
   isDisabled,
   onPick,
 }: {
   readonly isDisabled: boolean;
   readonly onPick: (starter: Starter) => Promise<void>;
-}) {
+}): ReactElement | null => {
   const [starters, setStarters] = useState<Starter[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    api
-      .starters()
-      .then(setStarters)
-      .catch(() => setStarters([]));
+    const load = async (): Promise<void> => {
+      try {
+        setStarters(await api.starters());
+      } catch {
+        setStarters([]);
+      }
+    };
+
+    load();
   }, []);
 
   if (starters !== null && starters.length === 0) {
     return null;
   }
 
-  const pick = async (starter: Starter) => {
+  const pick = async (starter: Starter): Promise<void> => {
     setBusy(starter.id);
     setError(null);
 
     try {
       await onPick(starter);
-    } catch (err) {
-      setError(`Could not open ${starter.name}: ${errorText(err)}`);
+    } catch (failure) {
+      setError(`Could not open ${starter.name}: ${errorText(failure)}`);
     } finally {
       setBusy(null);
     }
@@ -56,8 +62,8 @@ export function StarterGallery({
       aria-labelledby="starters-heading"
     >
       <div className="home-list-head">
-        <h2 id="starters-heading">Starters</h2>
-        <span className="home-section-hint">Opens at once, no agent run</span>
+        <h2 id="starters-heading">{copy.starters}</h2>
+        <span className="home-section-hint">{copy.opensAtOnceNoAgent}</span>
       </div>
       <ul className="starter-grid">
         {(starters ?? []).map((starter) => (
@@ -68,7 +74,7 @@ export function StarterGallery({
               data-starter-id={starter.id}
               disabled={isDisabled || busy !== null}
               aria-busy={busy === starter.id}
-              onClick={() => void pick(starter)}
+              onClick={() => pick(starter)}
             >
               <span className="starter-thumb">
                 <img
@@ -102,26 +108,26 @@ export function StarterGallery({
       )}
     </section>
   );
-}
+};
 
-export function FirstRunPanel({
+const FirstRunPanel = ({
   onClose,
   onSample,
 }: {
   readonly onClose: () => void;
   readonly onSample: () => Promise<void>;
-}) {
+}): ReactElement => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sample = async () => {
+  const sample = async (): Promise<void> => {
     setBusy(true);
     setError(null);
 
     try {
       await onSample();
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
       setBusy(false);
     }
   };
@@ -130,8 +136,8 @@ export function FirstRunPanel({
     <section className="ui-notice info first-run" aria-label={copy.firstSteps}>
       <Icon name="sparkle" size={16} />
       <p className="first-run-text">
-        <strong>New here?</strong> Describe a page or pick a template. Then use
-        Select to edit any part.
+        <strong>{copy.newHere}</strong>
+        {copy.describeAPageOrPick}
         {error && (
           <span className="first-run-error" role="alert">
             {" "}
@@ -143,7 +149,7 @@ export function FirstRunPanel({
         type="button"
         className="btn small first-run-sample"
         disabled={busy}
-        onClick={() => void sample()}
+        onClick={() => sample()}
       >
         {busy ? "Opening…" : "Open the sample"}
       </button>
@@ -159,4 +165,6 @@ export function FirstRunPanel({
       </button>
     </section>
   );
-}
+};
+
+export { FirstRunPanel, StarterGallery };

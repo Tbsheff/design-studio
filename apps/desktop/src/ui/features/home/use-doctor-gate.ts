@@ -6,13 +6,19 @@ function useDoctorGate() {
   const [gate, setGate] = useState<DoctorGate | null>(null);
   const close = useCallback(() => setGate(null), []);
 
-  const check = async () => {
+  const check = async (): Promise<void> => {
     if (!gate) {
       return;
     }
 
     setGate({ ...gate, isChecking: true });
-    const fixed = await gate.check().catch(() => false);
+    let fixed = false;
+
+    try {
+      fixed = await gate.check();
+    } catch {
+      fixed = false;
+    }
 
     if (fixed) {
       setGate(null);
@@ -23,11 +29,11 @@ function useDoctorGate() {
   };
 
   return {
+    check,
+    close,
     gate,
     open: (next: Omit<DoctorGate, "isChecking">) =>
       setGate({ ...next, isChecking: false }),
-    close,
-    check,
   };
 }
 

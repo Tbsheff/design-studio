@@ -1,15 +1,15 @@
 import { Icon } from "@design-studio/ui";
-import { lazy, Suspense, useState } from "react";
-import type { ChangeEvent } from "react";
+import { Suspense, lazy, useState } from "react";
+import type { ChangeEvent, ReactElement } from "react";
 
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { copy } from "./copy.js";
 
-const loadFields = () => import("../../app/shell/settings-fields.js");
+const importFields = () => import("../../app/shell/settings-fields.js");
 
-const SettingsFields = lazy(() =>
-  loadFields().then((m) => ({ default: m.SettingsFields }))
-);
+const SettingsFields = lazy(async () => ({
+  default: (await importFields()).SettingsFields,
+}));
 
 interface Props {
   readonly draft: SettingsDraft;
@@ -20,35 +20,40 @@ interface Props {
   readonly isInitiallyOpen: boolean;
 }
 
-export function NewProjectAdvanced(props: Props) {
+const NewProjectAdvanced = (props: Props): ReactElement => {
   const [open, setOpen] = useState(props.isInitiallyOpen === true);
 
-  const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  const pickFile = (changeEvent: ChangeEvent<HTMLInputElement>): void => {
+    const file = changeEvent.target.files?.[0];
+    changeEvent.target.value = "";
 
     if (!file) {
       return;
     }
 
-    file
-      .text()
-      .then(props.onDesignMd)
-      .catch(() => props.onError(`Could not read ${file.name}.`));
+    const read = async (): Promise<void> => {
+      try {
+        props.onDesignMd(await file.text());
+      } catch {
+        props.onError(`Could not read ${file.name}.`);
+      }
+    };
+
+    read();
   };
 
   return (
     <details
       className="advanced"
       open={open}
-      onToggle={(e) => setOpen(e.currentTarget.open)}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary
-        onPointerEnter={() => void loadFields()}
-        onFocus={() => void loadFields()}
+        onPointerEnter={() => importFields()}
+        onFocus={() => importFields()}
       >
         <Icon name="chevronRight" size={14} />
-        Advanced
+        {copy.advanced}
       </summary>
       <div className="advanced-body">
         {open && (
@@ -57,22 +62,20 @@ export function NewProjectAdvanced(props: Props) {
           </Suspense>
         )}
         <label className="field">
-          <span>
-            DESIGN.md (optional). The agent reads it before the first run.
-          </span>
+          <span>{copy.designMdOptionalTheAgent}</span>
           <textarea
             aria-label={copy.designMd}
             className="mono"
             rows={5}
             value={props.designMd}
-            onChange={(e) => props.onDesignMd(e.target.value)}
+            onChange={(eventArg) => props.onDesignMd(eventArg.target.value)}
             placeholder={copy.brandPrimaryColor0b6e4fHeadings}
             spellCheck={false}
           />
         </label>
         <label className="btn small has-icon file-pick">
           <Icon name="file" size={14} />
-          Load DESIGN.md from a file
+          {copy.loadDesignMdFromA}
           <input
             type="file"
             accept=".md,text/markdown,text/plain"
@@ -83,4 +86,6 @@ export function NewProjectAdvanced(props: Props) {
       </div>
     </details>
   );
-}
+};
+
+export { NewProjectAdvanced };

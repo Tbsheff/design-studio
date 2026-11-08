@@ -1,20 +1,17 @@
 import type { PackSummary, ProjectKind } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
-import {
-  type RefObject,
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { uiStore } from "../../platform/storage.js";
 import { usePresence } from "../chat/use-presence.js";
-import { type PacksState, pickable } from "../design-system/packs.js";
-import { AppSlot, type AppSlotProps } from "./app-slot.js";
+import { pickable } from "../design-system/packs.js";
+import type { PacksState } from "../design-system/packs.js";
+import { AppSlot } from "./app-slot.js";
+import type { AppSlotProps } from "./app-slot.js";
 import { copy } from "./copy.js";
-import { type Busy, LEVEL_LABEL, type Pop } from "./home-model.js";
+import { LEVEL_LABEL } from "./home-model.js";
+import type { Busy, Pop } from "./home-model.js";
 import type { ModelSettings, PlusMenuActions } from "./home-popovers.js";
 import {
   FolderPathPop,
@@ -48,7 +45,7 @@ interface ComposerBarProps {
   };
 }
 
-function ComposerBar({
+const ComposerBar = ({
   fileRef,
   onFiles,
   plusActions,
@@ -63,7 +60,7 @@ function ComposerBar({
   busy,
   sendDisabled,
   app,
-}: ComposerBarProps) {
+}: ComposerBarProps): ReactElement => {
   const [pop, setPop] = useState<Pop>(null);
   const shownPop = usePresence(pop);
   const plusRef = useRef<HTMLButtonElement>(null);
@@ -75,11 +72,11 @@ function ComposerBar({
   const closePop = useCallback(
     (refocus: boolean) => {
       const trigger = {
-        plus: plusRef,
-        pack: packRef,
+        folder: folderRef,
         level: levelRef,
         model: modelRef,
-        folder: folderRef,
+        pack: packRef,
+        plus: plusRef,
       }[pop ?? "model"];
 
       setPop(null);
@@ -91,7 +88,7 @@ function ComposerBar({
     [pop]
   );
 
-  const togglePop = (next: Exclude<Pop, null>) =>
+  const togglePop = (next: Exclude<Pop, null>): void =>
     setPop((current) => (current === next ? null : next));
 
   useEffect(
@@ -102,7 +99,7 @@ function ComposerBar({
     [app.isFolderPopOpen]
   );
 
-  const closeFolder = (refocus: boolean) => {
+  const closeFolder = (refocus: boolean): void => {
     closePop(refocus);
     app.onFolderClose();
   };
@@ -116,7 +113,7 @@ function ComposerBar({
         multiple
         hidden
         onChange={(event) => {
-          onFiles(Array.from(event.target.files ?? []));
+          onFiles([...(event.target.files ?? [])]);
           event.target.value = "";
         }}
       />
@@ -130,7 +127,7 @@ function ComposerBar({
           aria-expanded={pop === "plus"}
           data-tip={copy.attachImportAndOptions}
           data-tip-align="start"
-          onPointerEnter={() => void loadPops()}
+          onPointerEnter={() => loadPops()}
           onClick={() => togglePop("plus")}
         >
           <Icon name="plus" size={16} />
@@ -202,7 +199,7 @@ function ComposerBar({
               value={pack?.id ?? null}
               onChange={(id) => uiStore.set({ lastPackId: id })}
               onNew={() =>
-                uiStore.set({ screen: "new-design-system", returnTo: "home" })
+                uiStore.set({ returnTo: "home", screen: "new-design-system" })
               }
             />
           </Suspense>
@@ -259,7 +256,7 @@ function ComposerBar({
       />
     </div>
   );
-}
+};
 
 export { ComposerBar };
 

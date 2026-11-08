@@ -1,13 +1,14 @@
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 
-import type { FolderInspection } from "../../../shared/open-app.js";
 import { api, errorText } from "../../api.js";
 import { desktopBridge } from "../../platform/desktop.js";
+import type { FolderInspection } from "./deps.js";
 
-export type RunMode = "start" | "url";
+type RunMode = "start" | "url";
 
-export interface AppChip {
+interface AppChip {
   readonly path: string;
   readonly inspection: FolderInspection | null;
   readonly isChecking: boolean;
@@ -20,23 +21,23 @@ export interface AppChip {
 }
 
 const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
-  next: "Next.js",
-  vite: "Vite",
   html: "HTML",
+  next: "Next.js",
   tokens: "Tokens",
+  vite: "Vite",
 };
 
-export function chipProblem(chip: AppChip | null): string | null {
+const getChipProblem = (chip: AppChip | null): string | null => {
   if (!chip || chip.isChecking) {
     return null;
   }
 
   return chip.error ?? chip.inspection?.problem ?? null;
-}
+};
 
-export function chipBlocker(
+const getChipBlocker = (
   chip: AppChip | null
-): { readonly command: string; readonly dir: string } | null {
+): { readonly command: string; readonly dir: string } | null => {
   const found = chip?.inspection;
 
   if (
@@ -53,22 +54,19 @@ export function chipBlocker(
   }
 
   return found.install;
-}
+};
 
-export function chipName(chip: AppChip): string {
-  return (
-    chip.inspection?.name ??
-    chip.path.split("/").filter(Boolean).pop() ??
-    chip.path
-  );
-}
+const getChipName = (chip: AppChip): string =>
+  chip.inspection?.name ??
+  chip.path.split("/").filter(Boolean).pop() ??
+  chip.path;
 
-function chipLabel(chip: AppChip): string {
+function getChipLabel(chip: AppChip): string {
   if (chip.isChecking && !chip.inspection) {
     return "Checking…";
   }
 
-  if (chipProblem(chip)) {
+  if (getChipProblem(chip)) {
     return "Not an app folder";
   }
 
@@ -89,10 +87,10 @@ interface DropBridge {
   readonly pathForFile?: (file: File) => string;
 }
 
-export function droppedFolder(
+const getDroppedFolder = (
   data: DataTransfer
-): { readonly path: string } | { readonly unsupported: true } | null {
-  for (const item of Array.from(data.items)) {
+): { readonly path: string } | { readonly unsupported: true } | null => {
+  for (const item of data.items) {
     if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
       continue;
     }
@@ -107,23 +105,23 @@ export function droppedFolder(
   }
 
   return null;
-}
+};
 
-export function useAppChip() {
+const useAppChip = () => {
   const [chip, setChip] = useState<AppChip | null>(null);
 
   const set = useCallback(
     (path: string) =>
       setChip({
-        path,
+        appDir: null,
+        env: "",
+        error: null,
         inspection: null,
         isChecking: true,
-        error: null,
-        appDir: null,
         mode: "start",
-        url: "",
-        env: "",
         nonce: 0,
+        path,
+        url: "",
       }),
     []
   );
@@ -148,36 +146,40 @@ export function useAppChip() {
     setChip((current) =>
       current ? { ...current, checking: true, error: null } : current
     );
-    api
-      .inspectFolder(path, appDir ?? undefined)
-      .then(
-        (inspection) =>
-          live &&
-          setChip((current) =>
-            current?.path === path
-              ? { ...current, inspection, checking: false }
-              : current
-          )
-      )
-      .catch(
-        (err: unknown) =>
-          live &&
-          setChip((current) =>
-            current?.path === path
-              ? { ...current, error: errorText(err), checking: false }
-              : current
-          )
-      );
 
-    return () => {
+    const inspect = async (): Promise<void> => {
+      try {
+        const inspection = await api.inspectFolder(path, appDir ?? undefined);
+
+        if (live) {
+          setChip((current) =>
+            current?.path === path
+              ? { ...current, checking: false, inspection }
+              : current
+          );
+        }
+      } catch (error: unknown) {
+        if (live) {
+          setChip((current) =>
+            current?.path === path
+              ? { ...current, checking: false, error: errorText(error) }
+              : current
+          );
+        }
+      }
+    };
+
+    inspect();
+
+    return (): void => {
       live = false;
     };
   }, [path, appDir, nonce]);
 
-  return { chip, set, clear, update };
-}
+  return { chip, clear, set, update };
+};
 
-export function AppChipView({
+const AppChipView = ({
   chip,
   isMenuOpen,
   onMenu,
@@ -187,9 +189,9 @@ export function AppChipView({
   readonly isMenuOpen: boolean;
   readonly onMenu: () => void;
   readonly onRemove: () => void;
-}) {
-  const name = chipName(chip);
-  const bad = chipProblem(chip) !== null || chipBlocker(chip) !== null;
+}): ReactElement => {
+  const name = getChipName(chip);
+  const bad = getChipProblem(chip) !== null || getChipBlocker(chip) !== null;
 
   return (
     <li className={`home-chip app${bad ? " warn" : ""}`}>
@@ -207,7 +209,7 @@ export function AppChipView({
           <Icon name="code" size={12} />
         </span>
         <b className="truncate">{name}</b>
-        <span className="home-chip-host truncate">{chipLabel(chip)}</span>
+        <span className="home-chip-host truncate">{getChipLabel(chip)}</span>
         <Icon name="chevronDown" size={12} />
       </button>
       <button
@@ -220,4 +222,15 @@ export function AppChipView({
       </button>
     </li>
   );
-}
+};
+
+export {
+  AppChipView,
+  getChipBlocker as chipBlocker,
+  getChipName as chipName,
+  getChipProblem as chipProblem,
+  getDroppedFolder as droppedFolder,
+  useAppChip,
+};
+
+export type { AppChip, RunMode };

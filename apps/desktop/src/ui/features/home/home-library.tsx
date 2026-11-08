@@ -1,11 +1,13 @@
 import type { Project } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
 import { formatRelative } from "../../domain/format.js";
 import { copy } from "./copy.js";
-import { homePrefs, type HomeFilter } from "./home-prefs-model.js";
+import type { AppHealth } from "./deps.js";
+import { homePrefs } from "./home-prefs-model.js";
+import type { HomeFilter } from "./home-prefs-model.js";
 import { isFolderProject, projectBadge, useThumbnail } from "./project-grid.js";
 import { listRecentRuns } from "./use-last-runs.js";
 
@@ -22,12 +24,12 @@ const FILTERS: { readonly id: HomeFilter; readonly label: string }[] = [
 
 export const FILTER_EMPTY: Record<HomeFilter, string> = {
   all: "projects",
-  prototypes: "prototypes",
   apps: "apps",
+  prototypes: "prototypes",
   systems: "design systems",
 };
 
-function filterTest(filter: HomeFilter): (project: Project) => boolean {
+function isFilterMatch(filter: HomeFilter): (project: Project) => boolean {
   if (filter === "systems") {
     return (project) => Boolean(project.designSystemFor);
   }
@@ -41,7 +43,7 @@ function filterTest(filter: HomeFilter): (project: Project) => boolean {
     isFolderProject(project) === (filter === "apps");
 }
 
-export function filterLibrary(
+export function listFilteredLibrary(
   projects: Project[] | null,
   filter: HomeFilter
 ): Project[] | null {
@@ -49,31 +51,33 @@ export function filterLibrary(
     return projects;
   }
 
-  const test = filterTest(filter);
+  const test = isFilterMatch(filter);
 
   return projects.filter(
     (project) => !project.designSystemDeleted && test(project)
   );
 }
 
-export function FilterChips({ filter }: { readonly filter: HomeFilter }) {
-  return (
-    <div className="home-seg" role="tablist" aria-label={copy.show}>
-      {FILTERS.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          role="tab"
-          aria-selected={filter === item.id}
-          className={filter === item.id ? "on" : ""}
-          onClick={() => homePrefs.set({ filter: item.id })}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+export const FilterChips = ({
+  filter,
+}: {
+  readonly filter: HomeFilter;
+}): ReactElement => (
+  <div className="home-seg" role="tablist" aria-label={copy.show}>
+    {FILTERS.map((item) => (
+      <button
+        key={item.id}
+        type="button"
+        role="tab"
+        aria-selected={filter === item.id}
+        className={filter === item.id ? "on" : ""}
+        onClick={() => homePrefs.set({ filter: item.id })}
+      >
+        {item.label}
+      </button>
+    ))}
+  </div>
+);
 
 interface LastRun {
   readonly prompt: string;
@@ -85,21 +89,32 @@ function useLastRun(project: Project): LastRun | null {
   const [last, setLast] = useState<LastRun | null>(null);
   useEffect(() => {
     let live = true;
-    listRecentRuns(project.id, 5)
-      .then((items) => {
-        const run = [...items].sort((a, b) => b.startedAt - a.startedAt)[0];
+
+    const load = async (): Promise<void> => {
+      try {
+        const items = await listRecentRuns(project.id, 5);
+
+        const run = [...items].sort(
+          (first, second) => second.startedAt - first.startedAt
+        )[0];
 
         if (live && run) {
           setLast({
+            at: run.startedAt,
             prompt: run.request.prompt,
             route: run.request.canvas?.path ?? null,
-            at: run.startedAt,
           });
         }
-      })
-      .catch(() => undefined);
+      } catch {
+        if (live) {
+          setLast((previous) => previous);
+        }
+      }
+    };
 
-    return () => {
+    load();
+
+    return (): void => {
       live = false;
     };
   }, [project.id]);
@@ -107,7 +122,7 @@ function useLastRun(project: Project): LastRun | null {
   return last;
 }
 
-function routeLine(project: Project, last: LastRun | null): string {
+function getRouteLine(project: Project, last: LastRun | null): string {
   const dir =
     project.app?.appDir && project.app.appDir !== "."
       ? project.app.appDir
@@ -119,13 +134,13 @@ function routeLine(project: Project, last: LastRun | null): string {
 }
 
 const SERVER_TEXT: Partial<Record<AppHealth["state"], string>> = {
-  ready: "Dev server ready",
   building: "Dev server starting…",
-  install: "Needs install",
   failed: "Dev server failed",
+  install: "Needs install",
+  ready: "Dev server ready",
 };
 
-export function ContinueCard({
+export const ContinueCard = ({
   project,
   health,
   onOpen,
@@ -133,11 +148,11 @@ export function ContinueCard({
   readonly project: Project;
   readonly health: AppHealth | null;
   readonly onOpen: (project: Project) => void;
-}) {
+}): ReactElement => {
   const thumb = useThumbnail(project);
   const last = useLastRun(project);
   const badge = projectBadge(project);
-  const line = routeLine(project, last);
+  const line = getRouteLine(project, last);
   const server = project.app && health ? SERVER_TEXT[health.state] : undefined;
 
   return (
@@ -156,7 +171,7 @@ export function ContinueCard({
         )}
       </button>
       <div className="home-continue-body">
-        <span className="home-continue-kicker">Continue</span>
+        <span className="home-continue-kicker">{copy.continue}</span>
         <div className="home-continue-title">
           <b className="truncate">{project.name}</b>
           <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
@@ -175,7 +190,7 @@ export function ContinueCard({
             className="btn primary"
             onClick={() => onOpen(project)}
           >
-            Resume
+            {copy.resume}
             <Icon name="arrowRight" size={14} />
           </button>
           {server && health && (
@@ -188,4 +203,4 @@ export function ContinueCard({
       </div>
     </section>
   );
-}
+};

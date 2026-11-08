@@ -1,13 +1,9 @@
 import { Icon } from "@design-studio/ui";
-import type { RefObject } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import { copy } from "./copy.js";
-import {
-  type AppChip,
-  chipBlocker,
-  chipName,
-  chipProblem,
-} from "./home-app-chip.js";
+import { chipBlocker, chipName, chipProblem } from "./home-app-chip.js";
+import type { AppChip } from "./home-app-chip.js";
 import type { Pop } from "./home-model.js";
 import { loadAppMenu } from "./lazy-parts.js";
 
@@ -19,13 +15,13 @@ interface AppSlotProps {
   readonly onDoctor: () => void;
 }
 
-function AppSlot({
+const AppSlot = ({
   chip,
   pop,
   folderRef,
   onAddFolder,
   onDoctor,
-}: AppSlotProps) {
+}: AppSlotProps): ReactElement | null => {
   if (!chip) {
     return (
       <button
@@ -36,11 +32,11 @@ function AppSlot({
         aria-expanded={pop === "folder"}
         data-tip={copy.addAppFolder}
         data-tip-side="top"
-        onPointerEnter={() => void loadAppMenu()}
+        onPointerEnter={() => loadAppMenu()}
         onClick={onAddFolder}
       >
         <Icon name="folder" size={14} />
-        <span className="home-pill-text">Add app folder</span>
+        <span className="home-pill-text">{copy.addAppFolder}</span>
       </button>
     );
   }
@@ -54,7 +50,8 @@ function AppSlot({
         className="home-badge warn home-badge-btn"
         onClick={onDoctor}
       >
-        Fix the app first: {blocker.command}
+        {copy.fixTheAppFirst}
+        {blocker.command}
       </button>
     );
   }
@@ -67,10 +64,11 @@ function AppSlot({
     <span
       className={`home-badge ${chip.inspection.kind === "next" ? "next" : chip.inspection.kind === "vite" ? "vite" : "html"}`}
     >
-      Edits {chipName(chip)}
+      {copy.edits}
+      {chipName(chip)}
     </span>
   );
-}
+};
 
 export { AppSlot };
 

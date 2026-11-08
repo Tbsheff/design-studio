@@ -1,6 +1,11 @@
 import type { RunLevel } from "@design-studio/contracts";
 import { useLayoutEffect } from "react";
-import type { KeyboardEvent, MutableRefObject, RefObject } from "react";
+import type {
+  KeyboardEvent,
+  MutableRefObject,
+  ReactElement,
+  RefObject,
+} from "react";
 
 import { levelGroup, modelGroup } from "../chat/slash-groups.js";
 import { SlashMenu, useSlashMenu } from "../chat/slash-menu.js";
@@ -24,7 +29,7 @@ interface Props {
   readonly home: RefObject<HTMLElement | null>;
 }
 
-export function HomeSlashMenu({
+const HomeSlashMenu = ({
   prompt,
   setPrompt,
   level,
@@ -33,17 +38,17 @@ export function HomeSlashMenu({
   onModel,
   keys,
   home,
-}: Props) {
+}: Props): ReactElement | null => {
   const slash = useSlashMenu({
     draft: prompt,
-    setDraft: setPrompt,
     groups: [levelGroup(level, onLevel), modelGroup(model, null, onModel)],
     label: "Settings",
+    setDraft: setPrompt,
   });
 
   keys.current = slash.onKeyDown;
 
-  const input = () =>
+  const input = (): HTMLElement | null =>
     home.current?.querySelector<HTMLElement>(
       '[aria-label="Describe the design"]'
     ) ?? null;
@@ -81,4 +86,6 @@ export function HomeSlashMenu({
       onClose={slash.close}
     />
   );
-}
+};
+
+export { HomeSlashMenu };

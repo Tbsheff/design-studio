@@ -1,17 +1,8 @@
-import {
-  RUN_LEVELS,
-  type PackSummary,
-  type RunLevel,
-} from "@design-studio/contracts";
+import { RUN_LEVELS } from "@design-studio/contracts";
+import type { PackSummary, RunLevel } from "@design-studio/contracts";
 import { Icon, useFitPopover, usePopover } from "@design-studio/ui";
-import {
-  useEffect,
-  useRef,
-  type CSSProperties,
-  type KeyboardEvent,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { useEffect, useRef } from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { VariationsControl } from "../canvas/variations-control.js";
 import {
@@ -21,20 +12,17 @@ import {
   levelLabel,
 } from "../chat/level-control.js";
 import { MODEL_OPTIONS } from "../chat/settings-draft-model.js";
-import {
-  fontStack,
-  loadPackFonts,
-  type PacksState,
-} from "../design-system/packs.js";
+import { fontStack, loadPackFonts } from "../design-system/packs.js";
+import type { PacksState } from "../design-system/packs.js";
 import { copy } from "./copy.js";
 import type { DesignCount } from "./home-model.js";
 
-export type Close = (refocus: boolean) => void;
+type Close = (refocus: boolean) => void;
 
 const FOCUS_ITEMS =
   ".ui-menu-item:not(:disabled), .home-pack-card:not(:disabled), .btn:not(:disabled)";
 
-export function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
+const moveFocus = (event: KeyboardEvent<HTMLElement>, selector: string) => {
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLElement>(selector),
   ];
@@ -58,9 +46,9 @@ export function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
 
   event.preventDefault();
   items[(next + items.length) % items.length]?.focus();
-}
+};
 
-export function Pop({
+const Pop = ({
   trigger,
   onClose,
   className,
@@ -78,7 +66,7 @@ export function Pop({
   readonly children: ReactNode;
   readonly onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
   readonly closing?: boolean | undefined;
-}) {
+}) => {
   const root = useRef<HTMLDivElement>(null);
   usePopover(!closing, root, onClose, trigger);
   useFitPopover(root, trigger, true);
@@ -111,9 +99,9 @@ export function Pop({
       {children}
     </div>
   );
-}
+};
 
-export interface PlusMenuActions {
+interface PlusMenuActions {
   readonly onAttachFile: () => void;
   readonly onLinkCode: () => void;
   readonly onTemplates: () => void;
@@ -124,7 +112,7 @@ export interface PlusMenuActions {
   readonly onLocation: () => void;
 }
 
-export function Item({
+const Item = ({
   icon,
   label,
   meta,
@@ -134,23 +122,21 @@ export function Item({
   readonly label: string;
   readonly meta?: ReactNode;
   readonly onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      className="ui-menu-item"
-      tabIndex={-1}
-      onClick={onClick}
-    >
-      <Icon name={icon} size={14} />
-      <span className="truncate">{label}</span>
-      {meta && <span className="ui-menu-meta">{meta}</span>}
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    role="menuitem"
+    className="ui-menu-item"
+    tabIndex={-1}
+    onClick={onClick}
+  >
+    <Icon name={icon} size={14} />
+    <span className="truncate">{label}</span>
+    {meta && <span className="ui-menu-meta">{meta}</span>}
+  </button>
+);
 
-export function PlusMenu({
+const PlusMenu = ({
   trigger,
   onClose,
   actions,
@@ -162,7 +148,7 @@ export function PlusMenu({
   readonly actions: PlusMenuActions;
   readonly locationLabel: string;
   readonly isClosing: boolean;
-}) {
+}) => {
   const run = (action: () => void) => () => {
     onClose(false);
     action();
@@ -179,7 +165,7 @@ export function PlusMenu({
       onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
     >
       <div className="ui-menu-section">
-        <span className="ui-menu-label">Files</span>
+        <span className="ui-menu-label">{copy.files}</span>
         <Item
           icon="paperclip"
           label="Attach images"
@@ -188,7 +174,7 @@ export function PlusMenu({
         />
       </div>
       <div className="ui-menu-section">
-        <span className="ui-menu-label">Code</span>
+        <span className="ui-menu-label">{copy.code}</span>
         <Item
           icon="folder"
           label="Add app folder…"
@@ -196,7 +182,7 @@ export function PlusMenu({
         />
       </div>
       <div className="ui-menu-section">
-        <span className="ui-menu-label">Designs</span>
+        <span className="ui-menu-label">{copy.designs}</span>
         <Item
           icon="layers"
           label={
@@ -233,7 +219,7 @@ export function PlusMenu({
       </div>
     </Pop>
   );
-}
+};
 
 function swatch(pack: PackSummary, name: string, fallback: string): string {
   return pack.swatches.find((item) => item.name === name)?.value ?? fallback;
@@ -243,14 +229,14 @@ const RAMP = [6, 16, 30, 48, 68, 100, 72, 48];
 
 function packVars(pack: PackSummary): CSSProperties {
   return {
-    "--pc-bg": swatch(pack, "bg", "#fff"),
-    "--pc-surface": swatch(pack, "surface", "#f5f5f5"),
-    "--pc-fg": swatch(pack, "fg", "#111"),
-    "--pc-primary": swatch(pack, "primary", "#555"),
     "--pc-accent": swatch(pack, "accent", "#888"),
+    "--pc-bg": swatch(pack, "bg", "#fff"),
+    "--pc-body": fontStack(pack.fonts.body, "var(--font)"),
     "--pc-border": swatch(pack, "border", "#ddd"),
     "--pc-display": fontStack(pack.fonts.display, "var(--serif)"),
-    "--pc-body": fontStack(pack.fonts.body, "var(--font)"),
+    "--pc-fg": swatch(pack, "fg", "#111"),
+    "--pc-primary": swatch(pack, "primary", "#555"),
+    "--pc-surface": swatch(pack, "surface", "#f5f5f5"),
   } as CSSProperties;
 }
 
@@ -270,7 +256,7 @@ function fontNames(pack: PackSummary): string {
   return display === body || !body ? display : `${display} / ${body}`;
 }
 
-export function PackPreviewCard({
+const PackPreviewCard = ({
   pack,
   isSelected,
   onPick,
@@ -278,66 +264,56 @@ export function PackPreviewCard({
   readonly pack: PackSummary;
   readonly isSelected: boolean;
   readonly onPick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="home-pack-card"
-      aria-pressed={isSelected}
-      data-pack-id={pack.id}
-      onClick={onPick}
-    >
-      <span
-        className="home-pack-face"
-        style={packVars(pack)}
-        aria-hidden="true"
-      >
-        <span className="pc-fonts">{fontNames(pack)}</span>
-        <span className="pc-name">{pack.name}</span>
-        <span className="pc-ramp">
-          {RAMP.map((step, index) => (
-            <span key={index} style={{ background: rampColor(step, index) }} />
-          ))}
-        </span>
-        <span className="pc-sample">
-          <span className="pc-sample-card">
-            <span className="pc-sample-text">
-              The quick brown fox jumps over the lazy dog.
-            </span>
-            <span className="pc-btn">Continue →</span>
-          </span>
-          <span className="pc-image" />
-        </span>
+}) => (
+  <button
+    type="button"
+    className="home-pack-card"
+    aria-pressed={isSelected}
+    data-pack-id={pack.id}
+    onClick={onPick}
+  >
+    <span className="home-pack-face" style={packVars(pack)} aria-hidden="true">
+      <span className="pc-fonts">{fontNames(pack)}</span>
+      <span className="pc-name">{pack.name}</span>
+      <span className="pc-ramp">
+        {RAMP.map((step, index) => (
+          <span key={index} style={{ background: rampColor(step, index) }} />
+        ))}
       </span>
-      <span className="home-pack-label truncate">{pack.name}</span>
-    </button>
-  );
-}
+      <span className="pc-sample">
+        <span className="pc-sample-card">
+          <span className="pc-sample-text">{copy.theQuickBrownFoxJumps}</span>
+          <span className="pc-btn">{copy.continue2}</span>
+        </span>
+        <span className="pc-image" />
+      </span>
+    </span>
+    <span className="home-pack-label truncate">{pack.name}</span>
+  </button>
+);
 
-function NoneCard({
+const NoneCard = ({
   isSelected,
   onPick,
 }: {
   readonly isSelected: boolean;
   readonly onPick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="home-pack-card none"
-      aria-pressed={isSelected}
-      onClick={onPick}
-    >
-      <span className="home-pack-face none" aria-hidden="true">
-        <span className="pc-none-text">No design system</span>
-        <span className="pc-none-hint">The agent picks the look</span>
-      </span>
-      <span className="home-pack-label">None</span>
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    className="home-pack-card none"
+    aria-pressed={isSelected}
+    onClick={onPick}
+  >
+    <span className="home-pack-face none" aria-hidden="true">
+      <span className="pc-none-text">{copy.noDesignSystem}</span>
+      <span className="pc-none-hint">{copy.theAgentPicksTheLook}</span>
+    </span>
+    <span className="home-pack-label">{copy.none}</span>
+  </button>
+);
 
-export function PackCards({
+const PackCards = ({
   packs,
   value,
   shouldIncludeNone,
@@ -347,7 +323,7 @@ export function PackCards({
   readonly value: string | null;
   readonly shouldIncludeNone: boolean;
   readonly onPick: (pack: PackSummary | null) => void;
-}) {
+}) => {
   useEffect(() => loadPackFonts(packs), [packs]);
 
   return (
@@ -365,9 +341,9 @@ export function PackCards({
       ))}
     </div>
   );
-}
+};
 
-export function PackPopover({
+const PackPopover = ({
   trigger,
   onClose,
   state,
@@ -383,42 +359,38 @@ export function PackPopover({
   readonly onChange: (id: string | null) => void;
   readonly onNew: () => void;
   readonly isClosing: boolean;
-}) {
-  return (
-    <Pop
-      trigger={trigger}
-      closing={isClosing}
-      onClose={onClose}
-      className="home-pack-pop"
-      label="Design system"
-      onKeyDown={(event) => moveFocus(event, FOCUS_ITEMS)}
-    >
-      <p className="home-pop-lede">
-        Set up a design system so every project starts from your colors, type
-        and components.
-      </p>
-      <button type="button" className="btn strong home-pop-cta" onClick={onNew}>
-        Set up your design system
-      </button>
-      {state.error && (
-        <div className="alert error small">
-          Could not load design systems. {state.error}
-        </div>
-      )}
-      <PackCards
-        packs={state.packs ?? []}
-        value={value}
-        shouldIncludeNone
-        onPick={(pack) => {
-          onChange(pack?.id ?? null);
-          onClose(true);
-        }}
-      />
-    </Pop>
-  );
-}
+}) => (
+  <Pop
+    trigger={trigger}
+    closing={isClosing}
+    onClose={onClose}
+    className="home-pack-pop"
+    label="Design system"
+    onKeyDown={(event) => moveFocus(event, FOCUS_ITEMS)}
+  >
+    <p className="home-pop-lede">{copy.setUpADesignSystem}</p>
+    <button type="button" className="btn strong home-pop-cta" onClick={onNew}>
+      {copy.setUpYourDesignSystem}
+    </button>
+    {state.error && (
+      <div className="alert error small">
+        {copy.couldNotLoadDesignSystems}
+        {state.error}
+      </div>
+    )}
+    <PackCards
+      packs={state.packs ?? []}
+      value={value}
+      shouldIncludeNone
+      onPick={(pack) => {
+        onChange(pack?.id ?? null);
+        onClose(true);
+      }}
+    />
+  </Pop>
+);
 
-export interface ModelSettings {
+interface ModelSettings {
   readonly model: string;
   readonly onModel: (model: string) => void;
   readonly level: RunLevel;
@@ -427,7 +399,7 @@ export interface ModelSettings {
   readonly onMore: () => void;
 }
 
-export function ModelPopover({
+const ModelPopover = ({
   trigger,
   onClose,
   settings,
@@ -437,70 +409,68 @@ export function ModelPopover({
   readonly onClose: Close;
   readonly settings: ModelSettings;
   readonly isClosing: boolean;
-}) {
-  return (
-    <Pop
-      trigger={trigger}
-      closing={isClosing}
-      onClose={onClose}
-      className="home-model-pop"
-      label="Model and run settings"
+}) => (
+  <Pop
+    trigger={trigger}
+    closing={isClosing}
+    onClose={onClose}
+    className="home-model-pop"
+    label="Model and run settings"
+  >
+    <div
+      className="ui-menu-section"
+      role="radiogroup"
+      aria-label={copy.model}
+      onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
     >
-      <div
-        className="ui-menu-section"
-        role="radiogroup"
-        aria-label={copy.model}
-        onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
-      >
-        <span className="ui-menu-label">Model</span>
-        {MODEL_OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            role="radio"
-            className="ui-menu-item"
-            aria-checked={settings.model === option.id}
-            tabIndex={settings.model === option.id ? 0 : -1}
-            onClick={() => settings.onModel(option.id)}
-          >
-            {option.label.replace(/^Claude /, "")}
-          </button>
-        ))}
-      </div>
-      <div className="ui-menu-section home-pop-group">
-        <span className="ui-menu-label" id="home-designs-label">
-          Designs
-        </span>
-        <VariationsControl
-          value={settings.designs.value}
-          max={settings.designs.max}
-          onChange={settings.designs.onChange}
-          labelledBy="home-designs-label"
-        />
-        <p className="home-pop-hint">
-          {settings.designs.value > 1
-            ? `Create makes ${settings.designs.value} designs side by side.`
-            : `Pick 2 to ${settings.designs.max} to compare options.`}
-        </p>
-      </div>
-      <div className="ui-menu-section">
+      <span className="ui-menu-label">{copy.model}</span>
+      {MODEL_OPTIONS.map((option) => (
         <button
+          key={option.id}
           type="button"
+          role="radio"
           className="ui-menu-item"
-          onClick={() => {
-            onClose(false);
-            settings.onMore();
-          }}
+          aria-checked={settings.model === option.id}
+          tabIndex={settings.model === option.id ? 0 : -1}
+          onClick={() => settings.onModel(option.id)}
         >
-          <Icon name="sliders" size={14} />
-          Skills, limits and DESIGN.md…
+          {option.label.replace(/^Claude /, "")}
         </button>
-      </div>
-    </Pop>
-  );
-}
+      ))}
+    </div>
+    <div className="ui-menu-section home-pop-group">
+      <span className="ui-menu-label" id="home-designs-label">
+        {copy.designs}
+      </span>
+      <VariationsControl
+        value={settings.designs.value}
+        max={settings.designs.max}
+        onChange={settings.designs.onChange}
+        labelledBy="home-designs-label"
+      />
+      <p className="home-pop-hint">
+        {settings.designs.value > 1
+          ? `Create makes ${settings.designs.value} designs side by side.`
+          : `Pick 2 to ${settings.designs.max} to compare options.`}
+      </p>
+    </div>
+    <div className="ui-menu-section">
+      <button
+        type="button"
+        className="ui-menu-item"
+        onClick={() => {
+          onClose(false);
+          settings.onMore();
+        }}
+      >
+        <Icon name="sliders" size={14} />
+        {copy.skillsLimitsAndDesignMd}
+      </button>
+    </div>
+  </Pop>
+);
 
-export function LevelPopover({
+const LevelPopover = ({
   trigger,
   onClose,
   level,
@@ -512,35 +482,47 @@ export function LevelPopover({
   readonly level: RunLevel;
   readonly onLevel: (level: RunLevel) => void;
   readonly isClosing: boolean;
-}) {
-  return (
-    <Pop
-      trigger={trigger}
-      closing={isClosing}
-      onClose={onClose}
-      className="home-level-pop"
-      label="Level"
-      role="menu"
-      onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
-    >
-      <div className="ui-menu-section" role="group" aria-label={copy.level}>
-        <span className="ui-menu-label">Level</span>
-        {RUN_LEVELS.map((item) => (
-          <ChoiceItem
-            key={item}
-            label={levelLabel(item)}
-            hint={levelGist(item).hint}
-            meta={levelGist(item).cost}
-            full={levelHint(item)}
-            checked={level === item}
-            focusable
-            onPick={() => {
-              onLevel(item);
-              onClose(true);
-            }}
-          />
-        ))}
-      </div>
-    </Pop>
-  );
-}
+}) => (
+  <Pop
+    trigger={trigger}
+    closing={isClosing}
+    onClose={onClose}
+    className="home-level-pop"
+    label="Level"
+    role="menu"
+    onKeyDown={(event) => moveFocus(event, ".ui-menu-item")}
+  >
+    <div className="ui-menu-section" role="group" aria-label={copy.level}>
+      <span className="ui-menu-label">{copy.level}</span>
+      {RUN_LEVELS.map((item) => (
+        <ChoiceItem
+          key={item}
+          label={levelLabel(item)}
+          hint={levelGist(item).hint}
+          meta={levelGist(item).cost}
+          full={levelHint(item)}
+          checked={level === item}
+          focusable
+          onPick={() => {
+            onLevel(item);
+            onClose(true);
+          }}
+        />
+      ))}
+    </div>
+  </Pop>
+);
+
+export {
+  Item,
+  LevelPopover,
+  ModelPopover,
+  PackCards,
+  PackPopover,
+  PackPreviewCard,
+  PlusMenu,
+  Pop,
+  moveFocus,
+};
+
+export type { Close, ModelSettings, PlusMenuActions };

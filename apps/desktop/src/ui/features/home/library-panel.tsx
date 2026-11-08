@@ -1,15 +1,16 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
-import type { RefObject } from "react";
+import type { ReactElement, RefObject } from "react";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
 import { uiStore } from "../../platform/storage.js";
-import { type PacksState, pickable } from "../design-system/packs.js";
+import { pickable } from "../design-system/packs.js";
+import type { PacksState } from "../design-system/packs.js";
 import { copy } from "./copy.js";
+import type { AppHealth } from "./deps.js";
 import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
-import { useProjectActions } from "./home-sections.js";
+import type { useProjectActions } from "./home-sections.js";
 import type { LibraryModule } from "./lazy-parts.js";
 
-function Library({
+const Library = ({
   lib,
   projects,
   health,
@@ -31,11 +32,11 @@ function Library({
   readonly packs: PacksState;
   readonly pack: PackSummary | null;
   readonly query: string;
-  readonly onQuery: (q: string) => void;
+  readonly onQuery: (queryArg: string) => void;
   readonly searchRef: RefObject<HTMLInputElement | null>;
   readonly listError: string | null;
   readonly onPickPack: (id: string | null) => void;
-}) {
+}): ReactElement => {
   const { filter } = useHomePrefs();
 
   if (!lib) {
@@ -44,7 +45,7 @@ function Library({
 
   const latest = [...projects]
     .filter((project) => !project.designSystemFor)
-    .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+    .sort((first, second) => second.updatedAt - first.updatedAt)[0];
 
   const systems = filter === "systems";
 
@@ -54,19 +55,19 @@ function Library({
         type="button"
         className="btn small"
         onClick={() =>
-          uiStore.set({ screen: "new-design-system", returnTo: "home" })
+          uiStore.set({ returnTo: "home", screen: "new-design-system" })
         }
       >
-        New design system
+        {copy.newDesignSystem}
       </button>
       <button
         type="button"
         className="btn small"
         onClick={() =>
-          uiStore.set({ screen: "design-systems", libraryFrom: null })
+          uiStore.set({ libraryFrom: null, screen: "design-systems" })
         }
       >
-        Open library
+        {copy.openLibrary}
       </button>
     </>
   );
@@ -81,7 +82,7 @@ function Library({
         />
       )}
       <lib.ProjectGrid
-        projects={lib.filterLibrary(projects, filter)}
+        projects={lib.listFilteredLibrary(projects, filter)}
         packs={packs.packs}
         health={health}
         homeDir={homeDir}
@@ -109,10 +110,7 @@ function Library({
       />
       {systems && (
         <section className="home-list" aria-label={copy.pickADesignSystem}>
-          <p className="home-section-hint">
-            Pick one for your next project. Edit, import and export them in the
-            library.
-          </p>
+          <p className="home-section-hint">{copy.pickOneForYourNext}</p>
           <lib.PackCards
             packs={pickable(packs).packs ?? []}
             value={pack?.id ?? null}
@@ -123,6 +121,6 @@ function Library({
       )}
     </>
   );
-}
+};
 
 export { Library };

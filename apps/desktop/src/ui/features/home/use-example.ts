@@ -9,12 +9,12 @@ function useExample(paused: boolean, fixed: boolean): string {
       return;
     }
 
-    const timer = window.setInterval(
-      () => setIndex((n) => (n + 1) % EXAMPLES.length),
+    const timer = globalThis.setInterval(
+      () => setIndex((count) => (count + 1) % EXAMPLES.length),
       EXAMPLE_MS
     );
 
-    return () => window.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [paused, fixed]);
 
   return fixed ? PLACEHOLDER : (EXAMPLES[index] ?? "");

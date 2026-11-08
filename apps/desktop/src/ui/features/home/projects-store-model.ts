@@ -1,53 +1,59 @@
 import type { Project } from "@design-studio/contracts";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import type { AppHealth, FoundApps } from "../../../shared/found-apps.js";
 import { api, errorText, json } from "../../api.js";
+import type { AppHealth, FoundApps } from "./deps.js";
 import { isThumbnailPending } from "./project-list-model.js";
 
-export interface ProjectsState {
+interface ProjectsState {
   readonly projects: Project[] | null;
   readonly error: string | null;
 }
 
-let state: ProjectsState = { projects: null, error: null };
+let state: ProjectsState = { error: null, projects: null };
 let inflight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
-function emit(next: ProjectsState): void {
+function setProjectsState(next: ProjectsState): void {
   state = next;
   listeners.forEach((listener) => listener());
 }
 
-function load(): Promise<void> {
-  inflight ??= api
-    .listProjects()
-    .then((projects) => emit({ projects, error: null }))
-    .catch((err: unknown) => emit({ ...state, error: errorText(err) }))
-    .finally(() => {
-      inflight = null;
-    });
+const runProjectsFetch = async (): Promise<void> => {
+  try {
+    const projects = await api.listProjects();
+    setProjectsState({ error: null, projects });
+  } catch (error: unknown) {
+    setProjectsState({ ...state, error: errorText(error) });
+  } finally {
+    inflight = null;
+  }
+};
+
+function runProjectsLoad(): Promise<void> {
+  inflight ??= runProjectsFetch();
 
   return inflight;
 }
 
 function update(change: (list: Project[]) => Project[]): void {
   if (state.projects) {
-    emit({ ...state, projects: change(state.projects) });
+    setProjectsState({ ...state, projects: change(state.projects) });
   }
 }
 
-export const projectsApi = {
-  get: () => state,
-  load,
-  subscribe(listener: () => void) {
-    listeners.add(listener);
+const projectsApi = {
+  duplicate: async (project: Project) => {
+    const { project: copy } = await api.duplicateProject(project.id);
+    await runProjectsLoad();
 
-    return () => {
-      listeners.delete(listener);
-    };
+    return copy;
   },
-  update,
+  found: (fresh = false) =>
+    json<FoundApps>("GET", `/api/folders/found${fresh ? "?fresh=1" : ""}`),
+  get: () => state,
+  health: () => json<AppHealth[]>("GET", "/api/home/health"),
+  load: runProjectsLoad,
   rename: async (project: Project, name: string) => {
     update((list) =>
       list.map((item) => (item.id === project.id ? { ...item, name } : item))
@@ -56,14 +62,24 @@ export const projectsApi = {
     try {
       return await api.renameProject(project.id, name);
     } finally {
-      void load();
+      void runProjectsLoad();
     }
   },
-  duplicate: async (project: Project) => {
-    const { project: copy } = await api.duplicateProject(project.id);
-    await load();
+  restore: async (trashId: string) => {
+    await api.restoreProject(trashId);
+    await runProjectsLoad();
+  },
+  reveal: (project: Project) =>
+    json<{ readonly ok: true }>(
+      "POST",
+      `/api/projects/${encodeURIComponent(project.id)}/reveal`
+    ),
+  subscribe(listener: () => void): () => void {
+    listeners.add(listener);
 
-    return copy;
+    return (): void => {
+      listeners.delete(listener);
+    };
   },
   trash: async (project: Project) => {
     update((list) => list.filter((item) => item.id !== project.id));
@@ -71,35 +87,24 @@ export const projectsApi = {
     try {
       return await api.trashProject(project.id);
     } finally {
-      void load();
+      void runProjectsLoad();
     }
   },
-  restore: async (trashId: string) => {
-    await api.restoreProject(trashId);
-    await load();
-  },
-  reveal: (project: Project) =>
-    json<{ readonly ok: true }>(
-      "POST",
-      `/api/projects/${encodeURIComponent(project.id)}/reveal`
-    ),
-  health: () => json<AppHealth[]>("GET", "/api/home/health"),
-  found: (fresh = false) =>
-    json<FoundApps>("GET", `/api/folders/found${fresh ? "?fresh=1" : ""}`),
+  update,
 };
 
 const POLL_FAST_MS = 500;
 const POLL_MS = 1500;
 const RECENT_MS = 120_000;
 
-export function useProjects(options: {
+const useProjects = (options: {
   readonly shouldWatch: boolean;
-}): ProjectsState & { readonly reload: () => Promise<void> } {
+}): ProjectsState & { readonly reload: () => Promise<void> } => {
   const current = useSyncExternalStore(projectsApi.subscribe, projectsApi.get);
   useEffect(() => {
-    void load();
+    void runProjectsLoad();
   }, []);
-  const projects = current.projects;
+  const { projects } = current;
   const lagging = projects?.some(isThumbnailPending) ?? false;
 
   const watching =
@@ -115,26 +120,24 @@ export function useProjects(options: {
       return;
     }
 
-    const timer = window.setInterval(
+    const timer = globalThis.setInterval(
       () => {
         if (document.visibilityState === "visible") {
-          void load();
+          void runProjectsLoad();
         }
       },
       lagging ? POLL_FAST_MS : POLL_MS
     );
 
-    return () => window.clearInterval(timer);
+    return (): void => globalThis.clearInterval(timer);
   }, [watching, lagging]);
 
-  return { ...current, reload: load };
-}
+  return { ...current, reload: runProjectsLoad };
+};
 
 const HEALTH_POLL_MS = 2500;
 
-export function useAppHealth(
-  projects: Project[] | null
-): Map<string, AppHealth> {
+const useAppHealth = (projects: Project[] | null): Map<string, AppHealth> => {
   const [health, setHealth] = useState<AppHealth[]>([]);
   const [tick, setTick] = useState(0);
 
@@ -149,12 +152,24 @@ export function useAppHealth(
     }
 
     let live = true;
-    projectsApi
-      .health()
-      .then((next) => live && setHealth(next))
-      .catch(() => undefined);
 
-    return () => {
+    const refresh = async (): Promise<void> => {
+      try {
+        const next = await projectsApi.health();
+
+        if (live) {
+          setHealth(next);
+        }
+      } catch {
+        if (live) {
+          setHealth((previous) => previous);
+        }
+      }
+    };
+
+    refresh();
+
+    return (): void => {
       live = false;
     };
   }, [key, tick]);
@@ -164,16 +179,20 @@ export function useAppHealth(
       return;
     }
 
-    const timer = window.setTimeout(
-      () => setTick((n) => n + 1),
+    const timer = globalThis.setTimeout(
+      () => setTick((count) => count + 1),
       HEALTH_POLL_MS
     );
 
-    return () => window.clearTimeout(timer);
+    return (): void => globalThis.clearTimeout(timer);
   }, [building, health]);
 
   return useMemo(
     () => new Map(health.map((item) => [item.projectId, item])),
     [health]
   );
-}
+};
+
+export { projectsApi, useAppHealth, useProjects };
+
+export type { ProjectsState };

@@ -1,22 +1,20 @@
 import type { Starter } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
-import {
-  FOUND_KIND_LABEL,
-  type FoundApp,
-  type FoundApps,
-} from "../../../shared/found-apps.js";
+import { FOUND_KIND_LABEL } from "../../../shared/found-apps.js";
 import { api } from "../../api.js";
 import { copy } from "./copy.js";
+import type { FoundApp, FoundApps } from "./deps.js";
 import { projectsApi } from "./projects-store-model.js";
 
 const MAX_FOUND = 6;
 const MAX_STARTERS = 4;
-const KIND_TONE = { next: "next", vite: "vite", html: "html" } as const;
+const KIND_TONE = { html: "html", next: "next", vite: "vite" } as const;
 
-function foundBadge(app: FoundApp): string {
+function getFoundBadge(app: FoundApp): string {
   const base = FOUND_KIND_LABEL[app.kind];
 
   return app.kind === "next" && app.apps.length > 1 ? `${base} monorepo` : base;
@@ -26,12 +24,24 @@ function useFound(): FoundApps | null | "error" {
   const [found, setFound] = useState<FoundApps | null | "error">(null);
   useEffect(() => {
     let live = true;
-    projectsApi
-      .found()
-      .then((next) => live && setFound(next))
-      .catch(() => live && setFound("error"));
 
-    return () => {
+    const load = async (): Promise<void> => {
+      try {
+        const next = await projectsApi.found();
+
+        if (live) {
+          setFound(next);
+        }
+      } catch {
+        if (live) {
+          setFound("error");
+        }
+      }
+    };
+
+    load();
+
+    return (): void => {
       live = false;
     };
   }, []);
@@ -39,7 +49,11 @@ function useFound(): FoundApps | null | "error" {
   return found;
 }
 
-function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
+const FoundList = ({
+  onUse,
+}: {
+  readonly onUse: (path: string) => void;
+}): ReactElement | null => {
   const found = useFound();
 
   if (found === "error") {
@@ -57,17 +71,18 @@ function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
   return (
     <section className="home-found" aria-label={copy.foundOnThisMac}>
       <div className="home-found-head">
-        <span>Found on this Mac</span>
+        <span>{copy.foundOnThisMac}</span>
         <span className="spacer" />
         <span className="home-found-roots truncate">{roots}</span>
       </div>
       {found === null && (
-        <p className="home-found-note">Looking in your folders…</p>
+        <p className="home-found-note">{copy.lookingInYourFolders}</p>
       )}
       {found && apps.length === 0 && (
         <p className="home-found-note">
-          No app folders found in {roots || "your home folder"}. Use Add app
-          folder, or drop a folder on the window.
+          {copy.noAppFoldersFoundIn}
+          {roots || "your home folder"}
+          {copy.labelUseAddAppFolderOr}
         </p>
       )}
       {apps.map((app) => (
@@ -80,7 +95,7 @@ function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
             {found ? shortenHome(app.path, found.home) : app.path}
           </span>
           <span className={`home-badge ${KIND_TONE[app.kind]}`}>
-            {foundBadge(app)}
+            {getFoundBadge(app)}
           </span>
           <button
             type="button"
@@ -89,15 +104,15 @@ function FoundList({ onUse }: { readonly onUse: (path: string) => void }) {
             data-tip={copy.pickThisAppToDesign}
             onClick={() => onUse(app.path)}
           >
-            Use
+            {copy.labelUse}
           </button>
         </div>
       ))}
     </section>
   );
-}
+};
 
-function StartCards({
+const StartCards = ({
   isBusy,
   onSample,
   onStarter,
@@ -105,13 +120,19 @@ function StartCards({
   readonly isBusy: boolean;
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
-}) {
+}): ReactElement => {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
-    void api
-      .starters()
-      .then((list) => setStarters(list.slice(0, MAX_STARTERS)))
-      .catch(() => undefined);
+    const load = async (): Promise<void> => {
+      try {
+        const list = await api.starters();
+        setStarters(list.slice(0, MAX_STARTERS));
+      } catch {
+        setStarters([]);
+      }
+    };
+
+    load();
   }, []);
 
   return (
@@ -126,12 +147,12 @@ function StartCards({
           <Icon name="play" size={16} />
         </span>
         <span className="home-start-text">
-          <b>Open the sample</b>
-          <span>Click through a finished prototype. No cost.</span>
+          <b>{copy.openTheSample}</b>
+          <span>{copy.clickThroughAFinishedPrototype}</span>
         </span>
       </button>
       <div className="home-start-card">
-        <b>Or start from</b>
+        <b>{copy.orStartFrom}</b>
         <div className="home-start-pills">
           {starters.map((starter) => (
             <button
@@ -148,7 +169,7 @@ function StartCards({
       </div>
     </div>
   );
-}
+};
 
 export default function HomeEmpty({
   isBusy,
@@ -160,17 +181,14 @@ export default function HomeEmpty({
   readonly onUse: (path: string) => void;
   readonly onSample: () => void;
   readonly onStarter: (starter: Starter) => void;
-}) {
+}): ReactElement {
   return (
     <div className="home-empty-state">
       <div className="home-empty-grid">
         <FoundList onUse={onUse} />
         <StartCards isBusy={isBusy} onSample={onSample} onStarter={onStarter} />
       </div>
-      <p className="home-empty-note">
-        “Use” picks the app. Return opens it in the studio, and your changes go
-        to its files. Recent work shows here after your first project.
-      </p>
+      <p className="home-empty-note">{copy.labelUsePicksTheAppReturn}</p>
     </div>
   );
 }

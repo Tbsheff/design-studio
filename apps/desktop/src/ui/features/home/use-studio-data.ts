@@ -11,7 +11,6 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
-import type { ConnectionState } from "../../platform/events.js";
 import { uiStore, useUi } from "../../platform/storage.js";
 import { reportFirstToken } from "../../platform/telemetry.js";
 import {
@@ -30,6 +29,7 @@ import {
   createDeltaBatcher,
   frameOrTimeout,
 } from "../inspector/delta-batch.js";
+import type { ConnectionState } from "./deps.js";
 import {
   createCursor,
   toLoadedCount,
@@ -145,7 +145,7 @@ function useRunPages(
   const publish = useCallback((c: RunCursor, load: (() => void) | null) => {
     if (cursor.current === c) {
       publishOlderRuns(
-        { more: !c.state.current.isDone, loading: c.state.current.isLoading },
+        { loading: c.state.current.isLoading, more: !c.state.current.isDone },
         load
       );
     }
@@ -208,13 +208,8 @@ function useRunPages(
         isLoading: false,
         pending: null,
       };
-      publish(
-        c,
-        () =>
-          void fill(
-            c,
-            wantMore(toLoadedCount(c, direction.current) + MORE_RUNS)
-          )
+      publish(c, () =>
+        fill(c, wantMore(toLoadedCount(c, direction.current) + MORE_RUNS))
       );
     },
     [page, publish, setRunsLoaded, wantMore]
@@ -258,7 +253,7 @@ function useRunPages(
       if (cursor.current === c) {
         cursor.current = createCursor(projectId);
       }
-      publishOlderRuns({ more: false, loading: false }, null);
+      publishOlderRuns({ loading: false, more: false }, null);
     };
   }, [projectId, fill, wantMore, setRunsLoaded]);
 
@@ -289,8 +284,8 @@ export function useStudioData(projectId: string): StudioData {
     createDeltaBatcher(setRuns, frameOrTimeout(100))
   );
   const sends = useRef<SendTimes>({
-    pending: { current: null },
     byRun: new Map(),
+    pending: { current: null },
   });
   useEffect(() => () => batcher.dispose(), [batcher]);
 
@@ -317,7 +312,7 @@ export function useStudioData(projectId: string): StudioData {
     api
       .getProject(projectId)
       .then((p) => alive && setProject(p))
-      .catch((err) => alive && setLoadError(errorText(err)));
+      .catch((error) => alive && setLoadError(errorText(error)));
     return () => {
       alive = false;
     };
@@ -386,10 +381,10 @@ export function useStudioData(projectId: string): StudioData {
         case "files.changed": {
           if (live && event.directionId) {
             setLastChange({
-              directionId: event.directionId,
               changedAt: event.changedAt,
-              receivedAt: Date.now(),
+              directionId: event.directionId,
               paths: event.paths,
+              receivedAt: Date.now(),
               shouldReload: event.reload === true,
             });
           }
@@ -434,10 +429,10 @@ export function useStudioData(projectId: string): StudioData {
           if (live && active) {
             addError({
               directionId: event.directionId ?? null,
-              source: "build",
-              message: event.message,
               file: event.file,
               line: event.line,
+              message: event.message,
+              source: "build",
             });
           }
           break;
@@ -487,17 +482,6 @@ export function useStudioData(projectId: string): StudioData {
   }, []);
 
   return {
-    project,
-    setProject,
-    loadError,
-    directionId,
-    setDirectionId,
-    versions,
-    runs,
-    hasRunsLoaded: runsLoaded,
-    status,
-    setStatus,
-    errors,
     addError,
     clearErrors: () => setErrors([]),
     clearFrameErrors: () =>
@@ -506,10 +490,21 @@ export function useStudioData(projectId: string): StudioData {
           ? prev.filter((e) => e.source === "build")
           : prev
       ),
-    lastChange,
     connection,
-    refreshVersions,
-    seedRun,
+    directionId,
+    errors,
+    hasRunsLoaded: runsLoaded,
+    lastChange,
+    loadError,
     noteSend,
+    project,
+    refreshVersions,
+    runs,
+    seedRun,
+    setDirectionId,
+    setProject,
+    setStatus,
+    status,
+    versions,
   };
 }

@@ -1,8 +1,10 @@
 import type { Starter } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
 import type { Busy } from "./home-model.js";
 
-function StarterRow({
+const StarterRow = ({
   template,
   busy,
   onOpen,
@@ -13,7 +15,7 @@ function StarterRow({
   } | null;
   readonly busy: Busy;
   readonly onOpen: (starter: Starter) => void;
-}) {
+}): ReactElement | null => {
   const starter = template?.starter;
 
   if (!template || !starter) {
@@ -22,7 +24,10 @@ function StarterRow({
 
   return (
     <div className="home-starter-row">
-      <span className="ui-chip">{template.label} starter</span>
+      <span className="ui-chip">
+        {template.label}
+        {copy.starter}
+      </span>
       <button
         type="button"
         className="link"
@@ -31,9 +36,9 @@ function StarterRow({
       >
         {busy === "starter" ? "Opening…" : "Open it now"}
       </button>
-      <span className="home-starter-hint">No agent run, no cost</span>
+      <span className="home-starter-hint">{copy.noAgentRunNoCost}</span>
     </div>
   );
-}
+};
 
 export { StarterRow };

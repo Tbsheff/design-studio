@@ -1,10 +1,12 @@
+import type { ReactElement } from "react";
 import { Suspense } from "react";
 
-import { HomeToast, type HomeToastState } from "./home-sections.js";
+import { HomeToast } from "./home-sections.js";
+import type { HomeToastState } from "./home-sections.js";
 import { HomeDoctor, HomeTrash } from "./lazy-parts.js";
-import { useDoctorGate } from "./use-doctor-gate.js";
+import type { useDoctorGate } from "./use-doctor-gate.js";
 
-function HomeOverlays({
+const HomeOverlays = ({
   isTrashOpen,
   onCloseTrash,
   onRestored,
@@ -18,8 +20,8 @@ function HomeOverlays({
   readonly doctor: ReturnType<typeof useDoctorGate>;
   readonly toast: HomeToastState | null;
   readonly onToastDone: () => void;
-}) {
-  const gate = doctor.gate;
+}): ReactElement => {
+  const { gate } = doctor;
 
   return (
     <>
@@ -33,7 +35,7 @@ function HomeOverlays({
           <HomeDoctor
             problem={gate.problem}
             isChecking={gate.isChecking}
-            onCheck={() => void doctor.check()}
+            onCheck={() => doctor.check()}
             onOpenAnyway={() => {
               doctor.close();
               gate.proceed();
@@ -45,6 +47,6 @@ function HomeOverlays({
       <HomeToast toast={toast} onDone={onToastDone} />
     </>
   );
-}
+};
 
 export { HomeOverlays };

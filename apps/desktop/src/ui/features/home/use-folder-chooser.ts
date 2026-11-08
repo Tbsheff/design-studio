@@ -7,7 +7,7 @@ type ChooseResult =
   | { readonly path: string; readonly isUnsupported: false }
   | { readonly path: null; readonly isUnsupported: boolean };
 
-export interface FolderChooser {
+interface FolderChooser {
   readonly choose: (
     title: string,
     defaultPath?: string
@@ -16,9 +16,9 @@ export interface FolderChooser {
   readonly isPicking: boolean;
 }
 
-export function useFolderChooser(
+const useFolderChooser = (
   onError: (message: string) => void
-): FolderChooser {
+): FolderChooser => {
   const [unsupported, setUnsupported] = useState(() => !hasNativePicker());
   const [picking, setPicking] = useState(false);
 
@@ -41,8 +41,8 @@ export function useFolderChooser(
       return outcome.kind === "picked"
         ? { isUnsupported: false, path: outcome.path }
         : { isUnsupported: outcome.kind === "unsupported", path: null };
-    } catch (err) {
-      onError(errorText(err));
+    } catch (error) {
+      onError(errorText(error));
 
       return { isUnsupported: false, path: null };
     } finally {
@@ -50,5 +50,9 @@ export function useFolderChooser(
     }
   };
 
-  return { choose, isUnsupported: unsupported, isPicking: picking };
-}
+  return { choose, isPicking: picking, isUnsupported: unsupported };
+};
+
+export { useFolderChooser };
+
+export type { FolderChooser };

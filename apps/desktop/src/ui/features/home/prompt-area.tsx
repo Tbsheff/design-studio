@@ -1,9 +1,9 @@
-import {
-  type ClipboardEvent,
-  type FormEvent,
-  type KeyboardEvent,
-  useLayoutEffect,
-  useRef,
+import { useLayoutEffect, useRef } from "react";
+import type {
+  ClipboardEvent,
+  FormEvent,
+  KeyboardEvent,
+  ReactElement,
 } from "react";
 
 import { copy } from "./copy.js";
@@ -11,19 +11,21 @@ import { useExample } from "./use-example.js";
 
 interface PromptAreaProps {
   readonly value: string;
-  readonly onChange: (v: string) => void;
-  readonly onSubmit: (e: FormEvent) => void;
-  readonly onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void;
+  readonly onChange: (value: string) => void;
+  readonly onSubmit: (formEvent: FormEvent) => void;
+  readonly onPaste: (
+    clipboardEvent: ClipboardEvent<HTMLTextAreaElement>
+  ) => void;
   readonly describedBy?: string | undefined;
   readonly menuKeys: {
     readonly current:
-      | ((e: KeyboardEvent<HTMLTextAreaElement>) => boolean)
+      | ((keyboardEvent: KeyboardEvent<HTMLTextAreaElement>) => boolean)
       | null;
   };
   readonly placeholder: string | null;
 }
 
-function PromptArea({
+const PromptArea = ({
   value,
   onChange,
   onSubmit,
@@ -31,7 +33,7 @@ function PromptArea({
   describedBy,
   menuKeys,
   placeholder,
-}: PromptAreaProps) {
+}: PromptAreaProps): ReactElement => {
   const ref = useRef<HTMLTextAreaElement>(null);
   const example = useExample(value !== "", placeholder === null);
   useLayoutEffect(() => {
@@ -53,21 +55,25 @@ function PromptArea({
       rows={2}
       autoFocus
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(event) => onChange(event.target.value)}
       onPaste={onPaste}
-      onKeyDown={(e) => {
-        if (menuKeys.current?.(e)) {
+      onKeyDown={(eventArg) => {
+        if (menuKeys.current?.(eventArg)) {
           return;
         }
 
-        if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-          onSubmit(e);
+        if (
+          eventArg.key === "Enter" &&
+          !eventArg.shiftKey &&
+          !eventArg.nativeEvent.isComposing
+        ) {
+          onSubmit(eventArg);
         }
       }}
       placeholder={placeholder ?? example}
     />
   );
-}
+};
 
 export { PromptArea };
 

@@ -1,9 +1,11 @@
 import { formatAnswers } from "@design-studio/contracts/clarify";
+import type { ReactElement } from "react";
 import { Suspense } from "react";
 
 import { uiStore } from "../../platform/storage.js";
 import { ChipMenuSlot } from "./chip-menu-slot.js";
 import { ComposerBar } from "./composer-bar.js";
+import { copy } from "./copy.js";
 import { DropHint } from "./drop-hint.js";
 import { HeroNotes } from "./hero-notes.js";
 import { ComposerChips } from "./home-composer-parts.js";
@@ -18,7 +20,11 @@ import { StarterRow } from "./starter-row.js";
 import { TemplatesSection } from "./templates-section.js";
 import { useHomeScreen } from "./use-home-screen.js";
 
-function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
+const Home = ({
+  onOpen,
+}: {
+  readonly onOpen: (projectId: string) => void;
+}): ReactElement => {
   const {
     actions,
     addAppFolder,
@@ -111,9 +117,9 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
       <main className="home-main">
         <section className="home-hero">
           {empty ? (
-            <h1 className="ui-display">What should we design?</h1>
+            <h1 className="ui-display">{copy.whatShouldWeDesign}</h1>
           ) : (
-            <h1 className="sr-only">Home</h1>
+            <h1 className="sr-only">{copy.home}</h1>
           )}
           <div className="home-card" ref={chipRef}>
             <form
@@ -166,7 +172,7 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
               <StarterRow
                 template={template}
                 busy={busy}
-                onOpen={(starter) => void openStarter(starter)}
+                onOpen={(starter) => openStarter(starter)}
               />
               <ComposerBar
                 fileRef={fileRef}
@@ -184,11 +190,11 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
                 sendDisabled={sendBlocker}
                 app={{
                   chip: app.chip,
-                  onAddFolder: () => void addAppFolder(),
-                  onDoctor: () => chipDoctor(prompt.trim()),
                   isFolderPopOpen: folderPop,
-                  onFolderPick: putFolder,
+                  onAddFolder: () => addAppFolder(),
+                  onDoctor: () => chipDoctor(prompt.trim()),
                   onFolderClose: () => setFolderPop(false),
+                  onFolderPick: putFolder,
                 }}
               />
             </form>
@@ -197,10 +203,8 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
                 <ClarifyForm
                   questions={questions}
                   busy={busy === "create"}
-                  onBuild={(answers) =>
-                    void build(formatAnswers(prompt, answers))
-                  }
-                  onSkip={() => void build(prompt.trim())}
+                  onBuild={(answers) => build(formatAnswers(prompt, answers))}
+                  onSkip={() => build(prompt.trim())}
                   onCancel={() => {
                     setQuestions(null);
                     focusPrompt(homeRef.current);
@@ -231,14 +235,14 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
               onLocation={setLocation}
               onAddFolder={addFolder}
               advanced={{
-                opened: advancedOpened,
-                draft: settingsDraft,
-                onDraft: setSettingsDraft,
                 designMd,
+                draft: settingsDraft,
                 onDesignMd: setDesignMd,
+                onDraft: setSettingsDraft,
                 onError: setFormError,
+                opened: advancedOpened,
               }}
-              onHiddenMoved={() => void loadProjects()}
+              onHiddenMoved={() => loadProjects()}
             />
           )}
         </section>
@@ -246,10 +250,10 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
           isEmpty={empty}
           isBusy={busy !== null}
           listError={listError}
-          onRetry={() => void loadProjects()}
+          onRetry={() => loadProjects()}
           onUse={putFolder}
-          onSample={() => void openSample()}
-          onStarter={(starter) => void openStarter(starter)}
+          onSample={() => openSample()}
+          onStarter={(starter) => openStarter(starter)}
         >
           {projects !== null && (
             <Library
@@ -275,13 +279,13 @@ function Home({ onOpen }: { readonly onOpen: (projectId: string) => void }) {
       <HomeOverlays
         isTrashOpen={trashOpen}
         onCloseTrash={() => setTrashOpen(false)}
-        onRestored={() => void loadProjects()}
+        onRestored={() => loadProjects()}
         doctor={doctor}
         toast={toast}
         onToastDone={clearToast}
       />
     </div>
   );
-}
+};
 
 export { Home };

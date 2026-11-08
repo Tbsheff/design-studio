@@ -12,7 +12,7 @@ function useOpenAppRequests(
   const handlers = useRef({ onPath, onPick });
   handlers.current = { onPath, onPick };
   useEffect(() => {
-    const take = () => {
+    const take = (): void => {
       const request = takeOpenAppRequest();
 
       if (!request) {

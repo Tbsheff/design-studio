@@ -1,16 +1,28 @@
 import { useEffect, useState } from "react";
 
-function useModule<T>(load: () => Promise<T>, enabled: boolean): T | null {
-  const [mod, setMod] = useState<T | null>(null);
+function useModule<Value>(
+  load: () => Promise<Value>,
+  enabled: boolean
+): Value | null {
+  const [mod, setMod] = useState<Value | null>(null);
   useEffect(() => {
     if (!enabled) {
       return;
     }
 
     let live = true;
-    void load().then((loaded) => live && setMod(loaded));
 
-    return () => {
+    const run = async (): Promise<void> => {
+      const loaded = await load();
+
+      if (live) {
+        setMod(loaded);
+      }
+    };
+
+    run();
+
+    return (): void => {
       live = false;
     };
   }, [enabled, load]);

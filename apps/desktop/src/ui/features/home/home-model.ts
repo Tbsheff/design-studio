@@ -4,16 +4,15 @@ import type {
   ProjectSettings,
   RunLevel,
 } from "@design-studio/contracts";
-import {
-  type WorkspaceList,
-  shortenHome,
-} from "@design-studio/contracts/folders";
+import { shortenHome } from "@design-studio/contracts/folders";
+import type { WorkspaceList } from "@design-studio/contracts/folders";
 import type { DragEvent } from "react";
 
 import { api } from "../../api.js";
 import { homeVariations } from "../../platform/storage.js";
 import { modelLabel } from "../chat/settings-draft-model.js";
-import { type AppChip, chipName, chipProblem } from "./home-app-chip.js";
+import { chipName, chipProblem } from "./home-app-chip.js";
+import type { AppChip } from "./home-app-chip.js";
 import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
 
 type Busy = "create" | "ask" | "starter" | null;
@@ -31,9 +30,9 @@ const EXAMPLES = [
 const EXAMPLE_MS = 3500;
 
 const LEVEL_LABEL: Record<RunLevel, string> = {
-  wireframe: "Wireframe",
-  prototype: "Prototype",
   polish: "Polish",
+  prototype: "Prototype",
+  wireframe: "Wireframe",
 };
 
 const PLACEHOLDER =
@@ -43,9 +42,9 @@ const HOME_REASON_ID = "home-send-reason";
 
 const EMPTY_PROMPT = "Describe the design first";
 
-function focusPrompt(home: HTMLElement | null, atEnd = false): void {
-  home?.scrollTo({ top: 0, behavior: "smooth" });
-  window.requestAnimationFrame(() => {
+function setPromptFocus(home: HTMLElement | null, atEnd = false): void {
+  home?.scrollTo({ behavior: "smooth", top: 0 });
+  globalThis.requestAnimationFrame(() => {
     const area = document.querySelector<HTMLTextAreaElement>(
       '[aria-label="Describe the design"]'
     );
@@ -58,15 +57,15 @@ function focusPrompt(home: HTMLElement | null, atEnd = false): void {
   });
 }
 
-function focusIn(selector: string): void {
-  window.setTimeout(() => {
+function setFocusIn(selector: string): void {
+  globalThis.setTimeout(() => {
     const el = document.querySelector<HTMLElement>(selector);
-    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
     el?.focus();
   }, 60);
 }
 
-function folderLabel(
+function getFolderLabel(
   list: WorkspaceList | null,
   location: string | null
 ): string {
@@ -79,13 +78,13 @@ function folderLabel(
   return match?.label ?? "Design Studio";
 }
 
-function modelSummary(model: string, count: number): string {
+function getModelSummary(model: string, count: number): string {
   const extra = count > 1 ? ` · ${count}×` : "";
 
   return `${modelLabel(model).replace(/^Claude /u, "")}${extra}`;
 }
 
-function homeSendBlocker(
+function getHomeSendBlocker(
   busy: Busy,
   prompt: string,
   asking: boolean,
@@ -136,10 +135,10 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
   const separateRun = !fanOut && input.images.length > 0;
 
   const { project } = await api.createProject({
-    prompt: input.prompt,
     kind: input.kind,
-    settings: input.settings,
     level,
+    prompt: input.prompt,
+    settings: input.settings,
     ...extra,
     ...where,
     ...(fanOut || separateRun ? { startRun: false } : {}),
@@ -148,10 +147,10 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
 
   if (fanOut) {
     homeVariations.set({
-      projectId: project.id,
-      prompt: input.prompt,
       count: input.designCount,
       level,
+      projectId: project.id,
+      prompt: input.prompt,
     });
   }
 
@@ -165,10 +164,10 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
     );
 
     await api.startRun(project.id, main.id, {
-      prompt: input.prompt,
-      mode: "edit",
-      level,
       attachmentIds: uploaded.map((item) => item.id),
+      level,
+      mode: "edit",
+      prompt: input.prompt,
       ...refs,
     });
   }
@@ -180,7 +179,7 @@ function hasFiles(event: DragEvent): boolean {
   return [...event.dataTransfer.types].includes("Files");
 }
 
-function promptPlaceholder(
+function getPromptPlaceholder(
   chip: AppChip | null,
   empty: boolean
 ): string | null {
@@ -191,7 +190,7 @@ function promptPlaceholder(
   return empty ? PLACEHOLDER : null;
 }
 
-function reasonId(blocker: string | null): string | undefined {
+function getReasonId(blocker: string | null): string | undefined {
   return blocker && blocker !== EMPTY_PROMPT ? HOME_REASON_ID : undefined;
 }
 
@@ -202,11 +201,11 @@ function isEmpty(projects: Project[] | null): boolean {
   );
 }
 
-function homeOf(workspaces: WorkspaceList | null): string | null {
+function getHome(workspaces: WorkspaceList | null): string | null {
   return workspaces?.homeDir ?? null;
 }
 
-function shortHome(target: string, homeDir: string | null): string {
+function toShortHome(target: string, homeDir: string | null): string {
   return shortenHome(target.replace(/^\/private(?=\/)/u, ""), homeDir);
 }
 
@@ -237,33 +236,33 @@ interface StarProps {
 }
 
 export {
-  PLACEHOLDER,
-  focusPrompt,
-  EXAMPLE_MS,
-  reasonId,
-  LEVEL_LABEL,
-  shortHome,
-  folderLabel,
-  hasFiles,
-  homeSendBlocker,
-  promptPlaceholder,
-  homeOf,
-  modelSummary,
-  EXAMPLES,
   EMPTY_PROMPT,
-  isEmpty,
-  focusIn,
+  EXAMPLES,
+  EXAMPLE_MS,
   HOME_REASON_ID,
+  LEVEL_LABEL,
+  PLACEHOLDER,
   createFromHome,
+  setFocusIn as focusIn,
+  setPromptFocus as focusPrompt,
+  getFolderLabel as folderLabel,
+  hasFiles,
+  getHome as homeOf,
+  getHomeSendBlocker as homeSendBlocker,
+  isEmpty,
+  getModelSummary as modelSummary,
+  getPromptPlaceholder as promptPlaceholder,
+  getReasonId as reasonId,
+  toShortHome as shortHome,
 };
 
 export type {
-  Pop,
   Busy,
-  HomeCreateInput,
   DesignCount,
+  HomeCreateInput,
   KeyedFlag,
   KeyedUrl,
   Point,
+  Pop,
   StarProps,
 };

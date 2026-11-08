@@ -1,9 +1,10 @@
-import { type RefObject, Suspense } from "react";
+import { Suspense } from "react";
+import type { ReactElement, RefObject } from "react";
 
 import type { AppChip } from "./home-app-chip.js";
 import { AppMenu } from "./lazy-parts.js";
 
-function ChipMenuSlot({
+const ChipMenuSlot = ({
   isShown,
   isClosing,
   chip,
@@ -21,7 +22,7 @@ function ChipMenuSlot({
   readonly onClose: () => void;
   readonly onChange: (patch: Partial<AppChip>) => void;
   readonly onTokensOnly: () => void;
-}) {
+}): ReactElement | null => {
   if (!isShown || !chip) {
     return null;
   }
@@ -44,6 +45,6 @@ function ChipMenuSlot({
       />
     </Suspense>
   );
-}
+};
 
 export { ChipMenuSlot };

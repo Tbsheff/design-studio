@@ -1,9 +1,10 @@
-import {
-  shortenHome,
-  type WorkspaceFolder,
-  type WorkspaceList,
+import { shortenHome } from "@design-studio/contracts/folders";
+import type {
+  WorkspaceFolder,
+  WorkspaceList,
 } from "@design-studio/contracts/folders";
 import { Disclosure } from "@design-studio/ui";
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
@@ -14,13 +15,13 @@ import type { FolderChooser } from "./use-folder-chooser.js";
 
 export { FoldersSection } from "./folder-controls.js";
 
-function HiddenProjectsNote({
+const HiddenProjectsNote = ({
   homeDir,
   onMoved,
 }: {
   readonly homeDir: string | null;
   readonly onMoved: () => void;
-}) {
+}): ReactElement | null => {
   const [hidden, setHidden] = useState<{
     readonly count: number;
     readonly target: string;
@@ -29,21 +30,23 @@ function HiddenProjectsNote({
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = () =>
-    api
-      .hiddenProjects()
-      .then(setHidden)
-      .catch(() => setHidden(null));
+  const load = async (): Promise<void> => {
+    try {
+      setHidden(await api.hiddenProjects());
+    } catch {
+      setHidden(null);
+    }
+  };
 
   useEffect(() => {
-    void load();
+    load();
   }, []);
 
   if (!hidden || hidden.count === 0) {
     return null;
   }
 
-  const move = async () => {
+  const move = async (): Promise<void> => {
     setMoving(true);
     setError(null);
 
@@ -60,8 +63,8 @@ function HiddenProjectsNote({
       if (result.moved.length > 0) {
         onMoved();
       }
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     } finally {
       setMoving(false);
       await load();
@@ -78,7 +81,7 @@ function HiddenProjectsNote({
       <button
         type="button"
         className="btn small"
-        onClick={() => void move()}
+        onClick={() => move()}
         disabled={moving}
       >
         {moving ? "Moving…" : `Move to ${shortenHome(hidden.target, homeDir)}`}
@@ -86,7 +89,7 @@ function HiddenProjectsNote({
       {error && <span className="home-hidden-error">{error}</span>}
     </div>
   );
-}
+};
 
 export interface ComposerFootProps {
   readonly workspaces: WorkspaceList | null;
@@ -106,7 +109,7 @@ export interface ComposerFootProps {
   readonly onHiddenMoved: () => void;
 }
 
-export function ComposerFoot({
+export const ComposerFoot = ({
   workspaces,
   location,
   prompt,
@@ -115,7 +118,7 @@ export function ComposerFoot({
   onAddFolder,
   advanced,
   onHiddenMoved,
-}: ComposerFootProps) {
+}: ComposerFootProps): ReactElement => {
   const homeDir = workspaces?.homeDir ?? null;
 
   return (
@@ -144,4 +147,4 @@ export function ComposerFoot({
       <HiddenProjectsNote homeDir={homeDir} onMoved={onHiddenMoved} />
     </div>
   );
-}
+};

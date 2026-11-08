@@ -1,12 +1,12 @@
 import type { Project } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type { FormEvent, KeyboardEvent, ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import type { CardAction, MenuAt } from "./project-grid.js";
 
-export function CardMenu({
+const CardMenu = ({
   project,
   place,
   at,
@@ -18,12 +18,12 @@ export function CardMenu({
   readonly at: Exclude<MenuAt, null>;
   readonly onClose: (refocus: boolean) => void;
   readonly onPick: (action: CardAction) => void;
-}) {
+}): ReactElement => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
 
-    const onDown = (event: globalThis.MouseEvent) => {
+    const onDown = (event: globalThis.MouseEvent): void => {
       if (!ref.current?.contains(event.target as Node)) {
         onClose(false);
       }
@@ -31,10 +31,10 @@ export function CardMenu({
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const items = [
       ...(ref.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitem"]'
@@ -73,7 +73,7 @@ export function CardMenu({
   const style =
     typeof at === "string"
       ? undefined
-      : { left: at.x, top: at.y, right: "auto" };
+      : { left: at.x, right: "auto", top: at.y };
 
   const mode =
     typeof at === "string" ? (at === "keys" ? " instant" : "") : " at-pointer";
@@ -84,7 +84,7 @@ export function CardMenu({
     icon: Parameters<typeof Icon>[0]["name"],
     keys: string,
     danger = false
-  ) => (
+  ): ReactElement => (
     <button
       type="button"
       role="menuitem"
@@ -119,18 +119,24 @@ export function CardMenu({
         "⌘⌫",
         true
       )}
-      {place && <p className="project-menu-note">Files stay in {place}.</p>}
+      {place && (
+        <p className="project-menu-note">
+          {copy.filesStayIn}
+          {place}
+          {copy.text}
+        </p>
+      )}
     </div>
   );
-}
+};
 
-export function RenameField({
+const RenameField = ({
   project,
   onDone,
 }: {
   readonly project: Project;
   readonly onDone: (name: string | null) => void;
-}) {
+}): ReactElement => {
   const [value, setValue] = useState(project.name);
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -138,7 +144,7 @@ export function RenameField({
     ref.current?.select();
   }, []);
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent): void => {
     event.preventDefault();
     onDone(value.trim() && value.trim() !== project.name ? value.trim() : null);
   };
@@ -166,4 +172,6 @@ export function RenameField({
       />
     </form>
   );
-}
+};
+
+export { CardMenu, RenameField };

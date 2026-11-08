@@ -2,11 +2,18 @@ import { useSyncExternalStore } from "react";
 
 import { readStored, writeStored } from "../../platform/storage.js";
 
-export type HomeView = "list" | "grid";
-export type HomeFilter = "all" | "prototypes" | "apps" | "systems";
-const FILTERS: HomeFilter[] = ["all", "prototypes", "apps", "systems"];
+type HomeView = "list" | "grid";
 
-export interface HomePrefs {
+type HomeFilter = "all" | "prototypes" | "apps" | "systems";
+
+const FILTERS: ReadonlySet<string> = new Set([
+  "all",
+  "prototypes",
+  "apps",
+  "systems",
+]);
+
+interface HomePrefs {
   readonly favorites: string[];
   readonly isFavoritesOnly: boolean;
   readonly view: HomeView;
@@ -20,6 +27,7 @@ interface LegacyHomePrefs {
 }
 
 const KEY = "studio.home.v1";
+
 const DEFAULTS: HomePrefs = {
   favorites: [],
   filter: "all",
@@ -28,15 +36,16 @@ const DEFAULTS: HomePrefs = {
   view: "list",
 };
 
-function read(): HomePrefs {
+function getPrefs(): HomePrefs {
   try {
     const raw = JSON.parse(readStored(KEY) ?? "{}") as Partial<HomePrefs> &
       Partial<LegacyHomePrefs>;
+
     return {
       favorites: Array.isArray(raw.favorites)
         ? raw.favorites.filter((id): id is string => typeof id === "string")
         : [],
-      filter: FILTERS.includes(raw.filter as HomeFilter)
+      filter: FILTERS.has(String(raw.filter))
         ? (raw.filter as HomeFilter)
         : "all",
       hasTemplatesShown:
@@ -50,21 +59,21 @@ function read(): HomePrefs {
   }
 }
 
-function saveQuietly(prefs: HomePrefs): void {
+function setPrefsQuietly(prefs: HomePrefs): void {
   writeStored(KEY, JSON.stringify(prefs));
 }
 
-let current = read();
+let current = getPrefs();
 const listeners = new Set<() => void>();
 
-export const homePrefs = {
+const homePrefs = {
   get: () => current,
-  set(patch: Partial<HomePrefs>) {
+  set(patch: Partial<HomePrefs>): void {
     current = { ...current, ...patch };
-    saveQuietly(current);
+    setPrefsQuietly(current);
     listeners.forEach((listener) => listener());
   },
-  toggleFavorite(id: string) {
+  toggleFavorite(id: string): void {
     const has = current.favorites.includes(id);
     homePrefs.set({
       favorites: has
@@ -74,13 +83,17 @@ export const homePrefs = {
   },
 };
 
-function subscribe(listener: () => void) {
+function startPrefsSubscription(listener: () => void) {
   listeners.add(listener);
-  return () => {
+
+  return (): void => {
     listeners.delete(listener);
   };
 }
 
-export function useHomePrefs(): HomePrefs {
-  return useSyncExternalStore(subscribe, homePrefs.get);
-}
+const useHomePrefs = (): HomePrefs =>
+  useSyncExternalStore(startPrefsSubscription, homePrefs.get);
+
+export { homePrefs, useHomePrefs };
+
+export type { HomeFilter, HomePrefs, HomeView };

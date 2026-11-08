@@ -2,76 +2,80 @@ import { lazy } from "react";
 
 const clarifyChunk = import("../chat/clarify-form.js");
 
-const ClarifyForm = lazy(() =>
-  clarifyChunk.then((m) => ({ default: m.ClarifyForm }))
-);
+const ClarifyForm = lazy(async () => ({
+  default: (await clarifyChunk).ClarifyForm,
+}));
 
 const libraryChunk = import("./home-library.js");
 
-const loadTrash = () => import("./home-trash.js");
+const importTrash = () => import("./home-trash.js");
 
-const loadSlash = () => import("./home-slash.js");
+const importSlash = () => import("./home-slash.js");
 
-const HomeTrash = lazy(loadTrash);
+const HomeTrash = lazy(importTrash);
 
-const loadPops = () => import("./home-popovers.js");
+const importPopovers = () => import("./home-popovers.js");
 
-const PlusMenu = lazy(() => loadPops().then((m) => ({ default: m.PlusMenu })));
+const PlusMenu = lazy(async () => ({
+  default: (await importPopovers()).PlusMenu,
+}));
 
-const PackPopover = lazy(() =>
-  loadPops().then((m) => ({ default: m.PackPopover }))
-);
+const PackPopover = lazy(async () => ({
+  default: (await importPopovers()).PackPopover,
+}));
 
-const ModelPopover = lazy(() =>
-  loadPops().then((m) => ({ default: m.ModelPopover }))
-);
+const ModelPopover = lazy(async () => ({
+  default: (await importPopovers()).ModelPopover,
+}));
 
-const LevelPopover = lazy(() =>
-  loadPops().then((m) => ({ default: m.LevelPopover }))
-);
+const LevelPopover = lazy(async () => ({
+  default: (await importPopovers()).LevelPopover,
+}));
 
-const loadTemplates = () => import("./home-templates.js");
+const importTemplates = () => import("./home-templates.js");
 
-const loadExtras = () => import("./home-extras.js");
+const importExtras = () => import("./home-extras.js");
 
-const loadAppMenu = () => import("./home-app-menu.js");
+const importAppMenu = () => import("./home-app-menu.js");
 
-const AppMenu = lazy(() => loadAppMenu().then((m) => ({ default: m.AppMenu })));
+const AppMenu = lazy(async () => ({
+  default: (await importAppMenu()).AppMenu,
+}));
 
-const FolderPathPop = lazy(() =>
-  loadAppMenu().then((m) => ({ default: m.FolderPathPop }))
-);
+const FolderPathPop = lazy(async () => ({
+  default: (await importAppMenu()).FolderPathPop,
+}));
 
 const HomeDoctor = lazy(() => import("./home-doctor.js"));
 
 const HomeEmpty = lazy(() => import("./home-empty.js"));
 
-const loadLibrary = () => libraryChunk;
+const importLibrary = () => libraryChunk;
 
 type LibraryModule = Awaited<typeof libraryChunk>;
 
-type TemplatesModule = Awaited<ReturnType<typeof loadTemplates>>;
+type TemplatesModule = Awaited<ReturnType<typeof importTemplates>>;
 
 export {
-  clarifyChunk,
-  FolderPathPop,
-  libraryChunk,
-  loadExtras,
-  loadTemplates,
-  loadTrash,
   AppMenu,
-  loadAppMenu,
-  PackPopover,
-  ModelPopover,
-  loadLibrary,
-  PlusMenu,
-  loadSlash,
-  HomeDoctor,
-  LevelPopover,
   ClarifyForm,
-  loadPops,
-  HomeTrash,
+  FolderPathPop,
+  HomeDoctor,
   HomeEmpty,
+  HomeTrash,
+  LevelPopover,
+  ModelPopover,
+  PackPopover,
+  PlusMenu,
+  clarifyChunk,
+  libraryChunk,
+  importAppMenu as loadAppMenu,
+  importExtras as loadExtras,
+  importLibrary as loadLibrary,
+  importPopovers as loadPops,
+  importSlash as loadSlash,
+  importTemplates as loadTemplates,
+  importTrash as loadTrash,
 };
 
 export type { LibraryModule, TemplatesModule };

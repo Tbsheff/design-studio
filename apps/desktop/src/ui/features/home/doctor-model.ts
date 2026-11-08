@@ -1,6 +1,6 @@
 import type { Project } from "@design-studio/contracts";
 
-import type { AppHealth } from "../../../shared/found-apps.js";
+import type { AppHealth } from "./deps.js";
 import type { DoctorProblem } from "./home-doctor.js";
 import { shortHome } from "./home-model.js";
 
@@ -16,7 +16,7 @@ const INSTALL_DETAIL =
 
 const SHELL_SAFE = /^[\w./-]+$/u;
 
-function shellPath(dir: string, homeDir: string | null): string {
+function getShellPath(dir: string, homeDir: string | null): string {
   const short = shortHome(dir, homeDir);
 
   if (short === "~") {
@@ -32,7 +32,7 @@ function shellPath(dir: string, homeDir: string | null): string {
   return SHELL_SAFE.test(short) ? short : JSON.stringify(short);
 }
 
-function homeCommand(
+function getHomeCommand(
   command: string | null,
   homeDir: string | null
 ): string | null {
@@ -43,13 +43,13 @@ function homeCommand(
   }
 
   try {
-    return `cd ${shellPath(JSON.parse(match[1]) as string, homeDir)} && ${match[2]}`;
+    return `cd ${getShellPath(JSON.parse(match[1]) as string, homeDir)} && ${match[2]}`;
   } catch {
     return command;
   }
 }
 
-function installProblem(
+function getInstallProblem(
   name: string,
   place: string,
   kindLabel: string,
@@ -60,19 +60,19 @@ function installProblem(
   }
 ): DoctorProblem {
   return {
+    badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
+    command: `cd ${getShellPath(install.dir, install.homeDir)} && ${install.command}`,
+    detail: INSTALL_DETAIL,
     name,
     place,
-    badge: { label: kindLabel, tone: kindLabel === "Vite" ? "vite" : "next" },
     steps: [
       { isOk: true, text: `package.json · ${kindLabel}` },
       { isOk: false, text: "node_modules is missing" },
     ],
-    detail: INSTALL_DETAIL,
-    command: `cd ${shellPath(install.dir, install.homeDir)} && ${install.command}`,
   };
 }
 
-function healthProblem(
+function getHealthProblem(
   project: Project,
   health: AppHealth,
   place: string,
@@ -81,9 +81,14 @@ function healthProblem(
   const label = project.app?.framework === "next" ? "Next.js" : "Vite";
 
   return {
+    badge: { label, tone: label === "Vite" ? "vite" : "next" },
+    command: getHomeCommand(health.command, homeDir),
+    detail:
+      health.state === "install"
+        ? INSTALL_DETAIL
+        : (health.detail ?? health.title ?? "The dev server cannot start."),
     name: project.name,
     place,
-    badge: { label, tone: label === "Vite" ? "vite" : "next" },
     steps: [
       { isOk: true, text: `package.json · ${label}` },
       {
@@ -94,21 +99,16 @@ function healthProblem(
             : (health.title ?? "The dev server failed"),
       },
     ],
-    detail:
-      health.state === "install"
-        ? INSTALL_DETAIL
-        : (health.detail ?? health.title ?? "The dev server cannot start."),
-    command: homeCommand(health.command, homeDir),
   };
 }
 
 export {
-  SHELL_SAFE,
   INSTALL_DETAIL,
-  installProblem,
-  healthProblem,
-  shellPath,
-  homeCommand,
+  SHELL_SAFE,
+  getHealthProblem as healthProblem,
+  getHomeCommand as homeCommand,
+  getInstallProblem as installProblem,
+  getShellPath as shellPath,
 };
 
 export type { DoctorGate };

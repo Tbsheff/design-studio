@@ -1,4 +1,5 @@
 import { CopyButton, Icon, useModalDialog } from "@design-studio/ui";
+import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
@@ -28,8 +29,9 @@ export default function HomeDoctor({
   readonly onCheck: () => void;
   readonly onOpenAnyway: () => void;
   readonly onClose: () => void;
-}) {
+}): ReactElement {
   const dialog = useModalDialog(() => onClose());
+
   return (
     <dialog
       ref={dialog.ref}
@@ -90,7 +92,7 @@ export default function HomeDoctor({
             className="btn small ghost"
             onClick={onOpenAnyway}
           >
-            Open anyway
+            {copy.openAnyway}
           </button>
         </div>
       </div>

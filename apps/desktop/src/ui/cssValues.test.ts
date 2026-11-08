@@ -1,56 +1,56 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  changedProps,
-  colorToHex,
-  displayColor,
-  expandBox,
+  toChangedProps,
+  toHexColor,
+  toDisplayColor,
+  toBoxSides,
   hasChildElements,
-  normalizeLength,
-  parseNumber,
-  stepValue,
-  valuesFromStyles,
-} from "./features/inspector/css-values";
+  toNormalizedLength,
+  toParsedNumber,
+  toSteppedValue,
+  toStyleValues,
+} from "./features/inspector/index";
 
 describe("cssValues", () => {
   it("parses numbers with units", () => {
-    expect(parseNumber("48px")).toEqual({ value: 48, unit: "px" });
-    expect(parseNumber("1.5")).toEqual({ value: 1.5, unit: "" });
-    expect(parseNumber("-0.5rem")).toEqual({ value: -0.5, unit: "rem" });
-    expect(parseNumber("auto")).toBeNull();
+    expect(toParsedNumber("48px")).toEqual({ value: 48, unit: "px" });
+    expect(toParsedNumber("1.5")).toEqual({ value: 1.5, unit: "" });
+    expect(toParsedNumber("-0.5rem")).toEqual({ value: -0.5, unit: "rem" });
+    expect(toParsedNumber("auto")).toBeNull();
   });
 
   it("steps and normalizes lengths", () => {
-    expect(stepValue("16px", 10, "px")).toBe("26px");
-    expect(stepValue("normal", 1, "px")).toBe("1px");
-    expect(stepValue("1.2", 0.1, "")).toBe("1.3");
-    expect(normalizeLength("48", "px")).toBe("48px");
-    expect(normalizeLength("1.4", "")).toBe("1.4");
-    expect(normalizeLength("2rem", "px")).toBe("2rem");
+    expect(toSteppedValue("16px", 10, "px")).toBe("26px");
+    expect(toSteppedValue("normal", 1, "px")).toBe("1px");
+    expect(toSteppedValue("1.2", 0.1, "")).toBe("1.3");
+    expect(toNormalizedLength("48", "px")).toBe("48px");
+    expect(toNormalizedLength("1.4", "")).toBe("1.4");
+    expect(toNormalizedLength("2rem", "px")).toBe("2rem");
   });
 
   it("converts colors for the swatch", () => {
-    expect(colorToHex("rgb(194, 65, 12)")).toBe("#c2410c");
-    expect(colorToHex("#abc")).toBe("#aabbcc");
-    expect(colorToHex("rgba(0, 0, 0, 0.5)")).toBeNull();
-    expect(colorToHex("oklch(0.5 0.1 200)")).toBeNull();
-    expect(displayColor("rgba(0, 0, 0, 0)")).toBe("transparent");
+    expect(toHexColor("rgb(194, 65, 12)")).toBe("#c2410c");
+    expect(toHexColor("#abc")).toBe("#aabbcc");
+    expect(toHexColor("rgba(0, 0, 0, 0.5)")).toBeNull();
+    expect(toHexColor("oklch(0.5 0.1 200)")).toBeNull();
+    expect(toDisplayColor("rgba(0, 0, 0, 0)")).toBe("transparent");
   });
 
   it("expands box shorthands and prefers longhands", () => {
-    expect(expandBox("1px 2px")).toEqual({
+    expect(toBoxSides("1px 2px")).toEqual({
       top: "1px",
       right: "2px",
       bottom: "1px",
       left: "2px",
     });
-    expect(expandBox("1px 2px 3px")).toEqual({
+    expect(toBoxSides("1px 2px 3px")).toEqual({
       top: "1px",
       right: "2px",
       bottom: "3px",
       left: "2px",
     });
-    const values = valuesFromStyles({
+    const values = toStyleValues({
       padding: "8px 16px",
       "padding-top": "4px",
       height: "61.59375px",
@@ -67,12 +67,12 @@ describe("cssValues", () => {
   });
 
   it("keeps only changed props", () => {
-    const base = valuesFromStyles({
+    const base = toStyleValues({
       color: "rgb(0, 0, 0)",
       "font-size": "16px",
     });
     expect(
-      changedProps({ color: "rgb(0, 0, 0)", "font-size": "18px" }, base)
+      toChangedProps({ color: "rgb(0, 0, 0)", "font-size": "18px" }, base)
     ).toEqual({ "font-size": "18px" });
   });
 });

@@ -6,7 +6,7 @@ import type {
 import { useModalDialog } from "@design-studio/ui";
 import type { KeyboardEvent, ReactNode } from "react";
 
-import { displayColor, isValidColor } from "../inspector/css-values.js";
+import { toDisplayColor, isValidColor } from "../inspector/index.js";
 import type { CreateRequest } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";
 import { CreateTokenBody } from "./create-token-body.js";
@@ -48,7 +48,7 @@ const CreateTokenDialog = ({
   let valuePaint: string | null = null;
 
   if (isColor) {
-    initialValue = displayColor(request.value);
+    initialValue = toDisplayColor(request.value);
   }
 
   const form = useCreateToken({

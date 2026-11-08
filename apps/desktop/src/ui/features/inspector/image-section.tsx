@@ -4,10 +4,15 @@ import { Suspense, lazy } from "react";
 import { imageKindOf } from "../../../shared/image.js";
 import type { InspectorProps } from "./inspector-model.js";
 
-const InspectorImage = lazy(() => import("./inspector-image.js"));
+const InspectorImage = lazy(async () => {
+  await import("../../styles/inspector-image.css");
+  const loaded = await import("./inspector-image.js");
+
+  return { default: loaded.InspectorImage };
+});
 
 const ImageSection = (props: InspectorProps): ReactElement | null => {
-  const target = props.selection[0];
+  const [target] = props.selection;
 
   if (
     props.selection.length !== 1 ||

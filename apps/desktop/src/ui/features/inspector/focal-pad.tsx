@@ -1,81 +1,45 @@
-import { useState } from "react";
-import type { KeyboardEvent, PointerEvent, ReactElement } from "react";
+import { useMemo } from "react";
+import type { ReactElement } from "react";
 
-import { focalOf, focalText } from "../../../shared/image.js";
+import { focalText } from "../../../shared/image.js";
 import { copy } from "./copy.js";
+import { toPadClass, toPadTabIndex } from "./focal-pad-model.js";
+import { useFocalPad } from "./use-focal-pad.js";
 
-const FocalPad = ({
-  value,
-  isDisabled: disabled,
-  onPick,
-}: {
+interface FocalPadProps {
   readonly value: string;
   readonly isDisabled: boolean;
   readonly onPick: (focal: string) => void;
-}): ReactElement => {
-  const [drag, setDrag] = useState<string | null>(null);
-  const point = focalOf(drag ?? value);
+}
 
-  const at = (event: PointerEvent<HTMLDivElement>): string => {
-    const rect = event.currentTarget.getBoundingClientRect();
+const FocalPad = ({
+  value,
+  isDisabled,
+  onPick,
+}: FocalPadProps): ReactElement => {
+  const pad = useFocalPad(value, isDisabled, onPick);
+  const { point } = pad;
 
-    return focalText(
-      ((event.clientX - rect.left) / rect.width) * 100,
-      ((event.clientY - rect.top) / rect.height) * 100
-    );
-  };
-
-  const onKey = (event: KeyboardEvent<HTMLDivElement>): void => {
-    const step = event.shiftKey ? 10 : 5;
-
-    const move = {
-      ArrowDown: [0, step],
-      ArrowLeft: [-step, 0],
-      ArrowRight: [step, 0],
-      ArrowUp: [0, -step],
-    }[event.key];
-
-    if (!move) {
-      return;
-    }
-
-    event.preventDefault();
-    onPick(focalText(point.x + (move[0] ?? 0), point.y + (move[1] ?? 0)));
-  };
+  const dotStyle = useMemo(
+    () => ({ left: `${point.x}%`, top: `${point.y}%` }),
+    [point.x, point.y]
+  );
 
   return (
-    <div
-      className={`img-focal${disabled ? " off" : ""}`}
-      role="slider"
-      tabIndex={disabled ? -1 : 0}
-      aria-label={copy.focalPoint}
-      aria-valuetext={focalText(point.x, point.y)}
+    <button
+      type="button"
+      className={toPadClass(isDisabled)}
+      tabIndex={toPadTabIndex(isDisabled)}
+      aria-label={`${copy.focalPoint} ${focalText(point.x, point.y)}`}
       data-tip={copy.clickOrDragToSet}
-      onPointerDown={(event) => {
-        if (disabled) {
-          return;
-        }
-
-        event.currentTarget.setPointerCapture(event.pointerId);
-        setDrag(at(event));
-      }}
-      onPointerMove={(event) => drag !== null && setDrag(at(event))}
-      onPointerUp={(event) => {
-        if (drag === null) {
-          return;
-        }
-
-        const next = at(event);
-        setDrag(null);
-        onPick(next);
-      }}
-      onKeyDown={onKey}
+      onPointerDown={pad.handlePointerDown}
+      onPointerMove={pad.handlePointerMove}
+      onPointerUp={pad.handlePointerUp}
+      onPointerCancel={pad.handlePointerCancel}
+      onKeyDown={pad.handleKeyDown}
     >
-      <span
-        className="img-focal-dot"
-        style={{ left: `${point.x}%`, top: `${point.y}%` }}
-      />
-    </div>
+      <span className="img-focal-dot" style={dotStyle} />
+    </button>
   );
 };
 

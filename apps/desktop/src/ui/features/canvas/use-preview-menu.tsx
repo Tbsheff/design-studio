@@ -20,7 +20,7 @@ import {
 import type { GenerateTabProps } from "../../canvas-preview-slots.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
-import { formatCopyCss } from "../inspector/authored-css.js";
+import { toCopyCss } from "../inspector/index.js";
 import { pasteJsx } from "../inspector/paste-jsx.js";
 import {
   selectionTargets,
@@ -68,7 +68,7 @@ const copyCss = async (
   const css = await requestAuthoredCss(port, selector);
 
   if (css) {
-    await toValueOr(navigator.clipboard.writeText(formatCopyCss(css)), null);
+    await toValueOr(navigator.clipboard.writeText(toCopyCss(css)), null);
   }
 };
 

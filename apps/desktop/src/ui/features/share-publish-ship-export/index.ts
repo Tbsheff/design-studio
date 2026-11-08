@@ -31,3 +31,5 @@ const PublishSetup = lazy(async () => {
 });
 
 export { ExportDialog, PublishPane, PublishSetup, ShareDialog, ShipDialog };
+
+export { exportApi } from "./export-api.js";

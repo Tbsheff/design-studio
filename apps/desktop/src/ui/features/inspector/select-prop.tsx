@@ -6,7 +6,7 @@ import { AUTHOR_OPTIONS, toAuthorMode } from "./author-model.js";
 import type { SheetMode } from "./author-model.js";
 import { toClassName } from "./class-name-model.js";
 import { copy } from "./copy.js";
-import { InspectorSelect } from "./inspector-fields.js";
+import { InspectorSelect } from "./inspector-select.js";
 import { toDraftText, toOptionLabel, toSelectList } from "./props-model.js";
 
 interface SelectPropProps {

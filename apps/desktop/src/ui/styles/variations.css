@@ -308,3 +308,17 @@
   white-space: nowrap;
   cursor: help;
 }
+
+dialog.variation-card {
+  position: static;
+  margin: 0;
+  max-width: none;
+  color: inherit;
+}
+
+fieldset.element-variants-count {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}

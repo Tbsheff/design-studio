@@ -1,12 +1,9 @@
 import type { RunSummary, StudioEvent } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
+import { createDeltaBatcher, toMergedDeltas } from "./features/chat/index";
 import { applyRunEvent, runText } from "./features/chat/run-state-model";
 import type { RunMap } from "./features/chat/run-state-model";
-import {
-  createDeltaBatcher,
-  mergeDeltas,
-} from "./features/inspector/delta-batch";
 
 let seq = 0;
 
@@ -204,8 +201,10 @@ describe("delta batcher", () => {
     >;
 
     expect(
-      mergeDeltas(mergeDeltas(mergeDeltas([], a), b), c).map((e) => e.text)
+      toMergedDeltas(toMergedDeltas(toMergedDeltas([], a), b), c).map(
+        (e) => e.text
+      )
     ).toEqual(["a", "b", "c"]);
-    expect(mergeDeltas([a], c).map((e) => e.text)).toEqual(["ac"]);
+    expect(toMergedDeltas([a], c).map((e) => e.text)).toEqual(["ac"]);
   });
 });

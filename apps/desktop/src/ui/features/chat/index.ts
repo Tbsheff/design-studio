@@ -1,6 +1,11 @@
 import { lazy } from "react";
 
 import { chatWidthStyle } from "./chat-splitter-model.js";
+import {
+  createDeltaBatcher,
+  toFrameSchedule,
+  toMergedDeltas,
+} from "./delta-batch-model.js";
 import { runStepText } from "./live-status-model.js";
 import { parseDraft, toDraft } from "./settings-draft-model.js";
 import type { SettingsDraft } from "./settings-draft-model.js";
@@ -34,9 +39,12 @@ export {
   McpPointBadge,
   McpToasts,
   chatWidthStyle,
+  createDeltaBatcher,
   parseDraft,
   runStepText,
   toDraft,
+  toFrameSchedule,
+  toMergedDeltas,
   UnfinishedBanner,
 };
 

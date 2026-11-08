@@ -1,9 +1,12 @@
-import type { ShiftPart } from "./css-values.js";
+import type { ShiftPart } from "./css-value-model.js";
 import { formatShadows, parseShadows } from "./shadows.js";
 import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 type Part = "x" | "y" | "blur" | "spread";
+
+const BOX_SHADOW = "box-shadow";
+const NO_SHADOW_VALUE = "0";
 
 const PARTS: {
   readonly part: Part;
@@ -27,33 +30,52 @@ interface ShadowView {
 const FIELDS: Field[] = ["x", "y", "blur", "spread", "color"];
 let opCount = 0;
 
-const eachList = (
+const toChangedShadows = (
   raw: string,
   change: (list: Shadow[]) => Shadow[]
 ): string => {
   const list = parseShadows(raw);
 
-  return list ? formatShadows(change(list)) : raw;
+  if (!list) {
+    return raw;
+  }
+
+  return formatShadows(change(list));
 };
 
-const fieldPart = (index: number, field: Field): ShiftPart => ({
-  key: `${index}.${field}`,
-  map: (raw, change) =>
-    eachList(raw, (list) =>
-      list.map((shadow, indexValue) =>
-        indexValue === index
-          ? {
-              ...shadow,
-              [field]:
-                change(shadow[field]) ||
-                (field === "color" ? shadow.color : "0"),
-            }
-          : shadow
-      )
-    ),
+const toFieldFallback = (field: Field, shadow: Shadow): string => {
+  if (field === "color") {
+    return shadow.color;
+  }
+
+  return NO_SHADOW_VALUE;
+};
+
+const toChangedShadow = (
+  shadow: Shadow,
+  field: Field,
+  change: (value: string) => string
+): Shadow => ({
+  ...shadow,
+  [field]: change(shadow[field]) || toFieldFallback(field, shadow),
 });
 
-const writeShadows = (
+const toFieldPart = (index: number, field: Field): ShiftPart => ({
+  key: `${index}.${field}`,
+  map: (raw, change) =>
+    toChangedShadows(raw, (list) => {
+      const next = [...list];
+      const [target] = next.slice(index, index + 1);
+
+      if (target) {
+        next[index] = toChangedShadow(target, field, change);
+      }
+
+      return next;
+    }),
+});
+
+const setShadows = (
   edit: DirectEdit,
   view: ShadowView,
   change: (list: Shadow[]) => Shadow[]
@@ -61,76 +83,99 @@ const writeShadows = (
   if (view.mixed) {
     opCount += 1;
     edit.shift(
-      ["box-shadow"],
+      [BOX_SHADOW],
       0,
       {},
-      { key: `op${opCount}`, map: (raw) => eachList(raw, change), set: "" }
+      {
+        key: `op${opCount}`,
+        map: (raw) => toChangedShadows(raw, change),
+        set: "",
+      }
     );
   } else {
-    edit.preview({ "box-shadow": formatShadows(change(view.list)) });
+    edit.preview({ [BOX_SHADOW]: formatShadows(change(view.list)) });
   }
 
   edit.commit();
 };
 
-const mixedFields = (lists: Shadow[][]): Set<string> => {
-  const first = lists[0] ?? [];
+const getMixedFields = (lists: Shadow[][]): Set<string> => {
+  const [first = []] = lists;
   const mixed = new Set<string>();
-  first.forEach((shadow, index) => {
+
+  for (const [index, shadow] of first.entries()) {
     for (const field of FIELDS) {
       if (lists.some((list) => list[index]?.[field] !== shadow[field])) {
         mixed.add(`${index}.${field}`);
       }
     }
-  });
+  }
 
   return mixed;
 };
 
-const shadowView = (edit: DirectEdit): ShadowView | null => {
-  if (!edit.mixed.has("box-shadow")) {
-    const list = parseShadows(edit.values["box-shadow"]);
+type Blanks = Partial<Record<Field, string>>;
 
-    return list ? { list, mixed: null } : null;
+const toBlankMixed = (
+  shadow: Shadow,
+  index: number,
+  mixed: ReadonlySet<string>
+): Shadow => {
+  const blanks: Blanks = {};
+
+  for (const field of FIELDS) {
+    if (mixed.has(`${index}.${field}`)) {
+      blanks[field] = "";
+    }
   }
 
-  const lists = (edit.each ?? []).map((values) =>
-    parseShadows(values["box-shadow"])
-  );
+  return { ...shadow, ...blanks };
+};
 
-  const first = lists[0];
+const toShadowLists = (edit: DirectEdit): (Shadow[] | null)[] =>
+  (edit.each ?? []).map((values) => parseShadows(values[BOX_SHADOW]));
 
-  if (
-    !first ||
-    first.length === 0 ||
-    lists.some((list) => list === null || list.length !== first.length)
-  ) {
+const getShadowView = (edit: DirectEdit): ShadowView | null => {
+  if (!edit.mixed.has(BOX_SHADOW)) {
+    const list = parseShadows(edit.values[BOX_SHADOW]);
+
+    if (!list) {
+      return null;
+    }
+
+    return { list, mixed: null };
+  }
+
+  const lists = toShadowLists(edit);
+  const [first] = lists;
+
+  if (!first || first.length === 0) {
     return null;
   }
 
-  const mixed = mixedFields(lists as Shadow[][]);
+  const all: Shadow[][] = [];
+
+  for (const list of lists) {
+    if (list === null || list.length !== first.length) {
+      return null;
+    }
+
+    all.push(list);
+  }
+
+  const mixed = getMixedFields(all);
 
   return {
-    list: first.map((shadow, index) => ({
-      ...shadow,
-      ...Object.fromEntries(
-        FIELDS.filter((field) => mixed.has(`${index}.${field}`)).map(
-          (field) => [field, ""]
-        )
-      ),
-    })),
+    list: first.map((shadow, index) => toBlankMixed(shadow, index, mixed)),
     mixed,
   };
 };
 
-export {
-  PARTS,
-  FIELDS,
-  eachList,
-  fieldPart,
-  writeShadows,
-  mixedFields,
-  shadowView,
-};
+const toShadowRows = (
+  view: ShadowView
+): readonly { readonly id: string; readonly index: number }[] =>
+  view.list.map((_shadow, index) => ({ id: `shadow-${index}`, index }));
+
+export { PARTS, FIELDS, toFieldPart, toShadowRows, setShadows, getShadowView };
 
 export type { Part, Field, ShadowView };

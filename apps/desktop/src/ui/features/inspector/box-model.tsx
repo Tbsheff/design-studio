@@ -1,196 +1,45 @@
-import type { DirectStyleProperty } from "@design-studio/contracts";
-import { Icon } from "@design-studio/ui";
-import { useState } from "react";
-import type { ReactNode, ReactElement } from "react";
+import { useCallback, useState } from "react";
+import type { ReactElement } from "react";
 
-import { TokenControl } from "../versions-layers-tokens/token-control.js";
-import { SIDES } from "./css-values.js";
-import type { Side } from "./css-values.js";
-import { NumberInput } from "./number-field.js";
-import type { DirectEdit } from "./use-direct-edit.js";
+import type { DeclaredMargins } from "./box-model-model.js";
+import { BoxPadding } from "./box-padding.js";
+import { BoxRing } from "./box-ring.js";
+import type { DirectEdit } from "./deps.js";
 
-type Box = "padding" | "margin";
-
-const SIDE_LABEL: Record<Side, string> = {
-  bottom: "bottom",
-  left: "left",
-  right: "right",
-  top: "top",
-};
-
-const propsOf = (box: Box): DirectStyleProperty[] =>
-  SIDES.map((side) => `${box}-${side}` as DirectStyleProperty);
-
-const LinkToggle = ({
-  box,
-  isLinked: linked,
-  onToggle,
-}: {
-  readonly box: Box;
-  readonly isLinked: boolean;
-  readonly onToggle: () => void;
-}): ReactElement => {
-  const name = box === "padding" ? "Padding" : "Margin";
-
-  return (
-    <button
-      type="button"
-      className="icon-btn ins-link"
-      aria-label={`Link ${box} sides`}
-      aria-pressed={linked}
-      data-tip={
-        linked ? `${name}: all sides change together` : `${name}: set each side`
-      }
-      onClick={onToggle}
-    >
-      <Icon name={linked ? "link" : "unlink"} size={14} />
-    </button>
-  );
-};
-
-type DeclaredMargins = Partial<Record<Side, string>>;
-
-const autoShown = (
-  declared: DeclaredMargins | undefined,
-  side: Side,
-  edit: DirectEdit,
-  prop: DirectStyleProperty
-): string | undefined =>
-  declared?.[side]?.trim() === "auto" && !edit.dirty.includes(prop)
-    ? "auto"
-    : undefined;
-
-const SideInput = ({
-  box,
-  side,
-  edit,
-  isLinked: linked,
-  declared,
-}: {
-  readonly box: Box;
-  readonly side: Side;
+interface Props {
   readonly edit: DirectEdit;
-  readonly isLinked: boolean;
-  readonly declared?: DeclaredMargins;
-}): ReactElement => {
-  const prop = `${box}-${side}` as DirectStyleProperty;
-  const name = box === "padding" ? "Padding" : "Margin";
-  const label = `${name} ${SIDE_LABEL[side]}`;
-  const targets = linked ? propsOf(box) : undefined;
+  readonly declared: DeclaredMargins;
+}
 
-  const display =
-    box === "margin" ? autoShown(declared, side, edit, prop) : undefined;
+const BoxModel = ({ edit, declared }: Props): ReactElement => {
+  const [isPaddingLinked, setIsPaddingLinked] = useState(false);
+  const [isMarginLinked, setIsMarginLinked] = useState(false);
 
-  return (
-    <span
-      className={`side-cell ${side}`}
-      data-tip={display ? `auto (${edit.values[prop]} now)` : undefined}
-    >
-      <NumberInput
-        className="side"
-        spec={{
-          display,
-          edit,
-          label,
-          min: box === "padding" ? 0 : undefined,
-          prop,
-          targets,
-        }}
-      />
-      <TokenControl
-        prop={prop}
-        label={label}
-        edit={edit}
-        targets={targets}
-        variant="mini"
-      />
-    </span>
-  );
-};
+  const handleMargin = useCallback((): void => {
+    setIsMarginLinked((isLinked) => !isLinked);
+  }, []);
 
-const BoxRing = (props: {
-  readonly box: Box;
-  readonly edit: DirectEdit;
-  readonly isLinked: boolean;
-  readonly onToggle: () => void;
-  readonly declared?: DeclaredMargins;
-  readonly children: ReactNode;
-}): ReactElement => {
-  const { box, edit, isLinked: linked, declared } = props;
-
-  return (
-    <div className={`box-ring ${box}`}>
-      <div className="box-ring-head">
-        <span className="box-ring-label">
-          {box === "padding" ? "Padding" : "Margin"}
-        </span>
-        <LinkToggle box={box} isLinked={linked} onToggle={props.onToggle} />
-      </div>
-      <SideInput
-        box={box}
-        side="top"
-        edit={edit}
-        isLinked={linked}
-        declared={declared}
-      />
-      <SideInput
-        box={box}
-        side="left"
-        edit={edit}
-        isLinked={linked}
-        declared={declared}
-      />
-      <div className="box-ring-core">{props.children}</div>
-      <SideInput
-        box={box}
-        side="right"
-        edit={edit}
-        isLinked={linked}
-        declared={declared}
-      />
-      <SideInput
-        box={box}
-        side="bottom"
-        edit={edit}
-        isLinked={linked}
-        declared={declared}
-      />
-    </div>
-  );
-};
-
-const BoxModel = ({
-  edit,
-  declared,
-}: {
-  readonly edit: DirectEdit;
-  readonly declared?: DeclaredMargins;
-}): ReactElement => {
-  const [linkPadding, setLinkPadding] = useState(false);
-  const [linkMargin, setLinkMargin] = useState(false);
+  const handlePadding = useCallback((): void => {
+    setIsPaddingLinked((isLinked) => !isLinked);
+  }, []);
 
   return (
     <div className="box-model">
       <BoxRing
         box="margin"
         edit={edit}
-        isLinked={linkMargin}
+        isLinked={isMarginLinked}
         declared={declared}
-        onToggle={() => setLinkMargin((positionX) => !positionX)}
+        onToggle={handleMargin}
       >
-        <BoxRing
-          box="padding"
+        <BoxPadding
           edit={edit}
-          isLinked={linkPadding}
-          onToggle={() => setLinkPadding((positionXValue) => !positionXValue)}
-        >
-          <span className="box-content" aria-hidden="true" />
-        </BoxRing>
+          isLinked={isPaddingLinked}
+          onToggle={handlePadding}
+        />
       </BoxRing>
     </div>
   );
 };
 
 export { BoxModel };
-
-export type { DeclaredMargins };

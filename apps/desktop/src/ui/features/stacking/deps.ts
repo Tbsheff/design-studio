@@ -4,7 +4,7 @@ export { routes as stackingRoutes } from "@design-studio/actions/stacking/routes
 
 export { call } from "../../platform/http.js";
 
-export { useEditVariant } from "../inspector/edit-variant.js";
+export { useEditVariant } from "../inspector/index.js";
 
 export { InspectorSection } from "../inspector/inspector-fields.js";
 

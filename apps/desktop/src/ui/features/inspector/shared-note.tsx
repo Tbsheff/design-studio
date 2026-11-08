@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { SharedSourceNote } from "./inspector-shared.js";
+import { SharedSourceNote } from "./shared-source-note.js";
 import type { SharedEditing } from "./simple-model.js";
 
 interface SharedNoteProps {

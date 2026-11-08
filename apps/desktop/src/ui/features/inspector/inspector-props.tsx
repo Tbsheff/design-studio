@@ -1,15 +1,15 @@
 import type { SelectionContext } from "@design-studio/contracts";
+import type { ComponentSchema } from "@design-studio/contracts/props";
 import type { ReactElement } from "react";
 
 import { ComponentPreviewThumb } from "../design-system/component-preview-thumb.js";
-
-import "../../styles/inspector-props.css";
 import { AuthorSheet } from "./author-sheet.js";
 import { copy } from "./copy.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { PropRows } from "./prop-rows.js";
 import { PropsChip } from "./props-chip.js";
 import { PropsFooter } from "./props-footer.js";
+import { PropsKitCaption } from "./props-kit-caption.js";
 import { usePropsPanel } from "./use-props-panel.js";
 
 interface InspectorPropsPanelProps {
@@ -19,23 +19,26 @@ interface InspectorPropsPanelProps {
   readonly isEditable: boolean;
 }
 
+const toPropsAside = (component: ComponentSchema): ReactElement => (
+  <PropsChip component={component} />
+);
+
 const InspectorPropsPanel = ({
   projectId,
   directionId,
   selection,
   isEditable,
 }: InspectorPropsPanelProps): ReactElement | null => {
-  const {
-    instance,
-    status,
-    setStatus,
-    sheet,
-    isStylesOpen,
-    onChange,
-    onOpenSheet,
-    onCloseSheet,
-    onToggleStyles,
-  } = usePropsPanel({ directionId, isEditable, projectId, selection });
+  const panel = usePropsPanel({
+    directionId,
+    isEditable,
+    projectId,
+    selection,
+  });
+
+  const { instance, status, sheet, isStylesOpen, onChange, setStatus } = panel;
+
+  const { onToggleStyles, onOpenSheet, onCloseSheet } = panel;
 
   const component = instance?.component;
 
@@ -46,8 +49,8 @@ const InspectorPropsPanel = ({
   return (
     <InspectorSection
       title={copy.component}
-      className="prp"
-      aside={<PropsChip component={component} />}
+      modifier="prp"
+      aside={toPropsAside(component)}
     >
       <p className="prp-where">
         {`${copy.usedAt}${instance.use.file}:${instance.use.line}`}
@@ -60,14 +63,8 @@ const InspectorPropsPanel = ({
             id={`${component.file}#${component.name}`}
             version="0"
             active
-            className="prp-kit-thumb"
           />
-          <p
-            className="prp-where"
-            data-tip={`${component.file}:${component.line}`}
-          >
-            {copy.kitComponentDefaultProps}
-          </p>
+          <PropsKitCaption component={component} />
         </div>
       )}
       {component.props.length === 0 && (

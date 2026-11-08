@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 
 import { copy } from "./copy.js";
-import { SnapToggle } from "./inspector-tokens.js";
+import { SnapToggle } from "./snap-toggle.js";
 import { StatusText } from "./status-text.js";
 import type { SaveStatus } from "./use-direct-edit.js";
 import type { TokenUi } from "./use-token-snap.js";

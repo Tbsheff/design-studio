@@ -45,16 +45,18 @@ const ContextMeter = ({
   return (
     <span
       className={`context-meter ${tone}`}
-      role="meter"
-      aria-label={copy.contextUsed}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={percent}
       data-testid="context-meter"
       data-tokens={tokens}
       data-tip={`${tokens.toLocaleString()} of ${window.toLocaleString()} tokens in context`}
       data-tip-side="top"
     >
+      <meter
+        className="sr-only"
+        aria-label={copy.contextUsed}
+        min={0}
+        max={100}
+        value={percent}
+      />
       <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
         <circle cx="8" cy="8" r={RADIUS} className="context-track" />
         <circle

@@ -14,6 +14,7 @@ import { ReasoningContent } from "../../ai/components/ai/reasoning-content.js";
 import { ReasoningTrigger } from "../../ai/components/ai/reasoning-trigger.js";
 import { Reasoning } from "../../ai/components/ai/reasoning.js";
 import { splitMarkdownBlocks } from "../../domain/markdown-blocks.js";
+import { findElement } from "../../platform/find-element.js";
 import { AnsweredCard } from "./answered-card.js";
 import { errorHint, splitAnswers } from "./chat-parts-model.js";
 import type { RunUndoAction, UserMessageSlots } from "./chat-parts-model.js";
@@ -144,10 +145,10 @@ const undoRun = (undo: RunUndoAction, button: HTMLButtonElement): void => {
   }
 
   const next =
-    button.parentElement?.querySelector<HTMLButtonElement>(
-      ".btn:not(.ghost)"
-    ) ??
-    document.querySelector<HTMLElement>('.prompt [data-slot="composer-input"]');
+    (button.parentElement
+      ? findElement(button.parentElement, ".btn:not(.ghost)")
+      : null) ??
+    findElement(document.body, '.prompt [data-slot="composer-input"]');
 
   undo.onUndo();
   next?.focus();

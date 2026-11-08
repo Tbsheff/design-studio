@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
+import { findElement } from "../../platform/find-element.js";
 import { useLive } from "../../platform/live-store.js";
 import {
   chatSearchAvailable,
@@ -183,9 +184,13 @@ const useScrollToRun = (options: ScrollToRunOptions): void => {
       return;
     }
 
-    const el = viewportRef.current?.querySelector<HTMLElement>(
-      `[data-run-id="${CSS.escape(runId)}"]`
-    );
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    const el = findElement(viewport, `[data-run-id="${CSS.escape(runId)}"]`);
 
     if (!el) {
       return;

@@ -196,21 +196,25 @@
   opacity: 1;
 }
 
-.reply-copy {
+.reply-copy-slot {
+  display: contents;
+}
+
+.reply-copy-slot .copy-btn {
   opacity: 0;
   transition-property: opacity, color, background-color;
   transition-duration: var(--dur-fast);
 }
 
-.run:hover .reply-copy,
-.reply-copy:focus-visible,
-.reply-copy[data-state="copied"] {
+.run:hover .reply-copy-slot .copy-btn,
+.reply-copy-slot .copy-btn:focus-visible,
+.reply-copy-slot .copy-btn[data-state="copied"] {
   opacity: 1;
 }
 
 @media (hover: none) {
   .msg-copy,
-  .reply-copy {
+  .reply-copy-slot .copy-btn {
     opacity: 1;
   }
 }

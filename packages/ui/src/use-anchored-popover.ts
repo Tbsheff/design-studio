@@ -16,13 +16,14 @@ const HIDDEN: CSSProperties = {
   top: 0,
 };
 
-export function useAnchoredPopover<View extends string>(
-  anchor?: (trigger: HTMLElement) => HTMLElement
-) {
+export function useAnchoredPopover<
+  View extends string,
+  Panel extends HTMLElement = HTMLDivElement,
+>(anchor?: (trigger: HTMLElement) => HTMLElement) {
   const [view, setView] = useState<View | null>(null);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN);
   const trigger = useRef<HTMLSpanElement | null>(null);
-  const panel = useRef<HTMLDivElement | null>(null);
+  const panel = useRef<Panel | null>(null);
   const returnTo = useRef<HTMLElement | null>(null);
 
   const open = useCallback((next: View) => {

@@ -1,4 +1,10 @@
 .tk-pop {
+  inset-inline-end: auto;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
   position: fixed;
   z-index: 90;
   width: 264px;

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { ExportFlowFields } from "./export-flow-fields.js";
 import { ExportFrameList } from "./export-frame-list.js";
 import { ExportScaleField } from "./export-scale-field.js";
 import { ExportScopeField } from "./export-scope-field.js";
@@ -18,6 +19,7 @@ const ExportOptionFields = ({
 }: ExportOptionFieldsProps): ReactElement => {
   const {
     chosen,
+    flow,
     format,
     isSelectionOnly,
     onChooseScale,
@@ -49,6 +51,7 @@ const ExportOptionFields = ({
           onChange={onChooseScale}
         />
       )}
+      {format === "flow" && <ExportFlowFields flow={flow} />}
       {hasScope && <ExportScopeField scope={scope} onChange={onChooseScope} />}
     </>
   );

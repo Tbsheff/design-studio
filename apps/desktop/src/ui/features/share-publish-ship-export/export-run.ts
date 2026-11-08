@@ -4,6 +4,7 @@ import type {
 } from "@design-studio/contracts/export";
 
 import { downloadBlob } from "../../domain/format.js";
+import { copy as uiCopy } from "./copy.js";
 import { canRevealDownload, exportApi } from "./export-api.js";
 import type { ExportTarget } from "./export-api.js";
 import { MOBILE_FRAME, MOBILE_MAX } from "./export-formats.js";
@@ -65,4 +66,32 @@ const exportOnce = async (
   };
 };
 
-export { exportOnce, toHandoffFrames };
+const MS_PER_SECOND = 1000;
+
+const exportFlowOnce = async (
+  target: ExportTarget,
+  options: ExportOptions
+): Promise<ExportStatus> => {
+  const { flow } = options;
+
+  const result = await exportApi.exportFlow(target.projectId, {
+    directionId: target.directionId,
+    format: flow.videoFormat,
+    maxSteps: flow.maxSteps,
+    stepMs: flow.stepMs,
+  });
+
+  const name = result.path.split("/").at(-1) ?? "";
+  const file = await exportApi.getFlowVideo(target.projectId, name);
+
+  downloadBlob(file.blob, file.name);
+
+  return {
+    kind: "done",
+    note: `${result.steps.length} ${uiCopy.stepsWord}, ${result.durationMs / MS_PER_SECOND} s`,
+    reveal: canRevealDownload(),
+    text: `Saved ${file.name}`,
+  };
+};
+
+export { exportFlowOnce, exportOnce, toHandoffFrames };

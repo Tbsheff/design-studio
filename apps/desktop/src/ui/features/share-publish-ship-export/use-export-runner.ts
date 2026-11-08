@@ -6,7 +6,7 @@ import { exportApi } from "./export-api.js";
 import type { ExportTarget } from "./export-api.js";
 import { IDLE_STATUS } from "./export-formats.js";
 import type { ExportStatus } from "./export-formats.js";
-import { exportOnce, toHandoffFrames } from "./export-run.js";
+import { exportFlowOnce, exportOnce, toHandoffFrames } from "./export-run.js";
 import type { ExportOptions } from "./use-export-options.js";
 
 interface ExportRunner {
@@ -40,6 +40,12 @@ const useExportRunner = (
           })
         );
         setStatus(IDLE_STATUS);
+
+        return;
+      }
+
+      if (options.format === "flow") {
+        setStatus(await exportFlowOnce(target, options));
 
         return;
       }

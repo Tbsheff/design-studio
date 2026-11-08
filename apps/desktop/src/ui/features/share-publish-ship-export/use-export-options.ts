@@ -12,10 +12,14 @@ import {
   saveExportPrefs,
 } from "./export-api.js";
 import type { ExportPrefs, ExportTarget, FrameChoice } from "./export-api.js";
+import type { DialogFormat } from "./export-formats.js";
+import { useExportFlow } from "./use-export-flow.js";
+import type { ExportFlow } from "./use-export-flow.js";
 
 interface ExportOptions {
   readonly projectId: string;
-  readonly format: ExportFormat;
+  readonly format: DialogFormat;
+  readonly flow: ExportFlow;
   readonly scale: ExportScale;
   readonly scope: ExportScope;
   readonly frames: readonly FrameChoice[];
@@ -23,16 +27,27 @@ interface ExportOptions {
   readonly chosen: readonly ExportFrame[];
   readonly isSelectionOnly: boolean;
   readonly needsFrames: boolean;
-  readonly onChoose: (next: ExportFormat) => void;
+  readonly onChoose: (next: DialogFormat) => void;
   readonly onChooseScale: (next: ExportScale) => void;
   readonly onChooseScope: (next: ExportScope) => void;
   readonly onToggle: (id: string) => void;
 }
 
+const toSavedFormat = (
+  format: DialogFormat,
+  saved: ExportFormat
+): ExportFormat => {
+  if (format === "flow") {
+    return saved;
+  }
+
+  return format;
+};
+
 const toInitialFormat = (
   target: ExportTarget,
   initial: ExportPrefs
-): ExportFormat => {
+): DialogFormat => {
   if (target.format) {
     return target.format;
   }
@@ -77,7 +92,7 @@ const toChosenFrames = (
 const useExportOptions = (target: ExportTarget): ExportOptions => {
   const initial = useMemo(() => readExportPrefs(), []);
 
-  const [format, setFormat] = useState<ExportFormat>(() =>
+  const [format, setFormat] = useState<DialogFormat>(() =>
     toInitialFormat(target, initial)
   );
 
@@ -97,11 +112,17 @@ const useExportOptions = (target: ExportTarget): ExportOptions => {
   const isSelectionOnly =
     Boolean(target.selector) && (format === "png" || format === "svg");
 
-  const prefs: ExportPrefs = { format, scale, scope };
+  const flow = useExportFlow();
 
-  const onChoose = (next: ExportFormat): void => {
+  const prefs: ExportPrefs = {
+    format: toSavedFormat(format, initial.format),
+    scale,
+    scope,
+  };
+
+  const onChoose = (next: DialogFormat): void => {
     setFormat(next);
-    saveExportPrefs({ ...prefs, format: next });
+    saveExportPrefs({ ...prefs, format: toSavedFormat(next, prefs.format) });
   };
 
   const onChooseScale = (next: ExportScale): void => {
@@ -119,10 +140,11 @@ const useExportOptions = (target: ExportTarget): ExportOptions => {
   }, []);
 
   const chosen = toChosenFrames(frames, picked);
-  const needsFrames = format !== "zip" && !isSelectionOnly;
+  const needsFrames = format !== "zip" && format !== "flow" && !isSelectionOnly;
 
   return {
     chosen,
+    flow,
     format,
     frames,
     isSelectionOnly,

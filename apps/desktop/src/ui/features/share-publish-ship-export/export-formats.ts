@@ -1,8 +1,10 @@
 import type { ExportFormat } from "@design-studio/contracts/export";
 import type { IconName } from "@design-studio/ui";
 
+type DialogFormat = ExportFormat | "flow";
+
 interface FormatInfo {
-  id: ExportFormat;
+  id: DialogFormat;
   label: string;
   icon: IconName;
   hint: string;
@@ -53,6 +55,13 @@ const FORMATS: FormatInfo[] = [
     label: "Source",
   },
   {
+    action: "Export video",
+    hint: "A click-through video of the prototype: a cursor clicks each saved link from the start frame. Save it as webm, mp4 or gif.",
+    icon: "play",
+    id: "flow",
+    label: "Prototype video",
+  },
+  {
     action: "Create handoff",
     hint: "A folder for a coding agent: HANDOFF.md, tokens, screens and source.",
     icon: "terminal",
@@ -74,4 +83,4 @@ const IDLE_STATUS: ExportStatus = { kind: "idle" };
 
 export { FORMATS, IDLE_STATUS, MOBILE_FRAME, MOBILE_MAX };
 
-export type { ExportStatus, FormatInfo };
+export type { DialogFormat, ExportStatus, FormatInfo };

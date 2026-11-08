@@ -1,4 +1,3 @@
-import type { ExportFormat } from "@design-studio/contracts/export";
 import { useModalDialog } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
@@ -11,7 +10,7 @@ import { ExportDialogBody } from "./export-dialog-body.js";
 import { ExportDialogFoot } from "./export-dialog-foot.js";
 import { ExportDialogHead } from "./export-dialog-head.js";
 import { FORMATS } from "./export-formats.js";
-import type { FormatInfo } from "./export-formats.js";
+import type { DialogFormat, FormatInfo } from "./export-formats.js";
 import { toFrameLabels } from "./frame-labels.js";
 import { pick } from "./pick.js";
 import type { SegmentOption } from "./segmented.js";
@@ -24,7 +23,7 @@ interface Props {
   onClose: () => void;
 }
 
-const FORMAT_OPTIONS: readonly SegmentOption<ExportFormat>[] = FORMATS.map(
+const FORMAT_OPTIONS: readonly SegmentOption<DialogFormat>[] = FORMATS.map(
   (entry) => ({ icon: entry.icon, id: entry.id, label: entry.label })
 );
 
@@ -42,7 +41,7 @@ const toActionText = (
   return pick(isRebuild, uiCopy.rebuildHandoff, info.action);
 };
 
-const toFormatInfo = (format: ExportFormat): FormatInfo =>
+const toFormatInfo = (format: DialogFormat): FormatInfo =>
   FORMATS.find((entry) => entry.id === format) ?? (FORMATS[0] as FormatInfo);
 
 const ExportDialog = ({ onClose, target }: Props): ReactElement => {
@@ -76,7 +75,7 @@ const ExportDialog = ({ onClose, target }: Props): ReactElement => {
   const result = pick(isHandoff, runner.handoff, null);
 
   const selectFormat = useCallback(
-    (next: ExportFormat): void => {
+    (next: DialogFormat): void => {
       options.onChoose(next);
       resetStatus();
     },

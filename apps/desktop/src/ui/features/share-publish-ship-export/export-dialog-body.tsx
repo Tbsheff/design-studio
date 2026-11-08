@@ -1,14 +1,17 @@
 import type {
   EditorInfo,
   HandoffResult,
-  ExportFormat,
 } from "@design-studio/contracts/export";
 import type { ReactElement } from "react";
 
 import { ConnectClaudeCode } from "./connect-claude-code.js";
 import { copy as uiCopy } from "./copy.js";
 import type { ExportTarget } from "./export-api.js";
-import type { ExportStatus, FormatInfo } from "./export-formats.js";
+import type {
+  DialogFormat,
+  ExportStatus,
+  FormatInfo,
+} from "./export-formats.js";
 import { ExportOptionFields } from "./export-option-fields.js";
 import type { FrameLabel } from "./frame-label.js";
 import { HandoffResultView } from "./handoff-result-view.js";
@@ -21,12 +24,12 @@ interface ExportDialogBodyProps {
   readonly options: ExportOptions;
   readonly labels: ReadonlyMap<string, FrameLabel>;
   readonly info: FormatInfo;
-  readonly formatOptions: readonly SegmentOption<ExportFormat>[];
+  readonly formatOptions: readonly SegmentOption<DialogFormat>[];
   readonly status: ExportStatus;
   readonly isBusy: boolean;
   readonly result: HandoffResult | null;
   readonly editors: readonly EditorInfo[];
-  readonly onFormat: (format: ExportFormat) => void;
+  readonly onFormat: (format: DialogFormat) => void;
   readonly onError: (text: string) => void;
 }
 

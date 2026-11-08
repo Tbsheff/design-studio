@@ -233,4 +233,6 @@ const TokenRowBase = (props: RowProps) => {
   );
 };
 
-export const TokenRow = memo(TokenRowBase);
+const TokenRow = memo(TokenRowBase);
+
+export { TokenRow };

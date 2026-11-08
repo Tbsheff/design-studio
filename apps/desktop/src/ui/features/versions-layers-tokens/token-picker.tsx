@@ -21,7 +21,7 @@ interface PickerProps {
   onChoose: (entry: CompiledTokenEntry) => void;
 }
 
-export function tokenShortName(entry: CompiledTokenEntry): string {
+function tokenShortName(entry: CompiledTokenEntry): string {
   return entry.type === "color"
     ? entry.cssVar
     : entry.path.split(".").slice(1).join("-");
@@ -115,7 +115,7 @@ function startIndex(
   return Math.max(0, at);
 }
 
-export function TokenPicker({
+function TokenPicker({
   label,
   entries,
   mode,
@@ -219,3 +219,5 @@ export function TokenPicker({
     </div>
   );
 }
+
+export { tokenShortName, TokenPicker };

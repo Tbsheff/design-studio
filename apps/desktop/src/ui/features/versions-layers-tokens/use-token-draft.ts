@@ -31,7 +31,7 @@ const releaseFlag = (set: (value: boolean) => void) => {
   set(false);
 };
 
-export const AGENT_BUSY_MESSAGE = "Agent is running. Wait or cancel.";
+const AGENT_BUSY_MESSAGE = "Agent is running. Wait or cancel.";
 
 interface Step {
   path: string;
@@ -122,7 +122,7 @@ function commitMessage(err: unknown): string {
     : errorText(err);
 }
 
-export function useTokenDraft(o: Options) {
+function useTokenDraft(o: Options) {
   const [pending, setPendingMap] = useState<PendingMap>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const theme = useCanvasTheme();
@@ -131,7 +131,7 @@ export function useTokenDraft(o: Options) {
   const history = useRef<Step[]>([]);
   const good = useRef<PendingMap>({});
   const seq = useRef(0);
-  const timer = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSent = useRef(0);
   const opts = useRef(o);
   opts.current = o;
@@ -142,7 +142,7 @@ export function useTokenDraft(o: Options) {
     seq.current += 1;
 
     if (timer.current !== null) {
-      window.clearTimeout(timer.current);
+      globalThis.clearTimeout(timer.current);
     }
 
     timer.current = null;
@@ -190,7 +190,7 @@ export function useTokenDraft(o: Options) {
       PREVIEW_THROTTLE_MS - (Date.now() - lastSent.current)
     );
 
-    timer.current = window.setTimeout(() => void runPreview(), wait);
+    timer.current = globalThis.setTimeout(() => void runPreview(), wait);
   }, [runPreview]);
 
   const clearDraft = useCallback(() => {
@@ -301,7 +301,7 @@ export function useTokenDraft(o: Options) {
       return true;
     }
 
-    const ok = window.confirm(
+    const ok = globalThis.confirm(
       `Discard ${count} token ${count === 1 ? "change" : "changes"}?`
     );
 
@@ -337,4 +337,8 @@ export function useTokenDraft(o: Options) {
   };
 }
 
-export type TokenDraft = ReturnType<typeof useTokenDraft>;
+type TokenDraft = ReturnType<typeof useTokenDraft>;
+
+export { AGENT_BUSY_MESSAGE, useTokenDraft };
+
+export type { TokenDraft };

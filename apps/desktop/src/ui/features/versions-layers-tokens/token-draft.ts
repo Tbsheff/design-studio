@@ -6,16 +6,16 @@ import type {
 
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 
-export interface PendingToken {
+interface PendingToken {
   value?: string;
   darkValue?: string | null;
 }
 
-export type PendingMap = Record<string, PendingToken>;
+type PendingMap = Record<string, PendingToken>;
 
-export type TokenField = "value" | "darkValue";
+type TokenField = "value" | "darkValue";
 
-export interface RawToken {
+interface RawToken {
   value: string;
   darkValue: string | null;
 }
@@ -26,17 +26,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function aliasPath(value: string): string | null {
+function aliasPath(value: string): string | null {
   return ALIAS_RE.exec(value.trim())?.[1] ?? null;
 }
 
 const VAR_RE = /^var\(\s*(--[A-Za-z0-9_-]+)\s*\)$/;
 
-export function varTarget(value: string): string | null {
+function varTarget(value: string): string | null {
   return VAR_RE.exec(value.trim())?.[1] ?? null;
 }
 
-export function referencedEntry(
+function referencedEntry(
   value: string,
   entries: CompiledTokenEntry[]
 ): CompiledTokenEntry | null {
@@ -61,10 +61,7 @@ function darkOf(node: Record<string, unknown>): string | null {
   return isRecord(ext) && typeof ext.dark === "string" ? ext.dark : null;
 }
 
-export function rawToken(
-  file: TokenFile | null,
-  entry: CompiledTokenEntry
-): RawToken {
+function rawToken(file: TokenFile | null, entry: CompiledTokenEntry): RawToken {
   if (entry.source) {
     return { darkValue: entry.source.darkValue, value: entry.source.value };
   }
@@ -82,10 +79,7 @@ export function rawToken(
   return { darkValue: darkOf(node), value: node.$value };
 }
 
-export function shownRaw(
-  base: RawToken,
-  pending: PendingToken | undefined
-): RawToken {
+function shownRaw(base: RawToken, pending: PendingToken | undefined): RawToken {
   return {
     darkValue:
       pending?.darkValue === undefined ? base.darkValue : pending.darkValue,
@@ -93,7 +87,7 @@ export function shownRaw(
   };
 }
 
-export function withField(
+function withField(
   prev: PendingToken | undefined,
   field: TokenField,
   next: string | null,
@@ -118,7 +112,7 @@ export function withField(
     : out;
 }
 
-export function setPending(
+function setPending(
   map: PendingMap,
   path: string,
   next: PendingToken | undefined
@@ -134,11 +128,11 @@ export function setPending(
   return out;
 }
 
-export function toChanges(map: PendingMap): TokenChange[] {
+function toChanges(map: PendingMap): TokenChange[] {
   return Object.entries(map).map(([path, p]) => ({ path, ...p }));
 }
 
-export function errorPaths(
+function errorPaths(
   messages: string[],
   changes: TokenChange[]
 ): Record<string, string> {
@@ -190,7 +184,7 @@ function overlayEntry(
   return { ...entry, darkValue, value };
 }
 
-export function overlayTokens(
+function overlayTokens(
   tokens: DesignTokens | null,
   map: PendingMap
 ): DesignTokens | null {
@@ -237,7 +231,7 @@ function matchesQuery(
   return hay.includes(query);
 }
 
-export function tokenSections(
+function tokenSections(
   entries: CompiledTokenEntry[],
   raw: (entry: CompiledTokenEntry) => RawToken,
   query: string
@@ -262,3 +256,19 @@ export function tokenSections(
 
   return [...sections, other].filter((s) => s.entries.length > 0);
 }
+
+export {
+  aliasPath,
+  varTarget,
+  referencedEntry,
+  rawToken,
+  shownRaw,
+  withField,
+  setPending,
+  toChanges,
+  errorPaths,
+  overlayTokens,
+  tokenSections,
+};
+
+export type { PendingToken, PendingMap, TokenField, RawToken };

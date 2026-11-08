@@ -20,7 +20,7 @@ interface Props {
   onError: (message: string) => void;
 }
 
-export function CompareFrame({
+function CompareFrame({
   projectId,
   version,
   title,
@@ -80,3 +80,5 @@ export function CompareFrame({
     />
   );
 }
+
+export { CompareFrame };

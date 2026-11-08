@@ -636,8 +636,8 @@ function usePendingSelect(
   useEffect(() => setPending(null), [selectedNode]);
   useEffect(() => {
     if (pending === null) return;
-    const timer = window.setTimeout(() => setPending(null), PENDING_MS);
-    return () => window.clearTimeout(timer);
+    const timer = globalThis.setTimeout(() => setPending(null), PENDING_MS);
+    return () => globalThis.clearTimeout(timer);
   }, [pending]);
   const select = useCallback(
     (id: number, additive: boolean) => {

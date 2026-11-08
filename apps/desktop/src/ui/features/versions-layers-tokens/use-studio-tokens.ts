@@ -17,7 +17,7 @@ interface Options {
   onCommitted: (version: Version) => void;
 }
 
-export function useStudioTokens(o: Options) {
+function useStudioTokens(o: Options) {
   const draft = useTokenDraft(o);
   useTokenFrameSync();
   useUndoShortcut(
@@ -47,3 +47,5 @@ export function useStudioTokens(o: Options) {
 
   return { draft, guard, panel };
 }
+
+export { useStudioTokens };

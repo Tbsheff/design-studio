@@ -1,7 +1,7 @@
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
-import { Icon } from "@design-studio/ui";
 import { cachedThumb, requestThumb } from "./versions-api.js";
 import type { ThumbResult } from "./versions-api.js";
 
@@ -40,13 +40,7 @@ function useInView(
   return seen;
 }
 
-export function VersionThumb({
-  projectId,
-  versionId,
-  active,
-  label,
-  onOpen,
-}: Props) {
+function VersionThumb({ projectId, versionId, active, label, onOpen }: Props) {
   const ref = useRef<HTMLSpanElement>(null);
 
   const [result, setResult] = useState<ThumbResult | undefined>(() =>
@@ -94,3 +88,5 @@ export function VersionThumb({
     </span>
   );
 }
+
+export { VersionThumb };

@@ -116,8 +116,8 @@ function useFork(
     try {
       await onNewDirection(from, name.trim());
       setFrom(null);
-    } catch (failure) {
-      setError(failure instanceof Error ? failure.message : String(failure));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
     }
   };
 
@@ -279,7 +279,7 @@ function VersionsEmpty({
 function useHeadFocus(headVersionId: string | null) {
   const ref = useRef<HTMLUListElement>(null);
   useEffect(() => {
-    const id = window.requestAnimationFrame(() => {
+    const id = globalThis.requestAnimationFrame(() => {
       const lost =
         !document.activeElement || document.activeElement === document.body;
 
@@ -290,7 +290,7 @@ function useHeadFocus(headVersionId: string | null) {
       }
     });
 
-    return () => window.cancelAnimationFrame(id);
+    return () => globalThis.cancelAnimationFrame(id);
   }, [headVersionId]);
 
   return ref;
@@ -311,7 +311,7 @@ function compareSides(
     : new Map();
 }
 
-export function VersionsPanel(props: Props) {
+function VersionsPanel(props: Props) {
   const { project, directionId, versions } = props;
 
   const direction =
@@ -426,3 +426,5 @@ export function VersionsPanel(props: Props) {
     </div>
   );
 }
+
+export { VersionsPanel };

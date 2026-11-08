@@ -177,7 +177,7 @@ interface Props {
   onClose: () => void;
 }
 
-export function CompareView({
+function CompareView({
   projectId,
   kind,
   left,
@@ -298,3 +298,5 @@ export function CompareView({
     </div>
   );
 }
+
+export { CompareView };

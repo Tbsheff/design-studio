@@ -8,7 +8,7 @@ import {
   runTitle,
 } from "../../../shared/version-title.js";
 
-export type VersionIndex = ReadonlyMap<string, Version>;
+type VersionIndex = ReadonlyMap<string, Version>;
 
 interface KindInfo {
   label: string;
@@ -60,7 +60,7 @@ const EDIT_INFO: Record<
   tokens: { hint: "You changed design tokens", icon: "token", label: "Tokens" },
 };
 
-export function indexVersions(versions: Version[]): VersionIndex {
+function indexVersions(versions: Version[]): VersionIndex {
   return new Map(versions.map((v) => [v.id, v]));
 }
 
@@ -82,13 +82,13 @@ function manualSort(raw: string): keyof typeof EDIT_INFO {
   return "element";
 }
 
-export function kindInfo(v: Version): KindInfo {
+function kindInfo(v: Version): KindInfo {
   return v.meta.kind === "manual"
     ? EDIT_INFO[manualSort(v.title)]
     : KIND_INFO[v.meta.kind];
 }
 
-export function originOf(v: Version, index: VersionIndex): Version | null {
+function originOf(v: Version, index: VersionIndex): Version | null {
   let current: Version | undefined = v;
 
   for (
@@ -111,11 +111,11 @@ function plainTitle(v: Version): string {
   return v.meta.kind === "run" ? runTitle(v.title) : v.title;
 }
 
-export function displayTitle(v: Version, index: VersionIndex): string {
+function displayTitle(v: Version, index: VersionIndex): string {
   return v.name ?? autoTitle(v, index);
 }
 
-export function autoTitle(v: Version, index: VersionIndex): string {
+function autoTitle(v: Version, index: VersionIndex): string {
   const { kind } = v.meta;
 
   if (!isRestoreKind(kind)) {
@@ -130,7 +130,7 @@ export function autoTitle(v: Version, index: VersionIndex): string {
   );
 }
 
-export function undoneOf(v: Version, index: VersionIndex): Version | null {
+function undoneOf(v: Version, index: VersionIndex): Version | null {
   if (v.meta.kind !== "undo" || !v.parentId) {
     return null;
   }
@@ -172,7 +172,7 @@ function editAction(props: string[]): string {
   return "edit";
 }
 
-export function historyPhrase(label: string): string | null {
+function historyPhrase(label: string): string | null {
   const text = TEXT_LABEL.exec(label);
 
   if (text?.[1]) {
@@ -190,8 +190,21 @@ export function historyPhrase(label: string): string | null {
   return `${editAction(props)} of ${layerName(edit[1])}${edit[3] ?? ""}`;
 }
 
-export function fullText(v: Version): string | null {
+function fullText(v: Version): string | null {
   const prompt = v.meta.prompt?.trim();
 
   return prompt ? prompt : null;
 }
+
+export {
+  indexVersions,
+  kindInfo,
+  originOf,
+  displayTitle,
+  autoTitle,
+  undoneOf,
+  historyPhrase,
+  fullText,
+};
+
+export type { VersionIndex };

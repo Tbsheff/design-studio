@@ -48,7 +48,7 @@ const base = (pid: string, vid: string) =>
 
 const COMPARE_MODE_KEY = "design-studio.compare-mode";
 
-export const revertHunk = async (
+const revertHunk = async (
   pid: string,
   did: string,
   request: HunkRevertRequest
@@ -65,7 +65,7 @@ export const revertHunk = async (
   return { ...out, version: toVersion(out.version) };
 };
 
-export const restoreVersion = async (
+const restoreVersion = async (
   pid: string,
   did: string,
   versionId: string
@@ -88,7 +88,7 @@ const END_ROUTES = {
   save: routes.createSessionVersion,
 } as const;
 
-export const stepEditHistory = async (
+const stepEditHistory = async (
   pid: string,
   did: string,
   kind: "redo" | "undo"
@@ -105,7 +105,7 @@ export const stepEditHistory = async (
   };
 };
 
-export const endEditSession = async (
+const endEditSession = async (
   pid: string,
   did: string,
   action: "discard" | "save",
@@ -133,28 +133,24 @@ const versionChanges = async (
     })
   );
 
-export const getVersion = (pid: string, versionId: string) =>
+const getVersion = (pid: string, versionId: string) =>
   call(routes.getVersion, { projectId: pid, versionId });
 
-export const listEditHistory = (pid: string, did: string, limit: number) =>
+const listEditHistory = (pid: string, did: string, limit: number) =>
   call(routes.listHistoryVersion, {
     limit,
     directionId: did,
     projectId: pid,
   });
 
-export const listHunks = (
-  pid: string,
-  from: string,
-  to: string,
-  file: string
-) => call(routes.listHunksVersion, { file, from, to, projectId: pid });
+const listHunks = (pid: string, from: string, to: string, file: string) =>
+  call(routes.listHunksVersion, { file, from, to, projectId: pid });
 
-export function openCompareInCode(): void {
+function openCompareInCode(): void {
   writeStored(COMPARE_MODE_KEY, "code");
 }
 
-export const renameVersion = (pid: string, vid: string, name: string | null) =>
+const renameVersion = (pid: string, vid: string, name: string | null) =>
   call(routes.renameVersion, {
     name,
     projectId: pid,
@@ -165,7 +161,7 @@ function fetchPng(url: string, signal: AbortSignal): Promise<Response> {
   return getRaw(url, signal);
 }
 
-export type ThumbResult = string | null;
+type ThumbResult = string | null;
 
 interface ThumbRequest {
   key: string;
@@ -242,7 +238,7 @@ const settleChanges = async (
   }
 };
 
-export const watchVersionChanges = (
+const watchVersionChanges = (
   pid: string,
   range: { readonly from: string; readonly to: string },
   onResult: (result: VersionChangesResult) => void
@@ -296,11 +292,11 @@ function pump(): void {
   }
 }
 
-export function cachedThumb(pid: string, vid: string): ThumbResult | undefined {
+function cachedThumb(pid: string, vid: string): ThumbResult | undefined {
   return thumbs.get(`${pid}/${vid}`);
 }
 
-export function requestThumb(
+function requestThumb(
   pid: string,
   vid: string,
   onResult: (result: ThumbResult) => void
@@ -348,12 +344,12 @@ export function requestThumb(
   };
 }
 
-export interface DiffMaskResult {
+interface DiffMaskResult {
   url: string;
   changedPct: number;
 }
 
-export async function versionDiff(
+async function versionDiff(
   pid: string,
   beforeId: string,
   afterId: string,
@@ -377,3 +373,21 @@ export async function versionDiff(
     url: URL.createObjectURL(await res.blob()),
   };
 }
+
+export {
+  revertHunk,
+  restoreVersion,
+  stepEditHistory,
+  endEditSession,
+  getVersion,
+  listEditHistory,
+  listHunks,
+  openCompareInCode,
+  renameVersion,
+  watchVersionChanges,
+  cachedThumb,
+  requestThumb,
+  versionDiff,
+};
+
+export type { ThumbResult, DiffMaskResult };

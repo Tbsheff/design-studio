@@ -122,7 +122,7 @@ function useSwatch(entries: CompiledTokenEntry[]) {
   );
 }
 
-export function TokensPanel({ tokens, draft, sweep }: Props) {
+function TokensPanel({ tokens, draft, sweep }: Props) {
   const [query, setQuery] = useState("");
   const [sweepOpen, setSweepOpen] = useState(false);
   const { file } = tokens;
@@ -260,3 +260,5 @@ export function TokensPanel({ tokens, draft, sweep }: Props) {
     </div>
   );
 }
+
+export { TokensPanel };

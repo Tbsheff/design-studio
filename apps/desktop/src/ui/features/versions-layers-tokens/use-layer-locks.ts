@@ -99,12 +99,12 @@ function persistLocks(
   }).catch(() => null);
 }
 
-export interface LayerLocks {
+interface LayerLocks {
   setNodeLocked: (id: number, locked: boolean) => void;
   onBridge: (message: BridgeToParent) => void;
 }
 
-export function useLayerLocks(
+function useLayerLocks(
   projectId: string,
   directionId: string | null,
   frontToken: string | null,
@@ -184,3 +184,7 @@ export function useLayerLocks(
   );
   return { onBridge, setNodeLocked };
 }
+
+export { useLayerLocks };
+
+export type { LayerLocks };

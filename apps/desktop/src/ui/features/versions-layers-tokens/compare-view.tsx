@@ -1,71 +1,33 @@
 import type { ProjectKind, Version } from "@design-studio/contracts";
-import { Icon } from "@design-studio/ui";
-import {
-  lazy,
-  Suspense,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import { readStored, useUi, writeStored } from "../../platform/storage.js";
+import { useUi, writeStored } from "../../platform/storage.js";
 import type { BoardProps } from "./compare-board-types.js";
-import { CompareFrame } from "./compare-frame.js";
+import {
+  MODE_KEY,
+  MODES,
+  toCompareClass,
+  toKeyStep,
+  toSavedMode,
+} from "./compare-mode-model.js";
+import type { Mode } from "./compare-mode-model.js";
+import { CompareSidePane } from "./compare-side-pane.js";
+import { CompareToolbar } from "./compare-toolbar.js";
 import { COPY } from "./copy.js";
 import { OverlayBoard } from "./overlay-board.js";
 import { ReferenceBoard } from "./reference-board.js";
 import { SliderBoard } from "./slider-board.js";
-
-import "../../styles/reference.css";
+import { useCompareLayout } from "./use-compare-layout.js";
 import { displayTitle, indexVersions } from "./version-labels.js";
 
-type Mode = "side" | "slider" | "overlay" | "reference" | "code";
+import "../../styles/reference.css";
 
 const CompareCode = lazy(async () => {
   const loaded = await import("./compare-code.js");
 
   return { default: loaded.CompareCode };
 });
-
-const MODES: { id: Mode; label: string; tip: string }[] = [
-  {
-    id: "side",
-    label: "Side by side",
-    tip: "Both versions next to each other",
-  },
-  {
-    id: "slider",
-    label: "Slider",
-    tip: "Drag a line to wipe between versions",
-  },
-  {
-    id: "overlay",
-    label: "Overlay",
-    tip: "The newer version with changed pixels in red",
-  },
-  {
-    id: "reference",
-    label: "Reference",
-    tip: "A screenshot or mock over the newer version, with a slider",
-  },
-  { id: "code", label: "Code", tip: "The line changes in each changed file" },
-];
-
-const MODE_KEY = "design-studio.compare-mode";
-
-const STACK_GAIN = 1.25;
-
-function savedMode(): Mode {
-  try {
-    const value = readStored(MODE_KEY);
-
-    return MODES.some((mode) => mode.id === value) ? (value as Mode) : "side";
-  } catch {
-    return "side";
-  }
-}
 
 function ModeSwitch({
   mode,
@@ -77,12 +39,7 @@ function ModeSwitch({
   const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const delta =
-      event.key === "ArrowRight" || event.key === "ArrowDown"
-        ? 1
-        : event.key === "ArrowLeft" || event.key === "ArrowUp"
-          ? -1
-          : 0;
+    const delta = toKeyStep(event.key);
 
     if (delta === 0) {
       return;
@@ -123,49 +80,12 @@ function ModeSwitch({
           aria-checked={mode === item.id}
           tabIndex={mode === item.id ? 0 : -1}
           className={mode === item.id ? "on" : ""}
-          {...{ "aria-description": item.tip }}
+          data-tip={item.tip}
           onClick={() => onMode(item.id)}
         >
           {item.label}
         </button>
       ))}
-    </div>
-  );
-}
-
-function SidePane(props: BoardProps & { side: "A" | "B" }) {
-  const version = props.side === "A" ? props.older : props.newer;
-  const title = props.side === "A" ? props.olderTitle : props.newerTitle;
-
-  return (
-    <div className="compare-pane">
-      <div
-        className="compare-label"
-        data-tip={title}
-        style={{ width: props.viewport.width * props.scale }}
-      >
-        <span className="badge accent">{props.side}</span>
-        <span className="compare-title truncate">{title}</span>
-      </div>
-      <div className="compare-stage">
-        <div
-          className="compare-board"
-          style={{
-            height: props.viewport.height * props.scale,
-            width: props.viewport.width * props.scale,
-          }}
-        >
-          <CompareFrame
-            projectId={props.projectId}
-            version={version}
-            title={title}
-            kind={props.kind}
-            viewport={props.viewport}
-            scale={props.scale}
-            onError={props.onError}
-          />
-        </div>
-      </div>
     </div>
   );
 }
@@ -188,11 +108,9 @@ function CompareView({
   onClose,
 }: Props) {
   const { viewport } = useUi();
-  const ref = useRef<HTMLDivElement>(null);
-  const [mode, setModeState] = useState<Mode>(savedMode);
-  const [scale, setScale] = useState(0.5);
-  const [stacked, setStacked] = useState(false);
+  const [mode, setModeState] = useState<Mode>(toSavedMode);
   const [error, setError] = useState<string | null>(null);
+  const { isStacked, ref, scale } = useCompareLayout(mode, viewport);
 
   const [older, newer] =
     left.createdAt <= right.createdAt ? [left, right] : [right, left];
@@ -202,45 +120,10 @@ function CompareView({
     [versions, left, right]
   );
 
-  const setMode = (next: Mode) => {
+  const handleMode = useCallback((next: Mode): void => {
     setModeState(next);
-
     writeStored(MODE_KEY, next);
-  };
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-
-    if (!el) {
-      return;
-    }
-
-    const measure = () => {
-      const fit = (w: number, h: number) =>
-        Math.max(0.1, Math.min(1, w / viewport.width, h / viewport.height));
-
-      const single = fit(el.clientWidth - 32, el.clientHeight - 76);
-
-      if (mode !== "side") {
-        setStacked(false);
-        setScale(single);
-
-        return;
-      }
-
-      const across = fit((el.clientWidth - 48) / 2, el.clientHeight - 76);
-      const down = fit(el.clientWidth - 32, (el.clientHeight - 48) / 2 - 36);
-      const stack = down > across * STACK_GAIN;
-      setStacked(stack);
-      setScale(stack ? down : across);
-    };
-
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    measure();
-
-    return () => ro.disconnect();
-  }, [viewport.width, viewport.height, mode]);
+  }, []);
 
   const board: BoardProps = {
     kind,
@@ -256,28 +139,23 @@ function CompareView({
 
   return (
     <div className="canvas">
-      <div className="toolbar">
-        <Icon name="compare" />
-        <strong className="toolbar-title">Compare</strong>
-        <span className="dims-readout">
-          {viewport.width} × {viewport.height}
-        </span>
-        <ModeSwitch mode={mode} onMode={setMode} />
-        <div className="spacer" />
-        <button className="btn small has-icon" onClick={onClose}>
-          <Icon name="close" size={14} />
-          Close compare
-        </button>
-      </div>
-      {mode === "code" ? (
+      <CompareToolbar
+        height={viewport.height}
+        onClose={onClose}
+        width={viewport.width}
+      >
+        <ModeSwitch mode={mode} onMode={handleMode} />
+      </CompareToolbar>
+      {mode === "code" && (
         <div className="compare-code-scroll" data-mode={mode}>
           <Suspense fallback={null}>
             <CompareCode projectId={projectId} older={older} newer={newer} />
           </Suspense>
         </div>
-      ) : (
+      )}
+      {mode !== "code" && (
         <div
-          className={`compare ${mode === "side" ? (stacked ? "stacked" : "") : "single"}`}
+          className={toCompareClass(mode, isStacked)}
           ref={ref}
           data-mode={mode}
         >
@@ -288,8 +166,8 @@ function CompareView({
           )}
           {mode === "side" && (
             <>
-              <SidePane {...board} side="A" />
-              <SidePane {...board} side="B" />
+              <CompareSidePane board={board} side="A" />
+              <CompareSidePane board={board} side="B" />
             </>
           )}
           {mode === "slider" && <SliderBoard {...board} />}

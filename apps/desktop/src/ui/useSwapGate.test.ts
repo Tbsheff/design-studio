@@ -34,11 +34,13 @@ describe(SwapQueue, () => {
     queue.offer("b", change("b", CHANGE_ARG_3));
     expect(queue.inFlight).toBe("a");
     expect([...queue.next.keys()]).toStrictEqual(["a"]);
-    expect(queue.done("b")).toBe(IS_FALSE);
-    expect(queue.done("a")).toBe(IS_TRUE);
-    expect(queue.shown.get("a")?.changedAt).toBe(1);
-    expect(queue.inFlight).toBe("b");
-    expect(queue.next.get("b")?.changedAt).toBe(EXPECTED_3);
+    expect([
+      queue.done("b"),
+      queue.done("a"),
+      queue.shown.get("a")?.changedAt,
+      queue.inFlight,
+      queue.next.get("b")?.changedAt,
+    ]).toStrictEqual([IS_FALSE, IS_TRUE, 1, "b", EXPECTED_3]);
     queue.done("b");
     expect(queue.inFlight).toBeNull();
     expect(queue.next.size).toBe(0);
@@ -49,9 +51,11 @@ describe(SwapQueue, () => {
 
     const queue = new SwapQueue();
     queue.offer("a", change("a", 1));
-    expect(queue.hold(true)).toBe(IS_TRUE);
-    expect(queue.inFlight).toBeNull();
-    expect(queue.next.size).toBe(0);
+    expect([queue.hold(true), queue.inFlight, queue.next.size]).toStrictEqual([
+      IS_TRUE,
+      null,
+      0,
+    ]);
     queue.offer("b", change("b", 2));
     expect(queue.inFlight).toBeNull();
     queue.hold(false);

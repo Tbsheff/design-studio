@@ -7,6 +7,10 @@ import {
 
 const base = { at: 1, ns: "studio", token: "t", type: "text-commit" } as const;
 
+const BAD_TEXT_MESSAGE = JSON.parse(
+  '{"at":1,"ns":"studio","selector":"h1","text":7,"token":"t","type":"text-commit"}'
+);
+
 describe(parseTextCommit, () => {
   it("accepts a string selector and text", () => {
     expect.hasAssertions();
@@ -27,13 +31,7 @@ describe(parseTextCommit, () => {
         text: "x".repeat(MAX_INLINE_TEXT + 1),
       })
     ).toBeNull();
-    expect(
-      parseTextCommit({
-        ...base,
-        selector: "h1",
-        text: 7,
-      } as unknown as Parameters<typeof parseTextCommit>[0])
-    ).toBeNull();
+    expect(parseTextCommit(BAD_TEXT_MESSAGE)).toBeNull();
     expect(
       parseTextCommit({
         ns: "studio",

@@ -24,6 +24,7 @@ import {
   withFramePath,
 } from "./features/canvas/index";
 
+const ABSENT = JSON.parse("{}").path;
 const xAxis = "x";
 const yAxis = "y";
 
@@ -124,9 +125,9 @@ describe("canvas frames", () => {
   }, 0);
 });
 
-describe("frames per direction", () => {
-  const group = ["va", "vb", "vc"];
+const group = ["va", "vb", "vc"];
 
+describe("frames per direction", () => {
   it("loads old records without a direction and keeps a valid direction and path", () => {
     expect.hasAssertions();
 
@@ -201,7 +202,9 @@ describe("frames per direction", () => {
     ]);
     expect(placeDirections(layout, group, "main", false)).toStrictEqual(layout);
   }, 0);
+});
 
+describe("frame variations", () => {
   it("drops the empty source frame when asked", () => {
     expect.hasAssertions();
 
@@ -229,12 +232,9 @@ describe("frames per direction", () => {
     ]);
     expect(kept.activeId).toBe("f4");
     const back = placeDirections(kept, group, "vc", false);
-    expect(back.frames.map((frame) => frame.directionId).sort()).toStrictEqual([
-      "main",
-      "va",
-      "vb",
-      "vc",
-    ]);
+    expect(
+      back.frames.map((frame) => frame.directionId).toSorted()
+    ).toStrictEqual(["main", "va", "vb", "vc"]);
     expect(new Set(back.frames.map((frame) => frame.id)).size).toBe(EXPECTED_4);
   }, 0);
 
@@ -262,7 +262,9 @@ describe("frames per direction", () => {
 
     expect(followDirection(unbound, "any")).toBe(unbound);
   }, 0);
+});
 
+describe("frame paths", () => {
   it("resizes a frame with a floor of 240 and whole pixels", () => {
     expect.hasAssertions();
 
@@ -272,6 +274,7 @@ describe("frames per direction", () => {
       RESIZE_FRAME_ARG_100_4,
       RESIZE_FRAME_ARG_1000_6
     );
+
     expect(layout.frames[0]).toMatchObject({ height: 1001, width: 240 });
     expect(
       resizeFrame(layout, "nope", RESIZE_FRAME_ARG_500, RESIZE_FRAME_ARG_500)
@@ -284,6 +287,10 @@ describe("frames per direction", () => {
     expect(cleanFramePath(" /about.html ")).toBe("about.html");
     expect(cleanFramePath("docs/intro.html")).toBe("docs/intro.html");
     expect(cleanFramePath("")).toBe("");
+  }, 0);
+
+  it("refuses unsafe paths and sets them on a frame", () => {
+    expect.hasAssertions();
 
     for (const bad of [
       "../x.html",
@@ -316,47 +323,62 @@ describe("frames per direction", () => {
     expect(withFramePath("http://localhost:5300/", "pricing")).toBe(
       "http://localhost:5300/pricing"
     );
-    expect(withFramePath("http://localhost:5300/", undefined)).toBe(
+    expect(withFramePath("http://localhost:5300/", ABSENT)).toBe(
       "http://localhost:5300/"
     );
   }, 0);
 });
 
-describe(zoomKeyOf, () => {
-  const key = (
-    keyName: string,
-    code: string,
-    mods: Partial<{
-      ctrlKey: boolean;
-      metaKey: boolean;
-      altKey: boolean;
-      shiftKey: boolean;
-    }> = {}
-  ): ZoomKey | null =>
-    zoomKeyOf({
-      altKey: false,
-      code,
-      ctrlKey: false,
-      key: keyName,
-      metaKey: false,
-      shiftKey: false,
-      ...mods,
-    });
+const key = (
+  keyName: string,
+  code: string,
+  mods: Partial<{
+    ctrlKey: boolean;
+    metaKey: boolean;
+    altKey: boolean;
+    shiftKey: boolean;
+  }> = {}
+): ZoomKey | null =>
+  zoomKeyOf({
+    altKey: false,
+    code,
+    ctrlKey: false,
+    key: keyName,
+    metaKey: false,
+    shiftKey: false,
+    ...mods,
+  });
 
+describe(zoomKeyOf, () => {
   it("maps Figma keys", () => {
     expect.hasAssertions();
 
-    expect(key("!", "Digit1", { shiftKey: true })).toBe("fit");
-    expect(key("@", "Digit2", { shiftKey: true })).toBe("selection");
-    expect(key(")", "Digit0", { shiftKey: true })).toBe("actual");
-    expect(key("0", "Digit0", { metaKey: true })).toBe("actual");
-    expect(key("1", "Digit1", { metaKey: true })).toBe("fit");
-    expect(key("=", "Equal", { metaKey: true })).toBe("in");
-    expect(key("-", "Minus", { ctrlKey: true })).toBe("out");
-    expect(key("=", "Equal")).toBe("in");
-    expect(key("+", "Equal", { shiftKey: true })).toBe("in");
-    expect(key("-", "Minus")).toBe("out");
-    expect(key("1", "Digit1")).toBeNull();
-    expect(key("¡", "Digit1", { altKey: true })).toBeNull();
+    expect([
+      key("!", "Digit1", { shiftKey: true }),
+      key("@", "Digit2", { shiftKey: true }),
+      key(")", "Digit0", { shiftKey: true }),
+      key("0", "Digit0", { metaKey: true }),
+      key("1", "Digit1", { metaKey: true }),
+      key("=", "Equal", { metaKey: true }),
+      key("-", "Minus", { ctrlKey: true }),
+      key("=", "Equal"),
+      key("+", "Equal", { shiftKey: true }),
+      key("-", "Minus"),
+      key("1", "Digit1"),
+      key("¡", "Digit1", { altKey: true }),
+    ]).toStrictEqual([
+      "fit",
+      "selection",
+      "actual",
+      "actual",
+      "fit",
+      "in",
+      "out",
+      "in",
+      "in",
+      "out",
+      null,
+      null,
+    ]);
   }, 0);
 });

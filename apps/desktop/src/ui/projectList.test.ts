@@ -22,43 +22,62 @@ const TO_NEXT_GRID_INDEX_ARG_5 = 5;
 const IS_FALSE = false;
 const IS_TRUE = true;
 
-function project(
-  id: string,
-  name: string,
-  createdAt: number,
-  updatedAt: number,
-  head: string | null = null,
-  thumb: string | null = null
-): Project {
-  return {
-    createdAt,
-    directions: [
-      {
-        branch: "d/main",
-        createdAt,
-        headVersionId: head,
-        id: "main",
-        name: "Main",
-        parentVersionId: null,
-        sessionId: null,
-        workTree: "/x",
-      },
-    ],
-    entry: "index.html",
-    id,
-    imported: null,
-    kind: "html",
-    name,
-    settings: {} as Project["settings"],
-    thumbnail: thumb ? { at: 1, versionId: thumb } : null,
-    updatedAt,
-  };
+interface ProjectVersions {
+  readonly head: string | null;
+  readonly thumb: string | null;
 }
 
+const NO_VERSIONS: ProjectVersions = { head: null, thumb: null };
+
+const toThumbnail = (versionId: string | null): Project["thumbnail"] => {
+  if (versionId === null || versionId === "") {
+    return null;
+  }
+
+  return { at: 1, versionId };
+};
+
+const project = (
+  projectId: string,
+  projectName: string,
+  stamps: readonly [number, number],
+  versions: ProjectVersions
+): Project => ({
+  createdAt: stamps[0],
+  directions: [
+    {
+      branch: "d/main",
+      createdAt: stamps[0],
+      headVersionId: versions.head,
+      id: "main",
+      name: "Main",
+      parentVersionId: null,
+      sessionId: null,
+      workTree: "/x",
+    },
+  ],
+  entry: "index.html",
+  id: projectId,
+  imported: null,
+  kind: "html",
+  name: projectName,
+  settings: {} as Project["settings"],
+  thumbnail: toThumbnail(versions.thumb),
+  updatedAt: stamps[1],
+});
+
+const toIndex = (key: string, from: number): number | null =>
+  toNextGridIndex(
+    key,
+    from,
+    TO_NEXT_GRID_INDEX_ARG_5,
+    TO_NEXT_GRID_INDEX_ARG_3
+  );
+
 const list = [
-  project("a", "Zebra page", 1, PROJECT_ARG_30),
-  project("b", "apple dashboard", PROJECT_ARG_3, PROJECT_ARG_10),
-  project("c", "Café landing", 2, PROJECT_ARG_20),
+  project("a", "Zebra page", [1, PROJECT_ARG_30], NO_VERSIONS),
+  project("b", "apple dashboard", [PROJECT_ARG_3, PROJECT_ARG_10], NO_VERSIONS),
+  project("c", "Café landing", [2, PROJECT_ARG_20], NO_VERSIONS),
 ];
 
 describe("project list", () => {
@@ -92,7 +111,12 @@ describe("project list", () => {
     expect.hasAssertions();
 
     const many = Array.from({ length: 50 }, (_unusedItem, index) =>
-      project(`p${index}`, `Project ${index} landing page`, index, index)
+      project(
+        `p${index}`,
+        `Project ${index} landing page`,
+        [index, index],
+        NO_VERSIONS
+      )
     );
 
     const started = performance.now();
@@ -106,13 +130,15 @@ describe("project thumbnails", () => {
   it("knows when a thumbnail is behind the head", () => {
     expect.hasAssertions();
 
-    expect(isThumbnailPending(project("a", "A", 1, 1, null))).toBe(IS_FALSE);
-    expect(isThumbnailPending(project("a", "A", 1, 1, "v2", "v1"))).toBe(
-      IS_TRUE
-    );
-    expect(isThumbnailPending(project("a", "A", 1, 1, "v2", "v2"))).toBe(
+    expect(isThumbnailPending(project("a", "A", [1, 1], NO_VERSIONS))).toBe(
       IS_FALSE
     );
+    expect(
+      isThumbnailPending(project("a", "A", [1, 1], { head: "v2", thumb: "v1" }))
+    ).toBe(IS_TRUE);
+    expect(
+      isThumbnailPending(project("a", "A", [1, 1], { head: "v2", thumb: "v2" }))
+    ).toBe(IS_FALSE);
   }, 0);
 });
 
@@ -120,61 +146,16 @@ describe("project grid", () => {
   it("moves through the grid with arrow keys", () => {
     expect.hasAssertions();
 
-    expect(
-      toNextGridIndex(
-        "ArrowRight",
-        0,
-        TO_NEXT_GRID_INDEX_ARG_5,
-        TO_NEXT_GRID_INDEX_ARG_3
-      )
-    ).toBe(1);
-    expect(
-      toNextGridIndex(
-        "ArrowRight",
-        TO_NEXT_GRID_INDEX_ARG_4,
-        TO_NEXT_GRID_INDEX_ARG_5,
-        TO_NEXT_GRID_INDEX_ARG_3
-      )
-    ).toBe(EXPECTED_4);
-    expect(
-      toNextGridIndex(
-        "ArrowDown",
-        1,
-        TO_NEXT_GRID_INDEX_ARG_5,
-        TO_NEXT_GRID_INDEX_ARG_3
-      )
-    ).toBe(EXPECTED_4);
-    expect(
-      toNextGridIndex(
-        "ArrowDown",
-        2,
-        TO_NEXT_GRID_INDEX_ARG_5,
-        TO_NEXT_GRID_INDEX_ARG_3
-      )
-    ).toBe(2);
-    expect(
-      toNextGridIndex(
-        "ArrowUp",
-        TO_NEXT_GRID_INDEX_ARG_4,
-        TO_NEXT_GRID_INDEX_ARG_5,
-        TO_NEXT_GRID_INDEX_ARG_3
-      )
-    ).toBe(1);
-    expect(
-      toNextGridIndex(
-        "End",
-        0,
-        TO_NEXT_GRID_INDEX_ARG_5,
-        TO_NEXT_GRID_INDEX_ARG_3
-      )
-    ).toBe(EXPECTED_4);
-    expect(
-      toNextGridIndex(
-        "Tab",
-        0,
-        TO_NEXT_GRID_INDEX_ARG_5,
-        TO_NEXT_GRID_INDEX_ARG_3
-      )
-    ).toBeNull();
+    expect([
+      toIndex("ArrowRight", 0),
+      toIndex("ArrowRight", TO_NEXT_GRID_INDEX_ARG_4),
+      toIndex("ArrowDown", 1),
+      toIndex("ArrowDown", 2),
+    ]).toStrictEqual([1, EXPECTED_4, EXPECTED_4, 2]);
+    expect([
+      toIndex("ArrowUp", TO_NEXT_GRID_INDEX_ARG_4),
+      toIndex("End", 0),
+      toIndex("Tab", 0),
+    ]).toStrictEqual([1, EXPECTED_4, null]);
   }, 0);
 });

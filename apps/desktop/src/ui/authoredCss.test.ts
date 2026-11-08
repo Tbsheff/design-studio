@@ -23,6 +23,16 @@ const SAMPLE_6 = 6;
 const IS_FALSE = false;
 const IS_TRUE = true;
 
+type Crumb = ReturnType<typeof collapseCrumbs>[number];
+
+const toCrumbLabel = (crumb: Crumb): number | string => {
+  if (crumb.kind === "node") {
+    return crumb.levels;
+  }
+
+  return `gap:${crumb.hidden.map((entry) => entry.levels).join(",")}`;
+};
+
 describe(parseDeclarations, () => {
   it("keeps semicolons inside url() and quotes, and keeps !important", () => {
     expect.hasAssertions();
@@ -67,7 +77,7 @@ describe(isCoveredDeclaration, () => {
       "flex-basis",
       "flex-flow",
     ]) {
-      expect(isCoveredDeclaration(prop, "1px"), prop).toBe(IS_TRUE);
+      expect(isCoveredDeclaration(prop, "1px")).toBe(IS_TRUE);
     }
   }, 0);
 
@@ -76,10 +86,10 @@ describe(isCoveredDeclaration, () => {
 
     expect(isCoveredDeclaration("background", "#fff")).toBe(IS_TRUE);
     expect(isCoveredDeclaration("background", "var(--bg) !important")).toBe(
-      true
+      IS_TRUE
     );
     expect(isCoveredDeclaration("background", "url(a.png) no-repeat")).toBe(
-      false
+      IS_FALSE
     );
     expect(
       isCoveredDeclaration("background", "linear-gradient(red, blue)")
@@ -98,7 +108,7 @@ describe(isCoveredDeclaration, () => {
       "transition",
       "--x",
     ]) {
-      expect(isCoveredDeclaration(prop, "1px"), prop).toBe(IS_FALSE);
+      expect(isCoveredDeclaration(prop, "1px")).toBe(IS_FALSE);
     }
   }, 0);
 });
@@ -228,16 +238,15 @@ describe("breadcrumb path", () => {
       { label: "main", levels: 2 },
       { label: "div", levels: 1 },
     ]);
-    expect(collapseCrumbs(pathCrumbs(path.slice(0, SAMPLE_4)))).toHaveLength(
-      EXPECTED_4
-    );
+    const shortCrumbs = collapseCrumbs(pathCrumbs(path.slice(0, SAMPLE_4)));
+    expect(shortCrumbs).toHaveLength(EXPECTED_4);
     const crumbs = collapseCrumbs(pathCrumbs(path));
-    expect(
-      crumbs.map((crumb) =>
-        crumb.kind === "node"
-          ? crumb.levels
-          : `gap:${crumb.hidden.map((entry) => entry.levels).join(",")}`
-      )
-    ).toStrictEqual([SAMPLE_6, "gap:5,4", SAMPLE_3, 2, 1]);
+    expect(crumbs.map((crumb) => toCrumbLabel(crumb))).toStrictEqual([
+      SAMPLE_6,
+      "gap:5,4",
+      SAMPLE_3,
+      2,
+      1,
+    ]);
   }, 0);
 });

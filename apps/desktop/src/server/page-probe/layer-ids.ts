@@ -16,8 +16,10 @@ interface Move {
 
 const IDS_MAX = 50_000;
 const GONE = "\u0000gone";
+
 const LOC_IN_KEY =
   /(?<boundary>^|\|)(?<file>[^|#]+):(?<line>\d+):(?<column>\d+)(?=[|#])/gu;
+
 const registries = new Map<string, Ids>();
 
 const idsOf = (scope: string): Ids => {

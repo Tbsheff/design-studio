@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { query, tool as createTool } from "@anthropic-ai/claude-agent-sdk";
-import { Schema } from "effect";
+import type { Schema } from "effect";
 
 import type { FlowInput } from "../../shared/route-flow.js";
 import {
@@ -15,7 +15,7 @@ import type {
   AgentRunContext,
   PreviewService,
 } from "../../shared/server-ports.js";
-import { toOptional, toSdkFieldSet, toToolRun } from "../agent-tools/index.js";
+import { toToolRun } from "../agent-tools/index.js";
 import type { ToolFields, ToolInput } from "../agent-tools/index.js";
 import {
   applyFrameSession,
@@ -67,7 +67,6 @@ import {
   describeCriticResult,
   runCritic,
 } from "./critic.js";
-import { editElementFields } from "./direct-tools.js";
 import { baselineNote } from "./final-check.js";
 import { AGENT_OPS } from "./legacy/agent-ops.js";
 import { recordShot } from "./polish-loop.js";
@@ -99,17 +98,6 @@ const TILE_PLAN: Record<
 };
 
 type QueryFn = typeof query;
-
-export const agentEditElementSdkFields = toSdkFieldSet({
-  ...editElementFields,
-  style: toOptional(
-    Schema.Record(
-      Schema.String,
-      Schema.Union([Schema.String, Schema.Finite, Schema.Null])
-    ),
-    "CSS properties to set, kebab-case or camelCase keys; null removes one. Tailwind projects get theme classes."
-  ),
-});
 
 export interface StudioToolDeps {
   preview: PreviewService;
@@ -886,7 +874,8 @@ export async function runPrepareShip(
 export const toDecodedRun = <Fields extends ToolFields, Reply>(
   input: ToolInput<Fields>,
   run: (data: Schema.Struct.Type<Fields>) => Promise<Reply>
-) => toToolRun(input, errorText, run);
+): ReturnType<typeof toToolRun<Fields, ReturnType<typeof errorText>, Reply>> =>
+  toToolRun(input, errorText, run);
 
 export type ToolFactory = typeof createTool;
 

@@ -1,3 +1,6 @@
+import { Schema } from "effect";
+
+import { toOptional, toSdkFieldSet } from "../../agent-tools/index.js";
 import {
   arrangeSdkFields,
   measureSdkFields,
@@ -11,7 +14,7 @@ import {
   setBreakpointStyleInput,
 } from "../breakpoints-tool.js";
 import { TWEAKS_TOOL } from "../canvas-tool-fields.js";
-import { runEditElement } from "../direct-tools.js";
+import { editElementFields, runEditElement } from "../direct-tools.js";
 import { figmaImportSdkFields, runFigmaImport } from "../figma-import-tool.js";
 import { runSetImage, setImageSdkFields } from "../image-tool.js";
 import {
@@ -41,11 +44,7 @@ import {
   runReplaceStyle,
 } from "../style-tool.js";
 import { TOOL_SHORT } from "../tool-help.js";
-import {
-  agentEditElementSdkFields,
-  runDefineTweaks,
-  toDecodedRun,
-} from "../tools.js";
+import { runDefineTweaks, toDecodedRun } from "../tools.js";
 import type { StudioToolDeps, ToolFactory } from "../tools.js";
 import {
   booleanOpsSdkFields,
@@ -55,6 +54,19 @@ import {
   runDrawVector,
   runPaintVector,
 } from "../vector-tool.js";
+
+const StyleRecord = Schema.Record(
+  Schema.String,
+  Schema.Union([Schema.String, Schema.Finite, Schema.Null])
+);
+
+const agentEditElementSdkFields = toSdkFieldSet({
+  ...editElementFields,
+  style: toOptional(
+    StyleRecord,
+    "CSS properties to set, kebab-case or camelCase keys; null removes one. Tailwind projects get theme classes."
+  ),
+});
 
 const toElementStyleTools = (
   deps: StudioToolDeps,

@@ -20,6 +20,14 @@ const toHintText = (count: number): string => {
   return `${count} strokes`;
 };
 
+const toStrokeTip = (count: number, tip: string): string => {
+  if (count === 0) {
+    return copy.drawFirst;
+  }
+
+  return tip;
+};
+
 const stopPointer = (event: PointerEvent<HTMLElement>): void =>
   event.stopPropagation();
 
@@ -57,7 +65,7 @@ const DrawBar = ({ draw }: { draw: DrawTool }): ReactElement | null => {
         className="icon-btn small"
         aria-label={copy.undoStroke}
         aria-keyshortcuts="Meta+Z Control+Z"
-        data-tip={`Undo stroke  ${MOD_LABEL}Z`}
+        data-tip={toStrokeTip(count, `Undo stroke  ${MOD_LABEL}Z`)}
         disabled={count === 0}
         onClick={undo}
       >
@@ -67,7 +75,7 @@ const DrawBar = ({ draw }: { draw: DrawTool }): ReactElement | null => {
         type="button"
         className="icon-btn small"
         aria-label={copy.clearDrawing}
-        data-tip={copy.clear}
+        data-tip={toStrokeTip(count, copy.clear)}
         disabled={count === 0}
         onClick={clear}
       >

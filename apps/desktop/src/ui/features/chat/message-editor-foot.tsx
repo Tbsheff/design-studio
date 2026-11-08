@@ -1,9 +1,17 @@
-import { Icon } from "@design-studio/ui";
+import { Button, Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 
 const HINT_ICON_SIZE = 12;
+
+const toSendReason = (isReady: boolean): string | null => {
+  if (isReady) {
+    return null;
+  }
+
+  return copy.sendNeedsText;
+};
 
 const MessageEditorFoot = ({
   isReady,
@@ -22,14 +30,17 @@ const MessageEditorFoot = ({
     <button type="button" className="btn ghost small" onClick={onCancel}>
       {copy.cancel}
     </button>
-    <button
-      type="button"
-      className="btn small primary"
-      disabled={!isReady}
+    <Button
+      disabledReason={toSendReason(isReady)}
+      isLoading={false}
+      label={null}
       onClick={onSend}
+      size="sm"
+      tip={null}
+      variant="primary"
     >
       {copy.send}
-    </button>
+    </Button>
   </div>
 );
 

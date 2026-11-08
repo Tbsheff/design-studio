@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import { SelectMatchingSection } from "./inspector-multi.js";
 import { InspectorOtherStyles } from "./inspector-other-styles.js";
 import { MatchSection } from "./inspector-tokens.js";
+import { SelectMatchingSection } from "./select-matching-section.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 
 interface SimpleTailProps {

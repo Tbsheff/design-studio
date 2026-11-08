@@ -7,6 +7,7 @@ import type { UiSelectProps } from "./UiSelect.js";
 const UiSelect = lazy(() =>
   (async () => {
     const loaded = await import("./UiSelect.js");
+
     return {
       default: loaded.UiSelect as (p: UiSelectProps<string>) => JSX.Element,
     };

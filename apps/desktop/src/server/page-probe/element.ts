@@ -1,9 +1,9 @@
-import {
-  SOURCE_LOC_ATTR,
-  type ComponentUse,
-  type SelectionContext,
-  type SourceLoc,
-  type TextSourceHints,
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+import type {
+  ComponentUse,
+  SelectionContext,
+  SourceLoc,
+  TextSourceHints,
 } from "@design-studio/contracts";
 import type { ComponentOwner } from "@design-studio/contracts/props";
 
@@ -69,23 +69,23 @@ function probeAll(selectors: string[]): string {
   return `Promise.all((${JSON.stringify(selectors)}).map(${probeBody()}))`;
 }
 
-function contextOf(selector: string, raw: RawElement): SelectionContext {
+function contextOf(selectorText: string, raw: RawElement): SelectionContext {
   return {
-    selector,
+    ancestors: raw.ancestors,
+    outerHTML: raw.outerHTML,
+    owners: raw.owners ?? [],
+    rect: raw.rect,
+    selector: selectorText,
+    source: parseLoc(raw.loc),
+    styles: raw.styles,
     tag: raw.tag,
     text: raw.text,
-    outerHTML: raw.outerHTML,
-    styles: raw.styles,
-    rect: raw.rect,
-    source: parseLoc(raw.loc),
     usedAt: parseLoc(raw.usedAt),
     usedBy: raw.usedBy,
-    owners: raw.owners ?? [],
-    ancestors: raw.ancestors,
   };
 }
 
-const PROBE_VIEWPORT = { width: 1440, height: 900 };
+const PROBE_VIEWPORT = { height: 900, width: 1440 };
 
 function onProbePage<T>(
   preview: PreviewService,
@@ -105,8 +105,10 @@ export async function describeElements(
     url,
     probeAll(selectors)
   );
+
   return selectors.map((selector, index) => {
     const raw = raws[index];
+
     return raw ? contextOf(selector, raw) : null;
   });
 }
@@ -121,6 +123,7 @@ export async function describeElement(
     url,
     probe(selector)
   );
+
   return raw ? contextOf(selector, raw) : null;
 }
 

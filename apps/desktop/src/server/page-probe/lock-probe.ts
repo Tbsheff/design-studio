@@ -14,7 +14,7 @@ export interface LockProbe {
   resolved: Record<string, boolean>;
 }
 
-const VIEWPORT = { width: 1440, height: 900 };
+const VIEWPORT = { height: 900, width: 1440 };
 
 const PROBE = String.raw`async (input) => {
   const LOC = ${JSON.stringify(SOURCE_LOC_ATTR)};
@@ -101,7 +101,7 @@ export function probeLock(
     preview,
     url,
     VIEWPORT,
-    `(${PROBE})(${JSON.stringify({ selector, keys })})`,
+    `(${PROBE})(${JSON.stringify({ keys, selector })})`,
     { layoutOnly: true }
   );
 }

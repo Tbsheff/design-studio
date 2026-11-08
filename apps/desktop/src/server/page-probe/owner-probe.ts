@@ -1,10 +1,7 @@
 import type { SourceLoc } from "@design-studio/contracts";
 import { APP_SOURCE_PATH } from "@design-studio/contracts/app";
-import {
-  OWNERS_MAX,
-  OWNER_STACK_MAX,
-  type ComponentOwner,
-} from "@design-studio/contracts/props";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
+import type { ComponentOwner } from "@design-studio/contracts/props";
 
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
@@ -96,21 +93,23 @@ export async function probeOwners(
   const raw = await probeOnPage<RawProbe | null>(
     preview,
     url,
-    { width: 1440, height: 900 },
+    { height: 900, width: 1440 },
     probe(selector)
   );
+
   return raw
-    ? { tag: raw.tag, owners: raw.owners, usedAt: parseLoc(raw.usedAt) }
+    ? { owners: raw.owners, tag: raw.tag, usedAt: parseLoc(raw.usedAt) }
     : null;
 }
 
 export function parseLoc(raw: string | null): SourceLoc | null {
   const match = raw ? /^(.+):(\d+):(\d+)$/.exec(raw) : null;
+
   return match
     ? {
+        col: Number(match[3]),
         file: match[1] as string,
         line: Number(match[2]),
-        col: Number(match[3]),
       }
     : null;
 }

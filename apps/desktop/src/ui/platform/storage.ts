@@ -49,21 +49,21 @@ const KEY = "design-studio.ui.v1";
 
 const defaults: UiState = {
   activeProjectId: null,
-  screen: "home",
-  libraryFrom: null,
-  returnTo: "home",
-  directionByProject: {},
-  viewport: { preset: "desktop", width: 1440, height: 900 },
-  zoom: "fit",
   chatWidth: null,
-  lastPackId: null,
-  lastLocation: null,
-  snapByProject: {},
+  directionByProject: {},
   homeSort: "recent",
+  lastLocation: null,
+  lastPackId: null,
   layersOpen: false,
+  libraryFrom: null,
   paneCollapsed: false,
-  viewRowOpen: false,
+  returnTo: "home",
   rulers: false,
+  screen: "home",
+  snapByProject: {},
+  viewRowOpen: false,
+  viewport: { height: 900, preset: "desktop", width: 1440 },
+  zoom: "fit",
 };
 
 function libraryFromOf(value: unknown): LibraryFrom | null {
@@ -71,7 +71,7 @@ function libraryFromOf(value: unknown): LibraryFrom | null {
 
   return typeof from?.projectId === "string" &&
     typeof from.directionId === "string"
-    ? { projectId: from.projectId, directionId: from.directionId }
+    ? { directionId: from.directionId, projectId: from.projectId }
     : null;
 }
 
@@ -87,37 +87,37 @@ function loadUiState(): UiState {
 
     return {
       activeProjectId: parsed.activeProjectId ?? null,
-      screen:
-        parsed.screen && SCREENS.has(parsed.screen) ? parsed.screen : "home",
-      libraryFrom:
-        parsed.screen === "design-systems"
-          ? libraryFromOf(parsed.libraryFrom)
-          : null,
-      returnTo:
-        parsed.returnTo === "design-systems" ? "design-systems" : "home",
-      directionByProject: parsed.directionByProject ?? {},
-      viewport: parsed.viewport ?? defaults.viewport,
-      zoom: parsed.zoom ?? defaults.zoom,
       chatWidth: typeof parsed.chatWidth === "number" ? parsed.chatWidth : null,
-      lastPackId:
-        typeof parsed.lastPackId === "string" ? parsed.lastPackId : null,
+      directionByProject: parsed.directionByProject ?? {},
+      homeSort:
+        parsed.homeSort && HOME_SORTS.includes(parsed.homeSort)
+          ? parsed.homeSort
+          : "recent",
       lastLocation:
         typeof parsed.lastLocation === "string" &&
         parsed.lastLocation.startsWith("/")
           ? parsed.lastLocation
           : null,
+      lastPackId:
+        typeof parsed.lastPackId === "string" ? parsed.lastPackId : null,
+      layersOpen: parsed.layersOpen === true,
+      libraryFrom:
+        parsed.screen === "design-systems"
+          ? libraryFromOf(parsed.libraryFrom)
+          : null,
+      paneCollapsed: parsed.paneCollapsed === true,
+      returnTo:
+        parsed.returnTo === "design-systems" ? "design-systems" : "home",
+      rulers: parsed.rulers === true,
+      screen:
+        parsed.screen && SCREENS.has(parsed.screen) ? parsed.screen : "home",
       snapByProject:
         parsed.snapByProject && typeof parsed.snapByProject === "object"
           ? parsed.snapByProject
           : {},
-      homeSort:
-        parsed.homeSort && HOME_SORTS.includes(parsed.homeSort)
-          ? parsed.homeSort
-          : "recent",
-      layersOpen: parsed.layersOpen === true,
-      paneCollapsed: parsed.paneCollapsed === true,
       viewRowOpen: parsed.viewRowOpen === true,
-      rulers: parsed.rulers === true,
+      viewport: parsed.viewport ?? defaults.viewport,
+      zoom: parsed.zoom ?? defaults.zoom,
     };
   } catch {
     return defaults;

@@ -40,13 +40,13 @@ export function reportAppStart(screen: "home" | "studio"): void {
     const boot = desktopBoot();
     const ms = boot ? Date.now() - boot.startedAt : performance.now();
     sendTelemetry({
-      kind: "app.start",
-      ms: Math.round(ms),
       detail: {
-        surface: boot ? "desktop" : "web",
         screen,
+        surface: boot ? "desktop" : "web",
         ...boot?.marks,
       },
+      kind: "app.start",
+      ms: Math.round(ms),
     });
   });
 }
@@ -59,11 +59,11 @@ export function reportFirstToken(
 ): void {
   afterPaint(() =>
     sendTelemetry({
-      kind: "run.first_token",
-      projectId,
-      directionId,
-      ms: Date.now() - sentAt,
       detail: { runId, stage: "visible" },
+      directionId,
+      kind: "run.first_token",
+      ms: Date.now() - sentAt,
+      projectId,
     })
   );
 }
@@ -105,7 +105,7 @@ export function watchLongFrames(): () => void {
       kind: "frame.long",
       ...scope,
       ms: Math.round(worst),
-      detail: { count, type, screen: scope.projectId ? "studio" : "home" },
+      detail: { count, screen: scope.projectId ? "studio" : "home", type },
     };
 
     count = 0;
@@ -130,7 +130,7 @@ export function watchLongFrames(): () => void {
     }
   });
 
-  observer.observe({ type, buffered: true });
+  observer.observe({ buffered: true, type });
 
   const onHide = () => {
     if (document.visibilityState === "hidden") {

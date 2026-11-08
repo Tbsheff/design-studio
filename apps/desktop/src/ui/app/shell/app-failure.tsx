@@ -29,16 +29,19 @@ function useInstallHint(
     }
 
     let live = true;
+
     const loadHint = async (): Promise<void> => {
       try {
         const project = await api.getProject(projectId);
         let result = null;
+
         if (project.imported) {
           result = await api.inspectFolder(
             project.imported.sourcePath,
             app.appDir
           );
         }
+
         if (live) {
           setHint(result);
         }
@@ -48,6 +51,7 @@ function useInstallHint(
         }
       }
     };
+
     void loadHint();
 
     return () => {

@@ -49,6 +49,7 @@ export function useAnchoredPopover<T extends string>(
     if (!view || !trigger.current || !panel.current) {
       return;
     }
+
     setStyle(
       placeFixed(
         anchor ? anchor(trigger.current) : trigger.current,
@@ -62,6 +63,7 @@ export function useAnchoredPopover<T extends string>(
     if (!view) {
       return;
     }
+
     const inside = (target: EventTarget | null) =>
       target instanceof Node &&
       (panel.current?.contains(target) || trigger.current?.contains(target));
@@ -76,6 +78,7 @@ export function useAnchoredPopover<T extends string>(
       if (e.key !== "Escape") {
         return;
       }
+
       e.preventDefault();
       e.stopPropagation();
       close(true);

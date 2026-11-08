@@ -260,11 +260,6 @@ export function lineMapOf(before: string, after: string): LineMap {
   matchMovedLines(oldLines, newLines, mapping);
 
   return {
-    line: (oldLine) => {
-      const mapped = mapping[oldLine - 1];
-
-      return mapped === undefined || mapped < 0 ? null : mapped + 1;
-    },
     col: (oldLine, oldCol) => {
       const mapped = mapping[oldLine - 1];
 
@@ -277,6 +272,11 @@ export function lineMapOf(before: string, after: string): LineMap {
         newLines[mapped] ?? "",
         oldCol
       );
+    },
+    line: (oldLine) => {
+      const mapped = mapping[oldLine - 1];
+
+      return mapped === undefined || mapped < 0 ? null : mapped + 1;
     },
   };
 }

@@ -23,7 +23,7 @@ function idsOf(scope: string): Ids {
   let ids = registries.get(scope);
 
   if (!ids || ids.refByKey.size > IDS_MAX) {
-    ids = { refByKey: new Map(), keyByRef: new Map() };
+    ids = { keyByRef: new Map(), refByKey: new Map() };
     registries.set(scope, ids);
   }
 
@@ -102,7 +102,7 @@ export function remapIds(scope: string, files: SourceFileChange[]): Move[] {
     const to = movedKey(key, maps);
 
     if (to !== key) {
-      moves.push({ ref, from: key, to });
+      moves.push({ from: key, ref, to });
     }
   }
 

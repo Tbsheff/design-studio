@@ -133,9 +133,9 @@ export async function resolveSourceLoc(
 
   if (full) {
     return {
+      col: Number(full[3]),
       file: fullFile(scope, full[1] as string),
       line: Number(full[2]),
-      col: Number(full[3]),
     };
   }
 
@@ -150,5 +150,5 @@ export async function resolveSourceLoc(
   const file = fullFile(scope, lineOnly[1] as string);
   const line = Number(lineOnly[2]);
 
-  return { file, line, col: await colOnLine(workTree, file, line, raw) };
+  return { col: await colOnLine(workTree, file, line, raw), file, line };
 }

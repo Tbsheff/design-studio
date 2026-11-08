@@ -4,7 +4,6 @@
     "apps/api/src/http/viewer-routes.ts": 3,
     "apps/api/src/index.ts": 1,
     "apps/api/src/mcp/mount.ts": 1,
-    "apps/desktop/src/server/agent/tools.ts": 48,
     "apps/desktop/src/server/http/app-routes.ts": 1,
     "apps/desktop/src/server/http/app.ts": 1,
     "apps/desktop/src/server/http/comments-routes.ts": 2,
@@ -75,10 +74,6 @@
     "apps/api/src/http/viewer-routes.ts": 3,
     "apps/api/src/index.ts": 4,
     "apps/api/src/mcp/mount.ts": 1
-  },
-  "T1": {
-    "apps/api/src/http/groups/gates.ts": 3,
-    "apps/api/src/http/sync/sync-gate.ts": 1
   },
   "W7": {
     "apps/api/src/http/middleware/member-auth.ts": 1,

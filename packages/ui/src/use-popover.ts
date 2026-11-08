@@ -113,6 +113,10 @@ const useModalDialog = (
     };
 
     const onClose = (): void => {
+      if (el.open) {
+        return;
+      }
+
       if (dismiss.current() === false && el.isConnected) {
         el.showModal();
       }

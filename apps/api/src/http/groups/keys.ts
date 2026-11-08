@@ -6,6 +6,7 @@ import { AuthRateLimit, AUTH_RULES } from "../../auth/rate-limit.js";
 import { CurrentOrg } from "../../tenant/current-org.js";
 import { KeyPermRepo } from "../../tenant/repos/key-perm.js";
 import { CurrentUser } from "../middleware/current-user.js";
+import { ORG_PATH, OrgIdSchema, OrgParams } from "../org-params.js";
 import { requireOrg, requirePerm } from "./authorizer.js";
 import { MemberGate } from "./gates.js";
 import { createKey } from "./keys/create-key.js";
@@ -18,10 +19,6 @@ const KEY_NEEDS = {
   revoke: "apiKey.revoke",
 } as const;
 
-const ORG_PATH = "/v1/o/:orgId";
-
-const OrgParams = { orgId: Schema.String };
-
 const KeyParams = { ...OrgParams, keyId: Schema.String };
 
 const KeyWireSchema = Schema.Struct({
@@ -29,7 +26,7 @@ const KeyWireSchema = Schema.Struct({
   createdAt: Schema.Number,
   keyId: Schema.String,
   name: Schema.String,
-  orgId: Schema.String,
+  orgId: OrgIdSchema,
   perms: Schema.Array(Schema.String),
   revoked: Schema.Boolean,
 });

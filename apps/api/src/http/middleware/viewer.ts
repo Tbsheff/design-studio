@@ -1,7 +1,7 @@
-import { Context, Effect, Layer } from "effect";
-
 import type { Gone } from "@design-studio/actions/_core/errors/gone";
 import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import { Context, Effect, Layer } from "effect";
+
 import { CurrentOrg } from "../../tenant/current-org.js";
 import { Resolver } from "../../tenant/resolver.js";
 import { ViewerScope } from "../../tenant/viewer-scope.js";
@@ -69,6 +69,8 @@ const withShare =
       );
     });
 
+const ViewerAuthResolved = ViewerAuth.layer.pipe(Layer.provide(Resolver.layer));
+
 const withPublic =
   (slug: string) =>
   <Value, Failure, Needs>(
@@ -85,6 +87,6 @@ const withPublic =
       return yield* Effect.provideService(handler, ViewerScope, scope);
     });
 
-export { ViewerAuth, withPublic, withShare };
+export { ViewerAuth, ViewerAuthResolved, withPublic, withShare };
 
 export type { ViewerAuthApi, ViewerAuthError };

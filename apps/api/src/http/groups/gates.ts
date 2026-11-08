@@ -1,16 +1,20 @@
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Effect, Layer } from "effect";
 import { HttpServerRequest } from "effect/http";
 import { HttpApiMiddleware } from "effect/http-api";
 
-import { NotFound } from "@design-studio/actions/_core/errors/not-found";
-import { CurrentOrg } from "../../tenant/current-org.js";
+import type { CurrentOrg } from "../../tenant/current-org.js";
 import { ViewerScope } from "../../tenant/viewer-scope.js";
 import { AgentAuth } from "../middleware/agent-auth.js";
 import type { AgentAuthApi } from "../middleware/agent-auth.js";
-import { CurrentKey } from "../middleware/current-key.js";
-import { CurrentUser } from "../middleware/current-user.js";
+import type { CurrentKey } from "../middleware/current-key.js";
+import type { CurrentUser } from "../middleware/current-user.js";
 import { MemberAuth } from "../middleware/member-auth.js";
 import type { RouteClass } from "../middleware/member-auth.js";
+import {
+  provideAgentGrant,
+  provideMemberGrant,
+} from "../middleware/provide-grant.js";
 import { ViewerAuth } from "../middleware/viewer.js";
 import {
   MEMBER_ERRORS,
@@ -21,7 +25,7 @@ import {
 const ORG_PATH = /\/v1\/o\/(?<org>[^/?]+)/u;
 
 const toOrgId = (url: string): string | null => {
-  const match = ORG_PATH.exec(url);
+  const match = url.match(ORG_PATH);
 
   if (match === null) {
     return null;
@@ -89,10 +93,7 @@ const MemberGateLive = Layer.effect(
           route: toRouteClass(endpoint.method),
         });
 
-        return yield* httpEffect.pipe(
-          Effect.provideService(CurrentOrg, grant.org),
-          Effect.provideService(CurrentUser, grant.user)
-        );
+        return yield* provideMemberGrant(grant)(httpEffect);
       })
     );
   })
@@ -120,10 +121,7 @@ const AgentGateLive = Layer.effect(
       Effect.gen(function* run() {
         const grant = yield* authenticateAgent(auth);
 
-        return yield* httpEffect.pipe(
-          Effect.provideService(CurrentOrg, grant.org),
-          Effect.provideService(CurrentKey, grant.key)
-        );
+        return yield* provideAgentGrant(grant)(httpEffect);
       })
     );
   })
@@ -140,10 +138,7 @@ const AgentProbeGateLive = Layer.effect(
           Effect.mapError(toMissingOrg)
         );
 
-        return yield* httpEffect.pipe(
-          Effect.provideService(CurrentOrg, grant.org),
-          Effect.provideService(CurrentKey, grant.key)
-        );
+        return yield* provideAgentGrant(grant)(httpEffect);
       })
     );
   })

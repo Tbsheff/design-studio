@@ -35,7 +35,7 @@ const HomeOverlays = ({
           <HomeDoctor
             problem={gate.problem}
             isChecking={gate.isChecking}
-            onCheck={() => void doctor.check()}
+            onCheck={() => doctor.check()}
             onOpenAnyway={() => {
               doctor.close();
               gate.proceed();

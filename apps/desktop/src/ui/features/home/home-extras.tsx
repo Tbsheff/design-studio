@@ -79,7 +79,7 @@ const HiddenProjectsNote = ({
       <button
         type="button"
         className="btn small"
-        onClick={() => void move()}
+        onClick={() => move()}
         disabled={moving}
       >
         {moving ? "Moving…" : `Move to ${shortenHome(hidden.target, homeDir)}`}

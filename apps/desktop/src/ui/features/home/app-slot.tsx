@@ -32,7 +32,7 @@ const AppSlot = ({
         aria-expanded={pop === "folder"}
         data-tip={copy.addAppFolder}
         data-tip-side="top"
-        onPointerEnter={() => void loadAppMenu()}
+        onPointerEnter={() => loadAppMenu()}
         onClick={onAddFolder}
       >
         <Icon name="folder" size={14} />

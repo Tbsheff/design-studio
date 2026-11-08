@@ -127,7 +127,7 @@ const ComposerBar = ({
           aria-expanded={pop === "plus"}
           data-tip={copy.attachImportAndOptions}
           data-tip-align="start"
-          onPointerEnter={() => void loadPops()}
+          onPointerEnter={() => loadPops()}
           onClick={() => togglePop("plus")}
         >
           <Icon name="plus" size={16} />

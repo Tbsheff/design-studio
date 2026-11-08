@@ -166,7 +166,7 @@ const LocationField = ({
         <PastePath
           label="Folder for the new project"
           action="Use folder"
-          onSubmit={(path) => void useFolder(path)}
+          onSubmit={(path) => useFolder(path)}
         />
       ) : (
         <span className="home-location-target" data-testid="location-target">
@@ -232,7 +232,7 @@ const FolderRow = ({
       className={`folder-row${folder.missing ? " missing" : ""}${isActive ? " active" : ""}`}
     >
       {editing ? (
-        <form className="folder-rename" onSubmit={(e) => void save(e)}>
+        <form className="folder-rename" onSubmit={(e) => save(e)}>
           <input
             aria-label={`Name for ${folder.label}`}
             value={label}
@@ -412,7 +412,7 @@ const FoldersSection = ({
         <button
           type="button"
           className="btn small has-icon"
-          onClick={() => void add()}
+          onClick={() => add()}
           disabled={chooser.isPicking}
         >
           <Icon name="plus" size={14} />
@@ -424,7 +424,7 @@ const FoldersSection = ({
           label="Folder to add"
           action="Add"
           onSubmit={(path) =>
-            void onAdd(path).then((saved) => {
+            onAdd(path).then((saved) => {
               if (saved) {
                 setPasting(false);
               }
@@ -437,7 +437,7 @@ const FoldersSection = ({
           label="Default folder for new projects"
           action="Use as default"
           onSubmit={(path) =>
-            void onSetDefault(path).then((ok) => {
+            onSetDefault(path).then((ok) => {
               if (ok) {
                 setPastingDefault(false);
               }
@@ -461,7 +461,7 @@ const FoldersSection = ({
               onOpenHere={() => onOpenHere(folder)}
               onRename={(label) => onRename(folder.id, label)}
               onRemove={() => onRemove(folder)}
-              onChangeDefault={() => void changeDefault(folder)}
+              onChangeDefault={() => changeDefault(folder)}
               isChanging={chooser.isPicking}
             />
           ))}

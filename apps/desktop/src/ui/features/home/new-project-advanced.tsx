@@ -43,10 +43,7 @@ const NewProjectAdvanced = (props: Props): ReactElement => {
       open={open}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
-      <summary
-        onPointerEnter={() => void loadFields()}
-        onFocus={() => void loadFields()}
-      >
+      <summary onPointerEnter={() => loadFields()} onFocus={() => loadFields()}>
         <Icon name="chevronRight" size={14} />
         Advanced
       </summary>

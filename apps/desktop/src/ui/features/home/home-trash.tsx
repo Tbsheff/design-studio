@@ -353,7 +353,7 @@ export default function HomeTrash({
                 key={item.trashId}
                 item={item}
                 isBusy={busy !== null}
-                onRestore={() => void restore(item)}
+                onRestore={() => restore(item)}
                 onDelete={() => {
                   setConfirmError(null);
                   setConfirm({ item, kind: "one" });
@@ -403,7 +403,7 @@ export default function HomeTrash({
           isBusy={busy === "confirm"}
           error={confirmError}
           onCancel={() => setConfirm(null)}
-          onConfirm={() => void confirmDelete()}
+          onConfirm={() => confirmDelete()}
         />
       )}
     </dialog>

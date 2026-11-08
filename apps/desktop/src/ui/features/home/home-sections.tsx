@@ -134,8 +134,8 @@ const useProjectActions = ({
     try {
       const trashed = await projectsApi.trash(project);
 
-      const undo = (): undefined =>
-        void projectsApi.restore(trashed.trashId).catch((error: unknown) =>
+      const undo = (): Promise<void> =>
+        projectsApi.restore(trashed.trashId).catch((error: unknown) =>
           showToast({
             text: `Could not restore: ${errorText(error)}`,
             hasError: true,

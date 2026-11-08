@@ -171,7 +171,7 @@ const Home = ({
               <StarterRow
                 template={template}
                 busy={busy}
-                onOpen={(starter) => void openStarter(starter)}
+                onOpen={(starter) => openStarter(starter)}
               />
               <ComposerBar
                 fileRef={fileRef}
@@ -190,7 +190,7 @@ const Home = ({
                 app={{
                   chip: app.chip,
                   isFolderPopOpen: folderPop,
-                  onAddFolder: () => void addAppFolder(),
+                  onAddFolder: () => addAppFolder(),
                   onDoctor: () => chipDoctor(prompt.trim()),
                   onFolderClose: () => setFolderPop(false),
                   onFolderPick: putFolder,
@@ -202,10 +202,8 @@ const Home = ({
                 <ClarifyForm
                   questions={questions}
                   busy={busy === "create"}
-                  onBuild={(answers) =>
-                    void build(formatAnswers(prompt, answers))
-                  }
-                  onSkip={() => void build(prompt.trim())}
+                  onBuild={(answers) => build(formatAnswers(prompt, answers))}
+                  onSkip={() => build(prompt.trim())}
                   onCancel={() => {
                     setQuestions(null);
                     focusPrompt(homeRef.current);
@@ -243,7 +241,7 @@ const Home = ({
                 onError: setFormError,
                 opened: advancedOpened,
               }}
-              onHiddenMoved={() => void loadProjects()}
+              onHiddenMoved={() => loadProjects()}
             />
           )}
         </section>
@@ -251,10 +249,10 @@ const Home = ({
           isEmpty={empty}
           isBusy={busy !== null}
           listError={listError}
-          onRetry={() => void loadProjects()}
+          onRetry={() => loadProjects()}
           onUse={putFolder}
-          onSample={() => void openSample()}
-          onStarter={(starter) => void openStarter(starter)}
+          onSample={() => openSample()}
+          onStarter={(starter) => openStarter(starter)}
         >
           {projects !== null && (
             <Library
@@ -280,7 +278,7 @@ const Home = ({
       <HomeOverlays
         isTrashOpen={trashOpen}
         onCloseTrash={() => setTrashOpen(false)}
-        onRestored={() => void loadProjects()}
+        onRestored={() => loadProjects()}
         doctor={doctor}
         toast={toast}
         onToastDone={clearToast}

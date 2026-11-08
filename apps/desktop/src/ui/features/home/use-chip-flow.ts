@@ -85,7 +85,7 @@ function useChipFlow({
     }
   };
 
-  useOpenAppRequests(putFolder, () => void addAppFolder());
+  useOpenAppRequests(putFolder, () => addAppFolder());
 
   const chipCandidates = app.chip?.inspection?.candidates.length ?? 0;
   const chipPicked = app.chip?.appDir ?? null;
@@ -146,7 +146,7 @@ function useChipFlow({
         found.kind === "vite" ? "Vite" : "Next.js",
         { ...install, homeDir }
       ),
-      proceed: () => void openChip(text),
+      proceed: () => openChip(text),
     });
   };
 

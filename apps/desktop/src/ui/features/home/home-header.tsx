@@ -31,7 +31,7 @@ const Header = ({
       <button
         type="button"
         className="btn small ghost"
-        onPointerEnter={() => void loadTrash()}
+        onPointerEnter={() => loadTrash()}
         onClick={onTrash}
       >
         <Icon name="trash" size={14} />

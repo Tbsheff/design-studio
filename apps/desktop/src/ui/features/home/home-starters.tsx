@@ -69,7 +69,7 @@ const StarterGallery = ({
               data-starter-id={starter.id}
               disabled={isDisabled || busy !== null}
               aria-busy={busy === starter.id}
-              onClick={() => void pick(starter)}
+              onClick={() => pick(starter)}
             >
               <span className="starter-thumb">
                 <img
@@ -144,7 +144,7 @@ const FirstRunPanel = ({
         type="button"
         className="btn small first-run-sample"
         disabled={busy}
-        onClick={() => void sample()}
+        onClick={() => sample()}
       >
         {busy ? "Opening…" : "Open the sample"}
       </button>

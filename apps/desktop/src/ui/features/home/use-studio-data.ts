@@ -208,13 +208,8 @@ function useRunPages(
         isLoading: false,
         pending: null,
       };
-      publish(
-        c,
-        () =>
-          void fill(
-            c,
-            wantMore(toLoadedCount(c, direction.current) + MORE_RUNS)
-          )
+      publish(c, () =>
+        fill(c, wantMore(toLoadedCount(c, direction.current) + MORE_RUNS))
       );
     },
     [page, publish, setRunsLoaded, wantMore]

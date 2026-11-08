@@ -457,7 +457,7 @@ const ProjectRail = ({ projectId, onHome, onNewPrototype }: RailProps) => {
   }, [state]);
   useEffect(() => noteProjectOpened(projectId), [projectId]);
   useEffect(() => {
-    const onFocus = () => void refreshProjectHits(projectId);
+    const onFocus = () => refreshProjectHits(projectId);
     window.addEventListener("focus", onFocus);
 
     return () => window.removeEventListener("focus", onFocus);

@@ -29,8 +29,8 @@ const PillSelect = ({
     aria-label={`${ariaLabel}: ${value}`}
     data-tip={label}
     data-tip-side="top"
-    onPointerEnter={() => void loadPops()}
-    onFocus={() => void loadPops()}
+    onPointerEnter={() => loadPops()}
+    onFocus={() => loadPops()}
     onClick={onOpen}
   >
     <span className="ui-pill-select-label">{label}</span>

@@ -311,7 +311,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     onAttachFile: () => fileRef.current?.click(),
     onImportSystem: () =>
       uiStore.set({ libraryFrom: null, screen: "design-systems" }),
-    onLinkCode: () => void addAppFolder(),
+    onLinkCode: () => addAppFolder(),
     onLocation: () => focusIn("#new-project-location"),
     onSkills: openAdvanced,
     onTemplates: () =>

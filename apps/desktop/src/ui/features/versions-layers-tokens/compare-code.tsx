@@ -25,12 +25,14 @@ const CompareCode = ({
   projectId,
 }: CompareCodeProps): ReactNode => {
   const state = useChanges(projectId, older.id, newer.id);
+
   const review = useHunkReview(
     projectId,
     newer.directionId,
     older.id,
     newer.id
   );
+
   const [toggled, setToggled] = useState<Set<string>>(() => new Set());
 
   const toggleFile = useCallback((path: string): void => {

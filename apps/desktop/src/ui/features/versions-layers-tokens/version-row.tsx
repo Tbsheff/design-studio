@@ -35,7 +35,6 @@ const VersionRow = (props: VersionRowProps): ReactNode => {
         projectId={props.projectId}
         versionId={version.id}
         active={props.active}
-        label={title}
         onOpen={props.onOpen}
       />
       <div className="version-main">

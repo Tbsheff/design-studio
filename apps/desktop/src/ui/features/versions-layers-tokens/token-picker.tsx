@@ -66,9 +66,11 @@ const TokenPicker = ({
 }: PickerProps): ReactNode => {
   const [query, setQuery] = useState("");
   const list = useMemo(() => filterEntries(entries, query), [entries, query]);
+
   const [active, setActive] = useState(() =>
     toStartIndex(entries, current, nearest)
   );
+
   const id = useId();
   const index = Math.min(active, Math.max(0, list.length - 1));
   const chosen = list[index];

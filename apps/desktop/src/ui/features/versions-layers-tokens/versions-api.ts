@@ -319,10 +319,16 @@ const pump = (): void => {
   }
 };
 
-const cachedThumb = (
-  projectId: string,
-  versionId: string
-): ThumbResult | undefined => thumbs.get(`${projectId}/${versionId}`);
+interface ThumbLookup {
+  isKnown: boolean;
+  result: ThumbResult;
+}
+
+const cachedThumb = (projectId: string, versionId: string): ThumbLookup => {
+  const key = `${projectId}/${versionId}`;
+
+  return { isKnown: thumbs.has(key), result: thumbs.get(key) ?? null };
+};
 
 const requestThumb = (
   projectId: string,
@@ -445,4 +451,4 @@ export {
   versionDiff,
 };
 
-export type { DiffMaskBlob, ThumbResult };
+export type { DiffMaskBlob, ThumbLookup, ThumbResult };

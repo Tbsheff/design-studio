@@ -77,7 +77,9 @@ const skillChoice = (
   label: skill.name,
   meta: originText(skill.origin),
   pick: () => onPick(skill.id),
-  tag: skill.needsBash ? <span className="skill-tag">Needs shell</span> : null,
+  tag: skill.needsBash ? (
+    <span className="skill-tag">{copy.needsShell}</span>
+  ) : null,
   tip: `${skill.description}\n${skill.sourcePath}`,
 });
 
@@ -154,7 +156,8 @@ const useSlashSections = ({
   const note =
     manualCount > 0 ? (
       <span data-tip-side="top" data-tip={copy.theseSkillsSet}>
-        {plural(manualCount, "manual-only skill")} not listed
+        {plural(manualCount, "manual-only skill")}
+        {copy.notListed}
       </span>
     ) : null;
 

@@ -399,7 +399,7 @@ export const LevelPill = ({
           menu.toggle();
         }}
       >
-        <span className="ui-pill-select-label">Level</span>
+        <span className="ui-pill-select-label">{copy.level}</span>
         <span className="ui-pill-select-value">
           <StableText sizes={RUN_LEVELS.map(levelLabel)}>
             {levelLabel(level)}
@@ -549,7 +549,7 @@ export const ModelPill = ({
           pop.toggle();
         }}
       >
-        <span className="ui-pill-select-label">Model</span>
+        <span className="ui-pill-select-label">{copy.model}</span>
         <span
           className="ui-pill-select-value model-pill-name"
           data-testid="active-model"
@@ -575,7 +575,7 @@ export const ModelPill = ({
             data-testid="run-settings-popover"
           >
             <section className="rs-group">
-              <h3 className="rs-label">Model</h3>
+              <h3 className="rs-label">{copy.model}</h3>
               <ModelToggle value={shown} onChange={onModel} locked={locked} />
               <p className="rs-hint">
                 {locked
@@ -584,7 +584,7 @@ export const ModelPill = ({
               </p>
             </section>
             <section className="rs-group">
-              <h3 className="rs-label">Effort</h3>
+              <h3 className="rs-label">{copy.effort}</h3>
               <EffortToggle effort={effort} hintId={`${id}-effort-hint`} />
               <p className="rs-hint" id={`${id}-effort-hint`}>
                 {EFFORT_HINT[choice]}

@@ -136,7 +136,9 @@ const SharedLayoutNote = ({
       role="note"
       data-tip={`${site?.file ?? usage.file} renders this for ${count} routes. A page cannot change its parent layout, so the run changes it on all of them.`}
     >
-      Shared layout: this change affects {count} routes
+      {copy.sharedLayoutThisChange}
+      {count}
+      {copy.routes}
     </div>
   );
 };
@@ -262,7 +264,7 @@ export default function InlinePrompt({
           aria-label={copy.send}
           onClick={submit}
         >
-          ↵
+          {copy.text7}
         </button>
       </div>
       {shared && isSharedLayout(shared.callSite) ? (

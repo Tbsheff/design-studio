@@ -1,6 +1,8 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
+
 interface Props {
   count: number;
   busy: boolean;
@@ -19,7 +21,10 @@ const UnfinishedBanner = ({
   <div className="banner" role="status">
     <Icon name="alert" />
     <span>
-      Unfinished changes in {count} file{count === 1 ? "" : "s"}
+      {copy.unfinishedChangesIn}
+      {count}
+      {copy.file}
+      {count === 1 ? "" : "s"}
     </span>
     <span className="sub">
       {runStopped
@@ -32,10 +37,10 @@ const UnfinishedBanner = ({
       disabled={busy}
       onClick={onDiscard}
     >
-      Discard
+      {copy.discard}
     </button>
     <button className="btn small" disabled={busy} onClick={onKeep}>
-      Keep
+      {copy.keep}
     </button>
   </div>
 );

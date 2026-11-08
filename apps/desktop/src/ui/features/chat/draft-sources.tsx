@@ -152,10 +152,13 @@ const SourceRow = ({ source }: { source: DraftSourceStatus }): ReactElement => {
         <p className="ds-src-detail">
           {source.detail}
           {source.method === "browser" && (
-            <span className="ds-src-time"> · read in a browser</span>
+            <span className="ds-src-time">{copy.readInABrowser}</span>
           )}
           {time && source.state !== "reading" && (
-            <span className="ds-src-time"> · {time}</span>
+            <span className="ds-src-time">
+              {copy.text}
+              {time}
+            </span>
           )}
         </p>
         {source.note && <p className="ds-src-note-line">{source.note}</p>}
@@ -263,7 +266,7 @@ const DraftSources = ({
       aria-busy={!state.done}
     >
       <div className="ds-src-head">
-        <strong>Sources</strong>
+        <strong>{copy.sources}</strong>
         <span className="ds-src-summary" role="status">
           {!state.done && <span className="spinner" aria-hidden="true" />}
           {summary(state)}

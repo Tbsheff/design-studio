@@ -132,10 +132,8 @@ const ClarifyForm = ({
     >
       <div className="clarify-head">
         <Icon name="sparkle" size={14} />
-        <h2 id="clarify-heading">A few quick questions</h2>
-        <span className="clarify-hint">
-          Short briefs build better with these answers. All are optional.
-        </span>
+        <h2 id="clarify-heading">{copy.aFewQuickQuestions}</h2>
+        <span className="clarify-hint">{copy.shortBriefsBuildBetter}</span>
       </div>
       {questions.map((item, index) => (
         <ClarifyQuestionField
@@ -153,7 +151,7 @@ const ClarifyForm = ({
           onClick={onSkip}
           disabled={busy}
         >
-          Skip questions
+          {copy.skipQuestions}
         </button>
         <button
           type="submit"

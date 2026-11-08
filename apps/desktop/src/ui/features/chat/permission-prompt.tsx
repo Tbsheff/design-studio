@@ -92,7 +92,7 @@ const PermissionPrompt = ({
             }}
           />
           <button type="submit" className="btn small danger" disabled={busy}>
-            Deny
+            {copy.deny}
           </button>
         </form>
       ) : (
@@ -103,7 +103,7 @@ const PermissionPrompt = ({
             disabled={busy}
             onClick={() => answer({ allow: true })}
           >
-            Allow once
+            {copy.allowOnce}
           </button>
           {rule && (
             <button
@@ -114,7 +114,8 @@ const PermissionPrompt = ({
               aria-label={`Always allow ${rule}`}
               onClick={() => answer({ allow: true, always: rule })}
             >
-              Always <code className="permission-rule">{rule}</code>
+              {copy.always}
+              <code className="permission-rule">{rule}</code>
             </button>
           )}
           <button
@@ -123,7 +124,7 @@ const PermissionPrompt = ({
             disabled={busy}
             onClick={() => setDenying(true)}
           >
-            Deny…
+            {copy.deny2}
           </button>
         </div>
       )}

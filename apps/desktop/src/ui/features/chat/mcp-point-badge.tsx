@@ -32,10 +32,12 @@ const McpPointBadge = ({
         {authorInitial(point.client)}
       </span>
       <span className="mcp-point-text">
-        <strong>{point.client}</strong> is pointing at <strong>{where}</strong>
+        <strong>{point.client}</strong>
+        {copy.isPointingAt}
+        <strong>{where}</strong>
       </span>
       <button type="button" className="btn small" onClick={badge.show}>
-        Show
+        {copy.show2}
       </button>
       <button
         type="button"

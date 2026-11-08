@@ -27,7 +27,8 @@ const RunContextChip = ({
       >
         <Icon name="frame" size={12} />
         <span className="chip-text min-w-0 truncate">
-          On page <span className="font-mono text-foreground">{chip.page}</span>
+          {copy.onPage}
+          <span className="font-mono text-foreground">{chip.page}</span>
           {chip.state ? ` (${chip.state})` : ""}
           {chip.element ? ` · ${chip.element}` : ""}
         </span>

@@ -69,7 +69,8 @@ const CommentLink = ({
         {state === "resolved" || state === "done" ? (
           <Icon name="check" size={12} />
         ) : null}
-        #{comment.n}
+        {copy.text9}
+        {comment.n}
       </span>
       <span className="text">{comment.text}</span>
     </button>
@@ -142,7 +143,8 @@ const RunCommentsCard = ({ run }: { run: RunView }): ReactElement | null => {
             onClick={() => void resolve()}
           >
             <Icon name="check" size={14} />
-            Resolve {toResolve.length} {noun}
+            {copy.resolve}
+            {toResolve.length} {noun}
           </button>
         )}
       </div>

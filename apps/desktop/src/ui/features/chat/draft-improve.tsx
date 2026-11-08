@@ -191,7 +191,7 @@ const CheckStatus = ({
   if (check.passed) {
     return (
       <span className="draft-check passed" role="status">
-        Check passed
+        {copy.checkPassed}
       </span>
     );
   }
@@ -208,7 +208,9 @@ const CheckStatus = ({
         aria-controls={listId}
         onClick={() => setOpen((value) => !value)}
       >
-        {count} problem{count === 1 ? "" : "s"}
+        {count}
+        {copy.problem}
+        {count === 1 ? "" : "s"}
       </button>
       {open && (
         <div
@@ -234,9 +236,7 @@ const CheckStatus = ({
               </ul>
             </section>
           ))}
-          <p className="draft-problems-hint">
-            Improve with AI fills these in, or edit DESIGN.md yourself.
-          </p>
+          <p className="draft-problems-hint">{copy.improveWithAiFills}</p>
         </div>
       )}
     </span>

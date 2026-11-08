@@ -162,7 +162,7 @@ const MentionList = ({
           </li>
         )}
       </ul>
-      <p className="skill-pop-foot">↑↓ move · ↵ or Tab add · Esc close</p>
+      <p className="skill-pop-foot">{copy.moveOrTabAdd}</p>
     </div>
   );
 };

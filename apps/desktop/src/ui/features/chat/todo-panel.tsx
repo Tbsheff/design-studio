@@ -129,9 +129,11 @@ const TodoPanel = memo(
           onClick={() => setChoice(!open)}
         >
           <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
-          <span>Todos</span>
+          <span>{copy.todos}</span>
           <span className="todo-count tabular-nums" data-testid="todo-count">
-            {current} of {total}
+            {current}
+            {copy.of}
+            {total}
           </span>
         </button>
         {open && (

@@ -104,7 +104,7 @@ const RunDetails = ({
       onKeyDown={onKeyDown}
     >
       <div className="drawer-head">
-        <strong>Run details</strong>
+        <strong>{copy.runDetails}</strong>
         <div className="spacer" />
         <button
           ref={closeButton}
@@ -119,7 +119,7 @@ const RunDetails = ({
       </div>
       <div className="drawer-body">
         <div className="drawer-id" data-tip={run.runId}>
-          <span className="badge">Run</span>
+          <span className="badge">{copy.run}</span>
           <span className="mono muted truncate">{run.runId}</span>
         </div>
         <dl className="kv">
@@ -132,7 +132,11 @@ const RunDetails = ({
         </dl>
         <LatencyBreakdown projectId={projectId} run={run} />
         {s?.error && <div className="alert error">{s.error}</div>}
-        <h4>Tool calls ({run.tools.length})</h4>
+        <h4>
+          {copy.toolCalls}
+          {run.tools.length}
+          {copy.text4}
+        </h4>
         <div className="tools-table">
           <table className="table compact">
             <colgroup>
@@ -143,9 +147,9 @@ const RunDetails = ({
             </colgroup>
             <thead>
               <tr>
-                <th>Tool</th>
-                <th>Input</th>
-                <th className="num">Time</th>
+                <th>{copy.tool}</th>
+                <th>{copy.input}</th>
+                <th className="num">{copy.time}</th>
                 {anyError && <th />}
               </tr>
             </thead>
@@ -165,7 +169,9 @@ const RunDetails = ({
                   </td>
                   {anyError && (
                     <td>
-                      {t.isError && <span className="badge fail">Error</span>}
+                      {t.isError && (
+                        <span className="badge fail">{copy.error}</span>
+                      )}
                     </td>
                   )}
                 </tr>

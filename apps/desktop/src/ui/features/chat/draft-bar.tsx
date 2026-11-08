@@ -87,7 +87,7 @@ const cssVarOf = (token: string): string => {
 
 const Fallbacks = ({ tokens }: { tokens: string[] }): ReactElement => {
   if (tokens.length === 0) {
-    return <span className="draft-fallbacks">No fallback tokens</span>;
+    return <span className="draft-fallbacks">{copy.noFallbackTokens}</span>;
   }
 
   return (
@@ -96,8 +96,12 @@ const Fallbacks = ({ tokens }: { tokens: string[] }): ReactElement => {
       data-tip={`From base: ${tokens.map(cssVarOf).join(", ")}`}
       data-tip-align="start"
     >
-      {tokens.length} from base
-      <span className="sr-only">: {tokens.map(cssVarOf).join(", ")}</span>
+      {tokens.length}
+      {copy.fromBase}
+      <span className="sr-only">
+        {copy.text6}
+        {tokens.map(cssVarOf).join(", ")}
+      </span>
     </span>
   );
 };
@@ -131,7 +135,7 @@ const Guessed = ({
   }
 
   if (keys.length === 0) {
-    return <span className="draft-fallbacks">Key tokens checked</span>;
+    return <span className="draft-fallbacks">{copy.keyTokensChecked}</span>;
   }
 
   const names = keys.map(cssVarOf).join(", ");
@@ -142,8 +146,12 @@ const Guessed = ({
       data-tip={`Not found under their usual names in the source, so these are guesses: ${names}`}
       data-tip-align="start"
     >
-      {keys.length} guessed
-      <span className="sr-only">: {names}</span>
+      {keys.length}
+      {copy.guessed}
+      <span className="sr-only">
+        {copy.text6}
+        {names}
+      </span>
     </span>
   );
 };
@@ -168,14 +176,20 @@ const DraftSummary = ({
         className="draft-grade"
         aria-label={`Coverage ${coverage.score} of 100, ${GRADE_LABELS[coverage.grade]}`}
       >
-        Coverage {coverage.score}/100 · {GRADE_LABELS[coverage.grade]}
+        {copy.coverage}
+        {coverage.score}
+        {copy.n100}
+        {GRADE_LABELS[coverage.grade]}
       </span>
     )}
     {coverage && <Fallbacks tokens={coverage.fallbacks} />}
     {coverage && <Guessed coverage={coverage} />}
     <CheckStatus check={check} run={run} />
     {error && (
-      <span className="draft-fallbacks">Could not load coverage. {error}</span>
+      <span className="draft-fallbacks">
+        {copy.couldNotLoadCoverage}
+        {error}
+      </span>
     )}
   </div>
 );
@@ -242,7 +256,7 @@ const SaveAnyway = ({
         disabled={busy}
         onClick={() => setOpen((value) => !value)}
       >
-        Save anyway
+        {copy.saveAnyway}
       </button>
       {open && (
         <div
@@ -253,8 +267,11 @@ const SaveAnyway = ({
           aria-label={copy.saveAnyway}
         >
           <p>
-            The check found {count} problem{count === 1 ? "" : "s"}. Save
-            anyway?
+            {copy.theCheckFound}
+            {count}
+            {copy.problem}
+            {count === 1 ? "" : "s"}
+            {copy.saveAnyway2}
           </p>
           <div className="draft-confirm-actions">
             <button
@@ -262,7 +279,7 @@ const SaveAnyway = ({
               className="btn ghost small"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {copy.cancel}
             </button>
             <button
               ref={confirmRef}
@@ -273,7 +290,7 @@ const SaveAnyway = ({
                 onSave();
               }}
             >
-              Save anyway
+              {copy.saveAnyway}
             </button>
           </div>
         </div>
@@ -418,7 +435,7 @@ const DraftBar = ({
     >
       {ready && (
         <span id={readyId} className="sr-only">
-          The AI run passed the check. Save it to your library.
+          {copy.theAiRunPassed}
         </span>
       )}
       <DraftSummary

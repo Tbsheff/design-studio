@@ -147,7 +147,7 @@ const BudgetMenu = ({
       data-testid="budget-menu"
     >
       <div className="ui-menu-section">
-        <div className="ui-menu-label">Spending limit per run</div>
+        <div className="ui-menu-label">{copy.spendingLimitPer}</div>
         {PRESETS.map((value) => (
           <button
             key={value ?? "none"}
@@ -163,7 +163,7 @@ const BudgetMenu = ({
       </div>
       <form className="ui-menu-section budget-custom" onSubmit={submit}>
         <label className="budget-custom-row">
-          <span>Other</span>
+          <span>{copy.other}</span>
           <input
             aria-label={copy.otherSpendingLimit}
             inputMode="decimal"
@@ -174,7 +174,7 @@ const BudgetMenu = ({
           />
         </label>
         <button type="submit" className="btn small">
-          Set
+          {copy.set}
         </button>
       </form>
       {(bad || error) && (

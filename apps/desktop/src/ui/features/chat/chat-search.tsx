@@ -109,15 +109,23 @@ const HitList = ({
   onActive: (index: number) => void;
 }): ReactElement | null => {
   if (!hits) {
-    return searching ? <p className="chat-search-note">Searching…</p> : null;
+    return searching ? (
+      <p className="chat-search-note">{copy.searching}</p>
+    ) : null;
   }
 
   if (hits.failed) {
-    return <p className="chat-search-note">Search failed. Try again.</p>;
+    return <p className="chat-search-note">{copy.searchFailedTryAgain}</p>;
   }
 
   if (hits.runs.length === 0) {
-    return <p className="chat-search-note">No run matches “{hits.query}”.</p>;
+    return (
+      <p className="chat-search-note">
+        {copy.noRunMatches}
+        {hits.query}
+        {copy.text2}
+      </p>
+    );
   }
 
   return (

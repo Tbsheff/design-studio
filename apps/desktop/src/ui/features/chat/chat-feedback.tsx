@@ -85,7 +85,9 @@ const FileChips = ({
   const action = reviews ? "Review the changes" : "Open run details";
 
   if (changes.length === 0) {
-    return quiet ? <p className="run-no-changes">No files changed.</p> : null;
+    return quiet ? (
+      <p className="run-no-changes">{copy.noFilesChanged}</p>
+    ) : null;
   }
 
   return (
@@ -213,7 +215,9 @@ const RunFeedbackRow = memo(
               data-tip-side="top"
               data-tip={`$${summary.costUsd.toFixed(4)}`}
             >
-              {formatMs(summary.durationMs)} · {formatUsd(summary.costUsd)}
+              {formatMs(summary.durationMs)}
+              {copy.text}
+              {formatUsd(summary.costUsd)}
             </span>
           )}
           <span className="ml-auto flex items-center gap-1">
@@ -225,7 +229,7 @@ const RunFeedbackRow = memo(
                 data-tip-side="top"
                 onClick={onReview}
               >
-                Review
+                {copy.review}
               </button>
             )}
             <button
@@ -233,7 +237,7 @@ const RunFeedbackRow = memo(
               className="btn ghost small run-foot-details"
               onClick={onDetails}
             >
-              Details
+              {copy.details}
             </button>
           </span>
         </div>

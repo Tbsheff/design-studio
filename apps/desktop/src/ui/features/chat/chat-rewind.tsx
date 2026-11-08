@@ -78,12 +78,15 @@ const RestoreConfirm = ({
     data-testid="restore-confirm"
   >
     <p>
-      Unfinished changes in {count} file{count === 1 ? "" : "s"}. Restore
-      replaces edits to files a version tracks; other files stay.
+      {copy.unfinishedChangesIn}
+      {count}
+      {copy.file}
+      {count === 1 ? "" : "s"}
+      {copy.restoreReplacesEditsTo}
     </p>
     <div className="msg-confirm-actions">
       <button type="button" className="btn ghost small" onClick={onCancel}>
-        Cancel
+        {copy.cancel}
       </button>
       <button
         type="button"
@@ -91,7 +94,7 @@ const RestoreConfirm = ({
 
         onClick={onConfirm}
       >
-        Restore
+        {copy.restore}
       </button>
     </div>
   </div>
@@ -152,10 +155,10 @@ const MessageEditor = ({
       <div className="msg-editor-foot">
         <span className="msg-editor-hint">
           <Icon name="branch" size={12} />
-          Sends to a new direction
+          {copy.sendsToANew}
         </span>
         <button type="button" className="btn ghost small" onClick={onCancel}>
-          Cancel
+          {copy.cancel}
         </button>
         <button
           type="button"
@@ -163,7 +166,7 @@ const MessageEditor = ({
           disabled={!ready}
           onClick={() => onSend(text.trim())}
         >
-          Send
+          {copy.send}
         </button>
       </div>
     </div>
@@ -314,7 +317,7 @@ const UserTurn = ({
       />
       {renameFailed && (
         <p className="msg-turn-error" role="alert">
-          Could not rename this run. Try again.
+          {copy.couldNotRenameThis}
         </p>
       )}
       {mode === "confirm" && rewind.restoreVersionId && (

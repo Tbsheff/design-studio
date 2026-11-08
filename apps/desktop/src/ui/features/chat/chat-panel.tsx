@@ -17,6 +17,7 @@ import {
 import { PendingEntry, RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";
+import { copy } from "./copy.js";
 import type { McpFeedControl } from "./mcp-feed.js";
 import { feedShown, McpItem, timelineOf } from "./mcp-feed.js";
 import type { RunView } from "./run-state-model.js";
@@ -155,7 +156,7 @@ const ChatPanel = ({
         <StickOnNewRun runId={pending?.runId ?? lastId ?? null} />
         <ConversationScrollButton className="btn small chat-scroll-btn">
           <Icon name="chevronDown" size={14} />
-          Jump to latest
+          {copy.jumpToLatest}
         </ConversationScrollButton>
       </Conversation>
     </div>

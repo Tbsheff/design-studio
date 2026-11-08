@@ -60,7 +60,7 @@ const SkillRow = ({
         {skill.name}
         {skill.needsBash && !allowBash && (
           <span className="skill-tag" data-tip={copy.thisSkillRuns}>
-            Needs shell
+            {copy.needsShell}
           </span>
         )}
         {!skill.modelInvocable && (
@@ -69,7 +69,7 @@ const SkillRow = ({
             data-tip-align="end"
             data-tip={copy.skillMdSets}
           >
-            Manual only
+            {copy.manualOnly}
           </span>
         )}
       </span>
@@ -111,16 +111,18 @@ const SkillsChecklist = ({
 
   return (
     <fieldset className="skills-field">
-      <legend>Claude skills</legend>
+      <legend>{copy.claudeSkills}</legend>
       {error && (
         <p className="skills-note" role="alert">
-          Could not load skills. Check your connection, then try again.{" "}
+          {copy.couldNotLoadSkills}{" "}
           <button type="button" className="link" onClick={reload}>
-            Try again
+            {copy.tryAgain}
           </button>
         </p>
       )}
-      {!error && !catalog && <p className="skills-note">Loading skills…</p>}
+      {!error && !catalog && (
+        <p className="skills-note">{copy.loadingSkills}</p>
+      )}
       {catalog && catalog.skills.length === 0 && (
         <p className="skills-note" data-testid="skills-empty">
           {NO_SKILLS_TEXT}
@@ -130,7 +132,10 @@ const SkillsChecklist = ({
         <>
           <div className="skills-bar">
             <span className="skills-note" aria-live="polite">
-              {onCount} of {skills.length} on
+              {onCount}
+              {copy.of}
+              {skills.length}
+              {copy.on}
             </span>
             <input
               aria-label={copy.filterSkills}
@@ -144,14 +149,14 @@ const SkillsChecklist = ({
               className="btn small ghost"
               onClick={() => setAll(true)}
             >
-              All on
+              {copy.allOn}
             </button>
             <button
               type="button"
               className="btn small ghost"
               onClick={() => setAll(false)}
             >
-              All off
+              {copy.allOff}
             </button>
           </div>
           <div className="skills-list">
@@ -175,42 +180,37 @@ const SkillsChecklist = ({
               </div>
             ))}
             {groups.length === 0 && (
-              <p className="skills-note">No skills match.</p>
+              <p className="skills-note">{copy.noSkillsMatch}</p>
             )}
           </div>
           {!allowBash && bashCount > 0 && (
             <p className="skills-note">
-              {plural(bashCount, "skill")} that{" "}
-              {bashCount === 1 ? "is on needs" : "are on need"} shell commands.
-              To let {bashCount === 1 ? "it" : "them"} run scripts, turn on
-              &quot;Allow agent to run shell commands&quot;.
+              {plural(bashCount, "skill")}
+              {copy.that} {bashCount === 1 ? "is on needs" : "are on need"}
+              {copy.shellCommandsToLet}
+              {bashCount === 1 ? "it" : "them"}
+              {copy.runScriptsTurnOn}
             </p>
           )}
           {catalog.problems.length > 0 && (
             <details className="skills-problems">
               <summary>
                 <Icon name="chevronRight" size={12} />
-                {plural(catalog.problems.length, "folder")} did not load
+                {plural(catalog.problems.length, "folder")}
+                {copy.didNotLoad}
               </summary>
               <ul>
                 {catalog.problems.map((problem) => (
                   <li key={problem.source}>
-                    <span className="mono">{problem.source}</span>:{" "}
-                    {problem.reason}
+                    <span className="mono">{problem.source}</span>
+                    {copy.text10} {problem.reason}
                   </li>
                 ))}
               </ul>
-              <p className="skills-note">
-                Fix or remove the SKILL.md in that folder, then open this list
-                again.
-              </p>
+              <p className="skills-note">{copy.fixOrRemoveThe}</p>
             </details>
           )}
-          <p className="skills-note">
-            Skills come from ~/.claude/skills and your enabled Claude Code
-            plugins. The agent can read the files in a skill folder that is on,
-            and their text goes to the model.
-          </p>
+          <p className="skills-note">{copy.skillsComeFromClaude}</p>
         </>
       )}
     </fieldset>

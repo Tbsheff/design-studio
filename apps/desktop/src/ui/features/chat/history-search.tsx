@@ -108,12 +108,10 @@ const HistorySearch = ({
           </li>
         ))}
         {search.shown.length === 0 && (
-          <li className="skill-empty">No past prompt matches.</li>
+          <li className="skill-empty">{copy.noPastPromptMatches}</li>
         )}
       </ul>
-      <p className="skill-pop-foot">
-        Ctrl+R or ↓ for the next match, Enter to use, Esc to close
-      </p>
+      <p className="skill-pop-foot">{copy.ctrlROrFor}</p>
     </div>
   );
 };

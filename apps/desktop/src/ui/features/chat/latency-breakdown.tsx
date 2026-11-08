@@ -176,7 +176,7 @@ const LatencyBreakdown = ({
 
   return (
     <>
-      <h4>Latency</h4>
+      <h4>{copy.latency}</h4>
       <dl className="kv" aria-label={copy.latencyBreakdown}>
         {rows.map(([k, v]) => (
           <div key={k}>

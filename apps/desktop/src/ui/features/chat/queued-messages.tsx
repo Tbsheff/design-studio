@@ -91,7 +91,7 @@ const QueuedItem = ({
           data-tip-side="top"
           data-tip-align="start"
         >
-          ⋮⋮
+          {copy.text8}
         </span>
       )}
       {editing ? (
@@ -152,7 +152,7 @@ const QueuedMessages = ({
 
   return (
     <div className="queued" aria-label={copy.queuedMessages} role="group">
-      <span className="queued-head">Queued · sent at the next step</span>
+      <span className="queued-head">{copy.queuedSentAtThe}</span>
       <ol className="queued-list">
         {items.map((item, index) => (
           <QueuedItem

@@ -57,7 +57,10 @@ const ContextMeter = ({
           transform="rotate(-90 8 8)"
         />
       </svg>
-      <span className="tabular-nums">{percent}%</span>
+      <span className="tabular-nums">
+        {percent}
+        {copy.text5}
+      </span>
     </span>
   );
 };

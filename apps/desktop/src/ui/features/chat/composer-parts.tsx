@@ -18,6 +18,7 @@ import { api } from "../../api.js";
 import type { PendingAttachment } from "../../domain/pending-attachment.js";
 import { readBlob } from "../../platform/http.js";
 import { projectFromPath } from "../../platform/router.js";
+import { copy } from "./copy.js";
 import { modelLabel } from "./settings-draft-model.js";
 
 export type { PendingAttachment } from "../../domain/pending-attachment.js";
@@ -70,7 +71,7 @@ const ThumbState = ({
   if (file.error) {
     return (
       <AttachmentOverlay className="rounded-outer bg-destructive/15 text-xs font-semibold text-destructive">
-        Failed
+        {copy.failed}
       </AttachmentOverlay>
     );
   }
@@ -82,7 +83,7 @@ const ThumbState = ({
   return (
     <AttachmentOverlay className="rounded-outer">
       <AttachmentProgress className="size-5" />
-      <span className="sr-only">Uploading</span>
+      <span className="sr-only">{copy.uploading}</span>
     </AttachmentOverlay>
   );
 };
@@ -271,7 +272,11 @@ const ModelTag = ({ model }: { model: string }): ReactElement => (
   >
     <Icon name="sparkle" size={12} />
     {modelLabel(model).replace(/^Claude /u, "")}
-    <span className="sr-only">({model})</span>
+    <span className="sr-only">
+      {copy.text3}
+      {model}
+      {copy.text4}
+    </span>
   </Chip>
 );
 

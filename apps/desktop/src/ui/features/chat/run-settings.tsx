@@ -344,7 +344,7 @@ const RunSettings = ({
           >
             {mode && (
               <section className="rs-group">
-                <h3 className="rs-label">Mode</h3>
+                <h3 className="rs-label">{copy.mode}</h3>
                 <ModeToggle mode={mode} hintId={`${id}-mode-hint`} />
                 <p className="rs-hint" id={`${id}-mode-hint`}>
                   {MODE_HINT[mode.value]}
@@ -352,13 +352,13 @@ const RunSettings = ({
               </section>
             )}
             <section className="rs-group">
-              <h3 className="rs-label">Level</h3>
+              <h3 className="rs-label">{copy.level}</h3>
               <LevelControl value={level} onChange={onLevel} />
               <p className="rs-hint">{levelHint(level)}</p>
             </section>
             {effort && (
               <section className="rs-group">
-                <h3 className="rs-label">Effort</h3>
+                <h3 className="rs-label">{copy.effort}</h3>
                 <EffortToggle effort={effort} hintId={`${id}-effort-hint`} />
                 <p className="rs-hint" id={`${id}-effort-hint`}>
                   {EFFORT_HINT[effort.value ?? "auto"]}
@@ -368,7 +368,7 @@ const RunSettings = ({
             {designs && (
               <section className="rs-group">
                 <h3 className="rs-label" id={`${id}-designs`}>
-                  Designs
+                  {copy.designs}
                 </h3>
                 <VariationsControl
                   value={designs.value}

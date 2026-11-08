@@ -18,7 +18,7 @@ const CompletionLog = ({ records }: CompletionLogProps): ReactElement => {
   return (
     <ul className={styles.log}>
       {records.map((item) => (
-        <CompletionRow key={item.id} item={item} />
+        <CompletionRow key={`${item.id}:${item.at}`} item={item} />
       ))}
     </ul>
   );

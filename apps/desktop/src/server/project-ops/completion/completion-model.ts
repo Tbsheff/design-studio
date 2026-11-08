@@ -158,6 +158,6 @@ const runCompletionAnswer = Effect.fn("CompletionModel.run")(function* run(
   return yield* runSdkAnswer(command);
 });
 
-export { runCompletionAnswer };
+export { MOCK_MODEL, runCompletionAnswer };
 
 export type { ModelAnswer, ModelCommand };

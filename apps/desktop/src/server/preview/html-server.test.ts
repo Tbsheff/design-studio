@@ -48,7 +48,7 @@ beforeAll(async () => {
   port = await freePort();
   server = await startHtmlServer({
     port,
-    studioOrigin: "http://127.0.0.1:4170",
+    studio: { studioOrigin: "http://127.0.0.1:4170", studioToken: "t" },
     bridgeScript: async () => "",
     resolveRoot: async (_kind, projectId) =>
       ["ProjA_1-x", "projb22"].includes(projectId)

@@ -12,7 +12,7 @@ import type { Context } from "hono";
 
 import type { AppProxy } from "../app/proxy.js";
 import { injectForPreview } from "../design-system/html-link.js";
-import { loadConfig } from "../platform/config/index.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import { annotateHtml, COMPLETE_SCRIPT_PATH } from "./annotate.js";
 import {
   COMPLETE_POST_PATH,
@@ -25,7 +25,7 @@ export type RootKind = "direction" | "snapshot";
 
 interface HtmlServerOptions {
   port: number;
-  studioOrigin: string;
+  studio: Pick<ServerConfig, "studioOrigin" | "studioToken">;
   hostname?: string;
   bridgeScript: () => Promise<string>;
   resolveRoot: (
@@ -261,7 +261,7 @@ export async function startHtmlServer(
   const app = new Hono();
 
   const securityHeaders = {
-    "content-security-policy": frameAncestors(options.studioOrigin),
+    "content-security-policy": frameAncestors(options.studio.studioOrigin),
     "cross-origin-resource-policy": "same-origin",
     "referrer-policy": "no-referrer",
     "x-content-type-options": "nosniff",
@@ -293,8 +293,8 @@ export async function startHtmlServer(
     }
 
     const forwarded = await runCompleteForward(
-      options.studioOrigin,
-      loadConfig().studioToken,
+      options.studio.studioOrigin,
+      options.studio.studioToken,
       projectId,
       await c.req.text()
     );

@@ -1,12 +1,5 @@
-import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useId, useLayoutEffect, useState } from "react";
-import type {
-  CSSProperties,
-  KeyboardEvent,
-  ReactElement,
-  ReactNode,
-  RefObject,
-} from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 
 import { copy } from "./copy.js";
@@ -14,14 +7,19 @@ import {
   GAP,
   MAX_HEIGHT,
   SLASH_QUERY,
+  choiceRows,
+  groupRows,
+  listInputProps,
   lockReason,
+  menuKey,
   sectionRows,
+  slashQuery,
   startIndex,
-  wordsStart,
+  stepIndex,
+  toOptionAria,
+  toRowHeading,
 } from "./slash-menu-model.js";
 import type {
-  ListInputProps,
-  MenuKey,
   Options,
   Row,
   SlashGroup,
@@ -29,97 +27,7 @@ import type {
   SlashMenuView,
   SlashSection,
 } from "./slash-menu-model.js";
-
-const choiceRows = (group: SlashGroup, filter: string): Row[] =>
-  group.choices
-    .filter((choice) => filter === "" || wordsStart(choice.label, filter))
-    .map((choice): Row => ({
-      choice,
-      key: `${group.id}-${choice.id}`,
-      kind: "choice",
-      section: group.label,
-    }));
-
-const stepIndex = (
-  index: number | null,
-  down: boolean,
-  count: number
-): number => {
-  const last = count - 1;
-
-  if (index === null) {
-    if (down) {
-      return 0;
-    }
-
-    return last;
-  }
-
-  return Math.max(0, Math.min(last, index + (down ? 1 : -1)));
-};
-
-const menuKey = (
-  event: KeyboardEvent<HTMLElement>,
-  state: { current: Row | undefined; inGroup: boolean; filter: string }
-): MenuKey => {
-  const { key } = event;
-
-  if (key === "ArrowDown" || key === "ArrowUp") {
-    return "move";
-  }
-
-  if (
-    (key === "Enter" || key === "Tab") &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey
-  ) {
-    return "pick";
-  }
-
-  if (key === "ArrowRight" && state.current?.kind === "group") {
-    return "drill";
-  }
-
-  if (
-    state.inGroup &&
-    (key === "ArrowLeft" || (key === "Backspace" && state.filter === ""))
-  ) {
-    return "back";
-  }
-
-  if (key === "Escape") {
-    return "escape";
-  }
-
-  return null;
-};
-
-const slashQuery = (draft: string, dismissed: string | null): string | null => {
-  const match = dismissed === draft ? null : SLASH_QUERY.exec(draft);
-
-  if (match) {
-    return match[1] ?? "";
-  }
-
-  return null;
-};
-
-const listInputProps = (
-  open: boolean,
-  listId: string,
-  activeId: string | null
-): ListInputProps => {
-  if (open) {
-    return {
-      "aria-activedescendant": activeId ?? undefined,
-      "aria-autocomplete": "list" as const,
-      "aria-controls": listId,
-    };
-  }
-
-  return {};
-};
+import { SlashRowBody } from "./slash-row-body.js";
 
 const useSlashMenu = ({
   draft,
@@ -305,42 +213,6 @@ const useSlashMenu = ({
   return { close, inputProps, onKeyDown, open, openMenu, view };
 };
 
-const RowBody = ({ row }: { row: Row }): ReactElement => {
-  if (row.kind === "group") {
-    return (
-      <>
-        <Icon name={row.group.icon} size={16} />
-        <span className="slash-label">{row.group.label}</span>
-        <span className="slash-hint">{row.group.value}</span>
-        <span className="slash-end slash-chevron" aria-hidden="true">
-          {copy.text11}
-        </span>
-      </>
-    );
-  }
-
-  const { choice } = row;
-
-  return (
-    <>
-      {choice.checked !== undefined && (
-        <span className="slash-check-slot">
-          {choice.checked && <Icon name="check" size={14} />}
-        </span>
-      )}
-      <Icon name={choice.icon} size={16} />
-      <span className="slash-label">{choice.label}</span>
-      {choice.hint && <span className="slash-hint">{choice.hint}</span>}
-      {choice.tag}
-      {choice.meta && (
-        <span className="slash-end">
-          <span className="slash-meta">{choice.meta}</span>
-        </span>
-      )}
-    </>
-  );
-};
-
 const usePlacement = (anchor: () => HTMLElement | null): CSSProperties => {
   const [style, setStyle] = useState<CSSProperties>({
     position: "fixed",
@@ -488,30 +360,18 @@ const SlashMenu = ({
         }}
       >
         {view.rows.map((row, at) => {
-          const before = view.rows[at - 1];
-
-          let label: string | null = null;
-
-          if (
-            row.kind === "choice" &&
-            !view.heading &&
-            (before?.kind !== "choice" || before.section !== row.section)
-          ) {
-            label = row.section;
-          }
-
-          const off =
-            row.kind === "choice" && Boolean(row.choice.disabledReason);
+          const aria = toOptionAria(row, view.current);
+          const heading = toRowHeading(view.rows, at, Boolean(view.heading));
 
           return (
             <div key={row.key} role="presentation" className="slash-item">
-              {label && (
+              {heading && (
                 <div
                   className="slash-heading"
                   role="presentation"
                   aria-hidden="true"
                 >
-                  {label}
+                  {heading}
                 </div>
               )}
               <div
@@ -519,29 +379,17 @@ const SlashMenu = ({
                 id={view.optionId(row)}
                 role="option"
                 aria-selected={row === view.current}
-                aria-checked={
-                  row.kind === "choice" && row.choice.checked !== undefined
-                    ? row.choice.checked
-                    : undefined
-                }
-                aria-disabled={off || undefined}
-                aria-description={
-                  off && row.kind === "choice"
-                    ? (row.choice.disabledReason ?? undefined)
-                    : undefined
-                }
-                aria-label={
-                  row.kind === "group"
-                    ? `${row.group.label}: ${row.group.value}`
-                    : undefined
-                }
+                aria-checked={aria.checked}
+                aria-disabled={aria.disabled}
+                aria-description={aria.description}
+                aria-label={aria.label}
                 className="slash-row"
-                data-highlighted={row === view.current || undefined}
-                data-tip={row.kind === "choice" ? row.choice.tip : null}
+                data-highlighted={aria.highlighted}
+                data-tip={aria.tip}
                 data-tip-side="top"
                 onClick={() => view.onPick(row)}
               >
-                <RowBody row={row} />
+                <SlashRowBody row={row} />
               </div>
             </div>
           );
@@ -563,29 +411,6 @@ const SlashMenu = ({
     </div>,
     document.body
   );
-};
-
-const groupRows = (groups: readonly SlashGroup[], query: string): Row[] => {
-  const heads = groups
-    .filter((group) => query === "" || wordsStart(group.label, query))
-    .map((group): Row => ({ group, key: `group-${group.id}`, kind: "group" }));
-
-  if (query === "") {
-    return heads;
-  }
-
-  const leaves = groups.flatMap((group) =>
-    group.choices
-      .filter((choice) => wordsStart(choice.label, query))
-      .map((choice): Row => ({
-        choice,
-        key: `${group.id}-${choice.id}`,
-        kind: "choice",
-        section: group.label,
-      }))
-  );
-
-  return [...heads, ...leaves];
 };
 
 export { SlashMenu, useSlashMenu };

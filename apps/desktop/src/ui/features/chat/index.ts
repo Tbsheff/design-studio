@@ -1,5 +1,7 @@
 import { lazy } from "react";
 
+import { runStepText } from "./live-status-model.js";
+
 const ChatPanel = lazy(async () => {
   const loaded = await import("./chat-panel.js");
 
@@ -18,4 +20,4 @@ const McpPointBadge = lazy(async () => {
   return { default: loaded.McpPointBadge };
 });
 
-export { ChatPanel, McpPointBadge, McpToasts };
+export { ChatPanel, McpPointBadge, McpToasts, runStepText };

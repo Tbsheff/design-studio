@@ -33,6 +33,9 @@ import {
   levelLabel,
   useRovingRadioGroup,
 } from "./level-control.js";
+import { MenuItem } from "./menu-item.js";
+import { ModelName } from "./model-name.js";
+import { PillCaret } from "./pill-caret.js";
 import {
   MODE_HINT,
   designsHint,
@@ -47,41 +50,24 @@ import { effectiveModel, shortModel } from "./slash-groups.js";
 import { StableText } from "./stable-text.js";
 import { usePresence } from "./use-presence.js";
 
-const MenuItem = ({
-  icon,
+const MenuSection = ({
   label,
-  meta,
-  checked,
-  disabledReason,
-  hint,
-  onPick,
-}: ItemProps): ReactElement => {
-  const off = Boolean(disabledReason);
-  const note = disabledReason ?? hint;
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}): ReactElement => {
+  const id = useId();
 
   return (
-    <button
-      type="button"
-      className={note ? "ui-menu-item has-hint" : "ui-menu-item"}
-      role={checked === undefined ? "menuitem" : "menuitemradio"}
-      aria-checked={checked}
-      aria-disabled={off || undefined}
-      tabIndex={-1}
-      onClick={() => {
-        if (!off) {
-          onPick();
-        }
-      }}
-    >
-      {icon && <Icon name={icon} size={14} />}
-      <span>{label}</span>
-      {note && <span className="ui-menu-hint">{note}</span>}
-      {meta && <span className="ui-menu-meta">{meta}</span>}
-    </button>
+    <div className="ui-menu-section" role="group" aria-labelledby={id}>
+      <span className="ui-menu-label" id={id}>
+        {label}
+      </span>
+      {children}
+    </div>
   );
 };
-
-const DESIGN_COUNTS = [1, 2, 3, 4] as const;
 
 const menuKeys = (
   event: KeyboardEvent<HTMLDivElement>,
@@ -111,24 +97,13 @@ const menuKeys = (
   }
 };
 
-const Section = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}): ReactElement => {
-  const id = useId();
+const toPanelProps = (menu: { closing: boolean; style: CSSProperties }) => ({
+  "data-closing": menu.closing || undefined,
+  inert: menu.closing || undefined,
+  style: menu.style,
+});
 
-  return (
-    <div className="ui-menu-section" role="group" aria-labelledby={id}>
-      <span className="ui-menu-label" id={id}>
-        {label}
-      </span>
-      {children}
-    </div>
-  );
-};
+const DESIGN_COUNTS = [1, 2, 3, 4] as const;
 
 const usePlacedPopover = (
   trigger: RefObject<HTMLButtonElement | null>,
@@ -246,10 +221,10 @@ const PlusMenu = (props: PlusMenuProps): ReactElement => {
             className="ui-menu composer-menu"
             role="menu"
             aria-label={copy.addAndSettings}
-            {...panelProps(menu)}
+            {...toPanelProps(menu)}
             onKeyDown={(event) => menuKeys(event, menu.close)}
           >
-            <Section label="Add">
+            <MenuSection label="Add">
               <MenuItem
                 icon="paperclip"
                 label="Attach image"
@@ -267,8 +242,8 @@ const PlusMenu = (props: PlusMenuProps): ReactElement => {
                 meta="/"
                 onPick={act(props.onSkills)}
               />
-            </Section>
-            <Section label="Mode">
+            </MenuSection>
+            <MenuSection label="Mode">
               {MODES.map((mode) => (
                 <ChoiceItem
                   key={mode}
@@ -279,9 +254,9 @@ const PlusMenu = (props: PlusMenuProps): ReactElement => {
                   onPick={() => props.onMode(mode)}
                 />
               ))}
-            </Section>
+            </MenuSection>
             {designs && (
-              <Section label="Designs side by side">
+              <MenuSection label="Designs side by side">
                 <div
                   className="composer-menu-counts"
                   aria-describedby={`${countsId}-hint`}
@@ -320,7 +295,7 @@ const PlusMenu = (props: PlusMenuProps): ReactElement => {
                 >
                   {designsHint(designs)}
                 </p>
-              </Section>
+              </MenuSection>
             )}
           </div>,
           document.body
@@ -328,21 +303,6 @@ const PlusMenu = (props: PlusMenuProps): ReactElement => {
     </>
   );
 };
-
-const PillCaret = (): ReactElement => (
-  <svg
-    className="ui-pill-select-caret"
-    width="10"
-    height="10"
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={1.6}
-    aria-hidden="true"
-  >
-    <path d="M3.5 6L8 10.5 12.5 6" />
-  </svg>
-);
 
 const LevelPill = ({
   level,
@@ -399,10 +359,10 @@ const LevelPill = ({
             className="ui-menu composer-menu level-menu"
             role="menu"
             aria-label={copy.level}
-            {...panelProps(menu)}
+            {...toPanelProps(menu)}
             onKeyDown={(event) => menuKeys(event, menu.close)}
           >
-            <Section label="Level">
+            <MenuSection label="Level">
               {RUN_LEVELS.map((item) => (
                 <ChoiceItem
                   key={item}
@@ -417,25 +377,10 @@ const LevelPill = ({
                   }}
                 />
               ))}
-            </Section>
+            </MenuSection>
           </div>,
           document.body
         )}
-    </>
-  );
-};
-
-const ModelName = ({ name }: { name: string }): ReactElement => {
-  const at = name.lastIndexOf(" ");
-
-  if (at === -1) {
-    return <>{name}</>;
-  }
-
-  return (
-    <>
-      {name.slice(0, at)}
-      <span className="model-pill-version"> {name.slice(at + 1)}</span>
     </>
   );
 };
@@ -545,7 +490,7 @@ const ModelPill = ({
           <div
             className="run-settings-pop"
             ref={panel}
-            {...panelProps(pop)}
+            {...toPanelProps(pop)}
             role="dialog"
             aria-label={copy.modelAndEffort}
             data-testid="run-settings-popover"
@@ -572,11 +517,5 @@ const ModelPill = ({
     </>
   );
 };
-
-const panelProps = (menu: { closing: boolean; style: CSSProperties }) => ({
-  "data-closing": menu.closing || undefined,
-  inert: menu.closing || undefined,
-  style: menu.style,
-});
 
 export { LevelPill, MODE_SHORT_HINT, ModelPill, PlusMenu };

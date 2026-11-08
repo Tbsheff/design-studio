@@ -15,11 +15,10 @@ import {
 } from "../edit-kit.js";
 
 const FILE_MAX = 524_288;
+
 const TEXT_MAX = 5000;
+
 const ALSO_MAX = 49;
-const TOKEN_NAME_MIN = 3;
-const TOKEN_NAME_MAX = 120;
-const TOKEN_VALUE_MAX = 400;
 
 const writeFileSchema = z.strictObject({
   projectId,
@@ -120,39 +119,10 @@ const editElementSchema = editFields
     "target use takes style, classes or text, not op"
   );
 
-const setTokenSchema = z.strictObject({
-  projectId,
-  directionId,
-  name: z
-    .string()
-    .trim()
-    .min(TOKEN_NAME_MIN)
-    .max(TOKEN_NAME_MAX)
-    .describe(
-      'Token CSS variable from get_tokens, for example "--primary", or its path, for example "color.primary".'
-    ),
-  value: z
-    .string()
-    .trim()
-    .min(1)
-    .max(TOKEN_VALUE_MAX)
-    .describe(
-      'New value, for example "#015A5D" or "var(--color-brand-teal-500)".'
-    ),
-  theme: z
-    .enum(["light", "dark"])
-    .default("light")
-    .describe(
-      "light changes the main declaration. dark changes (or adds) the dark declaration. Default light."
-    ),
-});
-
 type WriteFileInput = z.output<typeof writeFileSchema>;
 
 type EditElementInput = z.output<typeof editElementSchema>;
 
-type SetTokenInput = z.output<typeof setTokenSchema>;
+export { editElementSchema, writeFileSchema };
 
-export { editElementSchema, setTokenSchema, writeFileSchema };
-
-export type { EditElementInput, SetTokenInput, WriteFileInput };
+export type { EditElementInput, WriteFileInput };

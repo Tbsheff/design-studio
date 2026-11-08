@@ -12,7 +12,13 @@ import { TokenChangesQueryFields, TokenPreviewSchema } from "./schema.js";
 
 const inspectTokensDirectEdit = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "inspect_tokens_direct_edit",
+    set: "core",
+    short:
+      "Read only. Preview token changes for a direction: the CSS and errors for the new values. Writes nothing.",
+  },
   confirm: "none",
   description:
     "Preview token changes for a direction. Returns the CSS and errors for the new values and writes nothing.",

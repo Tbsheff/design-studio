@@ -13,7 +13,13 @@ import { VariantClassResultSchema } from "./schema.js";
 
 const setVariantClassesDirectEdit = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_variant_classes_direct_edit",
+    set: "kit",
+    short:
+      "Change the classes or style of one cva variant option in a component file. Saves one version.",
+  },
   confirm: "none",
   description:
     "Change the classes or style of one cva variant option in a component file. Saves one version.",
@@ -36,7 +42,7 @@ const setVariantClassesDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["version.list", "version.get"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_variant_classes_direct_edit" },
   needs: "project.update",
   output: VariantClassResultSchema,
   scope: "project",

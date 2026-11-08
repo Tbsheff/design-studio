@@ -12,7 +12,13 @@ import { CreateTokenFields, CreateTokenResultSchema } from "./schema.js";
 
 const createTokenDirectEdit = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "create_token_direct_edit",
+    set: "core",
+    short:
+      "Create a design token in a direction. It can apply the new token to one selected element in the same edit.",
+  },
   confirm: "none",
   description:
     "Create a design token in a direction. Can also apply the new token to one selected element in the same edit.",
@@ -35,7 +41,7 @@ const createTokenDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["direct-edit.getDesignSystem"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "create_token_direct_edit" },
   needs: "project.update",
   output: CreateTokenResultSchema,
   scope: "project",

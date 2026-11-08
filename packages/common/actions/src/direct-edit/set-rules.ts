@@ -13,7 +13,13 @@ import { SaveRulesResultSchema } from "./schema.js";
 
 const setRulesDirectEdit = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "set_design_rules",
+    set: "core",
+    short:
+      "Replace the design rules of a project, one rule per line. In a studio project the rules go into DESIGN.md as one version.",
+  },
   confirm: "none",
   description:
     "Replace the design rules of a project, with the same code path as Save in the Rules editor. In a studio project the rules go into a rules block in DESIGN.md as one version the user can undo. In an attached app they are saved in the studio data folder, never in the app repo. The next studio run and review_frame use them.",

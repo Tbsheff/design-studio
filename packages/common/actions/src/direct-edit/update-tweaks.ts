@@ -12,7 +12,13 @@ import { CommitTweaksResultSchema, TweakValuesFields } from "./schema.js";
 
 const updateTweaksDirectEdit = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "update_tweaks_direct_edit",
+    set: "tweak",
+    short:
+      "Commit new tweak values for a direction. Writes the token source and saves a version.",
+  },
   confirm: "none",
   description:
     "Commit new tweak values for a direction. Writes the token source and saves a version.",
@@ -35,7 +41,7 @@ const updateTweaksDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["direct-edit.getTweaks"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "update_tweaks_direct_edit" },
   needs: "project.update",
   output: CommitTweaksResultSchema,
   scope: "project",

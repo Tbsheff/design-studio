@@ -58,8 +58,8 @@ const DoctorCard = ({
       try {
         await api.appFix(projectId, cause.kind);
         onFixed();
-      } catch (caught: unknown) {
-        setError(errorText(caught));
+      } catch (err: unknown) {
+        setError(errorText(err));
       }
     });
   };

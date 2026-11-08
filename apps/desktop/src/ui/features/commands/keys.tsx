@@ -22,5 +22,6 @@ export function Keys({
 
 export function KeyHint({ id }: { id: KeyId }) {
   const first = binding(id).keys[0];
+
   return first ? <Keys keys={first} /> : null;
 }

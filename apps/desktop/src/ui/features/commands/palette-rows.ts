@@ -1,6 +1,7 @@
 import { TYPE_LABELS } from "./deps.js";
 import type { IconName, ProjectHit, ProjectType, RouteHit } from "./deps.js";
-import { rank, type Ranked } from "./fuzzy.js";
+import { rank } from "./fuzzy.js";
+import type { Ranked } from "./fuzzy.js";
 import type { Command } from "./registry.js";
 
 export type RowKind = "command" | "project" | "route" | "new";
@@ -103,13 +104,13 @@ function projectRow(
   const meta = projectMeta(hit);
 
   return {
+    group,
+    hit,
     key: `p:${hit.id}`,
     kind: "project",
-    group,
-    title: hit.name,
     marks,
-    hit,
     run: () => actions.openProject(hit.id),
+    title: hit.name,
     ...(meta ? { meta } : {}),
     ...(keys ? { keys } : {}),
   };
@@ -122,14 +123,14 @@ function commandRow(
   note?: string
 ): Row {
   return {
+    commandId: command.id,
+    group,
+    icon: command.icon ?? "dot",
     key: `c:${command.id}`,
     kind: "command",
-    group,
-    title: command.title,
     marks,
     run: command.run,
-    icon: command.icon ?? "dot",
-    commandId: command.id,
+    title: command.title,
     ...(command.disabled ? { disabled: command.disabled } : {}),
     ...(note ? { note } : {}),
   };
@@ -156,9 +157,9 @@ function suggested(input: RowInput, context: Command[]): Row[] {
   if (make) {
     rows.push({
       ...commandRow(make, "Suggested"),
-      title: "New prototype",
-      meta: "Describe it next",
       icon: "sparkle",
+      meta: "Describe it next",
+      title: "New prototype",
       tone: "brand",
       ...(input.desktop ? { keys: "Mod+N" } : {}),
     });
@@ -167,9 +168,9 @@ function suggested(input: RowInput, context: Command[]): Row[] {
   if (open) {
     rows.push({
       ...commandRow(open, "Suggested"),
-      title: "Open app folder…",
-      meta: "Next.js, Vite or HTML",
       icon: "folder",
+      meta: "Next.js, Vite or HTML",
+      title: "Open app folder…",
       tone: "accent",
       ...(input.desktop ? { keys: "Mod+O" } : {}),
     });
@@ -220,15 +221,15 @@ function newRow(query: string, actions: RowActions): Row {
   const text = query.trim();
 
   return {
+    group: "New",
+    icon: "sparkle",
     key: "new",
     kind: "new",
-    group: "New",
-    title: `New prototype: “${text}”`,
     marks: [],
-    icon: "sparkle",
-    tone: "brand",
     meta: `${typePair("html")} · starts an AI run`,
     run: () => actions.newPrototype(text),
+    title: `New prototype: “${text}”`,
+    tone: "brand",
   };
 }
 
@@ -239,14 +240,14 @@ interface Scored {
 
 function routeRow(r: RouteHit, input: RowInput, marks: number[]): Row {
   return {
+    group: `Routes in ${r.projectName}`,
+    icon: "link",
     key: `r:${r.projectId}:${r.route}`,
     kind: "route",
-    group: `Routes in ${r.projectName}`,
-    title: r.route,
     marks,
     meta: r.file,
-    icon: "link",
     run: () => input.actions.openProject(r.projectId, r.route),
+    title: r.route,
   };
 }
 
@@ -261,8 +262,8 @@ function routeRows(input: RowInput): Scored {
 
   if (ranked.length > 0) {
     return {
-      rows: ranked.map((r) => routeRow(r.item, input, r.marks)),
       best: ranked[0]?.score ?? 0,
+      rows: ranked.map((r) => routeRow(r.item, input, r.marks)),
     };
   }
 
@@ -274,10 +275,10 @@ function routeRows(input: RowInput): Scored {
   );
 
   return {
+    best: 0,
     rows: usable
       .filter((r) => named.has(r.projectId))
       .map((r) => routeRow(r, input, [])),
-    best: 0,
   };
 }
 
@@ -297,8 +298,8 @@ function looseMatches(input: RowInput): Row[] {
   for (const word of words) {
     for (const r of clean(
       rank(input.projects, word, (p) => ({
-        title: p.name,
         keywords: p.place ?? "",
+        title: p.name,
       })),
       word
     )) {
@@ -323,8 +324,8 @@ function projectMatches(input: RowInput): Row[] {
 
   const ranked = clean(
     rank(input.projects, input.query, (p) => ({
-      title: p.name,
       keywords: `${p.place ?? ""} ${typePair(p.type)}`,
+      title: p.name,
     })),
     input.query
   ).slice(0, MAX_PROJECTS);
@@ -341,7 +342,7 @@ function actionMatches(input: RowInput): Scored {
     rank(
       input.commands.filter((c) => !SUGGESTED_IDS.has(c.id)),
       input.query,
-      (c) => ({ title: c.title, keywords: `${c.keywords ?? ""} ${c.group}` })
+      (c) => ({ keywords: `${c.keywords ?? ""} ${c.group}`, title: c.title })
     ),
     input.query
   )
@@ -356,10 +357,10 @@ function actionMatches(input: RowInput): Scored {
     .slice(0, MAX_ACTIONS);
 
   return {
+    best: ranked[0]?.score ?? 0,
     rows: ranked.map((r) =>
       commandRow(r.item, "Actions", r.marks, r.item.group)
     ),
-    best: ranked[0]?.score ?? 0,
   };
 }
 

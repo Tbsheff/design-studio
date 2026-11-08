@@ -41,8 +41,8 @@ export const ChangePackDialog = ({
       try {
         await onApply(packId);
         onClose();
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };
@@ -153,8 +153,8 @@ export const SavePackDialog = ({
       try {
         await onSave(name.trim(), asNew);
         onClose();
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };

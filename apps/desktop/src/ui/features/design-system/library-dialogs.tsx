@@ -20,8 +20,8 @@ const useBusyAction = (onClose: () => void) => {
       try {
         await task();
         onClose();
-      } catch (caught) {
-        setError(errorText(caught));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };

@@ -184,10 +184,6 @@ function usePaletteRows(
 
   const actions = useMemo(
     () => ({
-      openProject: (id: string, route?: string) => {
-        onClose();
-        window.setTimeout(() => openProject(id, route), 0);
-      },
       newPrototype: (prompt: string) => {
         setError(null);
         startTransition(async () => {
@@ -204,6 +200,10 @@ function usePaletteRows(
           }
         });
       },
+      openProject: (id: string, route?: string) => {
+        onClose();
+        window.setTimeout(() => openProject(id, route), 0);
+      },
     }),
     [onClose, setError]
   );
@@ -211,20 +211,20 @@ function usePaletteRows(
   const rows = useMemo(
     () =>
       buildRows({
-        query,
+        actions,
         commands,
-        projects: hits?.projects ?? [],
-        routes,
-        recent,
         current,
         desktop: DESKTOP,
         mac: IS_MAC,
-        actions,
+        projects: hits?.projects ?? [],
+        query,
+        recent,
+        routes,
       }),
     [query, commands, hits, routes, recent, current, actions]
   );
 
-  return { rows, busy, loading: hits === null };
+  return { busy, loading: hits === null, rows };
 }
 
 export function Palette({

@@ -245,8 +245,8 @@ export const PackDetailDialog = ({
     startTransition(async () => {
       try {
         await task();
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };

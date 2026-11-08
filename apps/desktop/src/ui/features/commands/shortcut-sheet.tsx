@@ -98,8 +98,8 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
     );
 
     return GROUPS.map((group) => ({
-      group,
       entries: shown.filter((entry) => entry.group === group),
+      group,
     })).filter((g) => g.entries.length > 0);
   }, [query]);
 

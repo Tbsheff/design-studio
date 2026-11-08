@@ -650,7 +650,7 @@ export const CommentsPanel = ({
   const sent = by("sent");
   const resolved = by("resolved");
   const orphaned = by("orphaned");
-  const queued = control.queued;
+  const { queued } = control;
 
   const outside = control.comments.filter(
     (comment) =>
@@ -666,7 +666,7 @@ export const CommentsPanel = ({
       (comment) => comment.status !== "draft" || comment.author
     ).length === 0;
 
-  const showResolved = control.showResolved;
+  const { showResolved } = control;
 
   return (
     <div className="comments-pane">

@@ -161,6 +161,7 @@ const Thumb = ({
     }
 
     let live = true;
+
     const read = async () => {
       let next: string | null = null;
 

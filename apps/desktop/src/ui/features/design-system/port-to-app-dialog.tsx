@@ -326,8 +326,8 @@ const usePortStart = (target: PortDialogTarget, form: PortForm) => {
             targetProjectId: form.chosenApp,
           })
         );
-      } catch (caught: unknown) {
-        setError(errorText(caught));
+      } catch (err: unknown) {
+        setError(errorText(err));
       }
     });
   };
@@ -416,8 +416,8 @@ const useAttach = (onAttached: (projectId: string) => void) => {
         } else {
           setFound(result.inspection);
         }
-      } catch (caught: unknown) {
-        setError(errorText(caught));
+      } catch (err: unknown) {
+        setError(errorText(err));
       }
     });
   };

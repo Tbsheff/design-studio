@@ -26,6 +26,7 @@ export function CommandRules({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     let live = true;
+
     const load = async () => {
       try {
         const result = await listRules(projectId);
@@ -39,6 +40,7 @@ export function CommandRules({ projectId }: { projectId: string }) {
         }
       }
     };
+
     void load();
 
     return () => {

@@ -3,12 +3,8 @@ import { useEffect, useRef } from "react";
 import { findElement, isTypingTarget, matchesKey } from "./deps.js";
 import type { KeyId, PanelTab } from "./deps.js";
 import { IS_MAC } from "./key-model.js";
-import {
-  listenForCommands,
-  runCommand,
-  useCommands,
-  type Command,
-} from "./registry.js";
+import { listenForCommands, runCommand, useCommands } from "./registry.js";
+import type { Command } from "./registry.js";
 
 export interface StudioActions {
   running: boolean;
@@ -32,14 +28,14 @@ export interface StudioActions {
 }
 
 const PANELS: { tab: PanelTab; title: string; icon: Command["icon"] }[] = [
-  { tab: "chat", title: "Show Chat", icon: "chat" },
-  { tab: "design", title: "Edit mode: inspector and layers", icon: "pointer" },
-  { tab: "comments", title: "Show Comments", icon: "comment" },
-  { tab: "versions", title: "Show Versions", icon: "history" },
-  { tab: "tokens", title: "Show Tokens", icon: "token" },
-  { tab: "components", title: "Show Components", icon: "component" },
-  { tab: "tweaks", title: "Show Tweaks", icon: "sliders" },
-  { tab: "system", title: "Show Design system", icon: "palette" },
+  { icon: "chat", tab: "chat", title: "Show Chat" },
+  { icon: "pointer", tab: "design", title: "Edit mode: inspector and layers" },
+  { icon: "comment", tab: "comments", title: "Show Comments" },
+  { icon: "history", tab: "versions", title: "Show Versions" },
+  { icon: "token", tab: "tokens", title: "Show Tokens" },
+  { icon: "component", tab: "components", title: "Show Components" },
+  { icon: "sliders", tab: "tweaks", title: "Show Tweaks" },
+  { icon: "palette", tab: "system", title: "Show Design system" },
 ];
 
 const REGIONS = [
@@ -117,102 +113,102 @@ function studioCommands(a: StudioActions): Command[] {
 
   return [
     {
-      id: "go.home",
-      title: "Go to Home",
       group: "Go",
       icon: "folder",
+      id: "go.home",
       keyId: "home",
       keywords: "projects back exit",
       run: a.onHome,
+      title: "Go to Home",
     },
     {
-      id: "project.settings",
-      title: "Project settings",
       group: "Go",
       icon: "settings",
+      id: "project.settings",
       keyId: "settings",
       keywords: "model shell preferences",
       run: a.onSettings,
+      title: "Project settings",
     },
     {
-      id: "project.design-md",
-      title: "Edit DESIGN.md",
       group: "Go",
       icon: "doc",
+      id: "project.design-md",
       keywords: "design system brief",
       run: a.onDesignMd,
+      title: "Edit DESIGN.md",
     },
     {
-      id: "direction.next",
-      title: "Next direction",
       group: "Go",
       icon: "branch",
+      id: "direction.next",
       keyId: "next-direction",
       run: next ?? (() => undefined),
+      title: "Next direction",
       ...(noDirection ? { disabled: noDirection } : {}),
     },
     {
-      id: "direction.prev",
-      title: "Previous direction",
       group: "Go",
       icon: "branch",
+      id: "direction.prev",
       keyId: "prev-direction",
       run: prev ?? (() => undefined),
+      title: "Previous direction",
       ...(noDirection ? { disabled: noDirection } : {}),
     },
     ...a.directions
       .filter((d) => d.id !== a.directionId)
       .map((d) => ({
-        id: `direction.open.${d.id}`,
-        title: `Open direction ${d.name}`,
         group: "Go",
         icon: "branch" as const,
+        id: `direction.open.${d.id}`,
         keywords: "switch variation",
         run: () => a.onDirection(d.id),
+        title: `Open direction ${d.name}`,
       })),
     ...PANELS.map((p) => ({
-      id: `panel.${p.tab}`,
-      title: p.title,
       group: "Panels",
       icon: p.icon,
+      id: `panel.${p.tab}`,
       keywords: "tab side panel pane mode sheet",
       run: () => a.onPanel(p.tab),
+      title: p.title,
     })),
     {
-      id: "panel.focus-composer",
-      title: "Ask the agent",
       group: "Run",
       icon: "chat",
+      id: "panel.focus-composer",
       keywords: "composer prompt message chat",
       run: () => focusComposer(a),
+      title: "Ask the agent",
     },
     {
-      id: "run.stop",
-      title: "Stop the run",
       group: "Run",
       icon: "stop",
+      id: "run.stop",
       keyId: "stop",
       keywords: "cancel interrupt",
       run: a.onStop,
+      title: "Stop the run",
       ...(a.running ? {} : { disabled: "No run is going" }),
     },
     {
-      id: "run.polish",
-      title: "Polish this design",
       group: "Run",
       icon: "sparkle",
+      id: "run.polish",
       keywords: "improve refine critique",
       run: a.onPolish,
+      title: "Polish this design",
       ...(a.running ? { disabled: "A run is going" } : {}),
     },
     {
-      id: "run.states",
-      title: "Make UI states of this page",
       group: "Run",
       icon: "layers",
-      slash: "states",
+      id: "run.states",
       keywords: "empty loading error success validation menu frames",
       run: () => a.onMakeStates?.(),
+      slash: "states",
+      title: "Make UI states of this page",
       ...(a.running
         ? { disabled: "A run is going" }
         : a.onMakeStates
@@ -220,52 +216,52 @@ function studioCommands(a: StudioActions): Command[] {
           : { disabled: "No direction yet" }),
     },
     {
-      id: "edit.undo",
-      title: "Undo",
       group: "Version",
       icon: "undo",
+      id: "edit.undo",
       keyId: "undo",
       run: a.onUndo,
+      title: "Undo",
       ...(a.canUndo ? {} : { disabled: "Nothing to undo" }),
     },
     {
-      id: "edit.redo",
-      title: "Redo",
       group: "Version",
       icon: "restore",
+      id: "edit.redo",
       keyId: "redo",
       run: a.onRedo,
+      title: "Redo",
       ...(a.canRedo ? {} : { disabled: "Nothing to redo" }),
     },
     {
-      id: "version.export",
-      title: "Export…",
       group: "Version",
       icon: "download",
+      id: "version.export",
       keywords: "share download png pdf html handoff zip source files",
       run: () => a.exportId && a.onExport(a.exportId),
+      title: "Export…",
       ...(a.exportId ? {} : { disabled: "No version yet" }),
     },
     ...(a.onShip
       ? [
           {
-            id: "version.ship",
-            title: "Ship as a pull request…",
             group: "Version",
             icon: "branch" as const,
+            id: "version.ship",
             keywords: "share branch git commit push pull request github gh",
             run: a.onShip,
+            title: "Ship as a pull request…",
           },
         ]
       : []),
     {
-      id: "view.next-region",
-      title: "Focus the next region",
       group: "View",
       icon: "sidebar",
+      id: "view.next-region",
       keyId: "focus-next-region",
       keywords: "f6 toolbar canvas inspector chat",
       run: () => moveRegion(1),
+      title: "Focus the next region",
     },
   ];
 }

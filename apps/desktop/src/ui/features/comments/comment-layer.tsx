@@ -521,7 +521,7 @@ export const CommentLayer = (props: Props) => {
         pending.current.delete(message.requestId);
         resolve?.(message.contexts);
       } else if (message.type === "select" && live.current.commentMode) {
-        const repinId = live.current.control.repinId;
+        const { repinId } = live.current.control;
 
         if (repinId) {
           void live.current.control.repin(
@@ -641,7 +641,7 @@ export const CommentLayer = (props: Props) => {
 
   const open = openComment(control);
   const openRect = open ? (open.drawing?.box ?? rects[open.id] ?? null) : null;
-  const lastSelected = props.selection[props.selection.length - 1];
+  const lastSelected = props.selection.at(-1);
   const { tools } = props;
 
   const finishPick = () => {

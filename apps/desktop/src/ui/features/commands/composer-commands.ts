@@ -1,17 +1,20 @@
 import { LEVEL_PRESETS, matchesKey } from "./deps.js";
 import type { ComposerMode, KeyInput, RunLevel } from "./deps.js";
 import { IS_MAC } from "./key-model.js";
-import { collectCommands, type Command } from "./registry.js";
+import { collectCommands } from "./registry.js";
+import type { Command } from "./registry.js";
 
 const MODE_ORDER: ComposerMode[] = ["edit", "plan", "critique"];
+
 const MODE_TITLES: Record<ComposerMode, string> = {
+  critique: "Critique mode: the agent reviews only",
   edit: "Edit mode: the agent changes files",
   plan: "Plan mode: the agent writes a plan first",
-  critique: "Critique mode: the agent reviews only",
 };
 
 export function nextMode(mode: ComposerMode, step: 1 | -1 = 1): ComposerMode {
   const at = MODE_ORDER.indexOf(mode);
+
   return (
     MODE_ORDER[(at + step + MODE_ORDER.length) % MODE_ORDER.length] ?? "edit"
   );
@@ -34,59 +37,63 @@ export interface ComposerActions {
 
 export function composerCommands(a: ComposerActions): Command[] {
   const modes = MODE_ORDER.map((mode) => ({
-    id: `composer.mode-${mode}`,
-    title: MODE_TITLES[mode],
     group: "Run",
     icon: "chat" as const,
-    slash: mode,
+    id: `composer.mode-${mode}`,
     keywords: "mode composer",
     run: () => {
       a.setMode(mode);
       a.focus();
     },
+    slash: mode,
+    title: MODE_TITLES[mode],
     ...(a.mode === mode ? { disabled: "Already on" } : {}),
   }));
+
   const levels = (Object.keys(LEVEL_PRESETS) as RunLevel[]).map((level) => ({
-    id: `composer.level-${level}`,
-    title: `Level: ${LEVEL_PRESETS[level].label}`,
     group: "Run",
     icon: "sliders" as const,
-    slash: `level ${level}`,
+    id: `composer.level-${level}`,
     keywords: "quality speed cost",
     run: () => {
       a.setLevel(level);
       a.focus();
     },
+    slash: `level ${level}`,
+    title: `Level: ${LEVEL_PRESETS[level].label}`,
     ...(a.level === level ? { disabled: "Already on" } : {}),
   }));
+
   const v = a.variations;
+
   const variations: Command[] = v
     ? [
         {
-          id: "composer.variations",
-          title: `Make ${Math.min(3, v.max)} variations of the next prompt`,
           group: "Run",
           icon: "compare",
-          slash: "variations",
+          id: "composer.variations",
           keywords: "directions options alternatives",
           run: () => {
             v.onCount(Math.min(3, v.max));
             a.focus();
           },
+          slash: "variations",
+          title: `Make ${Math.min(3, v.max)} variations of the next prompt`,
         },
       ]
     : [];
+
   return [...modes, ...levels, ...variations];
 }
 
 const SLASH_OF: Record<string, string> = {
-  "version.export": "export",
+  "edit.undo": "undo",
+  "panel.comments": "comments",
+  "panel.versions": "versions",
+  "project.design-md": "design-md",
   "project.settings": "settings",
   "run.polish": "polish",
-  "edit.undo": "undo",
-  "panel.versions": "versions",
-  "panel.comments": "comments",
-  "project.design-md": "design-md",
+  "version.export": "export",
 };
 
 export function slashCommands(): Command[] {

@@ -502,8 +502,8 @@ const FolderField = ({
       if (outcome.kind === "unsupported") {
         setManual(true);
       }
-    } catch (failure) {
-      setError(errorText(failure));
+    } catch (err) {
+      setError(errorText(err));
     }
   };
 
@@ -790,8 +790,8 @@ export const NewDesignSystem = ({
         const result = await packApi.createDesignSystemDraft(toFormData(form));
         refreshPacks();
         onCreated(result.project.id);
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (err) {
+        setError(errorText(err));
       }
     });
   };

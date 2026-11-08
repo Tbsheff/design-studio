@@ -250,13 +250,13 @@ export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
       try {
         const result = await packApi.importPack(file);
         imported(result.pack, result.replaced);
-      } catch (failure) {
-        const existing = existingOf(failure);
+      } catch (err) {
+        const existing = existingOf(err);
 
         if (existing) {
           setDialog({ existing, file, kind: "conflict" });
         } else {
-          setImportError(errorText(failure));
+          setImportError(errorText(err));
         }
       }
     });

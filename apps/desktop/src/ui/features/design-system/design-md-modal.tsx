@@ -152,11 +152,11 @@ export const DesignMdModal = ({
           setContent(result.content);
           setOriginal(result.content);
         }
-      } catch (failure) {
+      } catch (err) {
         if (live) {
           setContent("");
           setError(
-            `Could not load DESIGN.md. ${errorText(failure)} Close this window and open it again.`
+            `Could not load DESIGN.md. ${errorText(err)} Close this window and open it again.`
           );
         }
       }
@@ -214,9 +214,9 @@ export const DesignMdModal = ({
       try {
         await api.putDesignMd(projectId, content);
         onClose();
-      } catch (failure) {
+      } catch (err) {
         setAsking(false);
-        setError(`Could not save DESIGN.md. ${errorText(failure)} Try again.`);
+        setError(`Could not save DESIGN.md. ${errorText(err)} Try again.`);
       }
     });
   };

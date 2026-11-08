@@ -1,7 +1,7 @@
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 
 import { componentPreviewPath } from "../../../shared/component-preview.js";
-import { Icon } from "@design-studio/ui";
 import { getRaw, readBlob } from "../../platform/http.js";
 
 type Shown =

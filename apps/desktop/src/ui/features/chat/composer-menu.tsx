@@ -26,6 +26,7 @@ import type {
   UsePlacedPopoverResult,
 } from "./composer-menu-model.js";
 import { copy } from "./copy.js";
+import { DesignCounts } from "./design-counts.js";
 import {
   ChoiceItem,
   levelGist,
@@ -102,8 +103,6 @@ const toPanelProps = (menu: { closing: boolean; style: CSSProperties }) => ({
   inert: menu.closing || undefined,
   style: menu.style,
 });
-
-const DESIGN_COUNTS = [1, 2, 3, 4] as const;
 
 const usePlacedPopover = (
   trigger: RefObject<HTMLButtonElement | null>,
@@ -257,44 +256,7 @@ const PlusMenu = (props: PlusMenuProps): ReactElement => {
             </MenuSection>
             {designs && (
               <MenuSection label="Designs side by side">
-                <div
-                  className="composer-menu-counts"
-                  aria-describedby={`${countsId}-hint`}
-                >
-                  {DESIGN_COUNTS.filter((count) => count <= designs.max).map(
-                    (count) => {
-                      const off = count > 1 && designs.disabledReason !== null;
-
-                      return (
-                        <button
-                          key={count}
-                          type="button"
-                          role="menuitemradio"
-                          className="composer-menu-count"
-                          aria-label={
-                            count === 1 ? "1 design" : `${count} designs`
-                          }
-                          aria-checked={designs.value === count}
-                          aria-disabled={off || undefined}
-                          tabIndex={-1}
-                          onClick={() => {
-                            if (!off) {
-                              designs.onChange(count);
-                            }
-                          }}
-                        >
-                          {count}
-                        </button>
-                      );
-                    }
-                  )}
-                </div>
-                <p
-                  className="ui-menu-hint composer-menu-counts-hint"
-                  id={`${countsId}-hint`}
-                >
-                  {designsHint(designs)}
-                </p>
+                <DesignCounts countsId={countsId} designs={designs} />
               </MenuSection>
             )}
           </div>,

@@ -14,11 +14,7 @@ import { Suspense, useId, useRef, useState } from "react";
 import type { ClipboardEvent, DragEvent, ReactElement } from "react";
 
 import { Composer, ComposerInput } from "../../ai/components/ai/composer.js";
-import {
-  composerCommands,
-  slashCommands,
-  useCommands,
-} from "../../chat-slots.js";
+import { composerCommands, useCommands } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
 import { useDraft } from "../../platform/storage.js";
 import type { DraftStore } from "../../platform/storage.js";
@@ -40,12 +36,14 @@ import { INPUT_COPY, RepoContextChip } from "./prompt-box-model.js";
 import type { VariationsPromptProps } from "./prompt-box-model.js";
 import { PromptFootTrail } from "./prompt-foot-trail.js";
 import {
-  SLASH_HIDDEN,
+  addSkillId,
   designsBlocker,
   inputPlaceholder,
   modeGroup,
   sendReady,
   sendStatus,
+  toDropClass,
+  toSlashCommands,
 } from "./prompt-send-model.js";
 import { PromptToolbar } from "./prompt-toolbar.js";
 import { QueuedMessages } from "./queued-messages.js";
@@ -109,25 +107,6 @@ const FILE_RULES = {
   createPreviewUrl: (file: File): string => URL.createObjectURL(file),
   imageProblem,
   maxImages: MAX_IMAGES,
-};
-
-const addSkillId = (previous: string[], id: string): string[] => {
-  if (previous.includes(id)) {
-    return previous;
-  }
-
-  return [...previous, id];
-};
-
-const toSlashCommands = (): Command[] =>
-  slashCommands().filter((command) => !SLASH_HIDDEN.test(command.id));
-
-const toDropClass = (isDragging: boolean, base: string): string => {
-  if (isDragging) {
-    return `${base} dragging`;
-  }
-
-  return base;
 };
 
 const PromptBox = (props: Props): ReactElement => {

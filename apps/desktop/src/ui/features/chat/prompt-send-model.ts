@@ -1,3 +1,5 @@
+import { slashCommands } from "../../chat-slots.js";
+import type { Command } from "../../chat-slots.js";
 import { MODE_SHORT_HINT } from "./composer-menu-model.js";
 import { MODE_LABEL } from "./composer-mode-model.js";
 import type { ComposerMode } from "./composer-mode-model.js";
@@ -45,6 +47,25 @@ const modeGroup = (
   label: "Mode",
   value: MODE_LABEL[mode],
 });
+
+const addSkillId = (previous: string[], id: string): string[] => {
+  if (previous.includes(id)) {
+    return previous;
+  }
+
+  return [...previous, id];
+};
+
+const toSlashCommands = (): Command[] =>
+  slashCommands().filter((command) => !SLASH_HIDDEN.test(command.id));
+
+const toDropClass = (isDragging: boolean, base: string): string => {
+  if (isDragging) {
+    return `${base} dragging`;
+  }
+
+  return base;
+};
 
 const sendReady = (state: SendReadyState): boolean =>
   !state.running && !state.blocked && !state.busy && !state.empty;
@@ -124,10 +145,12 @@ const designsBlocker = (
 };
 
 export {
-  SLASH_HIDDEN,
+  addSkillId,
   designsBlocker,
   inputPlaceholder,
   modeGroup,
   sendReady,
   sendStatus,
+  toDropClass,
+  toSlashCommands,
 };

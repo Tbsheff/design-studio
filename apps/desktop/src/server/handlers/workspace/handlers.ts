@@ -2,9 +2,15 @@
 import type { WorkspaceActions } from "@design-studio/actions/workspace/index";
 
 import type { Entries } from "../_core/handler.js";
+import { handle as createFolderWorkspaceHandle } from "./create-folder.js";
+import {
+  handle as deleteFolderWorkspaceHandle,
+  preview as deleteFolderWorkspacePreview,
+} from "./delete-folder.js";
 import { handle as getDesignMdWorkspaceHandle } from "./get-design-md.js";
 import { handle as getDoctorWorkspaceHandle } from "./get-doctor.js";
 import { handle as getFileWorkspaceHandle } from "./get-file.js";
+import { handle as getFoldersWorkspaceHandle } from "./get-folders.js";
 import { handle as getFrameHtmlWorkspaceHandle } from "./get-frame-html.js";
 import { handle as getPortPlanWorkspaceHandle } from "./get-port-plan.js";
 import { handle as getRunContextWorkspaceHandle } from "./get-run-context.js";
@@ -17,12 +23,20 @@ import { handle as listProjectsWorkspaceHandle } from "./list-projects.js";
 import { handle as listRoutesWorkspaceHandle } from "./list-routes.js";
 import { handle as listVariantsWorkspaceHandle } from "./list-variants.js";
 import { handle as listVersionsWorkspaceHandle } from "./list-versions.js";
+import { handle as renameFolderWorkspaceHandle } from "./rename-folder.js";
 import { handle as searchProjectsWorkspaceHandle } from "./search-projects.js";
+import { handle as setDefaultFolderWorkspaceHandle } from "./set-default-folder.js";
 
 const WorkspaceEntries = {
+  createFolderWorkspace: { handle: createFolderWorkspaceHandle },
+  deleteFolderWorkspace: {
+    handle: deleteFolderWorkspaceHandle,
+    preview: deleteFolderWorkspacePreview,
+  },
   getDesignMdWorkspace: { handle: getDesignMdWorkspaceHandle },
   getDoctorWorkspace: { handle: getDoctorWorkspaceHandle },
   getFileWorkspace: { handle: getFileWorkspaceHandle },
+  getFoldersWorkspace: { handle: getFoldersWorkspaceHandle },
   getFrameHtmlWorkspace: { handle: getFrameHtmlWorkspaceHandle },
   getPortPlanWorkspace: { handle: getPortPlanWorkspaceHandle },
   getRunContextWorkspace: { handle: getRunContextWorkspaceHandle },
@@ -35,7 +49,9 @@ const WorkspaceEntries = {
   listRoutesWorkspace: { handle: listRoutesWorkspaceHandle },
   listVariantsWorkspace: { handle: listVariantsWorkspaceHandle },
   listVersionsWorkspace: { handle: listVersionsWorkspaceHandle },
+  renameFolderWorkspace: { handle: renameFolderWorkspaceHandle },
   searchProjectsWorkspace: { handle: searchProjectsWorkspaceHandle },
+  setDefaultFolderWorkspace: { handle: setDefaultFolderWorkspaceHandle },
 } satisfies Entries<typeof WorkspaceActions>;
 
 export { WorkspaceEntries };

@@ -1,5 +1,17 @@
 // @generated
 const routes = {
+  createFolderWorkspace: {
+    id: "workspace.createFolder",
+    invalidates: ["workspace.getFolders"],
+    method: "POST",
+    path: "/api/workspaces",
+  },
+  deleteFolderWorkspace: {
+    id: "workspace.deleteFolder",
+    invalidates: ["workspace.getFolders"],
+    method: "DELETE",
+    path: "/api/workspaces/:workspaceId",
+  },
   getDesignMdWorkspace: {
     id: "workspace.getDesignMd",
     invalidates: [],
@@ -17,6 +29,12 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/source-file",
+  },
+  getFoldersWorkspace: {
+    id: "workspace.getFolders",
+    invalidates: [],
+    method: "GET",
+    path: "/api/workspaces",
   },
   getFrameHtmlWorkspace: {
     id: "workspace.getFrameHtml",
@@ -90,11 +108,23 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/versions",
   },
+  renameFolderWorkspace: {
+    id: "workspace.renameFolder",
+    invalidates: ["workspace.getFolders"],
+    method: "PATCH",
+    path: "/api/workspaces/:workspaceId",
+  },
   searchProjectsWorkspace: {
     id: "workspace.searchProjects",
     invalidates: [],
     method: "GET",
     path: "/api/projects-search",
+  },
+  setDefaultFolderWorkspace: {
+    id: "workspace.setDefaultFolder",
+    invalidates: ["workspace.getFolders", "project.list"],
+    method: "PUT",
+    path: "/api/workspaces/default",
   },
 } as const;
 

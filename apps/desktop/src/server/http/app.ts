@@ -36,7 +36,6 @@ import {
   registerVersionsHistoryRoutes,
   registerVersionsRoutes,
 } from "./app-versions-routes.js";
-import { registerWorkspacesRoutes } from "./app-workspaces-routes.js";
 import { registerLoopbackGuard } from "./loopback-guard.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
 
@@ -60,7 +59,6 @@ export function createApp(deps: AppDeps): Hono {
   registerProjectsRoutes(app, ctx);
   registerStudioRoutes(app, ctx);
   registerDevserverRoutes(app, ctx);
-  registerWorkspacesRoutes(app, ctx);
   registerEventsRoutes(app, ctx);
   registerProjectRunsRoutes(app, ctx);
   registerVersionsRoutes(app, ctx);

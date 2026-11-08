@@ -20,7 +20,11 @@ export type {
   SetCommand,
 } from "./dev-status/index.js";
 
-export { CompletionRunner, CompletionStore } from "./completion/index.js";
+export {
+  CompletionRunner,
+  CompletionStore,
+  runCompletionAnswer,
+} from "./completion/index.js";
 
 export type {
   CompletionPage,
@@ -38,3 +42,7 @@ export type {
   ImportReferenceCommand,
   ReferenceWriterApi,
 } from "./reference/index.js";
+
+export { BriefRunner } from "./brief/index.js";
+
+export type { BriefRunnerApi } from "./brief/index.js";

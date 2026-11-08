@@ -2,6 +2,7 @@
 import { AccessibilityLive } from "./accessibility/live.js";
 import { AnimationLive } from "./animation/live.js";
 import { BlockLive } from "./block/live.js";
+import { BriefLive } from "./brief/live.js";
 import { CanvasLive } from "./canvas/live.js";
 import { ChartLive } from "./chart/live.js";
 import { CloudLive } from "./cloud/live.js";
@@ -61,6 +62,7 @@ const ALL_LIVE = {
   accessibility: AccessibilityLive,
   animation: AnimationLive,
   block: BlockLive,
+  brief: BriefLive,
   canvas: CanvasLive,
   chart: ChartLive,
   cloud: CloudLive,

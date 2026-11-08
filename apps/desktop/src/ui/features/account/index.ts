@@ -1,5 +1,11 @@
 import { lazy } from "react";
 
+const AccountButton = lazy(async () => {
+  const loaded = await import("./account-button.js");
+
+  return { default: loaded.AccountButton };
+});
+
 const AccountMenu = lazy(async () => {
   const loaded = await import("./account-menu.js");
 
@@ -12,4 +18,4 @@ const SignedInConfirm = lazy(async () => {
   return { default: loaded.SignedInConfirm };
 });
 
-export { AccountMenu, SignedInConfirm };
+export { AccountButton, AccountMenu, SignedInConfirm };

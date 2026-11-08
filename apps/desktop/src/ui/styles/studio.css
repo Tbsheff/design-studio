@@ -402,8 +402,27 @@
   color: var(--text-3);
 }
 
+.account-anchor {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+
+.account-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + var(--s-1));
+  right: 0;
+  min-width: 200px;
+  transform-origin: top right;
+  animation: menu-in var(--dur) var(--ease-out);
+}
+
 .topbar-avatar {
   flex: none;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
   display: inline-grid;
   place-items: center;
   width: 20px;
@@ -559,7 +578,7 @@
   gap: 6px;
 }
 
-@container canvas-bar (max-width: 990px) {
+@container canvas-bar (max-width: 1060px) {
   .canvas-topbar .topbar-tools > button > span {
     display: none;
   }
@@ -570,8 +589,15 @@
   }
 }
 
-@container canvas-bar (max-width: 780px) {
-  .canvas-topbar .topbar-avatar,
+@container canvas-bar (max-width: 820px) {
+  .canvas-topbar {
+    gap: 2px;
+  }
+
+  .canvas-topbar .topbar-avatar {
+    margin-left: 0;
+  }
+
   .canvas-topbar .topbar-present > :not(:first-child) {
     display: none;
   }
@@ -583,7 +609,7 @@
   }
 }
 
-@container canvas-bar (max-width: 690px) {
+@container canvas-bar (max-width: 730px) {
   .canvas-topbar .topbar-zoom {
     width: 28px;
     padding: 0;
@@ -599,7 +625,7 @@
   }
 }
 
-@container canvas-bar (max-width: 660px) {
+@container canvas-bar (max-width: 700px) {
   .canvas-topbar .btn.topbar-review {
     position: relative;
     width: 28px;
@@ -634,7 +660,12 @@
   }
 }
 
-@container canvas-bar (max-width: 560px) {
+@container canvas-bar (max-width: 600px) {
+  .canvas-topbar .topbar-icon.icon-btn,
+  .canvas-topbar .topbar-tools > button {
+    width: 24px;
+  }
+
   .canvas-topbar .topbar-fold-wide {
     display: none;
   }
@@ -648,7 +679,7 @@
   }
 }
 
-@container canvas-bar (max-width: 480px) {
+@container canvas-bar (max-width: 520px) {
   .canvas-topbar .topbar-fold-narrow {
     display: none;
   }
@@ -664,7 +695,7 @@
   box-shadow: none;
 }
 
-@container canvas-bar (max-width: 400px) {
+@container canvas-bar (max-width: 440px) {
   .canvas-topbar .vector-tools {
     display: none;
   }

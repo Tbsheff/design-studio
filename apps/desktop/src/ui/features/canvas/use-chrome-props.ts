@@ -9,6 +9,7 @@ import type { ViewProps } from "./canvas-types.js";
 
 interface ChromeExtra {
   readonly importPage: ChromeImportPage;
+  readonly account: ReactNode;
   readonly matrix: ReactNode;
 }
 
@@ -78,6 +79,7 @@ const useChromeProps = (
 
   return useMemo(
     () => ({
+      account: extra.account,
       active: stage.active,
       addFrame: wiring.addFrameAt,
       comment: stage.comment,

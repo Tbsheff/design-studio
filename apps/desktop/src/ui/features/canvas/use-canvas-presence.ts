@@ -19,6 +19,8 @@ const SLICE_200 = 200;
 
 const PRESENCE_MS = 1500;
 const RESEND_MS = 60_000;
+const BACKOFF_MAX_MS = 120_000;
+const BACKOFF_BASE = 2;
 
 interface PresenceInput {
   projectId: string;
@@ -119,9 +121,29 @@ const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
   useEffect(() => {
     let last = "";
     let sentAt = 0;
+    let failures = 0;
+    let blockedUntil = 0;
+
+    const sendPresence = async (body: PresenceBody): Promise<void> => {
+      let isFailed = false;
+
+      await runOrReport(api.putCanvasPresence(projectId, body), () => {
+        isFailed = true;
+        last = "";
+        failures += 1;
+
+        blockedUntil =
+          Date.now() +
+          Math.min(PRESENCE_MS * BACKOFF_BASE ** failures, BACKOFF_MAX_MS);
+      });
+
+      if (!isFailed) {
+        failures = 0;
+      }
+    };
 
     const send = (): void => {
-      if (document.hidden) {
+      if (document.hidden || Date.now() < blockedUntil) {
         return;
       }
 
@@ -134,9 +156,7 @@ const useCanvasPresence = (presenceInputValue: PresenceInput): void => {
 
       last = key;
       sentAt = Date.now();
-      void runOrReport(api.putCanvasPresence(projectId, body), () => {
-        last = "";
-      });
+      void sendPresence(body);
     };
 
     send();

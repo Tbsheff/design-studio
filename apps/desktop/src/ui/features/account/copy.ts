@@ -1,4 +1,6 @@
 const copy = {
+  accountMenu: "Account menu",
+  accountTip: "Account",
   cancel: "Cancel",
   confirm: "Confirm",
   confirmHint: "Nothing moves to the cloud until you confirm.",
@@ -7,10 +9,12 @@ const copy = {
   failed: "Could not reach your account. Try again.",
   orgs: "Organizations",
   pending: "Waiting for the browser to finish sign-in.",
+  settings: "Settings",
   signIn: "Sign in",
   signOut: "Sign out",
   signedInAs: "Signed in as",
   signedOut: "You are signed out.",
+  signedOutLabel: "Not signed in",
 } as const;
 
 export { copy };

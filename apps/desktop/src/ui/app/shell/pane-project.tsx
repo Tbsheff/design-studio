@@ -9,13 +9,11 @@ import { ProjectMenu } from "./project-menu";
 interface PaneProjectProps {
   readonly header: StudioPaneHeaderProps;
   readonly onStartRename: () => void;
-  readonly railShortcut: string;
 }
 
 const PaneProject = ({
   header,
   onStartRename,
-  railShortcut,
 }: PaneProjectProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -52,7 +50,6 @@ const PaneProject = ({
           header={header}
           onClose={close}
           onStartRename={onStartRename}
-          railShortcut={railShortcut}
           trigger={trigger}
         />
       )}

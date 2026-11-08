@@ -41,6 +41,7 @@ interface ChromeImportPage {
 
 interface ChromeProps {
   matrix?: ReactNode;
+  account?: ReactNode;
   importPage: ChromeImportPage;
   shell: CanvasShell | undefined;
   kind: ProjectKind;

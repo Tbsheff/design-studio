@@ -9,14 +9,12 @@ import {
   toNavItems,
   toPanelItems,
   toProjectItems,
-  toThemeItems,
 } from "./pane-menu-model";
 
 interface ProjectMenuProps {
   readonly header: StudioPaneHeaderProps;
   readonly onClose: (refocus: boolean) => void;
   readonly onStartRename: () => void;
-  readonly railShortcut: string;
   readonly trigger: RefObject<HTMLButtonElement | null>;
 }
 
@@ -32,7 +30,6 @@ const ProjectMenu = ({
   header,
   onClose,
   onStartRename,
-  railShortcut,
   trigger,
 }: ProjectMenuProps): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
@@ -56,12 +53,7 @@ const ProjectMenu = ({
         onDone={done}
       />
       <MenuSection items={toPanelItems(header)} label={null} onDone={done} />
-      <MenuSection items={toThemeItems()} label={null} onDone={done} />
-      <MenuSection
-        items={toNavItems(header, railShortcut)}
-        label={null}
-        onDone={done}
-      />
+      <MenuSection items={toNavItems(header)} label={null} onDone={done} />
     </div>
   );
 };

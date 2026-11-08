@@ -82,6 +82,32 @@ const readDesktopAccount = (): DesktopAccount | null => {
 const needsConfirm = (view: AccountView): boolean =>
   view.phase === "needs-confirm" && view.user !== null;
 
+const SETTINGS_COMMAND = "project.settings";
+
+const toInitial = (user: AccountView["user"]): string | null => {
+  const source = (user?.name ?? "").trim() || (user?.email ?? "").trim();
+
+  if (source === "") {
+    return null;
+  }
+
+  return source.slice(0, 1).toUpperCase();
+};
+
+const toUserLabel = (user: AccountView["user"]): string => {
+  if (user === null) {
+    return copy.signedOutLabel;
+  }
+
+  return user.email;
+};
+
+const openSettings = (): void => {
+  globalThis.dispatchEvent(
+    new CustomEvent("studio:command", { detail: SETTINGS_COMMAND })
+  );
+};
+
 const toStatusText = (phase: AccountPhase): string => {
   if (phase === "expired") {
     return copy.expired;
@@ -99,8 +125,11 @@ export {
   fromCloud,
   fromDesktop,
   needsConfirm,
+  openSettings,
   readDesktopAccount,
+  toInitial,
   toStatusText,
+  toUserLabel,
 };
 
 export type { AccountPhase, AccountView, DesktopAccount, DesktopAccountView };

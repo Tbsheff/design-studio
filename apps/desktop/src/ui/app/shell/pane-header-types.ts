@@ -15,8 +15,6 @@ interface StudioPaneHeaderProps {
   commentCount: number;
   onRename: (name: string) => Promise<void>;
   onExit: () => void;
-  onToggleRail: () => void;
-  railOpen: boolean;
   onDesignMd: () => void;
   onSettings: () => void;
   onCollapse: () => void;

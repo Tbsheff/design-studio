@@ -233,6 +233,18 @@ function viewMenu(
         key: "shortcuts",
         always: true,
       }),
+      {
+        label: "Theme",
+        submenu: [
+          command({
+            label: "Match System",
+            command: "theme.system",
+            always: true,
+          }),
+          command({ label: "Light", command: "theme.light", always: true }),
+          command({ label: "Dark", command: "theme.dark", always: true }),
+        ],
+      },
       { type: "separator" },
       command({ label: "Show Layers", command: "view.layers", key: "layers" }),
       command({ label: "Chat", command: "panel.chat" }),

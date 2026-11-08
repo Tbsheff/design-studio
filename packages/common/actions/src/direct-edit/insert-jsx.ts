@@ -65,7 +65,7 @@ const insertJsxDirectEdit = defineAction({
   },
   confirm: "none",
   description:
-    "Build a group of elements in one call: insert a JSX snippet (or an HTML snippet in an HTML project) inside, before, after or in place of the target element. Each component tag that the target file does not import is found in the project library, and its import line is added or extended. Markup only: text, string props, numbers, style objects and plain references to names the file has. Functions, hook calls, conditions, .map() and spreads are refused with a reason. Targets made by .map() are refused. One version and one undo step. To remove placeholder text next to child elements, use clear_text.",
+    "Build a group of elements in one call. Insert a JSX snippet (or an HTML snippet in an HTML project) inside, before, after or in place of the target element. Each component tag that the target file does not import is found in the project library, and its import line is added or extended. Markup only: text, string props, numbers, style objects and plain references to names the file has. Functions, hook calls, conditions, .map() and spreads are refused with a reason. Targets made by .map() are refused. One version and one undo step. To remove text next to child elements, use clear_text.",
   errors: [
     BadRequest,
     Conflict,

@@ -1,4 +1,3 @@
-import { useModalDialog } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import {
   useCallback,
@@ -18,6 +17,7 @@ import { DmdFooter } from "./dmd-footer.js";
 import { DmdHead } from "./dmd-head.js";
 import { DmdOutline } from "./dmd-outline.js";
 import { DmdPreviewPane } from "./dmd-preview-pane.js";
+import { useBackdropDialog } from "./use-backdrop-dialog.js";
 import { useDesignMd } from "./use-design-md.js";
 
 const toModKey = (): string => {
@@ -37,7 +37,7 @@ const DesignMdModal = ({
 }): ReactElement => {
   const md = useDesignMd(projectId, onClose);
   const { changeContent, content, requestClose, save } = md;
-  const { onMouseDown, ref } = useModalDialog(requestClose);
+  const ref = useBackdropDialog(requestClose);
   const editor = useRef<HTMLTextAreaElement>(null);
   const preview = useRef<HTMLDivElement>(null);
   const loaded = content !== null;
@@ -57,12 +57,7 @@ const DesignMdModal = ({
   );
 
   return (
-    <dialog
-      ref={ref}
-      className="modal dmd"
-      aria-label={COPY.labelDesignMd}
-      onMouseDown={onMouseDown}
-    >
+    <dialog ref={ref} className="modal dmd" aria-label={COPY.labelDesignMd}>
       <DmdHead isDirty={md.isDirty} onClose={requestClose} />
       <div className="modal-body dmd-body">
         <DmdOutline items={outline} onJump={jump} />

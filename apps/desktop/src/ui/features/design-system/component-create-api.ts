@@ -2,9 +2,9 @@ import { routes } from "@design-studio/actions/direct-edit/routes";
 import type { SourceLoc } from "@design-studio/contracts";
 
 import type { CreateComponentRequest } from "../../../shared/component-create.js";
-import { ApiError } from "../../api.js";
 import { call } from "../../platform/http.js";
 import type { RouteOutput } from "../../platform/http.js";
+import { insertError } from "./component-insert-api.js";
 
 type CreateOutput = RouteOutput<typeof routes.createComponentDirectEdit>;
 
@@ -56,30 +56,6 @@ const componentCreateApi = {
     }),
 };
 
-const apiDataMessage = (error: ApiError): string | null => {
-  const message = error.data?.["message"] ?? null;
-
-  if (message === String(message)) {
-    return String(message);
-  }
-
-  return null;
-};
-
-const apiMessage = (error: unknown): string => {
-  if (error instanceof ApiError) {
-    const message = apiDataMessage(error);
-
-    if (message !== null) {
-      return message;
-    }
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
-};
+const apiMessage = insertError;
 
 export { apiMessage, componentCreateApi };

@@ -2,10 +2,10 @@ import type { ComponentInfo } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
+import { BlobImage } from "./blob-image.js";
 import { useComponentThumb } from "./use-component-thumb.js";
 
 const ICON_SIZE = 20;
-const IMAGE_STYLE = { aspectRatio: "auto" };
 
 const ComponentThumb = ({
   active,
@@ -20,7 +20,7 @@ const ComponentThumb = ({
   projectId: string;
   version: string;
 }): ReactElement => {
-  const { src, state } = useComponentThumb({
+  const { blob, state } = useComponentThumb({
     active,
     component,
     directionId,
@@ -30,8 +30,8 @@ const ComponentThumb = ({
 
   return (
     <span className={`cmp-thumb ${state}`} aria-hidden="true">
-      {src && <img src={src} alt="" draggable={false} style={IMAGE_STYLE} />}
-      {!src && state === "none" && <Icon name="component" size={ICON_SIZE} />}
+      {blob && <BlobImage blob={blob} />}
+      {!blob && state === "none" && <Icon name="component" size={ICON_SIZE} />}
     </span>
   );
 };

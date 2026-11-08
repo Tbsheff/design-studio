@@ -4,7 +4,7 @@ import { trimmedOrSelf } from "./thumb-trim.js";
 
 type Shown =
   | { state: "idle" | "loading" }
-  | { state: "ready"; src: string }
+  | { state: "ready"; blob: Blob }
   | { state: "none"; reason: string };
 
 interface PreviewLoad {
@@ -13,6 +13,7 @@ interface PreviewLoad {
   readonly id: string;
   readonly projectId: string;
   readonly setShown: (update: (prev: Shown) => Shown) => void;
+  readonly version: string;
 }
 
 const NO_PREVIEW = "No preview for this component.";
@@ -36,15 +37,10 @@ type PreviewBlob =
   | { blob: Blob; kind: "blob" }
   | { kind: "none"; reason: string };
 
-const loadPreviewBlob = async (
-  projectId: string,
-  directionId: string,
-  id: string,
-  signal: AbortSignal
-): Promise<PreviewBlob> => {
+const loadPreviewBlob = async (load: PreviewLoad): Promise<PreviewBlob> => {
   const res = await getRaw(
-    componentPreviewPath(projectId, directionId, id),
-    signal
+    `${componentPreviewPath(load.projectId, load.directionId, load.id)}&v=${encodeURIComponent(load.version)}`,
+    load.controller.signal
   );
 
   if (res.ok) {

@@ -1,6 +1,7 @@
-import { useModalDialog } from "@design-studio/ui";
 import type { ReactElement, ReactNode } from "react";
 import { useCallback } from "react";
+
+import { useBackdropDialog } from "./use-backdrop-dialog.js";
 
 const toDialogClass = (isWide: boolean): string => {
   if (isWide) {
@@ -31,15 +32,10 @@ const PackDialogShell = ({
     onClose();
   }, [isBusy, onClose]);
 
-  const { onMouseDown, ref } = useModalDialog(dismiss);
+  const ref = useBackdropDialog(dismiss);
 
   return (
-    <dialog
-      ref={ref}
-      className={toDialogClass(isWide)}
-      aria-label={label}
-      onMouseDown={onMouseDown}
-    >
+    <dialog ref={ref} className={toDialogClass(isWide)} aria-label={label}>
       {children}
     </dialog>
   );

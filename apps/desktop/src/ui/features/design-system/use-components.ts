@@ -2,49 +2,23 @@ import type { ComponentInfo } from "@design-studio/contracts";
 import { useEffect, useRef, useState } from "react";
 
 import { json } from "../../api.js";
-import { readBlob } from "../../platform/http.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { getBlob } from "./deps.js";
-import { trimmedOrSelf } from "./thumb-trim.js";
 
 const REFRESH_MS = 400;
 
 const base = (projectId: string, directionId: string): string =>
   `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/components`;
 
-const componentThumb = async (
+const componentThumb = (
   projectId: string,
   directionId: string,
   id: string,
   version: string
-): Promise<string | null> => {
-  const blob = await getBlob(
+): Promise<Blob | null> =>
+  getBlob(
     `${base(projectId, directionId)}/${encodeURIComponent(id)}/thumb?v=${encodeURIComponent(version)}`
   );
-
-  if (blob === null) {
-    return null;
-  }
-
-  return URL.createObjectURL(blob);
-};
-
-const trimmedUrl = async (url: string | null): Promise<string | null> => {
-  if (!url) {
-    return url;
-  }
-
-  const blob = await readBlob(url);
-  const next = await trimmedOrSelf(blob);
-
-  if (next === blob) {
-    return url;
-  }
-
-  URL.revokeObjectURL(url);
-
-  return URL.createObjectURL(next);
-};
 
 interface ComponentList {
   components: ComponentInfo[] | null;
@@ -129,6 +103,6 @@ const useComponents = (
   return { ...state, retry: () => setAttempt((count) => count + 1) };
 };
 
-export { componentThumb, trimmedUrl, useComponents };
+export { componentThumb, useComponents };
 
 export type { ComponentList };

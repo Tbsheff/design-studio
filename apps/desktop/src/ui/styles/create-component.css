@@ -31,7 +31,8 @@
   font-size: var(--t-xs);
 }
 
-.cc-folder {
+.cc-folder,
+.cc-folder .ui-select-root {
   width: 100%;
 }
 

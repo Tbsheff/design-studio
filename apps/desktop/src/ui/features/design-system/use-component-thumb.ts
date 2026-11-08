@@ -1,8 +1,8 @@
 import type { ComponentInfo } from "@design-studio/contracts";
-import { useEffect, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
+import { useEffect, useState } from "react";
 
-import { componentThumb, trimmedUrl } from "./use-components.js";
+import { trimmedOrSelf } from "./thumb-trim.js";
+import { componentThumb } from "./use-components.js";
 
 type ThumbState = "loading" | "ready" | "none";
 
@@ -15,19 +15,16 @@ interface ThumbSource {
 }
 
 interface ComponentThumbView {
-  src: string | null;
+  blob: Blob | null;
   state: ThumbState;
 }
 
-const useRevokeOnUnmount = (shown: MutableRefObject<string | null>): void => {
-  useEffect(
-    () => (): void => {
-      if (shown.current) {
-        URL.revokeObjectURL(shown.current);
-      }
-    },
-    [shown]
-  );
+const keepThumb = (prev: ComponentThumbView): ComponentThumbView => {
+  if (prev.blob) {
+    return prev;
+  }
+
+  return { blob: null, state: "none" };
 };
 
 const useComponentThumb = ({
@@ -37,12 +34,12 @@ const useComponentThumb = ({
   projectId,
   version,
 }: ThumbSource): ComponentThumbView => {
-  const [src, setSrc] = useState<string | null>(null);
-  const [state, setState] = useState<ThumbState>("loading");
-  const shown = useRef<string | null>(null);
-  const hasSelector = Boolean(component.selector);
+  const [view, setView] = useState<ComponentThumbView>({
+    blob: null,
+    state: "loading",
+  });
 
-  useRevokeOnUnmount(shown);
+  const hasSelector = Boolean(component.selector);
 
   useEffect(() => {
     if (!hasSelector || !active) {
@@ -52,43 +49,32 @@ const useComponentThumb = ({
     let live = true;
 
     const read = async (): Promise<void> => {
-      let next: string | null = null;
+      let next: Blob | null = null;
 
       try {
-        next = await trimmedUrl(
-          await componentThumb(projectId, directionId, component.id, version)
+        const fetched = await componentThumb(
+          projectId,
+          directionId,
+          component.id,
+          version
         );
-      } catch {
-        if (live && !shown.current) {
-          setState("none");
-        }
 
-        return;
+        if (fetched) {
+          next = await trimmedOrSelf(fetched);
+        }
+      } catch {
+        next = null;
       }
 
       if (!live) {
-        if (next) {
-          URL.revokeObjectURL(next);
-        }
-
         return;
       }
 
-      if (!next) {
-        if (!shown.current) {
-          setState("none");
-        }
-
-        return;
+      if (next) {
+        setView({ blob: next, state: "ready" });
+      } else {
+        setView((prev) => keepThumb(prev));
       }
-
-      if (shown.current) {
-        URL.revokeObjectURL(shown.current);
-      }
-
-      shown.current = next;
-      setSrc(next);
-      setState("ready");
     };
 
     read();
@@ -99,10 +85,10 @@ const useComponentThumb = ({
   }, [projectId, directionId, component.id, hasSelector, version, active]);
 
   if (!hasSelector) {
-    return { src: null, state: "none" };
+    return { blob: null, state: "none" };
   }
 
-  return { src, state };
+  return view;
 };
 
 export { useComponentThumb };

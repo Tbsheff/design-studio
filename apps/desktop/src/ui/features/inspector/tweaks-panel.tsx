@@ -325,7 +325,7 @@ const Header = ({
 }: Props & { readonly hasControls: boolean }): ReactElement => (
   <PanelHead
     title={copy.tabTweaks}
-    className="twk-header"
+    headClass="twk-header"
     titleClassName="twk-title"
   >
     <div className="twk-header-end">

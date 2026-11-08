@@ -3,7 +3,6 @@ import type {
   PackDetail,
   PackSummary,
 } from "@design-studio/contracts";
-import { useModalDialog } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useCallback } from "react";
 
@@ -14,6 +13,7 @@ import { DetailHead } from "./detail-head.js";
 import { DocSection } from "./doc-section.js";
 import type { PackDetailActions } from "./pack-detail-actions.js";
 import { PreviewSection } from "./preview-section.js";
+import { useBackdropDialog } from "./use-backdrop-dialog.js";
 import { useLoad } from "./use-load.js";
 import { usePackDetailRun } from "./use-pack-detail-run.js";
 
@@ -43,14 +43,13 @@ const PackDetailDialog = ({
     onClose();
   }, [isBusy, onClose]);
 
-  const dialog = useModalDialog(dismiss);
+  const ref = useBackdropDialog(dismiss);
 
   return (
     <dialog
-      ref={dialog.ref}
+      ref={ref}
       className="modal lib-detail"
       aria-label={`${pack.name} design system`}
-      onMouseDown={dialog.onMouseDown}
     >
       <DetailHead isBusy={state.isBusy} onClose={onClose} pack={pack} />
       <DetailBar actions={actions} pack={pack} state={state} />

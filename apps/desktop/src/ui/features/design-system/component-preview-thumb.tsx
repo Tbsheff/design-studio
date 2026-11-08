@@ -2,46 +2,39 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 
+import { BlobImage } from "./blob-image.js";
 import { keepReady, loadPreviewBlob } from "./thumb-preview.js";
-import type { PreviewLoad, Shown } from "./thumb-preview.js";
+import type { PreviewBlob, PreviewLoad, Shown } from "./thumb-preview.js";
 import { useThumbVisible } from "./use-thumb-visible.js";
 
 const ICON_SIZE = 20;
 
-const fetchPreview = async (
-  projectId: string,
-  directionId: string,
-  id: string,
-  signal: AbortSignal
-): Promise<Shown> => {
-  const loaded = await loadPreviewBlob(projectId, directionId, id, signal);
-
-  if (loaded.kind === "blob") {
-    return { src: URL.createObjectURL(loaded.blob), state: "ready" };
+const toLoadingShown = (prev: Shown): Shown => {
+  if (prev.state === "ready") {
+    return prev;
   }
 
-  return { reason: loaded.reason, state: "none" };
+  return { state: "loading" };
+};
+
+const toLoadedShown = (loaded: PreviewBlob): Shown => {
+  if (loaded.kind !== "blob") {
+    return { reason: loaded.reason, state: "none" };
+  }
+
+  return { blob: loaded.blob, state: "ready" };
 };
 
 const showPreview = async (load: PreviewLoad): Promise<void> => {
   const { controller } = load;
+  load.setShown((prev) => toLoadingShown(prev));
 
   try {
-    const next = await fetchPreview(
-      load.projectId,
-      load.directionId,
-      load.id,
-      controller.signal
-    );
+    const loaded = await loadPreviewBlob(load);
 
     if (!controller.signal.aborted) {
+      const next = toLoadedShown(loaded);
       load.setShown((prev) => keepReady(prev, next));
-
-      return;
-    }
-
-    if (next.state === "ready") {
-      URL.revokeObjectURL(next.src);
     }
   } catch {
     if (!controller.signal.aborted) {
@@ -51,14 +44,6 @@ const showPreview = async (load: PreviewLoad): Promise<void> => {
       }));
     }
   }
-};
-
-const toLoadingShown = (prev: Shown): Shown => {
-  if (prev.state === "ready") {
-    return prev;
-  }
-
-  return { state: "loading" };
 };
 
 const toStateClass = (shown: Shown): string => {
@@ -77,9 +62,9 @@ const toTip = (shown: Shown): string | null => {
   return null;
 };
 
-const toSource = (shown: Shown): string | null => {
+const toBlob = (shown: Shown): Blob | null => {
   if (shown.state === "ready") {
-    return shown.src;
+    return shown.blob;
   }
 
   return null;
@@ -111,22 +96,19 @@ const ComponentPreviewThumb = ({
 
     const controller = new AbortController();
 
-    setShown((prev) => toLoadingShown(prev));
-    showPreview({ controller, directionId, id, projectId, setShown });
+    showPreview({
+      controller,
+      directionId,
+      id,
+      projectId,
+      setShown,
+      version,
+    });
 
     return (): void => controller.abort();
   }, [projectId, directionId, id, version, visible]);
 
-  const src = toSource(shown);
-
-  useEffect(
-    () => (): void => {
-      if (src) {
-        URL.revokeObjectURL(src);
-      }
-    },
-    [src]
-  );
+  const blob = toBlob(shown);
 
   return (
     <span
@@ -137,8 +119,8 @@ const ComponentPreviewThumb = ({
       data-state={shown.state}
       data-tip={toTip(shown)}
     >
-      {src && <img src={src} alt="" draggable={false} />}
-      {!src && shown.state === "none" && (
+      {blob && <BlobImage blob={blob} />}
+      {!blob && shown.state === "none" && (
         <Icon name="component" size={ICON_SIZE} />
       )}
     </span>

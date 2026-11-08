@@ -37,8 +37,12 @@ const toChunks = (files) => {
   return chunks;
 };
 
+const SKIPPED_ENV = new Set(["GIT_INDEX_FILE", "STUDIO_LINT_TYPECHECK"]);
+
+const toHookEnv = () => Object.fromEntries(Object.entries(process.env).filter(([name]) => !SKIPPED_ENV.has(name)));
+
 const runStep = (label, command, args) => {
-  const result = spawnSync(command, args, { cwd: ROOT, stdio: "inherit" });
+  const result = spawnSync(command, args, { cwd: ROOT, env: toHookEnv(), stdio: "inherit" });
 
   if (result.error) {
     fail(`${label} did not start: ${result.error.message}`);
@@ -66,7 +70,6 @@ const runHook = () => {
 
   runLint(staged.filter((file) => LINT_FILE.test(file)));
   runFormat(staged.filter((file) => FORMAT_FILE.test(file)));
-  runStep("lint:boundaries", OXLINT, ["-c", "oxlint.boundaries.config.ts", "apps", "packages"]);
 };
 
 try {

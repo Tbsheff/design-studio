@@ -16,7 +16,8 @@
     "gen:routes": "pnpm --filter @design-studio/desktop run gen:routes",
     "format": "pnpm --filter @design-studio/desktop run format",
     "e2e": "pnpm --filter @design-studio/desktop run e2e",
-    "electron:dev": "pnpm --filter @design-studio/desktop run electron:dev"
+    "electron:dev": "pnpm --filter @design-studio/desktop run electron:dev",
+    "check:final": "pnpm run typecheck && pnpm run lint:gate && pnpm --filter @design-studio/desktop run lint:boundaries"
   },
   "devDependencies": {
     "oxfmt": "0.74.0",

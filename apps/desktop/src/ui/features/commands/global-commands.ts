@@ -76,6 +76,7 @@ const findTextCommand = (inProject: boolean): Command => ({
 
 const globalCommands = (openShortcuts: () => void): Command[] => {
   const inProject = uiStore.get().activeProjectId !== null;
+
   const home = (): void =>
     uiStore.set({ activeProjectId: null, screen: "home" });
 

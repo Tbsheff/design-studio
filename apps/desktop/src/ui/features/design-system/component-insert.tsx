@@ -115,6 +115,7 @@ const useCancelOnEscape = (active: boolean, cancel: () => void): void => {
         cancel();
       }
     };
+
     globalThis.addEventListener("keydown", onKey);
 
     return (): void => globalThis.removeEventListener("keydown", onKey);

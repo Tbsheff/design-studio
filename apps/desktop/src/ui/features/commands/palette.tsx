@@ -204,6 +204,7 @@ const usePaletteRows = (
               prompt,
               kind: "html",
             });
+
             void projectsApi.load();
             onClose();
             openProject(project.id);

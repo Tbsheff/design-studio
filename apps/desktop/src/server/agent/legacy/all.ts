@@ -1,6 +1,5 @@
 import { CANVAS_AGENT_TOOLS } from "./canvas.js";
 import { CLOUD_AGENT_TOOLS } from "./cloud.js";
-import { COMMENTS_AGENT_TOOLS } from "./comments.js";
 import { DEVSERVER_AGENT_TOOLS } from "./devserver.js";
 import { DIRECT_EDIT_AGENT_TOOLS } from "./direct-edit.js";
 import { EVENTS_AGENT_TOOLS } from "./events.js";
@@ -14,12 +13,10 @@ import { PUBLISH_AGENT_TOOLS } from "./publish.js";
 import { SESSION_AGENT_TOOLS } from "./session.js";
 import { SHIP_AGENT_TOOLS } from "./ship.js";
 import { STUDIO_AGENT_TOOLS } from "./studio.js";
-import { VERSIONS_AGENT_TOOLS } from "./versions.js";
 
 const LEGACY_AGENT_TOOLS: readonly string[] = [
   ...CANVAS_AGENT_TOOLS,
   ...CLOUD_AGENT_TOOLS,
-  ...COMMENTS_AGENT_TOOLS,
   ...DEVSERVER_AGENT_TOOLS,
   ...DIRECT_EDIT_AGENT_TOOLS,
   ...EVENTS_AGENT_TOOLS,
@@ -33,7 +30,6 @@ const LEGACY_AGENT_TOOLS: readonly string[] = [
   ...SESSION_AGENT_TOOLS,
   ...SHIP_AGENT_TOOLS,
   ...STUDIO_AGENT_TOOLS,
-  ...VERSIONS_AGENT_TOOLS,
 ];
 
 export { LEGACY_AGENT_TOOLS };

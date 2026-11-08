@@ -130,8 +130,6 @@ export type { SdkDriverOptions } from "./sdk-driver.js";
 
 export { askQuestions } from "./clarify.js";
 
-export { COMMENT_STATUSES, describeCommentList } from "./comment-tools.js";
-
 export { isLeanRun, leanContext, leanRunConfig } from "./lean-run.js";
 
 export { AgentSdkClient } from "./agent-sdk-client.js";

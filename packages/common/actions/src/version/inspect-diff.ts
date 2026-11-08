@@ -35,7 +35,13 @@ const ToFieldSchema = VersionIdSchema.annotate({
 
 const inspectDiffVersion = defineAction({
   access: "read",
-  agent: { off: "legacy-agent" },
+  agent: {
+    lean: false,
+    name: "diff_versions",
+    set: "core",
+    short:
+      "Read only. Compare two saved versions of this direction: changed files and lines.",
+  },
   confirm: "none",
   description:
     "Compare two saved versions, the same as Compare in the studio Versions panel. Returns each changed file (path, oldPath for a rename, status added, removed, modified or renamed, additions, deletions, binary) with its unified git diff (cut at 64 KB a file, 512 KB in all, and 100 files; truncated says so). With thumbnails (default) it also returns thumbs: absolute PNG paths of a 1280x800 screenshot of each version, a mask PNG of the changed pixels and changedPct. Read only.",

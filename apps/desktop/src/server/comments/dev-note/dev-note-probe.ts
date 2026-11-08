@@ -19,9 +19,11 @@ const toMeasureExpression = (selector: string): string =>
     }
     const root = getComputedStyle(document.documentElement);
     const known = [...names].filter((name) => root.getPropertyValue(name).trim() !== '');
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;color:rgb(1,2,3);font-size:7.77px';
     const probe = document.createElement('div');
-    probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none';
-    document.body.appendChild(probe);
+    holder.appendChild(probe);
+    document.body.appendChild(holder);
     const read = (prop, value) => {
       probe.style.removeProperty(prop);
       probe.style.setProperty(prop, value);
@@ -29,12 +31,21 @@ const toMeasureExpression = (selector: string): string =>
       probe.style.removeProperty(prop);
       return out;
     };
+    const HINTS = {
+      'background-color': /bg|background|surface|color|fill/i,
+      'border-radius': /radius|round|corner/i,
+      color: /text|fg|foreground|color|ink/i,
+      'font-size': /font|text|size|type/i,
+      gap: /space|spacing|gap|size/i,
+      padding: /space|spacing|pad|size/i,
+    };
     const tokenOf = (prop, value) => {
       const none = read(prop, 'var(--studio-dev-note-none)');
       if (value === none) return null;
-      const hit = known.find((name) => read(prop, 'var(' + name + ')') === value);
-      if (hit) return hit;
-      return null;
+      const hits = known.filter((name) => read(prop, 'var(' + name + ')') === value);
+      const hint = HINTS[prop.startsWith('padding') ? 'padding' : prop];
+      const best = hits.find((name) => hint && hint.test(name));
+      return best || hits[0] || null;
     };
     const measured = (prop, value) => ({ token: tokenOf(prop, value), value });
     const out = {
@@ -56,7 +67,7 @@ const toMeasureExpression = (selector: string): string =>
       },
       radius: measured('border-radius', cs.borderRadius),
     };
-    probe.remove();
+    holder.remove();
     return out;
   })(${JSON.stringify(selector)})`;
 

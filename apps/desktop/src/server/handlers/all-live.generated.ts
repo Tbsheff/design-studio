@@ -8,6 +8,7 @@ import { ComponentVariantLive } from "./component-variant/live.js";
 import { ConnectionLive } from "./connection/live.js";
 import { ContentLive } from "./content/live.js";
 import { CritiqueLive } from "./critique/live.js";
+import { DataModelLive } from "./data-model/live.js";
 import { DevServerLive } from "./dev-server/live.js";
 import { DirectEditLive } from "./direct-edit/live.js";
 import { EffectLive } from "./effect/live.js";
@@ -57,6 +58,7 @@ const ALL_LIVE = {
   connection: ConnectionLive,
   content: ContentLive,
   critique: CritiqueLive,
+  dataModel: DataModelLive,
   devServer: DevServerLive,
   directEdit: DirectEditLive,
   effect: EffectLive,

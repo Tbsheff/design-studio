@@ -8,6 +8,7 @@ import { ComponentVariantEntries } from "../component-variant/handlers.js";
 import { ConnectionEntries } from "../connection/handlers.js";
 import { ContentEntries } from "../content/handlers.js";
 import { CritiqueEntries } from "../critique/handlers.js";
+import { DataModelEntries } from "../data-model/handlers.js";
 import { DevServerEntries } from "../dev-server/handlers.js";
 import { DirectEditEntries } from "../direct-edit/handlers.js";
 import { EffectEntries } from "../effect/handlers.js";
@@ -57,6 +58,7 @@ const ALL_ENTRIES = {
   connection: ConnectionEntries,
   content: ContentEntries,
   critique: CritiqueEntries,
+  dataModel: DataModelEntries,
   devServer: DevServerEntries,
   directEdit: DirectEditEntries,
   effect: EffectEntries,

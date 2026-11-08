@@ -8,6 +8,7 @@ import { ComponentVariantActions } from "./component-variant/index.js";
 import { ConnectionActions } from "./connection/index.js";
 import { ContentActions } from "./content/index.js";
 import { CritiqueActions } from "./critique/index.js";
+import { DataModelActions } from "./data-model/index.js";
 import { DevServerActions } from "./dev-server/index.js";
 import { DirectEditActions } from "./direct-edit/index.js";
 import { EffectActions } from "./effect/index.js";
@@ -57,6 +58,7 @@ const ALL_ACTIONS = {
   connection: ConnectionActions,
   content: ContentActions,
   critique: CritiqueActions,
+  dataModel: DataModelActions,
   devServer: DevServerActions,
   directEdit: DirectEditActions,
   effect: EffectActions,

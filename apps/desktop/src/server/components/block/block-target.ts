@@ -1,6 +1,7 @@
 import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
 import type { InsertTarget } from "@design-studio/contracts/insert";
 
+import { getMainTarget } from "./block-main.js";
 import type { DirectionRun } from "./deps.js";
 import { BlockError } from "./errors.js";
 
@@ -17,8 +18,6 @@ interface FoundElement {
 }
 
 const SOURCE_LOCATION = /^(?<file>.+):(?<line>\d+):(?<col>\d+)$/u;
-
-const DEFAULT_SELECTORS = ["main", "#root > *", "#__next > *", "body"];
 
 const VIEWPORT = { height: 900, width: 1440 } as const;
 
@@ -93,6 +92,19 @@ const toElementTarget = async (
   return { selector: found.selector, source, tag };
 };
 
+const toMainTarget = async (run: DirectionRun): Promise<InsertTarget> => {
+  const { direction, project } = run;
+  const source = await getMainTarget(project, direction.workTree);
+
+  if (source === null) {
+    throw new BlockError(
+      "The page file has no main element. Select a layer, or pass targetSource as file:line:col."
+    );
+  }
+
+  return { source, tag: "main" };
+};
+
 const toBlockTarget = async (
   request: BlockTargetRequest
 ): Promise<InsertTarget> => {
@@ -114,7 +126,7 @@ const toBlockTarget = async (
     return await toElementTarget(run, [selector.trim()], selector);
   }
 
-  return await toElementTarget(run, DEFAULT_SELECTORS, "main");
+  return await toMainTarget(run);
 };
 
 export { toBlockTarget };

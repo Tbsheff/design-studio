@@ -2,6 +2,7 @@ import { Layer } from "effect";
 
 import { AccessibilityLive } from "../handlers/accessibility/live.js";
 import { AnimationLive } from "../handlers/animation/live.js";
+import { BlockLive } from "../handlers/block/live.js";
 import { CanvasLive } from "../handlers/canvas/live.js";
 import { ChartLive } from "../handlers/chart/live.js";
 import { CloudLive } from "../handlers/cloud/live.js";
@@ -66,6 +67,7 @@ const liveLayer = Layer.mergeAll(
   ProjectAccess.layer,
   AccessibilityLive,
   AnimationLive,
+  BlockLive,
   CanvasLive,
   ChartLive,
   CloudLive,

@@ -34,19 +34,21 @@ interface BlockInserted {
   readonly versionId: string;
 }
 
-const toImportLine = (item: JsxInsertPlan["imports"][number]): string =>
-  `import { ${item.name} } from "${item.specifier}";`;
-
 const toAddedImports = (items: JsxInsertPlan["imports"]): string[] => {
-  const lines: string[] = [];
+  const bySpecifier = new Map<string, string[]>();
 
   for (const item of items) {
     if (item.added) {
-      lines.push(toImportLine(item));
+      const names = bySpecifier.get(item.specifier) ?? [];
+
+      bySpecifier.set(item.specifier, [...names, item.name]);
     }
   }
 
-  return lines;
+  return [...bySpecifier].map(
+    ([specifier, names]) =>
+      `import { ${names.join(", ")} } from "${specifier}";`
+  );
 };
 
 const toLayerId = (item: JsxInsertPlan["select"][number]): string =>

@@ -5,10 +5,10 @@ import type { AppChip } from "./app-chip-model.js";
 import type { ContinueCard } from "./continue-card.js";
 import type { ComposerFoot } from "./home-extras.js";
 import type { FilterChips } from "./home-library.js";
-import type { PackCards } from "./home-popovers.js";
 import type { HomeSlashMenu } from "./home-slash.js";
 import type { HomeTemplateGrid } from "./home-templates.js";
 import type { FILTER_EMPTY, listFilteredLibrary } from "./library-model.js";
+import type { PackCards } from "./pack-cards.js";
 import type { ProjectGrid } from "./project-grid.js";
 
 interface LibraryModule {
@@ -54,6 +54,7 @@ const importTrash = async (): Promise<void> => {
 const importPopovers = async (): Promise<void> => {
   await Promise.all([
     import("./home-popovers.js"),
+    import("./pack-cards.js"),
     import("./pack-popover.js"),
     import("./model-popover.js"),
     import("./level-popover.js"),
@@ -90,7 +91,7 @@ const importLibrary = async (): Promise<LibraryModule> => {
     import("./project-grid.js"),
     import("./library-model.js"),
     import("./home-library.js"),
-    import("./home-popovers.js"),
+    import("./pack-cards.js"),
   ]);
 
   return {

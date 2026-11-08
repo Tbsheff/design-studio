@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import type { ReactElement, RefObject } from "react";
 
 import { copy } from "./copy.js";
-import { PackCards } from "./home-popovers.js";
+import { PackCards } from "./pack-cards.js";
 import { Pop } from "./pop.js";
 import type { Close } from "./pop.js";
 import { moveFocusInItems } from "./popover-focus-model.js";

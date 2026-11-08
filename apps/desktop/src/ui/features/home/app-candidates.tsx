@@ -1,9 +1,9 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { AppCandidateRow } from "./app-candidate-row.js";
 import type { AppChip } from "./app-chip-model.js";
 import { copy } from "./copy.js";
-import { AppCandidateRow } from "./home-popovers.js";
 
 interface AppCandidatesProps {
   readonly chip: AppChip;

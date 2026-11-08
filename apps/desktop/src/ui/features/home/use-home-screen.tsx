@@ -11,7 +11,12 @@ import {
 } from "../chat/settings-draft-model.js";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { usePresence } from "../chat/use-presence.js";
-import { findPack, usePacks } from "../design-system/packs.js";
+import {
+  findPack,
+  fontStack,
+  loadPackFonts,
+  usePacks,
+} from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
 import { useHomePrefs } from "./home-prefs-model.js";
 import { useHomeBase } from "./use-home-base.js";
@@ -114,6 +119,6 @@ const useHomeScreen = (openHome: (projectId: string) => void): HomeScreen => {
   };
 };
 
-export { useHomeScreen };
+export { fontStack, loadPackFonts, useHomeScreen };
 
 export type { HomeScreen };

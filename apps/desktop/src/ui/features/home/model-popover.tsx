@@ -4,7 +4,8 @@ import type { ReactElement, RefObject } from "react";
 
 import { copy } from "./copy.js";
 import { MODEL_OPTIONS } from "./home-model.js";
-import { ModelOption, VariationsControl } from "./home-popovers.js";
+import { VariationsControl } from "./home-popovers.js";
+import { ModelOption } from "./model-option.js";
 import type { ModelSettings } from "./model-settings-model.js";
 import { Pop } from "./pop.js";
 import type { Close } from "./pop.js";

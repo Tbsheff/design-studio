@@ -1,5 +1,5 @@
-import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
-import type { RefObject, ReactElement } from "react";
+import { Suspense } from "react";
+import type { ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
@@ -8,13 +8,9 @@ import { frameName } from "../canvas/index.js";
 import { CritiquePanel } from "../critique/index.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { ReviewEntryButton } from "./review-entry-button.js";
+import { ReviewEntryPanel } from "./review-entry-panel.js";
 import { useReviewEntry } from "./use-review-entry.js";
-
-const ReviewPanel = lazy(async () => {
-  const loaded = await import("./review-panel.js");
-
-  return { default: loaded.ReviewPanel };
-});
+import { useReviewSlot } from "./use-review-slot.js";
 
 interface Props {
   projectId: string;
@@ -31,27 +27,8 @@ interface Props {
 const labelOf = (frame: CanvasFrame): string =>
   [frame.label ?? frameName(frame), frame.path].filter(Boolean).join(" · ");
 
-const useSlot = (
-  marker: RefObject<HTMLSpanElement | null>
-): HTMLElement | null => {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-  useLayoutEffect(() => {
-    const found =
-      marker.current
-        ?.closest(".canvas")
-        ?.querySelector<HTMLElement>('[data-topbar-slot="review"]') ?? null;
-
-    if (found !== slot) {
-      setSlot(found);
-    }
-  });
-
-  return slot;
-};
-
 const ReviewEntry = (props: Props): ReactElement => {
-  const marker = useRef<HTMLSpanElement>(null);
-  const slot = useSlot(marker);
+  const { markerRef, slot } = useReviewSlot();
   const { directionId, frame, live, projectId } = props;
   const ask = props.shell?.onAskAgent;
 
@@ -90,9 +67,11 @@ const ReviewEntry = (props: Props): ReactElement => {
     </Suspense>
   );
 
-  const panel = (
-    <Suspense fallback={null}>
-      <ReviewPanel
+  let panel: ReactElement | null = null;
+
+  if (isOpen) {
+    panel = (
+      <ReviewEntryPanel
         review={review}
         frameLabel={labelOf(frame)}
         live={live}
@@ -103,15 +82,15 @@ const ReviewEntry = (props: Props): ReactElement => {
         onClose={close}
       >
         {critique}
-      </ReviewPanel>
-    </Suspense>
-  );
+      </ReviewEntryPanel>
+    );
+  }
 
   return (
     <>
-      <span ref={marker} hidden />
+      <span ref={markerRef} hidden />
       {slot && createPortal(button, slot)}
-      {isOpen && panel}
+      {panel}
     </>
   );
 };

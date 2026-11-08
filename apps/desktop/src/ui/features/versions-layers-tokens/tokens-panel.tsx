@@ -1,6 +1,5 @@
-import type { CompiledTokenEntry } from "@design-studio/contracts";
-import { Icon, PanelHead } from "@design-studio/ui";
-import { Suspense, useCallback, useMemo, useState } from "react";
+import { Icon } from "@design-studio/ui";
+import { Suspense, useState } from "react";
 import type { ReactNode } from "react";
 
 import {
@@ -10,16 +9,13 @@ import {
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { ThemeStrip } from "../theme/index.js";
 import { TokenSweepSlot, tokenSweepCopy } from "../token-sweep/index.js";
-import { COPY } from "./copy.js";
-import { rawToken, shownRaw, tokenSections } from "./token-draft.js";
-import type { RawToken } from "./token-draft.js";
 import { TokensFooter } from "./tokens-footer.js";
-import { TokensHeaderEnd } from "./tokens-header-end.js";
+import { TokensPanelHead } from "./tokens-panel-head.js";
 import { TokensSearch } from "./tokens-search.js";
 import { TokensSections } from "./tokens-sections.js";
 import { TokensSource } from "./tokens-source.js";
-import { useSwatch } from "./use-swatch.js";
 import type { TokenDraft } from "./use-token-draft.js";
+import { useTokenView } from "./use-token-view.js";
 
 const ALERT_SIZE = 13;
 
@@ -32,53 +28,21 @@ interface TokensPanelProps {
 const TokensPanel = ({ tokens, draft, sweep }: TokensPanelProps): ReactNode => {
   const [query, setQuery] = useState("");
   const [sweepOpen, setSweepOpen] = useState(false);
-  const { file } = tokens;
-
-  const bases = useMemo(
-    () =>
-      new Map(
-        tokens.entries.map((entry) => [entry.path, rawToken(file, entry)])
-      ),
-    [tokens.entries, file]
-  );
-
-  const baseOf = useCallback(
-    (entry: CompiledTokenEntry): RawToken =>
-      bases.get(entry.path) ?? rawToken(file, entry),
-    [bases, file]
-  );
-
-  const shownOf = useCallback(
-    (entry: CompiledTokenEntry): RawToken =>
-      shownRaw(baseOf(entry), draft.pending[entry.path]),
-    [baseOf, draft.pending]
-  );
-
-  const sections = useMemo(
-    () => tokenSections(tokens.entries, shownOf, query),
-    [tokens.entries, shownOf, query]
-  );
-
-  const swatchFor = useSwatch(draft.effective?.entries ?? tokens.entries);
+  const { setTheme: handleTheme } = draft;
+  const view = useTokenView(tokens, draft, query);
   const showDark = tokens.mode === "light";
 
   return (
     <div className="tkp">
-      <PanelHead
-        title={COPY.titleTokens}
-        className="ins-header tkp-header"
-        titleClassName="tkp-title"
-      >
-        <TokensHeaderEnd
-          hasSweep={Boolean(sweep)}
-          isSweepOpen={sweepOpen}
-          sweepLabel={tokenSweepCopy.open}
-          sweepTip={tokenSweepCopy.openTip}
-          theme={draft.theme}
-          onSweepOpen={setSweepOpen}
-          onTheme={draft.setTheme}
-        />
-      </PanelHead>
+      <TokensPanelHead
+        hasSweep={Boolean(sweep)}
+        isSweepOpen={sweepOpen}
+        sweepLabel={tokenSweepCopy.open}
+        sweepTip={tokenSweepCopy.openTip}
+        theme={draft.theme}
+        onSweepOpen={setSweepOpen}
+        onTheme={handleTheme}
+      />
       {sweep && sweepOpen && (
         <TokenSweepSlot
           projectId={sweep.projectId}
@@ -111,13 +75,13 @@ const TokensPanel = ({ tokens, draft, sweep }: TokensPanelProps): ReactNode => {
         </p>
       )}
       <TokensSections
-        baseOf={baseOf}
+        baseOf={view.baseOf}
         draft={draft}
         query={query}
-        sections={sections}
-        shownOf={shownOf}
+        sections={view.sections}
+        shownOf={view.shownOf}
         showDark={showDark}
-        swatchFor={swatchFor}
+        swatchFor={view.swatchFor}
       />
       <TokensFooter draft={draft} />
     </div>

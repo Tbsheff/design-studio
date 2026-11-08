@@ -91,7 +91,7 @@ const copy = {
   exporting: "Exporting",
   figmaFrameDidNotLoad: "The Figma frame did not load.",
   fileIsDeleted: "The file is deleted.",
-  fileKeyPlaceholder: "<file key>",
+  fileKeyPlaceholder: "FILE_KEY",
   fileWord: "file",
   files: " files",
   files2: "Files",
@@ -156,7 +156,7 @@ const copy = {
   noUploadLinksWork:
     "No upload: links work only while Design Studio is open on this computer.",
   noViewerCommentsYet: "No viewer comments yet.",
-  nodeIdPlaceholder: "<node id>",
+  nodeIdPlaceholder: "NODE_ID",
   nodes: '{ "nodes": { … } }',
   noindexWord: "noindex",
   noneWord: "None",

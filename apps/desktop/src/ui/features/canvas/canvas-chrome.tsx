@@ -75,6 +75,7 @@ const CanvasChrome = (chromeProps: ChromeProps): ReactElement => {
   const file = useFileMenu(chromeProps, () => setImporting(true));
   useRulersKey();
   const { shell } = chromeProps;
+
   const viewOpen =
     chromeProps.ui.viewRowOpen || chromeProps.view.source.kind === "version";
 

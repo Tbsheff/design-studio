@@ -96,11 +96,13 @@ const CanvasView = (props: ViewProps): ReactElement => {
   const pv = useCanvasPreview(props, textValue);
   const ed = useCanvasEdits(props, textValue, pv);
   const width = useCanvasWiring(props, textValue, pv, ed);
+
   const { findHost, importPage, matrixSlot } = useViewSlots(
     props,
     textValue,
     pv
   );
+
   const CommandsHost = props.commandsHost;
   const { projectId, directionId, kind, source, headVersionId } = props;
 

@@ -128,6 +128,7 @@ const OtherFrames = ({
       const slot = passive.slots.find(
         (item) => item.id === canvasFrameValue.id
       );
+
       const did = slot?.directionId ?? null;
       const wait = waiting(canvasFrameValue.path, did);
       live.set(canvasFrameValue.id, {

@@ -28,8 +28,10 @@ const inViewIds = (stage: HTMLElement | null): string[] => {
     ".artboard[data-frame-id], .canvas-frame[data-frame-id]"
   )) {
     const dOMRect = el.getBoundingClientRect();
+
     const widthValue =
       Math.min(dOMRect.right, box.right) - Math.max(dOMRect.left, box.left);
+
     const heightValue =
       Math.min(dOMRect.bottom, box.bottom) - Math.max(dOMRect.top, box.top);
 

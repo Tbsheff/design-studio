@@ -174,6 +174,7 @@ const ArtboardOverlay = ({
   const anchor = unionBox(
     selection.map((selectionContext) => selectionContext.rect)
   );
+
   const measuring = hover?.altKey && anchor && !hover.fromTree;
 
   const onSelected =

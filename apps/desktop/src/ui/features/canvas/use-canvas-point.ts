@@ -41,6 +41,7 @@ const useShowFrame = (
   return useCallback(
     (frameId: string, selector: string | undefined): boolean => {
       const cur = latest.current;
+
       const frame = cur.frames.layout.frames.find(
         (canvasFrame) => canvasFrame.id === frameId
       );

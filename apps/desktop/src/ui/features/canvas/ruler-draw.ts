@@ -51,6 +51,7 @@ const stepFor = (zoom: number): number =>
 
 const colorsOf = (el: HTMLElement): Colors => {
   const css = getComputedStyle(el);
+
   const valueValue = (name: string): string =>
     css.getPropertyValue(name).trim();
 
@@ -162,6 +163,7 @@ const drawRange = (axisDraw5: AxisDraw): void => {
   const [lo, hi] = axisDraw5.range.map((value3) =>
     toScreen(axisDraw5, value3)
   ) as [number, number];
+
   axisDraw5.ctx.fillStyle = axisDraw5.colors.mark;
   axisDraw5.ctx.globalAlpha = 0.18;
 

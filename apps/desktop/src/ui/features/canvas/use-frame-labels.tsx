@@ -167,7 +167,9 @@ const useFrameLabels = (labelInput4: LabelInput) => {
     const variation = did
       ? labelInput4.directions?.variationOf(did)
       : undefined;
+
     const isActive = frame.id === labelInput4.activeId;
+
     const index = labelInput4.frames.layout.frames.findIndex(
       (canvasFrameValue) => canvasFrameValue.id === frame.id
     );

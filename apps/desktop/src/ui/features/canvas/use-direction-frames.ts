@@ -79,9 +79,11 @@ const useDirectionUrls = (
 const useDirectionFrames = (options: Options) => {
   const tokens = useRef(new Map<string, string>());
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
+
   const passive = options.frames.filter(
     (canvasFrame) => canvasFrame.id !== options.activeId
   );
+
   const known = new Set(options.directions?.map((direction) => direction.id));
 
   const resolved = passive.map((canvasFrameValue) => {
@@ -106,6 +108,7 @@ const useDirectionFrames = (options: Options) => {
   ].sort();
 
   const urls = useDirectionUrls(options.projectId, others);
+
   const heads = new Map(
     options.directions?.map((directionValue) => [
       directionValue.id,

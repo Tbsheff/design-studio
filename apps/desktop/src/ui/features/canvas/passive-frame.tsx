@@ -199,7 +199,9 @@ const StablePassiveFrame = memo(
   }) => {
     const cur = entries.current.get(id);
 
-    if (!cur) return null;
+    if (!cur) {
+      return null;
+    }
     const live = (): PassiveProps => entries.current.get(id) ?? cur;
 
     return (

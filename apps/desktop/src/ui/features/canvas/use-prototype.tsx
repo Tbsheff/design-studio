@@ -91,6 +91,7 @@ const usePrototype = (options: Options) => {
       clear.current();
     }
   }, [options.active.id, on]);
+
   const startId = playStartOf(
     file,
     options.frames,
@@ -196,8 +197,10 @@ const usePrototype = (options: Options) => {
   };
 
   const play = (): void => setPlaying(true);
+
   const single =
     options.selection.length === 1 ? options.selection[0] : undefined;
+
   const selected = on
     ? linkOfSelection(states, single, options.active.id)
     : null;

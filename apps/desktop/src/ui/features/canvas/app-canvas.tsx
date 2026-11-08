@@ -68,7 +68,7 @@ const useServerFrames = (
   }, [ready]);
   useEffect(() => {
     if (!ready || loaded) {
-      return undefined;
+      return;
     }
 
     const timer = window.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
@@ -77,7 +77,7 @@ const useServerFrames = (
   }, [ready, loaded]);
   useEffect(() => {
     if (!enabled) {
-      return undefined;
+      return;
     }
 
     return listen((message) => {
@@ -294,17 +294,21 @@ const useAppCanvas = (
     Boolean(appCanvasInput.app),
     addRoute
   );
+
   const redirect = useRedirectNote(
     appCanvasInput.listen,
     Boolean(appCanvasInput.app),
     appCanvasInput.resetKey
   );
+
   const status = useAppStatus(appCanvasInput.projectId);
+
   const loaded = useServerFrames(
     status,
     appCanvasInput.listen,
     Boolean(appCanvasInput.app)
   );
+
   const [routeDismissed, setRouteDismissed] = useState(false);
   const [hidden, setHidden] = useState(() => readHiddenRedirects());
 

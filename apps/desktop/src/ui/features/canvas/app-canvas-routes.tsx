@@ -118,7 +118,7 @@ const useRedirectNote = (
   useEffect(() => setNote(null), [resetKey]);
   useEffect(() => {
     if (!enabled) {
-      return undefined;
+      return;
     }
 
     return listen((message) => {

@@ -168,8 +168,8 @@ const useFileMenu = (chromePropsValue: ChromeProps, onImport: () => void) => {
           label: framePreset.label,
           run: () =>
             addAndShow(chromePropsValue, {
-              width: framePreset.width,
               height: framePreset.height,
+              width: framePreset.width,
             }),
         })),
         ...chromePropsValue.importPage.items(

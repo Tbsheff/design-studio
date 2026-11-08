@@ -8,7 +8,7 @@ import { copy } from "./copy.js";
 const loadFields = () => import("../../app/shell/settings-fields.js");
 
 const SettingsFields = lazy(() =>
-  loadFields().then((m) => ({ default: m.SettingsFields }))
+  loadFields().then((entry) => ({ default: entry.SettingsFields }))
 );
 
 interface Props {
@@ -23,9 +23,9 @@ interface Props {
 const NewProjectAdvanced = (props: Props): ReactElement => {
   const [open, setOpen] = useState(props.isInitiallyOpen === true);
 
-  const pickFile = (e: ChangeEvent<HTMLInputElement>): void => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  const pickFile = (changeEvent: ChangeEvent<HTMLInputElement>): void => {
+    const file = changeEvent.target.files?.[0];
+    changeEvent.target.value = "";
 
     if (!file) {
       return;
@@ -41,7 +41,7 @@ const NewProjectAdvanced = (props: Props): ReactElement => {
     <details
       className="advanced"
       open={open}
-      onToggle={(e) => setOpen(e.currentTarget.open)}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary onPointerEnter={() => loadFields()} onFocus={() => loadFields()}>
         <Icon name="chevronRight" size={14} />
@@ -62,7 +62,7 @@ const NewProjectAdvanced = (props: Props): ReactElement => {
             className="mono"
             rows={5}
             value={props.designMd}
-            onChange={(e) => props.onDesignMd(e.target.value)}
+            onChange={(eventArg) => props.onDesignMd(eventArg.target.value)}
             placeholder={copy.brandPrimaryColor0b6e4fHeadings}
             spellCheck={false}
           />

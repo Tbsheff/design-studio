@@ -83,9 +83,9 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   const chooser = useFolderChooser(setFormError);
   const homeRef = useRef<HTMLDivElement>(null);
 
-  const slashKeys = useRef<((e: KeyboardEvent<HTMLElement>) => boolean) | null>(
-    null
-  );
+  const slashKeys = useRef<
+    ((keyboardEvent: KeyboardEvent<HTMLElement>) => boolean) | null
+  >(null);
 
   const { workspaces, addFolder } = useWorkspaces(setFormError);
   const [questions, setQuestions] = useState<ClarifyQuestion[] | null>(null);
@@ -214,8 +214,8 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     }
   };
 
-  const create = async (e: FormEvent): Promise<void> => {
-    e.preventDefault();
+  const create = async (formEvent: FormEvent): Promise<void> => {
+    formEvent.preventDefault();
     const text = prompt.trim();
 
     if (busy !== null) {
@@ -284,7 +284,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     const { level } = picked;
 
     if (level) {
-      setSettingsDraft((d) => ({ ...d, defaultLevel: level }));
+      setSettingsDraft((detail) => ({ ...detail, defaultLevel: level }));
     }
 
     focusPrompt(null, true);
@@ -292,7 +292,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
 
   const changeKind = (next: ProjectKind): void => {
     setKind(next);
-    setDesigns((n) => Math.min(n, maxVariationsFor(next)));
+    setDesigns((count) => Math.min(count, maxVariationsFor(next)));
   };
 
   const modelValue = modelSummary(settingsDraft.model, designCount);
@@ -302,7 +302,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
   );
 
   const openAdvanced = (): void => {
-    setAdvancedOpened((n) => n + 1);
+    setAdvancedOpened((countArg) => countArg + 1);
     focusIn(".advanced summary");
   };
 
@@ -330,7 +330,7 @@ function useHomeScreen(onOpen: (projectId: string) => void) {
     level: settingsDraft.defaultLevel,
     model: settingsDraft.model,
     onLevel: (defaultLevel) =>
-      setSettingsDraft((d) => ({ ...d, defaultLevel })),
+      setSettingsDraft((detailArg) => ({ ...detailArg, defaultLevel })),
     onModel: (model) => setSettingsDraft((d) => ({ ...d, model })),
     onMore: openAdvanced,
   };

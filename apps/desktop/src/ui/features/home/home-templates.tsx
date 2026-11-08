@@ -14,7 +14,7 @@ interface HomeTemplate {
   readonly level?: RunLevel;
 }
 
-const S = {
+const State = {
   fill: "none",
   stroke: "currentColor",
   strokeLinecap: "round",
@@ -31,7 +31,7 @@ const mark = {
 } as const;
 
 const Art = ({ children }: { readonly children: ReactNode }): ReactElement => (
-  <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true" {...S}>
+  <svg width="56" height="48" viewBox="0 0 56 48" aria-hidden="true" {...State}>
     {children}
   </svg>
 );

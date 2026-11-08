@@ -223,7 +223,7 @@ const DevServer = ({
           placeholder={copy.httpLocalhost3000}
           spellCheck={false}
           autoComplete="off"
-          onKeyDown={(e) => keepEnter(e)}
+          onKeyDown={(eventArg) => keepEnter(eventArg)}
           onChange={(e) => onChange({ url: e.target.value })}
         />
       )}
@@ -231,7 +231,7 @@ const DevServer = ({
         type="button"
         className="ui-menu-item"
         aria-expanded={envOpen}
-        onClick={() => setEnvOpen((v) => !v)}
+        onClick={() => setEnvOpen((valueArg) => !valueArg)}
       >
         <Icon name={envOpen ? "chevronDown" : "chevronRight"} size={14} />
         <span>Environment for next dev</span>

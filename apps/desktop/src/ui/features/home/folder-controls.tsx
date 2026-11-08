@@ -50,8 +50,8 @@ const PastePath = ({
   return (
     <form
       className="paste-path"
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(event) => {
+        event.preventDefault();
         if (value.trim()) {
           onSubmit(value.trim());
         }
@@ -60,7 +60,7 @@ const PastePath = ({
       <input
         aria-label={label}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(eventArg) => setValue(eventArg.target.value)}
         placeholder={copy.usersMeProjects}
         spellCheck={false}
         autoFocus
@@ -215,8 +215,8 @@ const FolderRow = ({
     setEditing(false);
     window.requestAnimationFrame(() => renameRef.current?.focus());
   };
-  const save = async (e: FormEvent): Promise<void> => {
-    e.preventDefault();
+  const save = async (formEvent: FormEvent): Promise<void> => {
+    formEvent.preventDefault();
     const next = label.trim();
     if (!next || next === folder.label) {
       setLabel(folder.label);

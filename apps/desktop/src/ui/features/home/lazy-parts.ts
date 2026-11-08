@@ -3,7 +3,7 @@ import { lazy } from "react";
 const clarifyChunk = import("../chat/clarify-form.js");
 
 const ClarifyForm = lazy(() =>
-  clarifyChunk.then((m) => ({ default: m.ClarifyForm }))
+  clarifyChunk.then((entry) => ({ default: entry.ClarifyForm }))
 );
 
 const libraryChunk = import("./home-library.js");
@@ -16,7 +16,9 @@ const HomeTrash = lazy(loadTrash);
 
 const loadPops = () => import("./home-popovers.js");
 
-const PlusMenu = lazy(() => loadPops().then((m) => ({ default: m.PlusMenu })));
+const PlusMenu = lazy(() =>
+  loadPops().then((entryArg) => ({ default: entryArg.PlusMenu }))
+);
 
 const PackPopover = lazy(() =>
   loadPops().then((m) => ({ default: m.PackPopover }))

@@ -11,13 +11,15 @@ import { useExample } from "./use-example.js";
 
 interface PromptAreaProps {
   readonly value: string;
-  readonly onChange: (v: string) => void;
-  readonly onSubmit: (e: FormEvent) => void;
-  readonly onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void;
+  readonly onChange: (valueArg: string) => void;
+  readonly onSubmit: (formEvent: FormEvent) => void;
+  readonly onPaste: (
+    clipboardEvent: ClipboardEvent<HTMLTextAreaElement>
+  ) => void;
   readonly describedBy?: string | undefined;
   readonly menuKeys: {
     readonly current:
-      | ((e: KeyboardEvent<HTMLTextAreaElement>) => boolean)
+      | ((keyboardEvent: KeyboardEvent<HTMLTextAreaElement>) => boolean)
       | null;
   };
   readonly placeholder: string | null;
@@ -53,15 +55,19 @@ const PromptArea = ({
       rows={2}
       autoFocus
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(event) => onChange(event.target.value)}
       onPaste={onPaste}
-      onKeyDown={(e) => {
-        if (menuKeys.current?.(e)) {
+      onKeyDown={(eventArg) => {
+        if (menuKeys.current?.(eventArg)) {
           return;
         }
 
-        if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-          onSubmit(e);
+        if (
+          eventArg.key === "Enter" &&
+          !eventArg.shiftKey &&
+          !eventArg.nativeEvent.isComposing
+        ) {
+          onSubmit(eventArg);
         }
       }}
       placeholder={placeholder ?? example}

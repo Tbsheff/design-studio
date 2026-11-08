@@ -91,7 +91,9 @@ function useLastRun(project: Project): LastRun | null {
     let live = true;
     listRecentRuns(project.id, 5)
       .then((items) => {
-        const run = [...items].sort((a, b) => b.startedAt - a.startedAt)[0];
+        const run = [...items].sort(
+          (first, second) => second.startedAt - first.startedAt
+        )[0];
 
         if (live && run) {
           setLast({

@@ -10,7 +10,7 @@ function useExample(paused: boolean, fixed: boolean): string {
     }
 
     const timer = globalThis.setInterval(
-      () => setIndex((n) => (n + 1) % EXAMPLES.length),
+      () => setIndex((count) => (count + 1) % EXAMPLES.length),
       EXAMPLE_MS
     );
 

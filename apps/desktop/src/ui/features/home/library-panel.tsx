@@ -32,7 +32,7 @@ const Library = ({
   readonly packs: PacksState;
   readonly pack: PackSummary | null;
   readonly query: string;
-  readonly onQuery: (q: string) => void;
+  readonly onQuery: (queryArg: string) => void;
   readonly searchRef: RefObject<HTMLInputElement | null>;
   readonly listError: string | null;
   readonly onPickPack: (id: string | null) => void;
@@ -45,7 +45,7 @@ const Library = ({
 
   const latest = [...projects]
     .filter((project) => !project.designSystemFor)
-    .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+    .sort((first, second) => second.updatedAt - first.updatedAt)[0];
 
   const systems = filter === "systems";
 

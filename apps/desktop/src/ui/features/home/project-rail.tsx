@@ -379,7 +379,7 @@ const OpenRail = ({
           placeholder={copy.find}
           aria-label={copy.findAProject}
           spellCheck={false}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(eventArg) => setFilter(eventArg.target.value)}
           onKeyDown={(e) => {
             const first = shown[0];
 

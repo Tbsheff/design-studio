@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
-function useModule<T>(load: () => Promise<T>, enabled: boolean): T | null {
-  const [mod, setMod] = useState<T | null>(null);
+function useModule<Value>(
+  load: () => Promise<Value>,
+  enabled: boolean
+): Value | null {
+  const [mod, setMod] = useState<Value | null>(null);
   useEffect(() => {
     if (!enabled) {
       return;

@@ -163,7 +163,7 @@ const useAppHealth = (projects: Project[] | null): Map<string, AppHealth> => {
     }
 
     const timer = globalThis.setTimeout(
-      () => setTick((n) => n + 1),
+      () => setTick((count) => count + 1),
       HEALTH_POLL_MS
     );
 

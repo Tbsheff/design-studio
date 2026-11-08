@@ -68,7 +68,10 @@ const useWorkspaces = (onError: (message: string | null) => void) => {
       list === null ? list : { ...list, folders: change(list.folders) }
     );
 
-  const attempt = async <T>(task: () => Promise<T>, failed: T): Promise<T> => {
+  const attempt = async <Value>(
+    task: () => Promise<Value>,
+    failed: Value
+  ): Promise<Value> => {
     onError(null);
 
     try {

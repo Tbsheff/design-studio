@@ -8,7 +8,7 @@ export { ShareListener } from "./share-listener.js";
 
 export { ShareStore } from "./share-store.js";
 
-export { SpacingStore, SpacingWriter } from "../spacing/index.js";
+export { SpacingStore, SpacingWriter } from "./spacing/index.js";
 
 export type {
   GetSpacingCommand,
@@ -18,9 +18,9 @@ export type {
   SpacingStep,
   SpacingStoreApi,
   SpacingWriterApi,
-} from "../spacing/index.js";
+} from "./spacing/index.js";
 
-export { StackingStore, StackingWriter } from "../stacking/index.js";
+export { StackingStore, StackingWriter } from "./stacking/index.js";
 
 export type {
   GetStackingCommand,
@@ -28,21 +28,21 @@ export type {
   StackingChange,
   StackingStoreApi,
   StackingWriterApi,
-} from "../stacking/index.js";
+} from "./stacking/index.js";
 
-export { PageWriter } from "../page-import/index.js";
+export { PageWriter } from "./page-import/index.js";
 
-export type { ImportPageCommand, PageWriterApi } from "../page-import/index.js";
+export type { ImportPageCommand, PageWriterApi } from "./page-import/index.js";
 
-export { ImageSearchStore, ImageSearchWriter } from "../image-search/index.js";
+export { ImageSearchStore, ImageSearchWriter } from "./image-search/index.js";
 
 export type {
   ImageSearchStoreApi,
   ImageSearchWriterApi,
   InsertImageSearchCommand,
-} from "../image-search/index.js";
+} from "./image-search/index.js";
 
-export { PatternStore, PatternWriter } from "../pattern/index.js";
+export { PatternStore, PatternWriter } from "./pattern/index.js";
 
 export type {
   CreatePatternCommand,
@@ -52,7 +52,7 @@ export type {
   PatternStoreApi,
   PatternWriterApi,
   StoredPattern,
-} from "../pattern/index.js";
+} from "./pattern/index.js";
 
 export { DirectEditStore } from "./direct-edit/direct-edit-store.js";
 

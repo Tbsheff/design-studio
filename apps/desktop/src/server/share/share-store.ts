@@ -1,7 +1,7 @@
-import { Context, Effect, Layer } from "effect";
-
 import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
 import type { ShareList } from "@design-studio/actions/share/schema";
+import { Context, Effect, Layer } from "effect";
+
 import { loadConfig } from "../platform/config/index.js";
 import { attemptShare } from "./share-attempt.js";
 import type { ShareError } from "./share-attempt.js";

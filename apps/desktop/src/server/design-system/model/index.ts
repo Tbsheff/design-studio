@@ -13,7 +13,7 @@ export {
   readDesignSystemState,
 } from "../state.js";
 
-export type { DesignSystemPromptContext } from "../state.js";
+export type { DesignSystemPromptContext } from "../../../shared/server-ports.js";
 
 export {
   designSystemLinkProblem,

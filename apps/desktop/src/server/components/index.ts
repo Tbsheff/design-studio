@@ -35,11 +35,10 @@ export type { ImportNeed } from "./import-plan.js";
 
 export type {
   ComponentPreviews,
+  ComponentService,
   PreviewResult,
   PreviewTarget,
-} from "./preview.js";
-
-export type { ComponentService } from "./thumbs.js";
+} from "../../shared/component-ports.js";
 
 export type { PropStoreApi, PropWriterApi } from "./prop/index.js";
 

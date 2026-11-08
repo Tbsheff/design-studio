@@ -27,6 +27,11 @@ import type {
 import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
 import { LINKS_FILE } from "@design-studio/contracts/links";
 
+import type {
+  SessionEndResult,
+  SessionSpan,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import {
   baseTitle,
   isRestoreKind,
@@ -37,6 +42,7 @@ import {
   isOwnEdit,
   stampOrigin,
 } from "../platform/call-origin/index.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import {
   BadRequestError,
   ConflictError,
@@ -53,12 +59,6 @@ import {
 } from "../platform/git/index.js";
 import type { CommitInfo, GitScope, TreeEntry } from "../platform/git/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import type {
-  ServerConfig,
-  SessionEndResult,
-  SessionSpan,
-  VersionStore,
-} from "../types.js";
 import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";
 import {

@@ -13,10 +13,11 @@ import path from "node:path";
 import { DEFAULT_SETTINGS } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type { VersionStore } from "../../shared/server-ports.js";
+import { projectStorePorts } from "../design-system/project-ports.js";
 import { openEventBus } from "../events/index.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
-import type { ServerConfig, VersionStore } from "../types.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import { createProjectStore } from "./projects.js";
 import type { StudioProjectStore } from "./projects.js";
 import { makeTempConfig } from "./testConfig.js";

@@ -12,6 +12,7 @@ import {
   type ElementVariantInfo,
 } from "@design-studio/contracts/element-variants";
 
+import type { VersionStore } from "../../shared/server-ports.js";
 import {
   htmlElementSpan,
   jsxElementSpan,
@@ -24,7 +25,6 @@ import {
   type DirectEditDeps,
 } from "../direct-edit/index.js";
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
-import type { VersionStore } from "../types.js";
 import { elementOf, hash } from "./scope-check.js";
 
 function lineAt(text: string, offset: number): number {

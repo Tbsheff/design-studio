@@ -30,7 +30,7 @@ const RUNTIME_ENTRIES = [
   "apps/desktop/src/server/agent-tools/**",
   SERVER_MAIN,
   "apps/desktop/src/server/thumbnail-worker.ts",
-  "apps/desktop/src/server/worker-serve.ts",
+  "apps/desktop/src/server/platform/process/worker-serve.ts",
   "apps/desktop/src/server/preview/route-graph-worker.ts",
   "apps/desktop/src/server/publish/worker-build.ts",
 ];

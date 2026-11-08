@@ -1,6 +1,6 @@
+import type { VersionStore } from "../../shared/server-ports.js";
 import { NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { VersionStore } from "../types.js";
 
 const VERSION_LIMIT = 50;
 

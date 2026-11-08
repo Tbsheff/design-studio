@@ -21,7 +21,6 @@ import type {
 import { parse as parseColor } from "culori";
 
 import {
-  DirectEditError,
   assertCanEdit,
   editSummary,
   parseDirectEditRequest,
@@ -29,11 +28,12 @@ import {
   publishVersion,
   writeAtomic,
 } from "../direct-edit/index.js";
+import { DirectEditError } from "../events/index.js";
 import type {
   DirectEditDeps,
   EditFileChange,
-  PlannedEdit,
-} from "../direct-edit/index.js";
+  PlannedDirectEdit as PlannedEdit,
+} from "../events/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { compileTokens, cssVarFor, parseTokenFile } from "./compile.js";
 import { DESIGN_MD_FILE, writeFileAtomic } from "./packs.js";

@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { runVisionAccessibility } from "@design-studio/actions/accessibility/run-vision";
 import { Effect } from "effect";
 
-import { VisionRunner } from "../../direct-edit/index.js";
+import { VisionRunner } from "../../review/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type RunVisionAccessibilityInput = Input<typeof runVisionAccessibility>;

@@ -1,6 +1,6 @@
 import type { Hono } from "hono";
 
-import type { FixApp } from "../mcp/index.js";
+import type { FixApp } from "../../shared/mcp-ports.js";
 import type { KeepVariant } from "../variations/routes.js";
 import type { AppContext } from "./app-context.js";
 import { fixApp } from "./doctor-routes.js";

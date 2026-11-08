@@ -6,9 +6,9 @@ import type {
 } from "@design-studio/contracts";
 
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
+import type { ProbeRect } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
-import type { ProbeRect } from "../preview/quality-probe.js";
 import type {
   CommandRuleRole,
   CommandRuleScope,

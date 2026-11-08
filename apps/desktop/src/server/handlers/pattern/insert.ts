@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { insertPattern } from "@design-studio/actions/pattern/insert";
 import { Effect } from "effect";
 
-import { PatternWriter } from "../../direct-edit/index.js";
+import { PatternWriter } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InsertPatternInput = Input<typeof insertPattern>;

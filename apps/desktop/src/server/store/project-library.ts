@@ -19,18 +19,18 @@ import type {
 } from "@design-studio/contracts";
 import { nanoid } from "nanoid";
 
+import type {
+  AgentRunner,
+  PreviewService,
+  VersionStore,
+} from "../../shared/server-ports.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import {
   BadRequestError,
   ConflictError,
   NotFoundError,
   assertSafeId,
 } from "../platform/errors/index.js";
-import type {
-  AgentRunner,
-  PreviewService,
-  ServerConfig,
-  VersionStore,
-} from "../types.js";
 import { bindProjectLibraryRuntime } from "./project-library-runtime.js";
 import type { StudioProjectStore } from "./projects.js";
 

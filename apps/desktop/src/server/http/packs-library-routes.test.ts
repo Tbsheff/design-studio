@@ -15,15 +15,16 @@ import type {
 import { PACK_FILE } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type { AgentRunner } from "../../shared/server-ports.js";
+import { projectStorePorts } from "../design-system/project-ports.js";
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
 import { createEventBus } from "../events/index.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import { createProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
 import { createFakePreview } from "../testing/fakes.js";
-import type { AgentRunner, ServerConfig } from "../types.js";
 import { createApp } from "./app.js";
 
 let config: ServerConfig;

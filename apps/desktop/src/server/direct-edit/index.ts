@@ -2,21 +2,24 @@ export { DirectEditError, parseDirectEditRequest } from "./engine/index.js";
 
 export * from "./commit/index.js";
 
-export { writeAndCommitAll } from "./commit/batch.js";
+export { writeAndCommitAll, applyDirectEditBatch } from "./commit/batch.js";
 
-export { bindDirectEditRuntime } from "./direct-edit-core.js";
+export {
+  attemptDirectEdit,
+  bindDirectEditRuntime,
+  directEditRuntimeOf,
+} from "./direct-edit-core.js";
 
-export type { DirectEditRuntime } from "./direct-edit-core.js";
-
-export { DirectEditStore } from "./direct-edit-store.js";
-
-export { DirectEditWriter } from "./direct-edit-writer.js";
+export type {
+  DirectEditFailure,
+  DirectEditRuntime,
+} from "./direct-edit-core.js";
 
 export { toBody, toFields, toRef } from "./direct-edit-ref.js";
 
-export { directEditRuntimeOf } from "./direct-edit-core.js";
+export type { EditBody } from "./direct-edit-ref.js";
 
-export { previewOriginOf, thumbOf } from "./direct-edit-insert-ops.js";
+export { toPreviewOrigin } from "./preview-origin.js";
 
 export {
   parseSetImage,
@@ -24,6 +27,7 @@ export {
   planChanged,
   planSetImage,
   writeImagePlan,
+  applySetImage,
 } from "./commit/image.js";
 
 export type { ImageBytes } from "./commit/image-source.js";
@@ -43,166 +47,21 @@ export type { DirectEditStatusFailure } from "./direct-edit-status-failure.js";
 export type { DirectionIds, DirectionRun } from "./direction-task.js";
 
 export {
-  IntegrationStore,
-  IntegrationWriter,
-  getRunIntegrations,
-} from "../integration/index.js";
+  applyClearText,
+  applyInsertJsx,
+  planInsertJsx,
+} from "./commit/jsx-insert.js";
 
-export type {
-  CreateIntegrationCommand,
-  IntegrationListCommand,
-  IntegrationPage,
-  IntegrationStoreApi,
-  IntegrationWriterApi,
-  RunIntegrations,
-  StoredIntegration,
-  UpdateIntegrationCommand,
-} from "../integration/index.js";
+export { applyVector } from "./commit/vector-ops.js";
 
-export { ThemeStore, ThemeWriter } from "../theme/index.js";
+export { commitDirectEdit } from "./commit/apply.js";
 
-export type {
-  ApplyThemeCommand,
-  CreateThemeCommand,
-  ListThemeCommand,
-  SetThemeCommand,
-  ThemePage,
-  ThemeStoreApi,
-  ThemeWriterApi,
-} from "../theme/index.js";
+export { applyArrange, isArrangeBody } from "./commit/arrange.js";
 
-export { EffectStore, EffectWriter } from "../effect/index.js";
+export { applyStyleReplace } from "./commit/replace.js";
 
-export type {
-  CreateEffectCommand,
-  DeleteEffectCommand,
-  EffectStoreApi,
-  EffectWriterApi,
-  GetEffectCommand,
-  ListEffectCommand,
-  SetEffectCommand,
-} from "../effect/index.js";
+export { applyStructureEdit } from "./commit/structure-apply.js";
 
-export { FillStore, FillWriter } from "../fill/index.js";
+export { isDirectEditBatch, isStructureEdit } from "./engine/validate.js";
 
-export type {
-  FillChange,
-  FillStoreApi,
-  FillWriterApi,
-  GetFillCommand,
-  SetFillCommand,
-} from "../fill/index.js";
-
-export { GridStore, GridWriter } from "../grid/index.js";
-
-export type {
-  GetGridCommand,
-  GridChange,
-  GridStoreApi,
-  GridWriterApi,
-  SetGridCommand,
-  SetGridItemCommand,
-} from "../grid/index.js";
-
-export { MotionStore, MotionWriter } from "../motion/index.js";
-
-export type {
-  GetMotionCommand,
-  MotionChange,
-  MotionStoreApi,
-  MotionWriterApi,
-  SetMotionCommand,
-} from "../motion/index.js";
-
-export { SpacingStore, SpacingWriter } from "../spacing/index.js";
-
-export type {
-  GetSpacingCommand,
-  SetSpacingCommand,
-  SpacingBox,
-  SpacingChange,
-  SpacingStep,
-  SpacingStoreApi,
-  SpacingWriterApi,
-} from "../spacing/index.js";
-
-export { StackingStore, StackingWriter } from "../stacking/index.js";
-
-export type {
-  GetStackingCommand,
-  SetStackingCommand,
-  StackingChange,
-  StackingStoreApi,
-  StackingWriterApi,
-} from "../stacking/index.js";
-
-export { TextSearchStore, TextSearchWriter } from "../text-search/index.js";
-
-export type {
-  InspectTextCommand,
-  TextSearchStoreApi,
-  TextSearchWriterApi,
-  UpdateTextCommand,
-} from "../text-search/index.js";
-
-export {
-  AccessibilityStore,
-  AccessibilityWriter,
-  VisionRunner,
-} from "../accessibility/index.js";
-
-export type {
-  AccessibilityStoreApi,
-  AccessibilityWriterApi,
-  InspectAccessibilityCommand,
-  SetAccessibilityCommand,
-} from "../accessibility/index.js";
-
-export { TextStyleStore, TextStyleWriter } from "../text-styles/index.js";
-
-export type {
-  ApplyTextStyleCommand,
-  CreateTextStyleCommand,
-  DetachTextStyleCommand,
-  InspectTextStyleCommand,
-  TextStyleStoreApi,
-  TextStyleWriterApi,
-} from "../text-styles/index.js";
-
-export { PageWriter } from "../page-import/index.js";
-
-export type { ImportPageCommand, PageWriterApi } from "../page-import/index.js";
-
-export { ImageSearchStore, ImageSearchWriter } from "../image-search/index.js";
-
-export type {
-  ImageSearchStoreApi,
-  ImageSearchWriterApi,
-  InsertImageSearchCommand,
-} from "../image-search/index.js";
-
-export { PatternStore, PatternWriter } from "../pattern/index.js";
-
-export type {
-  CreatePatternCommand,
-  InsertPatternCommand,
-  PatternDeleted,
-  PatternInserted,
-  PatternStoreApi,
-  PatternWriterApi,
-  StoredPattern,
-} from "../pattern/index.js";
-
-export { FixtureStore, FixtureWriter } from "../fixture/index.js";
-
-export type {
-  CreateFixtureCommand,
-  DeleteFixtureCommand,
-  FixtureCreated,
-  FixtureDeleted,
-  FixturePage,
-  FixtureStoreApi,
-  FixtureWriterApi,
-  ListFixtureCommand,
-  StoredFixture,
-} from "../fixture/index.js";
+export { applySetProps, applyVariantClasses } from "./commit/props.js";

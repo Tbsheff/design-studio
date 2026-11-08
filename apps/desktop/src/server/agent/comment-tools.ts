@@ -5,6 +5,7 @@ import { Schema } from "effect";
 
 import { describeComment, filterComments } from "../../shared/comments.js";
 import type { CommentFilter } from "../../shared/comments.js";
+import type { AgentRunContext } from "../../shared/server-ports.js";
 import {
   toLooseTool,
   toOptional,
@@ -12,7 +13,6 @@ import {
 } from "../agent-tools/index.js";
 import { canvasFrameOf } from "../comments/frame.js";
 import type { CommentStore } from "../store/comments.js";
-import type { AgentRunContext } from "../types.js";
 import { wrapUntrusted } from "./user-message.js";
 
 export const COMMENT_STATUSES = [

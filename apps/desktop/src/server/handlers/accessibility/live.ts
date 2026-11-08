@@ -4,7 +4,7 @@ import {
   AccessibilityStore,
   AccessibilityWriter,
   VisionRunner,
-} from "../../direct-edit/index.js";
+} from "../../review/index.js";
 
 const AccessibilityLive = Layer.mergeAll(
   AccessibilityStore.layer,

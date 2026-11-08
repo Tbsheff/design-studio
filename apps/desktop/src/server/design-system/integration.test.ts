@@ -20,6 +20,12 @@ import type {
 } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type {
+  AgentRunContext,
+  AgentRunner,
+  RunHandle,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import { designSystemBeforeCommit } from "../agent/index.js";
 import { createRunLifecycle } from "../agent/lifecycle.js";
 import type { RunDriver } from "../agent/lifecycle.js";
@@ -30,9 +36,10 @@ import {
 import { buildSystemPrompt } from "../agent/prompt.js";
 import { buildUserText } from "../agent/user-message.js";
 import { createEventBus } from "../events/index.js";
+import type { EventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import {
   recompileOnTokensChange,
   withDesignSystemWarning,
@@ -45,14 +52,6 @@ import {
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
 import { createFakePreview } from "../testing/fakes.js";
-import type {
-  AgentRunContext,
-  AgentRunner,
-  EventBus,
-  RunHandle,
-  ServerConfig,
-  VersionStore,
-} from "../types.js";
 import {
   designSystemLinkProblem,
   hasTokensLink,
@@ -64,6 +63,7 @@ import {
   createPackRegistry,
   loadAllPacks,
 } from "./packs.js";
+import { projectStorePorts } from "./project-ports.js";
 import { loadDesignSystemPromptContext } from "./state.js";
 import { syncDesignSystem } from "./sync.js";
 

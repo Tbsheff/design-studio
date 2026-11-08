@@ -1,14 +1,14 @@
 import type { HookCallback, Options } from "@anthropic-ai/claude-agent-sdk";
 import type { PermissionDecision } from "@design-studio/contracts";
 
-import { getRunIntegrations } from "../direct-edit/index.js";
-import type { RunIntegrations } from "../direct-edit/index.js";
 import { logError } from "../platform/logger/index.js";
 import {
   toIntegrationAccess,
   toIntegrationName,
 } from "../platform/tool-policy/index.js";
 import type { ToolPolicy } from "../platform/tool-policy/index.js";
+import { getRunIntegrations } from "../publish/index.js";
+import type { RunIntegrations } from "../publish/index.js";
 import { createIntegrationGate } from "./integration-gate.js";
 import type { PermissionAsk } from "./types.js";
 

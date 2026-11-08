@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { updateText } from "@design-studio/actions/text/update";
 import { Effect } from "effect";
 
-import { TextSearchWriter } from "../../direct-edit/index.js";
+import { TextSearchWriter } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type UpdateTextInput = Input<typeof updateText>;

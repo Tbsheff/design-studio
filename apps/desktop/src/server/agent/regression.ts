@@ -2,7 +2,10 @@ import { writeFile } from "node:fs/promises";
 
 import type { query } from "@anthropic-ai/claude-agent-sdk";
 
-import type { AgentRunContext, PreviewService } from "../types.js";
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import { runScreens } from "./check-tool.js";
 import { criticOutPrefix, regressionPairs, runCritic } from "./critic.js";
 import type { CriticIssue } from "./critic.js";

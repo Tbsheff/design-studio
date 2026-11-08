@@ -17,10 +17,10 @@ import {
 } from "@design-studio/contracts/style-search";
 
 import { hexOf } from "../../../shared/color-near.js";
+import type { PreviewService } from "../../../shared/server-ports.js";
 import { tokenFieldState } from "../../../shared/token-match.js";
 import { readDesignSystemState } from "../../design-system/state.js";
 import { onProbePage } from "../../preview/probe-page.js";
-import type { PreviewService } from "../../types.js";
 
 const HEADLESS_SCAN = "window.__studioStyleScan";
 const ROWS_MAX = 60;

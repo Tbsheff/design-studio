@@ -12,6 +12,11 @@ import {
 
 import { changedLineRanges } from "../../shared/line-diff.js";
 import type { ScreenPlan } from "../../shared/run-levels.js";
+import type {
+  RenderPage,
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import { stateOfFrame } from "../app/frame-state.js";
 import { listAppRoutes } from "../app/routes.js";
 import {
@@ -20,10 +25,8 @@ import {
 } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { withPagePath } from "../export/source.js";
-import type { RenderPage } from "../preview/render-backend.js";
 import { screenSignatureExpression } from "../preview/screens-probe.js";
 import { exploreScreens, replayExpression } from "../preview/screens.js";
-import type { AgentRunContext, PreviewService } from "../types.js";
 
 export interface RunScreen {
   key?: string;

@@ -11,7 +11,7 @@ import type {
 } from "@design-studio/contracts";
 import type { AppDoctorResult } from "@design-studio/contracts/app-doctor";
 
-import type { EventBus } from "../types.js";
+import type { EventBus } from "../events/index.js";
 import { DevServerPids } from "./dev-server-pids.js";
 import { diagnose, probeRoot, sameDoctor } from "./doctor.js";
 import type { DoctorProbe } from "./doctor.js";

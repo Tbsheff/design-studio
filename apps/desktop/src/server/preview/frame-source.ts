@@ -1,6 +1,10 @@
 import type { Direction, Project, Version } from "@design-studio/contracts";
 import { cleanExportPath } from "@design-studio/contracts/export";
 
+import type {
+  PreviewService,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import {
   firstVersionState,
   firstVersionWaitText,
@@ -13,7 +17,6 @@ import {
 import { resolveSource } from "../project-source/index.js";
 import type { ExportSource, SourceDeps } from "../project-source/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService, VersionStore } from "../types.js";
 
 const LIVE_VERSION_ID = "live";
 

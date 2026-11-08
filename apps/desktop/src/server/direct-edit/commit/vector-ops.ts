@@ -17,6 +17,7 @@ import {
   type VectorRequest,
   type VectorResult,
 } from "../../../shared/vector.js";
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
@@ -31,7 +32,6 @@ import { elementText, jsxAttrName, svgText } from "../engine/vector-snippet.js";
 import { isHtmlFile, vectorDoc, type VNode } from "../engine/vector-source.js";
 import { writeAndCommitAll } from "./batch.js";
 import { patchSource, resolveSource } from "./edit-source.js";
-import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
 import { setHtmlAttrs, setJsxAttrs, type AttrChanges } from "./image-attrs.js";
 import { planInsertJsx } from "./jsx-insert.js";
 import { assertCanEdit, publishVersion } from "./publish.js";

@@ -1,6 +1,7 @@
 import type { Direction, Project } from "@design-studio/contracts";
 import type { Context, Hono } from "hono";
 
+import type { AgentRunner, VersionStore } from "../../shared/server-ports.js";
 import type { LiveDrafts } from "../design-system/draft-live.js";
 import { createFetcher } from "../design-system/extract/draft.js";
 import type { Fetcher } from "../design-system/extract/url.js";
@@ -9,7 +10,6 @@ import { bindPackRuntime } from "../design-system/ops/library-core.js";
 import type { LoadedPack } from "../design-system/packs.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { AgentRunner, VersionStore } from "../types.js";
 
 interface DesignSystemRouteDeps {
   allowLoopback: boolean;

@@ -20,14 +20,14 @@ import {
   withRunTask,
   type ResolvedRunConfig,
 } from "../../shared/run-levels.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
-import type { StudioRuntime } from "../main/runtime.js";
 import { buildEnv } from "../platform/config/index.js";
+import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
-import type { PreviewService } from "../types.js";
 import { createActionAsk, createBashGate, type ToolGate } from "./ask-gate.js";
 import { captureBaselineFindings } from "./baseline-findings.js";
 import { toBaselineGate } from "./baseline-gate.js";

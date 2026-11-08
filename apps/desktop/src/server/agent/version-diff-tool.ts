@@ -8,9 +8,9 @@ import {
   toSdkFieldSet,
   toToolInput,
 } from "../agent-tools/index.js";
+import { toVersionThumbName } from "../preview/thumbs/index.js";
 import { diffVersionFiles } from "../store/version-diff.js";
 import { runGit } from "../store/versions.js";
-import { versionThumbName } from "../thumbnails.js";
 
 const DIFF_VERSIONS_TEXT =
   "Compare two saved versions, the same as Compare in the studio Versions panel. Returns each changed file (path, oldPath for a rename, status added, removed, modified or renamed, additions, deletions, binary) with its unified git diff (cut at 64 KB a file, 512 KB in all, and 100 files; truncated says so). With thumbnails (default) it also returns thumbs: absolute PNG paths of a 1280x800 screenshot of each version, a mask PNG of the changed pixels and changedPct. Read only.";
@@ -70,7 +70,7 @@ export async function runDiffVersions(
   const projectDir = path.dirname(deps.runsDir);
 
   const thumb = (id: string): string | null => {
-    const file = path.join(projectDir, "thumbs", versionThumbName(id));
+    const file = path.join(projectDir, "thumbs", toVersionThumbName(id));
 
     return existsSync(file) ? file : null;
   };

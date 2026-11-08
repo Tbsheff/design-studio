@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { setAccessibility } from "@design-studio/actions/accessibility/set";
 import { Effect } from "effect";
 
-import { AccessibilityWriter } from "../../direct-edit/index.js";
+import { AccessibilityWriter } from "../../review/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetAccessibilityInput = Input<typeof setAccessibility>;

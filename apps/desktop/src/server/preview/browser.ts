@@ -13,18 +13,8 @@ import type {
 } from "@design-studio/contracts";
 
 import type { RenderClip } from "../../shared/render-rpc.js";
-import { projectOfUrl } from "../events/index.js";
-import { dropOutsideApp } from "./app-source-filter.js";
-import { runAxe, runSharedAxe } from "./axe.js";
-import type { AxeViolation } from "./axe.js";
-import { CaptureCache, cacheKey } from "./capture-cache.js";
-import type { Stamps } from "./capture-cache.js";
-import { waitForPage } from "./capture.js";
-import { layoutProbeExpression } from "./layout-probe.js";
-import type { LayoutProbeResult } from "./layout-probe.js";
-import { WarmPages } from "./page-pool.js";
-import { PeekPages } from "./peek-pages.js";
 import type {
+  AxeViolation,
   InspectResult,
   PeekOptions,
   RenderBackend,
@@ -32,9 +22,20 @@ import type {
   RenderPage,
   TileRequest,
   TileResult,
-} from "./ports.js";
+  ProbeRect,
+} from "../../shared/server-ports.js";
+import { projectOfUrl } from "../events/index.js";
+import { dropOutsideApp } from "./app-source-filter.js";
+import { runAxe, runSharedAxe } from "./axe.js";
+import { CaptureCache, cacheKey } from "./capture-cache.js";
+import type { Stamps } from "./capture-cache.js";
+import { waitForPage } from "./capture.js";
+import { layoutProbeExpression } from "./layout-probe.js";
+import type { LayoutProbeResult } from "./layout-probe.js";
+import { WarmPages } from "./page-pool.js";
+import { PeekPages } from "./peek-pages.js";
 import { qualityProbeExpression } from "./quality-probe.js";
-import type { ProbeRect, QualityProbeResult } from "./quality-probe.js";
+import type { QualityProbeResult } from "./quality-probe.js";
 import {
   duplicateFindings,
   genericFindings,
@@ -50,7 +51,7 @@ export type {
   RenderCheckOptions,
   TileRequest,
   TileResult,
-} from "./ports.js";
+} from "../../shared/server-ports.js";
 
 const QUIET_EXPRESSION = `new Promise((resolve) => {
   let timer = 0;

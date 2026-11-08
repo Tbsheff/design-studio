@@ -7,9 +7,9 @@ import type {
   VersionMeta,
 } from "@design-studio/contracts";
 
+import type { VersionStore } from "../../../shared/server-ports.js";
 import { bindSaveLanes } from "../../events/index.js";
 import { logError } from "../../platform/logger/index.js";
-import type { VersionStore } from "../../types.js";
 
 interface SaveDeps {
   versions: VersionStore;

@@ -9,7 +9,7 @@ import type {
 } from "@design-studio/contracts/design-rules";
 import type { ReviewFix } from "@design-studio/contracts/review";
 
-import type { RenderPage } from "../preview/render-backend.js";
+import type { RenderPage } from "../../shared/server-ports.js";
 import type { Draft } from "../review/checks.js";
 import { parseLoc } from "../review/checks.js";
 import { rulesProbeExpression } from "./probe.js";

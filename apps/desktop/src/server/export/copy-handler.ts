@@ -4,12 +4,12 @@ import type {
   ExportFrame,
 } from "@design-studio/contracts/export";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import {
   defaultTailwindTheme,
   projectTailwindTheme,
 } from "../direct-edit/tailwind/index.js";
 import type { TailwindTheme } from "../direct-edit/tailwind/index.js";
-import type { PreviewService } from "../types.js";
 import { compact, readTree, renderHtml, renderTailwind } from "./copy-code.js";
 import type { StyledNode } from "./copy-code.js";
 import { reactKit, renderReact } from "./copy-react.js";

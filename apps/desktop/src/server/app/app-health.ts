@@ -4,7 +4,7 @@ import path from "node:path";
 import type { Project } from "@design-studio/contracts";
 
 import type { AppHealth } from "../../shared/found-apps.js";
-import type { AppControl } from "../types.js";
+import type { AppControl } from "../../shared/server-ports.js";
 import { frameworkOf, readPackage } from "./detect.js";
 import { nextBinary } from "./dev-server.js";
 import { installHint } from "./install-hint.js";

@@ -1,11 +1,11 @@
 import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
 import type { ExportFrame } from "@design-studio/contracts/export";
 
+import type { PreviewService } from "../../shared/server-ports.js";
 import { tailwindClassesFor } from "../direct-edit/engine/index.js";
 import type { TailwindTheme } from "../direct-edit/tailwind/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { waitForPage } from "../preview/page-capture/index.js";
-import type { PreviewService } from "../types.js";
 import { withPagePath } from "./source.js";
 
 interface StyledNode {

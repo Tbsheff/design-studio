@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { createTextStyle } from "@design-studio/actions/text-style/create";
 import { Effect } from "effect";
 
-import { TextStyleWriter } from "../../direct-edit/index.js";
+import { TextStyleWriter } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type CreateTextStyleInput = Input<typeof createTextStyle>;

@@ -6,6 +6,7 @@ import { DEFAULT_SETTINGS } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { withRunTask, resolveRunConfig } from "../../shared/run-levels.js";
+import type { AgentRunContext } from "../../shared/server-ports.js";
 import {
   TWEAKS_FILE,
   TWEAKS_TOOL,
@@ -17,7 +18,6 @@ import {
 import { evaluateToolUse, permittedToolNames } from "../agent/permissions.js";
 import { buildRunLevelBlock } from "../agent/run-level.js";
 import { runDefineTweaks } from "../agent/tools.js";
-import type { AgentRunContext } from "../types.js";
 import { MOCK_TWEAK_CONTROLS, withMockTweakStyles } from "./mock-tweaks.js";
 import { parseControls, parseTweaksText } from "./schema.js";
 import { readTweaksState } from "./store.js";

@@ -1,4 +1,4 @@
-import type { AgentRunContext } from "../types.js";
+import type { AgentRunContext } from "../../shared/server-ports.js";
 import { loadRepoContext } from "./repo-context.js";
 
 export const getRunContextShape = {};

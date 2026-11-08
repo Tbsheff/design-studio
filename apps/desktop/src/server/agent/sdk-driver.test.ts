@@ -15,6 +15,7 @@ import type {
 } from "@design-studio/contracts";
 import { afterEach, describe, expect, it } from "vitest";
 
+import type { AgentRunContext } from "../../shared/server-ports.js";
 import { draftDesignMd, writeTestDraft } from "../design-system/test-draft.js";
 import {
   createFakeBus,
@@ -23,7 +24,6 @@ import {
   createFakeVersions,
   createTempProject,
 } from "../testing/fakes.js";
-import type { AgentRunContext } from "../types.js";
 import type { DriverOutcome } from "./lifecycle.js";
 import { createRunLifecycle } from "./lifecycle.js";
 import { canChangePreview } from "./permissions.js";

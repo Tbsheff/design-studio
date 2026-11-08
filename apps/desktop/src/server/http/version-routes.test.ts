@@ -5,9 +5,15 @@ import type { Project, Version } from "@design-studio/contracts";
 import { PNG } from "pngjs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type {
+  AgentRunner,
+  PreviewService,
+  VersionStore,
+} from "../../shared/server-ports.js";
+import { projectStorePorts } from "../design-system/project-ports.js";
 import { createEventBus } from "../events/index.js";
 import { eventRunner } from "../main/event-runner.js";
-import { projectStorePorts } from "../main/project-ports.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import type { TileRequest } from "../preview/browser.js";
 import {
   createProjectStore,
@@ -21,12 +27,6 @@ import {
   createThumbnailService,
   type ThumbnailService,
 } from "../thumbnails.js";
-import type {
-  AgentRunner,
-  PreviewService,
-  ServerConfig,
-  VersionStore,
-} from "../types.js";
 import { createApp } from "./app.js";
 
 let config: ServerConfig;

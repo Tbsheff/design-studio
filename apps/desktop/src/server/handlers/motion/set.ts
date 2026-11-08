@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { setMotion } from "@design-studio/actions/motion/set";
 import { Effect } from "effect";
 
-import { MotionWriter } from "../../direct-edit/index.js";
+import { MotionWriter } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetMotionInput = Input<typeof setMotion>;

@@ -1,4 +1,4 @@
-import type { EventBus } from "../types.js";
+import type { EventBus } from "../events/index.js";
 import { createLinksService } from "./links/links.js";
 import { createCanvasCore } from "./service.js";
 import type { CanvasService, ProjectDirOf } from "./service.js";

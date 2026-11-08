@@ -8,12 +8,9 @@ import type {
   VersionMeta,
 } from "@design-studio/contracts";
 
-import {
-  DirectEditError,
-  assertCanEdit,
-  publishVersion,
-} from "../../direct-edit/index.js";
-import type { DirectEditDeps } from "../../direct-edit/index.js";
+import { assertCanEdit, publishVersion } from "../../direct-edit/index.js";
+import { DirectEditError } from "../../events/index.js";
+import type { DirectEditDeps } from "../../events/index.js";
 import { restoreSnapshots } from "../create-token.js";
 import { writeFileAtomic } from "../packs.js";
 import { parseTokenChanges } from "../token-changes.js";

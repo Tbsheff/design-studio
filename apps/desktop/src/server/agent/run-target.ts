@@ -12,12 +12,15 @@ import {
 import type { FrameStatesView } from "@design-studio/contracts/frame-state";
 
 import type { RunTarget, TargetFrame } from "../../shared/run-target.js";
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
 import { listAppRoutes, matchRouteFile } from "../app/routes.js";
 import type { CanvasService } from "../canvas/index.js";
 import { findFrame } from "../canvas/index.js";
 import { withPagePath } from "../export/source.js";
-import type { AgentRunContext, PreviewService } from "../types.js";
 import { pageOwner, probeLayout } from "./layout-region.js";
 
 export type { RunTarget, TargetFrame } from "../../shared/run-target.js";

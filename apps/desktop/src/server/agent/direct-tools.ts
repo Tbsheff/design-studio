@@ -8,6 +8,10 @@ import {
 } from "@design-studio/contracts";
 import { Schema } from "effect";
 
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import { kebabKeys } from "../../shared/style-keys.js";
 import {
   toDefaulted,
@@ -70,7 +74,6 @@ import {
   toProbeTarget,
 } from "../page-probe/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
-import type { AgentRunContext, PreviewService } from "../types.js";
 import { evaluateToolUse } from "./permissions.js";
 import { editPageUrl } from "./run-target.js";
 

@@ -3,8 +3,13 @@ import { userInfo } from "node:os";
 import type { Project } from "@design-studio/contracts";
 import type { Context, Hono } from "hono";
 
+import type {
+  ThumbnailService,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import { askQuestions } from "../agent/index.js";
 import { buildEnv } from "../platform/config/index.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import type { DefaultFolderStore } from "../store/default-folder.js";
 import {
@@ -17,8 +22,6 @@ import {
 } from "../store/index.js";
 import type { ProjectLibrary } from "../store/project-library.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { ThumbnailService } from "../thumbnails.js";
-import type { ServerConfig, VersionStore } from "../types.js";
 
 interface HomeRouteDeps {
   config: ServerConfig;

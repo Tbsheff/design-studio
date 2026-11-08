@@ -10,9 +10,9 @@ import type {
 } from "@design-studio/contracts/export";
 
 import type { RenderClip } from "../../shared/render-rpc.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
-import type { PreviewService } from "../types.js";
 import { expandScrollRoot } from "./scroll-root.js";
 
 const MAX_OUTPUT_PIXELS = 80_000_000;

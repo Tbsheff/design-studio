@@ -15,3 +15,20 @@ export { PublishStore } from "./publish-store.js";
 export { createKeyVault } from "./vault.js";
 
 export type { KeyVault } from "./vault.js";
+
+export {
+  IntegrationStore,
+  IntegrationWriter,
+  getRunIntegrations,
+} from "./integration/index.js";
+
+export type {
+  CreateIntegrationCommand,
+  IntegrationListCommand,
+  IntegrationPage,
+  IntegrationStoreApi,
+  IntegrationWriterApi,
+  RunIntegrations,
+  StoredIntegration,
+  UpdateIntegrationCommand,
+} from "./integration/index.js";

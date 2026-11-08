@@ -15,6 +15,13 @@ import type {
 
 import { withLofi } from "../../shared/lofi.js";
 import { levelOf } from "../../shared/run-levels.js";
+import type {
+  AgentRunner,
+  PreviewService,
+  RunHandle,
+  ThumbnailService,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import {
   isLeanRun,
   leanContext,
@@ -50,13 +57,15 @@ import {
 } from "../direct-edit/commit/index.js";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import { onPlannedEdit, toEditEvent } from "../events/index.js";
-import type { StudioRuntime } from "../main/runtime.js";
+import type { EventBus } from "../events/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
-import { insertPatternNames } from "../pattern/index.js";
 import { REPO_ROOT } from "../platform/config/index.js";
+import type { ServerConfig } from "../platform/config/index.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import { resourcePath, resourcesDir } from "../platform/resources/index.js";
+import type { StudioRuntime } from "../platform/studio-runtime/index.js";
+import { insertPatternNames } from "../share/pattern/index.js";
 import { createCommentStore } from "../store/comments.js";
 import type { CommentStore } from "../store/comments.js";
 import { createDefaultFolderStore } from "../store/default-folder.js";
@@ -68,22 +77,13 @@ import type { StudioProjectStore } from "../store/projects.js";
 import { createVersionNames } from "../store/version-names.js";
 import { createWorkspaceStore } from "../store/workspaces.js";
 import type { WorkspaceStore } from "../store/workspaces.js";
-import { createThumbnailService } from "../thumbnails.js";
-import type { ThumbnailService } from "../thumbnails.js";
-import type {
-  AgentRunner,
-  EventBus,
-  PreviewService,
-  RunHandle,
-  ServerConfig,
-  VersionStore,
-} from "../types.js";
 import { freshSessionPatch } from "./app-project-files.js";
 import { readMentionFiles } from "./mentions.js";
 import { createFolderPicker } from "./pick-folder.js";
 import type { FolderPicker } from "./pick-folder.js";
 import { rulesLoader } from "./rules-routes.js";
 import type { StreamTracker } from "./stream-routes.js";
+import { unavailableThumbnails } from "./unavailable-thumbnails.js";
 
 const STOP_WAIT_MS = 10_000;
 
@@ -207,8 +207,7 @@ const createAppContext = (deps: AppDeps) => {
 
   const versionNames = createVersionNames((pid) => projects.projectDir(pid));
 
-  const thumbnails =
-    deps.thumbnails ?? createThumbnailService({ preview, projects, versions });
+  const thumbnails = deps.thumbnails ?? unavailableThumbnails;
 
   const projectsRoot = path.join(config.dataDir, "projects");
 

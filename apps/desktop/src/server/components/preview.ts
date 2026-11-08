@@ -10,9 +10,12 @@ import {
 } from "@design-studio/contracts";
 import type { PropValue } from "@design-studio/contracts/props";
 
+import type {
+  ComponentPreviews,
+  PreviewTarget,
+} from "../../shared/component-ports.js";
+import type { RenderPage, PreviewService } from "../../shared/server-ports.js";
 import { humanize, propsFor } from "../direct-edit/components-ops/index.js";
-import type { RenderPage } from "../preview/render-backend.js";
-import type { PreviewService } from "../types.js";
 import { loadLibrary, type LibraryEntry } from "./insert-list.js";
 import {
   bundlePreview,
@@ -30,32 +33,7 @@ const HEAD_TTL_MS = 120_000;
 const SETTLE_MS = 120;
 const BLOCK_STYLE = "width:max-content;min-width:200px;max-width:320px";
 
-export interface PreviewTarget {
-  id?: string | undefined;
-  name?: string | undefined;
-  file?: string | undefined;
-  props?: Record<string, PropValue> | undefined;
-}
-
-export interface PreviewComponent {
-  id: string;
-  name: string;
-  file: string;
-}
-
 type Outcome = { png: Buffer } | { reason: string; transient?: boolean };
-
-export type PreviewResult =
-  | {
-      ok: true;
-      png: Buffer;
-      hash: string;
-      cached: boolean;
-      component: PreviewComponent;
-      props: Record<string, PropValue>;
-      text: string | null;
-    }
-  | { ok: false; reason: string; component: PreviewComponent | null };
 
 interface Job {
   hash: string;
@@ -80,14 +58,6 @@ interface Session {
   jobs: Job[];
   running: boolean;
   head: { value: Head; at: number } | null;
-}
-
-export interface ComponentPreviews {
-  render(
-    project: Project,
-    direction: Direction,
-    target: PreviewTarget
-  ): Promise<PreviewResult>;
 }
 
 export class PreviewTargetError extends Error {}

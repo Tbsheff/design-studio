@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { getGrid } from "@design-studio/actions/grid/get";
 import { Effect } from "effect";
 
-import { GridStore } from "../../direct-edit/index.js";
+import { GridStore } from "../../style-scope/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetGridInput = Input<typeof getGrid>;

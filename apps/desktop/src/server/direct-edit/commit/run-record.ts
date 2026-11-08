@@ -4,8 +4,8 @@ import type { Direction, Project, Version } from "@design-studio/contracts";
 import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
 import { LINKS_FILE } from "@design-studio/contracts/links";
 
-import type { VersionStore } from "../../types.js";
-import type { EditFileChange } from "./edit-types.js";
+import type { VersionStore } from "../../../shared/server-ports.js";
+import type { EditFileChange } from "../../events/index.js";
 import type { EditHistory } from "./history.js";
 
 const MAX_RUN_FILES = 50;

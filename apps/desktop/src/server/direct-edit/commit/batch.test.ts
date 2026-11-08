@@ -9,10 +9,16 @@ import type {
 } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type {
+  AgentRunner,
+  VersionStore,
+} from "../../../shared/server-ports.js";
+import { projectStorePorts } from "../../design-system/project-ports.js";
 import { createEventBus } from "../../events/index.js";
+import type { EventBus } from "../../events/index.js";
 import { createApp } from "../../http/app.js";
 import { eventRunner } from "../../main/event-runner.js";
-import { projectStorePorts } from "../../main/project-ports.js";
+import type { ServerConfig } from "../../platform/config/index.js";
 import {
   createProjectStore,
   type StudioProjectStore,
@@ -20,12 +26,6 @@ import {
 import { makeTempConfig } from "../../store/testConfig.js";
 import { createVersionStore } from "../../store/versions.js";
 import { createFakePreview } from "../../testing/fakes.js";
-import type {
-  AgentRunner,
-  EventBus,
-  ServerConfig,
-  VersionStore,
-} from "../../types.js";
 import { parseDirectEditBatch } from "../engine/validate.js";
 import type { EditRecord } from "../index.js";
 import { applyDirectEditBatch } from "./batch.js";

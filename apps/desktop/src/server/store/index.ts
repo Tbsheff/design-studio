@@ -57,8 +57,6 @@ export type { CommandRuleStore } from "./command-rules.js";
 
 export type { DefaultFolderStore } from "./default-folder.js";
 
-export type { StudioProjectStore } from "./projects.js";
-
 export {
   SAMPLE_NAME,
   SAMPLE_STARTER_ID,
@@ -67,3 +65,11 @@ export {
   copyStarter,
   findStarter,
 } from "./starters.js";
+
+export { createLayerLockStore } from "./layer-locks.js";
+
+export type { LayerLockStore } from "./layer-locks.js";
+
+export { createProjectStore } from "./projects.js";
+
+export type { ProjectStorePorts, StudioProjectStore } from "./projects.js";

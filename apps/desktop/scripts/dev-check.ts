@@ -29,13 +29,10 @@ import {
 import { chromium } from "playwright-core";
 import type { Frame, Page } from "playwright-core";
 
+import type { EventBus } from "../src/server/events/index.js";
+import type { ServerConfig } from "../src/server/platform/config/index.js";
 import { createPreviewService } from "../src/server/preview/index.js";
-import type {
-  EventBus,
-  ProjectStore,
-  ServerConfig,
-  VersionStore,
-} from "../src/server/types.js";
+import type { ProjectStore, VersionStore } from "../src/shared/server-ports.js";
 
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

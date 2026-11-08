@@ -1,8 +1,9 @@
-import { Effect } from "effect";
-
 import type { Input } from "@design-studio/actions/_core/action";
 import type { importFigmaDirectEdit } from "@design-studio/actions/direct-edit/import-figma";
-import { DirectEditWriter, toFields, toRef } from "../../direct-edit/index.js";
+import { Effect } from "effect";
+
+import { toFields, toRef } from "../../direct-edit/index.js";
+import { DirectEditWriter } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ImportFigmaDirectEditInput = Input<typeof importFigmaDirectEdit>;

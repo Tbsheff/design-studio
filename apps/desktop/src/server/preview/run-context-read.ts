@@ -1,6 +1,6 @@
 import type { Direction, Project } from "@design-studio/contracts";
 
-import { loadRepoContext } from "../agent/index.js";
+import { loadRepoContext } from "../agent/repo-context.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 interface RunContextQuery {

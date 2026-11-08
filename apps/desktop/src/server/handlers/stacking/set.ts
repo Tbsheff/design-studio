@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { setStacking } from "@design-studio/actions/stacking/set";
 import { Effect } from "effect";
 
-import { StackingWriter } from "../../direct-edit/index.js";
+import { StackingWriter } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetStackingInput = Input<typeof setStacking>;

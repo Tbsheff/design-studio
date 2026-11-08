@@ -3,7 +3,10 @@ import {
   DOCTOR_NOTE,
 } from "@design-studio/contracts/app-doctor";
 
-import type { AgentRunContext, PreviewService } from "../types.js";
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];

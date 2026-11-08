@@ -5,6 +5,7 @@ import path from "node:path";
 import type { Context, Hono } from "hono";
 
 import type { FolderInspection, FolderKind } from "../../shared/open-app.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 import { projectHealth, viteNeedsInstall } from "../app/app-health.js";
 import {
   detectApp,
@@ -20,7 +21,6 @@ import { findTokenFile } from "../design-system/app-tokens/detect.js";
 import { revealInFinder } from "../export/editors.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService } from "../types.js";
 
 const MAX_PATH = 4096;
 const PREFERRED_APP = /(^|\/)(web|dashboard|app|site|frontend)$/;

@@ -6,6 +6,10 @@ import { PackExists } from "@design-studio/actions/pack/errors/pack-exists";
 import type { Direction, PackSummary, Project } from "@design-studio/contracts";
 import { Effect } from "effect";
 
+import type {
+  AgentRunner,
+  VersionStore,
+} from "../../../shared/server-ports.js";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import { loadConfig } from "../../platform/config/index.js";
 import {
@@ -13,7 +17,6 @@ import {
   requireBound,
 } from "../../platform/runtime-slot/index.js";
 import type { StudioProjectStore } from "../../store/projects.js";
-import type { AgentRunner, VersionStore } from "../../types.js";
 import type { LiveDrafts } from "../draft-live.js";
 import type { Fetcher } from "../extract/url.js";
 import type { PackLibrary } from "../library.js";

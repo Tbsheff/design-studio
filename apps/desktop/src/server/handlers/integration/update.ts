@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { updateIntegration } from "@design-studio/actions/integration/update";
 import { Effect } from "effect";
 
-import { IntegrationWriter } from "../../direct-edit/index.js";
+import { IntegrationWriter } from "../../publish/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type UpdateIntegrationInput = Input<typeof updateIntegration>;

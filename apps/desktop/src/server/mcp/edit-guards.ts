@@ -2,18 +2,19 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Direction, Project } from "@design-studio/contracts";
-import type { AppFixResult } from "@design-studio/contracts/app-doctor";
 
+import type { FixApp } from "../../shared/mcp-ports.js";
+import type { AgentRunner } from "../../shared/server-ports.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { warmKit } from "../components/props-service.js";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import type { EditRecorder } from "../direct-edit/index.js";
+import type { EventBus } from "../events/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { EditError } from "../page-probe/index.js";
 import { LOCAL_ORG_ID, isOrgInScope, toOrgScope } from "../store/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
-import type { AgentRunner, EventBus } from "../types.js";
 import type { KeepVariant } from "../variations/routes.js";
 import type { ActivityLog } from "./activity.js";
 import { APPROVAL_TIMEOUT_MS } from "./approvals.js";
@@ -35,11 +36,6 @@ export interface EditDeps extends ExportDeps {
   keepVariant: KeepVariant;
   layerLocks: LayerLockStore | null;
 }
-
-export type FixApp = (
-  projectId: string,
-  kind: unknown
-) => Promise<AppFixResult>;
 
 export { EditError } from "../page-probe/index.js";
 
@@ -196,3 +192,5 @@ export function oneLine(text: string, max = 80): string {
 
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
+
+export type { FixApp };

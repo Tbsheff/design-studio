@@ -1,4 +1,4 @@
-import type { PreviewService } from "../types.js";
+import type { PreviewService } from "../../shared/server-ports.js";
 import { runEditElement, runSetToken } from "./direct-tools.js";
 import type { DriverInput } from "./lifecycle.js";
 import { mockCanvasTool } from "./mock-canvas.js";

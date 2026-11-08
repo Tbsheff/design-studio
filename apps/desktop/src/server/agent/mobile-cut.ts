@@ -1,6 +1,6 @@
+import type { PreviewService } from "../../shared/server-ports.js";
 import { appSourceBody } from "../page-probe/index.js";
 import { onProbePage } from "../preview/probe-page.js";
-import type { PreviewService } from "../types.js";
 
 const MOBILE = { height: 844, width: 390 };
 const MAX_CUT = 30;

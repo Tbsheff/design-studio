@@ -15,11 +15,11 @@ import {
 } from "@design-studio/contracts";
 
 import type {
-  EventBus,
   PreviewService,
   ProjectStore,
   VersionStore,
-} from "../types.js";
+} from "../../shared/server-ports.js";
+import type { EventBus } from "../events/index.js";
 
 interface FakeBus extends EventBus {
   events: StudioEvent[];

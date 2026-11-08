@@ -1,6 +1,6 @@
 import { Layer } from "effect";
 
-import { TextStyleStore, TextStyleWriter } from "../../direct-edit/index.js";
+import { TextStyleStore, TextStyleWriter } from "../../style-scope/index.js";
 
 const TextStyleLive = Layer.mergeAll(
   TextStyleStore.layer,

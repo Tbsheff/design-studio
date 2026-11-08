@@ -3,9 +3,9 @@ import path from "node:path";
 
 import type { DesignComment, RunSummary } from "@design-studio/contracts";
 
+import type { AgentRunner, RunHandle } from "../../shared/server-ports.js";
 import { logError } from "../platform/logger/index.js";
 import type { CommentStore } from "../store/comments.js";
-import type { AgentRunner, RunHandle } from "../types.js";
 
 interface RunWatcher {
   readonly reconcile: (

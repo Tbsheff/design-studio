@@ -6,7 +6,8 @@ import type { Direction, Project } from "@design-studio/contracts";
 import { watch } from "chokidar";
 import type { FSWatcher } from "chokidar";
 
-import type { EventBus, ProjectStore, VersionStore } from "../types.js";
+import type { ProjectStore, VersionStore } from "../../shared/server-ports.js";
+import type { EventBus } from "../events/index.js";
 
 const IGNORED_SEGMENTS = new Set([
   "node_modules",

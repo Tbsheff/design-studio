@@ -1,15 +1,18 @@
 import { Layer, ManagedRuntime } from "effect";
 
 import type { ServerConfig } from "../platform/config/index.js";
+import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import { toAgentLayer } from "./agent-runner.js";
 import type { AgentServices } from "./agent-runner.js";
 import { liveLayer } from "./live-layer.js";
 import type { LiveServices } from "./live-layer.js";
 
-type StudioRuntime = ManagedRuntime.ManagedRuntime<
-  AgentServices | LiveServices,
-  never
->;
+declare module "../platform/studio-runtime/index.js" {
+  interface StudioServiceGroups {
+    readonly agent: AgentServices;
+    readonly live: LiveServices;
+  }
+}
 
 const buildRuntime = (config: ServerConfig): StudioRuntime =>
   ManagedRuntime.make(

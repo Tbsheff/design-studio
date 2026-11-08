@@ -5,9 +5,9 @@ import type {
 import type { AppServerStatus, Project } from "@design-studio/contracts";
 import { describeDoctor } from "@design-studio/contracts/app-doctor";
 
+import type { AppControl, PreviewService } from "../../shared/server-ports.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { AppControl, PreviewService } from "../types.js";
 
 type DoctorControl = Required<Pick<AppControl, "doctor">> & AppControl;
 

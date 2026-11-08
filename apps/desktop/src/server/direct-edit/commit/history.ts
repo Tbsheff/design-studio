@@ -14,43 +14,22 @@ import type {
 import type { LayoutChange } from "@design-studio/contracts/canvas-file";
 
 import { emitSourceChange } from "../../events/index.js";
-import { isNodeError } from "../../platform/errors/index.js";
-import type { EventBus } from "../../types.js";
-import { DirectEditError } from "../engine/errors.js";
-import { writeAtomic, writeNewFile } from "./edit-source.js";
 import type {
+  EventBus,
   DirectEditDeps,
   EditFileChange,
+  EditHistory,
   EditRecord,
-  EditRecorder,
-} from "./edit-types.js";
+  EditStepResult,
+  HistoryStep,
+} from "../../events/index.js";
+import { isNodeError } from "../../platform/errors/index.js";
+import { DirectEditError } from "../engine/errors.js";
+import { writeAtomic, writeNewFile } from "./edit-source.js";
 import { assertCanEdit, publishVersion, saveDeferred } from "./publish.js";
 import { savedVersionId, savesSettled } from "./save-queue.js";
 
 export const HISTORY_LIMIT = 100;
-
-export type HistoryStep = "undo" | "redo";
-
-export interface EditStepResult {
-  state: EditHistoryState;
-  version: Version;
-  label: string;
-}
-
-export interface EditHistory extends EditRecorder {
-  mark: () => number;
-  dropUnsaved: (projectId: string, since: number) => Promise<number>;
-  state(projectId: string, directionId: string): EditHistoryState;
-  list?(projectId: string, directionId: string, limit: number): EditHistoryList;
-  step(
-    kind: HistoryStep,
-    deps: DirectEditDeps,
-    project: Project,
-    direction: Direction
-  ): Promise<EditStepResult>;
-  clear(projectId: string, directionId?: string): void;
-  forget(projectId: string, directionId: string): void;
-}
 
 interface HistoryOptions {
   bus: Pick<EventBus, "emit">;
@@ -449,3 +428,5 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
 
   return { record, state, list, step, clear, forget, mark, dropUnsaved };
 }
+
+export type { EditHistory, EditStepResult, HistoryStep };

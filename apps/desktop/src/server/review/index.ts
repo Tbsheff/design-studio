@@ -16,6 +16,19 @@ export type { Critique, RunCommand } from "./critique-frame.js";
 
 export { ScenarioRunner, ScenarioStore } from "./scenario/index.js";
 
+export {
+  AccessibilityStore,
+  AccessibilityWriter,
+  VisionRunner,
+} from "./accessibility/index.js";
+
+export type {
+  AccessibilityStoreApi,
+  AccessibilityWriterApi,
+  InspectAccessibilityCommand,
+  SetAccessibilityCommand,
+} from "./accessibility/index.js";
+
 export { WalkthroughRunner, WalkthroughStore } from "./walkthrough/index.js";
 
 export type {

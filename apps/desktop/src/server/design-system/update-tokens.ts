@@ -13,12 +13,9 @@ import type {
   VersionMeta,
 } from "@design-studio/contracts";
 
-import {
-  DirectEditError,
-  assertCanEdit,
-  publishVersion,
-} from "../direct-edit/index.js";
-import type { DirectEditDeps } from "../direct-edit/index.js";
+import { assertCanEdit, publishVersion } from "../direct-edit/index.js";
+import { DirectEditError } from "../events/index.js";
+import type { DirectEditDeps } from "../events/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import {
   DESIGN_FILES,

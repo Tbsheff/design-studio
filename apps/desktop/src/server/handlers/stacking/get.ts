@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { getStacking } from "@design-studio/actions/stacking/get";
 import { Effect } from "effect";
 
-import { StackingStore } from "../../direct-edit/index.js";
+import { StackingStore } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetStackingInput = Input<typeof getStacking>;

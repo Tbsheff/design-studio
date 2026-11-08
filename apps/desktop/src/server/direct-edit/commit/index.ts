@@ -18,9 +18,9 @@ export type {
   EditRecord,
   EditRecorder,
   EditScope,
-  PlannedEdit,
+  PlannedDirectEdit as PlannedEdit,
   ResolvedSource,
-} from "./edit-types.js";
+} from "../../events/index.js";
 
 export {
   announceWhile,

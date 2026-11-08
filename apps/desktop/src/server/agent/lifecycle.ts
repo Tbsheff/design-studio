@@ -37,20 +37,20 @@ import {
   isPartEvent,
   withFinalText,
 } from "../../shared/run-parts.js";
+import type {
+  AgentRunContext,
+  AgentRunner,
+  ProjectStore,
+  RunHandle,
+  VersionStore,
+} from "../../shared/server-ports.js";
 import { runTitle } from "../../shared/version-title.js";
+import type { EventBus } from "../events/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import {
   createCommandRuleStore,
   isOrgCapAllowed,
 } from "../store/command-rules.js";
-import type {
-  AgentRunContext,
-  AgentRunner,
-  EventBus,
-  ProjectStore,
-  RunHandle,
-  VersionStore,
-} from "../types.js";
 import { scopeProblem } from "../variations/scope-check.js";
 import { createBashEditTracker, fileDiff, readFileText } from "./bash-edits.js";
 import type { BashEditResult, BashWriteCheck, FileText } from "./bash-edits.js";
@@ -364,7 +364,7 @@ export function createRunLifecycle(
 ): AgentRunner {
   const handles = new Map<string, RunHandle>();
   const activeRuns = new Map<string, string>();
-  const stopping = new Map<string, Promise<unknown>>();
+  const stopping = new Map<string, Promise<RunSummary>>();
   const activeKey = (projectId: string, directionId: string): string =>
     `${projectId}/${directionId}`;
 

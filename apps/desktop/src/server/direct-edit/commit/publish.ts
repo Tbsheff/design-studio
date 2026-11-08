@@ -10,12 +10,12 @@ import {
   noteTreeWrite,
   withdrawPlanned,
 } from "../../events/index.js";
+import type { DirectEditDeps } from "../../events/index.js";
 import {
   isOutsideRequest,
   isOwnAgentRun,
 } from "../../platform/call-origin/index.js";
 import { DirectEditError } from "../engine/errors.js";
-import type { DirectEditDeps } from "./edit-types.js";
 import { isPendingVersion, saveLater } from "./save-queue.js";
 
 export async function publishVersion(

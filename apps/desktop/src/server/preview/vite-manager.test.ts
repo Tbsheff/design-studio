@@ -6,7 +6,7 @@ import { BRIDGE_SCRIPT_PATH } from "@design-studio/contracts";
 import type { StudioEventInput } from "@design-studio/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import type { EventBus } from "../types.js";
+import type { EventBus } from "../events/index.js";
 import { ViteManager } from "./vite-manager.js";
 
 let root: string;

@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { createFixture } from "@design-studio/actions/fixture/create";
 import { Effect } from "effect";
 
-import { FixtureWriter } from "../../direct-edit/index.js";
+import { FixtureWriter } from "../../export/index.js";
 import { ProjectStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 

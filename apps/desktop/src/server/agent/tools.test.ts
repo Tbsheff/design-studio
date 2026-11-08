@@ -4,10 +4,10 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { resolveRunConfig } from "../../shared/run-levels.js";
+import type { AgentRunContext } from "../../shared/server-ports.js";
 import { writeTestDraft } from "../design-system/test-draft.js";
 import { planTiles, type TileRequest } from "../preview/browser.js";
 import { createFakePreview, createTempProject } from "../testing/fakes.js";
-import type { AgentRunContext } from "../types.js";
 import {
   describeTiles,
   runDesignSystemCheck,

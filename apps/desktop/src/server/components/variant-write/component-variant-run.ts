@@ -1,12 +1,12 @@
 import type { Effect } from "effect";
 
+import type { PreviewTarget } from "../../../shared/component-ports.js";
 import {
   runDirectionRead,
   runDirectionWrite,
 } from "../../direct-edit/index.js";
 import type { DirectionIds } from "../../direct-edit/index.js";
 import type { KnownFailure } from "../../platform/attempt/index.js";
-import type { PreviewTarget } from "../preview.js";
 import { toComponentVariantFailure } from "./component-variant-failure.js";
 import type {
   ComponentVariantChange,

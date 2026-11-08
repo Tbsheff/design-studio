@@ -7,16 +7,13 @@ import type {
 } from "@design-studio/contracts";
 
 import type { HunkRevertRequest, HunkRevertResult } from "../../shared/hunk.js";
-import type {
-  EditStepResult,
-  HistoryStep,
-} from "../direct-edit/commit/index.js";
 import {
   assertCanEdit,
   publishVersion,
   recordRunInHistory,
   revertHunk,
 } from "../direct-edit/commit/index.js";
+import type { EditStepResult, HistoryStep } from "../events/index.js";
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { parseVersionName } from "./version-names.js";
 import type { VersionWriteRuntime } from "./version-write-core.js";

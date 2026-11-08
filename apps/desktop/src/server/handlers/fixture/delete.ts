@@ -2,7 +2,7 @@ import type { Input } from "@design-studio/actions/_core/action";
 import type { deleteFixture } from "@design-studio/actions/fixture/delete";
 import { Effect } from "effect";
 
-import { FixtureStore, FixtureWriter } from "../../direct-edit/index.js";
+import { FixtureStore, FixtureWriter } from "../../export/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 
 type DeleteFixtureInput = Input<typeof deleteFixture>;

@@ -5,10 +5,13 @@ import {
 import type { ReviewFrame } from "@design-studio/contracts/review";
 
 import type { RunTarget } from "../../shared/run-target.js";
+import type {
+  AgentRunContext,
+  PreviewService,
+} from "../../shared/server-ports.js";
 import type { CanvasService } from "../canvas/index.js";
 import { frameRef } from "../canvas/index.js";
 import { z } from "../platform/zod-bridge/index.js";
-import type { AgentRunContext, PreviewService } from "../types.js";
 import { resolveReviewFrame } from "./frame.js";
 import { runReview } from "./run.js";
 

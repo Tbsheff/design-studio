@@ -24,6 +24,7 @@ import {
   type ImageFit,
   type SetImageResult,
 } from "../../../shared/image.js";
+import type { DirectEditDeps, ResolvedSource } from "../../events/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
@@ -34,7 +35,6 @@ import {
   themeForFile,
   writeAtomic,
 } from "./edit-source.js";
-import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
 import {
   jsxElementAt,
   jsxTagName,

@@ -5,13 +5,13 @@ import path from "node:path";
 import { SETTINGS_VERSION } from "@design-studio/contracts";
 import type { Project } from "@design-studio/contracts";
 
+import type { ServerConfig } from "../platform/config/index.js";
 import {
   NotFoundError,
   assertSafeId,
   isNodeError,
 } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
-import type { ServerConfig } from "../types.js";
 import {
   DEFAULT_TEMPLATE_DIR,
   installTemplateModules,

@@ -15,6 +15,7 @@ import {
   type ReviewSeverity,
 } from "@design-studio/contracts/review";
 
+import type { RenderPage, PreviewService } from "../../shared/server-ports.js";
 import {
   applyTokenRules,
   probeRules,
@@ -29,8 +30,6 @@ import {
   type LayoutProbeResult,
 } from "../preview/layout-probe.js";
 import { waitForPage } from "../preview/page-capture/index.js";
-import type { RenderPage } from "../preview/render-backend.js";
-import type { PreviewService } from "../types.js";
 import {
   axeDrafts,
   axeSelector,

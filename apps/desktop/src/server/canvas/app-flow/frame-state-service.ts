@@ -12,8 +12,8 @@ import {
   setFrameState,
 } from "../../app/frame-state.js";
 import type { SessionChange } from "../../app/frame-state.js";
+import type { EventBus } from "../../events/index.js";
 import { BadRequestError } from "../../platform/errors/index.js";
-import type { EventBus } from "../../types.js";
 import type { CanvasService } from "../service.js";
 import { findFrame } from "../tools.js";
 

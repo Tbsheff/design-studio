@@ -93,7 +93,7 @@ const watchLongFrames = (): (() => void) => {
   let worst = 0;
   let timer: number | undefined;
 
-  const flush = () => {
+  const flush = (): void => {
     window.clearTimeout(timer);
     timer = undefined;
 
@@ -132,7 +132,7 @@ const watchLongFrames = (): (() => void) => {
 
   observer.observe({ buffered: true, type });
 
-  const onHide = () => {
+  const onHide = (): void => {
     if (document.visibilityState === "hidden") {
       flush();
     }
@@ -144,7 +144,7 @@ const watchLongFrames = (): (() => void) => {
     document.removeEventListener("visibilitychange", onHide);
     observer.disconnect();
     flush();
-    flushLongFrames = () => undefined;
+    flushLongFrames = (): undefined => undefined;
   };
 };
 

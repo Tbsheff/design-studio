@@ -88,7 +88,7 @@ const useFolderDrop = (): void => {
       return;
     }
 
-    const onDragOver = (event: DragEvent) => {
+    const onDragOver = (event: DragEvent): void => {
       if (ownsDrop(event) || !hasFiles(event)) {
         return;
       }
@@ -100,7 +100,7 @@ const useFolderDrop = (): void => {
       }
     };
 
-    const onDrop = (event: DragEvent) => {
+    const onDrop = (event: DragEvent): void => {
       if (ownsDrop(event) || !hasFiles(event)) {
         return;
       }
@@ -116,7 +116,7 @@ const useFolderDrop = (): void => {
     globalThis.addEventListener("dragover", onDragOver);
     globalThis.addEventListener("drop", onDrop);
 
-    return () => {
+    return (): void => {
       globalThis.removeEventListener("dragover", onDragOver);
       globalThis.removeEventListener("drop", onDrop);
     };

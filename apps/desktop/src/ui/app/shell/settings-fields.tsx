@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import { MODEL_OPTIONS } from "../../features/chat/settings-draft-model";
 import type { SettingsDraft } from "../../features/chat/settings-draft-model";
@@ -17,8 +17,12 @@ interface Props {
   shellExtra?: ReactNode;
 }
 
-export const SettingsFields = ({ draft, onChange, shellExtra }: Props) => {
-  const set = (patch: Partial<SettingsDraft>) =>
+export const SettingsFields = ({
+  draft,
+  onChange,
+  shellExtra,
+}: Props): ReactElement => {
+  const set = (patch: Partial<SettingsDraft>): void =>
     onChange({ ...draft, ...patch });
 
   const known = MODEL_OPTIONS.some((m) => m.id === draft.model);

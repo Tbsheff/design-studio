@@ -1,6 +1,7 @@
 import type { Project } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
 import { Suspense, useRef, useState, useTransition } from "react";
+import type { ReactElement } from "react";
 
 import { api, errorText } from "../../api";
 import { CommandRules } from "../../features/commands/command-rules";
@@ -15,7 +16,11 @@ interface Props {
   onClose: () => void;
 }
 
-export const SettingsModal = ({ project, onSaved, onClose }: Props) => {
+export const SettingsModal = ({
+  project,
+  onSaved,
+  onClose,
+}: Props): ReactElement => {
   const [draft, setDraft] = useState(() => toDraft(project.settings));
   const [saving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +28,7 @@ export const SettingsModal = ({ project, onSaved, onClose }: Props) => {
 
   const dialog = useModalDialog(onClose);
 
-  const save = () => {
+  const save = (): void => {
     const parsed = parseDraft(draft);
 
     if ("error" in parsed) {

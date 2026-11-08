@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import type { ReactElement, KeyboardEvent, RefObject } from "react";
 
 type ThemePref = "system" | "light" | "dark";
 
@@ -14,7 +14,7 @@ const api = (): ThemeApi | undefined =>
 const subscribe = (notify: () => void) => {
   globalThis.addEventListener("studio-theme", notify);
 
-  return () => globalThis.removeEventListener("studio-theme", notify);
+  return (): void => globalThis.removeEventListener("studio-theme", notify);
 };
 
 const OPTIONS: { pref: ThemePref; label: string; path: string }[] = [
@@ -41,7 +41,7 @@ export default function ThemeMenu({
 }: {
   trigger: RefObject<HTMLButtonElement | null>;
   onClose: (refocus: boolean) => void;
-}) {
+}): ReactElement {
   const ref = useRef<HTMLDivElement>(null);
   const pref = useSyncExternalStore(subscribe, () => api()?.get() ?? "system");
 
@@ -50,7 +50,7 @@ export default function ThemeMenu({
       ?.querySelector<HTMLButtonElement>('[aria-checked="true"]')
       ?.focus();
 
-    const onDown = (event: MouseEvent) => {
+    const onDown = (event: MouseEvent): void => {
       const target = event.target as Node;
 
       if (
@@ -63,10 +63,10 @@ export default function ThemeMenu({
 
     document.addEventListener("mousedown", onDown);
 
-    return () => document.removeEventListener("mousedown", onDown);
+    return (): void => document.removeEventListener("mousedown", onDown);
   }, [onClose, trigger]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const items = [
       ...(ref.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitemradio"]'

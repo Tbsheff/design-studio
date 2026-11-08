@@ -31,7 +31,9 @@ export function useProjectEvents(
 
   const watch = useCallback(
     (onChange: () => void) =>
-      projectId ? hub.watchState(projectId, onChange) : () => undefined,
+      projectId
+        ? hub.watchState(projectId, onChange)
+        : (): undefined => undefined,
     [projectId]
   );
 

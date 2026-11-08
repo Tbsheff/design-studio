@@ -2,7 +2,7 @@ import type { AppRoute } from "@design-studio/contracts";
 import { cleanRoute } from "@design-studio/contracts/app";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { ReactElement, FormEvent } from "react";
 
 import { api, errorText } from "../../api";
 
@@ -12,7 +12,7 @@ const RoutesTab = ({
 }: {
   projectId: string;
   onAddRoute: (route: string) => void;
-}) => {
+}): ReactElement => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
@@ -36,7 +36,7 @@ const RoutesTab = ({
 
     void loadRoutes();
 
-    return () => {
+    return (): void => {
       isLive = false;
     };
   }, [projectId]);
@@ -54,7 +54,7 @@ const RoutesTab = ({
 
   const shown = matches.slice(0, 200);
 
-  const addCustom = (event: FormEvent) => {
+  const addCustom = (event: FormEvent): void => {
     event.preventDefault();
     const route = cleanRoute(custom);
 

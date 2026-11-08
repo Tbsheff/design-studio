@@ -2,6 +2,7 @@ import type { AppServerStatus } from "@design-studio/contracts";
 import { envText } from "@design-studio/contracts/app";
 import { Icon } from "@design-studio/ui";
 import { useTransition } from "react";
+import type { ReactElement } from "react";
 
 import { api } from "../../api";
 import FlowTab from "../../features/canvas/flow-tab";
@@ -29,7 +30,7 @@ const AppPanel = ({
   tab: Tab;
   setTab: (tab: Tab) => void;
   initial: AppServerStatus | null;
-}) => {
+}): ReactElement => {
   const {
     status,
     app: fresh,
@@ -42,7 +43,7 @@ const AppPanel = ({
 
   const [, startTransition] = useTransition();
 
-  const control = (action: "start" | "stop" | "restart") => {
+  const control = (action: "start" | "stop" | "restart"): void => {
     startTransition(async () => {
       try {
         await api.appControl(projectId, action);
@@ -55,7 +56,7 @@ const AppPanel = ({
 
   const settingsApp = fresh ?? app;
 
-  const addRoute = (route: string) => {
+  const addRoute = (route: string): void => {
     onAddRoute(route);
     onClose();
   };

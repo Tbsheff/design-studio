@@ -6,7 +6,13 @@ import {
   useRef,
   useState,
 } from "react";
-import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
+import type {
+  ReactElement,
+  CSSProperties,
+  KeyboardEvent,
+  ReactNode,
+  RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 
 import { Icon } from "./Icon";
@@ -94,18 +100,18 @@ const useOutsideClose = (
   close: () => void,
   root: RefObject<HTMLElement | null>,
   panel: RefObject<HTMLElement | null>
-) => {
+): void => {
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    const inside = (target: EventTarget | null) =>
+    const inside = (target: EventTarget | null): boolean =>
       target instanceof Node &&
       (Boolean(root.current?.contains(target)) ||
         Boolean(panel.current?.contains(target)));
 
-    const spot = () => {
+    const spot = (): string => {
       const box = root.current?.getBoundingClientRect();
 
       return box ? `${box.top},${box.left}` : "";
@@ -113,13 +119,13 @@ const useOutsideClose = (
 
     const openedAt = spot();
 
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: MouseEvent): void => {
       if (!inside(e.target)) {
         close();
       }
     };
 
-    const onScroll = (e: Event) => {
+    const onScroll = (e: Event): void => {
       if (!inside(e.target) && spot() !== openedAt) {
         close();
       }
@@ -129,7 +135,7 @@ const useOutsideClose = (
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", close);
 
-    return () => {
+    return (): void => {
       document.removeEventListener("mousedown", onDown, true);
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", close);
@@ -140,7 +146,7 @@ const useOutsideClose = (
 const openKey = (key: string): boolean =>
   key === "ArrowDown" || key === "ArrowUp" || key === "Enter" || key === " ";
 
-const UiSelect = <V extends string>(p: Props<V>) => {
+const UiSelect = <V extends string>(p: Props<V>): ReactElement => {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN);
@@ -181,7 +187,7 @@ const UiSelect = <V extends string>(p: Props<V>) => {
     }
   }, [open, active]);
 
-  const show = () => {
+  const show = (): void => {
     setActive(
       current !== -1 && !p.options[current]?.disabled
         ? current
@@ -190,7 +196,7 @@ const UiSelect = <V extends string>(p: Props<V>) => {
     setOpen(true);
   };
 
-  const pick = (index: number) => {
+  const pick = (index: number): void => {
     const option = p.options[index];
 
     if (!option || option.disabled) {
@@ -233,7 +239,7 @@ const UiSelect = <V extends string>(p: Props<V>) => {
     return null;
   };
 
-  const onOpenKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+  const onOpenKey = (e: KeyboardEvent<HTMLButtonElement>): void => {
     if (e.key === "Escape") {
       close();
 
@@ -253,7 +259,7 @@ const UiSelect = <V extends string>(p: Props<V>) => {
     }
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>): void => {
     if (e.key === "Tab") {
       if (open) {
         close();

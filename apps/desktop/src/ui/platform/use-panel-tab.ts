@@ -55,7 +55,14 @@ const writeTab = (projectId: string, tab: PanelTab): void => {
   writeStored(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
 };
 
-const usePanelTab = (projectId: string, eligible: boolean) => {
+const usePanelTab = (
+  projectId: string,
+  eligible: boolean
+): {
+  choose: (next: PanelTab) => void;
+  show: (next: PanelTab) => void;
+  tab: PanelTab;
+} => {
   const chosen = useRef(readTab(projectId));
   const autoSwitched = useRef(false);
   const [tab, setTab] = useState<PanelTab>(chosen.current ?? "chat");

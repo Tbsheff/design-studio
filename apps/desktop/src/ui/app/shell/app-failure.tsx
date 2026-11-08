@@ -1,7 +1,7 @@
 import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
 import { CopyButton, Icon } from "@design-studio/ui";
 import { useEffect, useState, useTransition } from "react";
-import type { FormEvent } from "react";
+import type { ReactElement, FormEvent } from "react";
 
 import type { FolderInspection } from "../../../shared/open-app";
 import { api, errorText } from "../../api";
@@ -54,7 +54,7 @@ const useInstallHint = (
 
     void loadHint();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, app.appDir, managed, retries]);
@@ -62,7 +62,11 @@ const useInstallHint = (
   return hint;
 };
 
-const InstallFix = ({ hint }: { hint: FolderInspection | null }) => {
+const InstallFix = ({
+  hint,
+}: {
+  hint: FolderInspection | null;
+}): ReactElement | null => {
   const install = hint?.install;
 
   if (!hint || hint.depsInstalled !== false || !install) {
@@ -94,7 +98,7 @@ const UrlForm = ({
   app: AttachedApp;
   suggested: string;
   onSaved: () => void;
-}) => {
+}): ReactElement => {
   const [url, setUrl] = useState(
     app.mode === "url" ? (app.url ?? "") : suggested
   );
@@ -102,7 +106,7 @@ const UrlForm = ({
   const [busy, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const save = (event: FormEvent) => {
+  const save = (event: FormEvent): void => {
     event.preventDefault();
 
     if (!url.trim()) {
@@ -158,12 +162,12 @@ export const AppFailure = ({
   onLog,
   onClose,
   onSaved,
-}: AppFailureProps) => {
+}: AppFailureProps): ReactElement => {
   const managed = status.mode === "managed";
   const [retries, setRetries] = useState(0);
   const hint = useInstallHint(projectId, app, managed, retries);
 
-  const retry = () => {
+  const retry = (): void => {
     setRetries((n) => n + 1);
     onRetry();
   };

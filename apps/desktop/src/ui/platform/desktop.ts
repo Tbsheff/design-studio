@@ -110,7 +110,7 @@ const useDesktopCommand = (handler: Handler): void => {
     const entry: Handler = (command) => latest.current(command);
     handlers.push(entry);
 
-    return () => {
+    return (): void => {
       const index = handlers.indexOf(entry);
 
       if (index !== -1) {

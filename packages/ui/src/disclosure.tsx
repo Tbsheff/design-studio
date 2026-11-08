@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { Icon } from "./Icon";
 
@@ -14,7 +14,7 @@ export const Disclosure = ({
   className?: string;
   lead?: ReactNode;
   trail?: ReactNode;
-}) => {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
 
   return (

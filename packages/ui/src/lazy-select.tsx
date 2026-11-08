@@ -1,11 +1,13 @@
 import { lazy, Suspense } from "react";
-import type { JSX } from "react";
+import type { ReactElement, JSX } from "react";
 
 import { Icon } from "./Icon";
 import type { UiSelectProps } from "./UiSelect.js";
 
 const UiSelect = lazy(() =>
-  (async () => {
+  (async (): Promise<{
+    default: (p: UiSelectProps<string>) => ReactElement;
+  }> => {
     const loaded = await import("./UiSelect.js");
 
     return {
@@ -14,7 +16,7 @@ const UiSelect = lazy(() =>
   })()
 );
 
-const Placeholder = <V extends string>(p: UiSelectProps<V>) => {
+const Placeholder = <V extends string>(p: UiSelectProps<V>): ReactElement => {
   const label =
     p.options.find((o) => o.value === p.value)?.label ?? p.placeholder ?? "";
 
@@ -38,7 +40,9 @@ const Placeholder = <V extends string>(p: UiSelectProps<V>) => {
   );
 };
 
-export const LazySelect = <V extends string>(p: UiSelectProps<V>) => (
+export const LazySelect = <V extends string>(
+  p: UiSelectProps<V>
+): ReactElement => (
   <Suspense fallback={<Placeholder {...p} />}>
     <UiSelect {...(p as unknown as UiSelectProps<string>)} />
   </Suspense>

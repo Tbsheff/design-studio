@@ -1,5 +1,6 @@
 import type { AppLogLine } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
+import type { ReactElement } from "react";
 
 const LogsTab = ({
   logs,
@@ -7,7 +8,7 @@ const LogsTab = ({
 }: {
   logs: AppLogLine[];
   managed: boolean;
-}) => {
+}): ReactElement => {
   const ref = useRef<HTMLPreElement>(null);
   useEffect(() => {
     const el = ref.current;

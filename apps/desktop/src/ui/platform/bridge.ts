@@ -127,7 +127,9 @@ const isBridgeMessage = (data: unknown): data is BridgeToParent => {
   return m.ns === "studio" && Boolean(m.token) && Boolean(m.type);
 };
 
-const frameElementOf = (source: MessageEventSource | null) => {
+const frameElementOf = (
+  source: MessageEventSource | null
+): HTMLIFrameElement | null => {
   for (const element of document.querySelectorAll<HTMLIFrameElement>(
     `iframe[${FRAME_TOKEN_ATTR}]`
   )) {
@@ -249,7 +251,7 @@ const useBridge = (
 
     installHello();
 
-    return () => {
+    return (): void => {
       listeners.delete(listener);
     };
   }, []);

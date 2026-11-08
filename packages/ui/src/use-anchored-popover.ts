@@ -64,17 +64,17 @@ export function useAnchoredPopover<T extends string>(
       return;
     }
 
-    const inside = (target: EventTarget | null) =>
+    const inside = (target: EventTarget | null): boolean | undefined =>
       target instanceof Node &&
       (panel.current?.contains(target) || trigger.current?.contains(target));
 
-    const onDown = (e: Event) => {
+    const onDown = (e: Event): void => {
       if (!inside(e.target)) {
         close(false);
       }
     };
 
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       if (e.key !== "Escape") {
         return;
       }
@@ -91,7 +91,7 @@ export function useAnchoredPopover<T extends string>(
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onScroll);
 
-    return () => {
+    return (): void => {
       document.removeEventListener("mousedown", onDown);
       globalThis.removeEventListener("keydown", onKey, true);
       window.removeEventListener("scroll", onScroll, true);

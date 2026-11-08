@@ -1,7 +1,7 @@
 import { Icon, usePopover } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useCallback, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode, RefObject } from "react";
+import type { ReactElement, KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { shortcutLabel } from "../../../shared/keymap";
 import {
@@ -55,7 +55,13 @@ interface Item {
   checked?: boolean;
 }
 
-const MenuItems = ({ items, onDone }: { items: Item[]; onDone: () => void }) =>
+const MenuItems = ({
+  items,
+  onDone,
+}: {
+  items: Item[];
+  onDone: () => void;
+}): ReactElement[] =>
   items.map((item) => (
     <button
       key={item.id}
@@ -75,7 +81,7 @@ const MenuItems = ({ items, onDone }: { items: Item[]; onDone: () => void }) =>
     </button>
   ));
 
-const onMenuKey = (event: KeyboardEvent<HTMLDivElement>) => {
+const onMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
     return;
   }
@@ -102,10 +108,10 @@ const ProjectMenu = (
     onStartRename: () => void;
     trigger: RefObject<HTMLButtonElement | null>;
   }
-) => {
+): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, props.onClose, props.trigger);
-  const done = () => props.onClose(false);
+  const done = (): void => props.onClose(false);
   const pref = themeApi()?.get() ?? "system";
 
   const panels: Item[] = [
@@ -236,11 +242,11 @@ const RenameField = ({
 }: {
   name: string;
   onDone: (next: string | null) => void;
-}) => {
+}): ReactElement => {
   const [value, setValue] = useState(name);
   const done = useRef(false);
 
-  const finish = (save: boolean) => {
+  const finish = (save: boolean): void => {
     if (done.current) {
       return;
     }
@@ -310,7 +316,7 @@ const Status = ({
   </>
 );
 
-export const StudioPaneHeader = (props: Props) => {
+export const StudioPaneHeader = (props: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);

@@ -1,4 +1,6 @@
-export const BrandMark = () => (
+import type { ReactElement } from "react";
+
+export const BrandMark = (): ReactElement => (
   <span className="brand-mark" aria-hidden="true">
     <svg width="16" height="16" viewBox="0 0 16 16">
       <rect

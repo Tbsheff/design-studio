@@ -262,10 +262,10 @@ class Leader {
     es.addEventListener(STREAM_APPROVALS, (msg) =>
       this.approvalsText((msg as MessageEvent<string>).data)
     );
-    const onEvent = (msg: Event) =>
+    const onEvent = (msg: Event): void =>
       this.event((msg as MessageEvent<string>).data);
     for (const type of EVENT_TYPES) es.addEventListener(type, onEvent);
-    es.onerror = () => this.lost(es);
+    es.onerror = (): void => this.lost(es);
   }
 
   private lost(es: EventSource): void {
@@ -429,12 +429,12 @@ const startStream = (): AppStream => {
     if (leader) leader.update(tab.id, wants);
     else channel?.postMessage({ t: "want", tab: tab.id, wants } satisfies Wire);
   });
-  const lead = () => {
+  const lead = (): void => {
     leader = new Leader(tab, channel);
     leader.start();
   };
   if (channel) {
-    channel.onmessage = (msg: MessageEvent<Wire>) =>
+    channel.onmessage = (msg: MessageEvent<Wire>): void =>
       follow(tab, msg.data, leader);
     void navigator.locks.request(
       TAB_LOCK + tab.id,

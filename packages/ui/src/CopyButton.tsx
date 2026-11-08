@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { Icon } from "./Icon";
 
@@ -30,7 +31,7 @@ const CopyButton = ({
   text: string | (() => string);
   label?: string;
   className?: string;
-}) => {
+}): ReactElement => {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   useEffect(() => {
@@ -40,7 +41,7 @@ const CopyButton = ({
 
     const id = window.setTimeout(() => setState("idle"), 1400);
 
-    return () => window.clearTimeout(id);
+    return (): void => window.clearTimeout(id);
   }, [state]);
 
   const tip =

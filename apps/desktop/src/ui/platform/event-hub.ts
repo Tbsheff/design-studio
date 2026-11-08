@@ -84,7 +84,7 @@ interface EventHub {
 const createEventHub = (deps: HubDeps): EventHub => {
   const channels = new Map<string, Channel>();
 
-  const setState = (channel: Channel, state: ConnectionState) => {
+  const setState = (channel: Channel, state: ConnectionState): void => {
     if (channel.state === state) {
       return;
     }
@@ -96,7 +96,7 @@ const createEventHub = (deps: HubDeps): EventHub => {
     }
   };
 
-  const receive = (channel: Channel, msg: MessageEvent<string>) => {
+  const receive = (channel: Channel, msg: MessageEvent<string>): void => {
     let event: StudioEvent;
 
     try {
@@ -126,7 +126,7 @@ const createEventHub = (deps: HubDeps): EventHub => {
     }
   };
 
-  const connect = (projectId: string, channel: Channel) => {
+  const connect = (projectId: string, channel: Channel): void => {
     if (channels.get(projectId) !== channel) {
       return;
     }
@@ -134,10 +134,10 @@ const createEventHub = (deps: HubDeps): EventHub => {
     const es = deps.open(projectId, channel.lastSeq);
     channel.source = es;
 
-    const onMessage = (msg: Event) =>
+    const onMessage = (msg: Event): void =>
       receive(channel, msg as MessageEvent<string>);
 
-    es.onopen = () => {
+    es.onopen = (): void => {
       channel.retryDelay = 500;
       setState(channel, "open");
     };
@@ -148,7 +148,7 @@ const createEventHub = (deps: HubDeps): EventHub => {
       es.addEventListener(type, onMessage);
     }
 
-    es.onerror = () => {
+    es.onerror = (): void => {
       es.close();
 
       if (channels.get(projectId) !== channel) {
@@ -191,7 +191,7 @@ const createEventHub = (deps: HubDeps): EventHub => {
     return channel;
   };
 
-  const release = (projectId: string, channel: Channel) => {
+  const release = (projectId: string, channel: Channel): void => {
     if (
       channel.listeners.size > 0 ||
       channel.stateListeners.size > 0 ||

@@ -1,4 +1,5 @@
 import type { FirstVersionState } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
 import { useNow } from "../../platform/clock";
 
@@ -24,7 +25,7 @@ const PrepChip = ({
   firstVersion,
 }: {
   firstVersion: FirstVersionState | null;
-}) => {
+}): ReactElement | null => {
   const seconds = useSecondsSince(
     firstVersion?.pending ? firstVersion.startedAt : null
   );

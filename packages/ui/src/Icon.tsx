@@ -1,4 +1,5 @@
 import { memo } from "react";
+import type { ReactElement } from "react";
 
 const PATHS = {
   alert: "M8 2.25l6.25 11H1.75zM8 6.5v3M8 11.5v.25",
@@ -109,7 +110,7 @@ const IconView = ({
   name: IconName;
   size?: number;
   className?: string;
-}) => (
+}): ReactElement => (
   <svg
     className={`icon ${className ?? ""}`}
     width={size}

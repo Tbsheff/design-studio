@@ -14,7 +14,7 @@ const usePanelFocus = (setOpen: (open: boolean) => void) => {
       active instanceof HTMLElement && active !== document.body ? active : null;
   }, []);
 
-  const close = () => {
+  const close = (): void => {
     setOpen(false);
     const back = opener.current;
     requestAnimationFrame(() => {
@@ -39,7 +39,7 @@ const useOpenRequests = (
   remember: () => void
 ): void => {
   useEffect(() => {
-    const show = (event: Event) => {
+    const show = (event: Event): void => {
       remember();
       const next = (event as CustomEvent<unknown>).detail;
       setTab(
@@ -52,7 +52,7 @@ const useOpenRequests = (
 
     globalThis.addEventListener(APP_PANEL_EVENT, show);
 
-    return () => globalThis.removeEventListener(APP_PANEL_EVENT, show);
+    return (): void => globalThis.removeEventListener(APP_PANEL_EVENT, show);
   }, [setTab, setOpen, remember]);
 };
 

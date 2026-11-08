@@ -1,7 +1,7 @@
 import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
 import { envText, parseEnvText } from "@design-studio/contracts/app";
 import { useState, useTransition } from "react";
-import type { FormEvent } from "react";
+import type { ReactElement, FormEvent } from "react";
 
 import { api, errorText } from "../../api";
 
@@ -25,13 +25,13 @@ const SettingsTab = ({
   app: AttachedApp;
   suggested: Record<string, string> | null;
   onSaved: () => void;
-}) => {
+}): ReactElement => {
   const [url, setUrl] = useState(app.url ?? "");
   const [env, setEnv] = useState(() => envText(app.env));
   const [note, setNote] = useState<string | null>(null);
   const [busy, startSave] = useTransition();
 
-  const save = (event: FormEvent) => {
+  const save = (event: FormEvent): void => {
     event.preventDefault();
     const parsed = parseEnvText(env);
 

@@ -136,8 +136,8 @@ let state: UiState = loadUiState();
 const listeners = new Set<() => void>();
 
 const uiStore = {
-  get: () => state,
-  set: (patch: Partial<UiState> | ((s: UiState) => Partial<UiState>)) => {
+  get: (): UiState => state,
+  set: (patch: Partial<UiState> | ((s: UiState) => Partial<UiState>)): void => {
     const next = typeof patch === "function" ? patch(state) : patch;
     state = { ...state, ...next };
     saveUiState(state);
@@ -146,7 +146,7 @@ const uiStore = {
   subscribe: (l: () => void) => {
     listeners.add(l);
 
-    return () => {
+    return (): void => {
       listeners.delete(l);
     };
   },
@@ -201,7 +201,7 @@ interface HomeVariationsIntent {
 let homeIntent: HomeVariationsIntent | null = null;
 
 const homeVariations = {
-  set: (intent: HomeVariationsIntent) => {
+  set: (intent: HomeVariationsIntent): void => {
     homeIntent = intent;
   },
   take: (projectId: string): HomeVariationsIntent | null => {

@@ -18,7 +18,7 @@ const usePopover = (
       return;
     }
 
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: MouseEvent): void => {
       const target = e.target as Node;
 
       if (trigger?.current?.contains(target)) {
@@ -30,7 +30,7 @@ const usePopover = (
       }
     };
 
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       if (e.key !== "Escape") {
         return;
       }
@@ -47,7 +47,7 @@ const usePopover = (
     document.addEventListener("mousedown", onDown);
     globalThis.addEventListener("keydown", onKey, true);
 
-    return () => {
+    return (): void => {
       document.removeEventListener("mousedown", onDown);
       globalThis.removeEventListener("keydown", onKey, true);
     };
@@ -67,7 +67,7 @@ const useReturnFocusOnUnmount = (): void => {
         ? document.activeElement
         : null;
 
-    return () => {
+    return (): void => {
       if (opener?.isConnected) {
         opener.focus();
       }
@@ -75,7 +75,12 @@ const useReturnFocusOnUnmount = (): void => {
   }, []);
 };
 
-const useModalDialog = (onDismiss: () => boolean | void) => {
+const useModalDialog = (
+  onDismiss: () => boolean | void
+): {
+  onMouseDown: (e: ReactMouseEvent<HTMLDialogElement>) => void;
+  ref: RefObject<HTMLDialogElement | null>;
+} => {
   const ref = useRef<HTMLDialogElement>(null);
   const dismiss = useRef(onDismiss);
   dismiss.current = onDismiss;
@@ -102,12 +107,12 @@ const useModalDialog = (onDismiss: () => boolean | void) => {
       firstFocusable(el)
     )?.focus();
 
-    const onCancel = (e: Event) => {
+    const onCancel = (e: Event): void => {
       e.preventDefault();
       dismiss.current();
     };
 
-    const onClose = () => {
+    const onClose = (): void => {
       if (dismiss.current() === false && el.isConnected) {
         el.showModal();
       }
@@ -116,7 +121,7 @@ const useModalDialog = (onDismiss: () => boolean | void) => {
     el.addEventListener("cancel", onCancel);
     el.addEventListener("close", onClose);
 
-    return () => {
+    return (): void => {
       el.removeEventListener("cancel", onCancel);
       el.removeEventListener("close", onClose);
 
@@ -130,7 +135,7 @@ const useModalDialog = (onDismiss: () => boolean | void) => {
     };
   }, []);
 
-  const onBackdropMouseDown = (e: ReactMouseEvent<HTMLDialogElement>) => {
+  const onBackdropMouseDown = (e: ReactMouseEvent<HTMLDialogElement>): void => {
     if (e.target !== e.currentTarget) {
       return;
     }

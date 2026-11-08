@@ -173,13 +173,13 @@ const useFitPopover = (
       return;
     }
 
-    const fit = () => fitAbsolute(node, trigger?.current ?? null);
+    const fit = (): void => fitAbsolute(node, trigger?.current ?? null);
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(node);
     window.addEventListener("resize", fit);
 
-    return () => {
+    return (): void => {
       observer.disconnect();
       window.removeEventListener("resize", fit);
     };

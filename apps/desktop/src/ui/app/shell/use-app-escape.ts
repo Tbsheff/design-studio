@@ -4,7 +4,7 @@ const useEscape = (onClose: () => void): void => {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.key !== "Escape" || event.defaultPrevented) {
         return;
       }
@@ -16,7 +16,7 @@ const useEscape = (onClose: () => void): void => {
 
     globalThis.addEventListener("keydown", onKey, true);
 
-    return () => globalThis.removeEventListener("keydown", onKey, true);
+    return (): void => globalThis.removeEventListener("keydown", onKey, true);
   }, []);
 };
 

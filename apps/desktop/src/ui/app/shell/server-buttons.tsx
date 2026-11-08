@@ -1,4 +1,5 @@
 import type { AppServerStatus } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
 const ServerButtons = ({
   state,
@@ -8,7 +9,7 @@ const ServerButtons = ({
   state: AppServerStatus["state"];
   managed: boolean;
   control: (action: "start" | "stop" | "restart") => void;
-}) => {
+}): ReactElement | null => {
   if (!managed) {
     return state === "starting" ? null : (
       <button

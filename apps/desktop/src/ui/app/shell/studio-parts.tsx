@@ -4,7 +4,7 @@ import type {
   RunStatus,
   Version,
 } from "@design-studio/contracts";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactElement } from "react";
 
 import { Canvas } from "../../features/canvas/canvas";
 import { UnfinishedBanner } from "../../features/chat/unfinished-banner";
@@ -23,7 +23,7 @@ interface CenterProps {
   canvas: ComponentProps<typeof Canvas>;
 }
 
-const CenterView = (props: CenterProps) => {
+const CenterView = (props: CenterProps): ReactElement => {
   const { left, right } = props;
 
   if (props.compareOpen && left && right) {
@@ -67,7 +67,7 @@ const UnfinishedSlot = (props: {
   runStopped: boolean;
   onKeep: () => void;
   onDiscard: () => void;
-}) => {
+}): ReactElement | null => {
   if (!props.visible) {
     return null;
   }
@@ -92,7 +92,7 @@ interface ModalsProps {
   onCloseSettings: () => void;
 }
 
-const StudioModals = (props: ModalsProps) => (
+const StudioModals = (props: ModalsProps): ReactElement => (
   <>
     {props.designOpen && (
       <DesignMdModal
@@ -116,7 +116,7 @@ const StudioBoot = ({
 }: {
   message: string | null;
   onExit: () => void;
-}) => {
+}): ReactElement => {
   if (message === null) {
     return <div className="boot muted">Loading project…</div>;
   }
@@ -134,7 +134,7 @@ const StudioBoot = ({
   );
 };
 
-const StudioToast = ({ text }: { text: string | null }) => (
+const StudioToast = ({ text }: { text: string | null }): ReactElement => (
   <div className="ds-toast-slot" role="status" aria-live="polite">
     {text && <div className="ds-toast">{text}</div>}
   </div>

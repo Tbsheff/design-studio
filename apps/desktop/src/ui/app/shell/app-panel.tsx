@@ -5,7 +5,7 @@ import { useTransition } from "react";
 import type { ReactElement } from "react";
 
 import { api } from "../../api";
-import FlowTab from "../../features/canvas/flow-tab";
+import { FlowTab } from "../../features/canvas/flow-tab";
 import type { AppBarProps } from "./app-bar";
 import { envSuggestion, SettingsTab } from "./app-settings-tab";
 import { statusLine } from "./app-state-text";

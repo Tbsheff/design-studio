@@ -10,8 +10,6 @@ import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";
 import { useCurrentFrameStates } from "./frame-states-model.js";
 
-import "../../styles/route-flow.css";
-
 const stop = (event: ReactPointerEvent): void => event.stopPropagation();
 
 const doneText = (result: FlowResult): string => {

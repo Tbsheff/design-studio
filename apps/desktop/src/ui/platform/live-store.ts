@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react";
 
-export interface LiveStore<T> {
-  get: () => T;
-  set: (next: T) => void;
+interface LiveStore<State> {
+  get: () => State;
+  set: (next: State) => void;
   subscribe: (listener: () => void) => () => void;
 }
 
-export function createLiveStore<T>(initial: T): LiveStore<T> {
+const createLiveStore = <State>(initial: State): LiveStore<State> => {
   let value = initial;
   const listeners = new Set<() => void>();
 
@@ -31,8 +31,11 @@ export function createLiveStore<T>(initial: T): LiveStore<T> {
       };
     },
   };
-}
+};
 
-export function useLive<T>(store: LiveStore<T>): T {
-  return useSyncExternalStore(store.subscribe, store.get, store.get);
-}
+const useLive = <State>(store: LiveStore<State>): State =>
+  useSyncExternalStore(store.subscribe, store.get, store.get);
+
+export { createLiveStore, useLive };
+
+export type { LiveStore };

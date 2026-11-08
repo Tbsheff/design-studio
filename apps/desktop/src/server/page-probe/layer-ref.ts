@@ -11,12 +11,12 @@ import type { PreviewService } from "../preview/index.js";
 import { onProbePage } from "../preview/probe-page.js";
 import { isGoneRef, refForKey, remapIds } from "./layer-ids.js";
 
-export interface Viewport {
+interface Viewport {
   width: number;
   height: number;
 }
 
-export interface RawLayer {
+interface RawLayer {
   parent: number;
   depth: number;
   tag: string;
@@ -31,7 +31,7 @@ export interface RawLayer {
   hidden: boolean;
 }
 
-export interface Layer extends RawLayer {
+interface Layer extends RawLayer {
   ref: string;
   key: string;
 }
@@ -51,7 +51,7 @@ interface ScanResult {
   roots: number[] | null;
 }
 
-type ScanPage = { evaluate<T>(expression: string): Promise<T> };
+type ScanPage = { evaluate<Value>(expression: string): Promise<Value> };
 
 interface Memo {
   key: string;
@@ -190,15 +190,13 @@ const SCAN_SOURCE = String.raw`async (input) => {
   return { layers, truncated, missingRoot: false, roots };
 }`;
 
-export function scopeOf(projectId: string, directionId: string): string {
-  return `${projectId}/${directionId}`;
-}
+const scopeOf = (projectId: string, directionId: string): string =>
+  `${projectId}/${directionId}`;
 
-export function isLayerRef(value: unknown): value is string {
-  return typeof value === "string" && LAYER_REF.test(value.trim());
-}
+const isLayerRef = (value: unknown): value is string =>
+  typeof value === "string" && LAYER_REF.test(value.trim());
 
-function keyed(raws: RawLayer[], scope: string): Layer[] {
+const keyed = (raws: RawLayer[], scope: string): Layer[] => {
   const keys: string[] = [];
   const seen = new Map<string, number>();
   return raws.map((raw, index) => {
@@ -212,29 +210,24 @@ function keyed(raws: RawLayer[], scope: string): Layer[] {
     keys[index] = key;
     return { ...raw, key, ref: refForKey(scope, key) };
   });
-}
+};
 
-function scanIn(page: ScanPage, input: ScanInput): Promise<ScanResult> {
-  return page.evaluate<ScanResult>(
-    `(${SCAN_SOURCE})(${JSON.stringify(input)})`
-  );
-}
+const scanIn = (page: ScanPage, input: ScanInput): Promise<ScanResult> =>
+  page.evaluate<ScanResult>(`(${SCAN_SOURCE})(${JSON.stringify(input)})`);
 
-async function onPage<T>(
+const onPage = async <Value>(
   preview: PreviewService,
   url: string,
   viewport: Viewport,
-  task: (page: ScanPage) => Promise<T>,
+  task: (page: ScanPage) => Promise<Value>,
   layoutOnly = false
-): Promise<T> {
-  return onProbePage(preview, url, viewport, task, { layoutOnly });
-}
+): Promise<Value> => onProbePage(preview, url, viewport, task, { layoutOnly });
 
-function remember(
+const remember = (
   scope: string,
   page: string | undefined,
   layers: Layer[]
-): void {
+): void => {
   if (memo.size > MEMO_MAX) memo.clear();
   for (const layer of layers)
     memo.set(`${scope}|${layer.ref}`, {
@@ -242,9 +235,9 @@ function remember(
       path: layer.path,
       page,
     });
-}
+};
 
-function remapMemo(change: SourceChange): void {
+const remapMemo = (change: SourceChange): void => {
   const scope = scopeOf(change.projectId, change.directionId);
   for (const move of remapIds(scope, change.files)) {
     const known = memo.get(`${scope}|${move.ref}`);
@@ -252,26 +245,25 @@ function remapMemo(change: SourceChange): void {
     if (move.to === null) memo.delete(`${scope}|${move.ref}`);
     else memo.set(`${scope}|${move.ref}`, { ...known, key: move.to });
   }
-}
+};
 
-export const pageProbe = {
+const pageProbe = {
   start(): () => void {
     return onSourceChange(remapMemo);
   },
 };
 
-export function memoPage(scope: string, ref: string): string | undefined {
-  return memo.get(`${scope}|${ref}`)?.page;
-}
+const memoPage = (scope: string, ref: string): string | undefined =>
+  memo.get(`${scope}|${ref}`)?.page;
 
-export async function scanLayers(
+const scanLayers = async (
   preview: PreviewService,
   url: string,
   viewport: Viewport,
   scope: string,
   page: string | undefined,
   options: { root: string | null; depth: number; max: number }
-): Promise<{ layers: Layer[]; truncated: boolean } | null> {
+): Promise<{ layers: Layer[]; truncated: boolean } | null> => {
   const found = await onPage(preview, url, viewport, (page) =>
     scanIn(page, { ...options, paths: null, all: false })
   );
@@ -279,15 +271,15 @@ export async function scanLayers(
   const layers = keyed(found.layers, scope);
   remember(scope, page, layers);
   return { layers, truncated: found.truncated };
-}
+};
 
-export class LayerRefError extends Error {}
+class LayerRefError extends Error {}
 
-function quickHits(
+const quickHits = (
   scope: string,
   refs: string[],
   found: ScanResult
-): Map<string, string> {
+): Map<string, string> => {
   const layers = keyed(found.layers, scope);
   const hits = new Map<string, string>();
   refs.forEach((ref, index) => {
@@ -296,7 +288,7 @@ function quickHits(
     if (layer?.ref === ref) hits.set(ref, layer.path);
   });
   return hits;
-}
+};
 
 function refError(
   ref: string,
@@ -314,7 +306,7 @@ function refError(
 
 type LookUp = Map<string, string> | LayerRefError | null;
 
-function lookUp(
+const lookUp = (
   preview: PreviewService,
   url: string,
   viewport: Viewport,
@@ -323,8 +315,8 @@ function lookUp(
   known: (Memo | undefined)[],
   last: boolean,
   layoutOnly: boolean
-): Promise<LookUp> {
-  return onPage<LookUp>(
+): Promise<LookUp> =>
+  onPage<LookUp>(
     preview,
     url,
     viewport,
@@ -366,16 +358,15 @@ function lookUp(
     },
     layoutOnly
   );
-}
 
-export async function resolveLayerRefs(
+const resolveLayerRefs = async (
   preview: PreviewService,
   url: string,
   viewport: Viewport,
   scope: string,
   refs: string[],
   layoutOnly = false
-): Promise<Map<string, string>> {
+): Promise<Map<string, string>> => {
   const wanted = [...new Set(refs)];
   const known = wanted.map((ref) => memo.get(`${scope}|${ref}`));
   let found = await lookUp(
@@ -412,34 +403,33 @@ export async function resolveLayerRefs(
     );
   if (found instanceof LayerRefError) throw found;
   return found as Map<string, string>;
-}
+};
 
-export async function resolveLayerRef(
+const resolveLayerRef = async (
   preview: PreviewService,
   url: string,
   viewport: Viewport,
   scope: string,
   ref: string
-): Promise<string> {
-  return (await resolveLayerRefs(preview, url, viewport, scope, [ref])).get(
+): Promise<string> =>
+  (await resolveLayerRefs(preview, url, viewport, scope, [ref])).get(
     ref
   ) as string;
-}
 
-export interface PathMatch<T> {
+interface PathMatch<Value> {
   layers: (Layer | null)[];
-  extra: T;
+  extra: Value;
 }
 
-export async function layersAtPaths<T>(
+const layersAtPaths = async <Value>(
   preview: PreviewService,
   url: string,
   viewport: Viewport,
   scope: string,
   page: string | undefined,
-  find: (probe: ScanPage) => Promise<{ paths: string[]; extra: T }>
-): Promise<PathMatch<T>> {
-  return onPage(preview, url, viewport, async (probe) => {
+  find: (probe: ScanPage) => Promise<{ paths: string[]; extra: Value }>
+): Promise<PathMatch<Value>> =>
+  onPage(preview, url, viewport, async (probe) => {
     const found = await find(probe);
     if (found.paths.length === 0) return { layers: [], extra: found.extra };
     const scan = await scanIn(probe, {
@@ -461,4 +451,17 @@ export async function layersAtPaths<T>(
     );
     return { layers: picked, extra: found.extra };
   });
-}
+
+export {
+  scopeOf,
+  isLayerRef,
+  pageProbe,
+  memoPage,
+  scanLayers,
+  LayerRefError,
+  resolveLayerRefs,
+  resolveLayerRef,
+  layersAtPaths,
+};
+
+export type { Viewport, RawLayer, Layer, PathMatch };

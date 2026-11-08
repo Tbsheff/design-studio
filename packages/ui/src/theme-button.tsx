@@ -1,10 +1,11 @@
 import { lazy, Suspense, useRef, useState } from "react";
+import type { ReactElement } from "react";
 
 import { Icon } from "./Icon";
 
 const ThemeMenu = lazy(() => import("./theme-menu.js"));
 
-export function ThemeButton() {
+export const ThemeButton = (): ReactElement => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
 
@@ -38,4 +39,4 @@ export function ThemeButton() {
       )}
     </span>
   );
-}
+};

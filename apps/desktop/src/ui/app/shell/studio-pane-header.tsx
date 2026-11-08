@@ -1,7 +1,7 @@
 import { Icon, usePopover } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
 import { useCallback, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode, RefObject } from "react";
+import type { ReactElement, KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { shortcutLabel } from "../../../shared/keymap";
 import {
@@ -21,7 +21,7 @@ interface ThemeApi {
 }
 
 const themeApi = (): ThemeApi | undefined =>
-  (window as unknown as { studioTheme?: ThemeApi }).studioTheme;
+  (globalThis as unknown as { studioTheme?: ThemeApi }).studioTheme;
 
 interface Props {
   name: string;
@@ -55,8 +55,14 @@ interface Item {
   checked?: boolean;
 }
 
-function MenuItems({ items, onDone }: { items: Item[]; onDone: () => void }) {
-  return items.map((item) => (
+const MenuItems = ({
+  items,
+  onDone,
+}: {
+  items: Item[];
+  onDone: () => void;
+}): ReactElement[] =>
+  items.map((item) => (
     <button
       key={item.id}
       type="button"
@@ -74,9 +80,8 @@ function MenuItems({ items, onDone }: { items: Item[]; onDone: () => void }) {
       {item.meta && <span className="ui-menu-meta">{item.meta}</span>}
     </button>
   ));
-}
 
-function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
+const onMenuKey = (event: KeyboardEvent<HTMLDivElement>): void => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
     return;
   }
@@ -95,18 +100,18 @@ function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
 
   event.preventDefault();
   next?.focus();
-}
+};
 
-function ProjectMenu(
+const ProjectMenu = (
   props: Props & {
     onClose: (refocus: boolean) => void;
     onStartRename: () => void;
     trigger: RefObject<HTMLButtonElement | null>;
   }
-) {
+): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, props.onClose, props.trigger);
-  const done = () => props.onClose(false);
+  const done = (): void => props.onClose(false);
   const pref = themeApi()?.get() ?? "system";
 
   const panels: Item[] = [
@@ -229,19 +234,19 @@ function ProjectMenu(
       </div>
     </div>
   );
-}
+};
 
-function RenameField({
+const RenameField = ({
   name,
   onDone,
 }: {
   name: string;
   onDone: (next: string | null) => void;
-}) {
+}): ReactElement => {
   const [value, setValue] = useState(name);
   const done = useRef(false);
 
-  const finish = (save: boolean) => {
+  const finish = (save: boolean): void => {
     if (done.current) {
       return;
     }
@@ -256,23 +261,23 @@ function RenameField({
       aria-label="Project name"
       autoFocus
       value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onFocus={(e) => e.currentTarget.select()}
+      onChange={(event) => setValue(event.target.value)}
+      onFocus={(event) => event.currentTarget.select()}
       onBlur={() => finish(true)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
           finish(true);
-        } else if (e.key === "Escape") {
-          e.preventDefault();
-          e.stopPropagation();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          event.stopPropagation();
           finish(false);
         }
       }}
     />
   );
-}
+};
 
-function Status({
+const Status = ({
   connection,
   error,
   onDismiss,
@@ -280,42 +285,38 @@ function Status({
   connection: string;
   error: string | null;
   onDismiss: () => void;
-}): ReactNode {
-  return (
-    <>
-      {connection !== "open" && (
-        <span
-          className="conn pane-conn"
-          role="status"
-          data-tip={
-            connection === "connecting" ? "Connecting…" : "Reconnecting…"
-          }
-        >
-          <span className="spinner" />
-          <span className="sr-only">
-            {connection === "connecting" ? "Connecting…" : "Reconnecting…"}
-          </span>
+}): ReactNode => (
+  <>
+    {connection !== "open" && (
+      <span
+        className="conn pane-conn"
+        role="status"
+        data-tip={connection === "connecting" ? "Connecting…" : "Reconnecting…"}
+      >
+        <span className="spinner" />
+        <span className="sr-only">
+          {connection === "connecting" ? "Connecting…" : "Reconnecting…"}
         </span>
-      )}
-      {error && (
-        <div className="pane-error ui-notice" role="alert">
-          <Icon name="alert" size={14} />
-          <span className="pane-error-text">{error}</span>
-          <button
-            type="button"
-            className="icon-btn small"
-            aria-label="Dismiss"
-            onClick={onDismiss}
-          >
-            <Icon name="close" size={12} />
-          </button>
-        </div>
-      )}
-    </>
-  );
-}
+      </span>
+    )}
+    {error && (
+      <div className="pane-error ui-notice" role="alert">
+        <Icon name="alert" size={14} />
+        <span className="pane-error-text">{error}</span>
+        <button
+          type="button"
+          className="icon-btn small"
+          aria-label="Dismiss"
+          onClick={onDismiss}
+        >
+          <Icon name="close" size={12} />
+        </button>
+      </div>
+    )}
+  </>
+);
 
-export function StudioPaneHeader(props: Props) {
+export const StudioPaneHeader = (props: Props): ReactElement => {
   const [open, setOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -356,7 +357,7 @@ export function StudioPaneHeader(props: Props) {
               aria-expanded={open}
               data-tip={open ? undefined : props.name}
               data-tip-align="start"
-              onClick={() => setOpen((v) => !v)}
+              onClick={() => setOpen((isOpen) => !isOpen)}
               onDoubleClick={() => setRenaming(true)}
             >
               <span className="truncate">{props.name}</span>
@@ -422,4 +423,4 @@ export function StudioPaneHeader(props: Props) {
       />
     </>
   );
-}
+};

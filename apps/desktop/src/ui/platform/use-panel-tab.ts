@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { readStored, writeStored } from "./storage";
 
-export type PanelTab =
+type PanelTab =
   | "chat"
   | "design"
   | "tweaks"
@@ -12,7 +12,7 @@ export type PanelTab =
   | "versions"
   | "system";
 
-export const PANE_MODES: readonly PanelTab[] = ["chat", "design", "comments"];
+const PANE_MODES: readonly PanelTab[] = ["chat", "design", "comments"];
 
 const TABS: readonly PanelTab[] = [
   "chat",
@@ -28,34 +28,43 @@ const TABS: readonly PanelTab[] = [
 const TAB_KEY = "design-studio.panel-tab.v2";
 const MAX_PROJECTS = 100;
 
-function readAll(): Record<string, PanelTab> {
+const readAll = (): Record<string, PanelTab> => {
   try {
     const raw: unknown = JSON.parse(readStored(TAB_KEY) ?? "{}");
 
-    return raw && typeof raw === "object"
-      ? (raw as Record<string, PanelTab>)
-      : {};
+    if (raw && typeof raw === "object") {
+      return raw as Record<string, PanelTab>;
+    }
+
+    return {};
   } catch {
     return {};
   }
-}
+};
 
-function readTab(projectId: string): PanelTab | null {
+const readTab = (projectId: string): PanelTab | null => {
   const raw = readAll()[projectId];
 
   return TABS.find((tab) => tab === raw) ?? null;
-}
+};
 
-function writeTab(projectId: string, tab: PanelTab): void {
+const writeTab = (projectId: string, tab: PanelTab): void => {
   const all = readAll();
   delete all[projectId];
   all[projectId] = tab;
   const kept = Object.entries(all).slice(-MAX_PROJECTS);
 
   writeStored(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
-}
+};
 
-export function usePanelTab(projectId: string, eligible: boolean) {
+const usePanelTab = (
+  projectId: string,
+  eligible: boolean
+): {
+  choose: (next: PanelTab) => void;
+  show: (next: PanelTab) => void;
+  tab: PanelTab;
+} => {
   const chosen = useRef(readTab(projectId));
   const autoSwitched = useRef(false);
   const [tab, setTab] = useState<PanelTab>(chosen.current ?? "chat");
@@ -79,4 +88,8 @@ export function usePanelTab(projectId: string, eligible: boolean) {
   );
 
   return { choose, show: choose, tab };
-}
+};
+
+export { PANE_MODES, usePanelTab };
+
+export type { PanelTab };

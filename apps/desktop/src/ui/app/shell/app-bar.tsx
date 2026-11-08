@@ -1,5 +1,6 @@
 import type { AttachedApp } from "@design-studio/contracts";
 import { lazy, Suspense, useState, useTransition } from "react";
+import type { ReactElement } from "react";
 
 import { api } from "../../api";
 import { AppBarAccount } from "./app-bar-account.js";
@@ -25,7 +26,11 @@ export interface AppBarProps {
   onAddRoute: (route: string) => void;
 }
 
-export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
+export default function AppBar({
+  projectId,
+  app,
+  onAddRoute,
+}: AppBarProps): ReactElement {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("routes");
   const { status, firstVersion, refresh } = useAppState(projectId, false);
@@ -39,7 +44,7 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
 
   const [, startTransition] = useTransition();
 
-  const retry = () => {
+  const retry = (): void => {
     startTransition(async () => {
       try {
         await api.appControl(projectId, managed ? "restart" : "start");
@@ -50,7 +55,7 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
     });
   };
 
-  const showLog = () => {
+  const showLog = (): void => {
     setTab("logs");
     setOpen(true);
   };
@@ -88,7 +93,7 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
         aria-haspopup="dialog"
         onClick={() => {
           focus.remember();
-          setOpen((v) => !v);
+          setOpen((isOpen) => !isOpen);
         }}
         data-tip="Routes, dev server and log"
       >

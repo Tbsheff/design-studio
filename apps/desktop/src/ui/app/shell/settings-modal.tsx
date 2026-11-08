@@ -1,11 +1,13 @@
 import type { Project } from "@design-studio/contracts";
 import { Icon, useModalDialog } from "@design-studio/ui";
 import { Suspense, useRef, useState, useTransition } from "react";
+import type { ReactElement } from "react";
 
 import { api, errorText } from "../../api";
 import { CommandRules } from "../../features/commands/command-rules";
 import { PublishSetup } from "../../features/share-publish-ship-export/index.js";
 import { ShipTemplates } from "../../features/share-publish-ship-export/ship-templates";
+import { copy } from "./copy";
 import { parseDraft, SettingsFields, toDraft } from "./settings-fields";
 import { SettingsPanels } from "./settings-panels";
 
@@ -15,7 +17,11 @@ interface Props {
   onClose: () => void;
 }
 
-export function SettingsModal({ project, onSaved, onClose }: Props) {
+export const SettingsModal = ({
+  project,
+  onSaved,
+  onClose,
+}: Props): ReactElement => {
   const [draft, setDraft] = useState(() => toDraft(project.settings));
   const [saving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +29,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
 
   const dialog = useModalDialog(onClose);
 
-  const save = () => {
+  const save = (): void => {
     const parsed = parseDraft(draft);
 
     if ("error" in parsed) {
@@ -53,8 +59,8 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
     >
       <div className="modal-head">
         <div className="titles">
-          <h2>Project settings</h2>
-          <p>Applies to the next run.</p>
+          <h2>{copy.projectSettings}</h2>
+          <p>{copy.appliesToTheNextRun}</p>
         </div>
         <button
           className="icon-btn"
@@ -85,7 +91,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
       </div>
       <div className="modal-foot">
         <button className="btn ghost" onClick={onClose}>
-          Cancel
+          {copy.cancel}
         </button>
         <button
           className="btn primary"
@@ -97,4 +103,4 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
       </div>
     </dialog>
   );
-}
+};

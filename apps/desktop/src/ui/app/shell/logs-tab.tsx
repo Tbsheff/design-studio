@@ -1,7 +1,16 @@
 import type { AppLogLine } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
+import type { ReactElement } from "react";
 
-function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
+import { copy } from "./copy";
+
+const LogsTab = ({
+  logs,
+  managed,
+}: {
+  logs: AppLogLine[];
+  managed: boolean;
+}): ReactElement => {
   const ref = useRef<HTMLPreElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -15,9 +24,8 @@ function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
     <pre ref={ref} className="app-logs" aria-label="Dev server log">
       {!managed && (
         <span className="studio">
-          The studio did not start this dev server, so it cannot show its
-          output. Look in the terminal where it runs. The studio checks are
-          below.{"\n"}
+          {copy.theStudioDidNotStart}
+          {"\n"}
         </span>
       )}
       {logs.length === 0
@@ -32,6 +40,6 @@ function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
           ))}
     </pre>
   );
-}
+};
 
 export { LogsTab };

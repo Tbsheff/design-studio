@@ -6,22 +6,28 @@ import {
   useRef,
   useState,
 } from "react";
-import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
+import type {
+  ReactElement,
+  CSSProperties,
+  KeyboardEvent,
+  ReactNode,
+  RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 
-import { placeFixed } from "./popover-placement.js";
 import { Icon } from "./Icon";
+import { placeFixed } from "./popover-placement.js";
 
-export interface UiSelectOption<V extends string = string> {
-  value: V;
+interface UiSelectOption<OptionValue extends string = string> {
+  value: OptionValue;
   label: string;
   disabled?: boolean;
 }
 
-interface Props<V extends string> {
-  value: V;
-  options: readonly UiSelectOption<V>[];
-  onChange: (value: V) => void;
+interface Props<OptionValue extends string> {
+  value: OptionValue;
+  options: readonly UiSelectOption<OptionValue>[];
+  onChange: (value: OptionValue) => void;
   "aria-label"?: string;
   "aria-labelledby"?: string;
   id?: string;
@@ -40,13 +46,13 @@ const HIDDEN: CSSProperties = {
   top: 0,
 };
 
-function step(
+const step = (
   options: readonly UiSelectOption[],
   from: number,
   delta: 1 | -1
-): number {
-  for (let i = 1; i <= options.length; i++) {
-    const at = (from + delta * i + options.length * 2) % options.length;
+): number => {
+  for (let index = 1; index <= options.length; index += 1) {
+    const at = (from + delta * index + options.length * 2) % options.length;
 
     if (!options[at]?.disabled) {
       return at;
@@ -54,73 +60,77 @@ function step(
   }
 
   return from;
-}
+};
 
-function edge(options: readonly UiSelectOption[], last: boolean): number {
-  const order = options.map((_, i) => i);
+const edge = (options: readonly UiSelectOption[], last: boolean): number => {
+  const order = options.map((_, index) => index);
 
   if (last) {
     order.reverse();
   }
 
-  return order.find((i) => !options[i]?.disabled) ?? -1;
-}
+  return order.find((index) => !options[index]?.disabled) ?? -1;
+};
 
-function typeahead(
+const typeahead = (
   options: readonly UiSelectOption[],
   from: number,
   query: string
-): number {
-  const q = query.toLowerCase();
+): number => {
+  const needle = query.toLowerCase();
 
-  for (let i = 1; i <= options.length; i++) {
-    const at = (from + i) % options.length;
+  for (let index = 1; index <= options.length; index += 1) {
+    const at = (from + index) % options.length;
     const option = options[at];
 
     if (
       option &&
       !option.disabled &&
-      option.label.toLowerCase().startsWith(q)
+      option.label.toLowerCase().startsWith(needle)
     ) {
       return at;
     }
   }
 
   return -1;
-}
+};
 
-function useOutsideClose(
+const useOutsideClose = (
   open: boolean,
   close: () => void,
   root: RefObject<HTMLElement | null>,
   panel: RefObject<HTMLElement | null>
-) {
+): void => {
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    const inside = (target: EventTarget | null) =>
+    const inside = (target: EventTarget | null): boolean =>
       target instanceof Node &&
       (Boolean(root.current?.contains(target)) ||
         Boolean(panel.current?.contains(target)));
 
-    const spot = () => {
+    const spot = (): string => {
       const box = root.current?.getBoundingClientRect();
 
-      return box ? `${box.top},${box.left}` : "";
+      if (box) {
+        return `${box.top},${box.left}`;
+      }
+
+      return "";
     };
 
     const openedAt = spot();
 
-    const onDown = (e: MouseEvent) => {
-      if (!inside(e.target)) {
+    const onDown = (event: MouseEvent): void => {
+      if (!inside(event.target)) {
         close();
       }
     };
 
-    const onScroll = (e: Event) => {
-      if (!inside(e.target) && spot() !== openedAt) {
+    const onScroll = (event: Event): void => {
+      if (!inside(event.target) && spot() !== openedAt) {
         close();
       }
     };
@@ -129,21 +139,20 @@ function useOutsideClose(
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", close);
 
-    return () => {
+    return (): void => {
       document.removeEventListener("mousedown", onDown, true);
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", close);
     };
   }, [open, close, root, panel]);
-}
+};
 
-function openKey(key: string): boolean {
-  return (
-    key === "ArrowDown" || key === "ArrowUp" || key === "Enter" || key === " "
-  );
-}
+const openKey = (key: string): boolean =>
+  key === "ArrowDown" || key === "ArrowUp" || key === "Enter" || key === " ";
 
-export function UiSelect<V extends string>(p: Props<V>) {
+const UiSelect = <OptionValue extends string>(
+  props: Props<OptionValue>
+): ReactElement => {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN);
@@ -152,7 +161,10 @@ export function UiSelect<V extends string>(p: Props<V>) {
   const panel = useRef<HTMLDivElement>(null);
   const typed = useRef({ at: 0, text: "" });
   const listId = useId();
-  const current = p.options.findIndex((o) => o.value === p.value);
+
+  const current = props.options.findIndex(
+    (option) => option.value === props.value
+  );
 
   const close = useCallback(() => {
     setOpen(false);
@@ -184,17 +196,17 @@ export function UiSelect<V extends string>(p: Props<V>) {
     }
   }, [open, active]);
 
-  const show = () => {
+  const show = (): void => {
     setActive(
-      current !== -1 && !p.options[current]?.disabled
+      current !== -1 && !props.options[current]?.disabled
         ? current
-        : edge(p.options, false)
+        : edge(props.options, false)
     );
     setOpen(true);
   };
 
-  const pick = (index: number) => {
-    const option = p.options[index];
+  const pick = (index: number): void => {
+    const option = props.options[index];
 
     if (!option || option.disabled) {
       return;
@@ -203,8 +215,8 @@ export function UiSelect<V extends string>(p: Props<V>) {
     close();
     button.current?.focus();
 
-    if (option.value !== p.value) {
-      p.onChange(option.value);
+    if (option.value !== props.value) {
+      props.onChange(option.value);
     }
   };
 
@@ -213,51 +225,56 @@ export function UiSelect<V extends string>(p: Props<V>) {
     const text = now - typed.current.at < 700 ? typed.current.text + key : key;
     typed.current = { at: now, text };
 
-    return typeahead(p.options, text.length > 1 ? active - 1 : active, text);
+    return typeahead(
+      props.options,
+      text.length > 1 ? active - 1 : active,
+      text
+    );
   };
 
   const moveFor = (key: string): number | null => {
     if (key === "ArrowDown") {
-      return step(p.options, active, 1);
+      return step(props.options, active, 1);
     }
 
     if (key === "ArrowUp") {
-      return step(p.options, active, -1);
+      return step(props.options, active, -1);
     }
 
     if (key === "Home" || key === "PageUp") {
-      return edge(p.options, false);
+      return edge(props.options, false);
     }
 
     if (key === "End" || key === "PageDown") {
-      return edge(p.options, true);
+      return edge(props.options, true);
     }
 
     return null;
   };
 
-  const onOpenKey = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === "Escape") {
+  const onOpenKey = (event: KeyboardEvent<HTMLButtonElement>): void => {
+    if (event.key === "Escape") {
       close();
 
       return;
     }
 
-    if (e.key === "Enter" || e.key === " ") {
+    if (event.key === "Enter" || event.key === " ") {
       pick(active);
 
       return;
     }
 
-    const next = moveFor(e.key) ?? (e.key.length === 1 ? find(e.key) : null);
+    const next =
+      moveFor(event.key) ?? (event.key.length === 1 ? find(event.key) : null);
 
     if (next !== null && next >= 0) {
       setActive(next);
     }
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === "Tab") {
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
+    if (event.key === "Tab") {
       if (open) {
         close();
       }
@@ -265,57 +282,59 @@ export function UiSelect<V extends string>(p: Props<V>) {
       return;
     }
 
-    if (e.metaKey || e.ctrlKey || e.altKey) {
+    if (event.metaKey || event.ctrlKey || event.altKey) {
       return;
     }
 
-    const printable = e.key.length === 1;
+    const printable = event.key.length === 1;
 
-    if (!open && !openKey(e.key) && !printable) {
+    if (!open && !openKey(event.key) && !printable) {
       return;
     }
 
-    e.preventDefault();
-    e.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
 
     if (open) {
-      return onOpenKey(e);
+      return onOpenKey(event);
     }
 
-    if (openKey(e.key)) {
+    if (openKey(event.key)) {
       return show();
     }
 
-    const hit = find(e.key);
+    const hit = find(event.key);
 
-    if (hit >= 0 && p.options[hit]) {
-      p.onChange(p.options[hit].value);
+    if (hit >= 0 && props.options[hit]) {
+      props.onChange(props.options[hit].value);
     }
   };
 
-  const label = current === -1 ? p.placeholder : p.options[current]?.label;
+  const label =
+    current === -1 ? props.placeholder : props.options[current]?.label;
+
   const activeId = open && active >= 0 ? `${listId}-${active}` : undefined;
 
   return (
-    <span ref={root} className={`ui-select-root ${p.className ?? ""}`}>
+    <span ref={root} className={`ui-select-root ${props.className ?? ""}`}>
       <button
         ref={button}
-        id={p.id}
+        id={props.id}
         type="button"
         role="combobox"
-        className={`ui-select${p.size === "sm" ? " sm" : ""}`}
+        className={`ui-select${props.size === "sm" ? " sm" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-activedescendant={activeId}
-        aria-label={p["aria-label"]}
-        aria-labelledby={p["aria-labelledby"]}
-        disabled={p.disabled}
-        data-tip={open ? undefined : p.tip}
+        aria-label={props["aria-label"]}
+        aria-labelledby={props["aria-labelledby"]}
+        disabled={props.disabled}
+        data-tip={open ? undefined : props.tip}
         onClick={() => (open ? close() : show())}
         onKeyDown={onKeyDown}
       >
-        {p.icon}
+        {props.icon}
         <span
           className={`ui-select-value truncate${current === -1 ? " placeholder" : ""}`}
         >
@@ -330,21 +349,21 @@ export function UiSelect<V extends string>(p: Props<V>) {
             id={listId}
             className="ui-menu ui-select-menu"
             role="listbox"
-            aria-label={p["aria-label"]}
-            aria-labelledby={p["aria-labelledby"]}
+            aria-label={props["aria-label"]}
+            aria-labelledby={props["aria-labelledby"]}
             style={style}
           >
-            {p.options.map((option, index) => (
+            {props.options.map((option, index) => (
               <div
                 key={option.value}
                 id={`${listId}-${index}`}
                 data-index={index}
                 data-active={index === active ? "" : undefined}
                 role="option"
-                aria-selected={option.value === p.value}
+                aria-selected={option.value === props.value}
                 aria-disabled={option.disabled || undefined}
                 className="ui-menu-item"
-                onMouseDown={(e) => e.preventDefault()}
+                onMouseDown={(event) => event.preventDefault()}
                 onMouseEnter={() => !option.disabled && setActive(index)}
                 onClick={() => pick(index)}
               >
@@ -356,6 +375,10 @@ export function UiSelect<V extends string>(p: Props<V>) {
         )}
     </span>
   );
-}
+};
 
-export type UiSelectProps<V extends string> = Props<V>;
+type UiSelectProps<OptionValue extends string> = Props<OptionValue>;
+
+export { UiSelect };
+
+export type { UiSelectOption, UiSelectProps };

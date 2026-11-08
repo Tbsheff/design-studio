@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { Icon } from "./Icon";
 
 const DATA_DISCLOSURE =
   "Prompts, selected element code, attached images and project files the agent reads are sent to Anthropic's API to generate designs. Projects, versions and history stay on this computer.";
 
-export function Disclosure({
+export const Disclosure = ({
   className = "",
   lead,
   trail,
@@ -14,7 +14,7 @@ export function Disclosure({
   className?: string;
   lead?: ReactNode;
   trail?: ReactNode;
-}) {
+}): ReactElement => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -34,7 +34,7 @@ export function Disclosure({
         aria-expanded={open}
         aria-controls="data-disclosure-text"
         aria-label={open ? "Hide data use details" : "Show data use details"}
-        onClick={() => setOpen((x) => !x)}
+        onClick={() => setOpen((isOpen) => !isOpen)}
       >
         {open ? (
           "Less"
@@ -51,4 +51,4 @@ export function Disclosure({
       {trail}
     </div>
   );
-}
+};

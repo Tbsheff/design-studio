@@ -1,4 +1,5 @@
 import { memo } from "react";
+import type { ReactElement } from "react";
 
 const PATHS = {
   alert: "M8 2.25l6.25 11H1.75zM8 6.5v3M8 11.5v.25",
@@ -99,7 +100,7 @@ const PATHS = {
   wrap: "M2.5 4.5h9a2.25 2.25 0 0 1 0 4.5H6.5M8.5 7l-2 2 2 2M2.5 12.5h3",
 } as const;
 
-export type IconName = keyof typeof PATHS;
+type IconName = keyof typeof PATHS;
 
 const IconView = ({
   name,
@@ -109,7 +110,7 @@ const IconView = ({
   name: IconName;
   size?: number;
   className?: string;
-}) => (
+}): ReactElement => (
   <svg
     className={`icon ${className ?? ""}`}
     width={size}
@@ -127,4 +128,8 @@ const IconView = ({
   </svg>
 );
 
-export const Icon = memo(IconView);
+const Icon = memo(IconView);
+
+export { Icon };
+
+export type { IconName };

@@ -2,26 +2,29 @@ import type { AppRoute } from "@design-studio/contracts";
 import { cleanRoute } from "@design-studio/contracts/app";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { ReactElement, FormEvent } from "react";
 
 import { api, errorText } from "../../api";
+import { copy } from "./copy";
 
-function RoutesTab({
+const RoutesTab = ({
   projectId,
   onAddRoute,
 }: {
   projectId: string;
   onAddRoute: (route: string) => void;
-}) {
+}): ReactElement => {
   const [routes, setRoutes] = useState<AppRoute[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [custom, setCustom] = useState("");
   useEffect(() => {
     let isLive = true;
+
     const loadRoutes = async (): Promise<void> => {
       try {
         const result = await api.appRoutes(projectId);
+
         if (isLive) {
           setRoutes(result.routes);
         }
@@ -31,8 +34,10 @@ function RoutesTab({
         }
       }
     };
+
     void loadRoutes();
-    return () => {
+
+    return (): void => {
       isLive = false;
     };
   }, [projectId]);
@@ -50,11 +55,11 @@ function RoutesTab({
 
   const shown = matches.slice(0, 200);
 
-  const addCustom = (event: FormEvent) => {
+  const addCustom = (event: FormEvent): void => {
     event.preventDefault();
     const route = cleanRoute(custom);
 
-    if (!route || /[[\]]/.test(route)) {
+    if (!route || /[[\]]/u.test(route)) {
       return;
     }
 
@@ -74,15 +79,19 @@ function RoutesTab({
             : "Loading routes…"
         }
         aria-label="Filter routes"
-        onChange={(e) => setFilter(e.target.value)}
-        onKeyDown={(e) => {
+        onChange={(event) => setFilter(event.target.value)}
+        onKeyDown={(event) => {
           const first = shown[0];
 
-          if (e.key !== "Enter" || !first || e.nativeEvent.isComposing) {
+          if (
+            event.key !== "Enter" ||
+            !first ||
+            event.nativeEvent.isComposing
+          ) {
             return;
           }
 
-          e.preventDefault();
+          event.preventDefault();
 
           if (first.dynamic) {
             setCustom(first.route);
@@ -114,7 +123,7 @@ function RoutesTab({
               <span className="file"> {route.file}</span>
             </span>
             {route.dynamic ? (
-              <span className="tag">dynamic</span>
+              <span className="tag">{copy.dynamic}</span>
             ) : (
               <Icon name="plus" size={12} />
             )}
@@ -122,8 +131,11 @@ function RoutesTab({
         ))}
         {matches.length > shown.length && (
           <div className="app-routes-more">
-            Showing {shown.length} of {matches.length}. Type in the filter to
-            find the rest.
+            {copy.showing}
+            {shown.length}
+            {copy.countSeparator}
+            {matches.length}
+            {copy.typeInTheFilterTo}
           </div>
         )}
       </div>
@@ -133,18 +145,18 @@ function RoutesTab({
           value={custom}
           placeholder="/patients/123"
           aria-label="Route to add"
-          onChange={(e) => setCustom(e.target.value)}
+          onChange={(event) => setCustom(event.target.value)}
         />
         <button
           type="submit"
           className="btn small"
-          disabled={!custom.trim() || /[[\]]/.test(custom)}
+          disabled={!custom.trim() || /[[\]]/u.test(custom)}
         >
-          Add frame
+          {copy.addFrame}
         </button>
       </form>
     </div>
   );
-}
+};
 
 export { RoutesTab };

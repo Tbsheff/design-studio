@@ -1,8 +1,8 @@
 import { uiStore } from "./storage";
 
-const PROJECT_PATH = /^\/p\/([^/]+)\/?$/;
+const PROJECT_PATH = /^\/p\/(?<projectId>[^/]+)\/?$/u;
 
-export function projectFromPath(pathname: string): string | null {
+const projectFromPath = (pathname: string): string | null => {
   const match = PROJECT_PATH.exec(pathname);
 
   if (!match?.[1]) {
@@ -14,33 +14,32 @@ export function projectFromPath(pathname: string): string | null {
   } catch {
     return null;
   }
-}
+};
 
-export function pathForProject(projectId: string | null): string {
-  return projectId ? `/p/${encodeURIComponent(projectId)}` : "/";
-}
+const pathForProject = (projectId: string | null): string =>
+  projectId ? `/p/${encodeURIComponent(projectId)}` : "/";
 
 let installed = false;
 let leaveCheck: (() => boolean) | null = null;
 
-export function setLeaveCheck(check: (() => boolean) | null): void {
+const setLeaveCheck = (check: (() => boolean) | null): void => {
   leaveCheck = check;
-}
+};
 
-export function installRouting(): void {
+const installRouting = (): void => {
   if (installed) {
     return;
   }
 
   installed = true;
-  let current = projectFromPath(window.location.pathname);
+  let current = projectFromPath(globalThis.location.pathname);
   const canonical = pathForProject(current);
 
-  if (window.location.pathname !== canonical) {
-    window.history.replaceState(
+  if (globalThis.location.pathname !== canonical) {
+    globalThis.history.replaceState(
       null,
       "",
-      `${canonical}${window.location.search}${window.location.hash}`
+      `${canonical}${globalThis.location.search}${globalThis.location.hash}`
     );
   }
 
@@ -60,13 +59,13 @@ export function installRouting(): void {
     }
 
     current = next;
-    window.history.pushState(null, "", pathForProject(next));
+    globalThis.history.pushState(null, "", pathForProject(next));
   });
-  window.addEventListener("popstate", () => {
-    const next = projectFromPath(window.location.pathname);
+  globalThis.addEventListener("popstate", () => {
+    const next = projectFromPath(globalThis.location.pathname);
 
     if (current !== null && next !== current && leaveCheck && !leaveCheck()) {
-      window.history.pushState(null, "", pathForProject(current));
+      globalThis.history.pushState(null, "", pathForProject(current));
 
       return;
     }
@@ -77,4 +76,6 @@ export function installRouting(): void {
       uiStore.set({ activeProjectId: next });
     }
   });
-}
+};
+
+export { projectFromPath, pathForProject, setLeaveCheck, installRouting };

@@ -1,19 +1,19 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type * as t from "@babel/types";
+import type * as babelTypes from "@babel/types";
 import type { SourceLoc } from "@design-studio/contracts";
 
 import { parseSource } from "../direct-edit/engine/index.js";
 import { EditError } from "./edit-error.js";
 
-const FULL = /^(.+):(\d+):(\d+)$/;
-const LINE_ONLY = /^(.+):(\d+)$/;
-const SCRIPT = /\.(tsx|jsx|ts|js|mjs|cjs)$/;
+const FULL = /^(?<file>.+):(?<line>\d+):(?<column>\d+)$/u;
+const LINE_ONLY = /^(?<file>.+):(?<line>\d+)$/u;
+const SCRIPT = /\.(?<extension>tsx|jsx|ts|js|mjs|cjs)$/u;
 const FILES_MAX = 2000;
 const shownFiles = new Map<string, Map<string, Set<string>>>();
 
-export function noteShownFiles(scope: string, files: Iterable<string>): void {
+const noteShownFiles = (scope: string, files: Iterable<string>): void => {
   let byBase = shownFiles.get(scope);
 
   if (!byBase || byBase.size > FILES_MAX) {
@@ -25,24 +25,28 @@ export function noteShownFiles(scope: string, files: Iterable<string>): void {
     const base = path.posix.basename(file);
     byBase.set(base, (byBase.get(base) ?? new Set()).add(file));
   }
-}
+};
 
-function fullFile(scope: string, file: string): string {
+const fullFile = (scope: string, file: string): string => {
   if (file.includes("/")) {
     return file;
   }
 
   const known = [...(shownFiles.get(scope)?.get(file) ?? [])];
 
-  return known.length === 1 ? (known[0] as string) : file;
-}
+  if (known.length === 1) {
+    return known[0] as string;
+  }
 
-function insideTree(workTree: string, file: string): string {
+  return file;
+};
+
+const insideTree = (workTree: string, file: string): string => {
   const absolute = path.resolve(workTree, file);
 
   if (
     path.isAbsolute(file) ||
-    file.split(/[\\/]/).includes("..") ||
+    file.split(/[\\/]/u).includes("..") ||
     !absolute.startsWith(workTree + path.sep)
   ) {
     throw new EditError(
@@ -51,9 +55,9 @@ function insideTree(workTree: string, file: string): string {
   }
 
   return absolute;
-}
+};
 
-function tagStartsOn(root: t.Node, line: number): number[] {
+const tagStartsOn = (root: babelTypes.Node, line: number): number[] => {
   const cols: number[] = [];
   const stack: unknown[] = [root];
 
@@ -70,7 +74,7 @@ function tagStartsOn(root: t.Node, line: number): number[] {
     }
 
     if (node.type === "JSXOpeningElement") {
-      const start = (node.loc as t.SourceLocation | undefined)?.start;
+      const start = (node.loc as babelTypes.SourceLocation | undefined)?.start;
 
       if (start?.line === line) {
         cols.push(start.column + 1);
@@ -84,15 +88,15 @@ function tagStartsOn(root: t.Node, line: number): number[] {
     }
   }
 
-  return cols.sort((a, b) => a - b);
-}
+  return cols.toSorted((left, right) => left - right);
+};
 
-async function colOnLine(
+const colOnLine = async (
   workTree: string,
   file: string,
   line: number,
   raw: string
-): Promise<number> {
+): Promise<number> => {
   if (!SCRIPT.test(file)) {
     throw new EditError(
       `${raw}: pass file:line:col for a file that is not JSX.`
@@ -107,7 +111,7 @@ async function colOnLine(
     throw new EditError(`${raw}: there is no file ${file} in the project.`);
   }
 
-  const cols = tagStartsOn(parseSource(text, /\.tsx?$/.test(file)), line);
+  const cols = tagStartsOn(parseSource(text, /\.tsx?$/u.test(file)), line);
 
   if (cols.length === 1) {
     return cols[0] as number;
@@ -122,20 +126,20 @@ async function colOnLine(
   throw new EditError(
     `${raw}: ${cols.length} JSX tags start on line ${line} (columns ${cols.join(", ")}). Pass file:line:col, for example ${file}:${line}:${cols[0]}.`
   );
-}
+};
 
-export async function resolveSourceLoc(
+const resolveSourceLoc = async (
   workTree: string,
   scope: string,
   raw: string
-): Promise<SourceLoc> {
+): Promise<SourceLoc> => {
   const full = FULL.exec(raw.trim());
 
   if (full) {
     return {
+      col: Number(full[3]),
       file: fullFile(scope, full[1] as string),
       line: Number(full[2]),
-      col: Number(full[3]),
     };
   }
 
@@ -150,5 +154,7 @@ export async function resolveSourceLoc(
   const file = fullFile(scope, lineOnly[1] as string);
   const line = Number(lineOnly[2]);
 
-  return { file, line, col: await colOnLine(workTree, file, line, raw) };
-}
+  return { col: await colOnLine(workTree, file, line, raw), file, line };
+};
+
+export { noteShownFiles, resolveSourceLoc };

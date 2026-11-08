@@ -8,7 +8,7 @@ interface Ids {
   keyByRef: Map<string, string>;
 }
 
-export interface Move {
+interface Move {
   ref: string;
   from: string;
   to: string | null;
@@ -16,21 +16,24 @@ export interface Move {
 
 const IDS_MAX = 50_000;
 const GONE = "\u0000gone";
-const LOC_IN_KEY = /(^|\|)([^|#]+):(\d+):(\d+)(?=[|#])/g;
+
+const LOC_IN_KEY =
+  /(?<boundary>^|\|)(?<file>[^|#]+):(?<line>\d+):(?<column>\d+)(?=[|#])/gu;
+
 const registries = new Map<string, Ids>();
 
-function idsOf(scope: string): Ids {
+const idsOf = (scope: string): Ids => {
   let ids = registries.get(scope);
 
   if (!ids || ids.refByKey.size > IDS_MAX) {
-    ids = { refByKey: new Map(), keyByRef: new Map() };
+    ids = { keyByRef: new Map(), refByKey: new Map() };
     registries.set(scope, ids);
   }
 
   return ids;
-}
+};
 
-export function refForKey(scope: string, key: string): string {
+const refForKey = (scope: string, key: string): string => {
   const ids = idsOf(scope);
   const known = ids.refByKey.get(key);
 
@@ -41,24 +44,23 @@ export function refForKey(scope: string, key: string): string {
   let ref = layerRef(key);
 
   for (
-    let n = 1;
+    let counter = 1;
     ids.keyByRef.has(ref) && ids.keyByRef.get(ref) !== key;
-    n += 1
+    counter += 1
   ) {
-    ref = layerRef(`${key}^${n}`);
+    ref = layerRef(`${key}^${counter}`);
   }
 
   ids.refByKey.set(key, ref);
   ids.keyByRef.set(ref, key);
 
   return ref;
-}
+};
 
-export function isGoneRef(scope: string, ref: string): boolean {
-  return registries.get(scope)?.keyByRef.get(ref) === GONE;
-}
+const isGoneRef = (scope: string, ref: string): boolean =>
+  registries.get(scope)?.keyByRef.get(ref) === GONE;
 
-function movedKey(key: string, maps: Map<string, LineMap>): string | null {
+const movedKey = (key: string, maps: Map<string, LineMap>): string | null => {
   let gone = false;
 
   const next = key.replaceAll(
@@ -82,10 +84,14 @@ function movedKey(key: string, maps: Map<string, LineMap>): string | null {
     }
   );
 
-  return gone ? null : next;
-}
+  if (gone) {
+    return null;
+  }
 
-export function remapIds(scope: string, files: SourceFileChange[]): Move[] {
+  return next;
+};
+
+const remapIds = (scope: string, files: SourceFileChange[]): Move[] => {
   const ids = registries.get(scope);
 
   if (!ids || files.length === 0) {
@@ -102,7 +108,7 @@ export function remapIds(scope: string, files: SourceFileChange[]): Move[] {
     const to = movedKey(key, maps);
 
     if (to !== key) {
-      moves.push({ ref, from: key, to });
+      moves.push({ from: key, ref, to });
     }
   }
 
@@ -127,4 +133,8 @@ export function remapIds(scope: string, files: SourceFileChange[]): Move[] {
   }
 
   return moves;
-}
+};
+
+export { refForKey, isGoneRef, remapIds };
+
+export type { Move };

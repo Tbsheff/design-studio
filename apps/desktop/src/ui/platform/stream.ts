@@ -120,9 +120,9 @@ class VirtualSource implements EventSourceLike {
   }
 }
 
-function eventHead(
+const eventHead = (
   data: string
-): { pid: string; seq: number; type: string } | null {
+): { pid: string; seq: number; type: string } | null => {
   try {
     const event: {
       projectId?: unknown;
@@ -139,7 +139,7 @@ function eventHead(
   } catch {
     return null;
   }
-}
+};
 
 class Tab {
   readonly id = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -262,10 +262,10 @@ class Leader {
     es.addEventListener(STREAM_APPROVALS, (msg) =>
       this.approvalsText((msg as MessageEvent<string>).data)
     );
-    const onEvent = (msg: Event) =>
+    const onEvent = (msg: Event): void =>
       this.event((msg as MessageEvent<string>).data);
     for (const type of EVENT_TYPES) es.addEventListener(type, onEvent);
-    es.onerror = () => this.lost(es);
+    es.onerror = (): void => this.lost(es);
   }
 
   private lost(es: EventSource): void {
@@ -389,7 +389,7 @@ interface AppStream {
   onApprovals(listener: (poll: McpApprovalPoll) => void): () => void;
 }
 
-function follow(tab: Tab, message: Wire, leader: Leader | null): void {
+const follow = (tab: Tab, message: Wire, leader: Leader | null): void => {
   switch (message.t) {
     case "ev": {
       if (!leader)
@@ -416,9 +416,9 @@ function follow(tab: Tab, message: Wire, leader: Leader | null): void {
       leader?.drop(message.tab);
     }
   }
-}
+};
 
-function startStream(): AppStream {
+const startStream = (): AppStream => {
   const shared =
     typeof BroadcastChannel !== "undefined" &&
     typeof navigator !== "undefined" &&
@@ -429,12 +429,12 @@ function startStream(): AppStream {
     if (leader) leader.update(tab.id, wants);
     else channel?.postMessage({ t: "want", tab: tab.id, wants } satisfies Wire);
   });
-  const lead = () => {
+  const lead = (): void => {
     leader = new Leader(tab, channel);
     leader.start();
   };
   if (channel) {
-    channel.onmessage = (msg: MessageEvent<Wire>) =>
+    channel.onmessage = (msg: MessageEvent<Wire>): void =>
       follow(tab, msg.data, leader);
     void navigator.locks.request(
       TAB_LOCK + tab.id,
@@ -466,20 +466,20 @@ function startStream(): AppStream {
       };
     },
   };
-}
+};
 
 let stream: AppStream | null = null;
 
-export function appStream(): AppStream {
+const appStream = (): AppStream => {
   stream ??= startStream();
   return stream;
-}
+};
 
 const ACTION_DONE_EVENT = "action.done";
 
-export function subscribeActionDone(
+const subscribeActionDone = (
   listener: (data: string) => void
-): () => void {
+): (() => void) => {
   if (typeof EventSource === "undefined") {
     return () => undefined;
   }
@@ -491,4 +491,6 @@ export function subscribeActionDone(
   return () => {
     source.close();
   };
-}
+};
+
+export { appStream, subscribeActionDone };

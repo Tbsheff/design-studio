@@ -1,12 +1,10 @@
 import { createContext, useContext } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-export const SheetSlot = createContext<{ slot: HTMLElement | null } | null>(
-  null
-);
+const SheetSlot = createContext<{ slot: HTMLElement | null } | null>(null);
 
-export function PanelHead({
+const PanelHead = ({
   title,
   className,
   titleClassName,
@@ -16,11 +14,15 @@ export function PanelHead({
   className: string;
   titleClassName: string;
   children?: ReactNode;
-}) {
+}): ReactElement | null => {
   const sheet = useContext(SheetSlot);
 
   if (sheet) {
-    return sheet.slot && children ? createPortal(children, sheet.slot) : null;
+    if (sheet.slot && children) {
+      return createPortal(children, sheet.slot);
+    }
+
+    return null;
   }
 
   return (
@@ -29,4 +31,6 @@ export function PanelHead({
       {children}
     </div>
   );
-}
+};
+
+export { SheetSlot, PanelHead };

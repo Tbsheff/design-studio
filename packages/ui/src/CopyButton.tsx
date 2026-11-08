@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 
 import { Icon } from "./Icon";
 
@@ -12,7 +13,7 @@ const reportCopy = async (
   report((await copied) ? "copied" : "failed");
 };
 
-export async function copyText(text: string): Promise<boolean> {
+const copyText = async (text: string): Promise<boolean> => {
   try {
     await navigator.clipboard.writeText(text);
 
@@ -20,9 +21,9 @@ export async function copyText(text: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
+};
 
-export function CopyButton({
+const CopyButton = ({
   text,
   label = "Copy",
   className = "",
@@ -30,7 +31,7 @@ export function CopyButton({
   text: string | (() => string);
   label?: string;
   className?: string;
-}) {
+}): ReactElement => {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export function CopyButton({
 
     const id = window.setTimeout(() => setState("idle"), 1400);
 
-    return () => window.clearTimeout(id);
+    return (): void => window.clearTimeout(id);
   }, [state]);
 
   const tip =
@@ -70,4 +71,6 @@ export function CopyButton({
       </span>
     </button>
   );
-}
+};
+
+export { copyText, CopyButton };

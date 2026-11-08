@@ -1,4 +1,4 @@
-const FENCE = /^\s{0,3}(```|~~~)/;
+const FENCE = /^\s{0,3}(?<marker>```|~~~)/u;
 
 export function splitMarkdownBlocks(source: string): string[] {
   const lines = source.split("\n");
@@ -26,8 +26,8 @@ export function splitMarkdownBlocks(source: string): string[] {
 
     if (
       next === undefined ||
-      /^[\s>]/.test(next) ||
-      /^\s*([-*+]|\d+[.)])\s/.test(next)
+      /^[\s>]/u.test(next) ||
+      /^\s*(?<marker>[-*+]|\d+[.)])\s/u.test(next)
     ) {
       continue;
     }

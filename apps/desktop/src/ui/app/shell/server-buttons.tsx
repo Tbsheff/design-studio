@@ -1,6 +1,9 @@
 import type { AppServerStatus } from "@design-studio/contracts";
+import type { ReactElement } from "react";
 
-function ServerButtons({
+import { copy } from "./copy";
+
+const ServerButtons = ({
   state,
   managed,
   control,
@@ -8,15 +11,19 @@ function ServerButtons({
   state: AppServerStatus["state"];
   managed: boolean;
   control: (action: "start" | "stop" | "restart") => void;
-}) {
+}): ReactElement | null => {
   if (!managed) {
-    return state === "starting" ? null : (
+    if (state === "starting") {
+      return null;
+    }
+
+    return (
       <button
         type="button"
         className="btn small"
         onClick={() => control("start")}
       >
-        Check again
+        {copy.checkAgain}
       </button>
     );
   }
@@ -40,11 +47,11 @@ function ServerButtons({
           className="btn small ghost"
           onClick={() => control("stop")}
         >
-          Stop
+          {copy.stop}
         </button>
       )}
     </>
   );
-}
+};
 
 export { ServerButtons };

@@ -2,20 +2,22 @@ const EVENT = "studio:open-app";
 
 let pending: { path: string } | null = null;
 
-export function requestOpenApp(path = ""): void {
+const requestOpenApp = (path = ""): void => {
   pending = { path };
-  window.dispatchEvent(new CustomEvent(EVENT));
-}
+  globalThis.dispatchEvent(new CustomEvent(EVENT));
+};
 
-export function takeOpenAppRequest(): { path: string } | null {
+const takeOpenAppRequest = (): { path: string } | null => {
   const next = pending;
   pending = null;
 
   return next;
-}
+};
 
-export function onOpenAppRequest(handler: () => void): () => void {
-  window.addEventListener(EVENT, handler);
+const onOpenAppRequest = (handler: () => void): (() => void) => {
+  globalThis.addEventListener(EVENT, handler);
 
-  return () => window.removeEventListener(EVENT, handler);
-}
+  return () => globalThis.removeEventListener(EVENT, handler);
+};
+
+export { requestOpenApp, takeOpenAppRequest, onOpenAppRequest };

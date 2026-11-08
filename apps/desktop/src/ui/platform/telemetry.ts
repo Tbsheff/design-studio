@@ -3,7 +3,7 @@ import type { TelemetrySample } from "@design-studio/contracts";
 import { sendTelemetry } from "../api";
 import { desktopBridge } from "./desktop";
 
-export interface DesktopBoot {
+interface DesktopBoot {
   startedAt: number;
   marks: Record<string, number>;
 }
@@ -20,17 +20,21 @@ let scope: Scope = {};
 let appStartSent = false;
 let flushLongFrames: () => void = () => undefined;
 
-export function desktopBoot(): DesktopBoot | null {
+const desktopBoot = (): DesktopBoot | null => {
   const boot = desktopBridge<{ boot?: DesktopBoot }>()?.boot;
 
-  return boot && typeof boot.startedAt === "number" ? boot : null;
-}
+  if (boot && typeof boot.startedAt === "number") {
+    return boot;
+  }
 
-function afterPaint(fn: () => void): void {
+  return null;
+};
+
+const afterPaint = (fn: () => void): void => {
   requestAnimationFrame(() => requestAnimationFrame(fn));
-}
+};
 
-export function reportAppStart(screen: "home" | "studio"): void {
+const reportAppStart = (screen: "home" | "studio"): void => {
   if (appStartSent) {
     return;
   }
@@ -40,35 +44,35 @@ export function reportAppStart(screen: "home" | "studio"): void {
     const boot = desktopBoot();
     const ms = boot ? Date.now() - boot.startedAt : performance.now();
     sendTelemetry({
-      kind: "app.start",
-      ms: Math.round(ms),
       detail: {
-        surface: boot ? "desktop" : "web",
         screen,
+        surface: boot ? "desktop" : "web",
         ...boot?.marks,
       },
+      kind: "app.start",
+      ms: Math.round(ms),
     });
   });
-}
+};
 
-export function reportFirstToken(
+const reportFirstToken = (
   projectId: string,
   directionId: string | undefined,
   runId: string,
   sentAt: number
-): void {
+): void => {
   afterPaint(() =>
     sendTelemetry({
-      kind: "run.first_token",
-      projectId,
-      directionId,
-      ms: Date.now() - sentAt,
       detail: { runId, stage: "visible" },
+      directionId,
+      kind: "run.first_token",
+      ms: Date.now() - sentAt,
+      projectId,
     })
   );
-}
+};
 
-function longFrameType(): string | null {
+const longFrameType = (): string | null => {
   if (typeof PerformanceObserver === "undefined") {
     return null;
   }
@@ -79,10 +83,14 @@ function longFrameType(): string | null {
     return "long-animation-frame";
   }
 
-  return types.includes("longtask") ? "longtask" : null;
-}
+  if (types.includes("longtask")) {
+    return "longtask";
+  }
 
-export function watchLongFrames(): () => void {
+  return null;
+};
+
+const watchLongFrames = (): (() => void) => {
   const type = longFrameType();
 
   if (!type) {
@@ -93,7 +101,7 @@ export function watchLongFrames(): () => void {
   let worst = 0;
   let timer: number | undefined;
 
-  const flush = () => {
+  const flush = (): void => {
     window.clearTimeout(timer);
     timer = undefined;
 
@@ -105,7 +113,7 @@ export function watchLongFrames(): () => void {
       kind: "frame.long",
       ...scope,
       ms: Math.round(worst),
-      detail: { count, type, screen: scope.projectId ? "studio" : "home" },
+      detail: { count, screen: scope.projectId ? "studio" : "home", type },
     };
 
     count = 0;
@@ -130,9 +138,9 @@ export function watchLongFrames(): () => void {
     }
   });
 
-  observer.observe({ type, buffered: true });
+  observer.observe({ buffered: true, type });
 
-  const onHide = () => {
+  const onHide = (): void => {
     if (document.visibilityState === "hidden") {
       flush();
     }
@@ -144,11 +152,11 @@ export function watchLongFrames(): () => void {
     document.removeEventListener("visibilitychange", onHide);
     observer.disconnect();
     flush();
-    flushLongFrames = () => undefined;
+    flushLongFrames = (): undefined => undefined;
   };
-}
+};
 
-export function setTelemetryScope(next: Scope): () => void {
+const setTelemetryScope = (next: Scope): (() => void) => {
   flushLongFrames();
   scope = next;
 
@@ -160,4 +168,14 @@ export function setTelemetryScope(next: Scope): () => void {
     flushLongFrames();
     scope = {};
   };
-}
+};
+
+export {
+  desktopBoot,
+  reportAppStart,
+  reportFirstToken,
+  watchLongFrames,
+  setTelemetryScope,
+};
+
+export type { DesktopBoot };

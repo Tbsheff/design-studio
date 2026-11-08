@@ -16,16 +16,16 @@ const HIDDEN: CSSProperties = {
   top: 0,
 };
 
-export function useAnchoredPopover<T extends string>(
+export function useAnchoredPopover<View extends string>(
   anchor?: (trigger: HTMLElement) => HTMLElement
 ) {
-  const [view, setView] = useState<T | null>(null);
+  const [view, setView] = useState<View | null>(null);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN);
   const trigger = useRef<HTMLSpanElement | null>(null);
   const panel = useRef<HTMLDivElement | null>(null);
   const returnTo = useRef<HTMLElement | null>(null);
 
-  const open = useCallback((next: T) => {
+  const open = useCallback((next: View) => {
     if (
       document.activeElement instanceof HTMLElement &&
       !panel.current?.contains(document.activeElement)
@@ -49,6 +49,7 @@ export function useAnchoredPopover<T extends string>(
     if (!view || !trigger.current || !panel.current) {
       return;
     }
+
     setStyle(
       placeFixed(
         anchor ? anchor(trigger.current) : trigger.current,
@@ -62,35 +63,37 @@ export function useAnchoredPopover<T extends string>(
     if (!view) {
       return;
     }
-    const inside = (target: EventTarget | null) =>
+
+    const inside = (target: EventTarget | null): boolean | undefined =>
       target instanceof Node &&
       (panel.current?.contains(target) || trigger.current?.contains(target));
 
-    const onDown = (e: Event) => {
-      if (!inside(e.target)) {
+    const onDown = (event: Event): void => {
+      if (!inside(event.target)) {
         close(false);
       }
     };
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") {
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") {
         return;
       }
-      e.preventDefault();
-      e.stopPropagation();
+
+      event.preventDefault();
+      event.stopPropagation();
       close(true);
     };
 
     const onScroll = onDown;
 
     document.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onScroll);
 
-    return () => {
+    return (): void => {
       document.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey, true);
+      globalThis.removeEventListener("keydown", onKey, true);
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", onScroll);
     };

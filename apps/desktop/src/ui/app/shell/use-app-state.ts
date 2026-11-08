@@ -63,7 +63,7 @@ const useAppState = (
 
     void load();
 
-    return () => {
+    return (): void => {
       isAlive = false;
     };
   }, [projectId, open, tick]);

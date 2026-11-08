@@ -1,17 +1,17 @@
 import type { RunLevel } from "@design-studio/contracts";
 import { useSyncExternalStore } from "react";
 
-export interface Viewport {
+interface Viewport {
   preset: "desktop" | "tablet" | "mobile" | "custom";
   width: number;
   height: number;
 }
 
-export type ZoomSetting = "fit" | number;
+type ZoomSetting = "fit" | number;
 
-export type Screen = "home" | "new-design-system" | "design-systems";
+type Screen = "home" | "new-design-system" | "design-systems";
 
-export interface LibraryFrom {
+interface LibraryFrom {
   projectId: string;
   directionId: string;
 }
@@ -22,7 +22,7 @@ const SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   "design-systems",
 ]);
 
-export interface UiState {
+interface UiState {
   activeProjectId: string | null;
   screen: Screen;
   libraryFrom: LibraryFrom | null;
@@ -41,41 +41,45 @@ export interface UiState {
   rulers: boolean;
 }
 
-export type HomeSort = "recent" | "name" | "created";
+type HomeSort = "recent" | "name" | "created";
 
-export const HOME_SORTS: readonly HomeSort[] = ["recent", "name", "created"];
+const HOME_SORTS: readonly HomeSort[] = ["recent", "name", "created"];
 
 const KEY = "design-studio.ui.v1";
 
 const defaults: UiState = {
   activeProjectId: null,
-  screen: "home",
-  libraryFrom: null,
-  returnTo: "home",
-  directionByProject: {},
-  viewport: { preset: "desktop", width: 1440, height: 900 },
-  zoom: "fit",
   chatWidth: null,
-  lastPackId: null,
-  lastLocation: null,
-  snapByProject: {},
+  directionByProject: {},
   homeSort: "recent",
+  lastLocation: null,
+  lastPackId: null,
   layersOpen: false,
+  libraryFrom: null,
   paneCollapsed: false,
-  viewRowOpen: false,
+  returnTo: "home",
   rulers: false,
+  screen: "home",
+  snapByProject: {},
+  viewRowOpen: false,
+  viewport: { height: 900, preset: "desktop", width: 1440 },
+  zoom: "fit",
 };
 
-function libraryFromOf(value: unknown): LibraryFrom | null {
+const libraryFromOf = (value: unknown): LibraryFrom | null => {
   const from = value as Partial<LibraryFrom> | null | undefined;
 
-  return typeof from?.projectId === "string" &&
+  if (
+    typeof from?.projectId === "string" &&
     typeof from.directionId === "string"
-    ? { projectId: from.projectId, directionId: from.directionId }
-    : null;
-}
+  ) {
+    return { directionId: from.directionId, projectId: from.projectId };
+  }
 
-function loadUiState(): UiState {
+  return null;
+};
+
+const loadUiState = (): UiState => {
   try {
     const raw = localStorage.getItem(KEY);
 
@@ -87,82 +91,83 @@ function loadUiState(): UiState {
 
     return {
       activeProjectId: parsed.activeProjectId ?? null,
-      screen:
-        parsed.screen && SCREENS.has(parsed.screen) ? parsed.screen : "home",
-      libraryFrom:
-        parsed.screen === "design-systems"
-          ? libraryFromOf(parsed.libraryFrom)
-          : null,
-      returnTo:
-        parsed.returnTo === "design-systems" ? "design-systems" : "home",
-      directionByProject: parsed.directionByProject ?? {},
-      viewport: parsed.viewport ?? defaults.viewport,
-      zoom: parsed.zoom ?? defaults.zoom,
       chatWidth: typeof parsed.chatWidth === "number" ? parsed.chatWidth : null,
-      lastPackId:
-        typeof parsed.lastPackId === "string" ? parsed.lastPackId : null,
+      directionByProject: parsed.directionByProject ?? {},
+      homeSort:
+        parsed.homeSort && HOME_SORTS.includes(parsed.homeSort)
+          ? parsed.homeSort
+          : "recent",
       lastLocation:
         typeof parsed.lastLocation === "string" &&
         parsed.lastLocation.startsWith("/")
           ? parsed.lastLocation
           : null,
+      lastPackId:
+        typeof parsed.lastPackId === "string" ? parsed.lastPackId : null,
+      layersOpen: parsed.layersOpen === true,
+      libraryFrom:
+        parsed.screen === "design-systems"
+          ? libraryFromOf(parsed.libraryFrom)
+          : null,
+      paneCollapsed: parsed.paneCollapsed === true,
+      returnTo:
+        parsed.returnTo === "design-systems" ? "design-systems" : "home",
+      rulers: parsed.rulers === true,
+      screen:
+        parsed.screen && SCREENS.has(parsed.screen) ? parsed.screen : "home",
       snapByProject:
         parsed.snapByProject && typeof parsed.snapByProject === "object"
           ? parsed.snapByProject
           : {},
-      homeSort:
-        parsed.homeSort && HOME_SORTS.includes(parsed.homeSort)
-          ? parsed.homeSort
-          : "recent",
-      layersOpen: parsed.layersOpen === true,
-      paneCollapsed: parsed.paneCollapsed === true,
       viewRowOpen: parsed.viewRowOpen === true,
-      rulers: parsed.rulers === true,
+      viewport: parsed.viewport ?? defaults.viewport,
+      zoom: parsed.zoom ?? defaults.zoom,
     };
   } catch {
     return defaults;
   }
-}
+};
 
-function saveUiState(state: UiState): void {
+const saveUiState = (state: UiState): void => {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
     return;
   }
-}
+};
 
 let state: UiState = loadUiState();
 const listeners = new Set<() => void>();
 
-export const uiStore = {
-  get: () => state,
-  set: (patch: Partial<UiState> | ((s: UiState) => Partial<UiState>)) => {
+const uiStore = {
+  get: (): UiState => state,
+  set: (
+    patch: Partial<UiState> | ((previous: UiState) => Partial<UiState>)
+  ): void => {
     const next = typeof patch === "function" ? patch(state) : patch;
     state = { ...state, ...next };
     saveUiState(state);
-    listeners.forEach((l) => l());
+    listeners.forEach((listener) => listener());
   },
-  subscribe: (l: () => void) => {
-    listeners.add(l);
+  subscribe: (listener: () => void) => {
+    listeners.add(listener);
 
-    return () => {
-      listeners.delete(l);
+    return (): void => {
+      listeners.delete(listener);
     };
   },
 };
 
-export function useUi(): UiState {
-  return useSyncExternalStore(uiStore.subscribe, uiStore.get);
-}
+const useUi = (): UiState =>
+  useSyncExternalStore(uiStore.subscribe, uiStore.get);
 
-export interface DraftStore {
+interface DraftStore {
   get: () => string;
   set: (value: string) => void;
   subscribe: (listener: () => void) => () => void;
 }
 
-export function createDraftStore(initial = ""): DraftStore {
+const createDraftStore = (initial = ""): DraftStore => {
   let value = initial;
   const draftListeners = new Set<() => void>();
 
@@ -174,25 +179,23 @@ export function createDraftStore(initial = ""): DraftStore {
       }
 
       value = next;
-      draftListeners.forEach((l) => l());
+      draftListeners.forEach((listener) => listener());
     },
-    subscribe: (l) => {
-      draftListeners.add(l);
+    subscribe: (listener) => {
+      draftListeners.add(listener);
 
       return () => {
-        draftListeners.delete(l);
+        draftListeners.delete(listener);
       };
     },
   };
-}
+};
 
-export function useDraft(store: DraftStore): string {
-  return useSyncExternalStore(store.subscribe, store.get);
-}
+const useDraft = (store: DraftStore): string =>
+  useSyncExternalStore(store.subscribe, store.get);
 
-export function useDraftActive(store: DraftStore): boolean {
-  return useSyncExternalStore(store.subscribe, () => store.get().trim() !== "");
-}
+const useDraftActive = (store: DraftStore): boolean =>
+  useSyncExternalStore(store.subscribe, () => store.get().trim() !== "");
 
 interface HomeVariationsIntent {
   projectId: string;
@@ -203,8 +206,8 @@ interface HomeVariationsIntent {
 
 let homeIntent: HomeVariationsIntent | null = null;
 
-export const homeVariations = {
-  set: (intent: HomeVariationsIntent) => {
+const homeVariations = {
+  set: (intent: HomeVariationsIntent): void => {
     homeIntent = intent;
   },
   take: (projectId: string): HomeVariationsIntent | null => {
@@ -219,7 +222,7 @@ export const homeVariations = {
   },
 };
 
-export const readStored = (key: string): string | null => {
+const readStored = (key: string): string | null => {
   try {
     return globalThis.localStorage.getItem(key);
   } catch {
@@ -227,7 +230,7 @@ export const readStored = (key: string): string | null => {
   }
 };
 
-export const writeStored = (key: string, value: string): void => {
+const writeStored = (key: string, value: string): void => {
   try {
     globalThis.localStorage.setItem(key, value);
   } catch {
@@ -235,10 +238,33 @@ export const writeStored = (key: string, value: string): void => {
   }
 };
 
-export const removeStored = (key: string): void => {
+const removeStored = (key: string): void => {
   try {
     globalThis.localStorage.removeItem(key);
   } catch {
     return;
   }
+};
+
+export {
+  HOME_SORTS,
+  uiStore,
+  useUi,
+  createDraftStore,
+  useDraft,
+  useDraftActive,
+  homeVariations,
+  readStored,
+  writeStored,
+  removeStored,
+};
+
+export type {
+  Viewport,
+  ZoomSetting,
+  Screen,
+  LibraryFrom,
+  UiState,
+  HomeSort,
+  DraftStore,
 };

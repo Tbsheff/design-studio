@@ -1,6 +1,6 @@
 import { Icon, SheetSlot } from "@design-studio/ui";
 import { Suspense, useMemo, useState } from "react";
-import type { ComponentProps, ReactNode, RefObject } from "react";
+import type { ReactElement, ComponentProps, ReactNode, RefObject } from "react";
 
 import { ChatPanel } from "../../features/chat/chat-panel";
 import { ChatSplitter } from "../../features/chat/chat-splitter";
@@ -51,7 +51,7 @@ const SHEET_TITLES: Partial<Record<PanelTab, string>> = {
   versions: "Versions",
 };
 
-export function visiblePane(
+const visiblePane = (
   tab: PanelTab,
   has: {
     tokens: boolean;
@@ -59,7 +59,7 @@ export function visiblePane(
     tweaks: boolean;
     components: boolean;
   }
-): PanelTab {
+): PanelTab => {
   const missing: Partial<Record<PanelTab, boolean>> = {
     comments: !has.comments,
     components: !has.components,
@@ -67,10 +67,14 @@ export function visiblePane(
     tweaks: !has.tweaks,
   };
 
-  return missing[tab] ? "chat" : tab;
-}
+  if (missing[tab]) {
+    return "chat";
+  }
 
-function SheetHead({
+  return tab;
+};
+
+const SheetHead = ({
   id,
   title,
   onClose,
@@ -80,59 +84,71 @@ function SheetHead({
   title: string;
   onClose: () => void;
   onSlot: (el: HTMLDivElement | null) => void;
-}) {
-  return (
-    <div className="pane-sheet-head">
-      <h2 className="pane-sheet-title" id={id}>
-        {title}
-      </h2>
-      <div className="pane-sheet-slot" ref={onSlot} />
-      <button
-        type="button"
-        className="icon-btn small"
-        aria-label="Back to chat"
-        data-tip="Back to chat"
-        data-tip-align="end"
-        onClick={onClose}
-      >
-        <Icon name="close" size={14} />
-      </button>
-    </div>
-  );
-}
+}): ReactElement => (
+  <div className="pane-sheet-head">
+    <h2 className="pane-sheet-title" id={id}>
+      {title}
+    </h2>
+    <div className="pane-sheet-slot" ref={onSlot} />
+    <button
+      type="button"
+      className="icon-btn small"
+      aria-label="Back to chat"
+      data-tip="Back to chat"
+      data-tip-align="end"
+      onClick={onClose}
+    >
+      <Icon name="close" size={14} />
+    </button>
+  </div>
+);
 
-function Sheet(props: Props & { tab: PanelTab }) {
-  const close = () => props.onTab("chat");
+const Sheet = (props: Props & { tab: PanelTab }): ReactElement => {
+  const close = (): void => props.onTab("chat");
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const sheet = useMemo(() => ({ slot }), [slot]);
   const title = SHEET_TITLES[props.tab] ?? "";
 
-  const body = (() => {
+  const body = ((): ReactElement | null => {
     switch (props.tab) {
       case "versions": {
         return <VersionsPanel {...props.versions} />;
       }
 
       case "tokens": {
-        return props.tokens ? <TokensPanel {...props.tokens} /> : null;
+        if (props.tokens) {
+          return <TokensPanel {...props.tokens} />;
+        }
+
+        return null;
       }
 
       case "components": {
-        return props.components ? (
-          <ComponentsPanel {...props.components} />
-        ) : null;
+        if (props.components) {
+          return <ComponentsPanel {...props.components} />;
+        }
+
+        return null;
       }
 
       case "tweaks": {
-        return props.tweaks ? (
-          <Suspense fallback={null}>
-            <TweaksPanel {...props.tweaks} />
-          </Suspense>
-        ) : null;
+        if (props.tweaks) {
+          return (
+            <Suspense fallback={null}>
+              <TweaksPanel {...props.tweaks} />
+            </Suspense>
+          );
+        }
+
+        return null;
       }
 
       case "comments": {
-        return props.comments ? <CommentsPanel {...props.comments} /> : null;
+        if (props.comments) {
+          return <CommentsPanel {...props.comments} />;
+        }
+
+        return null;
       }
 
       case "system": {
@@ -161,9 +177,9 @@ function Sheet(props: Props & { tab: PanelTab }) {
       </SheetSlot.Provider>
     </section>
   );
-}
+};
 
-export function LeftPane(props: Props) {
+const LeftPane = (props: Props): ReactElement => {
   const tab = visiblePane(props.tab, {
     comments: Boolean(props.comments),
     components: Boolean(props.components),
@@ -215,4 +231,6 @@ export function LeftPane(props: Props) {
       <ChatSplitter columnsRef={props.columnsRef} />
     </aside>
   );
-}
+};
+
+export { visiblePane, LeftPane };

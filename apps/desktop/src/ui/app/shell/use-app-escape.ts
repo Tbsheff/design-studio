@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 
-function useEscape(onClose: () => void): void {
+const useEscape = (onClose: () => void): void => {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.key !== "Escape" || event.defaultPrevented) {
         return;
       }
@@ -14,10 +14,10 @@ function useEscape(onClose: () => void): void {
       close.current();
     };
 
-    window.addEventListener("keydown", onKey, true);
+    globalThis.addEventListener("keydown", onKey, true);
 
-    return () => window.removeEventListener("keydown", onKey, true);
+    return (): void => globalThis.removeEventListener("keydown", onKey, true);
   }, []);
-}
+};
 
 export { useEscape };

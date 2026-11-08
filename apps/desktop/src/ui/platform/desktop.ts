@@ -21,19 +21,14 @@ const recentKeys = new Map<string, { at: number; handled: () => boolean }>();
 const recentCommands = new Map<string, number>();
 let installed = false;
 
-export function desktopBridge<
+const desktopBridge = <
   Bridge extends object = DesktopBridge,
->(): Bridge | null {
-  return (
-    (window as unknown as { studioDesktop?: Bridge }).studioDesktop ?? null
-  );
-}
+>(): Bridge | null =>
+  (globalThis as unknown as { studioDesktop?: Bridge }).studioDesktop ?? null;
 
-export function isDesktop(): boolean {
-  return desktopBridge() !== null;
-}
+const isDesktop = (): boolean => desktopBridge() !== null;
 
-function shortcutName(event: KeyboardEvent): string | null {
+const shortcutName = (event: KeyboardEvent): string | null => {
   if (!(event.metaKey || event.ctrlKey)) {
     return null;
   }
@@ -41,7 +36,11 @@ function shortcutName(event: KeyboardEvent): string | null {
   const key = event.key.toLowerCase();
 
   if (key === "z") {
-    return event.shiftKey ? "redo" : "undo";
+    if (event.shiftKey) {
+      return "redo";
+    }
+
+    return "undo";
   }
 
   if (key === "enter") {
@@ -53,9 +52,9 @@ function shortcutName(event: KeyboardEvent): string | null {
   }
 
   return null;
-}
+};
 
-function dispatchDesktopCommand(command: DesktopCommand): void {
+const dispatchDesktopCommand = (command: DesktopCommand): void => {
   recentCommands.set(command.type, Date.now());
   const pressed = recentKeys.get(command.type);
 
@@ -63,20 +62,20 @@ function dispatchDesktopCommand(command: DesktopCommand): void {
     return;
   }
 
-  for (const handler of [...handlers].reverse()) {
+  for (const handler of [...handlers].toReversed()) {
     if (handler(command)) {
       return;
     }
   }
-}
+};
 
-function install(): void {
+const install = (): void => {
   if (installed) {
     return;
   }
 
   installed = true;
-  window.addEventListener(
+  globalThis.addEventListener(
     "keydown",
     (event) => {
       const name = shortcutName(event);
@@ -91,19 +90,19 @@ function install(): void {
     true
   );
   desktopBridge()?.onCommand?.(dispatchDesktopCommand);
-}
+};
 
-export function noteHandledShortcut(name: "undo" | "redo"): void {
+const noteHandledShortcut = (name: "undo" | "redo"): void => {
   recentKeys.set(name, { at: Date.now(), handled: () => true });
-}
+};
 
-export function recentDesktopCommand(name: string): boolean {
+const recentDesktopCommand = (name: string): boolean => {
   const at = recentCommands.get(name);
 
   return at !== undefined && Date.now() - at < KEY_ECHO_MS;
-}
+};
 
-export function useDesktopCommand(handler: Handler): void {
+const useDesktopCommand = (handler: Handler): void => {
   const latest = useRef(handler);
   latest.current = handler;
   useEffect(() => {
@@ -115,7 +114,7 @@ export function useDesktopCommand(handler: Handler): void {
     const entry: Handler = (command) => latest.current(command);
     handlers.push(entry);
 
-    return () => {
+    return (): void => {
       const index = handlers.indexOf(entry);
 
       if (index !== -1) {
@@ -123,33 +122,29 @@ export function useDesktopCommand(handler: Handler): void {
       }
     };
   }, []);
-}
+};
 
-export function useDesktopContext(
-  context: DesktopContext,
-  enabled = true
-): void {
+const useDesktopContext = (context: DesktopContext, enabled = true): void => {
   const { projectId, directionId, running } = context;
   useEffect(() => {
     if (enabled) {
       desktopBridge()?.setContext?.({ directionId, projectId, running });
     }
   }, [projectId, directionId, running, enabled]);
-}
+};
 
 type PickOutcome =
   | { kind: "picked"; path: string }
   | { kind: "canceled" }
   | { kind: "unsupported" };
 
-export function hasNativePicker(): boolean {
-  return typeof desktopBridge()?.pickFolder === "function";
-}
+const hasNativePicker = (): boolean =>
+  typeof desktopBridge()?.pickFolder === "function";
 
-export async function pickFolder(options: {
+const pickFolder = async (options: {
   title: string;
   defaultPath?: string;
-}): Promise<PickOutcome> {
+}): Promise<PickOutcome> => {
   const native = desktopBridge()?.pickFolder;
 
   if (!native) {
@@ -161,5 +156,20 @@ export async function pickFolder(options: {
     ...(options.defaultPath ? { defaultPath: options.defaultPath } : {}),
   });
 
-  return chosen ? { kind: "picked", path: chosen } : { kind: "canceled" };
-}
+  if (chosen) {
+    return { kind: "picked", path: chosen };
+  }
+
+  return { kind: "canceled" };
+};
+
+export {
+  desktopBridge,
+  isDesktop,
+  noteHandledShortcut,
+  recentDesktopCommand,
+  useDesktopCommand,
+  useDesktopContext,
+  hasNativePicker,
+  pickFolder,
+};

@@ -13,20 +13,20 @@ import { focusNewProject } from "../../platform/focus";
 import { uiStore } from "../../platform/storage";
 import { isTypingTarget } from "../../platform/typing-target.js";
 
-function projectForFolder(
+const projectForFolder = (
   projects: Project[],
   folder: string
-): Project | undefined {
-  const clean = folder.replace(/\/+$/, "");
+): Project | undefined => {
+  const clean = folder.replace(/\/+$/u, "");
 
   return projects.find(
     (project) =>
       project.imported?.sourcePath === clean ||
       project.directions.some((direction) => direction.workTree === clean)
   );
-}
+};
 
-function textEdit(kind: "undo" | "redo"): boolean {
+const textEdit = (kind: "undo" | "redo"): boolean => {
   if (!isTypingTarget(document.activeElement)) {
     return false;
   }
@@ -34,9 +34,9 @@ function textEdit(kind: "undo" | "redo"): boolean {
   document.execCommand(kind);
 
   return true;
-}
+};
 
-async function openFolder(folder: string): Promise<string> {
+const openFolder = async (folder: string): Promise<string> => {
   const existing = projectForFolder(await api.listProjects(), folder);
 
   if (existing) {
@@ -46,22 +46,20 @@ async function openFolder(folder: string): Promise<string> {
   const { project } = await api.importProject(folder);
 
   return project.id;
-}
+};
 
 interface DropBridge {
   pathForFile?: (file: File) => string;
   openDropped?: (path: string) => void;
 }
 
-function dropBridge(): DropBridge | undefined {
-  return desktopBridge<DropBridge>() ?? undefined;
-}
+const dropBridge = (): DropBridge | undefined =>
+  desktopBridge<DropBridge>() ?? undefined;
 
-function hasFiles(event: DragEvent): boolean {
-  return event.dataTransfer?.types.includes("Files") ?? false;
-}
+const hasFiles = (event: DragEvent): boolean =>
+  event.dataTransfer?.types.includes("Files") ?? false;
 
-function droppedFolder(event: DragEvent, bridge: DropBridge): string | null {
+const droppedFolder = (event: DragEvent, bridge: DropBridge): string | null => {
   for (const item of event.dataTransfer?.items ?? []) {
     if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
       continue;
@@ -76,17 +74,13 @@ function droppedFolder(event: DragEvent, bridge: DropBridge): string | null {
   }
 
   return null;
-}
+};
 
-function ownsDrop(event: DragEvent): boolean {
-  return (
-    event.defaultPrevented ||
-    (event.target instanceof Element &&
-      event.target.closest(".prompt") !== null)
-  );
-}
+const ownsDrop = (event: DragEvent): boolean =>
+  event.defaultPrevented ||
+  (event.target instanceof Element && event.target.closest(".prompt") !== null);
 
-function useFolderDrop(): void {
+const useFolderDrop = (): void => {
   useEffect(() => {
     const bridge = dropBridge();
 
@@ -94,7 +88,7 @@ function useFolderDrop(): void {
       return;
     }
 
-    const onDragOver = (event: DragEvent) => {
+    const onDragOver = (event: DragEvent): void => {
       if (ownsDrop(event) || !hasFiles(event)) {
         return;
       }
@@ -106,7 +100,7 @@ function useFolderDrop(): void {
       }
     };
 
-    const onDrop = (event: DragEvent) => {
+    const onDrop = (event: DragEvent): void => {
       if (ownsDrop(event) || !hasFiles(event)) {
         return;
       }
@@ -119,22 +113,22 @@ function useFolderDrop(): void {
       }
     };
 
-    window.addEventListener("dragover", onDragOver);
-    window.addEventListener("drop", onDrop);
+    globalThis.addEventListener("dragover", onDragOver);
+    globalThis.addEventListener("drop", onDrop);
 
-    return () => {
-      window.removeEventListener("dragover", onDragOver);
-      window.removeEventListener("drop", onDrop);
+    return (): void => {
+      globalThis.removeEventListener("dragover", onDragOver);
+      globalThis.removeEventListener("drop", onDrop);
     };
   }, []);
-}
+};
 
-function runAppCommand(id: string): void {
+const runAppCommand = (id: string): void => {
   const layer = id === "palette" || id === "shortcuts";
-  window.dispatchEvent(
+  globalThis.dispatchEvent(
     new CustomEvent(layer ? LAYER_EVENT : COMMAND_EVENT, { detail: id })
   );
-}
+};
 
 const openFolderCommand = async (
   folder: string,
@@ -148,7 +142,7 @@ const openFolderCommand = async (
   }
 };
 
-function useAppCommands(setError: (error: string | null) => void): void {
+const useAppCommands = (setError: (error: string | null) => void): void => {
   useDesktopCommand((command: DesktopCommand) => {
     if (command.type === "new-project") {
       uiStore.set({ activeProjectId: null });
@@ -167,7 +161,7 @@ function useAppCommands(setError: (error: string | null) => void): void {
 
     return true;
   });
-}
+};
 
 export function useDesktopApp(activeProjectId: string | null): string | null {
   const [error, setError] = useState<string | null>(null);

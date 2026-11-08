@@ -1,14 +1,14 @@
 import { uiStore } from "../platform/storage.js";
 import { prefetchStudio } from "./screen-preload.js";
 
-export const OPEN_ROUTE_EVENT = "studio:open-route";
+const OPEN_ROUTE_EVENT = "studio:open-route";
 
 type Switcher = (projectId: string | null) => void;
 
 let switcher: Switcher | null = null;
 let pending: { projectId: string; route: string } | null = null;
 
-export function setProjectSwitcher(next: Switcher): () => void {
+const setProjectSwitcher = (next: Switcher): (() => void) => {
   switcher = next;
 
   return () => {
@@ -16,9 +16,9 @@ export function setProjectSwitcher(next: Switcher): () => void {
       switcher = null;
     }
   };
-}
+};
 
-export function takePendingRoute(projectId: string): string | null {
+const takePendingRoute = (projectId: string): string | null => {
   if (pending?.projectId !== projectId) {
     return null;
   }
@@ -27,19 +27,19 @@ export function takePendingRoute(projectId: string): string | null {
   pending = null;
 
   return route;
-}
+};
 
 const openProjectHome = async (projectId: string): Promise<void> => {
   await prefetchStudio();
   uiStore.set({ activeProjectId: projectId, screen: "home" });
 };
 
-export function openProject(projectId: string, route?: string): void {
+const openProject = (projectId: string, route?: string): void => {
   if (uiStore.get().activeProjectId === projectId) {
     pending = null;
 
     if (route) {
-      window.dispatchEvent(
+      globalThis.dispatchEvent(
         new CustomEvent(OPEN_ROUTE_EVENT, { detail: { projectId, route } })
       );
     }
@@ -56,12 +56,20 @@ export function openProject(projectId: string, route?: string): void {
   }
 
   void openProjectHome(projectId);
-}
+};
 
-export function goHome(): void {
+const goHome = (): void => {
   if (switcher && uiStore.get().activeProjectId) {
     switcher(null);
   } else {
     uiStore.set({ activeProjectId: null, screen: "home" });
   }
-}
+};
+
+export {
+  OPEN_ROUTE_EVENT,
+  setProjectSwitcher,
+  takePendingRoute,
+  openProject,
+  goHome,
+};

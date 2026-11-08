@@ -4,7 +4,7 @@ import { APP_SOURCE_PATH } from "@design-studio/contracts/app";
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
 
-export interface LockProbe {
+interface LockProbe {
   found: boolean;
   key: string;
   tag: string;
@@ -14,7 +14,7 @@ export interface LockProbe {
   resolved: Record<string, boolean>;
 }
 
-const VIEWPORT = { width: 1440, height: 900 };
+const VIEWPORT = { height: 900, width: 1440 };
 
 const PROBE = String.raw`async (input) => {
   const LOC = ${JSON.stringify(SOURCE_LOC_ATTR)};
@@ -91,46 +91,41 @@ const PROBE = String.raw`async (input) => {
   return { found: true, key: keyOf(element), tag: element.tagName.toLowerCase(), own, inside, page: location.pathname, resolved };
 }`;
 
-export function probeLock(
+const probeLock = (
   preview: PreviewService,
   url: string,
   selector: string | null,
   keys: string[]
-): Promise<LockProbe> {
-  return probeOnPage<LockProbe>(
+): Promise<LockProbe> =>
+  probeOnPage<LockProbe>(
     preview,
     url,
     VIEWPORT,
-    `(${PROBE})(${JSON.stringify({ selector, keys })})`,
+    `(${PROBE})(${JSON.stringify({ keys, selector })})`,
     { layoutOnly: true }
   );
-}
 
-export function lockDelta(
+const lockDelta = (
   probe: LockProbe,
   locked: boolean
-): { add: string[]; remove: string[] } {
+): { add: string[]; remove: string[] } => {
   if (locked) {
     return { add: probe.own.length > 0 ? [] : [probe.key], remove: [] };
   }
 
   return { add: [], remove: [...new Set([probe.key, ...probe.own])] };
-}
+};
 
-export function applyDelta(
+const applyDelta = (
   keys: string[],
   delta: { add: string[]; remove: string[] }
-): string[] {
+): string[] => {
   const remove = new Set(delta.remove);
 
   return [...keys.filter((key) => !remove.has(key)), ...delta.add];
-}
+};
 
-export function lockOutcome(
-  probe: LockProbe,
-  locked: boolean,
-  count: number
-): string {
+function lockOutcome(probe: LockProbe, locked: boolean, count: number): string {
   const what = `${probe.tag} on ${probe.page}`;
 
   if (locked) {
@@ -144,19 +139,21 @@ export function lockOutcome(
   return `${probe.own.length > 0 ? "Unlocked" : "Was not locked"}: ${what}.${note} ${count} locked layer${count === 1 ? "" : "s"} in this direction.`;
 }
 
-function lockLabel(what: string): string {
+const lockLabel = (what: string): string => {
   if (what.startsWith("sel:")) {
     return what.slice(4);
   }
 
-  const use = /^use:([^|]*)\|loc:(.*)$/.exec(what);
+  const use = /^use:(?<name>[^|]*)\|loc:(?<loc>.*)$/u.exec(what);
 
-  return use
-    ? `${use[1]} (component part ${use[2]})`
-    : what.replace(/^loc:/, "");
-}
+  if (use) {
+    return `${use[1]} (component part ${use[2]})`;
+  }
 
-export function describeLocks(
+  return what.replace(/^loc:/u, "");
+};
+
+function describeLocks(
   keys: string[],
   resolved: Record<string, boolean> | null,
   page: string | null
@@ -182,3 +179,7 @@ export function describeLocks(
 
   return `${keys.length} locked layer${keys.length === 1 ? "" : "s"} (a click on the canvas passes through a locked layer and its children):\n${lines.join("\n")}`;
 }
+
+export { probeLock, lockDelta, applyDelta, lockOutcome, describeLocks };
+
+export type { LockProbe };

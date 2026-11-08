@@ -4,12 +4,13 @@ import type {
   RunStatus,
   Version,
 } from "@design-studio/contracts";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactElement } from "react";
 
 import { Canvas } from "../../features/canvas/canvas";
 import { UnfinishedBanner } from "../../features/chat/unfinished-banner";
 import { DesignMdModal } from "../../features/design-system/design-md-modal";
 import { CompareView } from "../../features/versions-layers-tokens/compare-view";
+import { copy } from "./copy";
 import { SettingsModal } from "./settings-modal";
 
 interface CenterProps {
@@ -23,7 +24,7 @@ interface CenterProps {
   canvas: ComponentProps<typeof Canvas>;
 }
 
-export function CenterView(props: CenterProps) {
+const CenterView = (props: CenterProps): ReactElement => {
   const { left, right } = props;
 
   if (props.compareOpen && left && right) {
@@ -40,7 +41,7 @@ export function CenterView(props: CenterProps) {
   }
 
   return <Canvas {...props.canvas} />;
-}
+};
 
 const STOPPED: ReadonlySet<RunStatus> = new Set([
   "canceled",
@@ -48,26 +49,26 @@ const STOPPED: ReadonlySet<RunStatus> = new Set([
   "budget_exceeded",
 ]);
 
-export function runStoppedUnsaved(
+const runStoppedUnsaved = (
   runs: readonly { startedAt: number; status: RunStatus }[],
   versions: readonly Version[]
-): boolean {
+): boolean => {
   const head = versions.reduce(
     (latest, version) => Math.max(latest, version.createdAt),
     0
   );
 
   return runs.some((run) => run.startedAt > head && STOPPED.has(run.status));
-}
+};
 
-export function UnfinishedSlot(props: {
+const UnfinishedSlot = (props: {
   visible: boolean;
   count: number;
   busy: boolean;
   runStopped: boolean;
   onKeep: () => void;
   onDiscard: () => void;
-}) {
+}): ReactElement | null => {
   if (!props.visible) {
     return null;
   }
@@ -81,7 +82,7 @@ export function UnfinishedSlot(props: {
       onDiscard={props.onDiscard}
     />
   );
-}
+};
 
 interface ModalsProps {
   project: Project;
@@ -92,54 +93,59 @@ interface ModalsProps {
   onCloseSettings: () => void;
 }
 
-export function StudioModals(props: ModalsProps) {
-  return (
-    <>
-      {props.designOpen && (
-        <DesignMdModal
-          projectId={props.project.id}
-          onClose={props.onCloseDesign}
-        />
-      )}
-      {props.settingsOpen && (
-        <SettingsModal
-          project={props.project}
-          onSaved={props.onSaved}
-          onClose={props.onCloseSettings}
-        />
-      )}
-    </>
-  );
-}
+const StudioModals = (props: ModalsProps): ReactElement => (
+  <>
+    {props.designOpen && (
+      <DesignMdModal
+        projectId={props.project.id}
+        onClose={props.onCloseDesign}
+      />
+    )}
+    {props.settingsOpen && (
+      <SettingsModal
+        project={props.project}
+        onSaved={props.onSaved}
+        onClose={props.onCloseSettings}
+      />
+    )}
+  </>
+);
 
-export function StudioBoot({
+const StudioBoot = ({
   message,
   onExit,
 }: {
   message: string | null;
   onExit: () => void;
-}) {
+}): ReactElement => {
   if (message === null) {
-    return <div className="boot muted">Loading project…</div>;
+    return <div className="boot muted">{copy.loadingProject}</div>;
   }
 
   return (
     <div className="boot">
       <div className="boot-card">
-        <h1>Cannot open project</h1>
+        <h1>{copy.cannotOpenProject}</h1>
         <p className="muted">{message}</p>
         <button className="btn" onClick={onExit}>
-          Back to projects
+          {copy.backToProjects}
         </button>
       </div>
     </div>
   );
-}
+};
 
-export function StudioToast({ text }: { text: string | null }) {
-  return (
-    <div className="ds-toast-slot" role="status" aria-live="polite">
-      {text && <div className="ds-toast">{text}</div>}
-    </div>
-  );
-}
+const StudioToast = ({ text }: { text: string | null }): ReactElement => (
+  <div className="ds-toast-slot" role="status" aria-live="polite">
+    {text && <div className="ds-toast">{text}</div>}
+  </div>
+);
+
+export {
+  CenterView,
+  runStoppedUnsaved,
+  UnfinishedSlot,
+  StudioModals,
+  StudioBoot,
+  StudioToast,
+};

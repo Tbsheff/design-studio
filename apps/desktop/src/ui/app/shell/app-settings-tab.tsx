@@ -1,21 +1,26 @@
 import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
 import { envText, parseEnvText } from "@design-studio/contracts/app";
 import { useState, useTransition } from "react";
-import type { FormEvent } from "react";
+import type { ReactElement, FormEvent } from "react";
 
 import { api, errorText } from "../../api";
+import { copy } from "./copy";
 
-function envSuggestion(
+const envSuggestion = (
   status: AppServerStatus | null
-): Record<string, string> | null {
+): Record<string, string> | null => {
   const fix = status?.doctor?.causes.find(
     (cause) => cause.fix?.kind === "set-env"
   )?.fix;
 
-  return fix?.kind === "set-env" ? fix.env : null;
-}
+  if (fix?.kind === "set-env") {
+    return fix.env;
+  }
 
-function SettingsTab({
+  return null;
+};
+
+const SettingsTab = ({
   projectId,
   app,
   suggested,
@@ -25,13 +30,13 @@ function SettingsTab({
   app: AttachedApp;
   suggested: Record<string, string> | null;
   onSaved: () => void;
-}) {
+}): ReactElement => {
   const [url, setUrl] = useState(app.url ?? "");
   const [env, setEnv] = useState(() => envText(app.env));
   const [note, setNote] = useState<string | null>(null);
   const [busy, startSave] = useTransition();
 
-  const save = (event: FormEvent) => {
+  const save = (event: FormEvent): void => {
     event.preventDefault();
     const parsed = parseEnvText(env);
 
@@ -56,29 +61,26 @@ function SettingsTab({
   return (
     <form className="app-settings" onSubmit={save}>
       <label className="field">
-        <span>Dev server URL</span>
+        <span>{copy.devServerUrl}</span>
         <input
           className="mono"
           value={url}
           placeholder="Empty: the studio starts next dev"
           spellCheck={false}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(event) => setUrl(event.target.value)}
         />
       </label>
       <label className="field">
-        <span>Environment for next dev</span>
+        <span>{copy.environmentForNextDev}</span>
         <textarea
           className="mono"
           rows={5}
           value={env}
           placeholder="No variables set"
           spellCheck={false}
-          onChange={(e) => setEnv(e.target.value)}
+          onChange={(event) => setEnv(event.target.value)}
         />
-        <small className="field-help">
-          One KEY=value per line. The studio keeps these in the project file, so
-          do not paste secrets.
-        </small>
+        <small className="field-help">{copy.oneKeyValuePerLine}</small>
       </label>
       {suggested &&
         !Object.keys(suggested).every(
@@ -86,7 +88,7 @@ function SettingsTab({
         ) && (
           <div className="app-env-suggest">
             <span className="app-panel-sub grow">
-              The doctor suggests{" "}
+              {copy.theDoctorSuggests}{" "}
               <span className="mono">{envText(suggested)}</span>
             </span>
             <button
@@ -98,7 +100,7 @@ function SettingsTab({
                 )
               }
             >
-              Add
+              {copy.add}
             </button>
           </div>
         )}
@@ -109,11 +111,11 @@ function SettingsTab({
           </span>
         )}
         <button type="submit" className="btn small primary" disabled={busy}>
-          Save and restart
+          {copy.saveAndRestart}
         </button>
       </div>
     </form>
   );
-}
+};
 
 export { envSuggestion, SettingsTab };

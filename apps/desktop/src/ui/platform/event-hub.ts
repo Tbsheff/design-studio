@@ -42,21 +42,19 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
   "versions.changed": true,
 };
 
-export const EVENT_TYPES = Object.keys(
-  EVERY_EVENT_TYPE
-) as StudioEventBody["type"][];
+const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody["type"][];
 
-export type ConnectionState = "connecting" | "open" | "reconnecting";
+type ConnectionState = "connecting" | "open" | "reconnecting";
 
-export interface EventSourceLike {
+interface EventSourceLike {
   onopen: ((this: EventSource, ev: Event) => unknown) | null;
   onmessage: ((this: EventSource, ev: MessageEvent) => unknown) | null;
   onerror: ((this: EventSource, ev: Event) => unknown) | null;
-  addEventListener(type: string, listener: EventListener): void;
-  close(): void;
+  readonly addEventListener: (type: string, listener: EventListener) => void;
+  readonly close: () => void;
 }
 
-export interface HubDeps {
+interface HubDeps {
   open: (projectId: string, afterSeq: number) => EventSourceLike;
   setTimer: (fn: () => void, ms: number) => number;
   clearTimer: (id: number | undefined) => void;
@@ -76,17 +74,17 @@ interface Channel {
   closing: boolean;
 }
 
-export interface EventHub {
-  subscribe(projectId: string, listener: Listener): () => void;
-  watchState(projectId: string, onChange: () => void): () => void;
-  state(projectId: string): ConnectionState;
-  openCount(): number;
+interface EventHub {
+  readonly subscribe: (projectId: string, listener: Listener) => () => void;
+  readonly watchState: (projectId: string, onChange: () => void) => () => void;
+  readonly state: (projectId: string) => ConnectionState;
+  readonly openCount: () => number;
 }
 
-export function createEventHub(deps: HubDeps): EventHub {
+const createEventHub = (deps: HubDeps): EventHub => {
   const channels = new Map<string, Channel>();
 
-  const setState = (channel: Channel, state: ConnectionState) => {
+  const setState = (channel: Channel, state: ConnectionState): void => {
     if (channel.state === state) {
       return;
     }
@@ -98,7 +96,7 @@ export function createEventHub(deps: HubDeps): EventHub {
     }
   };
 
-  const receive = (channel: Channel, msg: MessageEvent<string>) => {
+  const receive = (channel: Channel, msg: MessageEvent<string>): void => {
     let event: StudioEvent;
 
     try {
@@ -128,7 +126,7 @@ export function createEventHub(deps: HubDeps): EventHub {
     }
   };
 
-  const connect = (projectId: string, channel: Channel) => {
+  const connect = (projectId: string, channel: Channel): void => {
     if (channels.get(projectId) !== channel) {
       return;
     }
@@ -136,10 +134,10 @@ export function createEventHub(deps: HubDeps): EventHub {
     const es = deps.open(projectId, channel.lastSeq);
     channel.source = es;
 
-    const onMessage = (msg: Event) =>
+    const onMessage = (msg: Event): void =>
       receive(channel, msg as MessageEvent<string>);
 
-    es.onopen = () => {
+    es.onopen = (): void => {
       channel.retryDelay = 500;
       setState(channel, "open");
     };
@@ -150,7 +148,7 @@ export function createEventHub(deps: HubDeps): EventHub {
       es.addEventListener(type, onMessage);
     }
 
-    es.onerror = () => {
+    es.onerror = (): void => {
       es.close();
 
       if (channels.get(projectId) !== channel) {
@@ -193,7 +191,7 @@ export function createEventHub(deps: HubDeps): EventHub {
     return channel;
   };
 
-  const release = (projectId: string, channel: Channel) => {
+  const release = (projectId: string, channel: Channel): void => {
     if (
       channel.listeners.size > 0 ||
       channel.stateListeners.size > 0 ||
@@ -245,4 +243,8 @@ export function createEventHub(deps: HubDeps): EventHub {
       };
     },
   };
-}
+};
+
+export { EVENT_TYPES, createEventHub };
+
+export type { ConnectionState, EventSourceLike, HubDeps, EventHub };

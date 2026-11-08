@@ -1,10 +1,11 @@
 import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
 import { CopyButton, Icon } from "@design-studio/ui";
 import { useEffect, useState, useTransition } from "react";
-import type { FormEvent } from "react";
+import type { ReactElement, FormEvent } from "react";
 
 import type { FolderInspection } from "../../../shared/open-app";
 import { api, errorText } from "../../api";
+import { copy } from "./copy";
 
 interface AppFailureProps {
   projectId: string;
@@ -16,12 +17,12 @@ interface AppFailureProps {
   onSaved: () => void;
 }
 
-function useInstallHint(
+const useInstallHint = (
   projectId: string,
   app: AttachedApp,
   managed: boolean,
   retries: number
-): FolderInspection | null {
+): FolderInspection | null => {
   const [hint, setHint] = useState<FolderInspection | null>(null);
   useEffect(() => {
     if (!managed) {
@@ -29,16 +30,19 @@ function useInstallHint(
     }
 
     let live = true;
+
     const loadHint = async (): Promise<void> => {
       try {
         const project = await api.getProject(projectId);
         let result = null;
+
         if (project.imported) {
           result = await api.inspectFolder(
             project.imported.sourcePath,
             app.appDir
           );
         }
+
         if (live) {
           setHint(result);
         }
@@ -48,17 +52,22 @@ function useInstallHint(
         }
       }
     };
+
     void loadHint();
 
-    return () => {
+    return (): void => {
       live = false;
     };
   }, [projectId, app.appDir, managed, retries]);
 
   return hint;
-}
+};
 
-function InstallFix({ hint }: { hint: FolderInspection | null }) {
+const InstallFix = ({
+  hint,
+}: {
+  hint: FolderInspection | null;
+}): ReactElement | null => {
   const install = hint?.install;
 
   if (!hint || hint.depsInstalled !== false || !install) {
@@ -69,18 +78,16 @@ function InstallFix({ hint }: { hint: FolderInspection | null }) {
 
   return (
     <div className="app-fail-fix">
-      <span className="app-fail-label">
-        Install the dependencies in a terminal, then press Restart dev server
-      </span>
+      <span className="app-fail-label">{copy.installTheDependenciesInA}</span>
       <div className="app-fail-cmd">
         <code className="truncate">{full}</code>
         <CopyButton text={full} label="Copy the install command" />
       </div>
     </div>
   );
-}
+};
 
-function UrlForm({
+const UrlForm = ({
   projectId,
   app,
   suggested,
@@ -90,7 +97,7 @@ function UrlForm({
   app: AttachedApp;
   suggested: string;
   onSaved: () => void;
-}) {
+}): ReactElement => {
   const [url, setUrl] = useState(
     app.mode === "url" ? (app.url ?? "") : suggested
   );
@@ -98,7 +105,7 @@ function UrlForm({
   const [busy, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const save = (event: FormEvent) => {
+  const save = (event: FormEvent): void => {
     event.preventDefault();
 
     if (!url.trim()) {
@@ -131,22 +138,22 @@ function UrlForm({
           placeholder="http://localhost:3000"
           spellCheck={false}
           autoComplete="off"
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(event) => setUrl(event.target.value)}
         />
         <button
           type="submit"
           className="btn small"
           disabled={busy || !url.trim()}
         >
-          Use this URL
+          {copy.confirmUrl}
         </button>
       </div>
       {error && <span className="app-fail-error">{error}</span>}
     </form>
   );
-}
+};
 
-export function AppFailure({
+export const AppFailure = ({
   projectId,
   app,
   status,
@@ -154,13 +161,13 @@ export function AppFailure({
   onLog,
   onClose,
   onSaved,
-}: AppFailureProps) {
+}: AppFailureProps): ReactElement => {
   const managed = status.mode === "managed";
   const [retries, setRetries] = useState(0);
   const hint = useInstallHint(projectId, app, managed, retries);
 
-  const retry = () => {
-    setRetries((n) => n + 1);
+  const retry = (): void => {
+    setRetries((attempt) => attempt + 1);
     onRetry();
   };
 
@@ -189,7 +196,7 @@ export function AppFailure({
         projectId={projectId}
         app={app}
         suggested={
-          /runs for this app at (\S+?)\.(?:\s|$)/.exec(
+          /runs for this app at (?<appPath>\S+?)\.(?:\s|$)/u.exec(
             status.message ?? ""
           )?.[1] ?? ""
         }
@@ -206,4 +213,4 @@ export function AppFailure({
       </div>
     </div>
   );
-}
+};

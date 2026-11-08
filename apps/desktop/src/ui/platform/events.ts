@@ -8,10 +8,10 @@ import { appStream } from "./stream.js";
 export type { ConnectionState } from "./event-hub.js";
 
 const hub = createEventHub({
-  open: (projectId, afterSeq) => appStream().source(projectId, afterSeq),
-  setTimer: (fn, ms) => window.setTimeout(fn, ms),
   clearTimer: (id) => window.clearTimeout(id),
   defer: (fn) => queueMicrotask(fn),
+  open: (projectId, afterSeq) => appStream().source(projectId, afterSeq),
+  setTimer: (fn, ms) => window.setTimeout(fn, ms),
 });
 
 export function useProjectEvents(
@@ -31,7 +31,9 @@ export function useProjectEvents(
 
   const watch = useCallback(
     (onChange: () => void) =>
-      projectId ? hub.watchState(projectId, onChange) : () => undefined,
+      projectId
+        ? hub.watchState(projectId, onChange)
+        : (): undefined => undefined,
     [projectId]
   );
 

@@ -75,3 +75,9 @@ export type { LayerLockStore } from "./layer-locks.js";
 export { createProjectStore } from "./projects.js";
 
 export type { ProjectStorePorts, StudioProjectStore } from "./projects.js";
+
+export { getReferenceBlock } from "./reference/reference-block.js";
+
+export { importReferenceInto } from "./reference/reference-import.js";
+
+export type { ReferenceSummary } from "./reference/reference-import.js";

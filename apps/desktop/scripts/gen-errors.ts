@@ -41,7 +41,17 @@ const errorDomains = async (contexts: string[]): Promise<string[]> => {
   return contexts.filter((_ctx, index) => Boolean(found[index]));
 };
 
-const errorType = (ctx: string): string => `${pascal(ctx)}Error`;
+const BUILT_IN_ERRORS = new Set(["ReferenceError"]);
+
+const toErrorPrefix = (ctx: string): string => {
+  if (BUILT_IN_ERRORS.has(`${pascal(ctx)}Error`)) {
+    return `${pascal(ctx)}Domain`;
+  }
+
+  return pascal(ctx);
+};
+
+const errorType = (ctx: string): string => `${toErrorPrefix(ctx)}Error`;
 
 const errorUnion = (domains: string[]): string =>
   ["CoreError", ...domains.map((ctx) => errorType(ctx))].join(" | ");
@@ -50,7 +60,7 @@ const errorsAll = (domains: string[]): string =>
   lines(
     ...domains.map(
       (ctx) =>
-        `import type { ${pascal(ctx)}Error } from "../../${ctx}/errors/index.js";`
+        `import type { ${errorType(ctx)} } from "../../${ctx}/errors/index.js";`
     ),
     `import type { CoreError } from "./index.js";`,
     "",
@@ -88,7 +98,7 @@ const domainErrorIndex = async (ctx: string): Promise<GeneratedFile> => {
 
   return {
     path: path.join(dir, "index.ts"),
-    text: errorsIndex(pascal(ctx), await errorTails(dir)),
+    text: errorsIndex(toErrorPrefix(ctx), await errorTails(dir)),
   };
 };
 

@@ -31,3 +31,10 @@ export type {
   ListCommand as ListCompletionCommand,
   SetCommand as SetCompletionCommand,
 } from "./completion/index.js";
+
+export { ReferenceWriter } from "./reference/index.js";
+
+export type {
+  ImportReferenceCommand,
+  ReferenceWriterApi,
+} from "./reference/index.js";

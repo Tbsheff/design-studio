@@ -1,5 +1,5 @@
-import { Icon } from "@design-studio/ui";
 import type { StructureKey } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import type { ReactNode } from "react";
 
 import type { KeyId } from "../../../shared/keymap.js";

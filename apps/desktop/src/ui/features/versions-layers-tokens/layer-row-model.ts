@@ -68,4 +68,11 @@ const toListClass = (isDragging: boolean): string => {
   return "layers-list";
 };
 
-export { toActiveDescendant, toListClass, toAriaExpanded, toRowClass, toRowIndent, toRowText };
+export {
+  toActiveDescendant,
+  toListClass,
+  toAriaExpanded,
+  toRowClass,
+  toRowIndent,
+  toRowText,
+};

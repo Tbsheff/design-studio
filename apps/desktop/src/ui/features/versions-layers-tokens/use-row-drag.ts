@@ -52,7 +52,7 @@ const useRowDrag = (
 
   const onPointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>): void => {
-      const {current} = drag;
+      const { current } = drag;
 
       if (!current || event.buttons % 2 === 0) {
         return;

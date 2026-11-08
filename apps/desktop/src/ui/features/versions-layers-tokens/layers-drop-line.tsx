@@ -8,7 +8,9 @@ interface LayersDropLineProps {
 const LayersDropLine = ({ line }: LayersDropLineProps): ReactNode => {
   const style = useMemo(() => ({ top: line }), [line]);
 
-  return <div className="layers-drop" data-testid="layers-drop" style={style} />;
+  return (
+    <div className="layers-drop" data-testid="layers-drop" style={style} />
+  );
 };
 
 export { LayersDropLine };

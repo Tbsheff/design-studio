@@ -22,11 +22,16 @@ interface LayerRowHandlers {
   readonly handlePointerLeave: () => void;
 }
 
-const useLayerRowHandlers = (
-  input: LayerRowHandlerInput
-): LayerRowHandlers => {
-  const { isEditable, node, onHover, onMenu, onPress, onSelect, onStartRename } =
-    input;
+const useLayerRowHandlers = (input: LayerRowHandlerInput): LayerRowHandlers => {
+  const {
+    isEditable,
+    node,
+    onHover,
+    onMenu,
+    onPress,
+    onSelect,
+    onStartRename,
+  } = input;
 
   const handlePointerEnter = useCallback((): void => {
     onHover(node.id);

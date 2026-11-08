@@ -2,10 +2,10 @@ import type { LayerNode } from "@design-studio/contracts";
 import { useMemo } from "react";
 import type { ReactNode, Ref } from "react";
 
-import { LayersDropLine } from "./layers-drop-line.js";
-import { LayerRow } from "./layer-row.js";
 import type { LayerRowCallbacks } from "./layer-row-callbacks-model.js";
+import { LayerRow } from "./layer-row.js";
 import { ROW } from "./layers-constants.js";
+import { LayersDropLine } from "./layers-drop-line.js";
 
 interface LayersRowsProps {
   readonly callbacks: LayerRowCallbacks;

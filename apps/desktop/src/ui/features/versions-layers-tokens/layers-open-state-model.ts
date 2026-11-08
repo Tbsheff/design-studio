@@ -81,7 +81,6 @@ const toLayersScope = (frameName: string): string => {
   return `${path}|${frameName}`;
 };
 
-
 interface RowWindow {
   readonly first: number;
   readonly last: number;

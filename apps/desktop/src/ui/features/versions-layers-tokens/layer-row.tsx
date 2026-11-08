@@ -1,11 +1,11 @@
-import { Icon } from "@design-studio/ui";
 import type { LayerNode } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { memo, useMemo } from "react";
 import type { MouseEvent, PointerEvent, ReactNode } from "react";
 
+import { toLayerIcon } from "./layer-icon-model.js";
 import { LayerRowBadges } from "./layer-row-badges.js";
 import { LayerRowLabel } from "./layer-row-label.js";
-import { toLayerIcon } from "./layer-icon-model.js";
 import {
   toAriaExpanded,
   toRowClass,

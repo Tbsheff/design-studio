@@ -1,13 +1,13 @@
-import { Icon } from "@design-studio/ui";
 import type { StructureKey } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 
-import { STRUCTURE_KEY_IDS } from "../../../shared/structure-keys.js";
 import type { KeyId } from "../../../shared/keymap.js";
-import { ICON_SIZE } from "./layers-constants.js";
+import { STRUCTURE_KEY_IDS } from "../../../shared/structure-keys.js";
 import { toAriaDisabled, toToolClass } from "./layer-tools-model.js";
 import type { LayerTool } from "./layer-tools-model.js";
+import { ICON_SIZE } from "./layers-constants.js";
 
 interface LayerToolButtonProps {
   readonly isBusy: boolean;

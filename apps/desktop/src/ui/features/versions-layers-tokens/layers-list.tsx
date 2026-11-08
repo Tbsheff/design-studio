@@ -7,8 +7,8 @@ import type {
 } from "react";
 
 import { COPY } from "./copy.js";
-import { LayersListBody } from "./layers-list-body.js";
 import { toActiveDescendant, toListClass } from "./layer-row-model.js";
+import { LayersListBody } from "./layers-list-body.js";
 import type { LayerTree } from "./layers-tree.js";
 
 interface LayersListProps {

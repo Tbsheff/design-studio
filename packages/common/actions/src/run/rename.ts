@@ -9,7 +9,7 @@ import { RunSummarySchema } from "./schema.js";
 
 const renameRun = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "run-control" },
   confirm: "none",
   description:
     "Set or clear the title of one finished run. Returns the run summary. Fails while the run is active.",
@@ -22,7 +22,7 @@ const renameRun = defineAction({
     title: Schema.String,
   }),
   invalidates: ["run.get", "run.list"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "rename_run" },
   needs: "project.update",
   output: RunSummarySchema,
   scope: "project",

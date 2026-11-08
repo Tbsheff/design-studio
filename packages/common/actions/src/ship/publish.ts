@@ -65,7 +65,7 @@ const ModeFieldSchema = ShipModeSchema.annotate({
 
 const publishShip = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "secret" },
   confirm: "user",
   description: `Commit studio changes to a new branch in the user's repo and, if asked, push it and open a pull request. The user must click Allow in Design Studio first; without the window open it is refused. Call prepare_ship first. Ship works on an attached app project in a git repository. It uses a new branch in a separate git worktree, so the checked-out branch and files of the user do not change. It never force pushes and never commits .env files, secrets or node_modules.`,
   errors: [BadRequest, Conflict, NotFound],

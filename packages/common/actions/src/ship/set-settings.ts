@@ -9,7 +9,7 @@ import { ShipSettingsSchema } from "./schema.js";
 
 const setSettingsShip = defineAction({
   access: "edit",
-  agent: { off: "legacy-agent" },
+  agent: { off: "secret" },
   confirm: "none",
   description:
     "Save the ship settings of a project: git user name, branch template, pull request body template and issue id.",
@@ -21,7 +21,7 @@ const setSettingsShip = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["ship.getSettings", "ship.getPlan"],
-  mcp: { off: "legacy-mcp" },
+  mcp: { name: "set_settings_ship" },
   needs: "project.update",
   output: ShipSettingsSchema,
   scope: "project",

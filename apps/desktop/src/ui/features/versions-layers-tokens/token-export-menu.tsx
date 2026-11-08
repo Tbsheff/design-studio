@@ -67,7 +67,7 @@ const TokenExportMenu = ({ setup }: TokenExportMenuProps): ReactNode => {
       <button
         ref={trigger}
         type="button"
-        className="btn small ghost"
+        className={styles.trigger}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         data-tip={COPY.exportTip}

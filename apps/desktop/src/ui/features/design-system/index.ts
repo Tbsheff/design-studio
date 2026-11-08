@@ -66,8 +66,6 @@ export { DesignSystemChip } from "./design-system-chip.js";
 
 export { designSystemRef } from "./design-system-ref.js";
 
-export { ChangePackDialog, SavePackDialog } from "./design-system-dialogs.js";
-
 export { useComponents } from "./use-components.js";
 
 export { useDesignSystemState } from "./use-design-system-state.js";

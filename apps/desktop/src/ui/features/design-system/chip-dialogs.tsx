@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
 
+import { ChangePackDialog } from "./change-pack-dialog.js";
 import type { ChipDialog } from "./chip-model.js";
-import { ChangePackDialog, SavePackDialog } from "./design-system-dialogs.js";
 import type { DesignSystemActions } from "./design-system-model.js";
 import type { DesignSystemRef } from "./design-system-ref.js";
+import { SavePackDialog } from "./save-pack-dialog.js";
 
 const toSource = (
   system: DesignSystemRef

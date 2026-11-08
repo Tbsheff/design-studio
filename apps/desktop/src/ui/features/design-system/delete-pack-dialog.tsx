@@ -31,6 +31,7 @@ const DeletePackDialog = ({
 
   return (
     <PackDialogShell
+      isWide={false}
       isBusy={action.isBusy}
       label={COPY.labelDeleteDesignSystem}
       onClose={onClose}

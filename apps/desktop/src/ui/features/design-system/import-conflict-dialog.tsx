@@ -32,6 +32,7 @@ const ImportConflictDialog = ({
 
   return (
     <PackDialogShell
+      isWide={false}
       isBusy={action.isBusy}
       label={COPY.labelDesignSystemAlreadyInYour}
       onClose={onClose}

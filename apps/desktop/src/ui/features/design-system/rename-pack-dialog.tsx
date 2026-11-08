@@ -19,6 +19,7 @@ const RenamePackDialog = ({
 
   return (
     <PackDialogShell
+      isWide={false}
       isBusy={action.isBusy}
       label={COPY.labelRenameDesignSystem}
       onClose={onClose}

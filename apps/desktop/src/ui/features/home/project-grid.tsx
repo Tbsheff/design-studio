@@ -1,22 +1,17 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { ReactElement, ReactNode, RefObject } from "react";
 
-import { useUi } from "../../platform/storage.js";
 import { findPack, keySwatches } from "../design-system/packs.js";
 import { Swatches } from "../inspector/swatches.js";
 import { copy } from "./copy.js";
 import type { AppHealth } from "./deps.js";
-import { toClassName } from "./project-card-model.js";
 import type { CardActions, ListFilter } from "./project-card-model.js";
-import { ProjectCard } from "./project-card.js";
-import { toFilteredProjects, toSortedProjects } from "./project-list-model.js";
+import { ProjectGridCards } from "./project-grid-cards.js";
+import { ProjectGridHead } from "./project-grid-head.js";
 import { ProjectListStates } from "./project-list-states.js";
-import { ProjectListTools } from "./project-list-tools.js";
 import { Star } from "./star-icon.js";
-import { useGridActions } from "./use-grid-actions.js";
-import { useGridFocus } from "./use-grid-focus.js";
-import { useHomeView } from "./use-home-view.js";
+import { useProjectGridState } from "./use-project-grid-state.js";
 
 const EMPTY_STAR_SIZE = 16;
 
@@ -55,51 +50,14 @@ const ProjectGrid = ({
   tabs,
   headActions,
 }: ProjectGridProps): ReactElement => {
-  const { homeSort } = useUi();
-  const { view, isFavoritesOnly, favorites } = useHomeView();
+  const grid = useProjectGridState(projects, query, actions, searchRef);
+  const { matched, shown, first, onGridKey } = grid;
+  const { setActiveId: onFocusCard, registerOpen: onRegisterOpen } = grid;
 
-  const matched = useMemo(
-    () => toSortedProjects(toFilteredProjects(projects ?? [], query), homeSort),
-    [projects, query, homeSort]
+  const toPack = useCallback(
+    (packId: string | null): PackSummary | null => findPack(packs, packId),
+    [packs]
   );
-
-  const shown = useMemo(() => {
-    if (isFavoritesOnly) {
-      return matched.filter((project) => favorites.includes(project.id));
-    }
-
-    return matched;
-  }, [favorites, isFavoritesOnly, matched]);
-
-  const {
-    gridRef,
-    active,
-    setActiveId,
-    focusAt,
-    onGridKey,
-    registerOpen,
-    openButtons,
-  } = useGridFocus(shown);
-
-  const gridActions = useGridActions({
-    actions,
-    gridRef,
-    openButtons,
-    searchRef,
-    shown,
-  });
-
-  const first = shown[0];
-
-  const focusFirst = useCallback((): void => {
-    focusAt(0);
-  }, [focusAt]);
-
-  const openFirst = useCallback((): void => {
-    if (first) {
-      actions.onOpen(first);
-    }
-  }, [actions, first]);
 
   const clearQuery = useCallback((): void => {
     onQuery("");
@@ -107,21 +65,18 @@ const ProjectGrid = ({
 
   return (
     <section className="home-list" aria-label={copy.projects}>
-      <div className="home-list-head">
-        {tabs}
-        <div className="spacer" />
-        {headActions}
-        {(projects?.length ?? 0) > 0 && (
-          <ProjectListTools
-            query={query}
-            onQuery={onQuery}
-            searchRef={searchRef}
-            onFirst={focusFirst}
-            onOpenFirst={openFirst}
-            canOpen={shown.length > 0}
-          />
-        )}
-      </div>
+      <ProjectGridHead
+        tabs={tabs}
+        headActions={headActions}
+        hasProjects={(projects?.length ?? 0) > 0}
+        first={first}
+        shownCount={shown.length}
+        query={query}
+        searchRef={searchRef}
+        actions={actions}
+        onQuery={onQuery}
+        focusAt={grid.focusAt}
+      />
       <ProjectListStates
         projects={projects}
         error={error}
@@ -130,34 +85,28 @@ const ProjectGrid = ({
         shownCount={matched.length}
         onClearQuery={clearQuery}
       />
-      {isFavoritesOnly && matched.length > 0 && shown.length === 0 && (
+      {grid.isFavoritesOnly && matched.length > 0 && shown.length === 0 && (
         <output className="home-empty">
           <Star isFilled={false} size={EMPTY_STAR_SIZE} />
           <span>{copy.noFavoritesYet}</span>
         </output>
       )}
       {shown.length > 0 && (
-        <div
-          className={toClassName("project-grid", view)}
-          ref={gridRef}
-          onKeyDown={onGridKey}
-        >
-          {shown.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              pack={findPack(packs, project.packId)}
-              health={health.get(project.id) ?? null}
-              homeDir={homeDir}
-              isActive={project.id === active}
-              isFavorite={favorites.includes(project.id)}
-              actions={gridActions}
-              onFocusCard={setActiveId}
-              onRegisterOpen={registerOpen}
-              toSwatches={toPackSwatches}
-            />
-          ))}
-        </div>
+        <ProjectGridCards
+          shown={shown}
+          view={grid.view}
+          gridRef={grid.gridRef}
+          onGridKey={onGridKey}
+          toPack={toPack}
+          toSwatches={toPackSwatches}
+          health={health}
+          homeDir={homeDir}
+          active={grid.active}
+          favoriteIds={grid.favoriteIds}
+          actions={grid.gridActions}
+          onFocusCard={onFocusCard}
+          onRegisterOpen={onRegisterOpen}
+        />
       )}
     </section>
   );

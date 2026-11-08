@@ -7,8 +7,8 @@ import { createElement } from "react";
 import type { ReactElement } from "react";
 
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
-import { LocationField } from "./folder-controls.js";
 import { HiddenProjectsNote } from "./hidden-projects-note.js";
+import { LocationField } from "./location-field.js";
 import { NewProjectAdvanced } from "./new-project-advanced.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
 

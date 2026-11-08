@@ -1,5 +1,4 @@
 import type { PackSummary, ProjectKind } from "@design-studio/contracts";
-import { useEffect, useState } from "react";
 import type { ReactElement, RefObject } from "react";
 
 import { usePresence } from "../chat/use-presence.js";
@@ -7,9 +6,9 @@ import { pickable } from "../design-system/packs.js";
 import type { PacksState } from "../design-system/packs.js";
 import type { AppSlotProps } from "./app-slot-model.js";
 import { ComposerFileInput } from "./composer-file-input.js";
-import { toNextFolderPop, toSendLabel } from "./composer-pop-model.js";
+import { toSendLabel } from "./composer-pop-model.js";
 import { FolderAnchor } from "./folder-anchor.js";
-import type { Busy, Pop } from "./home-model.js";
+import type { Busy } from "./home-model.js";
 import { KindToggle } from "./kind-toggle.js";
 import { LevelAnchor } from "./level-anchor.js";
 import { ModelAnchor } from "./model-anchor.js";
@@ -19,6 +18,7 @@ import { PlusAnchor } from "./plus-anchor.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
 import { SendButton } from "./send-button.js";
 import { useComposerPops } from "./use-composer-pops.js";
+import { useFolderPopState } from "./use-folder-pop-state.js";
 
 interface ComposerBarProps {
   readonly fileRef: RefObject<HTMLInputElement | null>;
@@ -57,22 +57,20 @@ const ComposerBar = ({
   sendDisabled,
   app,
 }: ComposerBarProps): ReactElement => {
-  const [pop, setPop] = useState<Pop>(null);
+  const [pop, setPop] = useFolderPopState(app.isFolderPopOpen);
   const presence = usePresence(pop);
+  const { closing: isClosing, shown } = presence;
+  const { onAddFolder, onDoctor, onFolderPick, onFolderClose } = app;
 
   const pops = useComposerPops({
-    isClosing: presence.closing,
-    onFolderClose: app.onFolderClose,
+    isClosing,
+    onFolderClose,
     pop,
     setPop,
-    shown: presence.shown,
+    shown,
   });
 
-  const { isFolderPopOpen } = app;
-
-  useEffect(() => {
-    setPop((current) => toNextFolderPop(current, isFolderPopOpen));
-  }, [isFolderPopOpen]);
+  const { closeFolder: handleFolderClose, openPack: onDesignSystem } = pops;
 
   return (
     <div className="home-composer-bar">
@@ -82,16 +80,16 @@ const ComposerBar = ({
         triggerRef={pops.refs.plus}
         locationLabel={locationLabel}
         plusActions={plusActions}
-        onDesignSystem={pops.openPack}
+        onDesignSystem={onDesignSystem}
       />
       <FolderAnchor
         pops={pops.state}
         chip={app.chip}
         triggerRef={pops.refs.folder}
-        onAddFolder={app.onAddFolder}
-        onDoctor={app.onDoctor}
-        onFolderPick={app.onFolderPick}
-        onFolderClose={pops.closeFolder}
+        onAddFolder={onAddFolder}
+        onDoctor={onDoctor}
+        onFolderPick={onFolderPick}
+        onFolderClose={handleFolderClose}
       />
       {!app.chip && <KindToggle kind={kind} onKind={onKind} />}
       <div className="spacer" />

@@ -21,10 +21,10 @@ import { useHomeLibrary } from "./use-home-library.js";
 import { useHomeModules } from "./use-home-modules.js";
 import { useHomeRefs } from "./use-home-refs.js";
 import { useHomeStartup } from "./use-home-startup.js";
-import { useHomeSubmit } from "./use-home-submit.js";
 import { useHomeToast } from "./use-home-toast.js";
 import { toMenuPresence, useHomeUi } from "./use-home-ui.js";
 import type { HomeScreenOf } from "./use-home-ui.js";
+import { useScreenSubmit } from "./use-screen-submit.js";
 
 type HomeScreen = HomeScreenOf<SettingsDraft, PacksState> & {
   readonly ClarifyForm: typeof ClarifyForm;
@@ -68,25 +68,18 @@ const useHomeScreen = (openHome: (projectId: string) => void): HomeScreen => {
 
   const { attach, flow } = composer;
 
-  const submit = useHomeSubmit({
-    busy: base.busy,
-    chip: flow.app.chip,
-    clarifyRef: refs.clarifyRef,
-    designCount: draft.designCount,
-    designMd: draft.designMd,
-    images: attach.images,
-    kind: draft.kind,
-    location: lib.location,
-    onOpen: openHome,
-    packId: pack?.id ?? null,
-    parsed: parseDraft(draft.settingsDraft),
-    prompt: draft.prompt,
-    questions: draft.questions,
-    references: attach.references,
-    setBusy: base.setBusy,
-    setFormError: base.setFormError,
-    setQuestions: draft.setQuestions,
-    submitChip: flow.submitChip,
+  const packId = pack?.id ?? null;
+  const parsed = parseDraft(draft.settingsDraft);
+
+  const submit = useScreenSubmit({
+    base,
+    composer,
+    draft,
+    lib,
+    openHome,
+    packId,
+    parsed,
+    refs,
   });
 
   const presence = usePresence(toMenuPresence(flow.isAppMenuOpen));

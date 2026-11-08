@@ -64,12 +64,14 @@ const useSkillCatalog = (): SkillCatalogState => {
 
   useEffect(() => load(false), [load]);
 
+  const reload = useCallback((): void => {
+    load(true);
+  }, [load]);
+
   return {
     catalog,
     error,
-    reload: (): void => {
-      load(true);
-    },
+    reload,
   };
 };
 

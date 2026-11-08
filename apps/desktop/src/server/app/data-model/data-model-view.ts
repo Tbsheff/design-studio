@@ -84,15 +84,29 @@ const toSummary = (model: PrismaModel): DataModelSummary => {
   };
 };
 
+const toRank = (model: PrismaModel, query: string): number => {
+  const name = model.name.toLowerCase();
+
+  if (name === query) {
+    return 0;
+  }
+
+  if (name.startsWith(query)) {
+    return 1;
+  }
+
+  return 2;
+};
+
 const toDataModelPage = (
   models: readonly PrismaModel[],
   command: ListDataModelCommand
 ): DataModelPage => {
   const query = (command.query ?? "").trim().toLowerCase();
 
-  const matched = models.filter((model) =>
-    model.name.toLowerCase().includes(query)
-  );
+  const matched = models
+    .filter((model) => model.name.toLowerCase().includes(query))
+    .toSorted((left, right) => toRank(left, query) - toRank(right, query));
 
   const start = toStart(command.cursor);
   const slice = matched.slice(start, start + command.limit);

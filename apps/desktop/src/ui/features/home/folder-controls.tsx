@@ -11,66 +11,13 @@ import type {
 } from "@design-studio/contracts/folders";
 import { Icon, LazySelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
-import type { ReactElement } from "react";
+import type { FormEvent, ReactElement } from "react";
 import { useRef, useState } from "react";
-import type { FormEvent } from "react";
 
 import { copy } from "./copy.js";
+import { FolderPath } from "./folder-path.js";
+import { PastePath } from "./paste-path.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
-
-const FolderPath = ({
-  path,
-  homeDir,
-}: {
-  readonly path: string;
-  readonly homeDir: string | null;
-}): ReactElement => {
-  const short = shortenHome(path, homeDir);
-  const cut = short.lastIndexOf("/");
-  const head = cut > 0 ? short.slice(0, cut + 1) : "";
-  const tail = cut > 0 ? short.slice(cut + 1) : short;
-  return (
-    <span className="folder-path" data-tip={path}>
-      {head && <span className="folder-path-head">{head}</span>}
-      <span className="folder-path-tail">{tail}</span>
-    </span>
-  );
-};
-
-const PastePath = ({
-  label,
-  action,
-  onSubmit,
-}: {
-  readonly label: string;
-  readonly action: string;
-  readonly onSubmit: (path: string) => void;
-}): ReactElement => {
-  const [value, setValue] = useState("");
-  return (
-    <form
-      className="paste-path"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (value.trim()) {
-          onSubmit(value.trim());
-        }
-      }}
-    >
-      <input
-        aria-label={label}
-        value={value}
-        onChange={(eventArg) => setValue(eventArg.target.value)}
-        placeholder={copy.usersMeProjects}
-        spellCheck={false}
-        autoFocus
-      />
-      <button className="btn small" type="submit" disabled={!value.trim()}>
-        {action}
-      </button>
-    </form>
-  );
-};
 
 const DEFAULT = "default";
 const CHOOSE = "choose";
@@ -85,6 +32,7 @@ function listLocationOptions(
     value && !usable.some((folder) => folder.path === value)
       ? [{ label: shortenHome(value, homeDir), value }]
       : [];
+
   return [
     { label: labels.fallback, value: DEFAULT },
     ...usable.map((folder) => ({ label: folder.label, value: folder.path })),
@@ -120,28 +68,35 @@ const LocationField = ({
   const usable = folders.filter((folder) => !folder.missing && !folder.default);
   const parent = value ?? fallback?.path ?? null;
   const target = parent ? `${parent}/${slugify(nameFromPrompt(prompt))}` : null;
+
   const useFolder = async (path: string): Promise<void> => {
     const saved = await onAddFolder(path);
+
     if (saved) {
       setPasting(false);
       onChange(saved.path);
     }
   };
+
   const pick = async (): Promise<void> => {
     if (chooser.isUnsupported) {
       setPasting(true);
+
       return;
     }
+
     const picked = await chooser.choose(
       "Choose where to save the new project",
       value ?? undefined
     );
+
     if (picked.path) {
       await useFolder(picked.path);
     } else if (picked.isUnsupported) {
       setPasting(true);
     }
   };
+
   return (
     <div className="home-location">
       <label htmlFor="new-project-location">{copy.location}</label>
@@ -212,22 +167,28 @@ const FolderRow = ({
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(folder.label);
   const renameRef = useRef<HTMLButtonElement>(null);
+
   const stopEditing = (): void => {
     setEditing(false);
     globalThis.requestAnimationFrame(() => renameRef.current?.focus());
   };
+
   const save = async (formEvent: FormEvent): Promise<void> => {
     formEvent.preventDefault();
     const next = label.trim();
+
     if (!next || next === folder.label) {
       setLabel(folder.label);
       stopEditing();
+
       return;
     }
+
     if (await onRename(next)) {
       stopEditing();
     }
   };
+
   return (
     <li
       className={`folder-row${folder.missing ? " missing" : ""}${isActive ? " active" : ""}`}
@@ -379,33 +340,42 @@ const FoldersSection = ({
   const [pastingDefault, setPastingDefault] = useState(false);
   const folders = list?.folders ?? [];
   const homeDir = list?.homeDir ?? null;
+
   const changeDefault = async (current: WorkspaceFolder): Promise<void> => {
     if (chooser.isUnsupported) {
       setPastingDefault(true);
+
       return;
     }
+
     const picked = await chooser.choose(
       "Choose the default folder for new projects",
       current.path
     );
+
     if (picked.path) {
       await onSetDefault(picked.path);
     } else if (picked.isUnsupported) {
       setPastingDefault(true);
     }
   };
+
   const add = async (): Promise<void> => {
     if (chooser.isUnsupported) {
       setPasting(true);
+
       return;
     }
+
     const picked = await chooser.choose("Choose a folder you work in");
+
     if (picked.path) {
       await onAdd(picked.path);
     } else if (picked.isUnsupported) {
       setPasting(true);
     }
   };
+
   return (
     <section
       className="home-list home-folders"

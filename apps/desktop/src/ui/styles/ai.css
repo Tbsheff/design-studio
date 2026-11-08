@@ -8,6 +8,7 @@
 @source '../features/chat/tool-chips.tsx';
 @source '../features/chat/prompt-box.tsx';
 @source '../features/chat/composer-parts.tsx';
+@source '../features/chat/attachment-thumb.tsx';
 
 @custom-variant dark (&:where(.dark, .dark *));
 

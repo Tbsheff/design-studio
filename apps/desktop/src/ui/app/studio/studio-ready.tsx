@@ -1,5 +1,5 @@
-import type { Project } from "@design-studio/contracts";
-import { useMemo } from "react";
+import type { CommentPrefill, Project } from "@design-studio/contracts";
+import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
 import { chatWidthStyle } from "../../features/chat/index.js";
@@ -8,6 +8,7 @@ import { ProjectRail } from "../../features/home/project-rail";
 import { useBindStudioCommands } from "./bind-studio-commands";
 import { DataModelLayer } from "./data-model-layer";
 import { DevStatusLayer } from "./dev-status-layer";
+import { MarkupLayer } from "./markup-layer";
 import { paneAttr, shipOpener } from "./project-model";
 import { ScreenLayer } from "./screen-layer";
 import { StudioCenter } from "./studio-center";
@@ -47,7 +48,12 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
     [core, onExit, openShip, panes, project, projectId, run, ui]
   );
 
-  const { columnsRef } = ui;
+  const { columnsRef, prefillChat } = ui;
+
+  const handleAttach = useCallback(
+    (prefill: CommentPrefill): void => prefillChat.current(prefill),
+    [prefillChat]
+  );
 
   useBindStudioCommands(ctx);
   const handleHome = core.guard(onExit);
@@ -80,6 +86,11 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
       <DevStatusLayer projectId={projectId} />
       <ScreenLayer projectId={projectId} />
       <DataModelLayer draft={ui.draft} />
+      <MarkupLayer
+        directionId={core.directionId}
+        onAttach={handleAttach}
+        projectId={projectId}
+      />
     </div>
   );
 };

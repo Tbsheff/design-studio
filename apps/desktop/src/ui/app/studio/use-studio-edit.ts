@@ -1,10 +1,8 @@
 import { useEffect, useRef } from "react";
 
 import { undoAllowed } from "../../features/canvas/use-undo-shortcut";
-import {
-  useEditHistory,
-  useSelectionRefresh,
-} from "../../features/inspector/use-edit-history";
+import { useSelectionRefresh } from "../../features/inspector/index.js";
+import { useEditHistory } from "../../features/inspector/use-edit-history";
 import { useTweaks } from "../../features/inspector/use-tweaks";
 import { useStudioTokens } from "../../features/versions-layers-tokens/use-studio-tokens";
 import { setLeaveCheck } from "../../platform/router";

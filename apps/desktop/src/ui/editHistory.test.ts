@@ -86,7 +86,7 @@ describe("edit history helpers", () => {
     ).toBe(true);
     expect(isHistoryStep(version("Edit h1: color", "manual"))).toBe(false);
     expect(isHistoryStep(version("Undo: Edit h1: color", "undo"))).toBe(false);
-    expect(isHistoryStep(undefined)).toBe(false);
+    expect(isHistoryStep(null)).toBe(false);
   });
 
   it("refreshes styles and text of the selected elements from the preview", () => {

@@ -31,3 +31,5 @@ export type { CanvasCommentTools, CanvasDirections } from "./canvas-types.js";
 
 export { Canvas, PlayMode };
 export { nextSelection } from "./preview-selection-model.js";
+
+export { historyKeyOf } from "./use-undo-shortcut.js";

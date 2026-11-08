@@ -12,3 +12,5 @@ export type {
 } from "./use-direct-edit.js";
 
 export type { AuthoredCssState } from "./use-authored-css.js";
+
+export { historyKeyOf } from "../canvas/index.js";

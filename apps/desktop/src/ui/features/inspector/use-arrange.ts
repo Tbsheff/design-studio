@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { MutableRefObject } from "react";
 
 import { ARRANGE_SHORTCUTS } from "../../../shared/arrange.js";
@@ -13,74 +13,114 @@ import {
   frameRequest,
 } from "./arrange-model.js";
 import type { Props, Message } from "./arrange-model.js";
+import { useLatestRef } from "./use-latest-ref.js";
 
-const useArrange = (
-  props: Props
-): {
+interface UseArrangeResult {
   readonly isBusy: boolean;
   readonly message: Message | null;
   readonly run: (action: ArrangeAction) => Promise<void>;
-} => {
-  const latest = useRef(props);
-  latest.current = props;
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<Message | null>(null);
-  const busyRef = useRef(false);
-  useEffect(() => {
-    if (message?.kind !== "ok") {
-      return;
-    }
+}
 
-    const timer = globalThis.setTimeout(() => setMessage(null), OK_MS);
+interface KeyedMessage {
+  readonly key: string;
+  readonly message: Message | null;
+}
 
-    return (): void => globalThis.clearTimeout(timer);
-  }, [message]);
+const NO_MESSAGE: KeyedMessage = { key: "", message: null };
+
+const toResultMessage = (
+  result: Awaited<ReturnType<typeof arrangeRequest>>
+): Message => {
+  if (result.changed) {
+    return { kind: "ok", text: successText(result) };
+  }
+
+  return { kind: "note", text: result.note ?? "Already aligned." };
+};
+
+const runArrange = async (
+  cur: Props,
+  action: ArrangeAction,
+  setMessage: (message: Message | null) => void
+): Promise<void> => {
+  const { directionId } = cur;
+
+  if (!directionId) {
+    return;
+  }
+
+  try {
+    await cur.control.current?.settle();
+
+    const targets = cur.selection.map((selectionContextValue) => ({
+      selector: selectionContextValue.selector,
+    }));
+
+    const result = await arrangeRequest(cur.projectId, directionId, {
+      action,
+      targets,
+      ...frameRequest(cur.projectId),
+    });
+
+    commitWrites(cur, result);
+    setMessage(toResultMessage(result));
+  } catch (error) {
+    setMessage({ kind: "error", text: errorText(error) });
+  }
+};
+
+const toVisibleMessage = (entry: KeyedMessage, key: string): Message | null => {
+  if (entry.key === key) {
+    return entry.message;
+  }
+
+  return null;
+};
+
+const useArrange = (props: Props): UseArrangeResult => {
+  const latest = useLatestRef(props);
+  const [isBusy, startTransition] = useTransition();
+  const [entry, setEntry] = useState<KeyedMessage>(NO_MESSAGE);
+  const inflight = useRef(false);
 
   const key = props.selection
     .map((selectionContext) => selectionContext.selector)
     .join("\n");
 
-  useEffect(() => setMessage(null), [key]);
+  const message = toVisibleMessage(entry, key);
 
-  const run = async (action: ArrangeAction): Promise<void> => {
-    const cur = latest.current;
-
-    if (!cur.directionId || busyRef.current || cur.selection.length === 0) {
+  useEffect(() => {
+    if (message?.kind !== "ok") {
       return;
     }
 
-    busyRef.current = true;
-    setBusy(true);
-    setMessage(null);
+    const timer = globalThis.setTimeout(() => setEntry(NO_MESSAGE), OK_MS);
 
-    try {
-      await cur.control.current?.settle();
+    return (): void => globalThis.clearTimeout(timer);
+  }, [message]);
 
-      const targets = cur.selection.map((selectionContextValue) => ({
-        selector: selectionContextValue.selector,
-      }));
+  const run = async (action: ArrangeAction): Promise<void> => {
+    const { current: cur } = latest;
 
-      const result = await arrangeRequest(cur.projectId, cur.directionId, {
-        action,
-        targets,
-        ...frameRequest(cur.projectId),
-      });
-
-      commitWrites(cur, result);
-      setMessage(
-        result.changed
-          ? { kind: "ok", text: successText(result) }
-          : { kind: "note", text: result.note ?? "Already aligned." }
-      );
-    } catch (error) {
-      setMessage({ kind: "error", text: errorText(error) });
-    } finally {
-      busyRef.current = false;
-      setBusy(false);
+    if (!cur.directionId || inflight.current || cur.selection.length === 0) {
+      return;
     }
+
+    inflight.current = true;
+    setEntry(NO_MESSAGE);
+
+    const job = runArrange(cur, action, (next) =>
+      setEntry({ key, message: next })
+    );
+
+    startTransition(async () => {
+      await job;
+    });
+    await job;
+    inflight.current = false;
   };
 
-  return { isBusy: busy, message, run };
+  return { isBusy, message, run };
 };
 
 const toChord = (event: KeyboardEvent): string | null => {
@@ -88,7 +128,27 @@ const toChord = (event: KeyboardEvent): string | null => {
     return null;
   }
 
-  return `${event.ctrlKey ? "Ctrl+" : ""}Alt+${event.shiftKey ? "Shift+" : ""}${event.code}`;
+  let chord = "";
+
+  if (event.ctrlKey) {
+    chord += "Ctrl+";
+  }
+
+  chord += "Alt+";
+
+  if (event.shiftKey) {
+    chord += "Shift+";
+  }
+
+  return `${chord}${event.code}`;
+};
+
+const toShortcutAction = (chord: string | null): ArrangeAction | null => {
+  if (!chord) {
+    return null;
+  }
+
+  return ARRANGE_SHORTCUTS[chord] ?? null;
 };
 
 const useArrangeKeys = (
@@ -96,15 +156,15 @@ const useArrangeKeys = (
   active: boolean,
   run: (action: ArrangeAction) => void
 ): void => {
-  const latest = useRef({ active, run });
-  latest.current = { active, run };
+  const latest = useLatestRef({ active, run });
+
   useEffect(() => {
     const ready = (): boolean =>
       latest.current.active &&
       Boolean(root.current && !root.current.closest("[inert]"));
 
-    const fire = (chord: string | null, event?: Event): void => {
-      const action = chord ? ARRANGE_SHORTCUTS[chord] : undefined;
+    const fire = (chord: string | null, event: Event | null): void => {
+      const action = toShortcutAction(chord);
 
       if (!action || !ready()) {
         return;
@@ -122,7 +182,9 @@ const useArrangeKeys = (
 
     const onForwarded = (event: Event): void =>
       fire(
-        (event as CustomEvent<{ readonly key?: string }>).detail?.key ?? null
+        (event as CustomEvent<{ readonly key: string | null }>).detail?.key ??
+          null,
+        null
       );
 
     globalThis.addEventListener("keydown", onKey);
@@ -132,7 +194,7 @@ const useArrangeKeys = (
       globalThis.removeEventListener("keydown", onKey);
       globalThis.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
     };
-  }, [root]);
+  }, [root, latest]);
 };
 
 export { useArrange, useArrangeKeys };

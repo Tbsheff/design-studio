@@ -39,7 +39,9 @@
 
 .heatmap {
   display: block;
-  width: calc(100% - var(--s-4) * 2);
+  width: auto;
+  max-width: calc(100% - var(--s-4) * 2);
+  max-height: 180px;
   height: auto;
   margin: var(--s-2) var(--s-4);
   border-radius: var(--r-md);

@@ -1,6 +1,6 @@
 import { HTML_FRAME_SANDBOX } from "../../platform/bridge.js";
-import { appRoutePages } from "./app-canvas-routes.js";
 import { useAppCanvas } from "./app-canvas.js";
+import { appRoutePages } from "./app-route-pages.js";
 import { frameDirection } from "./canvas-direction-ops.js";
 import { canvasStore, useCanvasLofi } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";

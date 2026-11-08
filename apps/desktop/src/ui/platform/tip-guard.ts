@@ -4,7 +4,7 @@ const TIP_ALIGN = "data-tip-align";
 const TIP_SIDE = "data-tip-side";
 const EDGE = 4;
 
-function release(host: Element): void {
+const release = (host: Element): void => {
   const clear = (): void => {
     if (
       host.getAttribute("aria-expanded") === "true" ||
@@ -21,14 +21,16 @@ function release(host: Element): void {
 
   host.addEventListener("pointerleave", clear);
   host.addEventListener("focusout", clear);
-}
+};
 
-function clipBox(host: Element): {
+const clipBox = (
+  host: Element
+): {
   left: number;
   right: number;
   top: number;
   bottom: number;
-} {
+} => {
   const box = {
     bottom: window.innerHeight,
     left: 0,
@@ -63,11 +65,11 @@ function clipBox(host: Element): {
   }
 
   return box;
-}
+};
 
 type Box = ReturnType<typeof clipBox>;
 
-function restoreAuto(host: Element): void {
+const restoreAuto = (host: Element): void => {
   const auto = host.getAttribute(AUTO);
 
   if (auto === null) {
@@ -87,14 +89,14 @@ function restoreAuto(host: Element): void {
   }
 
   host.removeAttribute(AUTO);
-}
+};
 
-function fitAlign(
+const fitAlign = (
   host: Element,
   rect: DOMRect,
   box: Box,
   width: number
-): string[] {
+): string[] => {
   if (host.hasAttribute(TIP_ALIGN)) {
     return [];
   }
@@ -110,14 +112,14 @@ function fitAlign(
   host.setAttribute(TIP_ALIGN, overRight ? "end" : "start");
 
   return ["align"];
-}
+};
 
-function fitSide(
+const fitSide = (
   host: Element,
   rect: DOMRect,
   box: Box,
   height: number
-): string[] {
+): string[] => {
   const fitsBelow = rect.bottom + 6 + height <= box.bottom - EDGE;
   const fitsAbove = rect.top - 6 - height >= box.top + EDGE;
   const side = host.getAttribute(TIP_SIDE);
@@ -135,9 +137,9 @@ function fitSide(
   }
 
   return [];
-}
+};
 
-function fitTip(host: Element): void {
+const fitTip = (host: Element): void => {
   restoreAuto(host);
   const tip = getComputedStyle(host, "::after");
   const width = Number(tip.width);
@@ -158,17 +160,16 @@ function fitTip(host: Element): void {
   if (moved.length > 0) {
     host.setAttribute(AUTO, moved.join(" "));
   }
-}
+};
 
-function tipHost(target: EventTarget | null): Element | null {
-  return target instanceof Element ? target.closest("[data-tip]") : null;
-}
+const tipHost = (target: EventTarget | null): Element | null =>
+  target instanceof Element ? target.closest("[data-tip]") : null;
 
 const WARM = "data-tip-warm";
 const WARM_AFTER_MS = 500;
 const COOL_AFTER_MS = 300;
 
-function installWarmTips(): void {
+const installWarmTips = (): void => {
   const root = document.documentElement;
   let warmTimer = 0;
   let coolTimer = 0;
@@ -215,7 +216,7 @@ function installWarmTips(): void {
     },
     true
   );
-}
+};
 
 export function installTipGuard(): void {
   installWarmTips();

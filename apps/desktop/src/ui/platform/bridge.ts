@@ -43,32 +43,33 @@ interface PreviewPort {
   listen?: (handler: (message: BridgeToParent) => void) => () => void;
 }
 
-function urlOrigin(url: string): string {
+const urlOrigin = (url: string): string => {
   try {
     return new URL(url, globalThis.location.href).origin;
   } catch {
     return "";
   }
-}
+};
 
-function frameOrigin(frame: Pick<BridgeFrame, "url">): string {
-  return urlOrigin(frame.url);
-}
+const frameOrigin = (frame: Pick<BridgeFrame, "url">): string =>
+  urlOrigin(frame.url);
 
-function tagFrame(
+const tagFrame = (
   element: HTMLIFrameElement | null,
   token: string
-): HTMLIFrameElement | null {
+): HTMLIFrameElement | null => {
   element?.setAttribute(FRAME_TOKEN_ATTR, token);
 
   return element;
-}
+};
 
-function frameTokenOf(element: HTMLIFrameElement): string | null {
-  return element.getAttribute(FRAME_TOKEN_ATTR);
-}
+const frameTokenOf = (element: HTMLIFrameElement): string | null =>
+  element.getAttribute(FRAME_TOKEN_ATTR);
 
-function frameSrc(previewUrl: string, extra?: Record<string, string>): string {
+const frameSrc = (
+  previewUrl: string,
+  extra?: Record<string, string>
+): string => {
   const url = new URL(previewUrl, globalThis.location.href);
   url.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, globalThis.location.origin);
 
@@ -79,9 +80,9 @@ function frameSrc(previewUrl: string, extra?: Record<string, string>): string {
   }
 
   return url.toString();
-}
+};
 
-function postToFrame(frame: BridgeFrame, body: ParentMessageBody): void {
+const postToFrame = (frame: BridgeFrame, body: ParentMessageBody): void => {
   const win = frame.element?.contentWindow;
 
   if (!win) {
@@ -114,9 +115,9 @@ function postToFrame(frame: BridgeFrame, body: ParentMessageBody): void {
     queue.push(message);
     pending.set(frame.token, queue);
   }
-}
+};
 
-function isBridgeMessage(data: unknown): data is BridgeToParent {
+const isBridgeMessage = (data: unknown): data is BridgeToParent => {
   if (!data || typeof data !== "object") {
     return false;
   }
@@ -124,9 +125,9 @@ function isBridgeMessage(data: unknown): data is BridgeToParent {
   const m = data as { ns?: unknown; token?: unknown; type?: unknown };
 
   return m.ns === "studio" && Boolean(m.token) && Boolean(m.type);
-}
+};
 
-function frameElementOf(source: MessageEventSource | null) {
+const frameElementOf = (source: MessageEventSource | null) => {
   for (const element of document.querySelectorAll<HTMLIFrameElement>(
     `iframe[${FRAME_TOKEN_ATTR}]`
   )) {
@@ -136,13 +137,13 @@ function frameElementOf(source: MessageEventSource | null) {
   }
 
   return null;
-}
+};
 
-function connectFrame(
+const connectFrame = (
   element: HTMLIFrameElement,
   token: string,
   target: string
-): void {
+): void => {
   const channel = new MessageChannel();
   ports.get(token)?.close();
   ports.set(token, channel.port1);
@@ -169,9 +170,9 @@ function connectFrame(
   }
 
   pending.delete(token);
-}
+};
 
-function helloDocId(data: MessageEvent["data"]): string | null {
+const helloDocId = (data: MessageEvent["data"]): string | null => {
   const hello = data as {
     docId?: unknown;
     ns?: unknown;
@@ -183,9 +184,9 @@ function helloDocId(data: MessageEvent["data"]): string | null {
   }
 
   return String(hello.docId ?? "");
-}
+};
 
-function onHello(event: MessageEvent): void {
+const onHello = (event: MessageEvent): void => {
   const docId = helloDocId(event.data);
 
   if (!docId) {
@@ -210,27 +211,24 @@ function onHello(event: MessageEvent): void {
 
   documents.set(token, docId);
   connectFrame(element, token, event.origin);
-}
+};
 
-function installHello(): void {
+const installHello = (): void => {
   if (helloInstalled) {
     return;
   }
 
   helloInstalled = true;
   window.addEventListener("message", onHello);
-}
+};
 
-function isCloudBlocked(frame: BridgeFrame, message: BridgeToParent): boolean {
-  return (
-    frame.cloud === true && CLOUD_BLOCKED_BRIDGE_TYPES.includes(message.type)
-  );
-}
+const isCloudBlocked = (frame: BridgeFrame, message: BridgeToParent): boolean =>
+  frame.cloud === true && CLOUD_BLOCKED_BRIDGE_TYPES.includes(message.type);
 
-function useBridge(
+const useBridge = (
   getFrames: () => BridgeFrame[],
   onMessage: (frame: BridgeFrame, message: BridgeToParent) => void
-): void {
+): void => {
   const framesRef = useRef(getFrames);
   framesRef.current = getFrames;
   const handlerRef = useRef(onMessage);
@@ -255,7 +253,7 @@ function useBridge(
       listeners.delete(listener);
     };
   }, []);
-}
+};
 
 export {
   HTML_FRAME_SANDBOX,

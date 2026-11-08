@@ -81,7 +81,7 @@ interface EventHub {
   openCount(): number;
 }
 
-function createEventHub(deps: HubDeps): EventHub {
+const createEventHub = (deps: HubDeps): EventHub => {
   const channels = new Map<string, Channel>();
 
   const setState = (channel: Channel, state: ConnectionState) => {
@@ -243,7 +243,7 @@ function createEventHub(deps: HubDeps): EventHub {
       };
     },
   };
-}
+};
 
 export { EVENT_TYPES, createEventHub };
 

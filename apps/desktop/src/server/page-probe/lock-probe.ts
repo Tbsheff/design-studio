@@ -91,40 +91,39 @@ const PROBE = String.raw`async (input) => {
   return { found: true, key: keyOf(element), tag: element.tagName.toLowerCase(), own, inside, page: location.pathname, resolved };
 }`;
 
-function probeLock(
+const probeLock = (
   preview: PreviewService,
   url: string,
   selector: string | null,
   keys: string[]
-): Promise<LockProbe> {
-  return probeOnPage<LockProbe>(
+): Promise<LockProbe> =>
+  probeOnPage<LockProbe>(
     preview,
     url,
     VIEWPORT,
     `(${PROBE})(${JSON.stringify({ keys, selector })})`,
     { layoutOnly: true }
   );
-}
 
-function lockDelta(
+const lockDelta = (
   probe: LockProbe,
   locked: boolean
-): { add: string[]; remove: string[] } {
+): { add: string[]; remove: string[] } => {
   if (locked) {
     return { add: probe.own.length > 0 ? [] : [probe.key], remove: [] };
   }
 
   return { add: [], remove: [...new Set([probe.key, ...probe.own])] };
-}
+};
 
-function applyDelta(
+const applyDelta = (
   keys: string[],
   delta: { add: string[]; remove: string[] }
-): string[] {
+): string[] => {
   const remove = new Set(delta.remove);
 
   return [...keys.filter((key) => !remove.has(key)), ...delta.add];
-}
+};
 
 function lockOutcome(probe: LockProbe, locked: boolean, count: number): string {
   const what = `${probe.tag} on ${probe.page}`;
@@ -140,7 +139,7 @@ function lockOutcome(probe: LockProbe, locked: boolean, count: number): string {
   return `${probe.own.length > 0 ? "Unlocked" : "Was not locked"}: ${what}.${note} ${count} locked layer${count === 1 ? "" : "s"} in this direction.`;
 }
 
-function lockLabel(what: string): string {
+const lockLabel = (what: string): string => {
   if (what.startsWith("sel:")) {
     return what.slice(4);
   }
@@ -150,7 +149,7 @@ function lockLabel(what: string): string {
   return use
     ? `${use[1]} (component part ${use[2]})`
     : what.replace(/^loc:/, "");
-}
+};
 
 function describeLocks(
   keys: string[],

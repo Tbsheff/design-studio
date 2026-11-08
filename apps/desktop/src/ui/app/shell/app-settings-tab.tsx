@@ -5,15 +5,15 @@ import type { FormEvent } from "react";
 
 import { api, errorText } from "../../api";
 
-function envSuggestion(
+const envSuggestion = (
   status: AppServerStatus | null
-): Record<string, string> | null {
+): Record<string, string> | null => {
   const fix = status?.doctor?.causes.find(
     (cause) => cause.fix?.kind === "set-env"
   )?.fix;
 
   return fix?.kind === "set-env" ? fix.env : null;
-}
+};
 
 const SettingsTab = ({
   projectId,

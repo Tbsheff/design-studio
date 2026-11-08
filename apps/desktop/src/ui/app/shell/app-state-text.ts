@@ -8,7 +8,10 @@ const STATE_TEXT: Record<AppServerStatus["state"], string> = {
   stopped: "Stopped",
 };
 
-function stateText(status: AppServerStatus | null, managed: boolean): string {
+const stateText = (
+  status: AppServerStatus | null,
+  managed: boolean
+): string => {
   const state = status?.state ?? "idle";
 
   if (managed) {
@@ -22,9 +25,12 @@ function stateText(status: AppServerStatus | null, managed: boolean): string {
       : state === "starting"
         ? "Checking"
         : "Not checked";
-}
+};
 
-function statusLine(status: AppServerStatus | null, managed: boolean): string {
+const statusLine = (
+  status: AppServerStatus | null,
+  managed: boolean
+): string => {
   const parts = [stateText(status, managed)];
 
   if (status?.upstream) {
@@ -34,6 +40,6 @@ function statusLine(status: AppServerStatus | null, managed: boolean): string {
   parts.push(managed ? "started by the studio" : "your dev server");
 
   return parts.join(" · ");
-}
+};
 
 export { STATE_TEXT, stateText, statusLine };

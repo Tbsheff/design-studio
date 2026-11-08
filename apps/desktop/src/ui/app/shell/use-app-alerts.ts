@@ -5,7 +5,7 @@ import { focusStageQuietly } from "../../features/canvas/use-inline-text-edit";
 import { APP_PANEL_EVENT } from "../../platform/app-status";
 import type { Tab } from "./app-tabs";
 
-function usePanelFocus(setOpen: (open: boolean) => void) {
+const usePanelFocus = (setOpen: (open: boolean) => void) => {
   const opener = useRef<HTMLElement | null>(null);
 
   const remember = useCallback(() => {
@@ -31,13 +31,13 @@ function usePanelFocus(setOpen: (open: boolean) => void) {
   };
 
   return { close, remember };
-}
+};
 
-function useOpenRequests(
+const useOpenRequests = (
   setTab: (tab: Tab) => void,
   setOpen: (open: boolean) => void,
   remember: () => void
-): void {
+): void => {
   useEffect(() => {
     const show = (event: Event) => {
       remember();
@@ -54,9 +54,9 @@ function useOpenRequests(
 
     return () => globalThis.removeEventListener(APP_PANEL_EVENT, show);
   }, [setTab, setOpen, remember]);
-}
+};
 
-function useAlerts(status: AppServerStatus | null, open: boolean) {
+const useAlerts = (status: AppServerStatus | null, open: boolean) => {
   const [hidden, setHidden] = useState<string | null>(null);
 
   const cause =
@@ -76,6 +76,6 @@ function useAlerts(status: AppServerStatus | null, open: boolean) {
   const failed = failKey !== null && failKey !== hidden && !open && !showDoctor;
 
   return { cause, doctorKey, failKey, failed, setHidden, showDoctor };
-}
+};
 
 export { usePanelFocus, useOpenRequests, useAlerts };

@@ -48,17 +48,17 @@ const STOPPED: ReadonlySet<RunStatus> = new Set([
   "budget_exceeded",
 ]);
 
-function runStoppedUnsaved(
+const runStoppedUnsaved = (
   runs: readonly { startedAt: number; status: RunStatus }[],
   versions: readonly Version[]
-): boolean {
+): boolean => {
   const head = versions.reduce(
     (latest, version) => Math.max(latest, version.createdAt),
     0
   );
 
   return runs.some((run) => run.startedAt > head && STOPPED.has(run.status));
-}
+};
 
 const UnfinishedSlot = (props: {
   visible: boolean;

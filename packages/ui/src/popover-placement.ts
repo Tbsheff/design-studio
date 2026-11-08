@@ -11,7 +11,7 @@ interface PopoverBounds {
   bottom: number;
 }
 
-function popoverBounds(anchor: Element): PopoverBounds {
+const popoverBounds = (anchor: Element): PopoverBounds => {
   const bounds = {
     bottom: window.innerHeight - MARGIN,
     left: MARGIN,
@@ -28,18 +28,18 @@ function popoverBounds(anchor: Element): PopoverBounds {
   }
 
   return bounds;
-}
+};
 
 interface FixedPlacement {
   align?: "start" | "end";
   prefer?: "above" | "below";
 }
 
-function placeFixed(
+const placeFixed = (
   trigger: HTMLElement,
   panel: HTMLElement,
   { align = "start", prefer = "below" }: FixedPlacement = {}
-): CSSProperties {
+): CSSProperties => {
   const rect = trigger.getBoundingClientRect();
   const bounds = popoverBounds(trigger);
   const room = bounds.right - bounds.left;
@@ -66,13 +66,15 @@ function placeFixed(
     maxWidth: room,
     overflowY: height > space ? "auto" : undefined,
   };
-}
+};
 
-function layoutRect(panel: HTMLElement): {
+const layoutRect = (
+  panel: HTMLElement
+): {
   left: number;
   top: number;
   right: number;
-} {
+} => {
   const parent = panel.offsetParent;
 
   if (!parent) {
@@ -87,9 +89,9 @@ function layoutRect(panel: HTMLElement): {
     right: left + panel.offsetWidth,
     top: base.top + panel.offsetTop,
   };
-}
+};
 
-function resetFit(style: CSSStyleDeclaration): void {
+const resetFit = (style: CSSStyleDeclaration): void => {
   for (const key of [
     "top",
     "bottom",
@@ -101,14 +103,14 @@ function resetFit(style: CSSStyleDeclaration): void {
   ] as const) {
     style[key] = "";
   }
-}
+};
 
-function fitVertical(
+const fitVertical = (
   panel: HTMLElement,
   top: number,
   from: DOMRect,
   bounds: PopoverBounds
-): void {
+): void => {
   const { style } = panel;
   const height = panel.scrollHeight;
   const below = bounds.bottom - top;
@@ -127,13 +129,13 @@ function fitVertical(
   if (height > Math.max(above, below)) {
     style.overflowY = "auto";
   }
-}
+};
 
-function fitHorizontal(
+const fitHorizontal = (
   panel: HTMLElement,
   rect: { left: number; right: number },
   bounds: PopoverBounds
-): void {
+): void => {
   const shift = rect.right > bounds.right ? bounds.right - rect.right : 0;
 
   const moved =
@@ -147,9 +149,9 @@ function fitHorizontal(
 
   panel.style.left = `${rect.left + moved - parent.getBoundingClientRect().left}px`;
   panel.style.right = "auto";
-}
+};
 
-function fitAbsolute(panel: HTMLElement, trigger: HTMLElement | null): void {
+const fitAbsolute = (panel: HTMLElement, trigger: HTMLElement | null): void => {
   resetFit(panel.style);
   const anchor = trigger ?? panel.parentElement ?? panel;
   const bounds = popoverBounds(anchor);
@@ -157,13 +159,13 @@ function fitAbsolute(panel: HTMLElement, trigger: HTMLElement | null): void {
   const rect = layoutRect(panel);
   fitVertical(panel, rect.top, anchor.getBoundingClientRect(), bounds);
   fitHorizontal(panel, rect, bounds);
-}
+};
 
-function useFitPopover(
+const useFitPopover = (
   panel: RefObject<HTMLElement | null>,
   trigger: RefObject<HTMLElement | null> | null,
   open: boolean
-): void {
+): void => {
   useLayoutEffect(() => {
     const node = panel.current;
 
@@ -182,7 +184,7 @@ function useFitPopover(
       window.removeEventListener("resize", fit);
     };
   }, [open, panel, trigger]);
-}
+};
 
 export { POPOVER_GAP, popoverBounds, placeFixed, useFitPopover };
 

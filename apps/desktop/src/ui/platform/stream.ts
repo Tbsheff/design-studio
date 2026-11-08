@@ -120,9 +120,9 @@ class VirtualSource implements EventSourceLike {
   }
 }
 
-function eventHead(
+const eventHead = (
   data: string
-): { pid: string; seq: number; type: string } | null {
+): { pid: string; seq: number; type: string } | null => {
   try {
     const event: {
       projectId?: unknown;
@@ -139,7 +139,7 @@ function eventHead(
   } catch {
     return null;
   }
-}
+};
 
 class Tab {
   readonly id = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -389,7 +389,7 @@ interface AppStream {
   onApprovals(listener: (poll: McpApprovalPoll) => void): () => void;
 }
 
-function follow(tab: Tab, message: Wire, leader: Leader | null): void {
+const follow = (tab: Tab, message: Wire, leader: Leader | null): void => {
   switch (message.t) {
     case "ev": {
       if (!leader)
@@ -416,9 +416,9 @@ function follow(tab: Tab, message: Wire, leader: Leader | null): void {
       leader?.drop(message.tab);
     }
   }
-}
+};
 
-function startStream(): AppStream {
+const startStream = (): AppStream => {
   const shared =
     typeof BroadcastChannel !== "undefined" &&
     typeof navigator !== "undefined" &&
@@ -466,18 +466,20 @@ function startStream(): AppStream {
       };
     },
   };
-}
+};
 
 let stream: AppStream | null = null;
 
-function appStream(): AppStream {
+const appStream = (): AppStream => {
   stream ??= startStream();
   return stream;
-}
+};
 
 const ACTION_DONE_EVENT = "action.done";
 
-function subscribeActionDone(listener: (data: string) => void): () => void {
+const subscribeActionDone = (
+  listener: (data: string) => void
+): (() => void) => {
   if (typeof EventSource === "undefined") {
     return () => undefined;
   }
@@ -489,6 +491,6 @@ function subscribeActionDone(listener: (data: string) => void): () => void {
   return () => {
     source.close();
   };
-}
+};
 
 export { appStream, subscribeActionDone };

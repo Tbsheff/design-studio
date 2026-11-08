@@ -28,7 +28,7 @@ const TABS: readonly PanelTab[] = [
 const TAB_KEY = "design-studio.panel-tab.v2";
 const MAX_PROJECTS = 100;
 
-function readAll(): Record<string, PanelTab> {
+const readAll = (): Record<string, PanelTab> => {
   try {
     const raw: unknown = JSON.parse(readStored(TAB_KEY) ?? "{}");
 
@@ -38,24 +38,24 @@ function readAll(): Record<string, PanelTab> {
   } catch {
     return {};
   }
-}
+};
 
-function readTab(projectId: string): PanelTab | null {
+const readTab = (projectId: string): PanelTab | null => {
   const raw = readAll()[projectId];
 
   return TABS.find((tab) => tab === raw) ?? null;
-}
+};
 
-function writeTab(projectId: string, tab: PanelTab): void {
+const writeTab = (projectId: string, tab: PanelTab): void => {
   const all = readAll();
   delete all[projectId];
   all[projectId] = tab;
   const kept = Object.entries(all).slice(-MAX_PROJECTS);
 
   writeStored(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
-}
+};
 
-function usePanelTab(projectId: string, eligible: boolean) {
+const usePanelTab = (projectId: string, eligible: boolean) => {
   const chosen = useRef(readTab(projectId));
   const autoSwitched = useRef(false);
   const [tab, setTab] = useState<PanelTab>(chosen.current ?? "chat");
@@ -79,7 +79,7 @@ function usePanelTab(projectId: string, eligible: boolean) {
   );
 
   return { choose, show: choose, tab };
-}
+};
 
 export { PANE_MODES, usePanelTab };
 

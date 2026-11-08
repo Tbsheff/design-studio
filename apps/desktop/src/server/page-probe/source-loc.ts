@@ -13,7 +13,7 @@ const SCRIPT = /\.(tsx|jsx|ts|js|mjs|cjs)$/;
 const FILES_MAX = 2000;
 const shownFiles = new Map<string, Map<string, Set<string>>>();
 
-function noteShownFiles(scope: string, files: Iterable<string>): void {
+const noteShownFiles = (scope: string, files: Iterable<string>): void => {
   let byBase = shownFiles.get(scope);
 
   if (!byBase || byBase.size > FILES_MAX) {
@@ -25,9 +25,9 @@ function noteShownFiles(scope: string, files: Iterable<string>): void {
     const base = path.posix.basename(file);
     byBase.set(base, (byBase.get(base) ?? new Set()).add(file));
   }
-}
+};
 
-function fullFile(scope: string, file: string): string {
+const fullFile = (scope: string, file: string): string => {
   if (file.includes("/")) {
     return file;
   }
@@ -35,9 +35,9 @@ function fullFile(scope: string, file: string): string {
   const known = [...(shownFiles.get(scope)?.get(file) ?? [])];
 
   return known.length === 1 ? (known[0] as string) : file;
-}
+};
 
-function insideTree(workTree: string, file: string): string {
+const insideTree = (workTree: string, file: string): string => {
   const absolute = path.resolve(workTree, file);
 
   if (
@@ -51,9 +51,9 @@ function insideTree(workTree: string, file: string): string {
   }
 
   return absolute;
-}
+};
 
-function tagStartsOn(root: t.Node, line: number): number[] {
+const tagStartsOn = (root: t.Node, line: number): number[] => {
   const cols: number[] = [];
   const stack: unknown[] = [root];
 
@@ -85,14 +85,14 @@ function tagStartsOn(root: t.Node, line: number): number[] {
   }
 
   return cols.toSorted((a, b) => a - b);
-}
+};
 
-async function colOnLine(
+const colOnLine = async (
   workTree: string,
   file: string,
   line: number,
   raw: string
-): Promise<number> {
+): Promise<number> => {
   if (!SCRIPT.test(file)) {
     throw new EditError(
       `${raw}: pass file:line:col for a file that is not JSX.`
@@ -122,13 +122,13 @@ async function colOnLine(
   throw new EditError(
     `${raw}: ${cols.length} JSX tags start on line ${line} (columns ${cols.join(", ")}). Pass file:line:col, for example ${file}:${line}:${cols[0]}.`
   );
-}
+};
 
-async function resolveSourceLoc(
+const resolveSourceLoc = async (
   workTree: string,
   scope: string,
   raw: string
-): Promise<SourceLoc> {
+): Promise<SourceLoc> => {
   const full = FULL.exec(raw.trim());
 
   if (full) {
@@ -151,6 +151,6 @@ async function resolveSourceLoc(
   const line = Number(lineOnly[2]);
 
   return { col: await colOnLine(workTree, file, line, raw), file, line };
-}
+};
 
 export { noteShownFiles, resolveSourceLoc };

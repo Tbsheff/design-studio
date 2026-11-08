@@ -1,18 +1,18 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { MouseEvent as ReactMouseEvent, RefObject } from "react";
 
-function modalDialogOwnsEscape(popover: HTMLElement | null): boolean {
+const modalDialogOwnsEscape = (popover: HTMLElement | null): boolean => {
   const modal = document.querySelector("dialog[open]");
 
   return modal !== null && popover !== null && !modal.contains(popover);
-}
+};
 
-function usePopover(
+const usePopover = (
   open: boolean,
   root: RefObject<HTMLElement | null>,
   onClose: (refocus: boolean) => void,
   trigger?: RefObject<HTMLElement | null>
-): void {
+): void => {
   useEffect(() => {
     if (!open) {
       return;
@@ -52,16 +52,15 @@ function usePopover(
       globalThis.removeEventListener("keydown", onKey, true);
     };
   }, [open, root, onClose, trigger]);
-}
+};
 
 const FOCUSABLE =
   'input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled), [href], [tabindex]:not([tabindex="-1"])';
 
-function firstFocusable(root: Element | null): HTMLElement | null {
-  return root?.querySelector<HTMLElement>(FOCUSABLE) ?? null;
-}
+const firstFocusable = (root: Element | null): HTMLElement | null =>
+  root?.querySelector<HTMLElement>(FOCUSABLE) ?? null;
 
-function useReturnFocusOnUnmount(): void {
+const useReturnFocusOnUnmount = (): void => {
   useLayoutEffect(() => {
     const opener =
       document.activeElement instanceof HTMLElement
@@ -74,9 +73,9 @@ function useReturnFocusOnUnmount(): void {
       }
     };
   }, []);
-}
+};
 
-function useModalDialog(onDismiss: () => boolean | void) {
+const useModalDialog = (onDismiss: () => boolean | void) => {
   const ref = useRef<HTMLDialogElement>(null);
   const dismiss = useRef(onDismiss);
   dismiss.current = onDismiss;
@@ -150,6 +149,6 @@ function useModalDialog(onDismiss: () => boolean | void) {
   };
 
   return { onMouseDown: onBackdropMouseDown, ref };
-}
+};
 
 export { usePopover, useReturnFocusOnUnmount, useModalDialog };

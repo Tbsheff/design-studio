@@ -21,17 +21,14 @@ const recentKeys = new Map<string, { at: number; handled: () => boolean }>();
 const recentCommands = new Map<string, number>();
 let installed = false;
 
-function desktopBridge<Bridge extends object = DesktopBridge>(): Bridge | null {
-  return (
-    (globalThis as unknown as { studioDesktop?: Bridge }).studioDesktop ?? null
-  );
-}
+const desktopBridge = <
+  Bridge extends object = DesktopBridge,
+>(): Bridge | null =>
+  (globalThis as unknown as { studioDesktop?: Bridge }).studioDesktop ?? null;
 
-function isDesktop(): boolean {
-  return desktopBridge() !== null;
-}
+const isDesktop = (): boolean => desktopBridge() !== null;
 
-function shortcutName(event: KeyboardEvent): string | null {
+const shortcutName = (event: KeyboardEvent): string | null => {
   if (!(event.metaKey || event.ctrlKey)) {
     return null;
   }
@@ -51,9 +48,9 @@ function shortcutName(event: KeyboardEvent): string | null {
   }
 
   return null;
-}
+};
 
-function dispatchDesktopCommand(command: DesktopCommand): void {
+const dispatchDesktopCommand = (command: DesktopCommand): void => {
   recentCommands.set(command.type, Date.now());
   const pressed = recentKeys.get(command.type);
 
@@ -66,9 +63,9 @@ function dispatchDesktopCommand(command: DesktopCommand): void {
       return;
     }
   }
-}
+};
 
-function install(): void {
+const install = (): void => {
   if (installed) {
     return;
   }
@@ -89,19 +86,19 @@ function install(): void {
     true
   );
   desktopBridge()?.onCommand?.(dispatchDesktopCommand);
-}
+};
 
-function noteHandledShortcut(name: "undo" | "redo"): void {
+const noteHandledShortcut = (name: "undo" | "redo"): void => {
   recentKeys.set(name, { at: Date.now(), handled: () => true });
-}
+};
 
-function recentDesktopCommand(name: string): boolean {
+const recentDesktopCommand = (name: string): boolean => {
   const at = recentCommands.get(name);
 
   return at !== undefined && Date.now() - at < KEY_ECHO_MS;
-}
+};
 
-function useDesktopCommand(handler: Handler): void {
+const useDesktopCommand = (handler: Handler): void => {
   const latest = useRef(handler);
   latest.current = handler;
   useEffect(() => {
@@ -121,30 +118,29 @@ function useDesktopCommand(handler: Handler): void {
       }
     };
   }, []);
-}
+};
 
-function useDesktopContext(context: DesktopContext, enabled = true): void {
+const useDesktopContext = (context: DesktopContext, enabled = true): void => {
   const { projectId, directionId, running } = context;
   useEffect(() => {
     if (enabled) {
       desktopBridge()?.setContext?.({ directionId, projectId, running });
     }
   }, [projectId, directionId, running, enabled]);
-}
+};
 
 type PickOutcome =
   | { kind: "picked"; path: string }
   | { kind: "canceled" }
   | { kind: "unsupported" };
 
-function hasNativePicker(): boolean {
-  return typeof desktopBridge()?.pickFolder === "function";
-}
+const hasNativePicker = (): boolean =>
+  typeof desktopBridge()?.pickFolder === "function";
 
-async function pickFolder(options: {
+const pickFolder = async (options: {
   title: string;
   defaultPath?: string;
-}): Promise<PickOutcome> {
+}): Promise<PickOutcome> => {
   const native = desktopBridge()?.pickFolder;
 
   if (!native) {
@@ -157,7 +153,7 @@ async function pickFolder(options: {
   });
 
   return chosen ? { kind: "picked", path: chosen } : { kind: "canceled" };
-}
+};
 
 export {
   desktopBridge,

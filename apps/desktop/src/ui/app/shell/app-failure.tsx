@@ -16,12 +16,12 @@ interface AppFailureProps {
   onSaved: () => void;
 }
 
-function useInstallHint(
+const useInstallHint = (
   projectId: string,
   app: AttachedApp,
   managed: boolean,
   retries: number
-): FolderInspection | null {
+): FolderInspection | null => {
   const [hint, setHint] = useState<FolderInspection | null>(null);
   useEffect(() => {
     if (!managed) {
@@ -60,7 +60,7 @@ function useInstallHint(
   }, [projectId, app.appDir, managed, retries]);
 
   return hint;
-}
+};
 
 const InstallFix = ({ hint }: { hint: FolderInspection | null }) => {
   const install = hint?.install;

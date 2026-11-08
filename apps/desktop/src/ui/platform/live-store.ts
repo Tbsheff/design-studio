@@ -6,7 +6,7 @@ interface LiveStore<T> {
   subscribe: (listener: () => void) => () => void;
 }
 
-function createLiveStore<T>(initial: T): LiveStore<T> {
+const createLiveStore = <T>(initial: T): LiveStore<T> => {
   let value = initial;
   const listeners = new Set<() => void>();
 
@@ -31,11 +31,10 @@ function createLiveStore<T>(initial: T): LiveStore<T> {
       };
     },
   };
-}
+};
 
-function useLive<T>(store: LiveStore<T>): T {
-  return useSyncExternalStore(store.subscribe, store.get, store.get);
-}
+const useLive = <T>(store: LiveStore<T>): T =>
+  useSyncExternalStore(store.subscribe, store.get, store.get);
 
 export { createLiveStore, useLive };
 

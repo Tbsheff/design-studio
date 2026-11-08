@@ -18,8 +18,7 @@ interface RawProbe {
   usedAt: string | null;
 }
 
-function appSourceBody(): string {
-  return `async (el) => {
+const appSourceBody = (): string => `async (el) => {
     const fiberOf = (node) => { const key = Object.keys(node).find((k) => k.startsWith('__reactFiber$')); return key ? node[key] : null; };
     const stackOf = (f) => [f?._debugStack?.stack, f?.debugStack?.stack, f?.stack].find((v) => typeof v === 'string' && v.length > 0) || '';
     const fiber = fiberOf(el);
@@ -44,10 +43,8 @@ function appSourceBody(): string {
       return loc ? { loc, usedAt, usedBy: usedAt && name ? { name, root } : null } : null;
     } catch { return null; }
   }`;
-}
 
-function ownerWalk(): string {
-  return `((el) => {
+const ownerWalk = (): string => `((el) => {
     const tags = new Set([0, 1, 11, 14, 15]);
     const nameOf = (type) => {
       if (!type || (typeof type !== 'function' && typeof type !== 'object')) return '';
@@ -73,23 +70,20 @@ function ownerWalk(): string {
     }
     return owners;
   })`;
-}
 
-function probe(selector: string): string {
-  return `(async (selector) => {
+const probe = (selector: string): string => `(async (selector) => {
     let el;
     try { el = document.querySelector(selector); } catch { return null; }
     if (!el) return null;
     const app = await (${appSourceBody()})(el);
     return { tag: el.tagName.toLowerCase(), owners: ${ownerWalk()}(el), usedAt: app?.usedAt ?? null };
   })(${JSON.stringify(selector)})`;
-}
 
-async function probeOwners(
+const probeOwners = async (
   preview: PreviewService,
   url: string,
   selector: string
-): Promise<ProbedElement | null> {
+): Promise<ProbedElement | null> => {
   const raw = await probeOnPage<RawProbe | null>(
     preview,
     url,
@@ -100,9 +94,9 @@ async function probeOwners(
   return raw
     ? { owners: raw.owners, tag: raw.tag, usedAt: parseLoc(raw.usedAt) }
     : null;
-}
+};
 
-function parseLoc(raw: string | null): SourceLoc | null {
+const parseLoc = (raw: string | null): SourceLoc | null => {
   const match = raw ? /^(.+):(\d+):(\d+)$/.exec(raw) : null;
 
   return match
@@ -112,7 +106,7 @@ function parseLoc(raw: string | null): SourceLoc | null {
         line: Number(match[2]),
       }
     : null;
-}
+};
 
 export { appSourceBody, ownerWalk, probeOwners, parseLoc };
 

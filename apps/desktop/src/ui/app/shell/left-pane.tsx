@@ -51,7 +51,7 @@ const SHEET_TITLES: Partial<Record<PanelTab, string>> = {
   versions: "Versions",
 };
 
-function visiblePane(
+const visiblePane = (
   tab: PanelTab,
   has: {
     tokens: boolean;
@@ -59,7 +59,7 @@ function visiblePane(
     tweaks: boolean;
     components: boolean;
   }
-): PanelTab {
+): PanelTab => {
   const missing: Partial<Record<PanelTab, boolean>> = {
     comments: !has.comments,
     components: !has.components,
@@ -68,7 +68,7 @@ function visiblePane(
   };
 
   return missing[tab] ? "chat" : tab;
-}
+};
 
 const SheetHead = ({
   id,

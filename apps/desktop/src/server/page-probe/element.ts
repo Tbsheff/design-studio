@@ -43,12 +43,10 @@ interface RawElement {
   ancestors: string[];
 }
 
-function probe(selector: string): string {
-  return `(${probeBody()})(${JSON.stringify(selector)})`;
-}
+const probe = (selector: string): string =>
+  `(${probeBody()})(${JSON.stringify(selector)})`;
 
-function probeBody(): string {
-  return `(async (selector) => {
+const probeBody = (): string => `(async (selector) => {
     let el;
     try { el = document.querySelector(selector); } catch { return null; }
     if (!el) return null;
@@ -62,43 +60,40 @@ function probeBody(): string {
     const app = tagged ? null : await (${appSourceBody()})(el);
     return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().slice(0, 2000), outerHTML: el.outerHTML.slice(0, 10000), styles, rect: { x: Math.round(r.x), y: Math.round(r.y + scrollY), width: Math.round(r.width), height: Math.round(r.height) }, loc: tagged || app?.loc || null, usedAt: app?.usedAt ?? null, usedBy: app?.usedBy ?? null, owners: ${ownerWalk()}(el), ancestors };
   })`;
-}
 
-function probeAll(selectors: string[]): string {
-  return `Promise.all((${JSON.stringify(selectors)}).map(${probeBody()}))`;
-}
+const probeAll = (selectors: string[]): string =>
+  `Promise.all((${JSON.stringify(selectors)}).map(${probeBody()}))`;
 
-function contextOf(selectorText: string, raw: RawElement): SelectionContext {
-  return {
-    ancestors: raw.ancestors,
-    outerHTML: raw.outerHTML,
-    owners: raw.owners ?? [],
-    rect: raw.rect,
-    selector: selectorText,
-    source: parseLoc(raw.loc),
-    styles: raw.styles,
-    tag: raw.tag,
-    text: raw.text,
-    usedAt: parseLoc(raw.usedAt),
-    usedBy: raw.usedBy,
-  };
-}
+const contextOf = (
+  selectorText: string,
+  raw: RawElement
+): SelectionContext => ({
+  ancestors: raw.ancestors,
+  outerHTML: raw.outerHTML,
+  owners: raw.owners ?? [],
+  rect: raw.rect,
+  selector: selectorText,
+  source: parseLoc(raw.loc),
+  styles: raw.styles,
+  tag: raw.tag,
+  text: raw.text,
+  usedAt: parseLoc(raw.usedAt),
+  usedBy: raw.usedBy,
+});
 
 const PROBE_VIEWPORT = { height: 900, width: 1440 };
 
-function onProbePage<T>(
+const onProbePage = <T>(
   preview: PreviewService,
   url: string,
   expression: string
-): Promise<T> {
-  return probeOnPage<T>(preview, url, PROBE_VIEWPORT, expression);
-}
+): Promise<T> => probeOnPage<T>(preview, url, PROBE_VIEWPORT, expression);
 
-async function describeElements(
+const describeElements = async (
   preview: PreviewService,
   url: string,
   selectors: string[]
-): Promise<(SelectionContext | null)[]> {
+): Promise<(SelectionContext | null)[]> => {
   const raws = await onProbePage<(RawElement | null)[]>(
     preview,
     url,
@@ -110,13 +105,13 @@ async function describeElements(
 
     return raw ? contextOf(selector, raw) : null;
   });
-}
+};
 
-async function describeElement(
+const describeElement = async (
   preview: PreviewService,
   url: string,
   selector: string
-): Promise<SelectionContext | null> {
+): Promise<SelectionContext | null> => {
   const raw = await onProbePage<RawElement | null>(
     preview,
     url,
@@ -124,14 +119,12 @@ async function describeElement(
   );
 
   return raw ? contextOf(selector, raw) : null;
-}
+};
 
-function textHintsOf(element: SelectionContext): TextSourceHints {
-  return {
-    text: element.text,
-    ...(element.usedAt ? { usedAt: element.usedAt } : {}),
-    ...(element.owners?.length ? { owners: element.owners } : {}),
-  };
-}
+const textHintsOf = (element: SelectionContext): TextSourceHints => ({
+  text: element.text,
+  ...(element.usedAt ? { usedAt: element.usedAt } : {}),
+  ...(element.owners?.length ? { owners: element.owners } : {}),
+});
 
 export { describeElements, describeElement, textHintsOf };

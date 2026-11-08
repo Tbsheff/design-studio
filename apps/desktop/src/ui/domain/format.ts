@@ -1,4 +1,4 @@
-function formatTime(ts: number): string {
+const formatTime = (ts: number): string => {
   const d = new Date(ts);
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
@@ -12,9 +12,9 @@ function formatTime(ts: number): string {
         hour: "2-digit",
         minute: "2-digit",
       })}`;
-}
+};
 
-function formatMs(ms: number | null | undefined): string {
+const formatMs = (ms: number | null | undefined): string => {
   if (ms === null || ms === undefined) {
     return "";
   }
@@ -28,17 +28,17 @@ function formatMs(ms: number | null | undefined): string {
   }
 
   return `${Math.floor(ms / 60_000)}m ${Math.round((ms % 60_000) / 1000)}s`;
-}
+};
 
-function formatUsd(n: number): string {
+const formatUsd = (n: number): string => {
   if (n > 0 && n < 0.005) {
     return "<$0.01";
   }
 
   return `$${n.toFixed(2)}`;
-}
+};
 
-function downloadBlob(blob: Blob, name: string): void {
+const downloadBlob = (blob: Blob, name: string): void => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -47,9 +47,9 @@ function downloadBlob(blob: Blob, name: string): void {
   a.click();
   a.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
+};
 
-function formatRelative(ts: number, now = Date.now()): string {
+const formatRelative = (ts: number, now = Date.now()): string => {
   const diff = Math.max(0, now - ts);
   const min = Math.floor(diff / 60_000);
 
@@ -81,13 +81,13 @@ function formatRelative(ts: number, now = Date.now()): string {
     day: "numeric",
     month: "short",
   });
-}
+};
 
-function baseName(p: string): string {
+const baseName = (p: string): string => {
   const parts = p.split(/[\\/]/).filter(Boolean);
 
   return parts.at(-1) ?? p;
-}
+};
 
 export {
   formatTime,

@@ -40,11 +40,11 @@ const HIDDEN: CSSProperties = {
   top: 0,
 };
 
-function step(
+const step = (
   options: readonly UiSelectOption[],
   from: number,
   delta: 1 | -1
-): number {
+): number => {
   for (let i = 1; i <= options.length; i += 1) {
     const at = (from + delta * i + options.length * 2) % options.length;
 
@@ -54,9 +54,9 @@ function step(
   }
 
   return from;
-}
+};
 
-function edge(options: readonly UiSelectOption[], last: boolean): number {
+const edge = (options: readonly UiSelectOption[], last: boolean): number => {
   const order = options.map((_, i) => i);
 
   if (last) {
@@ -64,13 +64,13 @@ function edge(options: readonly UiSelectOption[], last: boolean): number {
   }
 
   return order.find((i) => !options[i]?.disabled) ?? -1;
-}
+};
 
-function typeahead(
+const typeahead = (
   options: readonly UiSelectOption[],
   from: number,
   query: string
-): number {
+): number => {
   const q = query.toLowerCase();
 
   for (let i = 1; i <= options.length; i += 1) {
@@ -87,14 +87,14 @@ function typeahead(
   }
 
   return -1;
-}
+};
 
-function useOutsideClose(
+const useOutsideClose = (
   open: boolean,
   close: () => void,
   root: RefObject<HTMLElement | null>,
   panel: RefObject<HTMLElement | null>
-) {
+) => {
   useEffect(() => {
     if (!open) {
       return;
@@ -135,13 +135,10 @@ function useOutsideClose(
       window.removeEventListener("resize", close);
     };
   }, [open, close, root, panel]);
-}
+};
 
-function openKey(key: string): boolean {
-  return (
-    key === "ArrowDown" || key === "ArrowUp" || key === "Enter" || key === " "
-  );
-}
+const openKey = (key: string): boolean =>
+  key === "ArrowDown" || key === "ArrowUp" || key === "Enter" || key === " ";
 
 const UiSelect = <V extends string>(p: Props<V>) => {
   const [open, setOpen] = useState(false);

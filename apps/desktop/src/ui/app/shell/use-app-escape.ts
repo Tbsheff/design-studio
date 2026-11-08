@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-function useEscape(onClose: () => void): void {
+const useEscape = (onClose: () => void): void => {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
@@ -18,6 +18,6 @@ function useEscape(onClose: () => void): void {
 
     return () => globalThis.removeEventListener("keydown", onKey, true);
   }, []);
-}
+};
 
 export { useEscape };

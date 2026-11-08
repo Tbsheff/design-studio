@@ -8,7 +8,7 @@ type Switcher = (projectId: string | null) => void;
 let switcher: Switcher | null = null;
 let pending: { projectId: string; route: string } | null = null;
 
-function setProjectSwitcher(next: Switcher): () => void {
+const setProjectSwitcher = (next: Switcher): (() => void) => {
   switcher = next;
 
   return () => {
@@ -16,9 +16,9 @@ function setProjectSwitcher(next: Switcher): () => void {
       switcher = null;
     }
   };
-}
+};
 
-function takePendingRoute(projectId: string): string | null {
+const takePendingRoute = (projectId: string): string | null => {
   if (pending?.projectId !== projectId) {
     return null;
   }
@@ -27,14 +27,14 @@ function takePendingRoute(projectId: string): string | null {
   pending = null;
 
   return route;
-}
+};
 
 const openProjectHome = async (projectId: string): Promise<void> => {
   await prefetchStudio();
   uiStore.set({ activeProjectId: projectId, screen: "home" });
 };
 
-function openProject(projectId: string, route?: string): void {
+const openProject = (projectId: string, route?: string): void => {
   if (uiStore.get().activeProjectId === projectId) {
     pending = null;
 
@@ -56,15 +56,15 @@ function openProject(projectId: string, route?: string): void {
   }
 
   void openProjectHome(projectId);
-}
+};
 
-function goHome(): void {
+const goHome = (): void => {
   if (switcher && uiStore.get().activeProjectId) {
     switcher(null);
   } else {
     uiStore.set({ activeProjectId: null, screen: "home" });
   }
-}
+};
 
 export {
   OPEN_ROUTE_EVENT,

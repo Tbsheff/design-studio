@@ -66,16 +66,16 @@ const defaults: UiState = {
   zoom: "fit",
 };
 
-function libraryFromOf(value: unknown): LibraryFrom | null {
+const libraryFromOf = (value: unknown): LibraryFrom | null => {
   const from = value as Partial<LibraryFrom> | null | undefined;
 
   return typeof from?.projectId === "string" &&
     typeof from.directionId === "string"
     ? { directionId: from.directionId, projectId: from.projectId }
     : null;
-}
+};
 
-function loadUiState(): UiState {
+const loadUiState = (): UiState => {
   try {
     const raw = localStorage.getItem(KEY);
 
@@ -122,15 +122,15 @@ function loadUiState(): UiState {
   } catch {
     return defaults;
   }
-}
+};
 
-function saveUiState(state: UiState): void {
+const saveUiState = (state: UiState): void => {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
     return;
   }
-}
+};
 
 let state: UiState = loadUiState();
 const listeners = new Set<() => void>();
@@ -152,9 +152,8 @@ const uiStore = {
   },
 };
 
-function useUi(): UiState {
-  return useSyncExternalStore(uiStore.subscribe, uiStore.get);
-}
+const useUi = (): UiState =>
+  useSyncExternalStore(uiStore.subscribe, uiStore.get);
 
 interface DraftStore {
   get: () => string;
@@ -162,7 +161,7 @@ interface DraftStore {
   subscribe: (listener: () => void) => () => void;
 }
 
-function createDraftStore(initial = ""): DraftStore {
+const createDraftStore = (initial = ""): DraftStore => {
   let value = initial;
   const draftListeners = new Set<() => void>();
 
@@ -184,15 +183,13 @@ function createDraftStore(initial = ""): DraftStore {
       };
     },
   };
-}
+};
 
-function useDraft(store: DraftStore): string {
-  return useSyncExternalStore(store.subscribe, store.get);
-}
+const useDraft = (store: DraftStore): string =>
+  useSyncExternalStore(store.subscribe, store.get);
 
-function useDraftActive(store: DraftStore): boolean {
-  return useSyncExternalStore(store.subscribe, () => store.get().trim() !== "");
-}
+const useDraftActive = (store: DraftStore): boolean =>
+  useSyncExternalStore(store.subscribe, () => store.get().trim() !== "");
 
 interface HomeVariationsIntent {
   projectId: string;

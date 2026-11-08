@@ -20,17 +20,17 @@ let scope: Scope = {};
 let appStartSent = false;
 let flushLongFrames: () => void = () => undefined;
 
-function desktopBoot(): DesktopBoot | null {
+const desktopBoot = (): DesktopBoot | null => {
   const boot = desktopBridge<{ boot?: DesktopBoot }>()?.boot;
 
   return boot && typeof boot.startedAt === "number" ? boot : null;
-}
+};
 
-function afterPaint(fn: () => void): void {
+const afterPaint = (fn: () => void): void => {
   requestAnimationFrame(() => requestAnimationFrame(fn));
-}
+};
 
-function reportAppStart(screen: "home" | "studio"): void {
+const reportAppStart = (screen: "home" | "studio"): void => {
   if (appStartSent) {
     return;
   }
@@ -49,14 +49,14 @@ function reportAppStart(screen: "home" | "studio"): void {
       ms: Math.round(ms),
     });
   });
-}
+};
 
-function reportFirstToken(
+const reportFirstToken = (
   projectId: string,
   directionId: string | undefined,
   runId: string,
   sentAt: number
-): void {
+): void => {
   afterPaint(() =>
     sendTelemetry({
       detail: { runId, stage: "visible" },
@@ -66,9 +66,9 @@ function reportFirstToken(
       projectId,
     })
   );
-}
+};
 
-function longFrameType(): string | null {
+const longFrameType = (): string | null => {
   if (typeof PerformanceObserver === "undefined") {
     return null;
   }
@@ -80,9 +80,9 @@ function longFrameType(): string | null {
   }
 
   return types.includes("longtask") ? "longtask" : null;
-}
+};
 
-function watchLongFrames(): () => void {
+const watchLongFrames = (): (() => void) => {
   const type = longFrameType();
 
   if (!type) {
@@ -146,9 +146,9 @@ function watchLongFrames(): () => void {
     flush();
     flushLongFrames = () => undefined;
   };
-}
+};
 
-function setTelemetryScope(next: Scope): () => void {
+const setTelemetryScope = (next: Scope): (() => void) => {
   flushLongFrames();
   scope = next;
 
@@ -160,7 +160,7 @@ function setTelemetryScope(next: Scope): () => void {
     flushLongFrames();
     scope = {};
   };
-}
+};
 
 export {
   desktopBoot,

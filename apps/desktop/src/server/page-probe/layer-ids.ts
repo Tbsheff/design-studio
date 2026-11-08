@@ -19,7 +19,7 @@ const GONE = "\u0000gone";
 const LOC_IN_KEY = /(^|\|)([^|#]+):(\d+):(\d+)(?=[|#])/g;
 const registries = new Map<string, Ids>();
 
-function idsOf(scope: string): Ids {
+const idsOf = (scope: string): Ids => {
   let ids = registries.get(scope);
 
   if (!ids || ids.refByKey.size > IDS_MAX) {
@@ -28,9 +28,9 @@ function idsOf(scope: string): Ids {
   }
 
   return ids;
-}
+};
 
-function refForKey(scope: string, key: string): string {
+const refForKey = (scope: string, key: string): string => {
   const ids = idsOf(scope);
   const known = ids.refByKey.get(key);
 
@@ -52,13 +52,12 @@ function refForKey(scope: string, key: string): string {
   ids.keyByRef.set(ref, key);
 
   return ref;
-}
+};
 
-function isGoneRef(scope: string, ref: string): boolean {
-  return registries.get(scope)?.keyByRef.get(ref) === GONE;
-}
+const isGoneRef = (scope: string, ref: string): boolean =>
+  registries.get(scope)?.keyByRef.get(ref) === GONE;
 
-function movedKey(key: string, maps: Map<string, LineMap>): string | null {
+const movedKey = (key: string, maps: Map<string, LineMap>): string | null => {
   let gone = false;
 
   const next = key.replaceAll(
@@ -83,9 +82,9 @@ function movedKey(key: string, maps: Map<string, LineMap>): string | null {
   );
 
   return gone ? null : next;
-}
+};
 
-function remapIds(scope: string, files: SourceFileChange[]): Move[] {
+const remapIds = (scope: string, files: SourceFileChange[]): Move[] => {
   const ids = registries.get(scope);
 
   if (!ids || files.length === 0) {
@@ -127,7 +126,7 @@ function remapIds(scope: string, files: SourceFileChange[]): Move[] {
   }
 
   return moves;
-}
+};
 
 export { refForKey, isGoneRef, remapIds };
 

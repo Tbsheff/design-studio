@@ -12,7 +12,7 @@ const reportCopy = async (
   report((await copied) ? "copied" : "failed");
 };
 
-async function copyText(text: string): Promise<boolean> {
+const copyText = async (text: string): Promise<boolean> => {
   try {
     await navigator.clipboard.writeText(text);
 
@@ -20,7 +20,7 @@ async function copyText(text: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
+};
 
 const CopyButton = ({
   text,

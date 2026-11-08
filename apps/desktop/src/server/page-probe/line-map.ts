@@ -5,7 +5,7 @@ interface LineMap {
 
 const CELL_MAX = 9_000_000;
 
-function lcsPairs(a: string[], b: string[]): [number, number][] {
+const lcsPairs = (a: string[], b: string[]): [number, number][] => {
   const n = a.length;
   const m = b.length;
 
@@ -48,23 +48,23 @@ function lcsPairs(a: string[], b: string[]): [number, number][] {
   }
 
   return pairs;
-}
+};
 
-function pairByIndex(
+const pairByIndex = (
   mapping: Int32Array,
   fromOld: number,
   toOld: number,
   fromNew: number,
   toNew: number
-): void {
+): void => {
   const count = Math.min(toOld - fromOld, toNew - fromNew);
 
   for (let k = 0; k < count; k += 1) {
     mapping[fromOld + k] = fromNew + k;
   }
-}
+};
 
-function pairHunk(
+const pairHunk = (
   mapping: Int32Array,
   before: string[],
   after: string[],
@@ -72,7 +72,7 @@ function pairHunk(
   toOld: number,
   fromNew: number,
   toNew: number
-): void {
+): void => {
   if (toOld <= fromOld || toNew <= fromNew) {
     return;
   }
@@ -106,9 +106,9 @@ function pairHunk(
     lastOld = i + 1;
     lastNew = j + 1;
   }
-}
+};
 
-function lineMapping(before: string[], after: string[]): Int32Array {
+const lineMapping = (before: string[], after: string[]): Int32Array => {
   const mapping = new Int32Array(before.length).fill(-1);
   let head = 0;
 
@@ -161,14 +161,14 @@ function lineMapping(before: string[], after: string[]): Int32Array {
   }
 
   return mapping;
-}
+};
 
 const TRIVIAL_LINE = /^(?:<\/[\w.:-]*>|\/?>|[\s{}()[\];,]*)$/;
 
-function unclaimedByText(
+const unclaimedByText = (
   after: string[],
   mapping: Int32Array
-): Map<string, number[]> {
+): Map<string, number[]> => {
   const claimed = new Set(mapping);
   const byText = new Map<string, number[]>();
   after.forEach((line, index) => {
@@ -181,13 +181,13 @@ function unclaimedByText(
   });
 
   return byText;
-}
+};
 
-function movedTo(
+const movedTo = (
   text: string,
   candidates: number[] | undefined,
   prev: number
-): number | null {
+): number | null => {
   if (!candidates || candidates.length === 0) {
     return null;
   }
@@ -201,13 +201,13 @@ function movedTo(
   }
 
   return candidates.length === 1 ? (candidates[0] as number) : null;
-}
+};
 
-function matchMovedLines(
+const matchMovedLines = (
   before: string[],
   after: string[],
   mapping: Int32Array
-): void {
+): void => {
   const byText = unclaimedByText(after, mapping);
 
   for (let i = 0; i < before.length; i += 1) {
@@ -231,9 +231,9 @@ function matchMovedLines(
     mapping[i] = to;
     candidates.splice(candidates.indexOf(to), 1);
   }
-}
+};
 
-function shiftedCol(oldText: string, newText: string, col: number): number {
+const shiftedCol = (oldText: string, newText: string, col: number): number => {
   if (oldText === newText) {
     return col;
   }
@@ -251,9 +251,9 @@ function shiftedCol(oldText: string, newText: string, col: number): number {
   }
 
   return col;
-}
+};
 
-function lineMapOf(before: string, after: string): LineMap {
+const lineMapOf = (before: string, after: string): LineMap => {
   const oldLines = before.split("\n");
   const newLines = after.split("\n");
   const mapping = lineMapping(oldLines, newLines);
@@ -279,7 +279,7 @@ function lineMapOf(before: string, after: string): LineMap {
       return mapped === undefined || mapped < 0 ? null : mapped + 1;
     },
   };
-}
+};
 
 export { lineMapOf };
 

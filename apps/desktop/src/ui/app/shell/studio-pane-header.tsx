@@ -55,8 +55,8 @@ interface Item {
   checked?: boolean;
 }
 
-function MenuItems({ items, onDone }: { items: Item[]; onDone: () => void }) {
-  return items.map((item) => (
+const MenuItems = ({ items, onDone }: { items: Item[]; onDone: () => void }) =>
+  items.map((item) => (
     <button
       key={item.id}
       type="button"
@@ -74,9 +74,8 @@ function MenuItems({ items, onDone }: { items: Item[]; onDone: () => void }) {
       {item.meta && <span className="ui-menu-meta">{item.meta}</span>}
     </button>
   ));
-}
 
-function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
+const onMenuKey = (event: KeyboardEvent<HTMLDivElement>) => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
     return;
   }
@@ -95,7 +94,7 @@ function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
 
   event.preventDefault();
   next?.focus();
-}
+};
 
 const ProjectMenu = (
   props: Props & {

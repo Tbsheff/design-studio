@@ -28,7 +28,12 @@ function key(
   };
 }
 
-function shortcut(withRedo: boolean, enabled = true) {
+interface ShortcutRun {
+  calls: string[];
+  state: ShortcutState;
+}
+
+function shortcut(withRedo: boolean, enabled = true): ShortcutRun {
   const calls: string[] = [];
 
   const state: ShortcutState = {
@@ -95,7 +100,7 @@ describe("edit history helpers", () => {
   it("knows a history step version so a later Cmd+Z does not version-undo it", () => {
     expect.hasAssertions();
 
-    const version = (title: string, kind: Version["meta"]["kind"]) =>
+    const version = (title: string, kind: Version["meta"]["kind"]): Version =>
       ({ meta: { kind }, title }) as Version;
 
     expect(isHistoryStep(version("Undo: Edit h1: color", "manual"))).toBe(

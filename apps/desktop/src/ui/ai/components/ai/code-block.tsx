@@ -22,7 +22,7 @@ interface CodeBlockContextValue {
 
 const CodeBlockContext = createContext<CodeBlockContextValue | null>(null);
 
-const useCodeBlockContext = () => {
+const useCodeBlockContext = (): CodeBlockContextValue => {
   const ctx = useContext(CodeBlockContext);
 
   if (!ctx) {
@@ -79,7 +79,7 @@ const CodeBlock = ({
   const open = isControlled ? openProp : openState;
   const contentId = useId();
 
-  const setOpen = (next: boolean) => {
+  const setOpen = (next: boolean): void => {
     if (!isControlled) {setOpenState(next);}
 
     onOpenChange?.(next);
@@ -189,7 +189,7 @@ const CodeBlockContent = ({
 
     if (!el) {return;}
 
-    const update = () => {
+    const update = (): void => {
       const h = el.scrollHeight;
       setFullHeight(h);
       setOverflowing(h > maxHeight);
@@ -200,7 +200,7 @@ const CodeBlockContent = ({
     const observer = new ResizeObserver(update);
     observer.observe(el);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, [clip, maxHeight, setOverflowing]);
 
   const isOverflowing = fullHeight !== null && fullHeight > maxHeight;

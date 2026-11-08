@@ -35,7 +35,7 @@ interface ComposerExtensionContextValue {
 const ComposerExtensionContext =
   createContext<ComposerExtensionContextValue | null>(null);
 
-const useComposerContext = () => {
+const useComposerContext = (): ComposerContextValue => {
   const ctx = useContext(ComposerContext);
 
   if (!ctx) {
@@ -45,7 +45,7 @@ const useComposerContext = () => {
   return ctx;
 };
 
-const useComposerExtensionContext = () => {
+const useComposerExtensionContext = (): ComposerExtensionContextValue => {
   const ctx = useContext(ComposerExtensionContext);
 
   if (!ctx) {
@@ -55,7 +55,14 @@ const useComposerExtensionContext = () => {
   return ctx;
 };
 
-const useComposer = () => {
+interface ComposerState {
+  disabled: boolean;
+  isEmpty: boolean;
+  isFocused: boolean;
+  submit: () => void;
+}
+
+const useComposer = (): ComposerState => {
   const ctx = useComposerContext();
 
   return {
@@ -88,7 +95,7 @@ const Composer = ({
   const registerSubmit = useCallback((fn: () => void) => {
     submitFnRef.current = fn;
 
-    return () => {
+    return (): void => {
       if (submitFnRef.current === fn) {submitFnRef.current = null;}
     };
   }, []);
@@ -104,7 +111,7 @@ const Composer = ({
 
     let last = -1;
 
-    const emit = () => {
+    const emit = (): void => {
       const next = el.offsetHeight;
 
       if (next === last) {return;}
@@ -117,7 +124,7 @@ const Composer = ({
     const ro = new ResizeObserver(emit);
     ro.observe(el);
 
-    return () => ro.disconnect();
+    return (): void => ro.disconnect();
   }, []);
 
   const ctxValue = useMemo<ComposerContextValue>(
@@ -166,7 +173,7 @@ const Composer = ({
   );
 };
 
-const autosize = (el: HTMLTextAreaElement, maxRows: number) => {
+const autosize = (el: HTMLTextAreaElement, maxRows: number): void => {
   el.style.height = "auto";
   const styles = window.getComputedStyle(el);
   const lineHeight = Number.parseFloat(styles.lineHeight) || 20;
@@ -246,7 +253,7 @@ const ComposerInput = ({
 
   useEffect(() => ctx.registerSubmit(doSubmit), [ctx, doSubmit]);
 
-  const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     const next = e.target.value;
 
     if (!isControlled) {setInternalValue(next);}
@@ -254,7 +261,7 @@ const ComposerInput = ({
     onValueChangeRef.current?.(next);
   };
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     if (e.nativeEvent.isComposing || isComposingRef.current) {return;}
 
     const submitKey = submitOnEnter ? !e.shiftKey : e.metaKey || e.ctrlKey;
@@ -341,7 +348,7 @@ const ComposerQuoteContent = ({
 
     if (!el) {return;}
 
-    const update = () => {
+    const update = (): void => {
       setOverflows(el.scrollHeight > el.clientHeight + 1);
     };
 
@@ -349,7 +356,7 @@ const ComposerQuoteContent = ({
     const observer = new ResizeObserver(update);
     observer.observe(el);
 
-    return () => observer.disconnect();
+    return (): void => observer.disconnect();
   }, []);
 
   return (

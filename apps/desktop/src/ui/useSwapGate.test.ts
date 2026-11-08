@@ -5,7 +5,15 @@ import { SwapQueue } from "./features/inspector/use-swap-gate";
 const IS_FALSE = false;
 const IS_TRUE = true;
 
-const change = (directionId: string, changedAt: number) => ({
+interface GateChange {
+  changedAt: number;
+  directionId: string;
+  paths: never[];
+  receivedAt: number;
+  shouldReload: boolean;
+}
+
+const change = (directionId: string, changedAt: number): GateChange => ({
   changedAt,
   directionId,
   paths: [],

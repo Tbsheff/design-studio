@@ -2,8 +2,8 @@ import type { McpApprovalPoll } from "@design-studio/contracts/export";
 
 import { APP_STREAM_PATH } from "../../shared/app-stream";
 import type { StreamWatchRequest } from "../../shared/app-stream";
-import { json } from "../api";
 import type { EventSourceLike } from "./event-hub";
+import { request } from "./http";
 import { getSession } from "./session";
 import { StreamLeader } from "./stream-leader";
 import { StreamTab } from "./stream-tab";
@@ -102,7 +102,7 @@ const sendWatch = async (
   sessionId: string,
   body: StreamWatchRequest
 ): Promise<void> => {
-  await json(
+  await request(
     "POST",
     `${APP_STREAM_PATH}/${encodeURIComponent(sessionId)}`,
     body

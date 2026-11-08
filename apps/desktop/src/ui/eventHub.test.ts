@@ -2,7 +2,7 @@ import type { StudioEvent } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
 import { createEventHub } from "./platform/event-hub";
-import type { EventSourceLike } from "./platform/event-hub";
+import type { EventHub, EventSourceLike } from "./platform/event-hub";
 
 const IS_FALSE = false;
 const IS_TRUE = true;
@@ -40,7 +40,14 @@ class FakeSource implements EventSourceLike {
 
 const ignoreEvent = (): null => null;
 
-function setup() {
+interface HubSetup {
+  flushDeferred: () => void;
+  hub: EventHub;
+  sources: FakeSource[];
+  timers: (() => void)[];
+}
+
+function setup(): HubSetup {
   const sources: FakeSource[] = [];
   const timers: (() => void)[] = [];
   const deferred: (() => void)[] = [];
@@ -57,7 +64,7 @@ function setup() {
     setTimer: (fn) => timers.push(fn),
   });
 
-  const flushDeferred = () => {
+  const flushDeferred = (): void => {
     for (const fn of deferred.splice(0)) {
       fn();
     }

@@ -55,7 +55,7 @@ const defaultComponents: Components = {
   },
 };
 
-const closeIncompleteFence = (source: string) => {
+const closeIncompleteFence = (source: string): string => {
   const fences = source.match(/```/g);
 
   if (fences && fences.length % 2 === 1) {return `${source}\n\`\`\``;}

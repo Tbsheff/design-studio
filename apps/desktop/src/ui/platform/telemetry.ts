@@ -1,6 +1,6 @@
 import type { TelemetrySample } from "@design-studio/contracts";
 
-import { sendTelemetry } from "../api";
+import { sendTelemetry } from "../api-telemetry";
 import { desktopBridge } from "./desktop";
 import { pick } from "./pick.js";
 

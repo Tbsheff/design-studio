@@ -1,4 +1,5 @@
 import { zoomKeyOf } from "@design-studio/contracts";
+import type { ZoomKey } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -283,7 +284,7 @@ describe(zoomKeyOf, () => {
       altKey: boolean;
       shiftKey: boolean;
     }> = {}
-  ) =>
+  ): ZoomKey | null =>
     zoomKeyOf({
       altKey: false,
       code,

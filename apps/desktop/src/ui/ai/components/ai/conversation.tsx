@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { RefObject } from "react";
 import { cn } from "../../lib/utils";
 
 interface ConversationContextValue {
@@ -22,7 +23,7 @@ const ConversationContext = createContext<ConversationContextValue | null>(
   null,
 );
 
-const useConversationContext = () => {
+const useConversationContext = (): ConversationContextValue => {
   const ctx = useContext(ConversationContext);
 
   if (!ctx) {
@@ -32,7 +33,15 @@ const useConversationContext = () => {
   return ctx;
 };
 
-const useConversation = () => {
+interface ConversationState {
+  isAtBottom: boolean;
+  scrollToBottom: (behavior?: ScrollBehavior) => void;
+  stickToBottom: () => void;
+  viewportRef: RefObject<HTMLDivElement | null>;
+  wasAtBottomRef: RefObject<boolean>;
+}
+
+const useConversation = (): ConversationState => {
   const { isAtBottom, scrollToBottom, wasAtBottomRef, viewportRef } = useConversationContext();
 
   const stickToBottom = useCallback(() => {
@@ -139,7 +148,7 @@ const ConversationContent = ({
     ro.observe(c);
     ro.observe(v);
 
-    return () => ro.disconnect();
+    return (): void => ro.disconnect();
   }, [recompute, viewportRef, wasAtBottomRef]);
 
   return useRender({
@@ -164,7 +173,7 @@ const ConversationContent = ({
         if (event.target !== event.currentTarget) {return;}
         draggingRef.current = true;
 
-        const release = () => {
+        const release = (): void => {
           draggingRef.current = false;
           window.removeEventListener("pointerup", release);
           window.removeEventListener("pointercancel", release);

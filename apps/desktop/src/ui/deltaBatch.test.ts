@@ -7,10 +7,18 @@ import {
   createDeltaBatcher,
   mergeDeltas,
 } from "./features/inspector/delta-batch";
+import type { DeltaBatcher } from "./features/inspector/delta-batch";
 
 let seq = 0;
 
-const base = () => ({
+interface BaseEvent {
+  directionId: string;
+  projectId: string;
+  seq: number;
+  ts: number;
+}
+
+const base = (): BaseEvent => ({
   directionId: "d1",
   projectId: "p1",
   seq: ++seq,
@@ -55,7 +63,14 @@ const finished = (runId: string, finalText: string): StudioEvent => ({
   type: "run.finished",
 });
 
-function harness() {
+interface Harness {
+  batcher: DeltaBatcher;
+  frame: () => void;
+  runs: () => RunMap;
+  updates: () => number;
+}
+
+function harness(): Harness {
   let runs: RunMap = {};
   let updates = 0;
   const queued: (() => void)[] = [];
@@ -69,7 +84,7 @@ function harness() {
       let live = true;
       queued.push(() => live && fn());
 
-      return () => {
+      return (): void => {
         live = false;
       };
     }
@@ -77,13 +92,13 @@ function harness() {
 
   return {
     batcher,
-    frame: () => {
+    frame: (): void => {
       for (const fn of queued.splice(0)) {
         fn();
       }
     },
-    runs: () => runs,
-    updates: () => updates,
+    runs: (): RunMap => runs,
+    updates: (): number => updates,
   };
 }
 

@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
 import { formatMeasure } from "../../../shared/measure.js";
-import { gapStyle } from "./canvas-overlays.js";
+import { gapStyle } from "./overlay-styles.js";
 import type { FreeMoveView } from "./use-free-move.js";
 
 const FreeMoveSpacing = ({

@@ -17,14 +17,15 @@ import {
   inEditPane,
   quietOnPointer,
 } from "./canvas-helpers.js";
-import { FrameSnapLayer, MarqueeLayer } from "./canvas-overlays.js";
 import { CanvasComments, InlinePromptSlot } from "./canvas-tool-slots.js";
 import type { ViewProps } from "./canvas-types.js";
 import { copy } from "./copy.js";
-import { DrawBar } from "./draw-layer.js";
+import { DrawBar } from "./draw-bar.js";
 import { EditNotice } from "./edit-notice.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
+import { FrameSnapLayer } from "./frame-snap-layer.js";
 import { FrameUndoBar } from "./frame-undo-bar.js";
+import { MarqueeLayer } from "./marquee-layer.js";
 import {
   FreeMoveSlot,
   LiveOverlay,

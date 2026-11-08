@@ -3,11 +3,11 @@ import type { ReactElement, ReactNode } from "react";
 
 import { TabOrderToggle } from "../../canvas-toolbar-slots.js";
 import { copy } from "./copy.js";
-import { PenIcon } from "./draw-layer.js";
 import { FindPhotoButton } from "./find-photo-button.js";
 import { InsertIconButton } from "./insert-icon-button.js";
 import { LinksSwitch } from "./links-switch.js";
 import { LofiSwitch } from "./lofi-switch.js";
+import { PenIcon } from "./pen-icon.js";
 import { RulersSwitch } from "./rulers-switch.js";
 import { ThemeSwitch } from "./theme-switch.js";
 import { ViewportControls, SourceControls } from "./toolbar-viewport.js";

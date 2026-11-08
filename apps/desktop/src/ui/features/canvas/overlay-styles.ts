@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { MeasureLine } from "../../../shared/measure.js";
-import type { SnapGuide } from "./snap-model.js";
+import type { SnapGuide, SpacingBadge } from "./snap-model.js";
 
 const guideStyle = (snapGuide: SnapGuide): CSSProperties => {
   if (snapGuide.axis === "x") {
@@ -47,6 +47,22 @@ const lineStyle = (measureLine: MeasureLine): CSSProperties => {
   };
 };
 
+const gapStyle = (spacingBadge: SpacingBadge): CSSProperties => {
+  if (spacingBadge.axis === "x") {
+    return {
+      left: spacingBadge.from,
+      top: spacingBadge.at,
+      width: spacingBadge.to - spacingBadge.from,
+    };
+  }
+
+  return {
+    height: spacingBadge.to - spacingBadge.from,
+    left: spacingBadge.at,
+    top: spacingBadge.from,
+  };
+};
+
 interface RectLike {
   readonly height: number;
   readonly width: number;
@@ -65,4 +81,20 @@ const toRectStyle = (
   return { height, left, top, width };
 };
 
-export { toRectStyle, fullStyle, guideStyle, lineStyle };
+const toSnapOriginStyle = (
+  origin: { x: number; y: number },
+  shift: { x: number; y: number }
+): CSSProperties => ({
+  left: -origin.x,
+  top: -origin.y,
+  translate: `${shift.x}px ${shift.y}px`,
+});
+
+export {
+  gapStyle,
+  toSnapOriginStyle,
+  toRectStyle,
+  fullStyle,
+  guideStyle,
+  lineStyle,
+};

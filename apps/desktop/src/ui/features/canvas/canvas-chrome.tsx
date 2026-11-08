@@ -4,12 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { uiStore } from "../../platform/storage.js";
 import { useFileMenu } from "./canvas-chrome-menu.js";
 import type { ChromeProps } from "./canvas-chrome-menu.js";
-import { PresentLayer, TweakPrompt } from "./canvas-overlays.js";
+import { PresentLayer } from "./canvas-overlays.js";
 import { fileNameOf, reloadFrames, scopeOf, toolOf } from "./canvas-shell.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import { CanvasTopBar } from "./canvas-top-bar.js";
 import { CanvasViewRow } from "./canvas-view-row.js";
 import type { CanvasTool, PresentMode } from "./top-bar-menu.js";
+import { TweakPrompt } from "./tweak-prompt.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import { VectorToolButtons } from "./vector-tool-buttons.js";
 

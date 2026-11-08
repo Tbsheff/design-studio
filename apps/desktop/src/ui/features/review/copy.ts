@@ -63,6 +63,20 @@ const copy = {
     " The agent follows every rule. Review checks class, token, font and component rules.",
   thisFramePassesEvery: "This frame passes every check.",
   times: " × ",
+  walkAction: "Action",
+  walkFrictions: "Friction",
+  walkNoSteps: "The walk made no steps.",
+  walkOutcomeDone: "Task done",
+  walkOutcomeMaxSteps: "Out of steps",
+  walkOutcomeStuck: "User stuck",
+  walkRun: "Run",
+  walkRunTip:
+    "A synthetic user tries the task on this frame. The run clicks real controls and saves screenshots. It writes no project file.",
+  walkRunning: "Walking…",
+  walkSteps: "Steps",
+  walkTaskLabel: "Task for the synthetic user",
+  walkTaskPlaceholder: "Schedule a visit for a patient",
+  walkTitle: "Walk through a task",
 } as const;
 
 export { copy };

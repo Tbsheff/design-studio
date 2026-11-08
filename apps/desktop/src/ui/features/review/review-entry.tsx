@@ -24,6 +24,7 @@ import type { FilesChange } from "../home/use-studio-data.js";
 import { copy } from "./copy.js";
 import { pick } from "./pick.js";
 import { useReview } from "./use-review.js";
+import { WalkthroughSection } from "./walkthrough-section.js";
 
 import "../../styles/review.css";
 
@@ -197,6 +198,12 @@ const ReviewEntry = (props: Props): ReactElement => {
                 projectId={props.projectId}
               />
             </Suspense>
+            <WalkthroughSection
+              directionId={props.directionId}
+              frameId={props.frame.id}
+              isLive={props.live}
+              projectId={props.projectId}
+            />
           </ReviewPanel>
         </Suspense>
       )}

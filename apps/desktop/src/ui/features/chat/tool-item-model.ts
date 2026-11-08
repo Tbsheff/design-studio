@@ -50,14 +50,6 @@ const toTargetText = (target: string, isFull: boolean): string => {
   return shortName(target);
 };
 
-const toPlural = (count: number): string => {
-  if (count === 1) {
-    return "";
-  }
-
-  return "s";
-};
-
 const toSummaryLabel = (tools: ToolRow[]): string => {
   const names = tools.map((tool) => {
     if (shellEdits(tool).length > 0) {
@@ -81,7 +73,6 @@ const toSummaryLabel = (tools: ToolRow[]): string => {
 export {
   toEditCount,
   toIconTool,
-  toPlural,
   toRowClass,
   toSummaryLabel,
   toTargetText,

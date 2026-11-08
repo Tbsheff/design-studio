@@ -2,16 +2,9 @@ import type { ReactElement } from "react";
 
 import { formatMs } from "../../domain/format.js";
 import { copy } from "./copy.js";
+import { toPlural } from "./plural-model.js";
 import type { ToolRow } from "./run-state-model.js";
 import { failed } from "./tool-chips-model.js";
-
-const toPlural = (count: number): string => {
-  if (count === 1) {
-    return "";
-  }
-
-  return "s";
-};
 
 const GroupSummary = ({ tools }: { tools: ToolRow[] }): ReactElement => {
   const errors = tools.filter((tool) => failed(tool)).length;

@@ -98,14 +98,6 @@ const errorHint = (error: string): string => {
   return DEFAULT_ERROR_HINT;
 };
 
-const toPlural = (count: number): string => {
-  if (count === 1) {
-    return "";
-  }
-
-  return "s";
-};
-
 const toModeClass = (request: RunRequest): string => {
   if (request.plan) {
     return "plan";
@@ -134,7 +126,6 @@ export {
   runLevel,
   splitAnswers,
   toModeClass,
-  toPlural,
   toRequestMode,
 };
 

@@ -19,6 +19,7 @@ import { Chip } from "../../ai/components/ai/chip.js";
 import { CheckDetail } from "./check-detail.js";
 import { copy } from "./copy.js";
 import { GroupSummary } from "./group-summary.js";
+import { toPlural } from "./plural-model.js";
 import type { ToolRow } from "./run-state-model.js";
 import { CHECK_GROUP, COLLAPSE_AFTER, failed } from "./tool-chips-model.js";
 import type { RowGroup, ToolState } from "./tool-chips-model.js";
@@ -26,7 +27,6 @@ import { ToolDetail } from "./tool-detail.js";
 import {
   toEditCount,
   toIconTool,
-  toPlural,
   toRowClass,
   toSummaryLabel,
   toTargetText,

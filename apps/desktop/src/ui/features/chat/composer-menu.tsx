@@ -18,6 +18,7 @@ import type {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { cn } from "../../ai/lib/utils.js";
 import { ITEM, MODES, MODE_SHORT_HINT } from "./composer-menu-model.js";
 import type {
   ItemProps,
@@ -382,7 +383,7 @@ const ModelToggle = ({
           role="radio"
           aria-checked={value === option.id}
           disabled={locked}
-          className={value === option.id ? "on" : ""}
+          className={cn(value === option.id && "on")}
           onClick={() => onChange(option.id)}
         >
           {shortModel(option.id)}

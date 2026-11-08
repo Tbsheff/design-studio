@@ -11,6 +11,7 @@ import {
 import type { CSSProperties, KeyboardEvent, ReactElement } from "react";
 import { createPortal } from "react-dom";
 
+import { cn } from "../../ai/lib/utils.js";
 import { VariationsControl } from "../canvas/variations-control.js";
 import { MODE_LABEL } from "./composer-mode-model.js";
 import type { ComposerMode } from "./composer-mode-model.js";
@@ -166,7 +167,7 @@ const EffortToggle = ({
           type="button"
           role="radio"
           aria-checked={choice === effortOption}
-          className={choice === effortOption ? "on" : ""}
+          className={cn(choice === effortOption && "on")}
           onClick={() => pick(effortOption)}
         >
           {EFFORT_LABEL[effortOption]}
@@ -203,7 +204,7 @@ const ModeToggle = ({
           type="button"
           role="radio"
           aria-checked={mode.value === choice}
-          className={mode.value === choice ? "on" : ""}
+          className={cn(mode.value === choice && "on")}
           onClick={() => mode.onChange(choice)}
         >
           {MODE_LABEL[choice]}

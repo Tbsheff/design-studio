@@ -1,14 +1,10 @@
 import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
-import {
-  runLevel,
-  toModeClass,
-  toPlural,
-  toRequestMode,
-} from "./chat-parts-model.js";
+import { runLevel, toModeClass, toRequestMode } from "./chat-parts-model.js";
 import { copy } from "./copy.js";
 import { LevelChip } from "./level-chip.js";
+import { toPlural } from "./plural-model.js";
 import type { RunView } from "./run-state-model.js";
 import { skillDisplayName } from "./skills-model.js";
 

@@ -2,6 +2,7 @@ import type { SkillCatalog, SkillInfo } from "@design-studio/contracts";
 import { startTransition, useCallback, useEffect, useState } from "react";
 
 import { api, errorText } from "../../api.js";
+import { toPlural } from "./plural-model.js";
 
 let request: Promise<SkillCatalog> | null = null;
 let lastCatalog: SkillCatalog | null = null;
@@ -98,7 +99,7 @@ const withoutSkillLines = (prompt: string): string =>
   prompt.replaceAll(/^Use the \S+:\S+ skill\.$/gmu, "").trim();
 
 const plural = (count: number, word: string): string =>
-  `${count} ${word}${count === 1 ? "" : "s"}`;
+  `${count} ${word}${toPlural(count)}`;
 
 const NO_SKILLS_TEXT =
   "No skills found. Add a folder with a SKILL.md to ~/.claude/skills, or enable a Claude Code plugin that has skills.";

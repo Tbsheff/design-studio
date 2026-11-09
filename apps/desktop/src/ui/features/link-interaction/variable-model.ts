@@ -61,7 +61,7 @@ const whenDraftOf = (link: PrototypeLink): WhenDraft => {
     return { name: link.when.name, value: String(link.when.equals) };
   }
 
-  return { name: "", value: DEFAULT_VALUE };
+  return { name: "", value: "" };
 };
 
 const isVariableValue = (op: LinkVariableOp, text: string): boolean => {
@@ -110,8 +110,12 @@ const whenChange = (draft: WhenDraft): ChangeBody | null => {
 
   const name = cleanVariableName(draft.name);
 
-  if (name === null || draft.value === "") {
+  if (name === null) {
     return null;
+  }
+
+  if (draft.value === "") {
+    return { whenEquals: DEFAULT_VALUE, whenName: name };
   }
 
   return { whenEquals: toVariableValue(draft.value), whenName: name };

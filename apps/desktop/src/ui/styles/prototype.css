@@ -644,6 +644,35 @@ dialog.play-layer {
   font-family: var(--mono);
 }
 
+.proto-name {
+  width: 96px;
+  font-family: var(--mono);
+}
+
+.proto-value {
+  width: 72px;
+  font-family: var(--mono);
+}
+
+.proto-when {
+  position: absolute;
+  bottom: calc(100% + var(--s-2));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-md);
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+.proto-when > * {
+  flex: none;
+}
+
 .proto-delay {
   display: inline-flex;
   align-items: center;

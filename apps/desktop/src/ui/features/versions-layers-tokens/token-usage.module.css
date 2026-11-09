@@ -48,6 +48,7 @@
   z-index: 5;
   display: grid;
   gap: 2px;
+  box-sizing: border-box;
   width: 220px;
   margin: 2px 0 0;
   padding: var(--s-1);
@@ -78,8 +79,11 @@
   background: var(--surface-hover);
 }
 
-.site > span {
+.label {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .none {

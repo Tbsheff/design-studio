@@ -32,7 +32,7 @@ const TokenUsageSite = ({ site }: TokenUsageSiteProps): ReactNode => {
         data-tip-align="end"
         onClick={handleSelect}
       >
-        <span className="truncate">{toSiteLabel(site)}</span>
+        <span className={styles.label}>{toSiteLabel(site)}</span>
       </button>
     </li>
   );

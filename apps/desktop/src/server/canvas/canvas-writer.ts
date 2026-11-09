@@ -36,6 +36,13 @@ import type {
   FrameRemoved,
   FrameRouteQuery,
 } from "./frame-ops.js";
+import { deleteCanvasSection, setCanvasSection } from "./section-ops.js";
+import type {
+  SectionDeleteQuery,
+  SectionRemoved,
+  SectionSet,
+  SectionSetQuery,
+} from "./section-ops.js";
 import type { PlaceOutcome } from "./tools.js";
 
 interface CanvasWriterApi {
@@ -51,12 +58,18 @@ interface CanvasWriterApi {
   readonly deleteFrame: (
     query: FrameDeleteQuery
   ) => Effect.Effect<FrameRemoved, CanvasFailure>;
+  readonly deleteSection: (
+    query: SectionDeleteQuery
+  ) => Effect.Effect<SectionRemoved, CanvasFailure>;
   readonly setDoc: (
     query: CanvasDocWriteQuery
   ) => Effect.Effect<CanvasDocRead, CanvasFailure>;
   readonly setFrameState: (
     query: FrameStateQuery
   ) => Effect.Effect<FrameStateSet, CanvasFailure>;
+  readonly setSection: (
+    query: SectionSetQuery
+  ) => Effect.Effect<SectionSet, CanvasFailure>;
   readonly setPoint: (
     query: FramePointQuery
   ) => Effect.Effect<FramePointed, CanvasFailure>;
@@ -105,6 +118,13 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
           deleteCanvasFrame(runtime, query)
         );
       }),
+      deleteSection: Effect.fn("CanvasWriter.deleteSection")(function* run(
+        query: SectionDeleteQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          deleteCanvasSection(runtime, query)
+        );
+      }),
       setDoc: Effect.fn("CanvasWriter.setDoc")(function* run(
         query: CanvasDocWriteQuery
       ) {
@@ -126,6 +146,13 @@ class CanvasWriter extends Context.Service<CanvasWriter, CanvasWriterApi>()(
         query: PresenceQuery
       ) {
         return yield* attemptCanvas((runtime) => writePresence(runtime, query));
+      }),
+      setSection: Effect.fn("CanvasWriter.setSection")(function* run(
+        query: SectionSetQuery
+      ) {
+        return yield* attemptCanvas((runtime) =>
+          setCanvasSection(runtime, query)
+        );
       }),
       updateFrameSession: Effect.fn("CanvasWriter.updateFrameSession")(
         function* run(query: FrameSessionQuery) {

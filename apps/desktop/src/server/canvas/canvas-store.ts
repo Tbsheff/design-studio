@@ -14,11 +14,16 @@ import { attemptCanvas } from "./canvas-runtime.js";
 import type { CanvasFailure } from "./canvas-runtime.js";
 import { getCanvasDeleteCard, inspectCanvasFrames } from "./frame-ops.js";
 import type { FrameDeleteQuery, FrameTarget } from "./frame-ops.js";
+import { getSectionDeleteCard } from "./section-ops.js";
+import type { SectionDeleteQuery } from "./section-ops.js";
 import type { CanvasListing } from "./tools.js";
 
 interface CanvasStoreApi {
   readonly deleteCard: (
     query: FrameDeleteQuery
+  ) => Effect.Effect<ApprovalCard, CanvasFailure>;
+  readonly deleteSectionCard: (
+    query: SectionDeleteQuery
   ) => Effect.Effect<ApprovalCard, CanvasFailure>;
   readonly flowLinks: (
     projectId: string,
@@ -53,6 +58,13 @@ class CanvasStore extends Context.Service<CanvasStore, CanvasStoreApi>()(
           getCanvasDeleteCard(runtime, query)
         );
       }),
+      deleteSectionCard: Effect.fn("CanvasStore.deleteSectionCard")(
+        function* run(query: SectionDeleteQuery) {
+          return yield* attemptCanvas((runtime) =>
+            getSectionDeleteCard(runtime, query)
+          );
+        }
+      ),
       flowLinks: Effect.fn("CanvasStore.flowLinks")(function* run(
         projectId: string,
         route: string

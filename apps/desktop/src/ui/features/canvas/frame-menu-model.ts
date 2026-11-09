@@ -7,10 +7,12 @@ import type {
   SetStateAction,
 } from "react";
 
+import { COPY_PNG_EVENT } from "../../domain/copy-png-events.js";
 import {
   SCREEN_CREATE_EVENT,
   SCREEN_DUPLICATE_EVENT,
 } from "../../domain/screen-events.js";
+import { copy } from "./copy.js";
 import { toMenuItems } from "./menu-items-model.js";
 
 interface FrameMenu {
@@ -112,10 +114,32 @@ const useScreenEntry = (root: RefObject<HTMLElement | null>): ScreenEntry => {
   );
 };
 
+const useCopyPngEntry = (root: RefObject<HTMLElement | null>): ScreenEntry => {
+  const run = useCallback((): void => {
+    const frame = root.current?.closest<HTMLElement>("[data-frame-id]") ?? null;
+
+    globalThis.dispatchEvent(
+      new CustomEvent(COPY_PNG_EVENT, {
+        detail: { frameId: frame?.dataset.frameId ?? null },
+      })
+    );
+  }, [root]);
+
+  return useMemo(
+    () => ({
+      icon: "copy",
+      id: "copy-png",
+      label: copy.copyAsPng,
+      run,
+    }),
+    [run]
+  );
+};
+
 const openScreenCreate = (): void => {
   globalThis.dispatchEvent(new CustomEvent(SCREEN_CREATE_EVENT));
 };
 
-export { menuKeys, openScreenCreate, useMenu, useScreenEntry };
+export { menuKeys, openScreenCreate, useCopyPngEntry, useMenu, useScreenEntry };
 
 export type { ScreenEntry };

@@ -1,4 +1,6 @@
+import { COPY_PNG_EVENT } from "../../domain/copy-png-events.js";
 import { withDisabled } from "./command-disabled.js";
+import { copy } from "./copy.js";
 import {
   FIND_TEXT_COMMAND,
   FIND_TEXT_EVENT,
@@ -115,6 +117,28 @@ const findTextCommand = (inProject: boolean): Command =>
     toFindTextReason(inProject)
   );
 
+const toCopyPngReason = (inProject: boolean): string | null => {
+  if (inProject) {
+    return null;
+  }
+
+  return "Open a project to copy a frame";
+};
+
+const copyPngCommand = (inProject: boolean): Command =>
+  withDisabled(
+    {
+      group: "Edit",
+      icon: "image",
+      id: "edit.copy-png",
+      keyId: "copy-png",
+      keywords: "clipboard image frame layer screenshot export",
+      run: () => globalThis.dispatchEvent(new CustomEvent(COPY_PNG_EVENT)),
+      title: copy.copyAsPng,
+    },
+    toCopyPngReason(inProject)
+  );
+
 const home = (): void => uiStore.set({ activeProjectId: null, screen: "home" });
 
 const toHomeReason = (inProject: boolean): string | null => {
@@ -187,6 +211,7 @@ const globalCommands = (openShortcuts: () => void): Command[] => {
       title: "New design system",
     },
     findTextCommand(inProject),
+    copyPngCommand(inProject),
     ...THEME_COMMANDS,
     {
       group: "Help",

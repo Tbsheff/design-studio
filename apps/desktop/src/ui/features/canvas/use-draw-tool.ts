@@ -128,6 +128,32 @@ const useDrawStrokes = (): DrawStrokes => {
   return { clear, push, strokes, undo };
 };
 
+const useDrawInput = (
+  live: { readonly current: { available: boolean; on: boolean } },
+  handlers: DrawKeyHandlers
+): void => {
+  const { setOn, toggle, undo } = handlers;
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent): void =>
+      handleDrawKey(event, live, { setOn, toggle, undo });
+
+    globalThis.addEventListener("keydown", onKey, true);
+
+    return (): void => globalThis.removeEventListener("keydown", onKey, true);
+  }, [setOn, toggle, undo]);
+
+  useDesktopCommand((command) => {
+    if (!live.current.on || command.type !== "undo") {
+      return false;
+    }
+
+    undo();
+
+    return true;
+  });
+};
+
 const useDrawTool = (
   available: boolean,
   onActivate: () => void,
@@ -177,24 +203,7 @@ const useDrawTool = (
     setOn(!live.current.on);
   }, [setOn]);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent): void =>
-      handleDrawKey(event, live, { setOn, toggle, undo });
-
-    globalThis.addEventListener("keydown", onKey, true);
-
-    return (): void => globalThis.removeEventListener("keydown", onKey, true);
-  }, [setOn, toggle, undo]);
-
-  useDesktopCommand((command) => {
-    if (!live.current.on || command.type !== "undo") {
-      return false;
-    }
-
-    undo();
-
-    return true;
-  });
+  useDrawInput(live, { setOn, toggle, undo });
 
   const used = strokes.reduce((sum, stroke) => sum + stroke.points.length, 0);
 

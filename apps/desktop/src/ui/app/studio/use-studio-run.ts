@@ -164,13 +164,22 @@ const useStudioQuick = (
   };
 
   const send = (...args: StudioSendArgs): Promise<void> => {
-    const [text, composerMode, files, runLevel, runEffort, picks, commentIds] =
-      args;
+    const [
+      text,
+      composerMode,
+      files,
+      runLevel,
+      runEffort,
+      picks,
+      commentIds,
+      focus,
+    ] = args;
 
     const request = composeRequest({
       attachmentIds: files,
       canvas: core.runCanvas.current(),
       effort: runEffort,
+      focusPaths: focus ?? [],
       level: runLevel,
       mentions: picks,
       mode: composerMode,

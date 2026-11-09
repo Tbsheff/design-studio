@@ -45,10 +45,12 @@ const usePromptSending = (
       request.level,
       request.effort,
       request.mentions,
-      request.commentIds
+      request.commentIds,
+      request.focusPaths
     );
 
   const cleanup = {
+    clearFocus: input.focus.clear,
     clearMentions: mentionState.clear,
     clearPrefill: prefill.clear,
     resetHistory: keys.resetHistory,
@@ -58,6 +60,7 @@ const usePromptSending = (
   const { level } = base.runLevel;
   const linkedCommentIds = prefill.linked;
   const { mentions } = mentionState;
+  const focusPaths = input.focus.paths;
   const onSend = sendRequest;
 
   const { canSend, isSending, send } = usePromptSend({
@@ -66,6 +69,7 @@ const usePromptSending = (
     draftStore,
     effort,
     files,
+    focusPaths,
     isReady,
     level,
     linkedCommentIds,

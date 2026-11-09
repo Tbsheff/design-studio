@@ -10,8 +10,11 @@ import type { UseMentionsResult } from "./use-mentions.js";
 import { useMentions } from "./use-mentions.js";
 import type { PromptBase } from "./use-prompt-base.js";
 import { usePromptKeyCapture } from "./use-prompt-key-capture.js";
+import { useRunFocus } from "./use-run-focus.js";
+import type { RunFocus } from "./use-run-focus.js";
 
 interface PromptInput {
+  readonly focus: RunFocus;
   readonly historySearch: HistorySearchState;
   readonly keys: UseComposerKeysResult;
   readonly mentions: UseMentionsResult;
@@ -27,10 +30,14 @@ const usePromptInput = (
   const { components, directionId, projectId, tokens } = props;
   const request = props.mentionRequest;
 
+  const focus = useRunFocus(props.selection);
+  const onFocus = focus.add;
+
   const mentions = useMentions({
     components,
     directionId,
     draft,
+    onFocus,
     projectId,
     request,
     setDraft,
@@ -64,7 +71,7 @@ const usePromptInput = (
     slash,
   });
 
-  return { historySearch, keys, mentions, onKeyCapture };
+  return { focus, historySearch, keys, mentions, onKeyCapture };
 };
 
 export { usePromptInput };

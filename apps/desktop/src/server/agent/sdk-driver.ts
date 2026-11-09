@@ -48,6 +48,7 @@ import {
   studioAppReview,
   withReference,
 } from "./final-check.js";
+import { toGateLists } from "./focus-gate.js";
 import {
   createIntegrationNoteHook,
   createRunIntegrations,
@@ -622,7 +623,7 @@ function buildPolicy(
       skills: skills.enabled,
       skillDirs: skills.readableDirs,
       ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
-      lockedPaths: ctx.lockedPaths ?? [],
+      ...toGateLists(ctx),
       ...(ctx.request.plan ? { plan: true } : {}),
     },
     ctx.request

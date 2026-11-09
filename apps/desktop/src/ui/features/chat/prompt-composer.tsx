@@ -4,6 +4,7 @@ import type { MouseEvent, ReactElement } from "react";
 import { Composer } from "../../ai/components/ai/composer.js";
 import { findElement } from "../../platform/find-element.js";
 import { AttachmentThumbs } from "./attachment-thumbs.js";
+import { FocusChips } from "./focus-chips.js";
 import { MentionChips } from "./mention-chips.js";
 import { RepoContextChip } from "./prompt-box-model.js";
 import type { PromptBoxProps } from "./prompt-box-props.js";
@@ -86,6 +87,7 @@ const PromptComposer = ({
       <ReferenceUrlSlot url={base.references.url} />
       <ReferenceNotes notes={referenceNotes} onDismiss={dismissReference} />
       <MentionChips mentions={mentions.mentions} onRemove={removeMention} />
+      <FocusChips focus={input.focus} />
       <SkillChips ids={skillIds} onRemove={removeSkill} />
       <PromptTextInput
         box={box}

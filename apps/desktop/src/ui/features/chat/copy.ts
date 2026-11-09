@@ -57,6 +57,8 @@ const copy = {
   filterSkills: "Filter skills",
   fixOrRemoveThe:
     "Fix or remove the SKILL.md in that folder, then open this list again.",
+  focusFiles: "Files this run may change",
+  focusOnFile: "Focus on this file",
   fromBase: " from base",
   guessed: " guessed",
   hide: "Hide",
@@ -129,6 +131,7 @@ const copy = {
   rememberingRule: "Saving the rule",
   remove: "Remove",
   removeCanvasContext: "Remove canvas context",
+  removeFocus: "Remove focus on",
   removeQueuedMessage: "Remove queued message",
   resizeChatPanel: "Resize chat panel",
   resolve: "Resolve ",

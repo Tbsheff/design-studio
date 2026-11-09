@@ -20,6 +20,11 @@ import {
 } from "../platform/tool-policy/index.js";
 import type { ToolPolicy } from "../platform/tool-policy/index.js";
 import type { ToolGate } from "./ask-gate.js";
+import {
+  FOCUS_PATH_MESSAGE,
+  isOutsideFocus,
+  toGateLists,
+} from "./focus-gate.js";
 import { AGENT_OPS } from "./legacy/agent-ops.js";
 import { LEGACY_AGENT_TOOLS } from "./legacy/all.js";
 import {
@@ -167,6 +172,28 @@ const isLockedWrite = (
   });
 };
 
+const isFocusBlockedWrite = (
+  policy: ToolPolicy,
+  toolName: string,
+  input: Record<string, unknown>
+): boolean => {
+  const globs = policy.focusPaths ?? [];
+
+  if (globs.length === 0 || !LOCKED_WRITE_TOOLS.has(toolName)) {
+    return false;
+  }
+
+  return LOCK_PATH_FIELDS.some((field) => {
+    const value = input[field];
+
+    return (
+      typeof value === "string" &&
+      value !== "" &&
+      isOutsideFocus(globs, toWorkTreePath(policy.workTree, value))
+    );
+  });
+};
+
 const toLockedResult = (
   policy: ToolPolicy,
   toolName: string,
@@ -176,18 +203,26 @@ const toLockedResult = (
     return { behavior: "deny", message: LOCKED_PATH_MESSAGE };
   }
 
+  if (isFocusBlockedWrite(policy, toolName, input)) {
+    return { behavior: "deny", message: FOCUS_PATH_MESSAGE };
+  }
+
   return evaluateToolUse(policy, toolName, input);
 };
 
 const toBashWriteProblem = (
   policy: Pick<
     ToolPolicy,
-    "allowInstall" | "lockedPaths" | "readOnlyDirs" | "workTree"
+    "allowInstall" | "focusPaths" | "lockedPaths" | "readOnlyDirs" | "workTree"
   >,
   relative: string
 ): string | null => {
   if (isPathLocked(policy.lockedPaths ?? [], relative)) {
     return LOCKED_PATH_MESSAGE;
+  }
+
+  if (isOutsideFocus(policy.focusPaths ?? [], relative)) {
+    return FOCUS_PATH_MESSAGE;
   }
 
   return bashWriteProblem(policy, relative);
@@ -393,6 +428,10 @@ const toLockedProblem = (
     return LOCKED_PATH_MESSAGE;
   }
 
+  if (isOutsideFocus(ctx.request.focusPaths ?? [], relative)) {
+    return FOCUS_PATH_MESSAGE;
+  }
+
   return null;
 };
 
@@ -403,7 +442,7 @@ const toWriteProblem = (
   const policy: ToolPolicy = {
     allowBash: false,
     allowInstall: false,
-    lockedPaths: ctx.lockedPaths ?? [],
+    ...toGateLists(ctx),
     mode: ctx.request.mode,
     workTree: ctx.direction.workTree,
   };
@@ -422,8 +461,10 @@ const toWriteProblem = (
 };
 
 export {
+  FOCUS_PATH_MESSAGE,
   LOCKED_PATH_MESSAGE,
   toBashWriteProblem,
+  toGateLists,
   toLockedProblem,
   toLockedResult,
   toWriteProblem,

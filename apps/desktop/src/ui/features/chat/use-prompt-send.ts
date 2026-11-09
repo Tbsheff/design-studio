@@ -19,6 +19,7 @@ interface PromptRequest {
   readonly attachmentIds: string[];
   readonly commentIds: string[];
   readonly effort: RunEffort | null;
+  readonly focusPaths: string[];
   readonly level: RunLevel;
   readonly mentions: RunMention[];
   readonly mode: ComposerMode;
@@ -26,6 +27,7 @@ interface PromptRequest {
 }
 
 interface SendCleanup {
+  readonly clearFocus: () => void;
   readonly clearMentions: () => void;
   readonly clearPrefill: () => void;
   readonly resetHistory: () => void;
@@ -38,6 +40,7 @@ interface UsePromptSendOptions {
   readonly draftStore: DraftStore;
   readonly effort: RunEffort | null;
   readonly files: PendingAttachment[];
+  readonly focusPaths: string[];
   readonly level: RunLevel;
   readonly linkedCommentIds: string[];
   readonly mentions: RunMention[];
@@ -106,6 +109,7 @@ const dispatchPrompt = (
     attachmentIds: ids,
     commentIds: options.linkedCommentIds,
     effort: options.effort,
+    focusPaths: options.focusPaths,
     level: options.level,
     mentions: options.mentions,
     mode: options.mode,
@@ -115,6 +119,7 @@ const dispatchPrompt = (
 
 const clearSent = (options: UsePromptSendOptions): void => {
   options.cleanup.clearMentions();
+  options.cleanup.clearFocus();
   options.cleanup.clearPrefill();
 
   for (const file of options.files) {

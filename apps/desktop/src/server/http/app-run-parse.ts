@@ -16,6 +16,7 @@ import { Result, Schema } from "effect";
 import { toDecoder } from "../platform/decode/index.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { isRecord, requireString } from "./app-request.js";
+import { decodeFocusPaths, toFocusPaths } from "./focus-paths.js";
 import { parseMentions } from "./mentions.js";
 
 const decodeStartRunFlag = toDecoder(
@@ -46,11 +47,23 @@ function parseRunExtras(
   body: Record<string, unknown>
 ): Pick<
   RunRequest,
-  "effort" | "retryOf" | "plan" | "lean" | "editScope" | "mentions"
+  | "effort"
+  | "retryOf"
+  | "plan"
+  | "lean"
+  | "editScope"
+  | "mentions"
+  | "focusPaths"
 > {
   const extras: Pick<
     RunRequest,
-    "effort" | "retryOf" | "plan" | "lean" | "editScope" | "mentions"
+    | "effort"
+    | "retryOf"
+    | "plan"
+    | "lean"
+    | "editScope"
+    | "mentions"
+    | "focusPaths"
   > = {};
 
   if (body.plan === true) {
@@ -78,6 +91,11 @@ function parseRunExtras(
 
   if (mentions?.length) {
     extras.mentions = mentions;
+  }
+  const focusPaths = toFocusPaths(decodeFocusPaths(body.focusPaths ?? []));
+
+  if (focusPaths.length > 0) {
+    extras.focusPaths = focusPaths;
   }
   return extras;
 }

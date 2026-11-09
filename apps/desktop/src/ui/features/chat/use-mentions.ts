@@ -27,6 +27,7 @@ interface Options {
   request?: MentionRequest | null;
   lead?: readonly MentionOption[];
   onLead?: (option: MentionOption) => void;
+  onFocus?: (path: string) => void;
 }
 
 interface UseMentionsResult {
@@ -100,14 +101,26 @@ const useMentions = (config: Options): UseMentionsResult => {
   const { add, clear, mentions, remove } = useMentionSet(request);
 
   const options = useMemo(
-    () => toMentionOptions({ components, files, lead, mentions, tokens }),
-    [components, files, lead, mentions, tokens]
+    () =>
+      toMentionOptions({
+        components,
+        files,
+        isFocusShown: query !== null && query !== "",
+        lead,
+        mentions,
+        tokens,
+      }),
+    [components, files, lead, mentions, query, tokens]
   );
 
   const picker = useMentionPicker(options, query);
 
   const pick = (option: MentionOption): void => {
-    if (lead?.some((item) => item.key === option.key)) {
+    if (option.key.startsWith("focus:")) {
+      config.onFocus?.(
+        option.mention.kind === "file" ? option.mention.path : ""
+      );
+    } else if (lead?.some((item) => item.key === option.key)) {
       onLead?.(option);
     } else {
       add(option.mention);

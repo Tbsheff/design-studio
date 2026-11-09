@@ -42,6 +42,7 @@ interface TokenUi {
   readonly shouldSnap: boolean;
   readonly setSnap: (on: boolean) => void;
   readonly requestCreate: ((req: CreateRequest) => void) | null;
+  readonly keepRaw: (raw: Partial<StyleValues>) => void;
 }
 
 const TokenUiContext = createContext<TokenUi | null>(null);

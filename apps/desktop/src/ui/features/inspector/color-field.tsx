@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import { copy } from "./copy.js";
 import { toDisplayColor, isValidColor } from "./css-value-model.js";
 import { TokenControl } from "./deps.js";
+import { EyedropperButton } from "./eyedropper-button.js";
 import {
   toColorHex,
   toModifiedClass,
@@ -74,6 +75,7 @@ const ColorFieldView = ({
           onChange={field.handleSwatchChange}
         />
       </span>
+      <EyedropperButton prop={prop} edit={edit} />
       <TokenControl prop={prop} label={label} edit={edit} />
     </div>
   );

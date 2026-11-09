@@ -11,9 +11,14 @@ import type { CreateRequest, TokenUi } from "./use-token-snap.js";
 const toTokenUi = (
   tokens: DesignTokens | null,
   snapOn: boolean,
-  setSnap: (next: boolean) => void,
-  setCreating: (request: CreateRequest) => void
+  handlers: {
+    readonly keepRaw: TokenUi["keepRaw"];
+    readonly setSnap: (next: boolean) => void;
+    readonly setCreating: (request: CreateRequest) => void;
+  }
 ): TokenUi | null => {
+  const { keepRaw, setCreating, setSnap } = handlers;
+
   if (!tokens) {
     return null;
   }
@@ -26,7 +31,7 @@ const toTokenUi = (
     requestCreate = null;
   }
 
-  return { entries, mode, requestCreate, setSnap, shouldSnap };
+  return { entries, keepRaw, mode, requestCreate, setSnap, shouldSnap };
 };
 
 const useInspectorTokens = (input: ScopeInput): UseInspectorTokensResult => {
@@ -34,10 +39,11 @@ const useInspectorTokens = (input: ScopeInput): UseInspectorTokensResult => {
   const snap = useTokenSnap(input.tokens, snapOn);
   const [creating, setCreating] = useState<CreateRequest | null>(null);
   const { tokens } = input;
+  const { keepRaw } = snap;
 
   const ui = useMemo(
-    () => toTokenUi(tokens, snapOn, setSnap, setCreating),
-    [tokens, snapOn, setSnap]
+    () => toTokenUi(tokens, snapOn, { keepRaw, setCreating, setSnap }),
+    [tokens, snapOn, setSnap, keepRaw]
   );
 
   const closeCreate = useCallback(() => setCreating(null), []);

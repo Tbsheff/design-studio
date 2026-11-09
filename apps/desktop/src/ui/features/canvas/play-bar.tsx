@@ -13,8 +13,10 @@ import {
   toDeviceValue,
   toStoredDevice,
 } from "./device-frame-model.js";
+import { PlayThemeButton } from "./play-theme-button.js";
 import { protoCopy } from "./proto-copy.js";
 import { RotateButton } from "./rotate-button.js";
+import type { PlayTheme } from "./use-play-theme.js";
 
 interface PlayBarProps {
   readonly title: string;
@@ -23,6 +25,7 @@ interface PlayBarProps {
   readonly device: DeviceFrameId | null;
   readonly orientation: DeviceOrientation;
   readonly isHints: boolean;
+  readonly theme: PlayTheme;
   readonly onHints: (next: boolean) => void;
   readonly onDevice: (device: DeviceFrameId | null) => void;
   readonly onRotate: () => void;
@@ -46,6 +49,7 @@ const PlayBar = ({
   device,
   orientation,
   isHints,
+  theme,
   onHints,
   onDevice,
   onRotate,
@@ -91,6 +95,7 @@ const PlayBar = ({
         <Icon name="eye" size={12} />
         {protoCopy.hotspotHints}
       </button>
+      <PlayThemeButton theme={theme} />
       <UiSelect
         size="sm"
         aria-label={copy.playDevice}

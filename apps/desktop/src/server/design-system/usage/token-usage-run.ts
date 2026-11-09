@@ -111,6 +111,6 @@ const runTokenUsageList = (
     toDirectEditStatusFailure
   );
 
-export { runTokenUsageList };
+export { runTokenUsageList, toOffset, toUsageTokens };
 
 export type { ListTokenUsageCommand, TokenUsagePage };

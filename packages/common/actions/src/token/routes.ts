@@ -12,6 +12,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/tokens/export",
   },
+  listClassesToken: {
+    id: "token.listClasses",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/tokens/classes",
+  },
   listUsageToken: {
     id: "token.listUsage",
     invalidates: [],

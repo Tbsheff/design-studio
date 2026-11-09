@@ -1,34 +1,30 @@
-import { useCallback, useState } from "react";
-import type { ChangeEvent, KeyboardEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
 
+import { ClassSuggestMenu } from "./class-suggest-menu.js";
 import { copy } from "./copy.js";
 import { PADDING } from "./props-model.js";
 import type { ClassBody } from "./props-model.js";
 import { PxField } from "./px-field.js";
+import { useClassSuggest } from "./use-class-suggest.js";
 
 interface ClassEditorsProps {
+  readonly directionId: string;
   readonly onSend: (body: ClassBody) => void;
+  readonly projectId: string;
 }
 
-const ClassEditors = ({ onSend }: ClassEditorsProps): ReactElement => {
-  const [adding, setAdding] = useState("");
+const ClassEditors = ({
+  directionId,
+  onSend,
+  projectId,
+}: ClassEditorsProps): ReactElement => {
+  const { active, isOpen, rows, typed, ...handlers } = useClassSuggest({
+    directionId,
+    onSend,
+    projectId,
+  });
 
-  const onChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setAdding(event.target.value),
-    []
-  );
-
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key !== "Enter" || adding.trim() === "") {
-        return;
-      }
-
-      onSend({ classes: { add: adding.trim().split(/\s+/u) } });
-      setAdding("");
-    },
-    [adding, onSend]
-  );
+  const { onBlur, onChange, onFocus, onKeyDown, onPick } = handlers;
 
   return (
     <>
@@ -37,16 +33,21 @@ const ClassEditors = ({ onSend }: ClassEditorsProps): ReactElement => {
           <PxField key={field.label} field={field} onSend={onSend} />
         ))}
       </div>
-      <div className="ins-field wide">
+      <div className="ins-field wide cls-suggest-host">
         <input
           className="ins-input mono"
           aria-label={copy.addClass}
           placeholder={copy.addClassForExamplePx}
-          value={adding}
+          value={typed}
           spellCheck={false}
+          onBlur={onBlur}
           onChange={onChange}
+          onFocus={onFocus}
           onKeyDown={onKeyDown}
         />
+        {isOpen && (
+          <ClassSuggestMenu active={active} rows={rows} onPick={onPick} />
+        )}
       </div>
     </>
   );

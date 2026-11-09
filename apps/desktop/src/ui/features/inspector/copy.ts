@@ -31,6 +31,7 @@ const copy = {
   cancel: "Cancel",
   changeThisUseToAnother:
     "Change this use to another component with props that fit",
+  classSuggestions: "Class suggestions",
   classes: "Classes",
   claudePicksTheControls: "Claude picks the controls",
   clear: "Clear",
@@ -132,6 +133,7 @@ const copy = {
   noTweaksYet: "No tweaks yet",
   none: "None",
   notAFontTokenUse: "Not a font token. Use ",
+  notAToken: "not a token",
   notATokenReplaceIt: "Not a token. Replace it with one",
   notFontTokenUse: "Not a font token. Use ",
   notLive: "Switch the canvas to Live to edit styles directly.",

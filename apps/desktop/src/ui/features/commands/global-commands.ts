@@ -81,6 +81,18 @@ const THEME_COMMANDS: Command[] = [
   },
 ];
 
+const runThemeCommand = (id: string): boolean => {
+  const command = THEME_COMMANDS.find((entry) => entry.id === id);
+
+  if (!command) {
+    return false;
+  }
+
+  command.run();
+
+  return true;
+};
+
 const toFindTextReason = (inProject: boolean): string | null => {
   if (inProject) {
     return null;
@@ -188,4 +200,4 @@ const globalCommands = (openShortcuts: () => void): Command[] => {
   ];
 };
 
-export { focusNewProject, globalCommands };
+export { focusNewProject, globalCommands, runThemeCommand };

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import type { DesktopCommand } from "../../../shared/desktop-link";
 import { api, errorText } from "../../api";
+import { runThemeCommand } from "../../features/commands";
 import { COMMAND_EVENT, LAYER_EVENT } from "../../features/commands/registry";
 import {
   desktopBridge,
@@ -148,6 +149,10 @@ const useFolderDrop = (): void => {
 };
 
 const runAppCommand = (id: string): void => {
+  if (runThemeCommand(id)) {
+    return;
+  }
+
   const layer = id === "palette" || id === "shortcuts";
 
   globalThis.dispatchEvent(

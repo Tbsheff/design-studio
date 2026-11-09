@@ -53,6 +53,7 @@ import { ShareActions } from "./share/index.js";
 import { ShipActions } from "./ship/index.js";
 import { SpacingActions } from "./spacing/index.js";
 import { SpeedActions } from "./speed/index.js";
+import { SpellingActions } from "./spelling/index.js";
 import { StackingActions } from "./stacking/index.js";
 import { StateStyleActions } from "./state-style/index.js";
 import { StudioActions } from "./studio/index.js";
@@ -121,6 +122,7 @@ const ALL_ACTIONS = {
   ship: ShipActions,
   spacing: SpacingActions,
   speed: SpeedActions,
+  spelling: SpellingActions,
   stacking: StackingActions,
   stateStyle: StateStyleActions,
   studio: StudioActions,

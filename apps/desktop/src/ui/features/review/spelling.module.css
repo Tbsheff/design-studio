@@ -1,0 +1,34 @@
+.chip,
+.add {
+  height: 22px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.add {
+  border-color: transparent;
+  color: var(--text-2);
+}
+
+.chip:hover:not(:disabled),
+.add:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.chip:focus-visible,
+.add:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.chip:disabled,
+.add:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

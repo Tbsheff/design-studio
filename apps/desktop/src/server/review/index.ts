@@ -48,3 +48,10 @@ export type {
 export { ImpactRunner, ImpactStore } from "./impact/index.js";
 
 export type { ImpactRunnerApi, ImpactStoreApi } from "./impact/index.js";
+
+export { SpellingStore, SpellingWordWriter } from "./spelling/index.js";
+
+export type {
+  SpellingStoreApi,
+  SpellingWordWriterApi,
+} from "./spelling/index.js";

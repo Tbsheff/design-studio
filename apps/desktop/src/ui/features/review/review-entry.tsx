@@ -10,6 +10,7 @@ import type { FilesChange } from "../home/use-studio-data.js";
 import { KitDriftPanel } from "../kit-drift/index.js";
 import { ReviewEntryButton } from "./review-entry-button.js";
 import { ReviewEntryPanel } from "./review-entry-panel.js";
+import { SpellingGroup } from "./spelling-group.js";
 import { useReviewEntry } from "./use-review-entry.js";
 import { useReviewSlot } from "./use-review-slot.js";
 import { WalkthroughSection } from "./walkthrough-section.js";
@@ -47,6 +48,29 @@ const toSpeed = (props: Props): ReactNode =>
     projectId: props.projectId,
   }) ?? null;
 
+const toExtras = (
+  props: Props,
+  onSelect: (selector: string) => void
+): ReactNode => (
+  <Suspense fallback={null}>
+    <CritiquePanel
+      directionId={props.directionId}
+      frameId={props.frame.id}
+      isLive={props.live}
+      onSelect={onSelect}
+      projectId={props.projectId}
+    />
+    <KitDriftPanel onSelect={onSelect} scope={props} />
+    <SpellingGroup
+      directionId={props.directionId}
+      frameId={props.frame.id}
+      isLive={props.live}
+      onSelect={onSelect}
+      projectId={props.projectId}
+    />
+  </Suspense>
+);
+
 const ReviewEntry = (props: Props): ReactElement => {
   const { markerRef, slot } = useReviewSlot();
   const { directionId, frame, live, projectId } = props;
@@ -74,18 +98,7 @@ const ReviewEntry = (props: Props): ReactElement => {
     />
   );
 
-  const critique = (
-    <Suspense fallback={null}>
-      <CritiquePanel
-        directionId={directionId}
-        frameId={frame.id}
-        isLive={live}
-        onSelect={selectSelector}
-        projectId={projectId}
-      />
-      <KitDriftPanel onSelect={selectSelector} scope={props} />
-    </Suspense>
-  );
+  const critique = toExtras(props, selectSelector);
 
   const speed = toSpeed(props);
 

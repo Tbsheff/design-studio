@@ -62,6 +62,7 @@ const ChatPanel = (props: ChatPanelProps): ReactElement => {
         resetKey={direction?.id ?? null}
         reveal={target}
         stickRunId={pending?.runId ?? lastId}
+        suggestions={props.suggestions ?? null}
         workTree={workTree}
         onRevealed={onFound}
       />

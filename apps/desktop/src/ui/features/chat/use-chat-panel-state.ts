@@ -23,6 +23,7 @@ interface ChatPanelProps {
   onApprovePlan?: (run: RunView) => void;
   mcp?: McpFeedControl | null;
   lead?: ReactNode;
+  suggestions?: ReactNode;
   offline?: boolean;
   onStop?: () => void;
   onReview?: (versionId: string) => void;

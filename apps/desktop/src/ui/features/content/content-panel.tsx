@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { DataFillDialog } from "./data-fill-dialog.js";
 import { PresetChips } from "./preset-chips.js";
 import { RepeatStepper } from "./repeat-stepper.js";
 import { StressChips } from "./stress-chips.js";
@@ -42,6 +43,11 @@ const ContentPanel = (props: ContentOptions): ReactElement => {
           {copy.reset}
         </button>
       </div>
+      <DataFillDialog
+        directionId={props.directionId}
+        projectId={props.projectId}
+        target={props.target}
+      />
       <span className={styles.error} role="alert">
         {content.error}
       </span>

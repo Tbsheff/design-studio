@@ -1,3 +1,22 @@
+const dataFill = {
+  apply: "Apply",
+  applyLabel: "Fill the layer from the pasted data",
+  cell: "Slot",
+  error: {
+    bad_json: "The JSON must be an array of objects or arrays.",
+    empty: "The pasted data has no rows.",
+    too_big: "The data is over 100 KB.",
+    too_many_rows: "The data has more than 200 rows.",
+  },
+  filled: "Filled with data rows:",
+  open: "Fill from data",
+  paste: "Paste CSV, TSV or a JSON array",
+  pasteLabel: "Data to fill the layer with",
+  placeholder: "Name,Status,Amount",
+  previewLabel: "Preview of the first rows",
+  total: "rows",
+} as const;
+
 const copy = {
   apply: "Apply",
   applyLabel: "Apply content stress",
@@ -40,4 +59,4 @@ const copy = {
   title: "Content",
 } as const;
 
-export { copy };
+export { copy, dataFill };

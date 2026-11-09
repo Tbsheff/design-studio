@@ -9,3 +9,7 @@ export { useAction } from "../../platform/query.js";
 export type { ActionState } from "../../platform/query.js";
 
 export type { SelectionContext } from "@design-studio/contracts";
+
+export { parseRows } from "@design-studio/contracts/parse-rows";
+
+export type { ParseFailureCode } from "@design-studio/contracts/parse-rows";

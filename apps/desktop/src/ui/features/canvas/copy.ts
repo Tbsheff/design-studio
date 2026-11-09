@@ -21,6 +21,7 @@ const copy = {
   closeOverlay: "Close overlay",
   comment: "Comment",
   commentsWorkOnThe: "Comments work on the live preview",
+  copyAsPng: "Copy as PNG",
   crumbSep: "›",
   custom: "Custom",
   customSize: "Custom size",

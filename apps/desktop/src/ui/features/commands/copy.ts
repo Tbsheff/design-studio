@@ -1,5 +1,6 @@
 const copy = {
   closeShortcuts: "Close shortcuts",
+  copyAsPng: "Copy as PNG",
   filter: "Filter",
   filterShortcuts: "Filter shortcuts",
   palette: "Command palette",

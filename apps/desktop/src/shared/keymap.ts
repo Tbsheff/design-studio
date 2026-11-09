@@ -308,6 +308,12 @@ export const KEYMAP = [
   { id: "redo", label: "Redo", keys: ["Mod+Shift+Z"], group: "Edit" },
   { id: "find-text", label: "Find text", keys: ["Mod+Shift+F"], group: "Edit" },
   {
+    id: "copy-png",
+    label: "Copy as PNG",
+    keys: ["Mod+Shift+C"],
+    group: "Edit",
+  },
+  {
     id: "rename",
     label: "Rename layer or version",
     keys: ["F2"],

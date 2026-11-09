@@ -6,6 +6,7 @@ import { hostedClose } from "./canvas-helpers.js";
 import { CanvasLayersPanel } from "./canvas-layers.js";
 import type { CanvasStageProps } from "./canvas-stage-types.js";
 import { CanvasStage } from "./canvas-stage.js";
+import { CopyPngHost } from "./copy-png-host.js";
 import { FrameStateSlotContext } from "./frame-state-slot-context.js";
 import type { FrameStateSlotArgs } from "./frame-state-slot-context.js";
 
@@ -33,6 +34,7 @@ const CanvasBody = ({
 
   return (
     <div className="canvas-body">
+      <CopyPngHost frames={stage.canvasFrames} props={props} />
       {layersOpen &&
         place(
           <CanvasLayersPanel

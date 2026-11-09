@@ -12,13 +12,15 @@ import type {
 } from "../handlers/_core/run-action.js";
 import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
-import { toLegacyPrincipal } from "../store/principal.js";
+import type { Principal } from "../store/principal.js";
 
 type Group = Readonly<Record<string, AnyAction>>;
 
 type AgentToolRun = (name: string, body: WireArgs) => Promise<object>;
 
 const AGENT_TOOL_PATH = "/api/agent-tools/:name";
+
+const UI_PRINCIPAL: Principal = { kind: "ui", userId: null };
 
 const BODYLESS = new Set(["DELETE", "GET"]);
 
@@ -95,7 +97,7 @@ const mountOne = (
   runtime: StudioRuntime
 ): void => {
   app.on(action.http.method, action.http.path, async (ctx) => {
-    const program = run(await wireArgs(ctx), toLegacyPrincipal(), formOf(ctx));
+    const program = run(await wireArgs(ctx), UI_PRINCIPAL, formOf(ctx));
 
     const exit = await runWith(runtime, program, action, ctx);
 

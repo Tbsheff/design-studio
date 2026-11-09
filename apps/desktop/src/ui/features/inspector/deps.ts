@@ -40,3 +40,7 @@ export {
   runVector,
   type PreviewMenuItem,
 } from "../canvas/index.js";
+
+export { routes as fileLockRoutes } from "@design-studio/actions/file-lock/routes";
+
+export { useAction } from "../../platform/query.js";

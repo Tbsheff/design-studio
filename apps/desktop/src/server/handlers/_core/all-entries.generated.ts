@@ -21,6 +21,7 @@ import { DirectEditEntries } from "../direct-edit/handlers.js";
 import { EffectEntries } from "../effect/handlers.js";
 import { EventsEntries } from "../events/handlers.js";
 import { ExportEntries } from "../export/handlers.js";
+import { FileLockEntries } from "../file-lock/handlers.js";
 import { FillEntries } from "../fill/handlers.js";
 import { FixtureEntries } from "../fixture/handlers.js";
 import { GalleryEntries } from "../gallery/handlers.js";
@@ -87,6 +88,7 @@ const ALL_ENTRIES = {
   effect: EffectEntries,
   events: EventsEntries,
   export: ExportEntries,
+  fileLock: FileLockEntries,
   fill: FillEntries,
   fixture: FixtureEntries,
   gallery: GalleryEntries,

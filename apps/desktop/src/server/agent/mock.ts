@@ -44,9 +44,15 @@ import {
 import {
   runMockDirect,
   startMockReadOnly,
+  toLineColOffset,
+  toOpenTagEnd,
   wantsMockDirect,
 } from "./mock-direct.js";
-import { bashWriteProblem, evaluateToolUse } from "./permissions.js";
+import {
+  evaluateToolUse,
+  toBashWriteProblem,
+  toLockedProblem,
+} from "./permissions.js";
 import type { ToolPolicy } from "./permissions.js";
 import { runReferencePass } from "./reference-check.js";
 import { buildUserMessageParts, buildUserText } from "./user-message.js";
@@ -403,6 +409,7 @@ class MockSession {
     const policy: ToolPolicy = {
       allowBash: settings.allowBash,
       allowInstall: settings.allowInstall,
+      lockedPaths: this.input.ctx.lockedPaths ?? [],
       mode: "edit",
       workTree: this.workTree,
     };
@@ -415,7 +422,7 @@ class MockSession {
     }
 
     const result = await this.sink.bashFinished?.(toolUseId, (relative) =>
-      bashWriteProblem(policy, relative)
+      toBashWriteProblem(policy, relative)
     );
 
     this.sink.toolFinished(toolUseId, false, `Bash ${input.command}`);
@@ -447,6 +454,15 @@ class MockSession {
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
     this.sink.toolStarted(toolUseId, toolName, { file_path: absolute });
+    const locked = toLockedProblem(this.input.ctx, relativePath);
+
+    if (locked !== null) {
+      this.sink.toolFinished(toolUseId, true, `${toolName}: ${locked}`);
+      await this.say(locked);
+
+      return;
+    }
+
     this.sink.beforeWrite(toolUseId, toolName, { file_path: absolute });
 
     try {
@@ -488,51 +504,6 @@ class MockSession {
       throw new Error("Mock failure after first write.");
     }
   }
-}
-
-function lineColToOffset(source: string, line: number, col: number): number {
-  let offset = 0;
-
-  for (let current = 1; current < line; current += 1) {
-    const next = source.indexOf("\n", offset);
-
-    if (next === -1) {
-      return -1;
-    }
-
-    offset = next + 1;
-  }
-
-  return offset + col - 1;
-}
-
-function findOpenTagEnd(source: string, start: number): number {
-  let quote: string | null = null;
-  let braceDepth = 0;
-
-  for (let index = start + 1; index < source.length; index += 1) {
-    const char = source[index];
-
-    if (quote) {
-      if (char === quote) {
-        quote = null;
-      }
-
-      continue;
-    }
-
-    if (char === '"' || char === "'") {
-      quote = char;
-    } else if (char === "{") {
-      braceDepth += 1;
-    } else if (char === "}") {
-      braceDepth -= 1;
-    } else if (char === ">" && braceDepth === 0) {
-      return index;
-    }
-  }
-
-  return -1;
 }
 
 function parseColorRequest(prompt: string): string | null {
@@ -611,7 +582,7 @@ function replaceFirstText(
       return null;
     }
 
-    const tagEnd = findOpenTagEnd(source, nextTag);
+    const tagEnd = toOpenTagEnd(source, nextTag);
 
     if (tagEnd === -1) {
       return null;
@@ -633,7 +604,7 @@ function applySelectionEdit(
     return null;
   }
 
-  const start = lineColToOffset(
+  const start = toLineColOffset(
     source,
     selection.source.line,
     selection.source.col
@@ -643,7 +614,7 @@ function applySelectionEdit(
     return null;
   }
 
-  const openEnd = findOpenTagEnd(source, start);
+  const openEnd = toOpenTagEnd(source, start);
 
   if (openEnd === -1) {
     return null;
@@ -1148,7 +1119,7 @@ async function runElementVariantMock(
   const source = await readFile(path.join(workTree, scope.file), "utf-8");
   const end = source.length - scope.suffixLength;
   const element = source.slice(scope.start, end);
-  const openEnd = findOpenTagEnd(element, 0);
+  const openEnd = toOpenTagEnd(element, 0);
 
   if (!element.startsWith("<") || openEnd === -1) {
     throw new Error(`mock: no element at ${scope.file}:${scope.startLine}`);

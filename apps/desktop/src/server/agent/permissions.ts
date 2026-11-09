@@ -1,13 +1,19 @@
+import path from "node:path";
+
 import type {
   CanUseTool,
   HookCallback,
   PermissionResult,
 } from "@anthropic-ai/claude-agent-sdk";
 
+import type { AgentRunContext } from "../../shared/server-ports.js";
+import { SOURCE_DIR } from "../design-system/extract/draft.js";
+import { isPathLocked } from "../platform/path-lock/index.js";
 import {
   READ_TOOLS,
   SKILL_TOOL,
   TODO_TOOL,
+  bashWriteProblem,
   evaluateToolUse,
   setToolCatalog,
   toIntegrationAccess,
@@ -121,6 +127,72 @@ export const withUntrustedLimits = (
   return policy;
 };
 
+const LOCKED_PATH_MESSAGE =
+  "This file is locked. Unlock it in Code to let Claude change it.";
+
+const LOCK_PATH_FIELDS = ["file_path", "notebook_path", "path"] as const;
+
+const LOCKED_WRITE_TOOLS = new Set([
+  "Write",
+  "Edit",
+  "MultiEdit",
+  "NotebookEdit",
+]);
+
+const toWorkTreePath = (workTree: string, file: string): string =>
+  path
+    .relative(workTree, path.resolve(workTree, file))
+    .split(path.sep)
+    .join("/");
+
+const isLockedWrite = (
+  policy: ToolPolicy,
+  toolName: string,
+  input: Record<string, unknown>
+): boolean => {
+  if (!LOCKED_WRITE_TOOLS.has(toolName)) {
+    return false;
+  }
+
+  const globs = policy.lockedPaths ?? [];
+
+  return LOCK_PATH_FIELDS.some((field) => {
+    const value = input[field];
+
+    return (
+      typeof value === "string" &&
+      value !== "" &&
+      isPathLocked(globs, toWorkTreePath(policy.workTree, value))
+    );
+  });
+};
+
+const toLockedResult = (
+  policy: ToolPolicy,
+  toolName: string,
+  input: Record<string, unknown>
+): PermissionResult => {
+  if (isLockedWrite(policy, toolName, input)) {
+    return { behavior: "deny", message: LOCKED_PATH_MESSAGE };
+  }
+
+  return evaluateToolUse(policy, toolName, input);
+};
+
+const toBashWriteProblem = (
+  policy: Pick<
+    ToolPolicy,
+    "allowInstall" | "lockedPaths" | "readOnlyDirs" | "workTree"
+  >,
+  relative: string
+): string | null => {
+  if (isPathLocked(policy.lockedPaths ?? [], relative)) {
+    return LOCKED_PATH_MESSAGE;
+  }
+
+  return bashWriteProblem(policy, relative);
+};
+
 const COPY_CODE_TOOL = "mcp__studio__copy_code";
 const LIST_BREAKPOINTS_TOOL = "mcp__studio__list_breakpoints";
 const SET_BREAKPOINT_STYLE_TOOL = "mcp__studio__set_breakpoint_style";
@@ -194,7 +266,7 @@ export function createCanUseTool(
   bashGate?: ToolGate
 ): CanUseTool {
   return async (toolName, input, options) => {
-    const checked = evaluateToolUse(policy, toolName, input);
+    const checked = toLockedResult(policy, toolName, input);
 
     let result =
       checked.behavior === "allow" && toolName === "Bash" && bashGate
@@ -274,7 +346,7 @@ export function createPreToolUseGuard(
         ? (toolInput as Record<string, unknown>)
         : {};
 
-    const checked = evaluateToolUse(policy, hookInput.tool_name, record);
+    const checked = toLockedResult(policy, hookInput.tool_name, record);
 
     let result =
       checked.behavior === "allow" && hookInput.tool_name === "Bash" && bashGate
@@ -312,3 +384,47 @@ export function createPreToolUseGuard(
     };
   };
 }
+
+const toLockedProblem = (
+  ctx: AgentRunContext,
+  relative: string
+): string | null => {
+  if (isPathLocked(ctx.lockedPaths ?? [], relative)) {
+    return LOCKED_PATH_MESSAGE;
+  }
+
+  return null;
+};
+
+const toWriteProblem = (
+  ctx: AgentRunContext,
+  relative: string
+): string | null => {
+  const policy: ToolPolicy = {
+    allowBash: false,
+    allowInstall: false,
+    lockedPaths: ctx.lockedPaths ?? [],
+    mode: ctx.request.mode,
+    workTree: ctx.direction.workTree,
+  };
+
+  if (ctx.project.designSystemFor) {
+    policy.readOnlyDirs = [SOURCE_DIR];
+  }
+
+  const result = toLockedResult(policy, "Write", { file_path: relative });
+
+  if (result.behavior === "deny") {
+    return result.message;
+  }
+
+  return null;
+};
+
+export {
+  LOCKED_PATH_MESSAGE,
+  toBashWriteProblem,
+  toLockedProblem,
+  toLockedResult,
+  toWriteProblem,
+};

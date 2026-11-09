@@ -5,8 +5,9 @@ import { CodeEditButton } from "./code-edit-button.js";
 import { CodeEditHost } from "./code-edit-host.js";
 import { CopySnippet } from "./copy-snippet.js";
 import { copy } from "./copy.js";
+import { FileLockRow } from "./file-lock-row.js";
 import { OpenInEditor } from "./open-in-editor.js";
-import { toFileLabel, toFileTip } from "./snippet-model.js";
+import { toFileLabel, toFileTip, toLockFile } from "./snippet-model.js";
 import { SnippetView } from "./snippet-view.js";
 import { useSnippet } from "./use-snippet.js";
 
@@ -27,6 +28,11 @@ const InspectorCode = ({
     return (
       <>
         <p className="ins-hint">{copy.selectAnElementOnThe}</p>
+        <FileLockRow
+          projectId={projectId}
+          directionId={directionId}
+          file={null}
+        />
         <CodeEditHost />
       </>
     );
@@ -56,6 +62,11 @@ const InspectorCode = ({
         )}
       </div>
       <SnippetView snippet={snippet} />
+      <FileLockRow
+        projectId={projectId}
+        directionId={directionId}
+        file={toLockFile(snippet)}
+      />
       <CodeEditHost />
     </div>
   );

@@ -26,7 +26,6 @@ import {
   readCanvasAt,
   type CanvasService,
 } from "../canvas/index.js";
-import { SOURCE_DIR } from "../design-system/extract/draft.js";
 import {
   chooseEditSite,
   EDIT_TARGETS,
@@ -60,7 +59,7 @@ import {
   toProbeTarget,
 } from "../page-probe/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
-import { evaluateToolUse } from "./permissions.js";
+import { toWriteProblem } from "./permissions.js";
 import { editPageUrl } from "./run-target.js";
 
 export interface DirectToolDeps {
@@ -181,15 +180,7 @@ export function writeProblem(
   ctx: AgentRunContext,
   relative: string
 ): string | null {
-  const policy = {
-    workTree: ctx.direction.workTree,
-    mode: ctx.request.mode,
-    allowBash: false,
-    allowInstall: false,
-    ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
-  };
-  const result = evaluateToolUse(policy, "Write", { file_path: relative });
-  return result.behavior === "deny" ? result.message : null;
+  return toWriteProblem(ctx, relative);
 }
 
 async function findElements(

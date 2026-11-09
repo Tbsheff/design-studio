@@ -21,6 +21,7 @@ import { DirectEditLive } from "./direct-edit/live.js";
 import { EffectLive } from "./effect/live.js";
 import { EventsLive } from "./events/live.js";
 import { ExportLive } from "./export/live.js";
+import { FileLockLive } from "./file-lock/live.js";
 import { FillLive } from "./fill/live.js";
 import { FixtureLive } from "./fixture/live.js";
 import { GalleryLive } from "./gallery/live.js";
@@ -87,6 +88,7 @@ const ALL_LIVE = {
   effect: EffectLive,
   events: EventsLive,
   export: ExportLive,
+  fileLock: FileLockLive,
   fill: FillLive,
   fixture: FixtureLive,
   gallery: GalleryLive,

@@ -21,7 +21,12 @@ import { describeElements, textHintsOf } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { listWords } from "./activity-text.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import {
+  EditError,
+  loadTarget,
+  runLockedPathGuard,
+  refuseWhileRunning,
+} from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {
   checkWritePath,
@@ -275,6 +280,8 @@ async function batchFiles(
   });
   if (new Set(planned.map((file) => file.relative)).size !== planned.length)
     throw new EditError("Each path can be in files only once.");
+  for (const file of planned)
+    await runLockedPathGuard(deps, project, direction, file.relative);
   const befores = await Promise.all(
     planned.map((file) => readFile(file.absolute, "utf-8").catch(() => null))
   );

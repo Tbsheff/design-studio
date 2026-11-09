@@ -66,11 +66,11 @@ import {
 } from "./lifecycle.js";
 import {
   BASH_EDIT_TOOL,
-  bashWriteProblem,
   builtinToolNames,
   createCanUseTool,
   createPreToolUseGuard,
   holdsUntrustedInput,
+  toBashWriteProblem,
   type ToolPolicy,
   withUntrustedLimits,
 } from "./permissions.js";
@@ -611,23 +611,18 @@ function buildPolicy(
 ): ToolPolicy {
   const { ctx } = input;
   const settings = ctx.project.settings;
-  const shellAllowed = true;
   return withUntrustedLimits(
     {
       ...(config.preset.skills ? {} : { skillsOff: SKILLS_OFF_MESSAGE }),
       workTree: ctx.direction.workTree,
       mode: ctx.request.mode,
-      allowBash:
-        shellAllowed &&
-        settings.allowBash &&
-        (input.devicePolicy?.canRunBash ?? true),
+      allowBash: settings.allowBash && (input.devicePolicy?.canRunBash ?? true),
       allowInstall:
-        shellAllowed &&
-        settings.allowInstall &&
-        (input.devicePolicy?.canInstall ?? true),
+        settings.allowInstall && (input.devicePolicy?.canInstall ?? true),
       skills: skills.enabled,
       skillDirs: skills.readableDirs,
       ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
+      lockedPaths: ctx.lockedPaths ?? [],
       ...(ctx.request.plan ? { plan: true } : {}),
     },
     ctx.request
@@ -789,7 +784,7 @@ export function createBashEditHook(
       return {};
     const result = await input.sink.bashFinished?.(
       hookInput.tool_use_id,
-      (relative) => bashWriteProblem(policy, relative)
+      (relative) => toBashWriteProblem(policy, relative)
     );
     if (!result) return {};
     if (result.diffs.length > 0) toolOrder?.push(BASH_EDIT_TOOL);

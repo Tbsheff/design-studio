@@ -53,6 +53,7 @@ import { ShareLive } from "./share/live.js";
 import { ShipLive } from "./ship/live.js";
 import { SpacingLive } from "./spacing/live.js";
 import { SpeedLive } from "./speed/live.js";
+import { SpellingLive } from "./spelling/live.js";
 import { StackingLive } from "./stacking/live.js";
 import { StateStyleLive } from "./state-style/live.js";
 import { StudioLive } from "./studio/live.js";
@@ -121,6 +122,7 @@ const ALL_LIVE = {
   ship: ShipLive,
   spacing: SpacingLive,
   speed: SpeedLive,
+  spelling: SpellingLive,
   stacking: StackingLive,
   stateStyle: StateStyleLive,
   studio: StudioLive,

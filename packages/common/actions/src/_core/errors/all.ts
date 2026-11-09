@@ -41,6 +41,7 @@ import type { ScenarioError } from "../../scenario/errors/index.js";
 import type { ScreenError } from "../../screen/errors/index.js";
 import type { SpacingError } from "../../spacing/errors/index.js";
 import type { SpeedError } from "../../speed/errors/index.js";
+import type { SpellingError } from "../../spelling/errors/index.js";
 import type { StackingError } from "../../stacking/errors/index.js";
 import type { StateStyleError } from "../../state-style/errors/index.js";
 import type { SuggestionError } from "../../suggestion/errors/index.js";
@@ -96,6 +97,7 @@ type StudioError =
   | ScreenError
   | SpacingError
   | SpeedError
+  | SpellingError
   | StackingError
   | StateStyleError
   | SuggestionError

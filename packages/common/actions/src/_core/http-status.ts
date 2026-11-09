@@ -41,6 +41,7 @@ import { ScenarioStatus } from "../scenario/errors/status.js";
 import { ScreenStatus } from "../screen/errors/status.js";
 import { SpacingStatus } from "../spacing/errors/status.js";
 import { SpeedStatus } from "../speed/errors/status.js";
+import { SpellingStatus } from "../spelling/errors/status.js";
 import { StackingStatus } from "../stacking/errors/status.js";
 import { StateStyleStatus } from "../state-style/errors/status.js";
 import { SuggestionStatus } from "../suggestion/errors/status.js";
@@ -98,6 +99,7 @@ const HTTP_STATUS = {
   ...ScreenStatus,
   ...SpacingStatus,
   ...SpeedStatus,
+  ...SpellingStatus,
   ...StackingStatus,
   ...StateStyleStatus,
   ...SuggestionStatus,

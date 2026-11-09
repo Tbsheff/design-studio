@@ -37,7 +37,10 @@ const handleContextMenu = (
   const at = pagePoint(frame.element, message.x, message.y);
 
   if (at) {
-    state.opts.onContextMenu?.(at);
+    state.opts.onContextMenu?.({
+      ...at,
+      local: { x: message.x, y: message.y },
+    });
   }
 };
 

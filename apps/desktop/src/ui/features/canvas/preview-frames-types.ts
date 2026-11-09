@@ -8,6 +8,7 @@ import type {
 import type { Dispatch, SetStateAction } from "react";
 
 import type { LiveStore } from "../../platform/live-store.js";
+import type { MenuAnchor } from "./layer-pick-model.js";
 import type { HoverBox } from "./preview-rect-model.js";
 import type { PreviewSlot } from "./preview-slot-model.js";
 
@@ -67,7 +68,7 @@ interface PreviewOptions {
   onZoomKey: (key: ZoomKey) => void;
   textEditAllowed?: boolean;
   onTextEdit?: (message: TextEditMessage) => void;
-  onContextMenu?: (point: { x: number; y: number }) => void;
+  onContextMenu?: (point: MenuAnchor) => void;
 }
 
 interface PendingSwap {

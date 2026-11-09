@@ -1313,6 +1313,13 @@ export type BridgeToParent =
       parent: SelectionContext["rect"] | null;
       siblings: SelectionContext["rect"][];
     }
+  | {
+      ns: "studio";
+      token: string;
+      type: "layers-at";
+      requestId: string;
+      layers: LayerPick[];
+    }
   | { ns: "studio"; token: string; type: "arrange-key"; key: string }
   | {
       ns: "studio";
@@ -1458,6 +1465,14 @@ export interface LayerNode {
   loc?: string;
   ref?: string;
   locked?: boolean;
+}
+
+export interface LayerPick {
+  id: number;
+  selector: string;
+  tag: string;
+  name: string;
+  box: { x: number; y: number; width: number; height: number };
 }
 
 export const MATCH_KINDS = ["component", "classes", "text-style"] as const;
@@ -1776,6 +1791,14 @@ export type ParentToBridge =
       text: string;
     }
   | { ns: "studio"; token: string; type: "select-selector"; selector: string }
+  | {
+      ns: "studio";
+      token: string;
+      type: "layers-at-point";
+      requestId: string;
+      x: number;
+      y: number;
+    }
   | { ns: "studio"; token: string; type: "select-at"; x: number; y: number }
   | {
       ns: "studio";

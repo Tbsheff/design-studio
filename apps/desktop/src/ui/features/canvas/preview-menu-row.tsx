@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 
 import { KeyHint } from "../../canvas-preview-slots.js";
 import type { PreviewMenuItem } from "./preview-menu-model.js";
+import { PreviewSubmenuRow } from "./preview-submenu-row.js";
 
 interface PreviewMenuRowProps {
   readonly item: PreviewMenuItem;
@@ -38,6 +39,15 @@ const PreviewMenuRow = ({
     onClose();
     item.run();
   }, [item, onClose]);
+
+  if (item.submenu) {
+    return (
+      <>
+        {item.divider && <hr className="preview-menu-divider" />}
+        <PreviewSubmenuRow item={item} bindRef={bindRef} />
+      </>
+    );
+  }
 
   return (
     <>

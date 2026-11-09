@@ -1,7 +1,12 @@
 import type { IconName } from "@design-studio/ui";
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent, ReactElement } from "react";
 
 import type { KeyId } from "../../../shared/keymap.js";
+
+interface SubmenuProps {
+  readonly focusTick: number;
+  readonly onExit: () => void;
+}
 
 interface PreviewMenuItem {
   id: string;
@@ -12,6 +17,7 @@ interface PreviewMenuItem {
   hidden?: boolean;
   disabled?: string;
   divider?: boolean;
+  submenu?: ReactElement;
 }
 
 interface MenuPoint {
@@ -110,4 +116,4 @@ export {
   toVisibleItems,
 };
 
-export type { MenuPoint, PreviewMenuItem };
+export type { MenuPoint, PreviewMenuItem, SubmenuProps };

@@ -122,6 +122,7 @@ const copy = {
   save: "Save",
   saveTheLinks: "Save the links found in the page code",
   select: "Select",
+  selectLayer: "Select layer",
   set: "Set ",
   share: "Share",
   showAll: "Show all",

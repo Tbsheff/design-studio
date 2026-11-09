@@ -25,6 +25,7 @@ type PromptSend = (
     effort: RunEffort | null,
     mentions: RunMention[],
     commentIds?: string[],
+    focusPaths?: string[],
   ]
 ) => Promise<void>;
 

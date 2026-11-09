@@ -20,6 +20,7 @@ type StudioSendArgs = [
   effort: RunEffort | null,
   mentions: RunMention[],
   commentIds?: string[],
+  focusPaths?: string[],
 ];
 
 interface StudioRun {

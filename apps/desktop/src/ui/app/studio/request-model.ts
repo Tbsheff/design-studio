@@ -16,6 +16,7 @@ interface ComposeInput {
   attachmentIds: string[];
   level: RunLevel;
   effort: RunEffort | null;
+  focusPaths: string[];
   mentions: RunMention[];
   selection: SelectionContext[];
   canvas?: RunCanvasRef;
@@ -50,6 +51,10 @@ const composeRequest = (input: ComposeInput): RunRequest => {
 
   if (input.mentions.length > 0) {
     request.mentions = input.mentions;
+  }
+
+  if (input.focusPaths.length > 0) {
+    request.focusPaths = input.focusPaths;
   }
 
   if (input.selection.length > 0) {

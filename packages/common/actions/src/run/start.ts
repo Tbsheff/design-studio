@@ -28,6 +28,7 @@ const startRun = defineAction({
     directionId: DirectionIdSchema,
     editScope: Loose,
     effort: Loose,
+    focusPaths: Loose,
     lean: Loose,
     level: Loose,
     mentions: Loose,

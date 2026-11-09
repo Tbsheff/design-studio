@@ -23,6 +23,7 @@ import type {
 } from "../../shared/server-ports.js";
 import { referencePagesBlock } from "../design-system/reference-page.js";
 import { referenceBlock, variationBlock } from "../variations/message.js";
+import { toFocusLines } from "./focus-block.js";
 import { layoutLines } from "./layout-region.js";
 import type { RunTarget, TargetFrame } from "./run-target.js";
 
@@ -410,7 +411,6 @@ export function buildUserText(
       ].join("\n")
     );
   }
-
   const comments = ctx.request.comments ?? [];
 
   if (comments.length > 0) {
@@ -435,7 +435,7 @@ export function buildUserText(
     blocks.push(`<design_md>\n${ctx.designMd.trim()}\n</design_md>`);
   }
 
-  return blocks.join("\n\n");
+  return [...blocks, ...toFocusLines(ctx.request.focusPaths)].join("\n\n");
 }
 
 function isImageMime(mime: string): mime is ImageMime {

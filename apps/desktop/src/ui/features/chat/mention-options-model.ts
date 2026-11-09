@@ -10,6 +10,7 @@ import type { MentionOption } from "./mention-picker.js";
 interface MentionSources {
   readonly components: readonly ComponentInfo[] | null | undefined;
   readonly files: readonly string[] | null;
+  readonly isFocusShown: boolean;
   readonly lead: readonly MentionOption[] | undefined;
   readonly mentions: readonly RunMention[];
   readonly tokens: readonly CompiledTokenEntry[] | undefined;
@@ -26,6 +27,14 @@ const toFileOption = (path: string): MentionOption => ({
   detail: path,
   key: `file:${path}`,
   label: path.split("/").pop() ?? path,
+  mention: { kind: "file", path },
+});
+
+const toFocusOption = (path: string): MentionOption => ({
+  detail: path,
+  icon: "pointer",
+  key: `focus:${path}`,
+  label: `Focus on ${path.split("/").pop() ?? path}`,
   mention: { kind: "file", path },
 });
 
@@ -47,6 +56,14 @@ const toComponentOption = (item: ComponentInfo): MentionOption => {
   };
 };
 
+const toFocusOptions = (sources: MentionSources): MentionOption[] => {
+  if (!sources.isFocusShown) {
+    return [];
+  }
+
+  return (sources.files ?? []).map((path) => toFocusOption(path));
+};
+
 const toMentionOptions = (sources: MentionSources): MentionOption[] => {
   const picked = new Set(
     sources.mentions.map((mention) => mentionKey(mention))
@@ -56,6 +73,7 @@ const toMentionOptions = (sources: MentionSources): MentionOption[] => {
     ...(sources.lead ?? []),
     ...(sources.components ?? []).map((item) => toComponentOption(item)),
     ...(sources.files ?? []).map((path) => toFileOption(path)),
+    ...toFocusOptions(sources),
     ...(sources.tokens ?? []).map((entry) => toTokenOption(entry)),
   ].filter((option) => !picked.has(option.key));
 };

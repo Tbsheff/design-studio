@@ -430,6 +430,7 @@ export interface RunRequest {
   plan?: boolean;
   lean?: boolean;
   editScope?: EditScope;
+  focusPaths?: string[];
   mentions?: RunMention[];
   variation?: VariationBrief & { index: number; count: number };
   scope?: ElementScope;

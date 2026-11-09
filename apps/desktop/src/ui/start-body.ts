@@ -9,6 +9,7 @@ type StartBody = Pick<
   | "commentIds"
   | "editScope"
   | "effort"
+  | "focusPaths"
   | "lean"
   | "level"
   | "mentions"
@@ -28,6 +29,7 @@ const startBody = (req: StartInput): StartBody => ({
   commentIds: req.commentIds ?? req.comments?.map((comment) => comment.id),
   editScope: req.editScope,
   effort: req.effort,
+  focusPaths: req.focusPaths,
   lean: req.lean,
   level: req.level,
   mentions: req.mentions,

@@ -51,6 +51,7 @@ import {
 import {
   evaluateToolUse,
   toBashWriteProblem,
+  toGateLists,
   toLockedProblem,
 } from "./permissions.js";
 import type { ToolPolicy } from "./permissions.js";
@@ -409,7 +410,7 @@ class MockSession {
     const policy: ToolPolicy = {
       allowBash: settings.allowBash,
       allowInstall: settings.allowInstall,
-      lockedPaths: this.input.ctx.lockedPaths ?? [],
+      ...toGateLists(this.input.ctx),
       mode: "edit",
       workTree: this.workTree,
     };

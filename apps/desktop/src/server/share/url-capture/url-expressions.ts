@@ -53,7 +53,9 @@ const TEXT_EXPRESSION = `(() => {
     }
   };
   if (document.body) walk(document.body);
-  return '# ' + (document.title || location.hostname) + '\\n\\nSource: ' + location.href + '\\n\\n' + lines.join('\\n\\n') + '\\n';
+  const source = new URL(location.href);
+  for (const key of [...source.searchParams.keys()]) if (key.startsWith('__studio')) source.searchParams.delete(key);
+  return '# ' + (document.title || location.hostname) + '\\n\\nSource: ' + source.href + '\\n\\n' + lines.join('\\n\\n') + '\\n';
 })()`;
 
 const STYLE_EXPRESSION = `(() => {

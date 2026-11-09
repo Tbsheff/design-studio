@@ -40,6 +40,7 @@ interface PromptToolbarProps {
   readonly onFiles: (files: File[]) => void;
   readonly onReferenceFiles: (files: File[]) => void;
   readonly onReferenceFolder: () => Promise<void>;
+  readonly onReferenceUrl: () => void;
   readonly onMention: () => void;
   readonly onMode: (mode: ComposerMode) => void;
   readonly onOpenSkills: () => void;
@@ -88,6 +89,7 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
       <PlusMenu
         onAttach={attach}
         onAttachFolder={onReferenceFolder}
+        onAttachUrl={props.onReferenceUrl}
         onAttachZip={attachZip}
         onMention={props.onMention}
         onSkills={props.onOpenSkills}

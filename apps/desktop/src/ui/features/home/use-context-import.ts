@@ -9,6 +9,10 @@ const importOne = async (
     await api.importReferencePath(projectId, context.path);
   }
 
+  if (context.url !== null) {
+    await api.importReferenceUrl(projectId, context.url);
+  }
+
   if (context.file !== null) {
     await api.importReferenceFile(projectId, context.file);
   }

@@ -16,6 +16,7 @@ const copy = {
   apps: "Apps",
   attachFolder: "Attach folder…",
   attachImportAndOptions: "Attach, import and options",
+  attachWebPage: "Attach web page…",
   attachZipOrFile: "Attach zip or file…",
   attachedToThisPrompt: "Attached to this prompt",
   brandPrimaryColor0b6e4fHeadings:
@@ -231,6 +232,10 @@ const copy = {
   undoExpandPromptTip: "Go back to your short prompt",
   useKeyValueLines: "Use KEY=value lines. Not valid:",
   usersMeProjects: "/Users/me/projects",
+  webPageAdd: "Add",
+  webPageCancel: "Cancel",
+  webPageUrlLabel: "Web page address",
+  webPageUrlPlaceholder: "https://example.com",
   whatShouldWeDesign: "What should we design?",
   yet: "yet.",
 };

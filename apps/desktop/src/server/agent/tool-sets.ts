@@ -30,6 +30,8 @@ const CORE_TOOLS = [
   HELP_TOOL,
 ];
 
+const ASK_BLOCKED_TOOLS = new Set(["design_review", "review_frame"]);
+
 const TWEAK_TOOLS = ["define_tweaks"];
 const DESIGN_SYSTEM_TOOLS = ["design_system_check"];
 
@@ -84,9 +86,13 @@ export function studioToolsFor(
   const names = scopedTools(project).filter((name) => !lean || isLean(name));
 
   return new Set(
-    mode === "critique"
-      ? names.filter((name) => !blockedInCritique(`mcp__studio__${name}`))
-      : names
+    mode === "edit"
+      ? names
+      : names.filter(
+          (name) =>
+            !blockedInCritique(`mcp__studio__${name}`) &&
+            (mode !== "ask" || !ASK_BLOCKED_TOOLS.has(name))
+        )
   );
 }
 

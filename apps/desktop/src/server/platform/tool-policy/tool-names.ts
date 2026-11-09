@@ -52,7 +52,7 @@ const skillsOn = (policy: Pick<ToolPolicy, "skills">): boolean =>
   (policy.skills?.length ?? 0) > 0;
 
 const baseToolNames = (policy: ToolSet): string[] => {
-  if (policy.mode === "critique") {
+  if (policy.mode !== "edit") {
     return [...READ_TOOLS, TODO_TOOL];
   }
 
@@ -62,7 +62,7 @@ const baseToolNames = (policy: ToolSet): string[] => {
 const builtinToolNames = (policy: ToolSet): string[] => {
   const names = baseToolNames(policy);
 
-  if (policy.allowBash && policy.mode !== "critique") {
+  if (policy.allowBash && policy.mode === "edit") {
     names.push("Bash");
   }
 

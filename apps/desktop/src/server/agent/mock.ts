@@ -41,7 +41,11 @@ import {
   runMockDesignSystem,
   runMockDesignSystemFix,
 } from "./mock-design-system.js";
-import { runMockDirect, wantsMockDirect } from "./mock-direct.js";
+import {
+  runMockDirect,
+  startMockReadOnly,
+  wantsMockDirect,
+} from "./mock-direct.js";
 import { bashWriteProblem, evaluateToolUse } from "./permissions.js";
 import type { ToolPolicy } from "./permissions.js";
 import { runReferencePass } from "./reference-check.js";
@@ -700,13 +704,6 @@ function compareSelectionsBottomUp(
   );
 }
 
-async function startMockCritique(session: MockSession): Promise<string> {
-  const finalText = `Critique: tighten the hierarchy, check contrast on secondary text, and test the layout at 375px.`;
-  await session.say(finalText);
-
-  return finalText;
-}
-
 async function editSelectionFile(
   session: MockSession,
   workTree: string,
@@ -1194,8 +1191,8 @@ function runMockEdit(
   const { workTree } = ctx.direction;
   const text = cleanPrompt(prompt) || "Untitled";
 
-  if (ctx.request.mode === "critique") {
-    return startMockCritique(session);
+  if (ctx.request.mode !== "edit") {
+    return startMockReadOnly(session, input);
   }
 
   if (ctx.request.plan) {

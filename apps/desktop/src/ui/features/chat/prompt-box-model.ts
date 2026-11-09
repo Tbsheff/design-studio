@@ -64,15 +64,20 @@ const SEND_ICON: Record<SendState, IconName> = {
 };
 
 const MODE_ICON: Record<ComposerMode, IconName> = {
+  ask: "comment",
   critique: "eye",
   edit: "pencil",
   plan: "doc",
 };
 
-const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
+const MODES: readonly ComposerMode[] = ["edit", "plan", "critique", "ask"];
 
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> =
   {
+    ask: {
+      label: "Ask a question",
+      placeholder: "Ask a question about this design…",
+    },
     critique: {
       label: "Ask for a critique",
       placeholder: "Ask for a critique…",

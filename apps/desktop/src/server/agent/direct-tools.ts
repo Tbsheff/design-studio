@@ -172,8 +172,8 @@ function failure(message: string): ToolText {
 export function refusal(ctx: AgentRunContext, tool: string): string | null {
   if (ctx.request.plan)
     return "Plan mode is on, so files stay as they are. Reply with the plan; the user approves it before the build.";
-  if (ctx.request.mode === "critique")
-    return `${tool} is not available in critique runs.`;
+  if (ctx.request.mode !== "edit")
+    return `${tool} is not available in ${ctx.request.mode} runs.`;
   return null;
 }
 

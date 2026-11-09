@@ -7,6 +7,7 @@ const BASE_QUERY =
   "ui design interface layout typography color critique taste frontend";
 
 const MODE_QUERY: Record<RunMode, string> = {
+  ask: "explain answer question",
   critique: "critique review audit",
   edit: "build redesign",
 };

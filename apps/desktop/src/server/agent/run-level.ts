@@ -170,16 +170,34 @@ function budgetLine(config: ResolvedRunConfig): string {
   return `Budget for this run: $${config.maxBudgetUsd.toFixed(2)}, at most ${config.maxTurns} turns.`;
 }
 
+const ASK_SCOPE =
+  "Level: ASK. Answer the question from the source, the layers and the kit. Call get_layers or screenshot only when the answer needs it. Change no file.";
+
+function toLevelBody(
+  config: ResolvedRunConfig,
+  mode: RunMode,
+  context: RunLevelContext
+): string {
+  if (mode === "ask") {
+    return ASK_SCOPE;
+  }
+
+  if (mode === "critique") {
+    return CRITIQUE_SCOPE[config.level];
+  }
+
+  return (
+    taskBody(config) ??
+    editBody(config.level, config.maxBudgetUsd !== null, context)
+  );
+}
+
 export function buildRunLevelBlock(
   config: ResolvedRunConfig,
   mode: RunMode,
   context: RunLevelContext = {}
 ): string {
-  const body =
-    mode === "critique"
-      ? CRITIQUE_SCOPE[config.level]
-      : (taskBody(config) ??
-        editBody(config.level, config.maxBudgetUsd !== null, context));
+  const body = toLevelBody(config, mode, context);
 
   return `<run-level>\n${body}\n${budgetLine(config)}\n</run-level>`;
 }

@@ -133,6 +133,10 @@ const designsBlocker = (
     return "Critique makes one review.";
   }
 
+  if (mode === "ask") {
+    return "Ask makes one answer.";
+  }
+
   if (mode === "plan") {
     return "Plan makes one plan.";
   }

@@ -38,8 +38,8 @@ const ClassSuggestRow = ({
       type="button"
       onClick={onClick}
     >
-      <span className="mono cls-suggest-name">{className}</span>
       {isColor && <span className="cls-suggest-swatch" style={swatch} />}
+      <span className="mono cls-suggest-name">{className}</span>
       {isToken && !isColor && (
         <span className="ui-menu-meta mono">{value}</span>
       )}

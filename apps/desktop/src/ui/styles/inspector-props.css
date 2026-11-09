@@ -202,18 +202,19 @@ output.prp-status {
   position: relative;
 }
 
-.cls-suggest {
+.cls-suggest-host .cls-suggest {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
   z-index: 20;
   width: 100%;
+  min-width: 0;
   max-width: none;
   max-height: 260px;
   overflow-y: auto;
 }
 
-.cls-suggest-name {
+.cls-suggest .cls-suggest-name {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -221,23 +222,25 @@ output.prp-status {
   white-space: nowrap;
 }
 
-.cls-suggest-swatch {
+.cls-suggest .cls-suggest-swatch {
+  display: inline-block;
   flex: none;
   width: 14px;
+  min-width: 14px;
   height: 14px;
   border-radius: 4px;
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.cls-suggest-token {
+.cls-suggest .cls-suggest-token {
   flex: none;
-  max-width: 40%;
+  max-width: 45%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.cls-suggest-raw {
+.cls-suggest .cls-suggest-raw {
   flex: none;
   font-style: italic;
 }

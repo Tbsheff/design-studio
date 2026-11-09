@@ -34,10 +34,12 @@ const toLastWord = (typed: string): string => {
 };
 
 const toSuggestRows = (
-  items: readonly TokenClassItem[],
+  loaded: readonly TokenClassItem[] | null,
   word: string
 ): SuggestRow[] => {
-  if (word === "") {
+  const items = loaded ?? [];
+
+  if (word === "" || (loaded === null && !word.includes("["))) {
     return [];
   }
 
@@ -49,8 +51,9 @@ const toSuggestRows = (
   }));
 
   const isListed = rows.some((row) => row.className === word);
+  const isRaw = word.includes("[") || rows.length === 0;
 
-  if (!isListed) {
+  if (!isListed && isRaw) {
     rows.push({ className: word, isToken: false, tokenName: "", value: "" });
   }
 

@@ -56,7 +56,7 @@ const useSuggestRows = (
   const found = useAction(routes.listClassesToken, input);
   const items = found.data?.items;
 
-  const rows = useMemo(() => toSuggestRows(items ?? [], word), [items, word]);
+  const rows = useMemo(() => toSuggestRows(items ?? null, word), [items, word]);
 
   return rows;
 };

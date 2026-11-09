@@ -17,9 +17,11 @@ const toResult = (
 ): SpeedResult => ({
   frameId: query.frameId,
   hasBaseline: true,
-  images: toImages(sample, baseline),
   isDevBuild: sample.isDevBuild,
-  numbers: toNumbers(sample, baseline),
+  measure: {
+    images: toImages(sample, baseline),
+    numbers: toNumbers(sample, baseline),
+  },
   phase: query.phase,
   route: sample.route,
   runs: sample.runs,

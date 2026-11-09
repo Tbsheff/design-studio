@@ -10,9 +10,8 @@ interface SpeedStoreApi {
 const EMPTY_RESULT: SpeedResult = {
   frameId: null,
   hasBaseline: false,
-  images: [],
   isDevBuild: false,
-  numbers: [],
+  measure: { images: [], numbers: [] },
   phase: "none",
   route: null,
   runs: 0,

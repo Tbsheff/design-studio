@@ -65,12 +65,16 @@ const SpeedImageSchema = Schema.Struct({
   url: Schema.String,
 });
 
+const SpeedMeasureSchema = Schema.Struct({
+  images: Schema.Array(SpeedImageSchema),
+  numbers: Schema.Array(SpeedNumberSchema),
+});
+
 const SpeedResultSchema = Schema.Struct({
   frameId: Schema.NullOr(Schema.String),
   hasBaseline: Schema.Boolean,
-  images: Schema.Array(SpeedImageSchema),
   isDevBuild: Schema.Boolean,
-  numbers: Schema.Array(SpeedNumberSchema),
+  measure: SpeedMeasureSchema,
   phase: SpeedLastPhaseSchema,
   route: Schema.NullOr(Schema.String),
   runs: Schema.Int,
@@ -84,6 +88,7 @@ export {
   SpeedImageSchema,
   SpeedKeySchema,
   SpeedLastPhaseSchema,
+  SpeedMeasureSchema,
   SpeedNumberSchema,
   SpeedPhaseSchema,
   SpeedResultSchema,

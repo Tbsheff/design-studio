@@ -18,7 +18,7 @@ const getSpeed = defineAction({
   },
   confirm: "none",
   description:
-    "Read the last result of run_speed for one frame. It shows the phase of the last run, whether the route came from a dev server, each number with its baseline and change, and the 3 largest images. Run run_speed first. It returns an empty list of numbers when no run is saved.",
+    "Read the last result of run_speed for one frame. It shows the phase of the last run, whether the route came from a dev server, each number with its baseline and change, and the 3 largest images. Run run_speed first. Its measure has the numbers and the images. The lists are empty when no run is saved.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/speed" },
   id: "speed.get",

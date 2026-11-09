@@ -114,7 +114,7 @@ const toChange = (
 const toNumbers = (
   sample: SpeedSample,
   baseline: SpeedSample | null
-): SpeedResult["numbers"] =>
+): SpeedResult["measure"]["numbers"] =>
   KEYS.map((key) => {
     const value = sample.values[key];
     const before = baseline?.values[key] ?? null;
@@ -127,7 +127,7 @@ const toNumbers = (
 const toImages = (
   sample: SpeedSample,
   baseline: SpeedSample | null
-): SpeedResult["images"] => {
+): SpeedResult["measure"]["images"] => {
   const known = new Set<string>();
 
   for (const image of baseline?.images ?? []) {

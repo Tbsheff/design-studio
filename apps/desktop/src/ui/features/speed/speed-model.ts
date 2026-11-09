@@ -3,9 +3,9 @@ import type { RouteOutput, speedRoutes } from "./deps.js";
 
 type SpeedView = RouteOutput<typeof speedRoutes.getSpeed>;
 
-type SpeedNumberView = SpeedView["numbers"][number];
+type SpeedNumberView = SpeedView["measure"]["numbers"][number];
 
-type SpeedImageView = SpeedView["images"][number];
+type SpeedImageView = SpeedView["measure"]["images"][number];
 
 type SpeedTone = "better" | "same" | "worse";
 

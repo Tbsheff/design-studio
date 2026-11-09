@@ -14,7 +14,7 @@ interface SpeedPanelProps {
   readonly projectId: string;
 }
 
-const NO_IMAGES: SpeedView["images"] = [];
+const NO_IMAGES: SpeedView["measure"]["images"] = [];
 
 const SpeedPanel = ({
   directionId,
@@ -24,8 +24,8 @@ const SpeedPanel = ({
 }: SpeedPanelProps): ReactElement => {
   const speed = useSpeed({ directionId, frameId, projectId });
   const { view } = speed;
-  const rows = view?.numbers ?? [];
-  const images = view?.images ?? NO_IMAGES;
+  const rows = view?.measure.numbers ?? [];
+  const images = view?.measure.images ?? NO_IMAGES;
 
   return (
     <section aria-label={copy.title} className="review-group">

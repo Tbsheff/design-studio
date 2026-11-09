@@ -69,7 +69,13 @@ const VariantStyles = ({
         isEditable={option.editable}
         onRemove={onRemove}
       />
-      {option.editable && <ClassEditors onSend={send} />}
+      {option.editable && (
+        <ClassEditors
+          directionId={directionId}
+          projectId={projectId}
+          onSend={send}
+        />
+      )}
       {!option.editable && (
         <p className="ins-note">{copy.theseClassesAreNotAPlain}</p>
       )}

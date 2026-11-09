@@ -197,3 +197,47 @@
 output.prp-status {
   display: block;
 }
+
+.cls-suggest-host {
+  position: relative;
+}
+
+.cls-suggest {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  width: 100%;
+  max-width: none;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.cls-suggest-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cls-suggest-swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cls-suggest-token {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cls-suggest-raw {
+  flex: none;
+  font-style: italic;
+}

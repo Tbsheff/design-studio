@@ -12,11 +12,9 @@ import {
   APP_REDIRECT_PARAM,
   APP_SOURCE_PATH,
 } from "@design-studio/contracts/app";
-import {
-  FRAME_STATE_ATTR,
-  stateOfHost,
-} from "@design-studio/contracts/frame-state";
+import { stateOfHost } from "@design-studio/contracts/frame-state";
 
+import { toHeadTags } from "./frame-clock-script.js";
 import {
   answerState,
   captureSessionCookies,
@@ -151,17 +149,12 @@ function messagePage(title: string, detail: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><script src="${BRIDGE_SCRIPT_PATH}" data-studio-app="message"></script><style>body{font:14px/1.5 system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#f5f5f4;color:#292524}main{max-width:460px;padding:24px}h1{font-size:16px;margin:0 0 8px}p{margin:0 0 8px;color:#57534e}code{font-size:12px;word-break:break-all}</style></head><body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(detail)}</p></main></body></html>`;
 }
 
-function bridgeTag(stateId: string | null): string {
-  const state = stateId ? ` ${FRAME_STATE_ATTR}="${escapeHtml(stateId)}"` : "";
-  return `<script src="${BRIDGE_SCRIPT_PATH}" data-studio-app="next"${state}></script>`;
-}
-
 function injectBridge(
   res: http.ServerResponse,
   upstreamRes: http.IncomingMessage,
-  stateId: string | null
+  state: ActiveFrameState | null
 ): void {
-  const tag = bridgeTag(stateId);
+  const tag = toHeadTags(state?.resolved.def ?? null);
   let buffered = "";
   let done = false;
   upstreamRes.setEncoding("utf-8");
@@ -351,7 +344,7 @@ export function createAppProxy(options: AppProxyOptions) {
     if (wantsEmpty(state, req))
       return sendEmptied(req, res, upstreamRes, status, headers);
     res.writeHead(status, headers);
-    if (html) injectBridge(res, upstreamRes, state?.resolved.def.id ?? null);
+    if (html) injectBridge(res, upstreamRes, state);
     else upstreamRes.pipe(res);
   };
 

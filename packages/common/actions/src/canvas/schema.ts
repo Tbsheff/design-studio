@@ -20,6 +20,7 @@ import {
 import { Effect, Schema } from "effect";
 
 import { FrameIdSchema } from "../_core/ids.js";
+import { ClockDefFields, ClockInputFields } from "./frame-state/clock.js";
 import { OpenStepsSchema } from "./frame-state/open-step.js";
 import {
   LinkPopoverFields,
@@ -325,6 +326,7 @@ const MockRuleSchema = Schema.Struct({
 });
 
 const FrameMockSchema = Schema.Struct({
+  ...ClockInputFields,
   name: Schema.optionalKey(
     Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(40))
   ),
@@ -349,6 +351,7 @@ const SavedMockRuleSchema = Schema.Struct({
 });
 
 const FrameStateDefSchema = Schema.Struct({
+  ...ClockDefFields,
   id: Schema.String,
   kind: Schema.Literals(FRAME_STATE_KINDS),
   mocks: Schema.optionalKey(Schema.Array(SavedMockRuleSchema)),

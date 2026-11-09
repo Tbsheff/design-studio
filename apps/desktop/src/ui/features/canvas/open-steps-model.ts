@@ -28,7 +28,15 @@ const canAddStep = (def: FrameStateDef | null): boolean =>
 const toStepsWith = (
   def: FrameStateDef | null,
   selector: string
-): OpenStep[] => [...toStepsOf(def), { kind: "click", selector }];
+): OpenStep[] => {
+  const steps = toStepsOf(def);
+
+  if (steps.some((step) => step.selector === selector)) {
+    return steps;
+  }
+
+  return [...steps, { kind: "click", selector }];
+};
 
 const isCustomState = (def: FrameStateDef | null): def is FrameStateDef =>
   def !== null && def.kind === "mock";

@@ -1,0 +1,38 @@
+import type { ReactElement } from "react";
+
+import { HomeHero } from "./home-hero.js";
+import type { HomeIde } from "./use-home-ide.js";
+import type { HomeScreen } from "./use-home-screen.js";
+import { WorkspaceCenter } from "./workspace-center.js";
+import { WorkspaceHead } from "./workspace-head.js";
+
+interface IdeCenterProps {
+  readonly ide: HomeIde;
+  readonly onOpen: (projectId: string) => void;
+  readonly screen: HomeScreen;
+}
+
+const IdeCenter = ({ ide, onOpen, screen }: IdeCenterProps): ReactElement => {
+  const { nav, onStarter, packName } = ide;
+
+  return (
+    <main className="ide-center">
+      <WorkspaceHead
+        homeDir={screen.lib.homeDir}
+        packName={packName}
+        workspace={nav.selected}
+      />
+      <HomeHero screen={screen} />
+      <WorkspaceCenter
+        onOpen={onOpen}
+        onStarter={onStarter}
+        packName={packName}
+        workspace={nav.selected}
+      />
+    </main>
+  );
+};
+
+export { IdeCenter };
+
+export type { IdeCenterProps };

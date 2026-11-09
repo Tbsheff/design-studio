@@ -12,6 +12,7 @@ import type { createLivePreview, createPreviewStyles } from "./live-preview.js";
 import type { LockSet } from "./locks.js";
 import type { createMarquee } from "./marquee.js";
 import type { createOptimistic } from "./optimistic.js";
+import type { OutlineView } from "./outline-view.js";
 import type { createTriggerBridge } from "./play-triggers.js";
 import type { createLinkBridge } from "./play.js";
 import type { createRectTracker } from "./rect-tracker.js";
@@ -69,6 +70,7 @@ type BridgeCore = {
   rects: ReturnType<typeof createRectTracker>;
   livePreview: ReturnType<typeof createLivePreview>;
   optimistic: ReturnType<typeof createOptimistic>;
+  outlineView: OutlineView;
   previewStyles: ReturnType<typeof createPreviewStyles>;
   themeControl: ReturnType<typeof createThemeControl>;
   forceState: ReturnType<typeof createForceState>;

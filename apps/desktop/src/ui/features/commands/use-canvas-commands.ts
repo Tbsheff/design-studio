@@ -22,6 +22,7 @@ interface CanvasInput {
   lofi?: { on: boolean; onToggle: () => void } | undefined;
   onLayers: () => void;
   onSource: (source: CanvasSource) => void;
+  outline: { on: boolean; onToggle: () => void };
   play: () => void;
   selectMode: boolean;
   setSelectMode: (update: (on: boolean) => boolean) => void;
@@ -68,6 +69,10 @@ const actionsOf = (canvasInput: CanvasInput): CanvasActions => ({
     canvasInput.setSelectMode(() => true);
   },
   onSource: (kind) => canvasInput.onSource({ kind }),
+  outline: {
+    on: canvasInput.outline.on,
+    toggle: canvasInput.outline.onToggle,
+  },
   play: canvasInput.play,
   presets: PRESETS,
   selectMode: canvasInput.selectMode,

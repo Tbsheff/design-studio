@@ -167,6 +167,20 @@ const toolCommands = (canvasActions: CanvasActions): Command[] => {
     });
   }
 
+  out.push({
+    group: "View",
+    icon: "layers",
+    id: "view.outline",
+    keyId: "view-outline",
+    keywords: "wireframe boxes borders outline mode",
+    run: canvasActions.outline.toggle,
+    title: toTitle(
+      canvasActions.outline.on,
+      "Hide layer outlines",
+      "Show layer outlines"
+    ),
+  });
+
   if (dark) {
     out.push({
       group: "View",

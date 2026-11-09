@@ -29,6 +29,7 @@ import {
   installErrorReporting,
   installLifecycle,
 } from "./outgoing.js";
+import { createOutlineView } from "./outline-view.js";
 import { createTriggerBridge } from "./play-triggers.js";
 import { createLinkBridge } from "./play.js";
 import { createPointerTools, installPointerDrag } from "./pointer-drag.js";
@@ -128,6 +129,7 @@ const buildCore = (session: BridgeSession): BridgeCore => {
     livePreview,
     locks,
     optimistic,
+    outlineView: createOutlineView(),
     post,
     previewStyles: createPreviewStyles(),
     rects: createRectTracker(post),

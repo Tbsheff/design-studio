@@ -89,6 +89,7 @@ interface CanvasCommandsInput {
   onSource: (source: CanvasSource) => void;
   dark: { dark: boolean; onToggle: () => void } | undefined;
   lofi?: { on: boolean; onToggle: () => void } | undefined;
+  outline: { on: boolean; onToggle: () => void };
   check: { run: () => void; checking: boolean };
   play: () => void;
 }

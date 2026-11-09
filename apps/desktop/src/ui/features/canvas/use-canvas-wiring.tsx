@@ -17,6 +17,7 @@ import type {
 import {
   useFrameChangeReset,
   useLofiSwitch,
+  useOutlineSwitch,
 } from "./use-canvas-wiring-parts.js";
 import { useClickThrough } from "./use-click-through.js";
 import { useFrameActions } from "./use-frame-actions.js";
@@ -31,6 +32,7 @@ const useCanvasWiring = (
 ): CanvasWiring => {
   const { artboardRef, canvasFrames, pz, picking } = text;
   const lofiSwitch = useLofiSwitch(props, text);
+  const outlineSwitch = useOutlineSwitch(props, text);
   const darkSwitch = themeSwitch(Boolean(props.darkPreview), pv.theme);
   const sandbox = toSandbox(props.kind);
   const clickThrough = useClickThrough(pv.frames, picking);
@@ -56,6 +58,7 @@ const useCanvasWiring = (
     hasHead: props.headVersionId !== null,
     lofi: lofiSwitch,
     onSource: props.onSource,
+    outline: outlineSwitch,
     play: proto.play,
   });
 

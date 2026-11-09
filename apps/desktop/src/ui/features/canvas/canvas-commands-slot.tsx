@@ -24,6 +24,7 @@ const CanvasCommandsSlot = ({
       lofi={input.lofi}
       onLayers={onLayers}
       onSource={onSource}
+      outline={input.outline}
       play={input.play}
       selectMode={input.selectMode}
       setSelectMode={setSelectMode}

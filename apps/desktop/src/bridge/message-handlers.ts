@@ -140,6 +140,7 @@ const createPreviewHandlers = (
   MessageHandlers,
   | "lofi-preview"
   | "optimistic-apply"
+  | "outline-view"
   | "optimistic-drop"
   | "optimistic-settle"
   | "preview-reset"
@@ -152,8 +153,14 @@ const createPreviewHandlers = (
   | "tokens-preview"
   | "tweaks-preview"
 > => {
-  const { post, livePreview, optimistic, previewStyles, themeControl } =
-    context;
+  const {
+    post,
+    livePreview,
+    optimistic,
+    outlineView,
+    previewStyles,
+    themeControl,
+  } = context;
 
   return {
     "lofi-preview": (message) => previewStyles.apply("lofi", message.css),
@@ -167,6 +174,7 @@ const createPreviewHandlers = (
         message.classes,
         message.reason
       ),
+    "outline-view": (message) => outlineView.set(message.isOn === true),
     "preview-reset": () => livePreview.reset(),
     "preview-style": (message) =>
       livePreview.previewStyle(message.selector, message.style),

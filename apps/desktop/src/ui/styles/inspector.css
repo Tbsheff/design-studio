@@ -163,6 +163,18 @@
   padding-bottom: var(--s-4);
 }
 
+.ins-scroll [data-tip]::after {
+  position: fixed;
+  inset: auto;
+  max-width: 200px;
+  translate: 0 calc(100% + 6px);
+}
+
+.ins-scroll [data-tip]:hover::after,
+.ins-scroll [data-tip]:focus-visible::after {
+  translate: 0 calc(100% + 6px);
+}
+
 .ins-error {
   display: flex;
   align-items: flex-start;

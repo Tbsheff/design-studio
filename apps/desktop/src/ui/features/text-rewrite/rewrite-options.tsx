@@ -37,6 +37,7 @@ const RewriteOptions = ({
           {copy.cancel}
         </button>
         <button
+          aria-label={copy.applyLabel}
           className="btn small primary"
           disabled={rewrite.isPending}
           type="button"

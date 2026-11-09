@@ -72,6 +72,10 @@ const linkQuery = (link: PrototypeLink): LinkQuery => {
     query.text = link.from.text;
   }
 
+  if (link.when) {
+    query.when = link.when;
+  }
+
   return query;
 };
 

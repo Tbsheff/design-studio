@@ -3,6 +3,10 @@ import type {
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
 import type {
+  LinkVariableOp,
+  LinkVariableValue,
+} from "@design-studio/contracts/link-variable";
+import type {
   LinkAction,
   LinkEasing,
   LinkTransition,
@@ -14,6 +18,7 @@ interface LinkInteractionRequest {
   readonly duration: number | null;
   readonly easing: LinkEasing | null;
   readonly fromFrame: string | null;
+  readonly isWhenCleared: boolean;
   readonly key: string | null;
   readonly linkId: string | null;
   readonly selector: string | null;
@@ -22,7 +27,12 @@ interface LinkInteractionRequest {
   readonly transition: LinkTransition | null;
   readonly trigger: LinkTriggerKind | null;
   readonly url: string | null;
+  readonly variableName: string | null;
+  readonly variableOp: LinkVariableOp | null;
+  readonly variableValue: LinkVariableValue | null;
   readonly visibility: LinkVisibility | null;
+  readonly whenEquals: LinkVariableValue | null;
+  readonly whenName: string | null;
 }
 
 export type { LinkInteractionRequest };

@@ -76,6 +76,7 @@
     "./canvas/index": "./src/canvas/index.ts",
     "./canvas/inspect": "./src/canvas/inspect.ts",
     "./canvas/inspect-link-interaction": "./src/canvas/inspect-link-interaction.ts",
+    "./canvas/link/schema": "./src/canvas/link/schema.ts",
     "./canvas/list-flow-links": "./src/canvas/list-flow-links.ts",
     "./canvas/list-flow-params": "./src/canvas/list-flow-params.ts",
     "./canvas/list-frame-states": "./src/canvas/list-frame-states.ts",

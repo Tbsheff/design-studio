@@ -4,6 +4,10 @@ import type {
   LinkTriggerKind,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
+import type {
+  LinkVariableOp,
+  LinkVariableValue,
+} from "@design-studio/contracts/link-variable";
 import { emptyLinksFile, LINK_ACTIONS } from "@design-studio/contracts/links";
 import type {
   LinkAction,
@@ -73,7 +77,12 @@ interface LinkInteractionChange {
   readonly toFrame?: string;
   readonly trigger?: LinkTriggerKind;
   readonly url?: string;
+  readonly variableName?: string;
+  readonly variableOp?: LinkVariableOp;
+  readonly variableValue?: LinkVariableValue | null;
   readonly visibility?: LinkVisibility;
+  readonly whenEquals?: LinkVariableValue | null;
+  readonly whenName?: string | null;
 }
 
 interface Entry {

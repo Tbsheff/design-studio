@@ -2,6 +2,7 @@ import type { PlayRunOp, PlayTriggerPhase } from "@design-studio/contracts";
 import type { LinkQuery } from "@design-studio/contracts/links";
 
 import { createSwipeTracker, isSwipeQuery } from "./play-swipe.js";
+import { isQueryOpen } from "./play-vars.js";
 import { closestLink, resolveLink } from "./play.js";
 
 const TRIGGER_TYPE = "play-trigger";
@@ -107,13 +108,13 @@ const createTriggerBridge = (post: TriggerPost): TriggerBridge => {
   const pressed = new Set<string>();
 
   const swipe = createSwipeTracker({
-    getQueries: () => queries,
+    getQueries: () => queries.filter((query) => isQueryOpen(query)),
     owns: ownsTarget,
     post: (id) => post({ id, phase: "swipe", type: TRIGGER_TYPE }),
   });
 
   const of = (kind: "hover" | "press"): LinkQuery[] =>
-    queries.filter((query) => query.trigger === kind);
+    queries.filter((query) => query.trigger === kind && isQueryOpen(query));
 
   const onOver = (event: PointerEvent): void => {
     for (const query of of("hover")) {

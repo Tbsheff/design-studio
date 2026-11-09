@@ -1,6 +1,6 @@
 import { targetFrame } from "@design-studio/contracts/link-interaction";
+import { ACTION_LABELS } from "@design-studio/contracts/link-labels";
 import {
-  ACTION_LABELS,
   isBackTarget,
   linkAction,
   sourceName,

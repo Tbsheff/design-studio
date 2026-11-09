@@ -3,6 +3,8 @@ import type { ComponentType } from "react";
 import type { LinkInteractionEditorProps } from "./features/link-interaction/index.js";
 import {
   bridgeTrigger,
+  readPlayVars,
+  resetPlayVars,
   runLink,
 } from "./features/link-interaction/play-runtime.js";
 import type { PlayHandlers } from "./features/link-interaction/play-runtime.js";
@@ -18,6 +20,13 @@ const loadLinkInteraction = async (): Promise<LinkInteractionLoaded> => {
   return { LinkInteractionEditor: mod.LinkInteractionEditor };
 };
 
-export { bridgeTrigger, loadLinkInteraction, runLink, usePlayTriggers };
+export {
+  bridgeTrigger,
+  loadLinkInteraction,
+  readPlayVars,
+  resetPlayVars,
+  runLink,
+  usePlayTriggers,
+};
 
 export type { PlayHandlers };

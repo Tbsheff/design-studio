@@ -4,6 +4,8 @@ import type {
   LinkTrigger,
   LinkTriggerKind,
 } from "@design-studio/contracts/link-interaction";
+import { cleanWhen } from "@design-studio/contracts/link-variable";
+import type { LinkWhen } from "@design-studio/contracts/link-variable";
 import {
   cleanLinkSelector,
   cleanLinkText,
@@ -120,6 +122,36 @@ const resolveTrigger = (
   }
 
   return trigger;
+};
+
+const toWhen = (
+  request: LinkInteractionRequest,
+  current: LinkWhen | null
+): LinkWhen | null => {
+  if (request.isWhenCleared) {
+    return null;
+  }
+
+  if (request.whenName === null && request.whenEquals === null) {
+    return current;
+  }
+
+  const name = request.whenName ?? current?.name ?? null;
+  const equals = request.whenEquals ?? current?.equals ?? null;
+
+  if (name === null || equals === null) {
+    throw new LinkError("whenName and whenEquals go together.");
+  }
+
+  const when = cleanWhen(name, equals);
+
+  if (!when) {
+    throw new LinkError(
+      "whenName must be letters and digits, 1 to 32 chars, and whenEquals a short string or number."
+    );
+  }
+
+  return when;
 };
 
 const probeSource = async (
@@ -272,6 +304,12 @@ const resolve = async (
 
   if (trigger) {
     link.trigger = trigger;
+  }
+
+  const when = toWhen(request, current?.when ?? null);
+
+  if (when) {
+    link.when = when;
   }
 
   return { link, linkId: current?.id ?? null };

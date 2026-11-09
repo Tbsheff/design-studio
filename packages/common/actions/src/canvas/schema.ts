@@ -3,7 +3,6 @@ import {
   LINK_DELAY_MAX,
   LINK_EXTRA_ACTIONS,
   LINK_KEY_RE,
-  LINK_SWIPE_TRIGGERS,
   LINK_TRIGGERS,
   LINK_URL_MAX,
   LINK_VISIBILITIES,
@@ -20,6 +19,12 @@ import {
 import { Effect, Schema } from "effect";
 
 import { FrameIdSchema } from "../_core/ids.js";
+import {
+  LinkTargetSchema,
+  LinkTriggerSchema,
+  LinkVariableFields,
+  LinkWhenSchema,
+} from "./link/schema.js";
 
 const FRAME_REF_MAX = 120;
 
@@ -66,7 +71,7 @@ const LinkInteractionFields = {
   action: Schema.optionalKey(
     Schema.Literals(LINK_INTERACTION_ACTIONS).annotate({
       description:
-        "navigate, modal or drawer go to toFrame; scroll-to scrolls target into view in the same frame; open-url opens url (https only) in a new tab; close-overlay closes the open modal or drawer; toggle shows or hides target.",
+        "navigate, modal or drawer go to toFrame; scroll-to scrolls target into view in the same frame; open-url opens url (https only) in a new tab; close-overlay closes the open modal or drawer; toggle shows or hides target; set-variable changes a Play variable (variableName, variableOp, variableValue).",
     })
   ),
   delayMs: Schema.optionalKey(
@@ -137,6 +142,7 @@ const LinkInteractionFields = {
       description: "For toggle: toggle (default), show or hide the target.",
     })
   ),
+  ...LinkVariableFields,
 } as const;
 
 const LinkInteractionListFields = {
@@ -157,25 +163,6 @@ const LinkSourceSchema = Schema.Struct({
   text: Schema.optionalKey(Schema.String),
 });
 
-const LinkTargetSchema = Schema.Union([
-  Schema.Struct({ frame: Schema.String }),
-  Schema.Struct({ back: Schema.Literal(true) }),
-  Schema.Struct({
-    selector: Schema.String,
-    visibility: Schema.optionalKey(Schema.Literals(["show", "hide"])),
-  }),
-  Schema.Struct({ url: Schema.String }),
-  Schema.Struct({ close: Schema.Literal(true) }),
-]);
-
-const LinkTriggerSchema = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("hover") }),
-  Schema.Struct({ kind: Schema.Literal("press") }),
-  Schema.Struct({ kind: Schema.Literals(LINK_SWIPE_TRIGGERS) }),
-  Schema.Struct({ kind: Schema.Literal("delay"), ms: Schema.Number }),
-  Schema.Struct({ key: Schema.String, kind: Schema.Literal("key") }),
-]);
-
 const PrototypeLinkSchema = Schema.Struct({
   action: Schema.optionalKey(
     Schema.Literals(["modal", "drawer", ...LINK_EXTRA_ACTIONS])
@@ -188,6 +175,7 @@ const PrototypeLinkSchema = Schema.Struct({
   to: LinkTargetSchema,
   transition: LinkTransitionSchema,
   trigger: Schema.optionalKey(LinkTriggerSchema),
+  when: Schema.optionalKey(LinkWhenSchema),
 });
 
 const LinksFileSchema = Schema.Struct({

@@ -21,7 +21,7 @@ import type {
   UiSelectOption,
 } from "./deps.js";
 
-type PendingKind = "pick" | "url" | "key" | null;
+type PendingKind = "pick" | "url" | "key" | "variable" | null;
 
 interface Pending {
   readonly action: LinkAction | null;
@@ -126,6 +126,10 @@ const frameChange = (
 const pendingFor = (link: PrototypeLink, action: LinkAction): Pending => {
   if (action === "open-url" && urlOf(link.to) === null) {
     return { action, kind: "url" };
+  }
+
+  if (action === "set-variable" && !("variable" in link.to)) {
+    return { action, kind: "variable" };
   }
 
   const wantsSelector = action === "scroll-to" || action === "toggle";

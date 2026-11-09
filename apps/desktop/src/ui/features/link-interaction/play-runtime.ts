@@ -1,10 +1,17 @@
-import { isFrameAction, isSwipeKind, linkAction } from "./deps.js";
+import {
+  applyVariable,
+  holdsWhen,
+  isFrameAction,
+  isSwipeKind,
+  linkAction,
+} from "./deps.js";
 import type {
   LinkAction,
   LinkBridgeTrigger,
   LinkTriggerKind,
   PlayRunOp,
   PrototypeLink,
+  VariableMemory,
 } from "./deps.js";
 
 type PlayPhase = "start" | "end";
@@ -14,7 +21,26 @@ interface PlayHandlers {
   readonly go: (link: PrototypeLink) => void;
   readonly open: (url: string) => void;
   readonly run: (op: PlayRunOp, selector: string) => void;
+  readonly sync: () => void;
 }
+
+let playVars: VariableMemory = new Map();
+
+const resetPlayVars = (): void => {
+  playVars = new Map();
+};
+
+const readPlayVars = (): VariableMemory => playVars;
+
+const isLinkOpen = (link: PrototypeLink): boolean =>
+  holdsWhen(link.when ?? null, playVars);
+
+const runVariable = (link: PrototypeLink, handlers: PlayHandlers): void => {
+  if ("variable" in link.to) {
+    playVars = applyVariable(playVars, link.to.variable);
+    handlers.sync();
+  }
+};
 
 const START_OPS = { hide: "hide", show: "show", toggle: "toggle" } as const;
 const END_OPS = { hide: "show", show: "hide", toggle: "toggle" } as const;
@@ -84,6 +110,16 @@ const runLink = (
 
   if (phase === "end") {
     endLink(link, action, handlers);
+
+    return;
+  }
+
+  if (!isLinkOpen(link)) {
+    return;
+  }
+
+  if (action === "set-variable") {
+    runVariable(link, handlers);
 
     return;
   }
@@ -159,6 +195,15 @@ const bridgeTrigger = (link: PrototypeLink): LinkBridgeTrigger | null => {
   return null;
 };
 
-export { bridgeTrigger, keyMatches, linksFrom, phaseOf, runLink, triggerKind };
+export {
+  bridgeTrigger,
+  keyMatches,
+  linksFrom,
+  phaseOf,
+  readPlayVars,
+  resetPlayVars,
+  runLink,
+  triggerKind,
+};
 
 export type { PlayHandlers, PlayPhase };

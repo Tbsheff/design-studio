@@ -1,4 +1,4 @@
-export { linksApi } from "../canvas/links-api.js";
+export { linksApi, useLinks } from "../canvas/links-api.js";
 
 export type { LinkInteractionChange } from "../canvas/links-api.js";
 
@@ -8,8 +8,9 @@ export type { UiSelectOption } from "@design-studio/ui";
 
 export type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 
+export { ACTION_LABELS } from "@design-studio/contracts/link-labels";
+
 export {
-  ACTION_LABELS,
   LINK_INTERACTION_ACTIONS,
   isFrameAction,
   linkAction,
@@ -40,5 +41,18 @@ export type {
   LinkTriggerKind,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
+
+export {
+  LINK_VARIABLE_OPS,
+  applyVariable,
+  cleanVariableName,
+  holdsWhen,
+} from "@design-studio/contracts/link-variable";
+
+export type {
+  LinkVariableOp,
+  LinkVariableValue,
+  VariableMemory,
+} from "@design-studio/contracts/link-variable";
 
 export type { PlayRunOp } from "@design-studio/contracts";

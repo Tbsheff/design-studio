@@ -470,7 +470,3 @@ body:has(.frame-menu) .app-fail {
   min-width: 0;
   white-space: normal;
 }
-
-.app-bar-account {
-  display: contents;
-}

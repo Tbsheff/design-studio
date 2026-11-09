@@ -1,5 +1,4 @@
 const copy = {
-  accountTip: "Account",
   add: "Add",
   addFrame: "Add frame",
   allowAgentToRunShell: "Let Claude run shell commands",

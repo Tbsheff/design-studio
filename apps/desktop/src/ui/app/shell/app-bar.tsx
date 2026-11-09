@@ -2,7 +2,6 @@ import type { AttachedApp } from "@design-studio/contracts";
 import { useCallback, useState } from "react";
 import type { ReactElement } from "react";
 
-import { AppBarAccount } from "./app-bar-account.js";
 import { AppBarAlerts } from "./app-bar-alerts";
 import { AppBarToggle } from "./app-bar-toggle";
 import { AppPanel } from "./app-panel";
@@ -52,7 +51,6 @@ const AppBar = ({ projectId, app, onAddRoute }: AppBarProps): ReactElement => {
 
   return (
     <div className="app-bar-root">
-      <AppBarAccount />
       <AppBarAlerts
         app={app}
         cause={cause}

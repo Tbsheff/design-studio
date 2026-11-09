@@ -11,6 +11,7 @@ import type { LayerIndex } from "./layers.js";
 import type { createLivePreview, createPreviewStyles } from "./live-preview.js";
 import type { LockSet } from "./locks.js";
 import type { createMarquee } from "./marquee.js";
+import type { OpenSteps } from "./open-steps.js";
 import type { createOptimistic } from "./optimistic.js";
 import type { OutlineView } from "./outline-view.js";
 import type { createTriggerBridge } from "./play-triggers.js";
@@ -70,6 +71,7 @@ type BridgeCore = {
   rects: ReturnType<typeof createRectTracker>;
   livePreview: ReturnType<typeof createLivePreview>;
   optimistic: ReturnType<typeof createOptimistic>;
+  openSteps: OpenSteps;
   outlineView: OutlineView;
   previewStyles: ReturnType<typeof createPreviewStyles>;
   themeControl: ReturnType<typeof createThemeControl>;

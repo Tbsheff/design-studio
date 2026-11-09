@@ -18,6 +18,7 @@ import { addSectionAround } from "./use-canvas-sections.js";
 import {
   useFrameChangeReset,
   useLofiSwitch,
+  useStageOpenSteps,
   useOutlineSwitch,
 } from "./use-canvas-wiring-parts.js";
 import { useClickThrough } from "./use-click-through.js";
@@ -34,6 +35,7 @@ const useCanvasWiring = (
   const { artboardRef, canvasFrames, pz, picking } = text;
   const lofiSwitch = useLofiSwitch(props, text);
   const outlineSwitch = useOutlineSwitch(props, text);
+  useStageOpenSteps(props, text);
   const darkSwitch = themeSwitch(Boolean(props.darkPreview), pv.theme);
   const sandbox = toSandbox(props.kind);
   const clickThrough = useClickThrough(pv.frames, picking);

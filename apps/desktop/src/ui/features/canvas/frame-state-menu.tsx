@@ -2,13 +2,41 @@ import { Icon } from "@design-studio/ui";
 import { useCallback, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
+import { useLive } from "../../platform/live-store.js";
 import { stop } from "./frame-state-ui-model.js";
 import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
 import { MenuBody } from "./menu-body.js";
+import { missedSteps, toMissedText } from "./open-steps-model.js";
 import { usePanelMenu } from "./use-panel-menu.js";
 
 const STATE_TIP =
   "Preview state: signed in, empty, loading, error or mock data";
+
+const toChipPart = (isSet: boolean, isMissed: boolean): string => {
+  let part = "";
+
+  if (isSet) {
+    part = " set";
+  }
+
+  if (isMissed) {
+    part = `${part} warn`;
+  }
+
+  return part;
+};
+
+const toChipTip = (isOpen: boolean, missed: readonly number[]): string => {
+  if (isOpen) {
+    return "";
+  }
+
+  if (missed.length > 0) {
+    return toMissedText(missed);
+  }
+
+  return STATE_TIP;
+};
 
 const stopKeys = (event: KeyboardEvent<HTMLElement>): void =>
   event.stopPropagation();
@@ -26,6 +54,7 @@ const FrameStateMenu = ({
   const menu = usePanelMenu();
   const { root, setOpen, trigger } = menu;
   const [error, setError] = useState<string | null>(null);
+  const allMissed = useLive(missedSteps);
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
 
   if (!states) {
@@ -35,16 +64,10 @@ const FrameStateMenu = ({
   const chosen = frameStateOf(states.view, frameId);
   const def = states.view.states.find((state) => state.id === chosen);
   const set = chosen !== "default";
-  let part: "" | " set" = "";
-  let datatip = "";
-
-  if (set) {
-    part = " set";
-  }
-
-  if (!menu.open) {
-    datatip = STATE_TIP;
-  }
+  const missed = allMissed[chosen] ?? [];
+  const isMissed = missed.length > 0;
+  const part = toChipPart(set, isMissed);
+  const datatip = toChipTip(menu.open, missed);
 
   return (
     <div className="frame-menu-root frame-state-root" ref={root}>
@@ -77,6 +100,9 @@ const FrameStateMenu = ({
             menu={menu}
             onError={setError}
           />
+          {isMissed && (
+            <p className="frame-page-hint error">{toMissedText(missed)}</p>
+          )}
           {error && <p className="frame-page-hint error">{error}</p>}
         </div>
       )}

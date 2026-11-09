@@ -14,6 +14,9 @@ export const FRAME_STATE_HEADER = "x-studio-state";
 export const FRAME_STATE_ID_HEADER = "x-studio-state-id";
 export const FRAME_STATE_ATTR = "data-studio-state";
 export const MAX_MOCK_RULES = 40;
+export const MAX_OPEN_STEPS = 4;
+export const MAX_STEP_SELECTOR = 300;
+export const OPEN_STEP_KINDS = ["click", "hover", "focus"] as const;
 export const MAX_CUSTOM_STATES = 12;
 export const MAX_MOCK_BODY = 200_000;
 export const MAX_RULE_DELAY_MS = 30_000;
@@ -33,6 +36,13 @@ export interface MockRule {
   delayMs?: number;
 }
 
+export type OpenStepKind = (typeof OPEN_STEP_KINDS)[number];
+
+export interface OpenStep {
+  kind: OpenStepKind;
+  selector: string;
+}
+
 export interface MockUser {
   name: string;
   email: string;
@@ -44,6 +54,7 @@ export interface FrameStateDef {
   name: string;
   signedIn: boolean;
   mocks?: MockRule[];
+  steps?: OpenStep[];
 }
 
 export interface FrameSessionInfo {
@@ -192,6 +203,33 @@ export function cleanMockRule(raw: unknown): MockRule | null {
   }
 
   return out;
+}
+
+export function cleanOpenStep(raw: unknown): OpenStep | null {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  const step = raw as Record<string, unknown>;
+  const selector =
+    typeof step.selector === "string" ? step.selector.trim() : "";
+
+  if (
+    !(OPEN_STEP_KINDS as readonly unknown[]).includes(step.kind) ||
+    selector === "" ||
+    selector.length > MAX_STEP_SELECTOR
+  ) {
+    return null;
+  }
+
+  return { kind: step.kind as OpenStepKind, selector };
+}
+
+export function cleanOpenSteps(raw: unknown): OpenStep[] {
+  return (Array.isArray(raw) ? raw : [])
+    .map((entry) => cleanOpenStep(entry))
+    .filter((step): step is OpenStep => step !== null)
+    .slice(0, MAX_OPEN_STEPS);
 }
 
 const ID_SEGMENT = ID_PATH_SEGMENT;

@@ -1164,6 +1164,12 @@ export type BridgeToParent =
   | {
       ns: "studio";
       token: string;
+      type: "open-steps-result";
+      missed: number[];
+    }
+  | {
+      ns: "studio";
+      token: string;
       type: "hover";
       rect: SelectionContext["rect"] | null;
       label?: string;
@@ -1721,6 +1727,12 @@ export type ParentToBridge =
   | { ns: "studio"; token: string; type: "tweaks-preview"; css: string }
   | { ns: "studio"; token: string; type: "lofi-preview"; css: string }
   | { ns: "studio"; token: string; type: "outline-view"; isOn: boolean }
+  | {
+      ns: "studio";
+      token: string;
+      type: "open-steps";
+      steps: { kind: "click" | "hover" | "focus"; selector: string }[];
+    }
   | {
       ns: "studio";
       token: string;

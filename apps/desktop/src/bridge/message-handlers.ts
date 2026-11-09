@@ -1,4 +1,5 @@
 import type { ParentToBridge } from "@design-studio/contracts";
+import { cleanOpenSteps } from "@design-studio/contracts/frame-state";
 
 import { anchorQueries, resolveAnchorElement } from "./anchor-tracker.js";
 import { AUTHORED_MAX_BYTES, authoredRules } from "./authored.js";
@@ -139,6 +140,7 @@ const createPreviewHandlers = (
 ): Pick<
   MessageHandlers,
   | "lofi-preview"
+  | "open-steps"
   | "optimistic-apply"
   | "outline-view"
   | "optimistic-drop"
@@ -156,6 +158,7 @@ const createPreviewHandlers = (
   const {
     post,
     livePreview,
+    openSteps,
     optimistic,
     outlineView,
     previewStyles,
@@ -164,6 +167,7 @@ const createPreviewHandlers = (
 
   return {
     "lofi-preview": (message) => previewStyles.apply("lofi", message.css),
+    "open-steps": (message) => openSteps.set(cleanOpenSteps(message.steps)),
     "optimistic-apply": (message) =>
       optimistic.apply(message.id, message.patch, message.written === true),
     "optimistic-drop": () => optimistic.drop(),

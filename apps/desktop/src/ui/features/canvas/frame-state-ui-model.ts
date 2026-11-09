@@ -59,6 +59,21 @@ const toRuleCount = (count: number): string => {
   return `${count} rules`;
 };
 
-export { MOCK_EXAMPLE, menuKeys, stop, toFormText, toRuleCount };
+const toStateMeta = (state: FrameStateDef): string => {
+  const rules = toRuleCount(state.mocks?.length ?? 0);
+  const steps = state.steps?.length ?? 0;
+
+  if (steps === 0) {
+    return rules;
+  }
+
+  if (steps === 1) {
+    return `${rules}, 1 step`;
+  }
+
+  return `${rules}, ${steps} steps`;
+};
+
+export { MOCK_EXAMPLE, menuKeys, stop, toFormText, toRuleCount, toStateMeta };
 
 export type { MockRules, Panel };

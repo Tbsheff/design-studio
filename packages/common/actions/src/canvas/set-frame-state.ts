@@ -23,7 +23,7 @@ const setFrameStateCanvas = defineAction({
   },
   confirm: "none",
   description:
-    "Show one app frame in a preview state: default, session, empty, loading, error, an existing mock state id, or mock to make a new mock state. The frame reloads in the studio. Use get_screenshot with frameId to see it.",
+    "Show one app frame in a preview state: default, session, empty, loading, error, an existing mock state id, or mock to make a new mock state. Mock steps (click, hover or focus on a selector, at most 4) run after each load, so a dialog, sheet, menu, tab or tooltip stays open in the frame. The frame reloads in the studio. Use get_screenshot with frameId to see it.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "PUT",

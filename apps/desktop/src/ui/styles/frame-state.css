@@ -106,3 +106,9 @@
   flex: none;
   color: var(--text-3);
 }
+
+.frame-chip.state.warn,
+.frame-chip.state.warn:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+}

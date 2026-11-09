@@ -20,6 +20,7 @@ import {
 import { Effect, Schema } from "effect";
 
 import { FrameIdSchema } from "../_core/ids.js";
+import { OpenStepsSchema } from "./frame-state/open-step.js";
 import {
   LinkPopoverFields,
   LinkTargetSchema,
@@ -331,6 +332,7 @@ const FrameMockSchema = Schema.Struct({
     Schema.Array(MockRuleSchema).check(Schema.isMaxLength(40))
   ),
   signedIn: Schema.optionalKey(Schema.Boolean),
+  steps: Schema.optionalKey(OpenStepsSchema),
 });
 
 const MockUserSchema = Schema.Struct({
@@ -352,6 +354,7 @@ const FrameStateDefSchema = Schema.Struct({
   mocks: Schema.optionalKey(Schema.Array(SavedMockRuleSchema)),
   name: Schema.String,
   signedIn: Schema.Boolean,
+  steps: Schema.optionalKey(OpenStepsSchema),
 });
 
 const FrameSessionInfoSchema = Schema.Struct({

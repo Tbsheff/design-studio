@@ -1507,7 +1507,8 @@ export type AppKey =
   | "column-tokens"
   | "column-components"
   | "column-system"
-  | "inspector";
+  | "inspector"
+  | "view-outline";
 
 const MOD_APP_KEYS: Record<string, AppKey> = {
   Backslash: "project-rail",
@@ -1560,6 +1561,14 @@ const toolAppKeyOf = (event: PlainKeyEvent, typing: boolean): AppKey | null => {
   return TOOL_APP_KEYS.get(event.code) ?? null;
 };
 
+const isOutlineAppKey = (event: PlainKeyEvent, typing: boolean): boolean => {
+  if (typing || event.metaKey || event.ctrlKey) {
+    return false;
+  }
+
+  return event.code === "KeyO" && event.shiftKey;
+};
+
 export function appKeyOf(
   event: {
     key: string;
@@ -1592,6 +1601,10 @@ export function appKeyOf(
 
   if (event.key === "?" && !event.metaKey && (event.ctrlKey || !typing)) {
     return "shortcuts";
+  }
+
+  if (isOutlineAppKey(event, typing)) {
+    return "view-outline";
   }
 
   if (event.key === "F6" && !event.metaKey && !event.ctrlKey) {
@@ -1707,6 +1720,7 @@ export type ParentToBridge =
   | { ns: "studio"; token: string; type: "tokens-preview"; css: string }
   | { ns: "studio"; token: string; type: "tweaks-preview"; css: string }
   | { ns: "studio"; token: string; type: "lofi-preview"; css: string }
+  | { ns: "studio"; token: string; type: "outline-view"; isOn: boolean }
   | {
       ns: "studio";
       token: string;

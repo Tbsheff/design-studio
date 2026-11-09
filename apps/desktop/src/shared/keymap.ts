@@ -165,6 +165,12 @@ export const KEYMAP = [
     hold: true,
   },
   {
+    id: "view-outline",
+    label: "Show or hide layer outlines",
+    keys: ["Shift+O"],
+    group: "Canvas",
+  },
+  {
     id: "rulers",
     label: "Show or hide rulers",
     keys: ["Shift+R"],

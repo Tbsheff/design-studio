@@ -165,4 +165,4 @@ const useLofiFrames = (
   }, [key]);
 };
 
-export { useLofiFrames };
+export { stageFrames, useLofiFrames };

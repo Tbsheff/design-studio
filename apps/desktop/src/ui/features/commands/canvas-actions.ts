@@ -13,6 +13,7 @@ interface CanvasActions {
   onLayers: () => void;
   onSelect: () => void;
   onSource: (kind: "live" | "last") => void;
+  outline: { on: boolean; toggle: () => void };
   play: () => void;
   presets: readonly ViewportPreset[];
   selectMode: boolean;

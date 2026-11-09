@@ -5,6 +5,8 @@ import { canvasStore, useCanvasLofi } from "./canvas-frames-model.js";
 import type { ViewProps } from "./canvas-types.js";
 import type { LofiSwitch, StageState } from "./canvas-wiring-inputs.js";
 import { useLofiFrames } from "./lofi-frames-model.js";
+import { useOutlineView } from "./use-outline-view.js";
+import type { OutlineSwitch } from "./use-outline-view.js";
 import { useFrameChange } from "./use-stage-keys.js";
 
 const useLofiSwitch = (
@@ -33,6 +35,9 @@ const useLofiSwitch = (
   }
 };
 
+const useOutlineSwitch = (props: ViewProps, text: StageState): OutlineSwitch =>
+  useOutlineView(text.stageRef, props.kind, props.directionId, props.projectId);
+
 const useFrameChangeReset = (props: ViewProps, text: StageState): void => {
   const { active, liveUrl } = text;
 
@@ -48,4 +53,4 @@ const useFrameChangeReset = (props: ViewProps, text: StageState): void => {
   });
 };
 
-export { useFrameChangeReset, useLofiSwitch };
+export { useFrameChangeReset, useLofiSwitch, useOutlineSwitch };

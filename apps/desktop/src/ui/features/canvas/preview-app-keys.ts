@@ -22,6 +22,7 @@ const COMMAND_OF_KEY: Partial<Record<AppKey, string>> = {
   "column-tokens": "panel.tokens",
   "column-versions": "panel.versions",
   inspector: "panel.inspector",
+  "view-outline": "view.outline",
 };
 
 const isPlaying = (): boolean =>

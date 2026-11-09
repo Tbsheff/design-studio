@@ -47,6 +47,7 @@ interface CommandsInput {
   readonly lofi: LofiSwitch | undefined;
   readonly onLayers: StageState["toggleEdit"];
   readonly onSource: ViewProps["onSource"];
+  readonly outline: LofiSwitch;
   readonly play: ReturnType<typeof usePrototype>["play"];
   readonly selectMode: StageState["selectMode"];
   readonly setSelectMode: StageState["setSelectMode"];
@@ -58,6 +59,7 @@ interface CommandsExtras {
   readonly hasHead: boolean;
   readonly lofi: LofiSwitch | undefined;
   readonly onSource: ViewProps["onSource"];
+  readonly outline: LofiSwitch;
   readonly play: CommandsInput["play"];
 }
 
@@ -131,7 +133,7 @@ const toCommandsInput = (
   const { check, comment, draw, layersOpen, live, selectMode } = text;
   const { setSelectMode, zoomBy } = text;
   const onLayers = text.toggleEdit;
-  const { dark, hasHead, lofi, onSource, play } = extras;
+  const { dark, hasHead, lofi, onSource, outline, play } = extras;
 
   return {
     check,
@@ -144,6 +146,7 @@ const toCommandsInput = (
     lofi,
     onLayers,
     onSource,
+    outline,
     play,
     selectMode,
     setSelectMode,

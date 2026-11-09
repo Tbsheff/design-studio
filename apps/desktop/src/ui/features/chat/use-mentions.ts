@@ -92,6 +92,14 @@ const pickDirection = (key: string): 1 | -1 => {
   return -1;
 };
 
+const toFocusPath = (option: MentionOption): string => {
+  if (option.mention.kind === "file") {
+    return option.mention.path;
+  }
+
+  return "";
+};
+
 const useMentions = (config: Options): UseMentionsResult => {
   const { projectId, directionId, tokens, draft, setDraft } = config;
   const { components, request, lead, onLead } = config;
@@ -100,26 +108,26 @@ const useMentions = (config: Options): UseMentionsResult => {
   const files = useMentionFiles(projectId, directionId, query === "");
   const { add, clear, mentions, remove } = useMentionSet(request);
 
+  const isFocusShown = query !== null && query !== "";
+
   const options = useMemo(
     () =>
       toMentionOptions({
         components,
         files,
-        isFocusShown: query !== null && query !== "",
+        isFocusShown,
         lead,
         mentions,
         tokens,
       }),
-    [components, files, lead, mentions, query, tokens]
+    [components, files, isFocusShown, lead, mentions, tokens]
   );
 
   const picker = useMentionPicker(options, query);
 
   const pick = (option: MentionOption): void => {
     if (option.key.startsWith("focus:")) {
-      config.onFocus?.(
-        option.mention.kind === "file" ? option.mention.path : ""
-      );
+      config.onFocus?.(toFocusPath(option));
     } else if (lead?.some((item) => item.key === option.key)) {
       onLead?.(option);
     } else {

@@ -35,4 +35,4 @@ export type {
   TokenExportResult,
 } from "./token-export/index.js";
 
-export { TokenUsageStore } from "./usage/index.js";
+export { TokenClassStore, TokenUsageStore } from "./usage/index.js";

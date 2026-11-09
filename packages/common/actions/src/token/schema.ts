@@ -174,7 +174,23 @@ const TokenUsageTotalsFields = {
   unusedCount: Schema.Int,
 } as const;
 
+const TokenClassSchema = Schema.Struct({
+  className: Schema.String,
+  tokenName: Schema.String,
+  useCount: Schema.Int,
+  value: Schema.String,
+});
+
+const TokenClassListFields = {
+  query: Schema.String.annotate({
+    description:
+      "Class prefix, for example bg- or rounded. Default empty, which lists every class.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(""))),
+} as const;
+
 export {
+  TokenClassListFields,
+  TokenClassSchema,
   TokenUsageListFields,
   TokenUsageSchema,
   TokenUsageSiteSchema,

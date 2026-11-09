@@ -8,3 +8,7 @@ export type {
   UsageSite,
   UsageToken,
 } from "./count-token-uses.js";
+
+export { toTokenClasses } from "./to-token-classes.js";
+
+export type { TokenClass } from "./to-token-classes.js";

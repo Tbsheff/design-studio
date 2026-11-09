@@ -5,6 +5,7 @@ import { setFrameState } from "./frame-states-model.js";
 import {
   KEPT_STATE_NAME,
   isCustomState,
+  pushOpenSteps,
   toStepsWith,
 } from "./open-steps-model.js";
 
@@ -13,6 +14,11 @@ interface KeepOpen {
   readonly custom: FrameStateDef | null;
   readonly keepOpen: () => void;
 }
+
+const saveThenPush = async (task: Promise<unknown>): Promise<void> => {
+  await task;
+  pushOpenSteps();
+};
 
 const useKeepOpen = ({
   def,
@@ -39,22 +45,21 @@ const useKeepOpen = ({
     }
 
     if (custom) {
-      void run(
-        setFrameState(projectId, frameId, custom.id, {
-          steps: toStepsWith(custom, trigger),
-        })
-      );
+      const steps = toStepsWith(custom, trigger);
+      const save = setFrameState(projectId, frameId, custom.id, { steps });
+
+      void run(saveThenPush(save));
 
       return;
     }
 
-    void run(
-      setFrameState(projectId, frameId, "mock", {
-        name: KEPT_STATE_NAME,
-        signedIn: def?.signedIn ?? false,
-        steps: toStepsWith(null, trigger),
-      })
-    );
+    const save = setFrameState(projectId, frameId, "mock", {
+      name: KEPT_STATE_NAME,
+      signedIn: def?.signedIn ?? false,
+      steps: toStepsWith(null, trigger),
+    });
+
+    void run(saveThenPush(save));
   }, [trigger, custom, def, run, projectId, frameId]);
 
   const clearSteps = useCallback((): void => {

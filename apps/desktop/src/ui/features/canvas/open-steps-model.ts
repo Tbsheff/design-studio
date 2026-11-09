@@ -18,6 +18,10 @@ const missedSteps: LiveStore<MissedByState> = createLiveStore<MissedByState>(
   {}
 );
 
+const openStepsPush: LiveStore<number> = createLiveStore<number>(0);
+
+const pushOpenSteps = (): void => openStepsPush.set(openStepsPush.get() + 1);
+
 const KEPT_STATE_NAME = "Kept open";
 
 const toStepsOf = (def: FrameStateDef | null): OpenStep[] => def?.steps ?? [];
@@ -75,6 +79,8 @@ export {
   canAddStep,
   isCustomState,
   missedSteps,
+  openStepsPush,
+  pushOpenSteps,
   selectedTrigger,
   setMissed,
   toKeepTip,

@@ -7,6 +7,7 @@ import { usePlayTriggers } from "../../canvas-link-slots.js";
 import type { PlayHandlers } from "../../canvas-link-slots.js";
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
+import { editsText } from "../../platform/typing-target.js";
 import {
   clickLink,
   closeOverlay as closePlayOverlay,
@@ -107,6 +108,10 @@ const usePlayEffects = (ctx: PlayContext, linkKey: string): void => {
       const key = keyOf(event);
 
       if (event.metaKey || event.ctrlKey || event.altKey || !key) {
+        return;
+      }
+
+      if (key !== "exit" && editsText(event.target)) {
         return;
       }
 

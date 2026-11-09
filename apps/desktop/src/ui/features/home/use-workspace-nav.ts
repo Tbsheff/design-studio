@@ -101,7 +101,7 @@ const useWorkspaceNav = (
 
       if (target) {
         setSelectedId(target.id);
-        setExpanded((current) => toExpanded(current, target.id, true));
+        setExpanded(new Map([[target.id, true]]));
       }
     },
     [workspaces]

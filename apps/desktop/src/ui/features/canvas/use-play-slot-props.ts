@@ -1,11 +1,14 @@
-import type { DeviceFrameId, DeviceOrientation } from "@design-studio/contracts/device-frame";
+import type {
+  DeviceFrameId,
+  DeviceOrientation,
+} from "@design-studio/contracts/device-frame";
 
 import { tagFrame } from "../../platform/bridge.js";
 import { toCommentInput } from "./play-comment-model.js";
+import type { PlayCommentMode } from "./play-comment-model.js";
 import { baseOf } from "./play-model.js";
 import type { PlayModeProps, StageSize } from "./play-model.js";
 import type { BaseSlotsProps, BindFrame } from "./play-slot-types.js";
-import type { PlayCommentMode } from "./play-comment-model.js";
 import { useHotspotHints } from "./use-hotspot-hints.js";
 import type { PlayState } from "./use-play.js";
 

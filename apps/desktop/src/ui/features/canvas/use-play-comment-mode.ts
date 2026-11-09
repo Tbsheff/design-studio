@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
-import type { PlayCommentMode } from "./play-comment-model.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
+import type { PlayCommentMode } from "./play-comment-model.js";
 
 const isModified = (event: KeyboardEvent): boolean =>
   event.metaKey || event.ctrlKey || event.altKey;

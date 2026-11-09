@@ -7,18 +7,13 @@ import { HotspotFlash } from "./hotspot-flash.js";
 import { PlayBar } from "./play-bar.js";
 import { PlayCommentButton } from "./play-comment-button.js";
 import { toCommentNode } from "./play-comment-nodes.js";
-import {
-  overlayOf,
-  playHint,
-  slotStyle,
-  toShownFrame,
-} from "./play-model.js";
+import { overlayOf, playHint, slotStyle, toShownFrame } from "./play-model.js";
 import type { PlayModeProps, Slot } from "./play-model.js";
-import { SlotView } from "./play-slot-view.js";
 import type { BaseSlotsProps } from "./play-slot-types.js";
+import { SlotView } from "./play-slot-view.js";
 import { useFocusReturn } from "./use-focus-return.js";
-import { usePlayDevice } from "./use-play-device.js";
 import { usePlayCommentMode } from "./use-play-comment-mode.js";
+import { usePlayDevice } from "./use-play-device.js";
 import { usePlaySlotProps } from "./use-play-slot-props.js";
 import { usePlay } from "./use-play.js";
 import type { PlayState } from "./use-play.js";

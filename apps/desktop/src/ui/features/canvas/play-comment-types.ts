@@ -1,8 +1,8 @@
 import type { ProjectKind } from "@design-studio/contracts";
 import type { ComponentType, MutableRefObject } from "react";
 
-import type { commentToolsOf } from "./canvas-helpers.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
+import type { commentToolsOf } from "./canvas-helpers.js";
 import type { Props } from "./canvas-types.js";
 
 type PlayCommentControl = NonNullable<Props["comments"]>;

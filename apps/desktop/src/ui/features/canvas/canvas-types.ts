@@ -92,6 +92,7 @@ interface CanvasCommandsInput {
   outline: { on: boolean; onToggle: () => void };
   check: { run: () => void; checking: boolean };
   play: () => void;
+  addSection: () => void;
 }
 
 interface StageSlots {

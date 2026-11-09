@@ -10,6 +10,7 @@ import {
   CANVAS_GAP,
   CANVAS_MAX_FRAMES,
   cleanFrameLabel,
+  emptyCanvasFile,
 } from "@design-studio/contracts/canvas-file";
 import type {
   CanvasFile,
@@ -739,11 +740,7 @@ export async function buildFlow(
 ): Promise<FlowResult> {
   const scanner = await scannerFor(project);
 
-  const before = (await deps.canvas.read(project)).canvas ?? {
-    frames: [],
-    lofi: [],
-    version: 1,
-  };
+  const before = (await deps.canvas.read(project)).canvas ?? emptyCanvasFile();
 
   const plan = await planFlow(deps, project, scanner, input, before);
 

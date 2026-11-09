@@ -12,8 +12,10 @@ import {
 import type {
   CanvasFile,
   CanvasFileFrame,
+  CanvasSection,
 } from "@design-studio/contracts/canvas-file";
 
+import { NO_LAYOUT_NOTE, NO_WINDOW_NOTE } from "./canvas-notes.js";
 import type { CanvasService } from "./service.js";
 
 export const CANVAS_VIEWPORTS = {
@@ -442,6 +444,7 @@ export interface CanvasListing {
   frames: FrameView[];
   lofi: string[];
   note: string | null;
+  sections: CanvasSection[];
   thisRun: { direction: string };
   user: {
     currentDirection: string | null;
@@ -451,12 +454,6 @@ export interface CanvasListing {
     selection: { selector: string; tag: string; text: string }[];
   };
 }
-
-const NO_LAYOUT_NOTE =
-  'No saved layout yet. The canvas shows one frame (f1) with the entry page at the size the user picked. canvas_place with frame "f1" or a new frame saves the layout.';
-
-const NO_WINDOW_NOTE =
-  "The studio window is not open, so the selection and the frame in view are not known.";
 
 export async function inspectCanvasListing(
   ctx: CanvasToolContext
@@ -470,6 +467,7 @@ export async function inspectCanvasListing(
     frames: frames.map((frame) => describeFrame(frame, owner.id)),
     lofi: canvas?.lofi ?? [],
     note: frames.length === 0 ? NO_LAYOUT_NOTE : null,
+    sections: canvas?.sections ?? [],
     thisRun: { direction: ctx.direction.id },
     user: {
       currentDirection: presence?.directionId ?? null,

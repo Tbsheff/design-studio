@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 
 import { frameDirection } from "./canvas-direction-ops.js";
+import { CanvasSectionsLayer } from "./canvas-sections-layer.js";
 import type { CanvasStageProps } from "./canvas-stage-types.js";
 import { FrameLabel } from "./frame-label.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
@@ -36,6 +37,11 @@ const StageFrames = ({
 
   return (
     <>
+      <CanvasSectionsLayer
+        projectId={props.projectId}
+        offset={active}
+        zoom={stage.pz.zoom}
+      />
       <FrameLabel
         frame={label.frame}
         active={label.active}

@@ -7,6 +7,7 @@ import type { CanvasSource, ZoomKey } from "./deps.js";
 import { useCommands } from "./registry.js";
 
 interface CanvasInput {
+  addSection: () => void;
   check: { checking: boolean; run: () => void };
   comment: {
     available: boolean;
@@ -54,6 +55,7 @@ const toDraw = (canvasInput: CanvasInput): CanvasActions["draw"] => {
 };
 
 const actionsOf = (canvasInput: CanvasInput): CanvasActions => ({
+  addSection: canvasInput.addSection,
   checking: canvasInput.check.checking,
   comment: canvasInput.comment,
   dark: toDark(canvasInput),

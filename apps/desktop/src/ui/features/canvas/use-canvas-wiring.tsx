@@ -14,6 +14,7 @@ import type {
   PreviewState,
   StageState,
 } from "./canvas-wiring-inputs.js";
+import { addSectionAround } from "./use-canvas-sections.js";
 import {
   useFrameChangeReset,
   useLofiSwitch,
@@ -53,7 +54,12 @@ const useCanvasWiring = (
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
 
+  const activeId = text.active.id;
+
   const commandsInput = toCommandsInput(text, {
+    addSection: () => {
+      addSectionAround(props.projectId, [activeId]);
+    },
     dark: darkSwitch,
     hasHead: props.headVersionId !== null,
     lofi: lofiSwitch,

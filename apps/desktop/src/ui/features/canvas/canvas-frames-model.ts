@@ -4,7 +4,10 @@ import {
   normalizeCanvasFile,
   serializeCanvasFile,
 } from "@design-studio/contracts/canvas-file";
-import type { CanvasFile } from "@design-studio/contracts/canvas-file";
+import type {
+  CanvasFile,
+  CanvasSection,
+} from "@design-studio/contracts/canvas-file";
 import { useEffect, useSyncExternalStore } from "react";
 
 import { ApiError, api } from "../../api.js";
@@ -47,7 +50,8 @@ const toWriterId = (): string => {
 
 const toCanvasFile = (
   layout: CanvasLayout | null,
-  lofi: readonly string[]
+  lofi: readonly string[],
+  sections: readonly CanvasSection[]
 ): CanvasFile => {
   const frames = [];
 
@@ -55,7 +59,12 @@ const toCanvasFile = (
     frames.push({ ...frame, order });
   }
 
-  return normalizeCanvasFile({ frames, lofi: [...lofi], version: 1 });
+  return normalizeCanvasFile({
+    frames,
+    lofi: [...lofi],
+    sections: [...sections],
+    version: 1,
+  });
 };
 
 const fromCanvasFile = (
@@ -90,6 +99,8 @@ const fromCanvasFile = (
 interface Entry {
   layout: CanvasLayout | null;
   lofi: string[];
+  sections: CanvasSection[];
+  isPending: boolean;
   hash: string | null;
   loaded: boolean;
   loading: Promise<void> | null;
@@ -113,8 +124,10 @@ const entryOf = (projectId: string): Entry => {
       layout: null,
       loaded: false,
       loading: null,
+      isPending: false,
       lofi: [],
       requestedAt: 0,
+      sections: [],
       timer: null,
       writing: false,
     };
@@ -130,8 +143,8 @@ const notify = (): void => {
   }
 };
 
-const fileText = (entry: Pick<Entry, "layout" | "lofi">): string =>
-  serializeCanvasFile(toCanvasFile(entry.layout, entry.lofi));
+const fileText = (entry: Pick<Entry, "layout" | "lofi" | "sections">): string =>
+  serializeCanvasFile(toCanvasFile(entry.layout, entry.lofi, entry.sections));
 
 const applySnapshot = (
   projectId: string,
@@ -148,6 +161,8 @@ const applySnapshot = (
   entry.again = false;
   entry.hash = hash;
   entry.lofi = canvas?.lofi ?? [];
+  entry.sections = canvas?.sections ?? [];
+  entry.isPending = false;
   const active = entry.layout?.activeId ?? storedActive(projectId);
   entry.layout = null;
 
@@ -169,7 +184,7 @@ const migrate = async (
   try {
     const result = await api.putCanvas(projectId, {
       baseHash: entry.hash,
-      canvas: toCanvasFile(legacy, entry.lofi),
+      canvas: toCanvasFile(legacy, entry.lofi, entry.sections),
       migrate: true,
       writer: toWriterId(),
     });
@@ -229,7 +244,7 @@ const flush = async (projectId: string): Promise<void> => {
   try {
     const result = await api.putCanvas(projectId, {
       baseHash: entry.hash,
-      canvas: toCanvasFile(entry.layout, entry.lofi),
+      canvas: toCanvasFile(entry.layout, entry.lofi, entry.sections),
       writer: toWriterId(),
     });
 
@@ -314,6 +329,13 @@ const receiveCanvasEvent = (event: StudioEvent): void => {
 
 const NO_LOFI: string[] = [];
 
+const NO_SECTIONS: CanvasSection[] = [];
+
+interface SectionChange {
+  readonly layout: CanvasLayout | null;
+  readonly sections: CanvasSection[];
+}
+
 const canvasStore = {
   get: (projectId: string): CanvasLayout | null =>
     entries.get(projectId)?.layout ?? null,
@@ -330,6 +352,32 @@ const canvasStore = {
     notify();
 
     if (entry.loaded && fileText(entry) !== before) {
+      schedule(projectId);
+    }
+  },
+  sections: (projectId: string): CanvasSection[] =>
+    entries.get(projectId)?.sections ?? NO_SECTIONS,
+  setSections: (
+    projectId: string,
+    change: SectionChange,
+    isFinal: boolean
+  ): void => {
+    const entry = entryOf(projectId);
+    const before = fileText(entry);
+    entry.sections = change.sections;
+
+    if (change.layout) {
+      entry.layout = change.layout;
+    }
+
+    notify();
+
+    if (fileText(entry) !== before) {
+      entry.isPending = true;
+    }
+
+    if (isFinal && entry.loaded && entry.isPending) {
+      entry.isPending = false;
       schedule(projectId);
     }
   },
@@ -390,6 +438,11 @@ const useCanvasLayout = (
   return [layout, update];
 };
 
+const useCanvasSectionList = (projectId: string): CanvasSection[] =>
+  useSyncExternalStore(canvasStore.subscribe, () =>
+    canvasStore.sections(projectId)
+  );
+
 const useCanvasLofi = (projectId: string): string[] =>
   useSyncExternalStore(canvasStore.subscribe, () =>
     canvasStore.lofi(projectId)
@@ -405,6 +458,7 @@ export {
   toCanvasFile,
   useCanvasLayout,
   useCanvasLofi,
+  useCanvasSectionList,
 };
 
-export type { Box, CanvasFrame, CanvasLayout, FramePreset };
+export type { Box, CanvasFrame, CanvasLayout, FramePreset, SectionChange };

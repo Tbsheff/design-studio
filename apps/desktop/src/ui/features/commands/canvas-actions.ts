@@ -1,6 +1,7 @@
 import type { ViewportPreset, ZoomKey } from "./deps.js";
 
 interface CanvasActions {
+  addSection: () => void;
   checking: boolean;
   comment: { available: boolean; on: boolean; toggle: () => void };
   dark: { on: boolean; toggle: () => void } | null;

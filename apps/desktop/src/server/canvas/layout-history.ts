@@ -2,6 +2,7 @@ import type { CanvasWriteSource, Project } from "@design-studio/contracts";
 import type {
   CanvasFile,
   CanvasFileFrame,
+  CanvasSection,
   LayoutChange,
 } from "@design-studio/contracts/canvas-file";
 import type { LinksFile } from "@design-studio/contracts/links";
@@ -123,11 +124,13 @@ export function revertCanvas(
   const frames = revertItems(current.frames, made.frames, back.frames);
   const lofi = revertSet(current.lofi, made.lofi, back.lofi);
 
-  if (frames === null || lofi === null) {
+  const sections = revertItems(current.sections, made.sections, back.sections);
+
+  if (frames === null || lofi === null || sections === null) {
     return null;
   }
 
-  return { ...current, frames, lofi };
+  return { ...current, frames, lofi, sections };
 }
 
 export function revertLinks(
@@ -195,7 +198,55 @@ function withImplicitFirst(
   return first ? [first] : before;
 }
 
-function canvasLabel(before: CanvasFile, after: CanvasFile): string | null {
+function toSectionName(section: CanvasSection): string {
+  return section.label === "" ? "" : ` ${section.label}`;
+}
+
+function toChangedSectionLabel(from: CanvasSection, to: CanvasSection): string {
+  const box = { height: 0, width: 0, x: 0, y: 0 };
+
+  if (!same({ ...from, label: "" }, { ...to, label: "" })) {
+    const geometryOnly = same({ ...from, ...box }, { ...to, ...box });
+
+    if (!geometryOnly) {
+      return "Change section";
+    }
+
+    const isSized = from.width === to.width && from.height === to.height;
+
+    return `${isSized ? "Move" : "Resize"} section${toSectionName(to)}`;
+  }
+
+  return `Rename section${toSectionName(to)}`;
+}
+
+function toSectionsLabel(before: CanvasFile, after: CanvasFile): string | null {
+  const diff = diffItems(before.sections, after.sections);
+  const [added, removed] = [diff.added[0], diff.removed[0]];
+  const counts = [diff.added.length, diff.removed.length, diff.changed.length];
+  const kinds = counts.filter((count) => count > 0).length;
+  const first = diff.changed[0];
+
+  if (kinds === 0) {
+    return null;
+  }
+
+  if (kinds > 1 || counts.some((count) => count > 1)) {
+    return "Change sections";
+  }
+
+  if (added) {
+    return `Add section${toSectionName(added)}`;
+  }
+
+  if (removed) {
+    return `Remove section${toSectionName(removed)}`;
+  }
+
+  return first ? toChangedSectionLabel(first.from, first.to) : null;
+}
+
+function toFramesLabel(before: CanvasFile, after: CanvasFile): string | null {
   const diff = diffItems(
     withImplicitFirst(before.frames, after.frames),
     after.frames
@@ -230,6 +281,19 @@ function canvasLabel(before: CanvasFile, after: CanvasFile): string | null {
   }
 
   return same(before.lofi, after.lofi) ? null : "Change lo-fi frames";
+}
+
+function canvasLabel(before: CanvasFile, after: CanvasFile): string | null {
+  const sectionLabel = toSectionsLabel(before, after);
+
+  if (sectionLabel === null) {
+    return toFramesLabel(before, after);
+  }
+
+  return sectionLabel.startsWith("Move section") ||
+    toFramesLabel(before, after) === null
+    ? sectionLabel
+    : "Change canvas";
 }
 
 function linksLabel(before: LinksFile, after: LinksFile): string | null {

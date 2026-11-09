@@ -40,6 +40,7 @@ const PlayFrame = ({
     <div className={toFrameClass(layout)} style={frameStyle}>
       <DeviceFrame layout={layout}>
         <iframe
+          key={layout.orientation}
           ref={bind}
           title={copy.prototypeFrame}
           src={src}

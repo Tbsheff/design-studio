@@ -1,10 +1,16 @@
 import {
+  canRotateDevice,
   isDeviceFrameId,
+  isDeviceOrientation,
   toDeviceFrame,
-  toDeviceOuterSize,
+  toOrientedDeviceFrame,
+  toOrientedOuterSize,
   DEVICE_FRAME_IDS,
 } from "@design-studio/contracts/device-frame";
-import type { DeviceFrameId } from "@design-studio/contracts/device-frame";
+import type {
+  DeviceFrameId,
+  DeviceOrientation,
+} from "@design-studio/contracts/device-frame";
 
 import { copy } from "./copy.js";
 import { scaleFor } from "./play-model.js";
@@ -18,6 +24,7 @@ interface DeviceOption {
 interface SlotLayout {
   readonly deviceId: DeviceFrameId | null;
   readonly left: number;
+  readonly orientation: DeviceOrientation;
   readonly outerHeight: number;
   readonly outerRadius: number;
   readonly outerWidth: number;
@@ -43,6 +50,17 @@ const toStoredDevice = (raw: string | null): DeviceFrameId | null => {
   return null;
 };
 
+const toOrientationKey = (projectId: string): string =>
+  `${DEVICE_KEY_PREFIX}orientation.${projectId}`;
+
+const toStoredOrientation = (raw: string | null): DeviceOrientation => {
+  if (raw !== null && isDeviceOrientation(raw)) {
+    return raw;
+  }
+
+  return "portrait";
+};
+
 const toDeviceValue = (device: DeviceFrameId | null): string => {
   if (device === null) {
     return NO_DEVICE;
@@ -64,6 +82,7 @@ const DEVICE_OPTIONS: readonly DeviceOption[] = toDeviceOptions();
 const toPlainLayout = (slot: Slot, stage: StageSize): SlotLayout => ({
   deviceId: null,
   left: 0,
+  orientation: "portrait",
   outerHeight: slot.frame.height,
   outerRadius: 0,
   outerWidth: slot.frame.width,
@@ -87,21 +106,34 @@ const toDeviceScale = (
     stage
   );
 
+const toRenderedOrientation = (
+  device: DeviceFrameId,
+  orientation: DeviceOrientation
+): DeviceOrientation => {
+  if (canRotateDevice(device)) {
+    return orientation;
+  }
+
+  return "portrait";
+};
+
 const toSlotLayout = (
   slot: Slot,
   stage: StageSize,
-  device: DeviceFrameId | null
+  device: DeviceFrameId | null,
+  orientation: DeviceOrientation
 ): SlotLayout => {
   if (device === null || slot.overlay) {
     return toPlainLayout(slot, stage);
   }
 
-  const spec = toDeviceFrame(device);
-  const outer = toDeviceOuterSize(device);
+  const spec = toOrientedDeviceFrame(device, orientation);
+  const outer = toOrientedOuterSize(device, orientation);
 
   return {
     deviceId: device,
     left: spec.insets.left,
+    orientation: toRenderedOrientation(device, orientation),
     outerHeight: outer.height,
     outerRadius: spec.outerRadius,
     outerWidth: outer.width,
@@ -118,8 +150,10 @@ export {
   NO_DEVICE,
   toDeviceKey,
   toDeviceValue,
+  toOrientationKey,
   toSlotLayout,
   toStoredDevice,
+  toStoredOrientation,
 };
 
 export type { DeviceOption, SlotLayout };

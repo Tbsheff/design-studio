@@ -1,4 +1,7 @@
-import type { DeviceFrameId } from "@design-studio/contracts/device-frame";
+import type {
+  DeviceFrameId,
+  DeviceOrientation,
+} from "@design-studio/contracts/device-frame";
 import type { ReactElement, ReactNode } from "react";
 
 import { toSlotLayout } from "./device-frame-model.js";
@@ -13,6 +16,7 @@ interface SlotViewProps {
   readonly timing: Motion;
   readonly stage: StageSize;
   readonly device: DeviceFrameId | null;
+  readonly orientation: DeviceOrientation;
   readonly sandbox?: string;
   readonly bind: (el: HTMLIFrameElement | null) => void;
 }
@@ -40,10 +44,11 @@ const SlotView = ({
   timing,
   stage,
   device,
+  orientation,
   sandbox,
   bind,
 }: SlotViewProps): ReactElement => {
-  const layout = toSlotLayout(slot, stage, device);
+  const layout = toSlotLayout(slot, stage, device, orientation);
   const { frame } = slot;
 
   return (

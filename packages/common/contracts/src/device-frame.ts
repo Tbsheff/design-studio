@@ -6,6 +6,16 @@ const DEVICE_FRAME_IDS = [
   "browser",
 ] as const;
 
+const DEVICE_ORIENTATIONS = ["portrait", "landscape"] as const;
+
+type DeviceOrientation = (typeof DEVICE_ORIENTATIONS)[number];
+
+const ROTATABLE_DEVICE_IDS: ReadonlySet<string> = new Set([
+  "iphone-15",
+  "pixel-8",
+  "ipad",
+]);
+
 type DeviceFrameId = (typeof DEVICE_FRAME_IDS)[number];
 
 interface DeviceFrameInsets {
@@ -89,15 +99,61 @@ const toDeviceOuterSize = (id: DeviceFrameId): DeviceFrameSize => {
   };
 };
 
+const canRotateDevice = (id: DeviceFrameId): boolean =>
+  ROTATABLE_DEVICE_IDS.has(id);
+
+const toOrientedDeviceFrame = (
+  id: DeviceFrameId,
+  orientation: DeviceOrientation
+): DeviceFrameSpec => {
+  const spec = DEVICE_FRAMES[id];
+
+  if (orientation === "portrait" || !canRotateDevice(id)) {
+    return spec;
+  }
+
+  return {
+    ...spec,
+    insets: {
+      bottom: spec.insets.right,
+      left: spec.insets.bottom,
+      right: spec.insets.top,
+      top: spec.insets.left,
+    },
+    screenHeight: spec.screenWidth,
+    screenWidth: spec.screenHeight,
+  };
+};
+
+const toOrientedOuterSize = (
+  id: DeviceFrameId,
+  orientation: DeviceOrientation
+): DeviceFrameSize => {
+  const spec = toOrientedDeviceFrame(id, orientation);
+
+  return {
+    height: spec.screenHeight + spec.insets.top + spec.insets.bottom,
+    width: spec.screenWidth + spec.insets.left + spec.insets.right,
+  };
+};
+
+const isDeviceOrientation = (value: string): value is DeviceOrientation =>
+  DEVICE_ORIENTATIONS.some((orientation) => orientation === value);
+
 const isDeviceFrameId = (value: string): value is DeviceFrameId =>
   DEVICE_FRAME_IDS.some((id) => id === value);
 
 export {
   DEVICE_FRAMES,
   DEVICE_FRAME_IDS,
+  DEVICE_ORIENTATIONS,
+  canRotateDevice,
   isDeviceFrameId,
+  isDeviceOrientation,
   toDeviceFrame,
   toDeviceOuterSize,
+  toOrientedDeviceFrame,
+  toOrientedOuterSize,
 };
 
 export type {
@@ -105,4 +161,5 @@ export type {
   DeviceFrameInsets,
   DeviceFrameSize,
   DeviceFrameSpec,
+  DeviceOrientation,
 };

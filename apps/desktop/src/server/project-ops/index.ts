@@ -46,3 +46,7 @@ export type {
 export { BriefRunner } from "./brief/index.js";
 
 export type { BriefRunnerApi } from "./brief/index.js";
+
+export { TextRewriteRunner } from "./text-rewrite/index.js";
+
+export type { TextRewriteRunnerApi } from "./text-rewrite/index.js";

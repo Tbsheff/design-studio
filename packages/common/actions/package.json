@@ -545,6 +545,7 @@
     "./text/index": "./src/text/index.ts",
     "./text/inspect": "./src/text/inspect.ts",
     "./text/routes": "./src/text/routes.ts",
+    "./text/run": "./src/text/run.ts",
     "./text/schema": "./src/text/schema.ts",
     "./text/update": "./src/text/update.ts",
     "./theme/apply": "./src/theme/apply.ts",

@@ -70,3 +70,5 @@ export type {
 export { DirectEditStore } from "./direct-edit/direct-edit-store.js";
 
 export { DirectEditWriter } from "./direct-edit/direct-edit-writer.js";
+
+export type { DirectEditWriterApi } from "./direct-edit/direct-edit-writer.js";

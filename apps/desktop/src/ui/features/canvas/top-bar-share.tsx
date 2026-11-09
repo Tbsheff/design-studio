@@ -1,4 +1,3 @@
-import { Icon } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
@@ -34,14 +33,12 @@ const TopBarShare = ({
   return (
     <DropMenu
       label="Share"
-      triggerClass="btn strong topbar-share"
+      triggerClass="topbar-share"
       groups={groups}
       align="end"
       tip={toShareTip(Boolean(onShip))}
     >
-      <Icon name="share" size={14} />
       <span className="topbar-label">{copy.share}</span>
-      <Icon name="chevronDown" size={12} />
     </DropMenu>
   );
 };

@@ -35,6 +35,12 @@ const McpToasts = lazy(async () => {
   return { default: loaded.McpToasts };
 });
 
+const McpEditStrip = lazy(async () => {
+  const loaded = await import("./mcp-feed.js");
+
+  return { default: loaded.McpEditStrip };
+});
+
 const McpPointBadge = lazy(async () => {
   const loaded = await import("./mcp-point-badge.js");
 
@@ -44,6 +50,7 @@ const McpPointBadge = lazy(async () => {
 export {
   ChatPanel,
   ClarifyForm,
+  McpEditStrip,
   McpPointBadge,
   McpToasts,
   chatWidthStyle,

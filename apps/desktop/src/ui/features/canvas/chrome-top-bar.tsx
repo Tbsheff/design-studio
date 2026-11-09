@@ -1,14 +1,13 @@
 import type { ReactElement } from "react";
 
-import { requestAskChat } from "../../platform/ask-chat.js";
+import { heldTool } from "../../platform/canvas-tool.js";
+import { useLive } from "../../platform/live-store.js";
 import type { ChromeProps } from "./canvas-chrome-menu.js";
 import { fileNameOf, toolOf } from "./canvas-shell.js";
 import { CanvasTopBar } from "./canvas-top-bar.js";
-import { isViewOpen, toBarShell } from "./chrome-model.js";
+import { toBarShell } from "./chrome-model.js";
 import type { ChromeHandlers } from "./use-chrome-handlers.js";
-import { VectorToolButtons } from "./vector-tool-buttons.js";
-
-const VECTOR_TOOLS = <VectorToolButtons />;
+import { useVectorTool } from "./vector-tool-model.js";
 
 const ChromeTopBar = ({
   chrome,
@@ -19,22 +18,26 @@ const ChromeTopBar = ({
 }): ReactElement => {
   const { comment, proto, shell, ui, zoom } = chrome;
   const bar = toBarShell(shell);
-  const { canExport, directionName, onExpandPane, onExport } = bar;
-  const { onShareLink, onShip, paneCollapsed } = bar;
-  const { file, onPresent, onTool, reload, toggleView } = handlers;
+  const { canExport, directionName, onExport, onShareLink, onShip } = bar;
+  const { file, onPresent, onTool } = handlers;
+  const vector = useVectorTool();
+  const activeHeld = useLive(heldTool);
 
   const { groups, load } = file;
   const { fit, zoomPercent, zoomStep, zoomTo } = zoom;
 
+  const tool = toolOf({
+    comment: comment.on,
+    held: activeHeld,
+    proto: proto.on,
+    vector: vector.tool,
+  });
+
   return (
     <CanvasTopBar
-      vectorTools={VECTOR_TOOLS}
+      hosts={bar.topBar}
       matrix={chrome.matrix}
       account={chrome.account}
-      paneCollapsed={paneCollapsed}
-      onExpandPane={onExpandPane}
-      onReload={reload}
-      onAskChat={requestAskChat}
       fileName={fileNameOf(chrome.active, chrome.kind, directionName)}
       fileMenu={groups}
       onFileMenuOpen={load}
@@ -43,11 +46,10 @@ const ChromeTopBar = ({
       onZoomTo={zoomTo}
       onZoomStep={zoomStep}
       onFit={fit}
-      tool={toolOf(shell?.pane, comment.on, proto.on)}
+      tool={tool}
       commentAvailable={comment.available}
+      vectorAvailable={vector.available}
       onTool={onTool}
-      viewOpen={isViewOpen(chrome)}
-      onToggleView={toggleView}
       onPresent={onPresent}
       presentDisabled={!chrome.presentUrl}
       canExport={canExport}

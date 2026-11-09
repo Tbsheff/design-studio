@@ -1,6 +1,8 @@
 import type { RunLevel } from "@design-studio/contracts";
 import { useSyncExternalStore } from "react";
 
+import { DEFAULT_COLUMN, toEditorColumn } from "./panel-tab.js";
+import type { EditorColumn } from "./panel-tab.js";
 import { pick } from "./pick.js";
 import { isNumber, isObject, isString } from "./value-guards.js";
 
@@ -41,6 +43,7 @@ interface UiState {
   viewport: Viewport;
   zoom: ZoomSetting;
   chatWidth: number | null;
+  editorColumn: EditorColumn;
   lastPackId: string | null;
   lastLocation: string | null;
   snapByProject: Record<string, boolean>;
@@ -61,6 +64,7 @@ const defaults: UiState = {
   activeProjectId: null,
   chatWidth: null,
   directionByProject: {},
+  editorColumn: DEFAULT_COLUMN,
   homeSort: "recent",
   lastLocation: null,
   lastPackId: null,
@@ -120,6 +124,7 @@ const loadUiState = (): UiState => {
         null
       ),
       directionByProject: parsed.directionByProject ?? {},
+      editorColumn: toEditorColumn(parsed.editorColumn ?? null),
       homeSort: pick(
         Boolean(parsed.homeSort && HOME_SORTS.includes(parsed.homeSort)),
         parsed.homeSort ?? "recent",

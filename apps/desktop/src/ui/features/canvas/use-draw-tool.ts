@@ -89,7 +89,7 @@ const handleDrawKey = (
 
   const key = event.key.toLowerCase();
 
-  if (key === "p" && !event.shiftKey && live.current.available) {
+  if (key === "p" && event.shiftKey && live.current.available) {
     event.preventDefault();
     handlers.toggle();
 

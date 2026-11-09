@@ -8,12 +8,16 @@ const copy = {
   backToProjects: "Back to projects",
   cancel: "Cancel",
   cannotOpenProject: "Could not open the project",
+  chatTitle: "Chat",
   checkAgain: "Check again",
+  columnLabel: "Panel column",
+  commentsTitle: "Comments",
   confirmUrl: "Use this URL",
   countSeparator: " of ",
   devServerUrl: "Dev server URL",
   dynamic: "dynamic",
   environmentForNextDev: "Environment for next dev",
+  inspectorLabel: "Inspector",
   installTheDependenciesInA:
     "Install the dependencies in a terminal, then choose Restart dev server.",
   loadingProject: "Loading project…",
@@ -22,9 +26,12 @@ const copy = {
   notSaved: "Not saved",
   oneKeyValuePerLine:
     "One KEY=value per line. The studio keeps these in the project file, so do not paste secrets.",
+  panelRail: "Panels",
   preparing: "Preparing… ",
+  projectList: "Project list",
   projectSettings: "Project settings",
   saveAndRestart: "Save and restart",
+  searchRuns: "Search runs",
   secondsSuffix: " s",
   showing: "Showing ",
   spendingLimitPerRun: "Spending limit per run",
@@ -34,6 +41,7 @@ const copy = {
     "The studio did not start this dev server, so it cannot show its output. Look in the terminal where it runs. The studio checks are below.",
   theseAreOnByDefault:
     "These are on by default. Shell commands run on this computer in the project folder, and installs download and run third-party code. Turn them off for projects you do not trust.",
+  topBar: "Project and canvas",
   typeInTheFilterTo: ". Type in the filter to find the rest.",
 } as const;
 

@@ -1,7 +1,10 @@
+import { TOOL_KEYS } from "./keymap-tools.js";
+
 export type KeyGroup =
   | "General"
   | "Run and chat"
   | "Canvas"
+  | "Panels"
   | "Selection"
   | "Edit"
   | "Home";
@@ -125,23 +128,7 @@ export const KEYMAP = [
     group: "Run and chat",
   },
 
-  { id: "tool-select", label: "Select tool", keys: ["V"], group: "Canvas" },
-  { id: "tool-comment", label: "Comment tool", keys: ["C"], group: "Canvas" },
-  { id: "tool-draw", label: "Draw tool", keys: ["P"], group: "Canvas" },
-  { id: "tool-rect", label: "Rectangle", keys: ["R"], group: "Canvas" },
-  { id: "tool-ellipse", label: "Ellipse", keys: ["O"], group: "Canvas" },
-  {
-    id: "tool-pen",
-    label: "Pen (vector path)",
-    keys: ["Shift+P"],
-    group: "Canvas",
-  },
-  {
-    id: "layers",
-    label: "Edit mode and layers",
-    keys: ["Alt+1"],
-    group: "Canvas",
-  },
+  ...TOOL_KEYS,
   { id: "pan", label: "Pan", keys: ["Space"], group: "Canvas", hold: true },
   {
     id: "zoom-click",

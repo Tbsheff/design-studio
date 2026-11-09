@@ -1,9 +1,8 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactElement } from "react";
 
 import { CellBadges } from "./cell-badges.js";
-import { copy } from "./copy.js";
-import { Icon, usePopover } from "./deps.js";
+import { MATRIX_EVENT, usePopover } from "./deps.js";
 import { MatrixPanel } from "./matrix-panel.js";
 import { useMatrix } from "./use-matrix.js";
 
@@ -17,8 +16,6 @@ interface SlotProps {
   readonly projectId: string;
 }
 
-const ICON_SIZE = 14;
-
 const MatrixSlot = (props: SlotProps): ReactElement => {
   const root = useRef<HTMLSpanElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -31,29 +28,26 @@ const MatrixSlot = (props: SlotProps): ReactElement => {
   });
 
   const handleClose = useCallback(() => setIsOpen(false), []);
-  const handleToggle = useCallback(() => setIsOpen((open) => !open), []);
+
+  useEffect(() => {
+    const onOpen = (): void => setIsOpen((open) => !open);
+
+    globalThis.addEventListener(MATRIX_EVENT, onOpen);
+
+    return (): void => globalThis.removeEventListener(MATRIX_EVENT, onOpen);
+  }, []);
 
   usePopover(isOpen, root, handleClose, trigger);
-
-  const count = matrix.report?.findings.length ?? 0;
 
   return (
     <span className={`topbar-anchor ${styles.anchor}`} ref={root}>
       <button
-        aria-expanded={isOpen}
-        aria-haspopup="dialog"
-        aria-label={copy.menuLabel}
-        className="btn ghost topbar-review"
-        data-tip={copy.menuTip}
-        data-tip-align="end"
-        onClick={handleToggle}
+        aria-hidden
+        className={styles.trigger}
         ref={trigger}
+        tabIndex={-1}
         type="button"
-      >
-        <Icon name="window" size={ICON_SIZE} />
-        <span>{copy.title}</span>
-        {count > 0 && <span className={styles.count}>{count}</span>}
-      </button>
+      />
       {isOpen && <MatrixPanel matrix={matrix} onJump={props.onJumpToFrame} />}
       {matrix.report && (
         <CellBadges

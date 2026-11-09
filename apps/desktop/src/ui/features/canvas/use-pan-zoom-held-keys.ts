@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { heldTool } from "../../platform/canvas-tool.js";
+import { useLive } from "../../platform/live-store.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 
 interface HeldKeys {
@@ -61,7 +63,9 @@ const useHeldKeys = (): HeldKeys => {
     };
   }, []);
 
-  return { spaceHeld, zoomHeld };
+  const isHand = useLive(heldTool) === "hand";
+
+  return { spaceHeld: spaceHeld || isHand, zoomHeld };
 };
 
 export { useHeldKeys };

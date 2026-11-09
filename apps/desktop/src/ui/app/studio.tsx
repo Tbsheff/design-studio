@@ -13,8 +13,8 @@ interface StudioProps {
 
 const Studio = ({ projectId, onExit }: StudioProps): ReactElement => {
   const ui = useStudioState();
-  const panes = useStudioPanes(projectId, ui);
-  const core = useStudioCompose(projectId, ui, panes);
+  const panes = useStudioPanes(ui);
+  const core = useStudioCompose(projectId, ui);
   const { project } = core;
 
   if (core.data.loadError || !project) {

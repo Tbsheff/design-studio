@@ -59,6 +59,7 @@ import "../styles/route-flow.css";
 import "../styles/frame-state.css";
 import "../styles/drawing.css";
 import "../styles/project-nav.css";
+import "../styles/editor-shell.css";
 
 const desktop = desktopBridge<{ platform: string }>();
 

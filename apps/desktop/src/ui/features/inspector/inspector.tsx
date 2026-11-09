@@ -5,12 +5,14 @@ import { InspectorEditPane } from "./inspector-edit-pane.js";
 import type { InspectorProps, InspectorTab } from "./inspector-model.js";
 import { InspectorAppContext } from "./use-inspector-app.js";
 import { useInspectorSession } from "./use-inspector-session.js";
+import { usePlaceTool } from "./use-place-tool.js";
 import { useStableCallbacks } from "./use-stable-callbacks.js";
 
 const Inspector = (raw: InspectorProps): ReactElement => {
   const props = useStableCallbacks(raw);
   const [ownTab, setOwnTab] = useState<InspectorTab>("simple");
   const session = useInspectorSession(props);
+  usePlaceTool(props);
   const { appDir, onAskAgent } = props;
 
   const app = useMemo(

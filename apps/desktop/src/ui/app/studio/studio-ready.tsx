@@ -2,21 +2,18 @@ import type { CommentPrefill, Project } from "@design-studio/contracts";
 import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { chatWidthStyle } from "../../features/chat/index.js";
-import { focusNewProject } from "../../features/commands";
-import { ProjectRail } from "../../features/home/project-rail";
 import { useBindStudioCommands } from "./bind-studio-commands";
 import { DataModelLayer } from "./data-model-layer";
 import { DevStatusLayer } from "./dev-status-layer";
 import { ImpactLayer } from "./impact-layer";
 import { MarkupLayer } from "./markup-layer";
-import { paneAttr, shipOpener } from "./project-model";
+import { openAttr, shipOpener } from "./project-model";
 import { ScreenLayer } from "./screen-layer";
-import { StudioCenter } from "./studio-center";
+import { StudioBody } from "./studio-body";
 import type { StudioCtx } from "./studio-context";
 import type { StudioCore } from "./studio-core-types";
-import { StudioLeft } from "./studio-left";
 import { StudioRight } from "./studio-right";
+import { StudioTop } from "./studio-top";
 import type { StudioPanes, StudioUi } from "./studio-ui-types";
 import { useStudioRun } from "./use-studio-run";
 
@@ -49,7 +46,7 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
     [core, onExit, openShip, panes, project, projectId, run, ui]
   );
 
-  const { columnsRef, prefillChat } = ui;
+  const { prefillChat } = ui;
 
   const handleAttach = useCallback(
     (prefill: CommentPrefill): void => prefillChat.current(prefill),
@@ -57,32 +54,16 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
   );
 
   useBindStudioCommands(ctx);
-  const handleHome = core.guard(onExit);
-
-  const handleNewPrototype = core.guard((): void => {
-    onExit();
-    focusNewProject();
-  });
 
   return (
     <div
       className="studio"
-      data-pane={paneAttr(ui.paneCollapsed)}
+      data-column={openAttr(ui.editorColumn.isOpen)}
+      data-inspector={openAttr(panes.isInspectorOpen || ui.isCommentsShown)}
       data-rail={ui.rail}
     >
-      <ProjectRail
-        projectId={projectId}
-        onHome={handleHome}
-        onNewPrototype={handleNewPrototype}
-      />
-      <div
-        className="columns"
-        ref={columnsRef}
-        style={chatWidthStyle(ui.chatWidth)}
-      >
-        <StudioLeft ctx={ctx} />
-        <StudioCenter ctx={ctx} />
-      </div>
+      <StudioTop ctx={ctx} />
+      {ui.topEnd && <StudioBody ctx={ctx} />}
       <StudioRight ctx={ctx} />
       <DevStatusLayer projectId={projectId} />
       <ImpactLayer directionId={core.directionId} projectId={projectId} />

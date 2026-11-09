@@ -1,6 +1,8 @@
 import type { IconName } from "@design-studio/ui";
 
-type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
+import type { CanvasToolId } from "../../platform/canvas-tool.js";
+
+type CanvasTool = CanvasToolId | null;
 
 type PresentMode = "window" | "fullscreen" | "new-window" | "play";
 

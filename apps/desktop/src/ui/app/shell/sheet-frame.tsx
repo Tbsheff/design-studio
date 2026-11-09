@@ -2,7 +2,7 @@ import { SheetSlot } from "@design-studio/ui";
 import { useMemo, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
 
-import type { PanelTab } from "../../platform/use-panel-tab";
+import type { PanelTab } from "../../platform/panel-tab";
 import { SheetHead } from "./sheet-head";
 
 interface SheetFrameProps {

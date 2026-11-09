@@ -10,17 +10,13 @@ import { useStudioCommands } from "../../features/commands";
 import { useComponents } from "../../features/design-system";
 import { useExportTarget } from "../../features/share-publish-ship-export/use-export-target";
 import type { StudioCore } from "./studio-core-types";
-import type { StudioPanes, StudioUi } from "./studio-ui-types";
+import type { StudioUi } from "./studio-ui-types";
 import { useStudioBase } from "./use-studio-base";
 import { useStudioEdit } from "./use-studio-edit";
 import { useStudioEffects } from "./use-studio-effects";
 import { useStudioHistory, useStudioReview } from "./use-studio-history";
 
-const useStudioCompose = (
-  projectId: string,
-  ui: StudioUi,
-  panes: StudioPanes
-): StudioCore => {
+const useStudioCompose = (projectId: string, ui: StudioUi): StudioCore => {
   const base = useStudioBase(projectId, ui);
   const edit = useStudioEdit(projectId, ui, base);
 
@@ -56,7 +52,7 @@ const useStudioCompose = (
     [mcpFeed, rewind.locked, rewind.onRestore]
   );
 
-  useInlineApprovals(projectId, ui.paneCollapsed, panes.panel.tab);
+  useInlineApprovals(projectId);
 
   const history = useStudioHistory(projectId, ui, base);
   const review = useStudioReview(projectId, ui, base);

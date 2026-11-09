@@ -147,6 +147,9 @@ const copy = {
     "Pick an image file. You can also drop one on the canvas.",
   polishPrompt:
     "Polish this design: run every check, fix what you find, keep the content and structure.",
+  prototypeHint:
+    "Press L, then click an element and pick a frame to link it. Links play in Present.",
+  prototypeUseTool: "Use the Prototype link tool",
   radius: "Radius",
   raw: "raw",
   readOnly: "Read only",
@@ -196,7 +199,9 @@ const copy = {
   swatchSuffix: " swatch",
   tabCode: "Code",
   tabComponents: "Components",
+  tabDesign: "Design",
   tabLayers: "Layers",
+  tabPrototype: "Prototype",
   tabSimple: "Simple",
   tabTweaks: "Tweaks",
   text: "Text",

@@ -45,22 +45,6 @@ const zoomCommands = (canvasActions: CanvasActions): Command[] =>
   }));
 
 const viewCommands = (canvasActions: CanvasActions): Command[] => [
-  withDisabled(
-    {
-      group: "View",
-      icon: "layers",
-      id: "view.layers",
-      keyId: "layers",
-      keywords: "tree outline dom inspector edit",
-      run: canvasActions.onLayers,
-      title: toTitle(
-        canvasActions.layersOpen,
-        "Leave edit mode",
-        "Edit and show layers"
-      ),
-    },
-    toReason(!canvasActions.live, "Only in the live preview")
-  ),
   {
     group: "View",
     icon: "radio",

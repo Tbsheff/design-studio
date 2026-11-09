@@ -63,7 +63,18 @@ export { goHome, openProject } from "../../app/project-nav.js";
 
 export { projectsApi } from "../home/projects-store-model.js";
 
-export type { PanelTab } from "../../platform/use-panel-tab.js";
+export type { ColumnTab, PanelTab } from "../../platform/panel-tab.js";
+
+export {
+  requestCanvasTool,
+  requestMatrix,
+  requestPresent,
+  requestReload,
+} from "../../platform/canvas-tool.js";
+
+export type { CanvasToolId } from "../../platform/canvas-tool.js";
+
+export { requestProjectRename } from "../../platform/project-events.js";
 
 export { FIND_TEXT_COMMAND, FIND_TEXT_EVENT } from "../../domain/find-text.js";
 

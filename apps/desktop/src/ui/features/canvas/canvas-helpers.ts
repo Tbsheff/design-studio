@@ -24,7 +24,7 @@ const shellDirectionName = (shell: CanvasShell | undefined): string | null =>
   shell?.directionName ?? null;
 
 const inEditPane = (shell: CanvasShell | undefined): boolean =>
-  shell?.pane === "design";
+  shell?.isInspectorOpen ?? false;
 
 const hostedClose = (
   shell: CanvasShell | undefined,

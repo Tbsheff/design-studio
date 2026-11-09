@@ -1,6 +1,6 @@
 # Layout map: editor and Home
 
-Status: proposal for nitpicks 15 and 18. Tyler approves before any build. This file also settles the panel homes that nitpicks 13 and 17 need.
+Status: Tyler approved both layouts. Section 2 (nitpick 15) and the project menu (nitpick 17) are built on `layout/editor`; the control map below is what the app does now. Section 3 (nitpick 18) is still a plan. This file also settles the panel homes that nitpicks 13 and 17 need.
 
 Prototypes (open in a browser, add `?theme=dark` for dark):
 
@@ -49,31 +49,39 @@ Rail icons, top to bottom: Layers, Pages, Assets, Versions, Tokens, Components, 
 |---|---|---|---|
 | Select tool | Canvas tool bar | Top bar, tools group | V |
 | Hand tool | Space only | Top bar, tools group | H (hold Space too) |
-| Frame tool | Not a tool | Top bar, tools group | F |
-| Shape tool | Not a tool | Top bar, tools group | R |
+| Frame tool | Not a tool | Top bar, tools group. A click places a frame through the direct-edit insert | F |
+| Shape tool | Vector mode | Top bar, tools group (rectangle) | R |
+| Ellipse | Vector mode | Palette and key only | O |
 | Pen tool | Vector mode | Top bar, tools group | P |
-| Text tool | Not a tool | Top bar, tools group | T |
-| Comment tool | Canvas tool bar | Top bar, tools group | C |
+| Draw (freehand) | Pencil in the tool bar | Palette and key only | ⇧P |
+| Text tool | Not a tool | Top bar, tools group. A click places text through the direct-edit insert | T |
+| Comment tool | Canvas tool bar | Top bar, tools group. Opens the Comments sheet in the right column | C |
 | Prototype link tool | "Prototype" in canvas tool bar | Top bar, tools group | L |
 | Edit and layers | Canvas tool bar, swaps the left sidebar (⌥1) | Removed as a tool. Layers is a column tab | ⌥1 |
-| Pages | Left sidebar | Column tab | ⌥2 |
+| Pages | `index ▾` file menu | Column tab. The top bar page label stays as a quick switch | ⌥2 |
 | Assets | Left sidebar | Column tab | ⌥3 |
 | Versions | Project menu | Column tab | ⌥4 |
 | Tokens | Project menu | Column tab | ⌥5 |
-| Components | Project menu | Column tab | ⌥6 |
+| Components | Project menu and inspector tab | Column tab | ⌥6 |
 | Design system | Project menu | Column tab | ⌥7 |
-| Tweaks | Project menu and "Describe a tweak…" bar | Removed (nitpick 13). The sliders button focuses chat | ⌘I |
+| Column toggle | None | Panel rail on the left edge. Click the open tab again, or press its key again, to close | ⌥1–⌥7 |
+| Tweaks | Project menu, inspector tab and "Describe a tweak…" bar | Removed (nitpick 13). Chat takes the request | none |
 | Inline prompt | ⌘I box on the selection | Removed (nitpick 13). ⌘I focuses chat with a selection chip | ⌘I |
-| Inspector | Right side, mixed with chat | Right column, opens on select, closes on Esc with no selection | ⌥8 |
-| Inspector tabs | Inspector header | Design, Prototype, Code | click |
+| Inspector | Right side, mixed with chat | Right column, opens on select, closes when the selection clears | ⌥8 |
+| Inspector tabs | Design, Pro, Components, Code, Tweaks | Design, Prototype, Code. Components moved to the column | click |
+| Comments | Pane header toggle | Right column sheet, opened by the Comment tool or the palette | C |
+| Errors, Todo, run details | Pane body | Chat column, unchanged | none |
 | Zoom | Canvas corner | Top bar, after tools | ⌘+ ⌘− ⌘0, ⇧1 fit |
-| Review | Top bar | Top right | palette only |
-| Present | Top bar | Top right | ⌥⌘⏎ |
-| Share | Top bar | Top right | palette only |
-| Account | Rail | Top right avatar | none |
+| Viewport matrix | Top bar "Matrix" button | Palette "Check viewports (matrix)". Cell badges stay on the frames | palette only |
+| Review | Top bar | Top right. Palette "Open review" | palette only |
+| Present | Top bar | Top right, with the present modes menu | ⌥⌘⏎ |
+| Share | Top bar | Top right. Palette "Share…" | palette only |
+| Account | App canvas bar | Top right avatar | none |
 | Project rail | Project menu "Show project list" and rail | Rail toggle only (nitpick 10) | ⌘\ |
 | Theme | Project menu | App settings and macOS View menu | none |
 | Command palette | ⌘K, ⌘P | Same | ⌘K |
+
+Narrow windows (below 1200 px): chat shrinks to 300, the column to 232 and the inspector to 264. While the inspector is open, the column floats over the left edge of the canvas, so the canvas keeps its width.
 
 ### Project menu (nitpick 17)
 

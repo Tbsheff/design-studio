@@ -41,12 +41,12 @@ const exportTarget = (
   return (head ?? versions[0])?.id ?? null;
 };
 
-const paneAttr = (collapsed: boolean): string => {
-  if (collapsed) {
-    return "collapsed";
+const openAttr = (isOpen: boolean): string => {
+  if (isOpen) {
+    return "open";
   }
 
-  return "open";
+  return "closed";
 };
 
 const nameOf = (direction: { name: string } | null): string | null =>
@@ -75,7 +75,7 @@ export {
   exportTarget,
   kindLabel,
   nameOf,
-  paneAttr,
+  openAttr,
   reviewPair,
   shipOpener,
   whenDirection,

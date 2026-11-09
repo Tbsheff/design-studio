@@ -9,7 +9,6 @@ import { LeavePrompt } from "./leave-prompt.js";
 import { SessionError } from "./session-error.js";
 import { SessionHeader } from "./session-header.js";
 import { TabBar } from "./tab-bar.js";
-import { ToolsSlot } from "./tools-slot.js";
 import type { EditSession } from "./use-edit-session.js";
 
 interface Props {
@@ -18,6 +17,9 @@ interface Props {
   readonly tab: InspectorTab;
   readonly onTab: (tab: InspectorTab) => void;
 }
+
+const isSessionShown = (session: EditSession): boolean =>
+  session.count > 0 || session.busy !== null;
 
 const InspectorEditPane = ({
   props,
@@ -32,17 +34,16 @@ const InspectorEditPane = ({
     onExit?.();
   }, [onExit]);
 
-  const isToolsShown = tab === "simple" || tab === "pro";
-
   return (
     <section className="edit-pane" aria-label={copy.editTitle}>
-      <SessionHeader session={session} onDone={handleDone} />
+      <TabBar tab={tab} onTab={onTab} />
+      {isSessionShown(session) && (
+        <SessionHeader session={session} onDone={handleDone} />
+      )}
       {session.error && !session.isAsking && (
         <SessionError message={session.error} onDismiss={handleDismiss} />
       )}
       <LeavePrompt session={session} />
-      <TabBar tab={tab} onTab={onTab} />
-      {isToolsShown && <ToolsSlot props={props} />}
       <ArrangeSlot props={props} shouldShowBar={tab === "simple"} />
       <InspectorTabBody props={props} session={session} tab={tab} />
     </section>

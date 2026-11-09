@@ -10,6 +10,7 @@ import type { StudioPaneHeader } from "../shell/studio-pane-header";
 import { kindLabel, nameOf } from "./project-model";
 import { runById } from "./run-model";
 import type { StudioCtx } from "./studio-context";
+import { toSuggestionSlot } from "./suggestion-slot";
 import { tokenEntries } from "./token-model";
 
 type LeftProps = ComponentProps<typeof LeftPane>;
@@ -60,6 +61,8 @@ const chatProps = (ctx: StudioCtx): LeftProps["chat"] => {
   const { ui, core, run } = ctx;
   const { data, directionRuns, directionId } = core;
 
+  const shown = shownPending(core.pendingRun, directionRuns, directionId);
+
   return {
     busy: ui.busy,
     direction: core.direction,
@@ -72,10 +75,11 @@ const chatProps = (ctx: StudioCtx): LeftProps["chat"] => {
     onRetry: run.retryRun,
     onReview: core.reviewVersionId,
     onStop: run.runControls.onCancel,
-    pending: shownPending(core.pendingRun, directionRuns, directionId),
+    pending: shown,
     rewind: core.rewind,
     running: core.activeRun !== null,
     runs: directionRuns,
+    suggestions: toSuggestionSlot(ctx, shown !== null),
   };
 };
 

@@ -25,6 +25,7 @@ const ChatConversation = ({
   resetKey,
   reveal,
   stickRunId,
+  suggestions,
   workTree,
   onRevealed,
 }: ChatConversationProps): ReactElement => (
@@ -38,6 +39,7 @@ const ChatConversation = ({
       resetKey={resetKey}
       reveal={reveal}
       stickRunId={stickRunId}
+      suggestions={suggestions}
       workTree={workTree}
       onRevealed={onRevealed}
     />

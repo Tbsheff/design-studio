@@ -19,6 +19,7 @@ interface ChatLogProps {
   readonly resetKey: string | null;
   readonly reveal: string | null;
   readonly stickRunId: string | null;
+  readonly suggestions: ReactNode;
   readonly workTree: string | null;
   readonly onRevealed: () => void;
 }
@@ -32,6 +33,7 @@ const ChatLog = ({
   resetKey,
   reveal,
   stickRunId,
+  suggestions,
   workTree,
   onRevealed,
 }: ChatLogProps): ReactElement => (
@@ -46,6 +48,7 @@ const ChatLog = ({
       render={render}
     />
     {pending && <PendingEntry run={pending} workTree={workTree} />}
+    {suggestions}
   </LogContent>
 );
 

@@ -52,6 +52,7 @@ import { SpacingActions } from "./spacing/index.js";
 import { StackingActions } from "./stacking/index.js";
 import { StateStyleActions } from "./state-style/index.js";
 import { StudioActions } from "./studio/index.js";
+import { SuggestionActions } from "./suggestion/index.js";
 import { TextStyleActions } from "./text-style/index.js";
 import { TextActions } from "./text/index.js";
 import { ThemeActions } from "./theme/index.js";
@@ -115,6 +116,7 @@ const ALL_ACTIONS = {
   stacking: StackingActions,
   stateStyle: StateStyleActions,
   studio: StudioActions,
+  suggestion: SuggestionActions,
   text: TextActions,
   textStyle: TextStyleActions,
   theme: ThemeActions,

@@ -52,6 +52,7 @@ import { SpacingLive } from "./spacing/live.js";
 import { StackingLive } from "./stacking/live.js";
 import { StateStyleLive } from "./state-style/live.js";
 import { StudioLive } from "./studio/live.js";
+import { SuggestionLive } from "./suggestion/live.js";
 import { TextStyleLive } from "./text-style/live.js";
 import { TextLive } from "./text/live.js";
 import { ThemeLive } from "./theme/live.js";
@@ -115,6 +116,7 @@ const ALL_LIVE = {
   stacking: StackingLive,
   stateStyle: StateStyleLive,
   studio: StudioLive,
+  suggestion: SuggestionLive,
   text: TextLive,
   textStyle: TextStyleLive,
   theme: ThemeLive,

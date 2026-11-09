@@ -50,3 +50,7 @@ export type { BriefRunnerApi } from "./brief/index.js";
 export { TextRewriteRunner } from "./text-rewrite/index.js";
 
 export type { TextRewriteRunnerApi } from "./text-rewrite/index.js";
+
+export { SuggestionRunner } from "./suggestion/index.js";
+
+export type { SuggestionRunnerApi } from "./suggestion/index.js";

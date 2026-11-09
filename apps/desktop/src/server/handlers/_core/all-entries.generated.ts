@@ -52,6 +52,7 @@ import { SpacingEntries } from "../spacing/handlers.js";
 import { StackingEntries } from "../stacking/handlers.js";
 import { StateStyleEntries } from "../state-style/handlers.js";
 import { StudioEntries } from "../studio/handlers.js";
+import { SuggestionEntries } from "../suggestion/handlers.js";
 import { TextStyleEntries } from "../text-style/handlers.js";
 import { TextEntries } from "../text/handlers.js";
 import { ThemeEntries } from "../theme/handlers.js";
@@ -115,6 +116,7 @@ const ALL_ENTRIES = {
   stacking: StackingEntries,
   stateStyle: StateStyleEntries,
   studio: StudioEntries,
+  suggestion: SuggestionEntries,
   text: TextEntries,
   textStyle: TextStyleEntries,
   theme: ThemeEntries,

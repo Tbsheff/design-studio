@@ -12,6 +12,10 @@ import {
   preview as deleteFrameCanvasPreview,
 } from "./delete-frame.js";
 import { handle as deleteLinkCanvasHandle } from "./delete-link.js";
+import {
+  handle as deleteSectionCanvasHandle,
+  preview as deleteSectionCanvasPreview,
+} from "./delete-section.js";
 import { handle as exportFlowCanvasHandle } from "./export-flow.js";
 import { handle as getDocCanvasHandle } from "./get-doc.js";
 import { handle as getFlowVideoCanvasHandle } from "./get-flow-video.js";
@@ -27,6 +31,7 @@ import { handle as setFrameStateCanvasHandle } from "./set-frame-state.js";
 import { handle as setLinkInteractionCanvasHandle } from "./set-link-interaction.js";
 import { handle as setPointCanvasHandle } from "./set-point.js";
 import { handle as setPresenceCanvasHandle } from "./set-presence.js";
+import { handle as setSectionCanvasHandle } from "./set-section.js";
 import { handle as setStartLinkCanvasHandle } from "./set-start-link.js";
 import { handle as updateFrameSessionCanvasHandle } from "./update-frame-session.js";
 import { handle as updateFrameCanvasHandle } from "./update-frame.js";
@@ -43,6 +48,10 @@ const CanvasEntries = {
     preview: deleteFrameCanvasPreview,
   },
   deleteLinkCanvas: { handle: deleteLinkCanvasHandle },
+  deleteSectionCanvas: {
+    handle: deleteSectionCanvasHandle,
+    preview: deleteSectionCanvasPreview,
+  },
   exportFlowCanvas: { handle: exportFlowCanvasHandle },
   getDocCanvas: { handle: getDocCanvasHandle },
   getFlowVideoCanvas: { handle: getFlowVideoCanvasHandle },
@@ -58,6 +67,7 @@ const CanvasEntries = {
   setLinkInteractionCanvas: { handle: setLinkInteractionCanvasHandle },
   setPointCanvas: { handle: setPointCanvasHandle },
   setPresenceCanvas: { handle: setPresenceCanvasHandle },
+  setSectionCanvas: { handle: setSectionCanvasHandle },
   setStartLinkCanvas: { handle: setStartLinkCanvasHandle },
   updateFrameCanvas: { handle: updateFrameCanvasHandle },
   updateFrameSessionCanvas: { handle: updateFrameSessionCanvasHandle },

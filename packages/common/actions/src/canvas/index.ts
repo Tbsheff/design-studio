@@ -6,6 +6,7 @@ import { createLinkCanvas } from "./create-link.js";
 import { createRouteFrameCanvas } from "./create-route-frame.js";
 import { deleteFrameCanvas } from "./delete-frame.js";
 import { deleteLinkCanvas } from "./delete-link.js";
+import { deleteSectionCanvas } from "./delete-section.js";
 import { exportFlowCanvas } from "./export-flow.js";
 import { getDocCanvas } from "./get-doc.js";
 import { getFlowVideoCanvas } from "./get-flow-video.js";
@@ -21,6 +22,7 @@ import { setFrameStateCanvas } from "./set-frame-state.js";
 import { setLinkInteractionCanvas } from "./set-link-interaction.js";
 import { setPointCanvas } from "./set-point.js";
 import { setPresenceCanvas } from "./set-presence.js";
+import { setSectionCanvas } from "./set-section.js";
 import { setStartLinkCanvas } from "./set-start-link.js";
 import { updateFrameSessionCanvas } from "./update-frame-session.js";
 import { updateFrameCanvas } from "./update-frame.js";
@@ -34,6 +36,7 @@ const CanvasActions = {
   createRouteFrameCanvas,
   deleteFrameCanvas,
   deleteLinkCanvas,
+  deleteSectionCanvas,
   exportFlowCanvas,
   getDocCanvas,
   getFlowVideoCanvas,
@@ -49,6 +52,7 @@ const CanvasActions = {
   setLinkInteractionCanvas,
   setPointCanvas,
   setPresenceCanvas,
+  setSectionCanvas,
   setStartLinkCanvas,
   updateFrameCanvas,
   updateFrameSessionCanvas,

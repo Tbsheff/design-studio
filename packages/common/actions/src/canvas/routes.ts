@@ -42,6 +42,12 @@ const routes = {
     method: "DELETE",
     path: "/api/projects/:projectId/links/:linkId",
   },
+  deleteSectionCanvas: {
+    id: "canvas.deleteSection",
+    invalidates: ["canvas.inspect"],
+    method: "DELETE",
+    path: "/api/projects/:projectId/canvas/sections",
+  },
   exportFlowCanvas: {
     id: "canvas.exportFlow",
     invalidates: ["canvas.listLinks"],
@@ -135,6 +141,12 @@ const routes = {
     invalidates: [],
     method: "PUT",
     path: "/api/projects/:projectId/canvas/presence",
+  },
+  setSectionCanvas: {
+    id: "canvas.setSection",
+    invalidates: ["canvas.inspect"],
+    method: "PUT",
+    path: "/api/projects/:projectId/canvas/sections",
   },
   setStartLinkCanvas: {
     id: "canvas.setStartLink",

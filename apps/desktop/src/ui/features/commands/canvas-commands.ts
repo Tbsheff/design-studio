@@ -81,6 +81,17 @@ const viewCommands = (canvasActions: CanvasActions): Command[] => [
   })),
 ];
 
+const sectionCommands = (canvasActions: CanvasActions): Command[] => [
+  {
+    group: "View",
+    icon: "layers",
+    id: "view.add-section",
+    keywords: "group frames section container",
+    run: canvasActions.addSection,
+    title: "Add section around selected frames",
+  },
+];
+
 const playCommands = (canvasActions: CanvasActions): Command[] => [
   {
     group: "Canvas",
@@ -198,6 +209,7 @@ const toolCommands = (canvasActions: CanvasActions): Command[] => {
 const canvasCommands = (canvasActions: CanvasActions): Command[] => [
   ...zoomCommands(canvasActions),
   ...viewCommands(canvasActions),
+  ...sectionCommands(canvasActions),
   ...playCommands(canvasActions),
   ...toolCommands(canvasActions),
 ];

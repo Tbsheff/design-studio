@@ -9,8 +9,11 @@ export const CANVAS_MAX_SIDE = 4000;
 export const CANVAS_MAX_COORD = 100_000;
 export const CANVAS_LABEL_MAX = 40;
 export const CANVAS_GAP = 80;
+export const CANVAS_MAX_SECTIONS = 12;
+export const CANVAS_SECTION_MIN_SIDE = 80;
 
 const FRAME_ID_RE = /^f\d{1,4}$/;
+const SECTION_ID_RE = /^s\d{1,4}$/;
 const DIRECTION_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const PATH_MAX = 200;
 
@@ -27,10 +30,20 @@ export interface CanvasFileFrame {
   hidden?: boolean;
 }
 
+export interface CanvasSection {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface CanvasFile {
   version: number;
   frames: CanvasFileFrame[];
   lofi: string[];
+  sections: CanvasSection[];
 }
 
 export type LayoutChange =
@@ -38,7 +51,7 @@ export type LayoutChange =
   | { kind: "links"; before: LinksFile; after: LinksFile };
 
 export function emptyCanvasFile(): CanvasFile {
-  return { version: CANVAS_FILE_VERSION, frames: [], lofi: [] };
+  return { version: CANVAS_FILE_VERSION, frames: [], lofi: [], sections: [] };
 }
 
 export function cleanFramePath(raw: string): string | null {
@@ -79,6 +92,20 @@ export function isFrameId(value: unknown): value is string {
 
 export function isDirectionRef(value: unknown): value is string {
   return typeof value === "string" && DIRECTION_ID_RE.test(value);
+}
+
+export function isSectionId(value: unknown): value is string {
+  return typeof value === "string" && SECTION_ID_RE.test(value);
+}
+
+function sectionSide(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+
+  const n = Math.round(value);
+
+  return n >= CANVAS_SECTION_MIN_SIDE && n <= CANVAS_MAX_COORD * 2 ? n : null;
 }
 
 function side(value: unknown): number | null {
@@ -151,6 +178,45 @@ export function parseCanvasFrame(raw: unknown): CanvasFileFrame | null {
   return frame;
 }
 
+export function parseCanvasSection(raw: unknown): CanvasSection | null {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  const s = raw as Record<string, unknown>;
+  const width = sectionSide(s.width);
+  const height = sectionSide(s.height);
+  const x = coord(s.x);
+  const y = coord(s.y);
+
+  if (!isSectionId(s.id) || width === null || height === null) {
+    return null;
+  }
+
+  if (x === null || y === null) {
+    return null;
+  }
+
+  return {
+    id: s.id,
+    label: cleanFrameLabel(s.label) ?? "Section",
+    x,
+    y,
+    width,
+    height,
+  };
+}
+
+export function nextSectionId(sections: readonly { id: string }[]): string {
+  let n = sections.length + 1;
+
+  while (sections.some((section) => section.id === `s${n}`)) {
+    n += 1;
+  }
+
+  return `s${n}`;
+}
+
 export function normalizeCanvasFile(file: CanvasFile): CanvasFile {
   const seen = new Set<string>();
 
@@ -166,7 +232,17 @@ export function normalizeCanvasFile(file: CanvasFile): CanvasFile {
 
   const lofi = [...new Set(file.lofi.filter(isDirectionRef))].sort();
 
-  return { version: CANVAS_FILE_VERSION, frames, lofi };
+  const seenSections = new Set<string>();
+
+  const sections = file.sections
+    .filter((section) =>
+      seenSections.has(section.id)
+        ? false
+        : (seenSections.add(section.id), true)
+    )
+    .slice(0, CANVAS_MAX_SECTIONS);
+
+  return { version: CANVAS_FILE_VERSION, frames, lofi, sections };
 }
 
 export function parseCanvasFile(raw: unknown): CanvasFile | null {
@@ -188,7 +264,18 @@ export function parseCanvasFile(raw: unknown): CanvasFile | null {
     ? record.lofi.filter(isDirectionRef)
     : [];
 
-  return normalizeCanvasFile({ version: CANVAS_FILE_VERSION, frames, lofi });
+  const sections = Array.isArray(record.sections)
+    ? record.sections
+        .map(parseCanvasSection)
+        .filter((section): section is CanvasSection => section !== null)
+    : [];
+
+  return normalizeCanvasFile({
+    version: CANVAS_FILE_VERSION,
+    frames,
+    lofi,
+    sections,
+  });
 }
 
 export function parseCanvasText(text: string): CanvasFile | null {
@@ -235,6 +322,10 @@ export function serializeCanvasFile(file: CanvasFile): string {
 
   if (clean.lofi.length > 0) {
     body.lofi = clean.lofi;
+  }
+
+  if (clean.sections.length > 0) {
+    body.sections = clean.sections;
   }
 
   return `${JSON.stringify(sortedValue(body), null, 2)}\n`;

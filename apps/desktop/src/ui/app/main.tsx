@@ -57,6 +57,7 @@ import "../styles/share.css";
 import "../styles/ship.css";
 import "../styles/route-flow.css";
 import "../styles/frame-state.css";
+import "../styles/canvas-sections.css";
 import "../styles/drawing.css";
 import "../styles/project-nav.css";
 import "../styles/editor-shell.css";

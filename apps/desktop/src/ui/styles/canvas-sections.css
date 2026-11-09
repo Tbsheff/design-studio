@@ -1,0 +1,123 @@
+.canvas-sections {
+  display: contents;
+}
+
+.canvas-section {
+  position: absolute;
+  z-index: -1;
+  box-sizing: border-box;
+  border: calc(1px * var(--inv-zoom, 1)) solid var(--accent-line);
+  border-radius: calc(var(--r-control-sm) * var(--inv-zoom, 1));
+  background: color-mix(in oklab, var(--accent) 7%, transparent);
+  pointer-events: none;
+}
+
+.canvas-section-label {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding-bottom: var(--s-1);
+  transform: translateY(-100%) scale(var(--inv-zoom, 1));
+  transform-origin: 0 100%;
+  white-space: nowrap;
+}
+
+.canvas-section-name {
+  height: 24px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--accent-text);
+  font: var(--w-medium) var(--t-xs) / 24px var(--font);
+  cursor: grab;
+  user-select: none;
+}
+
+.canvas-section-name:hover {
+  background: var(--tint-hover);
+}
+
+.canvas-section-name:active {
+  cursor: grabbing;
+  background: var(--tint-press);
+}
+
+.canvas-section-name:focus-visible,
+.canvas-section-input:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.canvas-section-input {
+  width: 160px;
+  height: 24px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: var(--w-medium) var(--t-xs) / 24px var(--font);
+}
+
+.canvas-section-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text-3);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.canvas-section-label:hover .canvas-section-remove,
+.canvas-section-remove:focus-visible {
+  opacity: 1;
+}
+
+.canvas-section-remove:hover {
+  background: var(--tint-hover);
+  color: var(--text);
+}
+
+.canvas-section-handle {
+  position: absolute;
+  width: calc(10px * var(--inv-zoom, 1));
+  height: calc(10px * var(--inv-zoom, 1));
+  box-sizing: border-box;
+  border: calc(1px * var(--inv-zoom, 1)) solid var(--accent);
+  border-radius: calc(2px * var(--inv-zoom, 1));
+  background: var(--surface-raised);
+  pointer-events: auto;
+}
+
+.canvas-section-handle.nw {
+  left: calc(-5px * var(--inv-zoom, 1));
+  top: calc(-5px * var(--inv-zoom, 1));
+  cursor: nwse-resize;
+}
+
+.canvas-section-handle.ne {
+  right: calc(-5px * var(--inv-zoom, 1));
+  top: calc(-5px * var(--inv-zoom, 1));
+  cursor: nesw-resize;
+}
+
+.canvas-section-handle.sw {
+  left: calc(-5px * var(--inv-zoom, 1));
+  bottom: calc(-5px * var(--inv-zoom, 1));
+  cursor: nesw-resize;
+}
+
+.canvas-section-handle.se {
+  right: calc(-5px * var(--inv-zoom, 1));
+  bottom: calc(-5px * var(--inv-zoom, 1));
+  cursor: nwse-resize;
+}

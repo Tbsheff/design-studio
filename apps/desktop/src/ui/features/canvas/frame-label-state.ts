@@ -1,10 +1,14 @@
 import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
+import { CANVAS_MAX_SECTIONS } from "@design-studio/contracts/canvas-file";
 
 import { canHideFrame, setFrameHidden } from "./canvas-frame-ops.js";
+import { canvasStore } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasDirections, Props } from "./canvas-types.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
+import { sectionCopy } from "./section-copy.js";
 import type { useCanvasFrames } from "./use-canvas-frames.js";
+import { addSectionAround } from "./use-canvas-sections.js";
 import type { useFrameActions } from "./use-frame-actions.js";
 import type { FrameVariation } from "./variation-model.js";
 
@@ -72,7 +76,20 @@ const frameMenuItems = (
     hide.disabled = "The last shown frame stays.";
   }
 
-  return [...extra, hide];
+  const section: FrameMenuItem = {
+    icon: "layers",
+    id: "section",
+    label: sectionCopy.addSection,
+    run: () => {
+      addSectionAround(input.projectId, [frame.id]);
+    },
+  };
+
+  if (canvasStore.sections(input.projectId).length >= CANVAS_MAX_SECTIONS) {
+    section.disabled = sectionCopy.full;
+  }
+
+  return [...extra, section, hide];
 };
 
 const toVariationSig = (variation: FrameVariation | undefined): string => {

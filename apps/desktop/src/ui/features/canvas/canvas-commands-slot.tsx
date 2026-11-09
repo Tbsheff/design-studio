@@ -16,6 +16,7 @@ const CanvasCommandsSlot = ({
     <Host
       check={input.check}
       comment={input.comment}
+      addSection={input.addSection}
       dark={input.dark}
       draw={input.draw}
       hasHead={input.hasHead}

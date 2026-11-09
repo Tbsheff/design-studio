@@ -184,6 +184,15 @@ const FrameViewSchema = Schema.Struct({
   y: Schema.Int,
 });
 
+const CanvasSectionViewSchema = Schema.Struct({
+  height: Schema.Int,
+  id: Schema.String,
+  label: Schema.String,
+  width: Schema.Int,
+  x: Schema.Int,
+  y: Schema.Int,
+});
+
 const CanvasUserViewSchema = Schema.Struct({
   currentDirection: Schema.NullOr(Schema.String),
   inView: Schema.Array(Schema.String),
@@ -202,6 +211,7 @@ const CanvasListedSchema = Schema.Struct({
   frames: Schema.Array(FrameViewSchema),
   lofi: Schema.Array(Schema.String),
   note: Schema.NullOr(Schema.String),
+  sections: Schema.Array(CanvasSectionViewSchema),
   thisRun: Schema.Struct({ direction: Schema.String }),
   user: CanvasUserViewSchema,
 });

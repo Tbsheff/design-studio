@@ -37,6 +37,7 @@ interface LofiSwitch {
 }
 
 interface CommandsInput {
+  readonly addSection: () => void;
   readonly check: StageState["check"];
   readonly comment: StageState["comment"];
   readonly dark: ReturnType<typeof themeSwitch>;
@@ -55,6 +56,7 @@ interface CommandsInput {
 }
 
 interface CommandsExtras {
+  readonly addSection: CommandsInput["addSection"];
   readonly dark: CommandsInput["dark"];
   readonly hasHead: boolean;
   readonly lofi: LofiSwitch | undefined;
@@ -133,9 +135,10 @@ const toCommandsInput = (
   const { check, comment, draw, layersOpen, live, selectMode } = text;
   const { setSelectMode, zoomBy } = text;
   const onLayers = text.toggleEdit;
-  const { dark, hasHead, lofi, onSource, outline, play } = extras;
+  const { addSection, dark, hasHead, lofi, onSource, outline, play } = extras;
 
   return {
+    addSection,
     check,
     comment,
     dark,

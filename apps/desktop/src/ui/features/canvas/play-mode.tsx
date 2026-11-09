@@ -164,6 +164,7 @@ const toTitle = (
 const PlayMode = (props: PlayModeProps): ReactElement => {
   const stageRef = useRef<HTMLDivElement>(null);
   const play = usePlay(props, stageRef);
+
   const { device, onDevice, onRotate, orientation } = usePlayDevice(
     props.projectId
   );
@@ -176,13 +177,8 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
   const overlay = overlayOf(play.slots);
   const shown = toShownFrame(play.slots);
 
-  const {
-    back: onBack,
-    closeOverlay: onCloseOverlay,
-    restart: onRestart,
-  } = play;
-
-  const { elements } = play;
+  const { back: onBack, closeOverlay: onCloseOverlay, elements } = play;
+  const { restart: onRestart } = play;
   const { onClose: onExit, sandbox } = props;
 
   const bind: BindFrame = (token) => (el) => {

@@ -48,24 +48,51 @@ const FAILURE_TEXT: Readonly<Record<ContentFailure, string>> = {
 const promptOf = (command: ContentCommand): string =>
   `${TITLE}: ${command.mode} ${command.preset} x${command.repeat}`;
 
+interface ContentEdit {
+  readonly compute: (original: string) => ContentComputed;
+  readonly file: string;
+  readonly prompt: string;
+  readonly title: string;
+}
+
+type ContentComputed =
+  | ContentRefused
+  | {
+      readonly code: string;
+      readonly replaced: number;
+      readonly rows: number;
+    };
+
+const toApplyEdit =
+  (command: ContentCommand) =>
+  (original: string): ContentComputed => {
+    const result = applyContentEdits(original, command);
+
+    if (!result.ok) {
+      return { refused: FAILURE_TEXT[result.code] };
+    }
+
+    return result.value;
+  };
+
 const writeContent = async (
   runtime: ContentRuntime,
   project: Project,
   direction: Direction,
-  command: ContentCommand
+  edit: ContentEdit
 ): Promise<ContentRefused | ContentWritten> => {
   const headVersionId = assertCanEdit(runtime.editDeps, project, direction);
 
-  const target = await resolveSource(direction.workTree, command.file);
+  const target = await resolveSource(direction.workTree, edit.file);
   const original = await readFile(target.file, "utf-8");
-  const result = applyContentEdits(original, command);
+  const result = edit.compute(original);
 
-  if (!result.ok) {
-    return { refused: FAILURE_TEXT[result.code] };
+  if ("refused" in result) {
+    return result;
   }
 
-  const meta: VersionMeta = { kind: "manual", prompt: promptOf(command) };
-  const changed = [{ code: result.value.code, original, target }];
+  const meta: VersionMeta = { kind: "manual", prompt: edit.prompt };
+  const changed = [{ code: result.code, original, target }];
 
   const version = await announceWhile(
     project,
@@ -77,7 +104,7 @@ const writeContent = async (
         project,
         direction,
         changed,
-        TITLE,
+        edit.title,
         meta
       )
   );
@@ -86,7 +113,7 @@ const writeContent = async (
     directionId: direction.id,
     files: [
       {
-        after: result.value.code,
+        after: result.code,
         before: original,
         file: target.file,
         relative: target.relative,
@@ -102,8 +129,8 @@ const writeContent = async (
   return {
     files: [target.relative],
     previousVersionId: headVersionId,
-    replaced: result.value.replaced,
-    rows: result.value.rows,
+    replaced: result.replaced,
+    rows: result.rows,
     versionId: version.id,
   };
 };
@@ -115,9 +142,32 @@ const runContent = (
   runtime.withDirection(
     command.projectId,
     command.directionId,
-    (project, direction) => writeContent(runtime, project, direction, command)
+    (project, direction) =>
+      writeContent(runtime, project, direction, {
+        compute: toApplyEdit(command),
+        file: command.file,
+        prompt: promptOf(command),
+        title: TITLE,
+      })
   );
 
-export { runContent };
+const runEdit = (
+  runtime: ContentRuntime,
+  target: { readonly directionId: string; readonly projectId: string },
+  edit: ContentEdit
+): Promise<ContentRefused | ContentWritten> =>
+  runtime.withDirection(
+    target.projectId,
+    target.directionId,
+    (project, direction) => writeContent(runtime, project, direction, edit)
+  );
 
-export type { ContentCommand, ContentRefused, ContentWritten };
+export { runContent, runEdit };
+
+export type {
+  ContentCommand,
+  ContentComputed,
+  ContentEdit,
+  ContentRefused,
+  ContentWritten,
+};

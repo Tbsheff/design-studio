@@ -101,3 +101,75 @@
   color: var(--danger, var(--text-2));
   font-size: var(--t-xs);
 }
+
+.fillToggle {
+  height: 24px;
+  padding: 0 var(--s-3);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fillToggle:hover {
+  color: var(--text);
+}
+
+.fillToggle:focus-visible,
+.paste:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.fill {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.paste {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 72px;
+  padding: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: var(--bg-input, transparent);
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--t-xs);
+  resize: vertical;
+}
+
+.preview {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  table-layout: fixed;
+}
+
+.preview th,
+.preview td {
+  padding: 2px var(--s-2);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  font-weight: 400;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview th {
+  color: var(--text-faint);
+}
+
+.note {
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}

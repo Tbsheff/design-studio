@@ -3,6 +3,7 @@ interface PlusMenuActions {
   readonly onAttachFolder: () => void;
   readonly onAttachUrl: () => void;
   readonly onAttachZip: () => void;
+  readonly onImportRepo: () => void;
   readonly onLinkCode: () => void;
   readonly onTemplates: () => void;
   readonly hasTemplatesShown: boolean;

@@ -3,11 +3,11 @@ import type { ReactElement } from "react";
 import { ChipMenuSlot } from "./chip-menu-slot.js";
 import { ComposerBar } from "./composer-bar.js";
 import { ComposerChips } from "./composer-chips.js";
+import { ComposerUrlForms } from "./composer-url-forms.js";
 import { DropHint } from "./drop-hint.js";
 import { ExpandPromptSlot } from "./expand-prompt-slot.js";
 import { HomePrompt } from "./home-prompt.js";
 import { StarterRow } from "./starter-row.js";
-import { UrlAttachForm } from "./url-attach-form.js";
 import { useComposerHandlers } from "./use-composer-handlers.js";
 import type { HomeScreen } from "./use-home-screen.js";
 
@@ -31,9 +31,8 @@ const HomeComposer = ({
   const { create } = submit;
   const handlers = useComposerHandlers(flow, draft.prompt);
   const { barApp, closeMenu, openTokensOnly, toggleMenu } = handlers;
-  const { openStarter } = lib.openFlows;
+  const { openProject, openStarter } = lib.openFlows;
   const { addContextFiles, addImages, removeContext } = attach;
-  const { addContextUrl, closeUrlForm, isUrlFormOpen } = attach;
   const { removeImage, removeReference } = attach;
   const { changeKind } = draft;
 
@@ -56,9 +55,7 @@ const HomeComposer = ({
         onRemoveImage={removeImage}
         onRemoveReference={removeReference}
       />
-      {isUrlFormOpen && (
-        <UrlAttachForm onAdd={addContextUrl} onCancel={closeUrlForm} />
-      )}
+      <ComposerUrlForms attach={attach} onOpen={openProject} />
       <ChipMenuSlot
         isShown={ui.isMenuShown}
         isClosing={ui.isMenuClosing}

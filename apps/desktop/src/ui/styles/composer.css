@@ -1498,6 +1498,11 @@ button.skill-opt {
   color: var(--danger);
 }
 
+.url-attach-status {
+  flex-basis: 100%;
+  color: var(--text-2);
+}
+
 .url-attach-problem {
   flex-basis: 100%;
   color: var(--danger);

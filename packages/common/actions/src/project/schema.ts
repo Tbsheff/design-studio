@@ -104,8 +104,19 @@ const ProjectCreatedSchema = Schema.Struct({
 
 const ProjectImportFields = {
   appDir: Schema.optionalKey(Schema.String),
-  path: Schema.String,
+  path: Schema.NullOr(Schema.String)
+    .annotate({
+      description:
+        "Folder on this Mac to import. Leave out when you pass url. Pass path or url, not both.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
   skipApp: Schema.optionalKey(Schema.Boolean),
+  url: Schema.NullOr(Schema.String)
+    .annotate({
+      description:
+        "Public https repo URL to clone, on github.com, gitlab.com or bitbucket.org, or any https URL that ends in .git. Leave out when you pass path.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
 } as const;
 
 const ProjectImportedSchema = Schema.Struct({

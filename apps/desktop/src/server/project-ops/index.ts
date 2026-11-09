@@ -54,3 +54,7 @@ export type { TextRewriteRunnerApi } from "./text-rewrite/index.js";
 export { SuggestionRunner } from "./suggestion/index.js";
 
 export type { SuggestionRunnerApi } from "./suggestion/index.js";
+
+export { RepoCloneRunner } from "./repo-clone/index.js";
+
+export type { RepoCloneRunnerApi } from "./repo-clone/index.js";

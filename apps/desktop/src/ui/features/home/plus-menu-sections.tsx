@@ -36,6 +36,14 @@ const PlusMenuSections = ({
         action={actions.onLinkCode}
         onClose={onClose}
       />
+      <PlusItem
+        icon="download"
+        label={copy.importFromGithub}
+        meta={null}
+        hasChevron={false}
+        action={actions.onImportRepo}
+        onClose={onClose}
+      />
     </div>
     <div className="ui-menu-section">
       <span className="ui-menu-label">{copy.designs}</span>

@@ -1126,6 +1126,8 @@ export const BRIDGE_HANDSHAKE_TYPE = "bridge-handshake";
 export const CLOUD_BLOCKED_BRIDGE_TYPES: readonly BridgeToParent["type"][] = [
   "text-commit",
   "text-edit",
+  "text-range",
+  "text-range-key",
   "move-start",
   "move-live",
   "move-drop",
@@ -1275,6 +1277,29 @@ export type BridgeToParent =
       selector: string;
       text: string;
       at: number;
+    }
+  | {
+      ns: "studio";
+      token: string;
+      type: "text-range";
+      selector: string;
+      start: number;
+      end: number;
+      text: string;
+      tag: string;
+      isDirty: boolean;
+      rect: { x: number; y: number; width: number; height: number } | null;
+    }
+  | {
+      ns: "studio";
+      token: string;
+      type: "text-range-key";
+      command: "bold" | "italic" | "link";
+      selector: string;
+      start: number;
+      end: number;
+      text: string;
+      tag: string;
     }
   | { ns: "studio"; token: string; type: "history-key"; redo: boolean }
   | { ns: "studio"; token: string; type: "layout-key" }

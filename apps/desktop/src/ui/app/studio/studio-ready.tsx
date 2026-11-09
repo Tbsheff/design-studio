@@ -15,6 +15,7 @@ import type { StudioCore } from "./studio-core-types";
 import { StudioRight } from "./studio-right";
 import { StudioTop } from "./studio-top";
 import type { StudioPanes, StudioUi } from "./studio-ui-types";
+import { TextRangeLayer } from "./text-range-layer";
 import { useStudioRun } from "./use-studio-run";
 
 interface StudioReadyProps {
@@ -73,6 +74,12 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
         directionId={core.directionId}
         onAttach={handleAttach}
         projectId={projectId}
+      />
+      <TextRangeLayer
+        directionId={core.directionId}
+        port={ui.port}
+        projectId={projectId}
+        selection={ui.selection}
       />
     </div>
   );

@@ -1145,7 +1145,7 @@ export const BRIDGE_CHANGES_PATH = "/__studio/changes";
 
 export type PlayKey = "exit" | "restart" | "back";
 
-export type PlayTriggerPhase = "enter" | "leave" | "down" | "up";
+export type PlayTriggerPhase = "enter" | "leave" | "down" | "up" | "swipe";
 
 export type PlayRunOp = "scroll" | "show" | "hide" | "toggle";
 

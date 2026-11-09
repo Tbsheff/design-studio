@@ -60,7 +60,7 @@ const UiSelect = <OptionValue extends string>(
         onClick={onToggle}
         onKeyDown={onKeyDown}
       >
-        {props.icon}
+        {props.icon ?? selected?.icon}
         <span className={`ui-select-value truncate${valueClass}`}>
           {label ?? ""}
         </span>

@@ -1,6 +1,7 @@
 import type { PlayRunOp, PlayTriggerPhase } from "@design-studio/contracts";
 import type { LinkQuery } from "@design-studio/contracts/links";
 
+import { createSwipeTracker, isSwipeQuery } from "./play-swipe.js";
 import { closestLink, resolveLink } from "./play.js";
 
 const TRIGGER_TYPE = "play-trigger";
@@ -90,10 +91,26 @@ const run = (op: PlayRunOp, selector: string): void => {
   }
 };
 
+const markSwipeSources = (queries: readonly LinkQuery[]): void => {
+  for (const swipeQuery of queries.filter((item) => isSwipeQuery(item))) {
+    const element = resolveLink(swipeQuery);
+
+    if (element instanceof HTMLElement) {
+      element.style.touchAction = "none";
+    }
+  }
+};
+
 const createTriggerBridge = (post: TriggerPost): TriggerBridge => {
   let queries: LinkQuery[] = [];
   const hovered = new Set<string>();
   const pressed = new Set<string>();
+
+  const swipe = createSwipeTracker({
+    getQueries: () => queries,
+    owns: ownsTarget,
+    post: (id) => post({ id, phase: "swipe", type: TRIGGER_TYPE }),
+  });
 
   const of = (kind: "hover" | "press"): LinkQuery[] =>
     queries.filter((query) => query.trigger === kind);
@@ -117,6 +134,8 @@ const createTriggerBridge = (post: TriggerPost): TriggerBridge => {
   };
 
   const onDown = (event: PointerEvent): void => {
+    swipe.begin(event);
+
     for (const query of of("press")) {
       if (ownsTarget(query, event.target)) {
         pressed.add(query.id);
@@ -137,7 +156,10 @@ const createTriggerBridge = (post: TriggerPost): TriggerBridge => {
     globalThis.addEventListener("pointerover", onOver, { capture: true });
     globalThis.addEventListener("pointerout", onOut, { capture: true });
     globalThis.addEventListener("pointerdown", onDown, { capture: true });
+    globalThis.addEventListener("pointermove", swipe.move, { capture: true });
+    globalThis.addEventListener("pointerup", swipe.end, { capture: true });
     globalThis.addEventListener("pointerup", onUp, { capture: true });
+    globalThis.addEventListener("click", swipe.swallow, { capture: true });
     globalThis.addEventListener("pointercancel", onUp, { capture: true });
   };
 
@@ -145,6 +167,7 @@ const createTriggerBridge = (post: TriggerPost): TriggerBridge => {
     queries = links.filter((query) => query.trigger);
     hovered.clear();
     pressed.clear();
+    markSwipeSources(queries);
   };
 
   return { install, run, set };

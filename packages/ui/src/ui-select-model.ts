@@ -6,6 +6,7 @@ interface UiSelectOption<OptionValue extends string = string> {
   value: OptionValue;
   label: string;
   disabled?: boolean;
+  icon?: ReactNode;
 }
 
 interface UiSelectProps<OptionValue extends string> {

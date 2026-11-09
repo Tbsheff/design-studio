@@ -172,6 +172,8 @@ interface UpdateLayer {
 }
 
 interface UpdateCommand {
+  readonly aspect: string | null;
+  readonly box: { readonly height: number; readonly width: number } | null;
   readonly directionId: string;
   readonly layer: UpdateLayer;
   readonly mode: EditMode;
@@ -184,6 +186,10 @@ const EDIT_TITLE = "Edit image";
 const toEditLabel = (command: UpdateCommand): string => {
   if (command.mode === "prompt") {
     return (command.prompt ?? "").trim();
+  }
+
+  if (command.mode === "expand") {
+    return `expand ${command.aspect ?? ""}`.trim();
   }
 
   return command.mode;
@@ -208,6 +214,8 @@ const updateImageFile = async (
 
         const [edited, previewOrigin] = await Promise.all([
           updateImageBytes({
+            aspect: command.aspect,
+            box: command.box,
             mode: command.mode,
             prompt: command.prompt ?? "",
             source,

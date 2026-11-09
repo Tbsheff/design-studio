@@ -5,6 +5,8 @@ const copy = {
   editNeedsPrompt: "Describe the change first.",
   editPlaceholder: "Make the sky a warm sunset",
   editPrompt: "Change prompt",
+  expand: "Expand",
+  expandMenu: "Expand to shape",
   generate: "Generate",
   generating: "Generating…",
   hint: "Describe the image. The studio makes two versions to choose from.",
@@ -37,9 +39,19 @@ const STYLE_LABEL = {
 } as const;
 
 const EDIT_LABEL = {
+  expand: "Expand",
   prompt: "Change with prompt",
   "remove-background": "Remove background",
   upscale: "Upscale",
 } as const;
 
-export { ASPECT_LABEL, copy, EDIT_LABEL, STYLE_LABEL };
+const EXPAND_LABEL = {
+  "16:9": "16:9",
+  "1:1": "1:1",
+  "3:2": "3:2",
+  "4:3": "4:3",
+  "9:16": "9:16",
+  fill: "Fill layer",
+} as const;
+
+export { ASPECT_LABEL, copy, EDIT_LABEL, EXPAND_LABEL, STYLE_LABEL };

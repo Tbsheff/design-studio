@@ -14,11 +14,11 @@ const updateImage = defineAction({
     name: "update_image",
     set: "core",
     short:
-      "Remove the background, upscale or change the image of a layer with a prompt, as one undoable version.",
+      "Remove the background, upscale, expand or change the image of a layer with a prompt, as one undoable version.",
   },
   confirm: "none",
   description:
-    "Edit the image of a layer with the studio image provider. mode is remove-background, upscale or prompt. prompt is required for the prompt mode and is null for the other modes. The studio sends the current image to the provider, saves the result in the project assets folder with a content-hashed name and sets it on the layer as one version named Edit image. Undo restores the old image. With no key the provider is mock and the edit is a local transform.",
+    "Edit the image of a layer with the studio image provider. mode is remove-background, upscale, expand or prompt. prompt is required for the prompt mode and is null for the other modes. aspect is required for the expand mode (1:1, 4:3, 16:9, 9:16, 3:2 or fill) and is null for the other modes. The expand mode pads the image to the aspect with a transparent margin and the provider fills the margin. fill matches the layer box and needs box. The studio sends the current image to the provider, saves the result in the project assets folder with a content-hashed name and sets it on the layer as one version named Edit image. Undo restores the old image. With no key the provider is mock and the edit is a local transform.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

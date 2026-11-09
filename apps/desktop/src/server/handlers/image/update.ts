@@ -13,6 +13,8 @@ const handle = Effect.fn("image.update")(function* run(
   const generator = yield* ImageGeneratorRunner;
 
   return yield* generator.update({
+    aspect: input.aspect,
+    box: input.box,
     directionId: input.directionId,
     layer: input.layer,
     mode: input.mode,

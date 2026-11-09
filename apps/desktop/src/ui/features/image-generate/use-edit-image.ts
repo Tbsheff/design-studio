@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState, useTransition } from "react";
 import { copy } from "./copy.js";
 import { imageRoutes, toImageTarget, useAction } from "./deps.js";
 import type { SelectionContext } from "./deps.js";
-import type { EditMode } from "./generate-model.js";
+import type { EditMode, ExpandAspect } from "./generate-model.js";
 
 interface EditSetup {
   readonly directionId: string;
@@ -14,11 +14,33 @@ interface EditSetup {
 
 interface EditImage {
   readonly error: string | null;
+  readonly handleExpand: (aspect: ExpandAspect) => void;
   readonly handleMode: (mode: EditMode) => void;
   readonly handlePrompt: (value: string) => void;
   readonly isPending: boolean;
   readonly prompt: string;
 }
+
+const toFillBox = (
+  aspect: ExpandAspect | null,
+  target: SelectionContext
+): { height: number; width: number } | null => {
+  const { height, width } = target.rect;
+
+  if (aspect !== "fill" || width < 1 || height < 1) {
+    return null;
+  }
+
+  return { height: Math.round(height), width: Math.round(width) };
+};
+
+const toPromptText = (mode: EditMode, text: string): string | null => {
+  if (mode === "prompt") {
+    return text;
+  }
+
+  return null;
+};
 
 const useEditImage = (setup: EditSetup): EditImage => {
   const { directionId, onDone, projectId, target } = setup;
@@ -27,6 +49,40 @@ const useEditImage = (setup: EditSetup): EditImage => {
   const [note, setNote] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { run } = update;
+
+  const send = useCallback(
+    (
+      mode: EditMode,
+      aspect: ExpandAspect | null,
+      prompt: string | null
+    ): void => {
+      setNote(null);
+
+      const layer = toImageTarget(target);
+      const box = toFillBox(aspect, target);
+
+      const input = {
+        aspect,
+        box,
+        directionId,
+        layer,
+        mode,
+        projectId,
+        prompt,
+      };
+
+      const edit = async (): Promise<void> => {
+        const done = await run(input);
+
+        if (done !== null) {
+          onDone(copy.editDone);
+        }
+      };
+
+      startTransition(edit);
+    },
+    [directionId, onDone, projectId, run, target]
+  );
 
   const handleMode = useCallback(
     (mode: EditMode): void => {
@@ -38,26 +94,16 @@ const useEditImage = (setup: EditSetup): EditImage => {
         return;
       }
 
-      setNote(null);
-
-      const layer = toImageTarget(target);
-      let prompt: string | null = null;
-
-      if (mode === "prompt") {
-        prompt = text;
-      }
-
-      const edit = async (): Promise<void> => {
-        const done = await run({ directionId, layer, mode, projectId, prompt });
-
-        if (done !== null) {
-          onDone(copy.editDone);
-        }
-      };
-
-      startTransition(edit);
+      send(mode, null, toPromptText(mode, text));
     },
-    [directionId, draft, onDone, projectId, run, target]
+    [draft, send]
+  );
+
+  const handleExpand = useCallback(
+    (aspect: ExpandAspect): void => {
+      send("expand", aspect, null);
+    },
+    [send]
   );
 
   const handlePrompt = setDraft;
@@ -65,8 +111,15 @@ const useEditImage = (setup: EditSetup): EditImage => {
   const error = note ?? message;
 
   return useMemo(
-    () => ({ error, handleMode, handlePrompt, isPending, prompt: draft }),
-    [draft, error, handleMode, handlePrompt, isPending]
+    () => ({
+      error,
+      handleExpand,
+      handleMode,
+      handlePrompt,
+      isPending,
+      prompt: draft,
+    }),
+    [draft, error, handleExpand, handleMode, handlePrompt, isPending]
   );
 };
 

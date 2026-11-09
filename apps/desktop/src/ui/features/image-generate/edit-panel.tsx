@@ -3,6 +3,7 @@ import type { ChangeEvent, ReactElement } from "react";
 
 import { ChipButton } from "./chip-button.js";
 import { copy, EDIT_LABEL } from "./copy.js";
+import { ExpandChip } from "./expand-chip.js";
 import { EDIT_MODES } from "./generate-model.js";
 import { useEditImage } from "./use-edit-image.js";
 import type { EditSetup } from "./use-edit-image.js";
@@ -48,6 +49,7 @@ const EditPanel = (setup: EditSetup): ReactElement => {
             onPick={edit.handleMode}
           />
         ))}
+        <ExpandChip isPending={edit.isPending} onPick={edit.handleExpand} />
       </fieldset>
       {edit.error && (
         <p className="ins-error" role="alert">

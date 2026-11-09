@@ -64,7 +64,7 @@ const goCommands = (studioActions: StudioActions): Command[] => {
       icon: "folder",
       id: "go.home",
       keyId: "home",
-      keywords: "projects back exit",
+      keywords: "all projects back exit",
       run: studioActions.onHome,
       title: "Go to Home",
     },

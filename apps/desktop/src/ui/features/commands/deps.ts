@@ -67,6 +67,7 @@ export type { ColumnTab, PanelTab } from "../../platform/panel-tab.js";
 
 export {
   requestCanvasTool,
+  requestMatrix,
   requestPresent,
   requestReload,
 } from "../../platform/canvas-tool.js";

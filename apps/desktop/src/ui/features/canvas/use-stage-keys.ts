@@ -10,6 +10,7 @@ import type { Props } from "./canvas-types.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 import { PREVIEW_LAYOUT_KEY_EVENT } from "./use-preview-frames.js";
 import type { usePreviewFrames } from "./use-preview-frames.js";
+import { vectorTool } from "./vector-tool-model.js";
 
 type SetSelectMode = (update: (match: boolean) => boolean) => void;
 
@@ -45,6 +46,7 @@ const routeSelectKey = (
   if (isSelectToggleKey(event)) {
     event.preventDefault();
     heldTool.set(null);
+    vectorTool.set(null);
     handlers.setSelectMode(() => true);
 
     return;

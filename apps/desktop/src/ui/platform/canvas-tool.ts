@@ -21,6 +21,8 @@ const PRESENT_EVENT = "studio:present";
 
 const RELOAD_EVENT = "studio:canvas-reload";
 
+const MATRIX_EVENT = "studio:viewport-matrix";
+
 const heldTool = createLiveStore<HeldTool | null>(null);
 
 const requestCanvasTool = (tool: CanvasToolId): void => {
@@ -37,17 +39,23 @@ const requestReload = (): void => {
   globalThis.dispatchEvent(new Event(RELOAD_EVENT));
 };
 
+const requestMatrix = (): void => {
+  globalThis.dispatchEvent(new Event(MATRIX_EVENT));
+};
+
 const isCanvasToolId = (value: unknown): value is CanvasToolId =>
   CANVAS_TOOLS.some((tool) => tool === value);
 
 export {
   CANVAS_TOOLS,
   CANVAS_TOOL_EVENT,
+  MATRIX_EVENT,
   PRESENT_EVENT,
   RELOAD_EVENT,
   heldTool,
   isCanvasToolId,
   requestCanvasTool,
+  requestMatrix,
   requestPresent,
   requestReload,
 };

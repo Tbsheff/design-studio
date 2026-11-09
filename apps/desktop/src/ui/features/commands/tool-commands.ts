@@ -1,4 +1,10 @@
-import { requestCanvasTool, requestPresent, requestReload } from "./deps.js";
+import {
+  findElement,
+  requestCanvasTool,
+  requestMatrix,
+  requestPresent,
+  requestReload,
+} from "./deps.js";
 import type { CanvasToolId, KeyId } from "./deps.js";
 import type { Command } from "./registry.js";
 
@@ -55,6 +61,10 @@ const TOOLS: readonly ToolSpec[] = [
   },
 ];
 
+const clickTopBar = (selector: string): void => {
+  findElement(document.body, selector)?.click();
+};
+
 const toolCommands = (): Command[] => [
   ...TOOLS.map((spec) => ({
     group: "Canvas",
@@ -81,6 +91,30 @@ const toolCommands = (): Command[] => [
     keywords: "refresh preview frames",
     run: requestReload,
     title: "Reload the preview",
+  },
+  {
+    group: "Canvas",
+    icon: "window",
+    id: "view.matrix",
+    keywords: "matrix viewport breakpoints responsive check",
+    run: requestMatrix,
+    title: "Check viewports (matrix)",
+  },
+  {
+    group: "Canvas",
+    icon: "review",
+    id: "view.review",
+    keywords: "review audit contrast findings critique",
+    run: () => clickTopBar(".topbar-review.review-entry"),
+    title: "Open review",
+  },
+  {
+    group: "Canvas",
+    icon: "share",
+    id: "view.share",
+    keywords: "share link export ship publish",
+    run: () => clickTopBar(".topbar-share"),
+    title: "Share…",
   },
 ];
 

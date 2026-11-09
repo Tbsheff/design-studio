@@ -5,6 +5,7 @@ import type {
   FrameStatesView,
 } from "@design-studio/contracts/frame-state";
 
+import { toClockLine } from "../../app/frame-state-clock.js";
 import { sessionCookieNames } from "../../app/frame-state-proxy.js";
 import {
   frameStatesView,
@@ -27,6 +28,8 @@ export interface FrameStateInput {
   frame: string;
   state: string;
   mock?: {
+    clock?: string | null;
+    isClockFrozen?: boolean;
     name?: string;
     rules?: readonly unknown[];
     signedIn?: boolean;
@@ -35,7 +38,7 @@ export interface FrameStateInput {
 }
 
 export const FRAME_STATES_NOTE =
-  "Frame states are for attached apps. Each state frame loads from its own preview host, and the studio proxy changes only what the browser in that frame sends and gets: session sends a session cookie (common Auth.js, NextAuth, better-auth and Clerk names, plus AUTH_COOKIE_PREFIX from the app env) and answers GET /api/auth/get-session and /api/auth/session with the mock user; empty, loading and error change /api and tRPC calls made in the browser; mock answers calls that match its rules ({path, method?, status?, body?, delayMs?}, path may end in *); mock steps ([{kind: click|hover|focus, selector}], at most 4) run in the frame after each load, so a dialog, sheet, menu, tab or tooltip stays open. Every request also carries the header x-studio-state, so an app can serve its own fixtures for data it loads on the server. States and a recorded session live in the studio data dir, never in the repo or in exports.";
+  "Frame states are for attached apps. Each state frame loads from its own preview host, and the studio proxy changes only what the browser in that frame sends and gets: session sends a session cookie (common Auth.js, NextAuth, better-auth and Clerk names, plus AUTH_COOKIE_PREFIX from the app env) and answers GET /api/auth/get-session and /api/auth/session with the mock user; empty, loading and error change /api and tRPC calls made in the browser; mock answers calls that match its rules ({path, method?, status?, body?, delayMs?}, path may end in *); mock steps ([{kind: click|hover|focus, selector}], at most 4) run in the frame after each load, so a dialog, sheet, menu, tab or tooltip stays open; mock clock (ISO date-time) and isClockFrozen pin new Date() and Date.now() in the browser of the frame, and dates rendered on the Next server keep the real time and can cause hydration warnings. Every request also carries the header x-studio-state, so an app can serve its own fixtures for data it loads on the server. States and a recorded session live in the studio data dir, never in the repo or in exports.";
 
 function requireApp(project: Project): void {
   if (!project.app) {
@@ -102,6 +105,10 @@ export async function applyFrameState(
           ? {}
           : { signedIn: input.mock.signedIn }),
         ...(input.mock.steps ? { steps: input.mock.steps } : {}),
+        ...(input.mock.clock === undefined ? {} : { clock: input.mock.clock }),
+        ...(input.mock.isClockFrozen === undefined
+          ? {}
+          : { isClockFrozen: input.mock.isClockFrozen }),
       }
     : undefined;
 
@@ -140,7 +147,7 @@ export function describeFrameStates(
 ): string {
   const lines = view.states.map(
     (state) =>
-      `- ${state.id}: ${state.name}. ${STATE_HINTS[state.kind]}${state.mocks?.length ? ` Rules: ${state.mocks.map((rule) => `${rule.method ?? "ANY"} ${rule.path} → ${rule.status ?? 200}`).join(", ")}.` : ""}${state.steps?.length ? ` Open steps: ${state.steps.map((step) => `${step.kind} ${step.selector}`).join(", ")}.` : ""}`
+      `- ${state.id}: ${state.name}. ${STATE_HINTS[state.kind]}${state.mocks?.length ? ` Rules: ${state.mocks.map((rule) => `${rule.method ?? "ANY"} ${rule.path} → ${rule.status ?? 200}`).join(", ")}.` : ""}${toClockLine(state)}${state.steps?.length ? ` Open steps: ${state.steps.map((step) => `${step.kind} ${step.selector}`).join(", ")}.` : ""}`
   );
 
   const frames =

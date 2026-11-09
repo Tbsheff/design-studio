@@ -6,10 +6,10 @@ import { Suspense, useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { FrameStateEditRows } from "./frame-state-edit-rows.js";
 import { StateRows } from "./frame-state-parts.js";
 import { menuKeys } from "./frame-state-ui-model.js";
 import { setFrameSession, setFrameState } from "./frame-states-model.js";
-import { KeepOpenSection } from "./keep-open-section.js";
 import { NewMockRow } from "./new-mock-row.js";
 import { SessionRows } from "./session-rows.js";
 import { useFrameStateSlot } from "./use-frame-state-slot.js";
@@ -76,7 +76,7 @@ const StateListPanel = ({
     >
       <StateRows view={view} chosen={chosen} onPick={pick} />
       <NewMockRow onOpen={openMock} />
-      <KeepOpenSection
+      <FrameStateEditRows
         chosen={chosen}
         frameId={frameId}
         projectId={projectId}

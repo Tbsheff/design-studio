@@ -21,6 +21,9 @@ export const MAX_CUSTOM_STATES = 12;
 export const MAX_MOCK_BODY = 200_000;
 export const MAX_RULE_DELAY_MS = 30_000;
 export const ID_PATH_SEGMENT = ":id";
+export const MAX_CLOCK_LENGTH = 40;
+export const CLOCK_LIMIT_NOTE =
+  "The clock changes new Date() and Date.now() in the browser only. Dates rendered on the Next server keep the real time and can cause hydration warnings.";
 
 const STATE_ID_RE = /^[a-z][a-z0-9-]{0,23}$/;
 const HOST_LABEL_PREFIX = "s-";
@@ -55,6 +58,8 @@ export interface FrameStateDef {
   signedIn: boolean;
   mocks?: MockRule[];
   steps?: OpenStep[];
+  clock?: string | null;
+  isClockFrozen?: boolean;
 }
 
 export interface FrameSessionInfo {
@@ -230,6 +235,24 @@ export function cleanOpenSteps(raw: unknown): OpenStep[] {
     .map((entry) => cleanOpenStep(entry))
     .filter((step): step is OpenStep => step !== null)
     .slice(0, MAX_OPEN_STEPS);
+}
+
+export function cleanClock(raw: unknown): string | null {
+  if (typeof raw !== "string") {
+    return null;
+  }
+
+  const text = raw.trim();
+
+  if (text.length < 10 || text.length > MAX_CLOCK_LENGTH) {
+    return null;
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text)) {
+    return null;
+  }
+
+  return Number.isNaN(Date.parse(text)) ? null : text;
 }
 
 const ID_SEGMENT = ID_PATH_SEGMENT;

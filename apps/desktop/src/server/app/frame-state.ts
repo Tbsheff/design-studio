@@ -9,6 +9,7 @@ import {
   DEFAULT_MOCK_USER,
   MAX_CUSTOM_STATES,
   MAX_MOCK_RULES,
+  cleanClock,
   cleanMockRule,
   cleanOpenSteps,
   isFrameStateId,
@@ -19,6 +20,7 @@ import {
 } from "@design-studio/contracts/frame-state";
 
 import { BadRequestError } from "../platform/errors/index.js";
+import { toNextClockFields } from "./frame-state-clock.js";
 import { toTrialDef } from "./frame-state-trial.js";
 
 const STATES_FILE = "frame-states.json";
@@ -119,7 +121,6 @@ function cleanCustom(raw: unknown): FrameStateDef | null {
     .slice(0, MAX_MOCK_RULES);
 
   const steps = cleanOpenSteps(def.steps);
-
   const out: FrameStateDef = {
     id: def.id,
     kind: "mock",
@@ -130,6 +131,11 @@ function cleanCustom(raw: unknown): FrameStateDef | null {
 
   if (steps.length > 0) {
     out.steps = steps;
+  }
+
+  const clock = cleanClock(def.clock);
+  if (clock !== null) {
+    Object.assign(out, { clock, isClockFrozen: def.isClockFrozen === true });
   }
 
   return out;
@@ -298,6 +304,8 @@ export interface FrameStateChange {
     mocks?: readonly unknown[];
     signedIn?: boolean;
     steps?: readonly unknown[];
+    clock?: string | null;
+    isClockFrozen?: boolean;
   };
 }
 
@@ -327,6 +335,7 @@ function upsertCustom(
     mocks: custom.mocks ?? existing?.mocks ?? [],
     signedIn: custom.signedIn ?? existing?.signedIn ?? true,
     steps: custom.steps ?? existing?.steps ?? [],
+    ...toNextClockFields(existing, custom),
   });
 
   if (!def) {

@@ -71,6 +71,7 @@
     "./canvas/delete-link": "./src/canvas/delete-link.ts",
     "./canvas/delete-section": "./src/canvas/delete-section.ts",
     "./canvas/export-flow": "./src/canvas/export-flow.ts",
+    "./canvas/frame-state/clock": "./src/canvas/frame-state/clock.ts",
     "./canvas/frame-state/open-step": "./src/canvas/frame-state/open-step.ts",
     "./canvas/frame/schema": "./src/canvas/frame/schema.ts",
     "./canvas/get-doc": "./src/canvas/get-doc.ts",

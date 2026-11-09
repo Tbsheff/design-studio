@@ -27,6 +27,8 @@
 
 .frame-state-menu {
   width: 280px;
+  max-height: min(640px, 70vh);
+  overflow-y: auto;
   white-space: normal;
 }
 
@@ -111,4 +113,52 @@
 .frame-chip.state.warn:hover {
   color: var(--danger);
   background: var(--danger-soft);
+}
+
+.frame-clock {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-2);
+}
+
+.frame-clock-field {
+  display: grid;
+  gap: var(--s-1);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.frame-clock-field input {
+  height: 28px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: var(--surface);
+  color: var(--text);
+  color-scheme: inherit;
+  font: var(--t-xs) var(--mono);
+}
+
+.frame-clock-field input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.frame-clock-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.frame-clock-frozen {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}
+
+.frame-clock .frame-page-hint {
+  padding: 0;
 }

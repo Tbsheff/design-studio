@@ -175,3 +175,14 @@ The sample can be made twice on the server. `createSample` in `src/server/http/h
 - **Activity side:** right column (proposed) or below the composer on narrow windows.
 - **Pins:** a field on `project.update` or a new `project.set` action.
 - **Present and Review keys:** ⌥⌘⏎ for Present; Review and Share stay palette only.
+
+## 6. UI-only view state
+
+No action family owns canvas or play view state (no zoom, pan or toggle actions exist). These toggles change what the user sees. They write no source and no project file, so an MCP or agent caller has no result to read from them. A caller reads the page with `get_screenshot` and `get_layers` instead.
+
+| Feature | Reason it stays UI-only | Headless path |
+|---|---|---|
+| Outline view (Shift+O) | Draws outlines in the bridge on the live page. Resets on reload | `get_layers` lists every element with its box |
+| Device rotate (Play bar) | Swaps the device frame width and height in Play mode only. The frame keeps its size | `canvas_place` sets the frame width and height |
+| Hotspot hints (Play bar, Shift hold) | Flashes link hit areas on a missed click in Play mode | `list_links` and `list_link_interactions` list the links |
+| Layer pick (Select layer submenu) | Lists the layers under the pointer for one right click. A selection is not stored | `get_layers` gives layer ids. Each action takes a layer id or selector |

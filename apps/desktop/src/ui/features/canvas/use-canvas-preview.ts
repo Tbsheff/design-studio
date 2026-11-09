@@ -11,6 +11,7 @@ import {
 import { usePlannedEdits } from "../inspector/use-planned-edits.js";
 import { knownList, marqueeAllowed } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
+import type { MenuAnchor } from "./layer-pick-model.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import { useDirectionFrames } from "./use-direction-frames.js";
 import { useInlineTextEdit, useResetOnChange } from "./use-inline-text-edit.js";
@@ -23,12 +24,7 @@ type CanvasStageState = ReturnType<typeof useCanvasStage>;
 
 type PreviewFrames = ReturnType<typeof usePreviewFrames>;
 
-interface MenuPoint {
-  readonly x: number;
-  readonly y: number;
-}
-
-type MenuOpener = MutableRefObject<(at: MenuPoint) => void>;
+type MenuOpener = MutableRefObject<(at: MenuAnchor) => void>;
 
 interface PreviewState {
   readonly covered: ReturnType<typeof useFirstBuildCover>;
@@ -80,7 +76,7 @@ const usePreviewState = (
 
   const baseUrl = firstBuild.url;
   const marquee = marqueeAllowed(pane.picking, protoOn, commentMode);
-  const onContextMenu = (at: MenuPoint): void => openMenu.current(at);
+  const onContextMenu = (at: MenuAnchor): void => openMenu.current(at);
   const { onError } = props;
   const onFrameWheel = pz.frameWheel;
 
@@ -160,7 +156,7 @@ const useCanvasPreview = (
   const { selectMode, setProtoOn, setSelectMode } = text;
   const { layersOpen } = text;
 
-  const openMenu = useRef<(at: MenuPoint) => void>(() => null);
+  const openMenu = useRef<(at: MenuAnchor) => void>(() => null);
   const state = usePreviewState(props, text, openMenu);
   const { frames, stageEl: stage } = state;
   const hold = frames.slots.length > 1;

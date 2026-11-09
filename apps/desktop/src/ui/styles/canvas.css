@@ -1399,3 +1399,33 @@ dialog.canvas-menu {
 .layers-row.is-dimmed {
   opacity: 0.5;
 }
+
+.preview-submenu-host {
+  position: relative;
+}
+
+.preview-submenu-host > [role="menuitem"] > svg:last-child {
+  margin-left: auto;
+}
+
+.project-menu.preview-submenu {
+  display: none;
+  top: calc(var(--s-1) * -1);
+  left: calc(100% + 2px);
+  right: auto;
+  min-width: 180px;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  animation: none;
+}
+
+.preview-submenu-host:is(:hover, :focus-within) > .preview-submenu {
+  display: grid;
+}
+
+.preview-submenu-tag {
+  margin-left: auto;
+  padding-left: var(--s-3);
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+}

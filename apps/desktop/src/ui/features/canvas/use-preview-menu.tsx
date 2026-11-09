@@ -33,10 +33,14 @@ import { LayerStyleSlot, useLayerStyleHost } from "../layer-style/index.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";
 import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
+import { toLayerPickItems } from "./layer-pick-menu.js";
+import { toAfterSelectChild } from "./layer-pick-model.js";
+import type { MenuAnchor } from "./layer-pick-model.js";
 import { createItem, disabledBy } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 import { toValueOr } from "./settle-model.js";
+import { useLayerPick } from "./use-layer-pick.js";
 
 const renderGenerateTab = (props: GenerateTabProps): ReactElement => (
   <ImageGenerateSlot
@@ -208,7 +212,7 @@ interface MenuHandlers {
 
 interface PreviewMenuHandle {
   readonly menu: ReactElement;
-  readonly onContextMenu: (point: { x: number; y: number }) => void;
+  readonly onContextMenu: (point: MenuAnchor) => void;
 }
 
 interface HostBase {
@@ -220,6 +224,7 @@ interface HostBase {
 }
 
 interface MenuHosts {
+  readonly pickItems: PreviewMenuItem[];
   readonly devNotes: ReturnType<typeof useDevNoteHost>;
   readonly icons: ReturnType<typeof useIconHost>;
   readonly layerStyle: ReturnType<typeof useLayerStyleHost>;
@@ -373,7 +378,7 @@ const toPatternSlot = (options: Options, hosts: MenuHosts): ReactNode => {
 const toMenuNode = (
   options: Options,
   hosts: MenuHosts,
-  at: { x: number; y: number } | null,
+  at: MenuAnchor | null,
   handlers: MenuHandlers
 ): ReactNode => {
   const { onClose, onCreate } = handlers;
@@ -383,9 +388,12 @@ const toMenuNode = (
     return null;
   }
 
-  const items = toAfterCopyCss(
-    menuItems(options, target, onCreate, (item) => toHostItems(hosts, item)),
-    hosts.layerStyle.items(target)
+  const items = toAfterSelectChild(
+    toAfterCopyCss(
+      menuItems(options, target, onCreate, (item) => toHostItems(hosts, item)),
+      hosts.layerStyle.items(target)
+    ),
+    hosts.pickItems
   );
 
   return (
@@ -399,13 +407,10 @@ const toMenuNode = (
 };
 
 const usePreviewMenu = (options: Options): PreviewMenuHandle => {
-  const [at, setAt] = useState<{ x: number; y: number } | null>(null);
+  const [at, setAt] = useState<MenuAnchor | null>(null);
   const [creating, setCreating] = useState<SelectionContext[] | null>(null);
 
-  const onContextMenu = useCallback(
-    (point: { x: number; y: number }) => setAt(point),
-    []
-  );
+  const onContextMenu = useCallback((point: MenuAnchor) => setAt(point), []);
 
   const close = useCallback(() => setAt(null), []);
   const closeCreate = useCallback(() => setCreating(null), []);
@@ -413,6 +418,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
   const { selection } = options;
   const openCreate = useCallback(() => setCreating(selection), [selection]);
 
+  const pick = useLayerPick(options.port?.current ?? null, at?.local ?? null);
   const base = toHostBase(options);
   const isReact = options.ids.kind === "react";
 
@@ -428,6 +434,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
     layerStyle: useLayerStyleHost({ ...base, selection }),
     patterns: usePatternHost({ ...base, isReact }),
     photos: useImageSearchHost({ ...base, selection }),
+    pickItems: toLayerPickItems(pick, close),
     props: usePropHost({ ...base, isReact }),
   };
 

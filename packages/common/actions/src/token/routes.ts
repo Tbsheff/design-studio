@@ -2,7 +2,7 @@
 const routes = {
   applyToken: {
     id: "token.apply",
-    invalidates: ["version.list"],
+    invalidates: ["token.listClasses", "version.list"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/tokens/apply",
   },
@@ -26,7 +26,11 @@ const routes = {
   },
   setToken: {
     id: "token.set",
-    invalidates: ["direct-edit.getDesignSystem", "version.list"],
+    invalidates: [
+      "direct-edit.getDesignSystem",
+      "token.listClasses",
+      "version.list",
+    ],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/tokens/set",
   },

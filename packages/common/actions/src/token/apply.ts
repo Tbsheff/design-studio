@@ -30,7 +30,7 @@ const applyToken = defineAction({
     ...TokenApplyFields,
     projectId: ProjectIdSchema,
   }),
-  invalidates: ["version.list"],
+  invalidates: ["token.listClasses", "version.list"],
   mcp: { name: "apply_token" },
   needs: "project.update",
   output: TokenAppliedSchema,

@@ -68,32 +68,6 @@ const toPreviewResult = (value: Schema.Json): TextResult | null => {
   });
 };
 
-const LinkListSchema = Schema.Struct({
-  items: Schema.Array(Schema.Json),
-  note: Schema.NullOr(Schema.String),
-  startFrame: Schema.String,
-});
-
-const readLinkList = toDecoder(LinkListSchema, "ignore");
-
-const toLegacyValue = (value: Schema.Json): Schema.Json => {
-  const list = readLinkList(value);
-
-  if (list._tag === "Success") {
-    const { items, note, startFrame } = list.success;
-
-    const base = { links: items, startFrame };
-
-    if (note === null) {
-      return base;
-    }
-
-    return { ...base, note };
-  }
-
-  return value;
-};
-
 const readJsonText = toDecoder(Schema.fromJsonString(Schema.Json), "ignore");
 
 const readFileText = toDecoder(
@@ -128,10 +102,7 @@ const toLegacyText = (text: string, actionId: string): string => {
     return text;
   }
 
-  return (
-    toRawText(actionId, parsed.success) ??
-    JSON.stringify(toLegacyValue(parsed.success))
-  );
+  return toRawText(actionId, parsed.success) ?? JSON.stringify(parsed.success);
 };
 
 const toToolResult = (action: AnyAction, exit: ActionExit): TextResult => {

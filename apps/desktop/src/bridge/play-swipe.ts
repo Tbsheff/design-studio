@@ -11,7 +11,9 @@ interface SwipeStart {
 
 interface SwipeTracker {
   readonly begin: (event: PointerEvent) => void;
+  readonly cancel: () => void;
   readonly end: (event: PointerEvent) => void;
+  readonly guardSelection: (event: Event) => void;
   readonly move: (event: PointerEvent) => void;
   readonly swallow: (event: MouseEvent) => void;
 }
@@ -51,6 +53,30 @@ const toSwipeDirection = (dx: number, dy: number): string | null => {
 const isSwipeQuery = (query: LinkQuery): boolean =>
   isSwipeKind(query.trigger ?? "");
 
+const toMatchedIds = (
+  queries: readonly LinkQuery[],
+  origin: SwipeStart,
+  direction: string
+): string[] =>
+  queries.flatMap((query) => {
+    if (origin.ids.has(query.id) && query.trigger === direction) {
+      return [query.id];
+    }
+
+    return [];
+  });
+
+const toSwipeStart = (
+  owned: readonly LinkQuery[],
+  event: PointerEvent
+): SwipeStart => ({
+  ids: new Set(owned.map((query) => query.id)),
+  pointerId: event.pointerId,
+  time: event.timeStamp,
+  x: event.clientX,
+  y: event.clientY,
+});
+
 const createSwipeTracker = (host: SwipeHost): SwipeTracker => {
   let start: SwipeStart | null = null;
   let isSpent = false;
@@ -80,15 +106,7 @@ const createSwipeTracker = (host: SwipeHost): SwipeTracker => {
     start = null;
     isSpent = true;
 
-    const ids: string[] = [];
-
-    for (const query of host.getQueries()) {
-      if (origin.ids.has(query.id) && query.trigger === direction) {
-        ids.push(query.id);
-      }
-    }
-
-    return ids;
+    return toMatchedIds(host.getQueries(), origin, direction);
   };
 
   const move = (event: PointerEvent): void => {
@@ -106,19 +124,23 @@ const createSwipeTracker = (host: SwipeHost): SwipeTracker => {
     start = null;
 
     if (owned.length > 0) {
-      start = {
-        ids: new Set(owned.map((query) => query.id)),
-        pointerId: event.pointerId,
-        time: event.timeStamp,
-        x: event.clientX,
-        y: event.clientY,
-      };
+      start = toSwipeStart(owned, event);
     }
   };
 
   const end = (event: PointerEvent): void => {
     move(event);
     start = null;
+  };
+
+  const cancel = (): void => {
+    start = null;
+  };
+
+  const guardSelection = (event: Event): void => {
+    if (start) {
+      event.preventDefault();
+    }
   };
 
   const swallow = (event: MouseEvent): void => {
@@ -129,7 +151,7 @@ const createSwipeTracker = (host: SwipeHost): SwipeTracker => {
     }
   };
 
-  return { begin, end, move, swallow };
+  return { begin, cancel, end, guardSelection, move, swallow };
 };
 
 export { createSwipeTracker, isSwipeQuery };

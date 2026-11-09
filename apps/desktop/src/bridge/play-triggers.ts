@@ -161,6 +161,12 @@ const createTriggerBridge = (post: TriggerPost): TriggerBridge => {
     globalThis.addEventListener("pointerup", onUp, { capture: true });
     globalThis.addEventListener("click", swipe.swallow, { capture: true });
     globalThis.addEventListener("pointercancel", onUp, { capture: true });
+    globalThis.addEventListener("pointercancel", swipe.cancel, {
+      capture: true,
+    });
+    globalThis.addEventListener("selectstart", swipe.guardSelection, {
+      capture: true,
+    });
   };
 
   const set = (links: readonly LinkQuery[]): void => {

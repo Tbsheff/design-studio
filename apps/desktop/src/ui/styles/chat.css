@@ -1255,3 +1255,69 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
+
+.msg-user-stack {
+  display: grid;
+  justify-items: end;
+  gap: var(--s-1);
+  width: 100%;
+}
+
+.msg-remember-slot {
+  display: contents;
+}
+
+.msg-remember-slot .msg-action {
+  opacity: 0;
+  transition-property: opacity, color, background-color;
+  transition-duration: var(--dur-fast);
+}
+
+.msg.user:hover .msg-remember-slot .msg-action,
+.msg.user:focus-within .msg-remember-slot .msg-action,
+.msg-remember-slot .msg-action:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .msg-remember-slot .msg-action {
+    opacity: 1;
+  }
+}
+
+.remember-rule-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 100%;
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm, 12px);
+}
+
+.remember-rule-label {
+  color: var(--text-3);
+}
+
+.remember-rule-line {
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.remember-rule-hint {
+  color: var(--text-3);
+}
+
+.remember-rule-error {
+  color: var(--danger, var(--text-2));
+}
+
+.remember-rule-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}

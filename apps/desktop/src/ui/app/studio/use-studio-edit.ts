@@ -11,6 +11,7 @@ import { uiStore } from "../../platform/storage";
 import { setProjectSwitcher } from "../project-nav";
 import type { StudioBase, StudioEdit } from "./studio-core-types";
 import type { StudioUi } from "./studio-ui-types";
+import { useSiteSelect } from "./use-site-select";
 
 const switchProject = (projectId: string | null): void => {
   if (projectId) {
@@ -106,6 +107,7 @@ const useStudioEdit = (
 
   const studioTokens = useStudioTokens({
     ...scope,
+    onSelectSite: useSiteSelect(port),
     tokens: base.tokens,
     ...tweaks.undoChain(historyChain.canUndo, historyChain.onUndo),
     onCommitted: (): void => data.refreshVersions(),

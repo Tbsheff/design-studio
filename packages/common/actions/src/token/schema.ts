@@ -150,7 +150,35 @@ const TokenSetSchema = Schema.Struct({
   versionId: Schema.String,
 });
 
+const TokenUsageSiteSchema = Schema.Struct({
+  file: Schema.String,
+  line: Schema.Int,
+});
+
+const TokenUsageSchema = Schema.Struct({
+  fileCount: Schema.Int,
+  name: Schema.String,
+  samples: Schema.Array(TokenUsageSiteSchema),
+  useCount: Schema.Int,
+  value: Schema.String,
+});
+
+const TokenUsageListFields = {
+  isUnusedOnly: Schema.Boolean.annotate({
+    description: "Default false. When true, list only tokens with 0 uses.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false))),
+} as const;
+
+const TokenUsageTotalsFields = {
+  tokenCount: Schema.Int,
+  unusedCount: Schema.Int,
+} as const;
+
 export {
+  TokenUsageListFields,
+  TokenUsageSchema,
+  TokenUsageSiteSchema,
+  TokenUsageTotalsFields,
   TokenApplyFields,
   TokenExportFields,
   TokenExportFormatSchema,

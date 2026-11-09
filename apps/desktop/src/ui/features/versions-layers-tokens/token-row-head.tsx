@@ -6,6 +6,7 @@ import { COPY } from "./copy.js";
 import { TokenAliasChip } from "./token-alias-chip.js";
 import { toTokenTitle } from "./token-row-model.js";
 import type { TokenRowProps } from "./token-row-types.js";
+import { TokenUsageCount } from "./token-usage-count.js";
 
 const REVERT_ICON_SIZE = 12;
 const IMG_ROLE = "img";
@@ -54,6 +55,7 @@ const TokenRowHead = ({
         <code className="tkp-name truncate">{entry.cssVar}</code>
       </span>
       <TokenAliasChip value={row.shown.value} swatch={swatch} />
+      <TokenUsageCount name={entry.cssVar} />
       {isChanged && (
         <button
           type="button"

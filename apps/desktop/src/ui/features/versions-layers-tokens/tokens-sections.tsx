@@ -15,6 +15,7 @@ interface Section {
 interface TokensSectionsProps {
   readonly baseOf: (entry: CompiledTokenEntry) => RawToken;
   readonly draft: TokenDraft;
+  readonly emptyText: string | null;
   readonly query: string;
   readonly sections: Section[];
   readonly shownOf: (entry: CompiledTokenEntry) => RawToken;
@@ -26,7 +27,8 @@ const TokensSections = (props: TokensSectionsProps): ReactNode => (
   <div className="ins-scroll tkp-scroll">
     {props.sections.length === 0 && (
       <p className="ins-empty tkp-empty">
-        {`${COPY.panelNoMatchPrefix}${props.query}${COPY.panelNoMatchSuffix}`}
+        {props.emptyText ??
+          `${COPY.panelNoMatchPrefix}${props.query}${COPY.panelNoMatchSuffix}`}
       </p>
     )}
     {props.sections.map((section) => (

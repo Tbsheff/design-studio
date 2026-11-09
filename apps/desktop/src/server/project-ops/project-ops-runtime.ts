@@ -15,6 +15,7 @@ import type { EventBus } from "../events/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
+import type { PreviewService } from "../preview/index.js";
 import type {
   CommandRuleStore,
   DefaultFolderStore,
@@ -69,7 +70,12 @@ interface ProjectOpsRuntime {
     designMd: string | undefined
   ) => Promise<Project>;
   readonly preview: {
+    readonly directionUrl: (
+      project: Project,
+      direction: Direction
+    ) => Promise<string>;
     readonly release: (project: Project, direction: Direction) => Promise<void>;
+    readonly withPage?: PreviewService["withPage"];
   };
   readonly projects: StudioProjectStore;
   readonly recordVersion: (

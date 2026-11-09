@@ -1,19 +1,24 @@
 import { useState } from "react";
 
-import { getReferenceProblem } from "../../domain/reference-files.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import {
   MAX_CONTEXTS,
-  toFileDraft,
+  toFileDrafts,
   toFolderDraft,
+  toUrlDraft,
 } from "./context-drafts-model.js";
 import type { ContextDraft } from "./context-drafts-model.js";
 import { copy } from "./copy.js";
+import { useUrlFormOpen } from "./use-url-form-open.js";
 
 interface ContextDrafts {
   readonly addContextFiles: (picked: File[]) => void;
   readonly addContextFolder: (folderPath: string) => void;
+  readonly addContextUrl: (url: string) => void;
+  readonly closeUrlForm: () => void;
   readonly contexts: ContextDraft[];
+  readonly isUrlFormOpen: boolean;
+  readonly openUrlForm: () => void;
   readonly pickContextFolder: () => Promise<void>;
   readonly removeContext: (id: string) => void;
 }
@@ -25,6 +30,9 @@ const useContextDrafts = (
   setFormError: (message: string | null) => void
 ): ContextDrafts => {
   const [contexts, setContexts] = useState<ContextDraft[]>([]);
+  const urlForm = useUrlFormOpen();
+  const { close: closeUrlForm, open: openUrlForm } = urlForm;
+  const isUrlFormOpen = urlForm.isOpen;
 
   const addDrafts = (drafts: ContextDraft[]): void => {
     if (drafts.length === 0) {
@@ -44,18 +52,7 @@ const useContextDrafts = (
   };
 
   const addContextFiles = (picked: File[]): void => {
-    const problems: string[] = [];
-    const accepted: ContextDraft[] = [];
-
-    for (const file of picked) {
-      const problem = getReferenceProblem(file);
-
-      if (problem === null) {
-        accepted.push(toFileDraft(file));
-      } else {
-        problems.push(problem);
-      }
-    }
+    const { accepted, problems } = toFileDrafts(picked);
 
     if (problems.length > 0) {
       setFormError(problems.join(" "));
@@ -67,6 +64,12 @@ const useContextDrafts = (
   const addContextFolder = (folderPath: string): void => {
     setFormError(null);
     addDrafts([toFolderDraft(folderPath)]);
+  };
+
+  const addContextUrl = (url: string): void => {
+    setFormError(null);
+    closeUrlForm();
+    addDrafts([toUrlDraft(url)]);
   };
 
   const pickContextFolder = async (): Promise<void> => {
@@ -89,7 +92,11 @@ const useContextDrafts = (
   return {
     addContextFiles,
     addContextFolder,
+    addContextUrl,
+    closeUrlForm,
     contexts,
+    isUrlFormOpen,
+    openUrlForm,
     pickContextFolder,
     removeContext,
   };

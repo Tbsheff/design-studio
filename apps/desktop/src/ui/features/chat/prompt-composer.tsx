@@ -11,6 +11,7 @@ import { toDropClass } from "./prompt-send-model.js";
 import { PromptTextInput } from "./prompt-text-input.js";
 import { PromptToolbarRow } from "./prompt-toolbar-row.js";
 import { ReferenceNotes } from "./reference-notes.js";
+import { ReferenceUrlSlot } from "./reference-url-slot.js";
 import { RunContextChip } from "./run-context-chip.js";
 import { SelectionChips } from "./selection-chips.js";
 import { SkillChips } from "./skill-chips.js";
@@ -50,7 +51,9 @@ const PromptComposer = ({
   const { mentions } = input;
   const { remove: removeMention } = mentions;
   const { clear: clearPrefill } = prefill;
+
   const { dismissReference, notes: referenceNotes } = base.references;
+
   const { onRemoveSelection } = box;
 
   const focusInput = useCallback((event: MouseEvent<HTMLDivElement>): void => {
@@ -80,6 +83,7 @@ const PromptComposer = ({
       <SelectionChips selection={box.selection} onRemove={onRemoveSelection} />
       <Comments count={prefill.linked.length} onClear={clearPrefill} />
       <AttachmentThumbs files={files} onRemove={removeFile} />
+      <ReferenceUrlSlot url={base.references.url} />
       <ReferenceNotes notes={referenceNotes} onDismiss={dismissReference} />
       <MentionChips mentions={mentions.mentions} onRemove={removeMention} />
       <SkillChips ids={skillIds} onRemove={removeSkill} />

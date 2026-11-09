@@ -39,6 +39,11 @@ const PlusMenuBody = ({
           onPick={onAct(menuProps.onAttachZip)}
         />
         <MenuItem
+          icon="globe"
+          label={copy.attachWebPage}
+          onPick={onAct(menuProps.onAttachUrl)}
+        />
+        <MenuItem
           icon="file"
           label="Mention a file or token"
           meta="@"

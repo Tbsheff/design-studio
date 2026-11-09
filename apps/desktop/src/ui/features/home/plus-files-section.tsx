@@ -32,6 +32,14 @@ const PlusFilesSection = ({
       onClose={onClose}
     />
     <PlusItem
+      icon="globe"
+      label={copy.attachWebPage}
+      meta={null}
+      hasChevron={false}
+      action={actions.onAttachUrl}
+      onClose={onClose}
+    />
+    <PlusItem
       icon="file"
       label={copy.attachZipOrFile}
       meta={null}

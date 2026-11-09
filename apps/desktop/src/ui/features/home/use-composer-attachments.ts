@@ -12,12 +12,16 @@ import { useReferenceDrafts } from "./use-reference-drafts.js";
 interface ComposerAttachments {
   readonly addContextFiles: (picked: File[]) => void;
   readonly addContextFolder: (folderPath: string) => void;
+  readonly addContextUrl: (url: string) => void;
+  readonly closeUrlForm: () => void;
   readonly addImages: (picked: File[]) => void;
   readonly contextFileRef: RefObject<HTMLInputElement | null>;
   readonly contexts: ContextDraft[];
   readonly fileRef: RefObject<HTMLInputElement | null>;
   readonly images: ImageDraft[];
   readonly isDragging: boolean;
+  readonly isUrlFormOpen: boolean;
+  readonly openUrlForm: () => void;
   readonly pickContextFolder: () => Promise<void>;
   readonly onPromptPaste: (event: ClipboardEvent<HTMLTextAreaElement>) => void;
   readonly references: ReferenceDraft[];
@@ -39,7 +43,11 @@ const useComposerAttachments = (
   const {
     addContextFiles,
     addContextFolder,
+    addContextUrl,
+    closeUrlForm,
     contexts,
+    isUrlFormOpen,
+    openUrlForm,
     pickContextFolder,
     removeContext,
   } = useContextDrafts(setFormError);
@@ -74,13 +82,17 @@ const useComposerAttachments = (
   return {
     addContextFiles,
     addContextFolder,
+    addContextUrl,
     addImages,
+    closeUrlForm,
     contextFileRef,
     contexts,
     fileRef,
     images,
     isDragging,
+    isUrlFormOpen,
     onPromptPaste,
+    openUrlForm,
     pickContextFolder,
     references,
     removeContext,

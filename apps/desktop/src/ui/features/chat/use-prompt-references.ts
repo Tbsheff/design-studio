@@ -10,12 +10,15 @@ import {
   toSettledNote,
 } from "./reference-note-model.js";
 import type { ReferenceNote } from "./reference-note-model.js";
+import { useReferenceUrl } from "./use-reference-url.js";
+import type { ReferenceUrl } from "./use-reference-url.js";
 
 interface PromptReferences {
   readonly addReferenceFiles: (files: File[]) => void;
   readonly dismissReference: (id: string) => void;
   readonly notes: ReferenceNote[];
   readonly pickReferenceFolder: () => Promise<void>;
+  readonly url: ReferenceUrl;
 }
 
 const usePromptReferences = (
@@ -85,7 +88,15 @@ const usePromptReferences = (
   const dismissReference = (id: string): void =>
     setNotes((current) => current.filter((entry) => entry.id !== id));
 
-  return { addReferenceFiles, dismissReference, notes, pickReferenceFolder };
+  const url = useReferenceUrl(projectId, runImport);
+
+  return {
+    addReferenceFiles,
+    dismissReference,
+    notes,
+    pickReferenceFolder,
+    url,
+  };
 };
 
 export { usePromptReferences };

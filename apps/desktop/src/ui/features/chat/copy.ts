@@ -8,6 +8,7 @@ const copy = {
   approveAndBuild: "Approve and build",
   attachFolder: "Attach folder…",
   attachMentionSkills: "Attach, mention, skills and run settings",
+  attachWebPage: "Attach web page…",
   attachZipOrFile: "Attach zip or file…",
   cancel: "Cancel",
   changedFiles: "Changed files",
@@ -221,6 +222,10 @@ const copy = {
   undone: "Undone",
   unfinishedChangesIn: "Unfinished changes in ",
   uploading: "Uploading",
+  webPageAdd: "Add",
+  webPageCancel: "Cancel",
+  webPageUrlLabel: "Web page address",
+  webPageUrlPlaceholder: "https://example.com",
   youAnswered: "You answered",
   youWhileItRan: "You, while it ran",
 } as const;

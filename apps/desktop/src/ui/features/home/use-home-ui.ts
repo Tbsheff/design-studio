@@ -85,6 +85,7 @@ const useHomeUi = <Draft extends SettingsLike>(deps: UiDeps<Draft>): HomeUi => {
     plusActions: toPlusActions({
       addAppFolder: flow.addAppFolder,
       attachFolder: attach.pickContextFolder,
+      attachUrl: attach.openUrlForm,
       contextFileRef: attach.contextFileRef,
       fileRef: attach.fileRef,
       hasTemplatesShown: homePrefs.hasTemplatesShown,

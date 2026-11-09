@@ -7,6 +7,7 @@ import { DropHint } from "./drop-hint.js";
 import { ExpandPromptSlot } from "./expand-prompt-slot.js";
 import { HomePrompt } from "./home-prompt.js";
 import { StarterRow } from "./starter-row.js";
+import { UrlAttachForm } from "./url-attach-form.js";
 import { useComposerHandlers } from "./use-composer-handlers.js";
 import type { HomeScreen } from "./use-home-screen.js";
 
@@ -32,6 +33,7 @@ const HomeComposer = ({
   const { barApp, closeMenu, openTokensOnly, toggleMenu } = handlers;
   const { openStarter } = lib.openFlows;
   const { addContextFiles, addImages, removeContext } = attach;
+  const { addContextUrl, closeUrlForm, isUrlFormOpen } = attach;
   const { removeImage, removeReference } = attach;
   const { changeKind } = draft;
 
@@ -54,6 +56,9 @@ const HomeComposer = ({
         onRemoveImage={removeImage}
         onRemoveReference={removeReference}
       />
+      {isUrlFormOpen && (
+        <UrlAttachForm onAdd={addContextUrl} onCancel={closeUrlForm} />
+      )}
       <ChipMenuSlot
         isShown={ui.isMenuShown}
         isClosing={ui.isMenuClosing}

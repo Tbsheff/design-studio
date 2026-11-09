@@ -22,6 +22,11 @@ const ReferenceNameFieldSchema = Schema.NullOr(Schema.String).annotate({
     "A short name for the folder under reference/. Null to use the source name.",
 });
 
+const ReferenceUrlFieldSchema = Schema.NullOr(Schema.String).annotate({
+  description:
+    "An http or https web page to attach as reference. The studio loads it at 1440 px and saves page.png, page.md and style.json. Null when path or data is set.",
+});
+
 const ReferenceSchema = Schema.Struct({
   bytes: Schema.Number,
   documentCount: Schema.Int,
@@ -41,4 +46,5 @@ export {
   ReferenceNameFieldSchema,
   ReferencePathFieldSchema,
   ReferenceSchema,
+  ReferenceUrlFieldSchema,
 };

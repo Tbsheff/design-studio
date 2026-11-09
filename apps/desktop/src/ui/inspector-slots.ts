@@ -30,6 +30,12 @@ const StackingSlot = lazy(async () => {
   return { default: loaded.StackingSlot };
 });
 
+const TextRewriteSlot = lazy(async () => {
+  const loaded = await import("./features/text-rewrite/index.js");
+
+  return { default: loaded.TextRewriteSlot };
+});
+
 const VariantSheet = lazy(async () => {
   const loaded = await import("./features/component-variant/index.js");
 
@@ -51,6 +57,7 @@ export {
   MotionSlot,
   StackingSlot,
   StateStylesSlot,
+  TextRewriteSlot,
   TextStyleSlot,
   VariantSheet,
 };

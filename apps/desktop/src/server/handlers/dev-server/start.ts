@@ -17,13 +17,13 @@ const handle = Effect.fn("dev-server.start")(function* run(
   const projects = yield* ProjectStore;
   const project = yield* projects.get(input.projectId);
   const { imported } = project;
-  let notice: string | null = null;
+  const status = yield* service.control(input.projectId, "start");
 
-  if (imported !== null) {
-    notice = yield* clones.takeNotice(String(imported.sourcePath));
+  if (imported === null || status.state === "failed") {
+    return status;
   }
 
-  const status = yield* service.control(input.projectId, "start");
+  const notice = yield* clones.takeNotice(String(imported.sourcePath));
 
   if (notice === null) {
     return status;

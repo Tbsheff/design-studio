@@ -238,6 +238,13 @@ const toCandidates = (request: RewriteRequest): readonly string[] => {
   return toTranslated(request.text, request.language ?? "en");
 };
 
+const PADDERS: readonly ((text: string) => string)[] = [
+  (text) => text.toUpperCase(),
+  (text) => `${text}.`,
+  (text) => `${text}…`,
+  (text) => text.toLowerCase(),
+];
+
 const toMockOptions = (request: RewriteRequest): readonly string[] => {
   const original = request.text.trim();
 
@@ -256,11 +263,18 @@ const toMockOptions = (request: RewriteRequest): readonly string[] => {
   ];
 
   const padded = [...changed];
-  let index = 1;
+  const seed = padded.at(0) ?? original;
 
-  while (padded.length < OPTION_COUNT) {
-    padded.push(`${padded.at(0) ?? original} (${index})`);
-    index += 1;
+  for (const pad of PADDERS) {
+    const next = pad(seed);
+
+    if (
+      padded.length < OPTION_COUNT &&
+      next !== original &&
+      !padded.includes(next)
+    ) {
+      padded.push(next);
+    }
   }
 
   return padded.slice(0, OPTION_COUNT);

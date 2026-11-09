@@ -8,6 +8,7 @@ import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
 import type { ElementClasses } from "./element-classes-model.js";
 import { FontField } from "./font-field.js";
+import { NumberStyleRow } from "./number-style-row.js";
 import { SelectField } from "./select-field.js";
 import {
   CASES,
@@ -68,6 +69,7 @@ const TextGrid = ({
     {selection && classes && (
       <TruncateRow edit={edit} selection={selection} classes={classes} />
     )}
+    <NumberStyleRow edit={edit} selection={selection} classes={classes} />
   </div>
 );
 

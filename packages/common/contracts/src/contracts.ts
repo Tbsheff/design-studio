@@ -1983,6 +1983,7 @@ export const DIRECT_STYLE_PROPERTIES = [
   "-webkit-line-clamp",
   "-webkit-box-orient",
   "aspect-ratio",
+  "font-variant-numeric",
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

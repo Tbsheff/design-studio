@@ -36,6 +36,7 @@ const copy = {
   clearSearch: "Clear search",
   clickThroughAFinishedPrototype:
     "Click through a finished prototype. No cost.",
+  clientWord: "client",
   clientsWord: "clients",
   close: "Close",
   closeFirstSteps: "Close first steps",

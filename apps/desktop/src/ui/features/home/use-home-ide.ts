@@ -1,8 +1,12 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { toHomeCommands } from "./home-command-model.js";
-import type { HomeCommand, HomeLayer } from "./home-command-model.js";
+import type {
+  HomeCommand,
+  HomeCommandsInput,
+  HomeLayer,
+} from "./home-command-model.js";
 import { homePrefs } from "./home-prefs-model.js";
 import { useActivity } from "./use-activity.js";
 import type { ActivityState } from "./use-activity.js";
@@ -73,39 +77,45 @@ const useCommandSource = (input: HomeIdeInput, nav: WorkspaceNav): void => {
   const { onAttach, onCommands, onLayer, onSample, onTrashOpen } = input;
   const { onSelect, selected, workspaces } = nav;
   const { projects } = input;
+  const onComposer = setComposerFocus;
 
-  const source = useMemo(() => {
-    const onComposer = setComposerFocus;
-    const onTrash = (): void => onTrashOpen(true);
+  const onTrash = useCallback((): void => {
+    onTrashOpen(true);
+  }, [onTrashOpen]);
 
-    return (): readonly HomeCommand[] =>
-      toHomeCommands({
-        onAttach,
-        onComposer,
-        onLayer,
-        onSample,
-        onSelect,
-        onTrash,
-        projects,
-        selected,
-        workspaces,
-      });
-  }, [
+  const latest = useRef<HomeCommandsInput>({
     onAttach,
+    onComposer,
     onLayer,
     onSample,
     onSelect,
-    onTrashOpen,
+    onTrash,
     projects,
     selected,
     workspaces,
-  ]);
+  });
 
   useEffect(() => {
-    onCommands(source);
-  }, [onCommands, source]);
+    latest.current = {
+      onAttach,
+      onComposer,
+      onLayer,
+      onSample,
+      onSelect,
+      onTrash,
+      projects,
+      selected,
+      workspaces,
+    };
+  });
 
-  useEffect(() => (): void => onCommands(null), [onCommands]);
+  useEffect(() => {
+    onCommands(() => toHomeCommands(latest.current));
+
+    return (): void => {
+      onCommands(null);
+    };
+  }, [onCommands]);
 };
 
 const useHomeIde = (input: HomeIdeInput): HomeIde => {

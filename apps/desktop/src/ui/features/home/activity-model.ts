@@ -106,6 +106,14 @@ const toMcpText = (activity: ActivityWire | null): string => {
   return `${copy.mcpOn} :${port}`;
 };
 
+const toClientsWord = (count: number): string => {
+  if (count === 1) {
+    return copy.clientWord;
+  }
+
+  return copy.clientsWord;
+};
+
 const toClientsText = (activity: ActivityWire | null): string => {
   const clients = activity?.mcp.clients ?? [];
 
@@ -113,7 +121,7 @@ const toClientsText = (activity: ActivityWire | null): string => {
     return copy.noClients;
   }
 
-  const count = `${clients.length} ${copy.clientsWord}`;
+  const count = `${clients.length} ${toClientsWord(clients.length)}`;
 
   return `${count} · ${clients.join(", ")}`;
 };

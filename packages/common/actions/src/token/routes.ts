@@ -12,6 +12,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/tokens/export",
   },
+  listUsageToken: {
+    id: "token.listUsage",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/tokens/usage",
+  },
   setToken: {
     id: "token.set",
     invalidates: ["direct-edit.getDesignSystem", "version.list"],

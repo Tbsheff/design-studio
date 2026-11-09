@@ -34,3 +34,5 @@ export type {
   TokenExportOptions,
   TokenExportResult,
 } from "./token-export/index.js";
+
+export { TokenUsageStore } from "./usage/index.js";

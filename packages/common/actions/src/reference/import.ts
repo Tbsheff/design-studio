@@ -11,6 +11,7 @@ import {
   ReferenceNameFieldSchema,
   ReferencePathFieldSchema,
   ReferenceSchema,
+  ReferenceUrlFieldSchema,
 } from "./schema.js";
 
 const importReference = defineAction({
@@ -20,11 +21,11 @@ const importReference = defineAction({
     name: "import_reference",
     set: "core",
     short:
-      "Copy a folder, zip or file into the project as read-only reference material, and index it.",
+      "Copy a folder, zip, file or web page into the project as read-only reference material, and index it.",
   },
   confirm: "none",
   description:
-    "Import reference material into a project. Give a local path to a folder, zip, PDF, Markdown, CSV, JSON or text file, or file bytes as base64. The studio copies text and images into reference/<name>/, skips node_modules, .git and binaries, writes an index, and tells the agent the files are there.",
+    "Import reference material into a project. Give a local path to a folder, zip, PDF, Markdown, CSV, JSON or text file, file bytes as base64, or an http or https URL of a web page (saved as page.png, page.md and style.json). The studio copies text and images into reference/<name>/, skips node_modules, .git and binaries, writes an index, and tells the agent the files are there.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/references" },
   id: "reference.import",
@@ -34,6 +35,7 @@ const importReference = defineAction({
     name: ReferenceNameFieldSchema,
     path: ReferencePathFieldSchema,
     projectId: ProjectIdSchema,
+    url: ReferenceUrlFieldSchema,
   }),
   invalidates: ["project.get"],
   mcp: { name: "import_reference" },

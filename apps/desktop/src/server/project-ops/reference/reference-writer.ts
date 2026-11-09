@@ -6,6 +6,7 @@ import { Context, Effect, Layer } from "effect";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import { ProjectStore, importReferenceInto } from "../../store/index.js";
 import type { LocalOrgScope, ReferenceSummary } from "../../store/index.js";
+import { runUrlImport } from "./reference-url-import.js";
 
 interface ImportReferenceCommand {
   readonly data: string | null;
@@ -13,6 +14,7 @@ interface ImportReferenceCommand {
   readonly name: string | null;
   readonly path: string | null;
   readonly projectId: string;
+  readonly url: string | null;
 }
 
 type WriteFailure = BadRequest | Conflict | NotFound;
@@ -51,6 +53,13 @@ class ReferenceWriter extends Context.Service<
             return yield* new NotFound({
               message: "The project has no design.",
             });
+          }
+
+          if (command.url !== null) {
+            const { data, name, path, url } = command;
+            const source = { data, name, path };
+
+            return yield* runUrlImport({ direction, project, source, url });
           }
 
           return yield* attemptKnown(() =>

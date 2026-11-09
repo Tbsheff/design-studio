@@ -103,6 +103,7 @@ const projectApi = {
       name: null,
       path: null,
       projectId: pid,
+      url: null,
     }),
   importReferencePath: (
     pid: string,
@@ -114,6 +115,16 @@ const projectApi = {
       name: null,
       path: folderPath,
       projectId: pid,
+      url: null,
+    }),
+  importReferenceUrl: (pid: string, url: string): Promise<ReferenceImported> =>
+    call(referenceRoutes.importReference, {
+      data: null,
+      fileName: null,
+      name: null,
+      path: null,
+      projectId: pid,
+      url,
     }),
   listProjects: async (): Promise<Project[]> => {
     const all = await listProjectPages(null);

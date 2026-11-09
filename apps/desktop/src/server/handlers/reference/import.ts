@@ -18,6 +18,7 @@ const handle = Effect.fn("reference.import")(function* run(
     name: input.name,
     path: input.path,
     projectId: input.projectId,
+    url: input.url,
   });
 }) satisfies Handle<typeof importReference>;
 

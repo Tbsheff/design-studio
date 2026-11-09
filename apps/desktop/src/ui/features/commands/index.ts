@@ -36,7 +36,7 @@ export {
 
 export { useStudioCommands } from "./use-studio-commands.js";
 
-export type { CommandLayer as CommandLayerName } from "./registry.js";
+export type { Command, CommandLayer as CommandLayerName } from "./registry.js";
 
 export { useCanvasCommands } from "./use-canvas-commands.js";
 

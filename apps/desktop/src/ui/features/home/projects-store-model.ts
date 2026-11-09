@@ -57,6 +57,23 @@ const projectsApi = {
   health: (): Promise<AppHealth[]> =>
     json<AppHealth[]>("GET", "/api/home/health"),
   load: runProjectsLoad,
+  pin: async (project: Project, isPinned: boolean): Promise<void> => {
+    update((list) =>
+      list.map((item) => {
+        if (item.id === project.id) {
+          return { ...item, settings: { ...item.settings, isPinned } };
+        }
+
+        return item;
+      })
+    );
+
+    try {
+      await api.updateSettings(project.id, { isPinned });
+    } finally {
+      void runProjectsLoad();
+    }
+  },
   rename: async (project: Project, name: string): Promise<Project> => {
     update((list) =>
       list.map((item) => {

@@ -9,13 +9,15 @@ import { PaletteSearch } from "./palette-search.js";
 import { usePalette } from "./use-palette.js";
 
 const Palette = ({
+  isProjectsOnly,
   onClose,
   onShortcuts,
 }: {
-  onClose: () => void;
-  onShortcuts: () => void;
+  readonly isProjectsOnly: boolean;
+  readonly onClose: () => void;
+  readonly onShortcuts: () => void;
 }): ReactElement => {
-  const palette = usePalette(onClose, onShortcuts);
+  const palette = usePalette(onClose, onShortcuts, isProjectsOnly);
   const { changeQuery, onKeyDown, runRow, setActive } = palette;
 
   const closeOnBackdrop = useCallback(

@@ -42,12 +42,24 @@ const toUniqueCommands = (onShortcuts: () => void): Command[] => {
   );
 };
 
-const usePaletteRows = (
-  query: string,
-  onShortcuts: () => void,
-  onClose: () => void,
-  setError: (error: string | null) => void
-): PaletteRows => {
+interface PaletteRowsInput {
+  readonly isProjectsOnly: boolean;
+  readonly onClose: () => void;
+  readonly onShortcuts: () => void;
+  readonly query: string;
+  readonly setError: (error: string | null) => void;
+}
+
+const toShownRows = (rows: Row[], isProjectsOnly: boolean): Row[] => {
+  if (!isProjectsOnly) {
+    return rows;
+  }
+
+  return rows.filter((row) => row.kind === "project");
+};
+
+const usePaletteRows = (input: PaletteRowsInput): PaletteRows => {
+  const { isProjectsOnly, onClose, onShortcuts, query, setError } = input;
   const current = uiStore.get().activeProjectId;
   const hits = useProjectHits(current, true);
   const routes = useRouteHits(query, current, hits?.routes ?? []);
@@ -100,9 +112,14 @@ const usePaletteRows = (
     [actions, commands, current, projects, query, recent, routes]
   );
 
+  const shown = useMemo(
+    () => toShownRows(rows, isProjectsOnly),
+    [isProjectsOnly, rows]
+  );
+
   const isLoading = hits === null;
 
-  return { isBusy, isLoading, rows };
+  return { isBusy, isLoading, rows: shown };
 };
 
 export { usePaletteRows };

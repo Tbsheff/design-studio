@@ -16,4 +16,8 @@ export {
 
 export { setRailToggled, useRail } from "./rail-store-model.js";
 
+export type { CommandSource as HomeCommandSource } from "./use-home-ide.js";
+
+export type { HomeCommand, HomeLayer } from "./home-command-model.js";
+
 export { Home };

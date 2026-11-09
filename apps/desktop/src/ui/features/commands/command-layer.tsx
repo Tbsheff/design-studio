@@ -32,8 +32,14 @@ const CommandLayer = ({
     [opener]
   );
 
-  if (layer === "palette") {
-    return <Palette onClose={close} onShortcuts={openShortcuts} />;
+  if (layer === "palette" || layer === "projects") {
+    return (
+      <Palette
+        isProjectsOnly={layer === "projects"}
+        onClose={close}
+        onShortcuts={openShortcuts}
+      />
+    );
   }
 
   return <ShortcutSheet onClose={close} />;

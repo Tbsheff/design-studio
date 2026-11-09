@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useUi } from "../../platform/storage.js";
 import { toFilteredProjects, toSortedProjects } from "./project-list-model.js";
 import { useHomeView } from "./use-home-view.js";
+import { toPinned } from "./workspace-model.js";
 
 interface GridShown {
   readonly matched: readonly Project[];
@@ -18,8 +19,12 @@ const useGridShown = (
   query: string
 ): GridShown => {
   const { homeSort } = useUi();
-  const { view, isFavoritesOnly, favorites } = useHomeView();
-  const favoriteIds = useMemo(() => new Set(favorites), [favorites]);
+  const { view, isFavoritesOnly } = useHomeView();
+
+  const favoriteIds = useMemo(
+    () => new Set(toPinned(projects).map((project) => project.id)),
+    [projects]
+  );
 
   const matched = useMemo(
     () => toSortedProjects(toFilteredProjects(projects ?? [], query), homeSort),

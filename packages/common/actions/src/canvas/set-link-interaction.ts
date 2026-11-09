@@ -18,7 +18,7 @@ const setLinkInteractionCanvas = defineAction({
   },
   confirm: "none",
   description:
-    "Set the trigger, action and target of one prototype link (linkId), or make a link from a source element (fromFrame and selector). trigger: click (default), hover, press, delay (delayMs), key (key), swipe-left, swipe-right, swipe-up or swipe-down. action: navigate, modal, drawer, popover (toFrame; placement bottom-start, bottom-end, top-start, top-end, right or left; isOutsideClose false keeps it open on outside click), scroll-to, toggle (target), open-url (url), close-overlay, or set-variable (variableName, variableOp, variableValue). whenName and whenEquals make the link fire only when that Play variable matches; whenName null clears it. One undo step.",
+    "Set the trigger, action and target of one prototype link (linkId), or make a link from a source element (fromFrame and selector). trigger: click (default), hover, press, delay (delayMs), key (key) or swipe-left, -right, -up, -down. action: navigate, modal, drawer, popover (toFrame; placement top-start, top-end, bottom-start, bottom-end, left or right; isOutsideClose false keeps it open), scroll-to, toggle (target), open-url (url), close-overlay or set-variable (variableName, variableOp, variableValue). whenName and whenEquals fire the link only when that Play variable matches. One undo step.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/links/interaction" },
   id: "canvas.setLinkInteraction",

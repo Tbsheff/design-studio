@@ -118,3 +118,9 @@
 :root[data-shell="mac"] .studio .pane-canvas {
   margin-top: calc((var(--shell-bar-h) - var(--bar-h)) / 2);
 }
+
+.ide-status .theme-menu {
+  top: auto;
+  bottom: calc(100% + var(--s-1));
+  transform-origin: bottom right;
+}

@@ -701,7 +701,7 @@ export { ViteManager } from "./vite-manager.js";
 export type { ViteTarget } from "./vite-manager.js";
 export { AppFixRunner } from "./app-fix-runner.js";
 export { McpReadStore } from "./mcp-read-store.js";
-
+export { SpeedRunner, SpeedStore } from "./speed/index.js";
 export { probeOnPage } from "./probe-page.js";
 
 export { layoutProbeExpression } from "./layout-probe.js";

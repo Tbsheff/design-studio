@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import type { ParentMessageBody } from "../../platform/bridge.js";
@@ -22,7 +22,17 @@ interface Props {
   running?: boolean;
   lastChange: FilesChange | null;
   post: (body: ParentMessageBody) => void;
-  shell?: { onAskAgent?: (text: string) => void };
+  shell?: {
+    onAskAgent?: (text: string) => void;
+    renderSpeed?:
+      | ((scope: {
+          readonly directionId: string | null;
+          readonly frameId: string;
+          readonly isLive: boolean;
+          readonly projectId: string;
+        }) => ReactNode)
+      | null;
+  };
   toolKey: string;
 }
 
@@ -70,6 +80,14 @@ const ReviewEntry = (props: Props): ReactElement => {
     </Suspense>
   );
 
+  const speed =
+    props.shell?.renderSpeed?.({
+      directionId,
+      frameId: frame.id,
+      isLive: live,
+      projectId,
+    }) ?? null;
+
   const walkthrough = (
     <WalkthroughSection
       directionId={directionId}
@@ -92,6 +110,7 @@ const ReviewEntry = (props: Props): ReactElement => {
         onSelect={select}
         onAsk={askAgent}
         onClose={close}
+        speed={speed}
       >
         {critique}
         {walkthrough}

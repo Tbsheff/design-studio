@@ -10,6 +10,7 @@ interface ReviewBodyProps {
   readonly review: ReviewState;
   readonly isLive: boolean;
   readonly actions: ReviewActions;
+  readonly speed: ReactNode;
   readonly children: ReactNode;
 }
 
@@ -18,6 +19,7 @@ const ReviewBody = ({
   children,
   isLive,
   review,
+  speed,
 }: ReviewBodyProps): ReactElement => {
   const { result } = review;
 
@@ -38,6 +40,7 @@ const ReviewBody = ({
         toGroups(result.findings).map(([kind, list]) => (
           <ReviewGroup key={kind} kind={kind} list={list} actions={actions} />
         ))}
+      {speed}
       {children}
     </div>
   );

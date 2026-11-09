@@ -120,6 +120,11 @@ function wrapPage(context: BrowserContext, page: Page): RenderPage {
       await clearOrigin(context, page, page.url());
       await page.goto("about:blank").catch(() => undefined);
     },
+    async clearCache() {
+      const session = await context.newCDPSession(page).catch(() => null);
+      await session?.send("Network.clearBrowserCache").catch(() => undefined);
+      await session?.detach().catch(() => undefined);
+    },
     async goto(url) {
       errors.consoleErrors.length = 0;
       errors.pageErrors.length = 0;

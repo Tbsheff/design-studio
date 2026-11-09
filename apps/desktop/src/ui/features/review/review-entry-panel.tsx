@@ -20,6 +20,7 @@ const ReviewEntryPanel = (props: Props): ReactElement => (
       onSelect={props.onSelect}
       onAsk={props.onAsk}
       onClose={props.onClose}
+      speed={props.speed}
     >
       {props.children}
     </ReviewPanel>

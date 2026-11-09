@@ -37,6 +37,7 @@ import type { ReferenceDomainError } from "../../reference/errors/index.js";
 import type { ScenarioError } from "../../scenario/errors/index.js";
 import type { ScreenError } from "../../screen/errors/index.js";
 import type { SpacingError } from "../../spacing/errors/index.js";
+import type { SpeedError } from "../../speed/errors/index.js";
 import type { StackingError } from "../../stacking/errors/index.js";
 import type { StateStyleError } from "../../state-style/errors/index.js";
 import type { TextStyleError } from "../../text-style/errors/index.js";
@@ -87,6 +88,7 @@ type StudioError =
   | ScenarioError
   | ScreenError
   | SpacingError
+  | SpeedError
   | StackingError
   | StateStyleError
   | TextError

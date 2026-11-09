@@ -6,6 +6,7 @@ import { useCanvasCommandsHost } from "../canvas-commands-host";
 import type { CenterView } from "../shell/center-view";
 import { nameOf } from "./project-model";
 import { neverRan, runStepOf } from "./run-model";
+import { renderSpeedSlot } from "./speed-slot";
 import type { StudioCtx } from "./studio-context";
 import { hasDarkMode, tokenEntries } from "./token-model";
 
@@ -65,6 +66,7 @@ const shellProps = (ctx: StudioCtx): CanvasProps["shell"] => {
     onShip: openShip,
     pane: panes.panel.tab,
     paneCollapsed: ui.paneCollapsed,
+    renderSpeed: renderSpeedSlot,
   };
 };
 

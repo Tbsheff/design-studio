@@ -128,15 +128,45 @@ const useDrawStrokes = (): DrawStrokes => {
   return { clear, push, strokes, undo };
 };
 
-const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
+const useDrawInput = (
+  live: { readonly current: { available: boolean; on: boolean } },
+  handlers: DrawKeyHandlers
+): void => {
+  const { setOn, toggle, undo } = handlers;
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent): void =>
+      handleDrawKey(event, live, { setOn, toggle, undo });
+
+    globalThis.addEventListener("keydown", onKey, true);
+
+    return (): void => globalThis.removeEventListener("keydown", onKey, true);
+  }, [live, setOn, toggle, undo]);
+
+  useDesktopCommand((command) => {
+    if (!live.current.on || command.type !== "undo") {
+      return false;
+    }
+
+    undo();
+
+    return true;
+  });
+};
+
+const useDrawTool = (
+  available: boolean,
+  onActivate: () => void,
+  onDeactivate: () => void
+): DrawTool => {
   const [isOn, setIsOn] = useState(false);
   const on = isOn;
   const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
   const [wasAvailable, setWasAvailable] = useState(available);
   const { clear, push, strokes, undo } = useDrawStrokes();
-  const live = useRef({ available, on, onActivate });
+  const live = useRef({ available, on, onActivate, onDeactivate });
   useLayoutEffect(() => {
-    live.current = { available, on, onActivate };
+    live.current = { available, on, onActivate, onDeactivate };
   });
 
   const setOn = useCallback(
@@ -165,26 +195,15 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
     }
   }
 
-  const toggle = useCallback(() => setOn(!live.current.on), [setOn]);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent): void =>
-      handleDrawKey(event, live, { setOn, toggle, undo });
-
-    globalThis.addEventListener("keydown", onKey, true);
-
-    return (): void => globalThis.removeEventListener("keydown", onKey, true);
-  }, [setOn, toggle, undo]);
-
-  useDesktopCommand((command) => {
-    if (!live.current.on || command.type !== "undo") {
-      return false;
+  const toggle = useCallback(() => {
+    if (live.current.on) {
+      live.current.onDeactivate();
     }
 
-    undo();
+    setOn(!live.current.on);
+  }, [setOn]);
 
-    return true;
-  });
+  useDrawInput(live, { setOn, toggle, undo });
 
   const used = strokes.reduce((sum, stroke) => sum + stroke.points.length, 0);
 
@@ -214,10 +233,14 @@ const useCanvasDraw = (
 ): DrawTool => {
   const setComment = comment.setOn;
 
-  const draw = useDrawTool(comment.available, () => {
-    setSelectMode(false);
-    setComment(false);
-  });
+  const draw = useDrawTool(
+    comment.available,
+    () => {
+      setSelectMode(false);
+      setComment(false);
+    },
+    () => setSelectMode(true)
+  );
 
   const setDraw = draw.setOn;
   const isBlocked = comment.on || selectMode;

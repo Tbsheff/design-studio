@@ -290,4 +290,8 @@ const toJsxSegments = (file: string, source: string): Segment[] => {
   return segments;
 };
 
-export { toJsxSegments as jsxSegments };
+export {
+  toChildNodesOf as childNodesOf,
+  toPluginsOf as pluginsOf,
+  toJsxSegments as jsxSegments,
+};

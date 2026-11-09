@@ -154,21 +154,19 @@ const toResultOf = (
   versionId: version?.id ?? null,
 });
 
-const toCommitUpdate = async (
+const toCommitChanged = async (
   target: SearchTarget,
-  plan: UpdatePlan,
-  request: TextUpdateRequest,
+  changed: readonly ChangedFile[],
+  title: string,
   commit: UpdateCommit
 ): Promise<Version> => {
   const { project, direction } = target;
 
-  const written: WrittenFile[] = plan.changed.map((file) => ({
+  const written: WrittenFile[] = changed.map((file) => ({
     code: file.after,
     original: file.before,
     target: { file: file.absolute, relative: file.relative },
   }));
-
-  const title = toTitleOf(plan, request.replace);
 
   const version = await writeAndCommitAll(
     commit.deps,
@@ -185,7 +183,7 @@ const toCommitUpdate = async (
 
   commit.history?.record({
     directionId: direction.id,
-    files: plan.changed.map((file) => ({
+    files: changed.map((file) => ({
       after: file.after,
       before: file.before,
       file: file.absolute,
@@ -199,6 +197,19 @@ const toCommitUpdate = async (
 
   return version;
 };
+
+const toCommitUpdate = (
+  target: SearchTarget,
+  plan: UpdatePlan,
+  request: TextUpdateRequest,
+  commit: UpdateCommit
+): Promise<Version> =>
+  toCommitChanged(
+    target,
+    plan.changed,
+    toTitleOf(plan, request.replace),
+    commit
+  );
 
 const applyTextUpdate = async (
   target: SearchTarget,
@@ -219,6 +230,7 @@ const applyTextUpdate = async (
 
 export {
   applyTextUpdate,
+  toCommitChanged as commitChanged,
   toPlanTextUpdate as planTextUpdate,
   toResultOf as resultOf,
   toWriteTextUpdate as writeTextUpdate,

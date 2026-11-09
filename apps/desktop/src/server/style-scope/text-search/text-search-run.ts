@@ -6,6 +6,8 @@ import {
 } from "../../direct-edit/index.js";
 import type { DirectionIds, DirectionRun } from "../../direct-edit/index.js";
 import type { KnownFailure } from "../../platform/attempt/index.js";
+import { applyTextRange } from "./apply-range.js";
+import type { TextRangeRequest, TextRangeResult } from "./apply-range.js";
 import type {
   TextSearchQuery,
   TextSearchResult,
@@ -24,6 +26,10 @@ interface InspectTextCommand extends DirectionIds {
 
 interface UpdateTextCommand extends DirectionIds {
   readonly request: TextUpdateRequest;
+}
+
+interface ApplyRangeCommand extends DirectionIds {
+  readonly request: TextRangeRequest;
 }
 
 const CLIENT = "studio";
@@ -73,6 +79,20 @@ const runTextUpdate = (
     toTextSearchFailure
   );
 
-export { runTextInspect, runTextUpdate };
+const runTextRange = (
+  command: ApplyRangeCommand
+): Effect.Effect<TextRangeResult, KnownFailure> =>
+  runDirectionWrite(
+    command,
+    async (run): Promise<TextRangeResult> =>
+      await applyTextRange(await toSearchTarget(run), command.request, {
+        client: CLIENT,
+        deps: run.runtime.editDeps,
+        history: run.runtime.editDeps.history ?? null,
+      }),
+    toTextSearchFailure
+  );
 
-export type { InspectTextCommand, UpdateTextCommand };
+export { runTextInspect, runTextRange, runTextUpdate };
+
+export type { ApplyRangeCommand, InspectTextCommand, UpdateTextCommand };

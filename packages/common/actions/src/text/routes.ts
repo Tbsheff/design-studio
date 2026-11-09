@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  applyRangeText: {
+    id: "text.applyRange",
+    invalidates: ["text.inspect"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/apply-range-text",
+  },
   inspectText: {
     id: "text.inspect",
     invalidates: [],

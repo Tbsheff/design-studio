@@ -16,6 +16,7 @@ export {
 export type { SearchTarget } from "./scope.js";
 
 export type {
+  ApplyRangeCommand,
   InspectTextCommand,
   UpdateTextCommand,
 } from "./text-search-run.js";

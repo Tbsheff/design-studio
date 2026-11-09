@@ -121,10 +121,10 @@ const entryOf = (projectId: string): Entry => {
     entry = {
       again: false,
       hash: null,
+      isPending: false,
       layout: null,
       loaded: false,
       loading: null,
-      isPending: false,
       lofi: [],
       requestedAt: 0,
       sections: [],
@@ -344,6 +344,8 @@ const canvasStore = {
     entries.get(projectId)?.loaded ?? false,
   lofi: (projectId: string): string[] =>
     entries.get(projectId)?.lofi ?? NO_LOFI,
+  sections: (projectId: string): CanvasSection[] =>
+    entries.get(projectId)?.sections ?? NO_SECTIONS,
   set: (projectId: string, layout: CanvasLayout): void => {
     const entry = entryOf(projectId);
     const before = fileText(entry);
@@ -352,32 +354,6 @@ const canvasStore = {
     notify();
 
     if (entry.loaded && fileText(entry) !== before) {
-      schedule(projectId);
-    }
-  },
-  sections: (projectId: string): CanvasSection[] =>
-    entries.get(projectId)?.sections ?? NO_SECTIONS,
-  setSections: (
-    projectId: string,
-    change: SectionChange,
-    isFinal: boolean
-  ): void => {
-    const entry = entryOf(projectId);
-    const before = fileText(entry);
-    entry.sections = change.sections;
-
-    if (change.layout) {
-      entry.layout = change.layout;
-    }
-
-    notify();
-
-    if (fileText(entry) !== before) {
-      entry.isPending = true;
-    }
-
-    if (isFinal && entry.loaded && entry.isPending) {
-      entry.isPending = false;
       schedule(projectId);
     }
   },
@@ -403,6 +379,30 @@ const canvasStore = {
     entry.layout ??= fallback;
     notify();
     schedule(projectId);
+  },
+  setSections: (
+    projectId: string,
+    change: SectionChange,
+    isFinal: boolean
+  ): void => {
+    const entry = entryOf(projectId);
+    const before = fileText(entry);
+    entry.sections = change.sections;
+
+    if (change.layout) {
+      entry.layout = change.layout;
+    }
+
+    notify();
+
+    if (fileText(entry) !== before) {
+      entry.isPending = true;
+    }
+
+    if (isFinal && entry.loaded && entry.isPending) {
+      entry.isPending = false;
+      schedule(projectId);
+    }
   },
   subscribe: (listener2: () => void) => {
     listeners.add(listener2);

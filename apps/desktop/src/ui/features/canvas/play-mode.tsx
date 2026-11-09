@@ -188,11 +188,8 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
     stage,
   });
 
-  const theme = usePlayTheme({
-    elements: play.elements,
-    props,
-    slots: play.slots,
-  });
+  const { elements, slots } = play;
+  const theme = usePlayTheme({ elements, props, slots });
 
   return (
     <dialog

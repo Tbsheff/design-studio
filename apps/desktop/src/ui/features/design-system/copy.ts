@@ -241,6 +241,15 @@ const COPY = {
   titleStartFrom: "Start from",
   titleWebsite: "Website",
   titleYours: "Yours",
+  usageChipTip: "Show only kit parts that no file imports",
+  usageCountTip: "Show where this part is imported",
+  usageEmptyUnused: "Every kit part is imported.",
+  usageImportsSuffix: " imports in ",
+  usageNoSites: "No imports found in the code.",
+  usageOpenTip: "Open this file in the code editor",
+  usageRoutesSuffix: " routes",
+  usageSitesLabel: "Where this part is imported",
+  usageUnused: "Unused",
 } as const;
 
 export { COPY };

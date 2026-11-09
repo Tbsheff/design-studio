@@ -5,14 +5,19 @@ import { BlockPanel, BlockTabBar } from "../features/block/index.js";
 import { ChartPanel, ChartTabBar } from "../features/chart/index.js";
 import { ComponentsPanel as FeatureComponentsPanel } from "../features/design-system/components-panel.js";
 import { GalleryHost } from "../features/gallery/gallery-host.js";
+import { CodeEditDialog } from "../features/inspector/index.js";
 import { PatternPanel, PatternTabs } from "../features/pattern/index.js";
 import { useInsertPanel } from "./use-insert-panel.js";
 import type { InsertPanelState } from "./use-insert-panel.js";
 
 type PanelProps = Omit<
   ComponentProps<typeof FeatureComponentsPanel>,
-  "renderGallery"
+  "renderCode" | "renderGallery"
 >;
+
+type CodeSlot = Parameters<
+  NonNullable<ComponentProps<typeof FeatureComponentsPanel>["renderCode"]>
+>[0];
 
 type GallerySlot = Parameters<
   NonNullable<ComponentProps<typeof FeatureComponentsPanel>["renderGallery"]>
@@ -109,6 +114,24 @@ const ComponentsPanel = ({
     [directionId, projectId, selection]
   );
 
+  const renderCode = useCallback(({ onClose, target }: CodeSlot) => {
+    if (target === null) {
+      return null;
+    }
+
+    return (
+      <Suspense fallback={null}>
+        <CodeEditDialog
+          projectId={target.projectId}
+          directionId={target.directionId}
+          file={target.file}
+          line={target.line}
+          onClose={onClose}
+        />
+      </Suspense>
+    );
+  }, []);
+
   const panel = useInsertPanel();
 
   const extra = toExtraPanel(panel, {
@@ -130,6 +153,7 @@ const ComponentsPanel = ({
           onMention={onMention}
           kind={kind}
           selection={selection}
+          renderCode={renderCode}
           renderGallery={renderGallery}
         />
       )}

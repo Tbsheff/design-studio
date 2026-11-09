@@ -15,7 +15,18 @@ interface GalleryRender {
   onClose: () => void;
 }
 
+interface CodeSlot {
+  target: {
+    directionId: string;
+    file: string;
+    line: number;
+    projectId: string;
+  } | null;
+  onClose: () => void;
+}
+
 interface Props {
+  renderCode?: (slot: CodeSlot) => ReactNode;
   renderGallery?: (slot: GalleryRender) => ReactNode;
   projectId: string;
   directionId: string | null;
@@ -26,4 +37,4 @@ interface Props {
   selection?: SelectionContext[];
 }
 
-export type { GalleryRender, MenuAnchor, Props };
+export type { CodeSlot, GalleryRender, MenuAnchor, Props };

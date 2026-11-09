@@ -23,6 +23,7 @@ import { SlotView } from "./play-slot-view.js";
 import { useFocusReturn } from "./use-focus-return.js";
 import { useHotspotHints } from "./use-hotspot-hints.js";
 import { usePlayDevice } from "./use-play-device.js";
+import { usePlayTheme } from "./use-play-theme.js";
 import { usePlay } from "./use-play.js";
 import type { PlayState } from "./use-play.js";
 import { useStageSize } from "./use-stage-size.js";
@@ -191,6 +192,8 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
     slots: play.slots,
   });
 
+  const theme = usePlayTheme({ elements, props, slots: play.slots });
+
   const { flashCount, isEnabled, isHeld, setEnabled: onHints, spots } = hints;
 
   const slotProps = {
@@ -222,6 +225,7 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
         device={device}
         orientation={orientation}
         isHints={isEnabled}
+        theme={theme}
         onHints={onHints}
         onDevice={onDevice}
         onRotate={onRotate}

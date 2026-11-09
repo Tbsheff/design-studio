@@ -1,5 +1,7 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { text } from "node:stream/consumers";
 
 import { WORKSPACE_ROOT, toWorkspaceBin } from "./workspace-root.ts";
 
@@ -42,12 +44,35 @@ const toGateFailure = (reason: string): never => {
 
 const LINT_EXIT_CODES = new Set([0, 1]);
 
-const lint = (): Diagnostic[] => {
-  const run = spawnSync(
+interface OxlintRun {
+  readonly error: Error | null;
+  readonly status: number | null;
+  readonly stdout: string;
+  readonly stderr: string;
+}
+
+const runOxlint = async (): Promise<OxlintRun> => {
+  const child = spawn(
     toWorkspaceBin("oxlint"),
     ["-c", "oxlint.config.ts", "--format=json"],
-    { cwd: WORKSPACE_ROOT, encoding: "utf-8", maxBuffer: 2 ** 31 - 1 }
+    { cwd: WORKSPACE_ROOT, stdio: ["ignore", "pipe", "pipe"] }
   );
+
+  try {
+    const [stdout, stderr, [status]] = await Promise.all([
+      text(child.stdout),
+      text(child.stderr),
+      once(child, "close"),
+    ]);
+
+    return { error: null, status: status as number | null, stderr, stdout };
+  } catch (error) {
+    return { error: error as Error, status: null, stderr: "", stdout: "" };
+  }
+};
+
+const lint = async (): Promise<Diagnostic[]> => {
+  const run = await runOxlint();
 
   if (run.error) {
     return toGateFailure(`oxlint did not start: ${run.error.message}`);
@@ -144,8 +169,8 @@ const report = (lines: string[], ok: string) => {
   return lines.length > 0 ? 1 : 0;
 };
 
-const main = () => {
-  const diagnostics = lint();
+const main = async () => {
+  const diagnostics = await lint();
   const now = countAll(diagnostics);
   const before = readBaseline();
   const update = process.argv.includes("--update");
@@ -173,9 +198,9 @@ const main = () => {
   );
 };
 
-const toExitCode = (): number => {
+const toExitCode = async (): Promise<number> => {
   try {
-    return main();
+    return await main();
   } catch (error) {
     process.stderr.write(String(error));
 
@@ -183,4 +208,4 @@ const toExitCode = (): number => {
   }
 };
 
-process.exitCode = toExitCode();
+process.exitCode = await toExitCode();

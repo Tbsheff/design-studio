@@ -96,10 +96,10 @@
 }
 
 .missing {
-  align-self: flex-start;
-  padding: 0 var(--s-2);
+  align-self: stretch;
+  padding: var(--s-1) var(--s-2);
   border: 1px dashed var(--warning, #d9a441);
-  border-radius: 11px;
+  border-radius: var(--r-1, 4px);
   color: var(--warning, #d9a441);
 }
 
@@ -190,4 +190,83 @@
 .error {
   margin: 0;
   color: var(--danger, #e5484d);
+}
+
+.addForm {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.addInput {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-1, 4px);
+  background: var(--surface-inset);
+  color: var(--text);
+  font: inherit;
+}
+
+.missingList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: var(--s-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.missingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.missingName {
+  color: var(--text);
+}
+
+.link {
+  height: 22px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--accent-line);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.link:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-2);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-1, 4px);
+}
+
+.resultFiles {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+.command {
+  display: block;
+  margin-top: var(--s-1);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-1, 4px);
+  background: var(--surface-inset);
+  color: var(--text);
+  user-select: all;
 }

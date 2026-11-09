@@ -1,5 +1,4 @@
-import { Icon } from "@design-studio/ui";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useState } from "react";
 import type { ReactNode } from "react";
 
 import {
@@ -14,15 +13,13 @@ import { TokenUsageChip } from "./token-usage-chip.js";
 import { TokenUsageContext } from "./token-usage-context.js";
 import { toEmptyText } from "./token-usage-model.js";
 import { TokensFooter } from "./tokens-footer.js";
+import { TokensPanelError } from "./tokens-panel-error.js";
 import { TokensPanelHead } from "./tokens-panel-head.js";
 import { TokensSearch } from "./tokens-search.js";
 import { TokensSections } from "./tokens-sections.js";
 import { TokensSource } from "./tokens-source.js";
 import type { TokenDraft } from "./use-token-draft.js";
-import { useTokenUsage } from "./use-token-usage.js";
-import { useTokenView } from "./use-token-view.js";
-
-const ALERT_SIZE = 13;
+import { useTokensPanel } from "./use-tokens-panel.js";
 
 interface TokensPanelProps {
   tokens: DesignTokens;
@@ -39,20 +36,16 @@ const TokensPanel = ({
 }: TokensPanelProps): ReactNode => {
   const [query, setQuery] = useState("");
   const [sweepOpen, setSweepOpen] = useState(false);
+
   const { setTheme: handleTheme } = draft;
-  const directionId = sweep?.directionId ?? null;
-  const projectId = sweep?.projectId ?? "";
-  const usage = useTokenUsage({ directionId, onSelectSite, projectId });
 
-  const { filterEntries } = usage;
-
-  const shownTokens = useMemo(
-    () => ({ entries: filterEntries(tokens.entries), file: tokens.file }),
-    [filterEntries, tokens.entries, tokens.file]
-  );
-
-  const view = useTokenView(shownTokens, draft, query);
-  const showDark = tokens.mode === "light";
+  const { usage, view } = useTokensPanel({
+    draft,
+    onSelectSite,
+    query,
+    tokens,
+    usageScope: sweep ?? null,
+  });
 
   return (
     <div className="tkp">
@@ -98,12 +91,7 @@ const TokensPanel = ({
           onToggle={usage.handleToggle}
         />
       )}
-      {draft.errors[""] && (
-        <p className="ins-error" role="alert">
-          <Icon name="alert" size={ALERT_SIZE} />
-          {draft.errors[""]}
-        </p>
-      )}
+      <TokensPanelError message={draft.errors[""] ?? null} />
       <TokenUsageContext.Provider value={usage.lookup}>
         <TokensSections
           baseOf={view.baseOf}
@@ -112,7 +100,7 @@ const TokensPanel = ({
           query={query}
           sections={view.sections}
           shownOf={view.shownOf}
-          showDark={showDark}
+          showDark={tokens.mode === "light"}
           swatchFor={view.swatchFor}
         />
       </TokenUsageContext.Provider>

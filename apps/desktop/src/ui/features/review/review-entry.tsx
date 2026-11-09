@@ -39,10 +39,17 @@ interface Props {
 const labelOf = (frame: CanvasFrame): string =>
   [frame.label ?? frameName(frame), frame.path].filter(Boolean).join(" · ");
 
+const toSpeed = (props: Props): ReactNode =>
+  props.shell?.renderSpeed?.({
+    directionId: props.directionId,
+    frameId: props.frame.id,
+    isLive: props.live,
+    projectId: props.projectId,
+  }) ?? null;
+
 const ReviewEntry = (props: Props): ReactElement => {
   const { markerRef, slot } = useReviewSlot();
   const { directionId, frame, live, projectId } = props;
-  const ask = props.shell?.onAskAgent;
 
   const {
     askAgent,
@@ -80,13 +87,7 @@ const ReviewEntry = (props: Props): ReactElement => {
     </Suspense>
   );
 
-  const speed =
-    props.shell?.renderSpeed?.({
-      directionId,
-      frameId: frame.id,
-      isLive: live,
-      projectId,
-    }) ?? null;
+  const speed = toSpeed(props);
 
   const walkthrough = (
     <WalkthroughSection
@@ -106,7 +107,7 @@ const ReviewEntry = (props: Props): ReactElement => {
         frameLabel={labelOf(frame)}
         live={live}
         running={props.running === true}
-        canAsk={Boolean(ask)}
+        canAsk={Boolean(props.shell?.onAskAgent)}
         onSelect={select}
         onAsk={askAgent}
         onClose={close}

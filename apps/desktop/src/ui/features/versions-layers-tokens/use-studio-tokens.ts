@@ -40,6 +40,7 @@ interface StudioTokens {
 
 const useStudioTokens = (options: Options): StudioTokens => {
   const draft = useTokenDraft(options);
+
   const {
     canUndo,
     directionId,
@@ -49,7 +50,9 @@ const useStudioTokens = (options: Options): StudioTokens => {
     redo,
     tokens,
   } = options;
+
   const { confirmLeave, count, undoLast } = draft;
+
   useTokenFrames();
 
   const handleUndo = useCallback((): void => {

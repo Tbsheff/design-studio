@@ -2,7 +2,11 @@ import { useCallback } from "react";
 import type { ReactNode } from "react";
 
 import { COPY } from "./copy.js";
-import { toSitePlace, toSiteSelector } from "./token-usage-model.js";
+import {
+  toSiteLabel,
+  toSitePlace,
+  toSiteSelector,
+} from "./token-usage-model.js";
 import type { TokenUsageSite as Site } from "./token-usage-model.js";
 import { useTokenUsageLookup } from "./use-token-usage.js";
 
@@ -24,11 +28,11 @@ const TokenUsageSite = ({ site }: TokenUsageSiteProps): ReactNode => {
       <button
         type="button"
         className={styles.site}
-        data-tip={COPY.usageSelectTip}
+        data-tip={`${COPY.usageSelectTip}: ${toSitePlace(site)}`}
         data-tip-align="end"
         onClick={handleSelect}
       >
-        <span className="truncate">{toSitePlace(site)}</span>
+        <span className="truncate">{toSiteLabel(site)}</span>
       </button>
     </li>
   );

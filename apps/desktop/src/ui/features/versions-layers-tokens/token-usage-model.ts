@@ -26,8 +26,16 @@ const toChipLabel = (count: number): string => `${COPY.usageUnused} (${count})`;
 const toCountTip = (usage: TokenUsageView): string =>
   `${COPY.usageCountTip}. ${usage.useCount}${COPY.usageTimesSuffix}${usage.fileCount}${COPY.usageFilesSuffix}`;
 
+const SHORT_PATH_PARTS = 2;
+
 const toSitePlace = (site: TokenUsageSite): string =>
   `${site.file}:${site.line}`;
+
+const toSiteLabel = (site: TokenUsageSite): string => {
+  const tail = site.file.split("/").slice(-SHORT_PATH_PARTS).join("/");
+
+  return `${tail}:${site.line}`;
+};
 
 const toSiteSelector = (site: TokenUsageSite): string =>
   `[${SOURCE_LOC_ATTR}^="${site.file}:${site.line}:"]`;
@@ -44,6 +52,7 @@ export {
   toChipLabel,
   toCountTip,
   toEmptyText,
+  toSiteLabel,
   toSitePlace,
   toSiteSelector,
   toUnusedEntries,

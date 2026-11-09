@@ -6,6 +6,12 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/tokens/apply",
   },
+  deleteToken: {
+    id: "token.delete",
+    invalidates: ["token.listUsage", "token.listClasses", "version.list"],
+    method: "DELETE",
+    path: "/api/projects/:projectId/d/:directionId/tokens/delete",
+  },
   exportToken: {
     id: "token.export",
     invalidates: [],
@@ -23,6 +29,12 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/tokens/usage",
+  },
+  renameToken: {
+    id: "token.rename",
+    invalidates: ["token.listUsage", "token.listClasses", "version.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/tokens/rename",
   },
   setToken: {
     id: "token.set",

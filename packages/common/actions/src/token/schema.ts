@@ -188,8 +188,53 @@ const TokenClassListFields = {
   }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(""))),
 } as const;
 
+const TokenRenameFields = {
+  name: Schema.Trim.check(
+    Schema.isMinLength(TOKEN_NAME_MIN),
+    Schema.isMaxLength(TOKEN_NAME_MAX)
+  ).annotate({
+    description:
+      'Current CSS variable of the token from get_tokens, for example "--color-brand".',
+  }),
+  newName: Schema.Trim.check(
+    Schema.isMinLength(TOKEN_NAME_MIN),
+    Schema.isMaxLength(TOKEN_NAME_MAX)
+  ).annotate({
+    description:
+      'New CSS variable, for example "--color-accent". A Tailwind theme key must keep its prefix, for example --color-.',
+  }),
+} as const;
+
+const TokenRenamedSchema = Schema.Struct({
+  changedFiles: Schema.Array(Schema.String),
+  newName: Schema.String,
+  replacedCount: Schema.Int,
+  token: Schema.String,
+  versionId: Schema.String,
+});
+
+const TokenDeleteFields = {
+  name: Schema.Trim.check(
+    Schema.isMinLength(TOKEN_NAME_MIN),
+    Schema.isMaxLength(TOKEN_NAME_MAX)
+  ).annotate({
+    description:
+      'CSS variable of the unused token from list_usage_token, for example "--color-old".',
+  }),
+} as const;
+
+const TokenDeletedSchema = Schema.Struct({
+  changedFiles: Schema.Array(Schema.String),
+  token: Schema.String,
+  versionId: Schema.String,
+});
+
 export {
   TokenClassListFields,
+  TokenDeleteFields,
+  TokenDeletedSchema,
+  TokenRenameFields,
+  TokenRenamedSchema,
   TokenClassSchema,
   TokenUsageListFields,
   TokenUsageSchema,

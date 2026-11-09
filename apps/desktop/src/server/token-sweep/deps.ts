@@ -7,11 +7,21 @@ export {
 } from "../direct-edit/index.js";
 
 export {
+  getTokenUse,
+  listTokenSourceFiles,
   loadAppTokens,
   readDesignSystemFiles,
+  toDeletedText,
+  toEntryUsageTokens,
+  toRenamePlan,
+  toRenamedText,
 } from "../design-system/index.js";
 
-export { BadRequestError } from "../platform/errors/index.js";
+export {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+} from "../platform/errors/index.js";
 
 export { attemptKnown } from "../platform/attempt/index.js";
 

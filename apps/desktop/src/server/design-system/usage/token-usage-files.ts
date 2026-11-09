@@ -122,6 +122,15 @@ const listScannedFiles = async (
   return scanned.filter((entry): entry is ScannedFile => entry !== null);
 };
 
-export { listScannedFiles };
+const listTokenSourceFiles = async (root: string): Promise<string[]> => {
+  const found = await listFolder(root);
+
+  return found
+    .toSorted()
+    .slice(0, MAX_FILES)
+    .map((absolute) => toRelative(root, absolute));
+};
+
+export { listScannedFiles, listTokenSourceFiles };
 
 export type { CachedScan, ScanCache };

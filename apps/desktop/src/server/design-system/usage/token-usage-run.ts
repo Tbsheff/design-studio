@@ -47,16 +47,21 @@ const toAliasTexts = (entry: CompiledTokenEntry): string[] => {
   return [entry.value, entry.darkValue ?? ""];
 };
 
-const toUsageTokens = async (run: DirectionRun): Promise<UsageToken[]> => {
-  const state = await readDesignSystemState(run.project, run.direction);
-
-  return state.entries.map((entry) => ({
+const toEntryUsageTokens = (
+  entries: readonly CompiledTokenEntry[]
+): UsageToken[] =>
+  entries.map((entry) => ({
     aliasTexts: toAliasTexts(entry),
     file: entry.source?.file ?? TOKENS_FILE,
     line: entry.source?.line ?? 1,
     name: entry.cssVar,
     value: entry.value,
   }));
+
+const toUsageTokens = async (run: DirectionRun): Promise<UsageToken[]> => {
+  const state = await readDesignSystemState(run.project, run.direction);
+
+  return toEntryUsageTokens(state.entries);
 };
 
 const toRank = (left: TokenUse, right: TokenUse): number => {
@@ -101,6 +106,35 @@ const runList = async (
   };
 };
 
+interface FindTokenUsageCommand {
+  readonly directionId: string;
+  readonly name: string;
+  readonly projectId: string;
+}
+
+const runFind = async (
+  cache: ScanCache,
+  run: DirectionRun,
+  command: FindTokenUsageCommand
+): Promise<TokenUse | null> => {
+  const tokens = await toUsageTokens(run);
+  const index = toUsageIndex(tokens);
+  const files = await listScannedFiles(cache, run.direction.workTree, index);
+  const uses = toTokenUses(tokens, files);
+
+  return uses.find((use) => use.name === command.name) ?? null;
+};
+
+const runTokenUsageFind = (
+  cache: ScanCache,
+  command: FindTokenUsageCommand
+): Effect.Effect<TokenUse | null, KnownFailure> =>
+  runDirectionRead(
+    { directionId: command.directionId, projectId: command.projectId },
+    (run) => runFind(cache, run, command),
+    toDirectEditStatusFailure
+  );
+
 const runTokenUsageList = (
   cache: ScanCache,
   command: ListTokenUsageCommand
@@ -111,6 +145,12 @@ const runTokenUsageList = (
     toDirectEditStatusFailure
   );
 
-export { runTokenUsageList, toOffset, toUsageTokens };
+export {
+  runTokenUsageFind,
+  runTokenUsageList,
+  toEntryUsageTokens,
+  toOffset,
+  toUsageTokens,
+};
 
-export type { ListTokenUsageCommand, TokenUsagePage };
+export type { FindTokenUsageCommand, ListTokenUsageCommand, TokenUsagePage };

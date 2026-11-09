@@ -24,7 +24,7 @@ const moveRegion = async (step: 1 | -1): Promise<void> => {
 
 export { CommandLayer, CommandRules, loadCommandLayer, moveRegion };
 
-export { focusNewProject } from "./global-commands.js";
+export { focusNewProject, runThemeCommand } from "./global-commands.js";
 
 export {
   IS_MAC,

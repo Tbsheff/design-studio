@@ -51,6 +51,14 @@ const toThemeApi = (): ThemeApi | null => {
 
 const toThemePref = (): ThemePref => toThemeApi()?.get() ?? "system";
 
+const toThemeIcon = (): "moon" | "sun" => {
+  if (globalThis.document.documentElement.dataset.theme === "light") {
+    return "sun";
+  }
+
+  return "moon";
+};
+
 const subscribeTheme = (notify: () => void): (() => void) => {
   globalThis.addEventListener(THEME_EVENT, notify);
 
@@ -81,6 +89,13 @@ const toMenuTarget = (
   return null;
 };
 
-export { THEME_OPTIONS, subscribeTheme, toMenuTarget, toThemeApi, toThemePref };
+export {
+  THEME_OPTIONS,
+  subscribeTheme,
+  toMenuTarget,
+  toThemeApi,
+  toThemeIcon,
+  toThemePref,
+};
 
 export type { ThemeApi, ThemeOption, ThemePref };

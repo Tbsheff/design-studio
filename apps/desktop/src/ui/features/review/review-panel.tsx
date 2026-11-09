@@ -28,6 +28,7 @@ interface Props {
   onSelect: (finding: ReviewFinding) => void;
   onAsk: (finding: ReviewFinding) => void;
   onClose: () => void;
+  speed: ReactNode;
 }
 
 const REGION_ROLE = "region";
@@ -117,7 +118,12 @@ const ReviewPanel = (props: Props): ReactElement => {
         onClose={props.onClose}
       />
       <ReviewSummary review={props.review} />
-      <ReviewBody review={props.review} isLive={props.live} actions={actions}>
+      <ReviewBody
+        review={props.review}
+        isLive={props.live}
+        actions={actions}
+        speed={props.speed}
+      >
         {props.children}
       </ReviewBody>
     </div>

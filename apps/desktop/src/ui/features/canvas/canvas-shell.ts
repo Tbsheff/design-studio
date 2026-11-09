@@ -9,6 +9,13 @@ import type { PanelTab } from "../../platform/use-panel-tab.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasTool } from "./top-bar-menu-model.js";
 
+interface SpeedScope {
+  readonly directionId: string | null;
+  readonly frameId: string;
+  readonly isLive: boolean;
+  readonly projectId: string;
+}
+
 interface CanvasShell {
   pane: PanelTab;
   onPane: (tab: PanelTab) => Promise<boolean>;
@@ -21,6 +28,7 @@ interface CanvasShell {
   onShip?: (() => void) | null;
   onShareLink?: ((mode?: "link" | "publish") => void) | null;
   onAskAgent?: (text: string) => void;
+  renderSpeed?: ((scope: SpeedScope) => ReactNode) | null;
 }
 
 type SetSelectMode = (update: (match: boolean) => boolean) => void;
@@ -215,4 +223,5 @@ export type {
   SetSelectMode,
   ShellPane,
   ShellPaneInput,
+  SpeedScope,
 };

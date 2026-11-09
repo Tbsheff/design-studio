@@ -1,4 +1,9 @@
-import type { Browser, BrowserContext, Page } from "playwright-core";
+import type {
+  Browser,
+  BrowserContext,
+  CDPSession,
+  Page,
+} from "playwright-core";
 
 import type { RenderClip, RenderErrors } from "../../shared/render-rpc.js";
 import type { RenderBackend, RenderPage } from "../../shared/server-ports.js";
@@ -109,16 +114,57 @@ async function clearOrigin(
   await session?.detach().catch(() => undefined);
 }
 
+const COLD_LATENCY_MS = 40;
+const COLD_DOWN_BYTES = 1_125_000;
+const COLD_UP_BYTES = 750_000;
+
+function toNetworkConditions(isCold: boolean) {
+  if (isCold) {
+    return {
+      offline: false,
+      latency: COLD_LATENCY_MS,
+      downloadThroughput: COLD_DOWN_BYTES,
+      uploadThroughput: COLD_UP_BYTES,
+    };
+  }
+
+  return {
+    offline: false,
+    latency: 0,
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  };
+}
+
 function wrapPage(context: BrowserContext, page: Page): RenderPage {
   const errors = collectErrors(page);
   const network = trackNetwork(page);
   let nav: { loadMs: number; idleMs: number } | null = null;
+  let loadSession: CDPSession | null = null;
 
   return {
     async reset() {
       network.inflight.clear();
       await clearOrigin(context, page, page.url());
       await page.goto("about:blank").catch(() => undefined);
+    },
+    async setColdLoad(isCold) {
+      loadSession ??= await context.newCDPSession(page).catch(() => null);
+      await loadSession?.send("Network.enable").catch(() => undefined);
+
+      await loadSession
+        ?.send("Network.setCacheDisabled", { cacheDisabled: isCold })
+        .catch(() => undefined);
+
+      await loadSession
+        ?.send("Network.emulateNetworkConditions", toNetworkConditions(isCold))
+        .catch(() => undefined);
+
+      if (isCold) {
+        await loadSession
+          ?.send("Network.clearBrowserCache")
+          .catch(() => undefined);
+      }
     },
     async goto(url) {
       errors.consoleErrors.length = 0;

@@ -50,6 +50,7 @@ import { SessionEntries } from "../session/handlers.js";
 import { ShareEntries } from "../share/handlers.js";
 import { ShipEntries } from "../ship/handlers.js";
 import { SpacingEntries } from "../spacing/handlers.js";
+import { SpeedEntries } from "../speed/handlers.js";
 import { StackingEntries } from "../stacking/handlers.js";
 import { StateStyleEntries } from "../state-style/handlers.js";
 import { StudioEntries } from "../studio/handlers.js";
@@ -115,6 +116,7 @@ const ALL_ENTRIES = {
   share: ShareEntries,
   ship: ShipEntries,
   spacing: SpacingEntries,
+  speed: SpeedEntries,
   stacking: StackingEntries,
   stateStyle: StateStyleEntries,
   studio: StudioEntries,

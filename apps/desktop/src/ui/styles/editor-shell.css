@@ -632,3 +632,7 @@
   max-width: 100%;
   min-width: 0;
 }
+
+.studio-body > .prail[data-state="mini"] {
+  display: none;
+}

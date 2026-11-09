@@ -1474,7 +1474,21 @@ export type AppKey =
   | "prev-region"
   | "ask-inline"
   | "project-rail"
-  | "stop";
+  | "stop"
+  | "tool-select"
+  | "tool-hand"
+  | "tool-frame"
+  | "tool-text"
+  | "tool-comment"
+  | "tool-link"
+  | "column-layers"
+  | "column-pages"
+  | "column-assets"
+  | "column-versions"
+  | "column-tokens"
+  | "column-components"
+  | "column-system"
+  | "inspector";
 
 const MOD_APP_KEYS: Record<string, AppKey> = {
   Backslash: "project-rail",
@@ -1482,6 +1496,49 @@ const MOD_APP_KEYS: Record<string, AppKey> = {
   KeyK: "palette",
   KeyP: "palette",
   Period: "stop",
+};
+
+const TOOL_APP_KEYS = new Map<string, AppKey>([
+  ["KeyC", "tool-comment"],
+  ["KeyF", "tool-frame"],
+  ["KeyH", "tool-hand"],
+  ["KeyL", "tool-link"],
+  ["KeyT", "tool-text"],
+  ["KeyV", "tool-select"],
+]);
+
+const ALT_APP_KEYS = new Map<string, AppKey>([
+  ["Digit1", "column-layers"],
+  ["Digit2", "column-pages"],
+  ["Digit3", "column-assets"],
+  ["Digit4", "column-versions"],
+  ["Digit5", "column-tokens"],
+  ["Digit6", "column-components"],
+  ["Digit7", "column-system"],
+  ["Digit8", "inspector"],
+]);
+
+interface PlainKeyEvent {
+  readonly code: string;
+  readonly metaKey: boolean;
+  readonly ctrlKey: boolean;
+  readonly shiftKey: boolean;
+}
+
+const altAppKeyOf = (event: PlainKeyEvent): AppKey | null => {
+  if (event.metaKey || event.ctrlKey || event.shiftKey) {
+    return null;
+  }
+
+  return ALT_APP_KEYS.get(event.code) ?? null;
+};
+
+const toolAppKeyOf = (event: PlainKeyEvent, typing: boolean): AppKey | null => {
+  if (typing || event.metaKey || event.ctrlKey || event.shiftKey) {
+    return null;
+  }
+
+  return TOOL_APP_KEYS.get(event.code) ?? null;
 };
 
 export function appKeyOf(
@@ -1496,7 +1553,7 @@ export function appKeyOf(
   typing: boolean
 ): AppKey | null {
   if (event.altKey) {
-    return null;
+    return altAppKeyOf(event);
   }
 
   const modKey =
@@ -1506,6 +1563,12 @@ export function appKeyOf(
 
   if (modKey) {
     return modKey;
+  }
+
+  const toolKey = toolAppKeyOf(event, typing);
+
+  if (toolKey) {
+    return toolKey;
   }
 
   if (event.key === "?" && !event.metaKey && (event.ctrlKey || !typing)) {

@@ -39,15 +39,13 @@ const StudioBody = ({ ctx }: StudioCtxProps): ReactElement => {
   return (
     <div className="studio-body">
       <PanelRail column={ui.editorColumn} onPick={handlePick} />
-      {ui.rail === "open" && (
-        <Suspense fallback={null}>
-          <ProjectRail
-            projectId={projectId}
-            onHome={handleHome}
-            onNewPrototype={handleNewPrototype}
-          />
-        </Suspense>
-      )}
+      <Suspense fallback={null}>
+        <ProjectRail
+          projectId={projectId}
+          onHome={handleHome}
+          onNewPrototype={handleNewPrototype}
+        />
+      </Suspense>
       {columns}
     </div>
   );

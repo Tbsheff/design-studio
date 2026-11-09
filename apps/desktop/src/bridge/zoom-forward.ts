@@ -20,7 +20,10 @@ const forwardKey = (
   const app = freshAppKey(event);
 
   if (app) {
-    event.preventDefault();
+    if (!app.startsWith("tool-")) {
+      event.preventDefault();
+    }
+
     post({ id: app, type: "app-key" });
 
     return;

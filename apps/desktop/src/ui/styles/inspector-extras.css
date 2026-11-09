@@ -185,12 +185,13 @@ button.ins-crumb:focus-visible,
 
 .ins-lock-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--s-1);
 }
 
 .ins-lock-title {
-  flex: 1;
+  flex: 1 0 100%;
   min-width: 0;
   color: var(--text-2);
   font-size: var(--t-xs);

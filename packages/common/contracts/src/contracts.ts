@@ -1246,6 +1246,8 @@ export type BridgeToParent =
       phase: PlayTriggerPhase;
     }
   | { ns: "studio"; token: string; type: "play-press-key"; key: string }
+  | { ns: "studio"; token: string; type: "play-miss" }
+  | { ns: "studio"; token: string; type: "play-shift"; isHeld: boolean }
   | {
       ns: "studio";
       token: string;

@@ -1,5 +1,5 @@
 import type { DeviceFrameId } from "@design-studio/contracts/device-frame";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { toSlotLayout } from "./device-frame-model.js";
 import { PlayFrame } from "./play-frame.js";
@@ -7,6 +7,7 @@ import { slotClass, slotStyle } from "./play-model.js";
 import type { Motion, Slot, StageSize } from "./play-model.js";
 
 interface SlotViewProps {
+  readonly hotspots: ReactNode;
   readonly slot: Slot;
   readonly isLeaving: boolean;
   readonly timing: Motion;
@@ -33,6 +34,7 @@ const toOverlayTestId = (slot: Slot): string | null => {
 };
 
 const SlotView = ({
+  hotspots,
   slot,
   isLeaving,
   timing,
@@ -51,7 +53,13 @@ const SlotView = ({
       data-frame-id={frame.id}
       data-testid={toOverlayTestId(slot)}
     >
-      <PlayFrame layout={layout} src={slot.src} sandbox={sandbox} bind={bind} />
+      <PlayFrame
+        layout={layout}
+        src={slot.src}
+        sandbox={sandbox}
+        bind={bind}
+        hotspots={hotspots}
+      />
     </div>
   );
 };

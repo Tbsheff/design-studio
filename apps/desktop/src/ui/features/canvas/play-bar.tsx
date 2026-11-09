@@ -10,12 +10,15 @@ import {
   toDeviceValue,
   toStoredDevice,
 } from "./device-frame-model.js";
+import { protoCopy } from "./proto-copy.js";
 
 interface PlayBarProps {
   readonly title: string;
   readonly hint: string;
   readonly isBackDisabled: boolean;
   readonly device: DeviceFrameId | null;
+  readonly isHints: boolean;
+  readonly onHints: (next: boolean) => void;
   readonly onDevice: (device: DeviceFrameId | null) => void;
   readonly onBack: () => void;
   readonly onRestart: () => void;
@@ -27,6 +30,8 @@ const PlayBar = ({
   hint,
   isBackDisabled,
   device,
+  isHints,
+  onHints,
   onDevice,
   onBack,
   onRestart,
@@ -45,6 +50,10 @@ const PlayBar = ({
     [onDevice]
   );
 
+  const onToggleHints = useCallback((): void => {
+    onHints(!isHints);
+  }, [isHints, onHints]);
+
   return (
     <div className="play-bar">
       <button
@@ -61,6 +70,17 @@ const PlayBar = ({
         {title}
       </span>
       <span className="play-hint">{hint}</span>
+      <button
+        type="button"
+        className="btn small ghost"
+        aria-pressed={isHints}
+        data-tip={protoCopy.hotspotHintsTip}
+        data-testid="play-hotspot-toggle"
+        onClick={onToggleHints}
+      >
+        <Icon name="eye" size={12} />
+        {protoCopy.hotspotHints}
+      </button>
       <UiSelect
         size="sm"
         aria-label={copy.playDevice}

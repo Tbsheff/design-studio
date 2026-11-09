@@ -15,6 +15,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { useProjectEvents } from "../../platform/events.js";
 import { call } from "../../platform/http.js";
 import type { RouteInput } from "../../platform/http.js";
+import { reloadClockFrames, toClockChangedIds } from "./frame-clock-reload.js";
 
 type FrameStateMock = NonNullable<
   RouteInput<typeof routes.setFrameStateCanvas>["mock"]
@@ -38,6 +39,7 @@ const subscribe = (listener: () => void): (() => void) => {
 };
 
 const store = (projectId: string, view: FrameStatesView): void => {
+  reloadClockFrames(toClockChangedIds(views.get(projectId) ?? null, view));
   views.set(projectId, view);
   notify();
 };

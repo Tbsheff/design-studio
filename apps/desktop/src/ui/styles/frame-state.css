@@ -27,6 +27,8 @@
 
 .frame-state-menu {
   width: 280px;
+  max-height: min(640px, 70vh);
+  overflow-y: auto;
   white-space: normal;
 }
 

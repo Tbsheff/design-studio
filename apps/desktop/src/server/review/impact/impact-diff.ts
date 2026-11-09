@@ -14,7 +14,7 @@ const PERCENT = 100;
 
 const TENTH_PERCENT = 100;
 
-const SMALLEST_PCT = 0.01;
+const NOISE_PCT = 0.02;
 
 interface RouteDiff {
   readonly after: string;
@@ -44,13 +44,11 @@ const toPct = (
   const raw =
     ((changed + grown * width) / (width * (height + grown))) * PERCENT;
 
-  const rounded = Math.round(raw * TENTH_PERCENT) / TENTH_PERCENT;
-
-  if (rounded === 0 && raw > 0) {
-    return SMALLEST_PCT;
+  if (raw < NOISE_PCT) {
+    return 0;
   }
 
-  return rounded;
+  return Math.round(raw * TENTH_PERCENT) / TENTH_PERCENT;
 };
 
 const toPng = (encoded: string): PNG =>
@@ -73,6 +71,15 @@ const toRouteDiff = (
   };
 };
 
+const toChangedPct = (beforeEncoded: string, afterEncoded: string): number => {
+  const before = toPng(beforeEncoded);
+  const after = toPng(afterEncoded);
+  const mask = diffMask(before, after);
+  const grown = Math.abs(before.height - after.height);
+
+  return toPct(mask.changed, mask.width, mask.height, grown);
+};
+
 const PIXEL_BYTES = 4;
 
 const isBlankShot = (encoded: string): boolean => {
@@ -87,6 +94,6 @@ const isBlankShot = (encoded: string): boolean => {
   return true;
 };
 
-export { isBlankShot, toRouteDiff, toThumb };
+export { isBlankShot, toChangedPct, toRouteDiff, toThumb };
 
 export type { RouteDiff };

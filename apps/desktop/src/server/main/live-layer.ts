@@ -10,6 +10,7 @@ import { CloudLive } from "../handlers/cloud/live.js";
 import { CommentLive } from "../handlers/comment/live.js";
 import { CompletionLive } from "../handlers/completion/live.js";
 import { ComponentVariantLive } from "../handlers/component-variant/live.js";
+import { ComponentLive } from "../handlers/component/live.js";
 import { ConnectionLive } from "../handlers/connection/live.js";
 import { ContentLive } from "../handlers/content/live.js";
 import { CritiqueLive } from "../handlers/critique/live.js";
@@ -82,6 +83,7 @@ const liveLayer = Layer.mergeAll(
   CloudLive,
   CommentLive,
   CompletionLive,
+  ComponentLive,
   ComponentVariantLive,
   ConnectionLive,
   ContentLive,

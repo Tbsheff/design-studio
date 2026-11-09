@@ -1,5 +1,9 @@
 export { applyContentEdits } from "./apply-content.js";
 
+export { applyRows } from "./apply-rows.js";
+
+export type { FillRequest, FillResult } from "./apply-rows.js";
+
 export type {
   ContentFailure,
   ContentMode,

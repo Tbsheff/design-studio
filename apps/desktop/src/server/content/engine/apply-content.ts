@@ -47,7 +47,12 @@ const MAX_REPEAT = 50;
 const BRACES = /[{}]/u;
 
 const escapeText = (text: string): string =>
-  text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("{", "&#123;")
+    .replaceAll("}", "&#125;");
 
 const offsetOf = (source: string, line: number, col: number): number => {
   const lines = source.split("\n");
@@ -273,6 +278,20 @@ const applyContentEdits = (
   };
 };
 
-export { applyContentEdits };
+export {
+  applyContentEdits,
+  applySplices,
+  escapeText,
+  offsetOf,
+  separatorOf,
+  slotsOf,
+};
 
-export type { ContentFailure, ContentMode, ContentRequest, ContentResult };
+export type {
+  ContentFailure,
+  ContentMode,
+  ContentRequest,
+  ContentResult,
+  Slot,
+  Splice,
+};

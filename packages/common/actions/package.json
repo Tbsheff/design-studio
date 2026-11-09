@@ -545,6 +545,7 @@
     "./state-style/schema": "./src/state-style/schema.ts",
     "./state-style/set": "./src/state-style/set.ts",
     "./state-style/set-forced": "./src/state-style/set-forced.ts",
+    "./studio/get-activity": "./src/studio/get-activity.ts",
     "./studio/health": "./src/studio/health.ts",
     "./studio/index": "./src/studio/index.ts",
     "./studio/list-skills": "./src/studio/list-skills.ts",

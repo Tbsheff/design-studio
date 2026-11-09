@@ -53,6 +53,12 @@ const readView = async (runtime: DevServerRuntime, projectId: string) => {
   };
 };
 
+const getAppStatus = async (runtime: DevServerRuntime, projectId: string) => {
+  const project = await readAppProject(runtime, projectId);
+
+  return runtime.preview.apps?.status(project) ?? null;
+};
+
 const applyConfig = async (runtime: DevServerRuntime, input: ConfigInput) => {
   const project = await readAppProject(runtime, input.projectId);
   const current = project.app;
@@ -124,6 +130,13 @@ const attachApp = async (runtime: DevServerRuntime, input: AttachInput) => {
   return runtime.attach(await runtime.projects.attachApp(request));
 };
 
-export { applyConfig, attachApp, controlServer, readRoutes, readView };
+export {
+  applyConfig,
+  attachApp,
+  controlServer,
+  getAppStatus,
+  readRoutes,
+  readView,
+};
 
 export type { AttachInput, Control };

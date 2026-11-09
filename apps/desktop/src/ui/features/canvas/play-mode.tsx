@@ -1,3 +1,4 @@
+import type { DeviceFrameId } from "@design-studio/contracts/device-frame";
 import { useRef } from "react";
 import type { ReactElement } from "react";
 
@@ -15,6 +16,7 @@ import {
 import type { PlayModeProps, Slot, StageSize } from "./play-model.js";
 import { SlotView } from "./play-slot-view.js";
 import { useFocusReturn } from "./use-focus-return.js";
+import { usePlayDevice } from "./use-play-device.js";
 import { usePlay } from "./use-play.js";
 import type { PlayState } from "./use-play.js";
 import { useStageSize } from "./use-stage-size.js";
@@ -24,6 +26,7 @@ type BindFrame = (token: string) => (el: HTMLIFrameElement | null) => void;
 interface BaseSlotsProps {
   readonly base: Slot[];
   readonly stage: StageSize;
+  readonly device: DeviceFrameId | null;
   readonly sandbox?: string;
   readonly bind: BindFrame;
 }
@@ -34,6 +37,7 @@ const isLeavingSlot = (slot: Slot, current: Slot | undefined): boolean =>
 const toBaseNodes = ({
   base,
   stage,
+  device,
   sandbox,
   bind,
 }: BaseSlotsProps): ReactElement[] => {
@@ -50,6 +54,7 @@ const toBaseNodes = ({
         isLeaving={isLeaving}
         timing={timing}
         stage={stage}
+        device={device}
         sandbox={sandbox}
         bind={bind(slot.token)}
       />
@@ -90,6 +95,7 @@ const toOverlayNode = (
         isLeaving={false}
         timing={overlay}
         stage={stage}
+        device={null}
         sandbox={sandbox}
         bind={bind(overlay.token)}
       />
@@ -113,6 +119,7 @@ const toTitle = (
 
 const PlayMode = (props: PlayModeProps): ReactElement => {
   const play = usePlay(props);
+  const { device, setDevice: onDevice } = usePlayDevice(props.projectId);
   const stage = useStageSize();
   const root = useRef<HTMLDialogElement>(null);
   useFocusReturn(root, props.onRestoreFocus);
@@ -133,7 +140,7 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
     elements.current[token] = tagFrame(el, token);
   };
 
-  const slotProps = { base, bind, sandbox, stage };
+  const slotProps = { base, bind, device, sandbox, stage };
 
   return (
     <dialog
@@ -149,6 +156,8 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
         title={toTitle(shown, props)}
         hint={playHint(props, overlay !== null, shown)}
         isBackDisabled={toBackDisabled(play, overlay !== null)}
+        device={device}
+        onDevice={onDevice}
         onBack={onBack}
         onRestart={onRestart}
         onExit={onExit}

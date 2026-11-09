@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import type { DeviceFrameId } from "@design-studio/contracts/device-frame";
 import type { ReactElement } from "react";
 
-import { copy } from "./copy.js";
-import { scaleFor, slotClass, slotStyle } from "./play-model.js";
+import { toSlotLayout } from "./device-frame-model.js";
+import { PlayFrame } from "./play-frame.js";
+import { slotClass, slotStyle } from "./play-model.js";
 import type { Motion, Slot, StageSize } from "./play-model.js";
 
 interface SlotViewProps {
@@ -10,6 +11,7 @@ interface SlotViewProps {
   readonly isLeaving: boolean;
   readonly timing: Motion;
   readonly stage: StageSize;
+  readonly device: DeviceFrameId | null;
   readonly sandbox?: string;
   readonly bind: (el: HTMLIFrameElement | null) => void;
 }
@@ -35,23 +37,12 @@ const SlotView = ({
   isLeaving,
   timing,
   stage,
+  device,
   sandbox,
   bind,
 }: SlotViewProps): ReactElement => {
-  const scale = scaleFor(slot, stage);
+  const layout = toSlotLayout(slot, stage, device);
   const { frame } = slot;
-  const frameHeight = frame.height * scale;
-  const frameWidth = frame.width * scale;
-
-  const frameStyle = useMemo(
-    () => ({ height: frameHeight, width: frameWidth }),
-    [frameHeight, frameWidth]
-  );
-
-  const iframeStyle = useMemo(
-    () => ({ transform: `scale(${scale})` }),
-    [scale]
-  );
 
   return (
     <div
@@ -60,17 +51,7 @@ const SlotView = ({
       data-frame-id={frame.id}
       data-testid={toOverlayTestId(slot)}
     >
-      <div className="play-frame" style={frameStyle}>
-        <iframe
-          ref={bind}
-          title={copy.prototypeFrame}
-          src={slot.src}
-          sandbox={sandbox}
-          width={frame.width}
-          height={frame.height}
-          style={iframeStyle}
-        />
-      </div>
+      <PlayFrame layout={layout} src={slot.src} sandbox={sandbox} bind={bind} />
     </div>
   );
 };

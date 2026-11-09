@@ -14,6 +14,7 @@
     "./clarify": "./src/clarify.ts",
     "./component-variant": "./src/component-variant.ts",
     "./design-rules": "./src/design-rules.ts",
+    "./device-frame": "./src/device-frame.ts",
     "./element-variants": "./src/element-variants.ts",
     "./export": "./src/export.ts",
     "./figma-nodes": "./src/figma-nodes.ts",

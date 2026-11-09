@@ -88,6 +88,7 @@ const copy = {
   pickARoute: "Pick a route",
   pickRoutesFirst: "Pick at least 1 route first.",
   pickRoutesForTheFlow: "Pick routes for the flow",
+  playDevice: "Device",
   playPrototype: "Play prototype",
   present: "Present",
   presentedDesign: "Presented design",

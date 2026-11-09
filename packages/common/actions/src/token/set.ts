@@ -40,7 +40,11 @@ const setToken = defineAction({
     ...TokenSetFields,
     projectId: ProjectIdSchema,
   }),
-  invalidates: ["direct-edit.getDesignSystem", "version.list"],
+  invalidates: [
+    "direct-edit.getDesignSystem",
+    "token.listClasses",
+    "version.list",
+  ],
   mcp: { name: "set_token" },
   needs: "project.update",
   output: TokenSetSchema,

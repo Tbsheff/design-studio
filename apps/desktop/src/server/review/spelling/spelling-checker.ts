@@ -5,6 +5,21 @@ interface SpellingChecker {
 
 type LoadChecker = () => Promise<SpellingChecker>;
 
+const toSwaps = (word: string): string[] => {
+  const swaps: string[] = [];
+
+  for (let index = 0; index < word.length - 1; index += 1) {
+    const chars = [...word];
+    const left = chars[index] ?? "";
+
+    chars[index] = chars[index + 1] ?? "";
+    chars[index + 1] = left;
+    swaps.push(chars.join(""));
+  }
+
+  return swaps;
+};
+
 const toNspellChecker = async (): Promise<SpellingChecker> => {
   const [{ default: nspell }, { default: dictionary }] = await Promise.all([
     import("nspell"),
@@ -18,7 +33,10 @@ const toNspellChecker = async (): Promise<SpellingChecker> => {
 
   return {
     isCorrect: (word) => speller.correct(word),
-    suggest: (word) => speller.suggest(word),
+    suggest: (word) => [
+      ...toSwaps(word.toLowerCase()).filter((swap) => speller.correct(swap)),
+      ...speller.suggest(word),
+    ],
   };
 };
 

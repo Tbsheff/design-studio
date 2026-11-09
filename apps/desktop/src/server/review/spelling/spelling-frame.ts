@@ -60,14 +60,14 @@ const toSpellingFrame = async (
   const live = toLiveFrame(canvas, project, direction, frames);
   const found = toFoundFrame(frames, ref, live);
 
-  if (found === null && ref !== null) {
+  if (found === null && ref !== null && frames.length > 0) {
     throw new BadRequestError(
       `No frame ${ref} on the canvas. Use canvas_list for the frame ids.`
     );
   }
 
   if (found === null) {
-    return DEFAULT_FRAME;
+    return { ...DEFAULT_FRAME, id: ref ?? DEFAULT_FRAME.id };
   }
 
   return {

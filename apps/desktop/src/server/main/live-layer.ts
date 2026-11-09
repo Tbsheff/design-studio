@@ -54,6 +54,7 @@ import { ShareLive } from "../handlers/share/live.js";
 import { ShipLive } from "../handlers/ship/live.js";
 import { SpacingLive } from "../handlers/spacing/live.js";
 import { SpeedLive } from "../handlers/speed/live.js";
+import { SpellingLive } from "../handlers/spelling/live.js";
 import { StackingLive } from "../handlers/stacking/live.js";
 import { StateStyleLive } from "../handlers/state-style/live.js";
 import { StudioLive } from "../handlers/studio/live.js";
@@ -132,6 +133,7 @@ const liveLayer = Layer.mergeAll(
   ShipLive,
   SpacingLive,
   SpeedLive,
+  SpellingLive,
   StackingLive,
   StateStyleLive,
   StudioLive,

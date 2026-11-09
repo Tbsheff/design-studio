@@ -12,9 +12,15 @@ import type { RefObject } from "react";
 
 import { postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
+import { useLive } from "../../platform/live-store.js";
 import { useCurrentFrameStates } from "./frame-states-model.js";
 import { stageFrames } from "./lofi-frames-model.js";
-import { selectedTrigger, setMissed, toStepsOf } from "./open-steps-model.js";
+import {
+  openStepsPush,
+  selectedTrigger,
+  setMissed,
+  toStepsOf,
+} from "./open-steps-model.js";
 
 const toStateId = (url: string): string | null => {
   try {
@@ -97,6 +103,18 @@ const useOpenSteps = (
       sync(frame, false);
     }
   });
+
+  const push = useLive(openStepsPush);
+
+  useEffect(() => {
+    if (push === 0) {
+      return;
+    }
+
+    for (const frame of frames()) {
+      sync(frame, true);
+    }
+  }, [push, frames, sync]);
 
   const selector = selection[0]?.selector ?? null;
 

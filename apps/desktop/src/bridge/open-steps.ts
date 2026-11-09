@@ -310,7 +310,7 @@ const createOpenSteps = (state: BridgeState, post: Post): OpenSteps => {
   const set = (next: readonly OpenStep[]): void => {
     const key = JSON.stringify(next);
 
-    if (key === lastKey && watcher) {
+    if (key === lastKey && watcher && !runner.needsRerun()) {
       return;
     }
 

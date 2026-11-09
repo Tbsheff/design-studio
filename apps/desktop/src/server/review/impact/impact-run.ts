@@ -1,9 +1,10 @@
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { Effect } from "effect";
 
-import type { McpReadStore } from "../../preview/index.js";
-import { isBlankShot, toRouteDiff } from "./impact-diff.js";
+import { toRouteDiff } from "./impact-diff.js";
 import { getImpactRecord, setImpactRecord } from "./impact-memory.js";
+import { toRetriedShot, toSettledShot } from "./impact-shot.js";
+import type { ImpactReads, ImpactShot } from "./impact-shot.js";
 import type {
   ImpactBaseline,
   ImpactBaselineRoute,
@@ -12,23 +13,6 @@ import type {
   ImpactRoute,
   ImpactRunQuery,
 } from "./impact-types.js";
-
-type Reads = Pick<typeof McpReadStore.Service, "screenshot" | "usage">;
-
-const SHOT_WIDTH = 1280;
-
-const SHOT_HEIGHT = 800;
-
-const DYNAMIC_ROUTE = /[:[*]/u;
-
-const BLANK_NOTE = "The page is blank. It may need a sign-in.";
-
-const DYNAMIC_NOTE = "A dynamic route has no sample page to shoot.";
-
-interface Shot {
-  readonly note: string | null;
-  readonly png: string | null;
-}
 
 const toSameFile = (left: string, right: string): boolean => {
   const first = left.trim().replace(/^\/+/u, "");
@@ -41,50 +25,15 @@ const toSameFile = (left: string, right: string): boolean => {
   );
 };
 
-const toShot = (
-  reads: Reads,
-  query: ImpactGetQuery,
-  route: string
-): Effect.Effect<Shot> => {
-  if (DYNAMIC_ROUTE.test(route)) {
-    return Effect.succeed({ note: DYNAMIC_NOTE, png: null });
-  }
-
-  return Effect.match(
-    reads.screenshot({
-      directionId: query.directionId,
-      element: null,
-      frameId: null,
-      height: SHOT_HEIGHT,
-      isFullPage: true,
-      padding: null,
-      path: route,
-      projectId: query.projectId,
-      versionId: null,
-      width: SHOT_WIDTH,
-    }),
-    {
-      onFailure: (error): Shot => ({ note: error.message, png: null }),
-      onSuccess: (view): Shot => {
-        if (isBlankShot(view.data)) {
-          return { note: BLANK_NOTE, png: null };
-        }
-
-        return { note: null, png: view.data };
-      },
-    }
-  );
-};
-
 const toRoutes = Effect.fn("impact.toRoutes")(function* run(
-  reads: Reads,
+  reads: ImpactReads,
   query: ImpactGetQuery,
   routes: readonly { readonly file: string; readonly route: string }[]
 ) {
   return yield* Effect.all(
     routes.map((item) =>
       Effect.map(
-        toShot(reads, query, item.route),
+        toSettledShot(reads, query, item.route),
         (shot): ImpactBaselineRoute => ({
           file: item.file,
           note: shot.note,
@@ -93,6 +42,16 @@ const toRoutes = Effect.fn("impact.toRoutes")(function* run(
         })
       )
     )
+  );
+});
+
+const toCompareShots = Effect.fn("impact.toCompareShots")(function* run(
+  reads: ImpactReads,
+  query: ImpactGetQuery,
+  routes: readonly ImpactBaselineRoute[]
+) {
+  return yield* Effect.all(
+    routes.map((item) => toRetriedShot(reads, query, item.route, item.png))
   );
 });
 
@@ -135,7 +94,7 @@ const toBaselineRoute = (item: ImpactBaselineRoute): ImpactRoute => {
 };
 
 const runBaseline = Effect.fn("impact.runBaseline")(function* run(
-  reads: Reads,
+  reads: ImpactReads,
   query: ImpactRunQuery
 ) {
   const usage = yield* reads.usage({
@@ -178,7 +137,7 @@ const runBaseline = Effect.fn("impact.runBaseline")(function* run(
 
 const toCompareRoute = (
   baseline: ImpactBaselineRoute,
-  shot: Shot
+  shot: ImpactShot
 ): ImpactRoute => {
   if (baseline.png === null || shot.png === null) {
     return {
@@ -216,7 +175,7 @@ const toCompareRoute = (
 };
 
 const runCompare = Effect.fn("impact.runCompare")(function* run(
-  reads: Reads,
+  reads: ImpactReads,
   query: ImpactRunQuery
 ) {
   const baseline = getImpactRecord(query)?.baseline ?? null;
@@ -229,11 +188,7 @@ const runCompare = Effect.fn("impact.runCompare")(function* run(
 
   const kept = baseline.routes.slice(0, query.limit);
 
-  const shots = yield* toRoutes(
-    reads,
-    query,
-    kept.map((item) => ({ file: item.file, route: item.route }))
-  );
+  const shots = yield* toCompareShots(reads, query, kept);
 
   const last: ImpactResult = {
     component: baseline.component,
@@ -251,7 +206,7 @@ const runCompare = Effect.fn("impact.runCompare")(function* run(
 });
 
 const runImpactPhase = (
-  reads: Reads,
+  reads: ImpactReads,
   query: ImpactRunQuery
 ): ReturnType<typeof runBaseline> | ReturnType<typeof runCompare> => {
   if (query.phase === "baseline") {
@@ -262,5 +217,3 @@ const runImpactPhase = (
 };
 
 export { runImpactPhase };
-
-export type { Reads as ImpactReads };

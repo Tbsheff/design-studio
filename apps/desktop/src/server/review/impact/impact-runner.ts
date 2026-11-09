@@ -4,7 +4,7 @@ import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer } from "effect";
 
 import { runImpactPhase } from "./impact-run.js";
-import type { ImpactReads } from "./impact-run.js";
+import type { ImpactReads } from "./impact-shot.js";
 import type { ImpactResult, ImpactRunQuery } from "./impact-types.js";
 
 type ImpactRunError = BadRequest | Conflict | NotFound;

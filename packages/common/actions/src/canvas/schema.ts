@@ -24,7 +24,7 @@ import {
   LinkTriggerSchema,
   LinkVariableFields,
   LinkWhenSchema,
-} from "./link-target-schema.js";
+} from "./link/schema.js";
 
 const FRAME_REF_MAX = 120;
 

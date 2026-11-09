@@ -61,6 +61,10 @@ const STYLE_KEYS = [
   "background-repeat",
   "grid-template-columns",
   "grid-template-rows",
+  "text-overflow",
+  "white-space",
+  "-webkit-line-clamp",
+  "-webkit-box-orient",
 ];
 
 const MAX_SELECTOR_DEPTH = 8;

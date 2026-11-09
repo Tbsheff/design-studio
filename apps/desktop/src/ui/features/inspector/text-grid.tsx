@@ -6,6 +6,7 @@ import { ColorField } from "./color-field.js";
 import { ContentRow } from "./content-row.js";
 import { copy } from "./copy.js";
 import type { DirectEdit } from "./deps.js";
+import type { ElementClasses } from "./element-classes-model.js";
 import { FontField } from "./font-field.js";
 import { SelectField } from "./select-field.js";
 import {
@@ -17,12 +18,14 @@ import {
 } from "./simple-model.js";
 import { SpecNumberField } from "./spec-number-field.js";
 import { TextStyleToggles } from "./text-style-toggles.js";
+import { TruncateRow } from "./truncate-row.js";
 import type { TokenUi } from "./use-token-snap.js";
 
 interface TextGridProps {
   readonly edit: DirectEdit;
   readonly ui: TokenUi | null;
   readonly selection: SelectionContext | null;
+  readonly classes: ElementClasses | null;
   readonly textStyle: ReactNode;
 }
 
@@ -30,6 +33,7 @@ const TextGrid = ({
   edit,
   ui,
   selection,
+  classes,
   textStyle,
 }: TextGridProps): ReactElement => (
   <div className="ins-grid">
@@ -61,6 +65,9 @@ const TextGrid = ({
       edit={edit}
       options={CASES}
     />
+    {selection && classes && (
+      <TruncateRow edit={edit} selection={selection} classes={classes} />
+    )}
   </div>
 );
 

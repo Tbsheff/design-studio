@@ -237,6 +237,9 @@ const copy = {
   tooLongToEdit: "Too long to edit here",
   topLeftRadius: "Top left radius",
   topRightRadius: "Top right radius",
+  truncate: "Truncate",
+  truncateMaxLines: "Max lines",
+  truncateToggle: "Truncate text with an ellipsis",
   tryVariants: "Try variants",
   tweaksAreLiveControlsFor:
     "Tweaks are live controls for this design: sliders, colors, switches and menus. Drag them to try values on every frame at once, without asking Claude.",

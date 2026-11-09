@@ -5,6 +5,7 @@ import type { ReactElement, ReactNode } from "react";
 import { AppearanceSection } from "./appearance-section.js";
 import { BorderSection } from "./border-section.js";
 import type { DirectEdit } from "./deps.js";
+import type { ElementClasses } from "./element-classes-model.js";
 import { EffectsSection } from "./inspector-effects.js";
 import { LayoutSection } from "./layout-section.js";
 import { SHADOW_PRESET, applyEdit, toExtrasInUse } from "./simple-model.js";
@@ -16,6 +17,7 @@ interface SimpleSectionsProps {
   readonly edit: DirectEdit;
   readonly ui: TokenUi | null;
   readonly selection: SelectionContext | null;
+  readonly classes: ElementClasses | null;
   readonly textStyle: ReactNode;
   readonly fill: ReactNode;
 }
@@ -24,6 +26,7 @@ const SimpleSections = ({
   edit,
   ui,
   selection,
+  classes,
   textStyle,
   fill,
 }: SimpleSectionsProps): ReactElement => {
@@ -52,6 +55,7 @@ const SimpleSections = ({
         edit={edit}
         ui={ui}
         selection={selection}
+        classes={classes}
         textStyle={textStyle}
       />
       <AppearanceSection

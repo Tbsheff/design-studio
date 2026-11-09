@@ -25,6 +25,7 @@ const ContentPanel = (props: ContentOptions): ReactElement => {
       <RepeatStepper onStep={content.handleStep} repeat={content.repeat} />
       <div className={styles.actions}>
         <button
+          aria-label={copy.applyLabel}
           className={styles.primary}
           disabled={!content.canApply || content.isBusy}
           onClick={content.handleApply}

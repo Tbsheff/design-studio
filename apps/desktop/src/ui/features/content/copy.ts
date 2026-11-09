@@ -1,5 +1,6 @@
 const copy = {
   apply: "Apply",
+  applyLabel: "Apply content stress",
   applying: "Applying…",
   decrease: "Fewer rows",
   failed: "Could not apply the content. Try again.",

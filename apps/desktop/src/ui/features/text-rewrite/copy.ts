@@ -1,6 +1,7 @@
 const copy = {
   applied: "Applied. Press Cmd+Z to undo.",
   apply: "Apply",
+  applyLabel: "Apply rewrite",
   back: "Back",
   cancel: "Cancel",
   clarify: "Clarify",

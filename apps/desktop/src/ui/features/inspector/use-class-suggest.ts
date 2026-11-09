@@ -8,8 +8,8 @@ import {
   toLastWord,
   toPickedClasses,
   toStepIndex,
+  toSubmitClasses,
   toSuggestRows,
-  toWords,
 } from "./class-suggest-model.js";
 import type { SuggestRow } from "./class-suggest-model.js";
 import type { ClassBody } from "./props-model.js";
@@ -119,7 +119,7 @@ const useClassSuggest = (setup: ClassSuggestSetup): ClassSuggest => {
       }
 
       if (action === "submit") {
-        send(toWords(typed));
+        send(toSubmitClasses(typed, rows, isOpen));
       }
     },
     [active, isOpen, onPick, rows, send, typed]

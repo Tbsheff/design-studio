@@ -215,10 +215,8 @@ output.prp-status {
 }
 
 .cls-suggest .cls-suggest-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 0 0 auto;
+  max-width: 100%;
   white-space: nowrap;
 }
 
@@ -233,9 +231,10 @@ output.prp-status {
 }
 
 .cls-suggest .cls-suggest-token {
-  flex: none;
-  max-width: 45%;
+  flex: 1 1 0;
+  min-width: 0;
   overflow: hidden;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -243,4 +242,9 @@ output.prp-status {
 .cls-suggest .cls-suggest-raw {
   flex: none;
   font-style: italic;
+}
+
+.edit-pane .cls-suggest-host .ins-input {
+  text-align: left;
+  text-align-last: left;
 }

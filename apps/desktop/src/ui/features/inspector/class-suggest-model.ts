@@ -60,6 +60,19 @@ const toSuggestRows = (
   return rows;
 };
 
+const toPrefixPick = (
+  word: string,
+  rows: readonly SuggestRow[]
+): string | null => {
+  const first = rows.at(0) ?? null;
+
+  if (!word.endsWith("-") || first === null || !first.isToken) {
+    return null;
+  }
+
+  return first.className;
+};
+
 const toPickedClasses = (typed: string, className: string): string[] => {
   const words = toWords(typed);
 
@@ -68,6 +81,20 @@ const toPickedClasses = (typed: string, className: string): string[] => {
   }
 
   return [...words.slice(0, -1), className];
+};
+
+const toSubmitClasses = (
+  typed: string,
+  rows: readonly SuggestRow[],
+  isOpen: boolean
+): string[] => {
+  const pick = toPrefixPick(toLastWord(typed), rows);
+
+  if (isOpen && pick !== null) {
+    return toPickedClasses(typed, pick);
+  }
+
+  return toWords(typed);
 };
 
 const toStepIndex = (at: number, key: string, count: number): number => {
@@ -114,6 +141,7 @@ export {
   toLastWord,
   toPickedClasses,
   toStepIndex,
+  toSubmitClasses,
   toSuggestRows,
   toWords,
 };

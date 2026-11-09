@@ -13,6 +13,8 @@ const KEYS: readonly SpeedKey[] = ["lcp", "cls", "tbt", "transfer", "fonts"];
 
 const CLS_DIGITS = 10_000;
 
+const TIME_STEP_MS = 50;
+
 const toMedian = (list: readonly number[]): number | null => {
   if (list.length === 0) {
     return null;
@@ -36,6 +38,10 @@ const toRound = (key: SpeedKey, value: number | null): number | null => {
 
   if (key === "cls") {
     return Math.round(value * CLS_DIGITS) / CLS_DIGITS;
+  }
+
+  if (key === "lcp" || key === "tbt") {
+    return Math.round(value / TIME_STEP_MS) * TIME_STEP_MS;
   }
 
   return Math.round(value);

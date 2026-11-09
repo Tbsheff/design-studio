@@ -44,12 +44,17 @@ const toShotQuery = (query: SpeedRunQuery): ShotQuery => ({
 const toMeasure =
   (url: string) =>
   async (page: RenderPage): Promise<SpeedProbe> => {
-    await page.clearCache?.();
-    await page.goto(url);
-    await waitForPage(page);
-    await hideDevChrome(page);
-    await page.evaluate<boolean>(toWatchExpression());
-    await delay(SETTLE_MS);
+    await page.setColdLoad?.(true);
+
+    try {
+      await page.goto(url);
+      await waitForPage(page);
+      await hideDevChrome(page);
+      await page.evaluate<boolean>(toWatchExpression());
+      await delay(SETTLE_MS);
+    } finally {
+      await page.setColdLoad?.(false);
+    }
 
     const [vitals, resources] = await Promise.all([
       page.evaluate<SpeedVitals>(toVitalsExpression()),

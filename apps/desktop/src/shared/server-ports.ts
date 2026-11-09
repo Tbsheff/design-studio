@@ -77,7 +77,7 @@ interface RenderPage {
   close: () => Promise<void>;
   lastNav?: () => { loadMs: number; idleMs: number } | null;
   reset?: () => Promise<void>;
-  clearCache?: () => Promise<void>;
+  setColdLoad?: (isCold: boolean) => Promise<void>;
   axe?: () => Promise<AxeViolation[]>;
 }
 

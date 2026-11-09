@@ -82,6 +82,7 @@ const inspectSpeedVitals = (): SpeedVitals => {
 const inspectSpeedResources = (): SpeedResources => {
   const MAX_IMAGES = 40;
   const IMAGE_FILE = /\.(?:png|jpe?g|gif|webp|avif|svg|ico)(?:[?#]|$)/iu;
+  const FAVICON_FILE = /\/favicon\.[a-z]+(?:[?#]|$)/iu;
   const FONT_FILE = /\.(?:woff2?|ttf|otf|eot)(?:[?#]|$)/iu;
   const DEV_FILE = /\/@vite\/client|webpack-hmr|hot-update|@react-refresh/u;
 
@@ -99,7 +100,12 @@ const inspectSpeedResources = (): SpeedResources => {
     const bytes = Math.max(entry.transferSize, entry.encodedBodySize);
     transfer += bytes;
 
-    if (entry.initiatorType === "img" || IMAGE_FILE.test(entry.name)) {
+    const isFavicon = FAVICON_FILE.test(entry.name);
+
+    if (
+      !isFavicon &&
+      (entry.initiatorType === "img" || IMAGE_FILE.test(entry.name))
+    ) {
       images.push({ bytes, url: entry.name });
     }
 

@@ -141,7 +141,7 @@ const useDrawInput = (
     globalThis.addEventListener("keydown", onKey, true);
 
     return (): void => globalThis.removeEventListener("keydown", onKey, true);
-  }, [setOn, toggle, undo]);
+  }, [live, setOn, toggle, undo]);
 
   useDesktopCommand((command) => {
     if (!live.current.on || command.type !== "undo") {

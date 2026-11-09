@@ -27,7 +27,15 @@ const CodeEditDialog: LazyExoticComponent<typeof CodeEditDialogView> = lazy(
   }
 );
 
-export { CodeEditDialog, Inspector, TweaksPanel };
+const CodeEditHost = lazy(async () => {
+  const loaded = await import("./code-edit-host.js");
+
+  return { default: loaded.CodeEditHost };
+});
+
+export { CodeEditDialog, CodeEditHost, Inspector, TweaksPanel };
+
+export { codeEditStore } from "./use-code-edit-target.js";
 
 export {
   editVariantStore,

@@ -39,6 +39,8 @@ export { useStudioCommands } from "./use-studio-commands.js";
 
 export type { Command, CommandLayer as CommandLayerName } from "./registry.js";
 
+export type { OpenTarget as FileOpenTarget } from "./use-file-rows.js";
+
 export { useCanvasCommands } from "./use-canvas-commands.js";
 
 export type { CanvasInput as CanvasCommandsInput } from "./use-canvas-commands.js";

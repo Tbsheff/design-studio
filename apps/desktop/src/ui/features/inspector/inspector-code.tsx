@@ -2,7 +2,6 @@ import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
 import { CodeEditButton } from "./code-edit-button.js";
-import { CodeEditHost } from "./code-edit-host.js";
 import { CopySnippet } from "./copy-snippet.js";
 import { copy } from "./copy.js";
 import { FileLockRow } from "./file-lock-row.js";
@@ -33,7 +32,6 @@ const InspectorCode = ({
           directionId={directionId}
           file={null}
         />
-        <CodeEditHost />
       </>
     );
   }
@@ -67,7 +65,6 @@ const InspectorCode = ({
         directionId={directionId}
         file={toLockFile(snippet)}
       />
-      <CodeEditHost />
     </div>
   );
 };

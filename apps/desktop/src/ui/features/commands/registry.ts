@@ -7,7 +7,7 @@ import { IS_MAC, tipWithKey } from "./keys.js";
 const COMMAND_EVENT = "studio:command";
 const LAYER_EVENT = "studio:command-layer";
 
-type CommandLayer = "palette" | "projects" | "shortcuts";
+type CommandLayer = "files" | "palette" | "projects" | "shortcuts";
 
 interface Command {
   id: string;

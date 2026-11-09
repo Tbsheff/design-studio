@@ -98,9 +98,25 @@ const toActiveId = (listId: string, rows: Row[], current: number): string => {
   return "";
 };
 
-const toEmptyText = (isLoading: boolean, query: string): string => {
+const toLoadingText = (isFiles: boolean): string => {
+  if (isFiles) {
+    return copy.textLoadingFiles;
+  }
+
+  return copy.textLoadingProjects;
+};
+
+const toEmptyText = (
+  isLoading: boolean,
+  query: string,
+  isFiles: boolean
+): string => {
   if (isLoading) {
-    return copy.textLoadingProjects;
+    return toLoadingText(isFiles);
+  }
+
+  if (isFiles && query.trim() === "") {
+    return copy.textNoFiles;
   }
 
   return `${copy.textNothingMatches}${query}${copy.textGlyph}`;

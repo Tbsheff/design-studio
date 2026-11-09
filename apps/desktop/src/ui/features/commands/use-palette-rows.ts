@@ -18,6 +18,8 @@ import type { Row, RowActions } from "./palette-row-types.js";
 import { buildRows } from "./palette-rows.js";
 import { collectCommands } from "./registry.js";
 import type { Command } from "./registry.js";
+import { useFileRows } from "./use-file-rows.js";
+import type { OpenTarget } from "./use-file-rows.js";
 
 interface PaletteRows {
   isBusy: boolean;
@@ -43,8 +45,10 @@ const toUniqueCommands = (onShortcuts: () => void): Command[] => {
 };
 
 interface PaletteRowsInput {
+  readonly isFiles: boolean;
   readonly isProjectsOnly: boolean;
   readonly onClose: () => void;
+  readonly onOpenFile: (target: OpenTarget) => void;
   readonly onShortcuts: () => void;
   readonly query: string;
   readonly setError: (error: string | null) => void;
@@ -59,7 +63,8 @@ const toShownRows = (rows: Row[], isProjectsOnly: boolean): Row[] => {
 };
 
 const usePaletteRows = (input: PaletteRowsInput): PaletteRows => {
-  const { isProjectsOnly, onClose, onShortcuts, query, setError } = input;
+  const { isFiles, isProjectsOnly, onClose, onOpenFile } = input;
+  const { onShortcuts, query, setError } = input;
   const current = uiStore.get().activeProjectId;
   const hits = useProjectHits(current, true);
   const routes = useRouteHits(query, current, hits?.routes ?? []);
@@ -116,6 +121,12 @@ const usePaletteRows = (input: PaletteRowsInput): PaletteRows => {
     () => toShownRows(rows, isProjectsOnly),
     [isProjectsOnly, rows]
   );
+
+  const files = useFileRows(isFiles, query, onOpenFile);
+
+  if (isFiles) {
+    return { isBusy: false, isLoading: files.isLoading, rows: files.rows };
+  }
 
   const isLoading = hits === null;
 

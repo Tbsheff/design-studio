@@ -6,18 +6,41 @@ import { PaletteError } from "./palette-error.js";
 import { PaletteFoot } from "./palette-foot.js";
 import { PaletteList } from "./palette-list.js";
 import { PaletteSearch } from "./palette-search.js";
+import type { OpenTarget } from "./use-file-rows.js";
 import { usePalette } from "./use-palette.js";
 
+const toSearchLabel = (isFiles: boolean): string => {
+  if (isFiles) {
+    return copy.filesInput;
+  }
+
+  return copy.paletteInput;
+};
+
 const Palette = ({
+  isFiles,
   isProjectsOnly,
   onClose,
+  onEscape,
+  onOpenFile,
   onShortcuts,
 }: {
+  readonly isFiles: boolean;
   readonly isProjectsOnly: boolean;
   readonly onClose: () => void;
+  readonly onEscape: () => void;
+  readonly onOpenFile: (target: OpenTarget) => void;
   readonly onShortcuts: () => void;
 }): ReactElement => {
-  const palette = usePalette(onClose, onShortcuts, isProjectsOnly);
+  const palette = usePalette({
+    isFiles,
+    isProjectsOnly,
+    onClose,
+    onEscape,
+    onOpenFile,
+    onShortcuts,
+  });
+
   const { changeQuery, onKeyDown, runRow, setActive } = palette;
 
   const closeOnBackdrop = useCallback(
@@ -47,6 +70,7 @@ const Palette = ({
           activeId={palette.activeId}
           query={palette.query}
           isBusy={palette.isBusy}
+          label={toSearchLabel(isFiles)}
           onChange={changeQuery}
           onKeyDown={onKeyDown}
         />
@@ -58,6 +82,7 @@ const Palette = ({
           current={palette.current}
           query={palette.query}
           isLoading={palette.isLoading}
+          isFiles={isFiles}
           onHover={setActive}
           onRun={runRow}
         />

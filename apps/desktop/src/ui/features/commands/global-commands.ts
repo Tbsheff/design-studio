@@ -10,6 +10,7 @@ import {
   requestOpenApp,
   uiStore,
 } from "./deps.js";
+import { openLayer } from "./registry.js";
 import type { Command } from "./registry.js";
 
 const focusNewProject = (): void => {
@@ -139,6 +140,28 @@ const copyPngCommand = (inProject: boolean): Command =>
     toCopyPngReason(inProject)
   );
 
+const toFilesReason = (inProject: boolean): string | null => {
+  if (inProject) {
+    return null;
+  }
+
+  return copy.textOpenAProject;
+};
+
+const filesCommand = (inProject: boolean): Command =>
+  withDisabled(
+    {
+      group: "Go",
+      icon: "file",
+      id: "go.file",
+      keyId: "go-to-file",
+      keywords: "open source code finder",
+      run: () => openLayer("files"),
+      title: copy.goToFile,
+    },
+    toFilesReason(inProject)
+  );
+
 const home = (): void => uiStore.set({ activeProjectId: null, screen: "home" });
 
 const toHomeReason = (inProject: boolean): string | null => {
@@ -210,6 +233,7 @@ const globalCommands = (openShortcuts: () => void): Command[] => {
         }),
       title: "New design system",
     },
+    filesCommand(inProject),
     findTextCommand(inProject),
     copyPngCommand(inProject),
     ...THEME_COMMANDS,

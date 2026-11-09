@@ -107,14 +107,20 @@ const interactionTail = (link: Pick<PrototypeLink, "to" | "when">): string => {
   return tail;
 };
 
+const UNSET_VALUES: ReadonlySet<string> = new Set(["", "0", "false"]);
+
 const holdsWhen = (when: LinkWhen | null, memory: VariableMemory): boolean => {
   if (!when) {
     return true;
   }
 
-  const held = memory.get(when.name) ?? null;
+  const wanted = String(when.equals);
 
-  return held !== null && String(held) === String(when.equals);
+  if (!memory.has(when.name)) {
+    return UNSET_VALUES.has(wanted);
+  }
+
+  return String(memory.get(when.name)) === wanted;
 };
 
 const toggled = (held: LinkVariableValue | null): string => {

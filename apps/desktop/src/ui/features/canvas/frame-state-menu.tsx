@@ -2,9 +2,11 @@ import { Icon } from "@design-studio/ui";
 import { useCallback, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
+import { useLive } from "../../platform/live-store.js";
 import { stop } from "./frame-state-ui-model.js";
 import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
 import { MenuBody } from "./menu-body.js";
+import { missedSteps, toMissedText } from "./open-steps-model.js";
 import { usePanelMenu } from "./use-panel-menu.js";
 
 const STATE_TIP =
@@ -26,6 +28,7 @@ const FrameStateMenu = ({
   const menu = usePanelMenu();
   const { root, setOpen, trigger } = menu;
   const [error, setError] = useState<string | null>(null);
+  const allMissed = useLive(missedSteps);
   const toggle = useCallback(() => setOpen((value) => !value), [setOpen]);
 
   if (!states) {
@@ -35,15 +38,25 @@ const FrameStateMenu = ({
   const chosen = frameStateOf(states.view, frameId);
   const def = states.view.states.find((state) => state.id === chosen);
   const set = chosen !== "default";
-  let part: "" | " set" = "";
+  const missed = allMissed[chosen] ?? [];
+  const isMissed = missed.length > 0;
+  let part = "";
   let datatip = "";
 
   if (set) {
     part = " set";
   }
 
+  if (isMissed) {
+    part = `${part} warn`;
+  }
+
   if (!menu.open) {
     datatip = STATE_TIP;
+  }
+
+  if (!menu.open && isMissed) {
+    datatip = toMissedText(missed);
   }
 
   return (
@@ -77,6 +90,9 @@ const FrameStateMenu = ({
             menu={menu}
             onError={setError}
           />
+          {isMissed && (
+            <p className="frame-page-hint error">{toMissedText(missed)}</p>
+          )}
           {error && <p className="frame-page-hint error">{error}</p>}
         </div>
       )}

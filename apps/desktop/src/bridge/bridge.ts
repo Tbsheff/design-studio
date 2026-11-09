@@ -22,6 +22,7 @@ import {
 } from "./live-preview.js";
 import { createLockSet } from "./locks.js";
 import { installMessageHandlers } from "./message-handlers.js";
+import { createOpenSteps } from "./open-steps.js";
 import { createOptimistic } from "./optimistic.js";
 import {
   createPost,
@@ -128,6 +129,7 @@ const buildCore = (session: BridgeSession): BridgeCore => {
     links: createLinkBridge(post),
     livePreview,
     locks,
+    openSteps: createOpenSteps(state, post),
     optimistic,
     outlineView: createOutlineView(),
     post,

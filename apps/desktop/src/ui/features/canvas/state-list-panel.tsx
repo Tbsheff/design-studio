@@ -9,6 +9,7 @@ import { copy } from "./copy.js";
 import { StateRows } from "./frame-state-parts.js";
 import { menuKeys } from "./frame-state-ui-model.js";
 import { setFrameSession, setFrameState } from "./frame-states-model.js";
+import { KeepOpenSection } from "./keep-open-section.js";
 import { NewMockRow } from "./new-mock-row.js";
 import { SessionRows } from "./session-rows.js";
 import { useFrameStateSlot } from "./use-frame-state-slot.js";
@@ -75,6 +76,13 @@ const StateListPanel = ({
     >
       <StateRows view={view} chosen={chosen} onPick={pick} />
       <NewMockRow onOpen={openMock} />
+      <KeepOpenSection
+        chosen={chosen}
+        frameId={frameId}
+        projectId={projectId}
+        run={run}
+        view={view}
+      />
       <Suspense fallback={null}>
         {slot?.({ directionId, frameId, projectId })}
       </Suspense>

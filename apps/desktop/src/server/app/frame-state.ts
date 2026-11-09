@@ -10,6 +10,7 @@ import {
   MAX_CUSTOM_STATES,
   MAX_MOCK_RULES,
   cleanMockRule,
+  cleanOpenSteps,
   isFrameStateId,
   type FrameStateDef,
   type FrameStatesView,
@@ -117,13 +118,21 @@ function cleanCustom(raw: unknown): FrameStateDef | null {
     .filter((rule): rule is MockRule => rule !== null)
     .slice(0, MAX_MOCK_RULES);
 
-  return {
+  const steps = cleanOpenSteps(def.steps);
+
+  const out: FrameStateDef = {
     id: def.id,
     kind: "mock",
     name,
     signedIn: def.signedIn !== false,
     mocks,
   };
+
+  if (steps.length > 0) {
+    out.steps = steps;
+  }
+
+  return out;
 }
 
 function parseStates(text: string | null): StatesFile {
@@ -284,7 +293,12 @@ export function stateOfFrame(view: FrameStatesView, frameId: string): string {
 export interface FrameStateChange {
   frameId: string;
   state: string;
-  custom?: { name?: string; mocks?: readonly unknown[]; signedIn?: boolean };
+  custom?: {
+    name?: string;
+    mocks?: readonly unknown[];
+    signedIn?: boolean;
+    steps?: readonly unknown[];
+  };
 }
 
 function nextCustomId(states: StatesFile): string {
@@ -312,6 +326,7 @@ function upsertCustom(
     name: custom.name ?? existing?.name ?? "Mock data",
     mocks: custom.mocks ?? existing?.mocks ?? [],
     signedIn: custom.signedIn ?? existing?.signedIn ?? true,
+    steps: custom.steps ?? existing?.steps ?? [],
   });
 
   if (!def) {

@@ -15,7 +15,7 @@ interface TokenUsageStoreApi {
   ) => Effect.Effect<TokenUsagePage, KnownFailure>;
 }
 
-const MAX_SCANNED_FILES = 8000;
+const MAX_SCANNED_FILES = 60_000;
 
 class TokenUsageStore extends Context.Service<
   TokenUsageStore,

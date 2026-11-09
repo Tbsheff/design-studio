@@ -1,5 +1,5 @@
 interface UsageToken {
-  readonly darkValue: string | null;
+  readonly aliasTexts: readonly string[];
   readonly file: string;
   readonly line: number;
   readonly name: string;
@@ -16,9 +16,12 @@ interface WordHit {
   readonly lines: readonly number[];
 }
 
-interface FileScan {
-  readonly vars: ReadonlyMap<string, WordHit>;
-  readonly words: ReadonlyMap<string, WordHit>;
+type FileScan = ReadonlyMap<string, WordHit>;
+
+interface UsageIndex {
+  readonly classes: ReadonlyMap<string, readonly string[]>;
+  readonly names: ReadonlySet<string>;
+  readonly signature: string;
 }
 
 interface TokenUse {
@@ -233,38 +236,6 @@ const toDeclarationLines = (text: string): ReadonlySet<number> => {
   return lines;
 };
 
-const toFileScan = (text: string, isCss: boolean): FileScan => {
-  const lineOf = toLineOf(text);
-  const declared = toDeclarationLines(text);
-  const vars = new Map<string, MutableHit>();
-  const words = new Map<string, MutableHit>();
-
-  for (const pattern of VAR_PATTERNS) {
-    for (const match of text.matchAll(pattern)) {
-      const line = lineOf(match.index);
-      const name = match.groups?.["name"] ?? null;
-
-      if (name !== null && !(isCss && declared.has(line))) {
-        insertHit(vars, name, line);
-      }
-    }
-  }
-
-  for (const match of text.matchAll(WORD_PATTERN)) {
-    const [word = ""] = match;
-
-    if (
-      word.length <= MAX_WORD &&
-      word.includes("-") &&
-      !word.startsWith("-")
-    ) {
-      insertHit(words, word, lineOf(match.index));
-    }
-  }
-
-  return { vars, words };
-};
-
 const toBaseClass = (word: string): string => {
   let base = word;
   const colon = base.lastIndexOf(":");
@@ -306,10 +277,88 @@ const toClassIndex = (
   return index;
 };
 
+const toSignature = (tokens: readonly UsageToken[]): string =>
+  tokens.map((token) => token.name).join("|");
+
+const toUsageIndex = (tokens: readonly UsageToken[]): UsageIndex => ({
+  classes: toClassIndex(tokens),
+  names: new Set(tokens.map((token) => token.name)),
+  signature: toSignature(tokens),
+});
+
+interface ScanContext {
+  readonly declared: ReadonlySet<number>;
+  readonly hits: Map<string, MutableHit>;
+  readonly index: UsageIndex;
+  readonly isCss: boolean;
+  readonly lineOf: (offset: number) => number;
+  readonly text: string;
+}
+
+const toVarMatches = (
+  text: string
+): { readonly name: string; readonly offset: number }[] =>
+  VAR_PATTERNS.flatMap((pattern) =>
+    [...text.matchAll(pattern)].flatMap((match) => {
+      const name = match.groups?.["name"] ?? null;
+
+      if (name === null) {
+        return [];
+      }
+
+      return [{ name, offset: match.index }];
+    })
+  );
+
+const insertVarHits = (context: ScanContext): void => {
+  const { declared, hits, index, isCss, lineOf, text } = context;
+
+  for (const { name, offset } of toVarMatches(text)) {
+    const line = lineOf(offset);
+    const isDeclaration = isCss && declared.has(line);
+
+    if (index.names.has(name) && !isDeclaration) {
+      insertHit(hits, name, line);
+    }
+  }
+};
+
+const insertClassHits = (context: ScanContext): void => {
+  const { hits, index, lineOf, text } = context;
+
+  for (const match of text.matchAll(WORD_PATTERN)) {
+    const [word = ""] = match;
+
+    if (word.length <= MAX_WORD && word.includes("-")) {
+      const names = index.classes.get(toBaseClass(word)) ?? [];
+
+      for (const name of names) {
+        insertHit(hits, name, lineOf(match.index));
+      }
+    }
+  }
+};
+
+const toFileScan = (
+  text: string,
+  isCss: boolean,
+  index: UsageIndex
+): FileScan => {
+  const declared = toDeclarationLines(text);
+  const hits = new Map<string, MutableHit>();
+  const lineOf = toLineOf(text);
+  const context: ScanContext = { declared, hits, index, isCss, lineOf, text };
+
+  insertVarHits(context);
+  insertClassHits(context);
+
+  return hits;
+};
+
 const toAliasRefs = (token: UsageToken): ReadonlySet<string> => {
   const refs = new Set<string>();
 
-  for (const text of [token.value, token.darkValue ?? ""]) {
+  for (const text of token.aliasTexts) {
     for (const match of text.matchAll(ALIAS_PATTERN)) {
       const ref = match.groups?.["name"] ?? null;
 
@@ -373,17 +422,10 @@ const insertHits = (
 
 const insertScanned = (
   tallies: ReadonlyMap<string, Tally>,
-  classes: ReadonlyMap<string, readonly string[]>,
   scanned: ScannedFile
 ): void => {
-  for (const [name, hit] of scanned.scan.vars) {
+  for (const [name, hit] of scanned.scan) {
     insertHits(tallies, scanned.file, name, hit);
-  }
-
-  for (const [word, hit] of scanned.scan.words) {
-    for (const name of classes.get(toBaseClass(word)) ?? []) {
-      insertHits(tallies, scanned.file, name, hit);
-    }
   }
 };
 
@@ -398,10 +440,8 @@ const toTokenUses = (
     ])
   );
 
-  const classes = toClassIndex(tokens);
-
   for (const scanned of files) {
-    insertScanned(tallies, classes, scanned);
+    insertScanned(tallies, scanned);
   }
 
   for (const token of tokens) {
@@ -423,6 +463,14 @@ const toTokenUses = (
   });
 };
 
-export { toFileScan, toTokenUses };
+export { toFileScan, toTokenUses, toUsageIndex };
 
-export type { FileScan, ScannedFile, TokenUse, UsageSite, UsageToken, WordHit };
+export type {
+  FileScan,
+  ScannedFile,
+  TokenUse,
+  UsageIndex,
+  UsageSite,
+  UsageToken,
+  WordHit,
+};

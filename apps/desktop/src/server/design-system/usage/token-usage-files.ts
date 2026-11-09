@@ -4,10 +4,11 @@ import path from "node:path";
 
 import type { BoundedCache } from "./deps.js";
 import { toFileScan } from "./engine/index.js";
-import type { FileScan, ScannedFile } from "./engine/index.js";
+import type { FileScan, ScannedFile, UsageIndex } from "./engine/index.js";
 
 interface CachedScan {
   readonly scan: FileScan;
+  readonly signature: string;
   readonly stamp: string;
 }
 
@@ -27,7 +28,7 @@ const SKIPPED_DIRS: ReadonlySet<string> = new Set([
 
 const SOURCE_PATTERN = /\.(?:css|html|jsx|tsx|ts|js|mdx)$/u;
 const SKIPPED_FILE_PATTERN = /\.(?:test|spec|stories|story|d)\.[jt]sx?$/u;
-const MAX_FILES = 6000;
+const MAX_FILES = 50_000;
 const KILOBYTE = 1024;
 const MAX_KILOBYTES = 512;
 const MAX_BYTES = MAX_KILOBYTES * KILOBYTE;
@@ -75,6 +76,7 @@ const toRelative = (root: string, absolute: string): string =>
 const runFileScan = async (
   cache: ScanCache,
   root: string,
+  index: UsageIndex,
   absolute: string
 ): Promise<ScannedFile | null> => {
   try {
@@ -88,14 +90,16 @@ const runFileScan = async (
     const stamp = `${info.mtimeMs}:${info.size}`;
     const known = cache.get(absolute);
 
-    if (known?.stamp === stamp) {
+    if (known?.stamp === stamp && known.signature === index.signature) {
       return { file, scan: known.scan };
     }
 
     const text = await readFile(absolute, "utf-8");
-    const scan = toFileScan(text, absolute.endsWith(".css"));
+    const scan = toFileScan(text, absolute.endsWith(".css"), index);
 
-    cache.set(absolute, { scan, stamp });
+    const { signature } = index;
+
+    cache.set(absolute, { scan, signature, stamp });
 
     return { file, scan };
   } catch {
@@ -105,13 +109,14 @@ const runFileScan = async (
 
 const listScannedFiles = async (
   cache: ScanCache,
-  root: string
+  root: string,
+  index: UsageIndex
 ): Promise<ScannedFile[]> => {
   const found = await listFolder(root);
   const targets = found.toSorted().slice(0, MAX_FILES);
 
   const scanned = await Promise.all(
-    targets.map((absolute) => runFileScan(cache, root, absolute))
+    targets.map((absolute) => runFileScan(cache, root, index, absolute))
   );
 
   return scanned.filter((entry): entry is ScannedFile => entry !== null);

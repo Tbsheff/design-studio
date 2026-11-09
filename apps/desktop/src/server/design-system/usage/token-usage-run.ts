@@ -1,3 +1,4 @@
+import type { CompiledTokenEntry } from "@design-studio/contracts";
 import type { Effect } from "effect";
 
 import {
@@ -6,7 +7,7 @@ import {
   toDirectEditStatusFailure,
 } from "./deps.js";
 import type { DirectionRun, KnownFailure } from "./deps.js";
-import { toTokenUses } from "./engine/index.js";
+import { toTokenUses, toUsageIndex } from "./engine/index.js";
 import type { TokenUse, UsageToken } from "./engine/index.js";
 import { listScannedFiles } from "./token-usage-files.js";
 import type { ScanCache } from "./token-usage-files.js";
@@ -38,11 +39,19 @@ const toOffset = (cursor: string | null): number => {
   return 0;
 };
 
+const toAliasTexts = (entry: CompiledTokenEntry): string[] => {
+  if (entry.source) {
+    return [entry.source.value, entry.source.darkValue ?? ""];
+  }
+
+  return [entry.value, entry.darkValue ?? ""];
+};
+
 const toUsageTokens = async (run: DirectionRun): Promise<UsageToken[]> => {
   const state = await readDesignSystemState(run.project, run.direction);
 
   return state.entries.map((entry) => ({
-    darkValue: entry.darkValue,
+    aliasTexts: toAliasTexts(entry),
     file: entry.source?.file ?? TOKENS_FILE,
     line: entry.source?.line ?? 1,
     name: entry.cssVar,
@@ -63,11 +72,9 @@ const runList = async (
   run: DirectionRun,
   command: ListTokenUsageCommand
 ): Promise<TokenUsagePage> => {
-  const [tokens, files] = await Promise.all([
-    toUsageTokens(run),
-    listScannedFiles(cache, run.direction.workTree),
-  ]);
-
+  const tokens = await toUsageTokens(run);
+  const index = toUsageIndex(tokens);
+  const files = await listScannedFiles(cache, run.direction.workTree, index);
   const uses = toTokenUses(tokens, files).toSorted(toRank);
   const unused = uses.filter((use) => use.useCount === 0);
   let shown = uses;

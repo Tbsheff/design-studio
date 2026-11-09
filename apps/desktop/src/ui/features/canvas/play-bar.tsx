@@ -1,4 +1,7 @@
-import type { DeviceFrameId } from "@design-studio/contracts/device-frame";
+import type {
+  DeviceFrameId,
+  DeviceOrientation,
+} from "@design-studio/contracts/device-frame";
 import { Icon, UiSelect } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
@@ -11,41 +14,48 @@ import {
   toStoredDevice,
 } from "./device-frame-model.js";
 import { protoCopy } from "./proto-copy.js";
+import { RotateButton } from "./rotate-button.js";
 
 interface PlayBarProps {
   readonly title: string;
   readonly hint: string;
   readonly isBackDisabled: boolean;
   readonly device: DeviceFrameId | null;
+  readonly orientation: DeviceOrientation;
   readonly isHints: boolean;
   readonly onHints: (next: boolean) => void;
   readonly onDevice: (device: DeviceFrameId | null) => void;
+  readonly onRotate: () => void;
   readonly onBack: () => void;
   readonly onRestart: () => void;
   readonly onExit: () => void;
 }
+
+const toPickedDevice = (value: string): DeviceFrameId | null => {
+  if (value === NO_DEVICE) {
+    return null;
+  }
+
+  return toStoredDevice(value);
+};
 
 const PlayBar = ({
   title,
   hint,
   isBackDisabled,
   device,
+  orientation,
   isHints,
   onHints,
   onDevice,
+  onRotate,
   onBack,
   onRestart,
   onExit,
 }: PlayBarProps): ReactElement => {
   const onChange = useCallback(
     (value: string): void => {
-      if (value === NO_DEVICE) {
-        onDevice(null);
-
-        return;
-      }
-
-      onDevice(toStoredDevice(value));
+      onDevice(toPickedDevice(value));
     },
     [onDevice]
   );
@@ -87,6 +97,11 @@ const PlayBar = ({
         value={toDeviceValue(device)}
         options={DEVICE_OPTIONS}
         onChange={onChange}
+      />
+      <RotateButton
+        device={device}
+        orientation={orientation}
+        onRotate={onRotate}
       />
       <button type="button" className="btn small ghost" onClick={onRestart}>
         <Icon name="restore" size={12} />

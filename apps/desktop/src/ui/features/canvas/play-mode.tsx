@@ -1,4 +1,7 @@
-import type { DeviceFrameId } from "@design-studio/contracts/device-frame";
+import type {
+  DeviceFrameId,
+  DeviceOrientation,
+} from "@design-studio/contracts/device-frame";
 import { useRef } from "react";
 import type { ReactElement } from "react";
 
@@ -30,6 +33,7 @@ interface BaseSlotsProps {
   readonly base: Slot[];
   readonly stage: StageSize;
   readonly device: DeviceFrameId | null;
+  readonly orientation: DeviceOrientation;
   readonly sandbox?: string;
   readonly bind: BindFrame;
   readonly spots: Readonly<Record<string, readonly Rect[]>>;
@@ -64,7 +68,7 @@ const isLeavingSlot = (slot: Slot, current: Slot | undefined): boolean =>
   slot !== current && current?.phase === "run";
 
 const toBaseNodes = (props: BaseSlotsProps): ReactElement[] => {
-  const { base, stage, device, sandbox, bind } = props;
+  const { base, stage, device, orientation, sandbox, bind } = props;
   const current = base.at(-1);
 
   return base.map((slot) => {
@@ -80,6 +84,7 @@ const toBaseNodes = (props: BaseSlotsProps): ReactElement[] => {
         timing={timing}
         stage={stage}
         device={device}
+        orientation={orientation}
         sandbox={sandbox}
         bind={bind(slot.token)}
       />
@@ -122,6 +127,7 @@ const toOverlayNode = (
         timing={overlay}
         stage={stage}
         device={null}
+        orientation="portrait"
         sandbox={sandbox}
         bind={bind(overlay.token)}
       />
@@ -145,9 +151,15 @@ const toTitle = (
 
 const PlayMode = (props: PlayModeProps): ReactElement => {
   const play = usePlay(props);
-  const { device, setDevice: onDevice } = usePlayDevice(props.projectId);
+  const {
+    device,
+    orientation,
+    setDevice: onDevice,
+    toggleOrientation: onRotate,
+  } = usePlayDevice(props.projectId);
   const stage = useStageSize();
   const root = useRef<HTMLDialogElement>(null);
+
   useFocusReturn(root, props.onRestoreFocus);
   const base = baseOf(play.slots);
   const overlay = overlayOf(play.slots);
@@ -180,6 +192,7 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
     device,
     flashCount,
     isHeld,
+    orientation,
     sandbox,
     spots,
     stage,
@@ -200,9 +213,11 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
         hint={playHint(props, overlay !== null, shown)}
         isBackDisabled={toBackDisabled(play, overlay !== null)}
         device={device}
+        orientation={orientation}
         isHints={isEnabled}
         onHints={onHints}
         onDevice={onDevice}
+        onRotate={onRotate}
         onBack={onBack}
         onRestart={onRestart}
         onExit={onExit}

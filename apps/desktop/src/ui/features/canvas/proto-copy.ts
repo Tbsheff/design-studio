@@ -17,6 +17,9 @@ const protoCopy = {
   links: "links",
   missingFrame: "Missing frame",
   noLinks: "No links yet.",
+  rotate: "Rotate device",
+  rotateLandscape: "Rotate to landscape",
+  rotatePortrait: "Rotate to portrait",
   start: "Start",
   startTip: "Start frame for Play",
 } as const;

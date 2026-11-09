@@ -13,7 +13,7 @@ const toLensClass = (layout: SlotLayout): string | null => {
     return null;
   }
 
-  return `play-device-lens lens-${layout.deviceId}`;
+  return `play-device-lens lens-${layout.deviceId} is-${layout.orientation}`;
 };
 
 const DeviceFrame = ({ children, layout }: DeviceFrameProps): ReactElement => {

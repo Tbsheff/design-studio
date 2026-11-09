@@ -547,6 +547,28 @@ dialog.play-layer {
   border-radius: 50%;
 }
 
+.play-device-lens.lens-iphone-15.is-landscape {
+  top: 50%;
+  left: 24px;
+  width: 32px;
+  height: 112px;
+  margin-top: -56px;
+  margin-left: 0;
+}
+
+.play-device-lens.lens-pixel-8.is-landscape {
+  top: 50%;
+  left: 22px;
+  margin-top: -5px;
+  margin-left: 0;
+}
+
+.play-device-lens.lens-ipad.is-landscape {
+  top: 14px;
+  left: 50%;
+  margin-left: -4px;
+}
+
 .play-device-lens.lens-macbook {
   top: 24px;
   left: 50%;

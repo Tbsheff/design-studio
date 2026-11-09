@@ -104,10 +104,11 @@ const toPinned = (projects: readonly Project[] | null): Project[] =>
   );
 
 const toRecent = (projects: readonly Project[] | null): Project[] =>
-  toByRecent((projects ?? []).filter((project) => isVisible(project))).slice(
-    0,
-    RECENT_MAX
-  );
+  toByRecent(
+    (projects ?? []).filter(
+      (project) => isVisible(project) && project.settings.isPinned !== true
+    )
+  ).slice(0, RECENT_MAX);
 
 const toRecentIn = (workspace: Workspace | null): readonly Project[] =>
   workspace?.projects.slice(0, RECENT_MAX) ?? [];

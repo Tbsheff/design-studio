@@ -543,6 +543,10 @@ fieldset.ins-toggles {
   border-radius: var(--r-control-sm);
 }
 
+.edit-pane .ins-aspect-lock {
+  justify-content: space-between;
+}
+
 .edit-pane .ins-truncate .ins-toggles {
   flex: 1;
   min-width: 0;

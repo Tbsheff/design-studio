@@ -1956,6 +1956,7 @@ export const DIRECT_STYLE_PROPERTIES = [
   "white-space",
   "-webkit-line-clamp",
   "-webkit-box-orient",
+  "aspect-ratio",
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

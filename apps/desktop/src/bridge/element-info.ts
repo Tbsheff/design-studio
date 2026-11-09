@@ -65,6 +65,7 @@ const STYLE_KEYS = [
   "white-space",
   "-webkit-line-clamp",
   "-webkit-box-orient",
+  "aspect-ratio",
 ];
 
 const MAX_SELECTOR_DEPTH = 8;

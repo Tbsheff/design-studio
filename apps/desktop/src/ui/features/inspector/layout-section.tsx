@@ -8,12 +8,14 @@ import { copy } from "./copy.js";
 import { SIDES } from "./css-value-model.js";
 import type { DirectEdit } from "./deps.js";
 import { isSameEditValues } from "./edit-request-model.js";
+import type { ElementClasses } from "./element-classes-model.js";
 import { LayoutLead } from "./layout-lead.js";
 import { BOX_PROPS, toDeclaredMargins } from "./simple-model.js";
 
 interface LayoutSectionProps {
   readonly edit: DirectEdit;
   readonly selection: SelectionContext | null;
+  readonly classes: ElementClasses | null;
 }
 
 const BoxModelMemo = memo(
@@ -27,10 +29,11 @@ const BoxModelMemo = memo(
 const LayoutSection = ({
   edit,
   selection,
+  classes,
 }: LayoutSectionProps): ReactElement => {
   const lead = useMemo(
-    () => <LayoutLead edit={edit} selection={selection} />,
-    [edit, selection]
+    () => <LayoutLead edit={edit} selection={selection} classes={classes} />,
+    [edit, selection, classes]
   );
 
   return (

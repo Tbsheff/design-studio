@@ -50,7 +50,7 @@ const SimpleSections = ({
 
   return (
     <>
-      <LayoutSection edit={edit} selection={selection} />
+      <LayoutSection edit={edit} selection={selection} classes={classes} />
       <TextSection
         edit={edit}
         ui={ui}

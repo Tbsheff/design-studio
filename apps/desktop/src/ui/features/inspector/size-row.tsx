@@ -15,10 +15,12 @@ import { startFixedDrag } from "./use-fixed-drag.js";
 const SizeRow = ({
   axis,
   edit,
+  fieldEdit,
   selection,
 }: {
   readonly axis: Axis;
   readonly edit: DirectEdit;
+  readonly fieldEdit: DirectEdit | null;
   readonly selection: SelectionContext;
 }): ReactElement => {
   const parent = toParentLayout(selection.styles);
@@ -41,7 +43,7 @@ const SizeRow = ({
         axis={axis}
         mode={mode}
         used={used}
-        edit={edit}
+        edit={fieldEdit ?? edit}
         resizing={resizing}
         onDrag={drag}
       />

@@ -43,7 +43,7 @@ const getLayerText = Effect.fn("TextRewrite.getLayerText")(function* run(
 
   if (first === null) {
     return yield* new BadRequest({
-      message: "This layer has no plain text to rewrite.",
+      message: "This layer has no text of its own. Select a text layer.",
     });
   }
 

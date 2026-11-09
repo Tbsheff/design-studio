@@ -14,9 +14,7 @@ const PERCENT = 100;
 
 const TENTH_PERCENT = 100;
 
-const SMALLEST_PCT = 0.01;
-
-const NOISE_PCT = 0.005;
+const NOISE_PCT = 0.02;
 
 interface RouteDiff {
   readonly after: string;
@@ -50,13 +48,7 @@ const toPct = (
     return 0;
   }
 
-  const rounded = Math.round(raw * TENTH_PERCENT) / TENTH_PERCENT;
-
-  if (rounded === 0 && raw > 0) {
-    return SMALLEST_PCT;
-  }
-
-  return rounded;
+  return Math.round(raw * TENTH_PERCENT) / TENTH_PERCENT;
 };
 
 const toPng = (encoded: string): PNG =>

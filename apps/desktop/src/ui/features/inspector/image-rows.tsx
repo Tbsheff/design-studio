@@ -2,10 +2,12 @@ import type { ReactElement } from "react";
 
 import { AltField } from "./alt-field.js";
 import { ImageActions } from "./image-actions.js";
+import { ImageAdjustRow } from "./image-adjust-row.js";
 import { ImageFitRow } from "./image-fit-row.js";
 import { ImageFocalRow } from "./image-focal-row.js";
 import { getAttributeText } from "./image-model.js";
 import type { Props } from "./image-model.js";
+import { useImageAdjust } from "./use-image-adjust.js";
 import type { ImageControls } from "./use-image-controls.js";
 
 interface RowsProps {
@@ -15,6 +17,7 @@ interface RowsProps {
 
 const ImageRows = ({ controls, props }: RowsProps): ReactElement => {
   const isDisabled = !props.isEditable;
+  const adjust = useImageAdjust();
 
   return (
     <div className="img-rows">
@@ -35,6 +38,7 @@ const ImageRows = ({ controls, props }: RowsProps): ReactElement => {
         isDisabled={isDisabled}
         onPick={controls.handleFocal}
       />
+      {adjust && <ImageAdjustRow adjust={adjust} isDisabled={isDisabled} />}
       {!controls.isBackground && (
         <AltField
           initial={

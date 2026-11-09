@@ -3,6 +3,7 @@ import type { LayerNode } from "@design-studio/contracts";
 import { INDENT_BASE, INDENT_STEP } from "./layers-constants.js";
 
 interface LayerRowFlags {
+  readonly dimmed: boolean;
   readonly dropInto: boolean;
   readonly hovered: boolean;
   readonly node: LayerNode;
@@ -10,7 +11,7 @@ interface LayerRowFlags {
 }
 
 const toRowClass = (flags: LayerRowFlags): string => {
-  const { dropInto, hovered, node, selected } = flags;
+  const { dimmed, dropInto, hovered, node, selected } = flags;
   const names = ["layers-row"];
 
   if (selected) {
@@ -27,6 +28,10 @@ const toRowClass = (flags: LayerRowFlags): string => {
 
   if (node.locked) {
     names.push("is-locked");
+  }
+
+  if (dimmed) {
+    names.push("is-dimmed");
   }
 
   if (dropInto) {

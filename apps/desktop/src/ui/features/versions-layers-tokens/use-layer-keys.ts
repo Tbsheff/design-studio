@@ -10,6 +10,7 @@ import { reorderMoveOf } from "../../../shared/reorder.js";
 import { structureKeyOf } from "../../../shared/structure-keys.js";
 import {
   isEscapeKey,
+  isFindKey,
   isHideKey,
   isLockKey,
   isRenameKey,
@@ -28,6 +29,7 @@ interface LayerKeysInput {
   readonly isMac: boolean;
   readonly nodes: LayerNode[];
   readonly onEscape: () => void;
+  readonly onFind: () => void;
   readonly onSelect: (id: number, isAdditive: boolean) => void;
   readonly onStartEdit: (id: number) => void;
   readonly onToggleLocked: ((id: number, locked: boolean) => void) | undefined;
@@ -129,7 +131,8 @@ const runTreeKey = (
 const useLayerKeys = (
   input: LayerKeysInput
 ): ((event: KeyboardEvent<HTMLDivElement>) => void) => {
-  const { edits, isMac, onEscape, onStartEdit, rows, selectedIndex } = input;
+  const { edits, isMac, onEscape, onFind, onStartEdit, rows } = input;
+  const { selectedIndex } = input;
   const { onToggleLocked } = input;
   let selectedRow: LayerNode | null = null;
 
@@ -149,6 +152,13 @@ const useLayerKeys = (
         return;
       }
 
+      if (isFindKey(event)) {
+        event.preventDefault();
+        onFind();
+
+        return;
+      }
+
       if (onToggleLocked && selectedRow && isLockKey(event)) {
         event.preventDefault();
         onToggleLocked(selectedRow.id, !selectedRow.locked);
@@ -164,7 +174,7 @@ const useLayerKeys = (
 
       runTreeKey(event, input);
     },
-    [input, onEscape, onToggleLocked, runEditKey, selectedRow]
+    [input, onEscape, onFind, onToggleLocked, runEditKey, selectedRow]
   );
 };
 

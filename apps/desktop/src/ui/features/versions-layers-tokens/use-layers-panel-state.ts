@@ -5,7 +5,6 @@ import type { PointerEvent, RefObject } from "react";
 import type { DragHandlers } from "./layer-drag-model.js";
 import type { LayerRowCallbacks } from "./layer-row-callbacks-model.js";
 import { toLayersScope } from "./layers-open-state-model.js";
-import { visibleRows } from "./layers-tree.js";
 import type { LayerTree } from "./layers-tree.js";
 import { useLatest } from "./use-latest.js";
 import { useLayerCollapse } from "./use-layer-collapse.js";
@@ -17,6 +16,8 @@ import type { LayerListState } from "./use-layer-list-state.js";
 import { useLayerRename } from "./use-layer-rename.js";
 import type { LayerRenameApi } from "./use-layer-rename.js";
 import { useLayerRowCallbacks } from "./use-layer-row-callbacks.js";
+import { useLayerSearch } from "./use-layer-search.js";
+import type { LayerSearchApi } from "./use-layer-search.js";
 import { usePendingSelect } from "./use-pending-select.js";
 import { useRowMenu } from "./use-row-menu.js";
 import type { RowMenuApi } from "./use-row-menu.js";
@@ -40,7 +41,10 @@ interface PanelStateInput {
   readonly tree: LayerTree | null;
 }
 
-interface PanelTree extends CollapsedApi {
+interface PanelTree extends Omit<CollapsedApi, "collapsed"> {
+  readonly collapsed: ReadonlySet<number>;
+  readonly dimmed: ReadonlySet<number>;
+  readonly search: LayerSearchApi;
   readonly nodes: LayerNode[];
   readonly rows: LayerNode[];
   readonly scope: string;
@@ -57,7 +61,8 @@ interface PointerHandlers {
 
 interface PanelState extends PointerHandlers {
   readonly callbacks: LayerRowCallbacks;
-  readonly collapsed: Set<number>;
+  readonly collapsed: ReadonlySet<number>;
+  readonly dimmed: ReadonlySet<number>;
   readonly keys: Map<number, string>;
   readonly list: LayerListState;
   readonly listRef: RefObject<HTMLDivElement | null>;
@@ -66,6 +71,7 @@ interface PanelState extends PointerHandlers {
   readonly rowMenu: RowMenuApi;
   readonly rows: LayerNode[];
   readonly rowsRef: RefObject<HTMLDivElement | null>;
+  readonly search: LayerSearchApi;
   readonly selectedNode: number | null;
 }
 
@@ -85,15 +91,36 @@ const usePanelTree = (input: PanelStateInput): PanelTree => {
   const scope = toLayersScope(frameName);
   const collapse = useLayerCollapse(nodes, selectedNode, scope);
   const { collapsed } = collapse;
-  const rows = useMemo(() => visibleRows(nodes, collapsed), [nodes, collapsed]);
 
-  return { ...collapse, nodes, rows, scope, select, selectedNode };
+  const search = useLayerSearch({
+    collapsed,
+    nodes,
+    onEscape: input.onEscape,
+    onSelect: select,
+  });
+
+  const { dimmed, rows, shown } = search.view;
+
+  return {
+    ...collapse,
+    collapsed: shown,
+    dimmed,
+    nodes,
+    rows,
+    scope,
+    search,
+    select,
+    selectedNode,
+  };
 };
 
 const usePanelState = (input: PanelStateInput): PanelState => {
-  const { edits, isMac, onEscape, onHover, onToggleLocked } = input;
+  const { edits, isMac, onHover, onToggleLocked } = input;
   const treeState = usePanelTree(input);
-  const { collapsed, keys, nodes, rows, scope, select } = treeState;
+  const { collapsed, dimmed, keys, nodes, rows, scope, search } = treeState;
+  const { select } = treeState;
+  const { dismiss: onEscape, focus: onFind } = search;
+
   const { selectedNode, toggle } = treeState;
   const listRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<HTMLDivElement>(null);
@@ -122,6 +149,7 @@ const usePanelState = (input: PanelStateInput): PanelState => {
     isMac,
     nodes,
     onEscape,
+    onFind,
     onSelect,
     onStartEdit,
     onToggleLocked,
@@ -153,6 +181,7 @@ const usePanelState = (input: PanelStateInput): PanelState => {
     ...toPointerHandlers(list),
     callbacks,
     collapsed,
+    dimmed,
     keys,
     list,
     listRef,
@@ -161,6 +190,7 @@ const usePanelState = (input: PanelStateInput): PanelState => {
     rowMenu,
     rows,
     rowsRef,
+    search,
     selectedNode,
   };
 };

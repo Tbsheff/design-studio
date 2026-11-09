@@ -1383,3 +1383,19 @@ dialog.canvas-menu {
 .passive-frames {
   display: contents;
 }
+
+.layers-search {
+  flex: none;
+  gap: var(--s-2);
+}
+
+.layers-search-count {
+  flex: none;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.layers-row.is-dimmed {
+  opacity: 0.5;
+}

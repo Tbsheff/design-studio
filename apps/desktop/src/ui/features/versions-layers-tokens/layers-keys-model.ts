@@ -27,7 +27,13 @@ const isHideKey = (event: KeyModifiers): boolean =>
 const isEscapeKey = (event: KeyModifiers): boolean =>
   event.key === "Escape" && hasNoModifiers(event);
 
+const isFindKey = (event: KeyModifiers): boolean =>
+  event.key.toLowerCase() === "f" &&
+  hasCommand(event) &&
+  !event.shiftKey &&
+  !event.altKey;
+
 const isRenameKey = (event: KeyModifiers): boolean =>
   event.key === "F2" && hasNoModifiers(event);
 
-export { isEscapeKey, isHideKey, isLockKey, isRenameKey };
+export { isEscapeKey, isFindKey, isHideKey, isLockKey, isRenameKey };

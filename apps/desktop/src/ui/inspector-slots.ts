@@ -33,7 +33,7 @@ const StackingSlot = lazy(async () => {
 const TextRewriteSlot = lazy(async () => {
   const loaded = await import("./features/text-rewrite/index.js");
 
-  return { default: loaded.TextRewriteSlot };
+  return loaded.loadTextRewriteSlot();
 });
 
 const VariantSheet = lazy(async () => {

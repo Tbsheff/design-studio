@@ -5,6 +5,8 @@ import type { ReactElement } from "react";
 import { tagFrame } from "../../platform/bridge.js";
 import { copy } from "./copy.js";
 import { frameTitle } from "./frame-label-model.js";
+import { HotspotFlash } from "./hotspot-flash.js";
+import type { Rect } from "./hotspot-model.js";
 import { PlayBar } from "./play-bar.js";
 import {
   baseOf,
@@ -16,6 +18,7 @@ import {
 import type { PlayModeProps, Slot, StageSize } from "./play-model.js";
 import { SlotView } from "./play-slot-view.js";
 import { useFocusReturn } from "./use-focus-return.js";
+import { useHotspotHints } from "./use-hotspot-hints.js";
 import { usePlayDevice } from "./use-play-device.js";
 import { usePlay } from "./use-play.js";
 import type { PlayState } from "./use-play.js";
@@ -29,18 +32,39 @@ interface BaseSlotsProps {
   readonly device: DeviceFrameId | null;
   readonly sandbox?: string;
   readonly bind: BindFrame;
+  readonly spots: Readonly<Record<string, readonly Rect[]>>;
+  readonly isHeld: boolean;
+  readonly flashCount: number;
 }
+
+const toLayerKey = (props: BaseSlotsProps): string => {
+  if (props.isHeld) {
+    return "held";
+  }
+
+  return `flash-${props.flashCount}`;
+};
+
+const toHotspotNode = (
+  props: BaseSlotsProps,
+  slot: Slot
+): ReactElement | null => {
+  const rects = props.spots[slot.token];
+
+  if (!rects || rects.length === 0) {
+    return null;
+  }
+
+  return (
+    <HotspotFlash key={toLayerKey(props)} isHeld={props.isHeld} rects={rects} />
+  );
+};
 
 const isLeavingSlot = (slot: Slot, current: Slot | undefined): boolean =>
   slot !== current && current?.phase === "run";
 
-const toBaseNodes = ({
-  base,
-  stage,
-  device,
-  sandbox,
-  bind,
-}: BaseSlotsProps): ReactElement[] => {
+const toBaseNodes = (props: BaseSlotsProps): ReactElement[] => {
+  const { base, stage, device, sandbox, bind } = props;
   const current = base.at(-1);
 
   return base.map((slot) => {
@@ -50,6 +74,7 @@ const toBaseNodes = ({
     return (
       <SlotView
         key={slot.key}
+        hotspots={toHotspotNode(props, slot)}
         slot={slot}
         isLeaving={isLeaving}
         timing={timing}
@@ -91,6 +116,7 @@ const toOverlayNode = (
         onClick={onClose}
       />
       <SlotView
+        hotspots={toHotspotNode(props, overlay)}
         slot={overlay}
         isLeaving={false}
         timing={overlay}
@@ -140,7 +166,24 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
     elements.current[token] = tagFrame(el, token);
   };
 
-  const slotProps = { base, bind, device, sandbox, stage };
+  const hints = useHotspotHints({
+    elements,
+    props,
+    slots: play.slots,
+  });
+
+  const { flashCount, isEnabled, isHeld, setEnabled: onHints, spots } = hints;
+
+  const slotProps = {
+    base,
+    bind,
+    device,
+    flashCount,
+    isHeld,
+    sandbox,
+    spots,
+    stage,
+  };
 
   return (
     <dialog
@@ -157,6 +200,8 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
         hint={playHint(props, overlay !== null, shown)}
         isBackDisabled={toBackDisabled(play, overlay !== null)}
         device={device}
+        isHints={isEnabled}
+        onHints={onHints}
         onDevice={onDevice}
         onBack={onBack}
         onRestart={onRestart}

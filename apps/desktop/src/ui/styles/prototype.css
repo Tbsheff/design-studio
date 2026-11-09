@@ -689,3 +689,40 @@ ul.proto-list {
 li.proto-row {
   list-style: none;
 }
+
+.hotspot-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.hotspot-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  background: var(--accent-tint);
+}
+
+.hotspot-layer.is-flash {
+  animation: hotspot-fade 600ms ease-out forwards;
+}
+
+@keyframes hotspot-fade {
+  0%,
+  60% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hotspot-layer.is-flash {
+    animation-duration: 1ms;
+    animation-delay: 560ms;
+  }
+}

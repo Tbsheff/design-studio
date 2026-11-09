@@ -9,13 +9,21 @@ import {
   type LinkRectReport,
 } from "@design-studio/contracts/links";
 
+import {
+  installShiftReporter,
+  isNativeControl,
+  isTyping,
+} from "./play-hints.js";
+
 type Rect = NonNullable<LinkRectReport["rect"]>;
 
-type PlayPostBody =
+export type PlayPostBody =
   | { type: "link-rects"; links: LinkRectReport[] }
   | { type: "play-click"; id: string }
   | { type: "play-key"; key: PlayKey }
   | { type: "play-press-key"; key: string }
+  | { type: "play-miss" }
+  | { type: "play-shift"; isHeld: boolean }
   | { type: "play-layers"; layers: Record<string, Rect> };
 
 type PlayPost = (body: PlayPostBody) => void;
@@ -324,20 +332,6 @@ function rectOf(element: Element): Rect {
   return { x: r.x, y: r.y, width: r.width, height: r.height };
 }
 
-function isTyping(element: Element | null): boolean {
-  if (!element) {
-    return false;
-  }
-
-  if (element instanceof HTMLElement && element.isContentEditable) {
-    return true;
-  }
-
-  const tag = element.tagName.toLowerCase();
-
-  return tag === "input" || tag === "textarea" || tag === "select";
-}
-
 export interface LinkBridge {
   track(raw: unknown): void;
   play(raw: unknown): void;
@@ -352,6 +346,9 @@ export function createLinkBridge(post: PlayPost): LinkBridge {
   let playing: LinkQuery[] | null = null;
   let frame = 0;
   let last = "";
+  const isPlaying = (): boolean => playing !== null;
+
+  installShiftReporter(post, isPlaying);
 
   const observer =
     typeof ResizeObserver === "function"
@@ -440,6 +437,10 @@ export function createLinkBridge(post: PlayPost): LinkBridge {
       const query = linkAt(event.target);
 
       if (!query) {
+        if (playing && !isNativeControl(event.target)) {
+          post({ type: "play-miss" });
+        }
+
         return false;
       }
 

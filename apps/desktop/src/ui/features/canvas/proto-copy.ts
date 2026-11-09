@@ -8,6 +8,9 @@ const protoCopy = {
   found: "found",
   foundInPage: "Found in page",
   goTo: "Go to",
+  hotspotHints: "Hotspot hints",
+  hotspotHintsTip:
+    "Flash link areas on a missed click. Hold Shift to show them.",
   keep: "Keep",
   keepAll: "Keep all",
   link: "link",

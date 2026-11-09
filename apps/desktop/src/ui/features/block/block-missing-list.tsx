@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { BlockMissingRow } from "./block-missing-row.js";
+import { toMissingRoots } from "./block-model.js";
 import { copy } from "./copy.js";
 
 import styles from "./block.module.css";
@@ -19,7 +20,7 @@ const BlockMissingList = ({
   <div className={styles.missing} data-tip={copy.missingTip}>
     <span>{copy.missingLabel}</span>
     <ul aria-label={copy.missingListLabel} className={styles.missingList}>
-      {names.map((name) => (
+      {toMissingRoots(names).map((name) => (
         <BlockMissingRow isBusy={isBusy} key={name} name={name} onAdd={onAdd} />
       ))}
     </ul>

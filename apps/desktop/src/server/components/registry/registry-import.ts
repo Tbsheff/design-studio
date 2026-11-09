@@ -111,6 +111,7 @@ const toUniqueFiles = (files: readonly PlannedFile[]): PlannedFile[] => {
 
 const listTakenFiles = async (
   kit: RegistryKit,
+  workTree: string,
   files: readonly PlannedFile[]
 ): Promise<string[]> => {
   const checks = await Promise.all(
@@ -122,7 +123,9 @@ const listTakenFiles = async (
 
   return checks.flatMap((check) => {
     if (check.isTaken) {
-      return [check.file.relative];
+      return [
+        path.relative(workTree, path.join(kit.root, check.file.relative)),
+      ];
     }
 
     return [];
@@ -171,7 +174,7 @@ const createImportPlan = async (
     );
   }
 
-  const taken = await listTakenFiles(kit, planned);
+  const taken = await listTakenFiles(kit, workTree, planned);
 
   if (taken.length > 0) {
     throw new ConflictError(

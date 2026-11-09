@@ -112,6 +112,14 @@ const UPPER_BOUNDARY = /(?<=[a-z0-9])(?=[A-Z])/gu;
 const toRegistryName = (component: string): string =>
   component.replaceAll(UPPER_BOUNDARY, "-").toLowerCase();
 
+const isPartOf = (name: string, root: string): boolean =>
+  name !== root &&
+  name.startsWith(root) &&
+  /^[A-Z]/u.test(name.slice(root.length));
+
+const toMissingRoots = (names: readonly string[]): readonly string[] =>
+  names.filter((name) => !names.some((other) => isPartOf(name, other)));
+
 const toImportInput = (
   projectId: string,
   directionId: string | null,
@@ -128,6 +136,7 @@ export {
   toImportInput,
   toInsertInput,
   toListInput,
+  toMissingRoots,
   toRegistryName,
   toWireRows,
 };

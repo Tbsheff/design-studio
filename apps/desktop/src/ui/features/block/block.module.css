@@ -230,6 +230,8 @@
 }
 
 .link {
+  flex-shrink: 0;
+  white-space: nowrap;
   height: 22px;
   padding: 0 var(--s-2);
   border: 1px solid var(--accent-line);

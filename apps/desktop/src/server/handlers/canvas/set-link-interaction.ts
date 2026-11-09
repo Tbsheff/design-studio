@@ -18,6 +18,7 @@ const handle = Effect.fn("canvas.setLinkInteraction")(function* run(
     duration: input.duration ?? null,
     easing: input.easing ?? null,
     fromFrame: input.fromFrame ?? null,
+    isWhenCleared: input.whenName === null,
     key: input.key ?? null,
     linkId: input.linkId ?? null,
     projectId: input.projectId,
@@ -27,7 +28,12 @@ const handle = Effect.fn("canvas.setLinkInteraction")(function* run(
     transition: input.transition ?? null,
     trigger: input.trigger ?? null,
     url: input.url ?? null,
+    variableName: input.variableName ?? null,
+    variableOp: input.variableOp ?? null,
+    variableValue: input.variableValue ?? null,
     visibility: input.visibility ?? null,
+    whenEquals: input.whenEquals ?? null,
+    whenName: input.whenName ?? null,
   });
 }) satisfies Handle<typeof setLinkInteractionCanvas>;
 

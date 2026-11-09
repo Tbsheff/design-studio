@@ -1,12 +1,14 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import { targetFrame } from "@design-studio/contracts/link-interaction";
 import {
-  cleanLinkText,
   EASING_LABELS,
+  transitionLabel,
+} from "@design-studio/contracts/link-labels";
+import {
+  cleanLinkText,
   LINK_EASINGS,
   LINK_TRANSITIONS,
   linkDuration,
-  transitionLabel,
 } from "@design-studio/contracts/links";
 import type {
   LinkEasing,

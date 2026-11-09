@@ -1,15 +1,17 @@
 import { BRIDGE_PASSIVE_PARAM } from "@design-studio/contracts";
 import type { LinkRect, PlayKey, PlayRunOp } from "@design-studio/contracts";
 import { targetFrame } from "@design-studio/contracts/link-interaction";
-import {
-  isBackTarget,
-  reverseTransition,
-  staticLinkIssue,
-} from "@design-studio/contracts/links";
+import { reverseTransition } from "@design-studio/contracts/link-labels";
+import { isBackTarget, staticLinkIssue } from "@design-studio/contracts/links";
 import type { LinkQuery, PrototypeLink } from "@design-studio/contracts/links";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
-import { bridgeTrigger, runLink } from "../../canvas-link-slots.js";
+import {
+  bridgeTrigger,
+  readPlayVars,
+  resetPlayVars,
+  runLink,
+} from "../../canvas-link-slots.js";
 import type { PlayHandlers } from "../../canvas-link-slots.js";
 import { frameSrc, postToFrame } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
@@ -237,7 +239,17 @@ const closeOverlay = (ctx: PlayContext): boolean => {
   return true;
 };
 
+const syncPlayVars = (ctx: PlayContext): void => {
+  const vars = [...readPlayVars()];
+
+  for (const frame of ctx.readyFrames.current.values()) {
+    postToFrame(frame, { type: "play-vars", vars });
+  }
+};
+
 const restartPlay = (ctx: PlayContext): void => {
+  resetPlayVars();
+  syncPlayVars(ctx);
   const { file, frames, startId } = ctx.props.current;
   const start = playStartOf(file, frames, startId);
   showFrame(ctx, start, { ...INSTANT, transition: "dissolve" }, [start]);
@@ -313,6 +325,7 @@ const toHandlers = (ctx: PlayContext): PlayHandlers => ({
     globalThis.open(url, "_blank", "noopener,noreferrer");
   },
   run: (op, selector) => runInTop(ctx, op, selector),
+  sync: () => syncPlayVars(ctx),
 });
 
 const clickLink = (ctx: PlayContext, id: string): void => {
@@ -345,6 +358,8 @@ const isPlayable = (link: PrototypeLink, props: PlayModeProps): boolean =>
   (!link.trigger || bridgeTrigger(link) !== null) &&
   staticLinkIssue(link, props.frames) === null;
 
+const isSetter = (link: PrototypeLink): boolean => "variable" in link.to;
+
 const toPlayLink = (link: PrototypeLink): LinkQuery => {
   const query = linkQuery(link);
   const trigger = bridgeTrigger(link);
@@ -364,12 +379,18 @@ const sendPlayLinks = (
   const props = ctx.props.current;
   const links: LinkQuery[] = [];
 
-  for (const link of props.file.links) {
+  const ordered = [
+    ...props.file.links.filter((link) => isSetter(link)),
+    ...props.file.links.filter((link) => !isSetter(link)),
+  ];
+
+  for (const link of ordered) {
     if (link.from.frame === slot.frame.id && isPlayable(link, props)) {
       links.push(toPlayLink(link));
     }
   }
 
+  postToFrame(frame, { type: "play-vars", vars: [...readPlayVars()] });
   postToFrame(frame, { links, type: "play-links" });
 };
 

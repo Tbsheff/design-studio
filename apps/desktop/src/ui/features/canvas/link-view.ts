@@ -2,10 +2,12 @@ import type { SelectionContext } from "@design-studio/contracts";
 import { TRIGGER_LABELS } from "@design-studio/contracts/link-interaction";
 import {
   ACTION_LABELS,
+  transitionLabel,
+} from "@design-studio/contracts/link-labels";
+import {
   isFrameAction,
   LINK_ISSUE_TEXT,
   linkAction,
-  transitionLabel,
 } from "@design-studio/contracts/links";
 import type { PrototypeLink } from "@design-studio/contracts/links";
 

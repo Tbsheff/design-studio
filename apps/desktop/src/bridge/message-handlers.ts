@@ -14,6 +14,7 @@ import type { ForcedState } from "./force-state.js";
 import { createSelectionHandlers, elementOfId } from "./hover-select.js";
 import { createKeyboardHandlers } from "./keyboard.js";
 import type { PostNudge } from "./keyboard.js";
+import { setPlayVars } from "./play-vars.js";
 import { linkQueries } from "./play.js";
 import { neighborRects } from "./rect-tracker.js";
 
@@ -223,6 +224,7 @@ const createTrackingHandlers = (
   | "play-fx"
   | "play-links"
   | "play-run"
+  | "play-vars"
   | "request-neighbors"
   | "request-tree"
   | "set-locks"
@@ -263,6 +265,7 @@ const createTrackingHandlers = (
       triggers.set(linkQueries(message.links));
     },
     "play-run": (message) => triggers.run(message.op, message.selector),
+    "play-vars": (message) => setPlayVars(message.vars),
     "request-neighbors": (message) => {
       if (isString(message.requestId)) {
         post({

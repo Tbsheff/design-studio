@@ -1,3 +1,8 @@
+import type {
+  LinkVariableOp,
+  LinkVariableValue,
+  LinkWhen,
+} from "@design-studio/contracts/link-variable";
 import type { LinkTarget } from "@design-studio/contracts/links";
 
 const LINK_EXTRA_ACTIONS = [
@@ -5,6 +10,7 @@ const LINK_EXTRA_ACTIONS = [
   "open-url",
   "close-overlay",
   "toggle",
+  "set-variable",
 ] as const;
 
 const LINK_TRIGGERS = [
@@ -47,6 +53,7 @@ type LinkTrigger =
   | { readonly kind: "key"; readonly key: string };
 
 type TriggerFields =
+  | { readonly when: LinkWhen }
   | { readonly trigger: "hover" | "press" | LinkSwipeKind }
   | { readonly delayMs: number; readonly trigger: "delay" }
   | { readonly key: string; readonly trigger: "key" }
@@ -57,6 +64,11 @@ type TargetFields =
   | { readonly target: string; readonly visibility: LinkVisibility }
   | { readonly target: string }
   | { readonly url: string }
+  | {
+      readonly variable: string;
+      readonly variableOp: LinkVariableOp;
+      readonly variableValue: LinkVariableValue | null;
+    }
   | Readonly<Record<string, never>>;
 
 const TRIGGER_LABELS = {
@@ -183,10 +195,18 @@ const targetRef = (target: LinkTarget): string => {
     return "close";
   }
 
+  if ("variable" in target) {
+    return `variable:${target.variable.name}`;
+  }
+
   return "back";
 };
 
 const targetFits = (action: string, target: LinkTarget): boolean => {
+  if (action === "set-variable") {
+    return "variable" in target;
+  }
+
   if (action === "scroll-to" || action === "toggle") {
     return "selector" in target;
   }
@@ -233,6 +253,14 @@ const describeTarget = (target: LinkTarget, action: string): TargetFields => {
     return { url: target.url };
   }
 
+  if ("variable" in target) {
+    return {
+      variable: target.variable.name,
+      variableOp: target.variable.op,
+      variableValue: target.variable.value,
+    };
+  }
+
   if ("selector" in target) {
     return selectorFields(target, action);
   }
@@ -240,7 +268,14 @@ const describeTarget = (target: LinkTarget, action: string): TargetFields => {
   return {};
 };
 
-const describeTrigger = (trigger: LinkTrigger | null): TriggerFields => {
+const describeTrigger = (
+  trigger: LinkTrigger | null,
+  when: LinkWhen | null
+): TriggerFields => {
+  if (when) {
+    return { ...describeTrigger(trigger, null), when };
+  }
+
   if (!trigger) {
     return {};
   }

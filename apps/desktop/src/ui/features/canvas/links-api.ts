@@ -2,6 +2,8 @@ import { routes } from "@design-studio/actions/canvas/routes";
 import type { StudioEvent } from "@design-studio/contracts";
 import type {
   LinkTriggerKind,
+  LinkVariableOp,
+  LinkVariableValue,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
 import { emptyLinksFile, LINK_ACTIONS } from "@design-studio/contracts/links";
@@ -73,7 +75,12 @@ interface LinkInteractionChange {
   readonly toFrame?: string;
   readonly trigger?: LinkTriggerKind;
   readonly url?: string;
+  readonly variableName?: string;
+  readonly variableOp?: LinkVariableOp;
+  readonly variableValue?: LinkVariableValue | null;
   readonly visibility?: LinkVisibility;
+  readonly whenEquals?: LinkVariableValue | null;
+  readonly whenName?: string | null;
 }
 
 interface Entry {

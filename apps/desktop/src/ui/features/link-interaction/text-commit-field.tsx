@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, ReactElement } from "react";
 
-type FieldSize = "ms" | "target" | "url";
+type FieldSize = "ms" | "name" | "target" | "url" | "value";
 
 interface TextCommitFieldProps {
+  readonly list?: string;
   readonly isValid: (text: string) => boolean;
   readonly label: string;
   readonly onCommit: (text: string) => void;
@@ -15,8 +16,10 @@ interface TextCommitFieldProps {
 
 const FIELD_CLASS = {
   ms: "proto-input proto-ms",
+  name: "proto-input proto-name",
   target: "proto-input proto-target",
   url: "proto-input proto-url",
+  value: "proto-input proto-value",
 } satisfies Record<FieldSize, string>;
 
 const TextCommitField = (props: TextCommitFieldProps): ReactElement => {
@@ -60,6 +63,7 @@ const TextCommitField = (props: TextCommitFieldProps): ReactElement => {
       aria-invalid={isWrong}
       aria-label={props.label}
       className={FIELD_CLASS[props.size]}
+      list={props.list}
       placeholder={props.placeholder}
       spellCheck={false}
       type={props.type}

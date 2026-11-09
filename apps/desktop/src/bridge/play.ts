@@ -9,6 +9,8 @@ import {
   type LinkRectReport,
 } from "@design-studio/contracts/links";
 
+import { toOpenQueries, toSameSource } from "./play-vars.js";
+
 type Rect = NonNullable<LinkRectReport["rect"]>;
 
 type PlayPostBody =
@@ -402,13 +404,13 @@ export function createLinkBridge(post: PlayPost): LinkBridge {
       return null;
     }
 
-    for (const query of playing) {
+    for (const query of toOpenQueries(playing)) {
       if (closestLink(query, target)) {
         return query;
       }
     }
 
-    for (const query of playing) {
+    for (const query of toOpenQueries(playing)) {
       if (resolveLink(query)?.contains(target)) {
         return query;
       }
@@ -446,7 +448,10 @@ export function createLinkBridge(post: PlayPost): LinkBridge {
       event.preventDefault();
       event.stopImmediatePropagation();
       post({ type: "play-layers", layers: layerRects() });
-      post({ type: "play-click", id: query.id });
+
+      for (const item of toSameSource(playing ?? [], query)) {
+        post({ type: "play-click", id: item.id });
+      }
 
       return true;
     },

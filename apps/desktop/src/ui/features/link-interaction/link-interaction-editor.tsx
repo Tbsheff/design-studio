@@ -7,6 +7,7 @@ import { TargetField } from "./target-field.js";
 import { TriggerField } from "./trigger-field.js";
 import { useLinkInteraction } from "./use-link-interaction.js";
 import type { InteractionHost } from "./use-link-interaction.js";
+import { WhenField } from "./when-field.js";
 
 type LinkInteractionEditorProps = InteractionHost;
 
@@ -33,6 +34,12 @@ const LinkInteractionEditor = (
         action={action}
         interaction={interaction}
         link={props.link}
+        projectId={props.projectId}
+      />
+      <WhenField
+        interaction={interaction}
+        link={props.link}
+        projectId={props.projectId}
       />
     </span>
   );

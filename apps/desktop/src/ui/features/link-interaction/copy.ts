@@ -6,6 +6,8 @@ const copy = {
   delay: "Delay in ms",
   delayUnit: "ms",
   key: "Key",
+  onlyWhen: "Only when",
+  operation: "Operation",
   pick: "Pick",
   pickHint: "Click the layer in the frame",
   pickTip: "Pick the target layer in the frame",
@@ -15,7 +17,20 @@ const copy = {
   url: "URL",
   urlHint: "https://example.com",
   urlWrong: "Use a full URL that starts with https://.",
+  variableName: "Variable name",
+  variableNameHint: "signedIn",
+  variableValue: "Value",
+  variableValueHint: "true",
   visibility: "Show or hide",
+  whenEquals: "Equals",
+  whenEqualsSign: "=",
+  whenName: "Variable",
+} as const;
+
+const VARIABLE_OP_LABELS = {
+  add: "Add",
+  set: "Set to",
+  toggle: "Toggle",
 } as const;
 
 const VISIBILITY_LABELS = {
@@ -24,4 +39,4 @@ const VISIBILITY_LABELS = {
   toggle: "Toggle",
 } as const;
 
-export { VISIBILITY_LABELS, copy };
+export { VARIABLE_OP_LABELS, VISIBILITY_LABELS, copy };

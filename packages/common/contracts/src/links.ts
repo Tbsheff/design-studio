@@ -18,6 +18,15 @@ import type {
   LinkTrigger,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
+import {
+  cleanVariableSet,
+  cleanWhen,
+  interactionTail,
+} from "@design-studio/contracts/link-variable";
+import type {
+  LinkVariableSet,
+  LinkWhen,
+} from "@design-studio/contracts/link-variable";
 
 export const LINKS_FILE = ".studio/links.json";
 export const LINKS_FILE_VERSION = 1;
@@ -70,7 +79,8 @@ export type LinkTarget =
   | { back: true }
   | { selector: string; visibility?: Exclude<LinkVisibility, "toggle"> }
   | { url: string }
-  | { close: true };
+  | { close: true }
+  | { variable: LinkVariableSet };
 
 export interface PrototypeLink {
   id: string;
@@ -79,6 +89,7 @@ export interface PrototypeLink {
   transition: LinkTransition;
   action?: Exclude<LinkAction, "navigate">;
   trigger?: LinkTrigger;
+  when?: LinkWhen;
   duration?: number;
   easing?: LinkEasing;
   implicit?: true;
@@ -236,11 +247,33 @@ function parseSource(raw: unknown): LinkSource | null {
   return source;
 }
 
+function scalarOf(raw: unknown): string | number | null {
+  if (raw === null || raw instanceof Object) return null;
+  return Number.isFinite(raw) ? (raw as number) : String(raw);
+}
+
+function parseVariableTarget(raw: unknown): LinkTarget | null {
+  const v = (raw ?? {}) as Record<string, unknown>;
+  const variable = cleanVariableSet(
+    String(v.name ?? ""),
+    String(v.op ?? ""),
+    scalarOf(v.value ?? null)
+  );
+  return variable === null ? null : { variable };
+}
+
+function parseWhen(raw: unknown): LinkWhen | null {
+  const w = (raw ?? {}) as Record<string, unknown>;
+  const equals = scalarOf(w.equals ?? null);
+  return equals === null ? null : cleanWhen(String(w.name ?? ""), equals);
+}
+
 function parseTarget(raw: unknown): LinkTarget | null {
   if (!raw || typeof raw !== "object") return null;
   const t = raw as Record<string, unknown>;
   if (t.back === true) return { back: true };
   if (t.close === true) return { close: true };
+  if ("variable" in t) return parseVariableTarget(t.variable);
   if ("url" in t) {
     const url = typeof t.url === "string" ? cleanLinkUrl(t.url) : null;
     return url === null ? null : { url };
@@ -267,6 +300,8 @@ export function parseLink(raw: unknown): PrototypeLink | null {
   };
   const trigger = parseTrigger(l.trigger);
   if (trigger) base.trigger = trigger;
+  const when = parseWhen(l.when);
+  if (when) base.when = when;
   const link = withMotion(base, motionOf({ ...l, transition: undefined }));
   return targetFits(linkAction(link), link.to) ? link : null;
 }
@@ -282,9 +317,9 @@ function parseTrigger(raw: unknown): LinkTrigger | null {
 }
 
 export function interactionKey(
-  link: Pick<PrototypeLink, "from" | "trigger">
+  link: Pick<PrototypeLink, "from" | "to" | "trigger" | "when">
 ): string {
-  return `${sourceKey(link.from)}${triggerSuffix(link.trigger ?? null)}`;
+  return `${sourceKey(link.from)}${triggerSuffix(link.trigger ?? null)}${interactionTail(link)}`;
 }
 
 export function sourceKey(
@@ -410,53 +445,6 @@ export function startFrameOf(
   return all[0]?.id ?? "f1";
 }
 
-export function transitionLabel(transition: LinkTransition): string {
-  return TRANSITION_LABELS[transition];
-}
-
-const TRANSITION_LABELS: Record<LinkTransition, string> = {
-  instant: "Instant",
-  dissolve: "Dissolve",
-  "slide-left": "Slide left",
-  "slide-right": "Slide right",
-  "push-up": "Push up",
-  "push-down": "Push down",
-  "move-in": "Move in",
-  "move-out": "Move out",
-  "smart-animate": "Smart animate",
-};
-
-const REVERSE: Partial<Record<LinkTransition, LinkTransition>> = {
-  "slide-left": "slide-right",
-  "slide-right": "slide-left",
-  "push-up": "push-down",
-  "push-down": "push-up",
-  "move-in": "move-out",
-  "move-out": "move-in",
-};
-
-export function reverseTransition(transition: LinkTransition): LinkTransition {
-  return REVERSE[transition] ?? transition;
-}
-
-export const ACTION_LABELS: Record<LinkAction, string> = {
-  navigate: "Navigate",
-  modal: "Open as modal",
-  drawer: "Open as drawer",
-  "scroll-to": "Scroll to",
-  "open-url": "Open URL",
-  "close-overlay": "Close overlay",
-  toggle: "Show or hide",
-};
-
-export const EASING_LABELS: Record<LinkEasing, string> = {
-  "ease-out": "Ease out",
-  "ease-in": "Ease in",
-  "ease-in-out": "Ease in and out",
-  linear: "Linear",
-  spring: "Spring",
-};
-
 export const IMPLICIT_ID_RE = /^i[0-9a-z]{1,12}$/;
 
 export function isImplicitId(value: unknown): value is string {
@@ -511,6 +499,7 @@ export interface LinkQuery {
   tag?: string;
   text?: string;
   trigger?: LinkBridgeTrigger;
+  when?: LinkWhen;
 }
 
 export interface LinkRectReport {

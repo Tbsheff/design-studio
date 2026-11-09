@@ -1728,6 +1728,12 @@ export type ParentToBridge =
   | {
       ns: "studio";
       token: string;
+      type: "play-vars";
+      vars: readonly (readonly [string, string | number])[];
+    }
+  | {
+      ns: "studio";
+      token: string;
       type: "describe-anchors";
       requestId: string;
       anchors: AnchorQuery[];

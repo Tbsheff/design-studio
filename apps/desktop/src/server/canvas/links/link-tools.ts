@@ -5,13 +5,13 @@ import {
   describeTarget,
   describeTrigger,
 } from "@design-studio/contracts/link-interaction";
+import { ACTION_LABELS } from "@design-studio/contracts/link-labels";
 import {
   cleanLinkSelector,
   cleanLinkText,
   isBackTarget,
   LINK_ISSUE_TEXT,
   LINK_TEXT_MAX,
-  ACTION_LABELS,
   linkAction,
   sourceName,
   linkDuration,
@@ -306,7 +306,7 @@ export function describeLink(
     ...(link.from.text ? { text: link.from.text } : {}),
     ...describeTarget(link.to, linkAction(link)),
     action: linkAction(link),
-    ...describeTrigger(link.trigger ?? null),
+    ...describeTrigger(link.trigger ?? null, link.when ?? null),
     transition: link.transition,
     duration: linkDuration(link),
     ...(link.easing ? { easing: link.easing } : {}),

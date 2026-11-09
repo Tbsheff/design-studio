@@ -4,6 +4,8 @@ import {
   targetFits,
 } from "@design-studio/contracts/link-interaction";
 import type { LinkVisibility } from "@design-studio/contracts/link-interaction";
+import { cleanVariableSet } from "@design-studio/contracts/link-variable";
+import type { LinkVariableSet } from "@design-studio/contracts/link-variable";
 import {
   cleanLinkSelector,
   isFrameAction,
@@ -113,6 +115,40 @@ const urlTarget = (request: LinkInteractionRequest): LinkTarget | null => {
   return { url };
 };
 
+const toPreviousVariable = (
+  previous: LinkTarget | null
+): LinkVariableSet | null => {
+  if (previous && "variable" in previous) {
+    return previous.variable;
+  }
+
+  return null;
+};
+
+const toVariableTarget = (
+  request: LinkInteractionRequest,
+  query: TargetQuery
+): LinkTarget | null => {
+  const before = toPreviousVariable(query.previous);
+  const name = request.variableName ?? before?.name ?? null;
+
+  if (name === null) {
+    return null;
+  }
+
+  const op = request.variableOp ?? before?.op ?? "set";
+  const value = request.variableValue ?? before?.value ?? null;
+  const variable = cleanVariableSet(name, op, value);
+
+  if (variable === null) {
+    throw new LinkError(
+      "set-variable needs variableName (letters and digits), variableOp (set, toggle or add) and variableValue (a string or number; a number for add; none for toggle)."
+    );
+  }
+
+  return { variable };
+};
+
 const nextTarget = (
   request: LinkInteractionRequest,
   query: TargetQuery
@@ -129,6 +165,10 @@ const nextTarget = (
     return urlTarget(request);
   }
 
+  if (query.action === "set-variable") {
+    return toVariableTarget(request, query);
+  }
+
   return selectorTarget(request, query);
 };
 
@@ -139,6 +179,10 @@ const missingTarget = (action: LinkAction): string => {
 
   if (action === "open-url") {
     return "Action open-url needs url.";
+  }
+
+  if (action === "set-variable") {
+    return "Action set-variable needs variableName.";
   }
 
   return `Action ${action} needs target, a CSS selector in the same frame.`;

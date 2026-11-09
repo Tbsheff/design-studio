@@ -14,6 +14,7 @@ import { ConnectionActions } from "./connection/index.js";
 import { ContentActions } from "./content/index.js";
 import { CritiqueActions } from "./critique/index.js";
 import { DataModelActions } from "./data-model/index.js";
+import { DesignRuleActions } from "./design-rule/index.js";
 import { DevNoteActions } from "./dev-note/index.js";
 import { DevServerActions } from "./dev-server/index.js";
 import { DevStatusActions } from "./dev-status/index.js";
@@ -80,6 +81,7 @@ const ALL_ACTIONS = {
   content: ContentActions,
   critique: CritiqueActions,
   dataModel: DataModelActions,
+  designRule: DesignRuleActions,
   devNote: DevNoteActions,
   devServer: DevServerActions,
   devStatus: DevStatusActions,

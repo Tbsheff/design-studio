@@ -54,3 +54,10 @@ export type { TextRewriteRunnerApi } from "./text-rewrite/index.js";
 export { SuggestionRunner } from "./suggestion/index.js";
 
 export type { SuggestionRunnerApi } from "./suggestion/index.js";
+
+export { DesignRuleLineRunner } from "./design-rule-line/index.js";
+
+export type {
+  DesignRuleLine,
+  DesignRuleLineRunnerApi,
+} from "./design-rule-line/index.js";

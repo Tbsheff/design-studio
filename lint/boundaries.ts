@@ -130,7 +130,6 @@ const UI_CROSS_FEATURE_FILES = [
   "apps/desktop/src/ui/features/inspector/inspector-model.ts",
   "apps/desktop/src/ui/features/inspector/inspector-props.tsx",
   "apps/desktop/src/ui/features/inspector/inspector-simple.tsx",
-  "apps/desktop/src/ui/features/inspector/inspector-tools.tsx",
   "apps/desktop/src/ui/features/inspector/inspector-vector.tsx",
   "apps/desktop/src/ui/features/inspector/number-field.tsx",
   "apps/desktop/src/ui/features/inspector/size-row.tsx",

@@ -52,7 +52,7 @@ interface CommentTool {
   toggle: () => void;
 }
 
-const useCommentSync = (
+const useCommentMirror = (
   shell: CanvasShell | undefined,
   comment: CommentTool
 ): void => {
@@ -106,7 +106,7 @@ const useShellState = (
     }
   }, [isShown]);
 
-  useCommentSync(shell, comment);
+  useCommentMirror(shell, comment);
 };
 
 interface ShellPaneInput {

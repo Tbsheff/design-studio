@@ -142,7 +142,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
     start: <TopBarFileMenu props={props} />,
   };
 
-  return toHosted(parts, props.hosts);
+  return <>{toHosted(parts, props.hosts)}</>;
 };
 
 export { CanvasTopBar };

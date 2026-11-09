@@ -1,6 +1,7 @@
 import { lazy } from "react";
 import type { LazyExoticComponent } from "react";
 
+import type { CodeEditDialog as CodeEditDialogView } from "./code-edit-dialog.js";
 import type { TweaksPanel as TweaksPanelView } from "./tweaks-panel.js";
 
 const Inspector = lazy(async () => {
@@ -18,7 +19,15 @@ const TweaksPanel: LazyExoticComponent<typeof TweaksPanelView> = lazy(
   }
 );
 
-export { Inspector, TweaksPanel };
+const CodeEditDialog: LazyExoticComponent<typeof CodeEditDialogView> = lazy(
+  async () => {
+    const loaded = await import("./code-edit-dialog.js");
+
+    return { default: loaded.CodeEditDialog };
+  }
+);
+
+export { CodeEditDialog, Inspector, TweaksPanel };
 
 export {
   editVariantStore,

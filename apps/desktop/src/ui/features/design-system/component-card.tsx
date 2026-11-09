@@ -5,6 +5,7 @@ import { CardButton } from "./card-button.js";
 import { CardInsertActions } from "./card-insert-actions.js";
 import { CardThumb } from "./component-card-face.js";
 import type { ComponentDrag } from "./component-drag-state.js";
+import { ComponentUsageCount } from "./component-usage-count.js";
 import { toMeta } from "./components-panel-model.js";
 import type { Item } from "./components-panel-model.js";
 import type { MenuAnchor, Props } from "./components-panel-props.js";
@@ -43,6 +44,7 @@ const ComponentCard = ({
       <span className="cmp-name truncate">{item.info.name}</span>
       <span className="cmp-meta truncate">{toMeta(item.info)}</span>
     </CardButton>
+    <ComponentUsageCount usageKey={item.key} />
     <CardInsertActions
       component={item.insert}
       onGallery={onGallery}

@@ -4,16 +4,19 @@ import type { ReactElement } from "react";
 import { useCallback, useState } from "react";
 
 import { InsertMenu } from "./component-insert.js";
+import { ComponentUsageContext } from "./component-usage-context.js";
 import { ComponentsCount } from "./components-count.js";
 import { ComponentsFoot } from "./components-foot.js";
 import type { Item } from "./components-panel-model.js";
 import type { MenuAnchor, Props } from "./components-panel-props.js";
 import { ComponentsScroll } from "./components-scroll.js";
 import { ComponentsSearch } from "./components-search.js";
+import { ComponentsUsageBar } from "./components-usage-bar.js";
 import { COPY } from "./copy.js";
 import { DragGhost } from "./drag-ghost.js";
 import { useComponentDrag } from "./use-component-drag.js";
 import { useComponentItems } from "./use-component-items.js";
+import { useComponentUsage } from "./use-component-usage.js";
 
 const SEARCH_MIN_COUNT = 6;
 
@@ -38,6 +41,9 @@ const ComponentsPanel = (props: Props): ReactElement => {
   const drag = useComponentDrag();
   const items = useComponentItems(props, canInsert, query);
   const count = items.all?.length ?? 0;
+
+  const usage = useComponentUsage(props, canInsert);
+  const shown = usage.filterItems(items.shown);
   const { renderGallery } = props;
 
   const openMenu = useCallback(
@@ -67,18 +73,30 @@ const ComponentsPanel = (props: Props): ReactElement => {
       {count > SEARCH_MIN_COUNT && (
         <ComponentsSearch query={query} onChange={setQuery} />
       )}
-      <ComponentsScroll
-        all={items.all}
+      <ComponentsUsageBar
         canInsert={canInsert}
-        drag={drag}
-        error={items.error}
-        props={props}
         query={query}
-        retry={items.retry ?? null}
-        shown={items.shown}
-        onGallery={setGallery}
-        onInsertMenu={openMenu}
+        shown={shown}
+        usage={usage}
       />
+      <ComponentUsageContext.Provider value={usage.lookup}>
+        <ComponentsScroll
+          all={items.all}
+          canInsert={canInsert}
+          drag={drag}
+          error={items.error}
+          props={props}
+          query={query}
+          retry={items.retry ?? null}
+          shown={shown}
+          onGallery={setGallery}
+          onInsertMenu={openMenu}
+        />
+      </ComponentUsageContext.Provider>
+      {props.renderCode?.({
+        onClose: usage.handleCloseCode,
+        target: usage.codeTarget,
+      })}
       {renderGallery?.({ component: gallery, onClose: closeGallery })}
       <ComponentsFoot canInsert={canInsert} count={count} />
       {menu && (

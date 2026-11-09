@@ -40,4 +40,43 @@ const ComponentImportedSchema = Schema.Struct({
   versionId: Schema.String,
 });
 
-export { ComponentImportedSchema, ComponentImportFields, ComponentNameSchema };
+const ComponentUseSiteSchema = Schema.Struct({
+  file: Schema.String,
+  line: Schema.Int,
+});
+
+const ComponentUseCountSchema = Schema.Struct({
+  file: Schema.String,
+  importCount: Schema.Int,
+  name: Schema.String,
+  routeCount: Schema.Int,
+  samples: Schema.Array(ComponentUseSiteSchema),
+});
+
+const ComponentUsageListFields = {
+  directionId: Schema.NullOr(DirectionIdSchema)
+    .annotate({
+      description:
+        "Direction id. Pass null for the main direction. Default null.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  isUnusedOnly: Schema.Boolean.annotate({
+    description:
+      "Default false. When true, list only components with 0 imports.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false))),
+} as const;
+
+const ComponentUsageTotalsFields = {
+  componentCount: Schema.Int,
+  unusedCount: Schema.Int,
+} as const;
+
+export {
+  ComponentImportedSchema,
+  ComponentImportFields,
+  ComponentNameSchema,
+  ComponentUsageListFields,
+  ComponentUsageTotalsFields,
+  ComponentUseCountSchema,
+  ComponentUseSiteSchema,
+};

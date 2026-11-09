@@ -24,7 +24,7 @@ const toNoMatch = (
   shown: Item[],
   query: string
 ): string | null => {
-  if (all !== null && all.length > 0 && shown.length === 0) {
+  if (all !== null && all.length > 0 && shown.length === 0 && query !== "") {
     return `${COPY.textNoComponentsMatch}${query}${COPY.textGlyph}`;
   }
 

@@ -7,6 +7,8 @@ const FIND_MS = 6000;
 const FIND_POLL_MS = 100;
 const SETTLE_MS = 250;
 const WATCH_MS = 400;
+const VERIFY_MS = 8000;
+const VERIFY_POLL_MS = 350;
 
 const OPEN_STATES = new Set([
   "open",
@@ -14,6 +16,7 @@ const OPEN_STATES = new Set([
   "on",
   "checked",
   "delayed-open",
+  "instant-open",
 ]);
 
 type Timer = ReturnType<typeof globalThis.setTimeout>;
@@ -91,6 +94,60 @@ const performStep = (step: OpenStep, element: HTMLElement): void => {
   }
 };
 
+const actOn = (
+  state: BridgeState,
+  step: OpenStep,
+  element: HTMLElement
+): void => {
+  const { mode } = state;
+  state.mode = "none";
+
+  try {
+    performStep(step, element);
+  } finally {
+    state.mode = mode;
+  }
+};
+
+const needsVerify = (step: OpenStep, element: HTMLElement): boolean =>
+  step.kind !== "focus" &&
+  (element.hasAttribute("aria-expanded") || "state" in element.dataset);
+
+const settleStep = (
+  state: BridgeState,
+  step: OpenStep,
+  element: HTMLElement,
+  onDone: (isOk: boolean) => void
+): void => {
+  const until = performance.now() + VERIFY_MS;
+  let isFirst = true;
+
+  const tick = (): void => {
+    if (!isFirst && isOpen(element)) {
+      onDone(true);
+
+      return;
+    }
+
+    if (!isFirst && performance.now() >= until) {
+      onDone(false);
+
+      return;
+    }
+
+    isFirst = false;
+    actOn(state, step, element);
+
+    if (needsVerify(step, element)) {
+      globalThis.setTimeout(tick, VERIFY_POLL_MS);
+    } else {
+      onDone(true);
+    }
+  };
+
+  tick();
+};
+
 const findHtml = (selector: string): HTMLElement | null => {
   const element = queryElement(selector);
 
@@ -122,21 +179,6 @@ const waitForElement = (
   poll();
 };
 
-const actOn = (
-  state: BridgeState,
-  step: OpenStep,
-  element: HTMLElement
-): void => {
-  const { mode } = state;
-  state.mode = "none";
-
-  try {
-    performStep(step, element);
-  } finally {
-    state.mode = mode;
-  }
-};
-
 const hasDetached = (found: readonly (HTMLElement | null)[]): boolean =>
   found.some((element) => element !== null && !element.isConnected);
 
@@ -151,67 +193,132 @@ const observeDocument = (onChange: () => void): MutationObserver => {
   return observer;
 };
 
-const createOpenSteps = (state: BridgeState, post: Post): OpenSteps => {
+interface RunContext {
+  readonly canRun: () => boolean;
+  readonly done: (missed: number[]) => void;
+  readonly found: (HTMLElement | null)[];
+  readonly state: BridgeState;
+  readonly steps: readonly OpenStep[];
+}
+
+const toMissed = (missed: number[], index: number, isOk: boolean): number[] => {
+  if (isOk) {
+    return missed;
+  }
+
+  return [...missed, index];
+};
+
+const runFrom = (ctx: RunContext, index: number, missed: number[]): void => {
+  const step = ctx.steps[index];
+
+  if (!ctx.canRun()) {
+    return;
+  }
+
+  if (!step) {
+    ctx.done(missed);
+
+    return;
+  }
+
+  waitForElement(step.selector, (element) => {
+    if (!ctx.canRun()) {
+      return;
+    }
+
+    if (!element) {
+      runFrom(ctx, index + 1, [...missed, index]);
+
+      return;
+    }
+
+    settleStep(ctx.state, step, element, (isOk) => {
+      ctx.found[index] = element;
+      const next = toMissed(missed, index, isOk);
+
+      globalThis.setTimeout(() => runFrom(ctx, index + 1, next), SETTLE_MS);
+    });
+  });
+};
+
+interface Runner {
+  readonly begin: (steps: readonly OpenStep[]) => void;
+  readonly cancel: () => void;
+  readonly needsRerun: () => boolean;
+  readonly restart: () => void;
+}
+
+const createRunner = (state: BridgeState, post: Post): Runner => {
   let steps: readonly OpenStep[] = [];
   let runId = 0;
   let isRunning = false;
   let found: (HTMLElement | null)[] = [];
-  let watcher: MutationObserver | null = null;
-  let watchTimer: Timer | null = null;
 
-  const runStep = (id: number, index: number, missed: number[]): void => {
-    const step = steps[index];
-
-    if (id !== runId) {
-      return;
-    }
-
-    if (!step) {
-      isRunning = false;
-      post({ missed, type: "open-steps-result" });
-
-      return;
-    }
-
-    waitForElement(step.selector, (element) => {
-      if (id !== runId) {
-        return;
-      }
-
-      if (!element) {
-        runStep(id, index + 1, [...missed, index]);
-
-        return;
-      }
-
-      actOn(state, step, element);
-      found[index] = element;
-      globalThis.setTimeout(() => runStep(id, index + 1, missed), SETTLE_MS);
-    });
-  };
-
-  const start = (): void => {
+  const restart = (): void => {
     runId += 1;
+    const id = runId;
     isRunning = true;
     found = steps.map(() => null);
-    runStep(runId, 0, []);
+
+    runFrom(
+      {
+        canRun: () => id === runId,
+        done: (missed) => {
+          isRunning = false;
+          post({ missed, type: "open-steps-result" });
+        },
+        found,
+        state,
+        steps,
+      },
+      0,
+      []
+    );
   };
+
+  const begin = (next: readonly OpenStep[]): void => {
+    steps = next;
+    restart();
+  };
+
+  const cancel = (): void => {
+    runId += 1;
+    isRunning = false;
+    found = [];
+  };
+
+  const needsRerun = (): boolean => !isRunning && hasDetached(found);
+
+  return { begin, cancel, needsRerun, restart };
+};
+
+const createOpenSteps = (state: BridgeState, post: Post): OpenSteps => {
+  const runner = createRunner(state, post);
+  let lastKey = "";
+  let watcher: MutationObserver | null = null;
+  let watchTimer: Timer | null = null;
 
   const check = (): void => {
     watchTimer = null;
 
-    if (!isRunning && hasDetached(found)) {
-      start();
+    if (runner.needsRerun()) {
+      runner.restart();
     }
   };
 
   const set = (next: readonly OpenStep[]): void => {
-    steps = next;
+    const key = JSON.stringify(next);
 
-    if (steps.length === 0) {
-      runId += 1;
-      isRunning = false;
-      found = [];
+    if (key === lastKey && watcher) {
+      return;
+    }
+
+    lastKey = key;
+
+    if (next.length === 0) {
+      runner.cancel();
+      lastKey = "";
       watcher?.disconnect();
       watcher = null;
 
@@ -222,7 +329,7 @@ const createOpenSteps = (state: BridgeState, post: Post): OpenSteps => {
       watchTimer ??= globalThis.setTimeout(check, WATCH_MS);
     });
 
-    start();
+    runner.begin(next);
   };
 
   return { set };

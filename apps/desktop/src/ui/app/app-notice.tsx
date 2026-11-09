@@ -4,7 +4,7 @@ import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { McpToasts } from "../features/chat";
 import { CommandLayer } from "../features/commands";
 import type { CommandLayerName, FileOpenTarget } from "../features/commands";
-import { codeEditStore } from "../features/inspector";
+import { CodeEditHost, codeEditStore } from "../features/inspector";
 import { isDesktop } from "../platform/desktop";
 
 const DesktopApp = lazy(async () => {
@@ -42,6 +42,9 @@ const AppNotice = ({
           <CommandLayer layer={layer} onLayer={onLayer} onOpenFile={openFile} />
         </Suspense>
       )}
+      <Suspense fallback={null}>
+        <CodeEditHost />
+      </Suspense>
       <Suspense fallback={null}>
         <McpToasts />
       </Suspense>

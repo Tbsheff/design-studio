@@ -15,12 +15,14 @@ interface Options {
   onUndo: () => void;
   redo?: RedoShortcut;
   onCommitted: (version: Version) => void;
+  onSelectSite: (selector: string) => void;
 }
 
 type TokenDraft = ReturnType<typeof useTokenDraft>;
 
 interface StudioTokensPanel {
   readonly draft: TokenDraft;
+  readonly onSelectSite: (selector: string) => void;
   readonly sweep: {
     readonly directionId: string | null;
     readonly projectId: string;
@@ -38,7 +40,15 @@ interface StudioTokens {
 
 const useStudioTokens = (options: Options): StudioTokens => {
   const draft = useTokenDraft(options);
-  const { canUndo, directionId, onUndo, projectId, redo, tokens } = options;
+  const {
+    canUndo,
+    directionId,
+    onSelectSite,
+    onUndo,
+    projectId,
+    redo,
+    tokens,
+  } = options;
   const { confirmLeave, count, undoLast } = draft;
   useTokenFrames();
 
@@ -67,7 +77,7 @@ const useStudioTokens = (options: Options): StudioTokens => {
   if (tokens) {
     const sweep = { directionId, projectId };
 
-    panel = { draft, sweep, tokens };
+    panel = { draft, onSelectSite, sweep, tokens };
   }
 
   return { draft, guard, panel };

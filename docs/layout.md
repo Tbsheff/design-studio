@@ -186,3 +186,4 @@ No action family owns canvas or play view state (no zoom, pan or toggle actions 
 | Device rotate (Play bar) | Swaps the device frame width and height in Play mode only. The frame keeps its size | `canvas_place` sets the frame width and height |
 | Hotspot hints (Play bar, Shift hold) | Flashes link hit areas on a missed click in Play mode | `list_links` and `list_link_interactions` list the links |
 | Layer pick (Select layer submenu) | Lists the layers under the pointer for one right click. A selection is not stored | `get_layers` gives layer ids. Each action takes a layer id or selector |
+| Dark switch (Play bar) | Sets the dark theme on the Play frame only. Saves the choice in this browser for each project. Writes no source | `edit_element` with `variant: "dark:"` changes the dark styles. `get_screenshot` has no theme input |

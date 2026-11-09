@@ -1,5 +1,3 @@
-import type { SelectionContext } from "@design-studio/contracts";
-
 import type { StyleValues } from "./css-value-model.js";
 
 interface TruncateState {
@@ -18,8 +16,6 @@ const DECIMAL = 10;
 
 const OFF_STATE: TruncateState = { isOn: false, lines: MIN_LINES };
 
-const CLAMP_RE = /^line-clamp-(?<lines>\d+)$/u;
-
 const CONFLICT_RE =
   /^(?:whitespace-.+|overflow-(?:hidden|clip|visible|auto|scroll|ellipsis)|text-ellipsis|text-clip|truncate|line-clamp-.+)$/u;
 
@@ -33,46 +29,22 @@ const toClampedLines = (raw: number): number => {
   return Math.min(MAX_LINES, Math.max(MIN_LINES, Math.round(raw)));
 };
 
-const toClassState = (classes: readonly string[]): TruncateState | null => {
-  if (classes.includes("truncate")) {
-    return { isOn: true, lines: MIN_LINES };
-  }
-
-  for (const name of classes) {
-    const found = CLAMP_RE.exec(name)?.groups?.lines;
-
-    if (found) {
-      return { isOn: true, lines: toClampedLines(Number(found)) };
-    }
-  }
-
-  return null;
-};
-
-const toStyleState = (values: Partial<StyleValues>): TruncateState => {
-  const isClipped =
-    values.overflow === "hidden" && values["text-overflow"] === "ellipsis";
-
-  if (!isClipped) {
+const toTruncateState = (values: Partial<StyleValues>): TruncateState => {
+  if (values.overflow !== "hidden") {
     return OFF_STATE;
   }
 
   const clamp = Number.parseInt(values["-webkit-line-clamp"] ?? "", DECIMAL);
 
-  return { isOn: true, lines: toClampedLines(clamp) };
-};
-
-const toTruncateState = (
-  classes: readonly string[] | null,
-  values: Partial<StyleValues>
-): TruncateState => {
-  const fromStyle = toStyleState(values);
-
-  if (classes === null) {
-    return fromStyle;
+  if (Number.isFinite(clamp) && clamp > 0) {
+    return { isOn: true, lines: toClampedLines(clamp) };
   }
 
-  return toClassState(classes) ?? fromStyle;
+  if (values["text-overflow"] === "ellipsis") {
+    return { isOn: true, lines: MIN_LINES };
+  }
+
+  return OFF_STATE;
 };
 
 const toClassChange = (
@@ -149,20 +121,12 @@ const toStyleChange = (
   };
 };
 
-const toTruncateKey = (state: TruncateState): string =>
-  `${state.isOn}:${state.lines}`;
-
-const isTruncatable = (selection: SelectionContext | null): boolean =>
-  selection !== null && selection.source !== null;
-
 export {
   MAX_LINES,
   MIN_LINES,
-  isTruncatable,
   toClampedLines,
   toClassChange,
   toStyleChange,
-  toTruncateKey,
   toTruncateState,
 };
 

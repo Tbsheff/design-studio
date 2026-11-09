@@ -10,7 +10,6 @@ import {
   toClampedLines,
   toClassChange,
   toStyleChange,
-  toTruncateKey,
   toTruncateState,
 } from "./truncate-model.js";
 import type { TruncateState } from "./truncate-model.js";
@@ -20,11 +19,6 @@ interface Truncate {
   readonly isReady: boolean;
   readonly onLines: (lines: number) => void;
   readonly onToggle: () => void;
-  readonly state: TruncateState;
-}
-
-interface Pending {
-  readonly base: string;
   readonly state: TruncateState;
 }
 
@@ -46,22 +40,11 @@ const useTruncate = (
   selection: SelectionContext,
   classes: ElementClasses
 ): Truncate => {
-  const [pending, setPending] = useState<Pending | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const tailwind = toTailwindClasses(classes);
   const isReady = classes.variants !== null;
 
-  const derived = useMemo(
-    () => toTruncateState(tailwind, edit.values),
-    [tailwind, edit.values]
-  );
-
-  const base = toTruncateKey(derived);
-  let state = derived;
-
-  if (pending?.base === base) {
-    ({ state } = pending);
-  }
+  const state = useMemo(() => toTruncateState(edit.values), [edit.values]);
 
   const { directionId, projectId } = edit.scope;
   const { source } = selection;
@@ -80,8 +63,6 @@ const useTruncate = (
         return;
       }
 
-      setPending({ base, state: next });
-
       startTransition(async () => {
         try {
           await api.directEdit(projectId, directionId, {
@@ -93,12 +74,11 @@ const useTruncate = (
           edit.absorb({});
           edit.reselect();
         } catch (error) {
-          setPending(null);
           setMessage(errorText(error));
         }
       });
     },
-    [base, directionId, edit, projectId, selection, source, tailwind]
+    [directionId, edit, projectId, selection, source, tailwind]
   );
 
   const onToggle = useCallback(() => {

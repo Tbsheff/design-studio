@@ -6,7 +6,7 @@
   display: grid;
   grid-template-rows: minmax(0, 1fr) var(--ide-status);
   height: 100%;
-  overflow: hidden;
+  overflow: clip;
   background: var(--bg);
 }
 

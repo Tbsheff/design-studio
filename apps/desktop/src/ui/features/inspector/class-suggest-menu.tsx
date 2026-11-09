@@ -4,6 +4,7 @@ import type { MouseEvent, ReactElement } from "react";
 import type { SuggestRow } from "./class-suggest-model.js";
 import { ClassSuggestRow } from "./class-suggest-row.js";
 import { copy } from "./copy.js";
+import { useMenuInView } from "./use-menu-in-view.js";
 
 interface ClassSuggestMenuProps {
   readonly active: number;
@@ -16,12 +17,15 @@ const ClassSuggestMenu = ({
   onPick,
   rows,
 }: ClassSuggestMenuProps): ReactElement => {
+  const menuRef = useMenuInView();
+
   const onMouseDown = useCallback((event: MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
   }, []);
 
   return (
     <div
+      ref={menuRef}
       aria-label={copy.classSuggestions}
       className="ui-menu cls-suggest"
       role="menu"

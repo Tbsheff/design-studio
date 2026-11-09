@@ -104,8 +104,22 @@ const FileListSchema = Schema.Struct({
 });
 
 const FileTextSchema = Schema.Struct({
+  hash: Schema.String,
   path: Schema.String,
   text: Schema.String,
+});
+
+const FILE_CONTENT_MAX = 262_144;
+
+const FileContentSchema = Schema.String.check(
+  Schema.isMaxLength(FILE_CONTENT_MAX)
+);
+
+const FileSavedSchema = Schema.Struct({
+  hash: Schema.String,
+  isChanged: Schema.Boolean,
+  path: Schema.String,
+  versionId: Schema.String,
 });
 
 const VariantListSchema = Schema.Struct({
@@ -165,7 +179,9 @@ export {
   ComponentUsageSchema,
   DesignMdSchema,
   DoctorViewSchema,
+  FileContentSchema,
   FileListSchema,
+  FileSavedSchema,
   FileTextSchema,
   FoundAppsViewSchema,
   FrameHtmlSchema,

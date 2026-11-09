@@ -47,3 +47,7 @@ export {
   runRulesTestIn,
   setRulesIn,
 } from "./direct-edit-review-ops.js";
+
+export { updateFileIn } from "./direct-edit-file-ops.js";
+
+export type { FileSaved, FileUpdate } from "./direct-edit-file-ops.js";

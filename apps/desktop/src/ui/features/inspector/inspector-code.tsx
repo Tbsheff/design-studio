@@ -1,6 +1,7 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
+import { CodeEditButton } from "./code-edit-button.js";
 import { CopySnippet } from "./copy-snippet.js";
 import { copy } from "./copy.js";
 import { OpenInEditor } from "./open-in-editor.js";
@@ -32,6 +33,14 @@ const InspectorCode = ({
           {toFileLabel(snippet)}
         </span>
         {snippet.kind === "ready" && <CopySnippet code={snippet.code} />}
+        {snippet.kind === "ready" && snippet.file && directionId && (
+          <CodeEditButton
+            projectId={projectId}
+            directionId={directionId}
+            file={snippet.file}
+            line={snippet.line}
+          />
+        )}
         {snippet.kind === "ready" && snippet.file && directionId && (
           <OpenInEditor
             projectId={projectId}

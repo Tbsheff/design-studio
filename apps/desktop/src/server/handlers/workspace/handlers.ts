@@ -27,6 +27,7 @@ import { handle as listVersionsWorkspaceHandle } from "./list-versions.js";
 import { handle as renameFolderWorkspaceHandle } from "./rename-folder.js";
 import { handle as searchProjectsWorkspaceHandle } from "./search-projects.js";
 import { handle as setDefaultFolderWorkspaceHandle } from "./set-default-folder.js";
+import { handle as updateFileWorkspaceHandle } from "./update-file.js";
 
 const WorkspaceEntries = {
   applyFixWorkspace: { handle: applyFixWorkspaceHandle },
@@ -54,6 +55,7 @@ const WorkspaceEntries = {
   renameFolderWorkspace: { handle: renameFolderWorkspaceHandle },
   searchProjectsWorkspace: { handle: searchProjectsWorkspaceHandle },
   setDefaultFolderWorkspace: { handle: setDefaultFolderWorkspaceHandle },
+  updateFileWorkspace: { handle: updateFileWorkspaceHandle },
 } satisfies Entries<typeof WorkspaceActions>;
 
 export { WorkspaceEntries };

@@ -21,6 +21,7 @@ import { listVersionsWorkspace } from "./list-versions.js";
 import { renameFolderWorkspace } from "./rename-folder.js";
 import { searchProjectsWorkspace } from "./search-projects.js";
 import { setDefaultFolderWorkspace } from "./set-default-folder.js";
+import { updateFileWorkspace } from "./update-file.js";
 
 const WorkspaceActions = {
   applyFixWorkspace,
@@ -45,6 +46,7 @@ const WorkspaceActions = {
   renameFolderWorkspace,
   searchProjectsWorkspace,
   setDefaultFolderWorkspace,
+  updateFileWorkspace,
 } as const;
 
 export { WorkspaceActions };

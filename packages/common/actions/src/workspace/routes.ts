@@ -132,6 +132,12 @@ const routes = {
     method: "PUT",
     path: "/api/workspaces/default",
   },
+  updateFileWorkspace: {
+    id: "workspace.updateFile",
+    invalidates: ["workspace.getFile", "workspace.listFiles", "version.list"],
+    method: "PUT",
+    path: "/api/projects/:projectId/d/:directionId/source-file",
+  },
 } as const;
 
 export { routes };

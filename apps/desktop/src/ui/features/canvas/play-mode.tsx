@@ -151,12 +151,10 @@ const toTitle = (
 
 const PlayMode = (props: PlayModeProps): ReactElement => {
   const play = usePlay(props);
-  const {
-    device,
-    orientation,
-    setDevice: onDevice,
-    toggleOrientation: onRotate,
-  } = usePlayDevice(props.projectId);
+  const { device, onDevice, onRotate, orientation } = usePlayDevice(
+    props.projectId
+  );
+
   const stage = useStageSize();
   const root = useRef<HTMLDialogElement>(null);
 

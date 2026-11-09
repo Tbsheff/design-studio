@@ -19,8 +19,8 @@ import {
 interface PlayDevice {
   readonly device: DeviceFrameId | null;
   readonly orientation: DeviceOrientation;
-  readonly setDevice: (next: DeviceFrameId | null) => void;
-  readonly toggleOrientation: () => void;
+  readonly onDevice: (next: DeviceFrameId | null) => void;
+  readonly onRotate: () => void;
 }
 
 const toNextOrientation = (
@@ -42,7 +42,7 @@ const usePlayDevice = (projectId: string): PlayDevice => {
     toStoredOrientation(readStored(toOrientationKey(projectId)))
   );
 
-  const setDevice = useCallback(
+  const onDevice = useCallback(
     (next: DeviceFrameId | null): void => {
       setCurrent(next);
 
@@ -57,7 +57,7 @@ const usePlayDevice = (projectId: string): PlayDevice => {
     [projectId]
   );
 
-  const toggleOrientation = useCallback((): void => {
+  const onRotate = useCallback((): void => {
     const next = toNextOrientation(orientation);
 
     setOrientation(next);
@@ -66,7 +66,7 @@ const usePlayDevice = (projectId: string): PlayDevice => {
 
   const device = current;
 
-  return { device, orientation, setDevice, toggleOrientation };
+  return { device, onDevice, onRotate, orientation };
 };
 
 export { usePlayDevice };

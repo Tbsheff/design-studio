@@ -10,6 +10,7 @@ import {
 
 import { errorText } from "../../api.js";
 import { call } from "../../platform/http.js";
+import { reloadAppStageFrames } from "../../platform/stage-dom.js";
 import { toHashOf, toReadyStatus } from "./code-edit-model.js";
 import type { CodeEditStatus } from "./code-edit-model.js";
 import { isApiConflict } from "./use-api-error.js";
@@ -119,15 +120,19 @@ const useCodeEdit = (
     }
 
     startSave(async () => {
-      setStatus(
-        await toSavedStatus({
-          baseHash,
-          content,
-          directionId,
-          path,
-          projectId,
-        })
-      );
+      const saved = await toSavedStatus({
+        baseHash,
+        content,
+        directionId,
+        path,
+        projectId,
+      });
+
+      setStatus(saved);
+
+      if (saved.kind === "ready") {
+        reloadAppStageFrames();
+      }
     });
   }, [directionId, path, projectId, startSave, status]);
 

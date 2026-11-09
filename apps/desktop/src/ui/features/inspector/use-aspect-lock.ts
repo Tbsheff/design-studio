@@ -16,7 +16,6 @@ import type { StyleValues } from "./css-value-model.js";
 import type { DirectEdit } from "./deps.js";
 import { toEditTarget } from "./edit-request-model.js";
 import type { ElementClasses } from "./element-classes-model.js";
-import { applyEdit } from "./simple-model.js";
 
 interface AspectLock {
   readonly error: string | null;
@@ -120,7 +119,8 @@ const useAspectLock = (
       setMessage(null);
 
       if (tailwind === null) {
-        applyEdit(edit, toStylePatch(nextOn, box));
+        edit.previewForced(toStylePatch(nextOn, box));
+        edit.commit();
 
         return;
       }

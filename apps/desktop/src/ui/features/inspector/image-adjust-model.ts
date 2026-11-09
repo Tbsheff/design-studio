@@ -28,6 +28,7 @@ const RADIANS_PER_HALF_TURN = Math.PI;
 const GRADIANS_PER_TURN = 400;
 const NO_FILTER = "none";
 const HUE_KEY: AdjustKey = "hue-rotate";
+const IMPORTANT = "!important";
 
 const ADJUST_FIELDS: readonly AdjustField[] = [
   {
@@ -134,6 +135,9 @@ const toAmount = (key: AdjustKey, arg: string): number | null => {
 const isAdjustKey = (name: string): name is AdjustKey =>
   ADJUST_FIELDS.some((field) => field.key === name);
 
+const toFilterParts = (filter: string): string[] =>
+  listTopLevel(filter, " ").filter((part) => part.toLowerCase() !== IMPORTANT);
+
 const toAdjustValues = (filter: string): AdjustValues => {
   const values: Record<AdjustKey, number> = {
     brightness: FULL,
@@ -143,7 +147,7 @@ const toAdjustValues = (filter: string): AdjustValues => {
     saturate: FULL,
   };
 
-  for (const part of listTopLevel(filter, " ")) {
+  for (const part of toFilterParts(filter)) {
     const call = CALL_RE.exec(part)?.groups;
     const name = (call?.name ?? "").toLowerCase();
 
@@ -174,7 +178,7 @@ const toKeptParts = (filter: string, key: AdjustKey): string[] => {
     return [];
   }
 
-  return listTopLevel(filter, " ").filter((part) => {
+  return toFilterParts(filter).filter((part) => {
     const name = CALL_RE.exec(part)?.groups?.name ?? "";
 
     return name.toLowerCase() !== key;
@@ -205,7 +209,7 @@ const toWithoutAdjust = (filter: string): string => {
   }
 
   return toFilterText(
-    listTopLevel(filter, " ").filter((part) => {
+    toFilterParts(filter).filter((part) => {
       const name = CALL_RE.exec(part)?.groups?.name ?? "";
 
       return !keys.has(name.toLowerCase());

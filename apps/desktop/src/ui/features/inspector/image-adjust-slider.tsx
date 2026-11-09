@@ -43,7 +43,6 @@ const AdjustSlider = ({
         onChange={change}
         onPointerUp={handleRelease}
         onKeyUp={handleRelease}
-        onBlur={handleRelease}
       />
       <output htmlFor={id} className="img-adjust-value">
         {toReadout(field, value)}

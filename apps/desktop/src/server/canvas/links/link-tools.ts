@@ -2,6 +2,7 @@ import type { Direction, Project } from "@design-studio/contracts";
 import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
 import { withFrameStateHost } from "@design-studio/contracts/frame-state";
 import {
+  describeMotion,
   describeTarget,
   describeTrigger,
 } from "@design-studio/contracts/link-interaction";
@@ -309,7 +310,7 @@ export function describeLink(
     ...describeTrigger(link.trigger ?? null, link.when ?? null),
     transition: link.transition,
     duration: linkDuration(link),
-    ...(link.easing ? { easing: link.easing } : {}),
+    ...describeMotion(link),
     title: linkTitle(link, frames),
     broken: issue ? LINK_ISSUE_TEXT[issue] : null,
     ...(link.implicit ? { implicit: true } : {}),

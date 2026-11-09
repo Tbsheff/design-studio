@@ -8,7 +8,10 @@ export type { UiSelectOption } from "@design-studio/ui";
 
 export type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 
-export { ACTION_LABELS } from "@design-studio/contracts/link-labels";
+export {
+  ACTION_LABELS,
+  PLACEMENT_LABELS,
+} from "@design-studio/contracts/link-labels";
 
 export {
   LINK_INTERACTION_ACTIONS,
@@ -24,6 +27,7 @@ export type {
 
 export {
   LINK_DELAY_MAX,
+  LINK_PLACEMENTS,
   LINK_SWIPE_TRIGGERS,
   LINK_TRIGGERS,
   LINK_VISIBILITIES,
@@ -37,6 +41,7 @@ export {
 
 export type {
   LinkBridgeTrigger,
+  LinkPlacement,
   LinkTrigger,
   LinkTriggerKind,
   LinkVisibility,

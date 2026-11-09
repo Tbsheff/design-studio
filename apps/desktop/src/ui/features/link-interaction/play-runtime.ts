@@ -92,7 +92,7 @@ const endLink = (
   action: LinkAction,
   handlers: PlayHandlers
 ): void => {
-  if (action === "modal" || action === "drawer") {
+  if (action === "modal" || action === "drawer" || action === "popover") {
     handlers.close();
 
     return;

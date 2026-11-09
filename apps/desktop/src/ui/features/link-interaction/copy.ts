@@ -8,9 +8,11 @@ const copy = {
   key: "Key",
   onlyWhen: "Only when",
   operation: "Operation",
+  outsideClose: "Outside click",
   pick: "Pick",
   pickHint: "Click the layer in the frame",
   pickTip: "Pick the target layer in the frame",
+  placement: "Placement",
   target: "Target",
   targetHint: "#section",
   trigger: "Trigger",
@@ -33,10 +35,15 @@ const VARIABLE_OP_LABELS = {
   toggle: "Toggle",
 } as const;
 
+const OUTSIDE_CLOSE_LABELS = {
+  close: "Closes it",
+  stay: "Keeps it open",
+} as const;
+
 const VISIBILITY_LABELS = {
   hide: "Hide",
   show: "Show",
   toggle: "Toggle",
 } as const;
 
-export { VARIABLE_OP_LABELS, VISIBILITY_LABELS, copy };
+export { OUTSIDE_CLOSE_LABELS, VARIABLE_OP_LABELS, VISIBILITY_LABELS, copy };

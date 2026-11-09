@@ -3,7 +3,7 @@ import type {
   LinkVariableValue,
   LinkWhen,
 } from "@design-studio/contracts/link-variable";
-import type { LinkTarget } from "@design-studio/contracts/links";
+import type { LinkTarget, PrototypeLink } from "@design-studio/contracts/links";
 
 const LINK_EXTRA_ACTIONS = [
   "scroll-to",
@@ -33,6 +33,17 @@ const LINK_SWIPE_TRIGGERS = [
 ] as const;
 
 const LINK_VISIBILITIES = ["toggle", "show", "hide"] as const;
+
+const LINK_PLACEMENTS = [
+  "bottom-start",
+  "bottom-end",
+  "top-start",
+  "top-end",
+  "right",
+  "left",
+] as const;
+
+const LINK_PLACEMENT_DEFAULT = "bottom-start";
 const LINK_DELAY_MAX = 60_000;
 const LINK_URL_MAX = 2000;
 const LINK_KEY_RE = /^(?:[!-~]|[A-Z][A-Za-z0-9]{1,19})$/u;
@@ -44,6 +55,18 @@ type LinkBridgeTrigger = Exclude<LinkTriggerKind, "click" | "delay" | "key">;
 type LinkSwipeKind = (typeof LINK_SWIPE_TRIGGERS)[number];
 
 type LinkVisibility = (typeof LINK_VISIBILITIES)[number];
+
+type LinkPlacement = (typeof LINK_PLACEMENTS)[number];
+
+interface LinkPopoverFields {
+  placement?: LinkPlacement;
+  isOutsideClose?: false;
+}
+
+interface LinkPopoverMotion {
+  placement?: LinkPlacement;
+  isOutsideClose?: boolean;
+}
 
 type LinkTrigger =
   | { readonly kind: "hover" }
@@ -125,6 +148,53 @@ const cleanDelay = (raw: number): number | null => {
   }
 
   return Math.round(Math.max(0, Math.min(LINK_DELAY_MAX, raw)));
+};
+
+const isLinkPlacement = (value: unknown): value is LinkPlacement =>
+  typeof value === "string" &&
+  (LINK_PLACEMENTS as readonly string[]).includes(value);
+
+const popoverMotionOf = (raw: {
+  readonly isOutsideClose?: unknown;
+  readonly placement?: unknown;
+}): LinkPopoverMotion => {
+  const motion: LinkPopoverMotion = {};
+
+  if (isLinkPlacement(raw.placement)) {
+    motion.placement = raw.placement;
+  }
+
+  if (raw.isOutsideClose === false) {
+    motion.isOutsideClose = false;
+  }
+
+  return motion;
+};
+
+const withPopover = <Link extends LinkPopoverFields & { action?: string }>(
+  link: Link,
+  motion: LinkPopoverMotion
+): Link => {
+  const out: Link = { ...link };
+
+  if (out.action !== "popover") {
+    delete out.placement;
+    delete out.isOutsideClose;
+
+    return out;
+  }
+
+  out.placement = motion.placement ?? out.placement ?? LINK_PLACEMENT_DEFAULT;
+
+  if (motion.isOutsideClose === false) {
+    out.isOutsideClose = false;
+  }
+
+  if (motion.isOutsideClose === true) {
+    delete out.isOutsideClose;
+  }
+
+  return out;
 };
 
 const isSwipeKind = (kind: string): kind is LinkSwipeKind =>
@@ -268,6 +338,32 @@ const describeTarget = (target: LinkTarget, action: string): TargetFields => {
   return {};
 };
 
+interface MotionFields {
+  easing?: NonNullable<PrototypeLink["easing"]>;
+  isOutsideClose?: false;
+  placement?: LinkPlacement;
+}
+
+const describeMotion = (
+  link: Pick<PrototypeLink, "easing" | "isOutsideClose" | "placement">
+): MotionFields => {
+  const fields: MotionFields = {};
+
+  if (link.easing) {
+    fields.easing = link.easing;
+  }
+
+  if (link.placement) {
+    fields.placement = link.placement;
+  }
+
+  if (link.isOutsideClose === false) {
+    fields.isOutsideClose = false;
+  }
+
+  return fields;
+};
+
 const describeTrigger = (
   trigger: LinkTrigger | null,
   when: LinkWhen | null
@@ -295,6 +391,8 @@ export {
   LINK_DELAY_MAX,
   LINK_EXTRA_ACTIONS,
   LINK_KEY_RE,
+  LINK_PLACEMENT_DEFAULT,
+  LINK_PLACEMENTS,
   LINK_SWIPE_TRIGGERS,
   LINK_TRIGGERS,
   LINK_URL_MAX,
@@ -303,18 +401,25 @@ export {
   cleanDelay,
   cleanLinkKey,
   cleanLinkUrl,
+  describeMotion,
   describeTarget,
   describeTrigger,
+  isLinkPlacement,
   isSwipeKind,
+  popoverMotionOf,
   targetFits,
   targetFrame,
   targetRef,
   triggerOf,
   triggerSuffix,
+  withPopover,
 };
 
 export type {
   LinkBridgeTrigger,
+  LinkPlacement,
+  LinkPopoverFields,
+  LinkPopoverMotion,
   LinkSwipeKind,
   LinkTrigger,
   LinkTriggerKind,

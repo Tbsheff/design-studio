@@ -1,4 +1,5 @@
 import type {
+  LinkPlacement,
   LinkTriggerKind,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
@@ -18,9 +19,11 @@ interface LinkInteractionRequest {
   readonly duration: number | null;
   readonly easing: LinkEasing | null;
   readonly fromFrame: string | null;
+  readonly isOutsideClose: boolean | null;
   readonly isWhenCleared: boolean;
   readonly key: string | null;
   readonly linkId: string | null;
+  readonly placement: LinkPlacement | null;
   readonly selector: string | null;
   readonly target: string | null;
   readonly toFrame: string | null;

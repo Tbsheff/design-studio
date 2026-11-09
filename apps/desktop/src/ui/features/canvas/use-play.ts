@@ -1,4 +1,5 @@
 import type { BridgeToParent } from "@design-studio/contracts";
+import type { LinkRectReport } from "@design-studio/contracts/links";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 
@@ -44,7 +45,10 @@ const usePlayContext = (
   currentProps: PlayModeProps,
   currentSlots: Slot[],
   currentHistory: string[],
-  setters: Pick<PlayContext, "setError" | "setHistory" | "setSlots">
+  deps: Pick<
+    PlayContext,
+    "elements" | "setError" | "setHistory" | "setSlots" | "stage"
+  >
 ): PlayContext => {
   const slotsRef = useRef(currentSlots);
   const historyRef = useRef(currentHistory);
@@ -53,7 +57,8 @@ const usePlayContext = (
   const shot = useRef<LayerShot | null>(null);
   const pendingFx = useRef<PlayContext["pendingFx"]["current"]>(new Map());
   const readyFrames = useRef<PlayContext["readyFrames"]["current"]>(new Map());
-  const { setError, setHistory, setSlots } = setters;
+  const rects = useRef<PlayContext["rects"]["current"]>(new Map());
+  const { elements, setError, setHistory, setSlots, stage } = deps;
 
   useLayoutEffect(() => {
     slotsRef.current = currentSlots;
@@ -67,18 +72,21 @@ const usePlayContext = (
 
   return useMemo(
     () => ({
+      elements,
       history,
       pendingFx,
       props,
       readyFrames,
+      rects,
       setError,
       setHistory,
       setSlots,
       shot,
       slots,
+      stage,
       timers,
     }),
-    [history, props, slots, setError, setHistory, setSlots]
+    [elements, history, props, slots, stage, setError, setHistory, setSlots]
   );
 };
 
@@ -159,6 +167,20 @@ const handleTopMessage = (
   }
 };
 
+const keepRects = (
+  ctx: PlayContext,
+  slot: Slot,
+  links: LinkRectReport[]
+): void => {
+  const byId = new Map<string, LinkRectReport["rect"]>();
+
+  for (const report of links) {
+    byId.set(report.id, report.rect);
+  }
+
+  ctx.rects.current.set(slot.token, byId);
+};
+
 const handleBridgeMessage = (
   ctx: PlayContext,
   triggers: Triggers,
@@ -173,6 +195,12 @@ const handleBridgeMessage = (
 
   if (message.type === "ready") {
     markReady(ctx, frame, slot);
+
+    return;
+  }
+
+  if (message.type === "link-rects") {
+    keepRects(ctx, slot, message.links);
 
     return;
   }
@@ -200,16 +228,21 @@ const toBridgeFrames = (
     url: slot.src,
   }));
 
-const usePlay = (props: PlayModeProps): PlayState => {
+const usePlay = (
+  props: PlayModeProps,
+  stage: RefObject<HTMLElement | null>
+): PlayState => {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [history, setHistory] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
 
   const ctx = usePlayContext(props, slots, history, {
+    elements,
     setError,
     setHistory,
     setSlots,
+    stage,
   });
 
   const handlers: PlayHandlers = toHandlers(ctx);

@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { copy } from "./copy.js";
 import { UiSelect } from "./deps.js";
 import { actionOptions, shownAction } from "./interaction-model.js";
+import { PlacementField } from "./placement-field.js";
 import { TargetField } from "./target-field.js";
 import { TriggerField } from "./trigger-field.js";
 import { useLinkInteraction } from "./use-link-interaction.js";
@@ -36,6 +37,9 @@ const LinkInteractionEditor = (
         link={props.link}
         projectId={props.projectId}
       />
+      {action === "popover" && (
+        <PlacementField interaction={interaction} link={props.link} />
+      )}
       <WhenField
         interaction={interaction}
         link={props.link}

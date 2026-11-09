@@ -1,6 +1,7 @@
 import { routes } from "@design-studio/actions/canvas/routes";
 import type { StudioEvent } from "@design-studio/contracts";
 import type {
+  LinkPlacement,
   LinkTriggerKind,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
@@ -71,8 +72,10 @@ const toMotionFields = (motion: LinkMotion): MotionFields => {
 interface LinkInteractionChange {
   readonly action?: LinkAction;
   readonly delayMs?: number;
+  readonly isOutsideClose?: true | false;
   readonly key?: string;
   readonly linkId: string;
+  readonly placement?: LinkPlacement;
   readonly target?: string;
   readonly toFrame?: string;
   readonly trigger?: LinkTriggerKind;

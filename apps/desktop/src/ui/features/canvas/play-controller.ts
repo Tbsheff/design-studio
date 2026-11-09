@@ -34,8 +34,10 @@ import type {
   Motion,
   OverlayKind,
   PlayModeProps,
+  PopoverSlot,
   Slot,
 } from "./play-model.js";
+import { toPopoverSlot } from "./play-popover.js";
 import { playStartOf } from "./prototype-model.js";
 import { linkQuery } from "./use-link-rects.js";
 
@@ -53,6 +55,9 @@ interface PlayContext {
   readonly shot: RefObject<LayerShot | null>;
   readonly pendingFx: RefObject<Map<string, Record<string, LinkRect>>>;
   readonly readyFrames: RefObject<Map<string, BridgeFrame>>;
+  readonly elements: RefObject<Record<string, HTMLIFrameElement | null>>;
+  readonly rects: RefObject<Map<string, Map<string, LinkRect | null>>>;
+  readonly stage: RefObject<HTMLElement | null>;
   readonly setSlots: Dispatch<SetStateAction<Slot[]>>;
   readonly setHistory: (history: string[]) => void;
   readonly setError: (message: string | null) => void;
@@ -136,6 +141,7 @@ const mountSlot = async (
   options: {
     layers: Layers | null;
     overlay: OverlayKind | null;
+    popover: PopoverSlot | null;
     after: () => void;
   }
 ): Promise<void> => {
@@ -154,7 +160,7 @@ const mountSlot = async (
   }
 
   const { duration, easing, transition } = toSlotMotion(ctx, motion);
-  const { overlay } = options;
+  const { overlay, popover } = options;
   const src = frameSrc(url, { [BRIDGE_PASSIVE_PARAM]: "1" });
 
   const key = token;
@@ -167,6 +173,7 @@ const mountSlot = async (
     key,
     overlay,
     phase,
+    popover,
     src,
     token,
     transition,
@@ -181,7 +188,11 @@ const placeFrame = (
   ctx: PlayContext,
   frameId: string,
   motion: Motion,
-  options: { overlay: OverlayKind | null; after: () => void }
+  options: {
+    overlay: OverlayKind | null;
+    popover: PopoverSlot | null;
+    after: () => void;
+  }
 ): void => {
   const frame = ctx.props.current.frames.find((item) => item.id === frameId);
 
@@ -200,8 +211,8 @@ const placeFrame = (
   }
 
   const effective = toEffectiveMotion(motion, layers);
-  const { overlay, after } = options;
-  void mountSlot(ctx, frame, effective, { after, layers, overlay });
+  const { overlay, after, popover } = options;
+  void mountSlot(ctx, frame, effective, { after, layers, overlay, popover });
 };
 
 const showFrame = (
@@ -213,6 +224,7 @@ const showFrame = (
   placeFrame(ctx, frameId, motion, {
     after: () => ctx.setHistory(nextHistory),
     overlay: null,
+    popover: null,
   });
 
 const closeOverlay = (ctx: PlayContext): boolean => {
@@ -284,6 +296,28 @@ const goBack = (ctx: PlayContext): void => {
   showFrame(ctx, previous, toBackMotion(current), list.slice(0, -1));
 };
 
+const openPopover = (
+  ctx: PlayContext,
+  link: PrototypeLink,
+  to: string
+): void => {
+  const frame = ctx.props.current.frames.find((item) => item.id === to);
+
+  if (!frame) {
+    ctx.setError("That frame is gone.");
+
+    return;
+  }
+
+  const popover = toPopoverSlot(ctx, link, frame);
+
+  placeFrame(ctx, to, motionOf(link), {
+    after: () => null,
+    overlay: "popover",
+    popover,
+  });
+};
+
 const goLink = (ctx: PlayContext, link: PrototypeLink): void => {
   if (isBackTarget(link.to)) {
     goBack(ctx);
@@ -297,10 +331,17 @@ const goLink = (ctx: PlayContext, link: PrototypeLink): void => {
     return;
   }
 
+  if (link.action === "popover") {
+    openPopover(ctx, link, to);
+
+    return;
+  }
+
   if (link.action === "modal" || link.action === "drawer") {
     placeFrame(ctx, to, motionOf(link), {
       after: () => null,
       overlay: link.action,
+      popover: null,
     });
 
     return;

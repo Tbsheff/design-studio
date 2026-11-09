@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from "react";
 
 import { toSlotLayout } from "./device-frame-model.js";
 import { PlayFrame } from "./play-frame.js";
-import { slotClass, slotStyle } from "./play-model.js";
+import { slotClass, toSlotViewStyle } from "./play-model.js";
 import type { Motion, Slot, StageSize } from "./play-model.js";
 
 interface SlotViewProps {
@@ -49,7 +49,7 @@ const SlotView = ({
   return (
     <div
       className={slotClass(toViewSlot(slot, isLeaving, timing), isLeaving)}
-      style={slotStyle(timing)}
+      style={toSlotViewStyle(timing, slot)}
       data-frame-id={frame.id}
       data-testid={toOverlayTestId(slot)}
     >

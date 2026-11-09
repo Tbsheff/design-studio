@@ -7,14 +7,18 @@ import { decodeEntities } from "@design-studio/contracts/html-entities";
 import {
   cleanLinkUrl,
   LINK_EXTRA_ACTIONS,
+  popoverMotionOf,
   triggerOf,
   targetFits,
   targetFrame,
   targetRef,
   triggerSuffix,
+  withPopover,
 } from "@design-studio/contracts/link-interaction";
 import type {
   LinkBridgeTrigger,
+  LinkPopoverFields,
+  LinkPopoverMotion,
   LinkTrigger,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
@@ -44,7 +48,7 @@ export const LINK_TRANSITIONS = [
   "move-out",
   "smart-animate",
 ] as const;
-export const LINK_ACTIONS = ["navigate", "modal", "drawer"] as const;
+export const LINK_ACTIONS = ["navigate", "modal", "drawer", "popover"] as const;
 export const LINK_INTERACTION_ACTIONS = [
   ...LINK_ACTIONS,
   ...LINK_EXTRA_ACTIONS,
@@ -82,7 +86,7 @@ export type LinkTarget =
   | { close: true }
   | { variable: LinkVariableSet };
 
-export interface PrototypeLink {
+export interface PrototypeLink extends LinkPopoverFields {
   id: string;
   from: LinkSource;
   to: LinkTarget;
@@ -157,7 +161,7 @@ export function cleanDuration(value: unknown): number | null {
   );
 }
 
-export interface LinkMotion {
+export interface LinkMotion extends LinkPopoverMotion {
   action?: LinkAction;
   transition?: LinkTransition;
   duration?: number;
@@ -184,7 +188,7 @@ export function withMotion<T extends Omit<PrototypeLink, "id">>(
     if (motion.easing === LINK_EASING_DEFAULT) delete out.easing;
     else out.easing = motion.easing;
   }
-  return out;
+  return withPopover(out, motion);
 }
 
 export function motionOf(raw: Record<string, unknown>): LinkMotion {
@@ -194,6 +198,7 @@ export function motionOf(raw: Record<string, unknown>): LinkMotion {
     ...(isLinkTransition(raw.transition) ? { transition: raw.transition } : {}),
     ...(duration === null ? {} : { duration }),
     ...(isLinkEasing(raw.easing) ? { easing: raw.easing } : {}),
+    ...popoverMotionOf(raw),
   };
 }
 
@@ -443,12 +448,6 @@ export function startFrameOf(
   const start = file?.start;
   if (start && all.some((frame) => frame.id === start)) return start;
   return all[0]?.id ?? "f1";
-}
-
-export const IMPLICIT_ID_RE = /^i[0-9a-z]{1,12}$/;
-
-export function isImplicitId(value: unknown): value is string {
-  return typeof value === "string" && IMPLICIT_ID_RE.test(value);
 }
 
 export function implicitId(

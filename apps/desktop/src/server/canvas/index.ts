@@ -31,6 +31,8 @@ export {
   findFrame,
 } from "./tools.js";
 
+export type { LinkInteractionRequest } from "./links/index.js";
+
 export type { CanvasToolContext, PlaceSpec, ToolText } from "./tools.js";
 
 export { recordLayout, stepLayout } from "./layout-steps.js";

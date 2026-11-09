@@ -19,7 +19,7 @@ const inspectLinkInteractionCanvas = defineAction({
   },
   confirm: "none",
   description:
-    "List the saved prototype links with their trigger (click, hover, press, delay with delayMs, key with key), action (navigate, modal, drawer, scroll-to, open-url, close-overlay, toggle), target (toFrame, a target selector with visibility, or url) and broken (null, or why the link no longer works). Read only. Links live in the studio (.studio/links.json), not in the page code. limit caps the listed links.",
+    "List the saved prototype links with their trigger (click, hover, press, delay with delayMs, key with key), action (navigate, modal, drawer, popover with placement and isOutsideClose, scroll-to, open-url, close-overlay, toggle), target (toFrame, a target selector with visibility, or url) and broken (null, or why the link no longer works). Read only. Links live in the studio (.studio/links.json), not in the page code. limit caps the listed links.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/link-interactions" },
   id: "canvas.inspectLinkInteraction",

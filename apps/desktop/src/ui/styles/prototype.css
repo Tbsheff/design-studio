@@ -442,6 +442,23 @@ dialog.play-layer {
   place-items: start end;
 }
 
+.play-slot.overlay-popover {
+  place-items: start start;
+}
+
+.play-overlay.is-popover .play-backdrop {
+  background: transparent;
+}
+
+.play-slot.overlay-popover .play-frame {
+  border-radius: var(--r-md);
+}
+
+.play-slot.overlay-popover.enter:not(.t-instant),
+.play-slot.overlay-popover.closing:not(.t-instant) {
+  opacity: 0;
+}
+
 .play-slot.overlay-modal.enter:not(.t-instant),
 .play-slot.overlay-modal.closing:not(.t-instant) {
   opacity: 0;

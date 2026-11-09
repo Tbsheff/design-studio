@@ -394,6 +394,20 @@ async function appUsage(
   return callSite ? { routes, callSite } : { routes };
 }
 
+export function toImportEdges(
+  workTree: string,
+  roots: string[]
+): ReturnType<UsageEdges> {
+  return inProcessEdges(workTree, roots);
+}
+
+export function toImportStamp(
+  workTree: string,
+  roots: string[]
+): ReturnType<RouteGraph["stamp"]> {
+  return graph.stamp(workTree, roots);
+}
+
 export function warmComponentUsage(
   project: Project,
   workTree: string,

@@ -144,6 +144,7 @@
     "./component/errors/status": "./src/component/errors/status.ts",
     "./component/import": "./src/component/import.ts",
     "./component/index": "./src/component/index.ts",
+    "./component/list-usage": "./src/component/list-usage.ts",
     "./component/routes": "./src/component/routes.ts",
     "./component/schema": "./src/component/schema.ts",
     "./connection/get-status": "./src/connection/get-status.ts",

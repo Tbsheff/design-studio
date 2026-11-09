@@ -1,5 +1,11 @@
-import { RegistryWriter } from "../../components/index.js";
+import { Layer } from "effect";
 
-const ComponentLive = RegistryWriter.layer;
+import { RegistryWriter } from "../../components/index.js";
+import { ComponentUsageStore } from "../../preview/index.js";
+
+const ComponentLive = Layer.mergeAll(
+  ComponentUsageStore.layer,
+  RegistryWriter.layer
+);
 
 export { ComponentLive };

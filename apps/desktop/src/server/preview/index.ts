@@ -670,13 +670,13 @@ export {
 
 export type { Shot } from "./capture.js";
 
+export { ComponentUsageStore } from "./component-usage/index.js";
+
 export {
   componentUsage,
   resolveUsageFile,
   warmComponentUsage,
 } from "./usage-scope.js";
-
-export type { UsageAt, UsageEdges } from "./usage-scope.js";
 
 export {
   capFindings,

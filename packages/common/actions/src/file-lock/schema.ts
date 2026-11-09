@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
+import { PageFields, pageOf } from "../_core/list-page.js";
 
 const GLOBS_MAX = 100;
 const GLOB_MAX = 300;
@@ -26,6 +27,15 @@ const FileLockViewSchema = Schema.Struct({
   globs: FileLockGlobsSchema,
 });
 
+const FileLockPageSchema = pageOf(FileLockGlobSchema, {
+  directionId: Schema.String,
+});
+
+const FileLockPageFields = {
+  ...FileLockTargetFields,
+  ...PageFields,
+} as const;
+
 const FileLockFileSchema = Schema.Struct({
   locks: Schema.Record(Schema.String, Schema.Array(Schema.String)),
 });
@@ -33,6 +43,8 @@ const FileLockFileSchema = Schema.Struct({
 export {
   FileLockFileSchema,
   FileLockGlobsSchema,
+  FileLockPageFields,
+  FileLockPageSchema,
   FileLockTargetFields,
   FileLockViewSchema,
 };

@@ -21,15 +21,21 @@ interface FileLockState {
 
 const NONE: readonly string[] = [];
 
+const limit = 100;
+
 const toLockInput = (
   projectId: string,
   directionId: string | null
-): { readonly directionId: string; readonly projectId: string } | null => {
+): {
+  readonly directionId: string;
+  readonly limit: number;
+  readonly projectId: string;
+} | null => {
   if (directionId === null) {
     return null;
   }
 
-  return { directionId, projectId };
+  return { directionId, limit, projectId };
 };
 
 const useFileLock = (
@@ -43,7 +49,7 @@ const useFileLock = (
   );
 
   const write = useAction(fileLockRoutes.setFileLock);
-  const lockedGlobs = read.data?.globs ?? NONE;
+  const lockedGlobs = read.data?.items ?? NONE;
   const { run } = write;
   let folder: string | null = null;
 

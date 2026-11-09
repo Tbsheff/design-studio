@@ -4,7 +4,7 @@ import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
-import { FileLockTargetFields, FileLockViewSchema } from "./schema.js";
+import { FileLockPageFields, FileLockPageSchema } from "./schema.js";
 
 const getFileLock = defineAction({
   access: "read",
@@ -17,18 +17,18 @@ const getFileLock = defineAction({
   },
   confirm: "none",
   description:
-    "Read the lock globs of one design. Claude cannot change a file that matches a lock glob. Each glob is relative to the work tree, for example packages/ui/**. Returns an empty list when nothing is locked. Read only.",
+    "Read the lock globs of one design. Claude cannot change a file that matches a lock glob. Each glob is relative to the work tree, for example packages/ui/**. Returns one page of globs, at most limit, and next as the cursor of the next page. Returns an empty list when nothing is locked. Read only.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/file-lock",
   },
   id: "file-lock.get",
-  input: Schema.Struct(FileLockTargetFields),
+  input: Schema.Struct(FileLockPageFields),
   invalidates: [],
   mcp: { name: "get_file_lock" },
   needs: "project.read",
-  output: FileLockViewSchema,
+  output: FileLockPageSchema,
   scope: "project",
 });
 

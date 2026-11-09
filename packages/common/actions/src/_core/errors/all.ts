@@ -39,6 +39,7 @@ import type { ScreenError } from "../../screen/errors/index.js";
 import type { SpacingError } from "../../spacing/errors/index.js";
 import type { StackingError } from "../../stacking/errors/index.js";
 import type { StateStyleError } from "../../state-style/errors/index.js";
+import type { SuggestionError } from "../../suggestion/errors/index.js";
 import type { TextStyleError } from "../../text-style/errors/index.js";
 import type { TextError } from "../../text/errors/index.js";
 import type { ThemeError } from "../../theme/errors/index.js";
@@ -89,6 +90,7 @@ type StudioError =
   | SpacingError
   | StackingError
   | StateStyleError
+  | SuggestionError
   | TextError
   | TextStyleError
   | ThemeError

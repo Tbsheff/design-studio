@@ -2,10 +2,12 @@ import { routes } from "@design-studio/actions/canvas/routes";
 import type { StudioEvent } from "@design-studio/contracts";
 import type {
   LinkTriggerKind,
-  LinkVariableOp,
-  LinkVariableValue,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
+import type {
+  LinkVariableOp,
+  LinkVariableValue,
+} from "@design-studio/contracts/link-variable";
 import { emptyLinksFile, LINK_ACTIONS } from "@design-studio/contracts/links";
 import type {
   LinkAction,

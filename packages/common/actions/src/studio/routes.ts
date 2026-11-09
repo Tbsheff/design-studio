@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  getActivityStudio: {
+    id: "studio.getActivity",
+    invalidates: [],
+    method: "GET",
+    path: "/api/activity",
+  },
   healthStudio: {
     id: "studio.health",
     invalidates: [],

@@ -13,10 +13,12 @@ const updateProject = defineAction({
     lean: false,
     name: "update_project",
     set: "core",
-    short: "Update the settings of one project. Returns the project.",
+    short:
+      "Update the settings of one project, or pin it. Returns the project.",
   },
   confirm: "none",
-  description: "Update the settings of one project. Returns the project.",
+  description:
+    "Update the settings of one project. Set isPinned to pin the project to the top of the Home sidebar. Returns the project.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "PATCH", path: "/api/projects/:projectId/settings" },
   id: "project.update",

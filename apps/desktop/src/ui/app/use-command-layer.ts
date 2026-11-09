@@ -8,7 +8,7 @@ import { prefetchCommandLayer } from "./screen-preload";
 const LAYER_EVENT = "studio:command-layer";
 
 const toLayer = (value: string | null): CommandLayerName | null => {
-  if (value === "palette" || value === "shortcuts") {
+  if (value === "palette" || value === "projects" || value === "shortcuts") {
     return value;
   }
 

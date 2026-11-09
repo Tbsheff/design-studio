@@ -74,6 +74,11 @@ const SettingsFields = {
   defaultLevel: Schema.optionalKey(Schema.String),
   disabledSkills: Schema.optionalKey(Schema.Array(Schema.String)),
   imageSearch: Schema.optionalKey(Schema.Boolean),
+  isPinned: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description: "Pin the project to the top of the Home sidebar.",
+    })
+  ),
   maxBudgetUsd: Schema.optionalKey(Schema.NullOr(Schema.Number)),
   maxTurns: Schema.optionalKey(Schema.Number),
   model: Schema.optionalKey(Schema.String),

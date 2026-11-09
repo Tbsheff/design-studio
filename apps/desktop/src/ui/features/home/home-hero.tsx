@@ -4,7 +4,6 @@ import type { ReactElement } from "react";
 import { HeroNotes } from "./hero-notes.js";
 import { HomeCard } from "./home-card.js";
 import { HomeExtrasSlot } from "./home-extras-slot.js";
-import { HomeTitle } from "./home-title.js";
 import type { HomeScreen } from "./use-home-screen.js";
 
 const HomeHero = ({
@@ -12,7 +11,7 @@ const HomeHero = ({
 }: {
   readonly screen: HomeScreen;
 }): ReactElement => {
-  const { base, composer, ui } = screen;
+  const { base, composer } = screen;
   const { setFormError } = base;
 
   const clearError = useCallback((): void => {
@@ -21,7 +20,6 @@ const HomeHero = ({
 
   return (
     <section className="home-hero">
-      <HomeTitle isEmpty={ui.isEmpty} />
       <HomeCard screen={screen} />
       <HeroNotes
         isWindowDragged={composer.root.isWindowDragged}

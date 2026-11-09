@@ -118,10 +118,10 @@ const toCardKeyIntent = ({ key, hasMod, isShift }: CardKey): CardKeyIntent => {
 
 const toFavoriteLabel = (name: string, isFavorite: boolean): string => {
   if (isFavorite) {
-    return `Remove ${name} from favorites`;
+    return `Unpin ${name}`;
   }
 
-  return `Add ${name} to favorites`;
+  return `Pin ${name}`;
 };
 
 const toFavoriteTip = (isFavorite: boolean): string => {

@@ -1,10 +1,12 @@
+export { ActivityStore } from "./activity-store.js";
+
 export { ApprovalWindowQueue } from "./approval-window-queue.js";
+
+export { bindMcpLifeRuntime } from "./mcp-life-runtime.js";
 
 export { McpActivityLog } from "./mcp-activity-log.js";
 
 export { McpApprovalStore } from "./mcp-approval-store.js";
-
-export { bindMcpLifeRuntime } from "./mcp-life-runtime.js";
 
 export { McpListenerRunner } from "./mcp-listener-runner.js";
 

@@ -28,6 +28,7 @@ export interface ProjectSettings {
   disabledSkills: string[];
   defaultLevel: RunLevel;
   imageSearch?: boolean;
+  isPinned?: boolean;
 }
 
 export type RunLevel = "wireframe" | "prototype" | "polish";

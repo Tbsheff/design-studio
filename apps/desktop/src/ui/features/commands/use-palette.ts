@@ -26,7 +26,8 @@ interface PaletteState {
 
 const usePalette = (
   onClose: () => void,
-  onShortcuts: () => void
+  onShortcuts: () => void,
+  isProjectsOnly: boolean
 ): PaletteState => {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -35,12 +36,8 @@ const usePalette = (
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { isBusy, isLoading, rows } = usePaletteRows(
-    query,
-    onShortcuts,
-    onClose,
-    setError
-  );
+  const rowInput = { isProjectsOnly, onClose, onShortcuts, query, setError };
+  const { isBusy, isLoading, rows } = usePaletteRows(rowInput);
 
   const current = Math.min(active, Math.max(0, rows.length - 1));
 

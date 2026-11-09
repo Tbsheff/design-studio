@@ -2,12 +2,12 @@ import type { Project } from "@design-studio/contracts";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { homePrefs } from "./home-prefs-model.js";
 import {
   toFavoriteLabel,
   toFavoriteTip,
   toTabIndex,
 } from "./project-card-model.js";
+import { projectsApi } from "./projects-store-model.js";
 import { Star } from "./star-icon.js";
 
 interface CardFavoriteButtonProps {
@@ -22,8 +22,8 @@ const CardFavoriteButton = ({
   isFavorite,
 }: CardFavoriteButtonProps): ReactElement => {
   const toggle = useCallback((): void => {
-    homePrefs.toggleFavorite(project.id);
-  }, [project.id]);
+    void projectsApi.pin(project, !isFavorite);
+  }, [isFavorite, project]);
 
   return (
     <button

@@ -241,6 +241,7 @@ const SettingsSchema = Schema.Struct({
     Schema.Array(SkillIdSchema).check(Schema.isMaxLength(1000))
   ),
   imageSearch: Schema.optionalKey(Schema.Boolean),
+  isPinned: Schema.optionalKey(Schema.Boolean),
   maxBudgetUsd: Schema.optionalKey(
     Schema.NullOr(
       Schema.Number.check(Schema.isBetween({ maximum: 50, minimum: 0.01 }))

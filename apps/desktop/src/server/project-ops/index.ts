@@ -58,3 +58,10 @@ export type { SuggestionRunnerApi } from "./suggestion/index.js";
 export { RepoCloneRunner } from "./repo-clone/index.js";
 
 export type { RepoCloneRunnerApi } from "./repo-clone/index.js";
+
+export { DesignRuleLineRunner } from "./design-rule-line/index.js";
+
+export type {
+  DesignRuleLine,
+  DesignRuleLineRunnerApi,
+} from "./design-rule-line/index.js";

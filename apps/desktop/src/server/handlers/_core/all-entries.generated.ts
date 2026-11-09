@@ -14,6 +14,7 @@ import { ConnectionEntries } from "../connection/handlers.js";
 import { ContentEntries } from "../content/handlers.js";
 import { CritiqueEntries } from "../critique/handlers.js";
 import { DataModelEntries } from "../data-model/handlers.js";
+import { DesignRuleEntries } from "../design-rule/handlers.js";
 import { DevNoteEntries } from "../dev-note/handlers.js";
 import { DevServerEntries } from "../dev-server/handlers.js";
 import { DevStatusEntries } from "../dev-status/handlers.js";
@@ -80,6 +81,7 @@ const ALL_ENTRIES = {
   content: ContentEntries,
   critique: CritiqueEntries,
   dataModel: DataModelEntries,
+  designRule: DesignRuleEntries,
   devNote: DevNoteEntries,
   devServer: DevServerEntries,
   devStatus: DevStatusEntries,

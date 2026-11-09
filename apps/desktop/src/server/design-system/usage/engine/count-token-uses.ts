@@ -463,7 +463,7 @@ const toTokenUses = (
   });
 };
 
-export { toFileScan, toTokenUses, toUsageIndex };
+export { toFileScan, toNamespaceEntry, toTokenUses, toUsageIndex };
 
 export type {
   FileScan,

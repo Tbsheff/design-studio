@@ -1,7 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { BadRequestError } from "./deps.js";
+import { BadRequestError, listTokenSourceFiles } from "./deps.js";
+import type { Rewrite, RewriteText } from "./token-edit-types.js";
 
 const SWEEP_EXTENSIONS = new Set([".css", ".html", ".jsx", ".tsx"]);
 
@@ -77,4 +78,29 @@ const requireSafe = (relative: string): string => {
 const readSource = (workTree: string, relative: string): Promise<string> =>
   readFile(path.join(workTree, relative), "utf-8");
 
-export { listSourceFiles, readSource, requireSafe };
+const runRewrite = async (
+  workTree: string,
+  rewrite: RewriteText
+): Promise<Rewrite> => {
+  const relatives = await listTokenSourceFiles(workTree);
+  let count = 0;
+
+  const files = await Promise.all(
+    relatives.map(async (relative) => {
+      const before = await readSource(workTree, relative);
+      const result = rewrite(before, relative);
+
+      if (result.text === before) {
+        return [];
+      }
+
+      count += result.count;
+
+      return [{ after: result.text, before, relative }];
+    })
+  );
+
+  return { count, files: files.flat() };
+};
+
+export { listSourceFiles, readSource, requireSafe, runRewrite };

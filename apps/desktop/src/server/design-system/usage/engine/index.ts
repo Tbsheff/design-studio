@@ -1,4 +1,9 @@
-export { toFileScan, toTokenUses, toUsageIndex } from "./count-token-uses.js";
+export {
+  toFileScan,
+  toNamespaceEntry,
+  toTokenUses,
+  toUsageIndex,
+} from "./count-token-uses.js";
 
 export type {
   FileScan,
@@ -12,3 +17,11 @@ export type {
 export { toTokenClasses } from "./to-token-classes.js";
 
 export type { TokenClass } from "./to-token-classes.js";
+
+export {
+  toDeletedText,
+  toRenamePlan,
+  toRenamedText,
+} from "./rename-token-text.js";
+
+export type { RenamePlan, RenameResult } from "./rename-token-text.js";

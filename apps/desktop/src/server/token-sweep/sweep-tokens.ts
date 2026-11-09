@@ -3,10 +3,17 @@ import path from "node:path";
 import {
   assertCanEdit,
   BadRequestError,
+  ConflictError,
+  getTokenUse,
   loadAppTokens,
+  NotFoundError,
   publishVersion,
   readDesignSystemFiles,
   savesSettled,
+  toDeletedText,
+  toEntryUsageTokens,
+  toRenamePlan,
+  toRenamedText,
   writeAndCommitAll,
 } from "./deps.js";
 import type {
@@ -24,7 +31,19 @@ import type {
   SweepPlan,
   SweepToken,
 } from "./engine/index.js";
-import { listSourceFiles, readSource, requireSafe } from "./source-files.js";
+import {
+  listSourceFiles,
+  readSource,
+  requireSafe,
+  runRewrite,
+} from "./source-files.js";
+import type {
+  FileChange,
+  RemoveCommand,
+  RenameCommand,
+  TokenEditResult,
+  TokenScope,
+} from "./token-edit-types.js";
 import type { TokenSweepRuntime } from "./token-sweep-runtime.js";
 
 interface SweepLayer {
@@ -65,10 +84,9 @@ interface FilePlan {
   readonly relative: string;
 }
 
-interface FileChange {
-  readonly after: string;
-  readonly before: string;
-  readonly relative: string;
+interface CommitLabel {
+  readonly count: number;
+  readonly title: string;
 }
 
 const TITLE = "Apply tokens";
@@ -121,7 +139,7 @@ const commitChanges = async (
   runtime: TokenSweepRuntime,
   scope: { direction: Direction; project: Project },
   files: readonly FileChange[],
-  count: number
+  label: CommitLabel
 ): Promise<string> => {
   const { direction, project } = scope;
   const { editDeps } = runtime;
@@ -131,7 +149,7 @@ const commitChanges = async (
 
   const meta: VersionMeta = {
     kind: "manual",
-    prompt: `${TITLE}: ${count} values in ${files.length} files`,
+    prompt: `${label.title}: ${label.count} values in ${files.length} files`,
   };
 
   const version = await writeAndCommitAll(
@@ -146,7 +164,7 @@ const commitChanges = async (
         relative: file.relative,
       },
     })),
-    TITLE,
+    label.title,
     meta
   );
 
@@ -158,7 +176,7 @@ const commitChanges = async (
       file: path.join(direction.workTree, file.relative),
       relative: file.relative,
     })),
-    label: TITLE,
+    label: label.title,
     projectId: project.id,
     versionId: version.id,
   });
@@ -256,12 +274,10 @@ const sweepIn = async (
     return { ...rest, applied: 0, dryRun: command.dryRun, versionId: null };
   }
 
-  const versionId = await commitChanges(
-    runtime,
-    scope,
-    written,
-    changes.length
-  );
+  const versionId = await commitChanges(runtime, scope, written, {
+    count: changes.length,
+    title: TITLE,
+  });
 
   return { ...rest, applied: changes.length, dryRun: false, versionId };
 };
@@ -276,6 +292,116 @@ const sweepTokens = (
     (project, direction) => sweepIn(runtime, { direction, project }, command)
   );
 
-export { sweepTokens };
+const toEditEntry = (
+  entries: readonly CompiledTokenEntry[],
+  name: string
+): CompiledTokenEntry => {
+  const entry = entries.find((item) => item.cssVar === name) ?? null;
+
+  if (entry === null) {
+    throw new NotFoundError(`No token ${name}. Use get_tokens for the names.`);
+  }
+
+  if (!entry.source) {
+    throw new BadRequestError(
+      "Only CSS tokens of an imported app folder can change this way."
+    );
+  }
+
+  return entry;
+};
+
+const toEditResult = (
+  rewrite: { readonly count: number; readonly files: readonly FileChange[] },
+  versionId: string
+): TokenEditResult => ({
+  changedFiles: rewrite.files.map((file) => file.relative),
+  replacedCount: rewrite.count,
+  versionId,
+});
+
+const renameTokenIn = async (
+  runtime: TokenSweepRuntime,
+  scope: TokenScope,
+  command: RenameCommand
+): Promise<TokenEditResult> => {
+  const { workTree } = scope.direction;
+  const entries = await entriesOf(workTree);
+
+  toEditEntry(entries, command.name);
+
+  if (command.newName === command.name) {
+    throw new BadRequestError("The new name is the same as the old name.");
+  }
+
+  if (entries.some((item) => item.cssVar === command.newName)) {
+    throw new ConflictError(
+      `A token named ${command.newName} exists. Pick another name.`
+    );
+  }
+
+  const plan = toRenamePlan(command.name, command.newName);
+
+  if (plan.reason !== null) {
+    throw new BadRequestError(plan.reason);
+  }
+
+  const rewrite = await runRewrite(workTree, (text) =>
+    toRenamedText(text, plan)
+  );
+
+  const versionId = await commitChanges(runtime, scope, rewrite.files, {
+    count: rewrite.count,
+    title: "Rename token",
+  });
+
+  return toEditResult(rewrite, versionId);
+};
+
+const deleteTokenIn = async (
+  runtime: TokenSweepRuntime,
+  scope: TokenScope,
+  command: RemoveCommand
+): Promise<TokenEditResult> => {
+  const { workTree } = scope.direction;
+  const entries = await entriesOf(workTree);
+
+  toEditEntry(entries, command.name);
+
+  const use = await getTokenUse(
+    workTree,
+    toEntryUsageTokens(entries),
+    command.name
+  );
+
+  const useCount = use?.useCount ?? 0;
+
+  if (useCount > 0) {
+    throw new ConflictError(
+      `${command.name} has ${useCount} uses. Change them before you delete it.`
+    );
+  }
+
+  const rewrite = await runRewrite(workTree, (text, relative) => {
+    if (!relative.endsWith(".css")) {
+      return { count: 0, text };
+    }
+
+    return toDeletedText(text, command.name);
+  });
+
+  if (rewrite.files.length === 0) {
+    throw new NotFoundError(`No declaration of ${command.name} found.`);
+  }
+
+  const versionId = await commitChanges(runtime, scope, rewrite.files, {
+    count: rewrite.count,
+    title: "Delete token",
+  });
+
+  return toEditResult(rewrite, versionId);
+};
+
+export { deleteTokenIn, renameTokenIn, sweepTokens };
 
 export type { SweepCommand, SweepResult };

@@ -15,6 +15,7 @@ interface LayersListProps {
   readonly children: ReactNode;
   readonly isBusy: boolean;
   readonly isDragging: boolean;
+  readonly isSearching: boolean;
   readonly onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
   readonly onPointerCancel: () => void;
   readonly onPointerMove: (event: PointerEvent<HTMLDivElement>) => void;
@@ -48,10 +49,14 @@ const LayersList = (props: LayersListProps): ReactNode => {
       onPointerCancel={props.onPointerCancel}
       onScroll={props.onScroll}
     >
-      <LayersListBody rowCount={props.rowCount} tree={tree}>
+      <LayersListBody
+        isSearching={props.isSearching}
+        rowCount={props.rowCount}
+        tree={tree}
+      >
         {props.children}
       </LayersListBody>
-      {tree?.truncated && (
+      {tree?.truncated && !props.isSearching && (
         <div className="layers-note">
           {`${COPY.layersShowingPrefix}${tree.nodes.length}${COPY.layersShowingSuffix}`}
         </div>

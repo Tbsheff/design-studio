@@ -10,6 +10,7 @@ import { LayersDropLine } from "./layers-drop-line.js";
 interface LayersRowsProps {
   readonly callbacks: LayerRowCallbacks;
   readonly collapsed: ReadonlySet<number>;
+  readonly dimmed: ReadonlySet<number>;
   readonly dropInto: number | null;
   readonly dropLine: number | null;
   readonly editingKey: string | null;
@@ -47,6 +48,7 @@ const LayersRows = (props: LayersRowsProps): ReactNode => {
           top={(first + index) * ROW}
           isSelected={node.id === props.selectedNode}
           isCollapsed={props.collapsed.has(node.id)}
+          isDimmed={props.dimmed.has(node.id)}
           isEditing={editingKey !== null && keys.get(node.id) === editingKey}
           isEditable={props.isEditable}
           isHovered={node.id === props.hoveredNode}

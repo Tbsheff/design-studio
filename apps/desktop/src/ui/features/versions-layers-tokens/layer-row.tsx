@@ -18,6 +18,7 @@ import { useLayerRowHandlers } from "./use-layer-row-handlers.js";
 
 interface LayerRowProps {
   readonly dropInto: boolean;
+  readonly isDimmed: boolean;
   readonly isCollapsed: boolean;
   readonly isEditable: boolean;
   readonly isEditing: boolean;
@@ -57,7 +58,13 @@ const LayerRowBase = (props: LayerRowProps): ReactNode => {
       aria-level={node.depth + 1}
       aria-selected={selected}
       aria-expanded={toAriaExpanded(node, props.isCollapsed)}
-      className={toRowClass({ dropInto, hovered, node, selected })}
+      className={toRowClass({
+        dimmed: props.isDimmed,
+        dropInto,
+        hovered,
+        node,
+        selected,
+      })}
       style={style}
       data-tip={toRowText(node)}
       onPointerEnter={handlers.handlePointerEnter}

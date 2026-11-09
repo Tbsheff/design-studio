@@ -5,12 +5,14 @@ import type { LayerTree } from "./layers-tree.js";
 
 interface LayersListBodyProps {
   readonly children: ReactNode;
+  readonly isSearching: boolean;
   readonly rowCount: number;
   readonly tree: LayerTree | null;
 }
 
 const LayersListBody = ({
   children,
+  isSearching,
   rowCount,
   tree,
 }: LayersListBodyProps): ReactNode => {
@@ -21,6 +23,10 @@ const LayersListBody = ({
         {COPY.layersReading}
       </output>
     );
+  }
+
+  if (rowCount === 0 && isSearching) {
+    return <div className="layers-empty">{COPY.layersNoMatches}</div>;
   }
 
   if (rowCount === 0) {

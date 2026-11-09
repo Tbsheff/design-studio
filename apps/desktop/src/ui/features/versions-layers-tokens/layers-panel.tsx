@@ -7,6 +7,7 @@ import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
 import { IS_MAC, tipWithKey } from "../commands/index.js";
 import type { LayerDrop } from "../inspector/index.js";
 import { COPY } from "./copy.js";
+import { LayerSearchField } from "./layer-search-field.js";
 import { LayersHeader } from "./layers-header.js";
 import { LayersList } from "./layers-list.js";
 import { toRunTool } from "./layers-open-state-model.js";
@@ -99,10 +100,12 @@ const LayersPanel = ({
         onRunTool={toRunTool(selectedNode, edits)}
         toTip={tipWithKey}
       />
+      <LayerSearchField search={state.search} />
       <LayersList
         ref={listRef}
         isBusy={busy}
         isDragging={drag.dragging !== null}
+        isSearching={state.search.isActive}
         rowCount={state.rows.length}
         selectedIndex={list.selectedIndex}
         selectedNode={selectedNode}
@@ -117,6 +120,7 @@ const LayersPanel = ({
           ref={rowsRef}
           callbacks={state.callbacks}
           collapsed={state.collapsed}
+          dimmed={state.dimmed}
           dropInto={drag.drop?.into ?? null}
           dropLine={drag.drop?.line ?? null}
           editingKey={rename.editingKey}

@@ -58,6 +58,7 @@ const UiSelectOptionRow = ({
       onMouseEnter={hoverRow}
       onClick={pickRow}
     >
+      {option.icon}
       <span className="truncate">{option.label}</span>
     </button>
   );

@@ -3,6 +3,7 @@ import {
   LINK_DELAY_MAX,
   LINK_EXTRA_ACTIONS,
   LINK_KEY_RE,
+  LINK_SWIPE_TRIGGERS,
   LINK_TRIGGERS,
   LINK_URL_MAX,
   LINK_VISIBILITIES,
@@ -123,7 +124,7 @@ const LinkInteractionFields = {
   trigger: Schema.optionalKey(
     Schema.Literals(LINK_TRIGGERS).annotate({
       description:
-        "click (default), hover (pointer enters), press (pointer down), delay (delayMs after the frame shows) or key (a key press while the frame shows). One element has one link for each trigger.",
+        "click (default), hover (pointer enters), press (pointer down), delay (delayMs after the frame shows), key (a key press while the frame shows) or swipe-left, swipe-right, swipe-up, swipe-down (a pointer drag of 40 px or more within 600 ms on the element). One element has one link for each trigger.",
     })
   ),
   url: Schema.optionalKey(
@@ -170,6 +171,7 @@ const LinkTargetSchema = Schema.Union([
 const LinkTriggerSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("hover") }),
   Schema.Struct({ kind: Schema.Literal("press") }),
+  Schema.Struct({ kind: Schema.Literals(LINK_SWIPE_TRIGGERS) }),
   Schema.Struct({ kind: Schema.Literal("delay"), ms: Schema.Number }),
   Schema.Struct({ key: Schema.String, kind: Schema.Literal("key") }),
 ]);

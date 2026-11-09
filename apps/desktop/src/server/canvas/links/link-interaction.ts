@@ -63,6 +63,10 @@ const TRIGGER_NEEDS = {
   hover: "trigger hover is not valid here.",
   key: "trigger key needs key, a key name.",
   press: "trigger press is not valid here.",
+  "swipe-down": "trigger swipe-down is not valid here.",
+  "swipe-left": "trigger swipe-left is not valid here.",
+  "swipe-right": "trigger swipe-right is not valid here.",
+  "swipe-up": "trigger swipe-up is not valid here.",
 } satisfies Record<Exclude<LinkTriggerKind, "click">, string>;
 
 const refusal = (ctx: CanvasToolContext): ToolText | null => {

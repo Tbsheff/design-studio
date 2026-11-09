@@ -1,4 +1,5 @@
 import type { PlayKey } from "@design-studio/contracts";
+import { isSwipeKind } from "@design-studio/contracts/link-interaction";
 import {
   isIdSelector,
   LINKS_MAX,
@@ -249,7 +250,8 @@ function isLinkQuery(value: unknown): value is LinkQuery {
     (query.text === undefined || typeof query.text === "string") &&
     (query.trigger === undefined ||
       query.trigger === "hover" ||
-      query.trigger === "press")
+      query.trigger === "press" ||
+      isSwipeKind(query.trigger))
   );
 }
 

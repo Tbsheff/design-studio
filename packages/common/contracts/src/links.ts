@@ -14,6 +14,7 @@ import {
   triggerSuffix,
 } from "@design-studio/contracts/link-interaction";
 import type {
+  LinkBridgeTrigger,
   LinkTrigger,
   LinkVisibility,
 } from "@design-studio/contracts/link-interaction";
@@ -509,7 +510,7 @@ export interface LinkQuery {
   selector: string;
   tag?: string;
   text?: string;
-  trigger?: "hover" | "press";
+  trigger?: LinkBridgeTrigger;
 }
 
 export interface LinkRectReport {

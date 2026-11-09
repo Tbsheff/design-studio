@@ -1,6 +1,7 @@
-import { isFrameAction, linkAction } from "./deps.js";
+import { isFrameAction, isSwipeKind, linkAction } from "./deps.js";
 import type {
   LinkAction,
+  LinkBridgeTrigger,
   LinkTriggerKind,
   PlayRunOp,
   PrototypeLink,
@@ -148,10 +149,10 @@ const phaseOf = (raw: string): PlayPhase => {
   return "start";
 };
 
-const bridgeTrigger = (link: PrototypeLink): "hover" | "press" | null => {
+const bridgeTrigger = (link: PrototypeLink): LinkBridgeTrigger | null => {
   const kind = triggerKind(link);
 
-  if (kind === "hover" || kind === "press") {
+  if (kind === "hover" || kind === "press" || isSwipeKind(kind)) {
     return kind;
   }
 

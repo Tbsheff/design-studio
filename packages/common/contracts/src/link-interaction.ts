@@ -7,7 +7,25 @@ const LINK_EXTRA_ACTIONS = [
   "toggle",
 ] as const;
 
-const LINK_TRIGGERS = ["click", "hover", "press", "delay", "key"] as const;
+const LINK_TRIGGERS = [
+  "click",
+  "hover",
+  "press",
+  "delay",
+  "key",
+  "swipe-left",
+  "swipe-right",
+  "swipe-up",
+  "swipe-down",
+] as const;
+
+const LINK_SWIPE_TRIGGERS = [
+  "swipe-left",
+  "swipe-right",
+  "swipe-up",
+  "swipe-down",
+] as const;
+
 const LINK_VISIBILITIES = ["toggle", "show", "hide"] as const;
 const LINK_DELAY_MAX = 60_000;
 const LINK_URL_MAX = 2000;
@@ -15,16 +33,21 @@ const LINK_KEY_RE = /^(?:[!-~]|[A-Z][A-Za-z0-9]{1,19})$/u;
 
 type LinkTriggerKind = (typeof LINK_TRIGGERS)[number];
 
+type LinkBridgeTrigger = Exclude<LinkTriggerKind, "click" | "delay" | "key">;
+
+type LinkSwipeKind = (typeof LINK_SWIPE_TRIGGERS)[number];
+
 type LinkVisibility = (typeof LINK_VISIBILITIES)[number];
 
 type LinkTrigger =
   | { readonly kind: "hover" }
   | { readonly kind: "press" }
+  | { readonly kind: LinkSwipeKind }
   | { readonly kind: "delay"; readonly ms: number }
   | { readonly kind: "key"; readonly key: string };
 
 type TriggerFields =
-  | { readonly trigger: "hover" | "press" }
+  | { readonly trigger: "hover" | "press" | LinkSwipeKind }
   | { readonly delayMs: number; readonly trigger: "delay" }
   | { readonly key: string; readonly trigger: "key" }
   | Readonly<Record<string, never>>;
@@ -42,6 +65,10 @@ const TRIGGER_LABELS = {
   hover: "On hover",
   key: "On key",
   press: "While pressing",
+  "swipe-down": "On swipe down",
+  "swipe-left": "On swipe left",
+  "swipe-right": "On swipe right",
+  "swipe-up": "On swipe up",
 } satisfies Record<LinkTriggerKind, string>;
 
 const urlOf = (text: string): URL | null => {
@@ -88,12 +115,15 @@ const cleanDelay = (raw: number): number | null => {
   return Math.round(Math.max(0, Math.min(LINK_DELAY_MAX, raw)));
 };
 
+const isSwipeKind = (kind: string): kind is LinkSwipeKind =>
+  (LINK_SWIPE_TRIGGERS as readonly string[]).includes(kind);
+
 const triggerOf = (
   kind: string,
   ms: number | null,
   key: string | null
 ): LinkTrigger | null => {
-  if (kind === "hover" || kind === "press") {
+  if (kind === "hover" || kind === "press" || isSwipeKind(kind)) {
     return { kind };
   }
 
@@ -230,6 +260,7 @@ export {
   LINK_DELAY_MAX,
   LINK_EXTRA_ACTIONS,
   LINK_KEY_RE,
+  LINK_SWIPE_TRIGGERS,
   LINK_TRIGGERS,
   LINK_URL_MAX,
   LINK_VISIBILITIES,
@@ -239,6 +270,7 @@ export {
   cleanLinkUrl,
   describeTarget,
   describeTrigger,
+  isSwipeKind,
   targetFits,
   targetFrame,
   targetRef,
@@ -246,4 +278,10 @@ export {
   triggerSuffix,
 };
 
-export type { LinkTrigger, LinkTriggerKind, LinkVisibility };
+export type {
+  LinkBridgeTrigger,
+  LinkSwipeKind,
+  LinkTrigger,
+  LinkTriggerKind,
+  LinkVisibility,
+};

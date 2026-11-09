@@ -2,7 +2,7 @@ export { linksApi } from "../canvas/links-api.js";
 
 export type { LinkInteractionChange } from "../canvas/links-api.js";
 
-export { UiSelect } from "@design-studio/ui";
+export { Icon, UiSelect } from "@design-studio/ui";
 
 export type { UiSelectOption } from "@design-studio/ui";
 
@@ -23,16 +23,19 @@ export type {
 
 export {
   LINK_DELAY_MAX,
+  LINK_SWIPE_TRIGGERS,
   LINK_TRIGGERS,
   LINK_VISIBILITIES,
   TRIGGER_LABELS,
   cleanDelay,
   cleanLinkKey,
   cleanLinkUrl,
+  isSwipeKind,
   targetFrame,
 } from "@design-studio/contracts/link-interaction";
 
 export type {
+  LinkBridgeTrigger,
   LinkTrigger,
   LinkTriggerKind,
   LinkVisibility,

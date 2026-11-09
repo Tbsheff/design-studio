@@ -4,6 +4,12 @@ const PROMPT_MAX = 500;
 
 const SEED_MAX = 9;
 
+const OWNER_NAME_MAX = 64;
+
+const OWNER_STACK_MAX = 2000;
+
+const OWNERS_MAX = 20;
+
 const ImageAspectSchema = Schema.Literals(["square", "wide", "tall", "hero"]);
 
 const ImageStyleSchema = Schema.Literals([
@@ -15,9 +21,19 @@ const ImageStyleSchema = Schema.Literals([
 
 const ImageProviderSchema = Schema.Literals(["mock", "openai", "gemini"]);
 
+const ImageLayerOwnerSchema = Schema.Struct({
+  name: Schema.String.check(Schema.isMaxLength(OWNER_NAME_MAX)),
+  stack: Schema.String.check(Schema.isMaxLength(OWNER_STACK_MAX)),
+});
+
+const ImageLayerOwnersSchema = Schema.Array(ImageLayerOwnerSchema).check(
+  Schema.isMaxLength(OWNERS_MAX)
+);
+
 const ImageLayerSchema = Schema.Struct({
   background: Schema.optionalKey(Schema.Boolean),
   html: Schema.optionalKey(Schema.String),
+  owners: Schema.optionalKey(ImageLayerOwnersSchema),
   selector: Schema.optionalKey(Schema.String),
   source: Schema.NullOr(
     Schema.Struct({

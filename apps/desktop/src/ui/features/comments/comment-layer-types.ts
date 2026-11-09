@@ -25,6 +25,7 @@ interface Props {
   zoom: number;
   frame: { width: number; height: number };
   commentMode: boolean;
+  isFrameReady: boolean;
   selectMode: boolean;
   editing?: boolean;
   selection: SelectionContext[];
@@ -35,6 +36,7 @@ interface Props {
 
 interface TrackInput {
   commentMode: boolean;
+  isFrameReady: boolean;
   control: CommentsControl;
   frames: FrameSet;
   kind: ProjectKind;

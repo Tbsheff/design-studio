@@ -13,6 +13,7 @@ import type {
 import type { CSSProperties } from "react";
 
 import type { CanvasFrame } from "./canvas-frames-model.js";
+import type { PlayCommentOptions } from "./play-comment-types.js";
 import {
   POPOVER_MARGIN,
   toClamped,
@@ -59,6 +60,7 @@ interface PlayModeProps {
   frameTitle: (frame: CanvasFrame) => string;
   onClose: () => void;
   onRestoreFocus: () => void;
+  playComment: PlayCommentOptions | null;
 }
 
 interface LayerShot {
@@ -292,6 +294,7 @@ const toShownFrame = (slots: Slot[]): CanvasFrame | null => {
 export {
   baseOf,
   INSTANT,
+  isSettledPhase,
   keyOf,
   LAYERS_FRESH_MS,
   motionOf,

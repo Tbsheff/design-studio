@@ -37,12 +37,13 @@ const CommentLayer = (props: Props): ReactElement => {
   const tracked = useMemo(() => shown.filter((item) => !item.drawing), [shown]);
   const queries = useStableQueries(tracked);
 
-  const { commentMode, frames, kind, onExitCommentMode } = props;
+  const { commentMode, frames, isFrameReady, kind, onExitCommentMode } = props;
 
   const rects = useAnchorTracking({
     commentMode,
     control,
     frames,
+    isFrameReady,
     kind,
     onExitCommentMode,
     queries,

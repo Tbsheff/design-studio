@@ -23,6 +23,7 @@ import type { BuildError, FilesChange } from "../home/use-studio-data.js";
 import type { SpacingHandles } from "../spacing/index.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasShell } from "./canvas-shell.js";
+import type { PlayCommentInput } from "./play-comment-types.js";
 import type { TextCommitHandler } from "./use-inline-text-edit.js";
 import type { FrameVariation } from "./variation-controls.js";
 
@@ -53,6 +54,7 @@ interface Props {
   app?: AttachedApp | null;
   onFrameChange?: () => void;
   commandsHost?: ComponentType<CanvasCommandsInput> | null;
+  playComments?: ComponentType<PlayCommentInput> | null;
 }
 
 interface CanvasCommentTools {

@@ -168,6 +168,7 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
             frameTitle={toFrameTitle}
             onClose={onClosePlay}
             onRestoreFocus={onRestoreFocus}
+            playComment={options.playComment}
           />
         </Suspense>
       )}

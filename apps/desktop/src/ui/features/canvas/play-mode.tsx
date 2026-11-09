@@ -1,46 +1,24 @@
-import type {
-  DeviceFrameId,
-  DeviceOrientation,
-} from "@design-studio/contracts/device-frame";
 import { useRef } from "react";
 import type { ReactElement } from "react";
 
-import { tagFrame } from "../../platform/bridge.js";
 import { copy } from "./copy.js";
 import { frameTitle } from "./frame-label-model.js";
 import { HotspotFlash } from "./hotspot-flash.js";
-import type { Rect } from "./hotspot-model.js";
 import { PlayBar } from "./play-bar.js";
-import {
-  baseOf,
-  overlayOf,
-  playHint,
-  slotStyle,
-  toShownFrame,
-} from "./play-model.js";
-import type { PlayModeProps, Slot, StageSize } from "./play-model.js";
+import { PlayCommentButton } from "./play-comment-button.js";
+import { toCommentNode } from "./play-comment-nodes.js";
+import { overlayOf, playHint, slotStyle, toShownFrame } from "./play-model.js";
+import type { PlayModeProps, Slot } from "./play-model.js";
+import type { BaseSlotsProps } from "./play-slot-types.js";
 import { SlotView } from "./play-slot-view.js";
 import { useFocusReturn } from "./use-focus-return.js";
-import { useHotspotHints } from "./use-hotspot-hints.js";
+import { usePlayCommentMode } from "./use-play-comment-mode.js";
 import { usePlayDevice } from "./use-play-device.js";
+import { usePlaySlotProps } from "./use-play-slot-props.js";
 import { usePlayTheme } from "./use-play-theme.js";
 import { usePlay } from "./use-play.js";
 import type { PlayState } from "./use-play.js";
 import { useStageSize } from "./use-stage-size.js";
-
-type BindFrame = (token: string) => (el: HTMLIFrameElement | null) => void;
-
-interface BaseSlotsProps {
-  readonly base: Slot[];
-  readonly stage: StageSize;
-  readonly device: DeviceFrameId | null;
-  readonly orientation: DeviceOrientation;
-  readonly sandbox?: string;
-  readonly bind: BindFrame;
-  readonly spots: Readonly<Record<string, readonly Rect[]>>;
-  readonly isHeld: boolean;
-  readonly flashCount: number;
-}
 
 const toLayerKey = (props: BaseSlotsProps): string => {
   if (props.isHeld) {
@@ -50,7 +28,7 @@ const toLayerKey = (props: BaseSlotsProps): string => {
   return `flash-${props.flashCount}`;
 };
 
-const toHotspotNode = (
+const toFlashNode = (
   props: BaseSlotsProps,
   slot: Slot
 ): ReactElement | null => {
@@ -62,6 +40,25 @@ const toHotspotNode = (
 
   return (
     <HotspotFlash key={toLayerKey(props)} isHeld={props.isHeld} rects={rects} />
+  );
+};
+
+const toHotspotNode = (
+  props: BaseSlotsProps,
+  slot: Slot
+): ReactElement | null => {
+  const flash = toFlashNode(props, slot);
+  const comment = props.comment && toCommentNode(props.comment, slot);
+
+  if (!flash && !comment) {
+    return null;
+  }
+
+  return (
+    <>
+      {flash}
+      {comment}
+    </>
   );
 };
 
@@ -164,6 +161,7 @@ const toTitle = (
 
 const PlayMode = (props: PlayModeProps): ReactElement => {
   const stageRef = useRef<HTMLDivElement>(null);
+  const mode = usePlayCommentMode(props.playComment !== null);
   const play = usePlay(props, stageRef);
 
   const { device, onDevice, onRotate, orientation } = usePlayDevice(
@@ -174,39 +172,27 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
   const root = useRef<HTMLDialogElement>(null);
 
   useFocusReturn(root, props.onRestoreFocus);
-  const base = baseOf(play.slots);
   const overlay = overlayOf(play.slots);
   const shown = toShownFrame(play.slots);
-
-  const { back: onBack, closeOverlay: onCloseOverlay, elements } = play;
+  const { back: onBack, closeOverlay: onCloseOverlay } = play;
   const { restart: onRestart } = play;
-  const { onClose: onExit, sandbox } = props;
+  const { onClose: onExit } = props;
+  const { toggle: onToggleComment } = mode;
 
-  const bind: BindFrame = (token) => (el) => {
-    elements.current[token] = tagFrame(el, token);
-  };
+  const { isHints, onHints, slotProps } = usePlaySlotProps({
+    device,
+    mode,
+    orientation,
+    play,
+    props,
+    stage,
+  });
 
-  const hints = useHotspotHints({
-    elements,
+  const theme = usePlayTheme({
+    elements: play.elements,
     props,
     slots: play.slots,
   });
-
-  const theme = usePlayTheme({ elements, props, slots: play.slots });
-
-  const { flashCount, isEnabled, isHeld, setEnabled: onHints, spots } = hints;
-
-  const slotProps = {
-    base,
-    bind,
-    device,
-    flashCount,
-    isHeld,
-    orientation,
-    sandbox,
-    spots,
-    stage,
-  };
 
   return (
     <dialog
@@ -224,7 +210,7 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
         isBackDisabled={toBackDisabled(play, overlay !== null)}
         device={device}
         orientation={orientation}
-        isHints={isEnabled}
+        isHints={isHints}
         theme={theme}
         onHints={onHints}
         onDevice={onDevice}
@@ -237,6 +223,9 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
       <div ref={stageRef} className="play-stage">
         {toBaseNodes(slotProps)}
         {toOverlayNode(overlay, slotProps, onCloseOverlay)}
+        {props.playComment && (
+          <PlayCommentButton isOn={mode.isOn} onToggle={onToggleComment} />
+        )}
       </div>
     </dialog>
   );

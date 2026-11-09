@@ -2,6 +2,7 @@ import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 import type { MutableRefObject } from "react";
 
 import type { CanvasFrame } from "./canvas-frames-model.js";
+import type { PlayCommentOptions } from "./play-comment-types.js";
 
 interface PrototypeOptions {
   projectId: string;
@@ -16,6 +17,7 @@ interface PrototypeOptions {
   clearSelection: () => void;
   sandbox?: string;
   notify: (message: string) => void;
+  playComment: PlayCommentOptions | null;
   focusStage: () => void;
   on: boolean;
   preview: {

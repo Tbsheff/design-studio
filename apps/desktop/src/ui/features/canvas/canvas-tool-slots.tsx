@@ -28,7 +28,7 @@ const CanvasComments = ({
   draw: DrawTool;
 } & Omit<
   CommentLayerProps,
-  "control" | "commentMode" | "onExitCommentMode"
+  "control" | "commentMode" | "isFrameReady" | "onExitCommentMode"
 >): ReactElement | null => {
   const { setOn } = comment;
 
@@ -47,6 +47,7 @@ const CanvasComments = ({
         zoom={zoom}
         frame={frame}
         commentMode={comment.on}
+        isFrameReady={false}
         selectMode={selectMode}
         editing={editing}
         selection={selection}

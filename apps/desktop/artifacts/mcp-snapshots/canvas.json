@@ -796,7 +796,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "description": "Show one app frame in a preview state: default, session, empty, loading, error, an existing mock state id, or mock to make a new mock state. The frame reloads in the studio. Use get_screenshot with frameId to see it.",
+      "description": "Show one app frame in a preview state: default, session, empty, loading, error, an existing mock state id, or mock to make a new mock state. Mock steps (click, hover or focus on a selector, at most 4) run after each load, so a dialog, sheet, menu, tab or tooltip stays open in the frame. Mock clock (ISO date-time) pins new Date() and Date.now() in the browser of the frame, frozen or ticking; dates rendered on the Next server keep the real time and can cause hydration warnings. The frame reloads in the studio. Use get_screenshot with frameId to see it.",
       "inputSchema": {
         "properties": {
           "frame": {
@@ -808,6 +808,23 @@
           "mock": {
             "type": "object",
             "properties": {
+              "clock": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 40
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "ISO date-time such as 2026-03-03T09:00 that new Date() and Date.now() return in the frame, or null to clear. Dates rendered on the Next server keep the real time and can cause hydration warnings."
+              },
+              "isClockFrozen": {
+                "type": "boolean",
+                "description": "true stops the clock at the date-time. false lets it tick from there."
+              },
               "name": {
                 "type": "string",
                 "minLength": 1,
@@ -846,6 +863,28 @@
               },
               "signedIn": {
                 "type": "boolean"
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": ["click", "hover", "focus"],
+                      "description": "click, hover or focus the element."
+                    },
+                    "selector": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 300,
+                      "description": "CSS selector of the trigger, such as a Radix dialog trigger button."
+                    }
+                  },
+                  "required": ["kind", "selector"],
+                  "additionalProperties": false
+                },
+                "maxItems": 4
               }
             },
             "additionalProperties": false

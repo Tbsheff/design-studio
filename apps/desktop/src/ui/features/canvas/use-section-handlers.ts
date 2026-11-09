@@ -15,18 +15,21 @@ import type { CanvasSectionsApi } from "./use-canvas-sections.js";
 interface SectionHandlers {
   readonly remove: () => void;
   readonly rename: (raw: string) => void;
-  readonly startMove: (event: ReactPointerEvent) => void;
+  readonly startMove: (event: ReactPointerEvent<HTMLElement>) => void;
   readonly startResize: (event: ReactPointerEvent<HTMLElement>) => void;
 }
 
 const useSectionHandlers = (
   api: CanvasSectionsApi,
   section: CanvasSection,
-  zoom: number
+  view: { readonly freeze: () => void; readonly zoom: number }
 ): SectionHandlers => {
+  const { freeze, zoom } = view;
+
   const startMove = useCallback(
-    (event: ReactPointerEvent): void => {
+    (event: ReactPointerEvent<HTMLElement>): void => {
       const base = api.snapshot();
+      freeze();
 
       startSectionDrag(event, zoom, (delta, isFinal) =>
         api.apply(
@@ -35,7 +38,7 @@ const useSectionHandlers = (
         )
       );
     },
-    [api, section, zoom]
+    [api, section, zoom, freeze]
   );
 
   const startResize = useCallback(

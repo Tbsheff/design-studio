@@ -8,12 +8,14 @@ interface SectionDelta {
 type SectionDeltaHandler = (delta: SectionDelta, isFinal: boolean) => void;
 
 const startSectionDrag = (
-  event: ReactPointerEvent,
+  event: ReactPointerEvent<HTMLElement>,
   zoom: number,
   onDelta: SectionDeltaHandler
 ): void => {
   event.preventDefault();
   event.stopPropagation();
+  const target = event.currentTarget;
+  target.setPointerCapture(event.pointerId);
   const startX = event.clientX;
   const startY = event.clientY;
   const abort = new AbortController();
@@ -24,20 +26,25 @@ const startSectionDrag = (
     y: (moved.clientY - startY) / zoom,
   });
 
-  const end = (ended: PointerEvent): void => {
+  const end = (ended: Event): void => {
     abort.abort();
-    onDelta(read(ended), true);
+
+    if (ended instanceof PointerEvent) {
+      onDelta(read(ended), true);
+    }
   };
 
-  globalThis.addEventListener(
+  target.addEventListener(
     "pointermove",
-    (moved) => onDelta(read(moved), false),
-    {
-      signal,
-    }
+    (moved) => {
+      if (moved instanceof PointerEvent) {
+        onDelta(read(moved), false);
+      }
+    },
+    { signal }
   );
-  globalThis.addEventListener("pointerup", end, { signal });
-  globalThis.addEventListener("pointercancel", end, { signal });
+  target.addEventListener("pointerup", end, { signal });
+  target.addEventListener("pointercancel", end, { signal });
 };
 
 export { startSectionDrag };

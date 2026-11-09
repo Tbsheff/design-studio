@@ -8,6 +8,7 @@ import { useSectionHandlers } from "./use-section-handlers.js";
 
 interface CanvasSectionProps {
   readonly api: CanvasSectionsApi;
+  readonly freeze: () => void;
   readonly offset: { readonly x: number; readonly y: number };
   readonly section: CanvasSectionRecord;
   readonly zoom: number;
@@ -15,11 +16,12 @@ interface CanvasSectionProps {
 
 const CanvasSection = ({
   api,
+  freeze,
   offset,
   section,
   zoom,
 }: CanvasSectionProps): ReactElement => {
-  const handlers = useSectionHandlers(api, section, zoom);
+  const handlers = useSectionHandlers(api, section, { freeze, zoom });
   const { startResize } = handlers;
 
   return (

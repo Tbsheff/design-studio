@@ -7,6 +7,7 @@ import type { ChartError } from "../../chart/errors/index.js";
 import type { CommentError } from "../../comment/errors/index.js";
 import type { CompletionError } from "../../completion/errors/index.js";
 import type { ComponentVariantError } from "../../component-variant/errors/index.js";
+import type { ComponentError } from "../../component/errors/index.js";
 import type { ContentError } from "../../content/errors/index.js";
 import type { CritiqueError } from "../../critique/errors/index.js";
 import type { DataModelError } from "../../data-model/errors/index.js";
@@ -56,6 +57,7 @@ type StudioError =
   | ChartError
   | CommentError
   | CompletionError
+  | ComponentError
   | ComponentVariantError
   | ContentError
   | CritiqueError

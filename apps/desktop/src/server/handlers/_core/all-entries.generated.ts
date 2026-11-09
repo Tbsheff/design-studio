@@ -9,6 +9,7 @@ import { CloudEntries } from "../cloud/handlers.js";
 import { CommentEntries } from "../comment/handlers.js";
 import { CompletionEntries } from "../completion/handlers.js";
 import { ComponentVariantEntries } from "../component-variant/handlers.js";
+import { ComponentEntries } from "../component/handlers.js";
 import { ConnectionEntries } from "../connection/handlers.js";
 import { ContentEntries } from "../content/handlers.js";
 import { CritiqueEntries } from "../critique/handlers.js";
@@ -71,6 +72,7 @@ const ALL_ENTRIES = {
   cloud: CloudEntries,
   comment: CommentEntries,
   completion: CompletionEntries,
+  component: ComponentEntries,
   componentVariant: ComponentVariantEntries,
   connection: ConnectionEntries,
   content: ContentEntries,

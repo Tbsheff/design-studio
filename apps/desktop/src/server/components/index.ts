@@ -64,3 +64,5 @@ export type { LibraryEntry } from "./insert-list.js";
 export type { SampleNode } from "./preview-bundle.js";
 
 export type { ComponentRef } from "./props-schema.js";
+
+export { RegistryWriter } from "./registry/index.js";

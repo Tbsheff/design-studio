@@ -9,6 +9,7 @@ import { CloudActions } from "./cloud/index.js";
 import { CommentActions } from "./comment/index.js";
 import { CompletionActions } from "./completion/index.js";
 import { ComponentVariantActions } from "./component-variant/index.js";
+import { ComponentActions } from "./component/index.js";
 import { ConnectionActions } from "./connection/index.js";
 import { ContentActions } from "./content/index.js";
 import { CritiqueActions } from "./critique/index.js";
@@ -71,6 +72,7 @@ const ALL_ACTIONS = {
   cloud: CloudActions,
   comment: CommentActions,
   completion: CompletionActions,
+  component: ComponentActions,
   componentVariant: ComponentVariantActions,
   connection: ConnectionActions,
   content: ContentActions,

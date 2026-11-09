@@ -794,3 +794,30 @@ li.proto-row {
     animation-delay: 560ms;
   }
 }
+
+.play-comment-btn {
+  position: absolute;
+  right: var(--s-3);
+  bottom: var(--s-3);
+  z-index: 6;
+  gap: var(--s-1);
+  background: var(--surface-raised);
+  box-shadow: var(--float-shadow);
+}
+
+.play-comment-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+}
+
+.play-comment-btn kbd {
+  font: 500 11px/1 var(--font);
+  opacity: 0.7;
+}
+
+.play-comment-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}

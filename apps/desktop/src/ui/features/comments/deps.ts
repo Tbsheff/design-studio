@@ -39,6 +39,8 @@ export { canvasStore } from "../canvas/canvas-frames-model.js";
 
 export { shownFrames } from "../canvas/index.js";
 
+export type { PlayCommentInput } from "../canvas/index.js";
+
 export { DrawingStrokes, PenIcon } from "../canvas/draw-layer.js";
 
 export {

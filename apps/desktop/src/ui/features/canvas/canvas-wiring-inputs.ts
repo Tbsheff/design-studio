@@ -2,10 +2,11 @@ import { HTML_FRAME_SANDBOX } from "../../platform/bridge.js";
 import type { useAppCanvas } from "./app-canvas.js";
 import { appRoutePages } from "./app-route-pages.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
-import { shellDirectionName } from "./canvas-helpers.js";
+import { commentToolsOf, shellDirectionName } from "./canvas-helpers.js";
 import type { stageCursor, themeSwitch } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
+import type { PlayCommentOptions } from "./play-comment-types.js";
 import type { useCanvasEdits } from "./use-canvas-edits.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
@@ -187,6 +188,20 @@ const toLabelInput = (
   };
 };
 
+const toPlayComment = (props: ViewProps): PlayCommentOptions | null => {
+  const { comments, playComments } = props;
+
+  if (!comments || !playComments) {
+    return null;
+  }
+
+  return {
+    Layer: playComments,
+    control: comments,
+    toTools: (path: string) => commentToolsOf(props, path),
+  };
+};
+
 const toPrototypeInput = (
   props: ViewProps,
   text: StageState,
@@ -201,6 +216,7 @@ const toPrototypeInput = (
   const { frames } = text.layout;
   const on = text.protoOn;
   const preview = previewState.frames;
+  const playComment = toPlayComment(props);
   const clearSelection = (): void => props.setSelection(() => []);
   const { stageRef } = text;
 
@@ -220,6 +236,7 @@ const toPrototypeInput = (
     notify,
     on,
     passive,
+    playComment,
     preview,
     projectId,
     sandbox,

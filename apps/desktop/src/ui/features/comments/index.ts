@@ -23,13 +23,25 @@ const ComposerComments = lazy(async () => {
   return { default: loaded.ComposerComments };
 });
 
+const PlayCommentLayer = lazy(async () => {
+  const loaded = await import("./play-comment-layer.js");
+
+  return { default: loaded.PlayCommentLayer };
+});
+
 const QueuedComposerBar = lazy(async () => {
   const loaded = await import("./queued-composer-bar.js");
 
   return { default: loaded.QueuedComposerBar };
 });
 
-export { CommentLayer, CommentsPanel, ComposerComments, QueuedComposerBar };
+export {
+  CommentLayer,
+  CommentsPanel,
+  ComposerComments,
+  PlayCommentLayer,
+  QueuedComposerBar,
+};
 
 export { authorInitial } from "./author-initial.js";
 

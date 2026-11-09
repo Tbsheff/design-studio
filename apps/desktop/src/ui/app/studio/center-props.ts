@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 
 import { canvasVariations } from "../../features/canvas";
+import { PlayCommentLayer } from "../../features/comments";
 import { useCanvasCommandsHost } from "../canvas-commands-host";
 import type { CenterView } from "../shell/center-view";
 import { nameOf } from "./project-model";
@@ -121,6 +122,7 @@ const canvasProps = (ctx: StudioCtx): CanvasProps => {
     onFrameChange: data.clearFrameErrors,
     onSource: ui.setSource,
     onTextCommit: onTextCommit(ctx),
+    playComments: PlayCommentLayer,
     port: ui.port,
     projectId: ctx.projectId,
     runStep: runStepOf(core.activeRun, direction),

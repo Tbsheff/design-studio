@@ -62,3 +62,5 @@ export type { CanvasCommentTools, CanvasDirections } from "./canvas-types.js";
 export type { ShortcutState } from "./use-undo-shortcut.js";
 
 export type { PreviewMenuItem } from "./preview-menu.js";
+
+export type { PlayCommentInput } from "./play-comment-types.js";

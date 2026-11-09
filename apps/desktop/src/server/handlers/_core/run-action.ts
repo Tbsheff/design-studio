@@ -47,6 +47,28 @@ type ErasedCard = (
 
 const STRICT = { onExcessProperty: "error" } as const;
 
+const MAIN_DIRECTION = "main";
+
+const NULL_TEXT = "null";
+
+const isMissingDirection = (value: Schema.Json | null): boolean =>
+  value === null || value === NULL_TEXT;
+
+const toDirectionArgs = (
+  action: AnyAction,
+  args: WireArgs
+): (WireArgs & { readonly directionId: Schema.Json }) | WireArgs => {
+  if (!action.http.path.includes(":directionId")) {
+    return args;
+  }
+
+  if (isMissingDirection(args.directionId ?? null)) {
+    return { ...args, directionId: MAIN_DIRECTION };
+  }
+
+  return args;
+};
+
 const provenByRuntimeCheck = (
   program: Effect.Effect<object, StudioError, RunNeeds>
 ): Proven => program as Proven;
@@ -112,7 +134,7 @@ const makeRunner = <Action extends AnyAction>(
   return (args, principal, form, callGate = gate) => {
     const program = Effect.gen(function* runAction() {
       const input = yield* Effect.mapError(
-        decoders[form](args),
+        decoders[form](toDirectionArgs(action, args)),
         (issue) => new BadRequest({ message: issue.message })
       );
 

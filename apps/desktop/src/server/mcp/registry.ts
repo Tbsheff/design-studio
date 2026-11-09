@@ -240,18 +240,6 @@ const runActionTool = async (
 const refuse = (text: string): Promise<TextResult> =>
   Promise.resolve({ content: [{ text, type: "text" }], isError: true });
 
-const MAIN_DIRECTION = "main";
-
-const toMainDirection = (tool: ActionRunner, args: WireArgs): WireArgs => {
-  const takesDirection = tool.action.http.path.includes(":directionId");
-
-  if (!takesDirection || "directionId" in args) {
-    return args;
-  }
-
-  return { ...args, directionId: MAIN_DIRECTION };
-};
-
 const callActionTool = (
   deps: RuntimeDeps,
   name: string,
@@ -280,7 +268,7 @@ const callActionTool = (
     caller.client
   );
 
-  return runActionTool(runtime, tool, toMainDirection(tool, legacy), {
+  return runActionTool(runtime, tool, legacy, {
     gate: gateOf(edits, name, caller.client, toProjectId(legacy)),
     principal: caller.principal,
   });

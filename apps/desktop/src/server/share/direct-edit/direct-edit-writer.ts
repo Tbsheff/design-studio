@@ -318,3 +318,5 @@ class DirectEditWriter extends Context.Service<
 }
 
 export { DirectEditWriter };
+
+export type { DirectEditWriterApi };

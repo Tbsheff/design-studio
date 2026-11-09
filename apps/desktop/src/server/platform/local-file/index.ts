@@ -71,6 +71,12 @@ const duplicateFileOnce = Effect.fn("LocalFile.duplicateFileOnce")(
   }
 );
 
+const readTextFile = Effect.fn("LocalFile.readText")(function* run(
+  file: string
+) {
+  return yield* toNullIfMissing(() => readFile(file, "utf-8"));
+});
+
 const toJsonFileReader = <Value>(
   schema: Schema.Codec<Value, unknown>
 ): ((file: string) => Effect.Effect<Value | null>) => {
@@ -92,6 +98,7 @@ export {
   hasFile,
   listFileNames,
   listFolderNames,
+  readTextFile,
   toFileStamp,
   toJsonFileReader,
 };

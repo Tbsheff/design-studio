@@ -103,7 +103,67 @@ const TextUpdateResultSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
+const TEXT_REWRITE_MODES = [
+  "shorten",
+  "lengthen",
+  "clarify",
+  "voice",
+  "fix",
+  "translate",
+] as const;
+
+const TEXT_LANGUAGE_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8}){0,3}$/u;
+
+const TEXT_LANGUAGE_MAX = 35;
+
+const TEXT_FILE_MAX = 500;
+
+const TextRewriteModeSchema = Schema.Literals(TEXT_REWRITE_MODES).annotate({
+  description:
+    "shorten, lengthen, clarify, voice (match docs/voice.md), fix (spelling and grammar) or translate (needs language).",
+});
+
+const TextRewriteLanguageSchema = Schema.NullOr(
+  Schema.String.check(
+    Schema.isMaxLength(TEXT_LANGUAGE_MAX),
+    Schema.isPattern(TEXT_LANGUAGE_PATTERN)
+  )
+)
+  .annotate({
+    description:
+      "BCP 47 language tag such as es or fr-CA. Needed for translate, null for the other modes.",
+  })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
+
+const TextRewriteShouldApplySchema = Schema.Boolean.annotate({
+  description: "True writes option 1 to the source as one version.",
+}).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false)));
+
+const TextRewriteLayerSchema = Schema.Struct({
+  column: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  file: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(TEXT_FILE_MAX)
+  ),
+  line: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+});
+
+const TextRewriteResultSchema = Schema.Struct({
+  isApplied: Schema.Boolean,
+  layerText: Schema.String,
+  mode: TextRewriteModeSchema,
+  model: Schema.String,
+  options: Schema.Array(Schema.String),
+  versionId: Schema.NullOr(Schema.String),
+});
+
 export {
+  TEXT_REWRITE_MODES,
+  TextRewriteLanguageSchema,
+  TextRewriteLayerSchema,
+  TextRewriteModeSchema,
+  TextRewriteResultSchema,
+  TextRewriteShouldApplySchema,
   TextIdsSchema,
   TextLimitSchema,
   TextQueryFields,

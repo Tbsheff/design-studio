@@ -1,7 +1,12 @@
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import type { ReactElement } from "react";
 
-import { FillSlot, MotionSlot, TextStyleSlot } from "../../inspector-slots.js";
+import {
+  FillSlot,
+  MotionSlot,
+  TextRewriteSlot,
+  TextStyleSlot,
+} from "../../inspector-slots.js";
 import { BackgroundField } from "./background-field.js";
 import type { SimpleEditorProps, SimpleEditorState } from "./simple-model.js";
 import { SimpleSections } from "./simple-sections.js";
@@ -21,11 +26,20 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
   const textStyle = useMemo(
     () =>
       directionId && (
-        <TextStyleSlot
-          projectId={projectId}
-          directionId={directionId}
-          targets={targets}
-        />
+        <>
+          <TextStyleSlot
+            projectId={projectId}
+            directionId={directionId}
+            targets={targets}
+          />
+          <Suspense fallback={null}>
+            <TextRewriteSlot
+              projectId={projectId}
+              directionId={directionId}
+              targets={targets}
+            />
+          </Suspense>
+        </>
       ),
     [projectId, directionId, targets]
   );

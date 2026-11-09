@@ -361,3 +361,90 @@
 .tk-lint-more:hover {
   text-decoration: underline;
 }
+
+.eyedrop {
+  display: inline-flex;
+  flex: none;
+}
+
+.eyedrop-button {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.eyedrop-button:hover {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.eyedrop-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.eyedrop-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+  padding: 4px;
+}
+
+.eyedrop-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eyedrop-option,
+.eyedrop-hex {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  height: 28px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  text-align: start;
+  cursor: pointer;
+}
+
+.eyedrop-option.active,
+.eyedrop-option:hover,
+.eyedrop-hex:hover {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.eyedrop-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eyedrop-delta {
+  flex: none;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.eyedrop-hex code {
+  margin-inline-start: auto;
+  font-family: var(--mono);
+  color: var(--text-3);
+}

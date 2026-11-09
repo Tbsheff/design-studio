@@ -12,6 +12,32 @@ import { usePanelMenu } from "./use-panel-menu.js";
 const STATE_TIP =
   "Preview state: signed in, empty, loading, error or mock data";
 
+const toChipPart = (isSet: boolean, isMissed: boolean): string => {
+  let part = "";
+
+  if (isSet) {
+    part = " set";
+  }
+
+  if (isMissed) {
+    part = `${part} warn`;
+  }
+
+  return part;
+};
+
+const toChipTip = (isOpen: boolean, missed: readonly number[]): string => {
+  if (isOpen) {
+    return "";
+  }
+
+  if (missed.length > 0) {
+    return toMissedText(missed);
+  }
+
+  return STATE_TIP;
+};
+
 const stopKeys = (event: KeyboardEvent<HTMLElement>): void =>
   event.stopPropagation();
 
@@ -40,24 +66,8 @@ const FrameStateMenu = ({
   const set = chosen !== "default";
   const missed = allMissed[chosen] ?? [];
   const isMissed = missed.length > 0;
-  let part = "";
-  let datatip = "";
-
-  if (set) {
-    part = " set";
-  }
-
-  if (isMissed) {
-    part = `${part} warn`;
-  }
-
-  if (!menu.open) {
-    datatip = STATE_TIP;
-  }
-
-  if (!menu.open && isMissed) {
-    datatip = toMissedText(missed);
-  }
+  const part = toChipPart(set, isMissed);
+  const datatip = toChipTip(menu.open, missed);
 
   return (
     <div className="frame-menu-root frame-state-root" ref={root}>

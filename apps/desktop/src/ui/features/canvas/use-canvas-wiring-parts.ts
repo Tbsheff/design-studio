@@ -39,7 +39,7 @@ const useLofiSwitch = (
 const useOutlineSwitch = (props: ViewProps, text: StageState): OutlineSwitch =>
   useOutlineView(text.stageRef, props.kind, props.directionId, props.projectId);
 
-const useOpenStepsSync = (props: ViewProps, text: StageState): void =>
+const useStageOpenSteps = (props: ViewProps, text: StageState): void =>
   useOpenSteps(text.stageRef, props.kind, props.directionId, props.selection);
 
 const useFrameChangeReset = (props: ViewProps, text: StageState): void => {
@@ -60,6 +60,6 @@ const useFrameChangeReset = (props: ViewProps, text: StageState): void => {
 export {
   useFrameChangeReset,
   useLofiSwitch,
-  useOpenStepsSync,
+  useStageOpenSteps,
   useOutlineSwitch,
 };

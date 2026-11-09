@@ -26,7 +26,7 @@ const toChipLabel = (count: number): string => `${COPY.usageUnused} (${count})`;
 const toCountTip = (usage: TokenUsageView): string =>
   `${COPY.usageCountTip}. ${usage.useCount}${COPY.usageTimesSuffix}${usage.fileCount}${COPY.usageFilesSuffix}`;
 
-const SHORT_PATH_PARTS = 2;
+const SHORT_PATH_PARTS = 1;
 
 const toSitePlace = (site: TokenUsageSite): string =>
   `${site.file}:${site.line}`;

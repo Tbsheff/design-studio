@@ -77,7 +77,9 @@ const toStyleChange = (
   values: Partial<StyleValues>,
   next: TruncateState
 ): Partial<StyleValues> => {
-  const isBox = values.display === "-webkit-box";
+  const isBox =
+    values.display === "-webkit-box" ||
+    toTruncateState(values).lines > MIN_LINES;
 
   if (!next.isOn) {
     const cleared: Partial<StyleValues> = {

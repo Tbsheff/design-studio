@@ -30,7 +30,12 @@ const renameToken = defineAction({
     ...TokenRenameFields,
     projectId: ProjectIdSchema,
   }),
-  invalidates: ["token.listUsage", "token.listClasses", "version.list"],
+  invalidates: [
+    "direct-edit.getDesignSystem",
+    "token.listClasses",
+    "token.listUsage",
+    "version.list",
+  ],
   mcp: { name: "rename_token" },
   needs: "project.update",
   output: TokenRenamedSchema,

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { COPY } from "./copy.js";
 import { TokenAliasChip } from "./token-alias-chip.js";
 import { toTokenTitle } from "./token-row-model.js";
+import { TokenRowTools } from "./token-row-tools.js";
 import type { TokenRowProps } from "./token-row-types.js";
 import { TokenUsageCount } from "./token-usage-count.js";
 
@@ -56,6 +57,7 @@ const TokenRowHead = ({
       </span>
       <TokenAliasChip value={row.shown.value} swatch={swatch} />
       <TokenUsageCount name={entry.cssVar} />
+      <TokenRowTools name={entry.cssVar} />
       {isChanged && (
         <button
           type="button"

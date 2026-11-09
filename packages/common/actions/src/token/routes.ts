@@ -8,7 +8,12 @@ const routes = {
   },
   deleteToken: {
     id: "token.delete",
-    invalidates: ["token.listUsage", "token.listClasses", "version.list"],
+    invalidates: [
+      "direct-edit.getDesignSystem",
+      "token.listClasses",
+      "token.listUsage",
+      "version.list",
+    ],
     method: "DELETE",
     path: "/api/projects/:projectId/d/:directionId/tokens/delete",
   },
@@ -32,7 +37,12 @@ const routes = {
   },
   renameToken: {
     id: "token.rename",
-    invalidates: ["token.listUsage", "token.listClasses", "version.list"],
+    invalidates: [
+      "direct-edit.getDesignSystem",
+      "token.listClasses",
+      "token.listUsage",
+      "version.list",
+    ],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/tokens/rename",
   },

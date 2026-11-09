@@ -11,6 +11,7 @@ import {
   toUsageMap,
 } from "./token-usage-model.js";
 import type { TokenUsageView } from "./token-usage-model.js";
+import { useTokenScope } from "./use-token-scope.js";
 
 interface TokenUsageSetup {
   readonly directionId: string | null;
@@ -74,9 +75,11 @@ const useTokenUsage = (setup: TokenUsageSetup): TokenUsage => {
     [usages]
   );
 
+  const scope = useTokenScope(directionId, projectId);
+
   const lookup = useMemo(
-    () => ({ onSelectSite, usageOf }),
-    [onSelectSite, usageOf]
+    () => ({ onSelectSite, scope, usageOf }),
+    [onSelectSite, scope, usageOf]
   );
 
   const filterEntries = useCallback(

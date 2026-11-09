@@ -1241,3 +1241,21 @@ dialog.code-edit {
 .code-edit-note {
   margin: 0 auto 0 0;
 }
+
+.edit-pane .ins-numbers {
+  gap: var(--s-1);
+}
+
+.edit-pane .ins-numbers > :not(.ins-scrub):not(button) {
+  flex: 1;
+  min-width: 0;
+}
+
+.edit-pane .ins-numbers > button {
+  flex: 0 0 28px;
+  font-variant-numeric: slashed-zero;
+}
+
+.edit-pane .ins-numbers > button.on {
+  color: var(--accent);
+}

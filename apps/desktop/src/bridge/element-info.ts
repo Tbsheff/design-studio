@@ -66,6 +66,7 @@ const STYLE_KEYS = [
   "-webkit-line-clamp",
   "-webkit-box-orient",
   "aspect-ratio",
+  "font-variant-numeric",
 ];
 
 const MAX_SELECTOR_DEPTH = 8;

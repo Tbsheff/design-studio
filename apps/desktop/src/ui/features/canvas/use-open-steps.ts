@@ -70,6 +70,10 @@ const useOpenSteps = (
 
       sent.current.set(element, key);
       postToFrame(frame, { steps, type: "open-steps" });
+
+      if (steps.length === 0) {
+        setMissed(toStateId(frame.url) ?? "", []);
+      }
     },
     [view]
   );

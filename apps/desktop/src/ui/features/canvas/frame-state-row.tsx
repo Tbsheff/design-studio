@@ -3,7 +3,7 @@ import type { FrameStateDef } from "@design-studio/contracts/frame-state";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { toRuleCount } from "./frame-state-ui-model.js";
+import { toStateMeta } from "./frame-state-ui-model.js";
 
 const FrameStateRow = ({
   isChosen,
@@ -28,9 +28,7 @@ const FrameStateRow = ({
     >
       <span>{state.name}</span>
       {state.kind === "mock" && (
-        <span className="ui-menu-meta">
-          {toRuleCount(state.mocks?.length ?? 0)}
-        </span>
+        <span className="ui-menu-meta">{toStateMeta(state)}</span>
       )}
     </button>
   );

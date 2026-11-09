@@ -33,7 +33,6 @@ class BatchReader {
   private readonly cwd: string;
   private readonly env: NodeJS.ProcessEnv;
   private queue: Pending[] = [];
-  private starting: Promise<ChildProcessWithoutNullStreams> | null = null;
 
   public constructor(
     binary: BinaryResolver,
@@ -67,23 +66,15 @@ class BatchReader {
     this.child = null;
   }
 
-  private start(): Promise<ChildProcessWithoutNullStreams> {
+  private async start(): Promise<ChildProcessWithoutNullStreams> {
     if (this.child) {
-      return Promise.resolve(this.child);
+      return this.child;
     }
 
-    this.starting ??= this.spawnChild();
+    const binary = await this.binary();
 
-    return this.starting;
-  }
-
-  private async spawnChild(): Promise<ChildProcessWithoutNullStreams> {
-    let binary = "";
-
-    try {
-      binary = await this.binary();
-    } finally {
-      this.starting = null;
+    if (this.child) {
+      return this.child;
     }
 
     const child = spawnPiped(binary, ["cat-file", "--batch"], {

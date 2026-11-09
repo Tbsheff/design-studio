@@ -63,7 +63,7 @@ const parseTree = (body: Buffer): TreeEntry[] => {
     const shaStart = nul + 1;
 
     if (space === -1 || nul === -1 || shaStart + SHA_BYTES > body.length) {
-      throw new Error("git tree object is malformed");
+      break;
     }
 
     entries.push({

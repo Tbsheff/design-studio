@@ -3,11 +3,12 @@ import { useEffect, useEffectEvent, useRef } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import type { HeldTool } from "../../platform/canvas-tool.js";
 import { reloadFramesMatching } from "../../platform/stage-dom.js";
 import { uiStore } from "../../platform/storage.js";
-import type { PanelTab } from "../../platform/use-panel-tab.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasTool } from "./top-bar-menu-model.js";
+import type { VectorToolId } from "./vector-tool-model.js";
 
 interface SpeedScope {
   readonly directionId: string | null;
@@ -16,13 +17,24 @@ interface SpeedScope {
   readonly projectId: string;
 }
 
+interface TopBarHosts {
+  readonly center: HTMLElement;
+  readonly end: HTMLElement;
+  readonly start: HTMLElement;
+}
+
 interface CanvasShell {
-  pane: PanelTab;
-  onPane: (tab: PanelTab) => Promise<boolean>;
+  isCommentsShown: boolean;
+  isInspectorOpen: boolean;
+  isLayersOpen: boolean;
+  onCloseLayers: () => void;
+  onComments: (isShown: boolean) => Promise<boolean>;
+  onInspector: () => Promise<boolean>;
+  onLayers: () => void;
   layersHost: HTMLElement | null;
+  pagesHost: HTMLElement | null;
+  topBar: TopBarHosts | null;
   directionName: string | null;
-  paneCollapsed: boolean;
-  onExpandPane: () => void;
   canExport: boolean;
   onExport: () => void;
   onShip?: (() => void) | null;
@@ -40,21 +52,43 @@ interface CommentTool {
   toggle: () => void;
 }
 
-const useShellState = (
+const useCommentSync = (
   shell: CanvasShell | undefined,
-  comment: CommentTool,
-  setSelectMode: SetSelectMode
+  comment: CommentTool
 ): void => {
-  const pane = shell?.pane;
   const wasOn = useRef(comment.on);
 
-  const openPane = useEffectEvent(async (): Promise<void> => {
-    const moved = await shell?.onPane("comments");
+  const showComments = useEffectEvent(async (): Promise<void> => {
+    const moved = await shell?.onComments(true);
 
     if (moved === false) {
       comment.setOn(false);
     }
   });
+
+  const hideComments = useEffectEvent((): void => {
+    void shell?.onComments(false);
+  });
+
+  useEffect(() => {
+    const before = wasOn.current;
+    wasOn.current = comment.on;
+
+    if (comment.on && !before) {
+      void showComments();
+    }
+
+    if (!comment.on && before) {
+      hideComments();
+    }
+  }, [comment.on]);
+};
+
+const useShellState = (
+  shell: CanvasShell | undefined,
+  comment: CommentTool
+): void => {
+  const isShown = shell?.isCommentsShown ?? false;
 
   const closeComment = useEffectEvent((): void => {
     if (comment.on) {
@@ -62,41 +96,24 @@ const useShellState = (
     }
   });
 
+  const prevShown = useRef(isShown);
   useEffect(() => {
-    const before = wasOn.current;
-    wasOn.current = comment.on;
+    const before = prevShown.current;
+    prevShown.current = isShown;
 
-    if (!comment.on || before) {
-      return;
-    }
-
-    openPane();
-  }, [comment.on]);
-
-  const prevPane = useRef(pane);
-  useEffect(() => {
-    const before = prevPane.current;
-    prevPane.current = pane;
-
-    if (before === pane) {
-      return;
-    }
-
-    if (pane !== "comments") {
+    if (before && !isShown) {
       closeComment();
     }
+  }, [isShown]);
 
-    if (before === "design") {
-      setSelectMode(() => true);
-    }
-  }, [pane, setSelectMode]);
+  useCommentSync(shell, comment);
 };
 
 interface ShellPaneInput {
+  readonly isPlacing: boolean;
   readonly layersOpenSetting: boolean;
   readonly live: boolean;
   readonly selectMode: boolean;
-  readonly setSelectMode: SetSelectMode;
 }
 
 interface ShellPane {
@@ -112,35 +129,33 @@ const useShellPane = (
   comment: CommentTool,
   input: ShellPaneInput
 ): ShellPane => {
-  const { layersOpenSetting, live, selectMode, setSelectMode } = input;
+  const { isPlacing, layersOpenSetting, live, selectMode } = input;
 
-  useShellState(shell, comment, setSelectMode);
-  const picking = selectMode || (shell?.pane === "design" && !comment.on);
+  useShellState(shell, comment);
+  const picking = selectMode || isPlacing;
 
   let editOpen: boolean = layersOpenSetting;
 
   if (shell) {
-    editOpen = shell.pane === "design";
+    editOpen = shell.isLayersOpen;
   }
 
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
 
   const toggleEdit = (): void => {
-    if (!shell) {
+    if (shell) {
+      shell.onLayers();
+
       return;
     }
 
-    if (shell.pane === "design") {
-      shell.onPane("chat");
-    } else {
-      shell.onPane("design");
-    }
+    uiStore.set((prev) => ({ layersOpen: !prev.layersOpen }));
   };
 
   const closeLayers = (): void => {
     if (shell) {
-      shell.onPane("chat");
+      shell.onCloseLayers();
 
       return;
     }
@@ -175,24 +190,35 @@ const fileNameOf = (
   return directionName ?? "Design";
 };
 
-const toolOf = (
-  pane: PanelTab | undefined,
-  comment: boolean,
-  proto: boolean
-): CanvasTool => {
-  if (proto) {
+interface ToolState {
+  readonly comment: boolean;
+  readonly held: HeldTool | null;
+  readonly proto: boolean;
+  readonly vector: VectorToolId | null;
+}
+
+const toVectorTool = (vector: VectorToolId): CanvasTool => {
+  if (vector === "pen") {
+    return "pen";
+  }
+
+  return "shape";
+};
+
+const toolOf = (state: ToolState): CanvasTool => {
+  if (state.proto) {
     return "prototype";
   }
 
-  if (comment) {
+  if (state.comment) {
     return "comment";
   }
 
-  if (pane === "design") {
-    return "edit";
+  if (state.vector) {
+    return toVectorTool(state.vector);
   }
 
-  return "select";
+  return state.held ?? "select";
 };
 
 const reloadFrames = (stage: HTMLElement | null): void => {
@@ -224,4 +250,6 @@ export type {
   ShellPane,
   ShellPaneInput,
   SpeedScope,
+  ToolState,
+  TopBarHosts,
 };

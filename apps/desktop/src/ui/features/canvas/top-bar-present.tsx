@@ -1,7 +1,7 @@
-import { Icon } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import { copy } from "./copy.js";
 import { DropMenu } from "./top-bar-drop.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu-model.js";
@@ -14,16 +14,13 @@ const TopBarPresent = ({ present }: { present: MenuEntry[] }): ReactElement => {
 
   return (
     <DropMenu
-      label="Present"
-      triggerClass="btn ghost topbar-present"
-      anchorClass="topbar-fold-wide"
+      label={copy.present}
+      triggerClass="topbar-text-btn topbar-present"
       groups={groups}
       align="end"
-      tip="Present"
+      tip={tipWithKey(copy.present, "present")}
     >
-      <Icon name="play" size={14} />
       <span className="topbar-label">{copy.present}</span>
-      <Icon name="chevronDown" size={12} />
     </DropMenu>
   );
 };

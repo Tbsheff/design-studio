@@ -1,5 +1,4 @@
 import { toReason, withDisabled } from "./command-disabled.js";
-import type { PanelTab } from "./deps.js";
 import {
   DEV_STATUS_MARK_COMMAND,
   DEV_STATUS_MARK_EVENT,
@@ -8,24 +7,16 @@ import {
   IMPACT_OPEN_COMMAND,
   IMPACT_OPEN_EVENT,
   findElement,
+  requestProjectRename,
 } from "./deps.js";
+import { panelCommands } from "./panel-commands.js";
 import type { Command } from "./registry.js";
 import type { StudioActions } from "./studio-actions.js";
 import { moveRegion } from "./studio-regions.js";
+import { toolCommands } from "./tool-commands.js";
 
 const MIN_DIRECTIONS = 2;
 const COMPOSER_SELECTOR = '.prompt [data-slot="composer-input"]';
-
-const PANELS: { icon: Command["icon"]; tab: PanelTab; title: string }[] = [
-  { icon: "chat", tab: "chat", title: "Show Chat" },
-  { icon: "pointer", tab: "design", title: "Edit mode: inspector and layers" },
-  { icon: "comment", tab: "comments", title: "Show Comments" },
-  { icon: "history", tab: "versions", title: "Show Versions" },
-  { icon: "token", tab: "tokens", title: "Show Tokens" },
-  { icon: "component", tab: "components", title: "Show Components" },
-  { icon: "sliders", tab: "tweaks", title: "Show Tweaks" },
-  { icon: "palette", tab: "system", title: "Show Design system" },
-];
 
 const idle = (): void => globalThis.console.debug("idle");
 
@@ -119,6 +110,33 @@ const goCommands = (studioActions: StudioActions): Command[] => {
   ];
 };
 
+const projectCommands = (studioActions: StudioActions): Command[] => [
+  {
+    group: "Go",
+    icon: "pencil",
+    id: "project.rename",
+    keywords: "name title project",
+    run: requestProjectRename,
+    title: "Rename project",
+  },
+  {
+    group: "Go",
+    icon: "copy",
+    id: "project.duplicate",
+    keywords: "copy clone project",
+    run: studioActions.onDuplicate,
+    title: "Duplicate project",
+  },
+  {
+    group: "Go",
+    icon: "trash",
+    id: "project.trash",
+    keywords: "delete remove project",
+    run: studioActions.onTrash,
+    title: "Move project to trash",
+  },
+];
+
 const directionCommands = (studioActions: StudioActions): Command[] =>
   studioActions.directions.flatMap((direction) => {
     if (direction.id === studioActions.directionId) {
@@ -136,16 +154,6 @@ const directionCommands = (studioActions: StudioActions): Command[] =>
       },
     ];
   });
-
-const panelCommands = (studioActions: StudioActions): Command[] =>
-  PANELS.map((part) => ({
-    group: "Panels",
-    icon: part.icon,
-    id: `panel.${part.tab}`,
-    keywords: "tab side panel pane mode sheet",
-    run: () => studioActions.onPanel(part.tab),
-    title: part.title,
-  }));
 
 const toStatesReason = (studioActions: StudioActions): string | null => {
   if (studioActions.running) {
@@ -291,8 +299,10 @@ const impactCommands = (): Command[] => [
 
 const studioCommands = (studioActions: StudioActions): Command[] => [
   ...goCommands(studioActions),
+  ...projectCommands(studioActions),
   ...directionCommands(studioActions),
   ...panelCommands(studioActions),
+  ...toolCommands(),
   ...runCommands(studioActions),
   ...versionCommands(studioActions),
   ...devStatusCommands(),

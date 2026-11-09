@@ -1,5 +1,3 @@
-import type { PanelTab } from "../../platform/use-panel-tab";
-
 interface StudioPaneHeaderProps {
   name: string;
   kindLabel: string;
@@ -7,19 +5,12 @@ interface StudioPaneHeaderProps {
   connection: string;
   actionError: string | null;
   onDismissError: () => void;
-  tab: PanelTab;
-  onTab: (tab: PanelTab) => void;
-  hasTokens: boolean;
-  hasComponents: boolean;
-  hasTweaks: boolean;
-  commentCount: number;
   onRename: (name: string) => Promise<void>;
   onExit: () => void;
   onDesignMd: () => void;
   onDuplicate: () => void;
   onTrash: () => void;
   onSettings: () => void;
-  onCollapse: () => void;
 }
 
 export type { StudioPaneHeaderProps };

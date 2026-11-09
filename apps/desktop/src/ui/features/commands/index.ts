@@ -28,6 +28,7 @@ export { focusNewProject, runThemeCommand } from "./global-commands.js";
 
 export {
   IS_MAC,
+  commandBlocker,
   openLayer,
   runCommand,
   tipWithKey,

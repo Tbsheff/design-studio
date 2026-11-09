@@ -2,6 +2,7 @@ import { selectMoveOf } from "@design-studio/contracts";
 import type { SelectionContext } from "@design-studio/contracts";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
+import { heldTool } from "../../platform/canvas-tool.js";
 import { findElement } from "../../platform/find-element.js";
 import { canvasHasKeys } from "../../platform/typing-target.js";
 import type { CanvasShell } from "./canvas-shell.js";
@@ -43,6 +44,7 @@ const routeSelectKey = (
 
   if (isSelectToggleKey(event)) {
     event.preventDefault();
+    heldTool.set(null);
     handlers.setSelectMode(() => true);
 
     return;
@@ -58,6 +60,7 @@ const routeSelectKey = (
     return;
   }
 
+  heldTool.set(null);
   handlers.setSelectMode(() => true);
   handlers.onEscape();
 };
@@ -181,7 +184,7 @@ const forwardLayoutKeyWhenShown = (): void => {
   wait();
 };
 
-type OpenEdit = () => ReturnType<CanvasShell["onPane"]>;
+type OpenEdit = () => ReturnType<CanvasShell["onInspector"]>;
 
 const useLayoutKeyFallback = (optionsValue: {
   on: boolean;
@@ -255,8 +258,8 @@ interface StageKeys {
 }
 
 const editOpener = (shell: CanvasShell | undefined): OpenEdit | null => {
-  if (shell && shell.pane !== "design") {
-    return () => shell.onPane("design");
+  if (shell && !shell.isInspectorOpen) {
+    return shell.onInspector;
   }
 
   return null;

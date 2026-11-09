@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
+import { heldTool } from "../../platform/canvas-tool.js";
+import { useLive } from "../../platform/live-store.js";
 import { useUi } from "../../platform/storage.js";
 import { useFirstBuildGate } from "../chat/use-first-build.js";
 import { useCommentMode } from "../comments/use-comment-mode.js";
@@ -153,11 +155,13 @@ const useStageModes = (props: ViewProps, view: StageViewport): StageModes => {
   const commentMode = comment.on;
   const live = props.source.kind === "live";
 
+  const held = useLive(heldTool);
+
   const pane = useShellPane(props.shell, comment, {
+    isPlacing: held === "frame" || held === "text",
     layersOpenSetting: ui.layersOpen,
     live,
     selectMode,
-    setSelectMode,
   });
 
   const [protoOn, setProtoOn] = useState(false);
@@ -173,10 +177,6 @@ const useStageModes = (props: ViewProps, view: StageViewport): StageModes => {
 
     comment.setOn(false);
     setSelectMode(() => false);
-
-    if (props.shell?.pane === "design") {
-      void props.shell.onPane("chat");
-    }
   };
 
   const draw = useCanvasDraw(comment, picking, setSelectMode);

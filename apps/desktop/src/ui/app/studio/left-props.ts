@@ -4,7 +4,6 @@ import type { ComponentProps } from "react";
 import { api } from "../../api";
 import { shownPending } from "../../features/chat/run-state-model";
 import { toFixPrompt } from "../../features/review/index";
-import { uiStore } from "../../platform/storage";
 import type { LeftPane } from "../shell/left-pane";
 import type { StudioPaneHeader } from "../shell/studio-pane-header";
 import { kindLabel, nameOf } from "./project-model";
@@ -18,20 +17,15 @@ type LeftProps = ComponentProps<typeof LeftPane>;
 const headerProps = (
   ctx: StudioCtx
 ): ComponentProps<typeof StudioPaneHeader> => {
-  const { projectId, project, ui, panes, core, onExit } = ctx;
-  const { data, comments } = core;
+  const { projectId, project, ui, core, onExit } = ctx;
+  const { data } = core;
 
   return {
     actionError: ui.actionError,
-    commentCount: comments.queued.length,
     connection: data.connection,
     directionName: nameOf(core.direction),
-    hasComponents: true,
-    hasTokens: core.studioTokens.panel !== null,
-    hasTweaks: true,
     kindLabel: kindLabel(project),
     name: project.name,
-    onCollapse: (): void => uiStore.set({ paneCollapsed: true }),
     onDesignMd: (): void => ui.setDesignOpen(true),
     onDismissError: (): void => ui.setActionError(null),
     onDuplicate: (): void => {
@@ -46,14 +40,12 @@ const headerProps = (
         data.setProject(await api.renameProject(projectId, name))
       ),
     onSettings: (): void => ui.setSettingsOpen(true),
-    onTab: panes.showPane,
     onTrash: (): void => {
       void ui.act(async (): Promise<void> => {
         await api.trashProject(projectId);
         onExit();
       });
     },
-    tab: panes.panel.tab,
   };
 };
 
@@ -129,23 +121,10 @@ const promptProps = (ctx: StudioCtx): LeftProps["prompt"] => {
   };
 };
 
-const tweaksProps = (ctx: StudioCtx): LeftProps["tweaks"] => ({
-  draft: ctx.core.tweaks,
-  isRunning: ctx.core.activeRun !== null,
-  onSuggest: (): Promise<void> => ctx.run.suggestTweaks(),
-});
-
 const detailsProps = (ctx: StudioCtx): LeftProps["details"] => ({
   onClose: (): void => ctx.ui.setDetailsRunId(null),
   projectId: ctx.projectId,
   run: runById(ctx.core.runs, ctx.ui.detailsRunId),
 });
 
-export {
-  chatProps,
-  detailsProps,
-  errorsProps,
-  headerProps,
-  promptProps,
-  tweaksProps,
-};
+export { chatProps, detailsProps, errorsProps, headerProps, promptProps };

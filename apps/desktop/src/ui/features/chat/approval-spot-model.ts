@@ -23,21 +23,12 @@ const subscribe = (listener: () => void): (() => void) => {
   };
 };
 
-const useInlineApprovals = (
-  projectId: string,
-  paneCollapsed: boolean,
-  tab: string
-): void => {
-  const shown = !paneCollapsed && tab === "chat";
+const useInlineApprovals = (projectId: string): void => {
   useEffect(() => {
-    if (shown) {
-      setInline(projectId);
-    } else {
-      setInline(null);
-    }
+    setInline(projectId);
 
     return (): void => setInline(null);
-  }, [projectId, shown]);
+  }, [projectId]);
 };
 
 const useInlineApprovalProject = (): string | null =>

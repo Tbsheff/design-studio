@@ -4,17 +4,29 @@ import type { ComponentProps } from "react";
 import { api } from "../../api";
 import { componentMention } from "../../features/chat/use-mentions";
 import { runCommand } from "../../features/commands";
+import type { CommentsPanel } from "../../features/comments/index.js";
 import { applyCommit } from "../../features/inspector/index.js";
+import type { Inspector } from "../../features/inspector/index.js";
+import type { VersionsPanel } from "../../features/versions-layers-tokens/index.js";
 import { renameVersion } from "../../features/versions-layers-tokens/versions-api";
 import { focusComposer } from "../../platform/focus";
+import type { ColumnTab } from "../../platform/panel-tab";
 import type { DraftStore } from "../../platform/storage";
-import type { LeftPane } from "../shell/left-pane";
+import type { ComponentsPanel } from "../components-panel-host";
 import { appDirOf } from "./project-model";
 import type { StudioCtx } from "./studio-context";
 
-type LeftProps = ComponentProps<typeof LeftPane>;
+interface LeftProps {
+  readonly comments: ComponentProps<typeof CommentsPanel>;
+  readonly components: ComponentProps<typeof ComponentsPanel>;
+  readonly inspector: ComponentProps<typeof Inspector>;
+  readonly versions: ComponentProps<typeof VersionsPanel>;
+}
 
 const COMPARE_LIMIT = 2;
+
+const isColumnShown = (ctx: StudioCtx, tab: ColumnTab): boolean =>
+  ctx.ui.editorColumn.isOpen && ctx.ui.editorColumn.tab === tab;
 
 const askAgent = async (
   prompt: string,
@@ -78,8 +90,7 @@ const inspectorProps = (ctx: StudioCtx): LeftProps["inspector"] => {
     control: ui.editControl,
     directionId: core.directionId,
     isEditable: panes.editable,
-    isSelectMode: panes.panel.tab === "design",
-    layers: <div className="edit-layers-host" ref={ui.setLayersHost} />,
+    isSelectMode: panes.isInspectorOpen,
     notice: ui.staleNotice,
     onAskAgent: (prompt: string): Promise<void> =>
       askAgent(prompt, ui.draft, (): Promise<boolean> =>
@@ -89,7 +100,7 @@ const inspectorProps = (ctx: StudioCtx): LeftProps["inspector"] => {
       ui.setSelection((prev): SelectionContext[] => applyCommit(prev, commit));
       port.current?.refreshRects();
     },
-    onExit: (): void => panes.panel.choose("chat"),
+    onExit: (): void => ui.setSelection([]),
     onSelectMode: selectMode,
     onTab: ui.setInspectorTab,
     port: ui.port,
@@ -140,7 +151,7 @@ const componentsProps = (
   const { project, ui, panes, core } = ctx;
 
   return {
-    active: panes.panel.tab === "components",
+    active: isColumnShown(ctx, "components"),
     directionId: core.directionId,
     kind: project.kind,
     list: core.componentList,
@@ -212,11 +223,11 @@ const versionsActions = (ctx: StudioCtx): Partial<LeftProps["versions"]> => {
 };
 
 const versionsProps = (ctx: StudioCtx): LeftProps["versions"] => {
-  const { projectId, ui, panes, core, run } = ctx;
+  const { projectId, ui, core, run } = ctx;
   const { data, guard } = core;
 
   return {
-    active: panes.panel.tab === "versions",
+    active: isColumnShown(ctx, "versions"),
     busy: ui.busy,
     compare: ui.compare.map((entry): string => entry.id),
     directionId: core.directionId,

@@ -27,7 +27,10 @@ const toSlot = (marker: HTMLElement | null): HTMLElement | null => {
     return null;
   }
 
-  return findElement(canvas, SLOT_SELECTOR);
+  return (
+    findElement(canvas, SLOT_SELECTOR) ??
+    findElement(document.body, SLOT_SELECTOR)
+  );
 };
 
 const useReviewSlot = (): ReviewSlot => {

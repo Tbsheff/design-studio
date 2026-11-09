@@ -23,6 +23,7 @@ import {
 import type { DraftStore } from "../../platform/storage";
 import type {
   StudioActing,
+  StudioLayout,
   StudioOpen,
   StudioRefs,
   StudioUi,
@@ -79,6 +80,32 @@ const useStudioOpen = (): StudioOpen => {
   };
 };
 
+const useStudioLayout = (): StudioLayout => {
+  const [topStart, setTopStart] = useState<HTMLDivElement | null>(null);
+  const [topCenter, setTopCenter] = useState<HTMLDivElement | null>(null);
+  const [topEnd, setTopEnd] = useState<HTMLDivElement | null>(null);
+  const [pagesHost, setPagesHost] = useState<HTMLDivElement | null>(null);
+  const [isInspectorHidden, setIsInspectorHidden] = useState(false);
+  const [isCommentsShown, setIsCommentsShown] = useState(false);
+  const { editorColumn } = useUi();
+
+  return {
+    editorColumn,
+    isCommentsShown,
+    isInspectorHidden,
+    pagesHost,
+    setIsCommentsShown,
+    setIsInspectorHidden,
+    setPagesHost,
+    setTopCenter,
+    setTopEnd,
+    setTopStart,
+    topCenter,
+    topEnd,
+    topStart,
+  };
+};
+
 const useStudioAct = (): StudioActing => {
   const [busy, startAct] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -100,12 +127,13 @@ const useStudioState = (): StudioUi => {
   const refs = useStudioRefs();
   const open = useStudioOpen();
   const acting = useStudioAct();
+  const layout = useStudioLayout();
   const [selection, setSelection] = useState<SelectionContext[]>([]);
   const draft = useMemo((): DraftStore => createDraftStore(), []);
   const composerActive = useDraftActive(draft);
   const [source, setSource] = useState<CanvasSource>({ kind: "live" });
   const [staleNotice, setStaleNotice] = useState<string | null>(null);
-  const { chatWidth, paneCollapsed } = useUi();
+  const { chatWidth } = useUi();
   const [layersHost, setLayersHost] = useState<HTMLDivElement | null>(null);
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("simple");
   const [prefill, setPrefill] = useState<PrefillRequest | null>(null);
@@ -120,13 +148,13 @@ const useStudioState = (): StudioUi => {
     ...refs,
     ...open,
     ...acting,
+    ...layout,
     chatWidth,
     composerActive,
     draft,
     inspectorTab,
     layersHost,
     mentionRequest,
-    paneCollapsed,
     prefill,
     rail,
     selection,

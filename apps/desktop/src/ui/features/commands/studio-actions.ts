@@ -1,4 +1,4 @@
-import type { PanelTab } from "./deps.js";
+import type { ColumnTab, PanelTab } from "./deps.js";
 
 interface StudioActions {
   canRedo: boolean;
@@ -8,8 +8,11 @@ interface StudioActions {
   exportId: string | null;
   onDesignMd: () => void;
   onDirection: (id: string) => void;
+  onDuplicate: () => void;
   onExport: (versionId: string) => void;
   onHome: () => void;
+  onColumn: (tab: ColumnTab) => void;
+  onInspector: () => void;
   onMakeStates: (() => void) | null;
   onPanel: (tab: PanelTab) => void;
   onPolish: () => void;
@@ -17,6 +20,7 @@ interface StudioActions {
   onSettings: () => void;
   onShip: (() => void) | null;
   onStop: () => void;
+  onTrash: () => void;
   onUndo: () => void;
   running: boolean;
 }

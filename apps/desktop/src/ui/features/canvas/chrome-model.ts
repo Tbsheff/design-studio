@@ -1,15 +1,18 @@
+import { heldTool } from "../../platform/canvas-tool.js";
+import type { HeldTool } from "../../platform/canvas-tool.js";
 import type { ChromeProps } from "./canvas-chrome-menu.js";
-import type { CanvasShell } from "./canvas-shell.js";
+import type { CanvasShell, TopBarHosts } from "./canvas-shell.js";
 import type { CanvasTool, PresentMode } from "./top-bar-menu-model.js";
+import { vectorTool } from "./vector-tool-model.js";
+import type { VectorToolId } from "./vector-tool-model.js";
 
 interface BarShell {
   readonly canExport: boolean;
   readonly directionName: string | null;
-  readonly onExpandPane: () => void;
   readonly onExport: () => void;
   readonly onShareLink: ((mode?: "link" | "publish") => void) | null;
   readonly onShip: (() => void) | null;
-  readonly paneCollapsed: boolean;
+  readonly topBar: TopBarHosts | null;
 }
 
 const noop = (): null => null;
@@ -19,48 +22,70 @@ const toBarShell = (shell: CanvasShell | undefined): BarShell => {
     return {
       canExport: false,
       directionName: null,
-      onExpandPane: noop,
       onExport: noop,
       onShareLink: null,
       onShip: null,
-      paneCollapsed: false,
+      topBar: null,
     };
   }
 
   return {
     canExport: shell.canExport,
     directionName: shell.directionName,
-    onExpandPane: shell.onExpandPane,
     onExport: shell.onExport,
     onShareLink: shell.onShareLink ?? null,
     onShip: shell.onShip ?? null,
-    paneCollapsed: shell.paneCollapsed,
+    topBar: shell.topBar,
   };
 };
 
 const isViewOpen = (chrome: ChromeProps): boolean =>
   chrome.ui.viewRowOpen || chrome.view.source.kind === "version";
 
-const runEditTool = (chrome: ChromeProps, leavingProto: boolean): void => {
-  const { shell } = chrome;
+const clearTools = (chrome: ChromeProps): void => {
+  chrome.proto.set(false);
+  chrome.comment.setOn(false);
+  vectorTool.set(null);
+  heldTool.set(null);
+};
 
-  if (leavingProto && shell?.pane === "design") {
-    return;
+const runVectorTool = (chrome: ChromeProps, tool: VectorToolId): void => {
+  const isOn = vectorTool.get().tool === tool;
+
+  clearTools(chrome);
+
+  if (!isOn) {
+    vectorTool.set(tool);
   }
+};
 
-  chrome.toggleEdit();
+const runHeldTool = (chrome: ChromeProps, tool: HeldTool): void => {
+  const isOn = heldTool.get() === tool;
+
+  clearTools(chrome);
+  chrome.setSelectMode(() => true);
+
+  if (!isOn) {
+    heldTool.set(tool);
+  }
+};
+
+const runPrototypeTool = (chrome: ChromeProps): void => {
+  const isOn = chrome.proto.on;
+
+  clearTools(chrome);
+  chrome.proto.set(!isOn);
+};
+
+const runCommentTool = (chrome: ChromeProps): void => {
+  chrome.proto.set(false);
+  vectorTool.set(null);
+  heldTool.set(null);
+  chrome.comment.toggle();
 };
 
 const runSelectTool = (chrome: ChromeProps): void => {
-  const { shell } = chrome;
-  const editing = shell?.pane === "design";
-
-  chrome.comment.setOn(false);
-
-  if (editing) {
-    shell?.onPane("chat");
-  }
-
+  clearTools(chrome);
   chrome.setSelectMode(() => true);
 };
 
@@ -68,22 +93,42 @@ const runTool = (
   chrome: ChromeProps,
   next: Exclude<CanvasTool, null>
 ): void => {
-  if (next === "prototype") {
-    chrome.proto.set(!chrome.proto.on);
+  switch (next) {
+    case "prototype": {
+      runPrototypeTool(chrome);
 
-    return;
-  }
+      return;
+    }
 
-  const leavingProto = chrome.proto.on;
+    case "comment": {
+      runCommentTool(chrome);
 
-  chrome.proto.set(false);
+      return;
+    }
 
-  if (next === "comment") {
-    chrome.comment.toggle();
-  } else if (next === "edit") {
-    runEditTool(chrome, leavingProto);
-  } else {
-    runSelectTool(chrome);
+    case "shape": {
+      runVectorTool(chrome, "rect");
+
+      return;
+    }
+
+    case "pen": {
+      runVectorTool(chrome, "pen");
+
+      return;
+    }
+
+    case "hand":
+    case "frame":
+    case "text": {
+      runHeldTool(chrome, next);
+
+      return;
+    }
+
+    default: {
+      runSelectTool(chrome);
+    }
   }
 };
 

@@ -12,6 +12,19 @@ import { moveRegion } from "./studio-regions.js";
 
 const KEYED: [KeyId, string][] = [
   ["home", "go.home"],
+  ["tool-hand", "tool.hand"],
+  ["tool-frame", "tool.frame"],
+  ["tool-text", "tool.text"],
+  ["tool-link", "tool.prototype"],
+  ["layers", "panel.layers"],
+  ["column-pages", "panel.pages"],
+  ["column-assets", "panel.assets"],
+  ["column-versions", "panel.versions"],
+  ["column-tokens", "panel.tokens"],
+  ["column-components", "panel.components"],
+  ["column-system", "panel.system"],
+  ["inspector", "panel.inspector"],
+  ["present", "present.window"],
   ["settings", "project.settings"],
   ["next-direction", "direction.next"],
   ["prev-direction", "direction.prev"],
@@ -29,7 +42,10 @@ const isRegionKey = (event: KeyboardEvent): boolean =>
   event.key === "F6" && !event.metaKey && !event.ctrlKey && !event.altKey;
 
 const isBlockedTyping = (event: KeyboardEvent): boolean =>
-  isTypingTarget(event.target) && !event.metaKey && !event.ctrlKey;
+  isTypingTarget(event.target) &&
+  !event.metaKey &&
+  !event.ctrlKey &&
+  !event.altKey;
 
 const onStudioKey = (event: KeyboardEvent): void => {
   if (event.defaultPrevented || event.repeat) {

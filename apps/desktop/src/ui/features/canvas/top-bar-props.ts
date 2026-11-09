@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
+import type { TopBarHosts } from "./canvas-shell.js";
 import type {
   CanvasTool,
   MenuGroup,
@@ -9,13 +10,9 @@ import type {
 } from "./top-bar-menu-model.js";
 
 interface Props {
-  vectorTools?: ReactNode;
   matrix?: ReactNode;
   account?: ReactNode;
-  paneCollapsed: boolean;
-  onExpandPane: () => void;
-  onReload: () => void;
-  onAskChat: () => void;
+  hosts: TopBarHosts | null;
   fileName: string;
   fileMenu: () => MenuGroup[];
   onFileMenuOpen: () => void;
@@ -26,9 +23,8 @@ interface Props {
   onFit: () => void;
   tool: CanvasTool;
   commentAvailable: boolean;
+  vectorAvailable: boolean;
   onTool: (tool: Exclude<CanvasTool, null>) => void;
-  viewOpen: boolean;
-  onToggleView: () => void;
   onPresent: (mode: PresentMode) => void;
   presentDisabled: boolean;
   canExport: boolean;

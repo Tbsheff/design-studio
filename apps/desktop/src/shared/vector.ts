@@ -5,6 +5,12 @@ export const VECTOR_SHAPES = ["rect", "ellipse"] as const;
 
 export type VectorToolId = "rect" | "ellipse" | "pen";
 
+const VECTOR_KEYS = [
+  ["o", "ellipse"],
+  ["p", "pen"],
+  ["r", "rect"],
+] as const;
+
 export function vectorToolKeyOf(
   event: Pick<
     KeyboardEvent,
@@ -15,17 +21,13 @@ export function vectorToolKeyOf(
     return null;
   }
 
-  if (event.key === "P" && event.shiftKey) {
-    return "pen";
-  }
-
   if (event.shiftKey) {
     return null;
   }
 
   const key = event.key.toLowerCase();
 
-  return key === "r" ? "rect" : key === "o" ? "ellipse" : null;
+  return VECTOR_KEYS.find(([letter]) => letter === key)?.[1] ?? null;
 }
 
 export type VectorShape = (typeof VECTOR_SHAPES)[number];

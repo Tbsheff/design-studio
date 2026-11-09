@@ -24,6 +24,7 @@ const MenuItemButton = ({
         type="button"
         role="menuitem"
         className="ui-menu-item"
+        data-item={item.id}
         onClick={runItem}
       >
         <Icon name={item.icon} size={14} />

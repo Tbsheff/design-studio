@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import {
@@ -7,32 +7,14 @@ import {
   registerChatSearchButton,
 } from "../../features/chat/chat-search-model";
 import { useLive } from "../../platform/live-store";
-import { CommentsToggle } from "./comments-toggle";
-import { PaneHeadButton } from "./pane-head-button";
+import { copy } from "./copy";
 import { PaneHeadToggle } from "./pane-head-toggle";
 import type { StudioPaneHeaderProps } from "./pane-header-types";
-import { PaneProject } from "./pane-project";
 import { PaneStatus } from "./pane-status";
-import { RenameField } from "./rename-field";
 
 const StudioPaneHeader = (props: StudioPaneHeaderProps): ReactElement => {
-  const [renaming, setRenaming] = useState(false);
-  const { onCollapse, onRename, onTab, tab } = props;
-  const searchShown = useLive(chatSearchAvailable) && tab === "chat";
+  const searchShown = useLive(chatSearchAvailable);
   const searchOpen = useLive(chatSearchOpen);
-
-  const startRename = useCallback(() => setRenaming(true), []);
-
-  const finishRename = useCallback(
-    (next: string | null): void => {
-      setRenaming(false);
-
-      if (next) {
-        void onRename(next);
-      }
-    },
-    [onRename]
-  );
 
   const toggleSearch = useCallback(
     () => chatSearchOpen.set(!searchOpen),
@@ -41,22 +23,18 @@ const StudioPaneHeader = (props: StudioPaneHeaderProps): ReactElement => {
 
   return (
     <>
-      <header className="pane-head">
-        {renaming && <RenameField name={props.name} onDone={finishRename} />}
-        {!renaming && (
-          <PaneProject header={props} onStartRename={startRename} />
+      <header className="pane-head chat-head">
+        <h2 className="chat-head-title">{copy.chatTitle}</h2>
+        {props.directionName && (
+          <span className="chat-head-scope truncate">
+            {props.directionName}
+          </span>
         )}
+        <span className="chat-head-end" />
         <PaneStatus
           connection={props.connection}
           error={null}
           onDismiss={props.onDismissError}
-        />
-        <PaneHeadButton
-          extraClass=""
-          icon="sidebar"
-          label="Hide chat pane"
-          onClick={onCollapse}
-          tip="Hide pane"
         />
         {searchShown && (
           <PaneHeadToggle
@@ -64,12 +42,11 @@ const StudioPaneHeader = (props: StudioPaneHeaderProps): ReactElement => {
             extraClass="pane-head-search"
             icon="search"
             isPressed={searchOpen}
-            label="Search runs"
+            label={copy.searchRuns}
             onClick={toggleSearch}
-            tip="Search runs"
+            tip={copy.searchRuns}
           />
         )}
-        <CommentsToggle count={props.commentCount} onTab={onTab} tab={tab} />
       </header>
       <PaneStatus
         connection="open"

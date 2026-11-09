@@ -80,7 +80,6 @@ const sendRequest = async (job: SendJob): Promise<void> => {
 
 const startOptimistic = (
   input: StudioRunInput,
-  showChat: () => void,
   request: RunRequest,
   directionId: string
 ): RunView => {
@@ -92,13 +91,12 @@ const startOptimistic = (
   );
 
   input.core.setPendingRun(pending);
-  showChat();
 
   return pending;
 };
 
 const useStudioStart = (input: StudioRunInput): StudioStart => {
-  const { projectId, ui, panes, core } = input;
+  const { projectId, ui, core } = input;
 
   const { trackSend, ...runControls } = useRunControls(
     projectId,
@@ -106,12 +104,6 @@ const useStudioStart = (input: StudioRunInput): StudioStart => {
     ui.draft,
     ui.act
   );
-
-  const showChatAfterRun = (): void => {
-    if ((ui.editSession.current?.count ?? 0) === 0) {
-      panes.panel.show("chat");
-    }
-  };
 
   const startRun = async (
     request: RunRequest,
@@ -126,7 +118,7 @@ const useStudioStart = (input: StudioRunInput): StudioStart => {
     let pending: RunView | null = null;
 
     if (optimistic) {
-      pending = startOptimistic(input, showChatAfterRun, request, directionId);
+      pending = startOptimistic(input, request, directionId);
     }
 
     await sendRequest({
@@ -138,7 +130,6 @@ const useStudioStart = (input: StudioRunInput): StudioStart => {
     });
 
     ui.setSource({ kind: "live" });
-    showChatAfterRun();
   };
 
   return { runControls, startRun };

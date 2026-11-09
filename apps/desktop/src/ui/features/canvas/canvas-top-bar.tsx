@@ -1,12 +1,15 @@
 import { Suspense, useCallback, useMemo } from "react";
-import type { CSSProperties, ReactElement } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
+import { createPortal } from "react-dom";
 
+import type { TopBarHosts } from "./canvas-shell.js";
 import { copy } from "./copy.js";
 import { lazyPortToAppDialog, usePortDialog } from "./top-bar-drop-menu.js";
-import { TopBarEnd } from "./top-bar-end.js";
+import { TopBarFileMenu } from "./top-bar-file-menu.js";
 import type { MenuEntry, PresentMode } from "./top-bar-menu-model.js";
+import { TopBarPresent } from "./top-bar-present.js";
 import type { Props } from "./top-bar-props.js";
-import { TopBarStart } from "./top-bar-start.js";
+import { TopBarShare } from "./top-bar-share.js";
 import { TopBarTools } from "./top-bar-tools.js";
 import type { ZoomProps } from "./top-bar-zoom-model.js";
 import { ZoomPill } from "./top-bar-zoom.js";
@@ -14,12 +17,6 @@ import { ZoomPill } from "./top-bar-zoom.js";
 const CONTENTS_STYLE: CSSProperties = { display: "contents" };
 
 const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
-  {
-    icon: "link",
-    id: "play",
-    label: "Play prototype",
-    run: () => onPresent("play"),
-  },
   {
     icon: "play",
     id: "window",
@@ -38,16 +35,58 @@ const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
     label: "New window",
     run: () => onPresent("new-window"),
   },
+  {
+    icon: "link",
+    id: "play",
+    label: "Play prototype",
+    run: () => onPresent("play"),
+  },
 ];
 
 const PortToAppDialog = lazyPortToAppDialog;
+
+interface TopBarParts {
+  readonly center: ReactNode;
+  readonly end: ReactNode;
+  readonly start: ReactNode;
+}
+
+const toHosted = (
+  parts: TopBarParts,
+  hosts: TopBarHosts | null
+): ReactElement => {
+  if (hosts) {
+    return (
+      <>
+        {createPortal(parts.start, hosts.start)}
+        {createPortal(parts.center, hosts.center)}
+        {createPortal(parts.end, hosts.end)}
+      </>
+    );
+  }
+
+  return (
+    <div
+      className="toolbar canvas-topbar"
+      role="toolbar"
+      aria-label={copy.canvas}
+    >
+      {parts.start}
+      <div className="spacer" />
+      {parts.center}
+      <div className="spacer" />
+      {parts.end}
+    </div>
+  );
+};
 
 const CanvasTopBar = (props: Props): ReactElement => {
   const port = usePortDialog(!props.onShip);
   const { open: openPort, close: closePort } = port;
   const hasShip = Boolean(props.onShip);
   const openPortDialog = useCallback((): void => openPort(null), [openPort]);
-  const present = presentItems(props.onPresent);
+  const { onPresent } = props;
+  const present = useMemo(() => presentItems(onPresent), [onPresent]);
 
   const {
     onFit: fit,
@@ -74,31 +113,36 @@ const CanvasTopBar = (props: Props): ReactElement => {
     onPort = openPortDialog;
   }
 
-  return (
-    <div
-      className="toolbar canvas-topbar"
-      role="toolbar"
-      aria-label={copy.canvas}
-    >
-      <TopBarStart props={props} />
-      <div className="spacer" />
-      <ZoomPill control={zoom} />
-      <TopBarTools
-        tool={props.tool}
-        commentAvailable={props.commentAvailable}
-        onTool={props.onTool}
-      />
-      {props.vectorTools}
-      {props.matrix}
-      <span data-topbar-slot="review" style={CONTENTS_STYLE} />
-      <TopBarEnd props={props} zoom={zoom} present={present} onPort={onPort} />
-      {port.target && (
-        <Suspense fallback={null}>
-          <PortToAppDialog target={port.target} onClose={closePort} />
-        </Suspense>
-      )}
-    </div>
-  );
+  const parts: TopBarParts = {
+    center: (
+      <div className="topbar-center">
+        <TopBarTools
+          tool={props.tool}
+          commentAvailable={props.commentAvailable}
+          vectorAvailable={props.vectorAvailable}
+          onTool={props.onTool}
+        />
+        <ZoomPill control={zoom} />
+      </div>
+    ),
+    end: (
+      <>
+        {props.matrix}
+        <span data-topbar-slot="review" style={CONTENTS_STYLE} />
+        <TopBarPresent present={present} />
+        <TopBarShare props={props} onPort={onPort} />
+        {props.account}
+        {port.target && (
+          <Suspense fallback={null}>
+            <PortToAppDialog target={port.target} onClose={closePort} />
+          </Suspense>
+        )}
+      </>
+    ),
+    start: <TopBarFileMenu props={props} />,
+  };
+
+  return toHosted(parts, props.hosts);
 };
 
 export { CanvasTopBar };

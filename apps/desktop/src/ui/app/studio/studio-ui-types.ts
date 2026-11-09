@@ -14,12 +14,14 @@ import type { DirectEditControl } from "../../features/inspector/use-direct-edit
 import type { EditSessionHandle } from "../../features/inspector/use-edit-session";
 import type { ShareTarget } from "../../features/share-publish-ship-export/share-dialog";
 import type { PreviewPort } from "../../platform/bridge";
+import type {
+  ColumnTab,
+  EditorColumn,
+  PanelTab,
+} from "../../platform/panel-tab";
 import type { DraftStore } from "../../platform/storage";
-import type { usePanelTab } from "../../platform/use-panel-tab";
 
 type Setter<Result> = Dispatch<SetStateAction<Result>>;
-
-type PanelTab = Parameters<ReturnType<typeof usePanelTab>["choose"]>[0];
 
 interface StudioRefs {
   columnsRef: RefObject<HTMLDivElement | null>;
@@ -47,6 +49,22 @@ interface StudioOpen {
   shipOpen: boolean;
 }
 
+interface StudioLayout {
+  editorColumn: EditorColumn;
+  isCommentsShown: boolean;
+  isInspectorHidden: boolean;
+  pagesHost: HTMLDivElement | null;
+  setIsCommentsShown: Setter<boolean>;
+  setIsInspectorHidden: Setter<boolean>;
+  setPagesHost: Setter<HTMLDivElement | null>;
+  setTopCenter: Setter<HTMLDivElement | null>;
+  setTopEnd: Setter<HTMLDivElement | null>;
+  setTopStart: Setter<HTMLDivElement | null>;
+  topCenter: HTMLDivElement | null;
+  topEnd: HTMLDivElement | null;
+  topStart: HTMLDivElement | null;
+}
+
 interface StudioActing {
   act: <Result>(fn: () => Promise<Result>) => Promise<void>;
   actionError: string | null;
@@ -54,14 +72,13 @@ interface StudioActing {
   setActionError: Setter<string | null>;
 }
 
-interface StudioUi extends StudioRefs, StudioOpen, StudioActing {
+interface StudioUi extends StudioRefs, StudioOpen, StudioActing, StudioLayout {
   chatWidth: number | null;
   composerActive: boolean;
   draft: DraftStore;
   inspectorTab: InspectorTab;
   layersHost: HTMLDivElement | null;
   mentionRequest: MentionRequest | null;
-  paneCollapsed: boolean;
   prefill: PrefillRequest | null;
   rail: ReturnType<typeof useRail>;
   selection: SelectionContext[];
@@ -77,16 +94,23 @@ interface StudioUi extends StudioRefs, StudioOpen, StudioActing {
 }
 
 interface StudioPanes {
-  canvasPane: (tab: PanelTab) => Promise<boolean>;
+  closeColumn: () => void;
   editable: boolean;
-  panel: ReturnType<typeof usePanelTab>;
+  isInspectorOpen: boolean;
+  openColumn: (tab: ColumnTab) => void;
+  showColumn: (tab: ColumnTab) => void;
+  showComments: (isShown: boolean) => Promise<boolean>;
+  showInspector: () => Promise<boolean>;
   showPane: (tab: PanelTab) => Promise<boolean>;
+  toggleInspector: () => void;
 }
 
 export type {
+  ColumnTab,
   PanelTab,
   Setter,
   StudioActing,
+  StudioLayout,
   StudioOpen,
   StudioPanes,
   StudioRefs,

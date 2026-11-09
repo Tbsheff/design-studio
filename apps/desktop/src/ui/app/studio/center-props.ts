@@ -1,7 +1,6 @@
 import type { ComponentProps } from "react";
 
 import { canvasVariations } from "../../features/canvas";
-import { uiStore } from "../../platform/storage";
 import { useCanvasCommandsHost } from "../canvas-commands-host";
 import type { CenterView } from "../shell/center-view";
 import { nameOf } from "./project-model";
@@ -11,6 +10,8 @@ import type { StudioCtx } from "./studio-context";
 import { hasDarkMode, tokenEntries } from "./token-model";
 
 type CanvasProps = ComponentProps<typeof CenterView>["canvas"];
+
+type CanvasShell = NonNullable<CanvasProps["shell"]>;
 
 const shareKindOf = (project: StudioCtx["project"]): "site" | "viewer" => {
   if (project.kind === "html" && !project.app) {
@@ -31,30 +32,36 @@ const makeStatesOf = (
   return {};
 };
 
-const layersHostOf = (ui: StudioCtx["ui"]): HTMLDivElement | null => {
-  if (ui.paneCollapsed) {
-    return null;
+const topBarOf = (ui: StudioCtx["ui"]): CanvasShell["topBar"] => {
+  const { topCenter, topEnd, topStart } = ui;
+
+  if (topCenter && topEnd && topStart) {
+    return { center: topCenter, end: topEnd, start: topStart };
   }
 
-  return ui.layersHost;
+  return null;
 };
 
-const shellProps = (ctx: StudioCtx): CanvasProps["shell"] => {
+const shellProps = (ctx: StudioCtx): CanvasShell => {
   const { project, ui, panes, core, openShip } = ctx;
   const { direction } = core;
+  const column = ui.editorColumn;
 
   return {
     canExport: core.exporter.canOpen,
     directionName: nameOf(direction),
-    layersHost: layersHostOf(ui),
-    onAskAgent: (text: string): Promise<boolean> => {
+    isCommentsShown: ui.isCommentsShown,
+    isInspectorOpen: panes.isInspectorOpen,
+    isLayersOpen: column.isOpen && column.tab === "layers",
+    layersHost: ui.layersHost,
+    onAskAgent: (text: string): void => {
       ui.draft.set(text);
-
-      return panes.showPane("chat");
     },
-    onExpandPane: (): void => uiStore.set({ paneCollapsed: false }),
+    onCloseLayers: panes.closeColumn,
+    onComments: panes.showComments,
     onExport: core.exporter.openHead,
-    onPane: panes.canvasPane,
+    onInspector: panes.showInspector,
+    onLayers: (): void => panes.openColumn("layers"),
     onShareLink: (mode?: "link" | "publish"): void =>
       ui.setShareTarget({
         directionId: direction?.id ?? null,
@@ -64,9 +71,9 @@ const shellProps = (ctx: StudioCtx): CanvasProps["shell"] => {
         versionId: direction?.headVersionId ?? null,
       }),
     onShip: openShip,
-    pane: panes.panel.tab,
-    paneCollapsed: ui.paneCollapsed,
+    pagesHost: ui.pagesHost,
     renderSpeed: renderSpeedSlot,
+    topBar: topBarOf(ui),
   };
 };
 

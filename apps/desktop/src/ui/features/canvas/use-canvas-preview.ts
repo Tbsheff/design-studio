@@ -158,7 +158,7 @@ const useCanvasPreview = (
   const { directionId, running, selection, setSelection, shell } = props;
   const { comment, commentMode, live, picking, protoOn } = text;
   const { selectMode, setProtoOn, setSelectMode } = text;
-  const { layersOpen, toggleEdit } = text;
+  const { layersOpen } = text;
 
   const openMenu = useRef<(at: MenuPoint) => void>(() => null);
   const state = usePreviewState(props, text, openMenu);
@@ -202,7 +202,7 @@ const useCanvasPreview = (
       setProtoOn(false);
     }
   }, [selectMode, commentOn, setProtoOn]);
-  useLayersWatch(frames.watchTree, layersOpen, frames.frontToken, toggleEdit);
+  useLayersWatch(frames.watchTree, layersOpen, frames.frontToken);
   useSelectMoveKeys(picking, selection, frames.selectRelative);
   const editsEnabled = live && !running && directionId !== null;
 

@@ -8,6 +8,7 @@ const GROUPS: KeyGroup[] = [
   "General",
   "Run and chat",
   "Canvas",
+  "Panels",
   "Selection",
   "Edit",
   "Home",

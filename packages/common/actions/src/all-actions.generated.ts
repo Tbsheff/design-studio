@@ -32,6 +32,7 @@ import { IntegrationActions } from "./integration/index.js";
 import { KitDriftActions } from "./kit-drift/index.js";
 import { LayerStyleActions } from "./layer-style/index.js";
 import { MarkupActions } from "./markup/index.js";
+import { MockupActions } from "./mockup/index.js";
 import { MotionActions } from "./motion/index.js";
 import { OrgScopeActions } from "./org-scope/index.js";
 import { PackActions } from "./pack/index.js";
@@ -94,6 +95,7 @@ const ALL_ACTIONS = {
   kitDrift: KitDriftActions,
   layerStyle: LayerStyleActions,
   markup: MarkupActions,
+  mockup: MockupActions,
   motion: MotionActions,
   orgScope: OrgScopeActions,
   pack: PackActions,

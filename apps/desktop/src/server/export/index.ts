@@ -18,6 +18,10 @@ export type {
 
 export { FlowVideoStore, FlowVideoWriter } from "./flow-video/index.js";
 
+export { MockupWriter } from "./mockup/index.js";
+
 export { ScreenWriter } from "./screen/index.js";
+
+export type { MockupRequest, MockupWriterApi } from "./mockup/index.js";
 
 export type { ScreenWriterApi } from "./screen/index.js";

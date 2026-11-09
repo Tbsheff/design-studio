@@ -32,6 +32,7 @@ import { IntegrationEntries } from "../integration/handlers.js";
 import { KitDriftEntries } from "../kit-drift/handlers.js";
 import { LayerStyleEntries } from "../layer-style/handlers.js";
 import { MarkupEntries } from "../markup/handlers.js";
+import { MockupEntries } from "../mockup/handlers.js";
 import { MotionEntries } from "../motion/handlers.js";
 import { OrgScopeEntries } from "../org-scope/handlers.js";
 import { PackEntries } from "../pack/handlers.js";
@@ -94,6 +95,7 @@ const ALL_ENTRIES = {
   kitDrift: KitDriftEntries,
   layerStyle: LayerStyleEntries,
   markup: MarkupEntries,
+  mockup: MockupEntries,
   motion: MotionEntries,
   orgScope: OrgScopeEntries,
   pack: PackEntries,

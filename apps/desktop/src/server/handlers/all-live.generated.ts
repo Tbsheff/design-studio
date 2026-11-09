@@ -32,6 +32,7 @@ import { IntegrationLive } from "./integration/live.js";
 import { KitDriftLive } from "./kit-drift/live.js";
 import { LayerStyleLive } from "./layer-style/live.js";
 import { MarkupLive } from "./markup/live.js";
+import { MockupLive } from "./mockup/live.js";
 import { MotionLive } from "./motion/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
@@ -94,6 +95,7 @@ const ALL_LIVE = {
   kitDrift: KitDriftLive,
   layerStyle: LayerStyleLive,
   markup: MarkupLive,
+  mockup: MockupLive,
   motion: MotionLive,
   orgScope: OrgScopeLive,
   pack: PackLive,

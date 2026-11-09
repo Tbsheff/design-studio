@@ -146,6 +146,7 @@ const SimpleEditor = (props: SimpleEditorProps): ReactElement => {
       element={state.classes.element}
       variantScope={state.variantScope}
       tokenUi={tokens.ui}
+      edit={edit}
     >
       <SimpleEditorBody props={props} state={state} exportMenu={exportMenu} />
       <CreateTokenHost

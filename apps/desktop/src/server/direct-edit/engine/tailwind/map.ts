@@ -7,6 +7,7 @@ import type {
 } from "./classes.js";
 import { colorDistance, parseColor } from "./color.js";
 import type { ParsedColor } from "./color.js";
+import { toFilterToken } from "./filter-token.js";
 import type { TailwindTheme, ThemeNamespace } from "./theme-model.js";
 import { emValue, lengthToPx, percent, plainNumber } from "./units.js";
 
@@ -932,9 +933,7 @@ function singleToken(
       return flexToken(value);
     }
     case "filter": {
-      return value.trim() === "none"
-        ? "filter-none"
-        : `[filter:${arbitrary(value).slice(1, -1)}]`;
+      return toFilterToken(value, theme);
     }
     case "transform": {
       return value.trim() === "none"

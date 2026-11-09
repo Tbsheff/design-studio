@@ -106,3 +106,44 @@ fieldset.img-fit {
   padding: 2px;
   border: 0;
 }
+
+.img-adjust {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.img-adjust-line {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  font-size: 11px;
+  color: var(--text-2, inherit);
+}
+
+.img-adjust-range {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.img-adjust-range:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.img-adjust-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.img-adjust-reset {
+  align-self: flex-start;
+}

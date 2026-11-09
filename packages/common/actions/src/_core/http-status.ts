@@ -16,6 +16,7 @@ import { DevNoteStatus } from "../dev-note/errors/status.js";
 import { DevStatusStatus } from "../dev-status/errors/status.js";
 import { DirectEditStatus } from "../direct-edit/errors/status.js";
 import { EffectStatus } from "../effect/errors/status.js";
+import { FileLockStatus } from "../file-lock/errors/status.js";
 import { FillStatus } from "../fill/errors/status.js";
 import { FixtureStatus } from "../fixture/errors/status.js";
 import { GalleryStatus } from "../gallery/errors/status.js";
@@ -72,6 +73,7 @@ const HTTP_STATUS = {
   ...DevStatusStatus,
   ...DirectEditStatus,
   ...EffectStatus,
+  ...FileLockStatus,
   ...FillStatus,
   ...FixtureStatus,
   ...GalleryStatus,

@@ -136,3 +136,56 @@ export async function startMockReadOnly(
 
   return CRITIQUE_REPLY;
 }
+
+const toLineColOffset = (source: string, line: number, col: number): number => {
+  let offset = 0;
+
+  for (let current = 1; current < line; current += 1) {
+    const next = source.indexOf("\n", offset);
+
+    if (next === -1) {
+      return -1;
+    }
+
+    offset = next + 1;
+  }
+
+  return offset + col - 1;
+};
+
+const toBraceStep = (char: string): number => {
+  if (char === "{") {
+    return 1;
+  }
+
+  if (char === "}") {
+    return -1;
+  }
+
+  return 0;
+};
+
+const toOpenTagEnd = (source: string, start: number): number => {
+  let quote: string | null = null;
+  let braceDepth = 0;
+
+  for (let index = start + 1; index < source.length; index += 1) {
+    const char = source[index] ?? "";
+
+    if (quote !== null) {
+      if (char === quote) {
+        quote = null;
+      }
+    } else if (char === '"' || char === "'") {
+      quote = char;
+    } else if (char === ">" && braceDepth === 0) {
+      return index;
+    } else {
+      braceDepth += toBraceStep(char);
+    }
+  }
+
+  return -1;
+};
+
+export { toLineColOffset, toOpenTagEnd };

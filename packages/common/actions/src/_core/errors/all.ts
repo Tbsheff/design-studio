@@ -16,6 +16,7 @@ import type { DevNoteError } from "../../dev-note/errors/index.js";
 import type { DevStatusError } from "../../dev-status/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
 import type { EffectError } from "../../effect/errors/index.js";
+import type { FileLockError } from "../../file-lock/errors/index.js";
 import type { FillError } from "../../fill/errors/index.js";
 import type { FixtureError } from "../../fixture/errors/index.js";
 import type { GalleryError } from "../../gallery/errors/index.js";
@@ -70,6 +71,7 @@ type StudioError =
   | DevStatusError
   | DirectEditError
   | EffectError
+  | FileLockError
   | FillError
   | FixtureError
   | GalleryError

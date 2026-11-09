@@ -5,7 +5,12 @@ import type { Direction, Project, Version } from "@design-studio/contracts";
 
 import { firstVersionBlock } from "../../app/first-version.js";
 import { publishVersion } from "../../direct-edit/index.js";
-import { EditError, loadTarget, refuseWhileRunning } from "../edit-guards.js";
+import {
+  EditError,
+  loadTarget,
+  runLockedPathGuard,
+  refuseWhileRunning,
+} from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";
 import {
   checkWritePath,
@@ -107,6 +112,8 @@ const writeTarget = async (
   refuseWhileRunning(deps, project, direction);
 
   const relative = checkWritePath(project, direction.workTree, input.path);
+
+  await runLockedPathGuard(deps, project, direction, relative);
 
   const file = path.join(direction.workTree, ...relative.split("/"));
 

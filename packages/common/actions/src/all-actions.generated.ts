@@ -22,6 +22,7 @@ import { DirectEditActions } from "./direct-edit/index.js";
 import { EffectActions } from "./effect/index.js";
 import { EventsActions } from "./events/index.js";
 import { ExportActions } from "./export/index.js";
+import { FileLockActions } from "./file-lock/index.js";
 import { FillActions } from "./fill/index.js";
 import { FixtureActions } from "./fixture/index.js";
 import { GalleryActions } from "./gallery/index.js";
@@ -89,6 +90,7 @@ const ALL_ACTIONS = {
   effect: EffectActions,
   events: EventsActions,
   export: ExportActions,
+  fileLock: FileLockActions,
   fill: FillActions,
   fixture: FixtureActions,
   gallery: GalleryActions,

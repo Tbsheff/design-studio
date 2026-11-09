@@ -107,12 +107,21 @@ const toFileTip = (snippet: Snippet): string | null => {
   return null;
 };
 
+const toLockFile = (snippet: Snippet): string | null => {
+  if (snippet.kind !== "ready" || snippet.file === "") {
+    return null;
+  }
+
+  return snippet.file;
+};
+
 export {
   toFallbackSnippet,
   toFileLabel,
   toFileTip,
   toKeepReady,
   toLoadedSnippet,
+  toLockFile,
   toSnippetRequest,
 };
 

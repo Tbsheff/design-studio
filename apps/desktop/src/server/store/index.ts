@@ -1,5 +1,11 @@
 export { SkillStore } from "./skill-store.js";
 
+export { getFileLocks } from "./file-lock-file.js";
+
+export { FileLockStore } from "./file-lock-store.js";
+
+export { FileLockWriter } from "./file-lock-writer.js";
+
 export { Authorizer } from "./authorizer.js";
 
 export type { CreateCommentInput } from "./comments.js";

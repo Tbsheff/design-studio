@@ -22,6 +22,7 @@ import type { CommentStore } from "../store/comments.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import { createRunLifecycle } from "./lifecycle.js";
 import type { RunDriver } from "./lifecycle.js";
+import { toLockedDriver } from "./locked-driver.js";
 import type { RunFibers } from "./run-runner.js";
 import type { SdkDriverOptions } from "./sdk-driver.js";
 import type { DevicePolicySource } from "./types.js";
@@ -83,7 +84,7 @@ function createAgentRunner(
       beforeCommit: designSystemBeforeCommit(deps.bus, registry),
       fibers,
     },
-    driver
+    toLockedDriver(driver, deps.projects)
   );
 }
 

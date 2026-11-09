@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
+import { Forbidden } from "../_core/errors/forbidden.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import {
@@ -22,8 +23,8 @@ const updateFileWorkspace = defineAction({
   },
   confirm: "none",
   description:
-    "Replace the full text of one existing source file of a direction. Pass baseHash from read_file. The call fails with Conflict when the file changed on disk since that read. Paths in node_modules, .git or outside the direction fail. The save is one version, and undo takes it back.",
-  errors: [BadRequest, Conflict, NotFound],
+    "Replace the full text of one existing source file of a direction. Pass baseHash from read_file. The call fails with Conflict when the file changed on disk since that read. Paths in node_modules, .git or outside the direction fail. A path that matches a file lock fails with Forbidden when MCP or the agent calls it. The save is one version, and undo takes it back.",
+  errors: [BadRequest, Conflict, Forbidden, NotFound],
   http: {
     method: "PUT",
     path: "/api/projects/:projectId/d/:directionId/source-file",

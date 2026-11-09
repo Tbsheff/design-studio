@@ -297,6 +297,7 @@ interface AgentRunContext {
   mentionFiles?: MentionFile[];
   target?: RunTarget | null;
   repoContext?: string | null;
+  lockedPaths?: string[];
 }
 
 interface MentionFile {

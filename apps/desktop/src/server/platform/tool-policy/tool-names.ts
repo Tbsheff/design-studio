@@ -14,6 +14,7 @@ interface ToolPolicy {
   skillDirs?: string[];
   skillsOff?: string;
   readOnlyDirs?: string[];
+  lockedPaths?: string[];
   plan?: boolean;
 }
 

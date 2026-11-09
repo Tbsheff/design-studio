@@ -88,6 +88,7 @@ const projectApi = {
   ): Promise<{ project: Project }> => {
     const imported = await call(projectsRoutes.importProject, {
       path,
+      url: null,
       ...options,
     });
 
@@ -126,6 +127,14 @@ const projectApi = {
       projectId: pid,
       url,
     }),
+  importRepo: async (url: string): Promise<{ project: Project }> => {
+    const imported = await call(projectsRoutes.importProject, {
+      path: null,
+      url,
+    });
+
+    return { project: toProject(imported.project) };
+  },
   listProjects: async (): Promise<Project[]> => {
     const all = await listProjectPages(null);
 

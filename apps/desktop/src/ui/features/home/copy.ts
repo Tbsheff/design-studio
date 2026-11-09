@@ -117,6 +117,7 @@ const copy = {
   has: " has ",
   home: "Home",
   httpLocalhost3000: "http://localhost:3000",
+  importFromGithub: "Import from GitHub…",
   irreversibleMany:
     "and their versions, runs and comments leave the app. You cannot undo this.",
   irreversibleOne:
@@ -236,6 +237,11 @@ const copy = {
   removeFromFavorites: "Unpin",
   removeFromListFilesStay: "Remove from list. Files stay on disk.",
   rename: "Rename",
+  repoImportCloning: "Cloning the repo. This can take up to 90 seconds.",
+  repoImportEmpty: "Enter a repo URL.",
+  repoImportImport: "Import",
+  repoImportLabel: "Repo URL",
+  repoImportPlaceholder: "https://github.com/owner/repo",
   restore: "Restore",
   restoreADeletedProjectOr: "Restore a deleted project, or delete it for good.",
   resume: "Resume",

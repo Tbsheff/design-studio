@@ -1,6 +1,10 @@
 import { Layer } from "effect";
 
-import { ProjectOpsStore, ProjectOpsWriter } from "../../project-ops/index.js";
+import {
+  ProjectOpsStore,
+  ProjectOpsWriter,
+  RepoCloneRunner,
+} from "../../project-ops/index.js";
 import {
   ProjectLibraryStore,
   ProjectLibraryWriter,
@@ -15,6 +19,7 @@ const ProjectLive = Layer.mergeAll(
   ProjectWriter.layer,
   ProjectOpsStore.layer,
   ProjectOpsWriter.layer,
+  RepoCloneRunner.layer,
   ProjectLibraryStore.layer,
   ProjectLibraryWriter.layer,
   WorkspaceStore.layer,

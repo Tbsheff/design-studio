@@ -17,7 +17,9 @@ import { attemptProjectOps } from "./project-ops-runtime.js";
 
 type CreateInput = Input<typeof createProject>;
 
-type ImportInput = Input<typeof importProject>;
+type ImportInput = Omit<Input<typeof importProject>, "path" | "url"> & {
+  readonly path: string;
+};
 
 type SettingsFields = Omit<Input<typeof updateProject>, "projectId">;
 

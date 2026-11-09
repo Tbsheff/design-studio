@@ -4,6 +4,7 @@ import { uiStore } from "../../platform/storage.js";
 import { focusRequest } from "./focus-bus-model.js";
 import { homePrefs } from "./home-prefs-model.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
+import { startRepoImport } from "./repo-import-model.js";
 
 interface PlusSource {
   readonly addAppFolder: () => Promise<void>;
@@ -31,6 +32,7 @@ const toPlusActions = ({
   },
   onAttachUrl: attachUrl,
   onAttachZip: (): void => contextFileRef.current?.click(),
+  onImportRepo: startRepoImport,
   onImportSystem: (): void =>
     uiStore.set({ libraryFrom: null, screen: "design-systems" }),
   onLinkCode: (): void => {

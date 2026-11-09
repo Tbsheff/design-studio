@@ -68,18 +68,11 @@ const toPreviewResult = (value: Schema.Json): TextResult | null => {
   });
 };
 
-const PageSchema = Schema.Struct({
-  items: Schema.Array(Schema.Json),
-  next: Schema.optionalKey(Schema.NullOr(Schema.String)),
-});
-
 const LinkListSchema = Schema.Struct({
   items: Schema.Array(Schema.Json),
   note: Schema.NullOr(Schema.String),
   startFrame: Schema.String,
 });
-
-const readLastPage = toDecoder(PageSchema, "error");
 
 const readLinkList = toDecoder(LinkListSchema, "ignore");
 
@@ -96,19 +89,6 @@ const toLegacyValue = (value: Schema.Json): Schema.Json => {
     }
 
     return { ...base, note };
-  }
-
-  const page = readLastPage(value);
-
-  if (page._tag === "Success") {
-    const { items } = page.success;
-    const next = page.success.next ?? null;
-
-    if (next === null) {
-      return items;
-    }
-
-    return { items, next };
   }
 
   return value;

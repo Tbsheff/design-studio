@@ -1946,6 +1946,10 @@ export const DIRECT_STYLE_PROPERTIES = [
   "grid-template-rows",
   "grid-column",
   "grid-row",
+  "text-overflow",
+  "white-space",
+  "-webkit-line-clamp",
+  "-webkit-box-orient",
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

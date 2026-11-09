@@ -543,6 +543,23 @@ fieldset.ins-toggles {
   border-radius: var(--r-control-sm);
 }
 
+.edit-pane .ins-truncate .ins-toggles {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  padding: 0 var(--s-1);
+}
+
+.edit-pane .ins-truncate .ins-toggles button {
+  flex: 0 0 28px;
+}
+
+.edit-pane .ins-truncate .ins-input {
+  flex: 0 0 44px;
+  min-width: 0;
+  text-align: right;
+}
+
 .edit-pane .ins-radius {
   min-width: 0;
 }

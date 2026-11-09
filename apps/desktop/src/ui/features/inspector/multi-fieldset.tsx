@@ -20,6 +20,7 @@ const MultiFieldset = ({
       edit={edit}
       ui={ui}
       selection={null}
+      classes={null}
       textStyle={textStyle}
       fill={null}
     />

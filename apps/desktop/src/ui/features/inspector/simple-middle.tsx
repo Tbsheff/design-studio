@@ -68,6 +68,7 @@ const SimpleMiddle = ({ props, state }: SimpleMiddleProps): ReactElement => {
         edit={edit}
         ui={tokens.ui}
         selection={target}
+        classes={state.classes}
         textStyle={textStyle}
         fill={fill}
       />

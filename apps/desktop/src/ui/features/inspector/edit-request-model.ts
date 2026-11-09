@@ -149,5 +149,6 @@ export {
   applyCommit,
   createEditRequest,
   isSameEditValues,
+  toEditTarget,
   toTextHints,
 };

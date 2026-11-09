@@ -142,9 +142,15 @@ const useAnchorTracking = (input: TrackInput): AnchorRects => {
     [refs]
   );
 
+  const { isFrameReady } = input;
+
   useEffect(() => {
+    if (isFrameReady && frontToken) {
+      refs.readyTokens.current.add(frontToken);
+    }
+
     track(toBridgeFrame(frames, kind, frontToken), queries);
-  }, [queries, frames, kind, frontToken, track]);
+  }, [queries, frames, kind, frontToken, isFrameReady, refs, track]);
 
   useEffect(
     () => (): void => {

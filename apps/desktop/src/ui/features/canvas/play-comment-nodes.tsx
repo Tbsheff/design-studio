@@ -32,6 +32,7 @@ const toCommentNode = (
         height={layout.viewHeight}
         isActive={isActive}
         isOn={isActive && input.isOn}
+        isReady={slot.phase !== "loading"}
         kind={input.kind}
         onExit={onExit}
         scale={layout.scale}

@@ -1,7 +1,10 @@
 import type { ComponentProps } from "react";
 
 import { canvasVariations } from "../../features/canvas";
-import { PlayCommentLayer } from "../../features/comments";
+import {
+  loadPlayCommentLayer,
+  PlayCommentLayer,
+} from "../../features/comments";
 import { useCanvasCommandsHost } from "../canvas-commands-host";
 import type { CenterView } from "../shell/center-view";
 import { nameOf } from "./project-model";
@@ -93,6 +96,8 @@ const onTextCommit =
   };
 
 const canvasProps = (ctx: StudioCtx): CanvasProps => {
+  void loadPlayCommentLayer();
+
   const { project, ui, core, run } = ctx;
   const { data, direction, directionRuns } = core;
   const did = core.directionId;

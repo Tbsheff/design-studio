@@ -17,6 +17,7 @@ interface PlayCommentInput {
   readonly height: number;
   readonly isActive: boolean;
   readonly isOn: boolean;
+  readonly isReady: boolean;
   readonly kind: ProjectKind;
   readonly onExit: () => void;
   readonly scale: number;

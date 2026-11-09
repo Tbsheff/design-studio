@@ -2,6 +2,7 @@ import { lazy } from "react";
 import type { LazyExoticComponent } from "react";
 
 import type { CommentsPanel as CommentsPanelView } from "./comments-panel.js";
+import type { PlayCommentLayer as PlayCommentLayerView } from "./play-comment-layer.js";
 
 const CommentLayer = lazy(async () => {
   const loaded = await import("./comment-layer.js");
@@ -23,8 +24,16 @@ const ComposerComments = lazy(async () => {
   return { default: loaded.ComposerComments };
 });
 
-const PlayCommentLayer = lazy(async () => {
+const loadPlayCommentLayer = async (): Promise<{
+  PlayCommentLayer: typeof PlayCommentLayerView;
+}> => {
   const loaded = await import("./play-comment-layer.js");
+
+  return { PlayCommentLayer: loaded.PlayCommentLayer };
+};
+
+const PlayCommentLayer = lazy(async () => {
+  const loaded = await loadPlayCommentLayer();
 
   return { default: loaded.PlayCommentLayer };
 });
@@ -39,6 +48,7 @@ export {
   CommentLayer,
   CommentsPanel,
   ComposerComments,
+  loadPlayCommentLayer,
   PlayCommentLayer,
   QueuedComposerBar,
 };

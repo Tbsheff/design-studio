@@ -31,6 +31,7 @@ const PlayCommentLayer = (props: PlayCommentInput): ReactElement => {
         zoom={props.scale}
         frame={size}
         commentMode={props.isOn}
+        isFrameReady={props.isReady}
         selectMode={false}
         selection={NO_SELECTION}
         onExitCommentMode={onExit}

@@ -31,6 +31,8 @@ const MAX_SAMPLES = 3;
 const REEXPORT_PATTERN =
   /^export\s+(?:\*|\{[^}]*\})(?:\s+as\s+\w+)?\s+from\s/mu;
 
+const JSX_PATTERN = /<[A-Z][\w.]*[\s/>]/u;
+
 const ESCAPE_PATTERN = /[$()*+.?[\\\]^{|}]/gu;
 
 const toEscaped = (name: string): string =>
@@ -53,8 +55,11 @@ const toReverseEdges = (
   return reverse;
 };
 
-const isBarrel = (texts: UsageInput["texts"], file: string): boolean =>
-  REEXPORT_PATTERN.test(texts.get(file) ?? "");
+const isBarrel = (texts: UsageInput["texts"], file: string): boolean => {
+  const text = texts.get(file) ?? "";
+
+  return REEXPORT_PATTERN.test(text) && !JSX_PATTERN.test(text);
+};
 
 interface ImporterWalk {
   readonly found: string[];

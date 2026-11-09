@@ -7,7 +7,7 @@ type ComponentUsageView = typeof ComponentUseCountSchema.Type;
 
 type ComponentUsageSite = ComponentUsageView["samples"][number];
 
-const SHORT_PATH_PARTS = 2;
+const SHORT_PATH_PARTS = 1;
 
 const toUsageKey = (usage: ComponentUsageView): string =>
   `${usage.file}#${usage.name}`;
@@ -31,7 +31,11 @@ const toCountLabel = (usage: ComponentUsageView): string => {
     return COPY.usageUnused;
   }
 
-  return String(usage.importCount);
+  if (usage.importCount === 1) {
+    return COPY.usageOneImport;
+  }
+
+  return `${usage.importCount}${COPY.usageManyImports}`;
 };
 
 const toCountTip = (usage: ComponentUsageView): string =>

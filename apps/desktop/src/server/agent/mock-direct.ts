@@ -1,4 +1,5 @@
 import type { PreviewService } from "../../shared/server-ports.js";
+import { listInsertable } from "../components/index.js";
 import { runEditElement } from "./direct-tools.js";
 import type { DriverInput } from "./lifecycle.js";
 import { mockCanvasTool } from "./mock-canvas.js";
@@ -55,4 +56,83 @@ export async function runMockDirect(
     line(tagged, "Added the mock-direct class.", "The class edit"),
     line(copied, "Duplicated the section paragraph.", "The duplicate"),
   ].join(" ");
+}
+
+export interface MockReplySession {
+  readonly say: (text: string) => Promise<void>;
+  readonly fakeTool: (
+    name: string,
+    input: { readonly query: string },
+    summary: string
+  ) => Promise<void>;
+}
+
+const CRITIQUE_REPLY =
+  "Critique: tighten the hierarchy, check contrast on secondary text, and test the layout at 375px.";
+
+const KIT_COUNT = 2;
+const WORD_SPLIT = /\W+/u;
+
+const toSourceLabel = (ctx: DriverInput["ctx"]): string => {
+  const source = ctx.request.selection?.find((item) => item.source)?.source;
+
+  if (source) {
+    return `\`${source.file}:${source.line}\``;
+  }
+
+  return "the selected layer";
+};
+
+const toKitNames = async (ctx: DriverInput["ctx"]): Promise<string[]> => {
+  const list = await listInsertable(ctx.project, ctx.direction.workTree);
+  const words = ctx.request.prompt.toLowerCase().split(WORD_SPLIT);
+
+  const toMatch = (name: string): number =>
+    Number(
+      words.some((word) => word !== "" && name.toLowerCase().includes(word))
+    );
+
+  const ranked = list.components.toSorted(
+    (left, right) =>
+      toMatch(right.name) - toMatch(left.name) || right.uses - left.uses
+  );
+
+  return ranked
+    .slice(0, KIT_COUNT)
+    .map((item) => `\`${item.name}\` (${item.file})`);
+};
+
+const startMockAsk = async (
+  session: MockReplySession,
+  ctx: DriverInput["ctx"]
+): Promise<string> => {
+  await session.fakeTool(
+    "mcp__studio__list_components",
+    { query: ctx.request.prompt },
+    "Listed kit components"
+  );
+  const kit = await toKitNames(ctx);
+  let kitText = "no kit component";
+
+  if (kit.length > 0) {
+    kitText = kit.join(" and ");
+  }
+
+  const finalText = `Answer: the selected layer is at ${toSourceLabel(ctx)}. These kit components fit: ${kitText}. I changed no file.`;
+  await session.say(finalText);
+
+  return finalText;
+};
+
+export async function startMockReadOnly(
+  session: MockReplySession,
+  input: DriverInput
+): Promise<string> {
+  if (input.ctx.request.mode === "ask") {
+    return startMockAsk(session, input.ctx);
+  }
+
+  await session.say(CRITIQUE_REPLY);
+
+  return CRITIQUE_REPLY;
 }

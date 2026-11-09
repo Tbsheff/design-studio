@@ -86,8 +86,8 @@ function parseRunRequest(body: Record<string, unknown>): RunRequest {
   const prompt = requireString(body, "prompt");
   const mode = body.mode ?? "edit";
 
-  if (mode !== "edit" && mode !== "critique") {
-    throw new BadRequestError("mode must be edit or critique");
+  if (mode !== "edit" && mode !== "critique" && mode !== "ask") {
+    throw new BadRequestError("mode must be edit, critique or ask");
   }
   const request: RunRequest = { mode, prompt };
   const level = parseLevel(body.level);

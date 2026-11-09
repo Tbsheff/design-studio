@@ -28,9 +28,10 @@ interface PlusMenuProps {
   designs?: DesignsSetting | undefined;
 }
 
-const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
+const MODES: readonly ComposerMode[] = ["edit", "plan", "critique", "ask"];
 
 const MODE_SHORT_HINT: Record<ComposerMode, string> = {
+  ask: "Answers, no changes",
   critique: "Review only",
   edit: "Changes the design",
   plan: "You approve first",

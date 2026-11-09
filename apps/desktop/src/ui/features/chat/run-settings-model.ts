@@ -37,6 +37,7 @@ interface EffortSetting {
 }
 
 const MODE_HINT: Record<ComposerMode, string> = {
+  ask: "Send asks a question. The design does not change.",
   critique: "Send asks for a review. The design does not change.",
   edit: "Send changes the design.",
   plan: "Send makes a plan first. Files change only after you approve it.",
@@ -56,7 +57,7 @@ const EFFORT_LABEL: Record<EffortChoice, string> = {
   medium: "Medium",
 };
 
-const MODES = ["edit", "plan", "critique"] as const;
+const MODES = ["edit", "plan", "critique", "ask"] as const;
 
 const MIN_PLURAL_DESIGNS = 1;
 

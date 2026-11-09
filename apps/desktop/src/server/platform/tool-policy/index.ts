@@ -119,8 +119,8 @@ const findToolProblem = (
     return fileProblem;
   }
 
-  if (policy.mode === "critique" && blockedInCritique(toolName)) {
-    return `${toolName.replace("mcp__studio__", "")} is not available in critique runs.`;
+  if (policy.mode !== "edit" && blockedInCritique(toolName)) {
+    return `${toolName.replace("mcp__studio__", "")} is not available in ${policy.mode} runs.`;
   }
 
   if (toolName === "Bash") {

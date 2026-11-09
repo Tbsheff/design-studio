@@ -573,9 +573,9 @@ export async function canvasPlace(
     );
   }
 
-  if (ctx.mode === "critique") {
+  if (ctx.mode !== "edit") {
     return failure(
-      "canvas_place is not available in critique runs. Use canvas_point to show a frame."
+      `canvas_place is not available in ${ctx.mode} runs. Use canvas_point to show a frame.`
     );
   }
 

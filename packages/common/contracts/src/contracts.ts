@@ -383,7 +383,7 @@ export interface Attachment {
   path: LegacyBinding<string>;
 }
 
-export type RunMode = "edit" | "critique";
+export type RunMode = "edit" | "critique" | "ask";
 
 export type RunTask = "tweaks" | "design-system" | "port";
 

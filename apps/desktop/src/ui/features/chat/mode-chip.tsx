@@ -11,6 +11,7 @@ import { StateChip } from "./state-chip.js";
 const MODE_ICON_SIZE = 14;
 
 const MODE_ICONS: Record<ComposerMode, ReactElement> = {
+  ask: <Icon name={MODE_ICON.ask} size={MODE_ICON_SIZE} />,
   critique: <Icon name={MODE_ICON.critique} size={MODE_ICON_SIZE} />,
   edit: <Icon name={MODE_ICON.edit} size={MODE_ICON_SIZE} />,
   plan: <Icon name={MODE_ICON.plan} size={MODE_ICON_SIZE} />,

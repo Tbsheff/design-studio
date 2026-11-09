@@ -111,6 +111,10 @@ const toRequestMode = (request: RunRequest): string | null => {
     return "Critique";
   }
 
+  if (request.mode === "ask") {
+    return "Ask";
+  }
+
   if (request.plan) {
     return "Plan";
   }

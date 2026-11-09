@@ -82,7 +82,12 @@
   gap: var(--s-1);
 }
 
+.expand[open] {
+  flex-basis: 100%;
+}
+
 .expand > summary {
+  justify-self: start;
   display: inline-flex;
   list-style: none;
   cursor: pointer;

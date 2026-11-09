@@ -41,8 +41,8 @@ const toExpandedSize = (source: Size, target: ExpandTarget): Size | null => {
     return null;
   }
 
-  const wider = Math.max(source.width, Math.ceil(source.height * ratio));
-  const taller = Math.max(source.height, Math.ceil(source.width / ratio));
+  const wider = Math.max(source.width, Math.round(source.height * ratio));
+  const taller = Math.max(source.height, Math.round(source.width / ratio));
 
   if (source.width / source.height < ratio) {
     return { height: source.height, width: wider };

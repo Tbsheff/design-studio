@@ -1,4 +1,4 @@
-import { mkdir, readdir, rm } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
@@ -106,6 +106,50 @@ const checkCloneSize = Effect.fn("RepoClone.checkCloneSize")(function* run(
   });
 });
 
+const SOURCE_FILE = "studio-clone-source";
+
+const NOTICED_FILE = "studio-clone-noticed";
+
+const toNoticeText = (url: string): string =>
+  `Cloned from ${url}. This runs the repo scripts on your Mac.`;
+
+const toMarkerPath = (folder: string, name: string): string =>
+  path.join(folder, ".git", name);
+
+const getSource = (folder: string): Effect.Effect<string | null> =>
+  Effect.tryPromise({
+    catch: () => null,
+    try: () => readFile(toMarkerPath(folder, SOURCE_FILE), "utf-8"),
+  }).pipe(Effect.orElseSucceed(() => null));
+
+const takeNotice = Effect.fn("RepoClone.takeNotice")(function* run(
+  folder: string
+) {
+  const url = yield* getSource(folder);
+
+  if (url === null) {
+    return null;
+  }
+
+  const noticed = toMarkerPath(folder, NOTICED_FILE);
+
+  const hasNoticed = yield* Effect.tryPromise({
+    catch: () => null,
+    try: () => readFile(noticed, "utf-8"),
+  }).pipe(
+    Effect.as(true),
+    Effect.orElseSucceed(() => false)
+  );
+
+  if (hasNoticed) {
+    return null;
+  }
+
+  yield* runIo(() => writeFile(noticed, "1"));
+
+  return toNoticeText(url.trim());
+});
+
 const cloneRepo = Effect.fn("RepoClone.cloneRepo")(function* run(
   url: string,
   name: string,
@@ -114,8 +158,9 @@ const cloneRepo = Effect.fn("RepoClone.cloneRepo")(function* run(
   const folderName = yield* toFolderName(root, name);
   const folder = path.join(root, folderName);
   yield* runClone(root, url, folder);
+  yield* runIo(() => writeFile(toMarkerPath(folder, SOURCE_FILE), url));
 
   return yield* checkCloneSize(root, folder);
 });
 
-export { cloneRepo };
+export { cloneRepo, takeNotice };

@@ -4,12 +4,13 @@ import { Context, Effect, Layer } from "effect";
 
 import { loadConfig } from "../../platform/config/index.js";
 import { toRepoSource } from "../engine/to-repo-source.js";
-import { cloneRepo } from "./repo-clone-steps.js";
+import { cloneRepo, takeNotice } from "./repo-clone-steps.js";
 
 interface RepoCloneRunnerApi {
   readonly clone: (
     url: string
   ) => Effect.Effect<string, BadRequest | Unavailable>;
+  readonly takeNotice: (folder: string) => Effect.Effect<string | null>;
 }
 
 const BAD_URL_MESSAGE =
@@ -36,6 +37,11 @@ class RepoCloneRunner extends Context.Service<
           source.name,
           loadConfig().projectsDir
         );
+      }),
+      takeNotice: Effect.fn("RepoCloneRunner.takeNotice")(function* run(
+        folder: string
+      ) {
+        return yield* takeNotice(folder).pipe(Effect.orElseSucceed(() => null));
       }),
     })
   );

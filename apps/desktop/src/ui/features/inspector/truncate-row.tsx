@@ -39,7 +39,7 @@ const TruncateRow = ({
 
   return (
     <div className="wide">
-      <div className="ins-field ins-align-row">
+      <div className="ins-field ins-align-row ins-truncate">
         <span className="ins-scrub static">{copy.truncate}</span>
         <TruncateToggle
           isDisabled={!isReady}

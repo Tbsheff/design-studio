@@ -1108,7 +1108,7 @@ output.ins-select-matching-note {
   margin: 0;
 }
 
-.code-edit {
+dialog.code-edit {
   position: fixed;
   inset: 50% auto auto 50%;
   z-index: 60;

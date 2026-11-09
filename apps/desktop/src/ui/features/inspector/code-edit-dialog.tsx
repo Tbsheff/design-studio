@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
+import { createPortal } from "react-dom";
 
+import { useDocumentBody } from "../../platform/document-body.js";
 import { CodeEditBody } from "./code-edit-body.js";
 import { CodeEditFoot } from "./code-edit-foot.js";
 import { CodeEditHead } from "./code-edit-head.js";
@@ -20,7 +22,8 @@ const CodeEditDialog = ({
   file,
   line,
   onClose,
-}: Props): ReactElement => {
+}: Props): ReactElement | null => {
+  const body = useDocumentBody();
   const edit = useCodeEdit(projectId, directionId, file);
 
   const handleKeyDown = useCallback(
@@ -33,7 +36,11 @@ const CodeEditDialog = ({
     [onClose]
   );
 
-  return (
+  if (!body) {
+    return null;
+  }
+
+  const dialog = (
     <dialog
       open
       className="variation-card code-edit"
@@ -55,6 +62,8 @@ const CodeEditDialog = ({
       />
     </dialog>
   );
+
+  return <>{createPortal(dialog, body)}</>;
 };
 
 export { CodeEditDialog };

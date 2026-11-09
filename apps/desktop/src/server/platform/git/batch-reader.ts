@@ -33,6 +33,7 @@ class BatchReader {
   private readonly cwd: string;
   private readonly env: NodeJS.ProcessEnv;
   private queue: Pending[] = [];
+  private starting: Promise<ChildProcessWithoutNullStreams> | null = null;
 
   public constructor(
     binary: BinaryResolver,
@@ -66,19 +67,35 @@ class BatchReader {
     this.child = null;
   }
 
-  private async start(): Promise<ChildProcessWithoutNullStreams> {
+  private start(): Promise<ChildProcessWithoutNullStreams> {
     if (this.child) {
-      return this.child;
+      return Promise.resolve(this.child);
     }
 
-    const child = spawnPiped(await this.binary(), ["cat-file", "--batch"], {
+    this.starting ??= this.spawnChild();
+
+    return this.starting;
+  }
+
+  private async spawnChild(): Promise<ChildProcessWithoutNullStreams> {
+    let binary = "";
+
+    try {
+      binary = await this.binary();
+    } finally {
+      this.starting = null;
+    }
+
+    const child = spawnPiped(binary, ["cat-file", "--batch"], {
       cwd: this.cwd,
       env: this.env,
     });
 
     this.child = child;
     child.stdout.on("data", (chunk: Buffer) => {
-      this.consume(chunk);
+      if (this.child === child) {
+        this.consume(chunk);
+      }
     });
     child.stdin.on("error", ignoreError);
     child.once("exit", () => {
@@ -92,9 +109,11 @@ class BatchReader {
   }
 
   private fail(child: ChildProcessWithoutNullStreams, error: Error): void {
-    if (this.child === child) {
-      this.child = null;
+    if (this.child !== null && this.child !== child) {
+      return;
     }
+
+    this.child = null;
 
     this.buffer = Buffer.alloc(0);
 

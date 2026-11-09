@@ -59,8 +59,12 @@ const parseTree = (body: Buffer): TreeEntry[] => {
 
   while (offset < body.length) {
     const space = body.indexOf(SPACE_BYTE, offset);
-    const nul = body.indexOf(0, space);
+    const nul = body.indexOf(0, Math.max(space, offset));
     const shaStart = nul + 1;
+
+    if (space === -1 || nul === -1 || shaStart + SHA_BYTES > body.length) {
+      throw new Error("git tree object is malformed");
+    }
 
     entries.push({
       mode: body.toString("utf-8", offset, space),

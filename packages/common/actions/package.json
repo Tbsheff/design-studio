@@ -594,6 +594,7 @@
     "./text-style/routes": "./src/text-style/routes.ts",
     "./text-style/schema": "./src/text-style/schema.ts",
     "./text-style/update": "./src/text-style/update.ts",
+    "./text/apply-range": "./src/text/apply-range.ts",
     "./text/errors/index": "./src/text/errors/index.ts",
     "./text/errors/status": "./src/text/errors/status.ts",
     "./text/index": "./src/text/index.ts",

@@ -157,8 +157,72 @@ const TextRewriteResultSchema = Schema.Struct({
   versionId: Schema.NullOr(Schema.String),
 });
 
+const TEXT_RANGE_STYLES = ["bold", "italic", "link", "class"] as const;
+
+const TEXT_RANGE_OFFSET_MAX = 5000;
+
+const TEXT_RANGE_HREF_MAX = 2000;
+
+const TEXT_RANGE_CLASS_MAX = 200;
+
+const TextRangeStyleSchema = Schema.Literals(TEXT_RANGE_STYLES).annotate({
+  description:
+    "bold (strong), italic (em), link (a with href) or class (span with a token class).",
+});
+
+const TextRangeOffsetSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: TEXT_RANGE_OFFSET_MAX, minimum: 0 })
+);
+
+const TextRangeHrefSchema = Schema.NullOr(
+  Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(TEXT_RANGE_HREF_MAX)
+  )
+)
+  .annotate({ description: "The link target. Needed for link, else null." })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
+
+const TextRangeClassSchema = Schema.NullOr(
+  Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(TEXT_RANGE_CLASS_MAX)
+  )
+)
+  .annotate({
+    description:
+      "A token class from list_classes_token, such as text-brand. Needed for class, else null.",
+  })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
+
+const TextRangeRenderedSchema = Schema.NullOr(
+  Schema.String.check(Schema.isMaxLength(TEXT_RANGE_OFFSET_MAX))
+)
+  .annotate({
+    description:
+      "The rendered text of the layer, when it has dynamic parts. Null means the text in the source.",
+  })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
+
+const TextRangeIsRemoveSchema = Schema.Boolean.annotate({
+  description: "True removes the style from the range. False adds it.",
+}).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false)));
+
+const TextRangeResultSchema = Schema.Struct({
+  file: Schema.String,
+  versionId: Schema.NullOr(Schema.String),
+});
+
 export {
+  TEXT_RANGE_STYLES,
   TEXT_REWRITE_MODES,
+  TextRangeClassSchema,
+  TextRangeHrefSchema,
+  TextRangeIsRemoveSchema,
+  TextRangeOffsetSchema,
+  TextRangeRenderedSchema,
+  TextRangeResultSchema,
+  TextRangeStyleSchema,
   TextRewriteLanguageSchema,
   TextRewriteLayerSchema,
   TextRewriteModeSchema,

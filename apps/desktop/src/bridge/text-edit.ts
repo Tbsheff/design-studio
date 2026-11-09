@@ -1,8 +1,12 @@
 import type { BridgeToParent } from "@design-studio/contracts";
 
+import { createTextRange } from "./text-range.js";
+import type { TextRangeBody } from "./text-range.js";
+
 type TextEditBody =
   | Omit<Extract<BridgeToParent, { type: "text-edit" }>, "ns" | "token">
   | Omit<Extract<BridgeToParent, { type: "text-commit" }>, "ns" | "token">
+  | TextRangeBody
   | { type: "hover"; rect: null };
 
 export interface TextEditDeps {
@@ -134,6 +138,7 @@ function insertPlain(event: ClipboardEvent): void {
 export function createTextEditor(deps: TextEditDeps): TextEditor {
   let allowed = false;
   let session: Session | null = null;
+  const range = createTextRange({ post: deps.post, textOf: plainText });
 
   const restore = (current: Session): void => {
     current.element.replaceChildren(...current.nodes);
@@ -145,6 +150,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
 
   const finish = (current: Session): void => {
     session = null;
+    range.unwatch();
     const { element } = current;
     element.removeEventListener("blur", onBlur);
     element.removeEventListener("paste", insertPlain);
@@ -263,6 +269,11 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
     element.focus({ preventScroll: true });
     placeCaret(element, at);
     element.addEventListener("blur", onBlur);
+    range.watch({
+      element,
+      original: session.original,
+      selector: session.selector,
+    });
     deps.post({
       type: "text-edit",
       selector: session.selector,
@@ -277,6 +288,12 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
 
     const plain =
       !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey;
+
+    if (range.onKey(event)) {
+      event.stopImmediatePropagation();
+
+      return true;
+    }
 
     if (event.key === "Escape") {
       event.preventDefault();

@@ -14,6 +14,7 @@ const PaletteList = ({
   current,
   query,
   isLoading,
+  isFiles,
   onHover,
   onRun,
 }: {
@@ -23,6 +24,7 @@ const PaletteList = ({
   current: number;
   query: string;
   isLoading: boolean;
+  isFiles: boolean;
   onHover: (index: number) => void;
   onRun: (row: Row) => void;
 }): ReactElement => {
@@ -38,7 +40,7 @@ const PaletteList = ({
       aria-label={copy.results}
     >
       {rows.length === 0 && (
-        <p className="cmdk-empty">{toEmptyText(isLoading, query)}</p>
+        <p className="cmdk-empty">{toEmptyText(isLoading, query, isFiles)}</p>
       )}
       {rows.map((row, index) => (
         <div key={`${row.group}-${row.key}`} role="presentation">

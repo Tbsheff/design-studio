@@ -22,7 +22,13 @@ export const KEYMAP = [
   {
     id: "palette",
     label: "Go to anything (palette)",
-    keys: ["Mod+K", "Mod+P"],
+    keys: ["Mod+K"],
+    group: "General",
+  },
+  {
+    id: "go-to-file",
+    label: "Go to file",
+    keys: ["Mod+P"],
     group: "General",
   },
   {

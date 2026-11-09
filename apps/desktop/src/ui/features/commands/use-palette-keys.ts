@@ -6,7 +6,7 @@ import type { Row } from "./palette-row-types.js";
 
 interface PaletteKeyInput {
   current: number;
-  onClose: () => void;
+  onEscape: () => void;
   query: string;
   rows: Row[];
   runRow: (row: Row) => void;
@@ -17,7 +17,7 @@ interface PaletteKeyInput {
 const usePaletteKeys = (
   input: PaletteKeyInput
 ): ((event: KeyboardEvent<HTMLInputElement>) => void) => {
-  const { current, onClose, query, rows, runRow, setActive, setQuery } = input;
+  const { current, onEscape, query, rows, runRow, setActive, setQuery } = input;
 
   const closeOrClear = useCallback((): void => {
     if (query) {
@@ -26,8 +26,8 @@ const usePaletteKeys = (
       return;
     }
 
-    onClose();
-  }, [onClose, query, setQuery]);
+    onEscape();
+  }, [onEscape, query, setQuery]);
 
   return useCallback(
     (event: KeyboardEvent<HTMLInputElement>): void => {

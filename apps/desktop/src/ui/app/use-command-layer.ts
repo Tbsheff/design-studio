@@ -8,7 +8,12 @@ import { prefetchCommandLayer } from "./screen-preload";
 const LAYER_EVENT = "studio:command-layer";
 
 const toLayer = (value: string | null): CommandLayerName | null => {
-  if (value === "palette" || value === "projects" || value === "shortcuts") {
+  if (
+    value === "files" ||
+    value === "palette" ||
+    value === "projects" ||
+    value === "shortcuts"
+  ) {
     return value;
   }
 
@@ -30,7 +35,10 @@ const hasPaletteModifier = (event: KeyboardEvent): boolean =>
   (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
 
 const isPaletteKey = (event: KeyboardEvent): boolean =>
-  hasPaletteModifier(event) && (event.code === "KeyK" || event.code === "KeyP");
+  hasPaletteModifier(event) && event.code === "KeyK";
+
+const isFilesKey = (event: KeyboardEvent): boolean =>
+  hasPaletteModifier(event) && event.code === "KeyP";
 
 const isShortcutsKey = (event: KeyboardEvent): boolean => {
   if (event.key !== "?" || event.metaKey || event.altKey) {
@@ -43,6 +51,10 @@ const isShortcutsKey = (event: KeyboardEvent): boolean => {
 const layerForKey = (event: KeyboardEvent): CommandLayerName | null => {
   if (isPaletteKey(event)) {
     return "palette";
+  }
+
+  if (isFilesKey(event)) {
+    return "files";
   }
 
   if (isShortcutsKey(event)) {

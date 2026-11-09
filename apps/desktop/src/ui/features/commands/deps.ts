@@ -28,6 +28,8 @@ export { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 
 export { api, errorText, json } from "../../api.js";
 
+export { call } from "../../platform/http.js";
+
 export { HealthDot, ProjectThumb } from "../home/project-thumb.js";
 
 export type { ComposerMode } from "../chat/run-settings.js";

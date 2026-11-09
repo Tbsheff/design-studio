@@ -1,11 +1,13 @@
 import { useCallback, useId, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
 
-import { noteRecent, toActiveId } from "./palette-model.js";
+import { toActiveId } from "./palette-model.js";
 import type { Row } from "./palette-row-types.js";
+import type { OpenTarget } from "./use-file-rows.js";
 import { usePaletteFocus } from "./use-palette-focus.js";
 import { usePaletteKeys } from "./use-palette-keys.js";
 import { usePaletteRows } from "./use-palette-rows.js";
+import { usePaletteRun } from "./use-palette-run.js";
 
 interface PaletteState {
   activeId: string;
@@ -24,11 +26,18 @@ interface PaletteState {
   setActive: (index: number) => void;
 }
 
-const usePalette = (
-  onClose: () => void,
-  onShortcuts: () => void,
-  isProjectsOnly: boolean
-): PaletteState => {
+interface PaletteInput {
+  readonly isFiles: boolean;
+  readonly isProjectsOnly: boolean;
+  readonly onClose: () => void;
+  readonly onEscape: () => void;
+  readonly onOpenFile: (target: OpenTarget) => void;
+  readonly onShortcuts: () => void;
+}
+
+const usePalette = (input: PaletteInput): PaletteState => {
+  const { isFiles, isProjectsOnly, onClose, onEscape } = input;
+  const { onOpenFile, onShortcuts } = input;
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -36,38 +45,25 @@ const usePalette = (
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const rowInput = { isProjectsOnly, onClose, onShortcuts, query, setError };
-  const { isBusy, isLoading, rows } = usePaletteRows(rowInput);
+  const { isBusy, isLoading, rows } = usePaletteRows({
+    isFiles,
+    isProjectsOnly,
+    onClose,
+    onOpenFile,
+    onShortcuts,
+    query,
+    setError,
+  });
 
   const current = Math.min(active, Math.max(0, rows.length - 1));
 
   usePaletteFocus(inputRef, listRef, current, rows.length);
 
-  const runRow = useCallback(
-    (row: Row): void => {
-      if (row.disabled || isBusy) {
-        return;
-      }
-
-      if (row.commandId) {
-        noteRecent(row.commandId);
-      }
-
-      if (row.kind !== "command") {
-        row.run();
-
-        return;
-      }
-
-      onClose();
-      globalThis.setTimeout(() => row.run(), 0);
-    },
-    [isBusy, onClose]
-  );
+  const runRow = usePaletteRun(isBusy, onClose);
 
   const onKeyDown = usePaletteKeys({
     current,
-    onClose,
+    onEscape,
     query,
     rows,
     runRow,

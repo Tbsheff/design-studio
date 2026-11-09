@@ -29,6 +29,8 @@ const CodeEditDialog: LazyExoticComponent<typeof CodeEditDialogView> = lazy(
 
 export { CodeEditDialog, Inspector, TweaksPanel };
 
+export { codeEditStore } from "./use-code-edit-target.js";
+
 export {
   editVariantStore,
   setForceState,

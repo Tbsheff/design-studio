@@ -1,7 +1,7 @@
 import type { IconName, ProjectHit, RouteHit } from "./deps.js";
 import type { Command } from "./registry.js";
 
-type RowKind = "command" | "project" | "route" | "new";
+type RowKind = "command" | "file" | "project" | "route" | "new";
 
 interface Row {
   key: string;

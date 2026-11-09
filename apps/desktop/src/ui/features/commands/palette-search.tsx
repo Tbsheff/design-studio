@@ -14,6 +14,7 @@ const PaletteSearch = ({
   activeId,
   query,
   isBusy,
+  label,
   onChange,
   onKeyDown,
 }: {
@@ -22,6 +23,7 @@ const PaletteSearch = ({
   activeId: string;
   query: string;
   isBusy: boolean;
+  label: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
 }): ReactElement => (
@@ -35,8 +37,8 @@ const PaletteSearch = ({
       aria-controls={listId}
       aria-activedescendant={activeId}
       aria-autocomplete="list"
-      aria-label={copy.paletteInput}
-      placeholder={copy.paletteInput}
+      aria-label={label}
+      placeholder={label}
       spellCheck={false}
       value={query}
       onChange={onChange}

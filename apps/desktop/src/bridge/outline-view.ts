@@ -34,7 +34,7 @@ const isStudioNode = (element: Element): boolean =>
 
 const toBoxSelectors = (): string[] => {
   const found: string[] = [];
-  const all = document.body.querySelectorAll("*");
+  const all = document.body?.querySelectorAll("*") ?? [];
   const count = Math.min(all.length, SCAN_LIMIT);
 
   for (let index = 0; index < count; index += 1) {
@@ -121,7 +121,7 @@ const createOutlineView = (): OutlineView => {
   const start = (): void => {
     paint();
 
-    if (!observer && "MutationObserver" in globalThis) {
+    if (!observer && document.body && "MutationObserver" in globalThis) {
       observer = new MutationObserver(schedule);
       observer.observe(document.body, { childList: true, subtree: true });
     }

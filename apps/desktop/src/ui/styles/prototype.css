@@ -469,6 +469,130 @@ dialog.play-layer {
   color-scheme: light;
 }
 
+.play-frame.has-device {
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+}
+
+.play-device {
+  --device-body: #d8d9de;
+  --device-edge: #b4b5bc;
+  --device-lens: #0b0b0c;
+  --device-chrome: #e9e9ee;
+  --device-field: #fff;
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  transform-origin: 0 0;
+}
+
+:root[data-theme="dark"] .play-device {
+  --device-body: #1a1a1d;
+  --device-edge: #3a3a3f;
+  --device-lens: #000;
+  --device-chrome: #26262b;
+  --device-field: #121214;
+}
+
+.play-frame.has-device .play-device {
+  border: 1px solid var(--device-edge);
+  background: var(--device-body);
+  box-shadow:
+    var(--frame-shadow),
+    inset 0 0 0 2px var(--stage);
+}
+
+.play-device-screen {
+  position: absolute;
+  overflow: hidden;
+  background: var(--frame-bg);
+}
+
+.play-device-screen iframe {
+  left: 0;
+  top: 0;
+}
+
+.play-device-lens {
+  position: absolute;
+  pointer-events: none;
+  background: var(--device-lens);
+}
+
+.play-device-lens.lens-iphone-15 {
+  top: 24px;
+  left: 50%;
+  width: 112px;
+  height: 32px;
+  margin-left: -56px;
+  border-radius: 16px;
+}
+
+.play-device-lens.lens-pixel-8 {
+  top: 22px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+}
+
+.play-device-lens.lens-ipad {
+  top: 50%;
+  left: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.play-device-lens.lens-macbook {
+  top: 24px;
+  left: 50%;
+  width: 140px;
+  height: 20px;
+  margin-left: -70px;
+  border-radius: 0 0 12px 12px;
+}
+
+.play-device-lens.lens-browser {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  border-bottom: 1px solid var(--device-edge);
+  border-radius: 12px 12px 0 0;
+  background: var(--device-chrome);
+}
+
+.play-device-lens.lens-browser::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff5f57;
+  box-shadow:
+    20px 0 #febc2e,
+    40px 0 #28c840;
+}
+
+.play-device-lens.lens-browser::after {
+  content: "";
+  position: absolute;
+  left: 120px;
+  right: 120px;
+  top: 9px;
+  height: 26px;
+  box-sizing: border-box;
+  border: 1px solid var(--device-edge);
+  border-radius: 13px;
+  background: var(--device-field);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .proto-bar {
     transition: none;

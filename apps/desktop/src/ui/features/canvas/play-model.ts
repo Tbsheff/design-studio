@@ -36,6 +36,7 @@ interface Slot extends Motion {
 
 interface PlayModeProps {
   kind: ProjectKind;
+  projectId: string;
   file: LinksFile;
   frames: CanvasFrame[];
   startId: string;

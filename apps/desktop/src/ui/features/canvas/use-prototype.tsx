@@ -159,6 +159,7 @@ const usePrototype = (options: PrototypeOptions): PrototypeParts => {
         <Suspense fallback={null}>
           <PlayMode
             kind={options.kind}
+            projectId={options.projectId}
             file={prototypeFile.file}
             frames={options.frames}
             startId={prototypeFile.startId}

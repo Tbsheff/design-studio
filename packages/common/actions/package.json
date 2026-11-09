@@ -632,7 +632,8 @@
     "./workspace/routes": "./src/workspace/routes.ts",
     "./workspace/schema": "./src/workspace/schema.ts",
     "./workspace/search-projects": "./src/workspace/search-projects.ts",
-    "./workspace/set-default-folder": "./src/workspace/set-default-folder.ts"
+    "./workspace/set-default-folder": "./src/workspace/set-default-folder.ts",
+    "./workspace/update-file": "./src/workspace/update-file.ts"
   },
   "dependencies": {
     "@design-studio/contracts": "workspace:*",

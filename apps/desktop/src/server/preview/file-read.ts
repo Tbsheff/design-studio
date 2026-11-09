@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
@@ -71,6 +72,7 @@ interface FileList {
 }
 
 interface FileText {
+  readonly hash: string;
   readonly path: string;
   readonly text: string;
 }
@@ -139,6 +141,9 @@ const resolveFileSource = async (
 
   return { root: source.root, versionId: source.version.id };
 };
+
+const toFileHash = (text: string): string =>
+  createHash("sha256").update(text).digest("hex");
 
 const tryRealpath = async (target: string): Promise<string | null> => {
   try {
@@ -237,7 +242,9 @@ const readFileText = async (
     throw new Error("the file is too large");
   }
 
-  return { path: query.path, text: await readFile(file, "utf-8") };
+  const text = await readFile(file, "utf-8");
+
+  return { hash: toFileHash(text), path: query.path, text };
 };
 
 export { readFileList, readFileText };

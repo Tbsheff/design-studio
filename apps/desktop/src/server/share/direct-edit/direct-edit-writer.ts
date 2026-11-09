@@ -14,6 +14,7 @@ import {
   applyTweaksIn,
   createTokenIn,
   getRenderCheckOf,
+  updateFileIn,
   updateTokensIn,
   importFigmaIn,
   setPropsIn,
@@ -23,7 +24,12 @@ import {
   runRulesTestIn,
   setRulesIn,
 } from "./ops/index.js";
-import type { DirectionRef, EditBody } from "./ops/index.js";
+import type {
+  DirectionRef,
+  EditBody,
+  FileSaved,
+  FileUpdate,
+} from "./ops/index.js";
 
 interface DirectEditWriterApi {
   readonly apply: (
@@ -53,6 +59,10 @@ interface DirectEditWriterApi {
     Awaited<ReturnType<typeof createTokenIn>>,
     DirectEditFailure
   >;
+  readonly updateFile: (
+    ref: DirectionRef,
+    body: FileUpdate
+  ) => Effect.Effect<FileSaved, DirectEditFailure>;
   readonly updateTokens: (
     ref: DirectionRef,
     body: EditBody
@@ -303,6 +313,14 @@ class DirectEditWriter extends Context.Service<
       ) {
         return yield* attemptDirectEdit((runtime) =>
           setVectorIn(runtime, ref, body)
+        );
+      }),
+      updateFile: Effect.fn("DirectEditWriter.updateFile")(function* run(
+        ref: DirectionRef,
+        body: FileUpdate
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          updateFileIn(runtime, ref, body)
         );
       }),
       updateTokens: Effect.fn("DirectEditWriter.updateTokens")(function* run(

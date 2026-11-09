@@ -1,6 +1,8 @@
 import type { SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
+import { CodeEditButton } from "./code-edit-button.js";
+import { CodeEditHost } from "./code-edit-host.js";
 import { CopySnippet } from "./copy-snippet.js";
 import { copy } from "./copy.js";
 import { OpenInEditor } from "./open-in-editor.js";
@@ -22,7 +24,12 @@ const InspectorCode = ({
   const snippet = useSnippet(projectId, directionId, selection);
 
   if (!selection) {
-    return <p className="ins-hint">{copy.selectAnElementOnThe}</p>;
+    return (
+      <>
+        <p className="ins-hint">{copy.selectAnElementOnThe}</p>
+        <CodeEditHost />
+      </>
+    );
   }
 
   return (
@@ -33,6 +40,14 @@ const InspectorCode = ({
         </span>
         {snippet.kind === "ready" && <CopySnippet code={snippet.code} />}
         {snippet.kind === "ready" && snippet.file && directionId && (
+          <CodeEditButton
+            projectId={projectId}
+            directionId={directionId}
+            file={snippet.file}
+            line={snippet.line}
+          />
+        )}
+        {snippet.kind === "ready" && snippet.file && directionId && (
           <OpenInEditor
             projectId={projectId}
             directionId={directionId}
@@ -41,6 +56,7 @@ const InspectorCode = ({
         )}
       </div>
       <SnippetView snippet={snippet} />
+      <CodeEditHost />
     </div>
   );
 };

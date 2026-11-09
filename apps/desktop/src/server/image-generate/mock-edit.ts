@@ -1,6 +1,8 @@
 import { PNG } from "pngjs";
 
 import type { EditMode } from "./edit-mode.js";
+import { toExpandedPng } from "./expand-pad.js";
+import type { ExpandTarget } from "./expand-pad.js";
 
 interface MockEdited {
   readonly bytes: Buffer | null;
@@ -48,6 +50,8 @@ const HEIGHT_PATTERN = /\bheight="(?<value>\d+)"/gu;
 const STOP_PATTERN = /stop-color="hsl\((?<hue>\d+)/gu;
 
 const ONLY_PNG = "The mock provider edits PNG and SVG images only.";
+
+const NO_ASPECT = "Pick a shape to expand the image to.";
 
 const TOO_LARGE = "The image is already large. Upscale a smaller image.";
 
@@ -205,7 +209,13 @@ const toTintedPng = (png: PNG, prompt: string): PNG => {
   return out;
 };
 
-const toEditedPng = (png: PNG, mode: EditMode, prompt: string): PNG => {
+const toEditedPng = (png: PNG, request: MockEditRequest): PNG => {
+  const { expand, mode, prompt } = request;
+
+  if (mode === "expand" && expand !== null) {
+    return toExpandedPng(png, expand, true);
+  }
+
   if (mode === "remove-background") {
     return toCutPng(png);
   }
@@ -217,12 +227,16 @@ const toEditedPng = (png: PNG, mode: EditMode, prompt: string): PNG => {
   return toTintedPng(png, prompt);
 };
 
-const toMockEdit = (
-  source: Buffer,
-  ext: string,
-  mode: EditMode,
-  prompt: string
-): MockEdited => {
+interface MockEditRequest {
+  readonly expand: ExpandTarget | null;
+  readonly ext: string;
+  readonly mode: EditMode;
+  readonly prompt: string;
+  readonly source: Buffer;
+}
+
+const toMockEdit = (request: MockEditRequest): MockEdited => {
+  const { ext, mode, source } = request;
   const png = toSourcePng(source, ext);
 
   if (png === null) {
@@ -236,12 +250,13 @@ const toMockEdit = (
     return { bytes: null, message: TOO_LARGE };
   }
 
-  return {
-    bytes: PNG.sync.write(toEditedPng(png, mode, prompt)),
-    message: null,
-  };
+  if (mode === "expand" && request.expand === null) {
+    return { bytes: null, message: NO_ASPECT };
+  }
+
+  return { bytes: PNG.sync.write(toEditedPng(png, request)), message: null };
 };
 
-export { toMockEdit };
+export { toMockEdit, toSourcePng };
 
-export type { MockEdited };
+export type { MockEdited, MockEditRequest };

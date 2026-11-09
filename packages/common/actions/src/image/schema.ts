@@ -58,9 +58,34 @@ const ImageEditModeSchema = Schema.Literals([
   "remove-background",
   "upscale",
   "prompt",
+  "expand",
 ]);
 
+const ImageExpandAspectSchema = Schema.Literals([
+  "1:1",
+  "4:3",
+  "16:9",
+  "9:16",
+  "3:2",
+  "fill",
+]);
+
+const ImageBoxSchema = Schema.Struct({
+  height: Schema.Int.check(Schema.isGreaterThan(0)),
+  width: Schema.Int.check(Schema.isGreaterThan(0)),
+});
+
 const ImageEditFields = {
+  aspect: Schema.NullOr(ImageExpandAspectSchema).annotate({
+    description:
+      "Target shape for the expand mode: 1:1, 4:3, 16:9, 9:16, 3:2 or fill (match the layer box). Required for the expand mode. Null for the other modes.",
+  }),
+  box: Schema.NullOr(ImageBoxSchema)
+    .annotate({
+      description:
+        "Layer box in pixels. Used by the expand mode with aspect fill. Null otherwise.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
   layer: ImageLayerSchema,
   mode: ImageEditModeSchema,
   prompt: Schema.NullOr(
@@ -91,10 +116,12 @@ const ImageStatusSchema = Schema.Struct({
 
 export {
   ImageAspectSchema,
+  ImageBoxSchema,
   ImageCreatedSchema,
   ImageCreateFields,
   ImageEditFields,
   ImageEditModeSchema,
+  ImageExpandAspectSchema,
   ImageLayerSchema,
   ImageProviderSchema,
   ImageStatusSchema,

@@ -128,15 +128,19 @@ const useDrawStrokes = (): DrawStrokes => {
   return { clear, push, strokes, undo };
 };
 
-const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
+const useDrawTool = (
+  available: boolean,
+  onActivate: () => void,
+  onDeactivate: () => void
+): DrawTool => {
   const [isOn, setIsOn] = useState(false);
   const on = isOn;
   const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
   const [wasAvailable, setWasAvailable] = useState(available);
   const { clear, push, strokes, undo } = useDrawStrokes();
-  const live = useRef({ available, on, onActivate });
+  const live = useRef({ available, on, onActivate, onDeactivate });
   useLayoutEffect(() => {
-    live.current = { available, on, onActivate };
+    live.current = { available, on, onActivate, onDeactivate };
   });
 
   const setOn = useCallback(
@@ -165,7 +169,13 @@ const useDrawTool = (available: boolean, onActivate: () => void): DrawTool => {
     }
   }
 
-  const toggle = useCallback(() => setOn(!live.current.on), [setOn]);
+  const toggle = useCallback(() => {
+    if (live.current.on) {
+      live.current.onDeactivate();
+    }
+
+    setOn(!live.current.on);
+  }, [setOn]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void =>
@@ -214,10 +224,14 @@ const useCanvasDraw = (
 ): DrawTool => {
   const setComment = comment.setOn;
 
-  const draw = useDrawTool(comment.available, () => {
-    setSelectMode(false);
-    setComment(false);
-  });
+  const draw = useDrawTool(
+    comment.available,
+    () => {
+      setSelectMode(false);
+      setComment(false);
+    },
+    () => setSelectMode(true)
+  );
 
   const setDraw = draw.setOn;
   const isBlocked = comment.on || selectMode;

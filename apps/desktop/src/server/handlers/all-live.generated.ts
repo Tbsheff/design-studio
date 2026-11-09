@@ -9,6 +9,7 @@ import { CloudLive } from "./cloud/live.js";
 import { CommentLive } from "./comment/live.js";
 import { CompletionLive } from "./completion/live.js";
 import { ComponentVariantLive } from "./component-variant/live.js";
+import { ComponentLive } from "./component/live.js";
 import { ConnectionLive } from "./connection/live.js";
 import { ContentLive } from "./content/live.js";
 import { CritiqueLive } from "./critique/live.js";
@@ -72,6 +73,7 @@ const ALL_LIVE = {
   cloud: CloudLive,
   comment: CommentLive,
   completion: CompletionLive,
+  component: ComponentLive,
   componentVariant: ComponentVariantLive,
   connection: ConnectionLive,
   content: ContentLive,

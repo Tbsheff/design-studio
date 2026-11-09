@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
+import { BlockMissingList } from "./block-missing-list.js";
 import type { BlockItem } from "./block-model.js";
 import { BlockWireframe } from "./block-wireframe.js";
 import { copy } from "./copy.js";
@@ -10,6 +11,7 @@ import styles from "./block.module.css";
 interface BlockTileProps {
   readonly block: BlockItem;
   readonly isBusy: boolean;
+  readonly onAdd: (name: string) => void;
   readonly onInsert: (blockId: string) => void;
   readonly tip: string;
 }
@@ -17,6 +19,7 @@ interface BlockTileProps {
 const BlockTile = ({
   block,
   isBusy,
+  onAdd,
   onInsert,
   tip,
 }: BlockTileProps): ReactElement => {
@@ -25,8 +28,6 @@ const BlockTile = ({
     [block.id, onInsert]
   );
 
-  const missingTip = `${copy.missingTip} ${block.missing.join(", ")}`;
-
   return (
     <li className={styles.tile} data-block={block.id}>
       <BlockWireframe kind={block.kind} />
@@ -34,9 +35,11 @@ const BlockTile = ({
         <span className={styles.name}>{block.name}</span>
         <span className={styles.description}>{block.description}</span>
         {block.missing.length > 0 && (
-          <span className={styles.missing} data-tip={missingTip}>
-            {copy.missingLabel} {block.missing.length} {copy.missingCount}
-          </span>
+          <BlockMissingList
+            isBusy={isBusy}
+            names={block.missing}
+            onAdd={onAdd}
+          />
         )}
         {block.missing.length === 0 && (
           <span className={styles.matched}>{copy.matched}</span>

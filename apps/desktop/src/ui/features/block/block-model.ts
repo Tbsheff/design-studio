@@ -1,5 +1,10 @@
 import { copy } from "./copy.js";
-import type { RouteInput, RouteOutput, blockRoutes } from "./deps.js";
+import type {
+  RouteInput,
+  RouteOutput,
+  blockRoutes,
+  componentRoutes,
+} from "./deps.js";
 
 type ListInput = RouteInput<typeof blockRoutes.listBlock>;
 
@@ -8,6 +13,10 @@ type ListOutput = RouteOutput<typeof blockRoutes.listBlock>;
 type InsertInput = RouteInput<typeof blockRoutes.insertBlock>;
 
 type InsertOutput = RouteOutput<typeof blockRoutes.insertBlock>;
+
+type ImportOutput = RouteOutput<typeof componentRoutes.importComponent>;
+
+type ImportInput = RouteInput<typeof componentRoutes.importComponent>;
 
 type BlockItem = ListOutput["items"][number];
 
@@ -98,11 +107,44 @@ const toInsertInput = (
   };
 };
 
-export { KIND_OPTIONS, toInsertInput, toListInput, toWireRows };
+const UPPER_BOUNDARY = /(?<=[a-z0-9])(?=[A-Z])/gu;
+
+const toRegistryName = (component: string): string =>
+  component.replaceAll(UPPER_BOUNDARY, "-").toLowerCase();
+
+const isPartOf = (name: string, root: string): boolean =>
+  name !== root &&
+  name.startsWith(root) &&
+  /^[A-Z]/u.test(name.slice(root.length));
+
+const toMissingRoots = (names: readonly string[]): readonly string[] =>
+  names.filter((name) => !names.some((other) => isPartOf(name, other)));
+
+const toImportInput = (
+  projectId: string,
+  directionId: string | null,
+  component: string
+): ImportInput => {
+  const name = toRegistryName(component.trim());
+  const registryUrl = null;
+
+  return { directionId, name, projectId, registryUrl };
+};
+
+export {
+  KIND_OPTIONS,
+  toImportInput,
+  toInsertInput,
+  toListInput,
+  toMissingRoots,
+  toRegistryName,
+  toWireRows,
+};
 
 export type {
   BlockItem,
   BlockKind,
+  ImportOutput,
   InsertOutput,
   KindFilter,
   KindOption,

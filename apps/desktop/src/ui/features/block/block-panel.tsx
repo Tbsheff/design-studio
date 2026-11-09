@@ -6,8 +6,11 @@ import type { KindFilter } from "./block-model.js";
 import { BlockTile } from "./block-tile.js";
 import { copy } from "./copy.js";
 import type { ProjectKind, SelectionContext } from "./deps.js";
+import { RegistryAddForm } from "./registry-add-form.js";
+import { RegistryResult } from "./registry-result.js";
 import { useBlockInsert } from "./use-block-insert.js";
 import { useBlockList } from "./use-block-list.js";
+import { useRegistryAdd } from "./use-registry-add.js";
 
 import styles from "./block.module.css";
 
@@ -42,6 +45,8 @@ const BlockPanel = ({
 
   const insert = useBlockInsert({ directionId, projectId, selectionSource });
 
+  const registry = useRegistryAdd({ directionId, projectId });
+
   const handleFilter = useCallback(
     (next: KindFilter): void => setFilter(next),
     []
@@ -55,13 +60,21 @@ const BlockPanel = ({
 
   return (
     <div className={styles.panel}>
+      <RegistryAddForm isBusy={registry.isBusy} onAdd={registry.handleAdd} />
+      {registry.error !== null && (
+        <p className={styles.error}>{registry.error}</p>
+      )}
+      {registry.result !== null && registry.error === null && (
+        <RegistryResult result={registry.result} />
+      )}
       <BlockKindChips kind={filter} onSelect={handleFilter} />
       <ul aria-label={copy.listLabel} className={styles.list}>
         {list.items.map((block) => (
           <BlockTile
             block={block}
-            isBusy={insert.isBusy}
+            isBusy={insert.isBusy || registry.isBusy}
             key={block.id}
+            onAdd={registry.handleAdd}
             onInsert={insert.handleInsert}
             tip={tip}
           />

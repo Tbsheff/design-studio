@@ -18,7 +18,7 @@ const setLinkInteractionCanvas = defineAction({
   },
   confirm: "none",
   description:
-    "Set the trigger, action and target of one prototype link (linkId), or make a link from a source element (fromFrame and selector). trigger: click (default), hover, press, delay (delayMs), key (key) or swipe-left, swipe-right, swipe-up, swipe-down (a pointer drag of 40 px or more within 600 ms on the source element). action: navigate, modal or drawer (toFrame), scroll-to (target selector in the same frame), open-url (https url), close-overlay, or toggle (target selector, visibility toggle, show or hide). One element has one link per trigger; a second link with the same trigger replaces the first. Links live in the studio (.studio/links.json), not in the page code. Each change is one step in the edit history.",
+    "Set the trigger, action and target of one prototype link (linkId), or make a link from a source element (fromFrame and selector). trigger: click (default), hover, press, delay (delayMs), key (key) or swipe-left, swipe-right, swipe-up, swipe-down (a drag of 40 px or more in 600 ms). action: navigate, modal or drawer (toFrame), scroll-to (target selector), open-url (https url), close-overlay, or toggle (target selector, show or hide). One element has one link per trigger; a new link replaces the old one. Links live in .studio/links.json, not in the page code. Each change is one history step.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/links/interaction" },
   id: "canvas.setLinkInteraction",

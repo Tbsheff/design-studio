@@ -23,7 +23,7 @@ const createLinkCanvas = defineAction({
   },
   confirm: "none",
   description:
-    "Link an element (CSS selector on the page of fromFrame) to another frame: on click, go to toFrame (action navigate) or open it as a modal or drawer over the current frame, with a transition, a duration and an easing. toFrame back goes back to the frame before. A second link on the same element replaces the first. Each link change is one step in the edit history.",
+    "Link an element (CSS selector on the page of fromFrame) to another frame: on click, go to toFrame (action navigate) or open it as a modal, drawer or popover over the current frame, with a transition, a duration and an easing. toFrame back goes back to the frame before. A second link on the same element replaces the first. Each link change is one step in the edit history.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/links" },
   id: "canvas.createLink",

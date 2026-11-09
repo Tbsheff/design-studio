@@ -1,9 +1,11 @@
-import { VISIBILITY_LABELS } from "./copy.js";
+import { OUTSIDE_CLOSE_LABELS, VISIBILITY_LABELS } from "./copy.js";
 import {
   ACTION_LABELS,
   LINK_INTERACTION_ACTIONS,
+  LINK_PLACEMENTS,
   LINK_TRIGGERS,
   LINK_VISIBILITIES,
+  PLACEMENT_LABELS,
   TRIGGER_LABELS,
   cleanLinkKey,
   isFrameAction,
@@ -14,6 +16,7 @@ import type {
   CanvasFrame,
   LinkAction,
   LinkInteractionChange,
+  LinkPlacement,
   LinkTarget,
   LinkTriggerKind,
   LinkVisibility,
@@ -46,6 +49,31 @@ const visibilityOptions: UiSelectOption<LinkVisibility>[] =
     label: VISIBILITY_LABELS[visibility],
     value: visibility,
   }));
+
+const placementOptions: UiSelectOption<LinkPlacement>[] = LINK_PLACEMENTS.map(
+  (placement) => ({
+    label: PLACEMENT_LABELS[placement],
+    value: placement,
+  })
+);
+
+type OutsideCloseValue = keyof typeof OUTSIDE_CLOSE_LABELS;
+
+const outsideCloseOptions: UiSelectOption<OutsideCloseValue>[] = [
+  { label: OUTSIDE_CLOSE_LABELS.close, value: "close" },
+  { label: OUTSIDE_CLOSE_LABELS.stay, value: "stay" },
+];
+
+const placementOf = (link: PrototypeLink): LinkPlacement =>
+  link.placement ?? "bottom-start";
+
+const outsideCloseOf = (link: PrototypeLink): OutsideCloseValue => {
+  if (link.isOutsideClose === false) {
+    return "stay";
+  }
+
+  return "close";
+};
 
 const triggerOf = (link: PrototypeLink): LinkTriggerKind =>
   link.trigger?.kind ?? "click";
@@ -191,7 +219,11 @@ export {
   delayOf,
   keyName,
   keyOf,
+  outsideCloseOf,
+  outsideCloseOptions,
   pendingFor,
+  placementOf,
+  placementOptions,
   selectorOf,
   shownAction,
   triggerChange,
@@ -202,4 +234,4 @@ export {
   visibilityOptions,
 };
 
-export type { Pending, PendingKind };
+export type { OutsideCloseValue, Pending, PendingKind };

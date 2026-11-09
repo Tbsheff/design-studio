@@ -1,3 +1,4 @@
+import type { LinkPlacement } from "@design-studio/contracts/link-interaction";
 import type {
   LinkAction,
   LinkEasing,
@@ -10,6 +11,7 @@ const ACTION_LABELS: Record<LinkAction, string> = {
   modal: "Open as modal",
   navigate: "Navigate",
   "open-url": "Open URL",
+  popover: "Open as popover",
   "scroll-to": "Scroll to",
   "set-variable": "Set variable",
   toggle: "Show or hide",
@@ -35,6 +37,15 @@ const TRANSITION_LABELS: Record<LinkTransition, string> = {
   "smart-animate": "Smart animate",
 };
 
+const PLACEMENT_LABELS: Record<LinkPlacement, string> = {
+  "bottom-end": "Below, right edge",
+  "bottom-start": "Below, left edge",
+  left: "Left",
+  right: "Right",
+  "top-end": "Above, right edge",
+  "top-start": "Above, left edge",
+};
+
 const REVERSE: Partial<Record<LinkTransition, LinkTransition>> = {
   "move-in": "move-out",
   "move-out": "move-in",
@@ -50,4 +61,10 @@ const transitionLabel = (transition: LinkTransition): string =>
 const reverseTransition = (transition: LinkTransition): LinkTransition =>
   REVERSE[transition] ?? transition;
 
-export { ACTION_LABELS, EASING_LABELS, reverseTransition, transitionLabel };
+export {
+  ACTION_LABELS,
+  EASING_LABELS,
+  PLACEMENT_LABELS,
+  reverseTransition,
+  transitionLabel,
+};

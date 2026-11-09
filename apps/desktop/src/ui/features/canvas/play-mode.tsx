@@ -100,6 +100,17 @@ const toErrorNode = (message: string | null): ReactElement | null => {
   return <output className="play-error">{message}</output>;
 };
 
+const isBackdropLocked = (overlay: Slot): boolean =>
+  overlay.popover !== null && !overlay.popover.isOutsideClose;
+
+const toOverlayClass = (overlay: Slot): string => {
+  if (overlay.overlay === "popover") {
+    return `play-overlay is-popover ${overlay.phase}`;
+  }
+
+  return `play-overlay ${overlay.phase}`;
+};
+
 const toOverlayNode = (
   overlay: Slot | null,
   props: BaseSlotsProps,
@@ -112,12 +123,13 @@ const toOverlayNode = (
   const { bind, sandbox, stage } = props;
 
   return (
-    <div className={`play-overlay ${overlay.phase}`} style={slotStyle(overlay)}>
+    <div className={toOverlayClass(overlay)} style={slotStyle(overlay)}>
       <button
         type="button"
         className="play-backdrop"
         aria-label={copy.closeOverlay}
         data-testid="play-backdrop"
+        disabled={isBackdropLocked(overlay)}
         onClick={onClose}
       />
       <SlotView
@@ -150,7 +162,8 @@ const toTitle = (
 };
 
 const PlayMode = (props: PlayModeProps): ReactElement => {
-  const play = usePlay(props);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const play = usePlay(props, stageRef);
   const { device, onDevice, onRotate, orientation } = usePlayDevice(
     props.projectId
   );
@@ -221,7 +234,7 @@ const PlayMode = (props: PlayModeProps): ReactElement => {
         onExit={onExit}
       />
       {toErrorNode(play.error)}
-      <div className="play-stage">
+      <div ref={stageRef} className="play-stage">
         {toBaseNodes(slotProps)}
         {toOverlayNode(overlay, slotProps, onCloseOverlay)}
       </div>

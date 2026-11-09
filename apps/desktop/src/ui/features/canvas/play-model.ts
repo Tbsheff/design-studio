@@ -13,11 +13,24 @@ import type {
 import type { CSSProperties } from "react";
 
 import type { CanvasFrame } from "./canvas-frames-model.js";
+import {
+  POPOVER_MARGIN,
+  toClamped,
+  toCrossPlacement,
+  toMainPlacement,
+  toPopoverSpot,
+} from "./popover-model.js";
+import type {
+  PopoverBox,
+  PopoverInput,
+  PopoverSlot,
+  PopoverSpot,
+} from "./popover-model.js";
 import { hasOutgoing } from "./prototype-model.js";
 
 type Phase = "loading" | "enter" | "run" | "shown" | "closing";
 
-type OverlayKind = "modal" | "drawer";
+type OverlayKind = "modal" | "drawer" | "popover";
 
 interface Motion {
   transition: LinkTransition;
@@ -32,6 +45,7 @@ interface Slot extends Motion {
   token: string;
   phase: Phase;
   overlay: OverlayKind | null;
+  popover: PopoverSlot | null;
 }
 
 interface PlayModeProps {
@@ -76,6 +90,8 @@ const BASE_WIDTH_CHROME = 48;
 
 const BASE_HEIGHT_CHROME = 120;
 
+const HALF = 2;
+
 const INSTANT: Motion = {
   duration: LINK_DURATION_DEFAULT,
   easing: LINK_EASING_DEFAULT,
@@ -99,6 +115,10 @@ const scaleFor = (slot: Slot, stage: StageSize): number => {
     );
   }
 
+  if (slot.overlay === "popover") {
+    return slot.popover?.scale ?? 1;
+  }
+
   if (slot.overlay === "modal") {
     return Math.min(
       1,
@@ -113,6 +133,28 @@ const scaleFor = (slot: Slot, stage: StageSize): number => {
     (stage.height - BASE_HEIGHT_CHROME) / frame.height
   );
 };
+
+const toPopoverPosition = (input: PopoverInput): PopoverSpot => {
+  const main = toMainPlacement(input, input.placement);
+  const placement = toCrossPlacement(input, main);
+  const spot = toPopoverSpot(input, placement);
+
+  return {
+    left: toClamped(spot.left, input.size.width, input.stage.width),
+    top: toClamped(spot.top, input.size.height, input.stage.height),
+  };
+};
+
+const toPopoverScale = (
+  frame: { readonly height: number; readonly width: number },
+  base: number,
+  stage: StageSize
+): number =>
+  Math.min(
+    base,
+    (stage.width - POPOVER_MARGIN * HALF) / frame.width,
+    (stage.height - POPOVER_MARGIN * HALF) / frame.height
+  );
 
 const slotClass = (slot: Slot, isLeaving: boolean): string => {
   const names = ["play-slot", `t-${slot.transition}`];
@@ -135,6 +177,18 @@ const slotStyle = (motion: Motion): CSSProperties =>
     "--play-ease": motion.easing,
     "--play-ms": `${motion.duration}ms`,
   }) as CSSProperties;
+
+const toSlotViewStyle = (motion: Motion, slot: Slot): CSSProperties => {
+  if (!slot.popover) {
+    return slotStyle(motion);
+  }
+
+  return {
+    ...slotStyle(motion),
+    paddingLeft: slot.popover.left,
+    paddingTop: slot.popover.top,
+  };
+};
 
 const baseOf = (slots: Slot[]): Slot[] => slots.filter((slot) => !slot.overlay);
 
@@ -250,7 +304,10 @@ export {
   settled,
   slotClass,
   slotStyle,
+  toPopoverPosition,
+  toPopoverScale,
   toShownFrame,
+  toSlotViewStyle,
   withPhase,
 };
 
@@ -260,6 +317,9 @@ export type {
   OverlayKind,
   Phase,
   PlayModeProps,
+  PopoverBox,
+  PopoverInput,
+  PopoverSlot,
   Slot,
   StageSize,
 };

@@ -1,4 +1,7 @@
-import { LINK_SWIPE_TRIGGERS } from "@design-studio/contracts/link-interaction";
+import {
+  LINK_PLACEMENTS,
+  LINK_SWIPE_TRIGGERS,
+} from "@design-studio/contracts/link-interaction";
 import {
   LINK_VARIABLE_NAME_RE,
   LINK_VARIABLE_OPS,
@@ -52,6 +55,21 @@ const LinkVariableFields = {
   ),
 } as const;
 
+const LinkPopoverFields = {
+  isOutsideClose: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description:
+        "For popover: true (default) closes it on a click outside, false keeps it open until close-overlay or Esc.",
+    })
+  ),
+  placement: Schema.optionalKey(
+    Schema.Literals(LINK_PLACEMENTS).annotate({
+      description:
+        "For popover: where the frame opens next to the source element (bottom-start default, bottom-end, top-start, top-end, right, left). It flips to stay inside the screen. Needed for a new popover, ignored for other actions.",
+    })
+  ),
+} as const;
+
 const ShownVisibilitySchema = Schema.Literals(["show", "hide"]);
 
 const LinkVariableTargetSchema = Schema.Struct({
@@ -88,6 +106,7 @@ const LinkTriggerSchema = Schema.Union([
 ]);
 
 export {
+  LinkPopoverFields,
   LinkTargetSchema,
   LinkTriggerSchema,
   LinkVariableFields,

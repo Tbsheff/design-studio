@@ -43,7 +43,7 @@ const toSlotQueries = (props: PlayModeProps, slot: Slot): LinkQuery[] => {
   for (const link of props.file.links) {
     if (
       link.from.frame === slot.frame.id &&
-      !link.trigger &&
+      (!link.trigger || link.action === "popover") &&
       staticLinkIssue(link, props.frames) === null
     ) {
       queries.push(linkQuery(link));

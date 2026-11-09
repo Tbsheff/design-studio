@@ -246,6 +246,14 @@ const motionOf = (
     motion.easing = request.easing;
   }
 
+  if (request.placement !== null) {
+    motion.placement = request.placement;
+  }
+
+  if (request.isOutsideClose !== null) {
+    motion.isOutsideClose = request.isOutsideClose;
+  }
+
   return motion;
 };
 
@@ -268,6 +276,14 @@ const baseLink = (
 
   if (current?.easing) {
     link.easing = current.easing;
+  }
+
+  if (current?.placement) {
+    link.placement = current.placement;
+  }
+
+  if (current?.isOutsideClose === false) {
+    link.isOutsideClose = false;
   }
 
   return link;

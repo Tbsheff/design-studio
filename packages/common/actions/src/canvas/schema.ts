@@ -3,6 +3,7 @@ import {
   LINK_DELAY_MAX,
   LINK_EXTRA_ACTIONS,
   LINK_KEY_RE,
+  LINK_PLACEMENTS,
   LINK_TRIGGERS,
   LINK_URL_MAX,
   LINK_VISIBILITIES,
@@ -20,6 +21,7 @@ import { Effect, Schema } from "effect";
 
 import { FrameIdSchema } from "../_core/ids.js";
 import {
+  LinkPopoverFields,
   LinkTargetSchema,
   LinkTriggerSchema,
   LinkVariableFields,
@@ -71,7 +73,7 @@ const LinkInteractionFields = {
   action: Schema.optionalKey(
     Schema.Literals(LINK_INTERACTION_ACTIONS).annotate({
       description:
-        "navigate, modal or drawer go to toFrame; scroll-to scrolls target into view in the same frame; open-url opens url (https only) in a new tab; close-overlay closes the open modal or drawer; toggle shows or hides target; set-variable changes a Play variable (variableName, variableOp, variableValue).",
+        "navigate, modal, drawer or popover go to toFrame (popover opens it next to the source element, see placement); scroll-to scrolls target into view in the same frame; open-url opens url (https only) in a new tab; close-overlay closes the open modal, drawer or popover; toggle shows or hides target; set-variable changes a Play variable (variableName, variableOp, variableValue).",
     })
   ),
   delayMs: Schema.optionalKey(
@@ -81,7 +83,8 @@ const LinkInteractionFields = {
   ),
   duration: Schema.optionalKey(
     LinkDurationSchema.annotate({
-      description: "Transition length in ms for navigate, modal and drawer.",
+      description:
+        "Transition length in ms for navigate, modal, drawer and popover.",
     })
   ),
   easing: Schema.optionalKey(
@@ -118,12 +121,12 @@ const LinkInteractionFields = {
   toFrame: Schema.optionalKey(
     FrameRefSchema.annotate({
       description:
-        'Frame id or @label for navigate, modal and drawer, or "back" for navigate.',
+        'Frame id or @label for navigate, modal, drawer and popover, or "back" for navigate.',
     })
   ),
   transition: Schema.optionalKey(
     LinkTransitionSchema.annotate({
-      description: "Transition for navigate, modal and drawer.",
+      description: "Transition for navigate, modal, drawer and popover.",
     })
   ),
   trigger: Schema.optionalKey(
@@ -142,6 +145,7 @@ const LinkInteractionFields = {
       description: "For toggle: toggle (default), show or hide the target.",
     })
   ),
+  ...LinkPopoverFields,
   ...LinkVariableFields,
 } as const;
 
@@ -165,13 +169,15 @@ const LinkSourceSchema = Schema.Struct({
 
 const PrototypeLinkSchema = Schema.Struct({
   action: Schema.optionalKey(
-    Schema.Literals(["modal", "drawer", ...LINK_EXTRA_ACTIONS])
+    Schema.Literals(["modal", "drawer", "popover", ...LINK_EXTRA_ACTIONS])
   ),
   duration: Schema.optionalKey(Schema.Number),
   easing: Schema.optionalKey(LinkEasingSchema),
   from: LinkSourceSchema,
   id: Schema.String,
   implicit: Schema.optionalKey(Schema.Literal(true)),
+  isOutsideClose: Schema.optionalKey(Schema.Literal(false)),
+  placement: Schema.optionalKey(Schema.Literals(LINK_PLACEMENTS)),
   to: LinkTargetSchema,
   transition: LinkTransitionSchema,
   trigger: Schema.optionalKey(LinkTriggerSchema),

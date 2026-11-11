@@ -16,7 +16,11 @@ import { attemptKnown } from "../platform/attempt/index.js";
 import { isRunSummary } from "./run-log-json.js";
 import { findRunFile } from "./run-log-reads.js";
 import { readRunLogRuntime } from "./run-log-runtime.js";
-import type { ActiveRun, StartRunCall } from "./run-log-runtime.js";
+import type {
+  ActiveRun,
+  StartRunCall,
+  VariationStartCall,
+} from "./run-log-runtime.js";
 
 type RunAck = typeof AckSchema.Type;
 
@@ -210,11 +214,20 @@ const startRunWith = Effect.fn("RunLog.startRunWith")(function* run(
   return { runId };
 });
 
+const startVariationsWith = Effect.fn("RunLog.startVariationsWith")(
+  function* run(input: VariationStartCall) {
+    const runtime = yield* readRunLogRuntime;
+
+    return yield* attemptKnown(() => runtime.startVariations(input));
+  }
+);
+
 export {
   answerActiveRun,
   setActiveQueue,
   setRunTitle,
   startRunWith,
+  startVariationsWith,
   steerActiveRun,
   stopActiveRun,
 };

@@ -138,6 +138,7 @@ export interface VariationStartRequest {
 
 export interface VariationStartItem {
   label: string;
+  name: string | null;
   directionId: string | null;
   runId: string | null;
   error: string | null;

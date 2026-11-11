@@ -3,6 +3,8 @@ import type {
   PermissionDecision,
   Project,
   QueuedMessage,
+  RunLevel,
+  VariationStartResult,
 } from "@design-studio/contracts";
 import type { Effect } from "effect";
 
@@ -25,6 +27,21 @@ interface StartRunCall {
   readonly projectId: string;
 }
 
+interface VariationBriefCall {
+  readonly brief: string;
+  readonly title: string;
+}
+
+interface VariationStartCall {
+  readonly attachmentIds: readonly string[];
+  readonly briefs: readonly VariationBriefCall[] | null;
+  readonly count: number;
+  readonly fromDirectionId: string | null;
+  readonly level: RunLevel | null;
+  readonly projectId: string;
+  readonly prompt: string;
+}
+
 interface RunLogRuntime {
   readonly findRunProject: (runId: string) => Promise<string | null>;
   readonly loadContext: (
@@ -42,6 +59,9 @@ interface RunLogRuntime {
   };
   readonly runsDir: (projectId: string) => string;
   readonly startRun: (input: StartRunCall) => Promise<string>;
+  readonly startVariations: (
+    input: VariationStartCall
+  ) => Promise<VariationStartResult>;
 }
 
 const slot = makeRuntimeSlot<RunLogRuntime>("Run log");
@@ -54,4 +74,4 @@ const readRunLogRuntime: Effect.Effect<RunLogRuntime> = slot.read;
 
 export { bindRunLogRuntime, readRunLogRuntime };
 
-export type { ActiveRun, RunLogRuntime, StartRunCall };
+export type { ActiveRun, RunLogRuntime, StartRunCall, VariationStartCall };

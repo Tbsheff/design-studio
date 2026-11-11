@@ -25,7 +25,6 @@ import {
 import { registerAppPublishRoutes } from "./app-publish-routes.js";
 import {
   registerProjectRunsRoutes,
-  registerRunsRoutes,
   registerRunsVariationRoutes,
 } from "./app-runs-routes.js";
 import { registerSessionRoutes } from "./app-session-routes.js";
@@ -59,7 +58,6 @@ export function createApp(deps: AppDeps): Hono {
   registerEventsRoutes(app, ctx);
   registerProjectRunsRoutes(app, ctx);
   registerDirectEditRoutes(app, ctx);
-  registerRunsRoutes(app, ctx);
   registerAppExportRoutes(app, ctx);
   registerAppCommentsRoutes(app, ctx);
   registerDirectEditPanelRoutes(app);

@@ -37,6 +37,10 @@ const idle = (): null => null;
 
 const inflight = new Map<string, Promise<unknown>>();
 
+const handoff = new Map<string, Promise<unknown>>();
+
+const handoffOwner = new Map<string, string>();
+
 const listeners = new Set<DoneListener>();
 
 let unsubscribe: (() => void) | null = null;
@@ -57,7 +61,10 @@ const readShared = async <Out>(
   key: string,
   load: () => Promise<Out>
 ): Promise<Out> => {
-  const hit = inflight.get(key);
+  const hit = inflight.get(key) ?? handoff.get(key);
+
+  handoff.delete(key);
+  handoffOwner.delete(key);
 
   if (hit) {
     return (await hit) as Out;
@@ -71,19 +78,50 @@ const readShared = async <Out>(
   return next;
 };
 
+const dropOtherHandoffs = (owner: string): void => {
+  for (const [key, keyOwner] of handoffOwner) {
+    if (keyOwner !== owner) {
+      handoff.delete(key);
+      handoffOwner.delete(key);
+    }
+  }
+};
+
+const dropHandoff = (key: string, value: Promise<unknown>): void => {
+  if (handoff.get(key) === value) {
+    handoff.delete(key);
+    handoffOwner.delete(key);
+  }
+};
+
 const prefetch = async <Out>(
+  owner: string,
   key: string,
   load: () => Promise<Out>
 ): Promise<void> => {
+  dropOtherHandoffs(owner);
+
+  if (inflight.has(key) || handoff.has(key)) {
+    return;
+  }
+
+  const next = readShared(key, load);
+
+  handoff.set(key, next);
+  handoffOwner.set(key, owner);
+
   try {
-    await readShared(key, load);
+    await next;
   } catch {
     inflight.delete(key);
+    dropHandoff(key, next);
   }
 };
 
 const notify = (done: ActionDone): void => {
   inflight.clear();
+  handoff.clear();
+  handoffOwner.clear();
 
   for (const listener of listeners) {
     listener(done);

@@ -35,8 +35,8 @@ const toDirectionPath = (pid: string, did: string): string =>
 
 const RUNS_PAGE = "/runs?cursor=null&limit=200";
 
-const warmPath = (path: string): void => {
-  prefetch(`GET ${path}`, async () => {
+const warmPath = (pid: string, path: string): void => {
+  prefetch(pid, `GET ${path}`, async () => {
     const res = await request("GET", path);
 
     return (await res.json()) as unknown;
@@ -44,12 +44,11 @@ const warmPath = (path: string): void => {
 };
 
 const warmProject = (pid: string, directionId: string | null): void => {
-  warmPath(toProjectPath(pid));
-  warmPath(`${toProjectPath(pid)}${RUNS_PAGE}`);
-  warmPath(`${toProjectPath(pid)}/canvas`);
+  warmPath(pid, toProjectPath(pid));
+  warmPath(pid, `${toProjectPath(pid)}/canvas`);
 
   if (directionId) {
-    warmPath(`${toDirectionPath(pid, directionId)}/preview`);
+    warmPath(pid, `${toDirectionPath(pid, directionId)}/preview`);
   }
 };
 

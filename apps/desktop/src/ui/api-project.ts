@@ -27,6 +27,7 @@ import {
 } from "./api-wire.js";
 import type { ProjectWire } from "./api-wire.js";
 import { call, request } from "./platform/http";
+import { readShared } from "./platform/query";
 
 type ReferenceImported = WireOutput<typeof importReference>;
 
@@ -79,7 +80,11 @@ const projectApi = {
     return { project: toProject(duplicated.project) };
   },
   getProject: async (pid: string): Promise<Project> =>
-    toProject(await call(projectsRoutes.getProject, { projectId: pid })),
+    toProject(
+      await readShared(`GET ${toProjectPath(pid)}`, () =>
+        call(projectsRoutes.getProject, { projectId: pid })
+      )
+    ),
   hiddenProjects: (): Promise<{ count: number; target: string }> =>
     call(projectsRoutes.getHiddenProject, {}),
   importProject: async (

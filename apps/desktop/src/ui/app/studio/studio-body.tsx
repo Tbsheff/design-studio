@@ -30,6 +30,7 @@ const StudioBody = ({ ctx }: StudioCtxProps): ReactElement => {
       style={chatWidthStyle(ui.chatWidth)}
     >
       <StudioLeft ctx={ctx} />
+      <PanelRail column={ui.editorColumn} onPick={handlePick} />
       <StudioColumn ctx={ctx} />
       <StudioCenter ctx={ctx} />
       <StudioInspector ctx={ctx} />
@@ -38,7 +39,6 @@ const StudioBody = ({ ctx }: StudioCtxProps): ReactElement => {
 
   return (
     <div className="studio-body">
-      <PanelRail column={ui.editorColumn} onPick={handlePick} />
       <Suspense fallback={null}>
         <ProjectRail
           projectId={projectId}

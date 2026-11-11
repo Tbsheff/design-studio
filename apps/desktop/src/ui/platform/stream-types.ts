@@ -16,8 +16,10 @@ type Wire =
       data: string;
     }
   | { kind: "state"; state: ConnectionState }
-  | { kind: "approvals"; poll: McpApprovalPoll };
+  | { kind: "approvals"; poll: McpApprovalPoll }
+  | { kind: "done"; data: string };
 
+const ACTION_DONE_EVENT = "action.done";
 const CHANNEL = "design-studio-stream";
 const LEADER_LOCK = "design-studio-stream-leader";
 const TAB_LOCK = "design-studio-tab-";
@@ -28,6 +30,7 @@ const RADIX = 36;
 const SLICE_START = 2;
 
 export {
+  ACTION_DONE_EVENT,
   CHANNEL,
   GAP_MAX,
   GAP_MS,

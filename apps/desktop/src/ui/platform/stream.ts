@@ -4,7 +4,6 @@ import { APP_STREAM_PATH } from "../../shared/app-stream";
 import type { StreamWatchRequest } from "../../shared/app-stream";
 import type { EventSourceLike } from "./event-hub";
 import { request } from "./http";
-import { getSession } from "./session";
 import { StreamLeader } from "./stream-leader";
 import { StreamTab } from "./stream-tab";
 import { CHANNEL, LEADER_LOCK, TAB_LOCK } from "./stream-types";
@@ -13,6 +12,7 @@ import type { Wire } from "./stream-types";
 interface AppStream {
   source: (projectId: string, after: number) => EventSourceLike;
   onApprovals: (listener: (poll: McpApprovalPoll) => void) => () => void;
+  onDone: (listener: (data: string) => void) => () => void;
 }
 
 interface FollowInput {
@@ -43,6 +43,12 @@ const followLeaderless = (tab: StreamTab, message: Wire): void => {
 
     case "hello": {
       tab.changed();
+      break;
+    }
+
+    case "done": {
+      tab.done(message.data);
+
       break;
     }
 
@@ -95,6 +101,16 @@ const toApprovalsSubscriber =
 
     return () => {
       tab.approvalListeners.delete(listener);
+    };
+  };
+
+const toDoneSubscriber =
+  (tab: StreamTab): AppStream["onDone"] =>
+  (listener) => {
+    tab.doneListeners.add(listener);
+
+    return () => {
+      tab.doneListeners.delete(listener);
     };
   };
 
@@ -168,6 +184,7 @@ const startStream = (): AppStream => {
 
   return {
     onApprovals: toApprovalsSubscriber(tab),
+    onDone: toDoneSubscriber(tab),
     source: (projectId, after) => tab.source(projectId, after),
   };
 };
@@ -180,8 +197,6 @@ const appStream = (): AppStream => {
   return stream;
 };
 
-const ACTION_DONE_EVENT = "action.done";
-
 const subscribeActionDone = (
   listener: (data: string) => void
 ): (() => void) => {
@@ -189,15 +204,7 @@ const subscribeActionDone = (
     return () => false;
   }
 
-  const url = `${APP_STREAM_PATH}?token=${encodeURIComponent(getSession().token)}`;
-  const source = new EventSource(url);
-  source.addEventListener(ACTION_DONE_EVENT, (event) => {
-    listener((event as MessageEvent<string>).data);
-  });
-
-  return () => {
-    source.close();
-  };
+  return appStream().onDone(listener);
 };
 
 export { appStream, subscribeActionDone };

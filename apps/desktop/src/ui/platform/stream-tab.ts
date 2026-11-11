@@ -25,6 +25,7 @@ class StreamTab {
   public readonly approvalListeners = new Set<
     (poll: McpApprovalPoll) => void
   >();
+  public readonly doneListeners = new Set<(data: string) => void>();
   private announcing = false;
   private readonly announce: (wants: Wants) => void;
 
@@ -97,6 +98,12 @@ class StreamTab {
 
     for (const source of this.sources) {
       applyState(source, state);
+    }
+  }
+
+  public done(data: string): void {
+    for (const listener of this.doneListeners) {
+      listener(data);
     }
   }
 

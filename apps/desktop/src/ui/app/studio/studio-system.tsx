@@ -1,9 +1,10 @@
-import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
 import type { ReactElement } from "react";
 
 import {
   DesignSystemChip,
   designSystemRef,
+  StyleReferences,
 } from "../../features/design-system";
 import { EDIT_DESIGN_LABEL, SYSTEM_TEXT } from "./copy";
 import { RulesSlot } from "./rules-slot";
@@ -36,6 +37,9 @@ const StudioSystem = ({ ctx }: StudioCtxProps): ReactElement => {
           {EDIT_DESIGN_LABEL}
         </button>
       </div>
+      <Suspense fallback={null}>
+        <StyleReferences projectId={projectId} />
+      </Suspense>
       <RulesSlot projectId={projectId} directionId={core.directionId} />
     </>
   );

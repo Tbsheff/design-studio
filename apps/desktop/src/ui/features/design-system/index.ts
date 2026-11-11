@@ -5,6 +5,7 @@ import type { ComponentsPanel as ComponentsPanelView } from "./components-panel.
 import type { CreateComponentDialog as CreateComponentDialogView } from "./create-component-dialog.js";
 import type { DesignSystems as DesignSystemsView } from "./design-systems.js";
 import type { NewDesignSystem as NewDesignSystemView } from "./new-design-system.js";
+import type { StyleReferences as StyleReferencesView } from "./style-references.js";
 
 const ComponentsPanel: LazyExoticComponent<typeof ComponentsPanelView> = lazy(
   async () => {
@@ -40,6 +41,14 @@ const PortToAppDialog = lazy(async () => {
   return { default: loaded.PortToAppDialog };
 });
 
+const StyleReferences: LazyExoticComponent<typeof StyleReferencesView> = lazy(
+  async () => {
+    const loaded = await import("./style-references.js");
+
+    return { default: loaded.StyleReferences };
+  }
+);
+
 const loadDesignSystems = async (): Promise<typeof DesignSystemsView> => {
   const loaded = await import("./design-systems.js");
 
@@ -60,6 +69,7 @@ export {
   loadDesignSystems,
   loadNewDesignSystem,
   PortToAppDialog,
+  StyleReferences,
 };
 
 export { DesignSystemChip } from "./design-system-chip.js";

@@ -1,15 +1,14 @@
 import { VARIATION_BRIEF_MAX } from "@design-studio/contracts";
-import type { Project, VariationBrief } from "@design-studio/contracts";
+import type { VariationBrief } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
-import { BudgetLine } from "./budget-line.js";
 import { copy } from "./copy.js";
+import { CostLine } from "./cost-line.js";
 import type { BriefDraft } from "./use-variations.js";
 
 const MIN_BRIEF_LENGTH = 12;
 
 interface CardFootProps {
-  readonly project: Project;
   readonly draft: BriefDraft;
   readonly count: number;
   readonly onStart: () => void;
@@ -38,7 +37,6 @@ const toStartLabel = (isBusy: boolean, count: number): string => {
 };
 
 const BriefCardFoot = ({
-  project,
   draft,
   count,
   onStart,
@@ -48,7 +46,7 @@ const BriefCardFoot = ({
 
   return (
     <footer className="variation-card-foot">
-      <BudgetLine project={project} draft={draft} count={count} />
+      <CostLine draft={draft} />
       <div className="variation-card-actions">
         <button
           type="button"

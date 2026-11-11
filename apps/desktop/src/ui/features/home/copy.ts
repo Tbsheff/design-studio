@@ -262,7 +262,7 @@ const copy = {
   showFavoritesOnly: "Show pinned only",
   showProjects: "Show projects",
   showProjectsTip: "Show projects",
-  skillsLimitsAndDesignMd: "Skills, limits and DESIGN.md…",
+  skillsLimitsAndDesignMd: "Skills and DESIGN.md…",
   skipEnvValidationTrue: "SKIP_ENV_VALIDATION=true",
   slash: "/",
   sortProjects: "Sort projects",

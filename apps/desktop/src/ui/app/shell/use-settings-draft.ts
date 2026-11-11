@@ -5,7 +5,6 @@ interface DraftFields {
   allowInstall: boolean;
   autoApprove: boolean;
   disabledSkills: string[];
-  maxBudgetUsd: string;
   maxTurns: string;
   model: string;
 }
@@ -13,7 +12,6 @@ interface DraftFields {
 interface SettingsSetters {
   readonly handleAuto: (autoApprove: boolean) => void;
   readonly handleBash: (allowBash: boolean) => void;
-  readonly handleBudget: (maxBudgetUsd: string) => void;
   readonly handleInstall: (allowInstall: boolean) => void;
   readonly handleModel: (model: string) => void;
   readonly handleSkills: (disabledSkills: string[]) => void;
@@ -30,11 +28,6 @@ const useSettingsDraft = <Draft extends DraftFields>(
   );
 
   const handleModel = useCallback((model: string) => set({ model }), [set]);
-
-  const handleBudget = useCallback(
-    (maxBudgetUsd: string) => set({ maxBudgetUsd }),
-    [set]
-  );
 
   const handleTurns = useCallback(
     (maxTurns: string) => set({ maxTurns }),
@@ -65,7 +58,6 @@ const useSettingsDraft = <Draft extends DraftFields>(
   return {
     handleAuto,
     handleBash,
-    handleBudget,
     handleInstall,
     handleModel,
     handleSkills,

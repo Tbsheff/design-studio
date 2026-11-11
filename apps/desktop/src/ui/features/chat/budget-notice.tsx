@@ -21,7 +21,6 @@ const BudgetNotice = ({
     <span className="run-notice-text">
       {copy.thisRunStoppedAt}
       {toSpentText(run)}
-      {copy.raiseTheLimitIn}
     </span>
     {latest && onRetry && (
       <button

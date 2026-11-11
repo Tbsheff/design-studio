@@ -165,16 +165,12 @@
   gap: var(--s-2) var(--s-3);
 }
 
-.variation-budget {
+.variation-cost {
   flex: 1 1 220px;
   margin: 0;
   color: var(--text-2);
   font-size: var(--t-sm);
   font-variant-numeric: tabular-nums;
-}
-
-.variation-budget strong {
-  color: var(--text);
 }
 
 .variation-card-actions {

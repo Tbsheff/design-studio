@@ -57,9 +57,7 @@ const VariationsTop = ({
           />
         </div>
       )}
-      {draft && (
-        <BriefCardLayer draft={draft} project={project} state={state} />
-      )}
+      {draft && <BriefCardLayer draft={draft} state={state} />}
     </>
   );
 };

@@ -18,7 +18,7 @@ import {
   toWantedCount,
 } from "./variations-flow.js";
 import type { Flow, FlowContext } from "./variations-flow.js";
-import { budgetFor, toStoredCount } from "./variations-model.js";
+import { toStoredCount } from "./variations-model.js";
 import type { BriefDraft, Options, SessionPatch } from "./variations-model.js";
 
 const COUNT_KEY = "studio.variations.count";
@@ -169,6 +169,6 @@ const useVariations = (input: Options): VariationsState => {
   };
 };
 
-export { budgetFor, money, useVariations };
+export { money, useVariations };
 
 export type { BriefDraft, VariationsState };

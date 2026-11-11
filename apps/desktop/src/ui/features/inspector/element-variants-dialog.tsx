@@ -1,12 +1,10 @@
 import type { Project, SelectionContext } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
-import { budgetFor, money } from "../canvas/use-variations.js";
 import { maxVariationsFor } from "../canvas/variations-api.js";
 import { ElementVariantsCount } from "./element-variants-count.js";
 import { ElementVariantsFoot } from "./element-variants-foot.js";
 import { ElementVariantsHead } from "./element-variants-head.js";
-import { toBudgetLabel } from "./element-variants-model.js";
 import { ElementVariantsNote } from "./element-variants-note.js";
 import { useElementVariants } from "./use-element-variants.js";
 
@@ -25,7 +23,6 @@ const ElementVariantsDialog = ({
 }: Props): ReactElement => {
   const max = maxVariationsFor(project.kind);
   const state = useElementVariants(max, onStart, onCancel);
-  const budget = budgetFor(project, project.settings.defaultLevel, state.count);
 
   return (
     <dialog
@@ -44,7 +41,6 @@ const ElementVariantsDialog = ({
         onPick={state.handleCount}
       />
       <ElementVariantsFoot
-        budgetLabel={toBudgetLabel(budget.perRun, budget.total, money)}
         count={state.count}
         onCancel={onCancel}
         onStart={state.handleStart}

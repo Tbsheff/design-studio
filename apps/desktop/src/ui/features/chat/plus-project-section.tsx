@@ -24,17 +24,6 @@ const PlusProjectSection = ({
         meta={project.skillsCount ?? ""}
         onPick={onAct(project.onSkillList)}
       />
-      <MenuItem
-        icon="sliders"
-        label={copy.spendingLimitPer}
-        meta={project.budgetLabel}
-        onPick={onAct(project.onBudget)}
-      />
-      <MenuItem
-        icon="lock"
-        label={copy.dataUse}
-        onPick={onAct(project.onDataUse)}
-      />
     </MenuSection>
   );
 };

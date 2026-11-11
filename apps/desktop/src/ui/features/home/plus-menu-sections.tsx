@@ -75,7 +75,7 @@ const PlusMenuSections = ({
       />
       <PlusItem
         icon="sparkle"
-        label="Skills and limits"
+        label="Skills and DESIGN.md"
         meta={null}
         hasChevron={false}
         action={actions.onSkills}

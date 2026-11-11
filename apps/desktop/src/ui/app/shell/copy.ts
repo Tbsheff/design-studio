@@ -34,7 +34,6 @@ const copy = {
   searchRuns: "Search runs",
   secondsSuffix: " s",
   showing: "Showing ",
-  spendingLimitPerRun: "Spending limit per run",
   stop: "Stop",
   theDoctorSuggests: "Design Studio suggests",
   theStudioDidNotStart:

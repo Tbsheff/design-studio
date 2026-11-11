@@ -5,18 +5,17 @@ import { PROJECT_RENAME_EVENT } from "../../platform/project-events";
 import { copy } from "./copy";
 import type { StudioPaneHeaderProps } from "./pane-header-types";
 import { PaneProject } from "./pane-project";
+import { ProjectListToggle } from "./project-list-toggle";
 import { RenameField } from "./rename-field";
 
 interface StudioTopBarProps {
   readonly header: StudioPaneHeaderProps;
-  readonly onCenter: (node: HTMLDivElement | null) => void;
   readonly onEnd: (node: HTMLDivElement | null) => void;
   readonly onStart: (node: HTMLDivElement | null) => void;
 }
 
 const StudioTopBar = ({
   header,
-  onCenter,
   onEnd,
   onStart,
 }: StudioTopBarProps): ReactElement => {
@@ -46,13 +45,13 @@ const StudioTopBar = ({
   return (
     <header className="studio-top" aria-label={copy.topBar}>
       <div className="studio-top-start">
+        <ProjectListToggle />
         {isRenaming && <RenameField name={header.name} onDone={finishRename} />}
         {!isRenaming && (
           <PaneProject header={header} onStartRename={startRename} />
         )}
         <div className="studio-top-host" ref={onStart} />
       </div>
-      <div className="studio-top-center" ref={onCenter} />
       <div className="studio-top-end" ref={onEnd} />
     </header>
   );

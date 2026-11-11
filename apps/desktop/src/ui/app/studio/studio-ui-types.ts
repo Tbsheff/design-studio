@@ -57,12 +57,14 @@ interface StudioLayout {
   setIsCommentsShown: Setter<boolean>;
   setIsInspectorHidden: Setter<boolean>;
   setPagesHost: Setter<HTMLDivElement | null>;
-  setTopCenter: Setter<HTMLDivElement | null>;
+  setToolsHost: Setter<HTMLDivElement | null>;
   setTopEnd: Setter<HTMLDivElement | null>;
   setTopStart: Setter<HTMLDivElement | null>;
-  topCenter: HTMLDivElement | null;
+  setZoomHost: Setter<HTMLDivElement | null>;
+  toolsHost: HTMLDivElement | null;
   topEnd: HTMLDivElement | null;
   topStart: HTMLDivElement | null;
+  zoomHost: HTMLDivElement | null;
 }
 
 interface StudioActing {

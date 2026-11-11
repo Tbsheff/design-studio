@@ -161,6 +161,9 @@ const copy = {
   viewport: "Viewport",
   width: "Width",
   yet: " yet",
+  zoom: "Zoom",
+  zoomIn: "Zoom in",
+  zoomOut: "Zoom out",
 } as const;
 
 export { copy };

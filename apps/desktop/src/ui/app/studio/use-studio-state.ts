@@ -82,7 +82,8 @@ const useStudioOpen = (): StudioOpen => {
 
 const useStudioLayout = (): StudioLayout => {
   const [topStart, setTopStart] = useState<HTMLDivElement | null>(null);
-  const [topCenter, setTopCenter] = useState<HTMLDivElement | null>(null);
+  const [toolsHost, setToolsHost] = useState<HTMLDivElement | null>(null);
+  const [zoomHost, setZoomHost] = useState<HTMLDivElement | null>(null);
   const [topEnd, setTopEnd] = useState<HTMLDivElement | null>(null);
   const [pagesHost, setPagesHost] = useState<HTMLDivElement | null>(null);
   const [isInspectorHidden, setIsInspectorHidden] = useState(false);
@@ -97,12 +98,14 @@ const useStudioLayout = (): StudioLayout => {
     setIsCommentsShown,
     setIsInspectorHidden,
     setPagesHost,
-    setTopCenter,
+    setToolsHost,
     setTopEnd,
     setTopStart,
-    topCenter,
+    setZoomHost,
+    toolsHost,
     topEnd,
     topStart,
+    zoomHost,
   };
 };
 

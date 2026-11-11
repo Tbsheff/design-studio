@@ -12,7 +12,7 @@ import type { Props } from "./top-bar-props.js";
 import { TopBarShare } from "./top-bar-share.js";
 import { TopBarTools } from "./top-bar-tools.js";
 import type { ZoomProps } from "./top-bar-zoom-model.js";
-import { ZoomPill } from "./top-bar-zoom.js";
+import { ZoomControl } from "./zoom-control.js";
 
 const CONTENTS_STYLE: CSSProperties = { display: "contents" };
 
@@ -46,9 +46,10 @@ const presentItems = (onPresent: (mode: PresentMode) => void): MenuEntry[] => [
 const PortToAppDialog = lazyPortToAppDialog;
 
 interface TopBarParts {
-  readonly center: ReactNode;
   readonly end: ReactNode;
   readonly start: ReactNode;
+  readonly tools: ReactNode;
+  readonly zoom: ReactNode;
 }
 
 const toHosted = (
@@ -59,7 +60,8 @@ const toHosted = (
     return (
       <>
         {createPortal(parts.start, hosts.start)}
-        {createPortal(parts.center, hosts.center)}
+        {createPortal(parts.tools, hosts.tools)}
+        {createPortal(parts.zoom, hosts.zoom)}
         {createPortal(parts.end, hosts.end)}
       </>
     );
@@ -73,7 +75,8 @@ const toHosted = (
     >
       {parts.start}
       <div className="spacer" />
-      {parts.center}
+      {parts.tools}
+      {parts.zoom}
       <div className="spacer" />
       {parts.end}
     </div>
@@ -114,17 +117,6 @@ const CanvasTopBar = (props: Props): ReactElement => {
   }
 
   const parts: TopBarParts = {
-    center: (
-      <div className="topbar-center">
-        <TopBarTools
-          tool={props.tool}
-          commentAvailable={props.commentAvailable}
-          vectorAvailable={props.vectorAvailable}
-          onTool={props.onTool}
-        />
-        <ZoomPill control={zoom} />
-      </div>
-    ),
     end: (
       <>
         {props.matrix}
@@ -140,6 +132,15 @@ const CanvasTopBar = (props: Props): ReactElement => {
       </>
     ),
     start: <TopBarFileMenu props={props} />,
+    tools: (
+      <TopBarTools
+        tool={props.tool}
+        commentAvailable={props.commentAvailable}
+        vectorAvailable={props.vectorAvailable}
+        onTool={props.onTool}
+      />
+    ),
+    zoom: <ZoomControl control={zoom} />,
   };
 
   return <>{toHosted(parts, props.hosts)}</>;

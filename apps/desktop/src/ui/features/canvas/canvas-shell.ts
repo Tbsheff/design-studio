@@ -18,9 +18,10 @@ interface SpeedScope {
 }
 
 interface TopBarHosts {
-  readonly center: HTMLElement;
   readonly end: HTMLElement;
   readonly start: HTMLElement;
+  readonly tools: HTMLElement;
+  readonly zoom: HTMLElement;
 }
 
 interface CanvasShell {

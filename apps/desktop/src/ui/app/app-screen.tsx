@@ -2,13 +2,12 @@ import { Suspense, useCallback } from "react";
 import type { ReactNode } from "react";
 
 import { openLayer } from "../features/commands";
-import { Home } from "../features/home/index.js";
 import { uiStore, useUi } from "../platform/storage";
 import { openProject as openProjectAt } from "./project-nav";
 import { Screen } from "./screen";
 import { ScreenBoundary } from "./screen-boundary";
 import { prefetchStudio } from "./screen-preload";
-import { DesignSystems, NewDesignSystem, Studio } from "./screens";
+import { DesignSystems, Home, NewDesignSystem, Studio } from "./screens";
 import { useHomeCommands } from "./use-home-commands";
 
 const openProject = async (id: string): Promise<void> => {

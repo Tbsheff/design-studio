@@ -8,6 +8,7 @@ import type {
   RefObject,
 } from "react";
 
+import { prefetchStudio } from "../../app/screen-preload.js";
 import { copy } from "./copy.js";
 import { useExample } from "./use-example.js";
 import { usePromptElement } from "./use-prompt-element.js";
@@ -47,6 +48,7 @@ const PromptArea = ({
 
   const updateValue = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>): void => {
+      void prefetchStudio();
       onChange(event.target.value);
     },
     [onChange]

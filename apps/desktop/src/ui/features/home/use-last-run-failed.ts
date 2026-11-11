@@ -6,14 +6,20 @@ import { listRecentRuns } from "./use-last-runs.js";
 
 const runCache = new Map<string, Promise<boolean>>();
 
+const RECENT_COUNT = 5;
+
 const isLastRunFailed = async (
   key: string,
   projectId: string
 ): Promise<boolean> => {
   try {
-    const items = await listRecentRuns(projectId, 1);
+    const items = await listRecentRuns(projectId, RECENT_COUNT);
 
-    return items[0]?.status === "failed";
+    const [run] = items.toSorted(
+      (first, second) => second.startedAt - first.startedAt
+    );
+
+    return run?.status === "failed";
   } catch (error) {
     runCache.delete(key);
     throw error;

@@ -11,7 +11,7 @@ import type { ConnectionState } from "./event-hub";
 import { isApprovalPoll, isStreamHello, isStudioEvent } from "./json-guard";
 import { getSession } from "./session";
 import type { StreamTab } from "./stream-tab";
-import { REOPEN_MS, TAB_LOCK } from "./stream-types";
+import { ACTION_DONE_EVENT, REOPEN_MS, TAB_LOCK } from "./stream-types";
 import type { Wants, Wire } from "./stream-types";
 
 interface EventHead {
@@ -128,6 +128,9 @@ class StreamLeader {
     source.addEventListener(STREAM_APPROVALS, (message) => {
       this.approvalsText(toMessageText(message));
     });
+    source.addEventListener(ACTION_DONE_EVENT, (message) => {
+      this.done(toMessageText(message));
+    });
 
     const onEvent = (message: Event): void => {
       this.event(toMessageText(message));
@@ -196,6 +199,11 @@ class StreamLeader {
   private setState(state: ConnectionState): void {
     this.tab.setState(state);
     this.post({ kind: "state", state });
+  }
+
+  private done(data: string): void {
+    this.tab.done(data);
+    this.post({ data, kind: "done" });
   }
 
   private approvals(poll: McpApprovalPoll): void {

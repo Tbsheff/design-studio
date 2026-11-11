@@ -6,6 +6,7 @@ import { CommandLayer } from "../features/commands";
 import type { CommandLayerName, FileOpenTarget } from "../features/commands";
 import { CodeEditHost, codeEditStore } from "../features/inspector";
 import { isDesktop } from "../platform/desktop";
+import { ConnectAiLayer } from "./connect-ai-layer";
 
 const DesktopApp = lazy(async () => {
   const loaded = await import("./shell/desktop-app");
@@ -48,6 +49,7 @@ const AppNotice = ({
       <Suspense fallback={null}>
         <McpToasts />
       </Suspense>
+      <ConnectAiLayer />
       {isDesktop() && (
         <Suspense fallback={null}>
           <DesktopApp activeProjectId={activeProjectId} />

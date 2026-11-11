@@ -47,6 +47,7 @@ import "../styles/attach-app.css";
 import "../styles/compare-code.css";
 import "../styles/compare-hunk.css";
 import "../styles/export.css";
+import "../styles/connect-ai.css";
 import "../styles/figma-import.css";
 import "../styles/publish.css";
 import "../styles/reference.css";

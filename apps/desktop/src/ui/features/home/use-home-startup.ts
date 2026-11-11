@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 
-import { prefetchScreensWhenIdle } from "../../app/screen-preload.js";
 import { reportAppStart } from "../../platform/telemetry.js";
 
 const useHomeStartup = (isListed: boolean): void => {
@@ -10,7 +9,6 @@ const useHomeStartup = (isListed: boolean): void => {
     }
 
     reportAppStart("home");
-    prefetchScreensWhenIdle();
   }, [isListed]);
 };
 

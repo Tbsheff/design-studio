@@ -14,9 +14,6 @@ interface ComponentSlot<Props extends object> {
   component: ComponentType<Props> | null;
 }
 
-const IDLE_TIMEOUT_MS = 1000;
-const IDLE_FALLBACK_MS = 200;
-
 const preloadable = <Props extends object>(
   load: () => Promise<ComponentType<Props>>
 ): Preloaded<Props> => {
@@ -89,20 +86,9 @@ const loadCommandLayer = async (): Promise<object> => {
 const prefetchCommandLayer = (): Promise<boolean> =>
   prefetch({ fetch: loadCommandLayer });
 
-const prefetchAll = (): void => {
+const prefetchDesignSystems = (): void => {
   void prefetch(designSystems);
   void prefetch(newDesignSystem);
-  void prefetchCommandLayer();
-};
-
-const prefetchScreensWhenIdle = (): void => {
-  if ("requestIdleCallback" in globalThis) {
-    globalThis.requestIdleCallback(prefetchAll, { timeout: IDLE_TIMEOUT_MS });
-
-    return;
-  }
-
-  setTimeout(prefetchAll, IDLE_FALLBACK_MS);
 };
 
 export {
@@ -110,8 +96,8 @@ export {
   home,
   newDesignSystem,
   prefetchCommandLayer,
+  prefetchDesignSystems,
   prefetchHome,
-  prefetchScreensWhenIdle,
   prefetchStudio,
   studio,
 };

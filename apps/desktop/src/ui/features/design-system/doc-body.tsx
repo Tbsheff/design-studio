@@ -1,7 +1,7 @@
 import type { PackDetail } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
-import { Markdown } from "../../ai/components/ai/markdown.js";
+import { MarkdownView } from "./markdown-view.js";
 import type { Load } from "./use-load.js";
 
 const DocBody = ({
@@ -15,7 +15,7 @@ const DocBody = ({
 
   return (
     <div className="lib-doc">
-      <Markdown>{detail.value.designMd}</Markdown>
+      <MarkdownView>{detail.value.designMd}</MarkdownView>
     </div>
   );
 };

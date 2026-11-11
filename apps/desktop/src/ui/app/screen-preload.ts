@@ -42,6 +42,12 @@ const preloadable = <Props extends object>(
   return { Screen: screen, fetch: fetchComponent };
 };
 
+const home = preloadable(async () => {
+  const loaded = await import("../features/home/index.js");
+
+  return loaded.importHome();
+});
+
 const studio = preloadable(async () => {
   const loaded = await import("./studio");
 
@@ -72,6 +78,8 @@ const prefetch = async (screen: Prefetchable): Promise<boolean> => {
 
 const prefetchStudio = (): Promise<boolean> => prefetch(studio);
 
+const prefetchHome = (): Promise<boolean> => prefetch(home);
+
 const loadCommandLayer = async (): Promise<object> => {
   const loaded = await import("../features/commands");
 
@@ -82,7 +90,6 @@ const prefetchCommandLayer = (): Promise<boolean> =>
   prefetch({ fetch: loadCommandLayer });
 
 const prefetchAll = (): void => {
-  void prefetchStudio();
   void prefetch(designSystems);
   void prefetch(newDesignSystem);
   void prefetchCommandLayer();
@@ -100,8 +107,10 @@ const prefetchScreensWhenIdle = (): void => {
 
 export {
   designSystems,
+  home,
   newDesignSystem,
   prefetchCommandLayer,
+  prefetchHome,
   prefetchScreensWhenIdle,
   prefetchStudio,
   studio,

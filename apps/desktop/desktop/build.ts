@@ -5,6 +5,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -313,14 +314,26 @@ function copyWebsiteReader(serverDir: string, modulesRoot: string): number {
   return dirs.length;
 }
 
+function toModuleSubpath(dir: string): string {
+  const marker = `${path.sep}node_modules${path.sep}`;
+  return dir.slice(dir.lastIndexOf(marker) + marker.length);
+}
+
 function copyServerModules(serverDir: string, metafiles: Metafile[]): number {
   const modulesRoot = path.join(WORKSPACE_ROOT, "node_modules");
   const dirs = dependencyClosure(importedPackages(metafiles));
-  for (const dir of dirs)
+  const placed = new Set<string>();
+  for (const dir of dirs) {
+    const subpath = dir.startsWith(`${modulesRoot}${path.sep}`)
+      ? path.relative(modulesRoot, dir)
+      : toModuleSubpath(dir);
+    if (placed.has(subpath)) continue;
+    placed.add(subpath);
     copyPackage(
-      dir,
-      path.join(serverDir, "node_modules", path.relative(modulesRoot, dir))
+      realpathSync(dir),
+      path.join(serverDir, "node_modules", subpath)
     );
+  }
   return dirs.length + copyWebsiteReader(serverDir, modulesRoot);
 }
 

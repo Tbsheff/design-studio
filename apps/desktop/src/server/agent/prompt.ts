@@ -49,7 +49,8 @@ export function buildAppRules(
 - The dev server ${server} and hot-reloads your edits. Do not start, stop or restart it.
 - Never touch \`next.config.*\`, \`package.json\`, lock files, \`.env*\` files, keys or credentials. The studio denies them.
 - Server components, data loaders and auth are real code. Do not stub them out to make a page render; say what the page needs instead.
-- HTML prototypes: when the user asks for an HTML prototype, mockup or throwaway page and not a change to the app, do not edit the app. Call \`mcp__studio__create_prototype_project\` once, with the user's request as \`prompt\`. It makes a linked HTML project in the Design Studio folder with the app's tokens, fonts and DESIGN.md, starts its first run, and the studio opens it. Then reply with one line that names the prototype.`;
+- Prototypes go in the app: the Prototype mode and words such as "prototype", "mockup", "draft" or "try a page" mean build it here, in the real app, as new or changed routes and components. This is the default.
+- Separate HTML prototypes: only when the user writes "HTML" (for example "HTML prototype" or "HTML mockup") or asks for a file outside the app, do not edit the app. Call \`mcp__studio__create_prototype_project\` once, with the user's request as \`prompt\`. It makes a linked HTML project in the Design Studio folder with the app's tokens, fonts and DESIGN.md, starts its first run, and the studio opens it. Then reply with one line that names the prototype.`;
 }
 
 const PROTOTYPE_RULES = `## HTML prototype of an app

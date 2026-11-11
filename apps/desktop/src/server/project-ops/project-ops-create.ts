@@ -138,6 +138,12 @@ const importProjectIn = async (
   runtime: ProjectOpsRuntime,
   input: ImportInput
 ): Promise<ImportedProject> => {
+  if (input.isWorkspace) {
+    const project = await runtime.projects.linkFolder(input.path);
+
+    return { project };
+  }
+
   const skipApp = input.skipApp === true;
 
   const imported = await runtime.projects.importFolder(

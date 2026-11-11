@@ -9,6 +9,8 @@ const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
   vite: "Vite",
 };
 
+const FOLDER_LABEL = "Folder";
+
 const getChipProblem = (chip: AppChip | null): string | null => {
   if (!chip || chip.isChecking) {
     return null;
@@ -52,8 +54,12 @@ const getChipLabel = (chip: AppChip): string => {
 
   const found = chip.inspection;
 
-  if (!found?.kind) {
+  if (!found) {
     return "";
+  }
+
+  if (!found.kind) {
+    return FOLDER_LABEL;
   }
 
   const dir = chip.appDir ?? found.appDir;

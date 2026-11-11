@@ -41,7 +41,7 @@ const useChipFolder = (
     if ("path" in folder) {
       putFolder(folder.path);
     } else {
-      setFormError("Drop a folder in the desktop app, or use Add app folder.");
+      setFormError("Drop a folder in the desktop app, or use Open folder.");
     }
 
     return true;
@@ -54,7 +54,7 @@ const useChipFolder = (
       return;
     }
 
-    const picked = await pickFolder({ title: "Choose your app folder" });
+    const picked = await pickFolder({ title: "Choose a folder" });
 
     if (picked.kind === "picked") {
       putFolder(picked.path);

@@ -15,6 +15,7 @@ import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { createProjectCore } from "./project-core.js";
 import { createProjectCreation } from "./project-create.js";
 import { createProjectFiles } from "./project-files.js";
+import { createProjectFolderLink } from "./project-folder-link.js";
 import {
   cleanAppUrl,
   directionId,
@@ -46,18 +47,22 @@ const createProjectStore = (
   const core = createProjectCore(config, ports, options);
   const { lock, projectDir, readProject, writeProject } = core;
 
+  const creation = createProjectCreation(core);
+
   const store: StudioProjectStore = {
     projectDir,
     directionOf,
     mainDirection,
     list: core.list,
     get: readProject,
-    ...createProjectCreation(core),
+    ...creation,
+    ...createProjectFolderLink(core, creation.create),
     ...createProjectFiles(core),
 
     isHidden(project: Project): boolean {
       return (
         project.imported === null &&
+        !project.folder &&
         isInsideDataDir(
           config.dataDir,
           path.resolve(mainDirection(project).workTree)

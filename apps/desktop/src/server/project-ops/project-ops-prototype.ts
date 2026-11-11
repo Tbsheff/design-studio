@@ -17,6 +17,10 @@ import { attemptKnown } from "../platform/attempt/index.js";
 import { toPrototypeCss } from "./engine/to-prototype-css.js";
 import type { PrototypeFonts } from "./engine/to-prototype-css.js";
 import { toPrototypePage } from "./engine/to-prototype-page.js";
+import {
+  getFolderContext,
+  getFolderDesignMd,
+} from "./project-ops-folder-context.js";
 import type { ProjectOpsRuntime } from "./project-ops-runtime.js";
 
 type CreatePrototypeInput = Input<typeof createPrototypeProject>;
@@ -29,7 +33,7 @@ interface CreatedPrototype {
 }
 
 interface PrototypeTokens {
-  readonly css: string;
+  readonly css: string | null;
   readonly file: string | null;
 }
 
@@ -41,15 +45,16 @@ interface FontCandidate {
 const PROTOTYPES_FOLDER = "prototypes";
 const TOKENS_FILE = "tokens.css";
 const ENTRY_FILE = "index.html";
+const CONTEXT_FILE = "folder-context.md";
 const NO_DESIGN_MD = "";
 
 const toAppProject = Effect.fn("ProjectOpsPrototype.toAppProject")(
   function* run(runtime: ProjectOpsRuntime, projectId: string) {
     const app = yield* attemptKnown(() => runtime.projects.get(projectId));
 
-    if (!app.app) {
+    if (!app.app && !app.folder) {
       return yield* new BadRequest({
-        message: `${app.name} is not an attached app. Open the app project and try again.`,
+        message: `${app.name} is not a folder workspace or an attached app. Link the folder with import_project and isWorkspace true, then try again.`,
       });
     }
 
@@ -58,7 +63,9 @@ const toAppProject = Effect.fn("ProjectOpsPrototype.toAppProject")(
 );
 
 const toAppFolder = (runtime: ProjectOpsRuntime, app: Project): string =>
-  app.imported?.sourcePath ?? runtime.projects.mainDirection(app).workTree;
+  app.folder?.path ??
+  app.imported?.sourcePath ??
+  runtime.projects.mainDirection(app).workTree;
 
 const toPrototypeParent = Effect.fn("ProjectOpsPrototype.toPrototypeParent")(
   function* run(runtime: ProjectOpsRuntime, app: Project) {
@@ -91,6 +98,12 @@ const toAppDesignMd = Effect.fn("ProjectOpsPrototype.toAppDesignMd")(
       return own;
     }
 
+    const linked = yield* getFolderDesignMd(toAppFolder(runtime, app));
+
+    if (isFilled(linked)) {
+      return linked;
+    }
+
     const projects = yield* attemptKnown(() => runtime.projects.list());
 
     const system = projects.find(
@@ -115,7 +128,7 @@ const toFontValue = (
 
 const toPrototypeTokens = Effect.fn("ProjectOpsPrototype.toPrototypeTokens")(
   function* run(runtime: ProjectOpsRuntime, app: Project) {
-    const { workTree } = runtime.projects.mainDirection(app);
+    const workTree = toAppFolder(runtime, app);
 
     const [loaded, harvested] = yield* Effect.all(
       [
@@ -144,13 +157,11 @@ const toPrototypeTokens = Effect.fn("ProjectOpsPrototype.toPrototypeTokens")(
     }));
 
     const file = loaded?.file ?? null;
+    let css: string | null = null;
 
-    const css = toPrototypeCss({
-      appName: app.name,
-      declarations,
-      file,
-      fonts,
-    });
+    if (file !== null || candidates.length > 0) {
+      css = toPrototypeCss({ appName: app.name, declarations, file, fonts });
+    }
 
     const tokens: PrototypeTokens = { css, file };
 
@@ -169,12 +180,25 @@ const toRunRequest = (input: CreatePrototypeInput): RunRequest => {
 };
 
 const writePrototypeFiles = Effect.fn("ProjectOpsPrototype.writeFiles")(
-  function* run(folder: string, tokens: PrototypeTokens, page: string) {
-    yield* attemptKnown(() =>
-      writeFile(path.join(folder, TOKENS_FILE), tokens.css, "utf-8")
-    );
+  function* run(
+    folder: string,
+    tokens: PrototypeTokens,
+    page: string,
+    context: string
+  ) {
+    const { css } = tokens;
+
+    if (css !== null) {
+      yield* attemptKnown(() =>
+        writeFile(path.join(folder, TOKENS_FILE), css, "utf-8")
+      );
+    }
+
     yield* attemptKnown(() =>
       writeFile(path.join(folder, ENTRY_FILE), page, "utf-8")
+    );
+    yield* attemptKnown(() =>
+      writeFile(path.join(folder, CONTEXT_FILE), context, "utf-8")
     );
   }
 );
@@ -208,10 +232,18 @@ const createPrototypeWith = Effect.fn("ProjectOpsPrototype.create")(
   ) {
     const app = yield* toAppProject(runtime, input.projectId);
     const name = input.name ?? nameFromPrompt(input.prompt);
+    const tokens = yield* toPrototypeTokens(runtime, app);
+    const page = toPrototypePage(name, app.name, tokens.css !== null);
+
+    const context = yield* getFolderContext(
+      toAppFolder(runtime, app),
+      app.name
+    );
+
     const created = yield* toCreatedProject(runtime, app, name, folderName);
     const folder = runtime.projects.mainDirection(created).workTree;
-    const tokens = yield* toPrototypeTokens(runtime, app);
-    yield* writePrototypeFiles(folder, tokens, toPrototypePage(name, app.name));
+
+    yield* writePrototypeFiles(folder, tokens, page, context);
     const designMd = yield* toAppDesignMd(runtime, app);
 
     if (isFilled(designMd)) {

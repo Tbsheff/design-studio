@@ -50,13 +50,17 @@ const toIsReady = (
 };
 
 const toDefaultApp = (targets: Targets): string => {
-  const linked = targets.source?.appProjectId ?? null;
+  const linked = targets.linkedApp;
 
-  if (linked !== null && targets.apps?.some((app) => app.id === linked)) {
+  if (linked === null) {
+    return targets.apps?.[0]?.id ?? "";
+  }
+
+  if (targets.apps?.some((app) => app.id === linked)) {
     return linked;
   }
 
-  return targets.apps?.[0]?.id ?? "";
+  return "";
 };
 
 const usePortForm = (

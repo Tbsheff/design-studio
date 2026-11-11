@@ -30,9 +30,11 @@ import { useHomeToast } from "./use-home-toast.js";
 import { toMenuPresence, useHomeUi } from "./use-home-ui.js";
 import type { HomeScreenOf } from "./use-home-ui.js";
 import { useScreenSubmit } from "./use-screen-submit.js";
+import type { ScreenSubmit } from "./use-screen-submit.js";
 
 type HomeScreen = HomeScreenOf<SettingsDraft, PacksState> & {
   readonly ClarifyForm: typeof ClarifyForm;
+  readonly submit: ScreenSubmit;
 };
 
 const MODEL_IDS = MODEL_OPTIONS.map((option) => option.id);

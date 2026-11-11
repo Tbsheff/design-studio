@@ -12,7 +12,7 @@ type DriverOutcome = Awaited<ReturnType<RunDriver>>;
 
 const PROTOTYPE_TOOL = "create_prototype_project";
 const PROTOTYPE_TOOL_NAME = `mcp__studio__${PROTOTYPE_TOOL}`;
-const PROTOTYPE_REQUEST = /\bhtml prototype\b/iu;
+const PROTOTYPE_REQUEST = /\b(?:prototype|mockup|draft)\b/iu;
 const MOCK_CONTEXT_TOKENS = 24_000;
 const SUMMARY_CHARS = 200;
 

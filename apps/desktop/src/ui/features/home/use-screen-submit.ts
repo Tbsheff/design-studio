@@ -8,6 +8,8 @@ import type {
   ParsedSettings,
   SubmitInput,
 } from "./use-home-submit.js";
+import { useWorkspaceTarget } from "./use-workspace-target.js";
+import type { WorkspaceTarget } from "./use-workspace-target.js";
 
 type DraftParts = Pick<
   SubmitInput,
@@ -25,7 +27,9 @@ interface ScreenSubmitParts {
   readonly openHome: (projectId: string) => void;
 }
 
-const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
+type ScreenSubmit = HomeSubmit & { readonly target: WorkspaceTarget };
+
+const useScreenSubmit = (parts: ScreenSubmitParts): ScreenSubmit => {
   const { base, refs, draft, lib, composer, packId, parsed } = parts;
   const { openHome: onOpen } = parts;
   const { busy, setBusy, setFormError } = base;
@@ -37,8 +41,10 @@ const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
   const { location } = lib;
   const { chip } = flow.app;
   const { submitChip } = flow;
+  const target = useWorkspaceTarget(lib, base, flow.app);
+  const { isEditApp, nav } = target;
 
-  return useHomeSubmit({
+  const submit = useHomeSubmit({
     busy,
     chip,
     clarifyRef,
@@ -46,6 +52,7 @@ const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
     designCount,
     designMd,
     images,
+    isEditApp,
     kind,
     location,
     onOpen,
@@ -58,9 +65,12 @@ const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
     setFormError,
     setQuestions,
     submitChip,
+    workspace: nav.selected,
   });
+
+  return { ...submit, target };
 };
 
 export { useScreenSubmit };
 
-export type { ScreenSubmitParts };
+export type { ScreenSubmit, ScreenSubmitParts };

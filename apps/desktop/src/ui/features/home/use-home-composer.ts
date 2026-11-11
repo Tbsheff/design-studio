@@ -12,7 +12,6 @@ import type { HomeBase } from "./use-home-base.js";
 import { useRootDrop } from "./use-root-drop.js";
 import type { RootDrop } from "./use-root-drop.js";
 import { useRoutedFolderDrop } from "./use-routed-folder-drop.js";
-import type { FolderSink } from "./use-routed-folder-drop.js";
 
 interface HomeComposer {
   readonly attach: ComposerAttachments;
@@ -49,18 +48,14 @@ const useHomeComposer = (deps: ComposerDeps): HomeComposer => {
     setFormError,
   });
 
-  const folderSink = useRef<FolderSink | null>(null);
-  const takeDrop = useRoutedFolderDrop(flow, folderSink);
+  const takeDrop = useRoutedFolderDrop(flow);
   const attach = useComposerAttachments(composerRef, setFormError, takeDrop);
 
   const { contexts, images, references } = attach;
 
-  const { addContextFolder } = attach;
-
   useEffect(() => {
     attached.current = { contexts, images, references };
-    folderSink.current = addContextFolder;
-  }, [addContextFolder, contexts, images, references]);
+  }, [contexts, images, references]);
 
   const root = useRootDrop(homeRef, takeDrop, setFormError);
 

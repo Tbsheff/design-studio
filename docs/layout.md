@@ -168,12 +168,17 @@ Every panel reads through actions, so MCP and the agent see the same data. "Exis
 | Pinned | Pinned projects | `project.update` gets an `isPinned` field, or a new set action | Needs new field |
 | Recent | Last opened projects | `project.list` (sort by `updatedAt`) | Exists |
 | Composer | Prompt bound to the workspace: design system, kit, dev server | `project.create`, `run.start`, `pack.list`, `dev-server.get` | Exists |
-| Starters | "New screen in X", "Redesign a route", "Start from a template" | `project.create`, `dev-server.listRoutes`, `screen.create` | Exists |
+| Starters | Folder or app workspace: "New prototype", plus "Edit app" for a runnable app. Prototypes: "New prototype", sample, template | `project.createPrototype`, `project.import` (`isWorkspace`), `project.create` | Exists |
 | Running and recent runs | Runs from chat and MCP, status, cost, jump link | `run.list`, `run.get`, `run.stop` are per project | Needs new cross-project list |
 | MCP activity | Recent MCP edits | `connection.listActivity` is per project | Needs new cross-project list |
 | Waiting on you | Approvals, comments, drafts to save | `connection.listApprovals` (org), `comment.list` (project), `pack.getDraft` | Exists per item, needs new roll-up |
 | Dev servers | Dev server state per attached app | `dev-server.get` is per project | Needs new cross-project list |
 | Status bar | Agent model, MCP state, clients, git branch | `connection.getStatus`, `studio.health`; clients and git branch have no action | Needs new for clients and branch |
+
+### Folder workspaces (product rule)
+
+- Any folder is a workspace (`project.import` with `isWorkspace`). A prompt in it makes an HTML prototype beside the folder, in the Design Studio folder, with the folder's tokens, fonts, DESIGN.md and README. The folder never changes.
+- Only "Edit app" (runnable apps) or "Move to app" on a finished prototype writes to the app source.
 
 ### Keyboard flow
 

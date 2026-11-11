@@ -179,6 +179,12 @@ export interface Project {
   directions: Direction[];
   thumbnail?: ProjectThumbnail | null;
   app?: AttachedApp | null;
+  folder?: LinkedFolder | null;
+}
+
+export interface LinkedFolder {
+  kind: "app" | "folder";
+  path: string;
 }
 
 export type AppFramework = "next" | "vite";

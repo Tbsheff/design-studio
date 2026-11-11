@@ -6,7 +6,22 @@ const toEscapedText = (text: string): string =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
-const toPrototypePage = (title: string, appName: string): string => {
+const TOKENS_LINK = 'rel="stylesheet" href="tokens.css"';
+const EMPTY_ICON_LINK = 'rel="icon" href="data:,"';
+
+const toHeadLink = (hasTokens: boolean): string => {
+  if (hasTokens) {
+    return TOKENS_LINK;
+  }
+
+  return EMPTY_ICON_LINK;
+};
+
+const toPrototypePage = (
+  title: string,
+  appName: string,
+  hasTokens: boolean
+): string => {
   const safeTitle = toEscapedText(title);
   const safeApp = toEscapedText(appName);
 
@@ -16,7 +31,7 @@ const toPrototypePage = (title: string, appName: string): string => {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${safeTitle}</title>
-<link rel="stylesheet" href="tokens.css">
+<link ${toHeadLink(hasTokens)}>
 <style>
   main { max-width: 960px; margin: 0 auto; padding: 64px 24px; }
   h1 { margin: 0 0 12px; font-size: 32px; }

@@ -49,13 +49,15 @@ export function buildAppRules(
 - The dev server ${server} and hot-reloads your edits. Do not start, stop or restart it.
 - Never touch \`next.config.*\`, \`package.json\`, lock files, \`.env*\` files, keys or credentials. The studio denies them.
 - Server components, data loaders and auth are real code. Do not stub them out to make a page render; say what the page needs instead.
-- Prototypes go in the app: the Prototype mode and words such as "prototype", "mockup", "draft" or "try a page" mean build it here, in the real app, as new or changed routes and components. This is the default.
-- Separate HTML prototypes: only when the user writes "HTML" (for example "HTML prototype" or "HTML mockup") or asks for a file outside the app, do not edit the app. Call \`mcp__studio__create_prototype_project\` once, with the user's request as \`prompt\`. It makes a linked HTML project in the Design Studio folder with the app's tokens, fonts and DESIGN.md, starts its first run, and the studio opens it. Then reply with one line that names the prototype.`;
+- The user chose "Edit app" to reach this chat, so edits to the app source are fine here.
+- Prototypes stay out of the app: when the user asks for a prototype, mockup, draft or HTML page, do not edit the app. Call \`mcp__studio__create_prototype_project\` once, with the user's request as \`prompt\`. It makes a linked HTML project in the Design Studio folder with the app's tokens, fonts and DESIGN.md, starts its first run, and the studio opens it. Then reply with one line that names the prototype.
+- The run level (wireframe, prototype or polish) and the Prototype mode set only how deep the work goes. They never ask for a separate prototype. Only the user's own words do.`;
 }
 
-const PROTOTYPE_RULES = `## HTML prototype of an app
-- This project is an HTML prototype of the user's app. It lives in the Design Studio folder, not in the app repo. Never read or write the app repo from here.
-- \`tokens.css\` holds the app's CSS variables (light values on \`:root\`, dark values on \`.dark\`), its fonts and its page colors. Read it first. Link it in the \`<head>\` of every page before your own <style>: \`<link rel="stylesheet" href="tokens.css">\`. Keep the link when you edit a page. Never edit \`tokens.css\`.
+const PROTOTYPE_RULES = `## HTML prototype of a folder
+- This project is an HTML prototype for a folder of the user (an app, docs, a design repo or other code). It lives in the Design Studio folder, not in that folder. Never read or write the source folder from here.
+- \`folder-context.md\` holds the source folder's README and a short file list. Read it first for what the product is and the words it uses.
+- When there is a \`tokens.css\` file, it holds the folder's CSS variables (light values on \`:root\`, dark values on \`.dark\`), its fonts and its page colors. Read it. Link it in the \`<head>\` of every page before your own <style>: \`<link rel="stylesheet" href="tokens.css">\`. Keep the link when you edit a page. Never edit \`tokens.css\`.
 - Use \`var(--token)\` for every color, font, radius and shadow that a token in \`tokens.css\` covers. Do not hard-code a value that a token covers. Follow the <design_md> block for the look and the words.`;
 
 const toPrototypeRules = (project: Project): string[] => {

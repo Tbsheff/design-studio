@@ -17,6 +17,9 @@ import { focusRequest } from "./focus-bus-model.js";
 import { createFromHome } from "./home-model.js";
 import type { Busy } from "./home-model.js";
 import { importContexts } from "./use-context-import.js";
+import { runWorkspacePrototype } from "./use-workspace-submit.js";
+import { isFolderWorkspace } from "./workspace-model.js";
+import type { Workspace } from "./workspace-model.js";
 
 type ParsedSettings =
   | { readonly settings: ProjectSettings }
@@ -35,6 +38,7 @@ interface SubmitInput {
   readonly designCount: number;
   readonly designMd: string;
   readonly images: ImageDraft[];
+  readonly isEditApp: boolean;
   readonly kind: ProjectKind;
   readonly location: string | null;
   readonly onOpen: (projectId: string) => void;
@@ -47,6 +51,7 @@ interface SubmitInput {
   readonly setFormError: (message: string | null) => void;
   readonly setQuestions: (questions: ClarifyQuestion[] | null) => void;
   readonly submitChip: (text: string) => void;
+  readonly workspace: Workspace | null;
 }
 
 interface HomeSubmit {
@@ -121,6 +126,39 @@ const runBuild = async (
   }
 };
 
+const isPrototypeTarget = (input: SubmitInput): boolean =>
+  isFolderWorkspace(input.workspace) &&
+  !(input.isEditApp && input.workspace?.kind === "app");
+
+const startPrototype = async (
+  input: SubmitInput,
+  text: string
+): Promise<void> => {
+  const { parsed, workspace } = input;
+
+  if (workspace === null || text === "") {
+    return;
+  }
+
+  if ("error" in parsed) {
+    input.setFormError(parsed.error);
+
+    return;
+  }
+
+  await runWorkspacePrototype({
+    contexts: input.contexts,
+    images: input.images,
+    level: parsed.settings.defaultLevel,
+    onOpen: input.onOpen,
+    prompt: text,
+    references: input.references,
+    setBusy: input.setBusy,
+    setFormError: input.setFormError,
+    workspace,
+  });
+};
+
 const useHomeSubmit = (input: SubmitInput): HomeSubmit => {
   const { busy, chip, prompt, questions } = input;
   const { setBusy, setFormError, setQuestions } = input;
@@ -133,6 +171,12 @@ const useHomeSubmit = (input: SubmitInput): HomeSubmit => {
     const text = prompt.trim();
 
     if (busy !== null) {
+      return;
+    }
+
+    if (isPrototypeTarget(input)) {
+      await startPrototype(input, text);
+
       return;
     }
 

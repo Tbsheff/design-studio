@@ -3,6 +3,8 @@ import path from "node:path";
 
 const REFERENCE_DIR = "reference";
 
+const PINNED_DIR = "pinned";
+
 const MAX_INDEXES = 6;
 
 const MAX_INDEX_CHARS = 3000;
@@ -31,7 +33,7 @@ const listReferenceNames = async (root: string): Promise<string[]> => {
     const names: string[] = [];
 
     for (const child of children) {
-      if (child.isDirectory()) {
+      if (child.isDirectory() && child.name !== PINNED_DIR) {
         names.push(child.name);
       }
     }

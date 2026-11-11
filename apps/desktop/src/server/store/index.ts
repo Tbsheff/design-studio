@@ -86,4 +86,16 @@ export { getReferenceBlock } from "./reference/reference-block.js";
 
 export { importReferenceInto } from "./reference/reference-import.js";
 
+export {
+  deleteReferencePinShotFile,
+  getStyleReferenceBlock,
+  listReferencePins,
+  setReferencePinShotFile,
+  toReferencePinFile,
+  toReferencePinShot,
+  toStyleReferenceBlock,
+} from "./reference/reference-pins.js";
+
+export type { ReferencePin } from "./reference/reference-pins.js";
+
 export type { ReferenceSummary } from "./reference/reference-import.js";

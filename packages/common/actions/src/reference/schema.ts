@@ -40,11 +40,41 @@ const ReferenceSchema = Schema.Struct({
   textCount: Schema.Int,
 });
 
+const ReferencePinSchema = Schema.Struct({
+  directionId: Schema.String,
+  id: Schema.String.annotate({ description: "The pinned canvas frame id." }),
+  name: Schema.String,
+  path: Schema.NullOr(Schema.String).annotate({
+    description: "The page path of the frame. Null for the entry page.",
+  }),
+  pinnedAt: Schema.String,
+  screenshotPath: Schema.NullOr(Schema.String).annotate({
+    description:
+      "Absolute path of the PNG the studio saved at pin time. Null when the capture failed.",
+  }),
+  sourcePath: Schema.NullOr(Schema.String).annotate({
+    description:
+      "The main source file of the frame, relative to its direction. Null when the studio cannot tell.",
+  }),
+});
+
+const ReferencePinFileSchema = Schema.Struct({
+  pins: Schema.Array(ReferencePinSchema),
+});
+
+const ReferencePinSetSchema = Schema.Struct({
+  isPinned: Schema.Boolean,
+  pin: Schema.NullOr(ReferencePinSchema),
+});
+
 export {
   ReferenceDataFieldSchema,
   ReferenceFileNameFieldSchema,
   ReferenceNameFieldSchema,
   ReferencePathFieldSchema,
+  ReferencePinFileSchema,
+  ReferencePinSchema,
+  ReferencePinSetSchema,
   ReferenceSchema,
   ReferenceUrlFieldSchema,
 };

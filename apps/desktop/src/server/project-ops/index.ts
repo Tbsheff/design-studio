@@ -36,7 +36,11 @@ export type {
   SetCommand as SetCompletionCommand,
 } from "./completion/index.js";
 
-export { ReferenceWriter } from "./reference/index.js";
+export {
+  ReferencePinStore,
+  ReferencePinWriter,
+  ReferenceWriter,
+} from "./reference/index.js";
 
 export type {
   ImportReferenceCommand,

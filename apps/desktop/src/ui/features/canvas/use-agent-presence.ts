@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toAgentName } from "../../domain/agent-names.js";
 import { useProjectEvents } from "../../platform/events.js";
 import {
+  isFresh,
   toLiveMarks,
   toNextExpiry,
   toPresenceFrameId,
@@ -27,7 +28,11 @@ const useAgentPresence = (input: AgentPresenceInput): AgentPresence => {
   const [marks, setMarks] = useState<readonly PresenceMark[]>([]);
   const { layout } = input.frames;
 
-  const place = (agent: string, target: PresenceTarget): void => {
+  const place = (agent: string, at: number, target: PresenceTarget): void => {
+    if (!isFresh(at, Date.now())) {
+      return;
+    }
+
     const frameId = toPresenceFrameId(
       {
         activeId: layout.activeId,
@@ -41,21 +46,20 @@ const useAgentPresence = (input: AgentPresenceInput): AgentPresence => {
       return;
     }
 
-    const at = Date.now();
     const mark = { agent, at, frameId };
     setMarks((current) => withMark(current, mark));
   };
 
   useProjectEvents(input.projectId, (event) => {
     if (event.type === "mcp.activity") {
-      place(toAgentName(event.activity.client), {
+      place(toAgentName(event.activity.client), event.activity.at, {
         directionId: event.activity.directionId,
         frameId: event.activity.frameId,
       });
     }
 
     if (event.type === "run.tool.started") {
-      place(IN_APP_AGENT, {
+      place(IN_APP_AGENT, event.ts, {
         directionId: event.directionId ?? null,
         frameId: null,
       });

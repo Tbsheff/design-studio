@@ -51,6 +51,8 @@ const toPresenceFrameId = (
   return (active ?? matches[0])?.id ?? null;
 };
 
+const isFresh = (at: number, now: number): boolean => now - at < PRESENCE_MS;
+
 const withMark = (
   marks: readonly PresenceMark[],
   mark: PresenceMark
@@ -62,7 +64,7 @@ const withMark = (
 const toLiveMarks = (
   marks: readonly PresenceMark[],
   now: number
-): PresenceMark[] => marks.filter((mark) => now - mark.at < PRESENCE_MS);
+): PresenceMark[] => marks.filter((mark) => isFresh(mark.at, now));
 
 const toNextExpiry = (marks: readonly PresenceMark[], now: number): number =>
   Math.max(0, Math.min(...marks.map((mark) => mark.at + PRESENCE_MS - now)));
@@ -75,6 +77,7 @@ const toLatestMark = (marks: readonly PresenceMark[]): PresenceMark | null =>
 
 export {
   PRESENCE_MS,
+  isFresh,
   toLatestMark,
   toLiveMarks,
   toNextExpiry,

@@ -1206,7 +1206,6 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "apps/desktop/src/ui/features/chat/budget-indicator.tsx",
       "apps/desktop/src/ui/features/chat/chat-feedback.tsx",
       "apps/desktop/src/ui/features/chat/chat-panel.tsx",
       "apps/desktop/src/ui/features/chat/chat-parts.tsx",

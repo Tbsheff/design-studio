@@ -87,7 +87,7 @@
 
 .studio-dock {
   position: absolute;
-  z-index: 30;
+  z-index: 32;
   top: var(--dock-gap);
   left: var(--dock-gap);
   display: flex;
@@ -294,7 +294,7 @@
 
 .studio-stage > .studio-inspector {
   position: absolute;
-  z-index: 30;
+  z-index: 32;
   top: var(--dock-gap);
   right: var(--dock-gap);
   bottom: var(--dock-gap);
@@ -348,9 +348,6 @@
   .studio-stage {
     --column-w: 232px;
     --inspector-w: 264px;
-    --stage-left: calc(
-      var(--dock-gap) * 2 + var(--rail-w) + var(--tools-w) - var(--s-4)
-    );
   }
 }
 

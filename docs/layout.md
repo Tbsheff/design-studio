@@ -44,7 +44,7 @@ Both files copy the two `:root` blocks of `apps/desktop/src/ui/styles/tokens.css
 The canvas is the background of the whole area right of chat. The panels float on it as cards: radius `--r-lg`, a 1 px `--line` ring, `--shadow-sm`, 8 px from the canvas edges. Styles live in `apps/desktop/src/ui/styles/stage-shell.css`.
 
 - **Dock card.** The panel rail sits on the left edge of the column card it controls. When the column is closed, the card shrinks to the rail strip and the canvas takes the full width. The macOS traffic lights sit in the 48 px title bar above chat.
-- **Tool strip.** The tools (V H F R P T | C L) are a slim vertical card right of the dock card. It moves with the dock when the column opens or closes.
+- **Tool strip.** The tools (V H F R P T | C L) are a slim vertical card right of the dock card. It moves with the dock when the column opens or closes. The dock and inspector cards sit one layer above the strip and the zoom control, so their menus are never covered.
 - **Zoom control.** − % + at the bottom right of the canvas. The % opens the zoom menu (fit, 50–200 %). It moves left of the inspector card while the inspector is open.
 - **Inspector card.** Floats on the right edge. It covers the canvas and does not refit the frame, so the frame does not jump when a selection opens it.
 - **Fit.** The canvas stage starts right of the tool strip (`--stage-left`), so "fit" never puts the frame under the dock card. Opening or closing the column refits.
@@ -105,7 +105,7 @@ Every column panel uses one header: the title on the left, the panel's own contr
 | Skills, Data use, Spending limit | Composer footer row | Composer + menu, Project section | none |
 | New direction (one direction) | Versions "Directions" row | Versions panel ⋯ menu | none |
 
-Narrow windows (below 1200 px): chat shrinks to 300, the column card to 232 and the inspector card to 264. The column card then floats over the canvas without moving the stage, so the frame keeps its fit size. The tool strip still sits right of the dock card.
+Narrow windows (below 1200 px): chat shrinks to 300, the column card to 232 and the inspector card to 264. The stage still starts right of the tool strip, so an open column never hides the frame; the frame fits in the space that is left.
 
 ### Project menu (nitpick 17)
 

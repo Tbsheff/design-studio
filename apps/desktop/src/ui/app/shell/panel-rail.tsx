@@ -18,6 +18,7 @@ const PanelRail = ({ column, onPick }: PanelRailProps): ReactElement => {
 
   return (
     <nav className="panel-rail" aria-label={copy.panelRail}>
+      <span className="panel-rail-head" />
       {RAIL_TABS.map((entry) => (
         <PanelRailButton
           key={entry.tab}

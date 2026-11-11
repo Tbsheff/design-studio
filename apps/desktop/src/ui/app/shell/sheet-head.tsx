@@ -2,6 +2,8 @@ import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 interface SheetHeadProps {
+  readonly closeLabel: string;
+  readonly closeTip: string;
   readonly id: string;
   readonly onClose: () => void;
   readonly onSlot: (el: HTMLDivElement | null) => void;
@@ -9,6 +11,8 @@ interface SheetHeadProps {
 }
 
 const SheetHead = ({
+  closeLabel,
+  closeTip,
   id,
   onClose,
   onSlot,
@@ -21,9 +25,9 @@ const SheetHead = ({
     <div className="pane-sheet-slot" ref={onSlot} />
     <button
       type="button"
-      className="icon-btn small"
-      aria-label="Back to chat"
-      data-tip="Back to chat"
+      className="icon-btn small pane-sheet-close"
+      aria-label={closeLabel}
+      data-tip={closeTip}
       data-tip-align="end"
       onClick={onClose}
     >

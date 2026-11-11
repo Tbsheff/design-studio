@@ -8,6 +8,8 @@ const COLUMN_COPY = {
   assetsNote:
     "Select a layer on the canvas, then add an asset to it. Components, patterns and charts are on the Components tab.",
   assetsPhotos: "Stock photos",
+  backToChat: "Back to chat",
+  close: "Close",
   column: "Panel column",
   comments: "Comments",
   inspector: "Inspector",

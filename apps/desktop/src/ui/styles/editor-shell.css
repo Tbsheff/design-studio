@@ -288,9 +288,17 @@
   align-items: center;
   gap: 2px;
   width: 44px;
-  padding: var(--s-2) 0;
+  padding: 0 0 var(--s-2);
   border-right: 1px solid var(--line);
   background: var(--surface);
+}
+
+.panel-rail-head {
+  flex: none;
+  align-self: stretch;
+  height: var(--bar-h);
+  margin-bottom: var(--s-2);
+  border-bottom: 1px solid var(--line);
 }
 
 .panel-rail-btn {
@@ -340,7 +348,7 @@
 }
 
 .studio-body > .prail {
-  left: 44px;
+  left: 0;
   z-index: 60;
   box-shadow:
     inset -1px 0 0 var(--line),
@@ -355,7 +363,7 @@
   display: grid;
   grid-template-columns:
     clamp(280px, var(--chat-w, 360px), 36%)
-    auto minmax(0, 1fr) auto;
+    auto auto minmax(0, 1fr) auto;
   gap: 0;
   margin: 0;
   padding: 0;
@@ -365,16 +373,20 @@
   grid-column: 1;
 }
 
-.studio-body > .columns > .studio-column {
+.studio-body > .columns > .panel-rail {
   grid-column: 2;
 }
 
-.studio-body > .columns > .pane-canvas {
+.studio-body > .columns > .studio-column {
   grid-column: 3;
 }
 
-.studio-body > .columns > .studio-inspector {
+.studio-body > .columns > .pane-canvas {
   grid-column: 4;
+}
+
+.studio-body > .columns > .studio-inspector {
+  grid-column: 5;
 }
 
 .studio-body .pane-left {
@@ -384,7 +396,7 @@
 
 .chat-head.pane-head {
   gap: var(--s-2);
-  height: 40px;
+  height: var(--bar-h);
   padding: 0 var(--s-2) 0 var(--s-3);
   border-bottom: 1px solid var(--line);
 }
@@ -437,7 +449,7 @@
 
 .studio-column .pane-sheet-head,
 .studio-inspector .pane-sheet-head {
-  height: 40px;
+  height: var(--bar-h);
   padding: 0 var(--s-2) 0 var(--s-3);
   border-bottom: 1px solid var(--line);
 }
@@ -459,7 +471,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  height: 40px;
+  height: var(--bar-h);
   margin: 0;
   padding: 0 var(--s-2);
   border-bottom: 1px solid var(--line);
@@ -478,19 +490,12 @@
   color: var(--text);
 }
 
-.studio-column .pane-sheet-layers > .pane-sheet-head {
-  display: none;
-}
-
 .studio-column .layers-head {
+  height: 32px;
   padding-left: var(--s-3);
 }
 
 .studio-column .layers-title {
-  font-size: var(--t-sm);
-}
-
-.studio-column .layers-head:has(.layers-tools) .layers-frame {
   display: none;
 }
 
@@ -598,16 +603,16 @@
   .studio-body > .columns {
     grid-template-columns:
       clamp(260px, var(--chat-w, 300px), 34%)
-      auto minmax(0, 1fr) auto;
+      auto auto minmax(0, 1fr) auto;
   }
 
   .studio[data-inspector="open"] .studio-body > .columns > .studio-column {
     position: absolute;
-    z-index: 3;
+    z-index: 37;
     top: 0;
     bottom: 0;
     left: 0;
-    grid-column: 3;
+    grid-column: 4;
     box-shadow: var(--shadow-pop);
   }
 

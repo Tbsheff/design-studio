@@ -38,6 +38,9 @@ const RAIL_TABS: readonly RailTab[] = [
 const toColumnTitle = (tab: ColumnTab): string =>
   RAIL_TABS.find((entry) => entry.tab === tab)?.label ?? "";
 
-export { RAIL_TABS, toColumnTitle };
+const toColumnKeyId = (tab: ColumnTab): KeyId =>
+  RAIL_TABS.find((entry) => entry.tab === tab)?.keyId ?? "layers";
+
+export { RAIL_TABS, toColumnKeyId, toColumnTitle };
 
 export type { RailTab };

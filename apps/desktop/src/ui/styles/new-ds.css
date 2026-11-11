@@ -286,11 +286,13 @@
 }
 
 .draft-bar {
+  flex: none;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: var(--s-2) var(--s-4);
-  padding: var(--s-2) var(--s-4);
+  gap: var(--s-4);
+  height: var(--bar-h);
+  padding: 0 var(--s-3);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -360,7 +362,7 @@
 
 .draft-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   flex: 1 0 auto;
   align-items: center;
   justify-content: flex-end;

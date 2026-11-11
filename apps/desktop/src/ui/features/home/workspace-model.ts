@@ -158,7 +158,7 @@ const toWorkspaces = (projects: readonly Project[] | null): Workspace[] => {
 
   for (const app of apps) {
     if (!linkedApps.has(app)) {
-      appSpaces.push(toFolderWorkspace(app, null, visible));
+      appSpaces.push(toFolderWorkspace(app, app, visible));
     }
   }
 

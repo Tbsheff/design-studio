@@ -21,27 +21,37 @@ Both files copy the two `:root` blocks of `apps/desktop/src/ui/styles/tokens.css
 ## 2. Editor layout (nitpick 15)
 
 ```
-┌────┬───────────────────────────────────────────────────────────────────────────────────────────┐
-│ ●●●│ Kiln Coffee ▾  › Home        V  H  F  R  P  T │ C  L │ 100% ▾       Review  Present  Share  TS│  top bar 48
-├────┼────────────────────┬──────────────┬─────────────────────────────────────┬─────────────────┤
-│ ▤  │ Chat               │ Layers    ⌥1 │                                     │ Design│Proto│Code│
-│ ▦  │                    │ ──────────── │                                     │                 │
-│ ◫  │  agent messages    │ ▾ Page /     │        ┌──────────────────┐         │ Position        │
-│ ⟲  │                    │   ▸ Header   │        │                  │         │ Layout          │
-│ ◈  │                    │   ▾ Hero  ●  │        │   frame / route  │         │ Fill            │
-│ ⧉  │                    │     Title    │        │                  │         │ Text            │
-│ ◎  │                    │   ▸ Footer   │        └──────────────────┘         │ Effects         │
-│    │ ┌────────────────┐ │              │                                     │                 │
-│    │ │ On Hero ×      │ │              │                                     │                 │
-│    │ │ Ask Claude…    │ │              │                                     │                 │
-│    │ └────────────────┘ │              │                                     │                 │
-└────┴────────────────────┴──────────────┴─────────────────────────────────────┴─────────────────┘
- rail  chat 360, always    column 248,    canvas                               inspector 280,
- 44    on screen           toggled from   (tools change the click here)        opens on select
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ●●● Kiln Coffee ▾  › Home      V  H  F  R  P  T │ C  L │ 100% ▾        Review  Present  Share  │  title bar 48
+├────────────────────┬────┬──────────────┬─────────────────────────────────────┬─────────────────┤
+│ Chat · Main        │    │ Layers     × │ Kiln Coffee  Coverage 82%  chips    │ Design│Proto│Code│  header row, --bar-h
+├────────────────────┼────┼──────────────┼─────────────────────────────────────┼─────────────────┤  one straight line
+│                    │ ▤  │ Desktop 1440 │                                     │                 │  second rows sit
+│  agent messages    │ ▦  │ Search…      │        ┌──────────────────┐         │ Position        │  under the line
+│                    │ ◫  │ ▾ Page /     │        │                  │         │ Layout          │
+│                    │ ⟲  │   ▸ Header   │        │   frame / route  │         │ Fill            │
+│                    │ ◈  │   ▾ Hero  ●  │        │                  │         │ Text            │
+│ ┌────────────────┐ │ ⧉  │     Title    │        └──────────────────┘         │ Effects         │
+│ │ On Hero ×      │ │ ◎  │   ▸ Footer   │                                     │                 │
+│ │ Ask Claude…    │ │    │              │                                     │                 │
+│ └────────────────┘ │ ⊟  │              │                                     │                 │
+└────────────────────┴────┴──────────────┴─────────────────────────────────────┴─────────────────┘
+ chat 360, always     rail column 248,    canvas                               inspector 280,
+ on screen            44   toggled from   (tools change the click here)        opens on select
                            the rail
 ```
 
-Rail icons, top to bottom: Layers, Pages, Assets, Versions, Tokens, Components, Design system. Click an icon to open the column on that tab. Click the open tab again to close the column.
+The panel rail sits on the left edge of the column it controls, between chat and the column. It stays on screen when the column is closed, so a click opens the column. Chat is the leftmost pane. The macOS traffic lights sit in the 48 px title bar above it.
+
+Rail icons, top to bottom: Layers, Pages, Assets, Versions, Tokens, Components, Design system. The last icon (⊟) toggles the project list. Click an icon to open the column on that tab. Click the open tab again to close the column.
+
+Every column panel uses one header: the title on the left, the panel's own controls in the middle, and a close X on the right. The X has the same size and position in every panel, and its tooltip names the ⌥ key ("Close Layers ⌥1"). The X, the rail and ⌥1–⌥7 change one column state, so they always agree.
+
+### Header rule
+
+- **One height.** Every top header below the title bar uses `--bar-h` (40 px): chat header, rail top band, column panel header, canvas bar (design-system draft: name, Coverage, chips) and inspector tabs. Their bottom borders form one straight line across the window.
+- **Second rows go under the line.** A panel row such as the Layers frame and tools row, the Layers search or the Versions "Directions" row sits below the header. It never changes the header height.
+- **No wrap.** A header never wraps to a second line. Its content truncates instead.
 
 ### Control map
 
@@ -64,7 +74,7 @@ Rail icons, top to bottom: Layers, Pages, Assets, Versions, Tokens, Components, 
 | Tokens | Project menu | Column tab | ⌥5 |
 | Components | Project menu and inspector tab | Column tab | ⌥6 |
 | Design system | Project menu | Column tab | ⌥7 |
-| Column toggle | None | Panel rail on the left edge. Click the open tab again, or press its key again, to close | ⌥1–⌥7 |
+| Column toggle | None | Panel rail on the left edge of the column, between chat and the column. Click the open tab again, press its key again, or click the X in the panel header, to close | ⌥1–⌥7 |
 | Tweaks | Project menu, inspector tab and "Describe a tweak…" bar | Removed (nitpick 13). Chat takes the request | none |
 | Inline prompt | ⌘I box on the selection | Removed (nitpick 13). ⌘I focuses chat with a selection chip | ⌘I |
 | Inspector | Right side, mixed with chat | Right column, opens on select, closes when the selection clears | ⌥8 |
@@ -81,7 +91,7 @@ Rail icons, top to bottom: Layers, Pages, Assets, Versions, Tokens, Components, 
 | Theme | Project menu | App settings and macOS View menu | none |
 | Command palette | ⌘K, ⌘P | Same | ⌘K |
 
-Narrow windows (below 1200 px): chat shrinks to 300, the column to 232 and the inspector to 264. While the inspector is open, the column floats over the left edge of the canvas, so the canvas keeps its width.
+Narrow windows (below 1200 px): chat shrinks to 300, the column to 232 and the inspector to 264. While the inspector is open, the column floats over the left edge of the canvas, so the canvas keeps its width. The rail stays in place next to chat, and the floating column covers the canvas bar.
 
 ### Project menu (nitpick 17)
 

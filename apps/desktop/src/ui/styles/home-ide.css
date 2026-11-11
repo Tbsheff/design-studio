@@ -250,6 +250,18 @@
   box-shadow: var(--shadow-md);
 }
 
+.ide-starter[aria-pressed="true"] {
+  box-shadow:
+    0 0 0 1.5px var(--accent),
+    var(--shadow-sm);
+}
+
+.ide-default {
+  margin: calc(var(--s-1) * -1) 0 0;
+  color: var(--text-3);
+  font-size: var(--t-sm, 12px);
+}
+
 .ide-starter:active {
   scale: 0.99;
 }

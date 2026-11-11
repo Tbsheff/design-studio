@@ -89,7 +89,7 @@ const projectApi = {
     call(projectsRoutes.getHiddenProject, {}),
   importProject: async (
     path: string,
-    options: { appDir?: string; skipApp?: boolean } = {}
+    options: { appDir?: string; isWorkspace?: boolean; skipApp?: boolean } = {}
   ): Promise<{ project: Project }> => {
     const imported = await call(projectsRoutes.importProject, {
       path,

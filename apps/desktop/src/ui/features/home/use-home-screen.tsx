@@ -30,9 +30,12 @@ import { useHomeToast } from "./use-home-toast.js";
 import { toMenuPresence, useHomeUi } from "./use-home-ui.js";
 import type { HomeScreenOf } from "./use-home-ui.js";
 import { useScreenSubmit } from "./use-screen-submit.js";
+import { useWorkspaceTarget } from "./use-workspace-target.js";
+import type { WorkspaceTarget } from "./use-workspace-target.js";
 
 type HomeScreen = HomeScreenOf<SettingsDraft, PacksState> & {
   readonly ClarifyForm: typeof ClarifyForm;
+  readonly target: WorkspaceTarget;
 };
 
 const MODEL_IDS = MODEL_OPTIONS.map((option) => option.id);
@@ -76,6 +79,13 @@ const useHomeScreen = (openHome: (projectId: string) => void): HomeScreen => {
   const packId = pack?.id ?? null;
   const parsed = parseDraft(draft.settingsDraft);
 
+  const target = useWorkspaceTarget({
+    app: flow.app,
+    loadProjects: lib.loadProjects,
+    projects: lib.projects,
+    setFormError: base.setFormError,
+  });
+
   const submit = useScreenSubmit({
     base,
     composer,
@@ -85,6 +95,7 @@ const useHomeScreen = (openHome: (projectId: string) => void): HomeScreen => {
     packId,
     parsed,
     refs,
+    target,
   });
 
   const presence = usePresence(toMenuPresence(flow.isAppMenuOpen));
@@ -114,6 +125,7 @@ const useHomeScreen = (openHome: (projectId: string) => void): HomeScreen => {
     modules,
     refs,
     submit,
+    target,
     toasts,
     ui,
   };

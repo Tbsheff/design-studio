@@ -32,7 +32,7 @@ const Home = ({
   const { loadProjects, projects } = lib;
   const { packs } = lib.packs;
 
-  const { addAppFolder, app } = composer.flow;
+  const { addAppFolder } = composer.flow;
   const { openSample } = lib.openFlows;
 
   const onAttach = useCallback((): void => {
@@ -44,7 +44,6 @@ const Home = ({
   }, [openSample]);
 
   const ide = useHomeIde({
-    app,
     onAttach,
     onCommands,
     onLayer,
@@ -53,6 +52,7 @@ const Home = ({
     onTrashOpen,
     packs,
     projects,
+    target: screen.target,
   });
 
   const { nav } = ide;

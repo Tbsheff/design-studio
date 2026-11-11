@@ -11,16 +11,15 @@ import type {
 import { homePrefs } from "./home-prefs-model.js";
 import { useActivity } from "./use-activity.js";
 import type { ActivityState } from "./use-activity.js";
-import type { AppChipState } from "./use-app-chip.js";
 import { setComposerFocus, useHomeKeys } from "./use-home-keys.js";
-import { useWorkspaceNav } from "./use-workspace-nav.js";
 import type { WorkspaceNav } from "./use-workspace-nav.js";
+import type { WorkspaceTarget } from "./use-workspace-target.js";
+import { toDefaultLine } from "./workspace-model.js";
 import type { StarterId } from "./workspace-model.js";
 
 type CommandSource = () => readonly HomeCommand[];
 
 interface HomeIdeInput {
-  readonly app: AppChipState;
   readonly onAttach: () => void;
   readonly onCommands: (source: CommandSource | null) => void;
   readonly onLayer: (layer: HomeLayer) => void;
@@ -29,10 +28,13 @@ interface HomeIdeInput {
   readonly onTrashOpen: (isOpen: boolean) => void;
   readonly packs: readonly PackSummary[] | null;
   readonly projects: readonly Project[] | null;
+  readonly target: WorkspaceTarget;
 }
 
 interface HomeIde {
   readonly activity: ActivityState;
+  readonly defaultLine: string | null;
+  readonly isEditApp: boolean;
   readonly nav: WorkspaceNav;
   readonly onAttach: () => void;
   readonly onSearch: () => void;
@@ -55,15 +57,18 @@ const useStarter = (
   input: HomeIdeInput,
   nav: WorkspaceNav
 ): ((id: StarterId) => void) => {
-  const { onOpen, onSample } = input;
-  const appId = nav.selected?.app?.id ?? null;
+  const { onSample } = input;
+  const { setIsEditApp } = input.target;
+  const anchorId = nav.selected?.anchor?.id ?? null;
 
   return useCallback(
     (id: StarterId): void => {
-      if (id === "route" && appId !== null) {
-        onOpen(appId);
-      } else if (id === "prototype" && appId !== null) {
-        openPrototypeDialog(appId);
+      if (id === "edit") {
+        setIsEditApp(true);
+        setComposerFocus();
+      } else if (id === "prototype" && anchorId !== null) {
+        setIsEditApp(false);
+        openPrototypeDialog(anchorId);
       } else if (id === "sample") {
         onSample();
       } else if (id === "template") {
@@ -72,7 +77,7 @@ const useStarter = (
         setComposerFocus();
       }
     },
-    [appId, onOpen, onSample]
+    [anchorId, onSample, setIsEditApp]
   );
 };
 
@@ -123,12 +128,18 @@ const useCommandSource = (input: HomeIdeInput, nav: WorkspaceNav): void => {
 
 const useHomeIde = (input: HomeIdeInput): HomeIde => {
   const { onAttach, onLayer, onTrashOpen } = input;
-  const nav = useWorkspaceNav(input.projects, input.app);
+  const { isEditApp, nav } = input.target;
   const { onSelect, selected, workspaces } = nav;
   const count = workspaces.length;
   const activity = useActivity();
   const onStarter = useStarter(input, nav);
-  const packName = toPackName(input.packs, selected?.app?.packId ?? null);
+
+  const packName = toPackName(
+    input.packs,
+    selected?.anchor?.packId ?? selected?.app?.packId ?? null
+  );
+
+  const defaultLine = toDefaultLine(selected, isEditApp);
 
   useCommandSource(input, nav);
   useHomeKeys({ count, onLayer, onSelect });
@@ -141,7 +152,17 @@ const useHomeIde = (input: HomeIdeInput): HomeIde => {
     onLayer("palette");
   }, [onLayer]);
 
-  return { activity, nav, onAttach, onSearch, onStarter, onTrash, packName };
+  return {
+    activity,
+    defaultLine,
+    isEditApp,
+    nav,
+    onAttach,
+    onSearch,
+    onStarter,
+    onTrash,
+    packName,
+  };
 };
 
 export { useHomeIde };

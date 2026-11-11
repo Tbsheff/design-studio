@@ -169,11 +169,6 @@ export async function inspectFolder(
       (kind !== "next" || project.app?.appDir === appDir)
   );
 
-  const problem =
-    kind === null
-      ? "This folder has no Next.js app, no Vite app and no index.html. Add the name of your app folder to the path."
-      : null;
-
   return {
     path: folder,
     name: path.basename(folder),
@@ -187,7 +182,7 @@ export async function inspectFolder(
         : null,
     install: hint ? { command: hint.command, dir: hint.dir } : null,
     projectId: existing?.id ?? null,
-    problem,
+    problem: null,
     workspace: workspace
       ? { root: workspace.root, name: workspace.name, opened: found.path }
       : null,

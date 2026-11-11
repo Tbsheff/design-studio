@@ -17,7 +17,7 @@ const copy = {
   appFolder: "App folder",
   appOptions: "App options",
   apps: "Apps",
-  attachAppFolder: "Attach app folder",
+  attachAppFolder: "Open folder…",
   attachFolder: "Attach folder…",
   attachImportAndOptions: "Attach, import and options",
   attachWebPage: "Attach web page…",
@@ -83,6 +83,7 @@ const copy = {
   dropAnAppFolderAn:
     "Drop an app folder, a zip, a PDF, a Markdown file, an image or a link",
   dropAnywhereTheFolderGoes: "Drop anywhere: the folder goes on the prompt",
+  editApp: "Edit app",
   editedPrefix: "Edited",
   edits: "Edits ",
   emptyTheTrash: "Empty the trash?",
@@ -106,6 +107,7 @@ const copy = {
   findAProjectFolderOr: "Find a project, folder or command",
   firstSteps: "First steps",
   fixTheAppFirst: "Fix the app first: ",
+  folderLabel: "Folder",
   folderPath: "Folder path",
   folderStillChecked: "The folder is still being checked.",
   folders: "Folders",
@@ -221,6 +223,8 @@ const copy = {
   projectRail: "Project rail",
   projects: "Projects",
   projectsSuffix: "projects",
+  promptsEditApp: "Prompts edit the app source. Pick New prototype to stop.",
+  promptsMakePrototype: "Prompts make a prototype. The folder does not change.",
   prototypes: "Prototypes",
   prototypesGroup: "Prototypes",
   prototypesSub: "Standalone designs, no app folder",
@@ -270,6 +274,9 @@ const copy = {
   startNextDev: "Start next dev",
   startServer: "Start",
   starter: " starter",
+  starterBesideSub:
+    "Beside the folder, with its tokens. The folder does not change.",
+  starterEditAppSub: "Prompts change the app source",
   starterHtmlPrototypeSub:
     "Uses the app tokens. Saved in the Design Studio folder",
   starterNewAppSub: "Builds on the app code and its styles",

@@ -13,7 +13,7 @@ interface IdeCenterProps {
 }
 
 const IdeCenter = ({ ide, onOpen, screen }: IdeCenterProps): ReactElement => {
-  const { nav, onStarter, packName } = ide;
+  const { defaultLine, isEditApp, nav, onStarter, packName } = ide;
 
   return (
     <main className="ide-center">
@@ -24,9 +24,10 @@ const IdeCenter = ({ ide, onOpen, screen }: IdeCenterProps): ReactElement => {
       />
       <HomeHero screen={screen} />
       <WorkspaceCenter
+        defaultLine={defaultLine}
+        isEditApp={isEditApp}
         onOpen={onOpen}
         onStarter={onStarter}
-        packName={packName}
         workspace={nav.selected}
       />
     </main>

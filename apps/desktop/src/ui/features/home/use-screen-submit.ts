@@ -8,6 +8,7 @@ import type {
   ParsedSettings,
   SubmitInput,
 } from "./use-home-submit.js";
+import type { WorkspaceTarget } from "./use-workspace-target.js";
 
 type DraftParts = Pick<
   SubmitInput,
@@ -23,6 +24,7 @@ interface ScreenSubmitParts {
   readonly packId: string | null;
   readonly parsed: ParsedSettings;
   readonly openHome: (projectId: string) => void;
+  readonly target: WorkspaceTarget;
 }
 
 const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
@@ -37,6 +39,7 @@ const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
   const { location } = lib;
   const { chip } = flow.app;
   const { submitChip } = flow;
+  const { isEditApp, nav } = parts.target;
 
   return useHomeSubmit({
     busy,
@@ -46,6 +49,7 @@ const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
     designCount,
     designMd,
     images,
+    isEditApp,
     kind,
     location,
     onOpen,
@@ -58,6 +62,7 @@ const useScreenSubmit = (parts: ScreenSubmitParts): HomeSubmit => {
     setFormError,
     setQuestions,
     submitChip,
+    workspace: nav.selected,
   });
 };
 

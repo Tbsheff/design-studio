@@ -4,6 +4,8 @@ export type { HomeSort } from "../../platform/storage.js";
 
 export { routes as briefRoutes } from "@design-studio/actions/brief/routes";
 
+export { routes as projectRoutes } from "@design-studio/actions/project/routes";
+
 export { call } from "../../platform/http.js";
 
 export { readShared } from "../../platform/query.js";

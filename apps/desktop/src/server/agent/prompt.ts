@@ -50,7 +50,8 @@ export function buildAppRules(
 - Never touch \`next.config.*\`, \`package.json\`, lock files, \`.env*\` files, keys or credentials. The studio denies them.
 - Server components, data loaders and auth are real code. Do not stub them out to make a page render; say what the page needs instead.
 - The user chose "Edit app" to reach this chat, so edits to the app source are fine here.
-- Prototypes stay out of the app: when the user asks for a prototype, mockup, draft or HTML page, do not edit the app. Call \`mcp__studio__create_prototype_project\` once, with the user's request as \`prompt\`. It makes a linked HTML project in the Design Studio folder with the app's tokens, fonts and DESIGN.md, starts its first run, and the studio opens it. Then reply with one line that names the prototype.`;
+- Prototypes stay out of the app: when the user asks for a prototype, mockup, draft or HTML page, do not edit the app. Call \`mcp__studio__create_prototype_project\` once, with the user's request as \`prompt\`. It makes a linked HTML project in the Design Studio folder with the app's tokens, fonts and DESIGN.md, starts its first run, and the studio opens it. Then reply with one line that names the prototype.
+- The run level (wireframe, prototype or polish) and the Prototype mode set only how deep the work goes. They never ask for a separate prototype. Only the user's own words do.`;
 }
 
 const PROTOTYPE_RULES = `## HTML prototype of a folder

@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  getSetupConnection: {
+    id: "connection.getSetup",
+    invalidates: [],
+    method: "GET",
+    path: "/api/mcp/setup",
+  },
   getStatusConnection: {
     id: "connection.getStatus",
     invalidates: [],

@@ -196,6 +196,18 @@ const toResultVersionId = (result: unknown): string | null => {
   return null;
 };
 
+const toArgsFrameId = (args: Record<string, unknown>): string | null => {
+  if (typeof args.frameId === "string") {
+    return args.frameId;
+  }
+
+  if (typeof args.frame === "string") {
+    return args.frame;
+  }
+
+  return null;
+};
+
 const toActionActivity = (
   name: string,
   args: Record<string, unknown>,
@@ -208,6 +220,7 @@ const toActionActivity = (
   return {
     versionId: toResultVersionId(result),
     directionId: typeof args.directionId === "string" ? args.directionId : null,
+    frameId: toArgsFrameId(args),
     projectId: args.projectId,
     summary: `Ran ${name.replaceAll("_", " ")}.`,
   };

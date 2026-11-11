@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 
+import type { McpSetup } from "@design-studio/actions/connection/schema";
 import type { McpStatus } from "@design-studio/contracts/export";
 import { Effect } from "effect";
 import { Hono } from "hono";
@@ -39,7 +40,7 @@ const READ_ONLY_NOTE =
 const EDITS_NOTE =
   " Allow edits is on, so the edit tools are on. Each design edit is saved as a version the user can take back with Cmd+Z; prototype link and canvas frame changes are steps of their own and save with the next version. edit_element and batch_edit take variant ('md:', 'hover:', 'md:hover:', 'dark:') to style one breakpoint or state; in an attached app they edit a shared component use (<Button>, <CardTitle>) in the page file where it is used, unless target is 'component'; edit_element and batch_edit text on text from a prop, a literal array, a constant or a messages key changes that literal at its source; get_layers lists the page as a tree of short layer ids (e0k3pz) that every selector or targetSelector input accepts in place of a CSS selector, with file:line:col that targetSource and source accept (file:line works when one tag starts on that line); ids stay the same when studio edits move lines; edit tools return when the file is written and saved, and get_layers waits for the dev server rebuild (pass wait: 'render' to an edit to wait in that call); arrange aligns, distributes or tidies up sibling elements by writing their auto layout (or left/top for absolute children) as one version, and measure gives the distance between two elements; use batch_edit to make several edits one version, and test_design_rules to try the project's design rules. These tools never start, steer or stop the studio agent (Improve with AI on a design system draft runs only from the app), and design edits are refused while a studio run edits that direction. list_breakpoints {frame? | width?, targetSelector? | targetSource?} reads the project breakpoints (Tailwind --breakpoint-* or sm 640, md 768, lg 1024, xl 1280), the active one for a frame width and the values each breakpoint overrides on a layer, and set_breakpoint_style {targetSelector | targetSource, breakpoint: base | md | lg ..., property, value | reset} writes one property at one breakpoint as md:/lg: classes that replace only the same utility at that prefix, or as an @media (min-width) rule in the page stylesheet of an HTML page; one version and one Cmd+Z step. swap_instance changes one component use to another library component (leave out name to list the ones that fit). select_matching {selector, by: component | classes | text-style} returns the layer ids of every element that matches one element, like Select matching in the studio. set_image {selector, path | url, fit, focal, alt} replaces the image of an <img> or a background image, or inserts an <img> into another element; it copies the file into the project assets folder with a content-hashed name (url: https, 10 MB, image types only), and its page input is the page path. draw_vector draws a rectangle, ellipse or pen path as an inline <svg>, boolean_shapes joins two SVG shapes (union, subtract, intersect, exclude) into one <path>, and paint_shape sets the fill, stroke or stroke width of an SVG shape; each is one version. set_layer_state locks, hides or renames a layer (locks live in the studio data folder; hide and rename change the source), list_locked_layers lists locks, and list_page_variations, keep_page_variation and discard_page_variation manage page variations without starting a run. move_element moves one element before or after a sibling (before / after: CSS selector or layer id) or to a left/top point in an absolute parent, as one version, like a drag on the canvas. import_figma_frame {nodesFile, nodeId, targetSelector} turns a Figma nodes JSON frame into flex markup with token colors and kit components as one version; dryRun returns the markup; it never calls Figma. The tool descriptions name the rest: comments, links and flows, frame states, versions and history, design systems, tokens, share links, publications, code and frame output, shipping, app fixes, run context, port plans and component usage.";
 const EDITS_OFF =
-  "Allow edits is off in Design Studio, so this tool is not available. The user can turn it on in Export > Connect to Claude Code. Then reconnect the MCP server.";
+  "Allow edits is off in Design Studio, so this tool is not available. The user can turn it on in Connect AI. Then reconnect the MCP server.";
 const DEFAULT_CLIENT = "MCP client";
 const MAX_SESSIONS = 200;
 
@@ -337,6 +338,7 @@ export interface McpWiring {
 
 export interface McpService {
   status(): Promise<McpStatus>;
+  setup(): Promise<McpSetup>;
   setEnabled(enabled: boolean): Promise<McpStatus>;
   setEdits(edits: boolean): Promise<McpStatus>;
   editsOn(): Promise<boolean>;
@@ -399,8 +401,21 @@ export function createMcpService(
     };
   };
 
+  const setup = async (): Promise<McpSetup> => {
+    const settings = await load();
+    return {
+      canEdit: settings.edits,
+      isEnabled: settings.enabled,
+      isRunning: await isListening(),
+      name: SERVER_NAME,
+      token: settings.token,
+      url: `http://127.0.0.1:${settings.port}/mcp`,
+    };
+  };
+
   return {
     status,
+    setup,
     async setEnabled(enabled) {
       const settings = await load();
       settings.enabled = enabled;

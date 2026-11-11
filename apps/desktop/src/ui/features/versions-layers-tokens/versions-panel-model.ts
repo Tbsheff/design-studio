@@ -4,6 +4,10 @@ import { displayTitle } from "./version-labels.js";
 import type { VersionIndex } from "./version-labels.js";
 
 const SHORT_ID_LENGTH = 7;
+const MIN_LISTED_DIRECTIONS = 2;
+
+const hasDirectionList = (count: number): boolean =>
+  count >= MIN_LISTED_DIRECTIONS;
 
 interface RenamedVersions {
   readonly names: Map<string, string | null>;
@@ -83,6 +87,7 @@ const toRenamed = (
 };
 
 export {
+  hasDirectionList,
   toCompareSides,
   toNamedVersions,
   toRenamed,

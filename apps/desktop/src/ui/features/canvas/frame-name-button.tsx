@@ -12,8 +12,6 @@ import type { FrameLabelView } from "./frame-label-view-model.js";
 const FrameNameButton = ({
   active,
   frame,
-  hasBadge,
-  number,
   onActivate,
   onNudge,
   onPointerDown,
@@ -21,8 +19,6 @@ const FrameNameButton = ({
 }: {
   active: boolean;
   frame: CanvasFrame;
-  hasBadge: boolean;
-  number: string | undefined;
   onActivate: (frame: CanvasFrame) => void;
   onNudge: (frame: CanvasFrame, dx: number, dy: number) => void;
   onPointerDown: (event: ReactPointerEvent, frame: CanvasFrame) => void;
@@ -62,11 +58,8 @@ const FrameNameButton = ({
       onPointerDown={press}
       onKeyDown={key}
     >
-      {number && <span className="frame-number">{number}</span>}
       <span className="frame-title">{view.heading}</span>
-      {!hasBadge && frame.label?.trim() && (
-        <span className="frame-size">{view.size}</span>
-      )}
+      {view.hasSize && <span className="frame-size">{view.size}</span>}
     </button>
   );
 };

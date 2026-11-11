@@ -70,6 +70,8 @@ export type { SettingsDraft };
 
 export { useAskChat } from "./use-ask-chat.js";
 
+export { useActiveRun } from "./use-active-run.js";
+
 export { applyRunEvent, runText } from "./run-state-model.js";
 
 export type { RunMap } from "./run-state-model.js";

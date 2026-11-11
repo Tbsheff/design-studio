@@ -1,3 +1,4 @@
+import { isLiveRun } from "./run-state-model.js";
 import type { RunView, ToolRow } from "./run-state-model.js";
 import { shortName } from "./tool-chips-model.js";
 import { toolSubject, toolVerb } from "./tool-labels-model.js";
@@ -54,6 +55,10 @@ const statusLabel = (
 ): string => {
   if (isOffline) {
     return "Lost the connection. Reconnecting…";
+  }
+
+  if (!isLiveRun(run, now)) {
+    return "The run did not start. Send your message again.";
   }
 
   if (run.permissions.length > 0) {

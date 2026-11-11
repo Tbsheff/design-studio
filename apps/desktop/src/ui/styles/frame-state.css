@@ -1,15 +1,3 @@
-.frame-chip.state {
-  opacity: 0;
-}
-
-.frame-label:hover .frame-chip.state,
-.frame-label.active .frame-chip.state,
-.frame-chip.state.set,
-.frame-chip.state:focus-visible,
-.frame-chip.state[aria-expanded="true"] {
-  opacity: 1;
-}
-
 .frame-chip.state.set {
   color: var(--accent-text);
   background: var(--accent-soft);

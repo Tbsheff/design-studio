@@ -58,7 +58,7 @@ const RunEntryBody = ({
   );
 
   return (
-    <div className="run flex min-w-0 flex-col gap-3.5" data-run-id={run.runId}>
+    <div className="run flex min-w-0 flex-col gap-4" data-run-id={run.runId}>
       <UserTurn run={run} title={title} rewind={rewind} actions={actions} />
       <RunBody
         tail={tail}

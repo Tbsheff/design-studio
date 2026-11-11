@@ -7,7 +7,9 @@ import { toDroppedFiles } from "../../domain/reference-files.js";
 import { useDraft } from "../../platform/storage.js";
 import { useComposerFocus } from "./composer-focus.js";
 import type { ComposerMode } from "./composer-mode-model.js";
+import type { ComposerSheetState } from "./composer-sheet-model.js";
 import type { PromptBoxProps } from "./prompt-box-props.js";
+import { useComposerSheet } from "./use-composer-sheet.js";
 import { useModelChoice } from "./use-model-choice.js";
 import { FILE_RULES, usePromptFiles } from "./use-prompt-files.js";
 import { usePromptReferences } from "./use-prompt-references.js";
@@ -36,6 +38,7 @@ interface PromptBase {
   readonly setIsDragging: Dispatch<SetStateAction<boolean>>;
   readonly setMode: Dispatch<SetStateAction<ComposerMode>>;
   readonly setSkillIds: Dispatch<SetStateAction<string[]>>;
+  readonly sheet: ComposerSheetState;
   readonly skillIds: string[];
   readonly uploading: boolean;
 }
@@ -48,6 +51,7 @@ const usePromptBase = (props: PromptBoxProps): PromptBase => {
   const [skillIds, setSkillIds] = useState<string[]>([]);
   const reasonId = useId();
   const promptRef = useRef<HTMLDivElement>(null);
+  const sheet = useComposerSheet();
 
   const runLevel = useRunLevel(
     props.projectId,
@@ -105,6 +109,7 @@ const usePromptBase = (props: PromptBoxProps): PromptBase => {
     setIsDragging,
     setMode,
     setSkillIds,
+    sheet,
     skillIds,
     uploading,
   };

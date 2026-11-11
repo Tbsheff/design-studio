@@ -16,6 +16,7 @@ const NUDGE = new Map<string, readonly [number, number]>([
 
 interface FrameLabelView {
   readonly className: string;
+  readonly hasSize: boolean;
   readonly heading: string;
   readonly name: string;
   readonly size: string;
@@ -78,11 +79,14 @@ const toLabelView = (
     action = "Drag to move, double-click to zoom";
   }
 
+  const sizeText = `${frame.width} × ${frame.height}`;
+
   return {
     className: toLabelClassName(active, badge),
+    hasSize: caption !== sizeText,
     heading: caption,
     name: label,
-    size: frameName(frame),
+    size: sizeText,
     tip: `${toTipPrefix(frame, badge, title)}${action}`,
   };
 };

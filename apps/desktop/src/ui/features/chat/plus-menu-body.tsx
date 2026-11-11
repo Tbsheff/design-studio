@@ -9,6 +9,7 @@ import { MenuItem } from "./menu-item.js";
 import { MenuSection } from "./menu-section.js";
 import { ModeChoice } from "./mode-choice.js";
 import { PlusDataItem } from "./plus-data-item.js";
+import { PlusProjectSection } from "./plus-project-section.js";
 import { PlusPrototypeItem } from "./plus-prototype-item.js";
 
 const PlusMenuBody = ({
@@ -74,6 +75,7 @@ const PlusMenuBody = ({
           <DesignCounts countsId={countsId} designs={designs} />
         </MenuSection>
       )}
+      <PlusProjectSection project={menuProps.project ?? null} onAct={onAct} />
     </>
   );
 };

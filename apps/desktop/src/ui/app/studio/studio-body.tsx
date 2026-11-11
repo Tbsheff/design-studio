@@ -15,13 +15,31 @@ const StudioBody = ({ ctx }: StudioCtxProps): ReactElement => {
   const { core, onExit, panes, projectId, ui } = ctx;
   const { guard } = core;
   const { openColumn: handlePick } = panes;
-  const { columnsRef } = ui;
+  const { columnsRef, setToolsHost, setZoomHost } = ui;
+  const isHosted = ui.toolsHost !== null && ui.zoomHost !== null;
   const handleHome = guard(onExit);
 
   const handleNewPrototype = guard((): void => {
     onExit();
     focusNewProject();
   });
+
+  const dock = (
+    <div className="studio-dock">
+      <PanelRail column={ui.editorColumn} onPick={handlePick} />
+      <StudioColumn ctx={ctx} />
+    </div>
+  );
+
+  const stage = (
+    <div className="studio-stage">
+      {isHosted && <StudioCenter ctx={ctx} />}
+      {dock}
+      <div className="studio-tools" ref={setToolsHost} />
+      <div className="studio-zoom" ref={setZoomHost} />
+      <StudioInspector ctx={ctx} />
+    </div>
+  );
 
   const columns = (
     <div
@@ -30,10 +48,7 @@ const StudioBody = ({ ctx }: StudioCtxProps): ReactElement => {
       style={chatWidthStyle(ui.chatWidth)}
     >
       <StudioLeft ctx={ctx} />
-      <PanelRail column={ui.editorColumn} onPick={handlePick} />
-      <StudioColumn ctx={ctx} />
-      <StudioCenter ctx={ctx} />
-      <StudioInspector ctx={ctx} />
+      {stage}
     </div>
   );
 

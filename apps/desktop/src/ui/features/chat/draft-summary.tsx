@@ -11,30 +11,37 @@ import { DraftFallbacks } from "./draft-fallbacks.js";
 import { DraftGuessed } from "./draft-guessed.js";
 import type { RunView } from "./run-state-model.js";
 
+interface DraftSummaryProps {
+  readonly check: DesignSystemCheckResult | null;
+  readonly coverage: DesignSystemCoverage | null;
+  readonly error: string | null;
+  readonly run: RunView | null;
+}
+
 const DraftSummary = ({
-  name,
   coverage,
   check,
   run,
   error,
-}: {
-  name: string;
-  coverage: DesignSystemCoverage | null;
-  check: DesignSystemCheckResult | null;
-  run: RunView | null;
-  error: string | null;
-}): ReactElement => (
+}: DraftSummaryProps): ReactElement => (
   <div className="draft-main">
-    <strong className="truncate">{name}</strong>
-    {coverage && <CoverageNote coverage={coverage} />}
-    {coverage && <DraftFallbacks tokens={coverage.fallbacks} />}
-    {coverage && <DraftGuessed coverage={coverage} />}
+    {coverage && (
+      <div className="draft-row">
+        <CoverageNote coverage={coverage} />
+      </div>
+    )}
+    {coverage && (
+      <div className="draft-row">
+        <DraftFallbacks tokens={coverage.fallbacks} />
+        <DraftGuessed coverage={coverage} />
+      </div>
+    )}
     <CheckStatus check={check} run={run} />
     {error && (
-      <span className="draft-fallbacks">
+      <p className="draft-error">
         {copy.couldNotLoadCoverage}
         {error}
-      </span>
+      </p>
     )}
   </div>
 );

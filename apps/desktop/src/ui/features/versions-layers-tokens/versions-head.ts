@@ -6,10 +6,13 @@ import { COPY } from "./copy.js";
 import { VersionsHeadActions } from "./versions-head-actions.js";
 
 interface VersionsHeadProps {
+  readonly canNewDirection: boolean;
   readonly canUndo: boolean;
   readonly comparing: boolean;
   readonly count: number;
+  readonly hasMenu: boolean;
   readonly onCompare: () => void;
+  readonly onNewDirection: () => void;
   readonly onUndo: () => void;
 }
 
@@ -23,9 +26,12 @@ const toVersionsHead = (props: VersionsHeadProps): ReactNode =>
     },
     createElement("span", { className: "count" }, props.count),
     createElement(VersionsHeadActions, {
+      canNewDirection: props.canNewDirection,
       canUndo: props.canUndo,
       comparing: props.comparing,
+      hasMenu: props.hasMenu,
       onCompare: props.onCompare,
+      onNewDirection: props.onNewDirection,
       onUndo: props.onUndo,
     })
   );

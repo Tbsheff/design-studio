@@ -3,6 +3,7 @@ import type { IconName } from "@design-studio/ui";
 import type { CSSProperties } from "react";
 
 import type { ComposerMode } from "./composer-mode-model.js";
+import type { PlusProjectProps } from "./composer-sheet-model.js";
 import type { DesignsSetting, EffortSetting } from "./run-settings-model.js";
 
 interface ItemProps {
@@ -26,6 +27,7 @@ interface PlusMenuProps {
   mode: ComposerMode;
   onMode: (mode: ComposerMode) => void;
   designs?: DesignsSetting | undefined;
+  project?: PlusProjectProps | null;
 }
 
 const MODES: readonly ComposerMode[] = ["edit", "plan", "critique", "ask"];

@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 
 import type { PromptParts } from "./prompt-parts.js";
 import { PromptToolbar } from "./prompt-toolbar.js";
+import { usePlusProject } from "./use-plus-project.js";
 import { usePromptToolbar } from "./use-prompt-toolbar.js";
 
 const PromptToolbarRow = ({ parts }: { parts: PromptParts }): ReactElement => {
@@ -18,9 +19,12 @@ const PromptToolbarRow = ({ parts }: { parts: PromptParts }): ReactElement => {
   const { close: onCloseSlash } = slash.slash;
   const { model } = box;
   const { spoken } = sending.status;
+  const project = usePlusProject(box, base.sheet);
+  const contextTokens = box.contextTokens ?? null;
 
   return (
     <PromptToolbar
+      contextTokens={contextTokens}
       designs={designs}
       effort={effort}
       level={level}
@@ -37,6 +41,7 @@ const PromptToolbarRow = ({ parts }: { parts: PromptParts }): ReactElement => {
       onMention={insertMention}
       onMode={setMode}
       onOpenSkills={openSkills}
+      project={project}
       reasonId={reasonId}
       send={sendProps}
       spoken={spoken}

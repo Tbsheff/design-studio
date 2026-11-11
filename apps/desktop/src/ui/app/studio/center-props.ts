@@ -37,10 +37,10 @@ const makeStatesOf = (
 };
 
 const topBarOf = (ui: StudioCtx["ui"]): CanvasShell["topBar"] => {
-  const { topCenter, topEnd, topStart } = ui;
+  const { toolsHost, topEnd, topStart, zoomHost } = ui;
 
-  if (topCenter && topEnd && topStart) {
-    return { center: topCenter, end: topEnd, start: topStart };
+  if (toolsHost && topEnd && topStart && zoomHost) {
+    return { end: topEnd, start: topStart, tools: toolsHost, zoom: zoomHost };
   }
 
   return null;

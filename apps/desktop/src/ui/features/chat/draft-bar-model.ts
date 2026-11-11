@@ -4,7 +4,15 @@ import type {
   DesignSystemCoverage,
 } from "@design-studio/contracts";
 
+import { copy } from "./copy.js";
 import { toPlural } from "./plural-model.js";
+
+type DraftChipTone = "busy" | "error" | "failed" | "passed";
+
+interface DraftChip {
+  readonly text: string;
+  readonly tone: DraftChipTone;
+}
 
 const GRADE_LABELS: Record<CoverageGrade, string> = {
   excellent: "Excellent",
@@ -65,4 +73,47 @@ const saveReason = (
   return `The check found ${count} problem${toPlural(count)}. Ask the chat to fix them, or use Save anyway.`;
 };
 
-export { GRADE_LABELS, cssVarOf, guessedKeys, saveReason, toCssVarList };
+const toDraftChip = (
+  check: DesignSystemCheckResult | null,
+  error: string | null,
+  reading: boolean,
+  running: boolean
+): DraftChip => {
+  if (reading) {
+    return { text: copy.draftReading, tone: "busy" };
+  }
+
+  if (running) {
+    return { text: copy.draftChecking, tone: "busy" };
+  }
+
+  if (error) {
+    return { text: copy.draftLoadFailed, tone: "error" };
+  }
+
+  if (!check) {
+    return { text: copy.draftChecking, tone: "busy" };
+  }
+
+  if (check.passed) {
+    return { text: copy.checkPassed, tone: "passed" };
+  }
+
+  const count = check.problems.length;
+
+  return {
+    text: `${count}${copy.problem}${toPlural(count)}`,
+    tone: "failed",
+  };
+};
+
+export {
+  GRADE_LABELS,
+  cssVarOf,
+  guessedKeys,
+  saveReason,
+  toCssVarList,
+  toDraftChip,
+};
+
+export type { DraftChip, DraftChipTone };

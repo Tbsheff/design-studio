@@ -5,6 +5,8 @@ import type { ChangeEvent, ReactElement } from "react";
 import { cn } from "../../ai/lib/utils.js";
 import type { PlusMenuProps } from "./composer-menu-model.js";
 import type { ComposerMode } from "./composer-mode-model.js";
+import type { PlusProjectProps } from "./composer-sheet-model.js";
+import { ContextMeter } from "./context-meter.js";
 import { DesignsChip } from "./designs-chip.js";
 import { LevelPill } from "./level-pill.js";
 import { ModeChip } from "./mode-chip.js";
@@ -28,6 +30,7 @@ const SPACER_CLASS = cn(
 const ACCEPTED_IMAGES = "image/png,image/jpeg,image/gif,image/webp";
 
 interface PromptToolbarProps {
+  readonly contextTokens: number | null;
   readonly designs: PlusMenuProps["designs"];
   readonly effort: RunEffort | null;
   readonly level: RunLevel;
@@ -44,6 +47,7 @@ interface PromptToolbarProps {
   readonly onMention: () => void;
   readonly onMode: (mode: ComposerMode) => void;
   readonly onOpenSkills: () => void;
+  readonly project: PlusProjectProps;
   readonly reasonId: string;
   readonly send: SendProps;
   readonly spoken: string | null;
@@ -56,15 +60,13 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
 
   const referenceRef = useRef<HTMLInputElement>(null);
   const attachZip = useCallback((): void => referenceRef.current?.click(), []);
-  const { onReferenceFiles, onReferenceFolder } = props;
+  const { onFiles, onReferenceFiles, onReferenceFolder } = props;
 
   const resetMode = useCallback((): void => onMode("edit"), [onMode]);
 
   const clearDesigns = useCallback((): void => {
     designs?.onChange(1);
   }, [designs]);
-
-  const { onFiles } = props;
 
   const pickFiles = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
@@ -97,6 +99,7 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
         mode={mode}
         onMode={onMode}
         designs={designs}
+        project={props.project}
       />
       <ModeChip mode={mode} onClear={resetMode} />
       <DesignsChip designs={designs} onClear={clearDesigns} />
@@ -110,6 +113,7 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
       />
       <ReferenceFileInput inputRef={referenceRef} onFiles={onReferenceFiles} />
       <div data-slot="composer-toolbar-spacer" className={SPACER_CLASS}>
+        <ContextMeter tokens={props.contextTokens} model={props.model} />
         <LevelPill
           level={props.level}
           onLevel={props.onChooseLevel}

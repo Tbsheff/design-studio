@@ -47,7 +47,6 @@ const FrameLabel = ({
   removable,
   directionId,
   badge,
-  number,
   title,
   extras,
   note,
@@ -80,24 +79,28 @@ const FrameLabel = ({
       <FrameNameButton
         active={active}
         frame={frame}
-        hasBadge={Boolean(badge)}
-        number={number}
         onActivate={onActivate}
         onNudge={onNudge}
         onPointerDown={onPointerDown}
         view={view}
       />
-      <FrameStateMenu
-        frameId={frame.id}
-        frameName={view.name}
-        directionId={directionId}
-      />
-      {!badge && <FlowFromHere frameId={frame.id} frameName={view.name} />}
-      {extras}
       {note}
-      {removable && (
-        <FrameRemoveButton frame={frame} name={view.name} onRemove={onRemove} />
-      )}
+      <div className="frame-label-tools">
+        <FrameStateMenu
+          frameId={frame.id}
+          frameName={view.name}
+          directionId={directionId}
+        />
+        {!badge && <FlowFromHere frameId={frame.id} frameName={view.name} />}
+        {removable && (
+          <FrameRemoveButton
+            frame={frame}
+            name={view.name}
+            onRemove={onRemove}
+          />
+        )}
+        {extras}
+      </div>
     </div>
   );
 };

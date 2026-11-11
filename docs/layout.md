@@ -18,55 +18,66 @@ Both files copy the two `:root` blocks of `apps/desktop/src/ui/styles/tokens.css
 - **AI input** has one home: the chat on the left (nitpick 13).
 - **Project menu** holds project actions only (nitpick 17).
 
-## 2. Editor layout (nitpick 15)
+## 2. Editor layout (nitpick 15, canvas-first polish)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ●●● Kiln Coffee ▾  › Home      V  H  F  R  P  T │ C  L │ 100% ▾        Review  Present  Share  │  title bar 48
-├────────────────────┬────┬──────────────┬─────────────────────────────────────┬─────────────────┤
-│ Chat · Main        │    │ Layers     × │ Kiln Coffee  Coverage 82%  chips    │ Design│Proto│Code│  header row, --bar-h
-├────────────────────┼────┼──────────────┼─────────────────────────────────────┼─────────────────┤  one straight line
-│                    │ ▤  │ Desktop 1440 │                                     │                 │  second rows sit
-│  agent messages    │ ▦  │ Search…      │        ┌──────────────────┐         │ Position        │  under the line
-│                    │ ◫  │ ▾ Page /     │        │                  │         │ Layout          │
-│                    │ ⟲  │   ▸ Header   │        │   frame / route  │         │ Fill            │
-│                    │ ◈  │   ▾ Hero  ●  │        │                  │         │ Text            │
-│ ┌────────────────┐ │ ⧉  │     Title    │        └──────────────────┘         │ Effects         │
-│ │ On Hero ×      │ │ ◎  │   ▸ Footer   │                                     │                 │
-│ │ Ask Claude…    │ │    │              │                                     │                 │
-│ └────────────────┘ │ ⊟  │              │                                     │                 │
-└────────────────────┴────┴──────────────┴─────────────────────────────────────┴─────────────────┘
- chat 360, always     rail column 248,    canvas                               inspector 280,
- on screen            44   toggled from   (tools change the click here)        opens on select
-                           the rail
+│ ●●● ⊟ Kiln Coffee ▾  index ▾                                  Review  Present  [Share]  (◉)  │  title bar 48
+├────────────────────┬─────────────────────────────────────────────────────────────────────────┤
+│ Chat · Main        │ · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · │  canvas (dotted)
+├────────────────────┤ ╭────┬───────────╮ ╭──╮ ● Check passed            ╭────────────────────╮│  fills everything
+│                    │ │ ▤  │ Layers  × │ │V │                           │ Design│Proto│Code ×││  right of chat
+│  agent messages    │ │ ▦  │ Search…   │ │H │  Desktop 1440             │ Position           ││
+│  (UI sans, body    │ │ ◫  │ ▾ Page /  │ │F │  ┌──────────────────┐     │ Layout             ││
+│   size)            │ │ ⟲  │   ▸ Hero  │ │R │  │                  │     │ Fill               ││
+│                    │ │ ◈  │           │ │P │  │   frame / route  │     │ Text               ││
+│                    │ │ ⧉  │           │ │T │  │                  │     │                    ││
+│ ┌────────────────┐ │ │ ◎  │           │ │──│  └──────────────────┘     │                    ││
+│ │ Ask Claude…    │ │ │    │           │ │C │                           │                    ││
+│ │ +  Proto  Model│ │ │    │           │ │L │                 ╭───────╮ │                    ││
+│ └────────────────┘ │ ╰────┴───────────╯ ╰──╯                 │− 66% +│ ╰────────────────────╯│
+└────────────────────┴─────────────────────────────────────────╰───────╯───────────────────────┘
+ chat 360             dock card: rail 40   tool    status chip  zoom      inspector card 280,
+                      + column 248         strip   (DS drafts)  control   opens on select
 ```
 
-The panel rail sits on the left edge of the column it controls, between chat and the column. It stays on screen when the column is closed, so a click opens the column. Chat is the leftmost pane. The macOS traffic lights sit in the 48 px title bar above it.
+The canvas is the background of the whole area right of chat. The panels float on it as cards: radius `--r-lg`, a 1 px `--line` ring, `--shadow-sm`, 8 px from the canvas edges. Styles live in `apps/desktop/src/ui/styles/stage-shell.css`.
 
-Rail icons, top to bottom: Layers, Pages, Assets, Versions, Tokens, Components, Design system. The last icon (⊟) toggles the project list. Click an icon to open the column on that tab. Click the open tab again to close the column.
+- **Dock card.** The panel rail sits on the left edge of the column card it controls. When the column is closed, the card shrinks to the rail strip and the canvas takes the full width. The macOS traffic lights sit in the 48 px title bar above chat.
+- **Tool strip.** The tools (V H F R P T | C L) are a slim vertical card right of the dock card. It moves with the dock when the column opens or closes. The dock and inspector cards sit one layer above the strip and the zoom control, so their menus are never covered.
+- **Zoom control.** − % + at the bottom right of the canvas. The % opens the zoom menu (fit, 50–200 %). It moves left of the inspector card while the inspector is open.
+- **Inspector card.** Floats on the right edge. It covers the canvas and does not refit the frame, so the frame does not jump when a selection opens it.
+- **Fit.** The canvas stage starts right of the tool strip (`--stage-left`), so "fit" never puts the frame under the dock card. Opening or closing the column refits.
+- **Status chip.** A design-system draft shows one chip at the top left of the free canvas (`--canvas-free-left`): "Check passed", "N problems", "Reading sources", "Checking" or "Could not load". A click opens a popover with coverage, from base, guessed, the check and the save controls ("Save anyway", "Use for new projects").
+- **Frame label.** A plain frame name above each frame. The size, page chip and ⋯ menu show on hover, focus, or when the frame is active.
+- **Top bar.** Left: project list toggle, project name ▾, page ▾. Right: Review, Present, Share (primary), account. Nothing else.
+- **Chat divider.** A 1 px `--line` hairline. It shows the accent only on hover (after 120 ms) and while you drag.
+
+Rail icons, top to bottom: Layers, Pages, Assets, Versions, Tokens, Components, Design system. Click an icon to open the column on that tab. Click the open tab again to close the column. The project list toggle (⌘\) is the first icon in the top bar.
 
 Every column panel uses one header: the title on the left, the panel's own controls in the middle, and a close X on the right. The X has the same size and position in every panel, and its tooltip names the ⌥ key ("Close Layers ⌥1"). The X, the rail and ⌥1–⌥7 change one column state, so they always agree.
 
 ### Header rule
 
-- **One height.** Every top header below the title bar uses `--bar-h` (40 px): chat header, rail top band, column panel header, canvas bar (design-system draft: name, Coverage, chips) and inspector tabs. Their bottom borders form one straight line across the window.
-- **Second rows go under the line.** A panel row such as the Layers frame and tools row, the Layers search or the Versions "Directions" row sits below the header. It never changes the header height.
+- **One height.** Every header uses `--bar-h` (40 px): chat header, column card header and inspector tabs. The cards float, so their header lines sit 8 px lower than the chat header line.
+- **Second rows go under the line.** A panel row such as the Layers frame and tools row, the Layers search or the Versions "Directions" row sits below the header. It never changes the header height. Versions hides "Directions" when the project has one direction; "New direction" is then in the panel ⋯ menu.
 - **No wrap.** A header never wraps to a second line. Its content truncates instead.
+- **One line color, one radius scale.** Lines use `--line`. Cards use `--r-lg`, controls `--r-control-sm`. Spacing uses the 8 px grid (`--s-1` to `--s-4`).
 
 ### Control map
 
 | Control | Was | Now | Shortcut |
 |---|---|---|---|
-| Select tool | Canvas tool bar | Top bar, tools group | V |
-| Hand tool | Space only | Top bar, tools group | H (hold Space too) |
-| Frame tool | Not a tool | Top bar, tools group. A click places a frame through the direct-edit insert | F |
-| Shape tool | Vector mode | Top bar, tools group (rectangle) | R |
+| Select tool | Canvas tool bar | Tool strip | V |
+| Hand tool | Space only | Tool strip | H (hold Space too) |
+| Frame tool | Not a tool | Tool strip. A click places a frame through the direct-edit insert | F |
+| Shape tool | Vector mode | Tool strip (rectangle) | R |
 | Ellipse | Vector mode | Palette and key only | O |
-| Pen tool | Vector mode | Top bar, tools group | P |
+| Pen tool | Vector mode | Tool strip | P |
 | Draw (freehand) | Pencil in the tool bar | Palette and key only | ⇧P |
-| Text tool | Not a tool | Top bar, tools group. A click places text through the direct-edit insert | T |
-| Comment tool | Canvas tool bar | Top bar, tools group. Opens the Comments sheet in the right column | C |
-| Prototype link tool | "Prototype" in canvas tool bar | Top bar, tools group | L |
+| Text tool | Not a tool | Tool strip. A click places text through the direct-edit insert | T |
+| Comment tool | Canvas tool bar | Tool strip. Opens the Comments sheet in the right column | C |
+| Prototype link tool | "Prototype" in canvas tool bar | Tool strip | L |
 | Edit and layers | Canvas tool bar, swaps the left sidebar (⌥1) | Removed as a tool. Layers is a column tab | ⌥1 |
 | Pages | `index ▾` file menu | Column tab. The top bar page label stays as a quick switch | ⌥2 |
 | Assets | Left sidebar | Column tab | ⌥3 |
@@ -74,24 +85,27 @@ Every column panel uses one header: the title on the left, the panel's own contr
 | Tokens | Project menu | Column tab | ⌥5 |
 | Components | Project menu and inspector tab | Column tab | ⌥6 |
 | Design system | Project menu | Column tab | ⌥7 |
-| Column toggle | None | Panel rail on the left edge of the column, between chat and the column. Click the open tab again, press its key again, or click the X in the panel header, to close | ⌥1–⌥7 |
+| Column toggle | None | Panel rail on the left edge of the floating column card. Click the open tab again, press its key again, or click the X in the panel header, to close | ⌥1–⌥7 |
 | Tweaks | Project menu, inspector tab and "Describe a tweak…" bar | Removed (nitpick 13). Chat takes the request | none |
 | Inline prompt | ⌘I box on the selection | Removed (nitpick 13). ⌘I focuses chat with a selection chip | ⌘I |
 | Inspector | Right side, mixed with chat | Right column, opens on select, closes when the selection clears | ⌥8 |
 | Inspector tabs | Design, Pro, Components, Code, Tweaks | Design, Prototype, Code. Components moved to the column | click |
 | Comments | Pane header toggle | Right column sheet, opened by the Comment tool or the palette | C |
 | Errors, Todo, run details | Pane body | Chat column, unchanged | none |
-| Zoom | Canvas corner | Top bar, after tools | ⌘+ ⌘− ⌘0, ⇧1 fit |
+| Zoom | Top bar, after tools | Zoom control (− % +), canvas bottom right | ⌘+ ⌘− ⌘0, ⇧1 fit |
 | Viewport matrix | Top bar "Matrix" button | Palette "Check viewports (matrix)". Cell badges stay on the frames | palette only |
 | Review | Top bar | Top right. Palette "Open review" | palette only |
 | Present | Top bar | Top right, with the present modes menu | ⌥⌘⏎ |
 | Share | Top bar | Top right. Palette "Share…" | palette only |
 | Account | App canvas bar | Top right avatar | none |
-| Project rail | Project menu "Show project list" and rail | Rail toggle only (nitpick 10) | ⌘\ |
+| Project rail | Panel rail, last icon | Top bar, first icon (nitpick 10) | ⌘\ |
 | Theme | Project menu | App settings and macOS View menu | none |
 | Command palette | ⌘K, ⌘P | Same | ⌘K |
+| Design-system draft status | Canvas bar row (name, Coverage, chips, Save) | Status chip on the canvas, popover holds the rest | none |
+| Skills, Data use, Spending limit | Composer footer row | Composer + menu, Project section | none |
+| New direction (one direction) | Versions "Directions" row | Versions panel ⋯ menu | none |
 
-Narrow windows (below 1200 px): chat shrinks to 300, the column to 232 and the inspector to 264. While the inspector is open, the column floats over the left edge of the canvas, so the canvas keeps its width. The rail stays in place next to chat, and the floating column covers the canvas bar.
+Narrow windows (below 1200 px): chat shrinks to 300, the column card to 232 and the inspector card to 264. The stage still starts right of the tool strip, so an open column never hides the frame; the frame fits in the space that is left.
 
 ### Project menu (nitpick 17)
 

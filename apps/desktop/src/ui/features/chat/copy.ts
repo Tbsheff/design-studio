@@ -29,6 +29,9 @@ const copy = {
   coverageExplain:
     "Coverage is the share of expected tokens (color, type, spacing, radius, shadow) that the studio found in your sources and checked.",
   ctrlROrFor: "Ctrl+R or ↓ for the next match, Enter to use, Esc to close",
+  dataUse: "Data use",
+  dataUseText:
+    "Prompts, selected element code, attached images and project files the agent reads are sent to Anthropic's API to generate designs. Projects, versions and history stay on this computer.",
   deny: "Deny",
   deny2: "Deny…",
   describeAChangeBelow:
@@ -41,6 +44,10 @@ const copy = {
   discard: "Discard",
   disconnect: "Disconnect",
   dismiss: "Dismiss",
+  draftChecking: "Checking",
+  draftDetails: "Design system details",
+  draftLoadFailed: "Could not load",
+  draftReading: "Reading sources",
   dragOrAlt: "Drag, or Alt+↑ and Alt+↓, to move",
   dragToResize: "Drag to resize. Double-click to reset.",
   earlier: " earlier",
@@ -117,6 +124,7 @@ const copy = {
   polishThis: "Polish this",
   polishWait: "Wait for the run to finish.",
   problem: " problem",
+  projectSettings: "Project",
   queuedMessages: "Queued messages",
   queuedSentAtThe: "Queued · sent at the next step",
   raiseTheLimitIn: ". Raise the limit in Settings to let runs go further.",
@@ -182,6 +190,7 @@ const copy = {
     "Skills come from ~/.claude/skills and your enabled Claude Code plugins. Claude can read the files in each skill folder that is on.",
   skillsForThis: "Skills for this message",
   skillsForThisProject: "Skills for this project",
+  skillsOnOff: "Skills on",
   skipQuestions: "Skip questions",
   sources: "Sources",
   spendingLimitPer: "Spending limit per run",

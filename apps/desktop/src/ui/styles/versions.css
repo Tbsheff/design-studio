@@ -284,6 +284,19 @@
   background: var(--surface-active);
 }
 
+.versions-head-actions .icon-btn {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-control-sm);
+  color: var(--text-2);
+}
+
+.versions-head-actions .icon-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
 @media (hover: none) {
   .version .version-actions {
     display: flex;

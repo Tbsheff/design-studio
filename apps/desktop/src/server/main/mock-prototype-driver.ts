@@ -1,9 +1,14 @@
+import { buildUserText } from "../agent/index.js";
+import type { RunDriver } from "../agent/index.js";
 import { runAgentTool } from "../mcp/index.js";
-import type { StudioRuntime } from "../platform/studio-runtime/index.js";
-import type { DriverInput, DriverOutcome, RunDriver } from "./lifecycle.js";
-import { buildUserText } from "./user-message.js";
+import type { ServerConfig } from "../platform/config/index.js";
+import type { StudioRuntime } from "./runtime.js";
 
 type ToolResult = Awaited<ReturnType<typeof runAgentTool>>;
+
+type DriverInput = Parameters<RunDriver>[0];
+
+type DriverOutcome = Awaited<ReturnType<RunDriver>>;
 
 const PROTOTYPE_TOOL = "create_prototype_project";
 const PROTOTYPE_TOOL_NAME = `mcp__studio__${PROTOTYPE_TOOL}`;
@@ -91,11 +96,12 @@ const runMockPrototype = async (
   return outcome;
 };
 
-const toPrototypeDriver = (
+const toMockPrototypeDriver = (
   driver: RunDriver,
-  runtime: StudioRuntime | null
+  runtime: StudioRuntime,
+  mode: ServerConfig["agentMode"]
 ): RunDriver => {
-  if (runtime === null) {
+  if (mode !== "mock") {
     return driver;
   }
 
@@ -108,4 +114,4 @@ const toPrototypeDriver = (
   };
 };
 
-export { toPrototypeDriver };
+export { toMockPrototypeDriver };

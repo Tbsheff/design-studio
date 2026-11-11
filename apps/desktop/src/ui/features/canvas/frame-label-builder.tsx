@@ -73,6 +73,7 @@ const toFrameLabel = (
       listPages={toPagesLoader(input, getLive, did)}
       items={toLiveMenuItems(input, getLive, frame, did)}
       getLive={getLive}
+      projectId={input.projectId}
     />
   );
 

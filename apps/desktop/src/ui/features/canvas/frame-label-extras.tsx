@@ -9,6 +9,8 @@ import { toLiveVariation } from "./frame-label-state.js";
 import type { GetLive } from "./frame-label-state.js";
 import { FrameMoreMenu } from "./frame-more-menu.js";
 import type { FrameMenuItem } from "./frame-more-menu.js";
+import { FramePinMark } from "./frame-pin-mark.js";
+import { useFramePin } from "./use-frame-pin.js";
 import { VariationControls } from "./variation-controls.js";
 import type { FrameVariation } from "./variation-controls.js";
 
@@ -22,6 +24,7 @@ interface FrameLabelExtrasProps {
   readonly listPages: (() => Promise<string[]>) | null;
   readonly items: FrameMenuItem[];
   readonly getLive: GetLive;
+  readonly projectId: string;
 }
 
 const FrameLabelExtras = ({
@@ -34,8 +37,15 @@ const FrameLabelExtras = ({
   listPages,
   items,
   getLive,
+  projectId,
 }: FrameLabelExtrasProps): ReactElement => {
   const frameId = frame.id;
+  const pin = useFramePin(projectId, frameId);
+
+  const menuItems = useMemo(
+    (): FrameMenuItem[] => [...items, pin.item],
+    [items, pin.item]
+  );
 
   const liveVariation = useMemo(() => {
     if (variation && did) {
@@ -68,13 +78,14 @@ const FrameLabelExtras = ({
           onMixed={onMixed}
         />
       )}
+      {pin.isPinned && <FramePinMark />}
       <FramePageMenu
         path={frame.path ?? ""}
         routes={hasRoutes}
         listPages={listPages}
         onPath={onPath}
       />
-      <FrameMoreMenu name={frame.label ?? frameName(frame)} items={items} />
+      <FrameMoreMenu name={frame.label ?? frameName(frame)} items={menuItems} />
     </>
   );
 };

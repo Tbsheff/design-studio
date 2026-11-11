@@ -24,11 +24,11 @@ import { CreateComponentDialog } from "../design-system/index.js";
 import { DevNoteSlot, useDevNoteHost } from "../dev-note/index.js";
 import {
   applyPasteJsx,
+  getAuthoredCss,
   toCopyCss,
   toSelectionTargets,
   toStructureMenuEntries,
 } from "../inspector/index.js";
-import { getAuthoredCss } from "../inspector/use-authored-css.js";
 import { LayerStyleSlot, useLayerStyleHost } from "../layer-style/index.js";
 import { PatternSlot, usePatternHost } from "../pattern/index.js";
 import { PropSlot, usePropHost } from "../prop/index.js";
@@ -40,6 +40,8 @@ import { createItem, disabledBy } from "./preview-menu-create.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 import { toValueOr } from "./settle-model.js";
+import { useFramePin } from "./use-frame-pin.js";
+import type { FramePin } from "./use-frame-pin.js";
 import { useLayerPick } from "./use-layer-pick.js";
 
 const renderGenerateTab = (props: GenerateTabProps): ReactElement => (
@@ -231,6 +233,7 @@ interface MenuHosts {
   readonly photos: ReturnType<typeof useImageSearchHost>;
   readonly props: ReturnType<typeof usePropHost>;
   readonly patterns: ReturnType<typeof usePatternHost>;
+  readonly pin: FramePin;
 }
 
 const toHostBase = (options: Options): HostBase => {
@@ -249,6 +252,7 @@ const toHostItems = (
   ...hosts.photos.items(item),
   ...hosts.props.items(item),
   ...hosts.patterns.items(item),
+  hosts.pin.item,
 ];
 
 const toAfterCopyCss = (
@@ -435,6 +439,7 @@ const usePreviewMenu = (options: Options): PreviewMenuHandle => {
     patterns: usePatternHost({ ...base, isReact }),
     photos: useImageSearchHost({ ...base, selection }),
     pickItems: toLayerPickItems(pick, close),
+    pin: useFramePin(options.ids.projectId, options.ids.frameId),
     props: usePropHost({ ...base, isReact }),
   };
 

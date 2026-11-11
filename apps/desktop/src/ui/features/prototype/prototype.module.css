@@ -1,0 +1,81 @@
+.sheet {
+  width: min(480px, calc(100vw - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-xl);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  color: var(--text);
+}
+
+.sheet::backdrop {
+  background: var(--scrim);
+}
+
+.form {
+  display: grid;
+  margin: 0;
+}
+
+.title {
+  margin: 0;
+  padding: var(--s-3) var(--s-4) var(--s-2);
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--w-medium);
+}
+
+.body {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-4) var(--s-3);
+}
+
+.label {
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+}
+
+.prompt {
+  width: 100%;
+  min-height: 96px;
+  padding: var(--s-2) var(--s-2-5);
+  border: 1px solid var(--line-input);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
+  resize: vertical;
+}
+
+.prompt:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+  padding: var(--s-2-5) var(--s-4);
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.failure {
+  flex: 1;
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+}

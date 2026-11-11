@@ -49,6 +49,16 @@ const toIsReady = (
   return form.pages.picked.length > 0 && form.htmlSource;
 };
 
+const toDefaultApp = (targets: Targets): string => {
+  const linked = targets.source?.appProjectId ?? null;
+
+  if (linked !== null && targets.apps?.some((app) => app.id === linked)) {
+    return linked;
+  }
+
+  return targets.apps?.[0]?.id ?? "";
+};
+
 const usePortForm = (
   target: PortTarget,
   frames: PortFrameOption[]
@@ -61,7 +71,7 @@ const usePortForm = (
   const path = toPagePath(current?.path ?? null);
   const targets = useTargets(target.projectId);
   const [appId, setAppId] = useState("");
-  const chosenApp = appId || (targets.apps?.[0]?.id ?? "");
+  const chosenApp = appId || toDefaultApp(targets);
   const [route, setRoute] = useState<string | null>(null);
 
   const plan = usePlan({

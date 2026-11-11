@@ -33,6 +33,9 @@ const isAppProject = (project: Project): boolean => Boolean(project.app);
 const isDesignSystem = (project: Project): boolean =>
   Boolean(project.designSystemFor);
 
+const isLinkedTo = (project: Project, app: Project): boolean =>
+  project.appProjectId === app.id;
+
 const isInFolder = (project: Project, folder: string | null): boolean => {
   const source = toFolder(project);
 
@@ -56,7 +59,9 @@ const toAppWorkspace = (
   const folder = toFolder(app);
 
   const members = visible.filter(
-    (project) => project.id !== app.id && isInFolder(project, folder)
+    (project) =>
+      project.id !== app.id &&
+      (isLinkedTo(project, app) || isInFolder(project, folder))
   );
 
   const designSystems = members.filter((project) => isDesignSystem(project));
@@ -160,7 +165,7 @@ const toWorkspaceSub = (
   return parts.join(" · ");
 };
 
-type StarterId = "new" | "route" | "sample" | "template";
+type StarterId = "new" | "prototype" | "route" | "sample" | "template";
 
 interface WorkspaceStarter {
   readonly id: StarterId;
@@ -199,6 +204,11 @@ const toStarters = (
       title: `${copy.newScreenIn} ${workspace.name}`,
     },
     { id: "route", sub: copy.starterRouteSub, title: copy.redesignARoute },
+    {
+      id: "prototype",
+      sub: copy.starterHtmlPrototypeSub,
+      title: copy.newHtmlPrototype,
+    },
     {
       id: "template",
       sub: copy.starterTemplateAppSub,

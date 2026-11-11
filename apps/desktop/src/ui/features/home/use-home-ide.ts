@@ -1,6 +1,7 @@
 import type { PackSummary, Project } from "@design-studio/contracts";
 import { useCallback, useEffect, useRef } from "react";
 
+import { openPrototypeDialog } from "./deps.js";
 import { toHomeCommands } from "./home-command-model.js";
 import type {
   HomeCommand,
@@ -61,6 +62,8 @@ const useStarter = (
     (id: StarterId): void => {
       if (id === "route" && appId !== null) {
         onOpen(appId);
+      } else if (id === "prototype" && appId !== null) {
+        openPrototypeDialog(appId);
       } else if (id === "sample") {
         onSample();
       } else if (id === "template") {

@@ -24,3 +24,5 @@ export type {
 } from "../../../shared/project-search.js";
 
 export type { ConnectionState } from "../../platform/events.js";
+
+export { openPrototypeDialog } from "../../platform/prototype-dialog.js";

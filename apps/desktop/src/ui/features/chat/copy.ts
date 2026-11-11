@@ -89,6 +89,7 @@ const copy = {
   n100Plain: " of 100 · ",
   nameThisRun: "Name this run",
   needsShell: "Needs shell",
+  newHtmlPrototype: "New HTML prototype",
   noFallbackTokens: "No fallback tokens",
   noFilesChanged: "No files changed.",
   noFilesChangedYet: " No files changed yet.",

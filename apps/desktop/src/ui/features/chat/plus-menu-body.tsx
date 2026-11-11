@@ -9,6 +9,7 @@ import { MenuItem } from "./menu-item.js";
 import { MenuSection } from "./menu-section.js";
 import { ModeChoice } from "./mode-choice.js";
 import { PlusDataItem } from "./plus-data-item.js";
+import { PlusPrototypeItem } from "./plus-prototype-item.js";
 
 const PlusMenuBody = ({
   menuProps,
@@ -56,6 +57,7 @@ const PlusMenuBody = ({
           onPick={onAct(menuProps.onSkills)}
         />
         <PlusDataItem onAct={onAct} />
+        <PlusPrototypeItem onAct={onAct} />
       </MenuSection>
       <MenuSection label="Mode">
         {MODES.map((choice) => (

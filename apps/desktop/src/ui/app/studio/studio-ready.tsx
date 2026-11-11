@@ -16,6 +16,7 @@ import { StudioRight } from "./studio-right";
 import { StudioTop } from "./studio-top";
 import type { StudioPanes, StudioUi } from "./studio-ui-types";
 import { TextRangeLayer } from "./text-range-layer";
+import { usePrototypeFollow } from "./use-prototype-follow";
 import { useStudioRun } from "./use-studio-run";
 
 interface StudioReadyProps {
@@ -55,6 +56,7 @@ const StudioReady = (props: StudioReadyProps): ReactElement => {
   );
 
   useBindStudioCommands(ctx);
+  usePrototypeFollow(project);
 
   return (
     <div

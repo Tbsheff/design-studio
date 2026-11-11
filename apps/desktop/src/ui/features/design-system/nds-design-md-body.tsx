@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import type { ChangeEvent, ReactElement } from "react";
 
-import { Markdown } from "../../ai/components/ai/markdown.js";
 import { COPY } from "./copy.js";
+import { MarkdownView } from "./markdown-view.js";
 import type { DesignMdView } from "./new-design-system-values.js";
 
 const DesignMdBody = ({
@@ -34,7 +34,7 @@ const DesignMdBody = ({
 
   return (
     <section className="nds-preview" aria-label={COPY.labelDesignMdPreview}>
-      {value.trim() && <Markdown>{value}</Markdown>}
+      {value.trim() && <MarkdownView>{value}</MarkdownView>}
       {!value.trim() && <p className="muted">{COPY.textNothingToPreviewYet}</p>}
     </section>
   );

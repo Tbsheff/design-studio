@@ -75,18 +75,6 @@
   white-space: nowrap;
 }
 
-.frame-chip.flow {
-  opacity: 0;
-}
-
-.frame-label:hover .frame-chip.flow,
-.frame-label.active .frame-chip.flow,
-.frame-chip.flow:focus-visible,
-.frame-chip.flow.busy,
-.frame-chip.flow.done {
-  opacity: 1;
-}
-
 .frame-chip.flow.done {
   color: var(--accent-text);
 }

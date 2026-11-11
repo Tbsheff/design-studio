@@ -40,7 +40,7 @@ const useComposerPops = ({
   const model = useRef<HTMLButtonElement>(null);
   const level = useRef<HTMLButtonElement>(null);
   const drafts = useRef<HTMLButtonElement>(null);
-  const folder = useRef<HTMLButtonElement>(null);
+  const folder = plus;
 
   const refs = useMemo(
     () => ({ drafts, folder, level, model, pack, plus }),

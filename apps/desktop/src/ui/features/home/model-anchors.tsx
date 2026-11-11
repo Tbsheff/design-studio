@@ -1,16 +1,15 @@
-import type { ReactElement, RefObject } from "react";
+import type { ReactElement } from "react";
 
 import type { PopState } from "./composer-pop-model.js";
 import { DraftsAnchor } from "./drafts-anchor.js";
 import { LevelAnchor } from "./level-anchor.js";
 import { ModelAnchor } from "./model-anchor.js";
 import type { ModelSettings } from "./model-settings-model.js";
+import type { PopRefs } from "./use-composer-pops.js";
 
 interface ModelAnchorsProps {
   readonly pops: PopState;
-  readonly levelRef: RefObject<HTMLButtonElement | null>;
-  readonly modelRef: RefObject<HTMLButtonElement | null>;
-  readonly draftsRef: RefObject<HTMLButtonElement | null>;
+  readonly refs: PopRefs;
   readonly modelValue: string;
   readonly modelSizes: string[];
   readonly modelSettings: ModelSettings;
@@ -18,9 +17,7 @@ interface ModelAnchorsProps {
 
 const ModelAnchors = ({
   pops,
-  levelRef,
-  modelRef,
-  draftsRef,
+  refs,
   modelValue,
   modelSizes,
   modelSettings,
@@ -28,19 +25,19 @@ const ModelAnchors = ({
   <>
     <LevelAnchor
       pops={pops}
-      triggerRef={levelRef}
+      triggerRef={refs.level}
       modelSettings={modelSettings}
     />
     <ModelAnchor
       pops={pops}
-      triggerRef={modelRef}
+      triggerRef={refs.model}
       modelValue={modelValue}
       modelSizes={modelSizes}
       modelSettings={modelSettings}
     />
     <DraftsAnchor
       pops={pops}
-      triggerRef={draftsRef}
+      triggerRef={refs.drafts}
       designs={modelSettings.designs}
     />
   </>

@@ -34,8 +34,7 @@ const LEVEL_LABEL: Record<RunLevel, string> = {
   wireframe: "Wireframe",
 };
 
-const PLACEHOLDER =
-  "Describe what to design. Drop an app folder, an image or a link to build on it.";
+const PLACEHOLDER = "Describe what to design…";
 
 const HOME_REASON_ID = "home-send-reason";
 
@@ -206,7 +205,7 @@ const getPromptPlaceholder = (
   empty: boolean
 ): string | null => {
   if (chip) {
-    return `Describe a change to ${chipName(chip)}, or press Return to open it`;
+    return `Describe a change to ${chipName(chip)}…`;
   }
 
   if (empty) {

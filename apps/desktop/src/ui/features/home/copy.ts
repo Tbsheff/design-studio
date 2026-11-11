@@ -255,6 +255,7 @@ const copy = {
   search: "Search",
   searchAndCommands: "Search and commands",
   searchProjects: "Search projects",
+  sendKeys: "(⌘↩)",
   setUpADesignSystem:
     "Set up a design system so every project starts from your colors, type and components.",
   setUpYourDesignSystem: "Set up your design system",

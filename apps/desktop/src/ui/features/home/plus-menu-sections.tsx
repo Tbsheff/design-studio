@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { copy } from "./copy.js";
 import { PlusFilesSection } from "./plus-files-section.js";
 import { PlusItem } from "./plus-item.js";
+import { PlusKindItem } from "./plus-kind-item.js";
 import type { PlusMenuActions } from "./plus-menu-model.js";
 
 interface PlusMenuSectionsProps {
@@ -44,6 +45,7 @@ const PlusMenuSections = ({
         action={actions.onImportRepo}
         onClose={onClose}
       />
+      <PlusKindItem actions={actions} />
     </div>
     <div className="ui-menu-section">
       <span className="ui-menu-label">{copy.designs}</span>

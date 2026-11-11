@@ -10,7 +10,9 @@ interface ExpandPromptSlotProps {
   };
 }
 
-const ExpandPromptSlot = ({ draft }: ExpandPromptSlotProps): ReactElement => {
+const ExpandPromptSlot = ({
+  draft,
+}: ExpandPromptSlotProps): ReactElement | null => {
   const expand = useExpandPrompt({
     prompt: draft.prompt,
     setPrompt: draft.setPrompt,

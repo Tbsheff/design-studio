@@ -1,3 +1,4 @@
+import type { ProjectKind } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { Suspense, useCallback, useMemo } from "react";
 import type { ReactElement, RefObject } from "react";
@@ -13,8 +14,13 @@ interface PlusAnchorProps {
   readonly pops: PopState;
   readonly triggerRef: RefObject<HTMLButtonElement | null>;
   readonly locationLabel: string;
-  readonly plusActions: Omit<PlusMenuActions, "onDesignSystem">;
+  readonly plusActions: Omit<
+    PlusMenuActions,
+    "kind" | "onDesignSystem" | "onKind"
+  >;
   readonly onDesignSystem: () => void;
+  readonly kind: ProjectKind | null;
+  readonly onKind: (kind: ProjectKind) => void;
 }
 
 const PlusAnchor = ({
@@ -23,6 +29,8 @@ const PlusAnchor = ({
   locationLabel,
   plusActions,
   onDesignSystem,
+  kind,
+  onKind,
 }: PlusAnchorProps): ReactElement => {
   const { toggle, close } = pops;
 
@@ -35,8 +43,8 @@ const PlusAnchor = ({
   }, []);
 
   const actions = useMemo(
-    () => ({ ...plusActions, onDesignSystem }),
-    [onDesignSystem, plusActions]
+    () => ({ ...plusActions, kind, onDesignSystem, onKind }),
+    [kind, onDesignSystem, onKind, plusActions]
   );
 
   return (
@@ -44,7 +52,7 @@ const PlusAnchor = ({
       <button
         ref={triggerRef}
         type="button"
-        className="icon-btn bordered home-square"
+        className="icon-btn home-square composer-plus"
         aria-label={copy.add}
         aria-haspopup="menu"
         aria-expanded={pops.pop === "plus"}

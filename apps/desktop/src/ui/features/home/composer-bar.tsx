@@ -10,7 +10,6 @@ import { ComposerFileInput } from "./composer-file-input.js";
 import { toSendLabel } from "./composer-pop-model.js";
 import { FolderAnchor } from "./folder-anchor.js";
 import type { Busy } from "./home-model.js";
-import { KindToggle } from "./kind-toggle.js";
 import { ModelAnchors } from "./model-anchors.js";
 import type { ModelSettings } from "./model-settings-model.js";
 import { PackAnchor } from "./pack-anchor.js";
@@ -25,7 +24,10 @@ interface ComposerBarProps {
   readonly contextFileRef: RefObject<HTMLInputElement | null>;
   readonly onContextFiles: (files: File[]) => void;
   readonly onFiles: (files: File[]) => void;
-  readonly plusActions: Omit<PlusMenuActions, "onDesignSystem">;
+  readonly plusActions: Omit<
+    PlusMenuActions,
+    "kind" | "onDesignSystem" | "onKind"
+  >;
   readonly locationLabel: string;
   readonly packs: PacksState;
   readonly pack: PackSummary | null;
@@ -37,12 +39,23 @@ interface ComposerBarProps {
   readonly busy: Busy;
   readonly sendDisabled: string | null;
   readonly children: ReactNode;
-  readonly app: Omit<AppSlotProps, "pop" | "folderRef"> & {
+  readonly app: AppSlotProps & {
     readonly isFolderPopOpen: boolean;
     readonly onFolderPick: (path: string) => void;
     readonly onFolderClose: () => void;
   };
 }
+
+const toMenuKind = (
+  isKindShown: boolean,
+  kind: ProjectKind
+): ProjectKind | null => {
+  if (isKindShown) {
+    return kind;
+  }
+
+  return null;
+};
 
 const ComposerBar = ({
   fileRef,
@@ -64,8 +77,7 @@ const ComposerBar = ({
   app,
 }: ComposerBarProps): ReactElement => {
   const [pop, setPop] = useFolderPopState(app.isFolderPopOpen);
-  const presence = usePresence(pop);
-  const { closing: isClosing, shown } = presence;
+  const { closing: isClosing, shown } = usePresence(pop);
   const { onAddFolder, onDoctor, onFolderPick, onFolderClose } = app;
 
   const pops = useComposerPops({
@@ -88,17 +100,18 @@ const ComposerBar = ({
         locationLabel={locationLabel}
         plusActions={plusActions}
         onDesignSystem={onDesignSystem}
+        kind={toMenuKind(app.chip === null, kind)}
+        onKind={onKind}
       />
       <FolderAnchor
         pops={pops.state}
         chip={app.chip}
-        triggerRef={pops.refs.folder}
+        triggerRef={pops.refs.plus}
         onAddFolder={onAddFolder}
         onDoctor={onDoctor}
         onFolderPick={onFolderPick}
         onFolderClose={handleFolderClose}
       />
-      {!app.chip && <KindToggle kind={kind} onKind={onKind} />}
       <div className="spacer" />
       <PackAnchor
         pops={pops.state}
@@ -108,9 +121,7 @@ const ComposerBar = ({
       />
       <ModelAnchors
         pops={pops.state}
-        levelRef={pops.refs.level}
-        modelRef={pops.refs.model}
-        draftsRef={pops.refs.drafts}
+        refs={pops.refs}
         modelValue={modelValue}
         modelSizes={modelSizes}
         modelSettings={modelSettings}

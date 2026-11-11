@@ -3,7 +3,7 @@ import { useCallback, useMemo } from "react";
 import type { AppSlotProps } from "./app-slot-model.js";
 import type { ChipFlow } from "./use-chip-flow.js";
 
-type BarApp = Omit<AppSlotProps, "pop" | "folderRef"> & {
+type BarApp = AppSlotProps & {
   readonly isFolderPopOpen: boolean;
   readonly onFolderClose: () => void;
   readonly onFolderPick: (path: string) => void;

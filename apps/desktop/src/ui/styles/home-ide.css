@@ -646,11 +646,5 @@ button.ide-item:hover {
 }
 
 .ide-center .home-composer-bar {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  row-gap: var(--s-2);
-}
-
-.ide-center .home-composer-bar > .home-anchor {
-  flex-shrink: 0;
+  flex-wrap: nowrap;
 }

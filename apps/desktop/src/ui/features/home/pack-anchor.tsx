@@ -36,7 +36,7 @@ const PackAnchor = ({
   }, [toggle]);
 
   return (
-    <div className="home-anchor end">
+    <div className="home-anchor end home-pack-anchor">
       <PillSelect
         label={copy.designSystemLabel}
         ariaLabel={copy.designSystemLabel}

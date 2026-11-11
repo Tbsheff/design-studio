@@ -125,6 +125,8 @@
   --s-12: 48px;
   --bar-h: 40px;
   --composer-ctl: var(--s-8);
+  --composer-tool: 28px;
+  --composer-send: 30px;
   --pane-inset: 16px;
 
   --t-2xs: 11px;

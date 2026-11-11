@@ -8,8 +8,7 @@
 }
 
 .prompt-bar {
-  flex-wrap: wrap;
-  row-gap: var(--s-2);
+  flex-wrap: nowrap;
   min-width: 0;
 }
 
@@ -1194,4 +1193,124 @@ button.skill-opt {
 .url-attach-problem {
   flex-basis: 100%;
   color: var(--danger);
+}
+
+.prompt .composer.ui-composer {
+  gap: var(--s-2);
+  padding: var(--s-3) 10px 10px var(--s-3);
+  border-radius: var(--r-xl);
+}
+
+.prompt .composer.ui-composer:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
+  box-shadow: var(--shadow-xs);
+}
+
+.prompt .composer-input {
+  overflow-y: auto;
+}
+
+.prompt .prompt-bar {
+  gap: 2px;
+}
+
+.prompt .prompt-send {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+
+.prompt-bar .icon-btn.bordered.composer-plus {
+  width: var(--composer-tool);
+  height: var(--composer-tool);
+  border-radius: var(--r-full);
+  background: transparent;
+  box-shadow: none;
+}
+
+.prompt-bar .icon-btn.bordered.composer-plus:hover:not(:disabled),
+.prompt-bar .composer-plus[aria-expanded="true"] {
+  background: var(--surface-hover);
+  box-shadow: none;
+}
+
+.prompt-bar .composer-pill.ui-pill-select.inline {
+  flex: 0 1 auto;
+  min-width: 0;
+  height: var(--composer-tool);
+  min-height: var(--composer-tool);
+  column-gap: var(--s-1);
+  padding: 0 6px 0 var(--s-2);
+  border-radius: var(--r-control-sm);
+  box-shadow: none;
+}
+
+.prompt-bar .composer-pill.ui-pill-select:hover:not(:disabled),
+.prompt-bar .composer-pill.ui-pill-select[aria-expanded="true"] {
+  background: var(--surface-hover);
+  box-shadow: none;
+}
+
+.prompt-bar .composer-pill .ui-pill-select-value {
+  overflow: hidden;
+  color: var(--text-2);
+  text-overflow: ellipsis;
+}
+
+.prompt-bar .composer-pill:hover .ui-pill-select-value,
+.prompt-bar .composer-pill[aria-expanded="true"] .ui-pill-select-value {
+  color: var(--text);
+}
+
+.prompt-bar .icon-btn.send-btn {
+  width: var(--composer-send);
+  height: var(--composer-send);
+  margin-left: var(--s-1);
+  border-radius: var(--r-full);
+}
+
+.prompt-bar .icon-btn.send.send-btn {
+  background: var(--text);
+  box-shadow: none;
+  color: var(--surface);
+}
+
+.prompt-bar .icon-btn.send.send-btn:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--text) 86%, var(--surface));
+  color: var(--surface);
+}
+
+.prompt-bar .icon-btn.send.send-btn:disabled {
+  background: var(--surface-hover);
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+:is(.prompt-bar, .home-composer-bar) .ui-pill-select.inline {
+  grid-template-columns: minmax(0, auto) auto;
+}
+
+:is(.prompt-bar, .home-composer-bar) .ui-pill-select .stable-text {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: stretch;
+  max-width: 100%;
+}
+
+:is(.prompt-bar, .home-composer-bar) .ui-pill-select .stable-text > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@container prompt-bar (max-width: 340px) {
+  .prompt-bar .composer-pill.ui-pill-select.inline {
+    padding: 0 6px;
+  }
+
+  .prompt-bar .composer-pill .ui-pill-select-caret {
+    display: none;
+  }
 }

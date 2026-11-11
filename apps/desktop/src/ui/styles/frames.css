@@ -100,23 +100,13 @@
   max-width: min(180px, 100%);
 }
 
-.frame-label:is(
-    :hover,
-    .active,
-    :has(:focus-visible),
-    :has([aria-expanded="true"])
-  )
+.frame-label:is(:hover, :has(:focus-visible), :has([aria-expanded="true"]))
   .frame-size,
 .canvas-frame:hover > .frame-label .frame-size {
   display: inline;
 }
 
-.frame-label:is(
-    :hover,
-    .active,
-    :has(:focus-visible),
-    :has([aria-expanded="true"])
-  )
+.frame-label:is(:hover, :has(:focus-visible), :has([aria-expanded="true"]))
   > .frame-label-tools,
 .canvas-frame:hover > .frame-label > .frame-label-tools {
   flex-shrink: 1;

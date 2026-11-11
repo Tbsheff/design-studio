@@ -6,6 +6,8 @@ export { routes as briefRoutes } from "@design-studio/actions/brief/routes";
 
 export { call } from "../../platform/http.js";
 
+export { readShared } from "../../platform/query.js";
+
 export type {
   AppHealth,
   FoundApp,

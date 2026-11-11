@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import { McpPointBadge } from "../chat/index.js";
 import { CommentModePill } from "../comments/comment-layer.js";
 import { useEditVariant } from "../inspector/index.js";
+import { AgentPresenceLine } from "./agent-presence-line.js";
 import { frameName } from "./canvas-frame-ops.js";
 import { dropQuietFocus, quietOnPointer } from "./canvas-helpers.js";
 import type { CanvasStageProps } from "./canvas-stage-types.js";
@@ -54,7 +55,7 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
   const { active, artboardRef, canvasFrames, comment, draw, note } = stage;
   const { pz, stageRef, ui } = stage;
   const { dismissUndo, undoRemove } = wiring;
-  const { layerEdits, pointBadge } = edits;
+  const { layerEdits, pointBadge, presence } = edits;
   const { layout } = canvasFrames;
 
   const nameOf = useCallback(
@@ -111,6 +112,7 @@ const CanvasStage = (stageProps: CanvasStageProps): ReactElement => {
       <Suspense fallback={null}>
         <McpPointBadge badge={pointBadge} frameName={nameOf} />
       </Suspense>
+      <AgentPresenceLine frames={layout.frames} presence={presence} />
     </div>
   );
 };

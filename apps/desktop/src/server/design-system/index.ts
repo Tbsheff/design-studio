@@ -8,6 +8,8 @@ export { readDesignSystemFiles } from "./sync.js";
 
 export { loadAppTokens } from "./app-tokens/source.js";
 
+export { harvestNextFonts } from "./extract/next-font.js";
+
 export { captureReferencePage, parseReferenceUrls } from "./reference-page.js";
 
 export type { LoadedPack, PackRegistry } from "./packs.js";

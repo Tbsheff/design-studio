@@ -145,6 +145,36 @@ const CommandRulesSchema = Schema.Struct({
   rules: Schema.Array(Schema.String),
 });
 
+const ProjectPrototypeFields = {
+  level: Schema.NullOr(Schema.Literals(["wireframe", "prototype", "polish"]))
+    .annotate({
+      description:
+        "Run level for the first run: wireframe, prototype or polish. Leave out to use the project default.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  name: Schema.NullOr(Schema.String)
+    .annotate({
+      description:
+        "Name of the prototype. Leave out to make a name from the prompt.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  prompt: Schema.String.annotate({
+    description:
+      "What the HTML prototype shows, in the user's words. The first run of the prototype gets this text.",
+  }),
+  shouldStartRun: Schema.Boolean.annotate({
+    description:
+      "Start the first agent run in the prototype with the prompt. Leave out to start it.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(true))),
+} as const;
+
+const ProjectPrototypeCreatedSchema = Schema.Struct({
+  folder: Schema.String,
+  project: ProjectSchema,
+  runId: Schema.NullOr(Schema.String),
+  tokensFile: Schema.NullOr(Schema.String),
+});
+
 const AttachmentSchema = Schema.Struct({
   id: Schema.String,
   mime: Schema.String,
@@ -178,6 +208,8 @@ export {
   ProjectFileSchema,
   ProjectImportFields,
   ProjectImportedSchema,
+  ProjectPrototypeCreatedSchema,
+  ProjectPrototypeFields,
   ProjectSchema,
   ProjectSearchFields,
   ProjectTrashedSchema,

@@ -48,7 +48,14 @@ class AgentSdkClient extends Context.Service<
           () => import("./mock.js")
         );
 
-        return createMockDriver(toMockOptions(options));
+        const { toPrototypeDriver } = yield* Effect.promise(
+          () => import("./mock-prototype.js")
+        );
+
+        return toPrototypeDriver(
+          createMockDriver(toMockOptions(options)),
+          options.runtime ?? null
+        );
       }),
     })
   );

@@ -436,6 +436,7 @@
     "./pattern/schema": "./src/pattern/schema.ts",
     "./project/create": "./src/project/create.ts",
     "./project/create-attachment": "./src/project/create-attachment.ts",
+    "./project/create-prototype": "./src/project/create-prototype.ts",
     "./project/delete": "./src/project/delete.ts",
     "./project/delete-command-rule": "./src/project/delete-command-rule.ts",
     "./project/duplicate": "./src/project/duplicate.ts",

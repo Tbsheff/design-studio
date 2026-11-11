@@ -3,6 +3,7 @@ import type { ProjectActions } from "@design-studio/actions/project/index";
 
 import type { Entries } from "../_core/handler.js";
 import { handle as createAttachmentProjectHandle } from "./create-attachment.js";
+import { handle as createPrototypeProjectHandle } from "./create-prototype.js";
 import { handle as createProjectHandle } from "./create.js";
 import {
   handle as deleteCommandRuleProjectHandle,
@@ -28,6 +29,7 @@ import { handle as updateProjectHandle } from "./update.js";
 const ProjectEntries = {
   createAttachmentProject: { handle: createAttachmentProjectHandle },
   createProject: { handle: createProjectHandle },
+  createPrototypeProject: { handle: createPrototypeProjectHandle },
   deleteCommandRuleProject: {
     handle: deleteCommandRuleProjectHandle,
     preview: deleteCommandRuleProjectPreview,

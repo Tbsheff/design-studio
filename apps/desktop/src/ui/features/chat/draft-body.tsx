@@ -4,10 +4,12 @@ import type { ReactElement } from "react";
 
 import { REGION_ROLE } from "./aria-role-model.js";
 import { copy } from "./copy.js";
+import { toDraftChip } from "./draft-bar-model.js";
+import { DraftChip } from "./draft-chip.js";
 import { improvePassed } from "./draft-improve-model.js";
-import { DraftSummary } from "./draft-summary.js";
+import { DraftPop } from "./draft-pop.js";
 import type { RunView } from "./run-state-model.js";
-import { SaveControls } from "./save-controls.js";
+import { useDraftChip } from "./use-draft-chip.js";
 import { useDraftInfo } from "./use-draft-info.js";
 import type { DraftChange } from "./use-draft-info.js";
 
@@ -39,6 +41,8 @@ const DraftBody = ({
   running,
 }: DraftBodyProps): ReactElement => {
   const readyId = useId();
+  const popId = useId();
+  const { chipRef, isOpen, onToggle, rootRef } = useDraftChip();
 
   const { coverage, check, error } = useDraftInfo(
     project.id,
@@ -57,6 +61,7 @@ const DraftBody = ({
 
   return (
     <div
+      ref={rootRef}
       className="draft-bar"
       role={REGION_ROLE}
       aria-label={copy.designSystemDraft}
@@ -66,23 +71,26 @@ const DraftBody = ({
           {copy.theAiRunPassed}
         </span>
       )}
-      <DraftSummary
-        name={name}
-        coverage={coverage}
-        check={check}
-        run={lastRun}
-        error={error}
+      <DraftChip
+        chip={toDraftChip(check, error, reading, running)}
+        chipRef={chipRef}
+        isOpen={isOpen}
+        popId={popId}
+        onToggle={onToggle}
       />
-      <div className="draft-actions">
-        <SaveControls
-          check={check}
-          isReady={isReady}
-          readyId={readyId}
-          reading={reading}
-          running={running}
-          onSave={onSaveNamed}
-        />
-      </div>
+      <DraftPop
+        id={popId}
+        isOpen={isOpen}
+        check={check}
+        coverage={coverage}
+        error={error}
+        isReady={isReady}
+        lastRun={lastRun}
+        readyId={readyId}
+        reading={reading}
+        running={running}
+        onSave={onSaveNamed}
+      />
     </div>
   );
 };

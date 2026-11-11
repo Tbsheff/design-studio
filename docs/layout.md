@@ -37,8 +37,8 @@ Both files copy the two `:root` blocks of `apps/desktop/src/ui/styles/tokens.css
 │ │ +  Proto  Model│ │ │    │           │ │L │                 ╭───────╮ │                    ││
 │ └────────────────┘ │ ╰────┴───────────╯ ╰──╯                 │− 66% +│ ╰────────────────────╯│
 └────────────────────┴─────────────────────────────────────────╰───────╯───────────────────────┘
- chat 360             dock card: rail 40   tool    status chip  zoom      inspector card 280,
-                      + column 248         strip   (DS drafts)  control   opens on select
+ chat 360             dock card: rail 40   tool    status chip  zoom      inspector card 264,
+                      + column 240         strip   (DS drafts)  control   opens on select
 ```
 
 The canvas is the background of the whole area right of chat. The panels float on it as cards: radius `--r-lg`, a 1 px `--line` ring, `--shadow-sm`, 8 px from the canvas edges. Styles live in `apps/desktop/src/ui/styles/stage-shell.css`.
@@ -105,7 +105,7 @@ Every column panel uses one header: the title on the left, the panel's own contr
 | Skills, Data use, Spending limit | Composer footer row | Composer + menu, Project section | none |
 | New direction (one direction) | Versions "Directions" row | Versions panel ⋯ menu | none |
 
-Narrow windows (below 1200 px): chat shrinks to 300, the column card to 232 and the inspector card to 264. The stage still starts right of the tool strip, so an open column never hides the frame; the frame fits in the space that is left.
+Narrow windows (below 1200 px): chat shrinks to 300, the column card to 224 and the inspector card to 248. The stage still starts right of the tool strip, so an open column never hides the frame; the frame fits in the space that is left.
 
 ### Project menu (nitpick 17)
 

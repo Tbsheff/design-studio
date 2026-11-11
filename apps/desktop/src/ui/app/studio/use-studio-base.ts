@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useVariations } from "../../features/canvas/use-variations";
-import { lastImproveRun } from "../../features/chat";
+import { lastImproveRun, useActiveRun } from "../../features/chat";
 import type { RunView } from "../../features/chat/run-state-model";
 import { useRunCanvas } from "../../features/chat/use-run-canvas";
 import { useComments } from "../../features/comments";
@@ -30,8 +30,7 @@ const useStudioRuns = (
     [runs, directionId]
   );
 
-  const activeRun =
-    directionRuns.find((run): boolean => run.status === "running") ?? null;
+  const activeRun = useActiveRun(directionRuns);
 
   const [pendingRun, setPendingRun] = useState<RunView | null>(null);
   const improveRun = lastImproveRun(directionRuns);

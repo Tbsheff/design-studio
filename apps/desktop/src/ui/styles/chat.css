@@ -775,8 +775,9 @@
 }
 
 .msg-card .msg-body {
+  font-family: var(--font);
   font-size: var(--t-sm);
-  line-height: var(--lh-sm);
+  line-height: var(--lh-body);
 }
 
 .msg-user-row .msg-copy-slot .copy-btn,
@@ -934,16 +935,32 @@
   color: var(--text-2);
 }
 
+.chat .assistant-text [data-slot="markdown"] {
+  font-family: var(--font);
+}
+
 .run-body > .assistant-text [data-slot="markdown"] {
-  font-family: var(--serif);
   font-size: var(--t-sm);
-  line-height: 21.45px;
+  line-height: var(--lh-body);
   color: var(--text-prose);
 }
 
-.run-body > .assistant-text [data-slot="markdown"] :is(p, ul, ol) {
-  margin-top: 10px;
-  margin-bottom: 10px;
+.run-body > .assistant-text [data-slot="markdown"] :is(p, ul, ol, pre) {
+  margin-top: var(--s-3);
+  margin-bottom: var(--s-3);
+}
+
+.run-body > .assistant-text [data-slot="markdown"] :is(h1, h2, h3, h4) {
+  margin-top: var(--s-4);
+  margin-bottom: var(--s-1);
+  color: var(--text);
+  font-size: var(--t-sm);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+}
+
+.run-body > .assistant-text [data-slot="markdown"] h1 {
+  font-size: var(--t-md);
 }
 
 .run-body
@@ -963,8 +980,8 @@
 }
 
 .run-body > .assistant-text [data-slot="markdown"] li {
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin-top: var(--s-1);
+  margin-bottom: var(--s-1);
 }
 
 .live-status {
@@ -1143,14 +1160,18 @@
   margin: 0;
 }
 
-.live-status[data-offline] .ui-status-mark,
-.live-status[data-offline] .ui-status-mark::before,
-.live-status[data-offline] .ui-status-mark::after {
+.live-status:is([data-offline], [data-stalled]) .ui-status-mark,
+.live-status:is([data-offline], [data-stalled]) .ui-status-mark::before,
+.live-status:is([data-offline], [data-stalled]) .ui-status-mark::after {
   animation: none;
 }
 
-.live-status[data-offline] .ui-status-mark {
+.live-status:is([data-offline], [data-stalled]) .ui-status-mark {
   opacity: 0.5;
+}
+
+.live-status[data-stalled] .live-label {
+  color: var(--text-2);
 }
 
 .run-foot[data-status="running"] {

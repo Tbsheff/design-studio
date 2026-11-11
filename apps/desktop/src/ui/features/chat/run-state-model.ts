@@ -25,6 +25,8 @@ const RECENT_START_MS = 3_600_000;
 const isRecentStart = (startedAt: number): boolean =>
   Date.now() - startedAt < RECENT_START_MS;
 
+const START_GRACE_MS = 20_000;
+
 interface ToolRow {
   toolUseId: string;
   name: string;
@@ -85,6 +87,14 @@ const shownPending = (
 };
 
 const runText = (run: RunView): string => partsText(run.parts);
+
+const hasRunOutput = (run: RunView): boolean =>
+  run.hasStarted || run.parts.length > 0 || run.tools.length > 0;
+
+const isLiveRun = (run: RunView, now: number): boolean =>
+  run.status === "running" &&
+  run.runId !== "" &&
+  (hasRunOutput(run) || now - run.startedAt < START_GRACE_MS);
 
 type RunMap = Record<string, RunView>;
 
@@ -406,6 +416,15 @@ const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   return toRunMapWith(runs, runId, run);
 };
 
-export { applyRunEvent, emptyRun, runFromSummary, runText, shownPending };
+export {
+  START_GRACE_MS,
+  applyRunEvent,
+  emptyRun,
+  hasRunOutput,
+  isLiveRun,
+  runFromSummary,
+  runText,
+  shownPending,
+};
 
 export type { RetryState, RunMap, RunView, ToolRow };

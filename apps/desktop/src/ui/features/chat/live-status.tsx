@@ -5,6 +5,7 @@ import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC } from "../../chat-slots.js";
 import { copy } from "./copy.js";
 import { elapsedText, statusLabel } from "./live-status-model.js";
+import { isLiveRun } from "./run-state-model.js";
 import type { RunView } from "./run-state-model.js";
 import { useElapsed } from "./use-elapsed.js";
 
@@ -22,23 +23,26 @@ const LiveStatus = ({
   onStop: (() => void) | null;
 }): ReactElement => {
   const elapsed = useElapsed(run.startedAt, true);
+  const now = run.startedAt + elapsed;
+  const isLive = isLiveRun(run, now);
 
   return (
     <div
       className="ui-status live-status"
       data-testid="live-status"
       data-offline={isOffline || null}
+      data-stalled={!isLive || null}
     >
       <span className="ui-status-mark" aria-hidden="true" />
       <span className="live-label min-w-0 truncate">
-        {statusLabel(run, workTree, run.startedAt + elapsed, isOffline)}
+        {statusLabel(run, workTree, now, isOffline)}
       </span>
       {run.hasStarted && (
         <span className="live-elapsed tabular-nums">
           {elapsedText(elapsed)}
         </span>
       )}
-      {onStop && (
+      {onStop && isLive && (
         <button
           type="button"
           className="icon-btn small live-stop"

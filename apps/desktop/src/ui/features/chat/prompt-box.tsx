@@ -6,10 +6,10 @@ import { useCommentPrefill } from "../comments/use-comment-prefill.js";
 import type { PrefillRequest } from "../comments/use-comment-prefill.js";
 import { ComposerAlert } from "../home/home-composer-parts.js";
 import { focusComposerInput } from "./composer-focus.js";
+import { ComposerSheets } from "./composer-sheets.js";
 import { PromptAlerts } from "./prompt-alerts.js";
 import type { PromptBoxProps } from "./prompt-box-props.js";
 import { PromptComposer } from "./prompt-composer.js";
-import { PromptFoot } from "./prompt-foot.js";
 import { PromptFrame } from "./prompt-frame.js";
 import { PromptPanels } from "./prompt-panels.js";
 import { usePromptBase } from "./use-prompt-base.js";
@@ -43,7 +43,7 @@ const PromptBox = (props: Props): ReactElement => {
         prefill={prefill}
         Comments={ComposerComments}
       />
-      <PromptFoot box={props} />
+      <ComposerSheets box={props} sheet={base.sheet} />
     </PromptFrame>
   );
 };

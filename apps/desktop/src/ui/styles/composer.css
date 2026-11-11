@@ -1314,3 +1314,22 @@ button.skill-opt {
     display: none;
   }
 }
+
+.prompt-bar .drafts-short {
+  display: none;
+}
+
+@container prompt-bar (max-width: 300px) {
+  .prompt-bar .composer-pill.level-pill {
+    display: none;
+  }
+
+  .prompt-bar .drafts-pill .drafts-full,
+  .prompt-bar .drafts-pill .stable-text-size {
+    display: none;
+  }
+
+  .prompt-bar .drafts-pill .drafts-short {
+    display: inline;
+  }
+}

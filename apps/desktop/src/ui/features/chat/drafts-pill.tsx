@@ -1,7 +1,11 @@
 import { useCallback, useRef } from "react";
 import type { ReactElement } from "react";
 
-import { DRAFT_COUNTS, toDraftsLabel } from "../../domain/draft-counts.js";
+import {
+  DRAFT_COUNTS,
+  toDraftsLabel,
+  toDraftsShort,
+} from "../../domain/draft-counts.js";
 import { LEVEL_FOCUS } from "./composer-menu-model.js";
 import { ComposerPill } from "./composer-pill.js";
 import { copy } from "./copy.js";
@@ -57,7 +61,8 @@ const DraftsPill = ({
         sizes={DRAFT_SIZES}
         onToggle={onToggle}
       >
-        {toDraftsLabel(shown)}
+        <span className="drafts-full">{toDraftsLabel(shown)}</span>
+        <span className="drafts-short">{toDraftsShort(shown)}</span>
       </ComposerPill>
       <MenuPanel
         panel={panel}

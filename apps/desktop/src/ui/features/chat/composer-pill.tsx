@@ -13,7 +13,7 @@ const PILL_VARIANT = {
     valueTestId: null,
   },
   level: {
-    buttonClass: "ui-pill-select inline composer-pill",
+    buttonClass: "ui-pill-select inline composer-pill level-pill",
     buttonTestId: "level-pill",
     popup: "menu",
     valueClass: "ui-pill-select-value",

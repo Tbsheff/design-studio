@@ -13,6 +13,8 @@ const toDraftsLabel = (count: number): string => {
   return `${count} drafts`;
 };
 
+const toDraftsShort = (count: number): string => `${count}×`;
+
 const toDraftHint = (count: number): string => {
   if (count === 1) {
     return "One design";
@@ -27,4 +29,4 @@ const isDraftOff = (
   blocker: string | null
 ): boolean => count > max || (count > 1 && blocker !== null);
 
-export { DRAFT_COUNTS, isDraftOff, toDraftHint, toDraftsLabel };
+export { DRAFT_COUNTS, isDraftOff, toDraftHint, toDraftsLabel, toDraftsShort };

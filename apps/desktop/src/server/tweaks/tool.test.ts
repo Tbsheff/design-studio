@@ -288,14 +288,13 @@ describe("permissions", () => {
 });
 
 describe("tweaks run task", () => {
-  it("uses Haiku, a small budget, no skills and a tweaks-only run-level block", () => {
+  it("uses Haiku, no skills and a tweaks-only run-level block", () => {
     const config = withRunTask(
-      resolveRunConfig({ ...DEFAULT_SETTINGS, maxBudgetUsd: 2 }, "polish"),
+      resolveRunConfig(DEFAULT_SETTINGS, "polish"),
       "tweaks"
     );
 
     expect(config.model).toBe("claude-haiku-5-5");
-    expect(config.maxBudgetUsd).toBe(0.25);
     expect(config.preset.skills).toBe(false);
     expect(config.preset.checks.critic).toBe(false);
     expect(buildRunLevelBlock(config, "edit")).toContain("TWEAKS ONLY");

@@ -82,16 +82,6 @@ function checkOptions(
   };
 }
 
-export function budgetLine(
-  state: Pick<RunToolState, "config" | "spentUsd" | "criticCostUsd">
-): string | null {
-  const cap = state.config.maxBudgetUsd;
-  if (cap === null) return null;
-  const spent = state.spentUsd() + state.criticCostUsd;
-  const left = Math.max(0, Math.round((1 - spent / cap) * 100));
-  return `Budget: about $${spent.toFixed(2)} of $${cap.toFixed(2)} used, ${left}% left.`;
-}
-
 async function tokenFindings(
   ctx: AgentRunContext,
   config: ResolvedRunConfig
@@ -313,7 +303,6 @@ export async function buildCheckReport(
   if (state?.log) recordCheck(state.log, findings);
   const tail = state
     ? [
-        budgetLine(state),
         fitLine(findings),
         nextStepLine(state, findings.filter(isBlocking).length),
       ]

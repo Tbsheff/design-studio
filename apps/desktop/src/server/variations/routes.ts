@@ -10,7 +10,7 @@ import type { Result, Schema } from "effect";
 import type { Hono } from "hono";
 import { nanoid } from "nanoid";
 
-import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
+import { levelOf } from "../../shared/run-levels.js";
 import type { AgentRunner } from "../../shared/server-ports.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import type { ServerConfig } from "../platform/config/index.js";
@@ -216,19 +216,7 @@ export function registerVariationRoutes(
       groupId,
       items.flatMap((item) => (item.runId ? [item.runId] : []))
     );
-    const perRunBudgetUsd = resolveRunConfig(
-      project.settings,
-      level
-    ).maxBudgetUsd;
-    const result: VariationStartResult = {
-      groupId,
-      items,
-      perRunBudgetUsd,
-      totalBudgetUsd:
-        perRunBudgetUsd === null
-          ? null
-          : Math.round(perRunBudgetUsd * validBriefs.length * 100) / 100,
-    };
+    const result: VariationStartResult = { groupId, items };
     return c.json(result);
   });
 

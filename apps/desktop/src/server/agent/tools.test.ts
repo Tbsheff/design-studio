@@ -147,7 +147,7 @@ describe("render_check tool", () => {
 });
 
 describe("render_check quality report", () => {
-  it("passes the level options, adds the nav rule, caps findings and reports timings and budget", async () => {
+  it("passes the level options, adds the nav rule, caps findings and reports timings", async () => {
     const d = await deps([]);
     const seen: unknown[] = [];
     d.preview.renderCheck = async (_project, _direction, options) => {
@@ -191,10 +191,7 @@ describe("render_check quality report", () => {
       ];
     };
 
-    const config = resolveRunConfig(
-      { ...d.ctx.project.settings, maxBudgetUsd: 1.5 },
-      "polish"
-    );
+    const config = resolveRunConfig(d.ctx.project.settings, "polish");
 
     const run: RunToolState = {
       config,
@@ -219,22 +216,8 @@ describe("render_check quality report", () => {
       body.quality.map((finding: { check: string }) => finding.check).sort()
     ).toEqual(["a11y", "nav-mobile"]);
     expect(body.timingsMs.total).toBeGreaterThanOrEqual(0);
-    expect(text).toContain("Budget: about $1.30 of $1.50 used, 13% left.");
+    expect(text).not.toMatch(/Budget|\nnull/);
 
-    const unlimited = await runRenderCheck(
-      {
-        ...d,
-        run: {
-          ...run,
-          config: resolveRunConfig(d.ctx.project.settings, "polish"),
-        },
-      },
-      { shots: 0, checks: 0 }
-    );
-
-    expect((unlimited.content[0] as { text: string }).text).not.toMatch(
-      /Budget|\nnull/
-    );
     expect(run.lastFindings).toHaveLength(2);
     expect(text).toContain(
       "Required next: call mcp__studio__screenshot with viewport mobile from=0"

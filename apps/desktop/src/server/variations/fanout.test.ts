@@ -111,7 +111,6 @@ async function createProject(
   const response = await call("POST", "/api/projects", {
     prompt: "Bike repair shop",
     kind,
-    settings: { maxBudgetUsd: 0.2 },
   });
   expect(response.status).toBe(200);
   const { project, runId } = (await response.json()) as {
@@ -186,8 +185,6 @@ describe("variations fan-out", { timeout: 30_000 }, () => {
         (item) => item.runId && item.directionId && !item.error
       )
     ).toBe(true);
-    expect(result.perRunBudgetUsd).toBe(0.2);
-    expect(result.totalBudgetUsd).toBe(0.6);
     const running = result.items.filter(
       (item) =>
         item.directionId && runner.isRunning(project.id, item.directionId)

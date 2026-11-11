@@ -83,8 +83,6 @@ REQUIRED steps, in this order. Do not skip one:
 9. After your LAST edit, run render_check once more. This final check is mandatory.`;
 }
 
-const POLISH_BUDGET_STOP = ", or when less than 20% of the budget is left";
-
 function polishEdit(context: RunLevelContext): string {
   return `Level: POLISH. Goal: a finished, distinctive design. Be thorough and honest.
 - Edit the existing design with small Edit calls. Do not rewrite a file that already exists. Keep all content.
@@ -98,7 +96,7 @@ REQUIRED steps, in this order. Do not skip one:
 4. Call \`mcp__studio__design_review\` (a separate critic that has not seen your work; it reviews every screen). Call it at most twice per run. A second call also compares desktop with the first and files regressions; when you stop, the studio runs that desktop comparison itself if you did not.
 5. Fix round: fix every HIGH and MEDIUM finding from the checks and the critic with Edit (a \`duplicate-content\` finding means a fact shows twice: merge it), plus the one layout change if the layout is generic.
 6. After each fix round: run render_check AND take screenshots from=0 at mobile, tablet and desktop again. Then start the next fix round.
-7. Stop only when render_check has no high and no medium findings, or after 3 fix rounds${POLISH_BUDGET_STOP}. If you stop early, the studio continues the run and lists what is left.
+7. Stop only when render_check has no high and no medium findings, or after 3 fix rounds. If you stop early, the studio continues the run and lists what is left.
 8. Before the last render_check: ${finishStep(context)}
 - Final reply: the fix loops you ran, the findings per loop (high / medium / low), the layout change you made, and what is left.`;
 }
@@ -112,27 +110,20 @@ const CRITIQUE_SCOPE: Record<RunLevel, string> = {
     "Level: WIREFRAME critique. Cover structure only: sections, order, hierarchy, labels, the main flow and mobile layout. Skip color, type and polish. Call render_check once; no screenshots needed.",
 };
 
-const STOP_RULE = `Stop when there are no high findings, when the fix loops above are used up, or when the budget line in a tool result says less than 20% is left.`;
-const STOP_RULE_NO_LIMIT = `Stop when there are no high findings or when the fix loops above are used up.`;
+const STOP_RULE = `Stop when there are no high findings or when the fix loops above are used up.`;
 
 const REPLY_RULE = `Final reply: one to three sentences on the result, then list the checks you ran (render_check, screenshots, design_review) and every finding you did not fix. Be honest: never say a check passed if you did not run it after your last edit.`;
 
-function editBody(
-  level: RunLevel,
-  limited: boolean,
-  context: RunLevelContext
-): string {
+function editBody(level: RunLevel, context: RunLevelContext): string {
   if (level === "wireframe") {
     return wireframeEdit(context);
   }
 
   if (level === "polish") {
-    const body = polishEdit(context);
-
-    return `${limited ? body : body.replace(POLISH_BUDGET_STOP, "")}\n- ${REPLY_RULE}`;
+    return `${polishEdit(context)}\n- ${REPLY_RULE}`;
   }
 
-  return `${prototypeEdit(context)}\n- ${limited ? STOP_RULE : STOP_RULE_NO_LIMIT}\n- ${REPLY_RULE}`;
+  return `${prototypeEdit(context)}\n- ${STOP_RULE}\n- ${REPLY_RULE}`;
 }
 
 const PORT_STEPS = `Level: ${PORT_LEVEL_LABEL.toUpperCase()}. Task: move the prototype page in <prototype-source> into this app as the routes the <port-plan> or <port-flow> names. Do not redesign it.
@@ -162,12 +153,8 @@ function taskBody(config: ResolvedRunConfig): string | null {
   return null;
 }
 
-function budgetLine(config: ResolvedRunConfig): string {
-  if (config.maxBudgetUsd === null) {
-    return `No spending limit for this run; at most ${config.maxTurns} turns.`;
-  }
-
-  return `Budget for this run: $${config.maxBudgetUsd.toFixed(2)}, at most ${config.maxTurns} turns.`;
+function toTurnsLine(config: ResolvedRunConfig): string {
+  return `At most ${config.maxTurns} turns for this run.`;
 }
 
 const ASK_SCOPE =
@@ -186,10 +173,7 @@ function toLevelBody(
     return CRITIQUE_SCOPE[config.level];
   }
 
-  return (
-    taskBody(config) ??
-    editBody(config.level, config.maxBudgetUsd !== null, context)
-  );
+  return taskBody(config) ?? editBody(config.level, context);
 }
 
 export function buildRunLevelBlock(
@@ -199,7 +183,7 @@ export function buildRunLevelBlock(
 ): string {
   const body = toLevelBody(config, mode, context);
 
-  return `<run-level>\n${body}\n${budgetLine(config)}\n</run-level>`;
+  return `<run-level>\n${body}\n${toTurnsLine(config)}\n</run-level>`;
 }
 
 export function withRunLevel(

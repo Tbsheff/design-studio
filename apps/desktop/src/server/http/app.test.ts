@@ -101,7 +101,6 @@ describe("http app", { timeout: 20_000 }, () => {
   it("accepts every setting at create time", async () => {
     const settings = {
       model: "claude-haiku-5-5",
-      maxBudgetUsd: 0.5,
       maxTurns: 7,
       allowBash: true,
       allowInstall: true,
@@ -178,7 +177,7 @@ describe("http app", { timeout: 20_000 }, () => {
     const response = await call("POST", "/api/projects", {
       prompt: "x",
       kind: "html",
-      settings: { maxBudgetUsd: 51 },
+      settings: { maxTurns: 0 },
     });
     expect(response.status).toBe(400);
   });
@@ -197,26 +196,7 @@ describe("http app", { timeout: 20_000 }, () => {
       maxTurns: 12,
     });
     expect((await projects.get(project.id)).settings.allowBash).toBe(true);
-    expect(project.settings.maxBudgetUsd).toBeNull();
-    const limited = await call(
-      "PATCH",
-      `/api/projects/${project.id}/settings`,
-      { maxBudgetUsd: 1.25 }
-    );
-    expect(((await limited.json()) as Project).settings.maxBudgetUsd).toBe(
-      1.25
-    );
-    const cleared = await call(
-      "PATCH",
-      `/api/projects/${project.id}/settings`,
-      { maxBudgetUsd: null }
-    );
-    expect(
-      ((await cleared.json()) as Project).settings.maxBudgetUsd
-    ).toBeNull();
     for (const bad of [
-      { maxBudgetUsd: 0.001 },
-      { maxBudgetUsd: 60 },
       { maxTurns: 0 },
       { maxTurns: 201 },
       { maxTurns: 1.5 },

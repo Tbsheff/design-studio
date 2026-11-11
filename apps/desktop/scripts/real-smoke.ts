@@ -13,7 +13,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = 4470;
 const BASE = `http://127.0.0.1:${PORT}`;
 const MODEL = process.env.SMOKE_MODEL ?? "claude-haiku-5-5";
-const BUDGET = 0.5;
 const CREATE_PROMPT = "A landing page for a neighborhood bakery";
 const EDIT_PROMPT = "make this headline shorter";
 
@@ -139,12 +138,12 @@ async function main(): Promise<void> {
       {
         prompt: CREATE_PROMPT,
         kind: "html",
-        settings: { model: MODEL, maxBudgetUsd: BUDGET },
+        settings: { model: MODEL },
       }
     );
 
     console.log(
-      `[smoke] project ${project.id} model ${project.settings.model} budget ${project.settings.maxBudgetUsd}`
+      `[smoke] project ${project.id} model ${project.settings.model}`
     );
     await page.evaluate(
       (pid) =>

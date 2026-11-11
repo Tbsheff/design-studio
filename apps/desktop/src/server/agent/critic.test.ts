@@ -75,10 +75,9 @@ function fakeQuery(
 async function deps(
   level: RunLevel,
   reply: string,
-  seen: Options[],
-  maxBudgetUsd: number | null = null
+  seen: Options[]
 ): Promise<StudioToolDeps & { run: RunToolState }> {
-  const temp = await createTempProject("html", { maxBudgetUsd });
+  const temp = await createTempProject("html");
   roots.push(temp.root);
   const preview = createFakePreview();
   preview.screenshotTiles = async (_url, request) => {
@@ -222,17 +221,6 @@ describe("design_review tool", () => {
     const third = await runDesignReview(d);
     expect(third).toMatchObject({ isError: true });
     expect(seen).toHaveLength(2);
-  });
-
-  it("caps the critic call and reports the budget only when the project sets a spending limit", async () => {
-    const seen: Options[] = [];
-    const d = await deps("polish", JSON.stringify(ISSUES), seen, 1.5);
-
-    const text = ((await runDesignReview(d)).content[0] as { text: string })
-      .text;
-
-    expect(text).toMatch(/Budget: about \$0\.34 of \$1\.50 used/);
-    expect(seen[0]).toMatchObject({ maxBudgetUsd: 0.15, maxTurns: 1 });
   });
 
   it("is not available below polish", async () => {

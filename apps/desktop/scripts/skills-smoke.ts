@@ -124,12 +124,10 @@ async function runOnce(
   label: string,
   disabledAll: boolean,
   prompt: string,
-  mode: RunRequest["mode"],
-  budget: number
+  mode: RunRequest["mode"]
 ) {
   const temp = await createTempProject("html", {
     model: MODEL,
-    maxBudgetUsd: budget,
     maxTurns: 12,
   });
   const capture: Capture = {
@@ -273,8 +271,7 @@ async function main(): Promise<void> {
         "skills-on",
         false,
         `Create a one-section landing page for a neighborhood bakery. First load the ${SKILL} skill with the Skill tool and follow it for the type scale.`,
-        "edit",
-        0.3
+        "edit"
       );
   const manual = offOnly
     ? null
@@ -282,15 +279,13 @@ async function main(): Promise<void> {
         "manual-only-skill",
         false,
         `Load the ${MANUAL_SKILL} skill with the Skill tool, then reply with one sentence. Do not use other tools.`,
-        "critique",
-        0.1
+        "critique"
       );
   const off = await runOnce(
     "skills-off",
     true,
     "In one sentence, say what this empty project is. Do not use tools.",
-    "critique",
-    0.1
+    "critique"
   );
   if (!on) {
     console.log(

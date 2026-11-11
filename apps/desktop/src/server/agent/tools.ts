@@ -31,7 +31,6 @@ import type { LayerLockStore } from "../store/layer-locks.js";
 import { defineTweaks } from "../tweaks/store.js";
 import type { ActionAsk } from "./ask-gate.js";
 import {
-  budgetLine,
   buildCheckReport,
   freshCapture,
   runScreens,
@@ -588,9 +587,6 @@ export async function runDesignReview(
       await loadQuery(deps),
       input,
       run.config.criticModel as string,
-      run.config.maxBudgetUsd === null
-        ? null
-        : run.config.preset.criticBudgetUsd,
       deps.env
     );
 
@@ -604,9 +600,7 @@ export async function runDesignReview(
     return {
       content: [
         {
-          text: [describeCriticResult(result, run), budgetLine(run)]
-            .filter(Boolean)
-            .join("\n"),
+          text: describeCriticResult(result, run),
           type: "text" as const,
         },
       ],

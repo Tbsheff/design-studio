@@ -79,7 +79,6 @@ const SettingsFields = {
       description: "Pin the project to the top of the Home sidebar.",
     })
   ),
-  maxBudgetUsd: Schema.optionalKey(Schema.NullOr(Schema.Number)),
   maxTurns: Schema.optionalKey(Schema.Number),
   model: Schema.optionalKey(Schema.String),
 } as const;

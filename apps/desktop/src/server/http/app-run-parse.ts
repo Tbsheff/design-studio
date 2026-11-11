@@ -260,11 +260,6 @@ const SettingsSchema = Schema.Struct({
   ),
   imageSearch: Schema.optionalKey(Schema.Boolean),
   isPinned: Schema.optionalKey(Schema.Boolean),
-  maxBudgetUsd: Schema.optionalKey(
-    Schema.NullOr(
-      Schema.Number.check(Schema.isBetween({ maximum: 50, minimum: 0.01 }))
-    )
-  ),
   maxTurns: Schema.optionalKey(
     Schema.Int.check(Schema.isBetween({ maximum: 200, minimum: 1 }))
   ),

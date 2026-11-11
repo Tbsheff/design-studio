@@ -16,7 +16,7 @@ import {
 import type { LoopLog } from "./polish-loop.js";
 
 const polish = resolveRunConfig(DEFAULT_SETTINGS, "polish");
-const budget = { spentUsd: 0.3, capUsd: 1.5, continuations: 0 };
+const progress = { continuations: 0 };
 
 const finding = (
   severity: QualityFinding["severity"],
@@ -58,7 +58,7 @@ describe("polish loop stop rule", () => {
     check(log, [finding("medium")]);
     shootAll(log);
     round(log, [finding("low")]);
-    expect(decideLoop(log, polish, budget)).toEqual({
+    expect(decideLoop(log, polish, progress)).toEqual({
       stop: true,
       reason: "clean",
     });
@@ -69,14 +69,14 @@ describe("polish loop stop rule", () => {
     const log = newLoopLog();
     check(log, [finding("high")]);
     shootAll(log);
-    expect(decideLoop(log, polish, budget)).toMatchObject({
+    expect(decideLoop(log, polish, progress)).toMatchObject({
       stop: false,
       verified: true,
       missing: [],
       blocking: [{ severity: "high" }],
     });
     tool(log, "Edit");
-    expect(decideLoop(log, polish, budget)).toMatchObject({
+    expect(decideLoop(log, polish, progress)).toMatchObject({
       stop: false,
       verified: false,
       missing: ["desktop", "tablet", "mobile"],
@@ -84,7 +84,7 @@ describe("polish loop stop rule", () => {
     check(log, []);
     tool(log, "mcp__studio__screenshot");
     recordShot(log, "mobile");
-    expect(decideLoop(log, polish, budget)).toMatchObject({
+    expect(decideLoop(log, polish, progress)).toMatchObject({
       stop: false,
       verified: true,
       missing: ["desktop", "tablet"],
@@ -99,51 +99,33 @@ describe("polish loop stop rule", () => {
     round(log, [finding("medium")]);
     round(log, [finding("medium")]);
     tool(log, "Edit");
-    expect(decideLoop(log, polish, budget)).toMatchObject({
+    expect(decideLoop(log, polish, progress)).toMatchObject({
       stop: false,
       verified: false,
     });
     check(log, [finding("medium")]);
     shootAll(log);
-    expect(decideLoop(log, polish, budget)).toEqual({
+    expect(decideLoop(log, polish, progress)).toEqual({
       stop: true,
       reason: "loops",
     });
     expect(checkSteps(log).map((step) => step.loop)).toEqual([0, 1, 2, 3]);
   });
 
-  it("stops when less than 20% of the budget is left or the continuation cap is reached", () => {
+  it("stops when the continuation cap is reached", () => {
     const log = newLoopLog();
     check(log, [finding("high")]);
-    expect(decideLoop(log, polish, { ...budget, spentUsd: 1.21 })).toEqual({
-      stop: true,
-      reason: "budget",
-    });
-    expect(
-      decideLoop(log, polish, { ...budget, spentUsd: 1.19 })
-    ).toMatchObject({ stop: false });
-    expect(decideLoop(log, polish, { ...budget, continuations: 4 })).toEqual({
+    expect(decideLoop(log, polish, { continuations: 4 })).toEqual({
       stop: true,
       reason: "continuations",
     });
-  });
-
-  it("never stops for budget when the run has no spending limit", () => {
-    const log = newLoopLog();
-    check(log, [finding("high")]);
-    expect(
-      decideLoop(log, polish, { spentUsd: 50, capUsd: null, continuations: 0 })
-    ).toMatchObject({ stop: false });
-    expect(
-      decideLoop(log, polish, { spentUsd: 50, capUsd: null, continuations: 4 })
-    ).toEqual({ stop: true, reason: "continuations" });
   });
 
   it("keeps looping on duplicate-content findings", () => {
     const log = newLoopLog();
     check(log, [finding("medium", "duplicate-content")]);
     shootAll(log);
-    expect(decideLoop(log, polish, budget)).toMatchObject({
+    expect(decideLoop(log, polish, progress)).toMatchObject({
       stop: false,
       blocking: [{ check: "duplicate-content" }],
     });
@@ -151,7 +133,7 @@ describe("polish loop stop rule", () => {
 
   it("does not keep looping on generic-layout or visual-diff notes, and never stops before any check ran", () => {
     const log = newLoopLog();
-    expect(decideLoop(log, polish, budget)).toMatchObject({
+    expect(decideLoop(log, polish, progress)).toMatchObject({
       stop: false,
       verified: false,
     });
@@ -161,7 +143,7 @@ describe("polish loop stop rule", () => {
       finding("low"),
     ]);
     shootAll(log);
-    expect(decideLoop(log, polish, budget)).toEqual({
+    expect(decideLoop(log, polish, progress)).toEqual({
       stop: true,
       reason: "clean",
     });
@@ -173,7 +155,7 @@ describe("continuation prompt and report", () => {
     const log = newLoopLog();
     check(log, [finding("high"), finding("medium", "a11y")]);
     tool(log, "Edit");
-    const decision = decideLoop(log, polish, budget);
+    const decision = decideLoop(log, polish, progress);
 
     if (decision.stop) {
       throw new Error("expected continue");
@@ -188,7 +170,7 @@ describe("continuation prompt and report", () => {
     const verified = newLoopLog();
     check(verified, [finding("high"), finding("medium", "a11y")]);
     shootAll(verified);
-    const next = decideLoop(verified, polish, budget);
+    const next = decideLoop(verified, polish, progress);
 
     if (next.stop) {
       throw new Error("expected continue");
@@ -207,7 +189,7 @@ describe("continuation prompt and report", () => {
     round(log, [finding("medium")]);
     round(log, [finding("medium")]);
     tool(log, "Edit");
-    const decision = decideLoop(log, polish, budget);
+    const decision = decideLoop(log, polish, progress);
 
     if (decision.stop) {
       throw new Error("expected continue");

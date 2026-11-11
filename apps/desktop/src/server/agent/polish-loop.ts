@@ -8,7 +8,6 @@ import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 
 export const MAX_FIX_LOOPS = 3;
-const MIN_BUDGET_LEFT = 0.2;
 const MAX_CONTINUATIONS = 4;
 const LISTED_FINDINGS = 8;
 
@@ -135,7 +134,7 @@ function checkedAfterLastEdit(log: LoopLog): boolean {
   return last !== undefined && last.at > lastEditIndex(log);
 }
 
-export type StopReason = "clean" | "loops" | "budget" | "continuations";
+export type StopReason = "clean" | "loops" | "continuations";
 
 export type LoopDecision =
   | { stop: true; reason: StopReason }
@@ -146,32 +145,16 @@ export type LoopDecision =
       verified: boolean;
     };
 
-interface LoopBudget {
-  spentUsd: number;
-  capUsd: number | null;
+interface LoopProgress {
   continuations: number;
-}
-
-function budgetLow(budget: LoopBudget): boolean {
-  if (budget.capUsd === null) {
-    return false;
-  }
-
-  const left = budget.capUsd > 0 ? 1 - budget.spentUsd / budget.capUsd : 0;
-
-  return left < MIN_BUDGET_LEFT;
 }
 
 export function decideLoop(
   log: LoopLog,
   config: ResolvedRunConfig,
-  budget: LoopBudget
+  progress: LoopProgress
 ): LoopDecision {
-  if (budgetLow(budget)) {
-    return { reason: "budget", stop: true };
-  }
-
-  if (budget.continuations >= MAX_CONTINUATIONS) {
+  if (progress.continuations >= MAX_CONTINUATIONS) {
     return { reason: "continuations", stop: true };
   }
 
@@ -251,7 +234,6 @@ function stepLabel(step: CheckStep, index: number): string {
 }
 
 const STOP_TEXT: Record<StopReason, string> = {
-  budget: "less than 20% of the spending limit left",
   clean: "no high or medium findings left",
   continuations: "the studio continued the run the maximum number of times",
   loops: `${MAX_FIX_LOOPS} fix loops done`,

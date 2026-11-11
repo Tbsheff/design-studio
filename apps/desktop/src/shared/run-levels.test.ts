@@ -9,13 +9,11 @@ import {
 } from "./run-levels";
 
 describe("run level presets", () => {
-  it("runs wireframe on Haiku with no spending limit by default, no skills, structure-only taste and errors-only checks", () => {
+  it("runs wireframe on Haiku, no skills, structure-only taste and errors-only checks", () => {
     const config = resolveRunConfig(DEFAULT_SETTINGS, "wireframe");
     expect(config).toMatchObject({
       level: "wireframe",
       model: WIREFRAME_MODEL,
-      maxBudgetUsd: null,
-      agentBudgetUsd: null,
       maxTurns: 12,
       criticModel: null,
     });
@@ -33,8 +31,6 @@ describe("run level presets", () => {
     const config = resolveRunConfig(DEFAULT_SETTINGS, "prototype");
     expect(config).toMatchObject({
       model: "claude-sonnet-5-5",
-      maxBudgetUsd: null,
-      agentBudgetUsd: null,
       maxTurns: 30,
       criticModel: null,
     });
@@ -47,18 +43,13 @@ describe("run level presets", () => {
     });
   });
 
-  it("gives polish three sizes, a critic, three loops, and keeps the critic reserve out of the agent budget when a limit is set", () => {
+  it("gives polish three sizes, a critic, three loops", () => {
     const config = resolveRunConfig(DEFAULT_SETTINGS, "polish");
     expect(config).toMatchObject({
       model: "claude-sonnet-5-5",
-      maxBudgetUsd: null,
-      agentBudgetUsd: null,
       maxTurns: 40,
       criticModel: "claude-sonnet-5-5",
     });
-    expect(
-      resolveRunConfig({ ...DEFAULT_SETTINGS, maxBudgetUsd: 1.5 }, "polish")
-    ).toMatchObject({ maxBudgetUsd: 1.5, agentBudgetUsd: 1.2 });
     expect(config.preset.checks).toMatchObject({
       viewports: ["desktop", "tablet", "mobile"],
       critic: true,
@@ -76,22 +67,7 @@ describe("run level presets", () => {
     expect(resolveRunConfig(settings, "wireframe").model).toBe(WIREFRAME_MODEL);
   });
 
-  it("uses the project spending limit as the run limit at every level, and the turn setting as a ceiling", () => {
-    const settings = { ...DEFAULT_SETTINGS, maxBudgetUsd: 0.5, maxTurns: 10 };
-    expect(resolveRunConfig(settings, "polish")).toMatchObject({
-      maxBudgetUsd: 0.5,
-      agentBudgetUsd: 0.2,
-      maxTurns: 10,
-    });
-    expect(resolveRunConfig(settings, "wireframe")).toMatchObject({
-      maxBudgetUsd: 0.5,
-      agentBudgetUsd: 0.5,
-      maxTurns: 10,
-    });
-  });
-
-  it("has no spending limit by default and keeps the preset turn limits as runaway guards", () => {
-    expect(DEFAULT_SETTINGS.maxBudgetUsd).toBeNull();
+  it("keeps the preset turn limits as runaway guards", () => {
     expect(
       Object.fromEntries(
         Object.entries(LEVEL_PRESETS).map(([level, preset]) => [

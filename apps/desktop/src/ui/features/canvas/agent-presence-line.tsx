@@ -35,8 +35,7 @@ const AgentPresenceLine = ({
       <span className="agent-presence-dot" aria-hidden="true" />
       <strong>{mark.agent}</strong>
       {copy.isEditing}
-      <strong>{toPresenceFrameName(frame)}</strong>
-      {copy.ellipsis}
+      <strong>{`${toPresenceFrameName(frame)}${copy.ellipsis}`}</strong>
     </output>
   );
 };

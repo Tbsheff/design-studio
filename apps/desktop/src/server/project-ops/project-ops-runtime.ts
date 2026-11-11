@@ -115,6 +115,15 @@ const attemptProjectOps = <Value>(
     return yield* attemptKnown(() => task(runtime));
   });
 
-export { attemptProjectOps, bindProjectOpsRuntime, projectOpsRuntimeOf };
+const applyProjectOps = <Value, Failure>(
+  task: (runtime: ProjectOpsRuntime) => Effect.Effect<Value, Failure>
+): Effect.Effect<Value, Failure> => slot.read.pipe(Effect.flatMap(task));
+
+export {
+  applyProjectOps,
+  attemptProjectOps,
+  bindProjectOpsRuntime,
+  projectOpsRuntimeOf,
+};
 
 export type { ProjectOpsParsers, ProjectOpsRuntime };

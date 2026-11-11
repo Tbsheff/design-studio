@@ -168,6 +168,7 @@ const copy = {
   newDesignSystem: "New design system",
   newFolder: "New folder ",
   newHere: "New here?",
+  newHtmlPrototype: "New HTML prototype",
   newProjectHere: "New project here",
   newProjectsGoHereWhen: "New projects go here when you pick no location.",
   newPrototype: "New prototype",
@@ -269,6 +270,8 @@ const copy = {
   startNextDev: "Start next dev",
   startServer: "Start",
   starter: " starter",
+  starterHtmlPrototypeSub:
+    "Uses the app tokens. Saved in the Design Studio folder",
   starterNewAppSub: "Builds on the app code and its styles",
   starterPrototypeSub: "A blank canvas with a design system",
   starterRouteSub: "Open the app and pick a route",

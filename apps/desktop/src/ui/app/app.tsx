@@ -8,6 +8,7 @@ import { AppScreen } from "./app-screen";
 import { BootError } from "./boot-error";
 import { BootMessage } from "./boot-message";
 import { copy } from "./copy";
+import { PrototypeLayer } from "./prototype-layer";
 import { prefetchStudio } from "./screen-preload";
 import { useCommandLayer } from "./use-command-layer";
 import { useSession } from "./use-session";
@@ -47,6 +48,7 @@ const App = (): ReactNode => {
         onLayer={onLayer}
       />
       <AppScreen />
+      <PrototypeLayer />
     </>
   );
 };

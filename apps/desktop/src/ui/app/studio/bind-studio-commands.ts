@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import type { useStudioCommands } from "../../features/commands";
+import { openPrototypeDialog } from "../../platform/prototype-dialog";
 import { headerProps } from "./left-props";
 import { exportTarget } from "./project-model";
 import { assignRef } from "./ref-model";
@@ -28,6 +29,16 @@ const directionsOf = (ctx: StudioCtx): CommandActions["directions"] =>
     })
   );
 
+const newPrototypeOf = (ctx: StudioCtx): CommandActions["onNewPrototype"] => {
+  const { project } = ctx;
+
+  if (project.app) {
+    return (): void => openPrototypeDialog(project.id);
+  }
+
+  return null;
+};
+
 const commandActionsOf = (ctx: StudioCtx): CommandActions => {
   const { ui, panes, core, run, onExit, openShip } = ctx;
   const { data, direction, versions, guard } = core;
@@ -47,6 +58,7 @@ const commandActionsOf = (ctx: StudioCtx): CommandActions => {
     onHome: guard(onExit),
     onInspector: panes.toggleInspector,
     onMakeStates: makeStatesOf(ctx),
+    onNewPrototype: newPrototypeOf(ctx),
     onPanel: panes.showPane,
     onPolish: run.polish,
     onRedo: core.editHistory.redo.onRedo,

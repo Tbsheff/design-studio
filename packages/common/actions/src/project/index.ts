@@ -1,5 +1,6 @@
 // @generated
 import { createAttachmentProject } from "./create-attachment.js";
+import { createPrototypeProject } from "./create-prototype.js";
 import { createProject } from "./create.js";
 import { deleteCommandRuleProject } from "./delete-command-rule.js";
 import { deleteProject } from "./delete.js";
@@ -19,6 +20,7 @@ import { updateProject } from "./update.js";
 const ProjectActions = {
   createAttachmentProject,
   createProject,
+  createPrototypeProject,
   deleteCommandRuleProject,
   deleteProject,
   duplicateProject,

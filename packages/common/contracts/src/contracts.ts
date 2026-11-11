@@ -172,6 +172,7 @@ export interface Project {
   packId?: string | null;
   designSystemFor?: string | null;
   designSystemDeleted?: boolean;
+  appProjectId?: string | null;
   entry: string;
   settings: ProjectSettings;
   settingsVersion?: number;

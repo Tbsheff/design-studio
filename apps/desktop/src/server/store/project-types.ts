@@ -51,6 +51,7 @@ export interface StudioProjectStore extends ProjectStore {
     settings?: Partial<ProjectSettings>;
     designSystemFor?: string;
     folderName?: string;
+    appProjectId?: string;
   }): Promise<Project>;
   isHidden(project: Project): boolean;
   moveIntoFolder(projectId: string, parentPath: string): Promise<Project>;

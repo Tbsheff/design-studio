@@ -60,6 +60,7 @@ const createProjectCreation = (core: ProjectCore) => {
       created: boolean;
       settings?: Partial<ProjectSettings>;
       designSystemFor?: string;
+      appProjectId?: string;
     }
   ): Promise<Project> => {
     const id = nanoid(10);
@@ -80,6 +81,10 @@ const createProjectCreation = (core: ProjectCore) => {
 
     if (input.designSystemFor) {
       project.designSystemFor = input.designSystemFor;
+    }
+
+    if (input.appProjectId) {
+      project.appProjectId = input.appProjectId;
     }
 
     await mkdir(attachmentsDir(id), { recursive: true });
@@ -227,6 +232,7 @@ const createProjectCreation = (core: ProjectCore) => {
       settings?: Partial<ProjectSettings>;
       designSystemFor?: string;
       folderName?: string;
+      appProjectId?: string;
     }): Promise<Project> {
       if (input.kind !== "html" && input.kind !== "react") {
         throw new BadRequestError("kind must be html or react");
@@ -257,6 +263,7 @@ const createProjectCreation = (core: ProjectCore) => {
           created: true,
           settings: input.settings,
           designSystemFor: input.designSystemFor,
+          appProjectId: input.appProjectId,
         });
 
         return project;

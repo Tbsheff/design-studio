@@ -48,8 +48,22 @@ export function buildAppRules(
 - Every edit goes to the real source files and shows up in the user's repository diff. Make the smallest change that does the job, match the code style around it, and never reformat a file.
 - The dev server ${server} and hot-reloads your edits. Do not start, stop or restart it.
 - Never touch \`next.config.*\`, \`package.json\`, lock files, \`.env*\` files, keys or credentials. The studio denies them.
-- Server components, data loaders and auth are real code. Do not stub them out to make a page render; say what the page needs instead.`;
+- Server components, data loaders and auth are real code. Do not stub them out to make a page render; say what the page needs instead.
+- HTML prototypes: when the user asks for an HTML prototype, mockup or throwaway page and not a change to the app, do not edit the app. Call \`mcp__studio__create_prototype_project\` once, with the user's request as \`prompt\`. It makes a linked HTML project in the Design Studio folder with the app's tokens, fonts and DESIGN.md, starts its first run, and the studio opens it. Then reply with one line that names the prototype.`;
 }
+
+const PROTOTYPE_RULES = `## HTML prototype of an app
+- This project is an HTML prototype of the user's app. It lives in the Design Studio folder, not in the app repo. Never read or write the app repo from here.
+- \`tokens.css\` holds the app's CSS variables (light values on \`:root\`, dark values on \`.dark\`), its fonts and its page colors. Read it first. Link it in the \`<head>\` of every page before your own <style>: \`<link rel="stylesheet" href="tokens.css">\`. Keep the link when you edit a page. Never edit \`tokens.css\`.
+- Use \`var(--token)\` for every color, font, radius and shadow that a token in \`tokens.css\` covers. Do not hard-code a value that a token covers. Follow the <design_md> block for the look and the words.`;
+
+const toPrototypeRules = (project: Project): string[] => {
+  if (project.appProjectId) {
+    return [PROTOTYPE_RULES];
+  }
+
+  return [];
+};
 
 export const PORT_RULES = `Port rules (prototype pages move into this app):
 - Route files: write the one route file the <port-plan> names (or, with no file named, the page file of the route path under the app router). Do not change other routes, layouts or shared components. Never overwrite a file that exists.
@@ -405,6 +419,7 @@ export function buildSystemPrompt(
       ? [
           ROLE,
           kindRules,
+          ...toPrototypeRules(project),
           policy,
           EDITING_RULES,
           ...shellEditRules(project),
@@ -420,6 +435,7 @@ export function buildSystemPrompt(
       : [
           ROLE,
           kindRules,
+          ...toPrototypeRules(project),
           policy,
           SELECTION_RULES,
           QUALITY_RULES,

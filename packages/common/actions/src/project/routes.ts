@@ -12,6 +12,12 @@ const routes = {
     method: "POST",
     path: "/api/projects",
   },
+  createPrototypeProject: {
+    id: "project.createPrototype",
+    invalidates: ["project.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/prototypes",
+  },
   deleteCommandRuleProject: {
     id: "project.deleteCommandRule",
     invalidates: ["project.listCommandRules"],

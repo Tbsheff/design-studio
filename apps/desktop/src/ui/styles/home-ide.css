@@ -225,7 +225,8 @@
 
 .ide-starters {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: var(--s-2);
 }
 

@@ -1,5 +1,6 @@
 import type { Input } from "@design-studio/actions/_core/action";
 import type { createProject } from "@design-studio/actions/project/create";
+import type { createPrototypeProject } from "@design-studio/actions/project/create-prototype";
 import type { importProject } from "@design-studio/actions/project/import";
 import type { updateProject } from "@design-studio/actions/project/update";
 import { Context, Effect, Layer } from "effect";
@@ -13,9 +14,13 @@ import {
   updateSettingsIn,
 } from "./project-ops-detail.js";
 import { moveHiddenIn } from "./project-ops-hidden.js";
-import { attemptProjectOps } from "./project-ops-runtime.js";
+import { createPrototypeWith } from "./project-ops-prototype.js";
+import type { CreatedPrototype } from "./project-ops-prototype.js";
+import { applyProjectOps, attemptProjectOps } from "./project-ops-runtime.js";
 
 type CreateInput = Input<typeof createProject>;
+
+type CreatePrototypeInput = Input<typeof createPrototypeProject>;
 
 type ImportInput = Omit<Input<typeof importProject>, "path" | "url"> & {
   readonly path: string;
@@ -27,6 +32,9 @@ interface ProjectOpsWriterApi {
   readonly create: (
     input: CreateInput
   ) => Effect.Effect<Awaited<ReturnType<typeof createProjectIn>>, KnownFailure>;
+  readonly createPrototype: (
+    input: CreatePrototypeInput
+  ) => Effect.Effect<CreatedPrototype, KnownFailure>;
   readonly deleteCommandRule: (
     projectId: string,
     rule: string
@@ -76,6 +84,19 @@ class ProjectOpsWriter extends Context.Service<
           createProjectIn(runtime, input, folderName)
         );
       }),
+      createPrototype: Effect.fn("ProjectOpsWriter.createPrototype")(
+        function* run(input: CreatePrototypeInput) {
+          let folderName: string | null = null;
+
+          if (input.name === null) {
+            folderName = yield* toProjectFolderName(input.prompt);
+          }
+
+          return yield* applyProjectOps((runtime) =>
+            createPrototypeWith(runtime, input, folderName)
+          );
+        }
+      ),
       deleteCommandRule: Effect.fn("ProjectOpsWriter.deleteCommandRule")(
         function* run(projectId: string, rule: string) {
           return yield* attemptProjectOps((runtime) =>

@@ -110,7 +110,25 @@ const goCommands = (studioActions: StudioActions): Command[] => {
   ];
 };
 
+const prototypeCommands = (studioActions: StudioActions): Command[] => {
+  if (studioActions.onNewPrototype === null) {
+    return [];
+  }
+
+  return [
+    {
+      group: "Go",
+      icon: "plus",
+      id: "project.new-prototype",
+      keywords: "html mockup prototype page app tokens",
+      run: studioActions.onNewPrototype,
+      title: "New HTML prototype",
+    },
+  ];
+};
+
 const projectCommands = (studioActions: StudioActions): Command[] => [
+  ...prototypeCommands(studioActions),
   {
     group: "Go",
     icon: "pencil",

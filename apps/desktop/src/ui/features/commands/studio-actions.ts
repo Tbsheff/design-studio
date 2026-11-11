@@ -14,6 +14,7 @@ interface StudioActions {
   onColumn: (tab: ColumnTab) => void;
   onInspector: () => void;
   onMakeStates: (() => void) | null;
+  onNewPrototype: (() => void) | null;
   onPanel: (tab: PanelTab) => void;
   onPolish: () => void;
   onRedo: () => void;

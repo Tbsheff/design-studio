@@ -11,7 +11,6 @@ import type {
   VariationStartRequest,
 } from "@design-studio/contracts";
 
-import { resolveRunConfig } from "../../../shared/run-levels.js";
 import { readStored } from "../../platform/storage.js";
 
 interface BriefDraft {
@@ -48,16 +47,9 @@ interface Session {
 
 type SessionPatch = Partial<Omit<Session, "projectId">>;
 
-interface Budget {
-  perRun: number | null;
-  total: number | null;
-}
-
 const COUNT_KEY = "studio.variations.count";
 
 const BRIEF_LABELS = "ABCD";
-
-const CENTS = 100;
 
 const toStoredCount = (): number => {
   const raw = Number(readStored(COUNT_KEY) ?? "");
@@ -74,28 +66,6 @@ const relabel = (briefs: VariationBrief[]): VariationBrief[] =>
     ...brief,
     label: BRIEF_LABELS[index] ?? String(index + 1),
   }));
-
-const toBudgetTotal = (perRun: number | null, count: number): number | null => {
-  if (perRun === null) {
-    return null;
-  }
-
-  return Math.round(perRun * count * CENTS) / CENTS;
-};
-
-const budgetFor = (
-  project: Project | null,
-  level: RunLevel,
-  count: number
-): Budget => {
-  if (!project) {
-    return { perRun: 0, total: 0 };
-  }
-
-  const perRun = resolveRunConfig(project.settings, level).maxBudgetUsd;
-
-  return { perRun, total: toBudgetTotal(perRun, count) };
-};
 
 const emptySession = (projectId: string): Session => ({
   ask: null,
@@ -204,7 +174,6 @@ const toPatchedDraft = (
 };
 
 export {
-  budgetFor,
   emptySession,
   pickSession,
   relabel,
@@ -217,4 +186,4 @@ export {
   toTrimmedDraft,
 };
 
-export type { BriefDraft, Budget, Options, Session, SessionPatch };
+export type { BriefDraft, Options, Session, SessionPatch };

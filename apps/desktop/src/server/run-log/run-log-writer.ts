@@ -1,7 +1,10 @@
 import type { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import type { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
-import type { RunSummary } from "@design-studio/contracts";
+import type {
+  RunSummary,
+  VariationStartResult,
+} from "@design-studio/contracts";
 import { Context, Effect, Layer, Semaphore } from "effect";
 
 import {
@@ -9,6 +12,7 @@ import {
   setActiveQueue,
   setRunTitle,
   startRunWith,
+  startVariationsWith,
   steerActiveRun,
   stopActiveRun,
 } from "./run-log-controls.js";
@@ -17,7 +21,7 @@ import type {
   QueueItems,
   RunAck,
 } from "./run-log-controls.js";
-import type { StartRunCall } from "./run-log-runtime.js";
+import type { StartRunCall, VariationStartCall } from "./run-log-runtime.js";
 
 type WriteFailure = BadRequest | Conflict | NotFound;
 
@@ -41,6 +45,9 @@ interface RunLogWriterApi {
   readonly start: (
     input: StartRunCall
   ) => Effect.Effect<{ readonly runId: string }, WriteFailure>;
+  readonly startVariations: (
+    input: VariationStartCall
+  ) => Effect.Effect<VariationStartResult, WriteFailure>;
   readonly steer: (
     projectId: string,
     runId: string,
@@ -92,6 +99,11 @@ class RunLogWriter extends Context.Service<RunLogWriter, RunLogWriterApi>()(
         ) {
           return yield* startRunWith(input);
         }),
+        startVariations: Effect.fn("RunLogWriter.startVariations")(
+          function* run(input: VariationStartCall) {
+            return yield* startVariationsWith(input);
+          }
+        ),
         steer: Effect.fn("RunLogWriter.steer")(function* run(
           projectId: string,
           runId: string,

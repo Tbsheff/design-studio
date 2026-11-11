@@ -13,6 +13,7 @@ import { Effect } from "effect";
 import { runQueryTerms } from "../../shared/rewind.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
+import { listReferencePins, toStyleReferenceBlock } from "../store/index.js";
 import { listRunSummaries, pageRuns } from "./run-list.js";
 import { isRunLogRecord, isRunSummary } from "./run-log-json.js";
 import { readRunLogRuntime } from "./run-log-runtime.js";
@@ -176,9 +177,13 @@ const getRunContext = Effect.fn("RunLog.getRunContext")(function* run(
     attemptKnown(() => runtime.loadDirection(projectId, directionId))
   );
 
-  return yield* Effect.promise(() =>
+  const context = yield* Effect.promise(() =>
     runtime.loadContext(loaded.project, loaded.direction.workTree)
   );
+
+  const pins = yield* Effect.promise(() => listReferencePins(projectId));
+
+  return { ...context, styleReferences: toStyleReferenceBlock(pins) };
 });
 
 export { findRunFile, getRunContext, getRunDetail, listRunPage, onlyNotFound };

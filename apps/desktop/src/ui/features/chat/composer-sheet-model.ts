@@ -1,4 +1,4 @@
-type ComposerSheet = "budget" | "data" | "skills";
+type ComposerSheet = "skills";
 
 interface ComposerSheetState {
   readonly close: () => void;
@@ -7,9 +7,6 @@ interface ComposerSheetState {
 }
 
 interface PlusProjectProps {
-  readonly budgetLabel: string;
-  readonly onBudget: () => void;
-  readonly onDataUse: () => void;
   readonly onSkillList: () => void;
   readonly skillsCount: string | null;
 }

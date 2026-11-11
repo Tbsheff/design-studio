@@ -86,6 +86,10 @@ const RepoContextSchema = Schema.Struct({
   appDir: Schema.NullOr(Schema.String),
   bytes: Schema.Number,
   files: Schema.Array(RepoContextFileSchema),
+  styleReferences: Schema.NullOr(Schema.String).annotate({
+    description:
+      "The style references block a run gets for the pinned frames of the project. Null when no frame is pinned.",
+  }),
   text: Schema.NullOr(Schema.String),
   workspaceRoot: Schema.NullOr(Schema.String),
 });

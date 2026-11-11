@@ -36,24 +36,11 @@ const toCountClass = (isSelected: boolean): string => {
   return "btn small";
 };
 
-const toBudgetLabel = (
-  perRun: number | null,
-  total: number | null,
-  formatMoney: (amount: number) => string
-): string => {
-  if (perRun === null) {
-    return "No spending limit";
-  }
-
-  return `Up to ${formatMoney(perRun)} each, ${formatMoney(total ?? 0)} total`;
-};
-
 export {
   CLOSE_ICON_SIZE,
   NOTE_MAX_LENGTH,
   NOTE_ROWS,
   VARIANT_COUNTS,
-  toBudgetLabel,
   toCountClass,
   toCountTip,
   toDefaultCount,

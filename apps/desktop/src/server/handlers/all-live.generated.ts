@@ -62,6 +62,7 @@ import { TextStyleLive } from "./text-style/live.js";
 import { TextLive } from "./text/live.js";
 import { ThemeLive } from "./theme/live.js";
 import { TokenLive } from "./token/live.js";
+import { VariationLive } from "./variation/live.js";
 import { VersionLive } from "./version/live.js";
 import { ViewportLive } from "./viewport/live.js";
 import { WalkthroughLive } from "./walkthrough/live.js";
@@ -131,6 +132,7 @@ const ALL_LIVE = {
   textStyle: TextStyleLive,
   theme: ThemeLive,
   token: TokenLive,
+  variation: VariationLive,
   version: VersionLive,
   viewport: ViewportLive,
   walkthrough: WalkthroughLive,

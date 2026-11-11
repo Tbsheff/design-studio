@@ -3,11 +3,10 @@ import { useCallback, useMemo, useRef } from "react";
 import type { ChangeEvent, ReactElement } from "react";
 
 import { cn } from "../../ai/lib/utils.js";
-import type { PlusMenuProps } from "./composer-menu-model.js";
 import type { ComposerMode } from "./composer-mode-model.js";
 import type { PlusProjectProps } from "./composer-sheet-model.js";
 import { ContextMeter } from "./context-meter.js";
-import { DesignsChip } from "./designs-chip.js";
+import { DraftsPill } from "./drafts-pill.js";
 import { LevelPill } from "./level-pill.js";
 import { ModeChip } from "./mode-chip.js";
 import { ModelPill } from "./model-pill.js";
@@ -15,6 +14,7 @@ import { PlusMenu } from "./plus-menu.js";
 import type { SendProps } from "./prompt-box-model.js";
 import { ReasonText } from "./reason-text.js";
 import { ReferenceFileInput } from "./reference-file-input.js";
+import type { DesignsSetting } from "./run-settings-model.js";
 import { SendButton } from "./send-button.js";
 
 const TOOLBAR_CLASS = cn(
@@ -31,7 +31,7 @@ const ACCEPTED_IMAGES = "image/png,image/jpeg,image/gif,image/webp";
 
 interface PromptToolbarProps {
   readonly contextTokens: number | null;
-  readonly designs: PlusMenuProps["designs"];
+  readonly designs: DesignsSetting | undefined;
   readonly effort: RunEffort | null;
   readonly level: RunLevel;
   readonly mode: ComposerMode;
@@ -64,10 +64,6 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
 
   const resetMode = useCallback((): void => onMode("edit"), [onMode]);
 
-  const clearDesigns = useCallback((): void => {
-    designs?.onChange(1);
-  }, [designs]);
-
   const pickFiles = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
       if (event.target.files) {
@@ -98,11 +94,9 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
         onOpen={props.onCloseSlash}
         mode={mode}
         onMode={onMode}
-        designs={designs}
         project={props.project}
       />
       <ModeChip mode={mode} onClear={resetMode} />
-      <DesignsChip designs={designs} onClear={clearDesigns} />
       <input
         ref={inputRef}
         type="file"
@@ -126,6 +120,9 @@ const PromptToolbar = (props: PromptToolbarProps): ReactElement => {
           onModel={props.onChooseModel}
           onOpen={props.onCloseSlash}
         />
+        {designs && (
+          <DraftsPill designs={designs} onOpen={props.onCloseSlash} />
+        )}
         <SendButton send={send} />
       </div>
       <ReasonText id={props.reasonId} text={props.spoken} />

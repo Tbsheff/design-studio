@@ -2,7 +2,7 @@ import type { Project, RunRequest } from "@design-studio/contracts";
 
 import { isLeanRun, leanContext, loadRepoContext } from "../agent/index.js";
 import { insertPatternNames } from "../share/pattern/index.js";
-import { getReferenceBlock } from "../store/index.js";
+import { getReferenceBlock, getStyleReferenceBlock } from "../store/index.js";
 
 const toRepoText = (
   project: Project,
@@ -21,20 +21,21 @@ const toRunRepoContext = async (
   workTree: string,
   request: RunRequest
 ): Promise<string | null> => {
-  const [text, reference] = await Promise.all([
+  const parts = await Promise.all([
     toRepoText(project, workTree, request),
     getReferenceBlock(workTree),
+    getStyleReferenceBlock(project.id, workTree),
   ]);
 
-  if (reference === null) {
-    return text;
+  const found = parts.filter(
+    (part): part is string => part !== null && part !== ""
+  );
+
+  if (found.length === 0) {
+    return parts[0] ?? null;
   }
 
-  if (text === null || text === "") {
-    return reference;
-  }
-
-  return `${text}\n\n${reference}`;
+  return found.join("\n\n");
 };
 
 export { toRunRepoContext };

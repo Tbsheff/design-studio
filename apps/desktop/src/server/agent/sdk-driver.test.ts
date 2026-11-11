@@ -190,12 +190,9 @@ async function setup(
   options: {
     uiSkill?: boolean;
     claudeExecutable?: string;
-    maxBudgetUsd?: number | null;
   } = {}
 ) {
-  const temp = await createTempProject("html", {
-    maxBudgetUsd: options.maxBudgetUsd ?? null,
-  });
+  const temp = await createTempProject("html");
   roots.push(temp.root);
   const claudeHome = path.join(temp.root, "claude-home");
   await mkdir(claudeHome, { recursive: true });
@@ -388,27 +385,20 @@ describe("sdk driver run accounting", () => {
       cache_creation_input_tokens: 0,
       output_tokens: 0,
     };
-    const t = await setup(
-      [
-        {
-          messages: [
-            init(),
-            messageStart("m1", { input_tokens: 5 }),
-            result(0.01, 1000, 1500),
-          ],
-        },
-        {
-          messages: [
-            init(),
-            messageStart("m2", cancelInput),
-            messageDelta(500),
-          ],
-          hangAfter: true,
-        },
-        { messages: [init(), result(0.02, 1000 + 20 + 700, 900)] },
-      ],
-      { maxBudgetUsd: 0.6 }
-    );
+    const t = await setup([
+      {
+        messages: [
+          init(),
+          messageStart("m1", { input_tokens: 5 }),
+          result(0.01, 1000, 1500),
+        ],
+      },
+      {
+        messages: [init(), messageStart("m2", cancelInput), messageDelta(500)],
+        hangAfter: true,
+      },
+      { messages: [init(), result(0.02, 1000 + 20 + 700, 900)] },
+    ]);
 
     const first = await t.runner.start(t.context("one")).done;
     expect(first.costUsd).toBeCloseTo(0.01, 6);
@@ -436,10 +426,6 @@ describe("sdk driver run accounting", () => {
     );
 
     const third = await t.runner.start(t.context("three")).done;
-    expect(t.seenOptions[2]?.maxBudgetUsd).toBeCloseTo(
-      0.6 + 0.01 + estimate,
-      9
-    );
     expect(third.status).toBe("completed");
     expect(third.costUsd).toBeCloseTo(0.02 - 0.01 - estimate, 9);
     expect(third.modelMs).toBeGreaterThan(600);
@@ -670,47 +656,9 @@ describe("sdk driver polish auto-continue", () => {
     );
     expect(ledger.costUsd).toBeCloseTo(0.3, 9);
   });
-
-  it("with a spending limit, passes the limit less the critic reserve and stops at once when less than 20% is left, and never continues prototype runs", async () => {
-    const t = await setup(
-      [
-        {
-          messages: [
-            init(),
-            assistantWrite("m1", "tu1", "index.html"),
-            toolResult("tu1"),
-            result(1.25, 1000, 1500),
-          ],
-        },
-        {
-          messages: [
-            init(),
-            assistantWrite("m2", "tu2", "index.html"),
-            toolResult("tu2"),
-            result(0.1, 1000, 1500),
-          ],
-        },
-      ],
-      { maxBudgetUsd: 1.5 }
-    );
-    const polish = await t.runner.start(
-      t.context("Polish this design", "polish")
-    ).done;
-    expect(t.seenOptions[0]?.maxBudgetUsd).toBe(1.2);
-    expect(polish.loop).toMatchObject({
-      stopReason: "budget",
-      continuations: 0,
-    });
-    await t.projects.updateDirection("p1", "d1", { sessionId: null });
-    const prototype = await t.runner.start(t.context("Build", "prototype"))
-      .done;
-    expect(t.seenOptions).toHaveLength(2);
-    expect(prototype.loop).toBeUndefined();
-    expect(prototype.finalText).not.toContain("Studio check log");
-  });
 });
 
-describe("sdk driver with no spending limit", () => {
+describe("sdk driver polish loop", () => {
   it("never stops a polish loop for cost and passes no SDK limit on any segment", async () => {
     const t = await setup([
       {
@@ -739,32 +687,7 @@ describe("sdk driver with no spending limit", () => {
       continuations: 4,
       stopReason: "continuations",
     });
-    expect(t.seenPrompts[0]).toContain(
-      "No spending limit for this run; at most 40 turns."
-    );
-    expect(t.seenPrompts[0]).not.toContain("20% of the budget");
-  });
-
-  it("still maps an SDK budget stop to budget_exceeded when a limit is set", async () => {
-    const t = await setup(
-      [
-        {
-          messages: [
-            init(),
-            {
-              ...result(0.3, 10, 10),
-              subtype: "error_max_budget_usd",
-              is_error: true,
-              errors: ["Reached maximum budget"],
-            } as unknown as SDKMessage,
-          ],
-        },
-      ],
-      { maxBudgetUsd: 0.3 }
-    );
-    const summary = await t.runner.start(t.context("Build", "prototype")).done;
-    expect(t.seenOptions[0]?.maxBudgetUsd).toBe(0.3);
-    expect(summary.status).toBe("budget_exceeded");
+    expect(t.seenPrompts[0]).toContain("At most 40 turns for this run.");
   });
 });
 
@@ -968,11 +891,8 @@ describe("sdk driver baseline capture", () => {
 });
 
 describe("sdk driver design system runs", () => {
-  async function backing(
-    scripts: Script[],
-    maxBudgetUsd: number | null = null
-  ) {
-    const t = await setup(scripts, { maxBudgetUsd });
+  async function backing(scripts: Script[]) {
+    const t = await setup(scripts);
     t.projects.current.designSystemFor = "user-kit";
     await writeTestDraft(t.workTree, { todos: 2 });
     return t;
@@ -1064,24 +984,18 @@ describe("sdk driver design system runs", () => {
   });
 
   it("stops after the max fix rounds and finishes failed with the problems", async () => {
-    const t = await backing(
-      [
-        { messages: [init(), result(0.1, 1000, 1500)] },
-        { messages: [init(), result(0.12, 1100, 600)] },
-        { messages: [init(), result(0.14, 1200, 600)] },
-        { messages: [init(), result(0.16, 1300, 600)] },
-      ],
-      2
-    );
+    const t = await backing([
+      { messages: [init(), result(0.1, 1000, 1500)] },
+      { messages: [init(), result(0.12, 1100, 600)] },
+      { messages: [init(), result(0.14, 1200, 600)] },
+      { messages: [init(), result(0.16, 1300, 600)] },
+    ]);
     const summary = await t.runner.start(
       t.context("Improve this design system.", "polish", {
         task: "design-system",
       })
     ).done;
     expect(t.seenOptions).toHaveLength(4);
-    expect(t.seenOptions.map((options) => options.maxBudgetUsd)).toEqual([
-      2, 2, 2, 2,
-    ]);
     expect(summary.status).toBe("failed");
     expect(summary.error).toMatch(
       /^Design system check failed: 2 problem\(s\) after 3 fix round\(s\)\./

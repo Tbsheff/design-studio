@@ -2,8 +2,6 @@ import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
-import { Disclosure } from "@design-studio/ui";
-import { createElement } from "react";
 import type { ReactElement } from "react";
 
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
@@ -67,7 +65,6 @@ const ComposerFoot = ({
         onDesignMd={onDesignMd}
         onError={onError}
       />
-      {createElement(Disclosure, { className: "home-disclosure" })}
       <HiddenProjectsNote homeDir={homeDir} onMoved={onHiddenMoved} />
     </div>
   );

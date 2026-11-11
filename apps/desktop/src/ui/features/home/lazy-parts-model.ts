@@ -58,6 +58,7 @@ const importPopovers = async (): Promise<void> => {
     import("./pack-popover.js"),
     import("./model-popover.js"),
     import("./level-popover.js"),
+    import("./drafts-popover.js"),
   ]);
 };
 
@@ -134,6 +135,12 @@ const LevelPopover = lazy(async () => {
   return { default: loaded.LevelPopover };
 });
 
+const DraftsPopover = lazy(async () => {
+  const loaded = await import("./drafts-popover.js");
+
+  return { default: loaded.DraftsPopover };
+});
+
 const AppMenu = lazy(async () => {
   const loaded = await import("./app-menu.js");
 
@@ -160,6 +167,7 @@ const HomeEmpty = lazy(async () => {
 
 export {
   AppMenu,
+  DraftsPopover,
   FolderPathPop,
   HomeDoctor,
   HomeEmpty,

@@ -8,14 +8,6 @@ interface PopState {
   readonly toggle: (next: Exclude<Pop, null>) => void;
 }
 
-const toKindTip = (kind: string): string => {
-  if (kind === "react") {
-    return "React + Vite project. Press for a plain HTML page.";
-  }
-
-  return "Plain HTML page. Press for a React + Vite project.";
-};
-
 const toNextKind = (kind: string): "html" | "react" => {
   if (kind === "react") {
     return "html";
@@ -44,6 +36,6 @@ const toSendLabel = (hasChip: boolean): string => {
   return "Create";
 };
 
-export { toKindTip, toNextFolderPop, toNextKind, toSendLabel };
+export { toNextFolderPop, toNextKind, toSendLabel };
 
 export type { PopState };

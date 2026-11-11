@@ -83,7 +83,7 @@ const inputPlaceholder = (
     return RUNNING_PLACEHOLDER;
   }
 
-  return `${placeholder} (${MOD_LABEL}↵ to send)`;
+  return placeholder;
 };
 
 const sendBlocker = (state: SendBlockerState): string | null => {

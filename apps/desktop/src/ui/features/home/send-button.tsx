@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
 import { EMPTY_PROMPT, HOME_REASON_ID } from "./home-model.js";
 import type { Busy } from "./home-model.js";
 import { SendGlyph } from "./send-glyph.js";
@@ -25,7 +26,7 @@ const toSendTip = (
     return reason;
   }
 
-  return `${label}  ↩`;
+  return `${label} ${copy.sendKeys}`;
 };
 
 const SendButton = ({

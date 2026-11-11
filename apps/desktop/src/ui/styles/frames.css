@@ -114,6 +114,7 @@
   visibility: visible;
 }
 
+.frame-label-tools .frame-chip.pin,
 .frame-label-tools .frame-chip.state.warn,
 .frame-label-tools .frame-chip.flow.busy,
 .frame-label-tools .frame-chip.flow.done,
@@ -206,6 +207,18 @@
 .frame-chip:active {
   scale: 0.96;
   background: var(--tint-press);
+}
+
+.frame-chip.pin {
+  padding: 0 var(--s-1);
+  color: var(--text-2);
+  cursor: default;
+}
+
+.frame-chip.pin:hover,
+.frame-chip.pin:active {
+  scale: 1;
+  background: transparent;
 }
 
 .frame-chip:focus-visible {

@@ -80,6 +80,7 @@ const copy = {
   directions: "directions",
   dismiss: "Dismiss",
   done: "Done",
+  drafts: "Drafts",
   dropAnAppFolderAn:
     "Drop an app folder, a zip, a PDF, a Markdown file, an image or a link",
   dropAnywhereTheFolderGoes: "Drop anywhere: the folder goes on the prompt",
@@ -258,6 +259,7 @@ const copy = {
   search: "Search",
   searchAndCommands: "Search and commands",
   searchProjects: "Search projects",
+  sendKeys: "(⌘↩)",
   setUpADesignSystem:
     "Set up a design system so every project starts from your colors, type and components.",
   setUpYourDesignSystem: "Set up your design system",
@@ -266,7 +268,7 @@ const copy = {
   showFavoritesOnly: "Show pinned only",
   showProjects: "Show projects",
   showProjectsTip: "Show projects",
-  skillsLimitsAndDesignMd: "Skills, limits and DESIGN.md…",
+  skillsLimitsAndDesignMd: "Skills and DESIGN.md…",
   skipEnvValidationTrue: "SKIP_ENV_VALIDATION=true",
   slash: "/",
   sortProjects: "Sort projects",

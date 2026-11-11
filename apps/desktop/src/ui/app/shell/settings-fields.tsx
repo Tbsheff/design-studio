@@ -30,17 +30,6 @@ const SettingsFields = ({
         options={MODEL_OPTIONS}
       />
       <SettingsNumberField
-        ariaLabel="Spending limit per run"
-        label={copy.spendingLimitPerRun}
-        max={50}
-        min={0.01}
-        name="maxBudgetUsd"
-        onChange={handlers.handleBudget}
-        placeholder="No limit"
-        step={0.01}
-        value={draft.maxBudgetUsd}
-      />
-      <SettingsNumberField
         ariaLabel="Max turns"
         label={copy.maxTurnsPerRun}
         max={200}

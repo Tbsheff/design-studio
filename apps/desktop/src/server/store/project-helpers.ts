@@ -12,11 +12,7 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  DEFAULT_SETTINGS,
-  LEGACY_DEFAULT_BUDGET_USD,
-  SETTINGS_VERSION,
-} from "@design-studio/contracts";
+import { DEFAULT_SETTINGS, SETTINGS_VERSION } from "@design-studio/contracts";
 import type {
   AppFramework,
   Direction,
@@ -155,16 +151,11 @@ export function cleanAppEnv(raw: unknown): Record<string, string> | undefined {
 }
 
 export function migrateSettings(
-  project: Pick<Project, "settings" | "settingsVersion">
+  project: Pick<Project, "settings">
 ): ProjectSettings {
   const settings = { ...DEFAULT_SETTINGS, ...project.settings };
 
-  if (
-    (project.settingsVersion ?? 1) < SETTINGS_VERSION &&
-    settings.maxBudgetUsd === LEGACY_DEFAULT_BUDGET_USD
-  ) {
-    settings.maxBudgetUsd = null;
-  }
+  Reflect.deleteProperty(settings, "maxBudgetUsd");
 
   return settings;
 }

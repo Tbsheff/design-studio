@@ -132,6 +132,7 @@ export async function fanOut(
 
     return {
       label: item.brief.label,
+      name: item.direction?.name ?? null,
       directionId: item.direction?.id ?? null,
       runId,
       error: item.error ?? runError,

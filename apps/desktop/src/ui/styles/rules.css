@@ -84,3 +84,78 @@
   color: var(--danger);
   font-size: var(--t-xs);
 }
+
+.style-refs {
+  display: grid;
+  gap: var(--s-2);
+  width: 100%;
+  min-width: 0;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.style-ref-list {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.style-ref-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: var(--s-1);
+  border-radius: var(--r-control-sm);
+}
+
+.style-ref-row:hover {
+  background: var(--tint-hover);
+}
+
+.style-ref-thumb {
+  display: block;
+  width: 48px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface-inset);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.style-ref-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  outline: 1px solid oklch(0 0 0 / 0.08);
+  outline-offset: -1px;
+}
+
+.style-ref-text {
+  display: grid;
+  min-width: 0;
+}
+
+.style-ref-name,
+.style-ref-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.style-ref-name {
+  color: var(--text);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+}
+
+.style-ref-path {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: var(--t-2xs);
+}

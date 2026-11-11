@@ -208,13 +208,11 @@ function criticPrompt(input: CriticInput): AsyncIterable<SDKUserMessage> {
 function criticOptions(
   kind: CriticKind,
   model: string,
-  budgetUsd: number | null,
   env?: Record<string, string | undefined>
 ): Options {
   return {
     ...(env ? { env } : {}),
     model,
-    ...(budgetUsd === null ? {} : { maxBudgetUsd: budgetUsd }),
     maxTurns: 1,
     tools: [],
     settingSources: [],
@@ -265,11 +263,10 @@ export async function runCritic(
   queryFn: QueryFn,
   input: CriticInput,
   model: string,
-  budgetUsd: number | null,
   env?: Record<string, string | undefined>
 ): Promise<CriticResult> {
   const stream = queryFn({
-    options: criticOptions(input.kind ?? "full", model, budgetUsd, env),
+    options: criticOptions(input.kind ?? "full", model, env),
     prompt: criticPrompt(input),
   });
 

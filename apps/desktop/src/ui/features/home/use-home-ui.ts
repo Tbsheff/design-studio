@@ -21,7 +21,10 @@ interface HomeUi {
   readonly isMenuClosing: boolean;
   readonly isMenuShown: boolean;
   readonly modelSettings: ModelSettings;
-  readonly plusActions: Omit<PlusMenuActions, "onDesignSystem">;
+  readonly plusActions: Omit<
+    PlusMenuActions,
+    "kind" | "onDesignSystem" | "onKind"
+  >;
   readonly prefs: HomePrefs;
   readonly sendBlocker: string | null;
 }

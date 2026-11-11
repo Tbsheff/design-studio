@@ -24,7 +24,10 @@ const toPlusActions = ({
   fileRef,
   hasTemplatesShown,
   openAdvanced,
-}: PlusSource): Omit<PlusMenuActions, "onDesignSystem"> => ({
+}: PlusSource): Omit<
+  PlusMenuActions,
+  "kind" | "onDesignSystem" | "onKind"
+> => ({
   hasTemplatesShown,
   onAttachFile: (): void => fileRef.current?.click(),
   onAttachFolder: (): void => {

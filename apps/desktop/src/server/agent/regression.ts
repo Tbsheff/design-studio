@@ -74,7 +74,6 @@ export async function desktopRegression(
     input.queryFn,
     request,
     run.config.criticModel as string,
-    run.config.maxBudgetUsd === null ? null : run.config.preset.criticBudgetUsd,
     input.env
   );
 

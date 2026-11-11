@@ -1,4 +1,3 @@
-import type { Project } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
 import { BriefCardBody } from "./brief-card-body.js";
@@ -8,7 +7,6 @@ import type { BriefPatch } from "./brief-row.js";
 import type { BriefDraft } from "./use-variations.js";
 
 interface VariationBriefCardProps {
-  readonly project: Project;
   readonly draft: BriefDraft;
   readonly onEdit: (index: number, patch: BriefPatch) => void;
   readonly onRemove: (index: number) => void;
@@ -18,7 +16,6 @@ interface VariationBriefCardProps {
 }
 
 const VariationBriefCard = ({
-  project,
   draft,
   onEdit,
   onRemove,
@@ -47,7 +44,6 @@ const VariationBriefCard = ({
         </p>
       )}
       <BriefCardFoot
-        project={project}
         draft={draft}
         count={count}
         onStart={onStart}

@@ -3,11 +3,12 @@ import type { Hono } from "hono";
 import { loadRepoContext } from "../agent/index.js";
 import { bindRunLogRuntime } from "../run-log/index.js";
 import { registerVariationRoutes } from "../variations/routes.js";
+import type { StartVariations } from "../variations/routes.js";
 import type { AppContext } from "./app-context.js";
 import { optionalString, readBody } from "./app-request.js";
 import { startRunFromCall } from "./app-run-start.js";
 
-const bindRuns = (ctx: AppContext): void => {
+const bindRuns = (ctx: AppContext, startVariations: StartVariations): void => {
   bindRunLogRuntime({
     findRunProject: ctx.findRunProject,
     loadContext: loadRepoContext,
@@ -16,11 +17,8 @@ const bindRuns = (ctx: AppContext): void => {
     runner: ctx.runner,
     runsDir: ctx.runsDir,
     startRun: (input) => startRunFromCall(ctx, input),
+    startVariations: (input) => startVariations({ ...input, element: null }),
   });
-};
-
-const registerRunsRoutes = (_app: Hono, ctx: AppContext): void => {
-  bindRuns(ctx);
 };
 
 const registerProjectRunsRoutes = (app: Hono, ctx: AppContext): void => {
@@ -59,7 +57,7 @@ const registerRunsVariationRoutes = (
     withDirection,
   } = ctx;
 
-  return registerVariationRoutes(app, {
+  const variations = registerVariationRoutes(app, {
     config,
     edit: editDeps,
     forkDirection,
@@ -68,10 +66,10 @@ const registerRunsVariationRoutes = (
     startRun,
     withDirection,
   });
+
+  bindRuns(ctx, variations.startVariations);
+
+  return variations;
 };
 
-export {
-  registerProjectRunsRoutes,
-  registerRunsRoutes,
-  registerRunsVariationRoutes,
-};
+export { registerProjectRunsRoutes, registerRunsVariationRoutes };

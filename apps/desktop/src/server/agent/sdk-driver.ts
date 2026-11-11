@@ -433,20 +433,10 @@ async function attachFinalCheck(
   if (checked) outcome.finalCheck = checked;
 }
 
-const APP_REVIEW_MIN_LEFT = 0.15;
 const APP_REVIEW_PASSES = 3;
 
-function roomForFixLoop(
-  outcome: DriverOutcome,
-  segment: AttemptSegment
-): boolean {
-  if (outcome.status !== "completed") return false;
-  const cap = segment.setup.config.maxBudgetUsd;
-  return (
-    cap === null ||
-    segment.spentUsd + segment.setup.run.criticCostUsd <
-      cap * (1 - APP_REVIEW_MIN_LEFT)
-  );
+function roomForFixLoop(outcome: DriverOutcome): boolean {
+  return outcome.status === "completed";
 }
 
 let sdkQueryPromise: Promise<QueryFn> | null = null;
@@ -683,7 +673,6 @@ interface AttemptSegment {
   sdkOptions: Options;
   promptHash: string;
   spentUsd: number;
-  maxBudgetUsd: number | null;
   sessionId?: string | null;
 }
 
@@ -886,12 +875,6 @@ async function buildSdkOptions(
       ],
     },
     permissionMode: "default",
-    ...(config.agentBudgetUsd === null
-      ? {}
-      : {
-          maxBudgetUsd:
-            config.agentBudgetUsd + (priorFor(input, resume)?.costUsd ?? 0),
-        }),
     maxTurns: config.maxTurns,
     model: config.model,
     ...(ctx.request.effort ? { effort: ctx.request.effort } : {}),
@@ -1268,8 +1251,6 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       )
         return { outcome: total, reason: null, continuations };
       const decision: LoopDecision = decideLoop(run.log, segment.setup.config, {
-        spentUsd: segment.spentUsd + run.criticCostUsd,
-        capUsd: segment.setup.config.maxBudgetUsd,
         continuations,
       });
       const text = decision.stop
@@ -1295,9 +1276,6 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       segment.sdkOptions = {
         ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
         resume: sessionId,
-        ...(segment.maxBudgetUsd === null
-          ? {}
-          : { maxBudgetUsd: segment.maxBudgetUsd }),
       };
       const prior: PriorSession = {
         sessionId,
@@ -1334,9 +1312,6 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
         segment.sdkOptions = {
           ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
           resume: sessionId,
-          ...(segment.maxBudgetUsd === null
-            ? {}
-            : { maxBudgetUsd: segment.maxBudgetUsd }),
         };
         const prior: PriorSession = {
           sessionId,
@@ -1378,7 +1353,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       !text ||
       !sessionId ||
       pass >= APP_REVIEW_PASSES ||
-      !roomForFixLoop(total, segment) ||
+      !roomForFixLoop(total) ||
       input.signal.aborted
     )
       return { outcome: total, record: review.record };
@@ -1394,9 +1369,6 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     segment.sdkOptions = {
       ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
       resume: sessionId,
-      ...(segment.maxBudgetUsd === null
-        ? {}
-        : { maxBudgetUsd: segment.maxBudgetUsd }),
     };
     const prior: PriorSession = {
       sessionId,
@@ -1470,12 +1442,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     );
     const text = screenReviewPrompt(review);
     const sessionId = segment.sessionId;
-    if (
-      !text ||
-      !sessionId ||
-      !roomForFixLoop(total, segment) ||
-      input.signal.aborted
-    )
+    if (!text || !sessionId || !roomForFixLoop(total) || input.signal.aborted)
       return {
         ...total,
         finalText: `${total.finalText}\n\n${screenReviewNote(review, false)}`,
@@ -1492,9 +1459,6 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     segment.sdkOptions = {
       ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
       resume: sessionId,
-      ...(segment.maxBudgetUsd === null
-        ? {}
-        : { maxBudgetUsd: segment.maxBudgetUsd }),
     };
     const prior: PriorSession = {
       sessionId,
@@ -1527,7 +1491,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       images: UserMessageParts["images"]
     ): Promise<boolean> => {
       const sessionId = segment.sessionId;
-      if (!sessionId || !roomForFixLoop(total, segment) || input.signal.aborted)
+      if (!sessionId || !roomForFixLoop(total) || input.signal.aborted)
         return false;
       input.sink.sent({
         text,
@@ -1541,9 +1505,6 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       segment.sdkOptions = {
         ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
         resume: sessionId,
-        ...(segment.maxBudgetUsd === null
-          ? {}
-          : { maxBudgetUsd: segment.maxBudgetUsd }),
       };
       const prior: PriorSession = {
         sessionId,
@@ -1609,7 +1570,6 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       sdkOptions,
       promptHash,
       spentUsd: 0,
-      maxBudgetUsd: sdkOptions.maxBudgetUsd ?? null,
     };
     const first = await runSegment(input, segment, sent, prior);
     const looped = wantsLoop(setup.config, input.ctx.request.mode)

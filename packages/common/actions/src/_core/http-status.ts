@@ -49,6 +49,7 @@ import { TextStyleStatus } from "../text-style/errors/status.js";
 import { TextStatus } from "../text/errors/status.js";
 import { ThemeStatus } from "../theme/errors/status.js";
 import { TokenStatus } from "../token/errors/status.js";
+import { VariationStatus } from "../variation/errors/status.js";
 import { ViewportStatus } from "../viewport/errors/status.js";
 import { WalkthroughStatus } from "../walkthrough/errors/status.js";
 import type { StudioErrorTag } from "./errors/all.js";
@@ -107,6 +108,7 @@ const HTTP_STATUS = {
   ...TextStyleStatus,
   ...ThemeStatus,
   ...TokenStatus,
+  ...VariationStatus,
   ...ViewportStatus,
   ...WalkthroughStatus,
   Defect: 500,

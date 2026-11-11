@@ -156,32 +156,6 @@ describe("project store", () => {
     await expect(projects.get("../outside")).rejects.toThrow(/invalid/);
     await expect(projects.get("missing123")).rejects.toThrow(/not found/);
   });
-
-  it("reads the old $2 default budget as no limit once, and keeps custom and later-set limits", async () => {
-    const project = await projects.create({ kind: "html", name: "Budget" });
-    expect(project.settings.maxBudgetUsd).toBeNull();
-    const file = path.join(projects.projectDir(project.id), "project.json");
-
-    const legacy = async (maxBudgetUsd: number) => {
-      const stored = JSON.parse(await readFile(file, "utf-8"));
-      delete stored.settingsVersion;
-      stored.settings.maxBudgetUsd = maxBudgetUsd;
-      await writeFile(file, JSON.stringify(stored));
-    };
-
-    await legacy(2);
-    expect((await projects.get(project.id)).settings.maxBudgetUsd).toBeNull();
-    await legacy(0.75);
-    expect((await projects.get(project.id)).settings.maxBudgetUsd).toBe(0.75);
-    await legacy(2);
-    await projects.updateSettings(project.id, { maxTurns: 9 });
-    expect(JSON.parse(await readFile(file, "utf-8"))).toMatchObject({
-      settings: { maxBudgetUsd: null, maxTurns: 9 },
-      settingsVersion: 2,
-    });
-    await projects.updateSettings(project.id, { maxBudgetUsd: 2 });
-    expect((await projects.get(project.id)).settings.maxBudgetUsd).toBe(2);
-  });
 });
 
 describe("event bus", () => {

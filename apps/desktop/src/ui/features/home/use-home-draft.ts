@@ -112,8 +112,8 @@ const useHomeDraft = <Draft extends SettingsLike>(
     focusRequest("advanced", false, false);
   };
 
-  const modelSizes = config.modelIds.map((id) => modelSummary(id, designCount));
-  const modelValue = modelSummary(settingsDraft.model, designCount);
+  const modelSizes = config.modelIds.map((id) => modelSummary(id));
+  const modelValue = modelSummary(settingsDraft.model);
 
   return {
     advancedOpened,

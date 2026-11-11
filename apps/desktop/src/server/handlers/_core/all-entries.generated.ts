@@ -62,6 +62,7 @@ import { TextStyleEntries } from "../text-style/handlers.js";
 import { TextEntries } from "../text/handlers.js";
 import { ThemeEntries } from "../theme/handlers.js";
 import { TokenEntries } from "../token/handlers.js";
+import { VariationEntries } from "../variation/handlers.js";
 import { VersionEntries } from "../version/handlers.js";
 import { ViewportEntries } from "../viewport/handlers.js";
 import { WalkthroughEntries } from "../walkthrough/handlers.js";
@@ -131,6 +132,7 @@ const ALL_ENTRIES = {
   textStyle: TextStyleEntries,
   theme: ThemeEntries,
   token: TokenEntries,
+  variation: VariationEntries,
   version: VersionEntries,
   viewport: ViewportEntries,
   walkthrough: WalkthroughEntries,

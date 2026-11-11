@@ -6,13 +6,8 @@ import { buildRunLevelBlock, withRunLevel } from "./run-level.js";
 
 const block = (
   level: "wireframe" | "prototype" | "polish",
-  mode: "edit" | "critique" = "edit",
-  maxBudgetUsd: number | null = null
-) =>
-  buildRunLevelBlock(
-    resolveRunConfig({ ...DEFAULT_SETTINGS, maxBudgetUsd }, level),
-    mode
-  );
+  mode: "edit" | "critique" = "edit"
+) => buildRunLevelBlock(resolveRunConfig(DEFAULT_SETTINGS, level), mode);
 
 describe("run-level block", () => {
   it("tells a wireframe run to stay grayscale and structural, skip skills and screenshots, and use layout and behavior taste only", () => {
@@ -30,10 +25,7 @@ describe("run-level block", () => {
       expect(text).toContain(part);
     }
 
-    expect(text).toContain("No spending limit for this run; at most 12 turns.");
-    expect(block("wireframe", "edit", 0.15)).toContain(
-      "Budget for this run: $0.15, at most 12 turns."
-    );
+    expect(text).toContain("At most 12 turns for this run.");
     expect(text).not.toContain("design_review`");
   });
 
@@ -49,7 +41,6 @@ describe("run-level block", () => {
       "Stop when there are no high findings or when the fix loops above are used up."
     );
     expect(text).not.toMatch(/budget|20%/i);
-    expect(block("prototype", "edit", 0.6)).toContain("less than 20% is left");
     expect(text).toContain("every finding you did not fix");
     expect(text.indexOf("Call the Skill tool")).toBeLessThan(
       text.indexOf("Write the design")
@@ -80,9 +71,6 @@ describe("run-level block", () => {
     }
 
     expect(text).not.toMatch(/budget|20%/i);
-    expect(block("polish", "edit", 1.5)).toContain(
-      "no high and no medium findings, or after 3 fix rounds, or when less than 20% of the budget is left"
-    );
   });
 
   it("lets a wireframe fix a high nav-mobile finding once", () => {
@@ -108,15 +96,13 @@ describe("run-level block", () => {
 describe("design system task", () => {
   it("keeps the level, turns off skills and the critic, keeps screenshots, and gives the improve steps", () => {
     const config = withRunTask(
-      resolveRunConfig({ ...DEFAULT_SETTINGS, maxBudgetUsd: 1 }, "polish"),
+      resolveRunConfig(DEFAULT_SETTINGS, "polish"),
       "design-system"
     );
 
     expect(config).toMatchObject({
-      agentBudgetUsd: 1,
       criticModel: null,
       level: "polish",
-      maxBudgetUsd: 1,
       task: "design-system",
     });
     expect(config.preset).toMatchObject({

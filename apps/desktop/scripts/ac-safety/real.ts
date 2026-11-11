@@ -34,7 +34,6 @@ const ROOT = path.resolve(
 const PORT = 4580;
 const BASE = `http://127.0.0.1:${PORT}`;
 const MODEL = "claude-haiku-5-5";
-const RUN_BUDGET = 0.4;
 const SPEND_CAP = 2.6;
 const EVIDENCE = path.join(ROOT, "verification", "ac-safety-evidence");
 const EVIDENCE_NAME = process.env.AC_EVIDENCE ?? "real";
@@ -177,7 +176,6 @@ async function importFolder(
   stored.settings = {
     ...stored.settings,
     model: MODEL,
-    maxBudgetUsd: RUN_BUDGET,
     maxTurns: 15,
     ...settings,
   };

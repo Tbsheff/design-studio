@@ -1,3 +1,5 @@
+import type { ProjectKind } from "@design-studio/contracts";
+
 interface PlusMenuActions {
   readonly onAttachFile: () => void;
   readonly onAttachFolder: () => void;
@@ -11,6 +13,8 @@ interface PlusMenuActions {
   readonly onDesignSystem: () => void;
   readonly onSkills: () => void;
   readonly onLocation: () => void;
+  readonly kind: ProjectKind | null;
+  readonly onKind: (kind: ProjectKind) => void;
 }
 
 export type { PlusMenuActions };

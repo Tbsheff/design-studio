@@ -20,7 +20,6 @@ export type ProjectKind = "html" | "react";
 
 export interface ProjectSettings {
   model: string;
-  maxBudgetUsd: number | null;
   maxTurns: number;
   allowBash: boolean;
   allowInstall: boolean;
@@ -139,6 +138,7 @@ export interface VariationStartRequest {
 
 export interface VariationStartItem {
   label: string;
+  name: string | null;
   directionId: string | null;
   runId: string | null;
   error: string | null;
@@ -147,8 +147,6 @@ export interface VariationStartItem {
 export interface VariationStartResult {
   groupId: string;
   items: VariationStartItem[];
-  perRunBudgetUsd: number | null;
-  totalBudgetUsd: number | null;
 }
 
 export interface VariationMixRequest {
@@ -1106,7 +1104,7 @@ export const API_ROUTES = {
   updatePack:
     "PATCH /api/packs/:id UpdateUserPackInput -> PackSummary (same id; 400 built-in or invalid, 404 unknown)",
   updateSettings:
-    "PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxBudgetUsd 0.01..50 or null for no limit, maxTurns 1..200 int, allowBash, allowInstall, autoApprove (all three on by default), disabledSkills: skill ids from GET /api/skills) -> Project",
+    "PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxTurns 1..200 int, allowBash, allowInstall, autoApprove (all three on by default), disabledSkills: skill ids from GET /api/skills) -> Project",
   updateTokens:
     "POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)",
   updateWorkspace: "PATCH /api/workspaces/:id {label} -> WorkspaceFolder",
@@ -2180,7 +2178,6 @@ export const DEFAULT_STUDIO_PORT = 4170;
 export const DEFAULT_PREVIEW_PORT = 4171;
 export const DEFAULT_VITE_PORT_BASE = 5200;
 
-export const LEGACY_DEFAULT_BUDGET_USD = 2;
 export const SETTINGS_VERSION = 2;
 
 export const DEFAULT_SETTINGS: ProjectSettings = {
@@ -2189,7 +2186,6 @@ export const DEFAULT_SETTINGS: ProjectSettings = {
   autoApprove: true,
   defaultLevel: "prototype",
   disabledSkills: [],
-  maxBudgetUsd: null,
   maxTurns: 40,
   model: "claude-sonnet-5-5",
 };

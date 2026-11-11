@@ -29,7 +29,6 @@ export interface LevelPreset {
   tasteAreas: string[] | "all";
   checks: LevelChecks;
   criticModel: string | null;
-  criticBudgetUsd: number;
   criticMaxCalls: number;
   quickCritic?: boolean;
   regressionCheck?: boolean;
@@ -56,7 +55,6 @@ export const LEVEL_PRESETS: Record<RunLevel, LevelPreset> = {
       screenshots: true,
       viewports: ["desktop", "tablet", "mobile"],
     },
-    criticBudgetUsd: 0.1,
     criticMaxCalls: 2,
     criticModel: CRITIC_MODEL,
     hint: "Most thorough (usually ~$0.50 to $1.50, 2 to 6 minutes). All checks at 3 sizes, states, a fresh-eyes critic of every screen, a desktop regression check after fixes, one layout change if the layout is generic, and up to 3 fix loops.",
@@ -78,7 +76,6 @@ export const LEVEL_PRESETS: Record<RunLevel, LevelPreset> = {
       screenshots: true,
       viewports: ["desktop", "mobile"],
     },
-    criticBudgetUsd: 0.05,
     criticMaxCalls: 1,
     criticModel: WIREFRAME_MODEL,
     hint: "Balanced (usually ~$0.30, 1 to 2 minutes). Full look with tool checks, one screenshot review and a quick fresh-eyes critic of every screen.",
@@ -100,7 +97,6 @@ export const LEVEL_PRESETS: Record<RunLevel, LevelPreset> = {
       screenshots: false,
       viewports: ["desktop", "mobile"],
     },
-    criticBudgetUsd: 0,
     criticMaxCalls: 0,
     criticModel: null,
     hint: "Fastest and cheapest (usually ~$0.01, under a minute). Grayscale structure with real labels. Checks errors and mobile navigation only.",
@@ -115,8 +111,6 @@ export const LEVEL_PRESETS: Record<RunLevel, LevelPreset> = {
 export interface ResolvedRunConfig {
   level: RunLevel;
   model: string;
-  maxBudgetUsd: number | null;
-  agentBudgetUsd: number | null;
   maxTurns: number;
   criticModel: string | null;
   preset: LevelPreset;
@@ -143,27 +137,14 @@ function criticModelFor(preset: LevelPreset, model: string): string | null {
 }
 
 export function resolveRunConfig(
-  settings: Pick<ProjectSettings, "model" | "maxBudgetUsd" | "maxTurns">,
+  settings: Pick<ProjectSettings, "model" | "maxTurns">,
   level: RunLevel
 ): ResolvedRunConfig {
   const preset = LEVEL_PRESETS[level];
   const model = levelModel(preset, settings);
-  const maxBudgetUsd = settings.maxBudgetUsd ?? null;
-
-  const criticReserve =
-    preset.criticBudgetUsd *
-    (preset.criticMaxCalls + (preset.regressionCheck ? 1 : 0));
-
-  const agentBudgetUsd =
-    maxBudgetUsd === null
-      ? null
-      : Math.round(Math.max(0.01, maxBudgetUsd - criticReserve) * 100) / 100;
-
   return {
-    agentBudgetUsd,
     criticModel: criticModelFor(preset, model),
     level,
-    maxBudgetUsd,
     maxTurns: Math.min(preset.maxTurns, settings.maxTurns),
     model,
     preset,
@@ -177,7 +158,6 @@ export function levelOf(
   return request.level ?? settings?.defaultLevel ?? "prototype";
 }
 
-const TWEAKS_TASK_BUDGET_USD = 0.25;
 const TWEAKS_TASK_TURNS = 14;
 
 function designSystemTask(config: ResolvedRunConfig): ResolvedRunConfig {
@@ -189,12 +169,10 @@ function designSystemTask(config: ResolvedRunConfig): ResolvedRunConfig {
 
   return {
     ...config,
-    agentBudgetUsd: config.maxBudgetUsd,
     criticModel: null,
     preset: {
       ...config.preset,
       checks,
-      criticBudgetUsd: 0,
       criticMaxCalls: 0,
       criticModel: null,
       quickCritic: false,
@@ -223,13 +201,11 @@ function portTask(config: ResolvedRunConfig): ResolvedRunConfig {
 
   return {
     ...config,
-    agentBudgetUsd: config.maxBudgetUsd,
     criticModel: null,
     maxTurns: Math.min(PORT_TASK_TURNS, config.maxTurns),
     preset: {
       ...config.preset,
       checks,
-      criticBudgetUsd: 0,
       criticMaxCalls: 0,
       criticModel: null,
       hint: PORT_HINT,
@@ -258,11 +234,6 @@ export function withRunTask(
     return config;
   }
 
-  const maxBudgetUsd =
-    config.maxBudgetUsd === null
-      ? null
-      : Math.min(TWEAKS_TASK_BUDGET_USD, config.maxBudgetUsd);
-
   const checks: LevelChecks = {
     ...config.preset.checks,
     critic: false,
@@ -274,15 +245,12 @@ export function withRunTask(
 
   return {
     ...config,
-    agentBudgetUsd: maxBudgetUsd,
     criticModel: null,
-    maxBudgetUsd,
     maxTurns: Math.min(TWEAKS_TASK_TURNS, config.maxTurns),
     model: WIREFRAME_MODEL,
     preset: {
       ...config.preset,
       checks,
-      criticBudgetUsd: 0,
       criticMaxCalls: 0,
       criticModel: null,
       quickCritic: false,

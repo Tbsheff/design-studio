@@ -80,7 +80,7 @@ const Home = ({
       <StatusBar
         activity={ide.activity.activity}
         folder={nav.selected?.folder ?? null}
-        model={modelSummary(draft.settingsDraft.model, 1)}
+        model={modelSummary(draft.settingsDraft.model)}
       />
       <HomeOverlays
         isTrashOpen={base.isTrashOpen}

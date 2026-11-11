@@ -49,7 +49,7 @@ function parseJsonLines<T>(text: string): T[] {
   return items;
 }
 
-const PROJECT_FILE_DIRS = ["checks", "runs"];
+const PROJECT_FILE_DIRS = ["checks", "reference-pins", "runs"];
 
 async function resolveProjectFile(
   projectDir: string,

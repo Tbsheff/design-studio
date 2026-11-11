@@ -5,8 +5,15 @@ import { StableText } from "./stable-text.js";
 import type { StableSize } from "./stable-text.js";
 
 const PILL_VARIANT = {
+  drafts: {
+    buttonClass: "ui-pill-select inline composer-pill drafts-pill",
+    buttonTestId: "drafts-pill",
+    popup: "menu",
+    valueClass: "ui-pill-select-value",
+    valueTestId: null,
+  },
   level: {
-    buttonClass: "ui-pill-select inline composer-pill",
+    buttonClass: "ui-pill-select inline composer-pill level-pill",
     buttonTestId: "level-pill",
     popup: "menu",
     valueClass: "ui-pill-select-value",

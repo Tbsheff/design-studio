@@ -29,9 +29,6 @@ const copy = {
   coverageExplain:
     "Coverage is the share of expected tokens (color, type, spacing, radius, shadow) that the studio found in your sources and checked.",
   ctrlROrFor: "Ctrl+R or ↓ for the next match, Enter to use, Esc to close",
-  dataUse: "Data use",
-  dataUseText:
-    "Prompts, selected element code, attached images and project files the agent reads are sent to Anthropic's API to generate designs. Projects, versions and history stay on this computer.",
   deny: "Deny",
   deny2: "Deny…",
   describeAChangeBelow:
@@ -48,6 +45,7 @@ const copy = {
   draftDetails: "Design system details",
   draftLoadFailed: "Could not load",
   draftReading: "Reading sources",
+  drafts: "Drafts",
   dragOrAlt: "Drag, or Alt+↑ and Alt+↓, to move",
   dragToResize: "Drag to resize. Double-click to reset.",
   earlier: " earlier",
@@ -117,7 +115,6 @@ const copy = {
   openRules: "Open rules",
   orTypeAn: "Or type an answer",
   other: "Other",
-  otherSpendingLimit: "Other spending limit in dollars",
   pastPrompts: "Past prompts",
   planReady: "Plan ready",
   planReady2: "Plan ready.",
@@ -127,7 +124,6 @@ const copy = {
   projectSettings: "Project",
   queuedMessages: "Queued messages",
   queuedSentAtThe: "Queued · sent at the next step",
-  raiseTheLimitIn: ". Raise the limit in Settings to let runs go further.",
   rateThisResponse: "Rate this response",
   readInABrowser: " · read in a browser",
   referenceAdded: "Added ",
@@ -193,7 +189,6 @@ const copy = {
   skillsOnOff: "Skills on",
   skipQuestions: "Skip questions",
   sources: "Sources",
-  spendingLimitPer: "Spending limit per run",
   step: " step",
   stopRun: "Stop run",
   tellTheAgent: "Tell Claude what to do instead (optional)",

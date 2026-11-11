@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 
 import type { ComposerMode } from "./composer-mode-model.js";
 import type { PlusProjectProps } from "./composer-sheet-model.js";
-import type { DesignsSetting, EffortSetting } from "./run-settings-model.js";
+import type { EffortSetting } from "./run-settings-model.js";
 
 interface ItemProps {
   icon?: IconName;
@@ -26,7 +26,6 @@ interface PlusMenuProps {
   onOpen?: () => void;
   mode: ComposerMode;
   onMode: (mode: ComposerMode) => void;
-  designs?: DesignsSetting | undefined;
   project?: PlusProjectProps | null;
 }
 

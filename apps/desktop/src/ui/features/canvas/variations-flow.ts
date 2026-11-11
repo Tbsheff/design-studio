@@ -173,12 +173,12 @@ const proposeBriefs = async (
 ): Promise<void> => {
   const { projectId, direction } = context.settings.current;
   const { flow } = context;
-  const ticket = nextTicket(flow.current, false);
+  const ticket = nextTicket(flow.current, true);
   const fromDirectionId = toFromDirectionId(direction);
 
   const base = toLoadingDraft({
     ...input,
-    autoStart: false,
+    autoStart: true,
     element: null,
     fromDirectionId,
   });

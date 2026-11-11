@@ -11,7 +11,10 @@ interface RunLogStoreApi {
   readonly context: (
     projectId: string,
     directionId: string
-  ) => Effect.Effect<RepoContextState, NotFound>;
+  ) => Effect.Effect<
+    RepoContextState & { readonly styleReferences: string | null },
+    NotFound
+  >;
   readonly get: (
     projectId: string,
     runId: string

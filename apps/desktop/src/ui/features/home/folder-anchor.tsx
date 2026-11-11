@@ -26,13 +26,7 @@ const FolderAnchor = ({
   onFolderClose,
 }: FolderAnchorProps): ReactElement => (
   <div className="home-anchor">
-    <AppSlot
-      chip={chip}
-      pop={pops.pop}
-      folderRef={triggerRef}
-      onAddFolder={onAddFolder}
-      onDoctor={onDoctor}
-    />
+    <AppSlot chip={chip} onAddFolder={onAddFolder} onDoctor={onDoctor} />
     {pops.shown === "folder" && (
       <Suspense fallback={null}>
         <FolderPathPop

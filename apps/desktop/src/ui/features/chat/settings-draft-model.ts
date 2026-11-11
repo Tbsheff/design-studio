@@ -1,7 +1,5 @@
 import type { ProjectSettings, RunLevel } from "@design-studio/contracts";
 
-const MIN_BUDGET_USD = 0.01;
-const MAX_BUDGET_USD = 50;
 const MAX_TURNS_LIMIT = 200;
 
 const MODEL_OPTIONS = [
@@ -12,7 +10,6 @@ const MODEL_OPTIONS = [
 
 interface SettingsDraft {
   model: string;
-  maxBudgetUsd: string;
   maxTurns: string;
   allowBash: boolean;
   allowInstall: boolean;
@@ -21,21 +18,12 @@ interface SettingsDraft {
   defaultLevel: RunLevel;
 }
 
-const toBudgetText = (budget: number | null): string => {
-  if (budget === null) {
-    return "";
-  }
-
-  return String(budget);
-};
-
 const toDraft = (settings: ProjectSettings): SettingsDraft => ({
   allowBash: settings.allowBash,
   allowInstall: settings.allowInstall,
   autoApprove: settings.autoApprove ?? true,
   defaultLevel: settings.defaultLevel ?? "prototype",
   disabledSkills: [...(settings.disabledSkills ?? [])],
-  maxBudgetUsd: toBudgetText(settings.maxBudgetUsd),
   maxTurns: String(settings.maxTurns),
   model: settings.model,
 });
@@ -43,25 +31,6 @@ const toDraft = (settings: ProjectSettings): SettingsDraft => ({
 const parseDraft = (
   draft: SettingsDraft
 ): { settings: ProjectSettings } | { error: string } => {
-  const rawBudget = draft.maxBudgetUsd.trim();
-  let budget: number | null = null;
-
-  if (rawBudget !== "") {
-    budget = Number(rawBudget);
-  }
-
-  if (
-    budget !== null &&
-    (!Number.isFinite(budget) ||
-      budget < MIN_BUDGET_USD ||
-      budget > MAX_BUDGET_USD)
-  ) {
-    return {
-      error:
-        "Enter a spending limit per run from $0.01 to $50, or leave it empty for no limit.",
-    };
-  }
-
   const turns = Number(draft.maxTurns);
 
   if (!Number.isInteger(turns) || turns < 1 || turns > MAX_TURNS_LIMIT) {
@@ -75,7 +44,6 @@ const parseDraft = (
       autoApprove: draft.autoApprove,
       defaultLevel: draft.defaultLevel,
       disabledSkills: [...draft.disabledSkills],
-      maxBudgetUsd: budget,
       maxTurns: turns,
       model: draft.model,
     },

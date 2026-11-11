@@ -2,7 +2,9 @@ import type {
   Direction,
   DirectionVariation,
   Project,
+  RunLevel,
   RunRequest,
+  SelectionContext,
   VariationBriefsResult,
   VariationStartResult,
 } from "@design-studio/contracts";
@@ -10,7 +12,7 @@ import type { Result, Schema } from "effect";
 import type { Hono } from "hono";
 import { nanoid } from "nanoid";
 
-import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
+import { levelOf } from "../../shared/run-levels.js";
 import type { AgentRunner } from "../../shared/server-ports.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import type { ServerConfig } from "../platform/config/index.js";
@@ -106,14 +108,43 @@ function sourceDirection(
   return direction;
 }
 
+const toValidBriefs = (
+  raw: readonly unknown[],
+  project: Project
+): ReturnType<typeof validateUserBriefs> => {
+  try {
+    return validateUserBriefs(raw, project.kind);
+  } catch (error) {
+    throw new BadRequestError(
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+};
+
 type KeepVariant = (
   projectId: string,
   groupId: string,
   directionId: string
 ) => Promise<KeepResult>;
 
+interface VariationRouteCall {
+  readonly attachmentIds: readonly string[];
+  readonly briefs: readonly unknown[] | null;
+  readonly count: number;
+  readonly element: SelectionContext | null;
+  readonly fromDirectionId: string | null;
+  readonly level: RunLevel | null;
+  readonly projectId: string;
+  readonly prompt: string;
+}
+
+type StartVariations = (
+  call: VariationRouteCall
+) => Promise<VariationStartResult>;
+
 interface VariationRoutes {
   readonly keepVariant: KeepVariant;
+  readonly startVariations: StartVariations;
 }
 
 export function registerVariationRoutes(
@@ -155,31 +186,47 @@ export function registerVariationRoutes(
     return c.json(result);
   });
 
-  app.post("/api/projects/:pid/variations", async (c) => {
-    const pid = c.req.param("pid");
-    const input = parse(decodeStartBody, await body(c));
+  const toBriefs = async (
+    project: Project,
+    from: Direction | null,
+    call: VariationRouteCall
+  ): Promise<readonly unknown[]> => {
+    if (call.briefs !== null) return call.briefs;
+    const problem = countProblem(call.count, project.kind);
+    if (problem) throw new BadRequestError(problem);
+    const designSystem = from
+      ? await readDesignSystemState(project, from).catch(() => null)
+      : null;
+    const generated = await briefs.generate({
+      prompt: call.prompt,
+      count: call.count,
+      kind: project.kind,
+      hasDesign: Boolean(from?.headVersionId),
+      hasDesignSystem: Boolean(designSystem?.tokens),
+      element: call.element
+        ? { tag: call.element.tag, text: call.element.text }
+        : null,
+    });
+    return generated.briefs;
+  };
+
+  const startVariations: StartVariations = async (call) => {
+    const pid = call.projectId;
     const project = await projects.get(pid);
-    let validBriefs;
-    try {
-      validBriefs = validateUserBriefs(input.briefs, project.kind);
-    } catch (error) {
-      throw new BadRequestError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-    const from = sourceDirection(project, input.fromDirectionId);
-    if (input.element && !from)
+    const from = sourceDirection(project, call.fromDirectionId);
+    if (call.element && !from)
       throw new BadRequestError(
         "fromDirectionId is required for element variants"
       );
-    const scope =
-      input.element && from
-        ? await buildScope(project, from, deps.edit.versions, input.element)
-        : undefined;
-    const level = levelOf(
-      { level: input.level as RunRequest["level"] },
-      project.settings
+    const validBriefs = toValidBriefs(
+      await toBriefs(project, from, call),
+      project
     );
+    const scope =
+      call.element && from
+        ? await buildScope(project, from, deps.edit.versions, call.element)
+        : undefined;
+    const level = levelOf({ level: call.level ?? undefined }, project.settings);
     const groupId = nanoid(10);
     const items = await fanOut(
       {
@@ -202,10 +249,10 @@ export function registerVariationRoutes(
       },
       {
         groupId,
-        prompt: input.prompt,
+        prompt: call.prompt,
         briefs: validBriefs,
         level,
-        attachmentIds: input.attachmentIds,
+        attachmentIds: [...call.attachmentIds],
         takenNames: new Set(
           project.directions.map((direction) => direction.name)
         ),
@@ -216,20 +263,23 @@ export function registerVariationRoutes(
       groupId,
       items.flatMap((item) => (item.runId ? [item.runId] : []))
     );
-    const perRunBudgetUsd = resolveRunConfig(
-      project.settings,
-      level
-    ).maxBudgetUsd;
-    const result: VariationStartResult = {
-      groupId,
-      items,
-      perRunBudgetUsd,
-      totalBudgetUsd:
-        perRunBudgetUsd === null
-          ? null
-          : Math.round(perRunBudgetUsd * validBriefs.length * 100) / 100,
-    };
-    return c.json(result);
+    return { groupId, items };
+  };
+
+  app.post("/api/projects/:pid/variations", async (c) => {
+    const input = parse(decodeStartBody, await body(c));
+    return c.json(
+      await startVariations({
+        attachmentIds: input.attachmentIds ?? [],
+        briefs: input.briefs,
+        count: input.briefs.length,
+        element: input.element ?? null,
+        fromDirectionId: input.fromDirectionId ?? null,
+        level: input.level ?? null,
+        projectId: c.req.param("pid"),
+        prompt: input.prompt,
+      })
+    );
   });
 
   app.post("/api/projects/:pid/variations/mix", async (c) => {
@@ -319,7 +369,12 @@ export function registerVariationRoutes(
     return c.json({ canceled });
   });
 
-  return { keepVariant: keep };
+  return { keepVariant: keep, startVariations };
 }
 
-export type { KeepVariant, VariationRoutes };
+export type {
+  KeepVariant,
+  StartVariations,
+  VariationRouteCall,
+  VariationRoutes,
+};

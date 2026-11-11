@@ -1,6 +1,7 @@
 import type { Direction, Project } from "@design-studio/contracts";
 import type { ReactElement } from "react";
 
+import { copy } from "./copy.js";
 import { useVariationBar } from "./use-variation-bar.js";
 import type { VariationsState } from "./use-variations.js";
 import { money } from "./use-variations.js";
@@ -19,14 +20,6 @@ interface VariationBarProps {
   readonly state: VariationsState;
 }
 
-const toTotalSuffix = (budgetTotal: number | null): string => {
-  if (budgetTotal === null) {
-    return " spent";
-  }
-
-  return ` of ${money(budgetTotal)}`;
-};
-
 const VariationBar = ({
   direction,
   group,
@@ -43,7 +36,7 @@ const VariationBar = ({
     return null;
   }
 
-  const stats = toBarStats(project, group, runs ?? {});
+  const stats = toBarStats(group, runs ?? {});
 
   return (
     <>
@@ -56,7 +49,7 @@ const VariationBar = ({
         <div className="spacer" />
         <span className="variation-bar-total" data-testid="variations-total">
           {money(stats.total)}
-          {toTotalSuffix(stats.budgetTotal)}
+          {copy.spent}
         </span>
         <VariationBarActions
           isRunning={stats.anyRunning}

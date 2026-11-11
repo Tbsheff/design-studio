@@ -52,7 +52,7 @@ const Home = ({
     onTrashOpen,
     packs,
     projects,
-    target: screen.target,
+    target: screen.submit.target,
   });
 
   const { nav } = ide;

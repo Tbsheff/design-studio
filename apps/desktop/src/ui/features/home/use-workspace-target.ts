@@ -20,6 +20,10 @@ interface TargetDeps {
   readonly setFormError: (message: string | null) => void;
 }
 
+type TargetLibrary = Pick<TargetDeps, "loadProjects" | "projects">;
+
+type TargetBase = Pick<TargetDeps, "setFormError">;
+
 interface LinkedPath {
   readonly path: string;
   readonly projectId: string;
@@ -120,8 +124,15 @@ const useFolderLink = (deps: TargetDeps, nav: WorkspaceNav): void => {
   }, [linkPath, linked, loadProjects, path, setFormError]);
 };
 
-const useWorkspaceTarget = (deps: TargetDeps): WorkspaceTarget => {
-  const nav = useWorkspaceNav(deps.projects, deps.app);
+const useWorkspaceTarget = (
+  lib: TargetLibrary,
+  base: TargetBase,
+  app: AppChipState
+): WorkspaceTarget => {
+  const { loadProjects, projects } = lib;
+  const { setFormError } = base;
+  const deps: TargetDeps = { app, loadProjects, projects, setFormError };
+  const nav = useWorkspaceNav(projects, app);
   const [isEditApp, setIsEditApp] = useState(false);
   const [shownId, setShownId] = useState<string | null>(null);
   const selectedId = nav.selected?.id ?? null;

@@ -8,7 +8,7 @@ import { useVersionNames } from "./use-version-names.js";
 import { VersionsEmpty } from "./versions-empty.js";
 import { toVersionsHead } from "./versions-head.js";
 import { VersionsList } from "./versions-list.js";
-import { toCompareSides } from "./versions-panel-model.js";
+import { hasDirectionList, toCompareSides } from "./versions-panel-model.js";
 import type { VersionsPanelProps } from "./versions-panel-types.js";
 
 const MIN_UNDO_VERSIONS = 2;
@@ -29,6 +29,12 @@ const VersionsPanel = (props: VersionsPanelProps): ReactNode => {
   const picked = new Set(compare);
   const { start: handleBranch } = fork;
 
+  const handleNewDirection = useCallback((): void => {
+    if (headVersionId) {
+      fork.start(headVersionId);
+    }
+  }, [fork, headVersionId]);
+
   const handleExpand = useCallback((id: string): void => {
     setExpanded((current) => {
       if (current === id) {
@@ -47,6 +53,7 @@ const VersionsPanel = (props: VersionsPanelProps): ReactNode => {
         headVersionId={headVersionId}
         index={index}
         fork={fork}
+        onNewDirection={handleNewDirection}
         onSelectDirection={props.onSelectDirection}
       />
       <section
@@ -54,10 +61,13 @@ const VersionsPanel = (props: VersionsPanelProps): ReactNode => {
         aria-label={COPY.labelVersionList}
       >
         {toVersionsHead({
+          canNewDirection: headVersionId !== null,
           canUndo: !isLocked && sorted.length >= MIN_UNDO_VERSIONS,
           comparing: compare.length === 2,
           count: sorted.length,
+          hasMenu: !hasDirectionList(project.directions.length),
           onCompare: props.onCompare,
+          onNewDirection: handleNewDirection,
           onUndo: props.onUndo,
         })}
         <VersionsEmpty

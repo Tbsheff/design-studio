@@ -94,6 +94,7 @@ const COPY = {
   layersTitle: "Layers",
   menuBranch: "New direction from here",
   menuExport: "Export…",
+  menuNeedsVersion: "Needs a version",
   menuPolish: "Polish this",
   menuReview: "Review changes",
   menuWaitForRun: "Wait for the run",

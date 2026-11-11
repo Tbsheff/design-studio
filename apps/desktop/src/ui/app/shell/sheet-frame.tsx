@@ -7,6 +7,8 @@ import { SheetHead } from "./sheet-head";
 
 interface SheetFrameProps {
   readonly children: ReactNode;
+  readonly closeLabel: string;
+  readonly closeTip: string;
   readonly onClose: () => void;
   readonly tab: PanelTab;
   readonly title: string;
@@ -14,6 +16,8 @@ interface SheetFrameProps {
 
 const SheetFrame = ({
   children,
+  closeLabel,
+  closeTip,
   onClose,
   tab,
   title,
@@ -28,6 +32,8 @@ const SheetFrame = ({
     >
       <SheetSlot.Provider value={sheet}>
         <SheetHead
+          closeLabel={closeLabel}
+          closeTip={closeTip}
           id={`${tab}-heading`}
           title={title}
           onClose={onClose}

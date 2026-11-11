@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import type { ReactElement } from "react";
 
-import { toColumnTitle } from "../shell/panel-rail-model";
+import { tipWithKey } from "../../features/commands";
+import { toColumnKeyId, toColumnTitle } from "../shell/panel-rail-model";
 import { SheetFrame } from "../shell/sheet-frame";
 import { COLUMN_COPY } from "./copy";
 import { toColumnBody } from "./studio-column-body";
@@ -11,6 +12,8 @@ const StudioColumn = ({ ctx }: StudioCtxProps): ReactElement => {
   const { editorColumn } = ctx.ui;
   const { closeColumn: handleClose } = ctx.panes;
   const { tab } = editorColumn;
+  const title = toColumnTitle(tab);
+  const closeLabel = `${COLUMN_COPY.close} ${title}`;
 
   return (
     <aside
@@ -19,7 +22,13 @@ const StudioColumn = ({ ctx }: StudioCtxProps): ReactElement => {
       hidden={!editorColumn.isOpen}
     >
       {editorColumn.isOpen && (
-        <SheetFrame onClose={handleClose} tab={tab} title={toColumnTitle(tab)}>
+        <SheetFrame
+          closeLabel={closeLabel}
+          closeTip={tipWithKey(closeLabel, toColumnKeyId(tab))}
+          onClose={handleClose}
+          tab={tab}
+          title={title}
+        >
           <Suspense fallback={null}>{toColumnBody(ctx, tab)}</Suspense>
         </SheetFrame>
       )}

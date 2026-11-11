@@ -16,6 +16,8 @@ const StudioComments = ({ ctx }: StudioCtxProps): ReactElement => {
 
   return (
     <SheetFrame
+      closeLabel={COLUMN_COPY.backToChat}
+      closeTip={COLUMN_COPY.backToChat}
       onClose={handleClose}
       tab="comments"
       title={COLUMN_COPY.comments}

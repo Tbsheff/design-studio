@@ -232,8 +232,6 @@ const createPrototypeWith = Effect.fn("ProjectOpsPrototype.create")(
   ) {
     const app = yield* toAppProject(runtime, input.projectId);
     const name = input.name ?? nameFromPrompt(input.prompt);
-    const created = yield* toCreatedProject(runtime, app, name, folderName);
-    const folder = runtime.projects.mainDirection(created).workTree;
     const tokens = yield* toPrototypeTokens(runtime, app);
     const page = toPrototypePage(name, app.name, tokens.css !== null);
 
@@ -241,6 +239,9 @@ const createPrototypeWith = Effect.fn("ProjectOpsPrototype.create")(
       toAppFolder(runtime, app),
       app.name
     );
+
+    const created = yield* toCreatedProject(runtime, app, name, folderName);
+    const folder = runtime.projects.mainDirection(created).workTree;
 
     yield* writePrototypeFiles(folder, tokens, page, context);
     const designMd = yield* toAppDesignMd(runtime, app);

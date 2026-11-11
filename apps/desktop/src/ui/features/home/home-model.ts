@@ -213,7 +213,7 @@ const getPromptPlaceholder = (
   empty: boolean
 ): string | null => {
   if (chip) {
-    return `Describe a change to ${chipName(chip)}, or press Return to open it`;
+    return `Describe what to design for ${chipName(chip)}`;
   }
 
   if (empty) {

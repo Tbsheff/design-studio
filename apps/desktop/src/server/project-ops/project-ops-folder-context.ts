@@ -4,7 +4,6 @@ import path from "node:path";
 
 import { Effect } from "effect";
 
-import { attemptKnown } from "../platform/attempt/index.js";
 import { toFolderContext } from "./engine/to-folder-context.js";
 
 interface FolderEntry {
@@ -29,6 +28,14 @@ const SKIP_DIRS = new Set([
 
 const NO_ENTRIES: readonly Dirent[] = [];
 
+const toSettled = <Value, Fallback>(
+  task: () => Promise<Value>,
+  fallback: Fallback
+): Effect.Effect<Value | Fallback> =>
+  Effect.tryPromise({ catch: (error) => error, try: task }).pipe(
+    Effect.orElseSucceed(() => fallback)
+  );
+
 const isListed = (entry: Dirent): boolean =>
   !entry.name.startsWith(".") &&
   !SKIP_DIRS.has(entry.name) &&
@@ -41,9 +48,10 @@ const toFolderEntry = (relative: string, entry: Dirent): FolderEntry => ({
 
 const listEntries = Effect.fn("ProjectOpsFolderContext.listEntries")(
   function* run(folder: string, relative: string) {
-    const entries = yield* attemptKnown(() =>
-      readdir(path.join(folder, relative), { withFileTypes: true })
-    ).pipe(Effect.orElseSucceed(() => NO_ENTRIES));
+    const entries = yield* toSettled(
+      () => readdir(path.join(folder, relative), { withFileTypes: true }),
+      NO_ENTRIES
+    );
 
     return entries
       .filter((entry) => isListed(entry))
@@ -100,9 +108,7 @@ const listFolderFiles = Effect.fn("ProjectOpsFolderContext.listFolderFiles")(
 );
 
 const toFileText = (file: string): Effect.Effect<string | null> =>
-  attemptKnown(() => readFile(file, "utf-8")).pipe(
-    Effect.orElseSucceed(() => null)
-  );
+  toSettled(() => readFile(file, "utf-8"), null);
 
 const getFolderText = Effect.fn("ProjectOpsFolderContext.getFolderText")(
   function* run(folder: string, names: readonly string[]) {

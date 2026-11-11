@@ -187,6 +187,9 @@ const toRecent = (projects: readonly Project[] | null): Project[] =>
     )
   ).slice(0, RECENT_MAX);
 
+const toListedProjects = (projects: readonly Project[]): Project[] =>
+  projects.filter((project) => !isFolderLink(project));
+
 const toRecentIn = (workspace: Workspace | null): readonly Project[] =>
   workspace?.projects.slice(0, RECENT_MAX) ?? [];
 
@@ -321,6 +324,7 @@ export {
   toAgo,
   toDefaultLine,
   toIndexFor,
+  toListedProjects,
   toPinned,
   toProjectAgo,
   toRecent,

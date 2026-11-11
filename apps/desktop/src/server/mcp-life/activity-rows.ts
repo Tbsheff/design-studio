@@ -2,6 +2,7 @@ import type {
   ActivityApproval,
   ActivityBranch,
   ActivityDevServer,
+  ActivityPresence,
   ActivityRun,
   StudioActivity,
 } from "@design-studio/actions/studio/schema";
@@ -17,6 +18,7 @@ import type { McpStatus } from "@design-studio/contracts/export";
 const PROJECT_MAX = 24;
 const TITLE_MAX = 80;
 const CLIENT_WINDOW_MS = 86_400_000;
+const PRESENCE_WINDOW_MS = 15_000;
 
 interface ProjectRuns {
   readonly project: Project;
@@ -170,6 +172,31 @@ const toClients = (
   ]),
 ];
 
+const toPresence = (
+  edits: readonly ProjectEdits[],
+  now: number
+): ActivityPresence[] =>
+  edits
+    .flatMap((entry) =>
+      entry.edits.flatMap((edit) => {
+        if (now - edit.at >= PRESENCE_WINDOW_MS) {
+          return [];
+        }
+
+        return [
+          {
+            at: edit.at,
+            client: edit.client,
+            frameId: edit.frameId,
+            projectId: edit.projectId,
+            summary: edit.summary,
+            tool: edit.tool,
+          },
+        ];
+      })
+    )
+    .toSorted((left, right) => right.at - left.at);
+
 interface ActivityParts {
   readonly approvals: readonly McpApprovalRecord[];
   readonly branches: readonly ActivityBranch[];
@@ -197,6 +224,7 @@ const toActivity = (parts: ActivityParts): StudioActivity => {
       isRunning: parts.status.running,
       url: parts.status.url,
     },
+    presence: toPresence(parts.edits, parts.now),
     recent: toRecent(all, parts.limit),
     running: toRunning(all, parts.limit),
   };

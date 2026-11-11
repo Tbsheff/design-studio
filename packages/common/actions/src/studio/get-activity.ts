@@ -17,7 +17,7 @@ const getActivityStudio = defineAction({
   },
   confirm: "none",
   description:
-    "Read the live Home activity across all projects: running and recent agent runs from chat and MCP with status and cost, MCP approvals that wait on the user, dev servers, MCP clients and the git branch of each app folder. Read only.",
+    "Read the live Home activity across all projects: running and recent agent runs from chat and MCP with status and cost, MCP approvals that wait on the user, dev servers, MCP clients, the git branch of each app folder, and presence: the MCP clients that edited a frame in the last 15 seconds. Read only.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/activity" },
   id: "studio.getActivity",

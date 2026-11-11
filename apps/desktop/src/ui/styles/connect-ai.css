@@ -1,0 +1,236 @@
+.modal.connect-ai {
+  width: min(640px, 100%);
+}
+
+.connect-ai-body {
+  gap: var(--s-4);
+  align-content: start;
+}
+
+.connect-ai-clients {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.connect-ai-option {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-2-5) var(--s-3);
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-inset);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.connect-ai-option:hover {
+  background: var(--tint-hover);
+}
+
+.connect-ai-option[aria-checked="true"] {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.connect-ai-option:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.connect-ai-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-control-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.connect-ai-option-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.connect-ai-option-text strong {
+  font-size: var(--t-sm);
+  font-weight: var(--w-medium);
+}
+
+.connect-ai-option-text span {
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connect-ai-snippet {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.connect-ai-warn {
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}
+
+.connect-ai-code {
+  position: relative;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-inset);
+}
+
+.connect-ai-code pre {
+  max-height: 180px;
+  margin: 0;
+  overflow: auto;
+  padding: var(--s-3) 88px var(--s-3) var(--s-3);
+  color: var(--text);
+  font: var(--t-xs) / 18px var(--mono);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.connect-ai-code > .btn {
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+}
+
+.agent-presence {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.agent-presence-mark {
+  position: absolute;
+  border-radius: 2px;
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+  animation: agent-presence-fade 4.5s var(--ease) forwards;
+}
+
+.agent-presence-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px 0 6px;
+  border-radius: 2px 11px 11px 11px;
+  background: var(--accent);
+  color: #fff;
+  font: var(--w-medium) 11px / 22px var(--font);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  transform-origin: top left;
+}
+
+.agent-presence-cursor {
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid currentColor;
+}
+
+.agent-presence-line {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: min(420px, calc(100% - 32px));
+  height: 28px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-full);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  white-space: nowrap;
+  pointer-events: none;
+  translate: -50% 0;
+  animation: agent-presence-fade 4.5s var(--ease) forwards;
+}
+
+.agent-presence-line strong {
+  overflow: hidden;
+  color: var(--text);
+  font-weight: var(--w-medium);
+  text-overflow: ellipsis;
+}
+
+.agent-presence-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-right: 2px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+}
+
+@keyframes agent-presence-fade {
+  0% {
+    opacity: 0;
+  }
+
+  8%,
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connect-ai-option {
+    transition: none;
+  }
+
+  .agent-presence-mark,
+  .agent-presence-line {
+    animation-duration: 0s;
+    animation-delay: 4.5s;
+    animation-fill-mode: forwards;
+  }
+}
+
+.connect-ai-opener {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+}
+
+.connect-ai-opener .titles {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.connect-ai-opener h3 {
+  font-size: var(--t-sm);
+  font-weight: var(--w-medium);
+  line-height: 20px;
+}

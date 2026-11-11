@@ -1,3 +1,7 @@
+import {
+  CONNECT_AI_COMMAND,
+  openConnectAi,
+} from "../../domain/connect-ai-events.js";
 import { COPY_PNG_EVENT } from "../../domain/copy-png-events.js";
 import { withDisabled } from "./command-disabled.js";
 import { copy } from "./copy.js";
@@ -162,6 +166,15 @@ const filesCommand = (inProject: boolean): Command =>
     toFilesReason(inProject)
   );
 
+const CONNECT_AI: Command = {
+  group: "Go",
+  icon: "sparkle",
+  id: CONNECT_AI_COMMAND,
+  keywords: "mcp agent claude code cursor codex desktop token setup",
+  run: openConnectAi,
+  title: "Connect AI…",
+};
+
 const home = (): void => uiStore.set({ activeProjectId: null, screen: "home" });
 
 const toHomeReason = (inProject: boolean): string | null => {
@@ -237,6 +250,7 @@ const globalCommands = (openShortcuts: () => void): Command[] => {
     findTextCommand(inProject),
     copyPngCommand(inProject),
     ...THEME_COMMANDS,
+    CONNECT_AI,
     {
       group: "Help",
       icon: "sliders",

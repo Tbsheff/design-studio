@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { AgentPresenceLayer } from "./agent-presence-layer.js";
 import type { StageSlotProps } from "./canvas-stage-types.js";
 import { FreeMoveSlot } from "./free-move-slot.js";
 import { MarqueeLayer } from "./marquee-layer.js";
@@ -29,6 +30,12 @@ const StageLayers = ({
         page={active.path}
       />
       <FreeMoveSlot view={freeMove} />
+      <AgentPresenceLayer
+        frames={stage.canvasFrames.layout.frames}
+        offset={active}
+        presence={edits.presence}
+        zoom={pz.zoom}
+      />
     </>
   );
 };

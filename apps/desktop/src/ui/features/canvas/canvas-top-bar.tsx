@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 
 import type { TopBarHosts } from "./canvas-shell.js";
 import { copy } from "./copy.js";
+import { TopBarConnect } from "./top-bar-connect.js";
 import { lazyPortToAppDialog, usePortDialog } from "./top-bar-drop-menu.js";
 import { TopBarFileMenu } from "./top-bar-file-menu.js";
 import type { MenuEntry, PresentMode } from "./top-bar-menu-model.js";
@@ -122,6 +123,7 @@ const CanvasTopBar = (props: Props): ReactElement => {
         {props.matrix}
         <span data-topbar-slot="review" style={CONTENTS_STYLE} />
         <TopBarPresent present={present} />
+        <TopBarConnect />
         <TopBarShare props={props} onPort={onPort} />
         {props.account}
         {port.target && (

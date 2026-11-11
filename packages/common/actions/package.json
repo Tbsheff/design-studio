@@ -153,6 +153,7 @@
     "./component/list-usage": "./src/component/list-usage.ts",
     "./component/routes": "./src/component/routes.ts",
     "./component/schema": "./src/component/schema.ts",
+    "./connection/get-setup": "./src/connection/get-setup.ts",
     "./connection/get-status": "./src/connection/get-status.ts",
     "./connection/index": "./src/connection/index.ts",
     "./connection/list-activity": "./src/connection/list-activity.ts",

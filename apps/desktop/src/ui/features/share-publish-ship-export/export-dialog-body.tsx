@@ -4,7 +4,7 @@ import type {
 } from "@design-studio/contracts/export";
 import type { ReactElement } from "react";
 
-import { ConnectClaudeCode } from "./connect-claude-code.js";
+import { ConnectAiOpener } from "./connect-ai-opener.js";
 import { copy as uiCopy } from "./copy.js";
 import type { ExportTarget } from "./export-api.js";
 import type {
@@ -63,7 +63,7 @@ const ExportDialogBody = ({
         onError={onError}
       />
     )}
-    {options.format === "handoff" && <ConnectClaudeCode />}
+    {options.format === "handoff" && <ConnectAiOpener />}
     {status.kind === "error" && (
       <div className="alert error small" role="alert">
         {status.text}

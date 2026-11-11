@@ -1,3 +1,4 @@
+import type { McpSetup } from "@design-studio/actions/connection/schema";
 import type { McpActivity, McpApprovalRecord } from "@design-studio/contracts";
 import type { McpStatus } from "@design-studio/contracts/export";
 import type { Effect } from "effect";
@@ -9,6 +10,7 @@ interface McpLifeService {
   readonly rotate: () => Promise<McpStatus>;
   readonly setEdits: (edits: boolean) => Promise<McpStatus>;
   readonly setEnabled: (enabled: boolean) => Promise<McpStatus>;
+  readonly setup: () => Promise<McpSetup>;
   readonly status: () => Promise<McpStatus>;
 }
 

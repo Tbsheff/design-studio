@@ -6,6 +6,7 @@ import { useElementNudge } from "../inspector/use-element-nudge.js";
 import { useImageDrop } from "../inspector/use-image-drop.js";
 import { useLayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import type { ViewProps } from "./canvas-types.js";
+import { useAgentPresence } from "./use-agent-presence.js";
 import { useCanvasPoint } from "./use-canvas-point.js";
 import { useCanvasPresence } from "./use-canvas-presence.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";
@@ -45,6 +46,7 @@ interface SpacingHost {
 
 interface CanvasEdits extends EditTools, EditHandles {
   readonly pointBadge: ReturnType<typeof useCanvasPoint>;
+  readonly presence: ReturnType<typeof useAgentPresence>;
 }
 
 const useEditTools = (
@@ -211,7 +213,9 @@ const useCanvasEdits = (
     zoom,
   });
 
-  return { ...tools, ...handles, pointBadge };
+  const presence = useAgentPresence({ directionId, frames, projectId });
+
+  return { ...tools, ...handles, pointBadge, presence };
 };
 
 export { useCanvasEdits };

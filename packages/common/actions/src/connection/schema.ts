@@ -11,6 +11,15 @@ const McpStatusSchema = Schema.Struct({
   url: Schema.NullOr(Schema.String),
 });
 
+const McpSetupSchema = Schema.Struct({
+  canEdit: Schema.Boolean,
+  isEnabled: Schema.Boolean,
+  isRunning: Schema.Boolean,
+  name: Schema.String,
+  token: Schema.String,
+  url: Schema.String,
+});
+
 const McpActivitySchema = Schema.Struct({
   at: Schema.Number,
   beforeVersionId: Schema.NullOr(Schema.String),
@@ -53,6 +62,8 @@ const McpApprovalAnsweredSchema = Schema.Struct({
   ok: Schema.Literal(true),
 });
 
+type McpSetup = typeof McpSetupSchema.Type;
+
 export {
   APPROVAL_WAIT_MAX,
   McpActivityListSchema,
@@ -61,5 +72,8 @@ export {
   McpApprovalIdSchema,
   McpApprovalPollSchema,
   McpApprovalSchema,
+  McpSetupSchema,
   McpStatusSchema,
 };
+
+export type { McpSetup };

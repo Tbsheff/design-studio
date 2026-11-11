@@ -83,16 +83,28 @@ const ActivityMcpSchema = Schema.Struct({
   url: Schema.NullOr(Schema.String),
 });
 
+const ActivityPresenceSchema = Schema.Struct({
+  at: Schema.Number,
+  client: Schema.String,
+  frameId: Schema.NullOr(Schema.String),
+  projectId: Schema.String,
+  summary: Schema.String,
+  tool: Schema.String,
+});
+
 const StudioActivitySchema = Schema.Struct({
   approvals: Schema.Array(ActivityApprovalSchema),
   branches: Schema.Array(ActivityBranchSchema),
   devServers: Schema.Array(ActivityDevServerSchema),
   mcp: ActivityMcpSchema,
+  presence: Schema.Array(ActivityPresenceSchema),
   recent: Schema.Array(ActivityRunSchema),
   running: Schema.Array(ActivityRunSchema),
 });
 
 type ActivityRun = typeof ActivityRunSchema.Type;
+
+type ActivityPresence = typeof ActivityPresenceSchema.Type;
 
 type ActivityApproval = typeof ActivityApprovalSchema.Type;
 
@@ -108,6 +120,7 @@ export {
   ActivityBranchSchema,
   ActivityDevServerSchema,
   ActivityMcpSchema,
+  ActivityPresenceSchema,
   ActivityRunSchema,
   SkillCatalogSchema,
   SkillInfoSchema,
@@ -120,6 +133,7 @@ export type {
   ActivityApproval,
   ActivityBranch,
   ActivityDevServer,
+  ActivityPresence,
   ActivityRun,
   SkillCatalog,
   StudioActivity,

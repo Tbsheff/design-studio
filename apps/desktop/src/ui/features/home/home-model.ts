@@ -16,7 +16,7 @@ import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 
 type Busy = "create" | "ask" | "starter" | null;
 
-type Pop = "plus" | "pack" | "level" | "model" | "folder" | null;
+type Pop = "plus" | "pack" | "level" | "model" | "drafts" | "folder" | null;
 
 const EXAMPLES = [
   "Wireframe a settings page",
@@ -54,15 +54,8 @@ const getFolderLabel = (
   return match?.label ?? "Design Studio";
 };
 
-const getModelSummary = (model: string, count: number): string => {
-  let extra = "";
-
-  if (count > 1) {
-    extra = ` · ${count}×`;
-  }
-
-  return `${modelLabel(model).replace(/^Claude /u, "")}${extra}`;
-};
+const getModelSummary = (model: string): string =>
+  modelLabel(model).replace(/^Claude /u, "");
 
 const getHomeSendBlocker = (
   busy: Busy,

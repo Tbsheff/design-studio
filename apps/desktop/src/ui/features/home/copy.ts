@@ -80,6 +80,7 @@ const copy = {
   directions: "directions",
   dismiss: "Dismiss",
   done: "Done",
+  drafts: "Drafts",
   dropAnAppFolderAn:
     "Drop an app folder, a zip, a PDF, a Markdown file, an image or a link",
   dropAnywhereTheFolderGoes: "Drop anywhere: the folder goes on the prompt",

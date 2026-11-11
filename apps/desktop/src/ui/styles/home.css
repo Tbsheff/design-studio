@@ -326,24 +326,6 @@
   padding: var(--s-1);
 }
 
-.home-pop-group {
-  display: grid;
-  gap: var(--s-2);
-  padding: 2px var(--s-2) var(--s-2);
-}
-
-.home-pop-group .ui-menu-label {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.home-pop-hint {
-  margin: 0;
-  color: var(--text-3);
-  font-size: var(--t-xs);
-  line-height: var(--lh-xs);
-}
-
 .home-pack-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

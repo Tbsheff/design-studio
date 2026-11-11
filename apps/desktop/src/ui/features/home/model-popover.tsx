@@ -4,7 +4,6 @@ import type { ReactElement, RefObject } from "react";
 
 import { copy } from "./copy.js";
 import { MODEL_OPTIONS } from "./home-model.js";
-import { VariationsControl } from "./home-popovers.js";
 import { ModelOption } from "./model-option.js";
 import type { ModelSettings } from "./model-settings-model.js";
 import { Pop } from "./pop.js";
@@ -19,17 +18,7 @@ interface ModelPopoverProps {
   readonly isClosing: boolean;
 }
 
-const DESIGNS_LABEL_ID = "home-designs-label";
 const ICON_SIZE = 14;
-const FIRST_COMPARE = 2;
-
-const toDesignsHint = (value: number, max: number): string => {
-  if (value > 1) {
-    return `Create makes ${value} designs side by side.`;
-  }
-
-  return `Pick ${FIRST_COMPARE} to ${max} to compare options.`;
-};
 
 const toMoreSection = (openMore: () => void): ReactElement => (
   <div className="ui-menu-section">
@@ -50,7 +39,6 @@ const ModelPopover = ({
   useMenuArrowKeys(group, MENU_ITEMS);
 
   const { onMore, onModel } = settings;
-  const { onChange } = settings.designs;
 
   const openMore = useCallback((): void => {
     onClose(false);
@@ -81,20 +69,6 @@ const ModelPopover = ({
             onModel={onModel}
           />
         ))}
-      </div>
-      <div className="ui-menu-section home-pop-group">
-        <span className="ui-menu-label" id={DESIGNS_LABEL_ID}>
-          {copy.designs}
-        </span>
-        <VariationsControl
-          value={settings.designs.value}
-          max={settings.designs.max}
-          onChange={onChange}
-          labelledBy={DESIGNS_LABEL_ID}
-        />
-        <p className="home-pop-hint">
-          {toDesignsHint(settings.designs.value, settings.designs.max)}
-        </p>
       </div>
       {toMoreSection(openMore)}
     </Pop>

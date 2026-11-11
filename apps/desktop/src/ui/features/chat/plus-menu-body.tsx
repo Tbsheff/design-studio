@@ -1,10 +1,8 @@
-import { useId } from "react";
 import type { ReactElement } from "react";
 
 import { MODES } from "./composer-menu-model.js";
 import type { PlusMenuProps } from "./composer-menu-model.js";
 import { copy } from "./copy.js";
-import { DesignCounts } from "./design-counts.js";
 import { MenuItem } from "./menu-item.js";
 import { MenuSection } from "./menu-section.js";
 import { ModeChoice } from "./mode-choice.js";
@@ -19,8 +17,7 @@ const PlusMenuBody = ({
   menuProps: PlusMenuProps;
   onAct: (run: () => void) => () => void;
 }): ReactElement => {
-  const countsId = useId();
-  const { designs, mode, onMode } = menuProps;
+  const { mode, onMode } = menuProps;
 
   return (
     <>
@@ -70,11 +67,6 @@ const PlusMenuBody = ({
           />
         ))}
       </MenuSection>
-      {designs && (
-        <MenuSection label="Designs side by side">
-          <DesignCounts countsId={countsId} designs={designs} />
-        </MenuSection>
-      )}
       <PlusProjectSection project={menuProps.project ?? null} onAct={onAct} />
     </>
   );

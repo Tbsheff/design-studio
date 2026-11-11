@@ -110,6 +110,7 @@ const ComposerBar = ({
         pops={pops.state}
         levelRef={pops.refs.level}
         modelRef={pops.refs.model}
+        draftsRef={pops.refs.drafts}
         modelValue={modelValue}
         modelSizes={modelSizes}
         modelSettings={modelSettings}

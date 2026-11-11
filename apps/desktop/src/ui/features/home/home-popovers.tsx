@@ -2,7 +2,6 @@ import type { RunLevel } from "@design-studio/contracts";
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { VariationsControl } from "../canvas/variations-control.js";
 import { levelGist, levelHint, levelLabel } from "../chat/index.js";
 import { LevelChoiceItem } from "./level-choice-item.js";
 
@@ -37,4 +36,4 @@ const LevelChoice = ({
   );
 };
 
-export { LevelChoice, VariationsControl };
+export { LevelChoice };

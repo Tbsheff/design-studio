@@ -45,6 +45,7 @@ const copy = {
   draftDetails: "Design system details",
   draftLoadFailed: "Could not load",
   draftReading: "Reading sources",
+  drafts: "Drafts",
   dragOrAlt: "Drag, or Alt+↑ and Alt+↓, to move",
   dragToResize: "Drag to resize. Double-click to reset.",
   earlier: " earlier",

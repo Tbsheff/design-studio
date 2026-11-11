@@ -9,6 +9,7 @@ interface PopRefs {
   readonly pack: RefObject<HTMLButtonElement | null>;
   readonly model: RefObject<HTMLButtonElement | null>;
   readonly level: RefObject<HTMLButtonElement | null>;
+  readonly drafts: RefObject<HTMLButtonElement | null>;
   readonly folder: RefObject<HTMLButtonElement | null>;
 }
 
@@ -38,11 +39,12 @@ const useComposerPops = ({
   const pack = useRef<HTMLButtonElement>(null);
   const model = useRef<HTMLButtonElement>(null);
   const level = useRef<HTMLButtonElement>(null);
+  const drafts = useRef<HTMLButtonElement>(null);
   const folder = useRef<HTMLButtonElement>(null);
 
   const refs = useMemo(
-    () => ({ folder, level, model, pack, plus }),
-    [folder, level, model, pack, plus]
+    () => ({ drafts, folder, level, model, pack, plus }),
+    [drafts, folder, level, model, pack, plus]
   );
 
   const close = useCallback(

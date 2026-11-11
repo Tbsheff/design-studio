@@ -31,9 +31,9 @@
 .studio-stage {
   --dock-gap: var(--s-2);
   --rail-w: 40px;
-  --column-w: 248px;
+  --column-w: 240px;
   --tools-w: 40px;
-  --inspector-w: 280px;
+  --inspector-w: 264px;
   --dock-w: var(--rail-w);
   --tools-left: calc(var(--dock-gap) * 2 + var(--dock-w));
   --stage-left: calc(var(--tools-left) + var(--tools-w) - var(--s-4));
@@ -346,8 +346,8 @@
   }
 
   .studio-stage {
-    --column-w: 232px;
-    --inspector-w: 264px;
+    --column-w: 224px;
+    --inspector-w: 248px;
   }
 }
 

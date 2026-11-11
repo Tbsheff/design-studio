@@ -83,11 +83,25 @@ const toShotQuery = (pin: PinTarget): ShotQuery => ({
   width: null,
 });
 
+const IMPLICIT_FRAME: CanvasFileFrame = {
+  height: 900,
+  id: "f1",
+  order: 0,
+  width: 1440,
+  x: 0,
+  y: 0,
+};
+
 const toPinFrame = (
   frames: readonly CanvasFileFrame[],
   frameId: string
-): CanvasFileFrame | null =>
-  frames.find((candidate) => candidate.id === frameId) ?? null;
+): CanvasFileFrame | null => {
+  if (frames.length === 0 && frameId === IMPLICIT_FRAME.id) {
+    return IMPLICIT_FRAME;
+  }
+
+  return frames.find((candidate) => candidate.id === frameId) ?? null;
+};
 
 const toPinDirection = (
   directions: readonly Direction[],

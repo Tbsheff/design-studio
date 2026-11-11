@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import type { RunMap } from "../chat/run-state-model.js";
 import { ElementVariantsDialog } from "../inspector/element-variants-dialog.js";
 import { BriefCardLayer } from "./brief-card-layer.js";
+import { DraftStatus } from "./draft-status.js";
 import { useElementAsk } from "./use-element-ask.js";
 import { useShownGroup } from "./use-shown-group.js";
 import type { VariationsState } from "./use-variations.js";
@@ -26,6 +27,7 @@ const VariationsTop = ({
 }: TopProps): ReactElement => {
   const group = useShownGroup(project, state, direction);
   const { ask, draft, keepNotice, kept } = state;
+  const { dismiss: onDismissDraft } = state;
   const { onCancel, onStart } = useElementAsk(state, project, ask);
   const onDismissKept = useCallback((): void => keepNotice(null), [keepNotice]);
 
@@ -57,7 +59,12 @@ const VariationsTop = ({
           />
         </div>
       )}
-      {draft && <BriefCardLayer draft={draft} state={state} />}
+      {draft?.autoStart && (
+        <DraftStatus draft={draft} onDismiss={onDismissDraft} />
+      )}
+      {draft && !draft.autoStart && (
+        <BriefCardLayer draft={draft} state={state} />
+      )}
     </>
   );
 };

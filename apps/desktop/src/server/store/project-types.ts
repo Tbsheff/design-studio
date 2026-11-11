@@ -63,6 +63,7 @@ export interface StudioProjectStore extends ProjectStore {
   reserveFolder(parentPath: string, name: string): Promise<string>;
   writeRaw(project: Project): Promise<void>;
   attachApp(input: AttachAppRequest): Promise<Project>;
+  linkFolder(sourcePath: string): Promise<Project>;
 }
 
 export interface ImportOptions {

@@ -17,11 +17,11 @@ const createPrototypeProject = defineAction({
     name: "create_prototype_project",
     set: "app",
     short:
-      "Create a linked HTML prototype of this app in the studio folder, with the app tokens. Use it when the user asks for an HTML prototype or mockup.",
+      "Create a linked HTML prototype of this app or folder in the studio folder, with its tokens. Use it when the user asks for a prototype, mockup or draft.",
   },
   confirm: "none",
   description:
-    "Create an HTML prototype for an attached app. The prototype is a new HTML project in the Design Studio projects folder, under prototypes and the app name. It gets a tokens.css file with the app's CSS variables and fonts, and the app's DESIGN.md. It never changes the app repo.",
+    "Create an HTML prototype for a folder workspace or an attached app. The prototype is a new HTML project in the Design Studio projects folder, under prototypes and the folder name. It gets the folder's DESIGN.md, a folder-context.md file with its README and a short file list, and a tokens.css file when the folder has CSS variables or fonts. It never changes the source folder.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/prototypes" },
   id: "project.createPrototype",

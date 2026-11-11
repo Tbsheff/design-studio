@@ -104,6 +104,10 @@ const ProjectCreatedSchema = Schema.Struct({
 
 const ProjectImportFields = {
   appDir: Schema.optionalKey(Schema.String),
+  isWorkspace: Schema.Boolean.annotate({
+    description:
+      "Link the folder as a workspace and do not change it. Any folder works: an app, docs, a design repo or a backend. Prompts in a workspace make HTML prototypes in the Design Studio folder. Leave out to import the folder as a project.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false))),
   path: Schema.NullOr(Schema.String)
     .annotate({
       description:

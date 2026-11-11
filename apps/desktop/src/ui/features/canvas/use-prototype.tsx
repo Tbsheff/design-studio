@@ -4,11 +4,11 @@ import { Suspense, useCallback } from "react";
 import type { ReactNode } from "react";
 
 import { PlayMode } from "./lazy-play-mode.js";
+import { PrototypeBar } from "./lazy-prototype-bar.js";
 import { LinkArrows } from "./link-arrows.js";
 import { LinkDragLine } from "./link-drag-line.js";
 import { LinkHandle } from "./link-handle.js";
 import { linkOfSelection } from "./link-view.js";
-import { PrototypeBar } from "./prototype-bar.js";
 import { toLinkRectsInput } from "./prototype-links-input.js";
 import type { PrototypeOptions } from "./prototype-options-model.js";
 import { toFrameTitle, toLinkTitle } from "./prototype-titles-model.js";
@@ -108,18 +108,20 @@ const toBarNode = (scene: PrototypeScene): ReactNode => {
   }
 
   return (
-    <PrototypeBar
-      projectId={options.projectId}
-      file={prototypeFile.file}
-      states={states}
-      frames={options.shown}
-      startId={prototypeFile.startId}
-      selected={selected}
-      hasSelection={single !== null}
-      selection={single}
-      linkTitle={linkTitle}
-      onError={onError}
-    />
+    <Suspense fallback={null}>
+      <PrototypeBar
+        projectId={options.projectId}
+        file={prototypeFile.file}
+        states={states}
+        frames={options.shown}
+        startId={prototypeFile.startId}
+        selected={selected}
+        hasSelection={single !== null}
+        selection={single}
+        linkTitle={linkTitle}
+        onError={onError}
+      />
+    </Suspense>
   );
 };
 

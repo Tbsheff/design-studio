@@ -5,7 +5,7 @@ import type { AppHealth } from "./deps.js";
 import { homePrefs } from "./home-prefs-model.js";
 import type { HomeFilter } from "./home-prefs-model.js";
 import type { LibraryModule } from "./lazy-parts-model.js";
-import { toGridFilter, toLatestProject } from "./library-view-model.js";
+import { toGridFilter } from "./library-view-model.js";
 import type { CardActions } from "./project-card-model.js";
 import { SystemActions } from "./system-actions.js";
 import { SystemPackSection } from "./system-pack-section.js";
@@ -59,20 +59,11 @@ const LibraryBody = ({
   listError,
   onPickPack,
 }: LibraryBodyProps): ReactElement => {
-  const latest = toLatestProject(projects);
   const isSystems = filter === "systems";
   const gridFilter = toGridFilter(filter, lib.FILTER_EMPTY, clearFilter);
-  const { onOpen } = actions;
 
   return (
     <>
-      {latest && (
-        <lib.ContinueCard
-          project={latest}
-          health={health.get(latest.id) ?? null}
-          onOpen={onOpen}
-        />
-      )}
       <lib.ProjectGrid
         projects={lib.listFilteredLibrary(projects, filter)}
         packs={packs}

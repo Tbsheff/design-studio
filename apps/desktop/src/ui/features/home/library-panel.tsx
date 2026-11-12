@@ -39,11 +39,11 @@ const Library = ({
   searchRef,
   listError,
   onPickPack,
-}: LibraryProps): ReactElement => {
+}: LibraryProps): ReactElement | null => {
   const { filter } = useHomePrefs();
 
   if (!lib) {
-    return <div className="home-continue placeholder" aria-hidden="true" />;
+    return null;
   }
 
   return (

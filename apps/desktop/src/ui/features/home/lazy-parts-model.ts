@@ -2,7 +2,6 @@ import type { RunLevel } from "@design-studio/contracts";
 import { lazy } from "react";
 
 import type { AppChip } from "./app-chip-model.js";
-import type { ContinueCard } from "./continue-card.js";
 import type { ComposerFoot } from "./home-extras.js";
 import type { FilterChips } from "./home-library.js";
 import type { HomeSlashMenu } from "./home-slash.js";
@@ -12,7 +11,6 @@ import type { PackCards } from "./pack-cards.js";
 import type { ProjectGrid } from "./project-grid.js";
 
 interface LibraryModule {
-  readonly ContinueCard: typeof ContinueCard;
   readonly FILTER_EMPTY: typeof FILTER_EMPTY;
   readonly FilterChips: typeof FilterChips;
   readonly PackCards: typeof PackCards;
@@ -87,8 +85,7 @@ const importAppMenu = async (): Promise<AppMenuModule> => {
 };
 
 const importLibrary = async (): Promise<LibraryModule> => {
-  const [card, grid, models, filters, popovers] = await Promise.all([
-    import("./continue-card.js"),
+  const [grid, models, filters, popovers] = await Promise.all([
     import("./project-grid.js"),
     import("./library-model.js"),
     import("./home-library.js"),
@@ -96,7 +93,6 @@ const importLibrary = async (): Promise<LibraryModule> => {
   ]);
 
   return {
-    ContinueCard: card.ContinueCard,
     FILTER_EMPTY: models.FILTER_EMPTY,
     FilterChips: filters.FilterChips,
     PackCards: popovers.PackCards,

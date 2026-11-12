@@ -11,6 +11,12 @@ const watchParent = (
     return null;
   }
 
+  process.once("disconnect", onGone);
+
+  if (process.connected) {
+    return null;
+  }
+
   const timer = setInterval(() => {
     if (process.ppid === parent) {
       return;
@@ -21,10 +27,6 @@ const watchParent = (
   }, POLL_MS);
 
   timer.unref();
-  process.once("disconnect", () => {
-    clearInterval(timer);
-    onGone();
-  });
 
   return timer;
 };

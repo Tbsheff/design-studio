@@ -1,11 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { app, safeStorage, shell } from "electron";
@@ -160,7 +155,7 @@ class AccountAuth {
   private flow: PendingFlow | null = null;
   private session: StoredSession | null = null;
   private refreshTimer: NodeJS.Timeout | null = null;
-  private loaded = false;
+  private loading: Promise<void> | null = null;
 
   constructor(private readonly deps: AuthDeps) {}
 
@@ -188,14 +183,12 @@ class AccountAuth {
     if (!this.deps.isStudio(sender) || event.senderFrame !== sender.mainFrame) {
       return { user: null, orgs: [], state: "signed-out" };
     }
-    this.load();
+    await this.load();
 
     return run();
   }
 
   view(): AccountView {
-    this.load();
-
     if (this.session) {
       return {
         orgs: this.session.orgs,
@@ -279,6 +272,8 @@ class AccountAuth {
   }
 
   private async finishSignIn(code: string, verifier: string): Promise<void> {
+    await this.load();
+
     try {
       const payload = await postJson(
         "/v1/auth/desktop/exchange",
@@ -292,7 +287,7 @@ class AccountAuth {
         throw new Error("exchange returned no session");
       }
       this.session = stored;
-      this.persist();
+      await this.persist();
     } catch (error) {
       console.warn(`[desktop] auth exchange failed: ${String(error)}`);
     }
@@ -301,17 +296,17 @@ class AccountAuth {
   }
 
   restore(): void {
-    this.load();
+    void this.load();
   }
 
   async confirm(): Promise<AccountView> {
-    this.load();
+    await this.load();
 
     if (!this.session) {
       return this.view();
     }
     this.session.confirmed = true;
-    this.persist();
+    await this.persist();
     await this.mint();
     this.emit();
 
@@ -319,7 +314,7 @@ class AccountAuth {
   }
 
   async signOut(): Promise<AccountView> {
-    this.load();
+    await this.load();
     this.session = null;
     this.flow = null;
     this.stopRefresh();
@@ -373,43 +368,50 @@ class AccountAuth {
     return path.join(dir, SESSION_FILE);
   }
 
-  private persist(): void {
-    if (!this.session || !safeStorage.isEncryptionAvailable()) {
+  private async persist(): Promise<void> {
+    if (!this.session) {
       return;
     }
+    const plain = JSON.stringify(this.session);
+
+    if (!(await safeStorage.isAsyncEncryptionAvailable())) {
+      return;
+    }
+    const encrypted = await safeStorage.encryptStringAsync(plain);
     const file = this.sessionPath();
     mkdirSync(path.dirname(file), { recursive: true });
-    writeFileSync(
-      file,
-      safeStorage.encryptString(JSON.stringify(this.session)),
-      {
-        mode: 0o600,
-      }
-    );
+    writeFileSync(file, encrypted, { mode: 0o600 });
   }
 
-  private load(): void {
-    if (this.loaded) {
-      return;
-    }
-    this.loaded = true;
+  private load(): Promise<void> {
+    this.loading ??= this.readSession();
+
+    return this.loading;
+  }
+
+  private async readSession(): Promise<void> {
     const file = this.sessionPath();
 
-    if (!safeStorage.isEncryptionAvailable() || !existsSync(file)) {
+    if (!existsSync(file)) {
       return;
     }
     try {
-      const parsed: unknown = JSON.parse(
-        safeStorage.decryptString(readFileSync(file))
+      if (!(await safeStorage.isAsyncEncryptionAvailable())) {
+        return;
+      }
+      const { result } = await safeStorage.decryptStringAsync(
+        await readFile(file)
       );
+      const parsed: unknown = JSON.parse(result);
 
       const stored = toStored(
         isRecord(parsed) ? { ...parsed, session_token: parsed.token } : null
       );
 
-      if (stored && isRecord(parsed)) {
+      if (stored && isRecord(parsed) && !this.session) {
         stored.confirmed = parsed.confirmed === true;
         this.session = stored;
+        this.emit();
         void this.mint();
       }
     } catch {

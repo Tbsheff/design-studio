@@ -17,6 +17,7 @@ const copy = {
   appFolder: "App folder",
   appOptions: "App options",
   apps: "Apps",
+  askOnShortBriefs: "Ask questions on short briefs",
   attachAppFolder: "Open folder…",
   attachFolder: "Attach folder…",
   attachImportAndOptions: "Attach, import and options",
@@ -27,6 +28,7 @@ const copy = {
   branchMark: "⎇",
   brandPrimaryColor0b6e4fHeadings:
     "# Brand\nPrimary color #0B6E4F. Headings in Georgia.",
+  buildShortBriefsNow: "Build short briefs at once",
   cancel: "Cancel",
   change: "Change…",
   changeTheDefaultFolder: "Change the default folder",

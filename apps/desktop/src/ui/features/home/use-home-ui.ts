@@ -92,6 +92,7 @@ const useHomeUi = <Draft extends SettingsLike>(deps: UiDeps<Draft>): HomeUi => {
       contextFileRef: attach.contextFileRef,
       fileRef: attach.fileRef,
       hasTemplatesShown: homePrefs.hasTemplatesShown,
+      isAskingFirst: homePrefs.shouldAskFirst,
       openAdvanced: draft.openAdvanced,
     }),
     prefs: homePrefs,

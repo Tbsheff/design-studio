@@ -9,6 +9,8 @@ interface PlusMenuActions {
   readonly onLinkCode: () => void;
   readonly onTemplates: () => void;
   readonly hasTemplatesShown: boolean;
+  readonly onAskFirst: () => void;
+  readonly shouldAskFirst: boolean;
   readonly onImportSystem: () => void;
   readonly onDesignSystem: () => void;
   readonly onSkills: () => void;

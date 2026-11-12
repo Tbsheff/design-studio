@@ -19,6 +19,7 @@ interface HomePrefs {
   readonly view: HomeView;
   readonly hasTemplatesShown: boolean;
   readonly filter: HomeFilter;
+  readonly shouldAskFirst: boolean;
 }
 
 const KEY = "studio.home.v1";
@@ -28,6 +29,7 @@ const DEFAULTS: HomePrefs = {
   filter: "all",
   hasTemplatesShown: false,
   isFavoritesOnly: false,
+  shouldAskFirst: false,
   view: "list",
 };
 
@@ -45,6 +47,7 @@ interface StoredPrefs {
   readonly filter: StoredValue;
   readonly hasTemplatesShown: StoredValue;
   readonly isFavoritesOnly: StoredValue;
+  readonly shouldAskFirst: StoredValue;
   readonly templatesShown: StoredValue;
   readonly view: StoredValue;
 }
@@ -83,6 +86,7 @@ const getPrefs = (): HomePrefs => {
         raw.hasTemplatesShown === true || raw.templatesShown === true,
       isFavoritesOnly:
         raw.isFavoritesOnly === true || raw.favoritesOnly === true,
+      shouldAskFirst: raw.shouldAskFirst === true,
       view: toView(raw.view),
     };
   } catch {

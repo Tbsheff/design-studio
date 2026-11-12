@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
+import { PlusDesignsSection } from "./plus-designs-section.js";
 import { PlusFilesSection } from "./plus-files-section.js";
 import { PlusItem } from "./plus-item.js";
 import { PlusKindItem } from "./plus-kind-item.js";
@@ -11,14 +12,6 @@ interface PlusMenuSectionsProps {
   readonly locationLabel: string;
   readonly onClose: (shouldRefocus: boolean) => void;
 }
-
-const toTemplatesLabel = (hasTemplatesShown: boolean): string => {
-  if (hasTemplatesShown) {
-    return "Hide templates and starters";
-  }
-
-  return "Templates and starters";
-};
 
 const PlusMenuSections = ({
   actions,
@@ -47,25 +40,7 @@ const PlusMenuSections = ({
       />
       <PlusKindItem actions={actions} />
     </div>
-    <div className="ui-menu-section">
-      <span className="ui-menu-label">{copy.designs}</span>
-      <PlusItem
-        icon="layers"
-        label={toTemplatesLabel(actions.hasTemplatesShown)}
-        meta={null}
-        hasChevron={false}
-        action={actions.onTemplates}
-        onClose={onClose}
-      />
-      <PlusItem
-        icon="download"
-        label="Import design system or tokens"
-        meta={null}
-        hasChevron={false}
-        action={actions.onImportSystem}
-        onClose={onClose}
-      />
-    </div>
+    <PlusDesignsSection actions={actions} onClose={onClose} />
     <div className="ui-menu-section">
       <PlusItem
         icon="palette"

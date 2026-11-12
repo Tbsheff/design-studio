@@ -13,6 +13,7 @@ interface PlusSource {
   readonly contextFileRef: RefObject<HTMLInputElement | null>;
   readonly fileRef: RefObject<HTMLInputElement | null>;
   readonly hasTemplatesShown: boolean;
+  readonly isAskingFirst: boolean;
   readonly openAdvanced: () => void;
 }
 
@@ -23,12 +24,14 @@ const toPlusActions = ({
   contextFileRef,
   fileRef,
   hasTemplatesShown,
+  isAskingFirst,
   openAdvanced,
 }: PlusSource): Omit<
   PlusMenuActions,
   "kind" | "onDesignSystem" | "onKind"
 > => ({
   hasTemplatesShown,
+  onAskFirst: (): void => homePrefs.set({ shouldAskFirst: !isAskingFirst }),
   onAttachFile: (): void => fileRef.current?.click(),
   onAttachFolder: (): void => {
     attachFolder();
@@ -45,6 +48,7 @@ const toPlusActions = ({
   onSkills: openAdvanced,
   onTemplates: (): void =>
     homePrefs.set({ hasTemplatesShown: !hasTemplatesShown }),
+  shouldAskFirst: isAskingFirst,
 });
 
 export { toPlusActions };

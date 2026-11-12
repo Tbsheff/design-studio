@@ -16,6 +16,7 @@ import type { ContextDraft } from "./context-drafts-model.js";
 import { focusRequest } from "./focus-bus-model.js";
 import { createFromHome } from "./home-model.js";
 import type { Busy } from "./home-model.js";
+import { homePrefs } from "./home-prefs-model.js";
 import { importContexts } from "./use-context-import.js";
 import { runWorkspacePrototype } from "./use-workspace-submit.js";
 import { isFolderWorkspace } from "./workspace-model.js";
@@ -196,7 +197,7 @@ const useHomeSubmit = (input: SubmitInput): HomeSubmit => {
       return;
     }
 
-    if (needsQuestions(text)) {
+    if (homePrefs.get().shouldAskFirst && needsQuestions(text)) {
       setBusy("ask");
       setFormError(null);
       const asked = await getQuestions(text);

@@ -36,6 +36,7 @@ import type { Harvest, SourceReport } from "./extract/types.js";
 import { harvestUrl } from "./extract/url.js";
 import type { Fetcher, UrlHarvest } from "./extract/url.js";
 import type { PackLibrary } from "./library.js";
+import { updateDraftPack } from "./pack-components.js";
 import { applyPack } from "./packs.js";
 import type { LoadedPack } from "./packs.js";
 
@@ -749,10 +750,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
             logo
           );
 
-      const pack = await deps.library.updateUserPack(input.packId, {
-        ...draft.pack,
-        draft: true,
-      });
+      const pack = await updateDraftPack(deps.library, input, draft, done);
 
       await applyPack(project, direction.workTree, pack);
 

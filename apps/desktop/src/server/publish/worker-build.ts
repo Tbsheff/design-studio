@@ -4,7 +4,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { WORKER_NAME } from "@design-studio/actions/publish-remote";
-import { build } from "esbuild";
 
 export const PUBLISH_BUCKET = WORKER_NAME;
 export const PUBLISH_DATABASE = WORKER_NAME;
@@ -72,6 +71,8 @@ export async function writeBuildOutput(
   await mkdir(path.dirname(bundle), { recursive: true });
 
   if (source.entry) {
+    const { build } = await import("esbuild");
+
     await build({
       entryPoints: [source.entry],
       outfile: bundle,

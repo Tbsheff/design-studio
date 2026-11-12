@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>On-call log - Enzo Health</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="design-system/tokens.css">
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; }
+      body { background: var(--color-surface-page); color: var(--color-text-default); font-family: Inter, var(--font-sans); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+      .shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+
+      .sidebar { background: var(--sidebar); color: var(--sidebar-foreground); display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; border-right: 1px solid var(--sidebar-border); }
+      .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; font-weight: 600; font-size: 15px; color: var(--sidebar-foreground); }
+      .brand-mark { width: 28px; height: 28px; border-radius: var(--radius); background: var(--sidebar-active); display: grid; place-items: center; color: var(--sidebar-icon-active); font-weight: 700; }
+      .nav-label { padding: 12px 8px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--sidebar-muted-foreground); }
+      .nav-item { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px; border-radius: var(--radius-md); color: var(--sidebar-soft-foreground); font-weight: 500; }
+      .nav-item:hover { background: var(--sidebar-hover); }
+      .nav-item .dot { width: 16px; height: 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--sidebar-icon); flex-shrink: 0; }
+      .nav-item.active { background: var(--sidebar-active); color: var(--sidebar-foreground); }
+      .nav-item.active .dot { border-color: var(--sidebar-icon-active); background: var(--sidebar-icon-active); }
+      .nav-count { margin-left: auto; font-size: 11px; font-weight: 600; padding: 0 6px; border-radius: var(--radius-sm); background: var(--color-badge-danger-solid-bg); color: var(--color-badge-danger-solid-text); }
+      .sidebar-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 8px 0; border-top: 1px solid var(--sidebar-border); }
+      .avatar { width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: var(--color-badge-teal-bg); color: var(--color-badge-teal-text); flex-shrink: 0; }
+      .sidebar-foot .who { font-size: 13px; color: var(--sidebar-foreground); }
+      .sidebar-foot .role { font-size: 12px; color: var(--sidebar-muted-foreground); }
+
+      .main { display: flex; flex-direction: column; min-width: 0; }
+      .topbar { height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 28px; background: var(--color-surface-card); border-bottom: 1px solid var(--color-border-default); }
+      .crumbs { color: var(--color-text-muted); font-size: 13px; }
+      .crumbs strong { color: var(--color-text-heading); font-weight: 500; }
+      .search { margin-left: auto; width: 280px; height: 36px; padding: 0 12px; border: 1px solid var(--input); border-radius: var(--radius-md); background: var(--color-surface-card); color: var(--color-text-default); font: inherit; box-shadow: var(--shadow-xs); }
+      .search::placeholder { color: var(--color-text-placeholder); }
+
+      .content { padding: 24px 28px 40px; display: flex; flex-direction: column; gap: 20px; }
+      .page-head { display: flex; align-items: flex-end; gap: 16px; }
+      .page-head h1 { margin: 0; font-size: 24px; line-height: 1.25; font-weight: 600; color: var(--color-text-heading); letter-spacing: -0.01em; }
+      .page-head p { margin: 4px 0 0; color: var(--color-text-secondary); }
+      .head-actions { margin-left: auto; display: flex; gap: 8px; }
+
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: var(--radius-md); font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; border: 1px solid transparent; }
+      .btn-primary { background: var(--color-action-primary); color: var(--color-action-primary-text); }
+      .btn-primary:hover { background: var(--color-action-primary-hover); }
+      .btn-outline { background: var(--background); color: var(--color-text-default); border-color: var(--color-border-default); box-shadow: var(--shadow-xs); }
+      .btn-outline:hover { background: var(--accent); color: var(--accent-foreground); }
+      .btn-danger { background: var(--color-action-destructive); color: var(--color-text-on-dark); }
+      .btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+
+      .shift { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-radius: var(--radius-lg); background: var(--color-surface-dark); color: var(--color-text-on-dark); }
+      .shift .live { width: 8px; height: 8px; border-radius: 999px; background: var(--sidebar-icon-active); box-shadow: 0 0 0 4px var(--sidebar-active); }
+      .shift b { font-weight: 600; }
+      .shift .meta { color: var(--sidebar-soft-foreground); }
+      .shift .handoff { margin-left: auto; }
+
+      .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+      .card { background: var(--color-surface-card); color: var(--card-foreground); border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+      .kpi { padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+      .kpi .label { color: var(--color-text-muted); font-size: 13px; font-weight: 500; }
+      .kpi .value { font-size: 28px; font-weight: 600; line-height: 1.2; color: var(--color-text-heading); font-variant-numeric: tabular-nums; }
+      .kpi .note { font-size: 12px; color: var(--color-text-secondary); }
+      .kpi .note.bad { color: var(--color-text-danger); }
+      .kpi .note.good { color: var(--color-text-success); }
+
+      .split { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+      .card-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--color-border-muted); }
+      .card-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--color-text-heading); }
+      .tabs { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--radius-md); background: var(--muted); margin-left: auto; }
+      .tab { height: 28px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--muted-foreground); display: inline-flex; align-items: center; gap: 6px; }
+      .tab.on { background: var(--color-surface-card); color: var(--color-text-heading); box-shadow: var(--shadow-xs); }
+
+      table { width: 100%; border-collapse: collapse; }
+      th { text-align: left; font-size: 12px; font-weight: 500; color: var(--color-text-muted); padding: 10px 18px; background: var(--color-surface-muted); border-bottom: 1px solid var(--color-border-muted); }
+      td { padding: 12px 18px; border-bottom: 1px solid var(--color-border-muted); vertical-align: top; }
+      tr:last-child td { border-bottom: 0; }
+      tr.selected td { background: var(--color-surface-highlight); }
+      tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--color-border-focus); }
+      .time { font-variant-numeric: tabular-nums; color: var(--color-text-heading); font-weight: 500; white-space: nowrap; }
+      .sub { font-size: 12px; color: var(--color-text-muted); }
+      .patient { font-weight: 500; color: var(--color-text-heading); }
+      .reason { color: var(--color-text-default); max-width: 280px; }
+
+      .badge { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px; border-radius: var(--radius-md); font-size: 12px; font-weight: 500; white-space: nowrap; border: 1px solid transparent; }
+      .b-danger { background: var(--color-badge-danger-bg); color: var(--color-badge-danger-text); }
+      .b-warning { background: var(--color-badge-warning-bg); color: var(--color-badge-warning-text); }
+      .b-info { background: var(--color-badge-info-bg); color: var(--color-badge-info-text); }
+      .b-success { background: var(--color-badge-success-bg); color: var(--color-badge-success-text); }
+      .b-neutral { background: var(--color-badge-neutral-bg); color: var(--color-badge-neutral-text); }
+      .b-purple { background: var(--color-badge-purple-bg); color: var(--color-badge-purple-text); }
+      .b-outline { background: var(--color-surface-page); color: var(--color-badge-warning-text); border-color: var(--color-border-warning); }
+
+      .detail { display: flex; flex-direction: column; }
+      .detail-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+      .who-row { display: flex; gap: 12px; align-items: center; }
+      .who-row .patient { font-size: 15px; }
+      .facts { display: grid; grid-template-columns: 96px 1fr; gap: 6px 12px; font-size: 13px; }
+      .facts dt { color: var(--color-text-muted); }
+      .facts dd { margin: 0; color: var(--color-text-default); }
+      .sbar { display: flex; flex-direction: column; gap: 8px; }
+      .sbar-row { display: grid; grid-template-columns: 24px 1fr; gap: 10px; font-size: 13px; }
+      .sbar-key { width: 24px; height: 24px; border-radius: var(--radius-sm); display: grid; place-items: center; font-weight: 600; font-size: 12px; background: var(--color-badge-teal-bg); color: var(--color-badge-teal-text); }
+      .ai { display: flex; gap: 10px; padding: 12px; border-radius: var(--radius-md); background: var(--color-surface-info); border: 1px solid var(--color-border-info); font-size: 13px; color: var(--color-text-default); }
+      .ai-mark { width: 20px; height: 20px; border-radius: var(--radius-sm); background: var(--sidebar); color: var(--sidebar-icon-active); display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+      .ai strong { color: var(--color-text-ai); font-weight: 600; }
+      .note-field { width: 100%; min-height: 72px; resize: none; padding: 8px 12px; border: 1px solid var(--input); border-radius: var(--radius-md); background: var(--color-surface-card); color: var(--color-text-default); font: inherit; font-size: 13px; box-shadow: var(--shadow-xs); }
+      .note-field::placeholder { color: var(--color-text-placeholder); }
+      .detail-foot { display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--color-border-muted); flex-wrap: wrap; }
+      .detail-foot .btn-primary { flex-basis: 100%; }
+      .section-label { font-size: 12px; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">E</span>Enzo Health</div>
+        <div class="nav-label">Care</div>
+        <div class="nav-item"><span class="dot"></span>Home</div>
+        <div class="nav-item"><span class="dot"></span>Patients</div>
+        <div class="nav-item"><span class="dot"></span>Scheduling</div>
+        <div class="nav-item active"><span class="dot"></span>On-call log<span class="nav-count">2</span></div>
+        <div class="nav-item"><span class="dot"></span>Orders</div>
+        <div class="nav-label">Quality</div>
+        <div class="nav-item"><span class="dot"></span>OASIS</div>
+        <div class="nav-item"><span class="dot"></span>QA reviews</div>
+        <div class="nav-item"><span class="dot"></span>Reports</div>
+        <div class="sidebar-foot">
+          <span class="avatar">ML</span>
+          <div><div class="who">Maria Lopez, RN</div><div class="role">On-call nurse</div></div>
+        </div>
+      </aside>
+
+      <div class="main">
+        <header class="topbar">
+          <div class="crumbs">Sunrise Home Health / Care / <strong>On-call log</strong></div>
+          <input class="search" placeholder="Search patients, callers, MRN">
+        </header>
+
+        <main class="content">
+          <div class="page-head">
+            <div>
+              <h1>On-call log</h1>
+              <p>After-hours calls from patients, families and facilities. Triage each call, then close it or hand it to the day team.</p>
+            </div>
+            <div class="head-actions">
+              <button class="btn btn-outline" type="button">Export shift summary</button>
+              <button class="btn btn-primary" type="button">Log a call</button>
+            </div>
+          </div>
+
+          <div class="shift">
+            <span class="live"></span>
+            <div><b>Tonight, Wed Nov 12</b> <span class="meta">5:00 PM to 8:00 AM. Backup: Dev Patel, RN. Physician on call: Dr. Okafor</span></div>
+            <div class="handoff meta">Handoff to day team at 7:30 AM</div>
+          </div>
+
+          <section class="kpis">
+            <div class="card kpi"><span class="label">Open calls</span><span class="value">4</span><span class="note bad">2 past the 15 min callback goal</span></div>
+            <div class="card kpi"><span class="label">Escalated to physician</span><span class="value">1</span><span class="note">Dr. Okafor, paged 9:42 PM</span></div>
+            <div class="card kpi"><span class="label">Median callback</span><span class="value">11 min</span><span class="note good">4 min faster than last week</span></div>
+            <div class="card kpi"><span class="label">PRN visits added</span><span class="value">2</span><span class="note">Both on tomorrow's schedule</span></div>
+          </section>
+
+          <section class="split">
+            <div class="card">
+              <div class="card-head">
+                <h2>Calls this shift</h2>
+                <div class="tabs">
+                  <span class="tab on">All 9</span>
+                  <span class="tab">Open 4</span>
+                  <span class="tab">Escalated 1</span>
+                  <span class="tab">Closed 4</span>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr><th>Time</th><th>Patient</th><th>Reason</th><th>Triage</th><th>Callback</th></tr>
+                </thead>
+                <tbody>
+                  <tr class="selected">
+                    <td><div class="time">9:31 PM</div><div class="sub">Daughter</div></td>
+                    <td><div class="patient">Harold Jensen</div><div class="sub">MRN 20418, CHF</div></td>
+                    <td class="reason">Weight up 3 lb since yesterday, new ankle swelling, short of breath on stairs.</td>
+                    <td><span class="badge b-danger">Urgent</span></td>
+                    <td><span class="badge b-purple">Escalated</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="time">10:05 PM</div><div class="sub">Patient</div></td>
+                    <td><div class="patient">Rosa Delgado</div><div class="sub">MRN 19877, wound care</div></td>
+                    <td class="reason">Dressing soaked through on sacral wound, asks if she can change it tonight.</td>
+                    <td><span class="badge b-warning">Same night</span></td>
+                    <td><span class="badge b-outline">Due 10:20 PM</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="time">10:48 PM</div><div class="sub">Facility</div></td>
+                    <td><div class="patient">Walter Kim</div><div class="sub">MRN 21003, post-op hip</div></td>
+                    <td class="reason">Assisted living staff report pain 7 of 10, next dose not due until 2 AM.</td>
+                    <td><span class="badge b-warning">Same night</span></td>
+                    <td><span class="badge b-danger">Overdue 18 min</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="time">11:12 PM</div><div class="sub">Spouse</div></td>
+                    <td><div class="patient">Edith Moore</div><div class="sub">MRN 18560, diabetes</div></td>
+                    <td class="reason">Blood sugar 64 after dinner, now 92 after juice. Asks what to watch for.</td>
+                    <td><span class="badge b-info">Advice</span></td>
+                    <td><span class="badge b-success">Called back</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="time">11:40 PM</div><div class="sub">Patient</div></td>
+                    <td><div class="patient">Samuel Ortiz</div><div class="sub">MRN 20961, COPD</div></td>
+                    <td class="reason">Oxygen concentrator alarm. Backup tank in use, supplier called.</td>
+                    <td><span class="badge b-warning">Same night</span></td>
+                    <td><span class="badge b-outline">Due 11:55 PM</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="time">12:26 AM</div><div class="sub">Son</div></td>
+                    <td><div class="patient">Lucille Grant</div><div class="sub">MRN 17342, hospice eval</div></td>
+                    <td class="reason">Asks when the admission nurse will come. Wants the visit window confirmed.</td>
+                    <td><span class="badge b-neutral">Routine</span></td>
+                    <td><span class="badge b-success">Called back</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <aside class="card detail">
+              <div class="card-head">
+                <h2>Call at 9:31 PM</h2>
+                <span class="badge b-danger" style="margin-left:auto">Urgent</span>
+              </div>
+              <div class="detail-body">
+                <div class="who-row">
+                  <span class="avatar">HJ</span>
+                  <div><div class="patient">Harold Jensen, 81</div><div class="sub">Caller: Anne Jensen (daughter), 555-0142</div></div>
+                </div>
+                <dl class="facts">
+                  <dt>Diagnosis</dt><dd>CHF, type 2 diabetes</dd>
+                  <dt>Last visit</dt><dd>Today 2:10 PM, SN, weight 184 lb</dd>
+                  <dt>Clinician</dt><dd>Priya Shah, RN</dd>
+                  <dt>Orders</dt><dd>Call MD if gain over 2 lb a day</dd>
+                </dl>
+                <div class="section-label">SBAR</div>
+                <div class="sbar">
+                  <div class="sbar-row"><span class="sbar-key">S</span><span>Weight 187 lb tonight, ankles swollen, short of breath on stairs.</span></div>
+                  <div class="sbar-row"><span class="sbar-key">B</span><span>Furosemide 40 mg daily. Missed this morning's dose.</span></div>
+                  <div class="sbar-row"><span class="sbar-key">A</span><span>Fluid overload likely. No chest pain. Speaks full sentences.</span></div>
+                  <div class="sbar-row"><span class="sbar-key">R</span><span>Physician order for an extra dose, SN visit first thing tomorrow.</span></div>
+                </div>
+                <div class="ai">
+                  <span class="ai-mark">AI</span>
+                  <div><strong>Suggested next step:</strong> add a PRN skilled nursing visit for 8:30 AM. Priya Shah has an open slot near the patient.</div>
+                </div>
+                <textarea class="note-field" placeholder="Add a note for the day team"></textarea>
+              </div>
+              <div class="detail-foot">
+                <button class="btn btn-outline btn-sm" type="button">Close call</button>
+                <button class="btn btn-outline btn-sm" type="button">Add PRN visit</button>
+                <button class="btn btn-primary btn-sm" type="button">Hand off to day team</button>
+              </div>
+            </aside>
+          </section>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

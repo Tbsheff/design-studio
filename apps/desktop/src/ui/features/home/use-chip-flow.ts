@@ -25,7 +25,7 @@ const useChipFlow = (deps: ChipFlowDeps): ChipFlow => {
 
   const needsPick =
     (app.chip?.inspection?.candidates.length ?? 0) > 1 &&
-    (app.chip?.appDir ?? null) === null;
+    (app.chip?.appDir ?? app.chip?.inspection?.appDir ?? null) === null;
 
   if (needsPick !== wasPicking) {
     setWasPicking(needsPick);

@@ -2,12 +2,14 @@ import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
+import { useRef } from "react";
 import type { ReactElement } from "react";
 
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { HiddenProjectsNote } from "./hidden-projects-note.js";
 import { LocationField } from "./location-field.js";
 import { NewProjectAdvanced } from "./new-project-advanced.js";
+import { useFocusElement } from "./use-focus-request.js";
 import type { FolderChooser } from "./use-folder-chooser.js";
 
 interface ComposerFootProps {
@@ -30,6 +32,14 @@ interface ComposerFootProps {
 
 const EMPTY_FOLDERS: WorkspaceFolder[] = [];
 
+const toLocationMark = (location: string | null): string => {
+  if (location === null) {
+    return "default";
+  }
+
+  return "custom";
+};
+
 const ComposerFoot = ({
   workspaces,
   location,
@@ -42,10 +52,12 @@ const ComposerFoot = ({
 }: ComposerFootProps): ReactElement => {
   const homeDir = workspaces?.homeDir ?? null;
   const { designMd, draft, onDesignMd, onDraft, onError, opened } = advanced;
+  const rowRef = useRef<HTMLDivElement>(null);
+  useFocusElement("location", rowRef);
 
   return (
-    <div className="home-foot">
-      <div className="home-foot-row">
+    <div className="home-foot" data-location={toLocationMark(location)}>
+      <div className="home-foot-row" ref={rowRef} tabIndex={-1}>
         <LocationField
           folders={workspaces?.folders ?? EMPTY_FOLDERS}
           value={location}

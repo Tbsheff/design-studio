@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { heldTool } from "../../platform/canvas-tool.js";
 import { findElement } from "../../platform/find-element.js";
-import { canvasHasKeys } from "../../platform/typing-target.js";
+import { canvasHasKeys, isTextField } from "../../platform/typing-target.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import type { Props } from "./canvas-types.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
@@ -39,7 +39,7 @@ const routeSelectKey = (
   event: KeyboardEvent,
   handlers: SelectKeyHandlers
 ): void => {
-  if (isTypingTarget(event.target) || hasCommandModifier(event)) {
+  if (isTextField(event.target) || hasCommandModifier(event)) {
     return;
   }
 
@@ -52,7 +52,7 @@ const routeSelectKey = (
     return;
   }
 
-  if (event.key !== "Escape") {
+  if (event.key !== "Escape" || isTypingTarget(event.target)) {
     return;
   }
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { findElement } from "../../platform/find-element.js";
+import { focusStageQuietly, takeComposerIntent } from "../../platform/focus.js";
 
 const INPUT = '.prompt [data-slot="composer-input"]';
 
@@ -20,6 +21,20 @@ const focusComposer = (): void => {
   globalThis.requestAnimationFrame(() => {
     if (focusIsFree()) {
       findElement(document.body, INPUT)?.focus({ preventScroll: true });
+    }
+  });
+};
+
+const focusOpenTarget = (): void => {
+  if (takeComposerIntent()) {
+    focusComposer();
+
+    return;
+  }
+
+  globalThis.requestAnimationFrame(() => {
+    if (focusIsFree()) {
+      focusStageQuietly();
     }
   });
 };
@@ -49,11 +64,18 @@ const useComposerFocus = (running: boolean, ready: boolean): void => {
       return;
     }
 
-    if (was.current !== running) {
-      focusComposer();
+    const previous = was.current;
+    was.current = running;
+
+    if (previous === null) {
+      focusOpenTarget();
+
+      return;
     }
 
-    was.current = running;
+    if (previous !== running) {
+      focusComposer();
+    }
   }, [running, ready]);
 };
 

@@ -10,6 +10,7 @@ import {
 import type { FormEvent, RefObject } from "react";
 
 import { api, errorText } from "../../api.js";
+import { markComposerIntent } from "../../platform/focus.js";
 import type { AppChip } from "./app-chip-model.js";
 import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 import type { ContextDraft } from "./context-drafts-model.js";
@@ -120,6 +121,7 @@ const runBuild = async (
       settings: parsed.settings,
     });
 
+    markComposerIntent();
     input.onOpen(project.id);
   } catch (error) {
     setFormError(errorText(error));

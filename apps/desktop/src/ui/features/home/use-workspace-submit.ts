@@ -1,6 +1,7 @@
 import type { RunLevel } from "@design-studio/contracts";
 
 import { api, errorText } from "../../api.js";
+import { markComposerIntent } from "../../platform/focus.js";
 import type { ImageDraft, ReferenceDraft } from "./composer-drafts-model.js";
 import type { ContextDraft } from "./context-drafts-model.js";
 import { call, projectRoutes } from "./deps.js";
@@ -69,7 +70,9 @@ const runWorkspacePrototype = async (
   setFormError(null);
 
   try {
-    onOpen(await createWorkspacePrototype(input));
+    const projectId = await createWorkspacePrototype(input);
+    markComposerIntent();
+    onOpen(projectId);
   } catch (error: unknown) {
     setFormError(errorText(error));
     setBusy(null);

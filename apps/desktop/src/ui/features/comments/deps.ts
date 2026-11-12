@@ -65,7 +65,7 @@ export { createLiveStore, useLive } from "../../platform/live-store.js";
 
 export { readStored, writeStored } from "../../platform/storage.js";
 
-export { isTypingTarget } from "../../platform/typing-target.js";
+export { isTextField, isTypingTarget } from "../../platform/typing-target.js";
 
 export { projectFromPath } from "../../platform/router.js";
 

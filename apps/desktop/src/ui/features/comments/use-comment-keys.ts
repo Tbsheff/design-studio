@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { RefObject } from "react";
 
-import { isTypingTarget } from "./deps.js";
+import { isTextField } from "./deps.js";
 
 const isModified = (event: KeyboardEvent): boolean =>
   event.metaKey || event.ctrlKey || event.altKey;
@@ -13,7 +13,7 @@ const useCommentKeys = (
 ): void => {
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
-      if (isTypingTarget(event.target) || isModified(event)) {
+      if (isTextField(event.target) || isModified(event)) {
         return;
       }
 

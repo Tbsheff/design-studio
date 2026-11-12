@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
-import { findElement, isTypingTarget, matchesKey } from "./deps.js";
+import { findElement, isTextField, matchesKey } from "./deps.js";
 import type { KeyId } from "./deps.js";
 import { IS_MAC } from "./keys.js";
 import { listenForCommands, runCommand, useCommands } from "./registry.js";
@@ -42,7 +42,7 @@ const isRegionKey = (event: KeyboardEvent): boolean =>
   event.key === "F6" && !event.metaKey && !event.ctrlKey && !event.altKey;
 
 const isBlockedTyping = (event: KeyboardEvent): boolean =>
-  isTypingTarget(event.target) &&
+  isTextField(event.target) &&
   !event.metaKey &&
   !event.ctrlKey &&
   !event.altKey;

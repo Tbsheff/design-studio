@@ -16,7 +16,7 @@ import type {
 import { json } from "../../api.js";
 import { IS_MAC } from "../../canvas-hook-slots.js";
 import { findElement } from "../../platform/find-element.js";
-import { isTypingTarget } from "../../platform/typing-target.js";
+import { isTextField } from "../../platform/typing-target.js";
 
 const PREVIEW_TOOL_KEY_EVENT = "studio:preview-tool-key";
 
@@ -117,7 +117,7 @@ const useVectorToolKeys = (available: boolean): void => {
     const onKey = (event: KeyboardEvent): void => {
       if (
         event.defaultPrevented ||
-        isTypingTarget(event.target) ||
+        isTextField(event.target) ||
         findElement(document.body, ".play-bar")
       ) {
         return;

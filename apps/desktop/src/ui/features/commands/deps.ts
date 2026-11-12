@@ -57,7 +57,7 @@ export { animationTimeline } from "../../platform/animation-timeline.js";
 
 export { readStored, uiStore, writeStored } from "../../platform/storage.js";
 
-export { isTypingTarget } from "../../platform/typing-target.js";
+export { isTextField } from "../../platform/typing-target.js";
 
 export { useProjectHits, useRouteHits } from "../home/project-hits-model.js";
 

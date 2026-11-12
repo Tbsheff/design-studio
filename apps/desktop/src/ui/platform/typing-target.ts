@@ -41,6 +41,10 @@ const editsText = (target: EventTarget | null): boolean => {
   );
 };
 
+const isTextField = (target: EventTarget | null): boolean =>
+  editsText(target) ||
+  (target instanceof HTMLElement && target.getAttribute("role") === "combobox");
+
 const inspectorButtonFocused = (): HTMLButtonElement | null => {
   const active = document.activeElement;
 
@@ -65,4 +69,10 @@ const canvasHasKeys = (): boolean => {
   );
 };
 
-export { canvasHasKeys, editsText, inspectorButtonFocused, isTypingTarget };
+export {
+  canvasHasKeys,
+  editsText,
+  inspectorButtonFocused,
+  isTextField,
+  isTypingTarget,
+};

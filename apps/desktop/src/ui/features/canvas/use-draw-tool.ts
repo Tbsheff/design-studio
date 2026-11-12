@@ -9,7 +9,7 @@ import {
 
 import { DRAW_POINTS_MAX, DRAW_STROKES_MAX } from "../../../shared/comments.js";
 import { useDesktopCommand } from "../../platform/desktop.js";
-import { isTypingTarget } from "../../platform/typing-target.js";
+import { isTextField, isTypingTarget } from "../../platform/typing-target.js";
 import { DRAW_COLORS } from "./drawing-model.js";
 
 interface DrawTool {
@@ -79,11 +79,7 @@ const handleDrawKey = (
     return;
   }
 
-  if (
-    isTypingTarget(event.target) ||
-    hasCommandModifier(event) ||
-    event.altKey
-  ) {
+  if (isTextField(event.target) || hasCommandModifier(event) || event.altKey) {
     return;
   }
 

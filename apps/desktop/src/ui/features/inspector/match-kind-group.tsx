@@ -3,7 +3,7 @@ import type {
   StyleValueRow,
 } from "@design-studio/contracts/style-search";
 import type { ReactElement } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { toMoreLabel, toShownRows } from "./match-rows-model.js";
 import type { RowActions } from "./match-rows-model.js";
@@ -24,7 +24,12 @@ const KindGroup = ({
   const [isAll, setIsAll] = useState(false);
   const toggleAll = useCallback(() => setIsAll((current) => !current), []);
 
-  if (rows.length === 0) {
+  const kindRows = useMemo(
+    () => rows.filter((row) => row.kind === kind),
+    [rows, kind]
+  );
+
+  if (kindRows.length === 0) {
     return null;
   }
 
@@ -32,7 +37,7 @@ const KindGroup = ({
     <div className="sm-group">
       <h4 className="sm-group-head">{KIND_LABEL[kind]}</h4>
       <ul className="sm-list">
-        {toShownRows(rows, isAll).map((row) => (
+        {toShownRows(kindRows, isAll).map((row) => (
           <ValueRow
             key={toRowKey(row)}
             row={row}
@@ -41,14 +46,14 @@ const KindGroup = ({
           />
         ))}
       </ul>
-      {rows.length > ROWS_SHOWN && (
+      {kindRows.length > ROWS_SHOWN && (
         <button
           type="button"
           className="tk-lint-more"
           aria-expanded={isAll}
           onClick={toggleAll}
         >
-          {toMoreLabel(isAll, rows.length)}
+          {toMoreLabel(isAll, kindRows.length)}
         </button>
       )}
     </div>

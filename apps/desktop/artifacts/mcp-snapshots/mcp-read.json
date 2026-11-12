@@ -204,6 +204,11 @@
             "minimum": 0,
             "maximum": 200,
             "description": "Space around the element crop in px. Default 16."
+          },
+          "colorScheme": {
+            "type": "string",
+            "enum": ["light", "dark"],
+            "description": "Color scheme for the shot. \"dark\" sets prefers-color-scheme dark, class \"dark\" and data-theme=\"dark\" on <html>; \"light\" sets light and removes class \"dark\". Leave out to shoot the page as it is."
           }
         },
         "required": ["projectId"],

@@ -241,13 +241,14 @@ export function createPlaywrightBackend(): RenderBackend {
       await browser();
     },
     async open(viewport) {
-      const { scale, ...size } = viewport;
+      const { scale, colorScheme, ...size } = viewport;
 
       const context = await (
         await browser()
       ).newContext({
         viewport: size,
         ...(scale && scale !== 1 ? { deviceScaleFactor: scale } : {}),
+        ...(colorScheme ? { colorScheme } : {}),
       });
 
       return wrapPage(context, await context.newPage());

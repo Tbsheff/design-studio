@@ -17,6 +17,7 @@ const handle = Effect.fn("mockup.export")(function* run(
   const spec = toDeviceFrame(input.device);
 
   const shot = yield* reads.screenshot({
+    colorScheme: null,
     directionId: input.directionId,
     element: null,
     frameId: input.frameId,

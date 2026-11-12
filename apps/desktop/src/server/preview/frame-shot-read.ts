@@ -16,6 +16,7 @@ import type { ExportSource } from "../project-source/index.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
 import { captureFrame } from "./capture.js";
 import type { Shot } from "./capture.js";
+import { toSchemedPreview } from "./color-scheme.js";
 import { pickFrame } from "./frame-shot-pick.js";
 import type { FramePick } from "./frame-shot-pick.js";
 import {
@@ -123,6 +124,12 @@ const describe = (context: ShotContext, shot: Shot): string => {
     note = ` The page is taller; the shot stops at ${MAX_SHOT_HEIGHT} px.`;
   }
 
+  const { colorScheme } = context.query;
+
+  if (colorScheme) {
+    note = `${note} Shot in ${colorScheme} mode.`;
+  }
+
   return `${toWhat(context, shot)} of ${versionLabel(context.src)}.${toSizedNote(context)}${note}`;
 };
 
@@ -181,11 +188,11 @@ const readScreenshot = async (
   deps: FrameDeps,
   query: ShotQuery
 ): Promise<ScreenshotView> => {
-  const { preview } = deps;
-
-  if (!preview) {
+  if (!deps.preview) {
     throw new BadRequestError(NO_RENDER);
   }
+
+  const preview = toSchemedPreview(deps.preview, query.colorScheme);
 
   const pick = await pickFrame(deps.projects, query);
 

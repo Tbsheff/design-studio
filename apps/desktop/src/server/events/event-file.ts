@@ -2,11 +2,17 @@ import { open, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 const TAIL_BYTES = 65_536;
+const SEQ_TAIL_BYTES = 16_777_216;
 const HYDRATE_LIMIT = 8;
 const MISSING_CODES = new Set(["ENOENT", "ENOTDIR"]);
 
 interface Sequenced {
   seq: number;
+}
+
+interface SizedEntry<Entry> {
+  readonly bytes: number;
+  readonly entry: Entry;
 }
 
 interface SeqFloor {
@@ -94,16 +100,6 @@ const parseLines = <Entry extends Sequenced>(text: string): Entry[] => {
   return events;
 };
 
-const readEventFile = async <Entry extends Sequenced>(
-  file: string
-): Promise<Entry[]> => {
-  try {
-    return parseLines<Entry>(await readFile(file, "utf-8"));
-  } catch {
-    return [];
-  }
-};
-
 const parseReserved = (text: string): number => {
   const value = Number(text.trim());
 
@@ -125,12 +121,12 @@ const dropPartialLine = (text: string, start: number): string => {
   return text.slice(text.indexOf("\n") + 1);
 };
 
-const readTail = async (file: string): Promise<string> => {
+const getTailText = async (file: string, maxBytes: number): Promise<string> => {
   const handle = await open(file, "r");
 
   try {
     const { size } = await handle.stat();
-    const start = Math.max(0, size - TAIL_BYTES);
+    const start = Math.max(0, size - maxBytes);
     const buffer = Buffer.alloc(size - start);
 
     await handle.read(buffer, 0, buffer.length, start);
@@ -141,19 +137,48 @@ const readTail = async (file: string): Promise<string> => {
   }
 };
 
+const toSizedLines = <Entry extends Sequenced>(
+  text: string
+): SizedEntry<Entry>[] => {
+  const entries: SizedEntry<Entry>[] = [];
+  let lastSeq = 0;
+
+  for (const line of text.split("\n")) {
+    const entry = parseFilled<Entry>(line);
+
+    if (entry !== null && entry.seq > lastSeq) {
+      lastSeq = entry.seq;
+      entries.push({ bytes: line.length, entry });
+    }
+  }
+
+  return entries;
+};
+
+const getEventTail = async <Entry extends Sequenced>(
+  file: string,
+  maxBytes: number
+): Promise<SizedEntry<Entry>[]> => {
+  try {
+    return toSizedLines<Entry>(await getTailText(file, maxBytes));
+  } catch {
+    return [];
+  }
+};
+
 const lastSeqOf = (events: Sequenced[]): number => events.at(-1)?.seq ?? 0;
 
 const lastStoredSeq = async (file: string): Promise<number> => {
-  const tail = await orMissing(() => readTail(file), "");
+  const tail = await orMissing(() => getTailText(file, TAIL_BYTES), "");
   const tailSeq = lastSeqOf(parseLines(tail));
 
   if (tailSeq > 0) {
     return tailSeq;
   }
 
-  const text = await orMissing(() => readFile(file, "utf-8"), "");
+  const wide = await orMissing(() => getTailText(file, SEQ_TAIL_BYTES), "");
 
-  return lastSeqOf(parseLines(text));
+  return lastSeqOf(parseLines(wide));
 };
 
 const readFloor = async (dir: string): Promise<SeqFloor> => {
@@ -247,6 +272,6 @@ const readSeqFloors = async (
   return mergeTrash(new Map(projectFloors), trashFloors);
 };
 
-export { readEventFile, readSeqFloors };
+export { getEventTail, readSeqFloors };
 
-export type { SeqFloor };
+export type { SeqFloor, SizedEntry };

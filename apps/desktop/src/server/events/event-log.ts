@@ -8,11 +8,13 @@ import type {
 import { Effect, Result } from "effect";
 
 import { logError } from "../platform/logger/index.js";
-import { readEventFile } from "./event-file.js";
-import type { SeqFloor } from "./event-file.js";
+import { getEventTail } from "./event-file.js";
+import type { SeqFloor, SizedEntry } from "./event-file.js";
 import type { EventRunner } from "./event-runner.js";
 
 const RING_SIZE = 5000;
+const RING_BYTES = 4_194_304;
+const STORED_TAIL_BYTES = 16_777_216;
 const EVENT_FILES_MAX = 20;
 
 interface RecordedEvent {
@@ -21,6 +23,7 @@ interface RecordedEvent {
 }
 
 const lines = new WeakMap<StudioEvent, string>();
+const sizes = new WeakMap<StudioEvent, number>();
 
 type EventListener = (event: StudioEvent, line: string) => void;
 
@@ -33,6 +36,7 @@ interface ProjectLog {
   listeners: Set<EventListener>;
   reserved: number;
   ring: StudioEvent[];
+  ringBytes: number;
   readonly run: EventRunner;
   seqChain: Promise<void>;
   seqFile: string;
@@ -80,6 +84,7 @@ const openLog = (
   listeners: new Set(),
   reserved: floor?.reserved ?? 0,
   ring: [],
+  ringBytes: 0,
   run: runner,
   seqChain: Promise.resolve(),
   seqFile: path.join(path.dirname(logFile), "events.seq"),
@@ -87,12 +92,35 @@ const openLog = (
   unflushed: [],
 });
 
-const trimRing = (log: ProjectLog): void => {
-  const keep = Math.max(RING_SIZE, log.unflushed.length);
-
-  if (log.ring.length > keep) {
-    log.ring.splice(0, log.ring.length - keep);
+const toEventBytes = (event: StudioEvent | null): number => {
+  if (event === null) {
+    return 0;
   }
+
+  return sizes.get(event) ?? 0;
+};
+
+const isOverBudget = (log: ProjectLog, kept: number, bytes: number): boolean =>
+  kept > log.unflushed.length && (kept > RING_SIZE || bytes > RING_BYTES);
+
+const trimRing = (log: ProjectLog): void => {
+  let dropped = 0;
+  let bytes = log.ringBytes;
+
+  while (isOverBudget(log, log.ring.length - dropped, bytes)) {
+    bytes -= toEventBytes(log.ring[dropped] ?? null);
+    dropped += 1;
+  }
+
+  if (dropped > 0) {
+    log.ring.splice(0, dropped);
+    log.ringBytes = bytes;
+  }
+};
+
+const insertRing = (log: ProjectLog, recorded: RecordedEvent): void => {
+  log.ring.push(recorded.event);
+  log.ringBytes += recorded.line.length;
 };
 
 const toRecorded = (
@@ -108,6 +136,7 @@ const toRecorded = (
   const line = JSON.stringify(event);
 
   lines.set(event, line);
+  sizes.set(event, line.length);
 
   return { event, line };
 };
@@ -145,25 +174,40 @@ const bySeq = (events: readonly StudioEvent[]): StudioEvent[] => {
   return [...unique.values()].toSorted((left, right) => left.seq - right.seq);
 };
 
-const getStoredEvents = (log: ProjectLog): Effect.Effect<StudioEvent[]> =>
-  Effect.promise(() => readEventFile<StudioEvent>(log.file));
+const toSizedEvent = (sized: SizedEntry<StudioEvent>): StudioEvent => {
+  sizes.set(sized.entry, sized.bytes);
+
+  return sized.entry;
+};
+
+const getStoredEvents = (
+  log: ProjectLog,
+  maxBytes: number
+): Effect.Effect<StudioEvent[]> =>
+  Effect.promise(() => getEventTail<StudioEvent>(log.file, maxBytes)).pipe(
+    Effect.map((tail) => tail.map((sized) => toSizedEvent(sized)))
+  );
+
+const toRingBytes = (events: readonly StudioEvent[]): number =>
+  events.reduce((total, event) => total + toEventBytes(event), 0);
 
 const storedSince = Effect.fn("EventLog.storedSince")(function* run(
   log: ProjectLog,
   afterSeq: number
 ) {
   const tail = [...log.ring];
-  const stored = yield* getStoredEvents(log);
+  const stored = yield* getStoredEvents(log, STORED_TAIL_BYTES);
 
   return bySeq([...stored, ...tail]).filter((event) => event.seq > afterSeq);
 });
 
 const fillRing = Effect.fn("EventLog.fillRing")(function* run(log: ProjectLog) {
-  const stored = yield* getStoredEvents(log);
+  const stored = yield* getStoredEvents(log, RING_BYTES);
   const firstSeq = log.ring[0]?.seq ?? Number.POSITIVE_INFINITY;
   const older = stored.filter((event) => event.seq < firstSeq);
 
   log.ring = [...older, ...log.ring];
+  log.ringBytes = toRingBytes(log.ring);
   trimRing(log);
 });
 
@@ -190,6 +234,15 @@ const sinceLog = Effect.fn("EventLog.sinceLog")(function* run(
   return yield* storedSince(log, afterSeq);
 });
 
-export { fanOut, lineOf, openLog, report, sinceLog, toRecorded, trimRing };
+export {
+  fanOut,
+  lineOf,
+  openLog,
+  insertRing,
+  report,
+  sinceLog,
+  toRecorded,
+  trimRing,
+};
 
 export type { EventListener, ProjectLog, RecordedEvent };

@@ -9,6 +9,8 @@ export type { RunListQuery, RunPage } from "./run-list.js";
 
 export { RunLogStore } from "./run-log-store.js";
 
+export { updateStaleRuns } from "./run-stale.js";
+
 export { bindRunLogRuntime } from "./run-log-runtime.js";
 
 export type {

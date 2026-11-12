@@ -18,6 +18,7 @@ import { listRunSummaries, pageRuns } from "./run-list.js";
 import { isRunLogRecord, isRunSummary } from "./run-log-json.js";
 import { readRunLogRuntime } from "./run-log-runtime.js";
 import type { RunLogRuntime } from "./run-log-runtime.js";
+import { toSettledRun } from "./run-stale.js";
 
 interface RunListInput {
   readonly cursor: string | null;
@@ -67,6 +68,21 @@ const parseSummary = (text: string | null): RunSummary | null => {
   }
 
   return null;
+};
+
+const isLiveRun = (runtime: RunLogRuntime, summary: RunSummary): boolean =>
+  Boolean(runtime.runner.get(summary.id)) &&
+  runtime.runner.isRunning(summary.projectId, summary.directionId);
+
+const toLiveRun = (
+  runtime: RunLogRuntime,
+  summary: RunSummary | null
+): RunSummary | null => {
+  if (summary === null) {
+    return null;
+  }
+
+  return toSettledRun(summary, isLiveRun(runtime, summary), null);
 };
 
 const missingRun = (runId: string): NotFound =>
@@ -119,7 +135,9 @@ const getRunDetail = Effect.fn("RunLog.getRunDetail")(function* run(
     return yield* missingRun(runId);
   }
 
-  return toRunDetail(summaryText, eventsText);
+  const detail = toRunDetail(summaryText, eventsText);
+
+  return { ...detail, summary: toLiveRun(runtime, detail.summary) };
 });
 
 const CURSOR = /^\d{1,16}$/u;
@@ -158,7 +176,11 @@ const listRunPage = Effect.fn("RunLog.listRunPage")(function* run(
     listRunSummaries(runtime.runsDir(projectId))
   );
 
-  return pageRuns(all, {
+  const live = all.map((summary) =>
+    toSettledRun(summary, isLiveRun(runtime, summary), null)
+  );
+
+  return pageRuns(live, {
     before: toBefore(input.cursor),
     directionId: input.direction ?? null,
     isLight: input.light === true,

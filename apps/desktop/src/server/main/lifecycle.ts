@@ -8,6 +8,7 @@ import type { ServerConfig } from "../platform/config/index.js";
 import { acquireDataLock } from "../platform/data-lock/index.js";
 import { logError, logInfo } from "../platform/logger/index.js";
 import type { createPreviewService } from "../preview/index.js";
+import { updateStaleRuns } from "../run-log/index.js";
 import { watchParent } from "./parent-watch.js";
 import { disposeRuntime } from "./runtime.js";
 import type { StudioRuntime } from "./runtime.js";
@@ -26,6 +27,18 @@ const prepareDataDir = async (config: ServerConfig): Promise<void> => {
   const releaseLock = acquireDataLock(config.dataDir, config.studioPort);
 
   process.on("exit", releaseLock);
+};
+
+const stopStaleRuns = async (config: ServerConfig): Promise<void> => {
+  try {
+    const count = await updateStaleRuns(path.join(config.dataDir, "projects"));
+
+    if (count > 0) {
+      logInfo(`[studio] marked ${count} unfinished runs as failed`);
+    }
+  } catch (error) {
+    logError("[studio] cannot mark unfinished runs", error, config.dataDir);
+  }
 };
 
 interface ShutdownParts {
@@ -78,6 +91,6 @@ const handleSignals = (
   return { runtime: parts.runtime, shutdown };
 };
 
-export { handleSignals, prepareDataDir };
+export { handleSignals, prepareDataDir, stopStaleRuns };
 
 export type { ShutdownParts, SignalHandle };

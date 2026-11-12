@@ -26,7 +26,7 @@ import { createCommentStore } from "../store/comments.js";
 import { createVersionStore } from "../store/versions.js";
 import { bootAgentRunner } from "./agent-runner.js";
 import { desktopSender, linkDesktop } from "./desktop-link.js";
-import { handleSignals, prepareDataDir } from "./lifecycle.js";
+import { handleSignals, prepareDataDir, stopStaleRuns } from "./lifecycle.js";
 import { buildRuntime } from "./runtime.js";
 import type { StudioRuntime } from "./runtime.js";
 
@@ -264,6 +264,7 @@ const createServer = async (
       })
     ),
     openStores(config, options),
+    stopStaleRuns(config),
   ]);
 
   const { app, preview } = buildApp(config, options, stores, {

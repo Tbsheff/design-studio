@@ -19,6 +19,11 @@ const IGNORED_SEGMENTS = new Set([
   ".studio",
   ".next",
   ".turbo",
+  ".claude",
+  ".cache",
+  "build",
+  "coverage",
+  "worktrees",
 ]);
 
 const COALESCE_MS = 20;

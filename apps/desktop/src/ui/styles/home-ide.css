@@ -28,6 +28,13 @@
   scrollbar-color: var(--line-strong) transparent;
 }
 
+.ide-main:not(:has(> .ide-activity)) {
+  grid-template-columns: var(--ide-side) minmax(0, 1fr);
+  grid-template-areas:
+    "side center"
+    "side lib";
+}
+
 .ide-side {
   grid-area: side;
   position: sticky;
@@ -602,6 +609,13 @@ button.ide-item:hover {
     grid-template-areas:
       "side center"
       "side act"
+      "side lib";
+  }
+
+  .ide-main:not(:has(> .ide-activity)) {
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "side center"
       "side lib";
   }
 

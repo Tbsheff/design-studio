@@ -141,7 +141,28 @@ const toServerFor = (
 ): ActivityServerWire | null =>
   activity?.devServers.find((server) => server.projectId === projectId) ?? null;
 
+const isActivityEmpty = (
+  activity: ActivityWire | null,
+  hasError: boolean
+): boolean => {
+  if (hasError) {
+    return false;
+  }
+
+  if (activity === null) {
+    return true;
+  }
+
+  return (
+    activity.running.length === 0 &&
+    activity.approvals.length === 0 &&
+    activity.recent.length === 0 &&
+    activity.devServers.length === 0
+  );
+};
+
 export {
+  isActivityEmpty,
   isServerLive,
   toApprovalMeta,
   toBranch,

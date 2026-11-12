@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { ActivityHead } from "./activity-head.js";
+import { isActivityEmpty } from "./activity-model.js";
 import { ActivitySection } from "./activity-section.js";
 import { ApprovalItem } from "./approval-item.js";
 import { copy } from "./copy.js";
@@ -19,9 +20,14 @@ const ActivityColumn = ({
   onOpen,
   onSearch,
   state,
-}: ActivityColumnProps): ReactElement => {
+}: ActivityColumnProps): ReactElement | null => {
   const { activity, error, now } = state;
   const { isPending, onToggle } = useDevServerToggle();
+
+  if (isActivityEmpty(activity, error !== null)) {
+    return null;
+  }
+
   const running = activity?.running ?? [];
   const approvals = activity?.approvals ?? [];
   const recent = activity?.recent ?? [];

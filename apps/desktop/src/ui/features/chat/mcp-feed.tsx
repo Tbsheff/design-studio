@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { useNow } from "../../platform/clock.js";
 import { McpEditHead } from "./mcp-edit-head.js";
 import { McpEditRows } from "./mcp-edit-rows.js";
-import { FOLD_AT, RECENT_MS, TICK_MS } from "./mcp-feed-model.js";
+import { FOLD_AT, RECENT_MS, TICK_MS, isWithinMs } from "./mcp-feed-model.js";
 import type { McpFeedControl, TimelineItem } from "./use-mcp-feed.js";
 
 const McpEditStrip = ({
@@ -13,11 +13,12 @@ const McpEditStrip = ({
   mcp: McpFeedControl | null;
 }): ReactElement | null => {
   const last = mcp?.activity.at(-1) ?? null;
-  const now = useNow(last !== null, TICK_MS);
+  const isRecent = last !== null && isWithinMs(last.at, RECENT_MS);
+  const now = useNow(isRecent, TICK_MS);
   const [open, setOpen] = useState(false);
   const toggle = useCallback(() => setOpen((value) => !value), []);
 
-  if (!mcp || !last || now - last.at > RECENT_MS) {
+  if (!mcp || !last || !isRecent) {
     return null;
   }
 

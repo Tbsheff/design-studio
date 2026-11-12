@@ -10,6 +10,7 @@ import { DisconnectButton } from "./disconnect-button.js";
 import {
   FOLD_AT,
   MCP_ACTIVE_MS,
+  isWithinMs,
   TICK_MS,
   toBlockState,
 } from "./mcp-feed-model.js";
@@ -27,8 +28,9 @@ const McpBlock = ({
 }): ReactElement => {
   const [open, setOpen] = useState(false);
   const lastAt = entries.at(-1)?.at ?? 0;
-  const now = useNow(true, TICK_MS);
-  const active = now - lastAt < MCP_ACTIVE_MS;
+  const active = isWithinMs(lastAt, MCP_ACTIVE_MS);
+
+  useNow(active, TICK_MS);
   const hidden = pick(open, 0, Math.max(0, entries.length - FOLD_AT));
   const showAll = useCallback(() => setOpen(true), []);
   const showFewer = useCallback(() => setOpen(false), []);

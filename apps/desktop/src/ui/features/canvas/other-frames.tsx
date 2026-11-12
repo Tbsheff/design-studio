@@ -4,10 +4,12 @@ import { tagFrame } from "../../platform/bridge.js";
 import { useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
+import type { FrameLiveSources } from "./frame-still-model.js";
 import { StablePassiveFrame } from "./stable-passive-frame.js";
 import type { StageWait as PageWait } from "./stage-wait-model.js";
 import type { DirectionFrames, PassiveSlot } from "./use-direction-frames.js";
 import type { useFrameLabels } from "./use-frame-labels.js";
+import { useFrameLiveSources } from "./use-frame-live.js";
 import { usePassiveEntries } from "./use-passive-entries.js";
 import type { PassiveEntry } from "./use-passive-entries.js";
 
@@ -25,6 +27,8 @@ interface OtherFramesProps {
     directionId: string | null
   ) => PageWait;
   readonly steps: LiveStore<string | null>;
+  readonly projectId: string;
+  readonly zoomPercent: LiveStore<number>;
 }
 
 interface PassiveContext {
@@ -34,6 +38,8 @@ interface PassiveContext {
   readonly labelProps: FrameLabels;
   readonly register: OtherFramesProps["register"];
   readonly step: string | null | undefined;
+  readonly projectId: string;
+  readonly sources: FrameLiveSources;
 }
 
 const toPending = (
@@ -71,6 +77,7 @@ const toEntry = (
   wait: PageWait
 ): PassiveEntry => {
   const { active, passive, sandbox, labelProps, register, step } = context;
+  const { projectId, sources } = context;
   const did = slot?.directionId ?? null;
 
   const frameRef = (el: HTMLIFrameElement | null): void => {
@@ -94,8 +101,10 @@ const toEntry = (
     offset,
     onNextLoad,
     pending,
+    projectId,
     register,
     sandbox,
+    sources,
     src,
   };
 };
@@ -106,7 +115,7 @@ const toSignature = (
   slot: PassiveSlot | undefined,
   wait: PageWait
 ): string => {
-  const { active, sandbox, labelProps, step } = context;
+  const { active, sandbox, labelProps, step, projectId } = context;
   const did = slot?.directionId ?? null;
 
   return JSON.stringify([
@@ -120,6 +129,7 @@ const toSignature = (
     active.x,
     active.y,
     labelProps.sig(frame, did),
+    projectId,
   ]);
 };
 
@@ -132,8 +142,11 @@ const OtherFrames = ({
   register,
   waiting,
   steps,
+  projectId,
+  zoomPercent,
 }: OtherFramesProps): ReactElement => {
   const step = useLive(steps);
+  const sources = useFrameLiveSources(zoomPercent);
   const { entries, reset } = usePassiveEntries();
   const live = reset();
 
@@ -141,8 +154,10 @@ const OtherFrames = ({
     active,
     labelProps,
     passive,
+    projectId,
     register,
     sandbox,
+    sources,
     step,
   };
 

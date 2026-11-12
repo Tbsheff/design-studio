@@ -62,6 +62,8 @@ const StablePassiveView = ({
       register={cur.register}
       frameRef={cur.frameRef}
       onNextLoad={toNextLoad(entries, id)}
+      projectId={cur.projectId}
+      sources={cur.sources}
     />
   );
 };

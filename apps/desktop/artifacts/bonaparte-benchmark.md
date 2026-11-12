@@ -1,22 +1,22 @@
 # Bonaparte benchmark
 
-Run: 2026-11-12. Built UI (`pnpm run build:ui`), server with `STUDIO_AGENT=mock` and a temp `STUDIO_DATA_DIR`, browser at 1440x900.
+Run: 2026-11-12. The test pane was hidden: it pauses `requestAnimationFrame` and serves late screenshots, so timings come from DOM timestamps where possible. The focus fix was checked in the browser build, not in Electron. Built UI (`pnpm run build:ui`), server with `STUDIO_AGENT=mock` and a temp `STUDIO_DATA_DIR`, browser at 1440x900.
 Folder: `/Volumes/DevProjects/code/bonaparte` opened read-only as a folder workspace (Next.js monorepo, 6 apps, default `apps/dashboard`).
 
 ## Step timings
 
 | Step | Time | How measured |
 |---|---|---|
-| Add folder (path + Return) to workspace shown | ~2 s | screenshot after Return |
+| Add folder (path + Return) to workspace shown | ~2 s, approximate | screenshot after Return (screenshots lag in a hidden pane) |
 | Home prompt (Return) to project route | 419 ms | keydown to `pushState` |
 | Home prompt to preview frame mounted | 634 ms | keydown to stage `iframe` in DOM |
-| Home prompt to design visible | ~985 ms | keydown to first bridge message (`bridge-hello`) and frame `load` |
+| Home prompt to first frame | ~985 ms | keydown to first bridge message (`bridge-hello`) and frame `load`; this can be the frame before the mock run writes |
 | Open project (click in Home list) to route | 62 ms | click to `pushState` |
 | Open project to design visible | 373 ms | click to first bridge message |
 | Open project to canvas has keys | 840 ms | click to stage focus (after fix 1) |
 | Select (ArrowDown) to inspector | 21 ms | keydown to `.inspector` in DOM |
 | Edit text (double-click, type, Esc) | written at once | "Written" status in the inspector |
-| Undo (Cmd+Z) to preview shows old text | 1.5 to 3.5 s | screenshots |
+| Undo (Cmd+Z) to preview shows old text | not measured | screenshots lag in a hidden pane; a DOM re-measure did not get a clean edit |
 | Change color with a token | blocked | the project has no tokens (friction 9) |
 | Play (Present menu, Play prototype) | 2 clicks | play layer shown |
 
@@ -26,7 +26,7 @@ Each line: what I hit, then the cause. `Fixed` marks the ones this branch fixes 
 
 1. **Fixed** - Reopening a project by its URL left focus on the page body, so Esc and the arrow keys did nothing until a click. Cause: the open-project stage focus ran once, before the lazy canvas mounted; the arrow first-select also needed focus on the stage itself.
 2. **Fixed** - Every Home visit for bonaparte opened the app picker over the page, and the first click on a project went to closing it. Cause: `needsPick` ignored the default app (`apps/dashboard`) that the folder inspection already chose.
-3. **Fixed** - After "Add folder", focus went back to the rail button, so you clicked the composer before you could type. Cause: the path popover closed with refocus on its trigger, over the prompt focus request.
+3. **Fixed** - After "Add folder" in the browser folder-path popover (Electron uses the native picker), focus went back to the rail button, so you clicked the composer before you could type. Cause: the path popover closed with refocus on its trigger, over the prompt focus request.
 4. **Fixed** - The inspector put Effect layers, Scroll and stacking and Accessibility above Layout, Text and Appearance, so each text or color edit started with a scroll. Cause: those rare sections shared the type-specific slot at the top of the editor.
 5. **Fixed** - The inspector Values block listed the same sizes (`32px`, `12px`) under Colors, Font sizes, Radii and Spacing. Cause: `KindGroup` drew all rows for each kind and never filtered by `row.kind`.
 6. **Fixed** - Home showed "Prompts make a prototype. The folder does not change." under the New prototype card that already says it. Cause: the mode line showed in prototype mode as well as Edit app mode.
@@ -36,6 +36,6 @@ Each line: what I hit, then the cause. `Fixed` marks the ones this branch fixes 
 10. The project name and the h1 stop mid-phrase ("A patient intake summary card with"). Likely cause: the title is cut at a word count, not at a clause.
 11. Each new project shows three times on Home: rail Recent, Recent in bonaparte cards, and Activity Recent runs. Likely cause: three lists read the same recent set.
 12. Play needs two clicks: Present opens a menu, and Play prototype is the 4th item. Likely cause: Present has no direct play default.
-13. Undo takes 1.5 to 3.5 s to show in the preview, while the toast shows at once. Likely cause: the preview reloads after the file write, not on the patch.
+13. Unverified: undo looked slow (1.5 to 3.5 s) in screenshots, but the hidden pane delays screenshots, so this can be a test artifact. Likely cause, if real: the preview reloads after the file write, not on the patch.
 14. The text color swatch shows empty (white) for `oklch(0.15 0 0)`, and its label truncates to "Color o...". Likely cause: the swatch parses only hex and rgb; the Size and Color fields share one row.
 15. The canvas tool rail covers the left edge of the design at 100% zoom. Likely cause: the rail floats over the stage with no left inset for the frame.

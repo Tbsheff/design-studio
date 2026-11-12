@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { ActivityHead } from "./activity-head.js";
+import { ActivityLoading } from "./activity-loading.js";
 import { isActivityEmpty } from "./activity-model.js";
 import { ActivitySection } from "./activity-section.js";
 import { ApprovalItem } from "./approval-item.js";
@@ -26,6 +27,10 @@ const ActivityColumn = ({
 
   if (isActivityEmpty(activity, error !== null)) {
     return null;
+  }
+
+  if (activity === null && error === null) {
+    return <ActivityLoading />;
   }
 
   const running = activity?.running ?? [];

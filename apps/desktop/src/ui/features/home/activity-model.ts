@@ -150,7 +150,7 @@ const isActivityEmpty = (
   }
 
   if (activity === null) {
-    return true;
+    return false;
   }
 
   return (

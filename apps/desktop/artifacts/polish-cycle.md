@@ -34,7 +34,7 @@ All rows at 900 px window height. The strip reserves no height: a frame that fit
 ### 3. Location row folds under Advanced
 
 - **Was:** a row under the composer always showed "Location [Design Studio ▾] New folder /long/path/untitled".
-- **Now:** the row shows only when Advanced is open, when you picked a non-default location, or when focus moves into it (the + menu "Location" item still goes there).
+- **Now:** the row shows only when Advanced is open, when you picked a non-default location, or when focus moves into it (the + menu "Location" item now focuses it; before, that item did nothing).
 - **Why:** the default location is right for almost every prototype. The path is noise on the first screen.
 
 ### 4. No Continue card on Home
@@ -48,6 +48,16 @@ All rows at 900 px window height. The strip reserves no height: a frame that fit
 - **Was:** a 320 px Activity column always sat on the right of Home, with 4 empty sections ("Nothing is running.", "Nothing waits on you.", "No runs yet.", "Attach an app folder…").
 - **Now:** the column shows only when a run, an approval, a recent run or a dev server exists, or when the activity feed fails. With no activity, the centre gets the width.
 - **Why:** an empty panel is clutter. doop and Open Design show activity next to the work, not as a fixed empty column.
+- **Trade-off:** the column frame shows while the feed loads, so Home does not jump for a user with past runs. A user with no activity sees the frame for about 100 ms, then the centre widens once. Any past run keeps the column, so this pick mostly helps new users.
+
+## Strip states checked
+
+All 8 states (1440 and 1000 px, column open and closed, inspector open and closed) leave no tool under a card or the zoom control. The row lifts above the zoom row when it would touch it; it turns vertical only at 1000 px with the column and the inspector open.
+
+## Seen, not changed
+
+- The composer takes focus when a project opens, so tool keys (V H F R P T C L) do nothing until you click outside it.
+- A new project shows a blank thumbnail in the recent row until its first thumbnail is made.
 
 ## Idle CPU
 

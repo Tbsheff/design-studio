@@ -395,14 +395,13 @@ class AccountAuth {
     if (!existsSync(file)) {
       return;
     }
+    const decrypted = await this.decryptSession(file);
+
+    if (decrypted === null) {
+      return;
+    }
     try {
-      if (!(await safeStorage.isAsyncEncryptionAvailable())) {
-        return;
-      }
-      const { result } = await safeStorage.decryptStringAsync(
-        await readFile(file)
-      );
-      const parsed: unknown = JSON.parse(result);
+      const parsed: unknown = JSON.parse(decrypted.result);
 
       const stored = toStored(
         isRecord(parsed) ? { ...parsed, session_token: parsed.token } : null
@@ -411,11 +410,28 @@ class AccountAuth {
       if (stored && isRecord(parsed) && !this.session) {
         stored.confirmed = parsed.confirmed === true;
         this.session = stored;
+        if (decrypted.shouldReEncrypt) await this.persist();
         this.emit();
         void this.mint();
       }
     } catch {
       rmSync(file, { force: true });
+    }
+  }
+
+  private async decryptSession(
+    file: string
+  ): Promise<Electron.DecryptStringAsyncReturnValue | null> {
+    try {
+      if (!(await safeStorage.isAsyncEncryptionAvailable())) {
+        return null;
+      }
+
+      return await safeStorage.decryptStringAsync(await readFile(file));
+    } catch (error) {
+      console.warn(`[desktop] account session not read: ${String(error)}`);
+
+      return null;
     }
   }
 }

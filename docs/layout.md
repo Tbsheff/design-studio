@@ -25,29 +25,29 @@ Both files copy the two `:root` blocks of `apps/desktop/src/ui/styles/tokens.css
 │ ●●● ⊟ Kiln Coffee ▾  index ▾                                  Review  Present  [Share]  (◉)  │  title bar 48
 ├────────────────────┬─────────────────────────────────────────────────────────────────────────┤
 │ Chat · Main        │ · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · │  canvas (dotted)
-├────────────────────┤ ╭────┬───────────╮ ╭──╮ ● Check passed            ╭────────────────────╮│  fills everything
-│                    │ │ ▤  │ Layers  × │ │V │                           │ Design│Proto│Code ×││  right of chat
-│  agent messages    │ │ ▦  │ Search…   │ │H │  Desktop 1440             │ Position           ││
-│  (UI sans, body    │ │ ◫  │ ▾ Page /  │ │F │  ┌──────────────────┐     │ Layout             ││
-│   size)            │ │ ⟲  │   ▸ Hero  │ │R │  │                  │     │ Fill               ││
-│                    │ │ ◈  │           │ │P │  │   frame / route  │     │ Text               ││
-│                    │ │ ⧉  │           │ │T │  │                  │     │                    ││
-│ ┌────────────────┐ │ │ ◎  │           │ │──│  └──────────────────┘     │                    ││
-│ │ Ask Claude…    │ │ │    │           │ │C │                           │                    ││
-│ │ +  Proto  Model│ │ │    │           │ │L │                 ╭───────╮ │                    ││
-│ └────────────────┘ │ ╰────┴───────────╯ ╰──╯                 │− 66% +│ ╰────────────────────╯│
-└────────────────────┴─────────────────────────────────────────╰───────╯───────────────────────┘
- chat 360             dock card: rail 40   tool    status chip  zoom      inspector card 264,
-                      + column 240         strip   (DS drafts)  control   opens on select
+├────────────────────┤ ╭────┬───────────╮ ● Check passed                ╭────────────────────╮│  fills everything
+│                    │ │ ▤  │ Layers  × │                               │ Design│Proto│Code ×││  right of chat
+│  agent messages    │ │ ▦  │ Search…   │  Desktop 1440                 │ Position           ││
+│  (UI sans, body    │ │ ◫  │ ▾ Page /  │  ┌───────────────────────┐    │ Layout             ││
+│   size)            │ │ ⟲  │   ▸ Hero  │  │                       │    │ Fill               ││
+│                    │ │ ◈  │           │  │    frame / route      │    │ Text               ││
+│                    │ │ ⧉  │           │  │                       │    │                    ││
+│ ┌────────────────┐ │ │ ◎  │           │  └───────────────────────┘    │                    ││
+│ │ Ask Claude…    │ │ │    │           │                               │                    ││
+│ │ +  Proto  Model│ │ │    │           │ ╭─────────────────╮ ╭───────╮ │                    ││
+│ └────────────────┘ │ ╰────┴───────────╯ │V H F R P T │ C L│ │− 66% +│ ╰────────────────────╯│
+└────────────────────┴────────────────────╰─────────────────╯─╰───────╯───────────────────────┘
+ chat 360             dock card: rail 40   tool strip, bottom  zoom      inspector card 264,
+                      + column 240         centre (floats)     control   opens on select
 ```
 
 The canvas is the background of the whole area right of chat. The panels float on it as cards: radius `--r-lg`, a 1 px `--line` ring, `--shadow-sm`, 8 px from the canvas edges. Styles live in `apps/desktop/src/ui/styles/stage-shell.css`.
 
 - **Dock card.** The panel rail sits on the left edge of the column card it controls. When the column is closed, the card shrinks to the rail strip and the canvas takes the full width. The macOS traffic lights sit in the 48 px title bar above chat.
-- **Tool strip.** The tools (V H F R P T | C L) are a slim vertical card right of the dock card. It moves with the dock when the column opens or closes. The dock and inspector cards sit one layer above the strip and the zoom control, so their menus are never covered.
+- **Tool strip.** The tools (V H F R P T | C L) are a slim horizontal card that floats at the bottom centre of the free canvas, left of the zoom control. It takes no layout width. When the free canvas is too narrow for the row (column and inspector open on a small window), the strip turns vertical at the bottom left of the free canvas, so no tool goes under a card. The dock and inspector cards sit one layer above the strip and the zoom control, so their menus are never covered.
 - **Zoom control.** − % + at the bottom right of the canvas. The % opens the zoom menu (fit, 50–200 %). It moves left of the inspector card while the inspector is open.
 - **Inspector card.** Floats on the right edge. It covers the canvas and does not refit the frame, so the frame does not jump when a selection opens it.
-- **Fit.** The canvas stage starts right of the tool strip (`--stage-left`), so "fit" never puts the frame under the dock card. Opening or closing the column refits.
+- **Fit.** The canvas stage starts at the right edge of the dock card (`--stage-left`), so "fit" uses the full canvas width minus the floating cards and never puts the frame under the dock card. The strip reserves no height: a frame that fits by height can have its bottom 24 px under the strip. Opening or closing the column refits.
 - **Status chip.** A design-system draft shows one chip at the top left of the free canvas (`--canvas-free-left`): "Check passed", "N problems", "Reading sources", "Checking" or "Could not load". A click opens a popover with coverage, from base, guessed, the check and the save controls ("Save anyway", "Use for new projects").
 - **Frame label.** A plain frame name above each frame. The size, page chip and ⋯ menu show on hover, focus, or when the frame is active.
 - **Top bar.** Left: project list toggle, project name ▾, page ▾. Right: Review, Present, Share (primary), account. Nothing else.
@@ -68,7 +68,7 @@ Every column panel uses one header: the title on the left, the panel's own contr
 
 | Control | Was | Now | Shortcut |
 |---|---|---|---|
-| Select tool | Canvas tool bar | Tool strip | V |
+| Select tool | Canvas tool bar | Tool strip (bottom centre) | V |
 | Hand tool | Space only | Tool strip | H (hold Space too) |
 | Frame tool | Not a tool | Tool strip. A click places a frame through the direct-edit insert | F |
 | Shape tool | Vector mode | Tool strip (rectangle) | R |
@@ -105,7 +105,7 @@ Every column panel uses one header: the title on the left, the panel's own contr
 | Skills, Data use, Spending limit | Composer footer row | Composer + menu, Project section | none |
 | New direction (one direction) | Versions "Directions" row | Versions panel ⋯ menu | none |
 
-Narrow windows (below 1200 px): chat shrinks to 300, the column card to 224 and the inspector card to 248. The stage still starts right of the tool strip, so an open column never hides the frame; the frame fits in the space that is left.
+Narrow windows (below 1200 px): chat shrinks to 300, the column card to 224 and the inspector card to 248. The stage still starts right of the dock card, so an open column never hides the frame; the frame fits in the space that is left.
 
 ### Project menu (nitpick 17)
 

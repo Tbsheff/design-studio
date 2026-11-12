@@ -34,12 +34,12 @@
   --column-w: 240px;
   --tools-w: 40px;
   --inspector-w: 264px;
+  --zoom-w: 116px;
   --dock-w: var(--rail-w);
-  --tools-left: calc(var(--dock-gap) * 2 + var(--dock-w));
-  --stage-left: calc(var(--tools-left) + var(--tools-w) - var(--s-4));
-  --canvas-free-left: calc(
-    var(--tools-left) + var(--tools-w) + var(--dock-gap)
-  );
+  --dock-right: calc(var(--dock-gap) * 2 + var(--dock-w));
+  --zoom-right: var(--dock-gap);
+  --stage-left: calc(var(--dock-right) - var(--s-4));
+  --canvas-free-left: var(--dock-right);
   --card-shadow: 0 0 0 1px var(--line), var(--shadow-sm);
 
   grid-column: 2;
@@ -55,6 +55,10 @@
 
 .studio[data-column="open"] .studio-stage {
   --dock-w: calc(var(--rail-w) + var(--column-w));
+}
+
+.studio[data-inspector="open"] .studio-stage {
+  --zoom-right: calc(var(--dock-gap) * 2 + var(--inspector-w));
 }
 
 .studio-body .studio-stage > .pane-canvas.center {
@@ -160,20 +164,26 @@
 .studio-tools {
   position: absolute;
   z-index: 30;
-  top: var(--dock-gap);
-  left: var(--tools-left);
+  right: calc(var(--zoom-right) + var(--zoom-w) + var(--dock-gap));
+  bottom: var(--dock-gap);
+  left: calc(var(--dock-right) + var(--dock-gap));
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  container: tools / inline-size;
 }
 
 .studio-tools > .topbar-tools {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 2px;
-  width: var(--tools-w);
-  height: auto;
+  width: auto;
+  height: var(--tools-w);
   margin: 0;
   padding: var(--s-1);
   border: 0;
+  pointer-events: auto;
 }
 
 .studio-tools > .topbar-tools > button {
@@ -225,21 +235,34 @@
 
 .studio-tools .topbar-tool-sep {
   flex: none;
-  width: 16px;
-  height: 1px;
-  margin: var(--s-1) 0;
+  width: 1px;
+  height: 16px;
+  margin: 0 var(--s-1);
   background: var(--line);
+}
+
+@container tools (width < 296px) {
+  .studio-tools > .topbar-tools {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    flex-direction: column;
+    width: var(--tools-w);
+    height: auto;
+  }
+
+  .studio-tools .topbar-tool-sep {
+    width: 16px;
+    height: 1px;
+    margin: var(--s-1) 0;
+  }
 }
 
 .studio-zoom {
   position: absolute;
   z-index: 30;
-  right: var(--dock-gap);
+  right: var(--zoom-right);
   bottom: var(--dock-gap);
-}
-
-.studio[data-inspector="open"] .studio-zoom {
-  right: calc(var(--dock-gap) * 2 + var(--inspector-w));
 }
 
 .canvas-zoom {

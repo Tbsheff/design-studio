@@ -36,7 +36,7 @@ const TopBarToolButton = ({
       aria-keyshortcuts={shortcut}
       disabled={isDisabled}
       data-tip={tip}
-      data-tip-side="right"
+      data-tip-side="top"
       onClick={choose}
     >
       <Icon name={icon} size={14} />

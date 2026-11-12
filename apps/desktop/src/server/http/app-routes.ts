@@ -185,7 +185,6 @@ export async function finishAttach(
 
   const legacyCanvas = await setAsideCanvas(deps, attached);
   await deps.versions.ensureRepo(attached);
-  ensureFirstVersion(deps, attached);
 
   return {
     project: attached,
@@ -223,7 +222,6 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
   bindDevServerRuntime({
     projects,
     preview: deps.preview,
-    ensureFirstVersion: (project) => ensureFirstVersion(deps, project),
     attach: (project) => finishAttach(deps, project),
   });
 

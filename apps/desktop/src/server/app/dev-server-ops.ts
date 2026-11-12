@@ -43,7 +43,6 @@ const readAppProject = async (
 const readView = async (runtime: DevServerRuntime, projectId: string) => {
   const project = await readAppProject(runtime, projectId);
   const { apps } = runtime.preview;
-  runtime.ensureFirstVersion(project);
 
   return {
     app: project.app,

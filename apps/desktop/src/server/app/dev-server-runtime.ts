@@ -7,7 +7,6 @@ import type { AttachResponse } from "./first-version.js";
 
 interface DevServerRuntime {
   readonly attach: (project: Project) => Promise<AttachResponse>;
-  readonly ensureFirstVersion: (project: Project) => void;
   readonly preview: PreviewService;
   readonly projects: Pick<
     StudioProjectStore,

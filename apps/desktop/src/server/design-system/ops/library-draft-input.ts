@@ -146,21 +146,25 @@ const isSourceInside = async (
   }
 };
 
-const isSourceOk = (
+const isSourceOk = async (
   raw: string | undefined,
-  projects: string,
+  roots: readonly string[],
   isFile: boolean
 ): Promise<boolean> => {
   if (!raw) {
-    return Promise.resolve(true);
+    return true;
   }
 
-  return isSourceInside(raw, projects, isFile);
+  const results = await Promise.all(
+    roots.map((root) => isSourceInside(raw, root, isFile))
+  );
+
+  return results.some(Boolean);
 };
 
 const isDraftSourceTrusted = async (
   input: DraftInput,
-  projects: string | null
+  roots: readonly string[]
 ): Promise<boolean> => {
   const { folderPath, tokensFile } = input;
 
@@ -168,13 +172,9 @@ const isDraftSourceTrusted = async (
     return true;
   }
 
-  if (projects === null) {
-    return false;
-  }
-
   const results = await Promise.all([
-    isSourceOk(folderPath, projects, false),
-    isSourceOk(tokensFile, projects, true),
+    isSourceOk(folderPath, roots, false),
+    isSourceOk(tokensFile, roots, true),
   ]);
 
   return results.every(Boolean);

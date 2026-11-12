@@ -80,27 +80,40 @@ const toApplyCard = async (
   };
 };
 
-const toProjectsFolder = async (
+const toTrustRoots = async (
   runtime: PackRuntime
-): Promise<string | null> => {
+): Promise<readonly string[]> => {
   if (runtime.drafts === null) {
-    return null;
+    return [];
   }
 
-  try {
-    return await runtime.drafts.projectsFolder();
-  } catch {
-    return null;
+  const { drafts } = runtime;
+
+  const [projects, trusted] = await Promise.allSettled([
+    drafts.projectsFolder(),
+    drafts.trustedFolders(),
+  ]);
+
+  const roots: string[] = [];
+
+  if (projects.status === "fulfilled") {
+    roots.push(projects.value);
   }
+
+  if (trusted.status === "fulfilled") {
+    roots.push(...trusted.value);
+  }
+
+  return roots;
 };
 
 const toDraftCard = async (
   runtime: PackRuntime,
   input: DraftInput
 ): Promise<ApprovalCard | null> => {
-  const projects = await toProjectsFolder(runtime);
+  const roots = await toTrustRoots(runtime);
 
-  if (await isDraftSourceTrusted(input, projects)) {
+  if (await isDraftSourceTrusted(input, roots)) {
     return null;
   }
 

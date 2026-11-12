@@ -43,6 +43,8 @@ export interface EditDeps extends ExportDeps {
 
 export { EditError } from "../page-probe/index.js";
 
+const MS_PER_MINUTE = 60_000;
+
 export const RUN_BUSY =
   "A studio run is editing this design. Try again when it finishes.";
 
@@ -124,13 +126,13 @@ export async function approve(deps: EditDeps, ask: ApprovalAsk): Promise<void> {
 
   if (outcome === "closed") {
     throw new EditError(
-      "Design Studio is not open, so nobody can approve this write. Open the Design Studio window, or write to ~/Downloads or the projects folder."
+      "Design Studio is not open, so nobody can answer the approval card. Open Design Studio, then call again."
     );
   }
 
   if (outcome === "timeout") {
     throw new EditError(
-      `Nobody answered the approval prompt in Design Studio within ${APPROVAL_TIMEOUT_MS / 1000} seconds, so it was refused. Ask the user to watch for the prompt, then call the tool again.`
+      `Nobody answered the approval card in ${APPROVAL_TIMEOUT_MS / MS_PER_MINUTE} minutes, so it was refused. Ask the user to answer the card in Design Studio, then call again.`
     );
   }
 

@@ -1,6 +1,7 @@
 import { AllActions } from "@design-studio/actions";
 import type { AnyAction } from "@design-studio/actions/_core/action";
 import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
+import type { McpApprovalOutcome } from "@design-studio/contracts";
 import { Effect, Schema } from "effect";
 import type { JsonSchema } from "effect";
 
@@ -15,6 +16,7 @@ import { runAsAgent } from "../platform/call-origin/index.js";
 import type { StudioRuntime } from "../platform/studio-runtime/index.js";
 import { toLegacyPrincipal } from "../store/principal.js";
 import type { Principal } from "../store/principal.js";
+import { APPROVAL_TIMEOUT_MS } from "./approvals.js";
 import type { ApprovalQueue } from "./approvals.js";
 import { toLegacyArgs, toLegacySchema } from "./legacy-args.js";
 import { toToolResult } from "./tool-result.js";
@@ -155,13 +157,32 @@ const isActionTool = (name: string): boolean => ACTION_TOOLS_BY_NAME.has(name);
 const isReadActionTool = (name: string): boolean =>
   ACTION_TOOLS_BY_NAME.get(name)?.action.access === "read";
 
+const MS_PER_MINUTE = 60_000;
+
 const GATE_TEXT = {
   closed:
-    "Design Studio is not open, so nobody can approve this action. Open the Design Studio window, then call the tool again.",
+    "Design Studio is not open, so nobody can answer the approval card. Open Design Studio, then call again.",
   deny: "The user denied this action in Design Studio.",
-  timeout:
-    "Nobody answered the approval prompt in Design Studio in time, so it was refused. Ask the user to watch for the prompt, then call the tool again.",
+  timeout: `Nobody answered the approval card in ${APPROVAL_TIMEOUT_MS / MS_PER_MINUTE} minutes, so it was refused. Ask the user to answer the card in Design Studio, then call again.`,
 } as const;
+
+const TRUSTED_CLOSED_TEXT =
+  "Design Studio is not open, so nobody can answer the approval card. Open Design Studio, or ask the user to add the folder to trusted folders, then call again.";
+
+const TRUSTED_FOLDER_TOOLS: ReadonlySet<string> = new Set([
+  "create_design_system",
+]);
+
+const toGateText = (
+  tool: string,
+  outcome: Exclude<McpApprovalOutcome, "allow">
+): string => {
+  if (outcome === "closed" && TRUSTED_FOLDER_TOOLS.has(tool)) {
+    return TRUSTED_CLOSED_TEXT;
+  }
+
+  return GATE_TEXT[outcome];
+};
 
 const NO_GATE =
   "This action needs the user to allow it in Design Studio, and this caller has no approval prompt. Ask the user to do it in Design Studio.";
@@ -185,7 +206,10 @@ const askGate =
         }
 
         return Effect.fail(
-          new Forbidden({ message: GATE_TEXT[outcome], perm: "confirm" })
+          new Forbidden({
+            message: toGateText(tool, outcome),
+            perm: "confirm",
+          })
         );
       }
     );

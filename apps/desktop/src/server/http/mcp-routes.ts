@@ -18,6 +18,7 @@ import {
   createMcpService,
   runAgentTool,
 } from "../mcp/index.js";
+import type { TrustedFolders } from "../mcp/index.js";
 import { toRunningUpstream, warmUpstream } from "../preview/warm-upstream.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { KeepVariant } from "../variations/routes.js";
@@ -37,6 +38,7 @@ interface McpRouteDeps extends ExportDeps {
   keepVariant: KeepVariant;
   layerLocks: LayerLockStore | null;
   isAgentToolOpen: boolean;
+  trusted: TrustedFolders;
 }
 
 function warmAfterEdits(deps: McpRouteDeps): void {
@@ -126,6 +128,7 @@ export function registerMcpRoutes(
     },
     introspect: createCloudIntrospect(deps.runtime ?? null),
     listener: deps.listener,
+    trusted: deps.trusted,
   });
 
   void mcp.boot();

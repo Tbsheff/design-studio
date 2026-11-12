@@ -11,6 +11,7 @@ import path from "node:path";
 
 import { Result, Schema } from "effect";
 
+import { toMcpEnv } from "../platform/config/index.js";
 import { toDecoder } from "../platform/decode/index.js";
 import { BadRequestError, isNodeError } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
@@ -34,6 +35,7 @@ const AbsolutePathSchema = Schema.String.check(
 const PreferencesSchema = Schema.Struct({
   onboardingDismissed: Schema.optionalKey(Schema.Boolean),
   projectsDir: Schema.optionalKey(AbsolutePathSchema),
+  trustedFolders: Schema.optionalKey(Schema.Array(AbsolutePathSchema)),
   version: Schema.Literal(1),
 });
 
@@ -47,6 +49,9 @@ export interface DefaultFolderStore {
   set(raw: string): Promise<string>;
   onboardingDismissed(): Promise<boolean>;
   dismissOnboarding(): Promise<void>;
+  savedTrustedFolders(): Promise<readonly string[]>;
+  setTrustedFolders(raw: readonly string[]): Promise<readonly string[]>;
+  trustedFolders(): Promise<readonly string[]>;
 }
 
 async function presentPath(target: string): Promise<string> {
@@ -179,6 +184,32 @@ export function createDefaultFolderStore(
 
     async onboardingDismissed(): Promise<boolean> {
       return (await read()).onboardingDismissed === true;
+    },
+
+    async savedTrustedFolders(): Promise<readonly string[]> {
+      const saved = await read();
+
+      return saved.trustedFolders ?? [];
+    },
+
+    async setTrustedFolders(
+      raw: readonly string[]
+    ): Promise<readonly string[]> {
+      const real = await Promise.all(raw.map((item) => resolveFolder(item)));
+      const unique = [...new Set(real)];
+
+      return lock("file", async () => {
+        await write({ ...(await read()), trustedFolders: unique, version: 1 });
+
+        return unique;
+      });
+    },
+
+    async trustedFolders(): Promise<readonly string[]> {
+      const saved = await read();
+      const own = saved.trustedFolders ?? [];
+
+      return [...new Set([...own, ...toMcpEnv().trustedFolders])];
     },
 
     async set(raw: string): Promise<string> {

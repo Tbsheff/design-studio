@@ -10,6 +10,7 @@ interface McpLifeService {
   readonly rotate: () => Promise<McpStatus>;
   readonly setEdits: (edits: boolean) => Promise<McpStatus>;
   readonly setEnabled: (enabled: boolean) => Promise<McpStatus>;
+  readonly setTrustedFolders: (raw: readonly string[]) => Promise<void>;
   readonly setup: () => Promise<McpSetup>;
   readonly status: () => Promise<McpStatus>;
 }

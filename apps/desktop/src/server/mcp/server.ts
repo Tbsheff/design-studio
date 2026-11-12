@@ -8,6 +8,7 @@ import { Hono } from "hono";
 import type { ExportDeps } from "../export/source.js";
 import type { WireArgs } from "../handlers/_core/run-action.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
+import { toMcpEnv } from "../platform/config/index.js";
 import { toLegacyPrincipal } from "../store/principal.js";
 import type { EditDeps } from "./edit-guards.js";
 import { EDIT_NAMES, EDIT_TOOLS } from "./edit-tools.js";
@@ -20,7 +21,14 @@ import { getFreePort, isPortFree, isSameText } from "./port-probe.js";
 import { ActionTools } from "./registry.js";
 import type { McpCaller } from "./registry.js";
 import { argsOf, runActionEdit, runEdit } from "./run-edit.js";
-import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
+import {
+  fromMcpEnv,
+  newToken,
+  readMcpSettings,
+  toMcpSettingsPath,
+  toMcpUrl,
+  writeMcpSettings,
+} from "./settings.js";
 import type { McpSettings } from "./settings.js";
 import {
   FORBIDDEN_BODY,
@@ -330,10 +338,16 @@ function createMcpApp(
   return app;
 }
 
+export interface TrustedFolders {
+  list(): Promise<readonly string[]>;
+  set(raw: readonly string[]): Promise<readonly string[]>;
+}
+
 export interface McpWiring {
   edits: EditDeps | null;
   introspect: Introspect;
   listener: McpListenerRunnerApi | null;
+  trusted: TrustedFolders;
 }
 
 export interface McpService {
@@ -343,6 +357,7 @@ export interface McpService {
   setEdits(edits: boolean): Promise<McpStatus>;
   editsOn(): Promise<boolean>;
   rotate(): Promise<McpStatus>;
+  setTrustedFolders(raw: readonly string[]): Promise<void>;
   boot(): Promise<void>;
   stop(): Promise<void>;
 }
@@ -352,7 +367,7 @@ export function createMcpService(
   deps: ExportDeps,
   wiring: McpWiring
 ): McpService {
-  const { edits, introspect, listener } = wiring;
+  const { edits, introspect, listener, trusted } = wiring;
   let current: McpSettings | null = null;
   let lastError: string | null = null;
   const app = createMcpApp(
@@ -363,7 +378,7 @@ export function createMcpService(
   );
 
   const load = async (): Promise<McpSettings> => {
-    current ??= await readMcpSettings(dataDir);
+    current ??= fromMcpEnv(await readMcpSettings(dataDir), toMcpEnv());
     return current;
   };
 
@@ -379,17 +394,20 @@ export function createMcpService(
   const start = async (): Promise<void> => {
     if (listener === null) throw new Error("The MCP listener is not ready.");
     const settings = await load();
-    if (await isListening()) return;
-    if (!(await isPortFree(settings.port))) {
-      settings.port = await getFreePort();
-      await writeMcpSettings(dataDir, settings);
+    if (!(await isListening())) {
+      if (!(await isPortFree(settings.port)))
+        settings.port = await getFreePort();
+      await Effect.runPromise(listener.listen(settings.port, app.fetch));
+      console.info(
+        `[mcp] listening on ${toMcpUrl(settings.port)}; url and token in ${toMcpSettingsPath(dataDir)}`
+      );
     }
-    await Effect.runPromise(listener.listen(settings.port, app.fetch));
+    await writeMcpSettings(dataDir, settings);
   };
 
   const status = async (): Promise<McpStatus> => {
     const settings = await load();
-    const url = `http://127.0.0.1:${settings.port}/mcp`;
+    const url = toMcpUrl(settings.port);
     const command = `claude mcp add --scope user --transport http ${SERVER_NAME} ${url} --header "Authorization: Bearer ${settings.token}"`;
     return {
       enabled: settings.enabled,
@@ -409,7 +427,8 @@ export function createMcpService(
       isRunning: await isListening(),
       name: SERVER_NAME,
       token: settings.token,
-      url: `http://127.0.0.1:${settings.port}/mcp`,
+      trustedFolders: [...(await trusted.list())],
+      url: toMcpUrl(settings.port),
     };
   };
 
@@ -445,8 +464,14 @@ export function createMcpService(
       await writeMcpSettings(dataDir, settings);
       return status();
     },
+    async setTrustedFolders(raw) {
+      await trusted.set(raw);
+    },
     async boot() {
       const settings = await load();
+      const env = toMcpEnv();
+      if (env.isEnabled !== null || env.canEdit !== null)
+        await writeMcpSettings(dataDir, settings);
       if (!settings.enabled) return;
       await start().catch((error: unknown) => {
         lastError = error instanceof Error ? error.message : String(error);

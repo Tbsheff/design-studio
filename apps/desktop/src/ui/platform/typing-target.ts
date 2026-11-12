@@ -48,6 +48,20 @@ const isTextField = (target: EventTarget | null): boolean =>
 const isArrowOwned = (element: Element): boolean =>
   element.closest(ARROW_OWNERS) !== null;
 
+const inspectorButtonFocused = (): HTMLButtonElement | null => {
+  const active = document.activeElement;
+
+  if (!(active instanceof HTMLButtonElement)) {
+    return null;
+  }
+
+  if (active.closest(".inspector") === null || isArrowOwned(active)) {
+    return null;
+  }
+
+  return active;
+};
+
 const canvasHasKeys = (): boolean => {
   const active = document.activeElement;
 
@@ -58,4 +72,11 @@ const canvasHasKeys = (): boolean => {
   );
 };
 
-export { canvasHasKeys, editsText, isArrowOwned, isTextField, isTypingTarget };
+export {
+  canvasHasKeys,
+  editsText,
+  inspectorButtonFocused,
+  isArrowOwned,
+  isTextField,
+  isTypingTarget,
+};

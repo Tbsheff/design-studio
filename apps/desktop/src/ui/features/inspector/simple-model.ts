@@ -62,6 +62,7 @@ interface SimpleEditorProps extends EditorProps {
   readonly target: SelectionContext;
   readonly sharedEditing: SharedEditing | null;
   readonly component: ReactNode;
+  readonly trailing: ReactNode;
 }
 
 type MultiEdit = DirectEdit & { readonly blocked: string | null };

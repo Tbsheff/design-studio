@@ -22,6 +22,7 @@ const SimpleTail = ({
 
   return (
     <>
+      {props.trailing}
       <MatchSection
         projectId={projectId}
         directionId={directionId}

@@ -33,10 +33,15 @@ const SimpleSingleSelection = ({
       {createElement(VectorSection, inspector)}
       {createElement(ImageSection, inspector)}
       {createElement(GridSection, inspector)}
+      {createElement(ComponentSection, inspector)}
+    </>
+  );
+
+  const trailing = (
+    <>
       {createElement(EffectLayersSection, inspector)}
       {createElement(StackingSection, inspector)}
       {createElement(AccessibilitySection, inspector)}
-      {createElement(ComponentSection, inspector)}
     </>
   );
 
@@ -54,6 +59,7 @@ const SimpleSingleSelection = ({
       target={site.effective ?? first}
       sharedEditing={site.sharedEditing}
       component={sections}
+      trailing={trailing}
     />
   );
 };

@@ -215,14 +215,15 @@ test("R6-1: the canvas dark switch repaints every frame in under 100 ms and leav
 
   await toggle.click();
   await page.getByRole("tab", { name: /^Tokens/ }).click();
+  await page.getByRole("button", { name: "Preview and sweep" }).click();
   await expect(
     page
       .getByRole("group", { name: "Preview theme" })
-      .getByRole("button", { name: "Dark" })
-  ).toHaveAttribute("aria-pressed", "true");
+      .getByRole("menuitemradio", { name: "Dark" })
+  ).toHaveAttribute("aria-checked", "true");
   await page
     .getByRole("group", { name: "Preview theme" })
-    .getByRole("button", { name: "Auto" })
+    .getByRole("menuitemradio", { name: "Auto" })
     .click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
 

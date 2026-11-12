@@ -1,39 +1,40 @@
+import { Icon } from "@design-studio/ui";
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 
 import type { ThemeEntry, ThemeId } from "./tokens-panel-model.js";
 
-interface ThemeButtonProps {
+const ITEM_ICON_SIZE = 14;
+const ITEM_ROLE = "menuitemradio";
+
+interface TokenThemeItemProps {
   readonly entry: ThemeEntry;
   readonly isActive: boolean;
   readonly onTheme: (theme: ThemeId) => void;
 }
 
-const ThemeButton = ({
+const TokenThemeItem = ({
   entry,
   isActive,
   onTheme,
-}: ThemeButtonProps): ReactNode => {
+}: TokenThemeItemProps): ReactNode => {
   const handleTheme = useCallback((): void => {
     onTheme(entry.id);
   }, [entry.id, onTheme]);
 
-  let className = "";
-
-  if (isActive) {
-    className = "on";
-  }
-
   return (
     <button
       type="button"
-      className={className}
-      aria-pressed={isActive}
+      role={ITEM_ROLE}
+      className="ui-menu-item"
+      tabIndex={-1}
+      aria-checked={isActive}
       onClick={handleTheme}
     >
-      {entry.label}
+      <Icon name={entry.icon} size={ITEM_ICON_SIZE} />
+      <span>{entry.label}</span>
     </button>
   );
 };
 
-export { ThemeButton };
+export { TokenThemeItem };

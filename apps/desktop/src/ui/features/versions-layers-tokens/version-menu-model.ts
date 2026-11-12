@@ -3,7 +3,7 @@ import type { KeyboardEvent } from "react";
 import { COPY } from "./copy.js";
 import { findElements } from "./find-element.js";
 
-const MENU_ITEM_SELECTOR = '[role="menuitem"]:not(:disabled)';
+const MENU_ITEM_SELECTOR = '[role^="menuitem"]:not(:disabled)';
 
 const toMenuStep = (
   key: string

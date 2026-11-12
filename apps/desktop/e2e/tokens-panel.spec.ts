@@ -173,17 +173,13 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
   await expect(page.locator(".tkp-count")).toHaveText("1 change");
   await shoot(page, "pending", row);
 
-  await page
-    .locator(".tkp-theme")
-    .getByRole("button", { name: "Dark", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Preview and sweep" }).click();
+  await page.getByRole("menuitemradio", { name: "Dark", exact: true }).click();
   await expect.poll(async () => (await probe(front)).theme).toBe("dark");
   expect((await probe(front)).marker).toBe("kept");
   await shoot(page, "dark", row);
-  await page
-    .locator(".tkp-theme")
-    .getByRole("button", { name: "Auto", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Preview and sweep" }).click();
+  await page.getByRole("menuitemradio", { name: "Auto", exact: true }).click();
   await expect.poll(async () => (await probe(front)).theme).toBe(null);
 
   await showVersions(page);

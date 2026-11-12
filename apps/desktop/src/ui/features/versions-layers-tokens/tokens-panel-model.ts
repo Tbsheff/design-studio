@@ -1,4 +1,5 @@
 import type { CompiledTokenEntry } from "@design-studio/contracts";
+import type { IconName } from "@design-studio/ui";
 
 import { COPY } from "./copy.js";
 import { aliasPath, referencedEntry, varTarget } from "./token-draft.js";
@@ -6,14 +7,15 @@ import { aliasPath, referencedEntry, varTarget } from "./token-draft.js";
 type ThemeId = "light" | "dark" | null;
 
 interface ThemeEntry {
+  readonly icon: IconName;
   readonly id: ThemeId;
   readonly label: string;
 }
 
 const THEMES: readonly ThemeEntry[] = [
-  { id: "light", label: COPY.themeLight },
-  { id: "dark", label: COPY.themeDark },
-  { id: null, label: COPY.themeAuto },
+  { icon: "sun", id: "light", label: COPY.themeLight },
+  { icon: "moon", id: "dark", label: COPY.themeDark },
+  { icon: "desktop", id: null, label: COPY.themeAuto },
 ];
 
 const toSwatch = (
@@ -38,6 +40,9 @@ const toSwatch = (
   return entry.value;
 };
 
+const toThemeIcon = (theme: ThemeId): IconName =>
+  THEMES.find((entry) => entry.id === theme)?.icon ?? "desktop";
+
 const toChangeCount = (count: number): string => {
   if (count === 1) {
     return `${count} ${COPY.panelChange}`;
@@ -46,6 +51,6 @@ const toChangeCount = (count: number): string => {
   return `${count} ${COPY.panelChanges}`;
 };
 
-export { THEMES, toChangeCount, toSwatch };
+export { THEMES, toChangeCount, toSwatch, toThemeIcon };
 
 export type { ThemeEntry, ThemeId };

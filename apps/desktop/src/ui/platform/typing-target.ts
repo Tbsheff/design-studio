@@ -45,19 +45,8 @@ const isTextField = (target: EventTarget | null): boolean =>
   editsText(target) ||
   (target instanceof HTMLElement && target.getAttribute("role") === "combobox");
 
-const inspectorButtonFocused = (): HTMLButtonElement | null => {
-  const active = document.activeElement;
-
-  if (!(active instanceof HTMLButtonElement)) {
-    return null;
-  }
-
-  if (active.closest(".inspector") === null || active.closest(ARROW_OWNERS)) {
-    return null;
-  }
-
-  return active;
-};
+const isArrowOwned = (element: Element): boolean =>
+  element.closest(ARROW_OWNERS) !== null;
 
 const canvasHasKeys = (): boolean => {
   const active = document.activeElement;
@@ -69,10 +58,4 @@ const canvasHasKeys = (): boolean => {
   );
 };
 
-export {
-  canvasHasKeys,
-  editsText,
-  inspectorButtonFocused,
-  isTextField,
-  isTypingTarget,
-};
+export { canvasHasKeys, editsText, isArrowOwned, isTextField, isTypingTarget };

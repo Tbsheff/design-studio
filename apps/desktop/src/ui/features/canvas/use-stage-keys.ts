@@ -2,8 +2,10 @@ import { selectMoveOf } from "@design-studio/contracts";
 import type { SelectionContext } from "@design-studio/contracts";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
+import { canTakeCanvasKeys } from "../../platform/canvas-focus.js";
 import { heldTool } from "../../platform/canvas-tool.js";
 import { findElement } from "../../platform/find-element.js";
+import { focusStageQuietly } from "../../platform/focus.js";
 import { canvasHasKeys, isTextField } from "../../platform/typing-target.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import type { Props } from "./canvas-types.js";
@@ -109,6 +111,11 @@ const firstSelectKey = (eventValue: KeyboardEvent): boolean => {
   return selectMoveOf(eventValue) !== null || isPlainArrow(eventValue);
 };
 
+const isFirstSelectFocus = (
+  event: KeyboardEvent,
+  isOnStage: boolean
+): boolean => isOnStage || (isPlainArrow(event) && canTakeCanvasKeys());
+
 const useFirstSelectKeys = (
   stage: () => HTMLElement | null,
   options: {
@@ -131,11 +138,18 @@ const useFirstSelectKeys = (
         return;
       }
 
-      if (document.activeElement !== stage() || !firstSelectKey(event3)) {
+      const target = stage();
+      const isOnStage = document.activeElement === target;
+
+      if (!firstSelectKey(event3) || !isFirstSelectFocus(event3, isOnStage)) {
         return;
       }
 
       event3.preventDefault();
+
+      if (!isOnStage) {
+        focusStageQuietly(target);
+      }
 
       if (!cur.picking) {
         cur.startPicking();

@@ -25,6 +25,34 @@ const focusComposer = (): void => {
   });
 };
 
+const STAGE_WAIT_MS = 4000;
+
+const STAGE = ".canvas .stage";
+
+const focusStageWhenMounted = (): void => {
+  const until = performance.now() + STAGE_WAIT_MS;
+
+  const attempt = (): void => {
+    if (!focusIsFree()) {
+      return;
+    }
+
+    const stage = findElement(document.body, STAGE);
+
+    if (stage) {
+      focusStageQuietly(stage);
+
+      return;
+    }
+
+    if (performance.now() < until) {
+      globalThis.requestAnimationFrame(attempt);
+    }
+  };
+
+  globalThis.requestAnimationFrame(attempt);
+};
+
 const focusOpenTarget = (): void => {
   if (takeComposerIntent()) {
     focusComposer();
@@ -32,11 +60,7 @@ const focusOpenTarget = (): void => {
     return;
   }
 
-  globalThis.requestAnimationFrame(() => {
-    if (focusIsFree()) {
-      focusStageQuietly();
-    }
-  });
+  focusStageWhenMounted();
 };
 
 const focusComposerInput = (): number =>

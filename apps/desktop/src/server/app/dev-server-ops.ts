@@ -59,6 +59,19 @@ const getAppStatus = async (runtime: DevServerRuntime, projectId: string) => {
   return runtime.preview.apps?.status(project) ?? null;
 };
 
+const isManagedRunning = (
+  runtime: DevServerRuntime,
+  project: Project
+): boolean => {
+  const status = runtime.preview.apps?.status(project) ?? null;
+
+  if (status?.mode !== "managed") {
+    return false;
+  }
+
+  return status.state === "ready" || status.state === "starting";
+};
+
 const applyConfig = async (runtime: DevServerRuntime, input: ConfigInput) => {
   const project = await readAppProject(runtime, input.projectId);
   const current = project.app;
@@ -78,8 +91,12 @@ const applyConfig = async (runtime: DevServerRuntime, input: ConfigInput) => {
     env: env ?? {},
   });
 
+  const isRunning = isManagedRunning(runtime, project);
   runtime.preview.apps?.forget(updated.id);
-  void runtime.preview.apps?.restart(updated).catch(() => undefined);
+
+  if (updated.app?.mode === "url" || isRunning) {
+    void runtime.preview.apps?.restart(updated).catch(() => undefined);
+  }
 
   return { app: updated.app };
 };

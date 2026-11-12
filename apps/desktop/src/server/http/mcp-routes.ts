@@ -18,7 +18,7 @@ import {
   createMcpService,
   runAgentTool,
 } from "../mcp/index.js";
-import { warmUpstream } from "../preview/warm-upstream.js";
+import { toRunningUpstream, warmUpstream } from "../preview/warm-upstream.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { KeepVariant } from "../variations/routes.js";
 import { createAgentToolRoute } from "./mount.js";
@@ -50,9 +50,7 @@ function warmAfterEdits(deps: McpRouteDeps): void {
     startRender(change.projectId, async (signal) => {
       const project = await deps.projects.get(change.projectId);
 
-      const upstream = project.app
-        ? await deps.preview.apps?.ensure(project).catch(() => null)
-        : null;
+      const upstream = toRunningUpstream(deps.preview, project);
 
       if (!upstream) {
         return;

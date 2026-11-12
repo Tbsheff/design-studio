@@ -175,10 +175,8 @@ export async function finishAttach(
   deps.preview.apps?.forget(attached.id);
   deps.watch(attached, deps.projects.mainDirection(attached));
   warmKit(attached, deps.projects.mainDirection(attached));
-  const starting = deps.preview.apps?.ensure(attached).catch(() => undefined);
-
   if (attached.app?.mode === "url") {
-    await starting;
+    await deps.preview.apps?.ensure(attached).catch(() => undefined);
   }
 
   if (!fresh) {

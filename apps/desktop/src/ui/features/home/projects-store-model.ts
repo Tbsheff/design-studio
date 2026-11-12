@@ -127,7 +127,11 @@ const isRecentlyUpdated = (project: Project): boolean =>
   Date.now() - project.updatedAt < RECENT_MS;
 
 const toPollDelay = (projects: Project[]): number | null => {
-  if (projects.some((project) => isThumbnailPending(project))) {
+  if (
+    projects.some(
+      (project) => isThumbnailPending(project) && isRecentlyUpdated(project)
+    )
+  ) {
     return POLL_FAST_MS;
   }
 

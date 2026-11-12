@@ -144,7 +144,7 @@
     var(--surface-2)
   );
   background-size: 200% 100%;
-  animation: shimmer var(--dur-loop) linear infinite;
+  animation: shimmer var(--dur-loop) linear var(--skeleton-loops);
 }
 
 .pack-specimen {

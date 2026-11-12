@@ -137,6 +137,15 @@
   animation: ui-spin var(--dur-spin) linear infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .icon-btn[aria-busy="true"]::before,
+  .btn[aria-busy="true"]::before {
+    animation: none;
+    border-right-color: currentcolor;
+    opacity: 0.6;
+  }
+}
+
 .ui-pill-select {
   transition-property: background-color, box-shadow, scale;
   transition-duration: var(--dur-fast);

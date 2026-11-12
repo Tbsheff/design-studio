@@ -131,8 +131,8 @@
   height: 10px;
   border-radius: var(--r-full);
   background: var(--surface-hover);
-  animation: variation-pulse var(--dur-loop) var(--ease-in-out) infinite
-    alternate;
+  animation: variation-pulse var(--dur-loop) var(--ease-in-out)
+    var(--skeleton-loops) alternate;
 }
 
 .skeleton-lines span:last-child {

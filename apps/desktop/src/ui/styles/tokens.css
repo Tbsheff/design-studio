@@ -201,6 +201,7 @@
   --dur-loop: 1200ms;
   --dur-loop-slow: 1400ms;
   --loader-duration: var(--dur-loop-slow);
+  --skeleton-loops: 20;
 
   --font:
     "Inter Variable", "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
@@ -607,6 +608,12 @@ input[type="number"] {
     opacity: 0;
     scale: 0.8;
   }
+}
+
+:root[data-page-hidden] *,
+:root[data-page-hidden] *::before,
+:root[data-page-hidden] *::after {
+  animation-play-state: paused !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

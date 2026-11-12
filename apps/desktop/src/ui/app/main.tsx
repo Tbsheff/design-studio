@@ -85,3 +85,7 @@ if (root) {
 const tipGuard = await import("../platform/tip-guard");
 
 tipGuard.installTipGuard();
+
+const motionGuard = await import("../platform/motion-guard");
+
+motionGuard.startMotionGuard();

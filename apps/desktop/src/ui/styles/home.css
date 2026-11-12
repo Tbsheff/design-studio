@@ -926,7 +926,7 @@
     var(--surface) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer var(--dur-loop-slow) linear infinite;
+  animation: shimmer var(--dur-loop-slow) linear var(--skeleton-loops);
 }
 
 @keyframes shimmer {
@@ -1198,7 +1198,7 @@
     var(--surface) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer var(--dur-loop-slow) linear infinite;
+  animation: shimmer var(--dur-loop-slow) linear var(--skeleton-loops);
 }
 
 .starter-thumb {

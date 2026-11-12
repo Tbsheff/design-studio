@@ -393,7 +393,7 @@
 }
 
 .cmp-thumb.loading {
-  animation: pulse var(--dur-loop) var(--ease-in-out) infinite;
+  animation: pulse var(--dur-loop) var(--ease-in-out) var(--skeleton-loops);
 }
 
 .cmp-name {

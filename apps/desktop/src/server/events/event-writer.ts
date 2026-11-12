@@ -6,7 +6,7 @@ import { Cause, Effect } from "effect";
 
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure, Refine } from "../platform/attempt/index.js";
-import { report, toRecorded, trimRing } from "./event-log.js";
+import { insertRing, report, toRecorded, trimRing } from "./event-log.js";
 import type { ProjectLog, RecordedEvent } from "./event-log.js";
 
 const FLUSH_DELAY_MS = 5;
@@ -160,7 +160,7 @@ const record = (log: ProjectLog, input: StudioEventInput): RecordedEvent => {
 
   reserveAhead(log, recorded.event.seq);
   log.lastSeq = recorded.event.seq;
-  log.ring.push(recorded.event);
+  insertRing(log, recorded);
   log.unflushed.push(recorded);
   trimRing(log);
   scheduleFlush(log);

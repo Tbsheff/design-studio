@@ -8,8 +8,6 @@ import {
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { ThemeStrip } from "../theme/index.js";
 import { TokenSweepSlot, tokenSweepCopy } from "../token-sweep/index.js";
-import { TokenExportMenu } from "./token-export-menu.js";
-import { TokenUsageChip } from "./token-usage-chip.js";
 import { TokenUsageContext } from "./token-usage-context.js";
 import { toEmptyText } from "./token-usage-model.js";
 import { TokensFooter } from "./tokens-footer.js";
@@ -18,6 +16,7 @@ import { TokensPanelHead } from "./tokens-panel-head.js";
 import { TokensSearch } from "./tokens-search.js";
 import { TokensSections } from "./tokens-sections.js";
 import { TokensSource } from "./tokens-source.js";
+import { TokensTools } from "./tokens-tools.js";
 import type { TokenDraft } from "./use-token-draft.js";
 import { useTokensPanel } from "./use-tokens-panel.js";
 
@@ -82,13 +81,13 @@ const TokensPanel = ({
           tokens={tokens.source.tokens}
         />
       )}
-      {sweep && <TokenExportMenu setup={sweep} />}
       <TokensSearch query={query} onQuery={setQuery} />
-      {sweep && usage.unusedCount !== null && (
-        <TokenUsageChip
-          count={usage.unusedCount}
-          isOn={usage.isUnusedOnly}
-          onToggle={usage.handleToggle}
+      {sweep && (
+        <TokensTools
+          isUnusedOnly={usage.isUnusedOnly}
+          setup={sweep}
+          unusedCount={usage.unusedCount}
+          onUnusedToggle={usage.handleToggle}
         />
       )}
       <TokensPanelError message={draft.errors[""] ?? null} />

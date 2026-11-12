@@ -1,14 +1,30 @@
+.tools {
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-2) var(--s-1)
+    calc(var(--tkp-x, var(--s-3)) - var(--s-2));
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
 .root {
   position: relative;
-  display: grid;
-  gap: var(--s-2);
-  padding: var(--s-2) var(--s-3);
-  border-bottom: 1px solid var(--line);
+  flex: none;
+  margin-left: auto;
 }
 
 .result {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s-2);
+  padding-left: var(--s-2);
 }
 
 .head {
@@ -35,16 +51,24 @@
 }
 
 .trigger {
-  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
   height: 24px;
-  padding: 0 var(--s-3);
-  border: 1px solid var(--line);
+  padding: 0 var(--s-2);
+  border: 1px solid transparent;
   border-radius: var(--r-control-sm);
   background: transparent;
   color: var(--text-2);
   font: inherit;
   font-size: var(--t-xs);
   cursor: pointer;
+}
+
+.trigger:hover:not(:disabled),
+.trigger[aria-expanded="true"] {
+  background: var(--surface-hover);
+  color: var(--text);
 }
 
 .trigger:disabled {
@@ -78,11 +102,13 @@
 .skipped,
 .error {
   margin: 0;
+  overflow-wrap: anywhere;
   color: var(--text-2);
   font-size: var(--t-xs);
 }
 
 .error {
+  padding-left: var(--s-2);
   color: var(--danger, var(--text-2));
 }
 

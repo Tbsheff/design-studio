@@ -1,58 +1,32 @@
-import { usePopover } from "@design-studio/ui";
-import { useCallback, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import { Icon } from "@design-studio/ui";
+import { useCallback } from "react";
+import type { ReactNode } from "react";
 
 import { COPY } from "./copy.js";
 import { TokenExportList } from "./token-export-list.js";
-import { TokenExportResult } from "./token-export-result.js";
-import { useMenuPlace } from "./use-menu-place.js";
-import { useTokenExport } from "./use-token-export.js";
 import type {
   TokenExportFormat,
-  TokenExportSetup,
+  TokenExportState,
 } from "./use-token-export.js";
-import { runMenuKey } from "./version-menu-model.js";
+import { useTokenMenu } from "./use-token-menu.js";
 
 import styles from "./token-export.module.css";
 
+const TRIGGER_ICON_SIZE = 12;
+
 interface TokenExportMenuProps {
-  readonly setup: TokenExportSetup;
+  readonly exporter: TokenExportState;
 }
 
-const TokenExportMenu = ({ setup }: TokenExportMenuProps): ReactNode => {
-  const [isOpen, setIsOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const menu = useRef<HTMLDivElement>(null);
-  const exporter = useTokenExport(setup);
+const TokenExportMenu = ({ exporter }: TokenExportMenuProps): ReactNode => {
+  const menu = useTokenMenu();
+  const { close, menu: popup, root, trigger } = menu;
   const { handleRun } = exporter;
   let label: string = COPY.exportTitle;
 
   if (exporter.isBusy) {
     label = COPY.exportRunning;
   }
-
-  const close = useCallback((refocus: boolean): void => {
-    setIsOpen(false);
-
-    if (refocus) {
-      trigger.current?.focus({ preventScroll: true });
-    }
-  }, []);
-
-  usePopover(isOpen, root, close);
-  useMenuPlace(isOpen, trigger, menu);
-
-  const handleToggle = useCallback((): void => {
-    setIsOpen((value) => !value);
-  }, []);
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>): void => {
-      runMenuKey(event, close);
-    },
-    [close]
-  );
 
   const handlePick = useCallback(
     (format: TokenExportFormat): void => {
@@ -69,31 +43,20 @@ const TokenExportMenu = ({ setup }: TokenExportMenuProps): ReactNode => {
         type="button"
         className={styles.trigger}
         aria-haspopup="menu"
-        aria-expanded={isOpen}
+        aria-expanded={menu.isOpen}
         data-tip={COPY.exportTip}
+        data-tip-align="end"
         disabled={exporter.isBusy}
-        onClick={handleToggle}
+        onClick={menu.handleToggle}
       >
+        <Icon name="download" size={TRIGGER_ICON_SIZE} />
         {label}
       </button>
-      {isOpen && (
+      {menu.isOpen && (
         <TokenExportList
-          menu={menu}
-          onKeyDown={handleKeyDown}
+          menu={popup}
+          onKeyDown={menu.handleKeyDown}
           onPick={handlePick}
-        />
-      )}
-      {exporter.error !== null && (
-        <p className={styles.error} role="alert">
-          {exporter.error}
-        </p>
-      )}
-      {exporter.result !== null && (
-        <TokenExportResult
-          isCopied={exporter.isCopied}
-          onCopy={exporter.handleCopy}
-          onSave={exporter.handleSave}
-          view={exporter.result}
         />
       )}
     </div>

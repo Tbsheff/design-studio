@@ -386,8 +386,7 @@
   height: 6px;
   border-radius: 50%;
   background: var(--ok);
-  animation: ide-pulse var(--dur-pulse, 2s) var(--ease-in-out, ease-in-out)
-    infinite;
+  animation: ide-pulse var(--dur-pulse, 2s) var(--ease-in-out, ease-in-out) 3;
 }
 
 .ide-live[data-off] i {

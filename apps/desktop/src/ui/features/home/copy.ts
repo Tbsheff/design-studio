@@ -227,7 +227,6 @@ const copy = {
   projects: "Projects",
   projectsSuffix: "projects",
   promptsEditApp: "Prompts edit the app source. Pick New prototype to stop.",
-  promptsMakePrototype: "Prompts make a prototype. The folder does not change.",
   prototypes: "Prototypes",
   prototypesGroup: "Prototypes",
   prototypesSub: "Standalone designs, no app folder",

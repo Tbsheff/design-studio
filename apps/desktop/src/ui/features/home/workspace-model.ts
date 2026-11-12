@@ -308,7 +308,7 @@ const toDefaultLine = (
     return copy.promptsEditApp;
   }
 
-  return copy.promptsMakePrototype;
+  return null;
 };
 
 const toIndexFor = (workspaces: readonly Workspace[], id: string): number => {

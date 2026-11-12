@@ -310,7 +310,10 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     return value;
   };
 
-  const appTarget = async (projectId: string): Promise<AppTarget | null> => {
+  const appTarget = async (
+    projectId: string,
+    canStart: boolean
+  ): Promise<AppTarget | null> => {
     const project = await appProjectOf(projectId);
     const main = project?.directions[0];
 
@@ -318,8 +321,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       return null;
     }
 
-    const upstream =
-      apps.upstreamOf(project.id) ?? (await apps.ensure(project));
+    const upstream = await apps.serve(project, canStart);
 
     return { upstream, workTree: main.workTree, appDir: project.app.appDir };
   };
@@ -329,6 +331,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     studioOrigin: config.studioOrigin,
     bridgeScript: loadBridgeScript,
     targetFor: appTarget,
+    holdSocket: (projectId) => apps.idle.holdSocket(projectId),
     isApp: async (projectId) => (await appProjectOf(projectId)) !== null,
     stateFor: async (projectId, stateId) => {
       const project = await appProjectOf(projectId);
@@ -417,10 +420,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
 
     if (project.app) {
       appCache.delete(project.id);
-      void apps
-        .ensure(project)
-        .then(() => warmComponentUsage(project, direction.workTree, usageEdges))
-        .catch(() => undefined);
+      warmComponentUsage(project, direction.workTree, usageEdges);
       stamps.register(
         appUrl(project),
         key,

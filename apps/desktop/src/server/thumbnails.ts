@@ -222,6 +222,14 @@ export function createThumbnailService(deps: {
 }): ThumbnailService {
   const { projects, preview, versions } = deps;
   const queue = createShotQueue();
+  const isAppAsleep = (project: Project): boolean =>
+    project.app?.mode === "managed" &&
+    preview.apps?.status(project).state !== "ready";
+  const assertAppAwake = (project: Project): void => {
+    if (isAppAsleep(project)) {
+      throw new NotFoundError("the app dev server is not running");
+    }
+  };
 
   const thumbsDir = (projectId: string): string =>
     path.join(
@@ -308,6 +316,7 @@ export function createThumbnailService(deps: {
   const captureHead = async (projectId: string): Promise<void> => {
     if (!alive(projectId)) return;
     const project = await projects.get(projectId);
+    if (isAppAsleep(project)) return;
     const main = projects.mainDirection(project);
     const versionId = main.headVersionId;
     if (!versionId || project.thumbnail?.versionId === versionId) return;
@@ -372,6 +381,7 @@ export function createThumbnailService(deps: {
           throw new NotFoundError(
             "an attached app renders only its current version"
           );
+        assertAppAwake(project);
       }
       return queue.run(
         `version:${projectId}:${versionId}`,
@@ -412,6 +422,7 @@ export function createThumbnailService(deps: {
       const cached = await readCached(file);
       if (cached) return toResult(cached);
       const project = await projects.get(projectId);
+      assertAppAwake(project);
       const [, later] = await Promise.all([
         versions.get(project, beforeId),
         versions.get(project, afterId),

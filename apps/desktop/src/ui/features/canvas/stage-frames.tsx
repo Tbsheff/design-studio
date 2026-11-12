@@ -70,6 +70,8 @@ const StageFrames = ({
         register={registerPassive}
         waiting={firstBuild.waitFor}
         steps={props.steps}
+        projectId={props.projectId}
+        zoomPercent={stage.pz.zoomPercent}
       />
       <FrameSnapLayer origin={active} />
       {proto.artboard}

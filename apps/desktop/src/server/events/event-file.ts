@@ -1,9 +1,21 @@
-import { open, readFile, readdir } from "node:fs/promises";
+import {
+  open,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
+
+import { logError } from "../platform/logger/index.js";
 
 const TAIL_BYTES = 65_536;
 const SEQ_TAIL_BYTES = 16_777_216;
 const HYDRATE_LIMIT = 8;
+const EVENT_FILE_MAX_BYTES = 8_388_608;
+const EVENT_FILE_KEEP_BYTES = 4_194_304;
+const COMPACT_SUFFIX = ".compact.tmp";
 const MISSING_CODES = new Set(["ENOENT", "ENOTDIR"]);
 
 interface Sequenced {
@@ -166,6 +178,80 @@ const getEventTail = async <Entry extends Sequenced>(
   }
 };
 
+const toWholeLines = (buffer: Buffer, start: number): Buffer => {
+  if (start === 0) {
+    return buffer;
+  }
+
+  const newline = buffer.indexOf("\n");
+
+  if (newline === -1) {
+    return Buffer.alloc(0);
+  }
+
+  return buffer.subarray(newline + 1);
+};
+
+const getTailBuffer = async (file: string, size: number): Promise<Buffer> => {
+  const handle = await open(file, "r");
+
+  try {
+    const start = Math.max(0, size - EVENT_FILE_KEEP_BYTES);
+    const buffer = Buffer.alloc(size - start);
+
+    await handle.read(buffer, 0, buffer.length, start);
+
+    return toWholeLines(buffer, start);
+  } finally {
+    await handle.close();
+  }
+};
+
+const applyFileTail = async (file: string, size: number): Promise<number> => {
+  const tail = await getTailBuffer(file, size);
+  const temp = `${file}${COMPACT_SUFFIX}`;
+
+  try {
+    await writeFile(temp, tail);
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true });
+    throw error;
+  }
+
+  return tail.length;
+};
+
+const toFileSize = async (file: string): Promise<number> => {
+  const handle = await open(file, "r");
+
+  try {
+    const stats = await handle.stat();
+
+    return stats.size;
+  } finally {
+    await handle.close();
+  }
+};
+
+const applyEventFileCap = async (file: string): Promise<number> => {
+  const size = await toFileSize(file);
+
+  if (size <= EVENT_FILE_MAX_BYTES) {
+    return size;
+  }
+
+  return await applyFileTail(file, size);
+};
+
+const applyBootCap = async (file: string): Promise<void> => {
+  try {
+    await orMissing(() => applyEventFileCap(file), 0);
+  } catch (error) {
+    logError("[events] cap failed", error);
+  }
+};
+
 const lastSeqOf = (events: Sequenced[]): number => events.at(-1)?.seq ?? 0;
 
 const lastStoredSeq = async (file: string): Promise<number> => {
@@ -182,9 +268,13 @@ const lastStoredSeq = async (file: string): Promise<number> => {
 };
 
 const readFloor = async (dir: string): Promise<SeqFloor> => {
+  const file = path.join(dir, "events.jsonl");
+
+  await applyBootCap(file);
+
   const [reserved, stored] = await Promise.all([
     readReserved(path.join(dir, "events.seq")),
-    lastStoredSeq(path.join(dir, "events.jsonl")),
+    lastStoredSeq(file),
   ]);
 
   return { lastSeq: Math.max(reserved, stored), reserved };
@@ -272,6 +362,6 @@ const readSeqFloors = async (
   return mergeTrash(new Map(projectFloors), trashFloors);
 };
 
-export { getEventTail, readSeqFloors };
+export { applyEventFileCap, EVENT_FILE_MAX_BYTES, getEventTail, readSeqFloors };
 
 export type { SeqFloor, SizedEntry };

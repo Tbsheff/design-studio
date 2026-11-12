@@ -79,6 +79,19 @@ const isLive = async (
   return pages?.includes(`/${page ?? ""}`) ?? false;
 };
 
+const toRunningUpstream = (
+  preview: PreviewService,
+  project: Project
+): string | null => {
+  const status = preview.apps?.status(project) ?? null;
+
+  if (status?.state !== "ready") {
+    return null;
+  }
+
+  return status.upstream;
+};
+
 const warmAppPage = async (
   preview: PreviewService,
   project: Project,
@@ -90,13 +103,11 @@ const warmAppPage = async (
     return;
   }
 
-  const upstream = await attemptNull(
-    async () => (await preview.apps?.ensure(project)) ?? null
-  );
+  const upstream = toRunningUpstream(preview, project);
 
   if (upstream) {
     await warmUpstream(upstream, toOptional(page));
   }
 };
 
-export { warmAppPage, warmUpstream };
+export { toRunningUpstream, warmAppPage, warmUpstream };

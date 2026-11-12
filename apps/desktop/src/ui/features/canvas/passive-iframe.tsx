@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { ReactElement } from "react";
 
 interface PassiveIframeProps {
@@ -15,6 +15,8 @@ interface PassiveIframeProps {
 
 const IFRAME_CLASS = ["frame passive", "frame passive next"];
 
+const LOAD_CLASS = [" loading", ""];
+
 const PassiveIframe = ({
   url,
   name,
@@ -26,7 +28,11 @@ const PassiveIframe = ({
   frameRef,
   onNextLoad,
 }: PassiveIframeProps): ReactElement => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const onLoad = useCallback((): void => {
+    setIsLoaded(true);
+
     if (isNext) {
       onNextLoad(frameId);
     }
@@ -36,7 +42,7 @@ const PassiveIframe = ({
     <iframe
       ref={frameRef}
       title={`${name} preview`}
-      className={IFRAME_CLASS[Number(isNext)]}
+      className={`${IFRAME_CLASS[Number(isNext)]}${LOAD_CLASS[Number(isLoaded)]}`}
       src={url}
       sandbox={sandbox}
       width={width}

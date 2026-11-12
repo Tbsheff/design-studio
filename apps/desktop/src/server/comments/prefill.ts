@@ -67,9 +67,8 @@ async function warmApp(
   project: Project,
   page: string | undefined
 ): Promise<void> {
-  const upstream = project.app
-    ? await deps.preview.apps?.ensure(project).catch(() => null)
-    : null;
+  const status = project.app ? deps.preview.apps?.status(project) : null;
+  const upstream = status?.state === "ready" ? status.upstream : null;
 
   if (!upstream) {
     return;

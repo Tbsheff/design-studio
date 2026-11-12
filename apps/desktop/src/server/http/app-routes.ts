@@ -175,10 +175,8 @@ export async function finishAttach(
   deps.preview.apps?.forget(attached.id);
   deps.watch(attached, deps.projects.mainDirection(attached));
   warmKit(attached, deps.projects.mainDirection(attached));
-  const starting = deps.preview.apps?.ensure(attached).catch(() => undefined);
-
   if (attached.app?.mode === "url") {
-    await starting;
+    await deps.preview.apps?.ensure(attached).catch(() => undefined);
   }
 
   if (!fresh) {
@@ -187,7 +185,6 @@ export async function finishAttach(
 
   const legacyCanvas = await setAsideCanvas(deps, attached);
   await deps.versions.ensureRepo(attached);
-  ensureFirstVersion(deps, attached);
 
   return {
     project: attached,
@@ -225,7 +222,6 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
   bindDevServerRuntime({
     projects,
     preview: deps.preview,
-    ensureFirstVersion: (project) => ensureFirstVersion(deps, project),
     attach: (project) => finishAttach(deps, project),
   });
 

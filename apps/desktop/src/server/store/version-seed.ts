@@ -8,6 +8,7 @@ import {
   realpath,
   rm,
   stat,
+  writeFile,
 } from "node:fs/promises";
 import path from "node:path";
 
@@ -151,6 +152,39 @@ async function cloneLooseObjects(
       })
     );
   }
+}
+
+async function setAlternate(from: string, to: string): Promise<void> {
+  await mkdir(path.join(to, "info"), { recursive: true });
+  await writeFile(path.join(to, "info", "alternates"), `${from}\n`);
+}
+
+async function createSeedObjects(
+  from: string,
+  to: string,
+  entries: IndexEntry[],
+  isSameDevice: boolean
+): Promise<void> {
+  if (!isSameDevice) {
+    await setAlternate(from, to);
+
+    return;
+  }
+
+  await Promise.all([
+    clonePacks(from, to),
+    cloneLooseObjects(
+      from,
+      to,
+      entries.flatMap((entry) => {
+        if (entry.mode === "160000") {
+          return [];
+        }
+
+        return [entry.sha];
+      })
+    ),
+  ]);
 }
 
 function parseEntries(text: string): IndexEntry[] | null {
@@ -308,11 +342,12 @@ export async function seedFromUserRepo(
   try {
     const user = await userRepoOf(workTree);
 
-    if (!user || !(await sameDevice(user.objectsDir, scope.gitDir))) {
+    if (!user) {
       return false;
     }
 
     const objectsDir = path.join(scope.gitDir, "objects");
+    const isSameDevice = await sameDevice(user.objectsDir, scope.gitDir);
     await copyFile(
       path.join(user.gitDir, "index"),
       indexFile,
@@ -327,16 +362,12 @@ export async function seedFromUserRepo(
       throw new Error("index has entries the studio cannot reuse");
     }
 
-    const objectsReady = Promise.all([
-      clonePacks(user.objectsDir, objectsDir),
-      cloneLooseObjects(
-        user.objectsDir,
-        objectsDir,
-        entries
-          .filter((entry) => entry.mode !== "160000")
-          .map((entry) => entry.sha)
-      ),
-    ]).then(() => undefined);
+    const objectsReady = createSeedObjects(
+      user.objectsDir,
+      objectsDir,
+      entries,
+      isSameDevice
+    );
 
     const rehash = await entriesToRehash(
       scope,

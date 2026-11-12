@@ -61,16 +61,21 @@ import type { CommitInfo, GitScope, TreeEntry } from "../platform/git/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";
+import { createExternalStatus } from "./version-external-status.js";
+import { isExternalTree, toCleanStatus } from "./version-external.js";
 import {
   FastPathUnavailable,
   diffTrees,
   readBlobAt,
   updateTree,
 } from "./version-fast.js";
-import { updateIndexPaths } from "./version-index-paths.js";
+import {
+  listChangedAmong,
+  listStageable,
+  updateIndexPaths,
+} from "./version-index-paths.js";
 import { seedFromUserRepo } from "./version-seed.js";
 import { createChangeTracker } from "./version-tracker.js";
-import { createWarmQueue } from "./version-warm.js";
 
 export { runGit, runGitBuffer } from "../platform/git/index.js";
 export type { GitScope } from "../platform/git/index.js";
@@ -760,7 +765,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     }
 
     try {
-      const stageable = await stageableOf(scope, scoped);
+      const stageable = await listStageable(scope, scoped);
 
       if (stageable.length > 0) {
         await runGit(scope, [
@@ -774,34 +779,6 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     } catch {
       await fullStage(project, direction);
     }
-  };
-
-  const stageableOf = async (
-    scope: GitScope,
-    paths: string[]
-  ): Promise<string[]> => {
-    const listed = splitNul(
-      (
-        await runGit(scope, [
-          "--literal-pathspecs",
-          "ls-files",
-          "-z",
-          "--cached",
-          "--others",
-          "--exclude-standard",
-          "--",
-          ...paths,
-        ])
-      ).stdout
-    );
-
-    const exact = new Set(listed);
-
-    return paths.filter(
-      (relative) =>
-        exact.has(relative) ||
-        listed.some((entry) => entry.startsWith(`${relative}/`))
-    );
   };
 
   const commitTree = async (
@@ -1563,24 +1540,20 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       return task();
     });
 
-  const seedIndex = async (project: Project): Promise<void> => {
-    const main = project.directions[0];
-
-    if (!main) {
-      return;
-    }
-
-    await locked(project, main, async () => {
-      if ((await headOf(project, main)) !== null) {
-        return;
-      }
-
-      await writeBaseExclude(project);
-      await seedFromUserRepo(directionScope(project, main), main.workTree, {
+  const seedDirection = async (
+    project: Project,
+    direction: Direction
+  ): Promise<void> => {
+    await writeBaseExclude(project);
+    await seedFromUserRepo(
+      directionScope(project, direction),
+      direction.workTree,
+      {
         maxBytes: APP_MAX_TRACKED_BYTES,
         neverTracked: APP_NEVER_TRACKED,
-      });
-    });
+      }
+    );
+    await writeExclude(project);
   };
 
   const packLooseObjects = (project: Project): void => {
@@ -1700,81 +1673,6 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     }
   };
 
-  const startScanAside = (
-    project: Project,
-    direction: Direction,
-    indexFile: string
-  ): Promise<{ head: string; scan: number; base: string } | null> =>
-    locked(project, direction, async () => {
-      const head = await headOf(project, direction);
-
-      if (
-        head === null ||
-        direct.has(project, direction) ||
-        !(await rawFastOk(project, direction))
-      ) {
-        return null;
-      }
-
-      const scan = tracker.beginFullScan(
-        lockKey(project, direction),
-        rootOf(direction)
-      );
-
-      if (scan === null) {
-        return null;
-      }
-
-      return {
-        head,
-        scan,
-        base: await scanIndexBase(project, direction, head, indexFile),
-      };
-    });
-
-  const scanAside = async (
-    project: Project,
-    direction: Direction
-  ): Promise<void> => {
-    const indexFile = path.join(
-      gitDirOf(project),
-      `index-scan-${randomBytes(6).toString("hex")}`
-    );
-
-    try {
-      const start = await startScanAside(project, direction, indexFile);
-
-      if (!start) {
-        return;
-      }
-
-      const scope: GitScope = {
-        ...directionScope(project, direction),
-        indexFile,
-      };
-
-      const changed = await changedInIndex(scope, start.head, start.base);
-
-      await locked(project, direction, async () => {
-        const head = await headOf(project, direction);
-
-        if (
-          head === null ||
-          direct.has(project, direction) ||
-          !tracker.endFullScan(lockKey(project, direction), start.scan)
-        ) {
-          return;
-        }
-
-        await direct.adopt(project, direction, start.head, head, changed);
-      });
-    } finally {
-      await rm(indexFile, { force: true });
-    }
-  };
-
-  const warm = createWarmQueue(lockKey, scanAside);
-
   const prepareRepo = async (project: Project): Promise<void> => {
     const gitDir = gitDirOf(project);
 
@@ -1788,16 +1686,14 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       await runGit(scope, ["config", "core.autocrlf", "false"]);
       await runGit(scope, ["config", "core.quotepath", "false"]);
       await runGit(scope, ["config", "gc.auto", "0"]);
+      await runGit(scope, ["config", "core.untrackedCache", "true"]);
     }
 
-    await runGit(repoScope(project), ["config", "core.untrackedCache", "true"]);
     await sweepLocks(project);
 
-    if (project.app) {
-      await seedIndex(project);
+    if (!isExternalTree(project)) {
+      await writeExclude(project);
     }
-
-    await writeExclude(project);
   };
 
   const isEnvFile = (relative: string): boolean => {
@@ -1826,17 +1722,63 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     );
   };
 
+  const externalStatus = createExternalStatus();
+
+  const changedAmong = async (
+    project: Project,
+    direction: Direction,
+    head: string,
+    paths: string[]
+  ): Promise<string[]> => {
+    const scope = directionScope(project, direction);
+    const indexFile = path.join(
+      gitDirOf(project),
+      `index-scoped-${randomBytes(6).toString("hex")}`
+    );
+
+    const changed = await listChangedAmong(
+      scope,
+      indexFile,
+      head,
+      scopedPaths(scope, paths)
+    );
+
+    return changed.filter((entry) => !LAYOUT_FILES.includes(entry));
+  };
+
+  const readExternalStatus = async (
+    project: Project,
+    direction: Direction,
+    paths: string[] | null
+  ): Promise<WorkTreeStatus> => {
+    const head = await headOf(project, direction);
+
+    if (head === null) {
+      return toCleanStatus();
+    }
+
+    if (await fastOk(project, direction)) {
+      return locked(project, direction, () => {
+        if (paths === null) {
+          return statusOf(project, direction);
+        }
+
+        return statusOf(project, direction, paths);
+      });
+    }
+
+    return locked(project, direction, () =>
+      externalStatus.read(lockKey(project, direction), head, paths, {
+        changedAmong: (scoped) =>
+          changedAmong(project, direction, head, scoped),
+        fullScan: () => statusOf(project, direction),
+      })
+    );
+  };
+
   return {
     async ensureRepo(project: Project): Promise<void> {
-      const prepared = prepareRepo(project);
-
-      if (project.app) {
-        for (const direction of project.directions) {
-          warm.add(project, direction, prepared);
-        }
-      }
-
-      await prepared;
+      await prepareRepo(project);
     },
 
     commitFile(
@@ -1846,6 +1788,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       title: string,
       meta: VersionMeta
     ): Promise<Version | null> {
+      externalStatus.forget(lockKey(project, direction));
+
       const listed = Array.isArray(relative) ? relative : [relative];
 
       const paths = [
@@ -1877,11 +1821,18 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       title: string,
       meta: VersionMeta
     ): Promise<Version | null> {
+      externalStatus.forget(lockKey(project, direction));
+
       return locked(project, direction, async () => {
         await refreshExclude(project);
         const scope = directionScope(project, direction);
         const head = await headOf(project, direction);
         direct.forget(project, direction);
+
+        if (head === null && isExternalTree(project)) {
+          await seedDirection(project, direction);
+        }
+
         await direct.syncIndex(project, direction);
         await fullStage(
           project,
@@ -1964,7 +1915,9 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       direction: Direction,
       paths?: string[]
     ): Promise<WorkTreeStatus> {
-      await warm.settled(project, direction);
+      if (isExternalTree(project)) {
+        return readExternalStatus(project, direction, paths ?? null);
+      }
 
       return locked(project, direction, () =>
         statusOf(project, direction, paths)
@@ -2013,7 +1966,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       project: Project,
       direction: Direction
     ): Promise<WorkTreeStatus> {
-      await warm.settled(project, direction);
+      externalStatus.forget(lockKey(project, direction));
 
       return locked(project, direction, async () => {
         const head = await headOf(project, direction);
@@ -2038,7 +1991,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       versionId: string,
       kind: "undo" | "restore"
     ): Promise<Version> {
-      await warm.settled(project, direction);
+      externalStatus.forget(lockKey(project, direction));
 
       return locked(project, direction, async () => {
         const head = await headOf(project, direction);

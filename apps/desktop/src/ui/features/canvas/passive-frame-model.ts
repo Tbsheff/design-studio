@@ -3,6 +3,7 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameBaseName } from "./frame-label-model.js";
 import type { LabelProps } from "./frame-label.js";
+import type { FrameLiveSources } from "./frame-still-model.js";
 
 interface PassiveProps {
   frame: CanvasFrame;
@@ -15,6 +16,8 @@ interface PassiveProps {
   register: (id: string, el: HTMLDivElement | null) => void;
   frameRef?: (el: HTMLIFrameElement | null) => void;
   onNextLoad: (id: string) => void;
+  projectId: string;
+  sources: FrameLiveSources;
 }
 
 interface PassiveUrl {
@@ -31,13 +34,13 @@ const toFrameName = (label: LabelProps, frame: CanvasFrame): string => {
 };
 
 const toPassiveUrls = (
-  armed: boolean,
+  isLive: boolean,
   src: string | null,
   nextSrc: string | null
 ): PassiveUrl[] => {
   const urls: PassiveUrl[] = [];
 
-  if (!armed) {
+  if (!isLive) {
     return urls;
   }
 

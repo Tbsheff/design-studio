@@ -84,6 +84,9 @@ const toBlockState = (isActive: boolean, count: number): string => {
   return `${count} ${pick(count === 1, "edit", "edits")}`;
 };
 
+const isWithinMs = (at: number, windowMs: number): boolean =>
+  Date.now() - at < windowMs;
+
 export {
   FOLD_AT,
   MCP_ACTIVE_MS,
@@ -92,6 +95,7 @@ export {
   SECOND_MS,
   TICK_MS,
   countdown,
+  isWithinMs,
   toBlockState,
   toToolIcon,
 };

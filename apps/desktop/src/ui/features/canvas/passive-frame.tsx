@@ -5,6 +5,7 @@ import { pageFileOf } from "../chat/use-first-build.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameSkeleton } from "./frame-skeleton-view.js";
+import { FrameStillImage } from "./frame-still-image.js";
 import { PassiveFrameLabel } from "./passive-frame-label.js";
 import {
   routeHitPointerDown,
@@ -12,27 +13,18 @@ import {
   toFrontRef,
   toMissingPage,
   toPassiveStyle,
-  toPassiveUrls,
 } from "./passive-frame-model.js";
 import type { PassiveProps } from "./passive-frame-model.js";
 import { PassiveIframe } from "./passive-iframe.js";
-import { usePassiveMount } from "./passive-mount.js";
+import { usePassiveMode } from "./use-passive-mode.js";
 
-const PassiveFrame = ({
-  frame,
-  src,
-  nextSrc,
-  pending,
-  sandbox,
-  offset,
-  label,
-  register,
-  frameRef,
-  onNextLoad,
-}: PassiveProps): ReactElement => {
+const PassiveFrame = (props: PassiveProps): ReactElement => {
+  const { frame, pending, sandbox, offset, label, register } = props;
+  const { frameRef, onNextLoad } = props;
   const name = toFrameName(label, frame);
   const box = useRef<HTMLDivElement | null>(null);
-  const armed = usePassiveMount(box);
+  const mode = usePassiveMode(box, props);
+  const { onPointerEnter, onPointerLeave, still, urls } = mode;
 
   const setBox = useCallback(
     (el: HTMLDivElement | null): void => {
@@ -63,8 +55,11 @@ const PassiveFrame = ({
       data-frame-id={frame.id}
       data-direction-id={label.directionId}
       style={style}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
     >
-      {toPassiveUrls(armed, src, nextSrc).map((entry) => (
+      <FrameStillImage url={still} />
+      {urls.map((entry) => (
         <PassiveIframe
           key={entry.url}
           url={entry.url}

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const isPageHidden = (): boolean => document.visibilityState === "hidden";
+
 const useNow = (isOn: boolean, stepMs: number): number => {
   const [now, setNow] = useState(() => Date.now());
 
@@ -8,9 +10,38 @@ const useNow = (isOn: boolean, stepMs: number): number => {
       return;
     }
 
-    const timer = globalThis.setInterval(() => setNow(Date.now()), stepMs);
+    let timer: ReturnType<typeof globalThis.setInterval> | null = null;
 
-    return (): void => globalThis.clearInterval(timer);
+    const stopTick = (): void => {
+      if (timer !== null) {
+        globalThis.clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const startTick = (): void => {
+      stopTick();
+
+      if (!isPageHidden()) {
+        timer = globalThis.setInterval(() => setNow(Date.now()), stepMs);
+      }
+    };
+
+    const onVisibility = (): void => {
+      if (!isPageHidden()) {
+        setNow(Date.now());
+      }
+
+      startTick();
+    };
+
+    startTick();
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return (): void => {
+      stopTick();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [isOn, stepMs]);
 
   return now;

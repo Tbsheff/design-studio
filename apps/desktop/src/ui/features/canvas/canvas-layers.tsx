@@ -26,6 +26,16 @@ interface TreeFrames {
   hover: LiveStore<HoverBox | null>;
 }
 
+interface CanvasLayersPanelProps {
+  frames: TreeFrames;
+  readonly isEmpty: boolean;
+  edits: LayerEdits;
+  frameName: string;
+  selection: SelectionContext[];
+  onSelectMode: () => void;
+  onClose?: () => void;
+}
+
 const useHoveredNode = (hover: LiveStore<HoverBox | null>): number | null => {
   const read = (): number | null => hover.get()?.node ?? null;
 
@@ -40,15 +50,7 @@ const CanvasLayersPanel = ({
   selection,
   onSelectMode,
   onClose,
-}: {
-  frames: TreeFrames;
-  readonly isEmpty: boolean;
-  edits: LayerEdits;
-  frameName: string;
-  selection: SelectionContext[];
-  onSelectMode: () => void;
-  onClose?: () => void;
-}): ReactElement => {
+}: CanvasLayersPanelProps): ReactElement => {
   const hasSelection = selection.length > 0;
   const hoveredNode = useHoveredNode(frames.hover);
 

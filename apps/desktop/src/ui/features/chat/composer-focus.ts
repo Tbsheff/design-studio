@@ -24,7 +24,7 @@ const focusComposer = (): void => {
   });
 };
 
-const STAGE_WAIT_MS = 4000;
+const STAGE_WAIT_MS = 10_000;
 
 const STAGE_POLL_MS = 50;
 

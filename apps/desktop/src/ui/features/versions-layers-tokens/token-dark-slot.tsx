@@ -45,7 +45,7 @@ const TokenDarkSlot = ({
         aria-label={`${COPY.tokenAddDarkPrefix}${name}`}
         onClick={handleAddDark}
       >
-        <Icon name="plus" size={DARK_ICON_SIZE} />
+        <Icon name="moon" size={DARK_ICON_SIZE} />
         {COPY.tokenNoDark}
       </button>
     );
@@ -55,7 +55,7 @@ const TokenDarkSlot = ({
     <div className="tkp-dark">
       <ColorValue
         label={`${name} dark value`}
-        suffix="dark"
+        trail="moon"
         value={darkValue}
         swatch={swatchFor(darkValue, true)}
         onChange={handleEditDark}

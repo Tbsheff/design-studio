@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 
+import { toShortValue } from "./token-value-model.js";
 import { useDraftText } from "./use-draft-text.js";
 
 interface TextValueProps {
@@ -21,6 +22,11 @@ const TextValue = ({
   const draft = useDraftText(value, onChange);
   const { change } = draft;
   let monoClass = "";
+  let text = toShortValue(value);
+
+  if (draft.isFocused) {
+    text = draft.shown;
+  }
 
   if (mono) {
     monoClass = "mono";
@@ -39,7 +45,7 @@ const TextValue = ({
         className="ins-input tkp-text"
         aria-label={label}
         aria-invalid={invalid}
-        value={draft.shown}
+        value={text}
         spellCheck={false}
         autoComplete="off"
         onChange={handleEdit}

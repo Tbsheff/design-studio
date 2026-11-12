@@ -188,7 +188,7 @@ const COPY = {
   tokenLightValue: "Light value",
   tokenName: "Name",
   tokenNameRule: "Use lowercase letters, digits and single hyphens",
-  tokenNoDark: "No dark value",
+  tokenNoDark: "Add dark value",
   tokenOptional: "Optional",
   tokenRemoveDarkPrefix: "Remove dark value for ",
   tokenRevertPrefix: "Revert ",

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { toShortValue } from "../../domain/token-value.js";
 import { ValueSwatch } from "./value-swatch.js";
 
 const ValueCell = ({
@@ -11,7 +12,7 @@ const ValueCell = ({
 }): ReactElement => (
   <span className="ds-value" data-tip={value}>
     <ValueSwatch isColor={isColor} value={value} />
-    <span className="truncate">{value}</span>
+    <span className="truncate">{toShortValue(value)}</span>
   </span>
 );
 

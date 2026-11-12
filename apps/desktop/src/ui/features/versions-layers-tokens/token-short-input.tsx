@@ -1,6 +1,6 @@
 import type { ChangeEvent, ReactNode } from "react";
 
-import { toShortValue } from "./token-value-model.js";
+import { toShortValue } from "../../domain/token-value.js";
 import type { DraftText } from "./use-draft-text.js";
 
 interface TokenShortInputProps {

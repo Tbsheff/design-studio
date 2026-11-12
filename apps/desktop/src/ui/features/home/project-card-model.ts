@@ -149,7 +149,6 @@ export {
   toFavoriteTip,
   toFolderPlace,
   toProjectBadge,
-  toProjectPlace,
   toTabIndex,
 };
 

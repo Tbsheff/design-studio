@@ -392,6 +392,10 @@
   grid-row: 2;
 }
 
+.project-grid.list .project-name:has(+ .project-meta) {
+  grid-row: 1 / span 2;
+}
+
 .project-grid.list .project-meta {
   display: contents;
 }

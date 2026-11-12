@@ -14,6 +14,8 @@ import type { PointerBridge, StudioPointer } from "./share-studio-pointer.js";
 
 const RETRY_MS = 5000;
 
+const IDLE_RETRY_MS = 60_000;
+
 const POINTER_BRIDGE: PointerBridge = {
   onFrame: onSharePointer,
   setPointer: setSharePointer,
@@ -44,6 +46,14 @@ const applyEvent = (
   }
 };
 
+const toRetryMs = (isIdle: boolean): number => {
+  if (isIdle) {
+    return IDLE_RETRY_MS;
+  }
+
+  return RETRY_MS;
+};
+
 const isChangedFor = (event: Event, projectId: string): boolean =>
   event instanceof CustomEvent &&
   new Map(Object.entries(event.detail ?? {})).get("projectId") === projectId;
@@ -60,6 +70,8 @@ const startShareLive = (
     own: AbortController,
     reconnect: () => void
   ): Promise<void> => {
+    let isIdle = false;
+
     try {
       const response = await getRaw(
         `/api/projects/${encodeURIComponent(projectId)}/share-presence`,
@@ -68,6 +80,7 @@ const startShareLive = (
 
       if (response.ok) {
         await readEvents(response, (event) => {
+          isIdle = event.type === "idle";
           applyEvent(layer, pointer, event);
         });
       }
@@ -77,7 +90,7 @@ const startShareLive = (
       if (state.control === own && !state.stopped) {
         layer.set([]);
         pointer.set(false);
-        state.retry = globalThis.setTimeout(reconnect, RETRY_MS);
+        state.retry = globalThis.setTimeout(reconnect, toRetryMs(isIdle));
       }
     }
   };

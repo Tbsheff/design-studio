@@ -34,7 +34,7 @@
   --column-w: 240px;
   --tools-w: 40px;
   --inspector-w: 264px;
-  --zoom-w: 116px;
+  --zoom-h: 36px;
   --dock-w: var(--rail-w);
   --dock-right: calc(var(--dock-gap) * 2 + var(--dock-w));
   --zoom-right: var(--dock-gap);
@@ -164,7 +164,7 @@
 .studio-tools {
   position: absolute;
   z-index: 30;
-  right: calc(var(--zoom-right) + var(--zoom-w) + var(--dock-gap));
+  right: var(--zoom-right);
   bottom: var(--dock-gap);
   left: calc(var(--dock-right) + var(--dock-gap));
   display: flex;
@@ -241,7 +241,13 @@
   background: var(--line);
 }
 
-@container tools (width < 296px) {
+@container tools (width < 538px) {
+  .studio-tools > .topbar-tools {
+    margin-bottom: calc(var(--zoom-h) + var(--dock-gap));
+  }
+}
+
+@container tools (width < 297px) {
   .studio-tools > .topbar-tools {
     position: absolute;
     bottom: 0;

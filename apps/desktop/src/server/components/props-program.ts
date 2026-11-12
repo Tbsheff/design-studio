@@ -23,6 +23,7 @@ const SOURCE_BYTES_MAX = 1024 * 1024;
 const LIBRARY_DTS_BYTES_MAX = 256 * 1024;
 const BUDGET_MS = 1500;
 const SOURCE_CACHE_MAX = 400;
+const SOURCE_CACHE_BYTES_MAX = PROGRAM_BYTES_MAX;
 const REACT_TYPES = /[\\/]@types[\\/]react[\\/]/;
 
 export interface ProgramScope {
@@ -53,6 +54,31 @@ const configCache = new Map<
   { stamp: number; options: TS.CompilerOptions | null }
 >();
 const sourceCache = new Map<string, { stamp: number; file: TS.SourceFile }>();
+let sourceCacheBytes = 0;
+
+function deleteOldestSource(): void {
+  const oldest = sourceCache.keys().next();
+  if (oldest.done) return;
+  sourceCacheBytes -= sourceCache.get(oldest.value)?.file.text.length ?? 0;
+  sourceCache.delete(oldest.value);
+}
+
+function setCachedSource(
+  key: string,
+  stamp: number,
+  file: TS.SourceFile
+): void {
+  sourceCacheBytes -= sourceCache.get(key)?.file.text.length ?? 0;
+  sourceCache.delete(key);
+  sourceCache.set(key, { stamp, file });
+  sourceCacheBytes += file.text.length;
+  while (
+    sourceCache.size > 1 &&
+    (sourceCache.size > SOURCE_CACHE_MAX ||
+      sourceCacheBytes > SOURCE_CACHE_BYTES_MAX)
+  )
+    deleteOldestSource();
+}
 
 export function nodeModulesFile(file: string): boolean {
   return file.split(/[\\/]/).includes("node_modules");
@@ -179,13 +205,15 @@ function cachedSource(
   if (!stamp?.isFile() || stamp.size > limit) return undefined;
   const key = `${file}|${JSON.stringify(language)}`;
   const known = sourceCache.get(key);
-  if (known?.stamp === stamp.mtimeMs) return known.file;
+  if (known?.stamp === stamp.mtimeMs) {
+    sourceCache.delete(key);
+    sourceCache.set(key, known);
+    return known.file;
+  }
   const text = ts.sys.readFile(file);
   if (text === undefined) return undefined;
   const source = ts.createSourceFile(file, text, language);
-  if (sourceCache.size >= SOURCE_CACHE_MAX)
-    sourceCache.delete(sourceCache.keys().next().value as string);
-  sourceCache.set(key, { stamp: stamp.mtimeMs, file: source });
+  setCachedSource(key, stamp.mtimeMs, source);
   return source;
 }
 

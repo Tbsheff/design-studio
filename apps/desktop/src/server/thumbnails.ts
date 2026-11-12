@@ -219,6 +219,7 @@ export function createThumbnailService(deps: {
   projects: StudioProjectStore;
   preview: PreviewService;
   versions: VersionStore;
+  onCaptured?: (projectId: string) => void;
 }): ThumbnailService {
   const { projects, preview, versions } = deps;
   const queue = createShotQueue();
@@ -337,6 +338,8 @@ export function createThumbnailService(deps: {
     );
     await projects.setThumbnail(projectId, { versionId, at: Date.now() });
     await prune(thumbsDir(projectId), `${versionId}.png`);
+
+    deps.onCaptured?.(projectId);
   };
 
   const readCached = (file: string): Promise<Buffer | null> =>

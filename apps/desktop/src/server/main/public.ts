@@ -14,7 +14,7 @@ import {
 import { openEventBus } from "../events/index.js";
 import type { EventBus, FlushableEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
-import { eventRunner } from "../main/event-runner.js";
+import { eventRunner, toThumbnailNotice } from "../main/event-runner.js";
 import { McpListenerRunner } from "../mcp-life/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { pageProbe } from "../page-probe/index.js";
@@ -51,7 +51,9 @@ interface ObservedBus {
 
 interface ThumbnailHooks {
   createThumbnailService: (
-    deps: Pick<AppDeps, "preview" | "projects" | "versions">
+    deps: Pick<AppDeps, "preview" | "projects" | "versions"> & {
+      readonly onCaptured: (projectId: string) => void;
+    }
   ) => Thumbnails;
   observeBus: (bus: EventBus) => ObservedBus;
   wantsThumbnail: (event: StudioEvent) => boolean;
@@ -217,6 +219,7 @@ const buildApp = (
   const hooks = options.thumbnails;
 
   const thumbnails = hooks?.createThumbnailService({
+    onCaptured: toThumbnailNotice(runtime),
     preview,
     projects,
     versions,

@@ -2,8 +2,9 @@ import type { Project, TrashedProject } from "@design-studio/contracts";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { api, errorText, json } from "../../api.js";
+import { subscribeDone } from "../../platform/query.js";
+import { projectRoutes } from "./deps.js";
 import type { AppHealth, FoundApps } from "./deps.js";
-import { isThumbnailPending } from "./project-list-model.js";
 
 interface ProjectsState {
   readonly projects: Project[] | null;
@@ -119,7 +120,6 @@ const projectsApi = {
   update,
 };
 
-const POLL_FAST_MS = 500;
 const POLL_MS = 1500;
 const RECENT_MS = 120_000;
 
@@ -127,14 +127,6 @@ const isRecentlyUpdated = (project: Project): boolean =>
   Date.now() - project.updatedAt < RECENT_MS;
 
 const toPollDelay = (projects: Project[]): number | null => {
-  if (
-    projects.some(
-      (project) => isThumbnailPending(project) && isRecentlyUpdated(project)
-    )
-  ) {
-    return POLL_FAST_MS;
-  }
-
   if (projects.some((project) => isRecentlyUpdated(project))) {
     return POLL_MS;
   }
@@ -150,6 +142,18 @@ const useProjects = (options: {
     void runProjectsLoad();
   }, []);
   const { shouldWatch } = options;
+
+  useEffect(() => {
+    if (!shouldWatch) {
+      return;
+    }
+
+    return subscribeDone((done): void => {
+      if (done.invalidates.includes(projectRoutes.listProject.id)) {
+        void runProjectsLoad();
+      }
+    });
+  }, [shouldWatch]);
 
   useEffect(() => {
     if (!shouldWatch || current.projects === null) {

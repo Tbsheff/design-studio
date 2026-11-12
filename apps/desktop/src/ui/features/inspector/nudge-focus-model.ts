@@ -1,10 +1,13 @@
 import {
-  canTakeCanvasKeys,
   isOverlayOpen,
   isStageFrame,
   toStageElement,
 } from "../../platform/canvas-focus.js";
-import { canvasHasKeys, isTypingTarget } from "../../platform/typing-target.js";
+import {
+  canvasHasKeys,
+  inspectorButtonFocused,
+  isTypingTarget,
+} from "../../platform/typing-target.js";
 import { focusStageQuietly } from "./deps.js";
 
 const runStageFocus = (): void => {
@@ -60,7 +63,9 @@ const shouldTakeArrowKeys = (): boolean => {
     return true;
   }
 
-  if (!canTakeCanvasKeys()) {
+  const button = inspectorButtonFocused();
+
+  if (!button || isOverlayOpen()) {
     return false;
   }
 

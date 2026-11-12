@@ -23,9 +23,10 @@ const useChipFlow = (deps: ChipFlowDeps): ChipFlow => {
   const folder = useChipFolder(app, deps.setFormError);
   const open = useChipOpen({ ...deps, chip: app.chip });
 
+  const chosenApp = app.chip?.appDir ?? app.chip?.inspection?.appDir ?? null;
+
   const needsPick =
-    (app.chip?.inspection?.candidates.length ?? 0) > 1 &&
-    (app.chip?.appDir ?? app.chip?.inspection?.appDir ?? null) === null;
+    (app.chip?.inspection?.candidates.length ?? 0) > 1 && chosenApp === null;
 
   if (needsPick !== wasPicking) {
     setWasPicking(needsPick);

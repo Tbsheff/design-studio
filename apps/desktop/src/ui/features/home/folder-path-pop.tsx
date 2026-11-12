@@ -30,7 +30,7 @@ const FolderPathPop = ({
     }
 
     onPick(value.trim());
-    onClose(true);
+    onClose(false);
   }, [onClose, onPick, value]);
 
   const keyDown = useCallback(

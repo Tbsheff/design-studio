@@ -17,7 +17,7 @@ interface EditorColumn {
   readonly tab: ColumnTab;
 }
 
-const DEFAULT_COLUMN: EditorColumn = { isOpen: true, tab: "layers" };
+const DEFAULT_COLUMN: EditorColumn = { isOpen: false, tab: "layers" };
 
 const isColumnTab = (value: string | null | undefined): value is ColumnTab =>
   COLUMN_TABS.some((tab) => tab === value);

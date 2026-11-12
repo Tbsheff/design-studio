@@ -1,5 +1,4 @@
 import http from "node:http";
-import net from "node:net";
 import type { Duplex } from "node:stream";
 
 import {
@@ -23,6 +22,7 @@ import {
   withStateHeaders,
 } from "./frame-state-proxy.js";
 import type { ActiveFrameState } from "./frame-state-proxy.js";
+import { startUpgradePipe } from "./proxy-upgrade.js";
 import { resolveStackSources } from "./source-map.js";
 import type { SourceTarget } from "./source-map.js";
 
@@ -47,7 +47,11 @@ export interface AppProxyOptions {
   port: number;
   studioOrigin: string;
   bridgeScript: () => Promise<string>;
-  targetFor: (projectId: string) => Promise<AppTarget | null>;
+  targetFor: (
+    projectId: string,
+    canStart: boolean
+  ) => Promise<AppTarget | null>;
+  holdSocket?: (projectId: string) => () => void;
   isApp: (projectId: string) => Promise<boolean>;
   stateFor?: (
     projectId: string,
@@ -421,7 +425,7 @@ export function createAppProxy(options: AppProxyOptions) {
       }
       let target: AppTarget | null;
       try {
-        target = await options.targetFor(projectId);
+        target = await options.targetFor(projectId, isDocumentRequest(req));
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (isDocumentRequest(req))
@@ -461,41 +465,15 @@ export function createAppProxy(options: AppProxyOptions) {
       head: Buffer,
       projectId: string
     ): Promise<void> {
-      const target = await options.targetFor(projectId).catch(() => null);
+      const target = await options
+        .targetFor(projectId, false)
+        .catch(() => null);
       if (!target) {
         socket.destroy();
         return;
       }
-      const upstream = new URL(target.upstream);
-      const connection = net.connect(
-        Number(upstream.port),
-        upstream.hostname,
-        () => {
-          const lines = [
-            `${req.method ?? "GET"} ${req.url ?? "/"} HTTP/${req.httpVersion}`,
-          ];
-          for (let index = 0; index < req.rawHeaders.length; index += 2) {
-            const name = req.rawHeaders[index] ?? "";
-            const value = req.rawHeaders[index + 1] ?? "";
-            const lower = name.toLowerCase();
-            if (lower === "host") lines.push(`${name}: ${upstream.host}`);
-            else if (lower === "origin")
-              lines.push(`${name}: ${upstream.origin}`);
-            else lines.push(`${name}: ${value}`);
-          }
-          connection.write(`${lines.join("\r\n")}\r\n\r\n`);
-          if (head.length > 0) connection.write(head);
-          socket.pipe(connection).pipe(socket);
-        }
-      );
-      const close = (): void => {
-        connection.destroy();
-        socket.destroy();
-      };
-      connection.on("error", close);
-      socket.on("error", close);
-      connection.on("close", () => socket.destroy());
-      socket.on("close", () => connection.destroy());
+      socket.once("close", options.holdSocket?.(projectId) ?? (() => null));
+      startUpgradePipe(req, socket, head, target.upstream);
     },
   };
 }

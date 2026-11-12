@@ -1,7 +1,6 @@
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
-import net from "node:net";
 import path from "node:path";
 
 import type {
@@ -12,7 +11,16 @@ import type {
 import type { AppDoctorResult } from "@design-studio/contracts/app-doctor";
 
 import type { EventBus } from "../events/index.js";
+import { APP_IDLE_STOP_MINUTES, createIdleStop } from "./dev-server-idle.js";
+import type { IdleStop } from "./dev-server-idle.js";
 import { DevServerPids } from "./dev-server-pids.js";
+import {
+  canConnect,
+  isAnswering,
+  isPortClosed,
+  toFreePort,
+  toPause,
+} from "./dev-server-port.js";
 import { diagnose, probeRoot, sameDoctor } from "./doctor.js";
 import type { DoctorProbe } from "./doctor.js";
 import { installHint } from "./install-hint.js";
@@ -26,7 +34,6 @@ const BLOCKED_ENV =
   /^(STUDIO_|ANTHROPIC_|CLAUDE_|ELECTRON_RUN_AS_NODE$|NODE_OPTIONS$|VITE_)/;
 
 const ANSI = /\u001B\[[0-9;?]*[ -/]*[@-~]/g;
-const PROBE_TIMEOUT_MS = 3000;
 const DOCTOR_DELAY_MS = 300;
 
 interface AppServer {
@@ -52,47 +59,6 @@ export interface AppServerDeps {
 
 const DEFAULT_PORT_COUNT = 200;
 
-function freePort(start: number, count: number): Promise<number> {
-  const last = Math.min(65_535, start + count - 1);
-
-  const tryPort = (port: number): Promise<number> =>
-    new Promise((resolve, reject) => {
-      const probe = net.createServer();
-      probe.unref();
-      probe.once("error", () =>
-        port < last
-          ? resolve(tryPort(port + 1))
-          : reject(
-              new Error(
-                `No free port from ${start} to ${last} for the app dev server. Set STUDIO_APP_PORT_BASE and STUDIO_APP_PORT_COUNT to pick another range.`
-              )
-            )
-      );
-      probe.listen(port, "127.0.0.1", () => probe.close(() => resolve(port)));
-    });
-
-  return tryPort(start);
-}
-
-function canConnect(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = net.connect({ port, host: "127.0.0.1" });
-    socket.once("connect", () => {
-      socket.destroy();
-      resolve(true);
-    });
-    socket.once("error", () => resolve(false));
-  });
-}
-
-async function portClosed(port: number, timeoutMs: number): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-
-  while (Date.now() < deadline && (await canConnect(port))) {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-  }
-}
-
 export function nextBinary(workTree: string, appDir: string): string | null {
   const candidates = [
     path.join(workTree, appDir, "node_modules", ".bin", "next"),
@@ -100,22 +66,6 @@ export function nextBinary(workTree: string, appDir: string): string | null {
   ];
 
   return candidates.find((candidate) => existsSync(candidate)) ?? null;
-}
-
-async function answers(upstream: string): Promise<boolean> {
-  try {
-    const res = await fetch(upstream, {
-      method: "GET",
-      redirect: "manual",
-      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-    });
-
-    await res.body?.cancel().catch(() => undefined);
-
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export function missingNextMessage(workTree: string, appDir: string): string {
@@ -183,7 +133,9 @@ export class AppServers {
   private readonly servers = new Map<string, AppServer>();
   private readonly pids: DevServerPids | null;
   private readonly reaped: Promise<void>;
+  readonly idle: IdleStop;
   constructor(private readonly deps: AppServerDeps) {
+    this.idle = createIdleStop(deps.bus, (id) => this.stopIdle(id));
     this.pids = deps.dataDir ? new DevServerPids(deps.dataDir) : null;
     this.reaped = this.pids
       ? this.pids
@@ -367,6 +319,28 @@ export class AppServers {
     return server?.status.state === "ready" ? server.status.upstream : null;
   }
 
+  private stopIdle(projectId: string): void {
+    const server = this.servers.get(projectId);
+
+    if (server?.child) {
+      const text = `Stopped after ${APP_IDLE_STOP_MINUTES} min with no use`;
+      this.log(server, "studio", text);
+      void this.stop(projectId);
+    }
+  }
+
+  serve(project: Project, canStart: boolean): Promise<string> {
+    const state = this.servers.get(project.id)?.status.state;
+
+    if (canStart || state === "ready" || state === "starting") {
+      return this.ensure(project);
+    }
+
+    return Promise.reject(
+      new Error("The app dev server is not running. Reload the page.")
+    );
+  }
+
   ensure(project: Project): Promise<string> {
     const app = project.app;
 
@@ -383,6 +357,8 @@ export class AppServers {
     if (app.mode === "url") {
       return this.checkUrl(server, new URL(app.url ?? "").origin);
     }
+
+    this.idle.markUsed(project.id);
 
     if (
       server.ready &&
@@ -456,7 +432,7 @@ export class AppServers {
     server.probe = null;
     server.probing = null;
 
-    const probe: Promise<string> = answers(upstream).then((up) => {
+    const probe: Promise<string> = isAnswering(upstream).then((up) => {
       const current = server.ready === probe;
 
       if (up) {
@@ -510,7 +486,7 @@ export class AppServers {
       this.log(server, "studio", line)
     );
 
-    const port = await freePort(
+    const port = await toFreePort(
       this.deps.portBase,
       this.deps.portCount ?? DEFAULT_PORT_COUNT
     );
@@ -601,7 +577,7 @@ export class AppServers {
         return upstream;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await toPause(300);
     }
 
     this.killGroup(child, "SIGKILL");
@@ -623,6 +599,7 @@ export class AppServers {
   }
 
   async stop(projectId: string): Promise<void> {
+    this.idle.forget(projectId);
     const server = this.servers.get(projectId);
 
     if (!server) {
@@ -666,7 +643,7 @@ export class AppServers {
     this.killGroup(child, "SIGKILL");
 
     if (port) {
-      await portClosed(port, STOP_GRACE_MS);
+      await isPortClosed(port, STOP_GRACE_MS);
     }
   }
 

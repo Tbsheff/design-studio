@@ -1,5 +1,4 @@
 .slot {
-  position: relative;
   flex: none;
   margin-left: auto;
 }
@@ -36,15 +35,14 @@
 
 .sites {
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: 28px;
+  right: var(--tkp-x, var(--s-3));
+  left: var(--tkp-x, var(--s-3));
   z-index: 5;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 2px;
   box-sizing: border-box;
-  width: 220px;
-  max-width: calc(100vw - 16px);
   margin: 2px 0 0;
   padding: var(--s-1);
   border: 1px solid var(--line);

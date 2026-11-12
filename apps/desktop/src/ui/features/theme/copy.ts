@@ -8,7 +8,6 @@ const copy = {
   dark: "Dark",
   empty: "No themes yet. Press Shuffle to build some.",
   fromPrefix: "From",
-  generateTip: "Build theme candidates from a brief, a site or an image",
   generateTitle: "Generate theme",
   importAction: "Import",
   importImageLabel: "Image to read the theme from",

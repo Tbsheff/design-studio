@@ -25,7 +25,6 @@ const ThemeStripToggle = ({
     aria-controls={bodyId}
     aria-expanded={isOpen}
     className={styles.toggle}
-    data-tip={copy.generateTip}
     onClick={onToggle}
     type="button"
   >

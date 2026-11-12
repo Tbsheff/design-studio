@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { DarkModeSchema } from "./extract/dark-trigger.js";
 import { toParser } from "./parse-schema.js";
 import { toBounded, toTrimmed } from "./schema-fields.js";
 
@@ -54,6 +55,7 @@ const LicenseSchema = toTrimmed(1, LICENSE_MAX);
 
 const manifestSchema = Schema.Struct({
   copiedFrom: Schema.optionalKey(PackIdTextSchema),
+  darkMode: Schema.optionalKey(DarkModeSchema),
   description: toTrimmed(1, DESCRIPTION_MAX),
   draft: Schema.optionalKey(Schema.Literal(true)),
   fonts: FontsSchema,

@@ -266,7 +266,7 @@ function sectionBodies(prose: string): Map<string, string> {
     if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
     const heading = inFence ? null : /^##\s+(.+?)\s*#*\s*$/.exec(line);
     if (heading) {
-      current = (heading[1] ?? "").toLowerCase();
+      current = (heading[1] ?? "").replace(/^\d+[.)]\s*/u, "").toLowerCase();
       bodies.set(current, bodies.get(current) ?? "");
     } else if (current !== null) {
       bodies.set(current, `${bodies.get(current)}${line}\n`);

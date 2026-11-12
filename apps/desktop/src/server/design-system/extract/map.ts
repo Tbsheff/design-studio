@@ -4,6 +4,8 @@ import type { LoadedPack } from "../packs.js";
 import { applyAliases } from "./aliases.js";
 import type { AliasLink } from "./aliases.js";
 import { requiredPaths } from "./names.js";
+import { toExtrasAfterSource } from "./source-tokens.js";
+import type { TokenTree } from "./source-tokens.js";
 import type {
   Candidate,
   Coverage,
@@ -755,7 +757,6 @@ export function mapDraft(
 
   for (const token of requiredPaths()) {
     const found = choose(candidates, token, mode);
-
     const pick = found
       ? extracted(base, found, mode)
       : basePick(base, token, mode);
@@ -767,7 +768,6 @@ export function mapDraft(
 
   deriveMissing(picks, mode);
   guardContrast(picks);
-
   const tokens = structuredClone(base.tokens) as unknown as Record<
     string,
     unknown
@@ -786,7 +786,7 @@ export function mapDraft(
   }
   const extraLinks = addExtras(
     tokens,
-    harvests.flatMap((harvest) => harvest.extras ?? []),
+    toExtrasAfterSource(tokens as TokenTree, harvests, mode, picks),
     mode
   );
 

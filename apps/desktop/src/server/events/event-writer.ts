@@ -6,6 +6,7 @@ import { Cause, Effect } from "effect";
 
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure, Refine } from "../platform/attempt/index.js";
+import { applyEventFileCap, EVENT_FILE_MAX_BYTES } from "./event-file.js";
 import { insertRing, report, toRecorded, trimRing } from "./event-log.js";
 import type { ProjectLog, RecordedEvent } from "./event-log.js";
 
@@ -106,6 +107,30 @@ const appendLines = Effect.fn("EventWriter.appendLines")(function* run(
   );
 });
 
+const isUnderCap = (log: ProjectLog, appended: number): boolean =>
+  log.fileBytes !== null && log.fileBytes + appended <= EVENT_FILE_MAX_BYTES;
+
+const applyLogCap = Effect.fn("EventWriter.applyLogCap")(function* run(
+  log: ProjectLog,
+  appended: number
+) {
+  if (isUnderCap(log, appended)) {
+    log.fileBytes = (log.fileBytes ?? 0) + appended;
+
+    return;
+  }
+
+  log.fileBytes = yield* attemptKnown(() => applyEventFileCap(log.file)).pipe(
+    Effect.catchCause((cause) =>
+      Effect.sync(() => {
+        report("cap", { error: Cause.squash(cause) });
+
+        return null;
+      })
+    )
+  );
+});
+
 const writeBatch = Effect.fn("EventWriter.writeBatch")(function* run(
   log: ProjectLog,
   previous: Promise<void>
@@ -117,13 +142,17 @@ const writeBatch = Effect.fn("EventWriter.writeBatch")(function* run(
     return;
   }
 
-  yield* appendLines(log, toLines(batch)).pipe(
+  const text = toLines(batch);
+  const capLog = applyLogCap(log, Buffer.byteLength(text));
+
+  yield* appendLines(log, text).pipe(
     Effect.andThen(
       Effect.sync(() => {
         log.unflushed.splice(0, batch.length);
         trimRing(log);
       })
     ),
+    Effect.andThen(capLog),
     Effect.catchCause((cause) =>
       Effect.sync(() => {
         report("append", { error: Cause.squash(cause) });

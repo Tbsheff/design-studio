@@ -31,6 +31,7 @@ interface ProjectLog {
   chain: Promise<void>;
   dirReady: boolean;
   file: string;
+  fileBytes: number | null;
   filling: Promise<void> | null;
   lastSeq: number;
   listeners: Set<EventListener>;
@@ -79,6 +80,7 @@ const openLog = (
   chain: Promise.resolve(),
   dirReady: false,
   file: logFile,
+  fileBytes: null,
   filling: null,
   lastSeq: floor?.lastSeq ?? 0,
   listeners: new Set(),

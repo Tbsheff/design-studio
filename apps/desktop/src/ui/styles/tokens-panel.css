@@ -22,6 +22,10 @@
   flex-direction: column;
 }
 
+.pane-sheet-body:has(> .tkp) {
+  overflow-x: hidden;
+}
+
 .tkp-header {
   padding-right: var(--s-3);
 }
@@ -188,6 +192,47 @@
 .tkp-field.mono .ins-input {
   font-family: var(--mono);
   font-size: var(--t-xs);
+}
+
+.tkp-stack {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+  height: 100%;
+}
+
+.tkp-stack > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.tkp-short {
+  display: block;
+  overflow: hidden;
+  line-height: 28px;
+  padding: 0 var(--s-2) 0 0;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.tkp-field:not(.color) .tkp-short {
+  padding-left: var(--s-2);
+}
+
+.tkp-field:is(.color, .mono) .tkp-short {
+  font-family: var(--mono);
+}
+
+.tkp-stack:not(:focus-within):has(> .tkp-short) > .ins-input {
+  color: transparent;
+}
+
+.tkp-stack:focus-within > .tkp-short {
+  visibility: hidden;
 }
 
 .tkp-row.changed .ins-field:not(:focus-within) {

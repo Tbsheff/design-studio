@@ -5,7 +5,7 @@ import type { ChangeEvent, FormEvent, ReactNode } from "react";
 
 import { colorHex } from "../../../shared/token-match.js";
 import { toHexColor } from "../inspector/index.js";
-import { toShortValue } from "./token-value-model.js";
+import { TokenShortInput } from "./token-short-input.js";
 import { useDraftText } from "./use-draft-text.js";
 
 interface ColorValueProps {
@@ -32,11 +32,6 @@ const ColorValue = ({
   const { change } = draft;
   const hex = toHexColor(swatch) ?? colorHex(swatch);
   let emptyClass = "empty";
-  let text = toShortValue(value);
-
-  if (draft.isFocused) {
-    text = draft.shown;
-  }
 
   if (hex) {
     emptyClass = "";
@@ -79,17 +74,13 @@ const ColorValue = ({
           onChange={handlePick}
         />
       </span>
-      <input
-        className="ins-input"
-        aria-label={label}
-        aria-invalid={invalid}
-        value={text}
-        spellCheck={false}
-        autoComplete="off"
-        onChange={handleEdit}
-        onKeyDown={draft.handleKeyDown}
-        onFocus={draft.handleFocus}
-        onBlur={draft.handleSettle}
+      <TokenShortInput
+        inputClass="ins-input"
+        draft={draft}
+        isInvalid={Boolean(invalid)}
+        label={label}
+        value={value}
+        onEdit={handleEdit}
       />
       {trail && (
         <span className="tkp-trail" aria-hidden="true">

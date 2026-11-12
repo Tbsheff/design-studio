@@ -6,7 +6,6 @@ interface DraftText {
   readonly handleFocus: (event: FocusEvent<HTMLInputElement>) => void;
   readonly handleKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   readonly handleSettle: () => void;
-  readonly isFocused: boolean;
   readonly shown: string;
 }
 
@@ -15,7 +14,6 @@ const useDraftText = (
   onChange: (next: string) => void
 ): DraftText => {
   const [text, setText] = useState<string | null>(null);
-  const [isFocused, setIsFocused] = useState(false);
   const opener = useRef<HTMLElement | null>(null);
 
   const change = useCallback(
@@ -31,8 +29,6 @@ const useDraftText = (
 
   const handleFocus = useCallback(
     (event: FocusEvent<HTMLInputElement>): void => {
-      setIsFocused(true);
-
       if (event.relatedTarget instanceof HTMLElement) {
         opener.current = event.relatedTarget;
       }
@@ -60,7 +56,6 @@ const useDraftText = (
 
   const handleSettle = useCallback((): void => {
     setText(null);
-    setIsFocused(false);
   }, []);
 
   return {
@@ -68,7 +63,6 @@ const useDraftText = (
     handleFocus,
     handleKeyDown,
     handleSettle,
-    isFocused,
     shown: text ?? value,
   };
 };

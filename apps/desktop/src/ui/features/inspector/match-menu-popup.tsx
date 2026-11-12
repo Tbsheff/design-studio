@@ -20,6 +20,7 @@ const MatchMenuPopup = ({
   actions,
   replaceLabel,
   firstItemRef,
+  menuRef,
   onSelectValue,
   onReplace,
   onDone,
@@ -28,11 +29,13 @@ const MatchMenuPopup = ({
   readonly actions: RowActions;
   readonly replaceLabel: string;
   readonly firstItemRef: RefObject<HTMLButtonElement | null>;
+  readonly menuRef: RefObject<HTMLDivElement | null>;
   readonly onSelectValue: () => void;
   readonly onReplace: () => void;
   readonly onDone: () => void;
 }): ReactElement => (
   <div
+    ref={menuRef}
     className="ui-menu sm-menu"
     role="menu"
     aria-label={`${toShownValue(row)} actions`}

@@ -1,4 +1,4 @@
-import { usePopover } from "@design-studio/ui";
+import { useFitPopover, usePopover } from "@design-studio/ui";
 import { useCallback, useRef } from "react";
 import type { ReactElement, RefObject } from "react";
 
@@ -30,6 +30,7 @@ const ProjectMenu = ({
   const root = useRef<HTMLDivElement>(null);
 
   usePopover(true, root, onClose, trigger);
+  useFitPopover(root, trigger, true);
 
   const done = useCallback((): void => onClose(false), [onClose]);
 

@@ -232,3 +232,15 @@
     animation-name: ui-busy-pulse;
   }
 }
+
+:where([data-top-layer]) {
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  color: inherit;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}

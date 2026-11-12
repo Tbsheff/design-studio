@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import type { RefObject } from "react";
 
-import { usePopover } from "./deps.js";
+import { useFitPopover, usePopover } from "./deps.js";
 import type { RewriteMode, View } from "./text-rewrite-model.js";
 import type { TextRewrite } from "./use-text-rewrite.js";
 
@@ -38,6 +38,7 @@ const useRewriteView = (
   );
 
   usePopover(isOpen, root, close, trigger);
+  useFitPopover(root, trigger, isOpen);
 
   const handleToggle = useCallback((): void => {
     setView((now) => {

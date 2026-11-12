@@ -1,5 +1,5 @@
 import type { RunEffort, RunLevel } from "@design-studio/contracts";
-import { placeFixed } from "@design-studio/ui";
+import { placeFixed, showOnTop } from "@design-studio/ui";
 import type { CSSProperties } from "react";
 
 import { findElements } from "../../platform/find-element.js";
@@ -113,6 +113,7 @@ const placeAboveOrBelow = (
   trigger: HTMLElement,
   panel: HTMLElement
 ): CSSProperties => {
+  showOnTop(panel);
   const placed = placeFixed(trigger, panel, { prefer: "above" });
   const rect = trigger.getBoundingClientRect();
   const left = toPlacedLeft(placed, rect.left);

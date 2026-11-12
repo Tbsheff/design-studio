@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { CSSProperties, RefObject } from "react";
 
 import { placeFixed } from "./popover-placement.js";
+import { showOnTop } from "./top-layer.js";
 import { HIDDEN } from "./ui-select-model.js";
 
 interface SelectPlacement {
@@ -26,6 +27,7 @@ const useSelectPlacement = (
         return;
       }
 
+      showOnTop(node);
       const placed = placeFixed(button.current, node, { align: "start" });
 
       setStyle({ ...placed, minWidth: button.current.offsetWidth });

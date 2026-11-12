@@ -2,7 +2,7 @@ export { routes as directEditRoutes } from "@design-studio/actions/direct-edit/r
 
 export { routes as textRoutes } from "@design-studio/actions/text/routes";
 
-export { usePopover } from "@design-studio/ui";
+export { useFitPopover, usePopover } from "@design-studio/ui";
 
 export type { SelectionContext } from "@design-studio/contracts";
 

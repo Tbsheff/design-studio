@@ -23,6 +23,8 @@ export {
 
 export { PanelHead, SheetSlot } from "./sheet-head.js";
 
+export { fitLifted, liftPanel, showOnTop } from "./top-layer.js";
+
 export { ThemeButton } from "./theme-button.js";
 
 export { UiSelect } from "./ui-select.js";
@@ -36,6 +38,8 @@ export { useModalDialog } from "./use-modal-dialog.js";
 export { usePopover, useReturnFocusOnUnmount } from "./use-popover.js";
 
 export type { ButtonProps } from "./button.js";
+
+export type { LiftPlan } from "./top-layer.js";
 
 export type { ButtonSize, ButtonVariant } from "./button-model.js";
 

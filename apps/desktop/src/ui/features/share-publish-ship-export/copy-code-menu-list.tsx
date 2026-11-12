@@ -1,3 +1,4 @@
+import { useFitPopover } from "@design-studio/ui";
 import { useCallback, useEffect, useRef } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 
@@ -24,6 +25,8 @@ const toKeyStep = (key: string): number => {
 
 const CopyCodeMenuList = ({ items, onClose }: Props): ReactElement => {
   const nodes = useRef<(HTMLButtonElement | null)[]>([]);
+  const menu = useRef<HTMLDivElement>(null);
+  useFitPopover(menu, null, true);
 
   const handleRegister = useCallback(
     (index: number, node: HTMLButtonElement | null): void => {
@@ -62,6 +65,7 @@ const CopyCodeMenuList = ({ items, onClose }: Props): ReactElement => {
 
   return (
     <div
+      ref={menu}
       className="project-menu copy-code-menu"
       role="menu"
       tabIndex={-1}

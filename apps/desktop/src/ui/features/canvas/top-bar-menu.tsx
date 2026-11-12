@@ -1,4 +1,4 @@
-import { usePopover } from "@design-studio/ui";
+import { useFitPopover, usePopover } from "@design-studio/ui";
 import { useCallback, useRef } from "react";
 import type { KeyboardEvent, ReactElement, RefObject } from "react";
 
@@ -87,6 +87,7 @@ const MenuPopover = ({
   const root = useRef<HTMLDivElement>(null);
   const registered = useRef<ItemSet>(new Set());
   usePopover(true, root, onClose, trigger);
+  useFitPopover(root, trigger, true);
 
   const onRegister = useCallback((node: HTMLButtonElement) => {
     registered.current.add(node);

@@ -2,6 +2,7 @@ import { useLayoutEffect } from "react";
 import type { CSSProperties, RefObject } from "react";
 
 import { pick } from "./pick.js";
+import { fitLifted, liftPanel } from "./top-layer.js";
 
 const POPOVER_GAP = 4;
 const MARGIN = 8;
@@ -14,24 +15,12 @@ interface PopoverBounds {
   bottom: number;
 }
 
-const popoverBounds = (anchor: Element): PopoverBounds => {
-  const bounds = {
-    bottom: window.innerHeight - MARGIN,
-    left: MARGIN,
-    right: window.innerWidth - MARGIN,
-    top: MARGIN,
-  };
-
-  const boundary = anchor.closest("[data-popover-boundary]");
-
-  if (boundary) {
-    const rect = boundary.getBoundingClientRect();
-    bounds.left = Math.max(bounds.left, rect.left + MARGIN);
-    bounds.right = Math.min(bounds.right, rect.right - MARGIN);
-  }
-
-  return bounds;
-};
+const popoverBounds = (): PopoverBounds => ({
+  bottom: window.innerHeight - MARGIN,
+  left: MARGIN,
+  right: window.innerWidth - MARGIN,
+  top: MARGIN,
+});
 
 interface FixedPlacement {
   align?: "start" | "end";
@@ -44,7 +33,7 @@ const placeFixed = (
   { align = "start", prefer = "below" }: FixedPlacement = {}
 ): CSSProperties => {
   const rect = trigger.getBoundingClientRect();
-  const bounds = popoverBounds(trigger);
+  const bounds = popoverBounds();
   const room = bounds.right - bounds.left;
   const width = Math.min(panel.offsetWidth, room);
   const height = panel.scrollHeight;
@@ -79,12 +68,6 @@ const placeFixed = (
   return placement;
 };
 
-interface LayoutRect {
-  readonly left: number;
-  readonly right: number;
-  readonly top: number;
-}
-
 const PX_KEYS = new Set(["left", "top", "bottom", "maxHeight", "maxWidth"]);
 
 const toKebab = (key: string): string =>
@@ -103,95 +86,7 @@ const writeFixed = (panel: HTMLElement, placed: CSSProperties): void => {
   }
 };
 
-const layoutRect = (panel: HTMLElement): LayoutRect => {
-  const parent = panel.offsetParent;
-
-  if (!parent) {
-    return panel.getBoundingClientRect();
-  }
-
-  const base = parent.getBoundingClientRect();
-  const left = base.left + panel.offsetLeft;
-
-  return {
-    left,
-    right: left + panel.offsetWidth,
-    top: base.top + panel.offsetTop,
-  };
-};
-
-const resetFit = (style: CSSStyleDeclaration): void => {
-  for (const key of [
-    "top",
-    "bottom",
-    "left",
-    "right",
-    "maxHeight",
-    "maxWidth",
-    "overflowY",
-  ] as const) {
-    style[key] = "";
-  }
-};
-
-const fitVertical = (
-  panel: HTMLElement,
-  top: number,
-  from: DOMRect,
-  bounds: PopoverBounds
-): void => {
-  const { style } = panel;
-  const height = panel.scrollHeight;
-  const below = bounds.bottom - top;
-  const above = from.top - POPOVER_GAP - bounds.top;
-  const flip = height > below && above > below;
-
-  if (flip) {
-    style.top = "auto";
-    style.bottom = "calc(100% + 6px)";
-  }
-
-  if (height > below) {
-    style.maxHeight = `${Math.max(0, pick(flip, above, below))}px`;
-  }
-
-  if (height > Math.max(above, below)) {
-    style.overflowY = "auto";
-  }
-};
-
-const fitHorizontal = (
-  panel: HTMLElement,
-  rect: { left: number; right: number },
-  bounds: PopoverBounds
-): void => {
-  const shift = pick(rect.right > bounds.right, bounds.right - rect.right, 0);
-
-  const moved = pick(
-    rect.left + shift < bounds.left,
-    bounds.left - rect.left,
-    shift
-  );
-
-  const parent = panel.offsetParent;
-
-  if (moved === 0 || !parent) {
-    return;
-  }
-
-  panel.style.left = `${rect.left + moved - parent.getBoundingClientRect().left}px`;
-  panel.style.right = "auto";
-};
-
-const fitAbsolute = (panel: HTMLElement, trigger: HTMLElement | null): void => {
-  resetFit(panel.style);
-  const anchor = trigger ?? panel.parentElement ?? panel;
-  const bounds = popoverBounds(anchor);
-  panel.style.maxWidth = `${bounds.right - bounds.left}px`;
-  const rect = layoutRect(panel);
-  fitVertical(panel, rect.top, anchor.getBoundingClientRect(), bounds);
-  fitHorizontal(panel, rect, bounds);
-};
+const SCROLL_EVENT = "scroll";
 
 const useFitPopover = (
   panel: RefObject<HTMLElement | null>,
@@ -205,15 +100,26 @@ const useFitPopover = (
       return;
     }
 
-    const fit = (): void => fitAbsolute(node, trigger?.current ?? null);
-    fit();
-    const observer = new ResizeObserver(fit);
+    const anchor = trigger?.current ?? node.parentElement ?? node;
+    const plan = liftPanel(node, anchor);
+
+    const fit = (event: Event | null): void => {
+      if (event?.target instanceof Node && node.contains(event.target)) {
+        return;
+      }
+
+      fitLifted(node, anchor, plan);
+    };
+
+    const observer = new ResizeObserver(() => fit(null));
     observer.observe(node);
     globalThis.addEventListener(RESIZE_EVENT, fit);
+    globalThis.addEventListener(SCROLL_EVENT, fit, true);
 
     return (): void => {
       observer.disconnect();
       globalThis.removeEventListener(RESIZE_EVENT, fit);
+      globalThis.removeEventListener(SCROLL_EVENT, fit, true);
     };
   }, [open, panel, trigger]);
 };

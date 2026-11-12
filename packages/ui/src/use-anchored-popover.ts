@@ -8,6 +8,7 @@ import {
 import type { CSSProperties, RefObject } from "react";
 
 import { placeFixed, writeFixed } from "./popover-placement.js";
+import { showOnTop } from "./top-layer.js";
 
 const HIDDEN: CSSProperties = {
   left: 0,
@@ -127,7 +128,7 @@ const useAnchoredPopover = <
     }
 
     const target = toAnchor(trigger.current, anchor);
-
+    showOnTop(panel.current);
     writeFixed(
       panel.current,
       placeFixed(target, panel.current, { align: "end" })

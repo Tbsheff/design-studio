@@ -2,7 +2,7 @@ import { useCallback, useId, useMemo, useRef, useState } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { usePopover } from "./deps.js";
+import { useFitPopover, usePopover } from "./deps.js";
 import type { SelectionContext } from "./deps.js";
 import { MenuPopup } from "./menu-popup.js";
 import type { View } from "./menu-popup.js";
@@ -62,6 +62,7 @@ const TextStyleMenu = ({
   }, []);
 
   usePopover(open, root, close, trigger);
+  useFitPopover(root, trigger, open);
 
   const toggle = useCallback((): void => {
     setView(nextView);

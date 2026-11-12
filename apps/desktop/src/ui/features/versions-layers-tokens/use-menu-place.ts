@@ -1,3 +1,4 @@
+import { showOnTop } from "@design-studio/ui";
 import { useLayoutEffect } from "react";
 import type { RefObject } from "react";
 
@@ -30,6 +31,7 @@ const useMenuPlace = (
       return;
     }
 
+    showOnTop(menu);
     const maxLeft = globalThis.innerWidth - menu.offsetWidth - MENU_EDGE;
     const left = Math.max(MENU_EDGE, Math.min(button.left, maxLeft));
 

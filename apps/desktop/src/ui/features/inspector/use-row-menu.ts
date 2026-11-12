@@ -1,4 +1,4 @@
-import { usePopover } from "@design-studio/ui";
+import { useFitPopover, usePopover } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
@@ -7,6 +7,7 @@ interface RowMenuState {
   readonly rootRef: RefObject<HTMLDivElement | null>;
   readonly triggerRef: RefObject<HTMLButtonElement | null>;
   readonly firstItemRef: RefObject<HTMLButtonElement | null>;
+  readonly menuRef: RefObject<HTMLDivElement | null>;
   readonly toggle: () => void;
   readonly close: () => void;
 }
@@ -16,6 +17,7 @@ const useRowMenu = (): RowMenuState => {
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const firstItemRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const closeWithFocus = useCallback((isRefocus: boolean) => {
     setIsOpen(false);
@@ -28,13 +30,22 @@ const useRowMenu = (): RowMenuState => {
   const close = useCallback(() => closeWithFocus(false), [closeWithFocus]);
   const toggle = useCallback(() => setIsOpen((current) => !current), []);
   usePopover(isOpen, rootRef, closeWithFocus);
+  useFitPopover(menuRef, triggerRef, isOpen);
   useEffect(() => {
     if (isOpen) {
       firstItemRef.current?.focus();
     }
   }, [isOpen]);
 
-  return { close, firstItemRef, isOpen, rootRef, toggle, triggerRef };
+  return {
+    close,
+    firstItemRef,
+    isOpen,
+    menuRef,
+    rootRef,
+    toggle,
+    triggerRef,
+  };
 };
 
 export { useRowMenu };

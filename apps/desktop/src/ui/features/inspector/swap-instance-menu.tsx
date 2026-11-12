@@ -1,5 +1,5 @@
 import type { SourceLoc } from "@design-studio/contracts";
-import { usePopover } from "@design-studio/ui";
+import { useFitPopover, usePopover } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useRef } from "react";
 
@@ -62,6 +62,7 @@ const SwapInstanceMenu = ({
   const root = useRef<HTMLDivElement>(null);
   const close = useCallback(() => onClose(), [onClose]);
   usePopover(true, root, close);
+  useFitPopover(root, null, true);
 
   const site = useMemo(
     () => ({ directionId, projectId, use }),

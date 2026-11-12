@@ -1,4 +1,4 @@
-import { usePopover } from "@design-studio/ui";
+import { useFitPopover, usePopover } from "@design-studio/ui";
 import { useRef } from "react";
 import type { ReactElement, RefObject } from "react";
 
@@ -37,6 +37,7 @@ const AccountDropdown = ({
   const root = useRef<HTMLDivElement>(null);
 
   usePopover(true, root, onClose, trigger);
+  useFitPopover(root, trigger, true);
 
   return (
     <div

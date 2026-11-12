@@ -17,7 +17,7 @@ const RowMenu = ({
   readonly actions: RowActions;
   readonly replaceLabel: string;
 }): ReactElement => {
-  const { close, firstItemRef, isOpen, rootRef, toggle, triggerRef } =
+  const { close, firstItemRef, isOpen, menuRef, rootRef, toggle, triggerRef } =
     useRowMenu();
 
   const selectValue = useCallback(() => {
@@ -44,6 +44,7 @@ const RowMenu = ({
           actions={actions}
           replaceLabel={replaceLabel}
           firstItemRef={firstItemRef}
+          menuRef={menuRef}
           onSelectValue={selectValue}
           onReplace={replace}
           onDone={close}

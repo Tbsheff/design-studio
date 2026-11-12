@@ -85,6 +85,28 @@ const readPortCount = (name: string, fallback: number): number => {
   return value;
 };
 
+const UI_SECRET_PATTERN = /^[\da-f]{32,}$/iu;
+
+const toUiSecret = (): string | null => {
+  const raw = process.env.STUDIO_UI_SECRET ?? "";
+
+  if (raw === "") {
+    return null;
+  }
+
+  if (!UI_SECRET_PATTERN.test(raw)) {
+    throw new Error(
+      "STUDIO_UI_SECRET must be hex text of 32 or more characters"
+    );
+  }
+
+  return raw;
+};
+
+const deleteUiSecretEnv = (): void => {
+  delete process.env.STUDIO_UI_SECRET;
+};
+
 const readAgentMode = (): ServerConfig["agentMode"] => {
   const raw = process.env.STUDIO_AGENT ?? "sdk";
 
@@ -94,6 +116,46 @@ const readAgentMode = (): ServerConfig["agentMode"] => {
 
   throw new Error(`STUDIO_AGENT must be "sdk" or "mock", got "${raw}"`);
 };
+
+interface McpEnv {
+  readonly canEdit: boolean | null;
+  readonly isEnabled: boolean | null;
+  readonly trustedFolders: readonly string[];
+}
+
+const toMcpSwitch = (name: string): boolean | null => {
+  const raw = process.env[name] ?? "";
+
+  if (raw === "") {
+    return null;
+  }
+
+  if (raw === "on" || raw === "off") {
+    return raw === "on";
+  }
+
+  throw new Error(`${name} must be "on" or "off", got "${raw}"`);
+};
+
+const toTrustedFoldersEnv = (): readonly string[] => {
+  const raw = process.env.STUDIO_MCP_TRUSTED_FOLDERS ?? "";
+  const parts = raw.split(path.delimiter).filter((part) => part.trim() !== "");
+  const relative = parts.find((part) => !path.isAbsolute(part)) ?? null;
+
+  if (relative !== null) {
+    throw new Error(
+      `STUDIO_MCP_TRUSTED_FOLDERS must hold absolute paths, got "${relative}"`
+    );
+  }
+
+  return parts.map((part) => path.resolve(part));
+};
+
+const toMcpEnv = (): McpEnv => ({
+  canEdit: toMcpSwitch("STUDIO_MCP_EDITS"),
+  isEnabled: toMcpSwitch("STUDIO_MCP"),
+  trustedFolders: toTrustedFoldersEnv(),
+});
 
 const devProjectsRoot = (): string | null => {
   if (resourcesDir()) {
@@ -147,6 +209,10 @@ const loadConfig = (): ServerConfig => {
 
   const agentMode = readAgentMode();
 
+  toMcpEnv();
+
+  const uiSecret = toUiSecret();
+
   const studioOrigin = `http://127.0.0.1:${studioPort}`;
 
   const previewOrigin = `http://127.0.0.1:${previewPort}`;
@@ -166,6 +232,7 @@ const loadConfig = (): ServerConfig => {
     studioOrigin,
     studioPort,
     studioToken,
+    uiSecret,
     vitePortBase,
   };
 };
@@ -236,15 +303,18 @@ export {
   DEV_PROJECTS_FOLDER,
   LOGIN_SHELL_PATH_ENV,
   REPO_ROOT,
+  UI_SECRET_PATTERN,
   WORKSPACE_ROOT,
   buildEnv,
   childEnv,
+  deleteUiSecretEnv,
   gitOverride,
   imageSearchEnv,
   loadConfig,
   projectsDirFromEnv,
   resourcesDir,
+  toMcpEnv,
   toSharePort,
 };
 
-export type { ServerConfig };
+export type { McpEnv, ServerConfig };

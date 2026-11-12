@@ -14,6 +14,7 @@ import type { Project, RunSummary, Version } from "@design-studio/contracts";
 import { chromium } from "playwright-core";
 import type { Frame, Page } from "playwright-core";
 
+import { toUiOpenUrl } from "../studio-session.ts";
 import { toWorkspaceBin } from "../workspace-root.ts";
 
 const ROOT = path.resolve(
@@ -161,7 +162,7 @@ async function main(): Promise<void> {
       viewport: { width: 1600, height: 1000 },
     });
 
-    await page.goto(BASE);
+    await page.goto(await toUiOpenUrl(BASE, dataDir));
 
     const token =
       (await page

@@ -34,6 +34,7 @@ import { registerStudioRoutes } from "./app-studio-routes.js";
 import { registerVersionsHistoryRoutes } from "./app-versions-routes.js";
 import { registerLoopbackGuard } from "./loopback-guard.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
+import { isTrustedUi } from "./ui-trust.js";
 
 export { isRunSummary };
 
@@ -78,7 +79,10 @@ export function createApp(deps: AppDeps): Hono {
   app.get("*", async (c) => {
     const served = await serveStatic(uiDir, c.req.path);
     if (served) return served;
-    const html = await renderIndexHtml(uiDir, config);
+    const html = await renderIndexHtml(uiDir, config, isTrustedUi(c, config));
+
+    c.header("cache-control", "no-store");
+
     return c.html(html);
   });
 

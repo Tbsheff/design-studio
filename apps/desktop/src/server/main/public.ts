@@ -254,9 +254,7 @@ const buildApp = (
 const createServer = async (
   options: ServerOptions = {}
 ): Promise<StudioServer> => {
-  const config = loadConfig();
-
-  await prepareDataDir(config);
+  const config = await prepareDataDir(loadConfig());
 
   const runtime = buildRuntime(config);
 

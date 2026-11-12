@@ -4,6 +4,8 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 import type { Page } from "playwright-core";
 
+import { toUiOpenUrl } from "./studio-session.js";
+
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4870";
 const sheet = process.env.SHEET_URL;
 const out = path.resolve(process.argv[2] ?? "/tmp/ui-foundation");
@@ -48,7 +50,10 @@ async function openProject(page: Page): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  const [browser, openUrl] = await Promise.all([
+    chromium.launch({ channel: "chrome", headless: true }),
+    toUiOpenUrl(base, null),
+  ]);
 
   for (const theme of ["dark", "light"] as const) {
     const context = await browser.newContext({
@@ -61,7 +66,8 @@ async function main(): Promise<void> {
       theme
     );
     const page = await context.newPage();
-    await page.goto(base);
+
+    await page.goto(openUrl);
     await page.waitForLoadState("networkidle");
     await shot(page, `home-${theme}`);
     await openProject(page);

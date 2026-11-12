@@ -7,6 +7,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { fail, runCli } from "./stamp/args.js";
+import { toStudioToken } from "./studio-session.js";
 
 const APP_ROOT = fileURLToPath(new URL("../", import.meta.url));
 
@@ -47,7 +48,6 @@ const DEFAULT_SETTLE_MS = 10_000;
 const BOOT_TIMEOUT_MS = 120_000;
 const BOOT_POLL_MS = 250;
 const SIGNAL_WAIT_MS = 500;
-const TOKEN_PATTERN = /"token":"(?<token>[0-9a-f]+)"/u;
 
 const RECORDER_SOURCE = [
   'import { registerHooks } from "node:module";',
@@ -101,24 +101,18 @@ const runUntilServerUp = async (
   return runUntilServerUp(origin, deadline);
 };
 
-const toSessionToken = async (origin: string): Promise<string> => {
-  const response = await fetch(`${origin}/api/session`, {
-    headers: { "sec-fetch-site": "same-origin" },
-  });
-
-  if (!response.ok) {
+const toSessionToken = async (
+  origin: string,
+  dataDir: string
+): Promise<string> => {
+  try {
+    return await toStudioToken(origin, dataDir);
+  } catch (error) {
     return fail(
-      `GET /api/session failed with ${response.status}`,
+      `GET /api/session failed: ${String(error)}`,
       "check src/server/http/app-session-routes.ts"
     );
   }
-
-  const match = TOKEN_PATTERN.exec(await response.text());
-
-  return (
-    match?.groups?.token ??
-    fail("no token from /api/session", "check app-session-routes.ts")
-  );
 };
 
 const runHomeRead = async (
@@ -142,8 +136,8 @@ const runHomeRead = async (
   );
 };
 
-const runHomeVisit = async (origin: string): Promise<void> => {
-  const token = await toSessionToken(origin);
+const runHomeVisit = async (origin: string, dataDir: string): Promise<void> => {
+  const token = await toSessionToken(origin, dataDir);
 
   await Promise.all(
     HOME_PATHS.map((route) => runHomeRead(origin, route, token))
@@ -222,7 +216,7 @@ const runBoot = async (): Promise<string> => {
 
   try {
     await runUntilServerUp(origin, Date.now() + BOOT_TIMEOUT_MS);
-    await runHomeVisit(origin);
+    await runHomeVisit(origin, dataDir);
     await sleep(toSettleMs());
     child.kill("SIGUSR2");
     await sleep(SIGNAL_WAIT_MS);

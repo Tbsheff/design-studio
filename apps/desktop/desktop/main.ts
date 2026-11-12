@@ -39,6 +39,7 @@ import {
   clearServerPid,
   writeServerPid,
 } from "./stale-server.js";
+import { trustStudioOrigin, UI_SECRET } from "./ui-trust.js";
 import { attachVault } from "./vault-host.js";
 import { createMainWindow } from "./window.js";
 
@@ -147,6 +148,7 @@ async function serverOverrides(
     STUDIO_DATA_DIR: current.dataDir,
     ...(claudePath ? { STUDIO_CLAUDE_PATH: claudePath } : {}),
     STUDIO_PARENT_PID: String(process.pid),
+    STUDIO_UI_SECRET: UI_SECRET,
     STUDIO_LOGIN_SHELL_PATH: (await current.loginPath).join(":"),
     [RENDER_IPC_ENV]: "1",
     ...current.git.env,
@@ -164,6 +166,7 @@ async function launchServer(
   const ports = await pickPorts(readSavedPorts(portsFile));
   savePorts(portsFile, ports);
   const url = `http://127.0.0.1:${ports.studio}`;
+  trustStudioOrigin(session.defaultSession, url);
   const claudePath = (await locateClaude(boot, current))?.path ?? null;
   const env = buildServerEnv(
     process.env,

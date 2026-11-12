@@ -453,6 +453,7 @@ async function main(): Promise<void> {
     previewPort,
     vitePortBase: 5300,
     studioToken: "studio-secret-token",
+    uiSecret: null,
     agentMode: "mock",
     studioOrigin: `http://${HOST}:${studioPort}`,
     previewOrigin: `http://${HOST}:${previewPort}`,

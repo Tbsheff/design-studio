@@ -12,6 +12,7 @@ import { updateStaleRuns } from "../run-log/index.js";
 import { watchParent } from "./parent-watch.js";
 import { disposeRuntime } from "./runtime.js";
 import type { StudioRuntime } from "./runtime.js";
+import { toUiConfig } from "./ui-secret.js";
 
 const FORCE_EXIT_MS = 5000;
 
@@ -22,11 +23,13 @@ interface SignalHandle {
   shutdown: (signal: string) => void;
 }
 
-const prepareDataDir = async (config: ServerConfig): Promise<void> => {
+const prepareDataDir = async (config: ServerConfig): Promise<ServerConfig> => {
   await mkdir(path.join(config.dataDir, "projects"), { recursive: true });
   const releaseLock = acquireDataLock(config.dataDir, config.studioPort);
 
   process.on("exit", releaseLock);
+
+  return toUiConfig(config);
 };
 
 const stopStaleRuns = async (config: ServerConfig): Promise<void> => {

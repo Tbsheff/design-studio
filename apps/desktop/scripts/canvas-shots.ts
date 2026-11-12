@@ -4,6 +4,8 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 import type { Page } from "playwright-core";
 
+import { toUiOpenUrl } from "./studio-session.js";
+
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4970";
 const out = path.resolve(process.argv[2] ?? "/tmp/polish-r2");
 const prefix = process.argv[3] ?? "after";
@@ -34,6 +36,8 @@ async function main(): Promise<void> {
     deviceScaleFactor: 2,
     viewport: { height: 900, width: 1440 },
   });
+
+  await page.goto(await toUiOpenUrl(base, null));
 
   await page.goto(base);
 

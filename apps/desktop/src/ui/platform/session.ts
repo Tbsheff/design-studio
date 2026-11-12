@@ -7,6 +7,11 @@ const TOKEN_BYTES = 16;
 
 const HEX_RADIX = 16;
 
+const FORBIDDEN_STATUS = 403;
+
+const NO_ACCESS_TEXT =
+  "This page cannot open the studio session. Open Design Studio from the desktop app. In dev, open the link that the server wrote to its log at start.";
+
 let current: StudioSession | null = null;
 
 const readMeta = (name: string): string | null => {
@@ -18,6 +23,10 @@ const readMeta = (name: string): string | null => {
 
 const fetchSession = async (): Promise<StudioSession> => {
   const response = await fetch("/api/session");
+
+  if (response.status === FORBIDDEN_STATUS) {
+    throw new Error(NO_ACCESS_TEXT);
+  }
 
   if (!response.ok) {
     throw new Error(`Session request failed: ${response.status}`);

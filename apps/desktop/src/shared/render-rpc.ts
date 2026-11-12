@@ -6,6 +6,8 @@ export const RENDER_TOKEN_ENV = "STUDIO_RENDER_TOKEN";
 
 export type RenderBackendName = "playwright" | "electron";
 
+export type RenderColorScheme = "light" | "dark";
+
 export interface RenderClip {
   x: number;
   y: number;
@@ -20,7 +22,12 @@ export interface RenderErrors {
 
 export interface RenderOps {
   open: {
-    args: { width: number; height: number; scale?: number };
+    args: {
+      width: number;
+      height: number;
+      scale?: number;
+      colorScheme?: RenderColorScheme;
+    };
     result: { pageId: string };
   };
   goto: {

@@ -43,6 +43,7 @@ async function setup(kind: "html" | "react" = "html") {
     previewPort: 0,
     vitePortBase: 0,
     studioToken: "t",
+    uiSecret: null,
     agentMode: "mock",
     studioOrigin: "",
     previewOrigin: "",

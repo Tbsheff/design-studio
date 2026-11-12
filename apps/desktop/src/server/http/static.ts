@@ -29,7 +29,7 @@ const MISSING_BUILD_PAGE = `<!doctype html>
 <head><meta charset="utf-8"><title>Design Studio</title></head>
 <body style="font-family: system-ui, sans-serif; padding: 48px; color: #1f2328">
 <h1>Design Studio</h1>
-<p>The UI is not built yet. Run <code>npm run build:ui</code>, then reload this page.</p>
+<p>The UI is not built yet. Run <code>pnpm run build:ui</code>, then reload this page.</p>
 </body>
 </html>
 `;
@@ -41,6 +41,14 @@ function escapeAttribute(value: string): string {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
 }
+
+const toTokenMeta = (config: ServerConfig, isTrustedUi: boolean): string => {
+  if (!isTrustedUi) {
+    return "";
+  }
+
+  return `<meta name="studio-token" content="${escapeAttribute(config.studioToken)}">`;
+};
 
 export async function serveStatic(
   rootDir: string,
@@ -99,7 +107,8 @@ export async function serveStatic(
 
 export async function renderIndexHtml(
   rootDir: string,
-  config: ServerConfig
+  config: ServerConfig,
+  isTrustedUi: boolean
 ): Promise<string> {
   let html: string;
 
@@ -109,9 +118,7 @@ export async function renderIndexHtml(
     return MISSING_BUILD_PAGE;
   }
 
-  const meta =
-    `<meta name="studio-token" content="${escapeAttribute(config.studioToken)}">` +
-    `<meta name="studio-preview-origin" content="${escapeAttribute(config.previewOrigin)}">`;
+  const meta = `${toTokenMeta(config, isTrustedUi)}<meta name="studio-preview-origin" content="${escapeAttribute(config.previewOrigin)}">`;
 
   const headOpen = /<head[^>]*>/i.exec(html);
 

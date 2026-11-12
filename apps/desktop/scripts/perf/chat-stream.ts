@@ -21,6 +21,7 @@ import type {
 import { chromium } from "playwright-core";
 import type { Browser, Page } from "playwright-core";
 
+import { toStudioToken, toUiSecret } from "../studio-session.ts";
 import { toWorkspaceBin } from "../workspace-root.ts";
 
 const ROOT = path.resolve(
@@ -205,15 +206,6 @@ async function stopServer(child: ChildProcess): Promise<void> {
   }
 }
 
-async function tokenOf(): Promise<string> {
-  const page = await fetch(`${BASE}/`);
-  if (!page.ok) throw new Error(`studio page failed: ${page.status}`);
-  const html = await page.text();
-  const match = /name="studio-token" content="([^"]+)"/.exec(html);
-  if (!match?.[1]) throw new Error("studio token meta tag missing");
-  return match[1];
-}
-
 async function call<T>(
   token: string,
   method: string,
@@ -372,11 +364,15 @@ interface StreamSample {
 
 async function openProject(
   browser: Browser,
-  project: Project
+  project: Project,
+  dataDir: string
 ): Promise<{ page: Page; sample: OpenSample }> {
   const context = await browser.newContext({
     viewport: { width: 1600, height: 1000 },
   });
+  await context.addCookies([
+    { name: "studio_ui", url: BASE, value: await toUiSecret(dataDir) },
+  ]);
   await context.addInitScript(INIT_SCRIPT);
   await context.addInitScript(
     ([key, value]) => {
@@ -585,7 +581,7 @@ async function main(): Promise<void> {
   let browser: Browser | null = null;
   try {
     await waitReady();
-    const seeded = await seedProject(await tokenOf());
+    const seeded = await seedProject(await toStudioToken(BASE, dataDir));
     await stopServer(server);
     appendHistory(dataDir, seeded.project, seeded.template);
     server = startServer(dataDir, args.ui);
@@ -594,7 +590,11 @@ async function main(): Promise<void> {
     const open: OpenSample[] = [];
     const streams: StreamSample[] = [];
     for (let i = 0; i < OPEN_REPEATS; i += 1) {
-      const { page, sample } = await openProject(browser, seeded.project);
+      const { page, sample } = await openProject(
+        browser,
+        seeded.project,
+        dataDir
+      );
       open.push(sample);
       if (i < STREAM_REPEATS * 2)
         streams.push(
@@ -609,7 +609,7 @@ async function main(): Promise<void> {
       await page.context().close();
     }
     for (let i = OPEN_REPEATS; i < STREAM_REPEATS * 2; i += 1) {
-      const { page } = await openProject(browser, seeded.project);
+      const { page } = await openProject(browser, seeded.project, dataDir);
       streams.push(
         await streamLive(
           page,

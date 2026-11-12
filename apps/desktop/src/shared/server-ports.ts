@@ -26,6 +26,7 @@ import type { DesignRule } from "@design-studio/contracts/design-rules";
 import type {
   RenderBackendName,
   RenderClip,
+  RenderColorScheme,
   RenderErrors,
 } from "./render-rpc.js";
 import type { PlaceholderMode } from "./run-levels.js";
@@ -85,6 +86,7 @@ interface RenderViewport {
   width: number;
   height: number;
   scale?: number;
+  colorScheme?: RenderColorScheme;
 }
 
 interface RenderBackend {
@@ -148,6 +150,7 @@ interface ServerConfig {
   appPortBase?: number;
   appPortCount?: number;
   studioToken: string;
+  uiSecret: string | null;
   agentMode: "sdk" | "mock";
   studioOrigin: string;
   previewOrigin: string;
@@ -366,7 +369,7 @@ interface PreviewService {
   screenshotTiles: (url: string, request: TileRequest) => Promise<TileResult>;
   withPage?: <Value>(
     url: string,
-    viewport: { width: number; height: number; scale?: number },
+    viewport: RenderViewport,
     task: (page: RenderPage) => Promise<Value>
   ) => Promise<Value>;
   peekPage?: <Value>(

@@ -1,9 +1,12 @@
+import { Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
 import { useImportFields } from "./use-import-fields.js";
 
 import styles from "./theme.module.css";
+
+const IMAGE_ICON_SIZE = 14;
 
 interface ThemeImportFieldsProps {
   readonly isBusy: boolean;
@@ -45,7 +48,7 @@ const ThemeImportFields = ({
         data-disabled={isDisabled}
         data-tip={copy.importImageTip}
       >
-        {copy.pickImage}
+        <Icon name="image" size={IMAGE_ICON_SIZE} />
         <input
           accept={copy.importImageType}
           aria-label={copy.importImageLabel}

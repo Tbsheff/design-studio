@@ -1,25 +1,90 @@
 .strip {
   display: grid;
-  gap: var(--s-2);
-  padding: var(--s-3);
-  border-top: 1px solid var(--line);
+  grid-template-columns: minmax(0, 1fr);
+  flex: none;
+  border-bottom: 1px solid var(--line);
 }
 
-.head {
+.toggle {
   display: flex;
   align-items: center;
   gap: var(--s-2);
+  min-width: 0;
+  height: 32px;
+  padding: 0 var(--s-2) 0 var(--s-3);
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease);
 }
 
-.title {
-  margin: 0 auto 0 0;
-  color: var(--text-2);
-  font-size: var(--t-xs);
-  font-weight: 600;
+.toggle:hover,
+.toggle[aria-expanded="true"] {
+  color: var(--text);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.toggleLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toggleCount {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.chevron {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--text-3);
+  transition: rotate var(--dur-fast) var(--ease);
+}
+
+.toggle[aria-expanded="true"] .chevron {
+  rotate: 90deg;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: 0 var(--s-3) var(--s-3);
+}
+
+.body[hidden] {
+  display: none;
+}
+
+.briefRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.briefRow .brief {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .shuffle,
 .apply {
+  flex: none;
   height: 24px;
   padding: 0 var(--s-3);
   border: 1px solid var(--line);
@@ -131,22 +196,30 @@
 .error {
   color: var(--danger, var(--text-2));
   font-size: var(--t-xs);
+  overflow-wrap: anywhere;
+}
+
+.error:empty {
+  display: none;
 }
 
 .note {
-  color: var(--text-2);
+  color: var(--text-3);
   font-size: var(--t-xs);
+  line-height: 16px;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
 }
 
 .importRow {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s-1);
 }
 
 .importTitle {
-  color: var(--text-2);
+  color: var(--text-3);
   font-size: var(--t-xs);
-  font-weight: 600;
 }
 
 .importFields {
@@ -163,9 +236,11 @@
 .pick {
   position: relative;
   display: inline-flex;
+  flex: none;
   align-items: center;
+  justify-content: center;
+  width: 24px;
   height: 24px;
-  padding: 0 var(--s-3);
   border: 1px solid var(--line);
   border-radius: var(--r-control-sm);
   color: var(--text-2);

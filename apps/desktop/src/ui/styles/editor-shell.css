@@ -170,17 +170,6 @@
   min-height: 0;
 }
 
-[data-tip-side="right"]::after {
-  top: 50%;
-  left: calc(100% + 8px);
-  translate: -2px -50%;
-}
-
-[data-tip-side="right"]:hover::after,
-[data-tip-side="right"]:focus-visible::after {
-  translate: 0 -50%;
-}
-
 .studio-body > .prail {
   left: 0;
   z-index: 60;

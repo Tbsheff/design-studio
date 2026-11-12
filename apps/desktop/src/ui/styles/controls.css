@@ -166,86 +166,46 @@
   position: relative;
 }
 
-[data-tip]::after {
-  content: attr(data-tip) / "";
-  position: absolute;
-  z-index: 50;
-  left: 50%;
-  top: calc(100% + 6px);
-  translate: -50% -2px;
+.ui-tip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
   width: max-content;
   max-width: 240px;
   padding: var(--s-1) var(--s-2);
+  overflow: visible;
+  border: 0;
   border-radius: var(--r-sm);
   background: var(--tip-bg);
   box-shadow:
     inset 0 0 0 1px var(--tip-line),
     var(--shadow-sm);
   color: var(--tip-text);
-  font-size: var(--t-xs);
-  font-weight: 500;
-  line-height: 16px;
+  font: 500 var(--t-xs) / 16px var(--font);
   text-align: left;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   pointer-events: none;
   opacity: 0;
-  transition-property: opacity, translate;
+  transition-property: opacity;
   transition-duration: var(--dur);
   transition-timing-function: var(--ease);
 }
 
-[data-tip]:hover::after,
-[data-tip]:focus-visible::after {
+.ui-tip:popover-open {
   opacity: 1;
-  translate: -50% 0;
   transition-delay: var(--dur-tip-delay);
 }
 
-:root[data-tip-warm] [data-tip]:hover::after {
+@starting-style {
+  .ui-tip:popover-open {
+    opacity: 0;
+  }
+}
+
+:root[data-tip-warm] .ui-tip:popover-open {
   transition-delay: 0s;
   transition-duration: 0s;
-}
-
-[data-tip][aria-expanded="true"]::after,
-[data-tip][data-tip-off]::after,
-[data-tip=""]::after {
-  display: none;
-}
-
-[data-tip-side="top"]::after {
-  top: auto;
-  bottom: calc(100% + 6px);
-  translate: -50% 2px;
-}
-
-[data-tip-align="end"]::after {
-  left: auto;
-  right: 0;
-  translate: 0 -2px;
-}
-
-[data-tip-align="end"]:hover::after,
-[data-tip-align="end"]:focus-visible::after {
-  translate: 0 0;
-}
-
-[data-tip-align="start"]::after {
-  left: 0;
-  translate: 0 -2px;
-}
-
-[data-tip-align="start"]:hover::after,
-[data-tip-align="start"]:focus-visible::after {
-  translate: 0 0;
-}
-
-[data-tip-side="top"][data-tip-align]::after {
-  translate: 0 2px;
-}
-
-[data-tip-side="top"][data-tip-align]:hover::after,
-[data-tip-side="top"][data-tip-align]:focus-visible::after {
-  translate: 0 0;
 }
 
 .link {

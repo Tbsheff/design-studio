@@ -327,21 +327,6 @@ dialog.run-settings-pop {
   position: static;
 }
 
-.level-control [data-tip]::after {
-  left: auto;
-  right: 0;
-  width: max-content;
-  max-width: 220px;
-  white-space: normal;
-  text-align: left;
-  translate: 0 -2px;
-}
-
-.level-control [data-tip]:hover::after,
-.level-control [data-tip]:focus-visible::after {
-  translate: 0 0;
-}
-
 .queued {
   min-width: 0;
   padding: 0;
@@ -933,11 +918,6 @@ dialog.run-settings-pop {
 
 .prompt .thumb {
   animation: glyph-in var(--dur) var(--ease-out);
-}
-
-.prompt .thumb[data-tip]::after {
-  max-width: 220px;
-  overflow-wrap: anywhere;
 }
 
 .prompt .skill-chip {

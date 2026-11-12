@@ -1799,8 +1799,8 @@
   top: calc(50% + 14px + var(--s-1));
 }
 
-.home-composer-bar .home-pill[data-tip]::after {
-  display: none;
+.home-composer-bar .home-pill {
+  --tip: off;
 }
 
 @media (max-width: 860px) {
@@ -1819,8 +1819,8 @@
     white-space: nowrap;
   }
 
-  .home-composer-bar .home-pill[data-tip]::after {
-    display: block;
+  .home-composer-bar .home-pill {
+    --tip: on;
   }
 }
 

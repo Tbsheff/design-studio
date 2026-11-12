@@ -22,10 +22,6 @@
   flex-direction: column;
 }
 
-.pane-sheet-body:has(> .tkp) {
-  overflow-x: hidden;
-}
-
 .tkp-header {
   padding-right: var(--s-3);
 }

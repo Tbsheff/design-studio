@@ -1,184 +1,150 @@
 import { pick } from "./pick.js";
 
+const TIP = "data-tip";
 const OFF = "data-tip-off";
-const AUTO = "data-tip-auto";
 const TIP_ALIGN = "data-tip-align";
 const TIP_SIDE = "data-tip-side";
-const EDGE = 4;
-const TIP_GAP = 6;
+const EXPANDED = "aria-expanded";
 const INSTANT = "data-tip-warm";
+const LAYER_CLASS = "ui-tip";
+const MARGIN = 8;
+const TIP_MAX_WIDTH = 240;
+const TIP_GAP = 6;
 const INSTANT_AFTER_MS = 500;
 const RESET_AFTER_MS = 300;
-const EXPANDED = "aria-expanded";
+const HIDE_KEYS = new Set(["Escape", "Enter", " "]);
 
-interface Box {
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
+interface TipSize {
+  readonly width: number;
+  readonly height: number;
 }
 
-const release = (host: Element): void => {
-  const clear = (): void => {
-    const isHeld =
-      host.getAttribute(EXPANDED) === "true" ||
-      host.matches(":hover") ||
-      host.matches(":focus-visible");
+interface TipPoint {
+  readonly left: number;
+  readonly top: number;
+}
 
-    if (!isHeld) {
-      host.removeAttribute(OFF);
-      host.removeEventListener("pointerleave", clear);
-      host.removeEventListener("focusout", clear);
-    }
-  };
+type TimerId = ReturnType<typeof setTimeout>;
 
-  host.addEventListener("pointerleave", clear);
-  host.addEventListener("focusout", clear);
-};
-
-const narrowBox = (
-  box: Box,
-  rect: DOMRect,
-  clips: { clipsX: boolean; clipsY: boolean }
-): void => {
-  if (clips.clipsX) {
-    box.left = Math.max(box.left, rect.left);
-    box.right = Math.min(box.right, rect.right);
-  }
-
-  if (clips.clipsY) {
-    box.top = Math.max(box.top, rect.top);
-    box.bottom = Math.min(box.bottom, rect.bottom);
-  }
-};
-
-const clipBox = (host: Element): Box => {
-  const box: Box = {
-    bottom: globalThis.innerHeight,
-    left: 0,
-    right: globalThis.innerWidth,
-    top: 0,
-  };
-
-  for (
-    let node = host.parentElement;
-    node && node !== document.body;
-    node = node.parentElement
-  ) {
-    const style = getComputedStyle(node);
-    const clipsX = style.overflowX !== "visible";
-    const clipsY = style.overflowY !== "visible";
-
-    if (clipsX || clipsY) {
-      narrowBox(box, node.getBoundingClientRect(), { clipsX, clipsY });
-    }
-  }
-
-  return box;
-};
-
-const restoreAuto = (host: Element): void => {
-  const auto = host.getAttribute(AUTO);
-
-  if (auto === null) {
-    return;
-  }
-
-  if (auto.includes("align")) {
-    host.removeAttribute(TIP_ALIGN);
-  }
-
-  if (auto.includes("side")) {
-    host.removeAttribute(TIP_SIDE);
-  }
-
-  if (auto.includes("was-top")) {
-    host.setAttribute(TIP_SIDE, "top");
-  }
-
-  host.removeAttribute(AUTO);
-};
-
-const fitAlign = (
-  host: Element,
-  rect: DOMRect,
-  box: Box,
-  width: number
-): string[] => {
-  if (host.hasAttribute(TIP_ALIGN)) {
-    return [];
-  }
-
-  const middle = rect.left + rect.width / 2;
-  const overRight = middle + width / 2 > box.right - EDGE;
-  const overLeft = middle - width / 2 < box.left + EDGE;
-
-  if (!overRight && !overLeft) {
-    return [];
-  }
-
-  host.setAttribute(TIP_ALIGN, pick(overRight, "end", "start"));
-
-  return ["align"];
-};
-
-const fitSide = (
-  host: Element,
-  rect: DOMRect,
-  box: Box,
-  height: number
-): string[] => {
-  const fitsBelow = rect.bottom + TIP_GAP + height <= box.bottom - EDGE;
-  const fitsAbove = rect.top - TIP_GAP - height >= box.top + EDGE;
-  const side = host.getAttribute(TIP_SIDE);
-
-  if (side === null && !fitsBelow && fitsAbove) {
-    host.setAttribute(TIP_SIDE, "top");
-
-    return ["side"];
-  }
-
-  if (side === "top" && !fitsAbove && fitsBelow) {
-    host.setAttribute(TIP_SIDE, "bottom");
-
-    return ["side", "was-top"];
-  }
-
-  return [];
-};
-
-const fitTip = (host: Element): void => {
-  restoreAuto(host);
-  const tip = getComputedStyle(host, "::after");
-  const width = Number(tip.width);
-  const height = Number(tip.height);
-
-  if (!width || !height) {
-    return;
-  }
-
-  const rect = host.getBoundingClientRect();
-  const box = clipBox(host);
-
-  const moved = [
-    ...fitAlign(host, rect, box, width),
-    ...fitSide(host, rect, box, height),
-  ];
-
-  if (moved.length > 0) {
-    host.setAttribute(AUTO, moved.join(" "));
-  }
-};
-
-const tipHost = (target: EventTarget | null): Element | null => {
+const toTipHost = (target: EventTarget | null): Element | null => {
   if (target instanceof Element) {
-    return target.closest("[data-tip]");
+    return target.closest(`[${TIP}]`);
   }
 
   return null;
 };
 
-type TimerId = ReturnType<typeof setTimeout>;
+const toTipText = (host: Element): string => {
+  const text = host.getAttribute(TIP) ?? "";
+
+  const isMuted =
+    host.getAttribute(EXPANDED) === "true" ||
+    host.hasAttribute(OFF) ||
+    getComputedStyle(host).getPropertyValue("--tip").trim() === "off";
+
+  return pick(isMuted, "", text);
+};
+
+const clampTo = (value: number, low: number, high: number): number =>
+  Math.max(low, Math.min(value, high));
+
+const toAlignedLeft = (host: Element, rect: DOMRect, width: number): number => {
+  const align = host.getAttribute(TIP_ALIGN);
+
+  if (align === "start") {
+    return rect.left;
+  }
+
+  if (align === "end") {
+    return rect.right - width;
+  }
+
+  return rect.left + rect.width / 2 - width / 2;
+};
+
+const toVerticalPoint = (
+  host: Element,
+  rect: DOMRect,
+  size: TipSize
+): TipPoint => {
+  const below = rect.bottom + TIP_GAP;
+  const above = rect.top - TIP_GAP - size.height;
+  const fitsBelow = below + size.height <= globalThis.innerHeight - MARGIN;
+  const fitsAbove = above >= MARGIN;
+  const wantsTop = host.getAttribute(TIP_SIDE) === "top";
+
+  const isTop = pick(
+    wantsTop,
+    fitsAbove || !fitsBelow,
+    !fitsBelow && fitsAbove
+  );
+
+  return {
+    left: toAlignedLeft(host, rect, size.width),
+    top: pick(isTop, above, below),
+  };
+};
+
+const toSidePoint = (
+  host: Element,
+  rect: DOMRect,
+  size: TipSize
+): TipPoint | null => {
+  const side = host.getAttribute(TIP_SIDE);
+
+  if (side !== "right" && side !== "left") {
+    return null;
+  }
+
+  const right = rect.right + TIP_GAP;
+  const left = rect.left - TIP_GAP - size.width;
+  const fitsRight = right + size.width <= globalThis.innerWidth - MARGIN;
+  const fitsLeft = left >= MARGIN;
+
+  if (!fitsRight && !fitsLeft) {
+    return null;
+  }
+
+  const isLeft = pick(side === "left", fitsLeft, !fitsRight);
+
+  return {
+    left: pick(isLeft, left, right),
+    top: rect.top + rect.height / 2 - size.height / 2,
+  };
+};
+
+const placeTip = (layer: HTMLElement, host: Element): void => {
+  const rect = host.getBoundingClientRect();
+  const size = { height: layer.offsetHeight, width: layer.offsetWidth };
+
+  const point =
+    toSidePoint(host, rect, size) ?? toVerticalPoint(host, rect, size);
+
+  const left = clampTo(
+    point.left,
+    MARGIN,
+    globalThis.innerWidth - MARGIN - size.width
+  );
+
+  const top = clampTo(
+    point.top,
+    MARGIN,
+    globalThis.innerHeight - MARGIN - size.height
+  );
+
+  layer.style.left = `${Math.round(left)}px`;
+  layer.style.top = `${Math.round(top)}px`;
+};
+
+const createLayer = (): HTMLElement => {
+  const layer = document.createElement("div");
+  layer.className = LAYER_CLASS;
+  layer.setAttribute("popover", "manual");
+  layer.setAttribute("aria-hidden", "true");
+  document.body.append(layer);
+
+  return layer;
+};
 
 const clearTimer = (id: TimerId | null): void => {
   if (id !== null) {
@@ -186,7 +152,7 @@ const clearTimer = (id: TimerId | null): void => {
   }
 };
 
-const installInstantTips = (): void => {
+const installWarmTips = (): void => {
   const root = document.documentElement;
   let showTimer: TimerId | null = null;
   let hideTimer: TimerId | null = null;
@@ -194,7 +160,7 @@ const installInstantTips = (): void => {
   document.addEventListener(
     "pointerover",
     (event) => {
-      if (!tipHost(event.target)) {
+      if (!toTipHost(event.target)) {
         return;
       }
 
@@ -213,7 +179,7 @@ const installInstantTips = (): void => {
   document.addEventListener(
     "pointerout",
     (event) => {
-      const host = tipHost(event.target);
+      const host = toTipHost(event.target);
       const to = event.relatedTarget;
 
       if (!host || (to instanceof Node && host.contains(to))) {
@@ -231,44 +197,161 @@ const installInstantTips = (): void => {
   );
 };
 
-const onTipEnter = (event: Event): void => {
-  const host = tipHost(event.target);
+const releaseOff = (host: Element): void => {
+  const clear = (): void => {
+    const isHeld =
+      host.getAttribute(EXPANDED) === "true" ||
+      host.matches(":hover") ||
+      host.matches(":focus-visible");
 
-  if (!host || host.hasAttribute(OFF)) {
-    return;
-  }
+    if (!isHeld) {
+      host.removeAttribute(OFF);
+      host.removeEventListener("pointerleave", clear);
+      host.removeEventListener("focusout", clear);
+    }
+  };
 
-  let from: EventTarget | null = null;
-
-  if (event instanceof PointerEvent) {
-    from = event.relatedTarget;
-  }
-
-  if (from instanceof Node && host.contains(from)) {
-    return;
-  }
-
-  fitTip(host);
+  host.addEventListener("pointerleave", clear);
+  host.addEventListener("focusout", clear);
 };
 
-const installTipGuard = (): void => {
-  installInstantTips();
+interface TipLayer {
+  readonly hide: () => void;
+  readonly show: (host: Element) => void;
+  readonly isCurrent: (host: Element | null) => boolean;
+  readonly isLeaving: (to: EventTarget | null) => boolean;
+}
+
+const toLayerWidth = (): number =>
+  Math.min(TIP_MAX_WIDTH, globalThis.innerWidth - MARGIN * 2);
+
+const createTipLayer = (): TipLayer => {
+  const layer = createLayer();
+  let current: Element | null = null;
+
+  const hide = (): void => {
+    current = null;
+
+    if (layer.matches(":popover-open")) {
+      layer.hidePopover();
+    }
+  };
+
+  const show = (host: Element): void => {
+    const text = toTipText(host);
+
+    if (!text) {
+      hide();
+
+      return;
+    }
+
+    hide();
+    current = host;
+    layer.textContent = text;
+    layer.style.maxWidth = `${toLayerWidth()}px`;
+    layer.showPopover();
+    placeTip(layer, host);
+  };
+
+  const isCurrent = (host: Element | null): boolean =>
+    host !== null && host === current;
+
+  const isLeaving = (to: EventTarget | null): boolean =>
+    current !== null && !(to instanceof Node && current.contains(to));
+
+  return { hide, isCurrent, isLeaving, show };
+};
+
+const listenPointer = (tips: TipLayer): void => {
+  document.addEventListener(
+    "pointerover",
+    (event) => {
+      const host = toTipHost(event.target);
+      const from = event.relatedTarget;
+
+      if (!host || tips.isCurrent(host)) {
+        return;
+      }
+
+      if (from instanceof Node && host.contains(from)) {
+        return;
+      }
+
+      tips.show(host);
+    },
+    true
+  );
+  document.addEventListener(
+    "pointerout",
+    (event) => {
+      const host = toTipHost(event.target);
+
+      if (tips.isCurrent(host) && tips.isLeaving(event.relatedTarget)) {
+        tips.hide();
+      }
+    },
+    true
+  );
   document.addEventListener(
     "pointerdown",
     (event) => {
-      const host = tipHost(event.target);
+      tips.hide();
+      const host = toTipHost(event.target);
 
       if (!host || host.hasAttribute(OFF)) {
         return;
       }
 
       host.setAttribute(OFF, "");
-      release(host);
+      releaseOff(host);
     },
     true
   );
-  document.addEventListener("pointerover", onTipEnter, true);
-  document.addEventListener("focusin", onTipEnter, true);
+};
+
+const listenFocus = (tips: TipLayer): void => {
+  document.addEventListener(
+    "focusin",
+    (event) => {
+      const host = toTipHost(event.target);
+
+      if (host?.matches(":focus-visible")) {
+        tips.show(host);
+      }
+    },
+    true
+  );
+  document.addEventListener(
+    "focusout",
+    (event) => {
+      if (tips.isCurrent(toTipHost(event.target))) {
+        tips.hide();
+      }
+    },
+    true
+  );
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (HIDE_KEYS.has(event.key)) {
+        tips.hide();
+      }
+    },
+    true
+  );
+  globalThis.addEventListener("wheel", tips.hide, {
+    capture: true,
+    passive: true,
+  });
+  globalThis.addEventListener("blur", tips.hide);
+};
+
+const installTipGuard = (): void => {
+  const tips = createTipLayer();
+  listenPointer(tips);
+  listenFocus(tips);
+  installWarmTips();
 };
 
 export { installTipGuard };

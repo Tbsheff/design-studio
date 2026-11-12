@@ -35,7 +35,12 @@ const toRunSource = (run: ActivityRunWire): string => {
 };
 
 const toRunMeta = (run: ActivityRunWire, now: number): string => {
-  const parts = [run.projectName, toRunSource(run)];
+  const parts = [toRunSource(run)];
+
+  if (!run.title.startsWith(run.projectName)) {
+    parts.unshift(run.projectName);
+  }
+
   const cost = toCost(run.costUsd);
 
   if (cost !== null) {

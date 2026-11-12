@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import path from "node:path";
 
 import type { StudioEvent, StudioEventInput } from "@design-studio/contracts";
@@ -22,12 +23,36 @@ interface FlushableEventBus extends EventBus {
   flush: () => Promise<void>;
 }
 
+const isRepeatStatus = (
+  statusKeys: Map<string, string>,
+  input: StudioEventInput
+): boolean => {
+  if (input.type !== "status.changed") {
+    return false;
+  }
+
+  const key = `${input.projectId}/${input.directionId ?? ""}`;
+
+  const hash = createHash("sha256")
+    .update(JSON.stringify(input.status))
+    .digest("hex");
+
+  if (statusKeys.get(key) === hash) {
+    return true;
+  }
+
+  statusKeys.set(key, hash);
+
+  return false;
+};
+
 const createEventBus = (
   dataDir: string,
   floors: ReadonlyMap<string, SeqFloor>,
   run: EventRunner
 ): FlushableEventBus => {
   const logs = new Map<string, ProjectLog>();
+  const statusKeys = new Map<string, string>();
 
   const logFor = (projectId: string): ProjectLog => {
     const existing = logs.get(projectId);
@@ -52,6 +77,11 @@ const createEventBus = (
 
   const emit = (input: StudioEventInput): StudioEvent => {
     const log = logFor(input.projectId);
+
+    if (isRepeatStatus(statusKeys, input)) {
+      return { ...input, seq: log.lastSeq, ts: Date.now() } as StudioEvent;
+    }
+
     const recorded = record(log, input);
 
     fanOut(log, recorded);

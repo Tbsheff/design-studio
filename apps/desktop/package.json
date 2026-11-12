@@ -38,6 +38,7 @@
     "typecheck:cloud": "pnpm --filter @design-studio/api run typecheck && pnpm run check:tenant",
     "check:actions": "tsx scripts/check-actions.ts",
     "check:bundle": "tsx scripts/check-bundle.ts",
+    "check:clip": "tsx scripts/check-clip.ts",
     "check": "pnpm run lint:boundaries && pnpm run typecheck && pnpm run lint:gate && pnpm run check:scripts",
     "test": "vitest run",
     "e2e": "playwright test",
